@@ -795,6 +795,7 @@ private:
                                                                      bool* aIsCompatible) override;
 
   virtual mozilla::ipc::IPCResult RecvNSSU2FTokenIsRegistered(nsTArray<uint8_t>&& aKeyHandle,
+                                                              nsTArray<uint8_t>&& aApplication,
                                                               bool* aIsValidKeyHandle) override;
 
   virtual mozilla::ipc::IPCResult RecvNSSU2FTokenRegister(nsTArray<uint8_t>&& aApplication,
@@ -896,9 +897,6 @@ private:
   virtual mozilla::ipc::IPCResult RecvGetGfxVars(InfallibleTArray<GfxVarUpdate>* aVars) override;
 
   virtual mozilla::ipc::IPCResult RecvReadFontList(InfallibleTArray<FontListEntry>* retValue) override;
-
-  virtual mozilla::ipc::IPCResult RecvReadDataStorageArray(const nsString& aFilename,
-                                                           InfallibleTArray<DataStorageItem>* aValues) override;
 
   virtual mozilla::ipc::IPCResult RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions) override;
 

@@ -12,7 +12,7 @@ info: |
      c. Let hasRestrictedGlobal be ? envRec.HasRestrictedGlobalProperty(name).
      d. If hasRestrictedGlobal is true, throw a SyntaxError exception.
 negative:
-  phase: early
+  phase: runtime
   type: SyntaxError
 ---*/
 

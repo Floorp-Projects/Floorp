@@ -229,6 +229,8 @@ protected:
   virtual mozilla::ipc::IPCResult RecvIncreaseThrottlePressure() override;
   virtual mozilla::ipc::IPCResult RecvDecreaseThrottlePressure() override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvNotifyCurrentTopLevelOuterContentWindowId(const uint64_t& aWindowId) override;
 private:
   nsTArray<mozilla::UniquePtr<mozilla::net::Throttler>> mThrottlers;
 };

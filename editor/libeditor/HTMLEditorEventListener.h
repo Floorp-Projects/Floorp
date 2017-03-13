@@ -25,17 +25,15 @@ public:
   {
   }
 
-#ifdef DEBUG
-  // WARNING: You must be use HTMLEditor or its sub class for this class.
+  /**
+   * Connect() fails if aEditorBase isn't an HTMLEditor instance.
+   */
   virtual nsresult Connect(EditorBase* aEditorBase) override;
-#endif
 
 protected:
   virtual nsresult MouseDown(nsIDOMMouseEvent* aMouseEvent) override;
   virtual nsresult MouseUp(nsIDOMMouseEvent* aMouseEvent) override;
   virtual nsresult MouseClick(nsIDOMMouseEvent* aMouseEvent) override;
-
-  inline HTMLEditor* GetHTMLEditor();
 };
 
 } // namespace mozilla

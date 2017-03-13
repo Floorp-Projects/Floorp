@@ -84,7 +84,7 @@ Usage(char *progName)
             "               where id can be a certificate nickname or email address\n"
             " -S            create a CMS signed data message\n"
             "  -G           include a signing time attribute\n"
-            "  -H hash      use hash (default:SHA1)\n"
+            "  -H hash      use hash (default:SHA256)\n"
             "  -N nick      use certificate named \"nick\" for signing\n"
             "  -P           include a SMIMECapabilities attribute\n"
             "  -T           do not include content in CMS message\n"
@@ -1097,7 +1097,7 @@ main(int argc, char **argv)
     signOptions.signingTime = PR_FALSE;
     signOptions.smimeProfile = PR_FALSE;
     signOptions.encryptionKeyPreferenceNick = NULL;
-    signOptions.hashAlgTag = SEC_OID_SHA1;
+    signOptions.hashAlgTag = SEC_OID_SHA256;
     envelopeOptions.recipients = NULL;
     encryptOptions.recipients = NULL;
     encryptOptions.envmsg = NULL;

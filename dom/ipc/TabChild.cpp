@@ -1650,18 +1650,70 @@ TabChild::RecvRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
-                              const ScrollableLayerGuid& aGuid,
-                              const uint64_t& aInputBlockId)
+
+// In case handling repeated mouse wheel takes much time, we skip firing current
+// wheel event if it may be coalesced to the next one.
+bool
+TabChild::MaybeCoalesceWheelEvent(const WidgetWheelEvent& aEvent,
+                                  const ScrollableLayerGuid& aGuid,
+                                  const uint64_t& aInputBlockId,
+                                  bool* aIsNextWheelEvent)
 {
+  MOZ_ASSERT(aIsNextWheelEvent);
+  if (aEvent.mMessage == eWheel) {
+    GetIPCChannel()->PeekMessages(
+        [aIsNextWheelEvent](const IPC::Message& aMsg) -> bool {
+          if (aMsg.type() == mozilla::dom::PBrowser::Msg_MouseWheelEvent__ID) {
+            *aIsNextWheelEvent = true;
+          }
+          return false; // Stop peeking.
+        });
+    // We only coalesce the current event when
+    // 1. It's eWheel (we don't coalesce eOperationStart and eWheelOperationEnd)
+    // 2. It's not the first wheel event.
+    // 3. It's not the last wheel event.
+    // 4. It's dispatched before the last wheel event was processed.
+    // 5. It has same attributes as the coalesced wheel event which is not yet
+    //    fired.
+    if (!mLastWheelProcessedTimeFromParent.IsNull() &&
+        *aIsNextWheelEvent &&
+        aEvent.mTimeStamp < mLastWheelProcessedTimeFromParent &&
+        (mCoalescedWheelData.IsEmpty() ||
+         mCoalescedWheelData.CanCoalesce(aEvent, aGuid, aInputBlockId))) {
+      mCoalescedWheelData.Coalesce(aEvent, aGuid, aInputBlockId);
+      return true;
+    }
+  }
+  return false;
+}
+
+void
+TabChild::MaybeDispatchCoalescedWheelEvent()
+{
+  if (mCoalescedWheelData.IsEmpty()) {
+    return;
+  }
+  const WidgetWheelEvent* wheelEvent =
+    mCoalescedWheelData.GetCoalescedWheelEvent();
+  MOZ_ASSERT(wheelEvent);
+  DispatchWheelEvent(*wheelEvent,
+                     mCoalescedWheelData.GetScrollableLayerGuid(),
+                     mCoalescedWheelData.GetInputBlockId());
+  mCoalescedWheelData.Reset();
+}
+
+void
+TabChild::DispatchWheelEvent(const WidgetWheelEvent& aEvent,
+                                  const ScrollableLayerGuid& aGuid,
+                                  const uint64_t& aInputBlockId)
+{
+  WidgetWheelEvent localEvent(aEvent);
   if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
     nsCOMPtr<nsIDocument> document(GetDocument());
     APZCCallbackHelper::SendSetTargetAPZCNotification(
       mPuppetWidget, document, aEvent, aGuid, aInputBlockId);
   }
 
-  WidgetWheelEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
   APZCCallbackHelper::ApplyCallbackTransform(localEvent, aGuid,
                                              mPuppetWidget->GetDefaultScale());
@@ -1673,6 +1725,34 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
 
   if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
     mAPZEventState->ProcessWheelEvent(localEvent, aGuid, aInputBlockId);
+  }
+}
+
+mozilla::ipc::IPCResult
+TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
+                              const ScrollableLayerGuid& aGuid,
+                              const uint64_t& aInputBlockId)
+{
+  bool isNextWheelEvent = false;
+  if (MaybeCoalesceWheelEvent(aEvent, aGuid, aInputBlockId,
+                              &isNextWheelEvent)) {
+    return IPC_OK();
+  }
+  if (isNextWheelEvent) {
+    // Update mLastWheelProcessedTimeFromParent so that we can compare the end
+    // time of the current event with the dispatched time of the next event.
+    mLastWheelProcessedTimeFromParent = aEvent.mTimeStamp;
+    mozilla::TimeStamp beforeDispatchingTime = TimeStamp::Now();
+    MaybeDispatchCoalescedWheelEvent();
+    DispatchWheelEvent(aEvent, aGuid, aInputBlockId);
+    mLastWheelProcessedTimeFromParent +=
+      (TimeStamp::Now() - beforeDispatchingTime);
+  } else {
+    // This is the last wheel event. Set mLastWheelProcessedTimeFromParent to
+    // null moment to avoid coalesce the next incoming wheel event.
+    mLastWheelProcessedTimeFromParent = TimeStamp();
+    MaybeDispatchCoalescedWheelEvent();
+    DispatchWheelEvent(aEvent, aGuid, aInputBlockId);
   }
   return IPC_OK();
 }
@@ -1760,7 +1840,7 @@ TabChild::RecvRealDragEvent(const WidgetDragEvent& aEvent,
     if (dragService) {
       // This will dispatch 'drag' event at the source if the
       // drag transaction started in this process.
-      dragService->FireDragEventAtSource(eDrag);
+      dragService->FireDragEventAtSource(eDrag, aEvent.mModifiers);
     }
   }
 

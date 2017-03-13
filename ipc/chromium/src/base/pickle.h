@@ -16,6 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BufferList.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/TimeStamp.h"
 
 #ifdef FUZZING
 #include "base/singleton.h"
@@ -36,6 +37,7 @@ private:
   friend class Pickle;
 
   mozilla::BufferList<InfallibleAllocPolicy>::IterImpl iter_;
+  mozilla::TimeStamp start_;
 
   template<typename T>
   void CopyInto(T* dest);
@@ -127,7 +129,10 @@ class Pickle {
   }
 #endif
 
-  void EndRead(PickleIterator& iter) const;
+  // NOTE: The message type optional parameter should _only_ be called from
+  // generated IPDL code, as it is used to trigger the IPC_READ_LATENCY_MS
+  // telemetry probe.
+  void EndRead(PickleIterator& iter, uint32_t ipcMessageType = 0) const;
 
   // Methods for adding to the payload of the Pickle.  These values are
   // appended to the end of the Pickle's payload.  When reading values from a

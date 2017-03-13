@@ -131,7 +131,8 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 
   RefPtr<DeclarationBlock> newdecl;
   if (olddecl->IsServo()) {
-    newdecl = ServoDeclarationBlock::FromCssText(aCssText);
+    GeckoParserExtraData data(env.mBaseURI, env.mSheetURI, env.mPrincipal);
+    newdecl = ServoDeclarationBlock::FromCssText(aCssText, data);
   } else {
     RefPtr<css::Declaration> decl(new css::Declaration());
     decl->InitializeEmpty();

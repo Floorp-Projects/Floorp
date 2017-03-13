@@ -289,8 +289,8 @@ def check_style():
 
     # Compare expected and actual output.
     difflines = difflib.unified_diff(expected_output, actual_output,
-                                     fromfile='check_spider_monkey_style.py expected output',
-                                       tofile='check_spider_monkey_style.py actual output')
+                                     fromfile='check_spidermonkey_style.py expected output',
+                                       tofile='check_spidermonkey_style.py actual output')
     ok = True
     for diffline in difflines:
         ok = False

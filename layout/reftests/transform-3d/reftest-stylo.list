@@ -39,7 +39,7 @@ fails == backface-visibility-1b.html backface-visibility-1b.html
 fails == backface-visibility-1c.html backface-visibility-1c.html
 fails == backface-visibility-2.html backface-visibility-2.html
 == backface-visibility-3.html backface-visibility-3.html
-fails == perspective-clipping-1.html perspective-clipping-1.html
+== perspective-clipping-1.html perspective-clipping-1.html
 fails == perspective-origin-1a.html perspective-origin-1a.html
 fails == perspective-origin-1b.html perspective-origin-1b.html
 fails == perspective-origin-2a.html perspective-origin-2a.html

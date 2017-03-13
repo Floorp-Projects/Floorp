@@ -83,7 +83,8 @@
         if (event.message == "uncaught exception: 7.5 million years for that?" ||
             event.message == "uncaught exception: Just following orders, sir!") {
           // We throw those on purpose in the worker, so ignore them.
-          return true;
+          event.preventDefault();
+          return;
         }
         ok(false, "Worker had an error: " + event.message);
         worker.terminate();

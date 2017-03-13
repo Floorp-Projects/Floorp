@@ -18,10 +18,10 @@ info: |
 features: [class]
 ---*/
 
-var C = $.createRealm().global.eval(
-  'class C extends Object {' +
+var C = $262.createRealm().global.eval(
+  '(class C extends Object {' +
   '  constructor() {}' +
-  '}'
+  '});'
 );
 
 assert.throws(ReferenceError, function() {

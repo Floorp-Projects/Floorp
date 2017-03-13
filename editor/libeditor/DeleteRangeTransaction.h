@@ -28,15 +28,12 @@ class DeleteRangeTransaction final : public EditAggregateTransaction
 {
 public:
   /**
-   * Initialize the transaction.
-   * @param aEditorBase The object providing basic editing operations.
-   * @param aRange      The range to delete.
+   * @param aEditorBase         The object providing basic editing operations.
+   * @param aRangeToDelete      The range to delete.
    */
-  nsresult Init(EditorBase* aEditorBase,
-                nsRange* aRange,
-                RangeUpdater* aRangeUpdater);
-
-  DeleteRangeTransaction();
+  DeleteRangeTransaction(EditorBase& aEditorBase,
+                         nsRange& aRangeToDelete,
+                         RangeUpdater* aRangeUpdater);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteRangeTransaction,
                                            EditAggregateTransaction)
@@ -48,7 +45,7 @@ public:
 
   virtual void LastRelease() override
   {
-    mRange = nullptr;
+    mRangeToDelete = nullptr;
     EditAggregateTransaction::LastRelease();
   }
 
@@ -63,11 +60,11 @@ protected:
                                      int32_t aOffset,
                                      nsIEditor::EDirection aAction);
 
-  // P1 in the range.
-  RefPtr<nsRange> mRange;
-
   // The editor for this transaction.
-  EditorBase* mEditorBase;
+  EditorBase& mEditorBase;
+
+  // P1 in the range.
+  RefPtr<nsRange> mRangeToDelete;
 
   // Range updater object.
   RangeUpdater* mRangeUpdater;

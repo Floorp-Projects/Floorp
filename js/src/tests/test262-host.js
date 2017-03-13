@@ -8,13 +8,13 @@
     var ReflectApply = global.Reflect.apply;
     var NewGlobal = global.newGlobal;
 
-    global.$ = {
+    global.$262 = {
         __proto__: null,
         createRealm() {
             var newGlobalObject = NewGlobal();
             var createHostObjectFn = ReflectApply(FunctionToString, createHostObject, []);
             newGlobalObject.Function(`${createHostObjectFn} createHostObject(this);`)();
-            return newGlobalObject.$;
+            return newGlobalObject.$262;
         },
         detachArrayBuffer: global.detachArrayBuffer,
         evalScript: global.evaluateScript || global.evaluate,

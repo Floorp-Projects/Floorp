@@ -467,13 +467,16 @@ ClippedImage::DrawSingleTile(gfxContext* aContext,
     // The size in pixels at which the output will ultimately be drawn is
     // irrelevant here since the purpose of the SVG viewport size is to
     // determine what *region* of the SVG document will be drawn.
-    CSSIntSize vSize(aOldContext.GetViewportSize());
-    vSize.width = ceil(vSize.width * double(innerSize.width) / mClip.width);
-    vSize.height =
-      ceil(vSize.height * double(innerSize.height) / mClip.height);
-
     SVGImageContext context(aOldContext);
-    context.SetViewportSize(vSize);
+    auto oldViewport = aOldContext.GetViewportSize();
+    if (oldViewport) {
+      CSSIntSize newViewport;
+      newViewport.width =
+        ceil(oldViewport->width * double(innerSize.width) / mClip.width);
+      newViewport.height =
+        ceil(oldViewport->height * double(innerSize.height) / mClip.height);
+      context.SetViewportSize(Some(newViewport));
+    }
     return context;
   };
 

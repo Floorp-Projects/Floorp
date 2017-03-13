@@ -351,6 +351,12 @@
      {}
     ]
    ],
+   "html/semantics/forms/textfieldselection/selection-value-interactions.html": [
+    [
+     "/_mozilla/html/semantics/forms/textfieldselection/selection-value-interactions.html",
+     {}
+    ]
+   ],
    "html/semantics/scripting-1/the-script-element/create-module-script.html": [
     [
      "/_mozilla/html/semantics/scripting-1/the-script-element/create-module-script.html",
@@ -742,6 +748,10 @@
   ],
   "fetch/api/redirect/redirect-referrer.https.html": [
    "99cbd16b78771f35e075e4012d8dbc5dce3209c0",
+   "testharness"
+  ],
+  "html/semantics/forms/textfieldselection/selection-value-interactions.html": [
+   "6c5e95a8f2f11d106e669eb82b46ffff73d08335",
    "testharness"
   ],
   "html/semantics/scripting-1/the-script-element/create-module-script.html": [

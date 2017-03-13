@@ -988,6 +988,8 @@ TEST(Strings, Split)
              delimStart("-two"),
              delimEnd("one-");
 
+  nsString wide(u"hello world");
+
   size_t counter = 0;
   for (const nsCSubstring& token : one.Split(',')) {
     EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("one")));
@@ -1043,6 +1045,17 @@ TEST(Strings, Split)
       EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("one")));
     } else if (counter == 1) {
       EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("")));
+    }
+    counter++;
+  }
+  EXPECT_EQ(counter, (size_t)2);
+
+  counter = 0;
+  for (const nsSubstring& token : wide.Split(' ')) {
+    if (counter == 0) {
+      EXPECT_TRUE(token.Equals(NS_LITERAL_STRING("hello")));
+    } else if (counter == 1) {
+      EXPECT_TRUE(token.Equals(NS_LITERAL_STRING("world")));
     }
     counter++;
   }

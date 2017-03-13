@@ -743,6 +743,165 @@ add_task(async function test_misreconciled_root() {
   await promiseStopServer(server);
 });
 
+add_task(async function test_sync_dateAdded() {
+  await Service.recordManager.clearCache();
+  await PlacesSyncUtils.bookmarks.reset();
+  let engine = new BookmarksEngine(Service);
+  let store  = engine._store;
+  let server = serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  let collection = server.user("foo").collection("bookmarks");
+
+  Svc.Obs.notify("weave:engine:start-tracking");   // We skip usual startup...
+
+  // Just matters that it's in the past, not how far.
+  let now = Date.now();
+  let oneYearMS = 365 * 24 * 60 * 60 * 1000;
+
+  try {
+    let item1GUID = "abcdefabcdef";
+    let item1 = new Bookmark("bookmarks", item1GUID);
+    item1.bmkUri = "https://example.com";
+    item1.title = "asdf";
+    item1.parentName = "Bookmarks Toolbar";
+    item1.parentid = "toolbar";
+    item1.dateAdded = now - oneYearMS;
+    collection.insert(item1GUID, encryptPayload(item1.cleartext));
+
+    let item2GUID = "aaaaaaaaaaaa";
+    let item2 = new Bookmark("bookmarks", item2GUID);
+    item2.bmkUri = "https://example.com/2";
+    item2.title = "asdf2";
+    item2.parentName = "Bookmarks Toolbar";
+    item2.parentid = "toolbar";
+    item2.dateAdded = now + oneYearMS;
+    const item2LastModified = now / 1000 - 100;
+    collection.insert(item2GUID, encryptPayload(item2.cleartext), item2LastModified);
+
+    let item3GUID = "bbbbbbbbbbbb";
+    let item3 = new Bookmark("bookmarks", item3GUID);
+    item3.bmkUri = "https://example.com/3";
+    item3.title = "asdf3";
+    item3.parentName = "Bookmarks Toolbar";
+    item3.parentid = "toolbar";
+    // no dateAdded
+    collection.insert(item3GUID, encryptPayload(item3.cleartext));
+
+    let item4GUID = "cccccccccccc";
+    let item4 = new Bookmark("bookmarks", item4GUID);
+    item4.bmkUri = "https://example.com/4";
+    item4.title = "asdf4";
+    item4.parentName = "Bookmarks Toolbar";
+    item4.parentid = "toolbar";
+    // no dateAdded, but lastModified in past
+    const item4LastModified = (now - oneYearMS) / 1000;
+    collection.insert(item4GUID, encryptPayload(item4.cleartext), item4LastModified);
+
+    let item5GUID = "dddddddddddd";
+    let item5 = new Bookmark("bookmarks", item5GUID);
+    item5.bmkUri = "https://example.com/5";
+    item5.title = "asdf5";
+    item5.parentName = "Bookmarks Toolbar";
+    item5.parentid = "toolbar";
+    // no dateAdded, lastModified in (near) future.
+    const item5LastModified = (now + 60000) / 1000;
+    collection.insert(item5GUID, encryptPayload(item5.cleartext), item5LastModified);
+
+    let item6GUID = "eeeeeeeeeeee";
+    let item6 = new Bookmark("bookmarks", item6GUID);
+    item6.bmkUri = "https://example.com/6";
+    item6.title = "asdf6";
+    item6.parentName = "Bookmarks Toolbar";
+    item6.parentid = "toolbar";
+    const item6LastModified = (now - oneYearMS) / 1000;
+    collection.insert(item6GUID, encryptPayload(item6.cleartext), item6LastModified);
+
+    let origBuildWeakReuploadMap = engine.buildWeakReuploadMap;
+    engine.buildWeakReuploadMap = set => {
+      let fullMap = origBuildWeakReuploadMap.call(engine, set);
+      fullMap.delete(item6GUID);
+      return fullMap;
+    };
+
+    await sync_engine_and_validate_telem(engine, false);
+
+    let record1 = await store.createRecord(item1GUID);
+    let record2 = await store.createRecord(item2GUID);
+
+    equal(item1.dateAdded, record1.dateAdded, "dateAdded in past should be synced");
+    equal(record2.dateAdded, item2LastModified * 1000, "dateAdded in future should be ignored in favor of last modified");
+
+    let record3 = await store.createRecord(item3GUID);
+
+    ok(record3.dateAdded);
+    // Make sure it's within 24 hours of the right timestamp... This is a little
+    // dodgey but we only really care that it's basically accurate and has the
+    // right day.
+    ok(Math.abs(Date.now() - record3.dateAdded) < 24 * 60 * 60 * 1000);
+
+    let record4 = await store.createRecord(item4GUID);
+    equal(record4.dateAdded, item4LastModified * 1000,
+          "If no dateAdded is provided, lastModified should be used");
+
+    let record5 = await store.createRecord(item5GUID);
+    equal(record5.dateAdded, item5LastModified * 1000,
+          "If no dateAdded is provided, lastModified should be used (even if it's in the future)");
+
+    let item6WBO = JSON.parse(JSON.parse(collection._wbos[item6GUID].payload).ciphertext);
+    ok(!item6WBO.dateAdded,
+       "If we think an item has been modified locally, we don't upload it to the server");
+
+    let record6 = await store.createRecord(item6GUID);
+    equal(record6.dateAdded, item6LastModified * 1000,
+       "We still remember the more accurate dateAdded if we don't upload a record due to local changes");
+    engine.buildWeakReuploadMap = origBuildWeakReuploadMap;
+
+    // Update item2 and try resyncing it.
+    item2.dateAdded = now - 100000;
+    collection.insert(item2GUID, encryptPayload(item2.cleartext), now / 1000 - 50);
+
+
+    // Also, add a local bookmark and make sure it's date added makes it up to the server
+    let bzid = PlacesUtils.bookmarks.insertBookmark(
+      PlacesUtils.bookmarksMenuFolderId, Utils.makeURI("https://bugzilla.mozilla.org/"),
+      PlacesUtils.bookmarks.DEFAULT_INDEX, "Bugzilla");
+
+    let bzguid = await PlacesUtils.promiseItemGuid(bzid);
+
+
+    await sync_engine_and_validate_telem(engine, false);
+
+    let newRecord2 = await store.createRecord(item2GUID);
+    equal(newRecord2.dateAdded, item2.dateAdded, "dateAdded update should work for earlier date");
+
+    let bzWBO = JSON.parse(JSON.parse(collection._wbos[bzguid].payload).ciphertext);
+    ok(bzWBO.dateAdded, "Locally added dateAdded lost");
+
+    let localRecord = await store.createRecord(bzguid);
+    equal(bzWBO.dateAdded, localRecord.dateAdded, "dateAdded should not change during upload");
+
+    item2.dateAdded += 10000;
+    collection.insert(item2GUID, encryptPayload(item2.cleartext), now / 1000 - 10);
+    engine.lastSync = now / 1000 - 20;
+
+    await sync_engine_and_validate_telem(engine, false);
+
+    let newerRecord2 = await store.createRecord(item2GUID);
+    equal(newerRecord2.dateAdded, newRecord2.dateAdded,
+      "dateAdded update should be ignored for later date if we know an earlier one ");
+
+
+
+  } finally {
+    store.wipe();
+    Svc.Prefs.resetBranch("");
+    Service.recordManager.clearCache();
+    await PlacesSyncUtils.bookmarks.reset();
+    await promiseStopServer(server);
+  }
+});
+
 function run_test() {
   initTestLogging("Trace");
   generateNewKeys(Service.collectionKeys);

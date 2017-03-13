@@ -974,8 +974,11 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
     Range ligatureRange(aStart, end);
     ShrinkToLigatureBoundaries(&ligatureRange);
 
-    uint32_t i;
-    for (i = aStart; i < end; ++i) {
+    // We may need to move `i` backwards in the following loop, and re-scan
+    // part of the textrun; we'll use `rescanLimit` so we can tell when that
+    // is happening: if `i < rescanLimit` then we're rescanning.
+    uint32_t rescanLimit = aStart;
+    for (uint32_t i = aStart; i < end; ++i) {
         if (i >= bufferRange.end) {
             // Fetch more spacing and hyphenation data
             uint32_t oldHyphenBufferLength = hyphenBuffer.Length();
@@ -1007,6 +1010,7 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
                         // So, we can correct the wrong candidates that we set
                         // in the previous runs of the loop.
                         if (prevMostRecentWordBoundary < oldHyphenBufferLength) {
+                            rescanLimit = i;
                             i = prevMostRecentWordBoundary - 1;
                             continue;
                         }
@@ -1078,6 +1082,13 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
                     lastCandidateBreakPriority = *aBreakPriority;
                 }
             }
+        }
+
+        // If we're re-scanning part of a word (to re-process potential
+        // hyphenation types) then we don't want to accumulate widths again
+        // for the characters that were already added to `advance`.
+        if (i < rescanLimit) {
+            continue;
         }
 
         gfxFloat charAdvance;

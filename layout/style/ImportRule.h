@@ -22,6 +22,10 @@ namespace mozilla {
 class CSSStyleSheet;
 class StyleSheet;
 
+namespace dom {
+class MediaList;
+}
+
 namespace css {
 
 class ImportRule final : public Rule,
@@ -63,7 +67,7 @@ public:
   uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
   // The XPCOM GetHref is fine, since it never fails.
-  nsMediaList* Media() const { return mMedia; }
+  dom::MediaList* Media() const;
   StyleSheet* GetStyleSheet() const;
 
 private:

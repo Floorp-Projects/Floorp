@@ -24,7 +24,7 @@ info: |
 
 var array = [];
 var callCount = 0;
-var OArray = $.createRealm().global.Array;
+var OArray = $262.createRealm().global.Array;
 var speciesDesc = {
   get: function() {
     callCount += 1;

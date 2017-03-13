@@ -224,6 +224,10 @@ function GeometryEditorHighlighter(highlighterEnv) {
     this.getElement("handler-" + side)
       .addEventListener("mousedown", onMouseDown);
   }
+
+  this.onWillNavigate = this.onWillNavigate.bind(this);
+
+  this.highlighterEnv.on("will-navigate", this.onWillNavigate);
 }
 
 GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
@@ -512,7 +516,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let node = this.currentNode;
     this.markup.scaleRootElement(node, this.ID_CLASS_PREFIX + "root");
 
-    setIgnoreLayoutChanges(false, node.ownerDocument.documentElement);
+    setIgnoreLayoutChanges(false, this.highlighterEnv.document.documentElement);
     return true;
   },
 
@@ -592,8 +596,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
     this.definedProperties.clear();
 
-    setIgnoreLayoutChanges(false,
-      this.currentNode.ownerDocument.documentElement);
+    setIgnoreLayoutChanges(false, this.highlighterEnv.document.documentElement);
   },
 
   hideArrows: function () {
@@ -699,6 +702,12 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
                          : "translate(" + labelCross + " " + labelMain + ")");
     labelEl.removeAttribute("hidden");
     labelTextEl.setTextContent(labelValue);
-  }
+  },
+
+  onWillNavigate({ isTopLevel }) {
+    if (isTopLevel) {
+      this.hide();
+    }
+  },
 });
 exports.GeometryEditorHighlighter = GeometryEditorHighlighter;

@@ -39,7 +39,7 @@ public:
     /**
      * Compute a DOM key name index from aGdkKeyEvent.
      */
-    KeyNameIndex ComputeDOMKeyNameIndex(const GdkEventKey* aGdkKeyEvent);
+    static KeyNameIndex ComputeDOMKeyNameIndex(const GdkEventKey* aGdkKeyEvent);
 
     /**
      * Compute a DOM code name index from aGdkKeyEvent.
@@ -105,6 +105,18 @@ public:
      */
     static bool AreModifiersActive(Modifiers aModifiers,
                                    guint aModifierState);
+
+    /**
+     * Utility function to compute current keyboard modifiers for
+     * WidgetInputEvent
+     */
+    static uint32_t ComputeCurrentKeyModifiers();
+
+    /**
+     * Utility function to covert platform modifier state to keyboard modifiers
+     * of WidgetInputEvent
+     */
+    static uint32_t ComputeKeyModifiers(guint aModifierState);
 
     /**
      * InitInputEvent() initializes the aInputEvent with aModifierState.

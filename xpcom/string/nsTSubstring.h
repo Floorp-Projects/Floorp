@@ -912,7 +912,6 @@ protected:
 
   friend class nsTObsoleteAStringThunk_CharT;
   friend class nsTSubstringTuple_CharT;
-  friend class nsTSubstringSplitter_CharT;
   friend class nsTPromiseFlatString_CharT;
 
   char_type*  mData;
@@ -1175,11 +1174,14 @@ operator>(const nsTSubstring_CharT::base_string_type& aLhs,
 // Use nsTSubstring::Split instead.
 class nsTSubstringSplitter_CharT
 {
+  typedef nsTSubstring_CharT::size_type size_type;
+  typedef nsTSubstring_CharT::char_type char_type;
+
   class nsTSubstringSplit_Iter
   {
   public:
     nsTSubstringSplit_Iter(const nsTSubstringSplitter_CharT& aObj,
-                           nsTSubstring_CharT::size_type aPos)
+                           size_type aPos)
       : mObj(aObj)
       , mPos(aPos)
     {
@@ -1190,7 +1192,7 @@ class nsTSubstringSplitter_CharT
       return mPos != other.mPos;
     }
 
-    const nsTSubstring_CharT& operator*() const;
+    const nsTDependentSubstring_CharT& operator*() const;
 
     const nsTSubstringSplit_Iter& operator++()
     {
@@ -1200,48 +1202,17 @@ class nsTSubstringSplitter_CharT
 
   private:
     const nsTSubstringSplitter_CharT& mObj;
-    nsTSubstring_CharT::size_type mPos;
+    size_type mPos;
   };
 
 private:
-  const nsTSubstring_CharT* mStr;
-  mozilla::UniquePtr<nsTSubstring_CharT[]> mArray;
-  nsTSubstring_CharT::size_type mArraySize;
-  const nsTSubstring_CharT::char_type mDelim;
+  const nsTSubstring_CharT* const mStr;
+  mozilla::UniquePtr<nsTDependentSubstring_CharT[]> mArray;
+  size_type mArraySize;
+  const char_type mDelim;
 
 public:
-  nsTSubstringSplitter_CharT(const nsTSubstring_CharT* aStr,
-                             nsTSubstring_CharT::char_type aDelim)
-    : mStr(aStr)
-    , mArray(nullptr)
-    , mDelim(aDelim)
-  {
-    if (mStr->IsEmpty()) {
-      mArraySize = 0;
-      return;
-    }
-
-    nsTSubstring_CharT::size_type delimCount = mStr->CountChar(aDelim);
-    mArraySize = delimCount + 1;
-    mArray.reset(new nsTSubstring_CharT[mArraySize]);
-
-    size_t seenParts = 0;
-    nsTSubstring_CharT::size_type start = 0;
-    do {
-      MOZ_ASSERT(seenParts < mArraySize);
-      int32_t offset = mStr->FindChar(aDelim, start);
-      if (offset != -1) {
-        nsTSubstring_CharT::size_type length =
-          static_cast<nsTSubstring_CharT::size_type>(offset) - start;
-        mArray[seenParts++].Assign(mStr->Data() + start, length);
-        start = static_cast<nsTSubstring_CharT::size_type>(offset) + 1;
-      } else {
-        // Get the remainder
-        mArray[seenParts++].Assign(mStr->Data() + start, mStr->Length() - start);
-        break;
-      }
-    } while (start < mStr->Length());
-  }
+  nsTSubstringSplitter_CharT(const nsTSubstring_CharT* aStr, char_type aDelim);
 
   nsTSubstringSplit_Iter begin() const
   {
@@ -1253,7 +1224,7 @@ public:
     return nsTSubstringSplit_Iter(*this, mArraySize);
   }
 
-  const nsTSubstring_CharT& Get(const nsTSubstring_CharT::size_type index) const
+  const nsTDependentSubstring_CharT& Get(const size_type index) const
   {
     MOZ_ASSERT(index < mArraySize);
     return mArray[index];

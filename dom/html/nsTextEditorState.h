@@ -15,6 +15,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/dom/HTMLInputElementBinding.h"
+#include "mozilla/dom/Nullable.h"
 
 class nsTextInputListener;
 class nsTextControlFrame;
@@ -27,6 +29,9 @@ class nsITextControlElement;
 class nsFrame;
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 class HTMLInputElement;
 } // namespace dom
@@ -153,7 +158,11 @@ public:
     // something like setRangeText().
     eSetValue_ByContent             = 1 << 1,
     // Whether the value change should be notified to the frame/contet nor not.
-    eSetValue_Notify                = 1 << 2
+    eSetValue_Notify                = 1 << 2,
+    // Whether to move the cursor to end of the value (in the case when we have
+    // cached selection offsets).  If this is not set, the cached selection
+    // offsets will simply be clamped to be within the length of the new value.
+    eSetValue_MoveCursorToEnd       = 1 << 3,
   };
   MOZ_MUST_USE bool SetValue(const nsAString& aValue, uint32_t aFlags);
   void GetValue(nsAString& aValue, bool aIgnoreWrap) const;
@@ -218,20 +227,20 @@ public:
         return mStart == 0 && mEnd == 0 &&
                mDirection == nsITextControlFrame::eForward;
       }
-      int32_t GetStart() const
+      uint32_t GetStart() const
       {
         return mStart;
       }
-      void SetStart(int32_t value)
+      void SetStart(uint32_t value)
       {
         mIsDirty = true;
         mStart = value;
       }
-      int32_t GetEnd() const
+      uint32_t GetEnd() const
       {
         return mEnd;
       }
-      void SetEnd(int32_t value)
+      void SetEnd(uint32_t value)
       {
         mIsDirty = true;
         mEnd = value;
@@ -251,7 +260,7 @@ public:
         return mIsDirty;
       }
     private:
-      int32_t mStart, mEnd;
+      uint32_t mStart, mEnd;
       bool mIsDirty = false;
       nsITextControlFrame::SelectionDirection mDirection;
   };
@@ -261,12 +270,79 @@ public:
   void SetSelectionProperties(SelectionProperties& aProps);
   void WillInitEagerly() { mSelectionRestoreEagerInit = true; }
   bool HasNeverInitializedBefore() const { return !mEverInited; }
+  // Sync up our selection properties with our editor prior to being destroyed.
+  // This will invoke UnbindFromFrame() to ensure that we grab whatever
+  // selection state may be at the moment.
+  void SyncUpSelectionPropertiesBeforeDestruction();
 
   // Get the selection range start and end points in our text.
-  nsresult GetSelectionRange(int32_t* aSelectionStart, int32_t* aSelectionEnd);
+  void GetSelectionRange(uint32_t* aSelectionStart, uint32_t* aSelectionEnd,
+                         mozilla::ErrorResult& aRv);
 
   // Get the selection direction
-  nsresult GetSelectionDirection(nsITextControlFrame::SelectionDirection* aDirection);
+  nsITextControlFrame::SelectionDirection
+    GetSelectionDirection(mozilla::ErrorResult& aRv);
+
+  // Set the selection range (start, end, direction).  aEnd is allowed to be
+  // smaller than aStart; in that case aStart will be reset to the same value as
+  // aEnd.  This basically implements
+  // https://html.spec.whatwg.org/multipage/forms.html#set-the-selection-range
+  // but with the start/end already coerced to zero if null (and without the
+  // special infinity value), and the direction already converted to a
+  // SelectionDirection.
+  //
+  // If we have a frame, this method will scroll the selection into view.
+  //
+  // XXXbz This should really take uint32_t, but none of our guts (either the
+  // frame or our cached selection state) work with uint32_t at the moment...
+  void SetSelectionRange(uint32_t aStart, uint32_t aEnd,
+                         nsITextControlFrame::SelectionDirection aDirection,
+                         mozilla::ErrorResult& aRv);
+
+  // Set the selection range, but with an optional string for the direction.
+  // This will convert aDirection to an nsITextControlFrame::SelectionDirection
+  // and then call our other SetSelectionRange overload.
+  void SetSelectionRange(uint32_t aSelectionStart,
+                         uint32_t aSelectionEnd,
+                         const mozilla::dom::Optional<nsAString>& aDirection,
+                         mozilla::ErrorResult& aRv);
+
+  // Set the selection start.  This basically implements the
+  // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectionstart
+  // setter.
+  void SetSelectionStart(const mozilla::dom::Nullable<uint32_t>& aStart,
+                         mozilla::ErrorResult& aRv);
+
+  // Set the selection end.  This basically implements the
+  // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectionend
+  // setter.
+  void SetSelectionEnd(const mozilla::dom::Nullable<uint32_t>& aEnd,
+                       mozilla::ErrorResult& aRv);
+
+  // Get the selection direction as a string.  This implements the
+  // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectiondirection
+  // getter.
+  void GetSelectionDirectionString(nsAString& aDirection,
+                                   mozilla::ErrorResult& aRv);
+
+  // Set the selection direction.  This basically implements the
+  // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectiondirection
+  // setter.
+  void SetSelectionDirection(const nsAString& aDirection,
+                             mozilla::ErrorResult& aRv);
+
+  // Set the range text.  This basically implements
+  // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-setrangetext
+  void SetRangeText(const nsAString& aReplacement, mozilla::ErrorResult& aRv);
+  // The last two arguments are -1 if we don't know our selection range;
+  // otherwise they're the start and end of our selection range.
+  void SetRangeText(const nsAString& aReplacement, uint32_t aStart,
+                    uint32_t aEnd, mozilla::dom::SelectionMode aSelectMode,
+                    mozilla::ErrorResult& aRv,
+                    const mozilla::Maybe<uint32_t>& aSelectionStart =
+                      mozilla::Nothing(),
+                    const mozilla::Maybe<uint32_t>& aSelectionEnd =
+                      mozilla::Nothing());
 
   void UpdateEditableState(bool aNotify) {
     if (mRootNode) {
@@ -326,6 +402,7 @@ private:
   // The text control element owns this object, and ensures that this object
   // has a smaller lifetime.
   nsITextControlElement* const MOZ_NON_OWNING_REF mTextCtrlElement;
+  // mSelCon is non-null while we have an mBoundFrame.
   RefPtr<nsTextInputSelectionImpl> mSelCon;
   RefPtr<RestoreSelectionState> mRestoringSelection;
   nsCOMPtr<nsIEditor> mEditor;

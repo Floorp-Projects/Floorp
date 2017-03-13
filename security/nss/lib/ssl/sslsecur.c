@@ -478,7 +478,7 @@ sslBuffer_Append(sslBuffer *b, const void *data, unsigned int len)
 void
 sslBuffer_Clear(sslBuffer *b)
 {
-    if (b->len > 0) {
+    if (b->buf) {
         PORT_Free(b->buf);
         b->buf = NULL;
         b->len = 0;

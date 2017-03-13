@@ -42,10 +42,7 @@ add_task(function* invalid_input_throws() {
   Assert.throws(() => PlacesUtils.bookmarks.insert({ lastModified: Date.now() }),
                 /Invalid value for property 'lastModified'/);
   let time = new Date();
-  let future = new Date(time + 86400000);
-  Assert.throws(() => PlacesUtils.bookmarks.insert({ dateAdded: future,
-                                                     lastModified: time }),
-                /Invalid value for property 'dateAdded'/);
+
   let past = new Date(time - 86400000);
   Assert.throws(() => PlacesUtils.bookmarks.insert({ lastModified: past }),
                 /Invalid value for property 'lastModified'/);
