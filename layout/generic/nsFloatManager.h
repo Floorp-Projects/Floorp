@@ -382,13 +382,13 @@ private:
       const nsSize& aContainerSize);
 
     static mozilla::UniquePtr<ShapeInfo> CreateInset(
-      mozilla::StyleBasicShape* const aBasicShape,
+      const mozilla::StyleBasicShape* aBasicShape,
       const mozilla::LogicalRect& aShapeBoxRect,
       mozilla::WritingMode aWM,
       const nsSize& aContainerSize);
 
     static mozilla::UniquePtr<ShapeInfo> CreateCircleOrEllipse(
-      mozilla::StyleBasicShape* const aBasicShape,
+      const mozilla::StyleBasicShape* aBasicShape,
       const mozilla::LogicalRect& aShapeBoxRect,
       mozilla::WritingMode aWM,
       const nsSize& aContainerSize);
