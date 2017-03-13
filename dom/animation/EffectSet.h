@@ -195,6 +195,10 @@ public:
   {
     return mPropertiesForAnimationsLevel;
   }
+  nsCSSPropertyIDSet PropertiesForAnimationsLevel() const
+  {
+    return mPropertiesForAnimationsLevel;
+  }
 
 private:
   static nsIAtom* GetEffectSetPropertyAtom(CSSPseudoElementType aPseudoType);
