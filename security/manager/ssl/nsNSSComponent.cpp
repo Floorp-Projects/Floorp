@@ -197,7 +197,6 @@ nsNSSComponent::~nsNSSComponent()
   SharedSSLState::GlobalCleanup();
   RememberCertErrorsTable::Cleanup();
   --mInstanceCount;
-  nsNSSShutDownList::shutdown();
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::dtor finished\n"));
 }
@@ -1809,7 +1808,7 @@ nsNSSComponent::ShutdownNSS()
     Unused << SSL_ShutdownServerSessionIDCache();
 
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("evaporating psm resources"));
-    if (NS_FAILED(nsNSSShutDownList::evaporateAllNSSResources())) {
+    if (NS_FAILED(nsNSSShutDownList::evaporateAllNSSResourcesAndShutDown())) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("failed to evaporate resources"));
       return;
     }
