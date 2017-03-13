@@ -325,7 +325,8 @@ class StartRequestEvent : public ChannelEvent
                     const NetAddr& aSelfAddr,
                     const NetAddr& aPeerAddr,
                     const uint32_t& aCacheKey,
-                    const nsCString& altDataType)
+                    const nsCString& altDataType,
+                    const int64_t& altDataLen)
   : mChild(aChild)
   , mChannelStatus(aChannelStatus)
   , mResponseHead(aResponseHead)
@@ -340,6 +341,7 @@ class StartRequestEvent : public ChannelEvent
   , mPeerAddr(aPeerAddr)
   , mCacheKey(aCacheKey)
   , mAltDataType(altDataType)
+  , mAltDataLen(altDataLen)
   {}
 
   void Run()
@@ -349,7 +351,7 @@ class StartRequestEvent : public ChannelEvent
                            mRequestHeaders, mIsFromCache, mCacheEntryAvailable,
                            mCacheExpirationTime, mCachedCharset,
                            mSecurityInfoSerialization, mSelfAddr, mPeerAddr,
-                           mCacheKey, mAltDataType);
+                           mCacheKey, mAltDataType, mAltDataLen);
   }
  private:
   HttpChannelChild* mChild;
@@ -366,6 +368,7 @@ class StartRequestEvent : public ChannelEvent
   NetAddr mPeerAddr;
   uint32_t mCacheKey;
   nsCString mAltDataType;
+  int64_t mAltDataLen;
 };
 
 mozilla::ipc::IPCResult
@@ -382,7 +385,8 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                      const NetAddr& peerAddr,
                                      const int16_t& redirectCount,
                                      const uint32_t& cacheKey,
-                                     const nsCString& altDataType)
+                                     const nsCString& altDataType,
+                                     const int64_t& altDataLen)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -402,7 +406,7 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                               cachedCharset,
                                               securityInfoSerialization,
                                               selfAddr, peerAddr, cacheKey,
-                                              altDataType));
+                                              altDataType, altDataLen));
   return IPC_OK();
 }
 
@@ -419,7 +423,8 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
                                  const NetAddr& selfAddr,
                                  const NetAddr& peerAddr,
                                  const uint32_t& cacheKey,
-                                 const nsCString& altDataType)
+                                 const nsCString& altDataType,
+                                 const int64_t& altDataLen)
 {
   LOG(("HttpChannelChild::OnStartRequest [this=%p]\n", this));
 
@@ -450,6 +455,7 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
   mPeerAddr = peerAddr;
 
   mAvailableCachedAltDataType = altDataType;
+  mAltDataLength = altDataLen;
 
   mAfterOnStartRequestBegun = true;
 
