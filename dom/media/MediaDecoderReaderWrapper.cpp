@@ -148,7 +148,7 @@ MediaDecoderReaderWrapper::SetVideoBlankDecode(bool aIsBlankDecode)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod<bool>(mReader, &MediaDecoderReader::SetVideoNullDecode,
+    NewRunnableMethod<bool>(mReader, &MediaDecoderReader::SetVideoBlankDecode,
                             aIsBlankDecode);
   mReader->OwnerThread()->Dispatch(r.forget());
 }

@@ -400,10 +400,7 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
     VSINK_LOG_V("playing video frame %" PRId64 " (id=%x) (vq-queued=%" PRIuSIZE ")",
                 frame->mTime, frame->mFrameID, VideoQueue().GetSize());
   }
-
-  if (images.Length() > 0) {
-    mContainer->SetCurrentFrames(frames[0]->As<VideoData>()->mDisplay, images);
-  }
+  mContainer->SetCurrentFrames(frames[0]->As<VideoData>()->mDisplay, images);
 }
 
 void
