@@ -84,6 +84,10 @@ toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-menubutt
   font-size: 13px;
 }
 
+#PanelUI-remotetabs[mainview] .PanelUI-remotetabs-notabsforclient-label {
+  margin-left: 23px;
+}
+
 #PanelUI-remotetabs-tabslist {
   padding-bottom: 4px;
 }
