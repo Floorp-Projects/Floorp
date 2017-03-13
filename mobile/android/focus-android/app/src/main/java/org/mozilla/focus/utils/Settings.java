@@ -34,4 +34,10 @@ public class Settings {
     public boolean shouldShowFirstrun() {
         return !preferences.getBoolean(FirstrunFragment.FIRSTRUN_PREF, false);
     }
+
+    public boolean shouldUseSecureMode() {
+        return preferences.getBoolean(
+                resources.getString(R.string.pref_key_secure),
+                true);
+    }
 }

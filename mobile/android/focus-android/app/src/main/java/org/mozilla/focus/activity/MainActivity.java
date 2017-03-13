@@ -6,7 +6,6 @@
 package org.mozilla.focus.activity;
 
 import android.annotation.SuppressLint;
-import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -15,9 +14,8 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
-import android.widget.LinearLayout;
+import android.view.WindowManager;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
@@ -61,6 +59,10 @@ public class MainActivity extends AppCompatActivity {
         WebViewProvider.preload(this);
 
         PreferenceManager.setDefaultValues(this, R.xml.settings, false);
+
+        if (appSettings.shouldUseSecureMode()) {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        }
     }
 
     @Override
