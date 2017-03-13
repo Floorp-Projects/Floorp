@@ -2,4 +2,6 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yi{
     Version{"2.1.27.97"}
+    zoneStrings{
+    }
 }
