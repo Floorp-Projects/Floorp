@@ -15,6 +15,15 @@
 #error Internal string headers are not available from external-linkage code.
 #endif
 
+namespace mozilla {
+namespace detail {
+
+class nsStringRepr;
+class nsCStringRepr;
+
+} // namespace detail
+} // namespace mozilla
+
 /**
  * double-byte (char16_t) string types
  */
