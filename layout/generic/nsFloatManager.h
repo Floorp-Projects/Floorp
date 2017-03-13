@@ -348,11 +348,9 @@ private:
   public:
     virtual ~ShapeInfo() {}
 
-    virtual nscoord LineLeft(mozilla::WritingMode aWM,
-                             const nscoord aBStart,
+    virtual nscoord LineLeft(const nscoord aBStart,
                              const nscoord aBEnd) const = 0;
-    virtual nscoord LineRight(mozilla::WritingMode aWM,
-                              const nscoord aBStart,
+    virtual nscoord LineRight(const nscoord aBStart,
                               const nscoord aBEnd) const = 0;
     virtual nscoord BStart() const = 0;
     virtual nscoord BEnd() const = 0;
@@ -436,11 +434,9 @@ private:
       , mRadii(Move(aRadii))
     {}
 
-    nscoord LineLeft(mozilla::WritingMode aWM,
-                     const nscoord aBStart,
+    nscoord LineLeft(const nscoord aBStart,
                      const nscoord aBEnd) const override;
-    nscoord LineRight(mozilla::WritingMode aWM,
-                      const nscoord aBStart,
+    nscoord LineRight(const nscoord aBStart,
                       const nscoord aBEnd) const override;
     nscoord BStart() const override { return mRect.y; }
     nscoord BEnd() const override { return mRect.YMost(); }
@@ -471,11 +467,9 @@ private:
       , mRadii(aRadii)
     {}
 
-    nscoord LineLeft(mozilla::WritingMode aWM,
-                     const nscoord aBStart,
+    nscoord LineLeft(const nscoord aBStart,
                      const nscoord aBEnd) const override;
-    nscoord LineRight(mozilla::WritingMode aWM,
-                      const nscoord aBStart,
+    nscoord LineRight(const nscoord aBStart,
                       const nscoord aBEnd) const override;
     nscoord BStart() const override { return mCenter.y - mRadii.height; }
     nscoord BEnd() const override { return mCenter.y + mRadii.height; }
@@ -516,9 +510,9 @@ private:
     // aBStart and aBEnd are the starting and ending coordinate of a band.
     // LineLeft() and LineRight() return the innermost line-left extent and
     // line-right extent within the given band, respectively.
-    nscoord LineLeft(mozilla::WritingMode aWM, ShapeType aShapeType,
+    nscoord LineLeft(ShapeType aShapeType,
                      const nscoord aBStart, const nscoord aBEnd) const;
-    nscoord LineRight(mozilla::WritingMode aWM, ShapeType aShapeType,
+    nscoord LineRight(ShapeType aShapeType,
                       const nscoord aBStart, const nscoord aBEnd) const;
     nscoord BStart(ShapeType aShapeType) const;
     nscoord BEnd(ShapeType aShapeType) const;

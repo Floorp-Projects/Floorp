@@ -223,7 +223,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
       if (floatStyle == StyleFloat::Left) {
         // A left float
         nscoord lineRightEdge =
-          fi.LineRight(aWM, aShapeType, blockStart, bandBlockEnd);
+          fi.LineRight(aShapeType, blockStart, bandBlockEnd);
         if (lineRightEdge > lineLeft) {
           lineLeft = lineRightEdge;
           // Only set haveFloats to true if the float is inside our
@@ -235,7 +235,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
       } else {
         // A right float
         nscoord lineLeftEdge =
-          fi.LineLeft(aWM, aShapeType, blockStart, bandBlockEnd);
+          fi.LineLeft(aShapeType, blockStart, bandBlockEnd);
         if (lineLeftEdge < lineRight) {
           lineRight = lineLeftEdge;
           // See above.
@@ -532,8 +532,7 @@ nsFloatManager::ClearContinues(StyleClear aBreakType) const
 // RoundedBoxShapeInfo
 
 nscoord
-nsFloatManager::RoundedBoxShapeInfo::LineLeft(WritingMode aWM,
-                                              const nscoord aBStart,
+nsFloatManager::RoundedBoxShapeInfo::LineLeft(const nscoord aBStart,
                                               const nscoord aBEnd) const
 {
   if (!mRadii) {
@@ -550,8 +549,7 @@ nsFloatManager::RoundedBoxShapeInfo::LineLeft(WritingMode aWM,
 }
 
 nscoord
-nsFloatManager::RoundedBoxShapeInfo::LineRight(WritingMode aWM,
-                                               const nscoord aBStart,
+nsFloatManager::RoundedBoxShapeInfo::LineRight(const nscoord aBStart,
                                                const nscoord aBEnd) const
 {
   if (!mRadii) {
@@ -570,8 +568,7 @@ nsFloatManager::RoundedBoxShapeInfo::LineRight(WritingMode aWM,
 /////////////////////////////////////////////////////////////////////////////
 // EllipseShapeInfo
 nscoord
-nsFloatManager::EllipseShapeInfo::LineLeft(WritingMode aWM,
-                                           const nscoord aBStart,
+nsFloatManager::EllipseShapeInfo::LineLeft(const nscoord aBStart,
                                            const nscoord aBEnd) const
 {
   nscoord lineLeftDiff =
@@ -583,8 +580,7 @@ nsFloatManager::EllipseShapeInfo::LineLeft(WritingMode aWM,
 }
 
 nscoord
-nsFloatManager::EllipseShapeInfo::LineRight(WritingMode aWM,
-                                            const nscoord aBStart,
+nsFloatManager::EllipseShapeInfo::LineRight(const nscoord aBStart,
                                             const nscoord aBEnd) const
 {
   nscoord lineRightDiff =
@@ -677,8 +673,7 @@ nsFloatManager::FloatInfo::~FloatInfo()
 #endif
 
 nscoord
-nsFloatManager::FloatInfo::LineLeft(WritingMode aWM,
-                                    ShapeType aShapeType,
+nsFloatManager::FloatInfo::LineLeft(ShapeType aShapeType,
                                     const nscoord aBStart,
                                     const nscoord aBEnd) const
 {
@@ -694,12 +689,11 @@ nsFloatManager::FloatInfo::LineLeft(WritingMode aWM,
   // https://drafts.csswg.org/css-shapes-1/#relation-to-box-model-and-float-behavior
   // says "When a shape is used to define a float area, the shape is clipped
   // to the float’s margin box."
-  return std::max(LineLeft(), mShapeInfo->LineLeft(aWM, aBStart, aBEnd));
+  return std::max(LineLeft(), mShapeInfo->LineLeft(aBStart, aBEnd));
 }
 
 nscoord
-nsFloatManager::FloatInfo::LineRight(WritingMode aWM,
-                                     ShapeType aShapeType,
+nsFloatManager::FloatInfo::LineRight(ShapeType aShapeType,
                                      const nscoord aBStart,
                                      const nscoord aBEnd) const
 {
@@ -712,7 +706,7 @@ nsFloatManager::FloatInfo::LineRight(WritingMode aWM,
     return LineRight();
   }
   // Clip the flow area to the margin-box. See LineLeft().
-  return std::min(LineRight(), mShapeInfo->LineRight(aWM, aBStart, aBEnd));
+  return std::min(LineRight(), mShapeInfo->LineRight(aBStart, aBEnd));
 }
 
 nscoord
