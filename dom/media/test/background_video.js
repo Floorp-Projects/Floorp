@@ -34,10 +34,10 @@ function appendVideoToDoc(url, token, width, height) {
 
 /**
  * @param {HTMLMediaElement} video Video element under test.
- * @returns {Promise} Promise that is resolved when video 'playing' event fires.
+ * @returns {Promise} Promise that is resolved when video 'playing' event fires and rejected on error.
  */
 function waitUntilPlaying(video) {
-  var p = once(video, 'playing', () => { ok(true, `${video.token} played.`); });
+  var p = once(video, 'playing', () => { ok(true, video.token + " played."); });
   Log(video.token, "Start playing");
   video.play();
   return p;
@@ -54,21 +54,7 @@ function waitUntilEnded(video) {
     return Promise.resolve();
   }
 
-  return once(video, 'ended', () => { ok(true, `${video.token} ended`); });
-}
-
-/**
- * @param {HTMLMediaElement} video Video element under test.
- * @returns {Promise} Promise that is resolved when video decode starts
- *                    suspend timer.
- */
-function testSuspendTimerStartedWhenHidden(video) {
-  var p = once(video, 'mozstartvideosuspendtimer').then(() => {
-    ok(true, `${video.token} suspend begins`)
-  });
-  Log(video.token, 'Set Hidden');
-  video.setVisible(false);
-  return p;
+  return once(video, 'ended', () => { ok(true, video.token + " ended"); });
 }
 
 /**
@@ -77,7 +63,7 @@ function testSuspendTimerStartedWhenHidden(video) {
  */
 function testVideoSuspendsWhenHidden(video) {
   let p = once(video, 'mozentervideosuspend').then(() => {
-    ok(true, `${video.token} suspends`);
+    ok(true, video.token + " suspends");
   });
   Log(video.token, "Set hidden");
   video.setVisible(false);
@@ -90,7 +76,7 @@ function testVideoSuspendsWhenHidden(video) {
  */
 function testVideoResumesWhenShown(video) {
   var p  = once(video, 'mozexitvideosuspend').then(() => {
-    ok(true, `${video.token} resumes`);
+    ok(true, video.token + " resumes");
   });
   Log(video.token, "Set visible");
   video.setVisible(true);
@@ -103,8 +89,8 @@ function testVideoResumesWhenShown(video) {
  */
 function checkVideoDoesntSuspend(video) {
   let p = Promise.race([
-    waitUntilEnded(video).then(() => { ok(true, `${video.token} ended before decode was suspended`)}),
-    once(video, 'mozentervideosuspend', () => { Promise.reject(new Error(`${video.token} suspended`)) })
+    waitUntilEnded(video).then(() => { ok(true, video.token + ' ended before decode was suspended')}),
+    once(video, 'mozentervideosuspend', () => { Promise.reject(new Error(video.token + ' suspended')) })
   ]);
   Log(video.token, "Set hidden.");
   video.setVisible(false);
@@ -117,7 +103,7 @@ function checkVideoDoesntSuspend(video) {
  * @returns {Promise} Promise that is resolved once currentTime passes time.
  */
 function waitTil(video, time) {
-  Log(video.token, `Waiting for time to reach ${time}s`);
+  Log(video.token, "Waiting for time to reach " + time + "s");
   return new Promise(resolve => {
     video.addEventListener('timeupdate', function timeUpdateEvent() {
       if (video.currentTime > time) {

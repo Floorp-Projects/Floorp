@@ -765,19 +765,11 @@ public:
 
   void HandleVideoSuspendTimeout() override
   {
-    // No video, so nothing to suspend.
-    if (!mMaster->HasVideo()) {
-      return;
+    if (mMaster->HasVideo()) {
+      mMaster->mVideoDecodeSuspended = true;
+      mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
+      Reader()->SetVideoBlankDecode(true);
     }
-
-    // The decoder is tainted, so suspend-video-decoder is disabled.
-    if (mMaster->mHasSuspendTaint) {
-      return;
-    }
-
-    mMaster->mVideoDecodeSuspended = true;
-    mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
-    Reader()->SetVideoBlankDecode(true);
   }
 
   void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) override
@@ -1766,19 +1758,11 @@ public:
 
   void HandleVideoSuspendTimeout() override
   {
-    // No video, so nothing to suspend.
-     if (!mMaster->HasVideo()) {
-       return;
-     }
-
-     // The decoder is tainted, so nothing to suspend.
-     if (mMaster->mHasSuspendTaint) {
-       return;
-     }
-
-    mMaster->mVideoDecodeSuspended = true;
-    mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
-    Reader()->SetVideoBlankDecode(true);
+    if (mMaster->HasVideo()) {
+      mMaster->mVideoDecodeSuspended = true;
+      mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
+      Reader()->SetVideoBlankDecode(true);
+    }
   }
 
 private:
@@ -2520,7 +2504,7 @@ ShutdownState::Enter()
 
   // Shutdown happens while decode timer is active, we need to disconnect and
   // dispose of the timer.
-  master->CancelSuspendTimer();
+  master->mVideoDecodeSuspendTimer.Reset();
 
   master->mCDMProxyPromise.DisconnectIfExists();
 
@@ -2557,7 +2541,6 @@ ShutdownState::Enter()
   master->mPlaybackRateReliable.DisconnectIfConnected();
   master->mDecoderPosition.DisconnectIfConnected();
   master->mIsVisible.DisconnectIfConnected();
-  master->mHasSuspendTaint.DisconnectIfConnected();
 
   master->mDuration.DisconnectAll();
   master->mIsShutdown.DisconnectAll();
@@ -2625,7 +2608,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   INIT_MIRROR(mPlaybackRateReliable, true),
   INIT_MIRROR(mDecoderPosition, 0),
   INIT_MIRROR(mIsVisible, true),
-  INIT_MIRROR(mHasSuspendTaint, false),
   INIT_CANONICAL(mDuration, NullableTimeUnit()),
   INIT_CANONICAL(mIsShutdown, false),
   INIT_CANONICAL(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE),
@@ -2697,11 +2679,8 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
 
   if (MediaPrefs::MDSMSuspendBackgroundVideoEnabled()) {
     mIsVisible.Connect(aDecoder->CanonicalIsVisible());
-    mHasSuspendTaint.Connect(aDecoder->CanonicalHasSuspendTaint());
     mWatchManager.Watch(mIsVisible,
                         &MediaDecoderStateMachine::VisibilityChanged);
-    mWatchManager.Watch(mHasSuspendTaint,
-                        &MediaDecoderStateMachine::SuspendTaintChanged);
   }
 
   MOZ_ASSERT(!mStateObj);
@@ -3016,7 +2995,7 @@ void MediaDecoderStateMachine::PlayStateChanged()
   MOZ_ASSERT(OnTaskQueue());
 
   if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING) {
-    CancelSuspendTimer();
+    mVideoDecodeSuspendTimer.Reset();
   } else if (mMinimizePreroll) {
     // Once we start playing, we don't want to minimize our prerolling, as we
     // assume the user is likely to want to keep playing in future. This needs
@@ -3040,29 +3019,15 @@ void MediaDecoderStateMachine::VisibilityChanged()
     RefPtr<MediaDecoderStateMachine> self = this;
     mVideoDecodeSuspendTimer.Ensure(target,
                                     [=]() { self->OnSuspendTimerResolved(); },
-                                    [] () { MOZ_DIAGNOSTIC_ASSERT(false); });
-    mOnPlaybackEvent.Notify(MediaEventType::StartVideoSuspendTimer);
+                                    [=]() { self->OnSuspendTimerRejected(); });
     return;
   }
 
   // Resuming from suspended decoding
 
   // If suspend timer exists, destroy it.
-  CancelSuspendTimer();
+  mVideoDecodeSuspendTimer.Reset();
 
-  if (mVideoDecodeSuspended) {
-    mStateObj->HandleResumeVideoDecoding();
-  }
-}
-
-void MediaDecoderStateMachine::SuspendTaintChanged()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mHasSuspendTaint); // Suspend taint is only ever set.
-
-  CancelSuspendTimer();
-
-  // Resume from suspended decoding.
   if (mVideoDecodeSuspended) {
     mStateObj->HandleResumeVideoDecoding();
   }
@@ -3925,16 +3890,12 @@ MediaDecoderStateMachine::OnSuspendTimerResolved()
 }
 
 void
-MediaDecoderStateMachine::CancelSuspendTimer()
+MediaDecoderStateMachine::OnSuspendTimerRejected()
 {
-  DECODER_LOG("CancelSuspendTimer: State: %s, Timer.IsScheduled: %c",
-              ToStateStr(mStateObj->GetState()),
-              mVideoDecodeSuspendTimer.IsScheduled() ? 'T' : 'F');
+  DECODER_LOG("OnSuspendTimerRejected");
   MOZ_ASSERT(OnTaskQueue());
-  if (mVideoDecodeSuspendTimer.IsScheduled()) {
-    mOnPlaybackEvent.Notify(MediaEventType::CancelVideoSuspendTimer);
-  }
-  mVideoDecodeSuspendTimer.Reset();
+  MOZ_ASSERT(!mVideoDecodeSuspended);
+  mVideoDecodeSuspendTimer.CompleteRequest();
 }
 
 } // namespace mozilla

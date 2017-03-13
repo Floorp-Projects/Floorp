@@ -122,9 +122,7 @@ enum class MediaEventType : int8_t
   SeekStarted,
   Invalidate,
   EnterVideoSuspend,
-  ExitVideoSuspend,
-  StartVideoSuspendTimer,
-  CancelVideoSuspendTimer
+  ExitVideoSuspend
 };
 
 /*
@@ -396,9 +394,6 @@ protected:
   // Notification method invoked when mIsVisible changes.
   void VisibilityChanged();
 
-  // Notification method invoked when mHasSuspendTaint changes.
-  void SuspendTaintChanged();
-
   // Sets internal state which causes playback of media to pause.
   // The decoder monitor must be held.
   void StopPlayback();
@@ -616,7 +611,7 @@ private:
   const char* VideoRequestStatus() const;
 
   void OnSuspendTimerResolved();
-  void CancelSuspendTimer();
+  void OnSuspendTimerRejected();
 
   // True if we shouldn't play our audio (but still write it to any capturing
   // streams). When this is true, the audio thread will never start again after
@@ -742,9 +737,6 @@ private:
 
   // IsVisible, mirrored from the media decoder.
   Mirror<bool> mIsVisible;
-
-  // HasSuspendTaint, mirrored from the media decoder.
-  Mirror<bool> mHasSuspendTaint;
 
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.
