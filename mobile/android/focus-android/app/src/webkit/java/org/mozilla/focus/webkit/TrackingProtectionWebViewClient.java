@@ -126,4 +126,18 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
 
         super.onReceivedError(webView, errorCode, description, failingUrl);
     }
+
+    @Override
+    public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+        handler.cancel();
+
+        // Webkit can try to load the favicon for a bad page when you set a new URL. If we then
+        // loadErrorPage() again, webkit tries to load the favicon again. We end up in onReceivedSSlError()
+        // again, and we get an infinite loop of reloads (we also erroneously show the favicon URL
+        // in the toolbar, but that's less noticeable). Hence we check whether this error is from
+        // the desired page, or a page resource:
+        if (error.getUrl().equals(currentPageURL)) {
+            ErrorPage.loadErrorPage(view, error.getUrl(), WebViewClient.ERROR_FAILED_SSL_HANDSHAKE);
+        }
+    }
 }
