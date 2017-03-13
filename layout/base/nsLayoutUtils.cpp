@@ -4018,13 +4018,16 @@ struct MOZ_RAII BoxToRectAndText : public BoxToRect {
     if (aFrame->GetType() == nsGkAtoms::textFrame) {
       nsTextFrame* textFrame = static_cast<nsTextFrame*>(aFrame);
 
-      nsIFrame::RenderedText renderedText = textFrame->GetRenderedText(
-        textFrame->GetContentOffset(),
-        textFrame->GetContentOffset() + textFrame->GetContentLength(),
-        nsIFrame::TextOffsetType::OFFSETS_IN_CONTENT_TEXT,
-        nsIFrame::TrailingWhitespace::DONT_TRIM_TRAILING_WHITESPACE);
+      nsIContent* content = textFrame->GetContent();
+      nsAutoString textContent;
+      mozilla::ErrorResult err; // ignored
+      content->GetTextContent(textContent, err);
 
-      aResult.Append(renderedText.mString);
+      const nsAString& textSubstring =
+        Substring(textContent,
+                  textFrame->GetContentOffset(),
+                  textFrame->GetContentLength());
+      aResult.Append(textSubstring);
     }
 
     for (nsIFrame* child = aFrame->PrincipalChildList().FirstChild();
