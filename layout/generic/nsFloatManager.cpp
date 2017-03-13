@@ -8,6 +8,7 @@
 #include "nsFloatManager.h"
 
 #include <algorithm>
+#include <initializer_list>
 
 #include "mozilla/ReflowInput.h"
 #include "mozilla/ShapeUtils.h"
@@ -567,6 +568,7 @@ nsFloatManager::RoundedBoxShapeInfo::LineRight(const nscoord aBStart,
 
 /////////////////////////////////////////////////////////////////////////////
 // EllipseShapeInfo
+
 nscoord
 nsFloatManager::EllipseShapeInfo::LineLeft(const nscoord aBStart,
                                            const nscoord aBEnd) const
@@ -589,6 +591,169 @@ nsFloatManager::EllipseShapeInfo::LineRight(const nscoord aBStart,
                                     mRadii.width, mRadii.height,
                                     aBStart, aBEnd);
   return mCenter.x + mRadii.width - lineRightDiff;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PolygonShapeInfo
+
+nsFloatManager::PolygonShapeInfo::PolygonShapeInfo(nsTArray<nsPoint>&& aVertices)
+  : mVertices(aVertices)
+{
+  // Polygons with fewer than three vertices result in an empty area.
+  // https://drafts.csswg.org/css-shapes/#funcdef-polygon
+  if (mVertices.Length() < 3) {
+    mEmpty = true;
+    return;
+  }
+
+  auto Determinant = [] (const nsPoint& aP0, const nsPoint& aP1) {
+    // Returns the determinant of the 2x2 matrix [aP0 aP1].
+    // https://en.wikipedia.org/wiki/Determinant#2_.C3.97_2_matrices
+    return aP0.x * aP1.y - aP0.y * aP1.x;
+  };
+
+  // See if we have any vertices that are non-collinear with the first two.
+  // (If a polygon's vertices are all collinear, it encloses no area.)
+  bool isEntirelyCollinear = true;
+  const nsPoint& p0 = mVertices[0];
+  const nsPoint& p1 = mVertices[1];
+  for (size_t i = 2; i < mVertices.Length(); ++i) {
+    const nsPoint& p2 = mVertices[i];
+
+    // If the determinant of the matrix formed by two points is 0, that
+    // means they're collinear with respect to the origin. Here, if it's
+    // nonzero, then p1 and p2 are non-collinear with respect to p0, i.e.
+    // the three points are non-collinear.
+    if (Determinant(p2 - p0, p1 - p0) != 0) {
+      isEntirelyCollinear = false;
+      break;
+    }
+  }
+
+  if (isEntirelyCollinear) {
+    mEmpty = true;
+    return;
+  }
+
+  // mBStart and mBEnd are the lower and the upper bounds of all the
+  // vertex.y, respectively. The vertex.y is actually on the block-axis of
+  // the float manager's writing mode.
+  for (const nsPoint& vertex : mVertices) {
+    mBStart = std::min(mBStart, vertex.y);
+    mBEnd = std::max(mBEnd, vertex.y);
+  }
+}
+
+nscoord
+nsFloatManager::PolygonShapeInfo::LineLeft(const nscoord aBStart,
+                                           const nscoord aBEnd) const
+{
+  MOZ_ASSERT(!mEmpty, "Shouldn't be called if the polygon encloses no area.");
+
+  // We want the line-left-most inline-axis coordinate where the
+  // (block-axis) aBStart/aBEnd band crosses a line segment of the polygon.
+  // To get that, we start as line-right as possible (at nscoord_MAX). Then
+  // we iterate each line segment to compute its intersection point with the
+  // band (if any) and using std::min() successively to get the smallest
+  // inline-coordinates among those intersection points.
+  //
+  // Note: std::min<nscoord> means the function std::min() with template
+  // parameter nscoord, not the minimum value of nscoord.
+  return ComputeLineIntercept(aBStart, aBEnd, std::min<nscoord>, nscoord_MAX);
+}
+
+nscoord
+nsFloatManager::PolygonShapeInfo::LineRight(const nscoord aBStart,
+                                            const nscoord aBEnd) const
+{
+  MOZ_ASSERT(!mEmpty, "Shouldn't be called if the polygon encloses no area.");
+
+  // Similar to LineLeft(). Though here, we want the line-right-most
+  // inline-axis coordinate, so we instead start at nscoord_MIN and use
+  // std::max() to get the biggest inline-coordinate among those
+  // intersection points.
+  return ComputeLineIntercept(aBStart, aBEnd, std::max<nscoord>, nscoord_MIN);
+}
+
+nscoord
+nsFloatManager::PolygonShapeInfo::ComputeLineIntercept(
+  const nscoord aBStart,
+  const nscoord aBEnd,
+  nscoord (*aCompareOp) (std::initializer_list<nscoord>),
+  const nscoord aLineInterceptInitialValue) const
+{
+  MOZ_ASSERT(aBStart <= aBEnd,
+             "The band's block start is greater than its block end?");
+
+  const size_t len = mVertices.Length();
+  nscoord lineIntercept = aLineInterceptInitialValue;
+
+  // Iterate each line segment {p0, p1}, {p1, p2}, ..., {pn, p0}.
+  for (size_t i = 0; i < len; ++i) {
+    const nsPoint* smallYVertex = &mVertices[i];
+    const nsPoint* bigYVertex = &mVertices[(i + 1) % len];
+
+    // Swap the two points to satisfy the requirement for calling
+    // XInterceptAtY.
+    if (smallYVertex->y > bigYVertex->y) {
+      std::swap(smallYVertex, bigYVertex);
+    }
+
+    if (aBStart >= bigYVertex->y || aBEnd <= smallYVertex->y ||
+        smallYVertex->y == bigYVertex->y) {
+      // Skip computing the intercept if a) the band doesn't intersect the
+      // line segment (even if it crosses one of two the vertices); or b)
+      // the line segment is horizontal. It's OK because the two end points
+      // forming this horizontal segment will still be considered if each of
+      // them is forming another non-horizontal segment with other points.
+      continue;
+    }
+
+    nscoord bStartLineIntercept =
+      aBStart <= smallYVertex->y
+        ? smallYVertex->x
+        : XInterceptAtY(aBStart, *smallYVertex, *bigYVertex);
+    nscoord bEndLineIntercept =
+      aBEnd >= bigYVertex->y
+        ? bigYVertex->x
+        : XInterceptAtY(aBEnd, *smallYVertex, *bigYVertex);
+
+    // If either new intercept is more extreme than lineIntercept (per
+    // aCompareOp), then update lineIntercept to that value.
+    lineIntercept =
+      aCompareOp({lineIntercept, bStartLineIntercept, bEndLineIntercept});
+  }
+
+  return lineIntercept;
+}
+
+void
+nsFloatManager::PolygonShapeInfo::Translate(nscoord aLineLeft,
+                                            nscoord aBlockStart)
+{
+  for (nsPoint& vertex : mVertices) {
+    vertex.MoveBy(aLineLeft, aBlockStart);
+  }
+  mBStart += aBlockStart;
+  mBEnd += aBlockStart;
+}
+
+/* static */ nscoord
+nsFloatManager::PolygonShapeInfo::XInterceptAtY(const nscoord aY,
+                                                const nsPoint& aP1,
+                                                const nsPoint& aP2)
+{
+  // Solve for x in the linear equation: x = x1 + (y-y1) * (x2-x1) / (y2-y1),
+  // where aP1 = (x1, y1) and aP2 = (x2, y2).
+
+  MOZ_ASSERT(aP1.y <= aY && aY <= aP2.y,
+             "This function won't work if the horizontal line at aY and "
+             "the line segment (aP1, aP2) do not intersect!");
+
+  MOZ_ASSERT(aP1.y != aP2.y,
+             "A horizontal line segment results in dividing by zero error!");
+
+  return aP1.x + (aY - aP1.y) * (aP2.x - aP1.x) / (aP2.y - aP1.y);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -630,9 +795,10 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
 
     switch (basicShape->GetShapeType()) {
       case StyleBasicShapeType::Polygon:
-        // Bug 1326409 - Implement the rendering of basic shape polygon()
-        // for CSS shape-outside.
-        return;
+        mShapeInfo =
+          ShapeInfo::CreatePolygon(basicShape, shapeBoxRect, aWM,
+                                   aContainerSize);
+        break;
       case StyleBasicShapeType::Circle:
       case StyleBasicShapeType::Ellipse:
         mShapeInfo =
@@ -878,6 +1044,30 @@ nsFloatManager::ShapeInfo::CreateCircleOrEllipse(
   return MakeUnique<EllipseShapeInfo>(logicalCenter, radii);
 }
 
+/* static */ UniquePtr<nsFloatManager::ShapeInfo>
+nsFloatManager::ShapeInfo::CreatePolygon(
+  const StyleBasicShape* aBasicShape,
+  const LogicalRect& aShapeBoxRect,
+  WritingMode aWM,
+  const nsSize& aContainerSize)
+{
+  // Use physical coordinates to compute each (xi, yi) vertex because CSS
+  // represents them using physical coordinates.
+  // https://drafts.csswg.org/css-shapes-1/#funcdef-polygon
+  nsRect physicalShapeBoxRect =
+    aShapeBoxRect.GetPhysicalRect(aWM, aContainerSize);
+
+  // Get physical vertices.
+  nsTArray<nsPoint> vertices =
+    ShapeUtils::ComputePolygonVertices(aBasicShape, physicalShapeBoxRect);
+
+  // Convert all the physical vertices to logical.
+  for (nsPoint& vertex : vertices) {
+    vertex = ConvertToFloatLogical(vertex, aWM, aContainerSize);
+  }
+
+  return MakeUnique<PolygonShapeInfo>(Move(vertices));
+}
 
 /* static */ nscoord
 nsFloatManager::ShapeInfo::ComputeEllipseLineInterceptDiff(

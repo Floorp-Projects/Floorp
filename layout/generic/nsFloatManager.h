@@ -393,6 +393,12 @@ private:
       mozilla::WritingMode aWM,
       const nsSize& aContainerSize);
 
+    static mozilla::UniquePtr<ShapeInfo> CreatePolygon(
+      const mozilla::StyleBasicShape* aBasicShape,
+      const mozilla::LogicalRect& aShapeBoxRect,
+      mozilla::WritingMode aWM,
+      const nsSize& aContainerSize);
+
   protected:
     // Compute the minimum line-axis difference between the bounding shape
     // box and its rounded corner within the given band (block-axis region).
@@ -487,6 +493,53 @@ private:
     // The radii of the ellipse in app units. The width and height represent
     // the line-axis and block-axis radii of the ellipse.
     nsSize mRadii;
+  };
+
+  // Implements shape-outside: polygon().
+  class PolygonShapeInfo final : public ShapeInfo
+  {
+  public:
+    explicit PolygonShapeInfo(nsTArray<nsPoint>&& aVertices);
+
+    nscoord LineLeft(const nscoord aBStart,
+                     const nscoord aBEnd) const override;
+    nscoord LineRight(const nscoord aBStart,
+                      const nscoord aBEnd) const override;
+    nscoord BStart() const override { return mBStart; }
+    nscoord BEnd() const override { return mBEnd; }
+    bool IsEmpty() const override { return mEmpty; }
+
+    void Translate(nscoord aLineLeft, nscoord aBlockStart) override;
+
+  private:
+    // Helper method for implementing LineLeft() and LineRight().
+    nscoord ComputeLineIntercept(
+      const nscoord aBStart,
+      const nscoord aBEnd,
+      nscoord (*aCompareOp) (std::initializer_list<nscoord>),
+      const nscoord aLineInterceptInitialValue) const;
+
+    // Given a horizontal line y, and two points p1 and p2 forming a line
+    // segment L. Solve x for the intersection of y and L. This method
+    // assumes y and L do intersect, and L is *not* horizontal.
+    static nscoord XInterceptAtY(const nscoord aY,
+                                 const nsPoint& aP1,
+                                 const nsPoint& aP2);
+
+    // The vertices of the polygon in the float manager's coordinate space.
+    nsTArray<nsPoint> mVertices;
+
+    // If mEmpty is true, that means the polygon encloses no area.
+    bool mEmpty = false;
+
+    // Computed block start and block end value of the polygon shape.
+    //
+    // If mEmpty is false, their initial values nscoord_MAX and nscoord_MIN
+    // are used as sentinels for computing min() and max() in the
+    // constructor, and mBStart is guaranteed to be less than or equal to
+    // mBEnd. If mEmpty is true, their values do not matter.
+    nscoord mBStart = nscoord_MAX;
+    nscoord mBEnd = nscoord_MIN;
   };
 
   struct FloatInfo {
