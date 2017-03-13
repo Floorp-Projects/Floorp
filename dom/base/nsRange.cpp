@@ -2906,6 +2906,13 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
 {
   nsTextFrame* textFrame = GetTextFrameForContent(aContent, aFlushLayout);
   if (textFrame) {
+    // If we'll need it later, collect the full content text now.
+    nsAutoString textContent;
+    if (aTextList) {
+      mozilla::ErrorResult err; // ignored
+      aContent->GetTextContent(textContent, err);
+    }
+
     nsIFrame* relativeTo = nsLayoutUtils::GetContainingBlockForClientRect(textFrame);
     for (nsTextFrame* f = textFrame; f; f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
       int32_t fstart = f->GetContentOffset(), fend = f->GetContentEnd();
@@ -2936,13 +2943,11 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
 
       // Finally capture the text, if requested.
       if (aTextList) {
-        nsIFrame::RenderedText renderedText = f->GetRenderedText(
-          textContentStart,
-          textContentEnd,
-          nsIFrame::TextOffsetType::OFFSETS_IN_CONTENT_TEXT,
-          nsIFrame::TrailingWhitespace::DONT_TRIM_TRAILING_WHITESPACE);
-
-        aTextList->AppendElement(renderedText.mString, fallible);
+        const nsAString& textSubstring =
+          Substring(textContent,
+                    textContentStart,
+                    (textContentEnd - textContentStart));
+        aTextList->AppendElement(textSubstring, fallible);
       }
     }
   }
