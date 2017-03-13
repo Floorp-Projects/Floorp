@@ -314,7 +314,7 @@
 
 #ifdef MOZ_ANDROID_CUSTOM_TABS
         <activity android:name="org.mozilla.gecko.customtabs.CustomTabsActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
+            android:theme="@style/GeckoCustomTabs" />
 #endif
 
         <!-- Service to handle requests from overlays. -->

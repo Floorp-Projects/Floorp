@@ -513,7 +513,8 @@ CSSStyleSheet::UseForPresentation(nsPresContext* aPresContext,
                                   nsMediaQueryResultCacheKey& aKey) const
 {
   if (mMedia) {
-    return mMedia->Matches(aPresContext, &aKey);
+    auto media = static_cast<nsMediaList*>(mMedia.get());
+    return media->Matches(aPresContext, &aKey);
   }
   return true;
 }
@@ -900,48 +901,10 @@ CSSStyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv)
 }
 
 nsresult
-CSSStyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex)
+CSSStyleSheet::InsertRuleIntoGroupInternal(const nsAString& aRule,
+                                           css::GroupRule* aGroup,
+                                           uint32_t aIndex)
 {
-  NS_ENSURE_ARG_POINTER(aGroup);
-  NS_ASSERTION(mInner->mComplete, "No deleting from an incomplete sheet!");
-  RefPtr<css::Rule> rule = aGroup->GetStyleRuleAt(aIndex);
-  NS_ENSURE_TRUE(rule, NS_ERROR_ILLEGAL_VALUE);
-
-  // check that the rule actually belongs to this sheet!
-  if (this != rule->GetStyleSheet()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
-  
-  WillDirty();
-
-  nsresult result = aGroup->DeleteStyleRuleAt(aIndex);
-  NS_ENSURE_SUCCESS(result, result);
-  
-  rule->SetStyleSheet(nullptr);
-  
-  DidDirty();
-
-  if (mDocument) {
-    mDocument->StyleRuleRemoved(this, rule);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-CSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
-                                   css::GroupRule* aGroup,
-                                   uint32_t aIndex,
-                                   uint32_t* _retval)
-{
-  NS_ASSERTION(mInner->mComplete, "No inserting into an incomplete sheet!");
-  // check that the group actually belongs to this sheet!
-  if (this != aGroup->GetStyleSheet()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   // Hold strong ref to the CSSLoader in case the document update
   // kills the document
   RefPtr<css::Loader> loader;
@@ -951,11 +914,6 @@ CSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
   }
 
   nsCSSParser css(loader, this);
-
-  // parse and grab the rule
-  mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
-
-  WillDirty();
 
   RefPtr<css::Rule> rule;
   nsresult result = css.ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
@@ -984,16 +942,7 @@ CSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  result = aGroup->InsertStyleRuleAt(aIndex, rule);
-  NS_ENSURE_SUCCESS(result, result);
-  DidDirty();
-
-  if (mDocument) {
-    mDocument->StyleRuleAdded(this, rule);
-  }
-
-  *_retval = aIndex;
-  return NS_OK;
+  return aGroup->InsertStyleRuleAt(aIndex, rule);
 }
 
 // nsICSSLoaderObserver implementation

@@ -524,8 +524,9 @@ html|input[type="checkbox"] {
   -moz-appearance: none;
   width: 23px;
   height: 23px;
-  border-radius: 2px;
   border: 1px solid var(--in-content-box-border-color);
+  border-radius: 2px;
+  margin: 0;
   margin-inline-end: 10px;
   background-color: #f1f1f1;
   /* !important needed to override toolkit checked !important rule */

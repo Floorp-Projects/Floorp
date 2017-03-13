@@ -1196,6 +1196,7 @@ VirtualKey::FillKbdState(PBYTE aKbdState,
 uint8_t NativeKey::sDispatchedKeyOfAppCommand = 0;
 NativeKey* NativeKey::sLatestInstance = nullptr;
 const MSG NativeKey::sEmptyMSG = {};
+MSG NativeKey::sLastKeyMSG = {};
 
 LazyLogModule sNativeKeyLogger("NativeKeyWidgets");
 
@@ -1244,6 +1245,7 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
     mIsOverridingKeyboardLayout = true;
   } else {
     mIsOverridingKeyboardLayout = false;
+    sLastKeyMSG = aMessage;
   }
 
   if (mMsg.message == WM_APPCOMMAND) {

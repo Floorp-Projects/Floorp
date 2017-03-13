@@ -10,6 +10,7 @@
 #include "gfxFontUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EditorUtils.h" // AutoEditBatch, AutoRules
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEditRules.h"
@@ -76,6 +77,18 @@ TextEditor::TextEditor()
   // check the "single line editor newline handling"
   // and "caret behaviour in selection" prefs
   GetDefaultEditorPrefs(mNewlineHandling, mCaretStyle);
+}
+
+HTMLEditor*
+TextEditor::AsHTMLEditor()
+{
+  return nullptr;
+}
+
+const HTMLEditor*
+TextEditor::AsHTMLEditor() const
+{
+  return nullptr;
 }
 
 TextEditor::~TextEditor()
