@@ -49,17 +49,17 @@ def main(output, *filenames):
     print(banner, file=output)
     print(file_header, file=output)
 
-    for category,indexed in grouped.iteritems():
+    for category, indexed in grouped.iteritems():
         category_cpp = indexed[0][1].category_cpp
 
         print("// category: %s" % category, file=output)
         print("enum class %s : uint32_t {" % category_cpp, file=output)
 
-        for event_index,e in indexed:
+        for event_index, e in indexed:
             cpp_guard = e.cpp_guard
             if cpp_guard:
                 print("#if defined(%s)" % cpp_guard, file=output)
-            for offset,label in enumerate(e.enum_labels):
+            for offset, label in enumerate(e.enum_labels):
                 print("  %s = %d," % (label, event_index + offset), file=output)
             if cpp_guard:
                 print("#endif", file=output)
