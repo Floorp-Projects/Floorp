@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+  createHTML({
+    bug: "1342579",
+    title: "Unbundled PC connects to two different PCs",
+    visible: true
+  });
+
+  const fakeFingerPrint = "a=fingerprint:sha-256 11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11";
+
+  var pc1 = new RTCPeerConnection();
+  var pc2 = new RTCPeerConnection();
+  var pc3 = new RTCPeerConnection();
+
+  var add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
+  pc1.onicecandidate = e => {
+    add(pc2, e.candidate, generateErrorCallback())
+    add(pc3, e.candidate, generateErrorCallback())
+  };
+  pc2.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
+  pc3.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
+
+  var ice1Finished, ice2Finished, ice3Finished;
+  var ice1Done = new Promise(r => ice1Finished = r);
+  var ice2Done = new Promise(r => ice2Finished = r);
+  var ice3Done = new Promise(r => ice3Finished = r);
+
+  var icsc = (pc, str, resolve) => {
+    var state = pc.iceConnectionState;
+    info(str + " ICE connection state is: " + state);
+    if (state == "connected") {
+      ok(true, str + " ICE connected");
+      resolve();
+    } else if (state == "failed") {
+      ok(false, str + " ICE failed")
+      resolve();
+    }
+  };
+
+  pc1.oniceconnectionstatechange = e => icsc(pc1, "PC1", ice1Finished);
+  pc2.oniceconnectionstatechange = e => icsc(pc2, "PC2", ice2Finished);
+  pc3.oniceconnectionstatechange = e => icsc(pc3, "PC3", ice3Finished);
+
+
+  async function getAnswer(pc, offer, answer) {
+    await pc.setLocalDescription(
+      await pc.createAnswer(
+        await pc.setRemoteDescription(offer)));
+    const sdplines = pc.localDescription.sdp.split('\r\n');
+    const fpIndex = sdplines.findIndex(l => l.match('^a=fingerprint'));
+    const FP = sdplines[fpIndex];
+    const audioIndex = sdplines.findIndex(l => l.match(/^m=audio [1-9]/));
+    const videoIndex = sdplines.findIndex(l => l.match(/^m=video [1-9]/));
+    if (audioIndex > -1) {
+      var ss = sdplines.slice(0, audioIndex);
+      ss.splice(fpIndex, 1);
+      answer.sessionSection = ss;
+      const rejectedVideoIndex = sdplines.findIndex(l => l.match('m=video 0'));
+      var ams = sdplines.slice(audioIndex, rejectedVideoIndex);
+      ams.push(FP);
+      ams.push(fakeFingerPrint);
+      answer.audioMsection = ams;
+    }
+    if (videoIndex > -1) {
+      var vms = sdplines.slice(videoIndex, sdplines.length -1);
+      vms.push(fakeFingerPrint);
+      vms.push(FP);
+      answer.videoMsection = vms;
+    }
+    return answer;
+  }
+
+  runNetworkTest(function() {
+    var v1 = createMediaElement('video', 'v1');
+    var v2 = createMediaElement('video', 'v2');
+    var v3 = createMediaElement('video', 'v3');
+    var offer, offerVideo, offerAudio;
+
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    .then(stream => (v1.srcObject = stream).getTracks().forEach(t => pc1.addTrack(t, stream)))
+    .then(() => navigator.mediaDevices.getUserMedia({ video: true }))
+    .then(stream2 => (v2.srcObject = stream2).getTracks().forEach(t => pc2.addTrack(t, stream2)))
+    .then(() => navigator.mediaDevices.getUserMedia({ audio: true }))
+    .then(stream3 => (v3.srcObject = stream3).getTracks().forEach(t => pc3.addTrack(t, stream3)))
+    .then(() => pc1.createOffer())
+    .then(offer => pc1.setLocalDescription(offer))
+    .then(() => {
+      offer = pc1.localDescription;
+      //info("Original OFFER: " + JSON.stringify(offer));
+      offer.sdp = sdputils.removeBundle(offer.sdp);
+      //info("OFFER w/o BUNDLE: " + JSON.stringify(offer));
+      offerAudio = new RTCSessionDescription(JSON.parse(JSON.stringify(offer)));
+      offerAudio.sdp = offerAudio.sdp.replace('m=video 9', 'm=video 0');
+      //info("offerAudio: " + JSON.stringify(offerAudio));
+      offerVideo = new RTCSessionDescription(JSON.parse(JSON.stringify(offer)));
+      offerVideo.sdp = offerVideo.sdp.replace('m=audio 9', 'm=audio 0');
+      //info("offerVideo: " + JSON.stringify(offerVideo));
+    })
+    .then(() => {
+      return getAnswer(pc2, offerVideo, {});
+    })
+    .then((partialAnswer) => {
+      return getAnswer(pc3, offerAudio, partialAnswer);
+    })
+    .then((answer) => {
+      var fakeAnswer = answer.sessionSection.concat(answer.audioMsection, answer.videoMsection).join('\r\n');
+      info("ANSWER: " + fakeAnswer);
+      pc1.setRemoteDescription({type: 'answer', sdp: fakeAnswer});
+    })
+
+    .then(() => Promise.all([ice1Done, ice2Done, ice3Done]))
+    .then(() => ok(true, "Connected."))
+    .catch(reason => ok(false, "unexpected failure: " + reason))
+    .then(networkTestFinished);
+  });
+</script>
+</pre>
+</body>
+</html>

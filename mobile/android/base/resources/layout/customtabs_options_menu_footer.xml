@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- padding is consistent with Widget.MenuItemDefault -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:background="@color/toolbar_menu_dark_grey"
+        android:gravity="center_vertical"
+        android:paddingEnd="10dp"
+        android:paddingLeft="15dp"
+        android:paddingRight="10dp"
+        android:paddingStart="15dp"
+        android:text="@string/custom_tabs_menu_footer"
+        android:textColor="#8f9195"
+        android:textSize="12sp"
+        tools:ignore="RtlHardcoded"/>
+</FrameLayout>

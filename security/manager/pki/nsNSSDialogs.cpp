@@ -24,6 +24,7 @@
 #include "nsIX509CertDB.h"
 #include "nsIX509Cert.h"
 #include "nsNSSDialogHelper.h"
+#include "nsPromiseFlatString.h"
 #include "nsString.h"
 #include "nsVariant.h"
 
@@ -57,13 +58,15 @@ nsNSSDialogs::Init()
   return rv;
 }
 
-nsresult
-nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
-                          const char16_t *tokenName, bool* _canceled)
+NS_IMETHODIMP
+nsNSSDialogs::SetPassword(nsIInterfaceRequestor* ctx,
+                          const nsAString& tokenName,
+                  /*out*/ bool* canceled)
 {
-  nsresult rv;
+  // |ctx| is allowed to be null.
+  NS_ENSURE_ARG(canceled);
 
-  *_canceled = false;
+  *canceled = false;
 
   // Get the parent window for the dialog
   nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
@@ -72,7 +75,7 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
            do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
   if (!block) return NS_ERROR_FAILURE;
 
-  rv = block->SetString(1, tokenName);
+  nsresult rv = block->SetString(1, PromiseFlatString(tokenName).get());
   if (NS_FAILED(rv)) return rv;
 
   rv = nsNSSDialogHelper::openDialog(parent,
@@ -86,7 +89,7 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
   rv = block->GetInt(1, &status);
   if (NS_FAILED(rv)) return rv;
 
-  *_canceled = (status == 0)?true:false;
+  *canceled = (status == 0);
 
   return rv;
 }
@@ -369,9 +372,14 @@ nsNSSDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *aCtx, nsIKeyge
 }
 
 NS_IMETHODIMP
-nsNSSDialogs::ChooseToken(nsIInterfaceRequestor *aCtx, const char16_t **aTokenList, uint32_t aCount, char16_t **aTokenChosen, bool *aCanceled) {
-  nsresult rv;
-  uint32_t i;
+nsNSSDialogs::ChooseToken(nsIInterfaceRequestor* /*aCtx*/,
+                          const char16_t** aTokenList,
+                          uint32_t aCount,
+                  /*out*/ nsAString& aTokenChosen,
+                  /*out*/ bool* aCanceled)
+{
+  NS_ENSURE_ARG(aTokenList);
+  NS_ENSURE_ARG(aCanceled);
 
   *aCanceled = false;
 
@@ -381,7 +389,8 @@ nsNSSDialogs::ChooseToken(nsIInterfaceRequestor *aCtx, const char16_t **aTokenLi
 
   block->SetNumberStrings(aCount);
 
-  for (i = 0; i < aCount; i++) {
+  nsresult rv;
+  for (uint32_t i = 0; i < aCount; i++) {
     rv = block->SetString(i, aTokenList[i]);
     if (NS_FAILED(rv)) return rv;
   }
@@ -399,10 +408,10 @@ nsNSSDialogs::ChooseToken(nsIInterfaceRequestor *aCtx, const char16_t **aTokenLi
   rv = block->GetInt(0, &status);
   if (NS_FAILED(rv)) return rv;
 
-  *aCanceled = (status == 0)?true:false;
+  *aCanceled = (status == 0);
   if (!*aCanceled) {
     // retrieve the nickname
-    rv = block->GetString(0, aTokenChosen);
+    rv = block->GetString(0, getter_Copies(aTokenChosen));
   }
   return rv;
 }

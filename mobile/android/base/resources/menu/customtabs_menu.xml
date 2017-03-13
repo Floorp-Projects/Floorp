@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- We disable AlwaysShowAction because we interpret the menu
+     attributes ourselves and thus the warning isn't relevant to us. -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:ignore="AlwaysShowAction">
+
+    <item
+        android:id="@+id/custom_tabs_menu_forward"
+        android:icon="@drawable/ic_menu_forward"
+        android:showAsAction="always"
+        android:title="@string/forward"/>
+
+    <item
+        android:id="@+id/custom_tabs_menu_reload"
+        android:icon="@drawable/ic_menu_reload"
+        android:showAsAction="always"
+        android:title="@string/share"/>
+
+    <item
+        android:id="@+id/custom_tabs_menu_open_in"
+        android:title="@string/custom_tabs_menu_item_open_in"/>
+
+</menu>

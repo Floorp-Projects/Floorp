@@ -31,7 +31,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_bug1089417.html [1]
   * test_bug418986-2.html: matchMedia support [3]
   * test_bug453896_deck.html: &lt;style media&gt; support [8]
-  * test_media_queries.html [1]
+  * test_media_queries.html [684]
   * test_media_queries_dynamic.html [17]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
@@ -40,7 +40,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_display_mode_reflow.html [2]
 * test_all_shorthand.html: all shorthand servo/servo#15055 [*]
 * Animation support:
-  * test_animations.html [70]
+  * test_animations.html [44]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
   * OMTA
@@ -108,15 +108,14 @@ Any line which doesn't follow the format above would be ignored like comment.
 * test_bug798843_pref.html: conditional opentype svg support [7]
 * test_computed_style.html `gradient`: -moz-prefixed radient value [9]
 * url value in style attribute bug 1310886
-  * test_computed_style.html `url` [12]
+  * test_computed_style.html `url` [11]
   * test_parse_url.html [4]
   * test_value_storage.html `url` [92]
-  * test_shorthand_property_getters.html `background shorthand` [1]
-  * ... `url` [3]
-* test_computed_style.html `mask`: setting mask shorthand resets subproperties to non-initial value bug 1331516 [11]
+  * test_shorthand_property_getters.html `url` [3]
+* test_computed_style.html `mask`: setting mask shorthand resets subproperties to non-initial value bug 1331516 [0]
 * auto value for min-{width,height} servo/servo#15045
 * test_compute_data_with_start_struct.html `timing-function`: incorrectly computing keywords to bezier function servo/servo#15086 [2]
-* test_condition_text.html: @-moz-document, CSSOM support of @media, @support [2]
+* test_condition_text.html: @-moz-document, CSSOM support of @media, @support [7]
 * @counter-style support:
   * test_counter_descriptor_storage.html [1]
   * test_counter_style.html [1]
@@ -446,7 +445,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_value_storage.html `33.5833px` [2]
   * ... `0.766667px` [2]
   * ... `105.333px` [2]
-* test_viewport_units.html: viewport units support [12]
+* test_viewport_units.html: viewport units support [8]
 * test_value_storage.html `: var(--a)`: extra whitespace is added for shorthand with variables servo/servo#15295 [*]
 * border-width computed wrong bug 1335990
   * test_parse_rule.html `border-style` [4]
@@ -476,7 +475,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_units_length.html [5]
   * test_units_time.html [1]
 * insertRule / deleteRule don't work bug 1336863
-  * test_rule_insertion.html [16]
+  * test_rule_insertion.html [7]
 * @-moz-document support
   * test_rule_serialization.html [2]
   * test_moz_document_rules.html [13]

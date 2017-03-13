@@ -155,8 +155,10 @@ class MessageLogger(object):
                           'chrome://mochitests/content/browser/',
                           'chrome://mochitests/content/chrome/']
 
-    def __init__(self, logger, buffering=True):
+    def __init__(self, logger, buffering=True, structured=True):
         self.logger = logger
+        self.structured = structured
+        self.gecko_id = 'GECKO'
 
         # Even if buffering is enabled, we only want to buffer messages between
         # TEST-START/TEST-END. So it is off to begin, but will be enabled after
@@ -170,11 +172,12 @@ class MessageLogger(object):
         # Failures reporting, after the end of the tests execution
         self.errors = []
 
-    def valid_message(self, obj):
-        """True if the given object is a valid structured message
+    def validate(self, obj):
+        """Tests whether the given object is a valid structured message
         (only does a superficial validation)"""
-        return isinstance(obj, dict) and 'action' in obj and obj[
-            'action'] in MessageLogger.VALID_ACTIONS
+        if not (isinstance(obj, dict) and 'action' in obj and obj[
+                'action'] in MessageLogger.VALID_ACTIONS):
+            raise ValueError
 
     def _fix_test_name(self, message):
         """Normalize a logged test path to match the relative path from the sourcedir.
@@ -204,18 +207,21 @@ class MessageLogger(object):
                 continue
             try:
                 message = json.loads(fragment)
-                if not self.valid_message(message):
+                self.validate(message)
+            except ValueError:
+                if self.structured:
+                    message = dict(
+                        action='process_output',
+                        process=self.gecko_id,
+                        data=fragment,
+                    )
+                else:
                     message = dict(
                         action='log',
                         level='info',
                         message=fragment,
-                        unstructured=True)
-            except ValueError:
-                message = dict(
-                    action='log',
-                    level='info',
-                    message=fragment,
-                    unstructured=True)
+                    )
+
             self._fix_test_name(message)
             self._fix_message_format(message)
             messages.append(message)
@@ -231,11 +237,6 @@ class MessageLogger(object):
         if message['action'] == 'buffering_off':
             self.buffering = False
             return
-
-        unstructured = False
-        if 'unstructured' in message:
-            unstructured = True
-            message.pop('unstructured')
 
         # Error detection also supports "raw" errors (in log messages) because some tests
         # manually dump 'TEST-UNEXPECTED-FAIL'.
@@ -258,15 +259,12 @@ class MessageLogger(object):
 
             # Logging the error message
             self.logger.log_raw(message)
-        # If we don't do any buffering, or the tests haven't started, or the message was
-        # unstructured, it is directly logged.
-        elif any([not self.buffering,
-                  unstructured,
-                  message['action'] not in self.BUFFERED_ACTIONS]):
-            self.logger.log_raw(message)
-        else:
-            # Buffering the message
+        # Determine if message should be buffered
+        elif self.buffering and self.structured and message['action'] in self.BUFFERED_ACTIONS:
             self.buffered_messages.append(message)
+        # Otherwise log the message directly
+        else:
+            self.logger.log_raw(message)
 
         # If a test ended, we clean the buffer
         if message['action'] == 'test_end':
@@ -793,8 +791,9 @@ class MochitestDesktop(object):
     # TODO: replace this with 'runtests.py' or 'mochitest' or the like
     test_name = 'automation.py'
 
-    def __init__(self, logger_options, quiet=False):
+    def __init__(self, flavor, logger_options, quiet=False):
         self.update_mozinfo()
+        self.flavor = flavor
         self.server = None
         self.wsserver = None
         self.websocketProcessBridge = None
@@ -820,7 +819,12 @@ class MochitestDesktop(object):
                                                  })
             MochitestDesktop.log = self.log
 
-        self.message_logger = MessageLogger(logger=self.log, buffering=quiet)
+        # Jetpack flavors still don't use the structured logger. We need to process their output
+        # slightly differently.
+        structured = not self.flavor.startswith('jetpack')
+        self.message_logger = MessageLogger(
+                logger=self.log, buffering=quiet, structured=structured)
+
         # Max time in seconds to wait for server startup before tests will fail -- if
         # this seems big, it's mostly for debug machines where cold startup
         # (particularly after a build) takes forever.
@@ -2077,7 +2081,10 @@ toolbar#nav-bar {
                          outputTimeout=timeout)
             proc = runner.process_handler
             self.log.info("runtests.py | Application pid: %d" % proc.pid)
-            self.log.process_start("Main app process")
+
+            gecko_id = "GECKO(%d)" % proc.pid
+            self.log.process_start(gecko_id)
+            self.message_logger.gecko_id = gecko_id
 
             # start marionette and kick off the tests
             marionette_args = marionette_args or {}
@@ -2743,7 +2750,7 @@ def run_test_harness(parser, options):
         key: value for key, value in vars(options).iteritems()
         if key.startswith('log') or key == 'valgrind'}
 
-    runner = MochitestDesktop(logger_options, quiet=options.quiet)
+    runner = MochitestDesktop(options.flavor, logger_options, quiet=options.quiet)
 
     options.runByDir = False
 

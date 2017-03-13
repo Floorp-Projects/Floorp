@@ -80,7 +80,7 @@ var SelfSupportBackendInternal = {
 
     this._log.trace("init");
 
-    Preferences.observe(PREF_BRANCH_LOG, this._configureLogging, this);
+    Services.prefs.addObserver(PREF_BRANCH_LOG, this, false);
 
     // Only allow to use SelfSupport if Unified Telemetry is enabled.
     let reportingEnabled = IS_UNIFIED_TELEMETRY;
@@ -111,7 +111,7 @@ var SelfSupportBackendInternal = {
   uninit() {
     this._log.trace("uninit");
 
-    Preferences.ignore(PREF_BRANCH_LOG, this._configureLogging, this);
+    Services.prefs.removeObserver(PREF_BRANCH_LOG, this);
 
     // Cancel delayed loading, if still active, when shutting down.
     clearTimeout(this._delayedLoadTimerId);
@@ -148,6 +148,8 @@ var SelfSupportBackendInternal = {
     if (aTopic === "sessionstore-windows-restored") {
       Services.obs.removeObserver(this, "sessionstore-windows-restored");
       this._delayedLoadTimerId = setTimeout(this._loadSelfSupport.bind(this), STARTUP_DELAY_MS);
+    } else if (aTopic === "nsPref:changed") {
+      this._configureLogging();
     }
   },
 

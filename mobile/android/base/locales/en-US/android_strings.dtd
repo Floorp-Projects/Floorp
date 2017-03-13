@@ -282,6 +282,10 @@
      For more see: https://developer.chrome.com/multidevice/android/customtabs -->
 <!ENTITY pref_custom_tabs "Custom Tabs">
 <!ENTITY pref_custom_tabs_summary3 "Allow apps to open websites using a customized version of &brandShortName;">
+<!-- Localization note (custom_tabs_menu_item_open_in): The variable is replaced by the name of
+     default browser from user's preference, such as "Open in Firefox" -->
+<!ENTITY custom_tabs_menu_item_open_in "Open in &formatS;">
+<!ENTITY custom_tabs_menu_footer "Powered by &brandShortName;">
 
 <!-- Localization note (pref_activity_stream): Experimental feature, see https://testpilot.firefox.com/experiments/activity-stream  -->
 <!ENTITY pref_activity_stream "Activity Stream">

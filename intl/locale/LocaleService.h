@@ -7,6 +7,7 @@
 #define mozilla_intl_LocaleService_h__
 
 #include "mozilla/StaticPtr.h"
+#include "nsIObserver.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -37,10 +38,12 @@ namespace intl {
  * try to be specific when naming APIs, so the service is for locales,
  * but we negotiate between languages etc.
  */
-class LocaleService : public mozILocaleService
+class LocaleService : public mozILocaleService,
+                      public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
   NS_DECL_MOZILOCALESERVICE
 
   /**
@@ -90,6 +93,26 @@ public:
    * (See mozILocaleService.idl for a JS-callable version of this.)
    */
   void GetAppLocales(nsTArray<nsCString>& aRetVal);
+
+  /**
+   * Returns a list of locales that the user requested the app to be
+   * localized to.
+   *
+   * The result is a sorted list of valid locale IDs and it should be
+   * used as a requestedLocales input list for languages negotiation.
+   *
+   * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
+   *
+   * Usage:
+   *   nsTArray<nsCString> appLocales;
+   *   LocaleService::GetInstance()->GetRequestedLocales(appLocales);
+   *
+   * Returns a boolean indicating if the attempt to retrieve prefs
+   * was successful.
+   *
+   * (See mozILocaleService.idl for a JS-callable version of this.)
+   */
+  bool GetRequestedLocales(nsTArray<nsCString>& aRetVal);
 
   /**
    * Triggers a refresh of the language negotiation process.
@@ -169,7 +192,7 @@ private:
                      LangNegStrategy aStrategy,
                      nsTArray<nsCString>& aRetVal);
 
-  virtual ~LocaleService() {};
+  virtual ~LocaleService();
 
   nsTArray<nsCString> mAppLocales;
 
