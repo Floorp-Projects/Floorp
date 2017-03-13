@@ -149,4 +149,25 @@ ShapeUtils::ComputeInsetRadii(StyleBasicShape* const aBasicShape,
 
 }
 
+/* static */ nsTArray<nsPoint>
+ShapeUtils::ComputePolygonVertices(const StyleBasicShape* aBasicShape,
+                                   const nsRect& aRefBox)
+{
+  MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Polygon,
+             "The basic shape must be polygon()!");
+
+  const nsTArray<nsStyleCoord>& coords = aBasicShape->Coordinates();
+  MOZ_ASSERT(coords.Length() % 2 == 0 &&
+             coords.Length() >= 2, "Wrong number of arguments!");
+
+  nsTArray<nsPoint> vertices(coords.Length() / 2);
+  for (size_t i = 0; i + 1 < coords.Length(); i += 2) {
+    vertices.AppendElement(
+      nsPoint(nsRuleNode::ComputeCoordPercentCalc(coords[i], aRefBox.width),
+              nsRuleNode::ComputeCoordPercentCalc(coords[i + 1], aRefBox.height))
+      + aRefBox.TopLeft());
+  }
+  return vertices;
+}
+
 } // namespace mozilla
