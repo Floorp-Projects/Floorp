@@ -73,6 +73,7 @@ stylo-tests:
     - crashtest
     - reftest-stylo
     - mochitest-style
+    - mochitest-chrome-style
 
 qr-tests:
     - cppunit

@@ -14,11 +14,11 @@
 }
 
 .identity-popup-expander:-moz-focusring > .button-box {
-  @hudButtonFocused@
+  box-shadow: var(--focus-ring-box-shadow);
 }
 
 .identity-popup-permission-remove-button:-moz-focusring {
-  box-shadow: @focusRingShadow@;
+  box-shadow: var(--focus-ring-box-shadow);
 }
 
 #identity-popup-multiView > .panel-viewcontainer > .panel-viewstack > .panel-subviews {
@@ -49,6 +49,7 @@
 #tracking-action-unblock:-moz-focusring,
 #tracking-action-unblock-private:-moz-focusring,
 #identity-popup-securityView-body > button:-moz-focusring {
-  @hudButtonFocused@
+  box-shadow: var(--focus-ring-box-shadow);
 }
+
 

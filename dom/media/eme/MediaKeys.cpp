@@ -330,7 +330,7 @@ private:
 };
 
 already_AddRefed<CDMProxy>
-MediaKeys::CreateCDMProxy()
+MediaKeys::CreateCDMProxy(nsIEventTarget* aMainThread)
 {
   RefPtr<CDMProxy> proxy;
 #ifdef MOZ_WIDGET_ANDROID
@@ -338,7 +338,8 @@ MediaKeys::CreateCDMProxy()
     proxy = new MediaDrmCDMProxy(this,
                                  mKeySystem,
                                  mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
-                                 mConfig.mPersistentState == MediaKeysRequirement::Required);
+                                 mConfig.mPersistentState == MediaKeysRequirement::Required,
+                                 aMainThread);
   } else
 #endif
   {
@@ -346,7 +347,8 @@ MediaKeys::CreateCDMProxy()
                             mKeySystem,
                             new MediaKeysGMPCrashHelper(this),
                             mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
-                            mConfig.mPersistentState == MediaKeysRequirement::Required);
+                            mConfig.mPersistentState == MediaKeysRequirement::Required,
+                            aMainThread);
   }
   return proxy.forget();
 }
@@ -359,8 +361,6 @@ MediaKeys::Init(ErrorResult& aRv)
   if (aRv.Failed()) {
     return nullptr;
   }
-
-  mProxy = CreateCDMProxy();
 
   // Determine principal (at creation time) of the MediaKeys object.
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(GetParentObject());
@@ -415,6 +415,8 @@ MediaKeys::Init(ErrorResult& aRv)
           origin.get(),
           topLevelOrigin.get());
 
+  mProxy = CreateCDMProxy(top->GetExtantDoc()->EventTargetFor(TaskCategory::Other));
+
   // The CDMProxy's initialization is asynchronous. The MediaKeys is
   // refcounted, and its instance is returned to JS by promise once
   // it's been initialized. No external refs exist to the MediaKeys while
@@ -429,8 +431,7 @@ MediaKeys::Init(ErrorResult& aRv)
   mProxy->Init(mCreatePromiseId,
                NS_ConvertUTF8toUTF16(origin),
                NS_ConvertUTF8toUTF16(topLevelOrigin),
-               KeySystemToGMPName(mKeySystem),
-               top->GetExtantDoc()->EventTargetFor(TaskCategory::Other));
+               KeySystemToGMPName(mKeySystem));
 
   return promise.forget();
 }

@@ -439,6 +439,24 @@ ServiceWorkerRegistrationInfo::GetActive() const
   return mActiveWorker;
 }
 
+ServiceWorkerInfo*
+ServiceWorkerRegistrationInfo::GetByID(uint64_t aID) const
+{
+  if (mActiveWorker && mActiveWorker->ID() == aID) {
+    return mActiveWorker;
+  }
+  if (mWaitingWorker && mWaitingWorker->ID() == aID) {
+    return mWaitingWorker;
+  }
+  if (mInstallingWorker && mInstallingWorker->ID() == aID) {
+    return mInstallingWorker;
+  }
+  if (mEvaluatingWorker && mEvaluatingWorker->ID() == aID) {
+    return mEvaluatingWorker;
+  }
+  return nullptr;
+}
+
 void
 ServiceWorkerRegistrationInfo::SetEvaluating(ServiceWorkerInfo* aServiceWorker)
 {

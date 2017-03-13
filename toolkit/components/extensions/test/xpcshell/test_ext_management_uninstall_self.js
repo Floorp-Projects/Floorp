@@ -67,7 +67,6 @@ add_task(function* test_management_uninstall_no_prompt() {
   notEqual(addon, null, "Add-on is installed");
   extension.sendMessage("uninstall");
   yield waitForUninstalled();
-  yield extension.markUnloaded();
   Services.obs.notifyObservers(extension.extension.file, "flush-cache-entry", null);
 });
 
@@ -91,7 +90,6 @@ add_task(function* test_management_uninstall_prompt_uninstall() {
   notEqual(addon, null, "Add-on is installed");
   extension.sendMessage("uninstall");
   yield waitForUninstalled();
-  yield extension.markUnloaded();
 
   // Test localization strings
   equal(promptService._confirmExArgs[1], `Uninstall ${manifest.name}`);
@@ -123,12 +121,15 @@ add_task(function* test_management_uninstall_prompt_keep() {
   });
 
   yield extension.startup();
+
   let addon = yield AddonManager.getAddonByID(id);
   notEqual(addon, null, "Add-on is installed");
+
   extension.sendMessage("uninstall");
   yield extension.awaitMessage("uninstall-rejected");
+
   addon = yield AddonManager.getAddonByID(id);
   notEqual(addon, null, "Add-on remains installed");
+
   yield extension.unload();
-  Services.obs.notifyObservers(extension.extension.file, "flush-cache-entry", null);
 });

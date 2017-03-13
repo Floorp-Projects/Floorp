@@ -63,7 +63,7 @@ pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,tru
 pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == disable-fontinfl-on-mobile-2.html disable-fontinfl-on-mobile-2.html
 pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == disable-fontinfl-on-mobile-3.html disable-fontinfl-on-mobile-3.html
 pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == disable-fontinfl-on-mobile-5.html disable-fontinfl-on-mobile-5.html
-fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == preformatted-text.html preformatted-text.html
+pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == preformatted-text.html preformatted-text.html
 pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == fixed-height-body.html fixed-height-body.html
 pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == fixed-height-body-child.html fixed-height-body-child.html
 pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == consecutive-inline.html consecutive-inline.html

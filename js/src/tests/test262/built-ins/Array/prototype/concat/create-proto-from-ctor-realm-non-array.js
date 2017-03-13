@@ -25,7 +25,7 @@ info: |
 var array = [];
 var callCount = 0;
 var CustomCtor = function() {};
-var OObject = $.createRealm().global.Object;
+var OObject = $262.createRealm().global.Object;
 var speciesDesc = {
   get: function() {
     callCount += 1;

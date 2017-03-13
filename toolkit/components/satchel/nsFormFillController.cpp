@@ -6,6 +6,7 @@
 
 #include "nsFormFillController.h"
 
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/HTMLInputElement.h"
@@ -44,6 +45,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using mozilla::ErrorResult;
 
 NS_IMPL_CYCLE_COLLECTION(nsFormFillController,
                          mController, mLoginManager, mFocusedPopup, mDocShells,
@@ -602,25 +604,40 @@ nsFormFillController::SetTextValueWithReason(const nsAString & aTextValue,
 NS_IMETHODIMP
 nsFormFillController::GetSelectionStart(int32_t *aSelectionStart)
 {
-  if (mFocusedInput)
-    mFocusedInput->GetSelectionStart(aSelectionStart);
-  return NS_OK;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mFocusedInput);
+  if (!content) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  ErrorResult rv;
+  *aSelectionStart =
+    HTMLInputElement::FromContent(content)->GetSelectionStartIgnoringType(rv);
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
 nsFormFillController::GetSelectionEnd(int32_t *aSelectionEnd)
 {
-  if (mFocusedInput)
-    mFocusedInput->GetSelectionEnd(aSelectionEnd);
-  return NS_OK;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mFocusedInput);
+  if (!content) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  ErrorResult rv;
+  *aSelectionEnd =
+    HTMLInputElement::FromContent(content)->GetSelectionEndIgnoringType(rv);
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
 nsFormFillController::SelectTextRange(int32_t aStartIndex, int32_t aEndIndex)
 {
- if (mFocusedInput)
-    mFocusedInput->SetSelectionRange(aStartIndex, aEndIndex, EmptyString());
-  return NS_OK;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mFocusedInput);
+    if (!content) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  ErrorResult rv;
+  HTMLInputElement::FromContent(content)->
+    SetSelectionRange(aStartIndex, aEndIndex, Optional<nsAString>(), rv);
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP

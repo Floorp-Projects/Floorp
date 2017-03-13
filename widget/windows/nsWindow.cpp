@@ -1704,15 +1704,6 @@ void nsWindow::SetThemeRegion()
  **************************************************************/
 
 void nsWindow::RegisterTouchWindow() {
-  if (!WinUtils::IsTouchDeviceSupportPresent() &&
-      !Preferences::GetBool("test.force_register_touch_windows", false)) {
-    // If we don't have any touch support on the device, don't
-    // register any touch windows because it'll consume WM_GESTURE
-    // events from other devices.
-    // For testing purposes we have a pref to override this behaviour
-    // and force the registration of touch windows.
-    return;
-  }
   mTouchWindow = true;
   mGesture.RegisterTouchWindow(mWnd);
   ::EnumChildWindows(mWnd, nsWindow::RegisterTouchForDescendants, 0);
@@ -4334,6 +4325,20 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
 
   ModifierKeyState modifierKeyState;
   modifierKeyState.InitInputEvent(event);
+
+  // eContextMenu with Shift state is special.  It won't fire "contextmenu"
+  // event in the web content for blocking web content to prevent its default.
+  // However, Shift+F10 is a standard shortcut key on Windows.  Therefore,
+  // this should not block web page to prevent its default.  I.e., it should
+  // behave same as ContextMenu key without Shift key.
+  // XXX Should we allow to block web page to prevent its default with
+  //     Ctrl+Shift+F10 or Alt+Shift+F10 instead?
+  if (aEventMessage == eContextMenu && aIsContextMenuKey && event.IsShift() &&
+      NativeKey::LastKeyMSG().message == WM_SYSKEYDOWN &&
+      NativeKey::LastKeyMSG().wParam == VK_F10) {
+    event.mModifiers &= ~MODIFIER_SHIFT;
+  }
+
   event.button    = aButton;
   event.inputSource = aInputSource;
   if (aPointerInfo) {

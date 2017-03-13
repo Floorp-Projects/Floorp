@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1323158
+-->
+<head>
+  <meta charset="utf-8">
+  <title>This is a test to check if target and relatedTarget of mouse events are the same as pointer events</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="content"></p>
+<script type="text/javascript">
+
+/** Test for Bug 1323158 **/
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  let content = document.getElementById('content');
+  let iframe = document.createElement('iframe');
+  iframe.width = 500;
+  iframe.height = 500;
+  content.appendChild(iframe);
+  iframe.contentDocument.body.innerHTML =
+    "<br><div id='target0' style='width: 30px; height: 30px; background: black;'></div>" +
+    "<br><div id='target1' style='width: 30px; height: 30px; background: red;'></div>" +
+    "<br><div id='done' style='width: 30px; height: 30px; background: green;'></div>";
+
+  let target0 = iframe.contentDocument.getElementById("target0");
+  let target1 = iframe.contentDocument.getElementById("target1");
+  let done = iframe.contentDocument.getElementById("done");
+  let pointerBoundaryEvents = ["pointerover", "pointerenter", "pointerleave", "pointerout"];
+  let mouseBoundaryEvents = ["mouseover", "mouseenter", "mouseleave", "mouseout"];
+  let receivedPointerBoundaryEvents = {};
+  let mouseEvent2pointerEvent = {"mouseover": "pointerover",
+                                 "mouseenter": "pointerenter",
+                                 "mouseleave": "pointerleave",
+                                 "mouseout": "pointerout"
+                                };
+
+  pointerBoundaryEvents.forEach((event) => {
+    target1.addEventListener(event, (e) => {
+      receivedPointerBoundaryEvents[event] = e;
+    });
+  });
+
+  let attributes = ["target", "relatedTarget"];
+  mouseBoundaryEvents.forEach((event) => {
+    target1.addEventListener(event, (e) => {
+      let correspondingPointerEv = receivedPointerBoundaryEvents[mouseEvent2pointerEvent[event]];
+      ok(correspondingPointerEv, "Should receive " + mouseEvent2pointerEvent[event] + " before " + e.type);
+      if (correspondingPointerEv) {
+        attributes.forEach((attr) => {
+          ok(correspondingPointerEv[attr] == e[attr],
+             attr + " of " + e.type + " should be the same as the correcponding pointer event expect " +
+               correspondingPointerEv[attr] + " got " + e[attr]);
+        });
+      }
+      receivedPointerBoundaryEvents[mouseEvent2pointerEvent[event]] = null;
+    });
+  });
+  target0.addEventListener("pointerdown", (e) => {
+    target1.setPointerCapture(e.pointerId);
+  });
+  done.addEventListener("mouseup", () => {
+    SimpleTest.finish();
+  });
+  let source = SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE;
+  synthesizeMouse(target0, 5, 5, { type: "mousemove", inputSource: source },
+                  iframe.contentWindow);
+  synthesizeMouse(target0, 5, 5, { type: "mousedown", inputSource: source },
+                  iframe.contentWindow);
+  synthesizeMouse(target0, 5, 5, { type: "mousemove", inputSource: source },
+                  iframe.contentWindow);
+  synthesizeMouse(target0, 5, 5, { type: "mouseup", inputSource: source },
+                  iframe.contentWindow);
+  synthesizeMouse(target0, 5, 5, { type: "mousemove", inputSource: source },
+                  iframe.contentWindow);
+  synthesizeMouse(done, 5, 5, { type: "mousedown", inputSource: source },
+                  iframe.contentWindow);
+  synthesizeMouse(done, 5, 5, { type: "mouseup", inputSource: source },
+                  iframe.contentWindow);
+}
+
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true]]}, runTests);
+});
+
+</script>
+</body>
+</html>

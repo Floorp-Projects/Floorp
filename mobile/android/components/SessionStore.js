@@ -147,8 +147,8 @@ SessionStore.prototype = {
     } else { // We're shutting down and must delete synchronously
       if (this._sessionFile.exists()) { this._sessionFile.remove(false); }
       if (this._sessionFileBackup.exists()) { this._sessionFileBackup.remove(false); }
-      if (this._sessionFileBackup.exists()) { this._sessionFilePrevious.remove(false); }
-      if (this._sessionFileBackup.exists()) { this._sessionFileTemp.remove(false); }
+      if (this._sessionFilePrevious.exists()) { this._sessionFilePrevious.remove(false); }
+      if (this._sessionFileTemp.exists()) { this._sessionFileTemp.remove(false); }
     }
   },
 
@@ -1607,6 +1607,11 @@ SessionStore.prototype = {
     } else if (this._loadState <= STATE_QUITTING) {
       this.saveStateDelayed();
     }
+  },
+
+  setLoadState: function ss_setLoadState(aState) {
+    this.flushPendingState();
+    this._loadState = aState;
   }
 
 };

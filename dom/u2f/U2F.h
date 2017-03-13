@@ -86,6 +86,7 @@ class U2FIsRegisteredTask final : public U2FPrepTask
 public:
   U2FIsRegisteredTask(const Authenticator& aAuthenticator,
                       const LocalRegisteredKey& aRegisteredKey,
+                      const CryptoBuffer& aAppParam,
                       AbstractThread* aMainThread);
 
   NS_DECL_NSIRUNNABLE
@@ -93,6 +94,7 @@ private:
   ~U2FIsRegisteredTask();
 
   LocalRegisteredKey mRegisteredKey;
+  CryptoBuffer mAppParam;
 };
 
 class U2FTask : public Runnable

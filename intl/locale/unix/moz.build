@@ -9,14 +9,7 @@ SOURCES += [
     'nsPosixLocale.cpp',
 ]
 
-if 'gtk' not in CONFIG['MOZ_WIDGET_TOOLKIT']:
-    SOURCES += ['OSPreferences_unix.cpp']
-
-if CONFIG['OS_TARGET'] == 'Android':
-    SOURCES += [
-        'nsAndroidCharset.cpp',
-    ]
-else:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     SOURCES += [
         'nsUNIXCharset.cpp',
     ]

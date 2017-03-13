@@ -36,13 +36,15 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(JoinNodeTransaction, EditTransactionBase,
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JoinNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-nsresult
-JoinNodeTransaction::CheckValidity()
+bool
+JoinNodeTransaction::CanDoIt() const
 {
-  if (!mEditorBase.IsModifiableNode(mLeftNode->GetParentNode())) {
-    return NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!mLeftNode) ||
+      NS_WARN_IF(!mRightNode) ||
+      !mLeftNode->GetParentNode()) {
+    return false;
   }
-  return NS_OK;
+  return mEditorBase.IsModifiableNode(mLeftNode->GetParentNode());
 }
 
 // After DoTransaction() and RedoTransaction(), the left node is removed from

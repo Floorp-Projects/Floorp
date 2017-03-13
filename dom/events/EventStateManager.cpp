@@ -742,6 +742,9 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     FlushPendingEvents(aPresContext);
     break;
   }
+  case ePointerGotCapture:
+    GenerateMouseEnterExit(mouseEvent);
+    break;
   case eDragStart:
     if (Prefs::ClickHoldContextMenu()) {
       // an external drag gesture event came in, not generated internally
@@ -3874,10 +3877,7 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
     newPointerEvent->mWidth = sourcePointer->mWidth;
     newPointerEvent->mHeight = sourcePointer->mHeight;
     newPointerEvent->inputSource = sourcePointer->inputSource;
-    newPointerEvent->relatedTarget =
-      nsIPresShell::GetPointerCapturingContent(sourcePointer->pointerId)
-        ? nullptr
-        : aRelatedContent;
+    newPointerEvent->relatedTarget = aRelatedContent;
     aNewEvent = newPointerEvent.forget();
   } else {
     aNewEvent =
@@ -4087,14 +4087,8 @@ EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
     SetContentState(nullptr, NS_EVENT_STATE_HOVER);
   }
 
-  // In case we go out from capturing element (retargetedByPointerCapture is true)
-  // we should dispatch ePointerLeave event and only for capturing element.
-  RefPtr<nsIContent> movingInto = aMouseEvent->retargetedByPointerCapture
-                                    ? wrapper->mLastOverElement->GetParent()
-                                    : aMovingInto;
-
   EnterLeaveDispatcher leaveDispatcher(this, wrapper->mLastOverElement,
-                                       movingInto, aMouseEvent,
+                                       aMovingInto, aMouseEvent,
                                        isPointer ? ePointerLeave : eMouseLeave);
 
   // Fire mouseout
@@ -4115,13 +4109,9 @@ EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
 {
   NS_ASSERTION(aContent, "Mouse must be over something");
 
-  // If pointer capture is set, we should suppress pointerover/pointerenter events
-  // for all elements except element which have pointer capture.
-  bool dispatch = !aMouseEvent->retargetedByPointerCapture;
-
   OverOutElementsWrapper* wrapper = GetWrapperByEventID(aMouseEvent);
 
-  if (wrapper->mLastOverElement == aContent && dispatch)
+  if (wrapper->mLastOverElement == aContent)
     return;
 
   // Before firing mouseover, check for recursion
@@ -4143,7 +4133,7 @@ EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
   }
   // Firing the DOM event in the parent document could cause all kinds
   // of havoc.  Reverify and take care.
-  if (wrapper->mLastOverElement == aContent && dispatch)
+  if (wrapper->mLastOverElement == aContent)
     return;
 
   // Remember mLastOverElement as the related content for the
@@ -4152,11 +4142,9 @@ EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
 
   bool isPointer = aMouseEvent->mClass == ePointerEventClass;
   
-  Maybe<EnterLeaveDispatcher> enterDispatcher;
-  if (dispatch) {
-    enterDispatcher.emplace(this, aContent, lastOverElement, aMouseEvent,
-                            isPointer ? ePointerEnter : eMouseEnter);
-  }
+  EnterLeaveDispatcher enterDispatcher(this, aContent, lastOverElement,
+                                       aMouseEvent,
+                                       isPointer ? ePointerEnter : eMouseEnter);
 
   NotifyMouseOut(aMouseEvent, aContent);
 
@@ -4168,18 +4156,13 @@ EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
     SetContentState(aContent, NS_EVENT_STATE_HOVER);
   }
 
-  if (dispatch) {
-    // Fire mouseover
-    wrapper->mLastOverFrame = 
-      DispatchMouseOrPointerEvent(aMouseEvent,
-                                  isPointer ? ePointerOver : eMouseOver,
-                                  aContent, lastOverElement);
-    enterDispatcher->Dispatch();
-    wrapper->mLastOverElement = aContent;
-  } else {
-    wrapper->mLastOverFrame = nullptr;
-    wrapper->mLastOverElement = nullptr;
-  }
+  // Fire mouseover
+  wrapper->mLastOverFrame =
+    DispatchMouseOrPointerEvent(aMouseEvent,
+                                isPointer ? ePointerOver : eMouseOver,
+                                aContent, lastOverElement);
+  enterDispatcher.Dispatch();
+  wrapper->mLastOverElement = aContent;
 
   // Turn recursion protection back off
   wrapper->mFirstOverEventElement = nullptr;
@@ -4272,6 +4255,7 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
     MOZ_FALLTHROUGH;
   case ePointerMove:
   case ePointerDown:
+  case ePointerGotCapture:
     {
       // Get the target content target (mousemove target == mouseover target)
       nsCOMPtr<nsIContent> targetElement = GetEventTargetContent(aMouseEvent);

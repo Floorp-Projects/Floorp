@@ -380,7 +380,8 @@ WebAuthentication::U2FAuthMakeCredential(
         return;
       }
 
-      nsresult rv = aToken->IsRegistered(data, len, &isRegistered);
+      nsresult rv = aToken->IsRegistered(data, len, aRpIdHash.Elements(),
+                                         aRpIdHash.Length(), &isRegistered);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         aRequest->SetFailure(rv);
         return;
@@ -558,6 +559,8 @@ WebAuthentication::U2FAuthGetAssertion(const RefPtr<AssertionRequest>& aRequest,
     bool isRegistered = false;
     nsresult rv = aToken->IsRegistered(allowedCredential.Elements(),
                                        allowedCredential.Length(),
+                                       aRpIdHash.Elements(),
+                                       aRpIdHash.Length(),
                                        &isRegistered);
 
     // 4.1.2.8.b If any authenticator returns a status indicating that the user
