@@ -586,6 +586,9 @@ public:
                                 const StructuredCloneData& aInitialData,
                                 nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvProvideAnonymousTemporaryFile(const uint64_t& aID, const FileDescOrError& aFD) override;
+
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   bool
   SendGetA11yContentId();
@@ -627,6 +630,9 @@ public:
                       const nsAString& aName,
                       const Optional<int64_t>& aLastModified,
                       bool aExistenceCheck, bool aIsFromNsIFile);
+
+  typedef std::function<void(PRFileDesc*)> AnonymousTemporaryFileCallback;
+  nsresult AsyncOpenAnonymousTemporaryFile(AnonymousTemporaryFileCallback aCallback);
 
 private:
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
@@ -695,6 +701,8 @@ private:
   // Hashtable to keep track of the pending file creation.
   // These items are removed when RecvFileCreationResponse is received.
   nsRefPtrHashtable<nsIDHashKey, FileCreatorHelper> mFileCreationPending;
+
+  nsClassHashtable<nsUint64HashKey, AnonymousTemporaryFileCallback> mPendingAnonymousTemporaryFiles;
 
   bool mShuttingDown;
 

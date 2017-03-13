@@ -4077,6 +4077,78 @@ ContentParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
   return IPC_OK();
 }
 
+class AnonymousTemporaryFileRequestor final : public Runnable
+{
+public:
+  AnonymousTemporaryFileRequestor(ContentParent* aCP, const uint64_t& aID)
+    : mCP(aCP)
+    , mID(aID)
+    , mRv(NS_OK)
+    , mPRFD(nullptr)
+  {
+  }
+
+  NS_IMETHOD Run() override
+  {
+    if (NS_IsMainThread()) {
+      FileDescOrError result;
+      if (NS_WARN_IF(NS_FAILED(mRv))) {
+        // Returning false will kill the child process; instead
+        // propagate the error and let the child handle it.
+        result = mRv;
+      } else {
+        result = FileDescriptor(FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(mPRFD)));
+        // The FileDescriptor object owns a duplicate of the file handle; we
+        // must close the original (and clean up the NSPR descriptor).
+        PR_Close(mPRFD);
+      }
+      Unused << mCP->SendProvideAnonymousTemporaryFile(mID, result);
+    } else {
+      mRv = NS_OpenAnonymousTemporaryFile(&mPRFD);
+      NS_DispatchToMainThread(this);
+    }
+    return NS_OK;
+  }
+
+private:
+  RefPtr<ContentParent> mCP;
+  uint64_t mID;
+  nsresult mRv;
+  PRFileDesc* mPRFD;
+};
+
+mozilla::ipc::IPCResult
+ContentParent::RecvRequestAnonymousTemporaryFile(const uint64_t& aID)
+{
+  // Make sure to send a callback to the child if we bail out early.
+  nsresult rv = NS_OK;
+  RefPtr<ContentParent> self(this);
+  auto autoNotifyChildOnError = MakeScopeExit([&]() {
+    if (NS_FAILED(rv)) {
+      FileDescOrError result(rv);
+      Unused << self->SendProvideAnonymousTemporaryFile(aID, result);
+    }
+  });
+
+  // We use a helper runnable to open the anonymous temporary file on the IO
+  // thread.  The same runnable will call us back on the main thread when the
+  // file has been opened.
+  nsCOMPtr<nsIEventTarget> target
+    = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+  if (!target) {
+    return IPC_OK();
+  }
+
+  rv = target->Dispatch(new AnonymousTemporaryFileRequestor(this, aID),
+                        NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return IPC_OK();
+  }
+
+  rv = NS_OK;
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult
 ContentParent::RecvOpenAnonymousTemporaryFile(FileDescOrError *aFD)
 {
