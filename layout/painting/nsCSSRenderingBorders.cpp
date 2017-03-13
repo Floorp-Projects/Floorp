@@ -3538,7 +3538,7 @@ nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
   Rect outlineTransformedRect = aLayer->RelativeToParent(mOuterRect);
   WrBorderSide side[4];
   NS_FOR_CSS_SIDES(i) {
-    side[i] = wr::ToWrBorderSide(mBorderWidths[i], ToDeviceColor(mBorderColors[i]), mBorderStyles[i]);
+    side[i] = wr::ToWrBorderSide(ToDeviceColor(mBorderColors[i]), mBorderStyles[i]);
   }
 
   WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(outlineTransformedRect));
@@ -3548,6 +3548,7 @@ nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                                      LayerSize(mBorderRadii[2].width, mBorderRadii[2].height));
   aBuilder.PushBorder(wr::ToWrRect(outlineTransformedRect),
                       clipRegion,
+                      wr::ToWrBorderWidths(mBorderWidths[0], mBorderWidths[1], mBorderWidths[2], mBorderWidths[3]),
                       side[0], side[1], side[2], side[3],
                       borderRadius);
 }

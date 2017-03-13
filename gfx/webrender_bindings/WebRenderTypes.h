@@ -177,10 +177,9 @@ static inline WrBorderStyle ToWrBorderStyle(const uint8_t& style)
   return WrBorderStyle::None;
 }
 
-static inline WrBorderSide ToWrBorderSide(const LayerCoord width, const gfx::Color& color, const uint8_t& style)
+static inline WrBorderSide ToWrBorderSide(const gfx::Color& color, const uint8_t& style)
 {
   WrBorderSide bs;
-  bs.width = width;
   bs.color = ToWrColor(color);
   bs.style = ToWrBorderStyle(style);
   return bs;
@@ -211,6 +210,64 @@ static inline WrBorderRadius ToWrBorderRadius(const LayerSize& topLeft, const La
   br.bottom_left = ToWrSize(bottomLeft);
   br.bottom_right = ToWrSize(bottomRight);
   return br;
+}
+
+static inline WrBorderWidths ToWrBorderWidths(float top, float right, float bottom, float left)
+{
+  WrBorderWidths bw;
+  bw.top = top;
+  bw.right = right;
+  bw.bottom = bottom;
+  bw.left = left;
+  return bw;
+}
+
+static inline WrNinePatchDescriptor ToWrNinePatchDescriptor(uint32_t width, uint32_t height,
+                                                            const WrSideOffsets2Du32& slice)
+{
+  WrNinePatchDescriptor patch;
+  patch.width = width;
+  patch.height = height;
+  patch.slice = slice;
+  return patch;
+}
+
+static inline WrSideOffsets2Du32 ToWrSideOffsets2Du32(uint32_t top, uint32_t right, uint32_t bottom, uint32_t left)
+{
+  WrSideOffsets2Du32 offset;
+  offset.top = top;
+  offset.right = right;
+  offset.bottom = bottom;
+  offset.left = left;
+  return offset;
+}
+
+static inline WrSideOffsets2Df32 ToWrSideOffsets2Df32(float top, float right, float bottom, float left)
+{
+  WrSideOffsets2Df32 offset;
+  offset.top = top;
+  offset.right = right;
+  offset.bottom = bottom;
+  offset.left = left;
+  return offset;
+}
+
+static inline WrRepeatMode ToWrRepeatMode(uint8_t repeatMode)
+{
+  switch (repeatMode) {
+  case NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH:
+    return WrRepeatMode::Stretch;
+  case NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT:
+    return WrRepeatMode::Repeat;
+  case NS_STYLE_BORDER_IMAGE_REPEAT_ROUND:
+    return WrRepeatMode::Round;
+  case NS_STYLE_BORDER_IMAGE_REPEAT_SPACE:
+    return WrRepeatMode::Space;
+  default:
+    MOZ_ASSERT(false);
+  }
+
+  return WrRepeatMode::Stretch;
 }
 
 template<class T>
