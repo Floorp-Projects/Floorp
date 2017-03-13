@@ -16,6 +16,7 @@
 #include "nsClassHashtable.h"
 #include "GMPDecoderModule.h"
 #include "MP4Decoder.h"
+#include "DecryptThroughputLimit.h"
 
 namespace mozilla {
 
@@ -35,6 +36,7 @@ public:
     , mProxy(aProxy)
     , mSamplesWaitingForKey(new SamplesWaitingForKey(this, this->mCallback,
                                                      mTaskQueue, mProxy))
+    , mThroughputLimiter(aDecodeTaskQueue)
     , mIsShutdown(false)
   {
   }
@@ -54,6 +56,31 @@ public:
       return;
     }
 
+    ThrottleDecode(aSample);
+  }
+
+  void ThrottleDecode(MediaRawData* aSample)
+  {
+    RefPtr<EMEDecryptor> self = this;
+    mThroughputLimiter.Throttle(aSample)
+      ->Then(mTaskQueue, __func__,
+             [self, this] (MediaRawData* aSample) {
+               mThrottleRequest.Complete();
+               AttemptDecode(aSample);
+             },
+             [self, this]() {
+                mThrottleRequest.Complete();
+             })
+      ->Track(mThrottleRequest);
+  }
+
+  void AttemptDecode(MediaRawData* aSample)
+  {
+    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+    if (mIsShutdown) {
+      NS_WARNING("EME encrypted sample arrived after shutdown");
+      return;
+    }
     nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());
     mProxy->GetSessionIdsForKeyId(aSample->mCrypto.mKeyId,
                                   writer->mCrypto.mSessionIds);
@@ -114,6 +141,8 @@ public:
       holder->DisconnectIfExists();
       iter.Remove();
     }
+    mThrottleRequest.DisconnectIfExists();
+    mThroughputLimiter.Flush();
     mDecoder->Flush();
     mSamplesWaitingForKey->Flush();
   }
@@ -153,6 +182,8 @@ private:
   RefPtr<CDMProxy> mProxy;
   nsClassHashtable<nsRefPtrHashKey<MediaRawData>, DecryptPromiseRequestHolder> mDecrypts;
   RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
+  DecryptThroughputLimit mThroughputLimiter;
+  MozPromiseRequestHolder<DecryptThroughputLimit::ThrottlePromise> mThrottleRequest;
   bool mIsShutdown;
 };
 
