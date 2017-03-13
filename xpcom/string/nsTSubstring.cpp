@@ -780,6 +780,19 @@ nsTStringRepr_CharT::Equals(const self_type& aStr,
 }
 
 bool
+nsTStringRepr_CharT::Equals(const substring_tuple_type& aTuple) const
+{
+  return Equals(substring_type(aTuple));
+}
+
+bool
+nsTStringRepr_CharT::Equals(const substring_tuple_type& aTuple,
+                            const comparator_type& aComp) const
+{
+  return Equals(substring_type(aTuple), aComp);
+}
+
+bool
 nsTStringRepr_CharT::Equals(const char_type* aData) const
 {
   // unfortunately, some callers pass null :-(
