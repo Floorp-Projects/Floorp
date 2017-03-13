@@ -10,9 +10,10 @@ Test that css-logic calculates CSS specificity properly
 </head>
 <body style="background:blue;">
   <script type="application/javascript">
+  "use strict";
 
-  window.onload = function() {
-    var {utils: Cu, classes: Cc, interfaces: Ci} = Components;
+  window.onload = function () {
+    const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
     const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
     const {CssLogic, CssSelector} = require("devtools/server/css-logic");
@@ -58,7 +59,7 @@ Test that css-logic calculates CSS specificity properly
     let cssRule = cssSheet.domSheet.cssRules[0];
     let selectors = CssLogic.getSelectors(cssRule);
 
-    info("Iterating over the test selectors")
+    info("Iterating over the test selectors");
     for (let i = 0; i < selectors.length; i++) {
       let selectorText = selectors[i];
       info("Testing selector " + selectorText);
@@ -66,7 +67,7 @@ Test that css-logic calculates CSS specificity properly
       let selector = new CssSelector(cssRule, selectorText, i);
       let expected = getExpectedSpecificity(selectorText);
       let specificity = DOMUtils.getSpecificity(selector.cssRule,
-                                                selector.selectorIndex)
+                                                selector.selectorIndex);
       is(specificity, expected,
         'Selector "' + selectorText + '" has a specificity of ' + expected);
     }
@@ -77,8 +78,7 @@ Test that css-logic calculates CSS specificity properly
        "Element styles have specificity of 0x01000000 (16777216).");
 
     SimpleTest.finish();
-  }
-
+  };
   </script>
 </body>
 </html>

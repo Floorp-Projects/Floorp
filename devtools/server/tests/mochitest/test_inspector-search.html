@@ -10,14 +10,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=835896
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
-window.onload = function() {
+"use strict";
+
+window.onload = function () {
   const Cu = Components.utils;
   const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   const promise = require("promise");
   const {InspectorFront} = require("devtools/shared/fronts/inspector");
   const {WalkerSearch, WalkerIndex} =
     require("devtools/server/actors/utils/walker-search");
-  const {console} = Cu.import("resource://gre/modules/Console.jsm", {});
 
   SimpleTest.waitForExplicitFinish();
 
@@ -31,12 +32,13 @@ window.onload = function() {
   // See also test_inspector-search-front.html.
 
   addAsyncTest(function* setup() {
-    info ("Setting up inspector and walker actors.");
+    info("Setting up inspector and walker actors.");
 
     let url = document.getElementById("inspectorContent").href;
 
+    // eslint-disable-next-line new-cap
     yield new promise(resolve => {
-      attachURL(url, function(err, client, tab, doc) {
+      attachURL(url, function (err, client, tab, doc) {
         inspectee = doc;
         inspector = InspectorFront(client, tab);
         resolve();
@@ -56,7 +58,7 @@ window.onload = function() {
   });
 
   addAsyncTest(function* testIndexExists() {
-    info ("Testing basic index APIs exist.");
+    info("Testing basic index APIs exist.");
 
     let index = new WalkerIndex(walkerActor);
     ok(index.data.size > 0, "public index is filled after getting");
@@ -70,7 +72,7 @@ window.onload = function() {
   });
 
   addAsyncTest(function* testSearchExists() {
-    info ("Testing basic search APIs exist.");
+    info("Testing basic search APIs exist.");
 
     ok(walkerSearch, "walker search exists on the WalkerActor");
     ok(walkerSearch.search, "walker search has `search` method");
@@ -88,8 +90,8 @@ window.onload = function() {
   });
 
   addAsyncTest(function* testEmptySearch() {
-    info ("Testing search with an empty query.");
-    results = walkerSearch.search("");
+    info("Testing search with an empty query.");
+    let results = walkerSearch.search("");
     is(results.length, 0, "No results when searching for ''");
 
     results = walkerSearch.search(null);
@@ -165,7 +167,7 @@ window.onload = function() {
         {node: inspectee.querySelector("h1 + p > strong").childNodes[0], type: "text"},
       ]
     },
-    ]
+    ];
 
     for (let {desc, search, expected} of testData) {
       info("Running test: " + desc);
@@ -178,7 +180,7 @@ window.onload = function() {
   });
 
   addAsyncTest(function* testPseudoElements() {
-    info ("Testing ::before and ::after element matching");
+    info("Testing ::before and ::after element matching");
 
     let beforeElt = new _documentWalker(inspectee.querySelector("#pseudo"),
                                         inspectee.defaultView).firstChild();
@@ -218,7 +220,7 @@ window.onload = function() {
   });
 
   addAsyncTest(function* testSearchMutationChangeResults() {
-    info ("Testing search before and after a mutation.");
+    info("Testing search before and after a mutation.");
     let expected = [
       {node: inspectee.querySelectorAll("h3")[0], type: "tag"},
       {node: inspectee.querySelectorAll("h3")[1], type: "tag"},
@@ -238,6 +240,7 @@ window.onload = function() {
       expected[2]
     ], "Results are updated after removal");
 
+    // eslint-disable-next-line new-cap
     yield new promise(resolve => {
       info("Waiting for a mutation to happen");
       let observer = new inspectee.defaultView.MutationObserver(() => {
@@ -254,6 +257,7 @@ window.onload = function() {
       expected[2]
     ], "Results are updated after addition");
 
+    // eslint-disable-next-line new-cap
     yield new promise(resolve => {
       info("Waiting for a mutation to happen");
       let observer = new inspectee.defaultView.MutationObserver(() => {
@@ -274,6 +278,7 @@ window.onload = function() {
   runNextTest();
 
   function mutateDocumentAndWaitForMutation(mutationFn) {
+    // eslint-disable-next-line new-cap
     return new promise(resolve => {
       info("Listening to markup mutation on the inspectee");
       let observer = new inspectee.defaultView.MutationObserver(resolve);

@@ -13,16 +13,18 @@ Bug 1132764 - Test controlling the maximum allocations log length over the RDP.
 <pre id="test">
 <script src="memory-helpers.js" type="application/javascript"></script>
 <script>
-window.onload = function() {
+"use strict";
+
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
   Task.spawn(function* () {
-    var { memory, client } = yield startServerAndGetSelectedTabMemory();
+    let { memory, client } = yield startServerAndGetSelectedTabMemory();
     yield memory.attach();
 
-    var allocs = [];
+    let allocs = [];
     function allocator() {
-      allocs.push(new Object);
+      allocs.push(new Object());
     }
 
     yield memory.startRecordingAllocations({
@@ -33,7 +35,7 @@ window.onload = function() {
     allocator();
     allocator();
 
-    var response = yield memory.getAllocations();
+    let response = yield memory.getAllocations();
     yield memory.stopRecordingAllocations();
 
     is(response.allocations.length, 1,

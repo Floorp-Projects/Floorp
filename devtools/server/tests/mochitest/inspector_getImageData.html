@@ -7,6 +7,8 @@
   <img class="small" src="small-image.gif">
   <img class="data" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=">
   <script>
+    "use strict";
+
     window.onload = () => {
       var canvas = document.querySelector("canvas"), ctx = canvas.getContext("2d");
       canvas.width = 1000;
@@ -14,8 +16,8 @@
       ctx.fillStyle = "red";
       ctx.fillRect(0, 0, 1000, 2000);
 
-      window.opener.postMessage('ready', '*')
-    }
+      window.opener.postMessage("ready", "*");
+    };
   </script>
 </body>
 </html>

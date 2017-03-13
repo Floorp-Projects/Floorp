@@ -16,6 +16,7 @@ xray wrapper.
 <body>
 <pre id="test">
 <script>
+"use strict";
 
 Components.utils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
@@ -23,28 +24,28 @@ addDebuggerToGlobal(this);
 window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
-  var iframe = document.createElement("iframe");
+  let iframe = document.createElement("iframe");
   iframe.src = "http://mochi.test:8888/chrome/devtools/server/tests/mochitest/nonchrome_unsafeDereference.html";
 
   iframe.onload = function () {
-    var dbg = new Debugger;
-    var contentDO = dbg.addDebuggee(iframe.contentWindow);
-    var xhrDesc = contentDO.getOwnPropertyDescriptor('xhr');
+    let dbg = new Debugger();
+    let contentDO = dbg.addDebuggee(iframe.contentWindow);
+    let xhrDesc = contentDO.getOwnPropertyDescriptor("xhr");
 
     isnot(xhrDesc, undefined, "xhr should be visible as property of content global");
     isnot(xhrDesc.value, undefined, "xhr should have a value");
 
-    var xhr = xhrDesc.value.unsafeDereference();
+    let xhr = xhrDesc.value.unsafeDereference();
 
     is(typeof xhr, "object", "we should be able to deference xhr's value's D.O");
     is(xhr.timeout, 1742, "chrome should see the xhr's 'timeout' property");
     is(xhr.expando, undefined, "chrome should not see the xhr's 'expando' property");
 
     SimpleTest.finish();
-  }
+  };
 
   document.body.appendChild(iframe);
-}
+};
 
 </script>
 </pre>

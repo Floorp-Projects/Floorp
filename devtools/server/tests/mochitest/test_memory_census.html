@@ -13,14 +13,16 @@ Bug 1067491 - Test taking a census over the RDP.
 <pre id="test">
 <script src="memory-helpers.js" type="application/javascript"></script>
 <script>
-window.onload = function() {
+"use strict";
+
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
   Task.spawn(function* () {
-    var { memory, client } = yield startServerAndGetSelectedTabMemory();
+    let { memory, client } = yield startServerAndGetSelectedTabMemory();
     yield memory.attach();
 
-    var census = yield memory.takeCensus();
+    let census = yield memory.takeCensus();
     is(typeof census, "object");
 
     yield memory.detach();

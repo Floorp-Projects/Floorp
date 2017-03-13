@@ -1,4 +1,4 @@
-<SDOCTYPv HTM.>
+<!DOCTYPE HTML>
 <html>
 <!--
 Bug 966991 - Test DebuggerServer.connectToChild
@@ -12,16 +12,16 @@ Bug 966991 - Test DebuggerServer.connectToChild
 <body>
 <pre id="test">
 <script type="application/javascript">
+"use strict";
 
 let Cu = Components.utils;
-let Cc = Components.classes;
 let Ci = Components.interfaces;
 
 let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 let { DebuggerClient } = require("devtools/shared/client/main");
 let { DebuggerServer } = require("devtools/server/main");
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
   SpecialPowers.pushPrefEnv({
@@ -31,7 +31,7 @@ window.onload = function() {
       ["dom.mozBrowserFramesEnabled", true]
     ]
   }, runTests);
-}
+};
 
 function runTests() {
   // Create a minimal iframe with a message manager
@@ -44,14 +44,18 @@ function runTests() {
   // Register a test actor in the child process so that we can know if and when
   // this fake actor is destroyed.
   mm.loadFrameScript("data:text/javascript,new " + function FrameScriptScope() {
+    /* eslint-disable no-shadow */
     const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     const { DebuggerServer } = require("devtools/server/main");
+    /* eslint-enable no-shadow */
 
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
     }
 
-    function TestActor() {dump("instanciate test actor\n");}
+    function TestActor() {
+      dump("instanciate test actor\n");
+    }
     TestActor.prototype = {
       actorPrefix: "test",
 
@@ -59,7 +63,7 @@ function runTests() {
         sendAsyncMessage("test-actor-destroyed", null);
       },
       hello: function () {
-        return {msg:"world"};
+        return {msg: "world"};
       }
     };
     TestActor.prototype.requestTypes = {
@@ -90,7 +94,6 @@ function runTests() {
         to: actor.testActor,
         type: "hello",
       }, function (response) {
-
         // Then close the client. That should end up cleaning our test actor
         client.close();
 
@@ -113,7 +116,8 @@ function runTests() {
     let client = new DebuggerClient(transport);
     DebuggerServer.connectToChild(conn, iframe).then(actor => {
       ok(actor.testActor, "Got a test actor for the second connection");
-      isnot(actor.testActor, firstActor, "We get different actor instances between two connections");
+      isnot(actor.testActor, firstActor,
+            "We get different actor instances between two connections");
 
       client.close(cleanup);
     });
@@ -122,12 +126,11 @@ function runTests() {
   function cleanup() {
     DebuggerServer.destroy();
     iframe.remove();
-    SimpleTest.finish()
+    SimpleTest.finish();
   }
 
   firstClient();
 }
-
 </script>
 </pre>
 </body>

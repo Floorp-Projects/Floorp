@@ -11,30 +11,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
-const inspector = require("devtools/shared/fronts/inspector");
-const DOMUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"].
-                   getService(Components.interfaces.inIDOMUtils);
+"use strict";
 
-const KNOWN_PSEUDOCLASSES = [':hover', ':active', ':focus']
+const DOMUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
+                           .getService(Components.interfaces.inIDOMUtils);
 
-window.onload = function() {
+const KNOWN_PSEUDOCLASSES = [":hover", ":active", ":focus"];
+
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
-}
+};
 
-var gInspectee = null;
-var gWalker = null;
-var gClient = null;
-var gCleanupConnection = null;
+let gInspectee = null;
+let gWalker = null;
+let gCleanupConnection = null;
 
 function setup(callback) {
   let url = document.getElementById("inspectorContent").href;
-  gCleanupConnection = attachURL(url, function(err, client, tab, doc) {
+  gCleanupConnection = attachURL(url, function (err, client, tab, doc) {
     gInspectee = doc;
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
-      gClient = client;
       gWalker = walker;
     }).then(callback));
   });
@@ -42,7 +41,6 @@ function setup(callback) {
 
 function teardown() {
   gWalker = null;
-  gClient = null;
   gInspectee = null;
   if (gCleanupConnection) {
     gCleanupConnection();
@@ -53,10 +51,13 @@ function teardown() {
 function checkChange(change, expectation) {
   is(change.type, "pseudoClassLock", "Expect a pseudoclass lock change.");
   let target = change.target;
-  if (expectation.id)
+  if (expectation.id) {
     is(target.id, expectation.id, "Expect a change on node id " + expectation.id);
-  if (expectation.nodeName)
-    is(target.nodeName, expectation.nodeName, "Expect a change on node name " + expectation.nodeName);
+  }
+  if (expectation.nodeName) {
+    is(target.nodeName, expectation.nodeName,
+       "Expect a change on node name " + expectation.nodeName);
+  }
 
   is(target.pseudoClassLocks.length, expectation.pseudos.length,
      "Expect " + expectation.pseudos.length + " pseudoclass locks.");
@@ -74,7 +75,8 @@ function checkChange(change, expectation) {
   for (let pseudo of KNOWN_PSEUDOCLASSES) {
     if (!expectation.pseudos.some(expected => pseudo === expected)) {
       ok(!target.hasPseudoClassLock(pseudo), "Don't expect lock: " + pseudo);
-      ok(!DOMUtils.hasPseudoClassLock(target.rawNode(), pseudo), "Don't expect lock in dom: " + pseudo);
+      ok(!DOMUtils.hasPseudoClassLock(target.rawNode(), pseudo),
+         "Don't expect lock in dom: " + pseudo);
     }
   }
 }
@@ -82,7 +84,7 @@ function checkChange(change, expectation) {
 function checkMutations(mutations, expectations) {
   is(mutations.length, expectations.length, "Should get the right number of mutations.");
   for (let i = 0; i < mutations.length; i++) {
-    checkChange(mutations[i] , expectations[i]);
+    checkChange(mutations[i], expectations[i]);
   }
 }
 
@@ -94,7 +96,7 @@ addTest(function testPseudoClassLock() {
     return promiseDone(gWalker.querySelector(gWalker.rootNode, "#b").then(front => {
       nodeFront = front;
       // Lock the pseudoclass alone, no parents.
-      gWalker.addPseudoClassLock(nodeFront, ':active');
+      gWalker.addPseudoClassLock(nodeFront, ":active");
       // Expect a single pseudoClassLock mutation.
       return promiseOnce(gWalker, "mutations");
     }).then(mutations => {
@@ -107,50 +109,50 @@ addTest(function testPseudoClassLock() {
       });
     }).then(() => {
       // Now add :hover, this time with parents.
-      gWalker.addPseudoClassLock(nodeFront, ':hover', {parents: true});
+      gWalker.addPseudoClassLock(nodeFront, ":hover", {parents: true});
       return promiseOnce(gWalker, "mutations");
     }).then(mutations => {
       let expectedMutations = [{
-        id: 'b',
-        nodeName: 'DIV',
-        pseudos: [':hover', ':active'],
+        id: "b",
+        nodeName: "DIV",
+        pseudos: [":hover", ":active"],
       },
       {
-        id: 'longlist',
-        nodeName: 'DIV',
-        pseudos: [':hover']
+        id: "longlist",
+        nodeName: "DIV",
+        pseudos: [":hover"]
       },
       {
-        nodeName: 'BODY',
-        pseudos: [':hover']
+        nodeName: "BODY",
+        pseudos: [":hover"]
       },
       {
-        nodeName: 'HTML',
-        pseudos: [':hover']
+        nodeName: "HTML",
+        pseudos: [":hover"]
       }];
       checkMutations(mutations, expectedMutations);
     }).then(() => {
       // Now remove the :hover on all parents
-      gWalker.removePseudoClassLock(nodeFront, ':hover', {parents: true});
+      gWalker.removePseudoClassLock(nodeFront, ":hover", {parents: true});
       return promiseOnce(gWalker, "mutations");
     }).then(mutations => {
       let expectedMutations = [{
-        id: 'b',
-        nodeName: 'DIV',
+        id: "b",
+        nodeName: "DIV",
         // Should still have :active on the original node.
-        pseudos: [':active']
+        pseudos: [":active"]
       },
       {
-        id: 'longlist',
-        nodeName: 'DIV',
+        id: "longlist",
+        nodeName: "DIV",
         pseudos: []
       },
       {
-        nodeName: 'BODY',
+        nodeName: "BODY",
         pseudos: []
       },
       {
-        nodeName: 'HTML',
+        nodeName: "HTML",
         pseudos: []
       }];
       checkMutations(mutations, expectedMutations);
@@ -170,7 +172,8 @@ addTest(function testPseudoClassLock() {
       // Now shut down the walker and make sure that clears up the remaining lock.
       return gWalker.release();
     }).then(() => {
-      ok(!DOMUtils.hasPseudoClassLock(contentNode, ':active'), "Pseudoclass should have been removed during destruction.");
+      ok(!DOMUtils.hasPseudoClassLock(contentNode, ":active"),
+         "Pseudoclass should have been removed during destruction.");
       teardown();
     }).then(runNextTest));
   });

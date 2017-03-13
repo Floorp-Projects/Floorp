@@ -12,46 +12,45 @@ Bug 943251 - Allow accessing about:config from WebIDE
 <body>
 <pre id="test">
 <script>
+"use strict";
 
 function runTests() {
-  var Cu = Components.utils;
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
+  let Cu = Components.utils;
+  let Ci = Components.interfaces;
 
-  var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  var {DebuggerClient} = require("devtools/shared/client/main");
-  var {DebuggerServer} = require("devtools/server/main");
-  var Services = require("Services");
+  let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  let {DebuggerClient} = require("devtools/shared/client/main");
+  let {DebuggerServer} = require("devtools/server/main");
+  let Services = require("Services");
 
   SimpleTest.waitForExplicitFinish();
 
-  var {getPreferenceFront} = require("devtools/shared/fronts/preference");
+  let {getPreferenceFront} = require("devtools/shared/fronts/preference");
 
   DebuggerServer.init();
   DebuggerServer.addBrowserActors();
 
-  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
-    client.listTabs(function onListTabs(aResponse) {
-      var p = getPreferenceFront(client, aResponse);
+    client.listTabs(function onListTabs(response) {
+      let p = getPreferenceFront(client, response);
 
-      var prefs = {};
+      let prefs = {};
 
-      var localPref = {
+      let localPref = {
         boolPref: true,
         intPref: 0x1234,
         charPref: "Hello World",
       };
-
 
       function checkValues() {
         is(prefs.boolPref, localPref.boolPref, "read/write bool pref");
         is(prefs.intPref, localPref.intPref, "read/write int pref");
         is(prefs.charPref, localPref.charPref, "read/write string pref");
 
-        ["test.all.bool", "test.all.int", "test.all.string"].forEach(function(key) {
-          var expectedValue;
-          switch(Services.prefs.getPrefType(key)) {
+        ["test.all.bool", "test.all.int", "test.all.string"].forEach(function (key) {
+          let expectedValue;
+          switch (Services.prefs.getPrefType(key)) {
             case Ci.nsIPrefBranch.PREF_STRING:
               expectedValue = Services.prefs.getCharPref(key);
               break;
@@ -66,37 +65,43 @@ function runTests() {
               break;
           }
 
-          is(prefs.allPrefs[key].value, expectedValue, "valid preference value (" + key + ")");
-          is(prefs.allPrefs[key].hasUserValue, Services.prefs.prefHasUserValue(key), "valid hasUserValue (" + key + ")");
+          is(prefs.allPrefs[key].value, expectedValue,
+             "valid preference value (" + key + ")");
+          is(prefs.allPrefs[key].hasUserValue, Services.prefs.prefHasUserValue(key),
+             "valid hasUserValue (" + key + ")");
         });
 
-        ["test.bool", "test.int", "test.string"].forEach(function(key) {
+        ["test.bool", "test.int", "test.string"].forEach(function (key) {
           ok(!prefs.allPrefs.hasOwnProperty(key), "expect no pref (" + key + ")");
-          is(Services.prefs.getPrefType(key), Ci.nsIPrefBranch.PREF_INVALID, "pref (" + key + ") is clear");
+          is(Services.prefs.getPrefType(key), Ci.nsIPrefBranch.PREF_INVALID,
+             "pref (" + key + ") is clear");
         });
 
         client.close().then(() => {
           DebuggerServer.destroy();
-          SimpleTest.finish()
+          SimpleTest.finish();
         });
       }
 
+      function updatePrefsProperty(key) {
+        return function (value) {
+          prefs[key] = value;
+        };
+      }
 
-      p.getAllPrefs().then((json) => prefs["allPrefs"]  = json)
+      p.getAllPrefs().then(updatePrefsProperty("allPrefs"))
       .then(() => p.setBoolPref("test.bool", localPref.boolPref))
       .then(() => p.setIntPref("test.int", localPref.intPref))
       .then(() => p.setCharPref("test.string", localPref.charPref))
-      .then(() => p.getBoolPref("test.bool")).then((value) => prefs["boolPref"] = value)
-      .then(() => p.getIntPref("test.int")).then((value) => prefs["intPref"] = value)
-      .then(() => p.getCharPref("test.string")).then((value) => prefs["charPref"] = value)
+      .then(() => p.getBoolPref("test.bool")).then(updatePrefsProperty("boolPref"))
+      .then(() => p.getIntPref("test.int")).then(updatePrefsProperty("intPref"))
+      .then(() => p.getCharPref("test.string")).then(updatePrefsProperty("charPref"))
       .then(() => p.clearUserPref("test.bool"))
       .then(() => p.clearUserPref("test.int"))
       .then(() => p.clearUserPref("test.string"))
       .then(checkValues);
-
     });
   });
-
 }
 
 window.onload = function () {
@@ -108,7 +113,7 @@ window.onload = function () {
       ["test.all.string", "allizom"],
     ]
   }, runTests);
-}
+};
 </script>
 </pre>
 </body>
