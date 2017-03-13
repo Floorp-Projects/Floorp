@@ -278,3 +278,21 @@ def target_tasks_stylo(full_task_graph, parameters):
             return False
         return True
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('stylo_talos')
+def target_tasks_stylo(full_task_graph, parameters):
+    """Target stylotasks that only run on the m-c branch."""
+    def filter(task):
+        platform = task.attributes.get('build_platform')
+        # only stylo platforms
+        if platform != ('linux64-stylo'):
+            return False
+        # no non-e10s tests
+        if task.attributes.get('unittest_suite'):
+            if not task.attributes.get('e10s'):
+                return False
+            # only run talos
+            if task.attributes.get('unittest_suite') == 'talos':
+                return True
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
