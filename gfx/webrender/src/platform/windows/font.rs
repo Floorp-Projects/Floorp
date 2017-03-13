@@ -143,6 +143,10 @@ impl FontContext {
         self.fonts.insert((*font_key).clone(), face);
     }
 
+    pub fn delete_font(&mut self, font_key: &FontKey) {
+        self.fonts.remove(font_key);
+    }
+
     // Assumes RGB format from dwrite, which is 3 bytes per pixel as dwrite
     // doesn't output an alpha value via GlyphRunAnalysis::CreateAlphaTexture
     #[allow(dead_code)]
@@ -230,13 +234,8 @@ impl FontContext {
                 let length = pixels.len() / 3;
                 let mut rgba_pixels: Vec<u8> = vec![0; length * 4];
                 for i in 0..length {
-                    // TODO(vlad): we likely need to do something smarter
-                    // This is what skia does
-                    let alpha = ((pixels[i*3+0] as u32 +
-                                pixels[i*3+1] as u32 +
-                                pixels[i*3+2] as u32)
-                                / 3) as u8;
-
+                    // Only take the G channel, as its closest to D2D
+                    let alpha = pixels[i*3 + 1] as u8;
                     rgba_pixels[i*4+0] = alpha;
                     rgba_pixels[i*4+1] = alpha;
                     rgba_pixels[i*4+2] = alpha;
@@ -278,22 +277,24 @@ impl FontContext {
 
         let mut pixels = analysis.create_alpha_texture(texture_type, bounds);
 
-        let lut_correction = match glyph_options {
-            Some(option) => {
-                if option.force_gdi_rendering {
-                    &self.gdi_gamma_lut
-                } else {
-                    &self.gamma_lut
-                }
-            },
-            None => &self.gamma_lut
-        };
+        if render_mode != FontRenderMode::Mono {
+            let lut_correction = match glyph_options {
+                Some(option) => {
+                    if option.force_gdi_rendering {
+                        &self.gdi_gamma_lut
+                    } else {
+                        &self.gamma_lut
+                    }
+                },
+                None => &self.gamma_lut
+            };
 
-        lut_correction.preblend_rgb(&mut pixels, width, height,
-                                    ColorLut::new(key.color.r,
-                                                  key.color.g,
-                                                  key.color.b,
-                                                  key.color.a));
+            lut_correction.preblend_rgb(&mut pixels, width, height,
+                                        ColorLut::new(key.color.r,
+                                                      key.color.g,
+                                                      key.color.b,
+                                                      key.color.a));
+        }
 
         let rgba_pixels = self.convert_to_rgba(&mut pixels, render_mode);
 

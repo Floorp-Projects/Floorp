@@ -23,20 +23,23 @@ void main(void) {
 #endif
 
     YuvImage image = fetch_yuv_image(prim.prim_index);
+    ResourceRect y_rect = fetch_resource_rect(prim.user_data.x);
+    ResourceRect u_rect = fetch_resource_rect(prim.user_data.x + 1);
+    ResourceRect v_rect = fetch_resource_rect(prim.user_data.x + 2);
 
     vec2 y_texture_size = vec2(textureSize(sColor0, 0));
-    vec2 y_st0 = image.y_st_rect.xy / y_texture_size;
-    vec2 y_st1 = image.y_st_rect.zw / y_texture_size;
+    vec2 y_st0 = y_rect.uv_rect.xy / y_texture_size;
+    vec2 y_st1 = y_rect.uv_rect.zw / y_texture_size;
 
     vTextureSizeY = y_st1 - y_st0;
     vTextureOffsetY = y_st0;
 
     vec2 uv_texture_size = vec2(textureSize(sColor1, 0));
-    vec2 u_st0 = image.u_st_rect.xy / uv_texture_size;
-    vec2 u_st1 = image.u_st_rect.zw / uv_texture_size;
+    vec2 u_st0 = u_rect.uv_rect.xy / uv_texture_size;
+    vec2 u_st1 = u_rect.uv_rect.zw / uv_texture_size;
 
-    vec2 v_st0 = image.v_st_rect.xy / uv_texture_size;
-    vec2 v_st1 = image.v_st_rect.zw / uv_texture_size;
+    vec2 v_st0 = v_rect.uv_rect.xy / uv_texture_size;
+    vec2 v_st1 = v_rect.uv_rect.zw / uv_texture_size;
 
     // This assumes the U and V surfaces have the same size.
     vTextureSizeUv = u_st1 - u_st0;
