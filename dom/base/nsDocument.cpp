@@ -1203,8 +1203,9 @@ nsDOMStyleSheetSetList::EnsureFresh()
 }
 
 // ==================================================================
-nsIDocument::SelectorCache::SelectorCache()
-  : nsExpirationTracker<SelectorCacheKey, 4>(1000, "nsIDocument::SelectorCache")
+nsIDocument::SelectorCache::SelectorCache(nsIEventTarget* aEventTarget)
+  : nsExpirationTracker<SelectorCacheKey, 4>(
+      1000, "nsIDocument::SelectorCache", aEventTarget)
 { }
 
 nsIDocument::SelectorCache::~SelectorCache()
