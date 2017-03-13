@@ -2939,6 +2939,10 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_SPACE,
                    modifiers:{}, chars:" "},
                   " ", "Space", nsIDOMKeyEvent.DOM_VK_SPACE, " ", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    // Ctrl+Space causes WM_CHAR with ' '.  However, its keypress event's ctrlKey state shouldn't be false.
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_SPACE,
+                   modifiers:{ctrlKey:1}, chars:" "},
+                  " ", "Space", nsIDOMKeyEvent.DOM_VK_SPACE, " ", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_SELECT,
                    modifiers:{}, chars:""},
                   "Select", "", nsIDOMKeyEvent.DOM_VK_SELECT, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
