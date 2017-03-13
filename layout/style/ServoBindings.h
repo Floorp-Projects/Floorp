@@ -278,12 +278,17 @@ void Gecko_EnsureTArrayCapacity(void* array, size_t capacity, size_t elem_size);
 // otherwise. This is ensured with rust traits for the relevant structs.
 void Gecko_ClearPODTArray(void* array, size_t elem_size, size_t elem_align);
 
-// Clear the mContents field in nsStyleContent. This is needed to run the
-// destructors, otherwise we'd leak the images (though we still don't support
-// those), strings, and whatnot.
+// Clear the mContents, mCounterIncrements, or mCounterResets field in nsStyleContent. This is
+// needed to run the destructors, otherwise we'd leak the images, strings, and whatnot.
 void Gecko_ClearAndResizeStyleContents(nsStyleContent* content,
                                        uint32_t how_many);
+void Gecko_ClearAndResizeCounterIncrements(nsStyleContent* content,
+                                           uint32_t how_many);
+void Gecko_ClearAndResizeCounterResets(nsStyleContent* content,
+                                       uint32_t how_many);
 void Gecko_CopyStyleContentsFrom(nsStyleContent* content, const nsStyleContent* other);
+void Gecko_CopyCounterResetsFrom(nsStyleContent* content, const nsStyleContent* other);
+void Gecko_CopyCounterIncrementsFrom(nsStyleContent* content, const nsStyleContent* other);
 
 void Gecko_EnsureImageLayersLength(nsStyleImageLayers* layers, size_t len,
                                    nsStyleImageLayers::LayerType layer_type);

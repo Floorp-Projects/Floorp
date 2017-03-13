@@ -1027,6 +1027,44 @@ Gecko_CopyStyleContentsFrom(nsStyleContent* aContent, const nsStyleContent* aOth
 }
 
 void
+Gecko_ClearAndResizeCounterIncrements(nsStyleContent* aContent, uint32_t aHowMany)
+{
+  aContent->AllocateCounterIncrements(aHowMany);
+}
+
+void
+Gecko_CopyCounterIncrementsFrom(nsStyleContent* aContent, const nsStyleContent* aOther)
+{
+  uint32_t count = aOther->CounterIncrementCount();
+
+  aContent->AllocateCounterIncrements(count);
+
+  for (uint32_t i = 0; i < count; ++i) {
+    const nsStyleCounterData& data = aOther->CounterIncrementAt(i);
+    aContent->SetCounterIncrementAt(i, data.mCounter, data.mValue);
+  }
+}
+
+void
+Gecko_ClearAndResizeCounterResets(nsStyleContent* aContent, uint32_t aHowMany)
+{
+  aContent->AllocateCounterResets(aHowMany);
+}
+
+void
+Gecko_CopyCounterResetsFrom(nsStyleContent* aContent, const nsStyleContent* aOther)
+{
+  uint32_t count = aOther->CounterResetCount();
+
+  aContent->AllocateCounterResets(count);
+
+  for (uint32_t i = 0; i < count; ++i) {
+    const nsStyleCounterData& data = aOther->CounterResetAt(i);
+    aContent->SetCounterResetAt(i, data.mCounter, data.mValue);
+  }
+}
+
+void
 Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen,
                               nsStyleImageLayers::LayerType aLayerType)
 {

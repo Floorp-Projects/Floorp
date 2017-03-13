@@ -112,7 +112,6 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_parse_url.html [4]
   * test_value_storage.html `url` [92]
   * test_shorthand_property_getters.html `url` [3]
-* test_computed_style.html `mask`: setting mask shorthand resets subproperties to non-initial value bug 1331516 [0]
 * auto value for min-{width,height} servo/servo#15045
 * test_compute_data_with_start_struct.html `timing-function`: incorrectly computing keywords to bezier function servo/servo#15086 [2]
 * test_condition_text.html: @-moz-document, CSSOM support of @media, @support [7]
@@ -133,7 +132,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_namespace_rule.html [17]
 * test_dont_use_document_colors.html: support of disabling document color [21]
 * test_exposed_prop_accessors.html: mainly various unsupported properties [*]
-* test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [966]
+* test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [986]
 * test_flexbox_flex_shorthand.html `flex-basis`: **need investigation** [12]
 * test_flexbox_layout.html: **need investigation** [5]
 * test_font_feature_values_parsing.html: @font-feature-values support [107]
@@ -268,19 +267,8 @@ Any line which doesn't follow the format above would be ignored like comment.
 * Properties implemented but not in geckolib:
   * counter-reset property:
     * test_bug829816.html [8]
-    * test_compute_data_with_start_struct.html `counter-reset` [2]
-    * test_inherit_computation.html `counter-reset` [2]
-    * test_inherit_storage.html `counter-reset` [2]
-    * test_initial_computation.html `counter-reset` [4]
-    * test_initial_storage.html `counter-reset` [4]
     * test_value_storage.html `counter-reset` [30]
   * counter-increment property:
-    * test_parse_ident.html [133]
-    * test_compute_data_with_start_struct.html `counter-increment` [2]
-    * test_inherit_computation.html `counter-increment` [2]
-    * test_inherit_storage.html `counter-increment` [2]
-    * test_initial_computation.html `counter-increment` [4]
-    * test_initial_storage.html `counter-increment` [4]
     * test_value_storage.html `counter-increment` [30]
   * clip property: servo/servo#15729
     * test_value_storage.html `should be idempotent for 'clip` [4]
