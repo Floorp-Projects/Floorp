@@ -82,6 +82,7 @@
 #include "nsCSSProps.h"
 #include "nsPluginFrame.h"
 #include "nsSVGMaskFrame.h"
+#include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderDisplayItemLayer.h"
 #include "mozilla/layers/WebRenderMessages.h"
@@ -2754,8 +2755,9 @@ nsDisplayItem::BuildDisplayItemLayer(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
                                      const ContainerLayerParameters& aContainerParameters)
 {
-  RefPtr<DisplayItemLayer> layer = static_cast<DisplayItemLayer*>
-    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
+  RefPtr<Layer> oldLayer = aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this);
+  RefPtr<DisplayItemLayer> layer = oldLayer ? oldLayer->AsDisplayItemLayer() : nullptr;
+
   if (!layer) {
     layer = aManager->CreateDisplayItemLayer();
 
@@ -4552,30 +4554,69 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
                                          nsRect(offset, mFrame->GetSize()),
                                          mFrame->StyleContext(),
                                          mFrame->GetSkipSides());
-  if (!br) {
+
+  const nsStyleBorder *styleBorder = mFrame->StyleContext()->StyleBorder();
+  const nsStyleImage* image = &styleBorder->mBorderImageSource;
+  mBorderImageRenderer = Nothing();
+  if ((!image || image->GetType() != eStyleImageType_Image) && !br) {
     return LAYER_NONE;
   }
 
   LayersBackend backend = aManager->GetBackendType();
   if (backend == layers::LayersBackend::LAYERS_WR) {
-    bool hasCompositeColors;
-    br->AllBordersSolid(&hasCompositeColors);
-    if (hasCompositeColors) {
-      return LAYER_NONE;
-    }
+    if (br) {
+      bool hasCompositeColors;
+      br->AllBordersSolid(&hasCompositeColors);
+      if (hasCompositeColors) {
+        return LAYER_NONE;
+      }
 
-    NS_FOR_CSS_SIDES(i) {
-      mColors[i] = ToDeviceColor(br->mBorderColors[i]);
-      mWidths[i] = br->mBorderWidths[i];
-      mBorderStyles[i] = br->mBorderStyles[i];
-    }
-    NS_FOR_CSS_FULL_CORNERS(corner) {
-      mCorners[corner] = LayerSize(br->mBorderRadii[corner].width, br->mBorderRadii[corner].height);
-    }
+      NS_FOR_CSS_SIDES(i) {
+        mColors[i] = ToDeviceColor(br->mBorderColors[i]);
+        mWidths[i] = br->mBorderWidths[i];
+        mBorderStyles[i] = br->mBorderStyles[i];
+      }
 
-    mRect = ViewAs<LayerPixel>(br->mOuterRect);
+      NS_FOR_CSS_FULL_CORNERS(corner) {
+        mCorners[corner] = LayerSize(br->mBorderRadii[corner].width, br->mBorderRadii[corner].height);
+      }
+
+      mRect = ViewAs<LayerPixel>(br->mOuterRect);
+    } else {
+      if (styleBorder->mBorderImageRepeatH == NS_STYLE_BORDER_IMAGE_REPEAT_ROUND ||
+          styleBorder->mBorderImageRepeatH == NS_STYLE_BORDER_IMAGE_REPEAT_SPACE ||
+          styleBorder->mBorderImageRepeatV == NS_STYLE_BORDER_IMAGE_REPEAT_ROUND ||
+          styleBorder->mBorderImageRepeatV == NS_STYLE_BORDER_IMAGE_REPEAT_SPACE) {
+        // WebRender not supports this currently
+        return LAYER_NONE;
+      }
+
+      uint32_t flags = 0;
+      if (aBuilder->ShouldSyncDecodeImages()) {
+        flags |= nsImageRenderer::FLAG_SYNC_DECODE_IMAGES;
+      }
+
+      image::DrawResult result;
+      mBorderImageRenderer =
+        nsCSSBorderImageRenderer::CreateBorderImageRenderer(mFrame->PresContext(),
+                                                            mFrame,
+                                                            nsRect(offset, mFrame->GetSize()),
+                                                            *(mFrame->StyleContext()->StyleBorder()),
+                                                            mVisibleRect,
+                                                            mFrame->GetSkipSides(),
+                                                            flags,
+                                                            &result);
+
+      if (!mBorderImageRenderer) {
+        return LAYER_NONE;
+      }
+    }
 
     return LAYER_ACTIVE;
+  }
+
+  if (!br) {
+    return LAYER_NONE;
   }
 
   bool hasCompositeColors;
@@ -4618,8 +4659,13 @@ nsDisplayBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
                             LayerManager* aManager,
                             const ContainerLayerParameters& aContainerParameters)
 {
-  RefPtr<BorderLayer> layer = static_cast<BorderLayer*>
-    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
+  if (mBorderImageRenderer) {
+    return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
+  }
+
+  RefPtr<Layer> oldLayer = aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this);
+  RefPtr<BorderLayer> layer = oldLayer ? oldLayer->AsBorderLayer() : nullptr;
+
   if (!layer) {
     layer = aManager->CreateBorderLayer();
     if (!layer)
@@ -4633,6 +4679,70 @@ nsDisplayBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
   layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
                                                       aContainerParameters.mOffset.y, 0));
   return layer.forget();
+}
+
+void
+nsDisplayBorder::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                         nsTArray<WebRenderParentCommand>& aParentCommands,
+                                         WebRenderDisplayItemLayer* aLayer)
+{
+  // Only support border-image currently
+  MOZ_ASSERT(mBorderImageRenderer);
+  if (!mBorderImageRenderer->mImageRenderer.IsReady()) {
+    return;
+  }
+
+  nsDisplayListBuilder* builder = aLayer->GetDisplayListBuilder();
+  uint32_t flags = builder->ShouldSyncDecodeImages() ?
+                   imgIContainer::FLAG_SYNC_DECODE :
+                   imgIContainer::FLAG_NONE;
+
+  RefPtr<imgIContainer> img = mBorderImageRenderer->mImageRenderer.GetImage();
+  RefPtr<layers::ImageContainer> container = img->GetImageContainer(aLayer->WrManager(), flags);
+  if (!container) {
+    return;
+  }
+
+  uint64_t externalImageId = aLayer->SendImageContainer(container);
+
+  const int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  Rect destRect =
+    NSRectToRect(mBorderImageRenderer->mArea, appUnitsPerDevPixel);
+  Rect destRectTransformed = aLayer->RelativeToParent(destRect);
+  IntRect dest = RoundedToInt(destRectTransformed);
+
+  IntRect clip = dest;
+  if (!mBorderImageRenderer->mClip.IsEmpty()) {
+    Rect clipRect =
+      NSRectToRect(mBorderImageRenderer->mClip, appUnitsPerDevPixel);
+    Rect clipRectTransformed = aLayer->RelativeToParent(clipRect);
+    clip = RoundedToInt(clipRectTransformed);
+  }
+
+  float widths[4];
+  float slice[4];
+  float outset[4];
+  NS_FOR_CSS_SIDES(i) {
+    slice[i] = (float)(mBorderImageRenderer->mSlice.Side(i)) / appUnitsPerDevPixel;
+    widths[i] = (float)(mBorderImageRenderer->mWidths.Side(i)) / appUnitsPerDevPixel;
+    outset[i] = (float)(mBorderImageRenderer->mImageOutset.Side(i)) / appUnitsPerDevPixel;
+  }
+
+  WrImageKey key;
+  key.mNamespace = aLayer->WrBridge()->GetNamespace();
+  key.mHandle = aLayer->WrBridge()->GetNextResourceId();
+  aParentCommands.AppendElement(OpAddExternalImage(externalImageId, key));
+  aBuilder.PushBorderImage(wr::ToWrRect(dest),
+                           aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
+                           wr::ToWrBorderWidths(widths[0], widths[1], widths[2], widths[3]),
+                           key,
+                           wr::ToWrNinePatchDescriptor(
+                             (float)(mBorderImageRenderer->mImageSize.width) / appUnitsPerDevPixel,
+                             (float)(mBorderImageRenderer->mImageSize.height) / appUnitsPerDevPixel,
+                             wr::ToWrSideOffsets2Du32(slice[0], slice[1], slice[2], slice[3])),
+                           wr::ToWrSideOffsets2Df32(outset[0], outset[1], outset[2], outset[3]),
+                           wr::ToWrRepeatMode(mBorderImageRenderer->mRepeatModeHorizontal),
+                           wr::ToWrRepeatMode(mBorderImageRenderer->mRepeatModeVertical));
 }
 
 void
