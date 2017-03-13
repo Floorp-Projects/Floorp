@@ -27,6 +27,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
                                   "resource://gre/modules/FormHistory.jsm");
 
+Cu.importGlobalProperties(["URL"]);
+
 function Bookmarks(aBookmarksFile) {
   this._file = aBookmarksFile;
 }
@@ -147,33 +149,38 @@ Bookmarks.prototype = {
 
   // migrate the given array of safari bookmarks to the given places
   // folder.
-  _migrateEntries: Task.async(function* (entries, parentGuid) {
-    for (let entry of entries) {
+  _migrateEntries(entries, parentGuid) {
+    let convertedEntries = this._convertEntries(entries);
+    return MigrationUtils.insertManyBookmarksWrapper(convertedEntries, parentGuid);
+  },
+
+  _convertEntries(entries) {
+    return entries.map(function(entry) {
       let type = entry.get("WebBookmarkType");
       if (type == "WebBookmarkTypeList" && entry.has("Children")) {
-        let title = entry.get("Title");
-        let newFolderGuid = (yield MigrationUtils.insertBookmarkWrapper({
-          parentGuid, type: PlacesUtils.bookmarks.TYPE_FOLDER, title
-        })).guid;
-
-        // Empty folders may not have a children array.
-        if (entry.has("Children"))
-          yield this._migrateEntries(entry.get("Children"), newFolderGuid, false);
-      } else if (type == "WebBookmarkTypeLeaf" && entry.has("URLString")) {
+        return {
+          title: entry.get("Title"),
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          children: this._convertEntries(entry.get("Children")),
+        };
+      }
+      if (type == "WebBookmarkTypeLeaf" && entry.has("URLString")) {
+        // Check we understand this URL before adding it:
+        let url = entry.get("URLString");
+        try {
+          new URL(url);
+        } catch (ex) {
+          Cu.reportError(`Ignoring ${url} when importing from Safari because of exception: ${ex}`);
+          return null;
+        }
         let title;
         if (entry.has("URIDictionary"))
           title = entry.get("URIDictionary").get("title");
-
-        try {
-          yield MigrationUtils.insertBookmarkWrapper({
-            parentGuid, url: entry.get("URLString"), title
-          });
-        } catch (ex) {
-          Cu.reportError("Invalid Safari bookmark: " + ex);
-        }
+        return { url, title };
       }
-    }
-  })
+      return null;
+    }).filter(e => !!e);
+  },
 };
 
 function History(aHistoryFile) {

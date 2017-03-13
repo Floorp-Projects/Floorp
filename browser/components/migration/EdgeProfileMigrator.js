@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "ESEDBReader",
                                   "resource:///modules/ESEDBReader.jsm");
 
+Cu.importGlobalProperties(["URL"]);
+
 const kEdgeRegistryRoot = "SOFTWARE\\Classes\\Local Settings\\Software\\" +
   "Microsoft\\Windows\\CurrentVersion\\AppContainer\\Storage\\" +
   "microsoft.microsoftedge_8wekyb3d8bbwe\\MicrosoftEdge";
@@ -194,21 +196,18 @@ EdgeReadingListMigrator.prototype = {
     }
 
     let destFolderGuid = yield this._ensureReadingListFolder(parentGuid);
-    let exceptionThrown;
+    let bookmarks = [];
     for (let item of readingListItems) {
       let dateAdded = item.AddedDate || new Date();
-      yield MigrationUtils.insertBookmarkWrapper({
-        parentGuid: destFolderGuid, url: item.URL, title: item.Title, dateAdded
-      }).catch(ex => {
-        if (!exceptionThrown) {
-          exceptionThrown = ex;
-        }
-        Cu.reportError(ex);
-      });
+      // Avoid including broken URLs:
+      try {
+        new URL(item.URL);
+      } catch (ex) {
+        continue;
+      }
+      bookmarks.push({ url: item.URL, title: item.Title, dateAdded });
     }
-    if (exceptionThrown) {
-      throw exceptionThrown;
-    }
+    yield MigrationUtils.insertManyBookmarksWrapper(readingListItems, destFolderGuid);
   }),
 
   _ensureReadingListFolder: Task.async(function*(parentGuid) {
@@ -240,7 +239,7 @@ EdgeBookmarksMigrator.prototype = {
   },
 
   migrate(callback) {
-    this._migrateBookmarks(PlacesUtils.bookmarks.menuGuid).then(
+    this._migrateBookmarks().then(
       () => callback(true),
       ex => {
         Cu.reportError(ex);
@@ -249,64 +248,21 @@ EdgeBookmarksMigrator.prototype = {
     );
   },
 
-  _migrateBookmarks: Task.async(function*(rootGuid) {
-    let {bookmarks, folderMap} = this._fetchBookmarksFromDB();
-    if (!bookmarks.length) {
-      return;
-    }
-    yield this._importBookmarks(bookmarks, folderMap, rootGuid);
-  }),
-
-  _importBookmarks: Task.async(function*(bookmarks, folderMap, rootGuid) {
-    if (!MigrationUtils.isStartupMigration) {
-      rootGuid =
-        yield MigrationUtils.createImportedBookmarksFolder("Edge", rootGuid);
-    }
-
-    let exceptionThrown;
-    for (let bookmark of bookmarks) {
-      // If this is a folder, we might have created it already to put other bookmarks in.
-      if (bookmark.IsFolder && bookmark._guid) {
-        continue;
+  _migrateBookmarks: Task.async(function*() {
+    let {toplevelBMs, toolbarBMs} = this._fetchBookmarksFromDB();
+    if (toplevelBMs.length) {
+      let parentGuid = PlacesUtils.bookmarks.menuGuid;
+      if (!MigrationUtils.isStartupMigration) {
+        parentGuid = yield MigrationUtils.createImportedBookmarksFolder("Edge", parentGuid);
       }
-
-      // If this is a folder, just create folders up to and including that folder.
-      // Otherwise, create folders until we have a parent for this bookmark.
-      // This avoids duplicating logic for the bookmarks bar.
-      let folderId = bookmark.IsFolder ? bookmark.ItemId : bookmark.ParentId;
-      let parentGuid = yield this._getGuidForFolder(folderId, folderMap, rootGuid).catch(ex => {
-        if (!exceptionThrown) {
-          exceptionThrown = ex;
-        }
-        Cu.reportError(ex);
-      });
-
-      // If this was a folder, we're done with this item
-      if (bookmark.IsFolder) {
-        continue;
-      }
-
-      if (!parentGuid) {
-        // If we couldn't sort out a parent, fall back to importing on the root:
-        parentGuid = rootGuid;
-      }
-      let placesInfo = {
-        parentGuid,
-        url: bookmark.URL,
-        dateAdded: bookmark.DateUpdated || new Date(),
-        title: bookmark.Title,
-      };
-
-      yield MigrationUtils.insertBookmarkWrapper(placesInfo).catch(ex => {
-        if (!exceptionThrown) {
-          exceptionThrown = ex;
-        }
-        Cu.reportError(ex);
-      });
+      yield MigrationUtils.insertManyBookmarksWrapper(toplevelBMs, parentGuid);
     }
-
-    if (exceptionThrown) {
-      throw exceptionThrown;
+    if (toolbarBMs.length) {
+      let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
+      if (!MigrationUtils.isStartupMigration) {
+        parentGuid = yield MigrationUtils.createImportedBookmarksFolder("Edge", parentGuid);
+      }
+      yield MigrationUtils.insertManyBookmarksWrapper(toolbarBMs, parentGuid);
     }
   }),
 
@@ -331,44 +287,54 @@ EdgeBookmarksMigrator.prototype = {
       return true;
     };
     let bookmarks = readTableFromEdgeDB(this.TABLE_NAME, columns, filterFn, this.db);
-    return {bookmarks, folderMap};
-  },
-
-  _getGuidForFolder: Task.async(function*(folderId, folderMap, rootGuid) {
-    // If the folderId is not known as a folder in the folder map, we assume
-    // we just need the root
-    if (!folderMap.has(folderId)) {
-      return rootGuid;
-    }
-    let folder = folderMap.get(folderId);
-    // If the folder already has a places guid, just return that.
-    if (folder._guid) {
-      return folder._guid;
-    }
-
-    // Hacks! The bookmarks bar is special:
-    if (folder.Title == "_Favorites_Bar_") {
-      let toolbarGuid = PlacesUtils.bookmarks.toolbarGuid;
-      if (!MigrationUtils.isStartupMigration) {
-        toolbarGuid =
-          yield MigrationUtils.createImportedBookmarksFolder("Edge", toolbarGuid);
+    let toplevelBMs = [], toolbarBMs = [];
+    for (let bookmark of bookmarks) {
+      let bmToInsert;
+      // Ignore invalid URLs:
+      if (!bookmark.IsFolder) {
+        try {
+          new URL(bookmark.URL);
+        } catch (ex) {
+          Cu.reportError(`Ignoring ${bookmark.URL} when importing from Edge because of exception: ${ex}`);
+          continue;
+        }
+        bmToInsert = {
+          dateAdded: bookmark.DateUpdated || new Date(),
+          title: bookmark.Title,
+          url: bookmark.URL,
+        };
+      } else /* bookmark.IsFolder */ {
+        // Ignore the favorites bar bookmark itself.
+        if (bookmark.Title == "_Favorites_Bar_") {
+          continue;
+        }
+        if (!bookmark._childrenRef) {
+          bookmark._childrenRef = [];
+        }
+        bmToInsert = {
+          title: bookmark.Title,
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          dateAdded: bookmark.DateUpdated || new Date(),
+          children: bookmark._childrenRef,
+        };
       }
-      folder._guid = toolbarGuid;
-      return folder._guid;
+
+      if (!folderMap.has(bookmark.ParentId)) {
+        toplevelBMs.push(bmToInsert);
+      } else {
+        let parent = folderMap.get(bookmark.ParentId);
+        if (parent.Title == "_Favorites_Bar_") {
+          toolbarBMs.push(bmToInsert);
+          continue;
+        }
+        if (!parent._childrenRef) {
+          parent._childrenRef = [];
+        }
+        parent._childrenRef.push(bmToInsert);
+      }
     }
-    // Otherwise, get the right parent guid recursively:
-    let parentGuid = yield this._getGuidForFolder(folder.ParentId, folderMap, rootGuid);
-    let folderInfo = {
-      title: folder.Title,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      dateAdded: folder.DateUpdated || new Date(),
-      parentGuid,
-    };
-    // and add ourselves as a kid, and return the guid we got.
-    let parentBM = yield MigrationUtils.insertBookmarkWrapper(folderInfo);
-    folder._guid = parentBM.guid;
-    return folder._guid;
-  }),
+    return {toplevelBMs, toolbarBMs};
+  },
 };
 
 function EdgeProfileMigrator() {
