@@ -1042,6 +1042,9 @@ private:
   RecvBackUpXResources(const FileDescriptor& aXSocketFd) override;
 
   virtual mozilla::ipc::IPCResult
+  RecvRequestAnonymousTemporaryFile(const uint64_t& aID) override;
+
+  virtual mozilla::ipc::IPCResult
   RecvOpenAnonymousTemporaryFile(FileDescOrError* aFD) override;
 
   virtual mozilla::ipc::IPCResult
