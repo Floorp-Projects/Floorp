@@ -6,27 +6,20 @@ GARBAGE += $(MIDL_GENERATED_FILES) done_gen
 
 MIDL_GENERATED_FILES = \
   dlldata.c \
-  ISimpleDOMNode.h \
-  ISimpleDOMNode_p.c \
-  ISimpleDOMNode_i.c \
-  ISimpleDOMNode.tlb \
-  ISimpleDOMDocument.h \
-  ISimpleDOMDocument_p.c \
-  ISimpleDOMDocument_i.c \
-  ISimpleDOMText.h \
-  ISimpleDOMText_p.c \
-  ISimpleDOMText_i.c \
+  ISimpleDOM.h \
+  ISimpleDOM_i.c \
+  ISimpleDOM_p.c \
+  ISimpleDOM.tlb \
   $(NULL)
 
 $(MIDL_GENERATED_FILES): done_gen
 
-done_gen: ISimpleDOMNode.idl \
+done_gen: ISimpleDOM.idl \
+          ISimpleDOMNode.idl \
           ISimpleDOMDocument.idl \
           ISimpleDOMText.idl
 
-	$(MIDL) $(MIDL_FLAGS) -I $(srcdir) -Oicf $(srcdir)/ISimpleDOMNode.idl
-	$(MIDL) $(MIDL_FLAGS) -Oicf $(srcdir)/ISimpleDOMDocument.idl
-	$(MIDL) $(MIDL_FLAGS) -Oicf $(srcdir)/ISimpleDOMText.idl
+	$(MIDL) $(MIDL_FLAGS) -I $(srcdir) -robust -Oicf $(srcdir)/ISimpleDOM.idl
 	touch $@
 
 export:: done_gen
@@ -38,12 +31,8 @@ register::
 EMBED_MANIFEST_AT = 2
 
 midl_exports := \
-    ISimpleDOMDocument.h \
-    ISimpleDOMDocument_i.c \
-    ISimpleDOMNode.h \
-    ISimpleDOMNode_i.c \
-    ISimpleDOMText.h \
-    ISimpleDOMText_i.c \
+    ISimpleDOM.h \
+    ISimpleDOM_i.c \
     $(NULL)
 
 INSTALL_TARGETS += midl_exports
