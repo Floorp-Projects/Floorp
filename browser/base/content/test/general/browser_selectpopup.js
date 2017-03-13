@@ -594,12 +594,11 @@ function* performLargePopupTests(win) {
   EventUtils.synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" }, win);
   is(selectPopup.scrollBox.scrollTop, scrollPos, "scroll position at mousemove after mouseup should not change");
 
-
   yield hideSelectPopup(selectPopup, "escape", win);
 
   let positions = [
     "margin-top: 300px;",
-    "position: fixed; bottom: 100px;",
+    "position: fixed; bottom: 200px;",
     "width: 100%; height: 9999px;"
   ];
 
@@ -644,7 +643,52 @@ function* performLargePopupTests(win) {
     });
     yield contentPainted;
   }
+
+  if (navigator.platform.indexOf("Mac") == 0) {
+    yield ContentTask.spawn(browser, null, function*() {
+      let doc = content.document;
+      doc.body.style = "padding-top: 400px;"
+
+      let select = doc.getElementById("one");
+      select.options[41].selected = true;
+      select.focus();
+    });
+
+    yield openSelectPopup(selectPopup, "key", "select", win);
+
+    ok(selectPopup.getBoundingClientRect().top > browser.getBoundingClientRect().top,
+       "select popup appears over selected item");
+
+    yield hideSelectPopup(selectPopup, "escape", win);
+  }
 }
+
+// This test checks select elements with a large number of options to ensure that
+// the popup appears within the browser area.
+add_task(function* test_large_popup() {
+  const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
+
+  yield* performLargePopupTests(window);
+
+  yield BrowserTestUtils.removeTab(tab);
+});
+
+// This test checks the same as the previous test but in a new smaller window.
+add_task(function* test_large_popup_in_small_window() {
+  let newwin = yield BrowserTestUtils.openNewBrowserWindow({ width: 400, height: 400 });
+
+  const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(newwin.gBrowser.selectedBrowser);
+  yield BrowserTestUtils.loadURI(newwin.gBrowser.selectedBrowser, pageUrl);
+  yield browserLoadedPromise;
+
+  newwin.gBrowser.selectedBrowser.focus();
+
+  yield* performLargePopupTests(newwin);
+
+  yield BrowserTestUtils.closeWindow(newwin);
+});
 
 function* performSelectSearchTests(win) {
   let browser = win.gBrowser.selectedBrowser;
@@ -716,33 +760,6 @@ add_task(function* test_select_search() {
   yield BrowserTestUtils.removeTab(tab);
 
   yield SpecialPowers.popPrefEnv();
-});
-
-// This test checks select elements with a large number of options to ensure that
-// the popup appears within the browser area.
-add_task(function* test_large_popup() {
-  const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
-
-  yield* performLargePopupTests(window);
-
-  yield BrowserTestUtils.removeTab(tab);
-});
-
-// This test checks the same as the previous test but in a new smaller window.
-add_task(function* test_large_popup_in_small_window() {
-  let newwin = yield BrowserTestUtils.openNewBrowserWindow({ width: 400, height: 400 });
-
-  const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
-  let browserLoadedPromise = BrowserTestUtils.browserLoaded(newwin.gBrowser.selectedBrowser);
-  yield BrowserTestUtils.loadURI(newwin.gBrowser.selectedBrowser, pageUrl);
-  yield browserLoadedPromise;
-
-  newwin.gBrowser.selectedBrowser.focus();
-
-  yield* performLargePopupTests(newwin);
-
-  yield BrowserTestUtils.closeWindow(newwin);
 });
 
 // This test checks that a mousemove event is fired correctly at the menu and
