@@ -72,7 +72,7 @@ add_task(function* () {
   // Hack the planet! Load our blocklist shim, so we can mess with blocklist
   // return results in the content process. Active until we close our tab.
   let mm = gTestBrowser.messageManager;
-  info("test 3a: loading " + gChromeRoot + "blocklist_proxy.js" + "\n");
+  info("test 3a: loading " + gChromeRoot + "blocklist_proxy.js\n");
   mm.loadFrameScript(gChromeRoot + "blocklist_proxy.js", true);
 
   yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");

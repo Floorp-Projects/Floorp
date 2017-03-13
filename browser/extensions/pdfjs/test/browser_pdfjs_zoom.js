@@ -72,7 +72,7 @@ add_task(function* test() {
 
   yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
     function* (newTabBrowser) {
-      yield waitForPdfJS(newTabBrowser, TESTROOT + "file_pdfjs_test.pdf" + "#zoom=100");
+      yield waitForPdfJS(newTabBrowser, TESTROOT + "file_pdfjs_test.pdf#zoom=100");
 
       yield ContentTask.spawn(newTabBrowser, TESTS, function* (contentTESTS) {
         let document = content.document;

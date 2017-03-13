@@ -3996,7 +3996,8 @@ Downloader.prototype = {
     maxFail = Math.min(maxFail, 20);
     LOG("Downloader:onStopRequest - status: " + status + ", " +
         "current fail: " + this.updateService._consecutiveSocketErrors + ", " +
-        "max fail: " + maxFail + ", " + "retryTimeout: " + retryTimeout);
+        "max fail: " + maxFail + ", " +
+        "retryTimeout: " + retryTimeout);
     if (Components.isSuccessCode(status)) {
       if (this._verifyDownload()) {
         if (shouldUseService()) {

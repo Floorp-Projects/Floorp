@@ -161,7 +161,7 @@ function isSecurityState(expectedState, message, test) {
     gotState = "EV";
   }
 
-  test(gotState == expectedState, (message || "") + ", " + "expected " + expectedState + " got " + gotState);
+  test(gotState == expectedState, (message || "") + ", expected " + expectedState + " got " + gotState);
 
   switch (expectedState) {
     case "insecure":
