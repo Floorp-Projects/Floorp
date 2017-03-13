@@ -803,6 +803,10 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   margin-left: 28px;
 }
 
+#PanelUI-remotetabs[mainview] .PanelUI-remotetabs-notabsforclient-label {
+  margin-left: 32px;
+}
+
 .fxaSyncIllustration {
   width: 180px;
   height: var(--panel-ui-sync-illustration-height);
