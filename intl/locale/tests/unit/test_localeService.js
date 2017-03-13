@@ -22,15 +22,15 @@ function run_test()
   run_next_test();
 }
 
-add_test(function test_getAppLocales() {
+add_test(function test_getAppLocalesAsLangTags() {
   const localeService =
     Components.classes["@mozilla.org/intl/localeservice;1"]
     .getService(Components.interfaces.mozILocaleService);
 
-  const appLocale = localeService.getAppLocale();
+  const appLocale = localeService.getAppLocaleAsLangTag();
   do_check_true(appLocale != "", "appLocale is non-empty");
 
-  const appLocales = localeService.getAppLocales();
+  const appLocales = localeService.getAppLocalesAsLangTags();
   do_check_true(Array.isArray(appLocales), "appLocales returns an array");
 
   do_check_true(appLocale == appLocales[0], "appLocale matches first entry in appLocales");
