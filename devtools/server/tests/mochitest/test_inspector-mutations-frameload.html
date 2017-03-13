@@ -11,23 +11,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
-const inspector = require("devtools/shared/fronts/inspector");
+"use strict";
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
-}
+};
 
-var gInspectee = null;
-var gWalker = null;
-var gClient = null;
-var gChildFrame = null;
-var gChildDocument = null;
-var gCleanupConnection = null;
+let gInspectee = null;
+let gWalker = null;
+let gClient = null;
+let gCleanupConnection = null;
 
 function setup(callback) {
   let url = document.getElementById("inspectorContent").href;
-  gCleanupConnection = attachURL(url, function(err, client, tab, doc) {
+  gCleanupConnection = attachURL(url, function (err, client, tab, doc) {
     gInspectee = doc;
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
@@ -42,7 +40,6 @@ function teardown() {
   gWalker = null;
   gClient = null;
   gInspectee = null;
-  gChildFrame = null;
   if (gCleanupConnection) {
     gCleanupConnection();
     gCleanupConnection = null;
@@ -55,8 +52,8 @@ function assertOwnership() {
 
 function loadChildSelector(selector) {
   return gWalker.querySelector(gWalker.rootNode, "#childFrame").then(frame => {
-    ok(frame.numChildren > 0, "Child frame should consider its loaded document as a child.");
-    gChildFrame = frame;
+    ok(frame.numChildren > 0,
+       "Child frame should consider its loaded document as a child.");
     return gWalker.children(frame);
   }).then(children => {
     return gWalker.querySelectorAll(children.nodes[0], selector);
@@ -76,7 +73,6 @@ function getUnloadedDoc(mutations) {
 
 addTest(function loadNewChild() {
   setup(() => {
-    let beforeUnloadSize = 0;
     // Load a bunch of fronts for actors inside the child frame.
     promiseDone(loadChildSelector("#longlist div").then(() => {
       let childFrame = gInspectee.querySelector("#childFrame");
@@ -102,7 +98,6 @@ addTest(function loadNewChild() {
 
 addTest(function loadNewChildTwice() {
   setup(() => {
-    let beforeUnloadSize = 0;
     // Load a bunch of fronts for actors inside the child frame.
     promiseDone(loadChildSelector("#longlist div").then(() => {
       let childFrame = gInspectee.querySelector("#childFrame");
@@ -130,10 +125,8 @@ addTest(function loadNewChildTwice() {
   });
 });
 
-
 addTest(function loadNewChildTwiceAndCareAboutIt() {
   setup(() => {
-    let beforeUnloadSize = 0;
     // Load a bunch of fronts for actors inside the child frame.
     promiseDone(loadChildSelector("#longlist div").then(() => {
       let childFrame = gInspectee.querySelector("#childFrame");
@@ -168,7 +161,6 @@ addTest(function loadNewChildTwiceAndCareAboutIt() {
 
 addTest(function testBack() {
   setup(() => {
-    let beforeUnloadSize = 0;
     // Load a bunch of fronts for actors inside the child frame.
     promiseDone(loadChildSelector("#longlist div").then(() => {
       let childFrame = gInspectee.querySelector("#childFrame");
@@ -178,7 +170,8 @@ addTest(function testBack() {
       // Read the new child
       return loadChildSelector("#longlist div");
     }).then(() => {
-      // Now use history.back to change the source, and expect the same results as loadNewChild.
+      // Now use history.back to change the source,
+      // and expect the same results as loadNewChild.
       let childFrame = gInspectee.querySelector("#childFrame");
       childFrame.contentWindow.history.back();
       return waitForMutation(gWalker, isChildList);

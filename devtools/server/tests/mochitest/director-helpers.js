@@ -1,4 +1,8 @@
-var Cu = Components.utils;
+/* exported DirectorRegistryFront, DirectorManagerFront, Task,
+   newConnectedDebuggerClient, purgeInstalledDirectorScripts */
+"use strict";
+
+const Cu = Components.utils;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {DebuggerClient} = require("devtools/shared/client/main");
 const {DebuggerServer} = require("devtools/server/main");
@@ -25,12 +29,12 @@ const { Task } = require("devtools/shared/task");
  **********************************/
 
 function* newConnectedDebuggerClient(opts) {
-  var transport = DebuggerServer.connectPipe();
-  var client = new DebuggerClient(transport);
+  let transport = DebuggerServer.connectPipe();
+  let client = new DebuggerClient(transport);
 
   yield client.connect();
 
-  var root = yield client.listTabs();
+  let root = yield client.listTabs();
 
   return {
     client: client,

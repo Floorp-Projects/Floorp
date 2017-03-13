@@ -9,7 +9,9 @@
 </head>
 <body>
 <script>
-window.onload = function() {
+"use strict";
+
+window.onload = function () {
   const { Constructor: CC, utils: Cu } = Components;
   const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
   const { Task } = require("devtools/shared/task");
@@ -76,7 +78,7 @@ window.onload = function() {
     client.close();
     yield closed;
   });
-}
+};
 </script>
 </body>
 </html>

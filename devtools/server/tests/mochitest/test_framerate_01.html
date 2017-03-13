@@ -12,30 +12,29 @@ Bug 1007200 - Create a framerate actor
 <body>
 <pre id="test">
 <script>
+"use strict";
 
-window.onload = function() {
-  var Cu = Components.utils;
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
+window.onload = function () {
+  const Cu = Components.utils;
 
-  var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  var Services = require("Services");
-  var { DebuggerClient } = require("devtools/shared/client/main");
-  var { DebuggerServer } = require("devtools/server/main");
+  const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  const Services = require("Services");
+  const { DebuggerClient } = require("devtools/shared/client/main");
+  const { DebuggerServer } = require("devtools/server/main");
 
   // Always log packets when running tests.
   Services.prefs.setBoolPref("devtools.debugger.log", true);
-  SimpleTest.registerCleanupFunction(function() {
+  SimpleTest.registerCleanupFunction(function () {
     Services.prefs.clearUserPref("devtools.debugger.log");
   });
 
   SimpleTest.waitForExplicitFinish();
 
-  var {FramerateFront} = require("devtools/shared/fronts/framerate");
+  const { FramerateFront } = require("devtools/shared/fronts/framerate");
 
   function plotFPS(ticks, interval = 100, clamp = 60) {
-    var timeline = [];
-    var totalTicks = ticks.length;
+    let timeline = [];
+    let totalTicks = ticks.length;
 
     // If the refresh driver didn't get a chance to tick before the
     // recording was stopped, assume framerate was 0.
@@ -45,19 +44,19 @@ window.onload = function() {
       return timeline;
     }
 
-    var frameCount = 0;
-    var prevTime = ticks[0];
+    let frameCount = 0;
+    let prevTime = ticks[0];
 
-    for (var i = 1; i < totalTicks; i++) {
-      var currTime = ticks[i];
+    for (let i = 1; i < totalTicks; i++) {
+      let currTime = ticks[i];
       frameCount++;
 
-      var elapsedTime = currTime - prevTime;
+      let elapsedTime = currTime - prevTime;
       if (elapsedTime < interval) {
         continue;
       }
 
-      var framerate = Math.min(1000 / (elapsedTime / frameCount), clamp);
+      let framerate = Math.min(1000 / (elapsedTime / frameCount), clamp);
       timeline.push({ delta: prevTime, value: framerate });
       timeline.push({ delta: currTime, value: framerate });
 
@@ -66,20 +65,21 @@ window.onload = function() {
     }
 
     return timeline;
-  };
+  }
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
     DebuggerServer.addBrowserActors();
   }
 
-  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
-    client.listTabs(function onListTabs(aResponse) {
-      var form = aResponse.tabs[aResponse.selected];
-      var front = FramerateFront(client, form);
+    client.listTabs(function onListTabs(response) {
+      let form = response.tabs[response.selected];
+      let front = FramerateFront(client, form);
 
       window.setTimeout(() => {
+        /* eslint-disable max-nested-callbacks */
         front.startRecording().then(() => {
           window.setTimeout(() => {
             front.stopRecording().then(rawData => {
@@ -87,6 +87,7 @@ window.onload = function() {
             });
           }, 1000);
         });
+        /* eslint-enable max-nested-callbacks */
       }, 1000);
     });
   });
@@ -94,15 +95,15 @@ window.onload = function() {
   function onRecordingStopped(front, rawData) {
     ok(rawData, "There should be a recording available.");
 
-    var timeline = plotFPS(rawData);
+    let timeline = plotFPS(rawData);
     ok(timeline.length >= 2,
       "There should be at least one measurement available, with two entries.");
 
-    var prevTimeStart = timeline[0].delta;
+    let prevTimeStart = timeline[0].delta;
 
-    for (var i = 0; i < timeline.length; i += 2) {
-      var currTimeStart = timeline[i].delta;
-      var currTimeEnd = timeline[i + 1].delta;
+    for (let i = 0; i < timeline.length; i += 2) {
+      let currTimeStart = timeline[i].delta;
+      let currTimeEnd = timeline[i + 1].delta;
       info("Testing delta: " + currTimeStart + " vs. " + currTimeEnd);
 
       ok(currTimeStart < currTimeEnd,
@@ -113,28 +114,24 @@ window.onload = function() {
       prevTimeStart = currTimeEnd;
     }
 
-    var prevFramerateValue = -1;
-
-    for (var i = 0; i < timeline.length; i += 2) {
-      var currFramerateStart = timeline[i].value;
-      var currFramerateEnd = timeline[i + 1].value;
+    for (let i = 0; i < timeline.length; i += 2) {
+      let currFramerateStart = timeline[i].value;
+      let currFramerateEnd = timeline[i + 1].value;
       info("Testing framerate: " + currFramerateStart);
 
       is(currFramerateStart, currFramerateEnd,
         "The start and end framerate values should be equal.");
 
       is(typeof currFramerateStart, "number", "All values should be numbers.");
-      ok(currFramerateStart <= 60, "All values were correctly clamped.")
-
-      prevFramerateValue = currFramerateStart;
+      ok(currFramerateStart <= 60, "All values were correctly clamped.");
     }
 
     client.close().then(() => {
       DebuggerServer.destroy();
-      SimpleTest.finish()
+      SimpleTest.finish();
     });
   }
-}
+};
 </script>
 </pre>
 </body>

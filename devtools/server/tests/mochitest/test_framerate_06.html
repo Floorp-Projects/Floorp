@@ -13,34 +13,33 @@ Bug 1171489 - Tests if the framerate actor does not record timestamps from multi
 <body>
 <pre id="test">
 <script>
+"use strict";
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
-  var {FramerateFront} = require("devtools/shared/fronts/framerate");
-  var {TargetFactory} = require("devtools/client/framework/target");
+  const {FramerateFront} = require("devtools/shared/fronts/framerate");
 
-  var url = document.getElementById("testContent").href;
+  let url = document.getElementById("testContent").href;
   attachURL(url, onTab);
 
   function onTab(_, client, form, contentDoc) {
-    var contentWin = contentDoc.defaultView;
-    var chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
-    var selectedTab = chromeWin.gBrowser.selectedTab;
+    let contentWin = contentDoc.defaultView;
 
-    var target = TargetFactory.forTab(selectedTab);
-    var front = FramerateFront(client, form);
+    let front = FramerateFront(client, form);
 
     front.startRecording().then(() => {
       window.setTimeout(() => {
         // Wait for the iframe to be loaded again
-        window.addEventListener("message", function loaded (event) {
+        window.addEventListener("message", function loaded(event) {
           if (event.data === "ready") {
             window.removeEventListener("message", loaded);
+            /* eslint-disable max-nested-callbacks */
             window.setTimeout(() => {
               front.stopRecording().then(ticks => {
                 onRecordingStopped(client, ticks);
               });
             }, 1000);
+            /* eslint-enable max-nested-callbacks */
           }
         });
         contentWin.location.reload();
@@ -49,13 +48,13 @@ window.onload = function() {
   }
 
   function onRecordingStopped(client, ticks) {
-    var diffs = [];
+    let diffs = [];
 
     info(`Got ${ticks.length} ticks.`);
 
-    for (var i = 1; i < ticks.length; i++) {
-      var prev = ticks[i - 1];
-      var curr = ticks[i];
+    for (let i = 1; i < ticks.length; i++) {
+      let prev = ticks[i - 1];
+      let curr = ticks[i];
       diffs.push(curr - prev);
       info(curr + " - " + (curr - prev));
     }
@@ -64,17 +63,19 @@ window.onload = function() {
     // when we get ticks from other frames they're usually at diffs of < 1. Sometimes
     // ticks can still be less than 16ms even on one frame (usually following a very slow
     // frame), so use a low number (2) to be our threshold
-    var THRESHOLD = 2;
-    ok(ticks.length >= 20, "we should have atleast 20 ticks over the course of two seconds.");
-    var belowThreshold = diffs.filter(v => v <= THRESHOLD);
-    ok(belowThreshold.length <= 10, "we should have very few frames less than the threshold");
+    let THRESHOLD = 2;
+    ok(ticks.length >= 20,
+       "we should have atleast 20 ticks over the course of two seconds.");
+    let belowThreshold = diffs.filter(v => v <= THRESHOLD);
+    ok(belowThreshold.length <= 10,
+       "we should have very few frames less than the threshold");
 
     client.close().then(() => {
       DebuggerServer.destroy();
-      SimpleTest.finish()
+      SimpleTest.finish();
     });
   }
-}
+};
 </script>
 </pre>
 <a id="testContent" target="_blank" href="inspector-traversal-data.html">Test Document</a>
