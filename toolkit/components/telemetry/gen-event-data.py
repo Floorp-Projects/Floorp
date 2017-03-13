@@ -78,8 +78,8 @@ def write_common_event_table(events, output, string_table, extra_table):
         print("  {%d, %d, %d, %d, %d, %s, %s}," %
                 (string_table.stringIndex(e.category),
                  string_table.stringIndex(e.expiry_version),
-                 extras[0], # extra keys index
-                 extras[1], # extra keys count
+                 extras[0],  # extra keys index
+                 extras[1],  # extra keys count
                  e.expiry_day,
                  e.dataset,
                  " | ".join(e.record_in_processes_enum)),
