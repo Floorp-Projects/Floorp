@@ -242,17 +242,17 @@ public:
    * intrinsic ratio.
    */
   DrawResult
-  DrawBorderImageComponent(nsPresContext*                   aPresContext,
-                           nsRenderingContext&              aRenderingContext,
-                           const nsRect&                    aDirtyRect,
-                           const nsRect&                    aFill,
-                           const mozilla::CSSIntRect&       aSrc,
-                           mozilla::StyleBorderImageRepeat  aHFill,
-                           mozilla::StyleBorderImageRepeat  aVFill,
-                           const nsSize&                    aUnitSize,
-                           uint8_t                          aIndex,
-                           const mozilla::Maybe<nsSize>&    aSVGViewportSize,
-                           const bool                       aHasIntrinsicRatio);
+  DrawBorderImageComponent(nsPresContext*       aPresContext,
+                           nsRenderingContext&  aRenderingContext,
+                           const nsRect&        aDirtyRect,
+                           const nsRect&        aFill,
+                           const mozilla::CSSIntRect& aSrc,
+                           uint8_t              aHFill,
+                           uint8_t              aVFill,
+                           const nsSize&        aUnitSize,
+                           uint8_t              aIndex,
+                           const mozilla::Maybe<nsSize>& aSVGViewportSize,
+                           const bool           aHasIntrinsicRatio);
 
   bool IsRasterImage();
   bool IsAnimatedImage();

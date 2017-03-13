@@ -389,13 +389,11 @@ enum class FillMode : uint8_t;
 #define NS_STYLE_BORDER_STYLE_HIDDEN            9
 #define NS_STYLE_BORDER_STYLE_AUTO              10 // for outline-style only
 
-// border-image-repeat
-enum class StyleBorderImageRepeat : uint8_t {
-  Stretch,
-  Repeat,
-  Round,
-  Space
-};
+// See nsStyleBorder mBorderImage
+#define NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH    0
+#define NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT     1
+#define NS_STYLE_BORDER_IMAGE_REPEAT_ROUND      2
+#define NS_STYLE_BORDER_IMAGE_REPEAT_SPACE      3
 
 #define NS_STYLE_BORDER_IMAGE_SLICE_NOFILL      0
 #define NS_STYLE_BORDER_IMAGE_SLICE_FILL        1
