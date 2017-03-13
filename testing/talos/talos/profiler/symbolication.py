@@ -7,7 +7,6 @@ import hashlib
 import json
 import os
 import platform
-import re
 import subprocess
 import urllib2
 import zipfile
@@ -185,10 +184,10 @@ class ProfileSymbolicator:
     def get_unknown_modules_in_profile(self, profile_json):
         if "libs" not in profile_json:
             return []
-        shared_libraries = json.loads(profile_json["libs"])
+        shared_libraries = profile_json["libs"]
         memoryMap = []
         for lib in shared_libraries:
-            memoryMap.append(self._module_from_lib(lib))
+            memoryMap.append([lib["debugName"], lib["breakpadId"]])
 
         rawRequest = {"stacks": [[]], "memoryMap": memoryMap,
                       "version": 4, "symbolSources": ["FIREFOX", "WINDOWS"]}
@@ -223,8 +222,8 @@ class ProfileSymbolicator:
                 self.dump_and_integrate_symbols_for_lib(lib, output_dir, zf)
 
     def dump_and_integrate_symbols_for_lib(self, lib, output_dir, zip):
-        [name, breakpadId] = self._module_from_lib(lib)
-        expected_name_without_extension = os.path.join(name, breakpadId, name)
+        name = lib["debugName"]
+        expected_name_without_extension = os.path.join(name, lib["breakpadId"], name)
         for extension in [".sym", ".nmsym"]:
             expected_name = expected_name_without_extension + extension
             if expected_name in zip.namelist():
@@ -233,7 +232,7 @@ class ProfileSymbolicator:
                 zip.extract(expected_name, output_dir)
                 return
 
-        lib_path = lib['name']
+        lib_path = lib["path"]
         if not os.path.exists(lib_path):
             return
 
@@ -255,10 +254,13 @@ class ProfileSymbolicator:
     def symbolicate_profile(self, profile_json):
         if "libs" not in profile_json:
             return
-        if profile_json["meta"].get("version", 2) == 3:
-            self.symbolicate_profile_v3(profile_json)
-        else:
-            self.symbolicate_profile_v2(profile_json)
+
+        shared_libraries = profile_json["libs"]
+        addresses = self._find_addresses(profile_json)
+        symbols_to_resolve = self._assign_symbols_to_libraries(
+            addresses, shared_libraries)
+        symbolication_table = self._resolve_symbols(symbols_to_resolve)
+        self._substitute_symbols(profile_json, symbolication_table)
 
         profile_start_time = profile_json["meta"].get("startTime", 0)
         delta_time = 0
@@ -285,26 +287,7 @@ class ProfileSymbolicator:
                     if marker[1]:
                         marker[1] += delta_time
 
-    def symbolicate_profile_v2(self, profile_json):
-        shared_libraries = json.loads(profile_json["libs"])
-        shared_libraries.sort(key=lambda lib: lib["start"])
-        addresses = self._find_addresses_v2(profile_json)
-        symbols_to_resolve = self._assign_symbols_to_libraries(
-            addresses, shared_libraries)
-        symbolication_table = self._resolve_symbols(symbols_to_resolve)
-        self._substitute_symbols_v2(profile_json, symbolication_table)
-
-    def symbolicate_profile_v3(self, profile_json):
-        shared_libraries = json.loads(profile_json["libs"])
-        shared_libraries.sort(key=lambda lib: lib["start"])
-        addresses = self._find_addresses_v3(profile_json)
-        symbols_to_resolve = self._assign_symbols_to_libraries(
-            addresses, shared_libraries)
-        # print symbols_to_resolve
-        symbolication_table = self._resolve_symbols(symbols_to_resolve)
-        self._substitute_symbols_v3(profile_json, symbolication_table)
-
-    def _find_addresses_v3(self, profile_json):
+    def _find_addresses(self, profile_json):
         addresses = set()
         for thread in profile_json["threads"]:
             if isinstance(thread, basestring):
@@ -314,23 +297,12 @@ class ProfileSymbolicator:
                     addresses.add(s)
         return addresses
 
-    def _substitute_symbols_v3(self, profile_json, symbolication_table):
+    def _substitute_symbols(self, profile_json, symbolication_table):
         for thread in profile_json["threads"]:
             if isinstance(thread, basestring):
                 continue
             for i, s in enumerate(thread["stringTable"]):
                 thread["stringTable"][i] = symbolication_table.get(s, s)
-
-    def _find_addresses_v2(self, profile_json):
-        addresses = set()
-        for thread in profile_json["threads"]:
-            for sample in thread["samples"]:
-                for frame in sample["frames"]:
-                    if frame["location"][0:2] == "0x":
-                        addresses.add(frame["location"])
-                    if "lr" in frame and frame["lr"][0:2] == "0x":
-                        addresses.add(frame["lr"])
-        return addresses
 
     def _get_containing_library(self, address, libs):
         left = 0
@@ -358,12 +330,6 @@ class ProfileSymbolicator:
             libs_with_symbols[lib["start"]]["symbols"].add(address)
         return libs_with_symbols.values()
 
-    def _module_from_lib(self, lib):
-        if "breakpadId" in lib:
-            return [lib["name"].split("/")[-1], lib["breakpadId"]]
-        pdbSig = re.sub("[{}\-]", "", lib["pdbSignature"])
-        return [lib["pdbName"], pdbSig + lib["pdbAge"]]
-
     def _resolve_symbols(self, symbols_to_resolve):
         memoryMap = []
         processedStack = []
@@ -371,7 +337,7 @@ class ProfileSymbolicator:
         for moduleIndex, library_with_symbols in enumerate(symbols_to_resolve):
             lib = library_with_symbols["library"]
             symbols = library_with_symbols["symbols"]
-            memoryMap.append(self._module_from_lib(lib))
+            memoryMap.append([lib["debugName"], lib["breakpadId"]])
             all_symbols += symbols
             for symbol in symbols:
                 processedStack.append(
@@ -384,10 +350,3 @@ class ProfileSymbolicator:
             return {}
         symbolicated_stack = request.Symbolicate(0)
         return dict(zip(all_symbols, symbolicated_stack))
-
-    def _substitute_symbols_v2(self, profile_json, symbolication_table):
-        for thread in profile_json["threads"]:
-            for sample in thread["samples"]:
-                for frame in sample["frames"]:
-                    frame["location"] = symbolication_table.get(
-                        frame["location"], frame["location"])
