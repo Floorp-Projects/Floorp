@@ -222,7 +222,7 @@
                      "playing", "waiting", "canplay", "canplaythrough",
                      "seeking", "seeked", "emptied", "loadedmetadata",
                      "error", "suspend", "stalled",
-                     "mozinterruptbegin", "mozinterruptend" ],
+                     "mozexitvideosuspend"],
 
       showHours: false,
       firstFrameShown : false,
@@ -664,9 +664,7 @@
               this.controlsSpacer.removeAttribute("hideCursor");
             }
             break;
-          case "mozinterruptbegin":
-          case "mozinterruptend":
-            // Nothing to do...
+          case "mozexitvideosuspend":
             break;
           default:
             this.log("!!! event " + aEvent.type + " not handled!");
