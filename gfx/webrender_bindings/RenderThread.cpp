@@ -5,11 +5,12 @@
 
 #include "RenderThread.h"
 #include "nsThreadUtils.h"
-#include "mozilla/webrender/RendererOGL.h"
-#include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/webrender/RendererOGL.h"
+#include "mozilla/webrender/RenderTextureHost.h"
+#include "mozilla/widget/CompositorWidget.h"
 #include "base/task.h"
 
 namespace mozilla {
@@ -19,6 +20,7 @@ static StaticRefPtr<RenderThread> sRenderThread;
 
 RenderThread::RenderThread(base::Thread* aThread)
   : mThread(aThread)
+  , mRenderTextureMapLock("RenderThread.mRenderTextureMapLock")
 {
 
 }
@@ -192,6 +194,30 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId)
     epochs,
     start, end
   ));
+}
+
+void
+RenderThread::RegisterExternalImage(uint64_t aExternalImageId, RenderTextureHost* aTexture)
+{
+  MutexAutoLock lock(mRenderTextureMapLock);
+  MOZ_ASSERT(!mRenderTextures.Get(aExternalImageId));
+  mRenderTextures.Put(aExternalImageId, aTexture);
+}
+
+void
+RenderThread::UnregisterExternalImage(uint64_t aExternalImageId)
+{
+  MutexAutoLock lock(mRenderTextureMapLock);
+  MOZ_ASSERT(mRenderTextures.Get(aExternalImageId).get());
+  mRenderTextures.Remove(aExternalImageId);
+}
+
+RenderTextureHost*
+RenderThread::GetRenderTexture(uint64_t aExternalImageId)
+{
+  MutexAutoLock lock(mRenderTextureMapLock);
+  MOZ_ASSERT(mRenderTextures.Get(aExternalImageId).get());
+  return mRenderTextures.Get(aExternalImageId).get();
 }
 
 } // namespace wr

@@ -69,10 +69,12 @@ enum class TextureFlags : uint32_t {
   // This flag is only used in the parent process.
   INVALID_COMPOSITOR = 1 << 12,
   // The texture was created by converting from YCBCR to RGB
-  RGB_FROM_YCBCR = 1 << 13,
+  RGB_FROM_YCBCR     = 1 << 13,
+  // The texture is used for snapshot.
+  SNAPSHOT           = 1 << 14,
 
   // OR union of all valid bits
-  ALL_BITS           = (1 << 14) - 1,
+  ALL_BITS           = (1 << 15) - 1,
   // the default flags
   DEFAULT = NO_FLAGS
 };

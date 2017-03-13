@@ -97,6 +97,8 @@ public:
 
   virtual bool UsesImageBridge() const { return false; }
 
+  virtual bool UsesWebRenderBridge() const { return false; }
+
 protected:
   void Finalize() {}
 

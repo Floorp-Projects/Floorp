@@ -1,0 +1,13 @@
+environment:
+  PATH: 'C:\msys64\mingw64\bin;C:\msys64\usr\bin;%PATH%;C:\Rust\bin'
+
+install:
+  - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-nightly-x86_64-pc-windows-gnu.msi"
+  - msiexec /passive /i "rust-nightly-x86_64-pc-windows-gnu.msi" ADDLOCAL=Rustc,Cargo,Std INSTALLDIR=C:\Rust
+  - rustc -V
+  - cargo -V
+
+build: false
+
+test_script:
+  - cargo test --verbose

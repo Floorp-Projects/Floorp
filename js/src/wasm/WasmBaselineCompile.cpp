@@ -514,13 +514,12 @@ class BaseCompiler
         bool deadThenBranch;            // deadCode_ was set on exit from "then"
     };
 
-    struct BaseCompilePolicy : OpIterPolicy
+    struct BaseCompilePolicy
     {
-        static const bool Output = true;
-
         // The baseline compiler tracks values on a stack of its own -- it
         // needs to scan that stack for spilling -- and thus has no need
         // for the values maintained by the iterator.
+        typedef Nothing Value;
 
         // The baseline compiler uses the iterator's control stack, attaching
         // its own control information.
@@ -541,8 +540,8 @@ class BaseCompiler
     class OutOfLineCode : public TempObject
     {
       private:
-        Label entry_;
-        Label rejoin_;
+        NonAssertingLabel entry_;
+        NonAssertingLabel rejoin_;
         uint32_t framePushed_;
 
       public:
@@ -606,8 +605,8 @@ class BaseCompiler
     ValTypeVector               SigF_;
     MIRTypeVector               SigPI_;
     MIRTypeVector               SigP_;
-    Label                       returnLabel_;
-    Label                       stackOverflowLabel_;
+    NonAssertingLabel           returnLabel_;
+    NonAssertingLabel           stackOverflowLabel_;
     CodeOffset                  stackAddOffset_;
 
     LatentOp                    latentOp_;       // Latent operation for branch (seen next)
@@ -6866,6 +6865,11 @@ BaseCompiler::emitCurrentMemory()
 bool
 BaseCompiler::emitBody()
 {
+    if (!iter_.readFunctionStart(func_.sig().ret()))
+        return false;
+
+    initControl(controlItem());
+
     uint32_t overhead = 0;
 
     for (;;) {
@@ -6899,9 +6903,9 @@ BaseCompiler::emitBody()
 #define emitIntDivCallout(doEmit, symbol, type) \
         iter_.readBinary(type, &unused_a, &unused_b) && (deadCode_ || (doEmit(symbol, type), true))
 
-#define CHECK(E)      if (!(E)) goto done
+#define CHECK(E)      if (!(E)) return false
 #define NEXT()        continue
-#define CHECK_NEXT(E) if (!(E)) goto done; continue
+#define CHECK_NEXT(E) if (!(E)) return false; continue
 
         // TODO / EVALUATE (bug 1316845): Not obvious that this attempt at
         // reducing overhead is really paying off relative to making the check
@@ -6923,9 +6927,6 @@ BaseCompiler::emitBody()
 
         overhead--;
 
-        if (done())
-            return true;
-
         uint16_t op;
         CHECK(iter_.readOp(&op));
 
@@ -6940,10 +6941,20 @@ BaseCompiler::emitBody()
         }
 
         switch (op) {
+          case uint16_t(Op::End):
+            if (!emitEnd())
+                return false;
+
+            if (iter_.controlStackEmpty()) {
+                if (!deadCode_)
+                    doReturn(func_.sig().ret(), PopStack(false));
+                return iter_.readFunctionEnd(iter_.end());
+            }
+            NEXT();
+
           // Control opcodes
           case uint16_t(Op::Nop):
-            CHECK(iter_.readNop());
-            NEXT();
+            CHECK_NEXT(iter_.readNop());
           case uint16_t(Op::Drop):
             CHECK_NEXT(emitDrop());
           case uint16_t(Op::Block):
@@ -6954,8 +6965,6 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitIf());
           case uint16_t(Op::Else):
             CHECK_NEXT(emitElse());
-          case uint16_t(Op::End):
-            CHECK_NEXT(emitEnd());
           case uint16_t(Op::Br):
             CHECK_NEXT(emitBr());
           case uint16_t(Op::BrIf):
@@ -7392,118 +7401,15 @@ BaseCompiler::emitBody()
           case uint16_t(Op::F64Ge):
             CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, Assembler::DoubleGreaterThanOrEqual));
 
-          // asm.js
-          case uint16_t(Op::TeeGlobal):
-          case uint16_t(Op::I32Min):
-          case uint16_t(Op::I32Max):
-          case uint16_t(Op::I32Neg):
-          case uint16_t(Op::I32BitNot):
-          case uint16_t(Op::I32Abs):
-          case uint16_t(Op::F32TeeStoreF64):
-          case uint16_t(Op::F64TeeStoreF32):
-          case uint16_t(Op::I32TeeStore8):
-          case uint16_t(Op::I32TeeStore16):
-          case uint16_t(Op::I32TeeStore):
-          case uint16_t(Op::I64TeeStore8):
-          case uint16_t(Op::I64TeeStore16):
-          case uint16_t(Op::I64TeeStore32):
-          case uint16_t(Op::I64TeeStore):
-          case uint16_t(Op::F32TeeStore):
-          case uint16_t(Op::F64TeeStore):
-          case uint16_t(Op::F64Mod):
-          case uint16_t(Op::F64Sin):
-          case uint16_t(Op::F64Cos):
-          case uint16_t(Op::F64Tan):
-          case uint16_t(Op::F64Asin):
-          case uint16_t(Op::F64Acos):
-          case uint16_t(Op::F64Atan):
-          case uint16_t(Op::F64Exp):
-          case uint16_t(Op::F64Log):
-          case uint16_t(Op::F64Pow):
-          case uint16_t(Op::F64Atan2):
-          case uint16_t(Op::OldCallIndirect):
-            MOZ_CRASH("Unimplemented Asm.JS");
-
-          // SIMD
-#define CASE(TYPE, OP, SIGN) \
-          case uint16_t(Op::TYPE##OP): \
-            MOZ_CRASH("Unimplemented SIMD");
-#define I8x16CASE(OP) CASE(I8x16, OP, SimdSign::Signed)
-#define I16x8CASE(OP) CASE(I16x8, OP, SimdSign::Signed)
-#define I32x4CASE(OP) CASE(I32x4, OP, SimdSign::Signed)
-#define F32x4CASE(OP) CASE(F32x4, OP, SimdSign::NotApplicable)
-#define B8x16CASE(OP) CASE(B8x16, OP, SimdSign::NotApplicable)
-#define B16x8CASE(OP) CASE(B16x8, OP, SimdSign::NotApplicable)
-#define B32x4CASE(OP) CASE(B32x4, OP, SimdSign::NotApplicable)
-#define ENUMERATE(TYPE, FORALL, DO) \
-          case uint16_t(Op::TYPE##Constructor): \
-            FORALL(DO)
-
-          ENUMERATE(I8x16, FORALL_INT8X16_ASMJS_OP, I8x16CASE)
-          ENUMERATE(I16x8, FORALL_INT16X8_ASMJS_OP, I16x8CASE)
-          ENUMERATE(I32x4, FORALL_INT32X4_ASMJS_OP, I32x4CASE)
-          ENUMERATE(F32x4, FORALL_FLOAT32X4_ASMJS_OP, F32x4CASE)
-          ENUMERATE(B8x16, FORALL_BOOL_SIMD_OP, B8x16CASE)
-          ENUMERATE(B16x8, FORALL_BOOL_SIMD_OP, B16x8CASE)
-          ENUMERATE(B32x4, FORALL_BOOL_SIMD_OP, B32x4CASE)
-
-#undef CASE
-#undef I8x16CASE
-#undef I16x8CASE
-#undef I32x4CASE
-#undef F32x4CASE
-#undef B8x16CASE
-#undef B16x8CASE
-#undef B32x4CASE
-#undef ENUMERATE
-
-          case uint16_t(Op::I8x16Const):
-          case uint16_t(Op::I16x8Const):
-          case uint16_t(Op::I32x4Const):
-          case uint16_t(Op::F32x4Const):
-          case uint16_t(Op::B8x16Const):
-          case uint16_t(Op::B16x8Const):
-          case uint16_t(Op::B32x4Const):
-          case uint16_t(Op::I32x4shiftRightByScalarU):
-          case uint16_t(Op::I8x16addSaturateU):
-          case uint16_t(Op::I8x16subSaturateU):
-          case uint16_t(Op::I8x16shiftRightByScalarU):
-          case uint16_t(Op::I8x16lessThanU):
-          case uint16_t(Op::I8x16lessThanOrEqualU):
-          case uint16_t(Op::I8x16greaterThanU):
-          case uint16_t(Op::I8x16greaterThanOrEqualU):
-          case uint16_t(Op::I8x16extractLaneU):
-          case uint16_t(Op::I16x8addSaturateU):
-          case uint16_t(Op::I16x8subSaturateU):
-          case uint16_t(Op::I16x8shiftRightByScalarU):
-          case uint16_t(Op::I16x8lessThanU):
-          case uint16_t(Op::I16x8lessThanOrEqualU):
-          case uint16_t(Op::I16x8greaterThanU):
-          case uint16_t(Op::I16x8greaterThanOrEqualU):
-          case uint16_t(Op::I16x8extractLaneU):
-          case uint16_t(Op::I32x4lessThanU):
-          case uint16_t(Op::I32x4lessThanOrEqualU):
-          case uint16_t(Op::I32x4greaterThanU):
-          case uint16_t(Op::I32x4greaterThanOrEqualU):
-          case uint16_t(Op::I32x4fromFloat32x4U):
-            MOZ_CRASH("Unimplemented SIMD");
-
-          // Atomics
-          case uint16_t(Op::I32AtomicsLoad):
-          case uint16_t(Op::I32AtomicsStore):
-          case uint16_t(Op::I32AtomicsBinOp):
-          case uint16_t(Op::I32AtomicsCompareExchange):
-          case uint16_t(Op::I32AtomicsExchange):
-            MOZ_CRASH("Unimplemented Atomics");
-
           // Memory Related
           case uint16_t(Op::GrowMemory):
             CHECK_NEXT(emitGrowMemory());
           case uint16_t(Op::CurrentMemory):
             CHECK_NEXT(emitCurrentMemory());
-        }
 
-        MOZ_CRASH("unexpected wasm opcode");
+          default:
+            return iter_.unrecognizedOpcode(op);
+        }
 
 #undef CHECK
 #undef NEXT
@@ -7514,31 +7420,19 @@ BaseCompiler::emitBody()
 #undef emitConversion
 #undef emitConversionOOM
 #undef emitCalloutConversionOOM
+
+        MOZ_CRASH("unreachable");
     }
 
-done:
-    return false;
+    MOZ_CRASH("unreachable");
 }
 
 bool
 BaseCompiler::emitFunction()
 {
-    const Sig& sig = func_.sig();
-
-    if (!iter_.readFunctionStart(sig.ret()))
-        return false;
-
     beginFunction();
 
-    initControl(controlItem());
-
     if (!emitBody())
-        return false;
-
-    if (!deadCode_)
-        doReturn(sig.ret(), PopStack(false));
-
-    if (!iter_.readFunctionEnd())
         return false;
 
     if (!endFunction())
@@ -7717,14 +7611,8 @@ js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit, Uniq
     MOZ_ASSERT(task->env().kind == ModuleKind::Wasm);
 
     const FuncBytes& func = unit->func();
-    uint32_t bodySize = func.bytes().length();
 
     Decoder d(func.bytes().begin(), func.bytes().end(), func.lineOrBytecode(), error);
-
-    if (!ValidateFunctionBody(task->env(), func.index(), bodySize, d))
-        return false;
-
-    d.rollbackPosition(d.begin());
 
     // Build the local types vector.
 

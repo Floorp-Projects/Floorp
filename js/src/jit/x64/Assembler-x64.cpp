@@ -214,7 +214,7 @@ Assembler::finish()
 }
 
 void
-Assembler::executableCopy(uint8_t* buffer)
+Assembler::executableCopy(uint8_t* buffer, bool flushICache)
 {
     AssemblerX86Shared::executableCopy(buffer);
 

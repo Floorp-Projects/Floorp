@@ -11,8 +11,8 @@
 
 use debug_colors;
 use debug_render::DebugRenderer;
-use device::{DepthFunction, Device, ProgramId, TextureId, VertexFormat, GpuMarker, GpuProfiler};
-use device::{TextureFilter, VAOId, VertexUsageHint, FileWatcherHandler, TextureTarget, ShaderError};
+use device::{DepthFunction, Device, FrameId, ProgramId, TextureId, VertexFormat, GpuMarker, GpuProfiler};
+use device::{GpuSample, TextureFilter, VAOId, VertexUsageHint, FileWatcherHandler, TextureTarget, ShaderError};
 use euclid::Matrix4D;
 use fnv::FnvHasher;
 use frame_builder::FrameBuilderConfig;
@@ -29,7 +29,7 @@ use render_backend::RenderBackend;
 use render_task::RenderTaskData;
 use std;
 use std::cmp;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::f32;
 use std::hash::BuildHasherDefault;
 use std::marker::PhantomData;
@@ -46,7 +46,7 @@ use time::precise_time_ns;
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use util::TransformedRectKind;
 use webrender_traits::{ColorF, Epoch, PipelineId, RenderNotifier, RenderDispatcher};
-use webrender_traits::{ExternalImageId, ImageData, ImageFormat, RenderApiSender, RendererKind};
+use webrender_traits::{ExternalImageId, ImageData, ImageFormat, RenderApiSender};
 use webrender_traits::{DeviceIntRect, DevicePoint, DeviceIntPoint, DeviceIntSize, DeviceUintSize};
 use webrender_traits::{ImageDescriptor, BlobImageRenderer};
 use webrender_traits::channel;
@@ -75,14 +75,55 @@ const GPU_TAG_PRIM_BORDER: GpuProfileTag = GpuProfileTag { label: "Border", colo
 const GPU_TAG_PRIM_CACHE_IMAGE: GpuProfileTag = GpuProfileTag { label: "CacheImage", color: debug_colors::SILVER };
 const GPU_TAG_BLUR: GpuProfileTag = GpuProfileTag { label: "Blur", color: debug_colors::VIOLET };
 
+#[derive(Debug, Copy, Clone)]
+pub enum RendererKind {
+    Native,
+    OSMesa,
+}
+
+#[derive(Debug)]
+pub struct GpuProfile {
+    pub frame_id: FrameId,
+    pub paint_time_ns: u64,
+}
+
+impl GpuProfile {
+    fn new<T>(frame_id: FrameId, samples: &[GpuSample<T>]) -> GpuProfile {
+        let mut paint_time_ns = 0;
+        for sample in samples {
+            paint_time_ns += sample.time_ns;
+        }
+        GpuProfile {
+            frame_id: frame_id,
+            paint_time_ns: paint_time_ns,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct CpuProfile {
+    pub frame_id: FrameId,
+    pub composite_time_ns: u64,
+    pub draw_calls: usize,
+}
+
+impl CpuProfile {
+    fn new(frame_id: FrameId,
+           composite_time_ns: u64,
+           draw_calls: usize) -> CpuProfile {
+        CpuProfile {
+            frame_id: frame_id,
+            composite_time_ns: composite_time_ns,
+            draw_calls: draw_calls,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum BlendMode {
     None,
     Alpha,
-
-    Multiply,
-    Max,
-    Min,
+    PremultipliedAlpha,
 
     // Use the color of the text itself as a constant color blend factor.
     Subpixel(ColorF),
@@ -429,6 +470,7 @@ pub struct Renderer {
     notifier: Arc<Mutex<Option<Box<RenderNotifier>>>>,
 
     enable_profiler: bool,
+    max_recorded_profiles: usize,
     clear_framebuffer: bool,
     clear_color: ColorF,
     debug: DebugRenderer,
@@ -477,7 +519,12 @@ pub struct Renderer {
 
     // Optional trait object that handles WebVR commands.
     // Some WebVR commands such as SubmitFrame must be synced with the WebGL render thread.
-    vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>
+    vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>,
+
+    /// List of profile results from previous frames. Can be retrieved
+    /// via get_frame_profiles().
+    cpu_profiles: VecDeque<CpuProfile>,
+    gpu_profiles: VecDeque<GpuProfile>,
 }
 
 #[derive(Debug)]
@@ -513,7 +560,8 @@ impl Renderer {
     /// };
     /// let (renderer, sender) = Renderer::new(opts);
     /// ```
-    pub fn new(mut options: RendererOptions) -> Result<(Renderer, RenderApiSender), InitError> {
+    pub fn new(mut options: RendererOptions,
+               initial_window_size: DeviceUintSize) -> Result<(Renderer, RenderApiSender), InitError> {
         let (api_tx, api_rx) = try!{ channel::msg_channel() };
         let (payload_tx, payload_rx) = try!{ channel::payload_channel() };
         let (result_tx, result_rx) = channel();
@@ -805,7 +853,8 @@ impl Renderer {
                                                  recorder,
                                                  backend_main_thread_dispatcher,
                                                  blob_image_renderer,
-                                                 backend_vr_compositor);
+                                                 backend_vr_compositor,
+                                                 initial_window_size);
             backend.run(backend_profile_counters);
         })};
 
@@ -842,6 +891,7 @@ impl Renderer {
             profile_counters: RendererProfileCounters::new(),
             profiler: Profiler::new(),
             enable_profiler: options.enable_profiler,
+            max_recorded_profiles: options.max_recorded_profiles,
             clear_framebuffer: options.clear_framebuffer,
             clear_color: options.clear_color,
             last_time: 0,
@@ -858,7 +908,9 @@ impl Renderer {
             dummy_cache_texture_id: dummy_cache_texture_id,
             external_image_handler: None,
             external_images: HashMap::with_hasher(Default::default()),
-            vr_compositor_handler: vr_compositor
+            vr_compositor_handler: vr_compositor,
+            cpu_profiles: VecDeque::new(),
+            gpu_profiles: VecDeque::new(),
         };
 
         let sender = RenderApiSender::new(api_tx, payload_tx);
@@ -960,6 +1012,13 @@ impl Renderer {
         self.external_image_handler = Some(handler);
     }
 
+    /// Retrieve (and clear) the current list of recorded frame profiles.
+    pub fn get_frame_profiles(&mut self) -> (Vec<CpuProfile>, Vec<GpuProfile>) {
+        let cpu_profiles = self.cpu_profiles.drain(..).collect();
+        let gpu_profiles = self.gpu_profiles.drain(..).collect();
+        (cpu_profiles, gpu_profiles)
+    }
+
     /// Renders the current frame.
     ///
     /// A Frame is supplied by calling [set_root_stacking_context()][newframe].
@@ -973,13 +1032,19 @@ impl Renderer {
 
                 // Block CPU waiting for last frame's GPU profiles to arrive.
                 // In general this shouldn't block unless heavily GPU limited.
-                if let Some(samples) = self.gpu_profile.build_samples() {
+                if let Some((gpu_frame_id, samples)) = self.gpu_profile.build_samples() {
+                    if self.max_recorded_profiles > 0 {
+                        while self.gpu_profiles.len() >= self.max_recorded_profiles {
+                            self.gpu_profiles.pop_front();
+                        }
+                        self.gpu_profiles.push_back(GpuProfile::new(gpu_frame_id, &samples));
+                    }
                     profile_timers.gpu_samples = samples;
                 }
 
-                profile_timers.cpu_time.profile(|| {
-                    self.device.begin_frame(frame.device_pixel_ratio);
-                    self.gpu_profile.begin_frame();
+                let cpu_frame_id = profile_timers.cpu_time.profile(|| {
+                    let cpu_frame_id = self.device.begin_frame(frame.device_pixel_ratio);
+                    self.gpu_profile.begin_frame(cpu_frame_id);
                     {
                         let _gm = self.gpu_profile.add_marker(GPU_TAG_INIT);
 
@@ -994,11 +1059,22 @@ impl Renderer {
                     self.draw_tile_frame(frame, &framebuffer_size);
 
                     self.gpu_profile.end_frame();
+                    cpu_frame_id
                 });
 
                 let current_time = precise_time_ns();
                 let ns = current_time - self.last_time;
                 self.profile_counters.frame_time.set(ns);
+
+                if self.max_recorded_profiles > 0 {
+                    while self.cpu_profiles.len() >= self.max_recorded_profiles {
+                        self.cpu_profiles.pop_front();
+                    }
+                    let cpu_profile = CpuProfile::new(cpu_frame_id,
+                                                      profile_timers.cpu_time.get(),
+                                                      self.profile_counters.draw_calls.get());
+                    self.cpu_profiles.push_back(cpu_profile);
+                }
 
                 if self.enable_profiler {
                     self.profiler.draw_profile(&frame.profile_counters,
@@ -1180,7 +1256,9 @@ impl Renderer {
                     target_dimensions: DeviceUintSize) {
         let transform_kind = batch.key.flags.transform_kind();
         let needs_clipping = batch.key.flags.needs_clipping();
-        debug_assert!(!needs_clipping || batch.key.blend_mode == BlendMode::Alpha);
+        debug_assert!(!needs_clipping ||
+                      batch.key.blend_mode == BlendMode::Alpha ||
+                      batch.key.blend_mode == BlendMode::PremultipliedAlpha);
 
         match batch.data {
             PrimitiveBatchData::Instances(ref data) => {
@@ -1205,8 +1283,7 @@ impl Renderer {
                     AlphaBatchKind::TextRun => {
                         let shader = match batch.key.blend_mode {
                             BlendMode::Subpixel(..) => self.ps_text_run_subpixel.get(&mut self.device, transform_kind),
-                            BlendMode::Alpha | BlendMode::None => self.ps_text_run.get(&mut self.device, transform_kind),
-                            _ => unreachable!(),
+                            BlendMode::Alpha | BlendMode::PremultipliedAlpha | BlendMode::None => self.ps_text_run.get(&mut self.device, transform_kind),
                         };
                         (GPU_TAG_PRIM_TEXT_RUN, shader)
                     }
@@ -1290,20 +1367,18 @@ impl Renderer {
                 let width = readback.data[2];
                 let height = readback.data[3];
 
-                // Need to invert the y coordinates when reading back from
-                // the framebuffer.
-                let y0 = if render_target.is_some() {
-                    src_y as i32
-                } else {
-                    target_dimensions.height as i32 - height as i32 - src_y as i32
-                };
+                let mut src = DeviceIntRect::new(DeviceIntPoint::new(src_x as i32, src_y as i32),
+                                                 DeviceIntSize::new(width as i32, height as i32));
+                let mut dest = DeviceIntRect::new(DeviceIntPoint::new(dest_x as i32, dest_y as i32),
+                                                  DeviceIntSize::new(width as i32, height as i32));
 
-                let src = DeviceIntRect::new(DeviceIntPoint::new(src_x as i32,
-                                                                 y0),
-                                             DeviceIntSize::new(width as i32, height as i32));
-                let dest = DeviceIntRect::new(DeviceIntPoint::new(dest_x as i32,
-                                                                  dest_y as i32),
-                                              DeviceIntSize::new(width as i32, height as i32));
+                // Need to invert the y coordinates and flip the image vertically when
+                // reading back from the framebuffer.
+                if render_target.is_none() {
+                    src.origin.y = target_dimensions.height as i32 - src.size.height - src.origin.y;
+                    dest.origin.y += dest.size.height;
+                    dest.size.height = -dest.size.height;
+                }
 
                 self.device.blit_render_target(render_target,
                                                Some(src),
@@ -1380,6 +1455,11 @@ impl Renderer {
             };
 
             self.device.clear_target(clear_color, clear_depth);
+
+            let isolate_clear_color = Some([0.0, 0.0, 0.0, 0.0]);
+            for isolate_clear in &target.isolate_clears {
+                self.device.clear_target_rect(isolate_clear_color, None, *isolate_clear);
+            }
 
             projection
         };
@@ -1501,21 +1581,13 @@ impl Renderer {
                     BlendMode::None => {
                         self.device.set_blend(false);
                     }
-                    BlendMode::Multiply => {
-                        self.device.set_blend(true);
-                        self.device.set_blend_mode_multiply();
-                    }
-                    BlendMode::Max => {
-                        self.device.set_blend(true);
-                        self.device.set_blend_mode_max();
-                    }
-                    BlendMode::Min => {
-                        self.device.set_blend(true);
-                        self.device.set_blend_mode_min();
-                    }
                     BlendMode::Alpha => {
                         self.device.set_blend(true);
                         self.device.set_blend_mode_alpha();
+                    }
+                    BlendMode::PremultipliedAlpha => {
+                        self.device.set_blend(true);
+                        self.device.set_blend_mode_premultiplied_alpha();
                     }
                     BlendMode::Subpixel(color) => {
                         self.device.set_blend(true);
@@ -1601,10 +1673,8 @@ impl Renderer {
         // Some tests use a restricted viewport smaller than the main screen size.
         // Ensure we clear the framebuffer in these tests.
         // TODO(gw): Find a better solution for this?
-        let viewport_size = DeviceIntSize::new((frame.viewport_size.width * frame.device_pixel_ratio) as i32,
-                                               (frame.viewport_size.height * frame.device_pixel_ratio) as i32);
-        let needs_clear = viewport_size.width < framebuffer_size.width as i32 ||
-                          viewport_size.height < framebuffer_size.height as i32;
+        let needs_clear = frame.window_size.width < framebuffer_size.width ||
+                          frame.window_size.height < framebuffer_size.height;
 
         self.device.disable_depth_write();
         self.device.disable_stencil();
@@ -1778,6 +1848,7 @@ pub struct RendererOptions {
     pub resource_override_path: Option<PathBuf>,
     pub enable_aa: bool,
     pub enable_profiler: bool,
+    pub max_recorded_profiles: usize,
     pub debug: bool,
     pub enable_scrollbars: bool,
     pub precache_shaders: bool,
@@ -1799,6 +1870,7 @@ impl Default for RendererOptions {
             resource_override_path: None,
             enable_aa: true,
             enable_profiler: false,
+            max_recorded_profiles: 0,
             debug: false,
             enable_scrollbars: false,
             precache_shaders: false,

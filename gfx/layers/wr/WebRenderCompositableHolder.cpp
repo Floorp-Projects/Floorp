@@ -6,7 +6,8 @@
 #include "WebRenderCompositableHolder.h"
 
 #include "CompositableHost.h"
-//#include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/WebRenderImageHost.h"
+#include "mozilla/layers/WebRenderTextureHost.h"
 
 namespace mozilla {
 
@@ -22,36 +23,36 @@ WebRenderCompositableHolder::WebRenderCompositableHolder()
 WebRenderCompositableHolder::~WebRenderCompositableHolder()
 {
   MOZ_COUNT_DTOR(WebRenderCompositableHolder);
-  Destroy();
+  MOZ_ASSERT(mWebRenderTextureHosts.empty());
 }
 
 void
 WebRenderCompositableHolder::Destroy()
 {
-  mCompositableHosts.Clear();
+  while (!mWebRenderTextureHosts.empty()) {
+    mWebRenderTextureHosts.pop();
+  }
 }
 
 void
-WebRenderCompositableHolder::AddExternalImageId(uint64_t aExternalImageId, CompositableHost* aHost)
+WebRenderCompositableHolder::HoldExternalImage(const wr::Epoch& aEpoch, WebRenderTextureHost* aTexture)
 {
-  MOZ_ASSERT(!mCompositableHosts.Get(aExternalImageId));
-  mCompositableHosts.Put(aExternalImageId, aHost);
+  MOZ_ASSERT(aTexture);
+  // Hold WebRenderTextureHost until end of its usage on RenderThread
+  mWebRenderTextureHosts.push(ForwardingTextureHosts(aEpoch, aTexture));
 }
 
 void
-WebRenderCompositableHolder::RemoveExternalImageId(uint64_t aExternalImageId)
+WebRenderCompositableHolder::Update(const wr::Epoch& aEpoch)
 {
-  MOZ_ASSERT(mCompositableHosts.Get(aExternalImageId));
-  mCompositableHosts.Remove(aExternalImageId);
-}
-
-void
-WebRenderCompositableHolder::UpdateExternalImages()
-{
-  for (auto iter = mCompositableHosts.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<CompositableHost>& host = iter.Data();
-    // XXX Change to correct TextrueSource handling here.
-    host->BindTextureSource();
+  if (mWebRenderTextureHosts.empty()) {
+    return;
+  }
+  while (!mWebRenderTextureHosts.empty()) {
+    if (aEpoch <= mWebRenderTextureHosts.front().mEpoch) {
+      break;
+    }
+    mWebRenderTextureHosts.pop();
   }
 }
 

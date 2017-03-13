@@ -23,8 +23,6 @@ function debug(aMsg) {
 
 class GeckoViewProgress extends GeckoViewModule {
   init() {
-    this.window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = this;
-
     this.registerProgressListener();
   }
 

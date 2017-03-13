@@ -20,7 +20,7 @@ use std::sync::Arc;
 use tiling;
 use renderer::BlendMode;
 use webrender_traits::{Epoch, ColorF, PipelineId, DeviceIntSize};
-use webrender_traits::{ImageFormat, NativeFontHandle, MixBlendMode};
+use webrender_traits::{ImageFormat, NativeFontHandle};
 use webrender_traits::{ExternalImageId, ScrollLayerId, WebGLCommand};
 use webrender_traits::{ImageData};
 use webrender_traits::{DeviceUintRect};
@@ -492,26 +492,13 @@ pub enum LowLevelFilterOp {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum HardwareCompositeOp {
-    Multiply,
-    Max,
-    Min,
+    Alpha,
 }
 
 impl HardwareCompositeOp {
-    pub fn from_mix_blend_mode(mix_blend_mode: MixBlendMode) -> Option<HardwareCompositeOp> {
-        match mix_blend_mode {
-            MixBlendMode::Multiply => Some(HardwareCompositeOp::Multiply),
-            MixBlendMode::Lighten => Some(HardwareCompositeOp::Max),
-            MixBlendMode::Darken => Some(HardwareCompositeOp::Min),
-            _ => None,
-        }
-    }
-
     pub fn to_blend_mode(&self) -> BlendMode {
         match self {
-            &HardwareCompositeOp::Multiply => BlendMode::Multiply,
-            &HardwareCompositeOp::Max => BlendMode::Max,
-            &HardwareCompositeOp::Min => BlendMode::Min,
+            &HardwareCompositeOp::Alpha => BlendMode::Alpha,
         }
     }
 }

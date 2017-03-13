@@ -928,7 +928,7 @@ class AssemblerMIPSShared : public AssemblerShared
   public:
     void finish();
     bool asmMergeWith(const AssemblerMIPSShared& other);
-    void executableCopy(void* buffer);
+    void executableCopy(void* buffer, bool flushICache = true);
     void copyJumpRelocationTable(uint8_t* dest);
     void copyDataRelocationTable(uint8_t* dest);
     void copyPreBarrierTable(uint8_t* dest);

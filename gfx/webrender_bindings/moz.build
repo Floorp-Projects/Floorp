@@ -9,6 +9,7 @@ with Files('**'):
 
 EXPORTS.mozilla.webrender += [
     'RendererOGL.h',
+    'RenderTextureHost.h',
     'RenderThread.h',
     'webrender_ffi.h',
     'WebRenderAPI.h',
@@ -17,6 +18,7 @@ EXPORTS.mozilla.webrender += [
 
 UNIFIED_SOURCES += [
     'RendererOGL.cpp',
+    'RenderTextureHost.cpp',
     'RenderThread.cpp',
     'WebRenderAPI.cpp',
 ]

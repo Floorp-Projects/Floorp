@@ -18,6 +18,7 @@ use std::sync::mpsc::Sender;
 use texture_cache::TextureCache;
 use thread_profiler::register_thread_with_profiler;
 use threadpool::ThreadPool;
+use webrender_traits::{DeviceIntPoint, DeviceUintPoint, DeviceUintRect, DeviceUintSize, LayerPoint};
 use webrender_traits::{ApiMsg, AuxiliaryLists, BuiltDisplayList, IdNamespace, ImageData};
 use webrender_traits::{PipelineId, RenderNotifier, RenderDispatcher, WebGLCommand, WebGLContextId};
 use webrender_traits::channel::{PayloadHelperMethods, PayloadReceiver, PayloadSender, MsgReceiver};
@@ -34,7 +35,13 @@ pub struct RenderBackend {
     payload_tx: PayloadSender,
     result_tx: Sender<ResultMsg>,
 
-    device_pixel_ratio: f32,
+    // TODO(gw): Consider using strongly typed units here.
+    hidpi_factor: f32,
+    page_zoom_factor: f32,
+    pinch_zoom_factor: f32,
+    pan: DeviceIntPoint,
+    window_size: DeviceUintSize,
+    inner_rect: DeviceUintRect,
     next_namespace_id: IdNamespace,
 
     resource_cache: ResourceCache,
@@ -59,7 +66,7 @@ impl RenderBackend {
                payload_rx: PayloadReceiver,
                payload_tx: PayloadSender,
                result_tx: Sender<ResultMsg>,
-               device_pixel_ratio: f32,
+               hidpi_factor: f32,
                texture_cache: TextureCache,
                enable_aa: bool,
                workers: Arc<Mutex<ThreadPool>>,
@@ -69,7 +76,8 @@ impl RenderBackend {
                recorder: Option<Box<ApiRecordingReceiver>>,
                main_thread_dispatcher: Arc<Mutex<Option<Box<RenderDispatcher>>>>,
                blob_image_renderer: Option<Box<BlobImageRenderer>>,
-               vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>) -> RenderBackend {
+               vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>,
+               initial_window_size: DeviceUintSize) -> RenderBackend {
 
         let resource_cache = ResourceCache::new(texture_cache, workers, blob_image_renderer, enable_aa);
 
@@ -80,7 +88,10 @@ impl RenderBackend {
             payload_rx: payload_rx,
             payload_tx: payload_tx,
             result_tx: result_tx,
-            device_pixel_ratio: device_pixel_ratio,
+            hidpi_factor: hidpi_factor,
+            page_zoom_factor: 1.0,
+            pinch_zoom_factor: 1.0,
+            pan: DeviceIntPoint::zero(),
             resource_cache: resource_cache,
             scene: Scene::new(),
             frame: Frame::new(config),
@@ -92,7 +103,9 @@ impl RenderBackend {
             recorder: recorder,
             main_thread_dispatcher: main_thread_dispatcher,
             next_webgl_id: 0,
-            vr_compositor_handler: vr_compositor_handler
+            vr_compositor_handler: vr_compositor_handler,
+            window_size: initial_window_size,
+            inner_rect: DeviceUintRect::new(DeviceUintPoint::zero(), initial_window_size),
         }
     }
 
@@ -117,6 +130,9 @@ impl RenderBackend {
                             self.resource_cache
                                 .add_font_template(id, FontTemplate::Native(native_font_handle));
                         }
+                        ApiMsg::DeleteFont(id) => {
+                            self.resource_cache.delete_font_template(id);
+                        }
                         ApiMsg::GetGlyphDimensions(glyph_keys, tx) => {
                             let mut glyph_dimensions = Vec::with_capacity(glyph_keys.len());
                             for glyph_key in &glyph_keys {
@@ -136,6 +152,19 @@ impl RenderBackend {
                         }
                         ApiMsg::DeleteImage(id) => {
                             self.resource_cache.delete_image_template(id);
+                        }
+                        ApiMsg::SetPageZoom(factor) => {
+                            self.page_zoom_factor = factor.get();
+                        }
+                        ApiMsg::SetPinchZoom(factor) => {
+                            self.pinch_zoom_factor = factor.get();
+                        }
+                        ApiMsg::SetPan(pan) => {
+                            self.pan = pan;
+                        }
+                        ApiMsg::SetWindowParameters(window_size, inner_rect) => {
+                            self.window_size = window_size;
+                            self.inner_rect = inner_rect;
                         }
                         ApiMsg::CloneApi(sender) => {
                             let result = self.next_namespace_id;
@@ -398,6 +427,10 @@ impl RenderBackend {
         self.frame.discard_frame_state_for_pipeline(pipeline_id);
     }
 
+    fn accumulated_scale_factor(&self) -> f32 {
+        self.hidpi_factor * self.page_zoom_factor * self.pinch_zoom_factor
+    }
+
     fn build_scene(&mut self) {
         // Flatten the stacking context hierarchy
         if let Some(id) = self.current_bound_webgl_context_id {
@@ -418,17 +451,25 @@ impl RenderBackend {
             webgl_context.unbind();
         }
 
-        self.frame.create(&self.scene, &mut self.resource_cache);
+        let accumulated_scale_factor = self.accumulated_scale_factor();
+        self.frame.create(&self.scene,
+                          &mut self.resource_cache,
+                          self.window_size,
+                          self.inner_rect,
+                          accumulated_scale_factor);
     }
 
     fn render(&mut self,
               texture_cache_profile: &mut TextureCacheProfileCounters)
               -> RendererFrame {
+        let accumulated_scale_factor = self.accumulated_scale_factor();
+        let pan = LayerPoint::new(self.pan.x as f32 / accumulated_scale_factor,
+                                  self.pan.y as f32 / accumulated_scale_factor);
         let frame = self.frame.build(&mut self.resource_cache,
                                      &self.scene.pipeline_auxiliary_lists,
-                                     self.device_pixel_ratio,
+                                     accumulated_scale_factor,
+                                     pan,
                                      texture_cache_profile);
-
         frame
     }
 

@@ -17,6 +17,7 @@ namespace layers {
 already_AddRefed<TextureHost>
 CreateTextureHostBasic(const SurfaceDescriptor& aDesc,
                        ISurfaceAllocator* aDeallocator,
+                       LayersBackend aBackend,
                        TextureFlags aFlags)
 {
 #ifdef XP_MACOSX
@@ -26,7 +27,7 @@ CreateTextureHostBasic(const SurfaceDescriptor& aDesc,
     return MakeAndAddRef<MacIOSurfaceTextureHostBasic>(aFlags, desc);
   }
 #endif
-  return CreateBackendIndependentTextureHost(aDesc, aDeallocator, aFlags);
+  return CreateBackendIndependentTextureHost(aDesc, aDeallocator, aBackend, aFlags);
 }
 
 } // namespace layers

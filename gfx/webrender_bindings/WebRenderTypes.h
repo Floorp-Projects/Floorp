@@ -177,10 +177,9 @@ static inline WrBorderStyle ToWrBorderStyle(const uint8_t& style)
   return WrBorderStyle::None;
 }
 
-static inline WrBorderSide ToWrBorderSide(const LayerCoord width, const gfx::Color& color, const uint8_t& style)
+static inline WrBorderSide ToWrBorderSide(const gfx::Color& color, const uint8_t& style)
 {
   WrBorderSide bs;
-  bs.width = width;
   bs.color = ToWrColor(color);
   bs.style = ToWrBorderStyle(style);
   return bs;
@@ -194,9 +193,9 @@ static inline WrPoint ToWrPoint(const LayerPoint point)
   return lp;
 }
 
-static inline WrLayoutSize ToWrLayoutSize(const LayerSize size)
+static inline WrSize ToWrSize(const LayerSize size)
 {
-  WrLayoutSize ls;
+  WrSize ls;
   ls.width = size.width;
   ls.height = size.height;
   return ls;
@@ -206,11 +205,69 @@ static inline WrBorderRadius ToWrBorderRadius(const LayerSize& topLeft, const La
                                               const LayerSize& bottomLeft, const LayerSize& bottomRight)
 {
   WrBorderRadius br;
-  br.top_left = ToWrLayoutSize(topLeft);
-  br.top_right = ToWrLayoutSize(topRight);
-  br.bottom_left = ToWrLayoutSize(bottomLeft);
-  br.bottom_right = ToWrLayoutSize(bottomRight);
+  br.top_left = ToWrSize(topLeft);
+  br.top_right = ToWrSize(topRight);
+  br.bottom_left = ToWrSize(bottomLeft);
+  br.bottom_right = ToWrSize(bottomRight);
   return br;
+}
+
+static inline WrBorderWidths ToWrBorderWidths(float top, float right, float bottom, float left)
+{
+  WrBorderWidths bw;
+  bw.top = top;
+  bw.right = right;
+  bw.bottom = bottom;
+  bw.left = left;
+  return bw;
+}
+
+static inline WrNinePatchDescriptor ToWrNinePatchDescriptor(uint32_t width, uint32_t height,
+                                                            const WrSideOffsets2Du32& slice)
+{
+  WrNinePatchDescriptor patch;
+  patch.width = width;
+  patch.height = height;
+  patch.slice = slice;
+  return patch;
+}
+
+static inline WrSideOffsets2Du32 ToWrSideOffsets2Du32(uint32_t top, uint32_t right, uint32_t bottom, uint32_t left)
+{
+  WrSideOffsets2Du32 offset;
+  offset.top = top;
+  offset.right = right;
+  offset.bottom = bottom;
+  offset.left = left;
+  return offset;
+}
+
+static inline WrSideOffsets2Df32 ToWrSideOffsets2Df32(float top, float right, float bottom, float left)
+{
+  WrSideOffsets2Df32 offset;
+  offset.top = top;
+  offset.right = right;
+  offset.bottom = bottom;
+  offset.left = left;
+  return offset;
+}
+
+static inline WrRepeatMode ToWrRepeatMode(uint8_t repeatMode)
+{
+  switch (repeatMode) {
+  case NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH:
+    return WrRepeatMode::Stretch;
+  case NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT:
+    return WrRepeatMode::Repeat;
+  case NS_STYLE_BORDER_IMAGE_REPEAT_ROUND:
+    return WrRepeatMode::Round;
+  case NS_STYLE_BORDER_IMAGE_REPEAT_SPACE:
+    return WrRepeatMode::Space;
+  default:
+    MOZ_ASSERT(false);
+  }
+
+  return WrRepeatMode::Stretch;
 }
 
 template<class T>
@@ -256,6 +313,22 @@ struct VecU8 {
     inner = src.inner;
     src.inner.data = nullptr;
     src.inner.capacity = 0;
+  }
+
+  VecU8&
+  operator=(VecU8&& src) {
+    inner = src.inner;
+    src.inner.data = nullptr;
+    src.inner.capacity = 0;
+    return *this;
+  }
+
+  WrVecU8
+  Extract() {
+    WrVecU8 ret = inner;
+    inner.data = nullptr;
+    inner.capacity = 0;
+    return ret;
   }
 
   ~VecU8() {
