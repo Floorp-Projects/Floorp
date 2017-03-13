@@ -14,6 +14,7 @@
 #include "mozilla/ShapeUtils.h"
 #include "nsCSSRendering.h"
 #include "nsIFrame.h"
+#include "nsLayoutUtils.h"
 #include "nsRenderingContext.h"
 #include "nsRuleNode.h"
 #include "nsSVGElement.h"
@@ -150,23 +151,22 @@ nsCSSClipPathInstance::CreateClipPathPolygon(DrawTarget* aDrawTarget,
                                              const nsRect& aRefBox)
 {
   StyleBasicShape* basicShape = mClipPathStyle.GetBasicShape();
-  const nsTArray<nsStyleCoord>& coords = basicShape->Coordinates();
-  MOZ_ASSERT(coords.Length() % 2 == 0 &&
-             coords.Length() >= 2, "wrong number of arguments");
-
   FillRule fillRule = basicShape->GetFillRule() == StyleFillRule::Nonzero ?
                         FillRule::FILL_WINDING : FillRule::FILL_EVEN_ODD;
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder(fillRule);
 
-  nscoord x = nsRuleNode::ComputeCoordPercentCalc(coords[0], aRefBox.width);
-  nscoord y = nsRuleNode::ComputeCoordPercentCalc(coords[1], aRefBox.height);
-  nscoord appUnitsPerDevPixel =
-    mTargetFrame->PresContext()->AppUnitsPerDevPixel();
-  builder->MoveTo(Point(aRefBox.x + x, aRefBox.y + y) / appUnitsPerDevPixel);
-  for (size_t i = 2; i < coords.Length(); i += 2) {
-    x = nsRuleNode::ComputeCoordPercentCalc(coords[i], aRefBox.width);
-    y = nsRuleNode::ComputeCoordPercentCalc(coords[i + 1], aRefBox.height);
-    builder->LineTo(Point(aRefBox.x + x, aRefBox.y + y) / appUnitsPerDevPixel);
+  nsTArray<nsPoint> vertices =
+    ShapeUtils::ComputePolygonVertices(basicShape, aRefBox);
+  if (vertices.IsEmpty()) {
+    MOZ_ASSERT_UNREACHABLE(
+      "ComputePolygonVertices() should've given us some vertices!");
+  } else {
+    nscoord appUnitsPerDevPixel =
+      mTargetFrame->PresContext()->AppUnitsPerDevPixel();
+    builder->MoveTo(NSPointToPoint(vertices[0], appUnitsPerDevPixel));
+    for (size_t i = 1; i < vertices.Length(); ++i) {
+      builder->LineTo(NSPointToPoint(vertices[i], appUnitsPerDevPixel));
+    }
   }
   builder->Close();
   return builder->Finish();
