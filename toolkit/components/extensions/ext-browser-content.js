@@ -26,7 +26,7 @@ const {
   stylesheetMap,
 } = ExtensionUtils;
 
-/* globals addMessageListener, content, docShell, sendAsyncMessage */
+/* globals addMessageListener, addEventListener, content, docShell, removeEventListener, sendAsyncMessage */
 
 // Minimum time between two resizes.
 const RESIZE_TIMEOUT = 100;

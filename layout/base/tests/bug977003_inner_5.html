@@ -26,6 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1098139
     var test_lost_listener = false;
     var test_lost_type = "";
     var test_move_listener = false;
+    var test_over_listener = false;
     var test_listener = false;
     var test_lost_primary = false;
 
@@ -53,6 +54,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1098139
       logger("Receive event on Listener: " + event.type);
       test_move_listener = true;
     }
+    function ListenerOverHandler(event) {
+      logger("Receive event on Listener: " + event.type);
+      test_over_listener = true;
+    }
     function ListenerHandler(event) {
       logger("Receive event on Listener: " + event.type);
       test_listener = true;
@@ -74,7 +79,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1098139
       target.addEventListener("pointerdown",          TargetDownHandler);
       listener.addEventListener("gotpointercapture",  ListenerGotPCHandler);
       listener.addEventListener("lostpointercapture", ListenerLostPCHandler);
-      listener.addEventListener("pointerover",        ListenerHandler);
+      listener.addEventListener("pointerover",        ListenerOverHandler);
       listener.addEventListener("pointermove",        ListenerMoveHandler);
       listener.addEventListener("pointerup",          ListenerHandler);
       listener.addEventListener("pointerout",         ListenerHandler);
@@ -93,6 +98,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1098139
       parent.is(test_lost_type,    "touch", "Part 5: lostpointercapture event should have pointerType touch");
       parent.is(test_lost_primary,    true, "Part 5: lostpointercapture event should have isPrimary as true");
       parent.is(test_move_listener,   true, "Part 5: gotpointercapture should be triggered by pointermove");
+      parent.is(test_over_listener,   true, "Part 5: listener should receive pointerover when capturing pointer");
       parent.is(test_listener,       false, "Part 5: listener should not receive any other events");
       logger("finishTest");
       parent.finishTest();

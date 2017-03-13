@@ -32,7 +32,7 @@ public:
   NS_IMETHOD GetData(nsITransferable * aTransferable, uint32_t anItem);
   NS_IMETHOD GetNumDropItems(uint32_t * aNumItems);
   NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, bool *_retval);
-  NS_IMETHOD EndDragSession(bool aDoneDrag);
+  NS_IMETHOD EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers);
   NS_IMETHOD UpdateDragImage(nsIDOMNode* aImage, int32_t aImageX, int32_t aImageY);
 
   // native impl.

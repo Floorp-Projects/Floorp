@@ -3095,6 +3095,7 @@ static bool IsInBounds(const gfxSkipCharsIterator& aStart, int32_t aContentLengt
 
 class MOZ_STACK_CLASS PropertyProvider : public gfxTextRun::PropertyProvider {
   typedef gfxTextRun::Range Range;
+  typedef gfxTextRun::HyphenType HyphenType;
 
 public:
   /**
@@ -3159,7 +3160,7 @@ public:
 
   virtual void GetSpacing(Range aRange, Spacing* aSpacing);
   virtual gfxFloat GetHyphenWidth();
-  virtual void GetHyphenationBreaks(Range aRange, bool* aBreakBefore);
+  virtual void GetHyphenationBreaks(Range aRange, HyphenType* aBreakBefore);
   virtual StyleHyphens GetHyphensOption() {
     return mTextStyle->mHyphens;
   }
@@ -3181,7 +3182,6 @@ public:
   JustificationInfo ComputeJustification(
     Range aRange, nsTArray<JustificationAssignment>* aAssignments = nullptr);
 
-  const nsStyleText* StyleText() { return mTextStyle; }
   nsTextFrame* GetFrame() { return mFrame; }
   // This may not be equal to the frame offset/length in because we may have
   // adjusted for whitespace trimming according to the state bits set in the frame
@@ -3596,8 +3596,18 @@ PropertyProvider::GetHyphenWidth()
   return mHyphenWidth + mLetterSpacing;
 }
 
+static inline bool
+IS_HYPHEN(char16_t u)
+{
+  return (u == char16_t('-') ||
+          u == 0x058A || // ARMENIAN HYPHEN
+          u == 0x2010 || // HYPHEN
+          u == 0x2012 || // FIGURE DASH
+          u == 0x2013);  // EN DASH
+}
+
 void
-PropertyProvider::GetHyphenationBreaks(Range aRange, bool* aBreakBefore)
+PropertyProvider::GetHyphenationBreaks(Range aRange, HyphenType* aBreakBefore)
 {
   NS_PRECONDITION(IsInBounds(mStart, mLength, aRange), "Range out of bounds");
   NS_PRECONDITION(mLength != INT32_MAX, "Can't call this with undefined length");
@@ -3605,7 +3615,8 @@ PropertyProvider::GetHyphenationBreaks(Range aRange, bool* aBreakBefore)
   if (!mTextStyle->WhiteSpaceCanWrap(mFrame) ||
       mTextStyle->mHyphens == StyleHyphens::None)
   {
-    memset(aBreakBefore, false, aRange.Length() * sizeof(bool));
+    memset(aBreakBefore, static_cast<uint8_t>(HyphenType::None),
+           aRange.Length() * sizeof(HyphenType));
     return;
   }
 
@@ -3632,19 +3643,32 @@ PropertyProvider::GetHyphenationBreaks(Range aRange, bool* aBreakBefore)
         mFrag->CharAt(run.GetOriginalOffset() + run.GetRunLength() - 1) == CH_SHY;
     } else {
       int32_t runOffsetInSubstring = run.GetSkippedOffset() - aRange.start;
-      memset(aBreakBefore + runOffsetInSubstring, false, run.GetRunLength()*sizeof(bool));
+      memset(aBreakBefore + runOffsetInSubstring,
+             static_cast<uint8_t>(HyphenType::None),
+             run.GetRunLength() * sizeof(HyphenType));
       // Don't allow hyphen breaks at the start of the line
-      aBreakBefore[runOffsetInSubstring] = allowHyphenBreakBeforeNextChar &&
+      aBreakBefore[runOffsetInSubstring] =
+          allowHyphenBreakBeforeNextChar &&
           (!(mFrame->GetStateBits() & TEXT_START_OF_LINE) ||
-           run.GetSkippedOffset() > mStart.GetSkippedOffset());
+           run.GetSkippedOffset() > mStart.GetSkippedOffset())
+          ? HyphenType::Soft
+          : HyphenType::None;
       allowHyphenBreakBeforeNextChar = false;
     }
   }
 
   if (mTextStyle->mHyphens == StyleHyphens::Auto) {
     for (uint32_t i = 0; i < aRange.Length(); ++i) {
-      if (mTextRun->CanHyphenateBefore(aRange.start + i)) {
-        aBreakBefore[i] = true;
+      int32_t fragIndex = mFrag->GetLength() > aRange.end ?
+                          aRange.start + i : i;
+      if (IS_HYPHEN(mFrag->CharAt(fragIndex))) {
+        aBreakBefore[i] = HyphenType::Explicit;
+        continue;
+      }
+
+      if (mTextRun->CanHyphenateBefore(aRange.start + i) &&
+          aBreakBefore[i] == HyphenType::None) {
+        aBreakBefore[i] = HyphenType::AutoWithoutManualInSameWord;
       }
     }
   }
@@ -8387,14 +8411,13 @@ nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
     return;
   }
 
-  AutoTArray<bool,BIG_TEXT_NODE_SIZE> hyphBuffer;
-  bool *hyphBreakBefore = nullptr;
+  AutoTArray<gfxTextRun::HyphenType, BIG_TEXT_NODE_SIZE> hyphBuffer;
   if (hyphenating) {
-    hyphBreakBefore = hyphBuffer.AppendElements(flowEndInTextRun - start,
-                                                fallible);
-    if (hyphBreakBefore) {
+    if (hyphBuffer.AppendElements(flowEndInTextRun - start, fallible)) {
       provider.GetHyphenationBreaks(Range(start, flowEndInTextRun),
-                                    hyphBreakBefore);
+                                    hyphBuffer.Elements());
+    } else {
+      hyphenating = false;
     }
   }
 
@@ -8410,7 +8433,8 @@ nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
       if (!textRun->CanBreakLineBefore(i) &&
           !preformattedNewline &&
           !preformattedTab &&
-          (!hyphBreakBefore || !hyphBreakBefore[i - start]))
+          (!hyphenating ||
+           hyphBuffer[i - start] == gfxTextRun::HyphenType::None))
       {
         // we can't break here (and it's not the end of the flow)
         continue;
@@ -8457,8 +8481,8 @@ nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
          (textRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK))) {
       if (preformattedNewline) {
         aData->ForceBreak();
-      } else if (i < flowEndInTextRun && hyphBreakBefore &&
-                 hyphBreakBefore[i - start]) {
+      } else if (i < flowEndInTextRun && hyphenating &&
+                 hyphBuffer[i - start] != gfxTextRun::HyphenType::None) {
         aData->OptionallyBreak(NSToCoordRound(provider.GetHyphenWidth()));
       } else {
         aData->OptionallyBreak();

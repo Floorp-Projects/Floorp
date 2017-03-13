@@ -13,13 +13,13 @@ class DBTool {
  public:
   bool Run(const std::vector<std::string>& arguments);
 
-  void Usage();
-
  private:
+  void Usage();
   bool PathHasDBFiles(std::string path);
   void ListCertificates();
   bool ImportCertificate(const ArgParser& parser);
   bool ListKeys();
+  bool ImportKey(const ArgParser& parser);
 };
 
 #endif  // dbtool_h__

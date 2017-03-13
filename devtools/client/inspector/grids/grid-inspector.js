@@ -204,8 +204,8 @@ GridInspector.prototype = {
    * Returns true if the layout panel is visible, and false otherwise.
    */
   isPanelVisible() {
-    return this.inspector.toolbox.currentToolId === "inspector" &&
-           this.inspector.sidebar &&
+    return this.inspector.toolbox && this.inspector.sidebar &&
+           this.inspector.toolbox.currentToolId === "inspector" &&
            this.inspector.sidebar.getCurrentTabID() === "layoutview";
   },
 

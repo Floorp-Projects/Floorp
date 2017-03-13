@@ -86,8 +86,36 @@ DataStorage::GetIfExists(const nsString& aFilename)
   return storage.forget();
 }
 
+// static
+void
+DataStorage::GetAllFileNames(nsTArray<nsString>& aItems)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!sDataStorages) {
+    return;
+  }
+  for (auto iter = sDataStorages->Iter(); !iter.Done(); iter.Next()) {
+    aItems.AppendElement(iter.Key());
+  }
+}
+
+// static
+void
+DataStorage::SetCachedStorageEntries(
+  const InfallibleTArray<mozilla::dom::DataStorageEntry>& aEntries)
+{
+  MOZ_ASSERT(XRE_IsContentProcess());
+
+  for (auto& entry : aEntries) {
+    RefPtr<DataStorage> storage = DataStorage::Get(entry.filename());
+    bool dataWillPersist = false;
+    storage->Init(dataWillPersist, &entry.items());
+  }
+}
+
 nsresult
-DataStorage::Init(bool& aDataWillPersist)
+DataStorage::Init(bool& aDataWillPersist,
+                  const InfallibleTArray<mozilla::dom::DataStorageItem>* aItems)
 {
   // Don't access the observer service or preferences off the main thread.
   if (!NS_IsMainThread()) {
@@ -106,6 +134,8 @@ DataStorage::Init(bool& aDataWillPersist)
 
   nsresult rv;
   if (XRE_IsParentProcess()) {
+    MOZ_ASSERT(!aItems);
+
     rv = NS_NewNamedThread("DataStorage", getter_AddRefs(mWorkerThread));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -116,13 +146,13 @@ DataStorage::Init(bool& aDataWillPersist)
       return rv;
     }
   } else {
-    // In the child process, we ask the parent process for the data.
+    // In the child process, we use the data passed to us by the parent process
+    // to initialize.
     MOZ_ASSERT(XRE_IsContentProcess());
+    MOZ_ASSERT(aItems);
+
     aDataWillPersist = false;
-    InfallibleTArray<DataStorageItem> items;
-    dom::ContentChild::GetSingleton()->
-        SendReadDataStorageArray(mFilename, &items);
-    for (auto& item : items) {
+    for (auto& item : *aItems) {
       Entry entry;
       entry.mValue = item.value();
       rv = PutInternal(item.key(), entry, item.type(), lock);

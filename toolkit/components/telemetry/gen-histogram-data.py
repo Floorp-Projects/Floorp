@@ -118,13 +118,13 @@ def write_histogram_static_asserts(output, histograms):
 // give compile-time errors, not runtime errors.""", file=output)
 
     table = {
-        'boolean' : static_asserts_for_boolean,
-        'flag' : static_asserts_for_flag,
+        'boolean': static_asserts_for_boolean,
+        'flag': static_asserts_for_flag,
         'count': static_asserts_for_count,
-        'enumerated' : static_asserts_for_enumerated,
-        'categorical' : static_asserts_for_enumerated,
-        'linear' : static_asserts_for_linear,
-        'exponential' : static_asserts_for_exponential,
+        'enumerated': static_asserts_for_enumerated,
+        'categorical': static_asserts_for_enumerated,
+        'linear': static_asserts_for_linear,
+        'exponential': static_asserts_for_exponential,
         }
 
     for histogram in histograms:

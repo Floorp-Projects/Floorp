@@ -196,6 +196,11 @@ public:
    */
   static bool HasDisplayPort(nsIContent* aContent);
 
+  /**
+   * Check if the given element has a margins based displayport but is missing a
+   * displayport base rect that it needs to properly compute a displayport rect.
+   */
+  static bool IsMissingDisplayPortBaseRect(nsIContent* aContent);
 
   /**
    * Go through the IPC Channel and update displayport margins for content
@@ -1888,7 +1893,7 @@ public:
                                     const SamplingFilter aSamplingFilter,
                                     const nsRect&       aDest,
                                     const nsRect&       aDirty,
-                                    const mozilla::Maybe<const SVGImageContext>& aSVGContext,
+                                    const mozilla::Maybe<SVGImageContext>& aSVGContext,
                                     uint32_t            aImageFlags,
                                     const nsPoint*      aAnchorPoint = nullptr,
                                     const nsRect*       aSourceArea = nullptr);
@@ -2901,11 +2906,6 @@ public:
 
   static nsRect ComputeGeometryBox(nsIFrame* aFrame,
                                    StyleGeometryBox aGeometryBox);
-
-  /*
-   * Check whether aFrame is associated with CSS layout box.
-   */
-  static bool HasCSSBoxLayout(nsIFrame* aFrame);
 
 private:
   static uint32_t sFontSizeInflationEmPerLine;
