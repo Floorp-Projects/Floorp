@@ -3570,9 +3570,7 @@ var SessionStoreInternal = {
 
     // Update the persistent tab state cache with |tabData| information.
     TabStateCache.update(browser, {
-      // NOTE: Copy the entries array shallowly, so as to not screw with the
-      // original tabData's history when getting history updates.
-      history: {entries: [...tabData.entries], index: tabData.index},
+      history: {entries: tabData.entries, index: tabData.index},
       scroll: tabData.scroll || null,
       storage: tabData.storage || null,
       formdata: tabData.formdata || null,
