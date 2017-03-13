@@ -1,6 +1,6 @@
 [package]
 name = "serde_codegen_internals"
-version = "0.11.3"
+version = "0.14.1"
 authors = ["Erick Tryzelaar <erick.tryzelaar@gmail.com>"]
 license = "MIT/Apache-2.0"
 description = "AST representation used by Serde codegen. Unstable."
@@ -8,11 +8,11 @@ homepage = "https://serde.rs"
 repository = "https://github.com/serde-rs/serde"
 documentation = "https://docs.serde.rs/serde_codegen_internals/"
 keywords = ["serde", "serialization"]
-include = ["Cargo.toml", "src/**/*.rs"]
-
-[features]
-unstable-testing = ["clippy"]
+readme = "../README.md"
+include = ["Cargo.toml", "src/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 
 [dependencies]
-clippy = { version = "^0.*", optional = true }
-syn = "0.10"
+syn = { version = "0.11", default-features = false, features = ["parsing"] }
+
+[badges]
+travis-ci = { repository = "serde-rs/serde" }

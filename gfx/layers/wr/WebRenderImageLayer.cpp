@@ -80,7 +80,7 @@ WebRenderImageLayer::ClearCachedResources()
 }
 
 void
-WebRenderImageLayer::RenderLayer()
+WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   if (!mContainer) {
      return;
@@ -127,61 +127,107 @@ WebRenderImageLayer::RenderLayer()
     return;
   }
 
-  WrScrollFrameStackingContextGenerator scrollFrames(this);
+  gfx::Matrix4x4 transform = GetTransform();
+  gfx::Rect relBounds = GetWrRelBounds();
+  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
 
-  Matrix4x4 transform = GetTransform();
-  Rect rect(0, 0, size.width, size.height);
-  Rect clip;
-  if (GetClipRect().isSome()) {
-      clip = RelativeToVisible(transform.Inverse().TransformBounds(IntRectToRect(GetClipRect().ref().ToUnknownRect())));
-  } else {
-      clip = rect;
+  gfx::Rect rect = gfx::Rect(0, 0, size.width, size.height);
+  if (mScaleMode != ScaleMode::SCALE_NONE) {
+    NS_ASSERTION(mScaleMode == ScaleMode::STRETCH,
+                 "No other scalemodes than stretch and none supported yet.");
+    rect = gfx::Rect(0, 0, mScaleToSize.width, mScaleToSize.height);
   }
+  rect = RelativeToVisible(rect);
+  gfx::Rect clipRect = GetWrClipRect(rect);
 
-  Rect relBounds = VisibleBoundsRelativeToParent();
-  if (!transform.IsIdentity()) {
-    // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
-    gfx::Matrix4x4 boundTransform = transform;
-    boundTransform._41 = 0.0f;
-    boundTransform._42 = 0.0f;
-    boundTransform._43 = 0.0f;
-    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
-  }
+  Maybe<WrImageMask> mask = BuildWrMaskLayer();
+  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect));
 
-  Rect overflow(0, 0, relBounds.width, relBounds.height);
-  Maybe<WrImageMask> mask = buildMaskLayer();
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
-  WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
+  wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
+  DumpLayerInfo("Image Layer", rect);
   if (gfxPrefs::LayersDump()) {
-    printf_stderr("ImageLayer %p using bounds=%s, overflow=%s, transform=%s, rect=%s, clip=%s, texture-filter=%s, mix-blend-mode=%s\n",
-                  this->GetLayer(),
-                  Stringify(relBounds).c_str(),
-                  Stringify(overflow).c_str(),
-                  Stringify(transform).c_str(),
-                  Stringify(rect).c_str(),
-                  Stringify(clip).c_str(),
-                  Stringify(filter).c_str(),
-                  Stringify(mixBlendMode).c_str());
+    printf_stderr("ImageLayer %p texture-filter=%s \n",
+                  GetLayer(),
+                  Stringify(filter).c_str());
   }
 
-  WrBridge()->AddWebRenderCommand(
-    OpDPPushStackingContext(wr::ToWrRect(relBounds),
-                            wr::ToWrRect(overflow),
-                            mask,
-                            1.0f,
-                            GetAnimations(),
-                            transform,
-                            mixBlendMode,
-                            FrameMetrics::NULL_SCROLL_ID));
   WrImageKey key;
   key.mNamespace = WrBridge()->GetNamespace();
   key.mHandle = WrBridge()->GetNextResourceId();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
-  WrBridge()->AddWebRenderCommand(OpDPPushImage(wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), filter, key));
-  WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
+
+  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
+                            wr::ToWrRect(overflow),
+                            mask.ptrOr(nullptr),
+                            1.0f,
+                            //GetAnimations(),
+                            transform,
+                            mixBlendMode);
+  aBuilder.PushImage(wr::ToWrRect(rect), clip, filter, key);
+  aBuilder.PopStackingContext();
 
   //mContainer->SetImageFactory(originalIF);
+}
+
+Maybe<WrImageMask>
+WebRenderImageLayer::RenderMaskLayer()
+{
+  if (!mContainer) {
+     return Nothing();
+  }
+
+  CompositableType type = GetImageClientType();
+  if (type == CompositableType::UNKNOWN) {
+    return Nothing();
+  }
+
+  MOZ_ASSERT(GetImageClientType() != CompositableType::UNKNOWN);
+
+  if (GetImageClientType() == CompositableType::IMAGE && !mImageClient) {
+    mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
+                                                  WrBridge(),
+                                                  TextureFlags::DEFAULT);
+    if (!mImageClient) {
+      return Nothing();
+    }
+    mImageClient->Connect();
+  }
+
+  if (!mExternalImageId) {
+    if (GetImageClientType() == CompositableType::IMAGE_BRIDGE) {
+      MOZ_ASSERT(!mImageClient);
+      mExternalImageId = WrBridge()->AllocExternalImageId(mContainer->GetAsyncContainerHandle());
+    } else {
+      // Handle CompositableType::IMAGE case
+      MOZ_ASSERT(mImageClient);
+      mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
+    }
+  }
+  MOZ_ASSERT(mExternalImageId);
+
+  // XXX Not good for async ImageContainer case.
+  AutoLockImage autoLock(mContainer);
+  Image* image = autoLock.GetImage();
+  if (!image) {
+    return Nothing();
+  }
+  if (mImageClient && !mImageClient->UpdateImage(mContainer, /* unused */0)) {
+    return Nothing();
+  }
+
+  WrImageKey key;
+  key.mNamespace = WrBridge()->GetNamespace();
+  key.mHandle = WrBridge()->GetNextResourceId();
+  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
+
+  gfx::IntSize size = image->GetSize();
+  WrImageMask imageMask;
+  imageMask.image = key;
+  imageMask.rect = wr::ToWrRect(Rect(0, 0, size.width, size.height));
+  imageMask.repeat = false;
+  return Some(imageMask);
 }
 
 } // namespace layers

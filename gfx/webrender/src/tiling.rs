@@ -7,7 +7,7 @@ use fnv::FnvHasher;
 use gpu_store::GpuStoreAddress;
 use internal_types::{ANGLE_FLOAT_TO_FIXED, BatchTextures, CacheTextureId, LowLevelFilterOp};
 use internal_types::SourceTexture;
-use mask_cache::{ClipSource, MaskCacheInfo};
+use mask_cache::MaskCacheInfo;
 use prim_store::{CLIP_DATA_GPU_SIZE, DeferredResolve, GpuBlock128, GpuBlock16, GpuBlock32};
 use prim_store::{GpuBlock64, GradientData, PrimitiveCacheKey, PrimitiveGeometry, PrimitiveIndex};
 use prim_store::{PrimitiveKind, PrimitiveMetadata, PrimitiveStore, TexelRect};
@@ -23,9 +23,9 @@ use std::hash::BuildHasherDefault;
 use texture_cache::TexturePage;
 use util::{TransformedRect, TransformedRectKind};
 use webrender_traits::{AuxiliaryLists, ColorF, DeviceIntPoint, DeviceIntRect, DeviceUintPoint};
-use webrender_traits::{DeviceUintSize, FontRenderMode, ImageRendering, LayerRect, LayerSize};
-use webrender_traits::{LayerToScrollTransform, LayerToWorldTransform, MixBlendMode, PipelineId};
-use webrender_traits::{ScrollLayerId, WorldPoint4D, WorldToLayerTransform};
+use webrender_traits::{DeviceUintSize, FontRenderMode, ImageRendering, LayerPoint, LayerRect};
+use webrender_traits::{LayerToWorldTransform, MixBlendMode, PipelineId, ScrollLayerId};
+use webrender_traits::{WorldPoint4D, WorldToLayerTransform};
 
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.
@@ -105,7 +105,7 @@ impl AlphaBatchHelpers for PrimitiveStore {
             }
             PrimitiveKind::YuvImage => {
                 let image_cpu = &self.cpu_yuv_images[metadata.cpu_prim_index.0];
-                [image_cpu.y_texture_id, image_cpu.u_texture_id, image_cpu.v_texture_id]
+                image_cpu.yuv_texture_id
             }
             PrimitiveKind::TextRun => {
                 let text_run_cpu = &self.cpu_text_runs[metadata.cpu_prim_index.0];
@@ -126,6 +126,13 @@ impl AlphaBatchHelpers for PrimitiveStore {
                 } else {
                     // Text runs drawn to blur never get drawn with subpixel AA.
                     BlendMode::Alpha
+                }
+            }
+            PrimitiveKind::Image => {
+                if needs_blending {
+                    BlendMode::PremultipliedAlpha
+                } else {
+                    BlendMode::None
                 }
             }
             _ => {
@@ -277,6 +284,8 @@ impl AlphaBatchHelpers for PrimitiveStore {
                         });
                     }
                     AlphaBatchKind::YuvImage => {
+                        let image_yuv_cpu = &self.cpu_yuv_images[metadata.cpu_prim_index.0];
+
                         data.push(PrimitiveInstance {
                             task_index: task_index,
                             clip_task_index: clip_task_index,
@@ -284,7 +293,7 @@ impl AlphaBatchHelpers for PrimitiveStore {
                             global_prim_id: global_prim_id,
                             prim_address: prim_address,
                             sub_index: 0,
-                            user_data: [ 0, 0 ],
+                            user_data: [ image_yuv_cpu.yuv_resource_address.0, 0 ],
                             z_sort_index: z_sort_index,
                         });
                     }
@@ -391,14 +400,11 @@ pub struct ScrollbarPrimitive {
     pub border_radius: f32,
 }
 
+#[derive(Debug)]
 pub enum PrimitiveRunCmd {
     PushStackingContext(StackingContextIndex),
     PopStackingContext,
-
-    PushScrollLayer(ScrollLayerIndex),
-    PopScrollLayer,
-
-    PrimitiveRun(PrimitiveIndex, usize),
+    PrimitiveRun(PrimitiveIndex, usize, ScrollLayerId),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -870,6 +876,7 @@ pub struct RenderTarget {
     pub vertical_blurs: Vec<BlurCommand>,
     pub horizontal_blurs: Vec<BlurCommand>,
     pub readbacks: Vec<DeviceIntRect>,
+    pub isolate_clears: Vec<DeviceIntRect>,
     page_allocator: TexturePage,
 }
 
@@ -884,6 +891,7 @@ impl RenderTarget {
             vertical_blurs: Vec::new(),
             horizontal_blurs: Vec::new(),
             readbacks: Vec::new(),
+            isolate_clears: Vec::new(),
             page_allocator: TexturePage::new(CacheTextureId(0), size),
         }
     }
@@ -909,6 +917,16 @@ impl RenderTarget {
                     opaque_items: info.opaque_items,
                     alpha_items: info.alpha_items,
                 });
+
+                if info.isolate_clear {
+                    let location = match task.location {
+                        RenderTaskLocation::Dynamic(origin, size) => {
+                            DeviceIntRect::new(origin.unwrap().0, size)
+                        }
+                        RenderTaskLocation::Fixed => panic!()
+                    };
+                    self.isolate_clears.push(location);
+                }
             }
             RenderTaskKind::VerticalBlur(_, prim_index) => {
                 // Find the child render task that we are applying
@@ -1301,53 +1319,79 @@ pub struct StackingContextIndex(pub usize);
 #[derive(Debug)]
 pub struct StackingContext {
     pub pipeline_id: PipelineId,
-    pub local_transform: LayerToScrollTransform,
+
+    // Offset in the parent reference frame to the origin of this stacking
+    // context's coordinate system.
+    pub reference_frame_offset: LayerPoint,
+
+    // Bounds of this stacking context in its own coordinate system.
     pub local_rect: LayerRect,
+
     pub bounding_rect: DeviceIntRect,
     pub composite_ops: CompositeOps,
     pub clip_scroll_groups: Vec<ClipScrollGroupIndex>,
+
+    // Signifies that this stacking context should be drawn in a separate render pass
+    // with a transparent background and then composited back to its parent. Used to
+    // support mix-blend-mode in certain cases.
+    pub should_isolate: bool,
+
+    // Set for the root stacking context of a display list or an iframe. Used for determining
+    // when to isolate a mix-blend-mode composite.
+    pub is_page_root: bool,
+
     pub is_visible: bool,
 }
 
 impl StackingContext {
     pub fn new(pipeline_id: PipelineId,
-               local_transform: LayerToScrollTransform,
+               reference_frame_offset: LayerPoint,
                local_rect: LayerRect,
-               composite_ops: CompositeOps,
-               clip_scroll_group_index: ClipScrollGroupIndex)
+               is_page_root: bool,
+               composite_ops: CompositeOps)
                -> StackingContext {
         StackingContext {
             pipeline_id: pipeline_id,
-            local_transform: local_transform,
+            reference_frame_offset: reference_frame_offset,
             local_rect: local_rect,
             bounding_rect: DeviceIntRect::zero(),
             composite_ops: composite_ops,
-            clip_scroll_groups: vec![clip_scroll_group_index],
+            clip_scroll_groups: Vec::new(),
+            should_isolate: false,
+            is_page_root: is_page_root,
             is_visible: false,
         }
     }
 
-    pub fn clip_scroll_group(&self) -> ClipScrollGroupIndex {
+    pub fn clip_scroll_group(&self, scroll_layer_id: ScrollLayerId) -> ClipScrollGroupIndex {
         // Currently there is only one scrolled stacking context per context,
         // but eventually this will be selected from the vector based on the
         // scroll layer of this primitive.
-        self.clip_scroll_groups[0]
+        for group in &self.clip_scroll_groups {
+            if group.1 == scroll_layer_id {
+                return *group;
+            }
+        }
+        unreachable!("Looking for non-existent ClipScrollGroup");
     }
 
     pub fn can_contribute_to_scene(&self) -> bool {
         !self.composite_ops.will_make_invisible()
     }
+
+    pub fn has_clip_scroll_group(&self, id: ScrollLayerId) -> bool {
+        self.clip_scroll_groups.iter().rev().any(|index| index.1 == id)
+    }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub struct ClipScrollGroupIndex(pub usize);
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+pub struct ClipScrollGroupIndex(pub usize, pub ScrollLayerId);
 
 #[derive(Debug)]
 pub struct ClipScrollGroup {
     pub stacking_context_index: StackingContextIndex,
     pub scroll_layer_id: ScrollLayerId,
     pub packed_layer_index: PackedLayerIndex,
-    pub pipeline_id: PipelineId,
     pub xf_rect: Option<TransformedRect>,
 }
 
@@ -1355,18 +1399,6 @@ impl ClipScrollGroup {
     pub fn is_visible(&self) -> bool {
         self.xf_rect.is_some()
     }
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub struct ScrollLayerIndex(pub usize);
-
-pub struct ScrollLayer {
-    pub scroll_layer_id: ScrollLayerId,
-    pub parent_index: ScrollLayerIndex,
-    pub clip_source: ClipSource,
-    pub clip_cache_info: Option<MaskCacheInfo>,
-    pub packed_layer_index: PackedLayerIndex,
-    pub xf_rect: Option<TransformedRect>,
 }
 
 #[derive(Debug, Clone)]
@@ -1393,6 +1425,31 @@ impl PackedLayer {
     pub fn empty() -> PackedLayer {
         Default::default()
     }
+
+    pub fn set_transform(&mut self, transform: LayerToWorldTransform) {
+        self.transform = transform;
+        self.inv_transform = self.transform.inverse().unwrap();
+    }
+
+    pub fn set_rect(&mut self,
+                    local_rect: Option<LayerRect>,
+                    screen_rect: &DeviceIntRect,
+                    device_pixel_ratio: f32)
+                    -> Option<TransformedRect> {
+        let local_rect = match local_rect {
+            Some(rect) if !rect.is_empty() => rect,
+            _ => return None,
+        };
+
+        let xf_rect = TransformedRect::new(&local_rect, &self.transform, device_pixel_ratio);
+        if !xf_rect.bounding_rect.intersects(screen_rect) {
+            return None;
+        }
+
+        self.screen_vertices = xf_rect.vertices.clone();
+        self.local_clip_rect = local_rect;
+        Some(xf_rect)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -1409,13 +1466,6 @@ impl CompositeOps {
         CompositeOps {
             filters: filters,
             mix_blend_mode: mix_blend_mode
-        }
-    }
-
-    pub fn empty() -> CompositeOps {
-        CompositeOps {
-            filters: Vec::new(),
-            mix_blend_mode: None,
         }
     }
 
@@ -1437,7 +1487,7 @@ impl CompositeOps {
 /// A rendering-oriented representation of frame::Frame built by the render backend
 /// and presented to the renderer.
 pub struct Frame {
-    pub viewport_size: LayerSize,
+    pub window_size: DeviceUintSize,
     pub background_color: Option<ColorF>,
     pub device_pixel_ratio: f32,
     pub cache_size: DeviceUintSize,

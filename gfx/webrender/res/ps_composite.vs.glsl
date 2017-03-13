@@ -19,8 +19,8 @@ void main(void) {
 
     vec2 texture_size = vec2(textureSize(sCache, 0));
 
-    vec2 st0 = (backdrop_task.render_target_origin + vec2(0.0, backdrop_task.size.y)) / texture_size;
-    vec2 st1 = (backdrop_task.render_target_origin + vec2(backdrop_task.size.x, 0.0)) / texture_size;
+    vec2 st0 = backdrop_task.render_target_origin / texture_size;
+    vec2 st1 = (backdrop_task.render_target_origin + backdrop_task.size) / texture_size;
     vUv0 = vec3(mix(st0, st1, aPosition.xy), backdrop_task.render_target_layer_index);
 
     st0 = src_task.render_target_origin / texture_size;

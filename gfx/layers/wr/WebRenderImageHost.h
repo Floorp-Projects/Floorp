@@ -62,6 +62,8 @@ public:
 
   virtual void CleanupResources() override;
 
+  virtual WebRenderImageHost* AsWebRenderImageHost() override { return this; }
+
 protected:
   // ImageComposite
   virtual TimeStamp GetCompositionTime() const override;
