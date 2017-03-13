@@ -163,7 +163,18 @@ GMPContentChild::RecvPGMPVideoEncoderConstructor(PGMPVideoEncoderChild* aActor)
 mozilla::ipc::IPCResult
 GMPContentChild::RecvPChromiumCDMConstructor(PChromiumCDMChild* aActor)
 {
-  // TODO: Implement.
+  ChromiumCDMChild* child = static_cast<ChromiumCDMChild*>(aActor);
+  cdm::Host_8* host = child;
+
+  void* cdm = nullptr;
+  GMPErr err = mGMPChild->GetAPI(CHROMIUM_CDM_API, host, &cdm);
+  if (err != GMPNoErr || !cdm) {
+    NS_WARNING("GMPGetAPI call failed trying to get CDM.");
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  child->Init(static_cast<cdm::ContentDecryptionModule_8*>(cdm));
+
   return IPC_OK();
 }
 

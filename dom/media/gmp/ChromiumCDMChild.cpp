@@ -14,6 +14,13 @@ ChromiumCDMChild::ChromiumCDMChild(GMPContentChild* aPlugin)
 {
 }
 
+void
+ChromiumCDMChild::Init(cdm::ContentDecryptionModule_8* aCDM)
+{
+  mCDM = aCDM;
+  MOZ_ASSERT(mCDM);
+}
+
 mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvInit(const bool& aAllowDistinctiveIdentifier,
                            const bool& aAllowPersistentState)
