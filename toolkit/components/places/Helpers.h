@@ -137,7 +137,7 @@ void ReverseString(const nsString& aInput, nsString& aReversed);
  *
  * @note This guid uses the characters a-z, A-Z, 0-9, '-', and '_'.
  */
-nsresult GenerateGUID(nsCString& _guid);
+nsresult GenerateGUID(nsACString& _guid);
 
 /**
  * Determines if the string is a valid guid or not.
