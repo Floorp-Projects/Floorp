@@ -9,6 +9,7 @@
 #include "gfxAndroidPlatform.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/CountingAllocatorBase.h"
+#include "mozilla/intl/LocaleService.h"
 #include "mozilla/Preferences.h"
 
 #include "gfx2DGlue.h"
@@ -19,7 +20,6 @@
 #include "nsXULAppAPI.h"
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
-#include "nsILocaleService.h"
 #include "nsServiceManagerUtils.h"
 #include "gfxPrefs.h"
 #include "cairo.h"
@@ -34,6 +34,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
+using mozilla::intl::LocaleService;
 
 static FT_Library gPlatformFTLibrary = nullptr;
 
@@ -132,29 +133,13 @@ IsJapaneseLocale()
     if (!sInitialized) {
         sInitialized = true;
 
-        do { // to allow 'break' to abandon this block if a call fails
-            nsresult rv;
-            nsCOMPtr<nsILocaleService> ls =
-                do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
-            if (NS_FAILED(rv)) {
-                break;
-            }
-            nsCOMPtr<nsILocale> appLocale;
-            rv = ls->GetApplicationLocale(getter_AddRefs(appLocale));
-            if (NS_FAILED(rv)) {
-                break;
-            }
-            nsString localeStr;
-            rv = appLocale->
-                GetCategory(NS_LITERAL_STRING(NSILOCALE_MESSAGE), localeStr);
-            if (NS_FAILED(rv)) {
-                break;
-            }
-            const nsAString& lang = nsDependentSubstring(localeStr, 0, 2);
-            if (lang.EqualsLiteral("ja")) {
-                sIsJapanese = true;
-            }
-        } while (false);
+        nsAutoCString appLocale;
+        LocaleService::GetInstance()->GetAppLocaleAsLangTag(appLocale);
+
+        const nsDependentCSubstring lang(appLocale, 0, 2);
+        if (lang.EqualsLiteral("ja")) {
+            sIsJapanese = true;
+        }
     }
 
     return sIsJapanese;
