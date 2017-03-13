@@ -50,24 +50,68 @@ public:
 
 class nsTSubstringSplitter_CharT;
 
+namespace mozilla {
+namespace detail {
+
 /**
- * nsTSubstring is the most abstract class in the string hierarchy. It
- * represents a single contiguous array of characters, which may or may not
- * be null-terminated. This type is not instantiated directly.  A sub-class
- * is instantiated instead.  For example, see nsTString.
+ * nsTStringRepr defines a string's memory layout and some accessor methods.
+ * This class exists so that nsTLiteralString can avoid inheriting
+ * nsTSubstring's destructor. All methods on this class must be const because
+ * literal strings are not writable.
+ *
+ * This class is an implementation detail and should not be instantiated
+ * directly, nor used in any way outside of the string code itself. It is
+ * buried in a namespace to discourage its use in function parameters.
+ * If you need to take a parameter, use [const] ns[C]Substring&.
+ * If you need to instantiate a string, use ns[C]String or descendents.
+ *
+ * NAMES:
+ *   nsStringRepr for wide characters
+ *   nsCStringRepr for narrow characters
+ *
+ */
+class nsTStringRepr_CharT
+{
+public:
+  typedef CharT                               char_type;
+
+  typedef uint32_t                            size_type;
+
+protected:
+  nsTStringRepr_CharT() = delete; // Never instantiate directly
+
+  constexpr
+  nsTStringRepr_CharT(char_type* aData, size_type aLength, uint32_t aFlags)
+    : mData(aData)
+    , mLength(aLength)
+    , mFlags(aFlags)
+  {
+  }
+
+  char_type*  mData;
+  size_type   mLength;
+  uint32_t    mFlags;
+};
+
+} // namespace detail
+} // namespace mozilla
+
+/**
+ * nsTSubstring is an abstract string class. From an API perspective, this
+ * class is the root of the string class hierarchy. It represents a single
+ * contiguous array of characters, which may or may not be null-terminated.
+ * This type is not instantiated directly. A sub-class is instantiated
+ * instead. For example, see nsTString.
  *
  * NAMES:
  *   nsAString for wide characters
  *   nsACString for narrow characters
  *
- * Many of the accessors on nsTSubstring are inlined as an optimization.
  */
-class nsTSubstring_CharT
+class nsTSubstring_CharT : public mozilla::detail::nsTStringRepr_CharT
 {
 public:
   typedef mozilla::fallible_t                 fallible_t;
-
-  typedef CharT                               char_type;
 
   typedef nsCharTraits<char_type>             char_traits;
   typedef char_traits::incompatible_char_type incompatible_char_type;
@@ -87,7 +131,6 @@ public:
   typedef char_type*                          char_iterator;
   typedef const char_type*                    const_char_iterator;
 
-  typedef uint32_t                            size_type;
   typedef uint32_t                            index_type;
 
 public:
@@ -850,9 +893,7 @@ public:
    * base type, which helps avoid converting to nsTAString.
    */
   MOZ_IMPLICIT nsTSubstring_CharT(const substring_tuple_type& aTuple)
-    : mData(nullptr)
-    , mLength(0)
-    , mFlags(F_NONE)
+    : nsTStringRepr_CharT(nullptr, 0, F_NONE)
   {
     Assign(aTuple);
   }
@@ -891,24 +932,17 @@ protected:
 
   friend class nsTSubstringTuple_CharT;
 
-  char_type*  mData;
-  size_type   mLength;
-  uint32_t    mFlags;
-
   // default initialization
   nsTSubstring_CharT()
-    : mData(char_traits::sEmptyBuffer)
-    ,  mLength(0)
-    ,  mFlags(F_TERMINATED)
+    : nsTStringRepr_CharT(char_traits::sEmptyBuffer, 0, F_TERMINATED)
   {
   }
 
   // copy-constructor, constructs as dependent on given object
   // (NOTE: this is for internal use only)
   nsTSubstring_CharT(const self_type& aStr)
-    : mData(aStr.mData)
-    ,  mLength(aStr.mLength)
-    ,  mFlags(aStr.mFlags & (F_TERMINATED | F_VOIDED))
+    : nsTStringRepr_CharT(aStr.mData, aStr.mLength,
+                          aStr.mFlags & (F_TERMINATED | F_VOIDED))
   {
   }
 
@@ -922,9 +956,7 @@ protected:
 #else
 #undef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
   nsTSubstring_CharT(char_type* aData, size_type aLength, uint32_t aFlags)
-    : mData(aData)
-    , mLength(aLength)
-    , mFlags(aFlags)
+    : nsTStringRepr_CharT(aData, aLength, aFlags)
   {
   }
 #endif /* DEBUG || FORCE_BUILD_REFCNT_LOGGING */
@@ -1093,6 +1125,11 @@ public:
   //   mutually exclusive with F_SHARED, F_OWNED, and F_FIXED.
   //
 };
+
+static_assert(sizeof(nsTSubstring_CharT) ==
+              sizeof(mozilla::detail::nsTStringRepr_CharT),
+              "Don't add new data fields to nsTSubstring_CharT. "
+              "Add to nsTStringRepr_CharT instead.");
 
 int NS_FASTCALL
 Compare(const nsTSubstring_CharT::base_string_type& aLhs,
