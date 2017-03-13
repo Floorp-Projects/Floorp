@@ -1575,6 +1575,7 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
 
 PWebRenderBridgeParent*
 CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
+                                                    const LayoutDeviceIntSize& aSize,
                                                     TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                                     uint32_t* aIdNamespace)
 {
@@ -1591,7 +1592,8 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
 
   MOZ_ASSERT(mWidget);
   RefPtr<widget::CompositorWidget> widget = mWidget;
-  RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(gfxPrefs::WebRenderProfilerEnabled(), this, Move(widget));
+  RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(
+    gfxPrefs::WebRenderProfilerEnabled(), this, Move(widget), aSize);
   RefPtr<WebRenderCompositableHolder> holder = new WebRenderCompositableHolder();
   MOZ_ASSERT(api); // TODO have a fallback
   api->SetRootPipeline(aPipelineId);

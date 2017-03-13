@@ -1,6 +1,6 @@
 random == bug-364968.html bug-364968-ref.html
 == bug-463204.html bug-463204-ref.html
-fails-if(webrender) == canvas-outside-document.html canvas-inside-document.html
+== canvas-outside-document.html canvas-inside-document.html
 == mozsetimageelement-01.html mozsetimageelement-01-ref.html
 == mozsetimageelement-02.html about:blank
 == image-outside-document-invalidate.html about:blank

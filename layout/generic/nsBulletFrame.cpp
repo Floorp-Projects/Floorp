@@ -228,7 +228,7 @@ public:
 
   void
   CreateWebRenderCommands(nsDisplayItem* aItem,
-                          nsTArray<layers::WebRenderCommand>& aCommands,
+                          wr::DisplayListBuilder& aBuilder,
                           nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                           layers::WebRenderDisplayItemLayer* aLayer);
 
@@ -275,18 +275,18 @@ public:
 private:
   void
   CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
-                                  nsTArray<layers::WebRenderCommand>& aCommands,
+                                 wr::DisplayListBuilder& aBuilder,
                                   nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                   layers::WebRenderDisplayItemLayer* aLayer);
 
   void
   CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
-                                 nsTArray<layers::WebRenderCommand>& aCommands,
+                                 wr::DisplayListBuilder& aBuilder,
                                  layers::WebRenderDisplayItemLayer* aLayer);
 
   void
   CreateWebRenderCommandsForText(nsDisplayItem* aItem,
-                                 nsTArray<layers::WebRenderCommand>& aCommands,
+                                 wr::DisplayListBuilder& aBuilder,
                                  layers::WebRenderDisplayItemLayer* aLayer);
 
 private:
@@ -317,17 +317,17 @@ private:
 
 void
 BulletRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
-                                        nsTArray<layers::WebRenderCommand>& aCommands,
+                                        wr::DisplayListBuilder& aBuilder,
                                         nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                         layers::WebRenderDisplayItemLayer* aLayer)
 {
   if (IsImageType()) {
-    CreateWebRenderCommandsForImage(aItem, aCommands, aParentCommands, aLayer);
+    CreateWebRenderCommandsForImage(aItem, aBuilder, aParentCommands, aLayer);
   } else if (IsPathType()) {
-    CreateWebRenderCommandsForPath(aItem, aCommands, aLayer);
+    CreateWebRenderCommandsForPath(aItem, aBuilder, aLayer);
   } else {
     MOZ_ASSERT(IsTextType());
-    CreateWebRenderCommandsForText(aItem, aCommands, aLayer);
+    CreateWebRenderCommandsForText(aItem, aBuilder, aLayer);
   }
 }
 
@@ -435,7 +435,7 @@ BulletRenderer::IsImageContainerAvailable(layers::LayerManager* aManager, uint32
 
 void
 BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
-                                                nsTArray<layers::WebRenderCommand>& aCommands,
+                                                wr::DisplayListBuilder& aBuilder,
                                                 nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                                 layers::WebRenderDisplayItemLayer* aLayer)
 {
@@ -465,25 +465,23 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
   Rect destRectTransformed = aLayer->RelativeToParent(destRect);
   IntRect dest = RoundedToInt(destRectTransformed);
 
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(dest));
+
   WrImageKey key;
   key.mNamespace = layer->WrBridge()->GetNamespace();
   key.mHandle = layer->WrBridge()->GetNextResourceId();
   aParentCommands.AppendElement(layers::OpAddExternalImage(
                                 externalImageId,
                                 key));
-  aCommands.AppendElement(layers::OpDPPushImage(
-                            wr::ToWrRect(dest),
-                            wr::ToWrRect(dest),
-                            Nothing(),
-                            WrImageRendering::Auto,
-                            key));
-
-
+  aBuilder.PushImage(wr::ToWrRect(dest),
+                     clipRegion,
+                     WrImageRendering::Auto,
+                     key);
 }
 
 void
 BulletRenderer::CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
-                                               nsTArray<layers::WebRenderCommand>& aCommands,
+                                               wr::DisplayListBuilder& aBuilder,
                                                layers::WebRenderDisplayItemLayer* aLayer)
 {
   MOZ_ASSERT(IsPathType());
@@ -493,7 +491,7 @@ BulletRenderer::CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
 
 void
 BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
-                                               nsTArray<layers::WebRenderCommand>& aCommands,
+                                               wr::DisplayListBuilder& aBuilder,
                                                layers::WebRenderDisplayItemLayer* aLayer)
 {
   MOZ_ASSERT(IsTextType());
@@ -508,7 +506,7 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
     NSRectToRect(aItem->GetBounds(builder, &dummy), appUnitsPerDevPixel);
   Rect destRectTransformed = aLayer->RelativeToParent(destRect);
 
-  mGlyphHelper.BuildWebRenderCommands(layer->WrBridge(), aCommands, mGlyphs, mFont, aLayer->GetOffsetToParent(),
+  mGlyphHelper.BuildWebRenderCommands(layer->WrBridge(), aBuilder, mGlyphs, mFont, aLayer->GetOffsetToParent(),
                                       destRectTransformed, destRectTransformed);
 }
 
@@ -541,7 +539,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aParameters) override;
 
-  virtual void CreateWebRenderCommands(nsTArray<layers::WebRenderCommand>& aCommands,
+  virtual void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                        layers::WebRenderDisplayItemLayer* aLayer) override;
 
@@ -655,14 +653,14 @@ nsDisplayBullet::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsDisplayBullet::CreateWebRenderCommands(nsTArray<layers::WebRenderCommand>& aCommands,
+nsDisplayBullet::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                          nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                          layers::WebRenderDisplayItemLayer* aLayer)
 {
   if (!mBulletRenderer)
     return;
 
-  mBulletRenderer->CreateWebRenderCommands(this, aCommands, aParentCommands, aLayer);
+  mBulletRenderer->CreateWebRenderCommands(this, aBuilder, aParentCommands, aLayer);
 }
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,

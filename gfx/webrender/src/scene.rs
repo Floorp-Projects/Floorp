@@ -41,7 +41,14 @@ impl SceneProperties {
     }
 
     /// Get the current value for a transform property.
-    pub fn resolve_layout_transform(&self, property: &PropertyBinding<LayoutTransform>) -> LayoutTransform {
+    pub fn resolve_layout_transform(&self,
+                                    property: Option<&PropertyBinding<LayoutTransform>>)
+                                    -> LayoutTransform {
+        let property = match property {
+            Some(property) => property,
+            None => return LayoutTransform::identity(),
+        };
+
         match *property {
             PropertyBinding::Value(matrix) => matrix,
             PropertyBinding::Binding(ref key) => {

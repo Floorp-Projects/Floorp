@@ -21,6 +21,18 @@ public:
     MOZ_COUNT_CTOR(WebRenderBorderLayer);
   }
 
+  static void
+  CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                          WebRenderLayer* aLayer,
+                          BorderColors& aColors,
+                          BorderCorners& aCorners,
+                          BorderWidths& aWidths,
+                          BorderStyles& aBorderStyles,
+                          gfx::Rect aRect,
+                          gfx::Rect aClipRect,
+                          gfx::Rect aRelBounds,
+                          gfx::Rect aOverflow);
+
 protected:
   virtual ~WebRenderBorderLayer()
   {
@@ -29,7 +41,7 @@ protected:
 
 public:
   Layer* GetLayer() override { return this; }
-  void RenderLayer() override;
+  void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
 };
 
 } // namespace layers

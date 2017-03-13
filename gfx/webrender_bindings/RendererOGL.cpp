@@ -9,6 +9,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/webrender/RenderTextureHost.h"
 #include "mozilla/widget/CompositorWidget.h"
 
 namespace mozilla {
@@ -16,11 +17,20 @@ namespace wr {
 
 WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId)
 {
-  return WrExternalImage { /*WrExternalImageIdType::TextureHandle, */0.0f, 0.0f, 0.0f, 0.0f, 0 };
+  RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
+  RenderTextureHost* texture = renderer->GetRenderTexture(aId.id);
+  MOZ_ASSERT(texture);
+  texture->Lock();
+  return WrExternalImage { WrExternalImageIdType::RawData, 0.0f, 0.0f, 0.0f, 0.0f, 0,
+                           texture->GetDataForRender(), texture->GetBufferSizeForRender() };
 }
 
 void UnlockExternalImage(void* aObj, WrExternalImageId aId)
 {
+  RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
+  RenderTextureHost* texture = renderer->GetRenderTexture(aId.id);
+  MOZ_ASSERT(texture);
+  texture->Unlock();
 }
 
 void ReleaseExternalImage(void* aObj, WrExternalImageId aId)
@@ -118,6 +128,12 @@ WrRenderedEpochs*
 RendererOGL::FlushRenderedEpochs()
 {
   return wr_renderer_flush_rendered_epochs(mWrRenderer);
+}
+
+RenderTextureHost*
+RendererOGL::GetRenderTexture(uint64_t aExternalImageId)
+{
+  return mThread->GetRenderTexture(aExternalImageId);
 }
 
 } // namespace wr
