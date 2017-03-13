@@ -8,9 +8,8 @@
      width="32" height="32" viewBox="0 0 32 32">
 #include icon-colors.inc.svg
   <style>
-    use:not(:target) {
-      display: none;
-    }
+    :root > use:not(:target),
+    :root > g:not(:target),
     #strikeout {
       display: none;
     }
@@ -18,7 +17,7 @@
       display: block;
     }
     .blocked {
-      clip-path: url(#clip);
+      clip-path: url(#blocked-clipPath);
     }
 
     #login-highlighted {
@@ -64,10 +63,20 @@
     <path id="popup-icon" d="m 2,24 a 4,4 0 0 0 4,4 l 8,0 a 10,10 0 0 1 -2,-4 l -4,0 a 2,2 0 0 1 -2,-2 l 0,-12 18,0 0,2 a 10,10 0 0 1 4,2 l 0,-8 a 4,4 0 0 0 -4,-4 l -18,0 a 4,4 0 0 0 -4,4 z m 12,-2.1 a 8,8 0 1 1 0,0.2 m 10.7,-4.3 a 5,5 0 0 0 -6.9,6.9 z m -5.4,8.4 a 5,5 0 0 0 6.9,-6.9 z" />
     <path id="screen-icon" d="m 2,18 a 2,2 0 0 0 2,2 l 2,0 0,-6 a 4,4 0 0 1 4,-4 l 14,0 0,-6 a 2,2 0 0 0 -2,-2 l -18,0 a 2,2 0 0 0 -2,2 z m 6,10 a 2,2 0 0 0 2,2 l 18,0 a 2,2 0 0 0 2,-2 l 0,-14 a 2,2 0 0 0 -2,-2 l -18,0 a 2,2 0 0 0 -2,2 z" />
 
-    <clipPath id="clip">
+    <clipPath id="blocked-clipPath">
       <path d="m 0,0 0,31 31,-31 z m 6,32 26,0 0,-26 z"/>
     </clipPath>
+
+    <mask id="i-mask" style="fill-opacity: 1;">
+      <rect fill="white" width="32" height="32"/>
+      <circle fill="black" cx="16" cy="9" r="2.5"/>
+      <rect fill="black" x="14" y="14" width="4" height="10" rx="2" ry="2"/>
+    </mask>
   </defs>
+
+  <g id="default-info">
+    <circle cx="16" cy="16" r="14" mask="url(#i-mask)"/>
+  </g>
 
   <use id="camera" xlink:href="#camera-icon" />
   <use id="camera-sharing" xlink:href="#camera-icon"/>
