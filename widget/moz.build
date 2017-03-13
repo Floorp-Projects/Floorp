@@ -129,6 +129,7 @@ EXPORTS.mozilla.widget += [
     'CompositorWidget.h',
     'IMEData.h',
     'InProcessCompositorWidget.h',
+    'nsAutoRollup.h',
     'PuppetBidiKeyboard.h',
     'WidgetMessageUtils.h',
     'WindowSurface.h'
@@ -143,6 +144,7 @@ UNIFIED_SOURCES += [
     'GfxInfoWebGL.cpp',
     'InProcessCompositorWidget.cpp',
     'InputData.cpp',
+    'nsAutoRollup.cpp',
     'nsBaseAppShell.cpp',
     'nsBaseScreen.cpp',
     'nsClipboardHelper.cpp',
