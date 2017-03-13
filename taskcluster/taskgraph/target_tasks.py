@@ -281,7 +281,7 @@ def target_tasks_stylo(full_task_graph, parameters):
 
 
 @_target_task('stylo_talos')
-def target_tasks_stylo(full_task_graph, parameters):
+def target_stylo_talos(full_task_graph, parameters):
     """Target stylotasks that only run on the m-c branch."""
     def filter(task):
         platform = task.attributes.get('build_platform')
