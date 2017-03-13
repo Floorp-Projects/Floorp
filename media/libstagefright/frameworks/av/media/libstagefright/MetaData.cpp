@@ -323,7 +323,7 @@ String8 MetaData::typed_data::asString() const {
             out = String8::format("(int32_t) %d", *(int32_t *)data);
             break;
         case TYPE_INT64:
-            out = String8::format("(int64_t) %lld", *(int64_t *)data);
+            out = String8::format("(int64_t) %" PRId64, *(int64_t *)data);
             break;
         case TYPE_FLOAT:
             out = String8::format("(float) %f", *(float *)data);

@@ -31,5 +31,5 @@ void main(void) {
 
     alpha = alpha * float(all(bvec2(step(position_in_tile, vStretchSize))));
 
-    oFragColor = vec4(1.0, 1.0, 1.0, alpha) * textureLod(sColor0, st, 0.0);
+    oFragColor = vec4(alpha) * textureLod(sColor0, st, 0.0);
 }

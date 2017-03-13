@@ -5,10 +5,20 @@
 use device::TextureFilter;
 use std::marker::PhantomData;
 use std::mem;
+use std::ops::Add;
 use webrender_traits::ImageFormat;
 
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 pub struct GpuStoreAddress(pub i32);
+
+
+impl Add<i32> for GpuStoreAddress {
+    type Output = GpuStoreAddress;
+
+    fn add(self, other: i32) -> GpuStoreAddress {
+        GpuStoreAddress(self.0 + other)
+    }
+}
 
 pub trait GpuStoreLayout {
     fn image_format() -> ImageFormat;

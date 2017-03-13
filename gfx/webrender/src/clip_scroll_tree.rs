@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use clip_scroll_node::{ClipScrollNode, NodeType, ScrollingState};
 use fnv::FnvHasher;
-use clip_scroll_node::{ClipScrollNode, ScrollingState};
 use std::collections::{HashMap, HashSet};
 use std::hash::BuildHasherDefault;
-use webrender_traits::{LayerPoint, LayerRect, LayerSize, LayerToScrollTransform, PipelineId};
-use webrender_traits::{ScrollEventPhase, ScrollLayerId, ScrollLayerInfo, ScrollLayerPixel};
-use webrender_traits::{ScrollLayerRect, ScrollLayerState, ScrollLocation, ScrollToWorldTransform};
-use webrender_traits::{ServoScrollRootId, WorldPoint, as_scroll_parent_rect};
+use webrender_traits::{LayerPoint, LayerRect, LayerToScrollTransform, LayerToWorldTransform};
+use webrender_traits::{PipelineId, ScrollEventPhase, ScrollLayerId, ScrollLayerInfo};
+use webrender_traits::{ScrollLayerRect, ScrollLayerState, ScrollLocation, ServoScrollRootId};
+use webrender_traits::{WorldPoint, as_scroll_parent_rect};
 
 pub type ScrollStates = HashMap<ScrollLayerId, ScrollingState, BuildHasherDefault<FnvHasher>>;
 
@@ -48,7 +48,7 @@ impl ClipScrollTree {
             current_scroll_layer_id: None,
             root_reference_frame_id: ScrollLayerId::root_reference_frame(dummy_pipeline),
             topmost_scroll_layer_id: ScrollLayerId::root_scroll_layer(dummy_pipeline),
-            current_reference_frame_id: 1,
+            current_reference_frame_id: 0,
             pipelines_to_discard: HashSet::new(),
         }
     }
@@ -65,26 +65,6 @@ impl ClipScrollTree {
         debug_assert!(!self.nodes.is_empty());
         debug_assert!(self.nodes.contains_key(&self.topmost_scroll_layer_id));
         self.topmost_scroll_layer_id
-    }
-
-    pub fn establish_root(&mut self,
-                          pipeline_id: PipelineId,
-                          viewport_size: &LayerSize,
-                          content_size: &LayerSize) {
-        debug_assert!(self.nodes.is_empty());
-
-        let identity = LayerToScrollTransform::identity();
-        let viewport = LayerRect::new(LayerPoint::zero(), *viewport_size);
-
-        let root_reference_frame_id = ScrollLayerId::root_reference_frame(pipeline_id);
-        self.root_reference_frame_id = root_reference_frame_id;
-        let reference_frame = ClipScrollNode::new(&viewport, viewport.size, &identity, pipeline_id);
-        self.nodes.insert(self.root_reference_frame_id, reference_frame);
-
-        let scroll_node = ClipScrollNode::new(&viewport, *content_size, &identity, pipeline_id);
-        let topmost_scroll_layer_id = ScrollLayerId::root_scroll_layer(pipeline_id);
-        self.topmost_scroll_layer_id = topmost_scroll_layer_id;
-        self.add_node(scroll_node, topmost_scroll_layer_id, root_reference_frame_id);
     }
 
     pub fn collect_nodes_bouncing_back(&self)
@@ -129,16 +109,16 @@ impl ClipScrollTree {
 
     pub fn get_scroll_node_state(&self) -> Vec<ScrollLayerState> {
         let mut result = vec![];
-        for (scroll_layer_id, scroll_node) in self.nodes.iter() {
-            match scroll_layer_id.info {
-                ScrollLayerInfo::Scrollable(_, servo_scroll_root_id) => {
+        for (_, node) in self.nodes.iter() {
+            match node.node_type {
+                NodeType::Clip(ref info) if info.scroll_root_id.is_some() => {
                     result.push(ScrollLayerState {
-                        pipeline_id: scroll_node.pipeline_id,
-                        scroll_root_id: servo_scroll_root_id,
-                        scroll_offset: scroll_node.scrolling.offset,
+                        pipeline_id: node.pipeline_id,
+                        scroll_root_id: info.scroll_root_id.unwrap(),
+                        scroll_offset: node.scrolling.offset,
                     })
                 }
-                ScrollLayerInfo::ReferenceFrame(..) => {}
+                _ => {},
             }
         }
         result
@@ -177,10 +157,10 @@ impl ClipScrollTree {
                 continue;
             }
 
-            match layer_id.info {
-                ScrollLayerInfo::Scrollable(_, id) if id != scroll_root_id => continue,
-                ScrollLayerInfo::ReferenceFrame(..) => continue,
-                ScrollLayerInfo::Scrollable(..) => {}
+            match node.node_type {
+                NodeType::Clip(ref info) if info.scroll_root_id != Some(scroll_root_id) => continue,
+                NodeType::ReferenceFrame(..) => continue,
+                NodeType::Clip(_) => {},
             }
 
             found_node = true;
@@ -258,16 +238,26 @@ impl ClipScrollTree {
             },
         };
 
-        let scroll_node_info = if switch_node {
-            topmost_scroll_layer_id.info
+        let scroll_layer_id = if switch_node {
+            topmost_scroll_layer_id
         } else {
-            scroll_layer_id.info
+            scroll_layer_id
         };
 
-        let scroll_root_id = match scroll_node_info {
-             ScrollLayerInfo::Scrollable(_, scroll_root_id) => scroll_root_id,
-             _ => unreachable!("Tried to scroll a reference frame."),
+        // TODO(mrobinson): Once we remove the concept of shared scroll root ids we can remove
+        // this entirely and just scroll the node based on the ScrollLayerId.
+        let scroll_root_id = {
+            let node = self.nodes.get_mut(&scroll_layer_id).unwrap();
+            let scroll_root_id = match node.node_type {
+                NodeType::Clip(ref info) => info.scroll_root_id,
+                NodeType::ReferenceFrame(..) => unreachable!("Tried to scroll a reference frame."),
+            };
 
+            if scroll_root_id.is_none() {
+                return node.scroll(scroll_location, phase);
+            }
+
+            scroll_root_id
         };
 
         let mut scrolled_a_node = false;
@@ -276,10 +266,9 @@ impl ClipScrollTree {
                 continue;
             }
 
-            match layer_id.info {
-                ScrollLayerInfo::Scrollable(_, id) if id != scroll_root_id => continue,
-                ScrollLayerInfo::ReferenceFrame(..) => continue,
-                _ => {}
+            match node.node_type {
+                NodeType::Clip(ref info) if info.scroll_root_id == scroll_root_id => { }
+                _ => continue,
             }
 
             let scrolled_this_node = node.scroll(scroll_location, phase);
@@ -288,31 +277,49 @@ impl ClipScrollTree {
         scrolled_a_node
     }
 
-    pub fn update_all_node_transforms(&mut self) {
+    pub fn update_all_node_transforms(&mut self, pan: LayerPoint) {
         if self.nodes.is_empty() {
             return;
         }
 
         let root_reference_frame_id = self.root_reference_frame_id();
-        let root_viewport = self.nodes[&root_reference_frame_id].local_viewport_rect;
+        let root_viewport = self.nodes[&root_reference_frame_id].local_clip_rect;
         self.update_node_transform(root_reference_frame_id,
-                                    &ScrollToWorldTransform::identity(),
-                                    &as_scroll_parent_rect(&root_viewport));
+                                   &LayerToWorldTransform::create_translation(pan.x, pan.y, 0.0),
+                                   &as_scroll_parent_rect(&root_viewport),
+                                   LayerPoint::zero());
     }
 
     fn update_node_transform(&mut self,
                              layer_id: ScrollLayerId,
-                             parent_world_transform: &ScrollToWorldTransform,
-                             parent_viewport_rect: &ScrollLayerRect) {
+                             parent_reference_frame_transform: &LayerToWorldTransform,
+                             parent_viewport_rect: &ScrollLayerRect,
+                             parent_accumulated_scroll_offset: LayerPoint) {
         // TODO(gw): This is an ugly borrow check workaround to clone these.
         //           Restructure this to avoid the clones!
-        let (node_transform_for_children, viewport_rect, node_children) = {
+        let (reference_frame_transform, viewport_rect, accumulated_scroll_offset, node_children) = {
             match self.nodes.get_mut(&layer_id) {
                 Some(node) => {
-                    node.update_transform(parent_world_transform, parent_viewport_rect);
+                    node.update_transform(parent_reference_frame_transform,
+                                          parent_viewport_rect,
+                                          parent_accumulated_scroll_offset);
 
-                    (node.world_content_transform.with_source::<ScrollLayerPixel>(),
+                    // The transformation we are passing is the transformation of the parent
+                    // reference frame and the offset is the accumulated offset of all the nodes
+                    // between us and the parent reference frame. If we are a reference frame,
+                    // we need to reset both these values.
+                    let (transform, offset) = match node.node_type {
+                        NodeType::ReferenceFrame(..) =>
+                            (node.world_viewport_transform, LayerPoint::zero()),
+                        NodeType::Clip(_) => {
+                            (*parent_reference_frame_transform,
+                             parent_accumulated_scroll_offset + node.scrolling.offset)
+                        }
+                    };
+
+                    (transform,
                      as_scroll_parent_rect(&node.combined_local_viewport_rect),
+                     offset,
                      node.children.clone())
                 }
                 None => return,
@@ -321,8 +328,9 @@ impl ClipScrollTree {
 
         for child_layer_id in node_children {
             self.update_node_transform(child_layer_id,
-                                       &node_transform_for_children,
-                                       &viewport_rect);
+                                       &reference_frame_transform,
+                                       &viewport_rect,
+                                       accumulated_scroll_offset);
         }
     }
 
@@ -343,8 +351,9 @@ impl ClipScrollTree {
 
             node.finalize(&scrolling_state);
 
-            let scroll_root_id = match scroll_layer_id.info {
-                ScrollLayerInfo::Scrollable(_, scroll_root_id) => scroll_root_id,
+            let scroll_root_id = match node.node_type {
+                NodeType::Clip(ref info) if info.scroll_root_id.is_some() =>
+                    info.scroll_root_id.unwrap(),
                 _ => continue,
             };
 
@@ -359,27 +368,35 @@ impl ClipScrollTree {
     }
 
     pub fn add_reference_frame(&mut self,
-                               rect: LayerRect,
-                               transform: LayerToScrollTransform,
+                               rect: &LayerRect,
+                               transform: &LayerToScrollTransform,
                                pipeline_id: PipelineId,
-                               parent_id: ScrollLayerId) -> ScrollLayerId {
+                               parent_id: Option<ScrollLayerId>)
+                               -> ScrollLayerId {
         let reference_frame_id = ScrollLayerId {
             pipeline_id: pipeline_id,
             info: ScrollLayerInfo::ReferenceFrame(self.current_reference_frame_id),
         };
         self.current_reference_frame_id += 1;
 
-        let node = ClipScrollNode::new(&rect, rect.size, &transform, pipeline_id);
-        self.add_node(node, reference_frame_id, parent_id);
+        let node = ClipScrollNode::new_reference_frame(parent_id,
+                                                       &rect,
+                                                       rect.size,
+                                                       &transform,
+                                                       pipeline_id);
+        self.add_node(node, reference_frame_id);
         reference_frame_id
     }
 
-    pub fn add_node(&mut self, node: ClipScrollNode, id: ScrollLayerId, parent_id: ScrollLayerId) {
+    pub fn add_node(&mut self, node: ClipScrollNode, id: ScrollLayerId) {
+        // When the parent node is None this means we are adding the root.
+        match node.parent {
+            Some(parent_id) => self.nodes.get_mut(&parent_id).unwrap().add_child(id),
+            None => self.root_reference_frame_id = id,
+        }
+
         debug_assert!(!self.nodes.contains_key(&id));
         self.nodes.insert(id, node);
-
-        debug_assert!(parent_id != id);
-        self.nodes.get_mut(&parent_id).unwrap().add_child(id);
     }
 
     pub fn discard_frame_state_for_pipeline(&mut self, pipeline_id: PipelineId) {
