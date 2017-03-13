@@ -23,6 +23,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "mozilla/CheckedInt.h"
+
 using namespace cdm;
 
 bool AllZero(const std::vector<uint32_t>& aBytes)
@@ -211,19 +213,28 @@ ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
   if (aMetadata.NumSubsamples()) {
     // Take all encrypted parts of subsamples and stitch them into one
     // continuous encrypted buffer.
-    uint8_t* data = aBuffer;
+    static_assert(sizeof(uintptr_t) == sizeof(uint8_t*),
+                  "We need uintptr_t to be exactly the same size as a pointer");
+    mozilla::CheckedInt<uintptr_t> data = reinterpret_cast<uintptr_t>(aBuffer);
+    const uintptr_t endBuffer =
+      reinterpret_cast<uintptr_t>(aBuffer + aBufferSize);
     uint8_t* iter = &tmp[0];
     for (size_t i = 0; i < aMetadata.NumSubsamples(); i++) {
       data += aMetadata.mClearBytes[i];
-      uint32_t cipherBytes = aMetadata.mCipherBytes[i];
-      if (data + cipherBytes > aBuffer + aBufferSize) {
+      if (!data.isValid() || data.value() > endBuffer) {
+        // Trying to read past the end of the buffer!
+        return Status::kDecryptError;
+      }
+      const uint32_t& cipherBytes = aMetadata.mCipherBytes[i];
+      mozilla::CheckedInt<uintptr_t> dataAfterCipher = data + cipherBytes;
+      if (!dataAfterCipher.isValid() || dataAfterCipher.value() > endBuffer) {
         // Trying to read past the end of the buffer!
         return Status::kDecryptError;
       }
 
-      memcpy(iter, data, cipherBytes);
+      memcpy(iter, reinterpret_cast<uint8_t*>(data.value()), cipherBytes);
 
-      data += cipherBytes;
+      data = dataAfterCipher;
       iter += cipherBytes;
     }
 
