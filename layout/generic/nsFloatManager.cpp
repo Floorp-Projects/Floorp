@@ -978,7 +978,7 @@ nsFloatManager::ShapeInfo::CreateShapeBox(
 
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
 nsFloatManager::ShapeInfo::CreateInset(
-  StyleBasicShape* const aBasicShape,
+  const StyleBasicShape* aBasicShape,
   const LogicalRect& aShapeBoxRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
@@ -1010,7 +1010,7 @@ nsFloatManager::ShapeInfo::CreateInset(
 
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
 nsFloatManager::ShapeInfo::CreateCircleOrEllipse(
-  StyleBasicShape* const aBasicShape,
+  const StyleBasicShape* aBasicShape,
   const LogicalRect& aShapeBoxRect,
   WritingMode aWM,
   const nsSize& aContainerSize)

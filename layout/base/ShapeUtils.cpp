@@ -38,7 +38,7 @@ ShapeUtils::ComputeShapeRadius(const StyleShapeRadius aType,
 }
 
 nsPoint
-ShapeUtils::ComputeCircleOrEllipseCenter(StyleBasicShape* const aBasicShape,
+ShapeUtils::ComputeCircleOrEllipseCenter(const StyleBasicShape* aBasicShape,
                                          const nsRect& aRefBox)
 {
   MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Circle ||
@@ -54,7 +54,7 @@ ShapeUtils::ComputeCircleOrEllipseCenter(StyleBasicShape* const aBasicShape,
 }
 
 nscoord
-ShapeUtils::ComputeCircleRadius(StyleBasicShape* const aBasicShape,
+ShapeUtils::ComputeCircleRadius(const StyleBasicShape* aBasicShape,
                                 const nsPoint& aCenter,
                                 const nsRect& aRefBox)
 {
@@ -86,7 +86,7 @@ ShapeUtils::ComputeCircleRadius(StyleBasicShape* const aBasicShape,
 }
 
 nsSize
-ShapeUtils::ComputeEllipseRadii(StyleBasicShape* const aBasicShape,
+ShapeUtils::ComputeEllipseRadii(const StyleBasicShape* aBasicShape,
                                 const nsPoint& aCenter,
                                 const nsRect& aRefBox)
 {
@@ -117,7 +117,7 @@ ShapeUtils::ComputeEllipseRadii(StyleBasicShape* const aBasicShape,
 }
 
 /* static */ nsRect
-ShapeUtils::ComputeInsetRect(StyleBasicShape* const aBasicShape,
+ShapeUtils::ComputeInsetRect(const StyleBasicShape* aBasicShape,
                              const nsRect& aRefBox)
 {
   MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Inset,
@@ -138,7 +138,7 @@ ShapeUtils::ComputeInsetRect(StyleBasicShape* const aBasicShape,
 }
 
 /* static */ bool
-ShapeUtils::ComputeInsetRadii(StyleBasicShape* const aBasicShape,
+ShapeUtils::ComputeInsetRadii(const StyleBasicShape* aBasicShape,
                               const nsRect& aInsetRect,
                               const nsRect& aRefBox,
                               nscoord aRadii[8])
