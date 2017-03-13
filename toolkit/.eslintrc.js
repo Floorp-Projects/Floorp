@@ -241,6 +241,10 @@ module.exports = {
 
     // Only check typeof against valid results
     "valid-typeof": "error",
+
+    // Don't concatenate string literals together (unless they span multiple
+    // lines)
+    "no-useless-concat": "error",
   },
   "env": {
     "es6": true,

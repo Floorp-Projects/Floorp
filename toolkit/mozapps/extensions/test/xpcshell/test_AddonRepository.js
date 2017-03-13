@@ -305,7 +305,7 @@ function check_results(aActualAddons, aExpectedAddons, aAddonCount, aInstallNull
     if (aActualAddon.name == "FAIL")
       do_throw(aActualAddon.id + " - " + aActualAddon.description);
     if (aActualAddon.name != "PASS")
-      do_throw(aActualAddon.id + " - " + "invalid add-on name " + aActualAddon.name);
+      do_throw(aActualAddon.id + " - invalid add-on name " + aActualAddon.name);
 
     do_check_eq(aActualAddon.install == null, !!aInstallNull || !aActualAddon.sourceURI);
 
