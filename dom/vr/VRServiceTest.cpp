@@ -77,6 +77,8 @@ VRMockDisplay::SetPose(const Nullable<Float32Array>& aPosition,
                        const Nullable<Float32Array>& aAngularVelocity,
                        const Nullable<Float32Array>& aAngularAcceleration)
 {
+  mSensorState.Clear();
+  mSensorState.timestamp = PR_Now();
   mSensorState.flags = VRDisplayCapabilityFlags::Cap_Orientation |
                        VRDisplayCapabilityFlags::Cap_Position |
                        VRDisplayCapabilityFlags::Cap_AngularAcceleration |
