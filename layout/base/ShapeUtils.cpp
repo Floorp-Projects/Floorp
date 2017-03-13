@@ -50,7 +50,7 @@ ShapeUtils::ComputeCircleOrEllipseCenter(StyleBasicShape* const aBasicShape,
   nsImageRenderer::ComputeObjectAnchorPoint(aBasicShape->GetPosition(),
                                             size, size,
                                             &topLeft, &anchor);
-  return nsPoint(anchor.x + aRefBox.x, anchor.y + aRefBox.y);
+  return anchor + aRefBox.TopLeft();
 }
 
 nscoord
