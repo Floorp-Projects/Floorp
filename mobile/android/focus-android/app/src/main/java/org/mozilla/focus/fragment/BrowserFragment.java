@@ -139,6 +139,7 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
 
                 getActivity().getSupportFragmentManager()
                         .beginTransaction()
+                        .setCustomAnimations(0, R.anim.erase_animation)
                         .replace(R.id.container, HomeFragment.create(), HomeFragment.FRAGMENT_TAG)
                         .commit();
 

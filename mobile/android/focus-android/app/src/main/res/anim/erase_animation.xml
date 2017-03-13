@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <translate
+        android:duration="@integer/layout_animation_duration_ms"
+        android:fromYDelta="0"
+        android:toYDelta="100%p" />
+    <scale
+        android:duration="@integer/layout_animation_duration_ms"
+        android:fromXScale="100%p"
+        android:toXScale="50%p"
+        android:fromYScale="100%p"
+        android:pivotX="50%p"
+        android:pivotY="50%p"
+        android:toYScale="50%p" />
+    <alpha
+        android:duration="@integer/layout_animation_duration_ms"
+        android:fromAlpha="1.0"
+        android:toAlpha="0.0" />
+</set>
