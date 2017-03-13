@@ -377,12 +377,19 @@ Bookmarks.prototype = {
   },
 
   _migrateFolder: Task.async(function* (aSourceFolder, aDestFolderGuid) {
+    let bookmarks = yield this._getBookmarksInFolder(aSourceFolder);
+    if (bookmarks.length) {
+      yield MigrationUtils.insertManyBookmarksWrapper(bookmarks, aDestFolderGuid);
+    }
+  }),
+
+  _getBookmarksInFolder: Task.async(function* (aSourceFolder) {
     // TODO (bug 741993): the favorites order is stored in the Registry, at
     // HCU\Software\Microsoft\Windows\CurrentVersion\Explorer\MenuOrder\Favorites
     // for IE, and in a similar location for Edge.
     // Until we support it, bookmarks are imported in alphabetical order.
     let entries = aSourceFolder.directoryEntries;
-    let succeeded = true;
+    let rv = [];
     while (entries.hasMoreElements()) {
       let entry = entries.getNext().QueryInterface(Ci.nsIFile);
       try {
@@ -391,27 +398,23 @@ Bookmarks.prototype = {
         // Don't use isSymlink(), since it would throw for invalid
         // lnk files pointing to URLs or to unresolvable paths.
         if (entry.path == entry.target && entry.isDirectory()) {
-          let folderGuid;
-          if (entry.leafName == this._toolbarFolderName &&
-              entry.parent.equals(this._favoritesFolder)) {
+          let isBookmarksFolder = entry.leafName == this._toolbarFolderName &&
+                                  entry.parent.equals(this._favoritesFolder);
+          if (isBookmarksFolder && entry.isReadable()) {
             // Import to the bookmarks toolbar.
-            folderGuid = PlacesUtils.bookmarks.toolbarGuid;
+            let folderGuid = PlacesUtils.bookmarks.toolbarGuid;
             if (!MigrationUtils.isStartupMigration) {
               folderGuid =
                 yield MigrationUtils.createImportedBookmarksFolder(this.importedAppLabel, folderGuid);
             }
-          } else {
-            // Import to a new folder.
-            folderGuid = (yield MigrationUtils.insertBookmarkWrapper({
-              type: PlacesUtils.bookmarks.TYPE_FOLDER,
-              parentGuid: aDestFolderGuid,
-              title: entry.leafName
-            })).guid;
-          }
-
-          if (entry.isReadable()) {
-            // Recursively import the folder.
             yield this._migrateFolder(entry, folderGuid);
+          } else if (entry.isReadable()) {
+            let childBookmarks = yield this._getBookmarksInFolder(entry);
+            rv.push({
+              type: PlacesUtils.bookmarks.TYPE_FOLDER,
+              title: entry.leafName,
+              children: childBookmarks,
+            });
           }
         } else {
           // Strip the .url extension, to both check this is a valid link file,
@@ -421,21 +424,14 @@ Bookmarks.prototype = {
             let fileHandler = Cc["@mozilla.org/network/protocol;1?name=file"].
                               getService(Ci.nsIFileProtocolHandler);
             let uri = fileHandler.readURLFile(entry);
-            let title = matches[1];
-
-            yield MigrationUtils.insertBookmarkWrapper({
-              parentGuid: aDestFolderGuid, url: uri, title
-            });
+            rv.push({url: uri, title: matches[1]});
           }
         }
       } catch (ex) {
         Components.utils.reportError("Unable to import " + this.importedAppLabel + " favorite (" + entry.leafName + "): " + ex);
-        succeeded = false;
       }
     }
-    if (!succeeded) {
-      throw new Error("Failed to import all bookmarks correctly.");
-    }
+    return rv;
   }),
 
 };
