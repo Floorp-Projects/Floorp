@@ -27,7 +27,7 @@ SpecialPowers.pushPrefEnv({"set": [["security.webauth.u2f", true],
 function() {
   // listen for messages from the test harness
   window.addEventListener("message", handleEventMessage);
-  document.getElementById('testing_frame').src = "frame_multiple_keys.html";
+  document.getElementById('testing_frame').src = "https://example.com/tests/dom/u2f/tests/frame_multiple_keys.html";
 });
 </script>
 
