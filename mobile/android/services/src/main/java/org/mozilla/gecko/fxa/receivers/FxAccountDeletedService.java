@@ -7,8 +7,11 @@ package org.mozilla.gecko.fxa.receivers;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.text.TextUtils;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.fxa.FxAccountClient20;
+import org.mozilla.gecko.background.fxa.FxAccountClientException;
 import org.mozilla.gecko.background.fxa.oauth.FxAccountAbstractClient;
 import org.mozilla.gecko.background.fxa.oauth.FxAccountAbstractClientException.FxAccountAbstractClientRemoteException;
 import org.mozilla.gecko.background.fxa.oauth.FxAccountOAuthClient10;
@@ -16,10 +19,13 @@ import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.sync.FxAccountNotificationManager;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncAdapter;
+import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabase;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * A background service to clean up after a Firefox Account is deleted.
@@ -69,6 +75,8 @@ public class FxAccountDeletedService extends IntentService {
       return;
     }
 
+    // Delete current device the from FxA devices list.
+    deleteFxADevice(intent);
 
     // Fire up gecko and unsubscribe push
     final Intent geckoIntent = new Intent();
@@ -76,7 +84,6 @@ public class FxAccountDeletedService extends IntentService {
     geckoIntent.setClassName(context, "org.mozilla.gecko.GeckoService");
     geckoIntent.putExtra("category", "android-push-service");
     geckoIntent.putExtra("data", "android-fxa-unsubscribe");
-    final AndroidFxAccount fxAccount = AndroidFxAccount.fromContext(context);
     geckoIntent.putExtra("org.mozilla.gecko.intent.PROFILE_NAME",
             intent.getStringExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_PROFILE));
     context.startService(geckoIntent);
@@ -150,5 +157,39 @@ public class FxAccountDeletedService extends IntentService {
     } else {
       Logger.error(LOG_TAG, "Cached OAuth server URI is null or cached OAuth tokens are null; ignoring.");
     }
+  }
+
+  // Remove our current device from the FxA device list.
+  private void deleteFxADevice(Intent intent) {
+    final byte[] sessionToken = intent.getByteArrayExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_SESSION_TOKEN);
+    if (sessionToken == null) {
+      Logger.warn(LOG_TAG, "Empty session token, skipping FxA device destruction.");
+      return;
+    }
+    final String deviceId = intent.getStringExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_DEVICE_ID);
+    if (TextUtils.isEmpty(deviceId)) {
+      Logger.warn(LOG_TAG, "Empty FxA device ID, skipping FxA device destruction.");
+      return;
+    }
+
+    ExecutorService executor = Executors.newSingleThreadExecutor(); // Not called often, it's okay to spawn another thread
+    final String accountServerURI = intent.getStringExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_SERVER_URI);
+    final FxAccountClient20 fxAccountClient = new FxAccountClient20(accountServerURI, executor);
+    fxAccountClient.destroyDevice(sessionToken, deviceId, new FxAccountClient20.RequestDelegate<ExtendedJSONObject>() {
+      @Override
+      public void handleError(Exception e) {
+        Logger.error(LOG_TAG, "Error while trying to delete the FxA device; ignoring.", e);
+      }
+
+      @Override
+      public void handleFailure(FxAccountClientException.FxAccountClientRemoteException e) {
+        Logger.error(LOG_TAG, "Exception while trying to delete the FxA device; ignoring.", e);
+      }
+
+      @Override
+      public void handleSuccess(ExtendedJSONObject result) {
+        Logger.info(LOG_TAG, "Successfully deleted the FxA device.");
+      }
+    });
   }
 }
