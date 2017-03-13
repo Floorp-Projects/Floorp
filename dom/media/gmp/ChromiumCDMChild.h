@@ -7,6 +7,7 @@
 #define ChromiumCDMChild_h_
 
 #include "mozilla/gmp/PChromiumCDMChild.h"
+#include "content_decryption_module.h"
 
 namespace mozilla {
 namespace gmp {
@@ -14,6 +15,7 @@ namespace gmp {
 class GMPContentChild;
 
 class ChromiumCDMChild : public PChromiumCDMChild
+                       , public cdm::Host_8
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ChromiumCDMChild);
@@ -21,6 +23,54 @@ public:
   explicit ChromiumCDMChild(GMPContentChild* aPlugin);
 
   void Init(cdm::ContentDecryptionModule_8* aCDM);
+
+  void TimerExpired(void* aContext);
+
+  // cdm::Host_8
+  cdm::Buffer* Allocate(uint32_t aCapacity) override;
+  void SetTimer(int64_t aDelayMs, void* aContext) override;
+  cdm::Time GetCurrentWallTime() override;
+  void OnResolveNewSessionPromise(uint32_t aPromiseId,
+                                  const char* aSessionId,
+                                  uint32_t aSessionIdSize) override;
+  void OnResolvePromise(uint32_t aPromiseId) override;
+  void OnRejectPromise(uint32_t aPromiseId,
+                       cdm::Error aError,
+                       uint32_t aSystemCode,
+                       const char* aErrorMessage,
+                       uint32_t aErrorMessageSize) override;
+  void OnSessionMessage(const char* aSessionId,
+                        uint32_t aSessionIdSize,
+                        cdm::MessageType aMessageType,
+                        const char* aMessage,
+                        uint32_t aMessageSize,
+                        const char* aLegacyDestinationUrl,
+                        uint32_t aLegacyDestinationUrlLength) override;
+  void OnSessionKeysChange(const char* aSessionId,
+                           uint32_t aSessionIdSize,
+                           bool aHasAdditionalUsableKey,
+                           const cdm::KeyInformation* aKeysInfo,
+                           uint32_t aKeysInfoCount) override;
+  void OnExpirationChange(const char* aSessionId,
+                          uint32_t aSessionIdSize,
+                          cdm::Time aNewExpiryTime) override;
+  void OnSessionClosed(const char* aSessionId,
+                       uint32_t aSessionIdSize) override;
+  void OnLegacySessionError(const char* aSessionId,
+                            uint32_t aSessionIdLength,
+                            cdm::Error aError,
+                            uint32_t aSystemCode,
+                            const char* aErrorMessage,
+                            uint32_t aErrorMessageLength) override;
+  void SendPlatformChallenge(const char* aServiceId,
+                             uint32_t aServiceIdSize,
+                             const char* aChallenge,
+                             uint32_t aChallengeSize) override {}
+  void EnableOutputProtection(uint32_t aDesiredProtectionMask) override {}
+  void QueryOutputProtectionStatus() override {}
+  void OnDeferredInitializationDone(cdm::StreamType aStreamType,
+                                    cdm::Status aDecoderStatus) override {}
+  cdm::FileIO* CreateFileIO(cdm::FileIOClient* aClient) override;
 protected:
   ~ChromiumCDMChild() {}
 
