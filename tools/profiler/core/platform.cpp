@@ -1774,7 +1774,7 @@ NotifyProfilerStarted(const int aEntries, double aInterval,
 }
 
 static void
-NotifyProfilerStopped()
+NotifyObservers(const char* aTopic)
 {
   if (!CanNotifyObservers()) {
     return;
@@ -1785,7 +1785,7 @@ NotifyProfilerStopped()
     return;
   }
 
-  os->NotifyObservers(nullptr, "profiler-stopped", nullptr);
+  os->NotifyObservers(nullptr, aTopic, nullptr);
 }
 
 static void
@@ -1949,7 +1949,7 @@ profiler_shutdown()
   // We do these operations with gPSMutex unlocked. The comments in
   // profiler_stop() explain why.
   if (samplerThread) {
-    NotifyProfilerStopped();
+    NotifyObservers("profiler-stopped");
     delete samplerThread;
   }
 
@@ -2392,7 +2392,7 @@ profiler_start(int aEntries, double aInterval,
   // We do these operations with gPSMutex unlocked. The comments in
   // profiler_stop() explain why.
   if (samplerThread) {
-    NotifyProfilerStopped();
+    NotifyObservers("profiler-stopped");
     delete samplerThread;
   }
   NotifyProfilerStarted(aEntries, aInterval, aFeatures, aFeatureCount,
@@ -2508,7 +2508,7 @@ profiler_stop()
   // We notify observers with gPSMutex unlocked. Otherwise we might get a
   // deadlock, if code run by the observer calls a profiler function that locks
   // gPSMutex. (This has been seen in practise in bug 1346356.)
-  NotifyProfilerStopped();
+  NotifyObservers("profiler-stopped");
 
   // We delete with gPSMutex unlocked. Otherwise we would get a deadlock: we
   // would be waiting here with gPSMutex locked for SamplerThread::Run() to
@@ -2556,12 +2556,7 @@ profiler_pause()
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
-  if (CanNotifyObservers()) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os) {
-      os->NotifyObservers(nullptr, "profiler-paused", nullptr);
-    }
-  }
+  NotifyObservers("profiler-paused");
 }
 
 void
@@ -2581,12 +2576,7 @@ profiler_resume()
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
-  if (CanNotifyObservers()) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os) {
-      os->NotifyObservers(nullptr, "profiler-resumed", nullptr);
-    }
-  }
+  NotifyObservers("profiler-resumed");
 }
 
 bool
@@ -2642,31 +2632,6 @@ profiler_set_frame_number(int aFrameNumber)
   PS::AutoLock lock(gPSMutex);
 
   gPS->SetFrameNumber(lock, aFrameNumber);
-}
-
-void
-profiler_lock()
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(gPS);
-
-  profiler_stop();
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os) {
-    os->NotifyObservers(nullptr, "profiler-locked", nullptr);
-  }
-}
-
-void
-profiler_unlock()
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(gPS);
-
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os) {
-    os->NotifyObservers(nullptr, "profiler-unlocked", nullptr);
-  }
 }
 
 void
