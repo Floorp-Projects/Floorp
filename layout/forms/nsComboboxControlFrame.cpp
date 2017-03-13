@@ -48,6 +48,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Unused.h"
 #include "gfx2DGlue.h"
+#include "mozilla/widget/nsAutoRollup.h"
 
 #ifdef XP_WIN
 #define COMBOBOX_ROLLUP_CONSUME_EVENT 0
@@ -1149,8 +1150,7 @@ nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
 
 #if COMBOBOX_ROLLUP_CONSUME_EVENT == 0
   if (aEvent->mMessage == eMouseDown) {
-    nsIWidget* widget = GetNearestWidget();
-    if (widget && GetContent() == widget->GetLastRollup()) {
+    if (GetContent() == mozilla::widget::nsAutoRollup::GetLastRollup()) {
       // This event did a Rollup on this control - prevent it from opening
       // the dropdown again!
       *aEventStatus = nsEventStatus_eConsumeNoDefault;
