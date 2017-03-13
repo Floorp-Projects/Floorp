@@ -156,7 +156,7 @@ class Assembler : public AssemblerMIPSShared
 
     // Copy the assembly code to the given buffer, and perform any pending
     // relocations relying on the target address.
-    void executableCopy(uint8_t* buffer);
+    void executableCopy(uint8_t* buffer, bool flushICache = true);
 
     static uint32_t PatchWrite_NearCallSize();
 
