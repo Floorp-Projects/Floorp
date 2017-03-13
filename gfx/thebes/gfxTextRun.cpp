@@ -867,13 +867,17 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
     if (haveSpacing) {
         GetAdjustedSpacing(this, bufferRange, aProvider, spacingBuffer);
     }
-    bool hyphenBuffer[MEASUREMENT_BUFFER_SIZE];
+    AutoTArray<bool, 4096> hyphenBuffer;
     bool haveHyphenation = aProvider &&
         (aProvider->GetHyphensOption() == StyleHyphens::Auto ||
          (aProvider->GetHyphensOption() == StyleHyphens::Manual &&
           (mFlags & gfxTextRunFactory::TEXT_ENABLE_HYPHEN_BREAKS) != 0));
     if (haveHyphenation) {
-        aProvider->GetHyphenationBreaks(bufferRange, hyphenBuffer);
+        if (hyphenBuffer.AppendElements(bufferRange.Length(), fallible)) {
+            aProvider->GetHyphenationBreaks(bufferRange, hyphenBuffer.Elements());
+        } else {
+            haveHyphenation = false;
+        }
     }
 
     gfxFloat width = 0;
@@ -896,14 +900,29 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
     for (i = aStart; i < end; ++i) {
         if (i >= bufferRange.end) {
             // Fetch more spacing and hyphenation data
+            uint32_t oldHyphenBufferLength = hyphenBuffer.Length();
             bufferRange.start = i;
             bufferRange.end = std::min(aStart + aMaxLength,
                                        i + MEASUREMENT_BUFFER_SIZE);
+            // For spacing, we always overwrite the old data with the newly
+            // fetched one. However, for hyphenation, hyphenation data sometimes
+            // depends on the context in every word (if "hyphens: auto" is set).
+            // To ensure we get enough information between neighboring buffers,
+            // we grow the hyphenBuffer instead of overwrite it.
+            // NOTE that this means bufferRange does not correspond to the
+            // entire hyphenBuffer, but only to the most recently added portion.
+            // Therefore, we need to add the old length to hyphenBuffer.Elements()
+            // when getting more data.
             if (haveSpacing) {
                 GetAdjustedSpacing(this, bufferRange, aProvider, spacingBuffer);
             }
             if (haveHyphenation) {
-                aProvider->GetHyphenationBreaks(bufferRange, hyphenBuffer);
+                if (hyphenBuffer.AppendElements(bufferRange.Length(), fallible)) {
+                    aProvider->GetHyphenationBreaks(
+                        bufferRange, hyphenBuffer.Elements() + oldHyphenBufferLength);
+                } else {
+                    haveHyphenation = false;
+                }
             }
         }
 
@@ -915,7 +934,7 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
             (aSuppressBreak != eSuppressInitialBreak || i > aStart)) {
             bool atNaturalBreak = mCharacterGlyphs[i].CanBreakBefore() == 1;
             bool atHyphenationBreak = !atNaturalBreak &&
-                haveHyphenation && hyphenBuffer[i - bufferRange.start];
+                haveHyphenation && hyphenBuffer[i - aStart];
             bool atBreak = atNaturalBreak || atHyphenationBreak;
             bool wordWrapping =
                 aCanWordWrap && mCharacterGlyphs[i].IsClusterStart() &&
