@@ -570,6 +570,9 @@ auto GeckoAppShell::MoveTaskToBack() -> void
 constexpr char GeckoAppShell::NotifyObservers_t::name[];
 constexpr char GeckoAppShell::NotifyObservers_t::signature[];
 
+constexpr char GeckoAppShell::NotifyPushObservers_t::name[];
+constexpr char GeckoAppShell::NotifyPushObservers_t::signature[];
+
 constexpr char GeckoAppShell::NotifyAlertListener_t::name[];
 constexpr char GeckoAppShell::NotifyAlertListener_t::signature[];
 
