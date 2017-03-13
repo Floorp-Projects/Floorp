@@ -17,60 +17,62 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
-void
-WebRenderBorderLayer::RenderLayer()
+/* static */void
+WebRenderBorderLayer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                              WebRenderLayer* aLayer,
+                                              BorderColors& aColors,
+                                              BorderCorners& aCorners,
+                                              BorderWidths& aWidths,
+                                              BorderStyles& aBorderStyles,
+                                              Rect aRect,
+                                              Rect aClipRect,
+                                              Rect aRelBounds,
+                                              Rect aOverflow)
 {
-  WrScrollFrameStackingContextGenerator scrollFrames(this);
+  aBuilder.PushStackingContext(wr::ToWrRect(aRelBounds),
+                               wr::ToWrRect(aOverflow),
+                               nullptr,
+                               1.0f,
+                               aLayer->GetLayer()->GetTransform(),
+                               wr::MixBlendMode::Normal);
+  aBuilder.PushBorder(wr::ToWrRect(aRect), aBuilder.BuildClipRegion(wr::ToWrRect(aClipRect)),
+                      wr::ToWrBorderWidths(aWidths[0], aWidths[1], aWidths[2], aWidths[3]),
+                      wr::ToWrBorderSide(aColors[0], aBorderStyles[0]),
+                      wr::ToWrBorderSide(aColors[1], aBorderStyles[1]),
+                      wr::ToWrBorderSide(aColors[2], aBorderStyles[2]),
+                      wr::ToWrBorderSide(aColors[3], aBorderStyles[3]),
+                      wr::ToWrBorderRadius(aCorners[eCornerTopLeft], aCorners[eCornerTopRight],
+                                           aCorners[eCornerBottomLeft], aCorners[eCornerBottomRight]));
+  aBuilder.PopStackingContext();
+}
 
-  LayerIntRect bounds = GetVisibleRegion().GetBounds();
-  Rect rect(0, 0, bounds.width, bounds.height);
-  Rect clip;
-  Matrix4x4 transform = GetTransform();
-  if (GetClipRect().isSome()) {
-    clip = RelativeToVisible(transform.Inverse().TransformBounds(IntRectToRect(GetClipRect().ref().ToUnknownRect())));
-  } else {
-    clip = rect;
-  }
+void
+WebRenderBorderLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
+{
+  gfx::Rect relBounds = GetWrRelBounds();
+  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
 
-  Rect relBounds = VisibleBoundsRelativeToParent();
-  if (!transform.IsIdentity()) {
-    // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
-    gfx::Matrix4x4 boundTransform = transform;
-    boundTransform._41 = 0.0f;
-    boundTransform._42 = 0.0f;
-    boundTransform._43 = 0.0f;
-    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
-  }
+  gfx::Rect rect = GetWrBoundsRect();
+  gfx::Rect clipRect = GetWrClipRect(rect);
 
-  Rect overflow(0, 0, relBounds.width, relBounds.height);
+  DumpLayerInfo("BorderLayer", rect);
 
-  if (gfxPrefs::LayersDump()) {
-    printf_stderr("BorderLayer %p using bounds=%s, overflow=%s, transform=%s, rect=%s, clip=%s\n",
-                  this->GetLayer(),
-                  Stringify(relBounds).c_str(),
-                  Stringify(overflow).c_str(),
-                  Stringify(transform).c_str(),
-                  Stringify(rect).c_str(),
-                  Stringify(clip).c_str());
-  }
-
-  WrBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(wr::ToWrRect(relBounds),
-                              wr::ToWrRect(overflow),
-                              Nothing(),
-                              1.0f,
-                              GetAnimations(),
-                              transform,
-                              WrMixBlendMode::Normal,
-                              FrameMetrics::NULL_SCROLL_ID));
-  WrBridge()->AddWebRenderCommand(
-    OpDPPushBorder(wr::ToWrRect(rect), wr::ToWrRect(clip),
-                   wr::ToWrBorderSide(mWidths[0], mColors[0], mBorderStyles[0]),
-                   wr::ToWrBorderSide(mWidths[1], mColors[1], mBorderStyles[1]),
-                   wr::ToWrBorderSide(mWidths[2], mColors[2], mBorderStyles[2]),
-                   wr::ToWrBorderSide(mWidths[3], mColors[3], mBorderStyles[3]),
-                   wr::ToWrBorderRadius(mCorners[0], mCorners[1], mCorners[3], mCorners[2])));
-  WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
+  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
+                               wr::ToWrRect(overflow),
+                               nullptr,
+                               1.0f,
+                               //GetAnimations(),
+                               GetTransform(),
+                               wr::MixBlendMode::Normal);
+  aBuilder.PushBorder(wr::ToWrRect(rect), aBuilder.BuildClipRegion(wr::ToWrRect(clipRect)),
+                      wr::ToWrBorderWidths(mWidths[0], mWidths[1], mWidths[2], mWidths[3]),
+                      wr::ToWrBorderSide(mColors[0], mBorderStyles[0]),
+                      wr::ToWrBorderSide(mColors[1], mBorderStyles[1]),
+                      wr::ToWrBorderSide(mColors[2], mBorderStyles[2]),
+                      wr::ToWrBorderSide(mColors[3], mBorderStyles[3]),
+                      wr::ToWrBorderRadius(mCorners[eCornerTopLeft], mCorners[eCornerTopRight],
+                                           mCorners[eCornerBottomLeft], mCorners[eCornerBottomRight]));
+  aBuilder.PopStackingContext();
 }
 
 } // namespace layers

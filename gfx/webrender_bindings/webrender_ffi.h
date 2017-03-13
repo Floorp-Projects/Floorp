@@ -23,6 +23,9 @@ struct WrType {                                   \
   bool operator<(const WrType& rhs) const {       \
     return mHandle < rhs.mHandle;                 \
   }                                               \
+  bool operator<=(const WrType& rhs) const {      \
+    return mHandle <= rhs.mHandle;                \
+  }                                               \
 };                                                \
 // ---
 
@@ -115,14 +118,13 @@ enum class WrImageRendering: uint32_t
   Sentinel /* this must be last, for IPC serialization purposes */
 };
 
-// TODO(Jerry): handle shmem or cpu raw buffers.
-//enum class WrExternalImageIdType: uint32_t
-//{
-//  TextureHandle = 0,
-//  MemOrShmem    = 1,
-//
-//  Sentinel /* this must be last, for IPC serialization purposes */
-//};
+enum class WrExternalImageIdType: uint32_t
+{
+  NativeTexture, // Currently, we only support gl texture handle.
+  RawData,
+
+  Sentinel /* this must be last, for IPC serialization purposes */
+};
 
 enum class WrMixBlendMode: uint32_t
 {
@@ -154,6 +156,16 @@ enum class WrGradientExtendMode : uint32_t
   Sentinel /* this must be last, for IPC serialization purposes */
 };
 
+enum class WrRepeatMode : uint32_t
+{
+  Stretch      = 0,
+  Repeat       = 1,
+  Round        = 2,
+  Space        = 3,
+
+  Sentinel /* this must be last, for IPC serialization purposes */
+};
+
 // -----
 // Typedefs for struct fields and function signatures below.
 // -----
@@ -163,6 +175,60 @@ typedef uint64_t WrImageIdType;
 // -----
 // Structs used in C++ code with corresponding types in Rust code
 // -----
+
+struct WrItemRange
+{
+  size_t start;
+  size_t length;
+};
+
+struct WrBuiltDisplayListDescriptor {
+  size_t display_list_items_size;
+};
+
+struct WrAuxiliaryListsDescriptor {
+  size_t gradient_stops_size;
+  size_t complex_clip_regions_size;
+  size_t filters_size;
+  size_t glyph_instances_size;
+};
+
+struct WrPoint
+{
+  float x;
+  float y;
+
+  bool operator==(const WrPoint& aRhs) const {
+    return x == aRhs.x && y == aRhs.y;
+  }
+
+  operator mozilla::gfx::Point() const { return mozilla::gfx::Point(x, y); }
+};
+
+struct WrSize
+{
+  float width;
+  float height;
+
+  bool operator==(const WrSize& aRhs) const
+  {
+    return width == aRhs.width && height == aRhs.height;
+  }
+};
+
+struct WrRect
+{
+  float x;
+  float y;
+  float width;
+  float height;
+
+  bool operator==(const WrRect& aRhs) const
+  {
+    return x == aRhs.x && y == aRhs.y &&
+           width == aRhs.width && height == aRhs.height;
+  }
+};
 
 struct WrColor
 {
@@ -229,33 +295,20 @@ struct WrGradientStop {
 };
 
 struct WrBorderSide {
-  float width;
   WrColor color;
   WrBorderStyle style;
 
   bool operator==(const WrBorderSide& aRhs) const
   {
-    return width == aRhs.width && color == aRhs.color &&
-           style == aRhs.style;
-  }
-};
-
-struct WrLayoutSize
-{
-  float width;
-  float height;
-
-  bool operator==(const WrLayoutSize& aRhs) const
-  {
-    return width == aRhs.width && height == aRhs.height;
+    return color == aRhs.color && style == aRhs.style;
   }
 };
 
 struct WrBorderRadius {
-  WrLayoutSize top_left;
-  WrLayoutSize top_right;
-  WrLayoutSize bottom_left;
-  WrLayoutSize bottom_right;
+  WrSize top_left;
+  WrSize top_right;
+  WrSize bottom_left;
+  WrSize bottom_right;
 
   bool operator==(const WrBorderRadius& aRhs) const
   {
@@ -264,30 +317,55 @@ struct WrBorderRadius {
   }
 };
 
-struct WrRect
-{
-  float x;
-  float y;
-  float width;
-  float height;
+struct WrBorderWidths {
+  float left;
+  float top;
+  float right;
+  float bottom;
 
-  bool operator==(const WrRect& aRhs) const
+  bool operator==(const WrBorderWidths& aRhs) const
   {
-    return x == aRhs.x && y == aRhs.y &&
-           width == aRhs.width && height == aRhs.height;
+    return left == aRhs.left && top == aRhs.top &&
+           right == aRhs.right && bottom == aRhs.bottom;
   }
 };
 
-struct WrPoint
-{
-  float x;
-  float y;
+struct WrSideOffsets2Du32 {
+  uint32_t top;
+  uint32_t right;
+  uint32_t bottom;
+  uint32_t left;
 
-  bool operator==(const WrPoint& aRhs) const {
-    return x == aRhs.x && y == aRhs.y;
+  bool operator==(const WrSideOffsets2Du32& aRhs) const
+  {
+    return top == aRhs.top && right == aRhs.right &&
+           bottom == aRhs.bottom && left == aRhs.left;
   }
+};
 
-  operator mozilla::gfx::Point() const { return mozilla::gfx::Point(x, y); }
+struct WrSideOffsets2Df32 {
+  float top;
+  float right;
+  float bottom;
+  float left;
+
+  bool operator==(const WrSideOffsets2Df32& aRhs) const
+  {
+    return top == aRhs.top && right == aRhs.right &&
+           bottom == aRhs.bottom && left == aRhs.left;
+  }
+};
+
+struct WrNinePatchDescriptor {
+  uint32_t width;
+  uint32_t height;
+  WrSideOffsets2Du32 slice;
+
+  bool operator==(const WrNinePatchDescriptor& aRhs) const
+  {
+    return width == aRhs.width && height == aRhs.height &&
+           slice == aRhs.slice;
+  }
 };
 
 struct WrImageMask
@@ -302,6 +380,20 @@ struct WrImageMask
   }
 };
 
+struct WrComplexClipRegion
+{
+  WrRect rect;
+  WrBorderRadius radii;
+};
+
+struct WrClipRegion
+{
+  WrRect main;
+  WrItemRange complex;
+  WrImageMask image_mask;
+  bool has_image_mask;
+};
+
 struct WrExternalImageId
 {
   WrImageIdType id;
@@ -309,7 +401,7 @@ struct WrExternalImageId
 
 struct WrExternalImage
 {
-  //WrExternalImageIdType type;
+  WrExternalImageIdType type;
 
   // Texture coordinate
   float u0, v0;
@@ -318,10 +410,9 @@ struct WrExternalImage
   // external buffer handle
   uint32_t handle;
 
-  // TODO(Jerry): handle shmem or cpu raw buffers.
-  //// shmem or memory buffer
-  //// uint8_t* buff;
-  //// size_t size;
+  // handle RawData.
+  uint8_t* buff;
+  size_t size;
 };
 
 typedef WrExternalImage (*LockExternalImageCallback)(void*, WrExternalImageId);
@@ -342,17 +433,6 @@ struct WrImageDescriptor {
     uint32_t height;
     uint32_t stride;
     bool is_opaque;
-};
-
-struct WrBuiltDisplayListDescriptor {
-    size_t display_list_items_size;
-};
-
-struct WrAuxiliaryListsDescriptor {
-    size_t gradient_stops_size;
-    size_t complex_clip_regions_size;
-    size_t filters_size;
-    size_t glyph_instances_size;
 };
 
 struct WrVecU8 {
@@ -401,6 +481,13 @@ WR_INLINE void
 wr_renderer_render(WrRenderer* renderer, uint32_t width, uint32_t height)
 WR_FUNC;
 
+// It is the responsibility of the caller to manage the dst_buffer memory
+// and also free it at the proper time.
+WR_INLINE const uint8_t*
+wr_renderer_readback(uint32_t width, uint32_t height,
+                     uint8_t* dst_buffer, size_t buffer_length)
+WR_FUNC;
+
 WR_INLINE void
 wr_renderer_set_profiler_enabled(WrRenderer* renderer, bool enabled)
 WR_FUNC;
@@ -427,6 +514,8 @@ wr_rendered_epochs_delete(WrRenderedEpochs* pipeline_epochs) WR_DESTRUCTOR_SAFE_
 
 WR_INLINE bool
 wr_window_new(WrWindowId window_id,
+              uint32_t window_width,
+              uint32_t window_height,
               void* aGLContext,
               bool enable_profiler,
               WrAPI** out_api,
@@ -447,8 +536,9 @@ wr_api_add_external_image_handle(WrAPI* api, WrImageKey key, uint32_t width, uin
 WR_FUNC;
 
 WR_INLINE void
-wr_api_add_external_image_buffer(WrAPI* api, WrImageKey key, uint32_t width, uint32_t height,
-                                 WrImageFormat format, uint64_t external_image_id)
+wr_api_add_external_image_buffer(WrAPI* api, WrImageKey key,
+                                 const WrImageDescriptor* descriptor,
+                                 uint64_t external_image_id)
 WR_FUNC;
 
 WR_INLINE void
@@ -466,6 +556,10 @@ wr_api_set_root_pipeline(WrAPI* api, WrPipelineId pipeline_id)
 WR_FUNC;
 
 WR_INLINE void
+wr_api_set_window_parameters(WrAPI* api, int width, int height)
+WR_FUNC;
+
+WR_INLINE void
 wr_api_set_root_display_list(WrAPI* api, WrEpoch epoch, float w, float h,
                              WrPipelineId pipeline_id,
                              WrBuiltDisplayListDescriptor dl_descriptor,
@@ -474,6 +568,10 @@ wr_api_set_root_display_list(WrAPI* api, WrEpoch epoch, float w, float h,
                              WrAuxiliaryListsDescriptor aux_descriptor,
                              uint8_t *aux_data,
                              size_t aux_size)
+WR_FUNC;
+
+WR_INLINE void
+wr_api_clear_root_display_list(WrAPI* api, WrEpoch epoch, WrPipelineId pipeline_id)
 WR_FUNC;
 
 WR_INLINE void
@@ -488,6 +586,10 @@ WR_INLINE void
 wr_api_add_raw_font(WrAPI* api, WrFontKey key, uint8_t* font_buffer, size_t buffer_size)
 WR_FUNC;
 
+WR_INLINE WrIdNamespace
+wr_api_get_namespace(WrAPI* api)
+WR_FUNC;
+
 WR_INLINE WrState*
 wr_state_new(WrPipelineId pipeline_id)
 WR_FUNC;
@@ -495,6 +597,21 @@ WR_FUNC;
 WR_INLINE void
 wr_state_delete(WrState* state)
 WR_DESTRUCTOR_SAFE_FUNC;
+
+WR_INLINE void
+wr_dp_begin(WrState* wrState, uint32_t width, uint32_t height)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_end(WrState* wrState)
+WR_FUNC;
+
+WR_INLINE WrClipRegion
+wr_dp_new_clip_region(WrState* wrState,
+                      WrRect main,
+                      const WrComplexClipRegion* complex, size_t complexCount,
+                      const WrImageMask* image_mask)
+WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_stacking_context(WrState *wrState, WrRect bounds,
@@ -517,41 +634,50 @@ WR_INLINE void
 wr_dp_pop_scroll_layer(WrState *wrState)
 WR_FUNC;
 
-
 WR_INLINE void
-wr_dp_begin(WrState* wrState, uint32_t width, uint32_t height)
+wr_dp_push_iframe(WrState* wrState, WrRect bounds, WrClipRegion clip, WrPipelineId layers_id)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_end(WrState* wrState)
-WR_FUNC;
-
-WR_INLINE void
-wr_dp_push_rect(WrState* wrState, WrRect bounds, WrRect clip,
+wr_dp_push_rect(WrState* wrState, WrRect bounds, WrClipRegion clip,
                 WrColor color)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_text(WrState* wrState, WrRect bounds, WrRect clip, WrColor color,
+wr_dp_push_image(WrState* wrState, WrRect bounds, WrClipRegion clip,
+                 WrImageRendering filter, WrImageKey key)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_text(WrState* wrState, WrRect bounds, WrClipRegion clip, WrColor color,
                 WrFontKey font_Key, const WrGlyphInstance* glyphs,
                 uint32_t glyph_count, float glyph_size)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_border(WrState* wrState, WrRect bounds, WrRect clip,
+wr_dp_push_border(WrState* wrState, WrRect bounds, WrClipRegion clip,
+                  WrBorderWidths widths,
                   WrBorderSide top, WrBorderSide right, WrBorderSide bottom, WrBorderSide left,
                   WrBorderRadius radius)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_linear_gradient(WrState* wrState, WrRect bounds, WrRect clip,
+wr_dp_push_border_image(WrState* wrState, WrRect bounds, WrClipRegion clip,
+                        WrBorderWidths widths,
+                        WrImageKey image, WrNinePatchDescriptor patch, WrSideOffsets2Df32 outset,
+                        WrRepeatMode repeat_horizontal,
+                        WrRepeatMode repeat_vertical)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_linear_gradient(WrState* wrState, WrRect bounds, WrClipRegion clip,
                            WrPoint startPoint, WrPoint endPoint,
                            const WrGradientStop* stops, size_t stopsCount,
                            WrGradientExtendMode extendMode)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_radial_gradient(WrState* wrState, WrRect bounds, WrRect clip,
+wr_dp_push_radial_gradient(WrState* wrState, WrRect bounds, WrClipRegion clip,
                            WrPoint startCenter, WrPoint endCenter,
                            float startRadius, float endRadius,
                            const WrGradientStop* stops, size_t stopsCount,
@@ -559,30 +685,10 @@ wr_dp_push_radial_gradient(WrState* wrState, WrRect bounds, WrRect clip,
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_image(WrState* wrState, WrRect bounds, WrRect clip,
-                 const WrImageMask* mask, WrImageRendering filter, WrImageKey key)
-WR_FUNC;
-
-WR_INLINE void
-wr_dp_push_iframe(WrState* wrState, WrRect bounds, WrRect clip, WrPipelineId layers_id)
-WR_FUNC;
-
-// It is the responsibility of the caller to manage the dst_buffer memory
-// and also free it at the proper time.
-WR_INLINE const uint8_t*
-wr_renderer_readback(uint32_t width, uint32_t height,
-                     uint8_t* dst_buffer, size_t buffer_length)
-WR_FUNC;
-
-WR_INLINE void
-wr_dp_push_box_shadow(WrState* wrState, WrRect rect, WrRect clip,
+wr_dp_push_box_shadow(WrState* wrState, WrRect rect, WrClipRegion clip,
                       WrRect box_bounds, WrPoint offset, WrColor color,
                       float blur_radius, float spread_radius, float border_radius,
                       WrBoxShadowClipMode clip_mode)
-WR_FUNC;
-
-WR_INLINE WrIdNamespace
-wr_api_get_namespace(WrAPI* api)
 WR_FUNC;
 
 WR_INLINE void
@@ -591,6 +697,14 @@ wr_api_finalize_builder(WrState* wrState,
                         WrVecU8& dl_data,
                         WrAuxiliaryListsDescriptor& aux_descriptor,
                         WrVecU8& aux_data)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_built_display_list(WrState* wrState,
+                              WrBuiltDisplayListDescriptor dl_descriptor,
+                              WrVecU8 dl_data,
+                              WrAuxiliaryListsDescriptor aux_descriptor,
+                              WrVecU8 aux_data)
 WR_FUNC;
 
 WR_INLINE void

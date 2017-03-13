@@ -15,25 +15,17 @@ namespace mozilla {
 namespace layers {
 
 void
-WebRenderContainerLayer::RenderLayer()
+WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
-  WrScrollFrameStackingContextGenerator scrollFrames(this);
-
   nsTArray<LayerPolygon> children = SortChildrenBy3DZOrder(SortMode::WITHOUT_GEOMETRY);
-  gfx::Matrix4x4 transform = GetTransform();
-  gfx::Rect relBounds = VisibleBoundsRelativeToParent();
-  if (!transform.IsIdentity()) {
-    // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
-    gfx::Matrix4x4 boundTransform = transform;
-    boundTransform._41 = 0.0f;
-    boundTransform._42 = 0.0f;
-    boundTransform._43 = 0.0f;
-    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
-  }
 
+  gfx::Matrix4x4 transform = GetTransform();
+  gfx::Rect relBounds = GetWrRelBounds();
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
-  WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
-  Maybe<WrImageMask> mask = buildMaskLayer();
+
+  Maybe<WrImageMask> mask = BuildWrMaskLayer();
+
+  wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   if (gfxPrefs::LayersDump()) {
     printf_stderr("ContainerLayer %p using bounds=%s, overflow=%s, transform=%s, mix-blend-mode=%s\n",
@@ -43,33 +35,29 @@ WebRenderContainerLayer::RenderLayer()
                   Stringify(transform).c_str(),
                   Stringify(mixBlendMode).c_str());
   }
-
-  WrBridge()->AddWebRenderCommand(
-    OpDPPushStackingContext(wr::ToWrRect(relBounds),
-                            wr::ToWrRect(overflow),
-                            mask,
-                            GetLocalOpacity(),
-                            GetLayer()->GetAnimations(),
-                            transform,
-                            mixBlendMode,
-                            FrameMetrics::NULL_SCROLL_ID));
+  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
+                               wr::ToWrRect(overflow),
+                               mask.ptrOr(nullptr),
+                               GetLocalOpacity(),
+                               //GetLayer()->GetAnimations(),
+                               transform,
+                               mixBlendMode);
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {
       continue;
     }
-    ToWebRenderLayer(child.layer)->RenderLayer();
+    ToWebRenderLayer(child.layer)->RenderLayer(aBuilder);
   }
-  WrBridge()->AddWebRenderCommand(
-    OpDPPopStackingContext());
+  aBuilder.PopStackingContext();
 }
 
 void
-WebRenderRefLayer::RenderLayer()
+WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
-  WrScrollFrameStackingContextGenerator scrollFrames(this);
-
-  gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   gfx::Matrix4x4 transform;// = GetTransform();
+  gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
+
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(relBounds));
 
   if (gfxPrefs::LayersDump()) {
     printf_stderr("RefLayer %p (%" PRIu64 ") using bounds/overflow=%s, transform=%s\n",
@@ -79,7 +67,7 @@ WebRenderRefLayer::RenderLayer()
                   Stringify(transform).c_str());
   }
 
-  WrBridge()->AddWebRenderCommand(OpDPPushIframe(wr::ToWrRect(relBounds), wr::ToWrRect(relBounds), wr::AsPipelineId(mId)));
+  aBuilder.PushIFrame(wr::ToWrRect(relBounds), clipRegion, wr::AsPipelineId(mId));
 }
 
 } // namespace layers
