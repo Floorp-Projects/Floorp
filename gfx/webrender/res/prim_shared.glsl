@@ -625,12 +625,9 @@ struct YuvImage {
 YuvImage fetch_yuv_image(int index) {
     YuvImage image;
 
-    ivec2 uv = get_fetch_uv_4(index);
+    ivec2 uv = get_fetch_uv_1(index);
 
-    image.y_st_rect = texelFetchOffset(sData64, uv, 0, ivec2(0, 0));
-    image.u_st_rect = texelFetchOffset(sData64, uv, 0, ivec2(1, 0));
-    image.v_st_rect = texelFetchOffset(sData64, uv, 0, ivec2(2, 0));
-    vec4 size_color_space = texelFetchOffset(sData64, uv, 0, ivec2(3, 0));
+    vec4 size_color_space = texelFetchOffset(sData16, uv, 0, ivec2(0, 0));
     image.size = size_color_space.xy;
     image.color_space = int(size_color_space.z);
 

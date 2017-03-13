@@ -149,6 +149,8 @@ impl FontContext {
 
     pub fn delete_font(&mut self, font_key: &FontKey) {
         if let Some(cg_font) = self.cg_fonts.remove(font_key) {
+            // Unstable Rust has a retain() method on HashMap that will
+            // let us do this in-place. https://github.com/rust-lang/rust/issues/36648
             let ct_font_keys = self.ct_fonts.keys()
                                             .filter(|k| k.0 == *font_key)
                                             .cloned()

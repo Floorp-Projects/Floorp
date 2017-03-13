@@ -25,16 +25,21 @@ extern crate core_graphics;
 #[cfg(target_os = "windows")]
 extern crate dwrote;
 
-include!("types.rs");
-
 mod units;
 mod api;
+mod color;
 pub mod channel;
 mod display_item;
 mod display_list;
-mod stacking_context;
+mod font;
+mod image;
 mod webgl;
 
-pub use api::RenderApi;
-pub use display_list::DisplayListBuilder;
+pub use api::*;
+pub use color::*;
+pub use display_item::*;
+pub use display_list::*;
+pub use font::*;
+pub use image::*;
 pub use units::*;
+pub use webgl::*;
