@@ -39,7 +39,7 @@ def main(output, *filenames):
 
     # Write the enum file.
     print(banner, file=output)
-    print(file_header, file=output);
+    print(file_header, file=output)
 
     for s in scalars:
         cpp_guard = s.cpp_guard

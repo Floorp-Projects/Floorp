@@ -97,3 +97,19 @@ fails == shape-outside-border-box-border-radius-004.html shape-outside-border-bo
 == shape-outside-inset-025.html shape-outside-inset-025-ref.html
 == shape-outside-inset-026.html shape-outside-inset-026-ref.html
 == shape-outside-inset-027.html shape-outside-inset-027-ref.html
+
+# Basic shape: polygon()
+== shape-outside-polygon-018.html shape-outside-polygon-018-ref.html
+== shape-outside-polygon-019.html shape-outside-polygon-019-ref.html
+== shape-outside-polygon-020.html shape-outside-polygon-020-ref.html
+== shape-outside-polygon-021.html shape-outside-polygon-021-ref.html
+== shape-outside-polygon-022.html shape-outside-polygon-022-ref.html
+== shape-outside-polygon-023.html shape-outside-polygon-023-ref.html
+== shape-outside-polygon-024.html shape-outside-polygon-024-ref.html
+== shape-outside-polygon-025.html shape-outside-polygon-025-ref.html
+== shape-outside-polygon-026.html shape-outside-polygon-026-ref.html
+== shape-outside-polygon-027.html shape-outside-polygon-027-ref.html
+== shape-outside-polygon-028.html shape-outside-polygon-026-ref.html
+== shape-outside-polygon-029.html shape-outside-polygon-027-ref.html
+== shape-outside-polygon-030.html shape-outside-polygon-030-ref.html
+== shape-outside-polygon-031.html shape-outside-polygon-031-ref.html

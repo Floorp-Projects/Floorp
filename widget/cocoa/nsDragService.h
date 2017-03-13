@@ -27,7 +27,7 @@ public:
                                          nsIScriptableRegion* aRegion,
                                          uint32_t aActionType);
   // nsIDragService
-  NS_IMETHOD EndDragSession(bool aDoneDrag);
+  NS_IMETHOD EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers);
   NS_IMETHOD UpdateDragImage(nsIDOMNode* aImage, int32_t aImageX, int32_t aImageY);
 
   // nsIDragSession

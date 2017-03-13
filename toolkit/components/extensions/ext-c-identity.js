@@ -13,6 +13,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "redirectDomain",
                                       "extensions.webextensions.identity.redirectDomain");
 
 let CryptoHash = CC("@mozilla.org/security/hash;1", "nsICryptoHash", "initWithString");
+
+/* globals URL, XMLHttpRequest */
+
 Cu.importGlobalProperties(["URL", "XMLHttpRequest", "TextEncoder"]);
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");

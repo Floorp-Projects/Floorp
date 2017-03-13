@@ -3,12 +3,17 @@
 
 /*---
 es5id: 11.1.1_1
-description: Tests that the this-value is ignored in NumberFormat.
+description: >
+    Tests that the this-value is ignored in NumberFormat, if the this-value
+    isn't a NumberFormat instance.
 author: Norbert Lindenberg
 includes: [testIntl.js]
 ---*/
 
 testWithIntlConstructors(function (Constructor) {
+    if (Constructor === Intl.NumberFormat)
+        return true;
+
     var obj, newObj;
 
     // variant 1: use constructor in a "new" expression

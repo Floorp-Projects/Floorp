@@ -621,6 +621,7 @@ CssComputedView.prototype = {
       onHideBoxModelHighlighter,
       onShowBoxModelEditor,
       onShowBoxModelHighlighter,
+      onToggleGeometryEditor,
     } = this.inspector.boxmodel.getComponentProps();
 
     let provider = createElement(
@@ -631,6 +632,7 @@ CssComputedView.prototype = {
         onHideBoxModelHighlighter,
         onShowBoxModelEditor,
         onShowBoxModelHighlighter,
+        onToggleGeometryEditor,
       })
     );
     ReactDOM.render(provider, this.boxModelWrapper);

@@ -2044,7 +2044,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 672,
-    "releaseChannelCollection": "opt-out",      
+    "releaseChannelCollection": "opt-out",
     "description": "SSL handshake result, 0=success, 1-255=NSS error offset, 256-511=SEC error offset + 256, 512-639=NSPR error offset + 512, 640-670=PKIX error, 671=unknown err"
   },
   "SSL_TIME_UNTIL_READY": {
@@ -10200,123 +10200,12 @@
     "kind": "count",
     "description": "Number of top-level content documents destroyed; used in conjunction with use counter histograms"
   },
-  "PUSH_API_USED": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "flag",
-    "description": "A Push API subscribe() operation was performed at least once this session."
-  },
-  "PUSH_API_PERMISSION_REQUESTED": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "description": "Count of number of times the PermissionManager explicitly prompted user for Push Notifications permission"
-  },
-  "PUSH_API_PERMISSION_DENIED": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "description": "User explicitly denied Push Notifications permission"
-  },
-  "PUSH_API_PERMISSION_GRANTED": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "description": "User explicitly granted Push Notifications permission"
-  },
-  "PUSH_API_SUBSCRIBE_ATTEMPT": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "description": "Push Service attempts to subscribe with Push Server."
-  },
-  "PUSH_API_SUBSCRIBE_FAILED": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "description": "Attempt to subscribe with Push Server failed."
-  },
-  "PUSH_API_SUBSCRIBE_SUCCEEDED": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "description": "Attempt to subscribe with Push Server succeeded."
-  },
-  "PUSH_API_UNSUBSCRIBE_ATTEMPT": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "description": "Push Service attempts to unsubscribe with Push Server."
-  },
-  "PUSH_API_UNSUBSCRIBE_FAILED": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "description": "Attempt to unsubscribe with Push Server failed."
-  },
-  "PUSH_API_UNSUBSCRIBE_SUCCEEDED": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "description": "Attempt to unsubscribe with Push Server succeeded."
-  },
-  "PUSH_API_SUBSCRIBE_WS_TIME": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "exponential",
-    "high": 15000,
-    "n_buckets": 10,
-    "description": "Time taken to subscribe over WebSocket (ms)."
-  },
-  "PUSH_API_SUBSCRIBE_HTTP2_TIME": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "exponential",
-    "high": 15000,
-    "n_buckets": 10,
-    "description": "Time taken to subscribe over HTTP2 (ms)."
-  },
-  "PUSH_API_QUOTA_EXPIRATION_TIME": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "exponential",
-    "high": 31622400,
-    "n_buckets": 20,
-    "description": "Time taken for a push subscription to expire its quota (seconds). The maximum is just over an year."
-  },
-  "PUSH_API_QUOTA_RESET_TO": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "exponential",
-    "high": 200,
-    "n_buckets": 10,
-    "description": "The value a push record quota (a count) is reset to based on the user's browsing history."
-  },
-  "PUSH_API_NOTIFICATION_RECEIVED": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "description": "Push notification was received from server."
-  },
-  "PUSH_API_NOTIFICATION_RECEIVED_BUT_DID_NOT_NOTIFY": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "enumerated",
-    "n_values": 16,
-    "description": "Push notification was received from server, but not delivered to ServiceWorker. Enumeration values are defined in dom/push/PushService.jsm as kDROP_NOTIFICATION_REASON_*."
-  },
   "PUSH_API_NOTIFY": {
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "count",
     "description": "Number of push messages that were successfully decrypted and delivered to a ServiceWorker."
-  },
-  "PUSH_API_NOTIFY_REGISTRATION_LOST": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "description": "Attempt to notify ServiceWorker of push notification resubscription."
   },
   "D3D11_SYNC_HANDLE_FAILURE": {
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com","bschouten@mozilla.com","danderson@mozilla.com","msreckovic@mozilla.com","ashughes@mozilla.com"],
@@ -10374,9 +10263,9 @@
   },
   "WEB_NOTIFICATION_CLICKED": {
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["firefox-dev@mozilla.org", "push@mozilla.com"],
     "bug_numbers": [1225336],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "count",
     "description": "Count of times a web notification was clicked"
   },
@@ -10390,9 +10279,9 @@
   },
   "WEB_NOTIFICATION_SHOWN": {
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["firefox-dev@mozilla.org", "push@mozilla.com"],
     "bug_numbers": [1225336],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "count",
     "description": "Count of times a Notification was rendered (accounting for XUL DND). A system backend may put the notification directly into the tray if its own DND is on."
   },
@@ -10493,9 +10382,9 @@
   },
   "WEB_NOTIFICATION_PERMISSIONS": {
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["firefox-dev@mozilla.org", "push@mozilla.com"],
     "bug_numbers": [1219030],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 10,
     "description": "Number of origins with the web notifications permission (0 = denied, 1 = allowed)."
@@ -10547,13 +10436,6 @@
     "keyed": true,
     "bug_numbers": [1344152],
     "description": "Encoding used in a <script src>."
-  },
-  "WEB_NOTIFICATION_REQUEST_PERMISSION_CALLBACK": {
-    "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
-    "bug_numbers": [1241278],
-    "kind": "boolean",
-    "description": "Usage of the deprecated Notification.requestPermission() callback argument"
   },
   "VIDEO_FASTSEEK_USED": {
     "alert_emails": ["lchristie@mozilla.com", "cpearce@mozilla.com"],
@@ -10628,15 +10510,16 @@
     "keyed": true,
     "description": "Measures the size of IPC messages by message name"
   },
-  "IPC_SYNC_LATENCY_MS": {
+  "IPC_SYNC_MAIN_LATENCY_MS": {
     "alert_emails": ["cpearce@mozilla.com"],
     "bug_numbers": [1333489],
     "expires_in_version": "60",
     "kind": "exponential",
-    "high": 2000,
-    "n_buckets": 10,
+    "low": 32,
+    "high": 750,
+    "n_buckets": 40,
     "keyed": true,
-    "description": "Measures the number of milliseconds we spend waiting for sync IPC messages to finish sending, keyed by message name. Note: only messages that wait for more than 500 microseconds are included in this probe."
+    "description": "Measures the number of milliseconds we spend waiting for sync IPC messages to finish sending, keyed by message name. Note: only messages that wait for more than 500 microseconds and block the main thread are included in this probe."
   },
   "MESSAGE_MANAGER_MESSAGE_SIZE2": {
     "alert_emails": ["wmccloskey@mozilla.com","amccreight@mozilla.com"],
@@ -11029,24 +10912,6 @@
     "n_buckets": 30,
     "description": "Time in MS that content is narrated in 10 second increments up to 5 minutes"
   },
-  "HANDLE_UNLOAD_MS": {
-    "alert_emails": ["kchen@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "bug_numbers": [1301346],
-    "description": "The time spent handling unload event in milliseconds. It measures all documents and subframes separately. If there are multiple handlers for the unload event in a document, this will record a single value across all handlers in the document."
-  },
-  "HANDLE_BEFOREUNLOAD_MS": {
-    "alert_emails": ["kchen@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "bug_numbers": [1301346],
-    "description": "The time spent handling beforeunload event in milliseconds. It measures all documents and subframes separately. If there are multiple handlers for the unload event in a document, this will record a single value across all handlers in the document."
-  },
   "TABCHILD_PAINT_TIME": {
     "alert_emails": ["mconley@mozilla.com"],
     "bug_numbers": [1313686],
@@ -11136,5 +11001,25 @@
     "labels": ["installAmoAccepted", "installAmoRejected", "installLocalAccepted", "installLocalRejected", "installWebAccepted", "installWebRejected", "sideloadAccepted", "sideloadRejected", "updateAccepted", "updateRejected"],
     "description": "Results of displaying add-on installation notifications.",
     "releaseChannelCollection": "opt-out"
+  },
+  "IPC_READ_LATENCY_MS": {
+    "alert_emails": ["mlayzell@mozilla.com"],
+    "bug_numbers": [1342635],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 500,
+    "n_buckets": 20,
+    "keyed": true,
+    "description": "Measures the number of milliseconds we spend waiting for IPC messages to deserialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe. This probe is keyed on the IPDL message name."
+  },
+  "IPC_WRITE_LATENCY_MS": {
+    "alert_emails": ["mlayzell@mozilla.com"],
+    "bug_numbers": [1342635],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 500,
+    "n_buckets": 20,
+    "keyed": true,
+    "description": "Measures the number of milliseconds we spend waiting for IPC messages to serialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe. This probe is keyed on the IPDL message name."
   }
 }

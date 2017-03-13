@@ -19,6 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1073563
     var listener = undefined;
     var test_target = false;
     var test_move = false;
+    var test_over = false;
     var test_listener = false;
     var receive_lostpointercapture = false;
 
@@ -44,6 +45,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1073563
         }
       } else if(event.type == "pointermove") {
         test_move = true;
+      } else if(event.type == "pointerover") {
+        test_over = true;
       } else {
         test_listener = true;
       }
@@ -81,7 +84,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1073563
       // PE level 2 defines that the pending pointer capture is processed when firing next pointer events.
       // In this test case, pointer capture release is processed when firing pointermove
       parent.is(test_move,      true,   "Part 6: gotpointercapture should be triggered by pointermove");
-      parent.is(test_listener,  false,  "Part 6: no other pointerevents should be fired before gotpointercapture");
+      parent.is(test_over,      true,   "Part 6: pointerover should be received when capturing pointer");
+      parent.is(test_listener,  false,  "Part 6: no other pointerevents should be fired before gotpointercapture except pointerover");
       logger("finishTest");
       parent.finishTest();
     }

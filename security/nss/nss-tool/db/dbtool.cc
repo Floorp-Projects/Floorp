@@ -8,25 +8,30 @@
 #include "util.h"
 
 #include <dirent.h>
-#include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <memory>
 #include <regex>
 #include <sstream>
 
 #include <cert.h>
 #include <certdb.h>
 #include <nss.h>
+#include <pk11pub.h>
 #include <prerror.h>
 #include <prio.h>
 
 const std::vector<std::string> kCommandArgs({"--create", "--list-certs",
-                                             "--import-cert", "--list-keys"});
+                                             "--import-cert", "--list-keys",
+                                             "--import-key"});
 
 static bool HasSingleCommandArgument(const ArgParser &parser) {
   auto pred = [&](const std::string &cmd) { return parser.Has(cmd); };
   return std::count_if(kCommandArgs.begin(), kCommandArgs.end(), pred) == 1;
+}
+
+static bool HasArgumentRequiringWriteAccess(const ArgParser &parser) {
+  return parser.Has("--create") || parser.Has("--import-cert") ||
+         parser.Has("--import-key");
 }
 
 static std::string PrintFlags(unsigned int flags) {
@@ -62,17 +67,6 @@ static std::string PrintFlags(unsigned int flags) {
   return ss.str();
 }
 
-static std::vector<char> ReadFromIstream(std::istream &is) {
-  std::vector<char> certData;
-  while (is) {
-    char buf[1024];
-    is.read(buf, sizeof(buf));
-    certData.insert(certData.end(), buf, buf + is.gcount());
-  }
-
-  return certData;
-}
-
 static const char *const keyTypeName[] = {"null", "rsa", "dsa", "fortezza",
                                           "dh",   "kea", "ec"};
 
@@ -83,6 +77,7 @@ void DBTool::Usage() {
   std::cerr << "  --import-cert [<path>] --name <name> [--trusts <trusts>]"
             << std::endl;
   std::cerr << "  --list-keys" << std::endl;
+  std::cerr << "  --import-key [<path> [-- name <name>]]" << std::endl;
 }
 
 bool DBTool::Run(const std::vector<std::string> &arguments) {
@@ -95,7 +90,7 @@ bool DBTool::Run(const std::vector<std::string> &arguments) {
 
   PRAccessHow how = PR_ACCESS_READ_OK;
   bool readOnly = true;
-  if (parser.Has("--create") || parser.Has("--import-cert")) {
+  if (HasArgumentRequiringWriteAccess(parser)) {
     how = PR_ACCESS_WRITE_OK;
     readOnly = false;
   }
@@ -149,6 +144,8 @@ bool DBTool::Run(const std::vector<std::string> &arguments) {
     }
   } else if (parser.Has("--list-keys")) {
     ret = ListKeys();
+  } else if (parser.Has("--import-key")) {
+    ret = ImportKey(parser);
   }
 
   // shutdown nss
@@ -233,6 +230,7 @@ bool DBTool::ImportCertificate(const ArgParser &parser) {
   if (!parser.Has("--name")) {
     std::cerr << "A name (--name) is required to import a certificate."
               << std::endl;
+    Usage();
     return false;
   }
 
@@ -250,27 +248,13 @@ bool DBTool::ImportCertificate(const ArgParser &parser) {
     return false;
   }
 
-  ScopedPK11SlotInfo slot = ScopedPK11SlotInfo(PK11_GetInternalKeySlot());
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (slot.get() == nullptr) {
     std::cerr << "Error: Init PK11SlotInfo failed!" << std::endl;
     return false;
   }
 
-  std::vector<char> certData;
-  if (derFilePath.empty()) {
-    std::cout << "No Certificate file path given, using stdin." << std::endl;
-    certData = ReadFromIstream(std::cin);
-  } else {
-    std::ifstream is(derFilePath, std::ifstream::binary);
-    if (!is.good()) {
-      std::cerr << "IO Error when opening " << derFilePath << std::endl;
-      std::cerr
-          << "Certificate file does not exist or you don't have permissions."
-          << std::endl;
-      return false;
-    }
-    certData = ReadFromIstream(is);
-  }
+  std::vector<char> certData = ReadInputData(derFilePath);
 
   ScopedCERTCertificate cert(
       CERT_DecodeCertFromPackage(certData.data(), certData.size()));
@@ -300,7 +284,7 @@ bool DBTool::ImportCertificate(const ArgParser &parser) {
 }
 
 bool DBTool::ListKeys() {
-  ScopedPK11SlotInfo slot = ScopedPK11SlotInfo(PK11_GetInternalKeySlot());
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (slot.get() == nullptr) {
     std::cerr << "Error: Init PK11SlotInfo failed!" << std::endl;
     return false;
@@ -322,7 +306,7 @@ bool DBTool::ListKeys() {
   for (node = PRIVKEY_LIST_HEAD(list.get());
        !PRIVKEY_LIST_END(node, list.get()); node = PRIVKEY_LIST_NEXT(node)) {
     char *keyNameRaw = PK11_GetPrivateKeyNickname(node->key);
-    std::string keyName(keyNameRaw ? "" : keyNameRaw);
+    std::string keyName(keyNameRaw ? keyNameRaw : "");
 
     if (keyName.empty()) {
       ScopedCERTCertificate cert(PK11_GetCertFromPrivateKey(node->key));
@@ -365,5 +349,51 @@ bool DBTool::ListKeys() {
     std::cout << "No keys found." << std::endl;
   }
 
+  return true;
+}
+
+bool DBTool::ImportKey(const ArgParser &parser) {
+  std::string privKeyFilePath = parser.Get("--import-key");
+  std::string name;
+  if (parser.Has("--name")) {
+    name = parser.Get("--name");
+  }
+
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  if (slot.get() == nullptr) {
+    std::cerr << "Error: Init PK11SlotInfo failed!" << std::endl;
+    return false;
+  }
+
+  if (!DBLoginIfNeeded(slot)) {
+    return false;
+  }
+
+  std::vector<char> privKeyData = ReadInputData(privKeyFilePath);
+  if (privKeyData.empty()) {
+    return false;
+  }
+  SECItem pkcs8PrivKeyItem = {
+      siBuffer, reinterpret_cast<unsigned char *>(privKeyData.data()),
+      static_cast<unsigned int>(privKeyData.size())};
+
+  SECItem nickname = {siBuffer, nullptr, 0};
+  if (!name.empty()) {
+    nickname.data = const_cast<unsigned char *>(
+        reinterpret_cast<const unsigned char *>(name.c_str()));
+    nickname.len = static_cast<unsigned int>(name.size());
+  }
+
+  SECStatus rv = PK11_ImportDERPrivateKeyInfo(
+      slot.get(), &pkcs8PrivKeyItem,
+      nickname.data == nullptr ? nullptr : &nickname, nullptr /*publicValue*/,
+      true /*isPerm*/, false /*isPrivate*/, KU_ALL, nullptr);
+  if (rv != SECSuccess) {
+    std::cerr << "Importing a private key in DER format failed with error "
+              << PR_ErrorToName(PR_GetError()) << std::endl;
+    return false;
+  }
+
+  std::cout << "Key import succeeded." << std::endl;
   return true;
 }

@@ -15,7 +15,7 @@ info: |
        b. Return ? GetFunctionRealm(target).
 ---*/
 
-var other = $.createRealm().global;
+var other = $262.createRealm().global;
 var C = new other.Function();
 var B = Function.prototype.bind.call(C);
 

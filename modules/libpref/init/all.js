@@ -1466,6 +1466,10 @@ pref("network.http.max-connections", 900);
 // connections to the server is less then max-persistent-connections-per-server.
 pref("network.http.max-persistent-connections-per-server", 6);
 
+// Number of connections that we can open beyond the standard parallelism limit defined
+// by max-persistent-connections-per-server/-proxy to handle urgent-start marked requests
+pref("network.http.max-urgent-start-excessive-connections-per-host", 10);
+
 // If connecting via a proxy, then a
 // new connection will only be attempted if the number of active persistent
 // connections to the proxy is less then max-persistent-connections-per-proxy.
@@ -2930,6 +2934,13 @@ pref("browser.tabs.remote.separateFileUriProcess", true);
 pref("browser.tabs.remote.separateFileUriProcess", false);
 #endif
 
+// Pref that enables top level web content pages that are opened from file://
+// URI pages to run in the file content process.
+// This has been added in case breaking any window references between these
+// sorts of pages, which we have to do when we run them in the normal web
+// content process, causes compatibility issues.
+pref("browser.tabs.remote.allowLinkedWebInFileUriProcess", false);
+
 // Enable caching of Moz2D Path objects for SVG geometry elements
 pref("svg.path-caching.enabled", true);
 
@@ -2947,11 +2958,7 @@ pref("svg.marker-improvements.enabled", true);
 // See https://svgwg.org/svg2-draft/single-page.html#types-SVGBoundingBoxOptions
 pref("svg.new-getBBox.enabled", false);
 
-#ifdef RELEASE_OR_BETA
-pref("svg.transform-box.enabled", false);
-#else
 pref("svg.transform-box.enabled", true);
-#endif // RELEASE_OR_BETA
 
 // Default font types and sizes by locale
 pref("font.default.ar", "sans-serif");
