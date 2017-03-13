@@ -2,4 +2,6 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 bo{
     Version{"2.1.27.40"}
+    zoneStrings{
+    }
 }
