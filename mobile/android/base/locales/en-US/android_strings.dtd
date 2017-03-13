@@ -214,6 +214,9 @@
 <!ENTITY pref_home_updates_enabled "Enabled">
 <!ENTITY pref_home_updates_wifi "Only over Wi-Fi">
 <!ENTITY pref_category_home_homepage "Homepage">
+<!-- Localization note (home_homepage_every_new_tab): The user will see a switch to determine if the
+     home page will be use in every new tab. -->
+<!ENTITY home_homepage_every_new_tab "Also use for new tabs">
 <!ENTITY home_homepage_title "Set a Homepage">
 <!-- Localization note (home_homepage_radio_user_address): The user will see a series of radio
      buttons to choose the homepage they'd like to start on. When they click the radio
