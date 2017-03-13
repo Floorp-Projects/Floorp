@@ -18,12 +18,12 @@ class nsTSubstringTuple_CharT
 {
 public:
 
-  typedef CharT                      char_type;
-  typedef nsCharTraits<char_type>    char_traits;
+  typedef CharT                                 char_type;
+  typedef nsCharTraits<char_type>               char_traits;
 
-  typedef nsTSubstringTuple_CharT    self_type;
-  typedef nsTSubstring_CharT         base_string_type;
-  typedef uint32_t                   size_type;
+  typedef nsTSubstringTuple_CharT               self_type;
+  typedef mozilla::detail::nsTStringRepr_CharT  base_string_type;
+  typedef uint32_t                              size_type;
 
 public:
 
