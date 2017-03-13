@@ -375,8 +375,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_storage.html `calc(50px/` [7]
     * ... `calc(2em / ` [9]
   * calc() doesn't support number value servo/servo#15205
-    * test_value_storage.html `calc(1 +` [1]
-    * ... `calc(-2.5)` [1]
+    * test_value_storage.html `calc(-2.5)` [1]
   * size part of shorthand background/mask always desires two values servo/servo#15199
     * test_value_storage.html `'background'` [18]
     * ... `/ auto none` [34]
@@ -435,9 +434,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_selectors.html `TypeError` [1]
 * issues arround font shorthand servo/servo#15032 servo/servo#15036
   * test_bug377947.html [2]
-  * test_inherit_storage.html `for property 'font-` [2]
-  * test_initial_storage.html `for property 'font-` [1]
-  * test_value_storage.html `'font'` [171]
+  * test_value_storage.html `'font'` [144]
   * test_shorthand_property_getters.html `font shorthand` [2]
   * test_system_font_serialization.html [10]
 * test_value_storage.html `font-size: calc(`: clamp negative value servo/servo#15296 [3]
@@ -509,7 +506,6 @@ Any line which doesn't follow the format above would be ignored like comment.
 ## Spec Unclear
 
 * test_property_syntax_errors.html `'background'`: whether background shorthand should accept "text" [200]
-* test_inherit_computation.html `weight style`: whether font-synthesis should be reset by font w3c/csswg-drafts#1032 [8]
 
 ## Unknown / Unsure
 

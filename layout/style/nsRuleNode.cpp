@@ -3857,13 +3857,13 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
            defaultVariableFont->kerning,
            Unused, Unused, Unused, systemFont.kerning);
 
-  // font-synthesis: none, enum (bit field), inherit, initial, -moz-system-font
+  // font-synthesis: none, enum (bit field), inherit, initial
   SetValue(*aRuleData->ValueForFontSynthesis(),
            aFont->mFont.synthesis, aConditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INHERIT,
            aParentFont->mFont.synthesis,
            defaultVariableFont->synthesis,
-           Unused, /* none */ 0, Unused, systemFont.synthesis);
+           Unused, /* none */ 0, Unused, Unused);
 
   // font-variant-alternates: normal, enum (bit field) + functions, inherit,
   //                          initial, -moz-system-font
