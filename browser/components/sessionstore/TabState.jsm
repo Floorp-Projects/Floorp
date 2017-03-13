@@ -179,10 +179,7 @@ var TabStateInternal = {
       }
 
       if (key === "history") {
-        // Make a shallow copy of the entries array. We (currently) don't update
-        // entries in place, so we don't have to worry about performing a deep
-        // copy.
-        tabData.entries = [...tabData.entries];
+        tabData.entries = value.entries;
 
         if (value.hasOwnProperty("userContextId")) {
           tabData.userContextId = value.userContextId;
