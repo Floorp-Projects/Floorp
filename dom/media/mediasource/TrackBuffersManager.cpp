@@ -854,13 +854,22 @@ TrackBuffersManager::ResetDemuxingState()
 }
 
 void
-TrackBuffersManager::OnDemuxerResetDone(nsresult)
+TrackBuffersManager::OnDemuxerResetDone(const MediaResult& aResult)
 {
   MOZ_ASSERT(OnTaskQueue());
   mDemuxerInitRequest.Complete();
   // mInputDemuxer shouldn't have been destroyed while a demuxer init/reset
   // request was being processed. See bug 1239983.
   MOZ_DIAGNOSTIC_ASSERT(mInputDemuxer);
+
+  if (aResult != NS_OK && mParentDecoder) {
+    RefPtr<TrackBuffersManager> self = this;
+    mAbstractMainThread->Dispatch(NS_NewRunnableFunction([self, aResult] () {
+      if (self->mParentDecoder && self->mParentDecoder->GetOwner()) {
+        self->mParentDecoder->GetOwner()->DecodeWarning(aResult);
+      }
+    }));
+  }
 
   // Recreate track demuxers.
   uint32_t numVideos = mInputDemuxer->GetNumberTracks(TrackInfo::kVideoTrack);
@@ -940,7 +949,7 @@ TrackBuffersManager::InitializationSegmentReceived()
 }
 
 void
-TrackBuffersManager::OnDemuxerInitDone(nsresult)
+TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult)
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_DIAGNOSTIC_ASSERT(mInputDemuxer, "mInputDemuxer has been destroyed");
@@ -1132,6 +1141,15 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
   SetAppendState(AppendState::WAITING_FOR_SEGMENT);
   // 5. Jump to the loop top step above.
   ScheduleSegmentParserLoop();
+
+  if (aResult != NS_OK && mParentDecoder) {
+    RefPtr<TrackBuffersManager> self = this;
+    mAbstractMainThread->Dispatch(NS_NewRunnableFunction([self, aResult] () {
+      if (self->mParentDecoder && self->mParentDecoder->GetOwner()) {
+        self->mParentDecoder->GetOwner()->DecodeWarning(aResult);
+      }
+    }));
+  }
 }
 
 void
