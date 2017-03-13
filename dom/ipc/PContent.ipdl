@@ -146,6 +146,11 @@ struct DataStorageItem {
   DataStorageType type;
 };
 
+struct DataStorageEntry {
+  DataStorageItem[] items;
+  nsString filename;
+};
+
 struct ClipboardCapabilities {
   bool supportsSelectionClipboard;
   bool supportsFindClipboard;
@@ -257,6 +262,7 @@ struct XPCOMInitData
     OptionalURIParams userContentSheetURL;
     PrefSetting[] prefs;
     GfxInfoFeatureStatus[] gfxFeatureStatus;
+    DataStorageEntry[] dataStorage;
 };
 
 /**
@@ -487,7 +493,8 @@ child:
     async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action);
 
     async EndDragSession(bool aDoneDrag, bool aUserCancelled,
-                         LayoutDeviceIntPoint aDragEndPoint);
+                         LayoutDeviceIntPoint aDragEndPoint,
+                         uint32_t aKeyModifiers);
 
     async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, OptionalURIParams aDomain);
 
@@ -731,9 +738,6 @@ parent:
     sync GetGfxVars() returns (GfxVarUpdate[] vars);
 
     sync ReadFontList() returns (FontListEntry[] retValue);
-
-    sync ReadDataStorageArray(nsString aFilename)
-      returns (DataStorageItem[] retValue);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
                      CpowEntry[] aCpows, Principal aPrincipal)

@@ -2029,7 +2029,7 @@ IsHTMLStyleGeometryBox(StyleGeometryBox aBox)
 static StyleGeometryBox
 ComputeBoxValue(nsIFrame* aForFrame, StyleGeometryBox aBox)
 {
-  if (nsLayoutUtils::HasCSSBoxLayout(aForFrame)) {
+  if (!(aForFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
     // For elements with associated CSS layout box, the values fill-box,
     // stroke-box and view-box compute to the initial value of mask-clip.
     if (IsSVGStyleGeometryBox(aBox)) {

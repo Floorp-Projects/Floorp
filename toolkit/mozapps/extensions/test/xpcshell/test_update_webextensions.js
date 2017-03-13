@@ -36,11 +36,14 @@ function serveManifest(request, response) {
   response.write(manifest.data);
 }
 
-
 function promiseInstallWebExtension(aData) {
   let addonFile = createTempWebExtensionFile(aData);
 
+  let startupPromise = promiseWebExtensionStartup();
+
   return promiseInstallAllFiles([addonFile]).then(() => {
+    return startupPromise;
+  }).then(() => {
     Services.obs.notifyObservers(addonFile, "flush-cache-entry", null);
     return promiseAddonByID(aData.id);
   });
@@ -175,7 +178,10 @@ add_task(function* checkUpdateToWebExt() {
 
   equal(update.addon.version, "1.0", "add-on version");
 
-  yield promiseCompleteAllInstalls([update.updateAvailable]);
+  yield Promise.all([
+    promiseCompleteAllInstalls([update.updateAvailable]),
+    promiseWebExtensionStartup(),
+  ]);
 
   let addon = yield promiseAddonByID(update.addon.id);
   equal(addon.version, "1.2", "new add-on version");

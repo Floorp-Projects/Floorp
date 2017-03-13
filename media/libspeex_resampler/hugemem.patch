@@ -2,7 +2,7 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
 --- a/media/libspeex_resampler/src/resample.c
 +++ b/media/libspeex_resampler/src/resample.c
 @@ -56,16 +56,18 @@
-    (e.g. 2/3), and get rid of the rounding operations in the inner loop. 
+    (e.g. 2/3), and get rid of the rounding operations in the inner loop.
     The latter both reduces CPU time and makes the algorithm more SIMD-friendly.
  */
  
@@ -20,7 +20,7 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
  #include "speex_resampler.h"
  #include "arch.h"
  #else /* OUTSIDE_SPEEX */
-@@ -632,25 +634,26 @@ static int update_filter(SpeexResamplerS
+@@ -643,25 +645,26 @@ static int update_filter(SpeexResamplerS
           st->oversample >>= 1;
        if (st->oversample < 1)
           st->oversample = 1;
@@ -28,7 +28,7 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
        /* up-sampling */
        st->cutoff = quality_map[st->quality].upsample_bandwidth;
     }
-    
+ 
 -   /* Choose the resampling type that requires the least amount of memory */
 -#ifdef RESAMPLE_FULL_SINC_TABLE
 -   use_direct = 1;
@@ -54,3 +54,4 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
           goto fail;
  
        min_sinc_table_length = st->filt_len*st->oversample+8;
+

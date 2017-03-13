@@ -39,7 +39,7 @@ features: [Symbol.species]
 
 var sample1 = new Int8Array();
 var sample2 = new Int16Array();
-var other = $.createRealm().global;
+var other = $262.createRealm().global;
 var C = new other.Function();
 C.prototype = null;
 

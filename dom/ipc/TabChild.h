@@ -28,6 +28,7 @@
 #include "nsITooltipListener.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/TabContext.h"
+#include "mozilla/dom/CoalescedWheelData.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventForwards.h"
@@ -67,6 +68,7 @@ namespace dom {
 class TabChild;
 class TabGroup;
 class ClonedMessageData;
+class CoalescedWheelData;
 class TabChildBase;
 
 class TabChildGlobal : public DOMEventTargetHelper,
@@ -255,6 +257,7 @@ class TabChild final : public TabChildBase,
                        public mozilla::ipc::IShmemAllocator
 {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
+  typedef mozilla::dom::CoalescedWheelData CoalescedWheelData;
   typedef mozilla::layout::RenderFrameChild RenderFrameChild;
   typedef mozilla::layers::APZEventState APZEventState;
   typedef mozilla::layers::SetAllowedTouchBehaviorCallback SetAllowedTouchBehaviorCallback;
@@ -751,6 +754,17 @@ private:
 
   void UpdateRepeatedKeyEventEndTime(const WidgetKeyboardEvent& aEvent);
 
+  bool MaybeCoalesceWheelEvent(const WidgetWheelEvent& aEvent,
+                               const ScrollableLayerGuid& aGuid,
+                               const uint64_t& aInputBlockId,
+                               bool* aIsNextWheelEvent);
+
+  void MaybeDispatchCoalescedWheelEvent();
+
+  void DispatchWheelEvent(const WidgetWheelEvent& aEvent,
+                          const ScrollableLayerGuid& aGuid,
+                          const uint64_t& aInputBlockId);
+
   class DelayedDeleteRunnable;
 
   TextureFactoryIdentifier mTextureFactoryIdentifier;
@@ -805,6 +819,12 @@ private:
   // event so that in case event handling takes time, some repeated events can
   // be skipped to not flood child process.
   mozilla::TimeStamp mRepeatedKeyEventTime;
+
+  // Similar to mRepeatedKeyEventTime, store the end time (from parent process)
+  // of handling the last repeated wheel event so that in case event handling
+  // takes time, some repeated events can be skipped to not flood child process.
+  mozilla::TimeStamp mLastWheelProcessedTimeFromParent;
+  CoalescedWheelData mCoalescedWheelData;
 
   AutoTArray<bool, NUMBER_OF_AUDIO_CHANNELS> mAudioChannelsActive;
 

@@ -10,7 +10,7 @@ info: >
 features: [Symbol.replace]
 ---*/
 
-var OSymbol = $.createRealm().global.Symbol;
+var OSymbol = $262.createRealm().global.Symbol;
 
 assert.sameValue(Symbol.replace, OSymbol.replace);
 

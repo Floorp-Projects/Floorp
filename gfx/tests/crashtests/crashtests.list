@@ -125,6 +125,7 @@ load 944579.svg
 load 944579.html
 asserts-if(stylo,1) pref(security.fileuri.strict_origin_policy,false) load 950000.html # bug 1324700
 load 1034403-1.html
+load 1056516.html
 load 1205900.html
 load 1134549-1.svg
 load balinese-letter-spacing.html

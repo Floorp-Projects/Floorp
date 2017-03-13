@@ -348,11 +348,9 @@ private:
   public:
     virtual ~ShapeInfo() {}
 
-    virtual nscoord LineLeft(mozilla::WritingMode aWM,
-                             const nscoord aBStart,
+    virtual nscoord LineLeft(const nscoord aBStart,
                              const nscoord aBEnd) const = 0;
-    virtual nscoord LineRight(mozilla::WritingMode aWM,
-                              const nscoord aBStart,
+    virtual nscoord LineRight(const nscoord aBStart,
                               const nscoord aBEnd) const = 0;
     virtual nscoord BStart() const = 0;
     virtual nscoord BEnd() const = 0;
@@ -384,13 +382,19 @@ private:
       const nsSize& aContainerSize);
 
     static mozilla::UniquePtr<ShapeInfo> CreateInset(
-      mozilla::StyleBasicShape* const aBasicShape,
+      const mozilla::StyleBasicShape* aBasicShape,
       const mozilla::LogicalRect& aShapeBoxRect,
       mozilla::WritingMode aWM,
       const nsSize& aContainerSize);
 
     static mozilla::UniquePtr<ShapeInfo> CreateCircleOrEllipse(
-      mozilla::StyleBasicShape* const aBasicShape,
+      const mozilla::StyleBasicShape* aBasicShape,
+      const mozilla::LogicalRect& aShapeBoxRect,
+      mozilla::WritingMode aWM,
+      const nsSize& aContainerSize);
+
+    static mozilla::UniquePtr<ShapeInfo> CreatePolygon(
+      const mozilla::StyleBasicShape* aBasicShape,
       const mozilla::LogicalRect& aShapeBoxRect,
       mozilla::WritingMode aWM,
       const nsSize& aContainerSize);
@@ -436,11 +440,9 @@ private:
       , mRadii(Move(aRadii))
     {}
 
-    nscoord LineLeft(mozilla::WritingMode aWM,
-                     const nscoord aBStart,
+    nscoord LineLeft(const nscoord aBStart,
                      const nscoord aBEnd) const override;
-    nscoord LineRight(mozilla::WritingMode aWM,
-                      const nscoord aBStart,
+    nscoord LineRight(const nscoord aBStart,
                       const nscoord aBEnd) const override;
     nscoord BStart() const override { return mRect.y; }
     nscoord BEnd() const override { return mRect.YMost(); }
@@ -462,7 +464,7 @@ private:
   };
 
   // Implements shape-outside: circle() and shape-outside: ellipse().
-  class EllipseShapeInfo : public ShapeInfo
+  class EllipseShapeInfo final : public ShapeInfo
   {
   public:
     EllipseShapeInfo(const nsPoint& aCenter,
@@ -471,11 +473,9 @@ private:
       , mRadii(aRadii)
     {}
 
-    nscoord LineLeft(mozilla::WritingMode aWM,
-                     const nscoord aBStart,
+    nscoord LineLeft(const nscoord aBStart,
                      const nscoord aBEnd) const override;
-    nscoord LineRight(mozilla::WritingMode aWM,
-                      const nscoord aBStart,
+    nscoord LineRight(const nscoord aBStart,
                       const nscoord aBEnd) const override;
     nscoord BStart() const override { return mCenter.y - mRadii.height; }
     nscoord BEnd() const override { return mCenter.y + mRadii.height; }
@@ -486,13 +486,60 @@ private:
       mCenter.MoveBy(aLineLeft, aBlockStart);
     }
 
-  protected:
+  private:
     // The position of the center of the ellipse. The coordinate space is the
     // same as FloatInfo::mRect.
     nsPoint mCenter;
     // The radii of the ellipse in app units. The width and height represent
     // the line-axis and block-axis radii of the ellipse.
     nsSize mRadii;
+  };
+
+  // Implements shape-outside: polygon().
+  class PolygonShapeInfo final : public ShapeInfo
+  {
+  public:
+    explicit PolygonShapeInfo(nsTArray<nsPoint>&& aVertices);
+
+    nscoord LineLeft(const nscoord aBStart,
+                     const nscoord aBEnd) const override;
+    nscoord LineRight(const nscoord aBStart,
+                      const nscoord aBEnd) const override;
+    nscoord BStart() const override { return mBStart; }
+    nscoord BEnd() const override { return mBEnd; }
+    bool IsEmpty() const override { return mEmpty; }
+
+    void Translate(nscoord aLineLeft, nscoord aBlockStart) override;
+
+  private:
+    // Helper method for implementing LineLeft() and LineRight().
+    nscoord ComputeLineIntercept(
+      const nscoord aBStart,
+      const nscoord aBEnd,
+      nscoord (*aCompareOp) (std::initializer_list<nscoord>),
+      const nscoord aLineInterceptInitialValue) const;
+
+    // Given a horizontal line y, and two points p1 and p2 forming a line
+    // segment L. Solve x for the intersection of y and L. This method
+    // assumes y and L do intersect, and L is *not* horizontal.
+    static nscoord XInterceptAtY(const nscoord aY,
+                                 const nsPoint& aP1,
+                                 const nsPoint& aP2);
+
+    // The vertices of the polygon in the float manager's coordinate space.
+    nsTArray<nsPoint> mVertices;
+
+    // If mEmpty is true, that means the polygon encloses no area.
+    bool mEmpty = false;
+
+    // Computed block start and block end value of the polygon shape.
+    //
+    // If mEmpty is false, their initial values nscoord_MAX and nscoord_MIN
+    // are used as sentinels for computing min() and max() in the
+    // constructor, and mBStart is guaranteed to be less than or equal to
+    // mBEnd. If mEmpty is true, their values do not matter.
+    nscoord mBStart = nscoord_MAX;
+    nscoord mBEnd = nscoord_MIN;
   };
 
   struct FloatInfo {
@@ -516,9 +563,9 @@ private:
     // aBStart and aBEnd are the starting and ending coordinate of a band.
     // LineLeft() and LineRight() return the innermost line-left extent and
     // line-right extent within the given band, respectively.
-    nscoord LineLeft(mozilla::WritingMode aWM, ShapeType aShapeType,
+    nscoord LineLeft(ShapeType aShapeType,
                      const nscoord aBStart, const nscoord aBEnd) const;
-    nscoord LineRight(mozilla::WritingMode aWM, ShapeType aShapeType,
+    nscoord LineRight(ShapeType aShapeType,
                       const nscoord aBStart, const nscoord aBEnd) const;
     nscoord BStart(ShapeType aShapeType) const;
     nscoord BEnd(ShapeType aShapeType) const;

@@ -40,7 +40,7 @@ info: |
 features: [Proxy]
 ---*/
 
-var other = $.createRealm().global;
+var other = $262.createRealm().global;
 // Defer proxy revocation until after the `constructor` property has been
 // accessed
 var handlers = {

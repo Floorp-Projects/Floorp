@@ -22,7 +22,7 @@ assert.sameValue(Number, global.Number);
 assert.sameValue(RegExp, global.RegExp);
 assert.sameValue(String, global.String);
 
-globalVariable = {};
+var globalVariable = {};
 assert.sameValue(globalVariable, global.globalVariable);
 
 reportCompare(0, 0);

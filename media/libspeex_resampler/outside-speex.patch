@@ -15,7 +15,7 @@ diff --git a/media/libspeex_resampler/src/speex_resampler.h b/media/libspeex_res
  
  /********* WARNING: MENTAL SANITY ENDS HERE *************/
  
- /* If the resampler is defined outside of Speex, we change the symbol names so that 
+ /* If the resampler is defined outside of Speex, we change the symbol names so that
     there won't be any clash if linking with Speex later on. */
  
  /* #define RANDOM_PREFIX your software name here */
@@ -26,5 +26,5 @@ diff --git a/media/libspeex_resampler/src/speex_resampler.h b/media/libspeex_res
  
  #define CAT_PREFIX2(a,b) a ## b
  #define CAT_PREFIX(a,b) CAT_PREFIX2(a, b)
-       
+ 
  #define speex_resampler_init CAT_PREFIX(RANDOM_PREFIX,_resampler_init)

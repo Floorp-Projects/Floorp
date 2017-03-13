@@ -2203,6 +2203,19 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     }
   }
 
+  // Ensure the SSS is initialized before we try to use its storage.
+  nsCOMPtr<nsISiteSecurityService> sss = do_GetService("@mozilla.org/ssservice;1");
+
+  nsTArray<nsString> storageFiles;
+  DataStorage::GetAllFileNames(storageFiles);
+  for (auto& file : storageFiles) {
+    dom::DataStorageEntry entry;
+    entry.filename() = file;
+    RefPtr<DataStorage> storage = DataStorage::Get(file);
+    storage->GetAll(&entry.items());
+    xpcomInit.dataStorage().AppendElement(Move(entry));
+  }
+
   Unused << SendSetXPCOMProcessAttributes(xpcomInit, initialData, lnfCache);
 
   if (aSendRegisteredChrome) {
@@ -2437,24 +2450,6 @@ ContentParent::RecvReadFontList(InfallibleTArray<FontListEntry>* retValue)
 #ifdef ANDROID
   gfxAndroidPlatform::GetPlatform()->GetSystemFontList(retValue);
 #endif
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvReadDataStorageArray(const nsString& aFilename,
-                                        InfallibleTArray<DataStorageItem>* aValues)
-{
-  // If we're shutting down, the DataStorage object may have been cleared
-  // already, and setting it up is pointless anyways since we're about to die.
-  if (mShutdownPending) {
-    return IPC_OK();
-  }
-
-  // Ensure the SSS is initialized before we try to use its storage.
-  nsCOMPtr<nsISiteSecurityService> sss = do_GetService("@mozilla.org/ssservice;1");
-
-  RefPtr<DataStorage> storage = DataStorage::Get(aFilename);
-  storage->GetAll(aValues);
   return IPC_OK();
 }
 

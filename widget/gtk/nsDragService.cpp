@@ -37,6 +37,7 @@
 #include "nsViewManager.h"
 #include "nsIFrame.h"
 #include "nsGtkUtils.h"
+#include "nsGtkKeyUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxPlatform.h"
 #include "nsScreenGtk.h"
@@ -522,7 +523,7 @@ nsDragService::StartDragSession()
 }
  
 NS_IMETHODIMP
-nsDragService::EndDragSession(bool aDoneDrag)
+nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers)
 {
     MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::EndDragSession %d",
                                    aDoneDrag));
@@ -549,7 +550,7 @@ nsDragService::EndDragSession(bool aDoneDrag)
     // We're done with the drag context.
     mTargetDragContextForRemote = nullptr;
 
-    return nsBaseDragService::EndDragSession(aDoneDrag);
+    return nsBaseDragService::EndDragSession(aDoneDrag, aKeyModifiers);
 }
 
 // nsIDragSession
@@ -1920,7 +1921,7 @@ nsDragService::RunScheduledTask()
             // The drag that was initiated in a different app. End the drag
             // session, since we're done with it for now (until the user drags
             // back into this app).
-            EndDragSession(false);
+            EndDragSession(false, GetCurrentModifiers());
         }
     }
 
@@ -1942,7 +1943,7 @@ nsDragService::RunScheduledTask()
     if (task == eDragTaskLeave || task == eDragTaskSourceEnd) {
         if (task == eDragTaskSourceEnd) {
             // Dispatch drag end events.
-            EndDragSession(true);
+            EndDragSession(true, GetCurrentModifiers());
         }
 
         // Nothing more to do
@@ -2013,7 +2014,7 @@ nsDragService::RunScheduledTask()
         mTargetWindow = nullptr;
         // Make sure to end the drag session. If this drag started in a
         // different app, we won't get a drag_end signal to end it from.
-        EndDragSession(true);
+        EndDragSession(true, GetCurrentModifiers());
     }
 
     // We're done with the drag context.
@@ -2085,7 +2086,7 @@ nsDragService::DispatchMotionEvents()
 {
     mCanDrop = false;
 
-    FireDragEventAtSource(eDrag);
+    FireDragEventAtSource(eDrag, GetCurrentModifiers());
 
     mTargetWindow->DispatchDragEvent(eDragOver, mTargetWindowPoint,
                                      mTargetTime);
@@ -2106,4 +2107,10 @@ nsDragService::DispatchDropEvent()
     mTargetWindow->DispatchDragEvent(msg, mTargetWindowPoint, mTargetTime);
 
     return mCanDrop;
+}
+
+/* static */ uint32_t
+nsDragService::GetCurrentModifiers()
+{
+  return mozilla::widget::KeymapWrapper::ComputeCurrentKeyModifiers();
 }

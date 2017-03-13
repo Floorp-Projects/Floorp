@@ -61,21 +61,23 @@ function forceScrollAndWait(scrollbox, callback) {
   }
 }
 
+var kExtraEvents = 5;
+var kDelta = 3;
+
 function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum, callback) {
   var win = scrollbox.ownerDocument.defaultView;
   let event = {
     deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-    deltaY: direction * 3,
+    deltaY: direction * kDelta,
     lineOrPageDeltaY: direction,
     ctrlKey: ctrl,
     isMomentum: momentum
   };
-
-  let kExtraEvents = 5;
-
-  var received = 0;
-  var onwheel = function() {
-    if (++received == 1 + kExtraEvents) {
+  let received = 0;
+  let deltaY = 0;
+  var onwheel = function(e) {
+    deltaY += e.deltaY;
+    if (++received == 2) {
       // We have captured all the outstanding wheel events. Wait for the
       // animation to add itself to the refresh driver.
       scrollbox.removeEventListener("wheel", onwheel);
@@ -123,14 +125,16 @@ function runTest() {
           let postfix = isMomentum ? ", even after releasing the touchpad" : "";
           // Normal scroll: scroll
           is(winUtils.fullZoom, zoomFactorBefore, "Normal scrolling shouldn't change zoom" + postfix);
-          isnot(scrollbox.scrollTop, scrollTopBefore, "Normal scrolling should scroll" + postfix);
+          is(scrollbox.scrollTop, scrollTopBefore + kDelta * (kExtraEvents + 1),
+             "Normal scrolling should scroll" + postfix);
         } else {
           if (!isMomentum) {
             isnot(winUtils.fullZoom, zoomFactorBefore, "Ctrl-scrolling should zoom while the user is touching the touchpad");
             is(scrollbox.scrollTop, scrollTopBefore, "Ctrl-scrolling shouldn't scroll while the user is touching the touchpad");
           } else {
             is(winUtils.fullZoom, zoomFactorBefore, "Momentum scrolling shouldn't zoom, even when pressing Ctrl");
-            isnot(scrollbox.scrollTop, scrollTopBefore, "Momentum scrolling should scroll, even when pressing Ctrl");
+            is(scrollbox.scrollTop, scrollTopBefore + kDelta * (kExtraEvents + 1),
+               "Momentum scrolling should scroll, even when pressing Ctrl");
           }
         }
 

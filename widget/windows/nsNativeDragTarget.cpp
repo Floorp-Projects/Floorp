@@ -351,7 +351,8 @@ nsNativeDragTarget::DragOver(DWORD   grfKeyState,
     GetDropTargetHelper()->DragOver(&pt, *pdwEffect);
   }
 
-  mDragService->FireDragEventAtSource(eDrag);
+  ModifierKeyState modifierKeyState;
+  mDragService->FireDragEventAtSource(eDrag, modifierKeyState.GetModifiers());
   // Now process the native drag state and then dispatch the event
   ProcessDrag(eDragOver, grfKeyState, ptl, pdwEffect);
 
@@ -387,7 +388,8 @@ nsNativeDragTarget::DragLeave()
       // initiated in a different app. End the drag session, since
       // we're done with it for now (until the user drags back into
       // mozilla).
-      mDragService->EndDragSession(false);
+      ModifierKeyState modifierKeyState;
+      mDragService->EndDragSession(false, modifierKeyState.GetModifiers());
     }
   }
 
@@ -410,7 +412,8 @@ nsNativeDragTarget::DragCancel()
       GetDropTargetHelper()->DragLeave();
     }
     if (mDragService) {
-      mDragService->EndDragSession(false);
+      ModifierKeyState modifierKeyState;
+      mDragService->EndDragSession(false, modifierKeyState.GetModifiers());
     }
     this->Release(); // matching the AddRef in DragEnter
     mTookOwnRef = false;
@@ -471,7 +474,8 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData,
   cpos.x = GET_X_LPARAM(pos);
   cpos.y = GET_Y_LPARAM(pos);
   winDragService->SetDragEndPoint(nsIntPoint(cpos.x, cpos.y));
-  serv->EndDragSession(true);
+  ModifierKeyState modifierKeyState;
+  serv->EndDragSession(true, modifierKeyState.GetModifiers());
 
   // release the ref that was taken in DragEnter
   NS_ASSERTION(mTookOwnRef, "want to release own ref, but not taken!");

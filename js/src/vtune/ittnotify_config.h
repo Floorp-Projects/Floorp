@@ -371,20 +371,20 @@ ITT_INLINE long __itt_interlocked_increment(volatile long* ptr)
 }
 #endif /* ITT_SIMPLE_INIT */
 
-void* dlopen(const char*, int) __attribute__((weak));
-void* dlsym(void*, const char*) __attribute__((weak));
-int dlclose(void*) __attribute__((weak));
-#define DL_SYMBOLS (dlopen && dlsym && dlclose)
+void* dlopen(const char*, int);
+void* dlsym(void*, const char*);
+int dlclose(void*);
+#define DL_SYMBOLS (1)
 
-int pthread_mutex_init(pthread_mutex_t*, const pthread_mutexattr_t*) __attribute__((weak));
-int pthread_mutex_lock(pthread_mutex_t*) __attribute__((weak));
-int pthread_mutex_unlock(pthread_mutex_t*) __attribute__((weak));
-int pthread_mutex_destroy(pthread_mutex_t*) __attribute__((weak));
-int pthread_mutexattr_init(pthread_mutexattr_t*) __attribute__((weak));
-int pthread_mutexattr_settype(pthread_mutexattr_t*, int) __attribute__((weak));
-int pthread_mutexattr_destroy(pthread_mutexattr_t*) __attribute__((weak));
-pthread_t pthread_self(void) __attribute__((weak));
-#define PTHREAD_SYMBOLS (pthread_mutex_init && pthread_mutex_lock && pthread_mutex_unlock && pthread_mutex_destroy && pthread_mutexattr_init && pthread_mutexattr_settype && pthread_mutexattr_destroy && pthread_self)
+int pthread_mutex_init(pthread_mutex_t*, const pthread_mutexattr_t*);
+int pthread_mutex_lock(pthread_mutex_t*);
+int pthread_mutex_unlock(pthread_mutex_t*);
+int pthread_mutex_destroy(pthread_mutex_t*);
+int pthread_mutexattr_init(pthread_mutexattr_t*);
+int pthread_mutexattr_settype(pthread_mutexattr_t*, int);
+int pthread_mutexattr_destroy(pthread_mutexattr_t*);
+pthread_t pthread_self(void);
+#define PTHREAD_SYMBOLS (1)
 
 #endif /* ITT_PLATFORM==ITT_PLATFORM_WIN */
 

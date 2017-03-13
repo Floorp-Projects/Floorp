@@ -98,6 +98,32 @@ JS::IsArray(JSContext* cx, HandleObject obj, bool* isArray)
     return true;
 }
 
+// ES2017 7.1.15 ToLength, but clamped to the [0,2^32-2] range.
+static bool
+ToLengthClamped(JSContext* cx, HandleValue v, uint32_t* out)
+{
+    if (v.isInt32()) {
+        int32_t i = v.toInt32();
+        *out = i < 0 ? 0 : i;
+        return true;
+    }
+    double d;
+    if (v.isDouble()) {
+        d = v.toDouble();
+    } else {
+        if (!ToNumber(cx, v, &d))
+            return false;
+    }
+    d = JS::ToInteger(d);
+    if (d <= 0.0)
+        *out = 0;
+    else if (d < double(UINT32_MAX - 1))
+        *out = uint32_t(d);
+    else
+        *out = UINT32_MAX;
+    return true;
+}
+
 bool
 js::GetLengthProperty(JSContext* cx, HandleObject obj, uint32_t* lengthp)
 {
@@ -123,12 +149,9 @@ js::GetLengthProperty(JSContext* cx, HandleObject obj, uint32_t* lengthp)
     if (!GetProperty(cx, obj, obj, cx->names().length, &value))
         return false;
 
-    bool overflow;
-    if (!ToLengthClamped(cx, value, lengthp, &overflow)) {
-        if (!overflow)
-            return false;
-        *lengthp = UINT32_MAX;
-    }
+    if (!ToLengthClamped(cx, value, lengthp))
+        return false;
+
     return true;
 }
 
