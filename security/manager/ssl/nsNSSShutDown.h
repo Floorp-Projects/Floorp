@@ -64,8 +64,6 @@ public:
 class nsNSSShutDownList
 {
 public:
-  static void shutdown();
-
   // track instances that support early cleanup
   static void remember(nsNSSShutDownObject *o);
   static void forget(nsNSSShutDownObject *o);
@@ -75,8 +73,9 @@ public:
   static void remember(nsOnPK11LogoutCancelObject *o);
   static void forget(nsOnPK11LogoutCancelObject *o);
 
-  // Do the "early cleanup", if possible.
-  static nsresult evaporateAllNSSResources();
+  // Release all tracked NSS resources and prevent nsNSSShutDownObjects from
+  // using NSS functions.
+  static nsresult evaporateAllNSSResourcesAndShutDown();
 
   // PSM has been asked to log out of a token.
   // Notify all registered instances that want to react to that event.
@@ -228,7 +227,7 @@ public:
     }
   }
 
-  bool isAlreadyShutDown() const { return mAlreadyShutDown; }
+  bool isAlreadyShutDown() const;
 
 protected:
   virtual void virtualDestroyNSSReference() = 0;
