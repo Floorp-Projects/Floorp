@@ -310,7 +310,7 @@ typedef OpIter<ValidatingPolicy> ValidatingOpIter;
 
 static bool
 DecodeFunctionBodyExprs(const ModuleEnvironment& env, const Sig& sig, const ValTypeVector& locals,
-                        Decoder* d)
+                        const uint8_t* bodyEnd, Decoder* d)
 {
     ValidatingOpIter iter(env, *d);
 
@@ -330,7 +330,7 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const Sig& sig, const ValT
                 return false;
             iter.popEnd();
             if (iter.controlStackEmpty())
-                return iter.readFunctionEnd();
+                return iter.readFunctionEnd(bodyEnd);
             break;
           case uint16_t(Op::Nop):
             CHECK(iter.readNop());
@@ -596,11 +596,8 @@ wasm::ValidateFunctionBody(const ModuleEnvironment& env, uint32_t funcIndex, uin
     if (!DecodeLocalEntries(d, ModuleKind::Wasm, &locals))
         return false;
 
-    if (!DecodeFunctionBodyExprs(env, sig, locals, &d))
+    if (!DecodeFunctionBodyExprs(env, sig, locals, bodyBegin + bodySize, &d))
         return false;
-
-    if (d.currentPosition() != bodyBegin + bodySize)
-        return d.fail("function body length mismatch");
 
     return true;
 }

@@ -1455,7 +1455,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
     }
     c.exprs().shrinkTo(c.depths().popCopy());
 
-    if (!c.iter().readFunctionEnd())
+    if (!c.iter().readFunctionEnd(bodyEnd))
         return false;
 
     c.endFunction();
