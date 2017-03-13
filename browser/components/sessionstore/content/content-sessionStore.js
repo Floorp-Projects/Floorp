@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+/* eslint-env mozilla/frame-script */
 
-function debug(msg) {
-  Services.console.logStringMessage("SessionStoreContent: " + msg);
-}
+"use strict";
 
 var Cu = Components.utils;
 var Cc = Components.classes;
@@ -15,6 +13,11 @@ var Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+
+function debug(msg) {
+  Services.console.logStringMessage("SessionStoreContent: " + msg);
+}
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormData",
   "resource://gre/modules/FormData.jsm");
@@ -834,11 +837,10 @@ var MessageQueue = {
       });
     } catch (ex) {
         if (ex && ex.result == Cr.NS_ERROR_OUT_OF_MEMORY) {
-          let telemetry = {
-            FX_SESSION_RESTORE_SEND_UPDATE_CAUSED_OOM: 1
-          };
           sendAsyncMessage("SessionStore:error", {
-            telemetry
+            telemetry: {
+              FX_SESSION_RESTORE_SEND_UPDATE_CAUSED_OOM: 1
+            }
           });
         }
     }

@@ -76,7 +76,7 @@ add_task(function* setup() {
   document.documentElement.setAttribute("windowtype", "navigator:testrunner");
 
   registerCleanupFunction(() => {
-    document.documentElement.setAttribute("windowtype", "navigator:browser");
+    document.documentElement.setAttribute("windowtype", oldWinType);
   });
 });
 
@@ -471,4 +471,3 @@ add_task(function* test_mac_notifications() {
        "Got expected browser-lastwindow-close-granted notifications");
   });
 });
-

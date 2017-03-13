@@ -16,9 +16,9 @@ add_task(function* () {
     return false;
   }
 
-  ////////////////////////////
-  // setWindowValue, et al. //
-  ////////////////////////////
+  /**
+   * setWindowValue, et al.
+   */
   let key = "Unique name: " + Date.now();
   let value = "Unique value: " + Math.random();
 
@@ -37,9 +37,9 @@ add_task(function* () {
   // test deleting a non-existent value
   ok(test(() => ss.deleteWindowValue(window, key)), "delete non-existent window value");
 
-  /////////////////////////
-  // setTabValue, et al. //
-  /////////////////////////
+  /**
+   * setTabValue, et al.
+   */
   key = "Unique name: " + Math.random();
   value = "Unique value: " + Date.now();
   let tab = gBrowser.addTab();
@@ -63,9 +63,9 @@ add_task(function* () {
   // clean up
   yield promiseRemoveTab(tab);
 
-  /////////////////////////////////////
-  // getClosedTabCount, undoCloseTab //
-  /////////////////////////////////////
+  /**
+   * getClosedTabCount, undoCloseTab
+   */
 
   // get closed tab count
   let count = ss.getClosedTabCount(window);

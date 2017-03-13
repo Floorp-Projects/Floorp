@@ -73,7 +73,7 @@ add_task(function* () {
 });
 
 function setInputValue(browser, formValue) {
-  return ContentTask.spawn(browser, formValue, function* (formValue) {
-    content.document.getElementById("txt").setUserInput(formValue);
+  return ContentTask.spawn(browser, formValue, function* (newValue) {
+    content.document.getElementById("txt").setUserInput(newValue);
   });
 }

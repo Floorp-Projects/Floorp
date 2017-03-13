@@ -31,7 +31,6 @@ var prepareTest = Task.async(function* () {
 var getUpgradeBackups = Task.async(function* () {
   let iterator;
   let backups = [];
-  let upgradeBackupPrefix = Paths.upgradeBackupPrefix;
 
   try {
     iterator = new OS.File.DirectoryIterator(Paths.backups);
@@ -131,4 +130,3 @@ add_task(function* test_upgrade_backup_removal() {
   backups = yield getUpgradeBackups();
   is(backups.length, maxUpgradeBackups, "second call to SessionFile.write() didn't create or remove more backups");
 });
-

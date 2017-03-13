@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var state = {windows:[{tabs:[
+var windowState = {windows:[{tabs:[
   {entries:[{url:"http://example.com#1", triggeringPrincipal_base64}]},
   {entries:[{url:"http://example.com#2", triggeringPrincipal_base64}]},
   {entries:[{url:"http://example.com#3", triggeringPrincipal_base64}]},
@@ -33,7 +33,7 @@ function test_loadTabs(restoreHiddenTabs, callback) {
   let expectedTabs = restoreHiddenTabs ? 8 : 4;
   let firstProgress = true;
 
-  newWindowWithState(state, function(win, needsRestore, isRestoring) {
+  newWindowWithState(windowState, function(win, needsRestore, isRestoring) {
     if (firstProgress) {
       firstProgress = false;
       is(isRestoring, 3, "restoring 3 tabs concurrently");

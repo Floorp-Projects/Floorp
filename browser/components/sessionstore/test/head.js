@@ -15,16 +15,16 @@ const FRAME_SCRIPTS = [
   ROOT + "content-forms.js"
 ];
 
-var mm = Cc["@mozilla.org/globalmessagemanager;1"]
+var globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
            .getService(Ci.nsIMessageListenerManager);
 
 for (let script of FRAME_SCRIPTS) {
-  mm.loadFrameScript(script, true);
+  globalMM.loadFrameScript(script, true);
 }
 
 registerCleanupFunction(() => {
   for (let script of FRAME_SCRIPTS) {
-    mm.removeDelayedFrameScript(script, true);
+    globalMM.removeDelayedFrameScript(script, true);
   }
 });
 
@@ -216,7 +216,7 @@ function waitForTopic(aTopic, aTimeout, aCallback) {
     aCallback(false);
   }, aTimeout);
 
-  function observer(aSubject, aTopic, aData) {
+  function observer(subject, topic, data) {
     removeObserver();
     timeout = clearTimeout(timeout);
     executeSoon(() => aCallback(true));
@@ -287,7 +287,7 @@ function promiseBrowserLoaded(aBrowser, ignoreSubFrames = true, wantLoad = null)
   return BrowserTestUtils.browserLoaded(aBrowser, !ignoreSubFrames, wantLoad);
 }
 
-function whenWindowLoaded(aWindow, aCallback = next) {
+function whenWindowLoaded(aWindow, aCallback) {
   aWindow.addEventListener("load", function() {
     executeSoon(function executeWhenWindowLoaded() {
       aCallback(aWindow);
@@ -490,6 +490,10 @@ function sendMessage(browser, name, data = {}) {
 // This creates list of functions that we will map to their corresponding
 // ss-test:* messages names. Those will be sent to the frame script and
 // be used to read and modify form data.
+/* global getTextContent, getInputValue, setInputValue, getInputChecked
+          setInputChecked, getSelectedIndex, setSelectedIndex,
+          getMultipleSelected, setMultipleSelected, getFileNameArray,
+          setFileNameArray */
 const FORM_HELPERS = [
   "getTextContent",
   "getInputValue", "setInputValue",
@@ -511,8 +515,8 @@ function promiseRemoveTab(tab) {
 }
 
 // Write DOMSessionStorage data to the given browser.
-function modifySessionStorage(browser, data, options = {}) {
-  return ContentTask.spawn(browser, [data, options], function* ([data, options]) {
+function modifySessionStorage(browser, storageData, storageOptions = {}) {
+  return ContentTask.spawn(browser, [storageData, storageOptions], function* ([data, options]) {
     let frame = content;
     if (options && "frameIndex" in options) {
       frame = content.frames[options.frameIndex];
