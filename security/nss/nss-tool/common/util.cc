@@ -4,6 +4,7 @@
 
 #include "util.h"
 
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -73,6 +74,17 @@ static char *GetModulePassword(PK11SlotInfo *slot, int retry, void *arg) {
   return nullptr;
 }
 
+static std::vector<char> ReadFromIstream(std::istream &is) {
+  std::vector<char> certData;
+  while (is) {
+    char buf[1024];
+    is.read(buf, sizeof(buf));
+    certData.insert(certData.end(), buf, buf + is.gcount());
+  }
+
+  return certData;
+}
+
 bool InitSlotPassword(void) {
   ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (slot.get() == nullptr) {
@@ -132,4 +144,23 @@ std::string StringToHex(const ScopedSECItem &input) {
   }
 
   return ss.str();
+}
+
+std::vector<char> ReadInputData(std::string &dataPath) {
+  std::vector<char> data;
+  if (dataPath.empty()) {
+    std::cout << "No input file path given, using stdin." << std::endl;
+    data = ReadFromIstream(std::cin);
+  } else {
+    std::ifstream is(dataPath, std::ifstream::binary);
+    if (is.good()) {
+      data = ReadFromIstream(is);
+    } else {
+      std::cerr << "IO Error when opening " << dataPath << std::endl;
+      std::cerr << "Input file does not exist or you don't have permissions."
+                << std::endl;
+    }
+  }
+
+  return data;
 }
