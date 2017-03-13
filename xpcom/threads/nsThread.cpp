@@ -460,16 +460,21 @@ nsThread::ThreadFunc(void* aArg)
   self->mThread = PR_GetCurrentThread();
   SetupCurrentThreadForChaosMode();
 
-  if (initData->name.Length() > 0) {
+  if (!initData->name.IsEmpty()) {
     PR_SetCurrentThreadName(initData->name.BeginReading());
-
-    profiler_register_thread(initData->name.BeginReading(), &stackTop);
   }
 
   // Inform the ThreadManager
   nsThreadManager::get().RegisterCurrentThread(*self);
 
   mozilla::IOInterposer::RegisterCurrentThread();
+
+  // This must come after the call to nsThreadManager::RegisterCurrentThread(),
+  // because that call is needed to properly set up this thread as an nsThread,
+  // which profiler_register_thread() requires. See bug 1347007.
+  if (!initData->name.IsEmpty()) {
+    profiler_register_thread(initData->name.BeginReading(), &stackTop);
+  }
 
   // Wait for and process startup event
   nsCOMPtr<nsIRunnable> event;
