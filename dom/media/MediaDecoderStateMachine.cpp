@@ -2021,7 +2021,7 @@ StateObject::HandleResumeVideoDecoding()
   // invalid after the current state object is deleted in SetState();
   RefPtr<AbstractThread> mainThread = mMaster->mAbstractMainThread;
 
-  SetSeekingState(Move(seekJob), EventVisibility::Suppressed)->Then(
+  SetSeekingState(Move(seekJob), EventVisibility::Observable)->Then(
     mainThread, __func__,
     [start, info, hw](){ ReportRecoveryTelemetry(start, info, hw); },
     [](){});
