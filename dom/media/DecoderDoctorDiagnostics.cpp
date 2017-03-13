@@ -246,6 +246,7 @@ DecoderDoctorDocumentWatcher::EnsureTimerIsStarted()
   }
 }
 
+// Note: ReportStringIds are limited to alphanumeric only.
 static const NotificationAndReportStringId sMediaWidevineNoWMF=
   { dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
     "MediaWidevineNoWMF" };
