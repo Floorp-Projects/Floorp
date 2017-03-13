@@ -1304,6 +1304,10 @@ StreamJSON(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
         }
       }
 
+      // When notifying observers in other places in this file we are careful
+      // to do it when gPSMutex is unlocked, to avoid deadlocks. But that's not
+      // necessary here, because "profiler-subprocess" observers just call back
+      // into SubprocessCallback, which is simple and doesn't lock gPSMutex.
       if (CanNotifyObservers()) {
         // Send a event asking any subprocesses (plugins) to
         // give us their information
@@ -1739,6 +1743,52 @@ RegisterCurrentThread(PS::LockRef aLock, const char* aName,
 #endif
 
 static void
+NotifyProfilerStarted(const int aEntries, double aInterval,
+                      const char** aFeatures, uint32_t aFeatureCount,
+                      const char** aThreadNameFilters, uint32_t aFilterCount)
+{
+  if (!CanNotifyObservers()) {
+    return;
+  }
+
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (!os) {
+    return;
+  }
+
+  nsTArray<nsCString> featuresArray;
+  for (size_t i = 0; i < aFeatureCount; ++i) {
+    featuresArray.AppendElement(aFeatures[i]);
+  }
+
+  nsTArray<nsCString> threadNameFiltersArray;
+  for (size_t i = 0; i < aFilterCount; ++i) {
+    threadNameFiltersArray.AppendElement(aThreadNameFilters[i]);
+  }
+
+  nsCOMPtr<nsIProfilerStartParams> params =
+    new nsProfilerStartParams(aEntries, aInterval, featuresArray,
+                              threadNameFiltersArray);
+
+  os->NotifyObservers(params, "profiler-started", nullptr);
+}
+
+static void
+NotifyProfilerStopped()
+{
+  if (!CanNotifyObservers()) {
+    return;
+  }
+
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (!os) {
+    return;
+  }
+
+  os->NotifyObservers(nullptr, "profiler-stopped", nullptr);
+}
+
+static void
 locked_profiler_start(PS::LockRef aLock, const int aEntries, double aInterval,
                       const char** aFeatures, uint32_t aFeatureCount,
                       const char** aThreadNameFilters, uint32_t aFilterCount);
@@ -1750,59 +1800,6 @@ profiler_init(void* aStackTop)
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(!gPS);
-
-  PS::AutoLock lock(gPSMutex);
-
-  if (!tlsPseudoStack.init()) {
-    LOG("END   profiler_init: TLS init failed");
-    return;
-  }
-
-  // We've passed the possible failure point. Instantiate gPS, which indicates
-  // that the profiler has initialized successfully.
-  gPS = new PS();
-
-  set_stderr_callback(profiler_log);
-
-  bool ignore;
-  gPS->SetStartTime(lock, mozilla::TimeStamp::ProcessCreation(ignore));
-
-  // Read settings from environment variables.
-  ReadProfilerEnvVars(lock);
-
-  NotNull<PseudoStack*> stack = WrapNotNull(new PseudoStack());
-  tlsPseudoStack.set(stack);
-
-  bool isMainThread = true;
-  RegisterCurrentThread(lock, kGeckoThreadName, stack, isMainThread, aStackTop);
-
-  // Platform-specific initialization.
-  PlatformInit(lock);
-
-#ifdef MOZ_TASK_TRACER
-  mozilla::tasktracer::InitTaskTracer();
-#endif
-
-#if defined(PROFILE_JAVA)
-  if (mozilla::jni::IsFennec()) {
-    GeckoJavaSampler::Init();
-  }
-#endif
-
-  // (Linux-only) We could create gPS->mLUL and read unwind info into it
-  // at this point. That would match the lifetime implied by destruction of it
-  // in profiler_shutdown() just below. However, that gives a big delay on
-  // startup, even if no profiling is actually to be done. So, instead, it is
-  // created on demand at the first call to PlatformStart().
-
-  // We can't open pref so we use an environment variable to know if we should
-  // trigger the profiler on startup.
-  // NOTE: Default
-  const char *val = getenv("MOZ_PROFILER_STARTUP");
-  if (!val || !*val) {
-    LOG("END   profiler_init: MOZ_PROFILER_STARTUP not set");
-    return;
-  }
 
   const char* features[] = { "js"
 #if defined(PROFILE_JAVA)
@@ -1817,7 +1814,70 @@ profiler_init(void* aStackTop)
 
   const char* threadFilters[] = { "GeckoMain", "Compositor" };
 
-  locked_profiler_start(lock, PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+  {
+    PS::AutoLock lock(gPSMutex);
+
+    if (!tlsPseudoStack.init()) {
+      LOG("END   profiler_init: TLS init failed");
+      return;
+    }
+
+    // We've passed the possible failure point. Instantiate gPS, which
+    // indicates that the profiler has initialized successfully.
+    gPS = new PS();
+
+    set_stderr_callback(profiler_log);
+
+    bool ignore;
+    gPS->SetStartTime(lock, mozilla::TimeStamp::ProcessCreation(ignore));
+
+    // Read settings from environment variables.
+    ReadProfilerEnvVars(lock);
+
+    NotNull<PseudoStack*> stack = WrapNotNull(new PseudoStack());
+    tlsPseudoStack.set(stack);
+
+    bool isMainThread = true;
+    RegisterCurrentThread(lock, kGeckoThreadName, stack, isMainThread,
+                          aStackTop);
+
+    // Platform-specific initialization.
+    PlatformInit(lock);
+
+#ifdef MOZ_TASK_TRACER
+    mozilla::tasktracer::InitTaskTracer();
+#endif
+
+#if defined(PROFILE_JAVA)
+    if (mozilla::jni::IsFennec()) {
+      GeckoJavaSampler::Init();
+    }
+#endif
+
+    // (Linux-only) We could create gPS->mLUL and read unwind info into it at
+    // this point. That would match the lifetime implied by destruction of it
+    // in profiler_shutdown() just below. However, that gives a big delay on
+    // startup, even if no profiling is actually to be done. So, instead, it is
+    // created on demand at the first call to PlatformStart().
+
+    // We can't open pref so we use an environment variable to know if we
+    // should trigger the profiler on startup.
+    // NOTE: Default
+    const char *val = getenv("MOZ_PROFILER_STARTUP");
+    if (!val || !*val) {
+      LOG("END   profiler_init: MOZ_PROFILER_STARTUP not set");
+      return;
+    }
+
+    locked_profiler_start(lock, PROFILE_DEFAULT_ENTRIES,
+                          PROFILE_DEFAULT_INTERVAL,
+                          features, MOZ_ARRAY_LENGTH(features),
+                          threadFilters, MOZ_ARRAY_LENGTH(threadFilters));
+  }
+
+  // We do this with gPSMutex unlocked. The comment in profiler_stop() explains
+  // why.
+  NotifyProfilerStarted(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
                         features, MOZ_ARRAY_LENGTH(features),
                         threadFilters, MOZ_ARRAY_LENGTH(threadFilters));
 
@@ -1886,9 +1946,10 @@ profiler_shutdown()
 #endif
   }
 
-  // We do this operation with gPSMutex unlocked. The comment in
-  // profiler_stop() explains why.
+  // We do these operations with gPSMutex unlocked. The comments in
+  // profiler_stop() explain why.
   if (samplerThread) {
+    NotifyProfilerStopped();
     delete samplerThread;
   }
 
@@ -2298,26 +2359,6 @@ locked_profiler_start(PS::LockRef aLock, int aEntries, double aInterval,
                                     interposeObserver);
   }
 
-  if (CanNotifyObservers()) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os) {
-      nsTArray<nsCString> featuresArray;
-      for (size_t i = 0; i < aFeatureCount; ++i) {
-        featuresArray.AppendElement(aFeatures[i]);
-      }
-
-      nsTArray<nsCString> threadNameFiltersArray;
-      for (size_t i = 0; i < aFilterCount; ++i) {
-        threadNameFiltersArray.AppendElement(aThreadNameFilters[i]);
-      }
-
-      nsCOMPtr<nsIProfilerStartParams> params =
-        new nsProfilerStartParams(entries, interval, featuresArray,
-                                  threadNameFiltersArray);
-      os->NotifyObservers(params, "profiler-started", nullptr);
-    }
-  }
-
   LOG("END   locked_profiler_start");
 }
 
@@ -2348,11 +2389,14 @@ profiler_start(int aEntries, double aInterval,
                           aThreadNameFilters, aFilterCount);
   }
 
-  // We do this operation with gPSMutex unlocked. The comment in
-  // profiler_stop() explains why.
+  // We do these operations with gPSMutex unlocked. The comments in
+  // profiler_stop() explain why.
   if (samplerThread) {
+    NotifyProfilerStopped();
     delete samplerThread;
   }
+  NotifyProfilerStarted(aEntries, aInterval, aFeatures, aFeatureCount,
+                        aThreadNameFilters, aFilterCount);
 
   LOG("END   profiler_start");
 }
@@ -2367,12 +2411,6 @@ locked_profiler_stop(PS::LockRef aLock)
 
   // We clear things in roughly reverse order to their setting in
   // locked_profiler_start().
-
-  if (CanNotifyObservers()) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os)
-      os->NotifyObservers(nullptr, "profiler-stopped", nullptr);
-  }
 
   mozilla::IOInterposer::Unregister(mozilla::IOInterposeObserver::OpAll,
                                     gPS->InterposeObserver(aLock));
@@ -2467,6 +2505,11 @@ profiler_stop()
     samplerThread = locked_profiler_stop(lock);
   }
 
+  // We notify observers with gPSMutex unlocked. Otherwise we might get a
+  // deadlock, if code run by the observer calls a profiler function that locks
+  // gPSMutex. (This has been seen in practise in bug 1346356.)
+  NotifyProfilerStopped();
+
   // We delete with gPSMutex unlocked. Otherwise we would get a deadlock: we
   // would be waiting here with gPSMutex locked for SamplerThread::Run() to
   // return so the join operation within the destructor can complete, but Run()
@@ -2502,14 +2545,17 @@ profiler_pause()
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
-  PS::AutoLock lock(gPSMutex);
+  {
+    PS::AutoLock lock(gPSMutex);
 
-  if (!gPS->IsActive(lock)) {
-    return;
+    if (!gPS->IsActive(lock)) {
+      return;
+    }
+
+    gPS->SetIsPaused(lock, true);
   }
 
-  gPS->SetIsPaused(lock, true);
-
+  // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
   if (CanNotifyObservers()) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
@@ -2526,12 +2572,15 @@ profiler_resume()
 
   PS::AutoLock lock(gPSMutex);
 
-  if (!gPS->IsActive(lock)) {
-    return;
+  {
+    if (!gPS->IsActive(lock)) {
+      return;
+    }
+
+    gPS->SetIsPaused(lock, false);
   }
 
-  gPS->SetIsPaused(lock, false);
-
+  // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
   if (CanNotifyObservers()) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
@@ -2603,8 +2652,9 @@ profiler_lock()
 
   profiler_stop();
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os)
+  if (os) {
     os->NotifyObservers(nullptr, "profiler-locked", nullptr);
+  }
 }
 
 void
@@ -2614,8 +2664,9 @@ profiler_unlock()
   MOZ_RELEASE_ASSERT(gPS);
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os)
+  if (os) {
     os->NotifyObservers(nullptr, "profiler-unlocked", nullptr);
+  }
 }
 
 void
