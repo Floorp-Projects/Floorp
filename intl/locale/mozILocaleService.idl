@@ -108,4 +108,16 @@ interface mozILocaleService : nsISupports
    * Example: "zh-Hans-HK"
    */
   ACString getAppLocale();
+
+  /**
+   * Returns a list of locales that the user requested the app to be
+   * localized to.
+   *
+   * The result is an ordered list of locale IDs which should be
+   * used as a requestedLocales input list for language negotiation.
+   *
+   * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
+   */
+  void getRequestedLocales([optional] out unsigned long aCount,
+                           [retval, array, size_is(aCount)] out string aLocales);
 };

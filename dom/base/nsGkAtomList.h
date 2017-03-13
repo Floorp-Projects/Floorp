@@ -2214,6 +2214,7 @@ GK_ATOM(sans_serif, "sans-serif")
 GK_ATOM(cursive, "cursive")
 GK_ATOM(fantasy, "fantasy")
 GK_ATOM(monospace, "monospace")
+GK_ATOM(mozfixed, "-moz-fixed")
 
 // IPC stuff
 GK_ATOM(Remote, "remote")

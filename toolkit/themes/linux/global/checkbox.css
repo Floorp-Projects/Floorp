@@ -12,29 +12,8 @@
 
 checkbox {
   -moz-appearance: checkbox-container;
+  -moz-box-align: center;
   margin: 2px 4px;
-  border-left: 2px transparent;
-  border-right: 2px transparent;
-}
-
-/* With native theming on, the spacer-box paints the check mark and includes
-   the spacing to the right, so that oversized checkbox images can slop over
-   into the space.
-
-   If we need to disable checkbox theming, the spacer box no longer paints
-   the check mark, but its fallback CSS border supplies the padding between
-   the mark and the label.  The xul:image then takes over painting the check
-   mark. */
-
-.checkbox-spacer-box {
-  -moz-appearance: checkbox;
-  -moz-box-align: center;
-  margin: 2px;
-  border-right: 2px solid transparent;
-}
-
-.checkbox-label-center-box {
-  -moz-box-align: center;
 }
 
 .checkbox-label-box {
@@ -51,15 +30,13 @@ checkbox {
 
 /* ..... focused state ..... */
 
-checkbox:focus > .checkbox-label-center-box > .checkbox-label-box {
-  border: 1px dotted ThreeDDarkShadow;
+checkbox:-moz-focusring > .checkbox-label-box {
+  /* Native theming should take care of this but it appears to be broken with
+     some Gtk themes. Bug 1312169. */
+  outline: 1px dotted;
 }
 
 /* ..... disabled state ..... */
-
-checkbox[disabled="true"] > .checkbox-spacer-box > .checkbox-check {
-  background-color: -moz-Dialog;
-}
 
 checkbox[disabled="true"] {
   color: GrayText;
@@ -68,32 +45,12 @@ checkbox[disabled="true"] {
 /* ::::: checkmark image ::::: */
 
 .checkbox-check {
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  min-width: 13px;
-  min-height: 13px;
-  background: -moz-Field no-repeat 50% 50%;
+  -moz-appearance: checkbox;
+  margin: 2px;
 }
 
 checkbox:not([disabled="true"]):hover {
   color: -moz-buttonhovertext;
   text-shadow: none;
-}
-
-checkbox:hover:active > .checkbox-spacer-box > .checkbox-check {
-  background-color: -moz-Dialog;
-}
-
-/* ..... checked state ..... */
-
-checkbox[checked="true"] > .checkbox-spacer-box > .checkbox-check {
-  background-image: url("chrome://global/skin/checkbox/cbox-check.gif");
-}
-
-checkbox[checked="true"][disabled="true"] > .checkbox-spacer-box > .checkbox-check {
-  background-image: url("chrome://global/skin/checkbox/cbox-check-dis.gif") !important
 }
 

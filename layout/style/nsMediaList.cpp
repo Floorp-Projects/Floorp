@@ -10,9 +10,6 @@
 
 #include "nsMediaList.h"
 
-#include "mozAutoDocUpdate.h"
-#include "mozilla/dom/MediaListBinding.h"
-#include "mozilla/StyleSheet.h"
 #include "nsCSSParser.h"
 #include "nsCSSRules.h"
 #include "nsMediaFeatures.h"
@@ -494,30 +491,12 @@ nsMediaQuery::Matches(nsPresContext* aPresContext,
   return match == !mNegated;
 }
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsMediaList)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMediaList)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsMediaList)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsMediaList)
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(nsMediaList)
-
 nsMediaList::nsMediaList()
-  : mStyleSheet(nullptr)
 {
 }
 
 nsMediaList::~nsMediaList()
 {
-}
-
-/* virtual */ JSObject*
-nsMediaList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return dom::MediaListBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
@@ -557,15 +536,7 @@ nsMediaList::Matches(nsPresContext* aPresContext,
   return mArray.IsEmpty();
 }
 
-void
-nsMediaList::SetStyleSheet(StyleSheet* aSheet)
-{
-  NS_ASSERTION(aSheet == mStyleSheet || !aSheet || !mStyleSheet,
-               "multiple style sheets competing for one media list");
-  mStyleSheet = aSheet;
-}
-
-already_AddRefed<nsMediaList>
+already_AddRefed<MediaList>
 nsMediaList::Clone()
 {
   RefPtr<nsMediaList> result = new nsMediaList();
@@ -575,65 +546,6 @@ nsMediaList::Clone()
     MOZ_ASSERT(result->mArray[i]);
   }
   return result.forget();
-}
-
-NS_IMETHODIMP
-nsMediaList::GetMediaText(nsAString& aMediaText)
-{
-  GetText(aMediaText);
-  return NS_OK;
-}
-
-// "sheet" should be a StyleSheet and "doc" should be an
-// nsCOMPtr<nsIDocument>
-#define BEGIN_MEDIA_CHANGE(sheet, doc)                         \
-  if (sheet) {                                                 \
-    doc = sheet->GetAssociatedDocument();                      \
-  }                                                            \
-  mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, true);       \
-  if (sheet) {                                                 \
-    sheet->WillDirty();                                        \
-  }
-
-#define END_MEDIA_CHANGE(sheet, doc)                           \
-  if (sheet) {                                                 \
-    sheet->DidDirty();                                         \
-  }                                                            \
-  /* XXXldb Pass something meaningful? */                      \
-  if (doc) {                                                   \
-    doc->StyleRuleChanged(sheet, nullptr);                     \
-  }
-
-
-NS_IMETHODIMP
-nsMediaList::SetMediaText(const nsAString& aMediaText)
-{
-  nsCOMPtr<nsIDocument> doc;
-
-  BEGIN_MEDIA_CHANGE(mStyleSheet, doc)
-
-  SetText(aMediaText);
-
-  END_MEDIA_CHANGE(mStyleSheet, doc)
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMediaList::GetLength(uint32_t* aLength)
-{
-  NS_ENSURE_ARG_POINTER(aLength);
-
-  *aLength = Length();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMediaList::Item(uint32_t aIndex, nsAString& aReturn)
-{
-  bool dummy;
-  IndexedGetter(aIndex, dummy, aReturn);
-  return NS_OK;
 }
 
 void
@@ -647,40 +559,6 @@ nsMediaList::IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aReturn)
     aFound = false;
     SetDOMStringToNull(aReturn);
   }
-}
-
-NS_IMETHODIMP
-nsMediaList::DeleteMedium(const nsAString& aOldMedium)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIDocument> doc;
-
-  BEGIN_MEDIA_CHANGE(mStyleSheet, doc)
-
-  rv = Delete(aOldMedium);
-  if (NS_FAILED(rv))
-    return rv;
-
-  END_MEDIA_CHANGE(mStyleSheet, doc)
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsMediaList::AppendMedium(const nsAString& aNewMedium)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIDocument> doc;
-
-  BEGIN_MEDIA_CHANGE(mStyleSheet, doc)
-
-  rv = Append(aNewMedium);
-  if (NS_FAILED(rv))
-    return rv;
-
-  END_MEDIA_CHANGE(mStyleSheet, doc)
-
-  return rv;
 }
 
 nsresult
