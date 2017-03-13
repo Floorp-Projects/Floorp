@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <AvailabilityMacros.h>
+#include <mach-o/arch.h>
 #include <mach-o/loader.h>
 #include <mach-o/dyld_images.h>
 #include <mach/task_info.h>
@@ -81,9 +82,13 @@ void addSharedLibrary(const platform_mach_header* header, char *path, SharedLibr
     nameStr.Cut(0, pos + 1);
   }
 
+  const NXArchInfo* archInfo =
+    NXGetArchInfoFromCpuType(header->cputype, header->cpusubtype);
+
   info.AddSharedLibrary(SharedLibrary(start, start + size, 0, uuid.str(),
                                       nameStr, pathStr, nameStr, pathStr,
-                                      ""));
+                                      "",
+                                      archInfo ? archInfo->name : ""));
 }
 
 // Use dyld to inspect the macho image information. We can build the SharedLibraryEntry structure
