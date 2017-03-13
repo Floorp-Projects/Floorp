@@ -196,7 +196,7 @@ class MacroAssemblerNone : public Assembler
     static bool SupportsSimd() { return false; }
     static bool SupportsUnalignedAccesses() { return false; }
 
-    void executableCopy(void*) { MOZ_CRASH(); }
+    void executableCopy(void*, bool) { MOZ_CRASH(); }
     void copyJumpRelocationTable(uint8_t*) { MOZ_CRASH(); }
     void copyDataRelocationTable(uint8_t*) { MOZ_CRASH(); }
     void copyPreBarrierTable(uint8_t*) { MOZ_CRASH(); }
