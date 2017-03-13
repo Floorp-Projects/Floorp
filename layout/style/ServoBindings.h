@@ -223,11 +223,7 @@ void Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src);
 void Gecko_SetNullImageValue(nsStyleImage* image);
 void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient);
 void Gecko_SetUrlImageValue(nsStyleImage* image,
-                            const uint8_t* url_bytes,
-                            uint32_t url_length,
-                            ThreadSafeURIHolder* base_uri,
-                            ThreadSafeURIHolder* referrer,
-                            ThreadSafePrincipalHolder* principal);
+                            ServoBundledURI uri);
 void Gecko_CopyImageValueFrom(nsStyleImage* image, const nsStyleImage* other);
 
 nsStyleGradient* Gecko_CreateGradient(uint8_t shape,
@@ -245,10 +241,7 @@ void Gecko_CopyListStyleImageFrom(nsStyleList* dest, const nsStyleList* src);
 // cursor style.
 void Gecko_SetCursorArrayLength(nsStyleUserInterface* ui, size_t len);
 void Gecko_SetCursorImage(nsCursorImage* cursor,
-                          const uint8_t* string_bytes, uint32_t string_length,
-                          ThreadSafeURIHolder* base_uri,
-                          ThreadSafeURIHolder* referrer,
-                          ThreadSafePrincipalHolder* principal);
+                          ServoBundledURI uri);
 void Gecko_CopyCursorArrayFrom(nsStyleUserInterface* dest,
                                const nsStyleUserInterface* src);
 
