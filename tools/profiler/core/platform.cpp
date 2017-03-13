@@ -281,10 +281,10 @@ private:
   // sIsActive, but then we could have the following scenario.
   //
   // - profiler_stop() locks gPSMutex, zeroes sIsActive, unlocks gPSMutex,
-  //   calls Join().
+  //   deletes the SamplerThread (which does a join).
   //
   // - profiler_start() runs on a different thread, locks gPSMutex, sets
-  //   sIsActive, unlocks gPSMutex -- all before the Join() completes.
+  //   sIsActive, unlocks gPSMutex -- all before the join completes.
   //
   // - SamplerThread::Run() locks gPSMutex, sees that sIsActive is set, and
   //   continues as if the start/stop pair didn't occur. Also profiler_stop()
@@ -1839,7 +1839,7 @@ profiler_shutdown()
   MOZ_RELEASE_ASSERT(gPS);
 
   // If the profiler is active we must get a handle to the SamplerThread before
-  // gPS is destroyed, in order to call Join().
+  // gPS is destroyed, in order to delete it.
   SamplerThread* samplerThread = nullptr;
   {
     PS::AutoLock lock(gPSMutex);
@@ -1886,10 +1886,9 @@ profiler_shutdown()
 #endif
   }
 
-  // We call Join() with gPSMutex unlocked. The comment in profiler_stop()
-  // explains why.
+  // We do this operation with gPSMutex unlocked. The comment in
+  // profiler_stop() explains why.
   if (samplerThread) {
-    samplerThread->Join();
     delete samplerThread;
   }
 
@@ -2349,10 +2348,9 @@ profiler_start(int aEntries, double aInterval,
                           aThreadNameFilters, aFilterCount);
   }
 
-  // We call Join() with gPSMutex unlocked. The comment in profiler_stop()
-  // explains why.
+  // We do this operation with gPSMutex unlocked. The comment in
+  // profiler_stop() explains why.
   if (samplerThread) {
-    samplerThread->Join();
     delete samplerThread;
   }
 
@@ -2381,8 +2379,8 @@ locked_profiler_stop(PS::LockRef aLock)
   gPS->SetInterposeObserver(aLock, nullptr);
 
   // The Stop() call doesn't actually stop Run(); that happens in this
-  // function's caller, via Join(). Stop() just gives the SamplerThread a chance
-  // to do some cleanup with gPSMutex locked.
+  // function's caller when the sampler thread is destroyed. Stop() just gives
+  // the SamplerThread a chance to do some cleanup with gPSMutex locked.
   SamplerThread* samplerThread = gPS->SamplerThread(aLock);
   samplerThread->Stop(aLock);
   gPS->SetSamplerThread(aLock, nullptr);
@@ -2469,16 +2467,15 @@ profiler_stop()
     samplerThread = locked_profiler_stop(lock);
   }
 
-  // We call Join() with gPSMutex unlocked. Otherwise we would get a deadlock:
-  // we would be waiting here with gPSMutex locked for SamplerThread::Run() to
-  // return so the Join() can complete, but Run() needs to lock gPSMutex to
-  // return.
+  // We delete with gPSMutex unlocked. Otherwise we would get a deadlock: we
+  // would be waiting here with gPSMutex locked for SamplerThread::Run() to
+  // return so the join operation within the destructor can complete, but Run()
+  // needs to lock gPSMutex to return.
   //
   // Because this call occurs with gPSMutex unlocked, it -- including the final
   // iteration of Run()'s loop -- must be able detect deactivation and return
   // in a way that's safe with respect to other gPSMutex-locking operations
   // that may have occurred in the meantime.
-  samplerThread->Join();
   delete samplerThread;
 
   LOG("END   profiler_stop");
