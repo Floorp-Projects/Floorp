@@ -180,11 +180,21 @@ public:
 
   void PushBorder(const WrRect& aBounds,
                   const WrClipRegion& aClip,
+                  const WrBorderWidths& aWidths,
                   const WrBorderSide& aTop,
                   const WrBorderSide& aRight,
                   const WrBorderSide& aBbottom,
                   const WrBorderSide& aLeft,
                   const WrBorderRadius& aRadius);
+
+  void PushBorderImage(const WrRect& aBounds,
+                       const WrClipRegion& aClip,
+                       const WrBorderWidths& aWidths,
+                       wr::ImageKey aImage,
+                       const WrNinePatchDescriptor& aPatch,
+                       const WrSideOffsets2Df32& aOutset,
+                       const WrRepeatMode& aRepeatHorizontal,
+                       const WrRepeatMode& aRepeatVertical);
 
   void PushText(const WrRect& aBounds,
                 const WrClipRegion& aClip,

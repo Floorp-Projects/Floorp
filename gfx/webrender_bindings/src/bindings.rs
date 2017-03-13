@@ -3,8 +3,10 @@ use std::{mem, slice};
 use std::path::PathBuf;
 use std::os::raw::{c_void, c_char};
 use gleam::gl;
+
 use webrender_traits::{BorderSide, BorderStyle, BorderRadius};
 use webrender_traits::{BorderWidths, BorderDetails, NormalBorder};
+use webrender_traits::{RepeatMode, ImageBorder, NinePatchDescriptor};
 use webrender_traits::{PipelineId, ComplexClipRegion, ClipRegion, PropertyBinding};
 use webrender_traits::{Epoch, ExtendMode, ColorF, GlyphInstance, GradientStop, ImageDescriptor};
 use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering};
@@ -19,7 +21,7 @@ use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use app_units::Au;
-use euclid::TypedPoint2D;
+use euclid::{TypedPoint2D, SideOffsets2D};
 
 extern crate webrender_traits;
 
@@ -179,7 +181,6 @@ impl WrGradientStop {
 
 #[repr(C)]
 pub struct WrBorderSide {
-    width: f32,
     color: WrColor,
     style: BorderStyle,
 }
@@ -210,6 +211,83 @@ impl WrBorderRadius {
             bottom_right: self.bottom_right.to_size(),
         }
     }
+}
+
+#[repr(C)]
+pub struct WrBorderWidths
+{
+    left: f32,
+    top: f32,
+    right: f32,
+    bottom: f32,
+}
+
+impl WrBorderWidths
+{
+    pub fn to_border_widths(&self) -> BorderWidths {
+        BorderWidths {
+            left: self.left,
+            top: self.top,
+            right: self.right,
+            bottom: self.bottom
+        }
+    }
+}
+
+#[repr(C)]
+pub struct WrNinePatchDescriptor
+{
+    width: u32,
+    height: u32,
+    slice: WrSideOffsets2D<u32>,
+}
+
+impl WrNinePatchDescriptor
+{
+    pub fn to_nine_patch_descriptor(&self) -> NinePatchDescriptor {
+        NinePatchDescriptor {
+            width: self.width,
+            height: self.height,
+            slice: self.slice.to_side_offsets_2d(),
+        }
+    }
+}
+
+#[repr(C)]
+pub struct WrSideOffsets2D<T>
+{
+    top: T,
+    right: T,
+    bottom: T,
+    left: T,
+}
+
+impl<T: Copy> WrSideOffsets2D<T>
+{
+    pub fn to_side_offsets_2d(&self) -> SideOffsets2D<T> {
+        SideOffsets2D::new(self.top, self.right, self.bottom, self.left)
+    }
+}
+
+#[repr(C)]
+pub enum WrRepeatMode
+{
+    Stretch,
+    Repeat,
+    Round,
+    Space,
+}
+
+impl WrRepeatMode
+{
+   pub fn to_repeat_mode(self) -> RepeatMode {
+       match self {
+           WrRepeatMode::Stretch => RepeatMode::Stretch,
+           WrRepeatMode::Repeat => RepeatMode::Repeat,
+           WrRepeatMode::Round => RepeatMode::Round,
+           WrRepeatMode::Space => RepeatMode::Space,
+       }
+   }
 }
 
 #[repr(C)]
@@ -1069,6 +1147,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
 pub extern "C" fn wr_dp_push_border(state: &mut WrState,
                                     rect: WrRect,
                                     clip: WrClipRegion,
+                                    widths: WrBorderWidths,
                                     top: WrBorderSide,
                                     right: WrBorderSide,
                                     bottom: WrBorderSide,
@@ -1076,23 +1155,43 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
                                     radius: WrBorderRadius) {
     assert!(unsafe { is_in_main_thread() });
 
-    let border_widths = BorderWidths {
-        left: left.width,
-        top: top.width,
-        right: right.width,
-        bottom: bottom.width,
-    };
     let border_details = BorderDetails::Normal(NormalBorder {
-                                                   left: left.to_border_side(),
-                                                   right: right.to_border_side(),
-                                                   top: top.to_border_side(),
-                                                   bottom: bottom.to_border_side(),
-                                                   radius: radius.to_border_radius(),
-                                               });
-    state.frame_builder.dl_builder.push_border(rect.to_rect(),
-                                               clip.to_clip_region(),
-                                               border_widths,
-                                               border_details);
+        left: left.to_border_side(),
+        right: right.to_border_side(),
+        top: top.to_border_side(),
+        bottom: bottom.to_border_side(),
+        radius: radius.to_border_radius(),
+    });
+    state.frame_builder.dl_builder.push_border(
+                                    rect.to_rect(),
+                                    clip.to_clip_region(),
+                                    widths.to_border_widths(),
+                                    border_details);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
+                                          rect: WrRect,
+                                          clip: WrClipRegion,
+                                          widths: WrBorderWidths,
+                                          image: ImageKey,
+                                          patch: WrNinePatchDescriptor,
+                                          outset: WrSideOffsets2D<f32>,
+                                          repeat_horizontal: WrRepeatMode,
+                                          repeat_vertical: WrRepeatMode) {
+    assert!( unsafe { is_in_main_thread() });
+    let border_details = BorderDetails::Image(ImageBorder {
+        image_key: image,
+        patch: patch.to_nine_patch_descriptor(),
+        outset: outset.to_side_offsets_2d(),
+        repeat_horizontal: repeat_horizontal.to_repeat_mode(),
+        repeat_vertical: repeat_vertical.to_repeat_mode(),
+    });
+    state.frame_builder.dl_builder.push_border(
+                                    rect.to_rect(),
+                                    clip.to_clip_region(),
+                                    widths.to_border_widths(),
+                                    border_details);
 }
 
 #[no_mangle]

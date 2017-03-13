@@ -36,12 +36,13 @@ WebRenderBorderLayer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                aLayer->GetLayer()->GetTransform(),
                                wr::MixBlendMode::Normal);
   aBuilder.PushBorder(wr::ToWrRect(aRect), aBuilder.BuildClipRegion(wr::ToWrRect(aClipRect)),
-                      wr::ToWrBorderSide(aWidths[0], aColors[0], aBorderStyles[0]),
-                      wr::ToWrBorderSide(aWidths[1], aColors[1], aBorderStyles[1]),
-                      wr::ToWrBorderSide(aWidths[2], aColors[2], aBorderStyles[2]),
-                      wr::ToWrBorderSide(aWidths[3], aColors[3], aBorderStyles[3]),
-                      wr::ToWrBorderRadius(aCorners[0], aCorners[1],
-                                           aCorners[3], aCorners[2]));
+                      wr::ToWrBorderWidths(aWidths[0], aWidths[1], aWidths[2], aWidths[3]),
+                      wr::ToWrBorderSide(aColors[0], aBorderStyles[0]),
+                      wr::ToWrBorderSide(aColors[1], aBorderStyles[1]),
+                      wr::ToWrBorderSide(aColors[2], aBorderStyles[2]),
+                      wr::ToWrBorderSide(aColors[3], aBorderStyles[3]),
+                      wr::ToWrBorderRadius(aCorners[eCornerTopLeft], aCorners[eCornerTopRight],
+                                           aCorners[eCornerBottomLeft], aCorners[eCornerBottomRight]));
   aBuilder.PopStackingContext();
 }
 
@@ -64,11 +65,13 @@ WebRenderBorderLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                                GetTransform(),
                                wr::MixBlendMode::Normal);
   aBuilder.PushBorder(wr::ToWrRect(rect), aBuilder.BuildClipRegion(wr::ToWrRect(clipRect)),
-                      wr::ToWrBorderSide(mWidths[0], mColors[0], mBorderStyles[0]),
-                      wr::ToWrBorderSide(mWidths[1], mColors[1], mBorderStyles[1]),
-                      wr::ToWrBorderSide(mWidths[2], mColors[2], mBorderStyles[2]),
-                      wr::ToWrBorderSide(mWidths[3], mColors[3], mBorderStyles[3]),
-                      wr::ToWrBorderRadius(mCorners[0], mCorners[1], mCorners[3], mCorners[2]));
+                      wr::ToWrBorderWidths(mWidths[0], mWidths[1], mWidths[2], mWidths[3]),
+                      wr::ToWrBorderSide(mColors[0], mBorderStyles[0]),
+                      wr::ToWrBorderSide(mColors[1], mBorderStyles[1]),
+                      wr::ToWrBorderSide(mColors[2], mBorderStyles[2]),
+                      wr::ToWrBorderSide(mColors[3], mBorderStyles[3]),
+                      wr::ToWrBorderRadius(mCorners[eCornerTopLeft], mCorners[eCornerTopRight],
+                                           mCorners[eCornerBottomLeft], mCorners[eCornerBottomRight]));
   aBuilder.PopStackingContext();
 }
 

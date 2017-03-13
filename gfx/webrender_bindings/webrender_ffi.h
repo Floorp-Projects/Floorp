@@ -156,6 +156,16 @@ enum class WrGradientExtendMode : uint32_t
   Sentinel /* this must be last, for IPC serialization purposes */
 };
 
+enum class WrRepeatMode : uint32_t
+{
+  Stretch      = 0,
+  Repeat       = 1,
+  Round        = 2,
+  Space        = 3,
+
+  Sentinel /* this must be last, for IPC serialization purposes */
+};
+
 // -----
 // Typedefs for struct fields and function signatures below.
 // -----
@@ -285,14 +295,12 @@ struct WrGradientStop {
 };
 
 struct WrBorderSide {
-  float width;
   WrColor color;
   WrBorderStyle style;
 
   bool operator==(const WrBorderSide& aRhs) const
   {
-    return width == aRhs.width && color == aRhs.color &&
-           style == aRhs.style;
+    return color == aRhs.color && style == aRhs.style;
   }
 };
 
@@ -306,6 +314,57 @@ struct WrBorderRadius {
   {
     return top_left == aRhs.top_left && top_right == aRhs.top_right &&
            bottom_left == aRhs.bottom_left && bottom_right == aRhs.bottom_right;
+  }
+};
+
+struct WrBorderWidths {
+  float left;
+  float top;
+  float right;
+  float bottom;
+
+  bool operator==(const WrBorderWidths& aRhs) const
+  {
+    return left == aRhs.left && top == aRhs.top &&
+           right == aRhs.right && bottom == aRhs.bottom;
+  }
+};
+
+struct WrSideOffsets2Du32 {
+  uint32_t top;
+  uint32_t right;
+  uint32_t bottom;
+  uint32_t left;
+
+  bool operator==(const WrSideOffsets2Du32& aRhs) const
+  {
+    return top == aRhs.top && right == aRhs.right &&
+           bottom == aRhs.bottom && left == aRhs.left;
+  }
+};
+
+struct WrSideOffsets2Df32 {
+  float top;
+  float right;
+  float bottom;
+  float left;
+
+  bool operator==(const WrSideOffsets2Df32& aRhs) const
+  {
+    return top == aRhs.top && right == aRhs.right &&
+           bottom == aRhs.bottom && left == aRhs.left;
+  }
+};
+
+struct WrNinePatchDescriptor {
+  uint32_t width;
+  uint32_t height;
+  WrSideOffsets2Du32 slice;
+
+  bool operator==(const WrNinePatchDescriptor& aRhs) const
+  {
+    return width == aRhs.width && height == aRhs.height &&
+           slice == aRhs.slice;
   }
 };
 
@@ -597,8 +656,17 @@ WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_border(WrState* wrState, WrRect bounds, WrClipRegion clip,
+                  WrBorderWidths widths,
                   WrBorderSide top, WrBorderSide right, WrBorderSide bottom, WrBorderSide left,
                   WrBorderRadius radius)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_border_image(WrState* wrState, WrRect bounds, WrClipRegion clip,
+                        WrBorderWidths widths,
+                        WrImageKey image, WrNinePatchDescriptor patch, WrSideOffsets2Df32 outset,
+                        WrRepeatMode repeat_horizontal,
+                        WrRepeatMode repeat_vertical)
 WR_FUNC;
 
 WR_INLINE void

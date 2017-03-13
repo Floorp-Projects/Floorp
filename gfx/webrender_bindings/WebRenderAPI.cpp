@@ -533,6 +533,7 @@ DisplayListBuilder::PushIFrame(const WrRect& aBounds,
 void
 DisplayListBuilder::PushBorder(const WrRect& aBounds,
                                const WrClipRegion& aClip,
+                               const WrBorderWidths& aWidths,
                                const WrBorderSide& aTop,
                                const WrBorderSide& aRight,
                                const WrBorderSide& aBottom,
@@ -540,8 +541,22 @@ DisplayListBuilder::PushBorder(const WrRect& aBounds,
                                const WrBorderRadius& aRadius)
 {
   wr_dp_push_border(mWrState, aBounds, aClip,
-                    aTop, aRight, aBottom, aLeft,
-                    aRadius);
+                    aWidths, aTop, aRight, aBottom, aLeft, aRadius);
+}
+
+void
+DisplayListBuilder::PushBorderImage(const WrRect& aBounds,
+                                    const WrClipRegion& aClip,
+                                    const WrBorderWidths& aWidths,
+                                    wr::ImageKey aImage,
+                                    const WrNinePatchDescriptor& aPatch,
+                                    const WrSideOffsets2Df32& aOutset,
+                                    const WrRepeatMode& aRepeatHorizontal,
+                                    const WrRepeatMode& aRepeatVertical)
+{
+  wr_dp_push_border_image(mWrState, aBounds, aClip,
+                          aWidths, aImage, aPatch, aOutset,
+                          aRepeatHorizontal, aRepeatVertical);
 }
 
 void
