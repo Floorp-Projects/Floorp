@@ -15,6 +15,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsColor.h"
 #include "nsCOMPtr.h"
+#include "nsImageRenderer.h"
 #include "nsStyleConsts.h"
 #include "nsStyleStruct.h"
 #include "nsPresContext.h"
