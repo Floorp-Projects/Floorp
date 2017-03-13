@@ -215,6 +215,10 @@ public:
   bool NS_FASTCALL Equals(const self_type&) const;
   bool NS_FASTCALL Equals(const self_type&, const comparator_type&) const;
 
+  bool NS_FASTCALL Equals(const substring_tuple_type& aTuple) const;
+  bool NS_FASTCALL Equals(const substring_tuple_type& aTuple,
+                          const comparator_type& aComp) const;
+
   bool NS_FASTCALL Equals(const char_type* aData) const;
   bool NS_FASTCALL Equals(const char_type* aData,
                           const comparator_type& aComp) const;
@@ -1000,8 +1004,6 @@ public:
   }
 
 protected:
-
-  friend class nsTSubstringTuple_CharT;
 
   // default initialization
   nsTSubstring_CharT()
