@@ -867,7 +867,7 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
     if (haveSpacing) {
         GetAdjustedSpacing(this, bufferRange, aProvider, spacingBuffer);
     }
-    AutoTArray<bool, 4096> hyphenBuffer;
+    AutoTArray<HyphenType, 4096> hyphenBuffer;
     bool haveHyphenation = aProvider &&
         (aProvider->GetHyphensOption() == StyleHyphens::Auto ||
          (aProvider->GetHyphensOption() == StyleHyphens::Manual &&
@@ -933,8 +933,8 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
         if (aSuppressBreak != eSuppressAllBreaks &&
             (aSuppressBreak != eSuppressInitialBreak || i > aStart)) {
             bool atNaturalBreak = mCharacterGlyphs[i].CanBreakBefore() == 1;
-            bool atHyphenationBreak = !atNaturalBreak &&
-                haveHyphenation && hyphenBuffer[i - aStart];
+            bool atHyphenationBreak = !atNaturalBreak && haveHyphenation &&
+                hyphenBuffer[i - aStart] != HyphenType::None;
             bool atBreak = atNaturalBreak || atHyphenationBreak;
             bool wordWrapping =
                 aCanWordWrap && mCharacterGlyphs[i].IsClusterStart() &&
