@@ -13630,7 +13630,7 @@ nsGlobalWindow::DispatchVRDisplayPresentChange(uint32_t aDisplayID)
 {
   // Search for the display identified with aDisplayID and fire the
   // event if found.
-  for (auto display : mVRDisplays) {
+  for (const& auto display : mVRDisplays) {
     if (display->DisplayId() == aDisplayID) {
       // Fire event even if not presenting to the display.
       VRDisplayEventInit init;
