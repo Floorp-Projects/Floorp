@@ -11,6 +11,7 @@
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "mozilla/dom/KeyframeEffectReadOnly.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsHTMLStyleSheet.h"
@@ -710,6 +711,24 @@ ServoStyleSet::FillKeyframesForName(const nsString& aName,
                                              &aKeyframes);
 }
 
+nsTArray<ComputedKeyframeValues>
+ServoStyleSet::GetComputedKeyframeValuesFor(const nsTArray<Keyframe>& aKeyframes,
+                                            dom::Element* aElement,
+                                            const ServoComputedStyleValues& aServoValues)
+{
+  nsTArray<ComputedKeyframeValues> result(aKeyframes.Length());
+
+  // Construct each nsTArray<PropertyStyleAnimationValuePair> here.
+  result.AppendElements(aKeyframes.Length());
+
+  Servo_GetComputedKeyframeValues(&aKeyframes,
+                                  aServoValues.mCurrentStyle,
+                                  aServoValues.mParentStyle,
+                                  mRawSet.get(),
+                                  &result);
+  return result;
+}
+
 void
 ServoStyleSet::RebuildData()
 {
@@ -728,7 +747,7 @@ ServoStyleSet::ClearNonInheritingStyleContexts()
 {
   for (RefPtr<nsStyleContext>& ptr : mNonInheritingStyleContexts) {
     ptr = nullptr;
-  }  
+  }
 }
 
 already_AddRefed<ServoComputedValues>

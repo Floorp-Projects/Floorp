@@ -226,18 +226,18 @@ fails == css-values-3/calc-in-media-queries-002.html css-values-3/calc-in-media-
 == css-values-3/calc-parenthesis-stack.html css-values-3/calc-parenthesis-stack.html
 fails == css-values-3/ch-unit-001.html css-values-3/ch-unit-001.html
 == css-values-3/initial-background-color.html css-values-3/initial-background-color.html
-fails == css-values-3/vh-calc-support-pct.html css-values-3/vh-calc-support-pct.html
-fails == css-values-3/vh-calc-support.html css-values-3/vh-calc-support.html
-fails == css-values-3/vh-em-inherit.html css-values-3/vh-em-inherit.html
-fails == css-values-3/vh-inherit.html css-values-3/vh-inherit.html
-fails == css-values-3/vh-interpolate-pct.html css-values-3/vh-interpolate-pct.html
-fails == css-values-3/vh-interpolate-px.html css-values-3/vh-interpolate-px.html
-fails == css-values-3/vh-interpolate-vh.html css-values-3/vh-interpolate-vh.html
+== css-values-3/vh-calc-support-pct.html css-values-3/vh-calc-support-pct.html
+== css-values-3/vh-calc-support.html css-values-3/vh-calc-support.html
+== css-values-3/vh-em-inherit.html css-values-3/vh-em-inherit.html
+== css-values-3/vh-inherit.html css-values-3/vh-inherit.html
+== css-values-3/vh-interpolate-pct.html css-values-3/vh-interpolate-pct.html
+== css-values-3/vh-interpolate-px.html css-values-3/vh-interpolate-px.html
+== css-values-3/vh-interpolate-vh.html css-values-3/vh-interpolate-vh.html
 fails == css-values-3/vh-support-atviewport.html css-values-3/vh-support-atviewport.html
 == css-values-3/vh-support-margin.html css-values-3/vh-support-margin.html
 == css-values-3/vh-support-transform-origin.html css-values-3/vh-support-transform-origin.html
 == css-values-3/vh-support-transform-translate.html css-values-3/vh-support-transform-translate.html
-fails == css-values-3/vh-support.html css-values-3/vh-support.html
+== css-values-3/vh-support.html css-values-3/vh-support.html
 == css-values-3/vh-zero-support.html css-values-3/vh-zero-support.html
 fails == css-values-3/vh_not_refreshing_on_chrome.html css-values-3/vh_not_refreshing_on_chrome.html
 skip-if(stylo) == css-values-3/vh_not_refreshing_on_chrome_iframe.html css-values-3/vh_not_refreshing_on_chrome_iframe.html # Why does this fail to load?

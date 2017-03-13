@@ -118,7 +118,7 @@ public:
   // WebIDL interface, aka helpers for nsIDOMCSSRule implementation.
   virtual uint16_t Type() const = 0;
   virtual void GetCssTextImpl(nsAString& aCssText) const = 0;
-  // XPCOM GetCssText is OK, since it never throws.
+  void GetCssText(nsAString& aCssText) const { GetCssTextImpl(aCssText); }
   // XPCOM SetCssText is OK, since it never throws.
   Rule* GetParentRule() const;
   StyleSheet* GetParentStyleSheet() const { return GetStyleSheet(); }

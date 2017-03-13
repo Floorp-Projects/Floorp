@@ -192,6 +192,19 @@ public:
     void               OnContainerFocusOutEvent(GdkEventFocus *aEvent);
     gboolean           OnKeyPressEvent(GdkEventKey *aEvent);
     gboolean           OnKeyReleaseEvent(GdkEventKey *aEvent);
+
+    /**
+     * MaybeDispatchContextMenuEvent() may dispatch eContextMenu event if
+     * the given key combination should cause opening context menu.
+     *
+     * @param aEvent            The native key event.
+     * @return                  true if this method dispatched eContextMenu
+     *                          event.  Otherwise, false.
+     *                          Be aware, when this returns true, the
+     *                          widget may have been destroyed.
+     */
+    bool               MaybeDispatchContextMenuEvent(const GdkEventKey* aEvent);
+
     void               OnScrollEvent(GdkEventScroll *aEvent);
     void               OnVisibilityNotifyEvent(GdkEventVisibility *aEvent);
     void               OnWindowStateEvent(GtkWidget *aWidget,

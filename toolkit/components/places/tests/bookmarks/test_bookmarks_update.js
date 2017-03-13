@@ -103,22 +103,6 @@ add_task(function* invalid_properties_for_existing_bookmark() {
 
   try {
     yield PlacesUtils.bookmarks.update({ guid: bm.guid,
-                                         dateAdded: new Date() });
-    Assert.ok(false, "Should have thrown");
-  } catch (ex) {
-    Assert.ok(/The bookmark dateAdded cannot be changed/.test(ex));
-  }
-
-  try {
-    yield PlacesUtils.bookmarks.update({ guid: bm.guid,
-                                         dateAdded: new Date() });
-    Assert.ok(false, "Should have thrown");
-  } catch (ex) {
-    Assert.ok(/The bookmark dateAdded cannot be changed/.test(ex));
-  }
-
-  try {
-    yield PlacesUtils.bookmarks.update({ guid: bm.guid,
                                          parentGuid: "123456789012",
                                          index: 1 });
     Assert.ok(false, "Should have thrown");

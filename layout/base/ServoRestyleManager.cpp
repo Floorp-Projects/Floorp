@@ -62,16 +62,6 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
     aRestyleHint |= eRestyle_Self | eRestyle_Subtree;
   }
 
-  // XXX For now, convert eRestyle_Subtree into (eRestyle_Self |
-  // eRestyle_SomeDescendants), which Servo will interpret as
-  // RESTYLE_SELF | RESTYLE_DESCENDANTS, since this is a commonly
-  // posted restyle hint that doesn't yet align with RestyleHint's
-  // bits.
-  if (aRestyleHint & eRestyle_Subtree) {
-    aRestyleHint &= ~eRestyle_Subtree;
-    aRestyleHint |= eRestyle_Self | eRestyle_SomeDescendants;
-  }
-
   if (aRestyleHint || aMinChangeHint) {
     Servo_NoteExplicitHints(aElement, aRestyleHint, aMinChangeHint);
   }
