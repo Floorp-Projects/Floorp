@@ -7,6 +7,7 @@ import time
 import urllib
 
 from marionette_driver import By, errors, expected, Wait
+from marionette_driver.keys import Keys
 from marionette_harness import (
     MarionetteTestCase,
     run_if_e10s,
@@ -21,12 +22,19 @@ def inline(doc):
     return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
 
 
-class TestBackForwardNavigation(WindowManagerMixin, MarionetteTestCase):
+class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
 
     def setUp(self):
-        super(TestBackForwardNavigation, self).setUp()
+        super(BaseNavigationTestCase, self).setUp()
 
-        self.test_page = self.marionette.absolute_url('test.html')
+        self.test_page_insecure = self.fixtures.where_is("test.html", on="https")
+        self.test_page_not_remote = "about:robots"
+        self.test_page_remote = self.marionette.absolute_url("test.html")
+
+        if self.marionette.session_capabilities['platformName'] == 'darwin':
+            self.mod_key = Keys.META
+        else:
+            self.mod_key = Keys.CONTROL
 
         def open_with_link():
             link = self.marionette.find_element(By.ID, "new-blank-tab")
@@ -39,16 +47,52 @@ class TestBackForwardNavigation(WindowManagerMixin, MarionetteTestCase):
         self.assertEqual(self.history_length, 1)
 
     def tearDown(self):
+        self.marionette.timeout.reset()
         self.marionette.switch_to_parent_frame()
+
         self.close_all_tabs()
 
-        super(TestBackForwardNavigation, self).tearDown()
+        super(BaseNavigationTestCase, self).tearDown()
 
     @property
     def history_length(self):
         return self.marionette.execute_script("return window.history.length;")
 
-    def run_test(self, test_pages):
+    @property
+    def is_remote_tab(self):
+        with self.marionette.using_context("chrome"):
+            # TODO: DO NOT USE MOST RECENT WINDOW BUT CURRENT ONE
+            return self.marionette.execute_script("""
+              Components.utils.import("resource://gre/modules/AppConstants.jsm");
+
+              let win = null;
+
+              if (AppConstants.MOZ_APP_NAME == "fennec") {
+                Components.utils.import("resource://gre/modules/Services.jsm");
+                win = Services.wm.getMostRecentWindow("navigator:browser");
+              } else {
+                Components.utils.import("resource:///modules/RecentWindow.jsm");
+                win = RecentWindow.getMostRecentBrowserWindow();
+              }
+
+              let tabBrowser = null;
+
+              // Fennec
+              if (win.BrowserApp) {
+                tabBrowser = win.BrowserApp.selectedBrowser;
+
+              // Firefox
+              } else if (win.gBrowser) {
+                tabBrowser = win.gBrowser.selectedBrowser;
+
+              } else {
+                return null;
+              }
+
+              return tabBrowser.isRemoteBrowser;
+            """)
+
+    def run_bfcache_test(self, test_pages):
         # Helper method to run simple back and forward testcases.
         for index, page in enumerate(test_pages):
             if "error" in page:
@@ -59,6 +103,11 @@ class TestBackForwardNavigation(WindowManagerMixin, MarionetteTestCase):
             self.assertEqual(page["url"], self.marionette.get_url())
             self.assertEqual(self.history_length, index + 1)
 
+            if "is_remote" in page:
+                self.assertEqual(page["is_remote"], self.is_remote_tab,
+                                 "'{}' doesn't match expected remoteness state: {}".format(
+                                     page["url"], page["is_remote"]))
+
         for page in test_pages[-2::-1]:
             if "error" in page:
                 with self.assertRaises(page["error"]):
@@ -66,6 +115,11 @@ class TestBackForwardNavigation(WindowManagerMixin, MarionetteTestCase):
             else:
                 self.marionette.go_back()
             self.assertEqual(page["url"], self.marionette.get_url())
+
+        if "is_remote" in page:
+            self.assertEqual(page["is_remote"], self.is_remote_tab,
+                             "'{}' doesn't match expected remoteness state: {}".format(
+                                 page["url"], page["is_remote"]))
 
         for page in test_pages[1::]:
             if "error" in page:
@@ -75,6 +129,193 @@ class TestBackForwardNavigation(WindowManagerMixin, MarionetteTestCase):
                 self.marionette.go_forward()
             self.assertEqual(page["url"], self.marionette.get_url())
 
+        if "is_remote" in page:
+            self.assertEqual(page["is_remote"], self.is_remote_tab,
+                             "'{}' doesn't match expected remoteness state: {}".format(
+                                 page["url"], page["is_remote"]))
+
+
+class TestNavigate(BaseNavigationTestCase):
+
+    def test_set_location_through_execute_script(self):
+        self.marionette.execute_script(
+            "window.location.href = '%s'" % self.test_page_remote)
+        Wait(self.marionette).until(
+            lambda _: self.test_page_remote == self.marionette.get_url())
+        self.assertEqual("Marionette Test", self.marionette.title)
+
+    def test_navigate_chrome_unsupported_error(self):
+        with self.marionette.using_context("chrome"):
+            self.assertRaises(errors.UnsupportedOperationException,
+                              self.marionette.navigate, "about:blank")
+            self.assertRaises(errors.UnsupportedOperationException, self.marionette.go_back)
+            self.assertRaises(errors.UnsupportedOperationException, self.marionette.go_forward)
+            self.assertRaises(errors.UnsupportedOperationException, self.marionette.refresh)
+
+    def test_get_current_url_returns_top_level_browsing_context_url(self):
+        page_iframe = self.marionette.absolute_url("test_iframe.html")
+
+        self.marionette.navigate(page_iframe)
+        self.assertEqual(page_iframe, self.marionette.get_url())
+        frame = self.marionette.find_element(By.CSS_SELECTOR, "#test_iframe")
+        self.marionette.switch_to_frame(frame)
+        self.assertEqual(page_iframe, self.marionette.get_url())
+
+    def test_get_current_url(self):
+        self.marionette.navigate(self.test_page_remote)
+        self.assertEqual(self.test_page_remote, self.marionette.get_url())
+        self.marionette.navigate("about:blank")
+        self.assertEqual("about:blank", self.marionette.get_url())
+
+    def test_refresh(self):
+        self.marionette.navigate(self.test_page_remote)
+        self.assertEqual("Marionette Test", self.marionette.title)
+        self.assertTrue(self.marionette.execute_script(
+            """var elem = window.document.createElement('div'); elem.id = 'someDiv';
+            window.document.body.appendChild(elem); return true;"""))
+        self.assertFalse(self.marionette.execute_script(
+            "return window.document.getElementById('someDiv') == undefined"))
+        self.marionette.refresh()
+        # TODO(ato): Bug 1291320
+        time.sleep(0.2)
+        self.assertEqual("Marionette Test", self.marionette.title)
+        self.assertTrue(self.marionette.execute_script(
+            "return window.document.getElementById('someDiv') == undefined"))
+
+    def test_navigate_in_child_frame_changes_to_top(self):
+        page_frameset = self.marionette.absolute_url("frameset.html")
+
+        self.marionette.navigate(page_frameset)
+        frame = self.marionette.find_element(By.NAME, "third")
+        self.marionette.switch_to_frame(frame)
+        self.assertRaises(errors.NoSuchElementException,
+                          self.marionette.find_element, By.NAME, "third")
+
+        self.marionette.navigate(page_frameset)
+        self.marionette.find_element(By.NAME, "third")
+
+    @skip_if_mobile("Bug 1323755 - Socket timeout")
+    def test_invalid_protocol(self):
+        with self.assertRaises(errors.MarionetteException):
+            self.marionette.navigate("thisprotocoldoesnotexist://")
+
+    def test_find_element_state_complete(self):
+        self.marionette.navigate(self.test_page_remote)
+        state = self.marionette.execute_script(
+            "return window.document.readyState")
+        self.assertEqual("complete", state)
+        self.assertTrue(self.marionette.find_element(By.ID, "mozLink"))
+
+    def test_navigate_timeout_error_no_remoteness_change(self):
+        is_remote_before_timeout = self.is_remote_tab
+        self.marionette.timeout.page_load = 0.1
+        with self.assertRaises(errors.TimeoutException):
+            self.marionette.navigate(self.marionette.absolute_url("slow"))
+        self.assertEqual(self.is_remote_tab, is_remote_before_timeout)
+
+    @run_if_e10s("Requires e10s mode enabled")
+    def test_navigate_timeout_error_remoteness_change(self):
+        self.assertTrue(self.is_remote_tab)
+        self.marionette.navigate("about:robots")
+        self.assertFalse(self.is_remote_tab)
+
+        self.marionette.timeout.page_load = 0.1
+        with self.assertRaises(errors.TimeoutException):
+            self.marionette.navigate(self.marionette.absolute_url("slow"))
+
+        # Even with the page not finished loading the browser is remote
+        self.assertTrue(self.is_remote_tab)
+
+    def test_navigate_to_same_image_document_twice(self):
+        self.marionette.navigate(self.fixtures.where_is("black.png"))
+        self.assertIn("black.png", self.marionette.title)
+        self.marionette.navigate(self.fixtures.where_is("black.png"))
+        self.assertIn("black.png", self.marionette.title)
+
+    def test_navigate_hash_change(self):
+        doc = inline("<p id=foo>")
+        self.marionette.navigate(doc)
+        self.marionette.execute_script("window.visited = true", sandbox=None)
+        self.marionette.navigate("{}#foo".format(doc))
+        self.assertTrue(self.marionette.execute_script(
+            "return window.visited", sandbox=None))
+
+    @skip_if_mobile("Bug 1334095 - Timeout: No new tab has been opened")
+    def test_about_blank_for_new_docshell(self):
+        self.assertEqual(self.marionette.get_url(), "about:blank")
+
+        self.marionette.navigate('about:blank')
+
+    @run_if_manage_instance("Only runnable if Marionette manages the instance")
+    @skip_if_mobile("Bug 1322993 - Missing temporary folder")
+    def test_focus_after_navigation(self):
+        self.marionette.quit()
+        self.marionette.start_session()
+
+        self.marionette.navigate(inline("<input autofocus>"))
+        focus_el = self.marionette.find_element(By.CSS_SELECTOR, ":focus")
+        self.assertEqual(self.marionette.get_active_element(), focus_el)
+
+    @skip_if_mobile("Needs application independent method to open a new tab")
+    def test_no_hang_when_navigating_after_closing_original_tab(self):
+        # Close the start tab
+        self.marionette.switch_to_window(self.start_tab)
+        self.marionette.close()
+
+        self.marionette.switch_to_window(self.new_tab)
+        self.marionette.navigate(self.test_page_remote)
+
+    @skip("Bug 1334137 - Intermittent: Process killed because of hang in getCurrentUrl()")
+    @skip_if_mobile("Interacting with chrome elements not available for Fennec")
+    def test_type_to_non_remote_tab(self):
+        self.marionette.navigate(self.test_page_not_remote)
+        self.assertFalse(self.is_remote_tab)
+
+        with self.marionette.using_context("chrome"):
+            urlbar = self.marionette.find_element(By.ID, 'urlbar')
+            urlbar.send_keys(self.mod_key + 'a')
+            urlbar.send_keys(self.mod_key + 'x')
+            urlbar.send_keys('about:support' + Keys.ENTER)
+
+        Wait(self.marionette).until(
+            lambda mn: mn.get_url() == "about:support",
+            message="'about:support' hasn't been loaded")
+        self.assertFalse(self.is_remote_tab)
+
+    @skip_if_mobile("Interacting with chrome elements not available for Fennec")
+    @run_if_e10s("Requires e10s mode enabled")
+    def test_type_to_remote_tab(self):
+        self.assertTrue(self.is_remote_tab)
+
+        with self.marionette.using_context("chrome"):
+            urlbar = self.marionette.find_element(By.ID, 'urlbar')
+            urlbar.send_keys(self.mod_key + 'a')
+            urlbar.send_keys(self.mod_key + 'x')
+            urlbar.send_keys(self.test_page_remote + Keys.ENTER)
+
+        Wait(self.marionette).until(
+            lambda mn: mn.get_url() == self.test_page_remote,
+            message="'{}' hasn't been loaded".format(self.test_page_remote))
+        self.assertTrue(self.is_remote_tab)
+
+    @skip_if_mobile("On Android no shortcuts are available")
+    def test_navigate_shortcut_key(self):
+
+        def open_with_shortcut():
+            self.marionette.navigate(self.test_page_remote)
+            with self.marionette.using_context("chrome"):
+                main_win = self.marionette.find_element(By.ID, "main-window")
+                main_win.send_keys(self.mod_key, Keys.SHIFT, 'a')
+
+        new_tab = self.open_tab(trigger=open_with_shortcut)
+        self.marionette.switch_to_window(new_tab)
+
+        Wait(self.marionette).until(lambda mn: mn.get_url() == "about:addons",
+                                    message="'about:addons' hasn't been loaded")
+
+
+class TestBackForwardNavigation(BaseNavigationTestCase):
+
     def test_no_history_items(self):
         # Both methods should not raise a failure if no navigation is possible
         self.marionette.go_back()
@@ -83,33 +324,33 @@ class TestBackForwardNavigation(WindowManagerMixin, MarionetteTestCase):
     def test_data_urls(self):
         test_pages = [
             {"url": inline("<p>foobar</p>")},
-            {"url": self.test_page},
+            {"url": self.test_page_remote},
             {"url": inline("<p>foobar</p>")},
         ]
-        self.run_test(test_pages)
+        self.run_bfcache_test(test_pages)
 
     def test_same_document_hash_change(self):
         test_pages = [
-            {"url": "{}#23".format(self.test_page)},
-            {"url": self.test_page},
-            {"url": "{}#42".format(self.test_page)},
+            {"url": "{}#23".format(self.test_page_remote)},
+            {"url": self.test_page_remote},
+            {"url": "{}#42".format(self.test_page_remote)},
         ]
-        self.run_test(test_pages)
+        self.run_bfcache_test(test_pages)
 
     @skip("Causes crashes for JS GC (bug 1344863) and a11y (bug 1344868)")
     def test_frameset(self):
         test_pages = [
             {"url": self.marionette.absolute_url("frameset.html")},
-            {"url": self.test_page},
+            {"url": self.test_page_remote},
             {"url": self.marionette.absolute_url("frameset.html")},
         ]
-        self.run_test(test_pages)
+        self.run_bfcache_test(test_pages)
 
     def test_frameset_after_navigating_in_frame(self):
         test_element_locator = (By.ID, "email")
 
-        self.marionette.navigate(self.test_page)
-        self.assertEqual(self.marionette.get_url(), self.test_page)
+        self.marionette.navigate(self.test_page_remote)
+        self.assertEqual(self.marionette.get_url(), self.test_page_remote)
         self.assertEqual(self.history_length, 1)
         page = self.marionette.absolute_url("frameset.html")
         self.marionette.navigate(page)
@@ -137,7 +378,7 @@ class TestBackForwardNavigation(WindowManagerMixin, MarionetteTestCase):
         # Go back to the non-frameset page
         self.marionette.switch_to_parent_frame()
         self.marionette.go_back()
-        self.assertEqual(self.marionette.get_url(), self.test_page)
+        self.assertEqual(self.marionette.get_url(), self.test_page_remote)
 
         # Go forward to the frameset page
         self.marionette.go_forward()
@@ -154,43 +395,48 @@ class TestBackForwardNavigation(WindowManagerMixin, MarionetteTestCase):
     def test_image_document_to_html(self):
         test_pages = [
             {"url": self.marionette.absolute_url('black.png')},
-            {"url": self.test_page},
+            {"url": self.test_page_remote},
             {"url": self.marionette.absolute_url('white.png')},
         ]
-        self.run_test(test_pages)
+        self.run_bfcache_test(test_pages)
 
     def test_image_document_to_image_document(self):
         test_pages = [
             {"url": self.marionette.absolute_url('black.png')},
             {"url": self.marionette.absolute_url('white.png')},
         ]
-        self.run_test(test_pages)
+        self.run_bfcache_test(test_pages)
 
     @run_if_e10s("Requires e10s mode enabled")
     def test_remoteness_change(self):
-        # TODO: Verify that a remoteness change happened
-        # like: self.assertNotEqual(self.marionette.current_window_handle, self.new_tab)
-
-        # about:robots is always a non-remote page for now
         test_pages = [
-            {"url": "about:robots"},
-            {"url": self.test_page},
-            {"url": "about:robots"},
+            {"url": "about:robots", "is_remote": False},
+            {"url": self.test_page_remote, "is_remote": True},
+            {"url": "about:robots", "is_remote": False},
         ]
-        self.run_test(test_pages)
+        self.run_bfcache_test(test_pages)
+
+    @skip_if_mobile("Bug 1333209 - Process killed because of connection loss")
+    def test_non_remote_about_pages(self):
+        test_pages = [
+            {"url": "about:preferences", "is_remote": False},
+            {"url": "about:robots", "is_remote": False},
+            {"url": "about:support", "is_remote": False},
+        ]
+        self.run_bfcache_test(test_pages)
 
     def test_navigate_to_requested_about_page_after_error_page(self):
         test_pages = [
             {"url": "about:neterror"},
-            {"url": self.marionette.absolute_url("test.html")},
+            {"url": self.test_page_remote},
             {"url": "about:blocked"},
         ]
-        self.run_test(test_pages)
+        self.run_bfcache_test(test_pages)
 
     def test_timeout_error(self):
         urls = [
             self.marionette.absolute_url('slow'),
-            self.test_page,
+            self.test_page_remote,
             self.marionette.absolute_url('slow'),
         ]
 
@@ -222,154 +468,13 @@ class TestBackForwardNavigation(WindowManagerMixin, MarionetteTestCase):
 
     def test_certificate_error(self):
         test_pages = [
-            {"url": self.fixtures.where_is("/test.html", on="https"),
+            {"url": self.test_page_insecure,
              "error": errors.InsecureCertificateException},
-            {"url": self.test_page},
-            {"url": self.fixtures.where_is("/test.html", on="https"),
+            {"url": self.test_page_remote},
+            {"url": self.test_page_insecure,
              "error": errors.InsecureCertificateException},
         ]
-        self.run_test(test_pages)
-
-
-class TestNavigate(WindowManagerMixin, MarionetteTestCase):
-
-    def setUp(self):
-        super(TestNavigate, self).setUp()
-
-        self.marionette.navigate("about:")
-        self.test_doc = self.marionette.absolute_url("test.html")
-        self.iframe_doc = self.marionette.absolute_url("test_iframe.html")
-
-    def tearDown(self):
-        self.marionette.timeout.reset()
-        self.close_all_tabs()
-
-        super(TestNavigate, self).tearDown()
-
-    @property
-    def location_href(self):
-        # Windows 8 has recently seen a proliferation of intermittent
-        # test failures to do with failing to compare "about:blank" ==
-        # u"about:blank". For the sake of consistenty, we encode the
-        # returned URL as Unicode here to ensure that the values are
-        # absolutely of the same type.
-        #
-        # (https://bugzilla.mozilla.org/show_bug.cgi?id=1322862)
-        return self.marionette.execute_script("return window.location.href").encode("utf-8")
-
-    def test_set_location_through_execute_script(self):
-        self.marionette.execute_script(
-            "window.location.href = '%s'" % self.test_doc)
-        Wait(self.marionette).until(
-            lambda _: self.test_doc == self.location_href)
-        self.assertEqual("Marionette Test", self.marionette.title)
-
-    def test_navigate_chrome_error(self):
-        with self.marionette.using_context("chrome"):
-            self.assertRaises(errors.UnsupportedOperationException,
-                              self.marionette.navigate, "about:blank")
-            self.assertRaises(errors.UnsupportedOperationException, self.marionette.go_back)
-            self.assertRaises(errors.UnsupportedOperationException, self.marionette.go_forward)
-            self.assertRaises(errors.UnsupportedOperationException, self.marionette.refresh)
-
-    def test_get_current_url_returns_top_level_browsing_context_url(self):
-        self.marionette.navigate(self.iframe_doc)
-        self.assertEqual(self.iframe_doc, self.location_href)
-        frame = self.marionette.find_element(By.CSS_SELECTOR, "#test_iframe")
-        self.marionette.switch_to_frame(frame)
-        self.assertEqual(self.iframe_doc, self.marionette.get_url())
-
-    def test_get_current_url(self):
-        self.marionette.navigate(self.test_doc)
-        self.assertEqual(self.test_doc, self.marionette.get_url())
-        self.marionette.navigate("about:blank")
-        self.assertEqual("about:blank", self.marionette.get_url())
-
-    def test_refresh(self):
-        self.marionette.navigate(self.test_doc)
-        self.assertEqual("Marionette Test", self.marionette.title)
-        self.assertTrue(self.marionette.execute_script(
-            """var elem = window.document.createElement('div'); elem.id = 'someDiv';
-            window.document.body.appendChild(elem); return true;"""))
-        self.assertFalse(self.marionette.execute_script(
-            "return window.document.getElementById('someDiv') == undefined"))
-        self.marionette.refresh()
-        # TODO(ato): Bug 1291320
-        time.sleep(0.2)
-        self.assertEqual("Marionette Test", self.marionette.title)
-        self.assertTrue(self.marionette.execute_script(
-            "return window.document.getElementById('someDiv') == undefined"))
-
-    def test_navigate_in_child_frame_changes_to_top(self):
-        frame_html = self.marionette.absolute_url("frameset.html")
-
-        self.marionette.navigate(frame_html)
-        frame = self.marionette.find_element(By.NAME, "third")
-        self.marionette.switch_to_frame(frame)
-        self.assertRaises(errors.NoSuchElementException,
-                          self.marionette.find_element, By.NAME, "third")
-
-        self.marionette.navigate(frame_html)
-        self.marionette.find_element(By.NAME, "third")
-
-    @skip_if_mobile("Bug 1323755 - Socket timeout")
-    def test_invalid_protocol(self):
-        with self.assertRaises(errors.MarionetteException):
-            self.marionette.navigate("thisprotocoldoesnotexist://")
-
-    def test_find_element_state_complete(self):
-        self.marionette.navigate(self.test_doc)
-        state = self.marionette.execute_script(
-            "return window.document.readyState")
-        self.assertEqual("complete", state)
-        self.assertTrue(self.marionette.find_element(By.ID, "mozLink"))
-
-    def test_error_when_exceeding_page_load_timeout(self):
-        self.marionette.timeout.page_load = 0.1
-        with self.assertRaises(errors.TimeoutException):
-            self.marionette.navigate(self.marionette.absolute_url("slow"))
-
-    def test_navigate_to_same_image_document_twice(self):
-        self.marionette.navigate(self.fixtures.where_is("black.png"))
-        self.assertIn("black.png", self.marionette.title)
-        self.marionette.navigate(self.fixtures.where_is("black.png"))
-        self.assertIn("black.png", self.marionette.title)
-
-    def test_navigate_hash_change(self):
-        doc = inline("<p id=foo>")
-        self.marionette.navigate(doc)
-        self.marionette.execute_script("window.visited = true", sandbox=None)
-        self.marionette.navigate("{}#foo".format(doc))
-        self.assertTrue(self.marionette.execute_script(
-            "return window.visited", sandbox=None))
-
-    @skip_if_mobile("Bug 1334095 - Timeout: No new tab has been opened")
-    def test_about_blank_for_new_docshell(self):
-        """ Bug 1312674 - Hang when loading about:blank for a new docshell."""
-        def open_with_link():
-            link = self.marionette.find_element(By.ID, "new-blank-tab")
-            link.click()
-
-        # Open a new tab to get a new docshell created
-        self.marionette.navigate(self.marionette.absolute_url("windowHandles.html"))
-        new_tab = self.open_tab(trigger=open_with_link)
-        self.marionette.switch_to_window(new_tab)
-        self.assertEqual(self.marionette.get_url(), "about:blank")
-
-        self.marionette.navigate('about:blank')
-        self.marionette.close()
-        self.marionette.switch_to_window(self.start_window)
-
-    @run_if_manage_instance("Only runnable if Marionette manages the instance")
-    @skip_if_mobile("Bug 1322993 - Missing temporary folder")
-    def test_focus_after_navigation(self):
-        self.marionette.quit()
-        self.marionette.start_session()
-
-        self.marionette.navigate(inline("<input autofocus>"))
-        active_el = self.marionette.execute_script("return document.activeElement")
-        focus_el = self.marionette.find_element(By.CSS_SELECTOR, ":focus")
-        self.assertEqual(active_el, focus_el)
+        self.run_bfcache_test(test_pages)
 
 
 class TestTLSNavigation(MarionetteTestCase):
@@ -377,7 +482,10 @@ class TestTLSNavigation(MarionetteTestCase):
     secure_tls = {"acceptInsecureCerts": False}
 
     def setUp(self):
-        MarionetteTestCase.setUp(self)
+        super(TestTLSNavigation, self).setUp()
+
+        self.test_page_insecure = self.fixtures.where_is("test.html", on="https")
+
         self.marionette.delete_session()
         self.capabilities = self.marionette.start_session(
             {"requiredCapabilities": self.insecure_tls})
@@ -387,7 +495,8 @@ class TestTLSNavigation(MarionetteTestCase):
             self.marionette.delete_session()
         except:
             pass
-        MarionetteTestCase.tearDown(self)
+
+        super(TestTLSNavigation, self).tearDown()
 
     @contextlib.contextmanager
     def safe_session(self):
@@ -410,19 +519,18 @@ class TestTLSNavigation(MarionetteTestCase):
             self.marionette.delete_session()
 
     def test_navigate_by_command(self):
-        self.marionette.navigate(
-            self.fixtures.where_is("/test.html", on="https"))
+        self.marionette.navigate(self.test_page_insecure)
         self.assertIn("https", self.marionette.get_url())
 
     def test_navigate_by_click(self):
-        link_url = self.fixtures.where_is("/test.html", on="https")
+        link_url = self.test_page_insecure
         self.marionette.navigate(
             inline("<a href=%s>https is the future</a>" % link_url))
         self.marionette.find_element(By.TAG_NAME, "a").click()
         self.assertIn("https", self.marionette.get_url())
 
     def test_deactivation(self):
-        invalid_cert_url = self.fixtures.where_is("/test.html", on="https")
+        invalid_cert_url = self.test_page_insecure
 
         print "with safe session"
         with self.safe_session() as session:
