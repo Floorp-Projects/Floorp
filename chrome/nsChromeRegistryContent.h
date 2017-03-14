@@ -56,7 +56,6 @@ class nsChromeRegistryContent : public nsChromeRegistry
     uint32_t         flags;
   };
 
-  nsresult UpdateSelectedLocale() override;
   nsIURI* GetBaseURIFromPackage(const nsCString& aPackage,
                      const nsCString& aProvider,
                      const nsCString& aPath) override;

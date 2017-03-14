@@ -13,6 +13,7 @@
 #include "nsIObserverService.h"
 #include "nsStringEnumerator.h"
 #include "nsIToolkitChromeRegistry.h"
+#include "nsXULAppAPI.h"
 
 #ifdef ENABLE_INTL_API
 #include "unicode/uloc.h"
@@ -76,24 +77,39 @@ static void SanitizeForBCP47(nsACString& aLocale)
  * Currently it collects the locale ID used by nsChromeRegistry and
  * adds hardcoded "en-US" locale as a fallback.
  */
-static void
-ReadAppLocales(nsTArray<nsCString>& aRetVal)
+void
+LocaleService::NegotiateAppLocales(nsTArray<nsCString>& aRetVal)
 {
-  nsAutoCString uaLangTag;
-  nsCOMPtr<nsIToolkitChromeRegistry> cr =
-    mozilla::services::GetToolkitChromeRegistryService();
-  if (cr) {
-    // We don't want to canonicalize the locale from ChromeRegistry into
-    // it's BCP47 form because we will use it for direct language
-    // negotiation and BCP47 changes `ja-JP-mac` into `ja-JP-x-variant-mac`.
-    cr->GetSelectedLocale(NS_LITERAL_CSTRING("global"), false, uaLangTag);
-  }
-  if (!uaLangTag.IsEmpty()) {
-    aRetVal.AppendElement(uaLangTag);
-  }
+  nsAutoCString defaultLocale;
+  GetDefaultLocale(defaultLocale);
 
-  if (!uaLangTag.EqualsLiteral("en-US")) {
-    aRetVal.AppendElement(NS_LITERAL_CSTRING("en-US"));
+  if (XRE_IsParentProcess()) {
+    AutoTArray<nsCString, 100> availableLocales;
+    AutoTArray<nsCString, 10> requestedLocales;
+    GetAvailableLocales(availableLocales);
+    GetRequestedLocales(requestedLocales);
+
+    NegotiateLanguages(requestedLocales, availableLocales, defaultLocale,
+                       LangNegStrategy::Filtering, aRetVal);
+  } else {
+    //XXX: In bug 1348042 we're working on getting the content process
+    //     to follow the parent process negotiated locales.
+    //     Until we have it, we're going to match the behavior of following
+    //     the ChromeRegistry locale in the content process.
+
+    nsAutoCString uaLangTag;
+    nsCOMPtr<nsIToolkitChromeRegistry> cr =
+      mozilla::services::GetToolkitChromeRegistryService();
+    if (cr) {
+      cr->GetSelectedLocale(NS_LITERAL_CSTRING("global"), false, uaLangTag);
+    }
+    if (!uaLangTag.IsEmpty()) {
+      aRetVal.AppendElement(uaLangTag);
+    }
+
+    if (!uaLangTag.Equals(defaultLocale)) {
+      aRetVal.AppendElement(defaultLocale);
+    }
   }
 }
 
@@ -121,7 +137,7 @@ void
 LocaleService::GetAppLocalesAsLangTags(nsTArray<nsCString>& aRetVal)
 {
   if (mAppLocales.IsEmpty()) {
-    ReadAppLocales(mAppLocales);
+    NegotiateAppLocales(mAppLocales);
   }
   aRetVal = mAppLocales;
 }
@@ -130,7 +146,7 @@ void
 LocaleService::GetAppLocalesAsBCP47(nsTArray<nsCString>& aRetVal)
 {
   if (mAppLocales.IsEmpty()) {
-    ReadAppLocales(mAppLocales);
+    NegotiateAppLocales(mAppLocales);
   }
   for (uint32_t i = 0; i < mAppLocales.Length(); i++) {
     nsAutoCString locale(mAppLocales[i]);
@@ -156,15 +172,8 @@ LocaleService::GetRequestedLocales(nsTArray<nsCString>& aRetVal)
   }
 
   // Otherwise, we'll try to get the requested locale from the prefs.
-
-  // In some cases, mainly on Fennec and on Linux version,
-  // `general.useragent.locale` is a special 'localized' value, like:
-  // "chrome://global/locale/intl.properties"
-  if (!NS_SUCCEEDED(Preferences::GetLocalizedCString(SELECTED_LOCALE_PREF, &locale))) {
-    // If not, we can attempt to retrieve it as a simple string value.
-    if (!NS_SUCCEEDED(Preferences::GetCString(SELECTED_LOCALE_PREF, &locale))) {
-      return false;
-    }
+  if (!NS_SUCCEEDED(Preferences::GetCString(SELECTED_LOCALE_PREF, &locale))) {
+    return false;
   }
 
   // At the moment we just take a single locale, but in the future
@@ -203,14 +212,23 @@ LocaleService::GetAvailableLocales(nsTArray<nsCString>& aRetVal)
 void
 LocaleService::Refresh()
 {
+  // if mAppLocales has not been initialized yet, just return
+  if (mAppLocales.IsEmpty()) {
+    return;
+  }
+
   nsTArray<nsCString> newLocales;
-  ReadAppLocales(newLocales);
+  NegotiateAppLocales(newLocales);
 
   if (mAppLocales != newLocales) {
     mAppLocales = Move(newLocales);
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->NotifyObservers(nullptr, "intl:app-locales-changed", nullptr);
+
+      // Deprecated, please use `intl:app-locales-changed`.
+      // Kept for now for compatibility reasons
+      obs->NotifyObservers(nullptr, "selected-locale-has-changed", nullptr);
     }
   }
 }
@@ -386,6 +404,7 @@ LocaleService::Observe(nsISupports *aSubject, const char *aTopic,
   // user requested locales.
   NS_ConvertUTF16toUTF8 pref(aData);
   if (pref.EqualsLiteral(MATCH_OS_LOCALE_PREF) || pref.EqualsLiteral(SELECTED_LOCALE_PREF)) {
+    Refresh();
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->NotifyObservers(nullptr, "intl:requested-locales-changed", nullptr);
@@ -420,7 +439,7 @@ NS_IMETHODIMP
 LocaleService::GetAppLocalesAsLangTags(uint32_t* aCount, char*** aOutArray)
 {
   if (mAppLocales.IsEmpty()) {
-    ReadAppLocales(mAppLocales);
+    NegotiateAppLocales(mAppLocales);
   }
 
   *aCount = mAppLocales.Length();
@@ -445,7 +464,7 @@ NS_IMETHODIMP
 LocaleService::GetAppLocaleAsLangTag(nsACString& aRetVal)
 {
   if (mAppLocales.IsEmpty()) {
-    ReadAppLocales(mAppLocales);
+    NegotiateAppLocales(mAppLocales);
   }
   aRetVal = mAppLocales[0];
   return NS_OK;
@@ -455,7 +474,7 @@ NS_IMETHODIMP
 LocaleService::GetAppLocaleAsBCP47(nsACString& aRetVal)
 {
   if (mAppLocales.IsEmpty()) {
-    ReadAppLocales(mAppLocales);
+    NegotiateAppLocales(mAppLocales);
   }
   aRetVal = mAppLocales[0];
   SanitizeForBCP47(aRetVal);
