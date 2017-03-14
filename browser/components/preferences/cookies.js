@@ -497,12 +497,9 @@ var gCookiesWindow = {
   formatExpiresString(aExpires) {
     if (aExpires) {
       var date = new Date(1000 * aExpires);
-      const locale = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                     .getService(Components.interfaces.nsIXULChromeRegistry)
-                     .getSelectedLocale("global", true);
       const dtOptions = { year: "numeric", month: "long", day: "numeric",
                           hour: "numeric", minute: "numeric", second: "numeric" };
-      return date.toLocaleString(locale, dtOptions);
+      return date.toLocaleString(undefined, dtOptions);
     }
     return this._bundle.getString("expireAtEndOfSession");
   },
