@@ -94,6 +94,7 @@ SERVO_BINDING_FUNC(Servo_CssRules_DeleteRule, nsresult,
                      RawServo##type_##RuleBorrowed rule, nsAString* result)
 BASIC_RULE_FUNCS(Style)
 BASIC_RULE_FUNCS(Media)
+BASIC_RULE_FUNCS(Namespace)
 #undef BASIC_RULE_FUNCS
 SERVO_BINDING_FUNC(Servo_StyleRule_GetStyle, RawServoDeclarationBlockStrong,
                    RawServoStyleRuleBorrowed rule)
@@ -106,6 +107,10 @@ SERVO_BINDING_FUNC(Servo_MediaRule_GetMedia, RawServoMediaListStrong,
                    RawServoMediaRuleBorrowed rule)
 SERVO_BINDING_FUNC(Servo_MediaRule_GetRules, ServoCssRulesStrong,
                    RawServoMediaRuleBorrowed rule)
+SERVO_BINDING_FUNC(Servo_NamespaceRule_GetPrefix, nsIAtom*,
+                   RawServoNamespaceRuleBorrowed rule)
+SERVO_BINDING_FUNC(Servo_NamespaceRule_GetURI, nsIAtom*,
+                   RawServoNamespaceRuleBorrowed rule)
 
 // Animations API
 SERVO_BINDING_FUNC(Servo_ParseProperty,
