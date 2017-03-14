@@ -482,10 +482,9 @@ GLXLibrary::AfterGLXCall() const
 
 already_AddRefed<GLContextGLX>
 GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
-                              GLContextGLX* shareContext, bool isOffscreen,
-                              Display* display, GLXDrawable drawable, GLXFBConfig cfg,
-                              bool deleteDrawable, gfxXlibSurface* pixmap,
-                              ContextProfile profile)
+                              bool isOffscreen, Display* display, GLXDrawable drawable,
+                              GLXFBConfig cfg, bool deleteDrawable,
+                              gfxXlibSurface* pixmap, ContextProfile profile)
 {
     GLXLibrary& glx = sGLXLibrary;
 
@@ -507,7 +506,6 @@ GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
     do {
         error = false;
 
-        GLXContext glxContext = shareContext ? shareContext->mContext : nullptr;
         if (glx.HasCreateContextAttribs()) {
             AutoTArray<int, 11> attrib_list;
             if (glx.HasRobustness()) {
@@ -532,7 +530,7 @@ GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
             context = glx.fCreateContextAttribs(
                 display,
                 cfg,
-                glxContext,
+                nullptr,
                 True,
                 attrib_list.Elements());
         } else {
@@ -540,14 +538,13 @@ GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
                 display,
                 cfg,
                 LOCAL_GLX_RGBA_TYPE,
-                glxContext,
+                nullptr,
                 True);
         }
 
         if (context) {
-            glContext = new GLContextGLX(flags, caps, shareContext, isOffscreen, display,
-                                         drawable, context, deleteDrawable, db, pixmap,
-                                         profile);
+            glContext = new GLContextGLX(flags, caps, isOffscreen, display, drawable,
+                                         context, deleteDrawable, db, pixmap, profile);
             if (!glContext->Init())
                 error = true;
         } else {
@@ -557,11 +554,6 @@ GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
         error |= xErrorHandler.SyncAndGetError(display);
 
         if (error) {
-            if (shareContext) {
-                shareContext = nullptr;
-                continue;
-            }
-
             NS_WARNING("Failed to create GLXContext!");
             glContext = nullptr; // note: this must be done while the graceful X error handler is set,
                                 // because glxMakeCurrent can give a GLXBadDrawable error
@@ -712,7 +704,6 @@ GLContextGLX::RestoreDrawable()
 GLContextGLX::GLContextGLX(
                   CreateContextFlags flags,
                   const SurfaceCaps& caps,
-                  GLContext* shareContext,
                   bool isOffscreen,
                   Display* aDisplay,
                   GLXDrawable aDrawable,
@@ -721,7 +712,7 @@ GLContextGLX::GLContextGLX(
                   bool aDoubleBuffered,
                   gfxXlibSurface* aPixmap,
                   ContextProfile profile)
-    : GLContext(flags, caps, shareContext, isOffscreen),
+    : GLContext(flags, caps, nullptr, isOffscreen),
       mContext(aContext),
       mDisplay(aDisplay),
       mDrawable(aDrawable),
@@ -734,13 +725,6 @@ GLContextGLX::GLContextGLX(
     MOZ_ASSERT(mGLX);
     // See 899855
     SetProfileVersion(profile, 200);
-}
-
-
-static GLContextGLX*
-GetGlobalContextGLX()
-{
-    return static_cast<GLContextGLX*>(GLContextProviderGLX::GetGlobalContext());
 }
 
 static bool
@@ -763,8 +747,6 @@ AreCompatibleVisuals(Visual* one, Visual* two)
     return true;
 }
 
-static StaticRefPtr<GLContext> gGlobalContext;
-
 already_AddRefed<GLContext>
 GLContextProviderGLX::CreateWrappingExisting(void* aContext, void* aSurface)
 {
@@ -776,7 +758,6 @@ GLContextProviderGLX::CreateWrappingExisting(void* aContext, void* aSurface)
         SurfaceCaps caps = SurfaceCaps::Any();
         RefPtr<GLContextGLX> glContext =
             new GLContextGLX(CreateContextFlags::NONE, caps,
-                             nullptr, // SharedContext
                              false, // Offscreen
                              (Display*)DefaultXDisplay(), // Display
                              (GLXDrawable)aSurface, (GLXContext)aContext,
@@ -786,8 +767,6 @@ GLContextProviderGLX::CreateWrappingExisting(void* aContext, void* aSurface)
                              ContextProfile::OpenGLCompatibility);
 
         glContext->mOwnsContext = false;
-        gGlobalContext = glContext;
-
         return glContext.forget();
     }
 
@@ -827,17 +806,16 @@ CreateForWidget(Display* aXDisplay, Window aXWindow,
     }
 
     SurfaceCaps caps = SurfaceCaps::Any();
-    GLContextGLX* shareContext = GetGlobalContextGLX();
     RefPtr<GLContextGLX> gl;
     if (aWebRender) {
       gl = GLContextGLX::CreateGLContext(CreateContextFlags::NONE,
-                                         caps, shareContext, false,
+                                         caps, false,
                                          aXDisplay, aXWindow, config,
                                          //TODO: we might want to pass an additional bool to select GL core/compat
                                          false, nullptr, ContextProfile::OpenGLCore); //WR: required GL 3.2+
     } else {
       gl = GLContextGLX::CreateGLContext(CreateContextFlags::NONE,
-                                         caps, shareContext, false,
+                                         caps, false,
                                          aXDisplay, aXWindow, config,
                                          false);
     }
@@ -1070,8 +1048,7 @@ CreateOffscreenPixmapContext(CreateContextFlags flags, const IntSize& size,
     if (error || serverError)
         return nullptr;
 
-    GLContextGLX* shareContext = GetGlobalContextGLX();
-    return GLContextGLX::CreateGLContext(flags, minCaps, shareContext, true, display,
+    return GLContextGLX::CreateGLContext(flags, minCaps, true, display,
                                          pixmap, config, true, surface, profile);
 }
 
@@ -1119,27 +1096,13 @@ GLContextProviderGLX::CreateOffscreen(const IntSize& size,
 /*static*/ GLContext*
 GLContextProviderGLX::GetGlobalContext()
 {
-    // TODO: get GLX context sharing to work well with multiple threads
-    if (gfxEnv::DisableContextSharingGlx())
-        return nullptr;
-
-    static bool triedToCreateContext = false;
-    if (!triedToCreateContext) {
-        triedToCreateContext = true;
-
-        MOZ_RELEASE_ASSERT(!gGlobalContext, "GFX: Global GL context already initialized.");
-        nsCString discardFailureId;
-        RefPtr<GLContext> temp = CreateHeadless(CreateContextFlags::NONE, &discardFailureId);
-        gGlobalContext = temp;
-    }
-
-    return gGlobalContext;
+    // Context sharing not supported.
+    return nullptr;
 }
 
 /*static*/ void
 GLContextProviderGLX::Shutdown()
 {
-    gGlobalContext = nullptr;
 }
 
 } /* namespace gl */
