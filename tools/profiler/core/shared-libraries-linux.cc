@@ -81,12 +81,17 @@ dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
     if (end > libEnd)
       libEnd = end;
   }
-  const char *name = dl_info->dlpi_name;
+  const char *path = dl_info->dlpi_name;
 
   nsAutoString nameStr;
-  mozilla::Unused << NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(name), nameStr)));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(path), nameStr)));
 
-  SharedLibrary shlib(libStart, libEnd, 0, getId(name), nameStr, nameStr, "");
+  int32_t pos = nameStr.RFindChar('/');
+  if (pos != kNotFound) {
+    nameStr.Cut(0, pos + 1);
+  }
+
+  SharedLibrary shlib(libStart, libEnd, 0, getId(path), nameStr, nameStr, "");
   info.AddSharedLibrary(shlib);
 
   return 0;
@@ -126,10 +131,10 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     unsigned long end;
     char perm[6] = "";
     unsigned long offset;
-    char name[PATH_MAX] = "";
+    char modulePath[PATH_MAX] = "";
     ret = sscanf(line.c_str(),
                  "%lx-%lx %6s %lx %*s %*x %" PATH_MAX_STRING(PATH_MAX) "s\n",
-                 &start, &end, perm, &offset, name);
+                 &start, &end, perm, &offset, modulePath);
     if (!strchr(perm, 'x')) {
       // Ignore non executable entries
       continue;
@@ -141,7 +146,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
 #if defined(PROFILE_JAVA)
     // Use proc/pid/maps to get the dalvik-jit section since it has
     // no associated phdrs
-    if (strcmp(name, "/dev/ashmem/dalvik-jit-code-cache") != 0) {
+    if (strcmp(modulePath, "/dev/ashmem/dalvik-jit-code-cache") != 0) {
       continue;
     }
 #else
@@ -154,7 +159,12 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
 #endif
 
     nsAutoString nameStr;
-    mozilla::Unused << NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(name), nameStr)));
+    mozilla::Unused << NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(modulePath), nameStr)));
+
+    int32_t pos = nameStr.RFindChar('/');
+    if (pos != kNotFound) {
+      nameStr.Cut(0, pos + 1);
+    }
 
     SharedLibrary shlib(start, end, offset, getId(name), nameStr, nameStr, "");
     info.AddSharedLibrary(shlib);
