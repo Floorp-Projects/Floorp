@@ -1,7 +1,7 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == counter-name-case-sensitive.html counter-name-case-sensitive.html
 == t1202-counter-00-b-test.html t1202-counter-00-b-test.html
-t1202-counter-01-b-test.html t1202-counter-01-b-test.html
+== t1202-counter-01-b-test.html t1202-counter-01-b-test.html
 asserts-if(stylo,4) == t1202-counter-02-b-test.html t1202-counter-02-b-test.html
 asserts-if(stylo,4) == t1202-counter-03-b-test.html t1202-counter-03-b-test.html
 asserts-if(stylo,4) == t1202-counter-04-b-test.html t1202-counter-04-b-test.html
