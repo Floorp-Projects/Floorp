@@ -8,8 +8,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/colorUrlInputBackground"
-    android:animateLayoutChanges="true">
+    android:background="@color/colorUrlInputBackground">
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -20,13 +19,11 @@
         android:elevation="4dp">
 
         <LinearLayout
-            android:id="@+id/urlbar_background"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal"
             android:layout_margin="8dp"
-            android:background="@drawable/urlbar_background"
-            android:animateLayoutChanges="true">
+            android:background="@drawable/urlbar_background">
 
             <org.mozilla.focus.widget.InlineAutocompleteEditText
                 android:id="@+id/url_edit"

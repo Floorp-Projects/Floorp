@@ -5,15 +5,12 @@
 
 package org.mozilla.focus.utils;
 
-import android.animation.LayoutTransition;
 import android.content.Context;
-import android.content.res.Resources;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 
@@ -53,28 +50,5 @@ public class ViewUtils {
                 snackbar.show();
             }
         }, delayMillis);
-    }
-
-    /**
-     * Modify layout transition to use our custom timings.
-     */
-    public static void setupLayoutTransition(final ViewGroup view) {
-        if (view == null) {
-            return;
-        }
-
-        final LayoutTransition transition = view.getLayoutTransition();
-        if (transition == null) {
-            return;
-        }
-
-        final Resources resources = view.getResources();
-        final int delay = resources.getInteger(R.integer.layout_animation_delay_ms);
-
-        transition.setDuration(resources.getInteger(R.integer.layout_animation_duration_ms));
-        transition.setStartDelay(LayoutTransition.APPEARING, delay);
-        transition.setStartDelay(LayoutTransition.DISAPPEARING, delay);
-        transition.setStartDelay(LayoutTransition.CHANGE_APPEARING, delay);
-        transition.setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, delay);
     }
 }

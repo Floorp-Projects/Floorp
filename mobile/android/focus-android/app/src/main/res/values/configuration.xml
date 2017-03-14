@@ -3,14 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <integer name="layout_animation_duration_ms">200</integer>
-    <integer name="layout_animation_delay_ms">0</integer>
-
     <integer name="erase_animation_alpha_duration">200</integer>
     <integer name="erase_animation_scale_duration">100</integer>
     <integer name="erase_animation_translate_duration">100</integer>
     <integer name="erase_animation_translate_offset">100</integer>
 
     <integer name="erase_snackbar_delay">1000</integer>
-
 </resources>
