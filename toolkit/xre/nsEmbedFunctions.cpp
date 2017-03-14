@@ -583,7 +583,7 @@ XRE_InitChildProcess(int aArgc,
       nsString appId;
       appId.AssignWithConversion(nsDependentCString(appModelUserId));
       // The version string is encased in quotes
-      appId.Trim("\"");
+      appId.Trim(NS_LITERAL_CSTRING("\"").get());
       // Set the id
       SetTaskbarGroupId(appId);
     }

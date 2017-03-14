@@ -508,7 +508,7 @@ nsHttpHandler::AddConnectionHeader(nsHttpRequestHead *request,
     NS_NAMED_LITERAL_CSTRING(close, "close");
     NS_NAMED_LITERAL_CSTRING(keepAlive, "keep-alive");
 
-    const nsLiteralCString *connectionType = &close;
+    const nsACString *connectionType = &close;
     if (caps & NS_HTTP_ALLOW_KEEPALIVE) {
         connectionType = &keepAlive;
     }

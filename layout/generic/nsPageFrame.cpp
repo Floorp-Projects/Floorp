@@ -193,7 +193,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   // then subst in the current date/time
   NS_NAMED_LITERAL_STRING(kDate, "&D");
   if (aStr.Find(kDate) != kNotFound) {
-    aNewStr.ReplaceSubstring(kDate, mPD->mDateTimeStr);
+    aNewStr.ReplaceSubstring(kDate.get(), mPD->mDateTimeStr.get());
   }
 
   // NOTE: Must search for &PT before searching for &P
@@ -204,7 +204,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   NS_NAMED_LITERAL_STRING(kPageAndTotal, "&PT");
   if (aStr.Find(kPageAndTotal) != kNotFound) {
     char16_t * uStr = nsTextFormatter::smprintf(mPD->mPageNumAndTotalsFormat.get(), mPageNum, mTotNumPages);
-    aNewStr.ReplaceSubstring(kPageAndTotal, nsDependentString(uStr));
+    aNewStr.ReplaceSubstring(kPageAndTotal.get(), uStr);
     free(uStr);
   }
 
@@ -213,24 +213,24 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   NS_NAMED_LITERAL_STRING(kPage, "&P");
   if (aStr.Find(kPage) != kNotFound) {
     char16_t * uStr = nsTextFormatter::smprintf(mPD->mPageNumFormat.get(), mPageNum);
-    aNewStr.ReplaceSubstring(kPage, nsDependentString(uStr));
+    aNewStr.ReplaceSubstring(kPage.get(), uStr);
     free(uStr);
   }
 
   NS_NAMED_LITERAL_STRING(kTitle, "&T");
   if (aStr.Find(kTitle) != kNotFound) {
-    aNewStr.ReplaceSubstring(kTitle, mPD->mDocTitle);
+    aNewStr.ReplaceSubstring(kTitle.get(), mPD->mDocTitle.get());
   }
 
   NS_NAMED_LITERAL_STRING(kDocURL, "&U");
   if (aStr.Find(kDocURL) != kNotFound) {
-    aNewStr.ReplaceSubstring(kDocURL, mPD->mDocURL);
+    aNewStr.ReplaceSubstring(kDocURL.get(), mPD->mDocURL.get());
   }
 
   NS_NAMED_LITERAL_STRING(kPageTotal, "&L");
   if (aStr.Find(kPageTotal) != kNotFound) {
     char16_t * uStr = nsTextFormatter::smprintf(mPD->mPageNumFormat.get(), mTotNumPages);
-    aNewStr.ReplaceSubstring(kPageTotal, nsDependentString(uStr));
+    aNewStr.ReplaceSubstring(kPageTotal.get(), uStr);
     free(uStr);
   }
 }

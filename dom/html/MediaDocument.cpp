@@ -418,7 +418,8 @@ MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
     nsXPIDLString titleWithStatus;
     const nsPromiseFlatString& status = PromiseFlatString(aStatus);
     const char16_t *formatStrings[2] = {title.get(), status.get()};
-    mStringBundle->FormatStringFromName(u"TitleWithStatus", formatStrings, 2,
+    NS_NAMED_LITERAL_STRING(fmtName, "TitleWithStatus");
+    mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 2,
                                         getter_Copies(titleWithStatus));
     SetTitle(titleWithStatus);
   }

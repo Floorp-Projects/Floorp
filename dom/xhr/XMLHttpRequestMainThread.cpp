@@ -2588,10 +2588,11 @@ XMLHttpRequestMainThread::InitiateFetch(nsIInputStream* aUploadStream,
       nsCOMPtr<nsIConsoleService> consoleService =
         do_GetService(NS_CONSOLESERVICE_CONTRACTID);
       if (consoleService) {
-        consoleService->LogStringMessage(
-          u"Http channel implementation doesn't support nsIUploadChannel2. "
+        consoleService->LogStringMessage(NS_LITERAL_STRING(
+          "Http channel implementation doesn't support nsIUploadChannel2. "
           "An extension has supplied a non-functional http protocol handler. "
-          "This will break behavior and in future releases not work at all.");
+          "This will break behavior and in future releases not work at all."
+        ).get());
       }
     }
 

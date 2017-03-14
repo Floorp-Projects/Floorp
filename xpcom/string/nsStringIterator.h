@@ -27,8 +27,8 @@ public:
   typedef const CharT&                reference;
 
 private:
-  friend class mozilla::detail::nsStringRepr;
-  friend class mozilla::detail::nsCStringRepr;
+  friend class nsAString;
+  friend class nsACString;
 
   // unfortunately, the API for nsReadingIterator requires that the
   // iterator know its start and end positions.  this was needed when
