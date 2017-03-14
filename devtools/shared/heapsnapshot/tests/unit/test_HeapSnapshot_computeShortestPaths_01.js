@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Sanity test that we can compute shortest paths.
 //
@@ -21,7 +22,8 @@ function run_test() {
 
   const targetSet = new Set(dominatedByRoot);
 
-  const shortestPaths = snapshot.computeShortestPaths(dominatorTree.root, dominatedByRoot, 2);
+  const shortestPaths
+    = snapshot.computeShortestPaths(dominatorTree.root, dominatedByRoot, 2);
   ok(shortestPaths);
   ok(shortestPaths instanceof Map);
   ok(shortestPaths.size === targetSet.size);
@@ -38,21 +40,21 @@ function run_test() {
 
     dumpn("---------------------");
     dumpn("Shortest paths for 0x" + target.toString(16) + ":");
-    for (let path of paths) {
+    for (let pth of paths) {
       dumpn("    path =");
-      for (let part of path) {
+      for (let part of pth) {
         dumpn("        predecessor: 0x" + part.predecessor.toString(16) +
               "; edge: " + part.edge);
       }
     }
     dumpn("---------------------");
 
-    for (let path of paths) {
-      ok(path.length > 0, "Cannot have zero length paths");
-      ok(path[0].predecessor === dominatorTree.root,
+    for (let path2 of paths) {
+      ok(path2.length > 0, "Cannot have zero length paths");
+      ok(path2[0].predecessor === dominatorTree.root,
          "The first predecessor is always our start node");
 
-      for (let part of path) {
+      for (let part of path2) {
         ok(part.predecessor, "Each part of a path has a predecessor");
         ok(!!snapshot.describeNode({ by: "count", count: true, bytes: true},
                                    part.predecessor),

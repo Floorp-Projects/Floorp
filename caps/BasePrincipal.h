@@ -41,6 +41,7 @@ public:
   {}
 
   void SetFirstPartyDomain(const bool aIsTopLevelDocument, nsIURI* aURI);
+  void SetFirstPartyDomain(const bool aIsTopLevelDocument, const nsACString& aDomain);
 
   enum {
     STRIP_FIRST_PARTY_DOMAIN = 0x01,
