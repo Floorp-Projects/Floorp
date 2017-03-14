@@ -23,8 +23,12 @@
 struct CachedOffsetForFrame;
 class nsAutoScrollTimer;
 class nsIContentIterator;
+class nsIDocument;
+class nsIEditor;
 class nsIFrame;
+class nsIHTMLEditor;
 class nsFrameSelection;
+class nsPIDOMWindowOuter;
 struct SelectionDetails;
 class nsCopySupport;
 class nsHTMLCopyEncoder;
@@ -353,6 +357,43 @@ private:
    * Helper method for AddItem.
    */
   nsresult AddItemInternal(nsRange* aRange, int32_t* aOutIndex);
+
+  nsIDocument* GetDocument() const;
+  nsPIDOMWindowOuter* GetWindow() const;
+  nsIEditor* GetEditor() const;
+
+  /**
+   * GetCommonEditingHostForAllRanges() returns common editing host of all
+   * ranges if there is. If at least one of the ranges is in non-editable
+   * element, returns nullptr.  See following examples for the detail:
+   *
+   *  <div id="a" contenteditable>
+   *    an[cestor
+   *    <div id="b" contenteditable="false">
+   *      non-editable
+   *      <div id="c" contenteditable>
+   *        desc]endant
+   *  in this case, this returns div#a because div#c is also in div#a.
+   *
+   *  <div id="a" contenteditable>
+   *    an[ce]stor
+   *    <div id="b" contenteditable="false">
+   *      non-editable
+   *      <div id="c" contenteditable>
+   *        de[sc]endant
+   *  in this case, this returns div#a because second range is also in div#a
+   *  and common ancestor of the range (i.e., div#c) is editable.
+   *
+   *  <div id="a" contenteditable>
+   *    an[ce]stor
+   *    <div id="b" contenteditable="false">
+   *      [non]-editable
+   *      <div id="c" contenteditable>
+   *        de[sc]endant
+   *  in this case, this returns nullptr because the second range is in
+   *  non-editable area.
+   */
+  Element* GetCommonEditingHostForAllRanges();
 
   // These are the ranges inside this selection. They are kept sorted in order
   // of DOM start position.
