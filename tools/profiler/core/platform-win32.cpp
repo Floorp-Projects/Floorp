@@ -123,6 +123,8 @@ public:
   }
 
   ~SamplerThread() {
+    WaitForSingleObject(mThread, INFINITE);
+
     // Close our own handle for the thread.
     if (mThread != kNoThread) {
       CloseHandle(mThread);
@@ -141,10 +143,6 @@ public:
     if (mInterval < 10) {
       ::timeEndPeriod(mInterval);
     }
-  }
-
-  void Join() {
-    WaitForSingleObject(mThread, INFINITE);
   }
 
   void Run() {
