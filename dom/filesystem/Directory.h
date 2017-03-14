@@ -96,9 +96,6 @@ public:
   FileSystemBase*
   GetFileSystem(ErrorResult& aRv);
 
-  bool
-  ClonableToDifferentThreadOrProcess() const;
-
   nsIFile*
   GetInternalNsIFile() const
   {
