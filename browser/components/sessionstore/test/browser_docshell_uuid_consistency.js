@@ -1,5 +1,5 @@
 // First test - open a tab and duplicate it, using session restore to restore the history into the new tab.
-add_task(function* duplicateTab () {
+add_task(function* duplicateTab() {
   const TEST_URL = "data:text/html,foo";
   let tab = gBrowser.addTab(TEST_URL);
   yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);

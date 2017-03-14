@@ -29,7 +29,7 @@ function test() {
 
     // Mark the window with some unique data to be restored later on.
     ss.setWindowValue(newWin, uniqueKey, uniqueValue);
-    let [txt, chk] = newWin.content.document.querySelectorAll("#txt, #chk");
+    let [txt] = newWin.content.document.querySelectorAll("#txt");
     txt.value = uniqueText;
 
     let browser = newWin.gBrowser.selectedBrowser;
@@ -73,7 +73,8 @@ function test() {
           is(newWin2.gBrowser.currentURI.spec, TEST_URL,
              "The window correctly restored the URL");
 
-          let [txt, chk] = newWin2.content.document.querySelectorAll("#txt, #chk");
+          let chk;
+          [txt, chk] = newWin2.content.document.querySelectorAll("#txt, #chk");
           ok(txt.value == uniqueText && chk.checked,
              "The window correctly restored the form");
           is(ss.getWindowValue(newWin2, uniqueKey), uniqueValue,

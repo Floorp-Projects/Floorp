@@ -16,7 +16,7 @@ add_task(function* test() {
 
   // this is a baseline to ensure CSP is active
   // attempt to inject and run a script via inline (pre-restore, allowed)
-  injectInlineScript(browser,'document.getElementById("test_id").value = "fail";');
+  injectInlineScript(browser, 'document.getElementById("test_id").value = "fail";');
   is(browser.contentDocument.getElementById("test_id").value, "ok",
      "CSP should block the inline script that modifies test_id");
 
@@ -46,7 +46,7 @@ add_task(function* test() {
 // injects an inline script element (with a text body)
 function injectInlineScript(browser, scriptText) {
   let scriptElt = browser.contentDocument.createElement("script");
-  scriptElt.type = 'text/javascript';
+  scriptElt.type = "text/javascript";
   scriptElt.text = scriptText;
   browser.contentDocument.body.appendChild(scriptElt);
 }

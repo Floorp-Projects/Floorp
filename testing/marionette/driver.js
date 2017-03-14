@@ -1232,8 +1232,8 @@ GeckoDriver.prototype.setWindowPosition = function* (cmd, resp) {
   assert.firefox()
 
   let {x, y} = cmd.parameters;
-  assert.positiveInteger(x);
-  assert.positiveInteger(y);
+  assert.integer(x);
+  assert.integer(y);
 
   let win = this.getCurrentWindow();
   let orig = {screenX: win.screenX, screenY: win.screenY};

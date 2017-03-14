@@ -491,7 +491,7 @@ load 765409.html
 asserts(0-200) load 765621.html # bug 703550
 asserts(0-200) load 767765.html # bug 407550, bug 871758, and various nscoord_MAX related asserts
 load 769120.html
-asserts(0-2) asserts-if(stylo,3-9) load 769303-1.html # bug 1123979 # bug 1324664
+asserts(0-2) load 769303-1.html # bug 1123979
 load 769303-2.html
 load 777838.html
 load 783228.html
@@ -540,7 +540,7 @@ asserts(0-12) load 850931.html # bug 569193
 load 851396-1.html
 load 854263-1.html
 load 862185.html
-asserts-if(stylo,1) load 862947-1.html # bug 1324704
+load 862947-1.html
 load 863935.html
 load 866547-1.html
 needs-focus pref(accessibility.browsewithcaret,true) load 868906.html
@@ -559,7 +559,7 @@ asserts(2-8) asserts-if(stylo,0) load 944909-1.html
 load 946167-1.html
 load 947158.html
 load 949932.html
-asserts-if(Android,0-1) asserts-if(stylo,1) load 964078.html # bug 989718, bug 1296477
+asserts-if(Android,0-1) asserts-if(stylo,4) load 964078.html # bug 989718, bug 1296477
 load 970710.html
 load 973701-1.xhtml
 load 973701-2.xhtml

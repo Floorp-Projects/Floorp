@@ -24,11 +24,11 @@ const MAX_EXPIRY = Math.pow(2, 62);
  * The external API implemented by the SessionCookies module.
  */
 this.SessionCookies = Object.freeze({
-  update: function (windows) {
+  update(windows) {
     SessionCookiesInternal.update(windows);
   },
 
-  getHostsForWindow: function (window, checkPrivacy = false) {
+  getHostsForWindow(window, checkPrivacy = false) {
     return SessionCookiesInternal.getHostsForWindow(window, checkPrivacy);
   },
 
@@ -55,7 +55,7 @@ var SessionCookiesInternal = {
    *        Array of window state objects.
    *        [{ tabs: [...], cookies: [...] }, ...]
    */
-  update: function (windows) {
+  update(windows) {
     this._ensureInitialized();
 
     for (let window of windows) {
@@ -71,7 +71,7 @@ var SessionCookiesInternal = {
           // _getCookiesForHost() will only return hosts with the right privacy
           // rules, so there is no need to do anything special with this call
           // to PrivacyLevel.canSave().
-          if (PrivacyLevel.canSave({isHttps: cookie.secure, isPinned: isPinned})) {
+          if (PrivacyLevel.canSave({isHttps: cookie.secure, isPinned})) {
             cookies.push(cookie);
           }
         }
@@ -99,7 +99,7 @@ var SessionCookiesInternal = {
    *                  whether we will use the deferred privacy level when
    *                  checking how much data to save on quitting.
    */
-  getHostsForWindow: function (window, checkPrivacy = false) {
+  getHostsForWindow(window, checkPrivacy = false) {
     let hosts = {};
 
     for (let tab of window.tabs) {
@@ -135,7 +135,7 @@ var SessionCookiesInternal = {
    * Handles observers notifications that are sent whenever cookies are added,
    * changed, or removed. Ensures that the storage is updated accordingly.
    */
-  observe: function (subject, topic, data) {
+  observe(subject, topic, data) {
     switch (data) {
       case "added":
       case "changed":
@@ -163,7 +163,7 @@ var SessionCookiesInternal = {
    * If called for the first time in a session, iterates all cookies in the
    * cookies service and puts them into the store if they're session cookies.
    */
-  _ensureInitialized: function () {
+  _ensureInitialized() {
     if (!this._initialized) {
       this._reloadCookies();
       this._initialized = true;
@@ -185,7 +185,7 @@ var SessionCookiesInternal = {
    *        is the entry we're evaluating for a pinned tab; used only if
    *        checkPrivacy
    */
-  _extractHostsFromEntry: function (entry, hosts, checkPrivacy, isPinned) {
+  _extractHostsFromEntry(entry, hosts, checkPrivacy, isPinned) {
     let host = entry._host;
     let scheme = entry._scheme;
 
@@ -199,8 +199,7 @@ var SessionCookiesInternal = {
         host = uri.host;
         scheme = uri.scheme;
         this._extractHostsFromHostScheme(host, scheme, hosts, checkPrivacy, isPinned);
-      }
-      catch (ex) { }
+      } catch (ex) { }
     }
 
     if (entry.children) {
@@ -226,13 +225,12 @@ var SessionCookiesInternal = {
    *        is the entry we're evaluating for a pinned tab; used only if
    *        checkPrivacy
    */
-  _extractHostsFromHostScheme:
-    function (host, scheme, hosts, checkPrivacy, isPinned) {
+  _extractHostsFromHostScheme(host, scheme, hosts, checkPrivacy, isPinned) {
     // host and scheme may not be set (for about: urls for example), in which
     // case testing scheme will be sufficient.
     if (/https?/.test(scheme) && !hosts[host] &&
         (!checkPrivacy ||
-         PrivacyLevel.canSave({isHttps: scheme == "https", isPinned: isPinned}))) {
+         PrivacyLevel.canSave({isHttps: scheme == "https", isPinned}))) {
       // By setting this to true or false, we can determine when looking at
       // the host in update() if we should check for privacy.
       hosts[host] = isPinned;
@@ -244,7 +242,7 @@ var SessionCookiesInternal = {
   /**
    * Updates or adds a given cookie to the store.
    */
-  _updateCookie: function (cookie) {
+  _updateCookie(cookie) {
     cookie.QueryInterface(Ci.nsICookie2);
 
     if (cookie.isSession) {
@@ -257,7 +255,7 @@ var SessionCookiesInternal = {
   /**
    * Removes a given cookie from the store.
    */
-  _removeCookie: function (cookie) {
+  _removeCookie(cookie) {
     cookie.QueryInterface(Ci.nsICookie2);
 
     if (cookie.isSession) {
@@ -268,7 +266,7 @@ var SessionCookiesInternal = {
   /**
    * Removes a given list of cookies from the store.
    */
-  _removeCookies: function (cookies) {
+  _removeCookies(cookies) {
     for (let i = 0; i < cookies.length; i++) {
       this._removeCookie(cookies.queryElementAt(i, Ci.nsICookie2));
     }
@@ -278,7 +276,7 @@ var SessionCookiesInternal = {
    * Iterates all cookies in the cookies service and puts them into the store
    * if they're session cookies.
    */
-  _reloadCookies: function () {
+  _reloadCookies() {
     let iter = Services.cookies.enumerator;
     while (iter.hasMoreElements()) {
       this._updateCookie(iter.getNext());
@@ -358,10 +356,10 @@ var CookieStore = {
   /**
    * Returns the list of stored session cookies for a given host.
    *
-   * @param host
+   * @param mainHost
    *        A string containing the host name we want to get cookies for.
    */
-  getCookiesForHost: function (host) {
+  getCookiesForHost(mainHost) {
     let cookies = [];
 
     let appendCookiesForHost = host => {
@@ -383,7 +381,7 @@ var CookieStore = {
     // <.example.com>. We will find those variants with a leading dot in the
     // map if the Set-Cookie header had a domain= attribute, i.e. the cookie
     // will be stored for a parent domain and we send it for any subdomain.
-    for (let variant of [host, ...getPossibleSubdomainVariants(host)]) {
+    for (let variant of [mainHost, ...getPossibleSubdomainVariants(mainHost)]) {
       appendCookiesForHost(variant);
     }
 
@@ -396,7 +394,7 @@ var CookieStore = {
    * @param cookie
    *        The nsICookie2 object to add to the storage.
    */
-  set: function (cookie) {
+  set(cookie) {
     let jscookie = {host: cookie.host, value: cookie.value};
 
     // Only add properties with non-default values to save a few bytes.
@@ -433,14 +431,14 @@ var CookieStore = {
    * @param cookie
    *        The nsICookie2 object to be removed from storage.
    */
-  delete: function (cookie) {
+  delete(cookie) {
     this._ensureMap(cookie).delete(cookie.name);
   },
 
   /**
    * Removes all cookies.
    */
-  clear: function () {
+  clear() {
     this._hosts.clear();
   },
 
@@ -453,7 +451,7 @@ var CookieStore = {
    * @return The newly created Map instance mapping cookie names to
    *         internal jscookies, in the given path of the given host.
    */
-  _ensureMap: function (cookie) {
+  _ensureMap(cookie) {
     if (!this._hosts.has(cookie.host)) {
       this._hosts.set(cookie.host, new Map());
     }

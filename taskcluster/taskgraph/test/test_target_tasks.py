@@ -10,7 +10,7 @@ from .. import target_tasks
 from .. import try_option_syntax
 from ..graph import Graph
 from ..taskgraph import TaskGraph
-from .util import TestTask
+from ..task import Task
 from mozunit import main
 
 
@@ -34,8 +34,9 @@ class TestTargetTasks(unittest.TestCase):
     def default_matches(self, run_on_projects, project):
         method = target_tasks.get_method('default')
         graph = TaskGraph(tasks={
-            'a': TestTask(kind='build', label='a',
-                          attributes={'run_on_projects': run_on_projects}),
+            'a': Task(kind='build', label='a',
+                      attributes={'run_on_projects': run_on_projects},
+                      task={}),
         }, graph=Graph(nodes={'a'}, edges=set()))
         parameters = {'project': project}
         return 'a' in method(graph, parameters)
@@ -67,8 +68,8 @@ class TestTargetTasks(unittest.TestCase):
 
     def test_try_option_syntax(self):
         tasks = {
-            'a': TestTask(kind=None, label='a'),
-            'b': TestTask(kind=None, label='b', attributes={'at-at': 'yep'}),
+            'a': Task(kind=None, label='a', attributes={}, task={}),
+            'b': Task(kind=None, label='b', attributes={'at-at': 'yep'}, task={}),
         }
         graph = Graph(nodes=set('ab'), edges=set())
         tg = TaskGraph(tasks, graph)

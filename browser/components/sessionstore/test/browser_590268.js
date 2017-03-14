@@ -11,8 +11,6 @@ function test() {
   waitForExplicitFinish();
   requestLongerTimeout(2);
 
-  let startedTest = false;
-
   // wasLoaded will be used to keep track of tabs that have already had SSTabRestoring
   // fired for them.
   let wasLoaded = { };
@@ -87,8 +85,7 @@ function test() {
       // then the test is successful.
       try {
         ss.deleteTabValue(tab, "baz");
-      }
-      catch (e) {
+      } catch (e) {
         ok(false, "no error calling deleteTabValue - " + e);
       }
 

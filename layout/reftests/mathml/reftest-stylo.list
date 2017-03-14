@@ -50,7 +50,7 @@ fails == mi-mathvariant-2.xhtml mi-mathvariant-2.xhtml
 fails == mi-mathvariant-3.html mi-mathvariant-3.html
 fails == non-spacing-accent-1.xhtml non-spacing-accent-1.xhtml
 fails == overbar-width-1.xhtml overbar-width-1.xhtml
-fails == quotes-1.xhtml quotes-1.xhtml
+== quotes-1.xhtml quotes-1.xhtml
 fails == stretchy-underbar-1.xhtml stretchy-underbar-1.xhtml
 fails == stretchy-munderover-1a.html stretchy-munderover-1a.html
 fails == stretchy-munderover-1b.html stretchy-munderover-1b.html

@@ -31,13 +31,12 @@ var prepareTest = Task.async(function* () {
 var getUpgradeBackups = Task.async(function* () {
   let iterator;
   let backups = [];
-  let upgradeBackupPrefix = Paths.upgradeBackupPrefix;
 
   try {
     iterator = new OS.File.DirectoryIterator(Paths.backups);
 
     // iterate over all files in the backup directory
-    yield iterator.forEach(function (file) {
+    yield iterator.forEach(function(file) {
       // check the upgradeBackupPrefix
       if (file.path.startsWith(Paths.upgradeBackupPrefix)) {
         // the file is a backup
@@ -119,7 +118,7 @@ add_task(function* test_upgrade_backup_removal() {
 
   // find all backups that were created during the last call to `SessionFile.write("");`
   // ie, filter out all the backups that have already been present before the call
-  newBackups = newBackups.filter(function (backup) {
+  newBackups = newBackups.filter(function(backup) {
     return backups.indexOf(backup) < 0;
   });
 
@@ -131,4 +130,3 @@ add_task(function* test_upgrade_backup_removal() {
   backups = yield getUpgradeBackups();
   is(backups.length, maxUpgradeBackups, "second call to SessionFile.write() didn't create or remove more backups");
 });
-

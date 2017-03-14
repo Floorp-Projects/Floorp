@@ -59,16 +59,14 @@ xul|*.checkbox-icon {
 /* Never draw a border for the focusring, use outline instead */
 xul|*.button-box,
 xul|*.menulist-label-box,
-xul|*.radio-label-box,
-xul|*.checkbox-label-box {
+xul|*.radio-label-box {
   border-style: none;
 }
 
 xul|button:-moz-focusring > xul|*.button-box,
 xul|menulist:-moz-focusring > xul|*.menulist-label-box,
 xul|radio[focused="true"] > xul|*.radio-label-box,
-html|input[type="checkbox"]:-moz-focusring + html|label:before,
-xul|checkbox:-moz-focusring > xul|*.checkbox-label-box {
+html|input[type="checkbox"]:-moz-focusring + html|label:before {
   outline: 1px dotted;
 }
 
