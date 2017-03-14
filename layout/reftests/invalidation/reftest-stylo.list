@@ -66,8 +66,8 @@ fails == layer-splitting-4.html layer-splitting-4.html
 fails == layer-splitting-5.html layer-splitting-5.html
 fails == layer-splitting-6.html layer-splitting-6.html
 fails == layer-splitting-7.html layer-splitting-7.html
-fails == image-scrolling-zoom-1.html image-scrolling-zoom-1.html
-fails == image-scrolling-zoom-1-ref.html image-scrolling-zoom-1-ref.html
+== image-scrolling-zoom-1.html image-scrolling-zoom-1.html
+== image-scrolling-zoom-1-ref.html image-scrolling-zoom-1-ref.html
 fails pref(layers.single-tile.enabled,false) == fast-scrolling.html fast-scrolling.html
 == background-position-1.html background-position-1.html
 == background-position-2a.html background-position-2a.html
