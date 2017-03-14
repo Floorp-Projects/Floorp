@@ -4,6 +4,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
+                                  "resource://gre/modules/LightweightThemeManager.jsm");
 
 // WeakMap[Extension -> Theme]
 let themeMap = new WeakMap();
@@ -50,6 +52,7 @@ class Theme {
     if (this.lwtStyles.headerURL &&
         this.lwtStyles.accentcolor &&
         this.lwtStyles.textcolor) {
+      LightweightThemeManager.fallbackThemeData = this.lwtStyles;
       Services.obs.notifyObservers(null,
         "lightweight-theme-styling-update",
         JSON.stringify(this.lwtStyles));
@@ -142,6 +145,7 @@ class Theme {
     for (let icon of ICONS) {
       lwtStyles.icons[`--${icon}--icon`] = "";
     }
+    LightweightThemeManager.fallbackThemeData = null;
     Services.obs.notifyObservers(null,
       "lightweight-theme-styling-update",
       JSON.stringify(lwtStyles));
