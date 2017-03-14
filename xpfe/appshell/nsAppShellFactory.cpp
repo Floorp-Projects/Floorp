@@ -31,10 +31,26 @@ static const mozilla::Module::ContractIDEntry kAppShellContracts[] = {
   { nullptr }
 };
 
+static nsresult
+nsAppShellModuleConstructor()
+{
+  return nsChromeTreeOwner::InitGlobals();
+}
+
+static void
+nsAppShellModuleDestructor()
+{
+  nsChromeTreeOwner::FreeGlobals();
+}
+
 static const mozilla::Module kAppShellModule = {
   mozilla::Module::kVersion,
   kAppShellCIDs,
   kAppShellContracts,
+  nullptr,
+  nullptr,
+  nsAppShellModuleConstructor,
+  nsAppShellModuleDestructor
 };
 
 NSMODULE_DEFN(appshell) = &kAppShellModule;

@@ -1848,10 +1848,12 @@ nsNSSComponent::Init()
   // - wrong thread: 'NS_IsMainThread()' in nsIOService.cpp
   // when loading error strings on the SSL threads.
   {
-    const char16_t* dummy = u"dummy";
+    NS_NAMED_LITERAL_STRING(dummy_name, "dummy");
     nsXPIDLString result;
-    mPIPNSSBundle->GetStringFromName(dummy, getter_Copies(result));
-    mNSSErrorsBundle->GetStringFromName(dummy, getter_Copies(result));
+    mPIPNSSBundle->GetStringFromName(dummy_name.get(),
+                                     getter_Copies(result));
+    mNSSErrorsBundle->GetStringFromName(dummy_name.get(),
+                                        getter_Copies(result));
   }
 
 

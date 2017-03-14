@@ -183,7 +183,9 @@ nsresult GetInstallYear(uint32_t& aYear)
 {
   HKEY hKey;
   LONG status = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                              L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                              NS_LITERAL_STRING(
+                              "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"
+                              ).get(),
                               0, KEY_READ | KEY_WOW64_64KEY, &hKey);
 
   if (status != ERROR_SUCCESS) {

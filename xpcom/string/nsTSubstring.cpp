@@ -14,7 +14,9 @@ using double_conversion::DoubleToStringConverter;
 #ifdef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
 nsTSubstring_CharT::nsTSubstring_CharT(char_type* aData, size_type aLength,
                                        uint32_t aFlags)
-  : nsTStringRepr_CharT(aData, aLength, aFlags)
+  : mData(aData),
+    mLength(aLength),
+    mFlags(aFlags)
 {
   if (aFlags & F_OWNED) {
     STRING_STAT_INCREMENT(Adopt);
@@ -30,6 +32,21 @@ inline const nsTFixedString_CharT*
 AsFixedString(const nsTSubstring_CharT* aStr)
 {
   return static_cast<const nsTFixedString_CharT*>(aStr);
+}
+
+
+nsTSubstring_CharT::char_type
+nsTSubstring_CharT::First() const
+{
+  MOZ_RELEASE_ASSERT(mLength > 0, "|First()| called on an empty string");
+  return mData[0];
+}
+
+nsTSubstring_CharT::char_type
+nsTSubstring_CharT::Last() const
+{
+  MOZ_RELEASE_ASSERT(mLength > 0, "|Last()| called on an empty string");
+  return mData[mLength - 1];
 }
 
 /**
@@ -747,53 +764,23 @@ nsTSubstring_CharT::SetIsVoid(bool aVal)
   }
 }
 
-namespace mozilla {
-namespace detail {
-
-nsTStringRepr_CharT::char_type
-nsTStringRepr_CharT::First() const
-{
-  MOZ_RELEASE_ASSERT(mLength > 0, "|First()| called on an empty string");
-  return mData[0];
-}
-
-nsTStringRepr_CharT::char_type
-nsTStringRepr_CharT::Last() const
-{
-  MOZ_RELEASE_ASSERT(mLength > 0, "|Last()| called on an empty string");
-  return mData[mLength - 1];
-}
-
 bool
-nsTStringRepr_CharT::Equals(const self_type& aStr) const
+nsTSubstring_CharT::Equals(const self_type& aStr) const
 {
   return mLength == aStr.mLength &&
          char_traits::compare(mData, aStr.mData, mLength) == 0;
 }
 
 bool
-nsTStringRepr_CharT::Equals(const self_type& aStr,
-                            const comparator_type& aComp) const
+nsTSubstring_CharT::Equals(const self_type& aStr,
+                           const comparator_type& aComp) const
 {
   return mLength == aStr.mLength &&
          aComp(mData, aStr.mData, mLength, aStr.mLength) == 0;
 }
 
 bool
-nsTStringRepr_CharT::Equals(const substring_tuple_type& aTuple) const
-{
-  return Equals(substring_type(aTuple));
-}
-
-bool
-nsTStringRepr_CharT::Equals(const substring_tuple_type& aTuple,
-                            const comparator_type& aComp) const
-{
-  return Equals(substring_type(aTuple), aComp);
-}
-
-bool
-nsTStringRepr_CharT::Equals(const char_type* aData) const
+nsTSubstring_CharT::Equals(const char_type* aData) const
 {
   // unfortunately, some callers pass null :-(
   if (!aData) {
@@ -808,8 +795,8 @@ nsTStringRepr_CharT::Equals(const char_type* aData) const
 }
 
 bool
-nsTStringRepr_CharT::Equals(const char_type* aData,
-                            const comparator_type& aComp) const
+nsTSubstring_CharT::Equals(const char_type* aData,
+                           const comparator_type& aComp) const
 {
   // unfortunately, some callers pass null :-(
   if (!aData) {
@@ -823,36 +810,36 @@ nsTStringRepr_CharT::Equals(const char_type* aData,
 }
 
 bool
-nsTStringRepr_CharT::EqualsASCII(const char* aData, size_type aLen) const
+nsTSubstring_CharT::EqualsASCII(const char* aData, size_type aLen) const
 {
   return mLength == aLen &&
          char_traits::compareASCII(mData, aData, aLen) == 0;
 }
 
 bool
-nsTStringRepr_CharT::EqualsASCII(const char* aData) const
+nsTSubstring_CharT::EqualsASCII(const char* aData) const
 {
   return char_traits::compareASCIINullTerminated(mData, mLength, aData) == 0;
 }
 
 bool
-nsTStringRepr_CharT::LowerCaseEqualsASCII(const char* aData,
-                                          size_type aLen) const
+nsTSubstring_CharT::LowerCaseEqualsASCII(const char* aData,
+                                         size_type aLen) const
 {
   return mLength == aLen &&
          char_traits::compareLowerCaseToASCII(mData, aData, aLen) == 0;
 }
 
 bool
-nsTStringRepr_CharT::LowerCaseEqualsASCII(const char* aData) const
+nsTSubstring_CharT::LowerCaseEqualsASCII(const char* aData) const
 {
   return char_traits::compareLowerCaseToASCIINullTerminated(mData,
                                                             mLength,
                                                             aData) == 0;
 }
 
-nsTStringRepr_CharT::size_type
-nsTStringRepr_CharT::CountChar(char_type aChar) const
+nsTSubstring_CharT::size_type
+nsTSubstring_CharT::CountChar(char_type aChar) const
 {
   const char_type* start = mData;
   const char_type* end   = mData + mLength;
@@ -861,7 +848,7 @@ nsTStringRepr_CharT::CountChar(char_type aChar) const
 }
 
 int32_t
-nsTStringRepr_CharT::FindChar(char_type aChar, index_type aOffset) const
+nsTSubstring_CharT::FindChar(char_type aChar, index_type aOffset) const
 {
   if (aOffset < mLength) {
     const char_type* result = char_traits::find(mData + aOffset,
@@ -872,9 +859,6 @@ nsTStringRepr_CharT::FindChar(char_type aChar, index_type aOffset) const
   }
   return -1;
 }
-
-} // namespace detail
-} // namespace mozilla
 
 void
 nsTSubstring_CharT::StripChar(char_type aChar, int32_t aOffset)
