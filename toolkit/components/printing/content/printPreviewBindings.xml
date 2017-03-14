@@ -161,10 +161,16 @@
 
           let $ = id => document.getAnonymousElementByAttribute(this, "anonid", id);
           let ltr = document.documentElement.matches(":root:-moz-locale-dir(ltr)");
-          $("navigateHome").label = ltr ? "⏮" : "⏭";
+          // Windows 7 doesn't support ⏮ and ⏭ by default, and fallback doesn't
+          // always work (bug 1343330).
+          let {AppConstants} = Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
+          let useCompatCharacters = AppConstants.isPlatformAndVersionAtMost("win", "6.1");
+          let leftEnd = useCompatCharacters ? "⏪" : "⏮";
+          let rightEnd = useCompatCharacters ? "⏩" : "⏭";
+          $("navigateHome").label = ltr ? leftEnd : rightEnd;
           $("navigatePrevious").label = ltr ? "◂" : "▸";
           $("navigateNext").label = ltr ? "▸" : "◂";
-          $("navigateEnd").label = ltr ? "⏭" : "⏮";
+          $("navigateEnd").label = ltr ? rightEnd : leftEnd;
         ]]>
         </body>
       </method>
