@@ -1961,8 +1961,11 @@ MediaFormatReader::HandleDemuxedSamples(
     RefPtr<TrackInfoSharedPtr> info = sample->mTrackInfo;
 
     if (info && decoder.mLastStreamSourceID != info->GetID()) {
-      if (decoder.mNextStreamSourceID.isNothing()
-          || decoder.mNextStreamSourceID.ref() != info->GetID()) {
+      bool recyclable = MediaPrefs::MediaDecoderCheckRecycling()
+                        && decoder.mDecoder->SupportDecoderRecycling();
+      if (!recyclable
+          && (decoder.mNextStreamSourceID.isNothing()
+              || decoder.mNextStreamSourceID.ref() != info->GetID())) {
         LOG("%s stream id has changed from:%d to:%d, draining decoder.",
           TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
           info->GetID());
@@ -1978,8 +1981,7 @@ MediaFormatReader::HandleDemuxedSamples(
       decoder.mLastStreamSourceID = info->GetID();
       decoder.mNextStreamSourceID.reset();
 
-      if (!MediaPrefs::MediaDecoderCheckRecycling()
-          || !decoder.mDecoder->SupportDecoderRecycling()) {
+      if (!recyclable) {
         LOG("Decoder does not support recycling, recreate decoder.");
         // If flushing is required, it will clear our array of queued samples.
         // So make a copy now.
