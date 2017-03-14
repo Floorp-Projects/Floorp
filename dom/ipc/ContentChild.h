@@ -239,6 +239,9 @@ public:
   virtual PChildToParentStreamChild* AllocPChildToParentStreamChild() override;
   virtual bool DeallocPChildToParentStreamChild(PChildToParentStreamChild*) override;
 
+  virtual PParentToChildStreamChild* AllocPParentToChildStreamChild() override;
+  virtual bool DeallocPParentToChildStreamChild(PParentToChildStreamChild*) override;
+
   virtual PScreenManagerChild*
   AllocPScreenManagerChild(uint32_t* aNumberOfScreens,
                            float* aSystemDefaultScale,

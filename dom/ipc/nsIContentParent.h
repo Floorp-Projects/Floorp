@@ -10,6 +10,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/ipc/PChildToParentStreamParent.h"
+#include "mozilla/ipc/PParentToChildStreamParent.h"
 
 #include "nsFrameMessageManager.h"
 #include "nsISupports.h"
@@ -33,6 +35,7 @@ class CpowEntry;
 namespace ipc {
 class PFileDescriptorSetParent;
 class PChildToParentStreamParent;
+class PParentToChildStreamParent;
 }
 
 namespace dom {
@@ -75,6 +78,9 @@ public:
                           const ContentParentId& aCpId,
                           const bool& aIsForBrowser) = 0;
 
+  virtual mozilla::ipc::PFileDescriptorSetParent*
+  SendPFileDescriptorSetConstructor(const mozilla::ipc::FileDescriptor&) = 0;
+
   virtual bool IsContentParent() const { return false; }
 
   ContentParent* AsContentParent();
@@ -86,6 +92,9 @@ public:
   nsFrameMessageManager* GetMessageManager() const { return mMessageManager; }
 
   virtual int32_t Pid() const = 0;
+
+  virtual mozilla::ipc::PParentToChildStreamParent*
+  SendPParentToChildStreamConstructor(mozilla::ipc::PParentToChildStreamParent*) = 0;
 
 protected: // methods
   bool CanOpenBrowser(const IPCTabContext& aContext);
@@ -115,6 +124,11 @@ protected: // IPDL methods
 
   virtual bool
   DeallocPChildToParentStreamParent(mozilla::ipc::PChildToParentStreamParent* aActor);
+
+  virtual mozilla::ipc::PParentToChildStreamParent* AllocPParentToChildStreamParent();
+
+  virtual bool
+  DeallocPParentToChildStreamParent(mozilla::ipc::PParentToChildStreamParent* aActor);
 
   virtual mozilla::ipc::IPCResult RecvSyncMessage(const nsString& aMsg,
                                                   const ClonedMessageData& aData,

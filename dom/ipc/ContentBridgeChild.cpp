@@ -180,6 +180,18 @@ ContentBridgeChild::DeallocPChildToParentStreamChild(PChildToParentStreamChild* 
   return nsIContentChild::DeallocPChildToParentStreamChild(aActor);
 }
 
+PParentToChildStreamChild*
+ContentBridgeChild::AllocPParentToChildStreamChild()
+{
+  return nsIContentChild::AllocPParentToChildStreamChild();
+}
+
+bool
+ContentBridgeChild::DeallocPParentToChildStreamChild(PParentToChildStreamChild* aActor)
+{
+  return nsIContentChild::DeallocPParentToChildStreamChild(aActor);
+}
+
 PFileDescriptorSetChild*
 ContentBridgeChild::AllocPFileDescriptorSetChild(const FileDescriptor& aFD)
 {

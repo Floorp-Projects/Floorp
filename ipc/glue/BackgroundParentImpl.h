@@ -107,6 +107,12 @@ protected:
   virtual bool
   DeallocPChildToParentStreamParent(PChildToParentStreamParent* aActor) override;
 
+  virtual PParentToChildStreamParent*
+  AllocPParentToChildStreamParent() override;
+
+  virtual bool
+  DeallocPParentToChildStreamParent(PParentToChildStreamParent* aActor) override;
+
   virtual PServiceWorkerManagerParent*
   AllocPServiceWorkerManagerParent() override;
 

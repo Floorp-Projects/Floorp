@@ -18,7 +18,9 @@
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/PFileDescriptorSetParent.h"
-#include "mozilla/ipc/SendStreamAlloc.h"
+#include "mozilla/ipc/IPCStreamAlloc.h"
+#include "mozilla/ipc/IPCStreamDestination.h"
+#include "mozilla/ipc/IPCStreamSource.h"
 #include "mozilla/Unused.h"
 
 #include "nsFrameMessageManager.h"
@@ -268,6 +270,19 @@ nsIContentParent::AllocPChildToParentStreamParent()
 
 bool
 nsIContentParent::DeallocPChildToParentStreamParent(PChildToParentStreamParent* aActor)
+{
+  delete aActor;
+  return true;
+}
+
+PParentToChildStreamParent*
+nsIContentParent::AllocPParentToChildStreamParent()
+{
+  MOZ_CRASH("PParentToChildStreamChild actors should be manually constructed!");
+}
+
+bool
+nsIContentParent::DeallocPParentToChildStreamParent(PParentToChildStreamParent* aActor)
 {
   delete aActor;
   return true;

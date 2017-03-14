@@ -6,6 +6,7 @@
 
 include protocol PBlob;
 include protocol PChildToParentStream;
+include protocol PParentToChildStream;
 include IPCStream;
 include ProtocolTypes;
 
