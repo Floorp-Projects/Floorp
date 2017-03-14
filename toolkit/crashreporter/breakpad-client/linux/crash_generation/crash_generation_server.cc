@@ -44,9 +44,9 @@
 #include "linux/crash_generation/crash_generation_server.h"
 #include "linux/crash_generation/client_info.h"
 #include "linux/handler/exception_handler.h"
+#include "linux/handler/guid_generator.h"
 #include "linux/minidump_writer/minidump_writer.h"
 #include "common/linux/eintr_wrapper.h"
-#include "common/linux/guid_creator.h"
 #include "common/linux/safe_readlink.h"
 
 static const char kCommandQuit = 'x';
