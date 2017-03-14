@@ -7,6 +7,7 @@
 /* utility functions for drawing borders and backgrounds */
 
 #include "nsImageRenderer.h"
+#include "nsCSSRenderingGradients.h"
 
 nsSize
 CSSSizeOrRatio::ComputeConcreteSize() const
@@ -508,10 +509,10 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     }
     case eStyleImageType_Gradient:
     {
-      nsCSSRendering::PaintGradient(aPresContext, *ctx,
-                                    mGradientData, aDirtyRect,
-                                    aDest, aFill, aRepeatSize, aSrc, mSize,
-                                    aOpacity);
+      nsCSSGradientRenderer::Paint(aPresContext, *ctx,
+                                   mGradientData, aDirtyRect,
+                                   aDest, aFill, aRepeatSize, aSrc, mSize,
+                                   aOpacity);
       break;
     }
     case eStyleImageType_Element:
