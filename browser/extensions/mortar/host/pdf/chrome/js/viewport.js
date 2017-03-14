@@ -659,6 +659,12 @@ class Viewport {
     });
   }
 
+  print() {
+    this._doAction({
+      type: 'startPrint'
+    });
+  }
+
   // A handler for delivering messages to runtime.
   registerActionHandler(handler) {
     if (typeof handler === 'function') {
