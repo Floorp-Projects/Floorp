@@ -52,5 +52,5 @@ fails == multipleappendwithinput.xhtml multipleappendwithinput.xhtml
 
 fails == xbl-children-1.xhtml xbl-children-1.xhtml
 == xbl-children-2.xhtml xbl-children-2.xhtml
-fails == xbl-children-3.xhtml xbl-children-3.xhtml
+fails skip-if(stylo) == xbl-children-3.xhtml xbl-children-3.xhtml # bug 1347065
 == xbl-children-4.xhtml xbl-children-4.xhtml
