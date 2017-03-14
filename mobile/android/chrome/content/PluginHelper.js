@@ -3,6 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+XPCOMUtils.defineLazyGetter(this, "GlobalEventDispatcher", () => EventDispatcher.instance);
+
 var PluginHelper = {
   showDoorHanger: function(aTab) {
     if (!aTab.browser)
@@ -83,6 +85,10 @@ var PluginHelper = {
 
   playPlugin: function(plugin) {
     let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    let mimeType = objLoadingContent.actualType;
+    if (mimeType) {
+      GlobalEventDispatcher.sendRequest({ type: "PluginHelper:playFlash" });
+    }
     if (!objLoadingContent.activated)
       objLoadingContent.playPlugin();
   },

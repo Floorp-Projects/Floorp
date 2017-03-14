@@ -161,6 +161,7 @@ public abstract class GeckoApp
     public static final String LAST_SELECTED_TAB           = "lastSelectedTab";
 
     public static final String PREFS_ALLOW_STATE_BUNDLE    = "allowStateBundle";
+    public static final String PREFS_FLASH_USAGE = "playFlashCount";
     public static final String PREFS_VERSION_CODE          = "versionCode";
     public static final String PREFS_WAS_STOPPED           = "wasStopped";
     public static final String PREFS_CRASHED_COUNT         = "crashedCount";
@@ -824,6 +825,11 @@ public abstract class GeckoApp
 
         } else if ("Update:Install".equals(event)) {
             UpdateServiceHelper.applyUpdate(this);
+
+        } else if ("PluginHelper:playFlash".equals(event)) {
+            final SharedPreferences prefs = getSharedPreferences();
+            int count = prefs.getInt(PREFS_FLASH_USAGE, 0);
+            prefs.edit().putInt(PREFS_FLASH_USAGE,++count).apply();
         }
     }
 
@@ -1245,6 +1251,7 @@ public abstract class GeckoApp
             "Accessibility:Ready",
             "Gecko:Exited",
             "Gecko:Ready",
+            "PluginHelper:playFlash",
             null);
 
         EventDispatcher.getInstance().registerUiThreadListener(this,
@@ -2386,6 +2393,7 @@ public abstract class GeckoApp
             "Accessibility:Ready",
             "Gecko:Exited",
             "Gecko:Ready",
+            "PluginHelper:playFlash",
             null);
 
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
