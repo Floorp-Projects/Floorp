@@ -178,11 +178,14 @@ EyeDropper.prototype = {
     this.pageImage = null;
 
     let {pageListenerTarget} = this.highlighterEnv;
-    pageListenerTarget.removeEventListener("mousemove", this);
-    pageListenerTarget.removeEventListener("click", this, true);
-    pageListenerTarget.removeEventListener("keydown", this);
-    pageListenerTarget.removeEventListener("DOMMouseScroll", this);
-    pageListenerTarget.removeEventListener("FullZoomChange", this);
+
+    if (pageListenerTarget) {
+      pageListenerTarget.removeEventListener("mousemove", this);
+      pageListenerTarget.removeEventListener("click", this, true);
+      pageListenerTarget.removeEventListener("keydown", this);
+      pageListenerTarget.removeEventListener("DOMMouseScroll", this);
+      pageListenerTarget.removeEventListener("FullZoomChange", this);
+    }
 
     this.getElement("root").setAttribute("hidden", "true");
     this.getElement("root").removeAttribute("drawn");

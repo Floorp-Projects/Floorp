@@ -21,7 +21,6 @@ public:
   void SetDisplayInfo(const VRDisplayInfo& aDisplayInfo);
   virtual void NotifyVSync() override;
   virtual VRHMDSensorState GetSensorState() override;
-  virtual VRHMDSensorState GetImmediateSensorState() override;
   void SetSensorState(const VRHMDSensorState& aSensorState);
   void ZeroSensor() override;
 

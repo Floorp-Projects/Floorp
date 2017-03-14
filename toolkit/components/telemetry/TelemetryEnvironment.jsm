@@ -226,12 +226,12 @@ function enforceBoolean(aValue) {
 }
 
 /**
- * Get the current browser.
+ * Get the current browser locale.
  * @return a string with the locale or null on failure.
  */
 function getBrowserLocale() {
   try {
-    return Services.locale.getAppLocale();
+    return Services.locale.getAppLocaleAsLangTag();
   } catch (e) {
     return null;
   }

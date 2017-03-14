@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Test that we correctly set `moreChildrenAvailable` when doing a partial
 // traversal of a dominator tree to create the initial incrementally loaded
@@ -154,8 +155,10 @@ function run_test() {
   const actual = DominatorTreeNode.partialTraversal(mockDominatorTree,
                                                     mockSnapshot,
                                                     breakdown,
-                                                    /* maxDepth = */ 4,
-                                                    /* siblings = */ 2);
+                                                    // maxDepth
+                                                    4,
+                                                    // siblings
+                                                    2);
 
   dumpn("Expected = " + JSON.stringify(expected, null, 2));
   dumpn("Actual = " + JSON.stringify(actual, null, 2));

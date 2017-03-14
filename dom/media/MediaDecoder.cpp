@@ -297,24 +297,15 @@ MediaDecoder::ResourceCallback::NotifyBytesConsumed(int64_t aBytes,
 }
 
 void
-MediaDecoder::NotifyOwnerActivityChanged(bool aIsVisible)
+MediaDecoder::NotifyOwnerActivityChanged(bool aIsDocumentVisible,
+                                         bool aIsElementVisible,
+                                         bool aIsElementInTree)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  SetElementVisibility(aIsVisible);
+  SetElementVisibility(aIsDocumentVisible, aIsElementVisible, aIsElementInTree);
 
-  MediaDecoderOwner* owner = GetOwner();
-  NS_ENSURE_TRUE_VOID(owner);
-
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
-  NS_ENSURE_TRUE_VOID(element);
-
-  RefPtr<LayerManager> layerManager =
-    nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
-  if (layerManager) {
-    RefPtr<KnowsCompositor> knowsCompositor = layerManager->AsShadowForwarder();
-    mCompositorUpdatedEvent.Notify(knowsCompositor);
-  }
+  NotifyCompositor();
 }
 
 void
@@ -405,8 +396,11 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , mMinimizePreroll(false)
   , mMediaTracksConstructed(false)
   , mFiredMetadataLoaded(false)
-  , mElementVisible(!aOwner->IsHidden())
+  , mIsDocumentVisible(false)
+  , mIsElementVisible(false)
+  , mIsElementInTree(false)
   , mForcedHidden(false)
+  , mHasSuspendTaint(false)
   , INIT_MIRROR(mStateMachineIsShutdown, true)
   , INIT_MIRROR(mBuffered, TimeIntervals())
   , INIT_MIRROR(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE)
@@ -426,7 +420,6 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , INIT_CANONICAL(mPlaybackBytesPerSecond, 0.0)
   , INIT_CANONICAL(mPlaybackRateReliable, true)
   , INIT_CANONICAL(mDecoderPosition, 0)
-  , INIT_CANONICAL(mIsVisible, !aOwner->IsHidden())
   , mTelemetryReported(false)
   , mIsMediaElement(!!aOwner->GetMediaElement())
   , mElement(aOwner->GetMediaElement())
@@ -576,6 +569,11 @@ MediaDecoder::OnPlaybackEvent(MediaEventType aEvent)
     case MediaEventType::ExitVideoSuspend:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozexitvideosuspend"));
       break;
+    case MediaEventType::StartVideoSuspendTimer:
+      GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozstartvideosuspendtimer"));
+      break;
+    case MediaEventType::CancelVideoSuspendTimer:
+      GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozcancelvideosuspendtimer"));
   }
 }
 
@@ -1294,11 +1292,32 @@ MediaDecoder::DurationChanged()
 }
 
 void
-MediaDecoder::SetElementVisibility(bool aIsVisible)
+MediaDecoder::NotifyCompositor()
+{
+  MediaDecoderOwner* owner = GetOwner();
+  NS_ENSURE_TRUE_VOID(owner);
+
+  dom::HTMLMediaElement* element = owner->GetMediaElement();
+  NS_ENSURE_TRUE_VOID(element);
+
+  RefPtr<LayerManager> layerManager =
+    nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
+  if (layerManager) {
+    RefPtr<KnowsCompositor> knowsCompositor = layerManager->AsShadowForwarder();
+    mCompositorUpdatedEvent.Notify(knowsCompositor);
+  }
+}
+
+void
+MediaDecoder::SetElementVisibility(bool aIsDocumentVisible,
+                                   bool aIsElementVisible,
+                                   bool aIsElementInTree)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mElementVisible = aIsVisible;
-  mIsVisible = !mForcedHidden && mElementVisible;
+  mIsDocumentVisible = aIsDocumentVisible;
+  mIsElementVisible = aIsElementVisible;
+  mIsElementInTree = aIsElementInTree;
+  UpdateVideoDecodeMode();
 }
 
 void
@@ -1306,7 +1325,58 @@ MediaDecoder::SetForcedHidden(bool aForcedHidden)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mForcedHidden = aForcedHidden;
-  SetElementVisibility(mElementVisible);
+  UpdateVideoDecodeMode();
+}
+
+void
+MediaDecoder::SetSuspendTaint(bool aTainted)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mHasSuspendTaint = aTainted;
+  UpdateVideoDecodeMode();
+}
+
+void
+MediaDecoder::UpdateVideoDecodeMode()
+{
+  // The MDSM may yet be set.
+  if (!mDecoderStateMachine) {
+    return;
+  }
+
+  // If mHasSuspendTaint is set, never suspend the video decoder.
+  if (mHasSuspendTaint) {
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
+    return;
+  }
+
+  // Don't suspend elements that is not in tree.
+  if (!mIsElementInTree) {
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
+    return;
+  }
+
+  // If mForcedHidden is set, suspend the video decoder anyway.
+  if (mForcedHidden) {
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);
+    return;
+  }
+
+  // Otherwise, depends on the owner's visibility state.
+  // A element is visible only if its document is visible and the element
+  // itself is visible.
+  if (mIsDocumentVisible && mIsElementVisible) {
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
+  } else {
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);
+  }
+}
+
+bool
+MediaDecoder::HasSuspendTaint() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mHasSuspendTaint;
 }
 
 void
@@ -1478,6 +1548,7 @@ MediaDecoder::SetStateMachine(MediaDecoderStateMachine* aStateMachine)
   mDecoderStateMachine = aStateMachine;
   if (aStateMachine) {
     ConnectMirrors(aStateMachine);
+    UpdateVideoDecodeMode();
   } else {
     DisconnectMirrors();
   }

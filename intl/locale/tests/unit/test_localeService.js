@@ -10,27 +10,23 @@ const { Services } = Cu.import('resource://gre/modules/Services.jsm', {});
 const osPrefs = Cc["@mozilla.org/intl/ospreferences;1"].
   getService(Ci.mozIOSPreferences);
 
+const localeService =
+  Components.classes["@mozilla.org/intl/localeservice;1"]
+  .getService(Components.interfaces.mozILocaleService);
+
 /**
  * Make sure the locale service can be instantiated.
  */
 function run_test()
 {
-  const localeService =
-    Components.classes["@mozilla.org/intl/localeservice;1"]
-    .getService(Components.interfaces.mozILocaleService);
-
   run_next_test();
 }
 
-add_test(function test_getAppLocales() {
-  const localeService =
-    Components.classes["@mozilla.org/intl/localeservice;1"]
-    .getService(Components.interfaces.mozILocaleService);
-
-  const appLocale = localeService.getAppLocale();
+add_test(function test_getAppLocalesAsLangTags() {
+  const appLocale = localeService.getAppLocaleAsLangTag();
   do_check_true(appLocale != "", "appLocale is non-empty");
 
-  const appLocales = localeService.getAppLocales();
+  const appLocales = localeService.getAppLocalesAsLangTags();
   do_check_true(Array.isArray(appLocales), "appLocales returns an array");
 
   do_check_true(appLocale == appLocales[0], "appLocale matches first entry in appLocales");
@@ -46,10 +42,6 @@ const PREF_SELECTED_LOCALE = "general.useragent.locale";
 const REQ_LOC_CHANGE_EVENT = "intl:requested-locales-changed";
 
 add_test(function test_getRequestedLocales() {
-  const localeService =
-    Components.classes["@mozilla.org/intl/localeservice;1"]
-    .getService(Components.interfaces.mozILocaleService);
-
   const requestedLocales = localeService.getRequestedLocales();
   do_check_true(Array.isArray(requestedLocales), "requestedLocales returns an array");
 
@@ -66,10 +58,6 @@ add_test(function test_getRequestedLocales() {
  */
 add_test(function test_getRequestedLocales_matchOS() {
   do_test_pending();
-
-  const localeService =
-    Components.classes["@mozilla.org/intl/localeservice;1"]
-    .getService(Components.interfaces.mozILocaleService);
 
   Services.prefs.setBoolPref(PREF_MATCH_OS_LOCALE, false);
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "ar-IR");
@@ -100,10 +88,6 @@ add_test(function test_getRequestedLocales_matchOS() {
 add_test(function test_getRequestedLocales_matchOS() {
   do_test_pending();
 
-  const localeService =
-    Components.classes["@mozilla.org/intl/localeservice;1"]
-    .getService(Components.interfaces.mozILocaleService);
-
   Services.prefs.setBoolPref(PREF_MATCH_OS_LOCALE, false);
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "ar-IR");
 
@@ -121,6 +105,22 @@ add_test(function test_getRequestedLocales_matchOS() {
 
   Services.obs.addObserver(observer, REQ_LOC_CHANGE_EVENT, false);
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "sr-RU");
+
+  run_next_test();
+});
+
+add_test(function test_setRequestedLocales() {
+  localeService.setRequestedLocales([]);
+
+  let matchOS = Services.prefs.getBoolPref(PREF_MATCH_OS_LOCALE);
+  do_check_true(matchOS === true);
+
+  localeService.setRequestedLocales(['de-AT']);
+
+  matchOS = Services.prefs.getBoolPref(PREF_MATCH_OS_LOCALE);
+  do_check_true(matchOS === false);
+  let locales = localeService.getRequestedLocales();;
+  do_check_true(locales[0] === 'de-AT');
 
   run_next_test();
 });

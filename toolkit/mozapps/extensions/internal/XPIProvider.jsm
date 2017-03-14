@@ -997,6 +997,7 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
   addon.internalName = null;
   addon.updateURL = bss.update_url;
   addon.updateKey = null;
+  addon.optionsBrowserStyle = true;
   addon.optionsURL = null;
   addon.optionsType = null;
   addon.aboutURL = null;
@@ -1010,6 +1011,12 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
       addon.optionsType = AddonManager.OPTIONS_TYPE_TAB;
     else
       addon.optionsType = AddonManager.OPTIONS_TYPE_INLINE_BROWSER;
+
+    if (manifest.options_ui.browser_style === null)
+      logger.warn("Please specify whether you want browser_style " +
+          "or not in your options_ui options.");
+    else
+      addon.optionsBrowserStyle = manifest.options_ui.browser_style;
   }
 
   // WebExtensions don't use iconURLs
@@ -1247,11 +1254,12 @@ let loadManifestFromRDF = Task.async(function*(aUri, aStream) {
       addon.bootstrap = true;
     }
 
-    // Only extensions are allowed to provide an optionsURL, optionsType or aboutURL. For
-    // all other types they are silently ignored
-    addon.optionsURL = null;
-    addon.optionsType = null;
+    // Only extensions are allowed to provide an optionsURL, optionsType,
+    // optionsBrowserStyle, or aboutURL. For all other types they are silently ignored
     addon.aboutURL = null;
+    addon.optionsBrowserStyle = null;
+    addon.optionsType = null;
+    addon.optionsURL = null;
 
     if (addon.type == "theme") {
       if (!addon.internalName)
@@ -7332,6 +7340,11 @@ AddonWrapper.prototype = {
       return AddonManager.OPTIONS_TYPE_DIALOG;
 
     return null;
+  },
+
+  get optionsBrowserStyle() {
+    let addon = addonFor(this);
+    return addon.optionsBrowserStyle;
   },
 
   get iconURL() {

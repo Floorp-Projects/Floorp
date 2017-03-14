@@ -59,6 +59,11 @@
       }
     };
     mySocket.onerror = function(e) {
+      // debug information for Bug 1316305
+      dump("  xxx mySocket.onerror: (mySocket): " + mySocket + "\n");
+      dump("  xxx mySocket.onerror: (mySocket.url): " + mySocket.url + "\n");
+      dump("  xxx mySocket.onerror: (e): " + e + "\n");
+      dump("  xxx mySocket.onerror: (e.message): " + e.message + "\n");
       window.parent.postMessage({result: "websocket-unexpected-error"}, "*");
     };
   </script>

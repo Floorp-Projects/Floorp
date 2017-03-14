@@ -74,6 +74,7 @@ CensusTreeNodeCacheValue.prototype = null;
  *          The unique string that can be used as a key in a CensusTreeNodeCache.
  */
 CensusTreeNodeCache.hashFrame = function (frame) {
+  // eslint-disable-next-line max-len
   return `FRAME,${frame.functionDisplayName},${frame.source},${frame.line},${frame.column},${frame.asyncCause}`;
 };
 

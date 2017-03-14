@@ -66,5 +66,11 @@ TestSyncHangChild::~TestSyncHangChild()
     MOZ_COUNT_DTOR(TestSyncHangChild);
 }
 
+mozilla::ipc::IPCResult
+TestSyncHangChild::RecvUnusedMessage()
+{
+  return IPC_OK();
+}
+
 } // namespace _ipdltest
 } // namespace mozilla

@@ -434,12 +434,6 @@ VRDisplayOculus::GetSensorState()
 }
 
 VRHMDSensorState
-VRDisplayOculus::GetImmediateSensorState()
-{
-  return GetSensorState(0.0);
-}
-
-VRHMDSensorState
 VRDisplayOculus::GetSensorState(double timeOffset)
 {
   VRHMDSensorState result;

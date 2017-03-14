@@ -1132,12 +1132,10 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     if (!code.initLengthUninitialized(bytesNeeded + padding))
         return nullptr;
 
-    // Delay flushing of the icache until CodeSegment::create since there is
-    // more patching to do before this code becomes executable.
-    {
-        AutoFlushICache afc("ModuleGenerator::finish", /* inhibit = */ true);
-        masm_.executableCopy(code.begin());
-    }
+    // We're not copying into executable memory, so don't flush the icache.
+    // Note: we may be executing on an arbitrary thread without TlsContext set
+    // so we can't use AutoFlushICache to inhibit.
+    masm_.executableCopy(code.begin(), /* flushICache = */ false);
 
     // Zero the padding, since we used resizeUninitialized above.
     memset(code.begin() + bytesNeeded, 0, padding);

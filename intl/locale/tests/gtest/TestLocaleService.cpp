@@ -11,16 +11,16 @@
 using namespace mozilla::intl;
 
 
-TEST(Intl_Locale_LocaleService, GetAppLocales) {
+TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags) {
   nsTArray<nsCString> appLocales;
-  LocaleService::GetInstance()->GetAppLocales(appLocales);
+  LocaleService::GetInstance()->GetAppLocalesAsLangTags(appLocales);
 
   ASSERT_FALSE(appLocales.IsEmpty());
 }
 
-TEST(Intl_Locale_LocaleService, GetAppLocales_firstMatchesChromeReg) {
+TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags_firstMatchesChromeReg) {
   nsTArray<nsCString> appLocales;
-  LocaleService::GetInstance()->GetAppLocales(appLocales);
+  LocaleService::GetInstance()->GetAppLocalesAsLangTags(appLocales);
 
   nsAutoCString uaLangTag;
   nsCOMPtr<nsIToolkitChromeRegistry> cr =
@@ -32,9 +32,9 @@ TEST(Intl_Locale_LocaleService, GetAppLocales_firstMatchesChromeReg) {
   ASSERT_TRUE(appLocales[0].Equals(uaLangTag));
 }
 
-TEST(Intl_Locale_LocaleService, GetAppLocales_lastIsEnUS) {
+TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags_lastIsEnUS) {
   nsTArray<nsCString> appLocales;
-  LocaleService::GetInstance()->GetAppLocales(appLocales);
+  LocaleService::GetInstance()->GetAppLocalesAsLangTags(appLocales);
 
   int32_t len = appLocales.Length();
   ASSERT_TRUE(appLocales[len - 1].EqualsLiteral("en-US"));
@@ -48,12 +48,12 @@ TEST(Intl_Locale_LocaleService, GetRequestedLocales) {
   ASSERT_TRUE(len > 0);
 }
 
-TEST(Intl_Locale_LocaleService, GetAppLocale) {
+TEST(Intl_Locale_LocaleService, GetAppLocaleAsLangTag) {
   nsTArray<nsCString> appLocales;
-  LocaleService::GetInstance()->GetAppLocales(appLocales);
+  LocaleService::GetInstance()->GetAppLocalesAsLangTags(appLocales);
 
   nsAutoCString locale;
-  LocaleService::GetInstance()->GetAppLocale(locale);
+  LocaleService::GetInstance()->GetAppLocaleAsLangTag(locale);
 
   ASSERT_TRUE(appLocales[0] == locale);
 }

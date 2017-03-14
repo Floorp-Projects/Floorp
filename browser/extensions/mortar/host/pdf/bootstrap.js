@@ -6,15 +6,27 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
+const messageGenerateRandomBytes = "ppapi.js:generateRandomBytes";
+const handlerURI = "chrome://ppapipdf.js/content/viewer.html";
+const prefPdfiumEnable = "pdfium.enabled";
+
 function sandboxScript(sandbox)
 {
   dump("sandboxScript " + sandbox.pluginElement + "\n");
   Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("resource://ppapipdf.js/ppapi-content-sandbox.js", sandbox);
 }
 
-const handlerURI = "chrome://ppapipdf.js/content/viewer.html";
+function prefObserver(aSubject, aTopic, aData) {
+  if (Services.prefs.getBoolPref(prefPdfiumEnable)) {
+    pdfium.init();
+  } else {
+    pdfium.uninit();
+  }
+}
+
+let bootstrapData;
 let pdfium = {
-  init(bootstrapData) {
+  init() {
     let root = bootstrapData.installPath.parent.parent;
     let rpclib = root.clone();
     let pluginlib = root.clone();
@@ -54,12 +66,10 @@ let pdfium = {
       ppapiProcessArgs: [ rpclib, pluginlib ],
     });
     plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
-    Services.ppmm.addMessageListener("ppapi.js:generateRandomBytes", this.generateRandomBytesListener);
   },
   uninit() {
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
     pluginHost.unregisterFakePlugin(handlerURI);
-    Services.ppmm.removeMessageListener("ppapi.js:generateRandomBytes", this.generateRandomBytesListener);
   },
   generateRandomBytesListener(data) {
     let rng = Cc["@mozilla.org/security/random-generator;1"].createInstance(Ci.nsIRandomGenerator);
@@ -69,10 +79,17 @@ let pdfium = {
 
 function startup(aData) {
   dump(">>>STARTED!!!\n");
-  pdfium.init(aData);
+  bootstrapData = aData;
+  if (Services.prefs.getBoolPref(prefPdfiumEnable)) {
+    pdfium.init();
+  }
+  Services.prefs.addObserver(prefPdfiumEnable, prefObserver, false);
+  Services.ppmm.addMessageListener(messageGenerateRandomBytes, pdfium.generateRandomBytesListener);
   dump("<<<STARTED!!!\n");
 }
 function shutdown() {
   dump("SHUTDOWN!!!\n");
   pdfium.uninit();
+  Services.prefs.removeObserver(prefPdfiumEnable, prefObserver);
+  Services.ppmm.removeMessageListener(messageGenerateRandomBytes, pdfium.generateRandomBytesListener);
 }

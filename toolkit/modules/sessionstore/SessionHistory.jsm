@@ -202,18 +202,10 @@ var SessionHistoryInternal = {
     }
 
     // Collect triggeringPrincipal data for the current history entry.
-    // Please note that before Bug 1297338 there was no concept of a
-    // principalToInherit. To remain backward/forward compatible we
-    // serialize the principalToInherit as triggeringPrincipal_b64.
-    // Once principalToInherit is well established (within FF55)
-    // we can update this code, remove triggeringPrincipal_b64 and
-    // just keep triggeringPrincipal_base64 as well as
-    // principalToInherit_base64;  see Bug 1301666.
     if (shEntry.principalToInherit) {
       try {
         let principalToInherit = Utils.serializePrincipal(shEntry.principalToInherit);
         if (principalToInherit) {
-          entry.triggeringPrincipal_b64 = principalToInherit;
           entry.principalToInherit_base64 = principalToInherit;
         }
       } catch (e) {
@@ -411,27 +403,11 @@ var SessionHistoryInternal = {
       }
     }
 
-    // Before introducing the concept of principalToInherit we only had
-    // a triggeringPrincipal within every entry which basically is the
-    // equivalent of the new principalToInherit. To avoid compatibility
-    // issues, we first check if the entry has entries for
-    // triggeringPrincipal_base64 and principalToInherit_base64. If not
-    // we fall back to using the principalToInherit (which is stored
-    // as triggeringPrincipal_b64) as the triggeringPrincipal and
-    // the principalToInherit.
-    // FF55 will remove the triggeringPrincipal_b64, see Bug 1301666.
-    if (entry.triggeringPrincipal_base64 || entry.principalToInherit_base64) {
-      if (entry.triggeringPrincipal_base64) {
-        shEntry.triggeringPrincipal =
-          Utils.deserializePrincipal(entry.triggeringPrincipal_base64);
-      }
-      if (entry.principalToInherit_base64) {
-        shEntry.principalToInherit =
-          Utils.deserializePrincipal(entry.principalToInherit_base64);
-      }
-    } else if (entry.triggeringPrincipal_b64) {
-      shEntry.triggeringPrincipal = Utils.deserializePrincipal(entry.triggeringPrincipal_b64);
-      shEntry.principalToInherit = shEntry.triggeringPrincipal;
+    if (entry.triggeringPrincipal_base64) {
+      shEntry.triggeringPrincipal = Utils.deserializePrincipal(entry.triggeringPrincipal_base64);
+    }
+    if (entry.principalToInherit_base64) {
+      shEntry.principalToInherit = Utils.deserializePrincipal(entry.principalToInherit_base64);
     }
 
     if (entry.children && shEntry instanceof Ci.nsISHContainer) {

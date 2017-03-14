@@ -4,6 +4,7 @@
 
 use cssparser::Parser;
 use media_queries::CSSErrorReporterTest;
+use parsing::parse;
 use servo_url::ServoUrl;
 use style::parser::ParserContext;
 use style::properties::longhands::{self, perspective_origin, transform_origin};
@@ -37,7 +38,8 @@ fn test_clip() {
 #[test]
 fn test_longhands_parse_origin() {
     let url = ServoUrl::parse("http://localhost").unwrap();
-    let context = ParserContext::new(Origin::Author, &url, Box::new(CSSErrorReporterTest));
+    let reporter = CSSErrorReporterTest;
+    let context = ParserContext::new(Origin::Author, &url, &reporter);
 
     let mut parser = Parser::new("1px some-rubbish");
     let parsed = longhands::parse_origin(&context, &mut parser);
@@ -105,4 +107,12 @@ fn test_parse_factor() {
     assert!(parse(filter::parse, "opacity(-1)").is_err());
     assert!(parse(filter::parse, "sepia(-1)").is_err());
     assert!(parse(filter::parse, "saturate(-1)").is_err());
+}
+
+#[test]
+fn blur_radius_should_not_accept_negavite_values() {
+    use style::properties::longhands::box_shadow;
+    assert!(parse(box_shadow::parse, "1px 1px -1px").is_err());// for -ve values
+    assert!(parse(box_shadow::parse, "1px 1px 0").is_ok());// for zero
+    assert!(parse(box_shadow::parse, "1px 1px 1px").is_ok());// for +ve value
 }

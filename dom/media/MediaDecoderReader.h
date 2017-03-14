@@ -260,10 +260,10 @@ public:
     return mOnTrackWaitingForKey;
   }
 
-  // Switch the video decoder to BlankDecoderModule. It might takes effective
+  // Switch the video decoder to NullDecoderModule. It might takes effective
   // since a few samples later depends on how much demuxed samples are already
   // queued in the original video decoder.
-  virtual void SetVideoBlankDecode(bool aIsBlankDecode) { }
+  virtual void SetVideoNullDecode(bool aIsNullDecode) { }
 
 protected:
   virtual ~MediaDecoderReader();

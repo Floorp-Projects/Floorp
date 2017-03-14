@@ -1060,9 +1060,9 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
 
     return {
       p1: {x: lGuide.x1, y: tGuide.y1},
-      p2: {x: rGuide.x1, y: tGuide. y1},
-      p3: {x: rGuide.x1, y: bGuide.y1},
-      p4: {x: lGuide.x1, y: bGuide.y1}
+      p2: {x: +rGuide.x1 + 1, y: tGuide.y1},
+      p3: {x: +rGuide.x1 + 1, y: +bGuide.y1 + 1},
+      p4: {x: lGuide.x1, y: +bGuide.y1 + 1}
     };
   }),
 

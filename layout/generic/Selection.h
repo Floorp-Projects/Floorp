@@ -23,8 +23,12 @@
 struct CachedOffsetForFrame;
 class nsAutoScrollTimer;
 class nsIContentIterator;
+class nsIDocument;
+class nsIEditor;
 class nsIFrame;
+class nsIHTMLEditor;
 class nsFrameSelection;
+class nsPIDOMWindowOuter;
 struct SelectionDetails;
 class nsCopySupport;
 class nsHTMLCopyEncoder;
@@ -167,13 +171,20 @@ public:
   uint32_t     FocusOffset();
 
   bool IsCollapsed() const;
-  void Collapse(nsINode& aNode, uint32_t aOffset, mozilla::ErrorResult& aRv);
-  void CollapseToStart(mozilla::ErrorResult& aRv);
-  void CollapseToEnd(mozilla::ErrorResult& aRv);
 
-  void Extend(nsINode& aNode, uint32_t aOffset, mozilla::ErrorResult& aRv);
+  // *JS() methods are mapped to Selection.*().
+  // They may move focus only when the range represents normal selection.
+  // These methods shouldn't be used by non-JS callers.
+  void CollapseJS(nsINode& aNode, uint32_t aOffset,
+                  mozilla::ErrorResult& aRv);
+  void CollapseToStartJS(mozilla::ErrorResult& aRv);
+  void CollapseToEndJS(mozilla::ErrorResult& aRv);
 
-  void SelectAllChildren(nsINode& aNode, mozilla::ErrorResult& aRv);
+  void ExtendJS(nsINode& aNode, uint32_t aOffset,
+                mozilla::ErrorResult& aRv);
+
+  void SelectAllChildrenJS(nsINode& aNode, mozilla::ErrorResult& aRv);
+
   void DeleteFromDocument(mozilla::ErrorResult& aRv);
 
   uint32_t RangeCount() const
@@ -181,7 +192,7 @@ public:
     return mRanges.Length();
   }
   nsRange* GetRangeAt(uint32_t aIndex, mozilla::ErrorResult& aRv);
-  void AddRange(nsRange& aRange, mozilla::ErrorResult& aRv);
+  void AddRangeJS(nsRange& aRange, mozilla::ErrorResult& aRv);
   void RemoveRange(nsRange& aRange, mozilla::ErrorResult& aRv);
   void RemoveAllRanges(mozilla::ErrorResult& aRv);
 
@@ -201,9 +212,9 @@ public:
   void Modify(const nsAString& aAlter, const nsAString& aDirection,
               const nsAString& aGranularity, mozilla::ErrorResult& aRv);
 
-  void SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
-                        nsINode& aFocusNode, uint32_t aFocusOffset,
-                        mozilla::ErrorResult& aRv);
+  void SetBaseAndExtentJS(nsINode& aAnchorNode, uint32_t aAnchorOffset,
+                          nsINode& aFocusNode, uint32_t aFocusOffset,
+                          mozilla::ErrorResult& aRv);
 
   bool GetInterlinePosition(mozilla::ErrorResult& aRv);
   void SetInterlinePosition(bool aValue, mozilla::ErrorResult& aRv);
@@ -237,6 +248,17 @@ public:
                       int16_t aVPercent, int16_t aHPercent,
                       mozilla::ErrorResult& aRv);
 
+  // Non-JS callers should use the following methods.
+  void Collapse(nsINode& aNode, uint32_t aOffset, mozilla::ErrorResult& aRv);
+  void CollapseToStart(mozilla::ErrorResult& aRv);
+  void CollapseToEnd(mozilla::ErrorResult& aRv);
+  void Extend(nsINode& aNode, uint32_t aOffset, mozilla::ErrorResult& aRv);
+  void AddRange(nsRange& aRange, mozilla::ErrorResult& aRv);
+  void SelectAllChildren(nsINode& aNode, mozilla::ErrorResult& aRv);
+  void SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
+                        nsINode& aFocusNode, uint32_t aFocusOffset,
+                        mozilla::ErrorResult& aRv);
+
   void AddSelectionChangeBlocker();
   void RemoveSelectionChangeBlocker();
   bool IsBlockingSelectionChangeEvents() const;
@@ -259,7 +281,8 @@ public:
     mSelectionType = aSelectionType;
   }
 
-  nsresult     NotifySelectionListeners();
+  nsresult NotifySelectionListeners(bool aCalledByJS);
+  nsresult NotifySelectionListeners();
 
   friend struct AutoUserInitiated;
   struct MOZ_RAII AutoUserInitiated
@@ -335,6 +358,43 @@ private:
    */
   nsresult AddItemInternal(nsRange* aRange, int32_t* aOutIndex);
 
+  nsIDocument* GetDocument() const;
+  nsPIDOMWindowOuter* GetWindow() const;
+  nsIEditor* GetEditor() const;
+
+  /**
+   * GetCommonEditingHostForAllRanges() returns common editing host of all
+   * ranges if there is. If at least one of the ranges is in non-editable
+   * element, returns nullptr.  See following examples for the detail:
+   *
+   *  <div id="a" contenteditable>
+   *    an[cestor
+   *    <div id="b" contenteditable="false">
+   *      non-editable
+   *      <div id="c" contenteditable>
+   *        desc]endant
+   *  in this case, this returns div#a because div#c is also in div#a.
+   *
+   *  <div id="a" contenteditable>
+   *    an[ce]stor
+   *    <div id="b" contenteditable="false">
+   *      non-editable
+   *      <div id="c" contenteditable>
+   *        de[sc]endant
+   *  in this case, this returns div#a because second range is also in div#a
+   *  and common ancestor of the range (i.e., div#c) is editable.
+   *
+   *  <div id="a" contenteditable>
+   *    an[ce]stor
+   *    <div id="b" contenteditable="false">
+   *      [non]-editable
+   *      <div id="c" contenteditable>
+   *        de[sc]endant
+   *  in this case, this returns nullptr because the second range is in
+   *  non-editable area.
+   */
+  Element* GetCommonEditingHostForAllRanges();
+
   // These are the ranges inside this selection. They are kept sorted in order
   // of DOM start position.
   //
@@ -364,6 +424,12 @@ private:
    * as well as whether selectstart events will be fired.
    */
   bool mUserInitiated;
+
+  /**
+   * When the selection change is caused by a call of Selection API,
+   * mCalledByJS is true.  Otherwise, false.
+   */
+  bool mCalledByJS;
 
   // Non-zero if we don't want any changes we make to the selection to be
   // visible to content. If non-zero, content won't be notified about changes.

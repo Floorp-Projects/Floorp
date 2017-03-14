@@ -19,6 +19,7 @@ namespace mp4_demuxer
 {
 
 class Index;
+class IndiceWrapper;
 
 typedef int64_t Microseconds;
 
@@ -92,7 +93,7 @@ public:
     Interval<Microseconds> mTime;
   };
 
-  Index(const nsTArray<Indice>& aIndex,
+  Index(const IndiceWrapper& aIndices,
         Stream* aSource,
         uint32_t aTrackId,
         bool aIsAudio);

@@ -465,10 +465,10 @@ bool Pickle::WriteSentinel(uint32_t sentinel) {
 void Pickle::EndRead(PickleIterator& iter, uint32_t ipcMsgType) const {
   DCHECK(iter.iter_.Done());
 
-  if (ipcMsgType != 0) {
+  if (NS_IsMainThread() && ipcMsgType != 0) {
     uint32_t latencyMs = round((mozilla::TimeStamp::Now() - iter.start_).ToMilliseconds());
     if (latencyMs >= kMinTelemetryIPCReadLatencyMs) {
-      mozilla::Telemetry::Accumulate(mozilla::Telemetry::IPC_READ_LATENCY_MS,
+      mozilla::Telemetry::Accumulate(mozilla::Telemetry::IPC_READ_MAIN_THREAD_LATENCY_MS,
                                      nsDependentCString(mozilla::ipc::StringFromIPCMessageType(ipcMsgType)),
                                      latencyMs);
     }

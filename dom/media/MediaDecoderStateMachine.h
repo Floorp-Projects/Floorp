@@ -122,7 +122,15 @@ enum class MediaEventType : int8_t
   SeekStarted,
   Invalidate,
   EnterVideoSuspend,
-  ExitVideoSuspend
+  ExitVideoSuspend,
+  StartVideoSuspendTimer,
+  CancelVideoSuspendTimer
+};
+
+enum class VideoDecodeMode : uint8_t
+{
+  Normal,
+  Suspend
 };
 
 /*
@@ -224,6 +232,9 @@ public:
 
   size_t SizeOfAudioQueue() const;
 
+  // Sets the video decode mode. Used by the suspend-video-decoder feature.
+  void SetVideoDecodeMode(VideoDecodeMode aMode);
+
 private:
   class StateObject;
   class DecodeMetadataState;
@@ -304,6 +315,8 @@ private:
   // to the decoders.
   void ResetDecode(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
                                                TrackInfo::kVideoTrack));
+
+  void SetVideoDecodeModeInternal(VideoDecodeMode aMode);
 
 protected:
   virtual ~MediaDecoderStateMachine();
@@ -611,7 +624,7 @@ private:
   const char* VideoRequestStatus() const;
 
   void OnSuspendTimerResolved();
-  void OnSuspendTimerRejected();
+  void CancelSuspendTimer();
 
   // True if we shouldn't play our audio (but still write it to any capturing
   // streams). When this is true, the audio thread will never start again after
@@ -670,6 +683,9 @@ private:
 
   // Media data resource from the decoder.
   RefPtr<MediaResource> mResource;
+
+  // Track the current video decode mode.
+  VideoDecodeMode mVideoDecodeMode;
 
   // Track the complete & error for audio/video separately
   MozPromiseRequestHolder<GenericPromise> mMediaSinkAudioPromise;
@@ -735,8 +751,6 @@ private:
   // Current decoding position in the stream.
   Mirror<int64_t> mDecoderPosition;
 
-  // IsVisible, mirrored from the media decoder.
-  Mirror<bool> mIsVisible;
 
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.

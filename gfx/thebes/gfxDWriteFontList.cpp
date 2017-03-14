@@ -5,11 +5,11 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/intl/LocaleService.h"
 
 #include "gfxDWriteFontList.h"
 #include "gfxDWriteFonts.h"
 #include "nsUnicharUtils.h"
-#include "nsILocaleService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "mozilla/Preferences.h"
@@ -27,6 +27,7 @@
 #include "harfbuzz/hb.h"
 
 using namespace mozilla;
+using mozilla::intl::LocaleService;
 
 #define LOG_FONTLIST(args) MOZ_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
                                LogLevel::Debug, args)
@@ -272,19 +273,8 @@ gfxDWriteFontFamily::LocalizedName(nsAString &aLocalizedName)
 {
     aLocalizedName.AssignLiteral("Unknown Font");
     HRESULT hr;
-    nsresult rv;
-    nsCOMPtr<nsILocaleService> ls = do_GetService(NS_LOCALESERVICE_CONTRACTID,
-                                                  &rv);
-    nsCOMPtr<nsILocale> locale;
-    rv = ls->GetApplicationLocale(getter_AddRefs(locale));
-    nsString localeName;
-    if (NS_SUCCEEDED(rv)) {
-        rv = locale->GetCategory(NS_LITERAL_STRING(NSILOCALE_MESSAGE), 
-                                 localeName);
-    }
-    if (NS_FAILED(rv)) {
-        localeName.AssignLiteral("en-us");
-    }
+    nsAutoCString locale;
+    LocaleService::GetInstance()->GetAppLocaleAsLangTag(locale);
 
     RefPtr<IDWriteLocalizedStrings> names;
 
@@ -294,7 +284,7 @@ gfxDWriteFontFamily::LocalizedName(nsAString &aLocalizedName)
     }
     UINT32 idx = 0;
     BOOL exists;
-    hr = names->FindLocaleName(localeName.get(),
+    hr = names->FindLocaleName(NS_ConvertUTF8toUTF16(locale).get(),
                                &idx,
                                &exists);
     if (FAILED(hr)) {

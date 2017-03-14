@@ -200,13 +200,13 @@ var gTests = [
     yield signOut();
   },
   *run() {
-    const expected_url = "https://example.com/?is_force_auth";
+    const expected_url = "https://example.com/force_auth";
     setPref("identity.fxaccounts.remote.force_auth.uri", expected_url);
 
     yield setSignedInUser();
     let [, url] = yield promiseNewTabWithIframeLoadEvent("about:accounts?action=reauth");
     // The current user will be appended to the url
-    let expected = expected_url + "&email=foo%40example.com";
+    let expected = expected_url + "?uid=1234%40lcip.org&email=foo%40example.com";
     is(url, expected, "action=reauth got the expected URL");
   },
 },

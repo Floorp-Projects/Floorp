@@ -20,6 +20,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
+#include "nsContentUtils.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
@@ -896,7 +897,7 @@ EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
 
   aEffectSet.MarkCascadeUpdated();
 
-  nsPresContext* presContext = GetPresContext(aElement);
+  nsPresContext* presContext = nsContentUtils::GetContextForContent(aElement);
   if (!presContext) {
     return;
   }
@@ -923,17 +924,6 @@ EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
                      EffectCompositor::RestyleType::Layer,
                      EffectCompositor::CascadeLevel::Transitions);
   }
-}
-
-/* static */ nsPresContext*
-EffectCompositor::GetPresContext(Element* aElement)
-{
-  MOZ_ASSERT(aElement);
-  nsIPresShell* shell = nsComputedDOMStyle::GetPresShellForContent(aElement);
-  if (!shell) {
-    return nullptr;
-  }
-  return shell->GetPresContext();
 }
 
 /* static */ void

@@ -23,7 +23,7 @@ DateTimeFormat::Initialize()
 
   mLocale = new nsCString();
   nsAutoCString locale;
-  intl::LocaleService::GetInstance()->GetAppLocale(locale);
+  intl::LocaleService::GetInstance()->GetAppLocaleAsBCP47(locale);
   mLocale->Assign(locale);
 
   return NS_OK;

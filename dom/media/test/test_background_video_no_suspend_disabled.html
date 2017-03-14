@@ -13,7 +13,7 @@ var manager = new MediaTestManager;
 startTest({
   desc: "Test Background Video Doesn't Suspend When Feature Disabled.",
   prefs: [
-    [ 'media.test.setVisible', true ],
+    [ 'media.test.video-suspend', true ],
     [ 'media.suspend-bkgnd-video.enabled', false ],
     [ 'media.suspend-bkgnd-video.delay-ms', 0 ]
   ],

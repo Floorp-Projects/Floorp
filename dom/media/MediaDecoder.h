@@ -189,7 +189,9 @@ public:
   virtual nsresult Play();
 
   // Notify activity of the decoder owner is changed.
-  virtual void NotifyOwnerActivityChanged(bool aIsVisible);
+  virtual void NotifyOwnerActivityChanged(bool aIsDocumentVisible,
+                                          bool aIsElementVisible,
+                                          bool aIsElementInTree);
 
   // Pause video playback.
   virtual void Pause();
@@ -371,11 +373,21 @@ private:
   dom::AudioChannel GetAudioChannel() { return mAudioChannel; }
 
   // Called from HTMLMediaElement when owner document activity changes
-  virtual void SetElementVisibility(bool aIsVisible);
+  virtual void SetElementVisibility(bool aIsDocumentVisible,
+                                    bool aIsElementVisible,
+                                    bool aIsElementInTree);
 
   // Force override the visible state to hidden.
   // Called from HTMLMediaElement when testing of video decode suspend from mochitests.
   void SetForcedHidden(bool aForcedHidden);
+
+  // Mark the decoder as tainted, meaning suspend-video-decoder is disabled.
+  void SetSuspendTaint(bool aTaint);
+
+  // Returns true if the decoder can't participate in suspend-video-decoder.
+  bool HasSuspendTaint() const;
+
+  void UpdateVideoDecodeMode();
 
   /******
    * The following methods must only be called on the main
@@ -584,6 +596,9 @@ private:
   MediaEventSource<void>*
   DataArrivedEvent() override { return &mDataArrivedEvent; }
 
+  // Called when the owner's activity changed.
+  void NotifyCompositor();
+
   MediaEventSource<RefPtr<layers::KnowsCompositor>>*
   CompositorUpdatedEvent() override { return &mCompositorUpdatedEvent; }
 
@@ -705,11 +720,21 @@ protected:
   // only be accessed from main thread.
   nsAutoPtr<MediaInfo> mInfo;
 
-  // Tracks the visiblity status from HTMLMediaElement
-  bool mElementVisible;
+  // Tracks the visibility status of owner element's document.
+  bool mIsDocumentVisible;
+
+  // Tracks the visibility status of owner element.
+  bool mIsElementVisible;
+
+  // Tracks the owner is in-tree or not.
+  bool mIsElementInTree;
 
   // If true, forces the decoder to be considered hidden.
   bool mForcedHidden;
+
+  // True if the decoder has a suspend taint - meaning suspend-video-decoder is
+  // disabled.
+  bool mHasSuspendTaint;
 
   // A listener to receive metadata updates from MDSM.
   MediaEventListener mTimedMetadataListener;
@@ -800,9 +825,6 @@ protected:
   // back again.
   Canonical<int64_t> mDecoderPosition;
 
-  // True if the decoder is visible.
-  Canonical<bool> mIsVisible;
-
 public:
   AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() override;
   AbstractCanonical<double>* CanonicalVolume() { return &mVolume; }
@@ -844,7 +866,6 @@ public:
   {
     return &mDecoderPosition;
   }
-  AbstractCanonical<bool>* CanonicalIsVisible() { return &mIsVisible; }
 
 private:
   // Notify owner when the audible state changed

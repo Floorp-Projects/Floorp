@@ -1716,28 +1716,10 @@ var BrowserApp = {
 
       case "Locale:Changed": {
         if (data) {
-          // The value provided to Locale:Changed should be a BCP47 language tag
-          // understood by Gecko -- for example, "es-ES" or "de".
-          console.log("Locale:Changed: " + data.languageTag);
-
-          // We always write a localized pref, even though sometimes the value is a char pref.
-          // (E.g., on desktop single-locale builds.)
-          this.setLocalizedPref("general.useragent.locale", data.languageTag);
+          Services.locale.setRequestedLocales([data.languageTag]);
         } else {
-          // Resetting.
-          console.log("Switching to system locale.");
-          Services.prefs.clearUserPref("general.useragent.locale");
+          Services.locale.setRequestedLocales([]);
         }
-
-        Services.prefs.setBoolPref("intl.locale.matchOS", !data);
-
-        // Ensure that this choice is immediately persisted, because
-        // Gecko won't be told again if it forgets.
-        Services.prefs.savePrefFile(null);
-
-        // Blow away the string cache so that future lookups get the
-        // correct locale.
-        Strings.flush();
 
         // Make sure we use the right Accept-Language header.
         let osLocale;

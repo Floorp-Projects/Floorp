@@ -473,7 +473,6 @@
               "previousVersion": {
                 "type": "string",
                 "optional": true,
-                "unsupported": true,
                 "description": "Indicates the previous version of the extension, which has just been updated. This is present only if 'reason' is 'update'."
               },
               "id": {

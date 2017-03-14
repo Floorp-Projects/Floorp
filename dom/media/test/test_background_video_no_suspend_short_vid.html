@@ -13,7 +13,7 @@ var manager = new MediaTestManager;
 startTest({
   desc: "Test Background Video Doesn't Suspend When Timeout Is Longer Than Video.",
   prefs: [
-    [ 'media.test.setVisible', true ],
+    [ 'media.test.video-suspend', true ],
     [ 'media.suspend-bkgnd-video.enabled', true ],
     // Gizmo.mp4 is about 5.6s
     [ 'media.suspend-bkgnd-video.delay-ms', 10000 ]

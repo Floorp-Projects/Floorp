@@ -1359,6 +1359,10 @@ static void nr_ice_component_consent_timer_cb(NR_SOCKET s, int how, void *cb_arg
     nr_ice_component *comp=cb_arg;
     int r;
 
+    if (!comp->consent_ctx) {
+      return;
+    }
+
     if (comp->consent_timer) {
       NR_async_timer_cancel(comp->consent_timer);
     }

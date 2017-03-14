@@ -234,7 +234,7 @@ nsSHEntryShared::SetContentViewer(nsIContentViewer* aViewer)
 nsresult
 nsSHEntryShared::RemoveFromBFCacheSync()
 {
-  NS_ASSERTION(mContentViewer && mDocument, "we're not in the bfcache!");
+  MOZ_ASSERT(mContentViewer && mDocument, "we're not in the bfcache!");
 
   nsCOMPtr<nsIContentViewer> viewer = mContentViewer;
   DropPresentationState();
@@ -273,13 +273,17 @@ public:
 nsresult
 nsSHEntryShared::RemoveFromBFCacheAsync()
 {
-  NS_ASSERTION(mContentViewer && mDocument, "we're not in the bfcache!");
+  MOZ_ASSERT(mContentViewer && mDocument, "we're not in the bfcache!");
 
   // Release the reference to the contentviewer asynchronously so that the
   // document doesn't get nuked mid-mutation.
 
+  if (!mDocument) {
+    return NS_ERROR_UNEXPECTED;
+  }
   nsCOMPtr<nsIRunnable> evt = new DestroyViewerEvent(mContentViewer, mDocument);
-  nsresult rv = NS_DispatchToCurrentThread(evt);
+  nsresult rv = mDocument->Dispatch("nsSHEntryShared::DestroyViewerEvent",
+                                    mozilla::TaskCategory::Other, evt.forget());
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to dispatch DestroyViewerEvent");
   } else {

@@ -151,9 +151,9 @@ static nsresult
 GetRegWindowsAppDataFolder(bool aLocal, nsIFile** aFile)
 {
   HKEY key;
-  NS_NAMED_LITERAL_STRING(keyName,
-    "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders");
-  DWORD res = ::RegOpenKeyExW(HKEY_CURRENT_USER, keyName.get(), 0, KEY_READ,
+  LPCWSTR keyName =
+    L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+  DWORD res = ::RegOpenKeyExW(HKEY_CURRENT_USER, keyName, 0, KEY_READ,
                               &key);
   if (res != ERROR_SUCCESS) {
     return NS_ERROR_FAILURE;

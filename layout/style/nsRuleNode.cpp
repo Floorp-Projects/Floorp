@@ -3857,13 +3857,13 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
            defaultVariableFont->kerning,
            Unused, Unused, Unused, systemFont.kerning);
 
-  // font-synthesis: none, enum (bit field), inherit, initial, -moz-system-font
+  // font-synthesis: none, enum (bit field), inherit, initial
   SetValue(*aRuleData->ValueForFontSynthesis(),
            aFont->mFont.synthesis, aConditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INHERIT,
            aParentFont->mFont.synthesis,
            defaultVariableFont->synthesis,
-           Unused, /* none */ 0, Unused, systemFont.synthesis);
+           Unused, /* none */ 0, Unused, Unused);
 
   // font-variant-alternates: normal, enum (bit field) + functions, inherit,
   //                          initial, -moz-system-font
@@ -6464,36 +6464,31 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     for (const nsCSSValueList* item = willChangeValue->GetListValue();
          item; item = item->mNext)
     {
-      if (item->mValue.UnitHasStringValue()) {
-        nsAutoString buffer;
-        item->mValue.GetStringValue(buffer);
-        display->mWillChange.AppendElement(buffer);
+      nsIAtom* atom = item->mValue.GetAtomValue();
+      display->mWillChange.AppendElement(atom);
+      if (atom == nsGkAtoms::transform) {
+        display->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_TRANSFORM;
+      } else if (atom == nsGkAtoms::opacity) {
+        display->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_OPACITY;
+      } else if (atom == nsGkAtoms::scrollPosition) {
+        display->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_SCROLL;
+      }
 
-        if (buffer.EqualsLiteral("transform")) {
-          display->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_TRANSFORM;
-        }
-        if (buffer.EqualsLiteral("opacity")) {
-          display->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_OPACITY;
-        }
-        if (buffer.EqualsLiteral("scroll-position")) {
-          display->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_SCROLL;
-        }
-
-        nsCSSPropertyID prop =
-          nsCSSProps::LookupProperty(buffer, CSSEnabledState::eForAllContent);
-        if (prop != eCSSProperty_UNKNOWN &&
-            prop != eCSSPropertyExtra_variable) {
-          // If the property given is a shorthand, it indicates the expectation
-          // for all the longhands the shorthand expands to.
-          if (nsCSSProps::IsShorthand(prop)) {
-            for (const nsCSSPropertyID* shorthands =
-                   nsCSSProps::SubpropertyEntryFor(prop);
-                 *shorthands != eCSSProperty_UNKNOWN; ++shorthands) {
-              display->mWillChangeBitField |= GetWillChangeBitFieldFromPropFlags(*shorthands);
-            }
-          } else {
-            display->mWillChangeBitField |= GetWillChangeBitFieldFromPropFlags(prop);
+      nsDependentAtomString buffer(atom);
+      nsCSSPropertyID prop =
+        nsCSSProps::LookupProperty(buffer, CSSEnabledState::eForAllContent);
+      if (prop != eCSSProperty_UNKNOWN &&
+          prop != eCSSPropertyExtra_variable) {
+        // If the property given is a shorthand, it indicates the expectation
+        // for all the longhands the shorthand expands to.
+        if (nsCSSProps::IsShorthand(prop)) {
+          for (const nsCSSPropertyID* shorthands =
+                  nsCSSProps::SubpropertyEntryFor(prop);
+                *shorthands != eCSSProperty_UNKNOWN; ++shorthands) {
+            display->mWillChangeBitField |= GetWillChangeBitFieldFromPropFlags(*shorthands);
           }
+        } else {
+          display->mWillChangeBitField |= GetWillChangeBitFieldFromPropFlags(prop);
         }
       }
     }
@@ -6501,7 +6496,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   }
 
   case eCSSUnit_Inherit:
-    display->mWillChange = parentDisplay->mWillChange;
+    display->mWillChange.Clear();
+    display->mWillChange.AppendElements(parentDisplay->mWillChange);
     display->mWillChangeBitField = parentDisplay->mWillChangeBitField;
     conditions.SetUncacheable();
     break;

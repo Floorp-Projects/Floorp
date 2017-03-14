@@ -29,7 +29,6 @@ public:
 
   const VRDisplayInfo& GetDisplayInfo() const { return mDisplayInfo; }
   virtual VRHMDSensorState GetSensorState();
-  virtual VRHMDSensorState GetImmediateSensorState();
 
   virtual void ZeroSensor();
 

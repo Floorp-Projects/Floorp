@@ -56,17 +56,19 @@ nsProfiler::Observe(nsISupports *aSubject,
                     const char *aTopic,
                     const char16_t *aData)
 {
+  // The profiler's handling of private browsing is as simple as possible: it
+  // is stopped when the first PB window opens, and left stopped when the last
+  // PB window closes.
   if (strcmp(aTopic, "chrome-document-global-created") == 0) {
     nsCOMPtr<nsIInterfaceRequestor> requestor = do_QueryInterface(aSubject);
     nsCOMPtr<nsIWebNavigation> parentWebNav = do_GetInterface(requestor);
     nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(parentWebNav);
     if (loadContext && loadContext->UsePrivateBrowsing() && !mLockedForPrivateBrowsing) {
       mLockedForPrivateBrowsing = true;
-      profiler_lock();
+      profiler_stop();
     }
   } else if (strcmp(aTopic, "last-pb-context-exited") == 0) {
     mLockedForPrivateBrowsing = false;
-    profiler_unlock();
   }
   return NS_OK;
 }

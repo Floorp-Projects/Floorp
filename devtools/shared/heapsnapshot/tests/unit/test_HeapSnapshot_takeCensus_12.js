@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Test that when we take a census and get a bucket list of ids that matched the
 // given category, that the returned ids are all in the snapshot and their
