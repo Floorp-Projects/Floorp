@@ -259,7 +259,8 @@ SERVO_BINDING_FUNC(Servo_CSSSupports, bool,
 SERVO_BINDING_FUNC(Servo_ComputedValues_GetForAnonymousBox,
                    ServoComputedValuesStrong,
                    ServoComputedValuesBorrowedOrNull parent_style_or_null,
-                   nsIAtom* pseudoTag, RawServoStyleSetBorrowed set)
+                   nsIAtom* pseudoTag, bool skip_display_fixup,
+                   RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoComputedValuesStrong,
                    RawServoStyleSetBorrowed set,
                    ServoComputedValuesBorrowedOrNull parent_style)

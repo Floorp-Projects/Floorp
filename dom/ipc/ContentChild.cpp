@@ -578,6 +578,11 @@ ContentChild::Init(MessageLoop* aIOLoop,
   GetIPCChannel()->SetChannelFlags(MessageChannel::REQUIRE_A11Y_REENTRY);
 #endif
 
+  // This must be sent before any IPDL message, which may hit sentinel
+  // errors due to parent and content processes having different
+  // versions.
+  GetIPCChannel()->SendBuildID();
+
 #ifdef MOZ_X11
   // Send the parent our X socket to act as a proxy reference for our X
   // resources.

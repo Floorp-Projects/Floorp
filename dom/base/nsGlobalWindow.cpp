@@ -14932,10 +14932,10 @@ nsGlobalWindow::GetPaintWorklet(ErrorResult& aRv)
 }
 
 void
-nsGlobalWindow::GetAppLocales(nsTArray<nsString>& aLocales)
+nsGlobalWindow::GetAppLocalesAsBCP47(nsTArray<nsString>& aLocales)
 {
   nsTArray<nsCString> appLocales;
-  mozilla::intl::LocaleService::GetInstance()->GetAppLocales(appLocales);
+  mozilla::intl::LocaleService::GetInstance()->GetAppLocalesAsBCP47(appLocales);
 
   for (uint32_t i = 0; i < appLocales.Length(); i++) {
     aLocales.AppendElement(NS_ConvertUTF8toUTF16(appLocales[i]));

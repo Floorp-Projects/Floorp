@@ -50,19 +50,27 @@ public:
 
 class nsTSubstringSplitter_CharT;
 
+namespace mozilla {
+namespace detail {
+
 /**
- * nsTSubstring is the most abstract class in the string hierarchy. It
- * represents a single contiguous array of characters, which may or may not
- * be null-terminated. This type is not instantiated directly.  A sub-class
- * is instantiated instead.  For example, see nsTString.
+ * nsTStringRepr defines a string's memory layout and some accessor methods.
+ * This class exists so that nsTLiteralString can avoid inheriting
+ * nsTSubstring's destructor. All methods on this class must be const because
+ * literal strings are not writable.
+ *
+ * This class is an implementation detail and should not be instantiated
+ * directly, nor used in any way outside of the string code itself. It is
+ * buried in a namespace to discourage its use in function parameters.
+ * If you need to take a parameter, use [const] ns[C]Substring&.
+ * If you need to instantiate a string, use ns[C]String or descendents.
  *
  * NAMES:
- *   nsAString for wide characters
- *   nsACString for narrow characters
+ *   nsStringRepr for wide characters
+ *   nsCStringRepr for narrow characters
  *
- * Many of the accessors on nsTSubstring are inlined as an optimization.
  */
-class nsTSubstring_CharT
+class nsTStringRepr_CharT
 {
 public:
   typedef mozilla::fallible_t                 fallible_t;
@@ -72,11 +80,10 @@ public:
   typedef nsCharTraits<char_type>             char_traits;
   typedef char_traits::incompatible_char_type incompatible_char_type;
 
-  typedef nsTSubstring_CharT                  self_type;
-  typedef self_type                           abstract_string_type;
+  typedef nsTStringRepr_CharT                 self_type;
   typedef self_type                           base_string_type;
 
-  typedef self_type                           substring_type;
+  typedef nsTSubstring_CharT                  substring_type;
   typedef nsTSubstringTuple_CharT             substring_tuple_type;
   typedef nsTString_CharT                     string_type;
 
@@ -88,16 +95,8 @@ public:
   typedef char_type*                          char_iterator;
   typedef const char_type*                    const_char_iterator;
 
-  typedef uint32_t                            size_type;
   typedef uint32_t                            index_type;
-
-public:
-
-  // this acts like a virtual destructor
-  ~nsTSubstring_CharT()
-  {
-    Finalize();
-  }
+  typedef uint32_t                            size_type;
 
   /**
    * reading iterators
@@ -140,81 +139,6 @@ public:
   const_char_iterator& EndReading(const_char_iterator& aIter) const
   {
     return aIter = mData + mLength;
-  }
-
-
-  /**
-   * writing iterators
-   */
-
-  char_iterator BeginWriting()
-  {
-    if (!EnsureMutable()) {
-      AllocFailed(mLength);
-    }
-
-    return mData;
-  }
-
-  char_iterator BeginWriting(const fallible_t&)
-  {
-    return EnsureMutable() ? mData : char_iterator(0);
-  }
-
-  char_iterator EndWriting()
-  {
-    if (!EnsureMutable()) {
-      AllocFailed(mLength);
-    }
-
-    return mData + mLength;
-  }
-
-  char_iterator EndWriting(const fallible_t&)
-  {
-    return EnsureMutable() ? (mData + mLength) : char_iterator(0);
-  }
-
-  char_iterator& BeginWriting(char_iterator& aIter)
-  {
-    return aIter = BeginWriting();
-  }
-
-  char_iterator& BeginWriting(char_iterator& aIter, const fallible_t& aFallible)
-  {
-    return aIter = BeginWriting(aFallible);
-  }
-
-  char_iterator& EndWriting(char_iterator& aIter)
-  {
-    return aIter = EndWriting();
-  }
-
-  char_iterator& EndWriting(char_iterator& aIter, const fallible_t& aFallible)
-  {
-    return aIter = EndWriting(aFallible);
-  }
-
-  /**
-   * deprecated writing iterators
-   */
-
-  iterator& BeginWriting(iterator& aIter)
-  {
-    char_type* data = BeginWriting();
-    aIter.mStart = data;
-    aIter.mEnd = data + mLength;
-    aIter.mPosition = aIter.mStart;
-    return aIter;
-  }
-
-  iterator& EndWriting(iterator& aIter)
-  {
-    char_type* data = BeginWriting();
-    aIter.mStart = data;
-    aIter.mEnd = data + mLength;
-    aIter.mPosition = aIter.mEnd;
-    return aIter;
   }
 
   /**
@@ -291,6 +215,10 @@ public:
   bool NS_FASTCALL Equals(const self_type&) const;
   bool NS_FASTCALL Equals(const self_type&, const comparator_type&) const;
 
+  bool NS_FASTCALL Equals(const substring_tuple_type& aTuple) const;
+  bool NS_FASTCALL Equals(const substring_tuple_type& aTuple,
+                          const comparator_type& aComp) const;
+
   bool NS_FASTCALL Equals(const char_type* aData) const;
   bool NS_FASTCALL Equals(const char_type* aData,
                           const comparator_type& aComp) const;
@@ -350,6 +278,195 @@ public:
   inline bool LowerCaseEqualsLiteral(const char (&aStr)[N]) const
   {
     return LowerCaseEqualsASCII(aStr, N - 1);
+  }
+
+  /**
+   * returns true if this string overlaps with the given string fragment.
+   */
+  bool IsDependentOn(const char_type* aStart, const char_type* aEnd) const
+  {
+    /**
+     * if it _isn't_ the case that one fragment starts after the other ends,
+     * or ends before the other starts, then, they conflict:
+     *
+     *   !(f2.begin >= f1.aEnd || f2.aEnd <= f1.begin)
+     *
+     * Simplified, that gives us:
+     */
+    return (aStart < (mData + mLength) && aEnd > mData);
+  }
+
+protected:
+  nsTStringRepr_CharT() = delete; // Never instantiate directly
+
+  constexpr
+  nsTStringRepr_CharT(char_type* aData, size_type aLength, uint32_t aFlags)
+    : mData(aData)
+    , mLength(aLength)
+    , mFlags(aFlags)
+  {
+  }
+
+  char_type*  mData;
+  size_type   mLength;
+  uint32_t    mFlags;
+
+public:
+  // mFlags is a bitwise combination of the following flags.  the meaning
+  // and interpretation of these flags is an implementation detail.
+  //
+  // NOTE: these flags are declared public _only_ for convenience inside
+  // the string implementation.
+
+  enum
+  {
+    F_NONE         = 0,       // no flags
+
+    // data flags are in the lower 16-bits
+    F_TERMINATED   = 1 << 0,  // IsTerminated returns true
+    F_VOIDED       = 1 << 1,  // IsVoid returns true
+    F_SHARED       = 1 << 2,  // mData points to a heap-allocated, shared buffer
+    F_OWNED        = 1 << 3,  // mData points to a heap-allocated, raw buffer
+    F_FIXED        = 1 << 4,  // mData points to a fixed-size writable, dependent buffer
+    F_LITERAL      = 1 << 5,  // mData points to a string literal; F_TERMINATED will also be set
+
+    // class flags are in the upper 16-bits
+    F_CLASS_FIXED  = 1 << 16   // indicates that |this| is of type nsTFixedString
+  };
+
+  //
+  // Some terminology:
+  //
+  //   "dependent buffer"    A dependent buffer is one that the string class
+  //                         does not own.  The string class relies on some
+  //                         external code to ensure the lifetime of the
+  //                         dependent buffer.
+  //
+  //   "shared buffer"       A shared buffer is one that the string class
+  //                         allocates.  When it allocates a shared string
+  //                         buffer, it allocates some additional space at
+  //                         the beginning of the buffer for additional
+  //                         fields, including a reference count and a
+  //                         buffer length.  See nsStringHeader.
+  //
+  //   "adopted buffer"      An adopted buffer is a raw string buffer
+  //                         allocated on the heap (using moz_xmalloc)
+  //                         of which the string class subsumes ownership.
+  //
+  // Some comments about the string flags:
+  //
+  //   F_SHARED, F_OWNED, and F_FIXED are all mutually exlusive.  They
+  //   indicate the allocation type of mData.  If none of these flags
+  //   are set, then the string buffer is dependent.
+  //
+  //   F_SHARED, F_OWNED, or F_FIXED imply F_TERMINATED.  This is because
+  //   the string classes always allocate null-terminated buffers, and
+  //   non-terminated substrings are always dependent.
+  //
+  //   F_VOIDED implies F_TERMINATED, and moreover it implies that mData
+  //   points to char_traits::sEmptyBuffer.  Therefore, F_VOIDED is
+  //   mutually exclusive with F_SHARED, F_OWNED, and F_FIXED.
+  //
+};
+
+} // namespace detail
+} // namespace mozilla
+
+/**
+ * nsTSubstring is an abstract string class. From an API perspective, this
+ * class is the root of the string class hierarchy. It represents a single
+ * contiguous array of characters, which may or may not be null-terminated.
+ * This type is not instantiated directly. A sub-class is instantiated
+ * instead. For example, see nsTString.
+ *
+ * NAMES:
+ *   nsAString for wide characters
+ *   nsACString for narrow characters
+ *
+ */
+class nsTSubstring_CharT : public mozilla::detail::nsTStringRepr_CharT
+{
+public:
+  typedef nsTSubstring_CharT                  self_type;
+
+  // this acts like a virtual destructor
+  ~nsTSubstring_CharT()
+  {
+    Finalize();
+  }
+
+  /**
+   * writing iterators
+   */
+
+  char_iterator BeginWriting()
+  {
+    if (!EnsureMutable()) {
+      AllocFailed(mLength);
+    }
+
+    return mData;
+  }
+
+  char_iterator BeginWriting(const fallible_t&)
+  {
+    return EnsureMutable() ? mData : char_iterator(0);
+  }
+
+  char_iterator EndWriting()
+  {
+    if (!EnsureMutable()) {
+      AllocFailed(mLength);
+    }
+
+    return mData + mLength;
+  }
+
+  char_iterator EndWriting(const fallible_t&)
+  {
+    return EnsureMutable() ? (mData + mLength) : char_iterator(0);
+  }
+
+  char_iterator& BeginWriting(char_iterator& aIter)
+  {
+    return aIter = BeginWriting();
+  }
+
+  char_iterator& BeginWriting(char_iterator& aIter, const fallible_t& aFallible)
+  {
+    return aIter = BeginWriting(aFallible);
+  }
+
+  char_iterator& EndWriting(char_iterator& aIter)
+  {
+    return aIter = EndWriting();
+  }
+
+  char_iterator& EndWriting(char_iterator& aIter, const fallible_t& aFallible)
+  {
+    return aIter = EndWriting(aFallible);
+  }
+
+  /**
+   * deprecated writing iterators
+   */
+
+  iterator& BeginWriting(iterator& aIter)
+  {
+    char_type* data = BeginWriting();
+    aIter.mStart = data;
+    aIter.mEnd = data + mLength;
+    aIter.mPosition = aIter.mStart;
+    return aIter;
+  }
+
+  iterator& EndWriting(iterator& aIter)
+  {
+    char_type* data = BeginWriting();
+    aIter.mStart = data;
+    aIter.mEnd = data + mLength;
+    aIter.mPosition = aIter.mEnd;
+    return aIter;
   }
 
   /**
@@ -851,32 +968,10 @@ public:
    * base type, which helps avoid converting to nsTAString.
    */
   MOZ_IMPLICIT nsTSubstring_CharT(const substring_tuple_type& aTuple)
-    : mData(nullptr)
-    , mLength(0)
-    , mFlags(F_NONE)
+    : nsTStringRepr_CharT(nullptr, 0, F_NONE)
   {
     Assign(aTuple);
   }
-
-  /**
-   * allows for direct initialization of a nsTSubstring object.
-   *
-   * NOTE: this constructor is declared public _only_ for convenience
-   * inside the string implementation.
-   */
-  // XXXbz or can I just include nscore.h and use NS_BUILD_REFCNT_LOGGING?
-#if defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING)
-#define XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
-  nsTSubstring_CharT(char_type* aData, size_type aLength, uint32_t aFlags);
-#else
-#undef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
-  nsTSubstring_CharT(char_type* aData, size_type aLength, uint32_t aFlags)
-    : mData(aData)
-    , mLength(aLength)
-    , mFlags(aFlags)
-  {
-  }
-#endif /* DEBUG || FORCE_BUILD_REFCNT_LOGGING */
 
   size_t SizeOfExcludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf)
   const;
@@ -910,37 +1005,34 @@ public:
 
 protected:
 
-  friend class nsTObsoleteAStringThunk_CharT;
-  friend class nsTSubstringTuple_CharT;
-  friend class nsTPromiseFlatString_CharT;
-
-  char_type*  mData;
-  size_type   mLength;
-  uint32_t    mFlags;
-
   // default initialization
   nsTSubstring_CharT()
-    : mData(char_traits::sEmptyBuffer)
-    ,  mLength(0)
-    ,  mFlags(F_TERMINATED)
-  {
-  }
-
-  // version of constructor that leaves mData and mLength uninitialized
-  explicit
-  nsTSubstring_CharT(uint32_t aFlags)
-    : mFlags(aFlags)
+    : nsTStringRepr_CharT(char_traits::sEmptyBuffer, 0, F_TERMINATED)
   {
   }
 
   // copy-constructor, constructs as dependent on given object
   // (NOTE: this is for internal use only)
   nsTSubstring_CharT(const self_type& aStr)
-    : mData(aStr.mData)
-    ,  mLength(aStr.mLength)
-    ,  mFlags(aStr.mFlags & (F_TERMINATED | F_VOIDED))
+    : nsTStringRepr_CharT(aStr.mData, aStr.mLength,
+                          aStr.mFlags & (F_TERMINATED | F_VOIDED))
   {
   }
+
+ /**
+   * allows for direct initialization of a nsTSubstring object.
+   */
+  // XXXbz or can I just include nscore.h and use NS_BUILD_REFCNT_LOGGING?
+#if defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING)
+#define XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
+  nsTSubstring_CharT(char_type* aData, size_type aLength, uint32_t aFlags);
+#else
+#undef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
+  nsTSubstring_CharT(char_type* aData, size_type aLength, uint32_t aFlags)
+    : nsTStringRepr_CharT(aData, aLength, aFlags)
+  {
+  }
+#endif /* DEBUG || FORCE_BUILD_REFCNT_LOGGING */
 
   /**
    * this function releases mData and does not change the value of
@@ -1017,22 +1109,6 @@ protected:
     size_type aNewLen = size_type(-1));
 
   /**
-   * returns true if this string overlaps with the given string fragment.
-   */
-  bool IsDependentOn(const char_type* aStart, const char_type* aEnd) const
-  {
-    /**
-     * if it _isn't_ the case that one fragment starts after the other ends,
-     * or ends before the other starts, then, they conflict:
-     *
-     *   !(f2.begin >= f1.aEnd || f2.aEnd <= f1.begin)
-     *
-     * Simplified, that gives us:
-     */
-    return (aStart < (mData + mLength) && aEnd > mData);
-  }
-
-  /**
    * this helper function stores the specified dataFlags in mFlags
    */
   void SetDataFlags(uint32_t aDataFlags)
@@ -1049,63 +1125,12 @@ public:
   // NOTE: this method is declared public _only_ for convenience for
   // callers who don't have access to the original nsLiteralString_CharT.
   void NS_FASTCALL AssignLiteral(const char_type* aData, size_type aLength);
-
-  // mFlags is a bitwise combination of the following flags.  the meaning
-  // and interpretation of these flags is an implementation detail.
-  //
-  // NOTE: these flags are declared public _only_ for convenience inside
-  // the string implementation.
-
-  enum
-  {
-    F_NONE         = 0,       // no flags
-
-    // data flags are in the lower 16-bits
-    F_TERMINATED   = 1 << 0,  // IsTerminated returns true
-    F_VOIDED       = 1 << 1,  // IsVoid returns true
-    F_SHARED       = 1 << 2,  // mData points to a heap-allocated, shared buffer
-    F_OWNED        = 1 << 3,  // mData points to a heap-allocated, raw buffer
-    F_FIXED        = 1 << 4,  // mData points to a fixed-size writable, dependent buffer
-    F_LITERAL      = 1 << 5,  // mData points to a string literal; F_TERMINATED will also be set
-
-    // class flags are in the upper 16-bits
-    F_CLASS_FIXED  = 1 << 16   // indicates that |this| is of type nsTFixedString
-  };
-
-  //
-  // Some terminology:
-  //
-  //   "dependent buffer"    A dependent buffer is one that the string class
-  //                         does not own.  The string class relies on some
-  //                         external code to ensure the lifetime of the
-  //                         dependent buffer.
-  //
-  //   "shared buffer"       A shared buffer is one that the string class
-  //                         allocates.  When it allocates a shared string
-  //                         buffer, it allocates some additional space at
-  //                         the beginning of the buffer for additional
-  //                         fields, including a reference count and a
-  //                         buffer length.  See nsStringHeader.
-  //
-  //   "adopted buffer"      An adopted buffer is a raw string buffer
-  //                         allocated on the heap (using moz_xmalloc)
-  //                         of which the string class subsumes ownership.
-  //
-  // Some comments about the string flags:
-  //
-  //   F_SHARED, F_OWNED, and F_FIXED are all mutually exlusive.  They
-  //   indicate the allocation type of mData.  If none of these flags
-  //   are set, then the string buffer is dependent.
-  //
-  //   F_SHARED, F_OWNED, or F_FIXED imply F_TERMINATED.  This is because
-  //   the string classes always allocate null-terminated buffers, and
-  //   non-terminated substrings are always dependent.
-  //
-  //   F_VOIDED implies F_TERMINATED, and moreover it implies that mData
-  //   points to char_traits::sEmptyBuffer.  Therefore, F_VOIDED is
-  //   mutually exclusive with F_SHARED, F_OWNED, and F_FIXED.
-  //
 };
+
+static_assert(sizeof(nsTSubstring_CharT) ==
+              sizeof(mozilla::detail::nsTStringRepr_CharT),
+              "Don't add new data fields to nsTSubstring_CharT. "
+              "Add to nsTStringRepr_CharT instead.");
 
 int NS_FASTCALL
 Compare(const nsTSubstring_CharT::base_string_type& aLhs,

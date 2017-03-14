@@ -34,6 +34,7 @@
 #include "AudioSegment.h"
 #include "MediaSegment.h"
 #include "MediaPipelineFilter.h"
+#include "RtpLogger.h"
 #include "databuffer.h"
 #include "transportflow.h"
 #include "transportlayer.h"
@@ -1078,6 +1079,9 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
   MOZ_MTLOG(ML_DEBUG, description_ << " received RTP packet.");
   increment_rtp_packets_received(out_len);
 
+  RtpLogger::LogPacket(inner_data.get(), out_len, true, true, header.headerLength,
+                       description_);
+
   (void)conduit_->ReceivedRTPPacket(inner_data.get(), out_len, header.ssrc);  // Ignore error codes
 }
 
@@ -1138,6 +1142,8 @@ void MediaPipeline::RtcpPacketReceived(TransportLayer *layer,
 
   MOZ_MTLOG(ML_DEBUG, description_ << " received RTCP packet.");
   increment_rtcp_packets_received();
+
+  RtpLogger::LogPacket(inner_data.get(), out_len, true, false, 0, description_);
 
   MOZ_ASSERT(rtcp_.recv_srtp_);  // This should never happen
 
@@ -1628,6 +1634,17 @@ nsresult MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
 
   // libsrtp enciphers in place, so we need a big enough buffer.
   MOZ_ASSERT(data->capacity() >= data->len() + SRTP_MAX_EXPANSION);
+
+  if (RtpLogger::IsPacketLoggingOn()) {
+    int header_len = 12;
+    webrtc::RTPHeader header;
+    if (pipeline_->rtp_parser_ &&
+        pipeline_->rtp_parser_->Parse(data->data(), data->len(), &header)) {
+        header_len = header.headerLength;
+    }
+    RtpLogger::LogPacket(data->data(), data->len(), false, is_rtp, header_len,
+                         pipeline_->description_);
+  }
 
   int out_len;
   nsresult res;

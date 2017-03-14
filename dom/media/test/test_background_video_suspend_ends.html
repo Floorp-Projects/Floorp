@@ -13,7 +13,7 @@ var manager = new MediaTestManager;
 startTest({
   desc: "Test Background Suspended Video Fires 'ended' Event",
   prefs: [
-    [ "media.test.setVisible", true ],
+    [ "media.test.video-suspend", true ],
     [ "media.suspend-bkgnd-video.enabled", true ],
     // User a short delay to ensure video decode suspend happens before end
     // of video.

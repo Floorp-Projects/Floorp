@@ -1633,8 +1633,8 @@ HTMLEditor::GetFontFaceState(bool* aMixed,
 
   NS_NAMED_LITERAL_STRING(attr, "face");
   nsresult rv =
-    GetInlinePropertyBase(*nsGkAtoms::font, &attr, nullptr, &first, &any,
-                          &all, &outFace);
+    GetInlinePropertyBase(*nsGkAtoms::font, &attr.AsString(), nullptr, &first,
+                          &any, &all, &outFace);
   NS_ENSURE_SUCCESS(rv, rv);
   if (any && !all) {
     return NS_OK; // mixed
@@ -1676,8 +1676,8 @@ HTMLEditor::GetFontColorState(bool* aMixed,
   bool first, any, all;
 
   nsresult rv =
-    GetInlinePropertyBase(*nsGkAtoms::font, &colorStr, nullptr, &first,
-                          &any, &all, &aOutColor);
+    GetInlinePropertyBase(*nsGkAtoms::font, &colorStr.AsString(), nullptr,
+                          &first, &any, &all, &aOutColor);
   NS_ENSURE_SUCCESS(rv, rv);
   if (any && !all) {
     return NS_OK; // mixed

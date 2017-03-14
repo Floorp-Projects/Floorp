@@ -75,7 +75,7 @@ public:
     bool MFBT_API vprint(const char* format, va_list);
 
 protected:
-    MFBT_API PrintfTarget() : mEmitted(0) { }
+    MFBT_API PrintfTarget();
     virtual ~PrintfTarget() { }
 
     /* Subclasses override this.  It is called when more output is

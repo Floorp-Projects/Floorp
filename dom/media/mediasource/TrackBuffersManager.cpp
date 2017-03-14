@@ -1091,9 +1091,10 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
   if (crypto && crypto->IsEncrypted()) {
     // Try and dispatch 'encrypted'. Won't go if ready state still HAVE_NOTHING.
     for (uint32_t i = 0; i < crypto->mInitDatas.Length(); i++) {
-      NS_DispatchToMainThread(
+      nsCOMPtr<nsIRunnable> r =
         new DispatchKeyNeededEvent(mParentDecoder, crypto->mInitDatas[i].mInitData,
-                                   crypto->mInitDatas[i].mType));
+                                   crypto->mInitDatas[i].mType);
+      mAbstractMainThread->Dispatch(r.forget());
     }
     info.mCrypto = *crypto;
     // We clear our crypto init data array, so the MediaFormatReader will

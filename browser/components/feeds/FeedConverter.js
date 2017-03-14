@@ -503,6 +503,30 @@ GenericProtocolHandler.prototype = {
     return this._http.allowPort(port, scheme);
   },
 
+  _getTelemetrySchemeId() {
+    // Gets a scheme id from 1-8
+    let schemeId;
+    if (!this._telemetrySubScheme) {
+      schemeId = 1;
+    } else {
+      switch (this._telemetryInnerScheme) {
+        case "http":
+          schemeId = 2;
+          break;
+        case "https":
+          schemeId = 3;
+          break;
+        default:
+          // Invalid scheme
+          schemeId = 4;
+      }
+    }
+    if (this._scheme === "pcast") {
+      schemeId += 4;
+    }
+    return schemeId;
+  },
+
   newURI(spec, originalCharset, baseURI) {
     // Feed URIs can be either nested URIs of the form feed:realURI (in which
     // case we create a nested URI for the realURI) or feed://example.com, in
@@ -512,9 +536,13 @@ GenericProtocolHandler.prototype = {
     if (spec.substr(0, scheme.length) != scheme)
       throw Cr.NS_ERROR_MALFORMED_URI;
 
+    this._telemetrySubScheme = spec.substr(scheme.length, 2) != "//";
+
     let prefix = spec.substr(scheme.length, 2) == "//" ? "http:" : "";
     let inner = Services.io.newURI(spec.replace(scheme, prefix),
                                    originalCharset, baseURI);
+    this._telemetryInnerScheme = inner.scheme;
+
 
     if (!["http", "https"].includes(inner.scheme))
       throw Cr.NS_ERROR_MALFORMED_URI;
@@ -529,6 +557,9 @@ GenericProtocolHandler.prototype = {
     let channel = Cc["@mozilla.org/network/io-service;1"].
                   getService(Ci.nsIIOService).
                   newChannelFromURIWithLoadInfo(inner, aLoadInfo);
+
+    const schemeId = this._getTelemetrySchemeId();
+    Services.telemetry.getHistogramById("FEED_PROTOCOL_USAGE").add(schemeId);
 
     if (channel instanceof Components.interfaces.nsIHttpChannel)
       // Set this so we know this is supposed to be a feed

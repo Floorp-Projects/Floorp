@@ -166,14 +166,14 @@ nsWindowsShellService::ShortcutMaintenance()
   if (NS_FAILED(taskbarInfo->GetDefaultGroupId(appId)))
     return NS_ERROR_UNEXPECTED;
 
-  NS_NAMED_LITERAL_CSTRING(prefName, "browser.taskbar.lastgroupid");
+  const char* prefName = "browser.taskbar.lastgroupid";
   nsCOMPtr<nsIPrefBranch> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (!prefs)
     return NS_ERROR_UNEXPECTED;
 
   nsCOMPtr<nsISupportsString> prefString;
-  rv = prefs->GetComplexValue(prefName.get(),
+  rv = prefs->GetComplexValue(prefName,
                               NS_GET_IID(nsISupportsString),
                               getter_AddRefs(prefString));
   if (NS_SUCCEEDED(rv)) {
@@ -191,7 +191,7 @@ nsWindowsShellService::ShortcutMaintenance()
     return rv;
 
   prefString->SetData(appId);
-  rv = prefs->SetComplexValue(prefName.get(),
+  rv = prefs->SetComplexValue(prefName,
                               NS_GET_IID(nsISupportsString),
                               prefString);
   if (NS_FAILED(rv)) {

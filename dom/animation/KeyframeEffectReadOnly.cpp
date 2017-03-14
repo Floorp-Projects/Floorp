@@ -995,8 +995,11 @@ void
 KeyframeEffectReadOnly::RequestRestyle(
   EffectCompositor::RestyleType aRestyleType)
 {
-  nsPresContext* presContext = GetPresContext();
-  if (presContext && mTarget && mAnimation) {
+   if (!mTarget) {
+    return;
+  }
+  nsPresContext* presContext = nsContentUtils::GetContextForContent(mTarget->mElement);
+  if (presContext && mAnimation) {
     presContext->EffectCompositor()->
       RequestRestyle(mTarget->mElement, mTarget->mPseudoType,
                      aRestyleType, mAnimation->CascadeLevel());

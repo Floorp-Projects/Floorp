@@ -2419,7 +2419,7 @@ toolbar#nav-bar {
                 options.app = self.immersiveHelperPath
 
             if options.jsdebugger:
-                options.browserArgs.extend(['-jsdebugger'])
+                options.browserArgs.extend(['-jsdebugger', '-wait-for-jsdebugger'])
 
             # Remove the leak detection file so it can't "leak" to the tests run.
             # The file is not there if leak logging was not enabled in the

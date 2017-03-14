@@ -1848,12 +1848,10 @@ nsNSSComponent::Init()
   // - wrong thread: 'NS_IsMainThread()' in nsIOService.cpp
   // when loading error strings on the SSL threads.
   {
-    NS_NAMED_LITERAL_STRING(dummy_name, "dummy");
+    const char16_t* dummy = u"dummy";
     nsXPIDLString result;
-    mPIPNSSBundle->GetStringFromName(dummy_name.get(),
-                                     getter_Copies(result));
-    mNSSErrorsBundle->GetStringFromName(dummy_name.get(),
-                                        getter_Copies(result));
+    mPIPNSSBundle->GetStringFromName(dummy, getter_Copies(result));
+    mNSSErrorsBundle->GetStringFromName(dummy, getter_Copies(result));
   }
 
 
@@ -1965,32 +1963,6 @@ nsNSSComponent::GetNewPrompter(nsIPrompt** result)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
-}
-
-/*static*/ nsresult
-nsNSSComponent::ShowAlertWithConstructedString(const nsString& message)
-{
-  nsCOMPtr<nsIPrompt> prompter;
-  nsresult rv = GetNewPrompter(getter_AddRefs(prompter));
-  if (prompter) {
-    rv = prompter->Alert(nullptr, message.get());
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
-nsNSSComponent::ShowAlertFromStringBundle(const char* messageID)
-{
-  nsString message;
-  nsresult rv;
-
-  rv = GetPIPNSSBundleString(messageID, message);
-  if (NS_FAILED(rv)) {
-    NS_ERROR("GetPIPNSSBundleString failed");
-    return rv;
-  }
-
-  return ShowAlertWithConstructedString(message);
 }
 
 nsresult nsNSSComponent::LogoutAuthenticatedPK11()

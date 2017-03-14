@@ -385,8 +385,9 @@ TextEditRules::WillInsertBreak(Selection* aSelection,
     NS_NAMED_LITERAL_STRING(inString, "\n");
     nsAutoString outString;
     bool didTruncate;
-    nsresult rv = TruncateInsertionIfNeeded(aSelection, &inString, &outString,
-                                            aMaxLength, &didTruncate);
+    nsresult rv = TruncateInsertionIfNeeded(aSelection, &inString.AsString(),
+                                            &outString, aMaxLength,
+                                            &didTruncate);
     NS_ENSURE_SUCCESS(rv, rv);
     if (didTruncate) {
       *aCancel = true;

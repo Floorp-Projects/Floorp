@@ -21,7 +21,7 @@ function testDelay(v, start, min) {
 startTest({
   desc: 'Test Background Video Suspends',
   prefs: [
-    [ "media.test.setVisible", true ],
+    [ "media.test.video-suspend", true ],
     [ "media.suspend-bkgnd-video.enabled", true ],
     // User a short delay to ensure video decode suspend happens before end
     // of video.
