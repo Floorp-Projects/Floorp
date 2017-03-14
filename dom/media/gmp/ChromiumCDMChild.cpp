@@ -468,7 +468,8 @@ ChromiumCDMChild::RecvInitializeVideoDecoder(
   config.profile =
     static_cast<cdm::VideoDecoderConfig::VideoCodecProfile>(aConfig.mProfile());
   config.format = static_cast<cdm::VideoFormat>(aConfig.mFormat());
-  config.coded_size = { aConfig.mImageWidth(), aConfig.mImageHeight() };
+  config.coded_size =
+    mCodedSize = { aConfig.mImageWidth(), aConfig.mImageHeight() };
   nsTArray<uint8_t> extraData(aConfig.mExtraData());
   config.extra_data = extraData.Elements();
   config.extra_data_size = extraData.Length();
@@ -528,12 +529,27 @@ ChromiumCDMChild::RecvDecryptAndDecodeFrame(const CDMInputBuffer& aBuffer)
           input.timestamp,
           rv);
 
-  if (rv == cdm::kSuccess) {
-    ReturnOutput(frame);
-  } else if (rv == cdm::kNeedMoreData) {
-    Unused << SendDecoded(gmp::CDMVideoFrame());
-  } else {
-    Unused << SendDecodeFailed(rv);
+  switch (rv) {
+    case cdm::kNoKey:
+      GMP_LOG("NoKey for sample at time=%" PRId64 "!", input.timestamp);
+      // Somehow our key became unusable. Typically this would happen when
+      // a stream requires output protection, and the configuration changed
+      // such that output protection is no longer available. For example, a
+      // non-compliant monitor was attached. The JS player should notice the
+      // key status changing to "output-restricted", and is supposed to switch
+      // to a stream that doesn't require OP. In order to keep the playback
+      // pipeline rolling, just output a black frame. See bug 1343140.
+      frame.InitToBlack(mCodedSize.width, mCodedSize.height, input.timestamp);
+      MOZ_FALLTHROUGH;
+    case cdm::kSuccess:
+      ReturnOutput(frame);
+      break;
+    case cdm::kNeedMoreData:
+      Unused << SendDecoded(gmp::CDMVideoFrame());
+      break;
+    default:
+      Unused << SendDecodeFailed(rv);
+      break;
   }
 
   return IPC_OK();
