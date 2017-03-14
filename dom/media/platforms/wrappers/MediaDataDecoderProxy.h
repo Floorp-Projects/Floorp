@@ -50,7 +50,6 @@ public:
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
   bool SupportDecoderRecycling() const override;
-  void ConfigurationChanged(const TrackInfo& aConfig) override;
   ConversionRequired NeedsConversion() const override;
 
 private:
