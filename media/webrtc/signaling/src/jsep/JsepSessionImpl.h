@@ -226,6 +226,7 @@ private:
   nsresult SetRemoteDescriptionAnswer(JsepSdpType type, UniquePtr<Sdp> answer);
   nsresult ValidateLocalDescription(const Sdp& description);
   nsresult ValidateRemoteDescription(const Sdp& description);
+  nsresult ValidateOffer(const Sdp& offer);
   nsresult ValidateAnswer(const Sdp& offer, const Sdp& answer);
   nsresult SetRemoteTracksFromDescription(const Sdp* remoteDescription);
   // Non-const because we use our Uuid generator
