@@ -141,7 +141,10 @@ nsSVGGradientFrame::GetGradientTransform(nsIFrame *aSource,
     // objectBoundingBox is the default anyway
 
     gfxRect bbox =
-      aOverrideBounds ? *aOverrideBounds : nsSVGUtils::GetBBox(aSource);
+      aOverrideBounds
+        ? *aOverrideBounds
+        : nsSVGUtils::GetBBox(aSource, nsSVGUtils::eUseFrameBoundsForOuterSVG |
+                                       nsSVGUtils::eBBoxIncludeFillGeometry);
     bboxMatrix =
       gfxMatrix(bbox.Width(), 0, 0, bbox.Height(), bbox.X(), bbox.Y());
   }
