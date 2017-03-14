@@ -12,13 +12,15 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 var URLBarZoom = {
   init(aWindow) {
     aWindow.addEventListener("EndSwapDocShells", onEndSwapDocShells, true);
+    aWindow.addEventListener("FullZoomChange", onFullZoomChange);
     aWindow.addEventListener("unload", () => {
       aWindow.removeEventListener("EndSwapDocShells", onEndSwapDocShells, true);
+      aWindow.removeEventListener("FullZoomChange", onFullZoomChange);
     }, {once: true});
   },
 }
 
-function fullZoomObserver(aSubject, aTopic) {
+function fullZoomLocationChangeObserver(aSubject, aTopic) {
   // If the tab was the last one in its window and has been dragged to another
   // window, the original browser's window will be unavailable here. Since that
   // window is closing, we can just ignore this notification.
@@ -26,12 +28,25 @@ function fullZoomObserver(aSubject, aTopic) {
     return;
   }
 
-  let animate = (aTopic != "browser-fullZoom:location-change");
-  updateZoomButton(aSubject, animate);
+  updateZoomButton(aSubject, false);
 }
 
 function onEndSwapDocShells(event) {
   updateZoomButton(event.originalTarget);
+}
+
+function onFullZoomChange(event) {
+  let browser;
+  if (event.target.nodeType == event.target.DOCUMENT_NODE) {
+    // In non-e10s, the event is dispatched on the contentDocument
+    // so we need to jump through some hoops to get to the <xul:browser>.
+    let gBrowser = event.currentTarget.gBrowser;
+    let topDoc = event.target.defaultView.top.document;
+    browser = gBrowser.getBrowserForDocument(topDoc);
+  } else {
+    browser = event.originalTarget;
+  }
+  updateZoomButton(browser, true);
 }
 
   /**
@@ -40,11 +55,8 @@ function onEndSwapDocShells(event) {
    * @param {object} aBrowser The browser that the zoomed content resides in.
    * @param {boolean} aAnimate Should be True for all cases unless the zoom
    *   change is related to tab switching. Optional
-   * @param {number} aValue The value that should be used for the zoom control.
-   *   If not provided then the value will be read from the window. Useful
-   *   if the data on the window may be stale.
    */
-function updateZoomButton(aBrowser, aAnimate = false, aValue = undefined) {
+function updateZoomButton(aBrowser, aAnimate = false) {
   let win = aBrowser.ownerGlobal;
   if (aBrowser != win.gBrowser.selectedBrowser) {
     return;
@@ -60,12 +72,9 @@ function updateZoomButton(aBrowser, aAnimate = false, aValue = undefined) {
     return;
   }
 
-  let zoomFactor = Math.round((aValue || win.ZoomManager.zoom) * 100);
+  let zoomFactor = Math.round(win.ZoomManager.zoom * 100);
   if (zoomFactor != 100) {
-    // Check if zoom button is visible and update label if it is
-    if (zoomResetButton.hidden) {
-      zoomResetButton.hidden = false;
-    }
+    zoomResetButton.hidden = false;
     if (aAnimate) {
       zoomResetButton.setAttribute("animate", "true");
     } else {
@@ -79,9 +88,4 @@ function updateZoomButton(aBrowser, aAnimate = false, aValue = undefined) {
   }
 }
 
-Services.obs.addObserver(fullZoomObserver, "browser-fullZoom:zoomChange", false);
-Services.obs.addObserver(fullZoomObserver, "browser-fullZoom:zoomReset", false);
-Services.obs.addObserver(fullZoomObserver, "browser-fullZoom:location-change", false);
-Services.mm.addMessageListener("SyntheticDocument:ZoomChange", function(aMessage) {
-  updateZoomButton(aMessage.target, true, aMessage.data.value);
-});
+Services.obs.addObserver(fullZoomLocationChangeObserver, "browser-fullZoom:location-change", false);
