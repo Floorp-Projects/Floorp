@@ -82,7 +82,7 @@ TEST(cubeb, duplex)
   user_state_duplex stream_state = { false };
   uint32_t latency_frames = 0;
 
-  r = cubeb_init(&ctx, "Cubeb duplex example");
+  r = cubeb_init(&ctx, "Cubeb duplex example", NULL);
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb library\n");
     ASSERT_EQ(r, CUBEB_OK);
