@@ -738,7 +738,7 @@ AccessibleCaretEventHubTester::TestEventDrivenAsyncPanZoomScroll(
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
 }
 
-TEST_F(AccessibleCaretEventHubTester, TestNoEventAsyncPanZoomScroll)
+TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScroll)
 {
   MockFunction<void(::std::string aCheckPointName)> check;
   {
@@ -748,7 +748,7 @@ TEST_F(AccessibleCaretEventHubTester, TestNoEventAsyncPanZoomScroll)
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollStart());
 
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(),
-                OnScrollPositionChanged()).Times(0);
+                OnScrollPositionChanged()).Times(2);
 
     EXPECT_CALL(check, Call("2"));
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollEnd());

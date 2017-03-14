@@ -63,6 +63,7 @@ std::ostream& operator<<(std::ostream& aStream,
   switch (aHint) {
     AC_PROCESS_ENUM_TO_STREAM(UpdateCaretsHint::Default);
     AC_PROCESS_ENUM_TO_STREAM(UpdateCaretsHint::RespectOldAppearance);
+    AC_PROCESS_ENUM_TO_STREAM(UpdateCaretsHint::DispatchNoEvent);
   }
   return aStream;
 }
@@ -295,14 +296,10 @@ AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHintSet aHints)
     return;
   }
 
-  bool oldSecondCaretVisible = mSecondCaret->IsLogicallyVisible();
   PositionChangedResult result = mFirstCaret->SetPosition(frame, offset);
 
   switch (result) {
     case PositionChangedResult::NotChanged:
-      // Do nothing
-      break;
-
     case PositionChangedResult::Changed:
       if (aHints == UpdateCaretsHint::Default) {
         if (HasNonEmptyTextContent(GetEditingHostForFrame(frame))) {
@@ -342,7 +339,7 @@ AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHintSet aHints)
 
   LaunchCaretTimeoutTimer();
 
-  if ((result != PositionChangedResult::NotChanged || oldSecondCaretVisible) &&
+  if (!aHints.contains(UpdateCaretsHint::DispatchNoEvent) &&
       !mActiveCaret) {
     DispatchCaretStateChangedEvent(CaretChangedReason::Updateposition);
   }
@@ -375,9 +372,6 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHintSet aHints)
 
     switch (result) {
       case PositionChangedResult::NotChanged:
-        // Do nothing
-        break;
-
       case PositionChangedResult::Changed:
         if (aHints == UpdateCaretsHint::Default) {
           aCaret->SetAppearance(Appearance::Normal);
@@ -418,7 +412,8 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHintSet aHints)
     }
   }
 
-  if (!mActiveCaret) {
+  if (!aHints.contains(UpdateCaretsHint::DispatchNoEvent) &&
+      !mActiveCaret) {
     DispatchCaretStateChangedEvent(CaretChangedReason::Updateposition);
   }
 }
@@ -658,6 +653,8 @@ AccessibleCaretManager::OnScrollStart()
 {
   AC_LOG("%s", __FUNCTION__);
 
+  mIsScrollStarted = true;
+
   if (!sCaretsAlwaysShowWhenScrolling) {
     // Backup the appearance so that we can restore them after the scrolling
     // ends.
@@ -680,6 +677,8 @@ AccessibleCaretManager::OnScrollEnd()
   if (mLastUpdateCaretMode != GetCaretMode()) {
     return;
   }
+
+  mIsScrollStarted = false;
 
   if (!sCaretsAlwaysShowWhenScrolling) {
     // Restore the appearance which is saved before the scrolling is started.
@@ -715,8 +714,17 @@ AccessibleCaretManager::OnScrollPositionChanged()
   }
 
   if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
-    AC_LOG("%s: UpdateCarets(RespectOldAppearance)", __FUNCTION__);
-    UpdateCarets(UpdateCaretsHint::RespectOldAppearance);
+    if (mIsScrollStarted) {
+      // We don't want extra CaretStateChangedEvents dispatched when user is
+      // scrolling the page.
+      AC_LOG("%s: UpdateCarets(RespectOldAppearance | DispatchNoEvent)",
+             __FUNCTION__);
+      UpdateCarets({ UpdateCaretsHint::RespectOldAppearance,
+                     UpdateCaretsHint::DispatchNoEvent });
+    } else {
+      AC_LOG("%s: UpdateCarets(RespectOldAppearance)", __FUNCTION__);
+      UpdateCarets(UpdateCaretsHint::RespectOldAppearance);
+    }
   }
 }
 

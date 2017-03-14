@@ -130,7 +130,11 @@ protected:
     // Update everything while respecting the old appearance. For example, if
     // the caret in cursor mode is hidden due to timeout, do not change its
     // appearance to Normal.
-    RespectOldAppearance
+    RespectOldAppearance,
+
+    // No CaretStateChangedEvent will be dispatched in the end of
+    // UpdateCarets().
+    DispatchNoEvent,
   };
 
   using UpdateCaretsHintSet = mozilla::EnumSet<UpdateCaretsHint>;
@@ -295,6 +299,9 @@ protected:
   // the carets for mouse-triggered selection changes but show them for other
   // input types such as touch.
   uint16_t mLastInputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
+
+  // Set to true in OnScrollStart() and set to false in OnScrollEnd().
+  bool mIsScrollStarted = false;
 
   static const int32_t kAutoScrollTimerDelay = 30;
 
