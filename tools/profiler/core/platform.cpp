@@ -1616,43 +1616,53 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  PS::AutoLock lock(gPSMutex);
+  size_t profSize = 0;
+#if defined(USE_LUL_STACKWALK)
+  size_t lulSize = 0;
+#endif
 
-  size_t n = 0;
-  if (gPS) {
-    n = GeckoProfilerMallocSizeOf(gPS);
+  {
+    PS::AutoLock lock(gPSMutex);
 
-    const PS::ThreadVector& threads = gPS->Threads(lock);
-    for (uint32_t i = 0; i < threads.size(); i++) {
-      ThreadInfo* info = threads.at(i);
-      n += info->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
-    }
+    if (gPS) {
+      profSize = GeckoProfilerMallocSizeOf(gPS);
 
-    if (gPS->IsActive(lock)) {
-      n += gPS->Buffer(lock)->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
-    }
+      const PS::ThreadVector& threads = gPS->Threads(lock);
+      for (uint32_t i = 0; i < threads.size(); i++) {
+        ThreadInfo* info = threads.at(i);
+        profSize += info->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
+      }
 
-    // Measurement of the following things may be added later if DMD finds it
-    // is worthwhile:
-    // - gPS->mFeatures
-    // - gPS->mThreadNameFilters
-    // - gPS->mThreads itself (its elements' children are measured above)
-    // - gPS->mGatherer
-    // - gPS->mInterposeObserver
+      if (gPS->IsActive(lock)) {
+        profSize +=
+          gPS->Buffer(lock)->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
+      }
 
-    MOZ_COLLECT_REPORT(
-      "explicit/profiler/profiler-state", KIND_HEAP, UNITS_BYTES, n,
-      "Memory used by the Gecko Profiler's ProfilerState object (excluding "
-      "memory used by LUL).");
+      // Measurement of the following things may be added later if DMD finds it
+      // is worthwhile:
+      // - gPS->mFeatures
+      // - gPS->mThreadNameFilters
+      // - gPS->mThreads itself (its elements' children are measured above)
+      // - gPS->mGatherer
+      // - gPS->mInterposeObserver
 
 #if defined(USE_LUL_STACKWALK)
-    lul::LUL* lul = gPS->LUL(lock);
-    n = lul ? lul->SizeOfIncludingThis(GeckoProfilerMallocSizeOf) : 0;
-    MOZ_COLLECT_REPORT(
-      "explicit/profiler/lul", KIND_HEAP, UNITS_BYTES, n,
-      "Memory used by LUL, a stack unwinder used by the Gecko Profiler.");
+      lul::LUL* lul = gPS->LUL(lock);
+      lulSize = lul ? lul->SizeOfIncludingThis(GeckoProfilerMallocSizeOf) : 0;
 #endif
+    }
   }
+
+  MOZ_COLLECT_REPORT(
+    "explicit/profiler/profiler-state", KIND_HEAP, UNITS_BYTES, profSize,
+    "Memory used by the Gecko Profiler's ProfilerState object (excluding "
+    "memory used by LUL).");
+
+#if defined(USE_LUL_STACKWALK)
+  MOZ_COLLECT_REPORT(
+    "explicit/profiler/lul", KIND_HEAP, UNITS_BYTES, lulSize,
+    "Memory used by LUL, a stack unwinder used by the Gecko Profiler.");
+#endif
 
   return NS_OK;
 }
@@ -1979,6 +1989,8 @@ profiler_get_profile_jsobject(JSContext *aCx, double aSinceTime)
 
   // |val| must outlive |lock| to avoid a GC hazard.
   JS::RootedValue val(aCx);
+  UniquePtr<char[]> buf = nullptr;
+
   {
     PS::AutoLock lock(gPSMutex);
 
@@ -1986,11 +1998,13 @@ profiler_get_profile_jsobject(JSContext *aCx, double aSinceTime)
       return nullptr;
     }
 
-    UniquePtr<char[]> buf = ToJSON(lock, aSinceTime);
-    NS_ConvertUTF8toUTF16 js_string(nsDependentCString(buf.get()));
-    auto buf16 = static_cast<const char16_t*>(js_string.get());
-    MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, buf16, js_string.Length(), &val));
+    buf = ToJSON(lock, aSinceTime);
   }
+
+  NS_ConvertUTF8toUTF16 js_string(nsDependentCString(buf.get()));
+  auto buf16 = static_cast<const char16_t*>(js_string.get());
+  MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, buf16, js_string.Length(), &val));
+
   return &val.toObject();
 }
 
