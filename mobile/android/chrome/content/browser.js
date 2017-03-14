@@ -4350,6 +4350,9 @@ Tab.prototype = {
       ExternalApps.updatePageActionUri(fixedURI);
     }
 
+    // Strip reader mode URI and also make it exposable if needed
+    fixedURI = this._stripAboutReaderURL(fixedURI);
+
     let webNav = contentWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
 
     let message = {
@@ -4380,8 +4383,15 @@ Tab.prototype = {
     }
   },
 
-  _stripAboutReaderURL: function (url) {
-    return ReaderMode.getOriginalUrl(url) || url;
+  _stripAboutReaderURL: function (originalURI) {
+    try {
+      let strippedURL = ReaderMode.getOriginalUrl(originalURI.spec);
+      if(strippedURL){
+        // Continue to create exposable uri if original uri is stripped.
+        originalURI = URIFixup.createExposableURI(Services.io.newURI(strippedURL));
+      }
+    } catch (ex) { }
+    return originalURI;
   },
 
   // Properties used to cache security state used to update the UI
