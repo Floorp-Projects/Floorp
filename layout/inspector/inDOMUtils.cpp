@@ -242,26 +242,29 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
     return NS_OK;
   }
 
-  nsRuleNode* ruleNode = styleContext->RuleNode();
+  NonOwningStyleContextSource source = styleContext->StyleSource();
+  if (!source.IsNull() && source.IsGeckoRuleNodeOrNull()) {
+    nsRuleNode* ruleNode = source.AsGeckoRuleNode();
 
-  AutoTArray<nsRuleNode*, 16> ruleNodes;
-  while (!ruleNode->IsRoot()) {
-    ruleNodes.AppendElement(ruleNode);
-    ruleNode = ruleNode->GetParent();
-  }
+    AutoTArray<nsRuleNode*, 16> ruleNodes;
+    while (!ruleNode->IsRoot()) {
+      ruleNodes.AppendElement(ruleNode);
+      ruleNode = ruleNode->GetParent();
+    }
 
-  nsCOMPtr<nsIMutableArray> rules = nsArray::Create();
-  for (nsRuleNode* ruleNode : Reversed(ruleNodes)) {
-    RefPtr<Declaration> decl = do_QueryObject(ruleNode->GetRule());
-    if (decl) {
-      css::Rule* owningRule = decl->GetOwningRule();
-      if (owningRule) {
-        rules->AppendElement(owningRule, /*weak =*/ false);
+    nsCOMPtr<nsIMutableArray> rules = nsArray::Create();
+    for (nsRuleNode* ruleNode : Reversed(ruleNodes)) {
+      RefPtr<Declaration> decl = do_QueryObject(ruleNode->GetRule());
+      if (decl) {
+        css::Rule* owningRule = decl->GetOwningRule();
+        if (owningRule) {
+          rules->AppendElement(owningRule, /*weak =*/ false);
+        }
       }
     }
-  }
 
-  rules.forget(_retval);
+    rules.forget(_retval);
+  }
 
   return NS_OK;
 }
