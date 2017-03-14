@@ -275,10 +275,9 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     }
 
     if (ruleBody) {
-      sheet.insertRule(`${item.localName}:nth-child(${nthChildIndex}):not([_moz-menuactive="true"]) {
+      sheet.insertRule(`menupopup > :nth-child(${nthChildIndex}):not([_moz-menuactive="true"]) {
         ${ruleBody}
       }`, 0);
-
       item.setAttribute("customoptionstyling", "true");
     } else {
       item.removeAttribute("customoptionstyling");
@@ -297,7 +296,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
       nthChildIndex =
         populateChildren(menulist, option.children, selectedIndex, zoom,
                          uaBackgroundColor, uaColor, sheet,
-                         item, isDisabled, adjustedTextSize, false);
+                         item, isDisabled, adjustedTextSize, false, nthChildIndex);
     } else {
       if (option.index == selectedIndex) {
         // We expect the parent element of the popup to be a <xul:menulist> that
