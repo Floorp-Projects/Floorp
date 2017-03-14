@@ -154,7 +154,8 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
                         .commit();
 
                 ViewUtils.showBrandedSnackbar(getActivity().findViewById(android.R.id.content),
-                        R.string.feedback_erase);
+                        R.string.feedback_erase,
+                        getResources().getInteger(R.integer.erase_snackbar_delay));
 
                 break;
 

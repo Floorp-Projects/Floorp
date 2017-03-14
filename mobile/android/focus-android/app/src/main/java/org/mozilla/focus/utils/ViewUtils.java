@@ -7,11 +7,11 @@ package org.mozilla.focus.utils;
 
 import android.animation.LayoutTransition;
 import android.content.Context;
+import android.content.res.Resources;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.view.Gravity;
-import android.content.res.Resources;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -35,7 +35,7 @@ public class ViewUtils {
     /**
      * Create a snackbar with Focus branding (See #193).
      */
-    public static void showBrandedSnackbar(View view, @StringRes int resId) {
+    public static void showBrandedSnackbar(View view, @StringRes int resId, int delayMillis) {
         final Context context = view.getContext();
         final Snackbar snackbar = Snackbar.make(view, resId, Snackbar.LENGTH_LONG);
 
@@ -47,7 +47,12 @@ public class ViewUtils {
         snackbarTextView.setGravity(Gravity.CENTER);
         snackbarTextView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
-        snackbar.show();
+        view.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                snackbar.show();
+            }
+        }, delayMillis);
     }
 
     /**
