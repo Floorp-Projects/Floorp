@@ -188,8 +188,7 @@ GLContextEGLFactory::Create(EGLNativeWindowType aWindow,
         flags |= CreateContextFlags::PREFER_ES3;
     }
     SurfaceCaps caps = SurfaceCaps::Any();
-    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(flags,
-                                                            caps, nullptr, false, config,
+    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(flags, caps, false, config,
                                                             surface, &discardFailureId);
     if (!gl) {
         MOZ_CRASH("GFX: Failed to create EGLContext!\n");
@@ -204,9 +203,9 @@ GLContextEGLFactory::Create(EGLNativeWindowType aWindow,
 }
 
 GLContextEGL::GLContextEGL(CreateContextFlags flags, const SurfaceCaps& caps,
-                           GLContext* shareContext, bool isOffscreen, EGLConfig config,
-                           EGLSurface surface, EGLContext context)
-    : GLContext(flags, caps, shareContext, isOffscreen)
+                           bool isOffscreen, EGLConfig config, EGLSurface surface,
+                           EGLContext context)
+    : GLContext(flags, caps, nullptr, isOffscreen)
     , mConfig(config)
     , mSurface(surface)
     , mContext(context)
@@ -467,7 +466,6 @@ GLContextEGL::HoldSurface(gfxASurface* aSurf) {
 already_AddRefed<GLContextEGL>
 GLContextEGL::CreateGLContext(CreateContextFlags flags,
                 const SurfaceCaps& caps,
-                GLContextEGL* shareContext,
                 bool isOffscreen,
                 EGLConfig config,
                 EGLSurface surface,
@@ -513,20 +511,8 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
             terminated_attribs.push_back(cur);
         }
 
-        if (shareContext) {
-            const auto context = sEGLLibrary.fCreateContext(EGL_DISPLAY(), config,
-                                                            shareContext->mContext,
-                                                            terminated_attribs.data());
-            if (context)
-                return context;
-        }
-        const auto context = sEGLLibrary.fCreateContext(EGL_DISPLAY(), config,
-                                                        EGL_NO_CONTEXT,
-                                                        terminated_attribs.data());
-        if (context) {
-            shareContext = nullptr;
-        }
-        return context;
+        return sEGLLibrary.fCreateContext(EGL_DISPLAY(), config, EGL_NO_CONTEXT,
+                                          terminated_attribs.data());
     };
 
     EGLContext context;
@@ -555,9 +541,8 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
     } while (false);
     MOZ_ASSERT(context);
 
-    RefPtr<GLContextEGL> glContext = new GLContextEGL(flags, caps, shareContext,
-                                                      isOffscreen, config, surface,
-                                                      context);
+    RefPtr<GLContextEGL> glContext = new GLContextEGL(flags, caps, isOffscreen, config,
+                                                      surface, context);
     if (!glContext->Init()) {
         *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_INIT");
         return nullptr;
@@ -745,8 +730,8 @@ GLContextProviderEGL::CreateWrappingExisting(void* aContext, void* aSurface)
 
     SurfaceCaps caps = SurfaceCaps::Any();
     EGLConfig config = EGL_NO_CONFIG;
-    RefPtr<GLContextEGL> gl = new GLContextEGL(CreateContextFlags::NONE, caps, nullptr,
-                                               false, config, (EGLSurface)aSurface,
+    RefPtr<GLContextEGL> gl = new GLContextEGL(CreateContextFlags::NONE, caps, false,
+                                               config, (EGLSurface)aSurface,
                                                (EGLContext)aContext);
     gl->SetIsDoubleBuffered(true);
     gl->mOwnsContext = false;
@@ -943,8 +928,8 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
         return nullptr;
     }
 
-    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(flags, configCaps, nullptr,
-                                                            true, config, surface,
+    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(flags, configCaps, true,
+                                                            config, surface,
                                                             out_failureId);
     if (!gl) {
         NS_WARNING("Failed to create GLContext from PBuffer");
