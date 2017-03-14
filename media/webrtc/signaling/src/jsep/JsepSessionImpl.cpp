@@ -2052,6 +2052,13 @@ JsepSessionImpl::ValidateAnswer(const Sdp& offer, const Sdp& answer)
                      << answerMsection.GetAttributeList().GetMid() << "\'");
       return NS_ERROR_INVALID_ARG;
     }
+
+    if (answerAttrs.HasAttribute(SdpAttribute::kSetupAttribute, true) &&
+        answerAttrs.GetSetup().mRole == SdpSetupAttribute::kActpass) {
+      JSEP_SET_ERROR("Answer contains illegal setup attribute \"actpass\""
+                     " at level " << i);
+      return NS_ERROR_INVALID_ARG;
+    }
   }
 
   return NS_OK;
