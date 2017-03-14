@@ -236,7 +236,7 @@ class ScalarType:
         # behaviour for it.
         release_channel_collection = \
             self._definition.get('release_channel_collection', 'opt-in')
-        return 'nsITelemetry::' +  ('DATASET_RELEASE_CHANNEL_OPTOUT'
+        return 'nsITelemetry::' + ('DATASET_RELEASE_CHANNEL_OPTOUT'
             if release_channel_collection == 'opt-out' else 'DATASET_RELEASE_CHANNEL_OPTIN')
 
     @property
