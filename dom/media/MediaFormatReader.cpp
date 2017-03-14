@@ -565,10 +565,6 @@ public:
   {
     return mDecoder->SupportDecoderRecycling();
   }
-  void ConfigurationChanged(const TrackInfo& aConfig) override
-  {
-    mDecoder->ConfigurationChanged(aConfig);
-  }
   RefPtr<ShutdownPromise> Shutdown() override
   {
     RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
@@ -1991,9 +1987,6 @@ MediaFormatReader::HandleDemuxedSamples(
         if (sample->mKeyframe) {
           decoder.mQueuedSamples.AppendElements(Move(samples));
         }
-      } else if (decoder.mInfo && *decoder.mInfo != *info) {
-        const TrackInfo* trackInfo = *info;
-        decoder.mDecoder->ConfigurationChanged(*trackInfo);
       }
 
       decoder.mInfo = info;
