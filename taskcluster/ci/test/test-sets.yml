@@ -89,14 +89,26 @@ qr-tests:
     - xpcshell
 
 ccov-code-coverage-tests:
+    - cppunit
     - crashtest
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
     - gtest
+    - jittest
     - jsreftest
     - marionette
     - mochitest
+    - mochitest-a11y
     - mochitest-browser-chrome
+    - mochitest-chrome
+    - mochitest-clipboard
     - mochitest-devtools-chrome
+    - mochitest-gpu
+    - mochitest-jetpack
+    - mochitest-media
+    - mochitest-webgl
     - reftest
+    - reftest-no-accel
     - web-platform-tests
     - xpcshell
 
