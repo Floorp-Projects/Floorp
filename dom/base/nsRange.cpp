@@ -968,7 +968,10 @@ nsRange::DoSetRange(nsINode* aStartN, int32_t aStartOffset,
   // Notify any selection listeners. This has to occur last because otherwise the world
   // could be observed by a selection listener while the range was in an invalid state.
   if (mSelection) {
-    mSelection->NotifySelectionListeners(mCalledByJS);
+    // Be aware, this range may be modified or stop being a range for selection
+    // after this call.  Additionally, the selection instance may have gone.
+    RefPtr<Selection> selection = mSelection;
+    selection->NotifySelectionListeners(mCalledByJS);
   }
 }
 

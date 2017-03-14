@@ -43,8 +43,15 @@ var alwaysEnabledCommands = [
   "styleWithCSS",
 ];
 
+function ensureNobodyHasFocus()
+{
+  document.activeElement.blur();
+}
+
 function IsCommandEnabled(command) {
   var enabled;
+
+  ensureNobodyHasFocus();
 
   // non-editable div: should return false unless alwaysEnabled
   window.getSelection().selectAllChildren(gBlock1);
@@ -90,6 +97,8 @@ function runTests() {
     IsCommandEnabled(commands[i]);
 
   // These are privileged, and available only to chrome.
+  ensureNobodyHasFocus();
+  window.getSelection().selectAllChildren(gBlock2);
   commands = ["paste"];
   for (i = 0; i < commands.length; i++) {
     is(document.queryCommandEnabled(commands[i]), false,
