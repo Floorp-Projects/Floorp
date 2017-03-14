@@ -946,10 +946,9 @@ nsFtpState::R_syst() {
             
             char16_t* ucs2Response = ToNewUnicode(mResponseMsg);
             const char16_t *formatStrings[1] = { ucs2Response };
-            NS_NAMED_LITERAL_STRING(name, "UnsupportedFTPServer");
 
             nsXPIDLString formattedString;
-            rv = bundle->FormatStringFromName(name.get(), formatStrings, 1,
+            rv = bundle->FormatStringFromName(u"UnsupportedFTPServer", formatStrings, 1,
                                               getter_Copies(formattedString));
             free(ucs2Response);
             if (NS_FAILED(rv))
