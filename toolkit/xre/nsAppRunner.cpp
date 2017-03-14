@@ -3820,11 +3820,27 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
       return 1;
     }
 
+    if (!username) {
+      struct passwd *pw = getpwuid(geteuid());
+      if (pw && pw->pw_name) {
+        // Beware that another call to getpwent/getpwname/getpwuid will overwrite
+        // pw, but we don't have such another call between here and when username
+        // is used last.
+        username = pw->pw_name;
+      }
+    }
+
     nsCOMPtr<nsIFile> mutexDir;
     rv = GetSpecialSystemDirectory(OS_TemporaryDirectory, getter_AddRefs(mutexDir));
     if (NS_SUCCEEDED(rv)) {
-      nsAutoCString mutexPath =
-        program + NS_LITERAL_CSTRING("_") + nsDependentCString(username);
+      nsAutoCString mutexPath = program + NS_LITERAL_CSTRING("_");
+      // In the unlikely even that LOGNAME is not set and getpwuid failed, just
+      // don't put the username in the mutex directory. It will conflict with
+      // other users mutex, but the worst that can happen is that they wait for
+      // MOZ_XREMOTE_START_TIMEOUT_SEC during startup in that case.
+      if (username) {
+        mutexPath.Append(username);
+      }
       if (profile) {
         mutexPath.Append(NS_LITERAL_CSTRING("_") + nsDependentCString(profile));
       }
