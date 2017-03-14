@@ -148,27 +148,35 @@
     <string name="error_malformedURI_title">The address isn’t valid</string>
     <string name="error_malformedURI_message"><![CDATA[
 <ul>
-  <li>Web addresses are usually written like  <strong>http://www.example.com/</strong></li>
+  <li>Web addresses are usually written like <strong>http://www.example.com/</strong></li>
   <li>Make sure that you’re using forward slashes (i.e. <strong>/</strong>).</li>
 </ul>
     ]]></string>
 
     <string name="error_redirectLoop_title">The page isn’t redirecting properly</string>
-    <string name="error_redirectLoop_message"><![CDATA[<ul><li>This problem can sometimes be caused by disabling or refusing to accept cookies.</li></ul>]]></string>
+    <string name="error_redirectLoop_message"><![CDATA[
+<ul>
+  <li>This problem can sometimes be caused by disabling or refusing to accept cookies.</li>
+</ul>
+    ]]></string>
 
     <string name="error_unsupportedprotocol_title">The address wasn’t understood</string>
-    <string name="error_unsupportedprotocol_message"><![CDATA[<ul><li>You might need to install other software to open this address.</li></ul>]]></string>
+    <string name="error_unsupportedprotocol_message"><![CDATA[
+<ul>
+  <li>You might need to install other software to open this address.</li>
+</ul>
+    ]]></string>
 
-    <string name="error_sslhandshake_title">Secure Connection Failed</string>
+    <string name="error_sslhandshake_title">Secure connection failed</string>
     <string name="error_sslhandshake_message"><![CDATA[
-      <ul>
-        <li>This could be a problem with the server’s configuration, or it could be
+<ul>
+  <li>This could be a problem with the server’s configuration, or it could be
 someone trying to impersonate the server.</li>
-        <li>If you have connected to this server successfully in the past, the error may
+  <li>If you have connected to this server successfully in the past, the error may
 be temporary, and you can try again later.</li>
-      </ul>
+</ul>
      ]]></string>
 
-    <string name="error_generic_title">Oops.</string>
+    <string name="error_generic_title">Oops</string>
     <string name="error_generic_message">We can’t load this page for some reason.</string>
 </resources>
