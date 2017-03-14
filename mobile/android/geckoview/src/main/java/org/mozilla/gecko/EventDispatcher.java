@@ -33,9 +33,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @RobocopTarget
 public final class EventDispatcher extends JNIObject {
     private static final String LOGTAG = "GeckoEventDispatcher";
-    /* package */ static final String GUID = "__guid__";
-    private static final String STATUS_ERROR = "error";
-    private static final String STATUS_SUCCESS = "success";
 
     private static final EventDispatcher INSTANCE = new EventDispatcher();
 
@@ -45,9 +42,9 @@ public final class EventDispatcher extends JNIObject {
      * empirically determine the initial capacity that avoids rehashing, we need to
      * determine the initial size, divide it by 75%, and round up to the next power-of-2.
      */
-    private static final int DEFAULT_GECKO_EVENTS_COUNT = 256; // Empirically measured
-    private static final int DEFAULT_UI_EVENTS_COUNT = 0; // Default for HashMap
-    private static final int DEFAULT_BACKGROUND_EVENTS_COUNT = 0; // Default for HashMap
+    private static final int DEFAULT_GECKO_EVENTS_COUNT = 64; // Empirically measured
+    private static final int DEFAULT_UI_EVENTS_COUNT = 128; // Empirically measured
+    private static final int DEFAULT_BACKGROUND_EVENTS_COUNT = 64; // Empirically measured
 
     // GeckoBundle-based events.
     private final Map<String, List<BundleEventListener>> mGeckoThreadListeners =
