@@ -15,7 +15,6 @@
 #include "SerializedLoadContext.h"
 #include "nsIContentPolicy.h"
 #include "mozilla/ipc/BackgroundUtils.h"
-#include "mozilla/dom/ContentParent.h"
 
 using namespace mozilla::ipc;
 
@@ -320,12 +319,6 @@ WyciwygChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext
 
   nsCOMPtr<nsIWyciwygChannel> chan = do_QueryInterface(aRequest, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Send down any permissions which are relevant to this URL if we are
-  // performing a document load.
-  PContentParent* pcp = Manager()->Manager();
-  rv = static_cast<ContentParent*>(pcp)->TransmitPermissionsFor(chan);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   nsresult status;
   chan->GetStatus(&status);
