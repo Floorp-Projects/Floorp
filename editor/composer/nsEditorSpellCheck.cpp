@@ -8,9 +8,9 @@
 
 #include "mozilla/Attributes.h"         // for final
 #include "mozilla/Preferences.h"        // for Preferences
-#include "mozilla/Services.h"           // for GetXULChromeRegistryService
 #include "mozilla/dom/Element.h"        // for Element
 #include "mozilla/dom/Selection.h"
+#include "mozilla/intl/LocaleService.h" // for retrieving app locale
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsAString.h"                  // for nsAString::IsEmpty, etc
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
@@ -18,7 +18,6 @@
 #include "nsDependentSubstring.h"       // for Substring
 #include "nsEditorSpellCheck.h"
 #include "nsError.h"                    // for NS_ERROR_NOT_INITIALIZED, etc
-#include "nsIChromeRegistry.h"          // for nsIXULChromeRegistry
 #include "nsIContent.h"                 // for nsIContent
 #include "nsIContentPrefService.h"      // for nsIContentPrefService, etc
 #include "nsIContentPrefService2.h"     // for nsIContentPrefService2, etc
@@ -49,6 +48,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using mozilla::intl::LocaleService;
 
 class UpdateDictionaryHolder {
   private:
@@ -916,21 +916,16 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
   // Priority 4:
   // As next fallback, try the current locale.
   if (NS_FAILED(rv)) {
-    nsCOMPtr<nsIXULChromeRegistry> packageRegistry =
-      mozilla::services::GetXULChromeRegistryService();
+    nsAutoCString utf8DictName;
+    LocaleService::GetInstance()->GetAppLocaleAsLangTag(utf8DictName);
 
-    if (packageRegistry) {
-      nsAutoCString utf8DictName;
-      rv2 = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("global"),
-                                               false, utf8DictName);
-      dictName.Assign(EmptyString());
-      AppendUTF8toUTF16(utf8DictName, dictName);
+    dictName.Assign(EmptyString());
+    AppendUTF8toUTF16(utf8DictName, dictName);
 #ifdef DEBUG_DICT
-      printf("***** Trying locale |%s|\n",
-             NS_ConvertUTF16toUTF8(dictName).get());
+    printf("***** Trying locale |%s|\n",
+           NS_ConvertUTF16toUTF8(dictName).get());
 #endif
-      rv = TryDictionary (dictName, dictList, DICT_COMPARE_CASE_INSENSITIVE);
-    }
+    rv = TryDictionary (dictName, dictList, DICT_COMPARE_CASE_INSENSITIVE);
   }
 
   if (NS_FAILED(rv)) {
