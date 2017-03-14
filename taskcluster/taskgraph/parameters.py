@@ -18,6 +18,7 @@ PARAMETER_NAMES = set([
     'head_ref',
     'head_repository',
     'head_rev',
+    'include_nightly',
     'level',
     'message',
     'moz_build_date',
