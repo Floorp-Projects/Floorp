@@ -379,7 +379,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * ... `'center right'` [8]
 * Incorrect parsing
   * border-image and -moz-border-image shorthand servo/servo#15770
-    * test_property_syntax_errors.html `border-image` [112]
+    * test_property_syntax_errors.html `border-image` [4]
   * mask shorthand servo/servo#15772
     * test_property_syntax_errors.html `mask'` [76]
 * Incorrect serialization
@@ -472,8 +472,6 @@ Any line which doesn't follow the format above would be ignored like comment.
 
 * Content glue not implemented
   * assertion in computed style bug 1337635
-    * test_value_cloning.html asserts [4]
-    * test_value_computation.html asserts [11]
   * assertion for unsupported or non-animatable property bug 1343710
     * test_animations.html asserts [24]
 
