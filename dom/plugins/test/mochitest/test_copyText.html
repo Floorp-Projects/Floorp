@@ -11,14 +11,19 @@ function runTests() {
   var textElt = document.getElementById("input");
   var plugin = document.getElementById("plugin1");
 
-  textElt.focus();
-  textElt.value = text;
-  textElt.select();
-  SpecialPowers.wrap(textElt).editor.copy();
-
-  is(plugin.getClipboardText(), text);
-
-  SimpleTest.finish();
+  // Make sure we wait for the clipboard
+  SimpleTest.waitForClipboard(text, () => {
+    textElt.focus();
+    textElt.value = text;
+    textElt.select();
+    SpecialPowers.wrap(textElt).editor.copy();
+  }, () => {
+    is(plugin.getClipboardText(), text);
+    SimpleTest.finish();
+  }, () => {
+    ok(false, "Failed to set the clipboard text!");
+    SimpleTest.finish();
+  });
 }
 
 SimpleTest.waitForExplicitFinish();
