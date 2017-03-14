@@ -16,7 +16,6 @@ DevToolsModules(
     'eye-dropper.js',
     'geometry-editor.js',
     'measuring-tool.js',
-    'rect.js',
     'rulers.js',
     'selector.js',
     'simple-outline.js'

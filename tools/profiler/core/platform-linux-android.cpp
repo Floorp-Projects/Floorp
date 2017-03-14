@@ -357,6 +357,10 @@ public:
     }
   }
 
+  ~SamplerThread() {
+    pthread_join(mThread, nullptr);
+  }
+
   void Stop(PS::LockRef aLock) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -366,12 +370,6 @@ public:
     // loop of Run() iterates it won't get past the mActivityGeneration check,
     // and so won't send any signals.
     sigaction(SIGPROF, &mOldSigprofHandler, 0);
-  }
-
-  void Join() {
-    MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-    pthread_join(mThread, nullptr);
   }
 
   static void SigprofHandler(int aSignal, siginfo_t* aInfo, void* aContext) {

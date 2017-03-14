@@ -46,11 +46,13 @@ nsNullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
 }
 
 /* static */ already_AddRefed<nsNullPrincipal>
-nsNullPrincipal::CreateWithInheritedAttributes(nsIDocShell* aDocShell)
+nsNullPrincipal::CreateWithInheritedAttributes(nsIDocShell* aDocShell, bool aIsFirstParty)
 {
+  OriginAttributes attrs = nsDocShell::Cast(aDocShell)->GetOriginAttributes();
+  attrs.SetFirstPartyDomain(aIsFirstParty, NS_LITERAL_CSTRING(NULL_PRINCIPAL_FIRST_PARTY_DOMAIN));
+
   RefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
-  nsresult rv =
-    nullPrin->Init(nsDocShell::Cast(aDocShell)->GetOriginAttributes());
+  nsresult rv = nullPrin->Init(attrs);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   return nullPrin.forget();
 }
