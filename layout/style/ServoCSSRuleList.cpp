@@ -11,6 +11,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleRule.h"
 #include "mozilla/ServoMediaRule.h"
+#include "mozilla/ServoNamespaceRule.h"
 
 namespace mozilla {
 
@@ -78,10 +79,10 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
       }
       CASE_RULE(STYLE, Style)
       CASE_RULE(MEDIA, Media)
+      CASE_RULE(NAMESPACE, Namespace)
 #undef CASE_RULE
       case nsIDOMCSSRule::FONT_FACE_RULE:
       case nsIDOMCSSRule::KEYFRAMES_RULE:
-      case nsIDOMCSSRule::NAMESPACE_RULE:
         // XXX create corresponding rules
       default:
         NS_WARNING("stylo: not implemented yet");
