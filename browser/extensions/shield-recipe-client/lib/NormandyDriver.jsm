@@ -34,9 +34,7 @@ this.NormandyDriver = function(sandboxManager, extraContext = {}) {
     testing: false,
 
     get locale() {
-      return Cc["@mozilla.org/chrome/chrome-registry;1"]
-        .getService(Ci.nsIXULChromeRegistry)
-        .getSelectedLocale("browser");
+      return Services.locale.getAppLocaleAsLangTag();
     },
 
     get userId() {

@@ -570,10 +570,7 @@ var pktUI = (function() {
     }
 
     function getUILocale() {
-        var locale = Cc["@mozilla.org/chrome/chrome-registry;1"].
-             getService(Ci.nsIXULChromeRegistry).
-             getSelectedLocale("browser");
-        return locale;
+        return Services.locale.getAppLocaleAsLangTag();
     }
 
     /**
