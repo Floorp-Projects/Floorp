@@ -87,6 +87,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsFocusManager.h"
+#include "nsPIDOMWindow.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1879,6 +1880,8 @@ printf(" * TakeFocus - moving into new cell\n");
   // Don't notify selection listeners if batching is on:
   if (GetBatching())
     return NS_OK;
+
+  // Be aware, the Selection instance may be destroyed after this call.
   return NotifySelectionListeners(SelectionType::eNormal);
 }
 
@@ -1919,6 +1922,7 @@ nsFrameSelection::SetDragState(bool aState)
     mDragSelectingCells = false;
     // Notify that reason is mouse up.
     PostReason(nsISelectionListener::MOUSEUP_REASON);
+    // Be aware, the Selection instance may be destroyed after this call.
     NotifySelectionListeners(SelectionType::eNormal);
   }
 }
@@ -2416,6 +2420,7 @@ nsFrameSelection::EndBatchChanges(int16_t aReason)
     int16_t postReason = PopReason() | aReason;
     PostReason(postReason);
     mChangesDuringBatching = false;
+    // Be aware, the Selection instance may be destroyed after this call.
     NotifySelectionListeners(SelectionType::eNormal);
   }
 }
@@ -2427,7 +2432,8 @@ nsFrameSelection::NotifySelectionListeners(SelectionType aSelectionType)
   int8_t index = GetIndexFromSelectionType(aSelectionType);
   if (index >=0 && mDomSelections[index])
   {
-    return mDomSelections[index]->NotifySelectionListeners();
+    RefPtr<Selection> selection = mDomSelections[index];
+    return selection->NotifySelectionListeners();
   }
   return NS_ERROR_FAILURE;
 }
@@ -4941,7 +4947,10 @@ Selection::RemoveAllRanges(ErrorResult& aRv)
   // Turn off signal for table selection
   mFrameSelection->ClearTableCellSelection();
 
+  // Be aware, this instance may be destroyed after this call.
+  // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
   result = mFrameSelection->NotifySelectionListeners(GetType());
+
   // Also need to notify the frames!
   // PresShell::CharacterDataChanged should do that on DocumentChanged
   if (NS_FAILED(result)) {
@@ -5026,6 +5035,8 @@ Selection::AddRangeInternal(nsRange& aRange, nsIDocument* aDocument,
   if (!mFrameSelection)
     return;//nothing to do
 
+  // Be aware, this instance may be destroyed after this call.
+  // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
   result = mFrameSelection->NotifySelectionListeners(GetType());
   if (NS_FAILED(result)) {
     aRv.Throw(result);
@@ -5120,6 +5131,9 @@ Selection::RemoveRange(nsRange& aRange, ErrorResult& aRv)
 
   if (!mFrameSelection)
     return;//nothing to do
+
+  // Be aware, this instance may be destroyed after this call.
+  // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
   rv = mFrameSelection->NotifySelectionListeners(GetType());
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
@@ -5238,6 +5252,9 @@ Selection::Collapse(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   }
   setAnchorFocusRange(0);
   selectFrames(presContext, range, true);
+
+  // Be aware, this instance may be destroyed after this call.
+  // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
   result = mFrameSelection->NotifySelectionListeners(GetType());
   if (NS_FAILED(result)) {
     aRv.Throw(result);
@@ -5818,6 +5835,9 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   printf ("Sel. Extend to %p %s %d\n", content.get(),
           nsAtomCString(content->NodeInfo()->NameAtom()).get(), aOffset);
 #endif
+
+  // Be aware, this instance may be destroyed after this call.
+  // XXX Why doesn't this call Selection::NotifySelectionListener() directly?
   res = mFrameSelection->NotifySelectionListeners(GetType());
   if (NS_FAILED(res)) {
     aRv.Throw(res);
@@ -5988,6 +6008,30 @@ Selection::GetPresShell() const
     return nullptr;//nothing to do
 
   return mFrameSelection->GetShell();
+}
+
+nsIDocument*
+Selection::GetDocument() const
+{
+  nsIPresShell* presShell = GetPresShell();
+  return presShell ? presShell->GetDocument() : nullptr;
+}
+
+nsPIDOMWindowOuter*
+Selection::GetWindow() const
+{
+  nsIDocument* document = GetDocument();
+  return document ? document->GetWindow() : nullptr;
+}
+
+nsIEditor*
+Selection::GetEditor() const
+{
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext) {
+    return nullptr;
+  }
+  return nsContentUtils::GetHTMLEditor(presContext);
 }
 
 nsIFrame *
@@ -6294,6 +6338,46 @@ Selection::RemoveSelectionListener(nsISelectionListener* aListenerToRemove,
   }
 }
 
+Element*
+Selection::GetCommonEditingHostForAllRanges()
+{
+  Element* editingHost = nullptr;
+  for (RangeData& rangeData : mRanges) {
+    nsRange* range = rangeData.mRange;
+    MOZ_ASSERT(range);
+    nsINode* commonAncestorNode = range->GetCommonAncestor();
+    if (!commonAncestorNode || !commonAncestorNode->IsContent()) {
+      return nullptr;
+    }
+    nsIContent* commonAncestor = commonAncestorNode->AsContent();
+    Element* foundEditingHost = commonAncestor->GetEditingHost();
+    // Even when common ancestor is a non-editable element in a contenteditable
+    // element, we don't need to move focus to the contenteditable element
+    // because Chromium doesn't set focus to it.
+    if (!foundEditingHost) {
+      return nullptr;
+    }
+    if (!editingHost) {
+      editingHost = foundEditingHost;
+      continue;
+    }
+    if (editingHost == foundEditingHost) {
+      continue;
+    }
+    if (nsContentUtils::ContentIsDescendantOf(foundEditingHost, editingHost)) {
+      continue;
+    }
+    if (nsContentUtils::ContentIsDescendantOf(editingHost, foundEditingHost)) {
+      editingHost = foundEditingHost;
+      continue;
+    }
+    // editingHost and foundEditingHost are not a descendant of the other.
+    // So, there is no common editing host.
+    return nullptr;
+  }
+  return editingHost;
+}
+
 nsresult
 Selection::NotifySelectionListeners(bool aCalledByJS)
 {
@@ -6307,7 +6391,50 @@ Selection::NotifySelectionListeners()
 {
   if (!mFrameSelection)
     return NS_OK;//nothing to do
- 
+
+  // When normal selection is changed by Selection API, we need to move focus
+  // if common ancestor of all ranges are in an editing host.  Note that we
+  // don't need to move focus *to* the other focusable node because other
+  // browsers don't do it either.
+  if (mSelectionType == SelectionType::eNormal && mCalledByJS) {
+    nsPIDOMWindowOuter* window = GetWindow();
+    nsIDocument* document = GetDocument();
+    // If the document is in design mode or doesn't have contenteditable
+    // element, we don't need to move focus.
+    if (window && document && !document->HasFlag(NODE_IS_EDITABLE) &&
+        GetEditor()) {
+      RefPtr<Element> newEditingHost = GetCommonEditingHostForAllRanges();
+      nsFocusManager* fm = nsFocusManager::GetFocusManager();
+      nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
+      nsIContent* focusedContent =
+        fm->GetFocusedDescendant(window, false, getter_AddRefs(focusedWindow));
+      nsCOMPtr<Element> focusedElement = do_QueryInterface(focusedContent);
+      // When all selected ranges are in an editing host, it should take focus.
+      if (newEditingHost && newEditingHost != focusedElement) {
+        MOZ_ASSERT(!newEditingHost->IsInNativeAnonymousSubtree());
+        nsCOMPtr<nsIDOMElement> domElementToFocus =
+          do_QueryInterface(newEditingHost->AsDOMNode());
+        // Note that don't steal focus from focused window if the window doesn't
+        // have focus.
+        fm->SetFocus(domElementToFocus, nsIFocusManager::FLAG_NOSWITCHFRAME);
+      }
+      // Otherwise, if current focused element is an editing host, it should
+      // be blurred if there is no common editing host of the selected ranges.
+      else if (!newEditingHost && focusedElement &&
+               focusedElement == focusedElement->GetEditingHost()) {
+        IgnoredErrorResult err;
+        focusedElement->Blur(err);
+        NS_WARNING_ASSERTION(!err.Failed(),
+                             "Failed to blur focused element");
+      }
+    }
+  }
+
+  // After moving focus, especially in selection listeners, our internal code
+  // should not move focus with using this class.
+  AutoRestore<bool> calledFromExternalRestorer(mCalledByJS);
+  mCalledByJS = false;
+
   if (mFrameSelection->GetBatching()) {
     mFrameSelection->SetDirty();
     return NS_OK;
