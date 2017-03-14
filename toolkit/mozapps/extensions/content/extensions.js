@@ -18,7 +18,6 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/addons/AddonRepository.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils", "resource:///modules/E10SUtils.jsm");
@@ -90,14 +89,6 @@ XPCOMUtils.defineLazyGetter(gStrings, "brandShortName", function() {
 });
 XPCOMUtils.defineLazyGetter(gStrings, "appVersion", function() {
   return Services.appinfo.version;
-});
-
-XPCOMUtils.defineLazyGetter(this, "gInlineOptionsStylesheets", () => {
-  let stylesheets = ["chrome://browser/content/extension.css"];
-  if (AppConstants.platform === "macosx") {
-    stylesheets.push("chrome://browser/content/extension-mac.css");
-  }
-  return stylesheets;
 });
 
 document.addEventListener("load", initialize, true);
@@ -3658,17 +3649,7 @@ var gDetailView = {
                          false);
       mm.addMessageListener("Extension:BrowserContentLoaded", messageListener);
       mm.addMessageListener("Extension:BrowserResized", messageListener);
-
-      let browserOptions = {
-        fixedWidth: true,
-        isInline: true,
-      };
-
-      if (this._addon.optionsBrowserStyle) {
-        browserOptions.stylesheets = gInlineOptionsStylesheets;
-      }
-
-      mm.sendAsyncMessage("Extension:InitBrowser", browserOptions);
+      mm.sendAsyncMessage("Extension:InitBrowser", {fixedWidth: true});
 
       browser.loadURI(optionsURL);
     });

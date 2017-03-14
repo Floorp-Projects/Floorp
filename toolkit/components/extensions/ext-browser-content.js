@@ -32,11 +32,10 @@ const {
 const RESIZE_TIMEOUT = 100;
 
 const BrowserListener = {
-  init({allowScriptsToClose, fixedWidth, maxHeight, maxWidth, stylesheets, isInline}) {
+  init({allowScriptsToClose, fixedWidth, maxHeight, maxWidth, stylesheets}) {
     this.fixedWidth = fixedWidth;
     this.stylesheets = stylesheets || [];
 
-    this.isInline = isInline;
     this.maxWidth = maxWidth;
     this.maxHeight = maxHeight;
 
@@ -69,20 +68,16 @@ const BrowserListener = {
     }
   },
 
-  loadStylesheets() {
-    let winUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindowUtils);
-
-    for (let url of this.stylesheets) {
-      winUtils.addSheet(stylesheetMap.get(url), winUtils.AGENT_SHEET);
-    }
-  },
-
   handleEvent(event) {
     switch (event.type) {
       case "DOMWindowCreated":
         if (event.target === content.document) {
-          this.loadStylesheets();
+          let winUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindowUtils);
+
+          for (let url of this.stylesheets) {
+            winUtils.addSheet(stylesheetMap.get(url), winUtils.AGENT_SHEET);
+          }
         }
         break;
 
@@ -106,12 +101,6 @@ const BrowserListener = {
           // For about:addons inline <browser>s, we currently receive a load
           // event on the <browser> element, but no load or DOMContentLoaded
           // events from the content window.
-
-          // Inline browsers don't receive the "DOMWindowCreated" event, so this
-          // is a workaround to load the stylesheets.
-          if (this.isInline) {
-            this.loadStylesheets();
-          }
           sendAsyncMessage("Extension:BrowserContentLoaded", {url: content.location.href});
         } else if (event.target !== content.document) {
           break;
