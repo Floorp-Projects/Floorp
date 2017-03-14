@@ -4,19 +4,16 @@ use std::path::PathBuf;
 use std::os::raw::{c_void, c_char};
 use gleam::gl;
 
-use webrender_traits::{BorderSide, BorderStyle, BorderRadius};
-use webrender_traits::{BorderWidths, BorderDetails, NormalBorder};
-use webrender_traits::{RepeatMode, ImageBorder, NinePatchDescriptor};
-use webrender_traits::{PipelineId, ComplexClipRegion, ClipRegion, PropertyBinding};
-use webrender_traits::{Epoch, ExtendMode, ColorF, GlyphInstance, GradientStop, ImageDescriptor};
-use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering};
-use webrender_traits::{FilterOp, MixBlendMode};
-use webrender_traits::{ExternalImageId, RenderApi, FontKey};
-use webrender_traits::{DeviceUintSize, DeviceUintRect, DeviceUintPoint, ExternalEvent};
-use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
-use webrender_traits::{BoxShadowClipMode, LayerPixel, ServoScrollRootId, IdNamespace};
-use webrender_traits::{BuiltDisplayListDescriptor, AuxiliaryListsDescriptor};
-use webrender_traits::{BuiltDisplayList, AuxiliaryLists, ItemRange};
+use webrender_traits::{AuxiliaryLists, AuxiliaryListsDescriptor, BorderDetails, BorderRadius};
+use webrender_traits::{BorderSide, BorderStyle, BorderWidths, BoxShadowClipMode, BuiltDisplayList};
+use webrender_traits::{BuiltDisplayListDescriptor, ClipRegion, ColorF, ComplexClipRegion};
+use webrender_traits::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, Epoch, ExtendMode};
+use webrender_traits::{ExternalEvent, ExternalImageId, FilterOp, FontKey, GlyphInstance};
+use webrender_traits::{GradientStop, IdNamespace, ImageBorder, ImageData, ImageDescriptor};
+use webrender_traits::{ImageFormat, ImageKey, ImageMask, ImageRendering, ItemRange, LayerPixel};
+use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform, MixBlendMode};
+use webrender_traits::{NinePatchDescriptor, NormalBorder, PipelineId, PropertyBinding, RenderApi};
+use webrender_traits::RepeatMode;
 use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
@@ -1036,9 +1033,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                None,
                                mix_blend_mode,
                                filters);
-    state.frame_builder.dl_builder.push_scroll_layer(clip_region,
-                                                     bounds.size,
-                                                     Some(ServoScrollRootId(1)));
+    state.frame_builder.dl_builder.push_scroll_layer(clip_region, bounds.size, None);
 }
 
 #[no_mangle]
@@ -1064,9 +1059,7 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
         }
     });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], mask);
-    state.frame_builder.dl_builder.push_scroll_layer(clip_region,
-                                                     bounds.size,
-                                                     Some(ServoScrollRootId(1)));
+    state.frame_builder.dl_builder.push_scroll_layer(clip_region, bounds.size, None);
 }
 
 #[no_mangle]
