@@ -50,12 +50,7 @@ public:
     }
     return false;
   }
-  void ConfigurationChanged(const TrackInfo& aConfig) override
-  {
-    if (mDecoder && mDecoder->SupportDecoderRecycling()) {
-      mDecoder->ConfigurationChanged(aConfig);
-    }
-  }
+
   ConversionRequired NeedsConversion() const override
   {
     if (mDecoder) {
