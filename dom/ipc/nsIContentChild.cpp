@@ -135,14 +135,14 @@ nsIContentChild::GetOrCreateActorForBlobImpl(BlobImpl* aImpl)
   return actor;
 }
 
-PSendStreamChild*
-nsIContentChild::AllocPSendStreamChild()
+PChildToParentStreamChild*
+nsIContentChild::AllocPChildToParentStreamChild()
 {
-  MOZ_CRASH("PSendStreamChild actors should be manually constructed!");
+  MOZ_CRASH("PChildToParentStreamChild actors should be manually constructed!");
 }
 
 bool
-nsIContentChild::DeallocPSendStreamChild(PSendStreamChild* aActor)
+nsIContentChild::DeallocPChildToParentStreamChild(PChildToParentStreamChild* aActor)
 {
   delete aActor;
   return true;

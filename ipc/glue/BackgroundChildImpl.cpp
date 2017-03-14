@@ -28,7 +28,7 @@
 #include "mozilla/dom/GamepadTestChannelChild.h"
 #include "mozilla/dom/MessagePortChild.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
-#include "mozilla/ipc/PSendStreamChild.h"
+#include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/layout/VsyncChild.h"
 #include "mozilla/net/PUDPSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
@@ -403,14 +403,14 @@ BackgroundChildImpl::DeallocPMessagePortChild(PMessagePortChild* aActor)
   return true;
 }
 
-PSendStreamChild*
-BackgroundChildImpl::AllocPSendStreamChild()
+PChildToParentStreamChild*
+BackgroundChildImpl::AllocPChildToParentStreamChild()
 {
-  MOZ_CRASH("PSendStreamChild actors should be manually constructed!");
+  MOZ_CRASH("PChildToParentStreamChild actors should be manually constructed!");
 }
 
 bool
-BackgroundChildImpl::DeallocPSendStreamChild(PSendStreamChild* aActor)
+BackgroundChildImpl::DeallocPChildToParentStreamChild(PChildToParentStreamChild* aActor)
 {
   delete aActor;
   return true;

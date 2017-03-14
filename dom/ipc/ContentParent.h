@@ -425,8 +425,9 @@ public:
   already_AddRefed<embedding::PrintingParent> GetPrintingParent();
 #endif
 
-  virtual PSendStreamParent* AllocPSendStreamParent() override;
-  virtual bool DeallocPSendStreamParent(PSendStreamParent* aActor) override;
+  virtual PChildToParentStreamParent* AllocPChildToParentStreamParent() override;
+  virtual bool
+  DeallocPChildToParentStreamParent(PChildToParentStreamParent* aActor) override;
 
   virtual PScreenManagerParent*
   AllocPScreenManagerParent(uint32_t* aNumberOfScreens,

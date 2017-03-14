@@ -10,10 +10,10 @@
 namespace mozilla {
 namespace ipc {
 
-class PSendStreamParent;
+class PChildToParentStreamParent;
 
-PSendStreamParent*
-AllocPSendStreamParent();
+PChildToParentStreamParent*
+AllocPChildToParentStreamParent();
 
 } // ipc namespace
 } // mozilla namespace
