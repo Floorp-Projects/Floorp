@@ -38,6 +38,21 @@
     <string name="menu_help">Help</string>
     <string name="menu_rights">Your Rights</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[
+<p>%1$s puts you in control.</p>
+<p>Use it as a private browser:
+  <ul>
+    <li>Search and browse right in the app</li>
+    <li>Block trackers (or update settings to allow trackers)</li>
+    <li>Erase to delete cookies as well as search and browsing history</li>
+  </ul>
+</p>
+<p>%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>
+<a href="%2$s">Learn more</a></p>
+    ]]></string>
+
     <string name="preference_category_search">Search</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->

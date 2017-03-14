@@ -17,7 +17,23 @@ a {
     color: #0A9AF4;
 }
 
+/* Make only about page links ("learn more") white */
+.about a {
+    color: #FFFFFF;
+}
+
 p.title {
     font-family: sans-serif-medium;
     font-size: 18px;
+}
+
+img#wordmark {
+    /* We need to set the dp size here, because by default webview assumes the image is not
+       density specific (but since it's an android resource, we get a density specific version). */
+    width: 180px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 24px;
+    padding-bottom: 24px;
 }
