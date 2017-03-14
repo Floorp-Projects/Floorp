@@ -15,6 +15,7 @@ browser.jar:
     content/browser/ext-bookmarks.js
     content/browser/ext-browserAction.js
     content/browser/ext-browsingData.js
+    content/browser/ext-chrome-settings-overrides.js
     content/browser/ext-commands.js
     content/browser/ext-contextMenus.js
     content/browser/ext-desktop-runtime.js

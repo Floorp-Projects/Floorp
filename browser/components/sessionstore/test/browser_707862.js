@@ -5,7 +5,7 @@ var tabState = {
   entries: [{
     url: "about:robots",
     triggeringPrincipal_base64,
-    children: [{url: "about:mozilla", triggeringPrincipal_base64,}]}]
+    children: [{url: "about:mozilla", triggeringPrincipal_base64, }]}]
 };
 
 function test() {
@@ -13,7 +13,7 @@ function test() {
   requestLongerTimeout(2);
 
   Services.prefs.setIntPref("browser.sessionstore.interval", 4000);
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.sessionstore.interval");
   });
 
@@ -26,13 +26,13 @@ function test() {
     let entry = sessionHistory.getEntryAtIndex(0, false);
     entry.QueryInterface(Ci.nsISHContainer);
 
-    whenChildCount(entry, 1, function () {
-      whenChildCount(entry, 2, function () {
+    whenChildCount(entry, 1, function() {
+      whenChildCount(entry, 2, function() {
         promiseBrowserLoaded(browser).then(() => {
-          let sessionHistory = browser.sessionHistory;
-          let entry = sessionHistory.getEntryAtIndex(0, false);
+          let newSessionHistory = browser.sessionHistory;
+          let newEntry = newSessionHistory.getEntryAtIndex(0, false);
 
-          whenChildCount(entry, 0, function () {
+          whenChildCount(newEntry, 0, function() {
             // Make sure that we reset the state.
             let blankState = { windows: [{ tabs: [{ entries: [{ url: "about:blank",
                                                                 triggeringPrincipal_base64 }] }]}]};

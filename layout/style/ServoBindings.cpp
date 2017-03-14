@@ -863,39 +863,30 @@ Gecko_SetGradientImageValue(nsStyleImage* aImage, nsStyleGradient* aGradient)
 
 static already_AddRefed<nsStyleImageRequest>
 CreateStyleImageRequest(nsStyleImageRequest::Mode aModeFlags,
-                        const uint8_t* aURLString, uint32_t aURLStringLength,
-                        ThreadSafeURIHolder* aBaseURI,
-                        ThreadSafeURIHolder* aReferrer,
-                        ThreadSafePrincipalHolder* aPrincipal)
+                        ServoBundledURI aURI)
 {
-  MOZ_ASSERT(aURLString);
-  MOZ_ASSERT(aBaseURI);
-  MOZ_ASSERT(aReferrer);
-  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aURI.mURLString);
+  MOZ_ASSERT(aURI.mBaseURI);
+  MOZ_ASSERT(aURI.mReferrer);
+  MOZ_ASSERT(aURI.mPrincipal);
 
   nsString url;
-  nsDependentCSubstring urlString(reinterpret_cast<const char*>(aURLString),
-                                  aURLStringLength);
+  nsDependentCSubstring urlString(reinterpret_cast<const char*>(aURI.mURLString),
+                                  aURI.mURLStringLength);
   AppendUTF8toUTF16(urlString, url);
   RefPtr<nsStringBuffer> urlBuffer = nsCSSValue::BufferFromString(url);
 
   RefPtr<nsStyleImageRequest> req =
-    new nsStyleImageRequest(aModeFlags, urlBuffer, do_AddRef(aBaseURI),
-                            do_AddRef(aReferrer), do_AddRef(aPrincipal));
+    new nsStyleImageRequest(aModeFlags, urlBuffer, do_AddRef(aURI.mBaseURI),
+                            do_AddRef(aURI.mReferrer), do_AddRef(aURI.mPrincipal));
   return req.forget();
 }
 
 void
-Gecko_SetUrlImageValue(nsStyleImage* aImage,
-                       const uint8_t* aURLString, uint32_t aURLStringLength,
-                       ThreadSafeURIHolder* aBaseURI,
-                       ThreadSafeURIHolder* aReferrer,
-                       ThreadSafePrincipalHolder* aPrincipal)
+Gecko_SetUrlImageValue(nsStyleImage* aImage, ServoBundledURI aURI)
 {
   RefPtr<nsStyleImageRequest> req =
-    CreateStyleImageRequest(nsStyleImageRequest::Mode::Track,
-                            aURLString, aURLStringLength,
-                            aBaseURI, aReferrer, aPrincipal);
+    CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aURI);
   aImage->SetImageRequest(req.forget());
 }
 
@@ -916,16 +907,10 @@ Gecko_SetCursorArrayLength(nsStyleUserInterface* aStyleUI, size_t aLen)
 }
 
 void
-Gecko_SetCursorImage(nsCursorImage* aCursor,
-                     const uint8_t* aURLString, uint32_t aURLStringLength,
-                     ThreadSafeURIHolder* aBaseURI,
-                     ThreadSafeURIHolder* aReferrer,
-                     ThreadSafePrincipalHolder* aPrincipal)
+Gecko_SetCursorImage(nsCursorImage* aCursor, ServoBundledURI aURI)
 {
   aCursor->mImage =
-    CreateStyleImageRequest(nsStyleImageRequest::Mode::Discard,
-                            aURLString, aURLStringLength,
-                            aBaseURI, aReferrer, aPrincipal);
+    CreateStyleImageRequest(nsStyleImageRequest::Mode::Discard, aURI);
 }
 
 void
@@ -933,6 +918,21 @@ Gecko_CopyCursorArrayFrom(nsStyleUserInterface* aDest,
                           const nsStyleUserInterface* aSrc)
 {
   aDest->mCursorImages = aSrc->mCursorImages;
+}
+
+void
+Gecko_SetContentDataImage(nsStyleContentData* aContent, ServoBundledURI aURI)
+{
+  RefPtr<nsStyleImageRequest> req = CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aURI);
+  aContent->SetImageRequest(req.forget());
+}
+
+void
+Gecko_SetContentDataArray(nsStyleContentData* aContent,
+                          nsStyleContentType aType, uint32_t aLen)
+{
+  nsCSSValue::Array* arr = nsCSSValue::Array::Create(aLen);
+  aContent->SetCounters(aType, arr);
 }
 
 nsStyleGradient*
@@ -978,9 +978,7 @@ Gecko_SetListStyleImage(nsStyleList* aList,
                         ServoBundledURI aURI)
 {
   aList->mListStyleImage =
-    CreateStyleImageRequest(nsStyleImageRequest::Mode(0),
-                            aURI.mURLString, aURI.mURLStringLength,
-                            aURI.mBaseURI, aURI.mReferrer, aURI.mPrincipal);
+    CreateStyleImageRequest(nsStyleImageRequest::Mode(0), aURI);
 }
 
 void
@@ -1025,6 +1023,44 @@ Gecko_CopyStyleContentsFrom(nsStyleContent* aContent, const nsStyleContent* aOth
 
   for (uint32_t i = 0; i < count; ++i) {
     aContent->ContentAt(i) = aOther->ContentAt(i);
+  }
+}
+
+void
+Gecko_ClearAndResizeCounterIncrements(nsStyleContent* aContent, uint32_t aHowMany)
+{
+  aContent->AllocateCounterIncrements(aHowMany);
+}
+
+void
+Gecko_CopyCounterIncrementsFrom(nsStyleContent* aContent, const nsStyleContent* aOther)
+{
+  uint32_t count = aOther->CounterIncrementCount();
+
+  aContent->AllocateCounterIncrements(count);
+
+  for (uint32_t i = 0; i < count; ++i) {
+    const nsStyleCounterData& data = aOther->CounterIncrementAt(i);
+    aContent->SetCounterIncrementAt(i, data.mCounter, data.mValue);
+  }
+}
+
+void
+Gecko_ClearAndResizeCounterResets(nsStyleContent* aContent, uint32_t aHowMany)
+{
+  aContent->AllocateCounterResets(aHowMany);
+}
+
+void
+Gecko_CopyCounterResetsFrom(nsStyleContent* aContent, const nsStyleContent* aOther)
+{
+  uint32_t count = aOther->CounterResetCount();
+
+  aContent->AllocateCounterResets(count);
+
+  for (uint32_t i = 0; i < count; ++i) {
+    const nsStyleCounterData& data = aOther->CounterResetAt(i);
+    aContent->SetCounterResetAt(i, data.mCounter, data.mValue);
   }
 }
 
@@ -1329,10 +1365,25 @@ Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut aCSSValue, int32_t aLen)
 }
 
 void
-Gecko_CSSValue_SetString(nsCSSValueBorrowedMut aCSSValue, const nsString aString)
+Gecko_CSSValue_SetString(nsCSSValueBorrowedMut aCSSValue, const uint8_t* aString, uint32_t aLength)
 {
   MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
-  aCSSValue->SetStringValue(aString, eCSSUnit_String);
+  nsString string;
+  nsDependentCSubstring slice(reinterpret_cast<const char*>(aString),
+                                  aLength);
+  AppendUTF8toUTF16(slice, string);
+  aCSSValue->SetStringValue(string, eCSSUnit_String);
+}
+
+void
+Gecko_CSSValue_SetIdent(nsCSSValueBorrowedMut aCSSValue, const uint8_t* aString, uint32_t aLength)
+{
+  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
+  nsString string;
+  nsDependentCSubstring slice(reinterpret_cast<const char*>(aString),
+                                  aLength);
+  AppendUTF8toUTF16(slice, string);
+  aCSSValue->SetStringValue(string, eCSSUnit_Ident);
 }
 
 void

@@ -16,14 +16,14 @@ function test() {
 
   waitForExplicitFinish();
 
-  newWindowWithState(state, function (win) {
+  newWindowWithState(state, function(win) {
     registerCleanupFunction(() => BrowserTestUtils.closeWindow(win));
 
     is(gBrowser.tabs.length, 1, "The total number of tabs should be 1");
     is(gBrowser.visibleTabs.length, 1, "The total number of visible tabs should be 1");
 
-    executeSoon(function () {
-      waitForFocus(function () {
+    executeSoon(function() {
+      waitForFocus(function() {
         middleClickTest(win);
         finish();
       }, win);
@@ -64,7 +64,7 @@ function newWindowWithState(state, callback) {
       callback(win);
     }, {capture: true, once: true});
 
-    executeSoon(function () {
+    executeSoon(function() {
       ss.setWindowState(win, JSON.stringify(state), true);
     });
   }, {once: true});

@@ -52,10 +52,6 @@ task_description_schema = Schema({
     # automatically
     Optional('routes'): [basestring],
 
-    # The index paths where this task may be cached. Transforms are expected to
-    # fill these automatically when wanted.
-    Optional('index-paths'): [basestring],
-
     # custom scopes for this task; any scopes required for the worker will be
     # added automatically
     Optional('scopes'): [basestring],
@@ -132,6 +128,18 @@ task_description_schema = Schema({
     # tasks are never coalesced
     Optional('coalesce-name'): basestring,
 
+    # Optimizations to perform on this task during the optimization phase,
+    # specified in order.  These optimizations are defined in
+    # taskcluster/taskgraph/optimize.py.
+    Optional('optimizations'): [Any(
+        # search the index for the given index namespace, and replace this task if found
+        ['index-search', basestring],
+        # consult SETA and skip this task if it is low-value
+        ['seta'],
+        # skip this task if none of the given file patterns match
+        ['files-changed', [basestring]],
+    )],
+
     # the provisioner-id/worker-type for the task.  The following parameters will
     # be substituted in this string:
     #  {level} -- the scm level of this push
@@ -162,6 +170,7 @@ task_description_schema = Schema({
         Required('allow-ptrace', default=False): bool,
         Required('loopback-video', default=False): bool,
         Required('loopback-audio', default=False): bool,
+        Required('docker-in-docker', default=False): bool,  # (aka 'dind')
 
         # caches to set up for the task
         Optional('caches'): [{
@@ -336,16 +345,6 @@ task_description_schema = Schema({
             Required('paths'): [basestring],
         }],
     }),
-
-    # The "when" section contains descriptions of the circumstances
-    # under which this task can be "optimized", that is, left out of the
-    # task graph because it is unnecessary.
-    Optional('when'): Any({
-        # This task only needs to be run if a file matching one of the given
-        # patterns has changed in the push.  The patterns use the mozpack
-        # match function (python/mozbuild/mozpack/path.py).
-        Optional('files-changed'): [basestring],
-    }),
 })
 
 GROUP_NAMES = {
@@ -375,6 +374,7 @@ GROUP_NAMES = {
     'tc-BMcs': 'Beetmover checksums, executed by Taskcluster',
     'Aries': 'Aries Device Image',
     'Nexus 5-L': 'Nexus 5-L Device Image',
+    'I': 'Docker Image Builds',
     'TL': 'Toolchain builds for Linux 64-bits',
     'TM': 'Toolchain builds for OSX',
     'TW32': 'Toolchain builds for Windows 32-bits',
@@ -460,6 +460,9 @@ def build_docker_worker_payload(config, task, task_def):
     if worker.get('chain-of-trust'):
         features['chainOfTrust'] = True
 
+    if worker.get('docker-in-docker'):
+        features['dind'] = True
+
     if task.get('needs-sccache'):
         features['taskclusterProxy'] = True
         task_def['scopes'].append(
@@ -480,10 +483,11 @@ def build_docker_worker_payload(config, task, task_def):
             task_def['scopes'].append('docker-worker:capability:device:' + capitalized)
 
     task_def['payload'] = payload = {
-        'command': worker['command'],
         'image': image,
         'env': worker['env'],
     }
+    if 'command' in worker:
+        payload['command'] = worker['command']
 
     if 'max-run-time' in worker:
         payload['maxRunTime'] = worker['max-run-time']
@@ -759,25 +763,6 @@ def add_index_routes(config, tasks):
 
 
 @transforms.add
-def add_files_changed(config, tasks):
-    for task in tasks:
-        if 'files-changed' not in task.get('when', {}):
-            yield task
-            continue
-
-        task['when']['files-changed'].extend([
-            '{}/**'.format(config.path),
-            'taskcluster/taskgraph/**',
-        ])
-
-        if 'in-tree' in task['worker'].get('docker-image', {}):
-            task['when']['files-changed'].append('taskcluster/docker/{}/**'.format(
-                task['worker']['docker-image']['in-tree']))
-
-        yield task
-
-
-@transforms.add
 def build_task(config, tasks):
     for task in tasks:
         worker_type = task['worker-type'].format(level=str(config.params['level']))
@@ -870,8 +855,7 @@ def build_task(config, tasks):
             'task': task_def,
             'dependencies': task.get('dependencies', {}),
             'attributes': attributes,
-            'index-paths': task.get('index-paths'),
-            'when': task.get('when', {}),
+            'optimizations': task.get('optimizations', []),
         }
 
 

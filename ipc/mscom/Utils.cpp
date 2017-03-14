@@ -49,6 +49,31 @@ IsProxy(IUnknown* aUnknown)
   return false;
 }
 
+bool
+IsValidGUID(REFGUID aCheckGuid)
+{
+  // This function determines whether or not aCheckGuid conforms to RFC4122
+  // as it applies to Microsoft COM.
+
+  BYTE variant = aCheckGuid.Data4[0];
+  if (!(variant & 0x80)) {
+    // NCS Reserved
+    return false;
+  }
+  if ((variant & 0xE0) == 0xE0) {
+    // Reserved for future use
+    return false;
+  }
+  if ((variant & 0xC0) == 0xC0) {
+    // Microsoft Reserved.
+    return true;
+  }
+
+  BYTE version = HIBYTE(aCheckGuid.Data3) >> 4;
+  // Other versions are specified in RFC4122 but these are the two used by COM.
+  return version == 1 || version == 4;
+}
+
 #ifdef ACCESSIBILITY
 static bool
 IsVtableIndexFromParentInterface(TYPEATTR* aTypeAttr,
