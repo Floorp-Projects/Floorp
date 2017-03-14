@@ -1452,16 +1452,6 @@ KeyframeEffectReadOnly::GetPresShell() const
   return doc->GetShell();
 }
 
-nsPresContext*
-KeyframeEffectReadOnly::GetPresContext() const
-{
-  nsIPresShell* shell = GetPresShell();
-  if (!shell) {
-    return nullptr;
-  }
-  return shell->GetPresContext();
-}
-
 /* static */ bool
 KeyframeEffectReadOnly::IsGeometricProperty(
   const nsCSSPropertyID aProperty)
