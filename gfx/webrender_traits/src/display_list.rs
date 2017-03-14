@@ -414,6 +414,7 @@ impl DisplayListBuilder {
                 _ => {}
             }
             i.clip.complex = self.auxiliary_lists_builder.add_complex_clip_regions(aux.complex_clip_regions(&i.clip.complex));
+            i.scroll_layer_id = *self.clip_stack.last().unwrap();
             self.list.push(i);
         }
     }
