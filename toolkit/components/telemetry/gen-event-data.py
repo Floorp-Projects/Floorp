@@ -65,7 +65,6 @@ def write_extra_table(events, output, string_table):
 
 def write_common_event_table(events, output, string_table, extra_table):
     table_name = "gCommonEventInfo"
-    extra_count = 0
 
     print("const CommonEventInfo %s[] = {" % table_name, file=output)
     for e, extras in zip(events, extra_table):
