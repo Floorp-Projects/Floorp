@@ -313,8 +313,8 @@ protected:
   /**
    * Create a transaction for removing aNode from its parent.
    */
-  nsresult CreateTxnForDeleteNode(nsINode* aNode,
-                                  DeleteNodeTransaction** aTransaction);
+  already_AddRefed<DeleteNodeTransaction>
+    CreateTxnForDeleteNode(nsINode* aNode);
 
   nsresult CreateTxnForDeleteSelection(
              EDirection aAction,
