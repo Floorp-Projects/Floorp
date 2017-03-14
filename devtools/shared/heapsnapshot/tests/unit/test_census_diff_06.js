@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Test diffing census reports of a "complex" and "realistic" breakdown.
 
@@ -41,11 +42,11 @@ const REPORT1 = {
     [stack1, { Function: { bytes: 1 },
                Object: { bytes: 2 },
                other: { bytes: 0 },
-             }],
+    }],
     [stack2, { Array: { bytes: 3 },
                Date: { bytes: 4 },
                other: { bytes: 0 },
-             }],
+    }],
     ["noStack", { Object: { bytes: 3 }}],
   ]),
   strings: {
@@ -66,11 +67,11 @@ const REPORT2 = {
     [stack2, { Array: { bytes: 1 },
                Date: { bytes: 2 },
                other: { bytes: 3 },
-             }],
+    }],
     [stack3, { Function: { bytes: 1 },
                Object: { bytes: 2 },
                other: { bytes: 0 },
-             }],
+    }],
     ["noStack", { Object: { bytes: 3 }}],
   ]),
   strings: {
@@ -92,15 +93,15 @@ const EXPECTED = {
     [stack1, { Function: { bytes: -1 },
                Object: { bytes: -2 },
                other: { bytes: 0 },
-             }],
+    }],
     [stack2, { Array: { bytes: -2 },
                Date: { bytes: -2 },
                other: { bytes: 3 },
-             }],
+    }],
     [stack3, { Function: { bytes: 1 },
                Object: { bytes: 2 },
                other: { bytes: 0 },
-             }],
+    }],
     ["noStack", { Object: { bytes: 0 }}],
   ]),
   "scripts": {

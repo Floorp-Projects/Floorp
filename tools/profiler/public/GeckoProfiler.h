@@ -274,14 +274,6 @@ static inline void profiler_get_buffer_info(uint32_t* aCurrentPosition,
   profiler_get_buffer_info_helper(aCurrentPosition, aEntries, aGeneration);
 }
 
-// Lock the profiler. When locked the profiler is (1) stopped,
-// (2) profile data is cleared, (3) 'profiler-locked' is fired.
-// This is used to lock down the profiler during private browsing.
-PROFILER_FUNC_VOID(profiler_lock())
-
-// Unlock the profiler, leaving it stopped, and fire 'profiler-unlocked'.
-PROFILER_FUNC_VOID(profiler_unlock())
-
 // Register/unregister threads with the profiler.
 PROFILER_FUNC_VOID(profiler_register_thread(const char* name,
                                             void* guessStackTop))

@@ -237,7 +237,7 @@ DominatorTreeNode.partialTraversal = function (dominatorTree,
  *
  * @returns {DominatorTreeNode}
  */
-DominatorTreeNode.insert = function (tree, path, newChildren, moreChildrenAvailable) {
+DominatorTreeNode.insert = function (nodeTree, path, newChildren, moreChildrenAvailable) {
   function insert(tree, i) {
     if (tree.nodeId !== path[i]) {
       return tree;
@@ -257,7 +257,7 @@ DominatorTreeNode.insert = function (tree, path, newChildren, moreChildrenAvaila
       : tree;
   }
 
-  return insert(tree, 0);
+  return insert(nodeTree, 0);
 };
 
 /**

@@ -1519,8 +1519,7 @@ nsSHistory::RemoveEntries(nsTArray<nsID>& aIDs, int32_t aStartIndex)
     --index;
   }
   if (didRemove && mRootDocShell) {
-    NS_DispatchToCurrentThread(NewRunnableMethod(static_cast<nsDocShell*>(mRootDocShell),
-                                                 &nsDocShell::FireDummyOnLocationChange));
+    mRootDocShell->DispatchLocationChangeEvent();
   }
 }
 
@@ -1932,8 +1931,7 @@ nsSHistory::OnAttachGroupedSHistory(int32_t aOffset)
 
   // Setting grouped history info may change canGoBack / canGoForward.
   // Send a location change to update these values.
-  NS_DispatchToCurrentThread(NewRunnableMethod(static_cast<nsDocShell*>(mRootDocShell),
-                                               &nsDocShell::FireDummyOnLocationChange));
+  mRootDocShell->DispatchLocationChangeEvent();
   return NS_OK;
 
 }
