@@ -33,7 +33,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/PBackgroundTestParent.h"
-#include "mozilla/ipc/PSendStreamParent.h"
+#include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/SendStreamAlloc.h"
 #include "mozilla/layout/VsyncParent.h"
 #include "mozilla/dom/network/UDPSocketParent.h"
@@ -302,14 +302,15 @@ BackgroundParentImpl::DeallocPFileDescriptorSetParent(
   return true;
 }
 
-PSendStreamParent*
-BackgroundParentImpl::AllocPSendStreamParent()
+PChildToParentStreamParent*
+BackgroundParentImpl::AllocPChildToParentStreamParent()
 {
-  return mozilla::ipc::AllocPSendStreamParent();
+  return mozilla::ipc::AllocPChildToParentStreamParent();
 }
 
 bool
-BackgroundParentImpl::DeallocPSendStreamParent(PSendStreamParent* aActor)
+BackgroundParentImpl::DeallocPChildToParentStreamParent(
+                                             PChildToParentStreamParent* aActor)
 {
   delete aActor;
   return true;

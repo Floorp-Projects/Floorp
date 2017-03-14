@@ -8,7 +8,7 @@ include protocol PCache;
 include protocol PCacheOp;
 include protocol PCacheStreamControl;
 include protocol PFileDescriptorSet;
-include protocol PSendStream;
+include protocol PChildToParentStream;
 
 include CacheTypes;
 

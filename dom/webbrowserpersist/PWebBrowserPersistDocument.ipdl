@@ -7,7 +7,7 @@ include protocol PContent;
 include protocol PWebBrowserPersistResources;
 include protocol PWebBrowserPersistSerialize;
 include protocol PFileDescriptorSet;
-include protocol PSendStream;
+include protocol PChildToParentStream; //FIXME: bug #792908
 
 include IPCStream;
 

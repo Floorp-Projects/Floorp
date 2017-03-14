@@ -260,14 +260,14 @@ nsIContentParent::DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aAct
   return true;
 }
 
-PSendStreamParent*
-nsIContentParent::AllocPSendStreamParent()
+PChildToParentStreamParent*
+nsIContentParent::AllocPChildToParentStreamParent()
 {
-  return mozilla::ipc::AllocPSendStreamParent();
+  return mozilla::ipc::AllocPChildToParentStreamParent();
 }
 
 bool
-nsIContentParent::DeallocPSendStreamParent(PSendStreamParent* aActor)
+nsIContentParent::DeallocPChildToParentStreamParent(PChildToParentStreamParent* aActor)
 {
   delete aActor;
   return true;

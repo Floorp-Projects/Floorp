@@ -114,9 +114,10 @@ protected:
 
   virtual bool DeallocPBlobParent(PBlobParent*) override;
 
-  virtual PSendStreamParent* AllocPSendStreamParent() override;
+  virtual PChildToParentStreamParent* AllocPChildToParentStreamParent() override;
 
-  virtual bool DeallocPSendStreamParent(PSendStreamParent* aActor) override;
+  virtual bool
+  DeallocPChildToParentStreamParent(PChildToParentStreamParent* aActor) override;
 
   virtual PFileDescriptorSetParent*
   AllocPFileDescriptorSetParent(const mozilla::ipc::FileDescriptor&) override;

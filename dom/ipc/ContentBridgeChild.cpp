@@ -90,10 +90,10 @@ ContentBridgeChild::SendPFileDescriptorSetConstructor(const FileDescriptor& aFD)
   return PContentBridgeChild::SendPFileDescriptorSetConstructor(aFD);
 }
 
-PSendStreamChild*
-ContentBridgeChild::SendPSendStreamConstructor(PSendStreamChild* aActor)
+PChildToParentStreamChild*
+ContentBridgeChild::SendPChildToParentStreamConstructor(PChildToParentStreamChild* aActor)
 {
-  return PContentBridgeChild::SendPSendStreamConstructor(aActor);
+  return PContentBridgeChild::SendPChildToParentStreamConstructor(aActor);
 }
 
 // This implementation is identical to ContentChild::GetCPOWManager but we can't
@@ -168,16 +168,16 @@ ContentBridgeChild::DeallocPBlobChild(PBlobChild* aActor)
   return nsIContentChild::DeallocPBlobChild(aActor);
 }
 
-PSendStreamChild*
-ContentBridgeChild::AllocPSendStreamChild()
+PChildToParentStreamChild*
+ContentBridgeChild::AllocPChildToParentStreamChild()
 {
-  return nsIContentChild::AllocPSendStreamChild();
+  return nsIContentChild::AllocPChildToParentStreamChild();
 }
 
 bool
-ContentBridgeChild::DeallocPSendStreamChild(PSendStreamChild* aActor)
+ContentBridgeChild::DeallocPChildToParentStreamChild(PChildToParentStreamChild* aActor)
 {
-  return nsIContentChild::DeallocPSendStreamChild(aActor);
+  return nsIContentChild::DeallocPChildToParentStreamChild(aActor);
 }
 
 PFileDescriptorSetChild*

@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PContent;
-include protocol PSendStream;
+include protocol PChildToParentStream;
 include protocol PFileDescriptorSet;
 include protocol PTransportProvider;
 include FetchTypes;

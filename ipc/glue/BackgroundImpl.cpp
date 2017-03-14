@@ -54,7 +54,7 @@
 
 #define CRASH_IN_CHILD_PROCESS(_msg)                                           \
   do {                                                                         \
-    if (XRE_IsParentProcess()) {                                                     \
+    if (XRE_IsParentProcess()) {                                               \
       MOZ_ASSERT(false, _msg);                                                 \
     } else {                                                                   \
       MOZ_CRASH(_msg);                                                         \
