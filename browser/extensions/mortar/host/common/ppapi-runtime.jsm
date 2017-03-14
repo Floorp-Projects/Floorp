@@ -53,6 +53,13 @@ const PP_ERROR_ADDRESS_IN_USE = -108;
 const PP_ERROR_MESSAGE_TOO_BIG = -109;
 const PP_ERROR_NAME_NOT_RESOLVED = -110;
 
+// Point is defined as 1/72 of an inch (25.4mm)
+const POINT_PER_INCH = 72;
+const POINT_PER_MILLIMETER = POINT_PER_INCH / 25.4;
+
+const PRINT_FILE_NAME = "print.pdf";
+const PRINT_CONTENT_TEMP_KEY =
+  (Services.appinfo.OS == "Linux") ? "TmpD" : "ContentTmpD";
 
 const PP_Bool = {
   PP_FALSE: 0,
@@ -262,6 +269,26 @@ const PP_NetworkList_Type = {
   PP_NETWORKLIST_TYPE_CELLULAR: 3
 };
 
+const PP_PrintOrientation_Dev = {
+  PP_PRINTORIENTATION_NORMAL: 0,
+  PP_PRINTORIENTATION_ROTATED_90_CW: 1,
+  PP_PRINTORIENTATION_ROTATED_180: 2,
+  PP_PRINTORIENTATION_ROTATED_90_CCW: 3
+};
+
+const PP_PrintOutputFormat_Dev = {
+  PP_PRINTOUTPUTFORMAT_RASTER: 1 << 0,
+  PP_PRINTOUTPUTFORMAT_PDF: 1 << 1,
+  PP_PRINTOUTPUTFORMAT_POSTSCRIPT: 1 << 2,
+  PP_PRINTOUTPUTFORMAT_EMF: 1 << 3
+};
+
+const PP_PrintScalingOption_Dev = {
+  PP_PRINTSCALINGOPTION_NONE: 0,
+  PP_PRINTSCALINGOPTION_FIT_TO_PRINTABLE_AREA: 1,
+  PP_PRINTSCALINGOPTION_SOURCE_SIZE: 2
+};
+
 const PP_TextInput_Type_Dev = {
   PP_TEXTINPUT_TYPE_DEV_NONE: 0,
   PP_TEXTINPUT_TYPE_DEV_TEXT: 1,
@@ -330,6 +357,19 @@ const PR_TRUNCATE = 0x20;
 const PR_SYNC = 0x40;
 const PR_EXCL = 0x80;
 
+/* File mode bits */
+const PR_IRWXU = 0o700;  /* read, write, execute/search by owner */
+const PR_IRUSR = 0o400;  /* read permission, owner */
+const PR_IWUSR = 0o200;  /* write permission, owner */
+const PR_IXUSR = 0o100;  /* execute/search permission, owner */
+const PR_IRWXG = 0o070;  /* read, write, execute/search by group */
+const PR_IRGRP = 0o040;  /* read permission, group */
+const PR_IWGRP = 0o020;  /* write permission, group */
+const PR_IXGRP = 0o010;  /* execute/search permission, group */
+const PR_IRWXO = 0o007;  /* read, write, execute/search by others */
+const PR_IROTH = 0o004;  /* read permission, others */
+const PR_IWOTH = 0o002;  /* write permission, others */
+const PR_IXOTH = 0o001;  /* execute/search permission, others */
 
 class InterfaceMemberCall {
   constructor(interfaceName, memberName, args) {
@@ -1541,6 +1581,8 @@ class PPAPIInstance {
     this.cachedImageData = null;
     this.viewport = new PPAPIViewport(this);
     this.selectedText = "";
+    this.ppapiPrintSettings = {};
+    this.pageRangeInfo = {};
 
     this.notifyHashChange(info.url);
 
@@ -1560,6 +1602,76 @@ class PPAPIInstance {
         type: "command",
         name: evt.data.name
       });
+    });
+
+    this.mm.addMessageListener("ppapipdf.js:printsettingschanged", (evt) => {
+      // Convert trim print settings to ppapi print settings
+      let ps = evt.data.trimPrintSettings;
+      let point = (ps.paperSizeUnit == Ci.nsIPrintSettings.kPaperSizeInches)
+        ? POINT_PER_INCH : POINT_PER_MILLIMETER;
+      // Unit of margins are in inches but paper size could be inches or mm
+      this.ppapiPrintSettings.printable_area = {
+        point: {
+          x: ps.unwriteableMarginLeft * POINT_PER_INCH,
+          y: ps.unwriteableMarginTop * POINT_PER_INCH
+        },
+        size: {
+          width: ps.paperWidth * point - (ps.unwriteableMarginLeft +
+                 ps.unwriteableMarginRight) * POINT_PER_INCH,
+          height: ps.paperHeight * point - (ps.unwriteableMarginTop +
+                  ps.unwriteableMarginBottom) * POINT_PER_INCH
+        }
+      };
+      this.ppapiPrintSettings.content_area = {
+        point: {
+          x: ps.marginLeft * POINT_PER_INCH,
+          y: ps.marginTop * POINT_PER_INCH
+        },
+        size: {
+          width: ps.paperWidth * point - (ps.marginLeft +
+                 ps.marginRight) * POINT_PER_INCH,
+          height: ps.paperHeight * point - (ps.marginTop +
+                  ps.marginBottom) * POINT_PER_INCH
+        }
+      };
+      this.ppapiPrintSettings.paper_size = {
+        width: ps.paperWidth * point,
+        height: ps.paperHeight * point
+      };
+      // XXX The print dialog does not provide a way for user to set resolution
+      //     which causes us not able to access the resolution. So here we
+      //     workaround by setting resolution to a default value 0 and pass it
+      //     to PDFium for getting PDF file. It is fine to pass a unmeaningful
+      //     value of resolution when print as PDF.
+      this.ppapiPrintSettings.dpi = 0;
+      // XXX We only support kPortraitOrientation and kLandscapeOreintation,
+      //     otherwise we return directly.
+      switch (ps.orientation) {
+        case Ci.nsIPrintSettings.kPortraitOrientation:
+          this.ppapiPrintSettings.orientation =
+            PP_PrintOrientation_Dev.PP_PRINTORIENTATION_NORMAL;
+          break;
+        case Ci.nsIPrintSettings.kLandscapeOrientation:
+          this.ppapiPrintSettings.orientation =
+            PP_PrintOrientation_Dev.PP_PRINTORIENTATION_ROTATED_90_CW;
+          break;
+        default:
+          return;
+      }
+      this.ppapiPrintSettings.print_scaling_option = ps.shrinkToFit ?
+        PP_PrintScalingOption_Dev.PP_PRINTSCALINGOPTION_FIT_TO_PRINTABLE_AREA :
+        PP_PrintScalingOption_Dev.PP_PRINTSCALINGOPTION_NONE;
+      this.ppapiPrintSettings.grayscale = !ps.printInColor;
+      this.ppapiPrintSettings.format =
+        PP_PrintOutputFormat_Dev.PP_PRINTOUTPUTFORMAT_PDF;
+
+      // Store page range information
+      this.pageRangeInfo.printRange = ps.printRange;
+      this.pageRangeInfo.startPageRange = ps.startPageRange;
+      this.pageRangeInfo.endPageRange = ps.endPageRange;
+
+      let message = {type: 'print'};
+      this.viewportActionHandler(message);
     });
   }
 
@@ -1704,6 +1816,10 @@ class PPAPIInstance {
       case 'setHash':
         this.mm.sendAsyncMessage("ppapipdf.js:setHash", message.hash);
         break;
+      case 'startPrint':
+        // We need permission for showing print dialog to get print settings
+        this.mm.sendAsyncMessage("ppapipdf.js:getPrintSettings");
+        break;
       case 'viewport':
       case 'rotateClockwise':
       case 'rotateCounterclockwise':
@@ -1711,6 +1827,7 @@ class PPAPIInstance {
       case 'getSelectedText':
       case 'getNamedDestination':
       case 'getPasswordComplete':
+      case 'print':
         let data = PP_Var.fromJSValue(new Dictionary(message), this);
         this.rt.call(new InterfaceMemberCall("PPP_Messaging;1.0", "HandleMessage",
           { instance: this, var: data }));
@@ -4808,6 +4925,94 @@ dump(`callFromJSON: < ${JSON.stringify(call)}\n`);
      */
     PPB_PDF_GetFontFileWithFallback: function(json) {
       return 0;
+    },
+
+    /**
+     * void Print(
+     *   [in] PP_Instance instance);
+     */
+    PPB_PDF_Print: function(json) {
+      let instance = this.instances[json.instance];
+      let pageRangeInfo = instance.pageRangeInfo;
+
+      // Query supported formats
+      let supportedFormats = instance.rt.call(new InterfaceMemberCall(
+        "PPP_Printing(Dev);0.6", "QuerySupportedFormats", { instance }), true);
+      // XXX We only support PDF output format now.
+      if (!(PP_PrintOutputFormat_Dev.PP_PRINTOUTPUTFORMAT_PDF &
+          supportedFormats)) {
+        return;
+      }
+
+      // Begin of printing
+      let totalPageNumber = instance.rt.call(new InterfaceMemberCall(
+        "PPP_Printing(Dev);0.6", "Begin", { instance, print_settings:
+        instance.ppapiPrintSettings }), true);
+      if (totalPageNumber <= 0) {
+        return;
+      }
+
+      // Get PDF file
+      if (pageRangeInfo.printRange == Ci.nsIPrintSettings.kRangeAllPages) {
+        pageRangeInfo.startPageRange = 1;
+        pageRangeInfo.endPageRange = totalPageNumber;
+      } else {
+        if (pageRangeInfo.startPageRange < 1) {
+          pageRanges.startPageRange = 1;
+        }
+        if (pageRangeInfo.endPageRange > totalPageNumber) {
+          pageRangeInfo.endPageRange = totalPageNumber;
+        }
+        if (pageRangeInfo.startPageRange > pageRangeInfo.endPageRange) {
+          return;
+        }
+      }
+      // XXX We only support one page range now:
+      //     Gecko is using OS native print dialog now. And the print dialog
+      //     on Linux do support multiple page ranges. However, there is no
+      //     existing XPCOM interface for us to get the multiple page ranges
+      //     information. In addition, the print dialog on Mac and Windows only
+      //     support one page range.
+      //
+      //     The behavior of printing muliple page ranges on Linux now is we
+      //     will print out the pages from the minimum start page to the
+      //     maximum last page of the page ranges.
+      let pageRanges = [{ from: pageRangeInfo.startPageRange - 1,
+        to: pageRangeInfo.endPageRange - 1 }];
+      let pageRangeCount = pageRanges.length;
+      let bufferId = instance.rt.call(new InterfaceMemberCall(
+        "PPP_Printing(Dev);0.6", "PrintPages", {
+          instance, page_ranges: pageRanges, page_range_count: pageRangeCount
+        }), true);
+      if (!bufferId) {
+        return;
+      }
+      let buffer = PP_Resource.lookup(bufferId);
+
+      // Save PDF to file
+      let file = Services.dirsvc.get(PRINT_CONTENT_TEMP_KEY, Ci.nsIFile);
+      file.append(PRINT_FILE_NAME);
+      file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PR_IRUSR | PR_IWUSR);
+      let stream = Cc["@mozilla.org/network/file-output-stream;1"].
+                   createInstance(Ci.nsIFileOutputStream);
+      stream.init(file, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE,
+                  PR_IRUSR | PR_IWUSR, 0);
+      let binaryStream = Cc["@mozilla.org/binaryoutputstream;1"].
+                         createInstance(Ci.nsIBinaryOutputStream);
+      binaryStream.setOutputStream(stream);
+      let data = new Uint8ClampedArray(instance.rt.getCachedBuffer(buffer.mem));
+      binaryStream.writeByteArray(Array.from(data), buffer.size);
+
+      // End of printing
+      stream.flush();
+      stream.close();
+      buffer.unmap();
+      buffer.release();
+      instance.rt.call(new InterfaceMemberCall(
+        "PPP_Printing(Dev);0.6", "End", { instance }), true);
+      // We need permission for printing PDF file
+      instance.mm.sendAsyncMessage("ppapipdf.js:printPDF", {
+        contentTempKey: PRINT_CONTENT_TEMP_KEY, fileName: PRINT_FILE_NAME });
     },
 
     /**

@@ -12,6 +12,7 @@
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                           "resource://gre/modules/NetUtil.jsm");
@@ -20,6 +21,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 
 let mm = pluginElement.frameLoader.messageManager;
 let containerWindow = pluginElement.ownerGlobal;
+// We have to cache the print settings for printing PDF file here, since in
+// general we are not able to send XPCOM object across processes.
+let printSettings = {};
+
 // Prevent the drag event's default action on the element, to avoid dragging of
 // that element while the user selects text.
 pluginElement.addEventListener("dragstart",
@@ -108,6 +113,71 @@ mm.addMessageListener("ppapipdf.js:setHash", ({ data }) => {
   if (data) {
     containerWindow.location.hash = data;
   }
+});
+
+mm.addMessageListener("ppapipdf.js:getPrintSettings", () => {
+  let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].
+              getService(Ci.nsIPrintSettingsService);
+  printSettings = PSSVC.globalPrintSettings;
+  let webBrowserPrint =
+    containerWindow.QueryInterface(Ci.nsIInterfaceRequestor).
+    getInterface(Ci.nsIWebBrowserPrint);
+  let PPSVC = Cc["@mozilla.org/embedcomp/printingprompt-service;1"].
+              getService(Ci.nsIPrintingPromptService);
+  PPSVC.showPrintDialog(containerWindow, webBrowserPrint, printSettings);
+
+  // XPCOM object should not in general be sent across processes. So we have to
+  // copy out only the info PDFium needed and send it back to jsplugin process
+  // for getting PDF file.
+  let trimPrintSettings = {};
+  trimPrintSettings.marginTop = printSettings.marginTop;
+  trimPrintSettings.marginLeft = printSettings.marginLeft;
+  trimPrintSettings.marginBottom = printSettings.marginBottom;
+  trimPrintSettings.marginRight = printSettings.marginRight;
+  trimPrintSettings.unwriteableMarginLeft =
+    printSettings.unwriteableMarginLeft;
+  trimPrintSettings.unwriteableMarginTop =
+    printSettings.unwriteableMarginTop;
+  trimPrintSettings.unwriteableMarginRight =
+    printSettings.unwriteableMarginRight;
+  trimPrintSettings.unwriteableMarginBottom =
+    printSettings.unwriteableMarginBottom;
+  trimPrintSettings.paperWidth = printSettings.paperWidth;
+  trimPrintSettings.paperHeight = printSettings.paperHeight;
+  trimPrintSettings.paperSizeUnit = printSettings.paperSizeUnit;
+  trimPrintSettings.orientation = printSettings.orientation;
+  trimPrintSettings.shrinkToFit = printSettings.shrinkToFit;
+  trimPrintSettings.printInColor = printSettings.printInColor;
+  trimPrintSettings.printRange = printSettings.printRange;
+  trimPrintSettings.startPageRange = printSettings.startPageRange;
+  trimPrintSettings.endPageRange = printSettings.endPageRange;
+
+  mm.sendAsyncMessage("ppapipdf.js:printsettingschanged", {
+    trimPrintSettings });
+});
+
+mm.addMessageListener("ppapipdf.js:printPDF", ({ data }) => {
+  let file = Services.dirsvc.get(data.contentTempKey, Ci.nsIFile);
+  file.append(data.fileName);
+  if (!file.exists()) {
+    return;
+  }
+
+  let webBrowserPrint =
+    containerWindow.QueryInterface(Ci.nsIInterfaceRequestor).
+    getInterface(Ci.nsIWebBrowserPrint);
+  if (!webBrowserPrint || !webBrowserPrint.printPDF) {
+    file.remove(false);
+    return;
+  }
+
+  webBrowserPrint.printPDF(file.path, printSettings)
+  .then(() => {
+    file.remove(false);
+  })
+  .catch(() => {
+    file.remove(false);
+  });
 });
 
 mm.addMessageListener("ppapipdf.js:save", () => {
