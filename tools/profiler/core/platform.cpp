@@ -1276,6 +1276,8 @@ BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
 static void
 StreamJSON(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
 {
+  LOG("StreamJSON");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS && gPS->IsActive(aLock));
 
@@ -1363,6 +1365,8 @@ StreamJSON(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
 UniquePtr<char[]>
 ToJSON(PS::LockRef aLock, double aSinceTime)
 {
+  LOG("ToJSON");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS && gPS->IsActive(aLock));
 
@@ -1924,7 +1928,7 @@ locked_profiler_start(PS::LockRef aLock, const int aEntries, double aInterval,
 void
 profiler_init(void* aStackTop)
 {
-  LOG("BEGIN profiler_init");
+  LOG("profiler_init");
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(!gPS);
@@ -1981,9 +1985,10 @@ profiler_init(void* aStackTop)
     // NOTE: Default
     const char *val = getenv("MOZ_PROFILER_STARTUP");
     if (!val || !*val) {
-      LOG("END   profiler_init: MOZ_PROFILER_STARTUP not set");
       return;
     }
+
+    LOG("MOZ_PROFILER_STARTUP is set");
 
     locked_profiler_start(lock, PROFILE_DEFAULT_ENTRIES,
                           PROFILE_DEFAULT_INTERVAL,
@@ -1996,8 +2001,6 @@ profiler_init(void* aStackTop)
   NotifyProfilerStarted(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
                         features, MOZ_ARRAY_LENGTH(features),
                         threadFilters, MOZ_ARRAY_LENGTH(threadFilters));
-
-  LOG("END   profiler_init");
 }
 
 static void
@@ -2009,7 +2012,7 @@ locked_profiler_stop(PS::LockRef aLock);
 void
 profiler_shutdown()
 {
-  LOG("BEGIN profiler_shutdown");
+  LOG("profiler_shutdown");
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
@@ -2066,13 +2069,13 @@ profiler_shutdown()
     NotifyObservers("profiler-stopped");
     delete samplerThread;
   }
-
-  LOG("END   profiler_shutdown");
 }
 
-mozilla::UniquePtr<char[]>
+UniquePtr<char[]>
 profiler_get_profile(double aSinceTime)
 {
+  LOG("profiler_get_profile");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
@@ -2088,6 +2091,8 @@ profiler_get_profile(double aSinceTime)
 JSObject*
 profiler_get_profile_jsobject(JSContext *aCx, double aSinceTime)
 {
+  LOG("profiler_get_profile_jsobject");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
@@ -2116,12 +2121,15 @@ void
 profiler_get_profile_jsobject_async(double aSinceTime,
                                     mozilla::dom::Promise* aPromise)
 {
+  LOG("profiler_get_profile_jsobject_async");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
   PS::AutoLock lock(gPSMutex);
 
   if (!gPS->IsActive(lock)) {
+    LOG("END   profiler_get_profile_jsobject_async: inactive");
     return;
   }
 
@@ -2131,17 +2139,22 @@ profiler_get_profile_jsobject_async(double aSinceTime,
 void
 profiler_save_profile_to_file_async(double aSinceTime, const char* aFileName)
 {
+  LOG("BEGIN profiler_save_profile_to_file_async");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
   nsCString filename(aFileName);
   NS_DispatchToMainThread(NS_NewRunnableFunction([=] () {
 
+    LOG("profiler_save_profile_to_file_async callback");
+
     PS::AutoLock lock(gPSMutex);
 
     // It's conceivable that profiler_stop() or profiler_shutdown() was called
     // between the dispatch and running of this runnable, so check for those.
     if (!gPS || !gPS->IsActive(lock)) {
+      LOG("END   profiler_save_profile_to_file_async callback: inactive");
       return;
     }
 
@@ -2238,6 +2251,8 @@ profiler_OOP_exit_profile(const nsCString& aProfile)
 static void
 locked_profiler_save_profile_to_file(PS::LockRef aLock, const char* aFilename)
 {
+  LOG("locked_profiler_save_profile_to_file(%s)", aFilename);
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS && gPS->IsActive(aLock));
 
@@ -2247,15 +2262,14 @@ locked_profiler_save_profile_to_file(PS::LockRef aLock, const char* aFilename)
     SpliceableJSONWriter w(mozilla::MakeUnique<OStreamJSONWriteFunc>(stream));
     StreamJSON(aLock, w, /* sinceTime */ 0);
     stream.close();
-    LOG("locked_profiler_save_profile_to_file: Saved to %s", aFilename);
-  } else {
-    LOG("locked_profiler_save_profile_to_file: Failed to open file");
   }
 }
 
 void
 profiler_save_profile_to_file(const char* aFilename)
 {
+  LOG("profiler_save_profile_to_file(%s)", aFilename);
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
@@ -2350,7 +2364,17 @@ locked_profiler_start(PS::LockRef aLock, int aEntries, double aInterval,
                       const char** aFeatures, uint32_t aFeatureCount,
                       const char** aThreadNameFilters, uint32_t aFilterCount)
 {
-  LOG("BEGIN locked_profiler_start");
+  if (LOG_TEST) {
+    LOG("locked_profiler_start");
+    LOG("- entries  = %d", aEntries);
+    LOG("- interval = %.2f", aInterval);
+    for (uint32_t i = 0; i < aFeatureCount; i++) {
+      LOG("- feature  = %s", aFeatures[i]);
+    }
+    for (uint32_t i = 0; i < aFilterCount; i++) {
+      LOG("- threads  = %s", aThreadNameFilters[i]);
+    }
+  }
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS && !gPS->IsActive(aLock));
@@ -2484,8 +2508,6 @@ locked_profiler_start(PS::LockRef aLock, int aEntries, double aInterval,
     mozilla::IOInterposer::Register(mozilla::IOInterposeObserver::OpAll,
                                     interposeObserver);
   }
-
-  LOG("END   locked_profiler_start");
 }
 
 void
@@ -2493,7 +2515,7 @@ profiler_start(int aEntries, double aInterval,
                const char** aFeatures, uint32_t aFeatureCount,
                const char** aThreadNameFilters, uint32_t aFilterCount)
 {
-  LOG("BEGIN profiler_start");
+  LOG("profiler_start");
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -2523,14 +2545,12 @@ profiler_start(int aEntries, double aInterval,
   }
   NotifyProfilerStarted(aEntries, aInterval, aFeatures, aFeatureCount,
                         aThreadNameFilters, aFilterCount);
-
-  LOG("END   profiler_start");
 }
 
 static MOZ_MUST_USE SamplerThread*
 locked_profiler_stop(PS::LockRef aLock)
 {
-  LOG("BEGIN locked_profiler_stop");
+  LOG("locked_profiler_stop");
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS && gPS->IsActive(aLock));
@@ -2609,15 +2629,13 @@ locked_profiler_stop(PS::LockRef aLock)
 
   gPS->SetEntries(aLock, 0);
 
-  LOG("END   locked_profiler_stop");
-
   return samplerThread;
 }
 
 void
 profiler_stop()
 {
-  LOG("BEGIN profiler_stop");
+  LOG("profiler_stop");
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
@@ -2627,7 +2645,6 @@ profiler_stop()
     PS::AutoLock lock(gPSMutex);
 
     if (!gPS->IsActive(lock)) {
-      LOG("END   profiler_stop: inactive");
       return;
     }
 
@@ -2649,8 +2666,6 @@ profiler_stop()
   // in a way that's safe with respect to other gPSMutex-locking operations
   // that may have occurred in the meantime.
   delete samplerThread;
-
-  LOG("END   profiler_stop");
 }
 
 bool
@@ -2671,6 +2686,8 @@ profiler_is_paused()
 void
 profiler_pause()
 {
+  LOG("profiler_pause");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
@@ -2691,6 +2708,8 @@ profiler_pause()
 void
 profiler_resume()
 {
+  LOG("profiler_resume");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
@@ -2766,6 +2785,8 @@ profiler_set_frame_number(int aFrameNumber)
 void
 profiler_register_thread(const char* aName, void* aGuessStackTop)
 {
+  DEBUG_LOG("profiler_register_thread(%s)", aName);
+
   MOZ_RELEASE_ASSERT(!NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
@@ -2791,6 +2812,7 @@ profiler_unregister_thread()
   for (uint32_t i = 0; i < threads.size(); i++) {
     ThreadInfo* info = threads.at(i);
     if (info->ThreadId() == id && !info->IsPendingDelete()) {
+      DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
       if (gPS->IsActive(lock)) {
         // We still want to show the results of this thread if you save the
         // profile shortly after a thread is terminated, which requires
