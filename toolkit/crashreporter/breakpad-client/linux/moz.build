@@ -10,6 +10,7 @@ UNIFIED_SOURCES += [
     'dump_writer_common/thread_info.cc',
     'dump_writer_common/ucontext_reader.cc',
     'handler/exception_handler.cc',
+    'handler/guid_generator.cc',
     'handler/minidump_descriptor.cc',
     'log/log.cc',
     'microdump_writer/microdump_writer.cc',
@@ -17,6 +18,10 @@ UNIFIED_SOURCES += [
     'minidump_writer/linux_ptrace_dumper.cc',
     'minidump_writer/minidump_writer.cc',
 ]
+
+# On Linux we override the guid_creator.h header and use our own instead
+if CONFIG['OS_TARGET'] == 'Linux' or CONFIG['OS_TARGET'] == 'Android':
+    DEFINES['COMMON_LINUX_GUID_CREATOR_H__'] = 1
 
 if CONFIG['OS_TARGET'] == 'Android':
     LOCAL_INCLUDES += [
