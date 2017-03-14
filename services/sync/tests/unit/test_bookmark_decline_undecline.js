@@ -70,13 +70,11 @@ add_task(async function test_decline_undecline() {
   await SyncTestingInfrastructure(server);
 
   try {
-    let bzGuid = "999999999999";
-    await PlacesSyncUtils.bookmarks.insert({
-      kind: PlacesSyncUtils.bookmarks.KINDS.BOOKMARK,
-      syncId: bzGuid,
-      parentSyncId: "menu",
+    let { guid: bzGuid } = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
       url: "https://bugzilla.mozilla.org",
-
+      index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+      title: "bugzilla",
     });
 
     ok(!getBookmarkWBO(server, bzGuid), "Shouldn't have been uploaded yet");
