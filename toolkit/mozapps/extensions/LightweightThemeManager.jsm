@@ -17,6 +17,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 const ID_SUFFIX              = "@personas.mozilla.org";
 const PREF_LWTHEME_TO_SELECT = "extensions.lwThemeToSelect";
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
+const PREF_EM_DSS_ENABLED    = "extensions.dss.enabled";
 const ADDON_TYPE             = "theme";
 const ADDON_TYPE_WEBEXT      = "webextension-theme";
 
@@ -500,8 +501,15 @@ AddonWrapper.prototype = {
   get operationsRequiringRestart() {
     // If a non-default theme is in use then a restart will be required to
     // enable lightweight themes unless dynamic theme switching is enabled
-    if (Services.prefs.prefHasUserValue(PREF_GENERAL_SKINS_SELECTEDSKIN))
+    if (Services.prefs.prefHasUserValue(PREF_GENERAL_SKINS_SELECTEDSKIN)) {
+      try {
+        if (Services.prefs.getBoolPref(PREF_EM_DSS_ENABLED))
+          return AddonManager.OP_NEEDS_RESTART_NONE;
+      } catch (e) {
+      }
       return AddonManager.OP_NEEDS_RESTART_ENABLE;
+    }
+
     return AddonManager.OP_NEEDS_RESTART_NONE;
   },
 
