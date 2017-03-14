@@ -134,7 +134,7 @@ symbol that should guard C/C++ definitions associated with the histogram."""
         datasets = {'opt-in': 'DATASET_RELEASE_CHANNEL_OPTIN',
                     'opt-out': 'DATASET_RELEASE_CHANNEL_OPTOUT'}
         value = definition.get('releaseChannelCollection', 'opt-in')
-        if not value in datasets:
+        if value not in datasets:
             raise DefinitionException, "unknown release channel collection policy for " + name
         self._dataset = "nsITelemetry::" + datasets[value]
 
@@ -367,14 +367,14 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             return t.__name__
 
         for key, key_type in type_checked_fields.iteritems():
-            if not key in definition:
+            if key not in definition:
                 continue
             if not isinstance(definition[key], key_type):
                 raise ValueError, ('value for key "{0}" in Histogram "{1}" '
                         'should be {2}').format(key, name, nice_type_name(key_type))
 
         for key, key_type in type_checked_list_fields.iteritems():
-            if not key in definition:
+            if key not in definition:
                 continue
             if not all(isinstance(x, key_type) for x in definition[key]):
                 raise ValueError, ('all values for list "{0}" in Histogram "{1}" '
