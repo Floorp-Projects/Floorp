@@ -3220,14 +3220,9 @@ var SessionStoreInternal = {
       let userContextId = winData.tabs[t].userContextId;
       let reuseExisting = t < openTabCount &&
                           (tabbrowser.tabs[t].getAttribute("usercontextid") == (userContextId || ""));
-      // If the tab is pinned, then we'll be loading it right away, and
-      // there's no need to cause a remoteness flip by loading it initially
-      // non-remote.
-      let forceNotRemote = !winData.tabs[t].pinned;
-      let tab = reuseExisting ? tabbrowser.tabs[t] :
-                                tabbrowser.addTab("about:blank",
+      let tab = reuseExisting ? this._maybeUpdateBrowserRemoteness(tabbrowser.tabs[t])
+                              : tabbrowser.addTab("about:blank",
                                                   {skipAnimation: true,
-                                                   forceNotRemote,
                                                    userContextId});
 
       // If we inserted a new tab because the userContextId didn't match with the
@@ -3494,9 +3489,6 @@ var SessionStoreInternal = {
     if (!willRestoreImmediately && !forceOnDemand) {
       TabRestoreQueue.add(tab);
     }
-
-    this._maybeUpdateBrowserRemoteness({ tabbrowser, tab,
-                                         willRestoreImmediately });
 
     // Increase the busy state counter before modifying the tab.
     this._setWindowStateBusy(window);
@@ -3937,46 +3929,21 @@ var SessionStoreInternal = {
    * Determines whether or not a tab that is being restored needs
    * to have its remoteness flipped first.
    *
-   * @param (object) with the following properties:
+   * @param tab (<xul:tab>):
+   *        The tab being restored.
    *
-   *        tabbrowser (<xul:tabbrowser>):
-   *          The tabbrowser that the browser belongs to.
-   *
-   *        tab (<xul:tab>):
-   *          The tab being restored
-   *
-   *        willRestoreImmediately (bool):
-   *          true if the tab is going to have its content
-   *          restored immediately by the caller.
-   *
+   * @returns tab (<xul:tab>)
+   *        The tab that was passed.
    */
-  _maybeUpdateBrowserRemoteness({ tabbrowser, tab,
-                                  willRestoreImmediately }) {
-    // If the browser we're attempting to restore happens to be
-    // remote, we need to flip it back to non-remote if it's going
-    // to go into the pending background tab state. This is to make
-    // sure that a background tab can't crash if it hasn't yet
-    // been restored.
-    //
-    // Normally, when a window is restored, the tabs that SessionStore
-    // inserts are non-remote - but the initial browser is, by default,
-    // remote, so this check and flip covers this case. The other case
-    // is when window state is overwriting the state of an existing
-    // window with some remote tabs.
+  _maybeUpdateBrowserRemoteness(tab) {
+    let win = tab.ownerGlobal;
+    let tabbrowser = win.gBrowser;
     let browser = tab.linkedBrowser;
-
-    // There are two ways that a tab might start restoring its content
-    // very soon - either the caller is going to restore the content
-    // immediately, or the TabRestoreQueue is set up so that the tab
-    // content is going to be restored in the very near future. In
-    // either case, we don't want to flip remoteness, since the browser
-    // will soon be loading content.
-    let willRestore = willRestoreImmediately ||
-                      TabRestoreQueue.willRestoreSoon(tab);
-
-    if (browser.isRemoteBrowser && !willRestore) {
-      tabbrowser.updateBrowserRemoteness(browser, false);
+    if (win.gMultiProcessBrowser && !browser.isRemoteBrowser) {
+      tabbrowser.updateBrowserRemoteness(browser, true);
     }
+
+    return tab;
   },
 
   /**
