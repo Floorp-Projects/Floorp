@@ -13,11 +13,19 @@ function run_test() {
   if (!profiler)
     return;
 
-  var sharedStr = profiler.getSharedLibraryInformation();
-  sharedStr = sharedStr.toLowerCase();
+  var libs = profiler.sharedLibraries;
 
-  // Let's not hardcode anything too specific
-  // just some sanity checks.
-  do_check_neq(sharedStr, null);
-  do_check_neq(sharedStr, "");
+  do_check_eq(typeof libs, "object");
+  do_check_true(Array.isArray(libs));
+  do_check_eq(typeof libs, "object");
+  do_check_true(libs.length >= 1);
+  do_check_eq(typeof libs[0], "object");
+  do_check_eq(typeof libs[0].name, "string");
+  do_check_eq(typeof libs[0].path, "string");
+  do_check_eq(typeof libs[0].debugName, "string");
+  do_check_eq(typeof libs[0].debugPath, "string");
+  do_check_eq(typeof libs[0].arch, "string");
+  do_check_eq(typeof libs[0].start, "number");
+  do_check_eq(typeof libs[0].end, "number");
+  do_check_true(libs[0].start <= libs[0].end);
 }
