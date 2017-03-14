@@ -191,4 +191,5 @@ fi
 # harnesses in a particular way)
 if [ "$CUSTOM_MACH_COMMAND" ]; then
     eval "/home/worker/workspace/build/tests/mach ${CUSTOM_MACH_COMMAND}"
+    exit $?
 fi
