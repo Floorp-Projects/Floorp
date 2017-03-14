@@ -170,6 +170,27 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
     return ids;
   }
 
+  _countServerOnlyFixableProblems(validationInfo) {
+    const fixableProblems = ["clientMissing", "serverMissing", "serverDeleted"];
+    return fixableProblems.reduce((numProblems, problemLabel) => {
+      return numProblems + validationInfo.problems[problemLabel].length;
+    }, 0);
+  }
+
+  tryServerOnlyRepairs(validationInfo) {
+    if (this._countServerOnlyFixableProblems(validationInfo) == 0) {
+      return false;
+    }
+    let engine = this.service.engineManager.get("bookmarks");
+    for (let id of validationInfo.problems.serverMissing) {
+      engine._modified.setWeak(id, { tombstone: false });
+    }
+    let toFetch = engine.toFetch.concat(validationInfo.problems.clientMissing,
+                                        validationInfo.problems.serverDeleted);
+    engine.toFetch = Array.from(new Set(toFetch));
+    return true;
+  }
+
   /* See if the repairer is willing and able to begin a repair process given
      the specified validation information.
      Returns true if a repair was started and false otherwise.
