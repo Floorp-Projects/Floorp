@@ -36,9 +36,12 @@ public class Browsers {
         OPERA("com.opera.browser"),
         OPERA_BETA("com.opera.browser.beta"),
         OPERA_MINI("com.opera.mini.native"),
+        OPERA_MINI_BETA("com.opera.mini.native.beta"),
 
         UC_BROWSER("com.UCMobile.intl"),
         UC_BROWSER_MINI("com.uc.browser.en"),
+
+        ANDROID_STOCK_BROWSER("com.android.browser"),
 
         SAMSUNG_INTERNET("com.sec.android.app.sbrowser"),
         DOLPHIN_BROWSER("mobi.mgeek.TunnyBrowser"),
