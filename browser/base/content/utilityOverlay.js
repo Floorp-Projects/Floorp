@@ -670,33 +670,13 @@ function isBidiEnabled() {
   if (getBoolPref("bidi.browser.ui", false))
     return true;
 
-  // then check intl.uidirection.<locale>
-  var chromeReg = Components.classes["@mozilla.org/chrome/chrome-registry;1"].
-                  getService(Components.interfaces.nsIXULChromeRegistry);
-  if (chromeReg.isLocaleRTL("global"))
-    return true;
+  // now see if the app locale is an RTL one.
+  const isRTL = Services.locale.isAppLocaleRTL;
 
-  // now see if the system locale is an RTL one.
-  var rv = false;
-
-  try {
-    var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
-                                  .getService(Components.interfaces.nsILocaleService);
-    var systemLocale = localeService.getSystemLocale().getCategory("NSILOCALE_CTYPE").substr(0, 3);
-
-    switch (systemLocale) {
-      case "ar-":
-      case "he-":
-      case "fa-":
-      case "ug-":
-      case "ur-":
-      case "syr":
-        rv = true;
-        Services.prefs.setBoolPref("bidi.browser.ui", true);
-    }
-  } catch (e) {}
-
-  return rv;
+  if (isRTL) {
+    Services.prefs.setBoolPref("bidi.browser.ui", true);
+  }
+  return isRTL;
 }
 
 function openAboutDialog() {
