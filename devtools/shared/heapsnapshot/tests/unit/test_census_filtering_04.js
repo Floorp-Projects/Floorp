@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Test the filtered nodes' counts and bytes are the same as they were when
 // unfiltered.

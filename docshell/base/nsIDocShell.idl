@@ -1136,4 +1136,9 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Attribute that determines whether tracking protection is enabled.
    */
   attribute boolean useTrackingProtection;
+
+ /**
+  * Fire a dummy location change event asynchronously.
+  */
+  [noscript] void dispatchLocationChangeEvent();
 };

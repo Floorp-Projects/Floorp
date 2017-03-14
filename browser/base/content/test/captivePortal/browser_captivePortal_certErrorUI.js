@@ -28,7 +28,7 @@ add_task(function* checkCaptivePortalCertErrorUI() {
     let tab = gBrowser.addTab(BAD_CERT_PAGE);
     gBrowser.selectedTab = tab;
     browser = gBrowser.selectedBrowser;
-    certErrorLoaded = waitForCertErrorLoad(browser);
+    certErrorLoaded = BrowserTestUtils.waitForContentEvent(browser, "DOMContentLoaded");
     return tab;
   }, false);
 
@@ -65,7 +65,7 @@ add_task(function* checkCaptivePortalCertErrorUI() {
   is(portalTab2, portalTab, "The existing portal tab should be focused.");
 
   let portalTabRemoved = BrowserTestUtils.removeTab(portalTab, {dontRemove: true});
-  let errorTabReloaded = waitForCertErrorLoad(browser);
+  let errorTabReloaded = BrowserTestUtils.waitForErrorPage(browser);
 
   Services.obs.notifyObservers(null, "captive-portal-login-success", null);
   yield portalTabRemoved;

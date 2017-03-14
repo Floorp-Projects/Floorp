@@ -108,11 +108,11 @@ public:
     }
   }
 
-  void Stop(PS::LockRef aLock) {}
-
-  void Join() {
+  ~SamplerThread() {
     pthread_join(mThread, nullptr);
   }
+
+  void Stop(PS::LockRef aLock) {}
 
   void Run() {
     // This function runs on the sampler thread.

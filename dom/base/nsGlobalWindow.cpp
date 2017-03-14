@@ -9389,6 +9389,9 @@ public:
 
   NS_IMETHOD Run() override
   {
+    PROFILER_LABEL("WindowDestroyedEvent", "Run",
+                   js::ProfileEntry::Category::OTHER);
+
     nsCOMPtr<nsIObserverService> observerService =
       services::GetObserverService();
     if (observerService) {

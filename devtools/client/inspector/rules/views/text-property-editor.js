@@ -280,7 +280,8 @@ TextPropertyEditor.prototype = {
         if (target.nodeName === "a") {
           event.stopPropagation();
           event.preventDefault();
-          this.browserWindow.openUILinkIn(target.href, "tab");
+          let browserWin = this.ruleView.inspector.target.tab.ownerDocument.defaultView;
+          browserWin.openUILinkIn(target.href, "tab");
         }
       });
 

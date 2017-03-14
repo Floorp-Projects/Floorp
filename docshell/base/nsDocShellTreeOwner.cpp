@@ -1251,6 +1251,10 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
         aMouseEvent->InternalDOMEvent()->GetTarget();
       if (eventTarget) {
         mPossibleTooltipNode = do_QueryInterface(eventTarget);
+        nsCOMPtr<nsIGlobalObject> global(eventTarget->GetOwnerGlobal());
+        if (global) {
+          mTooltipTimer->SetTarget(global->EventTargetFor(TaskCategory::UI));
+        }
       }
       if (mPossibleTooltipNode) {
         nsresult rv = mTooltipTimer->InitWithFuncCallback(
