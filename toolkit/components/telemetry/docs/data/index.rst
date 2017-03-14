@@ -12,6 +12,7 @@ Data documentation
    main-ping
    deletion-ping
    crash-ping
+   anonymous-ping
    *-ping
 
 The `mozilla-pipeline-schemas repository <https://github.com/mozilla-services/mozilla-pipeline-schemas/>`_ contains schemas for some of the pings.
