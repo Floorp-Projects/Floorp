@@ -30,16 +30,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1224790
     SimpleTest.waitForFocus(gotFocus);
   }
 
+  var timer = null;
   function gotFocus() {
     var button = document.getElementById('button');
     synthesizeMouseAtCenter(button, { type: 'mousemove' }, window);
-    // The bug is not reproducible with synthesizeMouseAtCenter.
-    // Need to emulate native mouse event.
-    synthesizeNativeOSXClick(button.boxObject.screenX + button.boxObject.width / 2,
-                             button.boxObject.screenY + button.boxObject.height / 2);
+    function click() {
+      // The bug is not reproducible with synthesizeMouseAtCenter.
+      // Need to emulate native mouse event.
+      synthesizeNativeOSXClick(button.boxObject.screenX + button.boxObject.width / 2,
+                               button.boxObject.screenY + button.boxObject.height / 2);
+    }
+    click();
+    // On debug build, it's possible that the click event handler is not
+    // triggered by the first click in case the click is dispatched too early
+    // before Firefox gets ready for input.
+    // Click the button again after 1 sec when we don't get click event.
+    timer = setTimeout(click, 1000);
   }
 
   function onClick() {
+    if (timer) {
+      // Avoid clicking unrelated thing.
+      clearTimeout(timer);
+    }
     ok(true, "Click event should be fired");
     SimpleTest.finish();
   }
