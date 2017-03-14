@@ -287,7 +287,7 @@ jclass GetClassRef(JNIEnv* aEnv, const char* aClassName)
     return nullptr;
 }
 
-void DispatchToGeckoThread(UniquePtr<AbstractCall>&& aCall)
+void DispatchToGeckoPriorityQueue(UniquePtr<AbstractCall>&& aCall)
 {
     class AbstractCallEvent : public nsAppShell::Event
     {
