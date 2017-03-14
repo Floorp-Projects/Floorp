@@ -1568,14 +1568,11 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
     IPC::Permission permission(origin, aType, aPermission,
                                aExpireType, aExpireTime);
 
-    nsAutoCString permissionKey;
-    GetKeyForPrincipal(aPrincipal, permissionKey);
-
     nsTArray<ContentParent*> cplist;
     ContentParent::GetAll(cplist);
     for (uint32_t i = 0; i < cplist.Length(); ++i) {
       ContentParent* cp = cplist[i];
-      if (cp->NeedsPermissionsUpdate(permissionKey))
+      if (cp->NeedsPermissionsUpdate())
         Unused << cp->SendAddPermission(permission);
     }
   }

@@ -2055,6 +2055,7 @@ ContentParent::ContentParent(ContentParent* aOpener,
   , mNumDestroyingTabs(0)
   , mIsAvailable(true)
   , mIsAlive(true)
+  , mSendPermissionUpdates(false)
   , mIsForBrowser(!mRemoteType.IsEmpty())
   , mCalledClose(false)
   , mCalledKillHard(false)
@@ -5043,12 +5044,6 @@ ContentParent::EnsurePermissionsByKey(const nsCString& aKey)
 
   Unused << SendSetPermissionsWithKey(aKey, perms);
 #endif
-}
-
-bool
-ContentParent::NeedsPermissionsUpdate(const nsACString& aPermissionKey) const
-{
-  return mActivePermissionKeys.Contains(aPermissionKey);
 }
 
 mozilla::ipc::IPCResult
