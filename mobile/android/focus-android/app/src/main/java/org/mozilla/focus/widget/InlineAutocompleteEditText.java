@@ -47,6 +47,10 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
         void onSearchStateChange(boolean isActive);
     }
 
+    public interface OnTextChangeListener {
+        void onTextChange(String originalText, String autocompleteText);
+    }
+
     private static final String LOGTAG = "GeckoToolbarEditText";
     private static final NoCopySpan AUTOCOMPLETE_SPAN = new NoCopySpan.Concrete();
 
@@ -56,6 +60,7 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
     private OnDismissListener mDismissListener;
     private OnFilterListener mFilterListener;
     private OnSearchStateChangeListener mSearchStateChangeListener;
+    private OnTextChangeListener mTextChangeListener;
 
     // The previous autocomplete result returned to us
     private String mAutoCompleteResult = "";
@@ -87,6 +92,10 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
 
     void setOnSearchStateChangeListener(OnSearchStateChangeListener listener) {
         mSearchStateChangeListener = listener;
+    }
+
+    public void setOnTextChangeListener(OnTextChangeListener listener) {
+        mTextChangeListener = listener;
     }
 
     @Override
@@ -386,6 +395,12 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
         announceForAccessibility(text.toString());
     }
 
+    public String getOriginalText() {
+        final Editable text = getText();
+
+        return text.subSequence(0, mAutoCompletePrefixLength).toString();
+    }
+
     private static boolean hasCompositionString(Editable content) {
         Object[] spans = content.getSpans(0, content.length(), Object.class);
 
@@ -538,6 +553,10 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
 
             if (mFilterListener != null) {
                 mFilterListener.onFilter(text, doAutocomplete ? InlineAutocompleteEditText.this : null);
+            }
+
+            if (mTextChangeListener != null) {
+                mTextChangeListener.onTextChange(text, getText().toString());
             }
         }
 

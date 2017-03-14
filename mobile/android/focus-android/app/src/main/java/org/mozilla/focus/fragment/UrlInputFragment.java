@@ -9,9 +9,7 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.text.Editable;
 import android.text.SpannableString;
-import android.text.TextWatcher;
 import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,7 +25,7 @@ import org.mozilla.focus.widget.InlineAutocompleteEditText;
 /**
  * Fragment for displaying he URL input controls.
  */
-public class UrlInputFragment extends Fragment implements View.OnClickListener, TextWatcher {
+public class UrlInputFragment extends Fragment implements View.OnClickListener, InlineAutocompleteEditText.OnTextChangeListener, InlineAutocompleteEditText.OnCommitListener {
     public static final String ARGUMENT_URL = "url";
 
     public static UrlInputFragment create() {
@@ -80,14 +78,9 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
             }
         });
 
-        urlView.setOnCommitListener(new InlineAutocompleteEditText.OnCommitListener() {
-            @Override
-            public void onCommit() {
-                onUrlEntered(false);
-            }
-        });
+        urlView.setOnCommitListener(this);
 
-        urlView.addTextChangedListener(this);
+        urlView.setOnTextChangeListener(this);
 
         if (getArguments().containsKey(ARGUMENT_URL)) {
             urlView.setText(getArguments().getString(ARGUMENT_URL));
@@ -112,7 +105,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
                 break;
 
             case R.id.search_hint:
-                onUrlEntered(true);
+                onSearch();
                 break;
 
             case R.id.dismiss:
@@ -124,15 +117,26 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         }
     }
 
-    private void onUrlEntered(boolean forceSearch) {
+    @Override
+    public void onCommit() {
         ViewUtils.hideKeyboard(urlView);
 
         final String rawUrl = urlView.getText().toString();
 
-        final String url = !forceSearch && UrlUtils.isUrl(rawUrl)
+        final String url = UrlUtils.isUrl(rawUrl)
                 ? UrlUtils.normalize(rawUrl)
                 : UrlUtils.createSearchUrl(rawUrl);
 
+        openUrl(url);
+    }
+
+    private void onSearch() {
+        final String searchUrl = UrlUtils.createSearchUrl(urlView.getOriginalText());
+
+        openUrl(searchUrl);
+    }
+
+    private void openUrl(String url) {
         // Since we've completed URL entry, we no longer want the URL entry fragment in our backstack
         // (exiting browser activity should return you to the main activity), so we pop that entry (which
         // essentially removes the fragment which was add()ed elsewhere)
@@ -149,28 +153,17 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     }
 
     @Override
-    public void beforeTextChanged(CharSequence text, int start, int count, int after) {
-        // TextWatcher - Unused
-    }
-
-    @Override
-    public void onTextChanged(CharSequence text, int start, int before, int count) {
-        // TextWatcher - Unused
-    }
-
-    @Override
-    public void afterTextChanged(Editable editable) {
-        if (editable.length() == 0) {
+    public void onTextChange(String originalText, String autocompleteText) {
+        if (originalText.length() == 0) {
             clearView.setVisibility(View.GONE);
             searchViewContainer.setVisibility(View.GONE);
         } else {
             clearView.setVisibility(View.VISIBLE);
 
-            final String text = editable.toString();
-            final String hint = getString(R.string.search_hint, text);
+            final String hint = getString(R.string.search_hint, originalText);
 
             final SpannableString content = new SpannableString(hint);
-            content.setSpan(new StyleSpan(Typeface.BOLD), hint.length() - text.length(), hint.length(), 0);
+            content.setSpan(new StyleSpan(Typeface.BOLD), hint.length() - originalText.length(), hint.length(), 0);
 
             searchView.setText(content);
             searchViewContainer.setVisibility(View.VISIBLE);
