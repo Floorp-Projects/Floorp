@@ -377,7 +377,10 @@ public:
     return mScriptableHelper;
   }
 
-  bool NeedsPermissionsUpdate(const nsACString& aPermissionKey) const;
+  bool NeedsPermissionsUpdate() const
+  {
+    return mSendPermissionUpdates;
+  }
 
   /**
    * Kill our subprocess and make sure it dies.  Should only be used
@@ -1165,6 +1168,7 @@ private:
   // still pass through.
   bool mIsAlive;
 
+  bool mSendPermissionUpdates;
   bool mIsForBrowser;
 
   // These variables track whether we've called Close() and KillHard() on our
