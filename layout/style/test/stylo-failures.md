@@ -27,11 +27,10 @@ Any line which doesn't follow the format above would be ignored like comment.
 ## Failures
 
 * Media query support:
-  * test_acid3_test46.html: @media support [11]
   * test_bug1089417.html [1]
   * test_bug418986-2.html: matchMedia support [3]
   * test_bug453896_deck.html: &lt;style media&gt; support [8]
-  * test_media_queries.html [684]
+  * test_media_queries.html [657]
   * test_media_queries_dynamic.html [10]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
