@@ -45,7 +45,7 @@ class CertificateVerificationResult {
       result.chain = certListToJSArray(aVerifiedChain);
     } else {
       result.error = "certificate reverification";
-      console.log(`${this.hostname}: ${aPRErrorCode}`);
+      Services.console.logStringMessage(`${this.hostname}: ${aPRErrorCode}`);
     }
     this.resolve(result);
   }
@@ -193,15 +193,16 @@ function makeRequests() {
 
 function analyzeAndReport(results) {
   let payload = { version: "1.0", mismatches: [] };
+  Services.console.logStringMessage("deployment-checker results:");
   for (let result of results) {
     // Skip if the connection resulted in any kind of error.
     if ("error" in result) {
-      console.log(`${result.hostname}: ${result.error} - skipping`);
+      Services.console.logStringMessage(`${result.hostname}: ${result.error} - skipping`);
       continue;
     }
     // Skip imported roots.
     if (!result.chain[result.chain.length - 1].isBuiltInRoot) {
-      console.log(`${result.hostname}: imported root - skipping`);
+      Services.console.logStringMessage(`${result.hostname}: imported root - skipping`);
       continue;
     }
 
@@ -226,12 +227,10 @@ function analyzeAndReport(results) {
     if (report) {
       payload.mismatches.push({ hostname: result.hostname,
                                 chain: certArrayToBase64(result.chain) });
+    } else {
+      Services.console.logStringMessage(`${result.hostname} sends expected certificate chain`);
     }
   }
-  console.log("deployment-checker results:");
-  console.log(results);
-  console.log("deployment-checker payload:");
-  console.log(payload);
   return TelemetryController.submitExternalPing("deployment-checker", payload,
                                                 {});
 }
