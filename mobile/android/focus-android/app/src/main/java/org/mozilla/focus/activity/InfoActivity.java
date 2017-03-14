@@ -44,6 +44,10 @@ public class InfoActivity extends AppCompatActivity {
         return getIntentFor(context, "about:", context.getResources().getString(R.string.menu_about));
     }
 
+    public static final Intent getRightsIntent(final Context context) {
+        return getIntentFor(context, "file:///android_asset/rights-focus.html", context.getResources().getString(R.string.menu_about));
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

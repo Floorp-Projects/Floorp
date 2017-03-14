@@ -16,7 +16,6 @@ import android.support.annotation.Nullable;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.HelpActivity;
 import org.mozilla.focus.activity.InfoActivity;
-import org.mozilla.focus.activity.RightsActivity;
 import org.mozilla.focus.widget.DefaultBrowserPreference;
 
 public class SettingsFragment extends PreferenceFragment {
@@ -36,10 +35,10 @@ public class SettingsFragment extends PreferenceFragment {
             final Intent intent = InfoActivity.getAboutIntent(getActivity());
             startActivity(intent);
         } else if (preference.getTitle().equals(getResources().getString(R.string.menu_help))) {
-            final Intent intent = new Intent(getActivity(), RightsActivity.class);
+            final Intent intent = new Intent(getActivity(), HelpActivity.class);
             startActivity(intent);
         } else if (preference.getTitle().equals(getResources().getString(R.string.menu_rights))) {
-            final Intent intent = new Intent(getActivity(), HelpActivity.class);
+            final Intent intent = InfoActivity.getRightsIntent(getActivity());
             startActivity(intent);
         }
 

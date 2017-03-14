@@ -20,7 +20,6 @@ import android.view.ViewGroup;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.HelpActivity;
 import org.mozilla.focus.activity.InfoActivity;
-import org.mozilla.focus.activity.RightsActivity;
 import org.mozilla.focus.activity.SettingsActivity;
 
 /**
@@ -80,7 +79,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, Popu
                 break;
 
             case R.id.rights:
-                Intent rightsIntent = new Intent(getActivity(), RightsActivity.class);
+                Intent rightsIntent = InfoActivity.getRightsIntent(getActivity());
                 startActivity(rightsIntent);
                 break;
 
