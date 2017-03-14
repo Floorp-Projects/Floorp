@@ -3481,23 +3481,24 @@ class BaseCompiler
         if (IsUnaligned(*access)) {
             switch (dest.tag) {
               case AnyReg::I64:
-                masm.wasmUnalignedLoadI64(*access, ptr, ptr, dest.i64(), tmp1);
+                masm.wasmUnalignedLoadI64(*access, HeapReg, ptr, ptr, dest.i64(), tmp1);
                 break;
               case AnyReg::F32:
-                masm.wasmUnalignedLoadFP(*access, ptr, ptr, dest.f32(), tmp1, tmp2, Register::Invalid());
+                masm.wasmUnalignedLoadFP(*access, HeapReg, ptr, ptr, dest.f32(), tmp1, tmp2,
+                                         Register::Invalid());
                 break;
               case AnyReg::F64:
-                masm.wasmUnalignedLoadFP(*access, ptr, ptr, dest.f64(), tmp1, tmp2, tmp3);
+                masm.wasmUnalignedLoadFP(*access, HeapReg, ptr, ptr, dest.f64(), tmp1, tmp2, tmp3);
                 break;
               default:
-                masm.wasmUnalignedLoad(*access, ptr, ptr, dest.i32(), tmp1);
+                masm.wasmUnalignedLoad(*access, HeapReg, ptr, ptr, dest.i32(), tmp1);
                 break;
             }
         } else {
             if (dest.tag == AnyReg::I64)
-                masm.wasmLoadI64(*access, ptr, ptr, dest.i64());
+                masm.wasmLoadI64(*access, HeapReg, ptr, ptr, dest.i64());
             else
-                masm.wasmLoad(*access, ptr, ptr, dest.any());
+                masm.wasmLoad(*access, HeapReg, ptr, ptr, dest.any());
         }
 #else
         MOZ_CRASH("BaseCompiler platform hook: load");
@@ -3574,27 +3575,27 @@ class BaseCompiler
         if (IsUnaligned(*access)) {
             switch (src.tag) {
               case AnyReg::I64:
-                masm.wasmUnalignedStoreI64(*access, src.i64(), ptr, ptr, tmp);
+                masm.wasmUnalignedStoreI64(*access, src.i64(), HeapReg, ptr, ptr, tmp);
                 break;
               case AnyReg::F32:
-                masm.wasmUnalignedStoreFP(*access, src.f32(), ptr, ptr, tmp);
+                masm.wasmUnalignedStoreFP(*access, src.f32(), HeapReg, ptr, ptr, tmp);
                 break;
               case AnyReg::F64:
-                masm.wasmUnalignedStoreFP(*access, src.f64(), ptr, ptr, tmp);
+                masm.wasmUnalignedStoreFP(*access, src.f64(), HeapReg, ptr, ptr, tmp);
                 break;
               default:
                 MOZ_ASSERT(tmp == Register::Invalid());
-                masm.wasmUnalignedStore(*access, src.i32(), ptr, ptr);
+                masm.wasmUnalignedStore(*access, src.i32(), HeapReg, ptr, ptr);
                 break;
             }
         } else {
             MOZ_ASSERT(tmp == Register::Invalid());
             if (access->type() == Scalar::Int64)
-                masm.wasmStoreI64(*access, src.i64(), ptr, ptr);
+                masm.wasmStoreI64(*access, src.i64(), HeapReg, ptr, ptr);
             else if (src.tag == AnyReg::I64)
-                masm.wasmStore(*access, AnyRegister(src.i64().low), ptr, ptr);
+                masm.wasmStore(*access, AnyRegister(src.i64().low), HeapReg, ptr, ptr);
             else
-                masm.wasmStore(*access, src.any(), ptr, ptr);
+                masm.wasmStore(*access, src.any(), HeapReg, ptr, ptr);
         }
 #else
         MOZ_CRASH("BaseCompiler platform hook: store");
