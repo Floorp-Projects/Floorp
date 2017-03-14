@@ -14,6 +14,7 @@ Test getAutocompleteInfo() on <input>
 <div id="content" style="display: none">
   <form>
     <input id="input"/>
+    <select id="select" />
   </form>
 </div>
 <pre id="test">
@@ -72,26 +73,8 @@ var autocompleteDisabledTypes = ["reset", "submit", "image", "button", "radio",
                                  "checkbox", "file"];
 
 function start() {
-  const fieldid = "input";
-  var field = document.getElementById(fieldid);
-  for (var test of values) {
-    if (typeof(test[0]) === "undefined")
-      field.removeAttribute("autocomplete");
-    else
-      field.setAttribute("autocomplete", test[0]);
-
-    var info = field.getAutocompleteInfo();
-
-    is(info.section, "section" in test[1] ? test[1].section : "",
-       "Checking autocompleteInfo.section for " + fieldid + ": " + test[0]);
-    is(info.addressType, "addressType" in test[1] ? test[1].addressType : "",
-       "Checking autocompleteInfo.addressType for " + fieldid + ": " + test[0]);
-    is(info.contactType, "contactType" in test[1] ? test[1].contactType : "",
-       "Checking autocompleteInfo.contactType for " + fieldid + ": " + test[0]);
-    is(info.fieldName, "fieldName" in test[1] ? test[1].fieldName : "",
-       "Checking autocompleteInfo.fieldName for " + fieldid + ": " + test[0]);
-
-  }
+  let field = document.getElementById("input");
+  testAutocompleteInfoValue(field, "input");
 
   for (var type of autocompleteEnabledTypes) {
     testAutocomplete(field, type, true);
@@ -100,7 +83,31 @@ function start() {
   for (var type of autocompleteDisabledTypes) {
     testAutocomplete(field, type, false);
   }
+
+  field = document.getElementById("select");
+  testAutocompleteInfoValue(field, "select");
+
   SimpleTest.finish();
+}
+
+function testAutocompleteInfoValue(aField, aFieldId) {
+  for (var test of values) {
+    if (typeof(test[0]) === "undefined")
+      aField.removeAttribute("autocomplete");
+    else
+      aField.setAttribute("autocomplete", test[0]);
+
+    var info = aField.getAutocompleteInfo();
+
+    is(info.section, "section" in test[1] ? test[1].section : "",
+       "Checking autocompleteInfo.section for " + aFieldId + ": " + test[0]);
+    is(info.addressType, "addressType" in test[1] ? test[1].addressType : "",
+       "Checking autocompleteInfo.addressType for " + aFieldId + ": " + test[0]);
+    is(info.contactType, "contactType" in test[1] ? test[1].contactType : "",
+       "Checking autocompleteInfo.contactType for " + aFieldId + ": " + test[0]);
+    is(info.fieldName, "fieldName" in test[1] ? test[1].fieldName : "",
+       "Checking autocompleteInfo.fieldName for " + aFieldId + ": " + test[0]);
+  }
 }
 
 function testAutocomplete(aField, aType, aEnabled) {
