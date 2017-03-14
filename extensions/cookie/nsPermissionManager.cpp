@@ -176,54 +176,6 @@ GetNextSubDomainForHost(const nsACString& aHost)
   return subDomain;
 }
 
-// This function produces a nsIPrincipal which is identical to the current
-// nsIPrincipal, except that it has one less subdomain segment. It returns
-// `nullptr` if there are no more segments to remove.
-already_AddRefed<nsIPrincipal>
-GetNextSubDomainPrincipal(nsIPrincipal* aPrincipal)
-{
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  nsAutoCString host;
-  rv = uri->GetHost(host);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  nsCString domain = GetNextSubDomainForHost(host);
-  if (domain.IsEmpty()) {
-    return nullptr;
-  }
-
-  // Create a new principal which is identical to the current one, but with the new host
-  nsCOMPtr<nsIURI> newURI;
-  rv = uri->Clone(getter_AddRefs(newURI));
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  rv = newURI->SetHost(domain);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  // Copy the attributes over
-  mozilla::OriginAttributes attrs = aPrincipal->OriginAttributesRef();
-
-  // Disable userContext and firstParty isolation for permissions.
-  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
-                        mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
-
-  nsCOMPtr<nsIPrincipal> principal =
-    mozilla::BasePrincipal::CreateCodebasePrincipal(newURI, attrs);
-
-  return principal.forget();
-}
-
 class ClearOriginDataObserver final : public nsIObserver {
   ~ClearOriginDataObserver() {}
 
@@ -2233,11 +2185,46 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
 
   // If aExactHostMatch wasn't true, we can check if the base domain has a permission entry.
   if (!aExactHostMatch) {
-    nsCOMPtr<nsIPrincipal> principal =
-      GetNextSubDomainPrincipal(aPrincipal);
-    if (principal) {
-      return GetPermissionHashKey(principal, aType, aExactHostMatch);
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+    if (NS_FAILED(rv)) {
+      return nullptr;
     }
+
+    nsAutoCString host;
+    rv = uri->GetHost(host);
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
+
+    nsCString domain = GetNextSubDomainForHost(host);
+    if (domain.IsEmpty()) {
+      return nullptr;
+    }
+
+    // Create a new principal which is identical to the current one, but with the new host
+    nsCOMPtr<nsIURI> newURI;
+    rv = uri->Clone(getter_AddRefs(newURI));
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
+
+    rv = newURI->SetHost(domain);
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
+
+    // Copy the attributes over
+    mozilla::OriginAttributes attrs = aPrincipal->OriginAttributesRef();
+
+    // Disable userContext and firstParty isolation for permissions.
+    attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
+                          mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
+
+    nsCOMPtr<nsIPrincipal> principal =
+      mozilla::BasePrincipal::CreateCodebasePrincipal(newURI, attrs);
+
+    return GetPermissionHashKey(principal, aType, aExactHostMatch);
   }
 
   // No entry, really...
@@ -3027,6 +3014,7 @@ nsPermissionManager::SetPermissionsWithKey(const nsACString& aPermissionKey,
   return NS_OK;
 }
 
+// XXX: Support file URIs here as well!
 /* static */ void
 nsPermissionManager::GetKeyForPrincipal(nsIPrincipal* aPrincipal, nsACString& aKey)
 {
@@ -3039,51 +3027,31 @@ nsPermissionManager::GetKeyForPrincipal(nsIPrincipal* aPrincipal, nsACString& aK
     // NOTE: We don't propagate the error here, instead we produce the default
     // "" permission key. This means that we can assign every principal a key,
     // even if the GetURI operation on that principal is not meaningful.
-    aKey.Truncate();
     return;
   }
 
+  // If the URI isn't of one of the supported schemes, it has the "" permission
+  // key. We can do an early return in that case.
   nsAutoCString scheme;
-  rv = uri->GetScheme(scheme);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // NOTE: Produce the default "" key as a fallback.
-    aKey.Truncate();
+  uri->GetScheme(scheme);
+  if (!scheme.EqualsLiteral("http") &&
+      !scheme.EqualsLiteral("https") &&
+      !scheme.EqualsLiteral("ftp")) {
     return;
   }
 
-  // URIs which have schemes other than http, https and ftp share the ""
-  // permission key.
-  if (scheme.EqualsLiteral("http") ||
-      scheme.EqualsLiteral("https") ||
-      scheme.EqualsLiteral("ftp")) {
-    rv = GetOriginFromPrincipal(aPrincipal, aKey);
-    if (NS_SUCCEEDED(rv)) {
-      return;
-    }
+  // We key sets of permissions to be sent over IPC based on their eTLD+1, or in
+  // the case where that isn't meaningful, on their IP address or spec.
+  nsCOMPtr<nsIEffectiveTLDService> etldService =
+    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  rv = etldService->GetBaseDomain(uri, 0, aKey);
+  if (NS_FAILED(rv)) {
+    rv = uri->GetHost(aKey);
   }
-
-  // NOTE: Produce the default "" key as a fallback.
-  aKey.Truncate();
-  return;
-}
-
-/* static */ nsTArray<nsCString>
-nsPermissionManager::GetAllKeysForPrincipal(nsIPrincipal* aPrincipal)
-{
-  MOZ_ASSERT(aPrincipal);
-
-  nsTArray<nsCString> keys;
-  nsCOMPtr<nsIPrincipal> prin = aPrincipal;
-  while (prin) {
-    // Add the key to the list
-    nsCString* key = keys.AppendElement();
-    GetKeyForPrincipal(prin, *key);
-
-    // Get the next subdomain principal and loop back around.
-    prin = GetNextSubDomainPrincipal(prin);
+  if (NS_FAILED(rv)) {
+    rv = uri->GetSpec(aKey);
   }
-
-  MOZ_ASSERT(keys.Length() >= 1,
-             "Every principal should have at least one key.");
-  return keys;
+  if (NS_FAILED(rv)) {
+    aKey.Truncate();
+  }
 }
