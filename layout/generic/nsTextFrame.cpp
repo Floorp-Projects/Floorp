@@ -9838,7 +9838,13 @@ nsTextFrame::GetRenderedText(uint32_t aStartOffset,
                              TextOffsetType aOffsetType,
                              TrailingWhitespace aTrimTrailingWhitespace)
 {
-  NS_ASSERTION(!GetPrevContinuation(), "Must be called on first-in-flow");
+  MOZ_ASSERT(aStartOffset <= aEndOffset, "bogus offsets");
+  MOZ_ASSERT(!GetPrevContinuation() ||
+             (aOffsetType == TextOffsetType::OFFSETS_IN_CONTENT_TEXT &&
+              aStartOffset >= (uint32_t)GetContentOffset() &&
+              aEndOffset <= (uint32_t)GetContentEnd()),
+             "Must be called on first-in-flow, or content offsets must be "
+             "given and be within this frame.");
 
   // The handling of offsets could be more efficient...
   RenderedText result;
