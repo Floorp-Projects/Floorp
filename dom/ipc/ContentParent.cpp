@@ -5137,6 +5137,10 @@ ContentParent::RecvFileCreationRequest(const nsID& aID,
   MOZ_ASSERT(blobImpl);
 
   BlobParent* blobParent = BlobParent::GetOrCreate(this, blobImpl);
+  if (NS_WARN_IF(!blobParent)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   if (!SendFileCreationResponse(aID,
                                 FileCreationSuccessResult(blobParent, nullptr))) {
     return IPC_FAIL_NO_REASON(this);
