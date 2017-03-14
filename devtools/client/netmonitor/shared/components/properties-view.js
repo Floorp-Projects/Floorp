@@ -108,7 +108,8 @@ const PropertiesView = createClass({
     const { member } = props;
 
     // Hide strings with following conditions
-    // 1. this row is a togglable section and content is object ('cause it shouldn't hide when string or number)
+    // 1. this row is a togglable section and content is object ('cause it shouldn't hide
+    //    when string or number)
     // 2. the `value` object has a `value` property, only happened in Cookies panel
     // Put 2 here to not dup this method
     if (member.level === 0 && member.type === "object" ||
