@@ -660,31 +660,54 @@ GetDynamicName(JSContext* cx, JSObject* envChain, JSString* str, Value* vp)
 void
 PostWriteBarrier(JSRuntime* rt, JSObject* obj)
 {
+    JS::AutoCheckCannotGC nogc;
     MOZ_ASSERT(!IsInsideNursery(obj));
-    obj->zone()->group()->storeBuffer().putWholeCell(obj);
+    rt->gc.storeBuffer().putWholeCell(obj);
 }
 
 static const size_t MAX_WHOLE_CELL_BUFFER_SIZE = 4096;
 
+template <IndexInBounds InBounds>
 void
 PostWriteElementBarrier(JSRuntime* rt, JSObject* obj, int32_t index)
 {
+    JS::AutoCheckCannotGC nogc;
+
     MOZ_ASSERT(!IsInsideNursery(obj));
-    if (obj->is<NativeObject>() &&
-        !obj->as<NativeObject>().isInWholeCellBuffer() &&
-        uint32_t(index) < obj->as<NativeObject>().getDenseInitializedLength() &&
-        (obj->as<NativeObject>().getDenseInitializedLength() > MAX_WHOLE_CELL_BUFFER_SIZE
+
+    if (InBounds == IndexInBounds::Yes) {
+        MOZ_ASSERT(uint32_t(index) < obj->as<NativeObject>().getDenseInitializedLength());
+    } else {
+        if (MOZ_UNLIKELY(!obj->is<NativeObject>()) ||
+            uint32_t(index) >= obj->as<NativeObject>().getDenseInitializedLength())
+        {
+            rt->gc.storeBuffer().putWholeCell(obj);
+            return;
+        }
+    }
+
+    NativeObject* nobj = &obj->as<NativeObject>();
+    if (nobj->isInWholeCellBuffer())
+        return;
+
+    if (nobj->getDenseInitializedLength() > MAX_WHOLE_CELL_BUFFER_SIZE
 #ifdef JS_GC_ZEAL
          || rt->hasZealMode(gc::ZealMode::ElementsBarrier)
 #endif
-        ))
+        )
     {
-        obj->zone()->group()->storeBuffer().putSlot(&obj->as<NativeObject>(), HeapSlot::Element, index, 1);
+        rt->gc.storeBuffer().putSlot(nobj, HeapSlot::Element, index, 1);
         return;
     }
 
-    obj->zone()->group()->storeBuffer().putWholeCell(obj);
+    rt->gc.storeBuffer().putWholeCell(obj);
 }
+
+template void
+PostWriteElementBarrier<IndexInBounds::Yes>(JSRuntime* rt, JSObject* obj, int32_t index);
+
+template void
+PostWriteElementBarrier<IndexInBounds::Maybe>(JSRuntime* rt, JSObject* obj, int32_t index);
 
 void
 PostGlobalWriteBarrier(JSRuntime* rt, JSObject* obj)
