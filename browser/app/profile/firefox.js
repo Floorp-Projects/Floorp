@@ -1204,6 +1204,11 @@ pref("full-screen-api.enabled", true);
 // (this pref has no effect if more than 6 hours have passed since the last crash)
 pref("toolkit.startup.max_resumed_crashes", 3);
 
+// Whether we use pdfium to view content with the pdf mime type.
+// Note: if the pref is set to false while Firefox is open, it won't
+// take effect until there are no open pdfium tabs.
+pref("pdfium.enabled", false);
+
 // Completely disable pdf.js as an option to preview pdfs within firefox.
 // Note: if this is not disabled it does not necessarily mean pdf.js is the pdf
 // handler just that it is an option.

@@ -59,3 +59,14 @@ jobs:
           - mozilla-central
       when:
           - {hour: 18, minute: 0}
+
+    - name: nightly-stylo-talos
+      job:
+          type: decision-task
+          treeherder-symbol: T 
+          target-tasks-method: stylo_talos
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 4, minute: 0}
+

@@ -36,9 +36,6 @@ public:
    NS_DECL_NSIDOCSHELLTREEOWNER
    NS_DECL_NSIWEBPROGRESSLISTENER
 
-   static nsresult InitGlobals();
-   static void     FreeGlobals();
-
 protected:
    nsChromeTreeOwner();
    virtual ~nsChromeTreeOwner();

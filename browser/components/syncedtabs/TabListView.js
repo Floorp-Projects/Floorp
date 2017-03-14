@@ -524,13 +524,16 @@ TabListView.prototype = {
     while (el) {
       let show = false;
       if (showTabOptions) {
-        if (el.getAttribute("id") != "syncedTabsOpenAllInTabs") {
+        if (el.getAttribute("id") != "syncedTabsOpenAllInTabs" &&
+            el.getAttribute("id") != "syncedTabsManageDevices") {
           show = true;
         }
       } else if (el.getAttribute("id") == "syncedTabsOpenAllInTabs") {
         const tabs = item.querySelectorAll(".item-tabs-list > .item.tab");
         show = tabs.length > 0;
       } else if (el.getAttribute("id") == "syncedTabsRefresh") {
+        show = true;
+      } else if (el.getAttribute("id") == "syncedTabsManageDevices") {
         show = true;
       }
       el.hidden = !show;

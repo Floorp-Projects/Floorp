@@ -35,43 +35,13 @@ using namespace mozilla;
 // nsChromeTreeOwner string literals
 //*****************************************************************************
 
-struct nsChromeTreeOwnerLiterals
-{
-  const nsLiteralString kPersist;
-  const nsLiteralString kScreenX;
-  const nsLiteralString kScreenY;
-  const nsLiteralString kWidth;
-  const nsLiteralString kHeight;
-  const nsLiteralString kSizemode;
-  const nsLiteralString kSpace;
-
-  nsChromeTreeOwnerLiterals()
-    : NS_LITERAL_STRING_INIT(kPersist,"persist")
-    , NS_LITERAL_STRING_INIT(kScreenX,"screenX")
-    , NS_LITERAL_STRING_INIT(kScreenY,"screenY")
-    , NS_LITERAL_STRING_INIT(kWidth,"width")
-    , NS_LITERAL_STRING_INIT(kHeight,"height")
-    , NS_LITERAL_STRING_INIT(kSizemode,"sizemode")
-    , NS_LITERAL_STRING_INIT(kSpace," ")
-  {}
-};
-
-static nsChromeTreeOwnerLiterals *gLiterals;
-
-nsresult
-nsChromeTreeOwner::InitGlobals()
-{
-  NS_ASSERTION(gLiterals == nullptr, "already initialized");
-  gLiterals = new nsChromeTreeOwnerLiterals();
-  return NS_OK;
-}
-
-void
-nsChromeTreeOwner::FreeGlobals()
-{
-  delete gLiterals;
-  gLiterals = nullptr;
-}
+const nsLiteralString kPersist(u"persist");
+const nsLiteralString kScreenX(u"screenX");
+const nsLiteralString kScreenY(u"screenY");
+const nsLiteralString kWidth(u"width");
+const nsLiteralString kHeight(u"height");
+const nsLiteralString kSizemode(u"sizemode");
+const nsLiteralString kSpace(u" ");
 
 //*****************************************************************************
 //***    nsChromeTreeOwner: Object Management
@@ -229,7 +199,7 @@ nsChromeTreeOwner::SetPersistence(bool aPersistPosition,
     return NS_ERROR_FAILURE;
 
   nsAutoString persistString;
-  docShellElement->GetAttribute(gLiterals->kPersist, persistString);
+  docShellElement->GetAttribute(kPersist, persistString);
 
   bool saveString = false;
   int32_t index;
@@ -240,18 +210,18 @@ nsChromeTreeOwner::SetPersistence(bool aPersistPosition,
     persistString.Cut(index, aString.Length());        \
     saveString = true;                              \
   } else if (aCond && index == kNotFound) {            \
-    persistString.Append(gLiterals->kSpace + aString); \
+    persistString.Append(kSpace + aString); \
     saveString = true;                              \
   }
-  FIND_PERSIST_STRING(gLiterals->kScreenX,  aPersistPosition);
-  FIND_PERSIST_STRING(gLiterals->kScreenY,  aPersistPosition);
-  FIND_PERSIST_STRING(gLiterals->kWidth,    aPersistSize);
-  FIND_PERSIST_STRING(gLiterals->kHeight,   aPersistSize);
-  FIND_PERSIST_STRING(gLiterals->kSizemode, aPersistSizeMode);
+  FIND_PERSIST_STRING(kScreenX,  aPersistPosition);
+  FIND_PERSIST_STRING(kScreenY,  aPersistPosition);
+  FIND_PERSIST_STRING(kWidth,    aPersistSize);
+  FIND_PERSIST_STRING(kHeight,   aPersistSize);
+  FIND_PERSIST_STRING(kSizemode, aPersistSizeMode);
 
   ErrorResult rv;
   if (saveString) {
-    docShellElement->SetAttribute(gLiterals->kPersist, persistString, rv);
+    docShellElement->SetAttribute(kPersist, persistString, rv);
   }
 
   return NS_OK;
@@ -268,18 +238,18 @@ nsChromeTreeOwner::GetPersistence(bool* aPersistPosition,
     return NS_ERROR_FAILURE;
 
   nsAutoString persistString;
-  docShellElement->GetAttribute(gLiterals->kPersist, persistString);
+  docShellElement->GetAttribute(kPersist, persistString);
 
   // data structure doesn't quite match the question, but it's close enough
   // for what we want (since this method is never actually called...)
   if (aPersistPosition)
-    *aPersistPosition = persistString.Find(gLiterals->kScreenX) > kNotFound ||
-                        persistString.Find(gLiterals->kScreenY) > kNotFound;
+    *aPersistPosition = persistString.Find(kScreenX) > kNotFound ||
+                        persistString.Find(kScreenY) > kNotFound;
   if (aPersistSize)
-    *aPersistSize = persistString.Find(gLiterals->kWidth) > kNotFound ||
-                    persistString.Find(gLiterals->kHeight) > kNotFound;
+    *aPersistSize = persistString.Find(kWidth) > kNotFound ||
+                    persistString.Find(kHeight) > kNotFound;
   if (aPersistSizeMode)
-    *aPersistSizeMode = persistString.Find(gLiterals->kSizemode) > kNotFound;
+    *aPersistSizeMode = persistString.Find(kSizemode) > kNotFound;
 
   return NS_OK;
 }

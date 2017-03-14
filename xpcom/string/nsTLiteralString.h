@@ -4,18 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 /**
  * nsTLiteralString_CharT
  *
  * Stores a null-terminated, immutable sequence of characters.
  *
- * Subclass of nsTString that restricts string value to a literal
- * character sequence.  This class does not own its data. The data is
- * assumed to be permanent. In practice this is true because this code
- * is only usable by and for libxul.
+ * nsTString-lookalike that restricts its string value to a literal character
+ * sequence. Can be implicitly cast to const nsTString& (the const is
+ * essential, since this class's data are not writable). The data are assumed
+ * to be static (permanent) and therefore, as an optimization, this class
+ * does not have a destructor.
  */
-class nsTLiteralString_CharT : public nsTString_CharT
+class nsTLiteralString_CharT : public mozilla::detail::nsTStringRepr_CharT
 {
 public:
 
@@ -29,8 +29,38 @@ public:
 
   template<size_type N>
   explicit nsTLiteralString_CharT(const char_type (&aStr)[N])
-    : string_type(const_cast<char_type*>(aStr), N - 1, F_TERMINATED | F_LITERAL)
+    : base_string_type(const_cast<char_type*>(aStr), N - 1, F_TERMINATED | F_LITERAL)
   {
+  }
+
+  /**
+   * For compatibility with existing code that requires const ns[C]String*.
+   * Use sparingly. If possible, rewrite code to use const ns[C]String&
+   * and the implicit cast will just work.
+   */
+  const nsTString_CharT& AsString() const
+  {
+    return *reinterpret_cast<const nsTString_CharT*>(this);
+  }
+
+  operator const nsTString_CharT&() const
+  {
+    return AsString();
+  }
+
+  /**
+   * Prohibit get() on temporaries as in nsLiteralCString("x").get().
+   * These should be written as just "x", using a string literal directly.
+   */
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+  char16ptr_t get() const && = delete;
+  char16ptr_t get() const &
+#else
+  const char_type* get() const && = delete;
+  const char_type* get() const &
+#endif
+  {
+    return mData;
   }
 
 private:
@@ -38,4 +68,10 @@ private:
   // NOT TO BE IMPLEMENTED
   template<size_type N>
   nsTLiteralString_CharT(char_type (&aStr)[N]) = delete;
+
+  self_type& operator=(const self_type&) = delete;
 };
+
+static_assert(sizeof(nsTLiteralString_CharT) == sizeof(nsTString_CharT),
+              "nsTLiteralString_CharT can masquerade as nsTString_CharT, "
+              "so they must have identical layout");

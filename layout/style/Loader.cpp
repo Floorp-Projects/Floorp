@@ -1886,8 +1886,7 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
                                          aLoadData->mSheet->GetReferrerPolicy());
 #ifdef DEBUG
       SheetLoadData *loadingData;
-      // XXXheycam Temporarily downgrade this assertion (bug 1314045).
-      NS_ASSERTION_STYLO_WARNING(
+      NS_ASSERTION(
         mSheets->mLoadingDatas.Get(&key, &loadingData) &&
         loadingData == aLoadData,
         "Bad loading table");

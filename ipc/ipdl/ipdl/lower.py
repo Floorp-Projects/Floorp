@@ -406,6 +406,11 @@ def _unionTypeReadError(unionname):
         ExprCall(ExprVar('mozilla::ipc::UnionTypeReadError'),
                  args=[ ExprLiteral.String(unionname) ]))
 
+def _sentinelReadError(classname):
+    return StmtExpr(
+        ExprCall(ExprVar('mozilla::ipc::SentinelReadError'),
+                 args=[ ExprLiteral.String(classname) ]))
+
 def _killProcess(pid):
     return ExprCall(
         ExprVar('base::KillProcess'),
@@ -466,6 +471,11 @@ def errfnArrayLength(elementname):
 
 def errfnUnionType(unionname):
     return [ _unionTypeReadError(unionname), StmtReturn.FALSE ]
+
+def errfnSentinel(rvalue=ExprLiteral.FALSE):
+    def inner(msg):
+        return [ _sentinelReadError(msg), StmtReturn(rvalue) ]
+    return inner
 
 def _destroyMethod():
     return ExprVar('ActorDestroy')
@@ -1832,6 +1842,16 @@ def _generateCxxStruct(sd):
         opeqeq.addstmt(ifneq)
     opeqeq.addstmt(StmtReturn.TRUE)
     struct.addstmts([ opeqeq, Whitespace.NL ])
+
+    # bool operator!=(const Struct& _o)
+    opneq = MethodDefn(MethodDecl(
+        'operator!=',
+        params=[ Decl(constreftype, ovar.name) ],
+        ret=Type.BOOL,
+        const=1))
+    opneq.addstmt(StmtReturn(ExprNot(ExprCall(ExprVar('operator=='),
+                                              args=[ ovar ]))))
+    struct.addstmts([ opneq, Whitespace.NL ])
 
     # field1& f1()
     # const field1& f1() const
@@ -3371,7 +3391,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.checkedRead(eltipdltype, ExprAddrOf(ExprIndex(elemsvar, ivar)),
                              msgvar, itervar, errfnRead,
                              '\'' + eltipdltype.name() + '[i]\'',
-                             sentinelKey=arraytype.name()))
+                             sentinelKey=arraytype.name(),
+                             errfnSentinel=errfnSentinel()))
         appendstmt = StmtDecl(Decl(directtype, elemsvar.name),
                               init=ExprCall(ExprSelect(favar, '.', 'AppendElements'),
                                             args=[ lenvar ]))
@@ -3381,7 +3402,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.checkedRead(None, ExprAddrOf(lenvar),
                              msgvar, itervar, errfnArrayLength,
                              [ arraytype.name() ],
-                             sentinelKey=('length', arraytype.name())),
+                             sentinelKey=('length', arraytype.name()),
+                             errfnSentinel=errfnSentinel()),
             Whitespace.NL,
             appendstmt,
             forread,
@@ -3516,7 +3538,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             writefield = self.checkedWrite(f.ipdltype, get('.', f), msgvar, sentinelKey=f.basename)
             readfield = self.checkedRead(f.ipdltype,
                                          ExprAddrOf(get('->', f)),
-                                         msgvar, itervar, errfnRead, desc, sentinelKey=f.basename)
+                                         msgvar, itervar, errfnRead, desc,
+                                         sentinelKey=f.basename, errfnSentinel=errfnSentinel())
             if f.special and f.side != self.side:
                 writefield = Whitespace(
                     "// skipping actor field that's meaningless on this side\n", indent=1)
@@ -3580,7 +3603,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                         c.ipdltype,
                         ExprAddrOf(ExprCall(ExprSelect(var, '->',
                                                        c.getTypeName()))),
-                        msgvar, itervar, errfnRead, 'Union type', sentinelKey=origenum),
+                        msgvar, itervar, errfnRead, 'Union type',
+                        sentinelKey=origenum, errfnSentinel=errfnSentinel()),
                     StmtReturn(ExprLiteral.TRUE)
                 ])
 
@@ -3609,7 +3633,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.checkedRead(
                 None, ExprAddrOf(typevar), msgvar, itervar, errfnUnionType,
                 [ uniontype.name() ],
-                sentinelKey=uniontype.name()),
+                sentinelKey=uniontype.name(), errfnSentinel=errfnSentinel()),
             Whitespace.NL,
             readswitch,
         ])
@@ -3776,7 +3800,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         def errfnCleanupCtor(msg):
             return self.failCtorIf(md, ExprLiteral.TRUE)
         stmts = self.deserializeReply(
-            md, ExprAddrOf(replyvar), self.side, errfnCleanupCtor)
+            md, ExprAddrOf(replyvar), self.side,
+            errfnCleanupCtor, errfnSentinel(ExprLiteral.NULL))
         method.addstmts(stmts + [ StmtReturn(actor.var()) ])
 
         return method
@@ -3883,7 +3908,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + sendstmts)
 
         destmts = self.deserializeReply(
-            md, ExprAddrOf(replyvar), self.side, errfnSend, actorvar)
+            md, ExprAddrOf(replyvar), self.side, errfnSend,
+            errfnSentinel(), actorvar)
         ifsendok = StmtIf(ExprLiteral.FALSE)
         ifsendok.addifstmts(destmts)
         ifsendok.addifstmts([ Whitespace.NL,
@@ -3946,7 +3972,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         failif.addifstmt(StmtReturn.FALSE)
 
         desstmts = self.deserializeReply(
-            md, ExprAddrOf(replyvar), self.side, errfnSend)
+            md, ExprAddrOf(replyvar), self.side, errfnSend, errfnSentinel())
 
         method.addstmts(
             serstmts
@@ -3969,7 +3995,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         actorvar = md.actorDecl().var()
         actorhandle = self.handlevar
 
-        stmts = self.deserializeMessage(md, self.side, errfnRecv)
+        stmts = self.deserializeMessage(md, self.side, errfnRecv,
+                                        errfnSent=errfnSentinel(_Result.ValuError))
 
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
@@ -3999,7 +4026,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         lbl = CaseLabel(md.pqMsgId())
         case = StmtBlock()
 
-        stmts = self.deserializeMessage(md, self.side, errfnRecv)
+        stmts = self.deserializeMessage(md, self.side, errfnRecv,
+                                        errfnSent=errfnSentinel(_Result.ValuError))
 
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
@@ -4025,7 +4053,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         lbl = CaseLabel(md.pqMsgId())
         case = StmtBlock()
 
-        stmts = self.deserializeMessage(md, self.side, errfn=errfnRecv)
+        stmts = self.deserializeMessage(md, self.side, errfn=errfnRecv,
+                                        errfnSent=errfnSentinel(_Result.ValuError))
 
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
@@ -4152,7 +4181,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return stmts + [ Whitespace.NL ]
 
 
-    def deserializeMessage(self, md, side, errfn):
+    def deserializeMessage(self, md, side, errfn, errfnSent):
         msgvar = self.msgvar
         itervar = self.itervar
         msgexpr = ExprAddrOf(msgvar)
@@ -4177,7 +4206,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             reads = [ self.checkedRead(None, ExprAddrOf(handlevar), msgexpr,
                                        ExprAddrOf(self.itervar),
                                        errfn, "'%s'" % handletype.name,
-                                       sentinelKey='actor') ]
+                                       sentinelKey='actor', errfnSentinel=errfnSent) ]
             start = 1
 
         stmts.extend((
@@ -4190,14 +4219,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + reads + [ self.checkedRead(p.ipdltype, ExprAddrOf(p.var()),
                                          msgexpr, ExprAddrOf(itervar),
                                          errfn, "'%s'" % p.bareType(side).name,
-                                         sentinelKey=p.name)
+                                         sentinelKey=p.name, errfnSentinel=errfnSent)
                         for p in md.params[start:] ]
             + [ self.endRead(msgvar, itervar) ]))
 
         return stmts
 
 
-    def deserializeReply(self, md, replyexpr, side, errfn, actor=None):
+    def deserializeReply(self, md, replyexpr, side, errfn, errfnSentinel, actor=None):
         stmts = [ Whitespace.NL,
                    self.logMessage(md, replyexpr,
                                    'Received reply ', actor, receiving=True) ]
@@ -4214,7 +4243,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                  ExprAddrOf(self.replyvar),
                                  ExprAddrOf(self.itervar),
                                  errfn, "'%s'" % r.bareType(side).name,
-                                 sentinelKey=r.name)
+                                 sentinelKey=r.name, errfnSentinel=errfnSentinel)
                 for r in md.returns ]
             + [ self.endRead(self.replyvar, itervar) ])
 
@@ -4358,12 +4387,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                    args=[ ExprVar(msgid),
                                    ExprAddrOf(stateexpr) ])) ]
 
-    def checkedRead(self, ipdltype, expr, msgexpr, iterexpr, errfn, paramtype, sentinelKey, sentinel=True):
+    def checkedRead(self, ipdltype, expr, msgexpr, iterexpr, errfn, paramtype, sentinelKey, errfnSentinel, sentinel=True):
         ifbad = StmtIf(ExprNot(self.read(ipdltype, expr, msgexpr, iterexpr)))
         if isinstance(paramtype, list):
             errorcall = errfn(*paramtype)
+            senterrorcall = errfnSentinel(*paramtype)
         else:
             errorcall = errfn('Error deserializing ' + paramtype)
+            senterrorcall = errfnSentinel('Error deserializing ' + paramtype)
         ifbad.addifstmts(errorcall)
 
         block = Block()
@@ -4371,12 +4402,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         if sentinel:
             assert sentinelKey
-
             block.addstmt(Whitespace('// Sentinel = ' + repr(sentinelKey) + '\n', indent=1))
             read = ExprCall(ExprSelect(msgexpr, '->', 'ReadSentinel'),
                                   args=[ iterexpr, ExprLiteral.Int(hashfunc(sentinelKey)) ])
             ifsentinel = StmtIf(ExprNot(read))
-            ifsentinel.addifstmts(errorcall)
+            ifsentinel.addifstmts(senterrorcall)
             block.addstmt(ifsentinel)
 
         return block

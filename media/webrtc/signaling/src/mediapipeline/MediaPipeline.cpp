@@ -34,6 +34,7 @@
 #include "AudioSegment.h"
 #include "MediaSegment.h"
 #include "MediaPipelineFilter.h"
+#include "RtpLogger.h"
 #include "databuffer.h"
 #include "transportflow.h"
 #include "transportlayer.h"
@@ -50,6 +51,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/SizePrintfMacros.h"
 
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
@@ -72,6 +74,7 @@ using namespace mozilla::layers;
 MOZ_MTLOG_MODULE("mediapipeline")
 
 namespace mozilla {
+extern mozilla::LogModule* AudioLogModule();
 
 class VideoConverterListener
 {
@@ -1076,6 +1079,9 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
   MOZ_MTLOG(ML_DEBUG, description_ << " received RTP packet.");
   increment_rtp_packets_received(out_len);
 
+  RtpLogger::LogPacket(inner_data.get(), out_len, true, true, header.headerLength,
+                       description_);
+
   (void)conduit_->ReceivedRTPPacket(inner_data.get(), out_len, header.ssrc);  // Ignore error codes
 }
 
@@ -1136,6 +1142,8 @@ void MediaPipeline::RtcpPacketReceived(TransportLayer *layer,
 
   MOZ_MTLOG(ML_DEBUG, description_ << " received RTCP packet.");
   increment_rtcp_packets_received();
+
+  RtpLogger::LogPacket(inner_data.get(), out_len, true, false, 0, description_);
 
   MOZ_ASSERT(rtcp_.recv_srtp_);  // This should never happen
 
@@ -1627,6 +1635,17 @@ nsresult MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
   // libsrtp enciphers in place, so we need a big enough buffer.
   MOZ_ASSERT(data->capacity() >= data->len() + SRTP_MAX_EXPANSION);
 
+  if (RtpLogger::IsPacketLoggingOn()) {
+    int header_len = 12;
+    webrtc::RTPHeader header;
+    if (pipeline_->rtp_parser_ &&
+        pipeline_->rtp_parser_->Parse(data->data(), data->len(), &header)) {
+        header_len = header.headerLength;
+    }
+    RtpLogger::LogPacket(data->data(), data->len(), false, is_rtp, header_len,
+                         pipeline_->description_);
+  }
+
   int out_len;
   nsresult res;
   if (is_rtp) {
@@ -1839,6 +1858,7 @@ class GenericReceiveListener : public MediaStreamListener
     : source_(source),
       track_id_(track_id),
       played_ticks_(0),
+      last_log_(0),
       principal_handle_(PRINCIPAL_HANDLE_NONE) {}
 
   virtual ~GenericReceiveListener() {}
@@ -1888,6 +1908,7 @@ class GenericReceiveListener : public MediaStreamListener
   SourceMediaStream *source_;
   const TrackID track_id_;
   TrackTicks played_ticks_;
+  TrackTicks last_log_; // played_ticks_ when we last logged
   PrincipalHandle principal_handle_;
 };
 
@@ -2014,6 +2035,14 @@ public:
       // Handle track not actually added yet or removed/finished
       if (source_->AppendToTrack(track_id_, &segment)) {
         played_ticks_ += frames;
+        if (MOZ_LOG_TEST(AudioLogModule(), LogLevel::Debug)) {
+          if (played_ticks_ > last_log_ + WEBRTC_DEFAULT_SAMPLE_RATE) { // ~ 1 second
+            MOZ_LOG(AudioLogModule(), LogLevel::Debug,
+                    ("%p: Inserting %" PRIuSIZE " samples into track %d, total = %" PRIu64,
+                     (void*) this, frames, track_id_, played_ticks_));
+            last_log_ = played_ticks_;
+          }
+        }
       } else {
         MOZ_MTLOG(ML_ERROR, "AppendToTrack failed");
         // we can't un-read the data, but that's ok since we don't want to

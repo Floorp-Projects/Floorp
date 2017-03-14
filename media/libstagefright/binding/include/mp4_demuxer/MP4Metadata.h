@@ -11,12 +11,24 @@
 #include "MediaData.h"
 #include "MediaInfo.h"
 #include "Stream.h"
+#include "mp4parse.h"
 
 namespace mp4_demuxer
 {
 
 class MP4MetadataStagefright;
 class MP4MetadataRust;
+
+class IndiceWrapper {
+public:
+  virtual size_t Length() const = 0;
+
+  // TODO: Index::Indice is from stagefright, we should use another struct once
+  //       stagefrigth is removed.
+  virtual bool GetIndice(size_t aIndex, Index::Indice& aIndice) const = 0;
+
+  virtual ~IndiceWrapper() {}
+};
 
 class MP4Metadata
 {
@@ -32,7 +44,7 @@ public:
 
   const CryptoFile& Crypto() const;
 
-  bool ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID);
+  mozilla::UniquePtr<IndiceWrapper> GetTrackIndice(mozilla::TrackID aTrackID);
 
 private:
   UniquePtr<MP4MetadataStagefright> mStagefright;

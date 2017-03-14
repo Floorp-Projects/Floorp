@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Test that Debugger.Memory.prototype.takeCensus and
 // HeapSnapshot.prototype.takeCensus return the same data for the same heap
@@ -14,7 +15,7 @@ function doLiveAndOfflineCensus(g, dbg, opts) {
              this.markers.push(allocationMarker()); // 4
            }                                        // 5
          }());                                      // 6
-         `);                                        // 7
+         `);
   dbg.memory.trackingAllocationSites = false;
 
   return {
@@ -24,8 +25,8 @@ function doLiveAndOfflineCensus(g, dbg, opts) {
 }
 
 function run_test() {
-  var g = newGlobal();
-  var dbg = new Debugger(g);
+  let g = newGlobal();
+  let dbg = new Debugger(g);
 
   g.eval("this.markers = []");
   const markerSize = byteSize(allocationMarker());
@@ -36,7 +37,7 @@ function run_test() {
   let prevCount = 0;
   let prevBytes = 0;
 
-  for (var i = 0; i < 10; i++) {
+  for (let i = 0; i < 10; i++) {
     const { live, offline } = doLiveAndOfflineCensus(g, dbg, {
       breakdown: { by: "objectClass",
                    then: { by: "count"} }
@@ -96,9 +97,8 @@ function run_test() {
       return -1;
     } else if (a[0] > b[0]) {
       return 1;
-    } else {
-      return 0;
     }
+    return 0;
   };
   liveEntries.sort(sortEntries);
   offlineEntries.sort(sortEntries);

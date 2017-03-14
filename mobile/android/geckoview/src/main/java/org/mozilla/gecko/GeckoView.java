@@ -20,6 +20,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -333,6 +334,7 @@ public class GeckoView extends LayerView
 
     /**
     * Load the given URI.
+    * Note: Only for Fennec support.
     * @param uri The URI of the resource to load.
     * @param flags The load flags (TODO).
     */
@@ -346,6 +348,24 @@ public class GeckoView extends LayerView
         }  else {
             GeckoThread.queueNativeCall(window, "loadUri", String.class, uri, flags);
         }
+    }
+
+    /**
+    * Load the given URI.
+    * @param uri The URI of the resource to load.
+    */
+    public void loadUri(String uri) {
+        final GeckoBundle msg = new GeckoBundle();
+        msg.putString("uri", uri);
+        mEventDispatcher.dispatch("GeckoView:LoadUri", msg);
+    }
+
+    /**
+    * Load the given URI.
+    * @param uri The URI of the resource to load.
+    */
+    public void loadUri(Uri uri) {
+        loadUri(uri.toString());
     }
 
     /**
