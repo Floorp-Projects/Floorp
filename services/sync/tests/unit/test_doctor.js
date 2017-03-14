@@ -65,6 +65,9 @@ add_task(async function test_repairs_start() {
   let validator = {
     validate(engine) {
       return problems;
+    },
+    canValidate() {
+      return Promise.resolve(true);
     }
   }
   let engine = {
@@ -138,4 +141,39 @@ add_task(async function test_repairs_advanced_daily() {
   await doctor.consult();
   // should have done another repair
   equal(repairCalls, 2);
+});
+
+add_task(async function test_repairs_skip_if_cant_vaidate() {
+  let validator = {
+    canValidate() {
+      return Promise.resolve(false);
+    },
+    validate() {
+      ok(false, "Shouldn't validate");
+    }
+  }
+  let engine = {
+    name: "test-engine",
+    getValidator() {
+      return validator;
+    }
+  }
+  let requestor = {
+    startRepairs(validationInfo, flowID) {
+      assert.ok(false, "Never should start repairs");
+    }
+  }
+  let doctor = mockDoctor({
+    _getEnginesToValidate(recentlySyncedEngines) {
+      deepEqual(recentlySyncedEngines, [engine]);
+      return {
+        "test-engine": { engine, maxRecords: -1 }
+      };
+    },
+    _getRepairRequestor(engineName) {
+      equal(engineName, engine.name);
+      return requestor;
+    },
+  });
+  await doctor.consult([engine]);
 });
