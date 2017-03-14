@@ -1134,6 +1134,26 @@ function goForward(msg) {
 }
 
 /**
+ * Causes the browser to reload the page in in current top-level browsing context.
+ *
+ * @param {number} command_id
+ *     ID of the currently handled message between the driver and listener.
+ * @param {number} pageTimeout
+ *     Timeout in milliseconds the method has to wait for the page being finished loading.
+ */
+function refresh(msg) {
+  let {command_id, pageTimeout} = msg.json;
+
+  // We need to move to the top frame before navigating
+  sendSyncMessage("Marionette:switchedToFrame", {frameValue: null});
+  curContainer.frame = content;
+
+  loadListener.navigate(() => {
+    curContainer.frame.location.reload(true);
+  }, command_id, pageTimeout);
+}
+
+/**
  * Get URL of the top-level browsing context.
  */
 function getCurrentUrl() {
@@ -1152,19 +1172,6 @@ function getTitle() {
  */
 function getPageSource() {
   return curContainer.frame.document.documentElement.outerHTML;
-}
-
-/**
- * Refresh the page
- */
-function refresh(msg) {
-  let command_id = msg.json.command_id;
-  curContainer.frame.location.reload(true);
-  let listen = function() {
-    removeEventListener("DOMContentLoaded", listen, false);
-    sendOk(command_id);
-  };
-  addEventListener("DOMContentLoaded", listen, false);
 }
 
 /**
