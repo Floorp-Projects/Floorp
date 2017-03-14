@@ -1275,7 +1275,10 @@ NewExternalString(JSContext* cx, unsigned argc, Value* vp)
     RootedString str(cx, args[0].toString());
     size_t len = str->length();
 
-    UniqueTwoByteChars buf(js_pod_malloc<char16_t>(len));
+    UniqueTwoByteChars buf(cx->pod_malloc<char16_t>(len));
+    if (!buf)
+        return false;
+
     if (!JS_CopyStringChars(cx, mozilla::Range<char16_t>(buf.get(), len), str))
         return false;
 
