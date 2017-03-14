@@ -331,8 +331,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_storage.html `-moz-anchor-decoration` [10]
   * various values on -{webkit,moz}-user-select **need investigation**
     * test_value_storage.html `user-select` [3]
-  * -moz-default-background-color
-    * test_value_storage.html `-moz-default-background-color` [1]
   * several prefixed values in cursor property
     * test_value_storage.html `cursor` [4]
   * moz-prefixed values of overflow shorthand bug 1330888
@@ -355,7 +353,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_pointer-events.html [2]
     * test_value_storage.html `pointer-events` [8]
   * new syntax of rgba?() and hsla?() functions servo/rust-cssparser#113
-    * test_value_storage.html `'color'` [37]
+    * test_value_storage.html `'color'` [36]
     * ... `rgb(100, 100.0, 100)` [1]
   * color interpolation hint not supported servo/servo#15166
     * test_value_storage.html `'linear-gradient` [50]
