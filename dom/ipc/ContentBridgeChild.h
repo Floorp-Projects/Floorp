@@ -81,6 +81,11 @@ protected:
   virtual bool
   DeallocPChildToParentStreamChild(mozilla::ipc::PChildToParentStreamChild* aActor) override;
 
+  virtual PParentToChildStreamChild* AllocPParentToChildStreamChild() override;
+
+  virtual bool
+  DeallocPParentToChildStreamChild(PParentToChildStreamChild* aActor) override;
+
   virtual PFileDescriptorSetChild*
   AllocPFileDescriptorSetChild(const mozilla::ipc::FileDescriptor& aFD) override;
 

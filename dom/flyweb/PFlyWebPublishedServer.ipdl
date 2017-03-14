@@ -6,6 +6,7 @@
 
 include protocol PContent;
 include protocol PChildToParentStream;
+include protocol PParentToChildStream;
 include protocol PFileDescriptorSet;
 include protocol PTransportProvider;
 include FetchTypes;

@@ -429,6 +429,16 @@ public:
   virtual bool
   DeallocPChildToParentStreamParent(PChildToParentStreamParent* aActor) override;
 
+  virtual PParentToChildStreamParent*
+  SendPParentToChildStreamConstructor(PParentToChildStreamParent*) override;
+
+  virtual PFileDescriptorSetParent*
+  SendPFileDescriptorSetConstructor(const FileDescriptor&) override;
+
+  virtual PParentToChildStreamParent* AllocPParentToChildStreamParent() override;
+  virtual bool
+  DeallocPParentToChildStreamParent(PParentToChildStreamParent* aActor) override;
+
   virtual PScreenManagerParent*
   AllocPScreenManagerParent(uint32_t* aNumberOfScreens,
                             float* aSystemDefaultScale,

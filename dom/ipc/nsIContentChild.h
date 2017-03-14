@@ -30,6 +30,7 @@ namespace ipc {
 class FileDescriptor;
 class PFileDescriptorSetChild;
 class PChildToParentStreamChild;
+class PParentToChildStreamChild;
 class Shmem;
 } // namespace ipc
 
@@ -103,6 +104,11 @@ protected:
 
   virtual bool
   DeallocPChildToParentStreamChild(mozilla::ipc::PChildToParentStreamChild* aActor);
+
+  virtual mozilla::ipc::PParentToChildStreamChild* AllocPParentToChildStreamChild();
+
+  virtual bool
+  DeallocPParentToChildStreamChild(mozilla::ipc::PParentToChildStreamChild* aActor);
 
   virtual mozilla::ipc::PFileDescriptorSetChild*
   AllocPFileDescriptorSetChild(const mozilla::ipc::FileDescriptor& aFD);

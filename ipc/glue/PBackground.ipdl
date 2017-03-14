@@ -19,6 +19,7 @@ include protocol PMessagePort;
 include protocol PCameras;
 include protocol PQuota;
 include protocol PChildToParentStream;
+include protocol PParentToChildStream;
 include protocol PServiceWorkerManager;
 include protocol PUDPSocket;
 include protocol PVsync;
@@ -62,6 +63,7 @@ sync protocol PBackground
   manages PCameras;
   manages PQuota;
   manages PChildToParentStream;
+  manages PParentToChildStream;
   manages PServiceWorkerManager;
   manages PUDPSocket;
   manages PVsync;
@@ -111,6 +113,8 @@ parent:
 child:
   async PCache();
   async PCacheStreamControl();
+
+  async PParentToChildStream();
 
 both:
   async PBlob(BlobConstructorParams params);

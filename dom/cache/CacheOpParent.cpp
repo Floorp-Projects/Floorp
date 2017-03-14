@@ -12,7 +12,6 @@
 #include "mozilla/dom/cache/SavedTypes.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/ipc/SendStream.h"
 
 namespace mozilla {
 namespace dom {
@@ -20,7 +19,6 @@ namespace cache {
 
 using mozilla::ipc::FileDescriptorSetParent;
 using mozilla::ipc::PBackgroundParent;
-using mozilla::ipc::SendStreamParent;
 
 CacheOpParent::CacheOpParent(PBackgroundParent* aIpcManager, CacheId aCacheId,
                              const CacheOpArgs& aOpArgs)

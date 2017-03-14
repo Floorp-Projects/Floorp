@@ -146,6 +146,12 @@ protected:
   virtual bool
   DeallocPChildToParentStreamChild(PChildToParentStreamChild* aActor) override;
 
+  virtual PParentToChildStreamChild*
+  AllocPParentToChildStreamChild() override;
+
+  virtual bool
+  DeallocPParentToChildStreamChild(PParentToChildStreamChild* aActor) override;
+
   virtual PAsmJSCacheEntryChild*
   AllocPAsmJSCacheEntryChild(const dom::asmjscache::OpenMode& aOpenMode,
                              const dom::asmjscache::WriteParams& aWriteParams,

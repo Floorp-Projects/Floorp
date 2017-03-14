@@ -20,7 +20,6 @@ namespace mozilla {
 
 namespace ipc {
 class PBackgroundChild;
-class SendStreamChild;
 class AutoIPCStream;
 }
 
