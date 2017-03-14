@@ -3464,8 +3464,7 @@ HTMLEditRules::WillMakeDefListItem(Selection* aSelection,
 {
   // for now we let WillMakeList handle this
   NS_NAMED_LITERAL_STRING(listType, "dl");
-  return WillMakeList(aSelection, &listType.AsString(), aEntireList, nullptr,
-                      aCancel, aHandled, aItemType);
+  return WillMakeList(aSelection, &listType, aEntireList, nullptr, aCancel, aHandled, aItemType);
 }
 
 nsresult

@@ -458,8 +458,11 @@ nsAppStartup::Quit(uint32_t aMode)
     // No chance of the shutdown being cancelled from here on; tell people
     // we're shutting down for sure while all services are still available.
     if (obsService) {
+      NS_NAMED_LITERAL_STRING(shutdownStr, "shutdown");
+      NS_NAMED_LITERAL_STRING(restartStr, "restart");
       obsService->NotifyObservers(nullptr, "quit-application",
-        (mRestart || mRestartNotSameProfile) ? u"restart" : u"shutdown");
+        (mRestart || mRestartNotSameProfile) ?
+         restartStr.get() : shutdownStr.get());
     }
 
     if (!mRunning) {

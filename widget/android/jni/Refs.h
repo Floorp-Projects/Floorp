@@ -748,22 +748,12 @@ public:
         , mEnv(env)
     {}
 
-    MOZ_IMPLICIT StringParam(const nsLiteralString& str, JNIEnv* env = Ref::FindEnv())
-        : Ref(GetString(env, str))
-        , mEnv(env)
-    {}
-
     MOZ_IMPLICIT StringParam(const char16_t* str, JNIEnv* env = Ref::FindEnv())
         : Ref(GetString(env, nsDependentString(str)))
         , mEnv(env)
     {}
 
     MOZ_IMPLICIT StringParam(const nsACString& str, JNIEnv* env = Ref::FindEnv())
-        : Ref(GetString(env, NS_ConvertUTF8toUTF16(str)))
-        , mEnv(env)
-    {}
-
-    MOZ_IMPLICIT StringParam(const nsLiteralCString& str, JNIEnv* env = Ref::FindEnv())
         : Ref(GetString(env, NS_ConvertUTF8toUTF16(str)))
         , mEnv(env)
     {}
