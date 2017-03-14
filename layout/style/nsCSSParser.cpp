@@ -14050,7 +14050,6 @@ CSSParserImpl::ParseFont()
       AppendValue(eCSSProperty_font_feature_settings, family);
       AppendValue(eCSSProperty_font_language_override, family);
       AppendValue(eCSSProperty_font_kerning, family);
-      AppendValue(eCSSProperty_font_synthesis, family);
       AppendValue(eCSSProperty_font_variant_alternates, family);
       AppendValue(eCSSProperty_font_variant_caps, family);
       AppendValue(eCSSProperty_font_variant_east_asian, family);
@@ -14071,7 +14070,6 @@ CSSParserImpl::ParseFont()
       AppendValue(eCSSProperty_font_feature_settings, systemFont);
       AppendValue(eCSSProperty_font_language_override, systemFont);
       AppendValue(eCSSProperty_font_kerning, systemFont);
-      AppendValue(eCSSProperty_font_synthesis, systemFont);
       AppendValue(eCSSProperty_font_variant_alternates, systemFont);
       AppendValue(eCSSProperty_font_variant_caps, systemFont);
       AppendValue(eCSSProperty_font_variant_east_asian, systemFont);
@@ -14178,9 +14176,6 @@ CSSParserImpl::ParseFont()
       AppendValue(eCSSProperty_font_language_override, nsCSSValue(eCSSUnit_Normal));
       AppendValue(eCSSProperty_font_kerning,
                   nsCSSValue(NS_FONT_KERNING_AUTO, eCSSUnit_Enumerated));
-      AppendValue(eCSSProperty_font_synthesis,
-                  nsCSSValue(NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE,
-                             eCSSUnit_Enumerated));
       AppendValue(eCSSProperty_font_variant_alternates,
                   nsCSSValue(eCSSUnit_Normal));
       AppendValue(eCSSProperty_font_variant_east_asian,
@@ -16101,14 +16096,13 @@ bool CSSParserImpl::ParseWillChange()
       }
     }
 
-    nsString str;
-    value.GetStringValue(str);
-    if (str.LowerCaseEqualsLiteral("default") ||
-        str.LowerCaseEqualsLiteral("will-change")) {
+    value.AtomizeIdentValue();
+    nsIAtom* atom = value.GetAtomValue();
+    if (atom == nsGkAtoms::_default || atom == nsGkAtoms::willChange) {
       return false;
     }
 
-    currentListValue->mValue = value;
+    currentListValue->mValue = Move(value);
 
     if (!ExpectSymbol(',', true)) {
       break;

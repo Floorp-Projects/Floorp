@@ -114,6 +114,10 @@
                            class="subviewbutton"
                            observes="viewTabsSidebar"
                            label="&appMenuRemoteTabs.sidebar.label;"/>
+            <toolbarbutton id="PanelUI-remotetabs-view-managedevices"
+                           class="subviewbutton"
+                           label="&appMenuRemoteTabs.managedevices.label;"
+                           oncommand="gFxAccounts.openDevicesManagementPage('syncedtabs-menupanel');"/>
             <toolbarbutton id="PanelUI-remotetabs-syncnow"
                            observes="sync-status"
                            class="subviewbutton"

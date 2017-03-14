@@ -153,6 +153,8 @@ class MessageChannel : HasResultCodes
     // Asynchronously send a message to the other side of the channel
     bool Send(Message* aMsg);
 
+    void SendBuildID();
+
     // Asynchronously deliver a message back to this side of the
     // channel
     bool Echo(Message* aMsg);

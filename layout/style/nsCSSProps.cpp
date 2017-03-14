@@ -2818,7 +2818,6 @@ static const nsCSSPropertyID gFontSubpropTable[] = {
   eCSSProperty_font_feature_settings,
   eCSSProperty_font_language_override,
   eCSSProperty_font_kerning,
-  eCSSProperty_font_synthesis,
   eCSSProperty_font_variant_alternates,
   eCSSProperty_font_variant_caps,
   eCSSProperty_font_variant_east_asian,

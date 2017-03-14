@@ -29,8 +29,8 @@
 
 // Used to notify begin and end of a heavy IO task.
 #define OBSERVER_TOPIC_HEAVY_IO "heavy-io-task"
-#define OBSERVER_DATA_VACUUM_BEGIN NS_LITERAL_STRING("vacuum-begin")
-#define OBSERVER_DATA_VACUUM_END NS_LITERAL_STRING("vacuum-end")
+#define OBSERVER_DATA_VACUUM_BEGIN u"vacuum-begin"
+#define OBSERVER_DATA_VACUUM_END u"vacuum-end"
 
 // This preferences root will contain last vacuum timestamps (in seconds) for
 // each database.  The database filename is used as a key.
@@ -191,7 +191,7 @@ Vacuumer::execute()
   if (os) {
     rv =
       os->NotifyObservers(nullptr, OBSERVER_TOPIC_HEAVY_IO,
-                          OBSERVER_DATA_VACUUM_BEGIN.get());
+                          OBSERVER_DATA_VACUUM_BEGIN);
     MOZ_ASSERT(NS_SUCCEEDED(rv), "Should be able to notify");
   }
 
@@ -289,7 +289,7 @@ Vacuumer::notifyCompletion(bool aSucceeded)
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
     os->NotifyObservers(nullptr, OBSERVER_TOPIC_HEAVY_IO,
-                        OBSERVER_DATA_VACUUM_END.get());
+                        OBSERVER_DATA_VACUUM_END);
   }
 
   nsresult rv = mParticipant->OnEndVacuum(aSucceeded);

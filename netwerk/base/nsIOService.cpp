@@ -834,9 +834,10 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
             nsCOMPtr<nsIConsoleService> consoleService =
                 do_GetService(NS_CONSOLESERVICE_CONTRACTID);
             if (consoleService) {
-                consoleService->LogStringMessage(NS_LITERAL_STRING(
-                    "Http channel implementation doesn't support nsIUploadChannel2. An extension has supplied a non-functional http protocol handler. This will break behavior and in future releases not work at all."
-                                                                   ).get());
+                consoleService->LogStringMessage(u"Http channel implementation "
+                    "doesn't support nsIUploadChannel2. An extension has "
+                    "supplied a non-functional http protocol handler. This will "
+                    "break behavior and in future releases not work at all.");
             }
             gHasWarnedUploadChannel2 = true;
         }
@@ -1062,14 +1063,13 @@ nsIOService::SetOffline(bool offline)
         offline = mSetOfflineValue;
 
         if (offline && !mOffline) {
-            NS_NAMED_LITERAL_STRING(offlineString, NS_IOSERVICE_OFFLINE);
             mOffline = true; // indicate we're trying to shutdown
 
             // don't care if notifications fail
             if (observerService)
                 observerService->NotifyObservers(subject,
                                                  NS_IOSERVICE_GOING_OFFLINE_TOPIC,
-                                                 offlineString.get());
+                                                 u"" NS_IOSERVICE_OFFLINE);
 
             if (mSocketTransportService)
                 mSocketTransportService->SetOffline(true);
@@ -1078,7 +1078,7 @@ nsIOService::SetOffline(bool offline)
             if (observerService)
                 observerService->NotifyObservers(subject,
                                                  NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
-                                                 offlineString.get());
+                                                 u"" NS_IOSERVICE_OFFLINE);
         }
         else if (!offline && mOffline) {
             // go online
@@ -1193,13 +1193,12 @@ nsIOService::SetConnectivityInternal(bool aConnectivity)
     } else {
         // If we were previously online and lost connectivity
         // send the OFFLINE notification
-        const nsLiteralString offlineString(u"" NS_IOSERVICE_OFFLINE);
         observerService->NotifyObservers(static_cast<nsIIOService *>(this),
                                          NS_IOSERVICE_GOING_OFFLINE_TOPIC,
-                                         offlineString.get());
+                                         u"" NS_IOSERVICE_OFFLINE);
         observerService->NotifyObservers(static_cast<nsIIOService *>(this),
                                          NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
-                                         offlineString.get());
+                                         u"" NS_IOSERVICE_OFFLINE);
     }
     return NS_OK;
 }

@@ -49,7 +49,7 @@ extensions.registerSchemaAPI("runtime", "addon_parent", context => {
               fire.sync({reason: "install"});
               break;
             case "ADDON_UPGRADE":
-              fire.sync({reason: "update"});
+              fire.sync({reason: "update", previousVersion: extension.addonData.oldVersion});
               break;
           }
         };

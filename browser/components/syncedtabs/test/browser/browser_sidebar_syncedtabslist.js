@@ -310,6 +310,7 @@ add_task(function* testSyncedTabsSidebarContextMenu() {
     ["menuitem#syncedTabsCopySelected", { hidden: false }],
     ["menuseparator", { hidden: false }],
     ["menuitem#syncedTabsOpenAllInTabs", { hidden: true }],
+    ["menuitem#syncedTabsManageDevices", { hidden: true }],
     ["menuitem#syncedTabsRefresh", { hidden: false }],
   ];
   yield* testContextMenu(syncedTabsDeckComponent,
@@ -317,7 +318,7 @@ add_task(function* testSyncedTabsSidebarContextMenu() {
                          "#tab-7cqCr77ptzX3-0",
                          tabMenuItems);
 
-  info("Right-clicking a client should show the Open All in Tabs action");
+  info("Right-clicking a client should show the Open All in Tabs and Manage devices actions");
   let sidebarMenuItems = [
     ["menuitem#syncedTabsOpenSelected", { hidden: true }],
     ["menuitem#syncedTabsOpenSelectedInTab", { hidden: true }],
@@ -328,6 +329,7 @@ add_task(function* testSyncedTabsSidebarContextMenu() {
     ["menuitem#syncedTabsCopySelected", { hidden: true }],
     ["menuseparator", { hidden: true }],
     ["menuitem#syncedTabsOpenAllInTabs", { hidden: false }],
+    ["menuitem#syncedTabsManageDevices", { hidden: false }],
     ["menuitem#syncedTabsRefresh", { hidden: false }],
   ];
   yield* testContextMenu(syncedTabsDeckComponent,
@@ -346,6 +348,7 @@ add_task(function* testSyncedTabsSidebarContextMenu() {
     ["menuitem#syncedTabsCopySelected", { hidden: true }],
     ["menuseparator", { hidden: true }],
     ["menuitem#syncedTabsOpenAllInTabs", { hidden: true }],
+    ["menuitem#syncedTabsManageDevices", { hidden: false }],
     ["menuitem#syncedTabsRefresh", { hidden: false }],
   ];
   yield* testContextMenu(syncedTabsDeckComponent,

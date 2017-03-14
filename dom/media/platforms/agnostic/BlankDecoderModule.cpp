@@ -4,114 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/CheckedInt.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/RefPtr.h"
+#include "nsRect.h"
+#include "nsSize.h"
+#include "DummyMediaDataDecoder.h"
 #include "ImageContainer.h"
-#include "MP4Decoder.h"
-#include "MediaDecoderReader.h"
+#include "MediaData.h"
 #include "MediaInfo.h"
 #include "PlatformDecoderModule.h"
-#include "ReorderQueue.h"
-#include "TimeUnits.h"
 #include "VideoUtils.h"
-#include "mozilla/CheckedInt.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/TaskQueue.h"
-#include "mozilla/mozalloc.h" // for operator new, and new (fallible)
-#include "mp4_demuxer/AnnexB.h"
-#include "mp4_demuxer/H264.h"
-#include "nsAutoPtr.h"
-#include "nsRect.h"
 
 namespace mozilla {
 
-// Decoder that uses a passed in object's Create function to create blank
-// MediaData objects.
-template<class BlankMediaDataCreator>
-class BlankMediaDataDecoder : public MediaDataDecoder
-{
-public:
-  BlankMediaDataDecoder(BlankMediaDataCreator* aCreator,
-                        const CreateDecoderParams& aParams)
-    : mCreator(aCreator)
-    , mIsH264(MP4Decoder::IsH264(aParams.mConfig.mMimeType))
-    , mMaxRefFrames(
-        mIsH264
-        ? mp4_demuxer::AnnexB::HasSPS(aParams.VideoConfig().mExtraData)
-          ? mp4_demuxer::H264::ComputeMaxRefFrames(
-              aParams.VideoConfig().mExtraData)
-          : 16
-        : 0)
-    , mType(aParams.mConfig.GetType())
-  {
-  }
-
-  RefPtr<InitPromise> Init() override
-  {
-    return InitPromise::CreateAndResolve(mType, __func__);
-  }
-
-  RefPtr<ShutdownPromise> Shutdown() override
-  {
-    return ShutdownPromise::CreateAndResolve(true, __func__);
-  }
-
-  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override
-  {
-    RefPtr<MediaData> data =
-      mCreator->Create(media::TimeUnit::FromMicroseconds(aSample->mTime),
-                       media::TimeUnit::FromMicroseconds(aSample->mDuration),
-                       aSample->mOffset);
-
-    if (!data) {
-      return DecodePromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
-    }
-
-    // Frames come out in DTS order but we need to output them in PTS order.
-    mReorderQueue.Push(data);
-
-    if (mReorderQueue.Length() > mMaxRefFrames) {
-      return DecodePromise::CreateAndResolve(
-        DecodedData{ mReorderQueue.Pop().get() }, __func__);
-    }
-    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
-  }
-
-  RefPtr<DecodePromise> Drain() override
-  {
-    DecodedData samples;
-    while (!mReorderQueue.IsEmpty()) {
-      samples.AppendElement(mReorderQueue.Pop().get());
-    }
-    return DecodePromise::CreateAndResolve(samples, __func__);
-  }
-
-  RefPtr<FlushPromise> Flush() override
-  {
-    mReorderQueue.Clear();
-    return FlushPromise::CreateAndResolve(true, __func__);
-  }
-
-  const char* GetDescriptionName() const override
-  {
-    return "blank media data decoder";
-  }
-
-  ConversionRequired NeedsConversion() const override
-  {
-    return mIsH264
-           ? ConversionRequired::kNeedAVCC
-           : ConversionRequired::kNeedNone;
-  }
-
-private:
-  nsAutoPtr<BlankMediaDataCreator> mCreator;
-  const bool mIsH264;
-  const uint32_t mMaxRefFrames;
-  ReorderQueue mReorderQueue;
-  TrackInfo::TrackType mType;
-};
-
-class BlankVideoDataCreator
-{
+class BlankVideoDataCreator : public DummyDataCreator {
 public:
   BlankVideoDataCreator(uint32_t aFrameWidth,
                         uint32_t aFrameHeight,
@@ -124,16 +31,14 @@ public:
     mPicture = gfx::IntRect(0, 0, mFrameWidth, mFrameHeight);
   }
 
-  already_AddRefed<MediaData> Create(const media::TimeUnit& aDTS,
-                                     const media::TimeUnit& aDuration,
-                                     int64_t aOffsetInStream)
+  already_AddRefed<MediaData> Create(MediaRawData* aSample) override
   {
     // Create a fake YUV buffer in a 420 format. That is, an 8bpp Y plane,
     // with a U and V plane that are half the size of the Y plane, i.e 8 bit,
-    // 2x2 subsampled.
-    const int sizeY = mFrameWidth * mFrameHeight;
-    const int sizeCbCr = ((mFrameWidth + 1) / 2) * ((mFrameHeight + 1) / 2);
-    auto frame = MakeUnique<uint8_t[]>(sizeY + sizeCbCr);
+    // 2x2 subsampled. Have the data pointer of each frame point to the
+    // first plane, they'll always be zero'd memory anyway.
+    auto frame = MakeUnique<uint8_t[]>(mFrameWidth * mFrameHeight);
+    memset(frame.get(), 0, mFrameWidth * mFrameHeight);
     VideoData::YCbCrBuffer buffer;
 
     // Y plane.
@@ -145,7 +50,7 @@ public:
     buffer.mPlanes[0].mSkip = 0;
 
     // Cb plane.
-    buffer.mPlanes[1].mData = frame.get() + sizeY;
+    buffer.mPlanes[1].mData = frame.get();
     buffer.mPlanes[1].mStride = (mFrameWidth + 1) / 2;
     buffer.mPlanes[1].mHeight = (mFrameHeight + 1) / 2;
     buffer.mPlanes[1].mWidth = (mFrameWidth + 1) / 2;
@@ -153,25 +58,21 @@ public:
     buffer.mPlanes[1].mSkip = 0;
 
     // Cr plane.
-    buffer.mPlanes[2].mData = frame.get() + sizeY;
+    buffer.mPlanes[2].mData = frame.get();
     buffer.mPlanes[2].mStride = (mFrameWidth + 1) / 2;
     buffer.mPlanes[2].mHeight = (mFrameHeight + 1) / 2;
     buffer.mPlanes[2].mWidth = (mFrameWidth + 1) / 2;
     buffer.mPlanes[2].mOffset = 0;
     buffer.mPlanes[2].mSkip = 0;
 
-    // Set to color white.
-    memset(buffer.mPlanes[0].mData, 255, sizeY);
-    memset(buffer.mPlanes[1].mData, 128, sizeCbCr);
-
     return VideoData::CreateAndCopyData(mInfo,
                                         mImageContainer,
-                                        aOffsetInStream,
-                                        aDTS.ToMicroseconds(),
-                                        aDuration.ToMicroseconds(),
+                                        aSample->mOffset,
+                                        aSample->mTime,
+                                        aSample->mDuration,
                                         buffer,
-                                        true,
-                                        aDTS.ToMicroseconds(),
+                                        aSample->mKeyframe,
+                                        aSample->mTime,
                                         mPicture);
   }
 
@@ -183,7 +84,7 @@ private:
   RefPtr<layers::ImageContainer> mImageContainer;
 };
 
-class BlankAudioDataCreator
+class BlankAudioDataCreator : public DummyDataCreator
 {
 public:
   BlankAudioDataCreator(uint32_t aChannelCount, uint32_t aSampleRate)
@@ -191,14 +92,11 @@ public:
   {
   }
 
-  MediaData* Create(const media::TimeUnit& aDTS,
-                    const media::TimeUnit& aDuration,
-                    int64_t aOffsetInStream)
+  already_AddRefed<MediaData> Create(MediaRawData* aSample) override
   {
     // Convert duration to frames. We add 1 to duration to account for
     // rounding errors, so we get a consistent tone.
-    CheckedInt64 frames =
-      UsecsToFrames(aDuration.ToMicroseconds()+1, mSampleRate);
+    CheckedInt64 frames = UsecsToFrames(aSample->mDuration+1, mSampleRate);
     if (!frames.isValid()
         || !mChannelCount
         || !mSampleRate
@@ -219,13 +117,14 @@ public:
       }
       mFrameSum++;
     }
-    return new AudioData(aOffsetInStream,
-                         aDTS.ToMicroseconds(),
-                         aDuration.ToMicroseconds(),
-                         uint32_t(frames.value()),
-                         Move(samples),
-                         mChannelCount,
-                         mSampleRate);
+    RefPtr<AudioData> data(new AudioData(aSample->mOffset,
+                                         aSample->mTime,
+                                         aSample->mDuration,
+                                         uint32_t(frames.value()),
+                                         Move(samples),
+                                         mChannelCount,
+                                         mSampleRate));
+    return data.forget();
   }
 
 private:
@@ -243,10 +142,10 @@ public:
   CreateVideoDecoder(const CreateDecoderParams& aParams) override
   {
     const VideoInfo& config = aParams.VideoConfig();
-    BlankVideoDataCreator* creator = new BlankVideoDataCreator(
-      config.mDisplay.width, config.mDisplay.height, aParams.mImageContainer);
+    UniquePtr<DummyDataCreator> creator =
+      MakeUnique<BlankVideoDataCreator>(config.mDisplay.width, config.mDisplay.height, aParams.mImageContainer);
     RefPtr<MediaDataDecoder> decoder =
-      new BlankMediaDataDecoder<BlankVideoDataCreator>(creator, aParams);
+      new DummyMediaDataDecoder(Move(creator), "blank media data decoder", aParams);
     return decoder.forget();
   }
 
@@ -255,11 +154,10 @@ public:
   CreateAudioDecoder(const CreateDecoderParams& aParams) override
   {
     const AudioInfo& config = aParams.AudioConfig();
-    BlankAudioDataCreator* creator = new BlankAudioDataCreator(
-      config.mChannels, config.mRate);
-
+    UniquePtr<DummyDataCreator> creator =
+      MakeUnique<BlankAudioDataCreator>(config.mChannels, config.mRate);
     RefPtr<MediaDataDecoder> decoder =
-      new BlankMediaDataDecoder<BlankAudioDataCreator>(creator, aParams);
+      new DummyMediaDataDecoder(Move(creator), "blank media data decoder", aParams);
     return decoder.forget();
   }
 

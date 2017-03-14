@@ -5057,16 +5057,16 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         // Windows won't let us do that. Bug 212316.
         nsCOMPtr<nsIObserverService> obsServ =
           mozilla::services::GetObserverService();
-        NS_NAMED_LITERAL_STRING(context, "shutdown-persist");
-        NS_NAMED_LITERAL_STRING(syncShutdown, "syncShutdown");
-        obsServ->NotifyObservers(nullptr, "quit-application-granted", syncShutdown.get());
+        const char16_t* context = u"shutdown-persist";
+        const char16_t* syncShutdown = u"syncShutdown";
+        obsServ->NotifyObservers(nullptr, "quit-application-granted", syncShutdown);
         obsServ->NotifyObservers(nullptr, "quit-application-forced", nullptr);
         obsServ->NotifyObservers(nullptr, "quit-application", nullptr);
-        obsServ->NotifyObservers(nullptr, "profile-change-net-teardown", context.get());
-        obsServ->NotifyObservers(nullptr, "profile-change-teardown", context.get());
-        obsServ->NotifyObservers(nullptr, "profile-before-change", context.get());
-        obsServ->NotifyObservers(nullptr, "profile-before-change-qm", context.get());
-        obsServ->NotifyObservers(nullptr, "profile-before-change-telemetry", context.get());
+        obsServ->NotifyObservers(nullptr, "profile-change-net-teardown", context);
+        obsServ->NotifyObservers(nullptr, "profile-change-teardown", context);
+        obsServ->NotifyObservers(nullptr, "profile-before-change", context);
+        obsServ->NotifyObservers(nullptr, "profile-before-change-qm", context);
+        obsServ->NotifyObservers(nullptr, "profile-before-change-telemetry", context);
         // Then a controlled but very quick exit.
         _exit(0);
       }

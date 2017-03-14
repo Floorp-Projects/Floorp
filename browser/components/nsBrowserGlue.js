@@ -148,6 +148,8 @@ function BrowserGlue() {
       return sanitizerScope.Sanitizer;
     });
 
+  XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts", "resource://gre/modules/FxAccounts.jsm");
+
   this._init();
 }
 
@@ -304,6 +306,10 @@ BrowserGlue.prototype = {
         } else if (data == "smart-bookmarks-init") {
           this.ensurePlacesDefaultQueriesInitialized().then(() => {
             Services.obs.notifyObservers(null, "test-smart-bookmarks-done", null);
+          });
+        } else if (data == "mock-fxaccounts") {
+          Object.defineProperty(this, "fxAccounts", {
+            value: subject.wrappedJSObject
           });
         }
         break;
@@ -2302,21 +2308,21 @@ BrowserGlue.prototype = {
     let body = accountsBundle.formatStringFromName("deviceConnectedBody" +
                                                    (deviceName ? "" : ".noDeviceName"),
                                                    [deviceName], 1);
-    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.settings.devices.uri");
 
-    function clickCallback(subject, topic, data) {
+    let clickCallback = async (subject, topic, data) => {
       if (topic != "alertclickcallback")
         return;
+      let url = await this.fxAccounts.promiseAccountsManageDevicesURI("device-connected-notification");
       let win = RecentWindow.getMostRecentBrowserWindow({private: false});
       if (!win) {
         Services.appShell.hiddenDOMWindow.open(url);
       } else {
         win.gBrowser.addTab(url);
       }
-    }
+    };
 
     try {
-      AlertsService.showAlertNotification(null, title, body, true, url, clickCallback);
+      AlertsService.showAlertNotification(null, title, body, true, null, clickCallback);
     } catch (ex) {
       Cu.reportError("Error notifying of a new Sync device: " + ex);
     }

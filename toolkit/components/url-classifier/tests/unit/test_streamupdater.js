@@ -102,7 +102,7 @@ function testInvalidUrlForward() {
 
   // add1Urls is present, but that is an artifact of the way we do the test.
   var assertions = {
-    "tableData" : "",
+    "tableData" : "test-phish-simple;a:1",
     "urlsExist" : add1Urls
   };
 
@@ -120,7 +120,7 @@ function testErrorUrlForward() {
 
   // add1Urls is present, but that is an artifact of the way we do the test.
   var assertions = {
-    "tableData" : "",
+    "tableData" : "test-phish-simple;a:1",
     "urlsExist" : add1Urls
   };
 

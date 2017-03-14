@@ -112,7 +112,10 @@ protected:
                            already_AddRefed<nsIRunnable>&& aRunnable);
 
   void CreateEventTargets(bool aNeedValidation);
-  void Shutdown();
+
+  // Shuts down this dispatcher. If aXPCOMShutdown is true, invalidates this
+  // dispatcher.
+  void Shutdown(bool aXPCOMShutdown);
 
   enum ValidationType {
     StartValidation,

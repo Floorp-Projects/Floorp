@@ -6,7 +6,6 @@
 #ifndef mozilla_intl_LocaleService_h__
 #define mozilla_intl_LocaleService_h__
 
-#include "mozilla/StaticPtr.h"
 #include "nsIObserver.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -63,7 +62,7 @@ public:
    * Use this accessor in C++ code that just wants to call a method on the
    * instance, but does not need to hold a reference, as in
    *    nsAutoCString str;
-   *    LocaleService::GetInstance()->GetAppLocale(str);
+   *    LocaleService::GetInstance()->GetAppLocaleAsLangTag(str);
    */
   static LocaleService* GetInstance();
 
@@ -88,11 +87,12 @@ public:
    *
    * Usage:
    *   nsTArray<nsCString> appLocales;
-   *   LocaleService::GetInstance()->GetAppLocales(appLocales);
+   *   LocaleService::GetInstance()->GetAppLocalesAsLangTags(appLocales);
    *
    * (See mozILocaleService.idl for a JS-callable version of this.)
    */
-  void GetAppLocales(nsTArray<nsCString>& aRetVal);
+  void GetAppLocalesAsLangTags(nsTArray<nsCString>& aRetVal);
+  void GetAppLocalesAsBCP47(nsTArray<nsCString>& aRetVal);
 
   /**
    * Returns a list of locales that the user requested the app to be

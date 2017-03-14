@@ -13,6 +13,11 @@
      {}
     ]
    ],
+   "focus/Selection_addRange_into_iframe_iframe.html": [
+    [
+     {}
+    ]
+   ],
    "html/semantics/scripting-1/the-script-element/support/missing_import.js": [
     [
      {}
@@ -348,6 +353,90 @@
    "fetch/api/redirect/redirect-referrer.https.html": [
     [
      "/_mozilla/fetch/api/redirect/redirect-referrer.https.html",
+     {}
+    ]
+   ],
+   "focus/Range_collapse.html": [
+    [
+     "/_mozilla/focus/Range_collapse.html",
+     {}
+    ]
+   ],
+   "focus/Range_selectNode.html": [
+    [
+     "/_mozilla/focus/Range_selectNode.html",
+     {}
+    ]
+   ],
+   "focus/Range_setEnd.html": [
+    [
+     "/_mozilla/focus/Range_setEnd.html",
+     {}
+    ]
+   ],
+   "focus/Range_setStart.html": [
+    [
+     "/_mozilla/focus/Range_setStart.html",
+     {}
+    ]
+   ],
+   "focus/Selection_addRange.html": [
+    [
+     "/_mozilla/focus/Selection_addRange.html",
+     {}
+    ]
+   ],
+   "focus/Selection_addRange_into_iframe.html": [
+    [
+     "/_mozilla/focus/Selection_addRange_into_iframe.html",
+     {}
+    ]
+   ],
+   "focus/Selection_collapse.html": [
+    [
+     "/_mozilla/focus/Selection_collapse.html",
+     {}
+    ]
+   ],
+   "focus/Selection_collapseToEnd.html": [
+    [
+     "/_mozilla/focus/Selection_collapseToEnd.html",
+     {}
+    ]
+   ],
+   "focus/Selection_collapseToStart.html": [
+    [
+     "/_mozilla/focus/Selection_collapseToStart.html",
+     {}
+    ]
+   ],
+   "focus/Selection_extend.html": [
+    [
+     "/_mozilla/focus/Selection_extend.html",
+     {}
+    ]
+   ],
+   "focus/Selection_removeAllRanges.html": [
+    [
+     "/_mozilla/focus/Selection_removeAllRanges.html",
+     {}
+    ]
+   ],
+   "focus/Selection_removeRange.html": [
+    [
+     "/_mozilla/focus/Selection_removeRange.html",
+     {}
+    ]
+   ],
+   "focus/Selection_selectAllChildren.html": [
+    [
+     "/_mozilla/focus/Selection_selectAllChildren.html",
+     {}
+    ]
+   ],
+   "focus/Selection_setBaseAndExtent.html": [
+    [
+     "/_mozilla/focus/Selection_setBaseAndExtent.html",
      {}
     ]
    ],
@@ -748,6 +837,66 @@
   ],
   "fetch/api/redirect/redirect-referrer.https.html": [
    "99cbd16b78771f35e075e4012d8dbc5dce3209c0",
+   "testharness"
+  ],
+  "focus/Range_collapse.html": [
+   "95c795db4cec3ccb1e2632c547e34292364d9c92",
+   "testharness"
+  ],
+  "focus/Range_selectNode.html": [
+   "699bb01144327600e57c715c84cc72ac2d7439d7",
+   "testharness"
+  ],
+  "focus/Range_setEnd.html": [
+   "481cecc11bb7a79bdfa171529bd8519dc69e33d4",
+   "testharness"
+  ],
+  "focus/Range_setStart.html": [
+   "2e23bd20e25da1b4c10c0f8e78162a91ab05a798",
+   "testharness"
+  ],
+  "focus/Selection_addRange.html": [
+   "03b60c8294d4421810d883255ba49784f390fea5",
+   "testharness"
+  ],
+  "focus/Selection_addRange_into_iframe.html": [
+   "8d914033edb0bf1a517cf886f7f9c95dd41ec116",
+   "testharness"
+  ],
+  "focus/Selection_addRange_into_iframe_iframe.html": [
+   "8e8eb8ee04e7a0879828de2c5fb2501c088504a4",
+   "support"
+  ],
+  "focus/Selection_collapse.html": [
+   "1110ffe713c8effbf2b557faec5e367c00e8b5a9",
+   "testharness"
+  ],
+  "focus/Selection_collapseToEnd.html": [
+   "92b38fcaffdee31422690f35c3d9147452b3a2e2",
+   "testharness"
+  ],
+  "focus/Selection_collapseToStart.html": [
+   "e47f9a13430db7d9f2c18ee41f9445ea372f0a18",
+   "testharness"
+  ],
+  "focus/Selection_extend.html": [
+   "385c583117378f34b301a61391178aac6e3d784b",
+   "testharness"
+  ],
+  "focus/Selection_removeAllRanges.html": [
+   "2002fb41dfadb0e91abf5075f9c6117f06201f9a",
+   "testharness"
+  ],
+  "focus/Selection_removeRange.html": [
+   "7950a74c29501a4d7abb86cdcb126928c51c6d9b",
+   "testharness"
+  ],
+  "focus/Selection_selectAllChildren.html": [
+   "6cd254447dea53268ce9ec8ce8a075c7803b5393",
+   "testharness"
+  ],
+  "focus/Selection_setBaseAndExtent.html": [
+   "cd25aacffbaabbeafa443140f9b08ff75a838116",
    "testharness"
   ],
   "html/semantics/forms/textfieldselection/selection-value-interactions.html": [

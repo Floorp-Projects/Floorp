@@ -19,7 +19,7 @@ const localeSvc =
  */
 function getLocales(locales) {
   if (!locales) {
-    return localeSvc.getAppLocales();
+    return localeSvc.getAppLocalesAsBCP47();
   }
   return locales;
 }
