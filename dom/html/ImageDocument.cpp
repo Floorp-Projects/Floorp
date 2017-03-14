@@ -585,8 +585,7 @@ ImageDocument::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
     NS_ConvertUTF8toUTF16 srcString(src);
     const char16_t* formatString[] = { srcString.get() };
     nsXPIDLString errorMsg;
-    NS_NAMED_LITERAL_STRING(str, "InvalidImage");
-    mStringBundle->FormatStringFromName(str.get(), formatString, 1,
+    mStringBundle->FormatStringFromName(u"InvalidImage", formatString, 1,
                                         getter_Copies(errorMsg));
 
     mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::alt, errorMsg, false);

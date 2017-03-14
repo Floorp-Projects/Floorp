@@ -460,16 +460,21 @@ nsThread::ThreadFunc(void* aArg)
   self->mThread = PR_GetCurrentThread();
   SetupCurrentThreadForChaosMode();
 
-  if (initData->name.Length() > 0) {
+  if (!initData->name.IsEmpty()) {
     PR_SetCurrentThreadName(initData->name.BeginReading());
-
-    profiler_register_thread(initData->name.BeginReading(), &stackTop);
   }
 
   // Inform the ThreadManager
   nsThreadManager::get().RegisterCurrentThread(*self);
 
   mozilla::IOInterposer::RegisterCurrentThread();
+
+  // This must come after the call to nsThreadManager::RegisterCurrentThread(),
+  // because that call is needed to properly set up this thread as an nsThread,
+  // which profiler_register_thread() requires. See bug 1347007.
+  if (!initData->name.IsEmpty()) {
+    profiler_register_thread(initData->name.BeginReading(), &stackTop);
+  }
 
   // Wait for and process startup event
   nsCOMPtr<nsIRunnable> event;
@@ -1493,15 +1498,12 @@ nsThread::DoMainThreadSpecificProcessing(bool aReallyWait)
     if (mpPending != MemPressure_None) {
       nsCOMPtr<nsIObserverService> os = services::GetObserverService();
 
-      // Use no-forward to prevent the notifications from being transferred to
-      // the children of this process.
-      NS_NAMED_LITERAL_STRING(lowMem, "low-memory-no-forward");
-      NS_NAMED_LITERAL_STRING(lowMemOngoing, "low-memory-ongoing-no-forward");
-
       if (os) {
+        // Use no-forward to prevent the notifications from being transferred to
+        // the children of this process.
         os->NotifyObservers(nullptr, "memory-pressure",
-                            mpPending == MemPressure_New ? lowMem.get() :
-                            lowMemOngoing.get());
+                            mpPending == MemPressure_New ? u"low-memory-no-forward" :
+                            u"low-memory-ongoing-no-forward");
       } else {
         NS_WARNING("Can't get observer service!");
       }

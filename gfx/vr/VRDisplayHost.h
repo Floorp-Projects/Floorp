@@ -38,7 +38,6 @@ public:
   void RemoveLayer(VRLayerParent* aLayer);
 
   virtual VRHMDSensorState GetSensorState() = 0;
-  virtual VRHMDSensorState GetImmediateSensorState() = 0;
   virtual void ZeroSensor() = 0;
   virtual void StartPresentation() = 0;
   virtual void StopPresentation() = 0;

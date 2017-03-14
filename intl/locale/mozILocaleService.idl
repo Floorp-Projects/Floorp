@@ -59,12 +59,19 @@ interface mozILocaleService : nsISupports
    *
    * This API always returns at least one locale.
    *
+   * When retrieving the locales for language negotiation and matching
+   * to language resources, use the language tag form.
+   * When retrieving the locales for Intl API or ICU locale settings,
+   * use the BCP47 form.
+   *
    * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
    *
    * (See LocaleService.h for a more C++-friendly version of this.)
    */
-  void getAppLocales([optional] out unsigned long aCount,
-                     [retval, array, size_is(aCount)] out string aLocales);
+  void getAppLocalesAsLangTags([optional] out unsigned long aCount,
+                               [retval, array, size_is(aCount)] out string aLocales);
+  void getAppLocalesAsBCP47([optional] out unsigned long aCount,
+                            [retval, array, size_is(aCount)] out string aLocales);
 
   /**
    * Negotiates the best locales out of a ordered list of requested locales and
@@ -100,14 +107,20 @@ interface mozILocaleService : nsISupports
    * The result is a valid locale ID and it should be
    * used for all APIs that do not handle language negotiation.
    *
-   * Where possible, getAppLocales() should be preferred over this API and
+   * When retrieving the locales for language negotiation and matching
+   * to language resources, use the language tag form.
+   * When retrieving the locales for Intl API or ICU locale settings,
+   * use the BCP47 form.
+   *
+   * Where possible, getAppLocales*() should be preferred over this API and
    * all callsites should handle some form of "best effort" language
    * negotiation to respect user preferences in case the use case does
    * not have data for the first locale in the list.
    *
    * Example: "zh-Hans-HK"
    */
-  ACString getAppLocale();
+  ACString getAppLocaleAsLangTag();
+  ACString getAppLocaleAsBCP47();
 
   /**
    * Returns a list of locales that the user requested the app to be
@@ -120,4 +133,23 @@ interface mozILocaleService : nsISupports
    */
   void getRequestedLocales([optional] out unsigned long aCount,
                            [retval, array, size_is(aCount)] out string aLocales);
+
+  /**
+   * Sets a list of locales that the user requested the app to be
+   * localized to.
+   *
+   * The argument is an ordered list of locale IDs which should be
+   * used as a requestedLocales input list for language negotiation.
+   *
+   * The current implementation is limited to handle at most one
+   * locale passed to the API. In the future we'll transition to support
+   * whole fallback chain.
+   *
+   * If an empty list is passed, the list of requested locales will
+   * be picked from the operating system.
+   *
+   * Example: ["de"]
+   */
+  void setRequestedLocales([array, size_is(aRequestedCount)] in string aRequested,
+                           [optional] in unsigned long aRequestedCount);
 };

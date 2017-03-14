@@ -201,12 +201,14 @@ MeasuringToolHighlighter.prototype = {
 
     let { pageListenerTarget } = this.env;
 
-    pageListenerTarget.removeEventListener("mousedown", this);
-    pageListenerTarget.removeEventListener("mousemove", this);
-    pageListenerTarget.removeEventListener("mouseup", this);
-    pageListenerTarget.removeEventListener("scroll", this);
-    pageListenerTarget.removeEventListener("pagehide", this);
-    pageListenerTarget.removeEventListener("mouseleave", this);
+    if (pageListenerTarget) {
+      pageListenerTarget.removeEventListener("mousedown", this);
+      pageListenerTarget.removeEventListener("mousemove", this);
+      pageListenerTarget.removeEventListener("mouseup", this);
+      pageListenerTarget.removeEventListener("scroll", this);
+      pageListenerTarget.removeEventListener("pagehide", this);
+      pageListenerTarget.removeEventListener("mouseleave", this);
+    }
 
     this.markup.destroy();
 
@@ -535,7 +537,11 @@ MeasuringToolHighlighter.prototype = {
         this.hideLabel("position");
         break;
       case "pagehide":
-        this.destroy();
+        // If a page hide event is triggered for current window's highlighter, hide the
+        // highlighter.
+        if (event.target.defaultView === this.env.window) {
+          this.destroy();
+        }
         break;
     }
   }

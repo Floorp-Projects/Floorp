@@ -118,10 +118,10 @@ const TEST_DATA = [
       let {points} = yield testActor.getHighlighterRegionPath("padding");
       points = points[0];
 
-      is(Math.ceil(topY1), points[0][1], "Top guide's y1 is correct");
-      is(Math.floor(rightX1), points[1][0], "Right guide's x1 is correct");
-      is(Math.floor(bottomY1), points[2][1], "Bottom guide's y1 is correct");
-      is(Math.ceil(leftX1), points[3][0], "Left guide's x1 is correct");
+      is(topY1, points[0][1], "Top guide's y1 is correct");
+      is(rightX1, points[1][0] - 1, "Right guide's x1 is correct");
+      is(bottomY1, points[2][1] - 1, "Bottom guide's y1 is correct");
+      is(leftX1, points[3][0], "Left guide's x1 is correct");
     }
   },
   {
@@ -140,10 +140,10 @@ const TEST_DATA = [
       let {points} = yield testActor.getHighlighterRegionPath("margin");
       points = points[0];
 
-      is(Math.ceil(topY1), points[0][1], "Top guide's y1 is correct");
-      is(Math.floor(rightX1), points[1][0], "Right guide's x1 is correct");
-      is(Math.floor(bottomY1), points[2][1], "Bottom guide's y1 is correct");
-      is(Math.ceil(leftX1), points[3][0], "Left guide's x1 is correct");
+      is(topY1, points[0][1], "Top guide's y1 is correct");
+      is(rightX1, points[1][0] - 1, "Right guide's x1 is correct");
+      is(bottomY1, points[2][1] - 1, "Bottom guide's y1 is correct");
+      is(leftX1, points[3][0], "Left guide's x1 is correct");
     }
   },
   {

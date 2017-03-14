@@ -130,6 +130,8 @@
         './src/mediapipeline/MediaPipeline.cpp',
         './src/mediapipeline/MediaPipelineFilter.h',
         './src/mediapipeline/MediaPipelineFilter.cpp',
+        './src/mediapipeline/RtpLogger.h',
+        './src/mediapipeline/RtpLogger.cpp',
          # SDP
          './src/sdp/sipcc/ccsdp.h',
          './src/sdp/sipcc/cpr_string.c',

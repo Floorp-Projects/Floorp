@@ -9,6 +9,7 @@
 #define CharT_is_PRUnichar                  1
 #define nsTAString_IncompatibleCharT        nsACString
 #define nsTString_CharT                     nsString
+#define nsTStringRepr_CharT                 nsStringRepr
 #define nsTFixedString_CharT                nsFixedString
 #define nsTAutoString_CharT                 nsAutoString
 #define nsTSubstring_CharT                  nsAString

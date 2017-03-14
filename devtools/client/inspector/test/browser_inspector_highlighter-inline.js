@@ -63,12 +63,12 @@ add_task(function* () {
     let contentRect = yield testActor.getGuidesRectangle();
 
     for (let point of ["p1", "p2", "p3", "p4"]) {
-      is((contentRect[point].x),
-         (expectedContentRect[point].x),
+      is(Math.round(contentRect[point].x),
+         (Math.round(expectedContentRect[point].x)),
          "x coordinate of point " + point +
          " of the content rectangle defined by the outer guides is correct");
-      is((contentRect[point].y),
-         (expectedContentRect[point].y),
+      is(Math.round(contentRect[point].y),
+         (Math.round(expectedContentRect[point].y)),
          "y coordinate of point " + point +
          " of the content rectangle defined by the outer guides is correct");
     }

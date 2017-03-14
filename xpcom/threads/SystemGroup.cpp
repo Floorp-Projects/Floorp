@@ -53,7 +53,7 @@ SystemGroupImpl::InitStatic()
 /* static */ void
 SystemGroupImpl::ShutdownStatic()
 {
-  sSingleton->Shutdown();
+  sSingleton->Shutdown(true);
   sSingleton = nullptr;
 }
 

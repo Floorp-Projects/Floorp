@@ -110,7 +110,7 @@ exports.testPreferedOsLocale = function(assert) {
   prefs.set(PREF_SELECTED_LOCALE, "");
   prefs.set(PREF_ACCEPT_LANGUAGES, "");
 
-  let expectedLocale = Services.locale.getAppLocale().toLowerCase();
+  let expectedLocale = Services.locale.getAppLocaleAsLangTag().toLowerCase();
   let expectedLocaleList = [expectedLocale];
 
   // Add default "en-us" fallback if the main language is not already en-us

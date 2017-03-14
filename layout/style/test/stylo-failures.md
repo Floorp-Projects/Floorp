@@ -331,8 +331,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_storage.html `-moz-anchor-decoration` [10]
   * various values on -{webkit,moz}-user-select **need investigation**
     * test_value_storage.html `user-select` [3]
-  * -moz-default-background-color
-    * test_value_storage.html `-moz-default-background-color` [1]
   * several prefixed values in cursor property
     * test_value_storage.html `cursor` [4]
   * moz-prefixed values of overflow shorthand bug 1330888
@@ -355,7 +353,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_pointer-events.html [2]
     * test_value_storage.html `pointer-events` [8]
   * new syntax of rgba?() and hsla?() functions servo/rust-cssparser#113
-    * test_value_storage.html `'color'` [37]
+    * test_value_storage.html `'color'` [36]
     * ... `rgb(100, 100.0, 100)` [1]
   * color interpolation hint not supported servo/servo#15166
     * test_value_storage.html `'linear-gradient` [50]
@@ -375,8 +373,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_storage.html `calc(50px/` [7]
     * ... `calc(2em / ` [9]
   * calc() doesn't support number value servo/servo#15205
-    * test_value_storage.html `calc(1 +` [1]
-    * ... `calc(-2.5)` [1]
+    * test_value_storage.html `calc(-2.5)` [1]
   * size part of shorthand background/mask always desires two values servo/servo#15199
     * test_value_storage.html `'background'` [18]
     * ... `/ auto none` [34]
@@ -435,9 +432,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_selectors.html `TypeError` [1]
 * issues arround font shorthand servo/servo#15032 servo/servo#15036
   * test_bug377947.html [2]
-  * test_inherit_storage.html `for property 'font-` [2]
-  * test_initial_storage.html `for property 'font-` [1]
-  * test_value_storage.html `'font'` [171]
+  * test_value_storage.html `'font'` [144]
   * test_shorthand_property_getters.html `font shorthand` [2]
   * test_system_font_serialization.html [10]
 * test_value_storage.html `font-size: calc(`: clamp negative value servo/servo#15296 [3]
@@ -454,9 +449,9 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_property_syntax_errors.html `transition-duration`: servo/servo#15343 [20]
   * ... `perspective'`: servo/servo#15337 [20]
   * third length of shadow servo/servo#15490
-    * test_property_syntax_errors.html `box-shadow'` [6]
+    * test_property_syntax_errors.html `box-shadow'` [0]
     * ... `'text-shadow'` [2]
-    * ... `drop-shadow` [6]
+    * ... `drop-shadow` [0]
   * test_property_syntax_errors.html `flex-basis`: servo/servo#15902 [6]
 * Quirks mode support
   * hashless color servo/servo#15341
@@ -497,7 +492,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_storage.html asserts [44]
   * assertion for unsupported or non-animatable property bug 1343710
     * test_animations.html asserts [24]
-* test_value_cloning.html asserts: negative radius bug 1337618 [4]
 
 ## Need Gecko change
 
@@ -510,7 +504,6 @@ Any line which doesn't follow the format above would be ignored like comment.
 ## Spec Unclear
 
 * test_property_syntax_errors.html `'background'`: whether background shorthand should accept "text" [200]
-* test_inherit_computation.html `weight style`: whether font-synthesis should be reset by font w3c/csswg-drafts#1032 [8]
 
 ## Unknown / Unsure
 
