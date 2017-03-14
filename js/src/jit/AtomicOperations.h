@@ -327,9 +327,9 @@ AtomicOperations::isLockfree(int32_t size)
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 # include "jit/mips-shared/AtomicOperations-mips-shared.h"
 #elif defined(__ppc__) || defined(__PPC__)
-# include "jit/none/AtomicOperations-ppc.h"
+# include "jit/none/AtomicOperations-feeling-lucky.h"
 #elif defined(__sparc__)
-# include "jit/none/AtomicOperations-sparc.h"
+# include "jit/none/AtomicOperations-feeling-lucky.h"
 #elif defined(JS_CODEGEN_NONE)
   // You can disable the JIT with --disable-ion but you must still
   // provide the atomic operations that will be used by the JS engine.
@@ -338,15 +338,15 @@ AtomicOperations::isLockfree(int32_t size)
   // in portable C++, hence the default here is to crash.  See the
   // top of the file for more guidance.
 # if defined(__ppc64__) || defined(__PPC64__) || defined(__ppc64le__) || defined(__PPC64LE__)
-#  include "jit/none/AtomicOperations-ppc.h"
+#  include "jit/none/AtomicOperations-feeling-lucky.h"
 # elif defined(__aarch64__)
 #  include "jit/arm64/AtomicOperations-arm64.h"
 # elif defined(__alpha__)
-#  include "jit/none/AtomicOperations-ppc.h"
+#  include "jit/none/AtomicOperations-feeling-lucky.h"
 # elif defined(__hppa__)
-#  include "jit/none/AtomicOperations-ppc.h"
-#elif defined(__sh__)
-#  include "jit/none/AtomicOperations-ppc.h"
+#  include "jit/none/AtomicOperations-feeling-lucky.h"
+# elif defined(__sh__)
+#  include "jit/none/AtomicOperations-feeling-lucky.h"
 # else
 #  include "jit/none/AtomicOperations-none.h" // These MOZ_CRASH() always
 # endif

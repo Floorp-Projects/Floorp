@@ -4,15 +4,61 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* For documentation, see jit/AtomicOperations.h */
+/* For documentation, see jit/AtomicOperations.h, both the comment block at the
+ * beginning and the #ifdef nest near the end.
+ *
+ * This is a common file for tier-3 platforms that are not providing
+ * hardware-specific implementations of the atomic operations.  Please keep it
+ * reasonably platform-independent by adding #ifdefs at the beginning as much as
+ * possible, not throughout the file.
+ *
+ *
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * !!!!                              NOTE                                 !!!!
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *
+ * The implementations in this file are NOT SAFE and cannot be safe even in
+ * principle because they rely on C++ undefined behavior.  However, they are
+ * frequently good enough for tier-3 platforms.
+ */
 
-#ifndef jit_sparc_AtomicOperations_sparc_h
-#define jit_sparc_AtomicOperations_sparc_h
+#ifndef jit_none_AtomicOperations_feeling_lucky_h
+#define jit_none_AtomicOperations_feeling_lucky_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Types.h"
 
-#if defined(__clang__) || defined(__GNUC__)
+// 64-bit JS atomics are not required by SpiderMonkey or the JS spec, but define
+// these names if you want to provide them anyway.
+
+#if defined(__ppc__) || defined(__PPC__)
+#  define GNUC_COMPATIBLE
+#endif
+
+#if defined(__ppc64__) ||  defined (__PPC64__) || defined(__ppc64le__) || defined (__PPC64LE__)
+#  define HAS_64BIT_LOCKFREE
+#  define GNUC_COMPATIBLE
+#endif
+
+#ifdef __sparc__
+#  define GNUC_COMPATIBLE
+#  ifdef  __LP64__
+#    define HAS_64BIT_ATOMICS
+#    define HAS_64BIT_LOCKFREE
+#  endif
+#endif
+
+#ifdef __alpha__
+#  define GNUC_COMPATIBLE
+#endif
+
+#ifdef __hppa__
+#  define GNUC_COMPATIBLE
+#endif
+
+#ifdef __sh__
+#  define GNUC_COMPATIBLE
+#endif
 
 // The default implementation tactic for gcc/clang is to use the newer
 // __atomic intrinsics added for use in C++11 <atomic>.  Where that
@@ -26,6 +72,11 @@
 
 //#define ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
 
+
+// Try to avoid platform #ifdefs below this point.
+
+#ifdef GNUC_COMPATIBLE
+
 inline bool
 js::jit::AtomicOperations::isLockfree8()
 {
@@ -33,7 +84,7 @@ js::jit::AtomicOperations::isLockfree8()
     MOZ_ASSERT(__atomic_always_lock_free(sizeof(int8_t), 0));
     MOZ_ASSERT(__atomic_always_lock_free(sizeof(int16_t), 0));
     MOZ_ASSERT(__atomic_always_lock_free(sizeof(int32_t), 0));
-#  if defined(__LP64__)
+#  ifdef HAS_64BIT_LOCKFREE
     MOZ_ASSERT(__atomic_always_lock_free(sizeof(int64_t), 0));
 #  endif
     return true;
@@ -99,7 +150,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchAddSeqCst(T* addr, T val)
 {
-#if !defined( __LP64__)
+#ifndef HAS_64BIT_ATOMICS
     static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
 #endif
 # ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
@@ -113,7 +164,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchSubSeqCst(T* addr, T val)
 {
-#if !defined( __LP64__)
+#ifndef HAS_64BIT_ATOMICS
     static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
 #endif
 # ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
@@ -127,7 +178,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchAndSeqCst(T* addr, T val)
 {
-#if !defined( __LP64__)
+#ifndef HAS_64BIT_ATOMICS
     static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
 #endif
 # ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
@@ -141,7 +192,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchOrSeqCst(T* addr, T val)
 {
-#if !defined( __LP64__)
+#ifndef HAS_64BIT_ATOMICS
     static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
 #endif
 # ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
@@ -155,7 +206,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchXorSeqCst(T* addr, T val)
 {
-#if !defined( __LP64__)
+#ifndef HAS_64BIT_ATOMICS
     static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
 #endif
 # ifdef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
@@ -242,12 +293,15 @@ js::jit::RegionLock::release(void* addr)
 # endif
 }
 
-# undef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
-
 #elif defined(ENABLE_SHARED_ARRAY_BUFFER)
 
 # error "Either disable JS shared memory, use GCC or Clang, or add code here"
 
 #endif
 
-#endif // jit_sparc_AtomicOperations_sparc_h
+#undef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
+#undef GNUC_COMPATIBLE
+#undef HAS_64BIT_ATOMICS
+#undef HAS_64BIT_LOCKFREE
+
+#endif // jit_none_AtomicOperations_feeling_lucky_h
