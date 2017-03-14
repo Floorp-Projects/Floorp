@@ -77,6 +77,7 @@ private:
   ~MainThreadHandoff();
   HRESULT FixArrayElements(ICallFrame* aFrame,
                            const ArrayData& aArrayData);
+  HRESULT FixIServiceProvider(ICallFrame* aFrame);
 
 private:
   ULONG                   mRefCnt;
