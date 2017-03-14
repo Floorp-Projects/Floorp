@@ -56,6 +56,7 @@ def alias_matches(pattern):
     pattern = re.compile(pattern)
     return lambda name: pattern.match(name)
 
+
 UNITTEST_ALIASES = {
     # Aliases specify shorthands that can be used in try syntax.  The shorthand
     # is the dictionary key, with the value representing a pattern for matching
@@ -235,6 +236,7 @@ class TryOptionSyntax(object):
         parser.add_argument('-f', '--failure-emails',
                             dest='notifications', action='store_const', const='failure')
         parser.add_argument('-j', '--job', dest='jobs', action='append')
+        parser.add_argument('--include-nightly', dest='include_nightly', action='store_true')
         # In order to run test jobs multiple times
         parser.add_argument('--rebuild', dest='trigger_tests', type=int, default=1)
         args, _ = parser.parse_known_args(parts[try_idx:])
@@ -248,6 +250,7 @@ class TryOptionSyntax(object):
         self.trigger_tests = args.trigger_tests
         self.interactive = args.interactive
         self.notifications = args.notifications
+        self.include_nightly = args.include_nightly
 
     def parse_jobs(self, jobs_arg):
         if not jobs_arg or jobs_arg == ['all']:
@@ -498,6 +501,8 @@ class TryOptionSyntax(object):
         attr = attributes.get
 
         def check_run_on_projects():
+            if attr('nightly') and not self.include_nightly:
+                return False
             return set(['try', 'all']) & set(attr('run_on_projects', []))
 
         def match_test(try_spec, attr_name):
