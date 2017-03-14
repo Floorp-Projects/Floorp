@@ -1048,23 +1048,23 @@ AddSharedLibraryInfoToStream(JSONWriter& aWriter, const SharedLibrary& aLib)
   aWriter.IntProperty("start", SafeJSInteger(aLib.GetStart()));
   aWriter.IntProperty("end", SafeJSInteger(aLib.GetEnd()));
   aWriter.IntProperty("offset", SafeJSInteger(aLib.GetOffset()));
-  aWriter.StringProperty("name", aLib.GetNativeDebugPath().c_str());
+  aWriter.StringProperty("name", NS_ConvertUTF16toUTF8(aLib.GetModuleName()).get());
+  aWriter.StringProperty("path", NS_ConvertUTF16toUTF8(aLib.GetModulePath()).get());
+  aWriter.StringProperty("debugName", NS_ConvertUTF16toUTF8(aLib.GetDebugName()).get());
+  aWriter.StringProperty("debugPath", NS_ConvertUTF16toUTF8(aLib.GetDebugPath()).get());
   aWriter.StringProperty("breakpadId", aLib.GetBreakpadId().c_str());
+  aWriter.StringProperty("arch", aLib.GetArch().c_str());
   aWriter.EndObject();
 }
 
-static std::string
-GetSharedLibraryInfoStringInternal()
+void
+AppendSharedLibraries(JSONWriter& aWriter)
 {
   SharedLibraryInfo info = SharedLibraryInfo::GetInfoForSelf();
-  std::ostringstream os;
-  JSONWriter w(MakeUnique<OStreamJSONWriteFunc>(os));
-  w.StartArrayElement();
+  info.SortByAddress();
   for (size_t i = 0; i < info.GetSize(); i++) {
-    AddSharedLibraryInfoToStream(w, info.GetEntry(i));
+    AddSharedLibraryInfoToStream(aWriter, info.GetEntry(i));
   }
-  w.EndArray();
-  return os.str();
 }
 
 static void
@@ -1112,7 +1112,7 @@ StreamMetaJSCustomObject(PS::LockRef aLock, SpliceableJSONWriter& aWriter)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  aWriter.IntProperty("version", 3);
+  aWriter.IntProperty("version", 4);
   aWriter.DoubleProperty("interval", gPS->Interval(aLock));
   aWriter.IntProperty("stackwalk", gPS->FeatureStackWalk(aLock));
 
@@ -1267,8 +1267,9 @@ StreamJSON(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
   aWriter.Start(SpliceableJSONWriter::SingleLineStyle);
   {
     // Put shared library info
-    aWriter.StringProperty("libs",
-                           GetSharedLibraryInfoStringInternal().c_str());
+    aWriter.StartArrayProperty("libs");
+    AppendSharedLibraries(aWriter);
+    aWriter.EndArray();
 
     // Put meta data
     aWriter.StartObjectProperty("meta");
