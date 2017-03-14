@@ -82,6 +82,8 @@ typedef ucontext_t tickcontext_t;
 
 using namespace mozilla;
 
+mozilla::LazyLogModule gProfilerLog("prof");
+
 #if defined(PROFILE_JAVA)
 class GeckoJavaSampler : public mozilla::java::GeckoJavaSampler::Natives<GeckoJavaSampler>
 {
@@ -1421,31 +1423,6 @@ void ProfilerMarker::StreamJSON(SpliceableJSONWriter& aWriter,
   aWriter.EndArray();
 }
 
-// Verbosity control for the profiler.  The aim is to check env var
-// MOZ_PROFILER_VERBOSE only once.
-
-enum class Verbosity : int8_t { UNCHECKED, NOTVERBOSE, VERBOSE };
-
-// The verbosity global and the mutex used to protect it. Unlike other globals
-// in this file, gVerbosity is not within ProfilerState because it can be used
-// before gPS is created.
-static Verbosity gVerbosity = Verbosity::UNCHECKED;
-static StaticMutex gVerbosityMutex;
-
-bool
-profiler_verbose()
-{
-  StaticMutexAutoLock lock(gVerbosityMutex);
-
-  if (gVerbosity == Verbosity::UNCHECKED) {
-    gVerbosity = getenv("MOZ_PROFILER_VERBOSE")
-               ? Verbosity::VERBOSE
-               : Verbosity::NOTVERBOSE;
-  }
-
-  return gVerbosity == Verbosity::VERBOSE;
-}
-
 static bool
 set_profiler_interval(PS::LockRef aLock, const char* aInterval)
 {
@@ -1494,37 +1471,39 @@ profiler_usage(int aExitCode)
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
-  // Force-enable verbosity so that LOG prints something. The LOG calls below
-  // lock gVerbosityMutex themselves, so this scope only needs to cover this
-  // assignment.
-  {
-    StaticMutexAutoLock lock(gVerbosityMutex);
-    gVerbosity = Verbosity::VERBOSE;
-  }
-
-  LOG ("");
-  LOG ("Environment variable usage:");
-  LOG ("");
-  LOG ("  MOZ_PROFILER_HELP");
-  LOG ("  If set to any value, prints this message.");
-  LOG ("");
-  LOG ("  MOZ_PROFILER_ENTRIES=<1..>      (count)");
-  LOG ("  If unset, platform default is used.");
-  LOG ("");
-  LOG ("  MOZ_PROFILER_INTERVAL=<1..1000> (milliseconds)");
-  LOG ("  If unset, platform default is used.");
-  LOG ("");
-  LOG ("  MOZ_PROFILER_VERBOSE");
-  LOG ("  If set to any value, increases verbosity (recommended).");
-  LOG ("");
-  LOG ("  MOZ_PROFILER_LUL_TEST");
-  LOG ("  If set to any value, runs LUL unit tests at startup of");
-  LOG ("  the unwinder thread, and prints a short summary of ");
-  LOG ("  results.");
-  LOG ("");
-  LOGF("  This platform %s native unwinding.",
-       is_native_unwinding_avail() ? "supports" : "does not support");
-  LOG ("");
+  printf(
+    "\n"
+    "Profiler environment variable usage:\n"
+    "\n"
+    "  MOZ_PROFILER_HELP\n"
+    "  If set to any value, prints this message.\n"
+    "\n"
+    "  MOZ_PROFILER_ENTRIES=<1..>\n"
+    "  The number of entries in the profiler's circular buffer.\n"
+    "  If unset, the platform default is used.\n"
+    "\n"
+    "  MOZ_PROFILER_INTERVAL=<1..1000>\n"
+    "  The interval between samples, measured in milliseconds.\n"
+    "  If unset, platform default is used.\n"
+    "\n"
+    "  MOZ_LOG\n"
+    "  Enables logging. The levels of logging available are\n"
+    "  'prof:3' (least verbose), 'prof:4', 'prof:5' (most verbose).\n"
+    "\n"
+    "  MOZ_PROFILER_STARTUP\n"
+    "  If set to any value, starts the profiler immediately on start-up.\n"
+    "  Useful if you want profile code that runs very early.\n"
+    "\n"
+    "  MOZ_PROFILER_SHUTDOWN\n"
+    "  If set, the profiler saves a profile to the named file on shutdown.\n"
+    "\n"
+    "  MOZ_PROFILER_LUL_TEST\n"
+    "  If set to any value, runs LUL unit tests at startup.\n"
+    "\n"
+    "  This platform %s native unwinding.\n"
+    "\n",
+    is_native_unwinding_avail() ? "supports" : "does not support\n"
+  );
 
   exit(aExitCode);
 }
@@ -1547,10 +1526,10 @@ ReadProfilerEnvVars(PS::LockRef aLock)
     profiler_usage(1); // terminates execution
   }
 
-  LOGF("entries  = %d (zero means \"platform default\")",
-       gPS->EnvVarEntries(aLock));
-  LOGF("interval = %d ms (zero means \"platform default\")",
-       gPS->EnvVarInterval(aLock));
+  LOG("entries  = %d (zero means \"platform default\")",
+      gPS->EnvVarEntries(aLock));
+  LOG("interval = %d ms (zero means \"platform default\")",
+      gPS->EnvVarInterval(aLock));
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -2268,9 +2247,9 @@ locked_profiler_save_profile_to_file(PS::LockRef aLock, const char* aFilename)
     SpliceableJSONWriter w(mozilla::MakeUnique<OStreamJSONWriteFunc>(stream));
     StreamJSON(aLock, w, /* sinceTime */ 0);
     stream.close();
-    LOGF("locked_profiler_save_profile_to_file: Saved to %s", aFilename);
+    LOG("locked_profiler_save_profile_to_file: Saved to %s", aFilename);
   } else {
-    LOG ("locked_profiler_save_profile_to_file: Failed to open file");
+    LOG("locked_profiler_save_profile_to_file: Failed to open file");
   }
 }
 
