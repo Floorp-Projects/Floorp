@@ -170,7 +170,6 @@ linux-nightly/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: []
 
 
 linux64-asan/opt:
@@ -247,7 +246,6 @@ linux64-nightly/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: [ ]
 
 linux64-stylo/opt:
     description: "Linux64 Opt Stylo"
