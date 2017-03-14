@@ -150,10 +150,9 @@ HandlerService.prototype = {
   },
 
   get _currentLocale() {
-    var chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                         getService(Ci.nsIXULChromeRegistry);
-    var currentLocale = chromeRegistry.getSelectedLocale("global");
-    return currentLocale;
+    const locSvc = Cc["@mozilla.org/intl/localeservice;1"].
+                   getService(Ci.mozILocaleService);
+    return locSvc.getAppLocaleAsLangTag();
   }, 
 
   _destroy: function HS__destroy() {

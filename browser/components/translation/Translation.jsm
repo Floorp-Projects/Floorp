@@ -33,9 +33,7 @@ this.Translation = {
   _defaultTargetLanguage: "",
   get defaultTargetLanguage() {
     if (!this._defaultTargetLanguage) {
-      this._defaultTargetLanguage = Cc["@mozilla.org/chrome/chrome-registry;1"]
-                                      .getService(Ci.nsIXULChromeRegistry)
-                                      .getSelectedLocale("global")
+      this._defaultTargetLanguage = Services.locale.getAppLocaleAsLangTag()
                                       .split("-")[0];
     }
     return this._defaultTargetLanguage;
