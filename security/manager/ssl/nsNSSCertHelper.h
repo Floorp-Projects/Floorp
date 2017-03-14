@@ -13,11 +13,14 @@
 #include "nsString.h"
 
 uint32_t
-getCertType(CERTCertificate *cert);
+getCertType(CERTCertificate* cert);
 
 nsresult
-GetCertFingerprintByOidTag(CERTCertificate* nsscert,
-                           SECOidTag aOidTag, 
-                           nsCString &fp);
+GetCertFingerprintByOidTag(CERTCertificate* nsscert, SECOidTag aOidTag,
+                           nsCString& fp);
+
+// Must be used on the main thread only.
+nsresult
+GetPIPNSSBundleString(const char* stringName, nsAString& result);
 
 #endif // nsNSSCertHelper_h

@@ -54,7 +54,7 @@ interface nsIAtom : nsISupports
     return mLength;
   }
 
-  inline void ToString(nsAString& aBuf) {
+  inline void ToString(nsAString& aBuf) const {
     // See the comment on |mString|'s declaration.
     nsStringBuffer::FromData(mString)->ToString(mLength, aBuf);
   }
@@ -139,7 +139,7 @@ extern void NS_SealStaticAtomTable();
 class nsAtomString : public nsString
 {
 public:
-  explicit nsAtomString(nsIAtom* aAtom)
+  explicit nsAtomString(const nsIAtom* aAtom)
   {
     aAtom->ToString(*this);
   }
@@ -157,7 +157,7 @@ public:
 class nsDependentAtomString : public nsDependentString
 {
 public:
-  explicit nsDependentAtomString(nsIAtom* aAtom)
+  explicit nsDependentAtomString(const nsIAtom* aAtom)
     : nsDependentString(aAtom->GetUTF16String(), aAtom->GetLength())
   {
   }

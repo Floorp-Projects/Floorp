@@ -196,7 +196,7 @@ class Assembler : public vixl::Assembler
     // Emit the jump table, returning the BufferOffset to the first entry in the table.
     BufferOffset emitExtendedJumpTable();
     BufferOffset ExtendedJumpTable_;
-    void executableCopy(uint8_t* buffer);
+    void executableCopy(uint8_t* buffer, bool flushICache = true);
 
     BufferOffset immPool(ARMRegister dest, uint8_t* value, vixl::LoadLiteralOp op,
                          ARMBuffer::PoolEntry* pe = nullptr);

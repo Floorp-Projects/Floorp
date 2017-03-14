@@ -40,8 +40,7 @@
  *     type is used by tooltips.
  *
  * When a new popup is opened, it is appended to the popup chain, stored in a
- * linked list in mPopups for dismissable menus and panels or mNoHidePanels
- * for tooltips and panels with noautohide="true".
+ * linked list in mPopups.
  * Popups are stored in this list linked from newest to oldest. When a click
  * occurs outside one of the open dismissable popups, the chain is closed by
  * calling Rollup.
@@ -135,6 +134,7 @@ class nsMenuChainItem
 private:
   nsMenuPopupFrame* mFrame; // the popup frame
   nsPopupType mPopupType; // the popup type of the frame
+  bool mNoAutoHide; // true for noautohide panels
   bool mIsContext; // true for context menus
   bool mOnMenuBar; // true if the menu is on a menu bar
   nsIgnoreKeys mIgnoreKeys; // indicates how keyboard listeners should be used
@@ -150,9 +150,11 @@ private:
   nsMenuChainItem* mChild;
 
 public:
-  nsMenuChainItem(nsMenuPopupFrame* aFrame, bool aIsContext, nsPopupType aPopupType)
+  nsMenuChainItem(nsMenuPopupFrame* aFrame, bool aNoAutoHide, bool aIsContext,
+                  nsPopupType aPopupType)
     : mFrame(aFrame),
       mPopupType(aPopupType),
+      mNoAutoHide(aNoAutoHide),
       mIsContext(aIsContext),
       mOnMenuBar(false),
       mIgnoreKeys(eIgnoreKeys_False),
@@ -172,6 +174,8 @@ public:
   nsIContent* Content();
   nsMenuPopupFrame* Frame() { return mFrame; }
   nsPopupType PopupType() { return mPopupType; }
+  bool IsNoAutoHide() { return mNoAutoHide; }
+  void SetNoAutoHide(bool aNoAutoHide) { mNoAutoHide = aNoAutoHide; }
   bool IsMenu() { return mPopupType == ePopupTypeMenu; }
   bool IsContextMenu() { return mIsContext; }
   nsIgnoreKeys IgnoreKeys() { return mIgnoreKeys; }
@@ -567,7 +571,7 @@ public:
   /**
    * Return the frame for the topmost open popup of a given type, or null if
    * no popup of that type is open. If aType is ePopupTypeAny, a menu of any
-   * type is returned, except for popups in the mNoHidePanels list.
+   * type is returned.
    */
   nsIFrame* GetTopPopup(nsPopupType aType);
 
@@ -828,9 +832,6 @@ protected:
 
   // linked list of normal menus and panels.
   nsMenuChainItem* mPopups;
-
-  // linked list of noautohide panels and tooltips.
-  nsMenuChainItem* mNoHidePanels;
 
   // timer used for HidePopupAfterDelay
   nsCOMPtr<nsITimer> mCloseTimer;

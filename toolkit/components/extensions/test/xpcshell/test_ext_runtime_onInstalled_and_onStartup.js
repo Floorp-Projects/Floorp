@@ -57,11 +57,14 @@ function background() {
   });
 }
 
-function* expectEvents(extension, {onStartupFired, onInstalledFired, onInstalledReason}) {
+function* expectEvents(extension, {onStartupFired, onInstalledFired, onInstalledReason, onInstalledPrevious}) {
   extension.sendMessage("get-on-installed-details");
   let details = yield extension.awaitMessage("on-installed-details");
   if (onInstalledFired) {
     equal(details.reason, onInstalledReason, "runtime.onInstalled fired with the correct reason");
+    if (onInstalledPrevious) {
+      equal(details.previousVersion, onInstalledPrevious, "runtime.onInstalled after update with correct previousVersion");
+    }
   } else {
     equal(details.fired, onInstalledFired, "runtime.onInstalled should not have fired");
   }
@@ -157,6 +160,7 @@ add_task(function* test_should_fire_on_addon_update() {
     onStartupFired: false,
     onInstalledFired: true,
     onInstalledReason: "update",
+    onInstalledPrevious: "1.0",
   });
 
   yield extension.unload();

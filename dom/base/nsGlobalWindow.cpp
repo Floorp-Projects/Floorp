@@ -9389,6 +9389,9 @@ public:
 
   NS_IMETHOD Run() override
   {
+    PROFILER_LABEL("WindowDestroyedEvent", "Run",
+                   js::ProfileEntry::Category::OTHER);
+
     nsCOMPtr<nsIObserverService> observerService =
       services::GetObserverService();
     if (observerService) {
@@ -14929,10 +14932,10 @@ nsGlobalWindow::GetPaintWorklet(ErrorResult& aRv)
 }
 
 void
-nsGlobalWindow::GetAppLocales(nsTArray<nsString>& aLocales)
+nsGlobalWindow::GetAppLocalesAsBCP47(nsTArray<nsString>& aLocales)
 {
   nsTArray<nsCString> appLocales;
-  mozilla::intl::LocaleService::GetInstance()->GetAppLocales(appLocales);
+  mozilla::intl::LocaleService::GetInstance()->GetAppLocalesAsBCP47(appLocales);
 
   for (uint32_t i = 0; i < appLocales.Length(); i++) {
     aLocales.AppendElement(NS_ConvertUTF8toUTF16(appLocales[i]));

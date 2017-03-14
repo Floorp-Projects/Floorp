@@ -442,6 +442,9 @@ class Decoder
     const uint8_t* begin() const {
         return beg_;
     }
+    const uint8_t* end() const {
+        return end_;
+    }
 
     // Fixed-size encoding operations simply copy the literal bytes (without
     // attempting to align).

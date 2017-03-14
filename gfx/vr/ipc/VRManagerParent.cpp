@@ -272,17 +272,6 @@ VRManagerParent::RecvGetSensorState(const uint32_t& aDisplayID, VRHMDSensorState
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-VRManagerParent::RecvGetImmediateSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState)
-{
-  VRManager* vm = VRManager::Get();
-  RefPtr<gfx::VRDisplayHost> display = vm->GetDisplay(aDisplayID);
-  if (display != nullptr) {
-    *aState = display->GetImmediateSensorState();
-  }
-  return IPC_OK();
-}
-
 bool
 VRManagerParent::HaveEventListener()
 {

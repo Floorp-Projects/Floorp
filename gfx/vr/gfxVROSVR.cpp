@@ -321,12 +321,6 @@ VRDisplayOSVR::GetSensorState()
   return result;
 }
 
-VRHMDSensorState
-VRDisplayOSVR::GetImmediateSensorState()
-{
-  return GetSensorState();
-}
-
 #if defined(XP_WIN)
 
 void

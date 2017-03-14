@@ -523,7 +523,7 @@ MediaSource::QueueAsyncSimpleEvent(const char* aName)
 {
   MSE_DEBUG("Queuing event '%s'", aName);
   nsCOMPtr<nsIRunnable> event = new AsyncEventRunner<MediaSource>(this, aName);
-  NS_DispatchToMainThread(event);
+  mAbstractMainThread->Dispatch(event.forget());
 }
 
 void

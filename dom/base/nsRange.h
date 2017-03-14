@@ -21,6 +21,7 @@
 #include "nsStubMutationObserver.h"
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/GuardObjects.h"
 
 namespace mozilla {
 class ErrorResult;
@@ -200,14 +201,20 @@ public:
   void InsertNode(nsINode& aNode, ErrorResult& aErr);
   bool IntersectsNode(nsINode& aNode, ErrorResult& aRv);
   bool IsPointInRange(nsINode& aParent, uint32_t aOffset, ErrorResult& aErr);
-  void SelectNode(nsINode& aNode, ErrorResult& aErr);
-  void SelectNodeContents(nsINode& aNode, ErrorResult& aErr);
-  void SetEnd(nsINode& aNode, uint32_t aOffset, ErrorResult& aErr);
-  void SetEndAfter(nsINode& aNode, ErrorResult& aErr);
-  void SetEndBefore(nsINode& aNode, ErrorResult& aErr);
-  void SetStart(nsINode& aNode, uint32_t aOffset, ErrorResult& aErr);
-  void SetStartAfter(nsINode& aNode, ErrorResult& aErr);
-  void SetStartBefore(nsINode& aNode, ErrorResult& aErr);
+
+  // *JS() methods are mapped to Range.*() of DOM.
+  // They may move focus only when the range represents normal selection.
+  // These methods shouldn't be used from internal.
+  void CollapseJS(bool aToStart);
+  void SelectNodeJS(nsINode& aNode, ErrorResult& aErr);
+  void SelectNodeContentsJS(nsINode& aNode, ErrorResult& aErr);
+  void SetEndJS(nsINode& aNode, uint32_t aOffset, ErrorResult& aErr);
+  void SetEndAfterJS(nsINode& aNode, ErrorResult& aErr);
+  void SetEndBeforeJS(nsINode& aNode, ErrorResult& aErr);
+  void SetStartJS(nsINode& aNode, uint32_t aOffset, ErrorResult& aErr);
+  void SetStartAfterJS(nsINode& aNode, ErrorResult& aErr);
+  void SetStartBeforeJS(nsINode& aNode, ErrorResult& aErr);
+
   void SurroundContents(nsINode& aNode, ErrorResult& aErr);
   already_AddRefed<DOMRect> GetBoundingClientRect(bool aClampToEdge = true,
                                                   bool aFlushLayout = true);
@@ -216,6 +223,17 @@ public:
   void GetClientRectsAndTexts(
     mozilla::dom::ClientRectsAndTexts& aResult,
     ErrorResult& aErr);
+
+  // Following methods should be used for internal use instead of *JS().
+  void SelectNode(nsINode& aNode, ErrorResult& aErr);
+  void SelectNodeContents(nsINode& aNode, ErrorResult& aErr);
+  void SetEnd(nsINode& aNode, uint32_t aOffset, ErrorResult& aErr);
+  void SetEndAfter(nsINode& aNode, ErrorResult& aErr);
+  void SetEndBefore(nsINode& aNode, ErrorResult& aErr);
+  void SetStart(nsINode& aNode, uint32_t aOffset, ErrorResult& aErr);
+  void SetStartAfter(nsINode& aNode, ErrorResult& aErr);
+  void SetStartBefore(nsINode& aNode, ErrorResult& aErr);
+
   static void GetInnerTextNoFlush(mozilla::dom::DOMString& aValue,
                                   mozilla::ErrorResult& aError,
                                   nsIContent* aStartParent,
@@ -323,6 +341,31 @@ protected:
                                    size_t aRangeStart,
                                    size_t aRangeEnd);
 
+  // Assume that this is guaranteed that this is held by the caller when
+  // this is used.  (Note that we cannot use AutoRestore for mCalledByJS
+  // due to a bit field.)
+  class MOZ_RAII AutoCalledByJSSetter final
+  {
+  private:
+    nsRange& mRange;
+    bool mOldValue;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+  public:
+    explicit AutoCalledByJSSetter(nsRange& aRange
+                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mRange(aRange)
+      , mOldValue(aRange.mCalledByJS)
+    {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+      mRange.mCalledByJS = true;
+    }
+    ~AutoCalledByJSSetter()
+    {
+      mRange.mCalledByJS = mOldValue;
+    }
+  };
+
   struct MOZ_STACK_CLASS AutoInvalidateSelection
   {
     explicit AutoInvalidateSelection(nsRange* aRange) : mRange(aRange)
@@ -359,6 +402,7 @@ protected:
   bool mStartOffsetWasIncremented : 1;
   bool mEndOffsetWasIncremented : 1;
   bool mEnableGravitationOnElementRemoval : 1;
+  bool mCalledByJS : 1;
 #ifdef DEBUG
   int32_t  mAssertNextInsertOrAppendIndex;
   nsINode* mAssertNextInsertOrAppendNode;

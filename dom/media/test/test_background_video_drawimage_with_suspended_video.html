@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test Background Video Displays Video Frame via drawImage When Suspended</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="manifest.js"></script>
+<script src="background_video.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<style>
+video, canvas {
+  border: 1px solid black;
+}
+</style>
+<script type="text/javascript">
+"use strict";
+
+var manager = new MediaTestManager;
+
+function drawVideoToCanvas(v) {
+  console.log('drawVideoToCanvas');
+  let w = v.width,
+      h = v.height,
+      c = document.createElement('canvas');
+  c.width = 4;
+  c.height = 4;
+  c.style.width = 64;
+  c.style.height = 64;
+  document.body.appendChild(c);
+
+  let gfx = c.getContext('2d');
+  if (!gfx) {
+    throw Error("Unable to obtain context '2d' from canvas");
+  }
+
+  gfx.drawImage(v, 0, 0, 4, 4);
+  let imageData = gfx.getImageData(0, 0, 4, 4);
+  let pixels = imageData.data;
+
+  // Check that pixels aren't all the same colour.
+  // Implements by checking against rgb of the first pixel.
+  let rr = pixels[0],
+      gg = pixels[1],
+      bb = pixels[2],
+      allSame = true;
+
+  for (let i = 0; i < 4*4; i++) {
+    let r = pixels[4*i+0];
+    let g = pixels[4*i+1];
+    let b = pixels[4*i+2];
+    if (r != rr || g != gg || b != bb) {
+      allSame = false;
+      break;
+    }
+  }
+
+  ok(!allSame, "Pixels aren't all the same color");
+}
+
+startTest({
+  desc: 'Test Background Video Displays Video Frame via drawImage When Suspended',
+  prefs: [
+    [ "media.test.video-suspend", true ],
+    [ "media.suspend-bkgnd-video.enabled", true ],
+    [ "media.suspend-bkgnd-video.delay-ms", 500 ]
+  ],
+  tests: gDecodeSuspendTests,
+  runTest: (test, token) => {
+    let v = appendVideoToDoc(test.name, token);
+    manager.started(token);
+
+    waitUntilPlaying(v)
+      .then(() => testVideoSuspendsWhenHidden(v))
+      .then(() => {
+        drawVideoToCanvas(v);
+        manager.finished(token);
+      });
+  }
+});
+</script>

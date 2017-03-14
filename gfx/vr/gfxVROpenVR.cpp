@@ -259,12 +259,6 @@ VRDisplayOpenVR::GetSensorState()
   return GetSensorState(0.0f);
 }
 
-VRHMDSensorState
-VRDisplayOpenVR::GetImmediateSensorState()
-{
-  return GetSensorState(0.0f);
-}
-
 void
 VRDisplayOpenVR::PollEvents()
 {

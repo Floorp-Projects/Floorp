@@ -108,7 +108,8 @@ child:
                        NetAddr             peerAddr,
                        int16_t             redirectCount,
                        uint32_t            cacheKey,
-                       nsCString           altDataType);
+                       nsCString           altDataType,
+                       int64_t             altDataLength);
 
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message

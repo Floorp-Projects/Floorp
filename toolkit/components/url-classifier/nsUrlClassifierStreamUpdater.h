@@ -74,6 +74,8 @@ private:
   bool mDownloadError;
   bool mBeganStream;
 
+  nsCString mDownloadErrorStatusStr;
+
   // Note that mStreamTable is only used by v2, it is empty for v4 update.
   nsCString mStreamTable;
 

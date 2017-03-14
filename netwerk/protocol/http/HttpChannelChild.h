@@ -124,7 +124,8 @@ protected:
                                              const NetAddr& peerAddr,
                                              const int16_t& redirectCount,
                                              const uint32_t& cacheKey,
-                                             const nsCString& altDataType) override;
+                                             const nsCString& altDataType,
+                                             const int64_t& altDataLen) override;
   mozilla::ipc::IPCResult RecvOnTransportAndData(const nsresult& channelStatus,
                                                  const nsresult& status,
                                                  const uint64_t& offset,
@@ -303,7 +304,8 @@ private:
                       const NetAddr& selfAddr,
                       const NetAddr& peerAddr,
                       const uint32_t& cacheKey,
-                      const nsCString& altDataType);
+                      const nsCString& altDataType,
+                      const int64_t& altDataLen);
   void MaybeDivertOnData(const nsCString& data,
                          const uint64_t& offset,
                          const uint32_t& count);

@@ -5,6 +5,7 @@
 #include "mp4_demuxer/ByteReader.h"
 #include "mp4_demuxer/Index.h"
 #include "mp4_demuxer/Interval.h"
+#include "mp4_demuxer/MP4Metadata.h"
 #include "mp4_demuxer/SinfParser.h"
 #include "nsAutoPtr.h"
 #include "mozilla/RefPtr.h"
@@ -297,17 +298,17 @@ SampleIterator::GetNextKeyframeTime()
   return -1;
 }
 
-Index::Index(const nsTArray<Indice>& aIndex,
+Index::Index(const IndiceWrapper& aIndices,
              Stream* aSource,
              uint32_t aTrackId,
              bool aIsAudio)
   : mSource(aSource)
   , mIsAudio(aIsAudio)
 {
-  if (aIndex.IsEmpty()) {
+  if (!aIndices.Length()) {
     mMoofParser = new MoofParser(aSource, aTrackId, aIsAudio);
   } else {
-    if (!mIndex.SetCapacity(aIndex.Length(), fallible)) {
+    if (!mIndex.SetCapacity(aIndices.Length(), fallible)) {
       // OOM.
       return;
     }
@@ -316,8 +317,12 @@ Index::Index(const nsTArray<Indice>& aIndex,
     bool haveSync = false;
     bool progressive = true;
     int64_t lastOffset = 0;
-    for (size_t i = 0; i < aIndex.Length(); i++) {
-      const Indice& indice = aIndex[i];
+    for (size_t i = 0; i < aIndices.Length(); i++) {
+      Indice indice;
+      if (!aIndices.GetIndice(i, indice)) {
+        // Out of index?
+        return;
+      }
       if (indice.sync || mIsAudio) {
         haveSync = true;
       }
@@ -364,8 +369,12 @@ Index::Index(const nsTArray<Indice>& aIndex,
     }
 
     if (mDataOffset.Length() && progressive) {
+      Indice indice;
+      if (!aIndices.GetIndice(aIndices.Length() - 1, indice)) {
+        return;
+      }
       auto& last = mDataOffset.LastElement();
-      last.mEndOffset = aIndex.LastElement().end_offset;
+      last.mEndOffset = indice.end_offset;
       last.mTime = Interval<int64_t>(intervalTime.GetStart(), intervalTime.GetEnd());
     } else {
       mDataOffset.Clear();

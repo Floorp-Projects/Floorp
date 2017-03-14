@@ -653,7 +653,7 @@ Tkhd::Tkhd(Box& aBox)
   size_t need =
     3*(version ? sizeof(int64_t) : sizeof(int32_t)) + 2*sizeof(int32_t);
   if (reader->Remaining() < need) {
-    LOG(Tkhd, "Incomplete Box (have:%lld need:%lld)",
+    LOG(Tkhd, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
         (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
@@ -688,7 +688,7 @@ Mvhd::Mvhd(Box& aBox)
   size_t need =
     3*(version ? sizeof(int64_t) : sizeof(int32_t)) + sizeof(uint32_t);
   if (reader->Remaining() < need) {
-    LOG(Mvhd, "Incomplete Box (have:%lld need:%lld)",
+    LOG(Mvhd, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
         (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
@@ -721,7 +721,7 @@ Trex::Trex(Box& aBox)
 {
   BoxReader reader(aBox);
   if (reader->Remaining() < 6*sizeof(uint32_t)) {
-    LOG(Trex, "Incomplete Box (have:%lld need:%lld)",
+    LOG(Trex, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
         (uint64_t)reader->Remaining(), (uint64_t)6*sizeof(uint32_t));
     return;
   }
@@ -756,7 +756,7 @@ Tfhd::Tfhd(Box& aBox, Trex& aTrex)
     }
   }
   if (reader->Remaining() < need) {
-    LOG(Tfhd, "Incomplete Box (have:%lld need:%lld)",
+    LOG(Tfhd, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
         (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
@@ -789,7 +789,7 @@ Tfdt::Tfdt(Box& aBox)
   uint8_t version = flags >> 24;
   size_t need = version ? sizeof(uint64_t) : sizeof(uint32_t) ;
   if (reader->Remaining() < need) {
-    LOG(Tfdt, "Incomplete Box (have:%lld need:%lld)",
+    LOG(Tfdt, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
         (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
@@ -820,7 +820,7 @@ Edts::Edts(Box& aBox)
   size_t need =
     sizeof(uint32_t) + 2*(version ? sizeof(int64_t) : sizeof(uint32_t));
   if (reader->Remaining() < need) {
-    LOG(Edts, "Incomplete Box (have:%lld need:%lld)",
+    LOG(Edts, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
         (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
@@ -865,7 +865,7 @@ Saiz::Saiz(Box& aBox, AtomType aDefaultType)
   size_t need =
     ((flags & 1) ? 2*sizeof(uint32_t) : 0) + sizeof(uint8_t) + sizeof(uint32_t);
   if (reader->Remaining() < need) {
-    LOG(Saiz, "Incomplete Box (have:%lld need:%lld)",
+    LOG(Saiz, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
         (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
@@ -903,7 +903,7 @@ Saio::Saio(Box& aBox, AtomType aDefaultType)
   uint8_t version = flags >> 24;
   size_t need = ((flags & 1) ? (2*sizeof(uint32_t)) : 0) + sizeof(uint32_t);
   if (reader->Remaining() < need) {
-    LOG(Saio, "Incomplete Box (have:%lld need:%lld)",
+    LOG(Saio, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
         (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
@@ -914,7 +914,7 @@ Saio::Saio(Box& aBox, AtomType aDefaultType)
   size_t count = reader->ReadU32();
   need = (version ? sizeof(uint64_t) : sizeof(uint32_t)) * count;
   if (reader->Remaining() < need) {
-    LOG(Saio, "Incomplete Box (have:%lld need:%lld)",
+    LOG(Saio, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
         (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
@@ -950,7 +950,7 @@ Sbgp::Sbgp(Box& aBox)
   // Make sure we have enough bytes to read as far as the count.
   uint32_t need = (version == 1 ? sizeof(uint32_t) : 0) + sizeof(uint32_t) * 2;
   if (reader->Remaining() < need) {
-    LOG(Sbgp, "Incomplete Box (have:%lld, need:%lld)",
+    LOG(Sbgp, "Incomplete Box (have:%" PRIu64 ", need:%" PRIu64 ")",
         (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
@@ -966,7 +966,7 @@ Sbgp::Sbgp(Box& aBox)
   // Make sure we can read all the entries.
   need = sizeof(uint32_t) * 2 * count;
   if (reader->Remaining() < need) {
-    LOG(Sbgp, "Incomplete Box (have:%lld, need:%lld). Failed to read entries",
+    LOG(Sbgp, "Incomplete Box (have:%" PRIu64 ", need:%" PRIu64 "). Failed to read entries",
         (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
@@ -997,7 +997,7 @@ Sgpd::Sgpd(Box& aBox)
 
   uint32_t need = ((flags & 1) ? sizeof(uint32_t) : 0) + sizeof(uint32_t) * 2;
   if (reader->Remaining() < need) {
-    LOG(Sgpd, "Incomplete Box (have:%lld need:%lld)",
+    LOG(Sgpd, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 ")",
         (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
@@ -1021,7 +1021,7 @@ Sgpd::Sgpd(Box& aBox)
     count * (sizeof(uint32_t) * (version == 1 && defaultLength == 0 ? 2 : 1) +
              kKeyIdSize * sizeof(uint8_t));
   if (reader->Remaining() < need) {
-    LOG(Sgpd, "Incomplete Box (have:%lld need:%lld). Failed to read entries",
+    LOG(Sgpd, "Incomplete Box (have:%" PRIu64 " need:%" PRIu64 "). Failed to read entries",
         (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }

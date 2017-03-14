@@ -203,6 +203,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mTopLevelOuterContentWindowId(0)
   , mRequireCORSPreflight(false)
   , mReportCollector(new ConsoleReportCollector())
+  , mAltDataLength(0)
   , mForceMainDocumentChannel(false)
   , mIsTrackingResource(false)
 {
@@ -700,6 +701,11 @@ HttpBaseChannel::GetContentLength(int64_t *aContentLength)
 
   if (!mResponseHead)
     return NS_ERROR_NOT_AVAILABLE;
+
+  if (!mAvailableCachedAltDataType.IsEmpty()) {
+    *aContentLength = mAltDataLength;
+    return NS_OK;
+  }
 
   *aContentLength = mResponseHead->ContentLength();
   return NS_OK;

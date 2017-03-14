@@ -40,7 +40,6 @@ class VRDisplayOculus : public VRDisplayHost
 public:
   virtual void NotifyVSync() override;
   virtual VRHMDSensorState GetSensorState() override;
-  virtual VRHMDSensorState GetImmediateSensorState() override;
   void ZeroSensor() override;
 
 protected:

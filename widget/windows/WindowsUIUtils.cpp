@@ -168,10 +168,8 @@ WindowsUIUtils::UpdateTabletModeState()
         if (mInTabletMode != oldTabletModeState) {
           nsCOMPtr<nsIObserverService> observerService =
             mozilla::services::GetObserverService();
-          NS_NAMED_LITERAL_STRING(tabletMode, "tablet-mode");
-          NS_NAMED_LITERAL_STRING(normalMode, "normal-mode");
           observerService->NotifyObservers(nullptr, "tablet-mode-change",
-            ((mInTabletMode == eTabletModeOn) ? tabletMode.get() : normalMode.get()));
+            ((mInTabletMode == eTabletModeOn) ? u"tablet-mode" : u"normal-mode"));
         }
       }
     }

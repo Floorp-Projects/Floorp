@@ -347,9 +347,17 @@ UnionTypeReadError(const char* aUnionName)
   NS_RUNTIMEABORT(message.get());
 }
 
-void ArrayLengthReadError(const char* aElementName)
+void
+ArrayLengthReadError(const char* aElementName)
 {
   nsPrintfCString message("error deserializing length of %s[]", aElementName);
+  NS_RUNTIMEABORT(message.get());
+}
+
+void
+SentinelReadError(const char* aClassName)
+{
+  nsPrintfCString message("incorrect sentinel when reading %s", aClassName);
   NS_RUNTIMEABORT(message.get());
 }
 

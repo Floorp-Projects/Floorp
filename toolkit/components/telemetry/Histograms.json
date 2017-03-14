@@ -755,6 +755,14 @@
     "bug_numbers": [1239166],
     "description": "Status of Family Safety detection and remediation. See nsNSSComponent.cpp."
   },
+  "FEED_PROTOCOL_USAGE": {
+    "alert_emails": ["jkt@mozilla.com"],
+    "bug_numbers": [1345546],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "Usage counts of feed protocols used to load a page. (1=feed, 2=feed:http, 3=feed:https, 4=feed:brokenScheme, 5=pcast, 6=pcast:http, 7=pcast:https, 8=pcast:brokenScheme)"
+  },
   "FETCH_IS_MAINTHREAD": {
     "expires_in_version": "50",
     "kind": "boolean",
@@ -5686,9 +5694,10 @@
   },
   "FX_URLBAR_SELECTED_RESULT_INDEX": {
     "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "55",
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 17,
+    "releaseChannelCollection": "opt-out",
     "bug_numbers": [775825],
     "description": "Firefox: The index of the selected result in the URL bar popup"
   },
@@ -5697,6 +5706,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 14,
+    "releaseChannelCollection": "opt-out",
     "bug_numbers": [775825],
     "description": "Firefox: The type of the selected result in the URL bar popup. See BrowserUsageTelemetry.jsm:URLBAR_SELECTED_RESULT_TYPES for the result types."
   },
@@ -7827,6 +7837,14 @@
     "description": "Number of times the DevTools Storage Inspector has been opened.",
     "releaseChannelCollection": "opt-out"
   },
+  "DEVTOOLS_DOM_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1343501],
+    "description": "Number of times the DevTools DOM Inspector has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
   "DEVTOOLS_PAINTFLASHING_OPENED_COUNT": {
     "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
@@ -8101,6 +8119,15 @@
     "high": 10000000,
     "n_buckets": 100,
     "description": "How long has the storage inspector been active (seconds)"
+  },
+  "DEVTOOLS_DOM_TIME_ACTIVE_SECONDS": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "bug_numbers": [1343501],
+    "high": 10000000,
+    "n_buckets": 100,
+    "description": "How long has the DOM inspector been active (seconds)"
   },
   "DEVTOOLS_PAINTFLASHING_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "never",
@@ -11002,7 +11029,7 @@
     "description": "Results of displaying add-on installation notifications.",
     "releaseChannelCollection": "opt-out"
   },
-  "IPC_READ_LATENCY_MS": {
+  "IPC_READ_MAIN_THREAD_LATENCY_MS": {
     "alert_emails": ["mlayzell@mozilla.com"],
     "bug_numbers": [1342635],
     "expires_in_version": "60",
@@ -11010,9 +11037,9 @@
     "high": 500,
     "n_buckets": 20,
     "keyed": true,
-    "description": "Measures the number of milliseconds we spend waiting for IPC messages to deserialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe. This probe is keyed on the IPDL message name."
+    "description": "Measures the number of milliseconds we spend waiting on the main thread for IPC messages to deserialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe. This probe is keyed on the IPDL message name."
   },
-  "IPC_WRITE_LATENCY_MS": {
+  "IPC_WRITE_MAIN_THREAD_LATENCY_MS": {
     "alert_emails": ["mlayzell@mozilla.com"],
     "bug_numbers": [1342635],
     "expires_in_version": "60",
@@ -11020,6 +11047,6 @@
     "high": 500,
     "n_buckets": 20,
     "keyed": true,
-    "description": "Measures the number of milliseconds we spend waiting for IPC messages to serialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe. This probe is keyed on the IPDL message name."
+    "description": "Measures the number of milliseconds we spend waiting on the main thread for IPC messages to serialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe. This probe is keyed on the IPDL message name."
   }
 }

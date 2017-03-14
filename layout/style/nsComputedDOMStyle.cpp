@@ -4821,7 +4821,7 @@ nsComputedDOMStyle::DoGetClip()
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetWillChange()
 {
-  const nsTArray<nsString>& willChange = StyleDisplay()->mWillChange;
+  const nsCOMArray<nsIAtom>& willChange = StyleDisplay()->mWillChange;
 
   if (willChange.IsEmpty()) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
@@ -4830,10 +4830,9 @@ nsComputedDOMStyle::DoGetWillChange()
   }
 
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
-  for (size_t i = 0; i < willChange.Length(); i++) {
-    const nsString& willChangeIdentifier = willChange[i];
+  for (const nsIAtom* ident : willChange) {
     RefPtr<nsROCSSPrimitiveValue> property = new nsROCSSPrimitiveValue;
-    property->SetString(willChangeIdentifier);
+    property->SetString(nsDependentAtomString(ident));
     valueList->AppendCSSValue(property.forget());
   }
 

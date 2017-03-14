@@ -617,7 +617,19 @@ public:
 
   void MozDumpDebugInfo();
 
+  // For use by mochitests. Enabling pref "media.test.video-suspend"
   void SetVisible(bool aVisible);
+
+  // For use by mochitests. Enabling pref "media.test.video-suspend"
+  bool HasSuspendTaint() const;
+
+  // Synchronously, return the next video frame and mark the element unable to
+  // participate in decode suspending.
+  //
+  // This function is synchronous for cases where decoding has been suspended
+  // and JS needs a frame to use in, eg., nsLayoutUtils::SurfaceFromElement()
+  // via drawImage().
+  layers::Image* GetCurrentImage();
 
   already_AddRefed<DOMMediaStream> GetSrcObject() const;
   void SetSrcObject(DOMMediaStream& aValue);
@@ -1287,6 +1299,9 @@ protected:
 
   already_AddRefed<Promise> CreateDOMPromise(ErrorResult& aRv) const;
 
+  // Pass information for deciding the video decode mode to decoder.
+  void NotifyDecoderActivityChanges() const;
+
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<MediaDecoder> mDecoder;
@@ -1713,6 +1728,10 @@ private:
 
   // True if the audio track is not silent.
   bool mIsAudioTrackAudible;
+
+  // True if media element has been marked as 'tainted' and can't
+  // participate in video decoder suspending.
+  bool mHasSuspendTaint;
 
   Visibility mVisibilityState;
 

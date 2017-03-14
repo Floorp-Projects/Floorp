@@ -1198,8 +1198,16 @@ TimeoutManager::Freeze()
   MOZ_LOG(gLog, LogLevel::Debug,
           ("Freeze(TimeoutManager=%p)\n", this));
 
+  DebugOnly<bool> _seenDummyTimeout = false;
+
   TimeStamp now = TimeStamp::Now();
   ForEachUnorderedTimeout([&](Timeout* aTimeout) {
+    if (!aTimeout->mWindow) {
+      NS_ASSERTION(!_seenDummyTimeout, "More than one dummy timeout?!");
+      _seenDummyTimeout = true;
+      return;
+    }
+
     // Save the current remaining time for this timeout.  We will
     // re-apply it when the window is Thaw()'d.  This effectively
     // shifts timers to the right as if time does not pass while

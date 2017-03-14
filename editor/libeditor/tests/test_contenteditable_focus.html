@@ -134,14 +134,14 @@ function runTestsInternal()
   otherEditor.focus();
   is(SpecialPowers.unwrap(fm.focusedElement), otherEditor,
      "the other editor didn't get focus #2");
-  // Set selection to the span element in the editor (unfocused)
+  // Set selection to the span element in the editor.
   range = document.createRange();
   range.setStart(spanInEditor.firstChild, 5);
   selection.removeAllRanges();
   selection.addRange(range);
   is(selection.rangeCount, 1, "selection range is lost from the document");
-  is(SpecialPowers.unwrap(fm.focusedElement), otherEditor,
-     "the other editor shouldn't lose focus by selection range change");
+  is(SpecialPowers.unwrap(fm.focusedElement), editor,
+     "the other editor should lose focus by selection range change");
   ok(selCon.caretVisible, "caret isn't visible in inputTextInEditor");
   // Move focus to the editor
   editor.focus();

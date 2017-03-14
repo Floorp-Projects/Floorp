@@ -191,7 +191,10 @@ CaptureTask::PostTrackEndEvent()
   };
 
   IC_LOG("Got MediaStream track removed or finished event.");
-  NS_DispatchToMainThread(new TrackEndRunnable(this));
+  nsCOMPtr<nsIRunnable> event = new TrackEndRunnable(this);
+  SystemGroup::Dispatch("CaptureTask::TaskComplete",
+                        TaskCategory::Other,
+                        event.forget());
 }
 
 } // namespace mozilla

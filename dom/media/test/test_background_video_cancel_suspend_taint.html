@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test Background Video Suspend Cancels (Element Taint)</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="manifest.js"></script>
+<script src="background_video.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script type="text/javascript">
+"use strict";
+
+var manager = new MediaTestManager;
+
+/**
+ * @param {HTMLMediaElement} video Video element under test.
+ * @returns {Promise} Promise that is resolved when video decode resumes.
+ */
+function testSuspendTimerCanceledWhenTainted(video) {
+  function ended() {
+    video.removeEventListener("mozcancelvideosuspendtimer", canceled);
+    ok(false, `${video.token} ended before suspend cancels`);
+    this.ended_resolve();
+  }
+
+  function canceled() {
+    video.removeEventListener("ended", ended);
+    ok(true, `${video.token} suspend cancels`);
+    this.canceled_resolve();
+  }
+
+  let p = Promise.race([
+    new Promise((resolve) => {
+      video.ended_resolve = resolve;
+      video.addEventListener('ended', ended, { 'once': true });
+    }),
+    new Promise((resolve) => {
+      video.canceled_resolve = resolve;
+      video.addEventListener('mozcancelvideosuspendtimer', canceled, { 'once': true });
+    })
+  ]);
+
+  Log(video.token, "Mark tainted");
+
+  let c = document.createElement('canvas');
+  let g = c.getContext('2d');
+  g.drawImage(video, 0, 0, c.width, c.height);
+  ok(video.hasSuspendTaint(), 'video used with drawImage is tainted.');
+
+  return p;
+}
+
+startTest({
+  desc: 'Test Background Video Suspend Cancels (Element Taint)',
+  prefs: [
+    [ "media.test.video-suspend", true ],
+    [ "media.suspend-bkgnd-video.enabled", true ],
+    [ "media.suspend-bkgnd-video.delay-ms", 10000 ]
+  ],
+  tests: gDecodeSuspendTests,
+  runTest: (test, token) => {
+    let v = appendVideoToDoc(test.name, token);
+    manager.started(token);
+
+    waitUntilPlaying(v)
+      .then(() => testSuspendTimerStartedWhenHidden(v))
+      .then(() => testSuspendTimerCanceledWhenTainted(v))
+      .then(() => { manager.finished(token); });
+  }
+});
+</script>

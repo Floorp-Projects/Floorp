@@ -357,7 +357,6 @@ nsUrlClassifierStreamUpdater::FetchNext()
     LOG(("Error fetching update url: %s\n", update.mUrl.get()));
     // We can commit the urls that we've applied so far.  This is
     // probably a transient server problem, so trigger backoff.
-    mDownloadErrorCallback->HandleEvent(EmptyCString());
     mDownloadError = true;
     mDBService->FinishUpdate();
     return rv;
@@ -442,6 +441,7 @@ nsUrlClassifierStreamUpdater::UpdateSuccess(uint32_t requestedTimeout)
 
   // DownloadDone() clears mSuccessCallback, so we save it off here.
   nsCOMPtr<nsIUrlClassifierCallback> successCallback = mDownloadError ? nullptr : mSuccessCallback.get();
+  nsCOMPtr<nsIUrlClassifierCallback> downloadErrorCallback = mDownloadError ? mDownloadErrorCallback.get() : nullptr;
   DownloadDone();
 
   nsAutoCString strTimeout;
@@ -450,9 +450,10 @@ nsUrlClassifierStreamUpdater::UpdateSuccess(uint32_t requestedTimeout)
     LOG(("nsUrlClassifierStreamUpdater::UpdateSuccess callback [this=%p]",
          this));
     successCallback->HandleEvent(strTimeout);
-  } else {
-    LOG(("nsUrlClassifierStreamUpdater::UpdateSuccess skipping callback [this=%p]",
-         this));
+  } else if (downloadErrorCallback) {
+    downloadErrorCallback->HandleEvent(mDownloadErrorStatusStr);
+    mDownloadErrorStatusStr = EmptyCString();
+    LOG(("Notify download error callback in UpdateSuccess [this=%p]", this));
   }
   // Now fetch the next request
   LOG(("stream updater: calling into fetch next request"));
@@ -468,13 +469,17 @@ nsUrlClassifierStreamUpdater::UpdateError(nsresult result)
 
   // DownloadDone() clears mUpdateErrorCallback, so we save it off here.
   nsCOMPtr<nsIUrlClassifierCallback> errorCallback = mDownloadError ? nullptr : mUpdateErrorCallback.get();
-
+  nsCOMPtr<nsIUrlClassifierCallback> downloadErrorCallback = mDownloadError ? mDownloadErrorCallback.get() : nullptr;
   DownloadDone();
 
   nsAutoCString strResult;
   strResult.AppendInt(static_cast<uint32_t>(result));
   if (errorCallback) {
     errorCallback->HandleEvent(strResult);
+  } else if (downloadErrorCallback) {
+    LOG(("Notify download error callback in UpdateError [this=%p]", this));
+    downloadErrorCallback->HandleEvent(mDownloadErrorStatusStr);
+    mDownloadErrorStatusStr = EmptyCString();
   }
 
   return NS_OK;
@@ -705,13 +710,8 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
 
   if (downloadError) {
     LOG(("nsUrlClassifierStreamUpdater::Download error [this=%p]", this));
-
-    // It's possible for mDownloadErrorCallback to be null on shutdown.
-    if (mDownloadErrorCallback) {
-      mDownloadErrorCallback->HandleEvent(strStatus);
-    }
-
     mDownloadError = true;
+    mDownloadErrorStatusStr = strStatus;
     status = NS_ERROR_ABORT;
   } else if (NS_SUCCEEDED(status)) {
     MOZ_ASSERT(mDownloadErrorCallback);
