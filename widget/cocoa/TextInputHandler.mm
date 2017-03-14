@@ -942,7 +942,6 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
   }
 
   aKeyEvent.mRefPoint = LayoutDeviceIntPoint(0, 0);
-  aKeyEvent.mIsChar = false; // XXX not used in XP level
 
   UInt32 kbType = GetKbdType();
   UInt32 nativeKeyCode = [aNativeKeyEvent keyCode];
@@ -1126,8 +1125,6 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
   uint32_t charCode =
     insertStringForCharCode.IsEmpty() ? 0 : insertStringForCharCode[0];
   aKeyEvent.SetCharCode(charCode);
-  // this is not a special key  XXX not used in XP
-  aKeyEvent.mIsChar = (aKeyEvent.mMessage == eKeyPress);
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
@@ -2317,7 +2314,6 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
   //     string?  If it wants to delete the specified range, should we
   //     dispatch an eContentCommandDelete event instead?  Because this
   //     must not be caused by a key operation, a part of IME's processing.
-  keypressEvent.mIsChar = IsPrintableChar(str.CharAt(0));
 
   // Don't set other modifiers from the current event, because here in
   // -insertText: they've already been taken into account in creating
