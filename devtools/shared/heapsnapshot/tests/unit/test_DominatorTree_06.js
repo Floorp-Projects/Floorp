@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Test that the retained size of a node is the sum of its children retained
 // sizes plus its shallow size.
@@ -14,31 +15,31 @@ function fastAssert(cond, msg) {
   }
 }
 
-var COUNT = { by: "count", count: false, bytes: true };
+let COUNT = { by: "count", count: false, bytes: true };
 
 function run_test() {
-  var path = saveNewHeapSnapshot();
-  var snapshot = ChromeUtils.readHeapSnapshot(path);
-  var dominatorTree = snapshot.computeDominatorTree();
+  let path = saveNewHeapSnapshot();
+  let snapshot = ChromeUtils.readHeapSnapshot(path);
+  let dominatorTree = snapshot.computeDominatorTree();
 
   // Do a traversal of the dominator tree and assert the relationship between
   // retained size, shallow size, and children's retained sizes.
 
-  var root = dominatorTree.root;
-  var stack = [root];
+  let root = dominatorTree.root;
+  let stack = [root];
   while (stack.length > 0) {
-    var top = stack.pop();
+    let top = stack.pop();
 
-    var children = dominatorTree.getImmediatelyDominated(top);
+    let children = dominatorTree.getImmediatelyDominated(top);
 
-    var topRetainedSize = dominatorTree.getRetainedSize(top);
-    var topShallowSize = snapshot.describeNode(COUNT, top).bytes;
+    let topRetainedSize = dominatorTree.getRetainedSize(top);
+    let topShallowSize = snapshot.describeNode(COUNT, top).bytes;
     fastAssert(topShallowSize <= topRetainedSize,
                "The shallow size should be less than or equal to the " +
                "retained size");
 
-    var sumOfChildrensRetainedSizes = 0;
-    for (var i = 0; i < children.length; i++) {
+    let sumOfChildrensRetainedSizes = 0;
+    for (let i = 0; i < children.length; i++) {
       sumOfChildrensRetainedSizes += dominatorTree.getRetainedSize(children[i]);
       stack.push(children[i]);
     }

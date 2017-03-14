@@ -69,7 +69,8 @@ const expected = [
     }
   }),
 
-  makeTestDominatorTreeNode({ nodeId: 3000,
+  makeTestDominatorTreeNode({
+    nodeId: 3000,
     shortestPaths: {
       nodes: [
         { id: 3000, label: ["SomeType-3000"] },

@@ -7938,16 +7938,24 @@ js::gc::detail::CellIsNotGray(const Cell* cell)
     if (!detail::CellIsMarkedGray(tc))
         return true;
 
+    // The cell is gray, but may eventually be marked black if we are in an
+    // incremental GC and the cell is reachable by something on the mark stack.
+
     auto rt = tc->runtimeFromAnyThread();
-    Zone* sourceZone = nullptr;
-    if (rt->gc.isIncrementalGCInProgress() &&
-        !tc->zone()->wasGCStarted() &&
-        (sourceZone = rt->gc.marker.stackContainsCrossZonePointerTo(tc)) &&
-        sourceZone->wasGCStarted())
-    {
+    if (!rt->gc.isIncrementalGCInProgress() || tc->zone()->wasGCStarted())
+        return false;
+
+    // Bug 1346874 - The stack check is expensive. Android tests are already
+    // slow enough that this check can easily push them over the threshold to a
+    // timeout. So always assume the best on Android.
+# ifdef ANDROID
+    return true;
+# else
+    Zone* sourceZone = rt->gc.marker.stackContainsCrossZonePointerTo(tc);
+    if (sourceZone && sourceZone->wasGCStarted())
         return true;
-    }
 
     return false;
+# endif
 }
 #endif

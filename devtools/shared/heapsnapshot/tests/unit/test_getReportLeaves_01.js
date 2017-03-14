@@ -63,7 +63,8 @@ function run_test() {
       const [ leaf ] = CensusUtils.getReportLeaves(new Set([node.reportLeafIndex]),
                                                    BREAKDOWN,
                                                    REPORT);
-      ok(leaf, "Should be able to find leaf for a node with a reportLeafIndex = " + node.reportLeafIndex);
+      ok(leaf, "Should be able to find leaf "
+        + "for a node with a reportLeafIndex = " + node.reportLeafIndex);
     }
 
     if (node.children) {
@@ -88,6 +89,8 @@ function run_test() {
         }
       }
     }
+
+    return undefined;
   }
 
   const arrayNode = find("Array", root);

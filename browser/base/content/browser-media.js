@@ -249,6 +249,10 @@ let gDecoderDoctorHandler = {
     //   resolution of that issue, to be reported as telemetry.
     let {type, isSolved, decoderDoctorReportId, formats} = parsedData;
     type = type.toLowerCase();
+    // Error out early on invalid ReportId
+    if (!(/^\w+$/mi).test(decoderDoctorReportId)) {
+      return
+    }
     let title = gDecoderDoctorHandler.getLabelForNotificationBox(type);
     if (!title) {
       return;

@@ -2436,10 +2436,7 @@ nsFrameLoader::MaybeCreateDocShell()
     OriginAttributes oa = doc->NodePrincipal()->OriginAttributesRef();
 
     // Assert on the firstPartyDomain from top-level docshell should be empty
-    if (mIsTopLevelContent) {
-      MOZ_ASSERT(attrs.mFirstPartyDomain.IsEmpty(),
-                 "top-level docshell shouldn't have firstPartyDomain attribute.");
-    }
+    MOZ_ASSERT_IF(mIsTopLevelContent, attrs.mFirstPartyDomain.IsEmpty());
 
     // So far we want to make sure Inherit doesn't override any other origin
     // attribute than firstPartyDomain.
