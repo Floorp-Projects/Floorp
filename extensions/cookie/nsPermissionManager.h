@@ -276,6 +276,12 @@ private:
   nsresult
   RemoveAllModifiedSince(int64_t aModificationTime);
 
+  /**
+   * Retrieve permissions from chrome process.
+   */
+  nsresult
+  FetchPermissions();
+
   nsCOMPtr<mozIStorageConnection> mDBConn;
   nsCOMPtr<mozIStorageAsyncStatement> mStmtInsert;
   nsCOMPtr<mozIStorageAsyncStatement> mStmtDelete;
@@ -289,9 +295,6 @@ private:
 
   // An array to store the strings identifying the different types.
   nsTArray<nsCString>          mTypeArray;
-
-  // The base domains which have their permissions loaded in the current process.
-  nsTHashtable<nsCStringHashKey> mAvailablePermissionKeys;
 
   // Initially, |false|. Set to |true| once shutdown has started, to avoid
   // reopening the database.
