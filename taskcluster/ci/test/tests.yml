@@ -122,6 +122,10 @@ external-media-tests-twitch:
     treeherder-symbol: tc-VP(b-t)
     unittest-try-name: media-twitch-tests
     e10s: false
+    instance-size:
+        by-test-platform:
+            linux.*: xlarge
+            default: default
     tier: 2
     max-run-time: 5400
     docker-image: {"in-tree": "desktop1604-test"}
