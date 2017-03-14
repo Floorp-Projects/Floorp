@@ -27,12 +27,12 @@ Any line which doesn't follow the format above would be ignored like comment.
 ## Failures
 
 * Media query support:
-  * test_acid3_test46.html: @media support [13]
+  * test_acid3_test46.html: @media support [11]
   * test_bug1089417.html [1]
   * test_bug418986-2.html: matchMedia support [3]
   * test_bug453896_deck.html: &lt;style media&gt; support [8]
   * test_media_queries.html [684]
-  * test_media_queries_dynamic.html [17]
+  * test_media_queries_dynamic.html [10]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
@@ -428,7 +428,6 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_value_storage.html `33.5833px` [2]
   * ... `0.766667px` [2]
   * ... `105.333px` [2]
-* test_viewport_units.html: viewport units support [8]
 * test_value_storage.html `: var(--a)`: extra whitespace is added for shorthand with variables servo/servo#15295 [*]
 * border-width computed wrong bug 1335990
   * test_parse_rule.html `border-style` [4]
@@ -484,7 +483,6 @@ Any line which doesn't follow the format above would be ignored like comment.
   * unitless zero as angle bug 1234357
     * test_property_syntax_errors.html `linear-gradient(0,` [8]
     * ... `hue-rotate(0)` [6]
-* test_moz_device_pixel_ratio.html: probably unship -moz-device-pixel-ratio bug 1338425 [4]
 
 ## Spec Unclear
 
