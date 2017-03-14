@@ -53,7 +53,7 @@ add_task(function* flush_on_windowclose() {
   yield modifySessionStorage(browser, {test: "on-window-close"});
   yield BrowserTestUtils.closeWindow(win);
 
-  let [{tabs: [_, {storage}]}] = JSON.parse(ss.getClosedWindowData());
+  let [{tabs: [, {storage}]}] = JSON.parse(ss.getClosedWindowData());
   is(storage["http://example.com"].test, "on-window-close",
     "sessionStorage data has been flushed when closing a window");
 });
