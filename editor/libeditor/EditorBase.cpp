@@ -1586,11 +1586,10 @@ EditorBase::DeleteNode(nsINode* aNode)
     }
   }
 
-  RefPtr<DeleteNodeTransaction> transaction;
-  nsresult rv = CreateTxnForDeleteNode(aNode, getter_AddRefs(transaction));
-  if (NS_SUCCEEDED(rv))  {
-    rv = DoTransaction(transaction);
-  }
+  RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
+    CreateTxnForDeleteNode(aNode);
+  nsresult rv = deleteNodeTransaction ? DoTransaction(deleteNodeTransaction) :
+                                        NS_ERROR_FAILURE;
 
   {
     AutoActionListenerArray listeners(mActionListeners);
@@ -4291,12 +4290,11 @@ EditorBase::CreateTxnForInsertNode(nsIContent& aNode,
   return transaction.forget();
 }
 
-nsresult
-EditorBase::CreateTxnForDeleteNode(nsINode* aNode,
-                                   DeleteNodeTransaction** aTransaction)
+already_AddRefed<DeleteNodeTransaction>
+EditorBase::CreateTxnForDeleteNode(nsINode* aNode)
 {
   if (NS_WARN_IF(!aNode)) {
-    return NS_ERROR_NULL_POINTER;
+    return nullptr;
   }
 
   RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
@@ -4304,11 +4302,9 @@ EditorBase::CreateTxnForDeleteNode(nsINode* aNode,
   // This should be OK because if currently it cannot delete the node,
   // it should never be able to undo/redo.
   if (!deleteNodeTransaction->CanDoIt()) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
-  deleteNodeTransaction.forget(aTransaction);
-
-  return NS_OK;
+  return deleteNodeTransaction.forget();
 }
 
 already_AddRefed<CompositionTransaction>
@@ -4480,12 +4476,12 @@ EditorBase::CreateTxnForDeleteInsertionPoint(
       aTransaction->AppendChild(transaction);
     } else {
       // priorNode is not chardata, so tell its parent to delete it
-      RefPtr<DeleteNodeTransaction> transaction;
-      nsresult rv =
-        CreateTxnForDeleteNode(priorNode, getter_AddRefs(transaction));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      aTransaction->AppendChild(transaction);
+      RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
+        CreateTxnForDeleteNode(priorNode);
+      if (NS_WARN_IF(!deleteNodeTransaction)) {
+        return NS_ERROR_FAILURE;
+      }
+      aTransaction->AppendChild(deleteNodeTransaction);
     }
 
     NS_ADDREF(*aNode = priorNode);
@@ -4516,11 +4512,12 @@ EditorBase::CreateTxnForDeleteInsertionPoint(
       aTransaction->AppendChild(transaction);
     } else {
       // nextNode is not chardata, so tell its parent to delete it
-      RefPtr<DeleteNodeTransaction> transaction;
-      nsresult rv =
-        CreateTxnForDeleteNode(nextNode, getter_AddRefs(transaction));
-      NS_ENSURE_SUCCESS(rv, rv);
-      aTransaction->AppendChild(transaction);
+      RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
+        CreateTxnForDeleteNode(nextNode);
+      if (NS_WARN_IF(!deleteNodeTransaction)) {
+        return NS_ERROR_FAILURE;
+      }
+      aTransaction->AppendChild(deleteNodeTransaction);
     }
 
     NS_ADDREF(*aNode = nextNode);
@@ -4579,13 +4576,11 @@ EditorBase::CreateTxnForDeleteInsertionPoint(
       *aOffset = deleteTextTransaction->GetOffset();
       *aLength = deleteTextTransaction->GetNumCharsToDelete();
     } else {
-      RefPtr<DeleteNodeTransaction> deleteNodeTransaction;
-      nsresult rv =
-        CreateTxnForDeleteNode(selectedNode,
-                               getter_AddRefs(deleteNodeTransaction));
-      NS_ENSURE_SUCCESS(rv, rv);
-      NS_ENSURE_TRUE(deleteNodeTransaction, NS_ERROR_NULL_POINTER);
-
+      RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
+        CreateTxnForDeleteNode(selectedNode);
+      if (NS_WARN_IF(!deleteNodeTransaction)) {
+        return NS_ERROR_FAILURE;
+      }
       aTransaction->AppendChild(deleteNodeTransaction);
     }
 
