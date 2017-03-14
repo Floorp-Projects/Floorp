@@ -453,6 +453,9 @@ TEST_F(AccessibleCaretManagerTester, TestScrollInSelectionModeWithAlwaysTiltPref
                   CaretChangedReason::Scroll));
     EXPECT_CALL(check, Call("scrollstart1"));
 
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_)).Times(0);
+    EXPECT_CALL(check, Call("scrollPositionChanged1"));
+
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
                   CaretChangedReason::Updateposition));
     EXPECT_CALL(check, Call("reflow1"));
@@ -469,6 +472,9 @@ TEST_F(AccessibleCaretManagerTester, TestScrollInSelectionModeWithAlwaysTiltPref
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
                   CaretChangedReason::Scroll));
     EXPECT_CALL(check, Call("scrollstart2"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_)).Times(0);
+    EXPECT_CALL(check, Call("scrollPositionChanged2"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
                   CaretChangedReason::Updateposition));
@@ -490,6 +496,11 @@ TEST_F(AccessibleCaretManagerTester, TestScrollInSelectionModeWithAlwaysTiltPref
   EXPECT_EQ(SecondCaretAppearance(), Appearance::Right);
   check.Call("scrollstart1");
 
+  mManager.OnScrollPositionChanged();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::Right);
+  check.Call("scrollPositionChanged1");
+
   mManager.OnReflow();
   EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
   EXPECT_EQ(SecondCaretAppearance(), Appearance::Right);
@@ -504,6 +515,11 @@ TEST_F(AccessibleCaretManagerTester, TestScrollInSelectionModeWithAlwaysTiltPref
   EXPECT_EQ(FirstCaretAppearance(), Appearance::Left);
   EXPECT_EQ(SecondCaretAppearance(), Appearance::NormalNotShown);
   check.Call("scrollstart2");
+
+  mManager.OnScrollPositionChanged();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Left);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::NormalNotShown);
+  check.Call("scrollPositionChanged2");
 
   mManager.OnReflow();
   EXPECT_EQ(FirstCaretAppearance(), Appearance::Left);
@@ -795,6 +811,7 @@ TEST_F(AccessibleCaretManagerTester,
   // Scroll the caret into the viewport.
   mManager.OnScrollStart();
   check.Call("longtap scrollstart2");
+  mManager.OnScrollPositionChanged();
   mManager.OnScrollEnd();
   EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
   check.Call("longtap scrollend2");
@@ -802,6 +819,7 @@ TEST_F(AccessibleCaretManagerTester,
   // Scroll the caret within the viewport.
   mManager.OnScrollStart();
   check.Call("longtap scrollstart3");
+  mManager.OnScrollPositionChanged();
   mManager.OnScrollEnd();
   EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
   check.Call("longtap scrollend3");
