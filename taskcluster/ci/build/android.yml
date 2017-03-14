@@ -73,7 +73,6 @@ android-x86-nightly/opt:
         secrets: true
         custom-build-variant-cfg: x86
         tooltool-downloads: internal
-    run-on-projects: []
 
 android-api-15/opt:
     description: "Android 4.0 API15+ Opt"
@@ -126,7 +125,6 @@ android-api-15-nightly/opt:
         secrets: true
         custom-build-variant-cfg: api-15
         tooltool-downloads: internal
-    run-on-projects: [ ]
 
 android-api-15-gradle/opt:
     description: "Android 4.0 API15+ (Gradle) Opt"
