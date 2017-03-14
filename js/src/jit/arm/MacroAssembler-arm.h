@@ -456,24 +456,25 @@ class MacroAssemblerARM : public Assembler
     }
 
     // `outAny` is valid if and only if `out64` == Register64::Invalid().
-    void wasmLoadImpl(const wasm::MemoryAccessDesc& access, Register ptr, Register ptrScratch,
-                      AnyRegister outAny, Register64 out64);
+    void wasmLoadImpl(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
+                      Register ptrScratch, AnyRegister outAny, Register64 out64);
 
     // `valAny` is valid if and only if `val64` == Register64::Invalid().
     void wasmStoreImpl(const wasm::MemoryAccessDesc& access, AnyRegister valAny, Register64 val64,
-                       Register ptr, Register ptrScratch);
+                       Register memoryBase, Register ptr, Register ptrScratch);
 
   protected:
     // `outAny` is valid if and only if `out64` == Register64::Invalid().
-    void wasmUnalignedLoadImpl(const wasm::MemoryAccessDesc& access, Register ptr, Register ptrScratch,
-                               AnyRegister outAny, Register64 out64, Register tmp1, Register tmp2,
-                               Register tmp3);
+    void wasmUnalignedLoadImpl(const wasm::MemoryAccessDesc& access, Register memoryBase,
+                               Register ptr, Register ptrScratch, AnyRegister outAny,
+                               Register64 out64, Register tmp1, Register tmp2, Register tmp3);
 
     // The value to be stored is in `floatValue` (if not invalid), `val64` (if not invalid),
     // or in `valOrTmp` (if `floatValue` and `val64` are both invalid).  Note `valOrTmp` must
     // always be valid.
     void wasmUnalignedStoreImpl(const wasm::MemoryAccessDesc& access, FloatRegister floatValue,
-                                Register64 val64, Register ptr, Register ptrScratch, Register valOrTmp);
+                                Register64 val64, Register memoryBase, Register ptr,
+                                Register ptrScratch, Register valOrTmp);
 
   private:
     // Loads `byteSize` bytes, byte by byte, by reading from ptr[offset],
