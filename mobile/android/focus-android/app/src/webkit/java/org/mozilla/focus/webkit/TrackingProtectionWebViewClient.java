@@ -9,7 +9,6 @@ import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.AsyncTask;
 import android.support.annotation.WorkerThread;
-import android.webkit.HttpAuthHandler;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -20,6 +19,8 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.webkit.matcher.UrlMatcher;
 
 public class TrackingProtectionWebViewClient extends WebViewClient {
+
+    final static String ERROR_PROTOCOL = "error:";
 
     private String currentPageURL;
 
@@ -115,6 +116,32 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
         // - the WebResourceRequest would let us know if the error affects the main frame or not. As a workaround
         // we just check whether the failing URL is the current URL, which is enough to detect an error
         // in the main frame.
+
+        // WebView swallows odd pages and only sends an error (i.e. it doesn't go through the usual
+        // shouldOverrideUrlLoading), so we need to handle special pages here:
+        // about: urls are even more odd: webview doesn't tell us _anything_, hence the use of
+        // a different prefix:
+        if (failingUrl.startsWith(ERROR_PROTOCOL)) {
+            // format: error:<error_code>
+            final int errorCodePosition = ERROR_PROTOCOL.length();
+            final String errorCodeString = failingUrl.substring(errorCodePosition);
+
+            int desiredErrorCode;
+            try {
+                desiredErrorCode = Integer.parseInt(errorCodeString);
+
+                if (!ErrorPage.supportsErrorCode(desiredErrorCode)) {
+                    // I don't think there's any good way of showing an error if there's an error
+                    // in requesting an error page?
+                    desiredErrorCode = WebViewClient.ERROR_BAD_URL;
+                }
+            } catch (final NumberFormatException e) {
+                desiredErrorCode = WebViewClient.ERROR_BAD_URL;
+            }
+            ErrorPage.loadErrorPage(webView, failingUrl, desiredErrorCode);
+            return;
+        }
+
 
         // The API 23+ version also return a *slightly* more usable description, via WebResourceError.getError();
         // e.g.. "There was a network error.", whereas this version provides things like "net::ERR_NAME_NOT_RESOLVED"
