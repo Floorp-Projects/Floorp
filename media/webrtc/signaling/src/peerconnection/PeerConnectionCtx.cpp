@@ -85,12 +85,10 @@ public:
       PeerConnectionCtx::gPeerConnectionCtxObserver = nullptr;
     }
     if (strcmp(aTopic, NS_IOSERVICE_OFFLINE_STATUS_TOPIC) == 0) {
-      const nsLiteralString onlineString(u"" NS_IOSERVICE_ONLINE);
-      const nsLiteralString offlineString(u"" NS_IOSERVICE_OFFLINE);
-      if (NS_strcmp(aData, offlineString.get()) == 0) {
+      if (NS_strcmp(aData, u"" NS_IOSERVICE_OFFLINE) == 0) {
         CSFLogDebug(logTag, "Updating network state to offline");
         PeerConnectionCtx::UpdateNetworkState(false);
-      } else if(NS_strcmp(aData, onlineString.get()) == 0) {
+      } else if(NS_strcmp(aData, u"" NS_IOSERVICE_ONLINE) == 0) {
         CSFLogDebug(logTag, "Updating network state to online");
         PeerConnectionCtx::UpdateNetworkState(true);
       } else {
