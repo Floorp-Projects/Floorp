@@ -311,7 +311,7 @@ def get_element_text(tag, name, warnfunc=dummy_warn):
                 if "<![CDATA[" in raw:
                     # Don't escape CDATA sections - they're already hand-crafted and can break
                     # if we do more escaping:
-                    value += '<![CDATA[' + t.replace('\n', '') + ']]>'
+                    value += t.replace('\n', '')
                 else:
                     converted_value, elem_formatted = convert_text(t)
                     if elem_formatted:
@@ -897,6 +897,17 @@ def write_xml(tree, warnfunc=dummy_warn):
             string_el = write_to_dom(
                 'string', value, '"%s"' % name, namespaces_used, warnfunc)
             string_el.attrib['name'] = name
+
+            # If the input text contains html, we need to use CDATA to prevent
+            # Android's resource processing from turning it into an Android
+            # formatted spannable string
+            if len(string_el) == 1:
+                text = etree.tostring(string_el[0])
+                if '<ul>' in text:
+                    text = "<![CDATA[" + text + "]]>"
+                    del(string_el[0])
+                    string_el.text = text
+
             root_tags.append(string_el)
 
     # Generate the root element, define the namespaces that have been
