@@ -217,8 +217,9 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
         if not filter_for_project(task, parameters):
             return False
         platform = task.attributes.get('build_platform')
-        if platform in ('linux64-pgo', 'android-api-15-nightly',
-                        'android-x86-nightly'):
+        if platform in ('linux64-pgo', 'linux-pgo', 'win32-pgo', 'win64-pgo',
+                        'android-api-15-nightly', 'android-x86-nightly',
+                        'win32', 'win64', 'macosx64'):
             return False
         if platform in ('linux64', 'linux'):
             if task.attributes['build_type'] == 'opt':
@@ -226,7 +227,7 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
         # skip l10n, beetmover, balrog
         if task.kind in [
             'balrog', 'beetmover', 'beetmover-checksums', 'beetmover-l10n',
-            'checksums-signing', 'nightly-l10n', 'nightly-l10n-signing'
+            'checksums-signing', 'nightly-l10n', 'nightly-l10n-signing',
         ]:
             return False
         return True
