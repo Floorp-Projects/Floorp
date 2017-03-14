@@ -112,6 +112,7 @@ class CreateElementTransaction;
 class DeleteNodeTransaction;
 class DeleteTextTransaction;
 class EditAggregateTransaction;
+class EditTransactionBase;
 class ErrorResult;
 class HTMLEditor;
 class InsertNodeTransaction;
@@ -323,14 +324,24 @@ protected:
              int32_t* aOffset,
              int32_t* aLength);
 
-  nsresult CreateTxnForDeleteInsertionPoint(
-             nsRange* aRange,
-             EDirection aAction,
-             EditAggregateTransaction* aTransaction,
-             nsINode** aNode,
-             int32_t* aOffset,
-             int32_t* aLength);
-
+  /**
+   * Create a transaction for removing the nodes and/or text in aRange.
+   *
+   * @param aRangeToDelete      The range to be removed.
+   * @param aAction             The action caused removing the range.
+   * @param aRemovingNode       The node to be removed.
+   * @param aOffset             The start offset of the range in aRemovingNode.
+   * @param aLength             The length of the range in aRemovingNode.
+   * @return                    The transaction to remove the range.  Its type
+   *                            is DeleteNodeTransaction or
+   *                            DeleteTextTransaction.
+   */
+  already_AddRefed<EditTransactionBase>
+    CreateTxnForDeleteRange(nsRange* aRangeToDelete,
+                            EDirection aAction,
+                            nsINode** aRemovingNode,
+                            int32_t* aOffset,
+                            int32_t* aLength);
 
   /**
    * Create a transaction for inserting aStringToInsert into aTextNode.  Never
