@@ -158,6 +158,11 @@ this.Doctor = {
         continue;
       }
 
+      if (!await validator.canValidate()) {
+        log.debug(`Skipping validation for ${engineName} because validator.canValidate() is false`);
+        continue;
+      }
+
       // Let's do it!
       Services.console.logStringMessage(
         `Sync is about to run a consistency check of ${engine.name}. This may be slow, and ` +
