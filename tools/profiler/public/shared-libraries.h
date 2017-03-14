@@ -28,14 +28,18 @@ public:
                 uintptr_t aOffset,
                 const std::string& aBreakpadId,
                 const nsString& aModuleName,
+                const nsString& aModulePath,
                 const nsString& aDebugName,
+                const nsString& aDebugPath,
                 const std::string& aVersion)
     : mStart(aStart)
     , mEnd(aEnd)
     , mOffset(aOffset)
     , mBreakpadId(aBreakpadId)
     , mModuleName(aModuleName)
+    , mModulePath(aModulePath)
     , mDebugName(aDebugName)
+    , mDebugPath(aDebugPath)
     , mVersion(aVersion)
   {}
 
@@ -45,7 +49,9 @@ public:
     , mOffset(aEntry.mOffset)
     , mBreakpadId(aEntry.mBreakpadId)
     , mModuleName(aEntry.mModuleName)
+    , mModulePath(aEntry.mModulePath)
     , mDebugName(aEntry.mDebugName)
+    , mDebugPath(aEntry.mDebugPath)
     , mVersion(aEntry.mVersion)
   {}
 
@@ -59,7 +65,9 @@ public:
     mOffset = aEntry.mOffset;
     mBreakpadId = aEntry.mBreakpadId;
     mModuleName = aEntry.mModuleName;
+    mModulePath = aEntry.mModulePath;
     mDebugName = aEntry.mDebugName;
+    mDebugPath = aEntry.mDebugPath;
     mVersion = aEntry.mVersion;
     return *this;
   }
@@ -70,7 +78,9 @@ public:
            (mEnd == other.mEnd) &&
            (mOffset == other.mOffset) &&
            (mModuleName == other.mModuleName) &&
+           (mModulePath == other.mModulePath) &&
            (mDebugName == other.mDebugName) &&
+           (mDebugPath == other.mDebugPath) &&
            (mBreakpadId == other.mBreakpadId) &&
            (mVersion == other.mVersion);
   }
@@ -80,14 +90,16 @@ public:
   uintptr_t GetOffset() const { return mOffset; }
   const std::string &GetBreakpadId() const { return mBreakpadId; }
   const nsString &GetModuleName() const { return mModuleName; }
-  const std::string GetNativeDebugName() const {
-    nsAutoCString debugNameStr;
+  const nsString &GetModulePath() const { return mModulePath; }
+  const std::string GetNativeDebugPath() const {
+    nsAutoCString debugPathStr;
 
-    NS_CopyUnicodeToNative(mDebugName, debugNameStr);
+    NS_CopyUnicodeToNative(mDebugPath, debugPathStr);
 
-    return debugNameStr.get();
+    return debugPathStr.get();
   }
   const nsString &GetDebugName() const { return mDebugName; }
+  const nsString &GetDebugPath() const { return mDebugPath; }
   const std::string &GetVersion() const { return mVersion; }
 
 private:
@@ -98,7 +110,9 @@ private:
   uintptr_t mOffset;
   std::string mBreakpadId;
   nsString mModuleName;
+  nsString mModulePath;
   nsString mDebugName;
+  nsString mDebugPath;
   std::string mVersion;
 };
 
