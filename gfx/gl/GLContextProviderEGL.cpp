@@ -479,54 +479,85 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
         return nullptr;
     }
 
-    EGLContext eglShareContext = shareContext ? shareContext->mContext
-                                              : EGL_NO_CONTEXT;
+    std::vector<EGLint> required_attribs;
+    required_attribs.push_back(LOCAL_EGL_CONTEXT_CLIENT_VERSION);
+    if (flags & CreateContextFlags::PREFER_ES3) {
+        required_attribs.push_back(3);
+    } else {
+        required_attribs.push_back(2);
+    }
 
-    std::vector<EGLint> contextAttribs;
-
-    contextAttribs.push_back(LOCAL_EGL_CONTEXT_CLIENT_VERSION);
-    if (flags & CreateContextFlags::PREFER_ES3)
-        contextAttribs.push_back(3);
-    else
-        contextAttribs.push_back(2);
-
+    std::vector<EGLint> robustness_attribs;
+    std::vector<EGLint> rbab_attribs; // RBAB: Robust Buffer Access Behavior
     if (flags & CreateContextFlags::PREFER_ROBUSTNESS) {
+        if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::EXT_create_context_robustness)) {
+            robustness_attribs = required_attribs;
+            robustness_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT);
+            robustness_attribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT);
+            // Skip EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT, since it doesn't help us.
+        }
+
         if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_create_context)) {
-            contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR);
-            contextAttribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_KHR);
-            contextAttribs.push_back(LOCAL_EGL_CONTEXT_FLAGS_KHR);
-            contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR);
-        } else if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::EXT_create_context_robustness)) {
-            contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT);
-            contextAttribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT);
-            contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT);
-            contextAttribs.push_back(LOCAL_EGL_TRUE);
+            rbab_attribs = required_attribs;
+            rbab_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR);
+            rbab_attribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_KHR);
+            rbab_attribs.push_back(LOCAL_EGL_CONTEXT_FLAGS_KHR);
+            rbab_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR);
         }
     }
 
-    for (const auto& cur : kTerminationAttribs) {
-        contextAttribs.push_back(cur);
-    }
+    const auto fnCreate = [&](const std::vector<EGLint>& attribs) {
+        auto terminated_attribs = attribs;
 
-    EGLContext context = sEGLLibrary.fCreateContext(EGL_DISPLAY(),
-                                                    config,
-                                                    eglShareContext,
-                                                    contextAttribs.data());
-    if (!context && shareContext) {
-        shareContext = nullptr;
-        context = sEGLLibrary.fCreateContext(EGL_DISPLAY(), config, EGL_NO_CONTEXT,
-                                             contextAttribs.data());
-    }
-    if (!context) {
+        for (const auto& cur : kTerminationAttribs) {
+            terminated_attribs.push_back(cur);
+        }
+
+        if (shareContext) {
+            const auto context = sEGLLibrary.fCreateContext(EGL_DISPLAY(), config,
+                                                            shareContext->mContext,
+                                                            terminated_attribs.data());
+            if (context)
+                return context;
+        }
+        const auto context = sEGLLibrary.fCreateContext(EGL_DISPLAY(), config,
+                                                        EGL_NO_CONTEXT,
+                                                        terminated_attribs.data());
+        if (context) {
+            shareContext = nullptr;
+        }
+        return context;
+    };
+
+    EGLContext context;
+    do {
+        if (rbab_attribs.size()) {
+            context = fnCreate(rbab_attribs);
+            if (context)
+                break;
+            NS_WARNING("Failed to create EGLContext with rbab_attribs");
+        }
+
+        if (robustness_attribs.size()) {
+            context = fnCreate(robustness_attribs);
+            if (context)
+                break;
+            NS_WARNING("Failed to create EGLContext with robustness_attribs");
+        }
+
+        context = fnCreate(required_attribs);
+        if (context)
+            break;
+        NS_WARNING("Failed to create EGLContext with required_attribs");
+
         *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_CREATE");
-        NS_WARNING("Failed to create EGLContext!");
         return nullptr;
-    }
+    } while (false);
+    MOZ_ASSERT(context);
 
     RefPtr<GLContextEGL> glContext = new GLContextEGL(flags, caps, shareContext,
                                                       isOffscreen, config, surface,
                                                       context);
-
     if (!glContext->Init()) {
         *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_INIT");
         return nullptr;
