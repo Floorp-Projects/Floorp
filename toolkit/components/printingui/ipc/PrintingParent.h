@@ -33,9 +33,7 @@ public:
     RecvShowProgress(PBrowserParent* parent,
                      PPrintProgressDialogParent* printProgressDialog,
                      PRemotePrintJobParent* remotePrintJob,
-                     const bool& isForPrinting,
-                     bool* notifyOnOpen,
-                     nsresult* result);
+                     const bool& isForPrinting);
     virtual mozilla::ipc::IPCResult
     RecvShowPrintDialog(PPrintSettingsDialogParent* aDialog,
                         PBrowserParent* aParent,
