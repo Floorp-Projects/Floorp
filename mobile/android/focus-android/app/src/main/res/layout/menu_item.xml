@@ -11,4 +11,6 @@
     android:textSize="16sp"
     android:gravity="center_vertical"
     android:background="?android:attr/selectableItemBackground"
+    android:lines="1"
+    android:ellipsize="end"
     style="@android:style/TextAppearance.Material.Menu"/>

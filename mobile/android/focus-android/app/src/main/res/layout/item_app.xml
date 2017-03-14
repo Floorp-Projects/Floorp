@@ -26,6 +26,8 @@
         android:layout_marginStart="32dp"
         android:textColor="#ff212121"
         android:textSize="16sp"
+        android:lines="1"
+        android:ellipsize="end"
         android:gravity="center_vertical" />
 
 </LinearLayout>
