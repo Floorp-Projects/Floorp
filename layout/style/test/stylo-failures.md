@@ -40,7 +40,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_display_mode_reflow.html [2]
 * test_all_shorthand.html: all shorthand servo/servo#15055 [*]
 * Animation support:
-  * test_animations.html [36]
+  * test_animations.html [35]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
   * OMTA
@@ -465,7 +465,7 @@ Any line which doesn't follow the format above would be ignored like comment.
 * Content glue not implemented
   * assertion in computed style bug 1337635
   * assertion for unsupported or non-animatable property bug 1343710
-    * test_animations.html asserts [24]
+    * test_animations.html asserts [12]
 
 ## Need Gecko change
 
