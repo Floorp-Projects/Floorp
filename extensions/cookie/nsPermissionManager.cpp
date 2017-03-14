@@ -39,7 +39,6 @@
 #include "nsINavHistoryService.h"
 #include "nsToolkitCompsCID.h"
 #include "nsIObserverService.h"
-#include "nsPrintfCString.h"
 
 static nsPermissionManager *gPermissionManager = nullptr;
 
@@ -597,24 +596,6 @@ nsPermissionManager::PermissionKey::CreateFromPrincipal(nsIPrincipal* aPrincipal
   if (NS_WARN_IF(NS_FAILED(aResult))) {
     return nullptr;
   }
-
-#ifdef DEBUG
-  // Creating a PermissionsKey to look up a permission if we haven't had those keys
-  // synced down yet is problematic, so we do a check here and emit an assertion if
-  // we see it happening.
-  if (XRE_IsContentProcess()) {
-    nsAutoCString permissionKey;
-    GetKeyForPrincipal(aPrincipal, permissionKey);
-
-    // NOTE: Theoretically an addon could ask for permissions which the process
-    // wouldn't have access to, and we wouldn't want to crash the process in
-    // this case, but our chrome code should never do this. Using NS_ASSERTION
-    // here so that we can test fetching unavaliable permissions in tests.
-    NS_ASSERTION(gPermissionManager->mAvailablePermissionKeys.Contains(permissionKey),
-                 nsPrintfCString("This content process hasn't received the "
-                                 "permissions for %s yet", permissionKey.get()).get());
-  }
-#endif
 
   return new PermissionKey(origin);
 }
