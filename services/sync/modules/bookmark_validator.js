@@ -222,6 +222,10 @@ XPCOMUtils.defineLazyGetter(this, "SYNCED_ROOTS", () => [
 
 class BookmarkValidator {
 
+  async canValidate() {
+    return !await PlacesSyncUtils.bookmarks.havePendingChanges();
+  }
+
   _followQueries(recordMap) {
     for (let [guid, entry] of recordMap) {
       if (entry.type !== "query" && (!entry.bmkUri || !entry.bmkUri.startsWith(QUERY_PROTOCOL))) {
