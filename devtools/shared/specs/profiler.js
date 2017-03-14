@@ -92,7 +92,7 @@ const profilerSpec = generateActorSpec({
     isActive: {
       response: RetVal("json")
     },
-    getSharedLibraryInformation: {
+    sharedLibraries: {
       response: RetVal("json")
     },
     registerEventNotifications: {
