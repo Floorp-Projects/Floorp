@@ -71,6 +71,10 @@ Object.defineProperty(this, "_maxUsedThemes", {
 var _themeIDBeingEnabled = null;
 var _themeIDBeingDisabled = null;
 
+// Holds optional fallback theme data that will be returned when no data for an
+// active theme can be found. This the case for WebExtension Themes, for example.
+var _fallbackThemeData = null;
+
 // Convert from the old storage format (in which the order of usedThemes
 // was combined with isThemeSelected to determine which theme was selected)
 // to the new one (where a selectedThemeID determines which theme is selected).
@@ -94,6 +98,19 @@ var _themeIDBeingDisabled = null;
 this.LightweightThemeManager = {
   get name() {
     return "LightweightThemeManager";
+  },
+
+  set fallbackThemeData(data) {
+    if (data && Object.getOwnPropertyNames(data).length) {
+      _fallbackThemeData = Object.assign({}, data);
+      if (PERSIST_ENABLED) {
+        LightweightThemeImageOptimizer.purge();
+        _persistImages(_fallbackThemeData, () => {});
+      }
+    } else {
+      _fallbackThemeData = null;
+    }
+    return _fallbackThemeData;
   },
 
   // Themes that can be added for an application.  They can't be removed, and
@@ -123,6 +140,8 @@ this.LightweightThemeManager = {
 
   get currentThemeForDisplay() {
     var data = this.currentTheme;
+    if (!data && _fallbackThemeData)
+      data = _fallbackThemeData;
 
     if (data && PERSIST_ENABLED) {
       for (let key in PERSIST_FILES) {
