@@ -51,6 +51,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     }
 
     private final class InputProcessor {
+        private static final int FEW_PENDING_INPUTS = 2;
         private boolean mHasInputCapacitySet;
         private Queue<Integer> mAvailableInputBuffers = new LinkedList<>();
         private Queue<Sample> mDequeuedSamples = new LinkedList<>();
@@ -123,10 +124,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                     ByteBuffer buf = mCodec.getInputBuffer(index);
                     try {
                         sample.writeToByteBuffer(buf);
-                        mCallbacks.onInputExhausted();
                     } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (RemoteException e) {
                         e.printStackTrace();
                     }
                     mSamplePool.recycleInput(sample);
@@ -136,6 +134,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                     mCodec.queueSecureInputBuffer(index, 0, cryptoInfo, pts, flags);
                 } else {
                     mCodec.queueInputBuffer(index, 0, len, pts, flags);
+                }
+            }
+            // To avoid input queue flood, request more input samples only when
+            // there are just a few waiting to be processed.
+            if (mDequeuedSamples.size() + mInputSamples.size() <= FEW_PENDING_INPUTS) {
+                try {
+                    mCallbacks.onInputExhausted();
+                } catch (RemoteException e) {
+                    e.printStackTrace();
                 }
             }
         }
