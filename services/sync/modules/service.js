@@ -230,12 +230,13 @@ Sync11Service.prototype = {
       cryptoKeys.ciphertext = cipherText;
       cryptoKeys.cleartext  = null;
 
-      let uploadResp = cryptoKeys.upload(this.resource(this.cryptoKeysURL));
-      if (uploadResp.success)
+      let uploadResp = this._uploadCryptoKeys(cryptoKeys, cryptoResp.obj.modified);
+      if (uploadResp.success) {
         this._log.info("Successfully re-uploaded keys. Continuing sync.");
-      else
+      } else {
         this._log.warn("Got error response re-uploading keys. " +
                        "Continuing sync; let's try again later.");
+      }
 
       return false;            // Don't try again: same keys.
 
@@ -676,8 +677,7 @@ Sync11Service.prototype = {
     this._log.info("Encrypting new key bundle.");
     wbo.encrypt(this.identity.syncKeyBundle);
 
-    this._log.info("Uploading...");
-    let uploadRes = wbo.upload(this.resource(this.cryptoKeysURL));
+    let uploadRes = this._uploadCryptoKeys(wbo, 0);
     if (uploadRes.status != 200) {
       this._log.warn("Got status " + uploadRes.status + " uploading new keys. What to do? Throw!");
       this.errorHandler.checkServerError(uploadRes);
@@ -1140,6 +1140,19 @@ Sync11Service.prototype = {
     // "Successful responses will return the new last-modified time for the collection."
     meta.modified = response.obj;
     this.recordManager.set(this.metaURL, meta);
+  },
+
+  /**
+   * Upload crypto/keys
+   * @param {WBORecord} cryptoKeys crypto/keys record
+   * @param {Number} lastModified known last modified timestamp (in decimal seconds),
+   *                 will be used to set the X-If-Unmodified-Since header
+   */
+  _uploadCryptoKeys(cryptoKeys, lastModified) {
+    this._log.debug(`Uploading crypto/keys (lastModified: ${lastModified})`);
+    let res = this.resource(this.cryptoKeysURL);
+    res.setHeader("X-If-Unmodified-Since", lastModified);
+    return res.put(cryptoKeys);
   },
 
   _freshStart: function _freshStart() {
