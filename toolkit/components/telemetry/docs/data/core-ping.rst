@@ -55,6 +55,7 @@ Structure:
                             // e.g.: { "yahoo.suggestion": 3, "other.listitem": 1 }
       "experiments": [<string>, /* … */], // Optional, array of identifiers
                                     // for the active experiments
+      "flashUsage": <integer>, // number of times flash plugin is played since last upload
     }
 
 Field details
@@ -157,6 +158,7 @@ et al (e.g. "Tue, 01 Feb 2011 14:00:00 GMT").
 
 Version history
 ---------------
+* v8: added ``flashUsage``
 * v7: added ``sessionCount`` & ``sessionDuration``
 * v6: added ``searches``
 * v5: added ``created`` & ``tz``
