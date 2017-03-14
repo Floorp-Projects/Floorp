@@ -29,7 +29,7 @@ const nsCString nsNSSU2FToken::mSecretNickname =
   NS_LITERAL_CSTRING("U2F_NSSTOKEN");
 const nsString nsNSSU2FToken::mVersion =
   NS_LITERAL_STRING("U2F_V2");
-NS_NAMED_LITERAL_CSTRING(kAttestCertSubjectName, "CN=Firefox U2F Soft Token");
+const char* kAttestCertSubjectName = "CN=Firefox U2F Soft Token";
 
 // This U2F-compatible soft token uses FIDO U2F-compatible ECDSA keypairs
 // on the SEC_OID_SECG_EC_SECP256R1 curve. When asked to Register, it will
@@ -256,7 +256,7 @@ GetAttestationCertificate(const UniquePK11SlotInfo& aSlot,
   }
 
   // Construct the Attestation Certificate itself
-  UniqueCERTName subjectName(CERT_AsciiToName(kAttestCertSubjectName.get()));
+  UniqueCERTName subjectName(CERT_AsciiToName(kAttestCertSubjectName));
   if (!subjectName) {
     MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
             ("Failed to set subject name, NSS error #%d", PORT_GetError()));
