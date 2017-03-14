@@ -1128,6 +1128,9 @@ StreamMetaJSCustomObject(PS::LockRef aLock, SpliceableJSONWriter& aWriter)
   bool asyncStacks = Preferences::GetBool("javascript.options.asyncstack");
   aWriter.IntProperty("asyncstack", asyncStacks);
 
+  // The "startTime" field holds the number of milliseconds since midnight
+  // January 1, 1970 GMT. This grotty code computes (Now - (Now - StartTime))
+  // to convert gPS->StartTime() into that form.
   mozilla::TimeDuration delta =
     mozilla::TimeStamp::Now() - gPS->StartTime(aLock);
   aWriter.DoubleProperty(
