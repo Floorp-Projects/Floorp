@@ -1632,11 +1632,11 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
       gcMsg.AssignLiteral(", forced a GC");
     }
 
-    NS_NAMED_LITERAL_STRING(kFmt,
+    const char16_t *kFmt =
       u"CC(T+%.1f)[%s-%i] max pause: %lums, total time: %lums, slices: %lu, suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu RCed and %lu GCed (%lu|%lu|%lu waiting for GC)%s\n"
-      u"ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, max sync: %lu ms, removed: %lu");
+      u"ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, max sync: %lu ms, removed: %lu";
     nsString msg;
-    msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), double(delta) / PR_USEC_PER_SEC,
+    msg.Adopt(nsTextFormatter::smprintf(kFmt, double(delta) / PR_USEC_PER_SEC,
                                         ProcessNameForCollectorLog(), getpid(),
                                         gCCStats.mMaxSliceTime, gCCStats.mTotalSliceTime,
                                         aResults.mNumSlices, gCCStats.mSuspected,
@@ -1664,7 +1664,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
   }
 
   if (sPostGCEventsToObserver) {
-    NS_NAMED_LITERAL_STRING(kJSONFmt,
+    const char16_t* kJSONFmt =
        u"{ \"timestamp\": %llu, "
          u"\"duration\": %lu, "
          u"\"max_slice_pause\": %lu, "
@@ -1689,10 +1689,10 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
              u"\"avg\": %lu, "
              u"\"total\": %lu, "
              u"\"removed\": %lu } "
-       u"}");
+       u"}";
     nsString json;
 
-    json.Adopt(nsTextFormatter::smprintf(kJSONFmt.get(), PR_Now(), ccNowDuration,
+    json.Adopt(nsTextFormatter::smprintf(kJSONFmt, PR_Now(), ccNowDuration,
                                          gCCStats.mMaxSliceTime,
                                          gCCStats.mTotalSliceTime,
                                          gCCStats.mMaxGCDuration,
@@ -2139,10 +2139,9 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
       PRTime delta = GetCollectionTimeDelta();
 
       if (sPostGCEventsToConsole) {
-        NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f)[%s-%i] ");
         nsString prefix, gcstats;
         gcstats.Adopt(aDesc.formatSummaryMessage(aCx));
-        prefix.Adopt(nsTextFormatter::smprintf(kFmt.get(),
+        prefix.Adopt(nsTextFormatter::smprintf(u"GC(T+%.1f)[%s-%i] ",
                                                double(delta) / PR_USEC_PER_SEC,
                                                ProcessNameForCollectorLog(),
                                                getpid()));
@@ -2223,10 +2222,9 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
       }
 
       if (sPostGCEventsToConsole) {
-        NS_NAMED_LITERAL_STRING(kFmt, "[%s-%i] ");
         nsString prefix, gcstats;
         gcstats.Adopt(aDesc.formatSliceMessage(aCx));
-        prefix.Adopt(nsTextFormatter::smprintf(kFmt.get(),
+        prefix.Adopt(nsTextFormatter::smprintf(u"[%s-%i] ",
                                                ProcessNameForCollectorLog(),
                                                getpid()));
         nsString msg = prefix + gcstats;
