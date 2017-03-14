@@ -43,12 +43,30 @@
 static nsPermissionManager *gPermissionManager = nullptr;
 
 using mozilla::dom::ContentParent;
+using mozilla::dom::ContentChild;
 using mozilla::Unused; // ha!
 
 static bool
 IsChildProcess()
 {
   return XRE_IsContentProcess();
+}
+
+/**
+ * @returns The child process object, or if we are not in the child
+ *          process, nullptr.
+ */
+static ContentChild*
+ChildProcess()
+{
+  if (IsChildProcess()) {
+    ContentChild* cpc = ContentChild::GetSingleton();
+    if (!cpc)
+      MOZ_CRASH("Content Process is nullptr!");
+    return cpc;
+  }
+
+  return nullptr;
 }
 
 static void
@@ -780,9 +798,8 @@ nsPermissionManager::Init()
   mMemoryOnlyDB = mozilla::Preferences::GetBool("permissions.memory_only", false);
 
   if (IsChildProcess()) {
-    // Stop here; we don't need the DB in the child process. Instead we will be
-    // sent permissions as we need them by our parent process.
-    return NS_OK;
+    // Stop here; we don't need the DB in the child process
+    return FetchPermissions();
   }
 
   nsCOMPtr<nsIObserverService> observerService =
@@ -2892,87 +2909,19 @@ nsPermissionManager::UpdateExpireTime(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPermissionManager::GetPermissionsWithKey(const nsACString& aPermissionKey,
-                                           nsTArray<IPC::Permission>& aPerms)
-{
-  aPerms.Clear();
-  if (NS_WARN_IF(XRE_IsContentProcess())) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+nsresult
+nsPermissionManager::FetchPermissions() {
+  MOZ_ASSERT(IsChildProcess(), "FetchPermissions can only be invoked in child process");
+  // Get the permissions from the parent process
+  InfallibleTArray<IPC::Permission> perms;
+  ChildProcess()->SendReadPermissions(&perms);
 
-  for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
-    PermissionHashKey* entry = iter.Get();
+  for (uint32_t i = 0; i < perms.Length(); i++) {
+    const IPC::Permission &perm = perms[i];
 
-    // XXX: Is it worthwhile to have a shortcut Origin->Key implementation? as
-    // we could implement this without creating a codebase principal.
-
-    // Fetch the principal for the given origin.
-    nsCOMPtr<nsIPrincipal> principal;
-    nsresult rv = GetPrincipalFromOrigin(entry->GetKey()->mOrigin,
-                                         getter_AddRefs(principal));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      continue;
-    }
-
-    // Get the permission key and make sure that it matches the aPermissionKey
-    // passed in.
-    nsAutoCString permissionKey;
-    GetKeyForPrincipal(principal, permissionKey);
-
-    if (permissionKey != aPermissionKey) {
-      continue;
-    }
-
-    for (const auto& permEntry : entry->GetPermissions()) {
-      // Given how "default" permissions work and the possibility of them being
-      // overridden with UNKNOWN_ACTION, we might see this value here - but we
-      // do not want to send it to the content process.
-      if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
-        continue;
-      }
-
-      aPerms.AppendElement(IPC::Permission(entry->GetKey()->mOrigin,
-                                           mTypeArray.ElementAt(permEntry.mType),
-                                           permEntry.mPermission,
-                                           permEntry.mExpireType,
-                                           permEntry.mExpireTime));
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPermissionManager::SetPermissionsWithKey(const nsACString& aPermissionKey,
-                                           nsTArray<IPC::Permission>& aPerms)
-{
-  if (NS_WARN_IF(XRE_IsParentProcess())) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  // Record that we have seen the permissions with the given permission key.
-  if (NS_WARN_IF(mAvailablePermissionKeys.Contains(aPermissionKey))) {
-    // NOTE: We shouldn't be sent two InitializePermissionsWithKey for the same
-    // key, but it's possible.
-    return NS_OK;
-  }
-  mAvailablePermissionKeys.PutEntry(aPermissionKey);
-
-  // Add the permissions locally to our process
-  for (IPC::Permission& perm : aPerms) {
     nsCOMPtr<nsIPrincipal> principal;
     nsresult rv = GetPrincipalFromOrigin(perm.origin, getter_AddRefs(principal));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      continue;
-    }
-
-#ifdef DEBUG
-    nsAutoCString permissionKey;
-    GetKeyForPrincipal(principal, permissionKey);
-    MOZ_ASSERT(permissionKey == aPermissionKey,
-               "The permission keys which were sent over should match!");
-#endif
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // The child process doesn't care about modification times - it neither
     // reads nor writes, nor removes them based on the date - so 0 (which

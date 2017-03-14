@@ -3222,16 +3222,5 @@ ContentChild::RecvParentActivated(PBrowserChild* aTab, const bool& aActivated)
   return tab->RecvParentActivated(aActivated);
 }
 
-mozilla::ipc::IPCResult
-ContentChild::RecvSetPermissionsWithKey(const nsCString& aPermissionKey,
-                                        nsTArray<IPC::Permission>&& aPerms)
-{
-  nsCOMPtr<nsIPermissionManager> permissionManager =
-    services::GetPermissionManager();
-  permissionManager->SetPermissionsWithKey(aPermissionKey, aPerms);
-
-  return IPC_OK();
-}
-
 } // namespace dom
 } // namespace mozilla
