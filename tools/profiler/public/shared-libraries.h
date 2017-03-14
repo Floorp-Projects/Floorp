@@ -27,14 +27,14 @@ public:
                 uintptr_t aEnd,
                 uintptr_t aOffset,
                 const std::string& aBreakpadId,
-                const nsString& aName,
+                const nsString& aModuleName,
                 const nsString& aDebugName,
                 const std::string& aVersion)
     : mStart(aStart)
     , mEnd(aEnd)
     , mOffset(aOffset)
     , mBreakpadId(aBreakpadId)
-    , mName(aName)
+    , mModuleName(aModuleName)
     , mDebugName(aDebugName)
     , mVersion(aVersion)
   {}
@@ -44,7 +44,7 @@ public:
     , mEnd(aEntry.mEnd)
     , mOffset(aEntry.mOffset)
     , mBreakpadId(aEntry.mBreakpadId)
-    , mName(aEntry.mName)
+    , mModuleName(aEntry.mModuleName)
     , mDebugName(aEntry.mDebugName)
     , mVersion(aEntry.mVersion)
   {}
@@ -58,7 +58,7 @@ public:
     mEnd = aEntry.mEnd;
     mOffset = aEntry.mOffset;
     mBreakpadId = aEntry.mBreakpadId;
-    mName = aEntry.mName;
+    mModuleName = aEntry.mModuleName;
     mDebugName = aEntry.mDebugName;
     mVersion = aEntry.mVersion;
     return *this;
@@ -69,7 +69,7 @@ public:
     return (mStart == other.mStart) &&
            (mEnd == other.mEnd) &&
            (mOffset == other.mOffset) &&
-           (mName == other.mName) &&
+           (mModuleName == other.mModuleName) &&
            (mDebugName == other.mDebugName) &&
            (mBreakpadId == other.mBreakpadId) &&
            (mVersion == other.mVersion);
@@ -79,7 +79,7 @@ public:
   uintptr_t GetEnd() const { return mEnd; }
   uintptr_t GetOffset() const { return mOffset; }
   const std::string &GetBreakpadId() const { return mBreakpadId; }
-  const nsString &GetName() const { return mName; }
+  const nsString &GetModuleName() const { return mModuleName; }
   const std::string GetNativeDebugName() const {
     nsAutoCString debugNameStr;
 
@@ -97,7 +97,7 @@ private:
   uintptr_t mEnd;
   uintptr_t mOffset;
   std::string mBreakpadId;
-  nsString mName;
+  nsString mModuleName;
   nsString mDebugName;
   std::string mVersion;
 };
