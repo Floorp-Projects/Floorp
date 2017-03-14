@@ -161,4 +161,15 @@ interface mozILocaleService : nsISupports
    */
   void setRequestedLocales([array, size_is(aRequestedCount)] in string aRequested,
                            [optional] in unsigned long aRequestedCount);
+
+  /**
+   * Returns a list of locales that the app can be localized to.
+   *
+   * The result is an unordered list of locale IDs which should be
+   * used as a availableLocales input list for language negotiation.
+   *
+   * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
+   */
+  void getAvailableLocales([optional] out unsigned long aCount,
+                           [retval, array, size_is(aCount)] out string aLocales);
 };
