@@ -134,6 +134,13 @@ const GENERIC_OPTION_STYLED_AS_IMPORTANT =
   '  <option value="Two" selected="true">{"end": "true"}</option>' +
   "</select></body></html>";
 
+const TRANSLUCENT_SELECT_BECOMES_OPAQUE =
+  "<html><head>" +
+  "<body><select id='one' style='background-color: rgba(255,255,255,.55);'>" +
+  '  <option value="One">{"color": "rgb(0, 0, 0)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
+  '  <option value="Two" selected="true">{"end": "true"}</option>' +
+  "</select></body></html>";
+
 function openSelectPopup(selectPopup, mode = "key", selector = "select", win = window) {
   let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
 
@@ -1005,6 +1012,45 @@ add_task(function* test_select_background_using_important() {
   let idx = 1;
   ok(!child.selected, "The first child should not be selected");
 
+  while (child) {
+    testOptionColors(idx, child, menulist);
+    idx++;
+    child = child.nextSibling;
+  }
+
+  yield hideSelectPopup(selectPopup, "escape");
+
+  yield BrowserTestUtils.removeTab(tab);
+});
+
+
+// This test checks when a <select> element has a background set, and the
+// options have their own background set which is equal to the default
+// user-agent background color, but should be used because the select
+// background color has been changed.
+add_task(function* test_translucent_select_becomes_opaque() {
+  const pageUrl = "data:text/html," + escape(TRANSLUCENT_SELECT_BECOMES_OPAQUE);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
+
+  let menulist = document.getElementById("ContentSelectDropdown");
+  let selectPopup = menulist.menupopup;
+
+  let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
+  yield BrowserTestUtils.synthesizeMouseAtCenter("#one", { type: "mousedown" }, gBrowser.selectedBrowser);
+  yield popupShownPromise;
+
+  is(selectPopup.parentNode.itemCount, 2, "Correct number of items");
+  let child = selectPopup.firstChild;
+  let idx = 1;
+
+  // The popup is requested to show a translucent background
+  // but we force the alpha channel to 1 on the popup.
+  is(getComputedStyle(selectPopup).color, "rgb(0, 0, 0)",
+    "popup has expected foreground color");
+  is(getComputedStyle(selectPopup).backgroundColor, "rgb(255, 255, 255)",
+    "popup has expected background color");
+
+  ok(!child.selected, "The first child should not be selected");
   while (child) {
     testOptionColors(idx, child, menulist);
     idx++;
