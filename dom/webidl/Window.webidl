@@ -183,10 +183,14 @@ partial interface Window {
   [ChromeOnly] void mozScrollSnap();
   // The four properties below are double per spec at the moment, but whether
   // that will continue is unclear.
-  [Replaceable, Throws] readonly attribute double scrollX;
-  [Replaceable, Throws] readonly attribute double pageXOffset;
-  [Replaceable, Throws] readonly attribute double scrollY;
-  [Replaceable, Throws] readonly attribute double pageYOffset;
+  //[Replaceable, Throws] readonly attribute double scrollX;
+  //[Replaceable, Throws] readonly attribute double pageXOffset;
+  //[Replaceable, Throws] readonly attribute double scrollY;
+  //[Replaceable, Throws] readonly attribute double pageYOffset;
+  [Replaceable, Throws] readonly attribute long scrollX;
+  [Replaceable, Throws] readonly attribute long pageXOffset;
+  [Replaceable, Throws] readonly attribute long scrollY;
+  [Replaceable, Throws] readonly attribute long pageYOffset;
 
   // client
   // These are writable because we allow chrome to write them.  And they need
