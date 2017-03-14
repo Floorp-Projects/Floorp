@@ -132,6 +132,26 @@ const TAB_EVENTS = [
 
 const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+/**
+ * When calling restoreTabContent, we can supply a reason why
+ * the content is being restored. These are those reasons.
+ */
+const RESTORE_TAB_CONTENT_REASON = {
+  /**
+   * SET_STATE:
+   * We're restoring this tab's content because we're setting
+   * state inside this browser tab, probably because the user
+   * has asked us to restore a tab (or window, or entire session).
+   */
+  SET_STATE: 0,
+  /**
+   * NAVIGATE_AND_RESTORE:
+   * We're restoring this tab's content because a navigation caused
+   * us to do a remoteness-flip.
+   */
+  NAVIGATE_AND_RESTORE: 1,
+};
+
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
@@ -906,11 +926,15 @@ var SessionStoreInternal = {
           // If a load not initiated by sessionstore was started in a
           // previously pending tab. Mark the tab as no longer pending.
           this.markTabAsRestoring(tab);
-        } else if (!data.isRemotenessUpdate) {
+        } else if (data.reason != RESTORE_TAB_CONTENT_REASON.NAVIGATE_AND_RESTORE) {
           // If the user was typing into the URL bar when we crashed, but hadn't hit
           // enter yet, then we just need to write that value to the URL bar without
           // loading anything. This must happen after the load, as the load will clear
           // userTypedValue.
+          //
+          // Note that we only want to do that if we're restoring state for reasons
+          // _other_ than a navigateAndRestore remoteness-flip, as such a flip
+          // implies that the user was navigating.
           let tabData = TabState.collect(tab);
           if (tabData.userTypedValue && !tabData.userTypedClear && !browser.userTypedValue) {
             browser.userTypedValue = tabData.userTypedValue;
@@ -2797,6 +2821,9 @@ var SessionStoreInternal = {
         // whether or not a historyIndex is passed in. Thus, we extract it from
         // the loadArguments.
         reloadInFreshProcess: !!recentLoadArguments.reloadInFreshProcess,
+        // Make sure that SessionStore knows that this restoration is due
+        // to a navigation, as opposed to us restoring a closed window or tab.
+        restoreContentReason: RESTORE_TAB_CONTENT_REASON.NAVIGATE_AND_RESTORE,
       };
 
       if (historyIndex >= 0) {
@@ -3458,6 +3485,7 @@ var SessionStoreInternal = {
     let tabbrowser = window.gBrowser;
     let forceOnDemand = options.forceOnDemand;
     let reloadInFreshProcess = options.reloadInFreshProcess;
+    let restoreContentReason = options.restoreContentReason;
 
     let willRestoreImmediately = restoreImmediately ||
                                  tabbrowser.selectedBrowser == browser ||
@@ -3582,7 +3610,8 @@ var SessionStoreInternal = {
     // This could cause us to ignore MAX_CONCURRENT_TAB_RESTORES a bit, but
     // it ensures each window will have its selected tab loaded.
     if (willRestoreImmediately) {
-      this.restoreTabContent(tab, loadArguments, reloadInFreshProcess);
+      this.restoreTabContent(tab, loadArguments, reloadInFreshProcess,
+                             restoreContentReason);
     } else if (!forceOnDemand) {
       this.restoreNextTab();
     }
@@ -3600,8 +3629,13 @@ var SessionStoreInternal = {
    *        optional load arguments used for loadURI()
    * @param aReloadInFreshProcess
    *        true if we want to reload into a fresh process
+   * @param aReason
+   *        The reason for why this tab content is being restored.
+   *        Should be one of the values within RESTORE_TAB_CONTENT_REASON.
+   *        Defaults to RESTORE_TAB_CONTENT_REASON.SET_STATE.
    */
-  restoreTabContent(aTab, aLoadArguments = null, aReloadInFreshProcess = false) {
+  restoreTabContent(aTab, aLoadArguments = null, aReloadInFreshProcess = false,
+                    aReason = RESTORE_TAB_CONTENT_REASON.SET_STATE) {
     if (aTab.hasAttribute("customizemode") && !aLoadArguments) {
       return;
     }
@@ -3661,7 +3695,8 @@ var SessionStoreInternal = {
     }
 
     browser.messageManager.sendAsyncMessage("SessionStore:restoreTabContent",
-      {loadArguments: aLoadArguments, isRemotenessUpdate});
+      {loadArguments: aLoadArguments, isRemotenessUpdate,
+       reason: aReason});
   },
 
   /**
