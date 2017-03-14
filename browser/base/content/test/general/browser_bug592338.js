@@ -77,8 +77,7 @@ function test_lwtheme_switch_theme() {
 
   AddonManager.getAddonByID("theme-xpi@tests.mozilla.org", function(aAddon) {
     aAddon.userDisabled = false;
-    ok(aAddon.isActive, "Theme should have immediately enabled");
-    Services.prefs.setBoolPref("extensions.dss.enabled", false);
+    ok(!aAddon.isActive, "Theme shouldn't have immediately enabled");
 
     var pm = Services.perms;
     pm.add(makeURI("https://example.com/"), "install", pm.ALLOW_ACTION);
@@ -88,29 +87,21 @@ function test_lwtheme_switch_theme() {
       if (gBrowser.contentDocument.location.href == "about:blank")
         return;
 
-      gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee);
-
       executeSoon(function() {
-        wait_for_notification(function(aPanel) {
-          is(LightweightThemeManager.currentTheme, null, "Should not have installed the test lwtheme");
-          ok(aAddon.isActive, "Test theme should still be active");
+        is(LightweightThemeManager.currentTheme, null, "Should not have installed the test lwtheme");
+        ok(!aAddon.isActive, "Test theme should still not be active");
+        ok(!aAddon.userDisabled, "Test theme should not be disabled yet");
 
-          let notification = aPanel.childNodes[0];
-          is(notification.button.label, "Restart Now", "Should have seen the right button");
+        aAddon.userDisabled = true;
 
-          ok(aAddon.userDisabled, "Should be waiting to disable the test theme");
-          aAddon.userDisabled = false;
-          Services.prefs.setBoolPref("extensions.dss.enabled", true);
+        gBrowser.removeTab(gBrowser.selectedTab);
 
-          gBrowser.removeTab(gBrowser.selectedTab);
+        Services.perms.remove(makeURI("http://example.com"), "install");
 
-          Services.perms.remove(makeURI("http://example.com"), "install");
-
-          runNextTest();
-        });
-        BrowserTestUtils.synthesizeMouse("#theme-install", 2, 2, {}, gBrowser.selectedBrowser);
+        runNextTest();
       });
-    });
+      BrowserTestUtils.synthesizeMouse("#theme-install", 2, 2, {}, gBrowser.selectedBrowser);
+    }, { once: true });
   });
 }
 ];
@@ -124,7 +115,6 @@ function runNextTest() {
         aAddon.uninstall();
 
         Services.prefs.setBoolPref("extensions.logging.enabled", false);
-        Services.prefs.setBoolPref("extensions.dss.enabled", false);
 
         finish();
       });
@@ -146,11 +136,6 @@ function test() {
       onInstallEnded() {
         AddonManager.getAddonByID("theme-xpi@tests.mozilla.org", function(aAddon) {
           isnot(aAddon, null, "Should have installed the test theme.");
-
-          // In order to switch themes while the test is running we turn on dynamic
-          // theme switching. This means the test isn't exactly correct but should
-          // do some good
-          Services.prefs.setBoolPref("extensions.dss.enabled", true);
 
           runNextTest();
         });
