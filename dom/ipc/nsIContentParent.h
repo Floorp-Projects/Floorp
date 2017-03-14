@@ -32,7 +32,7 @@ class CpowEntry;
 
 namespace ipc {
 class PFileDescriptorSetParent;
-class PSendStreamParent;
+class PChildToParentStreamParent;
 }
 
 namespace dom {
@@ -111,9 +111,10 @@ protected: // IPDL methods
   virtual bool
   DeallocPFileDescriptorSetParent(mozilla::ipc::PFileDescriptorSetParent* aActor);
 
-  virtual mozilla::ipc::PSendStreamParent* AllocPSendStreamParent();
+  virtual mozilla::ipc::PChildToParentStreamParent* AllocPChildToParentStreamParent();
 
-  virtual bool DeallocPSendStreamParent(mozilla::ipc::PSendStreamParent* aActor);
+  virtual bool
+  DeallocPChildToParentStreamParent(mozilla::ipc::PChildToParentStreamParent* aActor);
 
   virtual mozilla::ipc::IPCResult RecvSyncMessage(const nsString& aMsg,
                                                   const ClonedMessageData& aData,

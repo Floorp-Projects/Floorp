@@ -24,7 +24,7 @@ public:
   ~SendStreamParentImpl();
 
 private:
-  // PSendStreamParentImpl methods
+  // PChildToParentStreamParentImpl methods
   virtual void
   ActorDestroy(ActorDestroyReason aReason) override;
 
@@ -102,8 +102,8 @@ SendStreamParent::~SendStreamParent()
 {
 }
 
-PSendStreamParent*
-AllocPSendStreamParent()
+PChildToParentStreamParent*
+AllocPChildToParentStreamParent()
 {
   // use async versions for both reader and writer even though we are
   // opening the writer as an infinite stream.  We want to be able to
@@ -127,7 +127,7 @@ AllocPSendStreamParent()
 }
 
 void
-DeallocPSendStreamParent(PSendStreamParent* aActor)
+DeallocPChildToParentStreamParent(PChildToParentStreamParent* aActor)
 {
   delete aActor;
 }

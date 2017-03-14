@@ -9,7 +9,7 @@ include protocol PContentBridge;
 namespace mozilla {
 namespace ipc {
 
-protocol PSendStream
+protocol PChildToParentStream
 {
   manager PBackground or PContent or PContentBridge;
 

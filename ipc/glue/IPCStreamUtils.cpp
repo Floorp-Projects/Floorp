@@ -177,7 +177,7 @@ SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue, M* aManager)
   MOZ_ASSERT(asyncStream);
   aValue = SendStreamChild::Create(asyncStream, aManager);
 
-  if (!aValue.get_PSendStreamChild()) {
+  if (!aValue.get_PChildToParentStreamChild()) {
     MOZ_CRASH("SendStream creation failed!");
   }
 }
@@ -249,10 +249,10 @@ CleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC)
     return;
   }
 
-  MOZ_ASSERT(aValue.type() == IPCStream::TPSendStreamChild);
+  MOZ_ASSERT(aValue.type() == IPCStream::TPChildToParentStreamChild);
 
   auto sendStream =
-    static_cast<SendStreamChild*>(aValue.get_PSendStreamChild());
+    static_cast<SendStreamChild*>(aValue.get_PChildToParentStreamChild());
 
   if (!aConsumedByIPC) {
     sendStream->StartDestroy();
@@ -279,13 +279,13 @@ CleanupIPCStream(OptionalIPCStream& aValue, bool aConsumedByIPC)
 already_AddRefed<nsIInputStream>
 DeserializeIPCStream(const IPCStream& aValue)
 {
-  if (aValue.type() == IPCStream::TPSendStreamParent) {
+  if (aValue.type() == IPCStream::TPChildToParentStreamParent) {
     auto sendStream =
-      static_cast<SendStreamParent*>(aValue.get_PSendStreamParent());
+      static_cast<SendStreamParent*>(aValue.get_PChildToParentStreamParent());
     return sendStream->TakeReader();
   }
 
-  // Note, we explicitly do not support deserializing the PSendStream actor on
+  // Note, we explicitly do not support deserializing the PChildToParentStream actor on
   // the child side.  It can only be sent from child to parent.
   MOZ_ASSERT(aValue.type() == IPCStream::TInputStreamParamsWithFds);
 
@@ -338,7 +338,7 @@ namespace {
 void
 AssertValidValueToTake(const IPCStream& aVal)
 {
-  MOZ_ASSERT(aVal.type() == IPCStream::TPSendStreamChild ||
+  MOZ_ASSERT(aVal.type() == IPCStream::TPChildToParentStreamChild ||
              aVal.type() == IPCStream::TInputStreamParamsWithFds);
 }
 

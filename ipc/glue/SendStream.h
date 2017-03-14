@@ -8,8 +8,8 @@
 #define mozilla_ipc_SendStream_h
 
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/ipc/PSendStreamChild.h"
-#include "mozilla/ipc/PSendStreamParent.h"
+#include "mozilla/ipc/PChildToParentStreamChild.h"
+#include "mozilla/ipc/PChildToParentStreamParent.h"
 
 class nsIInputStream;
 class nsIAsyncInputStream;
@@ -49,7 +49,7 @@ class PBackgroundChild;
 //
 // In general you should probably use the AutoIPCStreamChild RAII class
 // defined in InputStreamUtils.h instead of using SendStreamChild directly.
-class SendStreamChild : public PSendStreamChild
+class SendStreamChild : public PChildToParentStreamChild
 {
 public:
   // Create a SendStreamChild using a PContent IPC manager on the
@@ -84,7 +84,7 @@ protected:
 // On the parent side, you must simply call TakeReader() upon receiving a
 // reference to the SendStreamParent actor.  You do not need to maintain a
 // reference to the actor itself.
-class SendStreamParent : public PSendStreamParent
+class SendStreamParent : public PChildToParentStreamParent
 {
 public:
   virtual already_AddRefed<nsIInputStream>

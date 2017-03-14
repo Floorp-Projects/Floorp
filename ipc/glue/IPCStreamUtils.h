@@ -31,7 +31,7 @@ already_AddRefed<nsIInputStream>
 DeserializeIPCStream(const OptionalIPCStream& aValue);
 
 // RAII helper class that serializes an nsIInputStream into an IPCStream struct.
-// Any file descriptor or PSendStream actors are automatically managed
+// Any file descriptor or PChildToParentStream actors are automatically managed
 // correctly.
 //
 // Here is a simple example:
@@ -60,7 +60,7 @@ DeserializeIPCStream(const OptionalIPCStream& aValue);
 //    // Do something with stream...
 //
 //    // You can also serialize streams from parent-to-child as long as
-//    // they don't require PSendStream actor support.
+//    // they don't require PChildToParentStream actor support.
 //    AutoIPCStream anotherStream;
 //    anotherStream.Serialize(mFileStream, Manager());
 //    SendStuffDone(anotherStream.TakeValue());
@@ -107,8 +107,8 @@ DeserializeIPCStream(const OptionalIPCStream& aValue);
 //
 // The AutoIPCStream class can also be used to serialize nsIInputStream objects
 // on the parent side to send to the child.  Currently, however, this only
-// works for directly serializable stream types.  The PSendStream actor mechanism
-// is not supported in this direction yet.
+// works for directly serializable stream types.  The PChildToParentStream actor
+// mechanism is not supported in this direction yet.
 //
 // Like SerializeInputStream(), the AutoIPCStream will crash if
 // serialization cannot be completed.
@@ -155,12 +155,12 @@ public:
   void
   Serialize(nsIInputStream* aStream, PBackgroundChild* aManager);
 
-  // Serialize the input stream.  A PSendStream cannot be used when going
+  // Serialize the input stream.  A PChildToParentStream cannot be used when going
   // from parent-to-child.
   void
   Serialize(nsIInputStream* aStream, dom::PContentParent* aManager);
 
-  // Serialize the input stream.  A PSendStream cannot be used when going
+  // Serialize the input stream.  A PChildToParentStream cannot be used when going
   // from parent-to-child.
   void
   Serialize(nsIInputStream* aStream, PBackgroundParent* aManager);

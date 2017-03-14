@@ -18,7 +18,7 @@ include protocol PGamepadTestChannel;
 include protocol PMessagePort;
 include protocol PCameras;
 include protocol PQuota;
-include protocol PSendStream;
+include protocol PChildToParentStream;
 include protocol PServiceWorkerManager;
 include protocol PUDPSocket;
 include protocol PVsync;
@@ -61,7 +61,7 @@ sync protocol PBackground
   manages PMessagePort;
   manages PCameras;
   manages PQuota;
-  manages PSendStream;
+  manages PChildToParentStream;
   manages PServiceWorkerManager;
   manages PUDPSocket;
   manages PVsync;
@@ -92,7 +92,7 @@ parent:
 
   async PMessagePort(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
 
-  async PSendStream();
+  async PChildToParentStream();
 
   async MessagePortForceClose(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
 

@@ -140,11 +140,11 @@ protected:
   virtual bool
   DeallocPMessagePortChild(PMessagePortChild* aActor) override;
 
-  virtual PSendStreamChild*
-  AllocPSendStreamChild() override;
+  virtual PChildToParentStreamChild*
+  AllocPChildToParentStreamChild() override;
 
   virtual bool
-  DeallocPSendStreamChild(PSendStreamChild* aActor) override;
+  DeallocPChildToParentStreamChild(PChildToParentStreamChild* aActor) override;
 
   virtual PAsmJSCacheEntryChild*
   AllocPAsmJSCacheEntryChild(const dom::asmjscache::OpenMode& aOpenMode,

@@ -220,7 +220,7 @@ CacheOpParent::DeserializeCacheStream(const CacheReadStreamOrVoid& aStreamOrVoid
   }
 
   // Option 2: A stream was serialized using normal methods or passed
-  //           as a PSendStream actor.  Use the standard method for
+  //           as a PChildToParentStream actor.  Use the standard method for
   //           extracting the resulting stream.
   return DeserializeIPCStream(readStream.stream());
 }

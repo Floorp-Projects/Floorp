@@ -198,16 +198,16 @@ ContentBridgeParent::DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* a
   return nsIContentParent::DeallocPFileDescriptorSetParent(aActor);
 }
 
-PSendStreamParent*
-ContentBridgeParent::AllocPSendStreamParent()
+PChildToParentStreamParent*
+ContentBridgeParent::AllocPChildToParentStreamParent()
 {
-  return nsIContentParent::AllocPSendStreamParent();
+  return nsIContentParent::AllocPChildToParentStreamParent();
 }
 
 bool
-ContentBridgeParent::DeallocPSendStreamParent(PSendStreamParent* aActor)
+ContentBridgeParent::DeallocPChildToParentStreamParent(PChildToParentStreamParent* aActor)
 {
-  return nsIContentParent::DeallocPSendStreamParent(aActor);
+  return nsIContentParent::DeallocPChildToParentStreamParent(aActor);
 }
 
 } // namespace dom
