@@ -61,10 +61,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_storage.html `animation` [280]
 * test_any_dynamic.html: -moz-any pseudo class [2]
 * CSSOM support:
-  * @namespace ##easy##
-    * test_at_rule_parse_serialize.html [1]
-    * test_bug765590.html [1]
-    * test_font_face_parser.html `@namespace` [1]
   * @import
     * test_bug221428.html [1]
   * @media
