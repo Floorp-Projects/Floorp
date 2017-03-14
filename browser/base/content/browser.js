@@ -6657,7 +6657,7 @@ function checkEmptyPageOrigin(browser = gBrowser.selectedBrowser,
   let contentPrincipal = browser.contentPrincipal;
   // Not all principals have URIs...
   if (contentPrincipal.URI) {
-    // There are two specialcases involving about:blank. One is where
+    // There are two special-cases involving about:blank. One is where
     // the user has manually loaded it and it got created with a null
     // principal. The other involves the case where we load
     // some other empty page in a browser and the current page is the
@@ -6665,7 +6665,13 @@ function checkEmptyPageOrigin(browser = gBrowser.selectedBrowser,
     // just URI in which case it could be web-based). Especially in
     // e10s, we need to tackle that case specifically to avoid race
     // conditions when updating the URL bar.
-    if ((uri.spec == "about:blank" && contentPrincipal.isNullPrincipal) ||
+    //
+    // Note that we check the documentURI here, since the currentURI on
+    // the browser might have been set by SessionStore in order to
+    // support switch-to-tab without having actually loaded the content
+    // yet.
+    let uriToCheck = browser.documentURI || uri;
+    if ((uriToCheck.spec == "about:blank" && contentPrincipal.isNullPrincipal) ||
         contentPrincipal.URI.spec == "about:blank") {
       return true;
     }
