@@ -126,11 +126,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                         sample.writeToByteBuffer(buf);
                     } catch (IOException e) {
                         e.printStackTrace();
+                        len = 0;
                     }
                     mSamplePool.recycleInput(sample);
                 }
 
-                if (cryptoInfo != null) {
+                if (cryptoInfo != null && len > 0) {
                     mCodec.queueSecureInputBuffer(index, 0, cryptoInfo, pts, flags);
                 } else {
                     mCodec.queueInputBuffer(index, 0, len, pts, flags);
