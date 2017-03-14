@@ -250,9 +250,7 @@ var pktApi = (function() {
 
         var url = baseAPIUrl + options.path;
         var data = options.data || {};
-        data.locale_lang = Cc["@mozilla.org/chrome/chrome-registry;1"].
-             getService(Ci.nsIXULChromeRegistry).
-             getSelectedLocale("browser");
+        data.locale_lang = Services.locale.getAppLocaleAsLangTag();
         data.consumer_key = oAuthConsumerKey;
 
         var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
