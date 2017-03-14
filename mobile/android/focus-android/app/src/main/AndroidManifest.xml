@@ -44,8 +44,6 @@
             android:theme="@style/SettingsTheme"
             android:label="Settings"/>
 
-        <activity android:name=".activity.AboutActivity" />
-
         <activity android:name=".activity.HelpActivity" />
 
         <activity android:name=".activity.RightsActivity"

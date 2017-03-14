@@ -14,8 +14,8 @@ import android.preference.PreferenceScreen;
 import android.support.annotation.Nullable;
 
 import org.mozilla.focus.R;
-import org.mozilla.focus.activity.AboutActivity;
 import org.mozilla.focus.activity.HelpActivity;
+import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.activity.RightsActivity;
 import org.mozilla.focus.widget.DefaultBrowserPreference;
 
@@ -33,7 +33,7 @@ public class SettingsFragment extends PreferenceFragment {
         // be used are in the menu XML, and here - so we might as well use the already
         // existing preference titles:
         if (preference.getTitle().equals(getResources().getString(R.string.menu_about))) {
-            final Intent intent = new Intent(getActivity(), AboutActivity.class);
+            final Intent intent = InfoActivity.getAboutIntent(getActivity());
             startActivity(intent);
         } else if (preference.getTitle().equals(getResources().getString(R.string.menu_help))) {
             final Intent intent = new Intent(getActivity(), RightsActivity.class);

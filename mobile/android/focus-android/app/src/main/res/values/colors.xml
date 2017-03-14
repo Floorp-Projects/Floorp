@@ -23,8 +23,6 @@
 
     <color name="colorFloatingActionButtonTint">#96368D</color>
 
-    <color name="colorTitleBar">#FF363B40</color>
-
     <color name="colorUrlInputBackground">#B2000000</color>
 
     <color name="snackbarBackground">#33FFFFFF</color>
