@@ -4954,7 +4954,7 @@ nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems()
   nsCSSRendering::HasBoxShadowNativeTheme(mFrame, hasBorderRadius);
   nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
 
-  return !shadows && !hasBorderRadius;
+  return shadows && !hasBorderRadius;
 }
 
 void
@@ -4970,9 +4970,6 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilde
   nsRegion visible = aLayer->GetVisibleRegion().ToAppUnits(appUnitsPerDevPixel);
 
   ComputeDisjointRectangles(visible, &rects);
-
-  nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
-  MOZ_ASSERT(shadows);
 
   bool hasBorderRadius;
   bool nativeTheme = nsCSSRendering::HasBoxShadowNativeTheme(mFrame,
@@ -4998,6 +4995,7 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilde
   for (uint32_t i = 0; i < rects.Length(); ++i) {
     Rect clipRect = NSRectToRect(rects[i], appUnitsPerDevPixel);
     nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
+    MOZ_ASSERT(shadows);
 
     for (uint32_t j = shadows->Length(); j  > 0; j--) {
       nsCSSShadowItem* shadow = shadows->ShadowAt(j - 1);
