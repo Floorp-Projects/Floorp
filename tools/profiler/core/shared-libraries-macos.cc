@@ -72,16 +72,18 @@ void addSharedLibrary(const platform_mach_header* header, char *path, SharedLibr
     uuid << '0';
   }
 
-  nsAutoString nameStr;
-  mozilla::Unused << NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(path), nameStr)));
+  nsAutoString pathStr;
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(path), pathStr)));
 
+  nsAutoString nameStr = pathStr;
   int32_t pos = nameStr.RFindChar('/');
   if (pos != kNotFound) {
     nameStr.Cut(0, pos + 1);
   }
 
   info.AddSharedLibrary(SharedLibrary(start, start + size, 0, uuid.str(),
-                                      nameStr, nameStr, ""));
+                                      nameStr, pathStr, nameStr, pathStr,
+                                      ""));
 }
 
 // Use dyld to inspect the macho image information. We can build the SharedLibraryEntry structure
