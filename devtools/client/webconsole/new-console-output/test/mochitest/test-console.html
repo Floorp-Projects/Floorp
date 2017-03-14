@@ -7,7 +7,7 @@
   <body>
     <p>Simple webconsole test page</p>
     <script>
-      /* exported doLogs */
+      /* exported doLogs, stringLog */
       "use strict";
 
       function doLogs(num) {
@@ -15,6 +15,10 @@
         for (let i = 0; i < num; i++) {
           console.log(i);
         }
+      }
+
+      function stringLog() {
+        console.log("stringLog");
       }
     </script>
   </body>

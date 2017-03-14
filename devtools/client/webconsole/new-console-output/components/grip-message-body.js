@@ -37,6 +37,7 @@ GripMessageBody.propTypes = {
     createElement: PropTypes.func.isRequired,
   }),
   userProvidedStyle: PropTypes.string,
+  useQuotes: PropTypes.bool,
 };
 
 GripMessageBody.defaultProps = {
@@ -44,7 +45,7 @@ GripMessageBody.defaultProps = {
 };
 
 function GripMessageBody(props) {
-  const { grip, userProvidedStyle, serviceContainer } = props;
+  const { grip, userProvidedStyle, serviceContainer, useQuotes } = props;
 
   let styleObject;
   if (userProvidedStyle && userProvidedStyle !== "") {
@@ -63,7 +64,7 @@ function GripMessageBody(props) {
     typeof grip === "string"
       ? StringRep({
         object: grip,
-        useQuotes: false,
+        useQuotes: useQuotes,
         mode: props.mode,
         style: styleObject
       })
