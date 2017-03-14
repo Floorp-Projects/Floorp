@@ -203,6 +203,15 @@ HTMLSelectElement::GetAutocomplete(DOMString& aValue)
                                                    mAutocompleteAttrState);
 }
 
+void
+HTMLSelectElement::GetAutocompleteInfo(AutocompleteInfo& aInfo)
+{
+  const nsAttrValue* attributeVal = GetParsedAttr(nsGkAtoms::autocomplete);
+  mAutocompleteAttrState =
+    nsContentUtils::SerializeAutocompleteAttribute(attributeVal, aInfo,
+                                                   mAutocompleteAttrState);
+}
+
 NS_IMETHODIMP
 HTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
