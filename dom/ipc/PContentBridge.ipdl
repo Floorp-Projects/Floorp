@@ -10,6 +10,7 @@ include protocol PContent;
 include protocol PJavaScript;
 include protocol PFileDescriptorSet;
 include protocol PChildToParentStream;
+include protocol PParentToChildStream;
 
 include DOMTypes;
 include JavaScriptTypes;
@@ -39,6 +40,10 @@ nested(upto inside_cpow) sync protocol PContentBridge
     manages PFileDescriptorSet;
     manages PJavaScript;
     manages PChildToParentStream;
+    manages PParentToChildStream;
+
+child:
+    async PParentToChildStream();
 
 parent:
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,

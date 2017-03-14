@@ -1730,6 +1730,18 @@ ContentChild::DeallocPChildToParentStreamChild(PChildToParentStreamChild* aActor
   return nsIContentChild::DeallocPChildToParentStreamChild(aActor);
 }
 
+PParentToChildStreamChild*
+ContentChild::AllocPParentToChildStreamChild()
+{
+  return nsIContentChild::AllocPParentToChildStreamChild();
+}
+
+bool
+ContentChild::DeallocPParentToChildStreamChild(PParentToChildStreamChild* aActor)
+{
+  return nsIContentChild::DeallocPParentToChildStreamChild(aActor);
+}
+
 PScreenManagerChild*
 ContentChild::AllocPScreenManagerChild(uint32_t* aNumberOfScreens,
                                        float* aSystemDefaultScale,

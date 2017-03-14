@@ -9,17 +9,17 @@ include protocol PContentBridge;
 namespace mozilla {
 namespace ipc {
 
-// This is protocol is the opposite of PParentToChildStream. Please keep these
+// This is protocol is the opposite of PChildToParentStream. Please keep these
 // protocols in sync.
-protocol PChildToParentStream
+protocol PParentToChildStream
 {
   manager PBackground or PContent or PContentBridge;
 
-parent:
+child:
   async Buffer(nsCString aBuffer);
   async Close(nsresult aRv);
 
-child:
+parent:
   // The parent side has hit an error condition and has requested the child
   // actor issue a Close() message.  The close must be initiated by the child
   // to avoid racing with an in-flight Buffer() message.

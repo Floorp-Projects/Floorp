@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PChildToParentStream;
+include protocol PParentToChildStream;
 include BlobTypes;
 include InputStreamParams;
 
@@ -23,6 +24,7 @@ union IPCStream
 {
   InputStreamParamsWithFds;
   PChildToParentStream;
+  PParentToChildStream;
 };
 
 union OptionalIPCStream
