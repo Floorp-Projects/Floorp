@@ -299,6 +299,16 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   }),
 
   /**
+   * Resolves to true if there are known sync changes.
+   */
+  havePendingChanges() {
+    // This could be optimized to use a more efficient query -- We don't need
+    // grab all the records if all we care about is whether or not any exist.
+    return PlacesUtils.withConnectionWrapper("BookmarkSyncUtils: havePendingChanges",
+      db => pullSyncChanges(db, true).then(changes => Object.keys(changes).length > 0));
+  },
+
+  /**
    * Returns a changeset containing local bookmark changes since the last sync.
    * Updates the sync status of all "NEW" bookmarks to "NORMAL", so that Sync
    * can recover correctly after an interrupted sync.
@@ -1687,11 +1697,13 @@ function addRowToChangeRecords(row, changeRecords) {
  *
  * @param db
  *        The Sqlite.jsm connection handle.
+ * @param preventUpdate {boolean}
+ *        Should we skip updating the records we pull.
  * @return {Promise} resolved once all items have been fetched.
  * @resolves to an object containing records for changed bookmarks, keyed by
  *           the sync ID.
  */
-var pullSyncChanges = Task.async(function* (db) {
+var pullSyncChanges = Task.async(function* (db, preventUpdate = false) {
   let changeRecords = {};
 
   yield db.executeCached(`
@@ -1716,7 +1728,9 @@ var pullSyncChanges = Task.async(function* (db) {
     { deletedSyncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL },
     row => addRowToChangeRecords(row, changeRecords));
 
-  yield markChangesAsSyncing(db, changeRecords);
+  if (!preventUpdate) {
+    yield markChangesAsSyncing(db, changeRecords);
+  }
 
   return changeRecords;
 });
