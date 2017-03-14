@@ -2233,13 +2233,6 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
 
 NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 {
-  if (XRE_IsContentProcess()) {
-    NS_WARNING("nsPermissionManager's enumerator is not avaliable in the "
-               "content process, as not all permissions may be avaliable.");
-    *aEnum = nullptr;
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   // roll an nsCOMArray of all our permissions, then hand out an enumerator
   nsCOMArray<nsIPermission> array;
 
