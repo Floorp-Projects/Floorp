@@ -232,16 +232,17 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
     pseudoElt = NS_Atomize(aPseudo);
   }
 
-  nsRuleNode* ruleNode = nullptr;
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   NS_ENSURE_STATE(element);
-  RefPtr<nsStyleContext> styleContext;
-  GetRuleNodeForElement(element, pseudoElt, getter_AddRefs(styleContext), &ruleNode);
-  if (!ruleNode) {
+  RefPtr<nsStyleContext> styleContext =
+    GetCleanStyleContextForElement(element, pseudoElt);
+  if (!styleContext) {
     // This can fail for elements that are not in the document or
     // if the document they're in doesn't have a presshell.  Bail out.
     return NS_OK;
   }
+
+  nsRuleNode* ruleNode = styleContext->RuleNode();
 
   AutoTArray<nsRuleNode*, 16> ruleNodes;
   while (!ruleNode->IsRoot()) {
@@ -1146,35 +1147,32 @@ inDOMUtils::GetContentState(nsIDOMElement* aElement,
   return NS_OK;
 }
 
-/* static */ nsresult
-inDOMUtils::GetRuleNodeForElement(dom::Element* aElement,
-                                  nsIAtom* aPseudo,
-                                  nsStyleContext** aStyleContext,
-                                  nsRuleNode** aRuleNode)
+/* static */ already_AddRefed<nsStyleContext>
+inDOMUtils::GetCleanStyleContextForElement(dom::Element* aElement,
+                                           nsIAtom* aPseudo)
 {
   MOZ_ASSERT(aElement);
 
-  *aRuleNode = nullptr;
-  *aStyleContext = nullptr;
-
   nsIDocument* doc = aElement->GetComposedDoc();
-  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+  if (!doc) {
+    return nullptr;
+  }
 
   nsIPresShell *presShell = doc->GetShell();
-  NS_ENSURE_TRUE(presShell, NS_ERROR_UNEXPECTED);
+  if (!presShell) {
+    return nullptr;
+  }
 
   nsPresContext *presContext = presShell->GetPresContext();
-  NS_ENSURE_TRUE(presContext, NS_ERROR_UNEXPECTED);
+  if (!presContext) {
+    return nullptr;
+  }
 
   presContext->EnsureSafeToHandOutCSSRules();
 
-  RefPtr<nsStyleContext> sContext =
+  RefPtr<nsStyleContext> styleContext =
     nsComputedDOMStyle::GetStyleContextForElement(aElement, aPseudo, presShell);
-  if (sContext) {
-    *aRuleNode = sContext->RuleNode();
-    sContext.forget(aStyleContext);
-  }
-  return NS_OK;
+  return styleContext.forget();
 }
 
 NS_IMETHODIMP

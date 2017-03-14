@@ -28,11 +28,9 @@ public:
 private:
   virtual ~inDOMUtils();
 
-  // aStyleContext must be released by the caller once he's done with aRuleNode.
-  static nsresult GetRuleNodeForElement(mozilla::dom::Element* aElement,
-                                        nsIAtom* aPseudo,
-                                        nsStyleContext** aStyleContext,
-                                        nsRuleNode** aRuleNode);
+  static already_AddRefed<nsStyleContext>
+    GetCleanStyleContextForElement(mozilla::dom::Element* aElement,
+                                   nsIAtom* aPseudo);
 };
 
 // {0a499822-a287-4089-ad3f-9ffcd4f40263}
