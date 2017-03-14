@@ -5,27 +5,151 @@
 
 package org.mozilla.focus.search;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.res.AssetManager;
+import android.support.annotation.WorkerThread;
+import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.focus.utils.IOUtils;
+import org.mozilla.focus.utils.Locales;
+
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
-/**
- * TODO: Quick hack with hardcoded values. We need to import and read search configuration files. (#184)
- */
-public class SearchEngineManager {
-    public static List<SearchEngine> getSearchEngines(Context context) {
-        return Arrays.asList(
-            new SearchEngine(0, "Yahoo"),
-            new SearchEngine(0, "Google"),
-            new SearchEngine(0, "Amazon"),
-            new SearchEngine(0, "DuckDuckGo"),
-            new SearchEngine(0, "Twitter"),
-            new SearchEngine(0, "Wikipedia")
-        );
+
+public class SearchEngineManager extends BroadcastReceiver {
+    private static final String LOG_TAG = SearchEngineManager.class.getSimpleName();
+
+    private static SearchEngineManager instance = new SearchEngineManager();
+
+    private List<SearchEngine> searchEngines;
+
+    public static SearchEngineManager getInstance() {
+        return instance;
     }
 
-    public static SearchEngine getDefaultSearchEngine(Context context) {
-        return getSearchEngines(context).get(0);
+    private SearchEngineManager() {}
+
+    public void init(Context context) {
+        context.registerReceiver(this, new IntentFilter(Intent.ACTION_LOCALE_CHANGED));
+
+        loadSearchEngines(context);
+    }
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (!Intent.ACTION_LOCALE_CHANGED.equals(intent.getAction())) {
+            // This is not the broadcast you are looking for.
+            return;
+        }
+
+        loadSearchEngines(context.getApplicationContext());
+    }
+
+    private void loadSearchEngines(final Context context) {
+        new Thread("SearchEngines-Load") {
+            @Override
+            public void run() {
+                loadFromDisk(context);
+            }
+        }.start();
+    }
+
+    @WorkerThread
+    private synchronized void loadFromDisk(Context context) {
+        final AssetManager assetManager = context.getAssets();
+        final Locale locale = Locale.getDefault();
+        final List<SearchEngine> searchEngines = new ArrayList<>();
+
+        try {
+            final JSONArray engineNames = loadSearchEngineListForLocale(context);
+
+            final String localePath = "search/" + Locales.getLanguageTag(locale);
+            final String languagePath = "search/" + Locales.getLanguage(locale);
+            final String defaultPath = "search/default";
+
+            final List<String> localeEngines = Arrays.asList(assetManager.list(localePath));
+            final List<String> languageEngines = Arrays.asList(assetManager.list(languagePath));
+            final List<String> defaultEngines = Arrays.asList(assetManager.list(defaultPath));
+
+            for (int i = 0; i < engineNames.length(); i++) {
+                final String engineName = engineNames.getString(i);
+                final String fileName = engineName + ".xml";
+
+                if (localeEngines.contains(fileName)) {
+                    searchEngines.add(SearchEngineParser.load(assetManager, localePath + "/" + fileName));
+                } else if (languageEngines.contains(fileName)) {
+                    searchEngines.add(SearchEngineParser.load(assetManager, languagePath + "/" + fileName));
+                } else if (defaultEngines.contains(fileName)) {
+                    searchEngines.add(SearchEngineParser.load(assetManager, defaultPath + "/" + fileName));
+                } else {
+                    Log.e(LOG_TAG, "Couldn't find configuration for engine: " + engineName);
+                }
+            }
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "IOException while loading search engines", e);
+        } catch (JSONException e) {
+            throw new AssertionError("Reading search engine failed: ", e);
+        } finally {
+            this.searchEngines = searchEngines;
+
+            notifyAll();
+        }
+    }
+
+    private JSONArray loadSearchEngineListForLocale(Context context) throws IOException {
+        try {
+            final Locale locale = Locale.getDefault();
+            final JSONObject configuration = IOUtils.readAsset(context, "search/search_configuration.json");
+
+            // Try to find a configuration for the language tag first (de-DE)
+            final String languageTag = Locales.getLanguageTag(locale);
+            if (configuration.has(languageTag)) {
+                return configuration.getJSONArray(languageTag);
+            }
+
+            // Try to find a configuration for just the language (de)
+            final String language = Locales.getLanguage(locale);
+            if (configuration.has(language)) {
+                return configuration.getJSONArray(language);
+            }
+
+            // No configuration for the current locale found. Let's use the default configuration.
+            return configuration.getJSONArray("default");
+        } catch (JSONException e) {
+            // Assertion error because this shouldn't happen: We check whether a key exists before
+            // reading it. An error here would mean the JSON file is corrupt.
+            throw new AssertionError("Reading search configuration failed", e);
+        }
+    }
+
+    public synchronized List<SearchEngine> getSearchEngines() {
+        awaitLoadingSearchEnginesLocked();
+
+        return searchEngines;
+    }
+
+    public synchronized SearchEngine getDefaultSearchEngine() {
+        awaitLoadingSearchEnginesLocked();
+
+        // TODO: Read from shared preference (#184)
+        return searchEngines.get(0);
+    }
+
+    public void awaitLoadingSearchEnginesLocked() {
+        while (searchEngines == null) {
+            try {
+                wait();
+            } catch (InterruptedException ignored) {}
+        }
     }
 }

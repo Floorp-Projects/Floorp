@@ -5,7 +5,6 @@
 
 package org.mozilla.focus.search;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,8 +22,8 @@ import java.util.List;
 public class SearchEngineAdapter extends BaseAdapter {
     private List<SearchEngine> searchEngines;
 
-    public SearchEngineAdapter(Context context) {
-        searchEngines = SearchEngineManager.getSearchEngines(context);
+    public SearchEngineAdapter() {
+        searchEngines = SearchEngineManager.getInstance().getSearchEngines();
     }
 
     @Override
@@ -52,10 +51,10 @@ public class SearchEngineAdapter extends BaseAdapter {
         }
 
         final TextView titleView = (TextView) convertView.findViewById(R.id.title);
-        titleView.setText(searchEngine.getLabel());
+        titleView.setText(searchEngine.getName());
 
         final ImageView iconView = (ImageView) convertView.findViewById(R.id.icon);
-        iconView.setImageResource(searchEngine.getIcon());
+        iconView.setImageBitmap(searchEngine.getIcon());
 
         return convertView;
     }

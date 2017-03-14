@@ -5,25 +5,19 @@
 
 package org.mozilla.focus.search;
 
-import android.support.annotation.DrawableRes;
+import android.graphics.Bitmap;
 
-/**
- * TODO: This class is only a placeholder until we read our search config files (#184).
- */
 public class SearchEngine {
-    private String label;
-    private int icon;
+    /* package */ String name;
+    /* package */ Bitmap icon;
 
-    /* package */ SearchEngine(@DrawableRes int icon, String label) {
-        this.label = label;
-        this.icon = icon;
+    /* package */ SearchEngine() {}
+
+    public String getName() {
+        return name;
     }
 
-    public String getLabel() {
-        return label;
-    }
-
-    public int getIcon() {
+    public Bitmap getIcon() {
         return icon;
     }
 }
