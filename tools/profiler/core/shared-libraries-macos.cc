@@ -35,7 +35,7 @@ typedef segment_command_64 mach_segment_command_type;
 #endif
 
 static
-void addSharedLibrary(const platform_mach_header* header, char *name, SharedLibraryInfo &info) {
+void addSharedLibrary(const platform_mach_header* header, char *path, SharedLibraryInfo &info) {
   const struct load_command *cmd =
     reinterpret_cast<const struct load_command *>(header + 1);
 
@@ -73,7 +73,12 @@ void addSharedLibrary(const platform_mach_header* header, char *name, SharedLibr
   }
 
   nsAutoString nameStr;
-  mozilla::Unused << NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(name), nameStr)));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(path), nameStr)));
+
+  int32_t pos = nameStr.RFindChar('/');
+  if (pos != kNotFound) {
+    nameStr.Cut(0, pos + 1);
+  }
 
   info.AddSharedLibrary(SharedLibrary(start, start + size, 0, uuid.str(),
                                       nameStr, nameStr, ""));
