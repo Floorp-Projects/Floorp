@@ -26,3 +26,5 @@ jobs:
     symbol: I(lnt)
   android-gradle-build:
     symbol: I(agb)
+  index-task:
+    symbol: I(idx)
