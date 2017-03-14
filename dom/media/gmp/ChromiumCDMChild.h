@@ -119,6 +119,8 @@ protected:
   DurationMap mFrameDurations;
   nsTArray<uint32_t> mLoadSessionPromiseIds;
 
+  cdm::Size mCodedSize;
+
   bool mDecoderInitialized = false;
   bool mPersistentStateAllowed = false;
 };
