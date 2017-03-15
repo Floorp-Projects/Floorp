@@ -9,8 +9,10 @@
 #include "pk11pub.h"
 #include "sechash.h"
 
-#include "gtest/gtest.h"
+#include "cpputil.h"
 #include "scoped_ptrs.h"
+
+#include "gtest/gtest.h"
 
 namespace nss_test {
 
@@ -216,10 +218,6 @@ class Pkcs11ChaCha20Poly1305Test : public ::testing::Test {
 
  protected:
   CK_MECHANISM_TYPE mech = CKM_NSS_CHACHA20_POLY1305;
-
-  unsigned char* toUcharPtr(const uint8_t* v) {
-    return const_cast<unsigned char*>(static_cast<const unsigned char*>(v));
-  }
 };
 
 #define ENCRYPT_DECRYPT(v)                                                 \

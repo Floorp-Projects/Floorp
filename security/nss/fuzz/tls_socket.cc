@@ -9,7 +9,7 @@
 #include "prerror.h"
 #include "prio.h"
 
-#include "tls_client_socket.h"
+#include "tls_socket.h"
 
 int32_t DummyPrSocket::Read(PRFileDesc *f, void *data, int32_t len) {
   assert(data && len > 0);
