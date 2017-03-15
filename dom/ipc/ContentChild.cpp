@@ -3012,8 +3012,7 @@ ContentChild::RecvBlobURLRegistration(const nsCString& aURI, PBlobChild* aBlobCh
 mozilla::ipc::IPCResult
 ContentChild::RecvBlobURLUnregistration(const nsCString& aURI)
 {
-  nsHostObjectProtocolHandler::RemoveDataEntry(aURI,
-                                               /* aBroadcastToOtherProcesses = */ false);
+  nsHostObjectProtocolHandler::RemoveDataEntry(aURI);
   return IPC_OK();
 }
 
