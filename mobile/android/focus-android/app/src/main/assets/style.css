@@ -1,7 +1,7 @@
 body, html {
     background: #221F1F;
     color: #FFFFFF;
-    font-family: roboto-regular;
+    font-family: sans-serif;
     line-height: 24px;
     font-size: 14px;
 }
@@ -18,16 +18,6 @@ a {
 }
 
 p.title {
-    font-family: roboto-medium;
+    font-family: sans-serif-medium;
     font-size: 18px;
-}
-
-@font-face {
-  font-family: roboto-regular;
-  src: url('file:///android_asset/Roboto-Regular.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: roboto-medium;
-  src: url('file:///android_asset/Roboto-Medium.ttf') format('truetype');
 }
