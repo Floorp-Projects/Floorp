@@ -2469,8 +2469,11 @@ SetPropIRGenerator::tryAttachSetDenseElementHole(HandleObject obj, ObjOperandId 
         return false;
 
     NativeObject* nobj = &obj->as<NativeObject>();
-    if (nobj->getElementsHeader()->isFrozen())
+    if (!nobj->nonProxyIsExtensible())
         return false;
+
+    MOZ_ASSERT(!nobj->getElementsHeader()->isFrozen(),
+               "Extensible objects should not have frozen elements");
 
     uint32_t initLength = nobj->getDenseInitializedLength();
 

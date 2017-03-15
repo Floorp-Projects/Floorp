@@ -71,7 +71,15 @@ AVD_DICT = {
                    ['-debug',
                     'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket',
                     '-qemu', '-m', '1024', '-enable-kvm'],
-                   5554)
+                   5554),
+    'x86-6.0': AvdInfo('Android 6.0 x86',
+                       'mozemulator-x86-6.0',
+                       'testing/config/tooltool-manifests/androidx86_6_0/mach-emulator.manifest',
+                       ['-debug',
+                        'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket',
+                        '-ranchu',
+                        '-qemu', '-m', '2048'],
+                       5554)
 }
 
 
