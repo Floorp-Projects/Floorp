@@ -478,6 +478,9 @@ public:
   explicit DrawableFrameRef(imgFrame* aFrame)
     : mFrame(aFrame)
   {
+    MOZ_ASSERT(aFrame);
+    MonitorAutoLock lock(aFrame->mMonitor);
+
     // Paletted images won't have a surface so there is no strong reference
     // to hold on to. Since Draw() and GetSourceSurface() calls will not work
     // in that case, we should be using RawAccessFrameRef exclusively instead.
