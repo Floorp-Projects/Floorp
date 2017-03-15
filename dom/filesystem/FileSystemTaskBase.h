@@ -225,17 +225,6 @@ public:
   void
   HandleResult();
 
-  // If this task must do something on the main-thread before IOWork(), it must
-  // overwrite this method. Otherwise it returns true if the FileSystem must be
-  // initialized on the main-thread. It's called from the Background thread.
-  virtual bool
-  NeedToGoToMainThread() const;
-
-  // This method is called only if NeedToGoToMainThread() returns true.
-  // Of course, it runs on the main-thread.
-  virtual nsresult
-  MainThreadWork();
-
   bool
   HasError() const { return NS_FAILED(mErrorValue); }
 

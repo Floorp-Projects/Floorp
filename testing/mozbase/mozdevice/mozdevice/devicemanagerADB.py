@@ -286,40 +286,28 @@ class DeviceManagerADB(DeviceManager):
         else:
             localDir = os.path.normpath(localDir)
             remoteDir = os.path.normpath(remoteDir)
-            copyRequired = False
-            if self._adb_version >= '1.0.36' and \
-               os.path.isdir(localDir) and self.dirExists(remoteDir):
-                # See do_sync_push in
-                # https://android.googlesource.com/platform/system/core/+/master/adb/file_sync_client.cpp
-                # Work around change in behavior in adb 1.0.36 where if
-                # the remote destination directory exists, adb push will
-                # copy the source directory *into* the destination
-                # directory otherwise it will copy the source directory
-                # *onto* the destination directory.
-                #
-                # If the destination directory does exist, push to its
-                # parent directory.  If the source and destination leaf
-                # directory names are different, copy the source directory
-                # to a temporary directory with the same leaf name as the
-                # destination so that when we push to the parent, the
-                # source is copied onto the destination directory.
-                localName = os.path.basename(localDir)
-                remoteName = os.path.basename(remoteDir)
-                if localName != remoteName:
-                    copyRequired = True
-                    tempParent = tempfile.mkdtemp()
-                    newLocal = os.path.join(tempParent, remoteName)
-                    dir_util.copy_tree(localDir, newLocal)
-                    localDir = newLocal
+            tempParent = tempfile.mkdtemp()
+            remoteName = os.path.basename(remoteDir)
+            newLocal = os.path.join(tempParent, remoteName)
+            dir_util.copy_tree(localDir, newLocal)
+            # See do_sync_push in
+            # https://android.googlesource.com/platform/system/core/+/master/adb/file_sync_client.cpp
+            # Work around change in behavior in adb 1.0.36 where if
+            # the remote destination directory exists, adb push will
+            # copy the source directory *into* the destination
+            # directory otherwise it will copy the source directory
+            # *onto* the destination directory.
+            if self._adb_version >= '1.0.36':
                 remoteDir = '/'.join(remoteDir.rstrip('/').split('/')[:-1])
             try:
-                self._checkCmd(["push", localDir, remoteDir],
-                               retryLimit=retryLimit, timeout=timeout)
+                if self._checkCmd(["push", newLocal, remoteDir],
+                                  retryLimit=retryLimit, timeout=timeout):
+                    raise DMError("failed to push %s (copy of %s) to %s" %
+                                  (newLocal, localDir, remoteDir))
             except:
                 raise
             finally:
-                if copyRequired:
-                    mozfile.remove(tempParent)
+                mozfile.remove(tempParent)
 
     def dirExists(self, remotePath):
         self._detectLsModifier()
