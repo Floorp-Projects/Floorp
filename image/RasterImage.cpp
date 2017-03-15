@@ -420,11 +420,11 @@ RasterImage::WillDrawOpaqueNow()
 }
 
 void
-RasterImage::OnSurfaceDiscarded()
+RasterImage::OnSurfaceDiscarded(SurfaceKey aSurfaceKey)
 {
   MOZ_ASSERT(mProgressTracker);
 
-  if (mAnimationState) {
+  if (mAnimationState && aSurfaceKey.Playback() == PlaybackType::eAnimated) {
     MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
     mAnimationState->SetDiscarded(true);
   }

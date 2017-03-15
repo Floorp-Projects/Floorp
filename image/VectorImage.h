@@ -49,7 +49,7 @@ public:
                                        nsresult aResult,
                                        bool aLastPart) override;
 
-  virtual void OnSurfaceDiscarded() override;
+  virtual void OnSurfaceDiscarded(SurfaceKey aSurfaceKey) override;
 
   /**
    * Callback for SVGRootRenderingObserver.
