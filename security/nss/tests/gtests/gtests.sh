@@ -55,7 +55,8 @@ gtest_start()
     GTESTREPORT="$GTESTDIR/report.xml"
     PARSED_REPORT="$GTESTDIR/report.parsed"
     echo "executing $i"
-    ${BINDIR}/$i -d "$GTESTDIR" --gtest_output=xml:"${GTESTREPORT}" \
+    ${BINDIR}/$i "${SOURCE_DIR}/gtests/freebl_gtest/kat/Hash_DRBG.rsp" \
+                 -d "$GTESTDIR" --gtest_output=xml:"${GTESTREPORT}" \
                                 --gtest_filter="${GTESTFILTER-*}"
     html_msg $? 0 "$i run successfully"
     echo "test output dir: ${GTESTREPORT}"
@@ -82,7 +83,8 @@ gtest_cleanup()
 }
 
 ################## main #################################################
-GTESTS="der_gtest pk11_gtest util_gtest"
+GTESTS="prng_gtest der_gtest pk11_gtest util_gtest"
+SOURCE_DIR="$PWD"/../..
 gtest_init $0
 gtest_start
 gtest_cleanup
