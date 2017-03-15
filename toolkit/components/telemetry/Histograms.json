@@ -6691,7 +6691,7 @@
   "SEARCH_SERVICE_ENGINE_COUNT": {
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["florian@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "bug_numbers": [1268424],
     "kind": "linear",
     "high": 200,
