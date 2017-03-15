@@ -308,11 +308,6 @@ protected:
     {}
   };
 
-  enum AreaRestriction
-  {
-    eAnywhere, eOutsideUserSelectAll
-  };
-
   /**
    * Return the node which we will handle white-space under. This is the
    * closest block within the DOM subtree we're editing, or if none is
@@ -332,14 +327,12 @@ protected:
   nsresult PrepareToDeleteRangePriv(WSRunObject* aEndObject);
   nsresult PrepareToSplitAcrossBlocksPriv();
   nsresult DeleteChars(nsINode* aStartNode, int32_t aStartOffset,
-                       nsINode* aEndNode, int32_t aEndOffset,
-                       AreaRestriction aAR = eAnywhere);
+                       nsINode* aEndNode, int32_t aEndOffset);
   WSPoint GetCharAfter(nsINode* aNode, int32_t aOffset);
   WSPoint GetCharBefore(nsINode* aNode, int32_t aOffset);
   WSPoint GetCharAfter(const WSPoint& aPoint);
   WSPoint GetCharBefore(const WSPoint& aPoint);
-  nsresult ConvertToNBSP(WSPoint aPoint,
-                         AreaRestriction aAR = eAnywhere);
+  nsresult ConvertToNBSP(WSPoint aPoint);
   void GetAsciiWSBounds(int16_t aDir, nsINode* aNode, int32_t aOffset,
                         dom::Text** outStartNode, int32_t* outStartOffset,
                         dom::Text** outEndNode, int32_t* outEndOffset);
