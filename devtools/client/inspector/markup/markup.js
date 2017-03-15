@@ -163,10 +163,14 @@ MarkupView.prototype = {
 
   _initTooltips: function () {
     // The tooltips will be attached to the toolbox document.
-    this.eventDetailsTooltip = new HTMLTooltip(this.toolbox.doc,
-      {type: "arrow"});
-    this.imagePreviewTooltip = new HTMLTooltip(this.toolbox.doc,
-      {type: "arrow", useXulWrapper: "true"});
+    this.eventDetailsTooltip = new HTMLTooltip(this.toolbox.doc, {
+      type: "arrow",
+      consumeOutsideClicks: false,
+    });
+    this.imagePreviewTooltip = new HTMLTooltip(this.toolbox.doc, {
+      type: "arrow",
+      useXulWrapper: true,
+    });
     this._enableImagePreviewTooltip();
   },
 
