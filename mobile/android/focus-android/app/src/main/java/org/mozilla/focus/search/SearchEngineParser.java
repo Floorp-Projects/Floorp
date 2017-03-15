@@ -6,8 +6,8 @@
 package org.mozilla.focus.search;
 
 import android.content.res.AssetManager;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.util.Base64;
 
 import org.mozilla.focus.utils.IOUtils;
@@ -22,9 +22,10 @@ import java.io.InputStreamReader;
 /**
  * A very simple parser for search plugins.
  */
-public class SearchEngineParser {
-    private static final String TAG_SHORT_NAME = "ShortName";
-    private static final String TAG_IMAGE = "Image";
+/* package */ class SearchEngineParser {
+    private static final String URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
+    private static final String URLTYPE_SEARCH_HTML  = "text/html";
+    private static final String URL_REL_MOBILE = "mobile";
 
     private static final String IMAGE_URI_PREFIX = "data:image/png;base64,";
 
@@ -36,20 +37,9 @@ public class SearchEngineParser {
         try {
             XmlPullParser parser = XmlPullParserFactory.newInstance().newPullParser();
             parser.setInput(new InputStreamReader(stream));
+            parser.next();
 
-            int eventType = parser.getEventType();
-
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                if (eventType == XmlPullParser.START_TAG && TAG_SHORT_NAME.equals(parser.getName())) {
-                    searchEngine.name = consumeText(parser);
-                }
-
-                if (eventType == XmlPullParser.START_TAG && TAG_IMAGE.equals(parser.getName())) {
-                    searchEngine.icon = decodeBitmap(parser);
-                }
-
-                eventType = parser.next();
-            }
+            readSearchPlugin(parser, searchEngine);
         } catch (XmlPullParserException e) {
             throw new AssertionError("Parser exception while reading " + path, e);
         } finally {
@@ -59,29 +49,115 @@ public class SearchEngineParser {
         return searchEngine;
     }
 
-    private static String consumeText(XmlPullParser parser) throws IOException, XmlPullParserException {
-        nextUntilEvent(parser, XmlPullParser.TEXT);
-        return parser.getText();
+    private static void readSearchPlugin(XmlPullParser parser, SearchEngine searchEngine) throws XmlPullParserException, IOException {
+        if (XmlPullParser.START_TAG != parser.getEventType()) {
+            throw new XmlPullParserException("Expected start tag: " + parser.getPositionDescription());
+        }
+
+        final String name = parser.getName();
+        if (!"SearchPlugin".equals(name) && !"OpenSearchDescription".equals(name)) {
+            throw new XmlPullParserException("Expected <SearchPlugin> or <OpenSearchDescription> as root tag: "
+                    + parser.getPositionDescription());
+        }
+
+        while (parser.next() != XmlPullParser.END_TAG) {
+            if (parser.getEventType() != XmlPullParser.START_TAG) {
+                continue;
+            }
+
+            final String tag = parser.getName();
+
+            if (tag.equals("ShortName")) {
+                readShortName(parser, searchEngine);
+            } else if (tag.equals("Url")) {
+                readUrl(parser, searchEngine);
+            } else if (tag.equals("Image")) {
+                readImage(parser, searchEngine);
+            } else {
+                skip(parser);
+            }
+        }
     }
 
-    private static Bitmap decodeBitmap(XmlPullParser parser) throws IOException, XmlPullParserException {
-        nextUntilEvent(parser, XmlPullParser.TEXT);
+    private static void readUrl(XmlPullParser parser, SearchEngine searchEngine) throws XmlPullParserException, IOException {
+        parser.require(XmlPullParser.START_TAG, null, "Url");
+
+        final String type = parser.getAttributeValue(null, "type");
+        final String template = parser.getAttributeValue(null, "template");
+        final String rel = parser.getAttributeValue(null, "rel");
+
+        Uri uri = Uri.parse(template);
+
+        while (parser.next() != XmlPullParser.END_TAG) {
+            if (parser.getEventType() != XmlPullParser.START_TAG) {
+                continue;
+            }
+
+            final String tag = parser.getName();
+
+            if (tag.equals("Param")) {
+                final String name = parser.getAttributeValue(null, "name");
+                final String value = parser.getAttributeValue(null, "value");
+                uri = uri.buildUpon().appendQueryParameter(name, value).build();
+                parser.nextTag();
+            } else {
+                skip(parser);
+            }
+        }
+
+        if (type.equals(URLTYPE_SEARCH_HTML)) {
+            // Prefer mobile URIs.
+            if (rel != null && rel.equals(URL_REL_MOBILE)) {
+                searchEngine.resultsUris.add(0, uri);
+            } else {
+                searchEngine.resultsUris.add(uri);
+            }
+        } else if (type.equals(URLTYPE_SUGGEST_JSON)) {
+            searchEngine.suggestUri = uri;
+        }
+    }
+
+    private static void skip(XmlPullParser parser) throws XmlPullParserException, IOException {
+        if (parser.getEventType() != XmlPullParser.START_TAG) {
+            throw new IllegalStateException();
+        }
+        int depth = 1;
+        while (depth != 0) {
+            switch (parser.next()) {
+                case XmlPullParser.END_TAG:
+                    depth--;
+                    break;
+                case XmlPullParser.START_TAG:
+                    depth++;
+                    break;
+            }
+        }
+    }
+
+    private static void readShortName(XmlPullParser parser, SearchEngine searchEngine) throws IOException, XmlPullParserException {
+        parser.require(XmlPullParser.START_TAG, null, "ShortName");
+        if (parser.next() == XmlPullParser.TEXT) {
+            searchEngine.name = parser.getText();
+            parser.nextTag();
+        }
+    }
+
+    private static void readImage(XmlPullParser parser, SearchEngine searchEngine) throws IOException, XmlPullParserException {
+        parser.require(XmlPullParser.START_TAG, null, "Image");
+
+        if (parser.next() != XmlPullParser.TEXT) {
+            return;
+        }
 
         final String uri = parser.getText();
         if (!uri.startsWith(IMAGE_URI_PREFIX)) {
-            return null;
+            return;
         }
 
         final byte[] raw = Base64.decode(uri.substring(IMAGE_URI_PREFIX.length()), Base64.DEFAULT);
 
-        return BitmapFactory.decodeByteArray(raw, 0, raw.length);
-    }
+        searchEngine.icon = BitmapFactory.decodeByteArray(raw, 0, raw.length);
 
-    private static void nextUntilEvent(XmlPullParser parser, int expectedEventType) throws IOException, XmlPullParserException {
-        int eventType = parser.getEventType();
-
-        while (eventType != expectedEventType && eventType != XmlPullParser.END_DOCUMENT) {
-            eventType = parser.next();
-        }
+        parser.nextTag();
     }
 }

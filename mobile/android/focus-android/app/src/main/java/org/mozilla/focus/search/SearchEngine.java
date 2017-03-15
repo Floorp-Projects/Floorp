@@ -6,12 +6,34 @@
 package org.mozilla.focus.search;
 
 import android.graphics.Bitmap;
+import android.net.Uri;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public class SearchEngine {
+    // Parameters copied from nsSearchService.js
+    private static final String MOZ_PARAM_LOCALE = "\\{moz:locale\\}";
+    private static final String MOZ_PARAM_DIST_ID = "\\{moz:distributionID\\}";
+    private static final String MOZ_PARAM_OFFICIAL = "\\{moz:official\\}";
+
+    // Supported OpenSearch parameters
+    // See http://opensearch.a9.com/spec/1.1/querysyntax/#core
+    private static final String OS_PARAM_USER_DEFINED = "\\{searchTerms\\??\\}";
+    private static final String OS_PARAM_INPUT_ENCODING = "\\{inputEncoding\\??\\}";
+    private static final String OS_PARAM_LANGUAGE = "\\{language\\??\\}";
+    private static final String OS_PARAM_OUTPUT_ENCODING = "\\{outputEncoding\\??\\}";
+    private static final String OS_PARAM_OPTIONAL = "\\{(?:\\w+:)?\\w+\\?\\}";
+
     /* package */ String name;
     /* package */ Bitmap icon;
+    /* package */ List<Uri> resultsUris;
+    /* package */ Uri suggestUri;
 
-    /* package */ SearchEngine() {}
+    /* package */ SearchEngine() {
+         resultsUris = new ArrayList<>();
+    }
 
     public String getName() {
         return name;
@@ -19,5 +41,44 @@ public class SearchEngine {
 
     public Bitmap getIcon() {
         return icon;
+    }
+
+    public String buildSearchUrl(final String searchTerm) {
+        if (resultsUris.isEmpty()) {
+            return searchTerm;
+        }
+
+        // The parse should have put the best URL for this device at the beginning of the list.
+        final Uri searchUri = resultsUris.get(0);
+
+        final String template = Uri.decode(searchUri.toString());
+        return paramSubstitution(template, Uri.encode(searchTerm));
+    }
+
+    /**
+     * Formats template string with proper parameters. Modeled after
+     * ParamSubstitution in nsSearchService.js
+     *
+     * @param template
+     * @param query
+     * @return
+     */
+    private String paramSubstitution(String template, String query) {
+        final String locale = Locale.getDefault().toString();
+
+        template = template.replaceAll(MOZ_PARAM_LOCALE, locale);
+        template = template.replaceAll(MOZ_PARAM_DIST_ID, "");
+        template = template.replaceAll(MOZ_PARAM_OFFICIAL, "unofficial");
+
+        template = template.replaceAll(OS_PARAM_USER_DEFINED, query);
+        template = template.replaceAll(OS_PARAM_INPUT_ENCODING, "UTF-8");
+
+        template = template.replaceAll(OS_PARAM_LANGUAGE, locale);
+        template = template.replaceAll(OS_PARAM_OUTPUT_ENCODING, "UTF-8");
+
+        // Replace any optional parameters
+        template = template.replaceAll(OS_PARAM_OPTIONAL, "");
+
+        return template;
     }
 }
