@@ -53,12 +53,11 @@ function test() {
         } else {
           info("waiting for the current window to become active");
           setTimeout(pollMostRecentWindow, 0);
-          window.focus(); //XXX Why is this needed?
+          window.focus(); // XXX Why is this needed?
         }
       }
       pollMostRecentWindow();
-    }
-    else {
+    } else {
       browserWindowsCount(1);
       ok(!window.closed, "Restoring the old state should have left this window open");
       Services.obs.removeObserver(observer, "sessionstore-browser-state-restored");

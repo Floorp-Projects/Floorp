@@ -103,26 +103,26 @@ fails == image-orientation-list-style-image.html?90&flip image-orientation-list-
 fails == image-orientation-dynamic.html image-orientation-dynamic.html # Bug 1341758
 
 # <img srcset> tests
-fails == image-srcset-basic-selection-0.1x.html image-srcset-basic-selection-0.1x.html
-fails == image-srcset-basic-selection-2x.html image-srcset-basic-selection-2x.html
-fails == image-srcset-basic-selection-0.5x.html image-srcset-basic-selection-0.5x.html
-fails == image-srcset-basic-selection-0.6x.html image-srcset-basic-selection-0.6x.html
-fails == image-srcset-basic-selection-1.5x.html image-srcset-basic-selection-1.5x.html
+== image-srcset-basic-selection-0.1x.html image-srcset-basic-selection-0.1x.html
+== image-srcset-basic-selection-2x.html image-srcset-basic-selection-2x.html
+== image-srcset-basic-selection-0.5x.html image-srcset-basic-selection-0.5x.html
+== image-srcset-basic-selection-0.6x.html image-srcset-basic-selection-0.6x.html
+== image-srcset-basic-selection-1.5x.html image-srcset-basic-selection-1.5x.html
 == image-srcset-basic-selection-1x.html image-srcset-basic-selection-1x.html
-fails == image-srcset-basic-selection-width-0.5x.html image-srcset-basic-selection-width-0.5x.html
+== image-srcset-basic-selection-width-0.5x.html image-srcset-basic-selection-width-0.5x.html
 fails == image-srcset-basic-selection-width-10x.html image-srcset-basic-selection-width-10x.html
-fails == image-srcset-basic-selection-width-2x.html image-srcset-basic-selection-width-2x.html
+== image-srcset-basic-selection-width-2x.html image-srcset-basic-selection-width-2x.html
 == image-srcset-basic-selection-width-1x.html image-srcset-basic-selection-width-1x.html
-fails == image-srcset-default-2x.html image-srcset-default-2x.html
+== image-srcset-default-2x.html image-srcset-default-2x.html
 == image-srcset-default-1x.html image-srcset-default-1x.html
-fails == image-srcset-default-src-2x.html image-srcset-default-src-2x.html
+== image-srcset-default-src-2x.html image-srcset-default-src-2x.html
 == image-srcset-default-src-1x.html image-srcset-default-src-1x.html
-fails == image-srcset-orientation-2x.html image-srcset-orientation-2x.html
+== image-srcset-orientation-2x.html image-srcset-orientation-2x.html
 == image-srcset-orientation-1x.html image-srcset-orientation-1x.html
 fails == image-srcset-svg-3x.html image-srcset-svg-3x.html
-fails == image-srcset-svg-2x.html image-srcset-svg-2x.html
+== image-srcset-svg-2x.html image-srcset-svg-2x.html
 == image-srcset-svg-1x.html image-srcset-svg-1x.html
-fails == image-srcset-svg-default-2x.html image-srcset-svg-default-2x.html
+== image-srcset-svg-default-2x.html image-srcset-svg-default-2x.html
 == image-srcset-svg-default-1x.html image-srcset-svg-default-1x.html
 
 == image-resize-percent-height.html image-resize-percent-height.html

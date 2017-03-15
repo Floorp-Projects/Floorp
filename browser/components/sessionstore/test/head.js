@@ -15,16 +15,16 @@ const FRAME_SCRIPTS = [
   ROOT + "content-forms.js"
 ];
 
-var mm = Cc["@mozilla.org/globalmessagemanager;1"]
+var globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
            .getService(Ci.nsIMessageListenerManager);
 
 for (let script of FRAME_SCRIPTS) {
-  mm.loadFrameScript(script, true);
+  globalMM.loadFrameScript(script, true);
 }
 
 registerCleanupFunction(() => {
   for (let script of FRAME_SCRIPTS) {
-    mm.removeDelayedFrameScript(script, true);
+    globalMM.removeDelayedFrameScript(script, true);
   }
 });
 
@@ -41,13 +41,13 @@ const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionSto
 // the user to bring them to the foreground. We ensure this by resetting the
 // related preference (see the "firefox.js" defaults file for details).
 Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", false);
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
 });
 
 // Obtain access to internals
 Services.prefs.setBoolPref("browser.sessionstore.debug", true);
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   Services.prefs.clearUserPref("browser.sessionstore.debug");
 });
 
@@ -95,8 +95,8 @@ function waitForBrowserState(aState, aSetStateCallback) {
   let restoreHiddenTabs = Services.prefs.getBoolPref(
                           "browser.sessionstore.restore_hidden_tabs");
 
-  aState.windows.forEach(function (winState) {
-    winState.tabs.forEach(function (tabState) {
+  aState.windows.forEach(function(winState) {
+    winState.tabs.forEach(function(tabState) {
       if (restoreHiddenTabs || !tabState.hidden)
         expectedTabsRestored++;
     });
@@ -211,12 +211,12 @@ function waitForTopic(aTopic, aTimeout, aCallback) {
     observing = false;
   }
 
-  let timeout = setTimeout(function () {
+  let timeout = setTimeout(function() {
     removeObserver();
     aCallback(false);
   }, aTimeout);
 
-  function observer(aSubject, aTopic, aData) {
+  function observer(subject, topic, data) {
     removeObserver();
     timeout = clearTimeout(timeout);
     executeSoon(() => aCallback(true));
@@ -287,7 +287,7 @@ function promiseBrowserLoaded(aBrowser, ignoreSubFrames = true, wantLoad = null)
   return BrowserTestUtils.browserLoaded(aBrowser, !ignoreSubFrames, wantLoad);
 }
 
-function whenWindowLoaded(aWindow, aCallback = next) {
+function whenWindowLoaded(aWindow, aCallback) {
   aWindow.addEventListener("load", function() {
     executeSoon(function executeWhenWindowLoaded() {
       aCallback(aWindow);
@@ -316,21 +316,21 @@ function* BrowserWindowIterator() {
 var gWebProgressListener = {
   _callback: null,
 
-  setCallback: function (aCallback) {
+  setCallback(aCallback) {
     if (!this._callback) {
       window.gBrowser.addTabsProgressListener(this);
     }
     this._callback = aCallback;
   },
 
-  unsetCallback: function () {
+  unsetCallback() {
     if (this._callback) {
       this._callback = null;
       window.gBrowser.removeTabsProgressListener(this);
     }
   },
 
-  onStateChange: function (aBrowser, aWebProgress, aRequest,
+  onStateChange(aBrowser, aWebProgress, aRequest,
                            aStateFlags, aStatus) {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
@@ -340,37 +340,37 @@ var gWebProgressListener = {
   }
 };
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   gWebProgressListener.unsetCallback();
 });
 
 var gProgressListener = {
   _callback: null,
 
-  setCallback: function (callback) {
+  setCallback(callback) {
     Services.obs.addObserver(this, "sessionstore-debug-tab-restored", false);
     this._callback = callback;
   },
 
-  unsetCallback: function () {
+  unsetCallback() {
     if (this._callback) {
       this._callback = null;
     Services.obs.removeObserver(this, "sessionstore-debug-tab-restored");
     }
   },
 
-  observe: function (browser, topic, data) {
+  observe(browser, topic, data) {
     gProgressListener.onRestored(browser);
   },
 
-  onRestored: function (browser) {
+  onRestored(browser) {
     if (browser.__SS_restoreState == TAB_STATE_RESTORING) {
       let args = [browser].concat(gProgressListener._countTabs());
       gProgressListener._callback.apply(gProgressListener, args);
     }
   },
 
-  _countTabs: function () {
+  _countTabs() {
     let needsRestore = 0, isRestoring = 0, wasRestored = 0;
 
     for (let win of BrowserWindowIterator()) {
@@ -388,7 +388,7 @@ var gProgressListener = {
   }
 };
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   gProgressListener.unsetCallback();
 });
 
@@ -490,6 +490,10 @@ function sendMessage(browser, name, data = {}) {
 // This creates list of functions that we will map to their corresponding
 // ss-test:* messages names. Those will be sent to the frame script and
 // be used to read and modify form data.
+/* global getTextContent, getInputValue, setInputValue, getInputChecked
+          setInputChecked, getSelectedIndex, setSelectedIndex,
+          getMultipleSelected, setMultipleSelected, getFileNameArray,
+          setFileNameArray */
 const FORM_HELPERS = [
   "getTextContent",
   "getInputValue", "setInputValue",
@@ -511,8 +515,8 @@ function promiseRemoveTab(tab) {
 }
 
 // Write DOMSessionStorage data to the given browser.
-function modifySessionStorage(browser, data, options = {}) {
-  return ContentTask.spawn(browser, [data, options], function* ([data, options]) {
+function modifySessionStorage(browser, storageData, storageOptions = {}) {
+  return ContentTask.spawn(browser, [storageData, storageOptions], function* ([data, options]) {
     let frame = content;
     if (options && "frameIndex" in options) {
       frame = content.frames[options.frameIndex];

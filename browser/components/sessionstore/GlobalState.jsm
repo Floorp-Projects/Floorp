@@ -28,14 +28,14 @@ GlobalStateInternal.prototype = {
   /**
    * Get all value from the global state.
    */
-  getState: function() {
+  getState() {
     return this.state;
   },
 
   /**
    * Clear all currently stored global state.
    */
-  clear: function() {
+  clear() {
     this.state = {};
   },
 
@@ -46,7 +46,7 @@ GlobalStateInternal.prototype = {
    *        A key the value is stored under.
    * @return The value stored at aKey, or an empty string if no value is set.
    */
-  get: function(aKey) {
+  get(aKey) {
     return this.state[aKey] || "";
   },
 
@@ -56,7 +56,7 @@ GlobalStateInternal.prototype = {
    * @param aKey
    *        A key to store the value under.
    */
-  set: function(aKey, aStringValue) {
+  set(aKey, aStringValue) {
     this.state[aKey] = aStringValue;
   },
 
@@ -66,7 +66,7 @@ GlobalStateInternal.prototype = {
    * @param aKey
    *        A key to delete the value for.
    */
-  delete: function(aKey) {
+  delete(aKey) {
     delete this.state[aKey];
   },
 
@@ -78,7 +78,7 @@ GlobalStateInternal.prototype = {
    * @param aState
    *        A state object to extract global state from to be set.
    */
-  setFromState: function (aState) {
+  setFromState(aState) {
     this.state = (aState && aState.global) || {};
   }
 };

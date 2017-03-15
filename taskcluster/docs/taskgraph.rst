@@ -96,10 +96,14 @@ Graph generation, as run via ``mach taskgraph decision``, proceeds as follows:
 #. Based on the full task graph, calculate the transitive closure of the target
    task set.  That is, the target tasks and all requirements of those tasks.
    The result is the "target task graph".
-#. Optimize the target task graph based on kind-specific optimization methods.
+#. Optimize the target task graph using task-specific optimization methods.
    The result is the "optimized task graph" with fewer nodes than the target
-   task graph.
-#. Create tasks for all tasks in the optimized task graph.
+   task graph.  See :ref:`optimization`.
+#. Morph the graph. Morphs are like syntactic sugar: they keep the same meaning,
+   but express it in a lower-level way. These generally work around limitations
+   in the TaskCluster platform, such as number of dependencies or routes in
+   a task.
+#. Create tasks for all tasks in the morphed task graph.
 
 Transitive Closure
 ..................
@@ -123,32 +127,6 @@ complete.
 And as you can see, the graph we've built now includes everything we wanted
 (the test jobs) plus everything required to do that (docker images, builds).
 
-Optimization
-------------
-
-The objective of optimization to remove as many tasks from the graph as
-possible, as efficiently as possible, thereby delivering useful results as
-quickly as possible.  For example, ideally if only a test script is modified in
-a push, then the resulting graph contains only the corresponding test suite
-task.
-
-A task is said to be "optimized" when it is either replaced with an equivalent,
-already-existing task, or dropped from the graph entirely.
-
-A task can be optimized if all of its dependencies can be optimized and none of
-its inputs have changed.  For a task on which no other tasks depend (a "leaf
-task"), the optimizer can determine what has changed by looking at the
-version-control history of the push: if the relevant files are not modified in
-the push, then it considers the inputs unchanged.  For tasks on which other
-tasks depend ("non-leaf tasks"), the optimizer must replace the task with
-another, equivalent task, so it generates a hash of all of the inputs and uses
-that to search for a matching, existing task.
-
-In some cases, such as try pushes, tasks in the target task set have been
-explicitly requested and are thus excluded from optimization. In other cases,
-the target task set is almost the entire task graph, so targetted tasks are
-considered for optimization.  This behavior is controlled with the
-``optimize_target_tasks`` parameter.
 
 Action Tasks
 ------------
@@ -234,6 +212,9 @@ represented as a JSON object.
 
 Each task has the following properties:
 
+``kind``
+   The name of this task's kind
+
 ``task_id``
    The task's taskId (only for optimized task graphs)
 
@@ -247,12 +228,11 @@ Each task has the following properties:
    The task's in-graph dependencies, represented as an object mapping
    dependency name to label (or to taskId for optimized task graphs)
 
+``optimizations``
+   The optimizations to be applied to this task
+
 ``task``
    The task's TaskCluster task definition.
-
-``kind_implementation``
-   The module and the class name which was used to implement this particular task.
-   It is always of the form ``<module-path>:<object-path>``
 
 The results from each command are in the same format, but with some differences
 in the content:

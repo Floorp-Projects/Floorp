@@ -102,23 +102,23 @@ function getFormValue(browser, xpath) {
   let value = FIELDS[xpath];
 
   if (typeof value == "string") {
-    return getInputValue(browser, {xpath: xpath});
+    return getInputValue(browser, {xpath});
   }
 
   if (typeof value == "boolean") {
-    return getInputChecked(browser, {xpath: xpath});
+    return getInputChecked(browser, {xpath});
   }
 
   if (typeof value == "number") {
-    return getSelectedIndex(browser, {xpath: xpath});
+    return getSelectedIndex(browser, {xpath});
   }
 
   if (isArrayOfNumbers(value)) {
-    return getMultipleSelected(browser, {xpath: xpath});
+    return getMultipleSelected(browser, {xpath});
   }
 
   if (isArrayOfStrings(value)) {
-    return getFileNameArray(browser, {xpath: xpath});
+    return getFileNameArray(browser, {xpath});
   }
 
   throw new Error("unknown input type");
@@ -128,23 +128,23 @@ function setFormValue(browser, xpath) {
   let value = FIELDS[xpath];
 
   if (typeof value == "string") {
-    return setInputValue(browser, {xpath: xpath, value: value});
+    return setInputValue(browser, {xpath, value});
   }
 
   if (typeof value == "boolean") {
-    return setInputChecked(browser, {xpath: xpath, checked: value});
+    return setInputChecked(browser, {xpath, checked: value});
   }
 
   if (typeof value == "number") {
-    return setSelectedIndex(browser, {xpath: xpath, index: value});
+    return setSelectedIndex(browser, {xpath, index: value});
   }
 
   if (isArrayOfNumbers(value)) {
-    return setMultipleSelected(browser, {xpath: xpath, indices: value});
+    return setMultipleSelected(browser, {xpath, indices: value});
   }
 
   if (isArrayOfStrings(value)) {
-    return setFileNameArray(browser, {xpath: xpath, names: value});
+    return setFileNameArray(browser, {xpath, names: value});
   }
 
   throw new Error("unknown input type");
