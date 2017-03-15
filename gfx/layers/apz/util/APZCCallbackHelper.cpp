@@ -29,8 +29,12 @@
 #include "nsView.h"
 #include "Layers.h"
 
+// #define APZCCH_LOGGING 1
+#ifdef APZCCH_LOGGING
+#define APZCCH_LOG(...) printf_stderr("APZCCH: " __VA_ARGS__)
+#else
 #define APZCCH_LOG(...)
-// #define APZCCH_LOG(...) printf_stderr("APZCCH: " __VA_ARGS__)
+#endif
 
 namespace mozilla {
 namespace layers {
@@ -620,6 +624,7 @@ PrepareForSetTargetAPZCNotification(nsIWidget* aWidget,
     ? GetDisplayportElementFor(scrollAncestor)
     : GetRootDocumentElementFor(aWidget);
 
+#ifdef APZCCH_LOGGING
   nsAutoString dpElementDesc;
   if (dpElement) {
     dpElement->Describe(dpElementDesc);
@@ -627,6 +632,7 @@ PrepareForSetTargetAPZCNotification(nsIWidget* aWidget,
   APZCCH_LOG("For event at %s found scrollable element %p (%s)\n",
       Stringify(aRefPoint).c_str(), dpElement.get(),
       NS_LossyConvertUTF16toASCII(dpElementDesc).get());
+#endif
 
   bool guidIsValid = APZCCallbackHelper::GetOrCreateScrollIdentifiers(
     dpElement, &(guid.mPresShellId), &(guid.mScrollId));
