@@ -1722,7 +1722,7 @@
     </emItem>
     <emItem blockID="d33f6d48-a555-49dd-96ff-8d75473403a8" id="mozilla_cc2@internetdownloadmanager.com">
       <prefs/>
-      <versionRange minVersion="0" maxVersion="6.26.11" severity="1">
+      <versionRange minVersion="0" maxVersion="6.26.11" severity="3">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
           <versionRange maxVersion="*" minVersion="53.0a1"/>
         </targetApplication>
