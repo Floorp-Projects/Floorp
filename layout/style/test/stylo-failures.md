@@ -313,8 +313,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_storage.html `-moz-element` [49]
   * -moz-anchor-decoration value on text-decoration
     * test_value_storage.html `-moz-anchor-decoration` [10]
-  * various values on -{webkit,moz}-user-select **need investigation**
-    * test_value_storage.html `user-select` [3]
   * several prefixed values in cursor property
     * test_value_storage.html `cursor` [4]
   * moz-prefixed values of overflow shorthand bug 1330888
