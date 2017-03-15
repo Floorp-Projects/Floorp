@@ -244,6 +244,7 @@ fuzzy-if(cocoaWidget,15,19679) fuzzy-if(winWidget,1,8800) fuzzy-if(!cocoaWidget&
 
 fuzzy-if(skiaContent,1,800000) == markers-and-group-opacity-01.svg markers-and-group-opacity-01.svg
 == marker-attribute-01.svg marker-attribute-01.svg
+== marker-dynamic-opacity.html marker-dynamic-opacity.html
 == marker-effects-01.svg marker-effects-01.svg
 fuzzy-if(skiaContent,1,100) == marker-viewBox-01.svg marker-viewBox-01.svg
 fuzzy-if(skiaContent,1,100) == marker-orientation-01.svg marker-orientation-01.svg
@@ -260,6 +261,7 @@ fuzzy-if(skiaContent,1,10000) == mask-basic-02.svg mask-basic-02.svg
 == mask-basic-04.svg mask-basic-04.svg
 == mask-containing-masked-content-01.svg mask-containing-masked-content-01.svg
 == mask-empty-size.svg mask-empty-size.svg
+
 == mask-extref-dataURI-01.svg mask-extref-dataURI-01.svg
 == mask-img.html mask-img.html
 fails == mask-on-outflowElement-01a.html mask-on-outflowElement-01a.html
