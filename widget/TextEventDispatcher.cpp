@@ -598,6 +598,7 @@ TextEventDispatcher::PendingComposition::Clear()
   mString.Truncate();
   mClauses = nullptr;
   mCaret.mRangeType = TextRangeType::eUninitialized;
+  mReplacedNativeLineBreakers = false;
 }
 
 void
@@ -612,6 +613,7 @@ TextEventDispatcher::PendingComposition::EnsureClauseArray()
 nsresult
 TextEventDispatcher::PendingComposition::SetString(const nsAString& aString)
 {
+  MOZ_ASSERT(!mReplacedNativeLineBreakers);
   mString = aString;
   return NS_OK;
 }
@@ -621,6 +623,8 @@ TextEventDispatcher::PendingComposition::AppendClause(
                                            uint32_t aLength,
                                            TextRangeType aTextRangeType)
 {
+  MOZ_ASSERT(!mReplacedNativeLineBreakers);
+
   if (NS_WARN_IF(!aLength)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -648,6 +652,8 @@ nsresult
 TextEventDispatcher::PendingComposition::SetCaret(uint32_t aOffset,
                                                   uint32_t aLength)
 {
+  MOZ_ASSERT(!mReplacedNativeLineBreakers);
+
   mCaret.mStartOffset = aOffset;
   mCaret.mEndOffset = mCaret.mStartOffset + aLength;
   mCaret.mRangeType = TextRangeType::eCaret;
@@ -694,6 +700,8 @@ TextEventDispatcher::PendingComposition::Set(const nsAString& aString,
 void
 TextEventDispatcher::PendingComposition::ReplaceNativeLineBreakers()
 {
+  mReplacedNativeLineBreakers = true;
+
   // If the composition string is empty, we don't need to do anything.
   if (mString.IsEmpty()) {
     return;
@@ -777,6 +785,12 @@ TextEventDispatcher::PendingComposition::Flush(
     }
     EnsureClauseArray();
     mClauses->AppendElement(mCaret);
+  }
+
+  // If the composition string is set without Set(), we need to replace native
+  // line breakers in the composition string with XP line breaker.
+  if (!mReplacedNativeLineBreakers) {
+    ReplaceNativeLineBreakers();
   }
 
   RefPtr<TextEventDispatcher> kungFuDeathGrip(aDispatcher);
