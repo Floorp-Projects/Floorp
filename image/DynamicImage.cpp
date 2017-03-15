@@ -80,7 +80,7 @@ DynamicImage::OnImageDataComplete(nsIRequest* aRequest,
 }
 
 void
-DynamicImage::OnSurfaceDiscarded()
+DynamicImage::OnSurfaceDiscarded(SurfaceKey aSurfaceKey)
 { }
 
 void
