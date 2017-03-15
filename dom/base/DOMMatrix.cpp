@@ -291,18 +291,52 @@ DOMMatrixReadOnly::ToFloat64Array(JSContext* aCx, JS::MutableHandle<JSObject*> a
   aResult.set(&value.toObject());
 }
 
+// Convenient way to append things as floats, not doubles.  We use this because
+// we only want to output about 6 digits of precision for our matrix()
+// functions, to preserve the behavior we used to have when we used
+// AppendPrintf.
+static void
+AppendFloat(nsAString& aStr, float f)
+{
+  aStr.AppendFloat(f);
+}
+
 void
 DOMMatrixReadOnly::Stringify(nsAString& aResult)
 {
   nsAutoString matrixStr;
   if (mMatrix3D) {
-    matrixStr.AppendPrintf("matrix3d(%g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g)",
-      M11(), M12(), M13(), M14(),
-      M21(), M22(), M23(), M24(),
-      M31(), M32(), M33(), M34(),
-      M41(), M42(), M43(), M44());
+    // We can't use AppendPrintf here, because it does locale-specific
+    // formatting of floating-point values.
+    matrixStr.AssignLiteral("matrix3d(");
+    AppendFloat(matrixStr, M11()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M12()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M13()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M14()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M21()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M22()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M23()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M24()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M31()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M32()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M33()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M34()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M41()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M42()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M43()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, M44());
+    matrixStr.AppendLiteral(")");
   } else {
-    matrixStr.AppendPrintf("matrix(%g, %g, %g, %g, %g, %g)", A(), B(), C(), D(), E(), F());
+    // We can't use AppendPrintf here, because it does locale-specific
+    // formatting of floating-point values.
+    matrixStr.AssignLiteral("matrix(");
+    AppendFloat(matrixStr, A()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, B()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, C()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, D()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, E()); matrixStr.AppendLiteral(", ");
+    AppendFloat(matrixStr, F());
+    matrixStr.AppendLiteral(")");
   }
 
   aResult = matrixStr;

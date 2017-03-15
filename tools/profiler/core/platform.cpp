@@ -1616,43 +1616,53 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  PS::AutoLock lock(gPSMutex);
+  size_t profSize = 0;
+#if defined(USE_LUL_STACKWALK)
+  size_t lulSize = 0;
+#endif
 
-  size_t n = 0;
-  if (gPS) {
-    n = GeckoProfilerMallocSizeOf(gPS);
+  {
+    PS::AutoLock lock(gPSMutex);
 
-    const PS::ThreadVector& threads = gPS->Threads(lock);
-    for (uint32_t i = 0; i < threads.size(); i++) {
-      ThreadInfo* info = threads.at(i);
-      n += info->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
-    }
+    if (gPS) {
+      profSize = GeckoProfilerMallocSizeOf(gPS);
 
-    if (gPS->IsActive(lock)) {
-      n += gPS->Buffer(lock)->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
-    }
+      const PS::ThreadVector& threads = gPS->Threads(lock);
+      for (uint32_t i = 0; i < threads.size(); i++) {
+        ThreadInfo* info = threads.at(i);
+        profSize += info->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
+      }
 
-    // Measurement of the following things may be added later if DMD finds it
-    // is worthwhile:
-    // - gPS->mFeatures
-    // - gPS->mThreadNameFilters
-    // - gPS->mThreads itself (its elements' children are measured above)
-    // - gPS->mGatherer
-    // - gPS->mInterposeObserver
+      if (gPS->IsActive(lock)) {
+        profSize +=
+          gPS->Buffer(lock)->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
+      }
 
-    MOZ_COLLECT_REPORT(
-      "explicit/profiler/profiler-state", KIND_HEAP, UNITS_BYTES, n,
-      "Memory used by the Gecko Profiler's ProfilerState object (excluding "
-      "memory used by LUL).");
+      // Measurement of the following things may be added later if DMD finds it
+      // is worthwhile:
+      // - gPS->mFeatures
+      // - gPS->mThreadNameFilters
+      // - gPS->mThreads itself (its elements' children are measured above)
+      // - gPS->mGatherer
+      // - gPS->mInterposeObserver
 
 #if defined(USE_LUL_STACKWALK)
-    lul::LUL* lul = gPS->LUL(lock);
-    n = lul ? lul->SizeOfIncludingThis(GeckoProfilerMallocSizeOf) : 0;
-    MOZ_COLLECT_REPORT(
-      "explicit/profiler/lul", KIND_HEAP, UNITS_BYTES, n,
-      "Memory used by LUL, a stack unwinder used by the Gecko Profiler.");
+      lul::LUL* lul = gPS->LUL(lock);
+      lulSize = lul ? lul->SizeOfIncludingThis(GeckoProfilerMallocSizeOf) : 0;
 #endif
+    }
   }
+
+  MOZ_COLLECT_REPORT(
+    "explicit/profiler/profiler-state", KIND_HEAP, UNITS_BYTES, profSize,
+    "Memory used by the Gecko Profiler's ProfilerState object (excluding "
+    "memory used by LUL).");
+
+#if defined(USE_LUL_STACKWALK)
+  MOZ_COLLECT_REPORT(
+    "explicit/profiler/lul", KIND_HEAP, UNITS_BYTES, lulSize,
+    "Memory used by LUL, a stack unwinder used by the Gecko Profiler.");
+#endif
 
   return NS_OK;
 }
@@ -1726,6 +1736,14 @@ RegisterCurrentThread(PS::LockRef aLock, const char* aName,
     new ThreadInfo(aName, id, aIsMainThread, aPseudoStack, stackTop);
 
   MaybeSetProfile(aLock, info);
+
+  // This must come after the MaybeSetProfile() call.
+  if (gPS->IsActive(aLock) && info->HasProfile() && gPS->FeatureJS(aLock)) {
+    // This startJSSampling() call is on-thread, so we can poll manually to
+    // start JS sampling immediately.
+    aPseudoStack->startJSSampling();
+    aPseudoStack->pollJSSampling();
+  }
 
   threads.push_back(info);
 }
@@ -1979,6 +1997,8 @@ profiler_get_profile_jsobject(JSContext *aCx, double aSinceTime)
 
   // |val| must outlive |lock| to avoid a GC hazard.
   JS::RootedValue val(aCx);
+  UniquePtr<char[]> buf = nullptr;
+
   {
     PS::AutoLock lock(gPSMutex);
 
@@ -1986,11 +2006,13 @@ profiler_get_profile_jsobject(JSContext *aCx, double aSinceTime)
       return nullptr;
     }
 
-    UniquePtr<char[]> buf = ToJSON(lock, aSinceTime);
-    NS_ConvertUTF8toUTF16 js_string(nsDependentCString(buf.get()));
-    auto buf16 = static_cast<const char16_t*>(js_string.get());
-    MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, buf16, js_string.Length(), &val));
+    buf = ToJSON(lock, aSinceTime);
   }
+
+  NS_ConvertUTF8toUTF16 js_string(nsDependentCString(buf.get()));
+  auto buf16 = static_cast<const char16_t*>(js_string.get());
+  MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, buf16, js_string.Length(), &val));
+
   return &val.toObject();
 }
 
@@ -2314,12 +2336,20 @@ locked_profiler_start(PS::LockRef aLock, int aEntries, double aInterval,
 
     MaybeSetProfile(aLock, info);
 
-    if (info->IsPendingDelete() || !info->HasProfile()) {
-      continue;
+    if (info->HasProfile() && !info->IsPendingDelete()) {
+      info->Stack()->reinitializeOnResume();
+
+      if (featureJS) {
+        info->Stack()->startJSSampling();
+      }
     }
-    info->Stack()->reinitializeOnResume();
-    if (featureJS) {
-      info->Stack()->enableJSSampling();
+  }
+
+  if (featureJS) {
+    // We just called startJSSampling() on all relevant threads. We can also
+    // manually poll the current thread so it starts sampling immediately.
+    if (PseudoStack* stack = tlsPseudoStack.get()) {
+      stack->pollJSSampling();
     }
   }
 
@@ -2433,16 +2463,25 @@ locked_profiler_stop(PS::LockRef aLock)
   }
 #endif
 
-  // Destroy ThreadInfo for dead threads.
   PS::ThreadVector& threads = gPS->Threads(aLock);
   for (uint32_t i = 0; i < threads.size(); i++) {
     ThreadInfo* info = threads.at(i);
-    // We've stopped profiling. We no longer need to retain information for a
-    // dead thread.
     if (info->IsPendingDelete()) {
+      // We've stopped profiling. Destroy ThreadInfo for dead threads.
       delete info;
       threads.erase(threads.begin() + i);
       i--;
+    } else if (info->HasProfile() && gPS->FeatureJS(aLock)) {
+      // Stop JS sampling live threads.
+      info->Stack()->stopJSSampling();
+    }
+  }
+
+  if (gPS->FeatureJS(aLock)) {
+    // We just called stopJSSampling() on all relevant threads. We can also
+    // manually poll the current thread so it stops profiling immediately.
+    if (PseudoStack* stack = tlsPseudoStack.get()) {
+      stack->pollJSSampling();
     }
   }
 
@@ -2452,12 +2491,6 @@ locked_profiler_stop(PS::LockRef aLock)
 
   delete gPS->Buffer(aLock);
   gPS->SetBuffer(aLock, nullptr);
-
-  if (gPS->FeatureJS(aLock)) {
-    PseudoStack *stack = tlsPseudoStack.get();
-    MOZ_ASSERT(stack != nullptr);
-    stack->disableJSSampling();
-  }
 
   gPS->SetFeatureDisplayListDump(aLock, false);
   gPS->SetFeatureGPU(aLock, false);
@@ -2683,6 +2716,9 @@ profiler_unregister_thread()
     }
   }
 
+  // We don't call PseudoStack::stopJSSampling() here; there's no point doing
+  // that for a JS thread that is in the process of disappearing.
+
   if (!wasPseudoStackTransferred) {
     delete tlsPseudoStack.get();
   }
@@ -2697,7 +2733,7 @@ profiler_thread_sleep()
   MOZ_RELEASE_ASSERT(gPS);
 
   PseudoStack *stack = tlsPseudoStack.get();
-  if (stack == nullptr) {
+  if (!stack) {
     return;
   }
   stack->setSleeping();
@@ -2711,7 +2747,7 @@ profiler_thread_wake()
   MOZ_RELEASE_ASSERT(gPS);
 
   PseudoStack *stack = tlsPseudoStack.get();
-  if (stack == nullptr) {
+  if (!stack) {
     return;
   }
   stack->setAwake();
@@ -2724,16 +2760,17 @@ profiler_thread_is_sleeping()
   MOZ_RELEASE_ASSERT(gPS);
 
   PseudoStack *stack = tlsPseudoStack.get();
-  if (stack == nullptr) {
+  if (!stack) {
     return false;
   }
   return stack->isSleeping();
 }
 
 void
-profiler_js_operation_callback()
+profiler_js_interrupt_callback()
 {
-  // This function runs both on and off the main thread.
+  // This function runs both on and off the main thread, on JS threads being
+  // sampled.
 
   MOZ_RELEASE_ASSERT(gPS);
 
@@ -2742,7 +2779,7 @@ profiler_js_operation_callback()
     return;
   }
 
-  stack->jsOperationCallback();
+  stack->pollJSSampling();
 }
 
 double
@@ -2935,38 +2972,64 @@ profiler_tracing(const char* aCategory, const char* aInfo,
   locked_profiler_add_marker(lock, aInfo, marker);
 }
 
-// END externally visible functions
-////////////////////////////////////////////////////////////////////////
-
-void PseudoStack::flushSamplerOnJSShutdown()
+void
+profiler_set_js_context(JSContext* aCx)
 {
-  MOZ_RELEASE_ASSERT(gPS);
-  MOZ_ASSERT(mContext);
+  // This function runs both on and off the main thread.
 
-  PS::AutoLock lock(gPSMutex);
+  MOZ_ASSERT(aCx);
 
-  if (!gPS->IsActive(lock)) {
+  PseudoStack* stack = tlsPseudoStack.get();
+  if (!stack) {
     return;
   }
 
-  gPS->SetIsPaused(lock, true);
-
-  const PS::ThreadVector& threads = gPS->Threads(lock);
-  for (size_t i = 0; i < threads.size(); i++) {
-    // Thread not being profiled, skip it.
-    ThreadInfo* info = threads.at(i);
-    if (!info->HasProfile() || info->IsPendingDelete()) {
-      continue;
-    }
-
-    // Thread not profiling the context that's going away, skip it.
-    if (info->Stack()->mContext != mContext) {
-      continue;
-    }
-
-    info->FlushSamplesAndMarkers(gPS->Buffer(lock), gPS->StartTime(lock));
-  }
-
-  gPS->SetIsPaused(lock, false);
+  stack->setJSContext(aCx);
 }
 
+void
+profiler_clear_js_context()
+{
+  // This function runs both on and off the main thread.
+
+  MOZ_RELEASE_ASSERT(gPS);
+
+  PseudoStack* stack = tlsPseudoStack.get();
+  if (!stack) {
+    return;
+  }
+
+  if (!stack->mContext) {
+    return;
+  }
+
+  // On JS shut down, flush the current buffer as stringifying JIT samples
+  // requires a live JSContext.
+
+  PS::AutoLock lock(gPSMutex);
+
+  if (gPS->IsActive(lock)) {
+    gPS->SetIsPaused(lock, true);
+
+    // Find the ThreadInfo corresponding to this thread, if there is one, and
+    // flush it.
+    const PS::ThreadVector& threads = gPS->Threads(lock);
+    for (size_t i = 0; i < threads.size(); i++) {
+      ThreadInfo* info = threads.at(i);
+      if (info->HasProfile() && !info->IsPendingDelete() &&
+          info->Stack() == stack) {
+        info->FlushSamplesAndMarkers(gPS->Buffer(lock), gPS->StartTime(lock));
+      }
+    }
+
+    gPS->SetIsPaused(lock, false);
+  }
+
+  // We don't call stack->stopJSSampling() here; there's no point doing
+  // that for a JS thread that is in the process of disappearing.
+
+  stack->mContext = nullptr;
+}
+
+// END externally visible functions
+////////////////////////////////////////////////////////////////////////
