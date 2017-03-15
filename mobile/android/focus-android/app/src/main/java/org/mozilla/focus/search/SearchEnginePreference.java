@@ -62,7 +62,7 @@ public class SearchEnginePreference extends DialogPreference {
         });
 
         builder.setPositiveButton(null, null);
-        builder.setNegativeButton(R.string.action_cancel, this);
+        builder.setNegativeButton(null, this);
     }
 
     private void persistSearchEngine(SearchEngine searchEngine) {
