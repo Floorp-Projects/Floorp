@@ -1,3 +1,5 @@
+//error: `nullable' qualifier for type `int' makes no sense
+
 union Union {
     nullable int;
 };

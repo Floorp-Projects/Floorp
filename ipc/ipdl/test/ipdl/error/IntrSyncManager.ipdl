@@ -1,3 +1,5 @@
+//error: protocol `IntrSyncManagee' requires more powerful send semantics than its manager `IntrSyncManager' provides
+
 include protocol IntrSyncManagee;
 
 sync protocol IntrSyncManager {

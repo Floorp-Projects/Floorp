@@ -1,3 +1,6 @@
+//error: message name `Msg' already declared as `MessageType'
+//error: redeclaration of symbol `Msg', first declared at
+
 protocol redeclMessage {
 
     // can't declare two messages with the same name

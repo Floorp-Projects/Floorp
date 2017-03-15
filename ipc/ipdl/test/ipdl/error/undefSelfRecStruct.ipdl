@@ -1,3 +1,5 @@
+//error: struct `X' is only partially defined
+
 struct X { X x; };
 
 protocol undefSelfRecStruct {
