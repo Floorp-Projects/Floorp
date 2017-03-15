@@ -18,7 +18,7 @@
 #include "mozilla/BasePrincipal.h"
 
 class nsICacheEntry;
-class nsIEventTarget;
+class nsICacheStorage;
 class nsIInputStream;
 class nsIInputStreamPump;
 class nsILoadGroup;
@@ -44,10 +44,6 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSICACHEENTRYOPENCALLBACK
 
-    friend class nsWyciwygSetCharsetandSourceEvent;
-    friend class nsWyciwygWriteEvent;
-    friend class nsWyciwygCloseEvent;
-
     // nsWyciwygChannel methods:
     nsWyciwygChannel();
 
@@ -56,19 +52,16 @@ public:
 protected:
     virtual ~nsWyciwygChannel();
 
-    nsresult WriteToCacheEntryInternal(const nsAString& aData);
-    void SetCharsetAndSourceInternal();
-    nsresult CloseCacheEntryInternal(nsresult reason);
-
     nsresult ReadFromCache();
     nsresult EnsureWriteCacheEntry();
-    nsresult OpenCacheEntry(nsIURI *aURI, uint32_t aOpenFlags);
+    nsresult GetCacheStorage(nsICacheStorage **_retval);
+    nsresult OpenCacheEntryForReading(nsIURI *aURI);
+    nsresult OpenCacheEntryForWriting(nsIURI *aURI);
 
     void WriteCharsetAndSourceToCache(int32_t aSource,
                                       const nsCString& aCharset);
 
     void NotifyListener();
-    bool IsOnCacheIOThread();
 
     friend class mozilla::net::PrivateBrowsingChannel<nsWyciwygChannel>;
 
@@ -81,7 +74,6 @@ protected:
     EMode                               mMode;
     nsresult                            mStatus;
     bool                                mIsPending;
-    bool                                mCharsetAndSourceSet;
     bool                                mNeedToWriteCharset;
     int32_t                             mCharsetSource;
     nsCString                           mCharset;
@@ -105,8 +97,8 @@ protected:
     nsCOMPtr<nsICacheEntry>             mCacheEntry;
     nsCOMPtr<nsIOutputStream>           mCacheOutputStream;
     nsCOMPtr<nsIInputStream>            mCacheInputStream;
-    nsCOMPtr<nsIEventTarget>            mCacheIOTarget;
 
+    bool                                mNeedToSetSecurityInfo;
     nsCOMPtr<nsISupports>               mSecurityInfo;
 };
 
