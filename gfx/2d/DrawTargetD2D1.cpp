@@ -229,7 +229,7 @@ DrawTargetD2D1::DrawSurfaceWithShadow(SourceSurface *aSurface,
   mTransformDirty = true;
 
   Matrix mat;
-  RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, mat, ExtendMode::CLAMP);
+  RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, mat, ExtendMode::CLAMP, nullptr, false);
 
   if (!image) {
     gfxWarning() << "Couldn't get image for surface.";
@@ -378,7 +378,7 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
   mTransformDirty = true;
 
   Matrix mat = Matrix::Translation(aDestination.x - aSourceRect.x, aDestination.y - aSourceRect.y);
-  RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, mat, ExtendMode::CLAMP);
+  RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, mat, ExtendMode::CLAMP, nullptr, false);
 
   if (!image) {
     gfxWarning() << "Couldn't get image for surface.";
@@ -1857,7 +1857,8 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
 already_AddRefed<ID2D1Image>
 DrawTargetD2D1::GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTransform,
-                                   ExtendMode aExtendMode, const IntRect* aSourceRect)
+                                   ExtendMode aExtendMode, const IntRect* aSourceRect,
+                                   bool aUserSpace)
 {
   RefPtr<ID2D1Image> image;
 
@@ -1876,7 +1877,8 @@ DrawTargetD2D1::GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTrans
         gfxWarning() << "Invalid surface type.";
         return nullptr;
       }
-      return CreatePartialBitmapForSurface(dataSurf, mTransform, mSize, aExtendMode,
+      Matrix transform = aUserSpace ? mTransform : Matrix();
+      return CreatePartialBitmapForSurface(dataSurf, transform, mSize, aExtendMode,
                                            aSourceTransform, mDC, aSourceRect);
     }
     break;
