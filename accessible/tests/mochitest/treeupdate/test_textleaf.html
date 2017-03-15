@@ -43,22 +43,16 @@
       var node = getNode(aID);
       node.setAttribute("onclick", "alert(3);");
       var textLeaf = getAccessible(node).firstChild;
-      is(textLeaf.actionCount, 1, "Wrong action numbers!");
+      is(textLeaf.actionCount, 1, "setOnClickAttr: wrong action numbers!");
     }
 
     function removeOnClickAttr(aID)
     {
-      this.__proto__ = new textLeafUpdate(aID, false);
-
-      this.invoke = function removeOnClickAttr_invoke()
-      {
-        this.node.removeAttribute("onclick");
-      }
-
-      this.getID = function removeOnClickAttr_getID()
-      {
-        return "unmake " + prettyName(aID) + " linkable";
-      }
+      var node = getNode(aID);
+      node.removeAttribute("onclick");
+      var textLeaf = getAccessible(node).firstChild;
+      is(textLeaf.actionCount, 0,
+         "removeOnClickAttr: wrong action numbers!");
     }
 
     function setOnClickNRoleAttrs(aID)
@@ -129,10 +123,11 @@
     {
       // adds onclick on element, text leaf should inherit its action
       setOnClickAttr("div");
+      // remove onclick attribute, text leaf shouldn't have any action
+      removeOnClickAttr("div");
+
       // Call rest of event tests.
       gQueue = new eventQueue();
-      // remove onclick attribute, text leaf shouldn't have any action
-      gQueue.push(new removeOnClickAttr("div"));
 
       // set onclick attribute making span accessible, it's inserted into tree
       // and adopts text leaf accessible, text leaf should have an action

@@ -47,7 +47,7 @@
     function testRemoveListener()
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, getNode("parent")),
+        new unexpectedInvokerChecker(EVENT_HIDE, getNode("parent")),
       ];
 
       this.invoke = function testRemoveListener_invoke()
@@ -57,8 +57,10 @@
 
       this.finalCheck = function testRemoveListener_finalCheck()
       {
-        is(getAccessible("parent", null, null, DONOTFAIL_IF_NO_ACC), null, "Check that parent is not accessible.");
-        is(getAccessible("child", null, null, DONOTFAIL_IF_NO_ACC), null, "Check that child is not accessible.");
+        ok(getAccessible("parent", null, null, DONOTFAIL_IF_NO_ACC),
+           "Parent stays accessible after click event listener is removed");
+        ok(!getAccessible("child", null, null, DONOTFAIL_IF_NO_ACC),
+           "Child stays inaccessible");
       }
 
       this.getID = function testRemoveListener_getID()
