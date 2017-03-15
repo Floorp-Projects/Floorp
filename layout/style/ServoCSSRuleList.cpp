@@ -11,6 +11,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleRule.h"
 #include "mozilla/ServoMediaRule.h"
+#include "mozilla/ServoNamespaceRule.h"
 
 namespace mozilla {
 
@@ -70,19 +71,18 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
   if (rule <= kMaxRuleType) {
     RefPtr<css::Rule> ruleObj = nullptr;
     switch (rule) {
-      case nsIDOMCSSRule::STYLE_RULE: {
-        ruleObj = new ServoStyleRule(
-          Servo_CssRules_GetStyleRuleAt(mRawRules, aIndex).Consume());
-        break;
+#define CASE_RULE(const_, name_)                                            \
+      case nsIDOMCSSRule::const_##_RULE: {                                  \
+        ruleObj = new Servo##name_##Rule(                                   \
+          Servo_CssRules_Get##name_##RuleAt(mRawRules, aIndex).Consume());  \
+        break;                                                              \
       }
-      case nsIDOMCSSRule::MEDIA_RULE: {
-        ruleObj = new ServoMediaRule(
-          Servo_CssRules_GetMediaRuleAt(mRawRules, aIndex).Consume());
-        break;
-      }
+      CASE_RULE(STYLE, Style)
+      CASE_RULE(MEDIA, Media)
+      CASE_RULE(NAMESPACE, Namespace)
+#undef CASE_RULE
       case nsIDOMCSSRule::FONT_FACE_RULE:
       case nsIDOMCSSRule::KEYFRAMES_RULE:
-      case nsIDOMCSSRule::NAMESPACE_RULE:
         // XXX create corresponding rules
       default:
         NS_WARNING("stylo: not implemented yet");

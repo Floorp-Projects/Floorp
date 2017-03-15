@@ -192,8 +192,8 @@ nsSVGIntegrationUtils::GetSVGCoordContextForNonSVGFrame(nsIFrame* aNonSVGFrame)
 gfxRect
 nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame)
 {
-  NS_ASSERTION(!aNonSVGFrame->IsFrameOfType(nsIFrame::eSVG),
-               "SVG frames should not get here");
+  NS_ASSERTION(!(aNonSVGFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT),
+               "Frames with SVG layout should not get here");
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aNonSVGFrame);
   // 'r' is in "user space":

@@ -83,6 +83,8 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == filter-nested-filtering-02.svg pass.svg
 == filter-patterned-rect-01.svg pass.svg
 == filter-patterned-rect-02.svg pass.svg
+== filter-region-01a.html pass.svg
+== filter-region-01b.html pass.svg
 
 == feColorMatrix-saturate-01.svg pass.svg
 
