@@ -1526,10 +1526,6 @@ pref("browser.esedbreader.loglevel", "Error");
 
 pref("browser.laterrun.enabled", false);
 
-#ifdef NIGHTLY_BUILD
-pref("dom.ipc.processPrelaunch.enabled", true);
-#endif
-
 #ifdef EARLY_BETA_OR_EARLIER
 pref("browser.migrate.automigrate.enabled", true);
 #else

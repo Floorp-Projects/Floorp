@@ -60,9 +60,6 @@ function startup() {
   Services.wm.addListener(windowListener);
 
   parent.init();
-  Services.ppmm.loadProcessScript("data:,new " + function() {
-    Components.utils.import("resource://formautofill/FormAutofillContent.jsm");
-  }, true);
   Services.mm.loadFrameScript("chrome://formautofill/content/FormAutofillFrameScript.js", true);
 }
 
