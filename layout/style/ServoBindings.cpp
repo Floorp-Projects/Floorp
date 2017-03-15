@@ -45,6 +45,7 @@
 #include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "mozilla/LookAndFeel.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -483,6 +484,16 @@ void
 Gecko_FillAllMaskLists(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
 {
   nsRuleNode::FillAllMaskLists(*aLayers, aMaxLen);
+}
+
+nscolor Gecko_GetLookAndFeelSystemColor(int32_t aId,
+                                        RawGeckoPresContextBorrowed aPresContext)
+{
+  bool useStandinsForNativeColors = aPresContext && !aPresContext->IsChrome();
+  nscolor result;
+  LookAndFeel::ColorID colorId = static_cast<LookAndFeel::ColorID>(aId);
+  LookAndFeel::GetColor(colorId, useStandinsForNativeColors, &result);
+  return result;
 }
 
 template <typename Implementor>
