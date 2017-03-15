@@ -43,14 +43,16 @@ def rewrite_patch(patch, strip_dir):
     return Patch(patch.author, patch.email, rewrite_message(patch), new_diff)
 
 def rewrite_message(patch):
+    rest = patch.message.body
+
     if patch.message.bug is not None:
         return "\n".join([patch.message.summary,
                           patch.message.body,
                           "",
-                          "Upstreamed from https://bugzilla.mozilla.org/show_bug.cgi?id=%s [ci skip]" %
+                          "Upstreamed from https://bugzilla.mozilla.org/show_bug.cgi?id=%s" %
                           patch.message.bug])
 
-    return "\n".join([patch.message.full_summary, "%s\n[ci skip]\n" % patch.message.body])
+    return "\n".join([patch.message.full_summary, rest])
 
 
 class SyncToUpstream(Step):
