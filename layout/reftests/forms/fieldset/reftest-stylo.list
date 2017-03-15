@@ -26,3 +26,4 @@ fails == fieldset-border-image-1a.html fieldset-border-image-1a.html
 fails == fieldset-border-image-1b.html fieldset-border-image-1b.html
 fails == fieldset-border-image-2a.html fieldset-border-image-2a.html
 fails == fieldset-border-image-2b.html fieldset-border-image-2b.html
+== dynamic-text-indent.html dynamic-text-indent.html
