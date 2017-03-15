@@ -45,6 +45,16 @@ nested(upto inside_cpow) sync protocol PContentBridge
 child:
     async PParentToChildStream();
 
+child:
+   /**
+     * Sending an activate message moves focus to the child.
+     */
+    async Activate(PBrowser aTab);
+
+    async Deactivate(PBrowser aTab);
+
+    async ParentActivated(PBrowser aTab, bool aActivated);
+
 parent:
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
                      CpowEntry[] aCpows, Principal aPrincipal)
