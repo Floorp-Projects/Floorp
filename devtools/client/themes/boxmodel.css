@@ -52,7 +52,7 @@
 
 /* Regions are 3 nested elements with wide borders and outlines */
 
-.boxmodel-content {
+.boxmodel-contents {
   height: 18px;
 }
 
@@ -84,7 +84,7 @@
   border-color: #6a5acd;
 }
 
-.boxmodel-content {
+.boxmodel-contents {
   background-color: #87ceeb;
 }
 
@@ -104,7 +104,8 @@
 
 /* Editable region sizes are contained in absolutely positioned <p> */
 
-.boxmodel-main > p {
+.boxmodel-main > p,
+.boxmodel-size {
   position: absolute;
   pointer-events: none;
   margin: 0;
@@ -112,7 +113,8 @@
 }
 
 .boxmodel-main > p > span,
-.boxmodel-main > p > input {
+.boxmodel-main > p > input,
+.boxmodel-content {
   vertical-align: middle;
   pointer-events: auto;
 }
@@ -172,8 +174,8 @@
 .boxmodel-position.boxmodel-right,
 .boxmodel-margin.boxmodel-right,
 .boxmodel-margin.boxmodel-left,
-.boxmodel-border.boxmodel-left,
 .boxmodel-border.boxmodel-right,
+.boxmodel-border.boxmodel-left,
 .boxmodel-padding.boxmodel-right,
 .boxmodel-padding.boxmodel-left {
   width: 21px;
@@ -216,6 +218,12 @@
   border-right: 1px solid var(--theme-highlight-purple);
   width: auto;
   height: 30px;
+}
+
+.boxmodel-size > p {
+  display: inline-block;
+  margin: auto;
+  line-height: 0;
 }
 
 .boxmodel-rotate.boxmodel-right.boxmodel-position:not(.boxmodel-editing) {
@@ -289,8 +297,6 @@
 .boxmodel-editable:hover {
   border-bottom-color: hsl(0, 0%, 50%);
 }
-
-/* Make sure the content size doesn't appear as editable like the other sizes */
 
 .boxmodel-size > span {
   cursor: default;

@@ -16,7 +16,7 @@ module.exports = createClass({
 
   propTypes: {
     box: PropTypes.string.isRequired,
-    direction: PropTypes.string.isRequired,
+    direction: PropTypes.string,
     property: PropTypes.string.isRequired,
     textContent: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     onShowBoxModelEditor: PropTypes.func.isRequired,
@@ -42,13 +42,15 @@ module.exports = createClass({
       textContent,
     } = this.props;
 
-    let rotate = (direction == "left" || direction == "right") &&
+    let rotate = direction &&
+                 (direction == "left" || direction == "right") &&
                  textContent.toString().length > LONG_TEXT_ROTATE_LIMIT;
 
     return dom.p(
       {
-        className: `boxmodel-${box} boxmodel-${direction}
-          ${rotate ? "boxmodel-rotate" : ""}`,
+        className: `boxmodel-${box}
+                    ${direction ? " boxmodel-" + direction : "boxmodel-" + property}
+                    ${rotate ? " boxmodel-rotate" : ""}`,
       },
       dom.span(
         {
