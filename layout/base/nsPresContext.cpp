@@ -2703,6 +2703,7 @@ nsPresContext::CreateTimer(nsTimerCallbackFunc aCallback,
                            uint32_t aDelay)
 {
   nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
+  timer->SetTarget(Document()->EventTargetFor(TaskCategory::Other));
   if (timer) {
     nsresult rv = timer->InitWithNamedFuncCallback(aCallback, this, aDelay,
                                                    nsITimer::TYPE_ONE_SHOT,
@@ -3295,12 +3296,14 @@ nsRootPresContext::EnsureEventualDidPaintEvent(uint64_t aTransactionId)
   }
 
   nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
+  timer->SetTarget(Document()->EventTargetFor(TaskCategory::Other));
   if (timer) {
     RefPtr<nsRootPresContext> self = this;
-    nsresult rv = timer->InitWithCallback(NewTimerCallback([self, aTransactionId](){
-      nsAutoScriptBlocker blockScripts;
-      self->NotifyDidPaintForSubtree(aTransactionId);
-    }), 100, nsITimer::TYPE_ONE_SHOT);
+    nsresult rv = timer->InitWithCallback(
+      NewNamedTimerCallback([self, aTransactionId](){
+        nsAutoScriptBlocker blockScripts;
+        self->NotifyDidPaintForSubtree(aTransactionId);
+    }, "NotifyDidPaintForSubtree"), 100, nsITimer::TYPE_ONE_SHOT);
 
     if (NS_SUCCEEDED(rv)) {
       NotifyDidPaintTimer* t = mNotifyDidPaintTimers.AppendElement();
