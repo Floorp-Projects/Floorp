@@ -20,6 +20,8 @@ class DBTool {
   bool ImportCertificate(const ArgParser& parser);
   bool ListKeys();
   bool ImportKey(const ArgParser& parser);
+  bool DeleteCert(const ArgParser& parser);
+  bool DeleteKey(const ArgParser& parser);
 };
 
 #endif  // dbtool_h__

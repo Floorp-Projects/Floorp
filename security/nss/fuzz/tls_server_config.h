@@ -2,20 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef tls_client_config_h__
-#define tls_client_config_h__
+#ifndef tls_server_config_h__
+#define tls_server_config_h__
 
 #include <stdint.h>
 #include <cstddef>
 
-class ClientConfig {
+class ServerConfig {
  public:
-  ClientConfig(const uint8_t* data, size_t len);
+  ServerConfig(const uint8_t* data, size_t len);
 
-  bool FailCertificateAuthentication();
   bool EnableExtendedMasterSecret();
-  bool RequireDhNamedGroups();
-  bool EnableFalseStart();
+  bool RequestCertificate();
+  bool RequireCertificate();
   bool EnableDeflate();
   bool EnableCbcRandomIv();
   bool RequireSafeNegotiation();
@@ -25,4 +24,4 @@ class ClientConfig {
   uint64_t config_;
 };
 
-#endif  // tls_client_config_h__
+#endif  // tls_server_config_h__
