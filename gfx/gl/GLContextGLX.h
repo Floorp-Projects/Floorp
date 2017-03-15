@@ -26,8 +26,7 @@ public:
                     GLXDrawable drawable,
                     GLXFBConfig cfg,
                     bool deleteDrawable,
-                    gfxXlibSurface* pixmap = nullptr,
-                    ContextProfile profile = ContextProfile::OpenGLCompatibility);
+                    gfxXlibSurface* pixmap);
 
     // Finds a GLXFBConfig compatible with the provided window.
     static bool
@@ -77,8 +76,7 @@ private:
                  GLXContext aContext,
                  bool aDeleteDrawable,
                  bool aDoubleBuffered,
-                 gfxXlibSurface* aPixmap,
-                 ContextProfile profile);
+                 gfxXlibSurface* aPixmap);
 
     GLXContext mContext;
     Display* mDisplay;
