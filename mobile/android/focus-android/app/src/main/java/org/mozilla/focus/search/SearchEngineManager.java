@@ -18,6 +18,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.focus.utils.IOUtils;
 import org.mozilla.focus.utils.Locales;
+import org.mozilla.focus.utils.Settings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -138,10 +139,20 @@ public class SearchEngineManager extends BroadcastReceiver {
         return searchEngines;
     }
 
-    public synchronized SearchEngine getDefaultSearchEngine() {
+    public synchronized SearchEngine getDefaultSearchEngine(Context context) {
         awaitLoadingSearchEnginesLocked();
 
-        // TODO: Read from shared preference (#184)
+        final Settings settings = new Settings(context);
+
+        final String defaultSearch = settings.getDefaultSearchEngineName();
+        if (defaultSearch != null) {
+            for (SearchEngine searchEngine : searchEngines) {
+                if (defaultSearch.equals(searchEngine.getName())) {
+                    return searchEngine;
+                }
+            }
+        }
+
         return searchEngines.get(0);
     }
 

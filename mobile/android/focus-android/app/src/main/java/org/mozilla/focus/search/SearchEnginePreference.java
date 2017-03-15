@@ -12,6 +12,7 @@ import android.preference.DialogPreference;
 import android.util.AttributeSet;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.utils.Settings;
 
 /**
  * Preference for setting the default search engine.
@@ -42,7 +43,7 @@ public class SearchEnginePreference extends DialogPreference {
     }
 
     private void init() {
-        setTitle(SearchEngineManager.getInstance().getDefaultSearchEngine().getName());
+        setTitle(SearchEngineManager.getInstance().getDefaultSearchEngine(getContext()).getName());
     }
 
     @Override
@@ -67,6 +68,7 @@ public class SearchEnginePreference extends DialogPreference {
     private void persistSearchEngine(SearchEngine searchEngine) {
         setTitle(searchEngine.getName());
 
-        // TODO: Store selection. This doesn't make any sense until we imported the actual search engines (#184).
+        final Settings settings = new Settings(getContext());
+        settings.setDefaultSearchEngine(searchEngine);
     }
 }

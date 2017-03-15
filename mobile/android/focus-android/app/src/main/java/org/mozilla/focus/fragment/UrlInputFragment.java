@@ -125,13 +125,13 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
 
         final String url = UrlUtils.isUrl(rawUrl)
                 ? UrlUtils.normalize(rawUrl)
-                : UrlUtils.createSearchUrl(rawUrl);
+                : UrlUtils.createSearchUrl(getContext(), rawUrl);
 
         openUrl(url);
     }
 
     private void onSearch() {
-        final String searchUrl = UrlUtils.createSearchUrl(urlView.getOriginalText());
+        final String searchUrl = UrlUtils.createSearchUrl(getContext(), urlView.getOriginalText());
 
         openUrl(searchUrl);
     }
