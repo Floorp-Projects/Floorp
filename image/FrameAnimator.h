@@ -33,6 +33,9 @@ public:
     , mFirstFrameTimeout(FrameTimeout::FromRawMilliseconds(0))
     , mAnimationMode(aAnimationMode)
     , mHasBeenDecoded(false)
+    , mIsCurrentlyDecoded(false)
+    , mCompositedFrameInvalid(false)
+    , mDiscarded(false)
   { }
 
   /**
@@ -44,6 +47,40 @@ public:
    * Returns true if this image has been fully decoded before.
    */
   bool GetHasBeenDecoded() { return mHasBeenDecoded; }
+
+  /**
+   * Call this with true when this image is discarded. Call this with false
+   * when a decoder is created to decode the image.
+   */
+  void SetDiscarded(bool aDiscarded);
+
+  /**
+   * Returns true if this image has been discarded and a decoded has not yet
+   * been created to redecode it.
+   */
+  bool IsDiscarded() { return mDiscarded; }
+
+  /**
+   * Sets the composited frame as valid or invalid.
+   */
+  void SetCompositedFrameInvalid(bool aInvalid) {
+    MOZ_ASSERT(!aInvalid || gfxPrefs::ImageMemAnimatedDiscardable());
+    mCompositedFrameInvalid = aInvalid;
+  }
+
+  /**
+   * Returns whether the composited frame is valid to draw to the screen.
+   */
+  bool GetCompositedFrameInvalid() {
+    return mCompositedFrameInvalid;
+  }
+
+  /**
+   * Returns whether the image is currently full decoded..
+   */
+  bool GetIsCurrentlyDecoded() {
+    return mIsCurrentlyDecoded;
+  }
 
   /**
    * Call when you need to re-start animating. Ensures we start from the first
@@ -145,8 +182,44 @@ private:
   //! The animation mode of this image. Constants defined in imgIContainer.
   uint16_t mAnimationMode;
 
+  /**
+   * The following four bools (mHasBeenDecoded, mIsCurrentlyDecoded,
+   * mCompositedFrameInvalid, mDiscarded) track the state of the image with
+   * regards to decoding. They all start out false, including mDiscarded,
+   * because we want to treat being discarded differently from "not yet decoded
+   * for the first time".
+   *
+   * (When we are decoding the image for the first time we want to show the
+   * image at the speed of data coming in from the network or the speed
+   * specified in the image file, whichever is slower. But when redecoding we
+   * want to show nothing until the frame for the current time has been
+   * decoded. The prevents the user from seeing the image "fast forward"
+   * to the expected spot.)
+   *
+   * When the image is decoded for the first time mHasBeenDecoded and
+   * mIsCurrentlyDecoded get set to true. When the image is discarded
+   * mIsCurrentlyDecoded gets set to false, and mCompositedFrameInvalid
+   * & mDiscarded get set to true. When we create a decoder to redecode the
+   * image mDiscarded gets set to false. mCompositedFrameInvalid gets set to
+   * false when we are able to advance to the frame that should be showing
+   * for the current time. mIsCurrentlyDecoded gets set to true when the
+   * redecode finishes.
+   */
+
   //! Whether this image has been decoded at least once.
   bool mHasBeenDecoded;
+
+  //! Whether this image is currently fully decoded.
+  bool mIsCurrentlyDecoded;
+
+  //! Whether the composited frame is valid to draw to the screen, note that
+  //! the composited frame can exist and be filled with image data but not
+  //! valid to draw to the screen.
+  bool mCompositedFrameInvalid;
+
+  //! Whether this image is currently discarded. Only set to true after the
+  //! image has been decoded at least once.
+  bool mDiscarded;
 };
 
 /**
