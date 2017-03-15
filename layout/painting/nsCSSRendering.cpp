@@ -1871,7 +1871,6 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
 /* static */
 nsCSSRendering::PaintBGParams
 nsCSSRendering::PaintBGParams::ForAllLayers(nsPresContext& aPresCtx,
-                                            nsRenderingContext& aRenderingCtx,
                                             const nsRect& aDirtyRect,
                                             const nsRect& aBorderArea,
                                             nsIFrame *aFrame,
@@ -1880,7 +1879,7 @@ nsCSSRendering::PaintBGParams::ForAllLayers(nsPresContext& aPresCtx,
 {
   MOZ_ASSERT(aFrame);
 
-  PaintBGParams result(aPresCtx, aRenderingCtx, aDirtyRect, aBorderArea,
+  PaintBGParams result(aPresCtx, aDirtyRect, aBorderArea,
                        aFrame, aPaintFlags, -1, CompositionOp::OP_OVER,
                        aOpacity);
 
@@ -1890,7 +1889,6 @@ nsCSSRendering::PaintBGParams::ForAllLayers(nsPresContext& aPresCtx,
 /* static */
 nsCSSRendering::PaintBGParams
 nsCSSRendering::PaintBGParams::ForSingleLayer(nsPresContext& aPresCtx,
-                                              nsRenderingContext& aRenderingCtx,
                                               const nsRect& aDirtyRect,
                                               const nsRect& aBorderArea,
                                               nsIFrame *aFrame,
@@ -1901,7 +1899,7 @@ nsCSSRendering::PaintBGParams::ForSingleLayer(nsPresContext& aPresCtx,
 {
   MOZ_ASSERT(aFrame && (aLayer != -1));
 
-  PaintBGParams result(aPresCtx, aRenderingCtx, aDirtyRect, aBorderArea,
+  PaintBGParams result(aPresCtx, aDirtyRect, aBorderArea,
                        aFrame, aPaintFlags, aLayer, aCompositionOp,
                        aOpacity);
 
@@ -1909,7 +1907,8 @@ nsCSSRendering::PaintBGParams::ForSingleLayer(nsPresContext& aPresCtx,
 }
 
 DrawResult
-nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams)
+nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams,
+                                     nsRenderingContext& aRenderingCtx)
 {
   PROFILER_LABEL("nsCSSRendering", "PaintBackground",
     js::ProfileEntry::Category::GRAPHICS);
@@ -1936,7 +1935,7 @@ nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams)
     sc = aParams.frame->StyleContext();
   }
 
-  return PaintStyleImageLayerWithSC(aParams, sc, *aParams.frame->StyleBorder());
+  return PaintStyleImageLayerWithSC(aParams, aRenderingCtx, sc, *aParams.frame->StyleBorder());
 }
 
 static bool
@@ -2415,6 +2414,7 @@ DetermineCompositionOp(const nsCSSRendering::PaintBGParams& aParams,
 
 DrawResult
 nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
+                                           nsRenderingContext& aRenderingCtx,
                                            nsStyleContext *aBackgroundSC,
                                            const nsStyleBorder& aBorder)
 {
@@ -2440,7 +2440,7 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
                                aParams.frame, displayData->UsedAppearance(),
                                &drawing);
       drawing.IntersectRect(drawing, aParams.dirtyRect);
-      theme->DrawWidgetBackground(&aParams.renderingCtx, aParams.frame,
+      theme->DrawWidgetBackground(&aRenderingCtx, aParams.frame,
                                   displayData->UsedAppearance(), aParams.borderArea,
                                   drawing);
       return DrawResult::SUCCESS;
@@ -2489,7 +2489,7 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
   // SetupCurrentBackgroundClip.  (Arguably it should be the
   // intersection, but that breaks the table painter -- in particular,
   // taking the intersection breaks reftests/bugs/403249-1[ab].)
-  gfxContext* ctx = aParams.renderingCtx.ThebesContext();
+  gfxContext* ctx = aRenderingCtx.ThebesContext();
   nscoord appUnitsPerPixel = aParams.presCtx.AppUnitsPerDevPixel();
   ImageLayerClipState clipState;
   if (aParams.bgClipRect) {
@@ -2632,7 +2632,7 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
 
       result &=
         state.mImageRenderer.DrawLayer(&aParams.presCtx,
-                                       aParams.renderingCtx,
+                                       aRenderingCtx,
                                        state.mDestArea, state.mFillArea,
                                        state.mAnchor + paintBorderArea.TopLeft(),
                                        clipState.mDirtyRectInAppUnits,
