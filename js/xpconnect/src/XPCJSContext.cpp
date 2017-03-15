@@ -1000,11 +1000,12 @@ class Watchdog
 
             // Wake up the watchdog, and wait for it to call us back.
             PR_NotifyCondVar(mWakeup);
-            PR_WaitCondVar(mWakeup, PR_INTERVAL_NO_TIMEOUT);
-            MOZ_ASSERT(!mShuttingDown);
         }
 
         PR_JoinThread(mThread);
+
+        // The thread sets mShuttingDown to false as it exits.
+        MOZ_ASSERT(!mShuttingDown);
 
         // Destroy state.
         mThread = nullptr;
@@ -1044,7 +1045,6 @@ class Watchdog
     {
         MOZ_ASSERT(!NS_IsMainThread());
         mShuttingDown = false;
-        PR_NotifyCondVar(mWakeup);
     }
 
     int32_t MinScriptRunTimeSeconds()
