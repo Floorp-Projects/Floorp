@@ -300,7 +300,6 @@ PROFILER_FUNC(double profiler_time(), 0)
 PROFILER_FUNC(bool profiler_is_active_and_not_in_privacy_mode(), false)
 
 PROFILER_FUNC_VOID(profiler_log(const char *str))
-PROFILER_FUNC_VOID(profiler_log(const char *fmt, va_list args))
 
 // End of the functions defined whether the profiler is enabled or not.
 
