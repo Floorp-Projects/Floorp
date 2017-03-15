@@ -157,6 +157,9 @@ public:
   // Main thread only.
   virtual void DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
                                  const nsAString& aInitDataType) = 0;
+
+  // Return the decoder owner's owner document.
+  virtual nsIDocument* GetDocument() const = 0;
 };
 
 } // namespace mozilla
