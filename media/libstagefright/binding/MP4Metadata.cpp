@@ -12,6 +12,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "VideoUtils.h"
@@ -89,7 +90,7 @@ public:
 
   MP4Metadata::ResultAndCryptoFile Crypto() const;
 
-  bool ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID);
+  MediaResult ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID);
 
 private:
   int32_t GetTrackNumber(mozilla::TrackID aTrackID);
@@ -138,7 +139,7 @@ public:
 
   MP4Metadata::ResultAndCryptoFile Crypto() const;
 
-  bool ReadTrackIndice(mp4parse_byte_data* aIndices, mozilla::TrackID aTrackID);
+  MediaResult ReadTrackIndice(mp4parse_byte_data* aIndices, mozilla::TrackID aTrackID);
 
 private:
   void UpdateCrypto();
@@ -550,19 +551,23 @@ MP4Metadata::Crypto() const
   return crypto;
 }
 
-mozilla::UniquePtr<IndiceWrapper>
+MP4Metadata::ResultAndIndice
 MP4Metadata::GetTrackIndice(mozilla::TrackID aTrackID)
 {
   FallibleTArray<Index::Indice> indiceSF;
-  if ((!mPreferRust || mRustTestMode) &&
-       !mStagefright->ReadTrackIndex(indiceSF, aTrackID)) {
-    return nullptr;
+  if (!mPreferRust || mRustTestMode) {
+    MediaResult rv = mStagefright->ReadTrackIndex(indiceSF, aTrackID);
+    if (NS_FAILED(rv)) {
+      return {Move(rv), nullptr};
+    }
   }
 
   mp4parse_byte_data indiceRust = {};
-  if ((mPreferRust || mRustTestMode) &&
-      !mRust->ReadTrackIndice(&indiceRust, aTrackID)) {
-    return nullptr;
+  if (mPreferRust || mRustTestMode) {
+    MediaResult rvRust = mRust->ReadTrackIndice(&indiceRust, aTrackID);
+    if (NS_FAILED(rvRust)) {
+      return {Move(rvRust), nullptr};
+    }
   }
 
 #ifndef RELEASE_OR_BETA
@@ -586,16 +591,18 @@ MP4Metadata::GetTrackIndice(mozilla::TrackID aTrackID)
     indice = mozilla::MakeUnique<IndiceWrapperStagefright>(indiceSF);
   }
 
-  return indice;
+  return {NS_OK, Move(indice)};
 }
 
-static inline bool
+static inline MediaResult
 ConvertIndex(FallibleTArray<Index::Indice>& aDest,
              const nsTArray<stagefright::MediaSource::Indice>& aIndex,
              int64_t aMediaTime)
 {
   if (!aDest.SetCapacity(aIndex.Length(), mozilla::fallible)) {
-    return false;
+    return MediaResult{NS_ERROR_OUT_OF_MEMORY,
+                       RESULT_DETAIL("Could not resize to %" PRIuSIZE " indices",
+                                     aIndex.Length())};
   }
   for (size_t i = 0; i < aIndex.Length(); i++) {
     Index::Indice indice;
@@ -612,7 +619,7 @@ ConvertIndex(FallibleTArray<Index::Indice>& aDest,
                                     indice.start_offset, indice.end_offset, indice.start_composition, indice.end_composition,
                                     indice.start_decode, indice.sync));
   }
-  return true;
+  return NS_OK;
 }
 
 MP4MetadataStagefright::MP4MetadataStagefright(Stream* aSource)
@@ -785,26 +792,29 @@ MP4MetadataStagefright::UpdateCrypto(const MetaData* aMetaData)
   mCrypto.Update(reinterpret_cast<const uint8_t*>(data), size);
 }
 
-bool
+MediaResult
 MP4MetadataStagefright::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID)
 {
   size_t numTracks = mMetadataExtractor->countTracks();
   int32_t trackNumber = GetTrackNumber(aTrackID);
   if (trackNumber < 0) {
-    return false;
+    return MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
+                       RESULT_DETAIL("Cannot find track id %d",
+                                     int(aTrackID)));
   }
   sp<MediaSource> track = mMetadataExtractor->getTrack(trackNumber);
   if (!track.get()) {
-    return false;
+    return MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
+                       RESULT_DETAIL("Cannot access track id %d",
+                                     int(aTrackID)));
   }
   sp<MetaData> metadata = mMetadataExtractor->getTrackMetaData(trackNumber);
   int64_t mediaTime;
   if (!metadata->findInt64(kKeyMediaTime, &mediaTime)) {
     mediaTime = 0;
   }
-  bool rv = ConvertIndex(aDest, track->exportIndex(), mediaTime);
 
-  return rv;
+  return ConvertIndex(aDest, track->exportIndex(), mediaTime);
 }
 
 int32_t
@@ -1099,25 +1109,31 @@ MP4MetadataRust::Crypto() const
   return {NS_OK, &mCrypto};
 }
 
-bool
+MediaResult
 MP4MetadataRust::ReadTrackIndice(mp4parse_byte_data* aIndices, mozilla::TrackID aTrackID)
 {
   uint8_t fragmented = false;
   auto rv = mp4parse_is_fragmented(mRustParser.get(), aTrackID, &fragmented);
   if (rv != mp4parse_status_OK) {
-    return false;
+    return MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
+                       RESULT_DETAIL("Cannot parse whether track id %d is "
+                                     "fragmented, mp4parse_error=%d",
+                                     int(aTrackID), int(rv)));
   }
 
   if (fragmented) {
-    return true;
+    return NS_OK;
   }
 
   rv = mp4parse_get_indice_table(mRustParser.get(), aTrackID, aIndices);
   if (rv != mp4parse_status_OK) {
-    return false;
+    return MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
+                       RESULT_DETAIL("Cannot parse index table in track id %d, "
+                                     "mp4parse_error=%d",
+                                     int(aTrackID), int(rv)));
   }
 
-  return true;
+  return NS_OK;
 }
 
 /*static*/ MP4Metadata::ResultAndByteBuffer
