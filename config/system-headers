@@ -873,9 +873,6 @@ Quickdraw.h
 QuickDraw.h
 QuickTimeComponents.h
 quipu/attr.h
-rasdlg.h
-raserror.h
-ras.h
 regex.h
 Region.h
 resolv.h

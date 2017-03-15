@@ -302,7 +302,7 @@ class MOZ_STACK_CLASS CallArgs : public detail::CallArgsBase<detail::IncludeUsed
      * Returns true if there are at least |required| arguments passed in. If
      * false, it reports an error message on the context.
      */
-    bool requireAtLeast(JSContext* cx, const char* fnname, unsigned required) const;
+    JS_PUBLIC_API(bool) requireAtLeast(JSContext* cx, const char* fnname, unsigned required) const;
 
 };
 
