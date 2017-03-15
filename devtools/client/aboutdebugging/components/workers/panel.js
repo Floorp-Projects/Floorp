@@ -136,61 +136,80 @@ module.exports = createClass({
     return null;
   },
 
-  render() {
-    let { client, id } = this.props;
-    let { workers } = this.state;
-
+  renderServiceWorkersError() {
     let isWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(window);
     let isPrivateBrowsingMode = PrivateBrowsingUtils.permanentPrivateBrowsing;
     let isServiceWorkerDisabled = !Services.prefs
                                     .getBoolPref("dom.serviceWorkers.enabled");
-    let errorMsg = isWindowPrivate || isPrivateBrowsingMode ||
-           isServiceWorkerDisabled ?
-      dom.p({ className: "service-worker-disabled" },
-        dom.div({ className: "warning" }),
-        Strings.GetStringFromName("configurationIsNotCompatible"),
-        " (",
-        dom.a({ href: MORE_INFO_URL, target: "_blank" },
-          Strings.GetStringFromName("moreInfo")),
-        ")"
-      ) : "";
 
-    return dom.div({
-      id: id + "-panel",
-      className: "panel",
-      role: "tabpanel",
-      "aria-labelledby": id + "-header"
-    },
-    PanelHeader({
-      id: id + "-header",
-      name: Strings.GetStringFromName("workers")
-    }),
-    dom.div({ id: "workers", className: "inverted-icons" },
-      TargetList({
-        client,
-        error: errorMsg,
-        id: "service-workers",
-        name: Strings.GetStringFromName("serviceWorkers"),
-        sort: true,
-        targetClass: ServiceWorkerTarget,
-        targets: workers.service
+    let isDisabled = isWindowPrivate || isPrivateBrowsingMode || isServiceWorkerDisabled;
+    if (!isDisabled) {
+      return "";
+    }
+    return dom.p(
+      {
+        className: "service-worker-disabled"
+      },
+      dom.div({ className: "warning" }),
+      Strings.GetStringFromName("configurationIsNotCompatible"),
+      " (",
+      dom.a(
+        {
+          href: MORE_INFO_URL,
+          target: "_blank"
+        },
+        Strings.GetStringFromName("moreInfo")
+      ),
+      ")"
+    );
+  },
+
+  render() {
+    let { client, id } = this.props;
+    let { workers } = this.state;
+
+    return dom.div(
+      {
+        id: id + "-panel",
+        className: "panel",
+        role: "tabpanel",
+        "aria-labelledby": id + "-header"
+      },
+      PanelHeader({
+        id: id + "-header",
+        name: Strings.GetStringFromName("workers")
       }),
-      TargetList({
-        client,
-        id: "shared-workers",
-        name: Strings.GetStringFromName("sharedWorkers"),
-        sort: true,
-        targetClass: WorkerTarget,
-        targets: workers.shared
-      }),
-      TargetList({
-        client,
-        id: "other-workers",
-        name: Strings.GetStringFromName("otherWorkers"),
-        sort: true,
-        targetClass: WorkerTarget,
-        targets: workers.other
-      })
-    ));
+      dom.div(
+        {
+          id: "workers",
+          className: "inverted-icons"
+        },
+        TargetList({
+          client,
+          error: this.renderServiceWorkersError(),
+          id: "service-workers",
+          name: Strings.GetStringFromName("serviceWorkers"),
+          sort: true,
+          targetClass: ServiceWorkerTarget,
+          targets: workers.service
+        }),
+        TargetList({
+          client,
+          id: "shared-workers",
+          name: Strings.GetStringFromName("sharedWorkers"),
+          sort: true,
+          targetClass: WorkerTarget,
+          targets: workers.shared
+        }),
+        TargetList({
+          client,
+          id: "other-workers",
+          name: Strings.GetStringFromName("otherWorkers"),
+          sort: true,
+          targetClass: WorkerTarget,
+          targets: workers.other
+        })
+      )
+    );
   }
 });
