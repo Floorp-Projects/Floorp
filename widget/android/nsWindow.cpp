@@ -852,8 +852,6 @@ public:
                     mozilla::Move(aCall)), &LayerViewEvent::MakeEvent);
             return;
         }
-
-        MOZ_CRASH("Unexpected call");
     }
 
     static LayerViewSupport*
