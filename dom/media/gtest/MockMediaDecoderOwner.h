@@ -55,6 +55,8 @@ public:
     return AbstractThread::MainThread();
   }
   nsIDocument* GetDocument() const { return nullptr; }
+  void ConstructMediaTracks(const MediaInfo* aInfo) {}
+  void RemoveMediaTracks() {}
 };
 }
 

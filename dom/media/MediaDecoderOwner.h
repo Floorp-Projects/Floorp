@@ -12,6 +12,7 @@ namespace mozilla {
 
 class AbstractThread;
 class VideoFrameContainer;
+class MediaInfo;
 class MediaResult;
 
 namespace dom {
@@ -160,6 +161,14 @@ public:
 
   // Return the decoder owner's owner document.
   virtual nsIDocument* GetDocument() const = 0;
+
+  // Called by the media decoder to create audio/video tracks and add to its
+  // owner's track list.
+  virtual void ConstructMediaTracks(const MediaInfo* aInfo) = 0;
+
+  // Called by the media decoder to removes all audio/video tracks from its
+  // owner's track list.
+  virtual void RemoveMediaTracks() = 0;
 };
 
 } // namespace mozilla
