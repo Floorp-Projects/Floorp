@@ -4000,6 +4000,8 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
 
       SetInitialSingleChild(container, outerFrame);
 
+      container->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
+
       // Now figure out whether newFrame or outerFrame should be the
       // absolute container.
       auto outerDisplay = outerSC->StyleDisplay();

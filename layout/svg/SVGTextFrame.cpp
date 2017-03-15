@@ -5652,3 +5652,13 @@ SVGTextFrame::TransformFrameRectFromTextChild(const nsRect& aRect,
 
   return result - framePosition;
 }
+
+void
+SVGTextFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
+                                            nsStyleChangeList& aChangeList,
+                                            nsChangeHint aHintForThisFrame)
+{
+  MOZ_ASSERT(PrincipalChildList().FirstChild(), "Must have our anon box");
+  UpdateStyleOfChildAnonBox(PrincipalChildList().FirstChild(),
+                            aStyleSet, aChangeList, aHintForThisFrame);
+}
