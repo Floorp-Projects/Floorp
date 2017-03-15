@@ -418,7 +418,8 @@ MarkupView.prototype = {
    *         requests queued up
    */
   _showBoxModel: function (nodeFront) {
-    return this.toolbox.highlighterUtils.highlightNodeFront(nodeFront);
+    return this.toolbox.highlighterUtils.highlightNodeFront(nodeFront)
+      .catch(this._handleRejectionIfNotDestroyed);
   },
 
   /**
@@ -431,7 +432,8 @@ MarkupView.prototype = {
    *         requests queued up
    */
   _hideBoxModel: function (forceHide) {
-    return this.toolbox.highlighterUtils.unhighlight(forceHide);
+    return this.toolbox.highlighterUtils.unhighlight(forceHide)
+      .catch(this._handleRejectionIfNotDestroyed);
   },
 
   _briefBoxModelTimer: null,
