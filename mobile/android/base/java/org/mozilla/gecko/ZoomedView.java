@@ -780,7 +780,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
         return ((System.nanoTime() - lastStartTimeReRender) < MINIMUM_DELAY_BETWEEN_TWO_RENDER_CALLS_NS);
     }
 
-    @WrapForJNI(dispatchTo = "gecko_priority")
+    @WrapForJNI(dispatchTo = "gecko")
     private static native void requestZoomedViewData(ByteBuffer buffer, int tabId,
                                                      int xPos, int yPos, int width,
                                                      int height, float scale);
