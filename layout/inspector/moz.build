@@ -31,7 +31,6 @@ UNIFIED_SOURCES += [
     'inDeepTreeWalker.cpp',
     'inDOMUtils.cpp',
     'inLayoutUtils.cpp',
-    'inSearchLoop.cpp',
     'nsFontFace.cpp',
     'nsFontFaceList.cpp',
 ]
