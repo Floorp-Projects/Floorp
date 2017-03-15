@@ -67,11 +67,6 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
         'user32.dll',
     ]
 
-    if CONFIG['CC_TYPE'] == "msvc":
-        CFLAGS += ['-guard:cf']
-        CXXFLAGS += ['-guard:cf']
-        LDFLAGS += ['-guard:cf']
-
 # Control the default heap size.
 # This is the heap returned by GetProcessHeap().
 # As we use the CRT heap, the default size is too large and wastes VM.

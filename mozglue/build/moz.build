@@ -28,12 +28,6 @@ if CONFIG['OS_TARGET'] == 'WINNT':
         'user32.dll',
     ]
 
-    if CONFIG['CC_TYPE'] == "msvc":
-        CFLAGS += ['-guard:cf']
-        CXXFLAGS += ['-guard:cf']
-        LDFLAGS += ['-guard:cf']
-
-
 if not CONFIG['JS_STANDALONE']:
 
     if CONFIG['MOZ_MEMORY'] and (CONFIG['MOZ_SYSTEM_JEMALLOC'] or FORCE_SHARED_LIB):
@@ -51,7 +45,6 @@ if not CONFIG['JS_STANDALONE']:
             '/memory/build',
         ]
         SOURCES += [
-            'WindowsCFGStatus.cpp',
             'WindowsDllBlocklist.cpp',
         ]
         DISABLE_STL_WRAPPING = True
@@ -63,7 +56,6 @@ if not CONFIG['JS_STANDALONE']:
         'arm.h',
         'mips.h',
         'SSE.h',
-        'WindowsCFGStatus.h',
         'WindowsDllBlocklist.h',
     ]
 
