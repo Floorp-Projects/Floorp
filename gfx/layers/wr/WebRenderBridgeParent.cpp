@@ -337,10 +337,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
 
         keysToDelete.push_back(key);
         dSurf->Unmap();
-        // XXX workaround for releasing Readlock. See Bug 1339625
-        if(host->GetType() == CompositableType::CONTENT_SINGLE) {
-          host->CleanupResources();
-        }
         break;
       }
       case WebRenderParentCommand::TCompositableOperation: {
