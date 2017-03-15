@@ -3721,6 +3721,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mDefaultPlaybackStartPosition(0.0),
     mIsAudioTrackAudible(false),
     mHasSuspendTaint(false),
+    mMediaTracksConstructed(false),
     mVisibilityState(Visibility::APPROXIMATELY_NONVISIBLE),
     mErrorSink(new ErrorSink(this)),
     mAudioChannelWrapper(new AudioChannelAgentCallback(this, mAudioChannel))
@@ -7414,6 +7415,51 @@ nsIDocument*
 HTMLMediaElement::GetDocument() const
 {
   return OwnerDoc();
+}
+
+void
+HTMLMediaElement::ConstructMediaTracks(const MediaInfo* aInfo)
+{
+  if (mMediaTracksConstructed || !aInfo) {
+    return;
+  }
+
+  mMediaTracksConstructed = true;
+
+  AudioTrackList* audioList = AudioTracks();
+  if (audioList && aInfo->HasAudio()) {
+    const TrackInfo& info = aInfo->mAudio;
+    RefPtr<AudioTrack> track = MediaTrackList::CreateAudioTrack(
+    info.mId, info.mKind, info.mLabel, info.mLanguage, info.mEnabled);
+
+    audioList->AddTrack(track);
+  }
+
+  VideoTrackList* videoList = VideoTracks();
+  if (videoList && aInfo->HasVideo()) {
+    const TrackInfo& info = aInfo->mVideo;
+    RefPtr<VideoTrack> track = MediaTrackList::CreateVideoTrack(
+    info.mId, info.mKind, info.mLabel, info.mLanguage);
+
+    videoList->AddTrack(track);
+    track->SetEnabledInternal(info.mEnabled, MediaTrack::FIRE_NO_EVENTS);
+  }
+}
+
+void
+HTMLMediaElement::RemoveMediaTracks()
+{
+  AudioTrackList* audioList = AudioTracks();
+  if (audioList) {
+    audioList->RemoveTracks();
+  }
+
+  VideoTrackList* videoList = VideoTracks();
+  if (videoList) {
+    videoList->RemoveTracks();
+  }
+
+  mMediaTracksConstructed = false;
 }
 
 bool HasDebuggerPrivilege(JSContext* aCx, JSObject* aObj)
