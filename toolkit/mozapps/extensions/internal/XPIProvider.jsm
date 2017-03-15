@@ -7543,7 +7543,7 @@ AddonWrapper.prototype = {
     }
 
     if (addon.inDatabase) {
-      let theme = isTheme(addon.type)
+      let theme = isTheme(addon.type);
       if (theme && val) {
         if (addon.internalName == XPIProvider.defaultSkin)
           throw new Error("Cannot disable the default theme");

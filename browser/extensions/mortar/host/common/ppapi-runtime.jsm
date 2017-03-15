@@ -1551,6 +1551,13 @@ class PPAPIInstance {
     this.mm.addMessageListener("ppapipdf.js:hashchange", (evt) => {
       this.notifyHashChange(evt.data.url);
     });
+
+    this.mm.addMessageListener("ppapipdf.js:oncommand", (evt) => {
+      this.viewport.notify({
+        type: "command",
+        name: evt.data.name
+      });
+    });
   }
 
   notifyHashChange(url) {

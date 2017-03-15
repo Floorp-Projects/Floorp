@@ -134,10 +134,10 @@ def type_check_event_fields(identifier, name, definition):
 def string_check(identifier, field, value, min_length=1, max_length=None, regex=None):
     # Length check.
     if len(value) < min_length:
-        raise ValueError("%s: value '%s' for field %s is less than minimum length of %d" %\
+        raise ValueError("%s: value '%s' for field %s is less than minimum length of %d" %
                          (identifier, value, field, min_length))
     if max_length and len(value) > max_length:
-        raise ValueError("%s: value '%s' for field %s is greater than maximum length of %d" %\
+        raise ValueError("%s: value '%s' for field %s is greater than maximum length of %d" %
                          (identifier, value, field, max_length))
     # Regex check.
     if regex and not re.match(regex, value):

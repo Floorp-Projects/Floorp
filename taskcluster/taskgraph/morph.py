@@ -44,7 +44,7 @@ def amend_taskgraph(taskgraph, label_to_taskid, to_add):
     return taskgraph, label_to_taskid
 
 
-def derive_misc_task(task, purpose, image, label_to_taskid):
+def derive_misc_task(task, purpose, image, taskgraph, label_to_taskid):
     """Create the shell of a task that depends on `task` and on the given docker
     image."""
     label = '{}-{}'.format(purpose, task.label)
@@ -80,24 +80,28 @@ def derive_misc_task(task, purpose, image, label_to_taskid):
             'maxRunTime': 600,
         }
     }
-    dependencies = {
-        'parent': task.task_id,
-        'docker-image': image_taskid,
-    }
+
+    # only include the docker-image dependency here if it is actually in the
+    # taskgraph (has not been optimized).  It is included in
+    # task_def['dependencies'] unconditionally.
+    dependencies = {'parent': task.task_id}
+    if image_taskid in taskgraph.tasks:
+        dependencies['docker-image'] = image_taskid
+
     task = Task(kind='misc', label=label, attributes={}, task=task_def,
                 dependencies=dependencies)
     task.task_id = slugid()
     return task
 
 
-def make_index_task(parent_task, label_to_taskid):
+def make_index_task(parent_task, taskgraph, label_to_taskid):
     index_paths = [r.split('.', 1)[1] for r in parent_task.task['routes']
                    if r.startswith('index.')]
     parent_task.task['routes'] = [r for r in parent_task.task['routes']
                                   if not r.startswith('index.')]
 
-    task = derive_misc_task(parent_task, 'index-task',
-                            'index-task', label_to_taskid)
+    task = derive_misc_task(parent_task, 'index-task', 'index-task',
+                            taskgraph, label_to_taskid)
     task.task['scopes'] = [
         'index:insert-task:{}'.format(path) for path in index_paths]
     task.task['payload']['command'] = ['insert-indexes.js'] + index_paths
@@ -120,7 +124,7 @@ def add_index_tasks(taskgraph, label_to_taskid):
     for label, task in taskgraph.tasks.iteritems():
         if len(task.task.get('routes', [])) <= MAX_ROUTES:
             continue
-        added.append(make_index_task(task, label_to_taskid))
+        added.append(make_index_task(task, taskgraph, label_to_taskid))
 
     if added:
         taskgraph, label_to_taskid = amend_taskgraph(

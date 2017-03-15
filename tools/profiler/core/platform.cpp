@@ -936,7 +936,7 @@ DoSampleStackTrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
   NativeStack nativeStack = { nullptr, nullptr, 0, 0 };
   MergeStacksIntoProfile(aBuffer, aSample, nativeStack);
 
-  if (aSample && gPS->FeatureLeaf(aLock)) {
+  if (gPS->FeatureLeaf(aLock)) {
     aBuffer->addTag(ProfileBufferEntry::NativeLeafAddr((void*)aSample->pc));
   }
 }
