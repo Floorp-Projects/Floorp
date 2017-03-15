@@ -73,12 +73,16 @@ namespace {
 class faviconAsyncLoader : public AsyncStatementCallback
 {
 public:
-  faviconAsyncLoader(nsIChannel *aChannel, nsIStreamListener *aListener)
+  faviconAsyncLoader(nsIChannel *aChannel, nsIStreamListener *aListener,
+                     uint16_t aPreferredSize)
     : mChannel(aChannel)
     , mListener(aListener)
+    , mPreferredSize(aPreferredSize)
   {
     MOZ_ASSERT(aChannel, "Not providing a channel will result in crashes!");
     MOZ_ASSERT(aListener, "Not providing a stream listener will result in crashes!");
+    MOZ_ASSERT(aChannel, "Not providing a channel!");
+
     // Set the default content type.
     Unused << mChannel->SetContentType(NS_LITERAL_CSTRING(PNG_MIME_TYPE));
   }
@@ -90,15 +94,15 @@ public:
   {
     nsCOMPtr<mozIStorageRow> row;
     while (NS_SUCCEEDED(aResultSet->GetNextRow(getter_AddRefs(row))) && row) {
-      // TODO: For now just return the biggest icon, that is the first one.
-      // Later this should allow to return a specific size.
-      if (!mData.IsEmpty()) {
-        return NS_OK;
-      }
-
       int32_t width;
       nsresult rv = row->GetInt32(1, &width);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      // Check if we already found an image >= than the preferred size,
+      // otherwise keep examining the next results.
+      if (width < mPreferredSize && !mData.IsEmpty()) {
+        return NS_OK;
+      }
 
       // Eventually override the default mimeType for svg.
       if (width == UINT16_MAX) {
@@ -165,6 +169,7 @@ private:
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIStreamListener> mListener;
   nsCString mData;
+  uint16_t mPreferredSize;
 };
 
 } // namespace
@@ -315,15 +320,23 @@ nsAnnoProtocolHandler::NewFaviconChannel(nsIURI *aURI, nsIURI *aAnnotationURI,
       };
 
       // Now we go ahead and get our data asynchronously for the favicon.
-      nsCOMPtr<mozIStorageStatementCallback> callback =
-        new faviconAsyncLoader(channel, listener);
-
+      // Ignore the ref part of the URI before querying the database because
+      // we may have added a size fragment for rendering purposes.
       nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
+      nsAutoCString faviconSpec;
+      nsresult rv = annotationURI->GetSpecIgnoringRef(faviconSpec);
       // Any failures fallback to the default icon channel.
-      if (!callback || !faviconService)
+      if (NS_FAILED(rv) || !faviconService)
         return fallback();
 
-      nsresult rv = faviconService->GetFaviconDataAsync(annotationURI, callback);
+      uint16_t preferredSize = UINT16_MAX;
+      MOZ_ALWAYS_SUCCEEDS(faviconService->PreferredSizeFromURI(annotationURI, &preferredSize));
+      nsCOMPtr<mozIStorageStatementCallback> callback =
+        new faviconAsyncLoader(channel, listener, preferredSize);
+      if (!callback)
+        return fallback();
+
+      rv = faviconService->GetFaviconDataAsync(faviconSpec, callback);
       if (NS_FAILED(rv))
         return fallback();
 

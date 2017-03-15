@@ -94,14 +94,14 @@ public:
   /**
    * Obtains the favicon data asynchronously.
    *
-   * @param aFaviconURI
-   *        The URI representing the favicon we are looking for.
+   * @param aFaviconSpec
+   *        The spec of the URI representing the favicon we are looking for.
    * @param aCallback
    *        The callback where results or errors will be dispatch to.  In the
    *        returned result, the favicon binary data will be at index 0, and the
    *        mime type will be at index 1.
    */
-  nsresult GetFaviconDataAsync(nsIURI* aFaviconURI,
+  nsresult GetFaviconDataAsync(const nsCString& aFaviconSpec,
                                mozIStorageStatementCallback* aCallback);
 
   /**

@@ -887,7 +887,7 @@ function* compareFavicons(icon1, icon2, msg) {
   icon2 = new URL(icon2 instanceof Ci.nsIURI ? icon2.spec : icon2);
 
   function getIconData(icon) {
-    new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       NetUtil.asyncFetch({
         uri: icon.href, loadUsingSystemPrincipal: true,
         contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
@@ -901,6 +901,8 @@ function* compareFavicons(icon1, icon2, msg) {
   }
 
   let data1 = yield getIconData(icon1);
+  Assert.ok(data1.length > 0, "Should fetch icon data");
   let data2 = yield getIconData(icon2);
+  Assert.ok(data2.length > 0, "Should fetch icon data");
   Assert.deepEqual(data1, data2, msg);
 }

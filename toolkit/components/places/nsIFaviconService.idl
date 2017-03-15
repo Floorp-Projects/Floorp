@@ -55,6 +55,15 @@ interface nsIFaviconService : nsISupports
   void expireAllFavicons();
 
   /**
+   * Tries to extract the preferred size from an icon uri ref fragment.
+   *
+   * @param aURI
+   *        The URI to parse.
+   * @return The preferred size, or UINT16_MAX if not present.
+   */
+  unsigned short preferredSizeFromURI(in nsIURI aURI);
+
+  /**
    * Adds a given favicon's URI to the failed favicon cache.
    *
    * The lifespan of the favicon cache is up to the caching system.  This cache
