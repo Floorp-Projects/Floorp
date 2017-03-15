@@ -622,7 +622,8 @@ class Marionette(object):
                 # do no further server-side cleanup in this case.
                 pass
         if self.instance:
-            self.instance.close()
+            # stop application and, if applicable, stop emulator
+            self.instance.close(clean=True)
 
     def __del__(self):
         self.cleanup()
