@@ -254,6 +254,20 @@ public:
         MOZ_CRASH("Uncaught Java exception");
     }
 
+    static void SyncNotifyObservers(jni::String::Param aTopic,
+                                    jni::String::Param aData)
+    {
+        MOZ_RELEASE_ASSERT(NS_IsMainThread());
+        NotifyObservers(aTopic, aData);
+    }
+
+    template<typename Functor>
+    static void OnNativeCall(Functor&& aCall)
+    {
+        MOZ_ASSERT(aCall.IsTarget(&NotifyObservers));
+        NS_DispatchToMainThread(NS_NewRunnableFunction(mozilla::Move(aCall)));
+    }
+
     static void NotifyObservers(jni::String::Param aTopic,
                                 jni::String::Param aData)
     {

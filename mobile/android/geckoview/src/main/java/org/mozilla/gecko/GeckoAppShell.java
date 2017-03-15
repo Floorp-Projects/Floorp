@@ -250,7 +250,11 @@ public class GeckoAppShell
         return sLayerView;
     }
 
-    @WrapForJNI(stubName = "NotifyObservers", dispatchTo = "gecko")
+    // Synchronously notify a Gecko observer; must be called from Gecko thread.
+    @WrapForJNI(calledFrom = "gecko")
+    public static native void syncNotifyObservers(String topic, String data);
+
+    @WrapForJNI(stubName = "NotifyObservers", dispatchTo = "proxy")
     private static native void nativeNotifyObservers(String topic, String data);
 
     @RobocopTarget
