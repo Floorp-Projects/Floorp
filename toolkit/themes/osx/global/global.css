@@ -36,7 +36,7 @@ window,
 page,
 dialog,
 wizard,
-prefwindow { 
+prefwindow {
   -moz-appearance: dialog;
   background-color: #FFFFFF;
   color: -moz-DialogText;
@@ -118,7 +118,7 @@ statusbarpanel {
 
 .statusbarpanel-iconic {
   padding: 0px;
-}    
+}
 
 /* ::::: miscellaneous formatting ::::: */
 
@@ -147,7 +147,7 @@ statusbar:-moz-lwtheme {
   border-bottom-color: ThreeDHighlight;
   margin: 0 5px 5px;
 }
-  
+
 .outset {
   border: 1px solid ThreeDShadow;
   border-left-color: ThreeDHighlight;
@@ -163,7 +163,7 @@ separator[orient="vertical"] {
 
 separator.thin:not([orient="vertical"]) {
   height: 0.5em;
-}  
+}
 separator.thin[orient="vertical"] {
   width: 0.5em;
 }
@@ -180,7 +180,7 @@ separator.groove[orient="vertical"] {
   margin-left: 0.4em;
   margin-right: 0.4em;
 }
-    
+
 .plain {
   -moz-appearance: none;
   margin: 0 !important;
@@ -241,7 +241,7 @@ label[disabled="true"] {
 .text-link:hover {
   text-decoration: underline;
 }
-  
+
 .text-link:-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow);
 }
@@ -271,11 +271,11 @@ notification > button:active:hover {
 }
 
 notification > button:-moz-focusring {
-  box-shadow: @focusRingShadow@, @roundButtonShadow@;
+  box-shadow: var(--focus-ring-box-shadow), @roundButtonShadow@;
 }
 
 notification > button:active:hover:-moz-focusring {
-  box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
+  box-shadow: var(--focus-ring-box-shadow), @roundButtonPressedShadow@;
 }
 
 notification > button > .button-box > .button-text {
