@@ -1966,9 +1966,12 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   extraArgs.push_back(idStr);
   extraArgs.push_back(IsForBrowser() ? "-isForBrowser" : "-notForBrowser");
 
-  std::stringstream boolPrefs;
-  std::stringstream intPrefs;
-  std::stringstream stringPrefs;
+  char boolBuf[1024];
+  char intBuf[1024];
+  char strBuf[1024];
+  nsFixedCString boolPrefs(boolBuf, 1024, 0);
+  nsFixedCString intPrefs(intBuf, 1024, 0);
+  nsFixedCString stringPrefs(strBuf, 1024, 0);
 
   size_t prefsLen;
   ContentPrefs::GetContentPrefs(&prefsLen);
@@ -1977,14 +1980,15 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
     MOZ_ASSERT(i == 0 || strcmp(ContentPrefs::GetContentPref(i), ContentPrefs::GetContentPref(i - 1)) > 0);
     switch (Preferences::GetType(ContentPrefs::GetContentPref(i))) {
     case nsIPrefBranch::PREF_INT:
-      intPrefs << i << ':' << Preferences::GetInt(ContentPrefs::GetContentPref(i)) << '|';
+      intPrefs.Append(nsPrintfCString("%u:%d|", i, Preferences::GetInt(ContentPrefs::GetContentPref(i))));
       break;
     case nsIPrefBranch::PREF_BOOL:
-      boolPrefs << i << ':' << Preferences::GetBool(ContentPrefs::GetContentPref(i)) << '|';
+      boolPrefs.Append(nsPrintfCString("%u:%d|", i, Preferences::GetBool(ContentPrefs::GetContentPref(i))));
       break;
     case nsIPrefBranch::PREF_STRING: {
-      std::string value(Preferences::GetCString(ContentPrefs::GetContentPref(i)).get());
-      stringPrefs << i << ':' << value.length() << ':' << value << '|';
+      nsAdoptingCString value(Preferences::GetCString(ContentPrefs::GetContentPref(i)));
+      stringPrefs.Append(nsPrintfCString("%u:%d;%s|", i, value.Length(), value.get()));
+
     }
       break;
     case nsIPrefBranch::PREF_INVALID:
@@ -1996,11 +2000,11 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   }
 
   extraArgs.push_back("-intPrefs");
-  extraArgs.push_back(intPrefs.str());
+  extraArgs.push_back(intPrefs.get());
   extraArgs.push_back("-boolPrefs");
-  extraArgs.push_back(boolPrefs.str());
+  extraArgs.push_back(boolPrefs.get());
   extraArgs.push_back("-stringPrefs");
-  extraArgs.push_back(stringPrefs.str());
+  extraArgs.push_back(stringPrefs.get());
 
   if (gSafeMode) {
     extraArgs.push_back("-safeMode");

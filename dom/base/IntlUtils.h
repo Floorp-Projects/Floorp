@@ -36,6 +36,11 @@ public:
                   mozilla::dom::DisplayNameResult& aResult,
                   mozilla::ErrorResult& aError);
 
+  void
+  GetLocaleInfo(const Sequence<nsString>& aLocales,
+                mozilla::dom::LocaleInfo& aResult,
+                mozilla::ErrorResult& aError);
+
 private:
   ~IntlUtils();
 

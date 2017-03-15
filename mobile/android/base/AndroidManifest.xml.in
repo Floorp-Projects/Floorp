@@ -54,6 +54,7 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:relinquishTaskIdentity="true"
             android:taskAffinity=""
+            android:exported="true"
             android:excludeFromRecents="true" />
 
         <!-- Fennec is shipped as the Android package named
@@ -316,6 +317,8 @@
         <activity android:name="org.mozilla.gecko.customtabs.CustomTabsActivity"
             android:theme="@style/GeckoCustomTabs" />
 #endif
+        <activity android:name="org.mozilla.gecko.webapps.WebAppActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
 
         <!-- Service to handle requests from overlays. -->
         <service android:name="org.mozilla.gecko.overlays.service.OverlayActionService" />
