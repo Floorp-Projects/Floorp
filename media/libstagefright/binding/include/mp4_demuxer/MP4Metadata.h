@@ -77,7 +77,8 @@ public:
   using ResultAndCryptoFile = ResultAndType<const CryptoFile*>;
   ResultAndCryptoFile Crypto() const;
 
-  mozilla::UniquePtr<IndiceWrapper> GetTrackIndice(mozilla::TrackID aTrackID);
+  using ResultAndIndice = ResultAndType<mozilla::UniquePtr<IndiceWrapper>>;
+  ResultAndIndice GetTrackIndice(mozilla::TrackID aTrackID);
 
 private:
   UniquePtr<MP4MetadataStagefright> mStagefright;
