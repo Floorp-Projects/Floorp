@@ -450,6 +450,7 @@ private:
   void OnDemuxerInitFailed(const MediaResult& aError);
   MozPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
   MozPromiseRequestHolder<NotifyDataArrivedPromise> mNotifyDataArrivedPromise;
+  bool mPendingNotifyDataArrived;
   void OnDemuxFailed(TrackType aTrack, const MediaResult &aError);
 
   void DoDemuxVideo();
