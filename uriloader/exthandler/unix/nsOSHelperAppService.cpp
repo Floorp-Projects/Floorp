@@ -731,10 +731,6 @@ nsOSHelperAppService::ParseNetscapeMIMETypesEntry(const nsAString& aEntry,
         --aDescriptionEnd;
       } while (aDescriptionEnd != aDescriptionStart &&
                nsCRT::IsAsciiSpace(*aDescriptionEnd));
-
-      if (aDescriptionStart != aDescriptionStart && *aDescriptionEnd == '"') {
-        --aDescriptionEnd;
-      }
     } else {
       // desc= after exts=, so use end_iter for the description end
       aDescriptionEnd = end_iter;

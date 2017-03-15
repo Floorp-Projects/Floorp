@@ -18,7 +18,7 @@ function test() {
       return;
     tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
     let tab2 = gBrowser.duplicateTab(tab);
-    tab2.linkedBrowser.addEventListener("461743", function(aEvent) {
+    tab2.linkedBrowser.addEventListener("461743", function(eventTab2) {
       tab2.linkedBrowser.removeEventListener("461743", arguments.callee, true);
       is(aEvent.data, "done", "XSS injection was attempted");
 

@@ -37,7 +37,7 @@ add_task(function* test_javascript_match() {
   addOpenPages(uri7, 1);
 
   // Now remove page 6 from history, so it is an unvisited bookmark.
-  PlacesUtils.history.removePage(uri6);
+  yield PlacesUtils.history.remove(uri6);
 
   do_print("Match everything");
   yield check_autocomplete({

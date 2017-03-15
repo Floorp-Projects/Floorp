@@ -184,7 +184,7 @@ add_task(function* test_pushstate_replacestate() {
   is(entries[0].url, "http://example.com/1", "url is correct");
 
   yield ContentTask.spawn(browser, {}, function* () {
-    content.window.history.pushState({}, "", 'test-entry/');
+    content.window.history.pushState({}, "", "test-entry/");
   });
 
   // Check that we have added the history entry.

@@ -84,7 +84,7 @@ add_task(function* test_run() {
  * different cookie domains given in the Set-Cookie header. See above for some
  * usage examples.
  */
-var testCookieCollection = async function (params) {
+var testCookieCollection = async function(params) {
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
 
@@ -97,14 +97,14 @@ var testCookieCollection = async function (params) {
   }
 
   // Construct request URI.
-  let uri = `${params.host}${PATH}browser_cookies.sjs?${urlParams}`;
+  let requestUri = `${params.host}${PATH}browser_cookies.sjs?${urlParams}`;
 
   // Wait for the browser to load and the cookie to be set.
   // These two events can probably happen in no particular order,
   // so let's wait for them in parallel.
   await Promise.all([
     waitForNewCookie(),
-    replaceCurrentURI(browser, uri)
+    replaceCurrentURI(browser, requestUri)
   ]);
 
   // Check all URIs for which the cookie should be collected.

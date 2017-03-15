@@ -46,9 +46,9 @@ function assertNotificationCount(count) {
 }
 
 function* awaitNotification(callback) {
-  let awaitNotification = TestUtils.topicObserved(TOPIC);
+  let notification = TestUtils.topicObserved(TOPIC);
   executeSoon(callback);
-  yield awaitNotification;
+  yield notification;
 }
 
 add_task(function* test_closedObjectsChangedNotifications() {
@@ -74,7 +74,7 @@ add_task(function* test_closedObjectsChangedNotifications() {
   assertNotificationCount(2);
 
   info(`Changing the ${MAX_TABS_UNDO_PREF} pref.`);
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref(MAX_TABS_UNDO_PREF);
   });
   yield awaitNotification(() => Services.prefs.setIntPref(MAX_TABS_UNDO_PREF, 1));

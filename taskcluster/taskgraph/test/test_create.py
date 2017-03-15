@@ -10,7 +10,7 @@ import os
 from .. import create
 from ..graph import Graph
 from ..taskgraph import TaskGraph
-from .util import TestTask
+from ..task import Task
 
 from mozunit import main
 
@@ -37,8 +37,8 @@ class TestCreate(unittest.TestCase):
 
     def test_create_tasks(self):
         tasks = {
-            'tid-a': TestTask(label='a', task={'payload': 'hello world'}),
-            'tid-b': TestTask(label='b', task={'payload': 'hello world'}),
+            'tid-a': Task(kind='test', label='a', attributes={}, task={'payload': 'hello world'}),
+            'tid-b': Task(kind='test', label='b', attributes={}, task={'payload': 'hello world'}),
         }
         label_to_taskid = {'a': 'tid-a', 'b': 'tid-b'}
         graph = Graph(nodes={'tid-a', 'tid-b'}, edges={('tid-a', 'tid-b', 'edge')})
@@ -60,7 +60,7 @@ class TestCreate(unittest.TestCase):
         "a task with no dependencies depends on the decision task"
         os.environ['TASK_ID'] = 'decisiontask'
         tasks = {
-            'tid-a': TestTask(label='a', task={'payload': 'hello world'}),
+            'tid-a': Task(kind='test', label='a', attributes={}, task={'payload': 'hello world'}),
         }
         label_to_taskid = {'a': 'tid-a'}
         graph = Graph(nodes={'tid-a'}, edges=set())
