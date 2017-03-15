@@ -164,7 +164,7 @@ public:
   virtual nsresult StopAnimation() override;
 
   // Methods inherited from Image
-  virtual void OnSurfaceDiscarded(SurfaceKey aSurfaceKey) override;
+  virtual void OnSurfaceDiscarded() override;
 
   virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf)
     const override;
