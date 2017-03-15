@@ -32,6 +32,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/widget/nsAutoRollup.h"
 
 #define APZES_LOG(...)
 // #define APZES_LOG(...) printf_stderr("APZES: " __VA_ARGS__)
@@ -129,19 +130,22 @@ public:
                             LayoutDevicePoint& aPoint,
                             Modifiers aModifiers,
                             int32_t aClickCount,
-                            nsITimer* aTimer)
+                            nsITimer* aTimer,
+                            RefPtr<nsIContent>& aTouchRollup)
     : mWidget(aWidget)
     , mPoint(aPoint)
     , mModifiers(aModifiers)
     , mClickCount(aClickCount)
     // Hold the reference count until we are called back.
     , mTimer(aTimer)
+    , mTouchRollup(aTouchRollup)
   {
   }
 
   NS_IMETHOD Notify(nsITimer*) override
   {
     if (nsCOMPtr<nsIWidget> widget = do_QueryReferent(mWidget)) {
+      widget::nsAutoRollup rollup(mTouchRollup.get());
       APZCCallbackHelper::FireSingleTapEvent(mPoint, mModifiers, mClickCount, widget);
     }
     mTimer = nullptr;
@@ -162,6 +166,7 @@ private:
   Modifiers mModifiers;
   int32_t mClickCount;
   nsCOMPtr<nsITimer> mTimer;
+  RefPtr<nsIContent> mTouchRollup;
 };
 
 NS_IMPL_ISUPPORTS(DelayedFireSingleTapEvent, nsITimerCallback)
@@ -175,6 +180,9 @@ APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
 {
   APZES_LOG("Handling single tap at %s on %s with %d\n",
     Stringify(aPoint).c_str(), Stringify(aGuid).c_str(), mTouchEndCancelled);
+
+  RefPtr<nsIContent> touchRollup = GetTouchRollup();
+  mTouchRollup = nullptr;
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -190,6 +198,7 @@ APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
     // If the active element isn't visually affected by the :active style, we
     // have no need to wait the extra sActiveDurationMs to make the activation
     // visually obvious to the user.
+    widget::nsAutoRollup rollup(touchRollup.get());
     APZCCallbackHelper::FireSingleTapEvent(ldPoint, aModifiers, aClickCount, widget);
     return;
   }
@@ -197,7 +206,8 @@ APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
   APZES_LOG("Active element uses style, scheduling timer for click event\n");
   nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
   RefPtr<DelayedFireSingleTapEvent> callback =
-    new DelayedFireSingleTapEvent(mWidget, ldPoint, aModifiers, aClickCount, timer);
+    new DelayedFireSingleTapEvent(mWidget, ldPoint, aModifiers, aClickCount,
+        timer, touchRollup);
   nsresult rv = timer->InitWithCallback(callback,
                                         sActiveDurationMs,
                                         nsITimer::TYPE_ONE_SHOT);
@@ -322,6 +332,8 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
   switch (aEvent.mMessage) {
   case eTouchStart: {
     mTouchEndCancelled = false;
+    mTouchRollup = do_GetWeakReference(widget::nsAutoRollup::GetLastRollup());
+
     sentContentResponse = SendPendingTouchPreventedResponse(false);
     // sentContentResponse can be true here if we get two TOUCH_STARTs in a row
     // and just responded to the first one.
@@ -506,6 +518,13 @@ already_AddRefed<nsIWidget>
 APZEventState::GetWidget() const
 {
   nsCOMPtr<nsIWidget> result = do_QueryReferent(mWidget);
+  return result.forget();
+}
+
+already_AddRefed<nsIContent>
+APZEventState::GetTouchRollup() const
+{
+  nsCOMPtr<nsIContent> result = do_QueryReferent(mTouchRollup);
   return result.forget();
 }
 

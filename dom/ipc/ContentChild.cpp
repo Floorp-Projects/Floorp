@@ -49,7 +49,7 @@
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/ProcessChild.h"
-#include "mozilla/ipc/PSendStreamChild.h"
+#include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/APZChild.h"
@@ -1713,26 +1713,38 @@ ContentChild::DeallocPPrintingChild(PPrintingChild* printing)
   return true;
 }
 
-PSendStreamChild*
-ContentChild::SendPSendStreamConstructor(PSendStreamChild* aActor)
+PChildToParentStreamChild*
+ContentChild::SendPChildToParentStreamConstructor(PChildToParentStreamChild* aActor)
 {
   if (IsShuttingDown()) {
     return nullptr;
   }
 
-  return PContentChild::SendPSendStreamConstructor(aActor);
+  return PContentChild::SendPChildToParentStreamConstructor(aActor);
 }
 
-PSendStreamChild*
-ContentChild::AllocPSendStreamChild()
+PChildToParentStreamChild*
+ContentChild::AllocPChildToParentStreamChild()
 {
-  return nsIContentChild::AllocPSendStreamChild();
+  return nsIContentChild::AllocPChildToParentStreamChild();
 }
 
 bool
-ContentChild::DeallocPSendStreamChild(PSendStreamChild* aActor)
+ContentChild::DeallocPChildToParentStreamChild(PChildToParentStreamChild* aActor)
 {
-  return nsIContentChild::DeallocPSendStreamChild(aActor);
+  return nsIContentChild::DeallocPChildToParentStreamChild(aActor);
+}
+
+PParentToChildStreamChild*
+ContentChild::AllocPParentToChildStreamChild()
+{
+  return nsIContentChild::AllocPParentToChildStreamChild();
+}
+
+bool
+ContentChild::DeallocPParentToChildStreamChild(PParentToChildStreamChild* aActor)
+{
+  return nsIContentChild::DeallocPParentToChildStreamChild(aActor);
 }
 
 PScreenManagerChild*

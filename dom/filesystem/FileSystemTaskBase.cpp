@@ -256,12 +256,6 @@ FileSystemTaskParentBase::Start()
   AssertIsOnBackgroundThread();
   mFileSystem->AssertIsOnOwningThread();
 
-  if (NeedToGoToMainThread()) {
-    DebugOnly<nsresult> rv = NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToCurrentThread failed");
-    return;
-  }
-
   DebugOnly<nsresult> rv = DispatchToIOThread(this);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DispatchToIOThread failed");
 }
@@ -305,52 +299,12 @@ FileSystemTaskParentBase::SetError(const nsresult& aErrorValue)
   mErrorValue = FileSystemErrorFromNsError(aErrorValue);
 }
 
-bool
-FileSystemTaskParentBase::NeedToGoToMainThread() const
-{
-  return mFileSystem->NeedToGoToMainThread();
-}
-
-nsresult
-FileSystemTaskParentBase::MainThreadWork()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return mFileSystem->MainThreadWork();
-}
-
 NS_IMETHODIMP
 FileSystemTaskParentBase::Run()
 {
-  // This method can run in 3 different threads. Here why:
-  // 1. if we are on the main-thread it's because the task must do something
-  //    here. If no errors are returned we go the step 2.
-  // 2. We can be here directly if the task doesn't have nothing to do on the
-  //    main-thread. We are are on the I/O thread and we call IOWork().
-  // 3. Both step 1 (in case of error) and step 2 end up here where return the
-  //    value back to the PBackground thread.
-  if (NS_IsMainThread()) {
-    MOZ_ASSERT(NeedToGoToMainThread());
-
-    nsresult rv = MainThreadWork();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      SetError(rv);
-
-      // Something when wrong. Let's go to the Background thread directly
-      // skipping the I/O thread step.
-      rv = mBackgroundEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
-
-    // Next step must happen on the I/O thread.
-    rv = DispatchToIOThread(this);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    return NS_OK;
-  }
+  // This method can run in 2 different threads. Here why:
+  // 1. We are are on the I/O thread and we call IOWork().
+  // 2. After step 1, it returns back to the PBackground thread.
 
   // Run I/O thread tasks
   if (!IsOnBackgroundThread()) {

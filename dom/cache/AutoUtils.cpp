@@ -38,7 +38,7 @@ void
 CleanupChild(CacheReadStream& aReadStream, CleanupAction aAction)
 {
   // fds cleaned up by mStreamCleanupList
-  // PSendStream actors cleaned up by mStreamCleanupList
+  // PChildToParentStream actors cleaned up by mStreamCleanupList
 }
 
 void

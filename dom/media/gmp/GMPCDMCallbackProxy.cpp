@@ -17,8 +17,10 @@
 
 namespace mozilla {
 
-GMPCDMCallbackProxy::GMPCDMCallbackProxy(CDMProxy* aProxy)
+GMPCDMCallbackProxy::GMPCDMCallbackProxy(CDMProxy* aProxy,
+                                         nsIEventTarget* aMainThread)
   : mProxy(aProxy)
+  , mMainThread(aMainThread)
 {}
 
 void
@@ -27,12 +29,14 @@ GMPCDMCallbackProxy::SetDecryptorId(uint32_t aId)
   MOZ_ASSERT(mProxy->IsOnOwnerThread());
 
   RefPtr<CDMProxy> proxy = mProxy;
-  NS_DispatchToMainThread(
+  mMainThread->Dispatch(
     NS_NewRunnableFunction([proxy, aId] ()
     {
       proxy->OnSetDecryptorId(aId);
-    })
-  );}
+    }),
+    NS_DISPATCH_NORMAL
+  );
+}
 
 void
 GMPCDMCallbackProxy::SetSessionId(uint32_t aToken,
@@ -42,13 +46,14 @@ GMPCDMCallbackProxy::SetSessionId(uint32_t aToken,
 
   RefPtr<CDMProxy> proxy = mProxy;
   auto sid = NS_ConvertUTF8toUTF16(aSessionId);
-  NS_DispatchToMainThread(
+  mMainThread->Dispatch(
     NS_NewRunnableFunction([proxy,
                             aToken,
                             sid] ()
     {
       proxy->OnSetSessionId(aToken, sid);
-    })
+    }),
+    NS_DISPATCH_NORMAL
   );
 }
 
@@ -59,11 +64,12 @@ GMPCDMCallbackProxy::ResolveLoadSessionPromise(uint32_t aPromiseId,
   MOZ_ASSERT(mProxy->IsOnOwnerThread());
 
   RefPtr<CDMProxy> proxy = mProxy;
-  NS_DispatchToMainThread(
+  mMainThread->Dispatch(
     NS_NewRunnableFunction([proxy, aPromiseId, aSuccess] ()
     {
       proxy->OnResolveLoadSessionPromise(aPromiseId, aSuccess);
-    })
+    }),
+    NS_DISPATCH_NORMAL
   );
 }
 
@@ -84,14 +90,15 @@ GMPCDMCallbackProxy::RejectPromise(uint32_t aPromiseId,
   MOZ_ASSERT(mProxy->IsOnOwnerThread());
 
   RefPtr<CDMProxy> proxy = mProxy;
-  NS_DispatchToMainThread(
+  mMainThread->Dispatch(
     NS_NewRunnableFunction([proxy,
                             aPromiseId,
                             aException,
                             aMessage] ()
     {
       proxy->OnRejectPromise(aPromiseId, aException, aMessage);
-    })
+    }),
+    NS_DISPATCH_NORMAL
   );
 }
 
@@ -105,14 +112,15 @@ GMPCDMCallbackProxy::SessionMessage(const nsCString& aSessionId,
   RefPtr<CDMProxy> proxy = mProxy;
   auto sid = NS_ConvertUTF8toUTF16(aSessionId);
   nsTArray<uint8_t> msg(aMessage);
-  NS_DispatchToMainThread(
+  mMainThread->Dispatch(
     NS_NewRunnableFunction([proxy,
                             sid,
                             aMessageType,
                             msg] () mutable
     {
       proxy->OnSessionMessage(sid, aMessageType, msg);
-    })
+    }),
+    NS_DISPATCH_NORMAL
   );
 }
 
@@ -124,13 +132,14 @@ GMPCDMCallbackProxy::ExpirationChange(const nsCString& aSessionId,
 
   RefPtr<CDMProxy> proxy = mProxy;
   auto sid = NS_ConvertUTF8toUTF16(aSessionId);
-  NS_DispatchToMainThread(
+  mMainThread->Dispatch(
     NS_NewRunnableFunction([proxy,
                             sid,
                             aExpiryTime] ()
     {
       proxy->OnExpirationChange(sid, aExpiryTime);
-    })
+    }),
+    NS_DISPATCH_NORMAL
   );
 }
 
@@ -147,20 +156,22 @@ GMPCDMCallbackProxy::SessionClosed(const nsCString& aSessionId)
   }
   if (keyStatusesChange) {
     RefPtr<CDMProxy> proxy = mProxy;
-    NS_DispatchToMainThread(
+    mMainThread->Dispatch(
       NS_NewRunnableFunction([proxy, sid] ()
       {
         proxy->OnKeyStatusesChange(sid);
-      })
+      }),
+      NS_DISPATCH_NORMAL
     );
   }
 
   RefPtr<CDMProxy> proxy = mProxy;
-  NS_DispatchToMainThread(
+  mMainThread->Dispatch(
     NS_NewRunnableFunction([proxy, sid] ()
     {
       proxy->OnSessionClosed(sid);
-    })
+    }),
+    NS_DISPATCH_NORMAL
   );
 }
 
@@ -175,7 +186,7 @@ GMPCDMCallbackProxy::SessionError(const nsCString& aSessionId,
   RefPtr<CDMProxy> proxy = mProxy;
   auto sid = NS_ConvertUTF8toUTF16(aSessionId);
   auto msg = NS_ConvertUTF8toUTF16(aMessage);
-  NS_DispatchToMainThread(
+  mMainThread->Dispatch(
     NS_NewRunnableFunction([proxy,
                             sid,
                             aException,
@@ -186,7 +197,8 @@ GMPCDMCallbackProxy::SessionError(const nsCString& aSessionId,
                         aException,
                         aSystemCode,
                         msg);
-    })
+    }),
+    NS_DISPATCH_NORMAL
   );
 }
 
@@ -215,11 +227,12 @@ GMPCDMCallbackProxy::BatchedKeyStatusChangedInternal(const nsCString& aSessionId
   if (keyStatusesChange) {
     RefPtr<CDMProxy> proxy = mProxy;
     auto sid = NS_ConvertUTF8toUTF16(aSessionId);
-    NS_DispatchToMainThread(
+    mMainThread->Dispatch(
       NS_NewRunnableFunction([proxy, sid] ()
       {
         proxy->OnKeyStatusesChange(sid);
-      })
+      }),
+      NS_DISPATCH_NORMAL
     );
   }
 }
@@ -240,11 +253,12 @@ GMPCDMCallbackProxy::Terminated()
   MOZ_ASSERT(mProxy->IsOnOwnerThread());
 
   RefPtr<CDMProxy> proxy = mProxy;
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction([proxy] ()
-      {
-        proxy->Terminated();
-      })
+  mMainThread->Dispatch(
+    NS_NewRunnableFunction([proxy] ()
+    {
+      proxy->Terminated();
+    }),
+    NS_DISPATCH_NORMAL
   );
 }
 

@@ -5,40 +5,41 @@
 function test() {
   /** Test for Bug 345898 **/
 
-  function test(aLambda) {
-    try {
-      aLambda();
-      return false;
-    }
-    catch (ex) {
-      return ex.name == "NS_ERROR_ILLEGAL_VALUE" ||
-             ex.name == "NS_ERROR_FAILURE";
-    }
-  }
-
   // all of the following calls with illegal arguments should throw NS_ERROR_ILLEGAL_VALUE
-  ok(test(() => ss.getWindowState({})),
-     "Invalid window for getWindowState throws");
-  ok(test(() => ss.setWindowState({}, "", false)),
-     "Invalid window for setWindowState throws");
-  ok(test(() => ss.getTabState({})),
-     "Invalid tab for getTabState throws");
-  ok(test(() => ss.setTabState({}, "{}")),
-     "Invalid tab state for setTabState throws");
-  ok(test(() => ss.setTabState({}, JSON.stringify({ entries: [] }))),
-     "Invalid tab for setTabState throws");
-  ok(test(() => ss.duplicateTab({}, {})),
-     "Invalid tab for duplicateTab throws");
-  ok(test(() => ss.duplicateTab({}, gBrowser.selectedTab)),
-     "Invalid window for duplicateTab throws");
-  ok(test(() => ss.getClosedTabData({})),
-     "Invalid window for getClosedTabData throws");
-  ok(test(() => ss.undoCloseTab({}, 0)),
-     "Invalid window for undoCloseTab throws");
-  ok(test(() => ss.undoCloseTab(window, -1)),
-     "Invalid index for undoCloseTab throws");
-  ok(test(() => ss.getWindowValue({}, "")),
-     "Invalid window for getWindowValue throws");
-  ok(test(() => ss.setWindowValue({}, "", "")),
-     "Invalid window for setWindowValue throws");
+  Assert.throws(() => ss.getWindowState({}),
+    /NS_ERROR_ILLEGAL_VALUE/,
+    "Invalid window for getWindowState throws");
+  Assert.throws(() => ss.setWindowState({}, "", false),
+    /NS_ERROR_ILLEGAL_VALUE/,
+    "Invalid window for setWindowState throws");
+  Assert.throws(() => ss.getTabState({}),
+    /NS_ERROR_FAILURE/,
+    "Invalid tab for getTabState throws");
+  Assert.throws(() => ss.setTabState({}, "{}"),
+    /NS_ERROR_FAILURE/,
+    "Invalid tab state for setTabState throws");
+  Assert.throws(() => ss.setTabState({}, JSON.stringify({ entries: [] })),
+    /NS_ERROR_FAILURE/,
+    "Invalid tab for setTabState throws");
+  Assert.throws(() => ss.duplicateTab({}, {}),
+    /NS_ERROR_FAILURE/,
+    "Invalid tab for duplicateTab throws");
+  Assert.throws(() => ss.duplicateTab({}, gBrowser.selectedTab),
+    /NS_ERROR_ILLEGAL_VALUE/,
+    "Invalid window for duplicateTab throws");
+  Assert.throws(() => ss.getClosedTabData({}),
+    /NS_ERROR_ILLEGAL_VALUE/,
+    "Invalid window for getClosedTabData throws");
+  Assert.throws(() => ss.undoCloseTab({}, 0),
+    /NS_ERROR_ILLEGAL_VALUE/,
+    "Invalid window for undoCloseTab throws");
+  Assert.throws(() => ss.undoCloseTab(window, -1),
+    /NS_ERROR_ILLEGAL_VALUE/,
+    "Invalid index for undoCloseTab throws");
+  Assert.throws(() => ss.getWindowValue({}, ""),
+    /NS_ERROR_ILLEGAL_VALUE/,
+    "Invalid window for getWindowValue throws");
+  Assert.throws(() => ss.setWindowValue({}, "", ""),
+    /NS_ERROR_ILLEGAL_VALUE/,
+    "Invalid window for setWindowValue throws");
 }

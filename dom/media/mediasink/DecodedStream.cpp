@@ -309,7 +309,10 @@ DecodedStream::Start(int64_t aStartTime, const MediaInfo& aInfo)
   public:
     R(PlaybackInfoInit&& aInit, Promise&& aPromise,
       OutputStreamManager* aManager, AbstractThread* aMainThread)
-      : mInit(Move(aInit)), mOutputStreamManager(aManager), mAbstractMainThread(aMainThread)
+      : Runnable("CreateDecodedStreamData")
+      , mInit(Move(aInit))
+      , mOutputStreamManager(aManager)
+      , mAbstractMainThread(aMainThread)
     {
       mPromise = Move(aPromise);
     }
@@ -346,8 +349,8 @@ DecodedStream::Start(int64_t aStartTime, const MediaInfo& aInfo)
   };
   nsCOMPtr<nsIRunnable> r =
     new R(Move(init), Move(promise), mOutputStreamManager, mAbstractMainThread);
-  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-  SyncRunnable::DispatchToThread(mainThread, r);
+  SyncRunnable::DispatchToThread(
+    SystemGroup::EventTargetFor(mozilla::TaskCategory::Other), r);
   mData = static_cast<R*>(r.get())->ReleaseData();
 
   if (mData) {

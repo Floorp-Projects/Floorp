@@ -133,6 +133,10 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler
 
     MOZ_MUST_USE bool emitAddAndStoreSlotShared(CacheOp op);
 
+    bool needsPostBarrier() const {
+        return ic_->asSetPropertyIC()->needsPostBarrier();
+    }
+
     void pushStubCodePointer() {
         stubJitCodeOffset_.emplace(masm.PushWithPatch(ImmPtr((void*)-1)));
     }
@@ -1024,6 +1028,10 @@ IonCacheIRCompiler::emitStoreFixedSlot()
     int32_t offset = int32StubField(reader.stubOffset());
     ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
 
+    Maybe<AutoScratchRegister> scratch;
+    if (needsPostBarrier())
+        scratch.emplace(allocator, masm);
+
     if (typeCheckInfo_->isSet()) {
         FailurePath* failure;
         if (!addFailurePath(&failure))
@@ -1035,6 +1043,8 @@ IonCacheIRCompiler::emitStoreFixedSlot()
     Address slot(obj, offset);
     EmitPreBarrier(masm, slot, MIRType::Value);
     masm.storeConstantOrRegister(val, slot);
+    if (needsPostBarrier())
+        emitPostBarrierSlot(obj, val, scratch.ref());
     return true;
 }
 
@@ -1058,6 +1068,8 @@ IonCacheIRCompiler::emitStoreDynamicSlot()
     Address slot(scratch, offset);
     EmitPreBarrier(masm, slot, MIRType::Value);
     masm.storeConstantOrRegister(val, slot);
+    if (needsPostBarrier())
+        emitPostBarrierSlot(obj, val, scratch);
     return true;
 }
 
@@ -1146,6 +1158,9 @@ IonCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op)
         masm.storeConstantOrRegister(val, slot);
     }
 
+    if (needsPostBarrier())
+        emitPostBarrierSlot(obj, val, scratch1);
+
     return true;
 }
 
@@ -1175,6 +1190,10 @@ IonCacheIRCompiler::emitStoreUnboxedProperty()
     int32_t offset = int32StubField(reader.stubOffset());
     ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
 
+    Maybe<AutoScratchRegister> scratch;
+    if (needsPostBarrier() && UnboxedTypeNeedsPostBarrier(fieldType))
+        scratch.emplace(allocator, masm);
+
     if (fieldType == JSVAL_TYPE_OBJECT && typeCheckInfo_->isSet()) {
         FailurePath* failure;
         if (!addFailurePath(&failure))
@@ -1187,6 +1206,8 @@ IonCacheIRCompiler::emitStoreUnboxedProperty()
     Address fieldAddr(obj, offset);
     EmitICUnboxedPreBarrier(masm, fieldAddr, fieldType);
     masm.storeUnboxedProperty(fieldAddr, fieldType, val, /* failure = */ nullptr);
+    if (needsPostBarrier() && UnboxedTypeNeedsPostBarrier(fieldType))
+        emitPostBarrierSlot(obj, val, scratch.ref());
     return true;
 }
 
@@ -1218,6 +1239,9 @@ IonCacheIRCompiler::emitStoreTypedObjectReferenceProperty()
     Address dest(scratch1, offset);
 
     emitStoreTypedObjectReferenceProp(val, type, dest, scratch2);
+
+    if (needsPostBarrier() && type != ReferenceTypeDescr::TYPE_STRING)
+        emitPostBarrierSlot(obj, val, scratch1);
     return true;
 }
 
@@ -1272,6 +1296,8 @@ IonCacheIRCompiler::emitStoreDenseElement()
 
     EmitPreBarrier(masm, element, MIRType::Value);
     EmitIonStoreDenseElement(masm, val, scratch, element);
+    if (needsPostBarrier())
+        emitPostBarrierElement(obj, val, scratch, index);
     return true;
 }
 
@@ -1356,6 +1382,8 @@ IonCacheIRCompiler::emitStoreDenseElementHole()
 
     masm.bind(&doStore);
     EmitIonStoreDenseElement(masm, val, scratch, element);
+    if (needsPostBarrier())
+        emitPostBarrierElement(obj, val, scratch, index);
     return true;
 }
 

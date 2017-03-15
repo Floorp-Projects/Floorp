@@ -8,7 +8,7 @@ fails == data:text/plain,HELLO data:text/plain,HELLO # Bug 1341637
 == test-async.html test-async.html
 
 # test that zoom works (and really zooms, not just scales)
-fails == test-zoom.html test-zoom.html
+== test-zoom.html test-zoom.html
 
 # make sure we don't fall over if the root is missing
 == no-root.html no-root.html

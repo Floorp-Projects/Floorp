@@ -19,19 +19,19 @@ function test() {
 
   // new format
     // index doesn't match value (testing an option in between (two))
-    { id:{ "select_id": {"selectedIndex":0,"value":"val2"} } },
+    { id:{ "select_id": {"selectedIndex":0, "value":"val2"} } },
     // index doesn't match value (testing an invalid value)
-    { id:{ "select_id": {"selectedIndex":4,"value":"val8"} } },
+    { id:{ "select_id": {"selectedIndex":4, "value":"val8"} } },
     // index doesn't match value (testing an invalid index)
-    { id:{ "select_id": {"selectedIndex":8,"value":"val5"} } },
+    { id:{ "select_id": {"selectedIndex":8, "value":"val5"} } },
     // index and value match position zero
-    { id:{ "select_id": {"selectedIndex":0,"value":"val0"} }, xpath: {} },
+    { id:{ "select_id": {"selectedIndex":0, "value":"val0"} }, xpath: {} },
     // index doesn't match value (testing the last option (seven))
-    { id:{},"xpath":{ "/xhtml:html/xhtml:body/xhtml:select[@name='select_name']": {"selectedIndex":1,"value":"val7"} } },
+    { id:{}, "xpath":{ "/xhtml:html/xhtml:body/xhtml:select[@name='select_name']": {"selectedIndex":1, "value":"val7"} } },
     // index and value match the default option "selectedIndex":3,"value":"val3"
-    { xpath: { "/xhtml:html/xhtml:body/xhtml:select[@name='select_name']" : {"selectedIndex":3,"value":"val3"} } },
+    { xpath: { "/xhtml:html/xhtml:body/xhtml:select[@name='select_name']" : {"selectedIndex":3, "value":"val3"} } },
     // index matches default option however it doesn't match value
-    { id:{ "select_id": {"selectedIndex":3,"value":"val4"} } },
+    { id:{ "select_id": {"selectedIndex":3, "value":"val4"} } },
   ];
 
   let expectedValues = [

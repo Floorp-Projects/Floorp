@@ -26,7 +26,7 @@ this.PrivacyFilter = Object.freeze({
    * @param data The session storage data as collected from a tab.
    * @return object
    */
-  filterSessionStorageData: function (data) {
+  filterSessionStorageData(data) {
     let retval = {};
 
     for (let host of Object.keys(data)) {
@@ -46,12 +46,12 @@ this.PrivacyFilter = Object.freeze({
    * @param data The form data as collected from a tab.
    * @return object
    */
-  filterFormData: function (data) {
+  filterFormData(data) {
     // If the given form data object has an associated URL that we are not
     // allowed to store data for, bail out. We explicitly discard data for any
     // children as well even if storing data for those frames would be allowed.
     if (data.url && !PrivacyLevel.check(data.url)) {
-      return;
+      return null;
     }
 
     let retval = {};
@@ -81,7 +81,7 @@ this.PrivacyFilter = Object.freeze({
    *        The browser state for which we remove any private windows and tabs.
    *        The given object will be modified.
    */
-  filterPrivateWindowsAndTabs: function (browserState) {
+  filterPrivateWindowsAndTabs(browserState) {
     // Remove private opened windows.
     for (let i = browserState.windows.length - 1; i >= 0; i--) {
       let win = browserState.windows[i];
@@ -113,7 +113,7 @@ this.PrivacyFilter = Object.freeze({
    *        The window state for which we remove any private tabs.
    *        The given object will be modified.
    */
-  filterPrivateTabs: function (winState) {
+  filterPrivateTabs(winState) {
     // Remove open private tabs.
     for (let i = winState.tabs.length - 1; i >= 0 ; i--) {
       let tab = winState.tabs[i];

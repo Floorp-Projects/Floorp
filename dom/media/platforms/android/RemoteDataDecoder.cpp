@@ -5,14 +5,14 @@
 #include "AndroidBridge.h"
 #include "AndroidDecoderModule.h"
 #include "AndroidSurfaceTexture.h"
-#include "DurationMap.h"
+#include "SimpleMap.h"
 #include "FennecJNINatives.h"
 #include "GLImages.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
-#include "VPXDecoder.h"
 #include "VideoUtils.h"
-#include "mozilla/Mutex.h"
+#include "VPXDecoder.h"
+
 #include "nsIGfxInfo.h"
 #include "nsPromiseFlatString.h"
 #include "nsThreadUtils.h"
@@ -136,6 +136,24 @@ public:
     java::Sample::GlobalRef mSample;
   };
 
+
+  class InputInfo
+  {
+  public:
+    InputInfo() { }
+
+    InputInfo(const int64_t aDurationUs, const gfx::IntSize& aImageSize, const gfx::IntSize& aDisplaySize)
+      : mDurationUs(aDurationUs)
+      , mImageSize(aImageSize)
+      , mDisplaySize(aDisplaySize)
+    {
+    }
+
+    int64_t mDurationUs;
+    gfx::IntSize mImageSize;
+    gfx::IntSize mDisplaySize;
+  };
+
   class CallbacksSupport final : public JavaCallbacksSupport
   {
   public:
@@ -172,25 +190,21 @@ public:
       }
 
       bool isEOS = !!(flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM);
-      int64_t durationUs = 0;
-      if (!mDecoder->mInputDurations.Find(presentationTimeUs, durationUs)
+      InputInfo inputInfo;
+      if (!mDecoder->mInputInfos.Find(presentationTimeUs, inputInfo)
           && !isEOS) {
         return;
       }
 
       if (size > 0) {
-        MutexAutoLock lock(mDecoder->mMutex);
-
         RefPtr<layers::Image> img = new SurfaceTextureImage(
-          mDecoder->mSurfaceTexture.get(), mDecoder->mConfig.mDisplay,
+          mDecoder->mSurfaceTexture.get(), inputInfo.mImageSize,
           gl::OriginPos::BottomLeft);
 
         RefPtr<VideoData> v = VideoData::CreateFromImage(
-          mDecoder->mConfig, offset, presentationTimeUs, durationUs,
+          inputInfo.mDisplaySize, offset, presentationTimeUs, inputInfo.mDurationUs,
           img, !!(flags & MediaCodec::BUFFER_FLAG_SYNC_FRAME),
-          presentationTimeUs,
-          gfx::IntRect(0, 0, mDecoder->mConfig.mDisplay.width,
-                       mDecoder->mConfig.mDisplay.height));
+          presentationTimeUs);
 
         v->SetListener(Move(releaseSample));
 
@@ -220,7 +234,6 @@ public:
     : RemoteDataDecoder(MediaData::Type::VIDEO_DATA, aConfig.mMimeType,
                         aFormat, aDrmStubId, aTaskQueue)
     , mImageContainer(aImageContainer)
-    , mMutex("RemoteVideoDecoder Mutex")
     , mConfig(aConfig)
   {
   }
@@ -263,13 +276,19 @@ public:
 
   RefPtr<MediaDataDecoder::FlushPromise> Flush() override
   {
-    mInputDurations.Clear();
+    mInputInfos.Clear();
     return RemoteDataDecoder::Flush();
   }
 
   RefPtr<MediaDataDecoder::DecodePromise> Decode(MediaRawData* aSample) override
   {
-    mInputDurations.Insert(aSample->mTime, aSample->mDuration);
+    const VideoInfo* config = aSample->mTrackInfo
+                              ? aSample->mTrackInfo->GetAsVideoInfo()
+                              : &mConfig;
+    MOZ_ASSERT(config);
+
+    InputInfo info(aSample->mDuration, config->mImage, config->mDisplay);
+    mInputInfos.Insert(aSample->mTime, info);
     return RemoteDataDecoder::Decode(aSample);
   }
 
@@ -277,20 +296,13 @@ public:
   {
     return mIsCodecSupportAdaptivePlayback;
   }
-  void ConfigurationChanged(const TrackInfo& aConfig) override
-  {
-    MOZ_ASSERT(aConfig.GetAsVideoInfo());
-    MutexAutoLock lock(mMutex);
-    mConfig = *aConfig.GetAsVideoInfo();
-  }
 
 private:
   layers::ImageContainer* mImageContainer;
+  const VideoInfo mConfig;
   RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
-  DurationMap mInputDurations;
+  SimpleMap<InputInfo> mInputInfos;
   bool mIsCodecSupportAdaptivePlayback = false;
-  Mutex mMutex; // Protects mConfig
-  VideoInfo mConfig;
 };
 
 class RemoteAudioDecoder : public RemoteDataDecoder

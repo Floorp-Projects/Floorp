@@ -8,15 +8,14 @@ GeckoSharedLibrary('AccessibleMarshal', linkage=None)
 
 SOURCES += [
     '!dlldata.c',
-    '!ISimpleDOMDocument_i.c',
-    '!ISimpleDOMDocument_p.c',
-    '!ISimpleDOMNode_i.c',
-    '!ISimpleDOMNode_p.c',
-    '!ISimpleDOMText_i.c',
-    '!ISimpleDOMText_p.c',
+    '!ISimpleDOM_i.c',
+    '!ISimpleDOM_p.c',
 ]
 
 DEFINES['REGISTER_PROXY_DLL'] = True
+# The following line is required to preserve compatibility with older versions
+# of AccessibleMarshal.dll.
+DEFINES['PROXY_CLSID'] = 'IID_ISimpleDOMNode'
 
 DEFFILE = SRCDIR + '/AccessibleMarshal.def'
 
@@ -28,16 +27,10 @@ OS_LIBS += [
 
 GENERATED_FILES += [
     'dlldata.c',
-    'ISimpleDOMDocument.h',
-    'ISimpleDOMDocument_i.c',
-    'ISimpleDOMDocument_p.c',
-    'ISimpleDOMNode.h',
-    'ISimpleDOMNode.tlb',
-    'ISimpleDOMNode_i.c',
-    'ISimpleDOMNode_p.c',
-    'ISimpleDOMText.h',
-    'ISimpleDOMText_i.c',
-    'ISimpleDOMText_p.c',
+    'ISimpleDOM.h',
+    'ISimpleDOM.tlb',
+    'ISimpleDOM_i.c',
+    'ISimpleDOM_p.c',
 ]
 
 RCINCLUDE = 'AccessibleMarshal.rc'

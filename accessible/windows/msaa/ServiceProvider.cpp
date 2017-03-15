@@ -16,7 +16,7 @@
 #include "mozilla/Preferences.h"
 #include "nsIDocShell.h"
 
-#include "ISimpleDOMNode_i.c"
+#include "ISimpleDOM.h"
 
 namespace mozilla {
 namespace a11y {

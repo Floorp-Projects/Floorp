@@ -17,7 +17,6 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PFileDescriptorSetChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/ipc/SendStream.h"
 #include "nsCOMPtr.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"

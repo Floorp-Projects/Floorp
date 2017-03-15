@@ -180,7 +180,7 @@ add_task(function* test_design_mode() {
 });
 
 function getInputValue(browser, id) {
-  return sendMessage(browser, "ss-test:getInputValue", {id: id});
+  return sendMessage(browser, "ss-test:getInputValue", {id});
 }
 
 function setInputValue(browser, data) {

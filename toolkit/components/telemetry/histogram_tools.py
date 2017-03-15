@@ -85,7 +85,7 @@ try:
         try:
             whitelists = json.load(f)
             for name, whitelist in whitelists.iteritems():
-              whitelists[name] = set(whitelist)
+                whitelists[name] = set(whitelist)
         except ValueError, e:
             raise BaseException, 'error parsing whitelist (%s)' % whitelist_path
 except IOError:

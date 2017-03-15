@@ -1294,7 +1294,7 @@ FrameHandle::updateHasTrackedOptimizations()
         canonicalAddr_ = (void*)(((uint8_t*) entry_.nativeStartAddr()) + entryOffset);
 }
 
-void
+JS_PUBLIC_API(void)
 FrameHandle::forEachOptimizationAttempt(ForEachTrackedOptimizationAttemptOp& op,
                                         JSScript** scriptOut, jsbytecode** pcOut) const
 {
@@ -1303,7 +1303,7 @@ FrameHandle::forEachOptimizationAttempt(ForEachTrackedOptimizationAttemptOp& op,
     entry_.youngestFrameLocationAtAddr(rt_, addr_, scriptOut, pcOut);
 }
 
-void
+JS_PUBLIC_API(void)
 FrameHandle::forEachOptimizationTypeInfo(ForEachTrackedOptimizationTypeInfoOp& op) const
 {
     MOZ_ASSERT(optsIndex_.isSome());

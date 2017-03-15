@@ -330,6 +330,8 @@
 @BINPATH@/components/txEXSLTRegExFunctions.js
 @BINPATH@/components/nsContentPrefService.manifest
 @BINPATH@/components/nsContentPrefService.js
+@BINPATH@/components/nsHandlerService-json.manifest
+@BINPATH@/components/nsHandlerService-json.js
 @BINPATH@/components/nsHandlerService.manifest
 @BINPATH@/components/nsHandlerService.js
 @BINPATH@/components/nsWebHandlerApp.manifest

@@ -1549,7 +1549,7 @@ add_task(function* test_DirectoryLinksProvider_ClickRemoval() {
   let testObserver = new UrlDeletionTester();
   DirectoryLinksProvider.addObserver(testObserver);
 
-  PlacesUtils.bhistory.removePage(NetUtil.newURI(landingUrl));
+  yield PlacesUtils.history.remove(landingUrl);
   yield testObserver.promise;
   DirectoryLinksProvider.removeObserver(testObserver);
   // views must be 2 and click should not exist

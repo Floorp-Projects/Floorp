@@ -20,6 +20,8 @@ def main(args):
     parser.add_argument("-C", metavar='DIR', default=".",
                         help="Change to given directory before considering "
                         "other paths")
+    parser.add_argument("--strip", action='store_true',
+                        help="Strip executables")
     parser.add_argument("zip", help="Path to zip file to write")
     parser.add_argument("input", nargs="+",
                         help="Path to files to add to zip")
@@ -28,7 +30,7 @@ def main(args):
     jarrer = Jarrer(optimize=False)
 
     with errors.accumulate():
-        finder = FileFinder(args.C)
+        finder = FileFinder(args.C, find_executables=args.strip)
         for path in args.input:
             for p, f in finder.find(path):
                 jarrer.add(p, f)

@@ -305,8 +305,9 @@ GeckoMediaPluginServiceChild::GetServiceChild()
     MozPromiseHolder<GetServiceChildPromise>* holder = mGetServiceChildPromises.AppendElement();
     RefPtr<GetServiceChildPromise> promise = holder->Ensure(__func__);
     if (mGetServiceChildPromises.Length() == 1) {
-        NS_DispatchToMainThread(WrapRunnable(contentChild,
-                                             &dom::ContentChild::SendCreateGMPService));
+      nsCOMPtr<nsIRunnable> r = WrapRunnable(
+        contentChild, &dom::ContentChild::SendCreateGMPService);
+      SystemGroup::Dispatch("SendCreateGMPService", TaskCategory::Other, r.forget());
     }
     return promise;
   }
@@ -357,9 +358,6 @@ GMPServiceChild::GetBridgedGMPContentParent(ProcessId aOtherPid,
   }
 
   MOZ_ASSERT(aOtherPid == endpoint.OtherPid());
-
-  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-  MOZ_ASSERT(mainThread);
 
   parent = new GMPContentParent();
 

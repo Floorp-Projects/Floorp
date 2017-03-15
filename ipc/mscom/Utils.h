@@ -18,6 +18,7 @@ namespace mscom {
 
 bool IsCurrentThreadMTA();
 bool IsProxy(IUnknown* aUnknown);
+bool IsValidGUID(REFGUID aCheckGuid);
 
 #ifdef ACCESSIBILITY
 bool IsVtableIndexFromParentInterface(REFIID aInterface,

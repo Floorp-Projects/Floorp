@@ -79,12 +79,11 @@ public:
     if (NS_IsMainThread()) {
       service = GetOrCreateOnMainThread();
     } else {
-      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-      MOZ_ASSERT(mainThread);
-
       RefPtr<GMPServiceCreateHelper> createHelper = new GMPServiceCreateHelper();
 
-      mozilla::SyncRunnable::DispatchToThread(mainThread, createHelper, true);
+      mozilla::SyncRunnable::DispatchToThread(
+        SystemGroup::EventTargetFor(mozilla::TaskCategory::Other),
+        createHelper, true);
 
       service = createHelper->mService.forget();
     }
@@ -94,6 +93,7 @@ public:
 
 private:
   GMPServiceCreateHelper()
+    : Runnable("GMPServiceCreateHelper")
   {
   }
 

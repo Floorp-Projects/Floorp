@@ -22,7 +22,7 @@ add_task(function* () {
 
   yield TabStateFlusher.flush(browser);
   let tabState = JSON.parse(ss.getTabState(tab));
-  is(tabState.entries[0].referrer,  REFERRER1,
+  is(tabState.entries[0].referrer, REFERRER1,
      "Referrer retrieved via getTabState matches referrer set via loadURI.");
 
   tabState.entries[0].referrer = REFERRER2;
