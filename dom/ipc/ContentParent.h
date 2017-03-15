@@ -611,6 +611,23 @@ public:
                                 const Principal& aPrincipal,
                                 const bool& aUseTrackingProtection,
                                 bool* aSuccess) override;
+
+  virtual bool SendActivate(PBrowserParent* aTab) override
+  {
+    return PContentParent::SendActivate(aTab);
+  }
+
+  virtual bool SendDeactivate(PBrowserParent* aTab) override
+  {
+    return PContentParent::SendDeactivate(aTab);
+  }
+
+  virtual bool SendParentActivated(PBrowserParent* aTab,
+                                   const bool& aActivated) override
+  {
+    return PContentParent::SendParentActivated(aTab, aActivated);
+  }
+
   virtual bool
   DeallocPURLClassifierParent(PURLClassifierParent* aActor) override;
 
