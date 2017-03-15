@@ -648,7 +648,6 @@ AudioCallbackDriver::Init()
   } else {
     if (cubeb_get_min_latency(cubebContext, output, &latency_frames) != CUBEB_OK) {
       NS_WARNING("Could not get minimal latency from cubeb.");
-      return false;
     }
   }
 
@@ -1031,6 +1030,17 @@ void
 AudioCallbackDriver::StateCallback(cubeb_state aState)
 {
   STREAM_LOG(LogLevel::Debug, ("AudioCallbackDriver State: %d", aState));
+  if (aState == CUBEB_STATE_ERROR) {
+    // Fall back to a driver using a normal thread.
+    MonitorAutoLock lock(GraphImpl()->GetMonitor());
+    SystemClockDriver* nextDriver = new SystemClockDriver(GraphImpl());
+    SetNextDriver(nextDriver);
+    RemoveCallback();
+    nextDriver->MarkAsFallback();
+    nextDriver->SetGraphTime(this, mIterationStart, mIterationEnd);
+    mGraphImpl->SetCurrentDriver(nextDriver);
+    nextDriver->Start();
+  }
 }
 
 void
