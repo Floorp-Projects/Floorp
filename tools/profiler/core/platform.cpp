@@ -1553,68 +1553,6 @@ ReadProfilerEnvVars(PS::LockRef aLock)
        gPS->EnvVarInterval(aLock));
 }
 
-#ifdef HAVE_VA_COPY
-#define VARARGS_ASSIGN(foo, bar)     VA_COPY(foo,bar)
-#elif defined(HAVE_VA_LIST_AS_ARRAY)
-#define VARARGS_ASSIGN(foo, bar)     foo[0] = bar[0]
-#else
-#define VARARGS_ASSIGN(foo, bar)     (foo) = (bar)
-#endif
-
-void
-profiler_log(const char* aStr)
-{
-  // This function runs both on and off the main thread.
-
-  profiler_tracing("log", aStr, TRACING_EVENT);
-}
-
-static void
-locked_profiler_add_marker(PS::LockRef aLock, const char* aMarker,
-                           ProfilerMarkerPayload* aPayload);
-
-void
-profiler_log(const char* aFmt, va_list aArgs)
-{
-  // This function runs both on and off the main thread.
-
-  MOZ_RELEASE_ASSERT(gPS);
-
-  PS::AutoLock lock(gPSMutex);
-
-  if (!gPS->IsActive(lock) || gPS->FeaturePrivacy(lock)) {
-    return;
-  }
-
-  // nsAutoCString AppendPrintf would be nicer but this is mozilla external
-  // code.
-  char buf[2048];
-  va_list argsCpy;
-  VARARGS_ASSIGN(argsCpy, aArgs);
-  int required = VsprintfLiteral(buf, aFmt, argsCpy);
-  va_end(argsCpy);
-
-  if (required < 0) {
-    // silently drop for now
-
-  } else if (required < 2048) {
-    auto marker = new ProfilerMarkerTracing("log", TRACING_EVENT);
-    locked_profiler_add_marker(lock, buf, marker);
-
-  } else {
-    char* heapBuf = new char[required + 1];
-    va_list argsCpy;
-    VARARGS_ASSIGN(argsCpy, aArgs);
-    vsnprintf(heapBuf, required + 1, aFmt, argsCpy);
-    va_end(argsCpy);
-    // EVENT_BACKTRACE could be used to get a source for all log events. This
-    // could be a runtime flag later.
-    auto marker = new ProfilerMarkerTracing("log", TRACING_EVENT);
-    locked_profiler_add_marker(lock, heapBuf, marker);
-    delete[] heapBuf;
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////
 // BEGIN SamplerThread
 
@@ -2032,8 +1970,6 @@ profiler_init(void* aStackTop)
     // indicates that the profiler has initialized successfully.
     gPS = new PS();
 
-    set_stderr_callback(profiler_log);
-
     bool ignore;
     gPS->SetStartTime(lock, mozilla::TimeStamp::ProcessCreation(ignore));
 
@@ -2114,8 +2050,6 @@ profiler_shutdown()
 
       samplerThread = locked_profiler_stop(lock);
     }
-
-    set_stderr_callback(nullptr);
 
     PS::ThreadVector& threads = gPS->Threads(lock);
     while (threads.size() > 0) {
@@ -3164,6 +3098,14 @@ profiler_tracing(const char* aCategory, const char* aInfo,
   auto marker =
     new ProfilerMarkerTracing(aCategory, aMetaData, mozilla::Move(aCause));
   locked_profiler_add_marker(lock, aInfo, marker);
+}
+
+void
+profiler_log(const char* aStr)
+{
+  // This function runs both on and off the main thread.
+
+  profiler_tracing("log", aStr, TRACING_EVENT);
 }
 
 void
