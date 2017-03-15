@@ -5114,6 +5114,29 @@ nsDisplayBoxShadowInner::GetLayerState(nsDisplayListBuilder* aBuilder,
                                        const ContainerLayerParameters& aParameters)
 {
   if (gfxPrefs::LayersAllowInsetBoxShadow()) {
+    nsPoint offset = ToReferenceFrame();
+    nsRect borderRect = nsRect(offset, mFrame->GetSize());
+    RectCornerRadii innerRadii;
+    bool hasBorderRadius = nsCSSRendering::GetShadowInnerRadii(mFrame,
+                                                               borderRect,
+                                                               innerRadii);
+    if (hasBorderRadius) {
+      return LAYER_NONE;
+    }
+
+    nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
+    for (uint32_t i = shadows->Length(); i > 0; --i) {
+      nsCSSShadowItem* shadowItem = shadows->ShadowAt(i - 1);
+      if (!shadowItem->mInset) {
+        continue;
+      }
+
+      if (shadowItem->mXOffset <= 0 || shadowItem->mYOffset <= 0) {
+        // Need to wait for WR to support clip out.
+        return LAYER_NONE;
+      }
+    }
+
     return LAYER_ACTIVE;
   }
 
