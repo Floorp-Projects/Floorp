@@ -18,8 +18,8 @@ class WebRenderDisplayItemLayer;
 } // namespace layers
 
 namespace wr {
-  class DisplayListBuilder;
-}
+class DisplayListBuilder;
+} // namespace wr
 
 // A resolved color stop, with a specific position along the gradient line and
 // a color.

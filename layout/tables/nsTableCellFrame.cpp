@@ -380,10 +380,9 @@ nsTableCellFrame::PaintBackground(nsRenderingContext& aRenderingContext,
   nsRect rect(aPt, GetSize());
   nsCSSRendering::PaintBGParams params =
     nsCSSRendering::PaintBGParams::ForAllLayers(*PresContext(),
-                                                aRenderingContext,
                                                 aDirtyRect, rect,
                                                 this, aFlags);
-  return nsCSSRendering::PaintStyleImageLayer(params);
+  return nsCSSRendering::PaintStyleImageLayer(params, aRenderingContext);
 }
 
 // Called by nsTablePainter
@@ -1248,9 +1247,9 @@ nsBCTableCellFrame::PaintBackground(nsRenderingContext& aRenderingContext,
   nsRect rect(aPt, GetSize());
   nsCSSRendering::PaintBGParams params =
     nsCSSRendering::PaintBGParams::ForAllLayers(*PresContext(),
-                                                aRenderingContext, aDirtyRect,
+                                                aDirtyRect,
                                                 rect, this,
                                                 aFlags);
-  return nsCSSRendering::PaintStyleImageLayerWithSC(params, StyleContext(),
+  return nsCSSRendering::PaintStyleImageLayerWithSC(params, aRenderingContext, StyleContext(),
                                                     myBorder);
 }
