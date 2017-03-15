@@ -33,4 +33,16 @@ interface nsIDateTimeInputArea : nsISupports
    * Set the current state of the picker, true if it's opened, false otherwise.
    */
   void setPickerState(in boolean isOpen);
+
+  /**
+   * Set the attribute of the inner text boxes. Only "tabindex", "readonly",
+   * and "disabled" are allowed.
+   */
+  void setEditAttribute(in DOMString name, in DOMString value);
+
+  /**
+   * Remove the attribute of the inner text boxes. Only "tabindex", "readonly",
+   * and "disabled" are allowed.
+   */
+  void removeEditAttribute(in DOMString name);
 };

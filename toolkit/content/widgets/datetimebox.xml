@@ -1280,6 +1280,53 @@
         </body>
       </method>
 
+      <method name="setEditAttribute">
+        <parameter name="aName"/>
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          this.log("setAttribute: " + aName + "=" + aValue);
+
+          if (aName != "tabindex" && aName != "disabled" &&
+              aName != "readonly") {
+            return;
+          }
+
+          let editRoot =
+            document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
+
+          for (let child = editRoot.firstChild; child; child = child.nextSibling) {
+            if (child instanceof HTMLInputElement) {
+              child.setAttribute(aName, aValue);
+            }
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="removeEditAttribute">
+        <parameter name="aName"/>
+        <body>
+        <![CDATA[
+          this.log("removeAttribute: " + aName);
+
+          if (aName != "tabindex" && aName != "disabled" &&
+              aName != "readonly") {
+            return;
+          }
+
+          let editRoot =
+            document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
+
+          for (let child = editRoot.firstChild; child; child = child.nextSibling) {
+            if (child instanceof HTMLInputElement) {
+              child.removeAttribute(aName);
+            }
+          }
+        ]]>
+        </body>
+      </method>
+
       <method name="isEmpty">
         <parameter name="aValue"/>
         <body>
@@ -1362,7 +1409,7 @@
       <method name="isDisabled">
         <body>
         <![CDATA[
-          return this.hasAttribute("disabled");
+          return this.mInputElement.hasAttribute("disabled");
         ]]>
         </body>
       </method>
@@ -1370,7 +1417,7 @@
       <method name="isReadonly">
         <body>
         <![CDATA[
-          return this.hasAttribute("readonly");
+          return this.mInputElement.hasAttribute("readonly");
         ]]>
         </body>
       </method>
