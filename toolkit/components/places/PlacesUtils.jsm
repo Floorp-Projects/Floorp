@@ -1671,6 +1671,23 @@ this.PlacesUtils = {
     return deferred.promise;
   },
 
+   /**
+   * Returns the passed URL with a #size ref for the specified size and
+   * devicePixelRatio.
+   *
+   * @param window
+   *        The window where the icon will appear.
+   * @param href
+   *        The string href we should add the ref to.
+   * @param size
+   *        The target image size
+   * @return The URL with the fragment at the end, in the same formar as input.
+   */
+  urlWithSizeRef(window, href, size) {
+    return href + (href.includes("#") ? "&" : "#") +
+           "size=" + (Math.round(size) * window.devicePixelRatio);
+  },
+
   /**
    * Get the unique id for an item (a bookmark, a folder or a separator) given
    * its item id.
