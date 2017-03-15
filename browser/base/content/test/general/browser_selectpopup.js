@@ -141,30 +141,6 @@ const TRANSLUCENT_SELECT_BECOMES_OPAQUE =
   '  <option value="Two" selected="true">{"end": "true"}</option>' +
   "</select></body></html>";
 
-const DISABLED_OPTGROUP_AND_OPTIONS =
-  "<html><head>" +
-  "<body><select id='one'>" +
-  "  <optgroup label='{\"color\": \"rgb(0, 0, 0)\", \"backgroundColor\": \"buttonface\"}'>" +
-  '    <option disabled="">{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  '    <option>{"color": "rgb(0, 0, 0)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  '    <option disabled="">{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  '    <option>{"color": "rgb(0, 0, 0)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  '    <option>{"color": "rgb(0, 0, 0)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  '    <option>{"color": "rgb(0, 0, 0)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  '    <option>{"color": "rgb(0, 0, 0)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  "  </optgroup>" +
-  "  <optgroup label='{\"color\": \"GrayText\", \"backgroundColor\": \"buttonface\"}' disabled=''>" +
-  '    <option>{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  '    <option>{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  '    <option>{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  '    <option>{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  '    <option>{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  '    <option>{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  '    <option>{"color": "GrayText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  "  </optgroup>" +
-  '  <option value="Two" selected="true">{"end": "true"}</option>' +
-  "</select></body></html>";
-
 function openSelectPopup(selectPopup, mode = "key", selector = "select", win = window) {
   let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
 
@@ -229,15 +205,7 @@ function getSystemColor(color) {
 function testOptionColors(index, item, menulist) {
   // The label contains a JSON string of the expected colors for
   // `color` and `background-color`.
-  let expected;
-  try {
-    expected = JSON.parse(item.label);
-  } catch (ex) {
-    info(`Failed parsing: ${item.label}`);
-    info(`Failed parsing element with outerHTML: ${item.outerHTML}`);
-    ok(false, ex.message);
-    return;
-  }
+  let expected = JSON.parse(item.label);
 
   for (let color of Object.keys(expected)) {
     if (color.toLowerCase().includes("color") &&
@@ -1001,14 +969,4 @@ add_task(function* test_translucent_select_becomes_opaque() {
     selectBgColor: "rgb(255, 255, 255)"
   };
   yield testSelectColors(TRANSLUCENT_SELECT_BECOMES_OPAQUE, 2, options);
-});
-
-add_task(function* test_disabled_optgroup_and_options() {
-  // The colors used by this test are platform-specific.
-  if (AppConstants.platform != "win") {
-    return;
-  }
-
-  yield testSelectColors(DISABLED_OPTGROUP_AND_OPTIONS, 17,
-                         {skipSelectColorTest: true});
 });
