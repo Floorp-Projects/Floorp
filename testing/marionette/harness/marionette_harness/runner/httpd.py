@@ -32,10 +32,19 @@ def upload_handler(request, response):
 
 @handlers.handler
 def slow_loading_document(request, response):
-    time.sleep(5)
-    return """<!doctype html>
-<title>ok</title>
-<p>ok"""
+    # Allow the test specify the delay for delivering the content
+    params = dict(urlparse.parse_qsl(request.url_parts.query))
+    delay = int(params.get('delay', 5))
+    time.sleep(delay)
+
+    # Do not allow the page to be cached to circumvent the bfcache of the browser
+    response.headers.set("Cache-Control", "no-cache, no-store")
+    response.content = """<!doctype html>
+<meta charset="UTF-8">
+<title>Slow page loading</title>
+
+<p>Delay: <span id="delay">{}</span></p>
+""".format(delay)
 
 
 class NotAliveError(Exception):
