@@ -24,7 +24,7 @@ add_task(function*() {
   });
 
   is(parseInt(zoomResetButton.label, 10), 100, "Default zoom is 100% for about:mozilla");
-  let zoomChangePromise = promiseObserverNotification("browser-fullZoom:zoomChange");
+  let zoomChangePromise = BrowserTestUtils.waitForEvent(window, "FullZoomChange");
   FullZoom.enlarge();
   yield zoomChangePromise;
   is(parseInt(zoomResetButton.label, 10), 110, "Zoom is changed to 110% for about:mozilla");
@@ -36,7 +36,7 @@ add_task(function*() {
   is(parseInt(zoomResetButton.label, 10), 100, "Default zoom is 100% for about:robots");
 
   gBrowser.selectedTab = tab1;
-  let zoomResetPromise = promiseObserverNotification("browser-fullZoom:zoomReset");
+  let zoomResetPromise = BrowserTestUtils.waitForEvent(window, "FullZoomChange");
   FullZoom.reset();
   yield zoomResetPromise;
   is(parseInt(zoomResetButton.label, 10), 100, "Default zoom is 100% for about:mozilla");
