@@ -8,7 +8,7 @@
 include protocol PHttpChannel;
 include protocol PFTPChannel;
 include protocol PRtspChannel;
-include protocol PSendStream;
+include protocol PChildToParentStream;
 include BlobTypes;
 include URIParams;
 include IPCStream;
