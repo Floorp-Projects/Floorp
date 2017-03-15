@@ -317,12 +317,25 @@ protected:
   already_AddRefed<DeleteNodeTransaction>
     CreateTxnForDeleteNode(nsINode* aNode);
 
-  nsresult CreateTxnForDeleteSelection(
-             EDirection aAction,
-             EditAggregateTransaction** aTransaction,
-             nsINode** aNode,
-             int32_t* aOffset,
-             int32_t* aLength);
+  /**
+   * Create an aggregate transaction for delete selection.  The result may
+   * include DeleteNodeTransactions and/or DeleteTextTransactions as its
+   * children.
+   *
+   * @param aAction             The action caused removing the selection.
+   * @param aRemovingNode       The node to be removed.
+   * @param aOffset             The start offset of the range in aRemovingNode.
+   * @param aLength             The length of the range in aRemovingNode.
+   * @return                    If it can remove the selection, returns an
+   *                            aggregate transaction which has some
+   *                            DeleteNodeTransactions and/or
+   *                            DeleteTextTransactions as its children.
+   */
+  already_AddRefed<EditAggregateTransaction>
+    CreateTxnForDeleteSelection(EDirection aAction,
+                                nsINode** aNode,
+                                int32_t* aOffset,
+                                int32_t* aLength);
 
   /**
    * Create a transaction for removing the nodes and/or text in aRange.

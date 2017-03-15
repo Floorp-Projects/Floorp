@@ -4061,54 +4061,58 @@ EditorBase::DeleteSelectionImpl(EDirection aAction,
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
-  RefPtr<EditAggregateTransaction> transaction;
+
+  RefPtr<EditAggregateTransaction> deleteSelectionTransaction;
   nsCOMPtr<nsINode> deleteNode;
   int32_t deleteCharOffset = 0, deleteCharLength = 0;
-  nsresult rv = CreateTxnForDeleteSelection(aAction,
-                                            getter_AddRefs(transaction),
-                                            getter_AddRefs(deleteNode),
-                                            &deleteCharOffset,
-                                            &deleteCharLength);
-  nsCOMPtr<nsIDOMCharacterData> deleteCharData(do_QueryInterface(deleteNode));
+  if (!selection->Collapsed() || aAction != eNone) {
+    deleteSelectionTransaction =
+      CreateTxnForDeleteSelection(aAction,
+                                  getter_AddRefs(deleteNode),
+                                  &deleteCharOffset,
+                                  &deleteCharLength);
+    if (NS_WARN_IF(!deleteSelectionTransaction)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
 
-  if (NS_SUCCEEDED(rv)) {
-    AutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
-    // Notify nsIEditActionListener::WillDelete[Selection|Text|Node]
-    {
-      AutoActionListenerArray listeners(mActionListeners);
-      if (!deleteNode) {
-        for (auto& listener : listeners) {
-          listener->WillDeleteSelection(selection);
-        }
-      } else if (deleteCharData) {
-        for (auto& listener : listeners) {
-          listener->WillDeleteText(deleteCharData, deleteCharOffset, 1);
-        }
-      } else {
-        for (auto& listener : listeners) {
-          listener->WillDeleteNode(deleteNode->AsDOMNode());
-        }
+  nsCOMPtr<nsIDOMCharacterData> deleteCharData(do_QueryInterface(deleteNode));
+  AutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
+  // Notify nsIEditActionListener::WillDelete[Selection|Text|Node]
+  {
+    AutoActionListenerArray listeners(mActionListeners);
+    if (!deleteNode) {
+      for (auto& listener : listeners) {
+        listener->WillDeleteSelection(selection);
+      }
+    } else if (deleteCharData) {
+      for (auto& listener : listeners) {
+        listener->WillDeleteText(deleteCharData, deleteCharOffset, 1);
+      }
+    } else {
+      for (auto& listener : listeners) {
+        listener->WillDeleteNode(deleteNode->AsDOMNode());
       }
     }
+  }
 
-    // Delete the specified amount
-    rv = DoTransaction(transaction);
+  // Delete the specified amount
+  nsresult rv = DoTransaction(deleteSelectionTransaction);
 
-    // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
-    {
-      AutoActionListenerArray listeners(mActionListeners);
-      if (!deleteNode) {
-        for (auto& listener : mActionListeners) {
-          listener->DidDeleteSelection(selection);
-        }
-      } else if (deleteCharData) {
-        for (auto& listener : mActionListeners) {
-          listener->DidDeleteText(deleteCharData, deleteCharOffset, 1, rv);
-        }
-      } else {
-        for (auto& listener : mActionListeners) {
-          listener->DidDeleteNode(deleteNode->AsDOMNode(), rv);
-        }
+  // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
+  {
+    AutoActionListenerArray listeners(mActionListeners);
+    if (!deleteNode) {
+      for (auto& listener : mActionListeners) {
+        listener->DidDeleteSelection(selection);
+      }
+    } else if (deleteCharData) {
+      for (auto& listener : mActionListeners) {
+        listener->DidDeleteText(deleteCharData, deleteCharOffset, 1, rv);
+      }
+    } else {
+      for (auto& listener : mActionListeners) {
+        listener->DidDeleteNode(deleteNode->AsDOMNode(), rv);
       }
     }
   }
@@ -4339,22 +4343,20 @@ EditorBase::CreateTxnForRemoveStyleSheet(StyleSheet* aSheet)
   return transaction.forget();
 }
 
-nsresult
+already_AddRefed<EditAggregateTransaction>
 EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
-                                        EditAggregateTransaction** aTransaction,
-                                        nsINode** aNode,
+                                        nsINode** aRemovingNode,
                                         int32_t* aOffset,
                                         int32_t* aLength)
 {
-  MOZ_ASSERT(aTransaction);
-  *aTransaction = nullptr;
-
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_STATE(selection);
+  if (NS_WARN_IF(!selection)) {
+    return nullptr;
+  }
 
   // Check whether the selection is collapsed and we should do nothing:
-  if (selection->Collapsed() && aAction == eNone) {
-    return NS_OK;
+  if (NS_WARN_IF(selection->Collapsed() && aAction == eNone)) {
+    return nullptr;
   }
 
   // allocate the out-param transaction
@@ -4363,7 +4365,9 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
 
   for (uint32_t rangeIdx = 0; rangeIdx < selection->RangeCount(); ++rangeIdx) {
     RefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
-    NS_ENSURE_STATE(range);
+    if (NS_WARN_IF(!range)) {
+      return nullptr;
+    }
 
     // Same with range as with selection; if it is collapsed and action
     // is eNone, do nothing.
@@ -4376,22 +4380,21 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
       // we have an insertion point.  delete the thing in front of it or
       // behind it, depending on aAction
       // XXX Odd, when there are two or more ranges, this returns the last
-      //     range information with aNode, aOffset and aLength.
+      //     range information with aRemovingNode, aOffset and aLength.
       RefPtr<EditTransactionBase> deleteRangeTransaction =
-        CreateTxnForDeleteRange(range, aAction, aNode, aOffset, aLength);
+        CreateTxnForDeleteRange(range, aAction,
+                                aRemovingNode, aOffset, aLength);
       // XXX When there are two or more ranges and at least one of them is
       //     not editable, deleteRangeTransaction may be nullptr.
       //     In such case, should we stop removing other ranges too?
       if (NS_WARN_IF(!deleteRangeTransaction)) {
-        return NS_ERROR_FAILURE;
+        return nullptr;
       }
       aggregateTransaction->AppendChild(deleteRangeTransaction);
     }
   }
 
-  aggregateTransaction.forget(aTransaction);
-
-  return NS_OK;
+  return aggregateTransaction.forget();
 }
 
 already_AddRefed<DeleteTextTransaction>
