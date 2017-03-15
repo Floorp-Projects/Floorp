@@ -8,6 +8,7 @@
 #define mozilla_DataStorage_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
@@ -131,6 +132,8 @@ public:
 
   // Set the cached copy of our DataStorage entries in the content process.
   static void SetCachedStorageEntries(const InfallibleTArray<mozilla::dom::DataStorageEntry>& aEntries);
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
   explicit DataStorage(const nsString& aFilename);

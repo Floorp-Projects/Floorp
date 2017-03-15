@@ -119,7 +119,7 @@ using JS::ToUint32;
 #define JS_ADDRESSOF_VA_LIST(ap) (&(ap))
 #endif
 
-bool
+JS_PUBLIC_API(bool)
 JS::CallArgs::requireAtLeast(JSContext* cx, const char* fnname, unsigned required) const
 {
     if (length() < required) {
@@ -3147,7 +3147,7 @@ JS_DefineConstIntegers(JSContext* cx, HandleObject obj, const JSConstIntegerSpec
     return DefineConstScalar(cx, obj, cis);
 }
 
-bool
+JS_PUBLIC_API(bool)
 JSPropertySpec::getValue(JSContext* cx, MutableHandleValue vp) const
 {
     MOZ_ASSERT(!isAccessor());
@@ -6414,7 +6414,7 @@ JSErrorNotes::addNoteUTF8(JSContext* cx,
     return true;
 }
 
-size_t
+JS_PUBLIC_API(size_t)
 JSErrorNotes::length()
 {
     return notes_.length();
@@ -6439,13 +6439,13 @@ JSErrorNotes::copy(JSContext* cx)
     return copiedNotes;
 }
 
-JSErrorNotes::iterator
+JS_PUBLIC_API(JSErrorNotes::iterator)
 JSErrorNotes::begin()
 {
     return iterator(notes_.begin());
 }
 
-JSErrorNotes::iterator
+JS_PUBLIC_API(JSErrorNotes::iterator)
 JSErrorNotes::end()
 {
     return iterator(notes_.end());
