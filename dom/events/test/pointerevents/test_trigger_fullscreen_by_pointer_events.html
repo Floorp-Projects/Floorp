@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for triggering Fullscreen by pointer events</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="target" style="width: 50px; height: 50px; background: green"></div>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+var target = document.getElementById("target");
+target.addEventListener("pointerdown", () => {
+  target.requestFullscreen();
+  target.addEventListener("pointerdown", () => {
+    document.exitFullscreen();
+  }, {once: true});
+}, {once: true});
+
+document.addEventListener("fullscreenchange", () => {
+  if (document.fullscreenElement) {
+    ok(document.fullscreenElement, target, "fullscreenElement should be the div element");
+    // synthesize mouse events to generate pointer events and leave full screen.
+    synthesizeMouseAtCenter(target, { type: "mousedown" });
+    synthesizeMouseAtCenter(target, { type: "mouseup" });
+  } else {
+    SimpleTest.finish();
+  }
+});
+
+function startTest() {
+  // synthesize mouse events to generate pointer events and enter full screen.
+  synthesizeMouseAtCenter(target, { type: "mousedown" });
+  synthesizeMouseAtCenter(target, { type: "mouseup" });
+}
+
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPrefEnv({
+    "set": [
+      ["full-screen-api.unprefix.enabled", true],
+      ["full-screen-api.allow-trusted-requests-only", false],
+      ["dom.w3c_pointer_events.enabled", true]
+    ]
+  }, startTest);
+});
+
+</script>
+</body>
+</html>
