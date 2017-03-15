@@ -2208,7 +2208,8 @@ async function installManifest(browser, manifestUrl, iconSize) {
       type: "Website:AppInstalled",
       icon,
       name: manifest.name,
-      start_url: manifest.start_url
+      start_url: manifest.start_url,
+      manifest_path: manifest.path
     });
   } catch (err) {
     Cu.reportError("Failed to install: " + err.message);

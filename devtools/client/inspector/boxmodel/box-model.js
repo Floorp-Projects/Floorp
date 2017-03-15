@@ -298,6 +298,10 @@ BoxModel.prototype = {
           }
         }
 
+        if (property.substring(0, 9) == "position-") {
+          properties[0].name = property.substring(9);
+        }
+
         session.setProperties(properties).catch(e => console.error(e));
       },
       done: (value, commit) => {
