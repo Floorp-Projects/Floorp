@@ -539,14 +539,7 @@
           return this.markupDocumentViewer.fullZoom;
         ]]></getter>
         <setter><![CDATA[
-          let changed = val.toFixed(2) != this.markupDocumentViewer.fullZoom.toFixed(2);
-
           this.markupDocumentViewer.fullZoom = val;
-
-          if (changed) {
-            let event = new Event("FullZoomChange", {bubbles: true});
-            this.dispatchEvent(event);
-          }
         ]]></setter>
       </property>
 
