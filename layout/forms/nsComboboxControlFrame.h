@@ -123,6 +123,11 @@ public:
 
   virtual nsContainerFrame* GetContentInsertionFrame() override;
 
+  // Update the style on the block wrappers around our kids.
+  void DoUpdateStyleOfOwnedAnonBoxes(mozilla::ServoStyleSet& aStyleSet,
+                                     nsStyleChangeList& aChangeList,
+                                     nsChangeHint aHintForThisFrame) override;
+
   // nsIFormControlFrame
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) override;
   /**
