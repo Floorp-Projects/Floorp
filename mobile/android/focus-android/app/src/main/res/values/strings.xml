@@ -81,6 +81,9 @@
     <string name="preference_mozilla_telemetry">Send anonymous usage data</string>
     <string name="preference_mozilla_telemetry_summary">Learn more</string>
 
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">About %1$s</string>
+
     <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
     <string name="content_description_clear_input">Clear input</string>
 

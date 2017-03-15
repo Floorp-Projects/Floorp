@@ -75,7 +75,10 @@
             android:defaultValue="true"
             android:summary="@string/preference_mozilla_telemetry_summary" />
 
-        <Preference
+        <!-- AboutPreference performs some string substitutions, so that we can show "About <AppName>".
+             We keep a plain "About" as the title here in xml as a fallback, but AboutPreference
+             will use the substitution regardless of what is set here. -->
+        <org.mozilla.focus.widget.AboutPreference
             android:layout="@layout/focus_preference"
             android:title="@string/menu_about" />
 
