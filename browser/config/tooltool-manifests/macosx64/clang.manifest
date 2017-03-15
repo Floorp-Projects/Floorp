@@ -1,35 +1,35 @@
 [
-{
-"version": "clang 3.9.0",
-"size": 184678304,
-"digest": "cfde9a0f7f59823200f94422b4adb9a2fb5d4d07f240bbd1142c792434f6a1cbb4096d25c9853d77008fc40db0d827daa7003e78016f51241f621d6040ccc635",
-"algorithm": "sha512",
-"filename": "clang.tar.bz2",
-"unpack": true
-},
-{
-"version": "rustc 1.15.1 (021bd294c 2017-02-08) repack",
-"size": 122706608,
-"digest": "b9ae830cfe24430907490cd58f8215447667fb8f1f052d6e78c8ecd7aadfbc92f75a404774d4cc7b30a46b756275209c2fe2723473704b3bce7ffee908e353a8",
-"algorithm": "sha512",
-"filename": "rustc.tar.bz2",
-"unpack": true
-},
-{
-"version": "sccache rev b21198a7183a2fe226ff49348b1c0b51bae9f4f8",
-"algorithm": "sha512",
-"visibility": "public",
-"filename": "sccache2.tar.bz2",
-"unpack": true,
-"digest": "a285c7c6468ad7438262dfec90f65981e84abf2adbb1aa075c0ec1759b4f98ce5d5f14a3d555274f970704210a00738ba7d95db2fc320f7780e6b99bcb0ffb6c",
-"size": 1143715
-},
-{
-"version": "cctools port from commit hash 84ce22dbb22a26ce7f392e9de0ee39c2efe6fd68",
-"size": 2174783,
-"digest": "8678348faff8f344b377075007975ae77a55a2a73488e36950a43c8ec27a79970cd8e34003e33e756a57d9cbf5c3e2e4461184102c6c03f793377a4d250a7f24",
-"algorithm": "sha512",
-"filename": "cctools.tar.bz2",
-"unpack": true
-}
+  {
+    "version": "clang 3.9.0",
+    "size": 184678304,
+    "digest": "cfde9a0f7f59823200f94422b4adb9a2fb5d4d07f240bbd1142c792434f6a1cbb4096d25c9853d77008fc40db0d827daa7003e78016f51241f621d6040ccc635",
+    "algorithm": "sha512",
+    "filename": "clang.tar.bz2",
+    "unpack": true
+  },
+  {
+    "version": "rustc 1.15.1 (021bd294c 2017-02-08) repack",
+    "size": 122706608,
+    "digest": "b9ae830cfe24430907490cd58f8215447667fb8f1f052d6e78c8ecd7aadfbc92f75a404774d4cc7b30a46b756275209c2fe2723473704b3bce7ffee908e353a8",
+    "algorithm": "sha512",
+    "filename": "rustc.tar.bz2",
+    "unpack": true
+  },
+  {
+    "version": "sccache rev b21198a7183a2fe226ff49348b1c0b51bae9f4f8",
+    "algorithm": "sha512",
+    "visibility": "public",
+    "filename": "sccache2.tar.bz2",
+    "unpack": true,
+    "digest": "a285c7c6468ad7438262dfec90f65981e84abf2adbb1aa075c0ec1759b4f98ce5d5f14a3d555274f970704210a00738ba7d95db2fc320f7780e6b99bcb0ffb6c",
+    "size": 1143715
+  },
+  {
+    "version": "cctools port from commit hash 84ce22dbb22a26ce7f392e9de0ee39c2efe6fd68",
+    "size": 2174783,
+    "digest": "8678348faff8f344b377075007975ae77a55a2a73488e36950a43c8ec27a79970cd8e34003e33e756a57d9cbf5c3e2e4461184102c6c03f793377a4d250a7f24",
+    "algorithm": "sha512",
+    "filename": "cctools.tar.bz2",
+    "unpack": true
+  }
 ]
