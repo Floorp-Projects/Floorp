@@ -5,8 +5,8 @@
 == dynamic-attr-01.html dynamic-attr-01.html
 fails == dynamic-button-01a.html dynamic-button-01a.html
 fails == dynamic-button-01b.html dynamic-button-01b.html
-fails == dynamic-fieldset-01a.html dynamic-fieldset-01a.html
-fails == dynamic-fieldset-01b.html dynamic-fieldset-01b.html
+== dynamic-fieldset-01a.html dynamic-fieldset-01a.html
+== dynamic-fieldset-01b.html dynamic-fieldset-01b.html
 == dynamic-restyle-01.html dynamic-restyle-01.html
 == dynamic-table-cell-01a.html dynamic-table-cell-01a.html
 == dynamic-table-cell-01b.html dynamic-table-cell-01b.html

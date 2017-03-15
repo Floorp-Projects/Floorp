@@ -24,7 +24,7 @@ fuzzy(2,440) == boxshadow-skiprect.html boxshadow-skiprect.html
 == boxshadow-color-rounding.html boxshadow-color-rounding.html
 == boxshadow-color-rounding-middle.html boxshadow-color-rounding-middle.html
 fuzzy-if(OSX==1010,1,24) fuzzy-if(d2d,16,908) == boxshadow-large-border-radius.html boxshadow-large-border-radius.html
-fails == boxshadow-border-radius-int.html boxshadow-border-radius-int.html
+== boxshadow-border-radius-int.html boxshadow-border-radius-int.html
 == boxshadow-inset-neg-spread.html boxshadow-inset-neg-spread.html
 == boxshadow-inset-neg-spread2.html boxshadow-inset-neg-spread2.html
 fails == boxshadow-rotated.html boxshadow-rotated.html
