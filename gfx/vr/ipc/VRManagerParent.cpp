@@ -242,14 +242,6 @@ VRManagerParent::RecvRefreshDisplays()
 }
 
 mozilla::ipc::IPCResult
-VRManagerParent::RecvGetDisplays(nsTArray<VRDisplayInfo> *aDisplays)
-{
-  VRManager* vm = VRManager::Get();
-  vm->GetVRDisplayInfo(*aDisplays);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 VRManagerParent::RecvResetSensor(const uint32_t& aDisplayID)
 {
   VRManager* vm = VRManager::Get();
