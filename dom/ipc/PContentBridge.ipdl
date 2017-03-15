@@ -9,7 +9,8 @@ include protocol PBrowser;
 include protocol PContent;
 include protocol PJavaScript;
 include protocol PFileDescriptorSet;
-include protocol PSendStream;
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
 
 include DOMTypes;
 include JavaScriptTypes;
@@ -38,7 +39,11 @@ nested(upto inside_cpow) sync protocol PContentBridge
     manages PBrowser;
     manages PFileDescriptorSet;
     manages PJavaScript;
-    manages PSendStream;
+    manages PChildToParentStream;
+    manages PParentToChildStream;
+
+child:
+    async PParentToChildStream();
 
 parent:
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
@@ -47,7 +52,7 @@ parent:
 
     async PJavaScript();
 
-    async PSendStream();
+    async PChildToParentStream();
 
 both:
     // Both the parent and the child can construct the PBrowser.

@@ -26,7 +26,8 @@ include protocol PGMPService;
 include protocol PPluginModule;
 include protocol PGMP;
 include protocol PPrinting;
-include protocol PSendStream;
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
 include protocol POfflineCacheUpdate;
 include protocol PRenderFrame;
 include protocol PScreenManager;
@@ -286,7 +287,8 @@ nested(upto inside_cpow) sync protocol PContent
     manages PNecko;
     manages POfflineCacheUpdate;
     manages PPrinting;
-    manages PSendStream;
+    manages PChildToParentStream;
+    manages PParentToChildStream;
     manages PScreenManager;
     manages PSpeechSynthesis;
     manages PStorage;
@@ -587,6 +589,8 @@ child:
 
     async ParentActivated(PBrowser aTab, bool aActivated);
 
+    async PParentToChildStream();
+
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
@@ -701,7 +705,7 @@ parent:
 
     async PPrinting();
 
-    async PSendStream();
+    async PChildToParentStream();
 
     nested(inside_sync) sync PScreenManager()
         returns (uint32_t numberOfScreens,

@@ -5,16 +5,19 @@
 /* CSS Variables specific to this panel that aren't defined by the themes */
 .theme-light {
   --rule-highlight-background-color: #ffee99;
+  --rule-overridden-item-border-color: var(--theme-content-color3);
 }
 
 .theme-dark {
   --rule-highlight-background-color: #594724;
+  --rule-overridden-item-border-color: var(--theme-content-color1);
 }
 
 .theme-firebug {
   --rule-highlight-background-color: #ffee99;
   --rule-property-name: darkgreen;
   --rule-property-value: darkblue;
+  --rule-overridden-item-border-color: var(--theme-content-color2);
 }
 
 /* Rule View Tabpanel */
@@ -428,9 +431,9 @@
   top: 0px;
   content: '';
   display: block;
-  border-left: 1px solid var(--theme-highlight-gray);
-  height: 0.7em;
-  border-bottom: 1px solid var(--theme-highlight-gray);
+  border-left: 0.5px solid var(--rule-overridden-item-border-color);
+  height: 0.8em;
+  border-bottom: 0.5px solid var(--rule-overridden-item-border-color);
   width: 10px;
 }
 
@@ -440,7 +443,7 @@
   bottom: -7px;
   content: '';
   display: block;
-  border-left: 1px solid var(--theme-highlight-gray);
+  border-left: 0.5px solid var(--rule-overridden-item-border-color);
   height: 100%;
 }
 

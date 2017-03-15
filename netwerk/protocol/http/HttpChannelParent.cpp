@@ -440,7 +440,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     if (!completeStream) {
       delayAsyncOpen = true;
 
-      // buffer size matches PSendStream transfer size.
+      // buffer size matches PChildToParentStream transfer size.
       const uint32_t kBufferSize = 32768;
 
       nsCOMPtr<nsIStorageStream> storageStream;

@@ -22,7 +22,8 @@ include protocol PBlob; //FIXME: bug #792908
 include protocol PFileDescriptorSet;
 include protocol PDataChannel;
 include protocol PTransportProvider;
-include protocol PSendStream;
+include protocol PChildToParentStream; //FIXME: bug #792908
+include protocol PParentToChildStream; //FIXME: bug #792908
 
 include protocol PRtspController;
 include protocol PRtspChannel;
@@ -145,7 +146,7 @@ child:
 
 both:
   // Actually we need PTCPSocket() for parent. But ipdl disallows us having different
-  // signatures on parent and child. So when constructing the parent side object, we just 
+  // signatures on parent and child. So when constructing the parent side object, we just
   // leave host/port unused.
   async PTCPSocket(nsString host, uint16_t port);
 };

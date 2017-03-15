@@ -3856,7 +3856,7 @@ CodeGenerator::visitOutOfLineCallPostWriteElementBarrier(OutOfLineCallPostWriteE
     masm.passABIArg(runtimereg);
     masm.passABIArg(objreg);
     masm.passABIArg(indexreg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostWriteElementBarrier));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (PostWriteElementBarrier<IndexInBounds::Maybe>)));
 
     restoreLiveVolatile(ool->lir());
 
@@ -10306,8 +10306,8 @@ CodeGenerator::addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, 
                                    Register temp, FloatRegister tempDouble,
                                    FloatRegister tempF32, const ConstantOrRegister& id,
                                    const ConstantOrRegister& value,
-                                   bool strict, bool needsTypeBarrier, bool guardHoles,
-                                   jsbytecode* profilerLeavePc)
+                                   bool strict, bool needsPostBarrier, bool needsTypeBarrier,
+                                   bool guardHoles, jsbytecode* profilerLeavePc)
 {
     CacheKind kind = CacheKind::SetElem;
     if (id.constant() && id.value().isString()) {
@@ -10317,7 +10317,7 @@ CodeGenerator::addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, 
             kind = CacheKind::SetProp;
     }
     IonSetPropertyIC cache(kind, liveRegs, objReg, temp, tempDouble, tempF32,
-                           id, value, strict, needsTypeBarrier, guardHoles);
+                           id, value, strict, needsPostBarrier, needsTypeBarrier, guardHoles);
     addIC(ins, allocateIC(cache));
 }
 
@@ -10467,8 +10467,9 @@ CodeGenerator::visitSetPropertyCache(LSetPropertyCache* ins)
         toConstantOrRegister(ins, LSetPropertyCache::Value, ins->mir()->value()->type());
 
     addSetPropertyCache(ins, liveRegs, objReg, temp, tempDouble, tempF32,
-                        id, value, ins->mir()->strict(), ins->mir()->needsTypeBarrier(),
-                        ins->mir()->guardHoles(), ins->mir()->profilerLeavePc());
+                        id, value, ins->mir()->strict(), ins->mir()->needsPostBarrier(),
+                        ins->mir()->needsTypeBarrier(), ins->mir()->guardHoles(),
+                        ins->mir()->profilerLeavePc());
 }
 
 typedef bool (*ThrowFn)(JSContext*, HandleValue);
