@@ -14,7 +14,7 @@ namespace mozilla {
 
 namespace dom {
 class nsIContentChild;
-class PContentParent;
+class nsIContentParent;
 }
 
 namespace ipc {
@@ -31,7 +31,7 @@ already_AddRefed<nsIInputStream>
 DeserializeIPCStream(const OptionalIPCStream& aValue);
 
 // RAII helper class that serializes an nsIInputStream into an IPCStream struct.
-// Any file descriptor or PSendStream actors are automatically managed
+// Any file descriptor or PChildToParentStream actors are automatically managed
 // correctly.
 //
 // Here is a simple example:
@@ -60,7 +60,7 @@ DeserializeIPCStream(const OptionalIPCStream& aValue);
 //    // Do something with stream...
 //
 //    // You can also serialize streams from parent-to-child as long as
-//    // they don't require PSendStream actor support.
+//    // they don't require PChildToParentStream actor support.
 //    AutoIPCStream anotherStream;
 //    anotherStream.Serialize(mFileStream, Manager());
 //    SendStuffDone(anotherStream.TakeValue());
@@ -101,14 +101,17 @@ DeserializeIPCStream(const OptionalIPCStream& aValue);
 //    /* do something with the nsIInputStream */
 //  }
 //
+// Note: This example is about child-to-parent inputStream, but AutoIPCStream
+// works also parent-to-child.
+//
 // The AutoIPCStream class also supports OptionalIPCStream values.  As long as
 // you did not initialize the object with a non-optional IPCStream, you can call
 // TakeOptionalValue() instead.
 //
 // The AutoIPCStream class can also be used to serialize nsIInputStream objects
 // on the parent side to send to the child.  Currently, however, this only
-// works for directly serializable stream types.  The PSendStream actor mechanism
-// is not supported in this direction yet.
+// works for directly serializable stream types.  The PChildToParentStream actor
+// mechanism is not supported in this direction yet.
 //
 // Like SerializeInputStream(), the AutoIPCStream will crash if
 // serialization cannot be completed.
@@ -146,35 +149,33 @@ public:
   // Serialize the input stream or create a SendStream actor using the PContent
   // manager.  If neither of these succeed, then crash.  This should only be
   // used on the main thread.
-  void
+  bool
   Serialize(nsIInputStream* aStream, dom::nsIContentChild* aManager);
 
   // Serialize the input stream or create a SendStream actor using the
   // PBackground manager.  If neither of these succeed, then crash.  This can
   // be called on the main thread or Worker threads.
-  void
+  bool
   Serialize(nsIInputStream* aStream, PBackgroundChild* aManager);
 
-  // Serialize the input stream.  A PSendStream cannot be used when going
-  // from parent-to-child.
-  void
-  Serialize(nsIInputStream* aStream, dom::PContentParent* aManager);
+  // Serialize the input stream.
+  MOZ_MUST_USE bool
+  Serialize(nsIInputStream* aStream, dom::nsIContentParent* aManager);
 
-  // Serialize the input stream.  A PSendStream cannot be used when going
-  // from parent-to-child.
-  void
+  // Serialize the input stream.
+  MOZ_MUST_USE bool
   Serialize(nsIInputStream* aStream, PBackgroundParent* aManager);
 
   // Get the IPCStream as a non-optional value.  This will
   // assert if a stream has not been serialized or if it has already been taken.
   // This should only be called if the value is being, or has already been, sent
-  // to the parent
+  // to the other side.
   IPCStream&
   TakeValue();
 
   // Get the OptionalIPCStream value.  This will assert if
   // the value has already been taken.  This should only be called if the value
-  // is being, or has already been, sent to the parent
+  // is being, or has already been, sent to the other side.
   OptionalIPCStream&
   TakeOptionalValue();
 };

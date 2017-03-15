@@ -7,6 +7,9 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+const InlineTooltip = require("devtools/client/shared/widgets/tooltip/InlineTooltip");
+
+const INLINE_TOOLTIP_CLASS = "inline-tooltip-container";
 
 /**
  * Base class for all (color, gradient, ...)-swatch based value editors inside
@@ -16,19 +19,30 @@ const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLToolti
  *        The document to attach the SwatchBasedEditorTooltip. This is either the toolbox
  *        document if the tooltip is a popup tooltip or the panel's document if it is an
  *        inline editor.
+ * @param {String} stylesheet
+ *        The stylesheet to be used for the HTMLTooltip.
+ * @param {Boolean} useInline
+ *        A boolean flag representing whether or not the InlineTooltip should be used.
  */
-function SwatchBasedEditorTooltip(document, stylesheet) {
+function SwatchBasedEditorTooltip(document, stylesheet, useInline) {
   EventEmitter.decorate(this);
+
+  this.useInline = useInline;
+
   // Creating a tooltip instance
-  // This one will consume outside clicks as it makes more sense to let the user
-  // close the tooltip by clicking out
-  // It will also close on <escape> and <enter>
-  this.tooltip = new HTMLTooltip(document, {
-    type: "arrow",
-    consumeOutsideClicks: true,
-    useXulWrapper: true,
-    stylesheet
-  });
+  if (useInline) {
+    this.tooltip = new InlineTooltip(document);
+  } else {
+    // This one will consume outside clicks as it makes more sense to let the user
+    // close the tooltip by clicking out
+    // It will also close on <escape> and <enter>
+    this.tooltip = new HTMLTooltip(document, {
+      type: "arrow",
+      consumeOutsideClicks: true,
+      useXulWrapper: true,
+      stylesheet
+    });
+  }
 
   // By default, swatch-based editor tooltips revert value change on <esc> and
   // commit value change on <enter>
@@ -73,9 +87,13 @@ SwatchBasedEditorTooltip.prototype = {
    *         immediately if there is no currently active swatch.
    */
   show: function () {
-    if (this.activeSwatch) {
+    let tooltipAnchor = this.useInline ?
+      this.activeSwatch.closest(`.${INLINE_TOOLTIP_CLASS}`) :
+      this.activeSwatch;
+
+    if (tooltipAnchor) {
       let onShown = this.tooltip.once("shown");
-      this.tooltip.show(this.activeSwatch, "topcenter bottomleft");
+      this.tooltip.show(tooltipAnchor, "topcenter bottomleft");
 
       // When the tooltip is closed by clicking outside the panel we want to
       // commit any changes.
