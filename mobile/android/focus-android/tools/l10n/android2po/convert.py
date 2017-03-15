@@ -902,11 +902,11 @@ def write_xml(tree, warnfunc=dummy_warn):
             # Android's resource processing from turning it into an Android
             # formatted spannable string
             if len(string_el) == 1:
-                text = etree.tostring(string_el[0])
-                if '<ul>' in text:
-                    text = "<![CDATA[" + text + "]]>"
+                text = etree.tostring(string_el[0], xml_declaration=False)
+                # <br is deliberately open: this protects against people using <br> or <br/>
+                if (tag in text for tag in ['<ul>', '<p>', '<br', '<strong>', '<li>']):
                     del(string_el[0])
-                    string_el.text = text
+                    string_el.text = etree.CDATA(text)
 
             root_tags.append(string_el)
 
