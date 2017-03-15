@@ -1,0 +1,23 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script>
+      function draw() {
+        var c = document.getElementById('c').getContext('2d');
+
+        c.fillStyle = 'lime';
+        c.fillRect(0, 0, 100, 50);
+
+        c.fillStyle = 'red';
+        c.fillRect(40, 0, 30, 50);
+
+        c.fillStyle = 'blue';
+        c.fillRect(70, 0, 30, 50);
+      }
+    </script>
+  </head>
+  <body onload="draw();">
+    <canvas id='c' width='100' height='50'></canvas>
+  </body>
+</html>

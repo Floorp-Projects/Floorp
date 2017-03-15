@@ -1,0 +1,33 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script>
+      function draw() {
+        var c = document.getElementById('c').getContext('2d');
+
+        c.fillStyle = 'lime';
+        c.fillRect(0, 0, 100, 50);
+
+        var imgdata = c.createImageData(60, 50);
+        for (var i = 0; i < imgdata.data.length; i += 4 * 60) {
+            for (var x = i; x < i + 4 * 30; x += 4) {
+                imgdata.data[x] = 255;
+                imgdata.data[x+3] = 255;
+            }
+            for (var x = i + 4 * 30; x < i + 4 * 60; x += 4) {
+                imgdata.data[x+2] = 255;
+                imgdata.data[x+3] = 255;
+            }
+        }
+
+        // Verify that putImageData is not affected by the current transform.
+        c.translate(20, 0);
+        c.putImageData(imgdata, 40, 0);
+      }
+    </script>
+  </head>
+  <body onload="draw();">
+    <canvas id='c' width='100' height='50'></canvas>
+  </body>
+</html>
