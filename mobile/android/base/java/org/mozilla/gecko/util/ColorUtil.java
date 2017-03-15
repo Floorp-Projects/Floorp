@@ -29,6 +29,19 @@ public class ColorUtil {
         }
     }
 
+    public static Integer parseStringColor(final String color) {
+        try {
+            if (color.length() < 7) {
+                return null;
+            }
+            return Color.argb(255,
+                    Integer.valueOf(color.substring(1, 3), 16),
+                    Integer.valueOf(color.substring(3, 5), 16),
+                    Integer.valueOf(color.substring(5, 7), 16));
+        } catch (NumberFormatException e) { }
+        return null;
+    }
+
     private static int darkenColor(final int color, final double fraction) {
         return (int) Math.max(color - (color * fraction), 0);
     }

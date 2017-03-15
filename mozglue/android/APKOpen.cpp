@@ -477,5 +477,9 @@ ChildProcessInit(int argc, char* argv[])
 extern "C" APKOPEN_EXPORT jboolean MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_GeckoLoader_neonCompatible(JNIEnv *jenv, jclass jc)
 {
+#ifdef __ARM_EABI__
   return mozilla::supports_neon();
+#else
+  return true;
+#endif // __ARM_EABI__
 }
