@@ -106,8 +106,10 @@ public:
   size_t GetStackCount() const;
   size_t SizeOfExcludingThis() const;
 
+#if defined(ENABLE_STACK_CAPTURE)
   /** Clears the contents of vectors and resets the index. */
   void Clear();
+#endif
 private:
   std::vector<Telemetry::ProcessedStack::Module> mModules;
   // A circular buffer to hold the stacks.
@@ -214,12 +216,14 @@ ComputeAnnotationsKey(const HangAnnotationsPtr& aAnnotations, nsAString& aKeyOut
   return NS_OK;
 }
 
+#if defined(ENABLE_STACK_CAPTURE)
 void
 CombinedStacks::Clear() {
   mNextIndex = 0;
   mStacks.clear();
   mModules.clear();
 }
+#endif
 
 class HangReports {
 public:
@@ -256,10 +260,12 @@ public:
     void operator=(const AnnotationInfo& aOther) = delete;
   };
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+#if defined(MOZ_GECKO_PROFILER)
   void AddHang(const Telemetry::ProcessedStack& aStack, uint32_t aDuration,
                int32_t aSystemUptime, int32_t aFirefoxUptime,
                HangAnnotationsPtr aAnnotations);
   void PruneStackReferences(const size_t aRemovedStackIndex);
+#endif
   uint32_t GetDuration(unsigned aIndex) const;
   int32_t GetSystemUptime(unsigned aIndex) const;
   int32_t GetFirefoxUptime(unsigned aIndex) const;
@@ -283,6 +289,7 @@ private:
   CombinedStacks mStacks;
 };
 
+#if defined(MOZ_GECKO_PROFILER)
 void
 HangReports::AddHang(const Telemetry::ProcessedStack& aStack,
                      uint32_t aDuration,
@@ -356,6 +363,7 @@ HangReports::PruneStackReferences(const size_t aRemovedStackIndex) {
     }
   }
 }
+#endif
 
 size_t
 HangReports::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
