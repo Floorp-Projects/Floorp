@@ -319,11 +319,12 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
         EXPECT_EQ(tests[test].mWidth, videoInfo->mDisplay.width);
         EXPECT_EQ(tests[test].mHeight, videoInfo->mDisplay.height);
 
-        UniquePtr<IndiceWrapper> indices = metadata.GetTrackIndice(videoInfo->mTrackId);
-        EXPECT_TRUE(!!indices);
-        for (size_t i = 0; i < indices->Length(); i++) {
+        MP4Metadata::ResultAndIndice indices =
+          metadata.GetTrackIndice(videoInfo->mTrackId);
+        EXPECT_TRUE(!!indices.Ref());
+        for (size_t i = 0; i < indices.Ref()->Length(); i++) {
           Index::Indice data;
-          EXPECT_TRUE(indices->GetIndice(i, data));
+          EXPECT_TRUE(indices.Ref()->GetIndice(i, data));
           EXPECT_TRUE(data.start_offset <= data.end_offset);
           EXPECT_TRUE(data.start_composition <= data.end_composition);
         }
@@ -344,11 +345,12 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
           MOZ_RELEASE_ASSERT(false);
         }
 
-        UniquePtr<IndiceWrapper> indices = metadata.GetTrackIndice(audioInfo->mTrackId);
-        EXPECT_TRUE(!!indices);
-        for (size_t i = 0; i < indices->Length(); i++) {
+        MP4Metadata::ResultAndIndice indices =
+          metadata.GetTrackIndice(audioInfo->mTrackId);
+        EXPECT_TRUE(!!indices.Ref());
+        for (size_t i = 0; i < indices.Ref()->Length(); i++) {
           Index::Indice data;
-          EXPECT_TRUE(indices->GetIndice(i, data));
+          EXPECT_TRUE(indices.Ref()->GetIndice(i, data));
           EXPECT_TRUE(data.start_offset <= data.end_offset);
           EXPECT_TRUE(int64_t(data.start_composition) <= int64_t(data.end_composition));
         }
