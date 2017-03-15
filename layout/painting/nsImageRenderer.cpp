@@ -509,10 +509,13 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     }
     case eStyleImageType_Gradient:
     {
-      nsCSSGradientRenderer::Paint(aPresContext, *ctx,
-                                   mGradientData, aDirtyRect,
-                                   aDest, aFill, aRepeatSize, aSrc, mSize,
-                                   aOpacity);
+      Maybe<nsCSSGradientRenderer> renderer =
+        nsCSSGradientRenderer::Create(aPresContext, mGradientData,
+                                      aDest, aFill, aRepeatSize, aSrc, mSize);
+
+      if (renderer) {
+        renderer->Paint(*ctx, aDirtyRect, aOpacity);
+      }
       break;
     }
     case eStyleImageType_Element:
