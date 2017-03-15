@@ -334,6 +334,12 @@ private:
     void EnsureClauseArray();
 
     /**
+     * ReplaceNativeLineBreakers() replaces "\r\n" and "\r" to "\n" and adjust
+     * each clause information and the caret information.
+     */
+    void ReplaceNativeLineBreakers();
+
+    /**
      * AdjustRange() adjusts aRange as in the string with XP line breakers.
      *
      * @param aRange            The reference to a range in aNativeString.
