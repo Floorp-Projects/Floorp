@@ -647,20 +647,18 @@ nsPermissionManager::PermissionKey::CreateFromPrincipal(nsIPrincipal* aPrincipal
   }
 
 #ifdef DEBUG
-  // Creating a PermissionsKey to look up a permission if we haven't had those keys
-  // synced down yet is problematic, so we do a check here and emit an assertion if
-  // we see it happening.
+  // Creating a PermissionsKey to look up a permission if we haven't had those
+  // keys synced down yet is problematic, so we do a check here and crash on
+  // debug builds if we see it happening.
   if (XRE_IsContentProcess()) {
     nsAutoCString permissionKey;
     GetKeyForPrincipal(aPrincipal, permissionKey);
 
-    // NOTE: Theoretically an addon could ask for permissions which the process
-    // wouldn't have access to, and we wouldn't want to crash the process in
-    // this case, but our chrome code should never do this. Using NS_ASSERTION
-    // here so that we can test fetching unavaliable permissions in tests.
-    NS_ASSERTION(gPermissionManager->mAvailablePermissionKeys.Contains(permissionKey),
-                 nsPrintfCString("This content process hasn't received the "
+    if (!gPermissionManager->mAvailablePermissionKeys.Contains(permissionKey)) {
+      NS_WARNING(nsPrintfCString("This content process hasn't received the "
                                  "permissions for %s yet", permissionKey.get()).get());
+      MOZ_CRASH("The content process hasn't recieved permissions for an origin yet.");
+    }
   }
 #endif
 
