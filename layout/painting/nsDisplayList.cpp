@@ -4566,9 +4566,7 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
   LayersBackend backend = aManager->GetBackendType();
   if (backend == layers::LayersBackend::LAYERS_WR) {
     if (br) {
-      bool hasCompositeColors;
-      br->AllBordersSolid(&hasCompositeColors);
-      if (hasCompositeColors) {
+      if (!br->CanCreateWebrenderCommands()) {
         return LAYER_NONE;
       }
       mBorderRenderer = br;
