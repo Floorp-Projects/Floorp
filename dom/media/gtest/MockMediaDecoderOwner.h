@@ -54,6 +54,7 @@ public:
     // Non-DocGroup version for Mock.
     return AbstractThread::MainThread();
   }
+  nsIDocument* GetDocument() const { return nullptr; }
 };
 }
 
