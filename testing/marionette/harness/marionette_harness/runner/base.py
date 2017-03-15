@@ -1072,7 +1072,7 @@ class BaseMarionetteTestRunner(object):
 
         if hasattr(self, 'marionette') and self.marionette:
             if self.marionette.instance is not None:
-                self.marionette.instance.close()
+                self.marionette.instance.close(clean=True)
                 self.marionette.instance = None
 
             self.marionette.cleanup()
