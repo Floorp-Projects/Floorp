@@ -158,8 +158,12 @@ ZoomConstraintsClient::Observe(nsISupports* aSubject, const char* aTopic, const 
     // We need to run this later because all the pref change listeners need
     // to execute before we can be guaranteed that gfxPrefs::ForceUserScalable()
     // returns the updated value.
-    NS_DispatchToMainThread(NewRunnableMethod(
-      this, &ZoomConstraintsClient::RefreshZoomConstraints));
+
+    RefPtr<nsRunnableMethod<ZoomConstraintsClient>> event =
+      NewRunnableMethod(this, &ZoomConstraintsClient::RefreshZoomConstraints);
+    mDocument->Dispatch("ZoomConstraintsClient::RefreshZoomConstraints",
+                        TaskCategory::Other,
+                        event.forget());
   }
   return NS_OK;
 }
