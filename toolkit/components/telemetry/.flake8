@@ -1,5 +1,5 @@
 [flake8]
 # See http://pep8.readthedocs.io/en/latest/intro.html#configuration
-ignore = E121, E123, E126, E129, E133, E226, E241, E242, E704, W503, E402, E128, E501, E713, E222, E201, E202, W602, E127, W601
+ignore = E121, E123, E126, E129, E133, E226, E241, E242, E704, W503, E402, E128, E501, E713, E222, E202, W602, E127, W601
 max-line-length = 99
 filename = *.py, +.lint
