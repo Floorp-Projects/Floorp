@@ -63,6 +63,7 @@ std::ostream& operator<<(std::ostream& aStream,
   switch (aHint) {
     AC_PROCESS_ENUM_TO_STREAM(UpdateCaretsHint::Default);
     AC_PROCESS_ENUM_TO_STREAM(UpdateCaretsHint::RespectOldAppearance);
+    AC_PROCESS_ENUM_TO_STREAM(UpdateCaretsHint::DispatchNoEvent);
   }
   return aStream;
 }
@@ -223,7 +224,7 @@ AccessibleCaretManager::HideCarets()
 }
 
 void
-AccessibleCaretManager::UpdateCarets(UpdateCaretsHint aHint)
+AccessibleCaretManager::UpdateCarets(UpdateCaretsHintSet aHint)
 {
   FlushLayout();
   if (IsTerminated()) {
@@ -284,7 +285,7 @@ AccessibleCaretManager::HasNonEmptyTextContent(nsINode* aNode) const
 }
 
 void
-AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHint aHint)
+AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHintSet aHints)
 {
   AC_LOG("%s, selection: %p", __FUNCTION__, GetSelection());
 
@@ -295,44 +296,36 @@ AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHint aHint)
     return;
   }
 
-  bool oldSecondCaretVisible = mSecondCaret->IsLogicallyVisible();
   PositionChangedResult result = mFirstCaret->SetPosition(frame, offset);
 
   switch (result) {
     case PositionChangedResult::NotChanged:
-      // Do nothing
-      break;
-
     case PositionChangedResult::Changed:
-      switch (aHint) {
-        case UpdateCaretsHint::Default:
-          if (HasNonEmptyTextContent(GetEditingHostForFrame(frame))) {
+      if (aHints == UpdateCaretsHint::Default) {
+        if (HasNonEmptyTextContent(GetEditingHostForFrame(frame))) {
+          mFirstCaret->SetAppearance(Appearance::Normal);
+        } else if (sCaretShownWhenLongTappingOnEmptyContent) {
+          if (mFirstCaret->IsLogicallyVisible()) {
+            // Possible cases are: 1) SelectWordOrShortcut() sets the
+            // appearance to Normal. 2) When the caret is out of viewport and
+            // now scrolling into viewport, it has appearance NormalNotShown.
             mFirstCaret->SetAppearance(Appearance::Normal);
-          } else if (sCaretShownWhenLongTappingOnEmptyContent) {
-            if (mFirstCaret->IsLogicallyVisible()) {
-              // Possible cases are: 1) SelectWordOrShortcut() sets the
-              // appearance to Normal. 2) When the caret is out of viewport and
-              // now scrolling into viewport, it has appearance NormalNotShown.
-              mFirstCaret->SetAppearance(Appearance::Normal);
-            } else {
-              // Possible cases are: a) Single tap on current empty content;
-              // OnSelectionChanged() sets the appearance to None due to
-              // MOUSEDOWN_REASON. b) Single tap on other empty content;
-              // OnBlur() sets the appearance to None.
-              //
-              // Do nothing to make the appearance remains None so that it can
-              // be distinguished from case 2). Also do not set the appearance
-              // to NormalNotShown here like the default update behavior.
-            }
           } else {
-            mFirstCaret->SetAppearance(Appearance::NormalNotShown);
+            // Possible cases are: a) Single tap on current empty content;
+            // OnSelectionChanged() sets the appearance to None due to
+            // MOUSEDOWN_REASON. b) Single tap on other empty content;
+            // OnBlur() sets the appearance to None.
+            //
+            // Do nothing to make the appearance remains None so that it can
+            // be distinguished from case 2). Also do not set the appearance
+            // to NormalNotShown here like the default update behavior.
           }
-          break;
-
-        case UpdateCaretsHint::RespectOldAppearance:
-          // Do nothing to preserve the appearance of the caret set by the
-          // caller.
-          break;
+        } else {
+          mFirstCaret->SetAppearance(Appearance::NormalNotShown);
+        }
+      } else if (aHints.contains(UpdateCaretsHint::RespectOldAppearance)) {
+        // Do nothing to preserve the appearance of the caret set by the
+        // caller.
       }
       break;
 
@@ -346,14 +339,14 @@ AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHint aHint)
 
   LaunchCaretTimeoutTimer();
 
-  if ((result != PositionChangedResult::NotChanged || oldSecondCaretVisible) &&
+  if (!aHints.contains(UpdateCaretsHint::DispatchNoEvent) &&
       !mActiveCaret) {
     DispatchCaretStateChangedEvent(CaretChangedReason::Updateposition);
   }
 }
 
 void
-AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
+AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHintSet aHints)
 {
   AC_LOG("%s: selection: %p", __FUNCTION__, GetSelection());
 
@@ -371,27 +364,20 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
     return;
   }
 
-  auto updateSingleCaret = [aHint](AccessibleCaret* aCaret, nsIFrame* aFrame,
-                                   int32_t aOffset) -> PositionChangedResult
+  auto updateSingleCaret = [aHints](AccessibleCaret* aCaret, nsIFrame* aFrame,
+                                    int32_t aOffset) -> PositionChangedResult
   {
     PositionChangedResult result = aCaret->SetPosition(aFrame, aOffset);
     aCaret->SetSelectionBarEnabled(sSelectionBarEnabled);
 
     switch (result) {
       case PositionChangedResult::NotChanged:
-        // Do nothing
-        break;
-
       case PositionChangedResult::Changed:
-        switch (aHint) {
-          case UpdateCaretsHint::Default:
-            aCaret->SetAppearance(Appearance::Normal);
-            break;
-
-          case UpdateCaretsHint::RespectOldAppearance:
-            // Do nothing to preserve the appearance of the caret set by the
-            // caller.
-            break;
+        if (aHints == UpdateCaretsHint::Default) {
+          aCaret->SetAppearance(Appearance::Normal);
+        } else if (aHints.contains(UpdateCaretsHint::RespectOldAppearance)) {
+          // Do nothing to preserve the appearance of the caret set by the
+          // caller.
         }
         break;
 
@@ -416,7 +402,7 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
     }
   }
 
-  if (aHint == UpdateCaretsHint::Default) {
+  if (aHints == UpdateCaretsHint::Default) {
     // Only check for tilt carets with default update hint. Otherwise we might
     // override the appearance set by the caller.
     if (sCaretsAlwaysTilt) {
@@ -426,7 +412,8 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
     }
   }
 
-  if (!mActiveCaret) {
+  if (!aHints.contains(UpdateCaretsHint::DispatchNoEvent) &&
+      !mActiveCaret) {
     DispatchCaretStateChangedEvent(CaretChangedReason::Updateposition);
   }
 }
@@ -666,6 +653,8 @@ AccessibleCaretManager::OnScrollStart()
 {
   AC_LOG("%s", __FUNCTION__);
 
+  mIsScrollStarted = true;
+
   if (!sCaretsAlwaysShowWhenScrolling) {
     // Backup the appearance so that we can restore them after the scrolling
     // ends.
@@ -688,6 +677,8 @@ AccessibleCaretManager::OnScrollEnd()
   if (mLastUpdateCaretMode != GetCaretMode()) {
     return;
   }
+
+  mIsScrollStarted = false;
 
   if (!sCaretsAlwaysShowWhenScrolling) {
     // Restore the appearance which is saved before the scrolling is started.
@@ -723,8 +714,17 @@ AccessibleCaretManager::OnScrollPositionChanged()
   }
 
   if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
-    AC_LOG("%s: UpdateCarets(RespectOldAppearance)", __FUNCTION__);
-    UpdateCarets(UpdateCaretsHint::RespectOldAppearance);
+    if (mIsScrollStarted) {
+      // We don't want extra CaretStateChangedEvents dispatched when user is
+      // scrolling the page.
+      AC_LOG("%s: UpdateCarets(RespectOldAppearance | DispatchNoEvent)",
+             __FUNCTION__);
+      UpdateCarets({ UpdateCaretsHint::RespectOldAppearance,
+                     UpdateCaretsHint::DispatchNoEvent });
+    } else {
+      AC_LOG("%s: UpdateCarets(RespectOldAppearance)", __FUNCTION__);
+      UpdateCarets(UpdateCaretsHint::RespectOldAppearance);
+    }
   }
 }
 

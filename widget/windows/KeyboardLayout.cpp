@@ -1224,6 +1224,7 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
   , mIsExtended(false)
   , mIsDeadKey(false)
   , mCharMessageHasGone(false)
+  , mCanIgnoreModifierStateAtKeyPress(true)
   , mFakeCharMsgs(aFakeCharMsgs && aFakeCharMsgs->Length() ?
                     aFakeCharMsgs : nullptr)
 {
@@ -3381,7 +3382,7 @@ NativeKey::DispatchKeyPressEventsWithRetrievedCharMessages() const
     ("%p   NativeKey::DispatchKeyPressEventsWithRetrievedCharMessages(), "
      "initializing keypress event...", this));
   ModifierKeyState modKeyState(mModKeyState);
-  if (IsFollowedByPrintableCharMessage()) {
+  if (mCanIgnoreModifierStateAtKeyPress && IsFollowedByPrintableCharMessage()) {
     // If eKeyPress event should cause inputting text in focused editor,
     // we need to remove Alt and Ctrl state.
     modKeyState.Unset(MODIFIER_ALT | MODIFIER_CONTROL);
@@ -3491,15 +3492,17 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
     // Set modifier state from mCommittedCharsAndModifiers because some of them
     // might be different.  For example, Shift key was pressed at inputting
     // dead char but Shift key was released before inputting next character.
-    ModifierKeyState modKeyState(mModKeyState);
-    modKeyState.Unset(MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT |
-                      MODIFIER_ALTGRAPH | MODIFIER_CAPSLOCK);
-    modKeyState.Set(mCommittedCharsAndModifiers.ModifiersAt(aIndex));
-    modKeyState.InitInputEvent(aKeyboardEvent);
-    MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
-      ("%p   NativeKey::WillDispatchKeyboardEvent(), "
-       "setting %uth modifier state to %s",
-       this, aIndex + 1, ToString(modKeyState).get()));
+    if (mCanIgnoreModifierStateAtKeyPress) {
+      ModifierKeyState modKeyState(mModKeyState);
+      modKeyState.Unset(MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT |
+                        MODIFIER_ALTGRAPH | MODIFIER_CAPSLOCK);
+      modKeyState.Set(mCommittedCharsAndModifiers.ModifiersAt(aIndex));
+      modKeyState.InitInputEvent(aKeyboardEvent);
+      MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
+        ("%p   NativeKey::WillDispatchKeyboardEvent(), "
+         "setting %uth modifier state to %s",
+         this, aIndex + 1, ToString(modKeyState).get()));
+    }
   }
   size_t longestLength =
     std::max(mInputtingStringAndModifiers.Length(),
@@ -3796,6 +3799,25 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
       aNativeKey.
         InitCommittedCharsAndModifiersWithFollowingCharMessages(aModKeyState);
       MOZ_ASSERT(!aNativeKey.mCommittedCharsAndModifiers.IsEmpty());
+
+      // Currently, we are doing a ugly hack to keypress events to cause
+      // inputting character even if Ctrl or Alt key is pressed, that is, we
+      // remove Ctrl and Alt modifier state from keypress event.  However, for
+      // example, Ctrl+Space which causes ' ' of WM_CHAR message never causes
+      // keypress event whose ctrlKey is true.  For preventing this problem,
+      // we should mark as not removable if Ctrl or Alt key does not cause
+      // changing inputting character.
+      if (IsPrintableCharKey(aNativeKey.mOriginalVirtualKeyCode) &&
+          !aModKeyState.IsAltGr() &&
+          (aModKeyState.IsControl() || aModKeyState.IsAlt())) {
+        ModifierKeyState state = aModKeyState;
+        state.Unset(MODIFIER_ALT | MODIFIER_CONTROL);
+        UniCharsAndModifiers charsWithoutModifier =
+          GetUniCharsAndModifiers(aNativeKey.mOriginalVirtualKeyCode, state);
+        aNativeKey.mCanIgnoreModifierStateAtKeyPress =
+          !charsWithoutModifier.UniCharsEqual(
+                                  aNativeKey.mCommittedCharsAndModifiers);
+      }
     } else {
       aNativeKey.mCommittedCharsAndModifiers.Clear();
     }

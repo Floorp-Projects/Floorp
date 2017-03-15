@@ -187,6 +187,8 @@ class VideoSendStream : public SendStream {
   virtual bool ReconfigureVideoEncoder(const VideoEncoderConfig& config) = 0;
 
   virtual Stats GetStats() = 0;
+
+  virtual int64_t GetRtt() const = 0;
 };
 
 }  // namespace webrtc
