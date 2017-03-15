@@ -680,27 +680,9 @@ TextEventDispatcher::PendingComposition::Set(const nsAString& aString,
   }
 
   // Adjust offsets in the ranges for XP linefeed character (only \n).
-  // XXX Following code is the safest approach.  However, it wastes performance.
-  //     For ensuring the clauses do not overlap each other, we should redesign
-  //     TextRange later.
   for (uint32_t i = 0; i < aRanges->Length(); ++i) {
     TextRange range = aRanges->ElementAt(i);
-    TextRange nativeRange = range;
-    if (nativeRange.mStartOffset > 0) {
-      nsAutoString preText(Substring(aString, 0, nativeRange.mStartOffset));
-      preText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                               NS_LITERAL_STRING("\n"));
-      range.mStartOffset = preText.Length();
-    }
-    if (nativeRange.Length() == 0) {
-      range.mEndOffset = range.mStartOffset;
-    } else {
-      nsAutoString clause(
-        Substring(aString, nativeRange.mStartOffset, nativeRange.Length()));
-      clause.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                              NS_LITERAL_STRING("\n"));
-      range.mEndOffset = range.mStartOffset + clause.Length();
-    }
+    AdjustRange(range, aString);
     if (range.mRangeType == TextRangeType::eCaret) {
       mCaret = range;
     } else {
@@ -709,6 +691,36 @@ TextEventDispatcher::PendingComposition::Set(const nsAString& aString,
     }
   }
   return NS_OK;
+}
+
+// static
+void
+TextEventDispatcher::PendingComposition::AdjustRange(
+                                           TextRange& aRange,
+                                           const nsAString& aNativeString)
+{
+  TextRange nativeRange = aRange;
+  // XXX Following code wastes runtime cost because this causes computing
+  //     mStartOffset for each clause from the start of composition string.
+  //     If we'd make TextRange have only its length, we don't need to do
+  //     this.  However, this must not be so serious problem because
+  //     composition string is usually short and separated as a few clauses.
+  if (nativeRange.mStartOffset > 0) {
+    nsAutoString preText(
+      Substring(aNativeString, 0, nativeRange.mStartOffset));
+    preText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                             NS_LITERAL_STRING("\n"));
+    aRange.mStartOffset = preText.Length();
+  }
+  if (nativeRange.Length() == 0) {
+    aRange.mEndOffset = aRange.mStartOffset;
+  } else {
+    nsAutoString clause(
+      Substring(aNativeString, nativeRange.mStartOffset, nativeRange.Length()));
+    clause.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                            NS_LITERAL_STRING("\n"));
+    aRange.mEndOffset = aRange.mStartOffset + clause.Length();
+  }
 }
 
 nsresult
