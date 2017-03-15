@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.utils.Browsers;
+import org.mozilla.focus.utils.HardwareUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,19 +30,21 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
         }
     }
 
+    private final Context context;
     private final BrowserMenu menu;
     private final BrowserFragment fragment;
 
     private List<MenuItem> items;
 
     public BrowserMenuAdapter(Context context, BrowserMenu menu, BrowserFragment fragment) {
+        this.context = context;
         this.menu = menu;
         this.fragment = fragment;
 
-        initializeMenu(context, fragment.getUrl());
+        initializeMenu(fragment.getUrl());
     }
 
-    private void initializeMenu(Context context, String url) {
+    private void initializeMenu(String url) {
         final Resources resources = context.getResources();
         final Browsers browsers = new Browsers(context, url);
 
@@ -84,14 +87,16 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
         holder.setMenu(menu);
         holder.setOnClickListener(fragment);
 
-        if (position > 0) {
-            ((MenuItemViewHolder) holder).bind(items.get(position - 1));
+        final int actualPosition = shouldShowButtonToolbar() ? position - 1 : position;
+
+        if (actualPosition >= 0) {
+            ((MenuItemViewHolder) holder).bind(items.get(actualPosition));
         }
     }
 
     @Override
     public int getItemViewType(int position) {
-        if (position == 0) {
+        if (position == 0 && shouldShowButtonToolbar()) {
             return NavigationItemViewHolder.LAYOUT_ID;
         } else {
             return MenuItemViewHolder.LAYOUT_ID;
@@ -100,7 +105,17 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
 
     @Override
     public int getItemCount() {
-        // Button toolbar + menu items
-        return 1 + items.size();
+        int itemCount = items.size();
+
+        if (shouldShowButtonToolbar()) {
+            itemCount++;
+        }
+
+        return itemCount;
+    }
+
+    private boolean shouldShowButtonToolbar() {
+        // On phones we show an extra row with toolbar items (forward/refresh)
+        return !HardwareUtils.isTablet(context);
     }
 }

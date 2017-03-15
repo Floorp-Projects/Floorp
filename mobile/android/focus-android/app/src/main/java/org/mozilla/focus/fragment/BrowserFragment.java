@@ -46,13 +46,15 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
         return fragment;
     }
 
-
     private TransitionDrawable backgroundTransition;
     private TextView urlView;
     private IWebView webView;
     private ProgressBar progressView;
     private View lockView;
     private View menuView;
+
+    private View forwardButton;
+    private View backButton;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -69,6 +71,19 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
         urlView.setOnClickListener(this);
 
         backgroundTransition = (TransitionDrawable) view.findViewById(R.id.urlbar).getBackground();
+
+        final View refreshButton = view.findViewById(R.id.refresh);
+        if (refreshButton != null) {
+            refreshButton.setOnClickListener(this);
+        }
+
+        if ((forwardButton = view.findViewById(R.id.forward)) != null) {
+            forwardButton.setOnClickListener(this);
+        }
+
+        if ((backButton = view.findViewById(R.id.back)) != null) {
+            backButton.setOnClickListener(this);
+        }
 
         lockView = view.findViewById(R.id.lock);
 
@@ -93,6 +108,8 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
                 backgroundTransition.resetTransition();
 
                 progressView.setVisibility(View.VISIBLE);
+
+                updateToolbarButtonStates();
             }
 
             @Override
@@ -106,6 +123,8 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
                 if (isSecure) {
                     lockView.setVisibility(View.VISIBLE);
                 }
+
+                updateToolbarButtonStates();
             }
 
             @Override
@@ -157,6 +176,10 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
                         R.string.feedback_erase,
                         getResources().getInteger(R.integer.erase_snackbar_delay));
 
+                break;
+
+            case R.id.back:
+                webView.goBack();
                 break;
 
             case R.id.forward:
@@ -221,6 +244,21 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
         super.onDetach();
 
         webView.setCallback(null);
+    }
+
+    private void updateToolbarButtonStates() {
+        if (forwardButton == null || backButton == null) {
+            return;
+        }
+
+        final boolean canGoForward = webView.canGoForward();
+        final boolean canGoBack = webView.canGoBack();
+
+        forwardButton.setEnabled(canGoForward);
+        forwardButton.setAlpha(canGoForward ? 1.0f : 0.5f);
+
+        backButton.setEnabled(canGoBack);
+        backButton.setAlpha(canGoBack ? 1.0f : 0.5f);
     }
 
     public String getUrl() {
