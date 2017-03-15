@@ -18,7 +18,7 @@
 #include "js/StructuredClone.h"
 
 namespace js {
-    struct PerformanceGroup;
+    struct JS_PUBLIC_API(PerformanceGroup);
 } // namespace js
 
 struct JSPrincipals {

@@ -583,7 +583,7 @@ InterruptCallback(JSContext* aCx)
   MOZ_ASSERT(worker);
 
   // Now is a good time to turn on profiling if it's pending.
-  profiler_js_operation_callback();
+  profiler_js_interrupt_callback();
 
   return worker->InterruptCallback(aCx);
 }
@@ -2877,10 +2877,7 @@ WorkerThreadPrimaryRunnable::Run()
 
     {
 #ifdef MOZ_GECKO_PROFILER
-      PseudoStack* stack = profiler_get_pseudo_stack();
-      if (stack) {
-        stack->sampleContext(cx);
-      }
+      profiler_set_js_context(cx);
 #endif
 
       {
@@ -2896,9 +2893,7 @@ WorkerThreadPrimaryRunnable::Run()
       BackgroundChild::CloseForCurrentThread();
 
 #ifdef MOZ_GECKO_PROFILER
-      if (stack) {
-        stack->sampleContext(nullptr);
-      }
+      profiler_clear_js_context();
 #endif
     }
 

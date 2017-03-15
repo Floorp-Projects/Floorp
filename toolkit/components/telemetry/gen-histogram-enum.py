@@ -88,17 +88,17 @@ def main(output, *filenames):
     # Write categorical label enums.
     categorical = filter(lambda h: h.kind() == "categorical", all_histograms)
     enums = [("LABELS_" + h.name(), h.labels(), h.name()) for h in categorical]
-    for name,labels,_ in enums:
+    for name, labels, _ in enums:
         print("\nenum class %s : uint32_t {" % name, file=output)
         print("  %s" % ",\n  ".join(labels), file=output)
         print("};", file=output)
 
     print("\ntemplate<class T> struct IsCategoricalLabelEnum : FalseType {};", file=output)
-    for name,_,_ in enums:
+    for name, _, _ in enums:
         print("template<> struct IsCategoricalLabelEnum<%s> : TrueType {};" % name, file=output)
 
     print("\ntemplate<class T> struct CategoricalLabelId {};", file=output)
-    for name,_,id in enums:
+    for name, _, id in enums:
         print("template<> struct CategoricalLabelId<%s> : IntegralConstant<uint32_t, %s> {};" % (name, id), file=output)
 
     # Footer.

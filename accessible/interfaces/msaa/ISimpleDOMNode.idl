@@ -99,9 +99,6 @@ cpp_quote("")
 import "objidl.idl";
 import "oaidl.idl";
 
-import "ISimpleDOMText.idl";
-import "ISimpleDOMDocument.idl";
-
 [object, uuid(1814ceeb-49e2-407f-af99-fa755a7d2607)]
 interface ISimpleDOMNode : IUnknown
 {
@@ -173,16 +170,4 @@ interface ISimpleDOMNode : IUnknown
 
   [propget] HRESULT language([out, retval] BSTR *language);
 }
-
-
-[
-    uuid(a6245497-9c0b-4449-85a5-bd6ad07df8ea), 
-    helpstring("ISimpleDOM Type Library")
-] 
-library ISimpleDOM 
-{
-  interface ISimpleDOMNode;
-  interface ISimpleDOMText;
-  interface ISimpleDOMDocument;
-};
 
