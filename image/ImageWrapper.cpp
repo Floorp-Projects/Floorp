@@ -88,9 +88,9 @@ ImageWrapper::OnImageDataComplete(nsIRequest* aRequest,
 }
 
 void
-ImageWrapper::OnSurfaceDiscarded(SurfaceKey aSurfaceKey)
+ImageWrapper::OnSurfaceDiscarded()
 {
-  return mInnerImage->OnSurfaceDiscarded(aSurfaceKey);
+  return mInnerImage->OnSurfaceDiscarded();
 }
 
 void
