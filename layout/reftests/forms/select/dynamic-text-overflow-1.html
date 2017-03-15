@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <select style="width: 100px; overflow: hidden;">
+    <option selected>Text that is long enough that it totally overflows<option>
+  </select>
+  <script>
+    onload = function() {
+      var s = document.querySelector("select");
+      window.w = s.offsetWidth;
+      s.style.textOverflow = "ellipsis";
+      document.documentElement.className = "";
+    }
+  </script>
+</html>
