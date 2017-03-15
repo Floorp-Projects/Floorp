@@ -9,7 +9,7 @@ load 339501-1.xhtml
 load 339501-2.xhtml
 load 378993-1.xhtml
 load 382568-1.html
-asserts-if(stylo,1) load 383137.xhtml # bug 1324704
+load 383137.xhtml
 load 388183-1.html
 load 395340-1.html # bug 1323652
 load 399694-1.html

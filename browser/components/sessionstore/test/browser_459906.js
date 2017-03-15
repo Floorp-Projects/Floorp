@@ -24,15 +24,15 @@ function test() {
 
     frameCount = 0;
     let tab2 = gBrowser.duplicateTab(tab);
-    tab2.linkedBrowser.addEventListener("load", function(aEvent) {
+    tab2.linkedBrowser.addEventListener("load", function(eventTab2) {
       // wait for all frames to load (and reload!) completely
       if (frameCount++ < 2)
         return;
       tab2.linkedBrowser.removeEventListener("load", arguments.callee, true);
 
       executeSoon(function() {
-        let iframes = tab2.linkedBrowser.contentWindow.frames;
-        if (iframes[1].document.body.innerHTML !== uniqueValue) {
+        let iframesTab2 = tab2.linkedBrowser.contentWindow.frames;
+        if (iframesTab2[1].document.body.innerHTML !== uniqueValue) {
           // Poll again the value, since we can't ensure to run
           // after SessionStore has injected innerHTML value.
           // See bug 521802.
@@ -41,14 +41,13 @@ function test() {
           return;
         }
 
-        is(iframes[1].document.body.innerHTML, uniqueValue,
+        is(iframesTab2[1].document.body.innerHTML, uniqueValue,
            "rich textarea's content correctly duplicated");
 
         let innerDomain = null;
         try {
-          innerDomain = iframes[0].document.domain;
-        }
-        catch (ex) { /* throws for chrome: documents */ }
+          innerDomain = iframesTab2[0].document.domain;
+        } catch (ex) { /* throws for chrome: documents */ }
         is(innerDomain, "mochi.test", "XSS exploit prevented!");
 
         // clean up

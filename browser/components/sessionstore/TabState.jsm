@@ -23,15 +23,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "Utils",
  * Module that contains tab state collection methods.
  */
 this.TabState = Object.freeze({
-  update: function (browser, data) {
+  update(browser, data) {
     TabStateInternal.update(browser, data);
   },
 
-  collect: function (tab) {
+  collect(tab) {
     return TabStateInternal.collect(tab);
   },
 
-  clone: function (tab) {
+  clone(tab) {
     return TabStateInternal.clone(tab);
   },
 
@@ -44,7 +44,7 @@ var TabStateInternal = {
   /**
    * Processes a data update sent by the content script.
    */
-  update: function (browser, {data}) {
+  update(browser, {data}) {
     TabStateCache.update(browser, data);
   },
 
@@ -58,7 +58,7 @@ var TabStateInternal = {
    * tab has not been invalidated since the last call to
    * collect(aTab), the same object is returned.
    */
-  collect: function (tab) {
+  collect(tab) {
     return this._collectBaseTabData(tab);
   },
 
@@ -73,7 +73,7 @@ var TabStateInternal = {
    *                   cached, it will always be read from the tab and thus be
    *                   up-to-date.
    */
-  clone: function (tab) {
+  clone(tab) {
     return this._collectBaseTabData(tab, {includePrivateData: true});
   },
 
@@ -87,7 +87,7 @@ var TabStateInternal = {
    *
    * @returns {object} An object with the basic data for this tab.
    */
-  _collectBaseTabData: function (tab, options) {
+  _collectBaseTabData(tab, options) {
     let tabData = { entries: [], lastAccessed: tab.lastAccessed };
     let browser = tab.linkedBrowser;
 
@@ -164,7 +164,6 @@ var TabStateInternal = {
 
     // The caller may explicitly request to omit privacy checks.
     let includePrivateData = options && options.includePrivateData;
-    let isPinned = !!tabData.pinned;
 
     for (let key of Object.keys(data)) {
       let value = data[key];

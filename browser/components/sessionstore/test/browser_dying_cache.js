@@ -27,9 +27,6 @@ add_task(function* test() {
   ss.setWindowValue(win, "foo", "bar");
   checkWindowState(win);
 
-  let state = ss.getWindowState(win);
-  let closedTabData = ss.getClosedTabData(win);
-
   // Close our window.
   yield BrowserTestUtils.closeWindow(win);
 
@@ -63,4 +60,5 @@ function shouldThrow(f) {
   } catch (e) {
     return true;
   }
+  return null;
 }

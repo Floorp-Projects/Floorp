@@ -76,7 +76,7 @@ ifdef WIN_UCRT_REDIST_DIR
   JSSHELL_BINS += ucrtbase.dll
 endif
 
-MAKE_JSSHELL  = $(call py_action,zip,-C $(DIST)/bin $(abspath $(PKG_JSSHELL)) $(JSSHELL_BINS))
+MAKE_JSSHELL  = $(call py_action,zip,-C $(DIST)/bin --strip $(abspath $(PKG_JSSHELL)) $(JSSHELL_BINS))
 
 JARLOG_DIR = $(topobjdir)/jarlog/
 JARLOG_FILE_AB_CD = $(JARLOG_DIR)/$(AB_CD).log

@@ -6,7 +6,7 @@ Components.utils.import("resource://gre/modules/ForgetAboutSite.jsm");
 
 function waitForClearHistory(aCallback) {
   let observer = {
-    observe: function(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic, aData) {
       Services.obs.removeObserver(this, "browser:purge-domain-data");
       setTimeout(aCallback, 0);
     }

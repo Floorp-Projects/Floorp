@@ -9,8 +9,8 @@ function test() {
     ok(state.windows[0].busy, "window is busy");
 
     window.addEventListener("SSWindowStateReady", function() {
-      let state = JSON.parse(ss.getWindowState(window));
-      ok(!state.windows[0].busy, "window is not busy");
+      let state2 = JSON.parse(ss.getWindowState(window));
+      ok(!state2.windows[0].busy, "window is not busy");
 
       executeSoon(() => {
         gBrowser.removeTab(gBrowser.tabs[1]);

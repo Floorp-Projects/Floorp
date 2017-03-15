@@ -6,7 +6,7 @@
 # a temporary place to generate these tasks in Bug 1286075 until they are
 # rewritten in a better way.
 
-implementation: taskgraph.task.transform:TransformTask
+loader: taskgraph.loader.transform:loader
 
 transforms:
    - taskgraph.transforms.android_stuff:transforms
@@ -58,9 +58,9 @@ jobs:
         scopes:
           - docker-worker:relengapi-proxy:tooltool.download.internal
           - docker-worker:relengapi-proxy:tooltool.download.public
-        when:
-            files-changed:
-              - "mobile/android/config/**"
+        optimizations:
+          - - files-changed
+            - - "mobile/android/config/**"
               - "testing/mozharness/configs/builds/releng_sub_android_configs/*gradle_dependencies.py"
               - "**/*.gradle"
 
@@ -108,9 +108,9 @@ jobs:
         scopes:
           - docker-worker:relengapi-proxy:tooltool.download.internal
           - docker-worker:relengapi-proxy:tooltool.download.public
-        when:
-            files-changed:
-              - "mobile/android/base/**"
+        optimizations:
+          - - files-changed
+            - - "mobile/android/base/**"
               - "mobile/android/tests/background/junit4/**"
 
     android-lint:
@@ -163,9 +163,9 @@ jobs:
         scopes:
           - docker-worker:relengapi-proxy:tooltool.download.internal
           - docker-worker:relengapi-proxy:tooltool.download.public
-        when:
-            files-changed:
-              - "mobile/android/**/*.java"
+        optimizations:
+          - - files-changed
+            - - "mobile/android/**/*.java"
               - "mobile/android/**/*.jpeg"
               - "mobile/android/**/*.jpg"
               - "mobile/android/**/*.png"
@@ -217,9 +217,9 @@ jobs:
         scopes:
           - docker-worker:relengapi-proxy:tooltool.download.internal
           - docker-worker:relengapi-proxy:tooltool.download.public
-        when:
-            files-changed:
-              - "mobile/android/**/checkstyle.xml"
+        optimizations:
+          - - files-changed
+            - - "mobile/android/**/checkstyle.xml"
               - "mobile/android/**/*.gradle"
               - "mobile/android/**/*.java"
 
@@ -267,7 +267,7 @@ jobs:
         scopes:
           - docker-worker:relengapi-proxy:tooltool.download.internal
           - docker-worker:relengapi-proxy:tooltool.download.public
-        when:
-            files-changed:
-              - "mobile/android/**/*.gradle"
+        optimizations:
+          - - files-changed
+            - - "mobile/android/**/*.gradle"
               - "mobile/android/**/*.java"

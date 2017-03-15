@@ -554,11 +554,6 @@ html|input[type="checkbox"]:disabled {
   opacity: 0.5;
 }
 
-xul|*.checkbox-label-box {
-  margin-inline-start: -1px; /* negative margin for the transparent border */
-  padding-inline-start: 0;
-}
-
 xul|richlistitem > xul|*.checkbox-check {
   margin: 3px 6px;
 }

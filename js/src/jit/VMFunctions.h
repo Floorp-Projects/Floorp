@@ -674,8 +674,12 @@ CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget, MutableHa
 void GetDynamicName(JSContext* cx, JSObject* scopeChain, JSString* str, Value* vp);
 
 void PostWriteBarrier(JSRuntime* rt, JSObject* obj);
-void PostWriteElementBarrier(JSRuntime* rt, JSObject* obj, int32_t index);
 void PostGlobalWriteBarrier(JSRuntime* rt, JSObject* obj);
+
+enum class IndexInBounds { Yes, Maybe };
+
+template <IndexInBounds InBounds>
+void PostWriteElementBarrier(JSRuntime* rt, JSObject* obj, int32_t index);
 
 // If |str| is an index in the range [0, INT32_MAX], return it. If the string
 // is not an index in this range, return -1.

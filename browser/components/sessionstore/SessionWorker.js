@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env worker */
+
 /**
  * A worker dedicated to handle I/O for Session Store.
  */
@@ -124,7 +126,7 @@ var Agent = {
    *  - isFinalWrite If |true|, write to Paths.clean instead of
    *    Paths.recovery
    */
-  write: function (state, options = {}) {
+  write(state, options = {}) {
     let exn;
     let telemetry = {};
 
@@ -227,7 +229,7 @@ var Agent = {
 
       try {
         iterator = new File.DirectoryIterator(this.Paths.backups);
-        iterator.forEach(function (file) {
+        iterator.forEach(function(file) {
           if (file.path.startsWith(upgradeBackupPrefix)) {
             backups.push(file.path);
           }
@@ -276,14 +278,14 @@ var Agent = {
       result: {
         upgradeBackup: upgradeBackupComplete
       },
-      telemetry: telemetry,
+      telemetry,
     };
   },
 
   /**
    * Wipes all files holding session data from disk.
    */
-  wipe: function () {
+  wipe() {
 
     // Don't stop immediately in case of error.
     let exn = null;
@@ -332,7 +334,7 @@ var Agent = {
    * @param {string|null} prefix If provided, only remove files whose
    * name starts with a specific prefix.
    */
-  _wipeFromDir: function(path, prefix) {
+  _wipeFromDir(path, prefix) {
     // Sanity check
     if (typeof prefix == "undefined" || prefix == "") {
       throw new TypeError();

@@ -9,6 +9,7 @@ DevToolsModules(
     'EventTooltipHelper.js',
     'HTMLTooltip.js',
     'ImageTooltipHelper.js',
+    'InlineTooltip.js',
     'SwatchBasedEditorTooltip.js',
     'SwatchColorPickerTooltip.js',
     'SwatchCubicBezierTooltip.js',

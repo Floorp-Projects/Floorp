@@ -175,7 +175,7 @@ ContentRestoreInternal.prototype = {
    * Start loading the current page. When the data has finished loading from the
    * network, finishCallback is called. Returns true if the load was successful.
    */
-  restoreTabContent: function (loadArguments, isRemotenessUpdate, finishCallback) {
+  restoreTabContent(loadArguments, isRemotenessUpdate, finishCallback) {
     let tabData = this._tabData;
     this._tabData = null;
 
@@ -199,7 +199,7 @@ ContentRestoreInternal.prototype = {
         // same state it was before the load started then trigger the load.
         let referrer = loadArguments.referrer ?
                        Utils.makeURI(loadArguments.referrer) : null;
-        let referrerPolicy = ('referrerPolicy' in loadArguments
+        let referrerPolicy = ("referrerPolicy" in loadArguments
             ? loadArguments.referrerPolicy
             : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET);
         let postData = loadArguments.postData ?
@@ -243,11 +243,14 @@ ContentRestoreInternal.prototype = {
       }
 
       return true;
-    } catch (ex if ex instanceof Ci.nsIException) {
-      // Ignore page load errors, but return false to signal that the load never
-      // happened.
-      return false;
+    } catch (ex) {
+      if (ex instanceof Ci.nsIException) {
+        // Ignore page load errors, but return false to signal that the load never
+        // happened.
+        return false;
+      }
     }
+    return null;
   },
 
   /**
@@ -281,11 +284,11 @@ ContentRestoreInternal.prototype = {
    * position. The restore is complete when this function exits. It should be
    * called when the "load" event fires for the restoring tab.
    */
-  restoreDocument: function () {
+  restoreDocument() {
     if (!this._restoringDocument) {
       return;
     }
-    let {entry, pageStyle, formdata, scrollPositions} = this._restoringDocument;
+    let {pageStyle, formdata, scrollPositions} = this._restoringDocument;
     this._restoringDocument = null;
 
     let window = this.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -305,7 +308,7 @@ ContentRestoreInternal.prototype = {
    * case, it's called before restoreDocument, so it cannot clear
    * _restoringDocument.
    */
-  resetRestore: function () {
+  resetRestore() {
     this._tabData = null;
 
     if (this._historyListener) {
@@ -338,18 +341,18 @@ HistoryListener.prototype = {
     Ci.nsISupportsWeakReference
   ]),
 
-  uninstall: function () {
+  uninstall() {
     let shistory = this.webNavigation.sessionHistory;
     if (shistory) {
       shistory.removeSHistoryListener(this);
     }
   },
 
-  OnHistoryGoBack: function(backURI) { return true; },
-  OnHistoryGoForward: function(forwardURI) { return true; },
-  OnHistoryGotoIndex: function(index, gotoURI) { return true; },
-  OnHistoryPurge: function(numEntries) { return true; },
-  OnHistoryReplaceEntry: function(index) {},
+  OnHistoryGoBack(backURI) { return true; },
+  OnHistoryGoForward(forwardURI) { return true; },
+  OnHistoryGotoIndex(index, gotoURI) { return true; },
+  OnHistoryPurge(numEntries) { return true; },
+  OnHistoryReplaceEntry(index) {},
 
   // This will be called for a pending tab when loadURI(uri) is called where
   // the given |uri| only differs in the fragment.
@@ -408,11 +411,11 @@ ProgressListener.prototype = {
     Ci.nsISupportsWeakReference
   ]),
 
-  uninstall: function() {
+  uninstall() {
     this.webProgress.removeProgressListener(this);
   },
 
-  onStateChange: function(webProgress, request, stateFlags, status) {
+  onStateChange(webProgress, request, stateFlags, status) {
     let {STATE_IS_WINDOW, STATE_STOP, STATE_START} = Ci.nsIWebProgressListener;
     if (!webProgress.isTopLevel || !(stateFlags & STATE_IS_WINDOW)) {
       return;
@@ -427,8 +430,8 @@ ProgressListener.prototype = {
     }
   },
 
-  onLocationChange: function() {},
-  onProgressChange: function() {},
-  onStatusChange: function() {},
-  onSecurityChange: function() {},
+  onLocationChange() {},
+  onProgressChange() {},
+  onStatusChange() {},
+  onSecurityChange() {},
 };

@@ -80,9 +80,19 @@ void
 ServoRestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                                          nsRestyleHint aRestyleHint)
 {
-  // TODO(emilio, bz): We probably need to do some actual restyling here too.
-  NS_WARNING("stylo: ServoRestyleManager::RebuildAllStyleData is incomplete");
   StyleSet()->RebuildData();
+
+  // NOTE(emilio): GeckoRestlyeManager does a sync style flush, which seems
+  // not to be needed in my testing.
+  //
+  // If it is, we can just do a content flush and call ProcessPendingRestyles.
+  if (Element* root = mPresContext->Document()->GetRootElement()) {
+    PostRestyleEvent(root, aRestyleHint, aExtraHint);
+  }
+
+  // TODO(emilio, bz): Extensions can add/remove stylesheets that can affect
+  // non-inheriting anon boxes. It's not clear if we want to support that, but
+  // if we do, we need to re-selector-match them here.
 }
 
 void

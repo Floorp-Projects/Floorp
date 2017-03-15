@@ -2903,6 +2903,7 @@ public:
   // For more information on Flash classification, see
   // toolkit/components/url-classifier/flash-block-lists.rst
   virtual mozilla::dom::FlashClassification DocumentFlashClassification() = 0;
+  virtual bool IsThirdParty() = 0;
 
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)

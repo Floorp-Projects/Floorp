@@ -55,8 +55,18 @@ job_description_schema = Schema({
     Optional('index'): task_description_schema['index'],
     Optional('run-on-projects'): task_description_schema['run-on-projects'],
     Optional('coalesce-name'): task_description_schema['coalesce-name'],
+    Optional('optimizations'): task_description_schema['optimizations'],
     Optional('needs-sccache'): task_description_schema['needs-sccache'],
-    Optional('when'): task_description_schema['when'],
+
+    # The "when" section contains descriptions of the circumstances
+    # under which this task should be included in the task graph.  This
+    # will be converted into an element in the `optimizations` list.
+    Optional('when'): Any({
+        # This task only needs to be run if a file matching one of the given
+        # patterns has changed in the push.  The patterns use the mozpack
+        # match function (python/mozbuild/mozpack/path.py).
+        Optional('files-changed'): [basestring],
+    }),
 
     # A description of how to run this job.
     'run': {
@@ -86,6 +96,30 @@ def validate(config, jobs):
     for job in jobs:
         yield validate_schema(job_description_schema, job,
                               "In job {!r}:".format(job['name']))
+
+
+@transforms.add
+def rewrite_when_to_optimization(config, jobs):
+    for job in jobs:
+        when = job.pop('when', {})
+        files_changed = when.get('files-changed')
+        if not files_changed:
+            yield job
+            continue
+
+        # add some common files
+        files_changed.extend([
+            '{}/**'.format(config.path),
+            'taskcluster/taskgraph/**',
+        ])
+        if 'in-tree' in job['worker'].get('docker-image', {}):
+            files_changed.append('taskcluster/docker/{}/**'.format(
+                job['worker']['docker-image']['in-tree']))
+
+        job.setdefault('optimizations', []).append(['files-changed', files_changed])
+
+        assert 'when' not in job
+        yield job
 
 
 @transforms.add

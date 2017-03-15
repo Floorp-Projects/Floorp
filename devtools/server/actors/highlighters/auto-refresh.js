@@ -119,7 +119,7 @@ AutoRefreshHighlighter.prototype = {
    * Hide the highlighter
    */
   hide: function () {
-    if (Cu.isDeadWrapper(this.highlighterEnv.window)) {
+    if (!this.currentNode || !this.highlighterEnv.window) {
       return;
     }
 

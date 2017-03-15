@@ -1014,21 +1014,24 @@
     "description": "Has seen location error"
   },
   "GEOLOCATION_GETCURRENTPOSITION_SECURE_ORIGIN" : {
-    "expires_in_version" : "55",
+    "alert_emails": ["mds@mozilla.com"],
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 10,
     "bug_numbers": [1230209],
     "description" : "Number of navigator.geolocation.getCurrentPosition() calls (0=other, 1=http, 2=https)"
   },
   "GEOLOCATION_REQUEST_GRANTED": {
-    "expires_in_version": "55",
+    "alert_emails": ["mds@mozilla.com"],
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 20,
     "bug_numbers": [1230209],
     "description": "Geolocation requests either granted or denied (0=denied/other, 1=denied/http, 2=denied/https, ..., 10=granted/other, 11=granted/http, 12=granted/https)"
   },
   "GEOLOCATION_WATCHPOSITION_SECURE_ORIGIN" : {
-    "expires_in_version" : "55",
+    "alert_emails": ["mds@mozilla.com"],
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 10,
     "bug_numbers": [1230209],
@@ -1045,15 +1048,15 @@
     "description": "Geolocation on OS X is either MLS or CoreLocation"
   },
   "GEOLOCATION_GETCURRENTPOSITION_VISIBLE": {
-    "alert_emails": ["michelangelo@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["mds@mozilla.com"],
+    "expires_in_version": "60",
     "kind": "boolean",
     "bug_numbers": [1255198],
     "description": "This metric is recorded every time a navigator.geolocation.getCurrentPosition() request gets allowed/fulfilled. A false value is recorded if the owner is not visible according to document.isVisible."
   },
   "GEOLOCATION_WATCHPOSITION_VISIBLE": {
-    "alert_emails": ["michelangelo@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["mds@mozilla.com"],
+    "expires_in_version": "60",
     "kind": "boolean",
     "bug_numbers": [1255198],
     "description": "This metric is recorded every time a navigator.geolocation.watchPosition() request gets allowed/fulfilled. A false value is recorded if the owner is not visible according to document.isVisible."

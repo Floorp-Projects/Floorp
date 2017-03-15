@@ -60,7 +60,7 @@ extern LogModule* GetGMPLog();
 
 namespace gmp {
 
-GMPParent::GMPParent()
+GMPParent::GMPParent(AbstractThread* aMainThread)
   : mState(GMPStateNotLoaded)
   , mProcess(nullptr)
   , mDeleteProcessOnlyOnUnload(false)
@@ -70,6 +70,7 @@ GMPParent::GMPParent()
   , mGMPContentChildCount(0)
   , mChildPid(0)
   , mHoldingSelfRef(false)
+  , mMainThread(aMainThread)
 {
   mPluginId = GeckoChildProcessHost::GetUniqueID();
   LOGD("GMPParent ctor id=%u", mPluginId);
@@ -302,7 +303,8 @@ GMPParent::Shutdown()
 class NotifyGMPShutdownTask : public Runnable {
 public:
   explicit NotifyGMPShutdownTask(const nsAString& aNodeId)
-    : mNodeId(aNodeId)
+    : Runnable("NotifyGMPShutdownTask")
+    , mNodeId(aNodeId)
   {
   }
   NS_IMETHOD Run() override {
@@ -354,9 +356,9 @@ GMPParent::DeleteProcess()
   mProcess = nullptr;
   mState = GMPStateNotLoaded;
 
-  NS_DispatchToMainThread(
-    new NotifyGMPShutdownTask(NS_ConvertUTF8toUTF16(mNodeId)),
-    NS_DISPATCH_NORMAL);
+  nsCOMPtr<nsIRunnable> r
+    = new NotifyGMPShutdownTask(NS_ConvertUTF8toUTF16(mNodeId));
+  mMainThread->Dispatch(r.forget());
 
   if (mHoldingSelfRef) {
     Release();
@@ -517,9 +519,9 @@ GMPParent::ActorDestroy(ActorDestroyReason aWhy)
     }
 
     // NotifyObservers is mainthread-only
-    NS_DispatchToMainThread(WrapRunnableNM(&GMPNotifyObservers,
-                                           mPluginId, mDisplayName, dumpID),
-                            NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> r = WrapRunnableNM(
+      &GMPNotifyObservers, mPluginId, mDisplayName, dumpID);
+    mMainThread->Dispatch(r.forget());
   }
 #endif
   // warn us off trying to close again
@@ -728,8 +730,7 @@ GMPParent::ReadChromiumManifestFile(nsIFile* aFile)
 
   // DOM JSON parsing needs to run on the main thread.
   return InvokeAsync<nsString&&>(
-    // Non DocGroup-version of AbstractThread::MainThread for the task in parent.
-    AbstractThread::MainThread(), this, __func__,
+    mMainThread, this, __func__,
     &GMPParent::ParseChromiumManifest, NS_ConvertUTF8toUTF16(json));
 }
 

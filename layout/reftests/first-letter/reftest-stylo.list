@@ -24,7 +24,7 @@ fails == parent-style-1.html parent-style-1.html
 == quote-1e.html quote-1e.html
 == quote-1f.html quote-1f.html
 fails == dynamic-1.html dynamic-1.html
-fails random-if(d2d) == dynamic-2.html dynamic-2.html
+random-if(d2d) == dynamic-2.html dynamic-2.html
 == dynamic-3a.html dynamic-3a.html
 == dynamic-3b.html dynamic-3b.html
 == 23605-1.html 23605-1.html

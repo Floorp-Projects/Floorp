@@ -16,7 +16,7 @@ namespace mozilla {
 namespace gfx {
 
 class VRLayerParent : public PVRLayerParent {
-  NS_INLINE_DECL_REFCOUNTING(VRLayerParent)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRLayerParent)
 
 public:
   VRLayerParent(uint32_t aVRDisplayID, const Rect& aLeftEyeRect, const Rect& aRightEyeRect);

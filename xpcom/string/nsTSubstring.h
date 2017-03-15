@@ -685,7 +685,9 @@ public:
 
   /**
    * Append a formatted string to the current string. Uses the
-   * standard printf format codes.
+   * standard printf format codes.  This uses NSPR formatting, which will be
+   * locale-aware for floating-point values.  You probably don't want to use
+   * this with floating-point values as a result.
    */
   void AppendPrintf(const char* aFormat, ...) MOZ_FORMAT_PRINTF(2, 3);
   void AppendPrintf(const char* aFormat, va_list aAp);

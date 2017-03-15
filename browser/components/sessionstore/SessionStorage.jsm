@@ -33,7 +33,7 @@ this.SessionStorage = Object.freeze({
    *         session storage data as strings. For example:
    *         {"example.com": {"key": "value", "my_number": "123"}}
    */
-  collect: function (docShell, frameTree) {
+  collect(docShell, frameTree) {
     return SessionStorageInternal.collect(docShell, frameTree);
   },
 
@@ -46,7 +46,7 @@ this.SessionStorage = Object.freeze({
    *        keys and per-host session storage data as strings. For example:
    *        {"example.com": {"key": "value", "my_number": "123"}}
    */
-  restore: function (aDocShell, aStorageData) {
+  restore(aDocShell, aStorageData) {
     SessionStorageInternal.restore(aDocShell, aStorageData);
   },
 });
@@ -62,7 +62,7 @@ var SessionStorageInternal = {
    *         session storage data as strings. For example:
    *         {"example.com": {"key": "value", "my_number": "123"}}
    */
-  collect: function (docShell, frameTree) {
+  collect(docShell, frameTree) {
     let data = {};
     let visitedOrigins = new Set();
 
@@ -108,7 +108,7 @@ var SessionStorageInternal = {
    *        keys and per-host session storage data as strings. For example:
    *        {"example.com": {"key": "value", "my_number": "123"}}
    */
-  restore: function (aDocShell, aStorageData) {
+  restore(aDocShell, aStorageData) {
     for (let origin of Object.keys(aStorageData)) {
       let data = aStorageData[origin];
 
@@ -149,7 +149,7 @@ var SessionStorageInternal = {
    * @param aDocShell
    *        A tab's docshell (containing the sessionStorage)
    */
-  _readEntry: function (aPrincipal, aDocShell) {
+  _readEntry(aPrincipal, aDocShell) {
     let hostData = {};
     let storage;
 

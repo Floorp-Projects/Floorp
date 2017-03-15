@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env mozilla/frame-script */
+
 "use strict";
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
@@ -43,12 +45,12 @@ function dispatchUIEvent(input, type) {
 }
 
 function defineListener(type, cb) {
-  addMessageListener("ss-test:" + type, function ({data}) {
+  addMessageListener("ss-test:" + type, function({data}) {
     sendAsyncMessage("ss-test:" + type, cb(data));
   });
 }
 
-defineListener("sendKeyEvent", function (data) {
+defineListener("sendKeyEvent", function(data) {
   let frame = content;
   if (data.hasOwnProperty("frame")) {
     frame = content.frames[data.frame];
@@ -65,67 +67,67 @@ defineListener("sendKeyEvent", function (data) {
   utils.sendKeyEvent("keyup", keyCode, charCode, null);
 });
 
-defineListener("getInnerHTML", function (data) {
+defineListener("getInnerHTML", function(data) {
   return queryElement(data).innerHTML;
 });
 
-defineListener("getTextContent", function (data) {
+defineListener("getTextContent", function(data) {
   return queryElement(data).textContent;
 });
 
-defineListener("getInputValue", function (data) {
+defineListener("getInputValue", function(data) {
   return queryElement(data).value;
 });
 
-defineListener("setInputValue", function (data) {
+defineListener("setInputValue", function(data) {
   let input = queryElement(data);
   input.value = data.value;
   dispatchUIEvent(input, "input");
 });
 
-defineListener("getInputChecked", function (data) {
+defineListener("getInputChecked", function(data) {
   return queryElement(data).checked;
 });
 
-defineListener("setInputChecked", function (data) {
+defineListener("setInputChecked", function(data) {
   let input = queryElement(data);
   input.checked = data.checked;
   dispatchUIEvent(input, "change");
 });
 
-defineListener("getSelectedIndex", function (data) {
+defineListener("getSelectedIndex", function(data) {
   return queryElement(data).selectedIndex;
 });
 
-defineListener("setSelectedIndex", function (data) {
+defineListener("setSelectedIndex", function(data) {
   let input = queryElement(data);
   input.selectedIndex = data.index;
   dispatchUIEvent(input, "change");
 });
 
-defineListener("getMultipleSelected", function (data) {
+defineListener("getMultipleSelected", function(data) {
   let input = queryElement(data);
   return Array.map(input.options, (opt, idx) => idx)
               .filter(idx => input.options[idx].selected);
 });
 
-defineListener("setMultipleSelected", function (data) {
+defineListener("setMultipleSelected", function(data) {
   let input = queryElement(data);
   Array.forEach(input.options, (opt, idx) => opt.selected = data.indices.indexOf(idx) > -1);
   dispatchUIEvent(input, "change");
 });
 
-defineListener("getFileNameArray", function (data) {
+defineListener("getFileNameArray", function(data) {
   return queryElement(data).mozGetFileNameArray();
 });
 
-defineListener("setFileNameArray", function (data) {
+defineListener("setFileNameArray", function(data) {
   let input = queryElement(data);
   input.mozSetFileNameArray(data.names, data.names.length);
   dispatchUIEvent(input, "input");
 });
 
-defineListener("setFormElementValues", function (data) {
+defineListener("setFormElementValues", function(data) {
   for (let elem of content.document.forms[0].elements) {
     elem.value = data.value;
     dispatchUIEvent(elem, "input");

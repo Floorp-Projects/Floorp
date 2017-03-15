@@ -76,6 +76,7 @@
 .theme-firebug .devtools-sidebar-tabs tab {
   margin: 3px 0 -1px 0;
   padding: 1px 4px !important;
+  padding-inline-end: 0 !important;
   border: 1px solid transparent !important;
   border-bottom: none !important;
   border-radius: 4px 4px 0 0;
@@ -98,8 +99,9 @@
   margin-bottom: -1px;
 }
 
-.theme-firebug .devtools-tab span {
-  padding-inline-end: 0;
+.theme-firebug .devtools-tab-label {
+  /* Set the end padding on the label to make sure the label gets faded out properly */
+  padding-inline-end: 4px;
 }
 
 /* In order to hide bottom-border of side panel tabs we need
@@ -118,7 +120,7 @@
 .theme-firebug .devtools-sidebar-tabs tab[selected] {
   background-color: var(--theme-toolbar-tab-selected-background);
   border-color: var(--theme-splitter-color) !important;
-  border-bottom-width: 0 !important;
+  border-bottom-color: transparent !important;
   padding-bottom: 2px;
   color: inherit;
 }

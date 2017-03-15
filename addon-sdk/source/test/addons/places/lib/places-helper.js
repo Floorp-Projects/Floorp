@@ -4,16 +4,6 @@
  'use strict'
 
 const { Cc, Ci, Cu } = require('chrome');
-const bmsrv = Cc['@mozilla.org/browser/nav-bookmarks-service;1'].
-                    getService(Ci.nsINavBookmarksService);
-const hsrv = Cc['@mozilla.org/browser/nav-history-service;1'].
-              getService(Ci.nsINavHistoryService);
-const brsrv = Cc["@mozilla.org/browser/nav-history-service;1"]
-                     .getService(Ci.nsIBrowserHistory);
-const tagsrv = Cc['@mozilla.org/browser/tagging-service;1'].
-              getService(Ci.nsITaggingService);
-const asyncHistory = Cc['@mozilla.org/browser/history;1'].
-              getService(Ci.mozIAsyncHistory);
 const { send } = require('sdk/addon/events');
 const { setTimeout } = require('sdk/timers');
 const { newURI } = require('sdk/url/utils');
@@ -41,7 +31,7 @@ exports.invalidResolve = invalidResolve;
 // Removes all children of group
 function clearBookmarks (group) {
   group
-   ? bmsrv.removeFolderChildren(group.id)
+   ? PlacesUtils.bookmarks.removeFolderChildren(group.id)
    : clearAllBookmarks();
 }
 
@@ -65,12 +55,15 @@ exports.resetPlaces = resetPlaces;
 
 function compareWithHost (assert, item) {
   let id = item.id;
-  let type = item.type === 'group' ? bmsrv.TYPE_FOLDER : bmsrv['TYPE_' + item.type.toUpperCase()];
+  let type = item.type === 'group' ?
+    PlacesUtils.bookmarks.TYPE_FOLDER :
+    PlacesUtils.bookmarks['TYPE_' + item.type.toUpperCase()];
   let url = item.url && !item.url.endsWith('/') ? item.url + '/' : item.url;
 
-  if (type === bmsrv.TYPE_BOOKMARK) {
-    assert.equal(url, bmsrv.getBookmarkURI(id).spec.toString(), 'Matches host url');
-    let tags = tagsrv.getTagsForURI(newURI(item.url));
+  if (type === PlacesUtils.bookmarks.TYPE_BOOKMARK) {
+    assert.equal(url, PlacesUtils.bookmarks.getBookmarkURI(id).spec.toString(),
+                 'Matches host url');
+    let tags = PlacesUtils.tagging.getTagsForURI(newURI(item.url));
     for (let tag of tags) {
       // Handle both array for raw data and set for instances
       if (Array.isArray(item.tags))
@@ -82,45 +75,45 @@ function compareWithHost (assert, item) {
       Array.isArray(item.tags) ? item.tags.length : item.tags.size,
       'matches tag count');
   }
-  if (type !== bmsrv.TYPE_SEPARATOR) {
-    assert.equal(item.title, bmsrv.getItemTitle(id), 'Matches host title');
+  if (type !== PlacesUtils.bookmarks.TYPE_SEPARATOR) {
+    assert.equal(item.title, PlacesUtils.bookmarks.getItemTitle(id),
+                 'Matches host title');
   }
-  assert.equal(item.index, bmsrv.getItemIndex(id), 'Matches host index');
-  assert.equal(item.group.id || item.group, bmsrv.getFolderIdForItem(id), 'Matches host group id');
-  assert.equal(type, bmsrv.getItemType(id), 'Matches host type');
+  assert.equal(item.index, PlacesUtils.bookmarks.getItemIndex(id),
+               'Matches host index');
+  assert.equal(item.group.id || item.group,
+               PlacesUtils.bookmarks.getFolderIdForItem(id),
+               'Matches host group id');
+  assert.equal(type, PlacesUtils.bookmarks.getItemType(id),
+               'Matches host type');
 }
 exports.compareWithHost = compareWithHost;
 
+/**
+ * Adds visits to places.
+ *
+ * @param {Array|String} urls Either an array of urls to add, or a single url
+ *                            as a string.
+ */
 function addVisits (urls) {
-  var deferred = defer();
-  asyncHistory.updatePlaces([].concat(urls).map(createVisit), {
-    handleResult: function () {},
-    handleError: deferred.reject,
-    handleCompletion: deferred.resolve
-  });
-
-  return deferred.promise;
+  return PlacesUtils.history.insertMany([].concat(urls).map(createVisit));
 }
 exports.addVisits = addVisits;
 
 function removeVisits (urls) {
-  [].concat(urls).map(url => {
-    hsrv.removePage(newURI(url));
-  });
+  PlacesUtils.history.remove(urls);
 }
 exports.removeVisits = removeVisits;
 
 // Creates a mozIVisitInfo object
 function createVisit (url) {
-  let place = {}
-  place.uri = newURI(url);
-  place.title = "Test visit for " + place.uri.spec;
-  place.visits = [{
-    transitionType: hsrv.TRANSITION_LINK,
-    visitDate: +(new Date()) * 1000,
-    referredURI: undefined
-  }];
-  return place;
+  return {
+    url,
+    title: "Test visit for " + url,
+    visits: [{
+      transition: PlacesUtils.history.TRANSITION_LINK
+    }]
+  };
 }
 
 function createBookmark (data) {
@@ -141,7 +134,7 @@ function createBookmark (data) {
 exports.createBookmark = createBookmark;
 
 function historyBatch () {
-  hsrv.runInBatchMode(() => {}, null);
+  PlacesUtils.history.runInBatchMode(() => {}, null);
 }
 exports.historyBatch = historyBatch;
 

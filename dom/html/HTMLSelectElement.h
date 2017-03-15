@@ -177,6 +177,9 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::autocomplete, aValue, aRv);
   }
+
+  void GetAutocompleteInfo(AutocompleteInfo& aInfo);
+
   bool Disabled() const
   {
     return GetBoolAttr(nsGkAtoms::disabled);

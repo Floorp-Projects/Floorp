@@ -35,7 +35,7 @@
       xhr.send(null);
     }
     function done() {
-      var event = new MessageEvent('461743', { bubbles: true, cancelable: false,
+      var event = new MessageEvent("461743", { bubbles: true, cancelable: false,
                                                data: "done", origin: location.href,
                                                source: window });
       document.dispatchEvent(event);
@@ -51,6 +51,6 @@
     frames[0].document.addEventListener("DOMNodeInserted", done, true);
 
     frames[0].document.designMode = "on";
-  };
+  }
 </script>
 </body>

@@ -197,7 +197,7 @@ add_task(async function test_track_delete() {
   await startTracking();
   let visitRemovedPromise = promiseVisit("removed", uri);
   let scorePromise = promiseOneObserver("weave:engine:score:updated");
-  PlacesUtils.history.removePage(uri);
+  await PlacesUtils.history.remove(uri);
   await Promise.all([scorePromise, visitRemovedPromise]);
 
   await verifyTrackedItems([guid]);
@@ -222,7 +222,7 @@ add_task(async function test_dont_track_expiration() {
   Services.obs.addObserver(function onExpiration(aSubject, aTopic, aData) {
     Services.obs.removeObserver(onExpiration, aTopic);
     // Remove the remaining page to update its score.
-    PlacesUtils.history.removePage(uriToRemove);
+    PlacesUtils.history.remove(uriToRemove);
   }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
 
   // Force expiration of 1 entry.

@@ -31,7 +31,7 @@ function test() {
     { "#input1" : "value31", "/xhtml:html/xhtml:body/xhtml:input[@name='input2']" : "value32", xpath: { "/xhtml:html/xhtml:body/xhtml:input[@name='input2']" : "value33" } }
   ]
   let expectedValues = [
-    [ "" , "" ],
+    [ "", "" ],
     // old format
     [ "value0", "" ],
     [ "value1", "value2" ],
@@ -65,7 +65,6 @@ function test() {
 async function testTabRestoreData(aFormData, aExpectedValue) {
   let URL = ROOT + "browser_formdata_format_sample.html";
   let tab = gBrowser.addTab("about:blank");
-  let browser = tab.linkedBrowser;
 
   aFormData.url = URL;
   let tabState = { entries: [{ url: URL, triggeringPrincipal_base64 }], formdata: aFormData };

@@ -582,6 +582,27 @@ class MOZ_RAII CacheIRCompiler
     void emitStoreTypedObjectReferenceProp(ValueOperand val, ReferenceTypeDescr::Type type,
                                            const Address& dest, Register scratch);
 
+  private:
+    void emitPostBarrierShared(Register obj, const ConstantOrRegister& val, Register scratch,
+                               Register maybeIndex);
+
+    void emitPostBarrierShared(Register obj, ValueOperand val, Register scratch,
+                               Register maybeIndex) {
+        emitPostBarrierShared(obj, ConstantOrRegister(val), scratch, maybeIndex);
+    }
+
+  protected:
+    template <typename T>
+    void emitPostBarrierSlot(Register obj, const T& val, Register scratch) {
+        emitPostBarrierShared(obj, val, scratch, InvalidReg);
+    }
+
+    template <typename T>
+    void emitPostBarrierElement(Register obj, const T& val, Register scratch, Register index) {
+        MOZ_ASSERT(index != InvalidReg);
+        emitPostBarrierShared(obj, val, scratch, index);
+    }
+
 #define DEFINE_SHARED_OP(op) MOZ_MUST_USE bool emit##op();
     CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
 #undef DEFINE_SHARED_OP

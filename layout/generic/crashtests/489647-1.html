@@ -1,0 +1,13 @@
+<html class="reftest-wait"><head><title> Bug 489647 -  New 1.9.0.9 topcrash [@nsTextFrame::ClearTextRun()]</title></head>
+<body>
+<div id="a" style="white-space: pre;">
+m</div>
+<script>
+function doe() {
+  document.getElementById('a').childNodes[0].splitText(1);
+  document.documentElement.className = "";
+}
+setTimeout(doe, 100);
+</script>
+</body>
+</html>

@@ -171,7 +171,7 @@ add_task(function* test_savedsearches_history() {
       do_check_eq(node.childCount, 2);
 
       // test live-update of query results - delete a history visit that matches the query
-      PlacesUtils.history.removePage(uri("http://foo.com"));
+      yield PlacesUtils.history.remove("http://foo.com");
       do_check_eq(node.childCount, 1);
       node.containerOpen = false;
     }

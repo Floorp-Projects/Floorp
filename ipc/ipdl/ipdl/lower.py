@@ -4138,10 +4138,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                    init=ExprMove(ExprDeref(msgsrcVar))))
 
         stmts.extend((
-            # PickleIterator msgverifyIter__ = PickleIterator(msgverify__);
+            # PickleIterator msgverifyIter__(msgverify__);
             [ StmtDecl(Decl(_iterType(ptr=0), itervar.name),
-                       init=ExprCall(ExprVar('PickleIterator'),
-                                     args=[ msgvar ])) ]
+                       initargs=[ msgvar ]) ]
             # declare varCopy for each variable to deserialize.
             + [ StmtDecl(Decl(p.bareType(side), p.var().name + 'Copy'))
                       for p in params ]
@@ -4211,8 +4210,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         stmts.extend((
             [ StmtDecl(Decl(_iterType(ptr=0), self.itervar.name),
-                     init=ExprCall(ExprVar('PickleIterator'),
-                                   args=[ msgvar ])) ]
+                       initargs=[ msgvar ]) ]
             + decls + [ StmtDecl(Decl(p.bareType(side), p.var().name))
                       for p in md.params ]
             + [ Whitespace.NL ]
@@ -4237,8 +4235,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         stmts.extend(
             [ Whitespace.NL,
               StmtDecl(Decl(_iterType(ptr=0), itervar.name),
-                       init=ExprCall(ExprVar('PickleIterator'),
-                                     args=[ self.replyvar ])) ]
+                       initargs= [ self.replyvar ]) ]
             + [ self.checkedRead(r.ipdltype, r.var(),
                                  ExprAddrOf(self.replyvar),
                                  ExprAddrOf(self.itervar),

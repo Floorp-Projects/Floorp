@@ -3682,11 +3682,10 @@ nsStyleContentData::~nsStyleContentData()
   MOZ_COUNT_DTOR(nsStyleContentData);
 
   if (mType == eStyleContentType_Image) {
-    MOZ_ASSERT(NS_IsMainThread());
-    mContent.mImage->Release();
+    NS_ReleaseOnMainThread(dont_AddRef(mContent.mImage));
+    mContent.mImage = nullptr;
   } else if (mType == eStyleContentType_Counter ||
              mType == eStyleContentType_Counters) {
-    MOZ_ASSERT(NS_IsMainThread());
     mContent.mCounters->Release();
   } else if (mContent.mString) {
     free(mContent.mString);
@@ -3759,6 +3758,14 @@ nsStyleContent::Destroy(nsPresContext* aContext)
 {
   this->~nsStyleContent();
   aContext->PresShell()->FreeByObjectID(eArenaObjectID_nsStyleContent, this);
+}
+
+void
+nsStyleContent::FinishStyle(nsPresContext* aPresContext)
+{
+  for (nsStyleContentData& data : mContents) {
+    data.Resolve(aPresContext);
+  }
 }
 
 nsStyleContent::nsStyleContent(const nsStyleContent& aSource)

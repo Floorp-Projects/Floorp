@@ -21,7 +21,6 @@ public:
     static already_AddRefed<GLContextGLX>
     CreateGLContext(CreateContextFlags flags,
                     const SurfaceCaps& caps,
-                    GLContextGLX* shareContext,
                     bool isOffscreen,
                     Display* display,
                     GLXDrawable drawable,
@@ -72,7 +71,6 @@ private:
 
     GLContextGLX(CreateContextFlags flags,
                  const SurfaceCaps& caps,
-                 GLContext* shareContext,
                  bool isOffscreen,
                  Display* aDisplay,
                  GLXDrawable aDrawable,

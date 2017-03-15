@@ -48,7 +48,7 @@ this.TabStateFlusher = Object.freeze({
    *        An error message that will be sent to the Console in the
    *        event that a flush failed.
    */
-  resolve(browser, flushID, success=true, message="") {
+  resolve(browser, flushID, success = true, message = "") {
     TabStateFlusherInternal.resolve(browser, flushID, success, message);
   },
 
@@ -66,7 +66,7 @@ this.TabStateFlusher = Object.freeze({
    *        An error message that will be sent to the Console in the
    *        event that the flushes failed.
    */
-  resolveAll(browser, success=true, message="") {
+  resolveAll(browser, success = true, message = "") {
     TabStateFlusherInternal.resolveAll(browser, success, message);
   }
 });
@@ -124,7 +124,7 @@ var TabStateFlusherInternal = {
    *        An error message that will be sent to the Console in the
    *        event that a flush failed.
    */
-  resolve(browser, flushID, success=true, message="") {
+  resolve(browser, flushID, success = true, message = "") {
     // Nothing to do if there are no pending flushes for the given browser.
     if (!this._requests.has(browser.permanentKey)) {
       return;
@@ -160,7 +160,7 @@ var TabStateFlusherInternal = {
    *        An error message that will be sent to the Console in the
    *        event that the flushes failed.
    */
-  resolveAll(browser, success=true, message="") {
+  resolveAll(browser, success = true, message = "") {
     // Nothing to do if there are no pending flushes for the given browser.
     if (!this._requests.has(browser.permanentKey)) {
       return;

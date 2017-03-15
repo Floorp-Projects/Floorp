@@ -31,6 +31,6 @@ fails == name-case-sensitivity.html name-case-sensitivity.html
 fails == dependent-builtin.html dependent-builtin.html
 fails == redefine-builtin.html redefine-builtin.html
 fails == redefine-attr-mapping.html redefine-attr-mapping.html
-fails asserts-if(stylo,2) == disclosure-styles.html disclosure-styles.html # bug 1324704
+fails asserts-if(stylo,4) == disclosure-styles.html disclosure-styles.html # bug 1328319
 fails == symbols-function.html symbols-function.html
 fails == symbols-function-invalid.html symbols-function-invalid.html

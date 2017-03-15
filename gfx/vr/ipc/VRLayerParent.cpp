@@ -16,7 +16,6 @@ VRLayerParent::VRLayerParent(uint32_t aVRDisplayID, const Rect& aLeftEyeRect, co
   , mLeftEyeRect(aLeftEyeRect)
   , mRightEyeRect(aRightEyeRect)
 {
-  MOZ_COUNT_CTOR(VRLayerParent);
 }
 
 VRLayerParent::~VRLayerParent()

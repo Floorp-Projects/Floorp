@@ -45,9 +45,9 @@ var decoder;
 
 function promise_check_exist(path, shouldExist) {
   return Task.spawn(function*() {
-    do_print("Ensuring that " + path + (shouldExist?" exists":" does not exist"));
+    do_print("Ensuring that " + path + (shouldExist ? " exists" : " does not exist"));
     if ((yield OS.File.exists(path)) != shouldExist) {
-      throw new Error("File " + path + " should " + (shouldExist?"exist":"not exist"));
+      throw new Error("File " + path + " should " + (shouldExist ? "exist" : "not exist"));
     }
   });
 }

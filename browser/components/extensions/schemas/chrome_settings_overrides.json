@@ -1,0 +1,25 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "chrome_settings_overrides": {
+            "type": "object",
+            "optional": true,
+            "additionalProperties": { "$ref": "UnrecognizedProperty" },
+            "properties": {
+              "homepage": {
+                "type": "string",
+                "format": "url",
+                "optional": true,
+                "preprocess": "localize"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+]

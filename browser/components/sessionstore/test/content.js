@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env mozilla/frame-script */
+
 "use strict";
 
 var Cu = Components.utils;
@@ -16,46 +18,46 @@ function executeSoon(callback) {
 }
 
 gFrameTree.addObserver({
-  onFrameTreeReset: function () {
+  onFrameTreeReset() {
     sendAsyncMessage("ss-test:onFrameTreeReset");
   },
 
-  onFrameTreeCollected: function () {
+  onFrameTreeCollected() {
     sendAsyncMessage("ss-test:onFrameTreeCollected");
   }
 });
 
 var historyListener = {
-  OnHistoryNewEntry: function () {
+  OnHistoryNewEntry() {
     sendAsyncMessage("ss-test:OnHistoryNewEntry");
   },
 
-  OnHistoryGoBack: function () {
+  OnHistoryGoBack() {
     sendAsyncMessage("ss-test:OnHistoryGoBack");
     return true;
   },
 
-  OnHistoryGoForward: function () {
+  OnHistoryGoForward() {
     sendAsyncMessage("ss-test:OnHistoryGoForward");
     return true;
   },
 
-  OnHistoryGotoIndex: function () {
+  OnHistoryGotoIndex() {
     sendAsyncMessage("ss-test:OnHistoryGotoIndex");
     return true;
   },
 
-  OnHistoryPurge: function () {
+  OnHistoryPurge() {
     sendAsyncMessage("ss-test:OnHistoryPurge");
     return true;
   },
 
-  OnHistoryReload: function () {
+  OnHistoryReload() {
     sendAsyncMessage("ss-test:OnHistoryReload");
     return true;
   },
 
-  OnHistoryReplaceEntry: function () {
+  OnHistoryReplaceEntry() {
     sendAsyncMessage("ss-test:OnHistoryReplaceEntry");
   },
 
@@ -75,22 +77,22 @@ if (sessionHistory) {
  * to modify and query docShell data when running with multiple processes.
  */
 
-addEventListener("hashchange", function () {
+addEventListener("hashchange", function() {
   sendAsyncMessage("ss-test:hashchange");
 });
 
-addMessageListener("ss-test:purgeDomainData", function ({data: domain}) {
+addMessageListener("ss-test:purgeDomainData", function({data: domain}) {
   Services.obs.notifyObservers(null, "browser:purge-domain-data", domain);
   content.setTimeout(() => sendAsyncMessage("ss-test:purgeDomainData"));
 });
 
-addMessageListener("ss-test:getStyleSheets", function (msg) {
+addMessageListener("ss-test:getStyleSheets", function(msg) {
   let sheets = content.document.styleSheets;
   let titles = Array.map(sheets, ss => [ss.title, ss.disabled]);
   sendSyncMessage("ss-test:getStyleSheets", titles);
 });
 
-addMessageListener("ss-test:enableStyleSheetsForSet", function (msg) {
+addMessageListener("ss-test:enableStyleSheetsForSet", function(msg) {
   let sheets = content.document.styleSheets;
   let change = false;
   for (let i = 0; i < sheets.length; i++) {
@@ -118,42 +120,42 @@ addMessageListener("ss-test:enableStyleSheetsForSet", function (msg) {
   }
 });
 
-addMessageListener("ss-test:enableSubDocumentStyleSheetsForSet", function (msg) {
+addMessageListener("ss-test:enableSubDocumentStyleSheetsForSet", function(msg) {
   let iframe = content.document.getElementById(msg.data.id);
   iframe.contentDocument.enableStyleSheetsForSet(msg.data.set);
   sendAsyncMessage("ss-test:enableSubDocumentStyleSheetsForSet");
 });
 
-addMessageListener("ss-test:getAuthorStyleDisabled", function (msg) {
+addMessageListener("ss-test:getAuthorStyleDisabled", function(msg) {
   let {authorStyleDisabled} =
     docShell.contentViewer;
   sendSyncMessage("ss-test:getAuthorStyleDisabled", authorStyleDisabled);
 });
 
-addMessageListener("ss-test:setAuthorStyleDisabled", function (msg) {
+addMessageListener("ss-test:setAuthorStyleDisabled", function(msg) {
   let markupDocumentViewer =
     docShell.contentViewer;
   markupDocumentViewer.authorStyleDisabled = msg.data;
   sendSyncMessage("ss-test:setAuthorStyleDisabled");
 });
 
-addMessageListener("ss-test:setUsePrivateBrowsing", function (msg) {
+addMessageListener("ss-test:setUsePrivateBrowsing", function(msg) {
   let loadContext =
     docShell.QueryInterface(Ci.nsILoadContext);
   loadContext.usePrivateBrowsing = msg.data;
   sendAsyncMessage("ss-test:setUsePrivateBrowsing");
 });
 
-addMessageListener("ss-test:getScrollPosition", function (msg) {
+addMessageListener("ss-test:getScrollPosition", function(msg) {
   let frame = content;
   if (msg.data.hasOwnProperty("frame")) {
     frame = content.frames[msg.data.frame];
   }
   let {scrollX: x, scrollY: y} = frame;
-  sendAsyncMessage("ss-test:getScrollPosition", {x: x, y: y});
+  sendAsyncMessage("ss-test:getScrollPosition", {x, y});
 });
 
-addMessageListener("ss-test:setScrollPosition", function (msg) {
+addMessageListener("ss-test:setScrollPosition", function(msg) {
   let frame = content;
   let {x, y} = msg.data;
   if (msg.data.hasOwnProperty("frame")) {
@@ -169,7 +171,7 @@ addMessageListener("ss-test:setScrollPosition", function (msg) {
   });
 });
 
-addMessageListener("ss-test:createDynamicFrames", function ({data}) {
+addMessageListener("ss-test:createDynamicFrames", function({data}) {
   function createIFrame(rows) {
     let frames = content.document.getElementById(data.id);
     frames.setAttribute("rows", rows);
@@ -200,23 +202,23 @@ addMessageListener("ss-test:createDynamicFrames", function ({data}) {
   sendAsyncMessage("ss-test:createDynamicFrames");
 });
 
-addMessageListener("ss-test:removeLastFrame", function ({data}) {
+addMessageListener("ss-test:removeLastFrame", function({data}) {
   let frames = content.document.getElementById(data.id);
   frames.lastElementChild.remove();
   sendAsyncMessage("ss-test:removeLastFrame");
 });
 
-addMessageListener("ss-test:mapFrameTree", function (msg) {
+addMessageListener("ss-test:mapFrameTree", function(msg) {
   let result = gFrameTree.map(frame => ({href: frame.location.href}));
   sendAsyncMessage("ss-test:mapFrameTree", result);
 });
 
-addMessageListener("ss-test:click", function ({data}) {
+addMessageListener("ss-test:click", function({data}) {
   content.document.getElementById(data.id).click();
   sendAsyncMessage("ss-test:click");
 });
 
 addEventListener("load", function(event) {
   let subframe = event.target != content.document;
-  sendAsyncMessage("ss-test:loadEvent", {subframe: subframe, url: event.target.documentURI});
+  sendAsyncMessage("ss-test:loadEvent", {subframe, url: event.target.documentURI});
 }, true);

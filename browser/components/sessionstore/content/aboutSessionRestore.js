@@ -194,15 +194,13 @@ function onListClick(aEvent) {
         !treeView.isContainer(cell.row)) {
       restoreSingleTab(cell.row, aEvent.shiftKey);
       aEvent.stopPropagation();
-    }
-    else if (cell.col.id == "restore")
+    } else if (cell.col.id == "restore")
       toggleRowChecked(cell.row);
   }
 }
 
 function onListKeyDown(aEvent) {
-  switch (aEvent.keyCode)
-  {
+  switch (aEvent.keyCode) {
   case KeyEvent.DOM_VK_SPACE:
     toggleRowChecked(document.getElementById("tabList").currentIndex);
     // Prevent page from scrolling on the space key.
@@ -239,11 +237,16 @@ function toggleRowChecked(aIx) {
       tab.checked = item.checked;
       treeView.treeBox.invalidateRow(gTreeData.indexOf(tab));
     }
-  }
-  else {
-    // update the window's checkmark as well (0 means "partially checked")
-    item.parent.checked = item.parent.tabs.every(isChecked) ? true :
-                          item.parent.tabs.some(isChecked) ? 0 : false;
+  } else {
+    // Update the window's checkmark as well (0 means "partially checked").
+    let state = false;
+    if (item.parent.tabs.every(isChecked)) {
+      state = true;
+    } else if (item.parent.tabs.some(isChecked)) {
+      state = 0;
+    }
+    item.parent.checked = state;
+
     treeView.treeBox.invalidateRow(gTreeData.indexOf(item.parent));
   }
 
@@ -277,20 +280,20 @@ var treeView = {
   treeBox: null,
   selection: null,
 
-  get rowCount()                     { return gTreeData.length; },
-  setTree: function(treeBox)         { this.treeBox = treeBox; },
-  getCellText: function(idx, column) { return gTreeData[idx].label; },
-  isContainer: function(idx)         { return "open" in gTreeData[idx]; },
-  getCellValue: function(idx, column){ return gTreeData[idx].checked; },
-  isContainerOpen: function(idx)     { return gTreeData[idx].open; },
-  isContainerEmpty: function(idx)    { return false; },
-  isSeparator: function(idx)         { return false; },
-  isSorted: function()               { return false; },
-  isEditable: function(idx, column)  { return false; },
-  canDrop: function(idx, orientation, dt) { return false; },
-  getLevel: function(idx)            { return this.isContainer(idx) ? 0 : 1; },
+  get rowCount() { return gTreeData.length; },
+  setTree(treeBox) { this.treeBox = treeBox; },
+  getCellText(idx, column) { return gTreeData[idx].label; },
+  isContainer(idx) { return "open" in gTreeData[idx]; },
+  getCellValue(idx, column) { return gTreeData[idx].checked; },
+  isContainerOpen(idx) { return gTreeData[idx].open; },
+  isContainerEmpty(idx) { return false; },
+  isSeparator(idx) { return false; },
+  isSorted() { return false; },
+  isEditable(idx, column) { return false; },
+  canDrop(idx, orientation, dt) { return false; },
+  getLevel(idx) { return this.isContainer(idx) ? 0 : 1; },
 
-  getParentIndex: function(idx) {
+  getParentIndex(idx) {
     if (!this.isContainer(idx))
       for (var t = idx - 1; t >= 0 ; t--)
         if (this.isContainer(t))
@@ -298,7 +301,7 @@ var treeView = {
     return -1;
   },
 
-  hasNextSibling: function(idx, after) {
+  hasNextSibling(idx, after) {
     var thisLevel = this.getLevel(idx);
     for (var t = after + 1; t < gTreeData.length; t++)
       if (this.getLevel(t) <= thisLevel)
@@ -306,7 +309,7 @@ var treeView = {
     return false;
   },
 
-  toggleOpenState: function(idx) {
+  toggleOpenState(idx) {
     if (!this.isContainer(idx))
       return;
     var item = gTreeData[idx];
@@ -317,8 +320,7 @@ var treeView = {
       var deletecount = t - idx - 1;
       gTreeData.splice(idx + 1, deletecount);
       this.treeBox.rowCountChanged(idx + 1, -deletecount);
-    }
-    else {
+    } else {
       // add this window's tab rows to the view
       var toinsert = gTreeData[idx].tabs;
       for (var i = 0; i < toinsert.length; i++)
@@ -329,7 +331,7 @@ var treeView = {
     this.treeBox.invalidateRow(idx);
   },
 
-  getCellProperties: function(idx, column) {
+  getCellProperties(idx, column) {
     if (column.id == "restore" && this.isContainer(idx) && gTreeData[idx].checked === 0)
       return "partial";
     if (column.id == "title")
@@ -338,7 +340,7 @@ var treeView = {
     return "";
   },
 
-  getRowProperties: function(idx) {
+  getRowProperties(idx) {
     var winState = gTreeData[idx].parent || gTreeData[idx];
     if (winState.ix % 2 != 0)
       return "alternate";
@@ -346,17 +348,17 @@ var treeView = {
     return "";
   },
 
-  getImageSrc: function(idx, column) {
+  getImageSrc(idx, column) {
     if (column.id == "title")
       return gTreeData[idx].src || null;
     return null;
   },
 
-  getProgressMode : function(idx, column) { },
-  cycleHeader: function(column) { },
-  cycleCell: function(idx, column) { },
-  selectionChanged: function() { },
-  performAction: function(action) { },
-  performActionOnCell: function(action, index, column) { },
-  getColumnProperties: function(column) { return ""; }
+  getProgressMode(idx, column) { },
+  cycleHeader(column) { },
+  cycleCell(idx, column) { },
+  selectionChanged() { },
+  performAction(action) { },
+  performActionOnCell(action, index, column) { },
+  getColumnProperties(column) { return ""; }
 };

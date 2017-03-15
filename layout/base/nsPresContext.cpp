@@ -2019,11 +2019,16 @@ nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
     } else {
       NS_WARNING("stylo: ServoStyleSets don't support responding to medium "
                  "changes yet. See bug 1290228.");
+      aRestyleHint |= eRestyle_Subtree;
     }
   }
 
   if (mUsesViewportUnits && mPendingViewportChange) {
     // Rebuild all style data without rerunning selector matching.
+    //
+    // TODO(emilio, bug 1328652): We don't set mUsesViewportUnits in stylo yet.
+    // This is wallpapered given we assume medium feature changes
+    // unconditionally, but we need to fix this.
     aRestyleHint |= eRestyle_ForceDescendants;
   }
 

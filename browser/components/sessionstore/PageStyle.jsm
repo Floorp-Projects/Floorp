@@ -12,11 +12,11 @@ const Ci = Components.interfaces;
  * The external API exported by this module.
  */
 this.PageStyle = Object.freeze({
-  collect: function (docShell, frameTree) {
+  collect(docShell, frameTree) {
     return PageStyleInternal.collect(docShell, frameTree);
   },
 
-  restoreTree: function (docShell, data) {
+  restoreTree(docShell, data) {
     PageStyleInternal.restoreTree(docShell, data);
   }
 });
@@ -28,7 +28,7 @@ var PageStyleInternal = {
   /**
    * Collects the selected style sheet sets for all reachable frames.
    */
-  collect: function (docShell, frameTree) {
+  collect(docShell, frameTree) {
     let result = frameTree.map(({document: doc}) => {
       let style;
 
@@ -71,23 +71,23 @@ var PageStyleInternal = {
    *          ]
    *        }
    */
-  restoreTree: function (docShell, data) {
+  restoreTree(docShell, data) {
     let disabled = data.disabled || false;
     let markupDocumentViewer =
       docShell.contentViewer;
     markupDocumentViewer.authorStyleDisabled = disabled;
 
-    function restoreFrame(root, data) {
-      if (data.hasOwnProperty("pageStyle")) {
-        root.document.selectedStyleSheetSet = data.pageStyle;
+    function restoreFrame(root, frameData) {
+      if (frameData.hasOwnProperty("pageStyle")) {
+        root.document.selectedStyleSheetSet = frameData.pageStyle;
       }
 
-      if (!data.hasOwnProperty("children")) {
+      if (!frameData.hasOwnProperty("children")) {
         return;
       }
 
       let frames = root.frames;
-      data.children.forEach((child, index) => {
+      frameData.children.forEach((child, index) => {
         if (child && index < frames.length) {
           restoreFrame(frames[index], child);
         }

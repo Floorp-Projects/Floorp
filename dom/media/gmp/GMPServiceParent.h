@@ -65,6 +65,8 @@ public:
 
   void UpdateContentProcessGMPCapabilities();
 
+  AbstractThread* MainThread() const { return mMainThread; }
+
 private:
   friend class GMPServiceParent;
 
@@ -202,6 +204,8 @@ private:
   // Tracks how many users are running (on the GMP thread). Only when this count
   // drops to 0 can we safely shut down the thread.
   MainThreadOnly<int32_t> mServiceUserCount;
+
+  const RefPtr<AbstractThread> mMainThread;
 };
 
 nsresult ReadSalt(nsIFile* aPath, nsACString& aOutData);

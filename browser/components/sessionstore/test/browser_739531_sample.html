@@ -6,11 +6,10 @@
 <meta charset="utf-8">
 <script>
 
-function boom()
-{
+function boom() {
   var w = document.getElementById("f").contentWindow;
   var d = w.document;
-  d.designMode = 'on';
+  d.designMode = "on";
   var r = d.documentElement;
   d.removeChild(r);
   document.adoptNode(r);
@@ -22,4 +21,3 @@ function boom()
 <iframe src="data:text/html;charset=utf-8,1" id="f"></iframe>
 </body>
 </html>
-

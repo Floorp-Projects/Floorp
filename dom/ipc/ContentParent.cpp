@@ -69,7 +69,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
-#include "mozilla/ipc/PSendStreamParent.h"
+#include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
@@ -3176,16 +3176,34 @@ ContentParent::GetPrintingParent()
 }
 #endif
 
-PSendStreamParent*
-ContentParent::AllocPSendStreamParent()
+PChildToParentStreamParent*
+ContentParent::AllocPChildToParentStreamParent()
 {
-  return nsIContentParent::AllocPSendStreamParent();
+  return nsIContentParent::AllocPChildToParentStreamParent();
 }
 
 bool
-ContentParent::DeallocPSendStreamParent(PSendStreamParent* aActor)
+ContentParent::DeallocPChildToParentStreamParent(PChildToParentStreamParent* aActor)
 {
-  return nsIContentParent::DeallocPSendStreamParent(aActor);
+  return nsIContentParent::DeallocPChildToParentStreamParent(aActor);
+}
+
+PParentToChildStreamParent*
+ContentParent::SendPParentToChildStreamConstructor(PParentToChildStreamParent* aActor)
+{
+  return PContentParent::SendPParentToChildStreamConstructor(aActor);
+}
+
+PParentToChildStreamParent*
+ContentParent::AllocPParentToChildStreamParent()
+{
+  return nsIContentParent::AllocPParentToChildStreamParent();
+}
+
+bool
+ContentParent::DeallocPParentToChildStreamParent(PParentToChildStreamParent* aActor)
+{
+  return nsIContentParent::DeallocPParentToChildStreamParent(aActor);
 }
 
 PScreenManagerParent*
@@ -3921,7 +3939,10 @@ ContentParent::RecvKeywordToURI(const nsCString& aKeyword,
   info->GetKeywordProviderName(*aProviderName);
 
   AutoIPCStream autoStream;
-  autoStream.Serialize(postData, this);
+  if (NS_WARN_IF(!autoStream.Serialize(postData, this))) {
+    NS_ENSURE_SUCCESS(NS_ERROR_FAILURE, IPC_FAIL_NO_REASON(this));
+  }
+
   *aPostData = autoStream.TakeOptionalValue();
 
   nsCOMPtr<nsIURI> uri;
@@ -4108,6 +4129,12 @@ ContentParent::RecvKeygenProvideContent(nsString* aAttribute,
   formProcessor->ProvideContent(NS_LITERAL_STRING("SELECT"), *aContent,
                                 *aAttribute);
   return IPC_OK();
+}
+
+PFileDescriptorSetParent*
+ContentParent::SendPFileDescriptorSetConstructor(const FileDescriptor& aFD)
+{
+  return PContentParent::SendPFileDescriptorSetConstructor(aFD);
 }
 
 PFileDescriptorSetParent*
@@ -5137,6 +5164,10 @@ ContentParent::RecvFileCreationRequest(const nsID& aID,
   MOZ_ASSERT(blobImpl);
 
   BlobParent* blobParent = BlobParent::GetOrCreate(this, blobImpl);
+  if (NS_WARN_IF(!blobParent)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   if (!SendFileCreationResponse(aID,
                                 FileCreationSuccessResult(blobParent, nullptr))) {
     return IPC_FAIL_NO_REASON(this);

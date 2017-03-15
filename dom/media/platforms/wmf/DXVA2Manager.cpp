@@ -699,7 +699,8 @@ D3D11DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
     mTextureClientAllocator = new D3D11RecycleAllocator(
       layers::ImageBridgeChild::GetSingleton().get(), mDevice);
 
-    if (ImageBridgeChild::GetSingleton() && gfxPrefs::PDMWMFUseSyncTexture()) {
+    if (ImageBridgeChild::GetSingleton() && gfxPrefs::PDMWMFUseSyncTexture() &&
+        mDevice != DeviceManagerDx::Get()->GetCompositorDevice()) {
       // We use a syncobject to avoid the cost of the mutex lock when compositing,
       // and because it allows color conversion ocurring directly from this texture
       // DXVA does not seem to accept IDXGIKeyedMutex textures as input.
@@ -902,7 +903,7 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
   if (mutex) {
     hr = mutex->AcquireSync(0, 2000);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  } else {
+  } else if (mDevice != DeviceManagerDx::Get()->GetCompositorDevice()) {
     NS_ENSURE_TRUE(mSyncObject, E_FAIL);
   }
 
@@ -939,10 +940,10 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
     hr = mTransform->Output(&sample);
   }
 
-  if (!mutex) {
+  if (!mutex && mDevice != DeviceManagerDx::Get()->GetCompositorDevice()) {
     client->SyncWithObject(mSyncObject);
     mSyncObject->FinalizeFrame();
-  } else {
+  } else if (mutex) {
     mutex->ReleaseSync(0);
   }
 

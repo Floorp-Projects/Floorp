@@ -575,7 +575,7 @@ fails == 364989-1.html 364989-1.html
 fails == 365173-1.html 365173-1.html
 == 366207-1.xul 366207-1.xul
 == 366616-1.xul 366616-1.xul
-fails asserts-if(stylo,30) skip-if(stylo) == 367220-1.html 367220-1.html # bug 1324704 # crash bug 1342106
+fails skip-if(stylo) == 367220-1.html 367220-1.html # crash bug 1342106
 == 367247-s-visible.html 367247-s-visible.html
 == 367247-s-hidden.html 367247-s-hidden.html
 == 367247-s-auto.html 367247-s-auto.html
@@ -618,7 +618,7 @@ fails == 368504-2.html 368504-2.html
 == 368504-4.html 368504-4.html
 == 368504-5.html 368504-5.html
 fails == 368504-6.html 368504-6.html
-fails asserts-if(stylo,2) == 368622-1.html 368622-1.html # bug 1324704
+== 368622-1.html 368622-1.html
 == 368651-1.html 368651-1.html
 == 369361-1.html 369361-1.html
 == 369361-2.html 369361-2.html
@@ -1187,7 +1187,7 @@ fails pref(dom.use_xbl_scopes_for_remote_xul,true) == 449149-1b.html 449149-1b.h
 fails == 449362-1.html 449362-1.html
 == 449519-1.html 449519-1.html
 == 450670-1.html 450670-1.html
-fails == 451168-1.html 451168-1.html
+== 451168-1.html 451168-1.html
 == 451876-1.html 451876-1.html
 == 451876-2.html 451876-2.html
 == 452915-1.html 452915-1.html
@@ -1453,7 +1453,7 @@ fails == 523096-1.html 523096-1.html
 == 528038-1e.html 528038-1e.html
 == 528038-1f.html 528038-1f.html
 == 528038-2.html 528038-2.html
-fails == 528096-1.html 528096-1.html
+== 528096-1.html 528096-1.html
 fails == 530686-1.html 530686-1.html
 == 531098-1.html 531098-1.html
 fails == 531200-1.html 531200-1.html

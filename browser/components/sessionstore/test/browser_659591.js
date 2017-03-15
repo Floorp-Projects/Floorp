@@ -6,11 +6,11 @@ function test() {
 
   let eventReceived = false;
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     ok(eventReceived, "SSWindowClosing event received");
   });
 
-  newWindow(function (win) {
+  newWindow(function(win) {
     win.addEventListener("SSWindowClosing", function() {
       eventReceived = true;
     }, {once: true});
