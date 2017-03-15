@@ -14,8 +14,12 @@ var res1 = [
     value: "160" + "\u00D7" + "160.117"
   },
   {
-    selector: ".boxmodel-size > span",
-    value: "100" + "\u00D7" + "100.117"
+    selector: ".boxmodel-size > .boxmodel-width",
+    value: "100"
+  },
+  {
+    selector: ".boxmodel-size > .boxmodel-height",
+    value: "100.117"
   },
   {
     selector: ".boxmodel-margin.boxmodel-top > span",
@@ -73,8 +77,12 @@ var res2 = [
     value: "190" + "\u00D7" + "210"
   },
   {
-    selector: ".boxmodel-size > span",
-    value: "100" + "\u00D7" + "150"
+    selector: ".boxmodel-size > .boxmodel-width",
+    value: "100"
+  },
+  {
+    selector: ".boxmodel-size > .boxmodel-height",
+    value: "150"
   },
   {
     selector: ".boxmodel-margin.boxmodel-top > span",
