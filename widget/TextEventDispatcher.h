@@ -330,6 +330,7 @@ private:
     nsString mString;
     RefPtr<TextRangeArray> mClauses;
     TextRange mCaret;
+    bool mReplacedNativeLineBreakers;
 
     void EnsureClauseArray();
 
