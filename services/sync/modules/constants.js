@@ -78,6 +78,10 @@ APPS_STORE_BATCH_SIZE:                 50,      // same as MOBILE_BATCH_SIZE
 // (how many records are fetched at a time from the server when batching is used).
 DEFAULT_DOWNLOAD_BATCH_SIZE:           1000,
 
+
+// Default maximum size for a record payload
+DEFAULT_MAX_RECORD_PAYLOAD_BYTES:      262144,  // 256KB
+
 // score thresholds for early syncs
 SINGLE_USER_THRESHOLD:                 1000,
 MULTI_DEVICE_THRESHOLD:                300,
