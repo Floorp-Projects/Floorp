@@ -1113,6 +1113,11 @@ nsProtocolProxyService::ReloadPAC()
         prefs->GetCharPref(PROXY_PREF("autoconfig_url"), getter_Copies(pacSpec));
     else if (type == PROXYCONFIG_WPAD)
         pacSpec.AssignLiteral(WPAD_URL);
+    else if (type == PROXYCONFIG_SYSTEM) {
+        if (mSystemProxySettings)
+            mSystemProxySettings->GetPACURI(pacSpec);
+        ResetPACThread();
+    }
 
     if (!pacSpec.IsEmpty())
         ConfigureFromPAC(pacSpec, true);
