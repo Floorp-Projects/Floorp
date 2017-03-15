@@ -1097,7 +1097,10 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
   }
   gfxRect bbox;
   nsISVGChildFrame *svg = do_QueryFrame(aFrame);
-  if (svg || aFrame->IsSVGText()) {
+  const bool hasSVGLayout = aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT;
+  if (hasSVGLayout || aFrame->IsSVGText() ||
+      // if we evaluate the following, |svg| can only be an outer-<svg> or null
+      (svg && !(aFlags & eUseFrameBoundsForOuterSVG))) {
     // It is possible to apply a gradient, pattern, clipping path, mask or
     // filter to text. When one of these facilities is applied to text
     // the bounding box is the entire text element in all
