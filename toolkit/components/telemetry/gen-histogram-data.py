@@ -63,7 +63,7 @@ def write_histogram_table(output, histograms):
                   "index overflow")
 
     print("\nconst uint32_t gHistogramLabelTable[] = {", file=output)
-    for name,indexes in label_table:
+    for name, indexes in label_table:
         print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
     print("};", file=output)
 

@@ -161,7 +161,7 @@ class ProfileEntry
         MOZ_ASSERT(!isJs());
         return spOrScript;
     }
-    JSScript* script() const volatile;
+    JS_PUBLIC_API(JSScript*) script() const volatile;
     uint32_t line() const volatile {
         MOZ_ASSERT(!isJs());
         return static_cast<uint32_t>(lineOrPcOffset);

@@ -324,12 +324,17 @@ AccessibleCaret::SetCaretElementStyle(const nsRect& aRect, float aZoomLevel)
   nsPoint position = CaretElementPosition(aRect);
   nsAutoString styleStr;
   styleStr.AppendPrintf("left: %dpx; top: %dpx; "
-                        "width: %.2fpx; height: %.2fpx; margin-left: %.2fpx",
+                        "width: ",
                         nsPresContext::AppUnitsToIntCSSPixels(position.x),
-                        nsPresContext::AppUnitsToIntCSSPixels(position.y),
-                        sWidth / aZoomLevel,
-                        sHeight / aZoomLevel,
-                        sMarginLeft / aZoomLevel);
+                        nsPresContext::AppUnitsToIntCSSPixels(position.y));
+  // We can't use AppendPrintf here, because it does locale-specific
+  // formatting of floating-point values.
+  styleStr.AppendFloat(sWidth/aZoomLevel);
+  styleStr.AppendLiteral("px; height: ");
+  styleStr.AppendFloat(sHeight/aZoomLevel);
+  styleStr.AppendLiteral("px; margin-left: ");
+  styleStr.AppendFloat(sMarginLeft/aZoomLevel);
+  styleStr.AppendLiteral("px");
 
   CaretElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::style, styleStr, true);
   AC_LOG("%s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(styleStr).get());
@@ -369,9 +374,13 @@ AccessibleCaret::SetSelectionBarElementStyle(const nsRect& aRect,
                                              float aZoomLevel)
 {
   nsAutoString styleStr;
-  styleStr.AppendPrintf("height: %dpx; width: %.2fpx;",
-                        nsPresContext::AppUnitsToIntCSSPixels(aRect.height),
-                        sBarWidth / aZoomLevel);
+  styleStr.AppendPrintf("height: %dpx; width: ",
+                        nsPresContext::AppUnitsToIntCSSPixels(aRect.height));
+  // We can't use AppendPrintf here, because it does locale-specific
+  // formatting of floating-point values.
+  styleStr.AppendFloat(sBarWidth / aZoomLevel);
+  styleStr.AppendLiteral("px");
+
   SelectionBarElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::style, styleStr,
                                  true);
   AC_LOG("%s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(styleStr).get());

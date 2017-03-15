@@ -2368,7 +2368,7 @@ var NativeWindow = {
           }
         }
       }
-    } else if (aTopic == "Menu:Clicked") {
+    } else if (event == "Menu:Clicked") {
       if (this.menu._callbacks[data.item]) {
         this.menu._callbacks[data.item]();
       }

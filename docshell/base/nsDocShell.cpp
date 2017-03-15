@@ -876,9 +876,7 @@ nsDocShell::~nsDocShell()
     NS_IF_RELEASE(sURIFixup);
   }
 
-  if (gDocShellLeakLog) {
-    MOZ_LOG(gDocShellLeakLog, LogLevel::Debug, ("DOCSHELL %p destroyed\n", this));
-  }
+  MOZ_LOG(gDocShellLeakLog, LogLevel::Debug, ("DOCSHELL %p destroyed\n", this));
 
 #ifdef DEBUG
   // We're counting the number of |nsDocShells| to help find leaks
@@ -1322,15 +1320,9 @@ nsDocShell::LoadURI(nsIURI* aURI,
     aLoadInfo->GetBaseURI(getter_AddRefs(baseURI));
   }
 
-#if defined(DEBUG)
-  if (MOZ_LOG_TEST(gDocShellLog, LogLevel::Debug)) {
-    nsAutoCString uristr;
-    aURI->GetAsciiSpec(uristr);
-    MOZ_LOG(gDocShellLog, LogLevel::Debug,
-           ("nsDocShell[%p]: loading %s with flags 0x%08x",
-            this, uristr.get(), aLoadFlags));
-  }
-#endif
+  MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
+          ("nsDocShell[%p]: loading %s with flags 0x%08x",
+           this, aURI->GetSpecOrDefault().get(), aLoadFlags));
 
   if (!shEntry &&
       !LOAD_TYPE_HAS_FLAGS(loadType, LOAD_FLAGS_REPLACE_HISTORY)) {
@@ -1980,10 +1972,9 @@ bool
 nsDocShell::SetCurrentURI(nsIURI* aURI, nsIRequest* aRequest,
                           bool aFireOnLocationChange, uint32_t aLocationFlags)
 {
-  if (gDocShellLeakLog && MOZ_LOG_TEST(gDocShellLeakLog, LogLevel::Debug)) {
-    PR_LogPrint("DOCSHELL %p SetCurrentURI %s\n",
-                this, aURI ? aURI->GetSpecOrDefault().get() : "");
-  }
+  MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
+          ("DOCSHELL %p SetCurrentURI %s\n",
+           this, aURI ? aURI->GetSpecOrDefault().get() : ""));
 
   // We don't want to send a location change when we're displaying an error
   // page, and we don't want to change our idea of "current URI" either
@@ -5343,7 +5334,8 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
 
     MOZ_LOG(gDocShellLog, LogLevel::Debug,
            ("nsDocShell[%p]::LoadErrorPage(\"%s\", \"%s\", {...}, [%s])\n", this,
-            aURI->GetSpecOrDefault().get(), NS_ConvertUTF16toUTF8(aURL).get(),
+            aURI ? aURI->GetSpecOrDefault().get() : "",
+            NS_ConvertUTF16toUTF8(aURL).get(),
             chanName.get()));
   }
 #endif
@@ -9809,10 +9801,9 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   nsresult rv = NS_OK;
   mOriginalUriString.Truncate();
 
-  if (gDocShellLeakLog && MOZ_LOG_TEST(gDocShellLeakLog, LogLevel::Debug)) {
-    PR_LogPrint("DOCSHELL %p InternalLoad %s\n",
-                this, aURI ? aURI->GetSpecOrDefault().get() : "");
-  }
+  MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
+          ("DOCSHELL %p InternalLoad %s\n",
+           this, aURI ? aURI->GetSpecOrDefault().get() : ""));
   // Initialize aDocShell/aRequest
   if (aDocShell) {
     *aDocShell = nullptr;

@@ -1637,7 +1637,7 @@ JS::ForEachProfiledFrameOp::FrameHandle::FrameHandle(JSRuntime* rt, js::jit::Jit
     }
 }
 
-JS::ProfilingFrameIterator::FrameKind
+JS_PUBLIC_API(JS::ProfilingFrameIterator::FrameKind)
 JS::ForEachProfiledFrameOp::FrameHandle::frameKind() const
 {
     if (entry_.isBaseline())

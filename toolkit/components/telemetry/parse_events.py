@@ -88,7 +88,7 @@ class TypeChecker:
                                       (identifier, key,
                                        nice_type_name(self._args[0]),
                                        nice_type_name(type(x)))
-            for k,v in value.iteritems():
+            for k, v in value.iteritems():
                 if not isinstance(x, self._args[1]):
                     raise ValueError, "%s: failed dict type check for %s - expected value type %s for key %s, got %s" %\
                                       (identifier, key,
@@ -127,7 +127,7 @@ def type_check_event_fields(identifier, name, definition):
         raise KeyError(identifier + ' - unknown fields: ' + ', '.join(unknown_fields))
 
     # Type-check fields.
-    for k,v in definition.iteritems():
+    for k, v in definition.iteritems():
         ALL_FIELDS[k].check(identifier, k, v)
 
 
@@ -310,7 +310,7 @@ def load_events(filename):
     #       <event definition>
     #      ...
     #   ...
-    for category_name,category in events.iteritems():
+    for category_name, category in events.iteritems():
         string_check("top level structure", field='category', value=category_name,
                      min_length=1, max_length=MAX_CATEGORY_NAME_LENGTH,
                      regex=IDENTIFIER_PATTERN)
@@ -319,7 +319,7 @@ def load_events(filename):
         if not category or len(category) == 0:
             raise ValueError(category_name + ' must contain at least one entry')
 
-        for name,entry in category.iteritems():
+        for name, entry in category.iteritems():
             string_check(category_name, field='event name', value=name,
                          min_length=1, max_length=MAX_METHOD_NAME_LENGTH,
                          regex=IDENTIFIER_PATTERN)

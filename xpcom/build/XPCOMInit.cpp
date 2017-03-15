@@ -1022,9 +1022,7 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   // JS pseudo-stack's internal reference to the main thread JSContext,
   // duplicating the call in XPCJSContext::~XPCJSContext() in case that
   // never fired.
-  if (PseudoStack* stack = profiler_get_pseudo_stack()) {
-    stack->sampleContext(nullptr);
-  }
+  profiler_clear_js_context();
 #endif
 
   if (sInitializedJS) {
