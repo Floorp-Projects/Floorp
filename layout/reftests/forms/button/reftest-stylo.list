@@ -40,3 +40,5 @@ fails == width-exact-fit-ltr.html width-exact-fit-ltr.html # Bug 1341086
 fails == width-exact-fit-rtl.html width-exact-fit-rtl.html # Bug 1341086
 fails == display-grid-flex-columnset.html display-grid-flex-columnset.html
 == 1317351.html 1317351.html
+
+fails == dynamic-text-indent.html dynamic-text-indent.html # Bug 1341086

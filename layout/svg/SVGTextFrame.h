@@ -371,6 +371,13 @@ public:
   gfxRect TransformFrameRectFromTextChild(const nsRect& aRect,
                                           nsIFrame* aChildFrame);
 
+  /**
+   * Update the style of our ::-moz-svg-text anonymous box.
+   */
+  void DoUpdateStyleOfOwnedAnonBoxes(mozilla::ServoStyleSet& aStyleSet,
+                                     nsStyleChangeList& aChangeList,
+                                     nsChangeHint aHintForThisFrame) override;
+
 private:
   /**
    * Mutation observer used to watch for text positioning attribute changes
