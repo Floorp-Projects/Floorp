@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Dragging the scrollbar on a page with a fixed-positioned element just past the right edge of the content</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    body {
+      height: 2000px;
+    }
+    #fixed {
+      width: 240px;
+      height: 100%;
+      position: fixed;
+      top: 0px;
+      right: -240px;
+      z-index: 1000;
+      overflow-y: scroll;
+    }
+    #fixed-content {
+      height: 2000px;
+    }
+  </style>
+  <script type="text/javascript">
+var root;
+var scrollPos;
+var haveScrolled = false;
+var generatedAll = false;
+
+// Be careful not to call subtestDone() until we've scrolled AND generated
+// all of the events.
+function maybeDone() {
+  if (haveScrolled && generatedAll) {
+    subtestDone();
+  }
+}
+
+function scrolled(e) {
+  // Test that we have scrolled
+  ok(root.scrollTop > scrollPos, "document scrolled after dragging scrollbar");
+  haveScrolled = true;
+  maybeDone();
+}
+
+function* test(testDriver) {
+  root = document.scrollingElement;
+  scrollPos = root.scrollTop;
+  document.addEventListener('scroll', scrolled);
+
+  var scrollbarX = (window.innerWidth + root.clientWidth) / 2;
+  // Move the mouse to the scrollbar
+  yield synthesizeNativeMouseEvent(root, scrollbarX, 100, nativeMouseMoveEventMsg(), testDriver);
+  // mouse down
+  yield synthesizeNativeMouseEvent(root, scrollbarX, 100, nativeMouseDownEventMsg(), testDriver);
+  // drag vertically
+  yield synthesizeNativeMouseEvent(root, scrollbarX, 150, nativeMouseMoveEventMsg(), testDriver);
+  // and release
+  yield synthesizeNativeMouseEvent(root, scrollbarX, 150, nativeMouseUpEventMsg(), testDriver);
+
+  generatedAll = true;
+  maybeDone();
+}
+
+waitUntilApzStable()
+.then(runContinuation(test));
+
+  </script>
+</head>
+<body>
+  <div id="fixed">
+    <p id="fixed-content"></p>
+  </div>
+</body>
+</html>
