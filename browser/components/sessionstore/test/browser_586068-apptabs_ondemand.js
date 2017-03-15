@@ -9,7 +9,7 @@ add_task(function* test() {
   Services.prefs.setBoolPref(PREF_RESTORE_ON_DEMAND, true);
   Services.prefs.setBoolPref(PREF_RESTORE_PINNED_TABS_ON_DEMAND, true);
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref(PREF_RESTORE_ON_DEMAND);
     Services.prefs.clearUserPref(PREF_RESTORE_PINNED_TABS_ON_DEMAND);
   });
@@ -25,7 +25,7 @@ add_task(function* test() {
   ], selected: 5 }] };
 
   let promiseRestoringTabs = new Promise(resolve => {
-    gProgressListener.setCallback(function (aBrowser, aNeedRestore, aRestoring, aRestored) {
+    gProgressListener.setCallback(function(aBrowser, aNeedRestore, aRestoring, aRestored) {
       // get the tab
       let tab;
       for (let i = 0; i < window.gBrowser.tabs.length; i++) {

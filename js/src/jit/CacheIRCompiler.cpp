@@ -2113,6 +2113,54 @@ CacheIRCompiler::emitStoreTypedObjectReferenceProp(ValueOperand val, ReferenceTy
     }
 }
 
+void
+CacheIRCompiler::emitPostBarrierShared(Register obj, const ConstantOrRegister& val,
+                                       Register scratch, Register maybeIndex)
+{
+    if (!cx_->nursery().exists())
+        return;
+
+    if (val.constant()) {
+        MOZ_ASSERT_IF(val.value().isObject(), !IsInsideNursery(&val.value().toObject()));
+        return;
+    }
+
+    TypedOrValueRegister reg = val.reg();
+    if (reg.hasTyped() && reg.type() != MIRType::Object)
+        return;
+
+    Label skipBarrier;
+    if (reg.hasValue()) {
+        masm.branchValueIsNurseryObject(Assembler::NotEqual, reg.valueReg(), scratch,
+                                        &skipBarrier);
+    } else {
+        masm.branchPtrInNurseryChunk(Assembler::NotEqual, reg.typedReg().gpr(), scratch,
+                                     &skipBarrier);
+    }
+    masm.branchPtrInNurseryChunk(Assembler::Equal, obj, scratch, &skipBarrier);
+
+    // Call one of these, depending on maybeIndex:
+    //
+    //   void PostWriteBarrier(JSRuntime* rt, JSObject* obj);
+    //   void PostWriteElementBarrier(JSRuntime* rt, JSObject* obj,
+    //                                int32_t index);
+    LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    masm.PushRegsInMask(save);
+    masm.setupUnalignedABICall(scratch);
+    masm.movePtr(ImmPtr(cx_->runtime()), scratch);
+    masm.passABIArg(scratch);
+    masm.passABIArg(obj);
+    if (maybeIndex != InvalidReg) {
+        masm.passABIArg(maybeIndex);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*,
+                                             (PostWriteElementBarrier<IndexInBounds::Yes>)));
+    } else {
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostWriteBarrier));
+    }
+    masm.PopRegsInMask(save);
+
+    masm.bind(&skipBarrier);
+}
 
 bool
 CacheIRCompiler::emitWrapResult()

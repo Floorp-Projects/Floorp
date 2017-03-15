@@ -18,6 +18,7 @@
 #include "nsExceptionHandler.h"
 #endif
 #include "nsISupportsImpl.h"
+#include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
 
 using namespace mozilla;

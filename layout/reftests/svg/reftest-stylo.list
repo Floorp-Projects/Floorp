@@ -408,7 +408,7 @@ fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-01
 
 == svg-effects-area-unzoomed.xhtml svg-effects-area-unzoomed.xhtml
 == svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in.xhtml
-fails == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out.xhtml
+== svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out.xhtml
 == href-attr-change-restyles.svg href-attr-change-restyles.svg
 == mask-img.html mask-img.html
 

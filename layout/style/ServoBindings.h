@@ -223,11 +223,7 @@ void Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src);
 void Gecko_SetNullImageValue(nsStyleImage* image);
 void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient);
 void Gecko_SetUrlImageValue(nsStyleImage* image,
-                            const uint8_t* url_bytes,
-                            uint32_t url_length,
-                            ThreadSafeURIHolder* base_uri,
-                            ThreadSafeURIHolder* referrer,
-                            ThreadSafePrincipalHolder* principal);
+                            ServoBundledURI uri);
 void Gecko_CopyImageValueFrom(nsStyleImage* image, const nsStyleImage* other);
 
 nsStyleGradient* Gecko_CreateGradient(uint8_t shape,
@@ -245,12 +241,12 @@ void Gecko_CopyListStyleImageFrom(nsStyleList* dest, const nsStyleList* src);
 // cursor style.
 void Gecko_SetCursorArrayLength(nsStyleUserInterface* ui, size_t len);
 void Gecko_SetCursorImage(nsCursorImage* cursor,
-                          const uint8_t* string_bytes, uint32_t string_length,
-                          ThreadSafeURIHolder* base_uri,
-                          ThreadSafeURIHolder* referrer,
-                          ThreadSafePrincipalHolder* principal);
+                          ServoBundledURI uri);
 void Gecko_CopyCursorArrayFrom(nsStyleUserInterface* dest,
                                const nsStyleUserInterface* src);
+
+void Gecko_SetContentDataImage(nsStyleContentData* content_data, ServoBundledURI uri);
+void Gecko_SetContentDataArray(nsStyleContentData* content_data, nsStyleContentType type, uint32_t len);
 
 // Dirtiness tracking.
 uint32_t Gecko_GetNodeFlags(RawGeckoNodeBorrowed node);
@@ -282,12 +278,17 @@ void Gecko_EnsureTArrayCapacity(void* array, size_t capacity, size_t elem_size);
 // otherwise. This is ensured with rust traits for the relevant structs.
 void Gecko_ClearPODTArray(void* array, size_t elem_size, size_t elem_align);
 
-// Clear the mContents field in nsStyleContent. This is needed to run the
-// destructors, otherwise we'd leak the images (though we still don't support
-// those), strings, and whatnot.
+// Clear the mContents, mCounterIncrements, or mCounterResets field in nsStyleContent. This is
+// needed to run the destructors, otherwise we'd leak the images, strings, and whatnot.
 void Gecko_ClearAndResizeStyleContents(nsStyleContent* content,
                                        uint32_t how_many);
+void Gecko_ClearAndResizeCounterIncrements(nsStyleContent* content,
+                                           uint32_t how_many);
+void Gecko_ClearAndResizeCounterResets(nsStyleContent* content,
+                                       uint32_t how_many);
 void Gecko_CopyStyleContentsFrom(nsStyleContent* content, const nsStyleContent* other);
+void Gecko_CopyCounterResetsFrom(nsStyleContent* content, const nsStyleContent* other);
+void Gecko_CopyCounterIncrementsFrom(nsStyleContent* content, const nsStyleContent* other);
 
 void Gecko_EnsureImageLayersLength(nsStyleImageLayers* layers, size_t len,
                                    nsStyleImageLayers::LayerType layer_type);
@@ -355,7 +356,8 @@ void Gecko_CSSValue_SetPercentage(nsCSSValueBorrowedMut css_value, float percent
 void Gecko_CSSValue_SetAngle(nsCSSValueBorrowedMut css_value, float radians);
 void Gecko_CSSValue_SetCalc(nsCSSValueBorrowedMut css_value, nsStyleCoord::CalcValue calc);
 void Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut css_value, int32_t len);
-void Gecko_CSSValue_SetString(nsCSSValueBorrowedMut css_value, const nsString string);
+void Gecko_CSSValue_SetString(nsCSSValueBorrowedMut css_value, const uint8_t* string, uint32_t len);
+void Gecko_CSSValue_SetIdent(nsCSSValueBorrowedMut css_value, const uint8_t* string, uint32_t len);
 void Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut css_value, int32_t len);
 void Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut css_value, ServoBundledURI uri);
 void Gecko_CSSValue_SetLocal(nsCSSValueBorrowedMut css_value, const nsString family);

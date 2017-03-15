@@ -226,6 +226,203 @@ var Bookmarks = Object.freeze({
     }.bind(this));
   },
 
+
+  /**
+   * Inserts a bookmark-tree into the existing bookmarks tree.
+   *
+   * All the specified folders and bookmarks will be inserted as new, even
+   * if duplicates. There's no merge support at this time.
+   *
+   * The input should be of the form:
+   * {
+   *   guid: "<some-existing-guid-to-use-as-parent>",
+   *   source: "<some valid source>", (optional)
+   *   children: [
+   *     ... valid bookmark objects.
+   *   ]
+   * }
+   *
+   * Children will be appended to any existing children of the parent
+   * that is specified. The source specified on the root of the tree
+   * will be used for all the items inserted. Any indices or custom parentGuids
+   * set on children will be ignored and overwritten.
+   *
+   * @param tree
+   *        object representing a tree of bookmark items to insert.
+   *
+   * @return {Promise} resolved when the creation is complete.
+   * @resolves to an object representing the created bookmark.
+   * @rejects if it's not possible to create the requested bookmark.
+   * @throws if the arguments are invalid.
+   */
+  insertTree(tree) {
+    if (!tree || typeof tree != "object") {
+      throw new Error("Should be provided a valid tree object.");
+    }
+
+    if (!Array.isArray(tree.children) || !tree.children.length) {
+      throw new Error("Should have a non-zero number of children to insert.");
+    }
+
+    if (!PlacesUtils.isValidGuid(tree.guid)) {
+      throw new Error("The parent guid is not valid.");
+    }
+
+    if (tree.guid == this.rootGuid) {
+      throw new Error("Can't insert into the root.");
+    }
+
+    if (tree.guid == this.tagsGuid) {
+      throw new Error("Can't use insertTree to insert tags.");
+    }
+
+    if (tree.hasOwnProperty("source") &&
+        !Object.values(this.SOURCES).includes(tree.source)) {
+      throw new Error("Can't use source value " + tree.source);
+    }
+
+    // Serialize the tree into an array of items to insert into the db.
+    let insertInfos = [];
+    let urlsThatMightNeedPlaces = [];
+
+    // We want to use the same 'last added' time for all the entries
+    // we import (so they won't differ by a few ms based on where
+    // they are in the tree, and so we don't needlessly construct
+    // multiple dates).
+    let fallbackLastAdded = new Date();
+
+    const {TYPE_BOOKMARK, TYPE_FOLDER, SOURCES} = this;
+
+    // Reuse the 'source' property for all the entries.
+    let source = tree.source || SOURCES.DEFAULT;
+
+    function appendInsertionInfoForInfoArray(infos, indexToUse, parentGuid) {
+      // We want to keep the index of items that will be inserted into the root
+      // NULL, and then use a subquery to select the right index, to avoid
+      // races where other consumers might add items between when we determine
+      // the index and when we insert. However, the validator does not allow
+      // NULL values in in the index, so we fake it while validating and then
+      // correct later. Keep track of whether we're doing this:
+      let shouldUseNullIndices = false;
+      if (indexToUse === null) {
+        shouldUseNullIndices = true;
+        indexToUse = 0;
+      }
+
+      // When a folder gets an item added, its last modified date is updated
+      // to be equal to the date we added the item (if that date is newer).
+      // Because we're inserting a tree, we keep track of this date for the
+      // loop, updating it for inserted items as well as from any subfolders
+      // we insert.
+      let lastAddedForParent = new Date(0);
+      for (let info of infos) {
+        // Add a guid if none is present.
+        if (!info.hasOwnProperty("guid")) {
+          info.guid = PlacesUtils.history.makeGuid();
+        }
+        // Set the correct parent guid.
+        info.parentGuid = parentGuid;
+        // Ensure to use the same date for dateAdded and lastModified, even if
+        // dateAdded may be imposed by the caller.
+        let time = (info && info.dateAdded) || fallbackLastAdded;
+        let insertInfo = validateBookmarkObject(info, {
+          type: { defaultValue: TYPE_BOOKMARK }
+          , url: { requiredIf: b => b.type == TYPE_BOOKMARK
+                 , validIf: b => b.type == TYPE_BOOKMARK }
+          , parentGuid: { required: true }
+          , title: { validIf: b => [ TYPE_BOOKMARK
+                                   , TYPE_FOLDER ].includes(b.type) }
+          , dateAdded: { defaultValue: time
+                       , validIf: b => !b.lastModified ||
+                                        b.dateAdded <= b.lastModified }
+          , lastModified: { defaultValue: time,
+                            validIf: b => (!b.dateAdded && b.lastModified >= time) ||
+                                          (b.dateAdded && b.lastModified >= b.dateAdded) }
+          , index: { replaceWith: indexToUse++ }
+          , source: { replaceWith: source }
+          , children: { validIf: b => b.type == TYPE_FOLDER && Array.isArray(b.children) }
+        });
+        if (shouldUseNullIndices) {
+          insertInfo.index = null;
+        }
+        // Store the URL if this is a bookmark, so we can ensure we create an
+        // entry in moz_places for it.
+        if (insertInfo.type == Bookmarks.TYPE_BOOKMARK) {
+          urlsThatMightNeedPlaces.push(insertInfo.url);
+        }
+        insertInfos.push(insertInfo);
+        // Process any children. We have to use info.children here rather than
+        // insertInfo.children because validateBookmarkObject doesn't copy over
+        // the children ref, as the default bookmark validators object doesn't
+        // know about children.
+        if (info.children) {
+          // start children of this item off at index 0.
+          let childrenLastAdded = appendInsertionInfoForInfoArray(info.children, 0, insertInfo.guid);
+          if (childrenLastAdded > insertInfo.lastModified) {
+            insertInfo.lastModified = childrenLastAdded;
+          }
+          if (childrenLastAdded > lastAddedForParent) {
+            lastAddedForParent = childrenLastAdded;
+          }
+        }
+
+        // Ensure we track what time to update the parent to.
+        if (insertInfo.dateAdded > lastAddedForParent) {
+          lastAddedForParent = insertInfo.dateAdded;
+        }
+      }
+      return lastAddedForParent;
+    }
+    // We want to validate synchronously, but we can't know the index at which
+    // we're inserting into the parent. We just use NULL instead,
+    // and the SQL query with which we insert will update it as necessary.
+    let lastAddedForParent = appendInsertionInfoForInfoArray(tree.children, null, tree.guid);
+
+    return Task.spawn(function* () {
+      let parent = yield fetchBookmark({ guid: tree.guid });
+      if (!parent) {
+        throw new Error("The parent you specified doesn't exist.");
+      }
+
+      if (parent._parentId == PlacesUtils.tagsFolderId) {
+        throw new Error("Can't use insertTree to insert tags.");
+      }
+
+      yield insertBookmarkTree(insertInfos, source, parent,
+                               urlsThatMightNeedPlaces, lastAddedForParent);
+      // Now update the indices of root items in the objects we return.
+      // These may be wrong if someone else modified the table between
+      // when we fetched the parent and inserted our items, but the actual
+      // inserts will have been correct, and we don't want to query the DB
+      // again if we don't have to. bug 1347230 covers improving this.
+      let rootIndex = parent._childCount;
+      for (let insertInfo of insertInfos) {
+        if (insertInfo.parentGuid == tree.guid) {
+          insertInfo.index += rootIndex++;
+        }
+      }
+      // We need the itemIds to notify, though once the switch to guids is
+      // complete we may stop using them.
+      let itemIdMap = yield PlacesUtils.promiseManyItemIds(insertInfos.map(info => info.guid));
+      // Notify onItemAdded to listeners.
+      let observers = PlacesUtils.bookmarks.getObservers();
+      for (let i = 0; i < insertInfos.length; i++) {
+        let item = insertInfos[i];
+        let itemId = itemIdMap.get(item.guid);
+        let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
+        notify(observers, "onItemAdded", [ itemId, parent._id, item.index,
+                                           item.type, uri, item.title || null,
+                                           PlacesUtils.toPRTime(item.dateAdded), item.guid,
+                                           item.parentGuid, item.source ],
+                                         { isTagging: false });
+        // Remove non-enumerable properties.
+        delete item.source;
+        insertInfos[i] = Object.assign({}, item);
+      }
+      return insertInfos;
+    });
+  },
+
   /**
    * Updates a bookmark-item.
    *
@@ -335,8 +532,8 @@ var Bookmarks = Object.freeze({
         if (item.type == this.TYPE_BOOKMARK &&
             item.url.href != updatedItem.url.href) {
           // ...though we don't wait for the calculation.
-          updateFrecency(db, [item.url]).then(null, Cu.reportError);
-          updateFrecency(db, [updatedItem.url]).then(null, Cu.reportError);
+          updateFrecency(db, [item.url]).catch(Cu.reportError);
+          updateFrecency(db, [updatedItem.url]).catch(Cu.reportError);
         }
 
         // Notify onItemChanged to listeners.
@@ -1059,7 +1256,7 @@ function insertBookmark(item, parent) {
     // If not a tag recalculate frecency...
     if (item.type == Bookmarks.TYPE_BOOKMARK && !isTagging) {
       // ...though we don't wait for the calculation.
-      updateFrecency(db, [item.url]).then(null, Cu.reportError);
+      updateFrecency(db, [item.url]).catch(Cu.reportError);
     }
 
     // Don't return an empty title to the caller.
@@ -1067,6 +1264,46 @@ function insertBookmark(item, parent) {
       delete item.title;
 
     return item;
+  }));
+}
+
+function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: insertBookmarkTree", Task.async(function*(db) {
+    yield db.executeTransaction(function* transaction() {
+      yield maybeInsertManyPlaces(db, urls);
+
+      let syncChangeDelta =
+        PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source);
+      let syncStatus =
+        PlacesSyncUtils.bookmarks.determineInitialSyncStatus(source);
+
+      let rootId = parent._id;
+
+      items = items.map(item => ({
+        url: item.url && item.url.href,
+        type: item.type, parentGuid: item.parentGuid, index: item.index,
+        title: item.title, date_added: PlacesUtils.toPRTime(item.dateAdded),
+        last_modified: PlacesUtils.toPRTime(item.lastModified), guid: item.guid,
+        syncChangeCounter: syncChangeDelta, syncStatus, rootId
+      }));
+      yield db.executeCached(
+        `INSERT INTO moz_bookmarks (fk, type, parent, position, title,
+                                    dateAdded, lastModified, guid,
+                                    syncChangeCounter, syncStatus)
+         VALUES (CASE WHEN :url ISNULL THEN NULL ELSE (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url) END, :type,
+         (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid),
+         IFNULL(:index, (SELECT count(*) FROM moz_bookmarks WHERE parent = :rootId)),
+         :title, :date_added, :last_modified, :guid,
+         :syncChangeCounter, :syncStatus)`, items);
+
+      yield setAncestorsLastModified(db, parent.guid, lastAddedForParent,
+                                     syncChangeDelta);
+    });
+
+    // We don't wait for the frecency calculation.
+    updateFrecency(db, urls).catch(Cu.reportError);
+
+    return items;
   }));
 }
 
@@ -1297,7 +1534,7 @@ function removeBookmark(item, options) {
     // If not a tag recalculate frecency...
     if (item.type == Bookmarks.TYPE_BOOKMARK && !isUntagging) {
       // ...though we don't wait for the calculation.
-      updateFrecency(db, [item.url]).then(null, Cu.reportError);
+      updateFrecency(db, [item.url]).catch(Cu.reportError);
     }
 
     return item;
@@ -1547,18 +1784,20 @@ function validateBookmarkObject(input, behavior) {
  *        the array of URLs to update.
  */
 var updateFrecency = Task.async(function* (db, urls) {
+  // TODO: this can be optimized for multiple-URL usage, see bug 1346979
+  let urlQuery = 'hash("' + urls.map(url => url.href).join('"), hash("') + '")';
   // We just use the hashes, since updating a few additional urls won't hurt.
   yield db.execute(
     `UPDATE moz_places
      SET frecency = NOTIFY_FRECENCY(
        CALCULATE_FRECENCY(id), url, guid, hidden, last_visit_date
-     ) WHERE url_hash IN ( ${urls.map(url => `hash("${url.href}")`).join(", ")} )
+     ) WHERE url_hash IN ( ${urlQuery} )
     `);
 
   yield db.execute(
     `UPDATE moz_places
      SET hidden = 0
-     WHERE url_hash IN ( ${urls.map(url => `hash(${JSON.stringify(url.href)})`).join(", ")} )
+     WHERE url_hash IN ( ${urlQuery} )
        AND frecency <> 0
     `);
 });
@@ -1757,6 +1996,27 @@ function maybeInsertPlace(db, url) {
          frecency: url.protocol == "place:" ? 0 : -1 });
 }
 
+/**
+ * Tries to insert a new place if it doesn't exist yet.
+ * @param db
+ *        The database to use
+ * @param urls
+ *        An array with all the url objects to insert.
+ * @return {Promise} resolved when the operation is complete.
+ */
+function maybeInsertManyPlaces(db, urls) {
+  return db.executeCached(
+    `INSERT OR IGNORE INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid) VALUES
+     (:url, hash(:url), :rev_host, 0, :frecency,
+     IFNULL((SELECT guid FROM moz_places WHERE url_hash = hash(:url) AND url = :url), :maybeguid))`,
+     urls.map(url => ({
+       url: url.href,
+       rev_host: PlacesUtils.getReversedHost(url),
+       frecency: url.protocol == "place:" ? 0 : -1,
+       maybeguid: PlacesUtils.history.makeGuid(),
+     })));
+}
+
 // Indicates whether we should write a tombstone for an item that has been
 // uploaded to the server. We ignore "NEW" and "UNKNOWN" items: "NEW" items
 // haven't been uploaded yet, and "UNKNOWN" items need a full reconciliation
@@ -1848,3 +2108,4 @@ function adjustSeparatorsSyncCounter(db, parentId, startIndex, syncChangeDelta) 
       item_type: Bookmarks.TYPE_SEPARATOR
     });
 }
+

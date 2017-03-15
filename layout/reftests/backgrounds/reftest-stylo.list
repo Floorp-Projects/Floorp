@@ -175,7 +175,7 @@ fails HTTP == background-referrer.html background-referrer.html
 fuzzy-if(skiaContent,1,8) == background-multiple-with-border-radius.html background-multiple-with-border-radius.html
 == background-repeat-large-area.html background-repeat-large-area.html
 
-fails == background-tiling-zoom-1.html background-tiling-zoom-1.html
+== background-tiling-zoom-1.html background-tiling-zoom-1.html
 
 skip-if(!cocoaWidget) == background-repeat-resampling.html background-repeat-resampling.html
 

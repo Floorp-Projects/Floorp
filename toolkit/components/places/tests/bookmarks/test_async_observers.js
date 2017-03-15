@@ -108,7 +108,7 @@ add_task(function* test_add_icon() {
 
 add_task(function* test_remove_page() {
   let observerPromise = observer.setupCompletionPromise();
-  PlacesUtils.history.removePage(NetUtil.newURI("http://book.ma.rk/"));
+  yield PlacesUtils.history.remove("http://book.ma.rk/");
   yield observerPromise;
 });
 

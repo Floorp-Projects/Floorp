@@ -565,10 +565,6 @@ public:
   {
     return mDecoder->SupportDecoderRecycling();
   }
-  void ConfigurationChanged(const TrackInfo& aConfig) override
-  {
-    mDecoder->ConfigurationChanged(aConfig);
-  }
   RefPtr<ShutdownPromise> Shutdown() override
   {
     RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
@@ -1082,6 +1078,7 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
            Preferences::GetUint("media.video-max-decode-error", 2))
   , mDemuxer(new DemuxerProxy(aDemuxer))
   , mDemuxerInitDone(false)
+  , mPendingNotifyDataArrived(false)
   , mLastReportedNumDecodedFrames(0)
   , mPreviousDecodedKeyframeTime_us(sNoPreviousDecodedKeyframe)
   , mInitDone(false)
@@ -1991,9 +1988,6 @@ MediaFormatReader::HandleDemuxedSamples(
         if (sample->mKeyframe) {
           decoder.mQueuedSamples.AppendElements(Move(samples));
         }
-      } else if (decoder.mInfo && *decoder.mInfo != *info) {
-        const TrackInfo* trackInfo = *info;
-        decoder.mDecoder->ConfigurationChanged(*trackInfo);
       }
 
       decoder.mInfo = info;
@@ -2144,6 +2138,16 @@ MediaFormatReader::Update(TrackType aTrack)
     return;
   }
 
+  if (decoder.HasWaitingPromise() && decoder.HasCompletedDrain()) {
+    // This situation will occur when a change of stream ID occurred during
+    // internal seeking following a gap encountered in the data, a drain was
+    // requested and has now completed. We need to complete the draining process
+    // so that the new data can be processed.
+    // We can complete the draining operation now as we have no pending
+    // operation when a waiting promise is pending.
+    decoder.mDrainState = DrainState::None;
+  }
+
   if (UpdateReceivedNewData(aTrack)) {
     LOGV("Nothing more to do");
     return;
@@ -2230,8 +2234,7 @@ MediaFormatReader::Update(TrackType aTrack)
       LOG("Rejecting %s promise: DECODE_ERROR", TrackTypeToStr(aTrack));
       decoder.RejectPromise(decoder.mError.ref(), __func__);
       return;
-    } else if (decoder.mDrainState == DrainState::DrainCompleted
-               || decoder.mDrainState == DrainState::DrainAborted) {
+    } else if (decoder.HasCompletedDrain()) {
       if (decoder.mDemuxEOS) {
         LOG("Rejecting %s promise: EOS", TrackTypeToStr(aTrack));
         decoder.RejectPromise(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
@@ -2884,10 +2887,8 @@ MediaFormatReader::NotifyDataArrived()
   }
 
   if (mNotifyDataArrivedPromise.Exists()) {
-    // Already one in progress. Reschedule for later.
-    RefPtr<nsIRunnable> task(
-        NewRunnableMethod(this, &MediaFormatReader::NotifyDataArrived));
-    OwnerThread()->Dispatch(task.forget());
+    // Already one in progress. Set the dirty flag so we can process it later.
+    mPendingNotifyDataArrived = true;
     return;
   }
 
@@ -2898,6 +2899,10 @@ MediaFormatReader::NotifyDataArrived()
              self->mNotifyDataArrivedPromise.Complete();
              self->UpdateBuffered();
              self->NotifyTrackDemuxers();
+             if (self->mPendingNotifyDataArrived) {
+               self->mPendingNotifyDataArrived = false;
+               self->NotifyDataArrived();
+             }
            },
            [self]() { self->mNotifyDataArrivedPromise.Complete(); })
     ->Track(mNotifyDataArrivedPromise);

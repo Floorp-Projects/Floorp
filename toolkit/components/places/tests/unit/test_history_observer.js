@@ -151,7 +151,7 @@ add_task(function* test_onDeleteURI() {
   });
   let [testuri] = yield task_add_visit();
   let testguid = do_get_guid_for_uri(testuri);
-  PlacesUtils.bhistory.removePage(testuri);
+  yield PlacesUtils.history.remove(testuri);
   yield promiseNotify;
 });
 
@@ -172,7 +172,7 @@ add_task(function* test_onDeleteVisits() {
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
                                        "test");
   let testguid = do_get_guid_for_uri(testuri);
-  PlacesUtils.bhistory.removePage(testuri);
+  yield PlacesUtils.history.remove(testuri);
   yield promiseNotify;
 });
 

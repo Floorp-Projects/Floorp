@@ -18,6 +18,7 @@ public:
 
   ~ThreadResponsiveness();
 
+  // Won't do anything on non-main threads for now.
   void Update(bool aIsMainThread, nsIThread* aThread);
 
   mozilla::TimeDuration GetUnresponsiveDuration(const mozilla::TimeStamp& now) const {

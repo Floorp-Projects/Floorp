@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts":{
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "taskcluster-client": "^1.6.2"
+  }
+}

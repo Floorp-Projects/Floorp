@@ -188,7 +188,8 @@ enum OwnTransferablePolicy {
     NoTransferables
 };
 
-class MOZ_NON_MEMMOVABLE JSStructuredCloneData : public mozilla::BufferList<js::SystemAllocPolicy>
+class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) :
+    public mozilla::BufferList<js::SystemAllocPolicy>
 {
     typedef js::SystemAllocPolicy AllocPolicy;
     typedef mozilla::BufferList<js::SystemAllocPolicy> BufferList;

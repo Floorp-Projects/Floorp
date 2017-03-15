@@ -6,7 +6,7 @@
 
 #include "sdnTextAccessible.h"
 
-#include "ISimpleDOMText_i.c"
+#include "ISimpleDOM.h"
 
 #include "nsCoreUtils.h"
 #include "DocAccessible.h"

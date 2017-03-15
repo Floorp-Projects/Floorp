@@ -14,7 +14,7 @@ load 383979-1.xhtml
 load 383979-2.html
 load 386939-1.html
 load 391034-1.xhtml
-asserts-if(stylo,1) load 397022-1.html # bug 1324704
+load 397022-1.html
 load 399289-1.svg
 load 404470-1.html
 load 411603-1.html

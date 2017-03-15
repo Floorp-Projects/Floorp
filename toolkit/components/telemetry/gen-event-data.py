@@ -65,10 +65,9 @@ def write_extra_table(events, output, string_table):
 
 def write_common_event_table(events, output, string_table, extra_table):
     table_name = "gCommonEventInfo"
-    extra_count = 0
 
     print("const CommonEventInfo %s[] = {" % table_name, file=output)
-    for e,extras in zip(events, extra_table):
+    for e, extras in zip(events, extra_table):
         # Write a comment to make the file human-readable.
         print("  // category: %s" % e.category, file=output)
         print("  // methods: [%s]" % ", ".join(e.methods), file=output)
@@ -78,8 +77,8 @@ def write_common_event_table(events, output, string_table, extra_table):
         print("  {%d, %d, %d, %d, %d, %s, %s}," %
                 (string_table.stringIndex(e.category),
                  string_table.stringIndex(e.expiry_version),
-                 extras[0], # extra keys index
-                 extras[1], # extra keys count
+                 extras[0],  # extra keys index
+                 extras[1],  # extra keys count
                  e.expiry_day,
                  e.dataset,
                  " | ".join(e.record_in_processes_enum)),
@@ -94,7 +93,7 @@ def write_event_table(events, output, string_table):
     table_name = "gEventInfo"
     print("const EventInfo %s[] = {" % table_name, file=output)
 
-    for common_info_index,e in enumerate(events):
+    for common_info_index, e in enumerate(events):
         for method_name, object_name in itertools.product(e.methods, e.objects):
             print("  // category: %s, method: %s, object: %s" %
                     (e.category, method_name, object_name),

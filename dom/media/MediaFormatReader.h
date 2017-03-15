@@ -263,6 +263,11 @@ private:
     {
       return mDrainState != DrainState::None;
     }
+    bool HasCompletedDrain() const
+    {
+      return mDrainState == DrainState::DrainCompleted ||
+             mDrainState == DrainState::DrainAborted;
+    }
     void RequestDrain()
     {
         MOZ_RELEASE_ASSERT(mDrainState == DrainState::None);
@@ -450,6 +455,7 @@ private:
   void OnDemuxerInitFailed(const MediaResult& aError);
   MozPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
   MozPromiseRequestHolder<NotifyDataArrivedPromise> mNotifyDataArrivedPromise;
+  bool mPendingNotifyDataArrived;
   void OnDemuxFailed(TrackType aTrack, const MediaResult &aError);
 
   void DoDemuxVideo();

@@ -66,19 +66,19 @@ this.SessionFile = {
   /**
    * Read the contents of the session file, asynchronously.
    */
-  read: function () {
+  read() {
     return SessionFileInternal.read();
   },
   /**
    * Write the contents of the session file, asynchronously.
    */
-  write: function (aData) {
+  write(aData) {
     return SessionFileInternal.write(aData);
   },
   /**
    * Wipe the contents of the session file, asynchronously.
    */
-  wipe: function () {
+  wipe() {
     return SessionFileInternal.wipe();
   },
 
@@ -226,32 +226,34 @@ var SessionFileInternal = {
         let source = yield OS.File.read(path, { encoding: "utf-8" });
         let parsed = JSON.parse(source);
 
-        if (!SessionStore.isFormatVersionCompatible(parsed.version || ["sessionrestore", 0] /*fallback for old versions*/)) {
+        if (!SessionStore.isFormatVersionCompatible(parsed.version || ["sessionrestore", 0] /* fallback for old versions*/)) {
           // Skip sessionstore files that we don't understand.
           Cu.reportError("Cannot extract data from Session Restore file " + path + ". Wrong format/version: " + JSON.stringify(parsed.version) + ".");
           continue;
         }
         result = {
           origin: key,
-          source: source,
-          parsed: parsed
+          source,
+          parsed
         };
         Telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").
           add(false);
         Telemetry.getHistogramById("FX_SESSION_RESTORE_READ_FILE_MS").
           add(Date.now() - startMs);
         break;
-      } catch (ex if ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
-        exists = false;
-      } catch (ex if ex instanceof OS.File.Error) {
-        // The file might be inaccessible due to wrong permissions
-        // or similar failures. We'll just count it as "corrupted".
-        console.error("Could not read session file ", ex, ex.stack);
-        corrupted = true;
-      } catch (ex if ex instanceof SyntaxError) {
-        console.error("Corrupt session file (invalid JSON found) ", ex, ex.stack);
-        // File is corrupted, try next file
-        corrupted = true;
+      } catch (ex) {
+          if (ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
+            exists = false;
+          } else if (ex instanceof OS.File.Error) {
+            // The file might be inaccessible due to wrong permissions
+            // or similar failures. We'll just count it as "corrupted".
+            console.error("Could not read session file ", ex, ex.stack);
+            corrupted = true;
+          } else if (ex instanceof SyntaxError) {
+            console.error("Corrupt session file (invalid JSON found) ", ex, ex.stack);
+            // File is corrupted, try next file
+            corrupted = true;
+          }
       } finally {
         if (exists) {
           noFilesFound = false;
@@ -310,7 +312,7 @@ var SessionFileInternal = {
     return SessionWorker.post(...args)
   }),
 
-  write: function (aData) {
+  write(aData) {
     if (RunState.isClosed) {
       return Promise.reject(new Error("SessionFile is closed"));
     }
@@ -377,12 +379,12 @@ var SessionFileInternal = {
     });
   },
 
-  wipe: function () {
+  wipe() {
     return this._postToWorker("wipe");
   },
 
-  _recordTelemetry: function(telemetry) {
-    for (let id of Object.keys(telemetry)){
+  _recordTelemetry(telemetry) {
+    for (let id of Object.keys(telemetry)) {
       let value = telemetry[id];
       let samples = [];
       if (Array.isArray(value)) {

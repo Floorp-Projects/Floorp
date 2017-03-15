@@ -78,11 +78,11 @@ class ScalarType:
 
         # The required and optional fields in a scalar type definition.
         REQUIRED_FIELDS = {
-            'bug_numbers': list, # This contains ints. See LIST_FIELDS_CONTENT.
+            'bug_numbers': list,  # This contains ints. See LIST_FIELDS_CONTENT.
             'description': basestring,
             'expires': basestring,
             'kind': basestring,
-            'notification_emails': list, # This contains strings. See LIST_FIELDS_CONTENT.
+            'notification_emails': list,  # This contains strings. See LIST_FIELDS_CONTENT.
             'record_in_processes': list,
         }
 

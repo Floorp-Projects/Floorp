@@ -429,7 +429,7 @@ nscoord nsCSSValue::GetPixelLength() const
 void nsCSSValue::DoReset()
 {
   if (UnitHasStringValue()) {
-    DO_RELEASE(mString);
+    mValue.mString->Release();
   } else if (IsFloatColorUnit()) {
     DO_RELEASE(mFloatColor);
   } else if (eCSSUnit_ComplexColor == mUnit) {

@@ -6665,6 +6665,10 @@
         // Set the cursor to an arrow during tab drags.
         dt.mozCursor = "default";
 
+        // Set the tab as the source of the drag, which ensures we have a stable
+        // node to deliver the `dragend` event.  See bug 1345473.
+        dt.addElement(tab);
+
         // Create a canvas to which we capture the current tab.
         // Until canvas is HiDPI-aware (bug 780362), we need to scale the desired
         // canvas size (in CSS pixels) to the window's backing resolution in order

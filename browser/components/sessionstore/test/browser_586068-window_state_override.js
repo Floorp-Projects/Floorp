@@ -6,7 +6,7 @@ const PREF_RESTORE_ON_DEMAND = "browser.sessionstore.restore_on_demand";
 
 add_task(function* test() {
   Services.prefs.setBoolPref(PREF_RESTORE_ON_DEMAND, false);
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref(PREF_RESTORE_ON_DEMAND);
   });
 
@@ -30,7 +30,7 @@ add_task(function* test() {
 
   let loadCount = 0;
   let promiseRestoringTabs = new Promise(resolve => {
-    gProgressListener.setCallback(function (aBrowser, aNeedRestore, aRestoring, aRestored) {
+    gProgressListener.setCallback(function(aBrowser, aNeedRestore, aRestoring, aRestored) {
       // When loadCount == 2, we'll also restore state2 into the window
       if (++loadCount == 2) {
         executeSoon(() => ss.setWindowState(window, JSON.stringify(state2), true));

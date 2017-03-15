@@ -527,12 +527,19 @@ ArmDebugger::getValue(const char* desc, int32_t* value)
 bool
 ArmDebugger::getVFPDoubleValue(const char* desc, double* value)
 {
-    FloatRegister reg(FloatRegister::FromName(desc));
-    if (reg != InvalidFloatReg) {
-        sim_->get_double_from_d_register(reg.code(), value);
+    FloatRegister reg = FloatRegister::FromCode(FloatRegister::FromName(desc));
+    if (reg == InvalidFloatReg)
+        return false;
+
+    if (reg.isSingle()) {
+        float fval;
+        sim_->get_float_from_s_register(reg.id(), &fval);
+        *value = fval;
         return true;
     }
-    return false;
+
+    sim_->get_double_from_d_register(reg.id(), value);
+    return true;
 }
 
 bool

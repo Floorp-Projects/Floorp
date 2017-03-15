@@ -118,7 +118,7 @@ add_task(function*() {
   let doc = tab.linkedBrowser.contentDocument;
   let iframe = doc.createElement("iframe");
   iframe.id = "iframe";
-  iframe.src="browser_frame_history_index.html";
+  iframe.src = "browser_frame_history_index.html";
   doc.body.appendChild(iframe);
   yield waitForLoadsInBrowser(tab.linkedBrowser, 4);
 
@@ -142,7 +142,7 @@ add_task(function*() {
   info("Check in the state that we have not stored this history");
   let state = ss.getBrowserState();
   info(JSON.stringify(JSON.parse(state), null, "\t"));
-  is(state.indexOf("c1.html"), -1, "History entry was not stored in the session state");;
+  is(state.indexOf("c1.html"), -1, "History entry was not stored in the session state");
   gBrowser.removeTab(tab);
 });
 

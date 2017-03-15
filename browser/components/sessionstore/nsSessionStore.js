@@ -26,7 +26,7 @@ function SessionStoreService() {}
 
 // The SessionStore module's object is frozen. We need to modify our prototype
 // and add some properties so let's just copy the SessionStore object.
-Object.keys(SessionStore).forEach(function (aName) {
+Object.keys(SessionStore).forEach(function(aName) {
   let desc = Object.getOwnPropertyDescriptor(SessionStore, aName);
   Object.defineProperty(SessionStoreService.prototype, aName, desc);
 });

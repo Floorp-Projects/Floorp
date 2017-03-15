@@ -11,10 +11,10 @@ EXPORTS += [
     'agnostic/TheoraDecoder.h',
     'agnostic/VorbisDecoder.h',
     'agnostic/VPXDecoder.h',
-    'DurationMap.h',
     'MediaTelemetryConstants.h',
     'PDMFactory.h',
     'PlatformDecoderModule.h',
+    'SimpleMap.h',
     'wrappers/H264Converter.h',
     'wrappers/MediaDataDecoderProxy.h'
 

@@ -40,102 +40,18 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 function ColorWidget(parentEl, rgb) {
   EventEmitter.decorate(this);
 
-  this.element = parentEl.ownerDocument.createElementNS(XHTML_NS, "div");
   this.parentEl = parentEl;
 
-  this.element.className = "colorwidget-container";
-  this.element.innerHTML = `
-    <div class="colorwidget-top">
-      <div class="colorwidget-fill"></div>
-      <div class="colorwidget-top-inner">
-        <div class="colorwidget-color colorwidget-box">
-          <div class="colorwidget-sat">
-            <div class="colorwidget-val">
-              <div class="colorwidget-dragger"></div>
-            </div>
-          </div>
-        </div>
-        <div class="colorwidget-hue colorwidget-box">
-          <div class="colorwidget-slider colorwidget-slider-control"></div>
-        </div>
-      </div>
-    </div>
-    <div class="colorwidget-alpha colorwidget-checker colorwidget-box">
-      <div class="colorwidget-alpha-inner">
-        <div class="colorwidget-alpha-handle colorwidget-slider-control"></div>
-      </div>
-    </div>
-    <div class="colorwidget-value">
-      <select class="colorwidget-select">
-        <option value="hex">Hex</option>
-        <option value="rgba">RGBA</option>
-        <option value="hsla">HSLA</option>
-      </select>
-      <div class="colorwidget-hex">
-        <input class="colorwidget-hex-input"/>
-      </div>
-      <div class="colorwidget-rgba colorwidget-hidden">
-        <input class="colorwidget-rgba-r" data-id="r" />
-        <input class="colorwidget-rgba-g" data-id="g" />
-        <input class="colorwidget-rgba-b" data-id="b" />
-        <input class="colorwidget-rgba-a" data-id="a" />
-      </div>
-      <div class="colorwidget-hsla colorwidget-hidden">
-        <input class="colorwidget-hsla-h" data-id="h" />
-        <input class="colorwidget-hsla-s" data-id="s" />
-        <input class="colorwidget-hsla-l" data-id="l" />
-        <input class="colorwidget-hsla-a" data-id="a" />
-      </div>
-    </div>
-  `;
-
-  this.onSelectValueChange = this.onSelectValueChange.bind(this);
-  this.onHexInputChange = this.onHexInputChange.bind(this);
-  this.onRgbaInputChange = this.onRgbaInputChange.bind(this);
-  this.onHslaInputChange = this.onHslaInputChange.bind(this);
-
+  this.onAlphaSliderMove = this.onAlphaSliderMove.bind(this);
   this.onElementClick = this.onElementClick.bind(this);
-  this.element.addEventListener("click", this.onElementClick);
+  this.onDraggerMove = this.onDraggerMove.bind(this);
+  this.onHexInputChange = this.onHexInputChange.bind(this);
+  this.onHslaInputChange = this.onHslaInputChange.bind(this);
+  this.onRgbaInputChange = this.onRgbaInputChange.bind(this);
+  this.onSelectValueChange = this.onSelectValueChange.bind(this);
+  this.onSliderMove = this.onSliderMove.bind(this);
 
-  this.parentEl.appendChild(this.element);
-
-  this.slider = this.element.querySelector(".colorwidget-hue");
-  this.slideHelper = this.element.querySelector(".colorwidget-slider");
-  ColorWidget.draggable(this.slider, this.onSliderMove.bind(this));
-
-  this.dragger = this.element.querySelector(".colorwidget-color");
-  this.dragHelper = this.element.querySelector(".colorwidget-dragger");
-  ColorWidget.draggable(this.dragger, this.onDraggerMove.bind(this));
-
-  this.alphaSlider = this.element.querySelector(".colorwidget-alpha");
-  this.alphaSliderInner = this.element.querySelector(".colorwidget-alpha-inner");
-  this.alphaSliderHelper = this.element.querySelector(".colorwidget-alpha-handle");
-  ColorWidget.draggable(this.alphaSliderInner, this.onAlphaSliderMove.bind(this));
-
-  this.colorSelect = this.element.querySelector(".colorwidget-select");
-  this.colorSelect.addEventListener("change", this.onSelectValueChange);
-
-  this.hexValue = this.element.querySelector(".colorwidget-hex");
-  this.hexValueInput = this.element.querySelector(".colorwidget-hex-input");
-  this.hexValueInput.addEventListener("input", this.onHexInputChange);
-
-  this.rgbaValue = this.element.querySelector(".colorwidget-rgba");
-  this.rgbaValueInputs = {
-    r: this.element.querySelector(".colorwidget-rgba-r"),
-    g: this.element.querySelector(".colorwidget-rgba-g"),
-    b: this.element.querySelector(".colorwidget-rgba-b"),
-    a: this.element.querySelector(".colorwidget-rgba-a"),
-  };
-  this.rgbaValue.addEventListener("input", this.onRgbaInputChange);
-
-  this.hslaValue = this.element.querySelector(".colorwidget-hsla");
-  this.hslaValueInputs = {
-    h: this.element.querySelector(".colorwidget-hsla-h"),
-    s: this.element.querySelector(".colorwidget-hsla-s"),
-    l: this.element.querySelector(".colorwidget-hsla-l"),
-    a: this.element.querySelector(".colorwidget-hsla-a"),
-  };
-  this.hslaValue.addEventListener("input", this.onHslaInputChange);
+  this.initializeColorWidget();
 
   if (rgb) {
     this.rgb = rgb;
@@ -291,7 +207,101 @@ ColorWidget.prototype = {
       rgb[3] + ")";
   },
 
+  initializeColorWidget: function () {
+    this.parentEl.innerHTML = "";
+    this.element = this.parentEl.ownerDocument.createElementNS(XHTML_NS, "div");
+
+    this.element.className = "colorwidget-container";
+    this.element.innerHTML = `
+      <div class="colorwidget-top">
+        <div class="colorwidget-fill"></div>
+        <div class="colorwidget-top-inner">
+          <div class="colorwidget-color colorwidget-box">
+            <div class="colorwidget-sat">
+              <div class="colorwidget-val">
+                <div class="colorwidget-dragger"></div>
+              </div>
+            </div>
+          </div>
+          <div class="colorwidget-hue colorwidget-box">
+            <div class="colorwidget-slider colorwidget-slider-control"></div>
+          </div>
+        </div>
+      </div>
+      <div class="colorwidget-alpha colorwidget-checker colorwidget-box">
+        <div class="colorwidget-alpha-inner">
+          <div class="colorwidget-alpha-handle colorwidget-slider-control"></div>
+        </div>
+      </div>
+      <div class="colorwidget-value">
+        <select class="colorwidget-select">
+          <option value="hex">Hex</option>
+          <option value="rgba">RGBA</option>
+          <option value="hsla">HSLA</option>
+        </select>
+        <div class="colorwidget-hex">
+          <input class="colorwidget-hex-input"/>
+        </div>
+        <div class="colorwidget-rgba colorwidget-hidden">
+          <input class="colorwidget-rgba-r" data-id="r" />
+          <input class="colorwidget-rgba-g" data-id="g" />
+          <input class="colorwidget-rgba-b" data-id="b" />
+          <input class="colorwidget-rgba-a" data-id="a" />
+        </div>
+        <div class="colorwidget-hsla colorwidget-hidden">
+          <input class="colorwidget-hsla-h" data-id="h" />
+          <input class="colorwidget-hsla-s" data-id="s" />
+          <input class="colorwidget-hsla-l" data-id="l" />
+          <input class="colorwidget-hsla-a" data-id="a" />
+        </div>
+      </div>
+    `;
+
+    this.element.addEventListener("click", this.onElementClick);
+
+    this.parentEl.appendChild(this.element);
+
+    this.slider = this.element.querySelector(".colorwidget-hue");
+    this.slideHelper = this.element.querySelector(".colorwidget-slider");
+    ColorWidget.draggable(this.slider, this.onSliderMove);
+
+    this.dragger = this.element.querySelector(".colorwidget-color");
+    this.dragHelper = this.element.querySelector(".colorwidget-dragger");
+    ColorWidget.draggable(this.dragger, this.onDraggerMove);
+
+    this.alphaSlider = this.element.querySelector(".colorwidget-alpha");
+    this.alphaSliderInner = this.element.querySelector(".colorwidget-alpha-inner");
+    this.alphaSliderHelper = this.element.querySelector(".colorwidget-alpha-handle");
+    ColorWidget.draggable(this.alphaSliderInner, this.onAlphaSliderMove);
+
+    this.colorSelect = this.element.querySelector(".colorwidget-select");
+    this.colorSelect.addEventListener("change", this.onSelectValueChange);
+
+    this.hexValue = this.element.querySelector(".colorwidget-hex");
+    this.hexValueInput = this.element.querySelector(".colorwidget-hex-input");
+    this.hexValueInput.addEventListener("input", this.onHexInputChange);
+
+    this.rgbaValue = this.element.querySelector(".colorwidget-rgba");
+    this.rgbaValueInputs = {
+      r: this.element.querySelector(".colorwidget-rgba-r"),
+      g: this.element.querySelector(".colorwidget-rgba-g"),
+      b: this.element.querySelector(".colorwidget-rgba-b"),
+      a: this.element.querySelector(".colorwidget-rgba-a"),
+    };
+    this.rgbaValue.addEventListener("input", this.onRgbaInputChange);
+
+    this.hslaValue = this.element.querySelector(".colorwidget-hsla");
+    this.hslaValueInputs = {
+      h: this.element.querySelector(".colorwidget-hsla-h"),
+      s: this.element.querySelector(".colorwidget-hsla-s"),
+      l: this.element.querySelector(".colorwidget-hsla-l"),
+      a: this.element.querySelector(".colorwidget-hsla-a"),
+    };
+    this.hslaValue.addEventListener("input", this.onHslaInputChange);
+  },
+
   show: function () {
+    this.initializeColorWidget();
     this.element.classList.add("colorwidget-show");
 
     this.slideHeight = this.slider.offsetHeight;

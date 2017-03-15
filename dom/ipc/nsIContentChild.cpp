@@ -15,7 +15,11 @@
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/ipc/SendStream.h"
+#include "mozilla/ipc/IPCStreamAlloc.h"
+#include "mozilla/ipc/IPCStreamDestination.h"
+#include "mozilla/ipc/IPCStreamSource.h"
+#include "mozilla/ipc/PChildToParentStreamChild.h"
+#include "mozilla/ipc/PParentToChildStreamChild.h"
 
 #include "nsPrintfCString.h"
 #include "xpcpublic.h"
@@ -135,14 +139,27 @@ nsIContentChild::GetOrCreateActorForBlobImpl(BlobImpl* aImpl)
   return actor;
 }
 
-PSendStreamChild*
-nsIContentChild::AllocPSendStreamChild()
+PChildToParentStreamChild*
+nsIContentChild::AllocPChildToParentStreamChild()
 {
-  MOZ_CRASH("PSendStreamChild actors should be manually constructed!");
+  MOZ_CRASH("PChildToParentStreamChild actors should be manually constructed!");
 }
 
 bool
-nsIContentChild::DeallocPSendStreamChild(PSendStreamChild* aActor)
+nsIContentChild::DeallocPChildToParentStreamChild(PChildToParentStreamChild* aActor)
+{
+  delete aActor;
+  return true;
+}
+
+PParentToChildStreamChild*
+nsIContentChild::AllocPParentToChildStreamChild()
+{
+  return mozilla::ipc::AllocPParentToChildStreamChild();
+}
+
+bool
+nsIContentChild::DeallocPParentToChildStreamChild(PParentToChildStreamChild* aActor)
 {
   delete aActor;
   return true;

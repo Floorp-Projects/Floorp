@@ -106,6 +106,11 @@ class MachCommands(MachCommandBase):
     def taskgraph_optimized(self, **options):
         return self.show_taskgraph('optimized_task_graph', options)
 
+    @ShowTaskGraphSubCommand('taskgraph', 'morphed',
+                             description="Show the morphed taskgraph")
+    def taskgraph_morphed(self, **options):
+        return self.show_taskgraph('morphed_task_graph', options)
+
     @SubCommand('taskgraph', 'decision',
                 description="Run the decision task")
     @CommandArgument('--root', '-r',

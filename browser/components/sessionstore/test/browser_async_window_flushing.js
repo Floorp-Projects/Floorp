@@ -1,5 +1,8 @@
 "use strict";
 
+// This file generates content tasks.
+/* eslint-env mozilla/frame-script */
+
 const PAGE = "http://example.com/";
 
 /**
@@ -32,8 +35,8 @@ add_task(function* test_add_interesting_window() {
   // Send a message that will cause the content to change its location
   // to someplace more interesting. We've disabled auto updates from
   // the browser, so the parent won't know about this
-  yield ContentTask.spawn(browser, PAGE, function*(PAGE) {
-    content.location = PAGE;
+  yield ContentTask.spawn(browser, PAGE, function*(newPage) {
+    content.location = newPage;
   });
 
   yield promiseContentMessage(browser, "ss-test:OnHistoryReplaceEntry");

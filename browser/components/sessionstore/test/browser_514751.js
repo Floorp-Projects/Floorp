@@ -19,8 +19,8 @@ function test() {
   };
 
   var theWin = openDialog(location, "", "chrome,all,dialog=no");
-  theWin.addEventListener("load", function () {
-    executeSoon(function () {
+  theWin.addEventListener("load", function() {
+    executeSoon(function() {
       var gotError = false;
       try {
         ss.setWindowState(theWin, JSON.stringify(state), true);

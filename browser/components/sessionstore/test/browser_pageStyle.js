@@ -16,14 +16,14 @@ add_task(function* page_style() {
   let sheets = yield getStyleSheets(browser);
 
   // Enable all style sheets one by one.
-  for (let [title, disabled] of sheets) {
+  for (let [title, /*disabled */] of sheets) {
     yield enableStyleSheetsForSet(browser, title);
 
     let tab2 = gBrowser.duplicateTab(tab);
     yield promiseTabRestored(tab2);
 
-    let sheets = yield getStyleSheets(tab2.linkedBrowser);
-    let enabled = sheets.filter(([title, disabled]) => !disabled);
+    let tab2Sheets = yield getStyleSheets(tab2.linkedBrowser);
+    let enabled = tab2Sheets.filter(([, disabled]) => !disabled);
 
     if (title.startsWith("fail_")) {
       ok(!enabled.length, "didn't restore " + title);

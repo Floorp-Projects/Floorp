@@ -41,6 +41,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Services.h"
+#include "mozilla/widget/nsAutoRollup.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1732,8 +1733,7 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
   }
 
   // if the popup was just rolled up, don't reopen it
-  nsCOMPtr<nsIWidget> widget = aPopup->GetWidget();
-  if (widget && widget->GetLastRollup() == aPopup->GetContent())
+  if (mozilla::widget::nsAutoRollup::GetLastRollup() == aPopup->GetContent())
       return false;
 
   nsCOMPtr<nsIDocShellTreeItem> dsti = aPopup->PresContext()->GetDocShell();

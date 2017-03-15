@@ -7,7 +7,7 @@
 #ifndef mozilla_a11y_sdnTextAccessible_h_
 #define mozilla_a11y_sdnTextAccessible_h_
 
-#include "ISimpleDOMText.h"
+#include "ISimpleDOM.h"
 #include "IUnknownImpl.h"
 
 #include "AccessibleWrap.h"

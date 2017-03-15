@@ -11835,13 +11835,15 @@ class MSetPropertyCache
     public Mix3Policy<SingleObjectPolicy, CacheIdPolicy<1>, NoFloatPolicy<2>>::Data
 {
     bool strict_ : 1;
+    bool needsPostBarrier_ : 1;
     bool needsTypeBarrier_ : 1;
     bool guardHoles_ : 1;
 
     MSetPropertyCache(MDefinition* obj, MDefinition* id, MDefinition* value, bool strict,
-                      bool typeBarrier, bool guardHoles)
+                      bool needsPostBarrier, bool typeBarrier, bool guardHoles)
       : MTernaryInstruction(obj, id, value),
         strict_(strict),
+        needsPostBarrier_(needsPostBarrier),
         needsTypeBarrier_(typeBarrier),
         guardHoles_(guardHoles)
     {
@@ -11852,6 +11854,9 @@ class MSetPropertyCache
     TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, object), (1, idval), (2, value))
 
+    bool needsPostBarrier() const {
+        return needsPostBarrier_;
+    }
     bool needsTypeBarrier() const {
         return needsTypeBarrier_;
     }

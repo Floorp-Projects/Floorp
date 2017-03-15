@@ -5,7 +5,7 @@
  * Bug 597071 - Closed windows should only be resurrected when there is a single
  * popup window
  */
-add_task(function test_close_last_nonpopup_window() {
+add_task(function* test_close_last_nonpopup_window() {
   // Purge the list of closed windows.
   forgetClosedWindows();
 

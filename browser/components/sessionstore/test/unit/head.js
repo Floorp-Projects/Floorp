@@ -29,4 +29,4 @@ function afterSessionStartupInitialization(cb) {
   Services.obs.addObserver(startup, "quit-application", false);
   Services.obs.notifyObservers(null, "final-ui-startup", "");
   Services.obs.addObserver(observer, "sessionstore-state-finalized", false);
-};
+}

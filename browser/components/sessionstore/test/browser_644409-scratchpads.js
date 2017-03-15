@@ -14,12 +14,12 @@ const testState = {
 };
 
 // only finish() when correct number of windows opened
-var restored = [];
+var restoredStates = [];
 function addState(state) {
-  restored.push(state);
+  restoredStates.push(state);
 
-  if (restored.length == testState.scratchpads.length) {
-    ok(statesMatch(restored, testState.scratchpads),
+  if (restoredStates.length == testState.scratchpads.length) {
+    ok(statesMatch(restoredStates, testState.scratchpads),
       "Two scratchpad windows restored");
 
     Services.ww.unregisterNotification(windowObserver);
@@ -41,7 +41,7 @@ function windowObserver(aSubject, aTopic, aData) {
     win.addEventListener("load", function() {
       if (win.Scratchpad) {
         win.Scratchpad.addObserver({
-          onReady: function() {
+          onReady() {
             win.Scratchpad.removeObserver(this);
 
             let state = win.Scratchpad.getState();

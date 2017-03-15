@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// This file spawns content tasks.
+/* eslint-env mozilla/frame-script */
+
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const HISTOGRAM_NAME = "FX_SESSION_RESTORE_SEND_UPDATE_CAUSED_OOM";

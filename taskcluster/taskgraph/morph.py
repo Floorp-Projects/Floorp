@@ -1,0 +1,136 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+"""
+Graph morphs are modifications to task-graphs that take place *after* the
+optimization phase.
+
+These graph morphs are largely invisible to developers running `./mach`
+locally, so they should be limited to changes that do not modify the meaning of
+the graph.
+"""
+
+# Note that the translation of `{'task-reference': '..'}` is handled in the
+# optimization phase (since optimization involves dealing with taskIds
+# directly).  Similarly, `{'relative-datestamp': '..'}` is handled at the last
+# possible moment during task creation.
+
+from __future__ import absolute_import, print_function, unicode_literals
+
+import logging
+
+from slugid import nice as slugid
+from .task import Task
+from .graph import Graph
+from .taskgraph import TaskGraph
+
+logger = logging.getLogger(__name__)
+MAX_ROUTES = 10
+
+
+def amend_taskgraph(taskgraph, label_to_taskid, to_add):
+    """Add the given tasks to the taskgraph, returning a new taskgraph"""
+    new_tasks = taskgraph.tasks.copy()
+    new_edges = taskgraph.graph.edges.copy()
+    for task in to_add:
+        new_tasks[task.task_id] = task
+        assert task.label not in label_to_taskid
+        label_to_taskid[task.label] = task.task_id
+        for depname, dep in task.dependencies.iteritems():
+            new_edges.add((task.task_id, dep, depname))
+
+    taskgraph = TaskGraph(new_tasks, Graph(set(new_tasks), new_edges))
+    return taskgraph, label_to_taskid
+
+
+def derive_misc_task(task, purpose, image, label_to_taskid):
+    """Create the shell of a task that depends on `task` and on the given docker
+    image."""
+    label = '{}-{}'.format(purpose, task.label)
+
+    # this is why all docker image tasks are included in the target task graph: we
+    # need to find them in label_to_taskid, if if nothing else required them
+    image_taskid = label_to_taskid['build-docker-image-' + image]
+
+    task_def = {
+        'provisionerId': 'aws-provisioner-v1',
+        'workerType': 'gecko-misc',
+        'dependencies': [task.task_id, image_taskid],
+        'created': {'relative-timestamp': '0 seconds'},
+        'deadline': task.task['deadline'],
+        # no point existing past the parent task's deadline
+        'expires': task.task['deadline'],
+        'metadata': {
+            'name': label,
+            'description': '{} for {}'.format(purpose, task.task['metadata']['description']),
+            'owner': task.task['metadata']['owner'],
+            'source': task.task['metadata']['source'],
+        },
+        'scopes': [],
+        'payload': {
+            'image': {
+                'path': 'public/image.tar.zst',
+                'taskId': image_taskid,
+                'type': 'task-image',
+            },
+            'features': {
+                'taskclusterProxy': True,
+            },
+            'maxRunTime': 600,
+        }
+    }
+    dependencies = {
+        'parent': task.task_id,
+        'docker-image': image_taskid,
+    }
+    task = Task(kind='misc', label=label, attributes={}, task=task_def,
+                dependencies=dependencies)
+    task.task_id = slugid()
+    return task
+
+
+def make_index_task(parent_task, label_to_taskid):
+    index_paths = [r.split('.', 1)[1] for r in parent_task.task['routes']
+                   if r.startswith('index.')]
+    parent_task.task['routes'] = [r for r in parent_task.task['routes']
+                                  if not r.startswith('index.')]
+
+    task = derive_misc_task(parent_task, 'index-task',
+                            'index-task', label_to_taskid)
+    task.task['scopes'] = [
+        'index:insert-task:{}'.format(path) for path in index_paths]
+    task.task['payload']['command'] = ['insert-indexes.js'] + index_paths
+    task.task['payload']['env'] = {
+        "TARGET_TASKID": parent_task.task_id,
+    }
+    return task
+
+
+def add_index_tasks(taskgraph, label_to_taskid):
+    """
+    The TaskCluster queue only allows 10 routes on a task, but we have tasks
+    with many more routes, for purposes of indexing. This graph morph adds
+    "index tasks" that depend on such tasks and do the index insertions
+    directly, avoiding the limits on task.routes.
+    """
+    logger.debug('Morphing: adding index tasks')
+
+    added = []
+    for label, task in taskgraph.tasks.iteritems():
+        if len(task.task.get('routes', [])) <= MAX_ROUTES:
+            continue
+        added.append(make_index_task(task, label_to_taskid))
+
+    if added:
+        taskgraph, label_to_taskid = amend_taskgraph(
+            taskgraph, label_to_taskid, added)
+        logger.info('Added {} index tasks'.format(len(added)))
+
+    return taskgraph, label_to_taskid
+
+
+def morph(taskgraph, label_to_taskid):
+    """Apply all morphs"""
+    taskgraph, label_to_taskid = add_index_tasks(taskgraph, label_to_taskid)
+    return taskgraph, label_to_taskid

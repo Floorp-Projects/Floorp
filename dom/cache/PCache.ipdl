@@ -7,7 +7,8 @@ include protocol PBlob; // FIXME: bug 792908
 include protocol PCacheOp;
 include protocol PCacheStreamControl;
 include protocol PFileDescriptorSet;
-include protocol PSendStream;
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
 
 include CacheTypes;
 
