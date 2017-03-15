@@ -1091,7 +1091,9 @@ nsPresContext::Observe(nsISupports* aSubject,
   if (!nsCRT::strcmp(aTopic, "charset")) {
     RefPtr<CharSetChangingRunnable> runnable =
       new CharSetChangingRunnable(this, NS_LossyConvertUTF16toASCII(aData));
-    return NS_DispatchToCurrentThread(runnable);
+    return Document()->Dispatch("CharSetChangingRunnable",
+                                TaskCategory::Other,
+                                runnable.forget());
   }
 
   NS_WARNING("unrecognized topic in nsPresContext::Observe");
@@ -1748,7 +1750,10 @@ nsPresContext::ThemeChanged()
 
     nsCOMPtr<nsIRunnable> ev =
       NewRunnableMethod(this, &nsPresContext::ThemeChangedInternal);
-    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+    nsresult rv = Document()->Dispatch("nsPresContext::ThemeChangedInternal",
+                                       TaskCategory::Other,
+                                       ev.forget());
+    if (NS_SUCCEEDED(rv)) {
       mPendingThemeChanged = true;
     }
   }
@@ -1808,7 +1813,10 @@ nsPresContext::SysColorChanged()
     sLookAndFeelChanged = true;
     nsCOMPtr<nsIRunnable> ev =
       NewRunnableMethod(this, &nsPresContext::SysColorChangedInternal);
-    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+    nsresult rv = Document()->Dispatch("nsPresContext::SysColorChangedInternal",
+                                       TaskCategory::Other,
+                                       ev.forget());
+    if (NS_SUCCEEDED(rv)) {
       mPendingSysColorChanged = true;
     }
   }
@@ -1840,7 +1848,11 @@ nsPresContext::UIResolutionChanged()
   if (!mPendingUIResolutionChanged) {
     nsCOMPtr<nsIRunnable> ev =
       NewRunnableMethod(this, &nsPresContext::UIResolutionChangedInternal);
-    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+    nsresult rv =
+      Document()->Dispatch("nsPresContext::UIResolutionChangedInternal",
+                           TaskCategory::Other,
+                           ev.forget());
+    if (NS_SUCCEEDED(rv)) {
       mPendingUIResolutionChanged = true;
     }
   }
@@ -2096,7 +2108,11 @@ nsPresContext::PostMediaFeatureValuesChangedEvent()
     nsCOMPtr<nsIRunnable> ev =
       NewRunnableMethod("nsPresContext::HandleMediaFeatureValuesChangedEvent",
                         this, &nsPresContext::HandleMediaFeatureValuesChangedEvent);
-    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+    nsresult rv =
+      Document()->Dispatch("nsPresContext::HandleMediaFeatureValuesChangedEvent",
+                           TaskCategory::Other,
+                           ev.forget());
+    if (NS_SUCCEEDED(rv)) {
       mPendingMediaFeatureValuesChanged = true;
       mShell->SetNeedStyleFlush();
     }
@@ -2289,7 +2305,11 @@ nsPresContext::RebuildCounterStyles()
     nsCOMPtr<nsIRunnable> ev =
       NewRunnableMethod("nsPresContext::HandleRebuildCounterStyles",
                         this, &nsPresContext::HandleRebuildCounterStyles);
-    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+    nsresult rv =
+      Document()->Dispatch("nsPresContext::HandleRebuildCounterStyles",
+                           TaskCategory::Other,
+                           ev.forget());
+    if (NS_SUCCEEDED(rv)) {
       mPostedFlushCounterStyles = true;
     }
   }
@@ -3318,7 +3338,9 @@ nsRootPresContext::AddWillPaintObserver(nsIRunnable* aRunnable)
 {
   if (!mWillPaintFallbackEvent.IsPending()) {
     mWillPaintFallbackEvent = new RunWillPaintObservers(this);
-    NS_DispatchToMainThread(mWillPaintFallbackEvent.get());
+    Document()->Dispatch("RunWillPaintObservers",
+                         TaskCategory::Other,
+                         do_AddRef(mWillPaintFallbackEvent.get()));
   }
   mWillPaintObservers.AppendElement(aRunnable);
 }
