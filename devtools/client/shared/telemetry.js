@@ -278,14 +278,19 @@ Telemetry.prototype = {
    *         Histogram in which the data is to be stored.
    * @param  {String} key
    *         The key within the single histogram.
-   * @param  value
-   *         Value to store.
+   * @param  [value]
+   *         Optional value to store.
    */
   logKeyed: function (histogramId, key, value) {
     if (histogramId) {
       try {
         let histogram = Services.telemetry.getKeyedHistogramById(histogramId);
-        histogram.add(key, value);
+
+        if (typeof value === "undefined") {
+          histogram.add(key);
+        } else {
+          histogram.add(key, value);
+        }
       } catch (e) {
         dump("Warning: An attempt was made to write to the " + histogramId +
              " histogram, which is not defined in Histograms.json\n");
@@ -322,4 +327,3 @@ Telemetry.prototype = {
     }
   }
 };
-
