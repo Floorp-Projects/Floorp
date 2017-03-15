@@ -19,7 +19,9 @@ GMPCrashHelper::Destroy()
     delete this;
   } else {
     // Don't addref, as then we'd end up releasing after the detele runs!
-    NS_DispatchToMainThread(mozilla::NewNonOwningRunnableMethod(this, &GMPCrashHelper::Destroy));
+    SystemGroup::Dispatch(
+      "GMPCrashHelper::Destroy", TaskCategory::Other,
+      NewNonOwningRunnableMethod(this, &GMPCrashHelper::Destroy));
   }
 }
 

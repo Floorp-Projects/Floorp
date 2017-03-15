@@ -21,7 +21,6 @@ VRLayerChild::VRLayerChild(uint32_t aVRDisplayID, VRManagerChild* aVRManagerChil
   , mShSurfClient(nullptr)
   , mFront(nullptr)
 {
-  MOZ_COUNT_CTOR(VRLayerChild);
 }
 
 VRLayerChild::~VRLayerChild()
