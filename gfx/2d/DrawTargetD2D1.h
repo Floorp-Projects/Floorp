@@ -140,9 +140,11 @@ public:
 
   // This function will get an image for a surface, it may adjust the source
   // transform for any transformation of the resulting image relative to the
-  // oritingal SourceSurface.
+  // oritingal SourceSurface. By default, the surface and its transform are
+  // interpreted in user-space, but may be specified in device-space instead.
   already_AddRefed<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTransform,
-                                              ExtendMode aExtendMode, const IntRect* aSourceRect = nullptr);
+                                              ExtendMode aExtendMode, const IntRect* aSourceRect = nullptr,
+                                              bool aUserSpace = true);
 
   already_AddRefed<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, ExtendMode aExtendMode) {
     Matrix mat;
