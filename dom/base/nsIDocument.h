@@ -1977,7 +1977,7 @@ public:
     return mMayStartLayout;
   }
 
-  void SetMayStartLayout(bool aMayStartLayout)
+  virtual void SetMayStartLayout(bool aMayStartLayout)
   {
     mMayStartLayout = aMayStartLayout;
   }
