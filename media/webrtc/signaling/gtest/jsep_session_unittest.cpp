@@ -5006,41 +5006,55 @@ TEST_F(JsepSessionTest, RtcpFbInOffer)
 }
 
 // In this test we will change the offer SDP's a=setup value
-// from actpass to passive.  This will make the answer do active.
+// from actpass to passive. This will force the answer to do active.
 TEST_F(JsepSessionTest, AudioCallForceDtlsRoles)
 {
   types.push_back(SdpMediaSection::kAudio);
   AddTracks(mSessionOff, "audio");
   AddTracks(mSessionAns, "audio");
   std::string offer = CreateOffer();
+
   std::string actpass = "\r\na=setup:actpass";
   size_t match = offer.find(actpass);
   ASSERT_NE(match, std::string::npos);
   offer.replace(match, actpass.length(), "\r\na=setup:passive");
+
   SetLocalOffer(offer);
   SetRemoteOffer(offer);
+  ASSERT_EQ(kJsepStateHaveRemoteOffer, mSessionAns.GetState());
   std::string answer = CreateAnswer();
   match = answer.find("\r\na=setup:active");
   ASSERT_NE(match, std::string::npos);
+
+  SetLocalAnswer(answer);
+  SetRemoteAnswer(answer);
+  ASSERT_EQ(kJsepStateStable, mSessionAns.GetState());
 }
 
 // In this test we will change the offer SDP's a=setup value
-// from actpass to active.  This will make the answer do passive
+// from actpass to active. This will force the answer to do passive.
 TEST_F(JsepSessionTest, AudioCallReverseDtlsRoles)
 {
   types.push_back(SdpMediaSection::kAudio);
   AddTracks(mSessionOff, "audio");
   AddTracks(mSessionAns, "audio");
   std::string offer = CreateOffer();
+
   std::string actpass = "\r\na=setup:actpass";
   size_t match = offer.find(actpass);
   ASSERT_NE(match, std::string::npos);
   offer.replace(match, actpass.length(), "\r\na=setup:active");
+
   SetLocalOffer(offer);
   SetRemoteOffer(offer);
+  ASSERT_EQ(kJsepStateHaveRemoteOffer, mSessionAns.GetState());
   std::string answer = CreateAnswer();
   match = answer.find("\r\na=setup:passive");
   ASSERT_NE(match, std::string::npos);
+
+  SetLocalAnswer(answer);
+  SetRemoteAnswer(answer);
+  ASSERT_EQ(kJsepStateStable, mSessionAns.GetState());
 }
 
 // In this test we will change the answer SDP's a=setup value
@@ -5052,63 +5066,53 @@ TEST_F(JsepSessionTest, AudioCallMismatchDtlsRoles)
   AddTracks(mSessionOff, "audio");
   AddTracks(mSessionAns, "audio");
   std::string offer = CreateOffer();
+
   std::string actpass = "\r\na=setup:actpass";
   size_t match = offer.find(actpass);
   ASSERT_NE(match, std::string::npos);
   SetLocalOffer(offer);
   SetRemoteOffer(offer);
+  ASSERT_EQ(kJsepStateHaveRemoteOffer, mSessionAns.GetState());
   std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+
   std::string active = "\r\na=setup:active";
   match = answer.find(active);
   ASSERT_NE(match, std::string::npos);
-  SetLocalAnswer(answer);
   answer.replace(match, active.length(), "\r\na=setup:passive");
   SetRemoteAnswer(answer);
+
+  // This is as good as it gets in a JSEP test (w/o starting DTLS)
+  ASSERT_EQ(JsepDtlsTransport::kJsepDtlsClient,
+      mSessionOff.GetTransports()[0]->mDtls->GetRole());
+  ASSERT_EQ(JsepDtlsTransport::kJsepDtlsClient,
+      mSessionAns.GetTransports()[0]->mDtls->GetRole());
 }
 
-// In this test we will change the offer SDP's a=setup value
-// from actpass to garbage.  It should ignore the garbage value
-// and respond with setup:active
-TEST_F(JsepSessionTest, AudioCallGarbageSetup)
+// Verify that missing a=setup in offer gets rejected
+TEST_F(JsepSessionTest, AudioCallOffererNoSetup)
 {
   types.push_back(SdpMediaSection::kAudio);
   AddTracks(mSessionOff, "audio");
   AddTracks(mSessionAns, "audio");
   std::string offer = CreateOffer();
-  std::string actpass = "\r\na=setup:actpass";
-  size_t match = offer.find(actpass);
-  ASSERT_NE(match, std::string::npos);
-  offer.replace(match, actpass.length(), "\r\na=setup:G4rb4g3V4lu3");
   SetLocalOffer(offer);
-  SetRemoteOffer(offer);
-  std::string answer = CreateAnswer();
-  match = answer.find("\r\na=setup:active");
-  ASSERT_NE(match, std::string::npos);
-}
 
-// In this test we will change the offer SDP to remove the
-// a=setup line.  Answer should respond with a=setup:active.
-TEST_F(JsepSessionTest, AudioCallOfferNoSetupOrConnection)
-{
-  types.push_back(SdpMediaSection::kAudio);
-  AddTracks(mSessionOff, "audio");
-  AddTracks(mSessionAns, "audio");
-  std::string offer = CreateOffer();
   std::string actpass = "\r\na=setup:actpass";
   size_t match = offer.find(actpass);
   ASSERT_NE(match, std::string::npos);
   offer.replace(match, actpass.length(), "");
-  SetLocalOffer(offer);
-  SetRemoteOffer(offer);
-  std::string answer = CreateAnswer();
-  match = answer.find("\r\na=setup:active");
-  ASSERT_NE(match, std::string::npos);
+
+  // The signaling state will remain "stable" because the unparsable
+  // SDP leads to a failure in SetRemoteDescription.
+  SetRemoteOffer(offer, NO_CHECKS);
+  ASSERT_EQ(kJsepStateStable, mSessionAns.GetState());
+  ASSERT_EQ(kJsepStateHaveLocalOffer, mSessionOff.GetState());
 }
 
 // In this test we will change the answer SDP to remove the
-// a=setup line. TODO: This used to be a signaling test so it also tested that
-// ICE would still connect since active would be assumed.
-TEST_F(JsepSessionTest, AudioCallAnswerNoSetupOrConnection)
+// a=setup line, which results in active being assumed.
+TEST_F(JsepSessionTest, AudioCallAnswerNoSetup)
 {
   types.push_back(SdpMediaSection::kAudio);
   AddTracks(mSessionOff, "audio");
@@ -5119,13 +5123,67 @@ TEST_F(JsepSessionTest, AudioCallAnswerNoSetupOrConnection)
 
   SetLocalOffer(offer);
   SetRemoteOffer(offer);
+  ASSERT_EQ(kJsepStateHaveRemoteOffer, mSessionAns.GetState());
   std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+
   std::string active = "\r\na=setup:active";
   match = answer.find(active);
   ASSERT_NE(match, std::string::npos);
   answer.replace(match, active.length(), "");
-  SetLocalAnswer(answer);
   SetRemoteAnswer(answer);
+  ASSERT_EQ(kJsepStateStable, mSessionAns.GetState());
+
+  // This is as good as it gets in a JSEP test (w/o starting DTLS)
+  ASSERT_EQ(JsepDtlsTransport::kJsepDtlsServer,
+      mSessionOff.GetTransports()[0]->mDtls->GetRole());
+  ASSERT_EQ(JsepDtlsTransport::kJsepDtlsClient,
+      mSessionAns.GetTransports()[0]->mDtls->GetRole());
+}
+
+// Verify that 'holdconn' gets rejected
+TEST_F(JsepSessionTest, AudioCallDtlsRoleHoldconn)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+
+  std::string actpass = "\r\na=setup:actpass";
+  size_t match = offer.find(actpass);
+  ASSERT_NE(match, std::string::npos);
+  offer.replace(match, actpass.length(), "\r\na=setup:holdconn");
+
+  // The signaling state will remain "stable" because the unparsable
+  // SDP leads to a failure in SetRemoteDescription.
+  SetRemoteOffer(offer, NO_CHECKS);
+  ASSERT_EQ(kJsepStateStable, mSessionAns.GetState());
+  ASSERT_EQ(kJsepStateHaveLocalOffer, mSessionOff.GetState());
+}
+
+// Verify that 'actpass' in answer gets rejected
+TEST_F(JsepSessionTest, AudioCallAnswererUsesActpass)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+
+  std::string active = "\r\na=setup:active";
+  size_t match = answer.find(active);
+  ASSERT_NE(match, std::string::npos);
+  answer.replace(match, active.length(), "\r\na=setup:actpass");
+
+  // The signaling state will remain "stable" because the unparsable
+  // SDP leads to a failure in SetRemoteDescription.
+  SetRemoteAnswer(answer, NO_CHECKS);
+  ASSERT_EQ(kJsepStateStable, mSessionAns.GetState());
+  ASSERT_EQ(kJsepStateHaveLocalOffer, mSessionOff.GetState());
 }
 
 // Remove H.264 P1 and VP8 from offer, check answer negotiates H.264 P0
