@@ -938,11 +938,6 @@ public:
 
   virtual nsresult InsertFromDrop(nsIDOMEvent* aDropEvent) = 0;
 
-  virtual already_AddRefed<nsIDOMNode> FindUserSelectAllNode(nsIDOMNode* aNode)
-  {
-    return nullptr;
-  }
-
   /**
    * GetIMESelectionStartOffsetIn() returns the start offset of IME selection in
    * the aTextNode.  If there is no IME selection, returns -1.
