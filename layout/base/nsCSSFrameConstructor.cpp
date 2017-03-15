@@ -5261,6 +5261,7 @@ nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
                                                   aParentFrame) :
                         aParentFrame,
                       newFrame);
+  newFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
 
   // Create the pseudo SC for the anonymous wrapper child as a child of the SC:
   RefPtr<nsStyleContext> scForAnon;
