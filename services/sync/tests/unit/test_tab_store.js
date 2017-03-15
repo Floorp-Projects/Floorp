@@ -93,7 +93,7 @@ function test_createRecord() {
   store.shouldSkipWindow = mockShouldSkipWindow;
   store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "http://foo.com", 1, 1);
 
-  let numtabs = Math.ceil(20000. / 77.);
+  let numtabs = 2600; // Note: this number is connected to DEFAULT_MAX_RECORD_PAYLOAD_BYTES
 
   store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "http://foo.com", 1, 1);
   record = store.createRecord("fake-guid");
@@ -104,7 +104,7 @@ function test_createRecord() {
   store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "http://foo.com", 1, numtabs);
   record = store.createRecord("fake-guid");
   ok(record instanceof TabSetRecord);
-  equal(record.tabs.length, 256);
+  equal(record.tabs.length, 2501);
 }
 
 function run_test() {
