@@ -821,24 +821,42 @@ bool WebrtcVideoConduit::GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
   {
     CSFLogVerbose(logTag, "%s for VideoConduit:%p", __FUNCTION__, this);
     MutexAutoLock lock(mCodecMutex);
-    if (!mRecvStream) {
+    if (!mSendStream) {
       return false;
     }
-
-    const webrtc::VideoReceiveStream::Stats &stats = mRecvStream->GetStats();
-    *jitterMs = stats.rtcp_stats.jitter;
-    *cumulativeLost = stats.rtcp_stats.cumulative_lost;
-    *bytesReceived = stats.rtp_stats.MediaPayloadBytes();
-    *packetsReceived = stats.rtp_stats.transmitted.packets;
-    // Note: timestamp is not correct per the spec... should be time the rtcp
-    // was received (remote) or sent (local)
-    *timestamp = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
-    int64_t rtt = mRecvStream->GetRtt();
+    const webrtc::VideoSendStream::Stats& sendStats = mSendStream->GetStats();
+    if (sendStats.substreams.size() == 0
+        || mSendStreamConfig.rtp.ssrcs.size() == 0) {
+      return false;
+    }
+    uint32_t ssrc = mSendStreamConfig.rtp.ssrcs.front();
+    auto ind = sendStats.substreams.find(ssrc);
+    if (ind == sendStats.substreams.end()) {
+      CSFLogError(logTag,
+        "%s for VideoConduit:%p ssrc not found in SendStream stats.",
+        __FUNCTION__, this);
+      return false;
+    }
+    *jitterMs = ind->second.rtcp_stats.jitter;
+    *cumulativeLost = ind->second.rtcp_stats.cumulative_lost;
+    *bytesReceived = ind->second.rtp_stats.MediaPayloadBytes();
+    *packetsReceived = ind->second.rtp_stats.transmitted.packets;
+    int64_t rtt = mSendStream->GetRtt(); // TODO: BUG 1241066, mozRtt is 0 or 1
     if (rtt >= 0) {
       *rttMs = rtt;
     } else {
       *rttMs = 0;
     }
+#ifdef DEBUG
+    if (rtt > INT32_MAX) {
+      CSFLogError(logTag,
+        "%s for VideoConduit:%p mRecvStream->GetRtt() is larger than the"
+        " maximum size of an RTCP RTT.", __FUNCTION__, this);
+    }
+#endif
+    // Note: timestamp is not correct per the spec... should be time the rtcp
+    // was received (remote) or sent (local)
+    *timestamp = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
   }
   return true;
 }
@@ -849,22 +867,16 @@ WebrtcVideoConduit::GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
                                         uint64_t* bytesSent)
 {
   CSFLogVerbose(logTag, "%s for VideoConduit:%p", __FUNCTION__, this);
-  MutexAutoLock lock(mCodecMutex);
-  if (!mSendStream) {
-    return false;
+  webrtc::RTCPSenderInfo senderInfo;
+  {
+    MutexAutoLock lock(mCodecMutex);
+    if (!mRecvStream || !mRecvStream->GetRemoteRTCPSenderInfo(&senderInfo)) {
+      return false;
+    }
   }
-
-  const webrtc::VideoSendStream::Stats& stats = mSendStream->GetStats();
-  *packetsSent = 0;
-  for (auto entry: stats.substreams){
-    *packetsSent += entry.second.rtp_stats.transmitted.packets;
-    // NG -- per https://www.w3.org/TR/webrtc-stats/ this is only payload bytes
-    *bytesSent += entry.second.rtp_stats.MediaPayloadBytes();
-  }
-
-  // Note: timestamp is not correct per the spec... should be time the rtcp
-  // was received (remote) or sent (local)
   *timestamp = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
+  *packetsSent = senderInfo.sendPacketCount;
+  *bytesSent = senderInfo.sendOctetCount;
   return true;
 }
 

@@ -118,23 +118,6 @@ MediaDataDecoderProxy::SupportDecoderRecycling() const
   return mProxyDecoder->SupportDecoderRecycling();
 }
 
-void
-MediaDataDecoderProxy::ConfigurationChanged(const TrackInfo& aConfig)
-{
-  MOZ_ASSERT(!mIsShutdown);
-
-  if (!mProxyThread) {
-    mProxyDecoder->ConfigurationChanged(aConfig);
-    return;
-  }
-  RefPtr<MediaDataDecoderProxy> self = this;
-  RefPtr<TrackInfoSharedPtr> config = new TrackInfoSharedPtr(aConfig, 0);
-  mProxyThread->Dispatch(NS_NewRunnableFunction([self, config] {
-    const TrackInfo* trackInfo = *config;
-    self->mProxyDecoder->ConfigurationChanged(*trackInfo);
-  }));
-}
-
 MediaDataDecoder::ConversionRequired
 MediaDataDecoderProxy::NeedsConversion() const
 {
