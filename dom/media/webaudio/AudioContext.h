@@ -142,8 +142,6 @@ public:
     return GetOwner();
   }
 
-  virtual void DisconnectFromOwner() override;
-
   void Shutdown(); // idempotent
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -374,7 +372,6 @@ private:
   bool mCloseCalled;
   // Suspend has been called with no following resume.
   bool mSuspendCalled;
-  bool mIsDisconnecting;
 };
 
 static const dom::AudioContext::AudioContextId NO_AUDIO_CONTEXT = 0;
