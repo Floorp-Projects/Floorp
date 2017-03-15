@@ -85,6 +85,7 @@ FormAutofillParent.prototype = {
     // Force to trigger the onStatusChanged function for setting listeners properly
     // while initizlization
     this._setStatus(this._getStatus());
+    this._updateSavedFieldNames();
   },
 
   observe(subject, topic, data) {
@@ -115,6 +116,7 @@ FormAutofillParent.prototype = {
           break;
         }
 
+        this._updateSavedFieldNames();
         let currentStatus = this._getStatus();
         if (currentStatus !== this._enabled) {
           this._setStatus(currentStatus);
@@ -243,5 +245,30 @@ FormAutofillParent.prototype = {
     }
 
     target.sendAsyncMessage("FormAutofill:Profiles", profiles);
+  },
+
+  _updateSavedFieldNames() {
+    if (!Services.ppmm.initialProcessData.autofillSavedFieldNames) {
+      Services.ppmm.initialProcessData.autofillSavedFieldNames = new Set();
+    } else {
+      Services.ppmm.initialProcessData.autofillSavedFieldNames.clear();
+    }
+
+    this._profileStore.getAll().forEach((profile) => {
+      Object.keys(profile).forEach((fieldName) => {
+        if (!profile[fieldName]) {
+          return;
+        }
+        Services.ppmm.initialProcessData.autofillSavedFieldNames.add(fieldName);
+      });
+    });
+
+    // Remove the internal guid and metadata fields.
+    this._profileStore.INTERNAL_FIELDS.forEach((fieldName) => {
+      Services.ppmm.initialProcessData.autofillSavedFieldNames.delete(fieldName);
+    });
+
+    Services.ppmm.broadcastAsyncMessage("FormAutofill:savedFieldNames",
+                                        Services.ppmm.initialProcessData.autofillSavedFieldNames);
   },
 };

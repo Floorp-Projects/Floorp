@@ -92,6 +92,9 @@ function ProfileStorage(path) {
 }
 
 ProfileStorage.prototype = {
+  // These fields are defined internally for each profile.
+  INTERNAL_FIELDS:
+    ["guid", "timeCreated", "timeLastUsed", "timeLastModified", "timesUsed"],
   /**
    * Loads the profile data from file to memory.
    *

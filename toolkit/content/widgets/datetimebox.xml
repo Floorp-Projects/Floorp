@@ -4,6 +4,11 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!DOCTYPE bindings [
+<!ENTITY % datetimeboxDTD SYSTEM "chrome://global/locale/datetimebox.dtd">
+%datetimeboxDTD;
+]>
+
 <bindings id="datetimeboxBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:html="http://www.w3.org/1999/xhtml"
@@ -40,38 +45,7 @@
         this.mDayPageUpDownInterval = 7;
         this.mYearPageUpDownInterval = 10;
 
-        // Default to en-US, month-day-year order.
-        this.mMonthField =
-          document.getAnonymousElementByAttribute(this, "anonid", "input-one");
-        this.mDayField =
-          document.getAnonymousElementByAttribute(this, "anonid", "input-two");
-        this.mYearField =
-          document.getAnonymousElementByAttribute(this, "anonid", "input-three");
-        this.mYearField.size = this.mYearLength;
-        this.mYearField.maxLength = this.mMaxYear.toString().length;
-
-        this.mMonthField.placeholder = this.mMonthPlaceHolder;
-        this.mDayField.placeholder = this.mDayPlaceHolder;
-        this.mYearField.placeholder = this.mYearPlaceHolder;
-
-        this.mMonthField.setAttribute("min", this.mMinMonth);
-        this.mMonthField.setAttribute("max", this.mMaxMonth);
-        this.mMonthField.setAttribute("pginterval",
-                                      this.mMonthPageUpDownInterval);
-        this.mDayField.setAttribute("min", this.mMinDay);
-        this.mDayField.setAttribute("max", this.mMaxDay);
-        this.mDayField.setAttribute("pginterval", this.mDayPageUpDownInterval);
-        this.mYearField.setAttribute("min", this.mMinYear);
-        this.mYearField.setAttribute("max", this.mMaxYear);
-        this.mYearField.setAttribute("pginterval",
-                                     this.mYearPageUpDownInterval);
-
-        this.mDaySeparator =
-           document.getAnonymousElementByAttribute(this, "anonid", "sep-first");
-        this.mDaySeparator.textContent = this.mSeparatorText;
-        this.mYearSeparator =
-          document.getAnonymousElementByAttribute(this, "anonid", "sep-second");
-        this.mYearSeparator.textContent = this.mSeparatorText;
+        this.buildEditFields();
 
         if (this.mInputElement.value) {
           this.setFieldsFromInputValue();
@@ -79,6 +53,57 @@
         this.updateResetButtonVisibility();
       ]]>
       </constructor>
+
+      <method name="buildEditFields">
+        <body>
+        <![CDATA[
+          const HTML_NS = "http://www.w3.org/1999/xhtml";
+          let root =
+            document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
+
+          this.mYearField = this.createEditField(this.mYearPlaceHolder,
+            this.mYearLength, true, this.mMinYear, this.mMaxYear,
+            this.mYearPageUpDownInterval);
+          this.mYearField.maxLength = this.mMaxYear.toString().length;
+          this.mMonthField = this.createEditField(this.mMonthPlaceHolder,
+            this.mMonthDayLength, true, this.mMinMonth, this.mMaxMonth,
+            this.mMonthPageUpDownInterval);
+          this.mDayField = this.createEditField(this.mDayPlaceHolder,
+            this.mMonthDayLength, true, this.mMinDay, this.mMaxDay,
+            this.mDayPageUpDownInterval);
+
+          let fragment = document.createDocumentFragment();
+          let formatter = Intl.DateTimeFormat(this.mLocales, {
+            year: "numeric",
+            month: "numeric",
+            day: "numeric"
+          });
+          formatter.formatToParts(Date.now()).map(part => {
+            switch (part.type) {
+              case "year":
+                fragment.appendChild(this.mYearField);
+                break;
+              case "month":
+                fragment.appendChild(this.mMonthField);
+                break;
+              case "day":
+                fragment.appendChild(this.mDayField);
+                break;
+              default:
+                // Remove bidirectional formatting characters, we'll handle
+                // directions on our own.
+                let value = this.stripDirFormattingChars(part.value);
+                let span = document.createElementNS(HTML_NS, "span");
+                span.textContent = value;
+                fragment.appendChild(span);
+                break;
+            }
+          });
+
+          root.appendChild(fragment);
+        ]]>
+        </body>
+      </method>
 
       <method name="clearInputFields">
         <parameter name="aFromInputElement"/>
@@ -444,19 +469,32 @@
     <implementation>
       <constructor>
       <![CDATA[
-        // TODO: Bug 1301312 - localization for input type=time input.
+        const kDefaultAMString = "AM";
+        const kDefaultPMString = "PM";
+
+        let { amString, pmString } =
+          this.getStringsForLocale(this.mLocales);
+
+        this.mAMIndicator = amString || kDefaultAMString;
+        this.mPMIndicator = pmString || kDefaultPMString;
+
+        /* eslint-disable no-multi-spaces */
+        this.mHourPlaceHolder = ]]>"&time.hour.placeholder;"<![CDATA[;
+        this.mMinutePlaceHolder = ]]>"&time.minute.placeholder;"<![CDATA[;
+        this.mSecondPlaceHolder = ]]>"&time.second.placeholder;"<![CDATA[;
+        this.mMillisecPlaceHolder = ]]>"&time.millisecond.placeholder;"<![CDATA[;
+        this.mDayPeriodPlaceHolder = ]]>"&time.dayperiod.placeholder;"<![CDATA[;
+        /* eslint-enable no-multi-spaces */
+
         this.mHour12 = true;
-        this.mAMIndicator = "AM";
-        this.mPMIndicator = "PM";
-        this.mPlaceHolder = "--";
         this.mSeparatorText = ":";
         this.mMillisecSeparatorText = ".";
         this.mMaxLength = 2;
         this.mMillisecMaxLength = 3;
         this.mDefaultStep = 60 * 1000; // in milliseconds
 
-        this.mMinHourInHour12 = 1;
-        this.mMaxHourInHour12 = 12;
+        this.mMinHour = this.mHour12 ? 1 : 0;
+        this.mMaxHour = this.mHour12 ? 12 : 23;
         this.mMinMinute = 0;
         this.mMaxMinute = 59;
         this.mMinSecond = 0;
@@ -467,37 +505,7 @@
         this.mHourPageUpDownInterval = 3;
         this.mMinSecPageUpDownInterval = 10;
 
-        this.mHourField =
-          document.getAnonymousElementByAttribute(this, "anonid", "input-one");
-        this.mHourField.setAttribute("typeBuffer", "");
-        this.mMinuteField =
-          document.getAnonymousElementByAttribute(this, "anonid", "input-two");
-        this.mMinuteField.setAttribute("typeBuffer", "");
-        this.mDayPeriodField =
-          document.getAnonymousElementByAttribute(this, "anonid", "input-three");
-        this.mDayPeriodField.classList.remove("numeric");
-
-        this.mHourField.placeholder = this.mPlaceHolder;
-        this.mMinuteField.placeholder = this.mPlaceHolder;
-        this.mDayPeriodField.placeholder = this.mPlaceHolder;
-
-        this.mHourField.setAttribute("min", this.mMinHourInHour12);
-        this.mHourField.setAttribute("max", this.mMaxHourInHour12);
-        this.mMinuteField.setAttribute("min", this.mMinMinute);
-        this.mMinuteField.setAttribute("max", this.mMaxMinute);
-
-        this.mMinuteSeparator =
-           document.getAnonymousElementByAttribute(this, "anonid", "sep-first");
-        this.mMinuteSeparator.textContent = this.mSeparatorText;
-        this.mSpaceSeparator =
-          document.getAnonymousElementByAttribute(this, "anonid", "sep-second");
-        // space between time and am/pm field
-        this.mSpaceSeparator.textContent = " ";
-
-        this.mSecondSeparator = null;
-        this.mSecondField = null;
-        this.mMillisecSeparator = null;
-        this.mMillisecField = null;
+        this.buildEditFields();
 
         if (this.mInputElement.value) {
           this.setFieldsFromInputValue();
@@ -506,48 +514,157 @@
         ]]>
       </constructor>
 
-      <method name="insertSeparator">
-        <parameter name="aSeparatorText"/>
+      <method name="getInputElementValues">
         <body>
         <![CDATA[
-          let container = this.mHourField.parentNode;
-          const HTML_NS = "http://www.w3.org/1999/xhtml";
+          let value = this.mInputElement.value;
+          if (value.length === 0) {
+            return {};
+          }
 
-          let separator = document.createElementNS(HTML_NS, "span");
-          separator.textContent = aSeparatorText;
-          separator.setAttribute("class", "datetime-separator");
-          container.insertBefore(separator, this.mSpaceSeparator);
+          let hour, minute, second, millisecond;
+          [hour, minute, second] = value.split(":");
+          if (second) {
+            [second, millisecond] = second.split(".");
 
-          return separator;
+            // Convert fraction of second to milliseconds.
+            if (millisecond && millisecond.length === 1) {
+              millisecond *= 100;
+            } else if (millisecond && millisecond.length === 2) {
+              millisecond *= 10;
+            }
+          }
+
+          return { hour, minute, second, millisecond };
         ]]>
         </body>
       </method>
 
-      <method name="insertAdditionalField">
-        <parameter name="aPlaceHolder"/>
-        <parameter name="aMin"/>
-        <parameter name="aMax"/>
-        <parameter name="aSize"/>
-        <parameter name="aMaxLength"/>
+      <method name="reBuildEditFields">
+        <body>
+          <![CDATA[
+            let root =
+              document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
+            while (root.firstChild) {
+              root.firstChild.remove();
+            }
+
+            this.mHourField = null;
+            this.mMinuteField = null;
+            this.mSecondField = null;
+            this.mMillisecField = null;
+
+            this.buildEditFields();
+          ]]>
+        </body>
+      </method>
+
+      <method name="buildEditFields">
         <body>
         <![CDATA[
-          let container = this.mHourField.parentNode;
           const HTML_NS = "http://www.w3.org/1999/xhtml";
+          let root =
+            document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
 
-          let field = document.createElementNS(HTML_NS, "input");
-          field.classList.add("textbox-input", "datetime-input", "numeric");
-          field.setAttribute("size", aSize);
-          field.setAttribute("maxlength", aMaxLength);
-          field.setAttribute("min", aMin);
-          field.setAttribute("max", aMax);
-          field.setAttribute("typeBuffer", "");
-          field.disabled = this.mInputElement.disabled;
-          field.readOnly = this.mInputElement.readOnly;
-          field.tabIndex = this.mInputElement.tabIndex;
-          field.placeholder = aPlaceHolder;
-          container.insertBefore(field, this.mSpaceSeparator);
+          let { second, millisecond } = this.getInputElementValues();
 
-          return field;
+          let options = {
+            hour: "numeric",
+            minute: "numeric",
+            hour12: this.mHour12
+          };
+
+          this.mHourField = this.createEditField(this.mHourPlaceHolder,
+            this.mMaxLength, true, this.mMinHour, this.mMaxHour,
+            this.mHourPageUpDownInterval);
+          this.mMinuteField = this.createEditField(this.mMinutePlaceHolder,
+            this.mMaxLength, true, this.mMinMinute, this.mMaxMinute,
+            this.mMinSecPageUpDownInterval);
+
+          if (this.mHour12) {
+            let dayPeriodLength =
+              Math.max(this.mAMIndicator.length, this.mPMIndicator.length);
+
+            this.mDayPeriodField = this.createEditField(
+              this.mDayPeriodPlaceHolder, dayPeriodLength, false);
+          }
+
+          if (second != undefined) {
+            options["second"] = "numeric";
+            this.mSecondField = this.createEditField(this.mSecondPlaceHolder,
+              this.mMaxLength, true, this.mMinSecond, this.mMaxSecond,
+              this.mMinSecPageUpDownInterval);
+          }
+
+          if (millisecond != undefined) {
+            this.mMillisecField = this.createEditField(this.mMillisecPlaceHolder,
+              this.mMillisecMaxLength, true, this.mMinMillisecond,
+              this.mMaxMillisecond, this.mMinSecPageUpDownInterval);
+          }
+
+          let fragment = document.createDocumentFragment();
+          let formatter = Intl.DateTimeFormat(this.mLocales, options);
+          formatter.formatToParts(Date.now()).map(part => {
+            switch (part.type) {
+              case "hour":
+                fragment.appendChild(this.mHourField);
+                break;
+              case "minute":
+                fragment.appendChild(this.mMinuteField);
+                break;
+              case "second":
+                fragment.appendChild(this.mSecondField);
+                if (millisecond != undefined) {
+                  // Intl.DateTimeFormat does not support millisecond, so we
+                  // need to handle this on our own.
+                  let span = document.createElementNS(HTML_NS, "span");
+                  span.textContent = this.mMillisecSeparatorText;
+                  fragment.appendChild(span);
+                  fragment.appendChild(this.mMillisecField);
+                }
+                break;
+              case "dayPeriod":
+                fragment.appendChild(this.mDayPeriodField);
+                break;
+              default:
+                // Remove bidirectional formatting characters, we'll handle
+                // directions on our own.
+                let value = this.stripDirFormattingChars(part.value);
+                let span = document.createElementNS(HTML_NS, "span");
+                span.textContent = value;
+                fragment.appendChild(span);
+                break;
+            }
+          });
+
+          root.appendChild(fragment);
+        ]]>
+        </body>
+      </method>
+
+      <method name="getStringsForLocale">
+        <parameter name="aLocales"/>
+        <body>
+        <![CDATA[
+          this.log("getStringsForLocale: " + aLocales);
+
+          let intlUtils = window.intlUtils;
+          if (!intlUtils) {
+            return {};
+          }
+
+          let amString, pmString;
+          let keys = [ "dates/gregorian/dayperiods/am",
+                       "dates/gregorian/dayperiods/pm" ];
+
+          let result = intlUtils.getDisplayNames(this.mLocales, {
+            style: "short",
+            keys
+          });
+
+          [ amString, pmString ] = keys.map(key => result.values[key]);
+
+          return { amString, pmString };
         ]]>
         </body>
       </method>
@@ -555,71 +672,38 @@
       <method name="setFieldsFromInputValue">
         <body>
         <![CDATA[
-          let value = this.mInputElement.value;
-          if (!value) {
+          let { hour, minute, second, millisecond } =
+            this.getInputElementValues();
+
+          if (this.isEmpty(hour) && this.isEmpty(minute)) {
             this.clearInputFields(true);
             return;
           }
 
-          this.log("setFieldsFromInputValue: " + value);
-          let [hour, minute, second] = value.split(":");
+          // Second and millsecond part is optional, rebuild edit fields if
+          // needed.
+          if ((!this.isEmpty(second) && !this.mSecondField) ||
+              (this.isEmpty(second) && this.mSecondField) ||
+              (!this.isEmpty(millisecond) && !this.mMillisecField) ||
+              (this.isEmpty(millisecond) && this.mMillisecField)) {
+            this.log("Edit fields need to be rebuilt.")
+            this.reBuildEditFields();
+          }
 
           this.setFieldValue(this.mHourField, hour);
           this.setFieldValue(this.mMinuteField, minute);
           if (this.mHour12) {
-            this.mDayPeriodField.value = (hour >= this.mMaxHourInHour12) ?
+            this.mDayPeriodField.value = (hour >= this.mMaxHour) ?
               this.mPMIndicator : this.mAMIndicator;
           }
 
           if (!this.isEmpty(second)) {
-            let index = second.indexOf(".");
-            let millisecond;
-            if (index != -1) {
-              millisecond = second.substring(index + 1);
-              second = second.substring(0, index);
-            }
-
-            if (!this.mSecondField) {
-              this.mSecondSeparator = this.insertSeparator(this.mSeparatorText);
-              this.mSecondField = this.insertAdditionalField(this.mPlaceHolder,
-                this.mMinSecond, this.mMaxSecond, this.mMaxLength,
-                this.mMaxLength);
-            }
             this.setFieldValue(this.mSecondField, second);
-
-            if (!this.isEmpty(millisecond)) {
-              if (!this.mMillisecField) {
-                this.mMillisecSeparator = this.insertSeparator(
-                  this.mMillisecSeparatorText);
-                this.mMillisecField = this.insertAdditionalField(
-                  this.mPlaceHolder, this.mMinMillisecond, this.mMaxMillisecond,
-                  this.mMillisecMaxLength, this.mMillisecMaxLength);
-              }
-              this.setFieldValue(this.mMillisecField, millisecond);
-            } else if (this.mMillisecField) {
-              this.mMillisecField.remove();
-              this.mMillisecField = null;
-
-              this.mMillisecSeparator.remove();
-              this.mMillisecSeparator = null;
-            }
-          } else {
-            if (this.mSecondField) {
-              this.mSecondField.remove();
-              this.mSecondField = null;
-
-              this.mSecondSeparator.remove();
-              this.mSecondSeparator = null;
-            }
-
-            if (this.mMillisecField) {
-              this.mMillisecField.remove();
-              this.mMillisecField = null;
-
-              this.mMillisecSeparator.remove();
-              this.mMillisecSeparator = null;
-            }
           }
+          if (!this.isEmpty(millisecond)) {
+            this.setFieldValue(this.mMillisecField, millisecond);
+          }
+
           this.notifyPicker();
         ]]>
         </body>
@@ -648,11 +732,10 @@
           let hour = Number(this.mHourField.value);
           if (this.mHour12) {
             let dayPeriod = this.mDayPeriodField.value;
-            if (dayPeriod == this.mPMIndicator &&
-                hour < this.mMaxHourInHour12) {
-              hour += this.mMaxHourInHour12;
+            if (dayPeriod == this.mPMIndicator && hour < this.mMaxHour) {
+              hour += this.mMaxHour;
             } else if (dayPeriod == this.mAMIndicator &&
-                       hour == this.mMaxHourInHour12) {
+                       hour == this.mMaxHour) {
               hour = 0;
             }
           }
@@ -686,8 +769,8 @@
             this.setFieldValue(this.mHourField, hour);
             if (this.mHour12) {
               this.mDayPeriodField.value =
-                (hour >= this.mMaxHourInHour12) ? this.mPMIndicator
-                                                : this.mAMIndicator;
+                (hour >= this.mMaxHour) ? this.mPMIndicator
+                                        : this.mAMIndicator;
             }
           }
 
@@ -758,8 +841,9 @@
             let now = new Date();
 
             if (aTargetField == this.mHourField) {
-              value = now.getHours() % this.mMaxHourInHour12 ||
-                this.mMaxHourInHour12;
+              if (this.mHour12) {
+                value = now.getHours() % this.mMaxHour || this.mMaxHour;
+              }
             } else if (aTargetField == this.mMinuteField) {
               value = now.getMinutes();
             } else if (aTargetField == this.mSecondField) {
@@ -777,7 +861,7 @@
           let min = aTargetField.getAttribute("min");
           let max = aTargetField.getAttribute("max");
 
-          value += aTimes;
+          value += Number(aTimes);
           if (value > max) {
             value -= (max - min + 1);
           } else if (value < min) {
@@ -823,16 +907,16 @@
             case "ArrowDown":
               this.incrementFieldValue(targetField, -1);
               break;
-            case "PageUp":
-              this.incrementFieldValue(targetField,
-                targetField == this.mHourField ? this.mHourPageUpDownInterval
-                                               : this.mMinSecPageUpDownInterval);
+            case "PageUp": {
+              let interval = targetField.getAttribute("pginterval");
+              this.incrementFieldValue(targetField, interval);
               break;
-            case "PageDown":
-              this.incrementFieldValue(targetField,
-                targetField == this.mHourField ? (0 - this.mHourPageUpDownInterval)
-                                               : (0 - this.mMinSecPageUpDownInterval));
+            }
+            case "PageDown": {
+              let interval = targetField.getAttribute("pginterval");
+              this.incrementFieldValue(targetField, 0 - interval);
               break;
+            }
             case "Home":
               let min = targetField.getAttribute("min");
               this.setFieldValue(targetField, min);
@@ -905,10 +989,11 @@
 
           if (aField.maxLength == this.mMaxLength) { // For hour, minute and second
             if (aField == this.mHourField && this.mHour12) {
-              value = (value > this.mMaxHourInHour12) ?
-                value - this.mMaxHourInHour12 : value;
               if (aValue == "00") {
-                value = this.mMaxHourInHour12;
+                value = this.mMaxHour;
+              } else {
+                // Change to 12hr format if user input is greater than 12.
+                value = (value > this.mMaxHour) ? value % this.mMaxHour : value;
               }
             }
             // prepend zero
@@ -961,11 +1046,10 @@
             hour = Number(this.mHourField.value);
             if (this.mHour12) {
               let dayPeriod = this.mDayPeriodField.value;
-              if (dayPeriod == this.mPMIndicator &&
-                  hour < this.mMaxHourInHour12) {
-                hour += this.mMaxHourInHour12;
+              if (dayPeriod == this.mPMIndicator && hour < this.mMaxHour) {
+                hour += this.mMaxHour;
               } else if (dayPeriod == this.mAMIndicator &&
-                         hour == this.mMaxHourInHour12) {
+                         hour == this.mMaxHour) {
                 hour = 0;
               }
             }
@@ -997,21 +1081,10 @@
     <content>
       <html:div class="datetime-input-box-wrapper"
                 xbl:inherits="context,disabled,readonly">
-        <html:span>
-          <html:input anonid="input-one"
-                      class="textbox-input datetime-input numeric"
-                      size="2" maxlength="2"
-                      xbl:inherits="disabled,readonly,tabindex"/>
-          <html:span anonid="sep-first" class="datetime-separator"></html:span>
-          <html:input anonid="input-two"
-                      class="textbox-input datetime-input numeric"
-                      size="2" maxlength="2"
-                      xbl:inherits="disabled,readonly,tabindex"/>
-          <html:span anonid="sep-second" class="datetime-separator"></html:span>
-          <html:input anonid="input-three"
-                      class="textbox-input datetime-input numeric"
-                      size="2" maxlength="2"
-                      xbl:inherits="disabled,readonly,tabindex"/>
+        <html:span class="datetime-input-edit-wrapper"
+                   anonid="edit-wrapper">
+          <!-- Each of the date/time input types will append their input child
+             - elements here -->
         </html:span>
 
         <html:button class="datetime-reset-button" anonid="reset-button"
@@ -1024,6 +1097,7 @@
       <![CDATA[
         this.DEBUG = false;
         this.mInputElement = this.parentNode;
+        this.mLocales = window.getAppLocalesAsBCP47();
 
         this.mMin = this.mInputElement.min;
         this.mMax = this.mInputElement.max;
@@ -1077,6 +1151,40 @@
         </body>
       </method>
 
+      <method name="createEditField">
+        <parameter name="aPlaceHolder"/>
+        <parameter name="aLength"/>
+        <parameter name="aIsNumeric"/>
+        <parameter name="aMin"/>
+        <parameter name="aMax"/>
+        <parameter name="aPageUpDownInterval"/>
+        <body>
+        <![CDATA[
+          const HTML_NS = "http://www.w3.org/1999/xhtml";
+
+          let field = document.createElementNS(HTML_NS, "input");
+          field.classList.add("textbox-input", "datetime-input");
+          field.disabled = this.mInputElement.disabled;
+          field.readOnly = this.mInputElement.readOnly;
+          field.tabIndex = this.mInputElement.tabIndex;
+          field.placeholder = aPlaceHolder;
+
+          field.setAttribute("size", aLength);
+          field.setAttribute("maxlength", aLength);
+          field.setAttribute("typeBuffer", "");
+
+          if (aIsNumeric) {
+            field.classList.add("numeric");
+            field.setAttribute("min", aMin);
+            field.setAttribute("max", aMax);
+            field.setAttribute("pginterval", aPageUpDownInterval);
+          }
+
+          return field;
+        ]]>
+        </body>
+      </method>
+
       <method name="updateResetButtonVisibility">
         <body>
           <![CDATA[
@@ -1093,7 +1201,16 @@
         <body>
         <![CDATA[
           this.log("focusInnerTextBox");
-          document.getAnonymousElementByAttribute(this, "anonid", "input-one").focus();
+
+          let editRoot =
+            document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
+
+          for (let child = editRoot.firstChild; child; child = child.nextSibling) {
+            if (child instanceof HTMLInputElement) {
+              child.focus();
+              break;
+            }
+          }
         ]]>
         </body>
       </method>
@@ -1163,10 +1280,71 @@
         </body>
       </method>
 
+      <method name="setEditAttribute">
+        <parameter name="aName"/>
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          this.log("setAttribute: " + aName + "=" + aValue);
+
+          if (aName != "tabindex" && aName != "disabled" &&
+              aName != "readonly") {
+            return;
+          }
+
+          let editRoot =
+            document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
+
+          for (let child = editRoot.firstChild; child; child = child.nextSibling) {
+            if (child instanceof HTMLInputElement) {
+              child.setAttribute(aName, aValue);
+            }
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="removeEditAttribute">
+        <parameter name="aName"/>
+        <body>
+        <![CDATA[
+          this.log("removeAttribute: " + aName);
+
+          if (aName != "tabindex" && aName != "disabled" &&
+              aName != "readonly") {
+            return;
+          }
+
+          let editRoot =
+            document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
+
+          for (let child = editRoot.firstChild; child; child = child.nextSibling) {
+            if (child instanceof HTMLInputElement) {
+              child.removeAttribute(aName);
+            }
+          }
+        ]]>
+        </body>
+      </method>
+
       <method name="isEmpty">
         <parameter name="aValue"/>
         <body>
           return (aValue == undefined || 0 === aValue.length);
+        </body>
+      </method>
+
+      <method name="stripDirFormattingChars">
+        <parameter name="aString"/>
+        <body>
+        <![CDATA[
+          // Strip bidirectional formatting characters.
+          // http://www.unicode.org/reports/tr9/#Directional_Formatting_Characters
+          let str = aString.replace(
+            /[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g, "");
+
+          return str;
+        ]]>
         </body>
       </method>
 
@@ -1231,7 +1409,7 @@
       <method name="isDisabled">
         <body>
         <![CDATA[
-          return this.hasAttribute("disabled");
+          return this.mInputElement.hasAttribute("disabled");
         ]]>
         </body>
       </method>
@@ -1239,7 +1417,7 @@
       <method name="isReadonly">
         <body>
         <![CDATA[
-          return this.hasAttribute("readonly");
+          return this.mInputElement.hasAttribute("readonly");
         ]]>
         </body>
       </method>
