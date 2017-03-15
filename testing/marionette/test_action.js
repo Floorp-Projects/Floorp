@@ -79,11 +79,13 @@ add_test(function test_validateActionDurationAndCoordinates() {
     check("pointer", "pointerMove");
   }
   actionItem.duration = 5000;
-  for (let d of [-1, "a"]) {
-    for (let name of ["x", "y"]) {
-      actionItem[name] = d;
-      check("pointer", "pointerMove", `${name}: ${actionItem[name]}`);
-    }
+  for (let name of ["x", "y"]) {
+    actionItem[name] = "a";
+    actionItem.type = "pointerMove";
+    actionSequence.type = "pointer";
+    checkErrors(/Expected '.*' \(.*\) to be an Integer/,
+        action.Action.fromJson, [actionSequence, actionItem],
+        `duration: ${actionItem.duration}, subtype: pointerMove`);
   }
   run_next_test();
 });
@@ -93,6 +95,7 @@ add_test(function test_processPointerMoveActionOriginValidation() {
   let actionItem = {duration: 5000, type: "pointerMove"};
   for (let d of [-1, {a: "blah"}, []]) {
     actionItem.origin = d;
+
     checkErrors(/Expected \'origin\' to be a string or a web element reference/,
         action.Action.fromJson,
         [actionSequence, actionItem],
