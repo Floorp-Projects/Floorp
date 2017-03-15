@@ -589,11 +589,7 @@ MediaDecoder::OnDecoderDoctorEvent(DecoderDoctorEvent aEvent)
   MOZ_ASSERT(NS_IsMainThread());
   // OnDecoderDoctorEvent is disconnected at shutdown time.
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  HTMLMediaElement* element = GetOwner()->GetMediaElement();
-  if (!element) {
-    return;
-  }
-  nsIDocument* doc = element->OwnerDoc();
+  nsIDocument* doc = GetOwner()->GetDocument();
   if (!doc) {
     return;
   }
@@ -1297,11 +1293,11 @@ MediaDecoder::NotifyCompositor()
   MediaDecoderOwner* owner = GetOwner();
   NS_ENSURE_TRUE_VOID(owner);
 
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
-  NS_ENSURE_TRUE_VOID(element);
+  nsIDocument* ownerDoc = owner->GetDocument();
+  NS_ENSURE_TRUE_VOID(ownerDoc);
 
   RefPtr<LayerManager> layerManager =
-    nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
+    nsContentUtils::LayerManagerForDocument(ownerDoc);
   if (layerManager) {
     RefPtr<KnowsCompositor> knowsCompositor = layerManager->AsShadowForwarder();
     mCompositorUpdatedEvent.Notify(knowsCompositor);
