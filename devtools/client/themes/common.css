@@ -264,6 +264,11 @@ checkbox:-moz-focusring {
   height: 16px;
   margin: 0 3px;
   transition: opacity 0.05s ease-in-out;
+
+  /* For text-as-image usage, match the SVG color */
+  color: #0b0b0b;
+  direction: ltr;
+  font-size: 11px;
 }
 
 .devtools-button:empty::before {
