@@ -45,7 +45,7 @@ public:
                                        nsresult aStatus,
                                        bool aLastPart) override;
 
-  virtual void OnSurfaceDiscarded(SurfaceKey aSurfaceKey) override;
+  virtual void OnSurfaceDiscarded() override;
 
   virtual void SetInnerWindowID(uint64_t aInnerWindowId) override;
   virtual uint64_t InnerWindowID() const override;
