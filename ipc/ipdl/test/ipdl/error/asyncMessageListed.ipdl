@@ -1,3 +1,5 @@
+//error: IPC message asyncMessageListed::Msg is async, can be delisted
+
 protocol asyncMessageListed {
 parent:
     async Msg();

@@ -1,3 +1,5 @@
+//error: union `X' is only partially defined
+
 union X { X; };
 
 protocol undefSelfRecUnion {

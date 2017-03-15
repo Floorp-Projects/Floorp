@@ -1,3 +1,5 @@
+//error: |manager| declaration in protocol `ForgottenManagee' does not match any |manages| declaration in protocol `ManagerForgot'
+
 include protocol ForgottenManagee;
 
 // See ForgottenManagee.ipdl. This includes ForgottenManagee to
