@@ -752,7 +752,7 @@ impl ToJson for SwitchToFrameParameters {
 
 #[derive(PartialEq)]
 pub struct SendKeysParameters {
-    pub value: Vec<char>
+    pub text: String
 }
 
 impl Parameters for SendKeysParameters {
@@ -760,26 +760,14 @@ impl Parameters for SendKeysParameters {
         let data = try_opt!(body.as_object(),
                             ErrorStatus::InvalidArgument,
                             "Message body was not an object");
-        let value_json = try_opt!(try_opt!(data.get("value"),
-                                           ErrorStatus::InvalidArgument,
-                                           "Missing 'value' parameter").as_array(),
-                                  ErrorStatus::InvalidArgument,
-                                  "Could not convert 'value' to array");
-
-        let value = try!(value_json.iter().map(|x| {
-           let str_value = try_opt!(x.as_string(),
-                                    ErrorStatus::InvalidArgument,
-                                    "Value was not a string");
-            let chars = str_value.chars().collect::<Vec<char>>();
-            if chars.len() != 1 {
-                return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                               "Value was not a string"));
-            }
-            Ok(chars[0])
-        }).collect::<Result<Vec<_>, _>>());
+        let text = try_opt!(try_opt!(data.get("text"),
+                                     ErrorStatus::InvalidArgument,
+                                     "Missing 'text' parameter").as_string(),
+                            ErrorStatus::InvalidArgument,
+                            "Could not convert 'text' to string");
 
         Ok(SendKeysParameters {
-            value: value
+            text: text.into()
         })
     }
 }
@@ -787,10 +775,7 @@ impl Parameters for SendKeysParameters {
 impl ToJson for SendKeysParameters {
     fn to_json(&self) -> Json {
         let mut data = BTreeMap::new();
-        let value_string: Vec<String> = self.value.iter().map(|x| {
-            x.to_string()
-        }).collect();
-        data.insert("value".to_string(), value_string.to_json());
+        data.insert("value".to_string(), self.text.to_json());
         Json::Object(data)
     }
 }
