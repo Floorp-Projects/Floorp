@@ -503,7 +503,7 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
     NS_ENSURE_TRUE(mappedOK, NS_ERROR_FAILURE);
 
     RefPtr<DrawTarget> dt =
-      Factory::CreateDrawTargetForData(BackendType::CAIRO,
+      Factory::CreateDrawTargetForData(gfxPlatform::GetPlatform()->GetSoftwareBackend(),
                                        map.mData,
                                        dataSurface->GetSize(),
                                        map.mStride,

@@ -145,7 +145,7 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
   }
 
   RefPtr<DrawTarget> dt =
-    Factory::CreateDrawTargetForData(BackendType::CAIRO,
+    Factory::CreateDrawTargetForData(gfxPlatform::GetPlatform()->GetSoftwareBackend(),
                                      map.mData,
                                      dataSurface->GetSize(),
                                      map.mStride,
