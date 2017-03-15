@@ -14,6 +14,13 @@ class IPDLTestCase(unittest.TestCase):
         self.assertFalse(self.compile.exception(), self.mkFailMsg())
         self.checkPassed()
 
+    def mkCustomMsg(self, msg):
+        return '''
+### Command: %s
+### %s
+### stderr:
+%s''' % (' '.join(self.compile.argv), msg, self.compile.stderr)
+
     def mkFailMsg(self):
         return '''
 ### Command: %s
@@ -42,8 +49,25 @@ The IPDL compiler *should* produce errors but not exceptions.'''
     def __init__(self, ipdlargv, filename):
         IPDLTestCase.__init__(self, ipdlargv, filename)
 
+        # Look for expected errors in the input file.
+        f = open(filename, 'r')
+        self.expectedErrorMessage = []
+        for l in f:
+            if l.startswith("//error:"):
+                self.expectedErrorMessage.append(l[2:-1])
+        f.close()
+
+
     def checkPassed(self):
-        self.assertTrue(self.compile.error(), self.mkFailMsg())
+        self.assertNotEqual(self.expectedErrorMessage, [],
+                            self.mkCustomMsg("Error test should contain at least " +
+                                             "one line starting with //error: " +
+                                             "that indicates the expected failure."))
+
+        for e in self.expectedErrorMessage:
+            self.assertTrue(self.compile.error(e),
+                            self.mkCustomMsg('Did not see expected error "' +
+                                             e + '"'))
 
 
 if __name__ == '__main__':
