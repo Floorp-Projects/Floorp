@@ -31,7 +31,7 @@ class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
         self.test_page_not_remote = "about:robots"
         self.test_page_remote = self.marionette.absolute_url("test.html")
 
-        if self.marionette.session_capabilities['platformName'] == 'darwin':
+        if self.marionette.session_capabilities["platformName"] == "darwin":
             self.mod_key = Keys.META
         else:
             self.mod_key = Keys.CONTROL
@@ -92,56 +92,15 @@ class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
               return tabBrowser.isRemoteBrowser;
             """)
 
-    def run_bfcache_test(self, test_pages):
-        # Helper method to run simple back and forward testcases.
-        for index, page in enumerate(test_pages):
-            if "error" in page:
-                with self.assertRaises(page["error"]):
-                    self.marionette.navigate(page["url"])
-            else:
-                self.marionette.navigate(page["url"])
-            self.assertEqual(page["url"], self.marionette.get_url())
-            self.assertEqual(self.history_length, index + 1)
-
-            if "is_remote" in page:
-                self.assertEqual(page["is_remote"], self.is_remote_tab,
-                                 "'{}' doesn't match expected remoteness state: {}".format(
-                                     page["url"], page["is_remote"]))
-
-        for page in test_pages[-2::-1]:
-            if "error" in page:
-                with self.assertRaises(page["error"]):
-                    self.marionette.go_back()
-            else:
-                self.marionette.go_back()
-            self.assertEqual(page["url"], self.marionette.get_url())
-
-        if "is_remote" in page:
-            self.assertEqual(page["is_remote"], self.is_remote_tab,
-                             "'{}' doesn't match expected remoteness state: {}".format(
-                                 page["url"], page["is_remote"]))
-
-        for page in test_pages[1::]:
-            if "error" in page:
-                with self.assertRaises(page["error"]):
-                    self.marionette.go_forward()
-            else:
-                self.marionette.go_forward()
-            self.assertEqual(page["url"], self.marionette.get_url())
-
-        if "is_remote" in page:
-            self.assertEqual(page["is_remote"], self.is_remote_tab,
-                             "'{}' doesn't match expected remoteness state: {}".format(
-                                 page["url"], page["is_remote"]))
-
 
 class TestNavigate(BaseNavigationTestCase):
 
     def test_set_location_through_execute_script(self):
         self.marionette.execute_script(
-            "window.location.href = '%s'" % self.test_page_remote)
+            "window.location.href = '{}'".format(self.test_page_remote),
+            sandbox=None)
         Wait(self.marionette).until(
-            lambda _: self.test_page_remote == self.marionette.get_url())
+            lambda mn: self.test_page_remote == mn.get_url())
         self.assertEqual("Marionette Test", self.marionette.title)
 
     def test_navigate_chrome_unsupported_error(self):
@@ -202,13 +161,13 @@ class TestNavigate(BaseNavigationTestCase):
     def test_find_element_state_complete(self):
         self.marionette.navigate(self.test_page_remote)
         state = self.marionette.execute_script(
-            "return window.document.readyState")
+            "return window.document.readyState", sandbox=None)
         self.assertEqual("complete", state)
         self.assertTrue(self.marionette.find_element(By.ID, "mozLink"))
 
     def test_navigate_timeout_error_no_remoteness_change(self):
         is_remote_before_timeout = self.is_remote_tab
-        self.marionette.timeout.page_load = 0.1
+        self.marionette.timeout.page_load = 0.5
         with self.assertRaises(errors.TimeoutException):
             self.marionette.navigate(self.marionette.absolute_url("slow"))
         self.assertEqual(self.is_remote_tab, is_remote_before_timeout)
@@ -219,7 +178,7 @@ class TestNavigate(BaseNavigationTestCase):
         self.marionette.navigate("about:robots")
         self.assertFalse(self.is_remote_tab)
 
-        self.marionette.timeout.page_load = 0.1
+        self.marionette.timeout.page_load = 0.5
         with self.assertRaises(errors.TimeoutException):
             self.marionette.navigate(self.marionette.absolute_url("slow"))
 
@@ -244,7 +203,7 @@ class TestNavigate(BaseNavigationTestCase):
     def test_about_blank_for_new_docshell(self):
         self.assertEqual(self.marionette.get_url(), "about:blank")
 
-        self.marionette.navigate('about:blank')
+        self.marionette.navigate("about:blank")
 
     @run_if_manage_instance("Only runnable if Marionette manages the instance")
     @skip_if_mobile("Bug 1322993 - Missing temporary folder")
@@ -272,10 +231,10 @@ class TestNavigate(BaseNavigationTestCase):
         self.assertFalse(self.is_remote_tab)
 
         with self.marionette.using_context("chrome"):
-            urlbar = self.marionette.find_element(By.ID, 'urlbar')
-            urlbar.send_keys(self.mod_key + 'a')
-            urlbar.send_keys(self.mod_key + 'x')
-            urlbar.send_keys('about:support' + Keys.ENTER)
+            urlbar = self.marionette.find_element(By.ID, "urlbar")
+            urlbar.send_keys(self.mod_key + "a")
+            urlbar.send_keys(self.mod_key + "x")
+            urlbar.send_keys("about:support" + Keys.ENTER)
 
         Wait(self.marionette).until(
             lambda mn: mn.get_url() == "about:support",
@@ -288,9 +247,9 @@ class TestNavigate(BaseNavigationTestCase):
         self.assertTrue(self.is_remote_tab)
 
         with self.marionette.using_context("chrome"):
-            urlbar = self.marionette.find_element(By.ID, 'urlbar')
-            urlbar.send_keys(self.mod_key + 'a')
-            urlbar.send_keys(self.mod_key + 'x')
+            urlbar = self.marionette.find_element(By.ID, "urlbar")
+            urlbar.send_keys(self.mod_key + "a")
+            urlbar.send_keys(self.mod_key + "x")
             urlbar.send_keys(self.test_page_remote + Keys.ENTER)
 
         Wait(self.marionette).until(
@@ -305,7 +264,7 @@ class TestNavigate(BaseNavigationTestCase):
             self.marionette.navigate(self.test_page_remote)
             with self.marionette.using_context("chrome"):
                 main_win = self.marionette.find_element(By.ID, "main-window")
-                main_win.send_keys(self.mod_key, Keys.SHIFT, 'a')
+                main_win.send_keys(self.mod_key, Keys.SHIFT, "a")
 
         new_tab = self.open_tab(trigger=open_with_shortcut)
         self.marionette.switch_to_window(new_tab)
@@ -315,6 +274,51 @@ class TestNavigate(BaseNavigationTestCase):
 
 
 class TestBackForwardNavigation(BaseNavigationTestCase):
+
+    def run_bfcache_test(self, test_pages):
+        # Helper method to run simple back and forward testcases.
+        for index, page in enumerate(test_pages):
+            if "error" in page:
+                with self.assertRaises(page["error"]):
+                    self.marionette.navigate(page["url"])
+            else:
+                self.marionette.navigate(page["url"])
+            self.assertEqual(page["url"], self.marionette.get_url())
+            self.assertEqual(self.history_length, index + 1)
+
+            if "is_remote" in page:
+                self.assertEqual(page["is_remote"], self.is_remote_tab,
+                                 "'{}' doesn't match expected remoteness state: {}".format(
+                                     page["url"], page["is_remote"]))
+
+        # Now going back in history for all test pages by backward iterating
+        # through the list (-1) and skipping the first entry at the end (-2).
+        for page in test_pages[-2::-1]:
+            if "error" in page:
+                with self.assertRaises(page["error"]):
+                    self.marionette.go_back()
+            else:
+                self.marionette.go_back()
+            self.assertEqual(page["url"], self.marionette.get_url())
+
+        if "is_remote" in page:
+            self.assertEqual(page["is_remote"], self.is_remote_tab,
+                             "'{}' doesn't match expected remoteness state: {}".format(
+                                 page["url"], page["is_remote"]))
+
+        # Now going forward in history by skipping the first entry.
+        for page in test_pages[1::]:
+            if "error" in page:
+                with self.assertRaises(page["error"]):
+                    self.marionette.go_forward()
+            else:
+                self.marionette.go_forward()
+            self.assertEqual(page["url"], self.marionette.get_url())
+
+        if "is_remote" in page:
+            self.assertEqual(page["is_remote"], self.is_remote_tab,
+                             "'{}' doesn't match expected remoteness state: {}".format(
+                                 page["url"], page["is_remote"]))
 
     def test_no_history_items(self):
         # Both methods should not raise a failure if no navigation is possible
@@ -392,18 +396,18 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         self.marionette.find_element(*test_element_locator)
         self.assertEqual(self.marionette.get_url(), page)
 
-    def test_image_document_to_html(self):
+    def test_image_to_html_to_image(self):
         test_pages = [
-            {"url": self.marionette.absolute_url('black.png')},
+            {"url": self.marionette.absolute_url("black.png")},
             {"url": self.test_page_remote},
-            {"url": self.marionette.absolute_url('white.png')},
+            {"url": self.marionette.absolute_url("white.png")},
         ]
         self.run_bfcache_test(test_pages)
 
-    def test_image_document_to_image_document(self):
+    def test_image_to_image(self):
         test_pages = [
-            {"url": self.marionette.absolute_url('black.png')},
-            {"url": self.marionette.absolute_url('white.png')},
+            {"url": self.marionette.absolute_url("black.png")},
+            {"url": self.marionette.absolute_url("white.png")},
         ]
         self.run_bfcache_test(test_pages)
 
@@ -435,9 +439,9 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
 
     def test_timeout_error(self):
         urls = [
-            self.marionette.absolute_url('slow'),
+            self.marionette.absolute_url("slow?delay=3"),
             self.test_page_remote,
-            self.marionette.absolute_url('slow'),
+            self.marionette.absolute_url("slow?delay=4"),
         ]
 
         # First, load all pages completely to get them added to the cache
@@ -450,21 +454,29 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         self.assertEqual(urls[1], self.marionette.get_url())
 
         # Force triggering a timeout error
-        self.marionette.timeout.page_load = 0.1
+        self.marionette.timeout.page_load = 0.5
         with self.assertRaises(errors.TimeoutException):
             self.marionette.go_back()
-        self.assertEqual(urls[0], self.marionette.get_url())
-        self.marionette.timeout.page_load = 300000
+        self.marionette.timeout.reset()
+
+        Wait(self.marionette, self.marionette.timeout.page_load).until(
+            lambda mn: urls[0] == mn.get_url(),
+            message="Slow loading page has been successfully loaded after going back")
+        self.assertEqual(self.marionette.find_element(By.ID, "delay").text, "3")
 
         self.marionette.go_forward()
         self.assertEqual(urls[1], self.marionette.get_url())
 
         # Force triggering a timeout error
-        self.marionette.timeout.page_load = 0.1
+        self.marionette.timeout.page_load = 0.5
         with self.assertRaises(errors.TimeoutException):
             self.marionette.go_forward()
-        self.assertEqual(urls[2], self.marionette.get_url())
-        self.marionette.timeout.page_load = 300000
+        self.marionette.timeout.reset()
+
+        Wait(self.marionette, self.marionette.timeout.page_load).until(
+            lambda mn: urls[2] == mn.get_url(),
+            message="Slow loading page has been successfully loaded after going forward")
+        self.assertEqual(self.marionette.find_element(By.ID, "delay").text, "4")
 
     def test_certificate_error(self):
         test_pages = [
