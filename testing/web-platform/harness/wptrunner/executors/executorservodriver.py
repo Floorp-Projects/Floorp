@@ -25,7 +25,7 @@ extra_timeout = 5
 
 def do_delayed_imports():
     global webdriver
-    import webdriver
+    from tools import webdriver
 
 
 class ServoWebDriverProtocol(Protocol):

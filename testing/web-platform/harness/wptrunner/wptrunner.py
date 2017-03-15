@@ -15,7 +15,6 @@ import wptcommandline
 import wptlogging
 import wpttest
 from testrunner import ManagerGroup
-from browsers.base import NullBrowser
 
 here = os.path.split(__file__)[0]
 
@@ -116,7 +115,7 @@ def run_tests(config, test_paths, product, **kwargs):
         env.do_delayed_imports(logger, test_paths)
 
         (check_args,
-         target_browser_cls, get_browser_kwargs,
+         browser_cls, get_browser_kwargs,
          executor_classes, get_executor_kwargs,
          env_options, run_info_extras) = products.load_product(config, product)
 
@@ -177,16 +176,6 @@ def run_tests(config, test_paths, product, **kwargs):
                 logger.suite_start(test_loader.test_ids, run_info)
                 for test_type in kwargs["test_types"]:
                     logger.info("Running %s tests" % test_type)
-
-                    # WebDriver tests may create and destroy multiple browser
-                    # processes as part of their expected behavior. These
-                    # processes are managed by a WebDriver server binary. This
-                    # obviates the need for wptrunner to provide a browser, so
-                    # the NullBrowser is used in place of the "target" browser
-                    if test_type == "wdspec":
-                        browser_cls = NullBrowser
-                    else:
-                        browser_cls = target_browser_cls
 
                     for test in test_loader.disabled_tests[test_type]:
                         logger.test_start(test.id)
