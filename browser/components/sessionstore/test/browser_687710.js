@@ -38,7 +38,7 @@ var state = {windows:[{tabs:[{entries:[
 ]}]}]}
 
 function test() {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     ss.setBrowserState(stateBackup);
   });
 

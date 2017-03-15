@@ -205,7 +205,7 @@ add_task(function* test_background_crash_multiple() {
       yield tabRestored;
 
       // Selecting the fourth tab should now send it to the tab crashed page.
-      let tabCrashedPagePromise =
+      tabCrashedPagePromise =
         BrowserTestUtils.waitForContentEvent(tab4.linkedBrowser,
                                              "AboutTabCrashedReady",
                                              false, null, true);

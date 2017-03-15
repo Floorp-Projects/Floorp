@@ -41,7 +41,7 @@ add_task(function* test_restore_nonstandard_input_values() {
   }
 
   is(countGood, 4, "Saved text for non-standard input fields");
-  is(countBad,  0, "Didn't save text for ignored field types");
+  is(countBad, 0, "Didn't save text for ignored field types");
 });
 
 function setFormElementValues(browser, data) {

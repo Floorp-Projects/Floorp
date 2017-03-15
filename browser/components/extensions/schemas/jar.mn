@@ -6,6 +6,7 @@ browser.jar:
     content/browser/schemas/bookmarks.json
     content/browser/schemas/browser_action.json
     content/browser/schemas/browsing_data.json
+    content/browser/schemas/chrome_settings_overrides.json
     content/browser/schemas/commands.json
     content/browser/schemas/context_menus.json
     content/browser/schemas/context_menus_internal.json

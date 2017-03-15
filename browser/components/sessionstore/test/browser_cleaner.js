@@ -24,11 +24,11 @@ function isRecent(stamp) {
   return Date.now() - stamp <= 60000;
 }
 
-function promiseCleanup () {
+function promiseCleanup() {
   info("Cleaning up browser");
 
   return promiseBrowserState(getClosedState());
-};
+}
 
 function getClosedState() {
   return Cu.cloneInto(CLOSED_STATE, {});

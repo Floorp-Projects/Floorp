@@ -73,8 +73,7 @@ function test() {
     try {
       aFunction();
       return false;
-    }
-    catch (ex) {
+    } catch (ex) {
       return ex.name == "NS_ERROR_ILLEGAL_VALUE";
     }
   }

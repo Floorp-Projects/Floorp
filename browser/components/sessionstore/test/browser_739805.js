@@ -10,7 +10,7 @@ function test() {
   waitForExplicitFinish();
   Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", true);
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     if (gBrowser.tabs.length > 1)
       gBrowser.removeTab(gBrowser.tabs[1]);
     Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");

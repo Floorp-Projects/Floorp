@@ -40,8 +40,7 @@ function runNextTest() {
       info("running " + currentTest.name);
       waitForBrowserState(testState, currentTest);
     });
-  }
-  else {
+  } else {
     ss.setBrowserState(stateBackup);
     executeSoon(finish);
   }
