@@ -39,8 +39,6 @@ def do_delayed_imports(logger, test_paths):
     try:
         from tools.serve import serve
     except ImportError:
-        from wpt_tools.serve import serve
-    except ImportError:
         failed.append("serve")
 
     try:

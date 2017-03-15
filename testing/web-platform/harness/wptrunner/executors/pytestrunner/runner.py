@@ -13,8 +13,6 @@ Usage::
 """
 
 import errno
-import json
-import os
 import shutil
 import tempfile
 
@@ -29,13 +27,14 @@ def do_delayed_imports():
     import pytest
 
 
-def run(path, server_config, session_config, timeout=0):
+def run(path, session, url_getter, timeout=0):
     """Run Python test at ``path`` in pytest.  The provided ``session``
     is exposed as a fixture available in the scope of the test functions.
 
     :param path: Path to the test file.
-    :param session_config: dictionary of host, port,capabilities parameters
-    to pass through to the webdriver session
+    :param session: WebDriver session to expose.
+    :param url_getter: Function to get server url from test environment, given
+        a protocol.
     :param timeout: Duration before interrupting potentially hanging
         tests.  If 0, there is no timeout.
 
@@ -47,13 +46,10 @@ def run(path, server_config, session_config, timeout=0):
         do_delayed_imports()
 
     recorder = SubtestResultRecorder()
-
-    os.environ["WD_HOST"] = session_config["host"]
-    os.environ["WD_PORT"] = str(session_config["port"])
-    os.environ["WD_CAPABILITIES"] = json.dumps(session_config["capabilities"])
-    os.environ["WD_SERVER_CONFIG"] = json.dumps(server_config)
-
-    plugins = [recorder]
+    plugins = [recorder,
+               fixtures,
+               fixtures.Session(session),
+               fixtures.Server(url_getter)]
 
     # TODO(ato): Deal with timeouts
 
@@ -96,9 +92,7 @@ class SubtestResultRecorder(object):
         self.record(report.nodeid, "ERROR", message, report.longrepr)
 
     def record_skip(self, report):
-        self.record(report.nodeid, "ERROR",
-                    "In-test skip decorators are disallowed, "
-                    "please use WPT metadata to ignore tests.")
+        self.record(report.nodeid, "PASS")
 
     def record(self, test, status, message=None, stack=None):
         if stack is not None:
