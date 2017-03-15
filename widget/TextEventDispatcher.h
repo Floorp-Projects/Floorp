@@ -332,6 +332,16 @@ private:
     TextRange mCaret;
 
     void EnsureClauseArray();
+
+    /**
+     * AdjustRange() adjusts aRange as in the string with XP line breakers.
+     *
+     * @param aRange            The reference to a range in aNativeString.
+     *                          This will be modified.
+     * @param aNativeString     The string with native line breakers.
+     *                          This may include "\r\n" and/or "\r".
+     */
+    static void AdjustRange(TextRange& aRange, const nsAString& aNativeString);
   };
   PendingComposition mPendingComposition;
 
