@@ -132,7 +132,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_namespace_rule.html [17]
 * test_dont_use_document_colors.html: support of disabling document color [21]
 * test_exposed_prop_accessors.html: mainly various unsupported properties [*]
-* test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [986]
+* test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [980]
 * test_flexbox_flex_shorthand.html `flex-basis`: **need investigation** [12]
 * test_flexbox_layout.html: **need investigation** [5]
 * test_font_feature_values_parsing.html: @font-feature-values support [107]
@@ -370,8 +370,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_inherit_storage.html `for property 'border-image-` [5]
     * test_initial_storage.html `for property 'border-image-` [10]
     * test_value_storage.html `(for 'border-image-` [60]
-  * accepts rubbish for second part of value:
-    * test_property_syntax_errors.html `'text-overflow'`: servo/servo#15491 [8]
   * -moz-alt-content parsing is wrong: servo/servo#15726
     * test_property_syntax_errors.html `-moz-alt-content` [4]
   * {transform,perspective}-origin fail to parse 'center left' and 'center right' servo/servo#15750
