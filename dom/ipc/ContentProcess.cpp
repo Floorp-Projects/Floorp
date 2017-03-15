@@ -160,8 +160,10 @@ ContentProcess::Init(int aArgc, char* aArgv[])
       char* str = aArgv[idx + 1];
       while (*str) {
         int32_t index = strtol(str, &str, 10);
+        MOZ_ASSERT(str[0] == ':');
         str++;
         MaybePrefValue value(PrefValue(static_cast<int32_t>(strtol(str, &str, 10))));
+        MOZ_ASSERT(str[0] == '|');
         str++;
         PrefSetting pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
         prefsArray.AppendElement(pref);
@@ -173,8 +175,10 @@ ContentProcess::Init(int aArgc, char* aArgv[])
       char* str = aArgv[idx + 1];
       while (*str) {
         int32_t index = strtol(str, &str, 10);
+        MOZ_ASSERT(str[0] == ':');
         str++;
         MaybePrefValue value(PrefValue(!!strtol(str, &str, 10)));
+        MOZ_ASSERT(str[0] == '|');
         str++;
         PrefSetting pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
         prefsArray.AppendElement(pref);
@@ -186,13 +190,16 @@ ContentProcess::Init(int aArgc, char* aArgv[])
       char* str = aArgv[idx + 1];
       while (*str) {
         int32_t index = strtol(str, &str, 10);
+        MOZ_ASSERT(str[0] == ':');
         str++;
         int32_t length = strtol(str, &str, 10);
+        MOZ_ASSERT(str[0] == ';');
         str++;
         MaybePrefValue value(PrefValue(nsCString(str, length)));
         PrefSetting pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
         prefsArray.AppendElement(pref);
         str += length + 1;
+        MOZ_ASSERT(*(str - 1) == '|');
       }
       SET_PREF_PHASE(END_INIT_PREFS);
       foundStringPrefs = true;
