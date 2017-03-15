@@ -1859,6 +1859,8 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
         Preferences::GetInt("nglayout.initialpaint.delay",
                             PAINTLOCK_EVENT_DELAY);
 
+      mPaintSuppressionTimer->SetTarget(
+          mDocument->EventTargetFor(TaskCategory::Other));
       mPaintSuppressionTimer->InitWithNamedFuncCallback(
         sPaintSuppressionCallback, this, delay, nsITimer::TYPE_ONE_SHOT,
         "PresShell::sPaintSuppressionCallback");
@@ -2005,9 +2007,12 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight, nscoord a
       }
       if (mAsyncResizeEventTimer) {
         mAsyncResizeTimerIsActive = true;
-        mAsyncResizeEventTimer->InitWithFuncCallback(AsyncResizeEventCallback,
-                                                     this, 15,
-                                                     nsITimer::TYPE_ONE_SHOT);
+        mAsyncResizeEventTimer->SetTarget(
+            mDocument->EventTargetFor(TaskCategory::Other));
+        mAsyncResizeEventTimer->InitWithNamedFuncCallback(AsyncResizeEventCallback,
+                                                          this, 15,
+                                                          nsITimer::TYPE_ONE_SHOT,
+                                                          "AsyncResizeEventCallback");
       }
     } else {
       RefPtr<nsRunnableMethod<PresShell>> event =
@@ -3689,28 +3694,6 @@ PresShell::GetRectVisibility(nsIFrame* aFrame,
   return nsRectVisibility_kVisible;
 }
 
-class PaintTimerCallBack final : public nsITimerCallback
-{
-public:
-  explicit PaintTimerCallBack(PresShell* aShell) : mShell(aShell) {}
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Notify(nsITimer* aTimer) final
-  {
-    mShell->SetNextPaintCompressed();
-    mShell->ScheduleViewManagerFlush();
-    return NS_OK;
-  }
-
-private:
-  ~PaintTimerCallBack() {}
-
-  PresShell* mShell;
-};
-
-NS_IMPL_ISUPPORTS(PaintTimerCallBack, nsITimerCallback)
-
 void
 PresShell::ScheduleViewManagerFlush(PaintType aType)
 {
@@ -3718,9 +3701,24 @@ PresShell::ScheduleViewManagerFlush(PaintType aType)
     // Delay paint for 1 second.
     static const uint32_t kPaintDelayPeriod = 1000;
     if (!mDelayedPaintTimer) {
+      nsTimerCallbackFunc
+        PaintTimerCallBack = [](nsITimer* aTimer, void* aClosure) {
+          // The passed-in PresShell is always alive here. Because if PresShell
+          // died, mDelayedPaintTimer->Cancel() would be called during the
+          // destruction and this callback would never be invoked.
+          auto self = static_cast<PresShell*>(aClosure);
+          self->SetNextPaintCompressed();
+          self->ScheduleViewManagerFlush();
+      };
+
       mDelayedPaintTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-      RefPtr<PaintTimerCallBack> cb = new PaintTimerCallBack(this);
-      mDelayedPaintTimer->InitWithCallback(cb, kPaintDelayPeriod, nsITimer::TYPE_ONE_SHOT);
+      mDelayedPaintTimer->SetTarget(
+          mDocument->EventTargetFor(TaskCategory::Other));
+      mDelayedPaintTimer->InitWithNamedFuncCallback(PaintTimerCallBack,
+                                                    this,
+                                                    kPaintDelayPeriod,
+                                                    nsITimer::TYPE_ONE_SHOT,
+                                                    "PaintTimerCallBack");
     }
     return;
   }
@@ -9176,10 +9174,13 @@ PresShell::ScheduleReflowOffTimer()
 
   if (!mReflowContinueTimer) {
     mReflowContinueTimer = do_CreateInstance("@mozilla.org/timer;1");
+    mReflowContinueTimer->SetTarget(
+        mDocument->EventTargetFor(TaskCategory::Other));
     if (!mReflowContinueTimer ||
         NS_FAILED(mReflowContinueTimer->
-                    InitWithFuncCallback(sReflowContinueCallback, this, 30,
-                                         nsITimer::TYPE_ONE_SHOT))) {
+                    InitWithNamedFuncCallback(sReflowContinueCallback, this, 30,
+                                              nsITimer::TYPE_ONE_SHOT,
+                                              "sReflowContinueCallback"))) {
       return false;
     }
   }
