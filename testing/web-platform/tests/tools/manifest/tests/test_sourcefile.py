@@ -3,7 +3,7 @@ import os
 import pytest
 
 from six import BytesIO
-from ..sourcefile import SourceFile, read_script_metadata, js_meta_re, python_meta_re
+from ..sourcefile import SourceFile, read_script_metadata
 
 def create(filename, contents=b""):
     assert isinstance(contents, bytes)
@@ -143,7 +143,7 @@ def test_worker_long_timeout():
 importScripts('/resources/testharness.js')
 test()"""
 
-    metadata = list(read_script_metadata(BytesIO(contents), js_meta_re))
+    metadata = list(read_script_metadata(BytesIO(contents)))
     assert metadata == [(b"timeout", b"long")]
 
     s = create("html/test.worker.js", contents=contents)
@@ -151,25 +151,6 @@ test()"""
 
     item_type, items = s.manifest_items()
     assert item_type == "testharness"
-
-    for item in items:
-        assert item.timeout == "long"
-
-
-def test_python_long_timeout():
-    contents = b"""# META: timeout=long
-
-"""
-
-    metadata = list(read_script_metadata(BytesIO(contents),
-                                         python_meta_re))
-    assert metadata == [(b"timeout", b"long")]
-
-    s = create("webdriver/test.py", contents=contents)
-    assert s.name_is_webdriver
-
-    item_type, items = s.manifest_items()
-    assert item_type == "wdspec"
 
     for item in items:
         assert item.timeout == "long"
@@ -205,7 +186,7 @@ def test_multi_global_long_timeout():
 importScripts('/resources/testharness.js')
 test()"""
 
-    metadata = list(read_script_metadata(BytesIO(contents), js_meta_re))
+    metadata = list(read_script_metadata(BytesIO(contents)))
     assert metadata == [(b"timeout", b"long")]
 
     s = create("html/test.any.js", contents=contents)
@@ -231,7 +212,7 @@ test()"""
     (b"""// META: foobar\n""", []),
 ])
 def test_script_metadata(input, expected):
-    metadata = read_script_metadata(BytesIO(input), js_meta_re)
+    metadata = read_script_metadata(BytesIO(input))
     assert list(metadata) == expected
 
 

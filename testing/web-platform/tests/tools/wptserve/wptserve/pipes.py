@@ -8,7 +8,10 @@ from cStringIO import StringIO
 
 
 def resolve_content(response):
-    return b"".join(item for item in response.iter_content(read_file=True))
+    rv = "".join(item for item in response.iter_content(read_file=True))
+    if type(rv) == unicode:
+        rv = rv.encode(response.encoding)
+    return rv
 
 
 class Pipeline(object):

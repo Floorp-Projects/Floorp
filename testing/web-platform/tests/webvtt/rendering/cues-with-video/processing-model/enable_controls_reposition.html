@@ -21,11 +21,8 @@ video {
                            setTimeout(function(video){
                              video.controls = true;
                            }, 100, this);
-                           takeScreenshotDelayed(1000);">
-    <source src="/media/white.webm" type="video/webm">
-    <source src="/media/white.mp4" type="video/mp4">
-    <track src=support/foo.vtt>
-    <script>
-    document.getElementsByTagName('track')[0].track.mode = 'showing';
-    </script>
+                           setTimeout(takeScreenshot, 200);">
+  <source src="/media/white.webm" type="video/webm">
+  <source src="/media/white.mp4" type="video/mp4">
+  <track src=support/foo.vtt>
 </video>

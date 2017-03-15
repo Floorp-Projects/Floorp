@@ -25,9 +25,9 @@
         client.timeout = 5;
         client.open("GET", "resources/delay.py?ms=20000");
         client.send(null);
-        test.step_timeout(() => {
+        setTimeout(test.step_func(function () {
           assert_unreached("ontimeout not called.");
-        }, 10);
+        }), 10);
       });
     </script>
   </body>

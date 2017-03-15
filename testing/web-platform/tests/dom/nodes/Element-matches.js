@@ -1,47 +1,43 @@
 /*
  * Check that the matches() method exists on the given Node
  */
-function interfaceCheckMatches(method, type, obj) {
+function interfaceCheckMatches(type, obj) {
   if (obj.nodeType === obj.ELEMENT_NODE) {
     test(function() {
-      assert_idl_attribute(obj, method, type + " supports " + method);
-    }, type + " supports " + method)
-  } else {
-    test(function() {
-      assert_false(method in obj, type + " supports " + method);
-    }, type + " should not support " + method)
+      assert_idl_attribute(obj, "matches", type + " supports matches");
+    }, type + " supports matches")
   }
 }
 
-function runSpecialMatchesTests(method, type, element) {
+function runSpecialMatchesTests(type, element) {
   test(function() { // 1
     if (element.tagName.toLowerCase() === "null") {
-      assert_true(element[method](null), "An element with the tag name '" + element.tagName.toLowerCase() + "' should match.");
+      assert_true(element.matches(null), "An element with the tag name '" + element.tagName.toLowerCase() + "' should match.");
     } else {
-      assert_false(element[method](null), "An element with the tag name '" + element.tagName.toLowerCase() + "' should not match.");
+      assert_false(element.matches(null), "An element with the tag name '" + element.tagName.toLowerCase() + "' should not match.");
     }
-  }, type + "." + method + "(null)")
+  }, type + ".matches(null)")
 
   test(function() { // 2
     if (element.tagName.toLowerCase() === "undefined") {
-      assert_true(element[method](undefined), "An element with the tag name '" + element.tagName.toLowerCase() + "' should match.");
+      assert_true(element.matches(undefined), "An element with the tag name '" + element.tagName.toLowerCase() + "' should match.");
     } else {
-      assert_false(element[method](undefined), "An element with the tag name '" + element.tagName.toLowerCase() + "' should not match.");
+      assert_false(element.matches(undefined), "An element with the tag name '" + element.tagName.toLowerCase() + "' should not match.");
     }
-  }, type + "." + method + "(undefined)")
+  }, type + ".matches(undefined)")
 
   test(function() { // 3
     assert_throws(TypeError(), function() {
-      element[method]();
+      element.matches();
     }, "This should throw a TypeError.")
-  }, type + "." + method + " no parameter")
+  }, type + ".matches no parameter")
 }
 
 /*
  * Execute queries with the specified invalid selectors for matches()
  * Only run these tests when errors are expected. Don't run for valid selector tests.
  */
-function runInvalidSelectorTestMatches(method, type, root, selectors) {
+function runInvalidSelectorTestMatches(type, root, selectors) {
   if (root.nodeType === root.ELEMENT_NODE) {
     for (var i = 0; i < selectors.length; i++) {
       var s = selectors[i];
@@ -50,14 +46,14 @@ function runInvalidSelectorTestMatches(method, type, root, selectors) {
 
       test(function() {
         assert_throws("SyntaxError", function() {
-          root[method](q)
+          root.matches(q)
         })
-      }, type + "." + method + ": " + n + ": " + q);
+      }, type + ".matches: " + n + ": " + q);
     }
   }
 }
 
-function runMatchesTest(method, type, root, selectors, docType) {
+function runMatchesTest(type, root, selectors, docType) {
   var nodeType = getNodeType(root);
 
   for (var i = 0; i < selectors.length; i++) {
@@ -79,17 +75,17 @@ function runMatchesTest(method, type, root, selectors, docType) {
           for (j = 0; j < e.length; j++) {
             element = root.querySelector("#" + e[j]);
             refNode = root.querySelector(ctx);
-            assert_true(element[method](q, refNode), "The element #" + e[j] + " should match the selector.")
+            assert_true(element.matches(q, refNode), "The element #" + e[j] + " should match the selector.")
           }
 
           if (u) {
             for (j = 0; j < u.length; j++) {
               element = root.querySelector("#" + u[j]);
               refNode = root.querySelector(ctx);
-              assert_false(element[method](q, refNode), "The element #" + u[j] + " should not match the selector.")
+              assert_false(element.matches(q, refNode), "The element #" + u[j] + " should not match the selector.")
             }
           }
-        }, type + " Element." + method + ": " + n + " (with refNode Element): " + q);
+        }, type + " Element.matches: " + n + " (with refNode Element): " + q);
       }
 
       if (ref) {
@@ -98,33 +94,33 @@ function runMatchesTest(method, type, root, selectors, docType) {
           for (j = 0; j < e.length; j++) {
             element = root.querySelector("#" + e[j]);
             refNodes = root.querySelectorAll(ref);
-            assert_true(element[method](q, refNodes), "The element #" + e[j] + " should match the selector.")
+            assert_true(element.matches(q, refNodes), "The element #" + e[j] + " should match the selector.")
           }
 
           if (u) {
             for (j = 0; j < u.length; j++) {
               element = root.querySelector("#" + u[j]);
               refNodes = root.querySelectorAll(ref);
-              assert_false(element[method](q, refNodes), "The element #" + u[j] + " should not match the selector.")
+              assert_false(element.matches(q, refNodes), "The element #" + u[j] + " should not match the selector.")
             }
           }
-        }, type + " Element." + method + ": " + n + " (with refNodes NodeList): " + q);
+        }, type + " Element.matches: " + n + " (with refNodes NodeList): " + q);
       }
 
       if (!ctx && !ref) {
         test(function() {
           for (var j = 0; j < e.length; j++) {
             var element = root.querySelector("#" + e[j]);
-            assert_true(element[method](q), "The element #" + e[j] + " should match the selector.")
+            assert_true(element.matches(q), "The element #" + e[j] + " should match the selector.")
           }
 
           if (u) {
             for (j = 0; j < u.length; j++) {
               element = root.querySelector("#" + u[j]);
-              assert_false(element[method](q), "The element #" + u[j] + " should not match the selector.")
+              assert_false(element.matches(q), "The element #" + u[j] + " should not match the selector.")
             }
           }
-        }, type + " Element." + method + ": " + n + " (with no refNodes): " + q);
+        }, type + " Element.matches: " + n + " (with no refNodes): " + q);
       }
     }
   }

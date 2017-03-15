@@ -82,10 +82,10 @@ function testPlaceholderWithHeight(placeholder,
             } else {
                 t.step(function() {
                     placeholder.addEventListener('load', function() {
-                        // step_timeout is a work-around to let engines
+                        // setTimeout is a work-around to let engines
                         // finish layout of child browsing contexts even
                         // after the load event
-                        step_timeout(t.step_func(checkSize), 0);
+                        setTimeout(t.step_func(checkSize), 0);
                     });
                     testContainer.appendChild(container);
                 });

@@ -12,7 +12,6 @@
     var t = async_test("Delete an existing database");
 
     t.step(function() {
-        var db;
         var openrq = indexedDB.open('db', 3);
 
         openrq.onupgradeneeded = function(e) {
@@ -26,7 +25,7 @@
             db.onerror = fail(t, "db.error");
             db.abort = fail(t, "db.abort");
 
-            step_timeout(t.step_func(Second), 4);
+            setTimeout(t.step_func(Second), 4);
             db.close();
         });
 
@@ -45,8 +44,8 @@
         deleterq.onupgradeneeded = fail(t, "delete.upgradeneeded");
     }
 
-    async_test("Delete a nonexistent database").step(function(e) {
-        var deleterq = indexedDB.deleteDatabase('nonexistent');
+    async_test("Delete a nonexistant database").step(function(e) {
+        var deleterq = indexedDB.deleteDatabase('nonexistant');
 
         deleterq.onsuccess = this.step_func(function(e) { this.done(); });
 
