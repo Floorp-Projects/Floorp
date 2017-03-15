@@ -70,7 +70,9 @@ public class ErrorPage {
         errorDescriptionMap.put(WebViewClient.ERROR_BAD_URL,
                 new Pair<>(R.string.error_malformedURI_title, R.string.error_malformedURI_message));
 
-        // We don't support file:/// URLs, so we shouldn't have to handle errors opening files either
+        // WebView returns ERROR_UNKNOWN when we try to access a file:/// on Android (with the error string
+        // containing access denied), so I'm not too sure why these codes exist:
+        // sure why these error codes exit
 //        WebViewClient.ERROR_FILE;
 //        WebViewClient.ERROR_FILE_NOT_FOUND;
 
