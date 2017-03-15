@@ -494,7 +494,7 @@ static char *disableReasonStr[] = {
     "could not verify token",
     "token not present"
 };
-static int numDisableReasonStr =
+static size_t numDisableReasonStr =
     sizeof(disableReasonStr) / sizeof(disableReasonStr[0]);
 
 /***********************************************************************
@@ -513,7 +513,7 @@ ListModule(char *moduleName)
     CK_SLOT_INFO slotinfo;
     CK_TOKEN_INFO tokeninfo;
     char *ciphers, *mechanisms;
-    PK11DisableReasons reason;
+    size_t reasonIdx;
     Error rv = SUCCESS;
 
     if (!moduleName) {
@@ -604,10 +604,10 @@ ListModule(char *moduleName)
         PR_fprintf(PR_STDOUT, PAD "Firmware Version: %d.%d\n",
                    slotinfo.firmwareVersion.major, slotinfo.firmwareVersion.minor);
         if (PK11_IsDisabled(slot)) {
-            reason = PK11_GetDisabledReason(slot);
-            if (reason < numDisableReasonStr) {
+            reasonIdx = PK11_GetDisabledReason(slot);
+            if (reasonIdx < numDisableReasonStr) {
                 PR_fprintf(PR_STDOUT, PAD "Status: DISABLED (%s)\n",
-                           disableReasonStr[reason]);
+                           disableReasonStr[reasonIdx]);
             } else {
                 PR_fprintf(PR_STDOUT, PAD "Status: DISABLED\n");
             }

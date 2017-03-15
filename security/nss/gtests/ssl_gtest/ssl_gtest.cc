@@ -31,12 +31,18 @@ int main(int argc, char** argv) {
     }
   }
 
-  NSS_Initialize(g_working_dir_path.c_str(), "", "", SECMOD_DB,
-                 NSS_INIT_READONLY);
-  NSS_SetDomesticPolicy();
+  if (NSS_Initialize(g_working_dir_path.c_str(), "", "", SECMOD_DB,
+                     NSS_INIT_READONLY) != SECSuccess) {
+    return 1;
+  }
+  if (NSS_SetDomesticPolicy() != SECSuccess) {
+    return 1;
+  }
   int rv = RUN_ALL_TESTS();
 
-  NSS_Shutdown();
+  if (NSS_Shutdown() != SECSuccess) {
+    return 1;
+  }
 
   nss_test::Poller::Shutdown();
 
