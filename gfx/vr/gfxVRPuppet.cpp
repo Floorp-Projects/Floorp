@@ -89,7 +89,6 @@ VRDisplayPuppet::VRDisplayPuppet()
   mDisplayInfo.mSittingToStandingTransform._43 = 0.0f;
 
   mSensorState.Clear();
-  mSensorState.timestamp = PR_Now();
 
   gfx::Quaternion rot;
 
