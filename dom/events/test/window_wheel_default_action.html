@@ -85,15 +85,17 @@ function hitEventLoop(aFunc, aTimes)
   }
 }
 
-const zoomResetTopic = "browser-fullZoom:zoomReset";
-SpecialPowers.registerObservers(zoomResetTopic);
-
 function onZoomReset(aCallback) {
-  var specialPowersTopic = "specialpowers-" + zoomResetTopic;
-  SpecialPowers.addObserver(function observe() {
-    SpecialPowers.removeObserver(observe, specialPowersTopic);
+  var fullZoom = SpecialPowers.getFullZoom(window);
+  if (fullZoom == 1) {
     SimpleTest.executeSoon(aCallback);
-  }, specialPowersTopic);
+    return;
+  }
+  SpecialPowers.addChromeEventListener("FullZoomChange", function onFullZoomChange(event) {
+    is(SpecialPowers.getFullZoom(window), 1, "Zoom should be reset to 1");
+    SpecialPowers.removeChromeEventListener("FullZoomChange", onFullZoomChange);
+    SimpleTest.executeSoon(aCallback);
+  });
 }
 
 function setDeltaMultiplierSettings(aSettings, aCallback)
