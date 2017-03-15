@@ -17,7 +17,9 @@ var subtests = [
   // Sanity test for click but with some mouse movement between the down and up
   {'file': 'helper_drag_click.html'},
   // Test for dragging on a fake-scrollbar element that scrolls the page
-  {'file': 'helper_drag_scroll.html'}
+  {'file': 'helper_drag_scroll.html'},
+  // Test for dragging the scrollbar with a fixed-pos element overlaying it
+  {'file': 'helper_bug1346632.html'}
 ];
 
 if (isApzEnabled()) {
