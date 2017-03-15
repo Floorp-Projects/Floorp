@@ -5985,6 +5985,106 @@ function runNotRedundantChangeTest()
   textarea.removeEventListener("text", handler, true);
 }
 
+function runNativeLineBreakerTest()
+{
+  textarea.focus();
+
+  var result = {};
+  function clearResult()
+  {
+    result = { compositionupdate: null, compositionend: null };
+  }
+
+  function handler(aEvent)
+  {
+    result[aEvent.type] = aEvent.data;
+  }
+
+  SpecialPowers.setBoolPref("dom.compositionevent.allow_control_characters", false);
+
+  textarea.addEventListener("compositionupdate", handler, true);
+  textarea.addEventListener("compositionend", handler, true);
+
+  // '\n' in composition string shouldn't be changed.
+  // XXX Currently, \n isn't accepted by TextComposition.  So,these test checks
+  //     without the length of \n (bug 1339331).
+  clearResult();
+  textarea.value = "";
+  var clauses = [ "abc\n", "def\n\ng", "hi\n", "\njkl" ];
+  var caret = clauses[0] + clauses[1] + clauses[2];
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": clauses.join(''),
+        "clauses":
+        [
+          { "length": clauses[0].length,
+            "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+          { "length": clauses[1].length,
+            "attr": COMPOSITION_ATTR_SELECTED_RAW_CLAUSE },
+          { "length": clauses[2].length,
+            "attr": COMPOSITION_ATTR_CONVERTED_CLAUSE },
+          { "length": clauses[3].length,
+            "attr": COMPOSITION_ATTR_SELECTED_CLAUSE },
+        ]
+      },
+      "caret": { "start": caret.length, "length": 0 }
+    });
+
+  checkSelection(caret.replace(/\n/g, "").length, "", "runNativeLineBreakerTest", "#1");
+  checkIMESelection("RawClause", true, 0, clauses[0].replace(/\n/g, ""), "runNativeLineBreakerTest: \\n shouldn't be replaced with any character #1");
+  checkIMESelection("SelectedRawClause", true, clauses[0].replace(/\n/g, "").length, clauses[1].replace(/\n/g, ""), "runNativeLineBreakerTest: \\n shouldn't be replaced with any character #1");
+  checkIMESelection("ConvertedClause", true, (clauses[0] + clauses[1]).replace(/\n/g, "").length, clauses[2].replace(/\n/g, ""), "runNativeLineBreakerTest: \\n shouldn't be replaced with any character #1");
+  checkIMESelection("SelectedClause", true, (clauses[0] + clauses[1] + clauses[2]).replace(/\n/g, "").length, clauses[3].replace(/\n/g, ""), "runNativeLineBreakerTest: \\n shouldn't be replaced with any character #1");
+  is(result.compositionupdate, clauses.join('').replace(/\n/g, ""), "runNativeLineBreakerTest: \\n in compositionupdate.data shouldn't be removed nor replaced with other characters #1");
+  is(textarea.value, clauses.join('').replace(/\n/g, ""), "runNativeLineBreakerTest: \\n in textarea.value shouldn't be removed nor replaced with other characters #1");
+
+  synthesizeComposition({ type: "compositioncommit", data: clauses.join('') });
+  checkSelection(clauses.join('').replace(/\n/g, "").length, "", "runNativeLineBreakerTest", "#2");
+  is(result.compositionend, clauses.join('').replace(/\n/g, ""), "runNativeLineBreakerTest: \\n in compositionend.data shouldn't be removed nor replaced with other characters #2");
+  is(textarea.value, clauses.join('').replace(/\n/g, ""), "runNativeLineBreakerTest: \\n in textarea.value shouldn't be removed nor replaced with other characters #2");
+
+  // \r\n in composition string should be replaced with \n.
+  clearResult();
+  textarea.value = "";
+  clauses = [ "abc\r\n", "def\r\n\r\ng", "hi\r\n", "\r\njkl" ];
+  caret = clauses[0] + clauses[1] + clauses[2];
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": clauses.join(''),
+        "clauses":
+        [
+          { "length": clauses[0].length,
+            "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+          { "length": clauses[1].length,
+            "attr": COMPOSITION_ATTR_SELECTED_RAW_CLAUSE },
+          { "length": clauses[2].length,
+            "attr": COMPOSITION_ATTR_CONVERTED_CLAUSE },
+          { "length": clauses[3].length,
+            "attr": COMPOSITION_ATTR_SELECTED_CLAUSE },
+        ]
+      },
+      "caret": { "start": caret.length, "length": 0 }
+    });
+
+  checkSelection(caret.replace(/\r\n/g, "").length, "", "runNativeLineBreakerTest", "#3");
+  checkIMESelection("RawClause", true, 0, clauses[0].replace(/\r\n/g, ""), "runNativeLineBreakerTest: \\r\\n should be replaced with \\n #3");
+  checkIMESelection("SelectedRawClause", true, clauses[0].replace(/\r\n/g, "").length, clauses[1].replace(/\r\n/g, ""), "runNativeLineBreakerTest: \\r\\n should be replaced with \\n #3");
+  checkIMESelection("ConvertedClause", true, (clauses[0] + clauses[1]).replace(/\r\n/g, "").length, clauses[2].replace(/\r\n/g, ""), "runNativeLineBreakerTest: \\r\\n should be replaced with \\n #3");
+  checkIMESelection("SelectedClause", true, (clauses[0] + clauses[1] + clauses[2]).replace(/\r\n/g, "").length, clauses[3].replace(/\r\n/g, ""), "runNativeLineBreakerTest: \\r\\n should be replaced with \\n #3");
+  is(result.compositionupdate, clauses.join('').replace(/\r\n/g, ""), "runNativeLineBreakerTest: \\r\\n in compositionudpate.data should be replaced with \\n #3");
+  is(textarea.value, clauses.join('').replace(/\r\n/g, ""), "runNativeLineBreakerTest: \\r\\n in textarea.value should be replaced with \\n #3");
+
+  synthesizeComposition({ type: "compositioncommit", data: clauses.join('') });
+  checkSelection(clauses.join('').replace(/\r\n/g, "").length, "", "runNativeLineBreakerTest", "#4");
+  is(result.compositionend, clauses.join('').replace(/\r\n/g, ""), "runNativeLineBreakerTest: \\r\\n in compositionend.data should be replaced with \\n #4");
+  is(textarea.value, clauses.join('').replace(/\r\n/g, ""), "runNativeLineBreakerTest: \\r\\n in textarea.value should be replaced with \\n #4");
+
+  textarea.removeEventListener("compositionupdate", handler, true);
+  textarea.removeEventListener("compositionend", handler, true);
+
+  SpecialPowers.clearUserPref("dom.compositionevent.allow_control_characters");
+}
+
 function runControlCharTest()
 {
   textarea.focus();
@@ -6971,6 +7071,7 @@ function runTest()
   runIsComposingTest();
   runRedundantChangeTest();
   runNotRedundantChangeTest();
+  runNativeLineBreakerTest();
   runControlCharTest();
   runEditorReframeTests(function () {
     runAsyncForceCommitTest(function () {
