@@ -22,6 +22,7 @@ EXPORTS.mozilla += [
     'PoisonIOInterposer.h',
     'ServiceList.h',
     'Services.h',
+    'TlsAllocationTracker.h',
     'XPCOM.h',
     'XREAppData.h',
 ]
@@ -33,6 +34,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'perfprobe.cpp',
         'PoisonIOInterposerBase.cpp',
         'PoisonIOInterposerWin.cpp',
+        'TlsAllocationTracker.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
