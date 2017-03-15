@@ -76,10 +76,6 @@ SERVO_BINDING_FUNC(Servo_StyleSet_FillKeyframesForName, bool,
 SERVO_BINDING_FUNC(Servo_CssRules_ListTypes, void,
                    ServoCssRulesBorrowed rules,
                    nsTArrayBorrowed_uintptr_t result)
-SERVO_BINDING_FUNC(Servo_CssRules_GetStyleRuleAt, RawServoStyleRuleStrong,
-                   ServoCssRulesBorrowed rules, uint32_t index)
-SERVO_BINDING_FUNC(Servo_CssRules_GetMediaRuleAt, RawServoMediaRuleStrong,
-                   ServoCssRulesBorrowed rules, uint32_t index)
 SERVO_BINDING_FUNC(Servo_CssRules_InsertRule, nsresult,
                    ServoCssRulesBorrowed rules,
                    RawServoStyleSheetBorrowed sheet, const nsACString* rule,
@@ -88,25 +84,33 @@ SERVO_BINDING_FUNC(Servo_CssRules_DeleteRule, nsresult,
                    ServoCssRulesBorrowed rules, uint32_t index)
 
 // CSS Rules
-SERVO_BINDING_FUNC(Servo_StyleRule_Debug, void,
-                   RawServoStyleRuleBorrowed rule, nsACString* result)
+#define BASIC_RULE_FUNCS(type_) \
+  SERVO_BINDING_FUNC(Servo_CssRules_Get##type_##RuleAt, \
+                     RawServo##type_##RuleStrong, \
+                     ServoCssRulesBorrowed rules, uint32_t index) \
+  SERVO_BINDING_FUNC(Servo_##type_##Rule_Debug, void, \
+                     RawServo##type_##RuleBorrowed rule, nsACString* result) \
+  SERVO_BINDING_FUNC(Servo_##type_##Rule_GetCssText, void, \
+                     RawServo##type_##RuleBorrowed rule, nsAString* result)
+BASIC_RULE_FUNCS(Style)
+BASIC_RULE_FUNCS(Media)
+BASIC_RULE_FUNCS(Namespace)
+#undef BASIC_RULE_FUNCS
 SERVO_BINDING_FUNC(Servo_StyleRule_GetStyle, RawServoDeclarationBlockStrong,
                    RawServoStyleRuleBorrowed rule)
 SERVO_BINDING_FUNC(Servo_StyleRule_SetStyle, void,
                    RawServoStyleRuleBorrowed rule,
                    RawServoDeclarationBlockBorrowed declarations)
-SERVO_BINDING_FUNC(Servo_StyleRule_GetCssText, void,
-                   RawServoStyleRuleBorrowed rule, nsAString* result)
 SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorText, void,
                    RawServoStyleRuleBorrowed rule, nsAString* result)
-SERVO_BINDING_FUNC(Servo_MediaRule_Debug, void,
-                   RawServoMediaRuleBorrowed rule, nsACString* result)
 SERVO_BINDING_FUNC(Servo_MediaRule_GetMedia, RawServoMediaListStrong,
                    RawServoMediaRuleBorrowed rule)
 SERVO_BINDING_FUNC(Servo_MediaRule_GetRules, ServoCssRulesStrong,
                    RawServoMediaRuleBorrowed rule)
-SERVO_BINDING_FUNC(Servo_MediaRule_GetCssText, void,
-                   RawServoMediaRuleBorrowed rule, nsAString* result)
+SERVO_BINDING_FUNC(Servo_NamespaceRule_GetPrefix, nsIAtom*,
+                   RawServoNamespaceRuleBorrowed rule)
+SERVO_BINDING_FUNC(Servo_NamespaceRule_GetURI, nsIAtom*,
+                   RawServoNamespaceRuleBorrowed rule)
 
 // Animations API
 SERVO_BINDING_FUNC(Servo_ParseProperty,

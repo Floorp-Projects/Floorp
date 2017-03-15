@@ -1350,7 +1350,7 @@ TelemetryImpl::SnapshotSubsessionHistograms(bool clearSubsession,
                                             JSContext *cx,
                                             JS::MutableHandle<JS::Value> ret)
 {
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
   return TelemetryHistogram::CreateHistogramSnapshots(cx, ret, true,
                                                       clearSubsession);
 #else

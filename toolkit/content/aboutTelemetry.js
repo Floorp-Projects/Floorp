@@ -17,7 +17,6 @@ Cu.import("resource://gre/modules/TelemetryUtils.jsm");
 Cu.import("resource://gre/modules/TelemetryLog.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
@@ -326,7 +325,7 @@ var PingPicker = {
     this.update();
   },
 
-  update: Task.async(function*() {
+  async update() {
     let viewCurrent = document.getElementById("ping-source-current").checked;
     let viewStructured = document.getElementById("ping-source-structured").checked;
     let currentChanged = viewCurrent !== this.viewCurrentPingData;
@@ -336,7 +335,7 @@ var PingPicker = {
 
     // If we have no archived pings, disable the ping archive selection.
     // This can happen on new profiles or if the ping archive is disabled.
-    let archivedPingList = yield TelemetryArchive.promiseArchivedPingList();
+    let archivedPingList = await TelemetryArchive.promiseArchivedPingList();
     let sourceArchived = document.getElementById("ping-source-archive");
     sourceArchived.disabled = (archivedPingList.length == 0);
 
@@ -347,7 +346,7 @@ var PingPicker = {
         this._updateCurrentPingData();
       } else {
         document.getElementById("current-ping-picker").classList.add("hidden");
-        yield this._updateArchivedPingList(archivedPingList);
+        await this._updateArchivedPingList(archivedPingList);
         document.getElementById("archived-ping-picker").classList.remove("hidden");
       }
     }
@@ -359,7 +358,7 @@ var PingPicker = {
         this._showRawPingData();
       }
     }
-  }),
+  },
 
   _updateCurrentPingData() {
     const subsession = document.getElementById("show-subsession-data").checked;
@@ -376,7 +375,7 @@ var PingPicker = {
                            .then((ping) => displayPingData(ping, true));
   },
 
-  _updateArchivedPingList: Task.async(function*(pingList) {
+  async _updateArchivedPingList(pingList) {
     // The archived ping list is sorted in ascending timestamp order,
     // but descending is more practical for the operations we do here.
     pingList.reverse();
@@ -413,8 +412,8 @@ var PingPicker = {
     this._renderPingList();
 
     // Update the displayed ping.
-    yield this._updateArchivedPingData();
-  }),
+    await this._updateArchivedPingData();
+  },
 
   _renderWeeks() {
     let weekSelector = document.getElementById("choose-ping-week");

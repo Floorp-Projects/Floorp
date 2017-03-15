@@ -91,7 +91,19 @@ AutofillProfileAutoCompleteSearch.prototype = {
     this.log.debug("startSearch: for", searchString, "with input", formFillController.focusedInput);
     let focusedInput = formFillController.focusedInput;
     this.forceStop = false;
-    let info = this._serializeInfo(FormAutofillContent.getInputDetails(focusedInput));
+    let info = FormAutofillContent.getInputDetails(focusedInput);
+
+    if (!FormAutofillContent.savedFieldNames.has(info.fieldName)) {
+      let formHistory = Cc["@mozilla.org/autocomplete/search;1?name=form-history"]
+                          .createInstance(Ci.nsIAutoCompleteSearch);
+      formHistory.startSearch(searchString, searchParam, previousResult, {
+        onSearchResult: (search, result) => {
+          listener.onSearchResult(this, result);
+          ProfileAutocomplete.setProfileAutoCompleteResult(result);
+        },
+      });
+      return;
+    }
 
     this._getProfiles({info, searchString}).then((profiles) => {
       if (this.forceStop) {
@@ -141,12 +153,6 @@ AutofillProfileAutoCompleteSearch.prototype = {
 
       Services.cpmm.sendAsyncMessage("FormAutofill:GetProfiles", data);
     });
-  },
-
-  _serializeInfo(detail) {
-    let info = Object.assign({}, detail);
-    delete info.element;
-    return info;
   },
 };
 
@@ -250,19 +256,38 @@ var FormAutofillContent = {
    */
   _formsDetails: new WeakMap(),
 
+  /**
+   * @type {Set} Set of the fields with usable values in any saved profile.
+   */
+  savedFieldNames: null,
+
   init() {
     FormAutofillUtils.defineLazyLogGetter(this, "FormAutofillContent");
 
-    Services.cpmm.addMessageListener("FormAutofill:enabledStatus", (result) => {
-      if (result.data) {
-        ProfileAutocomplete.ensureRegistered();
-      } else {
-        ProfileAutocomplete.ensureUnregistered();
-      }
-    });
+    Services.cpmm.addMessageListener("FormAutofill:enabledStatus", this);
+    Services.cpmm.addMessageListener("FormAutofill:savedFieldNames", this);
 
     if (Services.cpmm.initialProcessData.autofillEnabled) {
       ProfileAutocomplete.ensureRegistered();
+    }
+
+    this.savedFieldNames =
+      Services.cpmm.initialProcessData.autofillSavedFieldNames || new Set();
+  },
+
+  receiveMessage({name, data}) {
+    switch (name) {
+      case "FormAutofill:enabledStatus": {
+        if (data) {
+          ProfileAutocomplete.ensureRegistered();
+        } else {
+          ProfileAutocomplete.ensureUnregistered();
+        }
+        break;
+      }
+      case "FormAutofill:savedFieldNames": {
+        this.savedFieldNames = data;
+      }
     }
   },
 

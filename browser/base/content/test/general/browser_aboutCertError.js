@@ -19,7 +19,7 @@ add_task(function* checkReturnToAboutHome() {
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     gBrowser.selectedTab = gBrowser.addTab(BAD_CERT);
     browser = gBrowser.selectedBrowser;
-    certErrorLoaded = waitForCertErrorLoad(browser);
+    certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   }, false);
 
   info("Loading and waiting for the cert error");
@@ -57,7 +57,7 @@ add_task(function* checkReturnToPreviousPage() {
   let browser = gBrowser.selectedBrowser;
 
   info("Loading and waiting for the cert error");
-  let certErrorLoaded = waitForCertErrorLoad(browser);
+  let certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   BrowserTestUtils.loadURI(browser, BAD_CERT);
   yield certErrorLoaded;
 
@@ -92,7 +92,7 @@ add_task(function* checkBadStsCert() {
   let browser = gBrowser.selectedBrowser;
 
   info("Loading and waiting for the cert error");
-  let certErrorLoaded = waitForCertErrorLoad(browser);
+  let certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   BrowserTestUtils.loadURI(browser, BAD_STS_CERT);
   yield certErrorLoaded;
 
@@ -128,7 +128,7 @@ add_task(function* checkWrongSystemTimeWarning() {
     yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
       gBrowser.selectedTab = gBrowser.addTab(BAD_CERT);
       browser = gBrowser.selectedBrowser;
-      certErrorLoaded = waitForCertErrorLoad(browser);
+      certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
     }, false);
 
     info("Loading and waiting for the cert error");
@@ -224,7 +224,7 @@ add_task(function* checkAdvancedDetails() {
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     gBrowser.selectedTab = gBrowser.addTab(BAD_CERT);
     browser = gBrowser.selectedBrowser;
-    certErrorLoaded = waitForCertErrorLoad(browser);
+    certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   }, false);
 
   info("Loading and waiting for the cert error");
@@ -286,7 +286,7 @@ add_task(function* checkAdvancedDetailsForHSTS() {
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     gBrowser.selectedTab = gBrowser.addTab(BAD_STS_CERT);
     browser = gBrowser.selectedBrowser;
-    certErrorLoaded = waitForCertErrorLoad(browser);
+    certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   }, false);
 
   info("Loading and waiting for the cert error");
@@ -355,7 +355,7 @@ add_task(function* checkUnknownIssuerLearnMoreLink() {
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     gBrowser.selectedTab = gBrowser.addTab(UNKNOWN_ISSUER);
     browser = gBrowser.selectedBrowser;
-    certErrorLoaded = waitForCertErrorLoad(browser);
+    certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
   }, false);
 
   info("Loading and waiting for the cert error");
@@ -369,16 +369,6 @@ add_task(function* checkUnknownIssuerLearnMoreLink() {
 
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
-
-function waitForCertErrorLoad(browser) {
-  return new Promise(resolve => {
-    info("Waiting for DOMContentLoaded event");
-    browser.addEventListener("DOMContentLoaded", function load() {
-      browser.removeEventListener("DOMContentLoaded", load, false, true);
-      resolve();
-    }, false, true);
-  });
-}
 
 function getCertChain(securityInfoAsString) {
   let certChain = "";

@@ -8,6 +8,7 @@ module.exports = { // eslint-disable-line no-undef
   },
 
   "globals": {
+    "BrowserTestUtils": true,
     "ExtensionTestUtils": false,
     "XPCOMUtils": true,
   },

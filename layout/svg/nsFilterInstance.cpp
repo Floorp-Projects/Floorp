@@ -182,7 +182,9 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
     mTargetBBox = *aOverrideBBox;
   } else {
     MOZ_ASSERT(mTargetFrame, "Need to supply a frame when there's no aOverrideBBox");
-    mTargetBBox = nsSVGUtils::GetBBox(mTargetFrame);
+    mTargetBBox = nsSVGUtils::GetBBox(mTargetFrame,
+                                      nsSVGUtils::eUseFrameBoundsForOuterSVG |
+                                      nsSVGUtils::eBBoxIncludeFillGeometry);
   }
 
   // Compute user space to filter space transforms.
