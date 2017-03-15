@@ -368,10 +368,13 @@ async function scheduleFuzzing() {
   let tls_base = merge(run_base, {group: "TLS"});
   scheduleFuzzingRun(tls_base, "TLS Client", "tls-client", 20000, "client-nfm",
                      "tls-client-no_fuzzer_mode");
+  scheduleFuzzingRun(tls_base, "TLS Server", "tls-server", 20000, "server-nfm",
+                     "tls-server-no_fuzzer_mode");
 
   // Schedule TLS fuzzing runs (fuzzing mode).
   let tls_fm_base = merge(tls_base, {parent: task_build_tls});
   scheduleFuzzingRun(tls_fm_base, "TLS Client", "tls-client", 20000, "client");
+  scheduleFuzzingRun(tls_fm_base, "TLS Server", "tls-server", 20000, "server");
 
   return queue.submit();
 }

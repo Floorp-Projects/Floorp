@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef tls_client_socket_h__
-#define tls_client_socket_h__
+#ifndef tls_socket_h__
+#define tls_socket_h__
 
 #include "dummy_io.h"
 
@@ -21,4 +21,4 @@ class DummyPrSocket : public DummyIOLayerMethods {
   size_t len_;
 };
 
-#endif  // tls_client_socket_h__
+#endif  // tls_socket_h__
