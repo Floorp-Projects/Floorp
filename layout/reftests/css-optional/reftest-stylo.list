@@ -7,5 +7,5 @@ fails == css-optional-select.html css-optional-select.html
 
 # Checking dynamic behavior.
 fails == css-optional-dyn-1.html css-optional-dyn-1.html
-== css-optional-dyn-2.html css-optional-dyn-2.html
+fails == css-optional-dyn-2.html css-optional-dyn-2.html
 

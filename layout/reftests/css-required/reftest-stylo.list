@@ -14,13 +14,13 @@ fails == css-required-select.html css-required-select.html
 fails == css-required-dyn-1.html css-required-dyn-1.html
 fails == css-required-dyn-2.html css-required-dyn-2.html
 fails == css-required-dyn-3.html css-required-dyn-3.html
-== css-required-dyn-4.html css-required-dyn-4.html
+fails == css-required-dyn-4.html css-required-dyn-4.html
 fails == css-required-dyn-5.html css-required-dyn-5.html
-== css-required-dyn-6.html css-required-dyn-6.html
+fails == css-required-dyn-6.html css-required-dyn-6.html
 
 # Following input types do not support :required
 == css-required-hidden.html css-required-hidden.html
-== css-required-button.html css-required-button.html
+fails == css-required-button.html css-required-button.html
 fails == css-required-submit.html css-required-submit.html
 == css-required-image.html css-required-image.html
 fails == css-required-reset.html css-required-reset.html
