@@ -69,6 +69,22 @@ public:
   virtual mozilla::ipc::PParentToChildStreamParent*
   SendPParentToChildStreamConstructor(mozilla::ipc::PParentToChildStreamParent*) override;
 
+  virtual bool SendActivate(PBrowserParent* aTab) override
+  {
+    return PContentBridgeParent::SendActivate(aTab);
+  }
+
+  virtual bool SendDeactivate(PBrowserParent* aTab) override
+  {
+    return PContentBridgeParent::SendDeactivate(aTab);
+  }
+
+  virtual bool SendParentActivated(PBrowserParent* aTab,
+                                   const bool& aActivated) override
+  {
+    return PContentBridgeParent::SendParentActivated(aTab, aActivated);
+  }
+
 protected:
   virtual ~ContentBridgeParent();
 

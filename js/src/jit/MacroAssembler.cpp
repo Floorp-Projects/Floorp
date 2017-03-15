@@ -1383,12 +1383,29 @@ MacroAssembler::loadStringChars(Register str, Register dest)
 }
 
 void
-MacroAssembler::loadStringChar(Register str, Register index, Register output)
+MacroAssembler::loadStringChar(Register str, Register index, Register output, Label* fail)
 {
     MOZ_ASSERT(str != output);
     MOZ_ASSERT(index != output);
 
-    loadStringChars(str, output);
+    movePtr(str, output);
+
+    // This follows JSString::getChar.
+    Label notRope;
+    branchIfNotRope(str, &notRope);
+
+    // Load leftChild.
+    loadPtr(Address(str, JSRope::offsetOfLeft()), output);
+
+    // Check if the index is contained in the leftChild.
+    // Todo: Handle index in the rightChild.
+    branch32(Assembler::BelowOrEqual, Address(output, JSString::offsetOfLength()), index, fail);
+
+    // If the left side is another rope, give up.
+    branchIfRope(output, fail);
+
+    bind(&notRope);
+    loadStringChars(output, output);
 
     Label isLatin1, done;
     branchLatin1String(str, &isLatin1);
