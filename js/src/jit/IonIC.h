@@ -214,6 +214,7 @@ class IonSetPropertyIC : public IonIC
     ConstantOrRegister id_;
     ConstantOrRegister rhs_;
     bool strict_ : 1;
+    bool needsPostBarrier_ : 1;
     bool needsTypeBarrier_ : 1;
     bool guardHoles_ : 1;
 
@@ -221,7 +222,7 @@ class IonSetPropertyIC : public IonIC
     IonSetPropertyIC(CacheKind kind, LiveRegisterSet liveRegs, Register object, Register temp,
                      FloatRegister maybeTempDouble, FloatRegister maybeTempFloat32,
                      const ConstantOrRegister& id, const ConstantOrRegister& rhs, bool strict,
-                     bool needsTypeBarrier, bool guardHoles)
+                     bool needsPostBarrier, bool needsTypeBarrier, bool guardHoles)
       : IonIC(kind),
         liveRegs_(liveRegs),
         object_(object),
@@ -231,6 +232,7 @@ class IonSetPropertyIC : public IonIC
         id_(id),
         rhs_(rhs),
         strict_(strict),
+        needsPostBarrier_(needsPostBarrier),
         needsTypeBarrier_(needsTypeBarrier),
         guardHoles_(guardHoles)
     { }
@@ -245,6 +247,7 @@ class IonSetPropertyIC : public IonIC
     FloatRegister maybeTempFloat32() const { return maybeTempFloat32_; }
 
     bool strict() const { return strict_; }
+    bool needsPostBarrier() const { return needsPostBarrier_; }
     bool needsTypeBarrier() const { return needsTypeBarrier_; }
     bool guardHoles() const { return guardHoles_; }
 

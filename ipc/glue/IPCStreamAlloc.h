@@ -4,18 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ipc_SendStreamAlloc_h
-#define mozilla_ipc_SendStreamAlloc_h
+#ifndef mozilla_ipc_IPCStreamAlloc_h
+#define mozilla_ipc_IPCStreamAlloc_h
 
 namespace mozilla {
 namespace ipc {
 
-class PSendStreamParent;
+class PChildToParentStreamParent;
+class PParentToChildStreamChild;
 
-PSendStreamParent*
-AllocPSendStreamParent();
+PChildToParentStreamParent*
+AllocPChildToParentStreamParent();
+
+PParentToChildStreamChild*
+AllocPParentToChildStreamChild();
 
 } // ipc namespace
 } // mozilla namespace
 
-#endif // mozilla_ipc_SendStreamAlloc_h
+#endif // mozilla_ipc_IPCStreamAlloc_h
