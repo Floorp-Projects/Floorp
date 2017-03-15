@@ -237,15 +237,31 @@ class GeckoInstance(object):
             "process_args": process_args
         }
 
-    def close(self, restart=False):
+    def close(self, restart=False, clean=False):
+        """
+        Close the managed Gecko process.
+
+        Depending on self.runner_class, setting `clean` to True may also kill
+        the emulator process in which this instance is running.
+
+        :param restart: If True, assume this is being called by restart method.
+        :param clean: If True, also perform runner cleanup.
+        """
         if not restart:
             self.profile = None
 
         if self.runner:
             self.runner.stop()
-            self.runner.cleanup()
+            if clean:
+                self.runner.cleanup()
 
     def restart(self, prefs=None, clean=True):
+        """
+        Close then start the managed Gecko process.
+
+        :param prefs: Dictionary of preference names and values.
+        :param clean: If True, reset the profile before starting.
+        """
         self.close(restart=True)
 
         if clean and self.profile:
@@ -364,9 +380,18 @@ class FennecInstance(GeckoInstance):
 
         return runner_args
 
-    def close(self, restart=False):
-        super(FennecInstance, self).close(restart)
-        if self.runner and self.runner.device.connected:
+    def close(self, restart=False, clean=False):
+        """
+        Close the managed Gecko process.
+
+        If `clean` is True and the Fennec instance is running in an
+        emulator managed by mozrunner, this will stop the emulator.
+
+        :param restart: If True, assume this is being called by restart method.
+        :param clean: If True, also perform runner cleanup.
+        """
+        super(FennecInstance, self).close(restart, clean)
+        if clean and self.runner and self.runner.device.connected:
             self.runner.device.dm.remove_forward(
                 "tcp:{}".format(self.marionette_port))
 
