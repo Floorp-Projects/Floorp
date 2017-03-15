@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <fieldset style="column-count: 2; width: 200px; border: none">
+    This is some text that is too long and it will overflow.
+  </fieldset>
+  <script>
+  onload = function() {
+    var f = document.querySelector("fieldset");
+    window.w = f.offsetWidth;
+    f.style.textIndent = "50px";
+    document.documentElement.className = "";
+  }
+  </script>
+</html>
