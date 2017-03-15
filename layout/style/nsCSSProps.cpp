@@ -2106,9 +2106,9 @@ const KTableEntry nsCSSProps::kTopLayerKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kTransformBoxKTable[] = {
-  { eCSSKeyword_border_box, NS_STYLE_TRANSFORM_BOX_BORDER_BOX },
-  { eCSSKeyword_fill_box, NS_STYLE_TRANSFORM_BOX_FILL_BOX },
-  { eCSSKeyword_view_box, NS_STYLE_TRANSFORM_BOX_VIEW_BOX },
+  { eCSSKeyword_border_box, StyleGeometryBox::Border },
+  { eCSSKeyword_fill_box, StyleGeometryBox::Fill },
+  { eCSSKeyword_view_box, StyleGeometryBox::View },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
