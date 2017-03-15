@@ -7966,10 +7966,7 @@ CodeGenerator::visitCharCodeAt(LCharCodeAt* lir)
     Register output = ToRegister(lir->output());
 
     OutOfLineCode* ool = oolCallVM(CharCodeAtInfo, lir, ArgList(str, index), StoreRegisterTo(output));
-
-    masm.branchIfRope(str, ool->entry());
-    masm.loadStringChar(str, index, output);
-
+    masm.loadStringChar(str, index, output, ool->entry());
     masm.bind(ool->rejoin());
 }
 
