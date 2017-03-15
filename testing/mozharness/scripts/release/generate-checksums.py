@@ -293,6 +293,7 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin, Bu
         for fmt in self.config["formats"]:
             files.append(self._get_sums_filename(fmt))
             files.append("{}.asc".format(self._get_sums_filename(fmt)))
+            files.append(self._get_summary_filename(fmt))
 
         bucket = self._get_bucket()
         for f in files:
