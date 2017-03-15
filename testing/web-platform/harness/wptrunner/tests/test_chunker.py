@@ -24,19 +24,16 @@ class MockTest(object):
 
 def make_mock_manifest(*items):
     rv = []
-    for test_type, dir_path, num_tests in items:
+    for dir_path, num_tests in items:
         for i in range(num_tests):
-            rv.append((test_type,
-                       dir_path + "/%i.test" % i,
-                       set([MockTest(i)])))
+            rv.append((dir_path + "/%i.test" % i, set([MockTest(i)])))
     return rv
 
 
 class TestEqualTimeChunker(unittest.TestCase):
 
     def test_include_all(self):
-        tests = make_mock_manifest(("test", "a", 10), ("test", "a/b", 10),
-                                   ("test", "c", 10))
+        tests = make_mock_manifest(("a", 10), ("a/b", 10), ("c", 10))
 
         chunk_1 = list(EqualTimeChunker(3, 1)(tests))
         chunk_2 = list(EqualTimeChunker(3, 2)(tests))
@@ -47,8 +44,7 @@ class TestEqualTimeChunker(unittest.TestCase):
         self.assertEquals(tests[20:], chunk_3)
 
     def test_include_all_1(self):
-        tests = make_mock_manifest(("test", "a", 5), ("test", "a/b", 5),
-                                   ("test", "c", 10), ("test", "d", 10))
+        tests = make_mock_manifest(("a", 5), ("a/b", 5), ("c", 10), ("d", 10))
 
         chunk_1 = list(EqualTimeChunker(3, 1)(tests))
         chunk_2 = list(EqualTimeChunker(3, 2)(tests))
@@ -59,8 +55,7 @@ class TestEqualTimeChunker(unittest.TestCase):
         self.assertEquals(tests[20:], chunk_3)
 
     def test_long(self):
-        tests = make_mock_manifest(("test", "a", 100), ("test", "a/b", 1),
-                                   ("test", "c", 1))
+        tests = make_mock_manifest(("a", 100), ("a/b", 1), ("c", 1))
 
         chunk_1 = list(EqualTimeChunker(3, 1)(tests))
         chunk_2 = list(EqualTimeChunker(3, 2)(tests))
@@ -71,8 +66,7 @@ class TestEqualTimeChunker(unittest.TestCase):
         self.assertEquals(tests[101:102], chunk_3)
 
     def test_long_1(self):
-        tests = make_mock_manifest(("test", "a", 1), ("test", "a/b", 100),
-                                   ("test", "c", 1))
+        tests = make_mock_manifest(("a", 1), ("a/b", 100), ("c", 1))
 
         chunk_1 = list(EqualTimeChunker(3, 1)(tests))
         chunk_2 = list(EqualTimeChunker(3, 2)(tests))
@@ -84,8 +78,7 @@ class TestEqualTimeChunker(unittest.TestCase):
 
     def test_too_few_dirs(self):
         with self.assertRaises(ValueError):
-            tests = make_mock_manifest(("test", "a", 1), ("test", "a/b", 100),
-                                       ("test", "c", 1))
+            tests = make_mock_manifest(("a", 1), ("a/b", 100), ("c", 1))
             list(EqualTimeChunker(4, 1)(tests))
 
 
