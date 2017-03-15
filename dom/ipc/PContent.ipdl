@@ -591,8 +591,6 @@ child:
 
     async PParentToChildStream();
 
-    async ProvideAnonymousTemporaryFile(uint64_t aID, FileDescOrError aFD);
-
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
@@ -873,8 +871,6 @@ parent:
      * use the newly-invalid surface.
      */
     async BackUpXResources(FileDescriptor aXSocketFd);
-
-    async RequestAnonymousTemporaryFile(uint64_t aID);
 
     sync OpenAnonymousTemporaryFile() returns (FileDescOrError aFD);
 

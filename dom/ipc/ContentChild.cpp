@@ -198,7 +198,6 @@
 #include "gfxPlatform.h"
 #include "nscore.h" // for NS_FREE_PERMANENT_DATA
 #include "VRManagerChild.h"
-#include "private/pprio.h"
 
 #ifdef MOZ_WIDGET_GTK
 #include "nsAppRunner.h"
@@ -3222,43 +3221,6 @@ ContentChild::RecvParentActivated(PBrowserChild* aTab, const bool& aActivated)
   TabChild* tab = static_cast<TabChild*>(aTab);
   return tab->RecvParentActivated(aActivated);
 }
-
-mozilla::ipc::IPCResult
-ContentChild::RecvProvideAnonymousTemporaryFile(const uint64_t& aID,
-                                                const FileDescOrError& aFDOrError)
-{
-  nsAutoPtr<AnonymousTemporaryFileCallback> callback;
-  mPendingAnonymousTemporaryFiles.RemoveAndForget(aID, callback);
-  MOZ_ASSERT(callback);
-
-  PRFileDesc* prfile = nullptr;
-  if (aFDOrError.type() == FileDescOrError::Tnsresult) {
-    DebugOnly<nsresult> rv = aFDOrError.get_nsresult();
-    MOZ_ASSERT(NS_FAILED(rv));
-  } else {
-    auto rawFD = aFDOrError.get_FileDescriptor().ClonePlatformHandle();
-    prfile = PR_ImportFile(PROsfd(rawFD.release()));
-  }
-  (*callback)(prfile);
-  return IPC_OK();
-}
-
-nsresult
-ContentChild::AsyncOpenAnonymousTemporaryFile(AnonymousTemporaryFileCallback aCallback)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  static uint64_t id = 0;
-  if (!SendRequestAnonymousTemporaryFile(id++)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Remember the association with the callback.
-  MOZ_ASSERT(!mPendingAnonymousTemporaryFiles.Get(id));
-  mPendingAnonymousTemporaryFiles.LookupOrAdd(id, aCallback);
-  return NS_OK;
-}
-
 
 } // namespace dom
 } // namespace mozilla
