@@ -6,6 +6,7 @@
   height: 100%;
   width: 100%;
   overflow: auto;
+  min-width: 200px;
 }
 
 /**

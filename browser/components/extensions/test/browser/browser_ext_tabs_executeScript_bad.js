@@ -142,6 +142,76 @@ add_task(function* testBadPermissions() {
   yield BrowserTestUtils.removeTab(tab1);
 });
 
+add_task(function* testMatchDataURI() {
+  const target = ExtensionTestUtils.loadExtension({
+    files: {
+      "page.html": `<!DOCTYPE html>
+        <meta charset="utf-8">
+        <script src="page.js"></script>
+        <iframe id="inherited" src="data:text/html;charset=utf-8,inherited"></iframe>
+      `,
+      "page.js": function() {
+        browser.test.onMessage.addListener((msg, url) => {
+          window.location.href = url;
+        });
+      },
+    },
+    background() {
+      browser.tabs.create({active: true, url: browser.runtime.getURL("page.html")});
+    },
+  });
+
+  const scripts = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["<all_urls>", "webNavigation"],
+    },
+    background() {
+      browser.webNavigation.onCompleted.addListener(({url, frameId}) => {
+        browser.test.log(`Document loading complete: ${url}`);
+        if (frameId === 0) {
+          browser.test.sendMessage("tab-ready", url);
+        }
+      });
+
+      browser.test.onMessage.addListener(async msg => {
+        browser.test.assertRejects(
+          browser.tabs.executeScript({
+            code: "location.href;",
+            allFrames: true,
+          }),
+          /No window matching/,
+          "Should not execute in `data:` frame");
+
+        browser.test.sendMessage("done");
+      });
+    },
+  });
+
+  yield scripts.startup();
+  yield target.startup();
+
+  // Test extension page with a data: iframe.
+  const page = yield scripts.awaitMessage("tab-ready");
+  ok(page.endsWith("page.html"), "Extension page loaded into a tab");
+
+  scripts.sendMessage("execute");
+  yield scripts.awaitMessage("done");
+
+  // Test extension tab navigated to a data: URI.
+  const data = "data:text/html;charset=utf-8,also-inherits";
+  target.sendMessage("navigate", data);
+
+  const url = yield scripts.awaitMessage("tab-ready");
+  is(url, data, "Extension tab navigated to a data: URI");
+
+  scripts.sendMessage("execute");
+  yield scripts.awaitMessage("done");
+
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  yield scripts.unload();
+  yield target.unload();
+});
+
 add_task(function* testBadURL() {
   async function background() {
     let promises = [

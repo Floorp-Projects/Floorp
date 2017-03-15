@@ -22,6 +22,7 @@ import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.RawResource;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -42,6 +43,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Locale;
+import org.json.JSONObject;
+import org.json.JSONArray;
 
 /**
  * This class is not thread-safe, except where otherwise noted.
@@ -65,6 +68,9 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
 
     // URL for the geo-ip location service. Keep in sync with "browser.search.geoip.url" perference in Gecko.
     private static final String GEOIP_LOCATION_URL = "https://location.services.mozilla.com/v1/country?key=" + AppConstants.MOZ_MOZILLA_API_KEY;
+
+    // The API we're using requires a file size, so set an arbitrarily large one
+    public static final int MAX_LISTJSON_SIZE = 8192;
 
     // This should go through GeckoInterface to get the UA, but the search activity
     // doesn't use a GeckoView yet. Until it does, get the UA directly.
@@ -559,7 +565,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
     /**
      * Creates a SearchEngine instance for a search plugin shipped in the locale.
      *
-     * This method reads the list of search plugin file names from list.txt, then
+     * This method reads the list of search plugin file names from list.json, then
      * iterates through the files, creating SearchEngine instances until it finds one
      * with the right name. Unfortunately, we need to do this because there is no
      * other way to map the search engine "name" to the file for the search plugin.
@@ -568,33 +574,42 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
      * @return SearchEngine instance for name.
      */
     private SearchEngine createEngineFromLocale(String name) {
-        final InputStream in = getInputStreamFromSearchPluginsJar("list.txt");
+        final InputStream in = getInputStreamFromSearchPluginsJar("list.json");
         if (in == null) {
             return null;
         }
-        final BufferedReader br = getBufferedReader(in);
-
+        JSONObject json;
         try {
-            String identifier;
-            while ((identifier = br.readLine()) != null) {
-                final InputStream pluginIn = getInputStreamFromSearchPluginsJar(identifier + ".xml");
-                // pluginIn can be null if the xml file doesn't exist which
-                // can happen with :hidden plugins
+            json = new JSONObject(FileUtils.readStringFromInputStreamAndCloseStream(in, MAX_LISTJSON_SIZE));
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Error reading list.json", e);
+            return null;
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error parsing list.json", e);
+            return null;
+        } finally {
+            IOUtils.safeStreamClose(in);
+        }
+        try {
+            String region = GeckoSharedPrefs.forApp(context).getString(PREF_REGION_KEY, null);
+
+            JSONArray engines;
+            if (json.has(region)) {
+                engines = json.getJSONObject(region).getJSONArray("visibleDefaultEngines");
+            } else {
+                engines = json.getJSONObject("default").getJSONArray("visibleDefaultEngines");
+            }
+            for (int i = 0; i < engines.length(); i++) {
+                final InputStream pluginIn = getInputStreamFromSearchPluginsJar(engines.getString(i) + ".xml");
                 if (pluginIn != null) {
-                  final SearchEngine engine = createEngineFromInputStream(identifier, pluginIn);
-                  if (engine != null && engine.getName().equals(name)) {
-                      return engine;
-                  }
+                    final SearchEngine engine = createEngineFromInputStream(engines.getString(i), pluginIn);
+                    if (engine != null && engine.getName().equals(name)) {
+                        return engine;
+                    }
                 }
             }
         } catch (Throwable e) {
             Log.e(LOG_TAG, "Error creating shipped search engine from name: " + name, e);
-        } finally {
-            try {
-                br.close();
-            } catch (IOException e) {
-                // Ignore.
-            }
         }
         return null;
     }
