@@ -2037,10 +2037,11 @@ public class BrowserApp extends GeckoApp
             case "Website:AppInstalled":
                 final String name = message.getString("name");
                 final String startUrl = message.getString("start_url");
+                final String manifestPath = message.getString("manifest_path");
                 final Bitmap icon = FaviconDecoder
                     .decodeDataURI(getContext(), message.getString("icon"))
                     .getBestBitmap(GeckoAppShell.getPreferredIconSize());
-                createShortcut(name, startUrl, icon);
+                createAppShortcut(name, startUrl, manifestPath, icon);
                 break;
 
             case "Updater:Launch":
