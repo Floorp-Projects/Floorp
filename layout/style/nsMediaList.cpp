@@ -536,7 +536,7 @@ nsMediaList::Matches(nsPresContext* aPresContext,
   return mArray.IsEmpty();
 }
 
-already_AddRefed<MediaList>
+already_AddRefed<dom::MediaList>
 nsMediaList::Clone()
 {
   RefPtr<nsMediaList> result = new nsMediaList();

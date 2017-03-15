@@ -20,7 +20,7 @@ def print_array_entry(output, histogram, name_index, exp_index, label_index, lab
     cpp_guard = histogram.cpp_guard()
     if cpp_guard:
         print("#if defined(%s)" % cpp_guard, file=output)
-    print("  { %s, %s, %s, %s, %d, %d, %s, %d, %d, %s }," \
+    print("  { %s, %s, %s, %s, %d, %d, %s, %d, %d, %s },"
         % (histogram.low(),
            histogram.high(),
            histogram.n_buckets(),

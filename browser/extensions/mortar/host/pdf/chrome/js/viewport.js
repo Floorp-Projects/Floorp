@@ -594,6 +594,21 @@ class Viewport {
     }
   }
 
+  _handleCommand(name) {
+    switch(name) {
+      case 'cmd_selectAll':
+        this._doAction({
+          type: 'selectAll'
+        });
+        break;
+      case 'cmd_copy':
+        this._doAction({
+          type: 'getSelectedText'
+        })
+        break;
+    }
+  }
+
   verifyPassword(password) {
     this._doAction({
       type: 'getPasswordComplete',
@@ -613,12 +628,6 @@ class Viewport {
             this._runtimePosition.y != position.y) {
           this._refresh();
         }
-        break;
-      case 'copy':
-        this._doAction({
-          type: 'getSelectedText'
-        })
-        evt.preventDefault();
         break;
     }
   }
@@ -755,6 +764,9 @@ class Viewport {
         break;
       case 'hashChange':
         this._handleHashChange(message.hash);
+        break;
+      case 'command':
+        this._handleCommand(message.name);
         break;
     }
   }

@@ -48,7 +48,7 @@ class ScalarType:
         MAX_NAME_LENGTH = 40
         for n in [group_name, probe_name]:
             if len(n) > MAX_NAME_LENGTH:
-                raise ValueError("Name '{}' exceeds maximum name length of {} characters."\
+                raise ValueError("Name '{}' exceeds maximum name length of {} characters."
                                 .format(n, MAX_NAME_LENGTH))
 
         def check_name(name, error_msg_prefix, allowed_char_regexp):
@@ -60,7 +60,7 @@ class ScalarType:
             # Don't allow leading/trailing digits, '.' or '_'.
             if re.search(r'(^[\d\._])|([\d\._])$', name):
                 raise ValueError(error_msg_prefix +
-                    " name must not have a leading/trailing digit, a dot or underscore. Got: '{}'"\
+                    " name must not have a leading/trailing digit, a dot or underscore. Got: '{}'"
                     .format(name))
 
         check_name(group_name, 'Group', r'\.')
@@ -114,7 +114,7 @@ class ScalarType:
             raise KeyError(self._name + ' - unknown fields: ' + ', '.join(unknown_fields))
 
         # Checks the type for all the fields.
-        wrong_type_names = ['{} must be {}'.format(f, ALL_FIELDS[f].__name__) \
+        wrong_type_names = ['{} must be {}'.format(f, ALL_FIELDS[f].__name__)
             for f in definition.keys() if not isinstance(definition[f], ALL_FIELDS[f])]
         if len(wrong_type_names) > 0:
             raise TypeError(self._name + ' - ' + ', '.join(wrong_type_names))
@@ -236,7 +236,7 @@ class ScalarType:
         # behaviour for it.
         release_channel_collection = \
             self._definition.get('release_channel_collection', 'opt-in')
-        return 'nsITelemetry::' +  ('DATASET_RELEASE_CHANNEL_OPTOUT' \
+        return 'nsITelemetry::' +  ('DATASET_RELEASE_CHANNEL_OPTOUT'
             if release_channel_collection == 'opt-out' else 'DATASET_RELEASE_CHANNEL_OPTIN')
 
     @property

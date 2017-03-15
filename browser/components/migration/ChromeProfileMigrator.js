@@ -81,16 +81,16 @@ function dateToChromeTime(aDate) {
 }
 
 /**
- * Insert bookmark items into specific folder.
+ * Converts an array of chrome bookmark objects into one our own places code
+ * understands.
  *
- * @param   parentGuid
- *          GUID of the folder where items will be inserted
  * @param   items
- *          bookmark items to be inserted
+ *          bookmark items to be inserted on this parent
  * @param   errorAccumulator
  *          function that gets called with any errors thrown so we don't drop them on the floor.
  */
-function* insertBookmarkItems(parentGuid, items, errorAccumulator) {
+function convertBookmarks(items, errorAccumulator) {
+  let itemsToInsert = [];
   for (let item of items) {
     try {
       if (item.type == "url") {
@@ -99,21 +99,18 @@ function* insertBookmarkItems(parentGuid, items, errorAccumulator) {
           // messages to the console, so we avoid doing that.
           continue;
         }
-        yield MigrationUtils.insertBookmarkWrapper({
-          parentGuid, url: item.url, title: item.name
-        });
+        itemsToInsert.push({url: item.url, title: item.name});
       } else if (item.type == "folder") {
-        let newFolderGuid = (yield MigrationUtils.insertBookmarkWrapper({
-          parentGuid, type: PlacesUtils.bookmarks.TYPE_FOLDER, title: item.name
-        })).guid;
-
-        yield insertBookmarkItems(newFolderGuid, item.children, errorAccumulator);
+        let folderItem = {type: PlacesUtils.bookmarks.TYPE_FOLDER, title: item.name};
+        folderItem.children = convertBookmarks(item.children, errorAccumulator);
+        itemsToInsert.push(folderItem);
       }
-    } catch (e) {
-      Cu.reportError(e);
-      errorAccumulator(e);
+    } catch (ex) {
+      Cu.reportError(ex);
+      errorAccumulator(ex);
     }
   }
+  return itemsToInsert;
 }
 
 function ChromeProfileMigrator() {
@@ -260,23 +257,8 @@ function GetBookmarksResource(aProfileFolder) {
       return Task.spawn(function* () {
         let gotErrors = false;
         let errorGatherer = function() { gotErrors = true };
-        let jsonStream = yield new Promise((resolve, reject) => {
-          let options = {
-            uri: NetUtil.newURI(bookmarksFile),
-            loadUsingSystemPrincipal: true
-          };
-          NetUtil.asyncFetch(options, (inputStream, resultCode) => {
-            if (Components.isSuccessCode(resultCode)) {
-              resolve(inputStream);
-            } else {
-              reject(new Error("Could not read Bookmarks file"));
-            }
-          });
-        });
-
         // Parse Chrome bookmark file that is JSON format
-        let bookmarkJSON = NetUtil.readInputStreamToString(
-          jsonStream, jsonStream.available(), { charset : "UTF-8" });
+        let bookmarkJSON = yield OS.File.read(bookmarksFile.path, {encoding: "UTF-8"});
         let roots = JSON.parse(bookmarkJSON).roots;
 
         // Importing bookmark bar items
@@ -284,11 +266,12 @@ function GetBookmarksResource(aProfileFolder) {
             roots.bookmark_bar.children.length > 0) {
           // Toolbar
           let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
+          let bookmarks = convertBookmarks(roots.bookmark_bar.children, errorGatherer);
           if (!MigrationUtils.isStartupMigration) {
             parentGuid =
               yield MigrationUtils.createImportedBookmarksFolder("Chrome", parentGuid);
           }
-          yield insertBookmarkItems(parentGuid, roots.bookmark_bar.children, errorGatherer);
+          yield MigrationUtils.insertManyBookmarksWrapper(bookmarks, parentGuid);
         }
 
         // Importing bookmark menu items
@@ -296,11 +279,12 @@ function GetBookmarksResource(aProfileFolder) {
             roots.other.children.length > 0) {
           // Bookmark menu
           let parentGuid = PlacesUtils.bookmarks.menuGuid;
+          let bookmarks = convertBookmarks(roots.other.children, errorGatherer);
           if (!MigrationUtils.isStartupMigration) {
-            parentGuid =
-              yield MigrationUtils.createImportedBookmarksFolder("Chrome", parentGuid);
+            parentGuid
+              = yield MigrationUtils.createImportedBookmarksFolder("Chrome", parentGuid);
           }
-          yield insertBookmarkItems(parentGuid, roots.other.children, errorGatherer);
+          yield MigrationUtils.insertManyBookmarksWrapper(bookmarks, parentGuid);
         }
         if (gotErrors) {
           throw new Error("The migration included errors.");

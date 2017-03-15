@@ -163,3 +163,8 @@ span#hostname {
   white-space: pre-wrap;
   padding: 1em 0;
 }
+
+#cert_domain_link:not([href]) {
+  color: var(--in-content-page-color);
+  text-decoration: none;
+}

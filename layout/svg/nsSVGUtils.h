@@ -403,7 +403,11 @@ public:
     eBBoxIncludeStroke         = 1 << 2,
     eBBoxIncludeStrokeGeometry = 1 << 3,
     eBBoxIncludeMarkers        = 1 << 4,
-    eBBoxIncludeClipped        = 1 << 5
+    eBBoxIncludeClipped        = 1 << 5,
+    // Normally a getBBox call on outer-<svg> should only return the
+    // bounds of the elements children.  This flag will cause the
+    // element's bounds to be returned instead.
+    eUseFrameBoundsForOuterSVG = 1 << 6
   };
   /**
    * Get the SVG bbox (the SVG spec's simplified idea of bounds) of aFrame in

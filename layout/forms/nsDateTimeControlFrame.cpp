@@ -316,21 +316,25 @@ nsDateTimeControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   NS_TrustedNewXULElement(getter_AddRefs(mInputAreaContent), nodeInfo.forget());
   aElements.AppendElement(mInputAreaContent);
 
-  // Propogate our tabindex.
-  nsAutoString tabIndexStr;
-  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr)) {
-    mInputAreaContent->SetAttr(kNameSpaceID_None, nsGkAtoms::tabindex,
-                               tabIndexStr, false);
-  }
+  nsCOMPtr<nsIDateTimeInputArea> inputAreaContent =
+    do_QueryInterface(mInputAreaContent);
+  if (inputAreaContent) {
+    // Propogate our tabindex.
+    nsAutoString tabIndexStr;
+    if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr)) {
+      inputAreaContent->SetEditAttribute(NS_LITERAL_STRING("tabindex"),
+                                         tabIndexStr);
+    }
 
-  // Propagate our readonly state.
-  nsAutoString readonly;
-  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::readonly, readonly)) {
-    mInputAreaContent->SetAttr(kNameSpaceID_None, nsGkAtoms::readonly, readonly,
-                               false);
-  }
+    // Propagate our readonly state.
+    nsAutoString readonly;
+    if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::readonly, readonly)) {
+      inputAreaContent->SetEditAttribute(NS_LITERAL_STRING("readonly"),
+                                         readonly);
+    }
 
-  SyncDisabledState();
+    SyncDisabledState();
+  }
 
   return NS_OK;
 }
@@ -347,12 +351,19 @@ nsDateTimeControlFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElement
 void
 nsDateTimeControlFrame::SyncDisabledState()
 {
+  NS_ASSERTION(mInputAreaContent, "The input area content must exist!");
+  nsCOMPtr<nsIDateTimeInputArea> inputAreaContent =
+    do_QueryInterface(mInputAreaContent);
+  if (!inputAreaContent) {
+    return;
+  }
+
   EventStates eventStates = mContent->AsElement()->State();
   if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
-    mInputAreaContent->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled,
-                               EmptyString(), true);
+    inputAreaContent->SetEditAttribute(NS_LITERAL_STRING("disabled"),
+                                       EmptyString());
   } else {
-    mInputAreaContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
+    inputAreaContent->RemoveEditAttribute(NS_LITERAL_STRING("disabled"));
   }
 }
 
@@ -374,22 +385,28 @@ nsDateTimeControlFrame::AttributeChanged(int32_t aNameSpaceID,
       // then we don't need to do anything since we are going to be reframed.
       if (contentAsInputElem->GetType() == NS_FORM_INPUT_TIME ||
           contentAsInputElem->GetType() == NS_FORM_INPUT_DATE) {
+        nsCOMPtr<nsIDateTimeInputArea> inputAreaContent =
+          do_QueryInterface(mInputAreaContent);
         if (aAttribute == nsGkAtoms::value) {
-          nsCOMPtr<nsIDateTimeInputArea> inputAreaContent =
-            do_QueryInterface(mInputAreaContent);
           if (inputAreaContent) {
             nsContentUtils::AddScriptRunner(NewRunnableMethod(inputAreaContent,
               &nsIDateTimeInputArea::NotifyInputElementValueChanged));
           }
         } else {
           if (aModType == nsIDOMMutationEvent::REMOVAL) {
-            mInputAreaContent->UnsetAttr(aNameSpaceID, aAttribute, true);
+            if (inputAreaContent) {
+              nsAtomString name(aAttribute);
+              inputAreaContent->RemoveEditAttribute(name);
+            }
           } else {
             MOZ_ASSERT(aModType == nsIDOMMutationEvent::ADDITION ||
                        aModType == nsIDOMMutationEvent::MODIFICATION);
-            nsAutoString value;
-            mContent->GetAttr(aNameSpaceID, aAttribute, value);
-            mInputAreaContent->SetAttr(aNameSpaceID, aAttribute, value, true);
+            if (inputAreaContent) {
+              nsAtomString name(aAttribute);
+              nsAutoString value;
+              mContent->GetAttr(aNameSpaceID, aAttribute, value);
+              inputAreaContent->SetEditAttribute(name, value);
+            }
           }
         }
       }
