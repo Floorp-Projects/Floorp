@@ -3279,6 +3279,8 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
                       aState.GetGeometricParent(aStyleDisplay, aParentFrame),
                       fieldsetFrame);
 
+  fieldsetFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
+
   // Resolve style and initialize the frame
   RefPtr<nsStyleContext> fieldsetContentStyle;
   fieldsetContentStyle = mPresShell->StyleSet()->
