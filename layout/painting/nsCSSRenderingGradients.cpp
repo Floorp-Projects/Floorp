@@ -29,6 +29,11 @@
 #include "gfxUtils.h"
 #include "gfxGradientCache.h"
 
+#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/webrender/WebRenderAPI.h"
+#include "Units.h"
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 
@@ -999,6 +1004,86 @@ nsCSSGradientRenderer::Paint(gfxContext& aContext,
       }
       aContext.Fill();
       aContext.SetMatrix(ctm);
+    }
+  }
+}
+
+void
+nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuilder,
+                                                  layers::WebRenderDisplayItemLayer* aLayer,
+                                                  float aOpacity)
+{
+  bool isRepeat = mGradient->mRepeating || mForceRepeatToCoverTiles;
+  WrGradientExtendMode extendMode = isRepeat ? WrGradientExtendMode::Repeat : WrGradientExtendMode::Clamp;
+
+  nsTArray<WrGradientStop> stops(mStops.Length());
+  stops.SetLength(mStops.Length());
+  for(uint32_t i = 0; i < mStops.Length(); i++) {
+    stops[i].color.r = mStops[i].mColor.r;
+    stops[i].color.g = mStops[i].mColor.g;
+    stops[i].color.b = mStops[i].mColor.b;
+    stops[i].color.a = mStops[i].mColor.a * aOpacity;
+    stops[i].offset = mStops[i].mPosition;
+  }
+
+  double firstStop = mStops[0].mPosition;
+  double lastStop = mStops[mStops.Length() - 1].mPosition;
+
+  LayoutDevicePoint lineStart = LayoutDevicePoint(mLineStart.x, mLineStart.y);
+  LayoutDevicePoint lineEnd = LayoutDevicePoint(mLineEnd.x, mLineEnd.y);
+
+  // Do a naive tiling of the gradient by making multiple display items
+  // TODO: this should be done on the WebRender side eventually
+
+  nscoord appUnitsPerDevPixel = mPresContext->AppUnitsPerDevPixel();
+  LayoutDeviceRect firstTileBounds = LayoutDevicePixel::FromAppUnits(mDest, appUnitsPerDevPixel);
+  LayoutDeviceRect clipBounds = LayoutDevicePixel::FromAppUnits(mFillArea, appUnitsPerDevPixel);
+
+  // Make the units relative to the parent stacking context
+  firstTileBounds = LayoutDeviceRect::FromUnknownRect(aLayer->RelativeToParent(firstTileBounds.ToUnknownRect()));
+  clipBounds = LayoutDeviceRect::FromUnknownRect(aLayer->RelativeToParent(clipBounds.ToUnknownRect()));
+
+  float xStart = 0;
+  float yStart = 0;
+  float xEnd = (mFillArea.XMost() - mDest.X()) / appUnitsPerDevPixel;
+  float yEnd = (mFillArea.YMost() - mDest.Y()) / appUnitsPerDevPixel;
+
+  float stepX = mRepeatSize.width / appUnitsPerDevPixel;
+  float stepY = mRepeatSize.height / appUnitsPerDevPixel;
+
+  for (float y = yStart; y < yEnd; y += stepY) {
+    for (float x = xStart; x < xEnd; x += stepX) {
+      LayoutDevicePoint tileOffset = firstTileBounds.TopLeft() + LayoutDevicePoint(x, y);
+      LayoutDeviceRect tileRect = LayoutDeviceRect(tileOffset, firstTileBounds.Size());
+
+      if (mGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
+        LayoutDevicePoint relativeGradientStart = lineStart + tileOffset;
+        LayoutDevicePoint relativeGradientEnd = lineEnd + tileOffset;
+
+        aBuilder.PushLinearGradient(
+          mozilla::wr::ToWrRect(tileRect),
+          aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(clipBounds)),
+          mozilla::wr::ToWrPoint(relativeGradientStart),
+          mozilla::wr::ToWrPoint(relativeGradientEnd),
+          stops,
+          extendMode);
+      } else {
+        LayoutDevicePoint relativeGradientCenter = lineStart + tileOffset;
+
+        // TODO: ellipse gradients
+        double innerRadius = mRadiusX * firstStop;
+        double outerRadius = mRadiusX * lastStop;
+
+        aBuilder.PushRadialGradient(
+          mozilla::wr::ToWrRect(tileRect),
+          aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(clipBounds)),
+          mozilla::wr::ToWrPoint(relativeGradientCenter),
+          mozilla::wr::ToWrPoint(relativeGradientCenter),
+          innerRadius,
+          outerRadius,
+          stops,
+          extendMode);
+      }
     }
   }
 }
