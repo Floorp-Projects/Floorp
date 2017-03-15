@@ -5111,13 +5111,18 @@ void
 ContentParent::EnsurePermissionsByKey(const nsCString& aKey)
 {
 #ifdef MOZ_PERMISSIONS
+  // NOTE: Make sure to initialize the permission manager before updating the
+  // mActivePermissionKeys list. If the permission manager is being initialized
+  // by this call to GetPermissionManager, and we've added the key to
+  // mActivePermissionKeys, then the permission manager will send down a
+  // SendAddPermission before receiving the SendSetPermissionsWithKey message.
+  nsCOMPtr<nsIPermissionManager> permManager =
+    services::GetPermissionManager();
+
   if (mActivePermissionKeys.Contains(aKey)) {
     return;
   }
   mActivePermissionKeys.PutEntry(aKey);
-
-  nsCOMPtr<nsIPermissionManager> permManager =
-    services::GetPermissionManager();
 
   nsTArray<IPC::Permission> perms;
   nsresult rv = permManager->GetPermissionsWithKey(aKey, perms);
