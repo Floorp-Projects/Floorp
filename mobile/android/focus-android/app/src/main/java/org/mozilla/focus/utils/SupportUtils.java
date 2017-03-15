@@ -36,4 +36,9 @@ public class SupportUtils {
 
         return "https://support.mozilla.org/1/mobile/" + appVersion + "/" + osTarget + "/" + langTag + "/" + escapedTopic;
     }
+
+    public static String getManifestoURL() {
+        final String langTag = Locales.getLanguageTag(Locale.getDefault());
+        return "https://www.mozilla.org/" + langTag + "/about/manifesto/";
+    }
 }
