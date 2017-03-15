@@ -686,6 +686,10 @@ CERTCertList *PK11_ListCerts(PK11CertListType type, void *pwarg);
 CERTCertList *PK11_ListCertsInSlot(PK11SlotInfo *slot);
 CERTSignedCrl *PK11_ImportCRL(PK11SlotInfo *slot, SECItem *derCRL, char *url,
                               int type, void *wincx, PRInt32 importOptions, PLArenaPool *arena, PRInt32 decodeOptions);
+CK_BBOOL PK11_HasAttributeSet(PK11SlotInfo *slot,
+                              CK_OBJECT_HANDLE id,
+                              CK_ATTRIBUTE_TYPE type,
+                              PRBool haslock /* must be set to PR_FALSE */);
 
 /**********************************************************************
  *                   Sign/Verify

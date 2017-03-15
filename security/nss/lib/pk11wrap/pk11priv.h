@@ -118,10 +118,10 @@ CK_OBJECT_HANDLE *PK11_FindObjectsFromNickname(char *nickname,
                                                void *wincx);
 CK_OBJECT_HANDLE PK11_MatchItem(PK11SlotInfo *slot, CK_OBJECT_HANDLE peer,
                                 CK_OBJECT_CLASS o_class);
-CK_BBOOL PK11_HasAttributeSet(PK11SlotInfo *slot,
-                              CK_OBJECT_HANDLE id,
-                              CK_ATTRIBUTE_TYPE type,
-                              PRBool haslock);
+CK_BBOOL pk11_HasAttributeSet_Lock(PK11SlotInfo *slot,
+                                   CK_OBJECT_HANDLE id,
+                                   CK_ATTRIBUTE_TYPE type,
+                                   PRBool haslock);
 CK_RV PK11_GetAttributes(PLArenaPool *arena, PK11SlotInfo *slot,
                          CK_OBJECT_HANDLE obj, CK_ATTRIBUTE *attr, int count);
 int PK11_NumberCertsForCertSubject(CERTCertificate *cert);
