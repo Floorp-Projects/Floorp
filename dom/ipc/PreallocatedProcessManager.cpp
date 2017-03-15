@@ -132,6 +132,8 @@ PreallocatedProcessManagerImpl::Observe(nsISupports* aSubject,
       os->RemoveObserver(this, "ipc:content-shutdown");
       os->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     }
+    mShutdown = true;
+    CloseProcess();
   } else {
     MOZ_ASSERT(false);
   }
@@ -142,7 +144,8 @@ PreallocatedProcessManagerImpl::Observe(nsISupports* aSubject,
 void
 PreallocatedProcessManagerImpl::RereadPrefs()
 {
-  if (Preferences::GetBool("dom.ipc.processPrelaunch.enabled")) {
+  if (mozilla::BrowserTabsRemoteAutostart() &&
+      Preferences::GetBool("dom.ipc.processPrelaunch.enabled")) {
     Enable();
   } else {
     Disable();
@@ -199,7 +202,7 @@ PreallocatedProcessManagerImpl::AllocateOnIdle()
 void
 PreallocatedProcessManagerImpl::AllocateNow()
 {
-  if (!mEnabled || mPreallocatedProcess ||
+  if (!mEnabled || mPreallocatedProcess || mShutdown ||
       ContentParent::IsMaxProcessCountReached(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE))) {
     return;
   }
