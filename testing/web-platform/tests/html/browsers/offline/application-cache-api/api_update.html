@@ -11,19 +11,12 @@
     <script>
       var cache = window.applicationCache;
 
-      async_test(function(t) {
-        var next = t.step_func(function() {
-          cache.onnoupdate = cache.oncached = null;
-
+      test(function() {
+        try {
           cache.update()
-
-          t.done();
-        });
-
-        if (cache.status === cache.IDLE) {
-          next();
-        } else {
-          cache.onnoupdate = cache.oncached = next;
+          assert_true(true, "update method test")
+        } catch (e) {
+          assert_unreached("update method failed.");
         }
       });
     </script>

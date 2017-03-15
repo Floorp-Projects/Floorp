@@ -5,19 +5,15 @@ if (this.document === undefined) {
 }
 
 function corsRedirectCredentials(desc, redirectUrl, redirectLocation, redirectStatus, locationCredentials) {
+
   var url = redirectUrl
   var urlParameters = "?redirect_status=" + redirectStatus;
-  urlParameters += "&location=" + redirectLocation.replace("://", "://" + locationCredentials + "@");
+  urlParameters += "&location=" + encodeURIComponent(redirectLocation.replace("://", "://" + locationCredentials + "@"));
 
-  var requestInit = {"mode": "cors", "redirect": "follow"};
+  var requestInit = {"mode": "cors", "redirect": "follow", "credentials":"include"};
 
-  promise_test(t => {
-    const result = fetch(url + urlParameters, requestInit)
-    if(locationCredentials === "") {
-      return result;
-    } else {
-      return promise_rejects(t, new TypeError(), result);
-    }
+  promise_test(function(test) {
+    return promise_rejects(test, new TypeError(), fetch(url + urlParameters, requestInit));
   }, desc);
 }
 
@@ -34,8 +30,6 @@ var remoteLocation = host_info.HTTP_ORIGIN_WITH_DIFFERENT_PORT + preflightPath;
 var remoteLocation2 = host_info.HTTP_REMOTE_ORIGIN + preflightPath;
 
 for (var code of [301, 302, 303, 307, 308]) {
-  corsRedirectCredentials("Redirect " + code + " from same origin to remote without user and password", localRedirect, remoteLocation, code, "");
-
   corsRedirectCredentials("Redirect " + code + " from same origin to remote with user and password", localRedirect, remoteLocation, code, "user:password");
   corsRedirectCredentials("Redirect " + code + " from same origin to remote with user", localRedirect, remoteLocation, code, "user:");
   corsRedirectCredentials("Redirect " + code + " from same origin to remote with password", localRedirect, remoteLocation, code, ":password");

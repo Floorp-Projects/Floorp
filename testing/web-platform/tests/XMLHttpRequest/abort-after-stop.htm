@@ -19,9 +19,11 @@
         });
         client.open("GET", "resources/delay.py?ms=3000", true);
         client.send(null);
-        test.step_timeout(() => {
-          assert_equals(abortFired, true);
-          test.done();
+        setTimeout(function(){
+          test.step(function(){
+            assert_equals(abortFired, true);
+            test.done();
+          });
         }, 200);
         window.stop();
       });

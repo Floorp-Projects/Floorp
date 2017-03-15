@@ -22,14 +22,4 @@ test(function() {
 test(function() {
   assert_equals(new InputEvent('type', { data: 'data' }).data, 'data');
 }, 'InputEvent construtor with InputEventInit where data is non empty string');
-
-test(function() {
-  const range = new StaticRange();
-  range.setEnd(document, 1);
-  const resultRange = new InputEvent('type', { targetRanges: [range] }).getTargetRanges()[0];
-  assert_equals(resultRange.startContainer, document);
-  assert_equals(resultRange.startOffset, 0);
-  assert_equals(resultRange.endContainer, document);
-  assert_equals(resultRange.endOffset, 1);
-}, 'InputEvent construtor with InputEventInit where targetRanges is non empty list');
 </script>

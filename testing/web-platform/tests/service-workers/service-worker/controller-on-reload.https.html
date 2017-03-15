@@ -6,8 +6,7 @@
 <body>
 <script>
 promise_test(function(t) {
-    const iframe_scope = 'blank.html';
-    const scope = 'resources/' + iframe_scope;
+    var scope = 'resources/blank.html';
     var frame;
     var registration;
     var controller;
@@ -18,7 +17,7 @@ promise_test(function(t) {
       .then(function(f) {
           frame = f;
           return frame.contentWindow.navigator.serviceWorker.register(
-              'empty-worker.js', {scope: iframe_scope});
+              'resources/empty-worker.js', {scope: scope});
         })
       .then(function(swr) {
           registration = swr;
@@ -43,7 +42,7 @@ promise_test(function(t) {
           // objects from separate windows should not be equal
           assert_not_equals(controller, registration.active);
 
-          return w.navigator.serviceWorker.getRegistration(iframe_scope);
+          return w.navigator.serviceWorker.getRegistration();
         })
       .then(function(frameRegistration) {
           assert_equals(frameRegistration.active, controller);

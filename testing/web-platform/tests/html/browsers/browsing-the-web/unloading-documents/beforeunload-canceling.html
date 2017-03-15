@@ -118,10 +118,7 @@ const testCases = [
   }
 ];
 
-var testCaseIndex = 0;
-function runNextTest() {
-  const testCase = testCases[testCaseIndex];
-
+for (const testCase of testCases) {
   const labelAboutReturnValue = testCase.setReturnValue === undefined ? "" :
     `; setting returnValue to ${testCase.setReturnValue}`;
 
@@ -129,14 +126,10 @@ function runNextTest() {
     const iframe = document.createElement("iframe");
     iframe.onload = t.step_func(() => {
       iframe.contentWindow.runTest(t, testCase);
-      if (++testCaseIndex < testCases.length)
-        runNextTest();
     });
 
     iframe.src = "beforeunload-canceling-1.html";
     document.body.appendChild(iframe);
   }, `Returning ${testCase.valueToReturn} with a real iframe unloading${labelAboutReturnValue}`);
 }
-
-runNextTest();
 </script>

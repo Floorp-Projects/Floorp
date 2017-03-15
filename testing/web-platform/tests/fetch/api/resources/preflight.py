@@ -2,18 +2,11 @@ def main(request, response):
     headers = [("Content-Type", "text/plain")]
     stashed_data = {'control_request_headers': "", 'preflight': "0", 'preflight_referrer': ""}
 
-    token = None
-    if "token" in request.GET:
-        token = request.GET.first("token")
-
     if "origin" in request.GET:
         for origin in request.GET['origin'].split(", "):
             headers.append(("Access-Control-Allow-Origin", origin))
     else:
         headers.append(("Access-Control-Allow-Origin", "*"))
-
-    if "credentials" in request.GET:
-        headers.append(("Access-Control-Allow-Credentials", "true"))
 
     if request.method == "OPTIONS":
         if not "Access-Control-Request-Method" in request.headers:
@@ -38,13 +31,13 @@ def main(request, response):
 
         stashed_data['preflight'] = "1"
         stashed_data['preflight_referrer'] = request.headers.get("Referer", "")
-        if token:
-            request.server.stash.put(token, stashed_data)
+        request.server.stash.put(request.GET.first("token"), stashed_data)
 
         return preflight_status, headers, ""
 
-
-    if token:
+    token = None
+    if "token" in request.GET:
+        token = request.GET.first("token")
         data = request.server.stash.take(token)
         if data:
             stashed_data = data

@@ -1,13 +1,12 @@
 import unittest
-
-from six.moves.urllib.error import HTTPError
+import urllib2
 
 import wptserve
 from .base import TestUsingServer
 
 class TestFileHandler(TestUsingServer):
     def test_not_handled(self):
-        with self.assertRaises(HTTPError) as cm:
+        with self.assertRaises(urllib2.HTTPError) as cm:
             resp = self.request("/not_existing")
 
         self.assertEqual(cm.exception.code, 404)
@@ -33,7 +32,7 @@ class TestRequestHandler(TestUsingServer):
 
         route = ("GET", "/test/raises", handler)
         self.server.router.register(*route)
-        with self.assertRaises(HTTPError) as cm:
+        with self.assertRaises(urllib2.HTTPError) as cm:
             resp = self.request("/test/raises")
 
         self.assertEqual(cm.exception.code, 500)
