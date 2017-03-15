@@ -32,11 +32,11 @@ dictionary MediaConfiguration {
 
 enum MediaConfigurationType {
   "file",
-  "media-source",
+  "MediaSource",
 };
 
 dictionary VideoConfiguration {
-  required DOMString contentType;
+  required DOMString type;
   required unsigned long width;
   required unsigned long height;
   required unsigned long bitrate;
@@ -44,7 +44,7 @@ dictionary VideoConfiguration {
 };
 
 dictionary AudioConfiguration {
-  required DOMString contentType;
+  required DOMString type;
   DOMString channels;
   unsigned long bitrate;
   unsigned long samplerate;
@@ -58,12 +58,12 @@ interface MediaDecodingAbility {
 
 [Exposed=(Window)]
 partial interface Navigator {
-  [SameObject] readonly attribute MediaCapabilities mediaCapabilities;
+  readonly attribute MediaCapabilities mediaCapabilities;
 };
 
 [Exposed=(Worker)]
 partial interface WorkerNavigator {
-  [SameObject] readonly attribute MediaCapabilities mediaCapabilities;
+  readonly attribute MediaCapabilities mediaCapabilities;
 };
 
 [Exposed=(Window, Worker)]

@@ -25,18 +25,20 @@
 
         client.timeout = 100;
 
-        test.step_timeout(() => {
+        setTimeout(test.step_func(function() {
             assert_true(timeoutFired);
 
             // abort should not cause the "abort" event to fire
             client.abort();
 
-            test.step_timeout(() => { // use a timeout to catch any implementation that might queue an abort event for later - just in case
-              test.done()
+            setTimeout(function(){ // use a timeout to catch any implementation that might queue an abort event for later - just in case
+              test.step(function(){test.done();});
             }, 200);
 
             assert_equals(client.readyState, 0);
-        }, 300);
+
+            test.done();
+        }), 300);
 
         client.ontimeout = function () {
             timeoutFired = true;

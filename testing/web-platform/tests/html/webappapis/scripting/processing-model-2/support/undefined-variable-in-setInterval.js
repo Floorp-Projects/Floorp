@@ -1,5 +1,5 @@
 interval = setInterval('undefined_variable;', 10);
-step_timeout(function(){
+setTimeout(function(){
     clearInterval(interval);
     t.step(function(){
         assert_true(ran, 'ran');

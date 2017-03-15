@@ -28,76 +28,46 @@
 </form>
 
 <script>
-function assertSelectedIndex(select, value) {
-  assert_equals(select.selectedIndex, value);
-  assert_equals(select.options.selectedIndex, value);
-}
-
 test(function () {
   var select = document.getElementById('empty');
-  assertSelectedIndex(select, -1);
+  assert_equals(select.selectedIndex, -1);
 }, "get empty");
 
 test(function () {
   var select = document.getElementById('default');
-  assertSelectedIndex(select, 0);
+  assert_equals(select.selectedIndex, 0);
 }, "get default");
 
 test(function () {
   var select = document.getElementById('disabled');
-  assertSelectedIndex(select, 1);
+  assert_equals(select.selectedIndex, 1);
 }, "get disabled");
 
 test(function () {
   var select = document.getElementById('selected');
-  assertSelectedIndex(select, 1);
+  assert_equals(select.selectedIndex, 1);
 }, "get unselected");
 
 test(function () {
   var select = document.getElementById('empty');
   select.selectedIndex = 1;
-  assertSelectedIndex(select, -1);
-}, "set empty (HTMLSelectElement)");
-
-test(function () {
-  var select = document.getElementById('empty');
-  select.options.selectedIndex = 1;
-  assertSelectedIndex(select, -1);
-}, "set empty (HTMLOptionsCollection)");
+  assert_equals(select.selectedIndex, -1);
+}, "set empty");
 
 test(function () {
   var select = document.getElementById('default');
-  assertSelectedIndex(select, 0);
+  assert_equals(select.selectedIndex, 0);
   select.selectedIndex = 2;
-  assertSelectedIndex(select, 2);
-  this.add_cleanup(() => select.selectedIndex = 0);
-}, "set (HTMLSelectElement)");
-
-test(function () {
-  var select = document.getElementById('default');
-  assertSelectedIndex(select, 0);
-  select.options.selectedIndex = 2;
-  assertSelectedIndex(select, 2);
-  this.add_cleanup(() => select.selectedIndex = 0);
-}, "set (HTMLOptionsCollection)");
+  assert_equals(select.selectedIndex, 2);
+}, "set");
 
 test(function () {
   var select = document.getElementById('selected');
   var form = document.getElementById('form');
-  assertSelectedIndex(select, 1);
+  assert_equals(select.selectedIndex, 1);
   select.selectedIndex = 0;
-  assertSelectedIndex(select, 0);
+  assert_equals(select.selectedIndex, 0);
   form.reset();
-  assertSelectedIndex(select, 1);
-}, "set and reset (HTMLSelectElement)");
-
-test(function () {
-  var select = document.getElementById('selected');
-  var form = document.getElementById('form');
-  assertSelectedIndex(select, 1);
-  select.options.selectedIndex = 0;
-  assertSelectedIndex(select, 0);
-  form.reset();
-  assertSelectedIndex(select, 1);
-}, "set and reset (HTMLOptionsCollection)");
+  assert_equals(select.selectedIndex, 1);
+}, "set and reset");
 </script>
