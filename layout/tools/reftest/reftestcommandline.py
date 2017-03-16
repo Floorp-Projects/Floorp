@@ -449,14 +449,6 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           default="",
                           help="name of the pidfile to generate")
 
-        self.add_argument("--dm_trans",
-                          action="store",
-                          type=str,
-                          dest="dm_trans",
-                          default="sut",
-                          help="the transport to use to communicate with device: "
-                               "[adb|sut]; default=sut")
-
         self.add_argument("--remoteTestRoot",
                           action="store",
                           type=str,
