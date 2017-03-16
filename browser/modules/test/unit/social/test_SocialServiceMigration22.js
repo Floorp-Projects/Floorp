@@ -22,15 +22,12 @@ function run_test() {
   DEFAULT_PREFS.setCharPref(manifest.origin, JSON.stringify(manifest));
 
   // Set both providers active and flag the first one as "current"
-  let activeVal = Cc["@mozilla.org/supports-string;1"].
-             createInstance(Ci.nsISupportsString);
   let active = {};
   active[manifest.origin] = 1;
   // bad.origin tests that a missing manifest does not break migration, bug 859715
   active["bad.origin"] = 1;
-  activeVal.data = JSON.stringify(active);
-  Services.prefs.setComplexValue("social.activeProviders",
-                                 Ci.nsISupportsString, activeVal);
+  Services.prefs.setStringPref("social.activeProviders",
+                               JSON.stringify(active));
 
   Cu.import("resource:///modules/SocialService.jsm");
 

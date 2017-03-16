@@ -31,8 +31,7 @@ const PREF_DIR = "devtools.commands.dir";
  * using in gcli.addItemsByModule
  */
 function loadItemsFromMozDir() {
-  let dirName = prefBranch.getComplexValue(PREF_DIR,
-                                           Ci.nsISupportsString).data.trim();
+  let dirName = prefBranch.getStringPref(PREF_DIR).trim();
   if (dirName == "") {
     return Promise.resolve([]);
   }
@@ -143,8 +142,7 @@ exports.items = [
     exec: function (args, context) {
       gcli.load();
 
-      let dirName = prefBranch.getComplexValue(PREF_DIR,
-                                              Ci.nsISupportsString).data.trim();
+      let dirName = prefBranch.getStringPref(PREF_DIR).trim();
       return l10n.lookupFormat("cmdStatus3", [ dirName ]);
     }
   },

@@ -295,7 +295,7 @@ function fetchPref(prefName, prefIndex) {
         break;
       default:
       case gPrefBranch.PREF_STRING:
-        pref.valueCol = gPrefBranch.getComplexValue(prefName, nsISupportsString).data;
+        pref.valueCol = gPrefBranch.getStringPref(prefName);
         // Try in case it's a localized string (will throw an exception if not)
         if (pref.lockCol == PREF_IS_DEFAULT_VALUE &&
             /^chrome:\/\/.+\/locale\/.+\.properties/.test(pref.valueCol))
@@ -593,9 +593,7 @@ function ModifyPref(entry) {
       }
       gPrefBranch.setIntPref(entry.prefCol, val);
     } else {
-      var supportsString = Components.classes[nsSupportsString_CONTRACTID].createInstance(nsISupportsString);
-      supportsString.data = result.value;
-      gPrefBranch.setComplexValue(entry.prefCol, nsISupportsString, supportsString);
+      gPrefBranch.setStringPref(entry.prefCol, result.value);
     }
   }
 
