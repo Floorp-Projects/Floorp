@@ -130,6 +130,10 @@ namespace ipc {
 
 static const uint32_t kMinTelemetryMessageSize = 8192;
 
+// Note: we round the time we spend to the nearest millisecond. So a min value
+// of 1 ms actually captures from 500us and above.
+static const uint32_t kMinTelemetryIPCWriteLatencyMs = 1;
+
 // Note: we round the time we spend waiting for a response to the nearest
 // millisecond. So a min value of 1 ms actually captures from 500us and above.
 static const uint32_t kMinTelemetrySyncIPCLatencyMs = 1;
@@ -779,6 +783,18 @@ MessageChannel::Send(Message* aMsg)
     if (aMsg->size() >= kMinTelemetryMessageSize) {
         Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE,
                               nsDependentCString(aMsg->name()), aMsg->size());
+    }
+
+    // If the message was created by the IPC bindings, the create time will be
+    // recorded. Use this information to report the IPC_WRITE_LATENCY_MS (time
+    // from message creation to it being sent).
+    if (aMsg->create_time()) {
+        uint32_t latencyMs = round((mozilla::TimeStamp::Now() - aMsg->create_time()).ToMilliseconds());
+        if (latencyMs >= kMinTelemetryIPCWriteLatencyMs) {
+            mozilla::Telemetry::Accumulate(mozilla::Telemetry::IPC_WRITE_LATENCY_MS,
+                                           nsDependentCString(aMsg->name()),
+                                           latencyMs);
+        }
     }
 
     MOZ_RELEASE_ASSERT(!aMsg->is_sync());
