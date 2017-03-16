@@ -18,14 +18,9 @@ const PushService = Cc["@mozilla.org/push/Service;1"]
 
 add_task(function* () {
   info("Turn on workers via mochitest http.");
-  yield SpecialPowers.pushPrefEnv({
-    "set": [
-      // Accept workers from mochitest's http.
-      ["dom.serviceWorkers.testing.enabled", true],
-      // Enable the push service.
-      ["dom.push.connection.enabled", true],
-    ]
-  });
+  yield enableServiceWorkerDebugging();
+  // Enable the push service.
+  yield pushPref("dom.push.connection.enabled", true);
 
   info("Mock the push service");
   PushService.service = {
