@@ -1637,6 +1637,26 @@ StateSelectorMatches(Element* aElement,
   return true;
 }
 
+// Chooses the thread safe version in Servo mode, and
+// the non-thread safe one in Gecko mode. The non thread safe one does
+// some extra caching, and is preferred when possible.
+static inline bool
+IsSignificantChildMaybeThreadSafe(const nsIContent* aContent,
+                                  bool aTextIsSignificant,
+                                  bool aWhitespaceIsSignificant,
+                                  bool aIsGecko)
+{
+  if (aIsGecko) {
+    auto content = const_cast<nsIContent*>(aContent);
+    return IsSignificantChild(content, aTextIsSignificant, aWhitespaceIsSignificant);
+  } else {
+    // See bug 1349100 for optimizing this
+    return nsStyleUtil::ThreadSafeIsSignificantChild(aContent,
+                                                     aTextIsSignificant,
+                                                     aWhitespaceIsSignificant);
+  }
+}
+
 /* static */ bool
 nsCSSRuleProcessor::StringPseudoMatches(const mozilla::dom::Element* aElement,
                                         CSSPseudoClassType aPseudo,
@@ -1644,6 +1664,7 @@ nsCSSRuleProcessor::StringPseudoMatches(const mozilla::dom::Element* aElement,
                                         const nsIDocument* aDocument,
                                         bool aForStyling,
                                         EventStates aStateMask,
+                                        bool aIsGecko,
                                         bool* aSetSlowSelectorFlag,
                                         bool* const aDependence)
 {
@@ -1691,7 +1712,7 @@ nsCSSRuleProcessor::StringPseudoMatches(const mozilla::dom::Element* aElement,
     case CSSPseudoClassType::mozEmptyExceptChildrenWithLocalname:
       {
         NS_ASSERTION(aString, "Must have string!");
-        nsIContent *child = nullptr;
+        const nsIContent *child = nullptr;
         int32_t index = -1;
 
         if (aForStyling) {
@@ -1705,7 +1726,7 @@ nsCSSRuleProcessor::StringPseudoMatches(const mozilla::dom::Element* aElement,
         do {
           child = aElement->GetChildAt(++index);
         } while (child &&
-                  (!IsSignificantChild(child, true, false) ||
+                  (!IsSignificantChildMaybeThreadSafe(child, true, false, aIsGecko) ||
                   (child->GetNameSpaceID() == aElement->GetNameSpaceID() &&
                     child->NodeInfo()->NameAtom()->Equals(nsDependentString(aString)))));
         if (child) {
@@ -2157,6 +2178,7 @@ static bool SelectorMatches(Element* aElement,
                                                                aTreeMatchContext.mDocument,
                                                                aTreeMatchContext.mForStyling,
                                                                aNodeMatchContext.mStateMask,
+                                                               true,
                                                                &setSlowSelectorFlag,
                                                                aDependence);
         if (setSlowSelectorFlag) {

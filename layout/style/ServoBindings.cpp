@@ -492,11 +492,10 @@ Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed aElement,
                            const char16_t* aIdent,
                            bool* aSetSlowSelectorFlag)
 {
-  MOZ_ASSERT(aElement->OwnerDoc() == aElement->GetComposedDoc());
   EventStates dummyMask; // mask is never read because we pass aDependence=nullptr
   return nsCSSRuleProcessor::StringPseudoMatches(aElement, aType, aIdent,
                                                  aElement->OwnerDoc(), true,
-                                                 dummyMask, aSetSlowSelectorFlag, nullptr);
+                                                 dummyMask, false, aSetSlowSelectorFlag, nullptr);
 }
 
 template <typename Implementor>
