@@ -137,7 +137,22 @@ public class WebViewProvider {
 
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                    if ((!url.startsWith("http://")) && (!url.startsWith("https://") && (!url.startsWith("file://")))) {
+                    // shouldOverrideUrlLoading() is called for both the main frame, and iframes.
+                    // That can get problematic if an iframe tries to load an unsupported URL.
+                    // We then try to either handle that URL (ask to open relevant app), or extract
+                    // a fallback URL from the intent (or worst case fall back to an error page). In the
+                    // latter 2 cases, we explicitly open the fallback/error page in the main view.
+                    // Websites probably shouldn't use unsupported URLs in iframes, but we do need to
+                    // be careful to handle all valid schemes here to avoid redirecting due to such an iframe
+                    // (e.g. we don't want to redirect to a data: URI just because an iframe shows such
+                    // a URI).
+                    // (The API 24+ version of shouldOverrideUrlLoading() lets us determine whether
+                    // the request is for the main frame, and if it's not we could then completely
+                    // skip the external URL handling.)
+                    if ((!url.startsWith("http://")) &&
+                            (!url.startsWith("https://")) &&
+                            (!url.startsWith("file://")) &&
+                            (!url.startsWith("data:"))) {
                         callback.handleExternalUrl(url);
                         return true;
                     }
