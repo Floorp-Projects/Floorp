@@ -4580,6 +4580,17 @@ nsIPresShell::RestyleForCSSRuleChanges()
     mPresContext->RebuildCounterStyles();
   }
 
+  // Tell Servo that the contents of style sheets have changed.
+  //
+  // NB: It's important to do so before bailing out.
+  //
+  // Even if we have no frames, we can end up styling those when creating
+  // them, and it's important for Servo to know that it needs to use the
+  // correct styles.
+  if (mStyleSet->IsServo()) {
+    mStyleSet->AsServo()->NoteStyleSheetsChanged();
+  }
+
   Element* root = mDocument->GetRootElement();
   if (!mDidInitialize) {
     // Nothing to do here, since we have no frames yet
@@ -4592,11 +4603,6 @@ nsIPresShell::RestyleForCSSRuleChanges()
   }
 
   RestyleManager* restyleManager = mPresContext->RestyleManager();
-
-  if (mStyleSet->IsServo()) {
-    // Tell Servo that the contents of style sheets have changed.
-    mStyleSet->AsServo()->NoteStyleSheetsChanged();
-  }
 
   if (scopeRoots.IsEmpty()) {
     // If scopeRoots is empty, we know that mStylesHaveChanged was true at
