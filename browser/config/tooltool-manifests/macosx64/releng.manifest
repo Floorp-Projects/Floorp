@@ -1,35 +1,35 @@
 [
-{
-"version": "clang 3.8.0",
-"size": 133060926,
-"digest": "aff5ad3ac2d41db19d1ba0df5f97b189a7d7e1b6af8c56e22c2b0cced84d75fa98394ded6a4ba5713652e6684a0a46f47aeccf87991f9e849bf8d7d82e564f6f",
-"algorithm": "sha512",
-"filename": "clang.tar.bz2",
-"unpack": true
-},
-{
-"version": "rustc 1.15.1 (021bd294c 2017-02-08) repack",
-"size": 122706608,
-"digest": "b9ae830cfe24430907490cd58f8215447667fb8f1f052d6e78c8ecd7aadfbc92f75a404774d4cc7b30a46b756275209c2fe2723473704b3bce7ffee908e353a8",
-"algorithm": "sha512",
-"filename": "rustc.tar.bz2",
-"unpack": true
-},
-{
-"version": "cctools port from commit hash db1f8d906cb28, ld only",
-"size": 634496,
-"digest": "037f31fcf29e7bb7fada0d2bdd5e95c7d4cb2692f2a5c98ed6f6a7561b9d81622d015f0d12b291d3667719655f1369e8ce8a0a4a4773aa0ee4753e04a8821173",
-"algorithm": "sha512",
-"filename": "cctools.tar.bz2",
-"unpack": true
-},
-{
-"version": "sccache rev b21198a7183a2fe226ff49348b1c0b51bae9f4f8",
-"algorithm": "sha512",
-"visibility": "public",
-"filename": "sccache2.tar.bz2",
-"unpack": true,
-"digest": "a285c7c6468ad7438262dfec90f65981e84abf2adbb1aa075c0ec1759b4f98ce5d5f14a3d555274f970704210a00738ba7d95db2fc320f7780e6b99bcb0ffb6c",
-"size": 1143715
-}
+  {
+    "version": "clang 3.8.0",
+    "size": 133060926,
+    "digest": "aff5ad3ac2d41db19d1ba0df5f97b189a7d7e1b6af8c56e22c2b0cced84d75fa98394ded6a4ba5713652e6684a0a46f47aeccf87991f9e849bf8d7d82e564f6f",
+    "algorithm": "sha512",
+    "filename": "clang.tar.bz2",
+    "unpack": true
+  },
+  {
+    "version": "rustc 1.15.1 (021bd294c 2017-02-08) repack",
+    "size": 122706608,
+    "digest": "b9ae830cfe24430907490cd58f8215447667fb8f1f052d6e78c8ecd7aadfbc92f75a404774d4cc7b30a46b756275209c2fe2723473704b3bce7ffee908e353a8",
+    "algorithm": "sha512",
+    "filename": "rustc.tar.bz2",
+    "unpack": true
+  },
+  {
+    "version": "cctools port from commit hash db1f8d906cb28, ld only",
+    "size": 634496,
+    "digest": "037f31fcf29e7bb7fada0d2bdd5e95c7d4cb2692f2a5c98ed6f6a7561b9d81622d015f0d12b291d3667719655f1369e8ce8a0a4a4773aa0ee4753e04a8821173",
+    "algorithm": "sha512",
+    "filename": "cctools.tar.bz2",
+    "unpack": true
+  },
+  {
+    "version": "sccache rev b21198a7183a2fe226ff49348b1c0b51bae9f4f8",
+    "algorithm": "sha512",
+    "visibility": "public",
+    "filename": "sccache2.tar.bz2",
+    "unpack": true,
+    "digest": "a285c7c6468ad7438262dfec90f65981e84abf2adbb1aa075c0ec1759b4f98ce5d5f14a3d555274f970704210a00738ba7d95db2fc320f7780e6b99bcb0ffb6c",
+    "size": 1143715
+  }
 ]

@@ -365,6 +365,8 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
       MOZ_DIAGNOSTIC_ASSERT(audioRust->mBitDepth == audio->mBitDepth);
       MOZ_DIAGNOSTIC_ASSERT(audioRust->mProfile == audio->mProfile);
       MOZ_DIAGNOSTIC_ASSERT(audioRust->mExtendedProfile == audio->mExtendedProfile);
+      MOZ_DIAGNOSTIC_ASSERT(*audioRust->mExtraData == *audio->mExtraData);
+      MOZ_DIAGNOSTIC_ASSERT(*audioRust->mCodecSpecificConfig == *audio->mCodecSpecificConfig);
       break;
     }
     case mozilla::TrackInfo::kVideoTrack: {

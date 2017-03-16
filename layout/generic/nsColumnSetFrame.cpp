@@ -1139,6 +1139,26 @@ nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 }
 
+void
+nsColumnSetFrame::DoUpdateStyleOfOwnedAnonBoxes(
+    mozilla::ServoStyleSet& aStyleSet,
+    nsStyleChangeList& aChangeList,
+    nsChangeHint aHintForThisFrame)
+{
+  // Everything in mFrames is continuations of the first thing in mFrames.
+  nsIFrame* column = mFrames.FirstChild();
+
+  // We might not have any columns, apparently?
+  if (!column) {
+    return;
+  }
+
+  MOZ_ASSERT(column->StyleContext()->GetPseudo() ==
+               nsCSSAnonBoxes::columnContent,
+             "What sort of child is this?");
+  UpdateStyleOfChildAnonBox(column, aStyleSet, aChangeList, aHintForThisFrame);
+}
+
 #ifdef DEBUG
 void
 nsColumnSetFrame::SetInitialChildList(ChildListID     aListID,
