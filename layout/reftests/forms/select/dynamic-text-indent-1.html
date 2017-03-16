@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <select>
+    <option selected>Text<option>
+  </select>
+  <script>
+    onload = function() {
+      var s = document.querySelector("select");
+      window.w = s.offsetWidth;
+      s.style.textIndent = "15px";
+      document.documentElement.className = "";
+    }
+  </script>
+</html>

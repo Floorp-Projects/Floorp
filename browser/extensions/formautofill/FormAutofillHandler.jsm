@@ -53,6 +53,11 @@ FormAutofillHandler.prototype = {
   fieldDetails: null,
 
   /**
+   * String of the filled profile's guid.
+   */
+  filledProfileGUID: null,
+
+  /**
    * Set fieldDetails from the form about fields that can be autofilled.
    */
   collectFormFields() {
@@ -100,6 +105,8 @@ FormAutofillHandler.prototype = {
    */
   autofillFormFields(profile, focusedInput) {
     log.debug("profile in autofillFormFields:", profile);
+
+    this.filledProfileGUID = profile.guid;
     for (let fieldDetail of this.fieldDetails) {
       // Avoid filling field value in the following cases:
       // 1. the focused input which is filled in FormFillController.

@@ -1186,6 +1186,18 @@ nsComboboxControlFrame::GetContentInsertionFrame() {
   return mInRedisplayText ? mDisplayFrame : mDropdownFrame->GetContentInsertionFrame();
 }
 
+void
+nsComboboxControlFrame::DoUpdateStyleOfOwnedAnonBoxes(
+  ServoStyleSet& aStyleSet,
+  nsStyleChangeList& aChangeList,
+  nsChangeHint aHintForThisFrame)
+{
+  UpdateStyleOfChildAnonBox(mDropdownFrame, aStyleSet, aChangeList,
+                            aHintForThisFrame);
+  UpdateStyleOfChildAnonBox(mDisplayFrame, aStyleSet, aChangeList,
+                            aHintForThisFrame);
+}
+
 nsresult
 nsComboboxControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {

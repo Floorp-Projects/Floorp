@@ -62,7 +62,7 @@ fails == ua-style-sheet-margin-13.html ua-style-sheet-margin-13.html
 fails == ua-style-sheet-size-1.html ua-style-sheet-size-1.html
 fails == ua-style-sheet-size-2.html ua-style-sheet-size-2.html
 
-fails == ua-style-sheet-fieldset-1.html ua-style-sheet-fieldset-1.html
+== ua-style-sheet-fieldset-1.html ua-style-sheet-fieldset-1.html
 fails == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1.html
 fails == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1.html
 fails == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1.html

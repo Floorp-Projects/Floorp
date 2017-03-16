@@ -10067,6 +10067,8 @@ nsFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
              "This should only be used for children!");
   MOZ_ASSERT(aChildFrame->GetContent() == GetContent(),
              "What content node is it a frame for?");
+  MOZ_ASSERT(!aChildFrame->GetPrevContinuation(),
+             "Only first continuations should end up here");
 
   // We could force the caller to pass in the pseudo, since some callers know it
   // statically...  But this API is a bit nicer.

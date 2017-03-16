@@ -456,7 +456,7 @@ function prompt(aBrowser, aRequest) {
   // share without prompting).
   let reasonForNoPermanentAllow = "";
   if (sharingScreen) {
-    reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.screen2";
+    reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.screen3";
   } else if (sharingAudio) {
     reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.audio";
   } else if (!aRequest.secure) {
@@ -744,8 +744,8 @@ function prompt(aBrowser, aRequest) {
         if (videoDevices.length) {
           let listId = "webRTC-select" + (sharingScreen ? "Window" : "Camera") + "-menulist";
           let videoDeviceIndex = doc.getElementById(listId).value;
-          let allowCamera = videoDeviceIndex != "-1";
-          if (allowCamera) {
+          let allowVideoDevice = videoDeviceIndex != "-1";
+          if (allowVideoDevice) {
             allowedDevices.push(videoDeviceIndex);
             // Session permission will be removed after use
             // (it's really one-shot, not for the entire session)
@@ -764,9 +764,6 @@ function prompt(aBrowser, aRequest) {
             }
             if (remember)
               SitePermissions.set(uri, "camera", SitePermissions.ALLOW);
-          } else {
-            let scope = remember ? SitePermissions.SCOPE_PERSISTENT : SitePermissions.SCOPE_TEMPORARY;
-            SitePermissions.set(uri, "camera", SitePermissions.BLOCK, scope, aBrowser);
           }
         }
         if (audioDevices.length) {
@@ -788,9 +785,6 @@ function prompt(aBrowser, aRequest) {
               }
               if (remember)
                 SitePermissions.set(uri, "microphone", SitePermissions.ALLOW);
-            } else {
-                let scope = remember ? SitePermissions.SCOPE_PERSISTENT : SitePermissions.SCOPE_TEMPORARY;
-                SitePermissions.set(uri, "microphone", SitePermissions.BLOCK, scope, aBrowser);
             }
           } else {
             // Only one device possible for audio capture.

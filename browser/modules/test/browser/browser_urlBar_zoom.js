@@ -24,14 +24,13 @@ add_task(function* () {
   let buttonZoomLevel = parseInt(zoomResetButton.getAttribute("label"), 10);
   is(buttonZoomLevel, expectedZoomLevel, ("Button label updated successfully to " + Math.floor(ZoomManager.zoom * 100) + "%"));
 
-  let zoomResetPromise = promiseObserverNotification("browser-fullZoom:zoomReset");
+  let zoomResetPromise = BrowserTestUtils.waitForEvent(window, "FullZoomChange");
   zoomResetButton.click();
   yield zoomResetPromise;
   pageZoomLevel = Math.floor(ZoomManager.zoom * 100);
   expectedZoomLevel = 100;
   is(pageZoomLevel, expectedZoomLevel, "Clicking zoom button successfully resets browser zoom to 100%");
   is(zoomResetButton.hidden, true, "Zoom reset button returns to being hidden");
-
 });
 
 add_task(function* () {
@@ -39,7 +38,7 @@ add_task(function* () {
   CustomizableUI.addWidgetToArea("zoom-controls", CustomizableUI.AREA_NAVBAR);
   let zoomCustomizableWidget = document.getElementById("zoom-reset-button");
   let zoomResetButton = document.getElementById("urlbar-zoom-button");
-  let zoomChangePromise = promiseObserverNotification("browser-fullZoom:zoomChange");
+  let zoomChangePromise = BrowserTestUtils.waitForEvent(window, "FullZoomChange");
   FullZoom.enlarge();
   yield zoomChangePromise;
   is(zoomResetButton.hidden, true, "URL zoom button remains hidden despite zoom increase");
@@ -54,20 +53,4 @@ add_task(function* asyncCleanup() {
     CustomizableUI.removeWidgetFromArea("zoom-controls", CustomizableUI.AREA_NAVBAR);
     ok(!document.getElementById("zoom-controls"), "Customizable zoom widget removed from toolbar");
   }
-
 });
-
-function promiseObserverNotification(aObserver) {
-  let deferred = Promise.defer();
-  function notificationCallback(e) {
-    Services.obs.removeObserver(notificationCallback, aObserver);
-    clearTimeout(timeoutId);
-    deferred.resolve();
-  }
-  let timeoutId = setTimeout(() => {
-    Services.obs.removeObserver(notificationCallback, aObserver);
-    deferred.reject("Notification '" + aObserver + "' did not happen within 20 seconds.");
-  }, kTimeoutInMS);
-  Services.obs.addObserver(notificationCallback, aObserver, false);
-  return deferred.promise;
-}
