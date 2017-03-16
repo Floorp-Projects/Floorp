@@ -10,7 +10,7 @@ fails == tableboxshadow-basic.html tableboxshadow-basic.html
 fails == tableboxshadow-trshadow.html tableboxshadow-trshadow.html
 fails == tableboxshadow-tdshadow.html tableboxshadow-tdshadow.html
 == boxshadow-rounding.html boxshadow-rounding.html
-fails == boxshadow-button.html boxshadow-button.html
+== boxshadow-button.html boxshadow-button.html
 fails == boxshadow-fileupload.html boxshadow-fileupload.html
 == boxshadow-inner-basic.html boxshadow-inner-basic.html
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed.html

@@ -15,8 +15,8 @@ HTTP(..) == aspect-ratio-3b.xhtml aspect-ratio-3b.xhtml
 == empty-1a.html empty-1a.html
 == empty-1b.html empty-1b.html
 #these is skipped because we hang on the htmlparser tests when this is ran
-== object-aspect-ratio-1a.xhtml object-aspect-ratio-1a.xhtml
-== object-aspect-ratio-1b.xhtml object-aspect-ratio-1b.xhtml
+fails == object-aspect-ratio-1a.xhtml object-aspect-ratio-1a.xhtml
+fails == object-aspect-ratio-1b.xhtml object-aspect-ratio-1b.xhtml
 == offset-1.xhtml offset-1.xhtml
 random == object-aspect-ratio-2a.xhtml object-aspect-ratio-2a.xhtml
 random == object-aspect-ratio-2b.xhtml object-aspect-ratio-2b.xhtml
