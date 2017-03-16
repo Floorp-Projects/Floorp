@@ -74,8 +74,10 @@
 #include "jit/OptimizationTracking.h"
 #include "js/Debug.h"
 #include "js/GCAPI.h"
+#include "js/GCVector.h"
 #include "js/Initialization.h"
 #include "js/StructuredClone.h"
+#include "js/SweepingAPI.h"
 #include "js/TrackedOptimizationInfo.h"
 #include "perf/jsperf.h"
 #include "shell/jsoptparse.h"
@@ -286,11 +288,27 @@ class OffThreadState {
 typedef Vector<char16_t, 0, SystemAllocPolicy> StackChars;
 #endif
 
+class NonshrinkingGCObjectVector : public GCVector<JSObject*, 0, SystemAllocPolicy>
+{
+  public:
+    void sweep() {
+        for (uint32_t i = 0; i < this->length(); i++) {
+            if (JS::GCPolicy<JSObject*>::needsSweep(&(*this)[i]))
+                (*this)[i] = nullptr;
+        }
+    }
+};
+
+using MarkBitObservers = JS::WeakCache<NonshrinkingGCObjectVector>;
+
+struct ShellCompartmentPrivate {
+    JS::Heap<JSObject*> grayRoot;
+};
+
 // Per-context shell state.
 struct ShellContext
 {
     explicit ShellContext(JSContext* cx);
-
     bool isWorker;
     double timeoutInterval;
     double startTime;
@@ -330,6 +348,7 @@ struct ShellContext
     OffThreadState offThreadState;
 
     UniqueChars moduleLoadPath;
+    UniquePtr<MarkBitObservers> markObservers;
 };
 
 struct MOZ_STACK_CLASS EnvironmentPreparer : public js::ScriptEnvironmentPreparer {
@@ -484,6 +503,19 @@ GetShellContext(JSContext* cx)
     ShellContext* sc = static_cast<ShellContext*>(JS_GetContextPrivate(cx));
     MOZ_ASSERT(sc);
     return sc;
+}
+
+static void
+TraceGrayRoots(JSTracer* trc, void* data)
+{
+    JSRuntime* rt = trc->runtime();
+    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
+        for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+            auto priv = static_cast<ShellCompartmentPrivate*>(JS_GetCompartmentPrivate(comp.get()));
+            if (priv)
+                JS::TraceEdge(trc, &priv->grayRoot, "test gray root");
+        }
+    }
 }
 
 static char*
@@ -3525,7 +3557,6 @@ WorkerMain(void* arg)
     MOZ_ASSERT(!!input->parentRuntime != !!input->siblingContext);
 
     JSContext* cx = nullptr;
-    ShellContext* sc = nullptr;
 
     auto guard = mozilla::MakeScopeExit([&] {
             if (cx)
@@ -3535,7 +3566,6 @@ WorkerMain(void* arg)
                 CooperativeYield();
             }
             js_delete(input);
-            js_delete(sc);
         });
 
     cx = input->parentRuntime
@@ -3544,13 +3574,14 @@ WorkerMain(void* arg)
     if (!cx)
         return;
 
-    sc = js_new<ShellContext>(cx);
+    UniquePtr<ShellContext> sc = MakeUnique<ShellContext>(cx);
     if (!sc)
         return;
 
     if (input->parentRuntime)
         sc->isWorker = true;
-    JS_SetContextPrivate(cx, sc);
+    JS_SetContextPrivate(cx, sc.get());
+    JS_SetGrayGCRootsTracer(cx, TraceGrayRoots, nullptr);
     SetWorkerContextOptions(cx);
     sc->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
 
@@ -3611,6 +3642,7 @@ WorkerMain(void* arg)
     sc->jobQueue.reset();
 
     KillWatchdog(cx);
+    JS_SetGrayGCRootsTracer(cx, nullptr, nullptr);
 }
 
 // Workers can spawn other workers, so we need a lock to access workerThreads.
@@ -5814,6 +5846,149 @@ DumpScopeChain(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+// For testing gray marking, grayRoot() will heap-allocate an address
+// where we can store a JSObject*, and create a new object if one doesn't
+// already exist.
+//
+// Note that ensureGrayRoot() will automatically blacken the returned object,
+// so it will not actually end up marked gray until the following GC clears the
+// black bit (assuming nothing is holding onto it.)
+//
+// The idea is that you can set up a whole graph of objects to be marked gray,
+// hanging off of the object returned from grayRoot(). Then you GC to clear the
+// black bits and set the gray bits.
+//
+// To test grayness, register the objects of interest with addMarkObservers(),
+// which takes an Array of objects (which will be marked black at the time
+// they're passed in). Their mark bits may be retrieved at any time with
+// getMarks(), in the form of an array of strings with each index corresponding
+// to the original objects passed to addMarkObservers().
+
+static ShellCompartmentPrivate*
+EnsureShellCompartmentPrivate(JSContext* cx)
+{
+    auto priv = static_cast<ShellCompartmentPrivate*>(JS_GetCompartmentPrivate(cx->compartment()));
+    if (!priv) {
+        priv = cx->new_<ShellCompartmentPrivate>();
+        JS_SetCompartmentPrivate(cx->compartment(), priv);
+    }
+    return priv;
+}
+
+static bool
+EnsureGrayRoot(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    auto priv = EnsureShellCompartmentPrivate(cx);
+    if (!priv->grayRoot) {
+        if (!(priv->grayRoot = NewDenseEmptyArray(cx, nullptr, TenuredObject)))
+            return false;
+    }
+
+    args.rval().setObject(*priv->grayRoot);
+    return true;
+}
+
+static MarkBitObservers*
+EnsureMarkBitObservers(JSContext* cx)
+{
+    ShellContext* sc = GetShellContext(cx);
+    if (!sc->markObservers) {
+        sc->markObservers.reset(cx->new_<MarkBitObservers>(cx->runtime(),
+                                                         NonshrinkingGCObjectVector()));
+    }
+    return sc->markObservers.get();
+}
+
+static bool
+ClearMarkObservers(JSContext* cx, unsigned argc, Value* vp)
+{
+    auto markObservers = EnsureMarkBitObservers(cx);
+    markObservers->get().clear();
+    return true;
+}
+
+static bool
+AddMarkObservers(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    auto markObservers = EnsureMarkBitObservers(cx);
+
+    if (!args.get(0).isObject()) {
+        JS_ReportErrorASCII(cx, "argument must be an Array of objects");
+        return false;
+    }
+
+    // WeakCaches are not swept during a minor GC. To prevent nursery-allocated
+    // contents from having the mark bits be deceptively black until the second
+    // GC, they would need to be marked weakly (cf NurseryAwareHashMap). It is
+    // simpler to evict the nursery to prevent nursery objects from being
+    // observed.
+    cx->runtime()->gc.evictNursery();
+
+    RootedObject observersArg(cx, &args[0].toObject());
+    RootedValue v(cx);
+    uint32_t length;
+    if (!GetLengthProperty(cx, observersArg, &length))
+        return false;
+    for (uint32_t i = 0; i < length; i++) {
+        if (!JS_GetElement(cx, observersArg, i, &v))
+            return false;
+        if (!v.isObject()) {
+            JS_ReportErrorASCII(cx, "argument must be an Array of objects");
+            return false;
+        }
+        if (!markObservers->get().append(&v.toObject()))
+            return false;
+    }
+
+    args.rval().setInt32(length);
+    return true;
+}
+
+static bool
+GetMarks(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    auto& observers = GetShellContext(cx)->markObservers;
+    if (!observers) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    size_t length = observers->get().length();
+    Rooted<ArrayObject*> ret(cx, js::NewDenseEmptyArray(cx));
+    if (!ret)
+        return false;
+
+    for (uint32_t i = 0; i < length; i++) {
+        const char* color;
+        JSObject* obj = observers->get()[i];
+        if (!obj) {
+            color = "dead";
+        } else {
+            gc::TenuredCell* cell = &obj->asTenured();
+            if (cell->isMarked(gc::GRAY))
+                color = "gray";
+            else if (cell->isMarked(gc::BLACK))
+                color = "black";
+            else
+                color = "unmarked";
+        }
+        JSString* s = JS_NewStringCopyZ(cx, color);
+        if (!s)
+            return false;
+        if (!NewbornArrayPush(cx, ret, StringValue(s)))
+            return false;
+    }
+
+    args.rval().setObject(*ret);
+    return true;
+}
+
 namespace js {
 namespace shell {
 
@@ -6643,6 +6818,30 @@ TestAssertRecoveredOnBailout,
     JS_FN_HELP("dumpScopeChain", DumpScopeChain, 1, 0,
 "dumpScopeChain(obj)",
 "  Prints the scope chain of an interpreted function or a module."),
+
+    JS_FN_HELP("grayRoot", EnsureGrayRoot, 0, 0,
+"grayRoot()",
+"  Create a gray root Array, if needed, for the current compartment, and\n"
+"  return it."),
+
+    JS_FN_HELP("addMarkObservers", AddMarkObservers, 1, 0,
+"addMarkObservers(array_of_objects)",
+"  Register an array of objects whose mark bits will be tested by calls to\n"
+"  getMarks. The objects will be in calling compartment. Objects from\n"
+"  multiple compartments may be monitored by calling this function in\n"
+"  different compartments."),
+
+    JS_FN_HELP("clearMarkObservers", ClearMarkObservers, 1, 0,
+"clearMarkObservers()",
+"  Clear out the list of objects whose mark bits will be tested.\n"),
+
+    JS_FN_HELP("getMarks", GetMarks, 0, 0,
+"getMarks()",
+"  Return an array of strings representing the current state of the mark\n"
+"  bits ('gray' or 'black', or 'dead' if the object has been collected)\n"
+"  for the objects registered via addMarkObservers. Note that some of the\n"
+"  objects tested may be from different compartments than the one in which\n"
+"  this function runs."),
 
     JS_FN_HELP("crash", Crash, 0, 0,
 "crash([message])",
@@ -8405,6 +8604,7 @@ main(int argc, char** argv, char** envp)
         return 1;
 
     JS_SetContextPrivate(cx, sc.get());
+    JS_SetGrayGCRootsTracer(cx, TraceGrayRoots, nullptr);
     // Waiting is allowed on the shell's main thread, for now.
     JS_SetFutexCanWait(cx);
     JS::SetWarningReporter(cx, WarningReporter);
@@ -8472,6 +8672,10 @@ main(int argc, char** argv, char** envp)
 
     JS::SetGetIncumbentGlobalCallback(cx, nullptr);
     JS::SetEnqueuePromiseJobCallback(cx, nullptr);
+    JS_SetGrayGCRootsTracer(cx, nullptr, nullptr);
+
+    // Must clear out some of sc's pointer containers before JS_DestroyContext.
+    sc->markObservers.reset();
     sc->jobQueue.reset();
 
     KillWatchdog(cx);
