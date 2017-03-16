@@ -10967,5 +10967,15 @@
     "n_buckets": 20,
     "keyed": true,
     "description": "Measures the number of milliseconds we spend waiting for IPC messages to deserialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe."
+  },
+  "IPC_WRITE_LATENCY_MS": {
+    "alert_emails": ["mlayzell@mozilla.com"],
+    "bug_numbers": [1342635],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 500,
+    "n_buckets": 20,
+    "keyed": true,
+    "description": "Measures the number of milliseconds we spend waiting for IPC messages to serialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe."
   }
 }
