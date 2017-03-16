@@ -629,7 +629,7 @@ public:
   // This function is synchronous for cases where decoding has been suspended
   // and JS needs a frame to use in, eg., nsLayoutUtils::SurfaceFromElement()
   // via drawImage().
-  layers::Image* GetCurrentImage();
+  already_AddRefed<layers::Image> GetCurrentImage();
 
   already_AddRefed<DOMMediaStream> GetSrcObject() const;
   void SetSrcObject(DOMMediaStream& aValue);
