@@ -158,6 +158,7 @@ devtools/shared/sprintfjs/*
 devtools/shared/qrcode/decoder/*
 devtools/shared/qrcode/encoder/*
 devtools/client/shared/demangle.js
+devtools/client/shared/source-map/*
 devtools/client/shared/vendor/*
 devtools/client/sourceeditor/codemirror/*.js
 devtools/client/sourceeditor/codemirror/**/*.js
