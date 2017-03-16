@@ -464,9 +464,25 @@ DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
   };
 
   RefPtr<GASRunnable> runnable = new GASRunnable(aCallback, stringData);
-  rv = NS_DispatchToMainThread(runnable);
+
+  // DataTransfer.mParent might be EventTarget, nsIGlobalObject, ClipboardEvent
+  // nsPIDOMWindowOuter, null
+  nsISupports* parent = mDataTransfer->GetParentObject();
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(parent);
+  if (parent && !global) {
+    if (nsCOMPtr<dom::EventTarget> target = do_QueryInterface(parent)) {
+      global = target->GetOwnerGlobal();
+    } else if (nsCOMPtr<nsIDOMEvent> event = do_QueryInterface(parent)) {
+      global = event->InternalDOMEvent()->GetParentObject();
+    }
+  }
+  if (global) {
+    rv = global->Dispatch("GASRunnable", TaskCategory::Other, runnable.forget());
+  } else {
+    rv = NS_DispatchToMainThread(runnable);
+  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("NS_DispatchToMainThread Failed in "
+    NS_WARNING("Dispatch to main thread Failed in "
                "DataTransferItem::GetAsString!");
   }
 }
