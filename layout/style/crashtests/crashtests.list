@@ -28,7 +28,7 @@ load 437170-1.html
 load 437532-1.html
 load 439184-1.html
 load 444237-1.html
-load 444848-1.html 
+load 444848-1.html
 load 447776-1.html
 load 447783-1.html
 load 448161-1.html
@@ -76,7 +76,7 @@ load 621596-1.html
 skip-if(stylo) load 622314-1.xhtml # bug 1337695
 load 637242.xhtml
 load 645142.html
-fails-if(stylo) == 645951-1.html 645951-1-ref.html
+== 645951-1.html 645951-1-ref.html
 load 652976-1.svg
 load 665209-1.html
 load 671799-1.html
@@ -145,7 +145,7 @@ asserts-if(stylo,0-1) load 1264396-1.html # bug 1324677
 # layout.css.prefixes.webkit pref
 pref(layout.css.prefixes.webkit,false) load 1265611-1.html
 load border-image-visited-link.html
-load font-face-truncated-src.html 
+load font-face-truncated-src.html
 load large_border_image_width.html
 load long-url-list-stack-overflow.html
 pref(layout.css.background-clip-text.enabled,true) load 1264949.html
