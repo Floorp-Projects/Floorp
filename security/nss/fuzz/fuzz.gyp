@@ -252,8 +252,35 @@
       'type': 'executable',
       'sources': [
         'tls_client_config.cc',
-        'tls_client_socket.cc',
         'tls_client_target.cc',
+        'tls_common.cc',
+        'tls_socket.cc',
+      ],
+      'dependencies': [
+        '<(DEPTH)/cpputil/cpputil.gyp:cpputil',
+        '<(DEPTH)/exports.gyp:nss_exports',
+        'fuzz_base',
+      ],
+      'include_dirs': [
+        '<(DEPTH)/lib/freebl',
+      ],
+      'conditions': [
+        [ 'fuzz_tls==1', {
+          'defines': [
+            'UNSAFE_FUZZER_MODE',
+          ],
+        }],
+      ],
+    },
+    {
+      'target_name': 'nssfuzz-tls-server',
+      'type': 'executable',
+      'sources': [
+        'tls_common.cc',
+        'tls_socket.cc',
+        'tls_server_certs.cc',
+        'tls_server_config.cc',
+        'tls_server_target.cc',
       ],
       'dependencies': [
         '<(DEPTH)/cpputil/cpputil.gyp:cpputil',
@@ -279,6 +306,7 @@
         'nssfuzz-pkcs8',
         'nssfuzz-quickder',
         'nssfuzz-tls-client',
+        'nssfuzz-tls-server',
       ],
       'conditions': [
         ['OS=="linux"', {

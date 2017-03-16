@@ -342,7 +342,7 @@ PS* gPS = nullptr;
 static PS::Mutex gPSMutex;
 
 // The name of the main thread.
-static const char* const kGeckoThreadName = "GeckoMain";
+static const char* const kMainThreadName = "GeckoMain";
 
 static bool
 CanNotifyObservers()
@@ -1128,6 +1128,9 @@ StreamMetaJSCustomObject(PS::LockRef aLock, SpliceableJSONWriter& aWriter)
   bool asyncStacks = Preferences::GetBool("javascript.options.asyncstack");
   aWriter.IntProperty("asyncstack", asyncStacks);
 
+  // The "startTime" field holds the number of milliseconds since midnight
+  // January 1, 1970 GMT. This grotty code computes (Now - (Now - StartTime))
+  // to convert gPS->StartTime() into that form.
   mozilla::TimeDuration delta =
     mozilla::TimeStamp::Now() - gPS->StartTime(aLock);
   aWriter.DoubleProperty(
@@ -1537,12 +1540,6 @@ ReadProfilerEnvVars(PS::LockRef aLock)
        gPS->EnvVarInterval(aLock));
 }
 
-static bool
-is_main_thread_name(const char* aName)
-{
-  return aName && (strcmp(aName, kGeckoThreadName) == 0);
-}
-
 #ifdef HAVE_VA_COPY
 #define VARARGS_ASSIGN(foo, bar)     VA_COPY(foo,bar)
 #elif defined(HAVE_VA_LIST_AS_ARRAY)
@@ -1712,9 +1709,7 @@ MaybeSetProfile(PS::LockRef aLock, ThreadInfo* aInfo)
 }
 
 static void
-RegisterCurrentThread(PS::LockRef aLock, const char* aName,
-                      NotNull<PseudoStack*> aPseudoStack, bool aIsMainThread,
-                      void* stackTop)
+locked_register_thread(PS::LockRef aLock, const char* aName, void* stackTop)
 {
   // This function runs both on and off the main thread.
 
@@ -1732,8 +1727,14 @@ RegisterCurrentThread(PS::LockRef aLock, const char* aName,
     }
   }
 
+  if (!tlsPseudoStack.init()) {
+    return;
+  }
+  NotNull<PseudoStack*> stack = WrapNotNull(new PseudoStack());
+  tlsPseudoStack.set(stack);
+
   ThreadInfo* info =
-    new ThreadInfo(aName, id, aIsMainThread, aPseudoStack, stackTop);
+    new ThreadInfo(aName, id, NS_IsMainThread(), stack, stackTop);
 
   MaybeSetProfile(aLock, info);
 
@@ -1741,8 +1742,8 @@ RegisterCurrentThread(PS::LockRef aLock, const char* aName,
   if (gPS->IsActive(aLock) && info->HasProfile() && gPS->FeatureJS(aLock)) {
     // This startJSSampling() call is on-thread, so we can poll manually to
     // start JS sampling immediately.
-    aPseudoStack->startJSSampling();
-    aPseudoStack->pollJSSampling();
+    stack->startJSSampling();
+    stack->pollJSSampling();
   }
 
   threads.push_back(info);
@@ -1835,11 +1836,6 @@ profiler_init(void* aStackTop)
   {
     PS::AutoLock lock(gPSMutex);
 
-    if (!tlsPseudoStack.init()) {
-      LOG("END   profiler_init: TLS init failed");
-      return;
-    }
-
     // We've passed the possible failure point. Instantiate gPS, which
     // indicates that the profiler has initialized successfully.
     gPS = new PS();
@@ -1852,12 +1848,7 @@ profiler_init(void* aStackTop)
     // Read settings from environment variables.
     ReadProfilerEnvVars(lock);
 
-    NotNull<PseudoStack*> stack = WrapNotNull(new PseudoStack());
-    tlsPseudoStack.set(stack);
-
-    bool isMainThread = true;
-    RegisterCurrentThread(lock, kGeckoThreadName, stack, isMainThread,
-                          aStackTop);
+    locked_register_thread(lock, kMainThreadName, aStackTop);
 
     // Platform-specific initialization.
     PlatformInit(lock);
@@ -2670,25 +2661,19 @@ profiler_set_frame_number(int aFrameNumber)
 void
 profiler_register_thread(const char* aName, void* aGuessStackTop)
 {
-  // This function runs both on and off the main thread.
-
+  MOZ_RELEASE_ASSERT(!NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
   PS::AutoLock lock(gPSMutex);
 
-  MOZ_ASSERT(tlsPseudoStack.get() == nullptr);
-  NotNull<PseudoStack*> stack = WrapNotNull(new PseudoStack());
-  tlsPseudoStack.set(stack);
-  bool isMainThread = is_main_thread_name(aName);
   void* stackTop = GetStackTop(aGuessStackTop);
-  RegisterCurrentThread(lock, aName, stack, isMainThread, stackTop);
+  locked_register_thread(lock, aName, stackTop);
 }
 
 void
 profiler_unregister_thread()
 {
-  // This function runs both on and off the main thread.
-
+  MOZ_RELEASE_ASSERT(!NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
   PS::AutoLock lock(gPSMutex);

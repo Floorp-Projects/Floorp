@@ -20,6 +20,7 @@
 #include "prdtoa.h"
 
 #define PREF_VOLUME_SCALE "media.volume_scale"
+#define PREF_CUBEB_BACKEND "media.cubeb.backend"
 #define PREF_CUBEB_LATENCY_PLAYBACK "media.cubeb_latency_playback_ms"
 #define PREF_CUBEB_LATENCY_MSG "media.cubeb_latency_msg_frames"
 #define PREF_CUBEB_LOG_LEVEL "media.cubeb.log_level"
@@ -73,6 +74,7 @@ bool sCubebPlaybackLatencyPrefSet;
 bool sCubebMSGLatencyPrefSet;
 bool sAudioStreamInitEverSucceeded = false;
 StaticAutoPtr<char> sBrandName;
+StaticAutoPtr<char> sCubebBackendName;
 
 const char kBrandBundleURL[]      = "chrome://branding/locale/brand.properties";
 
@@ -167,6 +169,16 @@ void PrefChanged(const char* aPref, void* aClosure)
     } else if (utf8.IsEmpty()) {
       cubeb_set_log_callback(CUBEB_LOG_DISABLED, nullptr);
       cubebLog->SetLevel(LogLevel::Disabled);
+    }
+  } else if (strcmp(aPref, PREF_CUBEB_BACKEND) == 0) {
+    nsAdoptingString value = Preferences::GetString(aPref);
+    if (value.IsEmpty()) {
+      sCubebBackendName = nullptr;
+    } else {
+      NS_LossyConvertUTF16toASCII ascii(value);
+      sCubebBackendName = new char[ascii.Length() + 1];
+      PodCopy(sCubebBackendName.get(), ascii.get(), ascii.Length());
+      sCubebBackendName[ascii.Length()] = 0;
     }
   }
 }
@@ -305,11 +317,10 @@ void InitBrandName()
         NS_SUCCEEDED(rv), "Could not get the program name for a cubeb stream.");
     }
   }
-  /* cubeb expects a c-string. */
-  const char* ascii = NS_LossyConvertUTF16toASCII(brandName).get();
-  sBrandName = new char[brandName.Length() + 1];
-  PodCopy(sBrandName.get(), ascii, brandName.Length());
-  sBrandName[brandName.Length()] = 0;
+  NS_LossyConvertUTF16toASCII ascii(brandName);
+  sBrandName = new char[ascii.Length() + 1];
+  PodCopy(sBrandName.get(), ascii.get(), ascii.Length());
+  sBrandName[ascii.Length()] = 0;
 }
 
 cubeb* GetCubebContextUnlocked()
@@ -328,7 +339,7 @@ cubeb* GetCubebContextUnlocked()
       sBrandName, "Did not initialize sbrandName, and not on the main thread?");
   }
 
-  int rv = cubeb_init(&sCubebContext, sBrandName);
+  int rv = cubeb_init(&sCubebContext, sBrandName, sCubebBackendName.get());
   NS_WARNING_ASSERTION(rv == CUBEB_OK, "Could not get a cubeb context.");
   sCubebState = (rv == CUBEB_OK) ? CubebState::Initialized : CubebState::Uninitialized;
 
@@ -408,6 +419,8 @@ void InitLibrary()
   Preferences::RegisterCallback(PrefChanged, PREF_VOLUME_SCALE);
   PrefChanged(PREF_CUBEB_LATENCY_PLAYBACK, nullptr);
   PrefChanged(PREF_CUBEB_LATENCY_MSG, nullptr);
+  PrefChanged(PREF_CUBEB_BACKEND, nullptr);
+  Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_BACKEND);
   Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
   Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY_MSG);
   Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LOG_LEVEL);
@@ -419,6 +432,7 @@ void InitLibrary()
 void ShutdownLibrary()
 {
   Preferences::UnregisterCallback(PrefChanged, PREF_VOLUME_SCALE);
+  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_BACKEND);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY_MSG);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LOG_LEVEL);
@@ -429,6 +443,7 @@ void ShutdownLibrary()
     sCubebContext = nullptr;
   }
   sBrandName = nullptr;
+  sCubebBackendName = nullptr;
   // This will ensure we don't try to re-create a context.
   sCubebState = CubebState::Shutdown;
 }

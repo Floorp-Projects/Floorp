@@ -820,6 +820,25 @@ SSL_IMPORT PRFileDesc *SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd);
 SSL_IMPORT SECStatus SSL_SetPKCS11PinArg(PRFileDesc *fd, void *a);
 
 /*
+** These are callbacks for dealing with SSL alerts.
+ */
+
+typedef PRUint8 SSLAlertLevel;
+typedef PRUint8 SSLAlertDescription;
+
+typedef struct {
+    SSLAlertLevel level;
+    SSLAlertDescription description;
+} SSLAlert;
+
+typedef void(PR_CALLBACK *SSLAlertCallback)(const PRFileDesc *fd, void *arg,
+                                            const SSLAlert *alert);
+
+SSL_IMPORT SECStatus SSL_AlertReceivedCallback(PRFileDesc *fd, SSLAlertCallback cb,
+                                               void *arg);
+SSL_IMPORT SECStatus SSL_AlertSentCallback(PRFileDesc *fd, SSLAlertCallback cb,
+                                           void *arg);
+/*
 ** This is a callback for dealing with server certs that are not authenticated
 ** by the client.  The client app can decide that it actually likes the
 ** cert by some external means and restart the connection.
