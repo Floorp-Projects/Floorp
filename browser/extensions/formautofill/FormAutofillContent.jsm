@@ -93,7 +93,8 @@ AutofillProfileAutoCompleteSearch.prototype = {
     this.forceStop = false;
     let info = FormAutofillContent.getInputDetails(focusedInput);
 
-    if (!FormAutofillContent.savedFieldNames.has(info.fieldName)) {
+    if (!FormAutofillContent.savedFieldNames.has(info.fieldName) ||
+        FormAutofillContent.getFormHandler(focusedInput).filledProfileGUID) {
       let formHistory = Cc["@mozilla.org/autocomplete/search;1?name=form-history"]
                           .createInstance(Ci.nsIAutoCompleteSearch);
       formHistory.startSearch(searchString, searchParam, previousResult, {

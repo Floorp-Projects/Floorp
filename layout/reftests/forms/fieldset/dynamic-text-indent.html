@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <fieldset style="border: none">Text</fieldset>
+  <script>
+    onload = function() {
+      var f = document.querySelector("fieldset");
+      window.w = f.offsetWidth;
+      f.style.textIndent = "100px";
+      document.documentElement.className = "";
+    }
+  </script>
+</html>

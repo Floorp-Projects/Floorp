@@ -196,8 +196,7 @@ var ignoreFunctions = {
     // The nsScriptNameSpaceManager functions can't actually GC.  They
     // just use a PLDHashTable which has function pointers, which makes the
     // analysis think maybe they can.
-    "nsGlobalNameStruct* nsScriptNameSpaceManager::LookupNavigatorName(nsAString_internal*)": true,
-    "nsGlobalNameStruct* nsScriptNameSpaceManager::LookupName(nsAString_internal*, uint16**)": true,
+    "nsGlobalNameStruct* nsScriptNameSpaceManager::LookupName(nsAString*, uint16**)": true,
 
     // Similar to heap snapshot mock classes, and GTests below. This posts a
     // synchronous runnable when a GTest fails, and we are pretty sure that the

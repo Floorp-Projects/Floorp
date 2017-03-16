@@ -25,6 +25,8 @@
       <constructor><![CDATA[
         this.mozIntl = Components.classes["@mozilla.org/mozintl;1"]
                                  .getService(Components.interfaces.mozIMozIntl);
+        // Notify DateTimePickerHelper.jsm that binding is ready.
+        this.dispatchEvent(new CustomEvent("DateTimePickerBindingReady"));
       ]]></constructor>
       <method name="loadPicker">
         <parameter name="type"/>

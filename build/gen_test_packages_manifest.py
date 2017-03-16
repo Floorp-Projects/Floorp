@@ -18,6 +18,7 @@ ALL_HARNESSES = [
     'mozbase',
     'web-platform',
     'talos',
+    'awsy',
     'gtest',
 ]
 
@@ -28,6 +29,7 @@ PACKAGE_SPECIFIED_HARNESSES = [
     'xpcshell',
     'web-platform',
     'talos',
+    'awsy',
 ]
 
 # These packages are not present for every build configuration.

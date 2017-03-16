@@ -134,13 +134,13 @@ the "expr -R -- EXPR" command can be used to show its actual member variables.
   (lldb) frame info
   frame #0: 0x000000010400cfea XUL`nsCSSParser::ParseProperty(this=0x00007fff5fbf5248, aPropID=eCSSProperty_margin_top, aPropValue=0x00007fff5fbf53f8, aSheetURI=0x0000000115ae8c00, aBaseURI=0x0000000115ae8c00, aSheetPrincipal=0x000000010ff9e040, aDeclaration=0x00000001826fd580, aChanged=0x00007fff5fbf5247, aIsImportant=false, aIsSVGMode=false) + 74 at nsCSSParser.cpp:12851
   (lldb) p aPropValue
-  (const nsAString_internal) $16 = u"-25px"
+  (const nsAString) $16 = u"-25px"
 
   (lldb) p this
   (nsHTMLDocument *) $18 = 0x0000000115b56000
   (lldb) p mContentType
   (nsCString) $19 = {
-    nsACString_internal = "text/html"
+    nsACString = "text/html"
   }
 
 * nscolor

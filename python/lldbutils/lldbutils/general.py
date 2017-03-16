@@ -92,8 +92,8 @@ def callfunc(debugger, command, result, dict):
     debugger.HandleCommand('print ((void(*)%s)0x%0x)(%s' % (arg_types, sym.addr.GetLoadAddress(target), args))
 
 def init(debugger):
-    debugger.HandleCommand("type summary add nsAString_internal -F lldbutils.general.summarize_string")
-    debugger.HandleCommand("type summary add nsACString_internal -F lldbutils.general.summarize_string")
+    debugger.HandleCommand("type summary add nsAString -F lldbutils.general.summarize_string")
+    debugger.HandleCommand("type summary add nsACString -F lldbutils.general.summarize_string")
     debugger.HandleCommand("type summary add nsFixedString -F lldbutils.general.summarize_string")
     debugger.HandleCommand("type summary add nsFixedCString -F lldbutils.general.summarize_string")
     debugger.HandleCommand("type summary add nsAutoString -F lldbutils.general.summarize_string")
