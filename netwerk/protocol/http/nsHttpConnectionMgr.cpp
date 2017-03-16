@@ -1747,7 +1747,9 @@ nsHttpConnectionMgr::DispatchSpdyPendingQ(nsTArray<RefPtr<nsHttpTransaction>> &p
     nsTArray<RefPtr<nsHttpTransaction>> leftovers;
     uint32_t index;
     // Dispatch all the transactions we can
-    for (index = 0; index < pendingQ.Length(); ++index) {
+    for (index = 0;
+         index < pendingQ.Length() && conn->CanDirectlyActivate();
+         ++index) {
         nsHttpTransaction *trans = pendingQ[index];
 
         if (!(trans->Caps() & NS_HTTP_ALLOW_KEEPALIVE) ||
@@ -1794,6 +1796,9 @@ nsHttpConnectionMgr::ProcessSpdyPendingQ(nsConnectionEntry *ent)
         return;
     }
     DispatchSpdyPendingQ(ent->mUrgentStartQ, ent, conn);
+    if (!conn->CanDirectlyActivate()) {
+        return;
+    }
     DispatchSpdyPendingQ(ent->mPendingQ, ent, conn);
 }
 
