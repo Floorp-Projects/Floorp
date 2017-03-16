@@ -143,6 +143,7 @@ public:
   virtual nsresult AppendText(const char16_t* aBuffer, uint32_t aLength,
                               bool aNotify) override;
   virtual bool TextIsOnlyWhitespace() override;
+  virtual bool ThreadSafeTextIsOnlyWhitespace() const override;
   virtual bool HasTextForTranslation() override;
   virtual void AppendTextTo(nsAString& aResult) override;
   MOZ_MUST_USE
