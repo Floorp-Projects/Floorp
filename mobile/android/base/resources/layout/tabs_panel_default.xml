@@ -49,7 +49,7 @@
                          android:contentDescription="@string/new_tab"
                          android:background="@drawable/action_bar_button_inverse"/>
 
-            <FrameLayout android:id="@+id/menu"
+            <FrameLayout android:id="@+id/tabs_menu"
                          style="@style/UrlBar.ImageButton"
                          android:layout_width="@dimen/tabs_panel_button_width"
                          android:background="@drawable/action_bar_button_inverse"
