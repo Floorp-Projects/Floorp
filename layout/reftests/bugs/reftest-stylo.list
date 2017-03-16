@@ -90,7 +90,7 @@ fails == 82711-1-ref.html 82711-1-ref.html # Bug 1341697, Bug 1341637
 fails == 82711-1-ref.html 82711-1-ref.html # Bug 1341697, Bug 1341637
 fails == 82711-2-ref.html 82711-2-ref.html
 fails == 84400-1.html 84400-1.html
-fails == 84400-2.html 84400-2.html
+== 84400-2.html 84400-2.html
 == 97777-1.html 97777-1.html
 == 97777-2.html 97777-2.html
 == 98223-1.html 98223-1.html
@@ -196,10 +196,10 @@ fails == 201293-1d.html 201293-1d.html
 == 206516-1.html 206516-1.html
 == 206631-1.html 206631-1.html
 == 206802.html 206802.html
-fails == 210094-1a.html 210094-1a.html
-fails == 210094-1b.html 210094-1b.html
-fails == 210094-1c.html 210094-1c.html
-fails == 210876-1.html 210876-1.html
+== 210094-1a.html 210094-1a.html
+== 210094-1b.html 210094-1b.html
+== 210094-1c.html 210094-1c.html
+== 210876-1.html 210876-1.html
 == 211931-1.html 211931-1.html
 fails == 212563-1.html 212563-1.html
 == 212563-2.html 212563-2.html
@@ -284,11 +284,11 @@ fails == 260406-1.html 260406-1.html
 == 262151-1.html 262151-1.html
 fails == 262998-1.html 262998-1.html
 == 267353-1.html 267353-1.html
-fails == 269908-1.html 269908-1.html
-fails == 269908-2.html 269908-2.html
-fails == 269908-3.html 269908-3.html
-fails == 269908-4.html 269908-4.html
-fails == 269908-5.html 269908-5.html
+== 269908-1.html 269908-1.html
+== 269908-2.html 269908-2.html
+== 269908-3.html 269908-3.html
+== 269908-4.html 269908-4.html
+== 269908-5.html 269908-5.html
 fails == 271747-1a.html 271747-1a.html
 fails == 271747-1b.html 271747-1b.html
 == 272646-1.xul 272646-1.xul
@@ -452,7 +452,7 @@ fails == 338251-p.html 338251-p.html
 fails == 338251-p-oh.html 338251-p-oh.html
 fails == 338251-pre.html 338251-pre.html
 fails == 338251-pre-oh.html 338251-pre-oh.html
-fails == 339289-1.html 339289-1.html
+== 339289-1.html 339289-1.html
 == 341043-1a.html 341043-1a.html
 == 341043-1b.html 341043-1b.html
 == 343538-1.html 343538-1.html
@@ -528,7 +528,7 @@ fails == 352980-3f.html 352980-3f.html
 == 355548-5.xml 355548-5.xml
 == 356774-1.html 356774-1.html
 == 356775-1.html 356775-1.html
-fails == 359869-1.html 359869-1.html
+== 359869-1.html 359869-1.html
 fails == 359903-1.html 359903-1.html
 fails == 359903-2.html 359903-2.html
 == 360065-1.html 360065-1.html
@@ -544,7 +544,7 @@ asserts-if(stylo,1) == 360746-1.html 360746-1.html # Bug 1341721
 == 362594-2b.html 362594-2b.html
 == 362594-2b.html 362594-2b.html
 == 362594-2c.html 362594-2c.html
-fails == 362901-1.html 362901-1.html
+== 362901-1.html 362901-1.html
 == 363247-1.html 363247-1.html
 == 363329-1.html 363329-1.html
 fails == 363329-2.html 363329-2.html
@@ -743,7 +743,7 @@ fails == 385870-2.html 385870-2.html
 == 386014-1a.html 386014-1a.html
 == 386014-1b.html 386014-1b.html
 == 386014-1c.html 386014-1c.html
-fails == 386065-1.html 386065-1.html
+== 386065-1.html 386065-1.html
 == 386065-2.html 386065-2.html
 fails pref(layout.float-fragments-inside-column.enabled,false) == 386147-1.html 386147-1.html # Bug 1341095
 fails pref(layout.float-fragments-inside-column.enabled,true) == 386147-1.html 386147-1.html # Bug 1341095
@@ -887,14 +887,14 @@ fails == 403656-3.html 403656-3.html
 == 403656-4.html 403656-4.html
 == 403656-5.html 403656-5.html
 == 403657-1.html 403657-1.html
-fails == 403733-1.html 403733-1.html
+== 403733-1.html 403733-1.html
 fails == 403962-1.xhtml 403962-1.xhtml # Bug 1290276
 == 404030-1.html 404030-1.html
 == 404030-1-notref.html 404030-1-notref.html
 == 404030-1-notref2.html 404030-1-notref2.html
 fails == 404123-1.html 404123-1.html
 fails == 404123-2.html 404123-2.html
-fails == 404123-3.html 404123-3.html
+== 404123-3.html 404123-3.html
 # may fail "randomly" on OS X, doesn't seem to be rendering usefully anyhow - bug 602469
 random-if(cocoaWidget) HTTP(..) == 404149-1.xul 404149-1.xul
 == 404180-1.html 404180-1.html
@@ -907,7 +907,7 @@ fails == 404553-1.html 404553-1.html
 == 404666-1.html 404666-1.html
 == 404666-2.html 404666-2.html
 == 405186-1.xhtml 405186-1.xhtml
-fails == 405305-1.html 405305-1.html
+== 405305-1.html 405305-1.html
 == 405380-1.html 405380-1.html
 == 405517-1.xhtml 405517-1.xhtml
 == 405577-1.html 405577-1.html
@@ -995,7 +995,7 @@ fails asserts(1) == 418574-2.html 418574-2.html
 == 418766-1b.html 418766-1b.html
 == 419060.html 419060.html
 == 419285-1.html 419285-1.html
-fails == 419531-1.html 419531-1.html
+== 419531-1.html 419531-1.html
 == 420069-1.html 420069-1.html
 == 420069-2.html 420069-2.html
 == 420351-1.html 420351-1.html
@@ -1135,7 +1135,7 @@ fails == 430412-1.html 430412-1.html
 == 430813-3.html 430813-3.html
 == 431341-1.html 431341-1.html
 == 431341-2.html 431341-2.html
-fails == 431520-1.html 431520-1.html
+== 431520-1.html 431520-1.html
 == 431948-1.html 431948-1.html
 == 433640-1.html 433640-1.html
 fails == 433700.html 433700.html
@@ -1282,8 +1282,8 @@ fails == 474417-1.html 474417-1.html
 == 475986-1-ref.html 475986-1-ref.html
 == 475986-2-ref.html 475986-2-ref.html
 == 476063-1.html 476063-1.html
-fails == 476063-2.html 476063-2.html
-fails == 476063-3.html 476063-3.html
+== 476063-2.html 476063-2.html
+== 476063-3.html 476063-3.html
 == 476063-4.xhtml 476063-4.xhtml
 == 476357-1.html 476357-1.html
 fails == 476598-1a.html 476598-1a.html # Bug 1341785
@@ -1388,7 +1388,7 @@ pref(dom.use_xbl_scopes_for_remote_xul,true) == 495385-2f.xhtml 495385-2f.xhtml
 == 495385-4.html 495385-4.html
 fails == 495385-5.html 495385-5.html
 fails == 496032-1.html 496032-1.html
-fails == 496840-1.html 496840-1.html
+== 496840-1.html 496840-1.html
 fuzzy-if(skiaContent,1,17000) == 498228-1.xul 498228-1.xul
 fails == 501037.html 501037.html
 == 501257-1a.html 501257-1a.html
@@ -1434,7 +1434,7 @@ fails HTTP(..) == 518172-2a.html 518172-2a.html
 fails == 518172-2b.html 518172-2b.html
 == 520421-1.html 520421-1.html
 == 520563-1.xhtml 520563-1.xhtml
-fails == 521525-1.html 521525-1.html
+== 521525-1.html 521525-1.html
 == 521525-2.html 521525-2.html
 fails == 521539-1.html 521539-1.html
 == 521542-1.xhtml 521542-1.xhtml
@@ -1596,7 +1596,7 @@ fails == 589615-1b.html 589615-1b.html
 fails == 589682-1.html 589682-1.html
 == 593243-1.html 593243-1.html
 fails == 593243-2.html 593243-2.html
-fails == 593544-1.html 593544-1.html
+== 593544-1.html 593544-1.html
 == 594333-1.html 594333-1.html
 == 594624-1.html 594624-1.html
 fails == 594737-1.html 594737-1.html
@@ -1657,7 +1657,7 @@ fuzzy-if(skiaContent,1,500) == 630835-1.html 630835-1.html
 skip-if(Android) random-if(winWidget||OSX==1010) == 632781-verybig.html 632781-verybig.html
 == 632781-normalsize.html 632781-normalsize.html
 == 633344-1.html 633344-1.html
-fails == 634232-1.html 634232-1.html
+== 634232-1.html 634232-1.html
 skip-if(stylo) == 635302-1.html 635302-1.html # Too intermittent.
 == 635373-1.html 635373-1.html
 == 635373-2.html 635373-2.html
@@ -1699,7 +1699,7 @@ fails == 670467-2.html 670467-2.html
 == 691087-1.html 691087-1.html
 == 691571-1.html 691571-1.html
 == 696307-1.html 696307-1.html
-fails == 696739-1.html 696739-1.html
+== 696739-1.html 696739-1.html
 needs-focus == 703186-1.html 703186-1.html
 needs-focus == 703186-2.html 703186-2.html
 needs-focus == 703186-1.html 703186-1.html
@@ -1783,7 +1783,7 @@ fails == 883987-1c.html 883987-1c.html
 fails == 883987-1d.html 883987-1d.html
 fails == 883987-1e.html 883987-1e.html
 == 883987-1f.html 883987-1f.html
-fails == 890495-1.html 890495-1.html
+== 890495-1.html 890495-1.html
 == 894931-1.html 894931-1.html
 fails == 897491-1.html 897491-1.html
 fails == 897491-2.html 897491-2.html
@@ -1792,7 +1792,7 @@ fails == 897491-2.html 897491-2.html
 == 921716-1.html 921716-1.html
 == 926155-1.html 926155-1.html
 == 928607-1.html 928607-1.html
-fails == 931464-1.html 931464-1.html
+== 931464-1.html 931464-1.html
 == 931853.html 931853.html
 == 931853-quirks.html 931853-quirks.html
 fails == 933264-1.html 933264-1.html

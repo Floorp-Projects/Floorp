@@ -592,7 +592,7 @@ def remove_linux_pgo_try_talos(config, tests):
     def predicate(test):
         return not(
             test['test-platform'] == 'linux64-pgo/opt'
-            and test['suite'] == 'talos'
+            and (test['suite'] == 'talos' or test['suite'] == 'awsy')
             and config.params['project'] == 'try'
         )
     for test in filter(predicate, tests):

@@ -94,6 +94,7 @@ MOCHITEST_PACKAGE = $(PKG_BASENAME).mochitest.tests.zip
 REFTEST_PACKAGE = $(PKG_BASENAME).reftest.tests.zip
 WP_TEST_PACKAGE = $(PKG_BASENAME).web-platform.tests.zip
 TALOS_PACKAGE = $(PKG_BASENAME).talos.tests.zip
+AWSY_PACKAGE = $(PKG_BASENAME).awsy.tests.zip
 GTEST_PACKAGE = $(PKG_BASENAME).gtest.tests.zip
 
 ifneq (,$(wildcard $(DIST)/bin/application.ini))

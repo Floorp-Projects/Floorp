@@ -598,6 +598,7 @@ TextEventDispatcher::PendingComposition::Clear()
   mString.Truncate();
   mClauses = nullptr;
   mCaret.mRangeType = TextRangeType::eUninitialized;
+  mReplacedNativeLineBreakers = false;
 }
 
 void
@@ -612,6 +613,7 @@ TextEventDispatcher::PendingComposition::EnsureClauseArray()
 nsresult
 TextEventDispatcher::PendingComposition::SetString(const nsAString& aString)
 {
+  MOZ_ASSERT(!mReplacedNativeLineBreakers);
   mString = aString;
   return NS_OK;
 }
@@ -621,6 +623,8 @@ TextEventDispatcher::PendingComposition::AppendClause(
                                            uint32_t aLength,
                                            TextRangeType aTextRangeType)
 {
+  MOZ_ASSERT(!mReplacedNativeLineBreakers);
+
   if (NS_WARN_IF(!aLength)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -648,6 +652,8 @@ nsresult
 TextEventDispatcher::PendingComposition::SetCaret(uint32_t aOffset,
                                                   uint32_t aLength)
 {
+  MOZ_ASSERT(!mReplacedNativeLineBreakers);
+
   mCaret.mStartOffset = aOffset;
   mCaret.mEndOffset = mCaret.mStartOffset + aLength;
   mCaret.mRangeType = TextRangeType::eCaret;
@@ -660,47 +666,26 @@ TextEventDispatcher::PendingComposition::Set(const nsAString& aString,
 {
   Clear();
 
-  nsAutoString str(aString);
-  // Don't expose CRLF to web contents, instead, use LF.
-  str.ReplaceSubstring(NS_LITERAL_STRING("\r\n"), NS_LITERAL_STRING("\n"));
-  nsresult rv = SetString(str);
+  nsresult rv = SetString(aString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   if (!aRanges || aRanges->IsEmpty()) {
-    // Create dummy range if aString isn't empty.
-    if (!aString.IsEmpty()) {
-      rv = AppendClause(str.Length(), TextRangeType::eRawClause);
+    // Create dummy range if mString isn't empty.
+    if (!mString.IsEmpty()) {
+      rv = AppendClause(mString.Length(), TextRangeType::eRawClause);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
+      ReplaceNativeLineBreakers();
     }
     return NS_OK;
   }
 
   // Adjust offsets in the ranges for XP linefeed character (only \n).
-  // XXX Following code is the safest approach.  However, it wastes performance.
-  //     For ensuring the clauses do not overlap each other, we should redesign
-  //     TextRange later.
   for (uint32_t i = 0; i < aRanges->Length(); ++i) {
     TextRange range = aRanges->ElementAt(i);
-    TextRange nativeRange = range;
-    if (nativeRange.mStartOffset > 0) {
-      nsAutoString preText(Substring(aString, 0, nativeRange.mStartOffset));
-      preText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                               NS_LITERAL_STRING("\n"));
-      range.mStartOffset = preText.Length();
-    }
-    if (nativeRange.Length() == 0) {
-      range.mEndOffset = range.mStartOffset;
-    } else {
-      nsAutoString clause(
-        Substring(aString, nativeRange.mStartOffset, nativeRange.Length()));
-      clause.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                              NS_LITERAL_STRING("\n"));
-      range.mEndOffset = range.mStartOffset + clause.Length();
-    }
     if (range.mRangeType == TextRangeType::eCaret) {
       mCaret = range;
     } else {
@@ -708,7 +693,68 @@ TextEventDispatcher::PendingComposition::Set(const nsAString& aString,
       mClauses->AppendElement(range);
     }
   }
+  ReplaceNativeLineBreakers();
   return NS_OK;
+}
+
+void
+TextEventDispatcher::PendingComposition::ReplaceNativeLineBreakers()
+{
+  mReplacedNativeLineBreakers = true;
+
+  // If the composition string is empty, we don't need to do anything.
+  if (mString.IsEmpty()) {
+    return;
+  }
+
+  nsAutoString nativeString(mString);
+  // Don't expose CRLF to web contents, instead, use LF.
+  mString.ReplaceSubstring(NS_LITERAL_STRING("\r\n"), NS_LITERAL_STRING("\n"));
+
+  // If the length isn't changed, we don't need to adjust any offset and length
+  // of mClauses nor mCaret.
+  if (nativeString.Length() == mString.Length()) {
+    return;
+  }
+
+  if (mClauses) {
+    for (TextRange& clause : *mClauses) {
+      AdjustRange(clause, nativeString);
+    }
+  }
+  if (mCaret.mRangeType == TextRangeType::eCaret) {
+    AdjustRange(mCaret, nativeString);
+  }
+}
+
+// static
+void
+TextEventDispatcher::PendingComposition::AdjustRange(
+                                           TextRange& aRange,
+                                           const nsAString& aNativeString)
+{
+  TextRange nativeRange = aRange;
+  // XXX Following code wastes runtime cost because this causes computing
+  //     mStartOffset for each clause from the start of composition string.
+  //     If we'd make TextRange have only its length, we don't need to do
+  //     this.  However, this must not be so serious problem because
+  //     composition string is usually short and separated as a few clauses.
+  if (nativeRange.mStartOffset > 0) {
+    nsAutoString preText(
+      Substring(aNativeString, 0, nativeRange.mStartOffset));
+    preText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                             NS_LITERAL_STRING("\n"));
+    aRange.mStartOffset = preText.Length();
+  }
+  if (nativeRange.Length() == 0) {
+    aRange.mEndOffset = aRange.mStartOffset;
+  } else {
+    nsAutoString clause(
+      Substring(aNativeString, nativeRange.mStartOffset, nativeRange.Length()));
+    clause.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                            NS_LITERAL_STRING("\n"));
+    aRange.mEndOffset = aRange.mStartOffset + clause.Length();
+  }
 }
 
 nsresult
@@ -739,6 +785,12 @@ TextEventDispatcher::PendingComposition::Flush(
     }
     EnsureClauseArray();
     mClauses->AppendElement(mCaret);
+  }
+
+  // If the composition string is set without Set(), we need to replace native
+  // line breakers in the composition string with XP line breaker.
+  if (!mReplacedNativeLineBreakers) {
+    ReplaceNativeLineBreakers();
   }
 
   RefPtr<TextEventDispatcher> kungFuDeathGrip(aDispatcher);

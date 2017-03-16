@@ -156,14 +156,6 @@ AllowedImageSize(int32_t aWidth, int32_t aHeight)
     NS_WARNING("width or height too large");
     return false;
   }
-#if defined(XP_MACOSX)
-  // CoreGraphics is limited to images < 32K in *height*, so clamp all surfaces
-  // on the Mac to that height
-  if (MOZ_UNLIKELY(aHeight > SHRT_MAX)) {
-    NS_WARNING("image too big");
-    return false;
-  }
-#endif
   return true;
 }
 

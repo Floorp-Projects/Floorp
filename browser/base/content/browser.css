@@ -572,7 +572,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   transition: none;
 }
 
-#DateTimePickerPanel {
+#DateTimePickerPanel[active="true"] {
   -moz-binding: url("chrome://global/content/bindings/datetimepopup.xml#datetime-popup");
 }
 

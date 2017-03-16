@@ -112,3 +112,6 @@ fails asserts-if(stylo,1) == 1107096-invisibles.html 1107096-invisibles.html # b
 fails asserts-if(stylo,1) == 1304353-text-global-alpha-1.html 1304353-text-global-alpha-1.html # bug 1324700
 fails asserts-if(stylo,1) == 1304353-text-global-alpha-2.html 1304353-text-global-alpha-2.html # bug 1324700
 fails asserts-if(stylo,1) == 1304353-text-global-composite-op-1.html 1304353-text-global-composite-op-1.html # bug 1324700
+
+skip-if(stylo) == text-indent-1a.html text-indent-1a.html # Bug 1347410
+== text-indent-1b.html text-indent-1b.html

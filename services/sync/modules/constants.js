@@ -10,7 +10,7 @@ for (let [key, val] of Object.entries({
 WEAVE_VERSION:                         "@weave_version@",
 
 // Sync Server API version that the client supports.
-SYNC_API_VERSION:                      "1.1",
+SYNC_API_VERSION:                      "1.5",
 
 // Version of the data format this client supports. The data format describes
 // how records are packaged; this is separate from the Server API version and

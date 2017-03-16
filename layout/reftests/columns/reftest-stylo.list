@@ -37,3 +37,5 @@ fails == column-balancing-nested-001.html column-balancing-nested-001.html
 == positioning-transforms-bug1112501.html positioning-transforms-bug1112501.html
 == fieldset-columns-001.html fieldset-columns-001.html
 == dynamic-change-with-overflow-1.html dynamic-change-with-overflow-1.html
+== dynamic-text-indent-1.html dynamic-text-indent-1.html
+== dynamic-text-indent-2.html dynamic-text-indent-2.html

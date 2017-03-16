@@ -65,6 +65,9 @@ talos:
     - talos-svgr
     - talos-tp5o
 
+awsy:
+    - awsy
+
 ##
 # Limited test sets for specific platforms
 
