@@ -20,24 +20,12 @@ TokenizerIgnoreNothing(char16_t /* aChar */)
 } // anonymous namespace
 
 /* static */ bool
-FileSystemUtils::IsDescendantPath(nsIFile* aFile,
-                                  nsIFile* aDescendantFile)
+FileSystemUtils::IsDescendantPath(const nsAString& aPath,
+                                  const nsAString& aDescendantPath)
 {
-  nsAutoString path;
-  nsresult rv = aFile->GetPath(path);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  nsAutoString descendantPath;
-  rv = aDescendantFile->GetPath(descendantPath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
   // Check the sub-directory path to see if it has the parent path as prefix.
-  if (descendantPath.Length() <= path.Length() ||
-      !StringBeginsWith(descendantPath, path)) {
+  if (!aDescendantPath.Equals(aPath) &&
+      !StringBeginsWith(aDescendantPath, aPath)) {
     return false;
   }
 

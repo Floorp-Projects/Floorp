@@ -3847,7 +3847,8 @@ static PRInt32 _pr_poll_with_poll(
                     /* now locate the NSPR layer at the bottom of the stack */
                     PRFileDesc *bottom = PR_GetIdentitiesLayer(
                         pds[index].fd, PR_NSPR_IO_LAYER);
-                    PR_ASSERT(NULL != bottom);  /* what to do about that? */
+                    /* ignore a socket without PR_NSPR_IO_LAYER available */
+
                     pds[index].out_flags = 0;  /* pre-condition */
                     if ((NULL != bottom)
                     && (_PR_FILEDESC_OPEN == bottom->secret->state))
@@ -4105,7 +4106,8 @@ static PRInt32 _pr_poll_with_select(
                     /* now locate the NSPR layer at the bottom of the stack */
                     PRFileDesc *bottom = PR_GetIdentitiesLayer(
                         pds[index].fd, PR_NSPR_IO_LAYER);
-                    PR_ASSERT(NULL != bottom);  /* what to do about that? */
+                    /* ignore a socket without PR_NSPR_IO_LAYER available */
+
                     pds[index].out_flags = 0;  /* pre-condition */
                     if ((NULL != bottom)
                     && (_PR_FILEDESC_OPEN == bottom->secret->state))
