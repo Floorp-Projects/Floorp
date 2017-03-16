@@ -61,12 +61,17 @@ interface nsIXULBrowserWindow : nsISupports
    *        The URI being loaded.
    * @param aReferrer
    *        The referrer of the load.
+   * @param aHasPostData
+   *        True if the load which is being asked about has associated post data
+   *        which would be discarded if the load was redirected across process
+   *        boundaries.
    * @param aTriggeringPrincipal
    *        The principal that initiated the load of aURI.
    */
   bool shouldLoadURI(in nsIDocShell    aDocShell,
                      in nsIURI         aURI,
                      in nsIURI         aReferrer,
+                     in boolean        aHasPostData,
                      in nsIPrincipal   aTriggeringPrincipal);
   /**
    * Show/hide a tooltip (when the user mouses over a link, say).
