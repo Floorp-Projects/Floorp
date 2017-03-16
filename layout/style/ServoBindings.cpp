@@ -459,8 +459,8 @@ Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
                               nsIAtom* aPseudoTagOrNull)
 {
   if (aPseudoTagOrNull &&
-      aPseudoTagOrNull != nsGkAtoms::cssPseudoElementBeforeProperty &&
-      aPseudoTagOrNull != nsGkAtoms::cssPseudoElementAfterProperty) {
+      aPseudoTagOrNull != nsCSSPseudoElements::before &&
+      aPseudoTagOrNull != nsCSSPseudoElements::after) {
     return false;
   }
 
