@@ -109,7 +109,7 @@ TEST(cubeb, enumerate_devices)
   cubeb * ctx = NULL;
   cubeb_device_collection * collection = NULL;
 
-  r = cubeb_init(&ctx, "Cubeb audio test");
+  r = cubeb_init(&ctx, "Cubeb audio test", NULL);
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb library\n");
     ASSERT_EQ(r, CUBEB_OK);

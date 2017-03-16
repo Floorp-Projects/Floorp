@@ -7,6 +7,7 @@
 UNIFIED_SOURCES += [
 #  'test_duplex.cpp', # DISABLED: See bug 1314514.
 #  'test_record.cpp', # DISABLED: See bug 1314514.
+#  'test_overload_callback.cpp', # DISABLED: Times out in automation.
   'test_tone.cpp',
   'test_utils.cpp'
 ]

@@ -29,6 +29,14 @@ mozalloc_handle_oom(size_t size)
     // NB: this is handle_oom() stage 1, which simply aborts on OOM.
     // we might proceed to a stage 2 in which an attempt is made to
     // reclaim memory
+    // Warning: when stage 2 is done by, for example, notifying
+    // "memory-pressure" synchronously, please audit all
+    // nsExpirationTrackers and ensure that the actions they take
+    // on memory-pressure notifications (via NotifyExpired) are safe.
+    // Note that nsIDocument::SelectorCache::NotifyExpired is _known_
+    // to not be safe: it will delete the selector it's caching,
+    // which might be in use at the time under querySelector or
+    // querySelectorAll.
 
     if (gAbortHandler)
         gAbortHandler(size);

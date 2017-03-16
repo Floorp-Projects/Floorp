@@ -1575,6 +1575,24 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
       rv = StartLoad(request);
       if (NS_FAILED(rv)) {
+        const char* message = "ScriptSourceLoadFailed";
+
+        if (rv == NS_ERROR_MALFORMED_URI) {
+            message = "ScriptSourceMalformed";
+        }
+        else if (rv == NS_ERROR_DOM_BAD_URI) {
+            message = "ScriptSourceNotAllowed";
+        }
+
+        NS_ConvertUTF8toUTF16 url(scriptURI->GetSpecOrDefault());
+        const char16_t* params[] = { url.get() };
+
+        nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+            NS_LITERAL_CSTRING("Script Loader"), mDocument,
+            nsContentUtils::eDOM_PROPERTIES, message,
+            params, ArrayLength(params), nullptr,
+            EmptyString(), aElement->GetScriptLineNumber());
+
         // Asynchronously report the load failure
         NS_DispatchToCurrentThread(
           NewRunnableMethod(aElement,
@@ -2548,11 +2566,31 @@ nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     }
   }
 
-  if (NS_SUCCEEDED(rv)) {
+  bool sriOk = NS_SUCCEEDED(rv);
+
+  if (sriOk) {
     rv = PrepareLoadedRequest(aRequest, aLoader, aChannelStatus);
   }
 
   if (NS_FAILED(rv)) {
+    if (sriOk && aRequest->mElement) {
+      
+      uint32_t lineNo = aRequest->mElement->GetScriptLineNumber();
+
+      nsAutoString url;
+      if (aRequest->mURI) {
+        AppendUTF8toUTF16(aRequest->mURI->GetSpecOrDefault(), url);
+      }
+
+      const char16_t* params[] = { url.get() };
+
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+        NS_LITERAL_CSTRING("Script Loader"), mDocument,
+        nsContentUtils::eDOM_PROPERTIES, "ScriptSourceLoadFailed",
+        params, ArrayLength(params), nullptr,
+        EmptyString(), lineNo);
+    }
+
     /*
      * Handle script not loading error because source was a tracking URL.
      * We make a note of this script node by including it in a dedicated

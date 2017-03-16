@@ -84,9 +84,9 @@ interface nsIRequestContextService : nsISupports
   nsIRequestContext getRequestContext(in nsIDRef id);
 
   /**
-   * Create a new request context identifier
+   * Create a new request context
    */
-  nsID newRequestContextID();
+  nsIRequestContext newRequestContext();
 
   /**
    * Remove an existing request context from its ID

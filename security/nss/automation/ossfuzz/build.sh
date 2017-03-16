@@ -10,7 +10,7 @@
 declare -A disabled=([pkcs8]=1)
 
 # List of targets we want to fuzz in TLS and non-TLS mode.
-declare -A tls_targets=([tls-client]=1)
+declare -A tls_targets=([tls-client]=1 [tls-server]=1)
 
 # Helper function that copies a fuzzer binary and its seed corpus.
 copy_fuzzer()
