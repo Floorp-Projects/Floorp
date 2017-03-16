@@ -32,9 +32,8 @@ function check_record_version(user, id) {
 
     _("Payload is " + JSON.stringify(cleartext));
     equal(Services.appinfo.version, cleartext.version);
-    equal(2, cleartext.protocols.length);
-    equal("1.1", cleartext.protocols[0]);
-    equal("1.5", cleartext.protocols[1]);
+    equal(1, cleartext.protocols.length);
+    equal("1.5", cleartext.protocols[0]);
 }
 
 // compare 2 different command arrays, taking into account that a flowID
@@ -980,7 +979,7 @@ add_task(async function test_receive_display_uri() {
 add_task(async function test_optional_client_fields() {
   _("Ensure that we produce records with the fields added in Bug 1097222.");
 
-  const SUPPORTED_PROTOCOL_VERSIONS = ["1.1", "1.5"];
+  const SUPPORTED_PROTOCOL_VERSIONS = ["1.5"];
   let local = engine._store.createRecord(engine.localID, "clients");
   equal(local.name, engine.localName);
   equal(local.type, engine.localType);
