@@ -31,8 +31,7 @@ public:
                 const nsString& aModulePath,
                 const nsString& aDebugName,
                 const nsString& aDebugPath,
-                const std::string& aVersion,
-                const char* aArch)
+                const std::string& aVersion)
     : mStart(aStart)
     , mEnd(aEnd)
     , mOffset(aOffset)
@@ -42,7 +41,6 @@ public:
     , mDebugName(aDebugName)
     , mDebugPath(aDebugPath)
     , mVersion(aVersion)
-    , mArch(aArch)
   {}
 
   SharedLibrary(const SharedLibrary& aEntry)
@@ -55,7 +53,6 @@ public:
     , mDebugName(aEntry.mDebugName)
     , mDebugPath(aEntry.mDebugPath)
     , mVersion(aEntry.mVersion)
-    , mArch(aEntry.mArch)
   {}
 
   SharedLibrary& operator=(const SharedLibrary& aEntry)
@@ -72,7 +69,6 @@ public:
     mDebugName = aEntry.mDebugName;
     mDebugPath = aEntry.mDebugPath;
     mVersion = aEntry.mVersion;
-    mArch = aEntry.mArch;
     return *this;
   }
 
@@ -86,8 +82,7 @@ public:
            (mDebugName == other.mDebugName) &&
            (mDebugPath == other.mDebugPath) &&
            (mBreakpadId == other.mBreakpadId) &&
-           (mVersion == other.mVersion) &&
-           (mArch == other.mArch);
+           (mVersion == other.mVersion);
   }
 
   uintptr_t GetStart() const { return mStart; }
@@ -106,7 +101,6 @@ public:
   const nsString &GetDebugName() const { return mDebugName; }
   const nsString &GetDebugPath() const { return mDebugPath; }
   const std::string &GetVersion() const { return mVersion; }
-  const std::string &GetArch() const { return mArch; }
 
 private:
   SharedLibrary() {}
@@ -120,7 +114,6 @@ private:
   nsString mDebugName;
   nsString mDebugPath;
   std::string mVersion;
-  std::string mArch;
 };
 
 static bool
