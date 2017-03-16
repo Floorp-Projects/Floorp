@@ -19,6 +19,7 @@ import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewDatabase;
 
+import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.webkit.NestedWebView;
 import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
@@ -80,6 +81,10 @@ public class WebViewProvider {
 
             setWebViewClient(client);
             setWebChromeClient(createWebChromeClient());
+
+            if (BuildConfig.DEBUG) {
+                setWebContentsDebuggingEnabled(true);
+            }
         }
 
         @Override
