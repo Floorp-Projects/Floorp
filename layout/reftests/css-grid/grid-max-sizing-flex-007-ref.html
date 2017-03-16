@@ -107,4 +107,28 @@
   <div class="item"></div>
 </div>
 
+<pre>The first 6 grids should look the same:</pre>
+<div class="grid rows" style="grid: 1fr / 30px; height:83px">
+  <div class="item"></div>
+</div>
+<div class="grid rows" style="grid: 10px 1fr / 30px; height:83px">
+  <div class="item" style="grid-row:span 2"></div>
+</div>
+<div class="grid rows" style="grid: 1fr / 30px; height:83px">
+  <div class="item"></div>
+</div>
+<div class="grid rows" style="grid: 1fr 1fr / 30px; height:83px">
+  <div class="item" style="grid-row:span 2"><div style="height:90px"></div></div>
+</div>
+<div class="grid rows" style="grid: 1fr auto / 30px; height:83px">
+  <div class="item" style="grid-row:span 2"><div style="height:90px"></div></div>
+</div>
+<div class="grid rows" style="grid: 10px 1fr / 30px; height:83px">
+  <div class="item" style="grid-row:span 2"><div style="height:90px"></div></div>
+</div>
+<div class="grid rows" style="grid: 1fr 1fr / 30px; grid-row-gap:10px; height:83px">
+  <div class="item" style="grid-row:span 2"><div style="height:40px"></div></div>
+  <div class="item"><div style="height:40px"></div></div>
+</div>
+
 </body></html>
