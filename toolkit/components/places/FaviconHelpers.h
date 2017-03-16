@@ -104,12 +104,14 @@ struct PageData
 {
   PageData()
   : id(0)
+  , placeId(0)
   , canAddToHistory(true)
   {
     guid.SetIsVoid(true);
   }
 
-  int64_t id;
+  int64_t id; // This is the moz_pages_w_icons id.
+  int64_t placeId; // This is the moz_places page id.
   nsCString spec;
   nsCString bookmarkedSpec;
   nsString revHost;
