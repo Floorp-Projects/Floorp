@@ -27,12 +27,12 @@ function childLoad2() {
 
   // When we initially load the page, we should be at the top.
   is(cw.pageYOffset, 0, 'Initial Y offset should be 0.');
-  
+
   // Scroll the iframe to the bottom.
   cw.scrollTo(0, 300);
 
   // Did we actually scroll somewhere?
-  isnot(cw.pageYOffset, 0, 'Y offset should be non-zero after scrolling.');
+  isnot(Math.round(cw.pageYOffset), 0, 'Y offset should be non-zero after scrolling.');
 
   // Now load file_bug662170.html#, which should take us to the top of the
   // page.
