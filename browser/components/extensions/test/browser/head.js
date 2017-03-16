@@ -16,7 +16,7 @@
  *          getListStyleImage getPanelForNode
  *          awaitExtensionPanel awaitPopupResize
  *          promiseContentDimensions alterContent
- *          promisePrefChangeObserved
+ *          promisePrefChangeObserved openContextMenuInFrame
  */
 
 const {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm", {});
@@ -230,6 +230,16 @@ function closeBrowserAction(extension, win = window) {
   CustomizableUI.hidePanelForNode(node);
 
   return Promise.resolve();
+}
+
+async function openContextMenuInFrame(frameId) {
+  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let frame = doc.getElementById(frameId);
+  EventUtils.synthesizeMouseAtCenter(frame.contentDocument.body, {type: "contextmenu"}, frame.contentWindow);
+  await popupShownPromise;
+  return contentAreaContextMenu;
 }
 
 async function openContextMenu(selector = "#img1") {
