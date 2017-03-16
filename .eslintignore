@@ -1,6 +1,10 @@
 # Always ignore node_modules.
 **/node_modules/**/*.*
 
+# Include these to speed up ESLint, see bug 1347906.
+.hg
+.git
+
 # Exclude expected objdirs.
 obj*/**
 
