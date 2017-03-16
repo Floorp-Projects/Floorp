@@ -135,7 +135,6 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
   for (unsigned int i = 0; i < modulesNum; i++) {
     nsID pdbSig;
     uint32_t pdbAge;
-    nsAutoString pdbPathStr;
     nsAutoString pdbNameStr;
     char *pdbName = NULL;
     std::string breakpadId;
@@ -176,16 +175,14 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
       std::transform(breakpadId.begin(), breakpadId.end(),
         breakpadId.begin(), toupper);
 
-      pdbPathStr = NS_ConvertUTF8toUTF16(pdbName);
-      pdbNameStr = pdbPathStr;
+      pdbNameStr = NS_ConvertUTF8toUTF16(pdbName);
       int32_t pos = pdbNameStr.RFindChar('\\');
       if (pos != kNotFound) {
         pdbNameStr.Cut(0, pos + 1);
       }
     }
 
-    nsAutoString modulePathStr(modulePath);
-    nsAutoString moduleNameStr = modulePathStr;
+    nsAutoString moduleNameStr(modulePath);
     int32_t pos = moduleNameStr.RFindChar('\\');
     if (pos != kNotFound) {
       moduleNameStr.Cut(0, pos + 1);
@@ -196,9 +193,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
       0, // DLLs are always mapped at offset 0 on Windows
       breakpadId,
       moduleNameStr,
-      modulePathStr,
       pdbNameStr,
-      pdbPathStr,
       GetVersion(modulePath));
     sharedLibraryInfo.AddSharedLibrary(shlib);
 
