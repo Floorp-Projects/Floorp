@@ -7945,17 +7945,10 @@ js::gc::detail::CellIsNotGray(const Cell* cell)
     if (!rt->gc.isIncrementalGCInProgress() || tc->zone()->wasGCStarted())
         return false;
 
-    // Bug 1346874 - The stack check is expensive. Android tests are already
-    // slow enough that this check can easily push them over the threshold to a
-    // timeout. So always assume the best on Android.
-# ifdef ANDROID
-    return true;
-# else
     Zone* sourceZone = rt->gc.marker.stackContainsCrossZonePointerTo(tc);
     if (sourceZone && sourceZone->wasGCStarted())
         return true;
 
     return false;
-# endif
 }
 #endif
