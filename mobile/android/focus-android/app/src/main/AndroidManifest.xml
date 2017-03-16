@@ -43,7 +43,7 @@
 
         <activity android:name=".activity.SettingsActivity"
             android:theme="@style/SettingsTheme"
-            android:label="Settings"/>
+            android:label="@string/menu_settings" />
 
         <activity android:name=".activity.HelpActivity" />
 
