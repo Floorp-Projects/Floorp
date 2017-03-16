@@ -14,6 +14,8 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 
 initTestLogging("Trace");
 Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
+// sqlite logging generates lots of noise and typically isn't helpful here.
+Log.repository.getLogger("Sqlite").level = Log.Level.Error;
 
 // stub telemetry so we can easily check the right things are recorded.
 var recordedEvents = [];
@@ -78,10 +80,47 @@ async function cleanup(server) {
   await promiseStopServer(server);
   await PlacesSyncUtils.bookmarks.wipe();
   Svc.Prefs.reset("engine.bookmarks.validation.enabled");
+  // clear keys so when each test finds a different server it accepts its keys.
+  Service.collectionKeys.clear();
 }
+
+add_task(async function test_responder_error() {
+  let server = await setup();
+
+  // sync so the collection is created.
+  Service.sync();
+
+  let request = {
+    request: "upload",
+    ids: [Utils.makeGUID()],
+    flowID: Utils.makeGUID(),
+  }
+  let responder = new BookmarkRepairResponder();
+  // mock the responder to simulate an error.
+  responder._fetchItemsToUpload = async function() {
+    throw new Error("oh no!");
+  }
+  await responder.repair(request, null);
+
+  checkRecordedEvents([
+    { object: "repairResponse",
+      method: "failed",
+      value: undefined,
+      extra: { flowID: request.flowID,
+               numIDs: "0",
+               failureReason: '{"name":"unexpectederror","error":"Error: oh no!"}',
+      }
+    },
+  ]);
+
+  await cleanup(server);
+});
 
 add_task(async function test_responder_no_items() {
   let server = await setup();
+
+  // sync so the collection is created.
+  Service.sync();
 
   let request = {
     request: "upload",
@@ -279,6 +318,8 @@ add_task(async function test_responder_missing_items() {
 add_task(async function test_non_syncable() {
   let server = await setup();
 
+  Service.sync(); // to create the collections on the server.
+
   // Creates the left pane queries as a side effect.
   let leftPaneId = PlacesUIUtils.leftPaneFolderId;
   _(`Left pane root ID: ${leftPaneId}`);
@@ -289,11 +330,19 @@ add_task(async function test_non_syncable() {
   let allBookmarksId = PlacesUIUtils.leftPaneQueries.AllBookmarks;
   let allBookmarksGuid = await PlacesUtils.promiseItemGuid(allBookmarksId);
 
-  // Explicitly request the unfiled query; we should also upload tombstones
-  // for the menu and toolbar queries.
   let unfiledQueryId = PlacesUIUtils.leftPaneQueries.UnfiledBookmarks;
   let unfiledQueryGuid = await PlacesUtils.promiseItemGuid(unfiledQueryId);
 
+  // Put the "Bookmarks Menu" on the server to simulate old bugs.
+  let bookmarksMenuQueryId = PlacesUIUtils.leftPaneQueries.BookmarksMenu;
+  let bookmarksMenuQueryGuid = await PlacesUtils.promiseItemGuid(bookmarksMenuQueryId);
+  let collection = getServerBookmarks(server);
+  collection.insert(bookmarksMenuQueryGuid, "doesn't matter");
+
+  // Explicitly request the unfiled and allBookmarksGuid queries; these will
+  // get tombstones. Because the BookmarksMenu is already on the server it
+  // should be removed even though it wasn't requested. We should ignore the
+  // toolbar query as it wasn't explicitly requested and isn't on the server.
   let request = {
     request: "upload",
     ids: [allBookmarksGuid, unfiledQueryGuid],
@@ -306,8 +355,8 @@ add_task(async function test_non_syncable() {
     { object: "repairResponse",
       method: "uploading",
       value: undefined,
-      // Tombstones for the folder and its 3 children.
-      extra: {flowID: request.flowID, numIDs: "4"},
+      // Tombstones for the 2 items we requested and for bookmarksMenu
+      extra: {flowID: request.flowID, numIDs: "3"},
     },
   ]);
 
@@ -323,27 +372,34 @@ add_task(async function test_non_syncable() {
     unfiledQueryGuid,
   ];
 
-  let collection = getServerBookmarks(server);
   deepEqual(collection.keys().sort(), [
     // We always upload roots on the first sync.
     "menu",
     "mobile",
     "toolbar",
     "unfiled",
-    ...queryGuids,
+    ...request.ids,
+    bookmarksMenuQueryGuid,
   ].sort(), "Should upload roots and queries on first sync");
 
   for (let guid of queryGuids) {
     let wbo = collection.wbo(guid);
-    let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
-    ok(payload.deleted, `Should upload tombstone for left pane query ${guid}`);
+    if (request.ids.indexOf(guid) >= 0 || guid == bookmarksMenuQueryGuid) {
+      // explicitly requested or already on the server, so should have a tombstone.
+      let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
+      ok(payload.deleted, `Should upload tombstone for left pane query ${guid}`);
+    } else {
+      // not explicitly requested and not on the server at the start, so should
+      // not be on the server now.
+      ok(!wbo, `Should not upload anything for left pane query ${guid}`);
+    }
   }
 
   checkRecordedEvents([
     { object: "repairResponse",
       method: "finished",
       value: undefined,
-      extra: {flowID: request.flowID, numIDs: "4"},
+      extra: {flowID: request.flowID, numIDs: "3"},
     },
   ]);
 
