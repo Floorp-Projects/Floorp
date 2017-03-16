@@ -1,3 +1,4 @@
+/* eslint-env mozilla/frame-script */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
@@ -17,27 +18,34 @@ add_task(function* check_history_not_persisted() {
   yield TabStateFlusher.flush(browser);
   let state = JSON.parse(ss.getTabState(tab));
   ok(!state.entries[0].persist, "Should have collected the persistence state");
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
   browser = null;
 
   // Open a new tab to restore into.
   tab = gBrowser.addTab("about:blank");
   browser = tab.linkedBrowser;
   yield promiseTabState(tab, state);
-  let sessionHistory = browser.sessionHistory;
 
-  is(sessionHistory.count, 1, "Should be a single history entry");
-  is(sessionHistory.getEntryAtIndex(0, false).URI.spec, "about:blank", "Should be the right URL");
+  yield ContentTask.spawn(browser, null, function() {
+    let sessionHistory = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsISHistory);
+
+    is(sessionHistory.count, 1, "Should be a single history entry");
+    is(sessionHistory.getEntryAtIndex(0, false).URI.spec, "about:blank", "Should be the right URL");
+  });
 
   // Load a new URL into the tab, it should replace the about:blank history entry
   browser.loadURI("about:robots");
   yield promiseBrowserLoaded(browser);
-  sessionHistory = browser.sessionHistory;
-  is(sessionHistory.count, 1, "Should be a single history entry");
-  is(sessionHistory.getEntryAtIndex(0, false).URI.spec, "about:robots", "Should be the right URL");
+  yield ContentTask.spawn(browser, null, function() {
+    let sessionHistory = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsISHistory);
+    is(sessionHistory.count, 1, "Should be a single history entry");
+    is(sessionHistory.getEntryAtIndex(0, false).URI.spec, "about:robots", "Should be the right URL");
+  });
 
   // Cleanup.
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
 });
 
 /**
@@ -54,26 +62,32 @@ add_task(function* check_history_default_persisted() {
   yield TabStateFlusher.flush(browser);
   let state = JSON.parse(ss.getTabState(tab));
   delete state.entries[0].persist;
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
   browser = null;
 
   // Open a new tab to restore into.
   tab = gBrowser.addTab("about:blank");
   browser = tab.linkedBrowser;
   yield promiseTabState(tab, state);
-  let sessionHistory = browser.sessionHistory;
+  yield ContentTask.spawn(browser, null, function() {
+    let sessionHistory = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsISHistory);
 
-  is(sessionHistory.count, 1, "Should be a single history entry");
-  is(sessionHistory.getEntryAtIndex(0, false).URI.spec, "about:blank", "Should be the right URL");
+    is(sessionHistory.count, 1, "Should be a single history entry");
+    is(sessionHistory.getEntryAtIndex(0, false).URI.spec, "about:blank", "Should be the right URL");
+  });
 
   // Load a new URL into the tab, it should replace the about:blank history entry
   browser.loadURI("about:robots");
   yield promiseBrowserLoaded(browser);
-  sessionHistory = browser.sessionHistory;
-  is(sessionHistory.count, 2, "Should be two history entries");
-  is(sessionHistory.getEntryAtIndex(0, false).URI.spec, "about:blank", "Should be the right URL");
-  is(sessionHistory.getEntryAtIndex(1, false).URI.spec, "about:robots", "Should be the right URL");
+  yield ContentTask.spawn(browser, null, function() {
+    let sessionHistory = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsISHistory);
+    is(sessionHistory.count, 2, "Should be two history entries");
+    is(sessionHistory.getEntryAtIndex(0, false).URI.spec, "about:blank", "Should be the right URL");
+    is(sessionHistory.getEntryAtIndex(1, false).URI.spec, "about:robots", "Should be the right URL");
+  });
 
   // Cleanup.
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
 });
