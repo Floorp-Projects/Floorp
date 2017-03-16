@@ -63,7 +63,6 @@ Any line which doesn't follow the format above would be ignored like comment.
   * @import
     * test_bug221428.html [1]
   * @media
-    * test_condition_text_assignment.html [1]
     * test_css_eof_handling.html [1]
     * test_group_insertRule.html [16]
     * test_rules_out_of_sheets.html [1]
@@ -448,7 +447,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_units_length.html [5]
   * test_units_time.html [1]
 * insertRule / deleteRule don't work bug 1336863
-  * test_rule_insertion.html [8]
+  * test_rule_insertion.html [7]
 * @-moz-document support
   * test_rule_serialization.html [2]
   * test_moz_document_rules.html [13]
@@ -458,6 +457,7 @@ Any line which doesn't follow the format above would be ignored like comment.
 * test_css_supports.html: issues around @supports syntax servo/servo#15482 [8]
 * test_author_specified_style.html: support serializing color as author specified [33]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
+* test_selectors.html `this_better_be_unvisited`: visited handling [2]
 
 ## Assertions
 
