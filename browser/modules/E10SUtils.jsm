@@ -151,15 +151,17 @@ this.E10SUtils = {
     return remoteType == this.getRemoteTypeForURI(aURI.spec, true, remoteType);
   },
 
-  shouldLoadURI(aDocShell, aURI, aReferrer) {
+  shouldLoadURI(aDocShell, aURI, aReferrer, aHasPostData) {
     // Inner frames should always load in the current process
     if (aDocShell.QueryInterface(Ci.nsIDocShellTreeItem).sameTypeParent)
       return true;
 
     // If we are in a Large-Allocation process, and it wouldn't be content visible
     // to change processes, we want to load into a new process so that we can throw
-    // this one out.
-    if (aDocShell.inLargeAllocProcess &&
+    // this one out. We don't want to move into a new process if we have post data,
+    // because we would accidentally throw out that data.
+    if (!aHasPostData &&
+        aDocShell.inLargeAllocProcess &&
         !aDocShell.awaitingLargeAlloc &&
         aDocShell.isOnlyToplevelInTabGroup) {
       return false;
