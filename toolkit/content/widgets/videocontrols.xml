@@ -1499,8 +1499,6 @@
           return;
         }
 
-        this.closedCaptionButton.removeAttribute("hidden");
-
         if (this.isClosedCaptionOn()) {
           this.closedCaptionButton.setAttribute("enabled", "true");
         } else {
@@ -1710,15 +1708,9 @@
           this.volumeStack
         ];
 
-        if (this.controlBar.hasAttribute("fullscreen-unavailable")) {
-          this.fullscreenButton.isWanted = false;
-        }
-        if (!this.isClosedCaptionAvailable) {
-          this.closedCaptionButton.isWanted = false;
-        }
-        if (this.muteButton.hasAttribute("noAudio")) {
-          this.volumeStack.isWanted = false;
-        }
+        this.fullscreenButton.isWanted = !this.controlBar.hasAttribute("fullscreen-unavailable");
+        this.closedCaptionButton.isWanted = this.isClosedCaptionAvailable;
+        this.volumeStack.isWanted = !this.muteButton.hasAttribute("noAudio");
 
         let widthUsed = minControlBarPaddingWidth;
         let preventAppendControl = false;
