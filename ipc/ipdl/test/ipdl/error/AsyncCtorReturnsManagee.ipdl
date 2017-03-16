@@ -1,0 +1,8 @@
+include protocol AsyncCtorReturns;
+
+protocol AsyncCtorReturnsManagee {
+  manager AsyncCtorReturns;
+
+parent:
+  async __delete__();
+};
