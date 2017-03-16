@@ -94,16 +94,16 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         self.log(logging.ERROR, 'openssl', {}, "OpenSSL not found!")
         return None
 
-    def vendor(self, ignore_modified=False,
-               build_peers_said_large_imports_were_ok=False):
-        self.populate_logger()
-        self.log_manager.enable_unstructured()
-        if not ignore_modified:
-            self.check_modified_files()
+    def _ensure_cargo(self):
+        '''
+        Ensures all the necessary cargo bits are installed.
+
+        Returns the path to cargo if successful, None otherwise.
+        '''
         cargo = self.get_cargo_path()
         if not self.check_cargo_version(cargo):
             self.log(logging.ERROR, 'cargo_version', {}, 'Cargo >= 0.13 required (install Rust 1.12 or newer)')
-            return
+            return None
         else:
             self.log(logging.DEBUG, 'cargo_version', {}, 'cargo is new enough')
         have_vendor = any(l.strip() == 'vendor' for l in subprocess.check_output([cargo, '--list']).splitlines())
@@ -118,7 +118,21 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             self.run_process(args=[cargo, 'install', '--force', 'cargo-vendor'],
                              append_env=env)
         else:
-            self.log(logging.DEBUG, 'cargo_vendor', {}, 'sufficiently new cargo-vendor is already intalled')
+            self.log(logging.DEBUG, 'cargo_vendor', {}, 'sufficiently new cargo-vendor is already installed')
+
+        return cargo
+
+    def vendor(self, ignore_modified=False,
+               build_peers_said_large_imports_were_ok=False):
+        self.populate_logger()
+        self.log_manager.enable_unstructured()
+        if not ignore_modified:
+            self.check_modified_files()
+
+        cargo = self._ensure_cargo()
+        if not cargo:
+            return
+
         relative_vendor_dir = 'third_party/rust'
         vendor_dir = mozpath.join(self.topsrcdir, relative_vendor_dir)
         self.log(logging.INFO, 'rm_vendor_dir', {}, 'rm -rf %s' % vendor_dir)
