@@ -170,6 +170,9 @@ public:
     kBackgroundGroupID =  0x7,
     kSpeculativeGroupID = 0x9,
     kFollowerGroupID =    0xB
+    // Hey, you! YES YOU! If you add/remove any groups here, you almost
+    // certainly need to change the lookup of the stream/ID hash in
+    // Http2Session::OnTransportStatus. Yeah, that's right. YOU!
   };
 
   static nsresult RecvHeaders(Http2Session *);
