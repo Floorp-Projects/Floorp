@@ -1288,8 +1288,7 @@ var Scratchpad = {
     // Unicode strings.
 
     if (branch.prefHasUserValue("recentFilePaths")) {
-      let data = branch.getComplexValue("recentFilePaths",
-        Ci.nsISupportsString).data;
+      let data = branch.getStringPref("recentFilePaths");
       filePaths = JSON.parse(data);
     }
 
@@ -1336,16 +1335,8 @@ var Scratchpad = {
 
     filePaths.push(aFile.path);
 
-    // WARNING: Do not use setCharPref here, it doesn't play nicely with
-    // Unicode strings.
-
-    let str = Cc["@mozilla.org/supports-string;1"]
-      .createInstance(Ci.nsISupportsString);
-    str.data = JSON.stringify(filePaths);
-
-    let branch = Services.prefs.getBranch("devtools.scratchpad.");
-    branch.setComplexValue("recentFilePaths",
-      Ci.nsISupportsString, str);
+    Services.prefs.getBranch("devtools.scratchpad.")
+            .setStringPref("recentFilePaths", JSON.stringify(filePaths));
   },
 
   /**
@@ -1412,16 +1403,8 @@ var Scratchpad = {
     let filePaths = this.getRecentFiles();
     filePaths.splice(aIndex, aLength);
 
-    // WARNING: Do not use setCharPref here, it doesn't play nicely with
-    // Unicode strings.
-
-    let str = Cc["@mozilla.org/supports-string;1"]
-      .createInstance(Ci.nsISupportsString);
-    str.data = JSON.stringify(filePaths);
-
-    let branch = Services.prefs.getBranch("devtools.scratchpad.");
-    branch.setComplexValue("recentFilePaths",
-      Ci.nsISupportsString, str);
+    Services.prefs.getBranch("devtools.scratchpad.")
+            .setStringPref("recentFilePaths", JSON.stringify(filePaths));
   },
 
   /**

@@ -146,10 +146,7 @@ function CreatePocketWidget(reason) {
     if (provider) {
       let pref = "social.backup.getpocket-com";
       if (!Services.prefs.prefHasUserValue(pref)) {
-        let str = Cc["@mozilla.org/supports-string;1"].
-                  createInstance(Ci.nsISupportsString);
-        str.data = JSON.stringify(provider.manifest);
-        Services.prefs.setComplexValue(pref, Ci.nsISupportsString, str);
+        Services.prefs.setStringPref(pref, JSON.stringify(provider.manifest));
         SocialService.uninstallProvider(origin, () => {});
       }
     }
