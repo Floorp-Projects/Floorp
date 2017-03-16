@@ -20,6 +20,8 @@
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/UseCounter.h"
 #include "mozilla/EnumTypeTraits.h"
+#include "mozilla/Preferences.h"
+#include "nsXULAppAPI.h"
 
 // Length of the "--" prefix on custom names (such as custom property names,
 // and, in the future, custom media query names).
@@ -631,6 +633,12 @@ public:
   static bool IsEnabled(nsCSSPropertyID aProperty) {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_with_aliases,
                "out of range");
+    // We don't have useful pref init phases in the parent process.  But in the
+    // child process, assert that we're not trying to parse stylesheets before
+    // we've gotten all our prefs.
+    MOZ_ASSERT(XRE_IsParentProcess() ||
+               mozilla::Preferences::InitPhase() == END_ALL_PREFS,
+               "Checking style preferences before they have been set");
     return gPropertyEnabled[aProperty];
   }
 
