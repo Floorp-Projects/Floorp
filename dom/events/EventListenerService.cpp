@@ -360,14 +360,24 @@ EventListenerService::NotifyAboutMainThreadListenerChangeInternal(dom::EventTarg
                                                                   nsIAtom* aName)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aTarget);
   if (mChangeListeners.IsEmpty()) {
     return;
   }
 
   if (!mPendingListenerChanges) {
     mPendingListenerChanges = nsArrayBase::Create();
-    NS_DispatchToCurrentThread(NewRunnableMethod(this,
-                                                 &EventListenerService::NotifyPendingChanges));
+    nsCOMPtr<nsIRunnable> runnable =
+      NewRunnableMethod("EventListenerService::NotifyPendingChanges",
+                        this, &EventListenerService::NotifyPendingChanges);
+    if (nsCOMPtr<nsIGlobalObject> global = aTarget->GetOwnerGlobal()) {
+      global->Dispatch(nullptr, TaskCategory::Other, runnable.forget());
+    } else if (nsCOMPtr<nsINode> node = do_QueryInterface(aTarget)) {
+      node->OwnerDoc()->Dispatch(nullptr, TaskCategory::Other,
+                                 runnable.forget());
+    } else {
+      NS_DispatchToCurrentThread(runnable);
+    }
   }
 
   RefPtr<EventListenerChange> changes = mPendingListenerChangesSet.Get(aTarget);
