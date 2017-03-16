@@ -7,6 +7,11 @@
 // This is the list of well-known PSM DataStorage classes that Gecko uses.
 // These are key value data stores that are backed by a simple text-based
 // storage in the profile directory.
+//
+// Please note that it is crucial for performance reasons for the number of
+// these classes to remain low.  If you need to add to this list, you may
+// need to update the algorithm in DataStorage::SetCachedStorageEntries()
+// to something faster.
 
 DATA_STORAGE(AlternateServices)
 DATA_STORAGE(SecurityPreloadState)
