@@ -5104,7 +5104,7 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
   nscoord iSize, minISize, maxISize, bSize, minBSize, maxBSize;
   enum class Stretch {
     // stretch to fill the CB (preserving intrinsic ratio) in the relevant axis
-    eStretchPreservingRatio,
+    eStretchPreservingRatio, // XXX not used yet
     // stretch to fill the CB in the relevant axis
     eStretch,
     // no stretching in the relevant axis
@@ -5161,9 +5161,13 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
           aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
             stylePos->UsedAlignSelf(GetParent()->StyleContext()) :
             stylePos->UsedJustifySelf(GetParent()->StyleContext());
-        if (inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL) {
-          stretchI = eStretchPreservingRatio;
-        } else if (inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+        // Note: 'normal' means 'start' for elements with an intrinsic size
+        // or ratio in the relevant dimension, otherwise 'stretch'.
+        // https://drafts.csswg.org/css-grid/#grid-item-sizing
+        if ((inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL &&
+             !hasIntrinsicISize &&
+             !(logicalRatio.ISize(aWM) > 0)) ||
+            inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
           stretchI = eStretch;
         }
       }
@@ -5226,9 +5230,13 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
           !aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
             stylePos->UsedAlignSelf(GetParent()->StyleContext()) :
             stylePos->UsedJustifySelf(GetParent()->StyleContext());
-        if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL) {
-          stretchB = eStretchPreservingRatio;
-        } else if (blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+        // Note: 'normal' means 'start' for elements with an intrinsic size
+        // or ratio in the relevant dimension, otherwise 'stretch'.
+        // https://drafts.csswg.org/css-grid/#grid-item-sizing
+        if ((blockAxisAlignment == NS_STYLE_ALIGN_NORMAL &&
+             !hasIntrinsicBSize &&
+             !(logicalRatio.BSize(aWM) > 0)) ||
+            blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
           stretchB = eStretch;
         }
       }
