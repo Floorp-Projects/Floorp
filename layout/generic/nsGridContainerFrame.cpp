@@ -4758,14 +4758,14 @@ nsGridContainerFrame::Tracks::StretchFlexibleTracks(
                                          : ri->ComputedMaxISize();
   }
   Maybe<nsTArray<TrackSize>> origSizes;
+  bool applyMinMax = (minSize != 0 || maxSize != NS_UNCONSTRAINEDSIZE) &&
+                     aAvailableSize == NS_UNCONSTRAINEDSIZE;
   // We iterate twice at most.  The 2nd time if the grid size changed after
   // applying a min/max-size (can only occur if aAvailableSize is indefinite).
   while (true) {
     float fr = FindUsedFlexFraction(aState, aGridItems, flexTracks,
                                     aFunctions, aAvailableSize);
     if (fr != 0.0f) {
-      bool applyMinMax = (minSize != 0 || maxSize != NS_UNCONSTRAINEDSIZE) &&
-                         aAvailableSize == NS_UNCONSTRAINEDSIZE;
       for (uint32_t i : flexTracks) {
         float flexFactor = aFunctions.MaxSizingFor(i).GetFlexFractionValue();
         nscoord flexLength = NSToCoordRound(flexFactor * fr);
@@ -4777,7 +4777,8 @@ nsGridContainerFrame::Tracks::StretchFlexibleTracks(
           base = flexLength;
         }
       }
-      if (applyMinMax && origSizes.isSome()) {
+      if (applyMinMax) {
+        applyMinMax = false;
         // https://drafts.csswg.org/css-grid/#algo-flex-tracks
         // "If using this flex fraction would cause the grid to be smaller than
         // the grid container’s min-width/height (or larger than the grid
@@ -4795,13 +4796,12 @@ nsGridContainerFrame::Tracks::StretchFlexibleTracks(
           aAvailableSize = minSize;
         }
         if (aAvailableSize != NS_UNCONSTRAINEDSIZE) {
-          // Reset min/max-size to ensure 'applyMinMax' becomes false next time.
-          minSize = 0;
-          maxSize = NS_UNCONSTRAINEDSIZE;
           aAvailableSize = std::max(0, aAvailableSize - sumOfGridGaps);
           // Restart with the original track sizes and definite aAvailableSize.
-          mSizes = Move(*origSizes);
-          origSizes.reset();
+          if (origSizes.isSome()) {
+            mSizes = Move(*origSizes);
+            origSizes.reset();
+          } // else, no mSizes[].mBase were changed above so it's still correct
           if (aAvailableSize == 0) {
             break; // zero available size wouldn't change any sizes though...
           }
