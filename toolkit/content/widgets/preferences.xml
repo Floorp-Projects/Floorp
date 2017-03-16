@@ -384,11 +384,7 @@
           case "string":
           case "unichar":
           case "fontname":
-            var iss = Components.classes["@mozilla.org/supports-string;1"]
-                                .createInstance(Components.interfaces.nsISupportsString);
-            iss.data = val;
-            this.preferences.rootBranch
-                .setComplexValue(this.name, Components.interfaces.nsISupportsString, iss);
+            this.preferences.rootBranch.setStringPref(this.name, val);
             break;
           case "file":
             var lf;

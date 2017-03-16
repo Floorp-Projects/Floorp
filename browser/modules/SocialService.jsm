@@ -170,8 +170,7 @@ var ActiveProviders = {
     delete this._providers;
     this._providers = {};
     try {
-      let pref = Services.prefs.getComplexValue("social.activeProviders",
-                                                Ci.nsISupportsString);
+      let pref = Services.prefs.getStringPref("social.activeProviders");
       this._providers = JSON.parse(pref);
     } catch (ex) {}
     return this._providers;
