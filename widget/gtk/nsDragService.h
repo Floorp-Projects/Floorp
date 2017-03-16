@@ -85,7 +85,7 @@ public:
     // Methods called from nsWindow to handle responding to GTK drag
     // destination signals
 
-    static nsDragService* GetInstance();
+    static already_AddRefed<nsDragService> GetInstance();
 
     void TargetDataReceived          (GtkWidget         *aWidget,
                                       GdkDragContext    *aContext,
