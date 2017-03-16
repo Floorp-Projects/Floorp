@@ -1256,7 +1256,7 @@ public:
                                       bool *aDefaultAction = nullptr);
 
   /**
-   * Helper function for dispatching a "DOMServiceWorkerFocusClient" event to
+   * Helper function for dispatching a "DOMWindowFocus" event to
    * the chrome event handler of the given DOM Window. This has the effect
    * of focusing the corresponding tab and bringing the browser window
    * to the foreground.
