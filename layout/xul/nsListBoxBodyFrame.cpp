@@ -828,13 +828,15 @@ nsListBoxBodyFrame::InternalPositionChangedCallback()
 nsresult
 nsListBoxBodyFrame::InternalPositionChanged(bool aUp, int32_t aDelta)
 {
-  RefPtr<nsPositionChangedEvent> ev =
+  RefPtr<nsPositionChangedEvent> event =
     new nsPositionChangedEvent(this, aUp, aDelta);
-  nsresult rv = NS_DispatchToCurrentThread(ev);
+  nsresult rv = mContent->OwnerDoc()->Dispatch("nsPositionChangedEvent",
+                                               TaskCategory::Other,
+                                               do_AddRef(event));
   if (NS_SUCCEEDED(rv)) {
-    if (!mPendingPositionChangeEvents.AppendElement(ev)) {
+    if (!mPendingPositionChangeEvents.AppendElement(event)) {
       rv = NS_ERROR_OUT_OF_MEMORY;
-      ev->Revoke();
+      event->Revoke();
     }
   }
   return rv;
