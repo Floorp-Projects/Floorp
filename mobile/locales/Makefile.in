@@ -55,7 +55,7 @@ plugin-file-ts = $(tgt-gendir)/$(subst $(topsrcdir)/,$(NULL),$(plugin_file)).ts
 
 GARBAGE += $(plugin-file-ts)
 # ---------------------------------------------------------------------------
-# plugin-file-ts track searchlist file used ($path/list.txt)
+# plugin-file-ts track searchlist file used ($path/list.json)
 # and time when the file was last modified.
 ###########################################################################
 plugin-file-ts-preqs = \
