@@ -26,7 +26,6 @@ namespace mozilla {
 class EventChainPreVisitor;
 namespace dom {
 class ShadowRoot;
-struct CustomElementData;
 } // namespace dom
 namespace widget {
 struct IMEState;
@@ -734,22 +733,6 @@ public:
   // Helper method, which we leave public so that it's accessible from nsINode.
   enum FlattenedParentType { eNotForStyle, eForStyle };
   nsINode* GetFlattenedTreeParentNodeInternal(FlattenedParentType aType) const;
-
-  /**
-   * Gets the custom element data used by web components custom element.
-   * Custom element data is created at the first attempt to enqueue a callback.
-   *
-   * @return The custom element data or null if none.
-   */
-  virtual mozilla::dom::CustomElementData *GetCustomElementData() const = 0;
-
-  /**
-   * Sets the custom element data, ownership of the
-   * callback data is taken by this content.
-   *
-   * @param aCallbackData The custom element data.
-   */
-  virtual void SetCustomElementData(mozilla::dom::CustomElementData* aData) = 0;
 
   /**
    * API to check if this is a link that's traversed in response to user input

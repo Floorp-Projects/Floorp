@@ -1152,24 +1152,6 @@ FragmentOrElement::SetXBLInsertionParent(nsIContent* aContent)
   }
 }
 
-CustomElementData*
-FragmentOrElement::GetCustomElementData() const
-{
-  nsDOMSlots *slots = GetExistingDOMSlots();
-  if (slots) {
-    return slots->mCustomElementData;
-  }
-  return nullptr;
-}
-
-void
-FragmentOrElement::SetCustomElementData(CustomElementData* aData)
-{
-  nsDOMSlots *slots = DOMSlots();
-  MOZ_ASSERT(!slots->mCustomElementData, "Custom element data may not be changed once set.");
-  slots->mCustomElementData = aData;
-}
-
 nsresult
 FragmentOrElement::InsertChildAt(nsIContent* aKid,
                                 uint32_t aIndex,
