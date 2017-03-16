@@ -209,6 +209,8 @@ class MessageType(IPDLType):
     def isOut(self): return self.direction is OUT
     def isInout(self): return self.direction is INOUT
 
+    def hasReply(self): return len(self.returns) or IPDLType.hasReply(self)
+
     def hasImplicitActorParam(self):
         return self.isCtor() or self.isDtor()
 
@@ -1119,11 +1121,10 @@ class CheckTypes(TcheckVisitor):
                 "message `%s' requires more powerful send semantics than its protocol `%s' provides",
                 mname, pname)
 
-        if mtype.isAsync() and len(mtype.returns):
-            # XXX/cjones could modify grammar to disallow this ...
+        if (mtype.isCtor() or mtype.isDtor()) and mtype.isAsync() and mtype.returns:
             self.error(loc,
-                       "asynchronous message `%s' declares return values",
-                       mname)
+                       "asynchronous ctor/dtor message `%s' declares return values",
+                       mname);
 
         if (mtype.compress and
             (not mtype.isAsync() or mtype.isCtor() or mtype.isDtor())):
