@@ -339,8 +339,13 @@ EventStateManager::UpdateUserActivityTimer()
   if (!gUserInteractionTimerCallback)
     return NS_OK;
 
-  if (!gUserInteractionTimer)
+  if (!gUserInteractionTimer) {
     CallCreateInstance("@mozilla.org/timer;1", &gUserInteractionTimer);
+    if (gUserInteractionTimer) {
+      gUserInteractionTimer->SetTarget(
+        SystemGroup::EventTargetFor(TaskCategory::Other));
+    }
+  }
 
   if (gUserInteractionTimer) {
     gUserInteractionTimer->InitWithCallback(gUserInteractionTimerCallback,
@@ -1419,6 +1424,7 @@ EventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
   if (mClickHoldTimer) {
     int32_t clickHoldDelay =
       Preferences::GetInt("ui.click_hold_context_menus.delay", 500);
+    mClickHoldTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::Other));
     mClickHoldTimer->InitWithFuncCallback(sClickHoldCallback, this,
                                           clickHoldDelay,
                                           nsITimer::TYPE_ONE_SHOT);
