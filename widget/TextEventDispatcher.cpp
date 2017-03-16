@@ -319,8 +319,10 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
   }
   if (message == eCompositionCommit) {
     compositionCommitEvent.mData = *aCommitString;
-    // Don't send CRLF, replace it with LF here.
+    // Don't send CRLF nor CR, replace it with LF here.
     compositionCommitEvent.mData.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                                                  NS_LITERAL_STRING("\n"));
+    compositionCommitEvent.mData.ReplaceSubstring(NS_LITERAL_STRING("\r"),
                                                   NS_LITERAL_STRING("\n"));
   }
   rv = DispatchEvent(widget, compositionCommitEvent, aStatus);
@@ -708,8 +710,9 @@ TextEventDispatcher::PendingComposition::ReplaceNativeLineBreakers()
   }
 
   nsAutoString nativeString(mString);
-  // Don't expose CRLF to web contents, instead, use LF.
+  // Don't expose CRLF nor CR to web contents, instead, use LF.
   mString.ReplaceSubstring(NS_LITERAL_STRING("\r\n"), NS_LITERAL_STRING("\n"));
+  mString.ReplaceSubstring(NS_LITERAL_STRING("\r"), NS_LITERAL_STRING("\n"));
 
   // If the length isn't changed, we don't need to adjust any offset and length
   // of mClauses nor mCaret.

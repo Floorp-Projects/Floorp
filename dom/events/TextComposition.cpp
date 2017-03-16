@@ -225,7 +225,7 @@ RemoveControlCharactersFrom(nsAString& aStr, TextRangeArray* aRanges)
   size_t i = firstControlCharOffset;
   for (const char16_t* source = sourceBegin + firstControlCharOffset;
        source < sourceEnd; ++source) {
-    if (*source == '\t' || !IsControlChar(*source)) {
+    if (*source == '\t' || *source == '\n' || !IsControlChar(*source)) {
       *curDest = *source;
       ++curDest;
       ++i;
