@@ -28,7 +28,23 @@ namespace image {
 void
 AnimationState::NotifyDecodeComplete()
 {
+  // If we weren't discarded before the decode finished then mark ourselves as
+  // currently decoded.
+  if (!mDiscarded) {
+    mIsCurrentlyDecoded = true;
+  }
   mHasBeenDecoded = true;
+}
+
+void
+AnimationState::SetDiscarded(bool aDiscarded)
+{
+  if (aDiscarded) {
+    MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
+    mIsCurrentlyDecoded = false;
+    mCompositedFrameInvalid = true;
+  }
+  mDiscarded = aDiscarded;
 }
 
 void
@@ -265,12 +281,16 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
 RefreshResult
 FrameAnimator::RequestRefresh(AnimationState& aState, const TimeStamp& aTime)
 {
+  // By default, an empty RefreshResult.
+  RefreshResult ret;
+
+  if (aState.IsDiscarded()) {
+    return ret;
+  }
+
   // only advance the frame if the current time is greater than or
   // equal to the current frame's end time.
   TimeStamp currentFrameEndTime = GetCurrentImgFrameEndTime(aState);
-
-  // By default, an empty RefreshResult.
-  RefreshResult ret;
 
   while (currentFrameEndTime <= aTime) {
     TimeStamp oldFrameEndTime = currentFrameEndTime;
@@ -290,12 +310,26 @@ FrameAnimator::RequestRefresh(AnimationState& aState, const TimeStamp& aTime)
     }
   }
 
+  // Advanced to the correct frame, the composited frame is now valid to be drawn.
+  if (currentFrameEndTime > aTime) {
+    aState.mCompositedFrameInvalid = false;
+  }
+
+  MOZ_ASSERT(!aState.mIsCurrentlyDecoded || !aState.mCompositedFrameInvalid);
+
   return ret;
 }
 
 LookupResult
 FrameAnimator::GetCompositedFrame(AnimationState& aState)
 {
+  if (aState.mCompositedFrameInvalid) {
+    MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
+    MOZ_ASSERT(aState.GetHasBeenDecoded());
+    MOZ_ASSERT(!aState.GetIsCurrentlyDecoded());
+    return LookupResult(MatchType::NOT_FOUND);
+  }
+
   // If we have a composited version of this frame, return that.
   if (mLastCompositedFrameIndex >= 0 &&
       (uint32_t(mLastCompositedFrameIndex) == aState.mCurrentAnimationFrameIndex)) {

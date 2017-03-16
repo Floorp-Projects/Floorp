@@ -216,7 +216,7 @@ public:
   /**
    * Called when the SurfaceCache discards a surface belonging to this image.
    */
-  virtual void OnSurfaceDiscarded() = 0;
+  virtual void OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey) = 0;
 
   virtual void SetInnerWindowID(uint64_t aInnerWindowId) = 0;
   virtual uint64_t InnerWindowID() const = 0;
@@ -256,7 +256,7 @@ public:
   }
 #endif
 
-  virtual void OnSurfaceDiscarded() override { }
+  virtual void OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey) override { }
 
   virtual void SetInnerWindowID(uint64_t aInnerWindowId) override
   {

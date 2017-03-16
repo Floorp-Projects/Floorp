@@ -5183,7 +5183,7 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
   nscoord iSize, minISize, maxISize, bSize, minBSize, maxBSize;
   enum class Stretch {
     // stretch to fill the CB (preserving intrinsic ratio) in the relevant axis
-    eStretchPreservingRatio,
+    eStretchPreservingRatio, // XXX not used yet
     // stretch to fill the CB in the relevant axis
     eStretch,
     // no stretching in the relevant axis
@@ -5196,6 +5196,35 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
 
   Stretch stretchI = eNoStretch; // stretch behavior in the inline axis
   Stretch stretchB = eNoStretch; // stretch behavior in the block axis
+
+  const bool isVertical = aWM.IsVertical();
+  const nsStyleCoord& isizeCoord =
+    isVertical ? aIntrinsicSize.height : aIntrinsicSize.width;
+  const bool hasIntrinsicISize = isizeCoord.GetUnit() == eStyleUnit_Coord;
+  nscoord intrinsicISize;
+  if (hasIntrinsicISize) {
+    intrinsicISize = std::max(nscoord(0), isizeCoord.GetCoordValue());
+  } else {
+    NS_ASSERTION(isizeCoord.GetUnit() == eStyleUnit_None,
+                 "unexpected unit");
+    intrinsicISize = 0;
+  }
+
+  const nsStyleCoord& bsizeCoord =
+    isVertical ? aIntrinsicSize.width : aIntrinsicSize.height;
+  const bool hasIntrinsicBSize = bsizeCoord.GetUnit() == eStyleUnit_Coord;
+  nscoord intrinsicBSize;
+  if (hasIntrinsicBSize) {
+    intrinsicBSize = std::max(nscoord(0), bsizeCoord.GetCoordValue());
+  } else {
+    NS_ASSERTION(bsizeCoord.GetUnit() == eStyleUnit_None,
+                 "unexpected unit");
+    intrinsicBSize = 0;
+  }
+
+  NS_ASSERTION(aIntrinsicRatio.width >= 0 && aIntrinsicRatio.height >= 0,
+               "Intrinsic ratio has a negative component!");
+  LogicalSize logicalRatio(aWM, aIntrinsicRatio);
 
   if (!isAutoISize) {
     iSize = ComputeISizeValue(aRenderingContext,
@@ -5211,9 +5240,13 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
           aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
             stylePos->UsedAlignSelf(GetParent()->StyleContext()) :
             stylePos->UsedJustifySelf(GetParent()->StyleContext());
-        if (inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL) {
-          stretchI = eStretchPreservingRatio;
-        } else if (inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+        // Note: 'normal' means 'start' for elements with an intrinsic size
+        // or ratio in the relevant dimension, otherwise 'stretch'.
+        // https://drafts.csswg.org/css-grid/#grid-item-sizing
+        if ((inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL &&
+             !hasIntrinsicISize &&
+             !(logicalRatio.ISize(aWM) > 0)) ||
+            inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
           stretchI = eStretch;
         }
       }
@@ -5276,9 +5309,13 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
           !aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
             stylePos->UsedAlignSelf(GetParent()->StyleContext()) :
             stylePos->UsedJustifySelf(GetParent()->StyleContext());
-        if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL) {
-          stretchB = eStretchPreservingRatio;
-        } else if (blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+        // Note: 'normal' means 'start' for elements with an intrinsic size
+        // or ratio in the relevant dimension, otherwise 'stretch'.
+        // https://drafts.csswg.org/css-grid/#grid-item-sizing
+        if ((blockAxisAlignment == NS_STYLE_ALIGN_NORMAL &&
+             !hasIntrinsicBSize &&
+             !(logicalRatio.BSize(aWM) > 0)) ||
+            blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
           stretchB = eStretch;
         }
       }
@@ -5316,47 +5353,8 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
     minBSize = 0;
   }
 
-  // Resolve percentage intrinsic iSize/bSize as necessary:
-
   NS_ASSERTION(aCBSize.ISize(aWM) != NS_UNCONSTRAINEDSIZE,
                "Our containing block must not have unconstrained inline-size!");
-
-  const bool isVertical = aWM.IsVertical();
-  const nsStyleCoord& isizeCoord =
-    isVertical ? aIntrinsicSize.height : aIntrinsicSize.width;
-  const nsStyleCoord& bsizeCoord =
-    isVertical ? aIntrinsicSize.width : aIntrinsicSize.height;
-
-  bool hasIntrinsicISize, hasIntrinsicBSize;
-  nscoord intrinsicISize, intrinsicBSize;
-
-  if (isizeCoord.GetUnit() == eStyleUnit_Coord) {
-    hasIntrinsicISize = true;
-    intrinsicISize = isizeCoord.GetCoordValue();
-    if (intrinsicISize < 0)
-      intrinsicISize = 0;
-  } else {
-    NS_ASSERTION(isizeCoord.GetUnit() == eStyleUnit_None,
-                 "unexpected unit");
-    hasIntrinsicISize = false;
-    intrinsicISize = 0;
-  }
-
-  if (bsizeCoord.GetUnit() == eStyleUnit_Coord) {
-    hasIntrinsicBSize = true;
-    intrinsicBSize = bsizeCoord.GetCoordValue();
-    if (intrinsicBSize < 0)
-      intrinsicBSize = 0;
-  } else {
-    NS_ASSERTION(bsizeCoord.GetUnit() == eStyleUnit_None,
-                 "unexpected unit");
-    hasIntrinsicBSize = false;
-    intrinsicBSize = 0;
-  }
-
-  NS_ASSERTION(aIntrinsicRatio.width >= 0 && aIntrinsicRatio.height >= 0,
-               "Intrinsic ratio has a negative component!");
-  LogicalSize logicalRatio(aWM, aIntrinsicRatio);
 
   // Now calculate the used values for iSize and bSize:
 
