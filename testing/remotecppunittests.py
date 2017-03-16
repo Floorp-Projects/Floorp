@@ -15,7 +15,7 @@ import mozinfo
 import mozlog
 import StringIO
 import posixpath
-from mozdevice import devicemanager, devicemanagerADB
+from mozdevice import devicemanager, devicemanagerADB, devicemanagerSUT
 
 try:
     from mozbuild.base import MozbuildObject
@@ -167,6 +167,11 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
                         help = "port of remote device to test")
         defaults["device_port"] = 20701
 
+        self.add_option("--dm_trans", action="store",
+                        type = "string", dest = "dm_trans",
+                        help = "the transport to use to communicate with device: [adb|sut]; default=sut")
+        defaults["dm_trans"] = "sut"
+
         self.add_option("--noSetup", action="store_false",
                         dest = "setup",
                         help = "do not copy any files to device (to be used only if device is already setup)")
@@ -211,21 +216,28 @@ def run_test_harness(options, args):
         from mozrunner import B2GEmulatorRunner
         runner = B2GEmulatorRunner(arch=options.emulator, b2g_home=options.with_b2g_emulator)
         runner.start()
-        # because we just started the emulator, we need more than the
-        # default number of retries here.
-        retryLimit = 50
-    else:
-        retryLimit = 5
-    try:
-        if options.device_ip:
-            dm = devicemanagerADB.DeviceManagerADB(options.device_ip, options.device_port, packageName=None, deviceRoot=options.remote_test_root, retryLimit=retryLimit)
-        else:
-            dm = devicemanagerADB.DeviceManagerADB(packageName=None, deviceRoot=options.remote_test_root, retryLimit=retryLimit)
-    except:
+    if options.dm_trans == "adb":
         if options.with_b2g_emulator:
-            runner.cleanup()
-            runner.wait()
-        raise
+            # because we just started the emulator, we need more than the
+            # default number of retries here.
+            retryLimit = 50
+        else:
+            retryLimit = 5
+        try:
+            if options.device_ip:
+                dm = devicemanagerADB.DeviceManagerADB(options.device_ip, options.device_port, packageName=None, deviceRoot=options.remote_test_root, retryLimit=retryLimit)
+            else:
+                dm = devicemanagerADB.DeviceManagerADB(packageName=None, deviceRoot=options.remote_test_root, retryLimit=retryLimit)
+        except:
+            if options.with_b2g_emulator:
+                runner.cleanup()
+                runner.wait()
+            raise
+    else:
+        dm = devicemanagerSUT.DeviceManagerSUT(options.device_ip, options.device_port, deviceRoot=options.remote_test_root)
+        if not options.device_ip:
+            print "Error: you must provide a device IP to connect to via the --deviceIP option"
+            sys.exit(1)
 
     options.xre_path = os.path.abspath(options.xre_path)
     cppunittests.update_mozinfo()
