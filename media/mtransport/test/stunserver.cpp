@@ -268,6 +268,13 @@ int TestStunServer::Initialize(int address_family) {
     return R_INTERNAL;
   }
 
+  // removes duplicates and, based on prefs, loopback and link_local addrs
+  r = nr_stun_filter_local_addresses(addrs, &addr_ct);
+  if (r) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't filter addresses");
+    return R_INTERNAL;
+  }
+
   if (addr_ct < 1) {
     MOZ_MTLOG(ML_ERROR, "No local addresses");
     return R_INTERNAL;

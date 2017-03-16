@@ -39,9 +39,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 int nr_local_addr_copy(nr_local_addr *to, nr_local_addr *from)
   {
-    nr_transport_addr_copy(&(to->addr), &(from->addr));
+    int r,_status;
+
+    if (r=nr_transport_addr_copy(&(to->addr), &(from->addr))) {
+      ABORT(r);
+    }
     to->interface = from->interface;
-    return(0);
+
+    _status=0;
+  abort:
+    return(_status);
   }
 
 int nr_local_addr_fmt_info_string(nr_local_addr *addr, char *buf, int len)
