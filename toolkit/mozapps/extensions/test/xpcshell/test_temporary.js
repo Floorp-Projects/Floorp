@@ -507,10 +507,12 @@ add_task(function*() {
   const install = yield onInstall;
   equal(install.data.version, "2.0");
   equal(install.reason, BOOTSTRAP_REASONS.ADDON_UPGRADE);
+  equal(install.data.oldVersion, "1.0");
 
   const startup = yield onStartup;
   equal(startup.data.version, "2.0");
   equal(startup.reason, BOOTSTRAP_REASONS.ADDON_UPGRADE);
+  equal(startup.data.oldVersion, "1.0");
 
   const addon = yield promiseAddonByID(ID);
   addon.uninstall();
