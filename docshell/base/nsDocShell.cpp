@@ -10199,6 +10199,19 @@ nsDocShell::InternalLoad(nsIURI* aURI,
         //      window will need to be made visible...  For now,
         //      do nothing.
       }
+
+      // Switch to target tab if we're currently focused window.
+      // Take loadDivertedInBackground into account so the behavior would be
+      // the same as how the tab first opened.
+      bool isTargetActive = false;
+      targetDocShell->GetIsActive(&isTargetActive);
+      if (mIsActive && !isTargetActive &&
+          !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false)) {
+        if (NS_FAILED(nsContentUtils::DispatchFocusChromeEvent(
+            targetDocShell->GetWindow()))) {
+          return NS_ERROR_FAILURE;
+        }
+      }
     }
 
     // Else we ran out of memory, or were a popup and got blocked,
