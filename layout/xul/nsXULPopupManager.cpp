@@ -763,7 +763,9 @@ nsXULPopupManager::ShowMenu(nsIContent *aMenu,
     nsCOMPtr<nsIRunnable> event =
       new nsXULPopupShowingEvent(popupFrame->GetContent(),
                                  parentIsContextMenu, aSelectFirstItem);
-    NS_DispatchToCurrentThread(event);
+    aMenu->OwnerDoc()->Dispatch("nsXULPopupShowingEvent",
+                                TaskCategory::Other,
+                                event.forget());
   }
   else {
     nsCOMPtr<nsIContent> popupContent = popupFrame->GetContent();
@@ -1079,7 +1081,9 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
       nsCOMPtr<nsIRunnable> event =
         new nsXULPopupHidingEvent(popupToHide, nextPopup, lastPopup,
                                   popupFrame->PopupType(), deselectMenu, aIsCancel);
-        NS_DispatchToCurrentThread(event);
+        aPopup->OwnerDoc()->Dispatch("nsXULPopupHidingEvent",
+                                     TaskCategory::Other,
+                                     event.forget());
     }
     else {
       FirePopupHidingEvent(popupToHide, nextPopup, lastPopup,
@@ -1396,7 +1400,9 @@ nsXULPopupManager::ExecuteMenu(nsIContent* aMenu, nsXULMenuCommandEvent* aEvent)
 
   aEvent->SetCloseMenuMode(cmm);
   nsCOMPtr<nsIRunnable> event = aEvent;
-  NS_DispatchToCurrentThread(event);
+  aMenu->OwnerDoc()->Dispatch("nsXULMenuCommandEvent",
+                              TaskCategory::Other,
+                              event.forget());
 }
 
 void
@@ -2758,7 +2764,9 @@ nsXULPopupPositionedEvent::DispatchIfNeeded(nsIContent *aPopup,
                           nsGkAtoms::arrow, eCaseMatters)) {
     nsCOMPtr<nsIRunnable> event =
       new nsXULPopupPositionedEvent(aPopup, aIsContextMenu, aSelectFirstItem);
-    NS_DispatchToCurrentThread(event);
+    aPopup->OwnerDoc()->Dispatch("nsXULPopupPositionedEvent",
+                                 TaskCategory::Other,
+                                 event.forget());
 
     return true;
   }
