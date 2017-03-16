@@ -1637,6 +1637,168 @@ StateSelectorMatches(Element* aElement,
   return true;
 }
 
+/* static */ bool
+nsCSSRuleProcessor::StringPseudoMatches(mozilla::dom::Element* aElement,
+                                        CSSPseudoClassType aPseudo,
+                                        char16_t* aString,
+                                        nsIDocument* aDocument,
+                                        bool aForStyling,
+                                        EventStates aStateMask,
+                                        bool* const aDependence)
+{
+  switch (aPseudo) {
+    case CSSPseudoClassType::mozLocaleDir:
+      {
+        bool docIsRTL =
+          aDocument->GetDocumentState().
+            HasState(NS_DOCUMENT_STATE_RTL_LOCALE);
+
+        nsDependentString dirString(aString);
+
+        if (dirString.EqualsLiteral("rtl")) {
+          if (!docIsRTL) {
+            return false;
+          }
+        } else if (dirString.EqualsLiteral("ltr")) {
+          if (docIsRTL) {
+            return false;
+          }
+        } else {
+          // Selectors specifying other directions never match.
+          return false;
+        }
+      }
+      break;
+
+    case CSSPseudoClassType::mozSystemMetric:
+      {
+        nsCOMPtr<nsIAtom> metric = NS_Atomize(aString);
+        if (!nsCSSRuleProcessor::HasSystemMetric(metric)) {
+          return false;
+        }
+      }
+      break;
+
+    case CSSPseudoClassType::mozEmptyExceptChildrenWithLocalname:
+      {
+        NS_ASSERTION(aString, "Must have string!");
+        nsIContent *child = nullptr;
+        int32_t index = -1;
+
+        if (aForStyling) {
+          // FIXME:  This isn't sufficient to handle:
+          //   :-moz-empty-except-children-with-localname() + E
+          //   :-moz-empty-except-children-with-localname() ~ E
+          // because we don't know to restyle the grandparent of the
+          // inserted/removed element (as in bug 534804 for :empty).
+          aElement->SetFlags(NODE_HAS_SLOW_SELECTOR);
+        }
+        do {
+          child = aElement->GetChildAt(++index);
+        } while (child &&
+                  (!IsSignificantChild(child, true, false) ||
+                  (child->GetNameSpaceID() == aElement->GetNameSpaceID() &&
+                    child->NodeInfo()->NameAtom()->Equals(nsDependentString(aString)))));
+        if (child) {
+          return false;
+        }
+      }
+      break;
+
+    case CSSPseudoClassType::dir:
+      {
+        if (aDependence) {
+          EventStates states = sPseudoClassStateDependences[
+            static_cast<CSSPseudoClassTypeBase>(aPseudo)];
+          if (aStateMask.HasAtLeastOneOfStates(states)) {
+            *aDependence = true;
+            return false;
+          }
+        }
+
+        // If we only had to consider HTML, directionality would be
+        // exclusively LTR or RTL.
+        //
+        // However, in markup languages where there is no direction attribute
+        // we have to consider the possibility that neither dir(rtl) nor
+        // dir(ltr) matches.
+        EventStates state = aElement->StyleState();
+        nsDependentString dirString(aString);
+
+        if (dirString.EqualsLiteral("rtl")) {
+          if (!state.HasState(NS_EVENT_STATE_RTL)) {
+            return false;
+          }
+        } else if (dirString.EqualsLiteral("ltr")) {
+          if (!state.HasState(NS_EVENT_STATE_LTR)) {
+            return false;
+          }
+        } else {
+          // Selectors specifying other directions never match.
+          return false;
+        }
+      }
+      break;
+
+    case CSSPseudoClassType::lang:
+      {
+        NS_ASSERTION(aString, "null lang parameter");
+        if (!aString || !*aString) {
+          return false;
+        }
+
+        // We have to determine the language of the current element.  Since
+        // this is currently no property and since the language is inherited
+        // from the parent we have to be prepared to look at all parent
+        // nodes.  The language itself is encoded in the LANG attribute.
+        nsAutoString language;
+        if (aElement->GetLang(language)) {
+          if (!nsStyleUtil::DashMatchCompare(language,
+                                             nsDependentString(aString),
+                                             nsASCIICaseInsensitiveStringComparator())) {
+            return false;
+          }
+          // This pseudo-class matched; move on to the next thing
+          break;
+        }
+
+        if (aDocument) {
+          // Try to get the language from the HTTP header or if this
+          // is missing as well from the preferences.
+          // The content language can be a comma-separated list of
+          // language codes.
+          aDocument->GetContentLanguage(language);
+
+          nsDependentString langString(aString);
+          language.StripWhitespace();
+          int32_t begin = 0;
+          int32_t len = language.Length();
+          while (begin < len) {
+            int32_t end = language.FindChar(char16_t(','), begin);
+            if (end == kNotFound) {
+              end = len;
+            }
+            if (nsStyleUtil::DashMatchCompare(Substring(language, begin,
+                                                        end-begin),
+                                              langString,
+                                              nsASCIICaseInsensitiveStringComparator())) {
+              break;
+            }
+            begin = end + 1;
+          }
+          if (begin < len) {
+            // This pseudo-class matched
+            break;
+          }
+        }
+      }
+      return false;
+
+    default: MOZ_ASSERT_UNREACHABLE("Called StringPseudoMatches() with unknown string-like pseudo");
+  }
+  return true;
+}
+
 // |aDependence| has two functions:
 //  * when non-null, it indicates that we're processing a negation,
 //    which is done only when SelectorMatches calls itself recursively
@@ -1775,86 +1937,6 @@ static bool SelectorMatches(Element* aElement,
         return false;
       }
       break;
-
-    case CSSPseudoClassType::mozEmptyExceptChildrenWithLocalname:
-      {
-        NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
-        nsIContent *child = nullptr;
-        int32_t index = -1;
-
-        if (aTreeMatchContext.mForStyling)
-          // FIXME:  This isn't sufficient to handle:
-          //   :-moz-empty-except-children-with-localname() + E
-          //   :-moz-empty-except-children-with-localname() ~ E
-          // because we don't know to restyle the grandparent of the
-          // inserted/removed element (as in bug 534804 for :empty).
-          aElement->SetFlags(NODE_HAS_SLOW_SELECTOR);
-        do {
-          child = aElement->GetChildAt(++index);
-        } while (child &&
-                  (!IsSignificantChild(child, true, false) ||
-                  (child->GetNameSpaceID() == aElement->GetNameSpaceID() &&
-                    child->NodeInfo()->NameAtom()->Equals(nsDependentString(pseudoClass->u.mString)))));
-        if (child != nullptr) {
-          return false;
-        }
-      }
-      break;
-
-    case CSSPseudoClassType::lang:
-      {
-        NS_ASSERTION(nullptr != pseudoClass->u.mString, "null lang parameter");
-        if (!pseudoClass->u.mString || !*pseudoClass->u.mString) {
-          return false;
-        }
-
-        // We have to determine the language of the current element.  Since
-        // this is currently no property and since the language is inherited
-        // from the parent we have to be prepared to look at all parent
-        // nodes.  The language itself is encoded in the LANG attribute.
-        nsAutoString language;
-        if (aElement->GetLang(language)) {
-          if (!nsStyleUtil::DashMatchCompare(language,
-                                              nsDependentString(pseudoClass->u.mString),
-                                              nsASCIICaseInsensitiveStringComparator())) {
-            return false;
-          }
-          // This pseudo-class matched; move on to the next thing
-          break;
-        }
-
-        nsIDocument* doc = aTreeMatchContext.mDocument;
-        if (doc) {
-          // Try to get the language from the HTTP header or if this
-          // is missing as well from the preferences.
-          // The content language can be a comma-separated list of
-          // language codes.
-          doc->GetContentLanguage(language);
-
-          nsDependentString langString(pseudoClass->u.mString);
-          language.StripWhitespace();
-          int32_t begin = 0;
-          int32_t len = language.Length();
-          while (begin < len) {
-            int32_t end = language.FindChar(char16_t(','), begin);
-            if (end == kNotFound) {
-              end = len;
-            }
-            if (nsStyleUtil::DashMatchCompare(Substring(language, begin,
-                                                        end-begin),
-                                              langString,
-                                              nsASCIICaseInsensitiveStringComparator())) {
-              break;
-            }
-            begin = end + 1;
-          }
-          if (begin < len) {
-            // This pseudo-class matched
-            break;
-          }
-        }
-      }
-      return false;
 
     case CSSPseudoClassType::mozBoundElement:
       if (aTreeMatchContext.mScopedRoot != aElement) {
@@ -1999,38 +2081,6 @@ static bool SelectorMatches(Element* aElement,
       }
       break;
 
-    case CSSPseudoClassType::mozSystemMetric:
-      {
-        nsCOMPtr<nsIAtom> metric = NS_Atomize(pseudoClass->u.mString);
-        if (!nsCSSRuleProcessor::HasSystemMetric(metric)) {
-          return false;
-        }
-      }
-      break;
-
-    case CSSPseudoClassType::mozLocaleDir:
-      {
-        bool docIsRTL =
-          aTreeMatchContext.mDocument->GetDocumentState().
-            HasState(NS_DOCUMENT_STATE_RTL_LOCALE);
-
-        nsDependentString dirString(pseudoClass->u.mString);
-
-        if (dirString.EqualsLiteral("rtl")) {
-          if (!docIsRTL) {
-            return false;
-          }
-        } else if (dirString.EqualsLiteral("ltr")) {
-          if (docIsRTL) {
-            return false;
-          }
-        } else {
-          // Selectors specifying other directions never match.
-          return false;
-        }
-      }
-      break;
-
     case CSSPseudoClassType::mozLWTheme:
       {
         if (aTreeMatchContext.mDocument->GetDocumentLWTheme() <=
@@ -2065,41 +2115,6 @@ static bool SelectorMatches(Element* aElement,
       }
       break;
 
-    case CSSPseudoClassType::dir:
-      {
-        if (aDependence) {
-          EventStates states = sPseudoClassStateDependences[
-            static_cast<CSSPseudoClassTypeBase>(pseudoClass->mType)];
-          if (aNodeMatchContext.mStateMask.HasAtLeastOneOfStates(states)) {
-            *aDependence = true;
-            return false;
-          }
-        }
-
-        // If we only had to consider HTML, directionality would be
-        // exclusively LTR or RTL.
-        //
-        // However, in markup languages where there is no direction attribute
-        // we have to consider the possibility that neither dir(rtl) nor
-        // dir(ltr) matches.
-        EventStates state = aElement->StyleState();
-        nsDependentString dirString(pseudoClass->u.mString);
-
-        if (dirString.EqualsLiteral("rtl")) {
-          if (!state.HasState(NS_EVENT_STATE_RTL)) {
-            return false;
-          }
-        } else if (dirString.EqualsLiteral("ltr")) {
-          if (!state.HasState(NS_EVENT_STATE_LTR)) {
-            return false;
-          }
-        } else {
-          // Selectors specifying other directions never match.
-          return false;
-        }
-      }
-      break;
-
     case CSSPseudoClassType::scope:
       if (aTreeMatchContext.mForScopedStyle) {
         if (aTreeMatchContext.mCurrentStyleScope) {
@@ -2124,7 +2139,20 @@ static bool SelectorMatches(Element* aElement,
       break;
 
     default:
-      MOZ_ASSERT(false, "How did that happen?");
+      {
+        MOZ_ASSERT(nsCSSPseudoClasses::HasStringArg(pseudoClass->mType));
+        bool matched = nsCSSRuleProcessor::StringPseudoMatches(aElement,
+                                                               pseudoClass->mType,
+                                                               pseudoClass->u.mString,
+                                                               aTreeMatchContext.mDocument,
+                                                               aTreeMatchContext.mForStyling,
+                                                               aNodeMatchContext.mStateMask,
+                                                               aDependence);
+
+        if (!matched) {
+          return false;
+        }
+      }
     }
   }
 
