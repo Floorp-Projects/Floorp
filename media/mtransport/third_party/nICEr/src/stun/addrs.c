@@ -416,9 +416,9 @@ nr_stun_remove_duplicate_addrs(nr_local_addr addrs[], int remove_loopback, int r
 #ifndef USE_PLATFORM_NR_STUN_GET_ADDRS
 
 int
-nr_stun_get_addrs(nr_local_addr addrs[], int maxaddrs, int drop_loopback, int drop_link_local, int *count)
+nr_stun_get_addrs(nr_local_addr addrs[], int maxaddrs, int *count)
 {
-    int r,_status=0;
+    int _status=0;
     int i;
     char typestr[100];
 
@@ -428,16 +428,12 @@ nr_stun_get_addrs(nr_local_addr addrs[], int maxaddrs, int drop_loopback, int dr
     _status = stun_getifaddrs(addrs, maxaddrs, count);
 #endif
 
-    if ((r=nr_stun_remove_duplicate_addrs(addrs, drop_loopback, drop_link_local, count)))
-      ABORT(r);
-
     for (i = 0; i < *count; ++i) {
       nr_local_addr_fmt_info_string(addrs+i,typestr,sizeof(typestr));
       r_log(NR_LOG_STUN, LOG_DEBUG, "Address %d: %s on %s, type: %s\n",
             i,addrs[i].addr.as_string,addrs[i].addr.ifname,typestr);
     }
 
-abort:
     return _status;
 }
 
