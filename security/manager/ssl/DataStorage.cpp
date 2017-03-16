@@ -191,8 +191,33 @@ DataStorage::SetCachedStorageEntries(
 {
   MOZ_ASSERT(XRE_IsContentProcess());
 
-  for (auto& entry : aEntries) {
-    RefPtr<DataStorage> storage = DataStorage::GetFromRawFileName(entry.filename());
+  // Make sure to initialize all DataStorage classes.
+  // For each one, we look through the list of our entries and if we find
+  // a matching DataStorage object, we initialize it.
+  //
+  // Note that this is an O(n^2) operation, but the n here is very small
+  // (currently 3).  There is a comment in the DataStorageList.h header
+  // about updating the algorithm here to something more fancy if the list
+  // of DataStorage items grows some day.
+  nsTArray<dom::DataStorageEntry> entries;
+#define DATA_STORAGE(_)                              \
+  {                                                  \
+    dom::DataStorageEntry entry;                     \
+    entry.filename() = NS_LITERAL_STRING(#_ ".txt"); \
+    for (auto& e : aEntries) {                       \
+      if (entry.filename().Equals(e.filename())) {   \
+        entry.items() = Move(e.items());             \
+        break;                                       \
+      }                                              \
+    }                                                \
+    entries.AppendElement(Move(entry));              \
+  }
+#include "mozilla/DataStorageList.h"
+#undef DATA_STORAGE
+
+  for (auto& entry : entries) {
+    RefPtr<DataStorage> storage =
+      DataStorage::GetFromRawFileName(entry.filename());
     bool dataWillPersist = false;
     storage->Init(dataWillPersist, &entry.items());
   }
