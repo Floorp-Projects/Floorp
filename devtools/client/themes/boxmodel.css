@@ -234,7 +234,7 @@
 .boxmodel-position.boxmodel-top,
 .boxmodel-position.boxmodel-bottom {
   border-left: 1px solid var(--theme-highlight-purple);
-  left: 49.5%;
+  left: calc(50% - 1px);
   padding-left: 1px;
 }
 
@@ -242,7 +242,7 @@
 .boxmodel-position.boxmodel-left {
   border-top: 1px solid var(--theme-highlight-purple);
   line-height: 15px;
-  top: 49.5%;
+  top: calc(50% - 1px);
   width: 30px;
 }
 
