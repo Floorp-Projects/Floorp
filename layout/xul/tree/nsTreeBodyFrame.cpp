@@ -4740,11 +4740,14 @@ nsTreeBodyFrame::PostScrollEvent()
   if (mScrollEvent.IsPending())
     return;
 
-  RefPtr<ScrollEvent> ev = new ScrollEvent(this);
-  if (NS_FAILED(NS_DispatchToCurrentThread(ev))) {
+  RefPtr<ScrollEvent> event = new ScrollEvent(this);
+  nsresult rv = mContent->OwnerDoc()->Dispatch("ScrollEvent",
+                                               TaskCategory::Other,
+                                               do_AddRef(event));
+  if (NS_FAILED(rv)) {
     NS_WARNING("failed to dispatch ScrollEvent");
   } else {
-    mScrollEvent = ev;
+    mScrollEvent = event;
   }
 }
 
@@ -4931,7 +4934,9 @@ nsTreeBodyFrame::FullScrollbarsUpdate(bool aNeedsFullInvalidation)
   if (!mCheckingOverflow) {
     nsContentUtils::AddScriptRunner(checker);
   } else {
-    NS_DispatchToCurrentThread(checker);
+    mContent->OwnerDoc()->Dispatch("nsOverflowChecker",
+                                   TaskCategory::Other,
+                                   checker.forget());
   }
   return weakFrame.IsAlive();
 }
