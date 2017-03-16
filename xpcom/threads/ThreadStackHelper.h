@@ -29,7 +29,7 @@
 #  endif
 #endif
 
-#if defined(MOZ_THREADSTACKHELPER_PSEUDO) && defined(XP_WIN)
+#ifdef MOZ_THREADSTACKHELPER_PSEUDO
 #  define MOZ_THREADSTACKHELPER_NATIVE
 #  if defined(__i386__) || defined(_M_IX86)
 #    define MOZ_THREADSTACKHELPER_X86
@@ -64,16 +64,26 @@ private:
   Stack* mStackToFill;
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
   const PseudoStack* const mPseudoStack;
+#ifdef MOZ_THREADSTACKHELPER_NATIVE
+  class ThreadContext;
+  // Set to non-null if GetStack should get the thread context.
+  ThreadContext* mContextToFill;
+  intptr_t mThreadStackBase;
+#endif
   size_t mMaxStackSize;
   size_t mMaxBufferSize;
 #endif
 
   bool PrepareStackBuffer(Stack& aStack);
   void FillStackBuffer();
+  void FillThreadContext(void* aContext = nullptr);
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
   const char* AppendJSEntry(const volatile js::ProfileEntry* aEntry,
                             intptr_t& aAvailableBufferSize,
                             const char* aPrevLabel);
+#endif
+#ifdef MOZ_THREADSTACKHELPER_NATIVE
+  void GetThreadStackBase();
 #endif
 
 public:
@@ -109,8 +119,6 @@ public:
    */
   void GetNativeStack(Stack& aStack);
 
-private:
-  void GetStackInternal(Stack& aStack, bool aAppendNativeStack);
 #if defined(XP_LINUX)
 private:
   static int sInitialized;

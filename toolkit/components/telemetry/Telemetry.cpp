@@ -2079,18 +2079,9 @@ CreateJSHangHistogram(JSContext* cx, const Telemetry::HangHistogram& hang)
   }
 
   if (!hang.GetNativeStack().empty()) {
-    const Telemetry::HangStack& stack = hang.GetNativeStack();
-    const std::vector<uintptr_t>& frames = stack.GetNativeFrames();
-    Telemetry::ProcessedStack processed = Telemetry::GetStackAndModules(frames);
-
-    CombinedStacks singleStack;
-    singleStack.AddStack(processed);
-    JS::RootedObject fullReportObj(cx, CreateJSStackObject(cx, singleStack));
-    if (!fullReportObj) {
-      return nullptr;
-    }
-
-    if (!JS_DefineProperty(cx, ret, "nativeStack", fullReportObj, JSPROP_ENUMERATE)) {
+    JS::RootedObject native(cx, CreateJSHangStack(cx, hang.GetNativeStack()));
+    if (!native ||
+        !JS_DefineProperty(cx, ret, "nativeStack", native, JSPROP_ENUMERATE)) {
       return nullptr;
     }
   }
