@@ -99,7 +99,7 @@ OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
 void
 OriginAttributes::CreateSuffix(nsACString& aStr) const
 {
-  UniquePtr<URLParams> params(new URLParams());
+  URLParams params;
   nsAutoString value;
 
   //
@@ -111,34 +111,34 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
 
   if (mAppId != nsIScriptSecurityManager::NO_APP_ID) {
     value.AppendInt(mAppId);
-    params->Set(NS_LITERAL_STRING("appId"), value);
+    params.Set(NS_LITERAL_STRING("appId"), value);
   }
 
   if (mInIsolatedMozBrowser) {
-    params->Set(NS_LITERAL_STRING("inBrowser"), NS_LITERAL_STRING("1"));
+    params.Set(NS_LITERAL_STRING("inBrowser"), NS_LITERAL_STRING("1"));
   }
 
   if (mUserContextId != nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID) {
     value.Truncate();
     value.AppendInt(mUserContextId);
-    params->Set(NS_LITERAL_STRING("userContextId"), value);
+    params.Set(NS_LITERAL_STRING("userContextId"), value);
   }
 
 
   if (mPrivateBrowsingId) {
     value.Truncate();
     value.AppendInt(mPrivateBrowsingId);
-    params->Set(NS_LITERAL_STRING("privateBrowsingId"), value);
+    params.Set(NS_LITERAL_STRING("privateBrowsingId"), value);
   }
 
   if (!mFirstPartyDomain.IsEmpty()) {
     MOZ_RELEASE_ASSERT(mFirstPartyDomain.FindCharInSet(dom::quota::QuotaManager::kReplaceChars) == kNotFound);
-    params->Set(NS_LITERAL_STRING("firstPartyDomain"), mFirstPartyDomain);
+    params.Set(NS_LITERAL_STRING("firstPartyDomain"), mFirstPartyDomain);
   }
 
   aStr.Truncate();
 
-  params->Serialize(value);
+  params.Serialize(value);
   if (!value.IsEmpty()) {
     aStr.AppendLiteral("^");
     aStr.Append(NS_ConvertUTF16toUTF8(value));
@@ -255,11 +255,11 @@ OriginAttributes::PopulateFromSuffix(const nsACString& aStr)
     return false;
   }
 
-  UniquePtr<URLParams> params(new URLParams());
-  params->ParseInput(Substring(aStr, 1, aStr.Length() - 1));
+  URLParams params;
+  params.ParseInput(Substring(aStr, 1, aStr.Length() - 1));
 
   PopulateFromSuffixIterator iterator(this);
-  return params->ForEach(iterator);
+  return params.ForEach(iterator);
 }
 
 bool

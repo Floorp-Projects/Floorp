@@ -11,6 +11,9 @@ Cu.import("resource://gre/modules/osfile.jsm");
 
 const MAX_NAME_LENGTH = 64;
 
+// The following libraries (except libxul) are all built from the
+// toolkit/components/telemetry/tests/modules-test.cpp file, which contains
+// instructions on how to build them.
 const libModules = ctypes.libraryName("modules-test");
 const libUnicode = ctypes.libraryName("modμles-test");
 const libLongName = "lorem_ipsum_dolor_sit_amet_consectetur_adipiscing_elit_Fusce_sit_amet_tellus_non_magna_euismod_vestibulum_Vivamus_turpis_duis.dll"

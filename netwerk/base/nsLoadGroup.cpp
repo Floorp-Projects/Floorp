@@ -21,6 +21,7 @@
 #include "nsIRequestContext.h"
 #include "CacheObserver.h"
 #include "MainThreadUtils.h"
+#include "mozilla/Unused.h"
 
 #include "mozilla/net/NeckoChild.h"
 
@@ -1072,11 +1073,7 @@ nsresult nsLoadGroup::Init()
 {
     mRequestContextService = do_GetService("@mozilla.org/network/request-context-service;1");
     if (mRequestContextService) {
-        nsID requestContextID;
-        if (NS_SUCCEEDED(mRequestContextService->NewRequestContextID(&requestContextID))) {
-            mRequestContextService->GetRequestContext(requestContextID,
-                                                      getter_AddRefs(mRequestContext));
-        }
+        Unused << mRequestContextService->NewRequestContext(getter_AddRefs(mRequestContext));
     }
 
     return NS_OK;

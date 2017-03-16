@@ -19,6 +19,7 @@
 #include "nsIArray.h"
 #include "nsTArray.h"
 #include "nsDOMJSUtils.h"
+#include "nsIScriptError.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/HTMLScriptElement.h"
 #include "mozilla/dom/HTMLScriptElementBinding.h"
@@ -283,6 +284,24 @@ HTMLScriptElement::FreezeUriAsyncDefer()
       nsCOMPtr<nsIURI> baseURI = GetBaseURI();
       nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(mUri),
                                                 src, OwnerDoc(), baseURI);
+
+      if (!mUri) {
+        const char16_t* params[] = { u"src", src.get() };
+
+        nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+          NS_LITERAL_CSTRING("HTML"), OwnerDoc(),
+          nsContentUtils::eDOM_PROPERTIES, "ScriptSourceInvalidUri",
+          params, ArrayLength(params), nullptr,
+          EmptyString(), GetScriptLineNumber());
+      }
+    } else {
+      const char16_t* params[] = { u"src" };
+
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+        NS_LITERAL_CSTRING("HTML"), OwnerDoc(),
+        nsContentUtils::eDOM_PROPERTIES, "ScriptSourceEmpty",
+        params, ArrayLength(params), nullptr,
+        EmptyString(), GetScriptLineNumber());
     }
 
     // At this point mUri will be null for invalid URLs.

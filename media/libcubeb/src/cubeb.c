@@ -8,13 +8,11 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 
 #define NELEMS(x) ((int) (sizeof(x) / sizeof(x[0])))
-
-cubeb_log_level g_log_level;
-cubeb_log_callback g_log_callback;
 
 struct cubeb {
   struct cubeb_ops * ops;
@@ -105,9 +103,62 @@ validate_latency(int latency)
 }
 
 int
-cubeb_init(cubeb ** context, char const * context_name)
+cubeb_init(cubeb ** context, char const * context_name, char const * backend_name)
 {
-  int (* init[])(cubeb **, char const *) = {
+  int (* init_oneshot)(cubeb **, char const *) = NULL;
+
+  if (backend_name != NULL) {
+    if (!strcmp(backend_name, "pulse")) {
+#if defined(USE_PULSE)
+      init_oneshot = pulse_init;
+#endif
+    } else if (!strcmp(backend_name, "jack")) {
+#if defined(USE_JACK)
+      init_oneshot = jack_init;
+#endif
+    } else if (!strcmp(backend_name, "alsa")) {
+#if defined(USE_ALSA)
+      init_oneshot = alsa_init;
+#endif
+    } else if (!strcmp(backend_name, "audiounit")) {
+#if defined(USE_AUDIOUNIT)
+      init_oneshot = audiounit_init;
+#endif
+    } else if (!strcmp(backend_name, "wasapi")) {
+#if defined(USE_WASAPI)
+      init_oneshot = wasapi_init;
+#endif
+    } else if (!strcmp(backend_name, "winmm")) {
+#if defined(USE_WINMM)
+      init_oneshot = winmm_init;
+#endif
+    } else if (!strcmp(backend_name, "sndio")) {
+#if defined(USE_SNDIO)
+      init_oneshot = sndio_init;
+#endif
+    } else if (!strcmp(backend_name, "opensl")) {
+#if defined(USE_OPENSL)
+      init_oneshot = opensl_init;
+#endif
+    } else if (!strcmp(backend_name, "audiotrack")) {
+#if defined(USE_AUDIOTRACK)
+      init_oneshot = audiotrack_init;
+#endif
+    } else if (!strcmp(backend_name, "kai")) {
+#if defined(USE_KAI)
+      init_oneshot = kai_init;
+#endif
+    } else {
+      /* Already set */
+    }
+  }
+
+  int (* default_init[])(cubeb **, char const *) = {
+    /*
+     * init_oneshot must be at the top to allow user
+     * to override all other choices
+     */
+    init_oneshot,
 #if defined(USE_PULSE)
     pulse_init,
 #endif
@@ -145,10 +196,10 @@ cubeb_init(cubeb ** context, char const * context_name)
     return CUBEB_ERROR_INVALID_PARAMETER;
   }
 
-  for (i = 0; i < NELEMS(init); ++i) {
-    if (init[i](context, context_name) == CUBEB_OK) {
-      /* Assert that the minimal API is implemented. */
 #define OK(fn) assert((* context)->ops->fn)
+  for (i = 0; i < NELEMS(default_init); ++i) {
+    if (default_init[i] && default_init[i](context, context_name) == CUBEB_OK) {
+      /* Assert that the minimal API is implemented. */
       OK(get_backend_id);
       OK(destroy);
       OK(stream_init);
@@ -159,7 +210,6 @@ cubeb_init(cubeb ** context, char const * context_name)
       return CUBEB_OK;
     }
   }
-
   return CUBEB_ERROR;
 }
 
@@ -566,6 +616,15 @@ int cubeb_set_log_callback(cubeb_log_level log_level,
 
   g_log_callback = log_callback;
   g_log_level = log_level;
+
+  // Logging a message here allows to initialize the asynchronous logger from a
+  // thread that is not the audio rendering thread, and especially to not
+  // initialize it the first time we find a verbose log, which is often in the
+  // audio rendering callback, that runs from the audio rendering thread, and
+  // that is high priority, and that we don't want to block.
+  if (log_level >= CUBEB_LOG_VERBOSE) {
+    ALOGV("Starting cubeb log");
+  }
 
   return CUBEB_OK;
 }

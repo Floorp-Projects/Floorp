@@ -9,6 +9,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/SVGScriptElement.h"
 #include "mozilla/dom/SVGScriptElementBinding.h"
+#include "nsIScriptError.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT_CHECK_PARSER(Script)
 
@@ -147,9 +148,11 @@ SVGScriptElement::FreezeUriAsyncDefer()
       mStringAttributes[XLINK_HREF].IsExplicitlySet()) {
     // variation of this code in nsHTMLScriptElement - check if changes
     // need to be transfered when modifying
+    bool isHref = false;
     nsAutoString src;
     if (mStringAttributes[HREF].IsExplicitlySet()) {
       mStringAttributes[HREF].GetAnimValue(src, this);
+      isHref = true;
     } else {
       mStringAttributes[XLINK_HREF].GetAnimValue(src, this);
     }
@@ -158,6 +161,24 @@ SVGScriptElement::FreezeUriAsyncDefer()
     if (!src.IsEmpty()) {
       nsCOMPtr<nsIURI> baseURI = GetBaseURI();
       NS_NewURI(getter_AddRefs(mUri), src, nullptr, baseURI);
+
+      if (!mUri) {
+        const char16_t* params[] = { isHref ? u"href" : u"xlink:href", src.get() };
+
+        nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+          NS_LITERAL_CSTRING("SVG"), OwnerDoc(),
+          nsContentUtils::eDOM_PROPERTIES, "ScriptSourceInvalidUri",
+          params, ArrayLength(params), nullptr,
+          EmptyString(), GetScriptLineNumber());
+      }
+    } else {
+      const char16_t* params[] = { isHref ? u"href" : u"xlink:href" };
+
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+        NS_LITERAL_CSTRING("SVG"), OwnerDoc(),
+        nsContentUtils::eDOM_PROPERTIES, "ScriptSourceEmpty",
+        params, ArrayLength(params), nullptr,
+        EmptyString(), GetScriptLineNumber());
     }
 
     // At this point mUri will be null for invalid URLs.

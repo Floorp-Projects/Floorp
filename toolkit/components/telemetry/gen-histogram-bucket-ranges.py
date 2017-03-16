@@ -45,8 +45,8 @@ def main(argv):
         except histogram_tools.DefinitionException:
             continue
 
-        all_histograms.update({ name: parameters })
+        all_histograms.update({name: parameters})
 
-    print json.dumps({ 'histograms': all_histograms})
+    print json.dumps({'histograms': all_histograms})
 
 main(sys.argv[1:])
