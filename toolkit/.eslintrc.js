@@ -22,6 +22,10 @@ module.exports = {
     // Commas at the end of the line not the start
     // "comma-style": "error",
 
+    // Warn about cyclomatic complexity in functions.
+    // XXX Bug 1326071 - This should be reduced down - probably to 20.
+    "complexity": ["error", {"max": 48}],
+
     // Don't require spaces around computed properties
     "computed-property-spacing": ["error", "never"],
 
@@ -53,6 +57,10 @@ module.exports = {
 
     // Unix linebreaks
     "linebreak-style": ["error", "unix"],
+
+    // Don't enforce the maximum depth that blocks can be nested. The complexity
+    // rule is a better rule to check this.
+    "max-depth": "off",
 
     // Always require parenthesis for new calls
     // "new-parens": "error",
