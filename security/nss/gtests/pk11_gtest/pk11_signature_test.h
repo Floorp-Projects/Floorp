@@ -7,14 +7,12 @@
 #include "pk11pub.h"
 #include "sechash.h"
 
-#include "gtest/gtest.h"
+#include "cpputil.h"
 #include "scoped_ptrs.h"
 
-namespace nss_test {
+#include "gtest/gtest.h"
 
-static unsigned char* toUcharPtr(const uint8_t* v) {
-  return const_cast<unsigned char*>(static_cast<const unsigned char*>(v));
-}
+namespace nss_test {
 
 class Pk11SignatureTest : public ::testing::Test {
  protected:

@@ -241,6 +241,7 @@ TEST_F(TlsConnectTest, Tls13RejectsRehandshakeServer) {
 
 TEST_P(TlsConnectGeneric, AlertBeforeServerHello) {
   EnsureTlsSetup();
+  client_->SetExpectedAlertReceivedCount(1);
   client_->StartConnect();
   server_->StartConnect();
   client_->Handshake();  // Send ClientHello.

@@ -181,16 +181,27 @@ RequestContextService::GetRequestContext(const nsID& rcID, nsIRequestContext **r
 }
 
 NS_IMETHODIMP
-RequestContextService::NewRequestContextID(nsID *rcID)
+RequestContextService::NewRequestContext(nsIRequestContext **rc)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_ARG_POINTER(rc);
+  *rc = nullptr;
+
+  nsresult rv;
   if (!mUUIDGen) {
-    nsresult rv;
     mUUIDGen = do_GetService("@mozilla.org/uuid-generator;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return mUUIDGen->GenerateUUIDInPlace(rcID);
+  nsID rcID;
+  rv = mUUIDGen->GenerateUUIDInPlace(&rcID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIRequestContext> newSC = new RequestContext(rcID);
+  mTable.Put(rcID, newSC);
+  newSC.swap(*rc);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

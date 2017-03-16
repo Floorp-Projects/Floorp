@@ -275,7 +275,7 @@ bool FeatureRef::applyValToFeature(uint32 val, Features & pDest) const
     else
       if (pDest.m_pMap!=&m_pFace->theSill().theFeatureMap())
         return false;       //incompatible
-    pDest.reserve(m_index);
+    pDest.reserve(m_index + 1);
     pDest[m_index] &= ~m_mask;
     pDest[m_index] |= (uint32(val) << m_bits);
     return true;
