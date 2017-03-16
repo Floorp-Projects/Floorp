@@ -134,6 +134,7 @@ class ReftestRunner(MozbuildObject):
             args.app = self.substs["ANDROID_PACKAGE_NAME"]
         if not args.utilityPath:
             args.utilityPath = args.xrePath
+        args.dm_trans = "adb"
         args.ignoreWindowSize = True
         args.printDeviceInfo = False
 
