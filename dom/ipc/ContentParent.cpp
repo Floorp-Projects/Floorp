@@ -2236,9 +2236,6 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     }
   }
 
-  // Ensure the SSS is initialized before we try to use its storage.
-  nsCOMPtr<nsISiteSecurityService> sss = do_GetService("@mozilla.org/ssservice;1");
-
   DataStorage::GetAllChildProcessData(xpcomInit.dataStorage());
 
   // Must send screen info before send initialData
