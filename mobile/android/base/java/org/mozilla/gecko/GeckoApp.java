@@ -1249,6 +1249,9 @@ public abstract class GeckoApp
 
         EventDispatcher.getInstance().registerUiThreadListener(this,
             "Sanitize:Finished",
+            "Update:Check",
+            "Update:Download",
+            "Update:Install",
             null);
 
         GeckoThread.launch();
@@ -1304,9 +1307,6 @@ public abstract class GeckoApp
             "ToggleChrome:Focus",
             "ToggleChrome:Hide",
             "ToggleChrome:Show",
-            "Update:Check",
-            "Update:Download",
-            "Update:Install",
             null);
 
         Tabs.getInstance().attachToContext(this, mLayerView);
@@ -2390,6 +2390,9 @@ public abstract class GeckoApp
 
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
             "Sanitize:Finished",
+            "Update:Check",
+            "Update:Download",
+            "Update:Install",
             null);
 
         getAppEventDispatcher().unregisterGeckoThreadListener(this,
@@ -2415,9 +2418,6 @@ public abstract class GeckoApp
             "ToggleChrome:Focus",
             "ToggleChrome:Hide",
             "ToggleChrome:Show",
-            "Update:Check",
-            "Update:Download",
-            "Update:Install",
             null);
 
         if (mPromptService != null) {
