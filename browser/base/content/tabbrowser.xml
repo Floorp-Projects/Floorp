@@ -2555,6 +2555,23 @@
         <parameter name="aParams"/>
         <body>
           <![CDATA[
+            // We collect Telemetry on how long it takes to close a tab.
+            // Sometimes, tabs animate closed, and sometimes they don't, and
+            // it doesn't really make sense to put timings for both cases in the
+            // same bucket.
+            //
+            // We decide later on whether or not we're actually going to animate
+            // the tab closed. In order to capture as much of the time we care
+            // about with these stopwatches, but also in order to avoid any
+            // unnecessary work (since calculating whether or not we're going
+            // to do the animation might involved a style flush), we start
+            // stopwatches for both the animating and non-animating case. When
+            // we decide that we're animating, we cancel the non-animating case,
+            // and vice-versa. Then, in _endRemoveTab, we "finish" both
+            // stopwatches, which is a no-op for cancelled stopwatches.
+            TelemetryStopwatch.start("FX_TAB_CLOSE_TIME_ANIM_MS", aTab);
+            TelemetryStopwatch.start("FX_TAB_CLOSE_TIME_NO_ANIM_MS", aTab);
+
             if (aParams) {
               var animate = aParams.animate;
               var byMouse = aParams.byMouse;
@@ -2573,8 +2590,11 @@
 
             var isLastTab = (this.tabs.length - this._removingTabs.length == 1);
 
-            if (!this._beginRemoveTab(aTab, null, null, true, skipPermitUnload))
+            if (!this._beginRemoveTab(aTab, null, null, true, skipPermitUnload)) {
+              TelemetryStopwatch.cancel("FX_TAB_CLOSE_TIME_ANIM_MS", aTab);
+              TelemetryStopwatch.cancel("FX_TAB_CLOSE_TIME_NO_ANIM_MS", aTab);
               return;
+            }
 
             if (!aTab.pinned && !aTab.hidden && aTab._fullyOpen && byMouse)
               this.tabContainer._lockTabSizing(aTab);
@@ -2589,9 +2609,14 @@
                 aTab.getAttribute("fadein") != "true" /* fade-in transition hasn't been triggered yet */ ||
                 window.getComputedStyle(aTab).maxWidth == "0.1px" /* fade-in transition hasn't moved yet */ ||
                 !Services.prefs.getBoolPref("browser.tabs.animate")) {
+              // We're not animating, so we can cancel the animation stopwatch.
+              TelemetryStopwatch.cancel("FX_TAB_CLOSE_TIME_ANIM_MS", aTab);
               this._endRemoveTab(aTab);
               return;
             }
+
+            // We're animating, so we can cancel the non-animation stopwatch.
+            TelemetryStopwatch.cancel("FX_TAB_CLOSE_TIME_NO_ANIM_MS", aTab);
 
             this.tabContainer._handleTabTelemetryStart(aTab);
 
@@ -2846,6 +2871,14 @@
             aTab.linkedBrowser = null;
 
             panel.remove();
+
+            // closeWindow might wait an arbitrary length of time if we're supposed
+            // to warn about closing the window, so we'll just stop the tab close
+            // stopwatches here instead.
+            TelemetryStopwatch.finish("FX_TAB_CLOSE_TIME_ANIM_MS", aTab,
+                                      true /* aCanceledOkay */);
+            TelemetryStopwatch.finish("FX_TAB_CLOSE_TIME_NO_ANIM_MS", aTab,
+                                      true /* aCanceledOkay */);
 
             if (aCloseWindow)
               this._windowIsClosing = closeWindow(true, window.warnAboutClosingWindow);
