@@ -1,0 +1,71 @@
+This patch fixes three different crashes, one crash per chunk in this patch,
+in the same order.
+- Bug 1342389
+- Bug 1345147
+- Bug 1347453
+
+diff --git a/media/libcubeb/src/cubeb_wasapi.cpp b/media/libcubeb/src/cubeb_wasapi.cpp
+--- a/media/libcubeb/src/cubeb_wasapi.cpp
++++ b/media/libcubeb/src/cubeb_wasapi.cpp
+@@ -878,16 +878,23 @@ wasapi_stream_render_loop(LPVOID stream)
+ 
+   /* WaitForMultipleObjects timeout can trigger in cases where we don't want to
+      treat it as a timeout, such as across a system sleep/wake cycle.  Trigger
+      the timeout error handling only when the timeout_limit is reached, which is
+      reset on each successful loop. */
+   unsigned timeout_count = 0;
+   const unsigned timeout_limit = 5;
+   while (is_playing) {
++    // We want to check the emergency bailout variable before a
++    // and after the WaitForMultipleObject, because the handles WaitForMultipleObjects
++    // is going to wait on might have been closed already.
++    if (*emergency_bailout) {
++      delete emergency_bailout;
++      return 0;
++    }
+     DWORD waitResult = WaitForMultipleObjects(ARRAY_LENGTH(wait_array),
+                                               wait_array,
+                                               FALSE,
+                                               1000);
+     if (*emergency_bailout) {
+       delete emergency_bailout;
+       return 0;
+     }
+@@ -1199,16 +1206,22 @@ bool stop_and_join_render_thread(cubeb_s
+ {
+   bool rv = true;
+   LOG("Stop and join render thread.");
+   if (!stm->thread) {
+     LOG("No thread present.");
+     return true;
+   }
+ 
++  // If we've already leaked the thread, just return,
++  // there is not much we can do.
++  if (!stm->emergency_bailout.load()) {
++    return false;
++  }
++
+   BOOL ok = SetEvent(stm->shutdown_event);
+   if (!ok) {
+     LOG("Destroy SetEvent failed: %lx", GetLastError());
+   }
+ 
+   /* Wait five seconds for the rendering thread to return. It's supposed to
+    * check its event loop very often, five seconds is rather conservative. */
+   DWORD r = WaitForSingleObject(stm->thread, 5000);
+diff --git a/media/libcubeb/update.sh b/media/libcubeb/update.sh
+--- a/media/libcubeb/update.sh
++++ b/media/libcubeb/update.sh
+@@ -66,8 +66,11 @@ fi
+ echo "Applying a patch on top of $version"
+ patch -p1 < ./wasapi-drift-fix-passthrough-resampler.patch
+ 
+ echo "Applying a patch on top of $version"
+ patch -p1 < ./audiounit-drift-fix.patch
+ 
+ echo "Applying a patch on top of $version"
+ patch -p1 < ./uplift-wasapi-fixes-aurora.patch
++
++echo "Applying a patch on top of $version"
++patch -p3 < ./fix-crashes.patch

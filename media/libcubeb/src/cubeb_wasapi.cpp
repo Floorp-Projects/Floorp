@@ -883,6 +883,13 @@ wasapi_stream_render_loop(LPVOID stream)
   unsigned timeout_count = 0;
   const unsigned timeout_limit = 5;
   while (is_playing) {
+    // We want to check the emergency bailout variable before a
+    // and after the WaitForMultipleObject, because the handles WaitForMultipleObjects
+    // is going to wait on might have been closed already.
+    if (*emergency_bailout) {
+      delete emergency_bailout;
+      return 0;
+    }
     DWORD waitResult = WaitForMultipleObjects(ARRAY_LENGTH(wait_array),
                                               wait_array,
                                               FALSE,
@@ -1202,6 +1209,12 @@ bool stop_and_join_render_thread(cubeb_stream * stm)
   if (!stm->thread) {
     LOG("No thread present.");
     return true;
+  }
+
+  // If we've already leaked the thread, just return,
+  // there is not much we can do.
+  if (!stm->emergency_bailout.load()) {
+    return false;
   }
 
   BOOL ok = SetEvent(stm->shutdown_event);
