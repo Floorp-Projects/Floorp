@@ -15,6 +15,7 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.support.v4.widget.TextViewCompat;
+import android.support.v7.widget.ViewUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
@@ -109,17 +110,23 @@ public class TabsLayoutItemView extends LinearLayout
                 // we make it as tall as the parent view and 40dp across.
                 final int targetHitArea = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40, getResources().getDisplayMetrics());;
 
-                final Rect hitRect = new Rect();
-                hitRect.top = 0;
-                hitRect.right = getWidth();
-                hitRect.left = getWidth() - targetHitArea;
-                hitRect.bottom = targetHitArea;
+                final Rect hitRect = getHitRectRelatively(targetHitArea);
 
                 setTouchDelegate(new TouchDelegateWithReset(hitRect, mCloseButton));
 
                 return true;
             }
         });
+    }
+
+    private Rect getHitRectRelatively(int targetHitArea) {
+        final boolean isRtl = ViewUtils.isLayoutRtl(this);
+        final Rect hitRect = new Rect();
+        hitRect.top = 0;
+        hitRect.right = isRtl ? targetHitArea : getWidth();
+        hitRect.left = isRtl ? 0 : getWidth() - targetHitArea;
+        hitRect.bottom = targetHitArea;
+        return hitRect;
     }
 
     protected void assignValues(Tab tab)  {
