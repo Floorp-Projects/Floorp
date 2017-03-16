@@ -199,8 +199,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
       modulePathStr,
       pdbNameStr,
       pdbPathStr,
-      GetVersion(modulePath),
-      "");
+      GetVersion(modulePath));
     sharedLibraryInfo.AddSharedLibrary(shlib);
 
     FreeLibrary(handleLock); // ok to free null handles
