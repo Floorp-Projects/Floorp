@@ -69,7 +69,7 @@ fails == 115921-2.html 115921-2.html
 == 229367-1.html 229367-1.html
 fails == 229367-2.html 229367-2.html
 == 229367-3.html 229367-3.html
-fails == 258928-1.html 258928-1.html
+== 258928-1.html 258928-1.html
 fails == 263359-1.html 263359-1.html
 fails == 263359-1a.html 263359-1a.html
 fails == 263359-1b.html 263359-1b.html

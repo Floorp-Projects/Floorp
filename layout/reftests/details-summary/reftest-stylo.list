@@ -11,7 +11,7 @@ fails == no-summary.html no-summary.html
 fails == open-no-summary.html open-no-summary.html
 == summary-not-in-details.html summary-not-in-details.html
 fails == summary-not-direct-child.html summary-not-direct-child.html
-fails == float-in-summary.html float-in-summary.html
+== float-in-summary.html float-in-summary.html
 
 # Add elements dynamically
 fails == dynamic-add-single-summary.html dynamic-add-single-summary.html
@@ -64,7 +64,7 @@ fails == overflow-scroll-details.html overflow-scroll-details.html
 == details-absolute-children.html details-absolute-children.html
 == details-three-columns.html details-three-columns.html
 fails == details-writing-mode.html details-writing-mode.html
-fails == details-in-ol.html details-in-ol.html
+== details-in-ol.html details-in-ol.html
 == summary-three-columns.html summary-three-columns.html
 fails == details-first-line.html details-first-line.html
 fails == open-details-first-line-1.html open-details-first-line-1.html
