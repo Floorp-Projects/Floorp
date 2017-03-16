@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'multi-e10s-warning.js',
     'panel.js',
     'service-worker-target.js',
     'target.js',

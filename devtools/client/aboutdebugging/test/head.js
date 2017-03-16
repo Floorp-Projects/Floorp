@@ -7,8 +7,7 @@
    getServiceWorkerList, getTabList, openPanel, waitForInitialAddonList,
    waitForServiceWorkerRegistered, unregisterServiceWorker,
    waitForDelayedStartupFinished, setupTestAboutDebuggingWebExtension,
-   waitForServiceWorkerActivation, enableServiceWorkerDebugging,
-   getServiceWorkerContainer */
+   waitForServiceWorkerActivation */
 /* import-globals-from ../../framework/test/shared-head.js */
 
 "use strict";
@@ -130,26 +129,6 @@ function getInstalledAddonNames(document) {
 function getServiceWorkerList(document) {
   return document.querySelector("#service-workers .target-list") ||
     document.querySelector("#service-workers.targets");
-}
-
-/**
- * Retrieve the container element for the service worker corresponding to the provided
- * name.
- *
- * @param  {String} name
- *         expected service worker name
- * @param  {DOMDocument} document
- *         #service-workers section container document
- * @return {DOMNode} container element
- */
-function getServiceWorkerContainer(name, document) {
-  let nameElements = [...document.querySelectorAll("#service-workers .target-name")];
-  let nameElement = nameElements.filter(element => element.textContent === name)[0];
-  if (nameElement) {
-    return nameElement.closest(".target-container");
-  }
-
-  return null;
 }
 
 /**
@@ -417,21 +396,4 @@ function* waitForServiceWorkerActivation(swUrl, document) {
     // Wait for the status to leave the "registering" stage.
     yield waitForMutation(serviceWorkersElement, { childList: true, subtree: true });
   }
-}
-
-/**
- * Set all preferences needed to enable service worker debugging and testing.
- */
-function enableServiceWorkerDebugging() {
-  return new Promise(done => {
-    let options = { "set": [
-      // Enable service workers.
-      ["dom.serviceWorkers.enabled", true],
-      // Accept workers from mochitest's http.
-      ["dom.serviceWorkers.testing.enabled", true],
-      // Force single content process.
-      ["dom.ipc.processCount", 1],
-    ]};
-    SpecialPowers.pushPrefEnv(options, done);
-  });
 }
