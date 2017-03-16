@@ -4594,8 +4594,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return block
 
     def endRead(self, msgexpr, iterexpr):
+        msgtype = ExprCall(ExprSelect(msgexpr, '.', 'type'), [ ])
         return StmtExpr(ExprCall(ExprSelect(msgexpr, '.', 'EndRead'),
-                                 args=[ iterexpr ]))
+                                 args=[ iterexpr, msgtype ]))
 
 class _GenerateProtocolParentCode(_GenerateProtocolActorCode):
     def __init__(self):
