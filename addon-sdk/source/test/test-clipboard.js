@@ -7,12 +7,11 @@ require("sdk/clipboard");
 
 const { Cc, Ci } = require("chrome");
 
-const imageTools = Cc["@mozilla.org/image/tools;1"].
-                    getService(Ci.imgITools);
+const imageTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
+const io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+const appShellService = Cc['@mozilla.org/appshell/appShellService;1'].getService(Ci.nsIAppShellService);
 
-const io = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
-
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const base64png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYA" +
                   "AABzenr0AAAASUlEQVRYhe3O0QkAIAwD0eyqe3Q993AQ3cBSUKpygfsNTy" +
                   "N5ugbQpK0BAADgP0BRDWXWlwEAAAAAgPsA3rzDaAAAAHgPcGrpgAnzQ2FG" +
@@ -23,58 +22,6 @@ const { base64jpeg } = require("./fixtures");
 const { platform } = require("sdk/system");
 // For Windows, Mac and Linux, platform returns the following: winnt, darwin and linux.
 var isWindows = platform.toLowerCase().indexOf("win") == 0;
-
-const canvasHTML = "data:text/html," + encodeURIComponent(
-  "<html>\
-    <body>\
-      <canvas width='32' height='32'></canvas>\
-    </body>\
-  </html>"
-);
-
-function comparePixelImages(imageA, imageB, callback) {
-  let tabs = require("sdk/tabs");
-
-  tabs.open({
-    url: canvasHTML,
-
-    onReady: function onReady(tab) {
-      let worker = tab.attach({
-        contentScript: "new " + function() {
-          let canvas = document.querySelector("canvas");
-          let context = canvas.getContext("2d");
-
-          self.port.on("draw-image", function(imageURI) {
-            let img = new Image();
-
-            img.onload = function() {
-              context.drawImage(this, 0, 0);
-
-              let pixels = Array.join(context.getImageData(0, 0, 32, 32).data);
-              self.port.emit("image-pixels", pixels);
-            }
-
-            img.src = imageURI;
-          });
-        }
-      });
-
-      let compared = "";
-
-      worker.port.on("image-pixels", function (pixels) {
-        if (!compared) {
-          compared = pixels;
-          this.emit("draw-image", imageB);
-        } else {
-          tab.close(callback.bind(null, compared === pixels))
-        }
-      });
-
-      worker.port.emit("draw-image", imageA);
-    }
-  });
-}
-
 
 // Test the typical use case, setting & getting with no flavors specified
 exports["test With No Flavor"] = function(assert) {
@@ -160,20 +107,39 @@ exports["test Set Image"] = function(assert) {
   assert.equal(clip.currentFlavors[0], flavor, "flavor is set");
 };
 
-exports["test Get Image"] = function(assert, done) {
+exports["test Get Image"] = function* (assert) {
   var clip = require("sdk/clipboard");
 
   clip.set(base64png, "image");
 
   var contents = clip.get();
+  const hiddenWindow = appShellService.hiddenDOMWindow;
+  const Image = hiddenWindow.Image;
+  const canvas = hiddenWindow.document.createElementNS(XHTML_NS, "canvas");
+  let context = canvas.getContext("2d");
 
-  comparePixelImages(base64png, contents, function (areEquals) {
-    assert.ok(areEquals,
-      "Image gets from clipboard equals to image sets to the clipboard");
+  const imageURLToPixels = (imageURL) => {
+    return new Promise((resolve) => {
+      let img = new Image();
 
-    done();
-  });
-}
+      img.onload = function() {
+        context.drawImage(this, 0, 0);
+
+        let pixels = Array.join(context.getImageData(0, 0, 32, 32).data);
+        resolve(pixels);
+      };
+
+      img.src = imageURL;
+    });
+  };
+
+  let [base64pngPixels, clipboardPixels] = yield Promise.all([
+    imageURLToPixels(base64png), imageURLToPixels(contents),
+  ]);
+
+  assert.ok(base64pngPixels === clipboardPixels,
+            "Image gets from clipboard equals to image sets to the clipboard");
+};
 
 exports["test Set Image Type Not Supported"] = function(assert) {
   var clip = require("sdk/clipboard");
