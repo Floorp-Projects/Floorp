@@ -23,7 +23,7 @@ addLoadEvent(function() {
 
   setTimeout(function() {
     // Make sure that we're scrolled by 5000px
-    is(window.pageYOffset, 5000, "Make sure we're scrolled correctly");
+    is(Math.round(window.pageYOffset), 5000, "Make sure we're scrolled correctly");
 
     // Scroll back up, and mess with the input box along the way
     var input = document.getElementById("WhyDoYouFocusMe");
@@ -38,14 +38,14 @@ addLoadEvent(function() {
       window.scrollTo(0, 5000);
 
       setTimeout(function() {
-        is(window.pageYOffset, 5000, "Sanity check");
+        is(Math.round(window.pageYOffset), 5000, "Sanity check");
 
         window.scrollTo(0, 0);
         input.focus();
         input.blur();
 
         setTimeout(function() {
-          isnot(window.pageYOffset, 0, "This time we shouldn't be scrolled up");
+          isnot(Math.round(window.pageYOffset), 0, "This time we shouldn't be scrolled up");
 
           SimpleTest.finish();
         }, 0);
