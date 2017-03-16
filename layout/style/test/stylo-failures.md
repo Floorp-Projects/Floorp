@@ -457,6 +457,7 @@ Any line which doesn't follow the format above would be ignored like comment.
 * test_css_supports.html: issues around @supports syntax servo/servo#15482 [8]
 * test_author_specified_style.html: support serializing color as author specified [33]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
+* test_selectors.html `this_better_be_unvisited`: visited handling [2]
 
 ## Assertions
 
