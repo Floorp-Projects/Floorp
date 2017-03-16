@@ -2320,6 +2320,9 @@ Element::SetAttr(int32_t aNamespaceID, nsIAtom* aName,
 
   uint8_t modType;
   bool hasListeners;
+  // We don't want to spend time preparsing class attributes if the value is not
+  // changing, so just init our nsAttrValueOrString with aValue for the
+  // OnlyNotifySameValueSet call.
   nsAttrValueOrString value(aValue);
   nsAttrValue oldValue;
 
@@ -2328,9 +2331,18 @@ Element::SetAttr(int32_t aNamespaceID, nsIAtom* aName,
     return NS_OK;
   }
 
+  nsAttrValue attrValue;
+  nsAttrValue* preparsedAttrValue;
+  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::_class) {
+    attrValue.ParseAtomArray(aValue);
+    value.ResetToAttrValue(attrValue);
+    preparsedAttrValue = &attrValue;
+  } else {
+    preparsedAttrValue = nullptr;
+  }
+
   nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsAttrValue* preparsedAttrValue = value.GetStoredAttrValue();
 
   if (aNotify) {
     nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType,
@@ -2341,12 +2353,8 @@ Element::SetAttr(int32_t aNamespaceID, nsIAtom* aName,
   // out to id-observers
   nsAutoScriptBlocker scriptBlocker;
 
-  nsAttrValue attrValue;
-  if (preparsedAttrValue) {
-    attrValue.SwapValueWith(*preparsedAttrValue);
-  }
-  // Even the value was pre-parsed in BeforeSetAttr, we still need to call
-  // ParseAttribute because it can have side effects.
+  // Even the value was pre-parsed, we still need to call ParseAttribute because
+  // it can have side effects.
   if (!ParseAttribute(aNamespaceID, aName, aValue, attrValue)) {
     attrValue.SetTo(aValue);
   }
@@ -2517,25 +2525,6 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
     (new AsyncEventDispatcher(this, mutation))->RunDOMEventWhenSafe();
   }
 
-  return NS_OK;
-}
-
-nsresult
-Element::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                       nsAttrValueOrString* aValue, bool aNotify)
-{
-  if (aNamespaceID == kNameSpaceID_None) {
-    if (aName == nsGkAtoms::_class) {
-      // aValue->GetAttrValue will only be non-null here when this is called
-      // via Element::SetParsedAttr. This shouldn't happen for "class", but
-      // this will handle it.
-      if (aValue && !aValue->GetAttrValue()) {
-        nsAttrValue attr;
-        attr.ParseAtomArray(aValue->String());
-        aValue->TakeParsedValue(attr);
-      }
-    }
-  }
   return NS_OK;
 }
 

@@ -333,7 +333,7 @@ HTMLLinkElement::UpdateImport()
 
 nsresult
 HTMLLinkElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                               nsAttrValueOrString* aValue, bool aNotify)
+                               const nsAttrValueOrString* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       (aName == nsGkAtoms::href || aName == nsGkAtoms::rel)) {
