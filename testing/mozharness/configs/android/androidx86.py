@@ -20,7 +20,6 @@ config = {
         ] """,
     "emulator_process_name": "emulator64-x86",
     "emulator_extra_args": "-show-kernel -debug init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket -qemu -m 1024",
-    "device_manager": "adb",
     "exes": {
         'adb': '%(abs_work_dir)s/android-sdk18/platform-tools/adb',
     },
@@ -53,7 +52,6 @@ config = {
             "testsdir": "xpcshell",
             "install": False,
             "options": [
-                "--dm_trans=adb",
                 "--xre-path=%(xre_path)s",
                 "--testing-modules-dir=%(modules_dir)s",
                 "--apk=%(installer_path)s",
@@ -69,7 +67,6 @@ config = {
             "run_filename": "runtestsremote.py",
             "testsdir": "mochitest",
             "options": [
-                "--dm_trans=adb",
                 "--app=%(app)s",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
