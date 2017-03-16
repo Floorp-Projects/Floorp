@@ -141,9 +141,8 @@ public:
    * parses but does not match. Asserts if it fails to parse; only
    * call this when you're sure it's a string-like pseudo.
    *
-   * This will assert if the document has a stale document state,
-   * ensure that UpdatePossiblyStaleDocumentState() has been called
-   * first.
+   * In Servo mode, please ensure that UpdatePossiblyStaleDocumentState()
+   * has been called first.
    *
    * @param aElement The element we are trying to match
    * @param aPseudo The name of the pseudoselector
@@ -156,12 +155,13 @@ public:
    * @param aDependence Pointer to be set to true if we ignored a state due to
    *                    aStateMask. Can be null.
    */
-  static bool StringPseudoMatches(mozilla::dom::Element* aElement,
+  static bool StringPseudoMatches(const mozilla::dom::Element* aElement,
                                   mozilla::CSSPseudoClassType aPseudo,
-                                  char16_t* aString,
-                                  nsIDocument* aDocument,
+                                  const char16_t* aString,
+                                  const nsIDocument* aDocument,
                                   bool aForStyling,
                                   mozilla::EventStates aStateMask,
+                                  bool* aSetSlowSelectorFlag,
                                   bool* const aDependence = nullptr);
 
   // nsIStyleRuleProcessor
