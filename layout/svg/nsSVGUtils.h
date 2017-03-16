@@ -503,13 +503,13 @@ public:
   static nscolor GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
 
-  static void
+  static DrawResult
   MakeFillPatternFor(nsIFrame *aFrame,
                      gfxContext* aContext,
                      GeneralPattern* aOutPattern,
                      SVGContextPaint* aContextPaint = nullptr);
 
-  static void
+  static DrawResult
   MakeStrokePatternFor(nsIFrame* aFrame,
                        gfxContext* aContext,
                        GeneralPattern* aOutPattern,

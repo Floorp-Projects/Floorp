@@ -202,24 +202,26 @@ public:
         mStrokeMatrix = SetupDeviceToPatternMatrix(aStrokePattern, aCTM);
     }
 
-    already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
-                                                float aOpacity,
-                                                const gfxMatrix& aCTM) {
+    mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
+    GetFillPattern(const DrawTarget* aDrawTarget,
+                   float aOpacity,
+                   const gfxMatrix& aCTM) {
         if (mFillPattern) {
             mFillPattern->SetMatrix(aCTM * mFillMatrix);
         }
         RefPtr<gfxPattern> fillPattern = mFillPattern;
-        return fillPattern.forget();
+        return MakePair(DrawResult::SUCCESS, Move(fillPattern));
     }
 
-    already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
-                                                  float aOpacity,
-                                                  const gfxMatrix& aCTM) {
+    mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
+    GetStrokePattern(const DrawTarget* aDrawTarget,
+                     float aOpacity,
+                     const gfxMatrix& aCTM) {
         if (mStrokePattern) {
             mStrokePattern->SetMatrix(aCTM * mStrokeMatrix);
         }
         RefPtr<gfxPattern> strokePattern = mStrokePattern;
-        return strokePattern.forget();
+        return MakePair(DrawResult::SUCCESS, Move(strokePattern));
     }
 
     float GetFillOpacity() const {
