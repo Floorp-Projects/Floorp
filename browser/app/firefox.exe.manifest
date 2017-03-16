@@ -19,6 +19,12 @@
                 />
         </dependentAssembly>
 </dependency>
+<comInterfaceExternalProxyStub
+    iid="{618736E0-3C3D-11CF-810C-00AA00389B71}"
+    proxyStubClsid32="{00020424-0000-0000-C000-000000000046}"
+    name="IAccessible"
+    tlbid="{1EA4DBF0-3C3B-11CF-810C-00AA00389B71}"
+/>
 <ms_asmv3:trustInfo xmlns:ms_asmv3="urn:schemas-microsoft-com:asm.v3">
   <ms_asmv3:security>
     <ms_asmv3:requestedPrivileges>
