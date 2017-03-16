@@ -14,10 +14,10 @@
  *   {String} result: expected value of the color property after edition.
  */
 const colors = [
-  {name: "hex", id: "test1", color: "#f0c", result: "#0f0"},
+  {name: "hex", id: "test1", color: "#f06", result: "#0f0"},
   {name: "rgb", id: "test2", color: "rgb(0,128,250)", result: "rgb(0, 255, 0)"},
   // Test case preservation.
-  {name: "hex", id: "test3", color: "#F0C", result: "#0F0"},
+  {name: "hex", id: "test3", color: "#F06", result: "#0F0"},
 ];
 
 add_task(function* () {
