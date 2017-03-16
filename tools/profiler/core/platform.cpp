@@ -1034,36 +1034,37 @@ private:
 
 NS_IMPL_ISUPPORTS(ProfileSaveEvent, nsIProfileSaveEvent)
 
-const static uint64_t kJS_MAX_SAFE_UINTEGER = +9007199254740991ULL;
-
-static int64_t
-SafeJSInteger(uint64_t aValue) {
-  return aValue <= kJS_MAX_SAFE_UINTEGER ? int64_t(aValue) : -1;
-}
-
 static void
-AddSharedLibraryInfoToStream(JSONWriter& aWriter, const SharedLibrary& aLib)
+AddSharedLibraryInfoToStream(std::ostream& aStream, const SharedLibrary& aLib)
 {
-  aWriter.StartObjectElement();
-  aWriter.IntProperty("start", SafeJSInteger(aLib.GetStart()));
-  aWriter.IntProperty("end", SafeJSInteger(aLib.GetEnd()));
-  aWriter.IntProperty("offset", SafeJSInteger(aLib.GetOffset()));
-  aWriter.StringProperty("name", aLib.GetNativeDebugPath().c_str());
-  aWriter.StringProperty("breakpadId", aLib.GetBreakpadId().c_str());
-  aWriter.EndObject();
+  aStream << "{";
+  aStream << "\"start\":" << aLib.GetStart();
+  aStream << ",\"end\":" << aLib.GetEnd();
+  aStream << ",\"offset\":" << aLib.GetOffset();
+  aStream << ",\"name\":\"" << aLib.GetNativeDebugPath() << "\"";
+  const std::string& breakpadId = aLib.GetBreakpadId();
+  aStream << ",\"breakpadId\":\"" << breakpadId << "\"";
+  aStream << "}";
 }
 
 static std::string
 GetSharedLibraryInfoStringInternal()
 {
   SharedLibraryInfo info = SharedLibraryInfo::GetInfoForSelf();
-  std::ostringstream os;
-  JSONWriter w(MakeUnique<OStreamJSONWriteFunc>(os));
-  w.StartArrayElement();
-  for (size_t i = 0; i < info.GetSize(); i++) {
-    AddSharedLibraryInfoToStream(w, info.GetEntry(i));
+  if (info.GetSize() == 0) {
+    return "[]";
   }
-  w.EndArray();
+
+  std::ostringstream os;
+  os << "[";
+  AddSharedLibraryInfoToStream(os, info.GetEntry(0));
+
+  for (size_t i = 1; i < info.GetSize(); i++) {
+    os << ",";
+    AddSharedLibraryInfoToStream(os, info.GetEntry(i));
+  }
+
+  os << "]";
   return os.str();
 }
 
