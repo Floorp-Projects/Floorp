@@ -15,4 +15,8 @@
     <string name="pref_key_telemetry" translatable="false"><xliff:g id="preference_key">pref_telemetry</xliff:g></string>
 
     <string name="pref_key_secure" translatable="false"><xliff:g id="preference_key">pref_secure</xliff:g></string>
+
+    <string name="pref_key_about" translatable="false"><xliff:g id="preference_key">pref_about</xliff:g></string>
+    <string name="pref_key_help" translatable="false"><xliff:g id="preference_key">pref_help</xliff:g></string>
+    <string name="pref_key_rights" translatable="false"><xliff:g id="preference_key">pref_rights</xliff:g></string>
 </resources>

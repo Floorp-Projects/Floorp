@@ -80,15 +80,18 @@
              will use the substitution regardless of what is set here. -->
         <org.mozilla.focus.widget.AboutPreference
             android:layout="@layout/focus_preference"
-            android:title="@string/menu_about" />
+            android:title="@string/menu_about"
+            android:key="@string/pref_key_about" />
 
         <Preference
             android:layout="@layout/focus_preference"
-            android:title="@string/menu_help" />
+            android:title="@string/menu_help"
+            android:key="@string/pref_key_help" />
 
         <Preference
             android:layout="@layout/focus_preference"
-            android:title="@string/menu_rights" />
+            android:title="@string/menu_rights"
+            android:key="@string/pref_key_rights" />
 
     </PreferenceCategory>
 
