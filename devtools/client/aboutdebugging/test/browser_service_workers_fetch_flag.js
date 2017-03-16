@@ -9,7 +9,14 @@ const EMPTY_SW_TAB_URL = URL_ROOT + "service-workers/empty-sw.html";
 const FETCH_SW_TAB_URL = URL_ROOT + "service-workers/fetch-sw.html";
 
 function* testBody(url, expecting) {
-  yield enableServiceWorkerDebugging();
+  yield new Promise(done => {
+    let options = {"set": [
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+    ]};
+    SpecialPowers.pushPrefEnv(options, done);
+  });
+
   let { tab, document } = yield openAboutDebugging("workers");
 
   let swTab = yield addTab(url);

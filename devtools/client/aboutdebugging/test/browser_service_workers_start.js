@@ -15,9 +15,17 @@ const TAB_URL = URL_ROOT + "service-workers/empty-sw.html";
 const SW_TIMEOUT = 1000;
 
 add_task(function* () {
-  yield enableServiceWorkerDebugging();
-  yield pushPref("dom.serviceWorkers.idle_timeout", SW_TIMEOUT);
-  yield pushPref("dom.serviceWorkers.idle_extended_timeout", SW_TIMEOUT);
+  info("Turn on workers via mochitest http.");
+  yield new Promise(done => {
+    let options = { "set": [
+      // Accept workers from mochitest's http.
+      ["dom.serviceWorkers.testing.enabled", true],
+      // Reduce the timeout to accelerate service worker freezing
+      ["dom.serviceWorkers.idle_timeout", SW_TIMEOUT],
+      ["dom.serviceWorkers.idle_extended_timeout", SW_TIMEOUT],
+    ]};
+    SpecialPowers.pushPrefEnv(options, done);
+  });
 
   let { tab, document } = yield openAboutDebugging("workers");
 
