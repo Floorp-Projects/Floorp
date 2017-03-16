@@ -1019,8 +1019,8 @@ EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
 
   bool found = false;
   if (aPseudoTagOrNull &&
-      aPseudoTagOrNull != nsGkAtoms::cssPseudoElementBeforeProperty &&
-      aPseudoTagOrNull != nsGkAtoms::cssPseudoElementAfterProperty) {
+      aPseudoTagOrNull != nsCSSPseudoElements::before &&
+      aPseudoTagOrNull != nsCSSPseudoElements::after) {
     return found;
   }
 
