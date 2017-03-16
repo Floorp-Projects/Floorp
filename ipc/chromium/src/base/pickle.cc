@@ -10,6 +10,8 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 
 #include <stdlib.h>
 
@@ -29,6 +31,10 @@ static const uint32_t kHeaderSegmentCapacity = 64;
 static const uint32_t kDefaultSegmentCapacity = 4096;
 
 static const char kBytePaddingMarker = char(0xbf);
+
+// Note: we round the time to the nearest millisecond. So a min value of 1 ms
+// actually captures from 500us and above.
+static const uint32_t kMinTelemetryIPCReadLatencyMs = 1;
 
 namespace {
 
@@ -85,7 +91,8 @@ struct Copier<T, size, true>
 } // anonymous namespace
 
 PickleIterator::PickleIterator(const Pickle& pickle)
-   : iter_(pickle.buffers_.Iter()) {
+   : iter_(pickle.buffers_.Iter())
+   , start_(mozilla::TimeStamp::Now()) {
   iter_.Advance(pickle.buffers_, pickle.header_size_);
 }
 
@@ -448,8 +455,17 @@ bool Pickle::WriteSentinel(uint32_t sentinel) {
 }
 #endif
 
-void Pickle::EndRead(PickleIterator& iter) const {
+void Pickle::EndRead(PickleIterator& iter, uint32_t ipcMsgType) const {
   DCHECK(iter.iter_.Done());
+
+  if (ipcMsgType != 0) {
+    uint32_t latencyMs = round((mozilla::TimeStamp::Now() - iter.start_).ToMilliseconds());
+    if (latencyMs >= kMinTelemetryIPCReadLatencyMs) {
+      mozilla::Telemetry::Accumulate(mozilla::Telemetry::IPC_READ_LATENCY_MS,
+                                     nsDependentCString(mozilla::ipc::StringFromIPCMessageType(ipcMsgType)),
+                                     latencyMs);
+    }
+  }
 }
 
 void Pickle::BeginWrite(uint32_t length, uint32_t alignment) {

@@ -10957,5 +10957,15 @@
     "bug_numbers": [1335365],
     "releaseChannelCollection": "opt-out",
     "description": "XMLHttpRequest.responseType set to moz-chunked-arraybuffer"
+  },
+  "IPC_READ_LATENCY_MS": {
+    "alert_emails": ["mlayzell@mozilla.com"],
+    "bug_numbers": [1342635],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 500,
+    "n_buckets": 20,
+    "keyed": true,
+    "description": "Measures the number of milliseconds we spend waiting for IPC messages to deserialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe."
   }
 }
