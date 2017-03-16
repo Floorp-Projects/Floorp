@@ -5,7 +5,7 @@
 -->
 <html><head>
   <meta charset="utf-8">
-  <title>Reference: video items with auto-margins and/or orthogonal writing-mode</title>
+  <title>Reference: stretching video items with auto-margins and/or orthogonal writing-mode</title>
   <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1316051">
   <style type="text/css">
 * { vertical-align: top; }
@@ -72,6 +72,42 @@ video {
 <div class="grid"><video class="mxh vr hmaa jc" src="support/colors-16x8.webm"></div>
 <div class="grid"><video class="mxh vr" src="support/colors-16x8.webm"></div>
 
+<script>
+var sizes =
+[
+  ['90px', '40px'],
+  ['16px', '40px'],
+  ['16px', '40px'],
+  ['16px', '40px'],
+  ['16px', '40px'],
+  ['98px', '48px'],
+  ['90px', '8px'],
+  ['90px', '8px'],
+  ['90px', '8px'],
+  ['90px', '8px'],
+  ['82px', '8px'],
+  ['82px', '8px'],
+  ['32px', '40px'],
+  ['16px', '40px'],
+  ['16px', '40px'],
+  ['16px', '40px'],
+  ['16px', '40px'],
+  ['32px', '48px'],
+  ['90px', '16px'],
+  ['16px', '16px'],
+  ['16px', '16px'],
+  ['16px', '16px'],
+  ['16px', '16px'],
+  ['98px', '16px'],
+];
+var items = document.querySelectorAll('video')
+for (var i = 0; i < items.length; ++i) {
+  let item = items[i];
+  item.style.width = sizes[i][0];
+  item.style.height = sizes[i][1];
+}
+
+</script>
 
 </body>
 </html>

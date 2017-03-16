@@ -5,7 +5,7 @@
 -->
 <html><head>
   <meta charset="utf-8">
-  <title>CSS Grid Test: stretching intrinsic ratio item with min/max-size:0</title>
+  <title>CSS Grid Test: stretching intrinsic ratio item with min-size:0</title>
   <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1176775">
   <link rel="help" href="https://drafts.csswg.org/css-align-3/#valdef-justify-self-stretch">
   <link rel="match" href="grid-item-intrinsic-ratio-stretch-001-ref.html">
@@ -15,6 +15,7 @@ body,html { color:black; background:white; font:16px/1 monospace; padding:0; mar
   display: inline-grid;
   border: 1px solid;
   margin: 5px;
+  place-items: stretch;
 }
 .grid > * {
   min-width: 0;
