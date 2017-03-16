@@ -121,8 +121,8 @@ pref("network.predictor.enabled", true);
 pref("network.predictor.max-db-size", 2097152); // bytes
 pref("network.predictor.preserve", 50); // percentage of predictor data to keep when cleaning up
 
-// Use JS mDNS as a fallback
-pref("network.mdns.use_js_fallback", true);
+// Do not use JS mDNS as a fallback
+pref("network.mdns.use_js_fallback", false);
 
 /* history max results display */
 pref("browser.display.history.maxresults", 100);
@@ -907,8 +907,8 @@ pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sy
 
 // Enable Presentation API
 pref("dom.presentation.enabled", false);
-pref("dom.presentation.discovery.enabled", true);
-pref("dom.presentation.discovery.legacy.enabled", true); // for TV 2.5 backward capability
+pref("dom.presentation.discovery.enabled", false);
+pref("dom.presentation.discovery.legacy.enabled", false); // for TV 2.5 backward capability
 
 pref("dom.audiochannel.audioCompeting", true);
 pref("dom.audiochannel.mediaControl", true);
