@@ -306,8 +306,8 @@ fails == 280708-1b.html 280708-1b.html
 == 283686-2.html 283686-2.html
 == 283686-3.html 283686-3.html
 fails == 289384-1.xhtml 289384-1.xhtml
-fails == 289480.html#top 289480-ref.html
-fails == 289480-ref.html 289480-ref.html
+== 289480.html#top 289480-ref.html
+== 289480-ref.html 289480-ref.html
 fails == 290129-1.html 290129-1.html
 fails == 291078-1.html 291078-1.html
 == 291078-2.html 291078-2.html
@@ -794,7 +794,7 @@ fails == 391994-1.html 391994-1.html
 == 392047.html 392047.html
 fails == 392435-1.html 392435-1.html
 == 393330-1.html 393330-1.html
-fails == 393490-1.html 393490-1.html
+== 393490-1.html 393490-1.html
 == 393517-1.xhtml 393517-1.xhtml
 == 393649-1.html 393649-1.html
 == 393655-1.html 393655-1.html
@@ -1518,8 +1518,8 @@ fails-if(Android) == 560455-1.xul 560455-1.xul
 == 561981-6.html 561981-6.html
 == 561981-7.html 561981-7.html
 == 561981-8.html 561981-8.html
-fails == 562835-1.html 562835-1.html
-fails == 562835-2.html 562835-2.html
+== 562835-1.html 562835-1.html
+== 562835-2.html 562835-2.html
 == 563584-1.html 563584-1.html
 == 563584-2.html 563584-2.html
 == 563584-3.html 563584-3.html
