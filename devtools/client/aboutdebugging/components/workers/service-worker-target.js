@@ -155,7 +155,8 @@ module.exports = createClass({
   renderButtons() {
     let pushButton = dom.button({
       className: "push-button",
-      onClick: this.push
+      onClick: this.push,
+      disabled: this.props.debugDisabled
     }, Strings.GetStringFromName("push"));
 
     let debugButton = dom.button({
@@ -167,6 +168,7 @@ module.exports = createClass({
     let startButton = dom.button({
       className: "start-button",
       onClick: this.start,
+      disabled: this.props.debugDisabled
     }, Strings.GetStringFromName("start"));
 
     if (this.isRunning()) {
@@ -187,7 +189,7 @@ module.exports = createClass({
 
     return dom.a({
       onClick: this.unregister,
-      className: "unregister-link"
+      className: "unregister-link",
     }, Strings.GetStringFromName("unregister"));
   },
 
