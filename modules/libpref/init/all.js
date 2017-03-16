@@ -2909,7 +2909,7 @@ pref("dom.ipc.plugins.forcedirect.enabled", true);
 #endif
 
 #ifdef NIGHTLY_BUILD
-pref("dom.ipc.processCount", 2);
+pref("dom.ipc.processCount", 4);
 #else
 pref("dom.ipc.processCount", 1);
 #endif
