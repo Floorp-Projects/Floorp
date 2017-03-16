@@ -32,7 +32,6 @@
 #include "mozilla/dom/VideoTrackList.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Telemetry.h"
-#include "GMPCrashHelper.h"
 #include "Layers.h"
 #include "mozilla/layers/ShadowLayers.h"
 
@@ -965,34 +964,11 @@ MediaDecoder::OwnerHasError() const
   return GetOwner()->HasError();
 }
 
-class MediaElementGMPCrashHelper : public GMPCrashHelper
-{
-public:
-  explicit MediaElementGMPCrashHelper(HTMLMediaElement* aElement)
-    : mElement(aElement)
-  {
-    MOZ_ASSERT(NS_IsMainThread()); // WeakPtr isn't thread safe.
-  }
-  already_AddRefed<nsPIDOMWindowInner> GetPluginCrashedEventTarget() override
-  {
-    MOZ_ASSERT(NS_IsMainThread()); // WeakPtr isn't thread safe.
-    if (!mElement) {
-      return nullptr;
-    }
-    return do_AddRef(mElement->OwnerDoc()->GetInnerWindow());
-  }
-private:
-  WeakPtr<HTMLMediaElement> mElement;
-};
-
 already_AddRefed<GMPCrashHelper>
 MediaDecoder::GetCrashHelper()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return GetOwner()->GetMediaElement()
-         ? MakeAndAddRef<MediaElementGMPCrashHelper>(
-             GetOwner()->GetMediaElement())
-         : nullptr;
+  return GetOwner()->CreateGMPCrashHelper();
 }
 
 bool
