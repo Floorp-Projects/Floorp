@@ -10571,7 +10571,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       uriForShouldLoadCheck = aOriginalURI;
     }
     bool shouldLoad;
-    rv = browserChrome3->ShouldLoadURI(this, uriForShouldLoadCheck, aReferrer,
+    rv = browserChrome3->ShouldLoadURI(this, uriForShouldLoadCheck, aReferrer, !!aPostData,
                                        aTriggeringPrincipal, &shouldLoad);
     if (NS_SUCCEEDED(rv) && !shouldLoad) {
       return NS_OK;
