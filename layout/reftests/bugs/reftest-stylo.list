@@ -1652,7 +1652,7 @@ fails == 622585-1.html 622585-1.html
 == 625409-1.html 625409-1.html
 == 627393-1.html 627393-1.html
 fuzzy-if(skiaContent,1,500) == 630835-1.html 630835-1.html
-== 631352-1.html 631352-1.html
+fails == 631352-1.html 631352-1.html
 == 632423-1.html 632423-1.html
 skip-if(Android) random-if(winWidget||OSX==1010) == 632781-verybig.html 632781-verybig.html
 == 632781-normalsize.html 632781-normalsize.html
