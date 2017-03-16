@@ -1368,8 +1368,7 @@ CustomizeMode.prototype = {
       }
 
       let lwthemePrefs = Services.prefs.getBranch("lightweightThemes.");
-      let recommendedThemes = lwthemePrefs.getComplexValue("recommendedThemes",
-                                                           Ci.nsISupportsString).data;
+      let recommendedThemes = lwthemePrefs.getStringPref("recommendedThemes");
       recommendedThemes = JSON.parse(recommendedThemes);
       let sb = Services.strings.createBundle("chrome://browser/locale/lightweightThemes.properties");
       for (let theme of recommendedThemes) {
@@ -1379,11 +1378,8 @@ CustomizeMode.prototype = {
         button.addEventListener("command", () => {
           LightweightThemeManager.setLocalTheme(button.theme);
           recommendedThemes = recommendedThemes.filter((aTheme) => { return aTheme.id != button.theme.id; });
-          let string = Cc["@mozilla.org/supports-string;1"]
-                         .createInstance(Ci.nsISupportsString);
-          string.data = JSON.stringify(recommendedThemes);
-          lwthemePrefs.setComplexValue("recommendedThemes",
-                                       Ci.nsISupportsString, string);
+          lwthemePrefs.setStringPref("recommendedThemes",
+                                     JSON.stringify(recommendedThemes));
           onThemeSelected(panel);
         });
         panel.insertBefore(button, footer);

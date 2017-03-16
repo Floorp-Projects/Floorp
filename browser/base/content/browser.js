@@ -3611,11 +3611,7 @@ function openHomeDialog(aURL) {
 
   if (pressedVal == 0) {
     try {
-      var homepageStr = Components.classes["@mozilla.org/supports-string;1"]
-                        .createInstance(Components.interfaces.nsISupportsString);
-      homepageStr.data = aURL;
-      gPrefService.setComplexValue("browser.startup.homepage",
-                                   Components.interfaces.nsISupportsString, homepageStr);
+      gPrefService.setStringPref("browser.startup.homepage", aURL);
     } catch (ex) {
       dump("Failed to set the home page.\n" + ex + "\n");
     }
