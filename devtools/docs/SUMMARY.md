@@ -17,3 +17,4 @@
 * [Backend](backend.md)
   * [Protocol](protocol.md)
   * [Debugger API](debugger-api.md)
+  * [Backward Compatibility](backward-compatibility.md)
