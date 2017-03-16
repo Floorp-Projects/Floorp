@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 1346623</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body onload="startTest();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1346623">Mozilla Bug 1346623</a>
+<div id="display">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+var Ci = Components.interfaces;
+var winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+
+function startTest() {
+  // load some styles at the agent level
+  var css = `
+    #ac-parent { color: green; }
+    #ac-child.abc { }
+  `;
+  var sheetURL = "data:text/css," + encodeURIComponent(css);
+  winUtils.loadSheetUsingURIString(sheetURL, winUtils.AGENT_SHEET);
+
+  // add canvas anonymous content
+  var bq = document.createElement("blockquote");
+  bq.id = "ac-parent";
+  bq.textContent = "This blockquote text should be green.";
+  var div = document.createElement("div");
+  div.id = "ac-child";
+  div.textContent = " This div text should be green.";
+  bq.appendChild(div);
+  var ac = document.insertAnonymousContent(bq);
+  document.body.offsetWidth;
+
+  is(ac.getComputedStylePropertyValue("ac-child", "color"), "rgb(0, 128, 0)",
+     "color before reframing");
+
+  // reframe the root
+  document.documentElement.style.display = "flex";
+  document.body.offsetWidth;
+
+  // restyle the div
+  ac.setAttributeForElement("ac-child", "class", "abc");
+  document.body.offsetWidth;
+
+  is(ac.getComputedStylePropertyValue("ac-child", "color"), "rgb(0, 128, 0)",
+     "color after reframing");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
