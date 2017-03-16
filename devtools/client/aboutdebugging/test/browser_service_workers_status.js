@@ -12,15 +12,9 @@ const SW_TIMEOUT = 2000;
 requestLongerTimeout(2);
 
 add_task(function* () {
-  yield SpecialPowers.pushPrefEnv({
-    "set": [
-      // Accept workers from mochitest's http.
-      ["dom.serviceWorkers.testing.enabled", true],
-      ["dom.serviceWorkers.idle_timeout", SW_TIMEOUT],
-      ["dom.serviceWorkers.idle_extended_timeout", SW_TIMEOUT],
-      ["dom.ipc.processCount", 1],
-    ]
-  });
+  yield enableServiceWorkerDebugging();
+  yield pushPref("dom.serviceWorkers.idle_timeout", SW_TIMEOUT);
+  yield pushPref("dom.serviceWorkers.idle_extended_timeout", SW_TIMEOUT);
 
   let { tab, document } = yield openAboutDebugging("workers");
 
