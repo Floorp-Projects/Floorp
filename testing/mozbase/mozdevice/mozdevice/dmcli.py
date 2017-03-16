@@ -99,9 +99,6 @@ class DMCli(object):
                                        'args': [{'name': 'png_file'}],
                                        'help': 'capture screenshot of device in action'
                                        },
-                         'sutver': {'function': self.sutver,
-                                    'help': 'SUTAgent\'s product name and version (SUT only)'
-                                    },
                          'clearlogcat': {'function': self.clearlogcat,
                                          'help': 'clear the logcat'
                                          },
@@ -150,11 +147,7 @@ class DMCli(object):
         mozlog.commandline.setup_logging(
             'mozdevice', args, {'mach': sys.stdout})
 
-        if args.dmtype == "sut" and not args.host and not args.hwid:
-            self.parser.error("Must specify device ip in TEST_DEVICE or "
-                              "with --host option with SUT")
-
-        self.dm = self.getDevice(dmtype=args.dmtype, hwid=args.hwid,
+        self.dm = self.getDevice(hwid=args.hwid,
                                  host=args.host, port=args.port,
                                  verbose=args.verbose)
 
@@ -175,13 +168,8 @@ class DMCli(object):
                             default=os.environ.get('TEST_DEVICE'))
         parser.add_argument("-p", "--port", action="store",
                             type=int,
-                            help="Custom device port (if using SUTAgent or "
+                            help="Custom device port (if using "
                             "adb-over-tcp)", default=None)
-        parser.add_argument("-m", "--dmtype", action="store",
-                            help="DeviceManager type (adb or sut, defaults "
-                            "to DM_TRANS environment variable, if "
-                            "present, or adb)",
-                            default=os.environ.get('DM_TRANS', 'adb'))
         parser.add_argument("-d", "--hwid", action="store",
                             help="HWID", default=None)
         parser.add_argument("--package-name", action="store",
@@ -205,7 +193,7 @@ class DMCli(object):
                     subparser.add_argument(arg['name'], **kwargs)
             subparser.set_defaults(func=commandprops['function'])
 
-    def getDevice(self, dmtype="adb", hwid=None, host=None, port=None,
+    def getDevice(self, hwid=None, host=None, port=None,
                   packagename=None, verbose=False):
         '''
         Returns a device with the specified parameters
@@ -214,24 +202,11 @@ class DMCli(object):
         if verbose:
             logLevel = logging.DEBUG
 
-        if hwid:
-            return mozdevice.DroidConnectByHWID(hwid, logLevel=logLevel)
-
-        if dmtype == "adb":
-            if host and not port:
-                port = 5555
-            return mozdevice.DroidADB(packageName=packagename,
-                                      host=host, port=port,
-                                      logLevel=logLevel)
-        elif dmtype == "sut":
-            if not host:
-                self.parser.error("Must specify host with SUT!")
-            if not port:
-                port = 20701
-            return mozdevice.DroidSUT(host=host, port=port,
-                                      logLevel=logLevel)
-        else:
-            self.parser.error("Unknown device manager type: %s" % type)
+        if host and not port:
+            port = 5555
+        return mozdevice.DroidADB(packageName=packagename,
+                                  host=host, port=port,
+                                  logLevel=logLevel)
 
     def deviceroot(self, args):
         print self.dm.deviceRoot
@@ -338,13 +313,6 @@ class DMCli(object):
 
     def screencap(self, args):
         self.dm.saveScreenshot(args.png_file)
-
-    def sutver(self, args):
-        if args.dmtype == 'sut':
-            print '%s Version %s' % (self.dm.agentProductName,
-                                     self.dm.agentVersion)
-        else:
-            print 'Must use SUT transport to get SUT version.'
 
     def isfile(self, args):
         if self.dm.fileExists(args.remote_file):
