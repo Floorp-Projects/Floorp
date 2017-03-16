@@ -517,7 +517,7 @@ MenuItem.prototype = {
     }
 
     let docPattern = this.documentUrlMatchPattern;
-    let pageURI = Services.io.newURI(contextData["inFrame" ? "frameUrl" : "pageUrl"]);
+    let pageURI = Services.io.newURI(contextData.pageUrl);
     if (docPattern && !docPattern.matches(pageURI)) {
       return false;
     }
