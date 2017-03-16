@@ -350,6 +350,9 @@ protected:
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify) override;
 
+  // Override for nsImageLoadingContent.
+  nsIContent* AsContent() override { return this; }
+
   // This is a weak reference that this element and the HTMLFormElement
   // cooperate in maintaining.
   HTMLFormElement* mForm;
