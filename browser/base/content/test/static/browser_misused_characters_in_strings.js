@@ -107,9 +107,6 @@ let gWhitelist = [{
   }
 ];
 
-var moduleLocation = gTestPath.replace(/\/[^\/]*$/i, "/parsingTestHelpers.jsm");
-var {generateURIsFromDirTree} = Cu.import(moduleLocation, {});
-
 /**
  * Check if an error should be ignored due to matching one of the whitelist
  * objects defined in gWhitelist.
@@ -135,6 +132,7 @@ function ignoredError(filepath, key, type) {
 function fetchFile(uri) {
   return new Promise((resolve, reject) => {
     let xhr = new XMLHttpRequest();
+    xhr.responseType = "text";
     xhr.open("GET", uri, true);
     xhr.onreadystatechange = function() {
       if (this.readyState != this.DONE) {
