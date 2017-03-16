@@ -726,9 +726,8 @@ const CustomizableWidgets = [
       }
 
       // Register ourselves with the service so we know when the zoom prefs change.
-      Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:zoomChange", false);
-      Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:zoomReset", false);
       Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:location-change", false);
+      window.addEventListener("FullZoomChange", updateZoomResetButton);
 
       if (inPanel) {
         let panel = aDocument.getElementById(kPanelId);
@@ -805,9 +804,8 @@ const CustomizableWidgets = [
             return;
 
           CustomizableUI.removeListener(listener);
-          Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:zoomChange");
-          Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:zoomReset");
           Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:location-change");
+          window.removeEventListener("FullZoomChange", updateZoomResetButton);
           let panel = aDoc.getElementById(kPanelId);
           panel.removeEventListener("popupshowing", updateZoomResetButton);
           let container = aDoc.defaultView.gBrowser.tabContainer;

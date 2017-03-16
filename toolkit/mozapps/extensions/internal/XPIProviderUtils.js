@@ -55,7 +55,6 @@ const LAST_SQLITE_DB_SCHEMA           = 14;
 const PREF_DB_SCHEMA                  = "extensions.databaseSchema";
 const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
 const PREF_EM_ENABLED_ADDONS          = "extensions.enabledAddons";
-const PREF_EM_DSS_ENABLED             = "extensions.dss.enabled";
 const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
 const PREF_E10S_BLOCKED_BY_ADDONS     = "extensions.e10sBlockedByAddons";
 const PREF_E10S_HAS_NONEXEMPT_ADDON   = "extensions.e10s.rollout.hasAddon";
@@ -1429,30 +1428,17 @@ this.XPIDatabase = {
     // when a lightweight theme is applied for example)
     text += "\r\n[ThemeDirs]\r\n";
 
-    let dssEnabled = Services.prefs.getBoolPref(PREF_EM_DSS_ENABLED, false);
-
-    let themes = [];
-    if (dssEnabled) {
-      themes = _filterDB(this.addonDB, aAddon => aAddon.type == "theme");
-    } else {
-      let activeTheme = _findAddon(
-        this.addonDB,
-        aAddon => (aAddon.type == "theme") &&
-                  (aAddon.internalName == XPIProvider.selectedSkin));
-      if (activeTheme) {
-        themes.push(activeTheme);
-      }
+    let activeTheme = _findAddon(
+      this.addonDB,
+      aAddon => (aAddon.type == "theme") &&
+                (aAddon.internalName == XPIProvider.selectedSkin));
+    count = 0;
+    if (activeTheme) {
+      text += "Extension" + (count++) + "=" + activeTheme.descriptor + "\r\n";
+      enabledAddons.push(encodeURIComponent(activeTheme.id) + ":" +
+                         encodeURIComponent(activeTheme.version));
     }
-
-    if (themes.length > 0) {
-      count = 0;
-      for (let row of themes) {
-        text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
-        enabledAddons.push(encodeURIComponent(row.id) + ":" +
-                           encodeURIComponent(row.version));
-      }
-      fullCount += count;
-    }
+    fullCount += count;
 
     text += "\r\n[MultiprocessIncompatibleExtensions]\r\n";
 

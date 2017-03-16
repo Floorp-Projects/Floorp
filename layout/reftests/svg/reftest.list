@@ -225,6 +225,7 @@ fuzzy-if(skiaContent,1,800000) == filters-and-group-opacity-01.svg filters-and-g
 fuzzy-if(Android,18,600) == foreignObject-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
 == foreignObject-fixedpos-02.html foreignObject-fixedpos-ref.html
 == foreignObject-dynamic-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
+== foreignObject-dynamic-line-height-01.html foreignObject-dynamic-line-height-01-ref.html
 == foreignObject-vertical-01.svg foreignObject-vertical-01-ref.svg
 
 == fragmentIdentifier-01.xhtml pass.svg
@@ -254,6 +255,7 @@ fuzzy-if(cocoaWidget,15,19679) fuzzy-if(winWidget,1,8800) fuzzy-if(!cocoaWidget&
 
 fuzzy-if(skiaContent,1,800000) == markers-and-group-opacity-01.svg markers-and-group-opacity-01-ref.svg
 == marker-attribute-01.svg pass.svg
+== marker-dynamic-opacity.html marker-dynamic-opacity-ref.html
 == marker-effects-01.svg marker-effects-01-ref.svg
 fuzzy-if(skiaContent,1,100) == marker-viewBox-01.svg marker-viewBox-01-ref.svg
 fuzzy-if(skiaContent,1,100) == marker-orientation-01.svg marker-orientation-01-ref.svg
@@ -455,6 +457,9 @@ HTTP(..) == text-scale-03.svg text-scale-03-ref.svg
 == text-style-01e.svg text-style-01-ref.svg
 
 == text-stroke-scaling-01.svg text-stroke-scaling-01-ref.svg
+fuzzy(16,3) == text-stroke-scaling-02a.html text-stroke-scaling-02-ref.html # antialiasing
+fuzzy(16,3) == text-stroke-scaling-02b.html text-stroke-scaling-02-ref.html # antialiasing
+== text-stroke-scaling-02a.html text-stroke-scaling-02b.html
 == textPath-01.svg textPath-01-ref.svg
 == textPath-02.svg pass.svg
 fuzzy-if(skiaContent,1,610) == textPath-03.svg pass.svg

@@ -332,32 +332,11 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
   if (CanRecycleDecoder()) {
     // Do not recreate the decoder, reuse it.
     UpdateConfigFromExtraData(extra_data);
-    // Ideally we would want to drain the decoder instead of flushing it.
-    // However the draining operation requires calling Drain and looping several
-    // times which isn't possible from within the H264Converter. So instead we
-    // flush the decoder. In practice, this is a no-op as SPS change will only
-    // be used with MSE. And with MSE, the MediaFormatReader would have drained
-    // the decoder already.
-    RefPtr<H264Converter> self = this;
     if (!sample->mTrackInfo) {
       sample->mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, 0);
     }
-    mDecoder->Flush()
-      ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
-             __func__,
-             [self, sample, this]() {
-               mFlushRequest.Complete();
-               DecodeFirstSample(sample);
-             },
-             [self, this](const MediaResult& aError) {
-               mFlushRequest.Complete();
-               mDecodePromise.Reject(aError, __func__);
-             })
-      ->Track(mFlushRequest);
     mNeedKeyframe = true;
-    // This is not really initializing the decoder, but it will do as it
-    // indicates an operation is pending.
-    return NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER;
+    return NS_OK;
   }
 
   // The SPS has changed, signal to flush the current decoder and create a

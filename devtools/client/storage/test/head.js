@@ -919,3 +919,11 @@ function setPermission(url, permission) {
             .addFromPrincipal(principal, permission,
                               nsIPermissionManager.ALLOW_ACTION);
 }
+
+function toggleSidebar() {
+  gUI.sidebarToggleBtn.click();
+}
+
+function sidebarToggleVisible() {
+  return !gUI.sidebarToggleBtn.hidden;
+}

@@ -371,6 +371,11 @@ void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSour
 
 const nsMediaFeature* Gecko_GetMediaFeatures();
 
+// We use an int32_t here instead of a LookAndFeel::ColorID
+// because forward-declaring a nested enum/struct is impossible
+nscolor Gecko_GetLookAndFeelSystemColor(int32_t color_id,
+                                        RawGeckoPresContextBorrowed pres_context);
+
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                                       \
   void Gecko_Construct_Default_nsStyle##name(                                  \

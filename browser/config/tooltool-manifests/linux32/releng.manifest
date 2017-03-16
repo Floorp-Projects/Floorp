@@ -1,35 +1,35 @@
 [
-{
-"version": "gcc 4.9.4 + PR64905",
-"size": 101297752,
-"digest": "42aa2e3fdd232b5e390472a788e7f7db71a1fee4221e260b6cb58c9a1d73e6cdd10afcbac137f7844290169cd6b561b424ecc92b159e9726b0ad5de3f478a8be",
-"algorithm": "sha512",
-"filename": "gcc.tar.xz",
-"unpack": true
-},
-{
-"size": 11189216,
-"digest": "18bc52b0599b1308b667e282abb45f47597bfc98a5140cfcab8da71dacf89dd76d0dee22a04ce26fe7ad1f04e2d6596991f9e5b01fd2aaaab5542965f596b0e6",
-"algorithm": "sha512",
-"filename": "gtk3.tar.xz",
-"setup": "setup.sh",
-"unpack": true
-},
-{
-"version": "rustc 1.15.1 (021bd294c 2017-02-08) repack",
-"size": 110077036,
-"digest": "8b99d058cc081f6ca2a3cc88c3ca9c15232961d2539774dacee35e2258955ad8fc4cb0af3b903a3e3f8a264ddecb3baae9256502ffc178a2823779284ace2bd8",
-"algorithm": "sha512",
-"filename": "rustc.tar.xz",
-"unpack": true
-},
-{
-"version": "sccache rev b21198a7183a2fe226ff49348b1c0b51bae9f4f8",
-"algorithm": "sha512",
-"visibility": "public",
-"filename": "sccache2.tar.xz",
-"unpack": true,
-"digest": "b89c40dbf28c2bd54fadf017c15a8789f6e7611252a623cc3a1507e3dd6fc9e5a50d746e81776ba856e33fdc99b4a6413ba7c3ac0aed5f4835705da2b758ef22",
-"size": 1020700
-}
+  {
+    "version": "gcc 4.9.4 + PR64905",
+    "size": 101297752,
+    "digest": "42aa2e3fdd232b5e390472a788e7f7db71a1fee4221e260b6cb58c9a1d73e6cdd10afcbac137f7844290169cd6b561b424ecc92b159e9726b0ad5de3f478a8be",
+    "algorithm": "sha512",
+    "filename": "gcc.tar.xz",
+    "unpack": true
+  },
+  {
+    "size": 11189216,
+    "digest": "18bc52b0599b1308b667e282abb45f47597bfc98a5140cfcab8da71dacf89dd76d0dee22a04ce26fe7ad1f04e2d6596991f9e5b01fd2aaaab5542965f596b0e6",
+    "algorithm": "sha512",
+    "filename": "gtk3.tar.xz",
+    "setup": "setup.sh",
+    "unpack": true
+  },
+  {
+    "version": "rustc 1.15.1 (021bd294c 2017-02-08) repack",
+    "size": 110077036,
+    "digest": "8b99d058cc081f6ca2a3cc88c3ca9c15232961d2539774dacee35e2258955ad8fc4cb0af3b903a3e3f8a264ddecb3baae9256502ffc178a2823779284ace2bd8",
+    "algorithm": "sha512",
+    "filename": "rustc.tar.xz",
+    "unpack": true
+  },
+  {
+    "version": "sccache rev b21198a7183a2fe226ff49348b1c0b51bae9f4f8",
+    "algorithm": "sha512",
+    "visibility": "public",
+    "filename": "sccache2.tar.xz",
+    "unpack": true,
+    "digest": "b89c40dbf28c2bd54fadf017c15a8789f6e7611252a623cc3a1507e3dd6fc9e5a50d746e81776ba856e33fdc99b4a6413ba7c3ac0aed5f4835705da2b758ef22",
+    "size": 1020700
+  }
 ]
