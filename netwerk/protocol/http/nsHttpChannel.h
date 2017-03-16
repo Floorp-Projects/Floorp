@@ -188,8 +188,6 @@ public:
 
 public: /* internal necko use only */
 
-    using InitLocalBlockListCallback = std::function<void(bool)>;
-
     void InternalSetUploadStream(nsIInputStream *uploadStream)
       { mUploadStream = uploadStream; }
     void SetUploadStreamHasHeaders(bool hasHeaders)
@@ -295,18 +293,7 @@ private:
     typedef nsresult (nsHttpChannel::*nsContinueRedirectionFunc)(nsresult result);
 
     bool     RequestIsConditional();
-
-    // Connections will only be established in this function.
-    // (including DNS prefetch and speculative connection.)
-    nsresult BeginConnectActual();
-
-    // We might synchronously or asynchronously call BeginConnectActual,
-    // which includes DNS prefetch and speculative connection, according to
-    // whether an async tracker lookup is required. If the tracker lookup
-    // is required, this funciton will just return NS_OK and BeginConnectActual()
-    // will be called when callback. See Bug 1325054 for more information.
-    nsresult BeginConnect();
-
+    MOZ_MUST_USE nsresult BeginConnect();
     MOZ_MUST_USE nsresult ContinueBeginConnectWithResult();
     void     ContinueBeginConnect();
     MOZ_MUST_USE nsresult Connect();
@@ -338,8 +325,6 @@ private:
     MOZ_MUST_USE nsresult ContinueOnStartRequest1(nsresult);
     MOZ_MUST_USE nsresult ContinueOnStartRequest2(nsresult);
     MOZ_MUST_USE nsresult ContinueOnStartRequest3(nsresult);
-
-    bool InitLocalBlockList(const InitLocalBlockListCallback& aCallback);
 
     // redirection specific methods
     void     HandleAsyncRedirect();
