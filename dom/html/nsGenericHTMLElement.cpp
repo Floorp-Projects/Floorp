@@ -1959,13 +1959,6 @@ nsGenericHTMLFormElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       }
 
       mForm->RemoveElement(this, false);
-
-      // Removing the element from the form can make it not be the default
-      // control anymore.  Go ahead and notify on that change, though we might
-      // end up readding and becoming the default control again in
-      // AfterSetAttr.
-      // FIXME: Bug 656197
-      UpdateState(aNotify);
     }
 
     if (aName == nsGkAtoms::form) {
