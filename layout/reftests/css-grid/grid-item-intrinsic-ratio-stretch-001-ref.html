@@ -5,7 +5,7 @@
 -->
 <html><head>
   <meta charset="utf-8">
-  <title>Reference: stretching intrinsic ratio item with min/max-size:0</title>
+  <title>Reference: stretching intrinsic ratio item with min-size:0</title>
   <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1176775">
   <style type="text/css">
 body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
@@ -22,59 +22,59 @@ body,html { color:black; background:white; font:16px/1 monospace; padding:0; mar
 <body>
 
 <div class="grid" style="grid: 96px / 20px">
-<img src="support/lime-2x24.png" style="height:96px; width:8px">
+<img src="support/lime-2x24.png" style="height:96px; width:20px">
 </div>
 <div class="grid" style="grid: 96px / 4px">
-<img src="support/lime-2x24.png" style="height:48px; width:4px">
+<img src="support/lime-2x24.png" style="height:96px; width:4px">
 </div>
 
 <div class="grid" style="grid: 8px / 20px">
-<img src="support/lime-24x2.png" style="width:20px; height:calc(2px * (20 / 24))">
+<img src="support/lime-24x2.png" style="width:20px; height:8px">
 </div>
 <div class="grid" style="grid: 8px / 100px">
-<img src="support/lime-24x2.png" style="width:96px; height:8px">
+<img src="support/lime-24x2.png" style="width:100px; height:8px">
 </div>
 
 <div class="grid" style="grid: 96px / 10px">
-<img src="support/lime-2x24.png" style="align-self:start; height:120px; width:10px">
+<img src="support/lime-2x24.png" style="align-self:start; height:24px; width:10px">
 </div>
 <div class="grid" style="grid: 96px / 4px">
-<img src="support/lime-2x24.png" style="align-self:start; height:48px; width:4px">
+<img src="support/lime-2x24.png" style="align-self:start; height:24px; width:4px">
 </div>
 
 <div class="grid" style="grid: 8px / 100px">
-<img src="support/lime-24x2.png" style="justify-self:start; width:96px; height:8px">
+<img src="support/lime-24x2.png" style="justify-self:start; width:24px; height:8px">
 </div>
 <div class="grid" style="grid: 8px / 10px">
-<img src="support/lime-24x2.png" style="justify-self:start; width:96px; height:8px">
+<img src="support/lime-24x2.png" style="justify-self:start; width:24px; height:8px">
 </div>
 
 <br>
 
 <div class="grid" style="grid: 96px / 10px">
-<img src="support/lime-2x24.png" style="align-self:start unsafe; height:120px; width:10px">
+<img src="support/lime-2x24.png" style="align-self:start unsafe; height:24px; width:10px">
 </div>
 <div class="grid" style="grid: 96px / 10px">
-<img src="support/lime-2x24.png" style="align-self:start safe; height:120px; width:10px">
+<img src="support/lime-2x24.png" style="align-self:start safe; height:24px; width:10px">
 </div>
 <div class="grid" style="grid: 96px / 10px">
-<img src="support/lime-2x24.png" style="align-self:end unsafe; height:120px; width:10px; margin-bottom:-24px">
+<img src="support/lime-2x24.png" style="align-self:end unsafe; height:24px; width:10px">
 </div>
 <div class="grid" style="grid: 96px / 10px">
-<img src="support/lime-2x24.png" style="align-self:end safe; height:120px; width:10px; margin-top:-24px">
+<img src="support/lime-2x24.png" style="align-self:end safe; height:24px; width:10px">
 </div>
 
 <div class="grid" style="grid: 4px / 10px">
-<img src="support/lime-24x2.png" style="justify-self:start unsafe; width:48px; height:4px">
+<img src="support/lime-24x2.png" style="justify-self:start unsafe; width:24px; height:4px">
 </div>
 <div class="grid" style="grid: 4px / 10px; margin-left: 40px">
-<img src="support/lime-24x2.png" style="justify-self:start safe; width:48px; height:4px">
+<img src="support/lime-24x2.png" style="justify-self:start safe; width:24px; height:4px">
 </div>
 <div class="grid" style="grid: 4px / 10px; margin-left: 40px">
-<img src="support/lime-24x2.png" style="justify-self:end unsafe; width:48px; height:4px; margin-right:-38px">
+<img src="support/lime-24x2.png" style="justify-self:end unsafe; width:24px; height:4px; margin-right:-14px">
 </div>
 <div class="grid" style="grid: 4px / 10px; margin-left: 80px">
-<img src="support/lime-24x2.png" style="justify-self:end safe; width:48px; height:4px; margin-left:-38px">
+<img src="support/lime-24x2.png" style="justify-self:end safe; width:24px; height:4px; margin-left:-38px">
 </div>
 
 <br>
@@ -82,59 +82,59 @@ body,html { color:black; background:white; font:16px/1 monospace; padding:0; mar
 <div class="vertical-tests">
 
 <div class="grid" style="grid: 96px / 20px">
-<img src="support/lime-2x24.png" style="height:96px; width:8px">
+<img src="support/lime-2x24.png" style="height:96px; width:20px">
 </div>
 <div class="grid" style="grid: 96px / 4px">
-<img src="support/lime-2x24.png" style="height:48px; width:4px">
+<img src="support/lime-2x24.png" style="height:96px; width:4px">
 </div>
 
 <div class="grid" style="grid: 8px / 20px">
-<img src="support/lime-24x2.png" style="width:20px; height:calc(2px * (20 / 24))">
+<img src="support/lime-24x2.png" style="width:20px; height:8px">
 </div>
 <div class="grid" style="grid: 8px / 100px">
-<img src="support/lime-24x2.png" style="width:96px; height:8px">
+<img src="support/lime-24x2.png" style="width:100px; height:8px">
 </div>
 
 <div class="grid" style="grid: 96px / 10px">
-<img src="support/lime-2x24.png" style="align-self:start; height:120px; width:10px">
+<img src="support/lime-2x24.png" style="align-self:start; height:24px; width:10px">
 </div>
 <div class="grid" style="grid: 96px / 4px">
-<img src="support/lime-2x24.png" style="align-self:start; height:48px; width:4px">
+<img src="support/lime-2x24.png" style="align-self:start; height:24px; width:4px">
 </div>
 
 <div class="grid" style="grid: 8px / 100px">
-<img src="support/lime-24x2.png" style="justify-self:start; width:96px; height:8px">
+<img src="support/lime-24x2.png" style="justify-self:start; width:24px; height:8px">
 </div>
 <div class="grid" style="grid: 8px / 10px">
-<img src="support/lime-24x2.png" style="justify-self:start; width:96px; height:8px">
+<img src="support/lime-24x2.png" style="justify-self:start; width:24px; height:8px">
 </div>
 
 <br>
 
 <div class="grid" style="grid: 96px / 10px">
-<img src="support/lime-2x24.png" style="align-self:start unsafe; height:120px; width:10px">
+<img src="support/lime-2x24.png" style="align-self:start unsafe; height:24px; width:10px">
 </div>
 <div class="grid" style="grid: 96px / 10px">
-<img src="support/lime-2x24.png" style="align-self:start safe; height:120px; width:10px">
+<img src="support/lime-2x24.png" style="align-self:start safe; height:24px; width:10px">
 </div>
 <div class="grid" style="grid: 96px / 10px">
-<img src="support/lime-2x24.png" style="align-self:end unsafe; height:120px; width:10px; margin-bottom:-24px">
+<img src="support/lime-2x24.png" style="align-self:end unsafe; height:24px; width:10px">
 </div>
 <div class="grid" style="grid: 96px / 10px">
-<img src="support/lime-2x24.png" style="align-self:end safe; height:120px; width:10px; margin-top:-24px">
+<img src="support/lime-2x24.png" style="align-self:end safe; height:24px; width:10px">
 </div>
 
 <div class="grid" style="grid: 4px / 10px">
-<img src="support/lime-24x2.png" style="justify-self:start unsafe; width:48px; height:4px">
+<img src="support/lime-24x2.png" style="justify-self:start unsafe; width:24px; height:4px">
 </div>
 <div class="grid" style="grid: 4px / 10px; margin-left: 40px">
-<img src="support/lime-24x2.png" style="justify-self:start safe; width:48px; height:4px">
+<img src="support/lime-24x2.png" style="justify-self:start safe; width:24px; height:4px">
 </div>
 <div class="grid" style="grid: 4px / 10px; margin-left: 40px">
-<img src="support/lime-24x2.png" style="justify-self:end unsafe; width:48px; height:4px; margin-right:-38px">
+<img src="support/lime-24x2.png" style="justify-self:end unsafe; width:24px; height:4px; margin-right:-14px">
 </div>
 <div class="grid" style="grid: 4px / 10px; margin-left: 80px">
-<img src="support/lime-24x2.png" style="justify-self:end safe; width:48px; height:4px; margin-left:-38px">
+<img src="support/lime-24x2.png" style="justify-self:end safe; width:24px; height:4px; margin-left:-38px">
 </div>
 
 </div>
