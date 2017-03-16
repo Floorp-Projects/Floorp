@@ -2008,12 +2008,6 @@ nsGenericHTMLFormElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       }
 
       mForm->AddElement(this, false, aNotify);
-
-      // Adding the element to the form can make it be the default control .
-      // Go ahead and notify on that change.
-      // Note: no need to notify on CanBeDisabled(), since type attr
-      // changes can't affect that.
-      UpdateState(aNotify);
     }
 
     if (aName == nsGkAtoms::form) {
