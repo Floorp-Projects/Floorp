@@ -2341,13 +2341,13 @@ Element::SetAttr(int32_t aNamespaceID, nsIAtom* aName,
     preparsedAttrValue = nullptr;
   }
 
-  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (aNotify) {
     nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType,
                                      preparsedAttrValue);
   }
+
+  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Hold a script blocker while calling ParseAttribute since that can call
   // out to id-observers
@@ -2390,13 +2390,13 @@ Element::SetParsedAttr(int32_t aNamespaceID, nsIAtom* aName,
     return NS_OK;
   }
 
-  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (aNotify) {
     nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType,
                                      &aParsedValue);
   }
+
+  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
                           aParsedValue, modType, hasListeners, aNotify,
@@ -2644,9 +2644,6 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     return NS_OK;
   }
 
-  nsresult rv = BeforeSetAttr(aNameSpaceID, aName, nullptr, aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsIDocument *document = GetComposedDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
 
@@ -2655,6 +2652,9 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                      nsIDOMMutationEvent::REMOVAL,
                                      nullptr);
   }
+
+  nsresult rv = BeforeSetAttr(aNameSpaceID, aName, nullptr, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasMutationListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,
