@@ -10611,7 +10611,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   nsCOMPtr<nsIWebBrowserChrome3> browserChrome3 = do_GetInterface(mTreeOwner);
   if (browserChrome3) {
     bool shouldLoad;
-    rv = browserChrome3->ShouldLoadURI(this, aURI, aReferrer, aTriggeringPrincipal, &shouldLoad);
+    rv = browserChrome3->ShouldLoadURI(this, aURI, aReferrer, !!aPostData,
+                                       aTriggeringPrincipal, &shouldLoad);
     if (NS_SUCCEEDED(rv) && !shouldLoad) {
       return NS_OK;
     }
