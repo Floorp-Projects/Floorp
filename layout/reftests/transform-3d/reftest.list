@@ -88,3 +88,4 @@ fuzzy(255,100) fails-if(webrender) == split-non-ortho1.html split-non-ortho1-ref
 fuzzy-if(winWidget,150,120) fails-if(webrender) == component-alpha-1.html component-alpha-1-ref.html
 fails-if(webrender) == nested-transform-1.html nested-transform-1-ref.html
 fails-if(webrender) == transform-geometry-1.html transform-geometry-1-ref.html
+fails-if(webrender) == intermediate-1.html intermediate-1-ref.html

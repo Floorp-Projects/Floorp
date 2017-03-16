@@ -108,10 +108,6 @@ SelectLayerGeometry(const Maybe<gfx::Polygon>& aParentGeometry,
 {
   // Both the parent and the child layer were split.
   if (aParentGeometry && aChildGeometry) {
-    // As we use intermediate surface in these cases, this branch should never
-    // get executed.
-    MOZ_ASSERT(false,
-               "Both parent and child geometry present in nested 3D context!");
     return Some(aParentGeometry->ClipPolygon(*aChildGeometry));
   }
 
@@ -453,12 +449,16 @@ RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
         layerToRender->SetClearRect(gfx::IntRect(0, 0, 0, 0));
       }
     } else {
+      // Since we force an intermediate surface for nested 3D contexts,
+      // aGeometry and childGeometry are both in the same coordinate space.
       Maybe<gfx::Polygon> geometry =
         SelectLayerGeometry(aGeometry, childGeometry);
 
       // If we are dealing with a nested 3D context, we might need to transform
-      // the geometry to the coordinate space of the parent 3D context leaf.
-      const bool isLeafLayer = layer->AsContainerLayer() == nullptr;
+      // the geometry back to the coordinate space of the current layer before
+      // rendering the layer.
+      ContainerLayer* container = layer->AsContainerLayer();
+      const bool isLeafLayer = !container || container->UseIntermediateSurface();
 
       if (geometry && isLeafLayer) {
         TransformLayerGeometry(layer, geometry);
