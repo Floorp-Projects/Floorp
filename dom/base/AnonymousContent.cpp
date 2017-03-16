@@ -7,6 +7,7 @@
 #include "AnonymousContent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/AnonymousContentBinding.h"
+#include "nsComputedDOMStyle.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLCollection.h"
@@ -206,6 +207,30 @@ AnonymousContent::WrapObject(JSContext* aCx,
                              JS::MutableHandle<JSObject*> aReflector)
 {
   return AnonymousContentBinding::Wrap(aCx, this, aGivenProto, aReflector);
+}
+
+void
+AnonymousContent::GetComputedStylePropertyValue(const nsAString& aElementId,
+                                                const nsAString& aPropertyName,
+                                                DOMString& aResult,
+                                                ErrorResult& aRv)
+{
+  Element* element = GetElementById(aElementId);
+  if (!element) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
+
+  nsIPresShell* shell = element->OwnerDoc()->GetShell();
+  if (!shell) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
+
+  RefPtr<nsComputedDOMStyle> cs =
+    new nsComputedDOMStyle(element, NS_LITERAL_STRING(""), shell,
+                           nsComputedDOMStyle::eAll);
+  aRv = cs->GetPropertyValue(aPropertyName, aResult);
 }
 
 } // namespace dom
