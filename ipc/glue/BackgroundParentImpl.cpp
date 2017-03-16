@@ -787,9 +787,16 @@ BackgroundParentImpl::AllocPFileSystemRequestParent(
     return nullptr;
   }
 
-  result->Start();
-
   return result.forget().take();
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPFileSystemRequestConstructor(
+                                               PFileSystemRequestParent* aActor,
+                                               const FileSystemParams& params)
+{
+  static_cast<FileSystemRequestParent*>(aActor)->Start();
+  return IPC_OK();
 }
 
 bool
