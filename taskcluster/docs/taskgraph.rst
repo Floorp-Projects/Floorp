@@ -190,7 +190,7 @@ using simple parameterized values, as follows:
 ``{"relative-datestamp": "certain number of seconds/hours/days/years"}``
     Objects of this form will be replaced with an offset from the current time
     just before the ``queue.createTask`` call is made.  For example, an
-    artifact expiration might be specified as ``{"relative-timestamp": "1
+    artifact expiration might be specified as ``{"relative-datestamp": "1
     year"}``.
 
 ``{"task-reference": "string containing <dep-name>"}``
