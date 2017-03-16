@@ -13,6 +13,19 @@
         <item name="popupMenuStyle">@style/PopupMenu</item>
     </style>
 
+    <style name="DialogTitleStyle" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textColor">#FFFFFF</item>
+    </style>
+
+    <!-- Setting this via alertDialogStyle in AppTheme results in crashes. You need to
+         explicitly select this via "new AlertDialog.Builder(activity, R.style.DialogStyle)"
+         We need this style because the accent colour for the MainActivity is purple,
+         but we want different accents in the dialog. -->
+    <style name="DialogStyle" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="colorAccent">#FF00A4DC</item>
+        <item name="android:windowTitleStyle">@style/DialogTitleStyle</item>
+    </style>
+
     <style name="SettingsTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="colorAccent">#FF00A4DC</item>
     </style>

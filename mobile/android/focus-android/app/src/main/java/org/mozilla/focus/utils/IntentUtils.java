@@ -114,7 +114,7 @@ public class IntentUtils {
     // end up needing more or a variable number we can change this, but java varargs are a bit messy
     // so let's try to avoid that seeing as it's not needed right now.
     private static void showConfirmationDialog(final Activity activity, final Intent targetIntent, final String title, final @StringRes int messageResource, final CharSequence param) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.DialogStyle);
 
         final CharSequence ourAppName = activity.getResources().getString(R.string.app_name);
 
