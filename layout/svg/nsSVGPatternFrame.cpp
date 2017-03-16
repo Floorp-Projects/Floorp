@@ -282,7 +282,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
   gfxMatrix ctm = ConstructCTM(viewBox, patternContentUnits, patternUnits,
                                callerBBox, aContextMatrix, aSource);
   if (ctm.IsSingular()) {
-    return MakePair(DrawResult::BAD_ARGS, RefPtr<SourceSurface>());
+    return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
   }
 
   if (patternWithChildren->mCTM) {
@@ -309,7 +309,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
       patternTransform *= ToMatrix(userToOuterSVG);
       if (patternTransform.IsSingular()) {
         NS_WARNING("Singular matrix painting non-scaling-stroke");
-        return MakePair(DrawResult::BAD_ARGS, RefPtr<SourceSurface>());
+        return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
       }
     }
   }
@@ -319,7 +319,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
   *patternMatrix = GetPatternMatrix(patternUnits, patternTransform,
                                     bbox, callerBBox, aContextMatrix);
   if (patternMatrix->IsSingular()) {
-    return MakePair(DrawResult::BAD_ARGS, RefPtr<SourceSurface>());
+    return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
   }
 
   // Now that we have all of the necessary geometries, we can
