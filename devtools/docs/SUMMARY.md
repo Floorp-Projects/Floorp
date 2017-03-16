@@ -2,7 +2,9 @@
 # Summary
 
 * [Tool Architectures](tools.md)
-  * [Inspector](inspector-panel.md)
+  * [Inspector](inspector.md)
+    * [Panel Architecture](inspector-panel.md)
+    * [Highlighters](highlighters.md)
   * [Memory](memory-panel.md)
   * [Debugger](debugger-panel.md)
   * [Responsive Design Mode](responsive-design-mode.md)
