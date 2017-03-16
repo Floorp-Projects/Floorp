@@ -4,31 +4,76 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/SharedThreadPool.h"
 #include "FileBlockCache.h"
+#include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
 #include "prio.h"
 #include <algorithm>
+#include "nsAnonymousTemporaryFile.h"
+#include "mozilla/dom/ContentChild.h"
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 
-nsresult FileBlockCache::Open(PRFileDesc* aFD)
+LazyLogModule gFileBlockCacheLog("FileBlockCache");
+#define FBC_LOG(type, msg) MOZ_LOG(gFileBlockCacheLog, type, msg)
+
+void
+FileBlockCache::SetCacheFile(PRFileDesc* aFD)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-  NS_ENSURE_TRUE(aFD != nullptr, NS_ERROR_FAILURE);
+  MOZ_ASSERT(NS_IsMainThread());
+  FBC_LOG(LogLevel::Debug,
+          ("FileBlockCache::SetFD(aFD=%p) mIsOpen=%d", aFD, mIsOpen));
+
+  if (!aFD) {
+    // Failed to get a temporary file. Shutdown.
+    mInitPromise->Reject(NS_ERROR_FAILURE, __func__);
+    Close();
+    return;
+  }
   {
-    MonitorAutoLock mon(mFileMonitor);
+    MonitorAutoLock lock(mFileMonitor);
     mFD = aFD;
   }
-  {
-    MonitorAutoLock mon(mDataMonitor);
-    nsresult res = NS_NewNamedThread("FileBlockCache",
-                                     getter_AddRefs(mThread),
-                                     nullptr,
-                                     SharedThreadPool::kStackSize);
-    mIsOpen = NS_SUCCEEDED(res);
-    return res;
+  mInitPromise->Resolve(true, __func__);
+}
+
+nsresult
+FileBlockCache::Init()
+{
+  FBC_LOG(LogLevel::Debug, ("FileBlockCache::Init()"));
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MonitorAutoLock mon(mDataMonitor);
+  nsresult rv = NS_NewNamedThread("FileBlockCache",
+                                  getter_AddRefs(mThread),
+                                  nullptr,
+                                  SharedThreadPool::kStackSize);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
+  mAbstractThread = AbstractThread::CreateXPCOMThreadWrapper(mThread, false);
+  mIsOpen = true;
+
+  mInitPromise = new GenericPromise::Private(__func__);
+  if (XRE_IsParentProcess()) {
+    rv = NS_OpenAnonymousTemporaryFile(&mFD);
+    if (NS_SUCCEEDED(rv)) {
+      mInitPromise->Resolve(true, __func__);
+    }
+  } else {
+    // We must request a temporary file descriptor from the parent process.
+    RefPtr<FileBlockCache> self = this;
+    rv = dom::ContentChild::GetSingleton()->AsyncOpenAnonymousTemporaryFile(
+      [self](PRFileDesc* aFD) { self->SetCacheFile(aFD); });
+  }
+
+  if (NS_FAILED(rv)) {
+    Close();
+  }
+
+  return rv;
 }
 
 FileBlockCache::FileBlockCache()
@@ -59,24 +104,28 @@ FileBlockCache::~FileBlockCache()
   }
 }
 
-
 void FileBlockCache::Close()
 {
+  FBC_LOG(LogLevel::Debug, ("FileBlockCache::Close"));
+
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
   MonitorAutoLock mon(mDataMonitor);
-
   mIsOpen = false;
-
-  if (mThread) {
-    // We must shut down the thread in another runnable. This is called
-    // while we're shutting down the media cache, and nsIThread::Shutdown()
-    // can cause events to run before it completes, which could end up
-    // opening more streams, while the media cache is shutting down and
-    // releasing memory etc! Also note we close mFD in the destructor so
-    // as to not disturb any IO that's currently running.
-    nsCOMPtr<nsIRunnable> event = new ShutdownThreadEvent(mThread);
-    SystemGroup::Dispatch("ShutdownThreadEvent", TaskCategory::Other, event.forget());
+  if (!mThread) {
+    return;
   }
+  mAbstractThread = nullptr;
+  // We must shut down the thread in another runnable. This is called
+  // while we're shutting down the media cache, and nsIThread::Shutdown()
+  // can cause events to run before it completes, which could end up
+  // opening more streams, while the media cache is shutting down and
+  // releasing memory etc! Also note we close mFD in the destructor so
+  // as to not disturb any IO that's currently running.
+  nsCOMPtr<nsIRunnable> event = new ShutdownThreadEvent(mThread);
+  SystemGroup::Dispatch(
+    "ShutdownThreadEvent", TaskCategory::Other, event.forget());
+  mThread = nullptr;
 }
 
 template<typename Container, typename Value>
@@ -118,11 +167,20 @@ nsresult FileBlockCache::WriteBlock(uint32_t aBlockIndex, const uint8_t* aData)
 void FileBlockCache::EnsureWriteScheduled()
 {
   mDataMonitor.AssertCurrentThreadOwns();
+  MOZ_ASSERT(mIsOpen);
 
-  if (!mIsWriteScheduled) {
-    mThread->Dispatch(this, NS_DISPATCH_NORMAL);
-    mIsWriteScheduled = true;
+  if (mIsWriteScheduled) {
+    return;
   }
+  mIsWriteScheduled = true;
+
+  RefPtr<FileBlockCache> self = this;
+  mInitPromise->Then(mAbstractThread,
+                     __func__,
+                     [self](bool aValue) { self->Run(); },
+                     [self](nsresult rv) {}
+                     // Failure handled by EnsureInitialized.
+                     );
 }
 
 nsresult FileBlockCache::Seek(int64_t aOffset)
@@ -130,6 +188,7 @@ nsresult FileBlockCache::Seek(int64_t aOffset)
   mFileMonitor.AssertCurrentThreadOwns();
 
   if (mFDCurrentPos != aOffset) {
+    MOZ_ASSERT(mFD);
     int64_t result = PR_Seek64(mFD, aOffset, PR_SEEK_SET);
     if (result != aOffset) {
       NS_WARNING("Failed to seek media cache file");
@@ -145,7 +204,12 @@ nsresult FileBlockCache::ReadFromFile(int64_t aOffset,
                                       int32_t aBytesToRead,
                                       int32_t& aBytesRead)
 {
+  FBC_LOG(LogLevel::Debug,
+          ("FileBlockCache::ReadFromFile(offset=%" PRIu64 ", len=%u)",
+           aOffset,
+           aBytesToRead));
   mFileMonitor.AssertCurrentThreadOwns();
+  MOZ_ASSERT(mFD);
 
   nsresult res = Seek(aOffset);
   if (NS_FAILED(res)) return res;
@@ -161,7 +225,11 @@ nsresult FileBlockCache::ReadFromFile(int64_t aOffset,
 nsresult FileBlockCache::WriteBlockToFile(int32_t aBlockIndex,
                                           const uint8_t* aBlockData)
 {
+  FBC_LOG(LogLevel::Debug,
+          ("FileBlockCache::WriteBlockToFile(index=%u)", aBlockIndex));
+
   mFileMonitor.AssertCurrentThreadOwns();
+  MOZ_ASSERT(mFD);
 
   nsresult rv = Seek(BlockIndexToOffset(aBlockIndex));
   if (NS_FAILED(rv)) return rv;
@@ -179,6 +247,11 @@ nsresult FileBlockCache::WriteBlockToFile(int32_t aBlockIndex,
 nsresult FileBlockCache::MoveBlockInFile(int32_t aSourceBlockIndex,
                                          int32_t aDestBlockIndex)
 {
+  FBC_LOG(LogLevel::Debug,
+          ("FileBlockCache::MoveBlockInFile(src=%u, dest=%u)",
+           aSourceBlockIndex,
+           aDestBlockIndex));
+
   mFileMonitor.AssertCurrentThreadOwns();
 
   uint8_t buf[BLOCK_SIZE];
@@ -194,10 +267,14 @@ nsresult FileBlockCache::MoveBlockInFile(int32_t aSourceBlockIndex,
 
 nsresult FileBlockCache::Run()
 {
-  MonitorAutoLock mon(mDataMonitor);
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
+  MonitorAutoLock mon(mDataMonitor);
   NS_ASSERTION(!mChangeIndexList.empty(), "Only dispatch when there's work to do");
   NS_ASSERTION(mIsWriteScheduled, "Should report write running or scheduled.");
+  MOZ_ASSERT(mFD);
+
+  FBC_LOG(LogLevel::Debug,
+          ("FileBlockCache::Run mFD=%p mIsOpen=%d", mFD, mIsOpen));
 
   while (!mChangeIndexList.empty()) {
     if (!mIsOpen) {
@@ -252,7 +329,7 @@ nsresult FileBlockCache::Read(int64_t aOffset,
 {
   MonitorAutoLock mon(mDataMonitor);
 
-  if (!mFD || (aOffset / BLOCK_SIZE) > INT32_MAX)
+  if (!mIsOpen || (aOffset / BLOCK_SIZE) > INT32_MAX)
     return NS_ERROR_FAILURE;
 
   int32_t bytesToRead = aLength;
