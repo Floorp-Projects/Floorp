@@ -4777,36 +4777,36 @@ nsGridContainerFrame::Tracks::StretchFlexibleTracks(
           base = flexLength;
         }
       }
-      if (applyMinMax) {
-        applyMinMax = false;
-        // https://drafts.csswg.org/css-grid/#algo-flex-tracks
-        // "If using this flex fraction would cause the grid to be smaller than
-        // the grid container’s min-width/height (or larger than the grid
-        // container’s max-width/height), then redo this step, treating the free
-        // space as definite [...]"
-        nscoord newSize = 0;
-        for (auto& sz : mSizes) {
-          newSize += sz.mBase;
+    }
+    if (applyMinMax) {
+      applyMinMax = false;
+      // https://drafts.csswg.org/css-grid/#algo-flex-tracks
+      // "If using this flex fraction would cause the grid to be smaller than
+      // the grid container’s min-width/height (or larger than the grid
+      // container’s max-width/height), then redo this step, treating the free
+      // space as definite [...]"
+      nscoord newSize = 0;
+      for (auto& sz : mSizes) {
+        newSize += sz.mBase;
+      }
+      const auto sumOfGridGaps = SumOfGridGaps();
+      newSize += sumOfGridGaps;
+      if (newSize > maxSize) {
+        aAvailableSize = maxSize;
+      } else if (newSize < minSize) {
+        aAvailableSize = minSize;
+      }
+      if (aAvailableSize != NS_UNCONSTRAINEDSIZE) {
+        aAvailableSize = std::max(0, aAvailableSize - sumOfGridGaps);
+        // Restart with the original track sizes and definite aAvailableSize.
+        if (origSizes.isSome()) {
+          mSizes = Move(*origSizes);
+          origSizes.reset();
+        } // else, no mSizes[].mBase were changed above so it's still correct
+        if (aAvailableSize == 0) {
+          break; // zero available size wouldn't change any sizes though...
         }
-        const auto sumOfGridGaps = SumOfGridGaps();
-        newSize += sumOfGridGaps;
-        if (newSize > maxSize) {
-          aAvailableSize = maxSize;
-        } else if (newSize < minSize) {
-          aAvailableSize = minSize;
-        }
-        if (aAvailableSize != NS_UNCONSTRAINEDSIZE) {
-          aAvailableSize = std::max(0, aAvailableSize - sumOfGridGaps);
-          // Restart with the original track sizes and definite aAvailableSize.
-          if (origSizes.isSome()) {
-            mSizes = Move(*origSizes);
-            origSizes.reset();
-          } // else, no mSizes[].mBase were changed above so it's still correct
-          if (aAvailableSize == 0) {
-            break; // zero available size wouldn't change any sizes though...
-          }
-          continue;
-        }
+        continue;
       }
     }
     break;
