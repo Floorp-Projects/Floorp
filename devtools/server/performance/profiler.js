@@ -248,12 +248,14 @@ const ProfilerManager = (function () {
     },
 
     /**
-     * Returns an array of objects that describes the shared libraries
+     * Returns a stringified JSON object that describes the shared libraries
      * which are currently loaded into our process. Can be called while the
      * profiler is stopped.
      */
-    get sharedLibraries() {
-      return nsIProfilerModule.sharedLibraries;
+    getSharedLibraryInformation: function () {
+      return {
+        sharedLibraryInformation: nsIProfilerModule.getSharedLibraryInformation()
+      };
     },
 
     /**
@@ -469,10 +471,10 @@ var Profiler = exports.Profiler = Class({
   },
 
   /**
-   * @see ProfilerManager.sharedLibraries
+   * @see ProfilerManager.isActive
    */
-  sharedLibraries: function () {
-    return ProfilerManager.sharedLibraries
+  getSharedLibraryInformation: function () {
+    return ProfilerManager.getSharedLibraryInformation();
   },
 
   /**
