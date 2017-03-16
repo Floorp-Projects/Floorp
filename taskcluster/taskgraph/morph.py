@@ -57,7 +57,7 @@ def derive_misc_task(task, purpose, image, taskgraph, label_to_taskid):
         'provisionerId': 'aws-provisioner-v1',
         'workerType': 'gecko-misc',
         'dependencies': [task.task_id, image_taskid],
-        'created': {'relative-timestamp': '0 seconds'},
+        'created': {'relative-datestamp': '0 seconds'},
         'deadline': task.task['deadline'],
         # no point existing past the parent task's deadline
         'expires': task.task['deadline'],
