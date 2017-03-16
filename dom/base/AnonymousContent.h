@@ -68,6 +68,11 @@ public:
                                 const Sequence<OwningNonNull<DOMRect>>& aRects,
                                 ErrorResult& aError);
 
+  void GetComputedStylePropertyValue(const nsAString& aElementId,
+                                     const nsAString& aPropertyName,
+                                     DOMString& aResult,
+                                     ErrorResult& aRv);
+
 private:
   ~AnonymousContent();
   nsCOMPtr<Element> mContentNode;
