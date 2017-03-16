@@ -42,6 +42,7 @@
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/FileSystemSecurity.h"
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
@@ -7883,6 +7884,19 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
               }
 
               continue;
+            }
+
+            if (aParent) {
+              bool isDir = false;
+              if (NS_SUCCEEDED(file->IsDirectory(&isDir)) && isDir) {
+                nsAutoString path;
+                if (NS_WARN_IF(NS_FAILED(file->GetPath(path)))) {
+                  continue;
+                }
+
+                RefPtr<FileSystemSecurity> fss = FileSystemSecurity::GetOrCreate();
+                fss->GrantAccessToContentProcess(aParent->ChildID(), path);
+              }
             }
 
             blobImpl = new FileBlobImpl(file);
