@@ -5048,6 +5048,15 @@
     "n_buckets": 50,
     "description": "Firefox: Time taken from the point of closing a tab (without animation) to the browser element being removed from the DOM. (ms)."
   },
+  "FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS": {
+    "alert_emails": ["mconley@mozilla.com", "hkirschner@mozilla.com"],
+    "bug_numbers": [1340842],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "description": "Firefox: Time taken to run permitUnload on a browser during tab close to see whether or not we're allowed to close the tab (ms)."
+  },
   "FX_TAB_ANIM_OPEN_PREVIEW_FRAME_INTERVAL_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
