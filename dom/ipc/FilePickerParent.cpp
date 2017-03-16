@@ -13,6 +13,7 @@
 #include "nsISimpleEnumerator.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/FileBlobImpl.h"
+#include "mozilla/dom/FileSystemSecurity.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
@@ -145,6 +146,8 @@ FilePickerParent::IORunnable::Destroy()
 void
 FilePickerParent::SendFilesOrDirectories(const nsTArray<BlobImplOrString>& aData)
 {
+  nsIContentParent* parent = TabParent::GetFrom(Manager())->Manager();
+
   if (mMode == nsIFilePicker::modeGetFolder) {
     MOZ_ASSERT(aData.Length() <= 1);
     if (aData.IsEmpty()) {
@@ -154,13 +157,18 @@ FilePickerParent::SendFilesOrDirectories(const nsTArray<BlobImplOrString>& aData
 
     MOZ_ASSERT(aData[0].mType == BlobImplOrString::eDirectoryPath);
 
+    // Let's inform the security singleton about the given access of this tab on
+    // this directory path.
+    RefPtr<FileSystemSecurity> fss = FileSystemSecurity::GetOrCreate();
+    fss->GrantAccessToContentProcess(parent->ChildID(),
+                                     aData[0].mDirectoryPath);
+
     InputDirectory input;
     input.directoryPath() = aData[0].mDirectoryPath;
     Unused << Send__delete__(this, input, mResult);
     return;
   }
 
-  nsIContentParent* parent = TabParent::GetFrom(Manager())->Manager();
   InfallibleTArray<PBlobParent*> blobs;
 
   for (unsigned i = 0; i < aData.Length(); i++) {

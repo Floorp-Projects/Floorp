@@ -16,6 +16,7 @@ var entries;
 
 function setup_tests() {
   SpecialPowers.pushPrefEnv({"set": [["dom.webkitBlink.dirPicker.enabled", true],
+                                     ["dom.filesystem.pathcheck.disabled", true],
                                      ["dom.webkitBlink.filesystem.enabled", true]]}, next);
 }
 
