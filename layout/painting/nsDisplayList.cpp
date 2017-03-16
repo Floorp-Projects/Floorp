@@ -4647,7 +4647,25 @@ nsDisplayBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
                             LayerManager* aManager,
                             const ContainerLayerParameters& aContainerParameters)
 {
-  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
+  if (aManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+    return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
+  } else {
+    RefPtr<BorderLayer> layer = static_cast<BorderLayer*>
+      (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
+    if (!layer) {
+      layer = aManager->CreateBorderLayer();
+      if (!layer)
+        return nullptr;
+    }
+    layer->SetRect(mRect);
+    layer->SetCornerRadii(mCorners);
+    layer->SetColors(mColors);
+    layer->SetWidths(mWidths);
+    layer->SetStyles(mBorderStyles);
+    layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
+                                                        aContainerParameters.mOffset.y, 0));
+    return layer.forget();
+  }
 }
 
 void
