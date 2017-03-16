@@ -14,7 +14,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "FileBlockCache.h"
-#include "nsAnonymousTemporaryFile.h"
 #include "nsIObserverService.h"
 #include "nsISeekableStream.h"
 #include "nsIPrincipal.h"
@@ -574,12 +573,8 @@ MediaCache::Init()
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   NS_ASSERTION(!mFileCache, "Cache file already open?");
 
-  PRFileDesc* fileDesc = nullptr;
-  nsresult rv = NS_OpenAnonymousTemporaryFile(&fileDesc);
-  NS_ENSURE_SUCCESS(rv,rv);
-
   mFileCache = new FileBlockCache();
-  rv = mFileCache->Open(fileDesc);
+  nsresult rv = mFileCache->Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
   MediaCacheFlusher::Init();
