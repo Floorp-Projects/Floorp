@@ -6183,9 +6183,18 @@ Selection::PostScrollSelectionIntoViewEvent(
   mScrollEvent.Revoke();
 
   RefPtr<ScrollSelectionIntoViewEvent> ev =
-      new ScrollSelectionIntoViewEvent(this, aRegion, aVertical, aHorizontal,
-                                       aFlags);
-  nsresult rv = NS_DispatchToCurrentThread(ev);
+    new ScrollSelectionIntoViewEvent(this, aRegion, aVertical, aHorizontal,
+                                     aFlags);
+  nsresult rv;
+  nsIDocument* doc = GetParentObject();
+  if (doc) {
+    rv = doc->Dispatch("ScrollSelectionIntoViewEvent",
+                       TaskCategory::Other,
+                       ev.forget());
+  } else {
+    rv = NS_DispatchToCurrentThread(ev);
+  }
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   mScrollEvent = ev;
