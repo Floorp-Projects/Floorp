@@ -494,6 +494,46 @@ function* largeAllocSuccessTests() {
     yield BrowserTestUtils.closeWindow(newWindow);
   });
 
+  // XXX: Important - reset the process count, as it was set to 1 by the
+  // previous test.
+  yield SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.processCount.webLargeAllocation", 20]],
+  });
+
+  yield BrowserTestUtils.withNewTab("about:blank", function*(aBrowser) {
+    info("Starting test 11");
+
+    let pid1 = yield getPID(aBrowser);
+    is(false, yield getInLAProc(aBrowser));
+
+    let ready = Promise.all([expectProcessCreated(),
+                             BrowserTestUtils.browserLoaded(aBrowser)]);
+    yield ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+      content.document.location = TEST_URI;
+    });
+
+    yield ready;
+
+    let pid2 = yield getPID(aBrowser);
+
+    isnot(pid1, pid2, "PIDs 1 and 2 should not match");
+    is(true, yield getInLAProc(aBrowser));
+
+    yield Promise.all([
+      ContentTask.spawn(aBrowser, null, () => {
+        content.document.querySelector("#submit").click();
+      }),
+      BrowserTestUtils.browserLoaded(aBrowser)
+    ]);
+
+    let innerText = yield ContentTask.spawn(aBrowser, null, () => {
+      return content.document.body.innerText;
+    });
+    isnot(innerText, "FAIL", "We should not have sent a get request!");
+    is(innerText, "textarea=default+value&button=submit",
+       "The post data should be received by the callee");
+  });
+
   // XXX: Make sure to reset dom.ipc.processCount.webLargeAllocation if adding a
   // test after the above test.
 }
