@@ -4,14 +4,16 @@
 "use strict";
 
 /**
- * Tests whether the profiler responds to "sharedLibraries" adequately.
+ * Tests whether the profiler responds to "getSharedLibraryInformation" adequately.
  */
+
+const Profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
 
 function run_test()
 {
   get_chrome_actors((client, form) => {
     let actor = form.profilerActor;
-    test_sharedlibraries(client, actor, () => {
+    test_getsharedlibraryinformation(client, actor, () => {
       client.close().then(() => {
         do_test_finished();
       });
@@ -21,19 +23,20 @@ function run_test()
   do_test_pending();
 }
 
-function test_sharedlibraries(client, actor, callback)
+function test_getsharedlibraryinformation(client, actor, callback)
 {
-  client.request({ to: actor, type: "sharedLibraries" }, libs => {
-    do_check_eq(typeof libs, "object");
-    do_check_true(Array.isArray(libs));
+  client.request({ to: actor, type: "getSharedLibraryInformation" }, response => {
+    do_check_eq(typeof response.sharedLibraryInformation, "string");
+    let libs = [];
+    try {
+      libs = JSON.parse(response.sharedLibraryInformation);
+    } catch (e) {
+      do_check_true(false);
+    }
     do_check_eq(typeof libs, "object");
     do_check_true(libs.length >= 1);
     do_check_eq(typeof libs[0], "object");
     do_check_eq(typeof libs[0].name, "string");
-    do_check_eq(typeof libs[0].path, "string");
-    do_check_eq(typeof libs[0].debugName, "string");
-    do_check_eq(typeof libs[0].debugPath, "string");
-    do_check_eq(typeof libs[0].arch, "string");
     do_check_eq(typeof libs[0].start, "number");
     do_check_eq(typeof libs[0].end, "number");
     do_check_true(libs[0].start <= libs[0].end);
