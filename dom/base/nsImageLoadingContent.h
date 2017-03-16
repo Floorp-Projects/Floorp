@@ -463,6 +463,17 @@ private:
   // registered with the refresh driver.
   bool mCurrentRequestRegistered;
   bool mPendingRequestRegistered;
+
+  // TODO:
+  // Bug 1353685: Should ServiceWorker call SetBlockedRequest?
+  //
+  // This member is used in SetBlockedRequest, if it's true, then this call is
+  // triggered from LoadImage.
+  // If this is false, it means this call is from other places like
+  // ServiceWorker, then we will ignore call to SetBlockedRequest for now.
+  //
+  // Also we use this variable to check if some evil code is reentering LoadImage.
+  bool mIsStartingImageLoad;
 };
 
 #endif // nsImageLoadingContent_h__
