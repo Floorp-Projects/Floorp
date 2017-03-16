@@ -200,6 +200,11 @@ public:
    * Calls LoadObject with the correct arguments to start the plugin load.
    */
   void StartObjectLoad(bool aNotify, bool aForceLoad);
+
+protected:
+  // Override for nsImageLoadingContent.
+  nsIContent* AsContent() override { return this; }
+
 private:
   virtual ~HTMLSharedObjectElement();
 
