@@ -17,10 +17,6 @@ loader.lazyGetter(this, "prefBranch", function () {
   return prefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch2);
 });
 
-loader.lazyGetter(this, "supportsString", function () {
-  return Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-});
-
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 
 const PREF_DIR = "devtools.commands.dir";
@@ -170,8 +166,7 @@ exports.items = [
       return true;
     },
     exec: function (args, context) {
-      supportsString.data = args.directory;
-      prefBranch.setComplexValue(PREF_DIR, Ci.nsISupportsString, supportsString);
+      prefBranch.setStringPref(PREF_DIR, args.directory);
 
       gcli.load();
 
