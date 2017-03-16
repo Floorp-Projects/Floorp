@@ -890,16 +890,16 @@ const KTableEntry nsCSSProps::kImageLayerAttachmentKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kBackgroundOriginKTable[] = {
-  { eCSSKeyword_border_box, StyleGeometryBox::Border },
-  { eCSSKeyword_padding_box, StyleGeometryBox::Padding },
-  { eCSSKeyword_content_box, StyleGeometryBox::Content },
+  { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
+  { eCSSKeyword_padding_box, StyleGeometryBox::PaddingBox },
+  { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
 KTableEntry nsCSSProps::kBackgroundClipKTable[] = {
-  { eCSSKeyword_border_box, StyleGeometryBox::Border },
-  { eCSSKeyword_padding_box, StyleGeometryBox::Padding },
-  { eCSSKeyword_content_box, StyleGeometryBox::Content },
+  { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
+  { eCSSKeyword_padding_box, StyleGeometryBox::PaddingBox },
+  { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
   // The next entry is controlled by the layout.css.background-clip-text.enabled
   // pref.
   { eCSSKeyword_text, StyleGeometryBox::Text },
@@ -907,22 +907,22 @@ KTableEntry nsCSSProps::kBackgroundClipKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kMaskOriginKTable[] = {
-  { eCSSKeyword_border_box, StyleGeometryBox::Border },
-  { eCSSKeyword_padding_box, StyleGeometryBox::Padding },
-  { eCSSKeyword_content_box, StyleGeometryBox::Content },
-  { eCSSKeyword_fill_box, StyleGeometryBox::Fill },
-  { eCSSKeyword_stroke_box, StyleGeometryBox::Stroke },
-  { eCSSKeyword_view_box, StyleGeometryBox::View },
+  { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
+  { eCSSKeyword_padding_box, StyleGeometryBox::PaddingBox },
+  { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
+  { eCSSKeyword_fill_box, StyleGeometryBox::FillBox },
+  { eCSSKeyword_stroke_box, StyleGeometryBox::StrokeBox },
+  { eCSSKeyword_view_box, StyleGeometryBox::ViewBox },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
 const KTableEntry nsCSSProps::kMaskClipKTable[] = {
-  { eCSSKeyword_border_box, StyleGeometryBox::Border },
-  { eCSSKeyword_padding_box, StyleGeometryBox::Padding },
-  { eCSSKeyword_content_box, StyleGeometryBox::Content },
-  { eCSSKeyword_fill_box, StyleGeometryBox::Fill },
-  { eCSSKeyword_stroke_box, StyleGeometryBox::Stroke },
-  { eCSSKeyword_view_box, StyleGeometryBox::View },
+  { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
+  { eCSSKeyword_padding_box, StyleGeometryBox::PaddingBox },
+  { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
+  { eCSSKeyword_fill_box, StyleGeometryBox::FillBox },
+  { eCSSKeyword_stroke_box, StyleGeometryBox::StrokeBox },
+  { eCSSKeyword_view_box, StyleGeometryBox::ViewBox },
   { eCSSKeyword_no_clip, StyleGeometryBox::NoClip },
   { eCSSKeyword_UNKNOWN, -1 }
 };
@@ -2106,9 +2106,9 @@ const KTableEntry nsCSSProps::kTopLayerKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kTransformBoxKTable[] = {
-  { eCSSKeyword_border_box, StyleGeometryBox::Border },
-  { eCSSKeyword_fill_box, StyleGeometryBox::Fill },
-  { eCSSKeyword_view_box, StyleGeometryBox::View },
+  { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
+  { eCSSKeyword_fill_box, StyleGeometryBox::FillBox },
+  { eCSSKeyword_view_box, StyleGeometryBox::ViewBox },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -2314,13 +2314,13 @@ const KTableEntry nsCSSProps::kFillRuleKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kClipPathGeometryBoxKTable[] = {
-  { eCSSKeyword_content_box, StyleGeometryBox::Content },
-  { eCSSKeyword_padding_box, StyleGeometryBox::Padding },
-  { eCSSKeyword_border_box, StyleGeometryBox::Border },
-  { eCSSKeyword_margin_box, StyleGeometryBox::Margin },
-  { eCSSKeyword_fill_box, StyleGeometryBox::Fill },
-  { eCSSKeyword_stroke_box, StyleGeometryBox::Stroke },
-  { eCSSKeyword_view_box, StyleGeometryBox::View },
+  { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
+  { eCSSKeyword_padding_box, StyleGeometryBox::PaddingBox },
+  { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
+  { eCSSKeyword_margin_box, StyleGeometryBox::MarginBox },
+  { eCSSKeyword_fill_box, StyleGeometryBox::FillBox },
+  { eCSSKeyword_stroke_box, StyleGeometryBox::StrokeBox },
+  { eCSSKeyword_view_box, StyleGeometryBox::ViewBox },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -2359,10 +2359,10 @@ const KTableEntry nsCSSProps::kMaskTypeKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kShapeOutsideShapeBoxKTable[] = {
-  { eCSSKeyword_content_box, StyleGeometryBox::Content },
-  { eCSSKeyword_padding_box, StyleGeometryBox::Padding },
-  { eCSSKeyword_border_box, StyleGeometryBox::Border },
-  { eCSSKeyword_margin_box, StyleGeometryBox::Margin },
+  { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
+  { eCSSKeyword_padding_box, StyleGeometryBox::PaddingBox },
+  { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
+  { eCSSKeyword_margin_box, StyleGeometryBox::MarginBox },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
