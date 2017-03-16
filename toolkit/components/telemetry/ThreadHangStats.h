@@ -51,8 +51,6 @@ class HangStack
 {
 public:
   static const size_t sMaxInlineStorage = 8;
-  // The maximum depth for the native stack frames that we might collect.
-  static const size_t sMaxNativeFrames = 25;
 
 private:
   typedef mozilla::Vector<const char*, sMaxInlineStorage> Impl;
@@ -61,14 +59,9 @@ private:
   // Stack entries can either be a static const char*
   // or a pointer to within this buffer.
   mozilla::Vector<char, 0> mBuffer;
-  // When a native stack is gathered, this vector holds the raw program counter
-  // values that MozStackWalk will return to us after it walks the stack.
-  // When gathering the Telemetry payload, Telemetry will take care of mapping
-  // these program counters to proper addresses within modules.
-  std::vector<uintptr_t> mNativeFrames;
 
 public:
-  HangStack() {}
+  HangStack() { }
 
   HangStack(HangStack&& aOther)
     : mImpl(mozilla::Move(aOther.mImpl))
@@ -118,7 +111,6 @@ public:
   void clear() {
     mImpl.clear();
     mBuffer.clear();
-    mNativeFrames.clear();
   }
 
   bool IsInBuffer(const char* aEntry) const {
@@ -144,21 +136,6 @@ public:
 
   const char* InfallibleAppendViaBuffer(const char* aText, size_t aLength);
   const char* AppendViaBuffer(const char* aText, size_t aLength);
-
-  void EnsureNativeFrameCapacity(size_t aCapacity) {
-    mNativeFrames.reserve(aCapacity);
-  }
-
-  void AppendNativeFrame(uintptr_t aPc) {
-    MOZ_ASSERT(mNativeFrames.size() <= sMaxNativeFrames);
-    if (mNativeFrames.size() < sMaxNativeFrames) {
-      mNativeFrames.push_back(aPc);
-    }
-  }
-
-  const std::vector<uintptr_t>& GetNativeFrames() const {
-    return mNativeFrames;
-  }
 };
 
 /* A hang histogram consists of a stack associated with the

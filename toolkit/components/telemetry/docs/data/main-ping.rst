@@ -248,13 +248,12 @@ As of Firefox 48, this section does not contain empty keyed histograms anymore.
 
 threadHangStats
 ---------------
-Contains the statistics about the hangs in main and background threads. Note that hangs in this section capture the `C++ pseudostack <https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler#Native_stack_vs._Pseudo_stack>`_ and an incomplete JS stack, which is not 100% precise. For particularly egregious hangs, an unsymbolicated native stack is also captured. The amount of time that is considered "egregious" is different from thread to thread, and is set when the BackgroundHangMonitor is constructed for that thread. In general though, hangs from 5 - 10 seconds are generally considered egregious. Shorter hangs (1 - 2s) are considered egregious for other threads (the compositor thread, and the hang monitor that is only enabled during tab switch).
+Contains the statistics about the hangs in main and background threads. Note that hangs in this section capture the `C++ pseudostack <https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler#Native_stack_vs._Pseudo_stack>`_ and an incomplete JS stack, which is not 100% precise.
 
 To avoid submitting overly large payloads, some limits are applied:
 
 * Identical, adjacent "(chrome script)" or "(content script)" stack entries are collapsed together. If a stack is reduced, the "(reduced stack)" frame marker is added as the oldest frame.
-* The depth of the reported pseudostacks is limited to 11 entries. This value represents the 99.9th percentile of the thread hangs stack depths reported by Telemetry.
-* The native stacks are limited to a depth of 25 stack frames.
+* The depth of the reported stacks is limited to 11 entries. This value represents the 99.9th percentile of the thread hangs stack depths reported by Telemetry.
 
 Structure:
 
@@ -273,24 +272,7 @@ Structure:
               "IPDL::PPluginScriptableObject::SendGetChildProperty",
               ... up to 11 frames ...
             ],
-            "nativeStack": { // only captured for egregious hangs
-              "memoryMap": [
-                ["wgdi32.pdb", "08A541B5942242BDB4AEABD8C87E4CFF2"],
-                ["igd10iumd32.pdb", "D36DEBF2E78149B5BE1856B772F1C3991"],
-                // ... other entries in the format ["module name", "breakpad identifier"] ...
-              ],
-              "stacks": [
-                [
-                  [
-                    0, // the module index or -1 for invalid module indices
-                    190649 // the offset of this program counter in its module or an absolute pc
-                  ],
-                  [1, 2540075],
-                  // ... other frames ...
-                ],
-                // ... other stacks ...
-              ]
-            },
+            "nativeStack": [...], // optionally available
             "histogram" : {...}, // the time histogram of the hang times
             "annotations" : [
               {
