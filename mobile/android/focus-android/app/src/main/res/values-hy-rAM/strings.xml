@@ -1,10 +1,40 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-  <string name="menu_share">Համաօգտագործել</string>
+  <string name="action_cancel">Չեղարկել</string>
+  <string name="urlbar_hint">Որոնեք կամ մուտքագրեք հասցեն</string>
+  <string name="teaser">"Ինքնաշխատ գաղտնի դիտարկում: \nԴիտարկել: Ջնջել:  Կրկնել:"</string>
+  <string name="feedback_erase">Դիտարկումների պատմությունը ջնջվել է:</string>
+  <string name="menu_share">Համօգտագործել</string>
+  <string name="menu_open_with_default_browser">Բացել %1$s-ով</string>
+  <string name="menu_open_with_a_browser">Բացել սրանով՝</string>
   <string name="menu_settings">Կարգավորումներ</string>
   <string name="menu_about">Մասին</string>
   <string name="menu_help">Օգնություն</string>
   <string name="menu_rights">Ձեր իրավունքները</string>
+  <string name="preference_category_search">Որոնում</string>
+  <string name="preference_search_engine_default">Լռելյայն</string>
+  <string name="preference_dialog_title_search_engine">Լռելյայն որոնում</string>
+  <string name="preference_category_privacy">Գաղտնիություն</string>
+  <string name="preference_privacy_block_ads">Արգելափակել գովազդային հետագծումները</string>
+  <string name="preference_privacy_block_analytics">Արգելափակել վերլուծական հետագծումները</string>
+  <string name="preference_privacy_block_social">Արգելափակել սոցիալական հետագծումները</string>
+  <string name="preference_privacy_block_content">Արգելափակել այլ բովանդակության հետագծումները</string>
+  <string name="preference_category_performance">Արդյունավետություն</string>
+  <string name="preference_performance_block_webfonts">Արգելափակել վեբ տառատեսակները</string>
+  <string name="preference_performance_block_images">Արգելափակել պատկերները</string>
+  <string name="preference_default_browser">Դարձնել լռելյան դիտարկիչ</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Ուղարկել օգտագործման անանուն տվյալը</string>
   <string name="preference_mozilla_telemetry_summary">Իմանալ ավելին</string>
+  <string name="content_description_clear_input">Մաքրել ներածումը</string>
+  <string name="content_description_dismiss_input">Բաց թողնել</string>
+  <string name="content_description_erase">Ջնջել դիտարկման պատմությունը</string>
+  <string name="content_description_lock">Անվտանգ կապակցում</string>
+  <string name="accessibility_announcement_loading">Բեռնում</string>
+  <string name="accessibility_announcement_loading_finished">Կայքը բեռնվել է</string>
+  <string name="content_description_menu">Լր. ընտրանքներ</string>
+  <string name="content_description_reload">Կրկին բեռնել կայքը</string>
+  <string name="firstrun_description">Ինքնաշխատ արգելափակել առցանց հետագծումները դիտարկելիս: Ապա հպեք՝ ջնջելու այցելած էջերը, որոնումները, cookie-ները և գաղտնաբառերը ձեր սարքից:</string>
+  <string name="firstrun_button">Լավ, հասկացա:</string>
+  <string name="firstrun_footer">Անկեղծ ասած կայքերը և ծառայությունը, որը օգտագործել եք, դեռ կարող են իմանալ, թե որտեղ եք դուք եղել:</string>
 </resources>

@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">ยกเลิก</string>
+  <string name="action_ok">ตกลง</string>
   <string name="urlbar_hint">ค้นหาหรือป้อนที่อยู่</string>
   <string name="teaser">การท่องเว็บแบบส่วนตัวอัตโนมัติ\nท่องเว็บ ล้าง ทำซ้ำ</string>
   <string name="feedback_erase">ล้างประวัติการท่องเว็บของคุณแล้ว</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">เกี่ยวกับ</string>
   <string name="menu_help">ช่วยเหลือ</string>
   <string name="menu_rights">สิทธิของคุณ</string>
+  <string name="preference_category_search">ค้นหา</string>
+  <string name="preference_search_engine_default">ค่าเริ่มต้น</string>
+  <string name="preference_dialog_title_search_engine">การค้นหาเริ่มต้น</string>
   <string name="preference_category_privacy">ความเป็นส่วนตัว</string>
   <string name="preference_privacy_block_ads">ปิดกั้นตัวติดตามของโฆษณา</string>
   <string name="preference_privacy_block_analytics">ปิดกั้นตัวติดตามของการวิเคราะห์</string>
@@ -24,14 +29,33 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">ส่งข้อมูลการใช้งานแบบไม่ระบุตัวตน</string>
   <string name="preference_mozilla_telemetry_summary">เรียนรู้เพิ่มเติม</string>
+  <string name="content_description_clear_input">ล้างข้อมูลที่ป้อน</string>
   <string name="content_description_dismiss_input">ยกเลิก</string>
   <string name="content_description_erase">ล้างประวัติการท่องเว็บ</string>
   <string name="content_description_lock">การเชื่อมต่อปลอดภัย</string>
   <string name="accessibility_announcement_loading">กำลังโหลด</string>
   <string name="accessibility_announcement_loading_finished">โหลดเว็บไซต์แล้ว</string>
   <string name="content_description_menu">ตัวเลือกเพิ่มเติม</string>
+  <string name="content_description_forward">นำทางเดินหน้า</string>
   <string name="content_description_reload">โหลดเว็บไซต์ใหม่</string>
   <string name="firstrun_title">ท่องเว็บเหมือนไม่มีใครเฝ้ามองอยู่</string>
   <string name="firstrun_description">ปิดกั้นตัวติดตามออนไลน์โดยอัตโนมัติขณะที่คุณท่องเว็บ จากนั้นแตะเพื่อล้างหน้าที่เยี่ยมชม, การค้นหา, คุกกี้ และรหัสผ่านจากอุปกรณ์ของคุณ</string>
   <string name="firstrun_button">ตกลง เข้าใจแล้ว!</string>
+  <string name="firstrun_footer">เพื่อให้ชัดเจน ไซต์และบริการที่คุณใช้ยังคงสามารถทราบว่าคุณอยู่ที่ไหน</string>
+  <string name="your_rights">สิทธิของคุณ</string>
+  <string name="external_app_prompt">ลิงก์นี้จะเปิดใน %2$s คุณแน่ใจหรือว่าต้องการออกจาก %1$s ?</string>
+  <string name="external_app_prompt_no_app_title">ไม่มีแอพที่จัดการลิงก์</string>
+  <string name="external_app_prompt_no_app">ไม่มีแอพใดในอุปกรณ์ของคุณที่สามารถเปิดลิงก์นี้ได้ คุณต้องการออกจาก %1$s และเปิด %2$s เพื่อหาแอพที่เหมาะสมหรือไม่?</string>
+  <string name="external_multiple_apps_matched_exit">ออกจากการท่องเว็บแบบส่วนตัว?</string>
+  <string name="errorpage_title">เกิดปัญหาในการโหลดหน้า</string>
+  <string name="errorpage_refresh">ลองอีกครั้ง</string>
+  <string name="error_connectionfailure_title">ไม่สามารถเชื่อมต่อ</string>
+  <string name="error_timeout_title">การเชื่อมต่อหมดเวลา</string>
+  <string name="error_hostLookup_title">ไม่พบเซิร์ฟเวอร์</string>
+  <string name="error_malformedURI_title">ที่อยู่ไม่ถูกต้อง</string>
+  <string name="error_redirectLoop_title">หน้านี้ไม่มีการเปลี่ยนเส้นทางอย่างถูกต้อง</string>
+  <string name="error_unsupportedprotocol_title">ที่อยู่นี้ไม่สามารถเข้าใจได้</string>
+  <string name="error_sslhandshake_title">การเชื่อมต่อปลอดภัยล้มเหลว</string>
+  <string name="error_generic_title">อุปส์</string>
+  <string name="error_generic_message">เราไม่สามารถโหลดหน้านี้ด้วยเหตุผลบางอย่าง</string>
 </resources>

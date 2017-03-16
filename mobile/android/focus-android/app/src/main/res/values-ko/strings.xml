@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">취소</string>
+  <string name="action_ok">확인</string>
   <string name="urlbar_hint">검색어 또는 주소 입력</string>
   <string name="teaser">자동화된 사생활 보호 브라우저.\n쓰고, 지우고. 쓰고, 지우고.</string>
   <string name="feedback_erase">페이지 탐색 기록이 삭제되었습니다.</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">정보</string>
   <string name="menu_help">도움말</string>
   <string name="menu_rights">사용자 권리</string>
+  <string name="preference_category_search">검색</string>
+  <string name="preference_search_engine_default">기본</string>
+  <string name="preference_dialog_title_search_engine">기본 검색</string>
   <string name="preference_category_privacy">개인 정보</string>
   <string name="preference_privacy_block_ads">광고 추적기 차단</string>
   <string name="preference_privacy_block_analytics">분석용 추적기 차단</string>
@@ -37,4 +42,26 @@
   <string name="firstrun_description">검색 중 온라인 추적을 자동으로 차단합니다. 클릭만으로 방문한 페이지, 검색 기록, 쿠키, 암호를 단말기에서 삭제할 수 있습니다.</string>
   <string name="firstrun_button">알겠습니다!</string>
   <string name="firstrun_footer">명확히 하자면, 사이트와 서비스는 여전히 사용자가 어디에서 왔는지 알 수 있습니다.</string>
+  <string name="your_rights">권리</string>
+  <string name="external_app_prompt">이 링크는 %2$s에서 열립니다. %1$s를 종료하시겠습니까?</string>
+  <string name="external_app_prompt_no_app_title">이 링크를 사용하는 앱 없음</string>
+  <string name="external_app_prompt_no_app">이 링크를 열 수 있는 앱이 이 기기엔 설치돼있지 않습니다. %1$s를 종료하고 %2$s를 열어 관련된 앱을 찾을까요?</string>
+  <string name="external_multiple_apps_matched_exit">사생활 보호 브라우징을 종료할까요?</string>
+  <string name="errorpage_title">페이지를 불러오는 데에 문제가 발생했습니다</string>
+  <string name="errorpage_refresh">다시 시도하기</string>
+  <string name="error_connectionfailure_title">연결할 수 없음</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>&#51060; &#49324;&#51060;&#53944;&#44032; &#54788;&#51116; &#51025;&#45813;&#54616;&#51648; &#50506;&#49845;&#45768;&#45796;. &#51104;&#49884; &#54980;&#50640; &#45796;&#49884; &#49884;&#46020;&#54644;&#48372;&#49464;&#50836;.</li>"\n        "<li>&#47564;&#50557; &#50612;&#46500; &#54168;&#51060;&#51648;&#46020; &#48520;&#47084;&#50724;&#51648; &#47803;&#54620;&#45796;&#47732;, &#44592;&#44592;&#51032; &#45936;&#51060;&#53552; &#50672;&#44208; &#49345;&#53468;&#45208; Wi-Fi &#49345;&#53468;&#47484; &#54869;&#51064;&#54644;&#51452;&#49464;&#50836;.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">연결 시간이 초과되었습니다</string>
+  <string name="error_hostLookup_title">서버를 찾을 수 없습니다</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"&#51452;&#49548;&#47484; &#51060;&#47088; &#49885;&#51004;&#47196; &#51096;&#47803; &#52828; &#44163;&#51008; &#50500;&#45772;&#51648; &#54869;&#51064;&#54644;&#48372;&#49464;&#50836;.\n          "<strong>www</strong>".example.com &#45824;&#49888;\n          "<strong>ww</strong>.example.com</li>"\n        "<li>&#47564;&#50557; &#50612;&#46500; &#54168;&#51060;&#51648;&#46020; &#48520;&#47084;&#50724;&#51648; &#47803;&#54620;&#45796;&#47732;, &#44592;&#44592;&#51032; &#45936;&#51060;&#53552; &#50672;&#44208; &#49345;&#53468;&#45208; Wi-Fi &#49345;&#53468;&#47484; &#54869;&#51064;&#54644;&#51452;&#49464;&#50836;.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">주소가 올바르지 않습니다</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"&#50937; &#51452;&#49548;&#45716; "<strong>http://www.example.com/</strong>&#50752; &#44057;&#51060; &#49373;&#44220;&#49845;&#45768;&#45796;.</li>"\n  "<li>&#49324;&#49440;(<strong>/</strong>)&#51012; &#51228;&#45824;&#47196; &#52452;&#45716;&#51648; &#54869;&#51064;&#54644;&#48372;&#49464;&#50836;.</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">페이지가 제대로 이동되지 않았습니다</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#51060; &#47928;&#51228;&#45716; &#48652;&#46972;&#50864;&#51200;&#50640;&#49436; &#53216;&#53412; &#51217;&#44540;&#51012; &#48520;&#44032;&#45733;&#54616;&#44172; &#54664;&#51012; &#46412; &#48156;&#49373;&#54624; &#49688; &#51080;&#49845;&#45768;&#45796;.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">인식할 수 없는 주소입니다</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#51060; &#51452;&#49548;&#47484; &#50676;&#44592; &#50948;&#54644;&#49440; &#45796;&#47480; &#54532;&#47196;&#44536;&#47016;&#51012; &#49444;&#52824;&#54644;&#50556; &#54633;&#45768;&#45796;.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">보안 연결 실패</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#51060;&#45716; &#49436;&#48260;&#51032; &#44396;&#49457;&#50640; &#47928;&#51228;&#44032; &#51080;&#44144;&#45208; &#45572;&#44400;&#44032;&#44032; &#47564;&#46304; &#44032;&#51676; &#49436;&#48260;&#47196; &#50672;&#44208;&#49884;&#53412;&#47140;&#44256; &#54624; &#46412; &#48156;&#49373;&#46112; &#49688; &#51080;&#49845;&#45768;&#45796;.</li>"\n  "<li>&#47564;&#50557; &#51060;&#51204;&#50640; &#49436;&#48260;&#50640; &#51228;&#45824;&#47196; &#50672;&#44208;&#46096;&#45912; &#51201;&#51060; &#51080;&#50632;&#45796;&#47732;, &#50640;&#47084;&#44032; &#51104;&#44624;&#46041;&#50504;&#47564; &#48156;&#49373;&#54620; &#44163;&#51068; &#54869;&#47456;&#51060; &#45458;&#49845;&#45768;&#45796;. &#45208;&#51473;&#50640; &#45796;&#49884; &#49884;&#46020;&#54644;&#48372;&#49464;&#50836;.</li>\n</ul>]]></string>
+  <string name="error_generic_title">앗! 이런</string>
+  <string name="error_generic_message">페이지를 불러오지 못했습니다.</string>
 </resources>

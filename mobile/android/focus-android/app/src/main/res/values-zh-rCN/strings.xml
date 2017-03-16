@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">取消</string>
+  <string name="action_ok">确定</string>
   <string name="urlbar_hint">搜索或输入网址</string>
   <string name="teaser">全自动的私密浏览。\n无痕浏览，无需劳心。</string>
   <string name="feedback_erase">您的浏览记录已清除。</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">关于</string>
   <string name="menu_help">帮助</string>
   <string name="menu_rights">您的权利</string>
+  <string name="preference_category_search">搜索</string>
+  <string name="preference_search_engine_default">默认</string>
+  <string name="preference_dialog_title_search_engine">默认搜索</string>
   <string name="preference_category_privacy">隐私</string>
   <string name="preference_privacy_block_ads">拦截广告跟踪器</string>
   <string name="preference_privacy_block_analytics">拦截分析跟踪器</string>
@@ -37,4 +42,26 @@
   <string name="firstrun_description">在您浏览时自动屏蔽在线跟踪器。一按即可清除您的设备上的访问记录、搜索记录、Cookie 以及保存的密码。</string>
   <string name="firstrun_button">了解了！</string>
   <string name="firstrun_footer">也请了解，您使用的网站和服务仍然可能获知您造访的内容。</string>
+  <string name="your_rights">您的权利</string>
+  <string name="external_app_prompt">此链接将在 %2$s 中打开。您确定要退出 %1$s 吗？</string>
+  <string name="external_app_prompt_no_app_title">没有应用可处理此链接</string>
+  <string name="external_app_prompt_no_app">您的设备上没有可以打开此链接的应用。是否要退出 %1$s 并打开 %2$s 以查找适合的应用？</string>
+  <string name="external_multiple_apps_matched_exit">退出隐私浏览模式？</string>
+  <string name="errorpage_title">加载页面遇到问题</string>
+  <string name="errorpage_refresh">重试</string>
+  <string name="error_connectionfailure_title">无法连接</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>&#35813;&#32593;&#31449;&#21487;&#33021;&#26242;&#26102;&#19981;&#21487;&#29992;&#25110;&#22788;&#20110;&#32321;&#24537;&#29366;&#24577;&#12290;&#35831;&#20960;&#20998;&#38047;&#21518;&#20877;&#35797;&#12290;</li>"\n        "<li>&#22914;&#26524;&#24744;&#26080;&#27861;&#21152;&#36733;&#20219;&#20309;&#39029;&#38754;&#65292;&#35831;&#26816;&#26597;&#35813;&#31227;&#21160;&#35774;&#22791;&#30340;&#25968;&#25454;&#25110; Wi-Fi &#36830;&#25509;&#12290;</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">连接超时</string>
+  <string name="error_hostLookup_title">找不到服务器</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"&#35831;&#26816;&#26597;&#35813;&#22320;&#22336;&#26159;&#21542;&#36755;&#20837;&#38169;&#35823;&#65292;&#27604;&#22914;&#23558;\n          "<strong>www</strong>".example.com &#38169;&#20889;&#25104; \n          "<strong>ww</strong>.example.com</li>"\n        "<li>&#22914;&#26524;&#24744;&#26080;&#27861;&#36733;&#20837;&#20219;&#20309;&#39029;&#38754;&#65292;&#35831;&#26816;&#26597;&#35813;&#35774;&#22791;&#30340;&#25968;&#25454;&#25110; Wi-Fi &#36830;&#25509;&#12290;</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">地址无效</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"&#32593;&#39029;&#22320;&#22336;&#36890;&#24120;&#26684;&#24335;&#20026; "<strong>http://www.example.com/</strong></li>"\n  "<li>"&#35831;&#30830;&#35748;&#24744;&#20351;&#29992;&#30340;&#26159;&#27491;&#26012;&#26464;&#65288;&#21363; "<strong>/</strong>&#65289;&#12290;</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">页面不正确地重定向</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#26377;&#26102;&#20505;&#31105;&#29992;&#25110;&#25298;&#32477;&#25509;&#21463; Cookie &#20250;&#23548;&#33268;&#27492;&#38382;&#39064;&#12290;</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">地址无法理解</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#24744;&#21487;&#33021;&#38656;&#35201;&#23433;&#35013;&#20854;&#20182;&#36719;&#20214;&#25165;&#33021;&#25171;&#24320;&#27492;&#22320;&#22336;&#12290;</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">安全连接失败</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#36825;&#21487;&#33021;&#26159;&#26381;&#21153;&#22120;&#37197;&#32622;&#30340;&#38382;&#39064;&#65292;&#25110;&#32773;&#26377;&#20154;&#23581;&#35797;&#20882;&#20805;&#35813;&#26381;&#21153;&#22120;&#25152;&#33268;&#12290;</li>"\n  "<li>&#22914;&#26524;&#24744;&#20043;&#21069;&#26366;&#25104;&#21151;&#36830;&#25509;&#35813;&#26381;&#21153;&#22120;&#65292;&#37027;&#20040;&#27492;&#38169;&#35823;&#21487;&#33021;&#26159;&#26242;&#26102;&#30340;&#65292;&#24744;&#21487;&#20197;&#31245;&#21518;&#20877;&#35797;&#12290;</li>\n</ul>]]></string>
+  <string name="error_generic_title">哎呀</string>
+  <string name="error_generic_message">由于某些原因，我们无法加载此页面。</string>
 </resources>

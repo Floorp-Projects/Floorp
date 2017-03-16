@@ -1,16 +1,20 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Batal</string>
+  <string name="action_ok">Oke</string>
   <string name="urlbar_hint">Cari atau masukkan alamat</string>
   <string name="teaser">Penjelajahan pribadi otomatis.\nJelajahi. Hapus. Ulangi.</string>
   <string name="feedback_erase">Riwayat penjelajahan Anda sudah dihapus.</string>
   <string name="search_hint">Cari %1$s</string>
-  <string name="menu_share">Bagikan</string>
+  <string name="menu_share">Bagikan…</string>
   <string name="menu_open_with_default_browser">Buka dengan %1$s</string>
   <string name="menu_open_with_a_browser">Buka dengan …</string>
   <string name="menu_settings">Setelan</string>
   <string name="menu_about">Tentang</string>
   <string name="menu_help">Bantuan</string>
   <string name="menu_rights">Hak Anda</string>
+  <string name="preference_category_search">Cari</string>
+  <string name="preference_search_engine_default">Baku</string>
   <string name="preference_category_privacy">Privasi</string>
   <string name="preference_privacy_block_ads">Blokir pelacak iklan</string>
   <string name="preference_privacy_block_analytics">Blokir pelacak analitik</string>
@@ -28,5 +32,16 @@
   <string name="content_description_erase">Hapus riwayat penjelajahan</string>
   <string name="content_description_lock">Sambungan aman</string>
   <string name="accessibility_announcement_loading">Memuat</string>
+  <string name="accessibility_announcement_loading_finished">Situs web dimuat</string>
+  <string name="content_description_reload">Muat ulang situs web</string>
+  <string name="firstrun_title">Menjelajah seperti tidak ada yang mengawasi.</string>
+  <string name="firstrun_description">Blokir pelacak daring secara otomatis ketika Anda menjelajah. Kemudian ketuk untuk menghapus laman yang dikunjungi, pencarian, kuki, dan sandi dari perangkat Anda.</string>
   <string name="firstrun_button">Oke, beres!</string>
+  <string name="firstrun_footer">Agar jelas, situs dan layanan yang Anda gunakan masih dapat mengetahui di mana Anda berada.</string>
+  <string name="your_rights">Hak Anda</string>
+  <string name="errorpage_refresh">Coba Lagi</string>
+  <string name="error_connectionfailure_title">Tidak dapat tersambung</string>
+  <string name="error_hostLookup_title">Peladen tidak ditemukan</string>
+  <string name="error_malformedURI_title">Alamat tidak valid</string>
+  <string name="error_unsupportedprotocol_title">Alamat tidak dipahami</string>
 </resources>

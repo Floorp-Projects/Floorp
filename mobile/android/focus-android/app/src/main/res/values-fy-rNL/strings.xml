@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Annulearje</string>
+  <string name="action_ok">OK</string>
+  <string name="urlbar_hint">Fier sykterm of adres yn</string>
+  <string name="teaser">Automatysk privee sneupe.\nSneupe. Wiskje. Werhelje.</string>
+  <string name="feedback_erase">Jo sneupskiednis is wiske.</string>
+  <string name="search_hint">Sykje nei %1$s</string>
+  <string name="menu_share">Diele…</string>
+  <string name="menu_open_with_default_browser">Iepenje mei %1$s</string>
+  <string name="menu_open_with_a_browser">Iepenje mei…</string>
+  <string name="menu_settings">Ynstellingen</string>
+  <string name="menu_about">Oer</string>
+  <string name="menu_help">Help</string>
+  <string name="menu_rights">Jo rjochten</string>
+  <string name="preference_category_search">Sykje</string>
+  <string name="preference_search_engine_default">Standert</string>
+  <string name="preference_dialog_title_search_engine">Standertsykmasine</string>
+  <string name="preference_category_privacy">Privacy</string>
+  <string name="preference_privacy_block_ads">Advertinsjetrackers blokkearje</string>
+  <string name="preference_privacy_block_analytics">Analysetrackers blokkearje</string>
+  <string name="preference_privacy_block_social">Sosjale trackers blokkearje</string>
+  <string name="preference_privacy_block_content">Oare ynhâldstrackers blokkearje</string>
+  <string name="preference_privacy_block_content_summary">Kin guon fideo’s en websiden fersteure</string>
+  <string name="preference_category_performance">Prestaasjes</string>
+  <string name="preference_performance_block_webfonts">Weblettertypen blokkearje</string>
+  <string name="preference_performance_block_images">Ofbyldingen blokkearje</string>
+  <string name="preference_default_browser">Standertbrowser meitsje</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Anonime brûksgegevens ferstjoere</string>
+  <string name="preference_mozilla_telemetry_summary">Lês mear</string>
+  <string name="content_description_clear_input">Ynfier wiskje</string>
+  <string name="content_description_dismiss_input">Fuortsmite</string>
+  <string name="content_description_erase">Navigaasjeskiednis wiskje</string>
+  <string name="content_description_lock">Befeilige ferbining</string>
+  <string name="accessibility_announcement_loading">Lade</string>
+  <string name="accessibility_announcement_loading_finished">Website laden</string>
+  <string name="content_description_menu">Mear opsjes</string>
+  <string name="content_description_forward">Foarút blêdzje</string>
+  <string name="content_description_reload">Website opnij lade</string>
+  <string name="firstrun_title">Sneup as oft net ien meisjocht.</string>
+  <string name="firstrun_description">Blokkearje automatysk onlinetrackers wylst jo sneupje. Tik dêrnei om besochte siden, sykopdrachten, cookies en wachtwurden op jo apparaat te wiskjen.</string>
+  <string name="firstrun_button">Ok, begrepen!</string>
+  <string name="firstrun_footer">Foar de dúdlikens: websites en tsjinsten dy\'t jo brûke, kinne noch hieltyd sjen wêr\'t jo west binne.</string>
+  <string name="your_rights">Jo rjochten</string>
+  <string name="external_app_prompt">Dizze keppeling wurdt yn %2$s iepene. Binne jo wis dat jo %1$s ôfslute wolle?</string>
+  <string name="external_app_prompt_no_app_title">Gjin app foar ferwurkjen fan keppeling</string>
+  <string name="external_app_prompt_no_app">Gjin inkelde app op jo apparaat kin dizze keppeling iepenje. Wolle jo %1$s ôfslute en %2$s iepenje om in geskikte app te finen?</string>
+  <string name="external_multiple_apps_matched_exit">Priveenavigaasje ôfslute?</string>
+  <string name="errorpage_title">Probleem by it laden fan de side</string>
+  <string name="errorpage_refresh">Opnij probearje</string>
+  <string name="error_connectionfailure_title">Kin gjin ferbining meitsje</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Miskien is de website tydlik net beskikber of oerbel&#234;st. Probearje it oer inkelde mominten opnij.</li>"\n        "<li>As jo gjin inkelde side lade kinne, kontrolearje dan de gegevens- of wifi-ferbining fan jo apparaat.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">De wachttiid foar de ferbining is ferstrutsen</string>
+  <string name="error_hostLookup_title">Server net fûn</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kontrolearje it adres op typflaters, lykas\n          "<strong>ww</strong>".example.com yn stee fan\n          "<strong>www</strong>.example.com</li>"\n        "<li>As jo gjin inkelde side lade kinne, kontrolearje dan de gegevens- of wifi-ferbining fan jo apparaat.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">It adres is net jildich</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Webadressen wurde trochgeans skreaun as "<strong>http://www.example.com/</strong></li>"\n  "<li>"Let derop dat jo foar&#250;tgeande slashes br&#251;ke (d.y. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">De side ferwiist net op in krekte wize troch</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dit probleem kin soms feroarsake wurde troch it &#250;tskeakeljen of wegerjen fan cookies</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">It adres waard net begrepen</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Miskien moatte jo oare software ynstallearje om dit adres te iepenjen.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Befeilige ferbining mislearre</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dit kin in probleem mei de serverkonfiguraasje w&#234;ze, of ien probearret\ndizze server nei te meitsjen.</li>"\n  "<li>As jo yn it ferline wol mei sukses ferbining makke hawwe mei dizze server,\ndan is de flater mooglik tydlik en kinne jo it letter nochris probearje.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Oeps</string>
+  <string name="error_generic_message">De side kin om de ien oft oare reden net laden wurde.</string>
+</resources>

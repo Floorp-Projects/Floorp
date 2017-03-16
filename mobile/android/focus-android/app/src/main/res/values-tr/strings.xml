@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Vazgeç</string>
   <string name="urlbar_hint">Arama yapın veya adres yazın</string>
   <string name="teaser">Otomatik gizli gezinti.\nGez ve sil. Hepsi bu kadar.</string>
   <string name="feedback_erase">Gezinti geçmişiniz silinmiştir.</string>
@@ -11,6 +12,9 @@
   <string name="menu_about">Hakkında</string>
   <string name="menu_help">Yardım</string>
   <string name="menu_rights">Haklarınız</string>
+  <string name="preference_category_search">Arama</string>
+  <string name="preference_search_engine_default">Varsayılan</string>
+  <string name="preference_dialog_title_search_engine">Varsayılan arama</string>
   <string name="preference_category_privacy">Gizlilik</string>
   <string name="preference_privacy_block_ads">Reklam takipçilerini engelle</string>
   <string name="preference_privacy_block_analytics">Analitik takipçilerini engelle</string>

@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Zrušiť</string>
+  <string name="action_ok">OK</string>
   <string name="urlbar_hint">Zadajte hľadanie alebo adresu</string>
   <string name="teaser">Automatické súkromné prehliadanie.\nPrehliadajte. Vymažte históriu. Opakujte.</string>
   <string name="feedback_erase">Vaša história prehliadania bola vymazaná.</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">O aplikácii</string>
   <string name="menu_help">Pomocník</string>
   <string name="menu_rights">Vaše práva</string>
+  <string name="preference_category_search">Vyhľadávanie</string>
+  <string name="preference_search_engine_default">Predvolený</string>
+  <string name="preference_dialog_title_search_engine">Predvolený vyhľadávací modul</string>
   <string name="preference_category_privacy">Súkromie</string>
   <string name="preference_privacy_block_ads">Blokovať reklamné sledovacie prvky</string>
   <string name="preference_privacy_block_analytics">Blokovať analytické sledovacie prvky</string>
@@ -37,4 +42,26 @@
   <string name="firstrun_description">Automaticky počas prehliadania blokujte sledovacie prvky. Potom jedným ťuknutím z vášho zariadenia vymažte zoznam navštívených stránok, výsledky vyhľadávania, cookies a heslá.</string>
   <string name="firstrun_button">Ok, rozumiem!</string>
   <string name="firstrun_footer">Len pre úplnosť, stránky a služby, ktoré používate môžu stále vedieť kde ste boli.</string>
+  <string name="your_rights">Vaše práva</string>
+  <string name="external_app_prompt">Tento odkaz bude otvorený v aplikácii %2$s. Naozaj chcete ukončiť %1$s?</string>
+  <string name="external_app_prompt_no_app_title">Žiadna aplikácia na otvorenie odkazu</string>
+  <string name="external_app_prompt_no_app">Žiadna aplikácia na vašom zariadení nie je schopná otvoriť tento odkaz. Chcete opustiť aplikáciu %1$s a nájsť vhodnú aplikáciu v %2$s?</string>
+  <string name="external_multiple_apps_matched_exit">Ukončiť režim Súkromné prehliadanie?</string>
+  <string name="errorpage_title">Problém pri načítaní stránky</string>
+  <string name="errorpage_refresh">Skúsiť znova</string>
+  <string name="error_connectionfailure_title">Nie je možné sa pripojiť</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Str&#225;nka m&#244;&#382;e by&#357; do&#269;asne nedostupn&#225; alebo zanepr&#225;zdnen&#225;. Svoj pokus opakujte nesk&#244;r.</li>"\n        "<li>Ak sa ned&#225; na&#269;&#237;ta&#357; &#382;iadna str&#225;nka, skontrolujte pripojenie v&#225;&#353;ho mobiln&#233;ho zariadenia k internetu.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Čas pripojenia vypršal</string>
+  <string name="error_hostLookup_title">Server sa nenašiel</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Skontrolujte, &#269;i ste nezadali napr.\n          "<strong>ww</strong>".example.com namiesto\n          "<strong>www</strong>.example.com</li>"\n        "<li>Ak sa ned&#225; na&#269;&#237;ta&#357; &#382;iadna str&#225;nka, skontrolujte pripojenie v&#225;&#353;ho zariadenia k internetu.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">Adresa nie je platná</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Webov&#233; adresy s&#250; zvy&#269;ajne zad&#225;van&#233; v tvare "<strong>http://www.example.com/</strong></li>"\n  "<li>"Skontrolujte, &#269;i pou&#382;&#237;vate spr&#225;vne lomky (t.j. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Stránku sa nepodarilo správne presmerovať</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Tento probl&#233;m m&#244;&#382;e nasta&#357; pri nepovolen&#237; alebo odmietnut&#237; cookies.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Adresa nebola rozpoznaná</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Na otvorenie tento adresy mo&#382;no bude potrebn&#233; nain&#353;talova&#357; &#271;al&#353;&#237; softv&#233;r.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Zabezpečené pripojenie zlyhalo</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Toto m&#244;&#382;e by&#357; probl&#233;m s konfigur&#225;ciou servera alebo\n sa ho niekto sna&#382;&#237; napodobni&#357;.</li>"\n  "<li>Ak ste sa k tomuto serveru &#250;spe&#353;ne pripojili v minulosti,\n chyba m&#244;&#382;e by&#357; do&#269;asn&#225; a pokus by ste mali opakova&#357; nesk&#244;r.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Ups</string>
+  <string name="error_generic_message">Z nejakého dôvodu nebolo možné načítať stránku.</string>
 </resources>

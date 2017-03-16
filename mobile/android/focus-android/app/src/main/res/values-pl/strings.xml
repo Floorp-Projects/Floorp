@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Anuluj</string>
+  <string name="action_ok">OK</string>
   <string name="urlbar_hint">Wpisz adres lub szukaj</string>
   <string name="teaser">Automatyczne przeglądanie prywatne.\nPrzeglądaj. Usuwaj. Powtórz.</string>
   <string name="feedback_erase">Usunięto historię przeglądania.</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">O programie</string>
   <string name="menu_help">Pomoc</string>
   <string name="menu_rights">O prawach użytkownika</string>
+  <string name="preference_category_search">Wyszukiwanie</string>
+  <string name="preference_search_engine_default">Domyślna</string>
+  <string name="preference_dialog_title_search_engine">Domyślna wyszukiwarka</string>
   <string name="preference_category_privacy">Prywatność</string>
   <string name="preference_privacy_block_ads">Blokowanie śledzących reklam</string>
   <string name="preference_privacy_block_analytics">Blokowanie śledzących statystyk</string>
@@ -37,4 +42,26 @@
   <string name="firstrun_description">Automatycznie blokuj śledzące elementy podczas przeglądania stron. Wystarczy stuknąć, aby usunąć z urządzenia odwiedzone strony, wyszukiwania i hasła.</string>
   <string name="firstrun_button">OK!</string>
   <string name="firstrun_footer">Nie oznacza to, że odwiedzane strony nic o Tobie nie wiedzą.</string>
+  <string name="your_rights">O prawach użytkownika</string>
+  <string name="external_app_prompt">Odnośnik zostanie otwarty w aplikacji %2$s. Na pewno wyjść z aplikacji %1$s?</string>
+  <string name="external_app_prompt_no_app_title">Nie ma aplikacji dla tego odnośnika</string>
+  <string name="external_app_prompt_no_app">Żadna aplikacja na urządzeniu nie może otworzyć tego odnośnika. Wyjść z aplikacji %1$s i otworzyć %2$s, aby odnaleźć odpowiednią aplikację?</string>
+  <string name="external_multiple_apps_matched_exit">Wyjść z trybu prywatnego?</string>
+  <string name="errorpage_title">Błąd wczytywania strony</string>
+  <string name="errorpage_refresh">Spróbuj ponownie</string>
+  <string name="error_connectionfailure_title">Nie można połączyć</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Strona mo&#380;e by&#263; tymczasowo niedost&#281;pna lub przeci&#261;&#380;ona. Spr&#243;buj ponownie za chwil&#281;.</li>"\n        "<li>Je&#347;li nie mo&#380;esz otworzy&#263; &#380;adnej strony, sprawd&#378; swoje po&#322;&#261;czenie z&#160;Internetem.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Przekroczono czas oczekiwania</string>
+  <string name="error_hostLookup_title">Nie odnaleziono serwera</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Upewnij si&#281;, &#380;e wpisany adres nie zawiera takich liter&#243;wek, jak\n          "<strong>ww</strong>".mozilla.org zamiast\n          "<strong>www</strong>.mozilla.org</li>"\n        "<li>Je&#347;li nie mo&#380;esz otworzy&#263; &#380;adnej strony, sprawd&#378; swoje po&#322;&#261;czenie z&#160;Internetem.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">Adres jest nieprawidłowy</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Adresy internetowe s&#261; zwykle postaci "<strong>http://www.mozilla.org/</strong></li>"\n  "<li>"Upewnij si&#281;, &#380;e adres zawiera prawid&#322;owe uko&#347;niki (tzn. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Nieprawidłowe przekierowanie strony</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Mo&#380;e to by&#263; spowodowane wy&#322;&#261;czeniem lub odrzucaniem ciasteczek.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Nieznany protokół</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Aby otworzy&#263; ten adres, mo&#380;e by&#263; konieczna instalacja innego programu.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Bezpieczne połączenie się nie powiodło</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Mo&#380;e to by&#263; problem konfiguracji serwera lub pr&#243;ba podania si&#281;\nza ten serwer przez podmiot nieuprawniony.</li>"\n  "<li>Je&#347;li &#322;&#261;czono si&#281; wcze&#347;niej z&#160;tym serwerem, b&#322;&#261;d mo&#380;e by&#263; tymczasowy\ni&#160;nale&#380;y spr&#243;bowa&#263; ponownie p&#243;&#378;niej.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Wystąpił błąd</string>
+  <string name="error_generic_message">Nie można otworzyć tej strony.</string>
 </resources>

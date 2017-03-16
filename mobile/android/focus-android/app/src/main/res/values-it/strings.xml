@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Annulla</string>
+  <string name="action_ok">OK</string>
   <string name="urlbar_hint">Cerca o inserisci un indirizzo</string>
   <string name="teaser">Navigazione anonima in automatico.\nNaviga. Elimina. Ripeti.</string>
   <string name="feedback_erase">La cronologia di navigazione è stata eliminata.</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">Informazioni su</string>
   <string name="menu_help">Aiuto</string>
   <string name="menu_rights">I tuoi diritti</string>
+  <string name="preference_category_search">Ricerca</string>
+  <string name="preference_search_engine_default">Predefinito</string>
+  <string name="preference_dialog_title_search_engine">Motore di ricerca predefinito</string>
   <string name="preference_category_privacy">Privacy</string>
   <string name="preference_privacy_block_ads">Blocca pubblicità traccianti</string>
   <string name="preference_privacy_block_analytics">Blocca analytics traccianti</string>
@@ -37,4 +42,26 @@
   <string name="firstrun_description">Blocca automaticamente gli elementi in grado di tracciarti durante la navigazione. Poi, con un semplice tocco, elimina le pagine visitate, i cookie e le password dal dispositivo.</string>
   <string name="firstrun_button">Ho capito!</string>
   <string name="firstrun_footer">Per essere chiari, i siti web visitati e il gestore in uso potranno comunque stabilire dove sei stato.</string>
+  <string name="your_rights">I tuoi diritti</string>
+  <string name="external_app_prompt">Questo link verrà aperto in %2$s. Uscire da %1$s?</string>
+  <string name="external_app_prompt_no_app_title">Nessuna app per gestire il link</string>
+  <string name="external_app_prompt_no_app">Nessuna delle app sul dispositivo è in grado di aprire questo link. Uscire da %1$s e aprire %2$s per cercare una app adatta?</string>
+  <string name="external_multiple_apps_matched_exit">Uscire da Navigazione anonima?</string>
+  <string name="errorpage_title">Errore caricamento pagina</string>
+  <string name="errorpage_refresh">Riprova</string>
+  <string name="error_connectionfailure_title">Connessione non riuscita</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Il sito potrebbe essere non disponibile o sovraccarico. Riprovare fra qualche istante.</li>"\n  "<li>Se non &#232; possibile caricare alcuna pagina, controllare la connessione dati o Wi-Fi del dispositivo.</li>\n</ul>]]></string>
+  <string name="error_timeout_title">Tempo per la connessione esaurito</string>
+  <string name="error_hostLookup_title">Impossibile contattare il server</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Verificare se l\'indirizzo contiene errori di battitura del tipo "<strong>ww</strong>".example.com invece di "<strong>www</strong>.example.com</li>" \n  "<li>Se non &#232; possibile caricare alcuna pagina, controllare la connessione dati o Wi-Fi del dispositivo.</li>\n</ul>" "]]></string>
+  <string name="error_malformedURI_title">L’indirizzo non è valido</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Gli indirizzi internet normalmente si scrivono nella forma "<strong>http://www.example.com/</strong></li>"\n  "<li>"Verificare di aver utilizzato le barre corrette "<strong>/</strong>.</li>\n</ul>" "]]></string>
+  <string name="error_redirectLoop_title">Questa pagina non reindirizza in modo corretto</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Questo problema spesso &#232; causato dal blocco o dal rifiuto dei cookie.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Indirizzo non interpretabile</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#200; necessario installare del software aggiuntivo per aprire questo indirizzo.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Connessione sicura non riuscita</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Potrebbe trattarsi di un problema nella configurazione del server oppure di un tentativo da parte di qualcuno di sostituirsi al server stesso.</li>"\n  "<li>Se &#232; stato possibile connettersi a questo server in passato, il problema potrebbe essere solo temporaneo. Si consiglia di riprovare in seguito.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Oops</string>
+  <string name="error_generic_message">Non è stato possibile caricare questa pagina per qualche motivo.</string>
 </resources>

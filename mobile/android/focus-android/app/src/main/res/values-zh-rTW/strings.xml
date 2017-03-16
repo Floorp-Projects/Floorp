@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">取消</string>
+  <string name="action_ok">確定</string>
   <string name="urlbar_hint">進行搜尋或輸入網址</string>
   <string name="teaser">無痕瀏覽，不留足跡。</string>
   <string name="feedback_erase">已清除您的瀏覽紀錄。</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">關於</string>
   <string name="menu_help">說明</string>
   <string name="menu_rights">您的權利</string>
+  <string name="preference_category_search">搜尋</string>
+  <string name="preference_search_engine_default">預設</string>
+  <string name="preference_dialog_title_search_engine">預設搜尋引擎</string>
   <string name="preference_category_privacy">隱私權</string>
   <string name="preference_privacy_block_ads">封鎖廣告型追蹤器</string>
   <string name="preference_privacy_block_analytics">封鎖分析型追蹤器</string>
@@ -37,4 +42,26 @@
   <string name="firstrun_description">自動在您上網時封鎖線上追蹤器；只要一點即可清除裝置中造訪過的頁面、搜尋、Cookie、密碼等紀錄。</string>
   <string name="firstrun_button">好，知道了！</string>
   <string name="firstrun_footer">您開啟的網站或服務本身還是會知道您曾經來過。</string>
+  <string name="your_rights">您的權利</string>
+  <string name="external_app_prompt">此鏈結將於 %2$s 開啟。您確定要離開 %1$s 嗎？</string>
+  <string name="external_app_prompt_no_app_title">沒有應用程式可處理此類鏈結</string>
+  <string name="external_app_prompt_no_app">您裝置中並未安裝可開啟此鏈結的應用程式。要離開 %1$s，並開啟 %2$s 找一套可開啟的應用程式嗎？</string>
+  <string name="external_multiple_apps_matched_exit">要結束隱私瀏覽嗎？</string>
+  <string name="errorpage_title">載入頁面時發生問題</string>
+  <string name="errorpage_refresh">再試一次</string>
+  <string name="error_connectionfailure_title">無法連線</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>&#32178;&#31449;&#21487;&#33021;&#22826;&#24537;&#30860;&#25110;&#26283;&#26178;&#28961;&#27861;&#20351;&#29992;&#12290;&#35531;&#31245;&#20505;&#20877;&#35430;&#19968;&#27425;&#12290;</li><li>&#33509;&#24744;&#28961;&#27861;&#36617;&#20837;&#20219;&#20309;&#38913;&#38754;&#65292;&#35531;&#27298;&#26597;&#24744;&#30340;&#25976;&#25818;&#25110; Wi-Fi &#36899;&#32218;&#12290;</li></ul>]]></string>
+  <string name="error_timeout_title">連線逾時</string>
+  <string name="error_hostLookup_title">找不到伺服器</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>"&#35531;&#27298;&#26597;&#32178;&#22336;&#26159;&#21542;&#26377;&#25171;&#37679;&#65311;&#20363;&#22914;&#25226; "<strong>www</strong>".example.com &#25171;&#25104; "<strong>ww</strong>.example.com</li><li>&#33509;&#28961;&#27861;&#36617;&#20837;&#20219;&#20309;&#32178;&#31449;&#65292;&#35531;&#27298;&#26597;&#24744;&#30340;&#32178;&#36335;&#36899;&#32218;&#29376;&#24907;&#12290;</li></ul>]]></string>
+  <string name="error_malformedURI_title">網址無效</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>"&#32178;&#22336;&#36890;&#24120;&#38263;&#30340;&#20687; "<strong>http://www.example.com/</strong>&#12290;</li><li>"&#35531;&#30906;&#23450;&#24744;&#29992;&#30340;&#26159;&#26012;&#32218; (&#20363;: "<strong>/</strong>)&#12290;</li>" "</ul>]]></string>
+  <string name="error_redirectLoop_title">頁面重新導向不正確</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" "<li>&#26377;&#26178;&#20505;&#20572;&#29992;&#25110;&#25298;&#32085;&#25509;&#21463; Cookie &#26371;&#36896;&#25104;&#27492;&#21839;&#38988;&#12290;</li>" "</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">無法理解的網址</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>&#24744;&#21487;&#33021;&#38656;&#35201;&#23433;&#35037;&#20854;&#20182;&#36575;&#39636;&#25165;&#33021;&#38283;&#21855;&#27492;&#32178;&#22336;&#12290;</li></ul>]]></string>
+  <string name="error_sslhandshake_title">安全連線失敗</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>&#21487;&#33021;&#26159;&#20282;&#26381;&#22120;&#35373;&#23450;&#21839;&#38988;&#36896;&#25104;&#65292;&#25110;&#26159;&#26377;&#20154;&#22039;&#35430;&#20605;&#35037;&#25104;&#35442;&#20282;&#26381;&#22120;&#12290;</li><li>&#33509;&#24744;&#20197;&#21069;&#21487;&#20197;&#33287;&#35442;&#20282;&#26381;&#22120;&#27491;&#24120;&#36899;&#32218;&#65292;&#37027;&#40636;&#36889;&#20491;&#37679;&#35492;&#21487;&#33021;&#21482;&#26159;&#26283;&#26178;&#30340;&#65292;&#35531;&#31245;&#20505;&#20877;&#35430;&#35430;&#30475;&#12290;</li>" "</ul>]]></string>
+  <string name="error_generic_title">糟糕</string>
+  <string name="error_generic_message">因為某些原因，我們無法載入此頁面。</string>
 </resources>

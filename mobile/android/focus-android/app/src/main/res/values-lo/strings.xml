@@ -1,14 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">ຍົກເລີກ</string>
+  <string name="action_ok">ຕົກລົງ</string>
   <string name="urlbar_hint">ຄົ້ນຫາ ຫລື ປ້ອນທີ່ຢູ່ໃສ່ນີ້</string>
   <string name="teaser">ການທ່ອງເວັບສ່ວນຕົວແບບອັດຕະໂນມັດ.\nທ່ອງເວັບ ແລະ ລົບລ້າງປະຫວັດການໃຊ້ງານອອກ.</string>
   <string name="feedback_erase">ປະຫວັດການທ່ອງເວັບຂອງທ່ານໄດ້ຖືກລຶບອອກແລ້ວ.</string>
   <string name="search_hint">ຄົ້ນຫາສຳລັບ %1$s</string>
-  <string name="menu_share">ແບ່ງປັນ</string>
+  <string name="menu_share">ແບ່ງປັນ…</string>
+  <string name="menu_open_with_default_browser">ເປີດດ້ວຍ %1$s</string>
+  <string name="menu_open_with_a_browser">ເປີດ​ດ້ວຍ …</string>
   <string name="menu_settings">ການຕັ້ງຄ່າ</string>
   <string name="menu_about">ກ່ຽວກັບ</string>
   <string name="menu_help">ວິທີໃຊ້</string>
   <string name="menu_rights">ສິດທິຂອງທ່ານ</string>
+  <string name="preference_category_search">ຊອກຫາ</string>
+  <string name="preference_search_engine_default">ຄ່າພື້ນຖານ</string>
+  <string name="preference_dialog_title_search_engine">ການຊອກຫາພື້ນຖານ</string>
   <string name="preference_category_privacy">ຄວາມເປັນສ່ວນຕົວ</string>
   <string name="preference_privacy_block_ads">ບັອກຕົວຕິດຕາມຂອງການໂຄສະນາ</string>
   <string name="preference_privacy_block_analytics">ບັອກຕົວຕິດຕາມຂອງການວິເຄາະ</string>
@@ -17,7 +24,32 @@
   <string name="preference_privacy_block_content_summary">ອາດຈະເຮັດໃຫ້ບາງວິດີໂອ ແລະ ຫນ້າເວັບບໍ່ສົມບູນ</string>
   <string name="preference_category_performance">ປະສິດທິພາບ</string>
   <string name="preference_performance_block_webfonts">ບັອກຕົວອັກສອນເວັບ</string>
+  <string name="preference_performance_block_images">ບັອກຮູບພາບ</string>
+  <string name="preference_default_browser">ຕັ້ງໃຫ້ເປັນເວັບບຣາວເຊີຫລັກ</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">ສົ່ງຂໍ້ມູນການໃຊ້ງານແບບບໍ່ລະບຸຕົວຕົນ</string>
   <string name="preference_mozilla_telemetry_summary">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+  <string name="content_description_clear_input">ລົບລ້າງຂໍ້ມູນທີ່ປ້ອນເຂົ້າ</string>
+  <string name="content_description_dismiss_input">ຍົກເລີກ</string>
+  <string name="content_description_erase">ລຶບປະຫວັດການທ່ອງເວັບ</string>
+  <string name="content_description_lock">ການເຊື່ອມຕໍ່ທີ່ປອດໄພ</string>
+  <string name="accessibility_announcement_loading">ກຳລັງໂຫລດ</string>
+  <string name="accessibility_announcement_loading_finished">ໂຫລດເວັບໄຊທ໌ນີ້ແລ້ວ</string>
+  <string name="content_description_menu">ຕົວເລືອກເພີ່ມເຕີມ</string>
+  <string name="content_description_forward">ນຳທາງໄປທາງຫນ້າ</string>
+  <string name="content_description_reload">ໂຫລດເວັບໄຊທ໌ຄືນໃຫມ່</string>
+  <string name="firstrun_title">ທ່ອງເວັບແບບບໍ່ມີໃຜມາຫລັກເຝົ້າຕິດຕາມ.</string>
+  <string name="firstrun_description">ມັນຈະບັອກຕົວຕິດຕາມອອນໄລນ໌ແບບອັດຕະໂນມັດໃນຂະນະທີ່ທ່ານກຳລັງທ່ອງເວັບຢູ່. ຫລັງຈາກນັ້ນໃຫ້ແຕະເພື່ອລົບລ້າງຫນ້າເວັບທີ່ທ່ານໄດ້ເຂົ້າໄປເບິງ, ການຄົ້ນຫາ, ຄຸກກີ້ ແລະ ລະຫັດຜ່ານອອກຈາກອຸປະກອນຂອງທ່ານ.</string>
+  <string name="firstrun_button">ຕົກລົງ, ເຂົ້າໃຈແລ້ວ!</string>
+  <string name="firstrun_footer">ເພື່ອເຮັດໃຫ້ຊັດເຈນ, ບາງເວັບໄຊທ໌ ແລະ ບໍລິການທີ່ທ່ານໃຊ້ຍັງຄົງເຮັດໃຫ້ທ່ານສາມາດຮັບຮູ້ໄດ້ວ່າທ່ານໄດ້ໄປຢູ່ໃສ່ມາ.</string>
+  <string name="your_rights">ສິດທິຂອງທ່ານ</string>
+  <string name="external_app_prompt">ລີ້ງນີ້ຈະເປີດຢູ່ໃນ %2$s. ແນ່ໃຈແລ້ວບໍ່ວ່າທ່ານຕ້ອງການຈະອອກຈາກ %1$s?</string>
+  <string name="external_app_prompt_no_app_title">ບໍ່ມີແອັບເພື່ອຈັດການກັບລີ້ງ</string>
+  <string name="external_app_prompt_no_app">ບໍ່ມີແອັບໃດເລີຍໃນອຸປະກອນຂອງທ່ານທີ່ຈະສາມາດເປີດລີ້ງນີ້ໄດ້. ທ່ານຕ້ອງການຈະອອກຈາກ %1$s ແລະ ເປີດ %2$s ເພື່ອຊອກຫາແອັບທີ່ສາມາດເປີດລີ້ງນີ້ໄດ້ຫລືບໍ່?</string>
+  <string name="external_multiple_apps_matched_exit">ຕ້ອງການອອກຈາກການທອງເວັບແບບສ່ວນຕົວບໍ່?</string>
+  <string name="errorpage_title">ເກີດມີບັນຫາໃນການໂຫລດຫນ້າເວັບ</string>
+  <string name="errorpage_refresh">ລອງໃຫມ່ອີກຄັ້ງ</string>
+  <string name="error_connectionfailure_title">ບໍ່ສາມາດເຊື່ອມຕໍ່ໄດ້</string>
+  <string name="error_timeout_title">ການເຊື່ອມຕໍ່ຫມົດເວລາ</string>
+  <string name="error_hostLookup_title">ບໍ່ພົບເຊີເວີ</string>
 </resources>

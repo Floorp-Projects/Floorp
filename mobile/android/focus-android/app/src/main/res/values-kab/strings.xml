@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Sefsex</string>
+  <string name="action_ok">IH</string>
   <string name="urlbar_hint">Nadi neγ sekcem tansa</string>
   <string name="teaser">Tunigin tusligt tawurmant.\nSnirem. Kkes. Sniles.</string>
   <string name="feedback_erase">Amazray-inek n unadi yettwasfeḍ.</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">Γef</string>
   <string name="menu_help">Tallalt</string>
   <string name="menu_rights">Izerfan-inek</string>
+  <string name="preference_category_search">Nadi</string>
+  <string name="preference_search_engine_default">Amezwer</string>
+  <string name="preference_dialog_title_search_engine">Anadi amezwer</string>
   <string name="preference_category_privacy">Tabaḍnit</string>
   <string name="preference_privacy_block_ads">Sewḥel ineḍfaṛen</string>
   <string name="preference_privacy_block_analytics">Sewḥel ineḍfaṛen usliḍen</string>
@@ -37,4 +42,26 @@
   <string name="firstrun_description">Sewḥel s wudem awurman inedfaṛen ticki tettinigeḍ. Senned sakin ɣef tqeffalt Sfeḍ akken ad tekkseḍ isebtar yettwarzan, inadiyen, inagan n tuqqna akked wawalen uffiren.</string>
   <string name="firstrun_button">Ih, gziɣ!</string>
   <string name="firstrun_footer">Akken ad tegzuḍ, ismal akked imeẓla zeren yakan ad ẓren anida telliḍ.</string>
+  <string name="your_rights">Izerfan-ik</string>
+  <string name="external_app_prompt">Aseɣwen-agi ad d-dyeldi di %2$s. Tebɣiḍ ad teffɣeḍ si %1$s?</string>
+  <string name="external_app_prompt_no_app_title">Ulac asnas izemren ad d-yeldi aseɣwen</string>
+  <string name="external_app_prompt_no_app">Ulac asnas deg ibenk-ik izemren ad d-yeldi aseɣwen. Tebɣiḍ ad teffɣeḍ si %1$s sakin ad d-ldiḍ %2$s akken ad d-afeḍ asnas ilaqen?</string>
+  <string name="external_multiple_apps_matched_exit">Ffeɣ si tunigin tusligt?</string>
+  <string name="errorpage_title">Ugur deg usali n usebter</string>
+  <string name="errorpage_refresh">Ɛreḍ tikelt-nniḍen</string>
+  <string name="error_connectionfailure_title">Igguma ad iqqen</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Ahat asmel ulac-it akka tura ne&#611; &#611;ur-s tta&#603;ebga. &#400;re&#7693; tikelt-nni&#7693;en.</li>"\n        "<li>Ma yella ur tezmire&#7693; ara ad tinige&#7693; ar usmel, senqed tuqqna-ik n isefka ne&#611; Wi-Fi n yibenk-ik.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Akud n tuqqna yezri</string>
+  <string name="error_hostLookup_title">ulac aqeddac</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n<li>"Senqed taseddast n tensa (tira n "<strong>ww</strong>".example.com deg um&#7693;iq n "<strong>www</strong>.example.com par exemple)&#160;;</li>\n<li>Ma yella ur tessaw&#7693;e&#7693; ara ad tinige&#7693; deg ismal, senqed tuqqna n isefka ne&#611; Wi-Fi n yibenk-ik.</li>\n</ul>" "]]></string>
+  <string name="error_malformedURI_title">Tansa mačči d tameɣtut</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Tansiwin web ttwarunt am "<strong>http://www.example.com/</strong></li>"\n  "<li>"Wali ma yella tseqdacen amgal islacen (i.e. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Asebter ur yettuwelleh ara akken iwata</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Tikwal ugur-agi itekked-d seg usensi ne&#611; tugwin b unqbal n inagan n tuqqna.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Ur nessin ara tansa</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Issefk ahat ad tesbedde&#7693; ase&#611;zan-nni&#7693;en akken ad d-ldi&#7693; tansa-agi.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Tuqqna taɣelsant ur teddi ara</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" "<li>Ayagi yekka-d ahat seg ugur n twila n uqeddac ne&#611; amdan yetta&#603;ra&#7693;en ad yakker tim agit n uqeddac.</li>"\n  "<li>Ma yella teqqne&#7693; yakan ar uqeddac-agi, ahat tucc&#7693;a d umatu kan, tzemre&#7693; ad t&#603;er&#7693;e&#7693; tikelt-nni&#7693;en ticki.</li></ul>]]></string>
+  <string name="error_generic_title">Ihuh</string>
+  <string name="error_generic_message">Ur nezmir ara ad d-nsali asebter-agi, ur neẓri ara acuɣer.</string>
 </resources>

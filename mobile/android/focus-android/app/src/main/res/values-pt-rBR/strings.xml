@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Cancelar</string>
+  <string name="action_ok">OK</string>
   <string name="urlbar_hint">Pesquisar ou navegar</string>
   <string name="teaser">Navegação privativa automatica.\nNavegar. Apagar. Repetir.</string>
   <string name="feedback_erase">Seu histórico de navegação foi apagado.</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">Sobre</string>
   <string name="menu_help">Ajuda</string>
   <string name="menu_rights">Seus direitos</string>
+  <string name="preference_category_search">Pesquisar</string>
+  <string name="preference_search_engine_default">Padrão</string>
+  <string name="preference_dialog_title_search_engine">Pesquisa padrão</string>
   <string name="preference_category_privacy">Privacidade</string>
   <string name="preference_privacy_block_ads">Bloquear rastreadores de anúncio</string>
   <string name="preference_privacy_block_analytics">Bloquear rastreadores analíticos</string>
@@ -37,4 +42,19 @@
   <string name="firstrun_description">Bloqueie automaticamente os rastreadores on-line enquanto navega. Então, toque para apagar páginas visitadas, pesquisas, cookies e senhas do seu dispositivo.</string>
   <string name="firstrun_button">Ok, entendi!</string>
   <string name="firstrun_footer">Para ser claro, sites e serviços que você usa ainda podem saber onde você esteve.</string>
+  <string name="your_rights">Seus direitos</string>
+  <string name="external_app_prompt">Este link será aberto no %2$s. Tem certeza de que deseja sair do %1$s?</string>
+  <string name="external_app_prompt_no_app_title">Nenhum app para lidar com o link</string>
+  <string name="external_app_prompt_no_app">Nenhuma dos aplicativos no seu dispositivo consegue abrir este link. Deseja sair do %1$s e abrir o %2$s para encontrar um aplicativo adequado?</string>
+  <string name="external_multiple_apps_matched_exit">Sair da navegação privativa?</string>
+  <string name="errorpage_title">Problemas ao carregar a página</string>
+  <string name="errorpage_refresh">Tentar novamente</string>
+  <string name="error_connectionfailure_title">Não foi possível conectar</string>
+  <string name="error_timeout_title">A conexão expirou</string>
+  <string name="error_hostLookup_title">Servidor não encontrado</string>
+  <string name="error_malformedURI_title">O endereço não é válido</string>
+  <string name="error_redirectLoop_title">A página não está sendo redirecionada corretamente</string>
+  <string name="error_unsupportedprotocol_title">O endereço não foi compreendido</string>
+  <string name="error_sslhandshake_title">Falha na conexão segura</string>
+  <string name="error_generic_title">Ops</string>
 </resources>

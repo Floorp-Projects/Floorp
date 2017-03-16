@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Abbrechen</string>
+  <string name="action_ok">OK</string>
   <string name="urlbar_hint">Suchen oder Adresse eingeben</string>
   <string name="teaser">Automatischer Privater Modus.\nSurfen. Löschen. Wiederholen.</string>
   <string name="feedback_erase">Die Surf-Chronik wurde gelöscht.</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">Über</string>
   <string name="menu_help">Hilfe</string>
   <string name="menu_rights">Ihre Rechte</string>
+  <string name="preference_category_search">Suche</string>
+  <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_dialog_title_search_engine">Standardsuchmaschine</string>
   <string name="preference_category_privacy">Datenschutz</string>
   <string name="preference_privacy_block_ads">Werbeverfolgung blockieren</string>
   <string name="preference_privacy_block_analytics">Analyseverfolgung blockieren</string>
@@ -37,4 +42,26 @@
   <string name="firstrun_description">Blockieren Sie automatisch Online-Verfolgung beim Surfen. Durch Tippen können Sie dann besuchte Seiten, Suchanfragen, Cookies und Passwörter von Ihrem Gerät löschen.</string>
   <string name="firstrun_button">Ok, verstanden!</string>
   <string name="firstrun_footer">Beachten Sie: Websites und von Ihnen genutzte Dienste können immer noch nachvollziehen, wo Sie waren.</string>
+  <string name="your_rights">Ihre Rechte</string>
+  <string name="external_app_prompt">Dieser Link wird in %2$s geöffnet. Möchten Sie %1$s wirklich verlassen?</string>
+  <string name="external_app_prompt_no_app_title">Keine App zur Link-Verarbeitung</string>
+  <string name="external_app_prompt_no_app">Anscheinend kann keine der Apps auf Ihrem Gerät diesen Link öffnen. Möchten Sie %1$s verlassen und %2$s öffnen, um eine passende App zu finden?</string>
+  <string name="external_multiple_apps_matched_exit">Privaten Modus verlassen?</string>
+  <string name="errorpage_title">Seiten-Ladefehler</string>
+  <string name="errorpage_refresh">Erneut versuchen</string>
+  <string name="error_connectionfailure_title">Verbindung fehlgeschlagen</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Die Website k&#246;nnte vor&#252;bergehend nicht erreichbar sein, versuchen Sie es bitte sp&#228;ter nochmals.</li>"\n        "<li>"Wenn Sie auch keine andere Website aufrufen k&#246;nnen, &#252;berpr&#252;fen Sie bitte die Daten- oder WLAN-Verbindung. "</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Verbindung verloren</string>
+  <string name="error_hostLookup_title">Server nicht gefunden</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Bitte &#252;berpr&#252;fen Sie die Adresse auf Tippfehler, wie\n          "<strong>ww</strong>".example.com statt\n          "<strong>www</strong>.example.com</li>"\n        "<li>"Wenn Sie auch keine andere Website aufrufen k&#246;nnen, &#252;berpr&#252;fen Sie bitte die Daten- oder WLAN-Verbindung. "</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">Fehler: Ungültige Adresse</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Web-Adressen sehen f&#252;r gew&#246;hnlich folgenderma&#223;en aus: "<strong>http://www.example.com/</strong></li>"\n  "<li>Bitte stellen Sie sicher, dass Sie nicht den umgekehrten, sondern den einfachen Schr&#228;gstrich verwenden (<strong>/</strong>).</li>"\n "</ul>]]></string>
+  <string name="error_redirectLoop_title">Fehler: Umleitungsfehler</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dieses Problem kann manchmal auftreten, wenn Cookies deaktiviert oder abgelehnt werden.</li>" \n "</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Adresse nicht erkannt</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Eventuell m&#252;ssen Sie andere Software installieren, um diese Adresse aufrufen zu k&#246;nnen.</li>"\n "</ul>]]></string>
+  <string name="error_sslhandshake_title">Fehler: Gesicherte Verbindung fehlgeschlagen</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Das k&#246;nnte ein Problem mit der Konfiguration des Servers sein, oder jemand will sich als dieser Server ausgeben.</li>"\n  "<li>Wenn Sie mit diesem Server in der Vergangenheit erfolgreich Verbindungen herstellen konnten, ist der Fehler eventuell nur vor&#252;bergehend, und Sie k&#246;nnen es sp&#228;ter erneut versuchen.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Hoppla</string>
+  <string name="error_generic_message">Aus unbekannten Gründen konnte diese Seite nicht geladen werden.</string>
 </resources>

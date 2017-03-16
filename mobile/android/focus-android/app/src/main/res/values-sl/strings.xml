@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Prekliči</string>
   <string name="urlbar_hint">Iskanje ali naslov strani</string>
   <string name="teaser">Samodejno zasebno brskanje.\nBrskajte. Izbrišite. Ponovite.</string>
   <string name="feedback_erase">Vaša zgodovina brskanja je bila izbrisana.</string>
@@ -11,6 +12,9 @@
   <string name="menu_about">Predstavitev</string>
   <string name="menu_help">Pomoč</string>
   <string name="menu_rights">Vaše pravice</string>
+  <string name="preference_category_search">Išči</string>
+  <string name="preference_search_engine_default">Privzet</string>
+  <string name="preference_dialog_title_search_engine">Privzeti iskalnik</string>
   <string name="preference_category_privacy">Zasebnost</string>
   <string name="preference_privacy_block_ads">Zavračaj sledilce oglasov</string>
   <string name="preference_privacy_block_analytics">Zavračaj sledilce analitike</string>
@@ -31,4 +35,10 @@
   <string name="accessibility_announcement_loading">Nalaganje</string>
   <string name="accessibility_announcement_loading_finished">Spletna stran naložena</string>
   <string name="content_description_menu">Več možnosti</string>
+  <string name="content_description_forward">Krmari naprej</string>
+  <string name="content_description_reload">Ponovno naloži stran</string>
+  <string name="firstrun_title">Brskajte, kot da vas nihče ne gleda.</string>
+  <string name="firstrun_description">Samodejno zavračajte spletne sledilce med brskanjem. Nato z enim dotikom izbrišite obiskane strani, iskanja, piškotke in gesla z naprave.</string>
+  <string name="firstrun_button">V redu, razumem!</string>
+  <string name="firstrun_footer">Pozor, spletna mesta sama in storitve, ki jih uporabljate, vam še vedno lahko sledijo.</string>
 </resources>

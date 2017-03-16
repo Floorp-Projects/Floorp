@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Annuler</string>
+  <string name="action_ok">OK</string>
   <string name="urlbar_hint">Recherche ou adresse</string>
   <string name="teaser">Navigation privée automatique.\nNaviguez. Effacez. Recommencez.</string>
   <string name="feedback_erase">Votre historique de navigation a été effacé.</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">À propos</string>
   <string name="menu_help">Aide</string>
   <string name="menu_rights">Droits de l’utilisateur</string>
+  <string name="preference_category_search">Recherche</string>
+  <string name="preference_search_engine_default">Par défaut</string>
+  <string name="preference_dialog_title_search_engine">Moteur de recherche par défaut</string>
   <string name="preference_category_privacy">Vie privée</string>
   <string name="preference_privacy_block_ads">Bloquer les traqueurs publicitaires</string>
   <string name="preference_privacy_block_analytics">Bloquer les traqueurs de statistiques</string>
@@ -37,4 +42,26 @@
   <string name="firstrun_description">Bloquez automatiquement les traqueurs lorsque vous naviguez. Appuyez ensuite sur le bouton Effacer pour supprimer les pages visitées, les recherches, les cookies et les mots de passe.</string>
   <string name="firstrun_button">D’accord, j’ai compris.</string>
   <string name="firstrun_footer">"Note : les services et sites web que vous utilisez peuvent toujours déterminer où vous êtes allé. "</string>
+  <string name="your_rights">Droits de l’utilisateur</string>
+  <string name="external_app_prompt">Ce lien sera ouvert dans %2$s. Voulez-vous vraiment quitter %1$s ?</string>
+  <string name="external_app_prompt_no_app_title">Aucune application ne peut ouvrir le lien</string>
+  <string name="external_app_prompt_no_app">Aucune des applications de votre appareil n’est capable d’ouvrir ce lien. Voulez-vous vraiment quitter %1$s et ouvrir %2$s pour trouver une application appropriée ?</string>
+  <string name="external_multiple_apps_matched_exit">Quitter la navigation privée ?</string>
+  <string name="errorpage_title">Erreur de chargement de la page</string>
+  <string name="errorpage_refresh">Réessayer</string>
+  <string name="error_connectionfailure_title">La connexion a échoué</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n<li>Le site est peut-&#234;tre temporairement indisponible ou surcharg&#233;. R&#233;essayez plus tard&#160;;</li>\n<li>" Si vous n&#8217;arrivez &#224; naviguer sur aucun site, v&#233;rifiez la connexion donn&#233;es ou Wi-Fi de votre appareil."</li>\n</ul>" "]]></string>
+  <string name="error_timeout_title">Délai de connexion dépassé</string>
+  <string name="error_hostLookup_title">Adresse introuvable</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n<li>"Veuillez v&#233;rifier la syntaxe de l&#8217;adresse (saisie de "<strong>ww</strong>".example.com au lieu de "<strong>www</strong>.example.com par exemple)&#160;;</li>\n<li>Si vous n&#8217;arrivez &#224; naviguer sur aucun site, v&#233;rifiez la connexion donn&#233;es ou Wi-Fi de votre appareil.</li>\n</ul>" "]]></string>
+  <string name="error_malformedURI_title">L’adresse n’est pas valide</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n<li>"La syntaxe des adresses web est g&#233;n&#233;ralement "<strong>http://www.example.com/</strong>&#160;;</li>\n<li>"Assurez-vous de bien utiliser des barres obliques (c.-&#224;-d. "<strong>/</strong>).</li>\n</ul>" "]]></string>
+  <string name="error_redirectLoop_title">La page n’est pas redirigée correctement</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>La cause de ce probl&#232;me peut &#234;tre la d&#233;sactivation ou le refus des cookies.</li>\n</ul>\n]]></string>
+  <string name="error_unsupportedprotocol_title">L’adresse n’a pas été reconnue</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Il est peut-&#234;tre n&#233;cessaire d&#8217;installer une autre application pour ouvrir ce type d&#8217;adresse.</li>\n</ul>\n]]></string>
+  <string name="error_sslhandshake_title">Échec de la connexion sécurisée</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" "<li>Ceci peut &#234;tre d&#251; &#224; un probl&#232;me de configuration du serveur ou &#224; une personne essayant d&#8217;usurper l&#8217;identit&#233; du serveur.</li>" "<li>Si vous avez d&#233;j&#224; pu vous connecter &#224; ce serveur, l&#8217;erreur est peut-&#234;tre temporaire et vous pouvez essayer &#224; nouveau plus tard.</li>" "</ul>" "]]></string>
+  <string name="error_generic_title">La requête ne peut aboutir</string>
+  <string name="error_generic_message">Pour une raison inconnue, nous ne pouvons pas charger cette page.</string>
 </resources>

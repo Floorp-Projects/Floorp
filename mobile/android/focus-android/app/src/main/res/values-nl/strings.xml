@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Annuleren</string>
+  <string name="action_ok">OK</string>
   <string name="urlbar_hint">Voer zoekterm of adres in</string>
   <string name="teaser">Automatische privénavigatie.\nSurfen. Wissen. Herhalen.</string>
   <string name="feedback_erase">Uw navigatiegeschiedenis is gewist.</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">Over</string>
   <string name="menu_help">Help</string>
   <string name="menu_rights">Uw rechten</string>
+  <string name="preference_category_search">Zoeken</string>
+  <string name="preference_search_engine_default">Standaard</string>
+  <string name="preference_dialog_title_search_engine">Standaardzoekmachine</string>
   <string name="preference_category_privacy">Privacy</string>
   <string name="preference_privacy_block_ads">Advertentietrackers blokkeren</string>
   <string name="preference_privacy_block_analytics">Analysetrackers blokkeren</string>
@@ -37,4 +42,26 @@
   <string name="firstrun_description">Blokkeer automatisch onlinetrackers terwijl u surft. Tik daarna om bezochte pagina’s, zoekopdrachten, cookies en wachtwoorden op uw apparaat te wissen.</string>
   <string name="firstrun_button">OK, begrepen!</string>
   <string name="firstrun_footer">Voor de duidelijkheid: websites en services die u gebruikt, kunnen nog steeds zien waar u bent geweest.</string>
+  <string name="your_rights">Uw rechten</string>
+  <string name="external_app_prompt">Deze koppeling wordt in %2$s geopend. Weet u zeker dat u %1$s wilt afsluiten?</string>
+  <string name="external_app_prompt_no_app_title">Geen app voor verwerken van koppeling</string>
+  <string name="external_app_prompt_no_app">Geen enkele app op uw apparaat kan deze koppeling openen. Wilt u %1$s afsluiten en %2$s openen om een geschikte app te vinden?</string>
+  <string name="external_multiple_apps_matched_exit">Privénavigatie afsluiten?</string>
+  <string name="errorpage_title">Probleem bij het laden van de pagina</string>
+  <string name="errorpage_refresh">Opnieuw proberen</string>
+  <string name="error_connectionfailure_title">Kan geen verbinding maken</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Misschien is de website tijdelijk niet beschikbaar of overbelast. Probeer het over enkele ogenblikken opnieuw.</li>"\n        "<li>Als u geen enkele pagina kunt laden, controleer dan de gegevens- of wifi-verbinding van uw apparaat.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">De wachttijd voor de verbinding is verstreken</string>
+  <string name="error_hostLookup_title">Server niet gevonden</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Controleer het adres op typefouten, zoals\n          "<strong>ww</strong>".example.com in plaats van\n          "<strong>www</strong>.example.com</li>"\n        "<li>Als u geen enkele pagina kunt laden, controleer dan de gegevens- of wifi-verbinding van uw apparaat.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">Het adres is niet geldig</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Webadressen worden doorgaans geschreven als "<strong>http://www.example.com/</strong></li>"\n  "<li>"Let erop dat u voorwaartse slashes gebruikt (d.i. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">De pagina verwijst niet op een juiste manier door</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dit probleem kan soms worden veroorzaakt door het uitschakelen of weigeren van cookies.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Het adres werd niet begrepen</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Misschien moet u andere software installeren om dit adres te openen.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Beveiligde verbinding mislukt</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dit kan een probleem met de serverconfiguratie zijn, of iemand probeert\ndeze server na te bootsen.</li>"\n  "<li>Als u in het verleden wel met succes verbinding hebt gemaakt met deze server,\ndan is de fout wellicht tijdelijk en kunt u het later nogmaals proberen.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Oei</string>
+  <string name="error_generic_message">De pagina kan om de een of andere reden niet worden geladen.</string>
 </resources>

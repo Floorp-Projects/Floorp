@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Cancel·la</string>
+  <string name="action_ok">D\'acord</string>
   <string name="urlbar_hint">Escriviu una cerca o adreça</string>
   <string name="teaser">Navegació privada automàtica.\nNavegueu. Esborreu. Torneu-hi.</string>
   <string name="feedback_erase">S\'ha esborrat l\'historial de navegació.</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">Quant a</string>
   <string name="menu_help">Ajuda</string>
   <string name="menu_rights">Els vostres drets</string>
+  <string name="preference_category_search">Cerca</string>
+  <string name="preference_search_engine_default">Per defecte</string>
+  <string name="preference_dialog_title_search_engine">Cercador per defecte</string>
   <string name="preference_category_privacy">Privadesa</string>
   <string name="preference_privacy_block_ads">Bloqueja els elements de seguiment de publicitat</string>
   <string name="preference_privacy_block_analytics">Bloqueja els elements de seguiment d\'anàlisi</string>
@@ -37,4 +42,8 @@
   <string name="firstrun_description">Bloquegeu automàticament els elements que us fan el seguiment mentre navegueu. Esborreu amb un sol toc les pàgines visitades, cerques, galetes i contrasenyes del dispositiu.</string>
   <string name="firstrun_button">Entesos</string>
   <string name="firstrun_footer">Tingueu en compte que els serveis i els llocs web que utilitzeu poden saber igualment on heu estat.</string>
+  <string name="your_rights">Els vostres drets</string>
+  <string name="external_app_prompt">Aquest enllaç s\'obrirà al %2$s. Segur que voleu sortir del %1$s?</string>
+  <string name="external_multiple_apps_matched_exit">Voleu sortir de la navegació privada?</string>
+  <string name="errorpage_title">S\'ha produït un problema en carregar la pàgina</string>
 </resources>

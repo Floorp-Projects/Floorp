@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Mégse</string>
+  <string name="action_ok">OK</string>
   <string name="urlbar_hint">Keressen, vagy adjon meg címet</string>
   <string name="teaser">Automatikus privát böngészés.\nBöngészés. Törlés. Ismétlés.</string>
   <string name="feedback_erase">A böngészési előzmények törölve.</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">Névjegy</string>
   <string name="menu_help">Súgó</string>
   <string name="menu_rights">Az Ön jogai</string>
+  <string name="preference_category_search">Keresés</string>
+  <string name="preference_search_engine_default">Alapértelmezett</string>
+  <string name="preference_dialog_title_search_engine">Alapértelmezett kereső</string>
   <string name="preference_category_privacy">Adatvédelem</string>
   <string name="preference_privacy_block_ads">Reklámkövetők blokkolása</string>
   <string name="preference_privacy_block_analytics">Elemző követők blokkolása</string>
@@ -37,4 +42,26 @@
   <string name="firstrun_description">Automatikusan blokkolja az online követőket böngészés közben. Aztán érintse meg a gombot a meglátogatott oldalak, keresések, sütik és jelszavak törléséhez az eszközéről.</string>
   <string name="firstrun_button">Rendben, értem!</string>
   <string name="firstrun_footer">Hogy egyértelmű legyen, a webhelyek és szolgáltatások még mindig tudhatják, hogy hol járt.</string>
+  <string name="your_rights">Az Ön jogai</string>
+  <string name="external_app_prompt">Ez a hivatkozás itt fog megnyílni: %2$s. Biztosan ki akar lépni a %1$sból?</string>
+  <string name="external_app_prompt_no_app_title">Nincs app a hivatkozás kezeléséhez</string>
+  <string name="external_app_prompt_no_app">Az eszközön lévő appok egyike sem tudja megnyitni ezt a hivatkozást. Kilép a %1$sból, és megnyitja a %2$s appot, hogy egy megfelelő appot találjon?</string>
+  <string name="external_multiple_apps_matched_exit">Kilép a privát böngészésből?</string>
+  <string name="errorpage_title">Probléma az oldal betöltése közben</string>
+  <string name="errorpage_refresh">Próbálja újra</string>
+  <string name="error_connectionfailure_title">A kapcsolódás sikertelen</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>A webhely ideiglenesen nem &#233;rhet&#337; el, vagy t&#250;l elfoglalt. Pr&#243;b&#225;lja &#250;jra n&#233;h&#225;ny pillanat m&#250;lva.</li>"\n        "<li>Ha nem t&#246;lt be egyetlen oldal sem, akkor ellen&#337;rizze a mobileszk&#246;z adat- vagy Wi-Fi kapcsolat&#225;t.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">A kapcsolat túllépte az időkorlátot</string>
+  <string name="error_hostLookup_title">A kiszolgáló nem található</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Ellen&#337;rizze, hogy nem v&#233;tett g&#233;pel&#233;si hib&#225;t, p&#233;ld&#225;ul\n          "<strong>ww</strong>". example.com a\n          "<strong>www</strong>. example.com helyett</li>"\n        "<li>Ha egyetlen oldal sem t&#246;lt be, akkor ellen&#337;rizze az eszk&#246;z adat- vagy Wi-Fi kapcsolat&#225;t.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">A cím érvénytelen</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"A webc&#237;mek &#225;ltal&#225;ban &#250;gy n&#233;znek ki, mint a "<strong>http://www.example.com/</strong></li>"\n  "<li>"Gy&#337;z&#337;dj&#246;n meg r&#243;la, hogy perjeleket haszn&#225;l (teh&#225;t "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Az oldal nem megfelelően van átirányítva</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ezt a probl&#233;m&#225;t n&#233;ha a s&#252;tik letilt&#225;sa vagy elutas&#237;t&#225;sa okozza.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">A cím nem volt érthető</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Lehet, hogy egy&#233;b szoftvert kell telep&#237;tenie a c&#237;m megnyit&#225;s&#225;hoz.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">A biztonságos kapcsolat sikertelen</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ez lehet a kiszolg&#225;l&#243; be&#225;ll&#237;t&#225;si probl&#233;m&#225;ja, vagy lehet, hogy valaki megpr&#243;b&#225;lja megszem&#233;lyes&#237;teni a kiszolg&#225;l&#243;t.</li>"\n  "<li>Ha a m&#250;ltban sikeresen csatlakozott a kiszolg&#225;l&#243;hoz, akkor a hiba ideiglenes lehet, &#233;s k&#233;s&#337;bb &#250;jra megpr&#243;b&#225;lhatja.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Hoppá</string>
+  <string name="error_generic_message">Az oldal valamilyen okból nem tölthető be.</string>
 </resources>

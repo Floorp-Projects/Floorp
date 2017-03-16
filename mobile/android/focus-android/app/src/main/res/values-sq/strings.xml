@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Anuloje</string>
+  <string name="action_ok">OK</string>
   <string name="urlbar_hint">Kërkoni ose jepni adresë</string>
   <string name="teaser">Shfletim automatikisht privat.\nShfletoni. Fshini Gjurmët. Përsëriteni.</string>
   <string name="feedback_erase">Historiku juaj i shfletimit u fshi.</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">Rreth</string>
   <string name="menu_help">Ndihmë</string>
   <string name="menu_rights">Të drejtat Tuaja</string>
+  <string name="preference_category_search">Kërkim</string>
+  <string name="preference_search_engine_default">Parazgjedhje</string>
+  <string name="preference_dialog_title_search_engine">Kërkim parazgjedhje</string>
   <string name="preference_category_privacy">Privatësi</string>
   <string name="preference_privacy_block_ads">Blloko gjurmues reklamash</string>
   <string name="preference_privacy_block_analytics">Blloko gjurmues analizash</string>
@@ -19,7 +24,7 @@
   <string name="preference_privacy_block_content_summary">Mund të pengojë funksionimin e disa videove dhe faqeve Web</string>
   <string name="preference_category_performance">Punim</string>
   <string name="preference_performance_block_webfonts">Blloko shkronja Web</string>
-  <string name="preference_performance_block_images">Blloko Figura</string>
+  <string name="preference_performance_block_images">Blloko figura</string>
   <string name="preference_default_browser">Bëje shfletuesin parazgjedhje</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Dërgo të dhëna anonime përdorimi</string>
@@ -37,4 +42,26 @@
   <string name="firstrun_description">Bllokojini vetvetiu gjurmuesit në internet, teksa shfletoni. Mandej prekeni, që të fshihen nga pajisja juaj faqe të vizituara, kërkime, cookies dhe fjalëkalime.</string>
   <string name="firstrun_button">OK, e mora vesh!</string>
   <string name="firstrun_footer">Për ta thënë troç, sajtet dhe shërbimet që përdorni prapë mund të dinë se ku keni qenë.</string>
+  <string name="your_rights">Të drejtat Tuaja</string>
+  <string name="external_app_prompt">Kjo lidhje do të hapet në %2$s. Jeni i sigurt se doni të dilet nga %1$s?</string>
+  <string name="external_app_prompt_no_app_title">Pa aplikacion për të trajtuar lidhjen</string>
+  <string name="external_app_prompt_no_app">Asnjë nga aplikacionet në pajisjen tuaj s’është në gjendje të hapë këtë lidhje. Doni të dilet nga %1$s dhe të hapet %2$s për të gjetur një aplikacion të përshtatshëm?</string>
+  <string name="external_multiple_apps_matched_exit">Të dilet nga Shfletimi Privat?</string>
+  <string name="errorpage_title">Problem në ngarkimin e faqes</string>
+  <string name="errorpage_refresh">Riprovoni</string>
+  <string name="error_connectionfailure_title">S’arrihet të lidhet</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sajti mund t&#235; jet&#235; p&#235;rkoh&#235;sisht jasht&#235; funksionimit ose shum&#235; i zon&#235;. Riprovoni pas pak &#231;astesh.</li>"\n        "<li>N&#235;se s&#8217;jeni n&#235; gjendje t&#235; ngarkoni asnj&#235; faqe, kontrolloni lidhjen data ose Wi-Fi t&#235; pajisjes suaj celulare.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Lidhjes i mbaroi koha</string>
+  <string name="error_hostLookup_title">S’u gjet shërbyes</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kontrolloni adres&#235;n p&#235;r gabime shkrimi, t&#235; tilla si\n          "<strong>ww</strong>".example.com, n&#235; vend se\n          "<strong>www</strong>.example.com</li>"\n        "<li>If you are unable to load any pages, check your device&#8217;s data or Wi-Fi connection.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">Adresa s’është e vlefshme</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Adresat Web zakonisht shkruhen si "<strong>http://www.example.com/</strong></li>"\n  "<li>"Sigurohuni q&#235; po p&#235;rdorni pjerr&#235;se djathtas (d.m.th. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Faqja s’ridrejton si duhet</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ndonj&#235;her&#235; ky problem mund t&#235; shkaktohet nga &#231;aktivizim apo mospranim cookie-sh.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Adresa s’u kuptua</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Mund t&#235; duhet t&#235; instaloni software tjet&#235;r q&#235; t&#235; hapni k&#235;t&#235; adres.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Lidhja e sigurt dështoi</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ky mund t&#235; jet&#235; problem i ardhur nga form&#235;simi i sh&#235;rbyesit, ose mund t&#235; b&#235;het fjal&#235; p&#235;r dik&#235; q&#235; po provon t&#235; imitoj&#235; sh&#235;rbyesin.</li>"\n  "<li>Po qe se n&#235; t&#235; kaluar&#235;n jeni lidhur me sukses te ky sh&#235;rbyes, gabimi mund t&#235; jet&#235; i p&#235;rkohsh&#235;m, dhe mund t&#235; riprovoni m&#235; von&#235;.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Mos!</string>
+  <string name="error_generic_message">Për ndonjë farë arsyeje, s’e ngarkojmë dot këtë faqe.</string>
 </resources>

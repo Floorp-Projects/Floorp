@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">ביטול</string>
   <string name="urlbar_hint">חיפוש או הכנסת כתובת</string>
   <string name="teaser">גלישה פרטית אוטומטית.\nגלישה. מחיקה. חזרה להתחלה.</string>
   <string name="feedback_erase">היסטוריית הגלישה שלך נמחקה.</string>
@@ -11,6 +12,9 @@
   <string name="menu_about">אודות</string>
   <string name="menu_help">עזרה</string>
   <string name="menu_rights">הזכויות שלך</string>
+  <string name="preference_category_search">חיפוש</string>
+  <string name="preference_search_engine_default">בררת מחדל</string>
+  <string name="preference_dialog_title_search_engine">חיפוש בררת מחדל</string>
   <string name="preference_category_privacy">פרטיות</string>
   <string name="preference_privacy_block_ads">חסימת רכיבי מעקב</string>
   <string name="preference_privacy_block_analytics">חסימת מעקב של כלי ניתוח</string>

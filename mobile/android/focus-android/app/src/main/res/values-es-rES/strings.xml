@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Cancelar</string>
+  <string name="action_ok">Vale</string>
   <string name="urlbar_hint">Buscar o escribir dirección</string>
   <string name="teaser">Navegación privada automática.\nNavegar. Eliminar. Repetir.</string>
   <string name="feedback_erase">Se ha eliminado tu historial de búsqueda.</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">Acerca de</string>
   <string name="menu_help">Ayuda</string>
   <string name="menu_rights">Tus derechos</string>
+  <string name="preference_category_search">Búsqueda</string>
+  <string name="preference_search_engine_default">Predeterminado</string>
+  <string name="preference_dialog_title_search_engine">Buscador predeterminado</string>
   <string name="preference_category_privacy">Privacidad</string>
   <string name="preference_privacy_block_ads">Bloquear rastreadores de publicidad</string>
   <string name="preference_privacy_block_analytics">Bloquear rastreadores analíticos</string>
@@ -37,4 +42,26 @@
   <string name="firstrun_description">Bloquea automáticamente a los rastreadores online mientras navegas. Luego, elimina las páginas visitadas, búsquedas, cookies y contraseñas de tu dispositivo.</string>
   <string name="firstrun_button">¡Entendido!</string>
   <string name="firstrun_footer">Para ser honestos, aún así las páginas y servicios pueden saber dónde has estado.</string>
+  <string name="your_rights">Tus derechos</string>
+  <string name="external_app_prompt">Este enlace se abrirá con %2$s. ¿Seguro que quieres salir de %1$s?</string>
+  <string name="external_app_prompt_no_app_title">No hay una aplicación disponible para abrir este enlace</string>
+  <string name="external_app_prompt_no_app">Ninguna de las aplicaciones de tu dispositivo puede abrir este enlace. ¿Quieres salir de %1$s y abrir %2$s para buscar una aplicación compatible?</string>
+  <string name="external_multiple_apps_matched_exit">¿Salir de la navegación privada?</string>
+  <string name="errorpage_title">Problema al cargar la página</string>
+  <string name="errorpage_refresh">Vuelve a intentarlo</string>
+  <string name="error_connectionfailure_title">No se pudo conectar</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Puede que el sitio est&#233; ocupado o no est&#233; disponible temporalmente. Vuelve a intentarlo en unos minutos.</li>"\n        "<li>Si no puedes cargar ninguna p&#225;gina, comprueba la conexi&#243;n de datos o Wi-Fi de tu dispositivo.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">La conexión expiró</string>
+  <string name="error_hostLookup_title">No se encontró el servidor</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Comprueba que la direcci&#243;n no tiene nin&#250;n error como\n          "<strong>ww</strong>".example.com en vez de\n          "<strong>www</strong>.example.com</li>"\n        "<li>Si no puedes cargar ninguna p&#225;gina, comprueba la conexi&#243;n de datos o Wi-Fi de tu dispositivo.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">La dirección no es válida</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Las direcciones web se suelen escribir as&#237;: "<strong>http://www.example.com/</strong></li>"\n  "<li>Comprueba bien que utilizas las barras laterales (<strong/>).</li></ul>]]></string>
+  <string name="error_redirectLoop_title">La página no se está redireccionando adecuadamente</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>A veces, el problema se produce por desactivar o no aceptar el uso de cookies.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">No se entendió la dirección</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Puede que necesites instalar otro software para abrir esta direcci&#243;n.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Falló la conexión segura</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Puede que haya un problema con la configuraci&#243;n sel servidor o puede\nque alguien est&#233; intentando suplantar el servidor.</li>"\n  "<li>Si ya te hab&#237;as conectado antes a este servidor sin problemas, puede que el error\nsea temporal y puedes intentarlo m&#225;s tarde.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Ups</string>
+  <string name="error_generic_message">Por alguna razón, no podemos cargar esta página.</string>
 </resources>

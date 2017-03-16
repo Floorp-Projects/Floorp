@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Avbryt</string>
+  <string name="action_ok">OK</string>
   <string name="urlbar_hint">Sök eller ange adress</string>
   <string name="teaser">Automatisk privat surfning.\nSurfa. Radera. Upprepa.</string>
   <string name="feedback_erase">Din webbhistorik har raderats.</string>
@@ -11,6 +13,9 @@
   <string name="menu_about">Om</string>
   <string name="menu_help">Hjälp</string>
   <string name="menu_rights">Dina rättigheter</string>
+  <string name="preference_category_search">Sök</string>
+  <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_dialog_title_search_engine">Standardsökmotor</string>
   <string name="preference_category_privacy">Sekretess</string>
   <string name="preference_privacy_block_ads">Blockera annons trackers</string>
   <string name="preference_privacy_block_analytics">Blockera analys trackers</string>
@@ -37,4 +42,26 @@
   <string name="firstrun_description">Blockera automatiskt online-trackers när du surfar. Tryck på radera för att ta bort besökta sidor, sökningar, kakor och lösenord från din enhet.</string>
   <string name="firstrun_button">Ok, jag förstår!</string>
   <string name="firstrun_footer">För att vara tydlig, webbplatser och tjänster som du använder kan fortfarande se var du har varit.</string>
+  <string name="your_rights">Dina rättigheter</string>
+  <string name="external_app_prompt">Denna länk kommer att öppnas i %2$s. Är du säker på att du vill avsluta %1$s?</string>
+  <string name="external_app_prompt_no_app_title">Ingen app för att hantera länk</string>
+  <string name="external_app_prompt_no_app">Ingen av apparna på din enhet kan öppna denna länk. Vill du avsluta %1$s och öppna %2$s för att hitta en lämplig app?</string>
+  <string name="external_multiple_apps_matched_exit">Avsluta Privat surfning?</string>
+  <string name="errorpage_title">Fel vid sidhämtning</string>
+  <string name="errorpage_refresh">Försök igen</string>
+  <string name="error_connectionfailure_title">Det går inte att ansluta</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Webbplatsen kan vara tillf&#228;lligt otillg&#228;nglig eller alltf&#246;r upptagen. F&#246;rs&#246;k igen om en stund.</li>"\n        "<li>Om du inte kan &#246;ppna n&#229;gra sidor, kontrollera den mobila enhetens data eller WiFi-anslutning.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Anslutningens tidsgräns uppnåddes</string>
+  <string name="error_hostLookup_title">Servern hittades inte</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kontrollera adressen efter skrivfel s&#229;som\n          "<strong>ww</strong>".example.com ist&#228;llet f&#246;r\n          "<strong>www</strong>.example.com</li>"\n        "<li>Om du inte kan &#246;ppna n&#229;gra sidor, kontrollera enhetens data eller WiFi-anslutning.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">Adressen är inte giltig</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Webbadresser skrivs vanligen som "<strong>http://www.example.com/</strong></li>"\n  "<li>"Se till att du anv&#228;nder snedstreck (i.e. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Sidan omdirigerar inte korrekt</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Detta problem kan ibland uppst&#229; om du inaktiverat eller nekat att acceptera kakor.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Adressen kan inte tolkas</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Du kan beh&#246;va installera andra program f&#246;r att &#246;ppna den h&#228;r adressen.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Säker anslutning misslyckades</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Det kan vara ett problem med serverns konfiguration, eller det kan vara\nn&#229;gon som f&#246;rs&#246;ker imitera servern.</li>"\n  "<li>Om du har anslutit till den h&#228;r servern med framg&#229;ng i det f&#246;rflutna, kan felet\nvara tillf&#228;lligt, och du kan f&#246;rs&#246;ka igen senare.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Hoppsan</string>
+  <string name="error_generic_message">Vi kan inte ladda den här sidan av någon anledning.</string>
 </resources>
