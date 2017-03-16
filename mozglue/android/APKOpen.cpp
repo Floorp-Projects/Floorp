@@ -33,7 +33,6 @@
 #include "ElfLoader.h"
 #include "application.ini.h"
 
-#include "mozilla/arm.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "XREChildData.h"
@@ -464,12 +463,3 @@ ChildProcessInit(int argc, char* argv[])
   return fXRE_InitChildProcess(argc, argv, &childData);
 }
 
-extern "C" APKOPEN_EXPORT jboolean MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_neonCompatible(JNIEnv *jenv, jclass jc)
-{
-#ifdef __ARM_EABI__
-  return mozilla::supports_neon();
-#else
-  return true;
-#endif // __ARM_EABI__
-}
