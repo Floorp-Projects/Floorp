@@ -45,7 +45,7 @@ public class InfoActivity extends AppCompatActivity {
     }
 
     public static final Intent getRightsIntent(final Context context) {
-        return getIntentFor(context, "file:///android_asset/rights-focus.html", context.getResources().getString(R.string.menu_about));
+        return getIntentFor(context, "file:///android_asset/rights-focus.html", context.getResources().getString(R.string.menu_rights));
     }
 
     @Override
