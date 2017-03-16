@@ -15,7 +15,15 @@ const SERVICE_WORKER = SCOPE + "empty-sw.js";
 const TAB_URL = SCOPE + "empty-sw.html";
 
 add_task(function* () {
-  yield enableServiceWorkerDebugging();
+  info("Turn on workers via mochitest http.");
+  yield new Promise(done => {
+    let options = { "set": [
+      // Accept workers from mochitest's http.
+      ["dom.serviceWorkers.testing.enabled", true],
+      ["dom.ipc.processCount", 1],
+    ]};
+    SpecialPowers.pushPrefEnv(options, done);
+  });
 
   let { tab, document } = yield openAboutDebugging("workers");
 
