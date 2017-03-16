@@ -1497,7 +1497,7 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
     if (reph_pos == REPH_POS_AFTER_SUB)
     {
       new_reph_pos = base;
-      while (new_reph_pos < end &&
+      while (new_reph_pos + 1 < end &&
 	     !( FLAG_SAFE (info[new_reph_pos + 1].indic_position()) & (FLAG (POS_POST_C) | FLAG (POS_AFTER_POST) | FLAG (POS_SMVD))))
 	new_reph_pos++;
       if (new_reph_pos < end)

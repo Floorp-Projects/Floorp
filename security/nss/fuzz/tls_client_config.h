@@ -16,6 +16,10 @@ class ClientConfig {
   bool EnableExtendedMasterSecret();
   bool RequireDhNamedGroups();
   bool EnableFalseStart();
+  bool EnableDeflate();
+  bool EnableCbcRandomIv();
+  bool RequireSafeNegotiation();
+  bool EnableCache();
 
  private:
   uint64_t config_;

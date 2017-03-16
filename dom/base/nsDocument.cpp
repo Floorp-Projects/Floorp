@@ -1210,42 +1210,31 @@ nsIDocument::SelectorCache::SelectorCache()
 void nsIDocument::SelectorCache::CacheList(const nsAString& aSelector,
                                            nsCSSSelectorList* aSelectorList)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   SelectorCacheKey* key = new SelectorCacheKey(aSelector);
   mTable.Put(key->mKey, aSelectorList);
   AddObject(key);
 }
 
-class nsIDocument::SelectorCacheKeyDeleter final : public Runnable
-{
-public:
-  explicit SelectorCacheKeyDeleter(SelectorCacheKey* aToDelete)
-    : mSelector(aToDelete)
-  {
-  }
-
-protected:
-  ~SelectorCacheKeyDeleter()
-  {
-  }
-
-public:
-  NS_IMETHOD Run() override
-  {
-    return NS_OK;
-  }
-
-private:
-  nsAutoPtr<SelectorCacheKey> mSelector;
-};
-
 void nsIDocument::SelectorCache::NotifyExpired(SelectorCacheKey* aSelector)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aSelector);
+
+  // There is no guarantee that this method won't be re-entered when selector
+  // matching is ongoing because "memory-pressure" could be notified immediately
+  // when OOM happens according to the design of nsExpirationTracker.
+  // The perfect solution is to delete the |aSelector| and its nsCSSSelectorList
+  // in mTable asynchronously.
+  // We remove these objects synchronously for now because NotifiyExpired() will
+  // never be triggered by "memory-pressure" which is not implemented yet in
+  // the stage 2 of mozalloc_handle_oom().
+  // Once these objects are removed asynchronously, we should update the warning
+  // added in mozalloc_handle_oom() as well.
   RemoveObject(aSelector);
   mTable.Remove(aSelector->mKey);
-  nsCOMPtr<nsIRunnable> runnable = new SelectorCacheKeyDeleter(aSelector);
-  NS_DispatchToCurrentThread(runnable);
+  delete aSelector;
 }
-
 
 struct nsIDocument::FrameRequest
 {

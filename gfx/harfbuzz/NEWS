@@ -1,3 +1,19 @@
+Overview of changes leading to 1.4.5
+Friday, March 10, 2017
+====================================
+
+- Revert "Fix Context lookup application when moving back after a glyph..."
+  This introduced memory access problems.  To be fixed properly soon.
+
+
+Overview of changes leading to 1.4.4
+Sunday, March 5, 2017
+====================================
+
+- Fix Context lookup application when moving back after a glyph deletion.
+- Fix buffer-overrun in Bengali.
+
+
 Overview of changes leading to 1.4.3
 Saturday, February 25, 2017
 ====================================

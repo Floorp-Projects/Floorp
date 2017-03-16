@@ -300,6 +300,9 @@ void TlsConnectTestBase::CheckConnected() {
   CheckResumption(expected_resumption_mode_);
   client_->CheckSecretsDestroyed();
   server_->CheckSecretsDestroyed();
+
+  client_->CheckAlerts();
+  server_->CheckAlerts();
 }
 
 void TlsConnectTestBase::CheckKeys(SSLKEAType kea_type, SSLNamedGroup kea_group,

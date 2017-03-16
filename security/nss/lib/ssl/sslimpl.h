@@ -1134,6 +1134,10 @@ struct sslSocketStr {
     void *getClientAuthDataArg;
     SSLSNISocketConfig sniSocketConfig;
     void *sniSocketConfigArg;
+    SSLAlertCallback alertReceivedCallback;
+    void *alertReceivedCallbackArg;
+    SSLAlertCallback alertSentCallback;
+    void *alertSentCallbackArg;
     SSLBadCertHandler handleBadCert;
     void *badCertArg;
     SSLHandshakeCallback handshakeCallback;
