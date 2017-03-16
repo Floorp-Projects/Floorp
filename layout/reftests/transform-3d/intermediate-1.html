@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<style type="text/css">
+
+div {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+}
+
+.opacity {
+  opacity: 0.99;
+}
+
+.green {
+  transform-style: preserve-3d;
+  background-color: green;
+}
+
+.flat {
+  transform: translateZ(0px);
+}
+
+.red {
+  width: 300px;
+  height: 100px;
+  background-color: red;
+}
+
+.translate {
+  transform: translateX(100px);
+}
+
+</style>
+</head>
+
+<body>
+<div class="red"></div>
+<div class="green">
+  <div class="flat">
+    <div class="translate opacity green">
+      <div class="translate green"> </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
