@@ -377,6 +377,11 @@ const nsMediaFeature* Gecko_GetMediaFeatures();
 nscolor Gecko_GetLookAndFeelSystemColor(int32_t color_id,
                                         RawGeckoPresContextBorrowed pres_context);
 
+bool Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed element,
+                                mozilla::CSSPseudoClassType type,
+                                const char16_t* ident,
+                                bool* set_slow_selector);
+
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                                       \
   void Gecko_Construct_Default_nsStyle##name(                                  \
