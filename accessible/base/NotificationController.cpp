@@ -329,20 +329,27 @@ NotificationController::CoalesceMutationEvents()
           // queue, so we want to use the spot of the event with the higher
           // generation number, and keep that generation number.
           if (reorder && reorder->EventGeneration() < event->EventGeneration()) {
-            // There really should be a show or hide event before the first
-            // reorder event.
-            if (reorder->PrevEvent()) {
-              reorder->PrevEvent()->SetNextEvent(reorder->NextEvent());
-            } else {
-              mFirstMutationEvent = reorder->NextEvent();
-            }
-
-            reorder->NextEvent()->SetPrevEvent(reorder->PrevEvent());
-            event->PrevEvent()->SetNextEvent(reorder);
-            reorder->SetPrevEvent(event->PrevEvent());
-            event->SetPrevEvent(reorder);
-            reorder->SetNextEvent(event);
             reorder->SetEventGeneration(event->EventGeneration());
+
+            // It may be true that reorder was before event, and we coalesced
+            // away all the show / hide events between them.  In that case
+            // event is already immediately after reorder in the queue and we
+            // do not need to rearrange the list of events.
+            if (event != reorder->NextEvent()) {
+              // There really should be a show or hide event before the first
+              // reorder event.
+              if (reorder->PrevEvent()) {
+                reorder->PrevEvent()->SetNextEvent(reorder->NextEvent());
+              } else {
+                mFirstMutationEvent = reorder->NextEvent();
+              }
+
+              reorder->NextEvent()->SetPrevEvent(reorder->PrevEvent());
+              event->PrevEvent()->SetNextEvent(reorder);
+              reorder->SetPrevEvent(event->PrevEvent());
+              event->SetPrevEvent(reorder);
+              reorder->SetNextEvent(event);
+            }
           }
           DropMutationEvent(event);
           break;
