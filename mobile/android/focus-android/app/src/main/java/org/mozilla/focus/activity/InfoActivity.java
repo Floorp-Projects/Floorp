@@ -92,6 +92,9 @@ public class InfoActivity extends AppCompatActivity {
             final String aboutContent = resources.getString(R.string.about_content, appName, learnMoreURL);
             substitutionMap.put("%about-content%", aboutContent);
 
+            final String wordmark = HtmlLoader.loadPngAsDataURI(webView.getContext(), R.drawable.wordmark);
+            substitutionMap.put("%wordmark%", wordmark);
+
             final String data = HtmlLoader.loadResourceFile(webView.getContext(), R.raw.about, substitutionMap);
             // We use a file:/// base URL so that we have the right origin to load file:/// css and
             // image resources.
@@ -99,6 +102,5 @@ public class InfoActivity extends AppCompatActivity {
         } else {
             webView.loadUrl(url);
         }
-
     }
 }
