@@ -1668,7 +1668,9 @@ def _generateMessageConstructor(clsname, msgid, nested, prio, prettyName, compre
                                   ExprVar(nestedEnum),
                                   ExprVar(prioEnum),
                                   compression,
-                                  ExprLiteral.String(prettyName) ])))
+                                  ExprLiteral.String(prettyName),
+                                  # Pass `true` to recordWriteLatency to collect telemetry
+                                  ExprLiteral.TRUE ])))
 
     return func
 
