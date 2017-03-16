@@ -283,7 +283,7 @@ HangMonitorChild::HangMonitorChild(ProcessHangMonitor* aMonitor)
   mForcePaintMonitor =
     MakeUnique<mozilla::BackgroundHangMonitor>("Gecko_Child_ForcePaint",
                                                128, /* ms timeout for microhangs */
-                                               1024, /* ms timeout for permahangs */
+                                               8192 /* ms timeout for permahangs */,
                                                BackgroundHangMonitor::THREAD_PRIVATE);
 }
 
