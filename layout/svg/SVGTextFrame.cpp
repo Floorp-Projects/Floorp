@@ -3595,7 +3595,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
 
   if (aTransform.IsSingular()) {
     NS_WARNING("Can't render text element!");
-    return DrawResult::BAD_ARGS;
+    return DrawResult::SUCCESS;
   }
 
   gfxMatrix matrixForPaintServers = aTransform * initialMatrix;
