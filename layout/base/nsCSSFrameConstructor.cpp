@@ -4243,13 +4243,28 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
 
     ConnectAnonymousTreeDescendants(content, aContent[i].mChildren);
 
-    // least-surprise CSS binding until we do the SVG specified
-    // cascading rules for <svg:use> - bug 265894
-    if (aParentFrame->GetType() == nsGkAtoms::svgUseFrame) {
+    nsIAtom* parentFrameType = aParentFrame->GetType();
+    if (parentFrameType == nsGkAtoms::svgUseFrame) {
+      // least-surprise CSS binding until we do the SVG specified
+      // cascading rules for <svg:use> - bug 265894
       content->SetFlags(NODE_IS_ANONYMOUS_ROOT);
     } else {
       content->SetIsNativeAnonymousRoot();
-      SetNativeAnonymousBitOnDescendants(content);
+      // Don't mark descendants of the custom content container
+      // as native anonymous.  When canvas custom content is initially
+      // created and appended to the custom content container, in
+      // nsIDocument::InsertAnonymousContent, it is not considered native
+      // anonymous content.  But if we end up reframing the root element,
+      // we will re-create the nsCanvasFrame, and we would end up in here,
+      // marking it as NAC.  Existing uses of canvas custom content would
+      // break if it becomes NAC (since each element starts inheriting
+      // styles from its closest non-NAC ancestor, rather than from its
+      // parent).
+      if (!(parentFrameType == nsGkAtoms::canvasFrame &&
+              content == static_cast<nsCanvasFrame*>(aParentFrame)
+                           ->GetCustomContentContainer())) {
+        SetNativeAnonymousBitOnDescendants(content);
+      }
     }
 
     bool anonContentIsEditable = content->HasFlag(NODE_IS_EDITABLE);
