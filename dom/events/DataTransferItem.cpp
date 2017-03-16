@@ -463,10 +463,18 @@ DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
     nsString mStringData;
   };
 
+  nsCOMPtr<nsINode> parentNode =
+    do_QueryInterface(mDataTransfer->GetParentObject());
+  MOZ_ASSERT(parentNode);
   RefPtr<GASRunnable> runnable = new GASRunnable(aCallback, stringData);
-  rv = NS_DispatchToMainThread(runnable);
+  if (nsIDocument* doc = parentNode->OwnerDoc()) {
+    rv = doc->Dispatch("GASRunnable", TaskCategory::Other,
+                       runnable.forget());
+  } else {
+    rv = NS_DispatchToMainThread(runnable);
+  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("NS_DispatchToMainThread Failed in "
+    NS_WARNING("Dispatch to main thread Failed in "
                "DataTransferItem::GetAsString!");
   }
 }
