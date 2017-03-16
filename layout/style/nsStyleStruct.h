@@ -2632,12 +2632,24 @@ struct StyleShapeSource
 
   bool operator==(const StyleShapeSource& aOther) const
   {
+    return EqualsInternal<true>(aOther);
+  }
+
+  bool DefinitelyEquals(const StyleShapeSource& aOther) const
+  {
+    return EqualsInternal<false>(aOther);
+  }
+
+  template<bool aPrecise>
+  bool EqualsInternal(const StyleShapeSource& aOther) const
+  {
     if (mType != aOther.mType) {
       return false;
     }
 
     if (mType == StyleShapeSourceType::URL) {
-      return mURL->Equals(*aOther.mURL);
+      return aPrecise ? mURL->Equals(*aOther.mURL)
+                      : mURL->DefinitelyEqualURIs(*aOther.mURL);
     } else if (mType == StyleShapeSourceType::Shape) {
       return *mBasicShape == *aOther.mBasicShape &&
              mReferenceBox == aOther.mReferenceBox;
