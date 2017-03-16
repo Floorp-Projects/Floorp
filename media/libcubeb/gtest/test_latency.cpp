@@ -11,7 +11,7 @@ TEST(cubeb, latency)
   uint32_t latency_frames;
   cubeb_channel_layout layout;
 
-  r = cubeb_init(&ctx, "Cubeb audio test");
+  r = cubeb_init(&ctx, "Cubeb audio test", NULL);
   ASSERT_EQ(r, CUBEB_OK);
 
   r = cubeb_get_max_channel_count(ctx, &max_channels);

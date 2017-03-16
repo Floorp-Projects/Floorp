@@ -1064,11 +1064,4 @@ IsDebuggerSandbox(JSObject* object)
     SimpleGlobalObject::GlobalType::WorkerDebuggerSandbox;
 }
 
-bool
-GetterOnlyJSNative(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
-{
-  JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr, JSMSG_GETTER_ONLY);
-  return false;
-}
-
 END_WORKERS_NAMESPACE

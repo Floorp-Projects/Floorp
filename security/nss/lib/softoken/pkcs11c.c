@@ -5591,6 +5591,7 @@ sftk_unwrapPrivateKey(SFTKObject *key, SECItem *bpki)
 
     switch (SECOID_GetAlgorithmTag(&pki->algorithm)) {
         case SEC_OID_PKCS1_RSA_ENCRYPTION:
+        case SEC_OID_PKCS1_RSA_PSS_SIGNATURE:
             keyTemplate = nsslowkey_RSAPrivateKeyTemplate;
             paramTemplate = NULL;
             paramDest = NULL;

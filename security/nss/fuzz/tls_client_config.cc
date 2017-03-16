@@ -4,10 +4,14 @@
 
 #include "tls_client_config.h"
 
-const uint64_t CONFIG_FAIL_CERT_AUTH = 1;
-const uint64_t CONFIG_ENABLE_EXTENDED_MS = 2;
-const uint64_t CONFIG_REQUIRE_DH_NAMED_GROUPS = 4;
-const uint64_t CONFIG_ENABLE_FALSE_START = 8;
+const uint64_t CONFIG_FAIL_CERT_AUTH = 0x01;
+const uint64_t CONFIG_ENABLE_EXTENDED_MS = 0x02;
+const uint64_t CONFIG_REQUIRE_DH_NAMED_GROUPS = 0x04;
+const uint64_t CONFIG_ENABLE_FALSE_START = 0x08;
+const uint64_t CONFIG_ENABLE_DEFLATE = 0x10;
+const uint64_t CONFIG_ENABLE_CBC_RANDOM_IV = 0x20;
+const uint64_t CONFIG_REQUIRE_SAFE_NEGOTIATION = 0x40;
+const uint64_t CONFIG_ENABLE_CACHE = 0x80;
 
 // XOR 64-bit chunks of data to build a bitmap of config options derived from
 // the fuzzing input. This seems the only way to fuzz various options while
@@ -33,3 +37,15 @@ bool ClientConfig::RequireDhNamedGroups() {
 bool ClientConfig::EnableFalseStart() {
   return config_ & CONFIG_ENABLE_FALSE_START;
 }
+
+bool ClientConfig::EnableDeflate() { return config_ & CONFIG_ENABLE_DEFLATE; }
+
+bool ClientConfig::EnableCbcRandomIv() {
+  return config_ & CONFIG_ENABLE_CBC_RANDOM_IV;
+}
+
+bool ClientConfig::RequireSafeNegotiation() {
+  return config_ & CONFIG_REQUIRE_SAFE_NEGOTIATION;
+}
+
+bool ClientConfig::EnableCache() { return config_ & CONFIG_ENABLE_CACHE; }
