@@ -286,6 +286,8 @@ private:
    * Perform processes that we should do before traversing.
    */
   void PreTraverse();
+  // Subset of the pre-traverse steps that involve syncing up data
+  void PreTraverseSync();
 
   already_AddRefed<ServoComputedValues> ResolveStyleLazily(dom::Element* aElement,
                                                            nsIAtom* aPseudoTag);
