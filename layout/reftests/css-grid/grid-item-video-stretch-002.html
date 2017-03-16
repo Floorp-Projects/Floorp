@@ -5,16 +5,18 @@
 -->
 <html><head>
   <meta charset="utf-8">
-  <title>CSS Grid Test: video items with auto-margins and/or orthogonal writing-mode</title>
+  <title>CSS Grid Test: stretching video items with auto-margins and/or orthogonal writing-mode</title>
   <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1316051">
   <link rel="help" href="https://drafts.csswg.org/css-align-3/#valdef-justify-self-normal">
-  <link rel="match" href="grid-item-video-stretch-001-ref.html">
+  <link rel="match" href="grid-item-video-stretch-002-ref.html">
   <style type="text/css">
 * { vertical-align: top; }
 .grid {
   display: inline-grid;
   border: 3px solid grey;
   grid: 10px 50px 3px / 6px 100px 4px;
+  align-items: stretch;
+  justify-items: stretch;
 }
 
 video {
@@ -66,6 +68,24 @@ video {
 <div class="grid"><video class="mxh vr hma10" src="support/colors-16x8.webm"></div>
 <div class="grid"><video class="mxh vr hmaa" src="support/colors-16x8.webm"></div>
 <div class="grid"><video class="mxh vr" src="support/colors-16x8.webm"></div>
+
+<!--
+<script>
+function test() {
+document.body.clientHeight;
+var videos = document.querySelectorAll('video');
+var s = '  [\n';
+for (var i = 0; i < videos.length; ++i) {
+  let cs = window.getComputedStyle(videos[i])
+  s += "  ['"+ cs.width + "', '" + cs.height + "'],\n";
+}
+s += ']';
+console.log(s)
+}
+
+setTimeout(test,2000)
+</script>
+-->
 
 </body>
 </html>

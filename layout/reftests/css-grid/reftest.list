@@ -124,6 +124,7 @@ skip-if(Android) == grid-item-button-001.html grid-item-button-001-ref.html
 == grid-item-table-stretch-004.html grid-item-table-stretch-004-ref.html
 == grid-item-fieldset-stretch-001.html grid-item-fieldset-stretch-001-ref.html
 skip-if(Android) == grid-item-video-stretch-001.html grid-item-video-stretch-001-ref.html # Huh, Android doesn't have webm support?
+skip-if(Android) == grid-item-video-stretch-002.html grid-item-video-stretch-002-ref.html # Huh, Android doesn't have webm support?
 == grid-item-input-stretch-001.html grid-item-input-stretch-001-ref.html
 == grid-item-self-baseline-001.html grid-item-self-baseline-001-ref.html
 random-if(http.oscpu!="Linux\u0020i686") == grid-item-content-baseline-001.html grid-item-content-baseline-001-ref.html # depends on exact Ahem baseline font metrics which seems to differ between platforms: bug 1310792
