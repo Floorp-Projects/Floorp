@@ -239,7 +239,7 @@ fails == css-values-3/vh-support-atviewport.html css-values-3/vh-support-atviewp
 == css-values-3/vh-support-transform-translate.html css-values-3/vh-support-transform-translate.html
 == css-values-3/vh-support.html css-values-3/vh-support.html
 == css-values-3/vh-zero-support.html css-values-3/vh-zero-support.html
-== css-values-3/vh_not_refreshing_on_chrome.html css-values-3/vh_not_refreshing_on_chrome.html
+skip-if(stylo) == css-values-3/vh_not_refreshing_on_chrome.html css-values-3/vh_not_refreshing_on_chrome.html # bug 1346829
 skip-if(stylo) == css-values-3/vh_not_refreshing_on_chrome_iframe.html css-values-3/vh_not_refreshing_on_chrome_iframe.html # Why does this fail to load?
 fails needs-focus == selectors-4/focus-within-001.html selectors-4/focus-within-001.html
 fails needs-focus == selectors-4/focus-within-002.html selectors-4/focus-within-002.html

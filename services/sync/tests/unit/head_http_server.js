@@ -7,6 +7,9 @@ var Cm = Components.manager;
 // Shared logging for all HTTP server functions.
 Cu.import("resource://gre/modules/Log.jsm");
 const SYNC_HTTP_LOGGER = "Sync.Test.Server";
+
+// While the sync code itself uses 1.5, the tests hard-code 1.1,
+// so we're sticking with 1.1 here.
 const SYNC_API_VERSION = "1.1";
 
 // Use the same method that record.js does, which mirrors the server.

@@ -103,6 +103,7 @@ ARCHIVE_FILES = {
                 'mochitest/**',
                 'reftest/**',
                 'talos/**',
+                'awsy/**',
                 'web-platform/**',
                 'xpcshell/**',
             ],
@@ -372,6 +373,13 @@ ARCHIVE_FILES = {
             'source': buildconfig.topsrcdir,
             'base': 'testing',
             'pattern': 'talos/**',
+        },
+    ],
+    'awsy': [
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'testing',
+            'pattern': 'awsy/**',
         },
     ],
     'web-platform': [

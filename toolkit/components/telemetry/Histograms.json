@@ -10954,7 +10954,7 @@
   },
   "TIME_TO_NON_BLANK_PAINT_MS": {
     "alert_emails": ["hkirschner@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "exponential",
     "high": 100000,
     "n_buckets": 100,

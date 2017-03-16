@@ -1318,22 +1318,7 @@ Animation::PostUpdate()
   if (!keyframeEffect) {
     return;
   }
-
-  Maybe<NonOwningAnimationTarget> target = keyframeEffect->GetTarget();
-  if (!target) {
-    return;
-  }
-
-  nsPresContext* presContext = keyframeEffect->GetPresContext();
-  if (!presContext) {
-    return;
-  }
-
-  presContext->EffectCompositor()
-             ->RequestRestyle(target->mElement,
-                              target->mPseudoType,
-                              EffectCompositor::RestyleType::Layer,
-                              CascadeLevel());
+  keyframeEffect->RequestRestyle(EffectCompositor::RestyleType::Layer);
 }
 
 void

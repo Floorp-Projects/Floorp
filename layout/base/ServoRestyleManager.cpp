@@ -259,6 +259,13 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
         MOZ_ASSERT(pseudoContext, "should have taken the ReconstructFrame path above");
         pseudoFrame->SetStyleContext(pseudoContext);
 
+        if (pseudoFrame->GetStateBits() & NS_FRAME_OWNS_ANON_BOXES) {
+          // XXX It really would be good to pass the actual changehint for our
+          // ::before/::after here, but we never computed it!
+          pseudoFrame->UpdateStyleOfOwnedAnonBoxes(*aStyleSet, aChangeList,
+                                                   nsChangeHint_Hints_NotHandledForDescendants);
+        }
+
         // We only care restyling text nodes, since other type of nodes
         // (images), are still not supported. If that eventually changes, we
         // may have to write more code here... Or not, I don't think too

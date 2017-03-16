@@ -218,6 +218,7 @@ fuzzy-if(skiaContent,1,800000) == filters-and-group-opacity-01.svg filters-and-g
 == foreignObject-fixedpos-01.html foreignObject-fixedpos-01.html
 == foreignObject-fixedpos-02.html foreignObject-fixedpos-02.html
 == foreignObject-dynamic-fixedpos-01.html foreignObject-dynamic-fixedpos-01.html
+== foreignObject-dynamic-line-height-01.html foreignObject-dynamic-line-height-01.html
 == foreignObject-vertical-01.svg foreignObject-vertical-01.svg
 == fragmentIdentifier-01.xhtml fragmentIdentifier-01.xhtml
 == g-transform-01.svg g-transform-01.svg
@@ -243,6 +244,7 @@ fuzzy-if(cocoaWidget,15,19679) fuzzy-if(winWidget,1,8800) fuzzy-if(!cocoaWidget&
 
 fuzzy-if(skiaContent,1,800000) == markers-and-group-opacity-01.svg markers-and-group-opacity-01.svg
 == marker-attribute-01.svg marker-attribute-01.svg
+== marker-dynamic-opacity.html marker-dynamic-opacity.html
 == marker-effects-01.svg marker-effects-01.svg
 fuzzy-if(skiaContent,1,100) == marker-viewBox-01.svg marker-viewBox-01.svg
 fuzzy-if(skiaContent,1,100) == marker-orientation-01.svg marker-orientation-01.svg
@@ -259,6 +261,7 @@ fuzzy-if(skiaContent,1,10000) == mask-basic-02.svg mask-basic-02.svg
 == mask-basic-04.svg mask-basic-04.svg
 == mask-containing-masked-content-01.svg mask-containing-masked-content-01.svg
 == mask-empty-size.svg mask-empty-size.svg
+
 == mask-extref-dataURI-01.svg mask-extref-dataURI-01.svg
 == mask-img.html mask-img.html
 fails == mask-on-outflowElement-01a.html mask-on-outflowElement-01a.html
@@ -425,6 +428,8 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,3) == text-layout-06.svg text-layou
 fuzzy-if(skiaContent,2,1000) HTTP(..) == text-scale-02.svg text-scale-02.svg
 HTTP(..) == text-scale-03.svg text-scale-03.svg
 == text-stroke-scaling-01.svg text-stroke-scaling-01.svg
+== text-stroke-scaling-02a.html text-stroke-scaling-02a.html
+== text-stroke-scaling-02b.html text-stroke-scaling-02b.html
 
 == text-style-01a.svg text-style-01a.svg
 == text-style-01b.svg text-style-01b.svg
