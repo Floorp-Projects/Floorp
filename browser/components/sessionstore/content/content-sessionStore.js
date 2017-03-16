@@ -198,7 +198,7 @@ var MessageListener = {
     sendSyncMessage("SessionStore:restoreHistoryComplete", {epoch, isRemotenessUpdate});
   },
 
-  restoreTabContent({loadArguments, isRemotenessUpdate, reason}) {
+  restoreTabContent({loadArguments, isRemotenessUpdate}) {
     let epoch = gCurrentEpoch;
 
     // We need to pass the value of didStartLoad back to SessionStore.jsm.
@@ -208,9 +208,7 @@ var MessageListener = {
       sendAsyncMessage("SessionStore:restoreTabContentComplete", {epoch, isRemotenessUpdate});
     });
 
-    sendAsyncMessage("SessionStore:restoreTabContentStarted", {
-      epoch, isRemotenessUpdate, reason,
-    });
+    sendAsyncMessage("SessionStore:restoreTabContentStarted", {epoch, isRemotenessUpdate});
 
     if (!didStartLoad) {
       // Pretend that the load succeeded so that event handlers fire correctly.
