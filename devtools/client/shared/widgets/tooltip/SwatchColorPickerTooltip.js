@@ -117,8 +117,7 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
       this.spectrum.updateUI();
     }
 
-    let tooltipDoc = this.tooltip.doc;
-    let eyeButton = tooltipDoc.querySelector("#eyedropper-button");
+    let eyeButton = this.tooltip.container.querySelector("#eyedropper-button");
     let canShowEyeDropper = yield this.inspector.supportsEyeDropper();
     if (canShowEyeDropper) {
       eyeButton.disabled = false;

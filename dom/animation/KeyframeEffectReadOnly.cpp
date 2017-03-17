@@ -10,7 +10,7 @@
   // For UnrestrictedDoubleOrKeyframeAnimationOptions;
 #include "mozilla/dom/CSSPseudoElement.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
-#include "mozilla/AnimationRule.h"
+#include "mozilla/AnimValuesStyleRule.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EffectSet.h"
@@ -440,7 +440,7 @@ KeyframeEffectReadOnly::GetUnderlyingStyle(
 {
   StyleAnimationValue result;
 
-  if (aAnimationRule->HasValue(aProperty)) {
+  if (aAnimationRule && aAnimationRule->HasValue(aProperty)) {
     // If we have already composed style for the property, we use the style
     // as the underlying style.
     DebugOnly<bool> success = aAnimationRule->GetValue(aProperty, result);
@@ -510,8 +510,154 @@ KeyframeEffectReadOnly::WillComposeStyle()
 }
 
 void
+KeyframeEffectReadOnly::ComposeStyleRule(
+  RefPtr<AnimValuesStyleRule>& aStyleRule,
+  const AnimationProperty& aProperty,
+  const AnimationPropertySegment& aSegment,
+  const ComputedTiming& aComputedTiming)
+{
+  StyleAnimationValue fromValue =
+    CompositeValue(aProperty.mProperty, aStyleRule,
+                   aSegment.mFromValue.mGecko,
+                   aSegment.mFromComposite);
+  StyleAnimationValue toValue =
+    CompositeValue(aProperty.mProperty, aStyleRule,
+                   aSegment.mToValue.mGecko,
+                   aSegment.mToComposite);
+  if (fromValue.IsNull() || toValue.IsNull()) {
+    return;
+  }
+
+  if (!aStyleRule) {
+    // Allocate the style rule now that we know we have animation data.
+    aStyleRule = new AnimValuesStyleRule();
+  }
+
+  // Iteration composition for accumulate
+  if (mEffectOptions.mIterationComposite ==
+      IterationCompositeOperation::Accumulate &&
+      aComputedTiming.mCurrentIteration > 0) {
+    const AnimationPropertySegment& lastSegment =
+      aProperty.mSegments.LastElement();
+    // FIXME: Bug 1293492: Add a utility function to calculate both of
+    // below StyleAnimationValues.
+    StyleAnimationValue lastValue = lastSegment.mToValue.mGecko.IsNull()
+      ? GetUnderlyingStyle(aProperty.mProperty, aStyleRule)
+      : lastSegment.mToValue.mGecko;
+    fromValue =
+      StyleAnimationValue::Accumulate(aProperty.mProperty,
+                                      lastValue,
+                                      Move(fromValue),
+                                      aComputedTiming.mCurrentIteration);
+    toValue =
+      StyleAnimationValue::Accumulate(aProperty.mProperty,
+                                      lastValue,
+                                      Move(toValue),
+                                      aComputedTiming.mCurrentIteration);
+  }
+
+  // Special handling for zero-length segments
+  if (aSegment.mToKey == aSegment.mFromKey) {
+    if (aComputedTiming.mProgress.Value() < 0) {
+      aStyleRule->AddValue(aProperty.mProperty, Move(fromValue));
+    } else {
+      aStyleRule->AddValue(aProperty.mProperty, Move(toValue));
+    }
+    return;
+  }
+
+  double positionInSegment =
+    (aComputedTiming.mProgress.Value() - aSegment.mFromKey) /
+    (aSegment.mToKey - aSegment.mFromKey);
+  double valuePosition =
+    ComputedTimingFunction::GetPortion(aSegment.mTimingFunction,
+                                       positionInSegment,
+                                       aComputedTiming.mBeforeFlag);
+
+  MOZ_ASSERT(IsFinite(valuePosition), "Position value should be finite");
+
+  StyleAnimationValue val;
+  if (StyleAnimationValue::Interpolate(aProperty.mProperty,
+                                       fromValue,
+                                       toValue,
+                                       valuePosition, val)) {
+    aStyleRule->AddValue(aProperty.mProperty, Move(val));
+  } else if (valuePosition < 0.5) {
+    aStyleRule->AddValue(aProperty.mProperty, Move(fromValue));
+  } else {
+    aStyleRule->AddValue(aProperty.mProperty, Move(toValue));
+  }
+}
+
+// Bug 1333311 - We use two branches for Gecko and Stylo. However, it's
+// better to remove the duplicated code.
+void
+KeyframeEffectReadOnly::ComposeStyleRule(
+  const RawServoAnimationValueMap& aAnimationValues,
+  const AnimationProperty& aProperty,
+  const AnimationPropertySegment& aSegment,
+  const ComputedTiming& aComputedTiming)
+{
+  // Bug 1329878 - Stylo: Implement accumulate and addition on Servo
+  // AnimationValue.
+  RawServoAnimationValue* servoFromValue = aSegment.mFromValue.mServo;
+  RawServoAnimationValue* servoToValue = aSegment.mToValue.mServo;
+
+  // For unsupported or non-animatable animation types, we get nullptrs.
+  if (!servoFromValue || !servoToValue) {
+    NS_ERROR("Compose style for unsupported or non-animatable property, "
+             "so get invalid RawServoAnimationValues");
+    return;
+  }
+
+  // Special handling for zero-length segments
+  if (aSegment.mToKey == aSegment.mFromKey) {
+    if (aComputedTiming.mProgress.Value() < 0) {
+      Servo_AnimationValueMap_Push(&aAnimationValues,
+                                   aProperty.mProperty,
+                                   servoFromValue);
+    } else {
+      Servo_AnimationValueMap_Push(&aAnimationValues,
+                                   aProperty.mProperty,
+                                   servoToValue);
+    }
+    return;
+  }
+
+  double positionInSegment =
+    (aComputedTiming.mProgress.Value() - aSegment.mFromKey) /
+    (aSegment.mToKey - aSegment.mFromKey);
+  double valuePosition =
+    ComputedTimingFunction::GetPortion(aSegment.mTimingFunction,
+                                       positionInSegment,
+                                       aComputedTiming.mBeforeFlag);
+
+  MOZ_ASSERT(IsFinite(valuePosition), "Position value should be finite");
+
+  RefPtr<RawServoAnimationValue> interpolated =
+    Servo_AnimationValues_Interpolate(servoFromValue,
+                                      servoToValue,
+                                      valuePosition).Consume();
+
+  if (interpolated) {
+    Servo_AnimationValueMap_Push(&aAnimationValues,
+                                 aProperty.mProperty,
+                                 interpolated);
+  } else if (valuePosition < 0.5) {
+    Servo_AnimationValueMap_Push(&aAnimationValues,
+                                 aProperty.mProperty,
+                                 servoFromValue);
+  } else {
+    Servo_AnimationValueMap_Push(&aAnimationValues,
+                                 aProperty.mProperty,
+                                 servoToValue);
+  }
+}
+
+template<typename ComposeAnimationResult>
+void
 KeyframeEffectReadOnly::ComposeStyle(
-  AnimationRule& aStyleRule,
+  ComposeAnimationResult&& aComposeResult,
   const nsCSSPropertyIDSet& aPropertiesToSkip)
 {
   MOZ_DIAGNOSTIC_ASSERT(!mIsComposingStyle,
@@ -530,8 +676,6 @@ KeyframeEffectReadOnly::ComposeStyle(
   if (computedTiming.mProgress.IsNull()) {
     return;
   }
-
-  bool isServoBackend = mDocument->IsStyledByServo();
 
   for (size_t propIdx = 0, propEnd = mProperties.Length();
        propIdx != propEnd; ++propIdx)
@@ -566,135 +710,10 @@ KeyframeEffectReadOnly::ComposeStyle(
                  prop.mSegments.Length(),
                "out of array bounds");
 
-    // Bug 1333311 - We use two branches for Gecko and Stylo. However, it's
-    // better to remove the duplicated code.
-    if (isServoBackend) {
-      // Servo backend
-
-      // Bug 1329878 - Stylo: Implement accumulate and addition on Servo
-      // AnimationValue.
-      RawServoAnimationValue* servoFromValue = segment->mFromValue.mServo;
-      RawServoAnimationValue* servoToValue = segment->mToValue.mServo;
-
-      // For unsupported or non-animatable animation types, we get nullptrs.
-      if (!servoFromValue || !servoToValue) {
-        NS_ERROR("Compose style for unsupported or non-animatable property, "
-                 "so get invalid RawServoAnimationValues");
-        continue;
-      }
-
-      if (!aStyleRule.mServo) {
-        // Allocate the style rule now that we know we have animation data.
-        aStyleRule.mServo = new ServoAnimationRule();
-      }
-
-      // Special handling for zero-length segments
-      if (segment->mToKey == segment->mFromKey) {
-        if (computedTiming.mProgress.Value() < 0) {
-          aStyleRule.mServo->AddValue(prop.mProperty, servoFromValue);
-        } else {
-          aStyleRule.mServo->AddValue(prop.mProperty, servoToValue);
-        }
-        continue;
-      }
-
-      double positionInSegment =
-        (computedTiming.mProgress.Value() - segment->mFromKey) /
-        (segment->mToKey - segment->mFromKey);
-      double valuePosition =
-        ComputedTimingFunction::GetPortion(segment->mTimingFunction,
-                                           positionInSegment,
-                                           computedTiming.mBeforeFlag);
-
-      MOZ_ASSERT(IsFinite(valuePosition), "Position value should be finite");
-
-      RefPtr<RawServoAnimationValue> interpolated =
-        Servo_AnimationValues_Interpolate(servoFromValue,
-                                          servoToValue,
-                                          valuePosition).Consume();
-
-      if (interpolated) {
-        aStyleRule.mServo->AddValue(prop.mProperty, interpolated);
-      } else if (valuePosition < 0.5) {
-        aStyleRule.mServo->AddValue(prop.mProperty, servoFromValue);
-      } else {
-        aStyleRule.mServo->AddValue(prop.mProperty, servoToValue);
-      }
-    } else {
-      // Gecko backend
-
-      if (!aStyleRule.mGecko) {
-        // Allocate the style rule now that we know we have animation data.
-        aStyleRule.mGecko = new AnimValuesStyleRule();
-      }
-
-      StyleAnimationValue fromValue =
-        CompositeValue(prop.mProperty, aStyleRule.mGecko,
-                       segment->mFromValue.mGecko,
-                       segment->mFromComposite);
-      StyleAnimationValue toValue =
-        CompositeValue(prop.mProperty, aStyleRule.mGecko,
-                       segment->mToValue.mGecko,
-                       segment->mToComposite);
-      if (fromValue.IsNull() || toValue.IsNull()) {
-        continue;
-      }
-
-      // Iteration composition for accumulate
-      if (mEffectOptions.mIterationComposite ==
-          IterationCompositeOperation::Accumulate &&
-          computedTiming.mCurrentIteration > 0) {
-        const AnimationPropertySegment& lastSegment =
-          prop.mSegments.LastElement();
-        // FIXME: Bug 1293492: Add a utility function to calculate both of
-        // below StyleAnimationValues.
-        StyleAnimationValue lastValue = lastSegment.mToValue.mGecko.IsNull()
-          ? GetUnderlyingStyle(prop.mProperty, aStyleRule.mGecko)
-          : lastSegment.mToValue.mGecko;
-        fromValue =
-          StyleAnimationValue::Accumulate(prop.mProperty,
-                                          lastValue,
-                                          Move(fromValue),
-                                          computedTiming.mCurrentIteration);
-        toValue =
-          StyleAnimationValue::Accumulate(prop.mProperty,
-                                          lastValue,
-                                          Move(toValue),
-                                          computedTiming.mCurrentIteration);
-      }
-
-      // Special handling for zero-length segments
-      if (segment->mToKey == segment->mFromKey) {
-        if (computedTiming.mProgress.Value() < 0) {
-          aStyleRule.mGecko->AddValue(prop.mProperty, Move(fromValue));
-        } else {
-          aStyleRule.mGecko->AddValue(prop.mProperty, Move(toValue));
-        }
-        continue;
-      }
-
-      double positionInSegment =
-        (computedTiming.mProgress.Value() - segment->mFromKey) /
-        (segment->mToKey - segment->mFromKey);
-      double valuePosition =
-        ComputedTimingFunction::GetPortion(segment->mTimingFunction,
-                                           positionInSegment,
-                                           computedTiming.mBeforeFlag);
-
-      MOZ_ASSERT(IsFinite(valuePosition), "Position value should be finite");
-
-      StyleAnimationValue val;
-      if (StyleAnimationValue::Interpolate(prop.mProperty,
-                                           fromValue,
-                                           toValue,
-                                           valuePosition, val)) {
-        aStyleRule.mGecko->AddValue(prop.mProperty, Move(val));
-      } else if (valuePosition < 0.5) {
-        aStyleRule.mGecko->AddValue(prop.mProperty, Move(fromValue));
-      } else {
-        aStyleRule.mGecko->AddValue(prop.mProperty, Move(toValue));
-      }
-    }
+    ComposeStyleRule(Forward<ComposeAnimationResult>(aComposeResult),
+                     prop,
+                     *segment,
+                     computedTiming);
   }
 }
 
@@ -1798,6 +1817,18 @@ KeyframeEffectReadOnly::ContainsAnimatedScale(const nsIFrame* aFrame) const
 
   return false;
 }
+
+template
+void
+KeyframeEffectReadOnly::ComposeStyle<RefPtr<AnimValuesStyleRule>&>(
+  RefPtr<AnimValuesStyleRule>& aAnimationRule,
+  const nsCSSPropertyIDSet& aPropertiesToSkip);
+
+template
+void
+KeyframeEffectReadOnly::ComposeStyle<const RawServoAnimationValueMap&>(
+  const RawServoAnimationValueMap& aAnimationValues,
+  const nsCSSPropertyIDSet& aPropertiesToSkip);
 
 } // namespace dom
 } // namespace mozilla
