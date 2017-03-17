@@ -1962,6 +1962,10 @@ auto
 nsTArray_Impl<E, Alloc>::ReplaceElementsAt(index_type aStart, size_type aCount,
                                            const Item* aArray, size_type aArrayLen) -> elem_type*
 {
+  if (MOZ_UNLIKELY(aStart > Length())) {
+    InvalidArrayIndex_CRASH(aStart, Length());
+  }
+
   // Adjust memory allocation up-front to catch errors.
   if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
         Length() + aArrayLen - aCount, sizeof(elem_type)))) {
@@ -2041,6 +2045,10 @@ template<typename ActualAlloc>
 auto
 nsTArray_Impl<E, Alloc>::InsertElementAt(index_type aIndex) -> elem_type*
 {
+  if (MOZ_UNLIKELY(aIndex > Length())) {
+    InvalidArrayIndex_CRASH(aIndex, Length());
+  }
+
   if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
         Length() + 1, sizeof(elem_type)))) {
     return nullptr;
@@ -2057,6 +2065,10 @@ template<class Item, typename ActualAlloc>
 auto
 nsTArray_Impl<E, Alloc>::InsertElementAt(index_type aIndex, Item&& aItem) -> elem_type*
 {
+  if (MOZ_UNLIKELY(aIndex > Length())) {
+    InvalidArrayIndex_CRASH(aIndex, Length());
+  }
+
   if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
          Length() + 1, sizeof(elem_type)))) {
     return nullptr;
