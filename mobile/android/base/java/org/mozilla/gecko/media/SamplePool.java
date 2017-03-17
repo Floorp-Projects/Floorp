@@ -32,7 +32,7 @@ final class SamplePool {
             mDefaultBufferSize = size;
         }
 
-        private synchronized Sample obtain(int size)  {
+        private synchronized Sample obtain(int size) {
             if (!mRecycledSamples.isEmpty()) {
                 return mRecycledSamples.remove(0);
             }
@@ -48,13 +48,11 @@ final class SamplePool {
             SharedMemory shm = null;
             try {
                 shm = new SharedMemory(mNextId++, Math.max(size, mDefaultBufferSize));
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (NoSuchMethodException | IOException e) {
+                throw new UnsupportedOperationException(e);
             }
 
-            return shm != null ? Sample.create(shm) : Sample.create();
+            return Sample.create(shm);
         }
 
         private synchronized void recycle(Sample recycled) {
