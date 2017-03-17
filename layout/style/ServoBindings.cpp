@@ -1509,6 +1509,7 @@ void
 Gecko_LoadStyleSheet(css::Loader* aLoader,
                      ServoStyleSheet* aParent,
                      RawServoImportRuleBorrowed aImportRule,
+                     nsIURI* aBaseURI,
                      const uint8_t* aURLString,
                      uint32_t aURLStringLength,
                      const uint8_t* aMediaString,
@@ -1518,6 +1519,7 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
   MOZ_ASSERT(aLoader, "Should've catched this before");
   MOZ_ASSERT(aParent, "Only used for @import, so parent should exist!");
   MOZ_ASSERT(aURLString, "Invalid URLs shouldn't be loaded!");
+  MOZ_ASSERT(aBaseURI, "Need a base URI");
   RefPtr<nsMediaList> media = new nsMediaList();
   if (aMediaStringLength) {
     MOZ_ASSERT(aMediaString);
@@ -1533,7 +1535,7 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
   nsDependentCSubstring urlSpec(reinterpret_cast<const char*>(aURLString),
                                 aURLStringLength);
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), urlSpec);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nullptr, aBaseURI);
 
   if (NS_FAILED(rv)) {
     // Servo and Gecko have different ideas of what a valid URL is, so we might

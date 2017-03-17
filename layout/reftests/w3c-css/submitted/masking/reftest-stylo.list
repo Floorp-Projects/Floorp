@@ -102,7 +102,7 @@ fuzzy(64,370) == clip-path-borderBox-1a.html clip-path-borderBox-1a.html
 == clip-path-viewBox-1c.html clip-path-viewBox-1c.html
 == clip-path-geometryBox-2.html clip-path-geometryBox-2.html
 
-fails == clip-path-localRef-1.html clip-path-localRef-1.html
+== clip-path-localRef-1.html clip-path-localRef-1.html
 
 default-preferences
 
