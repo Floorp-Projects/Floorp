@@ -1701,11 +1701,18 @@ private:
   IsExperimentalFormsEnabled();
 
   /**
-   * Checks preference "dom.forms.datetime" to determine if input date/time
-   * related types should be supported.
+   * Checks preference "dom.forms.datetime" to determine if input date and time
+   * should be supported.
    */
   static bool
   IsInputDateTimeEnabled();
+
+  /**
+   * Checks preference "dom.forms.datetime.others" to determine if input week,
+   * month and datetime-local should be supported.
+   */
+  static bool
+  IsInputDateTimeOthersEnabled();
 
   /**
    * Checks preference "dom.forms.number" to determine if input type=number
