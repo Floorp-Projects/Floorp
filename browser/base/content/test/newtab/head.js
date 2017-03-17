@@ -253,11 +253,7 @@ function setPinnedLinks(aLinks) {
     });
   }
 
-  let string = Cc["@mozilla.org/supports-string;1"]
-                 .createInstance(Ci.nsISupportsString);
-  string.data = JSON.stringify(links);
-  Services.prefs.setComplexValue("browser.newtabpage.pinned",
-                                 Ci.nsISupportsString, string);
+  Services.prefs.setStringPref("browser.newtabpage.pinned", JSON.stringify(links));
 
   NewTabUtils.pinnedLinks.resetCache();
   NewTabUtils.allPages.update();

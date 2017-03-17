@@ -2187,7 +2187,7 @@ gfxFontGroup::MakeHyphenTextRun(DrawTarget* aDrawTarget,
 }
 
 gfxFloat
-gfxFontGroup::GetHyphenWidth(gfxTextRun::PropertyProvider *aProvider)
+gfxFontGroup::GetHyphenWidth(const gfxTextRun::PropertyProvider* aProvider)
 {
     if (mHyphenWidth < 0) {
         RefPtr<DrawTarget> dt(aProvider->GetDrawTarget());

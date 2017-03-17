@@ -31,6 +31,10 @@ namespace net {
 class nsHttpHandler;
 class ASpdySession;
 
+// 1dcc863e-db90-4652-a1fe-13fea0b54e46
+#define NS_HTTPCONNECTION_IID \
+{ 0x1dcc863e, 0xdb90, 0x4652, {0xa1, 0xfe, 0x13, 0xfe, 0xa0, 0xb5, 0x4e, 0x46 }}
+
 //-----------------------------------------------------------------------------
 // nsHttpConnection - represents a connection to a HTTP server (or proxy)
 //
@@ -46,10 +50,12 @@ class nsHttpConnection final : public nsAHttpSegmentReader
                              , public nsIInterfaceRequestor
                              , public NudgeTunnelCallback
                              , public ARefBase
+                             , public nsSupportsWeakReference
 {
     virtual ~nsHttpConnection();
 
 public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_HTTPCONNECTION_IID)
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSAHTTPSEGMENTREADER
     NS_DECL_NSAHTTPSEGMENTWRITER
@@ -375,6 +381,8 @@ private:
     nsCString                      mEarlyNegotiatedALPN;
     bool                           mDid0RTTSpdy;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnection, NS_HTTPCONNECTION_IID)
 
 } // namespace net
 } // namespace mozilla

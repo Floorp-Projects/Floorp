@@ -164,7 +164,6 @@
   "PageMenu.jsm": ["PageMenuParent", "PageMenuChild"],
   "PageThumbs.jsm": ["PageThumbs", "PageThumbsStorage"],
   "Parser.jsm": ["Parser", "ParserHelpers", "SyntaxTreeVisitor"],
-  "parsingTestHelpers.jsm": ["generateURIsFromDirTree"],
   "passwords.js": ["PasswordEngine", "LoginRec", "PasswordValidator"],
   "passwords.jsm": ["Password", "DumpPasswords"],
   "PdfJsNetwork.jsm": ["NetworkManager"],

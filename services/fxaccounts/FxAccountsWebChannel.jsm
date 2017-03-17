@@ -333,7 +333,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
    */
   getPreviousAccountNameHashPref() {
     try {
-      return Services.prefs.getComplexValue(PREF_LAST_FXA_USER, Ci.nsISupportsString).data;
+      return Services.prefs.getStringPref(PREF_LAST_FXA_USER);
     } catch (_) {
       return "";
     }
@@ -345,10 +345,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
    * @param acctName the account name of the user's account.
    */
   setPreviousAccountNameHashPref(acctName) {
-    let string = Cc["@mozilla.org/supports-string;1"]
-                 .createInstance(Ci.nsISupportsString);
-    string.data = this.sha256(acctName);
-    Services.prefs.setComplexValue(PREF_LAST_FXA_USER, Ci.nsISupportsString, string);
+    Services.prefs.setStringPref(PREF_LAST_FXA_USER, this.sha256(acctName));
   },
 
   /**
