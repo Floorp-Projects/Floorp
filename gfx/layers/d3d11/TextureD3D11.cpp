@@ -119,13 +119,18 @@ AutoTextureLock::AutoTextureLock(IDXGIKeyedMutex* aMutex,
                                  uint32_t aTimeout)
 {
   mMutex = aMutex;
-  mResult = mMutex->AcquireSync(0, aTimeout);
-  aResult = mResult;
+  if (mMutex) {
+    mResult = mMutex->AcquireSync(0, aTimeout);
+    aResult = mResult;
+  } else {
+    aResult = E_INVALIDARG;
+  }
+
 }
 
 AutoTextureLock::~AutoTextureLock()
 {
-  if (!FAILED(mResult) && mResult != WAIT_TIMEOUT &&
+  if (mMutex && !FAILED(mResult) && mResult != WAIT_TIMEOUT &&
       mResult != WAIT_ABANDONED) {
     mMutex->ReleaseSync(0);
   }
