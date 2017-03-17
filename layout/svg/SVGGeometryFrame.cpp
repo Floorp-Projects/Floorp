@@ -289,7 +289,7 @@ SVGGeometryFrame::PaintSVG(gfxContext& aContext,
   gfxMatrix newMatrix =
     aContext.CurrentMatrix().PreMultiply(aTransform).NudgeToIntegers();
   if (newMatrix.IsSingular()) {
-    return DrawResult::SUCCESS;
+    return DrawResult::BAD_ARGS;
   }
 
   uint32_t paintOrder = StyleSVG()->mPaintOrder;
