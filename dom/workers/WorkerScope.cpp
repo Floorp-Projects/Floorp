@@ -472,6 +472,14 @@ WorkerGlobalScope::CreateImageBitmap(const ImageBitmapSource& aImage,
                                      const Sequence<ChannelPixelLayout>& aLayout,
                                      ErrorResult& aRv)
 {
+  JSContext* cx = GetCurrentThreadJSContext();
+  MOZ_ASSERT(cx);
+
+  if (!ImageBitmap::ExtensionsEnabled(cx, nullptr)) {
+    aRv.Throw(NS_ERROR_TYPE_ERR);
+    return nullptr;
+  }
+
   if (aImage.IsArrayBuffer() || aImage.IsArrayBufferView()) {
     return ImageBitmap::Create(this, aImage, aOffset, aLength, aFormat, aLayout,
                                aRv);
