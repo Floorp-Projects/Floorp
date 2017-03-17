@@ -394,6 +394,9 @@ Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
                        EffectCompositor::CascadeLevel aCascadeLevel)
 {
   MOZ_ASSERT(aElement, "Invalid GeckoElement");
+  MOZ_ASSERT(!aPseudoTag ||
+             aPseudoTag == nsCSSPseudoElements::before ||
+             aPseudoTag == nsCSSPseudoElements::after);
 
   const RawServoDeclarationBlockStrong emptyDeclarationBlock{ nullptr };
   nsIDocument* doc = aElement->GetComposedDoc();
@@ -406,16 +409,9 @@ Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
   }
 
   CSSPseudoElementType pseudoType =
-    aPseudoTag
-    ? nsCSSPseudoElements::GetPseudoType(
-        aPseudoTag,
-        nsCSSProps::EnabledState::eIgnoreEnabledState)
-    : CSSPseudoElementType::NotPseudo;
-  if (pseudoType != CSSPseudoElementType::NotPseudo &&
-      pseudoType != CSSPseudoElementType::before &&
-      pseudoType != CSSPseudoElementType::after) {
-    return emptyDeclarationBlock;
-  }
+    nsCSSPseudoElements::GetPseudoType(
+      aPseudoTag,
+      nsCSSProps::EnabledState::eIgnoreEnabledState);
 
   ServoAnimationRule* rule =
     presContext->EffectCompositor()
