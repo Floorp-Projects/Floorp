@@ -452,7 +452,7 @@ EffectCompositor::GetAnimationRule(dom::Element* aElement,
     return nullptr;
   }
 
-  return effectSet->AnimationRule(aCascadeLevel).mGecko;
+  return effectSet->AnimationRule(aCascadeLevel);
 }
 
 namespace {
@@ -771,8 +771,8 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
   }
   sortedEffectList.Sort(EffectCompositeOrderComparator());
 
-  AnimationRule& animRule = effects->AnimationRule(aCascadeLevel);
-  animRule.mGecko = nullptr;
+  RefPtr<AnimValuesStyleRule>& animRule = effects->AnimationRule(aCascadeLevel);
+  animRule = nullptr;
 
   // If multiple animations affect the same property, animations with higher
   // composite order (priority) override or add or animations with lower
@@ -783,7 +783,7 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
     : effects->PropertiesForAnimationsLevel();
   for (KeyframeEffectReadOnly* effect : sortedEffectList) {
     effect->GetAnimation()->WillComposeStyle();
-    effect->GetAnimation()->ComposeStyle(animRule.mGecko, propertiesToSkip);
+    effect->GetAnimation()->ComposeStyle(animRule, propertiesToSkip);
   }
 
   MOZ_ASSERT(effects == EffectSet::GetEffectSet(aElement, aPseudoType),

@@ -38,7 +38,6 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Keyframe.h"
-#include "mozilla/ServoAnimationRule.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/StyleAnimationValue.h"
