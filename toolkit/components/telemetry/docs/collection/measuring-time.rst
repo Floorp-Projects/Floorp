@@ -44,6 +44,19 @@ Example:
     // ... do more work.
     TelemetryStopwatch.finish("SAMPLE_FILE_LOAD_TIME_MS");
 
+    // Periodically, it's necessary to attempt to finish a
+    // TelemetryStopwatch that's already been canceled or
+    // finished. Normally, that throws a warning to the
+    // console. If the TelemetryStopwatch being possibly
+    // cancelled or finished is expected behaviour, the
+    // warning can be suppressed by passing the optional
+    // aCanceledOkay argument.
+
+    // ... suppress warning on a previously finished
+    // TelemetryStopwatch
+    TelemetryStopwatch.finish("SAMPLE_FILE_LOAD_TIME_MS", null,
+                              true /* aCanceledOkay */);
+
 From C++
 ========
 
