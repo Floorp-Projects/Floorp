@@ -133,7 +133,12 @@ public class SharedMemory implements Parcelable {
         }
 
         if (!mIsMapped) {
-            mHandle = map(getFD(), mSize);
+            try {
+                mHandle = map(getFD(), mSize);
+            } catch (NullPointerException e) {
+                Log.e(LOGTAG, "SharedMemory#" + mId + " error.", e);
+                throw e;
+            }
             if (mHandle != 0) {
                 mIsMapped = true;
             }
