@@ -195,12 +195,15 @@ AsyncScriptCompiler::Reject(JSContext* aCx)
 void
 AsyncScriptCompiler::Reject(JSContext* aCx, const char* aMsg)
 {
-    nsAutoCString msg(aMsg);
-    msg.Append(": ");
-    msg.Append(mURL);
+    nsAutoString msg;
+    msg.AppendASCII(aMsg);
+    msg.AppendLiteral(": ");
+    AppendUTF8toUTF16(mURL, msg);
 
-    RootedValue exn(aCx, StringValue(JS_NewStringCopyZ(aCx, msg.get())));
-    JS_SetPendingException(aCx, exn);
+    RootedValue exn(aCx);
+    if (xpc::NonVoidStringToJsval(aCx, msg, &exn)) {
+        JS_SetPendingException(aCx, exn);
+    }
 
     Reject(aCx);
 }
