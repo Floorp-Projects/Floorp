@@ -15,6 +15,11 @@ from taskgraph.transforms.task import task_description_schema
 from voluptuous import Schema, Any, Required, Optional
 
 
+# For developers: if you are adding any new artifacts here that need to be
+# transfered to S3, please be aware you also need to follow-up with patch in
+# the actual beetmoverscript logic that lies under
+# https://github.com/mozilla-releng/beetmoverscript/. See example in bug
+# 1348286
 _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
     "balrog_props.json",
     "target.common.tests.zip",
@@ -56,6 +61,7 @@ _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
     "en-US/target.mozinfo.json",
     "en-US/target.reftest.tests.zip",
     "en-US/target.talos.tests.zip",
+    "en-US/target.awsy.tests.zip",
     "en-US/target.test_packages.json",
     "en-US/target.txt",
     "en-US/target.web-platform.tests.zip",
