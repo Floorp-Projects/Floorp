@@ -48,6 +48,7 @@ protected:
                            const VRHMDSensorState& aSensorState,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect) override;
+  void UpdateStageParameters();
 
 public:
   explicit VRDisplayOculus(ovrSession aSession);
@@ -82,7 +83,8 @@ protected:
   RefPtr<ID3D11InputLayout> mInputLayout;
 
   bool mIsPresenting;
-  
+  float mEyeHeight;
+
   bool UpdateConstantBuffers();
 
   struct Vertex
