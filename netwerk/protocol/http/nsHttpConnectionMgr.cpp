@@ -990,6 +990,9 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
     bool dispatchedSuccessfully = false;
 
     DispatchPendingQ(ent->mUrgentStartQ, ent, dispatchedSuccessfully, considerAll);
+    if (dispatchedSuccessfully && !considerAll) {
+        return dispatchedSuccessfully;
+    }
     DispatchPendingQ(ent->mPendingQ, ent, dispatchedSuccessfully, considerAll);
 
     return dispatchedSuccessfully;
