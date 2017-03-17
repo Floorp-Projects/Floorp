@@ -24,13 +24,14 @@ class nsIFrame;
 class nsIStyleRule;
 class nsPresContext;
 class nsStyleContext;
+struct RawServoAnimationValueMap;
+typedef RawServoAnimationValueMap const* RawServoAnimationValueMapBorrowed;
 
 namespace mozilla {
 
 class EffectSet;
 class RestyleTracker;
 class StyleAnimationValue;
-class ServoAnimationRule;
 struct AnimationPerformanceWarning;
 struct AnimationProperty;
 struct NonOwningAnimationTarget;
@@ -153,11 +154,15 @@ public:
                                  nsStyleContext* aStyleContext);
 
   // Get animation rule for stylo. This is an equivalent of GetAnimationRule
-  // and will be called from servo side. We need to be careful while doing any
-  // modification because it may case some thread-safe issues.
-  ServoAnimationRule* GetServoAnimationRule(const dom::Element* aElement,
-                                            CSSPseudoElementType aPseudoType,
-                                            CascadeLevel aCascadeLevel);
+  // and will be called from servo side.
+  // The animation rule is stored in |RawServoAnimationValueMapBorrowed|.
+  // We need to be careful while doing any modification because it may cause
+  // some thread-safe issues.
+  bool GetServoAnimationRule(
+    const dom::Element* aElement,
+    CSSPseudoElementType aPseudoType,
+    CascadeLevel aCascadeLevel,
+    RawServoAnimationValueMapBorrowed aAnimationValues);
 
   bool HasPendingStyleUpdates() const;
   bool HasThrottledStyleUpdates() const;

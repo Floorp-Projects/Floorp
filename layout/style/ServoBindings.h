@@ -187,10 +187,11 @@ RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetHTMLPresentationAttrDeclarationBlock(RawGeckoElementBorrowed element);
 
 // Animations
-RawServoDeclarationBlockStrong
+bool
 Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
                        nsIAtom* aPseudoTag,
-                       mozilla::EffectCompositor::CascadeLevel aCascadeLevel);
+                       mozilla::EffectCompositor::CascadeLevel aCascadeLevel,
+                       RawServoAnimationValueMapBorrowed aAnimationValues);
 bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
                                  RawGeckoStyleAnimationListBorrowed);
 void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,

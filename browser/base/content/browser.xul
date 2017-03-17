@@ -617,7 +617,6 @@
         <menupopup id="alltabs-popup"
                    position="after_end">
           <menuitem id="alltabs_undoCloseTab"
-                    class="menuitem-iconic"
                     key="key_undoCloseTab"
                     label="&undoCloseTab.label;"
                     observes="History:UndoCloseTab"/>
