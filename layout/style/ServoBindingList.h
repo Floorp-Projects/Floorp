@@ -124,6 +124,10 @@ SERVO_BINDING_FUNC(Servo_GetComputedKeyframeValues, void,
                    ServoComputedValuesBorrowedOrNull parent_style,
                    RawServoStyleSetBorrowed set,
                    RawGeckoComputedKeyframeValuesListBorrowedMut result)
+SERVO_BINDING_FUNC(Servo_AnimationValueMap_Push, void,
+                   RawServoAnimationValueMapBorrowed,
+                   nsCSSPropertyID property,
+                   RawServoAnimationValueBorrowed value)
 
 // AnimationValues handling
 SERVO_BINDING_FUNC(Servo_AnimationValues_Interpolate,
@@ -131,9 +135,6 @@ SERVO_BINDING_FUNC(Servo_AnimationValues_Interpolate,
                    RawServoAnimationValueBorrowed from,
                    RawServoAnimationValueBorrowed to,
                    double progress)
-SERVO_BINDING_FUNC(Servo_AnimationValues_Uncompute,
-                   RawServoDeclarationBlockStrong,
-                   RawServoAnimationValueBorrowedListBorrowed value)
 SERVO_BINDING_FUNC(Servo_AnimationValue_Serialize, void,
                    RawServoAnimationValueBorrowed value,
                    nsCSSPropertyID property,
