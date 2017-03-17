@@ -13,7 +13,6 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/AsyncEventDispatcher.h" // For AsyncEventDispatcher
 #include "mozilla/Maybe.h" // For Maybe
-#include "mozilla/AnimationRule.h" // For AnimationRule
 #include "mozilla/TypeTraits.h" // For Forward<>
 #include "nsAnimationManager.h" // For CSSAnimation
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
