@@ -488,7 +488,8 @@ class nsHtml5TreeOperation {
     }
 
     nsresult Perform(nsHtml5TreeOpExecutor* aBuilder,
-                     nsIContent** aScriptElement);
+                     nsIContent** aScriptElement,
+                     bool* aInterrupted);
 
   private:
     // possible optimization:
