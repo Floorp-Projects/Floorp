@@ -404,7 +404,7 @@ Cu.import('resource://gre/modules/Services.jsm');
           // Otherwise just ignore the end tag.
           continue;
         }
-        var ts = collectTimeStamp(t.substr(1, t.length - 2));
+        var ts = collectTimeStamp(t.substr(1, t.length - 1));
         var node;
         if (ts) {
           // Timestamps are lead nodes as well.
