@@ -278,6 +278,9 @@ to mochitest command.
   * test_bug887741_at-rules_in_declaration_lists.html [1]
   * test_page_parser.html [30]
   * test_rule_insertion.html `@page` [4]
+* Stylesheet cloning is somehow busted bug 1348481
+  * test_selectors.html `cloned correctly` [150]
+  * ... `matched clone` [195]
 * Unsupported prefixed values
   * moz-prefixed gradient functions bug 1337655
     * test_value_storage.html `-moz-linear-gradient` [322]
@@ -354,9 +357,9 @@ to mochitest command.
   * {transform,perspective}-origin fail to parse 'center left' and 'center right' servo/servo#15750
     * test_value_storage.html `'center left'` [8]
     * ... `'center right'` [8]
-* Incorrect parsing
   * mask shorthand servo/servo#15772
     * test_property_syntax_errors.html `mask'` [76]
+  * :-moz-any with combinators in the value bug 1348487 [7]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
@@ -388,15 +391,33 @@ to mochitest command.
   * counter-{reset,increment} doesn't serialize none servo/servo#15977
     * test_value_storage.html `counter-reset` [2]
     * test_value_storage.html `counter-increment` [2]
+  * :not(*) doesn't serialize properly servo/servo#16017
+    * test_selectors.html `:not()` [8]
+    * ... `:not(html|)` [1]
+  * "*|a" gets serialized as "a" when it should not servo/servo#16020
+    * test_selectors.html `reserialization of *|a` [6]
+* Unsupported pseudo-elements or anon boxes
+  * :-moz-tree bits bug 1348488
+    * test_selectors.html `:-moz-tree` [10]
+  * :-moz-placeholder bug 1348490
+    * test_selectors.html `:-moz-placeholder` [1]
+  * ::-moz-color-swatch bug 1348492
+    * test_selectors.html `::-moz-color-swatch` [1]
 * Unsupported pseudo-classes
   * :default ##easy##
     * test_bug302186.html [24]
   * test_bug98997.html: pseudo-class :empty and :-moz-only-whitespace bug 1337068 [75]
+  * :-moz-locale-dir
+    * test_selectors.html `:-moz-locale-dir` [15]
+  * :-moz-lwtheme-*
+    * test_selectors.html `:-moz-lwtheme` [3]
+  * :-moz-window-inactive bug 1348489
+    * test_selectors.html `:-moz-window-inactive` [2]
   * :-moz-{first,last}-node
-    * test_selectors.html `:-moz-` [4]
-    * ... `unexpected rule index` [2]
-  * :placeholder-shown
-    * test_selectors.html `TypeError` [1]
+    * test_selectors.html `:-moz-` [13]
+    * ... `unexpected rule index` [5]
+  * :dir
+    * test_selectors.html `:dir` [10]
 * issues arround font shorthand servo/servo#15032 servo/servo#15036
   * test_bug377947.html [2]
   * test_value_storage.html `'font'` [144]
