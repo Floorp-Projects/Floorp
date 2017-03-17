@@ -46,7 +46,7 @@ Where the individual fields are:
 Limits
 ------
 
-Each ``String`` marked as an identifier is restricted to the following regex pattern: ``^[:alpha:][:alnum:_.]+[:alnum:]$``.
+Each ``String`` marked as an identifier is restricted to the following regex pattern: ``^[:alpha:][:alnum:_.]*[:alnum:]$``.
 
 For the Firefox Telemetry implementation, several fields are subject to limits:
 
