@@ -1,0 +1,150 @@
+diff --git a/media/libcubeb/src/cubeb_audiounit.cpp b/media/libcubeb/src/cubeb_audiounit.cpp
+--- a/media/libcubeb/src/cubeb_audiounit.cpp
++++ b/media/libcubeb/src/cubeb_audiounit.cpp
+@@ -2302,27 +2302,29 @@ static int
+ audiounit_setup_stream(cubeb_stream * stm)
+ {
+   stm->mutex.assert_current_thread_owns();
+ 
+   int r = 0;
+ 
+   AudioDeviceID in_dev = stm->input_device;
+   AudioDeviceID out_dev = stm->output_device;
+-  if (has_input(stm) && has_output(stm)) {
++  if (has_input(stm) && has_output(stm) &&
++      !getenv("CUBEB_AUDIOUNIT_DISABLE_AGGREGATE_DEVICE")) {
+     r = audiounit_create_aggregate_device(stm);
+     if (r != CUBEB_OK) {
+       stm->aggregate_device_id = 0;
+       LOG("(%p) Create aggregate devices failed.", stm);
+       // !!!NOTE: It is not necessary to return here. If it does not
+       // return it will fallback to the old implementation. The intention
+       // is to investigate how often it fails. I plan to remove
+       // it after a couple of weeks.
+       return r;
+     } else {
++      LOG("(%p) Using aggregate device", stm);
+       in_dev = out_dev = stm->aggregate_device_id;
+     }
+   }
+ 
+   if (has_input(stm)) {
+     r = audiounit_create_unit(&stm->input_unit,
+                               INPUT,
+                               in_dev);
+diff --git a/media/libcubeb/src/cubeb_resampler.cpp b/media/libcubeb/src/cubeb_resampler.cpp
+--- a/media/libcubeb/src/cubeb_resampler.cpp
++++ b/media/libcubeb/src/cubeb_resampler.cpp
+@@ -13,16 +13,17 @@
+ #include <cassert>
+ #include <cstring>
+ #include <cstddef>
+ #include <cstdio>
+ #include "cubeb_resampler.h"
+ #include "cubeb-speex-resampler.h"
+ #include "cubeb_resampler_internal.h"
+ #include "cubeb_utils.h"
++#include "cubeb_log.h"
+ 
+ int
+ to_speex_quality(cubeb_resampler_quality q)
+ {
+   switch(q) {
+   case CUBEB_RESAMPLER_QUALITY_VOIP:
+     return SPEEX_RESAMPLER_QUALITY_VOIP;
+   case CUBEB_RESAMPLER_QUALITY_DEFAULT:
+@@ -70,16 +71,19 @@ long passthrough_resampler<T>::fill(void
+   long rv = data_callback(stream, user_ptr, internal_input_buffer.data(),
+                           output_buffer, output_frames);
+ 
+   if (input_buffer) {
+     internal_input_buffer.pop(nullptr, frames_to_samples(output_frames));
+     *input_frames_count = output_frames;
+   }
+ 
++  ALOGV("passthrough: after callback, internal input buffer length: %zu",
++        internal_input_buffer.length());
++
+   return rv;
+ }
+ 
+ template<typename T, typename InputProcessor, typename OutputProcessor>
+ cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
+   ::cubeb_resampler_speex(InputProcessor * input_processor,
+                           OutputProcessor * output_processor,
+                           cubeb_stream * s,
+@@ -231,16 +235,26 @@ cubeb_resampler_speex<T, InputProcessor,
+   } else {
+     resampled_input = nullptr;
+   }
+ 
+   got = data_callback(stream, user_ptr,
+                       resampled_input, out_unprocessed,
+                       output_frames_before_processing);
+ 
++  size_t input_processor_buffer_sizes[2];
++  size_t output_processor_buffer_sizes[2];
++  input_processor->internal_buffer_sizes(input_processor_buffer_sizes);
++  output_processor->internal_buffer_sizes(output_processor_buffer_sizes);
++  ALOGV("duplex resampler: after callback, resampling buffer state:"
++        "input_processor(input: %zu, output: %zu) "
++        "output_processor(input: %zu, output: %zu) ",
++        input_processor_buffer_sizes[0], input_processor_buffer_sizes[1],
++        output_processor_buffer_sizes[0], output_processor_buffer_sizes[1]);
++
+   if (got < 0) {
+     return got;
+   }
+ 
+   output_processor->written(got);
+ 
+   /* Process the output. If not enough frames have been returned from the
+    * callback, drain the processors. */
+diff --git a/media/libcubeb/src/cubeb_resampler_internal.h b/media/libcubeb/src/cubeb_resampler_internal.h
+--- a/media/libcubeb/src/cubeb_resampler_internal.h
++++ b/media/libcubeb/src/cubeb_resampler_internal.h
+@@ -174,16 +174,22 @@ public:
+   }
+ 
+   /** Destructor, deallocate the resampler */
+   virtual ~cubeb_resampler_speex_one_way()
+   {
+     speex_resampler_destroy(speex_resampler);
+   }
+ 
++  void internal_buffer_sizes(size_t buf_sizes[2])
++  {
++    buf_sizes[0] = resampling_in_buffer.length();
++    buf_sizes[1] = resampling_out_buffer.length();
++  }
++
+   /** Sometimes, it is necessary to add latency on one way of a two-way
+    * resampler so that the stream are synchronized. This must be called only on
+    * a fresh resampler, otherwise, silent samples will be inserted in the
+    * stream.
+    * @param frames the number of frames of latency to add. */
+   void add_latency(size_t frames)
+   {
+     additional_latency += frames;
+@@ -361,16 +367,21 @@ public:
+   }
+   /* Add some latency to the delay line.
+    * @param frames the number of frames of latency to add. */
+   void add_latency(size_t frames)
+   {
+     length += frames;
+     delay_input_buffer.push_silence(frames_to_samples(frames));
+   }
++  void internal_buffer_sizes(size_t buf_sizes[2])
++  {
++    buf_sizes[0] = delay_input_buffer.length();
++    buf_sizes[1] = delay_output_buffer.length();
++  }
+   /** Push some frames into the delay line.
+    * @parameter buffer the frames to push.
+    * @parameter frame_count the number of frames in #buffer. */
+   void input(T * buffer, uint32_t frame_count)
+   {
+     delay_input_buffer.push(buffer, frames_to_samples(frame_count));
+   }
+   /** Pop some frames from the internal buffer, into a internal output buffer.
