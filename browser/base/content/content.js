@@ -688,8 +688,12 @@ ContentLinkHandler.init(this);
 // TODO: Load this lazily so the JSM is run only if a relevant event/message fires.
 var pluginContent = new PluginContent(global);
 
-addEventListener("DOMWindowFocus", function(event) {
-  sendAsyncMessage("DOMWindowFocus", {});
+addEventListener("DOMWebNotificationClicked", function(event) {
+  sendAsyncMessage("DOMWebNotificationClicked", {});
+}, false);
+
+addEventListener("DOMServiceWorkerFocusClient", function(event) {
+  sendAsyncMessage("DOMServiceWorkerFocusClient", {});
 }, false);
 
 ContentWebRTC.init();

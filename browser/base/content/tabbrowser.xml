@@ -4957,7 +4957,8 @@
               popup.openPopupAtScreen(event.screenX, event.screenY, true);
               break;
             }
-            case "DOMWindowFocus": {
+            case "DOMServiceWorkerFocusClient":
+            case "DOMWebNotificationClicked": {
               let tab = this.getTabForBrowser(browser);
               if (!tab)
                 return undefined;
@@ -5189,7 +5190,8 @@
             this._outerWindowIDBrowserMap.set(this.mCurrentBrowser.outerWindowID,
                                               this.mCurrentBrowser);
           }
-          messageManager.addMessageListener("DOMWindowFocus", this);
+          messageManager.addMessageListener("DOMWebNotificationClicked", this);
+          messageManager.addMessageListener("DOMServiceWorkerFocusClient", this);
           messageManager.addMessageListener("RefreshBlocker:Blocked", this);
           messageManager.addMessageListener("Browser:WindowCreated", this);
 

@@ -4125,7 +4125,7 @@ nsContentUtils::DispatchFocusChromeEvent(nsPIDOMWindowOuter* aWindow)
   }
 
   return DispatchChromeEvent(doc, aWindow,
-                             NS_LITERAL_STRING("DOMWindowFocus"),
+                             NS_LITERAL_STRING("DOMServiceWorkerFocusClient"),
                              true, true);
 }
 
