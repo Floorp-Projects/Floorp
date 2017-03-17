@@ -7409,7 +7409,7 @@ HTMLMediaElement::NotifyDecoderActivityChanges() const
 {
   if (mDecoder) {
     mDecoder->NotifyOwnerActivityChanged(!IsHidden(),
-                                         mVisibilityState == Visibility::APPROXIMATELY_VISIBLE,
+                                         mVisibilityState,
                                          IsInUncomposedDoc());
   }
 }
