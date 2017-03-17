@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+      div {
+        background-color: blue;
+        position: absolute;
+        margin: 0px;
+        padding: 0px;
+        width: 100px;
+        height: 100px;
+        top: 10px;
+      }
+
+      div.auto {
+        left: 10px;
+        mask-mode: match-source;
+        mask-image: -moz-element(#blue-bg);
+      }
+
+      div.alpha {
+        left: 120px;
+        mask-mode: alpha;
+        mask-image: -moz-element(#blue-bg);
+      }
+
+      div.luminance1 {
+        left: 230px;
+        mask-mode: luminance;
+        mask-image: -moz-element(#blue-bg);
+      }
+
+      div.luminance2 {
+        left: 340px;
+        mask-mode: luminance;
+        mask-image: -moz-element(#red-bg);
+      }
+
+      div.luminance3 {
+        left: 450px;
+        mask-mode: luminance;
+        mask-image: -moz-element(#lime-bg);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="auto"></div>
+    <div class="alpha"></div>
+    <div class="luminance1"></div>
+    <div class="luminance2"></div>
+    <div class="luminance3"></div>
+
+    <div style="overflow:hidden; height:0;">
+      <div id="blue-bg" style="width:100px; height:100px; background-color: blue;">  </div>
+    </div>
+    <div style="overflow:hidden; height:0;">
+      <div id="red-bg" style="width:100px; height:100px; background-color: red;"></div>
+    </div>
+    <div style="overflow:hidden; height:0;">
+      <div id="lime-bg" style="width:100px; height:100px; background-color: lime;"></div>
+    </div>
+  </body>
+</html>

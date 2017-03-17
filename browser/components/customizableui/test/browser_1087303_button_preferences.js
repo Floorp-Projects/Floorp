@@ -42,7 +42,7 @@ function waitForPageLoad(aTab) {
   function onTabLoad(event) {
     clearTimeout(timeoutId);
     aTab.linkedBrowser.removeEventListener("load", onTabLoad, true);
-    info("Tab event received: " + "load");
+    info("Tab event received: load");
     deferred.resolve();
  }
   aTab.linkedBrowser.addEventListener("load", onTabLoad, true, true);

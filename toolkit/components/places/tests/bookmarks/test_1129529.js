@@ -36,7 +36,7 @@ add_task(function* () {
           index: 1,
           id: 4,
           charset: "UTF-8",
-          tags: "tag1," + "a" + "0123456789".repeat(10), // 101 chars
+          tags: "tag1,a" + "0123456789".repeat(10), // 101 chars
           type: "text/x-moz-place",
           dateAdded: now,
           lastModified: now,

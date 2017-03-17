@@ -135,6 +135,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
   for (unsigned int i = 0; i < modulesNum; i++) {
     nsID pdbSig;
     uint32_t pdbAge;
+    nsAutoString pdbPathStr;
     nsAutoString pdbNameStr;
     char *pdbName = NULL;
     std::string breakpadId;
@@ -175,26 +176,31 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
       std::transform(breakpadId.begin(), breakpadId.end(),
         breakpadId.begin(), toupper);
 
-      pdbNameStr = NS_ConvertUTF8toUTF16(pdbName);
+      pdbPathStr = NS_ConvertUTF8toUTF16(pdbName);
+      pdbNameStr = pdbPathStr;
       int32_t pos = pdbNameStr.RFindChar('\\');
       if (pos != kNotFound) {
         pdbNameStr.Cut(0, pos + 1);
       }
     }
 
-    nsAutoString moduleName(modulePath);
-    int32_t pos = moduleName.RFindChar('\\');
+    nsAutoString modulePathStr(modulePath);
+    nsAutoString moduleNameStr = modulePathStr;
+    int32_t pos = moduleNameStr.RFindChar('\\');
     if (pos != kNotFound) {
-      moduleName.Cut(0, pos + 1);
+      moduleNameStr.Cut(0, pos + 1);
     }
 
     SharedLibrary shlib((uintptr_t)module.lpBaseOfDll,
       (uintptr_t)module.lpBaseOfDll + module.SizeOfImage,
       0, // DLLs are always mapped at offset 0 on Windows
       breakpadId,
-      moduleName,
+      moduleNameStr,
+      modulePathStr,
       pdbNameStr,
-      GetVersion(modulePath));
+      pdbPathStr,
+      GetVersion(modulePath),
+      "");
     sharedLibraryInfo.AddSharedLibrary(shlib);
 
     FreeLibrary(handleLock); // ok to free null handles

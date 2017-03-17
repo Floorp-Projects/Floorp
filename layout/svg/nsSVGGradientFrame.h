@@ -46,7 +46,7 @@ public:
   NS_DECL_ABSTRACT_FRAME(nsSVGGradientFrame)
 
   // nsSVGPaintServerFrame methods:
-  virtual already_AddRefed<gfxPattern>
+  virtual mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
     GetPaintServerPattern(nsIFrame* aSource,
                           const DrawTarget* aDrawTarget,
                           const gfxMatrix& aContextMatrix,

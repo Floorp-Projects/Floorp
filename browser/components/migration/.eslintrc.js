@@ -19,7 +19,7 @@ module.exports = { // eslint-disable-line no-undef
     "comma-dangle": "off",
     "comma-spacing": ["warn", {"before": false, "after": true}],
     "comma-style": ["warn", "last"],
-    // "complexity": "warn",
+    "complexity": ["error", {"max": 21}],
     "consistent-return": "error",
     //"curly": "error",
     "dot-notation": "error",
@@ -79,4 +79,3 @@ module.exports = { // eslint-disable-line no-undef
     "yoda": "error"
   }
 };
-

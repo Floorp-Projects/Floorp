@@ -1034,38 +1034,37 @@ private:
 
 NS_IMPL_ISUPPORTS(ProfileSaveEvent, nsIProfileSaveEvent)
 
-static void
-AddSharedLibraryInfoToStream(std::ostream& aStream, const SharedLibrary& aLib)
-{
-  aStream << "{";
-  aStream << "\"start\":" << aLib.GetStart();
-  aStream << ",\"end\":" << aLib.GetEnd();
-  aStream << ",\"offset\":" << aLib.GetOffset();
-  aStream << ",\"name\":\"" << aLib.GetNativeDebugName() << "\"";
-  const std::string& breakpadId = aLib.GetBreakpadId();
-  aStream << ",\"breakpadId\":\"" << breakpadId << "\"";
-  aStream << "}";
+const static uint64_t kJS_MAX_SAFE_UINTEGER = +9007199254740991ULL;
+
+static int64_t
+SafeJSInteger(uint64_t aValue) {
+  return aValue <= kJS_MAX_SAFE_UINTEGER ? int64_t(aValue) : -1;
 }
 
-static std::string
-GetSharedLibraryInfoStringInternal()
+static void
+AddSharedLibraryInfoToStream(JSONWriter& aWriter, const SharedLibrary& aLib)
+{
+  aWriter.StartObjectElement();
+  aWriter.IntProperty("start", SafeJSInteger(aLib.GetStart()));
+  aWriter.IntProperty("end", SafeJSInteger(aLib.GetEnd()));
+  aWriter.IntProperty("offset", SafeJSInteger(aLib.GetOffset()));
+  aWriter.StringProperty("name", NS_ConvertUTF16toUTF8(aLib.GetModuleName()).get());
+  aWriter.StringProperty("path", NS_ConvertUTF16toUTF8(aLib.GetModulePath()).get());
+  aWriter.StringProperty("debugName", NS_ConvertUTF16toUTF8(aLib.GetDebugName()).get());
+  aWriter.StringProperty("debugPath", NS_ConvertUTF16toUTF8(aLib.GetDebugPath()).get());
+  aWriter.StringProperty("breakpadId", aLib.GetBreakpadId().c_str());
+  aWriter.StringProperty("arch", aLib.GetArch().c_str());
+  aWriter.EndObject();
+}
+
+void
+AppendSharedLibraries(JSONWriter& aWriter)
 {
   SharedLibraryInfo info = SharedLibraryInfo::GetInfoForSelf();
-  if (info.GetSize() == 0) {
-    return "[]";
+  info.SortByAddress();
+  for (size_t i = 0; i < info.GetSize(); i++) {
+    AddSharedLibraryInfoToStream(aWriter, info.GetEntry(i));
   }
-
-  std::ostringstream os;
-  os << "[";
-  AddSharedLibraryInfoToStream(os, info.GetEntry(0));
-
-  for (size_t i = 1; i < info.GetSize(); i++) {
-    os << ",";
-    AddSharedLibraryInfoToStream(os, info.GetEntry(i));
-  }
-
-  os << "]";
-  return os.str();
 }
 
 static void
@@ -1113,7 +1112,7 @@ StreamMetaJSCustomObject(PS::LockRef aLock, SpliceableJSONWriter& aWriter)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  aWriter.IntProperty("version", 3);
+  aWriter.IntProperty("version", 4);
   aWriter.DoubleProperty("interval", gPS->Interval(aLock));
   aWriter.IntProperty("stackwalk", gPS->FeatureStackWalk(aLock));
 
@@ -1268,8 +1267,9 @@ StreamJSON(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
   aWriter.Start(SpliceableJSONWriter::SingleLineStyle);
   {
     // Put shared library info
-    aWriter.StringProperty("libs",
-                           GetSharedLibraryInfoStringInternal().c_str());
+    aWriter.StartArrayProperty("libs");
+    AppendSharedLibraries(aWriter);
+    aWriter.EndArray();
 
     // Put meta data
     aWriter.StartObjectProperty("meta");

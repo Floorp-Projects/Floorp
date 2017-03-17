@@ -221,7 +221,7 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
 
   if (aTransform.IsSingular()) {
     NS_WARNING("Can't render foreignObject element!");
-    return DrawResult::BAD_ARGS;
+    return DrawResult::SUCCESS;
   }
 
   nsRect kidDirtyRect = kid->GetVisualOverflowRect();

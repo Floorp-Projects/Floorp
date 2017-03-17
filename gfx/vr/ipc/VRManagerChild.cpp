@@ -45,6 +45,7 @@ VRManagerChild::VRManagerChild()
   , mFrameRequestCallbackCounter(0)
   , mBackend(layers::LayersBackend::LAYERS_NONE)
   , mPromiseID(0)
+  , mVRMockDisplay(nullptr)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -519,7 +520,11 @@ VRManagerChild::RecvReplyCreateVRServiceTestDisplay(const nsCString& aID,
     MOZ_CRASH("We should always have a promise.");
   }
 
-  p->MaybeResolve(new VRMockDisplay(aID, aDeviceID));
+  // We only allow one VRMockDisplay in VR tests.
+  if (!mVRMockDisplay) {
+    mVRMockDisplay = new VRMockDisplay(aID, aDeviceID);
+  }
+  p->MaybeResolve(mVRMockDisplay);
   mPromiseList.Remove(aPromiseID);
   return IPC_OK();
 }

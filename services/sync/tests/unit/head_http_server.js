@@ -406,7 +406,14 @@ ServerCollection.prototype = {
           options[chunk[0]] = chunk[1];
         }
       }
-      if (options.ids) {
+      // The real servers return 400 if ids= is specified without a list of IDs.
+      if (options.hasOwnProperty("ids")) {
+        if (!options.ids) {
+          response.setStatusLine(request.httpVersion, "400", "Bad Request");
+          body = "Bad Request";
+          response.bodyOutputStream.write(body, body.length);
+          return;
+        }
         options.ids = options.ids.split(",");
       }
       if (options.newer) {
@@ -937,7 +944,9 @@ SyncServer.prototype = {
               respond(404, "Not found", "Not found");
               return undefined;
             }
-            // *cries inside*: Bug 687299.
+            // *cries inside*: Bug 687299 - now fixed, so apparently the real
+            // sync server *will* 404 in this case - bug 1347807 is to change
+            // this to a 404 and fix a handful of test failures it causes.
             respond(200, "OK", "[]");
             return undefined;
           }
