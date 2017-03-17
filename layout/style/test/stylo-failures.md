@@ -220,13 +220,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_initial_computation.html `place-` [12]
     * test_initial_storage.html `place-` [12]
     * test_value_storage.html `place-` [66]
-  * caret-color servo/servo#15309
-    * test_compute_data_with_start_struct.html `caret-color` [2]
-    * test_inherit_computation.html `caret-color` [4]
-    * test_inherit_storage.html `caret-color` [4]
-    * test_initial_computation.html `caret-color` [2]
-    * test_initial_storage.html `caret-color` [2]
-    * test_value_storage.html `caret-color` [16]
   * font-variant-{alternates,east-asian,ligatures,numeric} properties
     * test_compute_data_with_start_struct.html `font-variant` [8]
     * test_inherit_computation.html `font-variant` [20]
