@@ -332,13 +332,13 @@ TEST_F(SdpTest, parseRtcpFbNackFooBarBaz) {
 
 TEST_F(SdpTest, parseRtcpFbRemb) {
   ParseSdp(kVideoSdp + "a=rtcp-fb:120 goog-remb\r\n");
-  ASSERT_EQ(sdp_attr_get_rtcp_fb_remb_enabled(sdp_ptr_, 1, 120), true);
+  ASSERT_EQ((bool)sdp_attr_get_rtcp_fb_remb_enabled(sdp_ptr_, 1, 120), true);
 }
 
 TEST_F(SdpTest, parseRtcpRbRembAllPt) {
   ParseSdp(kVideoSdp + "a=rtcp-fb:* goog-remb\r\n");
-  ASSERT_EQ(sdp_attr_get_rtcp_fb_remb_enabled(sdp_ptr_, 1, SDP_ALL_PAYLOADS),
-                                              true);
+  ASSERT_EQ((bool)sdp_attr_get_rtcp_fb_remb_enabled(sdp_ptr_, 1, SDP_ALL_PAYLOADS),
+                                                    true);
 }
 
 TEST_F(SdpTest, parseRtcpFbTrrInt0) {
@@ -483,8 +483,8 @@ TEST_F(SdpTest, parseRtcpFbKitchenSink) {
   ASSERT_EQ(sdp_attr_get_rtcp_fb_trr_int(sdp_ptr_, 1, 120, 2), 123U);
   ASSERT_EQ(sdp_attr_get_rtcp_fb_trr_int(sdp_ptr_, 1, 120, 3), 0xFFFFFFFF);
 
-  ASSERT_EQ(sdp_attr_get_rtcp_fb_remb_enabled(sdp_ptr_, 1, 120), true);
-  ASSERT_EQ(sdp_attr_get_rtcp_fb_remb_enabled(sdp_ptr_, 2, 120), false);
+  ASSERT_EQ((bool)sdp_attr_get_rtcp_fb_remb_enabled(sdp_ptr_, 1, 120), true);
+  ASSERT_EQ((bool)sdp_attr_get_rtcp_fb_remb_enabled(sdp_ptr_, 2, 120), false);
 
   ASSERT_EQ(sdp_attr_get_rtcp_fb_ccm(sdp_ptr_, 1, 120, 1), SDP_RTCP_FB_CCM_FIR);
   ASSERT_EQ(sdp_attr_get_rtcp_fb_ccm(sdp_ptr_, 1, 120, 2),
