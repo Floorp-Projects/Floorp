@@ -12,12 +12,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=874640
 
   /** Test for Bug 874640 **/
   var states = [
-  // dom.experimental_forms, dom.forms.datepicker, dom.forms.datetime, expectedValueAsDate
-  [ 'true', 'true', 'true', 'true' ],
-  [ 'true', 'false', 'false', 'true' ],
-  [ 'false', 'true', 'false', 'true' ],
-  [ 'false', 'false', 'true', 'true' ],
-  [ 'false', 'false', 'false', 'false' ],
+  // dom.experimental_forms, dom.forms.datetime, expectedValueAsDate
+  [ 'true', 'true', 'true' ],
+  [ 'true', 'false', 'true' ],
+  [ 'false', 'true', 'true' ],
+  [ 'false', 'false', 'false' ],
         'end'
   ];
 
@@ -33,12 +32,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=874640
 
     SpecialPowers.pushPrefEnv({"set":[
       ["dom.experimental_forms", state[0] === 'true'],
-      ["dom.forms.datepicker", state[1] === 'true'],
-      ["dom.forms.datetime", state[2] === 'true']]},
+      ["dom.forms.datetime", state[1] === 'true']]},
       function() {
         iframe.src = 'data:text/html,<script>' +
                  'parent.is("valueAsDate" in document.createElement("input"), ' +
-                 state[3] + ', "valueAsDate presence state should be ' + state[3] + '");' +
+                 state[2] + ', "valueAsDate presence state should be ' + state[2] + '");' +
                  '<\/script>'
      });
   }
