@@ -14,6 +14,7 @@
 #include "nsThreadUtils.h"
 
 class nsPrintEngine;
+class nsIDocument;
 
 //---------------------------------------------------
 //-- Page Timer Class
@@ -27,15 +28,19 @@ public:
 
   nsPagePrintTimer(nsPrintEngine* aPrintEngine,
                    nsIDocumentViewerPrint* aDocViewerPrint,
+                   nsIDocument* aDocument,
                    uint32_t aDelay)
-    : mPrintEngine(aPrintEngine)
+    : Runnable("nsPagePrintTimer")
+    , mPrintEngine(aPrintEngine)
     , mDocViewerPrint(aDocViewerPrint)
+    , mDocument(aDocument)
     , mDelay(aDelay)
     , mFiringCount(0)
     , mPrintObj(nullptr)
     , mWatchDogCount(0)
     , mDone(false)
   {
+    MOZ_ASSERT(aDocument);
     mDocViewerPrint->IncrementDestroyRefCount();
   }
 
@@ -62,6 +67,7 @@ private:
 
   nsPrintEngine*             mPrintEngine;
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
+  nsCOMPtr<nsIDocument>      mDocument;
   nsCOMPtr<nsITimer>         mTimer;
   nsCOMPtr<nsITimer>         mWatchDogTimer;
   nsCOMPtr<nsITimer>         mWaitingForRemotePrint;
