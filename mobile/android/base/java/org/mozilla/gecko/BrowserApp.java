@@ -599,7 +599,10 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        if (!HardwareUtils.isSupportedSystem()) {
+        final Context appContext = getApplicationContext();
+
+        GeckoLoader.loadMozGlue(appContext);
+        if (!HardwareUtils.isSupportedSystem() || !GeckoLoader.neonCompatible()) {
             // This build does not support the Android version of the device; Exit early.
             super.onCreate(savedInstanceState);
             return;
@@ -614,8 +617,6 @@ public class BrowserApp extends GeckoApp
         ((GeckoApplication) getApplication()).prepareLightweightTheme();
 
         super.onCreate(savedInstanceState);
-
-        final Context appContext = getApplicationContext();
 
         initSwitchboard(this, intent, isInAutomation);
         initTelemetryUploader(isInAutomation);
@@ -1757,10 +1758,6 @@ public class BrowserApp extends GeckoApp
                               final EventCallback callback) {
         switch (event) {
             case "Gecko:Ready":
-                if (!GeckoLoader.neonCompatible()) {
-                    conditionallyNotifyEOL();
-                }
-
                 EventDispatcher.getInstance().registerUiThreadListener(this, "Gecko:DelayedStartup");
 
                 // Handle this message in GeckoApp, but also enable the Settings
