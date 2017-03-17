@@ -11,5 +11,5 @@
     <integer name="erase_animation_translate_duration">100</integer>
     <integer name="erase_animation_translate_offset">100</integer>
 
-    <integer name="erase_snackbar_delay">1000</integer>
+    <integer name="erase_snackbar_delay">100</integer>
 </resources>
