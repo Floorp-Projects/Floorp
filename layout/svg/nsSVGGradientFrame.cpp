@@ -256,7 +256,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
   gfxMatrix patternMatrix = GetGradientTransform(aSource, aOverrideBounds);
 
   if (patternMatrix.IsSingular()) {
-    return MakePair(DrawResult::SUCCESS, RefPtr<gfxPattern>());
+    return MakePair(DrawResult::BAD_ARGS, RefPtr<gfxPattern>());
   }
 
   // revert any vector effect transform so that the gradient appears unchanged
@@ -268,7 +268,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
   }
 
   if (!patternMatrix.Invert()) {
-    return MakePair(DrawResult::SUCCESS, RefPtr<gfxPattern>());
+    return MakePair(DrawResult::BAD_ARGS, RefPtr<gfxPattern>());
   }
 
   RefPtr<gfxPattern> gradient = CreateGradient();
