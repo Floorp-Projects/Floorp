@@ -228,7 +228,8 @@ public class WebViewProvider {
                     if ((!url.startsWith("http://")) &&
                             (!url.startsWith("https://")) &&
                             (!url.startsWith("file://")) &&
-                            (!url.startsWith("data:"))) {
+                            (!url.startsWith("data:")) &&
+                            (!url.startsWith("error:"))) {
                         callback.handleExternalUrl(url);
                         return true;
                     }
