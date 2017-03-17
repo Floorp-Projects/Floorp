@@ -1296,7 +1296,7 @@ HTMLSelectElement::UnbindFromTree(bool aDeep, bool aNullParent)
 
 nsresult
 HTMLSelectElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                 nsAttrValueOrString* aValue,
+                                 const nsAttrValueOrString* aValue,
                                  bool aNotify)
 {
   if (aNotify && aName == nsGkAtoms::disabled &&
@@ -1321,8 +1321,6 @@ HTMLSelectElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       // Clear the cached @autocomplete attribute state
       mAutocompleteAttrState = nsContentUtils::eAutocompleteAttrState_Unknown;
     }
-
-    UpdateState(aNotify);
   }
 
   return nsGenericHTMLFormElementWithState::AfterSetAttr(aNameSpaceID, aName,

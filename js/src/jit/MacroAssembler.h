@@ -1113,7 +1113,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchIfTrueBool(Register reg, Label* label);
 
     inline void branchIfRope(Register str, Label* label);
-    inline void branchIfNotRope(Register str, Label* label);
 
     inline void branchLatin1String(Register string, Label* label);
     inline void branchTwoByteString(Register string, Label* label);
@@ -1494,7 +1493,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadStringChars(Register str, Register dest);
-    void loadStringChar(Register str, Register index, Register output, Label* fail);
+    void loadStringChar(Register str, Register index, Register output);
 
     void loadJSContext(Register dest);
     void loadJitActivation(Register dest) {

@@ -407,6 +407,21 @@ public:
                                  nsIDocument* aDocument,
                                  char16_t*& aBufOut, size_t& aLengthOut);
 
+  static inline nsresult
+  ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
+                 uint32_t aLength, const nsAString& aHintCharset,
+                 nsIDocument* aDocument,
+                 JS::UniqueTwoByteChars& aBufOut, size_t& aLengthOut)
+  {
+    char16_t* bufOut;
+    nsresult rv = ConvertToUTF16(aChannel, aData, aLength, aHintCharset, aDocument,
+                                 bufOut, aLengthOut);
+    if (NS_SUCCEEDED(rv)) {
+      aBufOut.reset(bufOut);
+    }
+    return rv;
+  };
+
   /**
    * Handle the completion of a stream.  This is called by the
    * nsScriptLoadHandler object which observes the IncrementalStreamLoader

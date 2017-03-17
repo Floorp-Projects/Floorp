@@ -696,12 +696,7 @@ WebContentConverterRegistrar.prototype = {
       let pb = Services.prefs.getBranch(null);
       pb.setCharPref(PREF_SELECTED_READER, "web");
 
-      let supportsString =
-        Cc["@mozilla.org/supports-string;1"].
-        createInstance(Ci.nsISupportsString);
-        supportsString.data = uri;
-      pb.setComplexValue(PREF_SELECTED_WEB, Ci.nsISupportsString,
-                         supportsString);
+      pb.setStringPref(PREF_SELECTED_WEB, uri);
       pb.setCharPref(PREF_SELECTED_ACTION, "ask");
       this._setAutoHandler(TYPE_MAYBE_FEED, null);
     }

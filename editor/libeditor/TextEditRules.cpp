@@ -30,7 +30,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeIterator.h"
-#include "nsIDOMNodeList.h"
 #include "nsIDOMText.h"
 #include "nsNameSpaceManager.h"
 #include "nsINode.h"

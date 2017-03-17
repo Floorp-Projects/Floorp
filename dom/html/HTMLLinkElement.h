@@ -62,7 +62,7 @@ public:
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
   virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                 nsAttrValueOrString* aValue,
+                                 const nsAttrValueOrString* aValue,
                                  bool aNotify) override;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue,

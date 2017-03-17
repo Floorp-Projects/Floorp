@@ -84,8 +84,7 @@ var _fallbackThemeData = null;
     _prefs.clearUserPref("isThemeSelected");
     let themes = [];
     try {
-      themes = JSON.parse(_prefs.getComplexValue("usedThemes",
-                                                 Ci.nsISupportsString).data);
+      themes = JSON.parse(_prefs.getStringPref("usedThemes"));
     } catch (e) { }
 
     if (Array.isArray(themes) && themes[0]) {
@@ -119,8 +118,7 @@ this.LightweightThemeManager = {
   get usedThemes() {
     let themes = [];
     try {
-      themes = JSON.parse(_prefs.getComplexValue("usedThemes",
-                                                 Ci.nsISupportsString).data);
+      themes = JSON.parse(_prefs.getStringPref("usedThemes"));
     } catch (e) { }
 
     themes.push(...this._builtInThemes.values());
@@ -784,10 +782,7 @@ function _updateUsedThemes(aList) {
     AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
   }
 
-  var str = Cc["@mozilla.org/supports-string;1"]
-              .createInstance(Ci.nsISupportsString);
-  str.data = JSON.stringify(aList);
-  _prefs.setComplexValue("usedThemes", Ci.nsISupportsString, str);
+  _prefs.setStringPref("usedThemes", JSON.stringify(aList));
 
   Services.obs.notifyObservers(null, "lightweight-theme-list-changed", null);
 }

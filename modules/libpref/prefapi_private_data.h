@@ -30,6 +30,9 @@ pref_SetPref(const mozilla::dom::PrefSetting& aPref);
 void
 pref_SetInitPhase(pref_initPhase phase);
 
+pref_initPhase
+pref_GetInitPhase();
+
 void
 pref_SetWatchingPref(bool watching);
 #endif

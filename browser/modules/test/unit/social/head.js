@@ -57,10 +57,8 @@ function initApp() {
 }
 
 function setManifestPref(manifest) {
-  let string = Cc["@mozilla.org/supports-string;1"].
-               createInstance(Ci.nsISupportsString);
-  string.data = JSON.stringify(manifest);
-  Services.prefs.setComplexValue("social.manifest." + manifest.origin, Ci.nsISupportsString, string);
+  Services.prefs.setStringPref("social.manifest." + manifest.origin,
+                               JSON.stringify(manifest));
 }
 
 function do_wait_observer(obsTopic, cb) {
@@ -91,14 +89,11 @@ function do_initialize_social(enabledOnStartup, cb) {
       setManifestPref(manifest);
     });
     // Set both providers active and flag the first one as "current"
-    let activeVal = Cc["@mozilla.org/supports-string;1"].
-               createInstance(Ci.nsISupportsString);
     let active = {};
     for (let m of manifests)
       active[m.origin] = 1;
-    activeVal.data = JSON.stringify(active);
-    Services.prefs.setComplexValue("social.activeProviders",
-                                   Ci.nsISupportsString, activeVal);
+    Services.prefs.setStringPref("social.activeProviders",
+                                 JSON.stringify(active));
 
     do_register_cleanup(function() {
       manifests.forEach(function(manifest) {

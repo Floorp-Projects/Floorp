@@ -46,7 +46,7 @@ var SocialServiceInternal = {
       if (!MANIFEST_PREFS.prefHasUserValue(pref))
         continue;
       try {
-        var manifest = JSON.parse(MANIFEST_PREFS.getComplexValue(pref, Ci.nsISupportsString).data);
+        var manifest = JSON.parse(MANIFEST_PREFS.getStringPref(pref));
         if (manifest && typeof(manifest) == "object" && manifest.origin)
           yield manifest;
       } catch (err) {
@@ -65,7 +65,7 @@ var SocialServiceInternal = {
     let prefs = MANIFEST_PREFS.getChildList("", []);
     for (let pref of prefs) {
       try {
-        var manifest = JSON.parse(MANIFEST_PREFS.getComplexValue(pref, Ci.nsISupportsString).data);
+        var manifest = JSON.parse(MANIFEST_PREFS.getStringPref(pref));
         if (manifest.origin == origin) {
           return pref;
         }
@@ -170,8 +170,7 @@ var ActiveProviders = {
     delete this._providers;
     this._providers = {};
     try {
-      let pref = Services.prefs.getComplexValue("social.activeProviders",
-                                                Ci.nsISupportsString);
+      let pref = Services.prefs.getStringPref("social.activeProviders");
       this._providers = JSON.parse(pref);
     } catch (ex) {}
     return this._providers;
@@ -202,11 +201,8 @@ var ActiveProviders = {
   },
 
   _persist() {
-    let string = Cc["@mozilla.org/supports-string;1"].
-                 createInstance(Ci.nsISupportsString);
-    string.data = JSON.stringify(this._providers);
-    Services.prefs.setComplexValue("social.activeProviders",
-                                   Ci.nsISupportsString, string);
+    Services.prefs.setStringPref("social.activeProviders",
+                                 JSON.stringify(this._providers));
   }
 };
 
@@ -224,7 +220,7 @@ function migrateSettings() {
       let defaultManifest;
       try {
         prefname = getPrefnameFromOrigin(origin);
-        manifest = JSON.parse(Services.prefs.getComplexValue(prefname, Ci.nsISupportsString).data);
+        manifest = JSON.parse(Services.prefs.getStringPref(prefname));
       } catch (e) {
         // Our preference is missing or bad, remove from ActiveProviders and
         // continue. This is primarily an error-case and should only be
@@ -237,8 +233,7 @@ function migrateSettings() {
       let needsUpdate = !manifest.updateDate;
       // fx23 may have built-ins with shareURL
       try {
-        defaultManifest = Services.prefs.getDefaultBranch(null)
-                        .getComplexValue(prefname, Ci.nsISupportsString).data;
+        defaultManifest = Services.prefs.getDefaultBranch(null).getStringPref(prefname);
         defaultManifest = JSON.parse(defaultManifest);
       } catch (e) {
         // not a built-in, continue
@@ -262,10 +257,7 @@ function migrateSettings() {
         if (!manifest.installDate)
           manifest.installDate = 0; // we don't know when it was installed
 
-        let string = Cc["@mozilla.org/supports-string;1"].
-                     createInstance(Ci.nsISupportsString);
-        string.data = JSON.stringify(manifest);
-        Services.prefs.setComplexValue(prefname, Ci.nsISupportsString, string);
+        Services.prefs.setStringPref(prefname, JSON.stringify(manifest));
       }
       // as of fx 29, we no longer rely on social.enabled. migration from prior
       // versions should disable all service addons if social.enabled=false
@@ -291,7 +283,7 @@ function migrateSettings() {
     try {
       let manifest;
       try {
-        manifest = JSON.parse(manifestPrefs.getComplexValue(pref, Ci.nsISupportsString).data);
+        manifest = JSON.parse(manifestPrefs.getStringPref(pref));
       } catch (e) {
         // bad or missing preference, we wont update this one.
         continue;
@@ -305,10 +297,9 @@ function migrateSettings() {
           manifest.installDate = 0; // we don't know when it was installed
         }
 
-        let string = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-        string.data = JSON.stringify(manifest);
         // pref here is just the branch name, set the full pref name
-        Services.prefs.setComplexValue("social.manifest." + pref, Ci.nsISupportsString, string);
+        Services.prefs.setStringPref("social.manifest." + pref,
+                                     JSON.stringify(manifest));
         ActiveProviders.add(manifest.origin);
         ActiveProviders.flush();
         // social.active was used at a time that there was only one
@@ -642,10 +633,8 @@ this.SocialService = {
       throw new Error("SocialService.installProvider: service configuration is invalid from " + aUpdateOrigin);
 
     // overwrite the preference
-    let string = Cc["@mozilla.org/supports-string;1"].
-                 createInstance(Ci.nsISupportsString);
-    string.data = JSON.stringify(manifest);
-    Services.prefs.setComplexValue(getPrefnameFromOrigin(manifest.origin), Ci.nsISupportsString, string);
+    Services.prefs.setStringPref(getPrefnameFromOrigin(manifest.origin),
+                                 JSON.stringify(manifest));
 
     // overwrite the existing provider then notify the front end so it can
     // handle any reload that might be necessary.
@@ -829,10 +818,8 @@ function AddonInstaller(sourceURI, aManifest, installCallback) {
       AddonManagerPrivate.callAddonListeners("onInstalling", addon, false);
     }
 
-    let string = Cc["@mozilla.org/supports-string;1"].
-                 createInstance(Ci.nsISupportsString);
-    string.data = JSON.stringify(aManifest);
-    Services.prefs.setComplexValue(getPrefnameFromOrigin(aManifest.origin), Ci.nsISupportsString, string);
+    Services.prefs.setStringPref(getPrefnameFromOrigin(aManifest.origin),
+                                 JSON.stringify(aManifest));
 
     if (isNewInstall) {
       AddonManagerPrivate.callAddonListeners("onInstalled", addon);

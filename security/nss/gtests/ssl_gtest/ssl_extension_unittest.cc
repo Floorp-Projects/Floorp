@@ -476,6 +476,15 @@ TEST_P(TlsExtensionTestPre13, AlpnReturnedBadNameLength) {
       ssl_app_layer_protocol_xtn, extension));
 }
 
+TEST_P(TlsExtensionTestPre13, AlpnReturnedUnknownName) {
+  EnableAlpn();
+  const uint8_t val[] = {0x00, 0x02, 0x01, 0x67};
+  DataBuffer extension(val, sizeof(val));
+  ServerHelloErrorTest(std::make_shared<TlsExtensionReplacer>(
+                           ssl_app_layer_protocol_xtn, extension),
+                       kTlsAlertIllegalParameter);
+}
+
 TEST_P(TlsExtensionTestDtls, SrtpShort) {
   EnableSrtp();
   ClientHelloErrorTest(
