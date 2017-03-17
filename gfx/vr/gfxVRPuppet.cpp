@@ -436,7 +436,6 @@ VRSystemManagerPuppet::ScanForControllers()
       dom::GamepadHand hand = (i % 2) ? dom::GamepadHand::Right :
                                         dom::GamepadHand::Left;
       RefPtr<VRControllerPuppet> puppetController = new VRControllerPuppet(hand);
-      puppetController->SetIndex(mControllerCount);
       mPuppetController.AppendElement(puppetController);
 
       // Not already present, add it.

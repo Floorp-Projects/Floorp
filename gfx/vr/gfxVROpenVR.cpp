@@ -556,13 +556,13 @@ VRSystemManagerOpenVR::HandleInput()
         switch (axisType) {
           case vr::EVRControllerAxisType::k_eControllerAxis_Joystick:
           case vr::EVRControllerAxisType::k_eControllerAxis_TrackPad:
-            HandleAxisMove(controller->GetIndex(), axisIdx,
+            HandleAxisMove(i, axisIdx,
                            state.rAxis[j].x);
             ++axisIdx;
-            HandleAxisMove(controller->GetIndex(), axisIdx,
+            HandleAxisMove(i, axisIdx,
                            state.rAxis[j].y);
             ++axisIdx;
-            HandleButtonPress(controller->GetIndex(), buttonIdx,
+            HandleButtonPress(i, buttonIdx,
                               vr::ButtonMaskFromId(
                                static_cast<vr::EVRButtonId>(vr::k_EButton_Axis0 + j)),
                               state.ulButtonPressed);
@@ -584,49 +584,49 @@ VRSystemManagerOpenVR::HandleInput()
                                          trackedIndex, vr::Prop_SupportedButtons_Uint64);
       if (supportedButtons &
           BTN_MASK_FROM_ID(k_EButton_A)) {
-        HandleButtonPress(controller->GetIndex(), buttonIdx,
+        HandleButtonPress(i, buttonIdx,
                           BTN_MASK_FROM_ID(k_EButton_A),
                           state.ulButtonPressed);
         ++buttonIdx;
       }
       if (supportedButtons &
           BTN_MASK_FROM_ID(k_EButton_Grip)) {
-        HandleButtonPress(controller->GetIndex(), buttonIdx,
+        HandleButtonPress(i, buttonIdx,
                           BTN_MASK_FROM_ID(k_EButton_Grip),
                           state.ulButtonPressed);
         ++buttonIdx;
       }
       if (supportedButtons &
           BTN_MASK_FROM_ID(k_EButton_ApplicationMenu)) {
-        HandleButtonPress(controller->GetIndex(), buttonIdx,
+        HandleButtonPress(i, buttonIdx,
                           BTN_MASK_FROM_ID(k_EButton_ApplicationMenu),
                           state.ulButtonPressed);
         ++buttonIdx;
       }
       if (supportedButtons &
           BTN_MASK_FROM_ID(k_EButton_DPad_Left)) {
-        HandleButtonPress(controller->GetIndex(), buttonIdx,
+        HandleButtonPress(i, buttonIdx,
                           BTN_MASK_FROM_ID(k_EButton_DPad_Left),
                           state.ulButtonPressed);
         ++buttonIdx;
       }
       if (supportedButtons &
           BTN_MASK_FROM_ID(k_EButton_DPad_Up)) {
-        HandleButtonPress(controller->GetIndex(), buttonIdx,
+        HandleButtonPress(i, buttonIdx,
                           BTN_MASK_FROM_ID(k_EButton_DPad_Up),
                           state.ulButtonPressed);
         ++buttonIdx;
       }
       if (supportedButtons &
           BTN_MASK_FROM_ID(k_EButton_DPad_Right)) {
-        HandleButtonPress(controller->GetIndex(), buttonIdx,
+        HandleButtonPress(i, buttonIdx,
                           BTN_MASK_FROM_ID(k_EButton_DPad_Right),
                           state.ulButtonPressed);
         ++buttonIdx;
       }
       if (supportedButtons &
           BTN_MASK_FROM_ID(k_EButton_DPad_Down)) {
-        HandleButtonPress(controller->GetIndex(), buttonIdx,
+        HandleButtonPress(i, buttonIdx,
                           BTN_MASK_FROM_ID(k_EButton_DPad_Down),
                           state.ulButtonPressed);
         ++buttonIdx;
@@ -670,7 +670,7 @@ VRSystemManagerOpenVR::HandleInput()
         poseState.linearVelocity[0] = pose.vVelocity.v[0];
         poseState.linearVelocity[1] = pose.vVelocity.v[1];
         poseState.linearVelocity[2] = pose.vVelocity.v[2];
-        HandlePoseTracking(controller->GetIndex(), poseState, controller);
+        HandlePoseTracking(i, poseState, controller);
       }
     }
   }
@@ -783,7 +783,7 @@ VRSystemManagerOpenVR::ScanForControllers()
   if (newControllerCount != mControllerCount) {
     // The controller count is changed, removing the existing gamepads first.
     for (uint32_t i = 0; i < mOpenVRController.Length(); ++i) {
-      RemoveGamepad(mOpenVRController[i]->GetIndex());
+      RemoveGamepad(i);
     }
     mControllerCount = 0;
     mOpenVRController.Clear();
@@ -861,7 +861,6 @@ VRSystemManagerOpenVR::ScanForControllers()
 
       RefPtr<VRControllerOpenVR> openVRController =
         new VRControllerOpenVR(hand, numButtons, numAxes);
-      openVRController->SetIndex(mControllerCount);
       openVRController->SetTrackedIndex(trackedDevice);
       mOpenVRController.AppendElement(openVRController);
 
