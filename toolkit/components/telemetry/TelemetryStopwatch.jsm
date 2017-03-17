@@ -168,11 +168,17 @@ this.TelemetryStopwatch = {
    * @param (Object) aObj - Optional parameter which associates the histogram
    *                        timer with the given object.
    *
+   * @param {Boolean} aCanceledOkay - Optional parameter which will suppress any
+   *                                  warnings that normally fire when a stopwatch
+   *                                  is finished after being cancelled. Defaults
+   *                                  to false.
+   *
    * @returns {Integer} time in milliseconds or -1 if the stopwatch was not
    *                   found.
    */
-  timeElapsed(aHistogram, aObj) {
-    return TelemetryStopwatchImpl.timeElapsed(aHistogram, aObj, null);
+  timeElapsed(aHistogram, aObj, aCanceledOkay) {
+    return TelemetryStopwatchImpl.timeElapsed(aHistogram, aObj, null,
+                                              aCanceledOkay);
   },
 
   /**
@@ -185,11 +191,16 @@ this.TelemetryStopwatch = {
    * @param {Object} aObj - Optional parameter which associates the histogram
    *                        timer with the given object.
    *
+   * @param {Boolean} aCanceledOkay - Optional parameter which will suppress any
+   *                                  warnings that normally fire when a stopwatch
+   *                                  is finished after being cancelled. Defaults
+   *                                  to false.
+   *
    * @returns {Boolean} True if the timer was succesfully stopped and the data
    *                    was added to the histogram, False otherwise.
    */
-  finish(aHistogram, aObj) {
-    return TelemetryStopwatchImpl.finish(aHistogram, aObj, null);
+  finish(aHistogram, aObj, aCanceledOkay) {
+    return TelemetryStopwatchImpl.finish(aHistogram, aObj, null, aCanceledOkay);
   },
 
   /**
@@ -251,8 +262,9 @@ this.TelemetryStopwatch = {
    * @return {Integer} time in milliseconds or -1 if the stopwatch was not
    *                   found.
    */
-  timeElapsedKeyed(aHistogram, aKey, aObj) {
-    return TelemetryStopwatchImpl.timeElapsed(aHistogram, aObj, aKey);
+  timeElapsedKeyed(aHistogram, aKey, aObj, aCanceledOkay) {
+    return TelemetryStopwatchImpl.timeElapsed(aHistogram, aObj, aKey,
+                                              aCanceledOkay);
   },
 
   /**
@@ -267,11 +279,16 @@ this.TelemetryStopwatch = {
    * @param {Object} aObj - optional parameter which associates the histogram
    *                        timer with the given object.
    *
+   * @param {Boolean} aCanceledOkay - Optional parameter which will suppress any
+   *                                  warnings that normally fire when a stopwatch
+   *                                  is finished after being cancelled. Defaults
+   *                                  to false.
+   *
    * @returns {Boolean} True if the timer was succesfully stopped and the data
    *                   was added to the histogram, False otherwise.
    */
-  finishKeyed(aHistogram, aKey, aObj) {
-    return TelemetryStopwatchImpl.finish(aHistogram, aObj, aKey);
+  finishKeyed(aHistogram, aKey, aObj, aCanceledOkay) {
+    return TelemetryStopwatchImpl.finish(aHistogram, aObj, aKey, aCanceledOkay);
   }
 };
 
@@ -291,12 +308,14 @@ this.TelemetryStopwatchImpl = {
     return Timers.delete(histogram, object, key);
   },
 
-  timeElapsed(histogram, object, key) {
+  timeElapsed(histogram, object, key, aCanceledOkay) {
     let startTime = Timers.get(histogram, object, key);
     if (startTime === null) {
-      Cu.reportError("TelemetryStopwatch: requesting elapsed time for " +
-                     `nonexisting stopwatch. Histogram: "${histogram}", ` +
-                     `key: "${key}"`);
+      if (!aCanceledOkay) {
+        Cu.reportError("TelemetryStopwatch: requesting elapsed time for " +
+                       `nonexisting stopwatch. Histogram: "${histogram}", ` +
+                       `key: "${key}"`);
+      }
       return -1;
     }
 
@@ -311,8 +330,8 @@ this.TelemetryStopwatchImpl = {
     }
   },
 
-  finish(histogram, object, key) {
-    let delta = this.timeElapsed(histogram, object, key);
+  finish(histogram, object, key, aCanceledOkay) {
+    let delta = this.timeElapsed(histogram, object, key, aCanceledOkay);
     if (delta == -1) {
       return false;
     }
