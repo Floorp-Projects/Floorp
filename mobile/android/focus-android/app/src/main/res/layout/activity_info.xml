@@ -5,6 +5,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
+              android:background="?attr/colorPrimary"
               android:orientation="vertical">
 
     <android.support.v7.widget.Toolbar
@@ -16,6 +17,7 @@
 
     <WebView
         android:id="@+id/webview"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 

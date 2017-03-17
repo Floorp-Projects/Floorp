@@ -61,7 +61,19 @@ public class InfoActivity extends AppCompatActivity {
         // By default WebView will try to open links and redirects in an external browser (and sumo
         // links usually use a redirect to get to the desired target page). Somehow, setting a default
         // WebViewClient() is enough to disable that behaviour.
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClient() {
+
+            // We also hide the webview until it loads: webview shows a blank white screen until
+            // loading has finished, and loading is noticeably slow - we can avoid
+            // the jarring whitescreen (which can be visible up to 1-2s on really bad phones)
+            // by keeping it hidden until the (dark) content has loaded.
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+
+                view.setVisibility(View.VISIBLE);
+            }
+        });
 
         loadURL(url, webView);
 
