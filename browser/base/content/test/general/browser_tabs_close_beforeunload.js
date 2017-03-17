@@ -32,7 +32,7 @@ add_task(function*() {
   yield secondTabLoadedPromise;
 
   let closeBtn = document.getAnonymousElementByAttribute(secondTab, "anonid", "close-button");
-  let closePromise = BrowserTestUtils.removeTab(secondTab, {dontRemove: true});
+  let closePromise = BrowserTestUtils.tabRemoved(secondTab);
   info("closing second tab (which will self-close in beforeunload)");
   closeBtn.click();
   ok(secondTab.closing, "Second tab should be marked as closing synchronously.");
