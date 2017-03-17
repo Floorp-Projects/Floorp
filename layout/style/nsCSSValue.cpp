@@ -1680,17 +1680,13 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
         unit == eCSSUnit_RGBAColor) {
       nscolor color = GetColorValue();
       // For brevity, we omit the alpha component if it's equal to 255 (full
-      // opaque). Also, we use "rgba" rather than "rgb" when the color includes
-      // the non-opaque alpha value, for backwards-compat (even though they're
-      // aliases as of css-color-4).
-      // e.g.:
-      //   rgba(1, 2, 3, 1.0) => rgb(1, 2, 3)
-      //   rgba(1, 2, 3, 0.5) => rgba(1, 2, 3, 0.5)
-
+      // opaque). Also, we try to preserve the author-specified function name,
+      // unless it's rgba() and we're omitting the alpha component - then we
+      // use rgb().
       uint8_t a = NS_GET_A(color);
       bool showAlpha = (a != 255);
 
-      if (showAlpha) {
+      if (unit == eCSSUnit_RGBAColor && showAlpha) {
         aResult.AppendLiteral("rgba(");
       } else {
         aResult.AppendLiteral("rgb(");
