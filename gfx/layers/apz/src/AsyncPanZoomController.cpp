@@ -679,7 +679,7 @@ AsyncPanZoomController::InitializeGlobalState()
   gVelocityCurveFunction = new ComputedTimingFunction();
   gVelocityCurveFunction->Init(
     nsTimingFunction(gfxPrefs::APZCurveFunctionX1(),
-                     gfxPrefs::APZCurveFunctionY2(),
+                     gfxPrefs::APZCurveFunctionY1(),
                      gfxPrefs::APZCurveFunctionX2(),
                      gfxPrefs::APZCurveFunctionY2()));
   ClearOnShutdown(&gVelocityCurveFunction);
