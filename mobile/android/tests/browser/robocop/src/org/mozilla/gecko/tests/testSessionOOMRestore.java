@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
+import org.mozilla.gecko.tests.helpers.GeckoHelper;
+
 /**
  * Tests session OOM restore behavior.
  *
@@ -48,7 +50,7 @@ public class testSessionOOMRestore extends SessionTest {
     }
 
     public void testSessionOOMRestore() throws Exception {
-        blockForGeckoReady();
+        GeckoHelper.blockForReady();
         verifySessionTabs(mSession);
     }
 }

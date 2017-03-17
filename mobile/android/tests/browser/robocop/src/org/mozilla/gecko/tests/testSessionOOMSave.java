@@ -1,5 +1,7 @@
 package org.mozilla.gecko.tests;
 
+import android.util.Log;
+
 import org.mozilla.gecko.Actions;
 
 import com.robotium.solo.Condition;
@@ -41,12 +43,12 @@ public class testSessionOOMSave extends SessionTest {
         // output. Because of the delay, this part of the test takes ~9 seconds
         // to pass.
         VerifyJSONCondition verifyJSONCondition = new VerifyJSONCondition(session);
-        boolean success = waitForCondition(verifyJSONCondition, SESSION_TIMEOUT);
+        boolean success = mSolo.waitForCondition(verifyJSONCondition, SESSION_TIMEOUT);
         if (success) {
             mAsserter.ok(true, "verified session JSON", null);
         } else {
             mAsserter.ok(false, "failed to verify session JSON",
-                    getStackTraceString(verifyJSONCondition.getLastException()));
+                    Log.getStackTraceString(verifyJSONCondition.getLastException()));
         }
     }
 

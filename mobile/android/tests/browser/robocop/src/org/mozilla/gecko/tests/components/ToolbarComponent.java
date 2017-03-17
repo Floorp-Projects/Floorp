@@ -29,8 +29,7 @@ import com.robotium.solo.Solo;
  * A class representing any interactions that take place on the Toolbar.
  */
 public class ToolbarComponent extends BaseComponent {
-
-    private static final String URL_HTTP_PREFIX = "http://";
+    public static final String URL_HTTP_PREFIX = "http://";
 
     // We are waiting up to 30 seconds instead of the default waiting time because reader mode
     // parsing can take quite some time on slower devices (Bug 1142699)
