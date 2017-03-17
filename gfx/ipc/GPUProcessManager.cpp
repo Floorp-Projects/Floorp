@@ -163,7 +163,7 @@ GPUProcessManager::DisableGPUProcess(const char* aMessage)
   ShutdownVsyncIOThread();
 }
 
-bool
+void
 GPUProcessManager::EnsureGPUReady()
 {
   if (mProcess && !mProcess->IsConnected()) {
@@ -171,15 +171,13 @@ GPUProcessManager::EnsureGPUReady()
       // If this fails, we should have fired OnProcessLaunchComplete and
       // removed the process.
       MOZ_ASSERT(!mProcess && !mGPUChild);
-      return false;
+      return;
     }
   }
 
-  if (mGPUChild && mGPUChild->EnsureGPUReady()) {
-    return true;
+  if (mGPUChild) {
+    mGPUChild->EnsureGPUReady();
   }
-
-  return false;
 }
 
 void
@@ -189,7 +187,9 @@ GPUProcessManager::EnsureImageBridgeChild()
     return;
   }
 
-  if (!EnsureGPUReady()) {
+  EnsureGPUReady();
+
+  if (!mGPUChild) {
     ImageBridgeChild::InitSameProcess();
     return;
   }
@@ -217,7 +217,9 @@ GPUProcessManager::EnsureVRManager()
     return;
   }
 
-  if (!EnsureGPUReady()) {
+  EnsureGPUReady();
+
+  if (!mGPUChild) {
     VRManagerChild::InitSameProcess();
     return;
   }
@@ -246,13 +248,15 @@ GPUProcessManager::EnsureUiCompositorController()
     return;
   }
 
+  EnsureGPUReady();
+
   RefPtr<nsThread> uiThread;
 
   uiThread = GetAndroidUiThread();
 
   MOZ_ASSERT(uiThread);
 
-  if (!EnsureGPUReady()) {
+  if (!mGPUChild) {
     UiCompositorControllerChild::InitSameProcess(uiThread);
     return;
   }
@@ -542,13 +546,14 @@ GPUProcessManager::CreateTopLevelCompositor(nsBaseWidget* aWidget,
 {
   uint64_t layerTreeId = AllocateLayerTreeId();
 
+  EnsureGPUReady();
   EnsureImageBridgeChild();
   EnsureVRManager();
 #if defined(MOZ_WIDGET_ANDROID)
   EnsureUiCompositorController();
 #endif // defined(MOZ_WIDGET_ANDROID)
 
-  if (EnsureGPUReady()) {
+  if (mGPUChild) {
     RefPtr<CompositorSession> session = CreateRemoteSession(
       aWidget,
       aLayerManager,
@@ -677,6 +682,8 @@ bool
 GPUProcessManager::CreateContentCompositorBridge(base::ProcessId aOtherProcess,
                                                  ipc::Endpoint<PCompositorBridgeChild>* aOutEndpoint)
 {
+  EnsureGPUReady();
+
   ipc::Endpoint<PCompositorBridgeParent> parentPipe;
   ipc::Endpoint<PCompositorBridgeChild> childPipe;
 
@@ -694,7 +701,7 @@ GPUProcessManager::CreateContentCompositorBridge(base::ProcessId aOtherProcess,
     return false;
   }
 
-  if (EnsureGPUReady()) {
+  if (mGPUChild) {
     mGPUChild->SendNewContentCompositorBridge(Move(parentPipe));
   } else {
     if (!CompositorBridgeParent::CreateForContent(Move(parentPipe))) {
@@ -728,7 +735,7 @@ GPUProcessManager::CreateContentImageBridge(base::ProcessId aOtherProcess,
     return false;
   }
 
-  if (EnsureGPUReady()) {
+  if (mGPUChild) {
     mGPUChild->SendNewContentImageBridge(Move(parentPipe));
   } else {
     if (!ImageBridgeParent::CreateForContent(Move(parentPipe))) {
@@ -771,7 +778,7 @@ GPUProcessManager::CreateContentVRManager(base::ProcessId aOtherProcess,
     return false;
   }
 
-  if (EnsureGPUReady()) {
+  if (mGPUChild) {
     mGPUChild->SendNewContentVRManager(Move(parentPipe));
   } else {
     if (!VRManagerParent::CreateForContent(Move(parentPipe))) {
@@ -787,7 +794,7 @@ void
 GPUProcessManager::CreateContentVideoDecoderManager(base::ProcessId aOtherProcess,
                                                     ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndpoint)
 {
-  if (!EnsureGPUReady() || !MediaPrefs::PDMUseGPUDecoder()) {
+  if (!mGPUChild || !MediaPrefs::PDMUseGPUDecoder()) {
     return;
   }
 
@@ -821,7 +828,7 @@ GPUProcessManager::MapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningId)
 {
   LayerTreeOwnerTracker::Get()->Map(aLayersId, aOwningId);
 
-  if (EnsureGPUReady()) {
+  if (mGPUChild) {
     AutoTArray<LayerTreeIdMapping, 1> mappings;
     mappings.AppendElement(LayerTreeIdMapping(aLayersId, aOwningId));
     mGPUChild->SendAddLayerTreeIdMapping(mappings);
@@ -833,7 +840,7 @@ GPUProcessManager::UnmapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningI
 {
   LayerTreeOwnerTracker::Get()->Unmap(aLayersId, aOwningId);
 
-  if (EnsureGPUReady()) {
+  if (mGPUChild) {
     mGPUChild->SendRemoveLayerTreeIdMapping(LayerTreeIdMapping(aLayersId, aOwningId));
     return;
   }
@@ -897,7 +904,7 @@ GPUProcessManager::RemoveListener(GPUProcessListener* aListener)
 bool
 GPUProcessManager::NotifyGpuObservers(const char* aTopic)
 {
-  if (!EnsureGPUReady()) {
+  if (!mGPUChild) {
     return false;
   }
   nsCString topic(aTopic);
@@ -955,7 +962,7 @@ protected:
 RefPtr<MemoryReportingProcess>
 GPUProcessManager::GetProcessMemoryReporter()
 {
-  if (!EnsureGPUReady()) {
+  if (!mGPUChild) {
     return nullptr;
   }
   return new GPUMemoryReporter();
