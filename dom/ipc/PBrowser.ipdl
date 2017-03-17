@@ -9,7 +9,6 @@ include protocol PBlob;
 include protocol PColorPicker;
 include protocol PContent;
 include protocol PContentBridge;
-include protocol PDatePicker;
 include protocol PDocAccessible;
 include protocol PDocumentRenderer;
 include protocol PFilePicker;
@@ -117,7 +116,6 @@ nested(upto inside_cpow) sync protocol PBrowser
     manager PContent or PContentBridge;
 
     manages PColorPicker;
-    manages PDatePicker;
     manages PDocAccessible;
     manages PDocumentRenderer;
     manages PFilePicker;
@@ -442,12 +440,6 @@ parent:
      * but don't open it yet.
      */
     async PColorPicker(nsString title, nsString initialColor);
-
-    /**
-     * Create an asynchronous date picker on the parent side,
-     * but don't open it yet.
-     */
-    async PDatePicker(nsString title, nsString initialDate);
 
     async PFilePicker(nsString aTitle, int16_t aMode);
 

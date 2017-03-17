@@ -37,23 +37,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=764481
       inputType: "color",
       expectedType: "color"
     }, {
-      prefs: [["dom.experimental_forms", false], ["dom.forms.datepicker", false],
-              ["dom.forms.datetime", false]],
+      prefs: [["dom.experimental_forms", false], ["dom.forms.datetime", false]],
       inputType: "date",
       expectedType: "text"
     }, {
-      prefs: [["dom.experimental_forms", true], ["dom.forms.datepicker", false],
-              ["dom.forms.datetime", false]],
+      prefs: [["dom.experimental_forms", true], ["dom.forms.datetime", false]],
       inputType: "date",
       expectedType: "date"
     }, {
-      prefs: [["dom.experimental_forms", false], ["dom.forms.datepicker", true],
-              ["dom.forms.datetime", false]],
-      inputType: "date",
-      expectedType: "date"
-    }, {
-      prefs: [["dom.experimental_forms", false], ["dom.forms.datepicker", false],
-              ["dom.forms.datetime", true]],
+      prefs: [["dom.experimental_forms", false], ["dom.forms.datetime", true]],
       inputType: "date",
       expectedType: "date"
     }, {
