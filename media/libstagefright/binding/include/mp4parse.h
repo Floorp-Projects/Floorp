@@ -78,6 +78,7 @@ typedef struct mp4parse_track_audio_info {
 	uint16_t bit_depth;
 	uint32_t sample_rate;
 	uint16_t profile;
+	mp4parse_byte_data codec_specific_data;
 	mp4parse_byte_data codec_specific_config;
 	mp4parse_sinf_info protected_data;
 } mp4parse_track_audio_info;
@@ -108,7 +109,7 @@ mp4parse_parser* mp4parse_new(mp4parse_io const* io);
 /// Free an `mp4parse_parser*` allocated by `mp4parse_new()`.
 void mp4parse_free(mp4parse_parser* parser);
 
-/// Enable mp4_parser log.
+/// Enable `mp4_parser` log.
 void mp4parse_log(bool enable);
 
 /// Run the `mp4parse_parser*` allocated by `mp4parse_new()` until EOF or error.
@@ -136,10 +137,11 @@ mp4parse_error mp4parse_is_fragmented(mp4parse_parser* parser, uint32_t track_id
 
 /// Get 'pssh' system id and 'pssh' box content for eme playback.
 ///
-/// The data format in 'info' passing to gecko is:
-///   system_id
-///   pssh box size (in native endian)
-///   pssh box content (including header)
+/// The data format of the `info` struct passed to gecko is:
+///
+/// - system id (16 byte uuid)
+/// - pssh box size (32-bit native endian)
+/// - pssh box content (including header)
 mp4parse_error mp4parse_get_pssh_info(mp4parse_parser* parser, mp4parse_pssh_info* info);
 
 
