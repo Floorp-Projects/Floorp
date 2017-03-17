@@ -164,7 +164,12 @@ public class WebViewProvider {
         }
 
         public void loadUrl(String url) {
-            super.loadUrl(url);
+            // We need to check external URL handling here - shouldOverrideUrlLoading() is only
+            // called by webview when clicking on a link, and not when opening a new page for the
+            // first time using loadUrl().
+            if (!client.shouldOverrideUrlLoading(this, url)) {
+                super.loadUrl(url);
+            }
 
             client.notifyCurrentURL(url);
         }
