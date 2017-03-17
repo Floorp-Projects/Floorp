@@ -243,21 +243,23 @@ var tests = [
         onLocationChange: function onLocationChange() {
           gBrowser.removeProgressListener(progressListener);
 
-	  executeSoon(() => {
+          executeSoon(() => {
             let notification = PopupNotifications.getNotification(self.notifyObj.id,
                                                                   self.notifyObj.browser);
             ok(notification != null, "Notification remained when subframe navigated");
             self.notifyObj.options.eventCallback = undefined;
 
             notification.remove();
-	  });
+          });
         },
       };
 
       info("Adding progress listener and performing navigation");
       gBrowser.addProgressListener(progressListener);
-      content.document.getElementById("iframe")
-                      .setAttribute("src", "http://example.org/");
+      ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+        content.document.getElementById("iframe")
+                        .setAttribute("src", "http://example.org/");
+      });
     },
     onHidden() {}
   },

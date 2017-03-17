@@ -999,7 +999,23 @@ public:
     TrustLevel certTrustLevel;
   };
 
+// trustDomain deliberately shadows the inherited field so that it isn't used
+// by accident. See bug 1339921.
+// Unfortunately GCC can't parse __has_warning("-Wshadow-field") even if it's
+// the latter part of a conjunction that would evaluate to false, so we have to
+// wrap it in a separate preprocessor conditional rather than using &&.
+#if defined(__clang__)
+  #if __has_warning("-Wshadow-field")
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wshadow-field"
+  #endif
+#endif
   TrustDomain trustDomain;
+#if defined(__clang__)
+  #if __has_warning("-Wshadow-field")
+    #pragma clang diagnostic pop
+  #endif
+#endif
   ByteString signerCertDER;
   ByteString responseString;
   Input response; // references data in responseString

@@ -49,7 +49,7 @@ use properties::PropertyDeclarationBlock;
 use rule_tree::CascadeLevel as ServoCascadeLevel;
 use selector_parser::{ElementExt, Snapshot};
 use selectors::Element;
-use selectors::matching::ElementSelectorFlags;
+use selectors::matching::{ElementSelectorFlags, StyleRelations, matches_complex_selector};
 use selectors::parser::{AttrSelector, NamespaceConstraint};
 use servo_url::ServoUrl;
 use sink::Push;
@@ -637,7 +637,10 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
         }
     }
 
-    fn match_non_ts_pseudo_class(&self, pseudo_class: &NonTSPseudoClass) -> bool {
+    fn match_non_ts_pseudo_class(&self,
+                                 pseudo_class: &NonTSPseudoClass,
+                                 relations: &mut StyleRelations,
+                                 flags: &mut ElementSelectorFlags) -> bool {
         match *pseudo_class {
             // https://github.com/servo/servo/issues/8718
             NonTSPseudoClass::AnyLink => unsafe { Gecko_IsLink(self.0) },
@@ -651,7 +654,12 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             NonTSPseudoClass::Checked |
             NonTSPseudoClass::ReadWrite |
             NonTSPseudoClass::Fullscreen |
-            NonTSPseudoClass::Indeterminate => {
+            NonTSPseudoClass::Indeterminate |
+            NonTSPseudoClass::PlaceholderShown |
+            NonTSPseudoClass::Target |
+            NonTSPseudoClass::Valid |
+            NonTSPseudoClass::Invalid |
+            NonTSPseudoClass::MozUIValid => {
                 self.get_state().contains(pseudo_class.state_flag())
             },
             NonTSPseudoClass::ReadOnly => {
@@ -661,6 +669,10 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             NonTSPseudoClass::MozTableBorderNonzero |
             NonTSPseudoClass::MozBrowserFrame => unsafe {
                 Gecko_MatchesElement(pseudo_class.to_gecko_pseudoclasstype().unwrap(), self.0)
+            },
+            NonTSPseudoClass::MozSystemMetric(_) => false,
+            NonTSPseudoClass::MozAny(ref sels) => {
+                sels.iter().any(|s| matches_complex_selector(s, self, None, relations, flags))
             }
         }
     }
@@ -799,7 +811,9 @@ impl<'le> ::selectors::MatchAttr for GeckoElement<'le> {
 impl<'le> ElementExt for GeckoElement<'le> {
     #[inline]
     fn is_link(&self) -> bool {
-        self.match_non_ts_pseudo_class(&NonTSPseudoClass::AnyLink)
+        self.match_non_ts_pseudo_class(&NonTSPseudoClass::AnyLink,
+                                       &mut StyleRelations::empty(),
+                                       &mut ElementSelectorFlags::empty())
     }
 
     #[inline]

@@ -575,10 +575,8 @@ function type(dbg, string) {
 }
 
 function isVisibleWithin(outerEl, innerEl) {
-  info(`isVisibleWithin`);
   const innerRect = innerEl.getBoundingClientRect();
   const outerRect = outerEl.getBoundingClientRect();
-  info(`isVisibleWithin innerRect.top ${innerRect.top} outerRect.top ${outerRect.top} innerRect.bottom ${innerRect.bottom} outerRect.bottom ${outerRect.bottom}`);
 
   return innerRect.top > outerRect.top &&
     innerRect.bottom < outerRect.bottom;

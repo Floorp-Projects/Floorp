@@ -602,18 +602,14 @@
 
 #ruleview-add-rule-button::before {
   background-image: url("chrome://devtools/skin/images/add.svg");
-  background-size: cover;
 }
 
 #pseudo-class-panel-toggle::before {
   background-image: url("chrome://devtools/skin/images/pseudo-class.svg");
-  background-size: cover;
 }
 
 #class-panel-toggle::before {
   content: ".cls";
-  direction: ltr;
-  font-size: 11px;
 }
 
 .ruleview-overridden-rule-filter {

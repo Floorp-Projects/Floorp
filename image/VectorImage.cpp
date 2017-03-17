@@ -1123,7 +1123,7 @@ VectorImage::RequestDiscard()
 }
 
 void
-VectorImage::OnSurfaceDiscarded()
+VectorImage::OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey)
 {
   MOZ_ASSERT(mProgressTracker);
 

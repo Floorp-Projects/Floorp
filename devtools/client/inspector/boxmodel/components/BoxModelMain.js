@@ -83,6 +83,15 @@ module.exports = createClass({
     return value;
   },
 
+  getPositionValue(property) {
+    let { layout } = this.props.boxModel;
+
+    if (layout.position === "static") {
+      return "-";
+    }
+    return layout[property] ? parseFloat(layout[property]) : "-";
+  },
+
   onHighlightMouseOver(event) {
     let region = event.target.getAttribute("data-box");
     if (!region) {
@@ -99,7 +108,7 @@ module.exports = createClass({
   render() {
     let { boxModel, onShowBoxModelEditor } = this.props;
     let { layout } = boxModel;
-    let { height, width } = layout;
+    let { height, width, position } = layout;
 
     let borderTop = this.getBorderOrPaddingValue("border-top-width");
     let borderRight = this.getBorderOrPaddingValue("border-right-width");
@@ -110,6 +119,12 @@ module.exports = createClass({
     let paddingRight = this.getBorderOrPaddingValue("padding-right");
     let paddingBottom = this.getBorderOrPaddingValue("padding-bottom");
     let paddingLeft = this.getBorderOrPaddingValue("padding-left");
+
+    let displayPosition = layout.position && layout.position != "static";
+    let positionTop = this.getPositionValue("top");
+    let positionRight = this.getPositionValue("right");
+    let positionBottom = this.getPositionValue("bottom");
+    let positionLeft = this.getPositionValue("left");
 
     let marginTop = this.getMarginValue("margin-top", "top");
     let marginRight = this.getMarginValue("margin-right", "right");
@@ -125,56 +140,112 @@ module.exports = createClass({
         onMouseOver: this.onHighlightMouseOver,
         onMouseOut: this.props.onHideBoxModelHighlighter,
       },
-      dom.span(
-        {
-          className: "boxmodel-legend",
-          "data-box": "margin",
-          title: BOXMODEL_L10N.getStr("boxmodel.margin"),
-        },
-        BOXMODEL_L10N.getStr("boxmodel.margin")
-      ),
+      displayPosition ?
+        dom.span(
+          {
+            className: "boxmodel-legend",
+            "data-box": "position",
+            title: BOXMODEL_L10N.getFormatStr("boxmodel.position", position),
+          },
+          BOXMODEL_L10N.getFormatStr("boxmodel.position", position)
+        )
+        :
+        null,
       dom.div(
         {
-          className: "boxmodel-margins",
-          "data-box": "margin",
-          title: BOXMODEL_L10N.getStr("boxmodel.margin"),
+          className: "boxmodel-box"
         },
         dom.span(
           {
             className: "boxmodel-legend",
-            "data-box": "border",
-            title: BOXMODEL_L10N.getStr("boxmodel.border"),
+            "data-box": "margin",
+            title: BOXMODEL_L10N.getStr("boxmodel.margin"),
           },
-          BOXMODEL_L10N.getStr("boxmodel.border")
+          BOXMODEL_L10N.getStr("boxmodel.margin")
         ),
         dom.div(
           {
-            className: "boxmodel-borders",
-            "data-box": "border",
-            title: BOXMODEL_L10N.getStr("boxmodel.border"),
+            className: "boxmodel-margins",
+            "data-box": "margin",
+            title: BOXMODEL_L10N.getStr("boxmodel.margin"),
           },
           dom.span(
             {
               className: "boxmodel-legend",
-              "data-box": "padding",
-              title: BOXMODEL_L10N.getStr("boxmodel.padding"),
+              "data-box": "border",
+              title: BOXMODEL_L10N.getStr("boxmodel.border"),
             },
-            BOXMODEL_L10N.getStr("boxmodel.padding")
+            BOXMODEL_L10N.getStr("boxmodel.border")
           ),
           dom.div(
             {
-              className: "boxmodel-paddings",
-              "data-box": "padding",
-              title: BOXMODEL_L10N.getStr("boxmodel.padding"),
+              className: "boxmodel-borders",
+              "data-box": "border",
+              title: BOXMODEL_L10N.getStr("boxmodel.border"),
             },
-            dom.div({
-              className: "boxmodel-content",
-              "data-box": "content",
-              title: BOXMODEL_L10N.getStr("boxmodel.content"),
-            })
+            dom.span(
+              {
+                className: "boxmodel-legend",
+                "data-box": "padding",
+                title: BOXMODEL_L10N.getStr("boxmodel.padding"),
+              },
+              BOXMODEL_L10N.getStr("boxmodel.padding")
+            ),
+            dom.div(
+              {
+                className: "boxmodel-paddings",
+                "data-box": "padding",
+                title: BOXMODEL_L10N.getStr("boxmodel.padding"),
+              },
+              dom.div({
+                className: "boxmodel-content",
+                "data-box": "content",
+                title: BOXMODEL_L10N.getStr("boxmodel.content"),
+              })
+            )
           )
         )
       ),
+      displayPosition ?
+        BoxModelEditable({
+          box: "position",
+          direction: "top",
+          property: "position-top",
+          textContent: positionTop,
+          onShowBoxModelEditor,
+        })
+        :
+        null,
+      displayPosition ?
+        BoxModelEditable({
+          box: "position",
+          direction: "right",
+          property: "position-right",
+          textContent: positionRight,
+          onShowBoxModelEditor,
+        })
+        :
+        null,
+      displayPosition ?
+        BoxModelEditable({
+          box: "position",
+          direction: "bottom",
+          property: "position-bottom",
+          textContent: positionBottom,
+          onShowBoxModelEditor,
+        })
+        :
+        null,
+      displayPosition ?
+        BoxModelEditable({
+          box: "position",
+          direction: "left",
+          property: "position-left",
+          textContent: positionLeft,
+          onShowBoxModelEditor,
+        })
+        :
+        null,
       BoxModelEditable({
         box: "margin",
         direction: "top",

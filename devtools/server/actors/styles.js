@@ -771,6 +771,10 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     let style = CssLogic.getComputedStyle(node.rawNode);
     for (let prop of [
       "position",
+      "top",
+      "right",
+      "bottom",
+      "left",
       "margin-top",
       "margin-right",
       "margin-bottom",

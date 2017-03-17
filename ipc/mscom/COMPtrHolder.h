@@ -106,7 +106,9 @@ struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>>
     const BYTE* buf = proxyStream.GetBuffer(bufLen);
     MOZ_ASSERT(buf || !bufLen);
     aMsg->WriteInt(bufLen);
-    aMsg->WriteBytes(reinterpret_cast<const char*>(buf), bufLen);
+    if (bufLen) {
+      aMsg->WriteBytes(reinterpret_cast<const char*>(buf), bufLen);
+    }
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
@@ -128,11 +130,12 @@ struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>>
     if (!proxyStream.IsValid()) {
       return false;
     }
-    Interface* rawInterface = nullptr;
-    if (!proxyStream.GetInterface(_IID, (void**)&rawInterface)) {
+
+    typename paramType::COMPtrType ptr;
+    if (!proxyStream.GetInterface(_IID, mozilla::mscom::getter_AddRefs(ptr))) {
       return false;
     }
-    typename paramType::COMPtrType ptr(rawInterface);
+
     aResult->Set(mozilla::Move(ptr));
     return true;
   }

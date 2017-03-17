@@ -6,6 +6,7 @@
 <?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/storage.css" type="text/css"?>
+<?xml-stylesheet href="resource://devtools/client/shared/components/sidebar-toggle.css" type="text/css"?>
 
 <!DOCTYPE window [
   <!ENTITY % storageDTD SYSTEM "chrome://devtools/locale/storage.dtd">
@@ -46,6 +47,8 @@
                  type="search"
                  timeout="200"
                  placeholder="&searchBox.placeholder;"/>
+        <spacer flex="1"/>
+        <button class="devtools-button sidebar-toggle" hidden="true"></button>
       </hbox>
       <vbox id="storage-table" class="theme-sidebar" flex="1"/>
     </vbox>

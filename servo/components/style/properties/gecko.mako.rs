@@ -43,7 +43,7 @@ use gecko_bindings::bindings::Gecko_SetNullImageValue;
 use gecko_bindings::bindings::ServoComputedValuesBorrowedOrNull;
 use gecko_bindings::bindings::{Gecko_ResetFilters, Gecko_CopyFiltersFrom};
 use gecko_bindings::bindings::RawGeckoPresContextBorrowed;
-use gecko_bindings::structs;
+use gecko_bindings::structs::{self, StyleComplexColor};
 use gecko_bindings::structs::nsStyleVariables;
 use gecko_bindings::sugar::ns_style_coord::{CoordDataValue, CoordData, CoordDataMut};
 use gecko_bindings::sugar::ownership::HasArcFFI;
@@ -53,7 +53,7 @@ use gecko::values::GeckoStyleCoordConvertible;
 use gecko::values::round_border_to_device_pixels;
 use logical_geometry::WritingMode;
 use properties::longhands;
-use properties::{DeclaredValue, Importance, LonghandId};
+use properties::{Importance, LonghandId};
 use properties::{PropertyDeclaration, PropertyDeclarationBlock, PropertyDeclarationId};
 use std::fmt::{self, Debug};
 use std::mem::{forget, transmute, zeroed};
@@ -169,7 +169,7 @@ impl ComputedValues {
                 % if prop.animatable:
                     PropertyDeclarationId::Longhand(LonghandId::${prop.camel_case}) => {
                          PropertyDeclarationBlock::with_one(
-                            PropertyDeclaration::${prop.camel_case}(DeclaredValue::Value(
+                            PropertyDeclaration::${prop.camel_case}(
                                 % if prop.boxed:
                                     Box::new(
                                 % endif
@@ -178,7 +178,7 @@ impl ComputedValues {
                                 % if prop.boxed:
                                     )
                                 % endif
-                            )),
+                            ),
                             Importance::Normal
                         )
                     },
@@ -3095,7 +3095,7 @@ clip-path
 </%self:impl_trait>
 
 <%self:impl_trait style_struct_name="Pointing"
-                  skip_longhands="cursor">
+                  skip_longhands="cursor caret-color">
     pub fn set_cursor(&mut self, v: longhands::cursor::computed_value::T) {
         use properties::longhands::cursor::computed_value::Keyword;
         use style_traits::cursor::Cursor;
@@ -3162,6 +3162,26 @@ clip-path
             Gecko_CopyCursorArrayFrom(&mut self.gecko, &other.gecko);
         }
     }
+
+    pub fn set_caret_color(&mut self, v: longhands::caret_color::computed_value::T){
+        use values::Either;
+
+        match v {
+            Either::First(color) => {
+                self.gecko.mCaretColor = StyleComplexColor::from(color);
+            }
+            Either::Second(_auto) => {
+                self.gecko.mCaretColor = StyleComplexColor::auto();
+            }
+        }
+    }
+
+    pub fn copy_caret_color_from(&mut self, other: &Self){
+        self.gecko.mCaretColor = other.gecko.mCaretColor;
+    }
+
+    <%call expr="impl_color_clone('caret_color', 'mCaretColor')"></%call>
+
 </%self:impl_trait>
 
 <%self:impl_trait style_struct_name="Column"

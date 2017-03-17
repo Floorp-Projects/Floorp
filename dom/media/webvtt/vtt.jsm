@@ -317,6 +317,10 @@ Cu.import('resource://gre/modules/Services.jsm');
       }
 
       var m = input.match(/^([^<]*)(<[^>]+>?)?/);
+      // The input doesn't contain a complete tag.
+      if (!m[0]) {
+        return null;
+      }
       // If there is some text before the next tag, return it, otherwise return
       // the tag.
       return consume(m[1] ? m[1] : m[2]);

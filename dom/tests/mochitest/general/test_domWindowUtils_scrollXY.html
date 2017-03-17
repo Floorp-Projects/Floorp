@@ -31,13 +31,13 @@
       function checkGetScrollXYState(flush, vals, testName) {
         let scrollX = {}, scrollY = {};
         domWindowUtils.getScrollXY(flush, scrollX, scrollY);
-        is(scrollX.value, vals[0], "getScrollXY x for test: " + testName);
-        is(scrollY.value, vals[1], "getScrollXY y for test: " + testName);
+        is(Math.round(scrollX.value), vals[0], "getScrollXY x for test: " + testName);
+        is(Math.round(scrollY.value), vals[1], "getScrollXY y for test: " + testName);
       }
 
       function checkWindowScrollState(vals, testName) {
-        is(cwindow.scrollX, vals[0], "scrollX for test: " + testName);
-        is(cwindow.scrollY, vals[1], "scrollY for test: " + testName);
+        is(Math.round(cwindow.scrollX), vals[0], "scrollX for test: " + testName);
+        is(Math.round(cwindow.scrollY), vals[1], "scrollY for test: " + testName);
       }
 
       // Check initial state (0, 0)
@@ -67,8 +67,8 @@
       let scrollX = {}, scrollY = {};
       domWindowUtils.getScrollXY(false, scrollX, scrollY);
 
-      is(scrollX.value, 0, "scrollX is zero for display:none iframe");
-      is(scrollY.value, 0, "scrollY is zero for display:none iframe");
+      is(Math.round(scrollX.value), 0, "scrollX is zero for display:none iframe");
+      is(Math.round(scrollY.value), 0, "scrollY is zero for display:none iframe");
     }
 
     SimpleTest.waitForExplicitFinish();

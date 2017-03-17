@@ -77,16 +77,28 @@ interface nsIProfiler : nsISupports
   double getElapsedTime();
 
   /**
-   * Returns a JSON string of an array of shared library objects.
-   * Every object has three properties: start, end, and name.
-   * start and end are integers describing the address range that the library
-   * occupies in memory. name is the path of the library as a string.
-   *
-   * On Windows profiling builds, the shared library objects will have
-   * additional pdbSignature and pdbAge properties for uniquely identifying
-   * shared library versions for stack symbolication.
+   * Contains an array of shared library objects.
+   * Every object has the properties:
+   *  - start:      The start address of the memory region occupied by this library.
+   *  - end:        The end address of the memory region occupied by this library.
+   *  - offset:     Usually zero, except on Android if the region was mapped from
+   *                a file (using mmap), then this is the offset in the file where
+   *                the mapping begins.
+   *  - name:       The name (file basename) of the binary.
+   *  - path:       The full absolute path to the binary.
+   *  - debugName:  On Windows, the name of the pdb file for the binary. On other
+   *                platforms, the same as |name|.
+   *  - debugPath:  On Windows, the full absolute path of the pdb file for the
+   *                binary. On other platforms, the same as |path|.
+   *  - arch:       On Mac, the name of the architecture that identifies the right
+   *                binary image of a fat binary. Example values are "i386", "x86_64",
+   *                and "x86_64h". (x86_64h is used for binaries that contain
+   *                instructions that are specific to the Intel Haswell microarchitecture.)
+   *                On non-Mac platforms, arch is "".
+   *  - breakpadId: A unique identifier string for this library, as used by breakpad.
    */
-  AString getSharedLibraryInformation();
+  [implicit_jscontext]
+  readonly attribute jsval sharedLibraries;
 
   /**
    * Dump the collected profile to a file.

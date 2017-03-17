@@ -9,13 +9,7 @@ const SERVICE_WORKER = URL_ROOT + "service-workers/empty-sw.js";
 const TAB_URL = URL_ROOT + "service-workers/empty-sw.html";
 
 add_task(function* () {
-  yield new Promise(done => {
-    let options = {"set": [
-      ["dom.serviceWorkers.enabled", true],
-      ["dom.serviceWorkers.testing.enabled", true],
-    ]};
-    SpecialPowers.pushPrefEnv(options, done);
-  });
+  yield enableServiceWorkerDebugging();
 
   let { tab, document } = yield openAboutDebugging("workers");
 

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test content script matching a data: URI</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script>
+"use strict";
+
+add_task(function* test_contentscript_data_uri() {
+  const target = ExtensionTestUtils.loadExtension({
+    files: {
+      "page.html": `<!DOCTYPE html>
+        <meta charset="utf-8">
+        <iframe id="inherited" src="data:text/html;charset=utf-8,inherited"></iframe>
+      `,
+    },
+    background() {
+      browser.test.sendMessage("page", browser.runtime.getURL("page.html"));
+    },
+  });
+
+  const scripts = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webNavigation"],
+      content_scripts: [{
+        all_frames: true,
+        matches: ["<all_urls>"],
+        run_at: "document_start",
+        css: ["all_urls.css"],
+        js: ["all_urls.js"],
+      }],
+    },
+    files: {
+      "all_urls.css": `
+        body { background: yellow; }
+      `,
+      "all_urls.js": function() {
+        document.body.style.color = "red";
+        browser.test.assertTrue(location.protocol !== "data:",
+                                `Matched document not a data URI: ${location.href}`);
+      },
+    },
+    background() {
+      browser.webNavigation.onCompleted.addListener(({url, frameId}) => {
+        browser.test.log(`Document loading complete: ${url}`);
+        if (frameId === 0) {
+          browser.test.sendMessage("tab-ready", url);
+        }
+      });
+    },
+  });
+
+  yield target.startup();
+  yield scripts.startup();
+
+  // Test extension page with a data: iframe.
+  const page = yield target.awaitMessage("page");
+  const win = window.open(page);
+
+  yield scripts.awaitMessage("tab-ready");
+  is(win.location.href, page, "Extension page loaded into a tab");
+  is(win.document.readyState, "complete", "Page finished loading");
+
+  const iframe = win.document.getElementById("inherited").contentWindow;
+  is(iframe.document.readyState, "complete", "iframe finished loading");
+
+  const style1 = iframe.getComputedStyle(iframe.document.body);
+  is(style1.color, "rgb(0, 0, 0)", "iframe text color is unmodified");
+  is(style1.backgroundColor, "rgba(0, 0, 0, 0)", "iframe background unmodified");
+
+  // Test extension tab navigated to a data: URI.
+  const data = "data:text/html;charset=utf-8,also-inherits";
+  win.location.href = data;
+
+  yield scripts.awaitMessage("tab-ready");
+  is(win.location.href, data, "Extension tab navigated to a data: URI");
+  is(win.document.readyState, "complete", "Tab finished loading");
+
+  const style2 = win.getComputedStyle(win.document.body);
+  is(style2.color, "rgb(0, 0, 0)", "Tab text color is unmodified");
+  is(style2.backgroundColor, "rgba(0, 0, 0, 0)", "Tab background unmodified");
+
+  win.close();
+  yield target.unload();
+  yield scripts.unload();
+});
+
+</script>
+
+</body>
+</html>

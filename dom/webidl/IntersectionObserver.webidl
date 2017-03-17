@@ -18,6 +18,8 @@ interface IntersectionObserverEntry {
   [Constant]
   readonly attribute DOMRectReadOnly intersectionRect;
   [Constant]
+  readonly attribute boolean isIntersecting;
+  [Constant]
   readonly attribute double intersectionRatio;
   [Constant]
   readonly attribute Element target;

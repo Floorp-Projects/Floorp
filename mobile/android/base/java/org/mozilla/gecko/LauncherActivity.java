@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.customtabs.CustomTabsIntent;
 
+import org.mozilla.gecko.webapps.WebAppActivity;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.mozglue.SafeIntent;
@@ -30,8 +31,12 @@ public class LauncherActivity extends Activity {
 
         final SafeIntent safeIntent = new SafeIntent(getIntent());
 
+        // Is this web app?
+        if (isWebAppIntent(safeIntent)) {
+            dispatchWebAppIntent();
+
         // If it's not a view intent, it won't be a custom tabs intent either. Just launch!
-        if (!isViewIntentWithURL(safeIntent)) {
+        } else if (!isViewIntentWithURL(safeIntent)) {
             dispatchNormalIntent();
 
         // Is this a custom tabs intent, and are custom tabs enabled?
@@ -83,6 +88,15 @@ public class LauncherActivity extends Activity {
         startActivity(intent);
     }
 
+    private void dispatchWebAppIntent() {
+        Intent intent = new Intent(getIntent());
+        intent.setClassName(getApplicationContext(), WebAppActivity.class.getName());
+
+        filterFlags(intent);
+
+        startActivity(intent);
+    }
+
     private static void filterFlags(Intent intent) {
         // Explicitly remove the new task and clear task flags (Our browser activity is a single
         // task activity and we never want to start a second task here). See bug 1280112.
@@ -102,6 +116,10 @@ public class LauncherActivity extends Activity {
     private static boolean isCustomTabsIntent(@NonNull final SafeIntent safeIntent) {
         return isViewIntentWithURL(safeIntent)
                 && safeIntent.hasExtra(CustomTabsIntent.EXTRA_SESSION);
+    }
+
+    private static boolean isWebAppIntent(@NonNull final SafeIntent safeIntent) {
+        return GeckoApp.ACTION_WEBAPP.equals(safeIntent.getAction());
     }
 
     private boolean isCustomTabsEnabled() {

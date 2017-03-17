@@ -153,6 +153,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "mathml.disabled",
   "media.apple.forcevda",
   "media.clearkey.persistent-license.enabled",
+  "media.cubeb.backend",
   "media.cubeb_latency_msg_frames",
   "media.cubeb_latency_playback_ms",
   "media.decoder-doctor.wmf-disabled-is-failure",

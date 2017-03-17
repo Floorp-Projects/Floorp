@@ -76,7 +76,7 @@ TEST(cubeb, record)
   int r;
   user_state_record stream_state = { false };
 
-  r = cubeb_init(&ctx, "Cubeb record example");
+  r = cubeb_init(&ctx, "Cubeb record example", NULL);
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb library\n");
     ASSERT_EQ(r, CUBEB_OK);

@@ -734,8 +734,9 @@ refill_callback_duplex(cubeb_stream * stm)
     return true;
   }
 
-  LOGV("Duplex callback: input frames: %Iu, output frames: %Iu",
-       stm->linear_input_buffer.length(), output_frames);
+
+  ALOGV("Duplex callback: input frames: %Iu, output frames: %Iu",
+        stm->linear_input_buffer.length(), output_frames);
 
   refill(stm,
          stm->linear_input_buffer.data(),
@@ -770,7 +771,7 @@ refill_callback_input(cubeb_stream * stm)
     return true;
   }
 
-  LOGV("Input callback: input frames: %Iu", stm->linear_input_buffer.length());
+  ALOGV("Input callback: input frames: %Iu", stm->linear_input_buffer.length());
 
   long read = refill(stm,
                      stm->linear_input_buffer.data(),
@@ -811,8 +812,8 @@ refill_callback_output(cubeb_stream * stm)
                     output_buffer,
                     output_frames);
 
-  LOGV("Output callback: output frames requested: %Iu, got %ld",
-       output_frames, got);
+  ALOGV("Output callback: output frames requested: %Iu, got %ld",
+        output_frames, got);
 
   XASSERT(got >= 0);
   XASSERT((unsigned long) got == output_frames || stm->draining);
@@ -1164,6 +1165,12 @@ bool stop_and_join_render_thread(cubeb_stream * stm)
   if (!stm->thread) {
     LOG("No thread present.");
     return true;
+  }
+
+  // If we've already leaked the thread, just return,
+  // there is not much we can do.
+  if (!stm->emergency_bailout.load()) {
+    return false;
   }
 
   BOOL ok = SetEvent(stm->shutdown_event);

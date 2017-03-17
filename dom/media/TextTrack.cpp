@@ -13,6 +13,7 @@
 #include "mozilla/dom/TextTrackRegion.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLTrackElement.h"
+#include "nsGlobalWindow.h"
 
 namespace mozilla {
 namespace dom {
@@ -330,8 +331,13 @@ TextTrack::GetLanguage(nsAString& aLanguage) const
 void
 TextTrack::DispatchAsyncTrustedEvent(const nsString& aEventName)
 {
+  nsPIDOMWindowInner* win = GetOwner();
+  if (!win) {
+    return;
+  }
   RefPtr<TextTrack> self = this;
-  NS_DispatchToMainThread(
+  nsGlobalWindow::Cast(win)->Dispatch(
+    "TextTrack::DispatchAsyncTrustedEvent", TaskCategory::Other,
     NS_NewRunnableFunction([self, aEventName]() {
       self->DispatchTrustedEvent(aEventName);
     })

@@ -230,7 +230,7 @@ GetTargetGeometry(gfxRect *aBBox,
   return NS_OK;
 }
 
-already_AddRefed<SourceSurface>
+mozilla::Pair<DrawResult, RefPtr<SourceSurface>>
 nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
                                 Matrix* patternMatrix,
                                 const Matrix &aContextMatrix,
@@ -253,7 +253,8 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
 
   nsSVGPatternFrame* patternWithChildren = GetPatternWithChildren();
   if (!patternWithChildren) {
-    return nullptr; // Either no kids or a bad reference
+    // Either no kids or a bad reference
+    return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
   }
   nsIFrame* firstKid = patternWithChildren->mFrames.FirstChild();
 
@@ -292,7 +293,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
                                   aSource,
                                   aContextMatrix,
                                   aOverrideBounds))) {
-    return nullptr;
+    return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
   }
 
   // Construct the CTM that we will provide to our children when we
@@ -300,7 +301,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
   gfxMatrix ctm = ConstructCTM(viewBox, patternContentUnits, patternUnits,
                                callerBBox, aContextMatrix, aSource);
   if (ctm.IsSingular()) {
-    return nullptr;
+    return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
   }
 
   if (patternWithChildren->mCTM) {
@@ -314,7 +315,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
   // box for the pattern tile.
   gfxRect bbox = GetPatternRect(patternUnits, callerBBox, aContextMatrix, aSource);
   if (bbox.Width() <= 0.0 || bbox.Height() <= 0.0) {
-    return nullptr;
+    return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
   }
 
   // Get the pattern transform
@@ -327,7 +328,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
       patternTransform *= ToMatrix(userToOuterSVG);
       if (patternTransform.IsSingular()) {
         NS_WARNING("Singular matrix painting non-scaling-stroke");
-        return nullptr;
+        return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
       }
     }
   }
@@ -337,7 +338,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
   *patternMatrix = GetPatternMatrix(patternUnits, patternTransform,
                                     bbox, callerBBox, aContextMatrix);
   if (patternMatrix->IsSingular()) {
-    return nullptr;
+    return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
   }
 
   // Now that we have all of the necessary geometries, we can
@@ -351,7 +352,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
 
   // 0 disables rendering, < 0 is an error
   if (surfaceSize.width <= 0 || surfaceSize.height <= 0) {
-    return nullptr;
+    return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
   }
 
   gfxFloat patternWidth = bbox.Width();
@@ -375,7 +376,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
   RefPtr<DrawTarget> dt =
     aDrawTarget->CreateSimilarDrawTarget(surfaceSize, SurfaceFormat::B8G8R8A8);
   if (!dt || !dt->IsValid()) {
-    return nullptr;
+    return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
   }
   dt->ClearRect(Rect(0, 0, surfaceSize.width, surfaceSize.height));
 
@@ -398,6 +399,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
 
   // Delay checking NS_FRAME_DRAWING_AS_PAINTSERVER bit until here so we can
   // give back a clear surface if there's a loop
+  DrawResult result = DrawResult::SUCCESS;
   if (!(patternWithChildren->GetStateBits() & NS_FRAME_DRAWING_AS_PAINTSERVER)) {
     patternWithChildren->AddStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
     for (nsIFrame* kid = firstKid; kid;
@@ -412,11 +414,10 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
         tm = static_cast<nsSVGElement*>(kid->GetContent())->
                PrependLocalTransformsTo(tm, eUserSpaceToParent);
       }
-      DrawResult result = nsSVGUtils::PaintFrameWithEffects(kid, *gfx, tm);
-      if (result != DrawResult::SUCCESS) {
-        return nullptr;
-      }
+
+      result &= nsSVGUtils::PaintFrameWithEffects(kid, *gfx, tm);
     }
+
     patternWithChildren->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
   }
 
@@ -428,7 +429,8 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
   }
 
   // caller now owns the surface
-  return dt->Snapshot();
+  RefPtr<SourceSurface> surf = dt->Snapshot();
+  return MakePair(result, Move(surf));
 }
 
 /* Will probably need something like this... */
@@ -707,8 +709,7 @@ nsSVGPatternFrame::ConstructCTM(const nsSVGViewBox& aViewBox,
 
 //----------------------------------------------------------------------
 // nsSVGPaintServerFrame methods:
-
-already_AddRefed<gfxPattern>
+mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
 nsSVGPatternFrame::GetPaintServerPattern(nsIFrame *aSource,
                                          const DrawTarget* aDrawTarget,
                                          const gfxMatrix& aContextMatrix,
@@ -718,26 +719,29 @@ nsSVGPatternFrame::GetPaintServerPattern(nsIFrame *aSource,
 {
   if (aGraphicOpacity == 0.0f) {
     RefPtr<gfxPattern> pattern = new gfxPattern(Color());
-    return pattern.forget();
+    return MakePair(DrawResult::SUCCESS, Move(pattern));
   }
 
   // Paint it!
   Matrix pMatrix;
-  RefPtr<SourceSurface> surface =
+  RefPtr<SourceSurface> surface;
+  DrawResult result = DrawResult::SUCCESS;
+  Tie(result, surface) =
     PaintPattern(aDrawTarget, &pMatrix, ToMatrix(aContextMatrix), aSource,
                  aFillOrStroke, aGraphicOpacity, aOverrideBounds);
 
   if (!surface) {
-    return nullptr;
+    return MakePair(result, RefPtr<gfxPattern>());
   }
 
   RefPtr<gfxPattern> pattern = new gfxPattern(surface, pMatrix);
 
-  if (!pattern || pattern->CairoStatus())
-    return nullptr;
+  if (!pattern || pattern->CairoStatus()) {
+    return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<gfxPattern>());
+  }
 
   pattern->SetExtend(ExtendMode::REPEAT);
-  return pattern.forget();
+  return MakePair(result, Move(pattern));
 }
 
 // -------------------------------------------------------------------------

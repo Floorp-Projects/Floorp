@@ -1527,11 +1527,11 @@ HTMLMediaElement::SetVisible(bool aVisible)
   mDecoder->SetForcedHidden(!aVisible);
 }
 
-layers::Image*
+already_AddRefed<layers::Image>
 HTMLMediaElement::GetCurrentImage()
 {
   // Mark the decoder owned by the element as tainted so that the
-  // suspend-vide-decoder is suspended.
+  // suspend-video-decoder is disabled.
   mHasSuspendTaint = true;
   if (mDecoder) {
     mDecoder->SetSuspendTaint(true);
@@ -1544,7 +1544,8 @@ HTMLMediaElement::GetCurrentImage()
   }
 
   AutoLockImage lockImage(container);
-  return lockImage.GetImage();
+  RefPtr<layers::Image> image = lockImage.GetImage();
+  return image.forget();
 }
 
 bool

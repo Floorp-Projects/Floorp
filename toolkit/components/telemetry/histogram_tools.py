@@ -131,8 +131,8 @@ symbol that should guard C/C++ definitions associated with the histogram."""
         }
         table_dispatch(self.kind(), table,
                        lambda k: self._set_nsITelemetry_kind(k))
-        datasets = { 'opt-in': 'DATASET_RELEASE_CHANNEL_OPTIN',
-                     'opt-out': 'DATASET_RELEASE_CHANNEL_OPTOUT' }
+        datasets = {'opt-in': 'DATASET_RELEASE_CHANNEL_OPTIN',
+                    'opt-out': 'DATASET_RELEASE_CHANNEL_OPTOUT'}
         value = definition.get('releaseChannelCollection', 'opt-in')
         if not value in datasets:
             raise DefinitionException, "unknown release channel collection policy for " + name

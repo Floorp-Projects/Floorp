@@ -143,6 +143,17 @@ TableWidget.prototype = {
     }
   },
 
+/**
+ * Is a row currently selected?
+ *
+ * @return {Boolean}
+ *         true or false.
+ */
+  get hasSelectedRow() {
+    return this.columns.get(this.uniqueId) &&
+           this.columns.get(this.uniqueId).selectedRow;
+  },
+
   /**
    * Returns the json object corresponding to the selected row.
    */

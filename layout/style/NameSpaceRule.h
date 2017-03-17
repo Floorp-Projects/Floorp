@@ -10,7 +10,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/css/Rule.h"
+#include "mozilla/dom/CSSNamespaceRule.h"
 
 #include "nsIDOMCSSRule.h"
 
@@ -24,7 +24,7 @@ class nsIAtom;
 namespace mozilla {
 namespace css {
 
-class NameSpaceRule final : public Rule
+class NameSpaceRule final : public dom::CSSNamespaceRule
 {
 public:
   NameSpaceRule(nsIAtom* aPrefix, const nsString& aURLSpec,
@@ -37,28 +37,19 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_NAMESPACE_RULE_IMPL_CID)
 
   NS_DECL_ISUPPORTS_INHERITED
-  virtual bool IsCCLeaf() const override;
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
-  virtual int32_t GetType() const override;
-  using Rule::GetType;
   virtual already_AddRefed<Rule> Clone() const override;
 
-  nsIAtom* GetPrefix() const { return mPrefix; }
-
-  void GetURLSpec(nsString& aURLSpec) const { aURLSpec = mURLSpec; }
+  nsIAtom* GetPrefix() const final { return mPrefix; }
+  void GetURLSpec(nsString& aURLSpec) const final { aURLSpec = mURLSpec; }
 
   // WebIDL interface
-  uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
 
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-    override MOZ_MUST_OVERRIDE;
-
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
   nsCOMPtr<nsIAtom> mPrefix;

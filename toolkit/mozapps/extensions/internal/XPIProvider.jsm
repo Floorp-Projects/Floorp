@@ -103,9 +103,8 @@ const PREF_INSTALL_CACHE              = "extensions.installCache";
 const PREF_XPI_STATE                  = "extensions.xpiState";
 const PREF_BOOTSTRAP_ADDONS           = "extensions.bootstrappedAddons";
 const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
-const PREF_EM_DSS_ENABLED             = "extensions.dss.enabled";
-const PREF_DSS_SWITCHPENDING          = "extensions.dss.switchPending";
-const PREF_DSS_SKIN_TO_SELECT         = "extensions.lastSelectedSkin";
+const PREF_SKIN_SWITCHPENDING         = "extensions.dss.switchPending";
+const PREF_SKIN_TO_SELECT             = "extensions.lastSelectedSkin";
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
 const PREF_EM_UPDATE_URL              = "extensions.update.url";
 const PREF_EM_UPDATE_BACKGROUND_URL   = "extensions.update.background.url";
@@ -3013,21 +3012,21 @@ this.XPIProvider = {
    * Applies any pending theme change to the preferences.
    */
   applyThemeChange() {
-    if (!Preferences.get(PREF_DSS_SWITCHPENDING, false))
+    if (!Preferences.get(PREF_SKIN_SWITCHPENDING, false))
       return;
 
     // Tell the Chrome Registry which Skin to select
     try {
-      this.selectedSkin = Preferences.get(PREF_DSS_SKIN_TO_SELECT);
+      this.selectedSkin = Preferences.get(PREF_SKIN_TO_SELECT);
       Services.prefs.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN,
                                  this.selectedSkin);
-      Services.prefs.clearUserPref(PREF_DSS_SKIN_TO_SELECT);
+      Services.prefs.clearUserPref(PREF_SKIN_TO_SELECT);
       logger.debug("Changed skin to " + this.selectedSkin);
       this.currentSkin = this.selectedSkin;
     } catch (e) {
       logger.error("Error applying theme change", e);
     }
-    Services.prefs.clearUserPref(PREF_DSS_SWITCHPENDING);
+    Services.prefs.clearUserPref(PREF_SKIN_SWITCHPENDING);
   },
 
   /**
@@ -4073,6 +4072,8 @@ this.XPIProvider = {
     let installReason = BOOTSTRAP_REASONS.ADDON_INSTALL;
     let oldAddon = yield new Promise(
                    resolve => XPIDatabase.getVisibleAddonForID(addon.id, resolve));
+
+    let extraParams = {};
     if (oldAddon) {
       if (!oldAddon.bootstrap) {
         logger.warn("Non-restartless Add-on is already installed", addon.id);
@@ -4089,6 +4090,7 @@ this.XPIProvider = {
         // call its uninstall method
         let newVersion = addon.version;
         let oldVersion = oldAddon.version;
+
         if (Services.vc.compare(newVersion, oldVersion) >= 0) {
           installReason = BOOTSTRAP_REASONS.ADDON_UPGRADE;
         } else {
@@ -4096,13 +4098,16 @@ this.XPIProvider = {
         }
         let uninstallReason = installReason;
 
+        extraParams.newVersion = newVersion;
+        extraParams.oldVersion = oldVersion;
+
         if (oldAddon.active) {
           XPIProvider.callBootstrapMethod(oldAddon, existingAddon,
                                           "shutdown", uninstallReason,
-                                          { newVersion });
+                                          extraParams);
         }
         this.callBootstrapMethod(oldAddon, existingAddon,
-                                 "uninstall", uninstallReason, { newVersion });
+                                 "uninstall", uninstallReason, extraParams);
         this.unloadBootstrapScope(existingAddonID);
         flushChromeCaches();
       }
@@ -4113,7 +4118,7 @@ this.XPIProvider = {
     let file = addon._sourceBundle;
 
     XPIProvider._addURIMapping(addon.id, file);
-    XPIProvider.callBootstrapMethod(addon, file, "install", installReason);
+    XPIProvider.callBootstrapMethod(addon, file, "install", installReason, extraParams);
     addon.state = AddonManager.STATE_INSTALLED;
     logger.debug("Install of temporary addon in " + aFile.path + " completed.");
     addon.visible = true;
@@ -4128,7 +4133,7 @@ this.XPIProvider = {
 
     AddonManagerPrivate.callAddonListeners("onInstalling", addon.wrapper,
                                            false);
-    XPIProvider.callBootstrapMethod(addon, file, "startup", installReason);
+    XPIProvider.callBootstrapMethod(addon, file, "startup", installReason, extraParams);
     AddonManagerPrivate.callInstallListeners("onExternalInstall",
                                              null, addon.wrapper,
                                              oldAddon ? oldAddon.wrapper : null,
@@ -4331,14 +4336,14 @@ this.XPIProvider = {
     }
 
     if (aPendingRestart) {
-      Services.prefs.setBoolPref(PREF_DSS_SWITCHPENDING, true);
-      Services.prefs.setCharPref(PREF_DSS_SKIN_TO_SELECT, newSkin);
+      Services.prefs.setBoolPref(PREF_SKIN_SWITCHPENDING, true);
+      Services.prefs.setCharPref(PREF_SKIN_TO_SELECT, newSkin);
     } else if (newSkin == this.currentSkin) {
       try {
-        Services.prefs.clearUserPref(PREF_DSS_SWITCHPENDING);
+        Services.prefs.clearUserPref(PREF_SKIN_SWITCHPENDING);
       } catch (e) { }
       try {
-        Services.prefs.clearUserPref(PREF_DSS_SKIN_TO_SELECT);
+        Services.prefs.clearUserPref(PREF_SKIN_TO_SELECT);
       } catch (e) { }
     } else {
       Services.prefs.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, newSkin);
@@ -4418,8 +4423,8 @@ this.XPIProvider = {
         Services.prefs.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN,
                                    addon.internalName);
         this.currentSkin = this.selectedSkin = addon.internalName;
-        Preferences.reset(PREF_DSS_SKIN_TO_SELECT);
-        Preferences.reset(PREF_DSS_SWITCHPENDING);
+        Preferences.reset(PREF_SKIN_TO_SELECT);
+        Preferences.reset(PREF_SKIN_SWITCHPENDING);
       } else {
         logger.warn("Attempting to activate an already active default theme");
       }
@@ -4570,10 +4575,6 @@ this.XPIProvider = {
         let theme = XPIDatabase.getVisibleAddonForInternalName(this.currentSkin);
         return !theme || this.disableRequiresRestart(theme);
       }
-      // If dynamic theme switching is enabled then switching themes does not
-      // require a restart
-      if (Preferences.get(PREF_EM_DSS_ENABLED))
-        return false;
 
       // If the theme is already the theme in use then no restart is necessary.
       // This covers the case where the default theme is in use but a
@@ -4610,11 +4611,6 @@ this.XPIProvider = {
       return false;
 
     if (aAddon.type == "theme") {
-      // If dynamic theme switching is enabled then switching themes does not
-      // require a restart
-      if (Preferences.get(PREF_EM_DSS_ENABLED))
-        return false;
-
       // Non-default themes always require a restart to disable since it will
       // be switching from one theme to another or to the default theme and a
       // lightweight theme.
@@ -7543,7 +7539,7 @@ AddonWrapper.prototype = {
     }
 
     if (addon.inDatabase) {
-      let theme = isTheme(addon.type)
+      let theme = isTheme(addon.type);
       if (theme && val) {
         if (addon.internalName == XPIProvider.defaultSkin)
           throw new Error("Cannot disable the default theme");

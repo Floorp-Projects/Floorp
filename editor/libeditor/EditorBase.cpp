@@ -40,7 +40,7 @@
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc.
-#include "nsAString.h"                  // for nsAString_internal::Length, etc.
+#include "nsAString.h"                  // for nsAString::Length, etc.
 #include "nsCCUncollectableMarker.h"    // for nsCCUncollectableMarker
 #include "nsCaret.h"                    // for nsCaret
 #include "nsCaseTreatment.h"
@@ -1586,11 +1586,10 @@ EditorBase::DeleteNode(nsINode* aNode)
     }
   }
 
-  RefPtr<DeleteNodeTransaction> transaction;
-  nsresult rv = CreateTxnForDeleteNode(aNode, getter_AddRefs(transaction));
-  if (NS_SUCCEEDED(rv))  {
-    rv = DoTransaction(transaction);
-  }
+  RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
+    CreateTxnForDeleteNode(aNode);
+  nsresult rv = deleteNodeTransaction ? DoTransaction(deleteNodeTransaction) :
+                                        NS_ERROR_FAILURE;
 
   {
     AutoActionListenerArray listeners(mActionListeners);
@@ -4062,54 +4061,58 @@ EditorBase::DeleteSelectionImpl(EDirection aAction,
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
-  RefPtr<EditAggregateTransaction> transaction;
+
+  RefPtr<EditAggregateTransaction> deleteSelectionTransaction;
   nsCOMPtr<nsINode> deleteNode;
   int32_t deleteCharOffset = 0, deleteCharLength = 0;
-  nsresult rv = CreateTxnForDeleteSelection(aAction,
-                                            getter_AddRefs(transaction),
-                                            getter_AddRefs(deleteNode),
-                                            &deleteCharOffset,
-                                            &deleteCharLength);
-  nsCOMPtr<nsIDOMCharacterData> deleteCharData(do_QueryInterface(deleteNode));
+  if (!selection->Collapsed() || aAction != eNone) {
+    deleteSelectionTransaction =
+      CreateTxnForDeleteSelection(aAction,
+                                  getter_AddRefs(deleteNode),
+                                  &deleteCharOffset,
+                                  &deleteCharLength);
+    if (NS_WARN_IF(!deleteSelectionTransaction)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
 
-  if (NS_SUCCEEDED(rv)) {
-    AutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
-    // Notify nsIEditActionListener::WillDelete[Selection|Text|Node]
-    {
-      AutoActionListenerArray listeners(mActionListeners);
-      if (!deleteNode) {
-        for (auto& listener : listeners) {
-          listener->WillDeleteSelection(selection);
-        }
-      } else if (deleteCharData) {
-        for (auto& listener : listeners) {
-          listener->WillDeleteText(deleteCharData, deleteCharOffset, 1);
-        }
-      } else {
-        for (auto& listener : listeners) {
-          listener->WillDeleteNode(deleteNode->AsDOMNode());
-        }
+  nsCOMPtr<nsIDOMCharacterData> deleteCharData(do_QueryInterface(deleteNode));
+  AutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
+  // Notify nsIEditActionListener::WillDelete[Selection|Text|Node]
+  {
+    AutoActionListenerArray listeners(mActionListeners);
+    if (!deleteNode) {
+      for (auto& listener : listeners) {
+        listener->WillDeleteSelection(selection);
+      }
+    } else if (deleteCharData) {
+      for (auto& listener : listeners) {
+        listener->WillDeleteText(deleteCharData, deleteCharOffset, 1);
+      }
+    } else {
+      for (auto& listener : listeners) {
+        listener->WillDeleteNode(deleteNode->AsDOMNode());
       }
     }
+  }
 
-    // Delete the specified amount
-    rv = DoTransaction(transaction);
+  // Delete the specified amount
+  nsresult rv = DoTransaction(deleteSelectionTransaction);
 
-    // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
-    {
-      AutoActionListenerArray listeners(mActionListeners);
-      if (!deleteNode) {
-        for (auto& listener : mActionListeners) {
-          listener->DidDeleteSelection(selection);
-        }
-      } else if (deleteCharData) {
-        for (auto& listener : mActionListeners) {
-          listener->DidDeleteText(deleteCharData, deleteCharOffset, 1, rv);
-        }
-      } else {
-        for (auto& listener : mActionListeners) {
-          listener->DidDeleteNode(deleteNode->AsDOMNode(), rv);
-        }
+  // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
+  {
+    AutoActionListenerArray listeners(mActionListeners);
+    if (!deleteNode) {
+      for (auto& listener : mActionListeners) {
+        listener->DidDeleteSelection(selection);
+      }
+    } else if (deleteCharData) {
+      for (auto& listener : mActionListeners) {
+        listener->DidDeleteText(deleteCharData, deleteCharOffset, 1, rv);
+      }
+    } else {
+      for (auto& listener : mActionListeners) {
+        listener->DidDeleteNode(deleteNode->AsDOMNode(), rv);
       }
     }
   }
@@ -4291,12 +4294,11 @@ EditorBase::CreateTxnForInsertNode(nsIContent& aNode,
   return transaction.forget();
 }
 
-nsresult
-EditorBase::CreateTxnForDeleteNode(nsINode* aNode,
-                                   DeleteNodeTransaction** aTransaction)
+already_AddRefed<DeleteNodeTransaction>
+EditorBase::CreateTxnForDeleteNode(nsINode* aNode)
 {
   if (NS_WARN_IF(!aNode)) {
-    return NS_ERROR_NULL_POINTER;
+    return nullptr;
   }
 
   RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
@@ -4304,11 +4306,9 @@ EditorBase::CreateTxnForDeleteNode(nsINode* aNode,
   // This should be OK because if currently it cannot delete the node,
   // it should never be able to undo/redo.
   if (!deleteNodeTransaction->CanDoIt()) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
-  deleteNodeTransaction.forget(aTransaction);
-
-  return NS_OK;
+  return deleteNodeTransaction.forget();
 }
 
 already_AddRefed<CompositionTransaction>
@@ -4343,22 +4343,20 @@ EditorBase::CreateTxnForRemoveStyleSheet(StyleSheet* aSheet)
   return transaction.forget();
 }
 
-nsresult
+already_AddRefed<EditAggregateTransaction>
 EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
-                                        EditAggregateTransaction** aTransaction,
-                                        nsINode** aNode,
+                                        nsINode** aRemovingNode,
                                         int32_t* aOffset,
                                         int32_t* aLength)
 {
-  MOZ_ASSERT(aTransaction);
-  *aTransaction = nullptr;
-
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_STATE(selection);
+  if (NS_WARN_IF(!selection)) {
+    return nullptr;
+  }
 
   // Check whether the selection is collapsed and we should do nothing:
-  if (selection->Collapsed() && aAction == eNone) {
-    return NS_OK;
+  if (NS_WARN_IF(selection->Collapsed() && aAction == eNone)) {
+    return nullptr;
   }
 
   // allocate the out-param transaction
@@ -4367,7 +4365,9 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
 
   for (uint32_t rangeIdx = 0; rangeIdx < selection->RangeCount(); ++rangeIdx) {
     RefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
-    NS_ENSURE_STATE(range);
+    if (NS_WARN_IF(!range)) {
+      return nullptr;
+    }
 
     // Same with range as with selection; if it is collapsed and action
     // is eNone, do nothing.
@@ -4379,16 +4379,22 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
     } else if (aAction != eNone) {
       // we have an insertion point.  delete the thing in front of it or
       // behind it, depending on aAction
-      nsresult rv = CreateTxnForDeleteInsertionPoint(range, aAction,
-                                                     aggregateTransaction,
-                                                     aNode, aOffset, aLength);
-      NS_ENSURE_SUCCESS(rv, rv);
+      // XXX Odd, when there are two or more ranges, this returns the last
+      //     range information with aRemovingNode, aOffset and aLength.
+      RefPtr<EditTransactionBase> deleteRangeTransaction =
+        CreateTxnForDeleteRange(range, aAction,
+                                aRemovingNode, aOffset, aLength);
+      // XXX When there are two or more ranges and at least one of them is
+      //     not editable, deleteRangeTransaction may be nullptr.
+      //     In such case, should we stop removing other ranges too?
+      if (NS_WARN_IF(!deleteRangeTransaction)) {
+        return nullptr;
+      }
+      aggregateTransaction->AppendChild(deleteRangeTransaction);
     }
   }
 
-  aggregateTransaction.forget(aTransaction);
-
-  return NS_OK;
+  return aggregateTransaction.forget();
 }
 
 already_AddRefed<DeleteTextTransaction>
@@ -4427,22 +4433,22 @@ EditorBase::CreateTxnForDeleteCharacter(nsGenericDOMDataNode& aData,
 
 //XXX: currently, this doesn't handle edge conditions because GetNext/GetPrior
 //are not implemented
-nsresult
-EditorBase::CreateTxnForDeleteInsertionPoint(
-              nsRange* aRange,
-              EDirection aAction,
-              EditAggregateTransaction* aTransaction,
-              nsINode** aNode,
-              int32_t* aOffset,
-              int32_t* aLength)
+already_AddRefed<EditTransactionBase>
+EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
+                                    EDirection aAction,
+                                    nsINode** aRemovingNode,
+                                    int32_t* aOffset,
+                                    int32_t* aLength)
 {
   MOZ_ASSERT(aAction != eNone);
 
   // get the node and offset of the insertion point
-  nsCOMPtr<nsINode> node = aRange->GetStartParent();
-  NS_ENSURE_STATE(node);
+  nsCOMPtr<nsINode> node = aRangeToDelete->GetStartParent();
+  if (NS_WARN_IF(!node)) {
+    return nullptr;
+  }
 
-  int32_t offset = aRange->StartOffset();
+  int32_t offset = aRangeToDelete->StartOffset();
 
   // determine if the insertion point is at the beginning, middle, or end of
   // the node
@@ -4461,7 +4467,9 @@ EditorBase::CreateTxnForDeleteInsertionPoint(
     // we're backspacing from the beginning of the node.  Delete the first
     // thing to our left
     nsCOMPtr<nsIContent> priorNode = GetPriorNode(node, true);
-    NS_ENSURE_STATE(priorNode);
+    if (NS_WARN_IF(!priorNode)) {
+      return nullptr;
+    }
 
     // there is a priorNode, so delete its last child (if chardata, delete the
     // last char). if it has no children, delete it
@@ -4470,34 +4478,37 @@ EditorBase::CreateTxnForDeleteInsertionPoint(
         static_cast<nsGenericDOMDataNode*>(priorNode.get());
       uint32_t length = priorNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
-      NS_ENSURE_STATE(length);
-      RefPtr<DeleteTextTransaction> transaction =
+      if (NS_WARN_IF(!length)) {
+        return nullptr;
+      }
+      RefPtr<DeleteTextTransaction> deleteTextTransaction =
         CreateTxnForDeleteCharacter(*priorNodeAsCharData, length, ePrevious);
-      NS_ENSURE_STATE(transaction);
-
-      *aOffset = transaction->GetOffset();
-      *aLength = transaction->GetNumCharsToDelete();
-      aTransaction->AppendChild(transaction);
-    } else {
-      // priorNode is not chardata, so tell its parent to delete it
-      RefPtr<DeleteNodeTransaction> transaction;
-      nsresult rv =
-        CreateTxnForDeleteNode(priorNode, getter_AddRefs(transaction));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      aTransaction->AppendChild(transaction);
+      if (NS_WARN_IF(!deleteTextTransaction)) {
+        return nullptr;
+      }
+      *aOffset = deleteTextTransaction->GetOffset();
+      *aLength = deleteTextTransaction->GetNumCharsToDelete();
+      priorNode.forget(aRemovingNode);
+      return deleteTextTransaction.forget();
     }
 
-    NS_ADDREF(*aNode = priorNode);
-
-    return NS_OK;
+    // priorNode is not chardata, so tell its parent to delete it
+    RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
+      CreateTxnForDeleteNode(priorNode);
+    if (NS_WARN_IF(!deleteNodeTransaction)) {
+      return nullptr;
+    }
+    priorNode.forget(aRemovingNode);
+    return deleteNodeTransaction.forget();
   }
 
   if (aAction == eNext && isLast) {
     // we're deleting from the end of the node.  Delete the first thing to our
     // right
     nsCOMPtr<nsIContent> nextNode = GetNextNode(node, true);
-    NS_ENSURE_STATE(nextNode);
+    if (NS_WARN_IF(!nextNode)) {
+      return nullptr;
+    }
 
     // there is a nextNode, so delete its first child (if chardata, delete the
     // first char). if it has no children, delete it
@@ -4506,93 +4517,96 @@ EditorBase::CreateTxnForDeleteInsertionPoint(
         static_cast<nsGenericDOMDataNode*>(nextNode.get());
       uint32_t length = nextNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
-      NS_ENSURE_STATE(length);
-      RefPtr<DeleteTextTransaction> transaction =
+      if (NS_WARN_IF(!length)) {
+        return nullptr;
+      }
+      RefPtr<DeleteTextTransaction> deleteTextTransaction =
         CreateTxnForDeleteCharacter(*nextNodeAsCharData, 0, eNext);
-      NS_ENSURE_STATE(transaction);
-
-      *aOffset = transaction->GetOffset();
-      *aLength = transaction->GetNumCharsToDelete();
-      aTransaction->AppendChild(transaction);
-    } else {
-      // nextNode is not chardata, so tell its parent to delete it
-      RefPtr<DeleteNodeTransaction> transaction;
-      nsresult rv =
-        CreateTxnForDeleteNode(nextNode, getter_AddRefs(transaction));
-      NS_ENSURE_SUCCESS(rv, rv);
-      aTransaction->AppendChild(transaction);
+      if (NS_WARN_IF(!deleteTextTransaction)) {
+        return nullptr;
+      }
+      *aOffset = deleteTextTransaction->GetOffset();
+      *aLength = deleteTextTransaction->GetNumCharsToDelete();
+      nextNode.forget(aRemovingNode);
+      return deleteTextTransaction.forget();
     }
 
-    NS_ADDREF(*aNode = nextNode);
-
-    return NS_OK;
+    // nextNode is not chardata, so tell its parent to delete it
+    RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
+      CreateTxnForDeleteNode(nextNode);
+    if (NS_WARN_IF(!deleteNodeTransaction)) {
+      return nullptr;
+    }
+    nextNode.forget(aRemovingNode);
+    return deleteNodeTransaction.forget();
   }
 
   if (node->IsNodeOfType(nsINode::eDATA_NODE)) {
     RefPtr<nsGenericDOMDataNode> nodeAsCharData =
       static_cast<nsGenericDOMDataNode*>(node.get());
     // we have chardata, so delete a char at the proper offset
-    RefPtr<DeleteTextTransaction> transaction =
+    RefPtr<DeleteTextTransaction> deleteTextTransaction =
       CreateTxnForDeleteCharacter(*nodeAsCharData, offset, aAction);
-    NS_ENSURE_STATE(transaction);
-
-    aTransaction->AppendChild(transaction);
-    NS_ADDREF(*aNode = node);
-    *aOffset = transaction->GetOffset();
-    *aLength = transaction->GetNumCharsToDelete();
-  } else {
-    // we're either deleting a node or chardata, need to dig into the next/prev
-    // node to find out
-    nsCOMPtr<nsINode> selectedNode;
-    if (aAction == ePrevious) {
-      selectedNode = GetPriorNode(node, offset, true);
-    } else if (aAction == eNext) {
-      selectedNode = GetNextNode(node, offset, true);
+    if (NS_WARN_IF(!deleteTextTransaction)) {
+      return nullptr;
     }
-
-    while (selectedNode &&
-           selectedNode->IsNodeOfType(nsINode::eDATA_NODE) &&
-           !selectedNode->Length()) {
-      // Can't delete an empty chardata node (bug 762183)
-      if (aAction == ePrevious) {
-        selectedNode = GetPriorNode(selectedNode, true);
-      } else if (aAction == eNext) {
-        selectedNode = GetNextNode(selectedNode, true);
-      }
-    }
-    NS_ENSURE_STATE(selectedNode);
-
-    if (selectedNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-      RefPtr<nsGenericDOMDataNode> selectedNodeAsCharData =
-        static_cast<nsGenericDOMDataNode*>(selectedNode.get());
-      // we are deleting from a chardata node, so do a character deletion
-      uint32_t position = 0;
-      if (aAction == ePrevious) {
-        position = selectedNode->Length();
-      }
-      RefPtr<DeleteTextTransaction> deleteTextTransaction =
-        CreateTxnForDeleteCharacter(*selectedNodeAsCharData, position,
-                                    aAction);
-      NS_ENSURE_TRUE(deleteTextTransaction, NS_ERROR_NULL_POINTER);
-
-      aTransaction->AppendChild(deleteTextTransaction);
-      *aOffset = deleteTextTransaction->GetOffset();
-      *aLength = deleteTextTransaction->GetNumCharsToDelete();
-    } else {
-      RefPtr<DeleteNodeTransaction> deleteNodeTransaction;
-      nsresult rv =
-        CreateTxnForDeleteNode(selectedNode,
-                               getter_AddRefs(deleteNodeTransaction));
-      NS_ENSURE_SUCCESS(rv, rv);
-      NS_ENSURE_TRUE(deleteNodeTransaction, NS_ERROR_NULL_POINTER);
-
-      aTransaction->AppendChild(deleteNodeTransaction);
-    }
-
-    NS_ADDREF(*aNode = selectedNode);
+    *aOffset = deleteTextTransaction->GetOffset();
+    *aLength = deleteTextTransaction->GetNumCharsToDelete();
+    node.forget(aRemovingNode);
+    return deleteTextTransaction.forget();
   }
 
-  return NS_OK;
+  // we're either deleting a node or chardata, need to dig into the next/prev
+  // node to find out
+  nsCOMPtr<nsINode> selectedNode;
+  if (aAction == ePrevious) {
+    selectedNode = GetPriorNode(node, offset, true);
+  } else if (aAction == eNext) {
+    selectedNode = GetNextNode(node, offset, true);
+  }
+
+  while (selectedNode &&
+         selectedNode->IsNodeOfType(nsINode::eDATA_NODE) &&
+         !selectedNode->Length()) {
+    // Can't delete an empty chardata node (bug 762183)
+    if (aAction == ePrevious) {
+      selectedNode = GetPriorNode(selectedNode, true);
+    } else if (aAction == eNext) {
+      selectedNode = GetNextNode(selectedNode, true);
+    }
+  }
+
+  if (NS_WARN_IF(!selectedNode)) {
+    return nullptr;
+  }
+
+  if (selectedNode->IsNodeOfType(nsINode::eDATA_NODE)) {
+    RefPtr<nsGenericDOMDataNode> selectedNodeAsCharData =
+      static_cast<nsGenericDOMDataNode*>(selectedNode.get());
+    // we are deleting from a chardata node, so do a character deletion
+    uint32_t position = 0;
+    if (aAction == ePrevious) {
+      position = selectedNode->Length();
+    }
+    RefPtr<DeleteTextTransaction> deleteTextTransaction =
+      CreateTxnForDeleteCharacter(*selectedNodeAsCharData, position,
+                                  aAction);
+    if (NS_WARN_IF(!deleteTextTransaction)) {
+      return nullptr;
+    }
+    *aOffset = deleteTextTransaction->GetOffset();
+    *aLength = deleteTextTransaction->GetNumCharsToDelete();
+    selectedNode.forget(aRemovingNode);
+    return deleteTextTransaction.forget();
+  }
+
+  RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
+    CreateTxnForDeleteNode(selectedNode);
+  if (NS_WARN_IF(!deleteNodeTransaction)) {
+    return nullptr;
+  }
+  selectedNode.forget(aRemovingNode);
+  return deleteNodeTransaction.forget();
 }
 
 nsresult

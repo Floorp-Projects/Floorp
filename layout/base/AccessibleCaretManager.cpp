@@ -98,8 +98,6 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
   mFirstCaret = MakeUnique<AccessibleCaret>(mPresShell);
   mSecondCaret = MakeUnique<AccessibleCaret>(mPresShell);
 
-  mCaretTimeoutTimer = do_CreateInstance("@mozilla.org/timer;1");
-
   static bool addedPrefs = false;
   if (!addedPrefs) {
     Preferences::AddBoolVarCache(&sSelectionBarEnabled,
@@ -131,8 +129,6 @@ AccessibleCaretManager::~AccessibleCaretManager()
 void
 AccessibleCaretManager::Terminate()
 {
-  CancelCaretTimeoutTimer();
-  mCaretTimeoutTimer = nullptr;
   mFirstCaret = nullptr;
   mSecondCaret = nullptr;
   mActiveCaret = nullptr;
@@ -219,7 +215,6 @@ AccessibleCaretManager::HideCarets()
     mFirstCaret->SetAppearance(Appearance::None);
     mSecondCaret->SetAppearance(Appearance::None);
     DispatchCaretStateChangedEvent(CaretChangedReason::Visibilitychange);
-    CancelCaretTimeoutTimer();
   }
 }
 
@@ -336,8 +331,6 @@ AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHintSet aHints)
 
   mFirstCaret->SetSelectionBarEnabled(false);
   mSecondCaret->SetAppearance(Appearance::None);
-
-  LaunchCaretTimeoutTimer();
 
   if (!aHints.contains(UpdateCaretsHint::DispatchNoEvent) &&
       !mActiveCaret) {
@@ -501,7 +494,6 @@ AccessibleCaretManager::PressCaret(const nsPoint& aPoint,
       mActiveCaret->LogicalPosition().y - aPoint.y;
     SetSelectionDragState(true);
     DispatchCaretStateChangedEvent(CaretChangedReason::Presscaret);
-    CancelCaretTimeoutTimer();
     rv = NS_OK;
   }
 
@@ -528,7 +520,6 @@ AccessibleCaretManager::ReleaseCaret()
   mActiveCaret = nullptr;
   SetSelectionDragState(false);
   DispatchCaretStateChangedEvent(CaretChangedReason::Releasecaret);
-  LaunchCaretTimeoutTimer();
   return NS_OK;
 }
 
@@ -688,7 +679,7 @@ AccessibleCaretManager::OnScrollEnd()
 
   if (GetCaretMode() == CaretMode::Cursor) {
     if (!mFirstCaret->IsLogicallyVisible()) {
-      // If the caret is hidden (Appearance::None) due to timeout or blur, no
+      // If the caret is hidden (Appearance::None) due to blur, no
       // need to update it.
       return;
     }
@@ -1380,48 +1371,6 @@ AccessibleCaretManager::AdjustDragBoundary(const nsPoint& aPoint) const
   }
 
   return adjustedPoint;
-}
-
-uint32_t
-AccessibleCaretManager::CaretTimeoutMs() const
-{
-  static bool added = false;
-  static uint32_t caretTimeoutMs = 0;
-
-  if (!added) {
-    Preferences::AddUintVarCache(&caretTimeoutMs,
-                                 "layout.accessiblecaret.timeout_ms");
-    added = true;
-  }
-
-  return caretTimeoutMs;
-}
-
-void
-AccessibleCaretManager::LaunchCaretTimeoutTimer()
-{
-  if (!mPresShell || !mCaretTimeoutTimer || CaretTimeoutMs() == 0 ||
-      GetCaretMode() != CaretMode::Cursor || mActiveCaret) {
-    return;
-  }
-
-  nsTimerCallbackFunc callback = [](nsITimer* aTimer, void* aClosure) {
-    auto self = static_cast<AccessibleCaretManager*>(aClosure);
-    if (self->GetCaretMode() == CaretMode::Cursor) {
-      self->HideCarets();
-    }
-  };
-
-  mCaretTimeoutTimer->InitWithFuncCallback(callback, this, CaretTimeoutMs(),
-                                           nsITimer::TYPE_ONE_SHOT);
-}
-
-void
-AccessibleCaretManager::CancelCaretTimeoutTimer()
-{
-  if (mCaretTimeoutTimer) {
-    mCaretTimeoutTimer->Cancel();
-  }
 }
 
 void

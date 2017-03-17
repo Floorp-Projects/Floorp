@@ -253,5 +253,11 @@ GetFilesTaskParent::IOWork()
   return NS_OK;
 }
 
+nsresult
+GetFilesTaskParent::GetTargetPath(nsAString& aPath) const
+{
+  return mTargetPath->GetPath(aPath);
+}
+
 } // namespace dom
 } // namespace mozilla

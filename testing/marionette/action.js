@@ -698,11 +698,11 @@ action.Action = class {
         item.origin = action.PointerOrigin.get(actionItem.origin);
         item.x = actionItem.x;
         if (typeof item.x != "undefined") {
-          assert.positiveInteger(item.x, error.pprint`Expected 'x' (${item.x}) to be >= 0`);
+          assert.integer(item.x, error.pprint`Expected 'x' (${item.x}) to be an Integer`);
         }
         item.y = actionItem.y;
         if (typeof item.y != "undefined") {
-          assert.positiveInteger(item.y, error.pprint`Expected 'y' (${item.y}) to be >= 0`);
+          assert.integer(item.y, error.pprint`Expected 'y' (${item.y}) to be an Integer`);
         }
         break;
 
@@ -1333,8 +1333,8 @@ function capitalize(str) {
 }
 
 function inViewPort(x, y, win) {
-  assert.number(x);
-  assert.number(y);
+  assert.number(x, `Expected x to be finite number`);
+  assert.number(y, `Expected y to be finite number`);
   // Viewport includes scrollbars if rendered.
   return !(x < 0 || y < 0 || x > win.innerWidth || y > win.innerHeight);
 }

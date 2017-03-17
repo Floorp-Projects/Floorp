@@ -9,6 +9,7 @@ fuzzy-if(OSX==1010,1,10) == dynamic-fieldset-01b.html dynamic-fieldset-01-ref.ht
 fuzzy-if(OSX==1010,1,10) == dynamic-restyle-01.html dynamic-restyle-01-ref.html
 fuzzy-if(OSX==1010,1,10) == dynamic-table-cell-01a.html dynamic-table-cell-01-ref.html
 fuzzy-if(OSX==1010,1,10) == dynamic-table-cell-01b.html dynamic-table-cell-01-ref.html
+== dynamic-table-cell-indent.html dynamic-table-cell-indent-ref.html
 fuzzy-if(OSX==1010,1,10) == floated-01.html floated-01-ref.html
 fuzzy-if(OSX==1010,1,10) == images-01.html images-01-ref.html
 fuzzy-if(OSX==1010,1,10) == positioned-01.html positioned-01-ref.html

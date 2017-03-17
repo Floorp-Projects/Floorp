@@ -505,9 +505,10 @@ EffectCompositor::GetServoAnimationRule(const dom::Element* aElement,
   // If multiple animations affect the same property, animations with higher
   // composite order (priority) override or add or animations with lower
   // priority.
-  // stylo: we don't support animations on compositor now, so propertiesToSkip
-  // is an empty set.
-  const nsCSSPropertyIDSet propertiesToSkip;
+  const nsCSSPropertyIDSet propertiesToSkip =
+    aCascadeLevel == CascadeLevel::Animations
+      ? effectSet->PropertiesForAnimationsLevel().Inverse()
+      : effectSet->PropertiesForAnimationsLevel();
   for (KeyframeEffectReadOnly* effect : sortedEffectList) {
     effect->GetAnimation()->ComposeStyle(animRule, propertiesToSkip);
   }
@@ -686,6 +687,22 @@ EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
 }
 
 /* static */ void
+EffectCompositor::MaybeUpdateCascadeResults(dom::Element* aElement,
+                                            CSSPseudoElementType aPseudoType)
+{
+  EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
+  MOZ_ASSERT(effects);
+  if (!effects->CascadeNeedsUpdate()) {
+    return;
+  }
+
+  // FIXME: Implement the rule node traversal for stylo in Bug 1334036.
+  UpdateCascadeResults(*effects, aElement, aPseudoType, nullptr);
+
+  MOZ_ASSERT(!effects->CascadeNeedsUpdate(), "Failed to update cascade state");
+}
+
+/* static */ void
 EffectCompositor::UpdateCascadeResults(Element* aElement,
                                        CSSPseudoElementType aPseudoType,
                                        nsStyleContext* aStyleContext)
@@ -764,7 +781,7 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
   // priority except properties in propertiesToSkip.
   const nsCSSPropertyIDSet& propertiesToSkip =
     aCascadeLevel == CascadeLevel::Animations
-    ? effects->PropertiesForAnimationsLevel().Invert()
+    ? effects->PropertiesForAnimationsLevel().Inverse()
     : effects->PropertiesForAnimationsLevel();
   for (KeyframeEffectReadOnly* effect : sortedEffectList) {
     effect->GetAnimation()->WillComposeStyle();
@@ -837,6 +854,10 @@ EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
   // cascade applies.
   nsCSSPropertyIDSet overriddenProperties;
   if (aStyleContext) {
+    // FIXME: Bug 1334036 (OMTA) will implement a FFI to get the properties
+    // overriding animation.
+    MOZ_ASSERT(!aStyleContext->StyleSource().IsServoComputedValues(),
+               "stylo: Not support get properties overriding animation yet.");
     GetOverriddenProperties(aStyleContext, aEffectSet, overriddenProperties);
   }
 
@@ -976,6 +997,8 @@ EffectCompositor::PreTraverse()
         continue;
       }
 
+      MaybeUpdateCascadeResults(target.mElement, target.mPseudoType);
+
       for (KeyframeEffectReadOnly* effect : *effects) {
         effect->GetAnimation()->WillComposeStyle();
       }
@@ -996,8 +1019,8 @@ EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
 
   bool found = false;
   if (aPseudoTagOrNull &&
-      aPseudoTagOrNull != nsGkAtoms::cssPseudoElementBeforeProperty &&
-      aPseudoTagOrNull != nsGkAtoms::cssPseudoElementAfterProperty) {
+      aPseudoTagOrNull != nsCSSPseudoElements::before &&
+      aPseudoTagOrNull != nsCSSPseudoElements::after) {
     return found;
   }
 
@@ -1018,6 +1041,8 @@ EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
 
     EffectSet* effects = EffectSet::GetEffectSet(aElement, pseudoType);
     if (effects) {
+      MaybeUpdateCascadeResults(aElement, pseudoType);
+
       for (KeyframeEffectReadOnly* effect : *effects) {
         effect->GetAnimation()->WillComposeStyle();
       }

@@ -420,9 +420,14 @@ RasterImage::WillDrawOpaqueNow()
 }
 
 void
-RasterImage::OnSurfaceDiscarded()
+RasterImage::OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey)
 {
   MOZ_ASSERT(mProgressTracker);
+
+  if (mAnimationState && aSurfaceKey.Playback() == PlaybackType::eAnimated) {
+    MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
+    mAnimationState->SetDiscarded(true);
+  }
 
   NS_DispatchToMainThread(NewRunnableMethod("ProgressTracker::OnDiscard",
                                             mProgressTracker, &ProgressTracker::OnDiscard));
@@ -1028,6 +1033,10 @@ RasterImage::Discard()
   // Delete all the decoded frames.
   SurfaceCache::RemoveImage(ImageKey(this));
 
+  if (mAnimationState) {
+    mAnimationState->SetDiscarded(true);
+  }
+
   // Notify that we discarded.
   if (mProgressTracker) {
     mProgressTracker->OnDiscard();
@@ -1194,6 +1203,7 @@ RasterImage::Decode(const IntSize& aSize,
   // Create a decoder.
   RefPtr<IDecodingTask> task;
   if (mAnimationState && aPlaybackType == PlaybackType::eAnimated) {
+    mAnimationState->SetDiscarded(false);
     task = DecoderFactory::CreateAnimationDecoder(mDecoderType, WrapNotNull(this),
                                                   mSourceBuffer, mSize,
                                                   decoderFlags, surfaceFlags);

@@ -1701,10 +1701,10 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
       return NS_ERROR_INVALID_ARG;
     }
 
-    if (mediaAttrs.HasAttribute(SdpAttribute::kSetupAttribute) &&
+    if (mediaAttrs.HasAttribute(SdpAttribute::kSetupAttribute, true) &&
         mediaAttrs.GetSetup().mRole == SdpSetupAttribute::kHoldconn) {
       JSEP_SET_ERROR("Description has illegal setup attribute "
-                     "\"holdconn\" at level "
+                     "\"holdconn\" in m-section at level "
                      << i);
       return NS_ERROR_INVALID_ARG;
     }
@@ -1763,9 +1763,12 @@ JsepSessionImpl::SetRemoteDescriptionOffer(UniquePtr<Sdp> offer)
 {
   MOZ_ASSERT(mState == kJsepStateStable);
 
+  nsresult rv = ValidateOffer(*offer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // TODO(bug 1095780): Note that we create remote tracks even when
   // They contain only codecs we can't negotiate or other craziness.
-  nsresult rv = SetRemoteTracksFromDescription(offer.get());
+  rv = SetRemoteTracksFromDescription(offer.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   mPendingRemoteDescription = Move(offer);
@@ -1989,6 +1992,26 @@ JsepSessionImpl::ValidateRemoteDescription(const Sdp& description)
 }
 
 nsresult
+JsepSessionImpl::ValidateOffer(const Sdp& offer)
+{
+  for (size_t i = 0; i < offer.GetMediaSectionCount(); ++i) {
+    const SdpMediaSection& offerMsection = offer.GetMediaSection(i);
+    if (mSdpHelper.MsectionIsDisabled(offerMsection)) {
+      continue;
+    }
+
+    const SdpAttributeList& offerAttrs(offerMsection.GetAttributeList());
+    if (!offerAttrs.HasAttribute(SdpAttribute::kSetupAttribute, true)) {
+      JSEP_SET_ERROR("Offer is missing required setup attribute "
+                     " at level " << i);
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
 JsepSessionImpl::ValidateAnswer(const Sdp& offer, const Sdp& answer)
 {
   if (offer.GetMediaSectionCount() != answer.GetMediaSectionCount()) {
@@ -2027,6 +2050,13 @@ JsepSessionImpl::ValidateAnswer(const Sdp& offer, const Sdp& answer)
                      << offerMsection.GetAttributeList().GetMid()
                      << "\', now \'"
                      << answerMsection.GetAttributeList().GetMid() << "\'");
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    if (answerAttrs.HasAttribute(SdpAttribute::kSetupAttribute, true) &&
+        answerAttrs.GetSetup().mRole == SdpSetupAttribute::kActpass) {
+      JSEP_SET_ERROR("Answer contains illegal setup attribute \"actpass\""
+                     " at level " << i);
       return NS_ERROR_INVALID_ARG;
     }
   }

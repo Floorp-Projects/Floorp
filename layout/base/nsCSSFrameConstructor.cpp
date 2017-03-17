@@ -3112,6 +3112,8 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
                         aState.GetGeometricParent(aStyleDisplay, aParentFrame),
                         comboboxFrame);
 
+    comboboxFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
+
     aState.AddChild(comboboxFrame, aFrameItems, content, styleContext,
                     aParentFrame);
 
@@ -3279,6 +3281,8 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
                       aState.GetGeometricParent(aStyleDisplay, aParentFrame),
                       fieldsetFrame);
 
+  fieldsetFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
+
   // Resolve style and initialize the frame
   RefPtr<nsStyleContext> fieldsetContentStyle;
   fieldsetContentStyle = mPresShell->StyleSet()->
@@ -3325,7 +3329,8 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
       if (columns->mColumnCount != NS_STYLE_COLUMN_COUNT_AUTO ||
           columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
         columnSetFrame =
-          NS_NewColumnSetFrame(mPresShell, fieldsetContentStyle, nsFrameState(0));
+          NS_NewColumnSetFrame(mPresShell, fieldsetContentStyle,
+                               nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
         InitAndRestoreFrame(aState, content, parent, columnSetFrame);
         innerSC = mPresShell->StyleSet()->
           ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::columnContent,
@@ -3974,7 +3979,8 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
             if (columns->mColumnCount != NS_STYLE_COLUMN_COUNT_AUTO ||
                 columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
               columnSetFrame =
-                NS_NewColumnSetFrame(mPresShell, outerSC, nsFrameState(0));
+                NS_NewColumnSetFrame(mPresShell, outerSC,
+                                     nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
               InitAndRestoreFrame(aState, content, container, columnSetFrame);
               innerSC = mPresShell->StyleSet()->
                 ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::columnContent,
@@ -3999,6 +4005,8 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       }
 
       SetInitialSingleChild(container, outerFrame);
+
+      container->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
 
       // Now figure out whether newFrame or outerFrame should be the
       // absolute container.
@@ -5253,6 +5261,7 @@ nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
                                                   aParentFrame) :
                         aParentFrame,
                       newFrame);
+  newFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
 
   // Create the pseudo SC for the anonymous wrapper child as a child of the SC:
   RefPtr<nsStyleContext> scForAnon;
@@ -12035,7 +12044,8 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   if (columns->mColumnCount != NS_STYLE_COLUMN_COUNT_AUTO
       || columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
     nsContainerFrame* columnSetFrame =
-      NS_NewColumnSetFrame(mPresShell, aStyleContext, nsFrameState(0));
+      NS_NewColumnSetFrame(mPresShell, aStyleContext,
+                           nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
 
     InitAndRestoreFrame(aState, aContent, aParentFrame, columnSetFrame);
     blockStyle = mPresShell->StyleSet()->

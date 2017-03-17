@@ -34,7 +34,6 @@
 #include "nsCSSParser.h"
 #include "nsDOMClassInfoID.h"
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
-#include "mozilla/dom/CSSNamespaceRuleBinding.h"
 #include "mozilla/dom/CSSImportRuleBinding.h"
 #include "mozilla/dom/CSSSupportsRuleBinding.h"
 #include "mozilla/dom/CSSMozDocumentRuleBinding.h"
@@ -773,14 +772,14 @@ DocumentRule::AppendConditionText(nsAString& aCssText) const
 
 NameSpaceRule::NameSpaceRule(nsIAtom* aPrefix, const nsString& aURLSpec,
                              uint32_t aLineNumber, uint32_t aColumnNumber)
-  : Rule(aLineNumber, aColumnNumber),
+  : CSSNamespaceRule(aLineNumber, aColumnNumber),
     mPrefix(aPrefix),
     mURLSpec(aURLSpec)
 {
 }
 
 NameSpaceRule::NameSpaceRule(const NameSpaceRule& aCopy)
-  : Rule(aCopy),
+  : CSSNamespaceRule(aCopy),
     mPrefix(aCopy.mPrefix),
     mURLSpec(aCopy.mURLSpec)
 {
@@ -790,8 +789,8 @@ NameSpaceRule::~NameSpaceRule()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(NameSpaceRule, Rule)
-NS_IMPL_RELEASE_INHERITED(NameSpaceRule, Rule)
+NS_IMPL_ADDREF_INHERITED(NameSpaceRule, CSSNamespaceRule)
+NS_IMPL_RELEASE_INHERITED(NameSpaceRule, CSSNamespaceRule)
 
 // QueryInterface implementation for NameSpaceRule
 // If this ever gets its own cycle-collection bits, reevaluate our IsCCLeaf
@@ -803,13 +802,7 @@ NS_INTERFACE_MAP_BEGIN(NameSpaceRule)
     return NS_OK;
   }
   else
-NS_INTERFACE_MAP_END_INHERITING(Rule)
-
-bool
-NameSpaceRule::IsCCLeaf() const
-{
-  return Rule::IsCCLeaf();
-}
+NS_INTERFACE_MAP_END_INHERITING(CSSNamespaceRule)
 
 #ifdef DEBUG
 /* virtual */ void
@@ -837,23 +830,11 @@ NameSpaceRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-/* virtual */ int32_t
-NameSpaceRule::GetType() const
-{
-  return Rule::NAMESPACE_RULE;
-}
-
 /* virtual */ already_AddRefed<Rule>
 NameSpaceRule::Clone() const
 {
   RefPtr<Rule> clone = new NameSpaceRule(*this);
   return clone.forget();
-}
-
-uint16_t
-NameSpaceRule::Type() const
-{
-  return nsIDOMCSSRule::NAMESPACE_RULE;
 }
 
 void
@@ -877,13 +858,6 @@ NameSpaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   // worthwhile:
   // - mPrefix
   // - mURLSpec
-}
-
-/* virtual */ JSObject*
-NameSpaceRule::WrapObject(JSContext* aCx,
-                          JS::Handle<JSObject*> aGivenProto)
-{
-  return CSSNamespaceRuleBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace css

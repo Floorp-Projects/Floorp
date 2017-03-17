@@ -40,12 +40,14 @@ import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.webapps.WebAppActivity;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -145,6 +147,7 @@ public abstract class GeckoApp
 
     public static final String ACTION_ALERT_CALLBACK       = "org.mozilla.gecko.ALERT_CALLBACK";
     public static final String ACTION_HOMESCREEN_SHORTCUT  = "org.mozilla.gecko.BOOKMARK";
+    public static final String ACTION_WEBAPP               = "org.mozilla.gecko.WEBAPP";
     public static final String ACTION_DEBUG                = "org.mozilla.gecko.DEBUG";
     public static final String ACTION_LAUNCH_SETTINGS      = "org.mozilla.gecko.SETTINGS";
     public static final String ACTION_LOAD                 = "org.mozilla.gecko.LOAD";
@@ -158,6 +161,7 @@ public abstract class GeckoApp
     public static final String LAST_SELECTED_TAB           = "lastSelectedTab";
 
     public static final String PREFS_ALLOW_STATE_BUNDLE    = "allowStateBundle";
+    public static final String PREFS_FLASH_USAGE = "playFlashCount";
     public static final String PREFS_VERSION_CODE          = "versionCode";
     public static final String PREFS_WAS_STOPPED           = "wasStopped";
     public static final String PREFS_CRASHED_COUNT         = "crashedCount";
@@ -821,6 +825,11 @@ public abstract class GeckoApp
 
         } else if ("Update:Install".equals(event)) {
             UpdateServiceHelper.applyUpdate(this);
+
+        } else if ("PluginHelper:playFlash".equals(event)) {
+            final SharedPreferences prefs = getSharedPreferences();
+            int count = prefs.getInt(PREFS_FLASH_USAGE, 0);
+            prefs.edit().putInt(PREFS_FLASH_USAGE, ++count).apply();
         }
     }
 
@@ -1242,6 +1251,7 @@ public abstract class GeckoApp
             "Accessibility:Ready",
             "Gecko:Exited",
             "Gecko:Ready",
+            "PluginHelper:playFlash",
             null);
 
         EventDispatcher.getInstance().registerUiThreadListener(this,
@@ -2022,13 +2032,25 @@ public abstract class GeckoApp
     }
 
     public void createShortcut(final String aTitle, final String aURI, final Bitmap aIcon) {
-        // The intent to be launched by the shortcut.
         Intent shortcutIntent = new Intent();
         shortcutIntent.setAction(GeckoApp.ACTION_HOMESCREEN_SHORTCUT);
         shortcutIntent.setData(Uri.parse(aURI));
         shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
                 AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+        createHomescreenIcon(shortcutIntent, aTitle, aURI, aIcon);
+    }
 
+    public void createAppShortcut(final String aTitle, final String aURI, final String manifestPath, final Bitmap aIcon) {
+        Intent shortcutIntent = new Intent();
+        shortcutIntent.setAction(GeckoApp.ACTION_WEBAPP);
+        shortcutIntent.setData(Uri.parse(aURI));
+        shortcutIntent.putExtra("MANIFEST_PATH", manifestPath);
+        shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, LauncherActivity.class.getName());
+        createHomescreenIcon(shortcutIntent, aTitle, aURI, aIcon);
+    }
+
+    public void createHomescreenIcon(final Intent shortcutIntent, final String aTitle,
+                                     final String aURI, final Bitmap aIcon) {
         Intent intent = new Intent();
         intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
         intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, getLauncherIcon(aIcon, GeckoAppShell.getPreferredIconSize()));
@@ -2371,6 +2393,7 @@ public abstract class GeckoApp
             "Accessibility:Ready",
             "Gecko:Exited",
             "Gecko:Ready",
+            "PluginHelper:playFlash",
             null);
 
         EventDispatcher.getInstance().unregisterUiThreadListener(this,

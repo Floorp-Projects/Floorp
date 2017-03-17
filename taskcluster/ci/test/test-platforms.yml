@@ -34,6 +34,7 @@ linux32-nightly/opt:
         -  linux32-opt-tests
         - external-media-tests
         - external-media-tests-slow
+        - awsy
 
 linux64/debug:
     build-platform: linux64/debug
@@ -60,6 +61,7 @@ linux64-nightly/opt:
         - opt-only-tests
         - desktop-screenshot-capture
         - talos
+        - awsy
 
 # TODO: use 'pgo' and 'asan' labels here, instead of -pgo/opt
 linux64-pgo/opt:

@@ -949,6 +949,16 @@ nsSVGOuterSVGFrame::VerticalScrollbarNotNeeded() const
   return height.IsPercentage() && height.GetBaseValInSpecifiedUnits() <= 100;
 }
 
+void
+nsSVGOuterSVGFrame::DoUpdateStyleOfOwnedAnonBoxes(
+  mozilla::ServoStyleSet& aStyleSet,
+  nsStyleChangeList& aChangeList,
+  nsChangeHint aHintForThisFrame)
+{
+  nsIFrame* anonKid = PrincipalChildList().FirstChild();
+  MOZ_ASSERT(anonKid->GetType() == nsGkAtoms::svgOuterSVGAnonChildFrame);
+  UpdateStyleOfChildAnonBox(anonKid, aStyleSet, aChangeList, aHintForThisFrame);
+}
 
 //----------------------------------------------------------------------
 // Implementation of nsSVGOuterSVGAnonChildFrame

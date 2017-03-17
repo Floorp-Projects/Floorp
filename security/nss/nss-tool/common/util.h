@@ -18,6 +18,7 @@ typedef struct {
 } PwData;
 
 bool InitSlotPassword(void);
+bool ChangeSlotPassword(void);
 bool DBLoginIfNeeded(const ScopedPK11SlotInfo &slot);
 std::string StringToHex(const ScopedSECItem &input);
 std::vector<char> ReadInputData(std::string &dataPath);
