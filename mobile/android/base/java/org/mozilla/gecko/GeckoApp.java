@@ -829,7 +829,7 @@ public abstract class GeckoApp
         } else if ("PluginHelper:playFlash".equals(event)) {
             final SharedPreferences prefs = getSharedPreferences();
             int count = prefs.getInt(PREFS_FLASH_USAGE, 0);
-            prefs.edit().putInt(PREFS_FLASH_USAGE,++count).apply();
+            prefs.edit().putInt(PREFS_FLASH_USAGE, ++count).apply();
         }
     }
 
