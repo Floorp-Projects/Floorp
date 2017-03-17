@@ -142,9 +142,7 @@ TimingParams::ParseEasing(const nsAString& aEasing,
         case eCSSUnit_Steps: {
           nsTimingFunction timingFunction;
           nsRuleNode::ComputeTimingFunction(list->mValue, timingFunction);
-          ComputedTimingFunction computedTimingFunction;
-          computedTimingFunction.Init(timingFunction);
-          return Some(computedTimingFunction);
+          return Some(ComputedTimingFunction(timingFunction));
         }
         default:
           MOZ_ASSERT_UNREACHABLE("unexpected animation-timing-function list "
