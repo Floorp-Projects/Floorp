@@ -10589,16 +10589,15 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(UnblockParsingPromiseHandler)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(UnblockParsingPromiseHandler)
 
 already_AddRefed<Promise>
-nsIDocument::BlockParsing(OwningNonNull<Promise> aPromise,
-                          ErrorResult& aRv)
+nsIDocument::BlockParsing(Promise& aPromise, ErrorResult& aRv)
 {
-  RefPtr<Promise> resultPromise = Promise::Create(aPromise->GetParentObject(), aRv);
+  RefPtr<Promise> resultPromise = Promise::Create(aPromise.GetParentObject(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
   RefPtr<PromiseNativeHandler> promiseHandler = new UnblockParsingPromiseHandler(this, resultPromise);
-  aPromise->AppendNativeHandler(promiseHandler);
+  aPromise.AppendNativeHandler(promiseHandler);
 
   return resultPromise.forget();
 }
