@@ -567,8 +567,15 @@ typedef enum {
   ovrDebugHudStereo_EnumSize = 0x7fffffff
 } ovrDebugHudStereoMode;
 
+typedef enum {
+  // Outer boundary - closely represents user setup walls
+  ovrBoundary_Outer = 0x0001,
+  // Play area - safe rectangular area inside outer boundary which can optionally be used to restrict user interactions and motion.
+  ovrBoundary_PlayArea = 0x0100,
+} ovrBoundaryType;
+
 typedef ovrBool(OVR_PFN* pfn_ovr_GetBool)(ovrSession session, const char* propertyName, ovrBool defaultVal);
-typedef ovrBool(OVR_PFN* pfn_ovr_SetBool)(ovrSession session, const char* propertyName, ovrBool value); 
+typedef ovrBool(OVR_PFN* pfn_ovr_SetBool)(ovrSession session, const char* propertyName, ovrBool value);
 typedef int (OVR_PFN* pfn_ovr_GetInt)(ovrSession session, const char* propertyName, int defaultVal);
 typedef ovrBool (OVR_PFN* pfn_ovr_SetInt)(ovrSession session, const char* propertyName, int value);
 typedef float (OVR_PFN* pfn_ovr_GetFloat)(ovrSession session, const char* propertyName, float defaultVal);
@@ -581,8 +588,9 @@ typedef const char* (OVR_PFN* pfn_ovr_GetString)(ovrSession session, const char*
   const char* defaultVal);
 typedef ovrBool (OVR_PFN* pfn_ovr_SetString)(ovrSession session, const char* propertyName,
   const char* value);
-
-
+typedef ovrResult (OVR_PFN* pfn_ovr_GetBoundaryDimensions)(ovrSession session,
+                                                           ovrBoundaryType boundaryType,
+                                                           ovrVector3f* outDimensions);
 
 typedef enum {
   ovrError_MemoryAllocationFailure = -1000,
@@ -714,7 +722,10 @@ typedef ovrResult (OVR_PFN* pfn_ovr_GetMirrorTextureBufferGL)(ovrSession session
 	ovrMirrorTexture mirrorTexture,
 	unsigned int* out_TexId);
 
-#ifdef __cplusplus 
+#define OVR_KEY_EYE_HEIGHT "EyeHeight" // float meters
+#define OVR_DEFAULT_EYE_HEIGHT 1.675f
+
+#ifdef __cplusplus
 }
 #endif
 
