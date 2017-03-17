@@ -128,7 +128,7 @@ protected:
     Default,
 
     // Update everything while respecting the old appearance. For example, if
-    // the caret in cursor mode is hidden due to timeout, do not change its
+    // the caret in cursor mode is hidden due to blur, do not change its
     // appearance to Normal.
     RespectOldAppearance,
 
@@ -218,12 +218,6 @@ protected:
   // @return true if the aOffsets is suitable for changing the selection.
   bool RestrictCaretDraggingOffsets(nsIFrame::ContentOffsets& aOffsets);
 
-  // Timeout in milliseconds to hide the AccessibleCaret under cursor mode while
-  // no one touches it.
-  uint32_t CaretTimeoutMs() const;
-  void LaunchCaretTimeoutTimer();
-  void CancelCaretTimeoutTimer();
-
   // ---------------------------------------------------------------------------
   // The following functions are made virtual for stubbing or mocking in gtest.
   //
@@ -279,10 +273,6 @@ protected:
 
   // The caret being pressed or dragged.
   AccessibleCaret* mActiveCaret = nullptr;
-
-  // The timer for hiding the caret in cursor mode after timeout behind the
-  // preference "layout.accessiblecaret.timeout_ms".
-  nsCOMPtr<nsITimer> mCaretTimeoutTimer;
 
   // The caret mode since last update carets.
   CaretMode mLastUpdateCaretMode = CaretMode::None;
