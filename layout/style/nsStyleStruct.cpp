@@ -3407,7 +3407,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  if (!DefinitelyEqualURIsAndPrincipal(mBinding, aNewData.mBinding)
+  if (!DefinitelyEqualURIsAndPrincipal(mBinding.ForceGet(), aNewData.mBinding.ForceGet())
       || mPosition != aNewData.mPosition
       || mDisplay != aNewData.mDisplay
       || mContain != aNewData.mContain
