@@ -229,6 +229,7 @@ user_pref("browser.snippets.firstrunHomepage.enabled", false);
 
 // Disable useragent updates.
 user_pref("general.useragent.updates.enabled", false);
+user_pref("general.useragent.updates.url", "https://example.com/0/%%APP_ID%%");
 
 // Disable webapp updates.  Yes, it is supposed to be an integer.
 user_pref("browser.webapps.checkForUpdates", 0);
