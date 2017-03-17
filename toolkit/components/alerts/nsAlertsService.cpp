@@ -22,6 +22,10 @@
 #include "nsIFaviconService.h"
 #endif // MOZ_PLACES
 
+#ifdef XP_WIN
+#include <shellapi.h>
+#endif
+
 using namespace mozilla;
 
 using mozilla::dom::ContentChild;
@@ -154,23 +158,12 @@ bool nsAlertsService::ShouldShowAlert()
   bool result = true;
 
 #ifdef XP_WIN
-  HMODULE shellDLL = ::LoadLibraryW(L"shell32.dll");
-  if (!shellDLL)
-    return result;
-
-  SHQueryUserNotificationStatePtr pSHQueryUserNotificationState =
-    (SHQueryUserNotificationStatePtr) ::GetProcAddress(shellDLL, "SHQueryUserNotificationState");
-
-  if (pSHQueryUserNotificationState) {
-    MOZ_QUERY_USER_NOTIFICATION_STATE qstate;
-    if (SUCCEEDED(pSHQueryUserNotificationState(&qstate))) {
-      if (qstate != QUNS_ACCEPTS_NOTIFICATIONS) {
-         result = false;
-      }
+  QUERY_USER_NOTIFICATION_STATE qstate;
+  if (SUCCEEDED(SHQueryUserNotificationState(&qstate))) {
+    if (qstate != QUNS_ACCEPTS_NOTIFICATIONS) {
+       result = false;
     }
   }
-
-  ::FreeLibrary(shellDLL);
 #endif
 
   return result;
