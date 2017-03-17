@@ -375,38 +375,6 @@ var noframe_container = document.getElementById("content");
   p.remove();
 })();
 
-(function test_bug_1347164() {
-  // Test that computed color values are serialized as "rgb()"
-  // IFF they're fully-opaque (and otherwise as "rgba()").
-  var color = [
-    ["rgba(0, 0, 0, 1)", "rgb(0, 0, 0)"],
-    ["rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.5)"],
-    ["hsla(0, 0%, 0%, 1)", "rgb(0, 0, 0)"],
-    ["hsla(0, 0%, 0%, 0.5)", "rgba(0, 0, 0, 0.5)"],
-    // css-color-4
-    ["rgba(0 0 0 / 1)", "rgb(0, 0, 0)"],
-    ["rgba(0 0 0 / 0.5)", "rgba(0, 0, 0, 0.5)"],
-    ["rgb(0 0 0 / 1)", "rgb(0, 0, 0)"],
-    ["rgb(0 0 0 / 0.5)", "rgba(0, 0, 0, 0.5)"],
-    ["hsla(0 0% 0% / 1)", "rgb(0, 0, 0)"],
-    ["hsla(0deg 0% 0% / 0.5)", "rgba(0, 0, 0, 0.5)"],
-    ["hsl(0 0% 0% / 1)", "rgb(0, 0, 0)"],
-    ["hsl(0 0% 0% / 0.5)", "rgba(0, 0, 0, 0.5)"],
-  ];
-
-  var p = document.createElement("p");
-  var cs = getComputedStyle(p, "");
-  frame_container.appendChild(p);
-
-  for (var i = 0; i < color.length; ++i) {
-    var test = color[i];
-    p.style.color = test[0];
-    is(cs.color, test[1], "computed value of " + test[0]);
-  }
-
-  p.remove();
-})();
-
 </script>
 </pre>
 </body>
