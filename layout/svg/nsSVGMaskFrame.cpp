@@ -320,7 +320,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
 
   // Moz2D transforms in the opposite direction to Thebes
   if (!maskSurfaceMatrix.Invert()) {
-    return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
+    return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
   }
 
   *aParams.maskTransform = ToMatrix(maskSurfaceMatrix);
