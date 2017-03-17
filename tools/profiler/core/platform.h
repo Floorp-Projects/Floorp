@@ -167,4 +167,9 @@ UniquePlatformData AllocPlatformData(int aThreadId);
 mozilla::UniquePtr<char[]>
 ToJSON(PSLockRef aLock, double aSinceTime);
 
+namespace mozilla {
+class JSONWriter;
+}
+void AppendSharedLibraries(mozilla::JSONWriter& aWriter);
+
 #endif /* ndef TOOLS_PLATFORM_H_ */

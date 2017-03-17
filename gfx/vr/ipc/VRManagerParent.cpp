@@ -391,8 +391,9 @@ VRManagerParent::RecvSetDisplayInfoToMockDisplay(const uint32_t& aDeviceID,
                                                  const VRDisplayInfo& aDisplayInfo)
 {
   RefPtr<impl::VRDisplayPuppet> displayPuppet;
-  MOZ_ASSERT(mVRDisplayTests.Get(mDisplayTestID,
-                                 getter_AddRefs(displayPuppet)));
+  mVRDisplayTests.Get(mDisplayTestID,
+                      getter_AddRefs(displayPuppet));
+  MOZ_ASSERT(displayPuppet);
   displayPuppet->SetDisplayInfo(aDisplayInfo);
   return IPC_OK();
 }
@@ -402,8 +403,9 @@ VRManagerParent::RecvSetSensorStateToMockDisplay(const uint32_t& aDeviceID,
                                                  const VRHMDSensorState& aSensorState)
 {
   RefPtr<impl::VRDisplayPuppet> displayPuppet;
-  MOZ_ASSERT(mVRDisplayTests.Get(mControllerTestID,
-                                 getter_AddRefs(displayPuppet)));
+  mVRDisplayTests.Get(mDisplayTestID,
+                      getter_AddRefs(displayPuppet));
+  MOZ_ASSERT(displayPuppet);
   displayPuppet->SetSensorState(aSensorState);
   return IPC_OK();
 }
@@ -413,8 +415,9 @@ VRManagerParent::RecvNewButtonEventToMockController(const uint32_t& aDeviceID, c
                                                     const bool& aPressed)
 {
   RefPtr<impl::VRControllerPuppet> controllerPuppet;
-  MOZ_ASSERT(mVRControllerTests.Get(mControllerTestID,
-                                    getter_AddRefs(controllerPuppet)));
+  mVRControllerTests.Get(mControllerTestID,
+                         getter_AddRefs(controllerPuppet));
+  MOZ_ASSERT(controllerPuppet);
   controllerPuppet->SetButtonPressState(aButton, aPressed);
   return IPC_OK();
 }
@@ -424,8 +427,9 @@ VRManagerParent::RecvNewAxisMoveEventToMockController(const uint32_t& aDeviceID,
                                                       const double& aValue)
 {
   RefPtr<impl::VRControllerPuppet> controllerPuppet;
-  MOZ_ASSERT(mVRControllerTests.Get(mControllerTestID,
-                                    getter_AddRefs(controllerPuppet)));
+  mVRControllerTests.Get(mControllerTestID,
+                         getter_AddRefs(controllerPuppet));
+  MOZ_ASSERT(controllerPuppet);
   controllerPuppet->SetAxisMoveState(aAxis, aValue);
   return IPC_OK();
 }
@@ -435,8 +439,9 @@ VRManagerParent::RecvNewPoseMoveToMockController(const uint32_t& aDeviceID,
                                                  const GamepadPoseState& pose)
 {
   RefPtr<impl::VRControllerPuppet> controllerPuppet;
-  MOZ_ASSERT(mVRControllerTests.Get(mControllerTestID,
-                                    getter_AddRefs(controllerPuppet)));
+  mVRControllerTests.Get(mControllerTestID,
+                         getter_AddRefs(controllerPuppet));
+  MOZ_ASSERT(controllerPuppet);
   controllerPuppet->SetPoseMoveState(pose);
   return IPC_OK();
 }

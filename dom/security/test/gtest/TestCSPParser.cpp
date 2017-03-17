@@ -204,6 +204,8 @@ TEST(CSPParser, Directives)
 {
   static const PolicyTest policies[] =
   {
+    { "connect-src xn--mnchen-3ya.de",
+      "connect-src http://xn--mnchen-3ya.de"},
     { "default-src http://www.example.com",
       "default-src http://www.example.com" },
     { "script-src http://www.example.com",

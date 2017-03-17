@@ -28,10 +28,10 @@ function subtest(winProp, elemProp, win, correctElement, elemToSet, otherElem1, 
   win.scrollTo(50, 50);
   elemToSet[elemProp] = 100;
   if (elemToSet == correctElement) {
-    is(win[winProp], 100, "Setting " + elemToSet.name + "." + elemProp + " should scroll");
+    is(Math.round(win[winProp]), 100, "Setting " + elemToSet.name + "." + elemProp + " should scroll");
     is(elemToSet[elemProp], 100, "Reading back " + elemToSet.name + "." + elemProp + " after scrolling");
   } else {
-    is(win[winProp], 50, "Setting " + elemToSet.name + "." + elemProp + " should not scroll");
+    is(Math.round(win[winProp]), 50, "Setting " + elemToSet.name + "." + elemProp + " should not scroll");
     is(elemToSet[elemProp], 0, "Reading back " + elemToSet.name + "." + elemProp + " after not scrolling");
   }
   if (otherElem1 == correctElement) {

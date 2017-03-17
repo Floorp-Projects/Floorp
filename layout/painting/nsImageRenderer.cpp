@@ -508,7 +508,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     }
     case eStyleImageType_Gradient:
     {
-      nsCSSRendering::PaintGradient(aPresContext, aRenderingContext,
+      nsCSSRendering::PaintGradient(aPresContext, *ctx,
                                     mGradientData, aDirtyRect,
                                     aDest, aFill, aRepeatSize, aSrc, mSize,
                                     aOpacity);
@@ -516,8 +516,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     }
     case eStyleImageType_Element:
     {
-      RefPtr<gfxDrawable> drawable = DrawableForElement(aDest,
-                                                          aRenderingContext);
+      RefPtr<gfxDrawable> drawable = DrawableForElement(aDest, *ctx);
       if (!drawable) {
         NS_WARNING("Could not create drawable for element");
         return DrawResult::TEMPORARY_ERROR;
@@ -563,7 +562,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
 
 already_AddRefed<gfxDrawable>
 nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
-                                    nsRenderingContext&  aRenderingContext)
+                                    gfxContext&  aContext)
 {
   NS_ASSERTION(mType == eStyleImageType_Element,
                "DrawableForElement only makes sense if backed by an element");
@@ -581,8 +580,8 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
     RefPtr<gfxDrawable> drawable =
       nsSVGIntegrationUtils::DrawableFromPaintServer(
         mPaintServerFrame, mForFrame, mSize, imageSize,
-        aRenderingContext.GetDrawTarget(),
-        aRenderingContext.ThebesContext()->CurrentMatrix(),
+        aContext.GetDrawTarget(),
+        aContext.CurrentMatrix(),
         nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES);
 
     return drawable.forget();
@@ -775,8 +774,9 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
       // invalidate that cache, and it's not clear that it's worth the trouble
       // since using border-image with -moz-element is rare.
 
-      RefPtr<gfxDrawable> drawable = DrawableForElement(nsRect(nsPoint(), mSize),
-                                                          aRenderingContext);
+      RefPtr<gfxDrawable> drawable =
+        DrawableForElement(nsRect(nsPoint(), mSize),
+                           *aRenderingContext.ThebesContext());
       if (!drawable) {
         NS_WARNING("Could not create drawable for element");
         return DrawResult::TEMPORARY_ERROR;

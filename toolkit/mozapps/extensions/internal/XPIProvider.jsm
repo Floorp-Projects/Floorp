@@ -4072,6 +4072,8 @@ this.XPIProvider = {
     let installReason = BOOTSTRAP_REASONS.ADDON_INSTALL;
     let oldAddon = yield new Promise(
                    resolve => XPIDatabase.getVisibleAddonForID(addon.id, resolve));
+
+    let extraParams = {};
     if (oldAddon) {
       if (!oldAddon.bootstrap) {
         logger.warn("Non-restartless Add-on is already installed", addon.id);
@@ -4088,6 +4090,7 @@ this.XPIProvider = {
         // call its uninstall method
         let newVersion = addon.version;
         let oldVersion = oldAddon.version;
+
         if (Services.vc.compare(newVersion, oldVersion) >= 0) {
           installReason = BOOTSTRAP_REASONS.ADDON_UPGRADE;
         } else {
@@ -4095,13 +4098,16 @@ this.XPIProvider = {
         }
         let uninstallReason = installReason;
 
+        extraParams.newVersion = newVersion;
+        extraParams.oldVersion = oldVersion;
+
         if (oldAddon.active) {
           XPIProvider.callBootstrapMethod(oldAddon, existingAddon,
                                           "shutdown", uninstallReason,
-                                          { newVersion });
+                                          extraParams);
         }
         this.callBootstrapMethod(oldAddon, existingAddon,
-                                 "uninstall", uninstallReason, { newVersion });
+                                 "uninstall", uninstallReason, extraParams);
         this.unloadBootstrapScope(existingAddonID);
         flushChromeCaches();
       }
@@ -4112,7 +4118,7 @@ this.XPIProvider = {
     let file = addon._sourceBundle;
 
     XPIProvider._addURIMapping(addon.id, file);
-    XPIProvider.callBootstrapMethod(addon, file, "install", installReason);
+    XPIProvider.callBootstrapMethod(addon, file, "install", installReason, extraParams);
     addon.state = AddonManager.STATE_INSTALLED;
     logger.debug("Install of temporary addon in " + aFile.path + " completed.");
     addon.visible = true;
@@ -4127,7 +4133,7 @@ this.XPIProvider = {
 
     AddonManagerPrivate.callAddonListeners("onInstalling", addon.wrapper,
                                            false);
-    XPIProvider.callBootstrapMethod(addon, file, "startup", installReason);
+    XPIProvider.callBootstrapMethod(addon, file, "startup", installReason, extraParams);
     AddonManagerPrivate.callInstallListeners("onExternalInstall",
                                              null, addon.wrapper,
                                              oldAddon ? oldAddon.wrapper : null,

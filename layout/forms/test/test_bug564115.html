@@ -30,12 +30,12 @@ addLoadEvent(function() {
       win.scrollTo(0, 5000);
 
       setTimeout(function() {
-        is(win.pageYOffset, 5000, "Page should be scrolled correctly");
+        is(Math.round(win.pageYOffset), 5000, "Page should be scrolled correctly");
 
         // Refocus the window
         SimpleTest.waitForFocus(function() {
           SimpleTest.waitForFocus(function() {
-            is(win.pageYOffset, 5000,
+            is(Math.round(win.pageYOffset), 5000,
                "The page's scroll offset should not have been changed");
 
             win.close();

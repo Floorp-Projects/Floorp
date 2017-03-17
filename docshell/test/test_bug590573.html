@@ -147,21 +147,21 @@ function* testBody()
   popup.scroll(0, 100);
 
   popup.history.pushState('', '', '?pushed');
-  is(popup.scrollY, 100, "test 2");
+  is(Math.round(popup.scrollY), 100, "test 2");
   popup.scroll(0, 200); // set state-2's position to 200
 
   popup.history.back();
-  is(popup.scrollY, 100, "test 3");
+  is(Math.round(popup.scrollY), 100, "test 3");
   popup.scroll(0, 150); // set original page's position to 150
 
   popup.history.forward();
-  is(popup.scrollY, 200, "test 4");
+  is(Math.round(popup.scrollY), 200, "test 4");
 
   popup.history.back();
-  is(popup.scrollY, 150, "test 5");
+  is(Math.round(popup.scrollY), 150, "test 5");
 
   popup.history.forward();
-  is(popup.scrollY, 200, "test 6");
+  is(Math.round(popup.scrollY), 200, "test 6");
 
   // At this point, the history looks like:
   //   PATH                         POSITION
@@ -202,13 +202,13 @@ function* testBody()
   is(popup.location.search, "?pushed");
   ok(popup.document.getElementById('div1'), 'page should have div1.');
 
-  is(popup.scrollY, 200, "test 8");
+  is(Math.round(popup.scrollY), 200, "test 8");
 
   popup.history.back();
-  is(popup.scrollY, 150, "test 9");
+  is(Math.round(popup.scrollY), 150, "test 9");
   popup.history.forward();
 
-  is(popup.scrollY, 200, "test 10");
+  is(Math.round(popup.scrollY), 200, "test 10");
 
   // Spin one last time...
   setTimeout(pageLoad, 0);

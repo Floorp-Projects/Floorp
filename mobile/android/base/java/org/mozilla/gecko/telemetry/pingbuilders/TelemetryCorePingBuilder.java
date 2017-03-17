@@ -16,7 +16,9 @@ import android.text.TextUtils;
 
 import android.util.Log;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.search.SearchEngine;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
@@ -44,7 +46,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     private static final String PREF_SEQ_COUNT = "telemetry-seqCount";
 
     private static final String NAME = "core";
-    private static final int VERSION_VALUE = 7; // For version history, see toolkit/components/telemetry/docs/core-ping.rst
+    private static final int VERSION_VALUE = 8; // For version history, see toolkit/components/telemetry/docs/core-ping.rst
     private static final String OS_VALUE = "Android";
 
     private static final String ARCHITECTURE = "arch";
@@ -65,6 +67,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     private static final String SESSION_DURATION = "durations";
     private static final String TIMEZONE_OFFSET = "tz";
     private static final String VERSION_ATTR = "v";
+    private static final String FLASH_USAGE = "flashUsage";
 
     public TelemetryCorePingBuilder(final Context context) {
         initPayloadConstants(context);
@@ -90,6 +93,12 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
         payload.put(PING_CREATION_DATE, pingCreationDateFormat.format(nowCalendar.getTime()));
         payload.put(TIMEZONE_OFFSET, DateUtil.getTimezoneOffsetInMinutesForGivenDate(nowCalendar));
         payload.putArray(EXPERIMENTS, Experiments.getActiveExperiments(context));
+        synchronized (this) {
+            SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
+            final int count = prefs.getInt(GeckoApp.PREFS_FLASH_USAGE, 0);
+            payload.put(FLASH_USAGE, count);
+            prefs.edit().putInt(GeckoApp.PREFS_FLASH_USAGE, 0).apply();
+        }
     }
 
     @Override

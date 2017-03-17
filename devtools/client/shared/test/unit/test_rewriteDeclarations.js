@@ -457,7 +457,7 @@ const TEST_DATA = [
 
   {
     desc: "delete disabled property",
-    input: "\n  a:b;\n  /* color:#f0c; */\n  e:f;",
+    input: "\n  a:b;\n  /* color:#f06; */\n  e:f;",
     instruction: {type: "remove", name: "color", index: 1},
     expected: "\n  a:b;\n  e:f;",
   },
@@ -469,7 +469,7 @@ const TEST_DATA = [
   },
   {
     desc: "delete disabled property leaving other disabled property",
-    input: "\n  a:b;\n  /* color:#f0c; background-color: seagreen; */\n  e:f;",
+    input: "\n  a:b;\n  /* color:#f06; background-color: seagreen; */\n  e:f;",
     instruction: {type: "remove", name: "color", index: 1},
     expected: "\n  a:b;\n   /* background-color: seagreen; */\n  e:f;",
   },

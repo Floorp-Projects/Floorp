@@ -262,7 +262,7 @@ private:
    * Returns null if we cannot create the drawable.
    */
   already_AddRefed<gfxDrawable> DrawableForElement(const nsRect& aImageRect,
-                                                   nsRenderingContext&  aRenderingContext);
+                                                   gfxContext&  aContext);
 
   nsIFrame*                 mForFrame;
   const nsStyleImage*       mImage;

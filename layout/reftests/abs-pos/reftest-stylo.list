@@ -55,7 +55,7 @@ fails == select-1.html select-1.html
 fails == select-1-dynamic.html select-1-dynamic.html
 fails == select-2.html select-2.html
 fails == select-3.html select-3.html
-fails == multi-column-1.html multi-column-1.html
+== multi-column-1.html multi-column-1.html
 == button-1.html button-1.html
 == button-2.html button-2.html
 == relative-row-animation-1.html relative-row-animation-1.html

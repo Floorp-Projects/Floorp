@@ -631,16 +631,8 @@ static gint
 moz_gtk_scrollbar_trough_paint(WidgetNodeType widget,
                                cairo_t *cr, const GdkRectangle* rect,
                                GtkWidgetState* state,
-                               GtkScrollbarTrackFlags flags,
                                GtkTextDirection direction)
 {
-    if (flags & MOZ_GTK_TRACK_OPAQUE) {
-        GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_WINDOW, direction);
-        gtk_render_background(style, cr,
-                              rect->x, rect->y, rect->width, rect->height);
-        ReleaseStyleContext(style);
-    }
-
     GtkStyleContext* style = ClaimStyleContext(widget, direction);
     moz_gtk_draw_styled_frame(style, cr, rect, state->focused);
     ReleaseStyleContext(style);
@@ -2639,24 +2631,27 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
         break;
     case MOZ_GTK_SCROLLBAR_HORIZONTAL:
     case MOZ_GTK_SCROLLBAR_VERTICAL:
+        if (flags & MOZ_GTK_TRACK_OPAQUE) {
+            GtkStyleContext* style =
+                ClaimStyleContext(MOZ_GTK_WINDOW, direction);
+            gtk_render_background(style, cr,
+                                  rect->x, rect->y, rect->width, rect->height);
+            ReleaseStyleContext(style);
+        }
         if (gtk_check_version(3,20,0) == nullptr) {
           return moz_gtk_scrollbar_paint(widget, cr, rect, state, direction);
         } else {
           WidgetNodeType trough_widget = (widget == MOZ_GTK_SCROLLBAR_HORIZONTAL) ?
               MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL : MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL;
           return moz_gtk_scrollbar_trough_paint(trough_widget, cr, rect,
-                                                state,
-                                                (GtkScrollbarTrackFlags) flags,
-                                                direction);
+                                                state, direction);
         }
         break;
     case MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL:
     case MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL:
         if (gtk_check_version(3,20,0) == nullptr) {
           return moz_gtk_scrollbar_trough_paint(widget, cr, rect,
-                                                state,
-                                                (GtkScrollbarTrackFlags) flags,
-                                                direction);
+                                                state, direction);
         }
         break;
     case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
