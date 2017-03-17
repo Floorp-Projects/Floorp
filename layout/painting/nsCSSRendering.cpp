@@ -2773,7 +2773,7 @@ ClampColorStops(nsTArray<ColorStop>& aStops)
 
 void
 nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
-                              nsRenderingContext& aRenderingContext,
+                              gfxContext& aContext,
                               nsStyleGradient* aGradient,
                               const nsRect& aDirtyRect,
                               const nsRect& aDest,
@@ -2791,7 +2791,6 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     return;
   }
 
-  gfxContext *ctx = aRenderingContext.ThebesContext();
   nscoord appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
   gfxSize srcSize = gfxSize(gfxFloat(aIntrinsicSize.width)/appUnitsPerDevPixel,
                             gfxFloat(aIntrinsicSize.height)/appUnitsPerDevPixel);
@@ -3134,7 +3133,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     rawStops[i].offset = stopScale * (stops[i].mPosition - stopOrigin);
   }
   RefPtr<mozilla::gfx::GradientStops> gs =
-    gfxGradientCache::GetOrCreateGradientStops(ctx->GetDrawTarget(),
+    gfxGradientCache::GetOrCreateGradientStops(aContext.GetDrawTarget(),
                                                rawStops,
                                                isRepeat ? gfx::ExtendMode::REPEAT : gfx::ExtendMode::CLAMP);
   gradientPattern->SetColorStops(gs);
@@ -3152,7 +3151,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   gfxRect dirtyAreaToFill = nsLayoutUtils::RectToGfxRect(dirty, appUnitsPerDevPixel);
   dirtyAreaToFill.RoundOut();
 
-  gfxMatrix ctm = ctx->CurrentMatrix();
+  gfxMatrix ctm = aContext.CurrentMatrix();
   bool isCTMPreservingAxisAlignedRectangles = ctm.PreservesAxisAlignedRectangles();
 
   // xStart/yStart are the top-left corner of the top-left tile.
@@ -3180,9 +3179,9 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       // Snap three points instead of just two to ensure we choose the
       // correct orientation if there's a reflection.
       if (isCTMPreservingAxisAlignedRectangles &&
-          ctx->UserToDevicePixelSnapped(snappedFillRectTopLeft, true) &&
-          ctx->UserToDevicePixelSnapped(snappedFillRectBottomRight, true) &&
-          ctx->UserToDevicePixelSnapped(snappedFillRectTopRight, true)) {
+          aContext.UserToDevicePixelSnapped(snappedFillRectTopLeft, true) &&
+          aContext.UserToDevicePixelSnapped(snappedFillRectBottomRight, true) &&
+          aContext.UserToDevicePixelSnapped(snappedFillRectTopRight, true)) {
         if (snappedFillRectTopLeft.x == snappedFillRectBottomRight.x ||
             snappedFillRectTopLeft.y == snappedFillRectBottomRight.y) {
           // Nothing to draw; avoid scaling by zero and other weirdness that
@@ -3195,10 +3194,10 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
         gfxMatrix transform = gfxUtils::TransformRectToRect(fillRect,
             snappedFillRectTopLeft, snappedFillRectTopRight,
             snappedFillRectBottomRight);
-        ctx->SetMatrix(transform);
+        aContext.SetMatrix(transform);
       }
-      ctx->NewPath();
-      ctx->Rectangle(fillRect);
+      aContext.NewPath();
+      aContext.Rectangle(fillRect);
 
       gfxRect dirtyFillRect = fillRect.Intersect(dirtyAreaToFill);
       gfxRect fillRectRelativeToTile = dirtyFillRect - tileRect.TopLeft();
@@ -3207,14 +3206,14 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
           RectIsBeyondLinearGradientEdge(fillRectRelativeToTile, matrix, stops,
                                          gradientStart, gradientEnd, &edgeColor)) {
         edgeColor.a *= aOpacity;
-        ctx->SetColor(edgeColor);
+        aContext.SetColor(edgeColor);
       } else {
-        ctx->SetMatrix(
-          ctx->CurrentMatrix().Copy().Translate(tileRect.TopLeft()));
-        ctx->SetPattern(gradientPattern);
+        aContext.SetMatrix(
+          aContext.CurrentMatrix().Copy().Translate(tileRect.TopLeft()));
+        aContext.SetPattern(gradientPattern);
       }
-      ctx->Fill();
-      ctx->SetMatrix(ctm);
+      aContext.Fill();
+      aContext.SetMatrix(ctm);
     }
   }
 }
@@ -5703,7 +5702,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     }
     case eStyleImageType_Gradient:
     {
-      nsCSSRendering::PaintGradient(aPresContext, aRenderingContext,
+      nsCSSRendering::PaintGradient(aPresContext, *ctx,
                                     mGradientData, aDirtyRect,
                                     aDest, aFill, aRepeatSize, aSrc, mSize,
                                     aOpacity);
