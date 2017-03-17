@@ -5095,9 +5095,20 @@ ContentParent::TransmitPermissionsFor(nsIChannel* aChannel)
   rv = ssm->GetChannelResultPrincipal(aChannel, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = TransmitPermissionsForPrincipal(principal);
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
+  return NS_OK;
+}
+
+nsresult
+ContentParent::TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal)
+{
+#ifdef MOZ_PERMISSIONS
   // Create the key, and send it down to the content process.
   nsTArray<nsCString> keys =
-    nsPermissionManager::GetAllKeysForPrincipal(principal);
+    nsPermissionManager::GetAllKeysForPrincipal(aPrincipal);
   MOZ_ASSERT(keys.Length() >= 1);
   for (auto& key : keys) {
     EnsurePermissionsByKey(key);

@@ -639,6 +639,8 @@ public:
 
   nsresult TransmitPermissionsFor(nsIChannel* aChannel);
 
+  nsresult TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal);
+
 protected:
   void OnChannelConnected(int32_t pid) override;
 
