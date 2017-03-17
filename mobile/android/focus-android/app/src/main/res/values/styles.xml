@@ -11,6 +11,8 @@
         <item name="android:windowContentTransitions">true</item>
 
         <item name="popupMenuStyle">@style/PopupMenu</item>
+
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
     <style name="DialogTitleStyle" parent="TextAppearance.AppCompat.Title">
