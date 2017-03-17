@@ -13,7 +13,6 @@
 #include "nsStyleAutoArray.h"
 #include "nsTArray.h"
 
-struct RawServoAnimationValue;
 struct RawServoStyleSet;
 
 #define SERVO_ARC_TYPE(name_, type_) struct type_;
@@ -47,7 +46,6 @@ typedef nsPresContext RawGeckoPresContext;
 typedef nsTArray<mozilla::Keyframe> RawGeckoKeyframeList;
 typedef nsTArray<mozilla::ComputedKeyframeValues> RawGeckoComputedKeyframeValuesList;
 typedef nsTArray<mozilla::PropertyStyleAnimationValuePair> RawGeckoAnimationValueList;
-typedef nsTArray<const RawServoAnimationValue*> RawServoAnimationValueBorrowedList;
 typedef nsStyleAutoArray<mozilla::StyleAnimation> RawGeckoStyleAnimationList;
 
 // We have these helper types so that we can directly generate
@@ -119,7 +117,6 @@ DECL_BORROWED_MUT_REF_TYPE_FOR(nsCSSValue)
 DECL_OWNED_REF_TYPE_FOR(RawGeckoPresContext)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoPresContext)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoAnimationValueList)
-DECL_BORROWED_REF_TYPE_FOR(RawServoAnimationValueBorrowedList)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoKeyframeList)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoKeyframeList)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoComputedKeyframeValuesList)
