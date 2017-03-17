@@ -482,10 +482,8 @@ EffectCompositor::GetServoAnimationRule(const dom::Element* aElement,
                                         CSSPseudoElementType aPseudoType,
                                         CascadeLevel aCascadeLevel)
 {
-  if (!mPresContext || !mPresContext->IsDynamic()) {
-    // For print or print preview, ignore animations.
-    return nullptr;
-  }
+  MOZ_ASSERT(mPresContext && mPresContext->IsDynamic(),
+             "Should not be in print preview");
 
   EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
   if (!effectSet) {

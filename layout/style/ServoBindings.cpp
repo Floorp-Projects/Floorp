@@ -404,7 +404,8 @@ Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
     return emptyDeclarationBlock;
   }
   nsPresContext* presContext = doc->GetShell()->GetPresContext();
-  if (!presContext) {
+  if (!presContext || !presContext->IsDynamic()) {
+    // For print or print preview, ignore animations.
     return emptyDeclarationBlock;
   }
 
