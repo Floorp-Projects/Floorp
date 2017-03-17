@@ -35,13 +35,11 @@ add_task(function*() {
         observe(subject, topic, data) {
           is(topic, "nsPref:changed", "observed correct topic");
           is(data, HOMEPAGE_PREF, "observed correct data");
-          let modified = Services.prefs.getComplexValue(HOMEPAGE_PREF,
-                                                        Ci.nsISupportsString);
-          is(modified.data, homepage, "homepage is set correctly");
+          let modified = Services.prefs.getStringPref(HOMEPAGE_PREF);
+          is(modified, homepage, "homepage is set correctly");
           Services.prefs.removeObserver(HOMEPAGE_PREF, observer);
 
-          Services.prefs.setComplexValue(HOMEPAGE_PREF,
-                                         Ci.nsISupportsString, homepageStr);
+          Services.prefs.setStringPref(HOMEPAGE_PREF, "about:mozilla;");
 
           resolve();
         }
@@ -87,4 +85,3 @@ add_task(function*() {
               "http://mochi.test:8888/|http://mochi.test:8888/b|http://mochi.test:8888/c");
   yield dropInvalidURI();
 });
-

@@ -289,17 +289,14 @@ OutputParser.prototype = {
    *
    * @param  {String} text
    *         the parsed text.
-   *
    * @param  {Object} token
    *         the parsed token.
-   *
    * @param  {Object} options
    *         the options given to _parse.
    */
   _isDisplayGrid: function (text, token, options) {
     return options.expectDisplay &&
-      (token.text === "grid" || token.text === "inline-grid") &&
-      text === token.text;
+      (token.text === "grid" || token.text === "inline-grid");
   },
 
   /**

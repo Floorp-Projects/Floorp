@@ -803,6 +803,12 @@ Preferences::SetInitPhase(pref_initPhase phase)
 {
   pref_SetInitPhase(phase);
 }
+
+pref_initPhase
+Preferences::InitPhase()
+{
+  return pref_GetInitPhase();
+}
 #endif
 
 NS_IMETHODIMP

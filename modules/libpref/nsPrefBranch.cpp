@@ -242,6 +242,36 @@ nsresult nsPrefBranch::SetCharPrefInternal(const char *aPrefName, const char *aV
   return PREF_SetCharPref(pref, aValue, mIsDefault);
 }
 
+NS_IMETHODIMP nsPrefBranch::GetStringPref(const char *aPrefName,
+                                          const nsACString& aDefaultValue,
+                                          uint8_t _argc,
+                                          nsACString& _retval)
+{
+  nsXPIDLCString utf8String;
+  nsresult rv = GetCharPref(aPrefName, getter_Copies(utf8String));
+  if (NS_SUCCEEDED(rv)) {
+    _retval = utf8String;
+    return rv;
+  }
+
+  if (_argc == 1) {
+    _retval = aDefaultValue;
+    return NS_OK;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsPrefBranch::SetStringPref(const char *aPrefName, const nsACString& aValue)
+{
+  nsresult rv = CheckSanityOfStringLength(aPrefName, aValue);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return SetCharPrefInternal(aPrefName, PromiseFlatCString(aValue).get());
+}
+
 NS_IMETHODIMP nsPrefBranch::GetIntPrefWithDefault(const char *aPrefName,
                                                   int32_t aDefaultValue,
                                                   uint8_t _argc, int32_t *_retval)
@@ -422,6 +452,10 @@ nsresult nsPrefBranch::CheckSanityOfStringLength(const char* aPrefName, const ch
 }
 
 nsresult nsPrefBranch::CheckSanityOfStringLength(const char* aPrefName, const nsAString& aValue) {
+  return CheckSanityOfStringLength(aPrefName, aValue.Length());
+}
+
+nsresult nsPrefBranch::CheckSanityOfStringLength(const char* aPrefName, const nsACString& aValue) {
   return CheckSanityOfStringLength(aPrefName, aValue.Length());
 }
 

@@ -52,7 +52,7 @@ pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal-re
 #skip-if(Android)  pref(layout.css.mix-blend-mode.enabled,true) == blend-saturation.svg blend-saturation-ref.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-screen.svg blend-screen-ref.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-soft-light.svg blend-soft-light-ref.svg
-skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-difference-stacking.html blend-difference-stacking-ref.html
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking-ref.html
 
 == border-radius-01.html pass.svg
 

@@ -15,3 +15,10 @@ default-preferences pref(layout.css.text-combine-upright.enabled,true)
 == text-orientation-upright-directionality-001.html text-orientation-upright-directionality-001-ref.html
 
 == logical-physical-mapping-001.html logical-physical-mapping-001-ref.html
+
+== dynamic-offset-rtl-001.html dynamic-offset-rtl-001-ref.html
+== dynamic-offset-rtl-002.html dynamic-offset-rtl-001-ref.html
+== dynamic-offset-vrl-001.html dynamic-offset-rtl-001-ref.html
+== dynamic-offset-vrl-002.html dynamic-offset-rtl-001-ref.html
+== dynamic-offset-vrl-rtl-001.html dynamic-offset-rtl-001-ref.html
+== dynamic-offset-vrl-rtl-002.html dynamic-offset-rtl-001-ref.html

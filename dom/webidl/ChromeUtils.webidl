@@ -60,6 +60,15 @@ interface ChromeUtils : ThreadSafeChromeUtils {
   static boolean
   isOriginAttributesEqual(optional OriginAttributesDictionary aA,
                           optional OriginAttributesDictionary aB);
+
+  /**
+   * Loads and compiles the script at the given URL and returns an object
+   * which may be used to execute it repeatedly, in different globals, without
+   * re-parsing.
+   */
+  [NewObject, Throws]
+  static Promise<PrecompiledScript>
+  compileScript(DOMString url, optional CompileScriptOptionsDictionary options);
 };
 
 /**
@@ -87,4 +96,25 @@ dictionary OriginAttributesPatternDictionary {
   boolean inIsolatedMozBrowser;
   unsigned long privateBrowsingId;
   DOMString firstPartyDomain;
+};
+
+dictionary CompileScriptOptionsDictionary {
+  /**
+   * The character set from which to decode the script.
+   */
+  DOMString charset = "utf-8";
+
+  /**
+   * If true, certain parts of the script may be parsed lazily, the first time
+   * they are used, rather than eagerly parsed at load time.
+   */
+  boolean lazilyParse = false;
+
+  /**
+   * If true, the script will be compiled so that its last expression will be
+   * returned as the value of its execution. This makes certain types of
+   * optimization impossible, and disables the JIT in many circumstances, so
+   * should not be used when not absolutely necessary.
+   */
+  boolean hasReturnValue = false;
 };

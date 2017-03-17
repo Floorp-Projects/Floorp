@@ -10,10 +10,6 @@ const kWhitelist = new Set([
   /browser\/content\/browser\/places\/controller.js$/,
 ]);
 
-
-var moduleLocation = gTestPath.replace(/\/[^\/]*$/i, "/parsingTestHelpers.jsm");
-var {generateURIsFromDirTree} = Cu.import(moduleLocation, {});
-
 // Normally we would use reflect.jsm to get Reflect.parse. However, if
 // we do that, then all the AST data is allocated in reflect.jsm's
 // zone. That exposes a bug in our GC. The GC collects reflect.jsm's
@@ -50,7 +46,7 @@ function parsePromise(uri) {
         let scriptText = this.responseText;
         try {
           info("Checking " + uri);
-          Reflect.parse(scriptText);
+          Reflect.parse(scriptText, {source: uri});
           resolve(true);
         } catch (ex) {
           let errorMsg = "Script error reading " + uri + ": " + ex;
@@ -95,7 +91,7 @@ add_task(function* checkAllTheJS() {
   if (parseValue && parseValue.includes(":")) {
     uris = [NetUtil.newURI(parseValue)];
   } else {
-    let appDir = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
+    let appDir = Services.dirsvc.get("GreD", Ci.nsIFile);
     // This asynchronously produces a list of URLs (sadly, mostly sync on our
     // test infrastructure because it runs against jarfiles there, and
     // our zipreader APIs are all sync)

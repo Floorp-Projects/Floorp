@@ -745,6 +745,12 @@ pref_SetInitPhase(pref_initPhase phase)
     gPhase = phase;
 }
 
+pref_initPhase
+pref_GetInitPhase()
+{
+    return gPhase;
+}
+
 void
 pref_SetWatchingPref(bool watching)
 {

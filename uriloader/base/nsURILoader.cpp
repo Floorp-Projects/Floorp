@@ -237,15 +237,33 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
       return NS_BINDING_ABORTED;
     }
 
+    static bool sLargeAllocationTestingAllHttpLoads = false;
     static bool sLargeAllocationHeaderEnabled = false;
     static bool sCachedLargeAllocationPref = false;
     if (!sCachedLargeAllocationPref) {
       sCachedLargeAllocationPref = true;
       mozilla::Preferences::AddBoolVarCache(&sLargeAllocationHeaderEnabled,
                                             "dom.largeAllocationHeader.enabled");
+      mozilla::Preferences::AddBoolVarCache(&sLargeAllocationTestingAllHttpLoads,
+                                            "dom.largeAllocation.testing.allHttpLoads");
     }
 
     if (sLargeAllocationHeaderEnabled) {
+      if (sLargeAllocationTestingAllHttpLoads) {
+        nsCOMPtr<nsIURI> uri;
+        rv = httpChannel->GetURI(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv) && uri) {
+          bool httpScheme = false;
+          bool httpsScheme = false;
+          uri->SchemeIs("http", &httpScheme);
+          uri->SchemeIs("https", &httpsScheme);
+          if ((httpScheme || httpsScheme) &&
+              nsContentUtils::AttemptLargeAllocationLoad(httpChannel)) {
+            return NS_BINDING_ABORTED;
+          }
+        }
+      }
+
       // If we have a Large-Allocation header, let's check if we should perform a process switch.
       nsAutoCString largeAllocationHeader;
       rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Large-Allocation"), largeAllocationHeader);

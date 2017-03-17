@@ -204,5 +204,15 @@ nsHttpTransaction::PrintDiagnostics(nsCString &log)
   log.AppendPrintf("     restart count = %u\n", mRestartCount);
 }
 
+void
+nsHttpConnectionMgr::PendingTransactionInfo::PrintDiagnostics(nsCString &log)
+{
+  log.AppendPrintf("     ::: Pending transaction\n");
+  mTransaction->PrintDiagnostics(log);
+  RefPtr<nsHalfOpenSocket> halfOpen = do_QueryReferent(mHalfOpen);
+  log.AppendPrintf("     Waiting for half open sock: %p or connection: %p\n",
+                   halfOpen.get(), mActiveConn.get());
+}
+
 } // namespace net
 } // namespace mozilla

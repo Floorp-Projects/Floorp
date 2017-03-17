@@ -252,6 +252,10 @@ public:
    */
   void StartObjectLoad(bool aNotify, bool aForceLoad);
 
+protected:
+  // Override for nsImageLoadingContent.
+  nsIContent* AsContent() override { return this; }
+
 private:
   /**
    * Returns if the element is currently focusable regardless of it's tabindex

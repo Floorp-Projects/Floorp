@@ -335,10 +335,7 @@ var FeedHandler = {
         Services.prefs.setCharPref(msg.data.pref, msg.data.value);
         break;
       case "FeedWriter:SetFeedComplexString": {
-        let supportsString = Cc["@mozilla.org/supports-string;1"].
-                             createInstance(Ci.nsISupportsString);
-        supportsString.data = msg.data.value;
-        Services.prefs.setComplexValue(msg.data.pref, Ci.nsISupportsString, supportsString);
+        Services.prefs.setStringPref(msg.data.pref, msg.data.value);
         break;
       }
       case "FeedConverter:ExecuteClientApp":

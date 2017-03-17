@@ -45,12 +45,17 @@ interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
    *        The URI being loaded.
    * @param aReferrer
    *        The referrer of the load.
+   * @param aHasPostData
+   *        True if the load which is being asked about has associated post data
+   *        which would be discarded if the load was redirected across process
+   *        boundaries.
    * @param aTriggeringPrincipal
    *        The principal that initiated the load of aURI.
    */
   bool shouldLoadURI(in nsIDocShell    aDocShell,
                      in nsIURI         aURI,
                      in nsIURI         aReferrer,
+                     in boolean        aHasPostData,
                      in nsIPrincipal   aTriggeringPrincipal);
 
   bool shouldLoadURIInThisProcess(in nsIURI aURI);

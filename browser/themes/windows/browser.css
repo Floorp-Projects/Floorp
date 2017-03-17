@@ -921,20 +921,6 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   list-style-image: url("chrome://browser/skin/menu-forward.png") !important;
 }
 
-/* undo close tab menu item */
-#alltabs_undoCloseTab {
-  list-style-image: url(chrome://browser/skin/undoCloseTab.png);
-}
-
-@media (min-resolution: 1.1dppx) {
-  #alltabs_undoCloseTab {
-    list-style-image: url(chrome://browser/skin/undoCloseTab@2x.png);
-  }
-  #alltabs_undoCloseTab > .toolbarbutton-icon {
-    width: 16px;
-  }
-}
-
 /* zoom control text (reset) button special case: */
 
 #nav-bar #zoom-reset-button > .toolbarbutton-text {
