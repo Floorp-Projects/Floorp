@@ -477,17 +477,20 @@ namespace {
   };
 }
 
-ServoAnimationRule*
-EffectCompositor::GetServoAnimationRule(const dom::Element* aElement,
-                                        CSSPseudoElementType aPseudoType,
-                                        CascadeLevel aCascadeLevel)
+bool
+EffectCompositor::GetServoAnimationRule(
+  const dom::Element* aElement,
+  CSSPseudoElementType aPseudoType,
+  CascadeLevel aCascadeLevel,
+  RawServoAnimationValueMapBorrowed aAnimationValues)
 {
+  MOZ_ASSERT(aAnimationValues);
   MOZ_ASSERT(mPresContext && mPresContext->IsDynamic(),
              "Should not be in print preview");
 
   EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
   if (!effectSet) {
-    return nullptr;
+    return false;
   }
 
   // Get a list of effects sorted by composite order.
@@ -497,9 +500,6 @@ EffectCompositor::GetServoAnimationRule(const dom::Element* aElement,
   }
   sortedEffectList.Sort(EffectCompositeOrderComparator());
 
-  AnimationRule& animRule = effectSet->AnimationRule(aCascadeLevel);
-  animRule.mServo = nullptr;
-
   // If multiple animations affect the same property, animations with higher
   // composite order (priority) override or add or animations with lower
   // priority.
@@ -508,13 +508,13 @@ EffectCompositor::GetServoAnimationRule(const dom::Element* aElement,
       ? effectSet->PropertiesForAnimationsLevel().Inverse()
       : effectSet->PropertiesForAnimationsLevel();
   for (KeyframeEffectReadOnly* effect : sortedEffectList) {
-    effect->GetAnimation()->ComposeStyle(animRule.mServo, propertiesToSkip);
+    effect->GetAnimation()->ComposeStyle(*aAnimationValues, propertiesToSkip);
   }
 
   MOZ_ASSERT(effectSet == EffectSet::GetEffectSet(aElement, aPseudoType),
              "EffectSet should not change while composing style");
 
-  return animRule.mServo;
+  return true;
 }
 
 /* static */ dom::Element*

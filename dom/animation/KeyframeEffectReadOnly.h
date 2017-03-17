@@ -464,7 +464,7 @@ private:
                         const AnimationPropertySegment& aSegment,
                         const ComputedTiming& aComputedTiming);
 
-  void ComposeStyleRule(RefPtr<ServoAnimationRule>& aStyleRule,
+  void ComposeStyleRule(const RawServoAnimationValueMap& aAnimationValues,
                         const AnimationProperty& aProperty,
                         const AnimationPropertySegment& aSegment,
                         const ComputedTiming& aComputedTiming);

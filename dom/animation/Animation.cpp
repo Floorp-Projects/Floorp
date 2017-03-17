@@ -1517,8 +1517,8 @@ Animation::ComposeStyle<RefPtr<AnimValuesStyleRule>&>(
 
 template
 void
-Animation::ComposeStyle<RefPtr<ServoAnimationRule>&>(
-  RefPtr<ServoAnimationRule>& aAnimationRule,
+Animation::ComposeStyle<const RawServoAnimationValueMap&>(
+  const RawServoAnimationValueMap& aAnimationValues,
   const nsCSSPropertyIDSet& aPropertiesToSkip);
 
 } // namespace dom
