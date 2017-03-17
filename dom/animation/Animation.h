@@ -321,12 +321,13 @@ public:
   void WillComposeStyle();
 
   /**
-   * Updates |aStyleRule| with the animation values of this animation's effect,
-   * if any.
+   * Updates |aComposeResult| with the animation values of this animation's
+   * effect, if any.
    * Any properties contained in |aPropertiesToSkip| will not be added or
-   * updated in |aStyleRule|.
+   * updated in |aComposeResult|.
    */
-  void ComposeStyle(AnimationRule& aStyleRule,
+  template<typename ComposeAnimationResult>
+  void ComposeStyle(ComposeAnimationResult&& aComposeResult,
                     const nsCSSPropertyIDSet& aPropertiesToSkip);
 
   void NotifyEffectTimingUpdated();

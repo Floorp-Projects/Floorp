@@ -508,7 +508,7 @@ EffectCompositor::GetServoAnimationRule(const dom::Element* aElement,
       ? effectSet->PropertiesForAnimationsLevel().Inverse()
       : effectSet->PropertiesForAnimationsLevel();
   for (KeyframeEffectReadOnly* effect : sortedEffectList) {
-    effect->GetAnimation()->ComposeStyle(animRule, propertiesToSkip);
+    effect->GetAnimation()->ComposeStyle(animRule.mServo, propertiesToSkip);
   }
 
   MOZ_ASSERT(effectSet == EffectSet::GetEffectSet(aElement, aPseudoType),
@@ -783,7 +783,7 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
     : effects->PropertiesForAnimationsLevel();
   for (KeyframeEffectReadOnly* effect : sortedEffectList) {
     effect->GetAnimation()->WillComposeStyle();
-    effect->GetAnimation()->ComposeStyle(animRule, propertiesToSkip);
+    effect->GetAnimation()->ComposeStyle(animRule.mGecko, propertiesToSkip);
   }
 
   MOZ_ASSERT(effects == EffectSet::GetEffectSet(aElement, aPseudoType),
