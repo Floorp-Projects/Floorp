@@ -15,7 +15,6 @@
 #include "nsISiteSecurityService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSiteSecurityService.h"
-#include "nssb64.h"
 #include "pkix/pkixtypes.h"
 #include "seccomon.h"
 #include "sechash.h"
