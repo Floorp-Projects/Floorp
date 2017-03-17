@@ -30,6 +30,9 @@ class AsyncScriptCompiler final : public nsIIncrementalStreamLoaderObserver
                                 , public Runnable
 {
 public:
+    // Note: References to this class are never held by cycle-collected objects.
+    // If at any point a reference is returned to a caller, please update this
+    // class to implement cycle collection.
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIINCREMENTALSTREAMLOADEROBSERVER
     NS_DECL_NSIRUNNABLE

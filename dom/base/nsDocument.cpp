@@ -10526,7 +10526,8 @@ nsIDocument::ObsoleteSheet(const nsAString& aSheetURI, ErrorResult& rv)
 class UnblockParsingPromiseHandler final : public PromiseNativeHandler
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(UnblockParsingPromiseHandler)
 
   explicit UnblockParsingPromiseHandler(nsIDocument* aDocument, Promise* aPromise)
     : mDocument(aDocument)
@@ -10578,7 +10579,14 @@ private:
   RefPtr<Promise> mPromise;
 };
 
-NS_IMPL_ISUPPORTS0(UnblockParsingPromiseHandler)
+NS_IMPL_CYCLE_COLLECTION(UnblockParsingPromiseHandler, mDocument, mPromise)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UnblockParsingPromiseHandler)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(UnblockParsingPromiseHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(UnblockParsingPromiseHandler)
 
 already_AddRefed<Promise>
 nsIDocument::BlockParsing(OwningNonNull<Promise> aPromise,
