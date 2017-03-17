@@ -205,16 +205,16 @@ public:
         // Detect hyphenation break opportunities in the given range; breaks
         // not at cluster boundaries will be ignored.
         virtual void GetHyphenationBreaks(Range aRange,
-                                          HyphenType *aBreakBefore) = 0;
+                                          HyphenType *aBreakBefore) const = 0;
 
         // Returns the provider's hyphenation setting, so callers can decide
         // whether it is necessary to call GetHyphenationBreaks.
         // Result is an StyleHyphens value.
-        virtual mozilla::StyleHyphens GetHyphensOption() = 0;
+        virtual mozilla::StyleHyphens GetHyphensOption() const = 0;
 
         // Returns the extra width that will be consumed by a hyphen. This should
         // be constant for a given textrun.
-        virtual gfxFloat GetHyphenWidth() = 0;
+        virtual gfxFloat GetHyphenWidth() const = 0;
 
         typedef gfxFont::Spacing Spacing;
 
@@ -224,15 +224,15 @@ public:
          * CLUSTER_START, then character i-1 must have zero after-spacing and
          * character i must have zero before-spacing.
          */
-        virtual void GetSpacing(Range aRange, Spacing *aSpacing) = 0;
+        virtual void GetSpacing(Range aRange, Spacing *aSpacing) const = 0;
 
         // Returns a gfxContext that can be used to measure the hyphen glyph.
         // Only called if the hyphen width is requested.
-        virtual already_AddRefed<DrawTarget> GetDrawTarget() = 0;
+        virtual already_AddRefed<DrawTarget> GetDrawTarget() const = 0;
 
         // Return the appUnitsPerDevUnit value to be used when measuring.
         // Only called if the hyphen width is requested.
-        virtual uint32_t GetAppUnitsPerDevUnit() = 0;
+        virtual uint32_t GetAppUnitsPerDevUnit() const = 0;
     };
 
     struct DrawParams
@@ -850,13 +850,8 @@ public:
         return MakeTextRun(aString, aLength, &params, aFlags, aMFR);
     }
 
-    /**
-     * Get the (possibly-cached) width of the hyphen character.
-     * The aCtx and aAppUnitsPerDevUnit parameters will be used only if
-     * needed to initialize the cached hyphen width; otherwise they are
-     * ignored.
-     */
-    gfxFloat GetHyphenWidth(gfxTextRun::PropertyProvider* aProvider);
+    // Get the (possibly-cached) width of the hyphen character.
+    gfxFloat GetHyphenWidth(const gfxTextRun::PropertyProvider* aProvider);
 
     /**
      * Make a text run representing a single hyphen character.
