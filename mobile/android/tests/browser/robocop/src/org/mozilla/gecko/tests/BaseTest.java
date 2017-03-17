@@ -611,68 +611,6 @@ abstract class BaseTest extends BaseRobocopTest {
         }
     }
 
-    /**
-     * Gets the RecyclerView of the tabs list.
-     *
-     * @return List view in the tabs panel
-     */
-    private final RecyclerView getTabsLayout() {
-        Element tabs = mDriver.findElement(getActivity(), R.id.tabs);
-        tabs.click();
-        return (RecyclerView) getActivity().findViewById(R.id.normal_tabs);
-    }
-
-    /**
-     * Gets the view in the tabs panel at the specified index.
-     *
-     * @return View at index
-     */
-    private View getTabViewAt(final int index) {
-        final View[] childView = { null };
-
-        final RecyclerView view = getTabsLayout();
-
-        runOnUiThreadSync(new Runnable() {
-            @Override
-            public void run() {
-                view.scrollToPosition(index);
-
-                // The selection isn't updated synchronously; posting a
-                // runnable to the view's queue guarantees we'll run after the
-                // layout pass.
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Index is relative to all views in the list.
-                        final RecyclerView.ViewHolder itemViewHolder =
-                                view.findViewHolderForLayoutPosition(index);
-                        childView[0] = itemViewHolder == null ? null : itemViewHolder.itemView;
-                    }
-                });
-            }
-        });
-
-        boolean result = waitForCondition(new Condition() {
-            @Override
-            public boolean isSatisfied() {
-                return childView[0] != null;
-            }
-        }, MAX_WAIT_MS);
-
-        mAsserter.ok(result, "list item at index " + index + " exists", null);
-
-        return childView[0];
-    }
-
-    /**
-     * Selects the tab at the specified index.
-     *
-     * @param index Index of tab to select
-     */
-    public void selectTabAt(final int index) {
-        mSolo.clickOnView(getTabViewAt(index));
-    }
-
     public final void runOnUiThreadSync(Runnable runnable) {
         RobocopUtils.runOnUiThreadSync(getActivity(), runnable);
     }
