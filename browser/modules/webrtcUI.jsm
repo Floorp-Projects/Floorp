@@ -154,6 +154,13 @@ this.webrtcUI = {
     webrtcUI.forgetActivePermissionsFromBrowser(aBrowser);
   },
 
+  forgetStreamsFromProcess(aProcessMM) {
+    // stream.processMM is null when e10s is disabled.
+    this._streams =
+      this._streams.filter(stream => stream.processMM &&
+                                     stream.processMM != aProcessMM);
+  },
+
   showSharingDoorhanger(aActiveStream) {
     let browserWindow = aActiveStream.browser.ownerGlobal;
     if (aActiveStream.tab) {
@@ -279,30 +286,40 @@ this.webrtcUI = {
         removePrompt(aMessage.target, aMessage.data);
         break;
       case "webrtc:UpdatingIndicators":
-        webrtcUI._streams = [];
+        webrtcUI.forgetStreamsFromProcess(aMessage.target);
         break;
       case "webrtc:UpdateGlobalIndicators":
         updateIndicators(aMessage.data, aMessage.target);
         break;
       case "webrtc:UpdateBrowserIndicators":
         let id = aMessage.data.windowId;
+        aMessage.targetFrameLoader.QueryInterface(Ci.nsIFrameLoader);
+        let processMM =
+          aMessage.targetFrameLoader.messageManager.processMessageManager;
         let index;
         for (index = 0; index < webrtcUI._streams.length; ++index) {
-          if (webrtcUI._streams[index].state.windowId == id)
+          let stream = webrtcUI._streams[index];
+          if (stream.state.windowId == id && stream.processMM == processMM)
             break;
         }
         // If there's no documentURI, the update is actually a removal of the
         // stream, triggered by the recording-window-ended notification.
-        if (!aMessage.data.documentURI && index < webrtcUI._streams.length)
+        if (!aMessage.data.documentURI && index < webrtcUI._streams.length) {
           webrtcUI._streams.splice(index, 1);
-        else
-          webrtcUI._streams[index] = {browser: aMessage.target, state: aMessage.data};
+        } else {
+          webrtcUI._streams[index] = {
+            browser: aMessage.target,
+            processMM,
+            state: aMessage.data
+          };
+        }
         let tabbrowser = aMessage.target.ownerGlobal.gBrowser;
         if (tabbrowser)
           tabbrowser.setBrowserSharing(aMessage.target, aMessage.data);
         break;
       case "child-process-shutdown":
         webrtcUI.processIndicators.delete(aMessage.target);
+        webrtcUI.forgetStreamsFromProcess(aMessage.target);
         updateIndicators(null, null);
         break;
     }
@@ -439,7 +456,7 @@ function prompt(aBrowser, aRequest) {
   // share without prompting).
   let reasonForNoPermanentAllow = "";
   if (sharingScreen) {
-    reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.screen2";
+    reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.screen3";
   } else if (sharingAudio) {
     reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.audio";
   } else if (!aRequest.secure) {
@@ -727,8 +744,8 @@ function prompt(aBrowser, aRequest) {
         if (videoDevices.length) {
           let listId = "webRTC-select" + (sharingScreen ? "Window" : "Camera") + "-menulist";
           let videoDeviceIndex = doc.getElementById(listId).value;
-          let allowCamera = videoDeviceIndex != "-1";
-          if (allowCamera) {
+          let allowVideoDevice = videoDeviceIndex != "-1";
+          if (allowVideoDevice) {
             allowedDevices.push(videoDeviceIndex);
             // Session permission will be removed after use
             // (it's really one-shot, not for the entire session)
@@ -747,9 +764,6 @@ function prompt(aBrowser, aRequest) {
             }
             if (remember)
               SitePermissions.set(uri, "camera", SitePermissions.ALLOW);
-          } else {
-            let scope = remember ? SitePermissions.SCOPE_PERSISTENT : SitePermissions.SCOPE_TEMPORARY;
-            SitePermissions.set(uri, "camera", SitePermissions.BLOCK, scope, aBrowser);
           }
         }
         if (audioDevices.length) {
@@ -771,9 +785,6 @@ function prompt(aBrowser, aRequest) {
               }
               if (remember)
                 SitePermissions.set(uri, "microphone", SitePermissions.ALLOW);
-            } else {
-                let scope = remember ? SitePermissions.SCOPE_PERSISTENT : SitePermissions.SCOPE_TEMPORARY;
-                SitePermissions.set(uri, "microphone", SitePermissions.BLOCK, scope, aBrowser);
             }
           } else {
             // Only one device possible for audio capture.

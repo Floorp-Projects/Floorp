@@ -89,7 +89,6 @@ VRDisplayPuppet::VRDisplayPuppet()
   mDisplayInfo.mSittingToStandingTransform._43 = 0.0f;
 
   mSensorState.Clear();
-  mSensorState.timestamp = PR_Now();
 
   gfx::Quaternion rot;
 
@@ -119,7 +118,12 @@ VRDisplayPuppet::~VRDisplayPuppet()
 void
 VRDisplayPuppet::SetDisplayInfo(const VRDisplayInfo& aDisplayInfo)
 {
-  mDisplayInfo = aDisplayInfo;
+  // We are only interested in the eye info of the display info.
+  mDisplayInfo.mEyeResolution = aDisplayInfo.mEyeResolution;
+  memcpy(&mDisplayInfo.mEyeFOV, &aDisplayInfo.mEyeFOV,
+         sizeof(mDisplayInfo.mEyeFOV[0]) * VRDisplayInfo::NumEyes);
+  memcpy(&mDisplayInfo.mEyeTranslation, &aDisplayInfo.mEyeTranslation,
+         sizeof(mDisplayInfo.mEyeTranslation[0]) * VRDisplayInfo::NumEyes);
 }
 
 void
@@ -148,7 +152,7 @@ VRDisplayPuppet::GetSensorState(double timeOffset)
 void
 VRDisplayPuppet::SetSensorState(const VRHMDSensorState& aSensorState)
 {
-  mSensorState = aSensorState;
+  memcpy(&mSensorState, &aSensorState, sizeof(mSensorState));
 }
 
 void

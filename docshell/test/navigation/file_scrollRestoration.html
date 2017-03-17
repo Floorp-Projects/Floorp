@@ -26,7 +26,7 @@
           }
           case 2: {
             opener.is(event.persisted, false, "Shouldn't have persisted session history entry.");
-            opener.isnot(window.scrollY, 0, "Should have restored scrolling.");
+            opener.isnot(Math.round(window.scrollY), 0, "Should have restored scrolling.");
             opener.is(history.scrollRestoration, "auto", "Should have the same scrollRestoration as before reload.");
             history.scrollRestoration = "manual";
             window.onunload = function() {} // Disable bfcache.
@@ -45,7 +45,7 @@
           }
           case 4: {
             opener.is(event.persisted, true, "Should have persisted session history entry.");
-            opener.isnot(window.scrollY, 0, "Should have kept the old scroll position.");
+            opener.isnot(Math.round(window.scrollY), 0, "Should have kept the old scroll position.");
             opener.is(history.scrollRestoration, "manual", "Should have the same scrollRestoration as before reload.");
             window.scrollTo(0, 0);
             window.location.hash = "hash";
@@ -53,7 +53,7 @@
             break;
           }
           case 5: {
-            opener.isnot(window.scrollY, 0, "Should have scrolled to #hash.");
+            opener.isnot(Math.round(window.scrollY), 0, "Should have scrolled to #hash.");
             opener.is(history.scrollRestoration, "manual", "Should have the same scrollRestoration mode as before fragment navigation.");
             window.onunload = function() {} // Disable bfcache.
             opener.setTimeout("is(testWindow.history.scrollRestoration, 'auto'); testWindow.history.back();", 250);
@@ -70,7 +70,7 @@
             history.pushState({ state: "state2" }, "state2");
             window.scrollTo(0, 0);
             history.back();
-            opener.isnot(window.scrollY, 0, "Should have scrolled back to the state1's position");
+            opener.isnot(Math.round(window.scrollY), 0, "Should have scrolled back to the state1's position");
             opener.is(history.state.state, "state1", "Unexpected state.");
 
             history.scrollRestoration = "manual";
@@ -79,17 +79,17 @@
             history.pushState({ state: "state4" }, "state4");
             window.scrollTo(0, 0);
             history.back();
-            opener.is(window.scrollY, 0, "Shouldn't have scrolled back to the state3's position");
+            opener.is(Math.round(window.scrollY), 0, "Shouldn't have scrolled back to the state3's position");
             opener.is(history.state.state, "state3", "Unexpected state.");
 
             history.pushState({ state: "state5" }, "state5");
             history.scrollRestoration = "auto";
             document.getElementById("bottom").scrollIntoView();
-            opener.isnot(window.scrollY, 0, "Should have scrolled to 'bottom'.");
+            opener.isnot(Math.round(window.scrollY), 0, "Should have scrolled to 'bottom'.");
             history.back();
             window.scrollTo(0, 0);
             history.forward();
-            opener.isnot(window.scrollY, 0, "Should have scrolled back to the state5's position");
+            opener.isnot(Math.round(window.scrollY), 0, "Should have scrolled back to the state5's position");
 
             var ifr = document.createElement("iframe");
             ifr.src = "data:text/html,";

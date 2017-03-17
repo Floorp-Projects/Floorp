@@ -56,6 +56,8 @@ function loadevent(event) {
 var win;
 function startTest() {
   var videoURL = new URL("seek_with_sound.ogg", document.documentURI).href;
+
+  // eslint-disable-next-line no-useless-concat
   var url = "data:text/html,<video src=" + videoURL + " controls autoplay=true></video><script>window.testExpando = true;</scr" + "ipt>";
 
   win = window.open(url);

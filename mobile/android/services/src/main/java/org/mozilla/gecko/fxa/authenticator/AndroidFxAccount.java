@@ -693,6 +693,15 @@ public class AndroidFxAccount {
     intent.putExtra(FxAccountConstants.ACCOUNT_OAUTH_SERVICE_ENDPOINT_KEY, getOAuthServerURI());
     // Deleted broadcasts are package-private, so there's no security risk include the tokens in the extras
     intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_AUTH_TOKENS, tokens.toArray(new String[tokens.size()]));
+
+    try {
+      intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_SESSION_TOKEN, getSessionToken());
+    } catch (InvalidFxAState e) {
+      Logger.warn(LOG_TAG, "Could not get a session token, ignoring.", e);
+    }
+    intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_SERVER_URI, getAccountServerURI());
+    intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_DEVICE_ID, getDeviceId());
+
     return intent;
   }
 

@@ -2148,15 +2148,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "The lifetime of accepted HTTPS server certificates, in weeks, up to 2 years. Bucket 105 is all end-entity HTTPS server certificates with a lifetime > 2 years."
   },
-  "KEYGEN_GENERATED_KEY_TYPE": {
-    "expires_in_version": "55",
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "kind": "count",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1191414,1284945],
-    "description": "The number of times we generate a key via keygen, keyed on algorithm and keysize. Keys include RSA with key size (512, 1024, 2048, possibly others), secp384r1, secp256r1, and 'other_ec'."
-  },
   "WEBSOCKETS_HANDSHAKE_TYPE": {
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -10270,7 +10261,7 @@
   "SCROLL_INPUT_METHODS": {
     "alert_emails": ["botond@mozilla.com"],
     "bug_numbers": [1238137],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 64,
     "description": "Count of scroll actions triggered by different input methods. See gfx/layers/apz/util/ScrollInputMethods.h for a list of possible values and their meanings."
@@ -10954,7 +10945,7 @@
   },
   "TIME_TO_NON_BLANK_PAINT_MS": {
     "alert_emails": ["hkirschner@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "exponential",
     "high": 100000,
     "n_buckets": 100,

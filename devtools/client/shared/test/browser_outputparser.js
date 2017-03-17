@@ -152,7 +152,7 @@ function testParseCssProperty(doc, parser) {
        " 100%)"]),
 
     // Note the lack of a space before the color here.
-    makeColorTest("border", "1px dotted#f0c", ["1px dotted ", {name: "#f0c"}]),
+    makeColorTest("border", "1px dotted#f06", ["1px dotted ", {name: "#f06"}]),
   ];
 
   let target = doc.querySelector("div");

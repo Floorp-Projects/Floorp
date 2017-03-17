@@ -180,9 +180,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     }
     increase_msg_id()
     {
-        MSG_ID=`cat ${MSG_ID_FILE}`
-        MSG_ID=`expr ${MSG_ID} + 1`
-        echo ${MSG_ID} > ${MSG_ID_FILE}
+        MSG_ID=$(( ${MSG_ID} + 1 ))
     }
     html_passed_ignore_core()
     {
@@ -645,9 +643,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     NSS_DEFAULT_DB_TYPE="dbm"
     export NSS_DEFAULT_DB_TYPE
 
-    MSG_ID_FILE="${HOSTDIR}/id"
     MSG_ID=0
-    echo ${MSG_ID} > ${MSG_ID_FILE}
 
     #################################################
     # Interoperability testing constatnts

@@ -36,7 +36,7 @@ fuzzy-if(Android,9,134) random-if(layersGPUAccelerated) == logicalmarquee.html l
 == mixedChartype-03.html mixedChartype-03.html
 == mixedChartype-03-j.html mixedChartype-03-j.html
 == unicode-bidi-anonymous-001.html unicode-bidi-anonymous-001.html
-fails == unicode-bidi-anonymous-002.html unicode-bidi-anonymous-002.html
+== unicode-bidi-anonymous-002.html unicode-bidi-anonymous-002.html
 == unicode-bidi-isolate-basic.html unicode-bidi-isolate-basic.html
 fails == unicode-bidi-isolate-aharon.html unicode-bidi-isolate-aharon.html
 fails == unicode-bidi-plaintext.html unicode-bidi-plaintext.html
@@ -69,7 +69,7 @@ fails == 115921-2.html 115921-2.html
 == 229367-1.html 229367-1.html
 fails == 229367-2.html 229367-2.html
 == 229367-3.html 229367-3.html
-fails == 258928-1.html 258928-1.html
+== 258928-1.html 258928-1.html
 fails == 263359-1.html 263359-1.html
 fails == 263359-1a.html 263359-1a.html
 fails == 263359-1b.html 263359-1b.html

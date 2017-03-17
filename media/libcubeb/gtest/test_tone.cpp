@@ -101,7 +101,7 @@ TEST(cubeb, tone)
   struct cb_user_data *user_data;
   int r;
 
-  r = cubeb_init(&ctx, "Cubeb tone example");
+  r = cubeb_init(&ctx, "Cubeb tone example", NULL);
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb library\n");
     ASSERT_EQ(r, CUBEB_OK);

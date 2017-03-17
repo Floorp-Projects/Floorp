@@ -36,6 +36,7 @@ private:
   uint32_t mDeviceID;
   gfx::VRDisplayInfo mDisplayInfo;
   gfx::VRHMDSensorState mSensorState;
+  TimeStamp mTimestamp;
 };
 
 class VRMockController : public DOMEventTargetHelper

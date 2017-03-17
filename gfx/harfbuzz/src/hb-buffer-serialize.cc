@@ -311,6 +311,8 @@ hb_buffer_serialize_glyphs (hb_buffer_t *buffer,
   if (!buf_consumed)
     buf_consumed = &sconsumed;
   *buf_consumed = 0;
+  if (buf_size)
+    *buf = '\0';
 
   assert ((!buffer->len && buffer->content_type == HB_BUFFER_CONTENT_TYPE_INVALID) ||
 	  buffer->content_type == HB_BUFFER_CONTENT_TYPE_GLYPHS);

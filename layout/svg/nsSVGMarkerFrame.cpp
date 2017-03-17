@@ -222,6 +222,16 @@ nsSVGMarkerFrame::SetParentCoordCtxProvider(SVGSVGElement *aContext)
   marker->SetParentCoordCtxProvider(aContext);
 }
 
+void
+nsSVGMarkerFrame::DoUpdateStyleOfOwnedAnonBoxes(
+  mozilla::ServoStyleSet& aStyleSet,
+  nsStyleChangeList& aChangeList,
+  nsChangeHint aHintForThisFrame)
+{
+  UpdateStyleOfChildAnonBox(GetAnonymousChildFrame(this), aStyleSet,
+                            aChangeList, aHintForThisFrame);
+}
+
 //----------------------------------------------------------------------
 // helper class
 

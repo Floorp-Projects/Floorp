@@ -28,6 +28,7 @@ NS_IMPL_RELEASE_INHERITED(VRMockDisplay, DOMEventTargetHelper)
 
 VRMockDisplay::VRMockDisplay(const nsCString& aID, uint32_t aDeviceID)
  : mDeviceID(aDeviceID)
+ , mTimestamp(TimeStamp::Now())
 {
   mDisplayInfo.mDisplayName = aID;
   mDisplayInfo.mType = VRDeviceType::Puppet;
@@ -77,6 +78,8 @@ VRMockDisplay::SetPose(const Nullable<Float32Array>& aPosition,
                        const Nullable<Float32Array>& aAngularVelocity,
                        const Nullable<Float32Array>& aAngularAcceleration)
 {
+  mSensorState.Clear();
+  mSensorState.timestamp = (TimeStamp::Now() - mTimestamp).ToSeconds();
   mSensorState.flags = VRDisplayCapabilityFlags::Cap_Orientation |
                        VRDisplayCapabilityFlags::Cap_Position |
                        VRDisplayCapabilityFlags::Cap_AngularAcceleration |

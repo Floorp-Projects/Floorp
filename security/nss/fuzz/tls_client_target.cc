@@ -12,19 +12,8 @@
 
 #include "shared.h"
 #include "tls_client_config.h"
-#include "tls_client_socket.h"
-
-static PRStatus EnableAllProtocolVersions() {
-  SSLVersionRange supported;
-
-  SECStatus rv = SSL_VersionRangeGetSupported(ssl_variant_stream, &supported);
-  assert(rv == SECSuccess);
-
-  rv = SSL_VersionRangeSetDefault(ssl_variant_stream, &supported);
-  assert(rv == SECSuccess);
-
-  return PR_SUCCESS;
-}
+#include "tls_common.h"
+#include "tls_socket.h"
 
 static SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checksig,
                                      PRBool isServer) {
@@ -35,8 +24,7 @@ static SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checksig,
 
 static void SetSocketOptions(PRFileDesc* fd,
                              std::unique_ptr<ClientConfig>& config) {
-  // Disable session cache for now.
-  SECStatus rv = SSL_OptionSet(fd, SSL_NO_CACHE, true);
+  SECStatus rv = SSL_OptionSet(fd, SSL_NO_CACHE, config->EnableCache());
   assert(rv == SECSuccess);
 
   rv = SSL_OptionSet(fd, SSL_ENABLE_EXTENDED_MASTER_SECRET,
@@ -50,16 +38,19 @@ static void SetSocketOptions(PRFileDesc* fd,
   rv = SSL_OptionSet(fd, SSL_ENABLE_FALSE_START, config->EnableFalseStart());
   assert(rv == SECSuccess);
 
+  rv = SSL_OptionSet(fd, SSL_ENABLE_DEFLATE, config->EnableDeflate());
+  assert(rv == SECSuccess);
+
+  rv = SSL_OptionSet(fd, SSL_CBC_RANDOM_IV, config->EnableCbcRandomIv());
+  assert(rv == SECSuccess);
+
+  rv = SSL_OptionSet(fd, SSL_REQUIRE_SAFE_NEGOTIATION,
+                     config->RequireSafeNegotiation());
+  assert(rv == SECSuccess);
+
   rv =
       SSL_OptionSet(fd, SSL_ENABLE_RENEGOTIATION, SSL_RENEGOTIATE_UNRESTRICTED);
   assert(rv == SECSuccess);
-}
-
-static void EnableAllCipherSuites(PRFileDesc* fd) {
-  for (uint16_t i = 0; i < SSL_NumImplementedCiphers; ++i) {
-    SECStatus rv = SSL_CipherPrefSet(fd, SSL_ImplementedCiphers[i], true);
-    assert(rv == SECSuccess);
-  }
 }
 
 // This is only called when we set SSL_ENABLE_FALSE_START=1,
@@ -78,26 +69,6 @@ static void SetupCallbacks(PRFileDesc* fd, ClientConfig* config) {
   assert(rv == SECSuccess);
 }
 
-static void DoHandshake(PRFileDesc* fd) {
-  SECStatus rv = SSL_ResetHandshake(fd, false /* asServer */);
-  assert(rv == SECSuccess);
-
-  do {
-    rv = SSL_ForceHandshake(fd);
-  } while (rv != SECSuccess && PR_GetError() == PR_WOULD_BLOCK_ERROR);
-
-  // If the handshake succeeds, let's read some data from the server, if any.
-  if (rv == SECSuccess) {
-    uint8_t block[1024];
-    int32_t nb;
-
-    // Read application data and echo it back.
-    while ((nb = PR_Read(fd, block, sizeof(block))) > 0) {
-      PR_Write(fd, block, nb);
-    }
-  }
-}
-
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len) {
   static std::unique_ptr<NSSDatabase> db(new NSSDatabase());
   assert(db != nullptr);
@@ -105,10 +76,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len) {
   EnableAllProtocolVersions();
   std::unique_ptr<ClientConfig> config(new ClientConfig(data, len));
 
+  // Clear the cache. We never want to resume as we couldn't reproduce that.
+  SSL_ClearSessionCache();
+
 #ifdef UNSAFE_FUZZER_MODE
   // Reset the RNG state.
-  SECStatus rv = RNG_ResetForFuzzing();
-  assert(rv == SECSuccess);
+  assert(RNG_ResetForFuzzing() == SECSuccess);
 #endif
 
   // Create and import dummy socket.
@@ -124,7 +97,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len) {
   SetSocketOptions(ssl_fd, config);
   EnableAllCipherSuites(ssl_fd);
   SetupCallbacks(ssl_fd, config.get());
-  DoHandshake(ssl_fd);
+  DoHandshake(ssl_fd, false);
 
   return 0;
 }

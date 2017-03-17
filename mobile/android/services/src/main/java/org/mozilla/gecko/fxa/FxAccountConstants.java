@@ -52,6 +52,9 @@ public class FxAccountConstants {
   public static final String ACCOUNT_DELETED_INTENT_ACCOUNT_PROFILE = "account_deleted_intent_profile";
   public static final String ACCOUNT_OAUTH_SERVICE_ENDPOINT_KEY = "account_oauth_service_endpoint";
   public static final String ACCOUNT_DELETED_INTENT_ACCOUNT_AUTH_TOKENS = "account_deleted_intent_auth_tokens";
+  public static final String ACCOUNT_DELETED_INTENT_ACCOUNT_SESSION_TOKEN = "account_deleted_intent_session_token";
+  public static final String ACCOUNT_DELETED_INTENT_ACCOUNT_SERVER_URI = "account_deleted_intent_account_server_uri";
+  public static final String ACCOUNT_DELETED_INTENT_ACCOUNT_DEVICE_ID = "account_deleted_intent_account_device_id";
 
   /**
    * This action is broadcast when an Android Firefox Account's internal state

@@ -20,9 +20,9 @@
 #include <prerror.h>
 #include <prio.h>
 
-const std::vector<std::string> kCommandArgs({"--create", "--list-certs",
-                                             "--import-cert", "--list-keys",
-                                             "--import-key"});
+const std::vector<std::string> kCommandArgs(
+    {"--create", "--list-certs", "--import-cert", "--list-keys", "--import-key",
+     "--delete-cert", "--delete-key", "--change-password"});
 
 static bool HasSingleCommandArgument(const ArgParser &parser) {
   auto pred = [&](const std::string &cmd) { return parser.Has(cmd); };
@@ -31,7 +31,8 @@ static bool HasSingleCommandArgument(const ArgParser &parser) {
 
 static bool HasArgumentRequiringWriteAccess(const ArgParser &parser) {
   return parser.Has("--create") || parser.Has("--import-cert") ||
-         parser.Has("--import-key");
+         parser.Has("--import-key") || parser.Has("--delete-cert") ||
+         parser.Has("--delete-key") || parser.Has("--change-password");
 }
 
 static std::string PrintFlags(unsigned int flags) {
@@ -73,11 +74,14 @@ static const char *const keyTypeName[] = {"null", "rsa", "dsa", "fortezza",
 void DBTool::Usage() {
   std::cerr << "Usage: nss db [--path <directory>]" << std::endl;
   std::cerr << "  --create" << std::endl;
+  std::cerr << "  --change-password" << std::endl;
   std::cerr << "  --list-certs" << std::endl;
   std::cerr << "  --import-cert [<path>] --name <name> [--trusts <trusts>]"
             << std::endl;
   std::cerr << "  --list-keys" << std::endl;
   std::cerr << "  --import-key [<path> [-- name <name>]]" << std::endl;
+  std::cerr << "  --delete-cert <name>" << std::endl;
+  std::cerr << "  --delete-key <name>" << std::endl;
 }
 
 bool DBTool::Run(const std::vector<std::string> &arguments) {
@@ -146,6 +150,12 @@ bool DBTool::Run(const std::vector<std::string> &arguments) {
     ret = ListKeys();
   } else if (parser.Has("--import-key")) {
     ret = ImportKey(parser);
+  } else if (parser.Has("--delete-cert")) {
+    ret = DeleteCert(parser);
+  } else if (parser.Has("--delete-key")) {
+    ret = DeleteKey(parser);
+  } else if (parser.Has("--change-password")) {
+    ret = ChangeSlotPassword();
   }
 
   // shutdown nss
@@ -395,5 +405,94 @@ bool DBTool::ImportKey(const ArgParser &parser) {
   }
 
   std::cout << "Key import succeeded." << std::endl;
+  return true;
+}
+
+bool DBTool::DeleteCert(const ArgParser &parser) {
+  std::string certName = parser.Get("--delete-cert");
+  if (certName.empty()) {
+    std::cerr << "A name is required to delete a certificate." << std::endl;
+    Usage();
+    return false;
+  }
+
+  ScopedCERTCertificate cert(CERT_FindCertByNicknameOrEmailAddr(
+      CERT_GetDefaultCertDB(), certName.c_str()));
+  if (!cert) {
+    std::cerr << "Could not find certificate with name " << certName << "."
+              << std::endl;
+    return false;
+  }
+
+  SECStatus rv = SEC_DeletePermCertificate(cert.get());
+  if (rv != SECSuccess) {
+    std::cerr << "Unable to delete certificate with name " << certName << "."
+              << std::endl;
+    return false;
+  }
+
+  std::cout << "Certificate with name " << certName << " deleted successfully."
+            << std::endl;
+  return true;
+}
+
+bool DBTool::DeleteKey(const ArgParser &parser) {
+  std::string keyName = parser.Get("--delete-key");
+  if (keyName.empty()) {
+    std::cerr << "A name is required to delete a key." << std::endl;
+    Usage();
+    return false;
+  }
+
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  if (slot.get() == nullptr) {
+    std::cerr << "Error: Init PK11SlotInfo failed!" << std::endl;
+    return false;
+  }
+
+  if (!DBLoginIfNeeded(slot)) {
+    return false;
+  }
+
+  ScopedSECKEYPrivateKeyList list(PK11_ListPrivKeysInSlot(
+      slot.get(), const_cast<char *>(keyName.c_str()), nullptr));
+  if (list.get() == nullptr) {
+    std::cerr << "Fetching private keys with nickname " << keyName
+              << " failed with error " << PR_ErrorToName(PR_GetError())
+              << std::endl;
+    return false;
+  }
+
+  unsigned int foundKeys = 0, deletedKeys = 0;
+  SECKEYPrivateKeyListNode *node;
+  for (node = PRIVKEY_LIST_HEAD(list.get());
+       !PRIVKEY_LIST_END(node, list.get()); node = PRIVKEY_LIST_NEXT(node)) {
+    SECKEYPrivateKey *privKey = node->key;
+    foundKeys++;
+    // see PK11_DeleteTokenPrivateKey for example usage
+    // calling PK11_DeleteTokenPrivateKey directly does not work because it also
+    // destroys the SECKEYPrivateKey (by calling SECKEY_DestroyPrivateKey) -
+    // then SECKEY_DestroyPrivateKeyList does not
+    // work because it also calls SECKEY_DestroyPrivateKey
+    SECStatus rv =
+        PK11_DestroyTokenObject(privKey->pkcs11Slot, privKey->pkcs11ID);
+    if (rv == SECSuccess) {
+      deletedKeys++;
+    }
+  }
+
+  if (foundKeys > deletedKeys) {
+    std::cerr << "Some keys could not be deleted." << std::endl;
+  }
+
+  if (deletedKeys > 0) {
+    std::cout << "Found " << foundKeys << " keys." << std::endl;
+    std::cout << "Successfully deleted " << deletedKeys
+              << " key(s) with nickname " << keyName << "." << std::endl;
+  } else {
+    std::cout << "No key with nickname " << keyName << " found to delete."
+              << std::endl;
+  }
+
   return true;
 }

@@ -144,18 +144,38 @@ nsProfiler::GetProfile(double aSinceTime, char** aProfile)
   return NS_OK;
 }
 
-std::string GetSharedLibraryInfoStringInternal();
+namespace {
+  struct StringWriteFunc : public JSONWriteFunc
+  {
+    nsAString& mBuffer; // This struct must not outlive this buffer
+    explicit StringWriteFunc(nsAString& buffer) : mBuffer(buffer) {}
 
-std::string
-GetSharedLibraryInfoString()
-{
-  return GetSharedLibraryInfoStringInternal();
+    void Write(const char* aStr)
+    {
+      mBuffer.Append(NS_ConvertUTF8toUTF16(aStr));
+    }
+  };
 }
 
 NS_IMETHODIMP
-nsProfiler::GetSharedLibraryInformation(nsAString& aOutString)
+nsProfiler::GetSharedLibraries(JSContext* aCx,
+                               JS::MutableHandle<JS::Value> aResult)
 {
-  aOutString.Assign(NS_ConvertUTF8toUTF16(GetSharedLibraryInfoString().c_str()));
+  JS::RootedValue val(aCx);
+  {
+    nsString buffer;
+    JSONWriter w(MakeUnique<StringWriteFunc>(buffer));
+    w.StartArrayElement();
+    AppendSharedLibraries(w);
+    w.EndArray();
+    MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, static_cast<const char16_t*>(buffer.get()),
+                                 buffer.Length(), &val));
+  }
+  JS::RootedObject obj(aCx, &val.toObject());
+  if (!obj) {
+    return NS_ERROR_FAILURE;
+  }
+  aResult.setObject(*obj);
   return NS_OK;
 }
 

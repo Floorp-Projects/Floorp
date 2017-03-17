@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1151421
+-->
+<head>
+  <title>Test for Bug 1151421</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151421">Mozilla Bug 1151421</a>
+
+<script type="application/javascript">
+
+/** Test for Bug 1151421 **/
+SimpleTest.waitForExplicitFinish();
+
+function childLoad() {
+  // Spin the event loop so we leave the onload handler.
+  SimpleTest.executeSoon(childLoad2);
+}
+
+function childLoad2() {
+  let cw = iframe.contentWindow;
+  let content = cw.document.getElementById("content");
+
+  // Create a function to calculate an invariant.
+  let topPlusOffset = function()
+  {
+    return Math.round(content.getBoundingClientRect().top + cw.pageYOffset);
+  }
+
+  let initialTPO = topPlusOffset();
+
+  // Scroll the iframe to various positions, and check the TPO.
+  // Scrolling down to the bottom will adjust the page offset by a fractional amount.
+  let positions = [-100, 0.17, 0, 1.5, 10.41, 1e6, 12.1];
+
+  // Run some tests with scrollTo() and ensure we have the same invariant after scrolling.
+  positions.forEach(function(pos) {
+    cw.scrollTo(0, pos);
+    is(topPlusOffset(), initialTPO, "Top plus offset should remain invariant across scrolling.");
+  });
+
+  positions.reverse().forEach(function(pos) {
+    cw.scrollTo(0, pos);
+    is(topPlusOffset(), initialTPO, "(reverse) Top plus offset should remain invariant across scrolling.");
+  });
+
+  SimpleTest.finish();
+}
+
+</script>
+
+<!-- When the iframe loads, it calls childLoad(). -->
+<br>
+<iframe height='100px' id='iframe' src='file_bug1151421.html'></iframe>
+
+</body>
+</html>

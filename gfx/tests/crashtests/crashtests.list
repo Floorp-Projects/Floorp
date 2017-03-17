@@ -135,3 +135,4 @@ load 1308394.html
 load 1317403-1.html # bug 1331533
 load 1325159-1.html
 load 1331683.html
+skip-if(Android) pref(dom.disable_open_during_load,false) load 1343666.html

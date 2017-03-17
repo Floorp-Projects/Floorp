@@ -221,7 +221,7 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
 
   if (aTransform.IsSingular()) {
     NS_WARNING("Can't render foreignObject element!");
-    return DrawResult::BAD_ARGS;
+    return DrawResult::SUCCESS;
   }
 
   nsRect kidDirtyRect = kid->GetVisualOverflowRect();
@@ -589,4 +589,13 @@ nsSVGForeignObjectFrame::GetInvalidRegion()
   return nsRect();
 }
 
-
+void
+nsSVGForeignObjectFrame::DoUpdateStyleOfOwnedAnonBoxes(
+  ServoStyleSet& aStyleSet,
+  nsStyleChangeList& aChangeList,
+  nsChangeHint aHintForThisFrame)
+{
+  MOZ_ASSERT(PrincipalChildList().FirstChild(), "Must have our anon box");
+  UpdateStyleOfChildAnonBox(PrincipalChildList().FirstChild(),
+                            aStyleSet, aChangeList, aHintForThisFrame);
+}

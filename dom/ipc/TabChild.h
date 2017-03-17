@@ -358,6 +358,8 @@ public:
 
   mozilla::ipc::IPCResult RecvDeactivate();
 
+  mozilla::ipc::IPCResult RecvParentActivated(const bool& aActivated);
+
   virtual mozilla::ipc::IPCResult RecvMouseEvent(const nsString& aType,
                                                  const float& aX,
                                                  const float& aY,
@@ -691,8 +693,6 @@ protected:
   virtual mozilla::ipc::IPCResult RecvRequestNotifyAfterRemotePaint() override;
 
   virtual mozilla::ipc::IPCResult RecvSuppressDisplayport(const bool& aEnabled) override;
-
-  mozilla::ipc::IPCResult RecvParentActivated(const bool& aActivated);
 
   virtual mozilla::ipc::IPCResult RecvSetKeyboardIndicators(const UIStateChangeType& aShowAccelerators,
                                                             const UIStateChangeType& aShowFocusRings) override;

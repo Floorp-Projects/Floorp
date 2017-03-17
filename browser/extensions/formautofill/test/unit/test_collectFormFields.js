@@ -24,13 +24,6 @@ const TESTCASES = [
                <input id="country" autocomplete="country">
                <input id="email" autocomplete="email">
                <input id="tel" autocomplete="tel"></form>`,
-    returnedFormat: [
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address", "index": 0},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2", "index": 1},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "country", "index": 2},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "email", "index": 3},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel", "index": 4},
-    ],
     fieldDetails: [
       {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address", "element": {}},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2", "element": {}},
@@ -48,13 +41,6 @@ const TESTCASES = [
                <input id="country" autocomplete="shipping country">
                <input id='email' autocomplete="shipping email">
                <input id="tel" autocomplete="shipping tel"></form>`,
-    returnedFormat: [
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address", "index": 0},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2", "index": 1},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country", "index": 2},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email", "index": 3},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel", "index": 4},
-    ],
     fieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2", "element": {}},
@@ -72,13 +58,6 @@ const TESTCASES = [
                <input id="country" autocomplete="shipping country">
                <input id='email' autocomplete="shipping email">
                <input id="tel" autocomplete="shipping tel"></form>`,
-    returnedFormat: [
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address", "index": 0},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2", "index": 1},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country", "index": 2},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email", "index": 3},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel", "index": 4},
-    ],
     fieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2", "element": {}},
@@ -100,8 +79,7 @@ for (let tc of TESTCASES) {
       let form = doc.querySelector("form");
       let handler = new FormAutofillHandler(form);
 
-      Assert.deepEqual(handler.collectFormFields(), testcase.returnedFormat,
-                         "Check the format of form autofill were returned correctly");
+      handler.collectFormFields();
 
       Assert.deepEqual(handler.fieldDetails, testcase.fieldDetails,
                          "Check the fieldDetails were set correctly");

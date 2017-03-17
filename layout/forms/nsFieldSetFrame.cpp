@@ -671,3 +671,15 @@ nsFieldSetFrame::GetNaturalBaselineBOffset(WritingMode          aWM,
   }
   return true;
 }
+
+void
+nsFieldSetFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
+                                               nsStyleChangeList& aChangeList,
+                                               nsChangeHint aHintForThisFrame)
+{
+  nsIFrame* kid = GetInner();
+  if (kid) {
+    UpdateStyleOfChildAnonBox(kid, aStyleSet, aChangeList, aHintForThisFrame);
+  }
+}
+

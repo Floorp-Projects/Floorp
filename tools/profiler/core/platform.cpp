@@ -342,7 +342,7 @@ PS* gPS = nullptr;
 static PS::Mutex gPSMutex;
 
 // The name of the main thread.
-static const char* const kGeckoThreadName = "GeckoMain";
+static const char* const kMainThreadName = "GeckoMain";
 
 static bool
 CanNotifyObservers()
@@ -936,7 +936,7 @@ DoSampleStackTrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
   NativeStack nativeStack = { nullptr, nullptr, 0, 0 };
   MergeStacksIntoProfile(aBuffer, aSample, nativeStack);
 
-  if (aSample && gPS->FeatureLeaf(aLock)) {
+  if (gPS->FeatureLeaf(aLock)) {
     aBuffer->addTag(ProfileBufferEntry::NativeLeafAddr((void*)aSample->pc));
   }
 }
@@ -1034,38 +1034,37 @@ private:
 
 NS_IMPL_ISUPPORTS(ProfileSaveEvent, nsIProfileSaveEvent)
 
-static void
-AddSharedLibraryInfoToStream(std::ostream& aStream, const SharedLibrary& aLib)
-{
-  aStream << "{";
-  aStream << "\"start\":" << aLib.GetStart();
-  aStream << ",\"end\":" << aLib.GetEnd();
-  aStream << ",\"offset\":" << aLib.GetOffset();
-  aStream << ",\"name\":\"" << aLib.GetNativeDebugName() << "\"";
-  const std::string& breakpadId = aLib.GetBreakpadId();
-  aStream << ",\"breakpadId\":\"" << breakpadId << "\"";
-  aStream << "}";
+const static uint64_t kJS_MAX_SAFE_UINTEGER = +9007199254740991ULL;
+
+static int64_t
+SafeJSInteger(uint64_t aValue) {
+  return aValue <= kJS_MAX_SAFE_UINTEGER ? int64_t(aValue) : -1;
 }
 
-static std::string
-GetSharedLibraryInfoStringInternal()
+static void
+AddSharedLibraryInfoToStream(JSONWriter& aWriter, const SharedLibrary& aLib)
+{
+  aWriter.StartObjectElement();
+  aWriter.IntProperty("start", SafeJSInteger(aLib.GetStart()));
+  aWriter.IntProperty("end", SafeJSInteger(aLib.GetEnd()));
+  aWriter.IntProperty("offset", SafeJSInteger(aLib.GetOffset()));
+  aWriter.StringProperty("name", NS_ConvertUTF16toUTF8(aLib.GetModuleName()).get());
+  aWriter.StringProperty("path", NS_ConvertUTF16toUTF8(aLib.GetModulePath()).get());
+  aWriter.StringProperty("debugName", NS_ConvertUTF16toUTF8(aLib.GetDebugName()).get());
+  aWriter.StringProperty("debugPath", NS_ConvertUTF16toUTF8(aLib.GetDebugPath()).get());
+  aWriter.StringProperty("breakpadId", aLib.GetBreakpadId().c_str());
+  aWriter.StringProperty("arch", aLib.GetArch().c_str());
+  aWriter.EndObject();
+}
+
+void
+AppendSharedLibraries(JSONWriter& aWriter)
 {
   SharedLibraryInfo info = SharedLibraryInfo::GetInfoForSelf();
-  if (info.GetSize() == 0) {
-    return "[]";
+  info.SortByAddress();
+  for (size_t i = 0; i < info.GetSize(); i++) {
+    AddSharedLibraryInfoToStream(aWriter, info.GetEntry(i));
   }
-
-  std::ostringstream os;
-  os << "[";
-  AddSharedLibraryInfoToStream(os, info.GetEntry(0));
-
-  for (size_t i = 1; i < info.GetSize(); i++) {
-    os << ",";
-    AddSharedLibraryInfoToStream(os, info.GetEntry(i));
-  }
-
-  os << "]";
-  return os.str();
 }
 
 static void
@@ -1113,7 +1112,7 @@ StreamMetaJSCustomObject(PS::LockRef aLock, SpliceableJSONWriter& aWriter)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  aWriter.IntProperty("version", 3);
+  aWriter.IntProperty("version", 4);
   aWriter.DoubleProperty("interval", gPS->Interval(aLock));
   aWriter.IntProperty("stackwalk", gPS->FeatureStackWalk(aLock));
 
@@ -1128,6 +1127,9 @@ StreamMetaJSCustomObject(PS::LockRef aLock, SpliceableJSONWriter& aWriter)
   bool asyncStacks = Preferences::GetBool("javascript.options.asyncstack");
   aWriter.IntProperty("asyncstack", asyncStacks);
 
+  // The "startTime" field holds the number of milliseconds since midnight
+  // January 1, 1970 GMT. This grotty code computes (Now - (Now - StartTime))
+  // to convert gPS->StartTime() into that form.
   mozilla::TimeDuration delta =
     mozilla::TimeStamp::Now() - gPS->StartTime(aLock);
   aWriter.DoubleProperty(
@@ -1265,8 +1267,9 @@ StreamJSON(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
   aWriter.Start(SpliceableJSONWriter::SingleLineStyle);
   {
     // Put shared library info
-    aWriter.StringProperty("libs",
-                           GetSharedLibraryInfoStringInternal().c_str());
+    aWriter.StartArrayProperty("libs");
+    AppendSharedLibraries(aWriter);
+    aWriter.EndArray();
 
     // Put meta data
     aWriter.StartObjectProperty("meta");
@@ -1537,12 +1540,6 @@ ReadProfilerEnvVars(PS::LockRef aLock)
        gPS->EnvVarInterval(aLock));
 }
 
-static bool
-is_main_thread_name(const char* aName)
-{
-  return aName && (strcmp(aName, kGeckoThreadName) == 0);
-}
-
 #ifdef HAVE_VA_COPY
 #define VARARGS_ASSIGN(foo, bar)     VA_COPY(foo,bar)
 #elif defined(HAVE_VA_LIST_AS_ARRAY)
@@ -1712,9 +1709,7 @@ MaybeSetProfile(PS::LockRef aLock, ThreadInfo* aInfo)
 }
 
 static void
-RegisterCurrentThread(PS::LockRef aLock, const char* aName,
-                      NotNull<PseudoStack*> aPseudoStack, bool aIsMainThread,
-                      void* stackTop)
+locked_register_thread(PS::LockRef aLock, const char* aName, void* stackTop)
 {
   // This function runs both on and off the main thread.
 
@@ -1732,8 +1727,14 @@ RegisterCurrentThread(PS::LockRef aLock, const char* aName,
     }
   }
 
+  if (!tlsPseudoStack.init()) {
+    return;
+  }
+  NotNull<PseudoStack*> stack = WrapNotNull(new PseudoStack());
+  tlsPseudoStack.set(stack);
+
   ThreadInfo* info =
-    new ThreadInfo(aName, id, aIsMainThread, aPseudoStack, stackTop);
+    new ThreadInfo(aName, id, NS_IsMainThread(), stack, stackTop);
 
   MaybeSetProfile(aLock, info);
 
@@ -1741,8 +1742,8 @@ RegisterCurrentThread(PS::LockRef aLock, const char* aName,
   if (gPS->IsActive(aLock) && info->HasProfile() && gPS->FeatureJS(aLock)) {
     // This startJSSampling() call is on-thread, so we can poll manually to
     // start JS sampling immediately.
-    aPseudoStack->startJSSampling();
-    aPseudoStack->pollJSSampling();
+    stack->startJSSampling();
+    stack->pollJSSampling();
   }
 
   threads.push_back(info);
@@ -1835,11 +1836,6 @@ profiler_init(void* aStackTop)
   {
     PS::AutoLock lock(gPSMutex);
 
-    if (!tlsPseudoStack.init()) {
-      LOG("END   profiler_init: TLS init failed");
-      return;
-    }
-
     // We've passed the possible failure point. Instantiate gPS, which
     // indicates that the profiler has initialized successfully.
     gPS = new PS();
@@ -1852,12 +1848,7 @@ profiler_init(void* aStackTop)
     // Read settings from environment variables.
     ReadProfilerEnvVars(lock);
 
-    NotNull<PseudoStack*> stack = WrapNotNull(new PseudoStack());
-    tlsPseudoStack.set(stack);
-
-    bool isMainThread = true;
-    RegisterCurrentThread(lock, kGeckoThreadName, stack, isMainThread,
-                          aStackTop);
+    locked_register_thread(lock, kMainThreadName, aStackTop);
 
     // Platform-specific initialization.
     PlatformInit(lock);
@@ -2670,25 +2661,19 @@ profiler_set_frame_number(int aFrameNumber)
 void
 profiler_register_thread(const char* aName, void* aGuessStackTop)
 {
-  // This function runs both on and off the main thread.
-
+  MOZ_RELEASE_ASSERT(!NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
   PS::AutoLock lock(gPSMutex);
 
-  MOZ_ASSERT(tlsPseudoStack.get() == nullptr);
-  NotNull<PseudoStack*> stack = WrapNotNull(new PseudoStack());
-  tlsPseudoStack.set(stack);
-  bool isMainThread = is_main_thread_name(aName);
   void* stackTop = GetStackTop(aGuessStackTop);
-  RegisterCurrentThread(lock, aName, stack, isMainThread, stackTop);
+  locked_register_thread(lock, aName, stackTop);
 }
 
 void
 profiler_unregister_thread()
 {
-  // This function runs both on and off the main thread.
-
+  MOZ_RELEASE_ASSERT(!NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
   PS::AutoLock lock(gPSMutex);

@@ -767,6 +767,11 @@ public:
   // Called to inform that the set of active VR displays has changed.
   void NotifyActiveVRDisplaysChanged();
 
+  // Outer windows only.
+  uint32_t GetAutoActivateVRDisplayID();
+  // Outer windows only.
+  void SetAutoActivateVRDisplayID(uint32_t aAutoActivateVRDisplayID);
+
   void DispatchVRDisplayActivate(uint32_t aDisplayID,
                                  mozilla::dom::VRDisplayEventReason aReason);
   void DispatchVRDisplayDeactivate(uint32_t aDisplayID,
@@ -1090,15 +1095,15 @@ public:
   void SetInnerHeight(JSContext* aCx, JS::Handle<JS::Value> aValue,
                       mozilla::dom::CallerType aCallerType,
                       mozilla::ErrorResult& aError);
-  int32_t GetScrollXOuter();
-  int32_t GetScrollX(mozilla::ErrorResult& aError);
-  int32_t GetPageXOffset(mozilla::ErrorResult& aError)
+  double GetScrollXOuter();
+  double GetScrollX(mozilla::ErrorResult& aError);
+  double GetPageXOffset(mozilla::ErrorResult& aError)
   {
     return GetScrollX(aError);
   }
-  int32_t GetScrollYOuter();
-  int32_t GetScrollY(mozilla::ErrorResult& aError);
-  int32_t GetPageYOffset(mozilla::ErrorResult& aError)
+  double GetScrollYOuter();
+  double GetScrollY(mozilla::ErrorResult& aError);
+  double GetPageYOffset(mozilla::ErrorResult& aError)
   {
     return GetScrollY(aError);
   }
@@ -1635,7 +1640,7 @@ public:
   // If aDoFlush is true, we'll flush our own layout; otherwise we'll try to
   // just flush our parent and only flush ourselves if we think we need to.
   // Outer windows only.
-  mozilla::CSSIntPoint GetScrollXY(bool aDoFlush);
+  mozilla::CSSPoint GetScrollXY(bool aDoFlush);
 
   int32_t GetScrollBoundaryOuter(mozilla::Side aSide);
 
@@ -2039,6 +2044,11 @@ protected:
   nsTArray<RefPtr<mozilla::dom::VRDisplay>> mVRDisplays;
 
   RefPtr<mozilla::dom::VREventObserver> mVREventObserver;
+
+  // When non-zero, the document should receive a vrdisplayactivate event
+  // after loading.  The value is the ID of the VRDisplay that content should
+  // begin presentation on.
+  uint32_t mAutoActivateVRDisplayID; // Outer windows only
 
 #ifdef ENABLE_INTL_API
   RefPtr<mozilla::dom::IntlUtils> mIntlUtils;

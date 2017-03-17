@@ -108,7 +108,7 @@ use servo_config::opts;
 use servo_config::prefs::PREFS;
 use servo_rand::{Rng, SeedableRng, ServoRng, random};
 use servo_remutex::ReentrantMutex;
-use servo_url::ServoUrl;
+use servo_url::{Host, ImmutableOrigin, ServoUrl};
 use std::borrow::ToOwned;
 use std::collections::{HashMap, VecDeque};
 use std::iter::once;
@@ -229,13 +229,13 @@ pub struct Constellation<Message, LTF, STF> {
     /// event loop for each registered domain name (aka eTLD+1) in
     /// each top-level frame. We store the event loops in a map
     /// indexed by top-level frame id (as a `FrameId`) and registered
-    /// domain name (as a `String`) to event loops. This double
+    /// domain name (as a `Host`) to event loops. This double
     /// indirection ensures that separate tabs do not share event
     /// loops, even if the same domain is loaded in each.
     /// It is important that scripts with the same eTLD+1
     /// share an event loop, since they can use `document.domain`
     /// to become same-origin, at which point they can share DOM objects.
-    event_loops: HashMap<FrameId, HashMap<String, Weak<EventLoop>>>,
+    event_loops: HashMap<FrameId, HashMap<Host, Weak<EventLoop>>>,
 
     /// The set of all the pipelines in the browser.
     /// (See the `pipeline` module for more details.)
@@ -604,16 +604,18 @@ impl<Message, LTF, STF> Constellation<Message, LTF, STF>
             None => self.root_frame_id,
         };
 
+        debug!("Creating new pipeline {} in top-level frame {}.", pipeline_id, top_level_frame_id);
+
         let (event_loop, host) = match sandbox {
             IFrameSandboxState::IFrameSandboxed => (None, None),
             IFrameSandboxState::IFrameUnsandboxed => match reg_host(&load_data.url) {
                 None => (None, None),
                 Some(host) => {
                     let event_loop = self.event_loops.get(&top_level_frame_id)
-                        .and_then(|map| map.get(host))
+                        .and_then(|map| map.get(&host))
                         .and_then(|weak| weak.upgrade());
                     match event_loop {
-                        None => (None, Some(String::from(host))),
+                        None => (None, Some(host)),
                         Some(event_loop) => (Some(event_loop.clone()), None),
                     }
                 },
@@ -677,6 +679,7 @@ impl<Message, LTF, STF> Constellation<Message, LTF, STF>
         };
 
         if let Some(host) = host {
+            debug!("Adding new host entry {} for top-level frame {}.", host, top_level_frame_id);
             self.event_loops.entry(top_level_frame_id)
                 .or_insert_with(HashMap::new)
                 .insert(host, Rc::downgrade(&pipeline.event_loop));
@@ -976,6 +979,10 @@ impl<Message, LTF, STF> Constellation<Message, LTF, STF>
                 } else {
                     warn!("constellation got set final url message for dead pipeline");
                 }
+            }
+            FromScriptMsg::PostMessage(frame_id, origin, data) => {
+                debug!("constellation got postMessage message");
+                self.handle_post_message_msg(frame_id, origin, data);
             }
             FromScriptMsg::MozBrowserEvent(parent_pipeline_id, pipeline_id, event) => {
                 debug!("constellation got mozbrowser event message");
@@ -1786,6 +1793,21 @@ impl<Message, LTF, STF> Constellation<Message, LTF, STF>
         let result = match self.pipelines.get(&pipeline_id) {
             None => return self.compositor_proxy.send(ToCompositorMsg::ChangePageTitle(pipeline_id, None)),
             Some(pipeline) => pipeline.event_loop.send(ConstellationControlMsg::GetTitle(pipeline_id)),
+        };
+        if let Err(e) = result {
+            self.handle_send_error(pipeline_id, e);
+        }
+    }
+
+    fn handle_post_message_msg(&mut self, frame_id: FrameId, origin: Option<ImmutableOrigin>, data: Vec<u8>) {
+        let pipeline_id = match self.frames.get(&frame_id) {
+            None => return warn!("postMessage to closed frame {}.", frame_id),
+            Some(frame) => frame.pipeline_id,
+        };
+        let msg = ConstellationControlMsg::PostMessage(pipeline_id, origin, data);
+        let result = match self.pipelines.get(&pipeline_id) {
+            Some(pipeline) => pipeline.event_loop.send(msg),
+            None => return warn!("postMessage to closed pipeline {}.", pipeline_id),
         };
         if let Err(e) = result {
             self.handle_send_error(pipeline_id, e);

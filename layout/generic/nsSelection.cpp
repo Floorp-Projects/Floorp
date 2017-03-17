@@ -6183,9 +6183,18 @@ Selection::PostScrollSelectionIntoViewEvent(
   mScrollEvent.Revoke();
 
   RefPtr<ScrollSelectionIntoViewEvent> ev =
-      new ScrollSelectionIntoViewEvent(this, aRegion, aVertical, aHorizontal,
-                                       aFlags);
-  nsresult rv = NS_DispatchToCurrentThread(ev);
+    new ScrollSelectionIntoViewEvent(this, aRegion, aVertical, aHorizontal,
+                                     aFlags);
+  nsresult rv;
+  nsIDocument* doc = GetParentObject();
+  if (doc) {
+    rv = doc->Dispatch("ScrollSelectionIntoViewEvent",
+                       TaskCategory::Other,
+                       ev.forget());
+  } else {
+    rv = NS_DispatchToCurrentThread(ev);
+  }
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   mScrollEvent = ev;
@@ -6392,11 +6401,17 @@ Selection::NotifySelectionListeners()
   if (!mFrameSelection)
     return NS_OK;//nothing to do
 
+  // Our internal code should not move focus with using this class while
+  // this moves focus nor from selection listeners.
+  AutoRestore<bool> calledByJSRestorer(mCalledByJS);
+  mCalledByJS = false;
+
   // When normal selection is changed by Selection API, we need to move focus
   // if common ancestor of all ranges are in an editing host.  Note that we
   // don't need to move focus *to* the other focusable node because other
   // browsers don't do it either.
-  if (mSelectionType == SelectionType::eNormal && mCalledByJS) {
+  if (mSelectionType == SelectionType::eNormal &&
+      calledByJSRestorer.SavedValue()) {
     nsPIDOMWindowOuter* window = GetWindow();
     nsIDocument* document = GetDocument();
     // If the document is in design mode or doesn't have contenteditable
@@ -6429,11 +6444,6 @@ Selection::NotifySelectionListeners()
       }
     }
   }
-
-  // After moving focus, especially in selection listeners, our internal code
-  // should not move focus with using this class.
-  AutoRestore<bool> calledFromExternalRestorer(mCalledByJS);
-  mCalledByJS = false;
 
   if (mFrameSelection->GetBatching()) {
     mFrameSelection->SetDirty();
