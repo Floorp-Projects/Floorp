@@ -234,7 +234,7 @@ class BaseContext {
     }
     let message, fileName;
     if (instanceOf(error, "Object") || error instanceof ExtensionError ||
-        typeof error == "object" && this.principal.subsumes(Cu.getObjectPrincipal(error))) {
+        (typeof error == "object" && this.principal.subsumes(Cu.getObjectPrincipal(error)))) {
       message = error.message;
       fileName = error.fileName;
     } else {
