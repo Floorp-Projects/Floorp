@@ -255,10 +255,11 @@ public:
   // parallel traversal.
   void WillComposeStyle();
 
-  // Updates |aStyleRule| with the animation values produced by this
+  // Updates |aComposeResult| with the animation values produced by this
   // AnimationEffect for the current time except any properties contained
   // in |aPropertiesToSkip|.
-  void ComposeStyle(AnimationRule& aStyleRule,
+  template<typename ComposeAnimationResult>
+  void ComposeStyle(ComposeAnimationResult&& aRestultContainer,
                     const nsCSSPropertyIDSet& aPropertiesToSkip);
 
   // Composite |aValueToComposite| on |aUnderlyingValue| with
