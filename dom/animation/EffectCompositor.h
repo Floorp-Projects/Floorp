@@ -32,7 +32,6 @@ namespace mozilla {
 class EffectSet;
 class RestyleTracker;
 class StyleAnimationValue;
-class ServoAnimationRule;
 struct AnimationPerformanceWarning;
 struct AnimationProperty;
 struct NonOwningAnimationTarget;
