@@ -5,4 +5,6 @@
 <resources>
     <string name="app_name" translatable="false">Firefox Klar</string>
     <string name="launcher_name" translatable="false">Klar</string>
+
+    <string name="useragent_appname" translatable="false">Klar</string>
 </resources>

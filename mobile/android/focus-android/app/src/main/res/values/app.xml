@@ -5,4 +5,7 @@
 <resources>
     <string name="app_name" translatable="false">Firefox Focus</string>
     <string name="launcher_name" translatable="false">Focus</string>
+
+    <!-- This String is used in the User Agent -->
+    <string name="useragent_appname" translatable="false">Focus</string>
 </resources>
