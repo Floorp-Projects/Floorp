@@ -227,7 +227,7 @@ protected:
                           int32_t aSelectionType,
                           bool* aActionTaken = nullptr);
 
-  bool UpdateMetaCharset(nsIDOMDocument* aDocument,
+  bool UpdateMetaCharset(nsIDocument& aDocument,
                          const nsACString& aCharacterSet);
 
 protected:

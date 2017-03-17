@@ -1191,7 +1191,8 @@ ExtendableMessageEvent::GetSource(Nullable<OwningClientOrServiceWorkerOrMessageP
   } else if (mMessagePort) {
     aValue.SetValue().SetAsMessagePort() = mMessagePort;
   } else {
-    MOZ_CRASH("Unexpected source value");
+    // nullptr source is possible for manually constructed event
+    aValue.SetNull();
   }
 }
 

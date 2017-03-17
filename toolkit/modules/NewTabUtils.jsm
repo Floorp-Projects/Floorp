@@ -144,8 +144,7 @@ LinksStorage.prototype = {
   get: function Storage_get(aKey, aDefault) {
     let value;
     try {
-      let prefValue = Services.prefs.getComplexValue(this._prefs[aKey],
-                                                     Ci.nsISupportsString).data;
+      let prefValue = Services.prefs.getStringPref(this._prefs[aKey]);
       value = JSON.parse(prefValue);
     } catch (e) {}
     return value || aDefault;
@@ -158,11 +157,7 @@ LinksStorage.prototype = {
    */
   set: function Storage_set(aKey, aValue) {
     // Page titles may contain unicode, thus use complex values.
-    let string = Cc["@mozilla.org/supports-string;1"]
-                   .createInstance(Ci.nsISupportsString);
-    string.data = JSON.stringify(aValue);
-    Services.prefs.setComplexValue(this._prefs[aKey], Ci.nsISupportsString,
-                                   string);
+    Services.prefs.setStringPref(this._prefs[aKey], JSON.stringify(aValue));
   },
 
   /**

@@ -124,7 +124,7 @@ var pktApi = (function() {
         if (!prefBranch.prefHasUserValue(key))
             return undefined;
 
-        return prefBranch.getComplexValue(key, Components.interfaces.nsISupportsString).data;
+        return prefBranch.getStringPref(key);
      }
 
      /**
@@ -142,9 +142,7 @@ var pktApi = (function() {
             prefBranch.clearUserPref(key);
         else {
             // We use complexValue as tags can have utf-8 characters in them
-            var str = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
-            str.data = value;
-            prefBranch.setComplexValue(key, Components.interfaces.nsISupportsString, str);
+            prefBranch.setStringPref(key, value);
         }
     }
 

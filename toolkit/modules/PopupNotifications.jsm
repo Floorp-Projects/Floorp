@@ -1402,6 +1402,13 @@ PopupNotifications.prototype = {
     }
 
     if (type == "buttoncommand" || type == "secondarybuttoncommand") {
+      if (Services.focus.activeWindow != this.window) {
+        Services.console.logStringMessage("PopupNotifications._onButtonEvent: " +
+                                          "Button click happened before the window was focused");
+        this.window.focus();
+        return;
+      }
+
       let timeSinceShown = this.window.performance.now() - notification.timeShown;
       if (timeSinceShown < this.buttonDelay) {
         Services.console.logStringMessage("PopupNotifications._onButtonEvent: " +

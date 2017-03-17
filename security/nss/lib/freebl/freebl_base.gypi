@@ -177,6 +177,11 @@
         'CT_VERIF',
       ],
     }],
+    [ 'only_dev_random==1', {
+      'defines': [
+        'SEED_ONLY_DEV_URANDOM',
+      ]
+    }],
     [ 'OS=="mac"', {
       'conditions': [
         [ 'target_arch=="ia32"', {

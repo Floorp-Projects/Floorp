@@ -426,12 +426,8 @@ var MigrationWizard = { /* exported MigrationWizard */
               if (this._newHomePage == "DEFAULT") {
                 prefBranch.clearUserPref("browser.startup.homepage");
               } else {
-                var str = Components.classes["@mozilla.org/supports-string;1"]
-                                  .createInstance(Components.interfaces.nsISupportsString);
-                str.data = this._newHomePage;
-                prefBranch.setComplexValue("browser.startup.homepage",
-                                           Components.interfaces.nsISupportsString,
-                                           str);
+                prefBranch.setStringPref("browser.startup.homepage",
+                                         this._newHomePage);
               }
 
               var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]

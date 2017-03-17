@@ -1838,19 +1838,16 @@ BrowserGlue.prototype = {
         const DEFAULT =
           Services.prefs.getDefaultBranch(HOMEPAGE_PREF)
                         .getComplexValue("", Ci.nsIPrefLocalizedString).data;
-        let value =
-          Services.prefs.getComplexValue(HOMEPAGE_PREF, Ci.nsISupportsString);
+        let value = Services.prefs.getStringPref(HOMEPAGE_PREF);
         let updated =
-          value.data.replace(/https?:\/\/start\.mozilla\.org[^|]*/i, DEFAULT)
-                    .replace(/https?:\/\/(www\.)?google\.[a-z.]+\/firefox[^|]*/i,
-                             DEFAULT);
-        if (updated != value.data) {
+          value.replace(/https?:\/\/start\.mozilla\.org[^|]*/i, DEFAULT)
+               .replace(/https?:\/\/(www\.)?google\.[a-z.]+\/firefox[^|]*/i,
+                        DEFAULT);
+        if (updated != value) {
           if (updated == DEFAULT) {
             Services.prefs.clearUserPref(HOMEPAGE_PREF);
           } else {
-            value.data = updated;
-            Services.prefs.setComplexValue(HOMEPAGE_PREF,
-                                           Ci.nsISupportsString, value);
+            Services.prefs.setStringPref(HOMEPAGE_PREF, updated);
           }
         }
       }

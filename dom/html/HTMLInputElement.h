@@ -965,7 +965,7 @@ protected:
    * Called when an attribute is about to be changed
    */
   virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                 nsAttrValueOrString* aValue,
+                                 const nsAttrValueOrString* aValue,
                                  bool aNotify) override;
   /**
    * Called when an attribute has just been changed
@@ -1107,7 +1107,7 @@ protected:
   /**
    * Manages the internal data storage across type changes.
    */
-  void HandleTypeChange(uint8_t aNewType);
+  void HandleTypeChange(uint8_t aNewType, bool aNotify);
 
   /**
    * Sanitize the value of the element depending of its current type.
@@ -1494,6 +1494,11 @@ protected:
   void GetSelectionRange(uint32_t* aSelectionStart,
                          uint32_t* aSelectionEnd,
                          ErrorResult& aRv);
+
+  /**
+   * Override for nsImageLoadingContent.
+   */
+  nsIContent* AsContent() override { return this; }
 
   nsCOMPtr<nsIControllers> mControllers;
 

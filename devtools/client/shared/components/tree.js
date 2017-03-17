@@ -198,6 +198,14 @@ module.exports = createClass({
     // The depth to which we should automatically expand new items.
     autoExpandDepth: PropTypes.number,
 
+    // Note: the two properties below are mutually exclusive. Only one of the
+    // label properties is necessary.
+    // ID of an element whose textual content serves as an accessible label for
+    // a tree.
+    labelledby: PropTypes.string,
+    // Accessibility label for a tree widget.
+    label: PropTypes.string,
+
     // Optional event handlers for when items are expanded or collapsed. Useful
     // for dispatching redux events and updating application state, maybe lazily
     // loading subtrees from a worker, etc.
@@ -555,7 +563,7 @@ module.exports = createClass({
     // the top and bottom of the page are filled with the `NUMBER_OF_OFFSCREEN_ITEMS`
     // previous and next items respectively, which helps the user to see fewer empty
     // gaps when scrolling quickly.
-    const { itemHeight } = this.props;
+    const { itemHeight, focused } = this.props;
     const { scroll, height } = this.state;
     const begin = Math.max(((scroll / itemHeight) | 0) - NUMBER_OF_OFFSCREEN_ITEMS, 0);
     const end = Math.ceil((scroll + height) / itemHeight) + NUMBER_OF_OFFSCREEN_ITEMS;
@@ -566,6 +574,7 @@ module.exports = createClass({
     const nodes = [
       dom.div({
         key: "top-spacer",
+        role: "presentation",
         style: {
           padding: 0,
           margin: 0,
@@ -579,26 +588,30 @@ module.exports = createClass({
       const first = index == 0;
       const last = index == traversal.length - 1;
       const { item, depth } = toRender[i];
+      const key = this.props.getKey(item);
       nodes.push(TreeNode({
-        key: this.props.getKey(item),
+        key,
         index,
         first,
         last,
         item,
         depth,
+        id: key,
         renderItem: this.props.renderItem,
-        focused: this.props.focused === item,
+        focused: focused === item,
         expanded: this.props.isExpanded(item),
         hasChildren: !!this.props.getChildren(item).length,
         onExpand: this._onExpand,
         onCollapse: this._onCollapse,
-        onFocus: () => this._focus(begin + i, item),
-        onFocusedNodeUnmount: () => this.refs.tree && this.refs.tree.focus(),
+        onClick: () => this._focus(begin + i, item),
+        // Focus on the previous node if focused node is unmounted.
+        onFocusedNodeUnmount: () => this._focusPrevNode(),
       }));
     }
 
     nodes.push(dom.div({
       key: "bottom-spacer",
+      role: "presentation",
       style: {
         padding: 0,
         margin: 0,
@@ -610,10 +623,33 @@ module.exports = createClass({
       {
         className: "tree",
         ref: "tree",
+        role: "tree",
+        tabIndex: "0",
         onKeyDown: this._onKeyDown,
         onKeyPress: this._preventArrowKeyScrolling,
         onKeyUp: this._preventArrowKeyScrolling,
         onScroll: this._onScroll,
+        onFocus: ({nativeEvent}) => {
+          if (focused || !nativeEvent || !this.refs.tree) {
+            return;
+          }
+
+          let { explicitOriginalTarget } = nativeEvent;
+          // Only set default focus to the first tree node if the focus came
+          // from outside the tree (e.g. by tabbing to the tree from other
+          // external elements).
+          if (explicitOriginalTarget !== this.refs.tree &&
+              !this.refs.tree.contains(explicitOriginalTarget)) {
+            this._focus(begin, toRender[0].item);
+          }
+        },
+        onClick: () => {
+          // Focus should always remain on the tree container itself.
+          this.refs.tree.focus();
+        },
+        "aria-label": this.props.label,
+        "aria-labelledby": this.props.labelledby,
+        "aria-activedescendant": focused && this.props.getKey(focused),
         style: {
           padding: 0,
           margin: 0
@@ -669,6 +705,7 @@ const ArrowExpander = createFactory(createClass({
 
 const TreeNode = createFactory(createClass({
   propTypes: {
+    id: PropTypes.any.isRequired,
     focused: PropTypes.bool.isRequired,
     onFocusedNodeUnmount: PropTypes.func,
     item: PropTypes.any.isRequired,
@@ -678,52 +715,17 @@ const TreeNode = createFactory(createClass({
     index: PropTypes.number.isRequired,
     first: PropTypes.bool,
     last: PropTypes.bool,
-    onFocus: PropTypes.func,
-    onBlur: PropTypes.func,
+    onClick: PropTypes.func,
     onCollapse: PropTypes.func.isRequired,
     depth: PropTypes.number.isRequired,
     renderItem: PropTypes.func.isRequired,
   },
 
-  componentDidMount() {
-    if (this.props.focused) {
-      this.refs.button.focus();
-    }
-  },
-
-  componentDidUpdate() {
-    if (this.props.focused) {
-      this.refs.button.focus();
-    }
-  },
-
   componentWillUnmount() {
-    // If this node is being destroyed and has focus, transfer the focus manually
-    // to the parent tree component. Otherwise, the focus will get lost and keyboard
-    // navigation in the tree will stop working. This is a workaround for a XUL bug.
-    // See bugs 1259228 and 1152441 for details.
-    // DE-XUL: Remove this hack once all usages are only in HTML documents.
     if (this.props.focused) {
-      this.refs.button.blur();
       if (this.props.onFocusedNodeUnmount) {
         this.props.onFocusedNodeUnmount();
       }
-    }
-  },
-
-  _buttonAttrs: {
-    ref: "button",
-    style: {
-      opacity: 0,
-      width: "0 !important",
-      height: "0 !important",
-      padding: "0 !important",
-      outline: "none",
-      MozAppearance: "none",
-      // XXX: Despite resetting all of the above properties (and margin), the
-      // button still ends up with ~79px width, so we set a large negative
-      // margin to completely hide it.
-      MozMarginStart: "-1000px !important",
     }
   },
 
@@ -747,12 +749,22 @@ const TreeNode = createFactory(createClass({
       classList.push("tree-node-last");
     }
 
+    let ariaExpanded;
+    if (this.props.hasChildren) {
+      ariaExpanded = false;
+    }
+    if (this.props.expanded) {
+      ariaExpanded = true;
+    }
+
     return dom.div(
       {
+        id: this.props.id,
         className: classList.join(" "),
-        onFocus: this.props.onFocus,
-        onClick: this.props.onFocus,
-        onBlur: this.props.onBlur,
+        role: "treeitem",
+        "aria-level": this.props.depth,
+        onClick: this.props.onClick,
+        "aria-expanded": ariaExpanded,
         "data-expanded": this.props.expanded ? "" : undefined,
         "data-depth": this.props.depth,
         style: {
@@ -766,10 +778,6 @@ const TreeNode = createFactory(createClass({
                             this.props.focused,
                             arrow,
                             this.props.expanded),
-
-      // XXX: OSX won't focus/blur regular elements even if you set tabindex
-      // unless there is an input/button child.
-      dom.button(this._buttonAttrs)
     );
   }
 }));

@@ -34,6 +34,7 @@ window.onload = Task.async(function* () {
 
     const tree = renderTree();
 
+    isAccessibleTree(tree);
     TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
 
     // UP ----------------------------------------------------------------------

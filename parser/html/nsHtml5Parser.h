@@ -278,9 +278,10 @@ class nsHtml5Parser final : public nsIParser,
     bool                          mDocWriteSpeculativeLastWasCR;
 
     /**
-     * The parser is blocking on a script
+     * The parser is blocking on the load of an external script from a web
+     * page, or any number of extension content scripts.
      */
-    bool                          mBlocked;
+    uint32_t                      mBlocked;
 
     /**
      * Whether the document.write() speculator is already active.

@@ -337,13 +337,9 @@
                          .data;
             case "string":
             case "unichar":
-              return this._branch
-                         .getComplexValue(this.name, Components.interfaces.nsISupportsString)
-                         .data;
+              return this._branch.getStringPref(this.name);
             case "fontname":
-              var family = this._branch
-                               .getComplexValue(this.name, Components.interfaces.nsISupportsString)
-                               .data;
+              var family = this._branch.getStringPref(this.name);
               var fontEnumerator = Components.classes["@mozilla.org/gfx/fontenumerator;1"]
                                              .createInstance(Components.interfaces.nsIFontEnumerator);
               return fontEnumerator.getStandardFamilyName(family);
@@ -388,11 +384,7 @@
           case "string":
           case "unichar":
           case "fontname":
-            var iss = Components.classes["@mozilla.org/supports-string;1"]
-                                .createInstance(Components.interfaces.nsISupportsString);
-            iss.data = val;
-            this.preferences.rootBranch
-                .setComplexValue(this.name, Components.interfaces.nsISupportsString, iss);
+            this.preferences.rootBranch.setStringPref(this.name, val);
             break;
           case "file":
             var lf;

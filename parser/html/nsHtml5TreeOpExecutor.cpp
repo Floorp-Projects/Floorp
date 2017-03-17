@@ -440,6 +440,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
     mFlushState = eInFlush;
 
     nsIContent* scriptElement = nullptr;
+    bool interrupted = false;
     
     BeginDocUpdate();
 
@@ -454,7 +455,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
       }
       NS_ASSERTION(mFlushState == eInDocUpdate, 
         "Tried to perform tree op outside update batch.");
-      nsresult rv = iter->Perform(this, &scriptElement);
+      nsresult rv = iter->Perform(this, &scriptElement, &interrupted);
       if (NS_FAILED(rv)) {
         MarkAsBroken(rv);
         break;
@@ -463,8 +464,9 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
       // Be sure not to check the deadline if the last op was just performed.
       if (MOZ_UNLIKELY(iter == last)) {
         break;
-      } else if (MOZ_UNLIKELY(nsContentSink::DidProcessATokenImpl() == 
-                 NS_ERROR_HTMLPARSER_INTERRUPTED)) {
+      } else if (MOZ_UNLIKELY(interrupted) ||
+                 MOZ_UNLIKELY(nsContentSink::DidProcessATokenImpl() ==
+                              NS_ERROR_HTMLPARSER_INTERRUPTED)) {
         mOpQueue.RemoveElementsAt(0, (iter - first) + 1);
         
         EndDocUpdate();
@@ -546,6 +548,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
 #endif
   
   nsIContent* scriptElement = nullptr;
+  bool interrupted = false;
   
   BeginDocUpdate();
 
@@ -562,7 +565,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
     }
     NS_ASSERTION(mFlushState == eInDocUpdate, 
       "Tried to perform tree op outside update batch.");
-    rv = iter->Perform(this, &scriptElement);
+    rv = iter->Perform(this, &scriptElement, &interrupted);
     if (NS_FAILED(rv)) {
       MarkAsBroken(rv);
       break;
@@ -607,7 +610,7 @@ nsHtml5TreeOpExecutor::IsScriptEnabled()
 }
 
 void
-nsHtml5TreeOpExecutor::StartLayout() {
+nsHtml5TreeOpExecutor::StartLayout(bool* aInterrupted) {
   if (mLayoutStarted || !mDocument) {
     return;
   }
@@ -621,7 +624,24 @@ nsHtml5TreeOpExecutor::StartLayout() {
 
   nsContentSink::StartLayout(false);
 
-  BeginDocUpdate();
+  if (mParser) {
+    *aInterrupted = !GetParser()->IsParserEnabled();
+
+    BeginDocUpdate();
+  }
+}
+
+void
+nsHtml5TreeOpExecutor::PauseDocUpdate(bool* aInterrupted) {
+  // Pausing the document update allows JS to run, and potentially block
+  // further parsing.
+  EndDocUpdate();
+
+  if (MOZ_LIKELY(mParser)) {
+    *aInterrupted = !GetParser()->IsParserEnabled();
+
+    BeginDocUpdate();
+  }
 }
 
 /**
