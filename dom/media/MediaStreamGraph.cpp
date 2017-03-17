@@ -4009,7 +4009,7 @@ MediaStreamGraph::ApplyAudioContextOperation(MediaStream* aDestinationStream,
     }
     void RunDuringShutdown() override
     {
-      MOZ_ASSERT(aOperation == AudioContextOperation::Close, "We should be reviving the graph?");
+      MOZ_ASSERT(false, "We should be reviving the graph?");
     }
 
   private:
