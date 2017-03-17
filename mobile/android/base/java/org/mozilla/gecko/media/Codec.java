@@ -196,8 +196,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                 return;
             }
 
-            Sample output = obtainOutputSample(index, info);
             try {
+                Sample output = obtainOutputSample(index, info);
                 mSentIndices.add(index);
                 mSentOutputs.add(output);
                 mCallbacks.onOutput(output);
@@ -471,8 +471,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     }
 
     @Override
-    public synchronized Sample dequeueInput(int size) {
-        return mInputProcessor.onAllocate(size);
+    public synchronized Sample dequeueInput(int size) throws RemoteException {
+        try {
+            return mInputProcessor.onAllocate(size);
+        } catch (Exception e) {
+            // Translate allocation error to remote exception.
+            throw new RemoteException(e.getMessage());
+        }
     }
 
     @Override
