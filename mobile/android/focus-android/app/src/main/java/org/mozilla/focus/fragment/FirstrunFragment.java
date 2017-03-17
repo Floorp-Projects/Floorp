@@ -9,10 +9,11 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.transition.Transition;
+import android.transition.TransitionInflater;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.MainActivity;
@@ -24,6 +25,16 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
 
     public static FirstrunFragment create() {
         return new FirstrunFragment();
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        final Transition transition = TransitionInflater.from(context).
+                inflateTransition(R.transition.firstrun_exit);
+
+        setExitTransition(transition);
     }
 
     @Override
