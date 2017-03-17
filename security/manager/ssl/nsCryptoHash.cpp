@@ -8,9 +8,10 @@
 
 #include <algorithm>
 
-#include "base64.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
+#include "nsDependentString.h"
 #include "nsIInputStream.h"
 #include "nsIKeyModule.h"
 #include "nsString.h"
@@ -223,18 +224,12 @@ nsCryptoHash::Finish(bool ascii, nsACString & _retval)
 
   mInitialized = false;
 
-  if (ascii)
-  {
-    UniquePORTString asciiData(BTOA_DataToAscii(buffer, hashLen));
-    NS_ENSURE_TRUE(asciiData, NS_ERROR_OUT_OF_MEMORY);
-
-    _retval.Assign(asciiData.get());
-  }
-  else
-  {
-    _retval.Assign((const char*)buffer, hashLen);
+  if (ascii) {
+    nsDependentCSubstring dataStr(BitwiseCast<char*>(buffer), hashLen);
+    return Base64Encode(dataStr, _retval);
   }
 
+  _retval.Assign(BitwiseCast<char*>(buffer), hashLen);
   return NS_OK;
 }
 
@@ -428,18 +423,12 @@ nsCryptoHMAC::Finish(bool aASCII, nsACString & _retval)
     return NS_ERROR_FAILURE;
   }
 
-  if (aASCII)
-  {
-    UniquePORTString asciiData(BTOA_DataToAscii(buffer, hashLen));
-    NS_ENSURE_TRUE(asciiData, NS_ERROR_OUT_OF_MEMORY);
-
-    _retval.Assign(asciiData.get());
-  }
-  else
-  {
-    _retval.Assign((const char*)buffer, hashLen);
+  if (aASCII) {
+    nsDependentCSubstring dataStr(BitwiseCast<char*>(buffer), hashLen);
+    return Base64Encode(dataStr, _retval);
   }
 
+  _retval.Assign(BitwiseCast<char*>(buffer), hashLen);
   return NS_OK;
 }
 
