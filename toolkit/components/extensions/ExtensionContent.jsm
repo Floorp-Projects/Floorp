@@ -49,6 +49,7 @@ Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
+  DefaultMap,
   EventEmitter,
   LocaleData,
   defineLazyGetter,
@@ -102,6 +103,12 @@ var apiManager = new class extends SchemaAPIManager {
   }
 }();
 
+class ScriptCache extends DefaultMap {
+  constructor(options) {
+    super(url => ChromeUtils.compileScript(url, options));
+  }
+}
+
 // Represents a content script.
 function Script(extension, options, deferred = PromiseUtils.defer()) {
   this.extension = extension;
@@ -115,6 +122,12 @@ function Script(extension, options, deferred = PromiseUtils.defer()) {
 
   this.deferred = deferred;
 
+  this.scriptCache = extension[options.wantReturnValue ? "dynamicScripts"
+                                                       : "staticScripts"];
+  if (options.wantReturnValue) {
+    this.compileScripts();
+  }
+
   this.matches_ = new MatchPattern(this.options.matches);
   this.exclude_matches_ = new MatchPattern(this.options.exclude_matches || null);
   // TODO: MatchPattern should pre-mangle host-only patterns so that we
@@ -127,6 +140,10 @@ function Script(extension, options, deferred = PromiseUtils.defer()) {
 }
 
 Script.prototype = {
+  compileScripts() {
+    return this.js.map(url => this.scriptCache.get(url));
+  },
+
   get cssURLs() {
     // We can handle CSS urls (css) and CSS code (cssCode).
     let urls = [];
@@ -257,37 +274,32 @@ Script.prototype = {
       }
     }
 
-    let result;
     let scheduled = this.run_at || "document_idle";
     if (shouldRun(scheduled)) {
-      for (let url of this.js) {
-        url = this.extension.baseURI.resolve(url);
+      let scriptsPromise = Promise.all(this.compileScripts());
 
-        let options = {
-          target: sandbox,
-          charset: "UTF-8",
-          // Inject asynchronously unless we're expected to inject before any
-          // page scripts have run, and we haven't already missed that boat.
-          async: this.run_at !== "document_start" || when !== "document_start",
-        };
-        try {
-          result = Services.scriptloader.loadSubScriptWithOptions(url, options);
-        } catch (e) {
-          Cu.reportError(e);
-          this.deferred.reject(e);
-        }
+      // If we're supposed to inject at the start of the document load,
+      // and we haven't already missed that point, block further parsing
+      // until the scripts have been loaded.
+      if (this.run_at === "document_start" && when === "document_start") {
+        window.document.blockParsing(scriptsPromise);
       }
 
-      if (this.options.jsCode) {
-        try {
+      this.deferred.resolve(scriptsPromise.then(scripts => {
+        let result;
+
+        // The evaluations below may throw, in which case the promise will be
+        // automatically rejected.
+        for (let script of scripts) {
+          result = script.executeInGlobal(sandbox);
+        }
+
+        if (this.options.jsCode) {
           result = Cu.evalInSandbox(this.options.jsCode, sandbox, "latest");
-        } catch (e) {
-          Cu.reportError(e);
-          this.deferred.reject(e);
         }
-      }
 
-      this.deferred.resolve(result);
+        return result;
+      }));
     }
   },
 };
@@ -795,7 +807,10 @@ class BrowserExtensionContent extends EventEmitter {
     this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
     Services.cpmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
-    this.scripts = data.content_scripts.map(scriptData => new Script(this, scriptData));
+    defineLazyGetter(this, "scripts", () => {
+      return data.content_scripts.map(scriptData => new Script(this, scriptData));
+    });
+
     this.webAccessibleResources = new MatchGlobs(data.webAccessibleResources);
     this.whiteListedHosts = new MatchPattern(data.whiteListedHosts);
     this.permissions = data.permissions;
@@ -856,6 +871,14 @@ class BrowserExtensionContent extends EventEmitter {
     return this.permissions.has(perm);
   }
 }
+
+defineLazyGetter(BrowserExtensionContent.prototype, "staticScripts", () => {
+  return new ScriptCache({hasReturnValue: false});
+});
+
+defineLazyGetter(BrowserExtensionContent.prototype, "dynamicScripts", () => {
+  return new ScriptCache({hasReturnValue: true});
+});
 
 ExtensionManager = {
   // Map[extensionId, BrowserExtensionContent]
