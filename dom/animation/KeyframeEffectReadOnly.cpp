@@ -440,7 +440,7 @@ KeyframeEffectReadOnly::GetUnderlyingStyle(
 {
   StyleAnimationValue result;
 
-  if (aAnimationRule->HasValue(aProperty)) {
+  if (aAnimationRule && aAnimationRule->HasValue(aProperty)) {
     // If we have already composed style for the property, we use the style
     // as the underlying style.
     DebugOnly<bool> success = aAnimationRule->GetValue(aProperty, result);
@@ -623,11 +623,6 @@ KeyframeEffectReadOnly::ComposeStyle(
     } else {
       // Gecko backend
 
-      if (!aStyleRule.mGecko) {
-        // Allocate the style rule now that we know we have animation data.
-        aStyleRule.mGecko = new AnimValuesStyleRule();
-      }
-
       StyleAnimationValue fromValue =
         CompositeValue(prop.mProperty, aStyleRule.mGecko,
                        segment->mFromValue.mGecko,
@@ -638,6 +633,11 @@ KeyframeEffectReadOnly::ComposeStyle(
                        segment->mToComposite);
       if (fromValue.IsNull() || toValue.IsNull()) {
         continue;
+      }
+
+      if (!aStyleRule.mGecko) {
+        // Allocate the style rule now that we know we have animation data.
+        aStyleRule.mGecko = new AnimValuesStyleRule();
       }
 
       // Iteration composition for accumulate
