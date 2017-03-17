@@ -538,11 +538,6 @@ menuitem.bookmark-item {
   margin-left: calc(-0.01px - var(--forwardbutton-width) - var(--backbutton-urlbar-overlap));
 }
 
-/* undo close tab menu item */
-#alltabs_undoCloseTab {
-  list-style-image: url(chrome://browser/skin/undoCloseTab.png);
-}
-
 .unified-nav-back[_moz-menuactive] {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu") !important;
 }

@@ -13,7 +13,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/AsyncEventDispatcher.h" // For AsyncEventDispatcher
 #include "mozilla/Maybe.h" // For Maybe
-#include "mozilla/AnimationRule.h" // For AnimationRule
+#include "mozilla/TypeTraits.h" // For Forward<>
 #include "nsAnimationManager.h" // For CSSAnimation
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
 #include "nsIDocument.h" // For nsIDocument
@@ -942,8 +942,9 @@ Animation::WillComposeStyle()
   }
 }
 
+template<typename ComposeAnimationResult>
 void
-Animation::ComposeStyle(AnimationRule& aStyleRule,
+Animation::ComposeStyle(ComposeAnimationResult&& aComposeResult,
                         const nsCSSPropertyIDSet& aPropertiesToSkip)
 {
   if (!mEffect) {
@@ -1005,7 +1006,8 @@ Animation::ComposeStyle(AnimationRule& aStyleRule,
 
     KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
     if (keyframeEffect) {
-      keyframeEffect->ComposeStyle(aStyleRule, aPropertiesToSkip);
+      keyframeEffect->ComposeStyle(Forward<ComposeAnimationResult>(aComposeResult),
+                                   aPropertiesToSkip);
     }
   }
 
@@ -1505,6 +1507,18 @@ Animation::IsRunningOnCompositor() const
          mEffect->AsKeyframeEffect() &&
          mEffect->AsKeyframeEffect()->IsRunningOnCompositor();
 }
+
+template
+void
+Animation::ComposeStyle<RefPtr<AnimValuesStyleRule>&>(
+  RefPtr<AnimValuesStyleRule>& aAnimationRule,
+  const nsCSSPropertyIDSet& aPropertiesToSkip);
+
+template
+void
+Animation::ComposeStyle<const RawServoAnimationValueMap&>(
+  const RawServoAnimationValueMap& aAnimationValues,
+  const nsCSSPropertyIDSet& aPropertiesToSkip);
 
 } // namespace dom
 } // namespace mozilla

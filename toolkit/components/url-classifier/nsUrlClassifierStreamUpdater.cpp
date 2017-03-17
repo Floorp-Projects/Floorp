@@ -99,7 +99,6 @@ nsUrlClassifierStreamUpdater::DownloadDone()
   mSuccessCallback = nullptr;
   mUpdateErrorCallback = nullptr;
   mDownloadErrorCallback = nullptr;
-  mTelemetryProvider.Truncate();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -781,6 +780,7 @@ nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest *request, nsISupports* co
     rv = mDBService->FinishUpdate();
   }
 
+  mTelemetryProvider.Truncate();
   mChannel = nullptr;
 
   // If the fetch failed, return the network status rather than NS_OK, the
