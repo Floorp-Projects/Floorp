@@ -46,10 +46,7 @@ function run_test() {
   var advancedUrlRef = "http://test.mozilla.com/Url Formatter Test/1/" + gAppInfo.appBuildID + "/XPCShell_" + abi + "/" + locale + "/" + channel + "/" + OSVersion + "/bacon/1.0/";
 
   var pref = "xpcshell.urlformatter.test";
-  var str = Cc["@mozilla.org/supports-string;1"].
-            createInstance(Ci.nsISupportsString);
-  str.data = upperUrlRaw;
-  prefs.setComplexValue(pref, Ci.nsISupportsString, str);
+  prefs.setStringPref(pref, upperUrlRaw);
 
   do_check_eq(formatter.formatURL(upperUrlRaw), ulUrlRef);
   do_check_eq(formatter.formatURLPref(pref), ulUrlRef);

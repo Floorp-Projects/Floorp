@@ -13,7 +13,7 @@ ADD setup.sh /tmp/setup.sh
 RUN bash /tmp/setup.sh
 
 # Change user.
-USER worker
+# USER worker # See bug 1347473.
 
 # Env variables.
 ENV HOME /home/worker

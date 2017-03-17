@@ -391,6 +391,7 @@ NS_IMETHODIMP nsContentTreeOwner::OnBeforeLinkTraversal(const nsAString &origina
 NS_IMETHODIMP nsContentTreeOwner::ShouldLoadURI(nsIDocShell *aDocShell,
                                                 nsIURI *aURI,
                                                 nsIURI *aReferrer,
+                                                bool aHasPostData,
                                                 nsIPrincipal* aTriggeringPrincipal,
                                                 bool *_retval)
 {
@@ -400,7 +401,7 @@ NS_IMETHODIMP nsContentTreeOwner::ShouldLoadURI(nsIDocShell *aDocShell,
   mXULWindow->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
 
   if (xulBrowserWindow)
-    return xulBrowserWindow->ShouldLoadURI(aDocShell, aURI, aReferrer,
+    return xulBrowserWindow->ShouldLoadURI(aDocShell, aURI, aReferrer, aHasPostData,
                                            aTriggeringPrincipal, _retval);
 
   *_retval = true;

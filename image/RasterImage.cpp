@@ -1204,6 +1204,12 @@ RasterImage::Decode(const IntSize& aSize,
   RefPtr<IDecodingTask> task;
   if (mAnimationState && aPlaybackType == PlaybackType::eAnimated) {
     mAnimationState->SetDiscarded(false);
+    // If the animation is finished we can draw right away because we just draw
+    // the final frame all the time from now on. See comment in
+    // AnimationState::NotifyDecodeComplete.
+    if (mAnimationFinished) {
+      mAnimationState->SetCompositedFrameInvalid(false);
+    }
     task = DecoderFactory::CreateAnimationDecoder(mDecoderType, WrapNotNull(this),
                                                   mSourceBuffer, mSize,
                                                   decoderFlags, surfaceFlags);

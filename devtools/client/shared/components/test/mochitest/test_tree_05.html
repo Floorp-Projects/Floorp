@@ -35,9 +35,11 @@ window.onload = Task.async(function* () {
 
     const tree = renderTree();
 
+    isAccessibleTree(tree);
     TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
 
     renderTree({ focused: "G" });
+    isAccessibleTree(tree, { hasActiveDescendant: true });
 
     isRenderedTree(document.body.textContent, [
       "A:false",

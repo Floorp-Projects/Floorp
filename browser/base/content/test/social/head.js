@@ -203,10 +203,7 @@ function checkSocialUI(win) {
 }
 
 function setManifestPref(name, manifest) {
-  let string = Cc["@mozilla.org/supports-string;1"].
-               createInstance(Ci.nsISupportsString);
-  string.data = JSON.stringify(manifest);
-  Services.prefs.setComplexValue(name, Ci.nsISupportsString, string);
+  Services.prefs.setStringPref(name, JSON.stringify(manifest));
 }
 
 function getManifestPrefname(aManifest) {

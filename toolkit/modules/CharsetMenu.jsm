@@ -103,9 +103,8 @@ function CharsetComparator(a, b) {
 }
 
 function SetDetector(event) {
-  let str = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-  str.data = event.target.getAttribute("detector");
-  Services.prefs.setComplexValue("intl.charset.detector", Ci.nsISupportsString, str);
+  Services.prefs.setStringPref("intl.charset.detector",
+                               event.target.getAttribute("detector"));
 }
 
 function UpdateDetectorMenu(event) {

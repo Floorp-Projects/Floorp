@@ -32,6 +32,17 @@ AnimationState::NotifyDecodeComplete()
   // currently decoded.
   if (!mDiscarded) {
     mIsCurrentlyDecoded = true;
+
+    // Animated images that have finished their animation (ie because it is a
+    // finite length animation) don't have RequestRefresh called on them, and so
+    // mCompositedFrameInvalid would never get cleared. We clear it here (and
+    // also in RasterImage::Decode when we create a decoder for an image that
+    // has finished animated so it can display sooner than waiting until the
+    // decode completes). This is safe to do for images that aren't finished
+    // animating because before we paint the refresh driver will call into us
+    // to advance to the correct frame, and that will succeed because we have
+    // all the frames.
+    mCompositedFrameInvalid = false;
   }
   mHasBeenDecoded = true;
 }

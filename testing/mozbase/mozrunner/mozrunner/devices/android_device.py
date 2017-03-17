@@ -65,6 +65,14 @@ AVD_DICT = {
                    ['-show-kernel', '-debug',
                     'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket'],
                    5554),
+    '7.0': AvdInfo('Android 7.0',
+                   'mozemulator-7.0',
+                   'testing/config/tooltool-manifests/androidarm_7_0/mach-emulator.manifest',
+                   ['-debug',
+                    'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket',
+                    '-ranchu',
+                    '-qemu', '-m', '2048'],
+                   5554),
     'x86': AvdInfo('Android 4.2 x86',
                    'mozemulator-x86',
                    'testing/config/tooltool-manifests/androidx86/mach-emulator.manifest',
@@ -665,6 +673,7 @@ def _log_info(text):
 
 
 def _download_file(url, filename, path):
+    _log_debug("Download %s to %s/%s..." % (url, path, filename))
     f = urllib2.urlopen(url)
     if not os.path.isdir(path):
         try:

@@ -140,7 +140,7 @@ nsURLFormatterService.prototype = {
              getService(Ci.nsIPrefBranch);
 
     try {
-      format = PS.getComplexValue(aPref, Ci.nsISupportsString).data;
+      format = PS.getStringPref(aPref);
     } catch(ex) {
       Cu.reportError("formatURLPref: Couldn't get pref: " + aPref);
       return "about:blank";

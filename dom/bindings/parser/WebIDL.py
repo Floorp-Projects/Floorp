@@ -4852,9 +4852,10 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                     # optional arguments must be optional.
                     if (not argument.optional and
                         all(arg.optional for arg in arguments[idx+1:])):
-                        raise WebIDLError("Dictionary argument or union "
-                                          "argument containing a dictionary "
-                                          "not followed by a required argument "
+                        raise WebIDLError("Dictionary argument without any "
+                                          "required fields or union argument "
+                                          "containing such dictionary not "
+                                          "followed by a required argument "
                                           "must be optional",
                                           [argument.location])
 

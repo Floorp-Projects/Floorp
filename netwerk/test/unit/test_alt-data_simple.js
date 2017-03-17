@@ -24,10 +24,12 @@ function make_channel(url, callback, ctx) {
 }
 
 const responseContent = "response body";
+const responseContent2 = "response body 2";
 const altContent = "!@#$%^&*()";
 const altContentType = "text/binary";
 
 var servedNotModified = false;
+var shouldPassRevalidation = true;
 
 function contentHandler(metadata, response)
 {
@@ -41,11 +43,12 @@ function contentHandler(metadata, response)
     var etag = "";
   }
 
-  if (etag == "test-etag1") {
+  if (etag == "test-etag1" && shouldPassRevalidation) {
     response.setStatusLine(metadata.httpVersion, 304, "Not Modified");
     servedNotModified = true;
   } else {
-    response.bodyOutputStream.write(responseContent, responseContent.length);
+    var content = shouldPassRevalidation ? responseContent : responseContent2;
+    response.bodyOutputStream.write(content, content.length);
   }
 }
 
@@ -106,6 +109,26 @@ function readAltContent(request, buffer)
   do_check_eq(servedNotModified, true);
   do_check_eq(cc.alternativeDataType, altContentType);
   do_check_eq(buffer, altContent);
+
+  requestAgain();
+}
+
+function requestAgain()
+{
+  shouldPassRevalidation = false;
+  var chan = make_channel(URL);
+  var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
+  cc.preferAlternativeDataType(altContentType);
+  chan.asyncOpen2(new ChannelListener(readEmptyAltContent, null));
+}
+
+function readEmptyAltContent(request, buffer)
+{
+  var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
+
+  // the cache is overwrite and the alt-data is reset
+  do_check_eq(cc.alternativeDataType, "");
+  do_check_eq(buffer, responseContent2);
 
   httpServer.stop(do_test_finished);
 }

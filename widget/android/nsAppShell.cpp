@@ -146,8 +146,22 @@ public:
 
     static void WaitOnGecko()
     {
-        struct NoOpEvent : nsAppShell::Event {
-            void Run() override {}
+        struct NoOpRunnable : Runnable
+        {
+            NS_IMETHOD Run() override { return NS_OK; }
+        };
+
+        struct NoOpEvent : nsAppShell::Event
+        {
+            void Run() override
+            {
+                // We cannot call NS_DispatchToMainThread from within
+                // WaitOnGecko itself because the thread that is calling
+                // WaitOnGecko may not be an nsThread, and may not be able to do
+                // a sync dispatch.
+                NS_DispatchToMainThread(do_AddRef(new NoOpRunnable()),
+                                        NS_DISPATCH_SYNC);
+            }
         };
         nsAppShell::SyncRunEvent(NoOpEvent());
     }
@@ -252,20 +266,6 @@ public:
         }
 
         MOZ_CRASH("Uncaught Java exception");
-    }
-
-    static void SyncNotifyObservers(jni::String::Param aTopic,
-                                    jni::String::Param aData)
-    {
-        MOZ_RELEASE_ASSERT(NS_IsMainThread());
-        NotifyObservers(aTopic, aData);
-    }
-
-    template<typename Functor>
-    static void OnNativeCall(Functor&& aCall)
-    {
-        MOZ_ASSERT(aCall.IsTarget(&NotifyObservers));
-        NS_DispatchToMainThread(NS_NewRunnableFunction(mozilla::Move(aCall)));
     }
 
     static void NotifyObservers(jni::String::Param aTopic,
@@ -429,8 +429,10 @@ nsAppShell::nsAppShell()
 nsAppShell::~nsAppShell()
 {
     {
+        // Release any thread waiting for a sync call to finish.
         MutexAutoLock lock(*sAppShellLock);
         sAppShell = nullptr;
+        mSyncRunFinished.NotifyAll();
     }
 
     while (mEventQueue.Pop(/* mayWait */ false)) {
@@ -720,13 +722,13 @@ nsAppShell::SyncRunEvent(Event&& event,
 
     bool finished = false;
     auto runAndNotify = [&event, &finished] {
-        mozilla::MutexAutoLock shellLock(*sAppShellLock);
-        nsAppShell* const appShell = sAppShell;
+        nsAppShell* const appShell = nsAppShell::Get();
         if (MOZ_UNLIKELY(!appShell || appShell->mSyncRunQuit)) {
             return;
         }
         event.Run();
         finished = true;
+        mozilla::MutexAutoLock shellLock(*sAppShellLock);
         appShell->mSyncRunFinished.NotifyAll();
     };
 
