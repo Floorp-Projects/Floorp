@@ -37,7 +37,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIEditRules.h"
 #include "nsINode.h"
@@ -232,35 +231,34 @@ TextEditor::SetDocumentCharacterSet(const nsACString& characterSet)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Update META charset element.
-  nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
-  NS_ENSURE_TRUE(domdoc, NS_ERROR_NOT_INITIALIZED);
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  if (NS_WARN_IF(!doc)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
-  if (UpdateMetaCharset(domdoc, characterSet)) {
+  if (UpdateMetaCharset(*doc, characterSet)) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNodeList> headList;
-  rv = domdoc->GetElementsByTagName(NS_LITERAL_STRING("head"), getter_AddRefs(headList));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(headList, NS_OK);
+  RefPtr<nsContentList> headList =
+    doc->GetElementsByTagName(NS_LITERAL_STRING("head"));
+  if (NS_WARN_IF(!headList)) {
+    return NS_OK;
+  }
 
-  nsCOMPtr<nsIDOMNode> headNode;
-  headList->Item(0, getter_AddRefs(headNode));
-  NS_ENSURE_TRUE(headNode, NS_OK);
+  nsCOMPtr<nsIContent> headNode = headList->Item(0);
+  if (NS_WARN_IF(!headNode)) {
+    return NS_OK;
+  }
 
   // Create a new meta charset tag
-  nsCOMPtr<nsIDOMNode> resultNode;
-  rv = CreateNode(NS_LITERAL_STRING("meta"), headNode, 0, getter_AddRefs(resultNode));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(resultNode, NS_OK);
+  RefPtr<Element> metaElement = CreateNode(nsGkAtoms::meta, headNode, 0);
+  if (NS_WARN_IF(!metaElement)) {
+    return NS_OK;
+  }
 
   // Set attributes to the created element
   if (characterSet.IsEmpty()) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<dom::Element> metaElement = do_QueryInterface(resultNode);
-  if (!metaElement) {
     return NS_OK;
   }
 
@@ -275,23 +273,17 @@ TextEditor::SetDocumentCharacterSet(const nsACString& characterSet)
 }
 
 bool
-TextEditor::UpdateMetaCharset(nsIDOMDocument* aDocument,
+TextEditor::UpdateMetaCharset(nsIDocument& aDocument,
                               const nsACString& aCharacterSet)
 {
-  MOZ_ASSERT(aDocument);
   // get a list of META tags
-  nsCOMPtr<nsIDOMNodeList> list;
-  nsresult rv = aDocument->GetElementsByTagName(NS_LITERAL_STRING("meta"),
-                                                getter_AddRefs(list));
-  NS_ENSURE_SUCCESS(rv, false);
-  NS_ENSURE_TRUE(list, false);
+  RefPtr<nsContentList> metaList =
+    aDocument.GetElementsByTagName(NS_LITERAL_STRING("meta"));
+  if (NS_WARN_IF(!metaList)) {
+    return false;
+  }
 
-  nsCOMPtr<nsINodeList> metaList = do_QueryInterface(list);
-
-  uint32_t listLength = 0;
-  metaList->GetLength(&listLength);
-
-  for (uint32_t i = 0; i < listLength; ++i) {
+  for (uint32_t i = 0; i < metaList->Length(true); ++i) {
     nsCOMPtr<nsIContent> metaNode = metaList->Item(i);
     MOZ_ASSERT(metaNode);
 
@@ -322,10 +314,11 @@ TextEditor::UpdateMetaCharset(nsIDOMDocument* aDocument,
     // set attribute to <original prefix> charset=text/html
     RefPtr<Element> metaElement = metaNode->AsElement();
     MOZ_ASSERT(metaElement);
-    rv = EditorBase::SetAttribute(metaElement, nsGkAtoms::content,
-                                  Substring(originalStart, start) +
-                                    charsetEquals +
-                                    NS_ConvertASCIItoUTF16(aCharacterSet));
+    nsresult rv =
+      EditorBase::SetAttribute(metaElement, nsGkAtoms::content,
+                               Substring(originalStart, start) +
+                                 charsetEquals +
+                                 NS_ConvertASCIItoUTF16(aCharacterSet));
     return NS_SUCCEEDED(rv);
   }
   return false;
