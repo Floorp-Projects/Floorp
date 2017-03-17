@@ -79,7 +79,7 @@ to mochitest command.
   * test_bug389464.html: also font-size computation [1]
   * test_html_attribute_computed_values.html: also list-style-type [8]
 * test_bug387615.html: servo/servo#15006 [1]
-* test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [3]
+* test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [1]
 * console support:
   * test_bug413958.html `monitorConsole` [3]
   * test_parser_diagnostics_unprintables.html [550]

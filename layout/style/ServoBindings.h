@@ -131,6 +131,7 @@ RawGeckoElementBorrowedOrNull Gecko_GetDocumentElement(RawGeckoDocumentBorrowed 
 void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
                           mozilla::ServoStyleSheet* parent,
                           RawServoImportRuleBorrowed import_rule,
+                          nsIURI* base_uri,
                           const uint8_t* url_bytes,
                           uint32_t url_length,
                           const uint8_t* media_bytes,
