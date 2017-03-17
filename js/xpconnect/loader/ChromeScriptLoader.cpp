@@ -311,6 +311,7 @@ PrecompiledScript::ExecuteInGlobal(JSContext* aCx, HandleObject aGlobal,
         Rooted<JSScript*> script(aCx, mScript);
         if (!JS::CloneAndExecuteScript(aCx, script, aRval)) {
             aRv.NoteJSContextException(aCx);
+            return;
         }
     }
 
