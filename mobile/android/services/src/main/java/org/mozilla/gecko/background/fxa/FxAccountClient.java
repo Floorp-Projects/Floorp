@@ -19,6 +19,7 @@ public interface FxAccountClient {
   public void keys(byte[] keyFetchToken, RequestDelegate<TwoKeys> requestDelegate);
   public void sign(byte[] sessionToken, ExtendedJSONObject publicKey, long certificateDurationInMilliseconds, RequestDelegate<String> requestDelegate);
   public void registerOrUpdateDevice(byte[] sessionToken, FxAccountDevice device, RequestDelegate<FxAccountDevice> requestDelegate);
+  public void destroyDevice(byte[] sessionToken, String deviceId, RequestDelegate<ExtendedJSONObject> requestDelegate);
   public void deviceList(byte[] sessionToken, RequestDelegate<FxAccountDevice[]> requestDelegate);
   public void notifyDevices(byte[] sessionToken, List<String> deviceIds, ExtendedJSONObject payload, Long TTL, RequestDelegate<ExtendedJSONObject> requestDelegate);
 }

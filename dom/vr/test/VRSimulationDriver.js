@@ -1,33 +1,40 @@
 
 var VRServiceTest;
+var vrMockDisplay;
 
 var VRSimulationDriver = (function() {
 "use strict";
 
 var AttachWebVRDisplay = function() {
-  return VRServiceTest.attachVRDisplay("VRDisplayTest");
+  var promise = VRServiceTest.attachVRDisplay("VRDisplayTest");
+  promise.then(function (display) {
+    assert_true(display != null, "AttachWebVRDisplay should success.");
+    vrMockDisplay = display;
+  });
+
+  return promise;
 };
 
-var SetVRDisplayPose = function(vrDisplay, position,
+var SetVRDisplayPose = function(position,
                                 linearVelocity, linearAcceleration,
                                 orientation, angularVelocity,
                                 angularAcceleration) {
-  vrDisplay.setPose(position, linearVelocity, linearAcceleration,
-                    orientation, angularVelocity, angularAcceleration);
+  vrMockDisplay.setPose(position, linearVelocity, linearAcceleration,
+                        orientation, angularVelocity, angularAcceleration);
 };
 
 var SetEyeResolution = function(width, height) {
-  vrDisplay.setEyeResolution(width, height);
+  vrMockDisplay.setEyeResolution(width, height);
 }
 
-var SetEyeParameter = function(vrDisplay, eye, offsetX, offsetY, offsetZ,
+var SetEyeParameter = function(eye, offsetX, offsetY, offsetZ,
                                upDegree, rightDegree, downDegree, leftDegree) {
-  vrDisplay.setEyeParameter(eye, offsetX, offsetY, offsetZ, upDegree, rightDegree,
-                            downDegree, leftDegree);
+  vrMockDisplay.setEyeParameter(eye, offsetX, offsetY, offsetZ, upDegree, rightDegree,
+                                downDegree, leftDegree);
 }
 
-var UpdateVRDisplay = function(vrDisplay) {
-  vrDisplay.update();
+var UpdateVRDisplay = function() {
+  vrMockDisplay.update();
 }
 
 var API = {

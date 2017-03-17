@@ -151,7 +151,7 @@ function stringify(aThing, aAllowNewLines) {
       json = JSON.stringify(aThing);
     } catch (ex) {
       // Can't use a real ellipsis here, because cmd.exe isn't unicode-enabled
-      json = "{" + Object.keys(aThing).join(":..,") + ":.., " + "}";
+      json = "{" + Object.keys(aThing).join(":..,") + ":.., }";
     }
     return type + json;
   }

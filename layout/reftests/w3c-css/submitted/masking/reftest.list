@@ -11,6 +11,7 @@ fuzzy-if(skiaContent||winWidget,64,5200) == mask-composite-2b.html mask-composit
 # mask-mode test cases
 fuzzy-if(skiaContent,1,30000) == mask-mode-a.html mask-mode-ref.html
 fuzzy-if(skiaContent,1,30000) == mask-mode-b.html mask-mode-ref.html
+fuzzy-if(skiaContent,1,30000) == mask-mode-c.html mask-mode-ref.html
 fuzzy-if(skiaContent,1,30000) == mask-mode-to-mask-type.html mask-mode-to-mask-type-ref.html
 
 # mask-image test cases

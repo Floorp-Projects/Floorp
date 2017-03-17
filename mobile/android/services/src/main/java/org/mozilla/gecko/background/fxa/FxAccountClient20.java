@@ -823,6 +823,42 @@ public class FxAccountClient20 implements FxAccountClient {
   }
 
   @Override
+  public void destroyDevice(byte[] sessionToken, String deviceId, RequestDelegate<ExtendedJSONObject> delegate) {
+    final byte[] tokenId = new byte[32];
+    final byte[] reqHMACKey = new byte[32];
+    final byte[] requestKey = new byte[32];
+    try {
+      HKDF.deriveMany(sessionToken, new byte[0], FxAccountUtils.KW("sessionToken"), tokenId, reqHMACKey, requestKey);
+    } catch (Exception e) {
+      invokeHandleError(delegate, e);
+      return;
+    }
+
+    final BaseResource resource;
+    final ExtendedJSONObject body = new ExtendedJSONObject();
+    body.put("id", deviceId);
+    try {
+      resource = getBaseResource("account/device/destroy");
+    } catch (URISyntaxException | UnsupportedEncodingException e) {
+      invokeHandleError(delegate, e);
+      return;
+    }
+
+    resource.delegate = new ResourceDelegate<ExtendedJSONObject>(resource, delegate, ResponseType.JSON_OBJECT, tokenId, reqHMACKey) {
+      @Override
+      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) {
+        try {
+          delegate.handleSuccess(body);
+        } catch (Exception e) {
+          delegate.handleError(e);
+        }
+      }
+    };
+
+    post(resource, body);
+  }
+
+  @Override
   public void deviceList(byte[] sessionToken, RequestDelegate<FxAccountDevice[]> delegate) {
     final byte[] tokenId = new byte[32];
     final byte[] reqHMACKey = new byte[32];

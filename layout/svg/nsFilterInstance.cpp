@@ -418,10 +418,11 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource)
   ctx->SetMatrix(mPaintTransform *
                  gfxMatrix::Translation(-neededRect.TopLeft()));
   GeneralPattern pattern;
+  DrawResult result = DrawResult::SUCCESS;
   if (aSource == &mFillPaint) {
-    nsSVGUtils::MakeFillPatternFor(mTargetFrame, ctx, &pattern);
+    result = nsSVGUtils::MakeFillPatternFor(mTargetFrame, ctx, &pattern);
   } else if (aSource == &mStrokePaint) {
-    nsSVGUtils::MakeStrokePatternFor(mTargetFrame, ctx, &pattern);
+    result = nsSVGUtils::MakeStrokePatternFor(mTargetFrame, ctx, &pattern);
   }
 
   if (pattern.GetPattern()) {
@@ -432,7 +433,7 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource)
   aSource->mSourceSurface = offscreenDT->Snapshot();
   aSource->mSurfaceRect = neededRect;
 
-  return DrawResult::SUCCESS;
+  return result;
 }
 
 DrawResult
@@ -529,9 +530,10 @@ nsFilterInstance::Render(DrawTarget* aDrawTarget)
   MOZ_ASSERT(invertible);
   filterSpaceToUserSpace *= nsSVGUtils::GetCSSPxToDevPxMatrix(mTargetFrame);
 
-  aDrawTarget->SetTransform(ToMatrix(filterSpaceToUserSpace) *
-                            aDrawTarget->GetTransform() *
-                            Matrix::Translation(filterRect.TopLeft()));
+  Matrix newTM =
+    ToMatrix(filterSpaceToUserSpace).PreTranslate(filterRect.x, filterRect.y) *
+    aDrawTarget->GetTransform();
+  aDrawTarget->SetTransform(newTM);
 
   ComputeNeededBoxes();
 

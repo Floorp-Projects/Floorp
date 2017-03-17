@@ -12,7 +12,7 @@
 
 namespace mozilla {
 
-#define NS_EVENT_STATE_HIGHEST_SERVO_BIT 9
+#define NS_EVENT_STATE_HIGHEST_SERVO_BIT 12
 
 /**
  * EventStates is the class used to represent the event states of nsIContent
@@ -217,6 +217,12 @@ private:
 // Content is the full screen element, or a frame containing the
 // current full-screen element.
 #define NS_EVENT_STATE_FULL_SCREEN   NS_DEFINE_EVENT_STATE_MACRO(9)
+// Content is valid (and can be invalid).
+#define NS_EVENT_STATE_VALID         NS_DEFINE_EVENT_STATE_MACRO(10)
+// Content is invalid.
+#define NS_EVENT_STATE_INVALID       NS_DEFINE_EVENT_STATE_MACRO(11)
+// UI friendly version of :valid pseudo-class.
+#define NS_EVENT_STATE_MOZ_UI_VALID NS_DEFINE_EVENT_STATE_MACRO(12)
 
 /*
  * Bits below here do not have Servo-related ordering constraints.
@@ -226,54 +232,48 @@ private:
  */
 
 // Drag is hovering over content.
-#define NS_EVENT_STATE_DRAGOVER      NS_DEFINE_EVENT_STATE_MACRO(10)
+#define NS_EVENT_STATE_DRAGOVER      NS_DEFINE_EVENT_STATE_MACRO(13)
 // Content is required.
-#define NS_EVENT_STATE_REQUIRED      NS_DEFINE_EVENT_STATE_MACRO(11)
+#define NS_EVENT_STATE_REQUIRED      NS_DEFINE_EVENT_STATE_MACRO(14)
 // Content is optional (and can be required).
-#define NS_EVENT_STATE_OPTIONAL      NS_DEFINE_EVENT_STATE_MACRO(12)
+#define NS_EVENT_STATE_OPTIONAL      NS_DEFINE_EVENT_STATE_MACRO(15)
 // Link has been visited.
-#define NS_EVENT_STATE_VISITED       NS_DEFINE_EVENT_STATE_MACRO(13)
+#define NS_EVENT_STATE_VISITED       NS_DEFINE_EVENT_STATE_MACRO(16)
 // Link hasn't been visited.
-#define NS_EVENT_STATE_UNVISITED     NS_DEFINE_EVENT_STATE_MACRO(14)
-// Content is valid (and can be invalid).
-#define NS_EVENT_STATE_VALID         NS_DEFINE_EVENT_STATE_MACRO(15)
-// Content is invalid.
-#define NS_EVENT_STATE_INVALID       NS_DEFINE_EVENT_STATE_MACRO(16)
+#define NS_EVENT_STATE_UNVISITED     NS_DEFINE_EVENT_STATE_MACRO(17)
 // Content value is in-range (and can be out-of-range).
-#define NS_EVENT_STATE_INRANGE       NS_DEFINE_EVENT_STATE_MACRO(17)
+#define NS_EVENT_STATE_INRANGE       NS_DEFINE_EVENT_STATE_MACRO(18)
 // Content value is out-of-range.
-#define NS_EVENT_STATE_OUTOFRANGE    NS_DEFINE_EVENT_STATE_MACRO(18)
+#define NS_EVENT_STATE_OUTOFRANGE    NS_DEFINE_EVENT_STATE_MACRO(19)
 // These two are temporary (see bug 302188)
 // Content is read-only.
-#define NS_EVENT_STATE_MOZ_READONLY  NS_DEFINE_EVENT_STATE_MACRO(19)
+#define NS_EVENT_STATE_MOZ_READONLY  NS_DEFINE_EVENT_STATE_MACRO(20)
 // Content is editable.
-#define NS_EVENT_STATE_MOZ_READWRITE NS_DEFINE_EVENT_STATE_MACRO(20)
+#define NS_EVENT_STATE_MOZ_READWRITE NS_DEFINE_EVENT_STATE_MACRO(21)
 // Content is the default one (meaning depends of the context).
-#define NS_EVENT_STATE_DEFAULT       NS_DEFINE_EVENT_STATE_MACRO(21)
+#define NS_EVENT_STATE_DEFAULT       NS_DEFINE_EVENT_STATE_MACRO(22)
 // Content could not be rendered (image/object/etc).
-#define NS_EVENT_STATE_BROKEN        NS_DEFINE_EVENT_STATE_MACRO(22)
+#define NS_EVENT_STATE_BROKEN        NS_DEFINE_EVENT_STATE_MACRO(23)
 // Content disabled by the user (images turned off, say).
-#define NS_EVENT_STATE_USERDISABLED  NS_DEFINE_EVENT_STATE_MACRO(23)
+#define NS_EVENT_STATE_USERDISABLED  NS_DEFINE_EVENT_STATE_MACRO(24)
 // Content suppressed by the user (ad blocking, etc).
-#define NS_EVENT_STATE_SUPPRESSED    NS_DEFINE_EVENT_STATE_MACRO(24)
+#define NS_EVENT_STATE_SUPPRESSED    NS_DEFINE_EVENT_STATE_MACRO(25)
 // Content is still loading such that there is nothing to show the
 // user (eg an image which hasn't started coming in yet).
-#define NS_EVENT_STATE_LOADING       NS_DEFINE_EVENT_STATE_MACRO(25)
-#define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL NS_DEFINE_EVENT_STATE_MACRO(26)
+#define NS_EVENT_STATE_LOADING       NS_DEFINE_EVENT_STATE_MACRO(26)
+#define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL NS_DEFINE_EVENT_STATE_MACRO(27)
 // Handler for the content has been blocked.
-#define NS_EVENT_STATE_HANDLER_BLOCKED NS_DEFINE_EVENT_STATE_MACRO(27)
+#define NS_EVENT_STATE_HANDLER_BLOCKED NS_DEFINE_EVENT_STATE_MACRO(28)
 // Handler for the content has been disabled.
-#define NS_EVENT_STATE_HANDLER_DISABLED NS_DEFINE_EVENT_STATE_MACRO(28)
+#define NS_EVENT_STATE_HANDLER_DISABLED NS_DEFINE_EVENT_STATE_MACRO(29)
 // Handler for the content has crashed
-#define NS_EVENT_STATE_HANDLER_CRASHED NS_DEFINE_EVENT_STATE_MACRO(29)
+#define NS_EVENT_STATE_HANDLER_CRASHED NS_DEFINE_EVENT_STATE_MACRO(30)
 // Content has focus and should show a ring.
-#define NS_EVENT_STATE_FOCUSRING     NS_DEFINE_EVENT_STATE_MACRO(30)
+#define NS_EVENT_STATE_FOCUSRING     NS_DEFINE_EVENT_STATE_MACRO(31)
 // Content is a submit control and the form isn't valid.
-#define NS_EVENT_STATE_MOZ_SUBMITINVALID NS_DEFINE_EVENT_STATE_MACRO(31)
+#define NS_EVENT_STATE_MOZ_SUBMITINVALID NS_DEFINE_EVENT_STATE_MACRO(32)
 // UI friendly version of :invalid pseudo-class.
-#define NS_EVENT_STATE_MOZ_UI_INVALID NS_DEFINE_EVENT_STATE_MACRO(32)
-// UI friendly version of :valid pseudo-class.
-#define NS_EVENT_STATE_MOZ_UI_VALID NS_DEFINE_EVENT_STATE_MACRO(33)
+#define NS_EVENT_STATE_MOZ_UI_INVALID NS_DEFINE_EVENT_STATE_MACRO(33)
 // This bit is currently free.
 // #define NS_EVENT_STATE_?????????? NS_DEFINE_EVENT_STATE_MACRO(34)
 // Handler for click to play plugin
