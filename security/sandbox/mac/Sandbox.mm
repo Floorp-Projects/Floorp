@@ -317,6 +317,7 @@ static const char contentSandboxRules[] =
   "      (home-subpath \"/Library/Keyboard Layouts\")\n"
   "      (home-subpath \"/Library/Input Methods\")\n"
   "      (home-subpath \"/Library/Spelling\")\n"
+  "      (home-subpath \"/Library/Application Support/Adobe/CoreSync/plugins/livetype\")\n"
   "\n"
   "      (subpath appdir-path)\n"
   "\n"

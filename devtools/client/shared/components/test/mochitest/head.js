@@ -81,6 +81,23 @@ function isRenderedTree(actual, expectedDescription, msg) {
   is(actual, expected, msg);
 }
 
+function isAccessibleTree(tree, options = {}) {
+  const treeNode = tree.refs.tree;
+  is(treeNode.getAttribute("tabindex"), "0", "Tab index is set");
+  is(treeNode.getAttribute("role"), "tree", "Tree semantics is present");
+  if (options.hasActiveDescendant) {
+    ok(treeNode.hasAttribute("aria-activedescendant"),
+       "Tree has an active descendant set");
+  }
+
+  const treeNodes = [...treeNode.querySelectorAll(".tree-node")];
+  for (let node of treeNodes) {
+    ok(node.id, "TreeNode has an id");
+    is(node.getAttribute("role"), "treeitem", "Tree item semantics is present");
+    ok(node.hasAttribute("aria-level"), "Aria level attribute is set");
+  }
+}
+
 // Encoding of the following tree/forest:
 //
 // A

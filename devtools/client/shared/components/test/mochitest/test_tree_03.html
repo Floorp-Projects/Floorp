@@ -26,6 +26,7 @@ window.onload = Task.async(function* () {
       autoExpandDepth: 1
     })), window.document.body);
 
+    isAccessibleTree(tree);
     isRenderedTree(document.body.textContent, [
       "A:false",
       "-B:false",

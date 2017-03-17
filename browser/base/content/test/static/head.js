@@ -3,8 +3,6 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["generateURIsFromDirTree"];
-
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 /* Shorthand constructors to construct an nsI(Local)File and zip reader: */
@@ -127,5 +125,3 @@ function* generateEntriesFromJarFile(jarFile, extension) {
   }
   zr.close();
 }
-
-

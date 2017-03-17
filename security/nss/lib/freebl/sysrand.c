@@ -8,7 +8,9 @@
 
 #include "seccomon.h"
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if (defined(XP_UNIX) || defined(XP_BEOS)) && defined(SEED_ONLY_DEV_URANDOM)
+#include "unix_urandom.c"
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 #include "unix_rand.c"
 #endif
 #ifdef XP_WIN

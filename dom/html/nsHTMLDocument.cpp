@@ -2411,7 +2411,7 @@ nsHTMLDocument::GetDesignMode(nsAString& aDesignMode)
 void
 nsHTMLDocument::MaybeEditingStateChanged()
 {
-  if (!mPendingMaybeEditingStateChanged &&
+  if (!mPendingMaybeEditingStateChanged && mMayStartLayout &&
       mUpdateNestLevel == 0 && (mContentEditableCount > 0) != IsEditingOn()) {
     if (nsContentUtils::IsSafeToRunScript()) {
       EditingStateChanged();
@@ -2433,6 +2433,15 @@ nsHTMLDocument::EndUpdate(nsUpdateType aUpdateType)
   }
   MaybeEditingStateChanged();
 }
+
+void
+nsHTMLDocument::SetMayStartLayout(bool aMayStartLayout)
+{
+  nsIDocument::SetMayStartLayout(aMayStartLayout);
+
+  MaybeEditingStateChanged();
+}
+
 
 
 // Helper class, used below in ChangeContentEditableCount().

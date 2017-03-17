@@ -58,7 +58,7 @@ function run_test() {
   
       for (let prefName in test.prefs) {
         do_check_eq(test.prefs[prefName],
-                    prefs.getComplexValue(prefName, Ci.nsISupportsString).data);
+                    prefs.getStringPref(prefName));
       }
   
       ps.resetPrefs();

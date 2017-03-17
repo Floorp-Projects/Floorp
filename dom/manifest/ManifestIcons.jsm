@@ -68,10 +68,10 @@ async function getIcon(aWindow, icons, expectedSize) {
   });
 }
 
-function fetchIcon(aWindow, src) {
-  const manifestURL = new aWindow.URL(src);
-  const request = new aWindow.Request(manifestURL, {mode: "cors"});
-  request.overrideContentPolicyType(Ci.nsIContentPolicy.TYPE_WEB_MANIFEST);
+async function fetchIcon(aWindow, src) {
+  const iconURL = new aWindow.URL(src, aWindow.location);
+  const request = new aWindow.Request(iconURL, {mode: "cors"});
+  request.overrideContentPolicyType(Ci.nsIContentPolicy.TYPE_IMAGE);
   return aWindow.fetch(request)
     .then(response => response.blob())
     .then(blob => new Promise((resolve, reject) => {

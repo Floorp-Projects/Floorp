@@ -308,9 +308,14 @@ add_task(function* testStoreForDBusHandler() {
 
 // Test the functionality of _IsInHandlerArray() by injecting default handler again
 // Since we don't have defaultHandlersVersion pref on Android, skip this test.
+// Also skip for applications like Thunderbird which don't have all the prefs.
 add_task(function* testIsInHandlerArray() {
   if (Services.appinfo.widgetToolkit == "android") {
     do_print("Skipping test because it does not apply to this platform.");
+    return;
+  }
+  if (!Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")) {
+    do_print("Skipping test: No pref gecko.handlerService.defaultHandlersVersion.");
     return;
   }
 
@@ -357,9 +362,14 @@ add_task(function* testIsInHandlerArray() {
 
 // Test the basic functionality of FillHandlerInfo() for protocol
 // Since Android use mimeInfo to deal with mimeTypes and protocol, skip this test.
+// Also skip for applications like Thunderbird which don't have all the prefs.
 add_task(function* testFillHandlerInfoForProtocol() {
   if (Services.appinfo.widgetToolkit == "android") {
     do_print("Skipping test because it does not apply to this platform.");
+    return;
+  }
+  if (!Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")) {
+    do_print("Skipping test: No pref gecko.handlerService.defaultHandlersVersion.");
     return;
   }
 

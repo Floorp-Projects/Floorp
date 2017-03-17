@@ -737,6 +737,7 @@ WEBIDL_FILES = [
     'PopupBoxObject.webidl',
     'Position.webidl',
     'PositionError.webidl',
+    'PrecompiledScript.webidl',
     'Presentation.webidl',
     'PresentationAvailability.webidl',
     'PresentationConnection.webidl',

@@ -700,7 +700,7 @@ FeedWriter.prototype = {
         if (this._handlersList) {
           let url;
           try {
-            url = prefs.getComplexValue(getPrefWebForType(feedType), Ci.nsISupportsString).data;
+            url = prefs.getStringPref(getPrefWebForType(feedType));
           } catch (ex) {
             LOG("FeedWriter._setSelectedHandler: invalid or no handler in prefs");
             return;

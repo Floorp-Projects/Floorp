@@ -75,6 +75,8 @@
 #include "nsIDOMComment.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/NodeIterator.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/TreeWalker.h"
 
 #include "nsIServiceManager.h"
@@ -2742,6 +2744,13 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   }
   ApplySettingsFromCSP(false);
   return NS_OK;
+}
+
+already_AddRefed<nsIParser>
+nsDocument::CreatorParserOrNull()
+{
+  nsCOMPtr<nsIParser> parser = mParser;
+  return parser.forget();
 }
 
 void
@@ -10512,6 +10521,78 @@ nsIDocument::ObsoleteSheet(const nsAString& aSheetURI, ErrorResult& rv)
   if (NS_FAILED(res)) {
     rv.Throw(res);
   }
+}
+
+class UnblockParsingPromiseHandler final : public PromiseNativeHandler
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  explicit UnblockParsingPromiseHandler(nsIDocument* aDocument, Promise* aPromise)
+    : mDocument(aDocument)
+    , mPromise(aPromise)
+  {
+    nsCOMPtr<nsIParser> parser = mDocument->CreatorParserOrNull();
+    if (parser) {
+      parser->BlockParser();
+    } else {
+      mDocument = nullptr;
+    }
+  }
+
+  void
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    MaybeUnblockParser();
+
+    mPromise->MaybeResolve(aCx, aValue);
+  }
+
+  void
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    MaybeUnblockParser();
+
+    mPromise->MaybeReject(aCx, aValue);
+  }
+
+protected:
+  virtual ~UnblockParsingPromiseHandler()
+  {
+    MaybeUnblockParser();
+  }
+
+private:
+  void MaybeUnblockParser() {
+    if (mDocument) {
+      nsCOMPtr<nsIParser> parser = mDocument->CreatorParserOrNull();
+      if (parser) {
+        parser->UnblockParser();
+        parser->ContinueInterruptedParsingAsync();
+      }
+      mDocument = nullptr;
+    }
+  }
+
+  RefPtr<nsIDocument> mDocument;
+  RefPtr<Promise> mPromise;
+};
+
+NS_IMPL_ISUPPORTS0(UnblockParsingPromiseHandler)
+
+already_AddRefed<Promise>
+nsIDocument::BlockParsing(OwningNonNull<Promise> aPromise,
+                          ErrorResult& aRv)
+{
+  RefPtr<Promise> resultPromise = Promise::Create(aPromise->GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  RefPtr<PromiseNativeHandler> promiseHandler = new UnblockParsingPromiseHandler(this, resultPromise);
+  aPromise->AppendNativeHandler(promiseHandler);
+
+  return resultPromise.forget();
 }
 
 already_AddRefed<nsIURI>

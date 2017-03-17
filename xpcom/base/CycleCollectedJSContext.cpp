@@ -1319,8 +1319,15 @@ CycleCollectedJSContext::CheckGrayBits() const
   MOZ_ASSERT(mJSContext);
   MOZ_ASSERT(!JS::IsIncrementalGCInProgress(mJSContext),
              "Don't call CheckGrayBits during a GC.");
+
+#ifndef ANDROID
+  // Bug 1346874 - The gray state check is expensive. Android tests are already
+  // slow enough that this check can easily push them over the threshold to a
+  // timeout.
+
   MOZ_ASSERT(js::CheckGrayMarkingState(mJSContext));
   MOZ_ASSERT(CheckWeakMappingGrayBitsTracer::Check(mJSContext));
+#endif
 }
 
 bool

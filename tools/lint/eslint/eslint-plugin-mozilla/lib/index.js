@@ -25,6 +25,8 @@ module.exports = {
   },
   rules: {
     "avoid-removeChild": require("../lib/rules/avoid-removeChild"),
+    "avoid-nsISupportsString-preferences":
+      require("../lib/rules/avoid-nsISupportsString-preferences"),
     "balanced-listeners": require("../lib/rules/balanced-listeners"),
     "import-globals": require("../lib/rules/import-globals"),
     "import-headjs-globals": require("../lib/rules/import-headjs-globals"),
@@ -47,6 +49,7 @@ module.exports = {
   },
   rulesConfig: {
     "avoid-removeChild": 0,
+    "avoid-nsISupportsString-preferences": 0,
     "balanced-listeners": 0,
     "import-globals": 0,
     "import-headjs-globals": 0,
