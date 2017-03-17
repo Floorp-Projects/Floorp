@@ -66,8 +66,9 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
                 (!url.startsWith("file://")) &&
                 (!url.startsWith("data:")) &&
                 (!url.startsWith("error:"))) {
-            callback.handleExternalUrl(url);
-            return true;
+            if (callback.handleExternalUrl(url)) {
+                return true;
+            }
         }
 
         return super.shouldOverrideUrlLoading(view, url);

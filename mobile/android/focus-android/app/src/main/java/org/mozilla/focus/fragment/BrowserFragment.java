@@ -133,12 +133,21 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
             }
 
             @Override
-            public void handleExternalUrl(final String url) {
+            public boolean handleExternalUrl(final String url) {
                 final String fallback = IntentUtils.handleExternalUri(getActivity(), url);
 
                 if (fallback != null) {
-                    webView.loadUrl(fallback);
+                    // Stop loading if we've received any data. The fallback is either a success indicator
+                    // (we've shown a dialog), or a completely URL that we should try to load.
+                    if (!fallback.equals("success:")) {
+                        webView.loadUrl(fallback);
+                    }
+
+                    return true;
                 }
+
+                // Unhandled: we just let the browser finish loading (e.g. showing the unsupported protocol error page).
+                return false;
             }
         });
 

@@ -41,7 +41,7 @@ public class IntentUtils {
         } catch (URISyntaxException e) {
             // Let the browser handle the url (i.e. let the browser show it's unsupported protocol /
             // invalid URL page).
-            return uri;
+            return null;
         }
 
         // Since we're a browser:
@@ -71,7 +71,7 @@ public class IntentUtils {
             final CharSequence externalAppTitle = info.loadLabel(packageManager);
 
             showConfirmationDialog(activity, intent, activity.getString(R.string.external_app_prompt_title), R.string.external_app_prompt, externalAppTitle);
-            return null;
+            return "success:";
         } else { // matchingActivities.size() > 1
             // By explicitly showing the chooser, we can avoid having a (default) app from opening
             // the link immediately. This isn't perfect - we'd prefer to highlight the default app,
@@ -81,7 +81,9 @@ public class IntentUtils {
             final String chooserTitle = activity.getResources().getString(R.string.external_multiple_apps_matched_exit);
             final Intent chooserIntent = Intent.createChooser(intent, chooserTitle);
             activity.startActivity(chooserIntent);
-            return null;
+
+            // It was handled, stop loading other stuff
+            return "success:";
         }
     }
 
@@ -102,12 +104,14 @@ public class IntentUtils {
             showConfirmationDialog(activity, marketIntent,
                     activity.getResources().getString(R.string.external_app_prompt_no_app_title),
                     R.string.external_app_prompt_no_app, marketTitle);
-            return null;
+
+            // Stop loading, we essentially have a result.
+            return "success:";
         }
 
         // If there's really no way to handle this, we just let the browser handle this URL
         // (which then shows the unsupported protocol page).
-        return intent.toUri(0);
+        return null;
     }
 
     // We only need one param for both scenarios, hence we use just one "param" argument. If we ever
