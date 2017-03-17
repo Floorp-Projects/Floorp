@@ -1315,6 +1315,12 @@ MediaDecoder::UpdateVideoDecodeMode()
     return;
   }
 
+  // If an element is in-tree with UNTRACKED visibility, the visibility is
+  // incomplete and don't update the video decode mode.
+  if (mIsElementInTree && mElementVisibility == Visibility::UNTRACKED) {
+    return;
+  }
+
   // If mHasSuspendTaint is set, never suspend the video decoder.
   if (mHasSuspendTaint) {
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
