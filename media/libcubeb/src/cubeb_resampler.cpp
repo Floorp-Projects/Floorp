@@ -18,6 +18,7 @@
 #include "cubeb-speex-resampler.h"
 #include "cubeb_resampler_internal.h"
 #include "cubeb_utils.h"
+#include "cubeb_log.h"
 
 int
 to_speex_quality(cubeb_resampler_quality q)
@@ -74,6 +75,9 @@ long passthrough_resampler<T>::fill(void * input_buffer, long * input_frames_cou
     internal_input_buffer.pop(nullptr, frames_to_samples(output_frames));
     *input_frames_count = output_frames;
   }
+
+  ALOGV("passthrough: after callback, internal input buffer length: %zu",
+        internal_input_buffer.length());
 
   return rv;
 }
@@ -235,6 +239,16 @@ cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
   got = data_callback(stream, user_ptr,
                       resampled_input, out_unprocessed,
                       output_frames_before_processing);
+
+  size_t input_processor_buffer_sizes[2];
+  size_t output_processor_buffer_sizes[2];
+  input_processor->internal_buffer_sizes(input_processor_buffer_sizes);
+  output_processor->internal_buffer_sizes(output_processor_buffer_sizes);
+  ALOGV("duplex resampler: after callback, resampling buffer state:"
+        "input_processor(input: %zu, output: %zu) "
+        "output_processor(input: %zu, output: %zu) ",
+        input_processor_buffer_sizes[0], input_processor_buffer_sizes[1],
+        output_processor_buffer_sizes[0], output_processor_buffer_sizes[1]);
 
   if (got < 0) {
     return got;
