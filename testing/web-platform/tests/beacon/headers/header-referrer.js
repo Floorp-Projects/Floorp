@@ -12,7 +12,7 @@ function testReferrerHeader(testBase, expectedReferrer) {
     return pollResult(expectedReferrer, id) .then(result => {
       assert_equals(result, expectedReferrer, "Correct referrer header result");
     });
-  }, "Successful test ");
+  }, "Test referer header " + testBase);
 }
 
 // SendBeacon is an asynchronous and non-blocking request to a web server.
