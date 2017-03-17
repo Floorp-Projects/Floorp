@@ -822,10 +822,31 @@ this.BrowserTestUtils = {
   /**
    * Removes the given tab from its parent tabbrowser and
    * waits until its final message has reached the parent.
+   *
+   * @param (tab) tab
+   *        The tab to remove.
+   * @param (Object) options
+   *        Extra options to pass to tabbrowser's removeTab method.
+   * @returns (Promise)
+   * @resolves When the tab is removed. Does not get passed a value.
    */
   removeTab(tab, options = {}) {
-    let dontRemove = options && options.dontRemove;
+    let tabRemoved = BrowserTestUtils.tabRemoved(tab);
+    if (!tab.closing) {
+      tab.ownerGlobal.gBrowser.removeTab(tab, options);
+    }
+    return tabRemoved;
+  },
 
+  /**
+   * Returns a Promise that resolves once a tab has been removed.
+   *
+   * @param (tab) tab
+   *        The tab that will be removed.
+   * @returns (Promise)
+   * @resolves When the tab is removed. Does not get passed a value.
+   */
+  tabRemoved(tab) {
     return new Promise(resolve => {
       let {messageManager: mm, frameLoader} = tab.linkedBrowser;
       mm.addMessageListener("SessionStore:update", function onMessage(msg) {
@@ -834,10 +855,6 @@ this.BrowserTestUtils = {
           resolve();
         }
       }, true);
-
-      if (!dontRemove && !tab.closing) {
-        tab.ownerGlobal.gBrowser.removeTab(tab);
-      }
     });
   },
 
