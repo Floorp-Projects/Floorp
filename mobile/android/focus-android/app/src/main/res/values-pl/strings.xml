@@ -13,6 +13,7 @@
   <string name="menu_about">O programie</string>
   <string name="menu_help">Pomoc</string>
   <string name="menu_rights">O prawach użytkownika</string>
+  <string name="about_content"><p>%1$s daje większą kontrolę.</p>\n<p>"Jako prywatna przeglądarka umożliwia:\n  "<ul>"\n    "<li>wyszukiwanie i przeglądanie prosto z aplikacji</li>"\n    "<li>blokowanie śledzenia (można to zmienić w ustawieniach)</li>"\n    "<li>usuwanie ciasteczek oraz całej historii wyszukiwania i przeglądania</li>"\n  "</ul>\n</p>\n<p>%1$s jest tworzony przez Mozillę. Naszym celem jest wspieranie zdrowego i otwartego Internetu.<br/>\n<a href="%2$s">Więcej informacji</a></p></string>
   <string name="preference_category_search">Wyszukiwanie</string>
   <string name="preference_search_engine_default">Domyślna</string>
   <string name="preference_dialog_title_search_engine">Domyślna wyszukiwarka</string>
@@ -29,6 +30,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Przesyłanie anonimowych danych o użyciu</string>
   <string name="preference_mozilla_telemetry_summary">Więcej informacji</string>
+  <string name="preference_about">O programie %1$s</string>
   <string name="content_description_clear_input">Usuń tekst</string>
   <string name="content_description_dismiss_input">Odrzuć</string>
   <string name="content_description_erase">Usuń historię przeglądania</string>
@@ -39,13 +41,14 @@
   <string name="content_description_forward">Przejdź do przodu</string>
   <string name="content_description_reload">Ponownie wczytaj stronę</string>
   <string name="firstrun_title">Przeglądaj, jak gdyby nikt nie patrzył.</string>
-  <string name="firstrun_description">Automatycznie blokuj śledzące elementy podczas przeglądania stron. Wystarczy stuknąć, aby usunąć z urządzenia odwiedzone strony, wyszukiwania i hasła.</string>
+  <string name="firstrun_description">Automatycznie blokuj śledzące elementy podczas przeglądania stron. Wystarczy stuknąć, aby usunąć z urządzenia odwiedzone strony, wyszukiwania, ciasteczka i hasła.</string>
   <string name="firstrun_button">OK!</string>
   <string name="firstrun_footer">Nie oznacza to, że odwiedzane strony nic o Tobie nie wiedzą.</string>
   <string name="your_rights">O prawach użytkownika</string>
-  <string name="external_app_prompt">Odnośnik zostanie otwarty w aplikacji %2$s. Na pewno wyjść z aplikacji %1$s?</string>
-  <string name="external_app_prompt_no_app_title">Nie ma aplikacji dla tego odnośnika</string>
-  <string name="external_app_prompt_no_app">Żadna aplikacja na urządzeniu nie może otworzyć tego odnośnika. Wyjść z aplikacji %1$s i otworzyć %2$s, aby odnaleźć odpowiednią aplikację?</string>
+  <string name="external_app_prompt_title">Otwieranie odnośnika w innej aplikacji</string>
+  <string name="external_app_prompt">Można wyjść z aplikacji %1$s, aby otworzyć ten odnośnik w aplikacji %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Wyszukiwanie aplikacji mogącej otworzyć odnośnik</string>
+  <string name="external_app_prompt_no_app">Żadna aplikacja na urządzeniu nie może otworzyć tego odnośnika. Można wyjść z aplikacji %1$s, aby wyszukać odpowiednią aplikację w sklepie %2$s.</string>
   <string name="external_multiple_apps_matched_exit">Wyjść z trybu prywatnego?</string>
   <string name="errorpage_title">Błąd wczytywania strony</string>
   <string name="errorpage_refresh">Spróbuj ponownie</string>

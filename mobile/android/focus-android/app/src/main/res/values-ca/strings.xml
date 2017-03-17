@@ -43,7 +43,6 @@
   <string name="firstrun_button">Entesos</string>
   <string name="firstrun_footer">Tingueu en compte que els serveis i els llocs web que utilitzeu poden saber igualment on heu estat.</string>
   <string name="your_rights">Els vostres drets</string>
-  <string name="external_app_prompt">Aquest enllaç s\'obrirà al %2$s. Segur que voleu sortir del %1$s?</string>
   <string name="external_multiple_apps_matched_exit">Voleu sortir de la navegació privada?</string>
   <string name="errorpage_title">S\'ha produït un problema en carregar la pàgina</string>
 </resources>

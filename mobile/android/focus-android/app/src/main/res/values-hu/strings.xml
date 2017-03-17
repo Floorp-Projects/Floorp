@@ -13,6 +13,7 @@
   <string name="menu_about">Névjegy</string>
   <string name="menu_help">Súgó</string>
   <string name="menu_rights">Az Ön jogai</string>
+  <string name="about_content"><p>A %1$s az Ön kezébe adja az irányítást.</p>\n<p>"Használja privát böngészőként:\n  "<ul>"\n    "<li>Keressen és böngésszen közvetlenül az appban</li>"\n    "<li>Blokkolja a követőket (vagy frissítse a beállításokat az engedélyezéshez)</li>"\n    "<li>Törölje a sütiket és a böngészési előzményeket is</li>"\n  "</ul>\n</p>\n<p>A %1$s a Mozilla terméke. Küldetésünk az egészséges, nyílt Internet támogatása.<br/>\n<a href="%2$s">Tudjon meg többet</a></p></string>
   <string name="preference_category_search">Keresés</string>
   <string name="preference_search_engine_default">Alapértelmezett</string>
   <string name="preference_dialog_title_search_engine">Alapértelmezett kereső</string>
@@ -29,6 +30,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Névtelen használati adatok küldése</string>
   <string name="preference_mozilla_telemetry_summary">Tudjon meg többet</string>
+  <string name="preference_about">A %1$s névjegye</string>
   <string name="content_description_clear_input">Bemenet törlése</string>
   <string name="content_description_dismiss_input">Elutasítás</string>
   <string name="content_description_erase">Böngészési előzmények törlése</string>
@@ -43,9 +45,10 @@
   <string name="firstrun_button">Rendben, értem!</string>
   <string name="firstrun_footer">Hogy egyértelmű legyen, a webhelyek és szolgáltatások még mindig tudhatják, hogy hol járt.</string>
   <string name="your_rights">Az Ön jogai</string>
-  <string name="external_app_prompt">Ez a hivatkozás itt fog megnyílni: %2$s. Biztosan ki akar lépni a %1$sból?</string>
-  <string name="external_app_prompt_no_app_title">Nincs app a hivatkozás kezeléséhez</string>
-  <string name="external_app_prompt_no_app">Az eszközön lévő appok egyike sem tudja megnyitni ezt a hivatkozást. Kilép a %1$sból, és megnyitja a %2$s appot, hogy egy megfelelő appot találjon?</string>
+  <string name="external_app_prompt_title">Hivatkozás megnyitása egy másik appban</string>
+  <string name="external_app_prompt">Elhagyhatja a %1$st, hogy itt nyissa meg ezt a hivatkozást: %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Keressen egy appot, amely meg tudja nyitni a hivatkozást</string>
+  <string name="external_app_prompt_no_app">Az eszközön lévő appok egyike sem tudja megnyitni ezt a hivatkozást. Kiléphet a %1$sból, és kereshet egy megfelelőt itt: %2$s.</string>
   <string name="external_multiple_apps_matched_exit">Kilép a privát böngészésből?</string>
   <string name="errorpage_title">Probléma az oldal betöltése közben</string>
   <string name="errorpage_refresh">Próbálja újra</string>

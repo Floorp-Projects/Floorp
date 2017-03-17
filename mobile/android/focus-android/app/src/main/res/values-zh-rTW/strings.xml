@@ -13,6 +13,7 @@
   <string name="menu_about">關於</string>
   <string name="menu_help">說明</string>
   <string name="menu_rights">您的權利</string>
+  <string name="about_content"><p>%1$s 讓您可自行控制線上生活。</p>\n<p>"可當作私密瀏覽器使用:\n  "<ul>"\n    "<li>直接在程式中搜尋、瀏覽</li>"\n    "<li>封鎖追蹤器（也可調整設定，允許追蹤器）</li>"\n    "<li>清除 Cookie、搜尋紀錄、上網紀錄</li>"\n  "</ul>\n</p>\n<p>%1$s 是由 Mozilla 所打造，我們的使命是培養一個健康、開放的網際網路。<br/>\n<a href="%2$s">了解更多</a></p></string>
   <string name="preference_category_search">搜尋</string>
   <string name="preference_search_engine_default">預設</string>
   <string name="preference_dialog_title_search_engine">預設搜尋引擎</string>
@@ -29,6 +30,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">傳送匿名的使用統計資料</string>
   <string name="preference_mozilla_telemetry_summary">了解更多</string>
+  <string name="preference_about">關於 %1$s</string>
   <string name="content_description_clear_input">清除輸入內容</string>
   <string name="content_description_dismiss_input">結束輸入</string>
   <string name="content_description_erase">清除瀏覽紀錄</string>
@@ -43,9 +45,10 @@
   <string name="firstrun_button">好，知道了！</string>
   <string name="firstrun_footer">您開啟的網站或服務本身還是會知道您曾經來過。</string>
   <string name="your_rights">您的權利</string>
-  <string name="external_app_prompt">此鏈結將於 %2$s 開啟。您確定要離開 %1$s 嗎？</string>
-  <string name="external_app_prompt_no_app_title">沒有應用程式可處理此類鏈結</string>
-  <string name="external_app_prompt_no_app">您裝置中並未安裝可開啟此鏈結的應用程式。要離開 %1$s，並開啟 %2$s 找一套可開啟的應用程式嗎？</string>
+  <string name="external_app_prompt_title">用其他應用程式開啟鏈結</string>
+  <string name="external_app_prompt">您可離開 %1$s，到 %2$s 安裝一套應用程式開啟此鏈結。</string>
+  <string name="external_app_prompt_no_app_title">尋找可開啟此鏈結的應用程式</string>
+  <string name="external_app_prompt_no_app">您裝置中並未安裝可開啟此鏈結的應用程式。您可離開 %1$s，到 %2$s 安裝一套。</string>
   <string name="external_multiple_apps_matched_exit">要結束隱私瀏覽嗎？</string>
   <string name="errorpage_title">載入頁面時發生問題</string>
   <string name="errorpage_refresh">再試一次</string>

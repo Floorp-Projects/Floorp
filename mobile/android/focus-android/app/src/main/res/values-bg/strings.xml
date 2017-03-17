@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Отказ</string>
+  <string name="action_ok">Добре</string>
+  <string name="urlbar_hint">Търсене или въвеждане на адрес</string>
+  <string name="teaser">Автоматично поверително разглеждане.\nРазглеждане. Изтриване. Повтаряне.</string>
+  <string name="feedback_erase">Историята на разглеждането е изтрита.</string>
+  <string name="search_hint">Търсене на %1$s</string>
+  <string name="menu_share">Споделяне…</string>
+  <string name="menu_open_with_default_browser">Отваряне с/със %1$s</string>
+  <string name="menu_open_with_a_browser">Отваряне с…</string>
+  <string name="menu_settings">Настройки</string>
+  <string name="menu_about">Относно</string>
+  <string name="menu_help">Помощ</string>
+  <string name="menu_rights">Вашите права</string>
+  <string name="preference_category_search">Търсене</string>
+  <string name="preference_search_engine_default">Стандартна</string>
+  <string name="preference_dialog_title_search_engine">Стандартна търсеща машина</string>
+  <string name="preference_category_privacy">Поверителност</string>
+  <string name="preference_category_performance">Производителност</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Изпращане на анонимни данни за използването</string>
+  <string name="preference_mozilla_telemetry_summary">Научете повече</string>
+  <string name="preference_about">Относно %1$s</string>
+  <string name="content_description_clear_input">Изчистване на полето</string>
+  <string name="content_description_dismiss_input">Прекратяване</string>
+  <string name="content_description_erase">Изтриване на историята на разглеждане</string>
+  <string name="content_description_lock">Защитена връзка</string>
+  <string name="accessibility_announcement_loading">Зареждане</string>
+  <string name="accessibility_announcement_loading_finished">Страницата е заредена</string>
+  <string name="content_description_menu">Повече настройки</string>
+  <string name="content_description_forward">Придвижване напред</string>
+  <string name="content_description_reload">Презареждане на страницата</string>
+  <string name="firstrun_title">Разглеждайте все едно никой не ви гледа.</string>
+  <string name="firstrun_button">Добре</string>
+  <string name="your_rights">Вашите права</string>
+  <string name="external_multiple_apps_matched_exit">Излизане от поверително сърфиране?</string>
+  <string name="errorpage_title">Проблем при зареждане на страница</string>
+  <string name="errorpage_refresh">Нов опит</string>
+  <string name="error_connectionfailure_title">Не може да бъде установена връзка</string>
+  <string name="error_timeout_title">Времето за изчакване при свързване изтече</string>
+  <string name="error_hostLookup_title">Сървърът не е намерен</string>
+</resources>

@@ -29,6 +29,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Envoyer des statistiques d’utilisation anonymes</string>
   <string name="preference_mozilla_telemetry_summary">En savoir plus</string>
+  <string name="preference_about">À propos de %1$s</string>
   <string name="content_description_clear_input">Effacer le texte saisi</string>
   <string name="content_description_dismiss_input">Fermer</string>
   <string name="content_description_erase">Effacer l’historique de navigation</string>
@@ -41,11 +42,12 @@
   <string name="firstrun_title">Naviguez comme si personne ne vous regardait.</string>
   <string name="firstrun_description">Bloquez automatiquement les traqueurs lorsque vous naviguez. Appuyez ensuite sur le bouton Effacer pour supprimer les pages visitées, les recherches, les cookies et les mots de passe.</string>
   <string name="firstrun_button">D’accord, j’ai compris.</string>
-  <string name="firstrun_footer">"Note : les services et sites web que vous utilisez peuvent toujours déterminer où vous êtes allé. "</string>
+  <string name="firstrun_footer">Note : votre fournisseur d’accès à Internet et les sites web que vous visitez peuvent toujours savoir quelles pages vous avez consultées.</string>
   <string name="your_rights">Droits de l’utilisateur</string>
-  <string name="external_app_prompt">Ce lien sera ouvert dans %2$s. Voulez-vous vraiment quitter %1$s ?</string>
-  <string name="external_app_prompt_no_app_title">Aucune application ne peut ouvrir le lien</string>
-  <string name="external_app_prompt_no_app">Aucune des applications de votre appareil n’est capable d’ouvrir ce lien. Voulez-vous vraiment quitter %1$s et ouvrir %2$s pour trouver une application appropriée ?</string>
+  <string name="external_app_prompt_title">Ouvrir le lien dans une autre application</string>
+  <string name="external_app_prompt">Vous pouvez quitter %1$s pour ouvrir ce lien dans %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Trouver une application capable d’ouvrir ce lien</string>
+  <string name="external_app_prompt_no_app">Aucune des applications de votre appareil n’est capable d’ouvrir ce lien. Vous pouvez quitter %1$s pour rechercher dans %2$s une application qui en est capable.</string>
   <string name="external_multiple_apps_matched_exit">Quitter la navigation privée ?</string>
   <string name="errorpage_title">Erreur de chargement de la page</string>
   <string name="errorpage_refresh">Réessayer</string>

@@ -13,6 +13,7 @@
   <string name="menu_about">O aplikácii</string>
   <string name="menu_help">Pomocník</string>
   <string name="menu_rights">Vaše práva</string>
+  <string name="about_content"><p>%1$s vám dáva kontrolu.</p>\n<p>"Používajte ho ako súkromný prehliadač:\n  "<ul>"\n    "<li>Vyhľadávajte a prehliadajte priamo prostredníctvom aplikácie</li>"\n    "<li>Blokujte sledovacie prvky (v nastaveniach môžete sledovacie prvky povoliť)</li>"\n    "<li>Vymažte cookies, históriu vyhľadávania a prehliadania</li>"\n  "</ul>\n</p>\n<p>%1$s vyvíja Mozilla. Naša misia je podporovať zdravý a otvorený internet.<br/>\n<a href="%2$s">Ďalšie informácie</a></p></string>
   <string name="preference_category_search">Vyhľadávanie</string>
   <string name="preference_search_engine_default">Predvolený</string>
   <string name="preference_dialog_title_search_engine">Predvolený vyhľadávací modul</string>
@@ -29,6 +30,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Odosielať anonymné údaje o používaní</string>
   <string name="preference_mozilla_telemetry_summary">Ďalšie informácie</string>
+  <string name="preference_about">O aplikácii %1$s</string>
   <string name="content_description_clear_input">Vyčistiť vstup</string>
   <string name="content_description_dismiss_input">Zavrieť</string>
   <string name="content_description_erase">Vymazať históriu prehliadania</string>
@@ -43,9 +45,10 @@
   <string name="firstrun_button">Ok, rozumiem!</string>
   <string name="firstrun_footer">Len pre úplnosť, stránky a služby, ktoré používate môžu stále vedieť kde ste boli.</string>
   <string name="your_rights">Vaše práva</string>
-  <string name="external_app_prompt">Tento odkaz bude otvorený v aplikácii %2$s. Naozaj chcete ukončiť %1$s?</string>
-  <string name="external_app_prompt_no_app_title">Žiadna aplikácia na otvorenie odkazu</string>
-  <string name="external_app_prompt_no_app">Žiadna aplikácia na vašom zariadení nie je schopná otvoriť tento odkaz. Chcete opustiť aplikáciu %1$s a nájsť vhodnú aplikáciu v %2$s?</string>
+  <string name="external_app_prompt_title">Otvoriť odkaz v inej aplikácii</string>
+  <string name="external_app_prompt">Môžete opustiť aplikáciu %1$s a otvoriť tento odkaz v aplikácii %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Nájsť aplikáciu, ktorá môže otvoriť tento odkaz</string>
+  <string name="external_app_prompt_no_app">Žiadna aplikácia na vašom zariadení nie je schopná otvoriť tento odkaz. Môžete opustiť aplikáciu %1$s a nájsť vhodnú aplikáciu v %2$s.</string>
   <string name="external_multiple_apps_matched_exit">Ukončiť režim Súkromné prehliadanie?</string>
   <string name="errorpage_title">Problém pri načítaní stránky</string>
   <string name="errorpage_refresh">Skúsiť znova</string>

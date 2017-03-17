@@ -13,6 +13,7 @@
   <string name="menu_about">关于</string>
   <string name="menu_help">帮助</string>
   <string name="menu_rights">您的权利</string>
+  <string name="about_content"><p>%1$s 让您掌控线上生活。</p>\n<p>"使用它作为隐私浏览器：\n  "<ul>"\n    "<li>在应用中搜索和浏览</li>"\n    "<li>屏蔽跟踪器（或更新设置以允许跟踪器）</li>"\n    "<li>自动删除 Cookie 及搜索和浏览记录</li>"\n  "</ul>\n</p>\n<p>%1$s 由 Mozilla 出品。我们的使命是促成健康、开放的互联网。<br/>\n<a href="%2$s">详细了解</a></p></string>
   <string name="preference_category_search">搜索</string>
   <string name="preference_search_engine_default">默认</string>
   <string name="preference_dialog_title_search_engine">默认搜索</string>
@@ -29,6 +30,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">发送匿名使用统计数据</string>
   <string name="preference_mozilla_telemetry_summary">详细了解</string>
+  <string name="preference_about">关于 %1$s</string>
   <string name="content_description_clear_input">清空输入框</string>
   <string name="content_description_dismiss_input">关闭</string>
   <string name="content_description_erase">清除浏览记录</string>
@@ -43,9 +45,10 @@
   <string name="firstrun_button">了解了！</string>
   <string name="firstrun_footer">也请了解，您使用的网站和服务仍然可能获知您造访的内容。</string>
   <string name="your_rights">您的权利</string>
-  <string name="external_app_prompt">此链接将在 %2$s 中打开。您确定要退出 %1$s 吗？</string>
-  <string name="external_app_prompt_no_app_title">没有应用可处理此链接</string>
-  <string name="external_app_prompt_no_app">您的设备上没有可以打开此链接的应用。是否要退出 %1$s 并打开 %2$s 以查找适合的应用？</string>
+  <string name="external_app_prompt_title">在另一个应用中打开链接</string>
+  <string name="external_app_prompt">您可以离开 %1$s 以在 %2$s 中打开此链接。</string>
+  <string name="external_app_prompt_no_app_title">查找可以打开链接的应用</string>
+  <string name="external_app_prompt_no_app">您的设备上的应用都不能打开此链接。您可以离开 %1$s 以搜索 %2$s 来找出适合的应用。</string>
   <string name="external_multiple_apps_matched_exit">退出隐私浏览模式？</string>
   <string name="errorpage_title">加载页面遇到问题</string>
   <string name="errorpage_refresh">重试</string>

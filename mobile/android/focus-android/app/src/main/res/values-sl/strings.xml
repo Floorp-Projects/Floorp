@@ -1,6 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
   <string name="action_cancel">Prekliči</string>
+  <string name="action_ok">V redu</string>
   <string name="urlbar_hint">Iskanje ali naslov strani</string>
   <string name="teaser">Samodejno zasebno brskanje.\nBrskajte. Izbrišite. Ponovite.</string>
   <string name="feedback_erase">Vaša zgodovina brskanja je bila izbrisana.</string>

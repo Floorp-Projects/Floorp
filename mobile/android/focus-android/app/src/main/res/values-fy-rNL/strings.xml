@@ -13,6 +13,7 @@
   <string name="menu_about">Oer</string>
   <string name="menu_help">Help</string>
   <string name="menu_rights">Jo rjochten</string>
+  <string name="about_content"><p>%1$s jout jo de kontrôle.</p>\n<p>"Brûk as in priveebrowser:\n  "<ul>"\n    "<li>Streekrjocht fan de app út sykje en browse</li>"\n    "<li>Trackers blokkearje (of ynstellingen bywurkje om se ta te stean)</li>"\n    "<li>Wiskjen smyt sawol cookies as syk- en navigaasjeskiednis fuort</li>"\n  "</ul>\n</p>\n<p>%1$s wurdt makke troch Mozilla. Us misje is it fersoargjen fan in sûn en iepen ynternet.<br/>\n<a href="%2$s">Mear ynfo</a></p></string>
   <string name="preference_category_search">Sykje</string>
   <string name="preference_search_engine_default">Standert</string>
   <string name="preference_dialog_title_search_engine">Standertsykmasine</string>
@@ -29,6 +30,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Anonime brûksgegevens ferstjoere</string>
   <string name="preference_mozilla_telemetry_summary">Lês mear</string>
+  <string name="preference_about">Oer %1$s</string>
   <string name="content_description_clear_input">Ynfier wiskje</string>
   <string name="content_description_dismiss_input">Fuortsmite</string>
   <string name="content_description_erase">Navigaasjeskiednis wiskje</string>
@@ -43,9 +45,10 @@
   <string name="firstrun_button">Ok, begrepen!</string>
   <string name="firstrun_footer">Foar de dúdlikens: websites en tsjinsten dy\'t jo brûke, kinne noch hieltyd sjen wêr\'t jo west binne.</string>
   <string name="your_rights">Jo rjochten</string>
-  <string name="external_app_prompt">Dizze keppeling wurdt yn %2$s iepene. Binne jo wis dat jo %1$s ôfslute wolle?</string>
-  <string name="external_app_prompt_no_app_title">Gjin app foar ferwurkjen fan keppeling</string>
-  <string name="external_app_prompt_no_app">Gjin inkelde app op jo apparaat kin dizze keppeling iepenje. Wolle jo %1$s ôfslute en %2$s iepenje om in geskikte app te finen?</string>
+  <string name="external_app_prompt_title">Keppeling yn oare app iepenje</string>
+  <string name="external_app_prompt">Jo kinne %1$s ferlitte om dizze keppeling yn %2$s te iepenjen.</string>
+  <string name="external_app_prompt_no_app_title">Fyn in app dy\'t dizze keppeling iepenje kin</string>
+  <string name="external_app_prompt_no_app">Gjin inkelde app op jo apparaat kin dizze keppeling iepenje. Jo kinne %1$s ferlitte en %2$s iepenje om in geskikte app te finen.</string>
   <string name="external_multiple_apps_matched_exit">Priveenavigaasje ôfslute?</string>
   <string name="errorpage_title">Probleem by it laden fan de side</string>
   <string name="errorpage_refresh">Opnij probearje</string>

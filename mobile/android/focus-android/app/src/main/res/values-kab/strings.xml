@@ -13,6 +13,7 @@
   <string name="menu_about">Γef</string>
   <string name="menu_help">Tallalt</string>
   <string name="menu_rights">Izerfan-inek</string>
+  <string name="about_content"><p>%1$s puts you in control.</p>\n<p>"Seqdec-it d iminig uslig:\n  "<ul>"\n    "<li>Nadi sakin snirem akken iwata deg usnas</li>"\n    "<li>Sewḥel imesfuɣal (neɣ snifel iɣewwaṛen akken ad tsirgeḍ imesfuɣal)</li>"\n    "<li>Erase to delete cookies as well as search and browsing history</li>"\n  "</ul>\n</p>\n<p>%1$s yesnulfa-t-id Mozilla. Tuɣdaṭ-nneɣ is to foster a healthy, open Internet.<br/>\n<a href="%2$s">Learn more</a></p></string>
   <string name="preference_category_search">Nadi</string>
   <string name="preference_search_engine_default">Amezwer</string>
   <string name="preference_dialog_title_search_engine">Anadi amezwer</string>
@@ -29,6 +30,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Azen isefka n useqdec udrigen</string>
   <string name="preference_mozilla_telemetry_summary">Issin ugar</string>
+  <string name="preference_about">Ɣef %1$s</string>
   <string name="content_description_clear_input">Sfeḍ anekcam</string>
   <string name="content_description_dismiss_input">Kkes</string>
   <string name="content_description_erase">Kkes amazray n tunigin</string>
@@ -43,9 +45,10 @@
   <string name="firstrun_button">Ih, gziɣ!</string>
   <string name="firstrun_footer">Akken ad tegzuḍ, ismal akked imeẓla zeren yakan ad ẓren anida telliḍ.</string>
   <string name="your_rights">Izerfan-ik</string>
-  <string name="external_app_prompt">Aseɣwen-agi ad d-dyeldi di %2$s. Tebɣiḍ ad teffɣeḍ si %1$s?</string>
-  <string name="external_app_prompt_no_app_title">Ulac asnas izemren ad d-yeldi aseɣwen</string>
-  <string name="external_app_prompt_no_app">Ulac asnas deg ibenk-ik izemren ad d-yeldi aseɣwen. Tebɣiḍ ad teffɣeḍ si %1$s sakin ad d-ldiḍ %2$s akken ad d-afeḍ asnas ilaqen?</string>
+  <string name="external_app_prompt_title">Ldi aseɣwen deg usnas-nniḍen</string>
+  <string name="external_app_prompt">Tzemred ad teffqeḍ seg %1$s akken ad d-ldid aseɣwen di %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Aff-d asnas izemren ad d-yeldi aseɣwen</string>
+  <string name="external_app_prompt_no_app">Ulac asnas deg ibenk-ik izemren ad d-yeldi aseɣwen-agi. Tebɣiḍ ad teffɣeḍ si %1$s sakin ad d-nadiḍ %2$s akken ad d-afeḍ asnas ilaqen.</string>
   <string name="external_multiple_apps_matched_exit">Ffeɣ si tunigin tusligt?</string>
   <string name="errorpage_title">Ugur deg usali n usebter</string>
   <string name="errorpage_refresh">Ɛreḍ tikelt-nniḍen</string>

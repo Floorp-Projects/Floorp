@@ -13,6 +13,7 @@
   <string name="menu_about">Acerca de</string>
   <string name="menu_help">Ayuda</string>
   <string name="menu_rights">Tus derechos</string>
+  <string name="about_content"><p>%1$s te da el control.</p>\n<p>"Úsalo como navegador privado:\n  "<ul>"\n    "<li>Busca y navega en la propia aplicación</li>"\n    "<li>Bloquea a los rastreadores (o actualiza los ajustes para permitirlos)</li>"\n    "<li>Limpia para borrar cookies y los historiales de búsqueda y navegación</li>"\n  "</ul>\n</p>\n<p>Mozilla es la autora de %1$s. Nuestra misión es promover un Internet saludable y abierto.<br/>\n<a href="%2$s">Descubre más</a></p></string>
   <string name="preference_category_search">Búsqueda</string>
   <string name="preference_search_engine_default">Predeterminado</string>
   <string name="preference_dialog_title_search_engine">Buscador predeterminado</string>
@@ -29,6 +30,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Enviar datos de uso anónimos</string>
   <string name="preference_mozilla_telemetry_summary">Descubrir más</string>
+  <string name="preference_about">Acerca de %1$s</string>
   <string name="content_description_clear_input">Limpiar registro</string>
   <string name="content_description_dismiss_input">Ignorar</string>
   <string name="content_description_erase">Eliminar historial de navegación</string>
@@ -43,9 +45,10 @@
   <string name="firstrun_button">¡Entendido!</string>
   <string name="firstrun_footer">Para ser honestos, aún así las páginas y servicios pueden saber dónde has estado.</string>
   <string name="your_rights">Tus derechos</string>
-  <string name="external_app_prompt">Este enlace se abrirá con %2$s. ¿Seguro que quieres salir de %1$s?</string>
-  <string name="external_app_prompt_no_app_title">No hay una aplicación disponible para abrir este enlace</string>
-  <string name="external_app_prompt_no_app">Ninguna de las aplicaciones de tu dispositivo puede abrir este enlace. ¿Quieres salir de %1$s y abrir %2$s para buscar una aplicación compatible?</string>
+  <string name="external_app_prompt_title">Abrir enlace con otra aplicación</string>
+  <string name="external_app_prompt">Puedes salir de %1$s para abrir este enlace en %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Busca una aplicación que pueda abrir este enlace</string>
+  <string name="external_app_prompt_no_app">Ninguna de las aplicaciones de tu dispositivo puede abrir este enlace. Puedes salir de %1$s para buscar en %2$s una aplicación compatible.</string>
   <string name="external_multiple_apps_matched_exit">¿Salir de la navegación privada?</string>
   <string name="errorpage_title">Problema al cargar la página</string>
   <string name="errorpage_refresh">Vuelve a intentarlo</string>

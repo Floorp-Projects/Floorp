@@ -13,6 +13,7 @@
   <string name="menu_about">Про</string>
   <string name="menu_help">Допомога</string>
   <string name="menu_rights">Ваші права</string>
+  <string name="about_content"><p>%1$s надає вам контроль.</p>\n<p>"Використовуйте в якості приватного браузера:\n  "<ul>"\n    "<li>Пошук і перегляд безпосередньо в програмі</li>"\n    "<li>Блокування стеження (або налаштуйте дозволи стеження)</li>"\n    "<li>Видалення кук, а також історії пошуку і перегляду</li>"\n  "</ul>\n</p>\n<p>%1$s створено в Mozilla. Нашою місією є сприяння здорового, відкритого Інтернету.<br/>\n<a href="%2$s">Детальніше</a></p></string>
   <string name="preference_category_search">Пошук</string>
   <string name="preference_search_engine_default">Типовий</string>
   <string name="preference_dialog_title_search_engine">Типовий пошук</string>
@@ -29,6 +30,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Надсилати анонімні дані використання</string>
   <string name="preference_mozilla_telemetry_summary">Докладніше</string>
+  <string name="preference_about">Про %1$s</string>
   <string name="content_description_clear_input">Очистити поле</string>
   <string name="content_description_dismiss_input">Відхилити</string>
   <string name="content_description_erase">Стерти історію перегляду</string>
@@ -43,9 +45,10 @@
   <string name="firstrun_button">Гаразд, зрозуміло!</string>
   <string name="firstrun_footer">Однак, сайти й служби, якими ви користуєтесь, все ж можуть дізнатись, що ви переглядали.</string>
   <string name="your_rights">Ваші права</string>
-  <string name="external_app_prompt">Це посилання відкриється у %2$s. Ви впевнені, що хочете вийти з %1$s?</string>
-  <string name="external_app_prompt_no_app_title">Немає програми для обробки посилання</string>
-  <string name="external_app_prompt_no_app">Жодна з програм на вашому пристрої не здатна відкрити це посилання. Ви хочете вийти з %1$s та відкрити %2$s, щоб знайти відповідну програму?</string>
+  <string name="external_app_prompt_title">Відкрити посилання у іншій програмі</string>
+  <string name="external_app_prompt">Ви можете вийти з %1$s, щоб відкрити це посилання у %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Знайдіть програму, яка може відкрити посилання</string>
+  <string name="external_app_prompt_no_app">Жодна з програм на вашому пристрої не здатна відкрити це посилання. Ви можете вийти з %1$s для пошуку відповідної програми у %2$s.</string>
   <string name="external_multiple_apps_matched_exit">Вийти з приватного перегляду?</string>
   <string name="errorpage_title">Проблема при завантаженні сторінки</string>
   <string name="errorpage_refresh">Спробувати знову</string>

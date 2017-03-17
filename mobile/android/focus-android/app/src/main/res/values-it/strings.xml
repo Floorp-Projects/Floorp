@@ -13,6 +13,7 @@
   <string name="menu_about">Informazioni su</string>
   <string name="menu_help">Aiuto</string>
   <string name="menu_rights">I tuoi diritti</string>
+  <string name="about_content"><p>Prendi il controllo con %1$s.</p>\n<p>"Utilizzalo per la navigazione anonima:\n  "<ul>"\n    "<li>Cerca e naviga direttamente nell’app.</li>"\n    "<li>Blocca il tracciamento (o aggiorna le impostazioni per consentirlo).</li>"\n    "<li>Utilizza “Elimina” per rimuovere i cookie così come la cronologia di ricerca e navigazione.</li>"\n  "</ul>\n</p>\n<p>%1$s è realizzato da Mozilla. La nostra missione è promuovere un Internet integro e aperto.<br/>\n<a href="%2$s">Ulteriori informazioni</a></p></string>
   <string name="preference_category_search">Ricerca</string>
   <string name="preference_search_engine_default">Predefinito</string>
   <string name="preference_dialog_title_search_engine">Motore di ricerca predefinito</string>
@@ -29,6 +30,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Invia dati anonimi sull’uso</string>
   <string name="preference_mozilla_telemetry_summary">Ulteriori informazioni</string>
+  <string name="preference_about">Informazioni su %1$s</string>
   <string name="content_description_clear_input">Cancella testo</string>
   <string name="content_description_dismiss_input">Chiudi</string>
   <string name="content_description_erase">Elimina cronologia di navigazione</string>
@@ -43,9 +45,10 @@
   <string name="firstrun_button">Ho capito!</string>
   <string name="firstrun_footer">Per essere chiari, i siti web visitati e il gestore in uso potranno comunque stabilire dove sei stato.</string>
   <string name="your_rights">I tuoi diritti</string>
-  <string name="external_app_prompt">Questo link verrà aperto in %2$s. Uscire da %1$s?</string>
-  <string name="external_app_prompt_no_app_title">Nessuna app per gestire il link</string>
-  <string name="external_app_prompt_no_app">Nessuna delle app sul dispositivo è in grado di aprire questo link. Uscire da %1$s e aprire %2$s per cercare una app adatta?</string>
+  <string name="external_app_prompt_title">Apri link in un’altra app</string>
+  <string name="external_app_prompt">È possibile uscire da %1$s e aprire questo link in %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Trova un app per aprire il link</string>
+  <string name="external_app_prompt_no_app">Nessuna delle app sul dispositivo è in grado di aprire questo link. È possibile uscire da %1$s e cercare una app adatta in %2$s.</string>
   <string name="external_multiple_apps_matched_exit">Uscire da Navigazione anonima?</string>
   <string name="errorpage_title">Errore caricamento pagina</string>
   <string name="errorpage_refresh">Riprova</string>

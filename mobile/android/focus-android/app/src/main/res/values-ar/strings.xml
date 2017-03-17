@@ -43,9 +43,6 @@
   <string name="firstrun_button">حسنًا، فهمت</string>
   <string name="firstrun_footer">للتوضيح؛ المواقع و الخدمات التي تستخدمها يمكنها أن تعرف أين كنت.</string>
   <string name="your_rights">حقوقك</string>
-  <string name="external_app_prompt">سيفتح هذا الرابط في %2$s. أمتأكّد أنّك تريد مغادرة %1$s؟</string>
-  <string name="external_app_prompt_no_app_title">لا يوجد أي تطبيق للتعامل مع هذا الرابط</string>
-  <string name="external_app_prompt_no_app">لا يوجد أي تطبيق في جهازك يستطيع فتح هذا الرابط. هل تريد مغادرة %1$s و فتح %2$s للعثور على تطبيق مناسب؟</string>
   <string name="external_multiple_apps_matched_exit">أتريد مغادرة التصفح الخاص؟</string>
   <string name="errorpage_title">هناك مشكلة في تحميل الصفحة</string>
   <string name="errorpage_refresh">أعِد المحاولة</string>
