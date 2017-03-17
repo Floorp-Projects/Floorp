@@ -290,7 +290,10 @@ var PdfjsChromeUtils = {
 
   _setStringPref(aPrefName, aPrefValue) {
     this._ensurePreferenceAllowed(aPrefName);
-    Services.prefs.setStringPref(aPrefName, aPrefValue);
+    let str = Cc["@mozilla.org/supports-string;1"]
+                .createInstance(Ci.nsISupportsString);
+    str.data = aPrefValue;
+    Services.prefs.setComplexValue(aPrefName, Ci.nsISupportsString, str);
   },
 
   /*
