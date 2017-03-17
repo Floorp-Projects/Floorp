@@ -751,7 +751,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
 
     // Destroy toolboxes for closed window
     for (let [target, toolbox] of gDevTools._toolboxes) {
-      if (toolbox.win.top == win) {
+      if (target.tab && target.tab.ownerDocument.defaultView == win) {
         toolbox.destroy();
       }
     }
