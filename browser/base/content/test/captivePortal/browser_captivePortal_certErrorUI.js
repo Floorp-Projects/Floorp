@@ -64,7 +64,7 @@ add_task(function* checkCaptivePortalCertErrorUI() {
   let portalTab2 = yield portalTabPromise;
   is(portalTab2, portalTab, "The existing portal tab should be focused.");
 
-  let portalTabRemoved = BrowserTestUtils.removeTab(portalTab, {dontRemove: true});
+  let portalTabRemoved = BrowserTestUtils.tabRemoved(portalTab);
   let errorTabReloaded = waitForCertErrorLoad(browser);
 
   Services.obs.notifyObservers(null, "captive-portal-login-success", null);
