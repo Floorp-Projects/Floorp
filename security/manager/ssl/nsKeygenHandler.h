@@ -14,6 +14,7 @@
 #include "nsIFormProcessor.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsNSSShutDown.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "secmodt.h"
 
