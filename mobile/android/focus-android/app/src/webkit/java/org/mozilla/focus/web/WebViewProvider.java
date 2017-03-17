@@ -143,12 +143,12 @@ public class WebViewProvider {
 
     private static class WebkitView extends NestedWebView implements IWebView {
         private Callback callback;
-        private TrackingProtectionWebViewClient client;
+        private FocusWebViewClient client;
 
         public WebkitView(Context context, AttributeSet attrs) {
             super(context, attrs);
 
-            client = createWebViewClient();
+            client = new FocusWebViewClient(getContext().getApplicationContext());
 
             setWebViewClient(client);
             setWebChromeClient(createWebChromeClient());
@@ -160,7 +160,7 @@ public class WebViewProvider {
 
         @Override
         public void setCallback(Callback callback) {
-            this.callback = callback;
+            client.setCallback(callback);
         }
 
         public void loadUrl(String url) {
@@ -191,52 +191,6 @@ public class WebViewProvider {
             // It isn't entirely clear how this differs from WebView.clearFormData()
             webViewDatabase.clearFormData();
             webViewDatabase.clearHttpAuthUsernamePassword();
-        }
-
-        private TrackingProtectionWebViewClient createWebViewClient() {
-            return new TrackingProtectionWebViewClient(getContext().getApplicationContext()) {
-                @Override
-                public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                    if (callback != null) {
-                        callback.onPageStarted(url);
-                    }
-                    super.onPageStarted(view, url, favicon);
-                }
-
-                @Override
-                public void onPageFinished(WebView view, String url) {
-                    if (callback != null) {
-                        callback.onPageFinished(view.getCertificate() != null);
-                    }
-                    super.onPageFinished(view, url);
-                }
-
-                @Override
-                public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                    // shouldOverrideUrlLoading() is called for both the main frame, and iframes.
-                    // That can get problematic if an iframe tries to load an unsupported URL.
-                    // We then try to either handle that URL (ask to open relevant app), or extract
-                    // a fallback URL from the intent (or worst case fall back to an error page). In the
-                    // latter 2 cases, we explicitly open the fallback/error page in the main view.
-                    // Websites probably shouldn't use unsupported URLs in iframes, but we do need to
-                    // be careful to handle all valid schemes here to avoid redirecting due to such an iframe
-                    // (e.g. we don't want to redirect to a data: URI just because an iframe shows such
-                    // a URI).
-                    // (The API 24+ version of shouldOverrideUrlLoading() lets us determine whether
-                    // the request is for the main frame, and if it's not we could then completely
-                    // skip the external URL handling.)
-                    if ((!url.startsWith("http://")) &&
-                            (!url.startsWith("https://")) &&
-                            (!url.startsWith("file://")) &&
-                            (!url.startsWith("data:")) &&
-                            (!url.startsWith("error:"))) {
-                        callback.handleExternalUrl(url);
-                        return true;
-                    }
-
-                    return super.shouldOverrideUrlLoading(view, url);
-                }
-            };
         }
 
         private WebChromeClient createWebChromeClient() {

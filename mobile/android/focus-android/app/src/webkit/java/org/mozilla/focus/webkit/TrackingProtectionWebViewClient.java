@@ -19,10 +19,7 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.webkit.matcher.UrlMatcher;
 
 public class TrackingProtectionWebViewClient extends WebViewClient {
-
-    final static String ERROR_PROTOCOL = "error:";
-
-    private String currentPageURL;
+    protected String currentPageURL;
 
     private static volatile UrlMatcher MATCHER;
 
@@ -106,65 +103,5 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
         currentPageURL = url;
 
         return super.shouldOverrideUrlLoading(view, url);
-    }
-
-    @Override
-    public void onReceivedError(final WebView webView, int errorCode,
-                                final String description, String failingUrl) {
-
-        // This is a hack: onReceivedError(WebView, WebResourceRequest, WebResourceError) is API 23+ only,
-        // - the WebResourceRequest would let us know if the error affects the main frame or not. As a workaround
-        // we just check whether the failing URL is the current URL, which is enough to detect an error
-        // in the main frame.
-
-        // WebView swallows odd pages and only sends an error (i.e. it doesn't go through the usual
-        // shouldOverrideUrlLoading), so we need to handle special pages here:
-        // about: urls are even more odd: webview doesn't tell us _anything_, hence the use of
-        // a different prefix:
-        if (failingUrl.startsWith(ERROR_PROTOCOL)) {
-            // format: error:<error_code>
-            final int errorCodePosition = ERROR_PROTOCOL.length();
-            final String errorCodeString = failingUrl.substring(errorCodePosition);
-
-            int desiredErrorCode;
-            try {
-                desiredErrorCode = Integer.parseInt(errorCodeString);
-
-                if (!ErrorPage.supportsErrorCode(desiredErrorCode)) {
-                    // I don't think there's any good way of showing an error if there's an error
-                    // in requesting an error page?
-                    desiredErrorCode = WebViewClient.ERROR_BAD_URL;
-                }
-            } catch (final NumberFormatException e) {
-                desiredErrorCode = WebViewClient.ERROR_BAD_URL;
-            }
-            ErrorPage.loadErrorPage(webView, failingUrl, desiredErrorCode);
-            return;
-        }
-
-
-        // The API 23+ version also return a *slightly* more usable description, via WebResourceError.getError();
-        // e.g.. "There was a network error.", whereas this version provides things like "net::ERR_NAME_NOT_RESOLVED"
-        if (failingUrl.equals(currentPageURL) &&
-                ErrorPage.supportsErrorCode(errorCode)) {
-            ErrorPage.loadErrorPage(webView, currentPageURL, errorCode);
-            return;
-        }
-
-        super.onReceivedError(webView, errorCode, description, failingUrl);
-    }
-
-    @Override
-    public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-        handler.cancel();
-
-        // Webkit can try to load the favicon for a bad page when you set a new URL. If we then
-        // loadErrorPage() again, webkit tries to load the favicon again. We end up in onReceivedSSlError()
-        // again, and we get an infinite loop of reloads (we also erroneously show the favicon URL
-        // in the toolbar, but that's less noticeable). Hence we check whether this error is from
-        // the desired page, or a page resource:
-        if (error.getUrl().equals(currentPageURL)) {
-            ErrorPage.loadErrorPage(view, error.getUrl(), WebViewClient.ERROR_FAILED_SSL_HANDSHAKE);
-        }
     }
 }
