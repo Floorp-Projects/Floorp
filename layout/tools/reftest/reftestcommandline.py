@@ -453,9 +453,9 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           action="store",
                           type=str,
                           dest="dm_trans",
-                          default="sut",
+                          default="adb",
                           help="the transport to use to communicate with device: "
-                               "[adb|sut]; default=sut")
+                               "[adb|sut]; default=adb")
 
         self.add_argument("--remoteTestRoot",
                           action="store",
