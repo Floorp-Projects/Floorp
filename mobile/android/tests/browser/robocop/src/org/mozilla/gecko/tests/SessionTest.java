@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.tests;
 
+import android.util.Log;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -12,20 +14,13 @@ import java.io.IOException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.FennecMochitestAssert;
+import org.mozilla.gecko.tests.helpers.NavigationHelper;
 
-public abstract class SessionTest extends BaseTest {
-    protected Navigation mNavigation;
+import static org.mozilla.gecko.tests.components.AppMenuComponent.MenuItem;
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-
-        mNavigation = new Navigation(mDevice);
-    }
-
+public abstract class SessionTest extends UITest {
     /**
      * A generic session object representing a collection of items that has a
      * selected index.
@@ -135,8 +130,8 @@ public abstract class SessionTest extends BaseTest {
      */
     protected void loadSessionTabs(Session session) {
         // Verify initial about:home tab
-        verifyTabCount(1);
-        verifyUrl(mStringHelper.ABOUT_HOME_URL);
+        mToolbar.assertTabCount(1);
+        mToolbar.assertTitle(mStringHelper.ABOUT_HOME_URL);
 
         SessionTab[] tabs = session.getItems();
         for (int i = 0; i < tabs.length; i++) {
@@ -152,26 +147,20 @@ public abstract class SessionTest extends BaseTest {
             // create a new one. Otherwise, create a new tab if we're loading
             // the first the first page in the set.
             if (i > 0) {
-                addTab();
+                mAppMenu.pressMenuItem(MenuItem.NEW_TAB);
             }
 
             for (int j = 1; j < pages.length; j++) {
-                final Actions.EventExpecter pageShowExpecter =
-                        mActions.expectGlobalEvent(Actions.EventType.UI, "Content:PageShow");
-
-                loadUrl(pages[j].url);
-
-                pageShowExpecter.blockForEvent();
-                pageShowExpecter.unregisterListener();
+                NavigationHelper.enterAndLoadUrl(pages[j].url);
             }
 
             final int index = tab.getIndex();
             for (int j = pages.length - 1; j > index; j--) {
-                mNavigation.back();
+                NavigationHelper.goBack();
             }
         }
 
-        selectTabAt(session.getIndex());
+        mTabsPanel.selectTabAt(session.getIndex());
     }
 
     /**
@@ -180,7 +169,7 @@ public abstract class SessionTest extends BaseTest {
      * @param session Session to verify
      */
     protected void verifySessionTabs(Session session) {
-        verifyTabCount(session.getItems().length);
+        mToolbar.assertTabCount(session.getItems().length);
 
         (new NavigationWalker<SessionTab>(session) {
             boolean mFirstTabVisited;
@@ -189,7 +178,7 @@ public abstract class SessionTest extends BaseTest {
             public void onItem(SessionTab tab, int currentIndex) {
                 // The first tab to check should already be selected at startup
                 if (mFirstTabVisited) {
-                    selectTabAt(currentIndex);
+                    mTabsPanel.selectTabAt(currentIndex);
                 } else {
                     mFirstTabVisited = true;
                 }
@@ -197,27 +186,17 @@ public abstract class SessionTest extends BaseTest {
                 (new NavigationWalker<PageInfo>(tab) {
                     @Override
                     public void onItem(PageInfo page, int currentIndex) {
-                        final String text;
-                        if (mStringHelper.ABOUT_HOME_URL.equals(page.url)) {
-                            text = mStringHelper.TITLE_PLACE_HOLDER;
-                        } else if (page.url.startsWith(URL_HTTP_PREFIX)) {
-                            text = page.url.substring(URL_HTTP_PREFIX.length());
-                        } else {
-                            text = page.url;
-                        }
-                        waitForText(text);
-
-                        verifyUrlBarTitle(page.url);
+                        mToolbar.assertTitle(page.url);
                     }
 
                     @Override
                     public void goBack() {
-                        mNavigation.back();
+                        NavigationHelper.goBack();
                     }
 
                     @Override
                     public void goForward() {
-                        mNavigation.forward();
+                        NavigationHelper.goForward();
                     }
                 }).walk();
             }
@@ -264,7 +243,7 @@ public abstract class SessionTest extends BaseTest {
             window.put("selected", session.getIndex() + 1);
             sessionString = new JSONObject().put("windows", new JSONArray().put(window)).toString();
         } catch (JSONException e) {
-            mAsserter.ok(false, "JSON exception", getStackTraceString(e));
+            mAsserter.ok(false, "JSON exception", Log.getStackTraceString(e));
         }
 
         return sessionString;
@@ -316,7 +295,7 @@ public abstract class SessionTest extends BaseTest {
                 }
             }
         } catch (JSONException e) {
-            asserter.ok(false, "JSON exception", getStackTraceString(e));
+            asserter.ok(false, "JSON exception", Log.getStackTraceString(e));
         }
     }
 
@@ -357,14 +336,14 @@ public abstract class SessionTest extends BaseTest {
      * @return URL of the page
      */
     protected String getPage(String id) {
-        return getAbsoluteUrl("/robocop/robocop_dynamic.sjs?id=" + id);
+        return getAbsoluteHostnameUrl("/robocop/robocop_dynamic.sjs?id=" + id);
     }
 
     protected String readProfileFile(String filename) {
         try {
             return readFile(new File(mProfile, filename));
         } catch (IOException e) {
-            mAsserter.ok(false, "Error reading" + filename, getStackTraceString(e));
+            mAsserter.ok(false, "Error reading" + filename, Log.getStackTraceString(e));
         }
         return null;
     }
@@ -373,7 +352,7 @@ public abstract class SessionTest extends BaseTest {
         try {
             writeFile(new File(mProfile, filename), data);
         } catch (IOException e) {
-            mAsserter.ok(false, "Error writing to " + filename, getStackTraceString(e));
+            mAsserter.ok(false, "Error writing to " + filename, Log.getStackTraceString(e));
         }
     }
 
