@@ -1144,7 +1144,7 @@ Inspector.prototype = {
       id: "node-menu-screenshotnode",
       label: INSPECTOR_L10N.getStr("inspectorScreenshotNode.label"),
       disabled: !isScreenshotable,
-      click: () => this.screenshotNode(),
+      click: () => this.screenshotNode().catch(console.error),
     }));
     menu.append(new MenuItem({
       id: "node-menu-useinconsole",
@@ -1767,16 +1767,23 @@ Inspector.prototype = {
   /**
    * Initiate gcli screenshot command on selected node.
    */
-  screenshotNode: function () {
+  screenshotNode: Task.async(function* () {
     const command = Services.prefs.getBoolPref("devtools.screenshot.clipboard.enabled") ?
       "screenshot --file --clipboard --selector" :
       "screenshot --file --selector";
+
+    // Bug 1332936 - it's possible to call `screenshotNode` while the BoxModel highlighter
+    // is still visible, therefore showing it in the picture.
+    // To avoid that, we have to hide it before taking the screenshot. The `hideBoxModel`
+    // will do that, calling `hide` for the highlighter only if previously shown.
+    yield this.highlighter.hideBoxModel();
+
     // Bug 1180314 -  CssSelector might contain white space so need to make sure it is
     // passed to screenshot as a single parameter.  More work *might* be needed if
     // CssSelector could contain escaped single- or double-quotes, backslashes, etc.
     CommandUtils.executeOnTarget(this._target,
       `${command} '${this.selectionCssSelector}'`);
-  },
+  }),
 
   /**
    * Scroll the node into view.
