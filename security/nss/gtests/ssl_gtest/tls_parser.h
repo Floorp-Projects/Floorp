@@ -26,6 +26,7 @@ const uint8_t kTlsApplicationDataType = 23;
 
 const uint8_t kTlsHandshakeClientHello = 1;
 const uint8_t kTlsHandshakeServerHello = 2;
+const uint8_t kTlsHandshakeNewSessionTicket = 4;
 const uint8_t kTlsHandshakeHelloRetryRequest = 6;
 const uint8_t kTlsHandshakeEncryptedExtensions = 8;
 const uint8_t kTlsHandshakeCertificate = 11;
