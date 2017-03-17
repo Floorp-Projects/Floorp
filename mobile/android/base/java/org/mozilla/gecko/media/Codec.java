@@ -66,18 +66,26 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
         private synchronized void onSample(Sample sample) {
             if (sample == null) {
-                Log.w(LOGTAG, "WARN: null input sample");
+                // Ignore empty input.
+                mSamplePool.recycleInput(mDequeuedSamples.remove());
+                Log.w(LOGTAG, "WARN: empty input sample");
                 return;
             }
 
-            if (!sample.isEOS()) {
-                Sample temp = sample;
-                sample = mDequeuedSamples.remove();
-                sample.info = temp.info;
-                sample.cryptoInfo = temp.cryptoInfo;
-                temp.dispose();
+            if (sample.isEOS()) {
+                queueSample(sample);
+                return;
             }
 
+            Sample dequeued = mDequeuedSamples.remove();
+            dequeued.info = sample.info;
+            dequeued.cryptoInfo = sample.cryptoInfo;
+            queueSample(dequeued);
+
+            sample.dispose();
+        }
+
+        private void queueSample(Sample sample) {
             if (!mInputSamples.offer(sample)) {
                 reportError(Error.FATAL, new Exception("FAIL: input sample queue is full"));
                 return;
