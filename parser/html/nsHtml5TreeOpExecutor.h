@@ -170,7 +170,9 @@ class nsHtml5TreeOpExecutor final : public nsHtml5DocumentBuilder,
 
     virtual nsresult MarkAsBroken(nsresult aReason) override;
 
-    void StartLayout();
+    void StartLayout(bool* aInterrupted);
+
+    void PauseDocUpdate(bool* aInterrupted);
     
     void FlushSpeculativeLoads();
                   

@@ -774,6 +774,14 @@ public:
   };
   void MarkAsContentSource(CallerAPI aAPI);
 
+  nsIDocument* GetDocument() const override;
+
+  void ConstructMediaTracks(const MediaInfo* aInfo) override;
+
+  void RemoveMediaTracks() override;
+
+  already_AddRefed<GMPCrashHelper> CreateGMPCrashHelper() override;
+
 protected:
   virtual ~HTMLMediaElement();
 
@@ -1732,6 +1740,10 @@ private:
   // True if media element has been marked as 'tainted' and can't
   // participate in video decoder suspending.
   bool mHasSuspendTaint;
+
+  // True if audio tracks and video tracks are constructed and added into the
+  // track list, false if all tracks are removed from the track list.
+  bool mMediaTracksConstructed;
 
   Visibility mVisibilityState;
 

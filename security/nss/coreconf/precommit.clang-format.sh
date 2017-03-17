@@ -19,7 +19,7 @@ if [ "$1" = "install" ]; then
     if [ "$hg" -eq 1 ]; then
         hgrc="$(hg root)"/.hg/hgrc
         if ! grep -q '^pretxncommit.clang-format' "$hgrc"; then
-            echo '[hook]' >> "$hgrc"
+            echo '[hooks]' >> "$hgrc"
             echo 'pretxncommit.clang-format = [ ! -x ./coreconf/precommit.clang-format.sh ] || ./coreconf/precommit.clang-format.sh' >> "$hgrc"
             echo "Installed mercurial pretxncommit hook"
             exit

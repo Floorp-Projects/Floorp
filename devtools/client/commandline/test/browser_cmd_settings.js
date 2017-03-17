@@ -35,9 +35,8 @@ function* spawnTest() {
 
   let hideIntroOrig = prefBranch.getBoolPref("devtools.gcli.hideIntro");
   let tabSizeOrig = prefBranch.getIntPref("devtools.editor.tabsize");
-  let remoteHostOrig = prefBranch.getComplexValue(
-          "devtools.debugger.remote-host",
-          Components.interfaces.nsISupportsString).data;
+  let remoteHostOrig = prefBranch.getStringPref(
+          "devtools.debugger.remote-host");
 
   info("originally: devtools.gcli.hideIntro = " + hideIntroOrig);
   info("originally: devtools.editor.tabsize = " + tabSizeOrig);

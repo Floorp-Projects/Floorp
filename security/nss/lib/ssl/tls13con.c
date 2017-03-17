@@ -942,27 +942,6 @@ tls13_CanResume(sslSocket *ss, const sslSessionID *sid)
 }
 
 static PRBool
-tls13_AlpnTagAllowed(const sslSocket *ss, const SECItem *tag)
-{
-    const unsigned char *data = ss->opt.nextProtoNego.data;
-    unsigned int length = ss->opt.nextProtoNego.len;
-    unsigned int offset = 0;
-
-    if (!tag->len)
-        return PR_TRUE;
-
-    while (offset < length) {
-        unsigned int taglen = (unsigned int)data[offset];
-        if ((taglen == tag->len) &&
-            !PORT_Memcmp(data + offset + 1, tag->data, tag->len))
-            return PR_TRUE;
-        offset += 1 + taglen;
-    }
-
-    return PR_FALSE;
-}
-
-static PRBool
 tls13_CanNegotiateZeroRtt(sslSocket *ss, const sslSessionID *sid)
 {
     PORT_Assert(ss->ssl3.hs.zeroRttState == ssl_0rtt_sent);
@@ -4296,7 +4275,7 @@ tls13_ClientAllow0Rtt(const sslSocket *ss, const sslSessionID *sid)
         return PR_FALSE;
     if ((sid->u.ssl3.locked.sessionTicket.flags & ticket_allow_early_data) == 0)
         return PR_FALSE;
-    return tls13_AlpnTagAllowed(ss, &sid->u.ssl3.alpnSelection);
+    return ssl_AlpnTagAllowed(ss, &sid->u.ssl3.alpnSelection);
 }
 
 SECStatus

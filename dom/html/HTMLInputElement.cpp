@@ -178,15 +178,18 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
   { "search", NS_FORM_INPUT_SEARCH },
   { "submit", NS_FORM_INPUT_SUBMIT },
   { "tel", NS_FORM_INPUT_TEL },
-  { "text", NS_FORM_INPUT_TEXT },
   { "time", NS_FORM_INPUT_TIME },
   { "url", NS_FORM_INPUT_URL },
   { "week", NS_FORM_INPUT_WEEK },
+  // "text" must be last for ParseAttribute to work right.  If you add things
+  // before it, please update kInputDefaultType.
+  { "text", NS_FORM_INPUT_TEXT },
   { nullptr, 0 }
 };
 
 // Default type is 'text'.
-static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[18];
+static const nsAttrValue::EnumTable* kInputDefaultType =
+  &kInputTypeTable[ArrayLength(kInputTypeTable) - 2];
 
 static const uint8_t NS_INPUT_INPUTMODE_AUTO              = 0;
 static const uint8_t NS_INPUT_INPUTMODE_NUMERIC           = 1;
@@ -1358,7 +1361,7 @@ HTMLInputElement::Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) co
 
 nsresult
 HTMLInputElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                nsAttrValueOrString* aValue,
+                                const nsAttrValueOrString* aValue,
                                 bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
@@ -1449,36 +1452,15 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     }
 
     if (aName == nsGkAtoms::type) {
+      uint8_t newType;
       if (!aValue) {
-        // We're now a text input.  Note that we have to handle this manually,
-        // since removing an attribute (which is what happened, since aValue is
-        // null) doesn't call ParseAttribute.
-        HandleTypeChange(kInputDefaultType->value);
+        // We're now a text input.
+        newType = kInputDefaultType->value;
+      } else {
+        newType = aValue->GetEnumValue();
       }
-
-      UpdateBarredFromConstraintValidation();
-
-      if (mType != NS_FORM_INPUT_IMAGE) {
-        // We're no longer an image input.  Cancel our image requests, if we have
-        // any.  Note that doing this when we already weren't an image is ok --
-        // just does nothing.
-        CancelImageRequests(aNotify);
-      } else if (aNotify) {
-        // We just got switched to be an image input; we should see
-        // whether we have an image to load;
-        nsAutoString src;
-        if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
-          LoadImage(src, false, aNotify, eImageLoadType_Normal);
-        }
-      }
-
-      if (mType == NS_FORM_INPUT_PASSWORD && IsInComposedDoc()) {
-        AsyncEventDispatcher* dispatcher =
-          new AsyncEventDispatcher(this,
-                                   NS_LITERAL_STRING("DOMInputPasswordAdded"),
-                                   true,
-                                   true);
-        dispatcher->PostDOMEvent();
+      if (newType != mType) {
+        HandleTypeChange(newType, aNotify);
       }
     }
 
@@ -1577,8 +1559,6 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       // Clear the cached @autocomplete attribute state.
       mAutocompleteAttrState = nsContentUtils::eAutocompleteAttrState_Unknown;
     }
-
-    UpdateState(aNotify);
   }
 
   return nsGenericHTMLFormElementWithState::AfterSetAttr(aNameSpaceID, aName,
@@ -5121,14 +5101,23 @@ HTMLInputElement::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 void
-HTMLInputElement::HandleTypeChange(uint8_t aNewType)
+HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify)
 {
-  if (mType == NS_FORM_INPUT_RANGE && mIsDraggingRange) {
+  uint8_t oldType = mType;
+  MOZ_ASSERT(oldType != aNewType);
+
+  if (aNewType == NS_FORM_INPUT_FILE || oldType == NS_FORM_INPUT_FILE) {
+    // Strictly speaking, we only need to clear files on going _to_ or _from_
+    // the NS_FORM_INPUT_FILE type, not both, since we'll never confuse values
+    // and filenames. But this is safer.
+    ClearFiles(false);
+  }
+
+  if (oldType == NS_FORM_INPUT_RANGE && mIsDraggingRange) {
     CancelRangeThumbDrag(false);
   }
 
   ValueModeType aOldValueMode = GetValueMode();
-  uint8_t oldType = mType;
   nsAutoString aOldValue;
 
   if (aOldValueMode == VALUE_MODE_VALUE) {
@@ -5212,6 +5201,30 @@ HTMLInputElement::HandleTypeChange(uint8_t aNewType)
   UpdateAllValidityStates(false);
 
   UpdateApzAwareFlag();
+
+  UpdateBarredFromConstraintValidation();
+
+  if (oldType == NS_FORM_INPUT_IMAGE) {
+    // We're no longer an image input.  Cancel our image requests, if we have
+    // any.
+    CancelImageRequests(aNotify);
+  } else if (aNotify && mType == NS_FORM_INPUT_IMAGE) {
+    // We just got switched to be an image input; we should see
+    // whether we have an image to load;
+    nsAutoString src;
+    if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
+      LoadImage(src, false, aNotify, eImageLoadType_Normal);
+    }
+  }
+
+  if (mType == NS_FORM_INPUT_PASSWORD && IsInComposedDoc()) {
+    AsyncEventDispatcher* dispatcher =
+      new AsyncEventDispatcher(this,
+                               NS_LITERAL_STRING("DOMInputPasswordAdded"),
+                               true,
+                               true);
+    dispatcher->PostDOMEvent();
+  }
 }
 
 void
@@ -5935,45 +5948,34 @@ HTMLInputElement::ParseAttribute(int32_t aNamespaceID,
                                  const nsAString& aValue,
                                  nsAttrValue& aResult)
 {
+  // We can't make these static_asserts because kInputDefaultType and
+  // kInputTypeTable aren't constexpr.
+  MOZ_ASSERT(kInputDefaultType->value == NS_FORM_INPUT_TEXT,
+             "Someone forgot to update kInputDefaultType when adding a new "
+             "input type.");
+  MOZ_ASSERT(kInputTypeTable[ArrayLength(kInputTypeTable) - 1].tag == nullptr,
+             "Last entry in the table must be the nullptr guard");
+  MOZ_ASSERT(kInputTypeTable[ArrayLength(kInputTypeTable) - 2].value ==
+               NS_FORM_INPUT_TEXT,
+             "Next to last entry in the table must be the \"text\" entry");
+
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::type) {
-      // XXX ARG!! This is major evilness. ParseAttribute
-      // shouldn't set members. Override SetAttr instead
-      int32_t newType;
-      bool success = aResult.ParseEnumValue(aValue, kInputTypeTable, false);
-      if (success) {
-        newType = aResult.GetEnumValue();
-        if ((IsExperimentalMobileType(newType) &&
-             !IsExperimentalFormsEnabled()) ||
-            (newType == NS_FORM_INPUT_NUMBER && !IsInputNumberEnabled()) ||
-            (newType == NS_FORM_INPUT_COLOR && !IsInputColorEnabled()) ||
-            (IsDateTimeInputType(newType) &&
-             !IsDateTimeTypeSupported(newType))) {
-          newType = kInputDefaultType->value;
-          aResult.SetTo(newType, &aValue);
-        }
-      } else {
-        newType = kInputDefaultType->value;
+      aResult.ParseEnumValue(aValue, kInputTypeTable, false, kInputDefaultType);
+      int32_t newType = aResult.GetEnumValue();
+      if ((IsExperimentalMobileType(newType) &&
+           !IsExperimentalFormsEnabled()) ||
+          (newType == NS_FORM_INPUT_NUMBER && !IsInputNumberEnabled()) ||
+          (newType == NS_FORM_INPUT_COLOR && !IsInputColorEnabled()) ||
+          (IsDateTimeInputType(newType) &&
+           !IsDateTimeTypeSupported(newType))) {
+        // There's no public way to set an nsAttrValue to an enum value, but we
+        // can just re-parse with a table that doesn't have any types other than
+        // "text" in it.
+        aResult.ParseEnumValue(aValue, kInputDefaultType, false, kInputDefaultType);
       }
 
-      if (newType != mType) {
-        // Make sure to do the check for newType being NS_FORM_INPUT_FILE and
-        // the corresponding SetValueInternal() call _before_ we set mType.
-        // That way the logic in SetValueInternal() will work right (that logic
-        // makes assumptions about our frame based on mType, but we won't have
-        // had time to recreate frames yet -- that happens later in the
-        // SetAttr() process).
-        if (newType == NS_FORM_INPUT_FILE || mType == NS_FORM_INPUT_FILE) {
-          // This call isn't strictly needed any more since we'll never
-          // confuse values and filenames. However it's there for backwards
-          // compat.
-          ClearFiles(false);
-        }
-
-        HandleTypeChange(newType);
-      }
-
-      return success;
+      return true;
     }
     if (aAttribute == nsGkAtoms::width) {
       return aResult.ParseSpecialIntValue(aValue);

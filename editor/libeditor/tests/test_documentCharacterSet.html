@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<iframe></iframe>
+
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+function getEditor() {
+  const Ci = SpecialPowers.Ci;
+  let editframe = window.frames[0];
+  return SpecialPowers.wrap(editframe)
+                      .QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIWebNavigation)
+                      .QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIEditingSession)
+                      .getEditorForWindow(editframe);
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editdoc = window.frames[0].document;
+  editdoc.designMode = 'on';
+  let editor = getEditor();
+
+  editor.documentCharacterSet = "us-ascii";
+  let meta = editdoc.getElementsByTagName("meta")[0];
+  is(meta.getAttribute("http-equiv"), "Content-Type",
+     "meta element should have http-equiv");
+  is(meta.getAttribute("content"), "text/html;charset=us-ascii",
+     "charset should be set as us-ascii");
+
+  let dummyMeta = editdoc.createElement("meta");
+  dummyMeta.setAttribute("name", "keywords");
+  dummyMeta.setAttribute("content", "test");
+  meta.parentNode.insertBefore(dummyMeta, meta);
+
+  editor.documentCharacterSet = "utf-8";
+
+  meta = editdoc.getElementsByTagName("meta")[0];
+  isnot(meta.getAttribute("http-equiv"), "Content-Type",
+     "first meta element shouldn't have http-equiv");
+
+  meta = editdoc.getElementsByTagName("meta")[1];
+  is(meta.getAttribute("http-equiv"), "Content-Type",
+     "second meta element should have http-equiv");
+  is(meta.getAttribute("content"), "text/html;charset=utf-8",
+     "charset should be set as utf-8");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

@@ -21,6 +21,8 @@ class HeapSnapshot;
 namespace dom {
 
 class ArrayBufferViewOrArrayBuffer;
+class PrecompiledScript;
+class Promise;
 
 class ThreadSafeChromeUtils
 {
@@ -101,6 +103,13 @@ public:
            aA.mUserContextId == aB.mUserContextId &&
            aA.mPrivateBrowsingId == aB.mPrivateBrowsingId;
   }
+
+  // Implemented in js/xpconnect/loader/ChromeScriptLoader.cpp
+  static already_AddRefed<Promise>
+  CompileScript(GlobalObject& aGlobal,
+                const nsAString& aUrl,
+                const dom::CompileScriptOptionsDictionary& aOptions,
+                ErrorResult& aRv);
 };
 
 } // namespace dom

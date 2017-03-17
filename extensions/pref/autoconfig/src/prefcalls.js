@@ -27,11 +27,7 @@ function pref(prefName, value) {
 
         if (typeof value == "string") {
             if (gIsUTF8) {
-                const nsISupportsString = Components.interfaces.nsISupportsString;
-                let string = Components.classes["@mozilla.org/supports-string;1"]
-                                       .createInstance(nsISupportsString);
-                string.data = value;
-                prefBranch.setComplexValue(prefName, nsISupportsString, string);
+                prefBranch.setStringPref(prefName, value);
                 return;
             }
             prefBranch.setCharPref(prefName, value);
@@ -56,11 +52,7 @@ function defaultPref(prefName, value) {
         var prefBranch = prefService.getDefaultBranch(null);
         if (typeof value == "string") {
             if (gIsUTF8) {
-                const nsISupportsString = Components.interfaces.nsISupportsString;
-                let string = Components.classes["@mozilla.org/supports-string;1"]
-                                       .createInstance(nsISupportsString);
-                string.data = value;
-                prefBranch.setComplexValue(prefName, nsISupportsString, string);
+                prefBranch.setStringPref(prefName, value);
                 return;
             }
             prefBranch.setCharPref(prefName, value);
@@ -115,10 +107,7 @@ function getPref(prefName) {
             
         case prefBranch.PREF_STRING:
             if (gIsUTF8) {
-                const nsISupportsString = Components.interfaces.nsISupportsString;
-                let string = Components.classes["@mozilla.org/supports-string;1"]
-                                       .createInstance(nsISupportsString);
-                return prefBranch.getComplexValue(prefName, nsISupportsString).data;
+                return prefBranch.getStringPref(prefName);
             }
             return prefBranch.getCharPref(prefName);
             

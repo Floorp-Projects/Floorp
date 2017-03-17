@@ -44,11 +44,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
 XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
                                   "resource://gre/modules/WebNavigationFrames.jsm");
 
+const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer", "initWithCallback");
+
 Cu.import("resource://gre/modules/ExtensionChild.jsm");
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
+  DefaultMap,
   EventEmitter,
   LocaleData,
   defineLazyGetter,
@@ -102,6 +105,52 @@ var apiManager = new class extends SchemaAPIManager {
   }
 }();
 
+const SCRIPT_EXPIRY_TIMEOUT_MS = 300000;
+const SCRIPT_CLEAR_TIMEOUT_MS = 5000;
+
+const scriptCaches = new WeakSet();
+
+class ScriptCache extends DefaultMap {
+  constructor(options) {
+    super(url => ChromeUtils.compileScript(url, options));
+
+    this.expiryTimeout = SCRIPT_EXPIRY_TIMEOUT_MS;
+
+    scriptCaches.add(this);
+  }
+
+  get(url) {
+    let script = super.get(url);
+
+    script.lastUsed = Date.now();
+    if (script.timer) {
+      script.timer.cancel();
+    }
+    script.timer = Timer(this.delete.bind(this, url),
+                         this.expiryTimeout,
+                         Ci.nsITimer.TYPE_ONE_SHOT);
+
+    return script;
+  }
+
+  delete(url) {
+    if (this.has(url)) {
+      super.get(url).timer.cancel();
+    }
+
+    super.delete(url);
+  }
+
+  clear(timeout = SCRIPT_CLEAR_TIMEOUT_MS) {
+    let now = Date.now();
+    for (let [url, script] of this.entries()) {
+      if (now - script.lastUsed >= timeout) {
+        this.delete(url);
+      }
+    }
+  }
+}
+
 // Represents a content script.
 function Script(extension, options, deferred = PromiseUtils.defer()) {
   this.extension = extension;
@@ -115,6 +164,12 @@ function Script(extension, options, deferred = PromiseUtils.defer()) {
 
   this.deferred = deferred;
 
+  this.scriptCache = extension[options.wantReturnValue ? "dynamicScripts"
+                                                       : "staticScripts"];
+  if (options.wantReturnValue) {
+    this.compileScripts();
+  }
+
   this.matches_ = new MatchPattern(this.options.matches);
   this.exclude_matches_ = new MatchPattern(this.options.exclude_matches || null);
   // TODO: MatchPattern should pre-mangle host-only patterns so that we
@@ -127,6 +182,10 @@ function Script(extension, options, deferred = PromiseUtils.defer()) {
 }
 
 Script.prototype = {
+  compileScripts() {
+    return this.js.map(url => this.scriptCache.get(url));
+  },
+
   get cssURLs() {
     // We can handle CSS urls (css) and CSS code (cssCode).
     let urls = [];
@@ -140,6 +199,40 @@ Script.prototype = {
     }
 
     return urls;
+  },
+
+  matchesLoadInfo(uri, loadInfo) {
+    if (!this.matchesURI(uri)) {
+      return false;
+    }
+
+    if (!this.options.all_frames && !loadInfo.isTopLevelLoad) {
+      return false;
+    }
+
+    return true;
+  },
+
+  matchesURI(uri) {
+    if (!(this.matches_.matches(uri) || this.matches_host_.matchesIgnoringPath(uri))) {
+      return false;
+    }
+
+    if (this.exclude_matches_.matches(uri)) {
+      return false;
+    }
+
+    if (this.options.include_globs != null) {
+      if (!this.include_globs_.matches(uri.spec)) {
+        return false;
+      }
+    }
+
+    if (this.exclude_globs_.matches(uri.spec)) {
+      return false;
+    }
+
+    return true;
   },
 
   matches(window) {
@@ -174,21 +267,7 @@ Script.prototype = {
       uri = principal.URI;
     }
 
-    if (!(this.matches_.matches(uri) || this.matches_host_.matchesIgnoringPath(uri))) {
-      return false;
-    }
-
-    if (this.exclude_matches_.matches(uri)) {
-      return false;
-    }
-
-    if (this.options.include_globs != null) {
-      if (!this.include_globs_.matches(uri.spec)) {
-        return false;
-      }
-    }
-
-    if (this.exclude_globs_.matches(uri.spec)) {
+    if (!this.matchesURI(uri)) {
       return false;
     }
 
@@ -257,37 +336,32 @@ Script.prototype = {
       }
     }
 
-    let result;
     let scheduled = this.run_at || "document_idle";
     if (shouldRun(scheduled)) {
-      for (let url of this.js) {
-        url = this.extension.baseURI.resolve(url);
+      let scriptsPromise = Promise.all(this.compileScripts());
 
-        let options = {
-          target: sandbox,
-          charset: "UTF-8",
-          // Inject asynchronously unless we're expected to inject before any
-          // page scripts have run, and we haven't already missed that boat.
-          async: this.run_at !== "document_start" || when !== "document_start",
-        };
-        try {
-          result = Services.scriptloader.loadSubScriptWithOptions(url, options);
-        } catch (e) {
-          Cu.reportError(e);
-          this.deferred.reject(e);
-        }
+      // If we're supposed to inject at the start of the document load,
+      // and we haven't already missed that point, block further parsing
+      // until the scripts have been loaded.
+      if (this.run_at === "document_start" && when === "document_start") {
+        window.document.blockParsing(scriptsPromise);
       }
 
-      if (this.options.jsCode) {
-        try {
+      this.deferred.resolve(scriptsPromise.then(scripts => {
+        let result;
+
+        // The evaluations below may throw, in which case the promise will be
+        // automatically rejected.
+        for (let script of scripts) {
+          result = script.executeInGlobal(sandbox);
+        }
+
+        if (this.options.jsCode) {
           result = Cu.evalInSandbox(this.options.jsCode, sandbox, "latest");
-        } catch (e) {
-          Cu.reportError(e);
-          this.deferred.reject(e);
         }
-      }
 
-      this.deferred.resolve(result);
+        return result;
+      }));
     }
   },
 };
@@ -499,15 +573,23 @@ DocumentManager = {
   extensionPageWindows: new Map(),
 
   init() {
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+      Services.obs.addObserver(this, "http-on-opening-request", false);
+    }
     Services.obs.addObserver(this, "content-document-global-created", false);
     Services.obs.addObserver(this, "document-element-inserted", false);
     Services.obs.addObserver(this, "inner-window-destroyed", false);
+    Services.obs.addObserver(this, "memory-pressure", false);
   },
 
   uninit() {
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+      Services.obs.removeObserver(this, "http-on-opening-request");
+    }
     Services.obs.removeObserver(this, "content-document-global-created");
     Services.obs.removeObserver(this, "document-element-inserted");
     Services.obs.removeObserver(this, "inner-window-destroyed");
+    Services.obs.removeObserver(this, "memory-pressure");
   },
 
   getWindowState(contentWindow) {
@@ -544,17 +626,15 @@ DocumentManager = {
     }
   },
 
-  observe: function(subject, topic, data) {
+  observers: {
     // For some types of documents (about:blank), we only see the first
     // notification, for others (data: URIs) we only observe the second.
-    if (topic == "content-document-global-created" || topic == "document-element-inserted") {
+    "content-document-global-created"(subject, topic, data) {
+      this.observers["document-element-inserted"].call(this, subject.document, topic, data);
+    },
+    "document-element-inserted"(subject, topic, data) {
       let document = subject;
       let window = document && document.defaultView;
-
-      if (topic == "content-document-global-created") {
-        window = subject;
-        document = window && window.document;
-      }
 
       if (!document || !document.location || !window) {
         return;
@@ -578,7 +658,8 @@ DocumentManager = {
       window.addEventListener("DOMContentLoaded", this, true);
       window.addEventListener("load", this, true);
       /* eslint-enable mozilla/balanced-listeners */
-    } else if (topic == "inner-window-destroyed") {
+    },
+    "inner-window-destroyed"(subject, topic, data) {
       let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
 
       MessageChannel.abortResponses({innerWindowID: windowId});
@@ -601,10 +682,31 @@ DocumentManager = {
       }
 
       ExtensionChild.destroyExtensionContext(windowId);
-    }
+    },
+    "http-on-opening-request"(subject, topic, data) {
+      let {loadInfo} = subject.QueryInterface(Ci.nsIChannel);
+      if (loadInfo) {
+        let {externalContentPolicyType: type} = loadInfo;
+        if (type === Ci.nsIContentPolicy.TYPE_DOCUMENT ||
+            type === Ci.nsIContentPolicy.TYPE_SUBDOCUMENT) {
+          this.preloadScripts(subject.URI, loadInfo);
+        }
+      }
+    },
+    "memory-pressure"(subject, topic, data) {
+      let timeout = data === "heap-minimize" ? 0 : undefined;
+
+      for (let cache of ChromeUtils.nondeterministicGetWeakSetKeys(scriptCaches)) {
+        cache.clear(timeout);
+      }
+    },
   },
 
-  handleEvent: function(event) {
+  observe(subject, topic, data) {
+    this.observers[topic].call(this, subject, topic, data);
+  },
+
+  handleEvent(event) {
     let window = event.currentTarget;
     if (event.target != window.document) {
       // We use capturing listeners so we have precedence over content script
@@ -763,6 +865,16 @@ DocumentManager = {
     }
   },
 
+  preloadScripts(uri, loadInfo) {
+    for (let extension of ExtensionManager.extensions.values()) {
+      for (let script of extension.scripts) {
+        if (script.matchesLoadInfo(uri, loadInfo)) {
+          script.compileScripts();
+        }
+      }
+    }
+  },
+
   trigger(when, window) {
     if (when === "document_start") {
       for (let extension of ExtensionManager.extensions.values()) {
@@ -795,7 +907,10 @@ class BrowserExtensionContent extends EventEmitter {
     this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
     Services.cpmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
-    this.scripts = data.content_scripts.map(scriptData => new Script(this, scriptData));
+    defineLazyGetter(this, "scripts", () => {
+      return data.content_scripts.map(scriptData => new Script(this, scriptData));
+    });
+
     this.webAccessibleResources = new MatchGlobs(data.webAccessibleResources);
     this.whiteListedHosts = new MatchPattern(data.whiteListedHosts);
     this.permissions = data.permissions;
@@ -856,6 +971,14 @@ class BrowserExtensionContent extends EventEmitter {
     return this.permissions.has(perm);
   }
 }
+
+defineLazyGetter(BrowserExtensionContent.prototype, "staticScripts", () => {
+  return new ScriptCache({hasReturnValue: false});
+});
+
+defineLazyGetter(BrowserExtensionContent.prototype, "dynamicScripts", () => {
+  return new ScriptCache({hasReturnValue: true});
+});
 
 ExtensionManager = {
   // Map[extensionId, BrowserExtensionContent]

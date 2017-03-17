@@ -38,7 +38,6 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Keyframe.h"
-#include "mozilla/ServoAnimationRule.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/StyleAnimationValue.h"
@@ -388,42 +387,36 @@ Gecko_GetHTMLPresentationAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
   return reinterpret_cast<const RawServoDeclarationBlockStrong*>(&servo);
 }
 
-RawServoDeclarationBlockStrong
+bool
 Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
                        nsIAtom* aPseudoTag,
-                       EffectCompositor::CascadeLevel aCascadeLevel)
+                       EffectCompositor::CascadeLevel aCascadeLevel,
+                       RawServoAnimationValueMapBorrowed aAnimationValues)
 {
   MOZ_ASSERT(aElement, "Invalid GeckoElement");
+  MOZ_ASSERT(!aPseudoTag ||
+             aPseudoTag == nsCSSPseudoElements::before ||
+             aPseudoTag == nsCSSPseudoElements::after);
 
-  const RawServoDeclarationBlockStrong emptyDeclarationBlock{ nullptr };
   nsIDocument* doc = aElement->GetComposedDoc();
   if (!doc || !doc->GetShell()) {
-    return emptyDeclarationBlock;
+    return false;
   }
   nsPresContext* presContext = doc->GetShell()->GetPresContext();
-  if (!presContext) {
-    return emptyDeclarationBlock;
+  if (!presContext || !presContext->IsDynamic()) {
+    // For print or print preview, ignore animations.
+    return false;
   }
 
   CSSPseudoElementType pseudoType =
-    aPseudoTag
-    ? nsCSSPseudoElements::GetPseudoType(
-        aPseudoTag,
-        nsCSSProps::EnabledState::eIgnoreEnabledState)
-    : CSSPseudoElementType::NotPseudo;
-  if (pseudoType != CSSPseudoElementType::NotPseudo &&
-      pseudoType != CSSPseudoElementType::before &&
-      pseudoType != CSSPseudoElementType::after) {
-    return emptyDeclarationBlock;
-  }
+    nsCSSPseudoElements::GetPseudoType(
+      aPseudoTag,
+      nsCSSProps::EnabledState::eIgnoreEnabledState);
 
-  ServoAnimationRule* rule =
-    presContext->EffectCompositor()
-               ->GetServoAnimationRule(aElement, pseudoType, aCascadeLevel);
-  if (!rule) {
-    return emptyDeclarationBlock;
-  }
-  return rule->GetValues();
+  return presContext->EffectCompositor()
+    ->GetServoAnimationRule(aElement, pseudoType,
+                            aCascadeLevel,
+                            aAnimationValues);
 }
 
 bool

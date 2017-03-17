@@ -97,7 +97,7 @@ add_task(function* () {
 
   Assert.equal(defaultBranch.getCharPref("distribution.id"), "disttest");
   Assert.equal(defaultBranch.getCharPref("distribution.version"), "1.0");
-  Assert.equal(defaultBranch.getComplexValue("distribution.about", Ci.nsISupportsString).data, "Tèƨƭ δïƨƭřïβúƭïôñ ƒïℓè");
+  Assert.equal(defaultBranch.getStringPref("distribution.about"), "Tèƨƭ δïƨƭřïβúƭïôñ ƒïℓè");
 
   Assert.equal(defaultBranch.getCharPref("distribution.test.string"), "Test String");
   Assert.equal(defaultBranch.getCharPref("distribution.test.string.noquotes"), "Test String");

@@ -174,7 +174,7 @@ ssl_gtest_start()
 # Helper function used when 'parallel' isn't available.
 parallel_fallback()
 {
-  eval ${*//\{\}/0}
+  eval "${@//\{\}/0}"
 }
 
 parse_report()

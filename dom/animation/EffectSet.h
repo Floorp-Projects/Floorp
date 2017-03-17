@@ -7,7 +7,7 @@
 #ifndef mozilla_EffectSet_h
 #define mozilla_EffectSet_h
 
-#include "mozilla/AnimationRule.h" // For AnimationRule
+#include "mozilla/AnimValuesStyleRule.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedArray.h"
@@ -163,7 +163,7 @@ public:
 
   size_t Count() const { return mEffects.Count(); }
 
-  struct AnimationRule&
+  RefPtr<AnimValuesStyleRule>&
   AnimationRule(EffectCompositor::CascadeLevel aCascadeLevel)
   {
     return mAnimationRule[aCascadeLevel];
@@ -213,7 +213,7 @@ private:
   EnumeratedArray<EffectCompositor::CascadeLevel,
                   EffectCompositor::CascadeLevel(
                     EffectCompositor::kCascadeLevelCount),
-                  mozilla::AnimationRule> mAnimationRule;
+                  RefPtr<AnimValuesStyleRule>> mAnimationRule;
 
   // Refresh driver timestamp from the moment when transform animations in this
   // effect set were last updated and sent to the compositor. This is used for

@@ -32,7 +32,6 @@
 #include "mozilla/dom/VideoTrackList.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Telemetry.h"
-#include "GMPCrashHelper.h"
 #include "Layers.h"
 #include "mozilla/layers/ShadowLayers.h"
 
@@ -252,10 +251,10 @@ MediaDecoder::ResourceCallback::NotifyDataEnded(nsresult aStatus)
     }
     self->mDecoder->NotifyDownloadEnded(aStatus);
     if (NS_SUCCEEDED(aStatus)) {
-      HTMLMediaElement* element = self->GetMediaOwner()->GetMediaElement();
-      if (element) {
-        element->DownloadSuspended();
-      }
+      MediaDecoderOwner* owner = self->GetMediaOwner();
+      MOZ_ASSERT(owner);
+      owner->DownloadSuspended();
+
       // NotifySuspendedStatusChanged will tell the element that download
       // has been suspended "by the cache", which is true since we never
       // download anything. The element can then transition to HAVE_ENOUGH_DATA.
@@ -394,7 +393,6 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , mPlaybackStatistics(new MediaChannelStatistics())
   , mPinnedForSeek(false)
   , mMinimizePreroll(false)
-  , mMediaTracksConstructed(false)
   , mFiredMetadataLoaded(false)
   , mIsDocumentVisible(false)
   , mIsElementVisible(false)
@@ -589,11 +587,7 @@ MediaDecoder::OnDecoderDoctorEvent(DecoderDoctorEvent aEvent)
   MOZ_ASSERT(NS_IsMainThread());
   // OnDecoderDoctorEvent is disconnected at shutdown time.
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  HTMLMediaElement* element = GetOwner()->GetMediaElement();
-  if (!element) {
-    return;
-  }
-  nsIDocument* doc = element->OwnerDoc();
+  nsIDocument* doc = GetOwner()->GetDocument();
   if (!doc) {
     return;
   }
@@ -812,7 +806,7 @@ void
 MediaDecoder::OnMetadataUpdate(TimedMetadata&& aMetadata)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  RemoveMediaTracks();
+  GetOwner()->RemoveMediaTracks();
   MetadataLoaded(nsAutoPtr<MediaInfo>(new MediaInfo(*aMetadata.mInfo)),
                  Move(aMetadata.mTags),
                  MediaDecoderEventVisibility::Observable);
@@ -835,7 +829,7 @@ MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
   mMediaSeekable = aInfo->mMediaSeekable;
   mMediaSeekableOnlyInBufferedRanges = aInfo->mMediaSeekableOnlyInBufferedRanges;
   mInfo = aInfo.forget();
-  ConstructMediaTracks();
+  GetOwner()->ConstructMediaTracks(mInfo);
 
   // Make sure the element and the frame (if any) are told about
   // our new size.
@@ -970,34 +964,11 @@ MediaDecoder::OwnerHasError() const
   return GetOwner()->HasError();
 }
 
-class MediaElementGMPCrashHelper : public GMPCrashHelper
-{
-public:
-  explicit MediaElementGMPCrashHelper(HTMLMediaElement* aElement)
-    : mElement(aElement)
-  {
-    MOZ_ASSERT(NS_IsMainThread()); // WeakPtr isn't thread safe.
-  }
-  already_AddRefed<nsPIDOMWindowInner> GetPluginCrashedEventTarget() override
-  {
-    MOZ_ASSERT(NS_IsMainThread()); // WeakPtr isn't thread safe.
-    if (!mElement) {
-      return nullptr;
-    }
-    return do_AddRef(mElement->OwnerDoc()->GetInnerWindow());
-  }
-private:
-  WeakPtr<HTMLMediaElement> mElement;
-};
-
 already_AddRefed<GMPCrashHelper>
 MediaDecoder::GetCrashHelper()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return GetOwner()->GetMediaElement()
-         ? MakeAndAddRef<MediaElementGMPCrashHelper>(
-             GetOwner()->GetMediaElement())
-         : nullptr;
+  return GetOwner()->CreateGMPCrashHelper();
 }
 
 bool
@@ -1223,9 +1194,9 @@ MediaDecoder::ChangeState(PlayState aState)
   mPlayState = aState;
 
   if (mPlayState == PLAY_STATE_PLAYING) {
-    ConstructMediaTracks();
+    GetOwner()->ConstructMediaTracks(mInfo);
   } else if (IsEnded()) {
-    RemoveMediaTracks();
+    GetOwner()->RemoveMediaTracks();
   }
 }
 
@@ -1297,11 +1268,11 @@ MediaDecoder::NotifyCompositor()
   MediaDecoderOwner* owner = GetOwner();
   NS_ENSURE_TRUE_VOID(owner);
 
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
-  NS_ENSURE_TRUE_VOID(element);
+  nsIDocument* ownerDoc = owner->GetDocument();
+  NS_ENSURE_TRUE_VOID(ownerDoc);
 
   RefPtr<LayerManager> layerManager =
-    nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
+    nsContentUtils::LayerManagerForDocument(ownerDoc);
   if (layerManager) {
     RefPtr<KnowsCompositor> knowsCompositor = layerManager->AsShadowForwarder();
     mCompositorUpdatedEvent.Notify(knowsCompositor);
@@ -1783,67 +1754,6 @@ MediaDecoder::GetOwner() const
   MOZ_DIAGNOSTIC_ASSERT(!mOwner || !mIsMediaElement || mElement);
   // mOwner is valid until shutdown.
   return mOwner;
-}
-
-void
-MediaDecoder::ConstructMediaTracks()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-
-  if (mMediaTracksConstructed || !mInfo) {
-    return;
-  }
-
-  HTMLMediaElement* element = GetOwner()->GetMediaElement();
-  if (!element) {
-    return;
-  }
-
-  mMediaTracksConstructed = true;
-
-  AudioTrackList* audioList = element->AudioTracks();
-  if (audioList && mInfo->HasAudio()) {
-    const TrackInfo& info = mInfo->mAudio;
-    RefPtr<AudioTrack> track = MediaTrackList::CreateAudioTrack(
-    info.mId, info.mKind, info.mLabel, info.mLanguage, info.mEnabled);
-
-    audioList->AddTrack(track);
-  }
-
-  VideoTrackList* videoList = element->VideoTracks();
-  if (videoList && mInfo->HasVideo()) {
-    const TrackInfo& info = mInfo->mVideo;
-    RefPtr<VideoTrack> track = MediaTrackList::CreateVideoTrack(
-    info.mId, info.mKind, info.mLabel, info.mLanguage);
-
-    videoList->AddTrack(track);
-    track->SetEnabledInternal(info.mEnabled, MediaTrack::FIRE_NO_EVENTS);
-  }
-}
-
-void
-MediaDecoder::RemoveMediaTracks()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-
-  HTMLMediaElement* element = GetOwner()->GetMediaElement();
-  if (!element) {
-    return;
-  }
-
-  AudioTrackList* audioList = element->AudioTracks();
-  if (audioList) {
-    audioList->RemoveTracks();
-  }
-
-  VideoTrackList* videoList = element->VideoTracks();
-  if (videoList) {
-    videoList->RemoveTracks();
-  }
-
-  mMediaTracksConstructed = false;
 }
 
 MediaDecoderOwner::NextFrameStatus
