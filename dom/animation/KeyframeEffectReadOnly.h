@@ -458,6 +458,16 @@ private:
   template<typename StyleType>
   void DoUpdateProperties(StyleType&& aStyle);
 
+  void ComposeStyleRule(RefPtr<AnimValuesStyleRule>& aStyleRule,
+                        const AnimationProperty& aProperty,
+                        const AnimationPropertySegment& aSegment,
+                        const ComputedTiming& aComputedTiming);
+
+  void ComposeStyleRule(RefPtr<ServoAnimationRule>& aStyleRule,
+                        const AnimationProperty& aProperty,
+                        const AnimationPropertySegment& aSegment,
+                        const ComputedTiming& aComputedTiming);
+
   nsIFrame* GetAnimationFrame() const;
 
   bool CanThrottle() const;
