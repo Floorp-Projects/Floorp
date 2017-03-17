@@ -593,7 +593,7 @@ KeyframeEffectReadOnly::ComposeStyleRule(
 // better to remove the duplicated code.
 void
 KeyframeEffectReadOnly::ComposeStyleRule(
-  RefPtr<ServoAnimationRule>& aAnimationRule,
+  const RawServoAnimationValueMap& aAnimationValues,
   const AnimationProperty& aProperty,
   const AnimationPropertySegment& aSegment,
   const ComputedTiming& aComputedTiming)
@@ -610,17 +610,16 @@ KeyframeEffectReadOnly::ComposeStyleRule(
     return;
   }
 
-  if (!aAnimationRule) {
-    // Allocate the style rule now that we know we have animation data.
-    aAnimationRule = new ServoAnimationRule();
-  }
-
   // Special handling for zero-length segments
   if (aSegment.mToKey == aSegment.mFromKey) {
     if (aComputedTiming.mProgress.Value() < 0) {
-      aAnimationRule->AddValue(aProperty.mProperty, servoFromValue);
+      Servo_AnimationValueMap_Push(&aAnimationValues,
+                                   aProperty.mProperty,
+                                   servoFromValue);
     } else {
-      aAnimationRule->AddValue(aProperty.mProperty, servoToValue);
+      Servo_AnimationValueMap_Push(&aAnimationValues,
+                                   aProperty.mProperty,
+                                   servoToValue);
     }
     return;
   }
@@ -641,11 +640,17 @@ KeyframeEffectReadOnly::ComposeStyleRule(
                                       valuePosition).Consume();
 
   if (interpolated) {
-    aAnimationRule->AddValue(aProperty.mProperty, interpolated);
+    Servo_AnimationValueMap_Push(&aAnimationValues,
+                                 aProperty.mProperty,
+                                 interpolated);
   } else if (valuePosition < 0.5) {
-    aAnimationRule->AddValue(aProperty.mProperty, servoFromValue);
+    Servo_AnimationValueMap_Push(&aAnimationValues,
+                                 aProperty.mProperty,
+                                 servoFromValue);
   } else {
-    aAnimationRule->AddValue(aProperty.mProperty, servoToValue);
+    Servo_AnimationValueMap_Push(&aAnimationValues,
+                                 aProperty.mProperty,
+                                 servoToValue);
   }
 }
 
@@ -1821,8 +1826,8 @@ KeyframeEffectReadOnly::ComposeStyle<RefPtr<AnimValuesStyleRule>&>(
 
 template
 void
-KeyframeEffectReadOnly::ComposeStyle<RefPtr<ServoAnimationRule>&>(
-  RefPtr<ServoAnimationRule>& aAnimationRule,
+KeyframeEffectReadOnly::ComposeStyle<const RawServoAnimationValueMap&>(
+  const RawServoAnimationValueMap& aAnimationValues,
   const nsCSSPropertyIDSet& aPropertiesToSkip);
 
 } // namespace dom
