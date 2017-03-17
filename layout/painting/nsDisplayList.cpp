@@ -4890,10 +4890,11 @@ nsDisplayBoxShadowOuter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 LayerState
 nsDisplayBoxShadowOuter::GetLayerState(nsDisplayListBuilder* aBuilder,
-                                                  LayerManager* aManager,
-                                                  const ContainerLayerParameters& aParameters)
+                                       LayerManager* aManager,
+                                       const ContainerLayerParameters& aParameters)
 {
-  if (gfxPrefs::LayersAllowOuterBoxShadow() && CanBuildWebRenderDisplayItems()) {
+  if (gfxPrefs::LayersAllowOuterBoxShadow() &&
+      CanBuildWebRenderDisplayItems()) {
     return LAYER_ACTIVE;
   }
 
@@ -4911,11 +4912,41 @@ nsDisplayBoxShadowOuter::BuildLayer(nsDisplayListBuilder* aBuilder,
 bool
 nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems()
 {
-  bool hasBorderRadius;
-  nsCSSRendering::HasBoxShadowNativeTheme(mFrame, hasBorderRadius);
   nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
+  if (!shadows) {
+    return false;
+  }
 
-  return shadows && !hasBorderRadius;
+  bool hasBorderRadius;
+  bool nativeTheme =
+      nsCSSRendering::HasBoxShadowNativeTheme(mFrame, hasBorderRadius);
+  nsPoint offset = ToReferenceFrame();
+  nsRect borderRect = mFrame->VisualBorderRectRelativeToSelf() + offset;
+  nsRect frameRect =
+      nsCSSRendering::GetShadowRect(borderRect, nativeTheme, mFrame);
+
+  if (hasBorderRadius) {
+    nscoord twipsRadii[8];
+    nsSize sz = frameRect.Size();
+    hasBorderRadius = mFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
+  }
+
+  // WebRender doesn't support clipping properly with a border radius.
+  // We don't support native themed things yet like box shadows around
+  // input buttons.
+  if (hasBorderRadius || nativeTheme) {
+    return false;
+  }
+
+  for (uint32_t j = shadows->Length(); j  > 0; j--) {
+    nsCSSShadowItem* shadow = shadows->ShadowAt(j - 1);
+    // Need WR support for clip out.
+    if (shadow->mRadius <= 0) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 void
@@ -4939,13 +4970,13 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilde
   // Don't need the full size of the shadow rect like we do in
   // nsCSSRendering since WR takes care of calculations for blur
   // and spread radius.
-  nsRect shadowRect = nsCSSRendering::GetShadowRect(borderRect,
+  nsRect frameRect = nsCSSRendering::GetShadowRect(borderRect,
                                                     nativeTheme,
                                                     mFrame);
 
   RectCornerRadii borderRadii;
   if (hasBorderRadius) {
-    hasBorderRadius = nsCSSRendering::GetBorderRadii(shadowRect,
+    hasBorderRadius = nsCSSRendering::GetBorderRadii(frameRect,
                                                      borderRect,
                                                      mFrame,
                                                      borderRadii);
@@ -4960,37 +4991,60 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilde
 
     for (uint32_t j = shadows->Length(); j  > 0; j--) {
       nsCSSShadowItem* shadow = shadows->ShadowAt(j - 1);
-
+      float blurRadius = float(shadow->mRadius) / float(appUnitsPerDevPixel);
       gfx::Color shadowColor = nsCSSRendering::GetShadowColor(shadow,
                                                               mFrame,
                                                               mOpacity);
-      shadowRect.MoveBy(shadow->mXOffset, shadow->mYOffset);
 
+      // We don't move the shadow rect here since WR does it for us
       // Now translate everything to device pixels.
+      nsRect shadowRect = frameRect;
       Point shadowOffset;
       shadowOffset.x = (shadow->mXOffset / appUnitsPerDevPixel);
       shadowOffset.y = (shadow->mYOffset / appUnitsPerDevPixel);
 
       Rect deviceBoxRect = NSRectToRect(shadowRect, appUnitsPerDevPixel);
       deviceBoxRect = aLayer->RelativeToParent(deviceBoxRect);
+      deviceBoxRect.Round();
+      Rect deviceClipRect = aLayer->RelativeToParent(clipRect);
 
-      Rect deviceClipRect = aLayer->RelativeToParent(clipRect + shadowOffset);
-
-      float blurRadius = float(shadow->mRadius) / float(appUnitsPerDevPixel);
       // TODO: support non-uniform border radius.
       float borderRadius = hasBorderRadius ? borderRadii.TopLeft().width
                                            : 0.0;
       float spreadRadius = float(shadow->mSpread) / float(appUnitsPerDevPixel);
 
-      aBuilder.PushBoxShadow(wr::ToWrRect(deviceBoxRect),
-                             aBuilder.BuildClipRegion(wr::ToWrRect(deviceClipRect)),
-                             wr::ToWrRect(deviceBoxRect),
-                             wr::ToWrPoint(shadowOffset),
-                             wr::ToWrColor(shadowColor),
-                             blurRadius,
-                             spreadRadius,
-                             borderRadius,
-                             WrBoxShadowClipMode::Outset);
+      if (blurRadius <= 0) {
+        MOZ_ASSERT(false, "WR needs clip out first");
+        // TODO: See nsContextBoxBlur::BlurRectangle. Just need to fill
+        // a rect here with the proper clip in/out, but WR doesn't support
+        // clip out yet
+        if (hasBorderRadius) {
+          LayerSize borderRadiusSize(borderRadius, borderRadius);
+          WrComplexClipRegion roundedRect =
+                                  wr::ToWrComplexClipRegion(deviceBoxRect,
+                                                            borderRadiusSize);
+          nsTArray<WrComplexClipRegion> clips;
+          clips.AppendElement(roundedRect);
+          aBuilder.PushRect(wr::ToWrRect(deviceBoxRect),
+                            aBuilder.BuildClipRegion(wr::ToWrRect(deviceClipRect),
+                                                    clips),
+                            wr::ToWrColor(shadowColor));
+        } else {
+          aBuilder.PushRect(wr::ToWrRect(deviceBoxRect),
+                            aBuilder.BuildClipRegion(wr::ToWrRect(deviceClipRect)),
+                            wr::ToWrColor(shadowColor));
+        }
+      } else {
+        aBuilder.PushBoxShadow(wr::ToWrRect(deviceBoxRect),
+                              aBuilder.BuildClipRegion(wr::ToWrRect(deviceClipRect)),
+                              wr::ToWrRect(deviceBoxRect),
+                              wr::ToWrPoint(shadowOffset),
+                              wr::ToWrColor(shadowColor),
+                              blurRadius,
+                              spreadRadius,
+                              borderRadius,
+                              WrBoxShadowClipMode::Outset);
+      }
     }
   }
 }
