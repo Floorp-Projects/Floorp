@@ -474,6 +474,8 @@ class ProtectedReallocPolicy
     uintptr_t prevAddr;
     size_t prevSize;
 
+    static const uint8_t PoisonPattern = 0xe5;
+
     template <typename T> void update(T* newAddr, size_t newSize) {
         prevAddr = currAddr;
         prevSize = currSize;
@@ -490,6 +492,27 @@ class ProtectedReallocPolicy
         T* newAddr = js_pod_realloc<T>(oldAddr, oldSize, newSize);
         updateIfValid<T>(newAddr, newSize);
         return newAddr;
+    }
+
+    void crashWithInfo(const uint8_t* buffer, size_t bytes, bool afterRealloc) {
+        size_t start = 0;
+        while (start < bytes) {
+            if (MOZ_LIKELY(buffer[start] != PoisonPattern)) {
+                ++start;
+                continue;
+            }
+            size_t limit;
+            for (limit = start + 1; limit < bytes && buffer[limit] == PoisonPattern; ++limit);
+            size_t size = limit - start;
+            if (size >= 16) {
+                MOZ_CRASH_UNSAFE_PRINTF("maybe_pod_realloc: %s buffer (old size = %" PRIu64
+                                        ") contains %" PRIu64 " bytes of poison starting from"
+                                        " offset %" PRIu64 "!", afterRealloc ? "new" : "old",
+                                        uint64_t(bytes), uint64_t(size), uint64_t(start));
+            }
+            start = limit;
+        }
+        MOZ_CRASH("Could not confirm the presence of poison!");
     }
 
   public:
@@ -542,11 +565,20 @@ class ProtectedReallocPolicy
         }
 #endif
 
+        size_t bytes = (newSize >= oldSize ? oldSize : newSize) * sizeof(T);
+
+        // Check for the poison pattern every so often.
+        const uint8_t* oldAddrBytes = reinterpret_cast<const uint8_t*>(oldAddr);
+        for (size_t j, i = 0; i + 16 <= bytes; i += 1024) {
+            for (j = 0; j < 16 && oldAddrBytes[i + j] == PoisonPattern; ++j);
+            if (MOZ_UNLIKELY(j == 16))
+                crashWithInfo(oldAddrBytes, bytes, false);
+        }
+
         T* tmpAddr = js_pod_malloc<T>(newSize);
         if (MOZ_UNLIKELY(!tmpAddr))
             return reallocUpdate<T>(oldAddr, oldSize, newSize);
 
-        size_t bytes = (newSize >= oldSize ? oldSize : newSize) * sizeof(T);
         memcpy(tmpAddr, oldAddr, bytes);
 
         T* newAddr = js_pod_realloc<T>(oldAddr, oldSize, newSize);
@@ -556,6 +588,12 @@ class ProtectedReallocPolicy
         }
 
         const uint8_t* newAddrBytes = reinterpret_cast<const uint8_t*>(newAddr);
+        for (size_t j, i = 0; i + 16 <= bytes; i += 1024) {
+            for (j = 0; j < 16 && newAddrBytes[i + j] == PoisonPattern; ++j);
+            if (MOZ_UNLIKELY(j == 16))
+                crashWithInfo(newAddrBytes, bytes, true);
+        }
+
         const uint8_t* tmpAddrBytes = reinterpret_cast<const uint8_t*>(tmpAddr);
         if (!mozilla::PodEqual(tmpAddrBytes, newAddrBytes, bytes)) {
 #ifdef MOZ_MEMORY
