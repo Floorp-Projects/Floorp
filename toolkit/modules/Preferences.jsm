@@ -116,10 +116,7 @@ Preferences._set = function(prefName, prefValue) {
   switch (prefType) {
     case "String":
       {
-        let str = Cc["@mozilla.org/supports-string;1"].
-                     createInstance(Ci.nsISupportsString);
-        str.data = prefValue;
-        this._prefBranch.setComplexValue(prefName, Ci.nsISupportsString, str);
+        this._prefBranch.setStringPref(prefName, prefValue);
       }
       break;
 

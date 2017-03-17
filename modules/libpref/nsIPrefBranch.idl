@@ -99,7 +99,7 @@ interface nsIPrefBranch : nsISupports
   float getFloatPrefXPCOM(in string aPrefName);
 
   /**
-   * Called to get the state of an individual string preference.
+   * Called to get the state of an individual ascii string preference.
    *
    * @param aPrefName The string preference to retrieve.
    * @param aDefaultValue The string to return if the preference is not set.
@@ -114,7 +114,7 @@ interface nsIPrefBranch : nsISupports
   string getCharPrefXPCOM(in string aPrefName);
 
   /**
-   * Called to set the state of an individual string preference.
+   * Called to set the state of an individual ascii string preference.
    *
    * @param aPrefName The string preference to set.
    * @param aValue    The string value to set the preference to.
@@ -125,6 +125,33 @@ interface nsIPrefBranch : nsISupports
    * @see getCharPref
    */
   void setCharPref(in string aPrefName, in string aValue);
+
+  /**
+   * Called to get the state of an individual unicode string preference.
+   *
+   * @param aPrefName The string preference to retrieve.
+   * @param aDefaultValue The string to return if the preference is not set.
+   *
+   * @return string   The value of the requested string preference.
+   *
+   * @see setStringPref
+   */
+  [optional_argc]
+  AUTF8String getStringPref(in string aPrefName,
+                            [optional] in AUTF8String aDefaultValue);
+
+  /**
+   * Called to set the state of an individual unicode string preference.
+   *
+   * @param aPrefName The string preference to set.
+   * @param aValue    The string value to set the preference to.
+   *
+   * @throws Error if setting failed or the preference has a default
+             value of a type other than string.
+   *
+   * @see getStringPref
+   */
+  void setStringPref(in string aPrefName, in AUTF8String aValue);
 
   /**
    * Called to get the state of an individual integer preference.
@@ -164,6 +191,7 @@ interface nsIPrefBranch : nsISupports
    *                  represents. Interfaces currently supported are:
    *                    - nsIFile
    *                    - nsISupportsString (UniChar)
+   *                      (deprecated; see getStringPref)
    *                    - nsIPrefLocalizedString (Localized UniChar)
    * @param aValue    The XPCOM object into which to the complex preference 
    *                  value should be retrieved.
@@ -185,6 +213,7 @@ interface nsIPrefBranch : nsISupports
    *                  represents. Interfaces currently supported are:
    *                    - nsIFile
    *                    - nsISupportsString (UniChar)
+   *                      (deprecated; see setStringPref)
    *                    - nsIPrefLocalizedString (Localized UniChar)
    * @param aValue    The XPCOM object from which to set the complex preference 
    *                  value.

@@ -37,7 +37,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 nsHtml5Parser::nsHtml5Parser()
   : mLastWasCR(false)
   , mDocWriteSpeculativeLastWasCR(false)
-  , mBlocked(false)
+  , mBlocked(0)
   , mDocWriteSpeculatorActive(false)
   , mInsertionPointPushLevel(0)
   , mDocumentClosed(false)
@@ -146,14 +146,19 @@ nsHtml5Parser::ContinueInterruptedParsing()
 NS_IMETHODIMP_(void)
 nsHtml5Parser::BlockParser()
 {
-  mBlocked = true;
+  mBlocked++;
 }
 
 NS_IMETHODIMP_(void)
 nsHtml5Parser::UnblockParser()
 {
-  mBlocked = false;
-  mExecutor->ContinueInterruptedParsingAsync();
+  MOZ_DIAGNOSTIC_ASSERT(mBlocked > 0);
+  if (MOZ_LIKELY(mBlocked > 0)) {
+    mBlocked--;
+  }
+  if (MOZ_LIKELY(mBlocked == 0)) {
+    mExecutor->ContinueInterruptedParsingAsync();
+  }
 }
 
 NS_IMETHODIMP_(void)

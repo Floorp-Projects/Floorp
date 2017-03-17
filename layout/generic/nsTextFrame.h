@@ -641,7 +641,7 @@ public:
   };
   TrimmedOffsets GetTrimmedOffsets(const nsTextFragment* aFrag,
                                    bool aTrimAfter,
-                                   bool aPostReflow = true);
+                                   bool aPostReflow = true) const;
 
   // Similar to Reflow(), but for use from nsLineLayout
   void ReflowText(nsLineLayout& aLineLayout,

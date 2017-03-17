@@ -39,10 +39,8 @@ function* testMigration(manifest, next) {
   do_check_true(SocialService.enabled);
   do_check_true(Services.prefs.prefHasUserValue("social.activeProviders"));
 
-  let activeProviders;
-  let pref = Services.prefs.getComplexValue("social.activeProviders",
-                                            Ci.nsISupportsString);
-  activeProviders = JSON.parse(pref);
+  let activeProviders =
+    JSON.parse(Services.prefs.getStringPref("social.activeProviders"));
   do_check_true(activeProviders[manifest.origin]);
   do_check_true(MANIFEST_PREFS.prefHasUserValue(manifest.origin));
   do_check_true(JSON.parse(DEFAULT_PREFS.getCharPref(manifest.origin)).builtin);

@@ -44,11 +44,7 @@ add_test(function test_intl_accept_language() {
   ];
 
   function setLanguagePref(lang) {
-    let acceptLanguage = Cc["@mozilla.org/supports-string;1"]
-                           .createInstance(Ci.nsISupportsString);
-    acceptLanguage.data = lang;
-    Services.prefs.setComplexValue(
-      "intl.accept_languages", Ci.nsISupportsString, acceptLanguage);
+    Services.prefs.setStringPref("intl.accept_languages", lang);
   }
 
   let hawk = new HAWKAuthenticatedRESTRequest("https://example.com");
@@ -92,9 +88,8 @@ add_test(function test_hawk_authenticated_request() {
   let localTime = then + clockSkew;
 
   // Set the accept-languages pref to the Nepalese dialect of Zulu.
-  let acceptLanguage = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-  acceptLanguage.data = "zu-NP"; // omit trailing ';', which our HTTP libs snip
-  Services.prefs.setComplexValue("intl.accept_languages", Ci.nsISupportsString, acceptLanguage);
+  let acceptLanguage = "zu-NP"; // omit trailing ';', which our HTTP libs snip
+  Services.prefs.setStringPref("intl.accept_languages", acceptLanguage);
 
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
@@ -139,7 +134,7 @@ add_test(function test_hawk_authenticated_request() {
     Services.prefs.resetUserPrefs();
     let pref = Services.prefs.getComplexValue(
       "intl.accept_languages", Ci.nsIPrefLocalizedString);
-    do_check_neq(acceptLanguage.data, pref.data);
+    do_check_neq(acceptLanguage, pref.data);
 
     server.stop(run_next_test);
   }
@@ -171,9 +166,7 @@ add_test(function test_hawk_language_pref_changed() {
   };
 
   function setLanguage(lang) {
-    let acceptLanguage = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-    acceptLanguage.data = lang;
-    Services.prefs.setComplexValue("intl.accept_languages", Ci.nsISupportsString, acceptLanguage);
+    Services.prefs.setStringPref("intl.accept_languages", lang);
   }
 
   let server = httpd_setup({

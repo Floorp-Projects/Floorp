@@ -384,6 +384,7 @@ public:
 
 #ifdef DEBUG
   static void SetInitPhase(pref_initPhase phase);
+  static pref_initPhase InitPhase();
 #endif
 
   static int64_t SizeOfIncludingThisAndOtherStuff(mozilla::MallocSizeOf aMallocSizeOf);

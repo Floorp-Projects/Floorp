@@ -31,6 +31,7 @@ window.onload = Task.async(function* () {
 
     const tree = ReactDOM.render(t, window.document.body);
     ok(tree, "Should be able to mount Tree instances");
+    isAccessibleTree(tree);
 
     TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
     yield forceRender(tree);

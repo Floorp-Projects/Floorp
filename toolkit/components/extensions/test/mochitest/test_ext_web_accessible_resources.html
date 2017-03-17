@@ -218,7 +218,7 @@ add_task(function* test_web_accessible_resources_csp() {
     manifest: {
       "content_scripts": [{
         "matches": ["http://example.com/*/file_csp.html"],
-        "run_at": "document_start",
+        "run_at": "document_end",
         "js": ["content_script_helper.js", "content_script.js"],
       }],
       "web_accessible_resources": [
@@ -313,7 +313,7 @@ add_task(function* test_web_accessible_resources_mixed_content() {
     manifest: {
       "content_scripts": [{
         "matches": ["https://example.com/*/file_mixed.html"],
-        "run_at": "document_start",
+        "run_at": "document_end",
         "js": ["content_script_helper.js", "content_script.js"],
       }],
       "web_accessible_resources": [

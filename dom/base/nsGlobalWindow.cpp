@@ -14743,6 +14743,10 @@ nsGlobalWindow::CreateImageBitmap(const ImageBitmapSource& aImage,
                                   const Sequence<ChannelPixelLayout>& aLayout,
                                   ErrorResult& aRv)
 {
+  if (!ImageBitmap::ExtensionsEnabled(nullptr, nullptr)) {
+    aRv.Throw(NS_ERROR_TYPE_ERR);
+    return nullptr;
+  }
   if (aImage.IsArrayBuffer() || aImage.IsArrayBufferView()) {
     return ImageBitmap::Create(this, aImage, aOffset, aLength, aFormat, aLayout,
                                aRv);

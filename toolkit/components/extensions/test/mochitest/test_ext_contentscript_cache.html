@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script caching</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_contentscript_cache() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [{
+        "matches": ["http://example.com/"],
+        "js": ["content_script.js"],
+        "run_at": "document_start",
+      }],
+    },
+
+    background() {
+      browser.test.sendMessage("origin", location.origin);
+    },
+
+    files: {
+      "content_script.js": function() {
+        browser.test.sendMessage("content-script-loaded");
+      },
+    },
+  });
+
+  yield extension.startup();
+
+  let origin = yield extension.awaitMessage("origin");
+  let scriptUrl = `${origin}/content_script.js`;
+
+  let {ExtensionManager} = SpecialPowers.Cu.import("resource://gre/modules/ExtensionContent.jsm", {});
+  let ext = ExtensionManager.extensions.get(extension.id);
+
+  ext.staticScripts.expiryTimeout = 3000;
+  is(ext.staticScripts.size, 0, "Should have no cached scripts");
+
+  let win = window.open("http://example.com/");
+  yield extension.awaitMessage("content-script-loaded");
+
+  if (AppConstants.platform !== "android") {
+    is(ext.staticScripts.size, 1, "Should have one cached script");
+    ok(ext.staticScripts.has(scriptUrl), "Script cache should contain script URL");
+  }
+
+  let chromeScript, chromeScriptDone;
+  let {appinfo} = SpecialPowers.Services;
+  if (appinfo.processType === appinfo.PROCESS_TYPE_CONTENT) {
+    /* globals addMessageListener, assert */
+    chromeScript = SpecialPowers.loadChromeScript(() => {
+      addMessageListener("check-script-cache", extensionId => {
+        let {ExtensionManager} = Components.utils.import("resource://gre/modules/ExtensionContent.jsm", {});
+        let ext = ExtensionManager.extensions.get(extensionId);
+
+        assert.equal(ext.staticScripts.size, 0, "Should have no cached scripts in the parent process");
+
+        sendAsyncMessage("done");
+      });
+    });
+    chromeScript.sendAsyncMessage("check-script-cache", extension.id);
+    chromeScriptDone = chromeScript.promiseOneMessage("done");
+  }
+
+  SimpleTest.requestFlakyTimeout("Required to test expiry timeout");
+  yield new Promise(resolve => setTimeout(resolve, 3000));
+  is(ext.staticScripts.size, 0, "Should have no cached scripts");
+
+  if (chromeScript) {
+    yield chromeScriptDone;
+    chromeScript.destroy();
+  }
+
+  win.close();
+
+
+  win = window.open("http://example.com/");
+  yield extension.awaitMessage("content-script-loaded");
+
+  is(ext.staticScripts.size, 1, "Should have one cached script");
+  ok(ext.staticScripts.has(scriptUrl));
+
+  SpecialPowers.Services.obs.notifyObservers(null, "memory-pressure", "heap-minimize");
+
+  is(ext.staticScripts.size, 0, "Should have no cached scripts after heap-minimize");
+
+  win.close();
+
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>
