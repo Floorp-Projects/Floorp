@@ -267,7 +267,7 @@ PreferenceBranch.prototype = {
 
     switch (type) {
       case Ci.nsIPrefBranch.PREF_STRING:
-        aValue = this._prefs.getComplexValue(aName, Ci.nsISupportsString).data;
+        aValue = this._prefs.getStringPref(aName);
         break;
       case Ci.nsIPrefBranch.PREF_BOOL:
         aValue = this._prefs.getBoolPref(aName);
@@ -285,10 +285,7 @@ PreferenceBranch.prototype = {
 
     switch (type) {
       case "String":
-        var str = Components.classes["@mozilla.org/supports-string;1"]
-                            .createInstance(Ci.nsISupportsString);
-        str.data = aValue;
-        this._prefs.setComplexValue(aName, Ci.nsISupportsString, str);
+        this._prefs.setStringPref(aName, aValue);
         break;
       case "Boolean":
         this._prefs.setBoolPref(aName, aValue);

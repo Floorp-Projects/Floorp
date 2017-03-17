@@ -1856,6 +1856,8 @@ ssl3_TLSPRFWithMasterSecret(sslSocket *ss, ssl3CipherSpec *spec,
                             const unsigned char *val, unsigned int valLen,
                             unsigned char *out, unsigned int outLen);
 
+PRBool ssl_AlpnTagAllowed(const sslSocket *ss, const SECItem *tag);
+
 #ifdef TRACE
 #define SSL_TRACE(msg) ssl_Trace msg
 #else

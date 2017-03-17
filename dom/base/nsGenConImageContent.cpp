@@ -56,7 +56,10 @@ public:
     }
     return nsXMLElement::GetEventTargetParent(aVisitor);
   }
-  
+
+protected:
+  nsIContent* AsContent() override { return this; }
+
 private:
   virtual ~nsGenConImageContent();
 

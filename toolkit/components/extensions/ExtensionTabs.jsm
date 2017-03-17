@@ -563,6 +563,8 @@ class TabBase {
       options.css_origin = "author";
     }
 
+    options.wantReturnValue = true;
+
     return this.sendMessage(context, "Extension:Execute", {options});
   }
 

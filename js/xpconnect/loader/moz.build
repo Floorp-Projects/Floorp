@@ -6,9 +6,14 @@
 
 # These files cannot be built in unified mode because they rely on plarena.h
 SOURCES += [
+    'ChromeScriptLoader.cpp',
     'mozJSComponentLoader.cpp',
     'mozJSLoaderUtils.cpp',
     'mozJSSubScriptLoader.cpp',
+]
+
+EXPORTS.mozilla.dom += [
+    'PrecompiledScript.h',
 ]
 
 EXTRA_JS_MODULES += [

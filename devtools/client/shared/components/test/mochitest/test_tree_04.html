@@ -42,6 +42,7 @@ window.onload = Task.async(function* () {
       scroll: 1 * ITEM_HEIGHT
     });
 
+    isAccessibleTree(tree);
     isRenderedTree(document.body.textContent, [
       "A:false",
       "-B:false",
@@ -59,6 +60,7 @@ window.onload = Task.async(function* () {
       scroll: 3 * ITEM_HEIGHT
     });
 
+    isAccessibleTree(tree);
     isRenderedTree(document.body.textContent, [
       "--E:false",
       "---K:false",

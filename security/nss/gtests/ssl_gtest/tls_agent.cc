@@ -241,6 +241,10 @@ bool TlsAgent::GetPeerChainLength(size_t* count) {
   return true;
 }
 
+void TlsAgent::CheckCipherSuite(uint16_t cipher_suite) {
+  EXPECT_EQ(csinfo_.cipherSuite, cipher_suite);
+}
+
 void TlsAgent::RequestClientAuth(bool requireAuth) {
   EXPECT_TRUE(EnsureTlsSetup());
   ASSERT_EQ(SERVER, role_);

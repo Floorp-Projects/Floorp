@@ -144,6 +144,8 @@ public:
 
   void EndUpdate(nsUpdateType aUpdateType) override;
 
+  virtual void SetMayStartLayout(bool aMayStartLayout) override;
+
   virtual nsresult SetEditingState(EditingState aState) override;
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
