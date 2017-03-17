@@ -8,7 +8,7 @@ const { addons, createClass, createFactory, DOM: dom, PropTypes } = require("dev
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 
 // Reps
-const { REPS } = require("devtools/client/shared/components/reps/reps");
+const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const Rep = createFactory(REPS.Rep);
 const ElementNode = REPS.ElementNode;
 
@@ -133,6 +133,7 @@ module.exports = createClass({
         Rep(
           {
             defaultRep: ElementNode,
+            mode: MODE.TINY,
             object: this.translateNodeFrontToGrip(nodeFront),
             onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
             onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
