@@ -119,7 +119,7 @@
 
     <string name="firstrun_title">Browse like no one’s watching.</string>
     <string name="firstrun_description">Automatically block online trackers while you browse. Then tap to erase visited pages, searches, cookies and passwords from your device.</string>
-    <string name="firstrun_button">Ok, got it!</string>
+    <string name="firstrun_button">OK, got it!</string>
     <string name="firstrun_footer">To be clear, sites and service you use can still know where you\'ve been.</string>
 
     <string name="your_rights">Your Rights</string>
