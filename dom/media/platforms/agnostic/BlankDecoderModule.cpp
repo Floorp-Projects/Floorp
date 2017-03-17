@@ -37,7 +37,12 @@ public:
     // with a U and V plane that are half the size of the Y plane, i.e 8 bit,
     // 2x2 subsampled. Have the data pointer of each frame point to the
     // first plane, they'll always be zero'd memory anyway.
-    auto frame = MakeUniqueFallible<uint8_t[]>(mFrameWidth * mFrameHeight);
+    const CheckedUint32 size = CheckedUint32(mFrameWidth) * mFrameHeight;
+    if (!size.isValid()) {
+      // Overflow happened.
+      return nullptr;
+    }
+    auto frame = MakeUniqueFallible<uint8_t[]>(size.value());
     if (!frame) {
       return nullptr;
     }
