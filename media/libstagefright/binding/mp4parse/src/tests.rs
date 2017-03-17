@@ -863,6 +863,8 @@ fn read_esds() {
             0x05, 0x88, 0x05, 0x00, 0x48, 0x21, 0x10, 0x00,
             0x56, 0xe5, 0x98, 0x06, 0x01, 0x02,
         ];
+    let aac_dc_descriptor = &aac_esds[22 .. 35];
+
     let mut stream = make_box(BoxSize::Auto, b"esds", |s| {
         s.B32(0) // reserved
          .append_bytes(aac_esds.as_slice())
@@ -877,6 +879,7 @@ fn read_esds() {
     assert_eq!(es.audio_sample_rate, Some(24000));
     assert_eq!(es.audio_channel_count, Some(6));
     assert_eq!(es.codec_esds, aac_esds);
+    assert_eq!(es.decoder_specific_data, aac_dc_descriptor);
 }
 
 #[test]
