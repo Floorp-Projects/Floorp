@@ -45,3 +45,5 @@ HTTP == invalidate-1.html invalidate-1-ref.html
 == pattern-html-01.html pattern-html-01-ref.svg
 == pattern-html-02.html pattern-html-02-ref.svg
 == referenced-from-binding-01.html referenced-from-binding-01-ref.html
+
+fuzzy-if(skiaContent,1,30000) == mask-image-element.html mask-image-element-ref.html

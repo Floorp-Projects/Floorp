@@ -46,8 +46,7 @@ search-jar-default: search-jar
 ###########################################################################
 ## Searchlist plugin config
 plugin-file-array = \
-  $(wildcard $(LOCALE_SRCDIR)/searchplugins/list.txt) \
-  $(srcdir)/en-US/searchplugins/list.txt \
+  $(srcdir)/search/list.json \
   $(NULL)
 
 ###########################################################################
@@ -80,8 +79,7 @@ GARBAGE += $(search-jar) $(search-jar-ts) $(search-jar-common)
 # ---------------------------------------------------------------------------
 # search-jar contains a list of providers for the search plugin
 ###########################################################################
-SEARCH_PLUGINS = $(shell cat $(plugin_file))
-SEARCH_PLUGINS := $(subst :hidden,,$(SEARCH_PLUGINS))
+SEARCH_PLUGINS := $(shell $(call py_action,output_searchplugins_list,$(srcdir)/search/list.json $(AB_CD)))
 $(call errorIfEmpty,SEARCH_PLUGINS)
 
 search-jar-preqs = \
@@ -96,6 +94,7 @@ $(search-jar): $(search-jar-preqs)
 	printf '$(AB_CD).jar:' > $@
 	ln -fn $@ .
 	printf '$(foreach plugin,$(SEARCH_PLUGINS),$(subst __PLUGIN_SUBST__,$(plugin), \n locale/$(AB_CD)/browser/searchplugins/__PLUGIN_SUBST__.xml (__PLUGIN_SUBST__.xml)))' >>  $@
+	printf '\n locale/$(AB_CD)/browser/searchplugins/list.json (list.json)' >> $@
 	@echo   >> $@
 
 ###################
@@ -115,10 +114,12 @@ search-preqs =\
 
 .PHONY: searchplugins
 searchplugins: $(search-preqs)
+	$(call py_action,generate_searchjson,$(srcdir)/search/list.json $(AB_CD) $(tgt-gendir)/list.json)
 	$(call py_action,jar_maker,\
           $(QUIET) -d $(FINAL_TARGET) \
           -s $(topsrcdir)/$(relativesrcdir)/en-US/searchplugins \
           -s $(LOCALE_SRCDIR)/searchplugins \
+          -s $(tgt-gendir) \
           $(MAKE_JARS_FLAGS) $(search-jar))
 	$(TOUCH) $@
 

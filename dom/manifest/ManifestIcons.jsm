@@ -63,7 +63,7 @@ async function getIcon(aWindow, icons, expectedSize) {
   return fetchIcon(aWindow, icons[index].src).catch(err => {
     // Remove all icons with the failed source, the same source
     // may have been used for multiple sizes
-    icons = icons.filter(x => x.src === icons[index].src);
+    icons = icons.filter(x => x.src !== icons[index].src);
     return getIcon(aWindow, icons, expectedSize);
   });
 }

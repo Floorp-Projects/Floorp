@@ -19,8 +19,8 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     NS_DECL_NSITIMERCALLBACK
     MediaEngineTabVideoSource();
 
-    void GetName(nsAString_internal&) const override;
-    void GetUUID(nsACString_internal&) const override;
+    void GetName(nsAString&) const override;
+    void GetUUID(nsACString&) const override;
 
     bool GetScary() const override {
       return true;

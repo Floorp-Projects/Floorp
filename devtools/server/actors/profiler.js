@@ -38,7 +38,7 @@ exports.ProfilerActor = ActorClassWithSpec(profilerSpec, {
   getBufferInfo: actorBridgeWithSpec("getBufferInfo"),
   getStartOptions: actorBridgeWithSpec("getStartOptions"),
   isActive: actorBridgeWithSpec("isActive"),
-  getSharedLibraryInformation: actorBridgeWithSpec("getSharedLibraryInformation"),
+  sharedLibraries: actorBridgeWithSpec("sharedLibraries"),
   registerEventNotifications: actorBridgeWithSpec("registerEventNotifications"),
   unregisterEventNotifications: actorBridgeWithSpec("unregisterEventNotifications"),
   setProfilerStatusInterval: actorBridgeWithSpec("setProfilerStatusInterval"),

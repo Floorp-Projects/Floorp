@@ -3,7 +3,7 @@ fails == button-html-not-blank.html button-html-not-blank.html
 fails == button-not-blank.html button-not-blank.html
 == checkbox-not-blank.html checkbox-not-blank.html
 fails == combobox-not-blank.html combobox-not-blank.html
-fails == fieldset-not-blank.html fieldset-not-blank.html
+== fieldset-not-blank.html fieldset-not-blank.html
 fails == file-not-blank.html file-not-blank.html
 fails == listbox-not-blank.html listbox-not-blank.html
 == radio-not-blank.html radio-not-blank.html

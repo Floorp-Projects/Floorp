@@ -112,6 +112,7 @@ class CreateElementTransaction;
 class DeleteNodeTransaction;
 class DeleteTextTransaction;
 class EditAggregateTransaction;
+class EditTransactionBase;
 class ErrorResult;
 class HTMLEditor;
 class InsertNodeTransaction;
@@ -313,24 +314,47 @@ protected:
   /**
    * Create a transaction for removing aNode from its parent.
    */
-  nsresult CreateTxnForDeleteNode(nsINode* aNode,
-                                  DeleteNodeTransaction** aTransaction);
+  already_AddRefed<DeleteNodeTransaction>
+    CreateTxnForDeleteNode(nsINode* aNode);
 
-  nsresult CreateTxnForDeleteSelection(
-             EDirection aAction,
-             EditAggregateTransaction** aTransaction,
-             nsINode** aNode,
-             int32_t* aOffset,
-             int32_t* aLength);
+  /**
+   * Create an aggregate transaction for delete selection.  The result may
+   * include DeleteNodeTransactions and/or DeleteTextTransactions as its
+   * children.
+   *
+   * @param aAction             The action caused removing the selection.
+   * @param aRemovingNode       The node to be removed.
+   * @param aOffset             The start offset of the range in aRemovingNode.
+   * @param aLength             The length of the range in aRemovingNode.
+   * @return                    If it can remove the selection, returns an
+   *                            aggregate transaction which has some
+   *                            DeleteNodeTransactions and/or
+   *                            DeleteTextTransactions as its children.
+   */
+  already_AddRefed<EditAggregateTransaction>
+    CreateTxnForDeleteSelection(EDirection aAction,
+                                nsINode** aNode,
+                                int32_t* aOffset,
+                                int32_t* aLength);
 
-  nsresult CreateTxnForDeleteInsertionPoint(
-             nsRange* aRange,
-             EDirection aAction,
-             EditAggregateTransaction* aTransaction,
-             nsINode** aNode,
-             int32_t* aOffset,
-             int32_t* aLength);
-
+  /**
+   * Create a transaction for removing the nodes and/or text in aRange.
+   *
+   * @param aRangeToDelete      The range to be removed.
+   * @param aAction             The action caused removing the range.
+   * @param aRemovingNode       The node to be removed.
+   * @param aOffset             The start offset of the range in aRemovingNode.
+   * @param aLength             The length of the range in aRemovingNode.
+   * @return                    The transaction to remove the range.  Its type
+   *                            is DeleteNodeTransaction or
+   *                            DeleteTextTransaction.
+   */
+  already_AddRefed<EditTransactionBase>
+    CreateTxnForDeleteRange(nsRange* aRangeToDelete,
+                            EDirection aAction,
+                            nsINode** aRemovingNode,
+                            int32_t* aOffset,
+                            int32_t* aLength);
 
   /**
    * Create a transaction for inserting aStringToInsert into aTextNode.  Never
@@ -937,11 +961,6 @@ public:
                                           bool aDoDeleteSelection) = 0;
 
   virtual nsresult InsertFromDrop(nsIDOMEvent* aDropEvent) = 0;
-
-  virtual already_AddRefed<nsIDOMNode> FindUserSelectAllNode(nsIDOMNode* aNode)
-  {
-    return nullptr;
-  }
 
   /**
    * GetIMESelectionStartOffsetIn() returns the start offset of IME selection in

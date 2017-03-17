@@ -157,25 +157,13 @@ for (var i = 0; i < imgs.length; ++i) {
 }
 </script>
 
+<!--  For generating button size results in -ref file
 <script>
 document.body.clientHeight;
 var imgs = document.querySelectorAll('img');
 var s = '  [\n';
 for (var i = 0; i < imgs.length; ++i) {
   s += "  ['"+ imgs[i].width + "px', '" + imgs[i].height + "px'],\n";
-}
-s += ']';
-console.log(s)
-</script>
-
-<!--  For generating button size results in -ref file
-<script>
-document.body.clientHeight;
-var buttons = document.querySelectorAll('button');
-var s = '  [\n';
-for (var i = 0; i < buttons.length; ++i) {
-  var cs = window.getComputedStyle(buttons[i]);
-  s += "  ['"+ cs['width'] + "', '" + cs['height'] + "'],\n";
 }
 s += ']';
 console.log(s)

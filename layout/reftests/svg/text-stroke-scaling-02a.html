@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <svg width="500" height="400">
+    <text x="0" y="20" style="stroke: orange; stroke-width: 2px"
+          transform="scale(4)">
+      This is some text
+    </text>
+  </svg>
+  <script>
+    onload = function() {
+      var obj = document.querySelector("text");
+      window.w = obj.getBoundingClientRect().width;
+      obj.style.vectorEffect = "non-scaling-stroke";
+      document.documentElement.className = "";
+    }
+  </script>
+</html>

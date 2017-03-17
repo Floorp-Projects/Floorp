@@ -34,7 +34,6 @@ class nsIContent;
 class nsIDocument;
 class nsIFrame;
 class nsIPresShell;
-class nsPresContext;
 
 namespace mozilla {
 
@@ -211,11 +210,9 @@ public:
   {
     mEffectOptions.GetSpacingAsString(aRetVal);
   }
-
   void NotifyAnimationTimingUpdated();
-
+  void RequestRestyle(EffectCompositor::RestyleType aRestyleType);
   void SetAnimation(Animation* aAnimation) override;
-
   void SetKeyframes(JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
                     ErrorResult& aRv);
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
@@ -297,7 +294,6 @@ public:
   }
 
   nsIDocument* GetRenderedDocument() const;
-  nsPresContext* GetPresContext() const;
   nsIPresShell* GetPresShell() const;
 
   // Associates a warning with the animated property on the specified frame
@@ -378,8 +374,6 @@ protected:
 
   // Remove the current effect target from its EffectSet.
   void UnregisterTarget();
-
-  void RequestRestyle(EffectCompositor::RestyleType aRestyleType);
 
   // Update the associated frame state bits so that, if necessary, a stacking
   // context will be created and the effect sent to the compositor.  We

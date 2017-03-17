@@ -28,15 +28,15 @@ const testCases = [
   },
   {
     location: getCookieId("cs2", ".example.org", "/"),
-    sidebarHidden: false
+    sidebarHidden: true
   },
   {
     location: getCookieId("uc1", ".example.org", "/"),
-    sidebarHidden: false
+    sidebarHidden: true
   },
   {
     location: getCookieId("uc1", ".example.org", "/"),
-    sidebarHidden: false
+    sidebarHidden: true
   },
 
   {
@@ -93,7 +93,7 @@ const testCases = [
     sendEscape: true
   }, {
     location: "obj-s2",
-    sidebarHidden: false
+    sidebarHidden: true
   }
 ];
 

@@ -41,6 +41,7 @@ const TESTCASES = [
       {"section": "", "addressType": "", "contactType": "", "fieldName": "tel", "element": {}},
     ],
     profileData: {
+      "guid": "123",
       "street-address": "2 Harrison St",
       "address-level2": "San Francisco",
       "country": "US",
@@ -74,6 +75,7 @@ const TESTCASES = [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel", "element": {}},
     ],
     profileData: {
+      "guid": "123",
       "street-address": "2 Harrison St",
       "address-level2": "San Francisco",
       "country": "US",
@@ -107,6 +109,7 @@ const TESTCASES = [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel", "element": {}},
     ],
     profileData: {
+      "guid": "123",
       "street-address": "2 Harrison St",
       "address-level2": "San Francisco",
       "country": "US",
@@ -140,6 +143,7 @@ const TESTCASES = [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel", "element": {}},
     ],
     profileData: {
+      "guid": "123",
       "street-address": "",
       "address-level2": "",
       "country": "",
@@ -188,6 +192,9 @@ for (let tc of TESTCASES) {
       });
 
       handler.autofillFormFields(testcase.profileData);
+
+      Assert.equal(handler.filledProfileGUID, testcase.profileData.guid,
+                   "Check if filledProfileGUID is set correctly");
       yield Promise.all(onChangePromises);
     });
   })();

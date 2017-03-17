@@ -86,5 +86,52 @@ IntlUtils::GetDisplayNames(const Sequence<nsString>& aLocales,
   }
 }
 
+void
+IntlUtils::GetLocaleInfo(const Sequence<nsString>& aLocales,
+                         LocaleInfo& aResult, ErrorResult& aError)
+{
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome() ||
+             nsContentUtils::IsCallerContentXBL());
+
+  nsCOMPtr<mozIMozIntl> mozIntl = do_GetService("@mozilla.org/mozintl;1");
+  if (!mozIntl) {
+    aError.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(xpc::PrivilegedJunkScope())) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  JSContext* cx = jsapi.cx();
+
+  // Prepare parameter for getLocaleInfo().
+  JS::Rooted<JS::Value> locales(cx);
+  if (!ToJSValue(cx, aLocales, &locales)) {
+    aError.StealExceptionFromJSContext(cx);
+    return;
+  }
+
+  // Now call the method.
+  JS::Rooted<JS::Value> retVal(cx);
+  nsresult rv = mozIntl->GetLocaleInfo(locales, &retVal);
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+    return;
+  }
+
+  if (!retVal.isObject()) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  // Return the result as LocaleInfo.
+  JSAutoCompartment ac(cx, &retVal.toObject());
+  if (!aResult.Init(cx, retVal)) {
+    aError.Throw(NS_ERROR_FAILURE);
+  }
+}
+
 } // dom namespace
 } // mozilla namespace

@@ -30,6 +30,7 @@ public:
                                RefPtr<DOMRect> aRootBounds,
                                RefPtr<DOMRect> aBoundingClientRect,
                                RefPtr<DOMRect> aIntersectionRect,
+                               bool aIsIntersecting,
                                Element* aTarget,
                                double aIntersectionRatio)
   : mOwner(aOwner),
@@ -37,6 +38,7 @@ public:
     mRootBounds(aRootBounds),
     mBoundingClientRect(aBoundingClientRect),
     mIntersectionRect(aIntersectionRect),
+    mIsIntersecting(aIsIntersecting),
     mTarget(aTarget),
     mIntersectionRatio(aIntersectionRatio)
   {
@@ -74,6 +76,11 @@ public:
     return mIntersectionRect;
   }
 
+  bool IsIntersecting()
+  {
+    return mIsIntersecting;
+  }
+
   double IntersectionRatio()
   {
     return mIntersectionRatio;
@@ -90,6 +97,7 @@ protected:
   RefPtr<DOMRect>       mRootBounds;
   RefPtr<DOMRect>       mBoundingClientRect;
   RefPtr<DOMRect>       mIntersectionRect;
+  bool                  mIsIntersecting;
   RefPtr<Element>       mTarget;
   double                mIntersectionRatio;
 };

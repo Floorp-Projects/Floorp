@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/CheckedInt.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/RefPtr.h"
 #include "nsRect.h"
 #include "nsSize.h"
@@ -37,7 +37,10 @@ public:
     // with a U and V plane that are half the size of the Y plane, i.e 8 bit,
     // 2x2 subsampled. Have the data pointer of each frame point to the
     // first plane, they'll always be zero'd memory anyway.
-    auto frame = MakeUnique<uint8_t[]>(mFrameWidth * mFrameHeight);
+    auto frame = MakeUniqueFallible<uint8_t[]>(mFrameWidth * mFrameHeight);
+    if (!frame) {
+      return nullptr;
+    }
     memset(frame.get(), 0, mFrameWidth * mFrameHeight);
     VideoData::YCbCrBuffer buffer;
 

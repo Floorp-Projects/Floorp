@@ -204,5 +204,26 @@ ContentBridgeChild::DeallocPFileDescriptorSetChild(PFileDescriptorSetChild* aAct
   return nsIContentChild::DeallocPFileDescriptorSetChild(aActor);
 }
 
+mozilla::ipc::IPCResult
+ContentBridgeChild::RecvActivate(PBrowserChild* aTab)
+{
+  TabChild* tab = static_cast<TabChild*>(aTab);
+  return tab->RecvActivate();
+}
+
+mozilla::ipc::IPCResult
+ContentBridgeChild::RecvDeactivate(PBrowserChild* aTab)
+{
+  TabChild* tab = static_cast<TabChild*>(aTab);
+  return tab->RecvDeactivate();
+}
+
+mozilla::ipc::IPCResult
+ContentBridgeChild::RecvParentActivated(PBrowserChild* aTab, const bool& aActivated)
+{
+  TabChild* tab = static_cast<TabChild*>(aTab);
+  return tab->RecvParentActivated(aActivated);
+}
+
 } // namespace dom
 } // namespace mozilla

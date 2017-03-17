@@ -203,6 +203,26 @@ public class MockFxAccountClient implements FxAccountClient {
   }
 
   @Override
+  public void destroyDevice(byte[] sessionToken, String deviceId, RequestDelegate<ExtendedJSONObject> requestDelegate) {
+    String email = sessionTokens.get(Utils.byte2Hex(sessionToken));
+    User user = users.get(email);
+    if (email == null || user == null) {
+      handleFailure(requestDelegate, HttpStatus.SC_UNAUTHORIZED, FxAccountRemoteError.INVALID_AUTHENTICATION_TOKEN, "invalid sessionToken");
+      return;
+    }
+    if (!user.verified) {
+      handleFailure(requestDelegate, HttpStatus.SC_BAD_REQUEST, FxAccountRemoteError.ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT, "user is unverified");
+      return;
+    }
+    if(user.devices.containsKey(deviceId)) {
+      user.devices.remove(deviceId);
+      requestDelegate.handleSuccess(new ExtendedJSONObject());
+    } else {
+      handleFailure(requestDelegate, HttpStatus.SC_BAD_REQUEST, FxAccountRemoteError.UNKNOWN_DEVICE, "device is unknown");
+    }
+  }
+
+  @Override
   public void deviceList(byte[] sessionToken, RequestDelegate<FxAccountDevice[]> requestDelegate) {
     String email = sessionTokens.get(Utils.byte2Hex(sessionToken));
     User user = users.get(email);

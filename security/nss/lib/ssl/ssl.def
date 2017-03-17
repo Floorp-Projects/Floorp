@@ -227,3 +227,10 @@ SSL_SetSessionTicketKeyPair;
 ;+    local:
 ;+*;
 ;+};
+;+NSS_3.30.0.1 { # Additional symbols for NSS 3.30 release
+;+    global:
+SSL_AlertReceivedCallback;
+SSL_AlertSentCallback;
+;+    local:
+;+*;
+;+};

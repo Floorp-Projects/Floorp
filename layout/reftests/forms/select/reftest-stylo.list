@@ -10,3 +10,5 @@ fails == 997709-2.html 997709-2.html
 fails needs-focus == focusring-1.html focusring-1.html
 fails needs-focus == focusring-2.html focusring-2.html
 fails needs-focus == focusring-3.html focusring-3.html
+fails == dynamic-text-indent-1.html dynamic-text-indent-1.html
+fails == dynamic-text-overflow-1.html dynamic-text-overflow-1.html

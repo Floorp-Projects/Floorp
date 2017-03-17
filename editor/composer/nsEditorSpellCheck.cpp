@@ -12,7 +12,7 @@
 #include "mozilla/dom/Element.h"        // for Element
 #include "mozilla/dom/Selection.h"
 #include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "nsAString.h"                  // for nsAString_internal::IsEmpty, etc
+#include "nsAString.h"                  // for nsAString::IsEmpty, etc
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
 #include "nsDependentSubstring.h"       // for Substring

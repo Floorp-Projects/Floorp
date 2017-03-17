@@ -183,4 +183,35 @@ mm.addMessageListener("ppapipdf.js:save", () => {
   });
 });
 
+// This class is created to transfer global XUL commands event we needed.
+// The main reason we need to transfer it from sandbox side is that commands
+// triggered from menu bar targets only the outmost iframe (which is sandbox
+// itself) so we need to propagate it manually into the plugin's iframe.
+class CommandController {
+  constructor() {
+    this.SUPPORTED_COMMANDS = ['cmd_copy', 'cmd_selectAll'];
+    containerWindow.controllers.insertControllerAt(0, this);
+    containerWindow.addEventListener('unload', this.terminate.bind(this));
+  }
+
+  terminate() {
+    containerWindow.controllers.removeController(this);
+  }
+
+  supportsCommand(cmd) {
+    return this.SUPPORTED_COMMANDS.includes(cmd);
+  }
+
+  isCommandEnabled(cmd) {
+    return this.SUPPORTED_COMMANDS.includes(cmd);
+  }
+
+  doCommand(cmd) {
+    mm.sendAsyncMessage("ppapipdf.js:oncommand", {name: cmd});
+  }
+
+  onEvent(evt) {}
+};
+var commandController = new CommandController();
+
 mm.loadFrameScript("resource://ppapi.js/ppapi-instance.js", true);

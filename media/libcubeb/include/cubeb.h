@@ -414,10 +414,16 @@ typedef void (* cubeb_log_callback)(char const * fmt, ...);
                    context will be returned.
     @param context_name A name for the context. Depending on the platform this
                         can appear in different locations.
+    @param backend_name The name of the cubeb backend user desires to select.
+                        Accepted values self-documented in cubeb.c: init_oneshot
+                        If NULL, a default ordering is used for backend choice.
+                        A valid choice overrides all other possible backends,
+                        so long as the backend was included at compile time.
     @retval CUBEB_OK in case of success.
     @retval CUBEB_ERROR in case of error, for example because the host
                         has no audio hardware. */
-CUBEB_EXPORT int cubeb_init(cubeb ** context, char const * context_name);
+CUBEB_EXPORT int cubeb_init(cubeb ** context, char const * context_name,
+                                              char const * backend_name);
 
 /** Get a read-only string identifying this context's current backend.
     @param context A pointer to the cubeb context.

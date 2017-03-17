@@ -105,7 +105,7 @@ label.findbar-find-fast:-moz-lwtheme,
 .findbar-find-next:-moz-focusring,
 .findbar-find-previous:-moz-focusring {
   position: relative;
-  box-shadow: @focusRingShadow@, @roundButtonShadow@;
+  box-shadow: var(--focus-ring-box-shadow), @roundButtonShadow@;
 }
 
 .findbar-container > toolbarbutton[disabled] {
@@ -129,20 +129,7 @@ label.findbar-find-fast:-moz-lwtheme,
 .findbar-find-previous:hover:active:-moz-focusring {
   text-shadow: @loweredShadow@;
   background: @roundButtonPressedBackground@;
-  box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
-}
-
-@media (-moz-mac-yosemite-theme) {
-  .findbar-container > toolbarbutton:-moz-focusring,
-  .findbar-find-next:-moz-focusring,
-  .findbar-find-previous:-moz-focusring {
-    box-shadow: @yosemiteFocusRingShadow@, @roundButtonShadow@;
-  }
-
-  .findbar-find-next:hover:active:-moz-focusring,
-  .findbar-find-previous:hover:active:-moz-focusring {
-    box-shadow: @yosemiteFocusRingShadow@, @roundButtonPressedShadow@;
-  }
+  box-shadow: var(--focus-ring-box-shadow), @roundButtonPressedShadow@;
 }
 
 /* Search field */
@@ -180,13 +167,7 @@ label.findbar-find-fast:-moz-lwtheme,
 }
 
 .findbar-textbox[focused="true"] {
-  box-shadow: @focusRingShadow@;
-}
-
-@media (-moz-mac-yosemite-theme) {
-  .findbar-textbox[focused="true"] {
-    box-shadow: @yosemiteFocusRingShadow@;
-  }
+  box-shadow: var(--focus-ring-box-shadow);
 }
 
 .findbar-textbox[flash="true"] {

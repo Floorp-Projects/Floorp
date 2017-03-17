@@ -48,8 +48,8 @@ CSS_ANON_BOX(mozMathMLAnonymousBlock, ":-moz-mathml-anonymous-block")
 CSS_ANON_BOX(mozXULAnonymousBlock, ":-moz-xul-anonymous-block")
 
 // Framesets
-CSS_ANON_BOX(horizontalFramesetBorder, ":-moz-hframeset-border")
-CSS_ANON_BOX(verticalFramesetBorder, ":-moz-vframeset-border")
+CSS_NON_INHERITING_ANON_BOX(horizontalFramesetBorder, ":-moz-hframeset-border")
+CSS_NON_INHERITING_ANON_BOX(verticalFramesetBorder, ":-moz-vframeset-border")
 
 CSS_ANON_BOX(mozLineFrame, ":-moz-line-frame")
 
@@ -57,7 +57,7 @@ CSS_ANON_BOX(buttonContent, ":-moz-button-content")
 CSS_ANON_BOX(cellContent, ":-moz-cell-content")
 CSS_ANON_BOX(dropDownList, ":-moz-dropdown-list")
 CSS_ANON_BOX(fieldsetContent, ":-moz-fieldset-content")
-CSS_ANON_BOX(framesetBlank, ":-moz-frameset-blank")
+CSS_NON_INHERITING_ANON_BOX(framesetBlank, ":-moz-frameset-blank")
 CSS_ANON_BOX(mozDisplayComboboxControlFrame, ":-moz-display-comboboxcontrol-frame")
 CSS_ANON_BOX(htmlCanvasContent, ":-moz-html-canvas-content")
 

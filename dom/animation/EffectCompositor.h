@@ -196,6 +196,14 @@ public:
                             CSSPseudoElementType aPseudoType,
                             nsStyleContext* aStyleContext);
 
+  // Variant of MaybeUpdateCascadeResults for the Servo backend.
+  // The Servo backend doesn't use an nsStyleContext to get the rule node
+  // to traverse the style tree to find !important rules and instead
+  // gets the rule node from |aElement|.
+  static void
+  MaybeUpdateCascadeResults(dom::Element* aElement,
+                            CSSPseudoElementType aPseudoType);
+
   // Update the mPropertiesWithImportantRules and
   // mPropertiesForAnimationsLevel members of the corresponding EffectSet.
   //

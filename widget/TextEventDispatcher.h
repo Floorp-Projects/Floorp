@@ -330,8 +330,25 @@ private:
     nsString mString;
     RefPtr<TextRangeArray> mClauses;
     TextRange mCaret;
+    bool mReplacedNativeLineBreakers;
 
     void EnsureClauseArray();
+
+    /**
+     * ReplaceNativeLineBreakers() replaces "\r\n" and "\r" to "\n" and adjust
+     * each clause information and the caret information.
+     */
+    void ReplaceNativeLineBreakers();
+
+    /**
+     * AdjustRange() adjusts aRange as in the string with XP line breakers.
+     *
+     * @param aRange            The reference to a range in aNativeString.
+     *                          This will be modified.
+     * @param aNativeString     The string with native line breakers.
+     *                          This may include "\r\n" and/or "\r".
+     */
+    static void AdjustRange(TextRange& aRange, const nsAString& aNativeString);
   };
   PendingComposition mPendingComposition;
 

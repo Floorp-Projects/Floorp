@@ -3228,13 +3228,15 @@ IonBuilder::binaryArithTryConcat(bool* emitted, JSOp op, MDefinition* left, MDef
 
     // The non-string input (if present) should be atleast easily coercible to string.
     if (right->type() != MIRType::String &&
-        (right->mightBeType(MIRType::Symbol) || right->mightBeType(MIRType::Object)))
+        (right->mightBeType(MIRType::Symbol) || right->mightBeType(MIRType::Object) ||
+         right->mightBeMagicType()))
     {
         trackOptimizationOutcome(TrackedOutcome::OperandNotEasilyCoercibleToString);
         return Ok();
     }
     if (left->type() != MIRType::String &&
-        (left->mightBeType(MIRType::Symbol) || left->mightBeType(MIRType::Object)))
+        (left->mightBeType(MIRType::Symbol) || left->mightBeType(MIRType::Object) ||
+         left->mightBeMagicType()))
     {
         trackOptimizationOutcome(TrackedOutcome::OperandNotEasilyCoercibleToString);
         return Ok();

@@ -62,6 +62,7 @@ const ConsoleTable = createClass({
             GripMessageBody({
               grip: item[key],
               mode: MODE.SHORT,
+              useQuotes: false,
             })
           )
         );

@@ -29,9 +29,10 @@ function test() {
     is(formdata && formdata.id["foo"], "bar", "tab state's formdata is valid");
 
     promiseTabRestored(tab).then(() => {
-      let input = browser.contentDocument.getElementById("foo");
-      is(input.value, "bar", "formdata has been restored correctly");
-      finish();
+      ContentTask.spawn(browser, null, function() {
+        let input = content.document.getElementById("foo");
+        is(input.value, "bar", "formdata has been restored correctly");
+      }).then(() => { finish(); });
     });
 
     // Restore the tab by selecting it.

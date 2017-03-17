@@ -26,18 +26,4 @@ addAccessibleTask('<span id="parent"><span id="child"></span></span>',
 
     let tree = { TEXT: [] };
     testAccessibleTree(findAccessibleChildByID(accDoc, 'parent'), tree);
-
-    onReorder = waitForEvent(EVENT_REORDER, 'body');
-    // Remove an event listener from parent.
-    yield ContentTask.spawn(browser, {}, () => {
-      content.document.getElementById('parent').removeEventListener(
-        'click', content.window.dummyListener);
-      delete content.window.dummyListener;
-    });
-    yield onReorder;
-
-    is(findAccessibleChildByID(accDoc, 'parent'), null,
-      'Check that parent is not accessible.');
-    is(findAccessibleChildByID(accDoc, 'child'), null,
-      'Check that child is not accessible.');
   });

@@ -54,7 +54,7 @@ add_task(function* test_same_date_diff_hash() {
   let {count} = yield BookmarkJSONUtils.exportToFile(tempPath);
   let dateObj = new Date();
   let filename = "bookmarks-" + PlacesBackups.toISODateString(dateObj) + "_" +
-                  count + "_" + "differentHash==" + ".json";
+                  count + "_differentHash==.json";
   let backupFile = OS.Path.join(backupFolder, filename);
   yield OS.File.move(tempPath, backupFile);
   yield PlacesBackups.create(); // Force compressed backup

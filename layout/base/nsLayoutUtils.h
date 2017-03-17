@@ -2685,6 +2685,14 @@ public:
   static float GetCurrentAPZResolutionScale(nsIPresShell* aShell);
 
   /**
+   * Returns true if we need to disable async scrolling for this particular
+   * element. Note that this does a partial disabling - the displayport still
+   * exists but uses a very small margin, and the compositor doesn't apply the
+   * async transform. However, the content may still be layerized.
+   */
+  static bool ShouldDisableApzForElement(nsIContent* aContent);
+
+  /**
    * Log a key/value pair for APZ testing during a paint.
    * @param aManager   The data will be written to the APZTestData associated
    *                   with this layer manager.

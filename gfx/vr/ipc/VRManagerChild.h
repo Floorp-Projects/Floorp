@@ -21,6 +21,7 @@ class GamepadManager;
 class Navigator;
 class VRDisplay;
 class VREventObserver;
+class VRMockDisplay;
 } // namespace dom
 namespace layers {
 class TextureClient;
@@ -187,6 +188,7 @@ private:
   RefPtr<layers::SyncObject> mSyncObject;
   uint32_t mPromiseID;
   nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mPromiseList;
+  RefPtr<dom::VRMockDisplay> mVRMockDisplay;
 
   DISALLOW_COPY_AND_ASSIGN(VRManagerChild);
 };
