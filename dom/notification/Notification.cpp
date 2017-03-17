@@ -322,9 +322,14 @@ public:
       return NS_OK;
     }
 
-    // Browser UI may use DOMWindowFocus to focus the tab
-    // from which the event was dispatched.
-    nsContentUtils::DispatchFocusChromeEvent(mWindow->GetOuterWindow());
+    nsIDocument* doc = mWindow->GetExtantDoc();
+    if (doc) {
+      // Browser UI may use DOMWebNotificationClicked to focus the tab
+      // from which the event was dispatched.
+      nsContentUtils::DispatchChromeEvent(doc, mWindow->GetOuterWindow(),
+                                          NS_LITERAL_STRING("DOMWebNotificationClicked"),
+                                          true, true);
+    }
 
     return NS_OK;
   }
@@ -1484,9 +1489,14 @@ MainThreadNotificationObserver::Observe(nsISupports* aSubject, const char* aTopi
 
     bool doDefaultAction = notification->DispatchClickEvent();
     if (doDefaultAction) {
-      // Browser UI may use DOMWindowFocus to focus the tab
-      // from which the event was dispatched.
-      nsContentUtils::DispatchFocusChromeEvent(window->GetOuterWindow());
+      nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
+      if (doc) {
+        // Browser UI may use DOMWebNotificationClicked to focus the tab
+        // from which the event was dispatched.
+        nsContentUtils::DispatchChromeEvent(doc, window->GetOuterWindow(),
+                                            NS_LITERAL_STRING("DOMWebNotificationClicked"),
+                                            true, true);
+      }
     }
   } else if (!strcmp("alertfinished", aTopic)) {
     notification->UnpersistNotification();
