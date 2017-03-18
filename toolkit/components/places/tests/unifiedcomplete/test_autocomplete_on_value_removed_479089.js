@@ -12,6 +12,18 @@
  * Bug 479089
  */
 
+function promiseURIDeleted(testURI) {
+  return new Promise(resolve => {
+    let obs = new NavHistoryObserver();
+    obs.onDeleteURI = (uri, guid, reason) => {
+      PlacesUtils.history.removeObserver(obs);
+      Assert.equal(uri.spec, testURI.spec, "Deleted URI should be the expected one");
+      resolve();
+    };
+    PlacesUtils.history.addObserver(obs, false);
+  });
+}
+
 add_task(function* test_autocomplete_on_value_removed() {
   let listener = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"].
                  getService(Components.interfaces.nsIAutoCompleteSimpleResultListener);
@@ -22,18 +34,9 @@ add_task(function* test_autocomplete_on_value_removed() {
     referrer: uri("http://mozilla.com/")
   });
 
-  let query = PlacesUtils.history.getNewQuery();
-  let options = PlacesUtils.history.getNewQueryOptions();
-  // look for this uri only
-  query.uri = testUri;
-
-  let root = PlacesUtils.history.executeQuery(query, options).root;
-  root.containerOpen = true;
-  Assert.equal(root.childCount, 1);
+  let promise = promiseURIDeleted(testUri);
   // call the untested code path
   listener.onValueRemoved(null, testUri.spec, true);
-  // make sure it is GONE from the DB
-  Assert.equal(root.childCount, 0);
-  // close the container
-  root.containerOpen = false;
+
+  yield promise;
 });

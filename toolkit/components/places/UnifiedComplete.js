@@ -2305,7 +2305,7 @@ UnifiedComplete.prototype = {
 
   onValueRemoved(result, spec, removeFromDB) {
     if (removeFromDB) {
-      PlacesUtils.history.removePage(NetUtil.newURI(spec));
+      PlacesUtils.history.remove(spec).catch(Cu.reportError);
     }
   },
 

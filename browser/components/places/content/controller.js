@@ -23,10 +23,6 @@ const RELOAD_ACTION_REMOVE = 2;
 // rows.
 const RELOAD_ACTION_MOVE = 3;
 
-// When removing a bunch of pages we split them in chunks to give some breath
-// to the main-thread.
-const REMOVE_PAGES_CHUNKLEN = 300;
-
 /**
  * Represents an insertion point within a container where we can insert
  * items.
@@ -892,7 +888,7 @@ PlacesController.prototype = {
                PlacesUtils.asQuery(node.parent).queryOptions.queryType ==
                  Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY) {
         // This is a uri node inside an history query.
-        PlacesUtils.bhistory.removePage(NetUtil.newURI(node.uri));
+        PlacesUtils.history.removePage(node.uri).catch(Components.utils.reportError);
         // History deletes are not undoable, so we don't have a transaction.
       } else if (node.itemId == -1 &&
                PlacesUtils.nodeIsQuery(node) &&
@@ -945,21 +941,17 @@ PlacesController.prototype = {
   }),
 
   /**
-   * Removes the set of selected ranges from history.
+   * Removes the set of selected ranges from history, asynchronously.
    *
    * @note history deletes are not undoable.
    */
   _removeRowsFromHistory: function PC__removeRowsFromHistory() {
     let nodes = this._view.selectedNodes;
-    let URIs = [];
+    let URIs = new Set();
     for (let i = 0; i < nodes.length; ++i) {
       let node = nodes[i];
       if (PlacesUtils.nodeIsURI(node)) {
-        let uri = NetUtil.newURI(node.uri);
-        // Avoid duplicates.
-        if (URIs.indexOf(uri) < 0) {
-          URIs.push(uri);
-        }
+        URIs.add(node.uri);
       } else if (PlacesUtils.nodeIsQuery(node) &&
                PlacesUtils.asQuery(node).queryOptions.queryType ==
                  Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY) {
@@ -967,18 +959,7 @@ PlacesController.prototype = {
       }
     }
 
-    // Do removal in chunks to give some breath to main-thread.
-    function* pagesChunkGenerator(aURIs) {
-      while (aURIs.length) {
-        let URIslice = aURIs.splice(0, REMOVE_PAGES_CHUNKLEN);
-        PlacesUtils.bhistory.removePages(URIslice, URIslice.length);
-        Services.tm.mainThread.dispatch(() => gen.next(),
-                                        Ci.nsIThread.DISPATCH_NORMAL);
-        yield undefined;
-      }
-    }
-    let gen = pagesChunkGenerator(URIs);
-    gen.next();
+    PlacesUtils.history.remove([...URIs]).catch(Components.utils.reportError);
   },
 
   /**

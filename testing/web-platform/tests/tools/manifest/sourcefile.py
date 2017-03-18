@@ -16,7 +16,8 @@ from .item import Stub, ManualTest, WebdriverSpecTest, RefTestNode, RefTest, Tes
 from .utils import rel_path_to_url, ContextManagerBytesIO, cached_property
 
 wd_pattern = "*.py"
-meta_re = re.compile(b"//\s*META:\s*(\w*)=(.*)$")
+js_meta_re = re.compile(b"//\s*META:\s*(\w*)=(.*)$")
+python_meta_re = re.compile(b"#\s*META:\s*(\w*)=(.*)$")
 
 reference_file_re = re.compile(r'(^|[\-_])(not)?ref[0-9]*([\-_]|$)')
 
@@ -29,14 +30,17 @@ def replace_end(s, old, new):
     return s[:-len(old)] + new
 
 
-def read_script_metadata(f):
+def read_script_metadata(f, regexp):
     """
     Yields any metadata (pairs of bytestrings) from the file-like object `f`,
-    as specified according to the `meta_re` regex.
+    as specified according to a supplied regexp.
+
+    `regexp` - Regexp containing two groups containing the metadata name and
+               value.
     """
     for line in f:
         assert isinstance(line, binary_type), line
-        m = meta_re.match(line)
+        m = regexp.match(line)
         if not m:
             break
 
@@ -274,11 +278,15 @@ class SourceFile(object):
 
     @cached_property
     def script_metadata(self):
-        if not self.name_is_worker and not self.name_is_multi_global:
+        if self.name_is_worker or self.name_is_multi_global:
+            regexp = js_meta_re
+        elif self.name_is_webdriver:
+            regexp = python_meta_re
+        else:
             return None
 
         with self.open() as f:
-            return list(read_script_metadata(f))
+            return list(read_script_metadata(f, regexp))
 
     @cached_property
     def timeout(self):
@@ -482,8 +490,10 @@ class SourceFile(object):
 
         elif self.name_is_multi_global:
             rv = TestharnessTest.item_type, [
-                TestharnessTest(self, replace_end(self.url, ".any.js", ".any.html"), timeout=self.timeout),
-                TestharnessTest(self, replace_end(self.url, ".any.js", ".any.worker.html"), timeout=self.timeout),
+                TestharnessTest(self, replace_end(self.url, ".any.js", ".any.html"),
+                                timeout=self.timeout),
+                TestharnessTest(self, replace_end(self.url, ".any.js", ".any.worker.html"),
+                                timeout=self.timeout),
             ]
 
         elif self.name_is_worker:
@@ -492,7 +502,8 @@ class SourceFile(object):
                                    timeout=self.timeout)])
 
         elif self.name_is_webdriver:
-            rv = WebdriverSpecTest.item_type, [WebdriverSpecTest(self, self.url)]
+            rv = WebdriverSpecTest.item_type, [WebdriverSpecTest(self, self.url,
+                                                                 timeout=self.timeout)]
 
         elif self.content_is_css_manual and not self.name_is_reference:
             rv = ManualTest.item_type, [ManualTest(self, self.url)]
