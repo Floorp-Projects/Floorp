@@ -164,7 +164,7 @@ public class ToolbarComponent extends BaseComponent {
     /**
      * Returns the title of the page. Note that this makes no assertions to Toolbar state and
      * may return a value that may never be visible to the user. Callers likely want to use
-     * {@link assertTitle} instead.
+     * {@link #assertTitle} instead.
      */
     public String getPotentiallyInconsistentTitle() {
         return getTitleHelper(false);
