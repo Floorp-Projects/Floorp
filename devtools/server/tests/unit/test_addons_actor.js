@@ -1,8 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable no-shadow */
 
-const protocol = require("devtools/shared/protocol");
-const {AddonsActor} = require("devtools/server/actors/addons");
+"use strict";
+
 const {AddonsFront} = require("devtools/shared/fronts/addons");
 
 startupAddonsManager();

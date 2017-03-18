@@ -1,44 +1,43 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 var gClient;
 var gTabClient;
 var gDebuggee;
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = testGlobal("test-1");
   DebuggerServer.addTestGlobal(gDebuggee);
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect().then(function ([aType, aTraits]) {
-    attachTestTab(gClient, "test-1", function (aReply, aTabClient) {
-      gTabClient = aTabClient;
-      test_threadAttach(aReply.threadActor);
+  gClient.connect().then(function ([type, traits]) {
+    attachTestTab(gClient, "test-1", function (reply, tabClient) {
+      gTabClient = tabClient;
+      test_threadAttach(reply.threadActor);
     });
   });
   do_test_pending();
 }
 
-function test_threadAttach(aThreadActorID)
-{
-  do_print("Trying to attach to thread " + aThreadActorID);
-  gTabClient.attachThread({}, function (aResponse, aThreadClient) {
-    do_check_eq(aThreadClient.state, "paused");
-    do_check_eq(aThreadClient.actor, aThreadActorID);
-    aThreadClient.resume(function () {
-      do_check_eq(aThreadClient.state, "attached");
-      test_debugger_statement(aThreadClient);
+function test_threadAttach(threadActorID) {
+  do_print("Trying to attach to thread " + threadActorID);
+  gTabClient.attachThread({}, function (response, threadClient) {
+    do_check_eq(threadClient.state, "paused");
+    do_check_eq(threadClient.actor, threadActorID);
+    threadClient.resume(function () {
+      do_check_eq(threadClient.state, "attached");
+      test_debugger_statement(threadClient);
     });
   });
 }
 
-function test_debugger_statement(aThreadClient)
-{
-  aThreadClient.addListener("paused", function (aEvent, aPacket) {
-    do_check_eq(aThreadClient.state, "paused");
+function test_debugger_statement(threadClient) {
+  threadClient.addListener("paused", function (event, packet) {
+    do_check_eq(threadClient.state, "paused");
     // Reach around the protocol to check that the debuggee is in the state
     // we expect.
     do_check_true(gDebuggee.a);
@@ -47,7 +46,7 @@ function test_debugger_statement(aThreadClient)
     let xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
     do_check_eq(xpcInspector.eventLoopNestLevel, 1);
 
-    aThreadClient.resume(cleanup);
+    threadClient.resume(cleanup);
   });
 
   Cu.evalInSandbox("var a = true; var b = false; debugger; var b = true;", gDebuggee);
@@ -56,9 +55,8 @@ function test_debugger_statement(aThreadClient)
   do_check_true(gDebuggee.b);
 }
 
-function cleanup()
-{
-  gClient.addListener("closed", function (aEvent) {
+function cleanup() {
+  gClient.addListener("closed", function (event) {
     do_test_finished();
   });
 

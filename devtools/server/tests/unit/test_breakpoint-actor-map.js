@@ -128,7 +128,9 @@ function test_find_actors() {
 
   // Breakpoints by URL
 
-  bpSet = new Set(bps.filter(bp => { return bp.originalSourceActor.actorID === "actor1"; }));
+  bpSet = new Set(bps.filter(bp => {
+    return bp.originalSourceActor.actorID === "actor1";
+  }));
   for (let bp of bpStore.findActors({ originalSourceActor: { actorID: "actor1" } })) {
     bpSet.delete(bp);
   }
@@ -137,9 +139,12 @@ function test_find_actors() {
 
   // Breakpoints by URL and line
 
-  bpSet = new Set(bps.filter(bp => { return bp.originalSourceActor.actorID === "actor1" && bp.originalLine === 10; }));
+  bpSet = new Set(bps.filter(bp => {
+    return bp.originalSourceActor.actorID === "actor1" && bp.originalLine === 10;
+  }));
   let first = true;
-  for (let bp of bpStore.findActors({ originalSourceActor: { actorID: "actor1" }, originalLine: 10 })) {
+  for (let bp of bpStore.findActors({ originalSourceActor: { actorID: "actor1" },
+                                      originalLine: 10 })) {
     if (first) {
       do_check_eq(bp.originalColumn, undefined,
                   "Should always get the whole line breakpoint first");

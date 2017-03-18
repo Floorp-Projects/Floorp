@@ -1,3 +1,5 @@
+"use strict";
+
 const run_test = Test(function* () {
   initTestDebuggerServer();
   const connection = DebuggerServer.connectPipe();

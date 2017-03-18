@@ -7,8 +7,7 @@
  * Tests whether the profiler responds to "sharedLibraries" adequately.
  */
 
-function run_test()
-{
+function run_test() {
   get_chrome_actors((client, form) => {
     let actor = form.profilerActor;
     test_sharedlibraries(client, actor, () => {
@@ -21,8 +20,7 @@ function run_test()
   do_test_pending();
 }
 
-function test_sharedlibraries(client, actor, callback)
-{
+function test_sharedlibraries(client, actor, callback) {
   client.request({ to: actor, type: "sharedLibraries" }, libs => {
     do_check_eq(typeof libs, "object");
     do_check_true(Array.isArray(libs));

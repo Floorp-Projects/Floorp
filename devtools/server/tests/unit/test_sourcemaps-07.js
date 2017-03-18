@@ -1,5 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable no-shadow */
+
+"use strict";
 
 /**
  * Test that we don't permanently cache sources from source maps.
@@ -11,22 +14,21 @@ var gThreadClient;
 
 const {SourceNode} = require("source-map");
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-source-map", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test_cached_original_sources();
-    });
+    attachTestTabAndResume(gClient, "test-source-map",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             test_cached_original_sources();
+                           });
   });
   do_test_pending();
 }
 
-function test_cached_original_sources()
-{
+function test_cached_original_sources() {
   writeFile("temp.js", "initial content");
 
   gThreadClient.addOneTimeListener("newSource", onNewSource);
@@ -39,26 +41,26 @@ function test_cached_original_sources()
   });
   code += "//# sourceMappingURL=data:text/json;base64," + btoa(map.toString());
 
-
   Components.utils.evalInSandbox(code, gDebuggee, "1.8",
                                  "http://example.com/www/js/abc.js", 1);
 }
 
-function onNewSource(aEvent, aPacket) {
-  let sourceClient = gThreadClient.source(aPacket.source);
-  sourceClient.source(function (aResponse) {
-    do_check_true(!aResponse.error,
+function onNewSource(event, packet) {
+  let sourceClient = gThreadClient.source(packet.source);
+  sourceClient.source(function (response) {
+    do_check_true(!response.error,
                   "Should not be an error grabbing the source");
-    do_check_eq(aResponse.source, "initial content",
+    do_check_eq(response.source, "initial content",
                 "The correct source content should be sent");
 
     writeFile("temp.js", "new content");
 
-    sourceClient.source(function (aResponse) {
-      do_check_true(!aResponse.error,
+    sourceClient.source(function (response) {
+      do_check_true(!response.error,
                     "Should not be an error grabbing the source");
-      do_check_eq(aResponse.source, "new content",
-                  "The correct source content should not be cached, so we should get the new content");
+      do_check_eq(response.source, "new content",
+                  "The correct source content should not be cached, " +
+                  "so we should get the new content");
 
       do_get_file("temp.js").remove(false);
       finishClient(gClient);

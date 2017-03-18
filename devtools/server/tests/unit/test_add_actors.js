@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 var gClient;
 var gActors;
 
@@ -11,8 +13,7 @@ var gActors;
  * in order to add actors after initialization but rather can add actors anytime
  * regardless of the object's state.
  */
-function run_test()
-{
+function run_test() {
   DebuggerServer.addActors("resource://test/pre_init_global_actors.js");
   DebuggerServer.addActors("resource://test/pre_init_tab_actors.js");
 
@@ -32,52 +33,47 @@ function run_test()
   run_next_test();
 }
 
-function init()
-{
+function init() {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect()
     .then(() => gClient.listTabs())
-    .then(aResponse => {
-      gActors = aResponse;
+    .then(response => {
+      gActors = response;
       run_next_test();
     });
 }
 
-function test_pre_init_global_actor()
-{
+function test_pre_init_global_actor() {
   gClient.request({ to: gActors.preInitGlobalActor, type: "ping" },
-    function onResponse(aResponse) {
-      do_check_eq(aResponse.message, "pong");
+    function onResponse(response) {
+      do_check_eq(response.message, "pong");
       run_next_test();
     }
   );
 }
 
-function test_pre_init_tab_actor()
-{
+function test_pre_init_tab_actor() {
   gClient.request({ to: gActors.preInitTabActor, type: "ping" },
-    function onResponse(aResponse) {
-      do_check_eq(aResponse.message, "pong");
+    function onResponse(response) {
+      do_check_eq(response.message, "pong");
       run_next_test();
     }
   );
 }
 
-function test_post_init_global_actor()
-{
+function test_post_init_global_actor() {
   gClient.request({ to: gActors.postInitGlobalActor, type: "ping" },
-    function onResponse(aResponse) {
-      do_check_eq(aResponse.message, "pong");
+    function onResponse(response) {
+      do_check_eq(response.message, "pong");
       run_next_test();
     }
   );
 }
 
-function test_post_init_tab_actor()
-{
+function test_post_init_tab_actor() {
   gClient.request({ to: gActors.postInitTabActor, type: "ping" },
-    function onResponse(aResponse) {
-      do_check_eq(aResponse.message, "pong");
+    function onResponse(response) {
+      do_check_eq(response.message, "pong");
       run_next_test();
     }
   );
@@ -88,16 +84,17 @@ function getActorInstance(connID, actorID) {
   return DebuggerServer._connections[connID].getActor(actorID);
 }
 
-function test_stable_global_actor_instances()
-{
+function test_stable_global_actor_instances() {
   // Consider that there is only one connection,
   // and the first one is ours
   let connID = Object.keys(DebuggerServer._connections)[0];
   let postInitGlobalActor = getActorInstance(connID, gActors.postInitGlobalActor);
   let preInitGlobalActor = getActorInstance(connID, gActors.preInitGlobalActor);
-  gClient.listTabs(function onListTabs(aResponse) {
-    do_check_eq(postInitGlobalActor, getActorInstance(connID, aResponse.postInitGlobalActor));
-    do_check_eq(preInitGlobalActor, getActorInstance(connID, aResponse.preInitGlobalActor));
+  gClient.listTabs(function onListTabs(response) {
+    do_check_eq(postInitGlobalActor,
+                getActorInstance(connID, response.postInitGlobalActor));
+    do_check_eq(preInitGlobalActor,
+                getActorInstance(connID, response.preInitGlobalActor));
     run_next_test();
   });
 }

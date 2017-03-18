@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Check basic source map integration with the "newSource" packet in the RDP.
  */
@@ -11,36 +13,35 @@ var gThreadClient;
 
 const {SourceNode} = require("source-map");
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-source-map", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test_simple_source_map();
-    });
+    attachTestTabAndResume(gClient, "test-source-map",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             test_simple_source_map();
+                           });
   });
   do_test_pending();
 }
 
-function test_simple_source_map()
-{
+function test_simple_source_map() {
   // Because we are source mapping, we should be notified of a.js, b.js, and
   // c.js as sources, and shouldn't receive abc.js or test_sourcemaps-01.js.
   let expectedSources = new Set(["http://example.com/www/js/a.js",
                                  "http://example.com/www/js/b.js",
                                  "http://example.com/www/js/c.js"]);
 
-  gThreadClient.addListener("newSource", function _onNewSource(aEvent, aPacket) {
-    do_check_eq(aEvent, "newSource");
-    do_check_eq(aPacket.type, "newSource");
-    do_check_true(!!aPacket.source);
+  gThreadClient.addListener("newSource", function _onNewSource(event, packet) {
+    do_check_eq(event, "newSource");
+    do_check_eq(packet.type, "newSource");
+    do_check_true(!!packet.source);
 
-    do_check_true(expectedSources.has(aPacket.source.url),
+    do_check_true(expectedSources.has(packet.source.url),
                   "The source url should be one of our original sources.");
-    expectedSources.delete(aPacket.source.url);
+    expectedSources.delete(packet.source.url);
 
     if (expectedSources.size === 0) {
       gClient.removeListener("newSource", _onNewSource);
