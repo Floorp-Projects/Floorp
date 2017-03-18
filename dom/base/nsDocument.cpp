@@ -10564,14 +10564,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(UnblockParsingPromiseHandler)
 
   explicit UnblockParsingPromiseHandler(nsIDocument* aDocument, Promise* aPromise)
-    : mDocument(aDocument)
-    , mPromise(aPromise)
+    : mPromise(aPromise)
   {
-    nsCOMPtr<nsIParser> parser = mDocument->CreatorParserOrNull();
+    nsCOMPtr<nsIParser> parser = aDocument->CreatorParserOrNull();
     if (parser) {
       parser->BlockParser();
-    } else {
-      mDocument = nullptr;
+      mParser = do_GetWeakReference(parser);
     }
   }
 
@@ -10599,21 +10597,19 @@ protected:
 
 private:
   void MaybeUnblockParser() {
-    if (mDocument) {
-      nsCOMPtr<nsIParser> parser = mDocument->CreatorParserOrNull();
-      if (parser) {
-        parser->UnblockParser();
-        parser->ContinueInterruptedParsingAsync();
-      }
-      mDocument = nullptr;
+    nsCOMPtr<nsIParser> parser = do_QueryReferent(mParser);
+    if (parser) {
+      parser->UnblockParser();
+      parser->ContinueInterruptedParsingAsync();
+      mParser = nullptr;
     }
   }
 
-  RefPtr<nsIDocument> mDocument;
+  nsWeakPtr mParser;
   RefPtr<Promise> mPromise;
 };
 
-NS_IMPL_CYCLE_COLLECTION(UnblockParsingPromiseHandler, mDocument, mPromise)
+NS_IMPL_CYCLE_COLLECTION(UnblockParsingPromiseHandler, mPromise)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UnblockParsingPromiseHandler)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
