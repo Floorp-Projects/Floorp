@@ -7,6 +7,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "gThemesEnabled", () => {
+  return Preferences.get("extensions.webextensions.themes.enabled");
+});
+
 // WeakMap[Extension -> Theme]
 let themeMap = new WeakMap();
 
@@ -154,7 +158,7 @@ class Theme {
 
 /* eslint-disable mozilla/balanced-listeners */
 extensions.on("manifest_theme", (type, directive, extension, manifest) => {
-  if (!Preferences.get("extensions.webextensions.themes.enabled")) {
+  if (!gThemesEnabled) {
     // Return early if themes are disabled.
     return;
   }
@@ -181,11 +185,19 @@ extensions.registerSchemaAPI("theme", "addon_parent", context => {
   return {
     theme: {
       update(details) {
+        if (!gThemesEnabled) {
+          // Return early if themes are disabled.
+          return;
+        }
+
         let theme = themeMap.get(extension);
 
-        // We won't have a theme if theme's aren't enabled.
         if (!theme) {
-          return;
+          // Themes which use `update` will not a theme defined
+          // in the manifest. Therefore, we need to initialize the
+          // theme the first time `update` is called.
+          theme = new Theme(extension.baseURI);
+          themeMap.set(extension, theme);
         }
 
         theme.load(details);

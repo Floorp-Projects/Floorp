@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="horizontal">
+
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:paddingEnd="5dp"
+        android:paddingRight="5dp">
+
+        <ImageButton
+            android:id="@+id/custom_tabs_action_bar_icon"
+            style="@style/UrlBar.ImageButton"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:contentDescription="@string/site_security"
+            android:padding="3dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/customtabs_site_security_icon"
+            android:visibility="invisible"/>
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:animateLayoutChanges="true"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/custom_tabs_action_bar_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:textColor="?android:textColorPrimary"
+            android:textSize="14sp"
+            tools:text="Mozilla.org"/>
+
+        <TextView
+            android:id="@+id/custom_tabs_action_bar_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:textColor="?android:textColorPrimary"
+            android:textSize="10sp"
+            tools:text="https://mozilla.org"/>
+
+    </LinearLayout>
+
+</LinearLayout>

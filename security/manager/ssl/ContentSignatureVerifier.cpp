@@ -11,6 +11,7 @@
 #include "cryptohi.h"
 #include "keyhi.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
@@ -22,7 +23,6 @@
 #include "nsSecurityHeaderParser.h"
 #include "nsStreamUtils.h"
 #include "nsWhitespaceTokenizer.h"
-#include "nssb64.h"
 #include "pkix/pkix.h"
 #include "pkix/pkixtypes.h"
 #include "secerr.h"
@@ -100,12 +100,17 @@ ReadChainIntoCertList(const nsACString& aCertChain, CERTCertList* aCertList,
         inBlock = false;
         certFound = true;
         // base64 decode data, make certs, append to chain
-        ScopedAutoSECItem der;
-        if (!NSSBase64_DecodeBuffer(nullptr, &der, blockData.BeginReading(),
-                                    blockData.Length())) {
+        nsAutoCString derString;
+        nsresult rv = Base64Decode(blockData, derString);
+        if (NS_FAILED(rv)) {
           CSVerifier_LOG(("CSVerifier: decoding the signature failed\n"));
-          return NS_ERROR_FAILURE;
+          return rv;
         }
+        SECItem der = {
+          siBuffer,
+          BitwiseCast<unsigned char*, const char*>(derString.get()),
+          derString.Length(),
+        };
         UniqueCERTCertificate tmpCert(
           CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &der, nullptr, false,
                                   true));
@@ -215,15 +220,20 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
   }
 
   // Base 64 decode the signature
-  ScopedAutoSECItem rawSignatureItem;
-  if (!NSSBase64_DecodeBuffer(nullptr, &rawSignatureItem, mSignature.get(),
-                              mSignature.Length())) {
+  nsAutoCString rawSignature;
+  rv = Base64Decode(mSignature, rawSignature);
+  if (NS_FAILED(rv)) {
     CSVerifier_LOG(("CSVerifier: decoding the signature failed\n"));
-    return NS_ERROR_FAILURE;
+    return rv;
   }
 
   // get signature object
   ScopedAutoSECItem signatureItem;
+  SECItem rawSignatureItem = {
+    siBuffer,
+    BitwiseCast<unsigned char*, const char*>(rawSignature.get()),
+    rawSignature.Length(),
+  };
   // We have a raw ecdsa signature r||s so we have to DER-encode it first
   // Note that we have to check rawSignatureItem->len % 2 here as
   // DSAU_EncodeDerSigWithLen asserts this

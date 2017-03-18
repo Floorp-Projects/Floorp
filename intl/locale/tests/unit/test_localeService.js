@@ -22,6 +22,12 @@ function run_test()
   run_next_test();
 }
 
+add_test(function test_defaultLocale() {
+  const defaultLocale = localeService.defaultLocale;
+  do_check_true(defaultLocale === "en-US", "Default locale is en-US");
+  run_next_test();
+});
+
 add_test(function test_getAppLocalesAsLangTags() {
   const appLocale = localeService.getAppLocaleAsLangTag();
   do_check_true(appLocale != "", "appLocale is non-empty");

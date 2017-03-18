@@ -382,6 +382,13 @@ CreateOutArray(const nsTArray<nsCString>& aArray)
 }
 
 NS_IMETHODIMP
+LocaleService::GetDefaultLocale(nsACString& aRetVal)
+{
+  aRetVal.AssignLiteral("en-US");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LocaleService::GetAppLocalesAsLangTags(uint32_t* aCount, char*** aOutArray)
 {
   if (mAppLocales.IsEmpty()) {
