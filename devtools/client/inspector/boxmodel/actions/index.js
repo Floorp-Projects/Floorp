@@ -14,4 +14,7 @@ createEnum([
   // Update the layout state with the latest layout properties.
   "UPDATE_LAYOUT",
 
+  // Update the offset parent state with the new DOM node.
+  "UPDATE_OFFSET_PARENT",
+
 ], module.exports);
