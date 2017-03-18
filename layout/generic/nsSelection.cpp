@@ -268,6 +268,8 @@ public:
     if (!mTimer) {
       nsresult result;
       mTimer = do_CreateInstance("@mozilla.org/timer;1", &result);
+      mTimer->SetTarget(
+        mPresContext->Document()->EventTargetFor(TaskCategory::Other));
 
       if (NS_FAILED(result)) {
         return result;
