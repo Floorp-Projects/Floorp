@@ -52,7 +52,7 @@ fails == ruby-position-vertical-rl.html ruby-position-vertical-rl.html
 == ruby-reflow-1-opaqueruby.html ruby-reflow-1-opaqueruby.html
 == ruby-reflow-1-transparentruby.html ruby-reflow-1-transparentruby.html
 == ruby-span-1.html ruby-span-1.html
-fails == ruby-whitespace-1.html ruby-whitespace-1.html
+== ruby-whitespace-1.html ruby-whitespace-1.html
 == ruby-whitespace-2.html ruby-whitespace-2.html
 skip-if(stylo) == bug1181890.html bug1181890.html
 skip-if(stylo) == bug1181890.html bug1181890.html

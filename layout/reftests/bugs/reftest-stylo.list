@@ -148,8 +148,8 @@ fails == 163504-2b.html 163504-2b.html
 == 169749-1.html 169749-1.html
 == 172073-1.html 172073-1.html
 fails == 175190-1.html 175190-1.html
-fails == 179596-1a.html 179596-1a.html
-fails == 179596-1b.html 179596-1b.html
+== 179596-1a.html 179596-1a.html
+== 179596-1b.html 179596-1b.html
 == 179596-2.html 179596-2.html
 == 179596-2.html 179596-2.html
 == 179596-2.html 179596-2.html
@@ -201,7 +201,7 @@ fails == 201293-1d.html 201293-1d.html
 == 210094-1c.html 210094-1c.html
 == 210876-1.html 210876-1.html
 == 211931-1.html 211931-1.html
-fails == 212563-1.html 212563-1.html
+== 212563-1.html 212563-1.html
 == 212563-2.html 212563-2.html
 fails == 213834-1.html 213834-1.html
 == 214077-1a.html 214077-1a.html
@@ -349,9 +349,9 @@ fails == 307102-3.html 307102-3.html
 == 311366-unknown-inline-2.html 311366-unknown-inline-2.html
 fails == 311822-1.html 311822-1.html # bug 1341712, bug 1341714
 fails == 311822-1.html 311822-1.html # bug 1341712, bug 1341714
-fails == 315620-1a.html 315620-1a.html
+== 315620-1a.html 315620-1a.html
 == 315620-1b.html 315620-1b.html
-fails == 315620-2a.xhtml 315620-2a.xhtml
+== 315620-2a.xhtml 315620-2a.xhtml
 == 315620-2b.xhtml 315620-2b.xhtml
 fails == 315920-1a.html 315920-1a.html
 fails == 315920-1b.html 315920-1b.html
@@ -655,10 +655,10 @@ fails == 372037-1.html 372037-1.html
 == 372063-1.html 372063-1.html
 == 372323-1.xhtml 372323-1.xhtml
 fails == 372553-1.html 372553-1.html
-fails == 372632-1.html 372632-1.html
+== 372632-1.html 372632-1.html
 fails == 372768-1.html 372768-1.html
 == 373295-1.html 373295-1.html
-fails == 373298-1.html 373298-1.html
+== 373298-1.html 373298-1.html
 == 373381-1.html 373381-1.html
 == 373381-2.html 373381-2.html
 fails-if(Android) random-if(d2d) == 373381-3.html 373381-3.html
@@ -687,7 +687,7 @@ fails == 378933-1.html 378933-1.html
 fails == 378935-1.html 378935-1.html
 fails == 378937-1.html 378937-1.html
 == 379178-xhtml.xhtml 379178-xhtml.xhtml
-fails == 379178-html.html 379178-html.html
+== 379178-html.html 379178-html.html
 == 379178-svg.svg 379178-svg.svg
 == 379316-1.html 379316-1.html
 == 379316-2.html 379316-2.html
@@ -715,7 +715,7 @@ fails == 380825-1.html 380825-1.html
 fails == 381507-1.html 381507-1.html
 == 381746-1.html 381746-1.html
 fails == 382600-1.html 382600-1.html
-fails == 382916-1.html 382916-1.html
+== 382916-1.html 382916-1.html
 == 383035-1.html 383035-1.html
 == 383035-2.html 383035-2.html
 == 383488-1.html 383488-1.html
@@ -877,7 +877,7 @@ fails == 403249-2a.html 403249-2a.html
 fails == 403249-2b.html 403249-2b.html
 == 403328-1.html 403328-1.html
 == 403426-1.html 403426-1.html
-fails == 403455-1.html 403455-1.html
+== 403455-1.html 403455-1.html
 == 403505-1.xml 403505-1.xml
 fails == 403519-1.html 403519-1.html
 == 403519-2.html 403519-2.html
@@ -1056,7 +1056,7 @@ asserts(3-6) == 427017-1.xhtml 427017-1.xhtml
 == 427129-image.html 427129-image.html
 == 427129-table-caption.html 427129-table-caption.html
 == 427370-1.html 427370-1.html
-fails == 427730-1.html 427730-1.html
+== 427730-1.html 427730-1.html
 == 428278.html 428278.html
 == 428423-1a.html 428423-1a.html
 == 428423-1b.html 428423-1b.html
@@ -1320,9 +1320,9 @@ fails-if(Android) == 481024-1b.html 481024-1b.html
 fails-if(Android) == 481024-1c.html 481024-1c.html
 == 481024-1d.html 481024-1d.html
 == 481024-1e.html 481024-1e.html
-fails == 481948-1.html 481948-1.html
+== 481948-1.html 481948-1.html
 == 481948-2.html 481948-2.html
-fails-if(Android) random-if(winWidget) fails-if(gtkWidget) == 481948-3.html 481948-3.html
+fails-if(Android) random-if(winWidget) == 481948-3.html 481948-3.html
 == 482398-1.html 482398-1.html
 fails == 482592-1a.xhtml 482592-1a.xhtml
 fails == 482592-1b.xhtml 482592-1b.xhtml
@@ -1344,7 +1344,7 @@ fails == 485275-1.html 485275-1.html
 == 486052-2e.html 486052-2e.html
 == 486052-2f.html 486052-2f.html
 == 486052-2g.html 486052-2g.html
-fails == 486065-1.html 486065-1.html
+== 486065-1.html 486065-1.html
 == 486848-1.xul 486848-1.xul
 == 487539-1.html 487539-1.html
 == 488390-1.html 488390-1.html
@@ -1390,7 +1390,7 @@ fails == 495385-5.html 495385-5.html
 fails == 496032-1.html 496032-1.html
 == 496840-1.html 496840-1.html
 fuzzy-if(skiaContent,1,17000) == 498228-1.xul 498228-1.xul
-fails == 501037.html 501037.html
+== 501037.html 501037.html
 == 501257-1a.html 501257-1a.html
 == 501257-1b.html 501257-1b.html
 == 501257-1.xhtml 501257-1.xhtml
@@ -1407,7 +1407,7 @@ needs-focus == 503531-1.html 503531-1.html
 == 504032-1.html 504032-1.html
 == 505743-1.html 505743-1.html
 fails == 506481-1.html 506481-1.html
-fails == 507187-1.html 507187-1.html
+== 507187-1.html 507187-1.html
 == 507487-1.html 507487-1.html
 == 507487-2.xhtml 507487-2.xhtml
 == 507762-1.html 507762-1.html
@@ -1460,10 +1460,10 @@ fails == 531200-1.html 531200-1.html
 == 531371-1.html 531371-1.html
 == 534526-1a.html 534526-1a.html
 fails == 534526-1b.html 534526-1b.html
-== 534804-1.html 534804-1.html
+fails == 534804-1.html 534804-1.html # Bug 1330885
 == 534808-1.html 534808-1.html
 == 534808-2.html 534808-2.html
-fails == 534919-1.html 534919-1.html
+== 534919-1.html 534919-1.html
 fails random == 536061.html 536061.html
 == 537471-1.html 537471-1.html
 == 537507-1.xul 537507-1.xul
@@ -1564,8 +1564,8 @@ fails == 571347-3.html 571347-3.html
 fails == 572598-1.html 572598-1.html
 fails == 574898-1.html 574898-1.html
 # 574907 is a windows-only issue, result on other platforms depends on details of font support
-fails == 574907-1.html 574907-1.html
-fails == 574907-2.html 574907-2.html
+== 574907-1.html 574907-1.html
+== 574907-2.html 574907-2.html
 # 574907-3 only worked under directwrite, and even there it now depends on the rendering mode; marking as random for now
 random-if(!winWidget) fails-if(winWidget&&!dwrite) random-if(winWidget&&dwrite) == 574907-3.html 574907-3.html
 == 577838-1.html 577838-1.html
@@ -1593,7 +1593,7 @@ fails == 586683-1.html 586683-1.html
 fails == 589615-1a.xhtml 589615-1a.xhtml
 fails == 589615-1b.html 589615-1b.html
 == 589672-1.html 589672-1.html
-fails == 589682-1.html 589682-1.html
+== 589682-1.html 589682-1.html
 == 593243-1.html 593243-1.html
 fails == 593243-2.html 593243-2.html
 == 593544-1.html 593544-1.html
@@ -1684,7 +1684,7 @@ fails == 654950-1.html 654950-1.html
 == 655549-1.html 655549-1.html
 == 655836-1.html 655836-1.html
 fails == 656875.html 656875.html
-fails == 658952.html 658952.html
+== 658952.html 658952.html
 == 660682-1.html 660682-1.html
 fuzzy-if(d2d,1,256) skip-if(Android) fuzzy-if(skiaContent,1,68000) == 664127-1.xul 664127-1.xul
 fails == 665597-1.html 665597-1.html
