@@ -56,6 +56,7 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
   DefaultMap,
+  DefaultWeakMap,
   EventEmitter,
   LocaleData,
   defineLazyGetter,
@@ -116,6 +117,7 @@ const SCRIPT_CLEAR_TIMEOUT_MS = 5 * 1000;
 const CSS_EXPIRY_TIMEOUT_MS = 30 * 60 * 1000;
 
 const scriptCaches = new WeakSet();
+const sheetCacheDocuments = new DefaultWeakMap(() => new WeakSet());
 
 class CacheMap extends DefaultMap {
   constructor(timeout, getter) {
@@ -173,6 +175,31 @@ class CSSCache extends CacheMap {
         return {url, sheet};
       });
     });
+  }
+
+  addDocument(url, document) {
+    sheetCacheDocuments.get(this.get(url)).add(document);
+  }
+
+  deleteDocument(url, document) {
+    sheetCacheDocuments.get(this.get(url)).delete(document);
+  }
+
+  delete(url) {
+    if (this.has(url)) {
+      let promise = this.get(url);
+
+      // Never remove a sheet from the cache if it's still being used by a
+      // document. Rule processors can be shared between documents with the
+      // same preloaded sheet, so we only lose by removing them while they're
+      // still in use.
+      let docs = ChromeUtils.nondeterministicGetWeakSetKeys(sheetCacheDocuments.get(promise));
+      if (docs.length) {
+        return;
+      }
+    }
+
+    super.delete(url);
   }
 }
 
@@ -301,13 +328,18 @@ class Script {
   }
 
   cleanup(window) {
-    if (!this.remove_css) {
+    if (!this.remove_css && this.cssURLs.length) {
       let winUtils = getWinUtils(window);
 
       let type = this.css_origin === "user" ? winUtils.USER_SHEET : winUtils.AUTHOR_SHEET;
       for (let url of this.cssURLs) {
+        this.cssCache.deleteDocument(url, window.document);
         runSafeSyncWithoutClone(winUtils.removeSheetUsingURIString, url, type);
       }
+
+      // Clear any sheets that were kept alive past their timeout as
+      // a result of living in this document.
+      this.cssCache.clear(CSS_EXPIRY_TIMEOUT_MS);
     }
   }
 
@@ -346,6 +378,8 @@ class Script {
 
       if (this.remove_css) {
         for (let url of this.cssURLs) {
+          this.cssCache.deleteDocument(url, window.document);
+
           runSafeSyncWithoutClone(winUtils.removeSheetUsingURIString, url, type);
         }
 
@@ -357,7 +391,9 @@ class Script {
               return;
             }
 
-            for (let {sheet} of sheets) {
+            for (let {url, sheet} of sheets) {
+              this.cssCache.addDocument(url, window.document);
+
               runSafeSyncWithoutClone(winUtils.addSheet, sheet, type);
             }
           }));
