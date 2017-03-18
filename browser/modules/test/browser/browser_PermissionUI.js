@@ -397,3 +397,72 @@ add_task(function* test_no_request() {
     Assert.ok(allowed, "The mainAction callback should have fired");
   });
 });
+
+/**
+ * Tests that when the tab is moved to a different window, the notification
+ * is transferred to the new window.
+ */
+add_task(function* test_window_swap() {
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: "http://example.com",
+  }, function*(browser) {
+    const kTestNotificationID = "test-notification";
+    const kTestMessage = "Test message";
+
+    let mainAction = {
+      label: "Test action",
+      accessKey: "T",
+    };
+    let secondaryAction = {
+      label: "Secondary",
+      accessKey: "S",
+    };
+
+    let mockRequest = makeMockPermissionRequest(browser);
+
+    let TestPrompt = {
+      __proto__: PermissionUI.PermissionPromptForRequestPrototype,
+      request: mockRequest,
+      notificationID: kTestNotificationID,
+      message: kTestMessage,
+      promptActions: [mainAction, secondaryAction],
+    };
+
+    let shownPromise =
+      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+    TestPrompt.prompt();
+    yield shownPromise;
+
+    let newWindowOpened = BrowserTestUtils.waitForNewWindow();
+    gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
+    let newWindow = yield newWindowOpened;
+    shownPromise =
+      BrowserTestUtils.waitForEvent(newWindow.PopupNotifications.panel, "popupshown");
+    TestPrompt.prompt();
+    yield shownPromise;
+
+    let notification =
+      newWindow.PopupNotifications.getNotification(kTestNotificationID,
+                                                   newWindow.gBrowser.selectedBrowser);
+    Assert.ok(notification, "Should have gotten the notification");
+
+    Assert.equal(notification.message, kTestMessage,
+                 "Should be showing the right message");
+    Assert.equal(notification.mainAction.label, mainAction.label,
+                 "The main action should have the right label");
+    Assert.equal(notification.mainAction.accessKey, mainAction.accessKey,
+                 "The main action should have the right access key");
+    Assert.equal(notification.secondaryActions.length, 1,
+                 "There should only be 1 secondary action");
+    Assert.equal(notification.secondaryActions[0].label, secondaryAction.label,
+                 "The secondary action should have the right label");
+    Assert.equal(notification.secondaryActions[0].accessKey,
+                 secondaryAction.accessKey,
+                 "The secondary action should have the right access key");
+    Assert.ok(notification.options.displayURI.equals(mockRequest.principal.URI),
+              "Should be showing the URI of the requesting page");
+
+    yield BrowserTestUtils.closeWindow(newWindow);
+  });
+});
