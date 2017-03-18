@@ -618,6 +618,11 @@ CssComputedView.prototype = {
    */
   createBoxModelView: function () {
     let {
+      setSelectedNode,
+      onShowBoxModelHighlighterForNode,
+    } = this.inspector.getCommonComponentProps();
+
+    let {
       onHideBoxModelHighlighter,
       onShowBoxModelEditor,
       onShowBoxModelHighlighter,
@@ -628,10 +633,12 @@ CssComputedView.prototype = {
       Provider,
       { store: this.store },
       BoxModelApp({
+        setSelectedNode,
         showBoxModelProperties: false,
         onHideBoxModelHighlighter,
         onShowBoxModelEditor,
         onShowBoxModelHighlighter,
+        onShowBoxModelHighlighterForNode,
         onToggleGeometryEditor,
       })
     );

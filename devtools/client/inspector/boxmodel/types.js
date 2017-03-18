@@ -17,4 +17,7 @@ exports.boxModel = {
   // The layout information of the current selected node
   layout: PropTypes.object,
 
+  // The offset parent for the selected node
+  offsetParent: PropTypes.object,
+
 };
