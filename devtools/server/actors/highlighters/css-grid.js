@@ -15,6 +15,7 @@ const {
 } = require("./utils/markup");
 const {
   getCurrentZoom,
+  getDisplayPixelRatio,
   setIgnoreLayoutChanges,
   getWindowDimensions,
   getMaxSurfaceSize,
@@ -27,6 +28,9 @@ const DEFAULT_GRID_COLOR = "#4B0082";
 
 const COLUMNS = "cols";
 const ROWS = "rows";
+
+const GRID_FONT_SIZE = 10;
+const GRID_FONT_FAMILY = "sans-serif";
 
 const GRID_LINES_PROPERTIES = {
   "edge": {
@@ -879,19 +883,21 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    *         The grid dimension type which is either the constant COLUMNS or ROWS.
    */
   renderGridLineNumber(lineNumber, linePos, startPos, dimensionType) {
-    let ratio = this.win.devicePixelRatio;
+    let devicePixelRatio = this.win.devicePixelRatio;
+    let displayPixelRatio = getDisplayPixelRatio(this.win);
 
-    linePos = Math.round(linePos * ratio);
-    startPos = Math.round(startPos * ratio);
+    linePos = Math.round(linePos * devicePixelRatio);
+    startPos = Math.round(startPos * devicePixelRatio);
 
     this.ctx.save();
 
+    let fontSize = (GRID_FONT_SIZE * displayPixelRatio);
+    this.ctx.font = fontSize + "px " + GRID_FONT_FAMILY;
+
     let textWidth = this.ctx.measureText(lineNumber).width;
-    // Guess the font height based on the measured width
-    let textHeight = textWidth * 2;
 
     if (dimensionType === COLUMNS) {
-      let yPos = Math.max(startPos, textHeight);
+      let yPos = Math.max(startPos, fontSize);
       this.ctx.fillText(lineNumber, linePos, yPos);
     } else {
       let xPos = Math.max(startPos, textWidth);

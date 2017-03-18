@@ -16,7 +16,6 @@
 #include "nsColor.h"
 #include "nsStyleStruct.h"
 #include "nsTArray.h"
-#include "DrawResult.h"
 
 class gfxContext;
 class nsIDocument;
@@ -53,30 +52,26 @@ protected:
   SVGContextPaint() {}
 
 public:
-  typedef image::DrawResult DrawResult;
-
   MOZ_DECLARE_REFCOUNTED_TYPENAME(SVGContextPaint)
 
   virtual ~SVGContextPaint() {}
 
-  virtual mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
-  GetFillPattern(const DrawTarget* aDrawTarget,
-                 float aOpacity,
-                 const gfxMatrix& aCTM) = 0;
-  virtual mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
-  GetStrokePattern(const DrawTarget* aDrawTarget,
-                   float aOpacity,
-                   const gfxMatrix& aCTM) = 0;
+  virtual already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
+                                                      float aOpacity,
+                                                      const gfxMatrix& aCTM) = 0;
+  virtual already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
+                                                        float aOpacity,
+                                                        const gfxMatrix& aCTM) = 0;
   virtual float GetFillOpacity() const = 0;
   virtual float GetStrokeOpacity() const = 0;
 
-  mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
-  GetFillPattern(const DrawTarget* aDrawTarget, const gfxMatrix& aCTM) {
+  already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
+                                              const gfxMatrix& aCTM) {
     return GetFillPattern(aDrawTarget, GetFillOpacity(), aCTM);
   }
 
-  mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
-  GetStrokePattern(const DrawTarget* aDrawTarget, const gfxMatrix& aCTM) {
+  already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
+                                                const gfxMatrix& aCTM) {
     return GetStrokePattern(aDrawTarget, GetStrokeOpacity(), aCTM);
   }
 
@@ -142,24 +137,18 @@ struct SVGContextPaintImpl : public SVGContextPaint
 {
 protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
-
 public:
-  typedef mozilla::image::DrawResult DrawResult;
+  DrawMode Init(const DrawTarget* aDrawTarget,
+                const gfxMatrix& aContextMatrix,
+                nsIFrame* aFrame,
+                SVGContextPaint* aOuterContextPaint);
 
-  mozilla::Pair<DrawResult, DrawMode>
-  Init(const DrawTarget* aDrawTarget,
-       const gfxMatrix& aContextMatrix,
-       nsIFrame* aFrame,
-       SVGContextPaint* aOuterContextPaint);
-
-  mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
-  GetFillPattern(const DrawTarget* aDrawTarget,
-                 float aOpacity,
-                 const gfxMatrix& aCTM) override;
-  mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
-  GetStrokePattern(const DrawTarget* aDrawTarget,
-                   float aOpacity,
-                   const gfxMatrix& aCTM) override;
+  already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
+                                              float aOpacity,
+                                              const gfxMatrix& aCTM) override;
+  already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
+                                                float aOpacity,
+                                                const gfxMatrix& aCTM) override;
 
   void SetFillOpacity(float aOpacity) { mFillOpacity = aOpacity; }
   float GetFillOpacity() const override { return mFillOpacity; }
@@ -209,11 +198,10 @@ public:
     gfxMatrix mPatternMatrix;
     nsRefPtrHashtable<nsFloatHashKey, gfxPattern> mPatternCache;
 
-    mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
-    GetPattern(const DrawTarget* aDrawTarget,
-               float aOpacity,
-               nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-               const gfxMatrix& aCTM);
+    already_AddRefed<gfxPattern> GetPattern(const DrawTarget* aDrawTarget,
+                                            float aOpacity,
+                                            nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                                            const gfxMatrix& aCTM);
   };
 
   Paint mFillPaint;
@@ -231,29 +219,22 @@ public:
  */
 class SVGEmbeddingContextPaint : public SVGContextPaint
 {
-protected:
-  typedef mozilla::image::DrawResult DrawResult;
-
 public:
   SVGEmbeddingContextPaint() {}
 
   void SetFill(nscolor aFill);
   void SetStroke(nscolor aStroke);
 
-  mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
-  GetFillPattern(const DrawTarget* aDrawTarget,
-                 float aOpacity,
-                 const gfxMatrix& aCTM) override {
-    RefPtr<gfxPattern> fill = mFill;
-    return MakePair(DrawResult::SUCCESS, Move(fill));
+  already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
+                                              float aOpacity,
+                                              const gfxMatrix& aCTM) override {
+    return do_AddRef(mFill);
   }
 
-  mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
-  GetStrokePattern(const DrawTarget* aDrawTarget,
-                   float aOpacity,
-                   const gfxMatrix& aCTM) override {
-    RefPtr<gfxPattern> stroke = mStroke;
-    return MakePair(DrawResult::SUCCESS, Move(stroke));
+  already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
+                                                float aOpacity,
+                                                const gfxMatrix& aCTM) override {
+    return do_AddRef(mStroke);
   }
 
   float GetFillOpacity() const override {

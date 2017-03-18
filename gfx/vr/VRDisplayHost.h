@@ -88,8 +88,6 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRControllerHost)
 
   const VRControllerInfo& GetControllerInfo() const;
-  void SetIndex(uint32_t aIndex);
-  uint32_t GetIndex();
   void SetButtonPressed(uint64_t aBit);
   uint64_t GetButtonPressed();
   void SetPose(const dom::GamepadPoseState& aPose);
@@ -101,8 +99,6 @@ protected:
   virtual ~VRControllerHost();
 
   VRControllerInfo mControllerInfo;
-  // The controller index in VRControllerManager.
-  uint32_t mIndex;
   // The current button pressed bit of button mask.
   uint64_t mButtonPressed;
   dom::GamepadPoseState mPose;

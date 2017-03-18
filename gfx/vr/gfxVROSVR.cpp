@@ -532,25 +532,6 @@ VRSystemManagerOSVR::HandleInput()
 }
 
 void
-VRSystemManagerOSVR::HandleButtonPress(uint32_t aControllerIdx,
-                                       uint64_t aButtonPressed)
-{
-}
-
-void
-VRSystemManagerOSVR::HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
-                                    float aValue)
-{
-}
-
-void
-VRSystemManagerOSVR::HandlePoseTracking(uint32_t aControllerIdx,
-                                        const GamepadPoseState& aPose,
-                                        VRControllerHost* aController)
-{
-}
-
-void
 VRSystemManagerOSVR::GetControllers(nsTArray<RefPtr<VRControllerHost>>& aControllerResult)
 {
 }
