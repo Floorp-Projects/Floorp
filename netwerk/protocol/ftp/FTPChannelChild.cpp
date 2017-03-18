@@ -263,6 +263,12 @@ public:
                              mLastModified, mEntityID, mURI);
   }
 
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    MOZ_ASSERT(mChild);
+    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
+    return target.forget();
+  }
 private:
   FTPChannelChild* mChild;
   nsresult mChannelStatus;
@@ -369,6 +375,12 @@ public:
     mChild->DoOnDataAvailable(mChannelStatus, mData, mOffset, mCount);
   }
 
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    MOZ_ASSERT(mChild);
+    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
+    return target.forget();
+  }
 private:
   FTPChannelChild* mChild;
   nsresult mChannelStatus;
@@ -412,6 +424,12 @@ class MaybeDivertOnDataFTPEvent : public ChannelEvent
     mChild->MaybeDivertOnData(mData, mOffset, mCount);
   }
 
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    MOZ_ASSERT(mChild);
+    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
+    return target.forget();
+  }
  private:
   FTPChannelChild* mChild;
   nsCString mData;
@@ -498,6 +516,10 @@ public:
     mChild->DoOnStopRequest(mChannelStatus, mErrorMsg, mUseUTF8);
   }
 
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    return do_GetMainThread();
+  }
 private:
   FTPChannelChild* mChild;
   nsresult mChannelStatus;
@@ -559,6 +581,12 @@ class MaybeDivertOnStopFTPEvent : public ChannelEvent
     mChild->MaybeDivertOnStop(mChannelStatus);
   }
 
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    MOZ_ASSERT(mChild);
+    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
+    return target.forget();
+  }
  private:
   FTPChannelChild* mChild;
   nsresult mChannelStatus;
@@ -646,6 +674,13 @@ class FTPFailedAsyncOpenEvent : public ChannelEvent
   FTPFailedAsyncOpenEvent(FTPChannelChild* aChild, nsresult aStatus)
   : mChild(aChild), mStatus(aStatus) {}
   void Run() { mChild->DoFailedAsyncOpen(mStatus); }
+
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    MOZ_ASSERT(mChild);
+    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
+    return target.forget();
+  }
  private:
   FTPChannelChild* mChild;
   nsresult mStatus;
@@ -698,6 +733,13 @@ class FTPFlushedForDiversionEvent : public ChannelEvent
   {
     mChild->FlushedForDiversion();
   }
+
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    MOZ_ASSERT(mChild);
+    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
+    return target.forget();
+  }
  private:
   FTPChannelChild* mChild;
 };
@@ -747,6 +789,13 @@ class FTPDeleteSelfEvent : public ChannelEvent
   explicit FTPDeleteSelfEvent(FTPChannelChild* aChild)
   : mChild(aChild) {}
   void Run() { mChild->DoDeleteSelf(); }
+
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    MOZ_ASSERT(mChild);
+    nsCOMPtr<nsIEventTarget> target = mChild->GetNeckoTarget();
+    return target.forget();
+  }
  private:
   FTPChannelChild* mChild;
 };
@@ -961,7 +1010,19 @@ FTPChannelChild::EnsureDispatcher()
   nsCOMPtr<nsIEventTarget> target =
     mDispatcher->EventTargetFor(TaskCategory::Network);
   gNeckoChild->SetEventTargetForActor(this, target);
-  mEventQ->RetargetDeliveryTo(target);
+
+  mNeckoTarget = target;
+}
+
+already_AddRefed<nsIEventTarget>
+FTPChannelChild::GetNeckoTarget()
+{
+  nsCOMPtr<nsIEventTarget> target = mNeckoTarget;
+
+  if (!target) {
+    target = do_GetMainThread();
+  }
+  return target.forget();
 }
 
 } // namespace net
