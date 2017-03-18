@@ -3238,7 +3238,7 @@ public:
   }
 
   void Resolve(nsPresContext* aPresContext) {
-    if (mType == eStyleContentType_Image) {
+    if (mType == eStyleContentType_Image && !mContent.mImage->IsResolved()) {
       mContent.mImage->Resolve(aPresContext);
     }
   }
