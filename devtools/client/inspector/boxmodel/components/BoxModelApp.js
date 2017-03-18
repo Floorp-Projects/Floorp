@@ -25,10 +25,12 @@ const BoxModelApp = createClass({
 
   propTypes: {
     boxModel: PropTypes.shape(Types.boxModel).isRequired,
+    setSelectedNode: PropTypes.func.isRequired,
     showBoxModelProperties: PropTypes.bool.isRequired,
     onHideBoxModelHighlighter: PropTypes.func.isRequired,
     onShowBoxModelEditor: PropTypes.func.isRequired,
     onShowBoxModelHighlighter: PropTypes.func.isRequired,
+    onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
     onToggleGeometryEditor: PropTypes.func.isRequired,
   },
 
