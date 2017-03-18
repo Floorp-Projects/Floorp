@@ -1,27 +1,27 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 var gClient;
 var gDebuggee;
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = testGlobal("test-1");
   DebuggerServer.addTestGlobal(gDebuggee);
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect().then(function (aType, aTraits) {
-    attachTestTab(gClient, "test-1", function (aReply, aTabClient) {
+  gClient.connect().then(function (type, traits) {
+    attachTestTab(gClient, "test-1", function (reply, tabClient) {
       test_close(transport);
     });
   });
   do_test_pending();
 }
 
-function test_close(aTransport)
-{
+function test_close(transport) {
   // Check that, if we fake a transport shutdown
   // (like if a device is unplugged)
   // the client is automatically closed,
@@ -35,5 +35,5 @@ function test_close(aTransport)
     });
   };
   gClient.addListener("closed", onClosed);
-  aTransport.close();
+  transport.close();
 }

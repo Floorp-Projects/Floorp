@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Regression test for bug 882986 regarding sourcesContent and absolute source
  * URLs.
@@ -10,24 +12,23 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-source-map", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test_source_maps();
-    });
+    attachTestTabAndResume(gClient, "test-source-map",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             test_source_maps();
+                           });
   });
   do_test_pending();
 }
 
-function test_source_maps()
-{
-  gThreadClient.addOneTimeListener("newSource", function (aEvent, aPacket) {
-    let sourceClient = gThreadClient.source(aPacket.source);
+function test_source_maps() {
+  gThreadClient.addOneTimeListener("newSource", function (event, packet) {
+    let sourceClient = gThreadClient.source(packet.source);
     sourceClient.source(function ({error, source}) {
       do_check_true(!error, "should be able to grab the source");
       do_check_eq(source, "foo",

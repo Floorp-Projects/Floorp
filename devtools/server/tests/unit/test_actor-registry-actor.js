@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Check that you can register new actors via the ActorRegistrationActor.
  */
@@ -12,8 +14,7 @@ var gOldPref;
 
 const { ActorRegistryFront } = require("devtools/shared/fronts/actor-registry");
 
-function run_test()
-{
+function run_test() {
   gOldPref = Services.prefs.getBoolPref("devtools.debugger.forbid-certified-apps");
   Services.prefs.setBoolPref("devtools.debugger.forbid-certified-apps", false);
   initTestDebuggerServer();
@@ -39,7 +40,7 @@ function registerNewActor() {
 
   gRegistryFront
     .registerActor("resource://test/hello-actor.js", options)
-    .then(actorFront => gActorFront = actorFront)
+    .then(actorFront => (gActorFront = actorFront))
     .then(talkToNewActor)
     .then(null, e => {
       DevToolsUtils.reportException("registerNewActor", e);

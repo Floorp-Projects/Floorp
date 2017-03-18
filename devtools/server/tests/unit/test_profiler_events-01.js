@@ -7,7 +7,6 @@
  * Tests the event notification service for the profiler actor.
  */
 
-const Profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
 const { ProfilerFront } = require("devtools/shared/fronts/profiler");
 
 function run_test() {
@@ -36,7 +35,8 @@ add_task(function* () {
   do_check_true(events[2] === 0);
   do_check_true(events[3] === 0);
 
-  let ret = yield front.registerEventNotifications({ events: ["console-api-profiler", "profiler-started", "profiler-stopped"] });
+  let ret = yield front.registerEventNotifications(
+    { events: ["console-api-profiler", "profiler-started", "profiler-stopped"] });
   do_check_true(ret.registered.length === 3);
 
   yield front.startProfiler();
@@ -51,7 +51,8 @@ add_task(function* () {
   do_check_true(events[2] === 1);
   do_check_true(events[3] === 2, "compatibility events supported for eventNotifications");
 
-  ret = yield front.unregisterEventNotifications({ events: ["console-api-profiler", "profiler-started", "profiler-stopped"] });
+  ret = yield front.unregisterEventNotifications(
+    { events: ["console-api-profiler", "profiler-started", "profiler-stopped"] });
   do_check_true(ret.registered.length === 3);
 });
 

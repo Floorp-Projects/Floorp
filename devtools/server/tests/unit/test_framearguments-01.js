@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Check a frame actor's arguments property.
  */
@@ -9,24 +11,23 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test_pause_frame();
-    });
+    attachTestTabAndResume(gClient, "test-stack",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             test_pause_frame();
+                           });
   });
   do_test_pending();
 }
 
-function test_pause_frame()
-{
-  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    let args = aPacket.frame["arguments"];
+function test_pause_frame() {
+  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+    let args = packet.frame.arguments;
     do_check_eq(args.length, 6);
     do_check_eq(args[0], 42);
     do_check_eq(args[1], true);
@@ -43,7 +44,7 @@ function test_pause_frame()
   });
 
   gDebuggee.eval("(" + function () {
-    function stopMe(aNumber, aBool, aString, aNull, aUndefined, aObject) {
+    function stopMe(number, bool, string, null_, undef, object) {
       debugger;
     }
     stopMe(42, true, "nasu", null, undefined, { foo: "bar" });

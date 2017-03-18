@@ -1,5 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable no-shadow, max-nested-callbacks */
+
+"use strict";
 
 // Test the xpcshell-test debug support.  Ideally we should have this test
 // next to the xpcshell support code, but that's tricky...
@@ -9,7 +12,9 @@ function run_test() {
 
   // _setupDebuggerServer is from xpcshell-test's head.js
   let testResumed = false;
-  let DebuggerServer = _setupDebuggerServer([testFile.path], () => testResumed = true);
+  let DebuggerServer = _setupDebuggerServer([testFile.path], () => {
+    testResumed = true;
+  });
   let transport = DebuggerServer.connectPipe();
   let client = new DebuggerClient(transport);
   client.connect().then(() => {

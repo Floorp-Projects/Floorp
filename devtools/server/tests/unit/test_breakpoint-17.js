@@ -1,5 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable no-shadow */
+
+"use strict";
 
 /**
  * Test that when we add 2 breakpoints to the same line at different columns and
@@ -11,23 +14,22 @@ var gClient;
 var gThreadClient;
 var gCallback;
 
-function run_test()
-{
+function run_test() {
   run_test_with_server(DebuggerServer, do_test_finished);
   do_test_pending();
 }
 
-function run_test_with_server(aServer, aCallback)
-{
-  gCallback = aCallback;
-  initTestDebuggerServer(aServer);
-  gDebuggee = addTestGlobal("test-breakpoints", aServer);
-  gClient = new DebuggerClient(aServer.connectPipe());
+function run_test_with_server(server, callback) {
+  gCallback = callback;
+  initTestDebuggerServer(server);
+  gDebuggee = addTestGlobal("test-breakpoints", server);
+  gClient = new DebuggerClient(server.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-breakpoints", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test_breakpoints_columns();
-    });
+    attachTestTabAndResume(gClient, "test-breakpoints",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             test_breakpoints_columns();
+                           });
   });
 }
 
@@ -56,44 +58,44 @@ function test_breakpoints_columns() {
   Components.utils.evalInSandbox(code, gDebuggee, "1.8", "http://example.com/", 1);
 }
 
-function set_breakpoints(aEvent, aPacket) {
+function set_breakpoints(event, packet) {
   let first, second;
-  let source = gThreadClient.source(aPacket.frame.where.source);
+  let source = gThreadClient.source(packet.frame.where.source);
 
   source.setBreakpoint(firstLocation, function ({ error, actualLocation },
-                                        aBreakpointClient) {
+                                        breakpointClient) {
     do_check_true(!error, "Should not get an error setting the breakpoint");
     do_check_true(!actualLocation, "Should not get an actualLocation");
-    first = aBreakpointClient;
+    first = breakpointClient;
 
     source.setBreakpoint(secondLocation, function ({ error, actualLocation },
-                                                          aBreakpointClient) {
+                                                          breakpointClient) {
       do_check_true(!error, "Should not get an error setting the breakpoint");
       do_check_true(!actualLocation, "Should not get an actualLocation");
-      second = aBreakpointClient;
+      second = breakpointClient;
 
       test_different_actors(first, second);
     });
   });
 }
 
-function test_different_actors(aFirst, aSecond) {
-  do_check_neq(aFirst.actor, aSecond.actor,
+function test_different_actors(first, second) {
+  do_check_neq(first.actor, second.actor,
                "Each breakpoint should have a different actor");
-  test_remove_one(aFirst, aSecond);
+  test_remove_one(first, second);
 }
 
-function test_remove_one(aFirst, aSecond) {
-  aFirst.remove(function ({error}) {
+function test_remove_one(first, second) {
+  first.remove(function ({error}) {
     do_check_true(!error, "Should not get an error removing a breakpoint");
 
     let hitSecond;
-    gClient.addListener("paused", function _onPaused(aEvent, {why, frame}) {
+    gClient.addListener("paused", function _onPaused(event, {why, frame}) {
       if (why.type == "breakpoint") {
         hitSecond = true;
         do_check_eq(why.actors.length, 1,
                     "Should only be paused because of one breakpoint actor");
-        do_check_eq(why.actors[0], aSecond.actor,
+        do_check_eq(why.actors[0], second.actor,
                     "Should be paused because of the correct breakpoint actor");
         do_check_eq(frame.where.line, secondLocation.line,
                     "Should be at the right line");
