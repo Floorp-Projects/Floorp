@@ -105,6 +105,7 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 }
 
 .autocomplete-richlistitem[selected] {
+  background-color: Highlight;
   color: HighlightText;
 }
 
