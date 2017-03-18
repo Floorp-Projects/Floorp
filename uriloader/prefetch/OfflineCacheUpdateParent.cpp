@@ -276,6 +276,14 @@ OfflineCacheUpdateParent::GetOriginAttributes(JS::MutableHandleValue aAttrs)
     return NS_OK;
 }
 
+NS_IMETHODIMP_(void)
+OfflineCacheUpdateParent::GetOriginAttributes(mozilla::OriginAttributes& aAttrs)
+{
+    if (mLoadingPrincipal) {
+        aAttrs = mLoadingPrincipal->OriginAttributesRef();
+    }
+}
+
 NS_IMETHODIMP
 OfflineCacheUpdateParent::GetUseTrackingProtection(bool* aUseTrackingProtection)
 {
