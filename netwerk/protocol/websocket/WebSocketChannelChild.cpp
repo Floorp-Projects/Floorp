@@ -176,6 +176,15 @@ public:
     mChannelEvent->Run();
   }
 
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    nsCOMPtr<nsIEventTarget> target = mEventTarget;
+    if (!target) {
+      target = do_GetMainThread();
+    }
+    return target.forget();
+  }
+
 private:
   nsAutoPtr<ChannelEvent> mChannelEvent;
   nsCOMPtr<nsIEventTarget> mEventTarget;
@@ -200,6 +209,13 @@ class StartEvent : public ChannelEvent
   {
     mChild->OnStart(mProtocol, mExtensions, mEffectiveURL, mEncrypted);
   }
+
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    nsCOMPtr<nsIEventTarget> target = do_GetCurrentThread();
+    return target.forget();
+  }
+
  private:
   RefPtr<WebSocketChannelChild> mChild;
   nsCString mProtocol;
@@ -258,6 +274,13 @@ class StopEvent : public ChannelEvent
   {
     mChild->OnStop(mStatusCode);
   }
+
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    nsCOMPtr<nsIEventTarget> target = do_GetCurrentThread();
+    return target.forget();
+  }
+
  private:
   RefPtr<WebSocketChannelChild> mChild;
   nsresult mStatusCode;
@@ -308,6 +331,13 @@ class MessageEvent : public ChannelEvent
       mChild->OnBinaryMessageAvailable(mMessage);
     }
   }
+
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    nsCOMPtr<nsIEventTarget> target = do_GetCurrentThread();
+    return target.forget();
+  }
+
  private:
   RefPtr<WebSocketChannelChild> mChild;
   nsCString mMessage;
@@ -380,6 +410,13 @@ class AcknowledgeEvent : public ChannelEvent
   {
     mChild->OnAcknowledge(mSize);
   }
+
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    nsCOMPtr<nsIEventTarget> target = do_GetCurrentThread();
+    return target.forget();
+  }
+
  private:
   RefPtr<WebSocketChannelChild> mChild;
   uint32_t mSize;
@@ -426,6 +463,13 @@ class ServerCloseEvent : public ChannelEvent
   {
     mChild->OnServerClose(mCode, mReason);
   }
+
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    nsCOMPtr<nsIEventTarget> target = do_GetCurrentThread();
+    return target.forget();
+  }
+
  private:
   RefPtr<WebSocketChannelChild> mChild;
   uint16_t mCode;
@@ -719,19 +763,6 @@ WebSocketChannelChild::GetSecurityInfo(nsISupports **aSecurityInfo)
 {
   LOG(("WebSocketChannelChild::GetSecurityInfo() %p\n", this));
   return NS_ERROR_NOT_AVAILABLE;
-}
-
-//-----------------------------------------------------------------------------
-// WebSocketChannelChild::nsIThreadRetargetableRequest
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-WebSocketChannelChild::RetargetDeliveryTo(nsIEventTarget* aTargetThread)
-{
-  nsresult rv = BaseWebSocketChannel::RetargetDeliveryTo(aTargetThread);
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-
-  return mEventQ->RetargetDeliveryTo(aTargetThread);
 }
 
 bool
