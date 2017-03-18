@@ -111,6 +111,8 @@ public:
 private:
   ~LoadContext() {}
 
+  NS_IMETHOD_(void) GetOriginAttributes(mozilla::OriginAttributes& aAttrs) override;
+
   nsWeakPtr mTopFrameElement;
   uint64_t mNestedFrameId;
   bool mIsContent;
