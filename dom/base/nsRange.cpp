@@ -3461,13 +3461,14 @@ IsVisibleAndNotInReplacedElement(nsIFrame* aFrame)
 }
 
 static bool
-ElementIsVisible(Element* aElement)
+ElementIsVisibleNoFlush(Element* aElement)
 {
   if (!aElement) {
     return false;
   }
-  RefPtr<nsStyleContext> sc = nsComputedDOMStyle::GetStyleContextForElement(
-    aElement, nullptr, nullptr);
+  RefPtr<nsStyleContext> sc =
+    nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement, nullptr,
+                                                         nullptr);
   return sc && sc->StyleVisibility()->IsVisible();
 }
 
@@ -3595,7 +3596,7 @@ nsRange::GetInnerTextNoFlush(DOMString& aValue, ErrorResult& aError,
     if (currentState == AT_NODE) {
       bool isText = currentNode->IsNodeOfType(nsINode::eTEXT);
       if (isText && currentNode->GetParent()->IsHTMLElement(nsGkAtoms::rp) &&
-          ElementIsVisible(currentNode->GetParent()->AsElement())) {
+          ElementIsVisibleNoFlush(currentNode->GetParent()->AsElement())) {
         nsAutoString str;
         currentNode->GetTextContent(str, aError);
         result.Append(str);
