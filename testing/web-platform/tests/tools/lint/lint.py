@@ -15,9 +15,10 @@ from . import fnmatch
 from ..localpaths import repo_root
 from ..gitignore.gitignore import PathFilter
 
-from manifest.sourcefile import SourceFile, meta_re
+from manifest.sourcefile import SourceFile, js_meta_re, python_meta_re
 from six import binary_type, iteritems, itervalues
 from six.moves import range
+from six.moves.urllib.parse import urlsplit, urljoin
 
 here = os.path.abspath(os.path.split(__file__)[0])
 
@@ -34,12 +35,6 @@ you could add the following line to the lint.whitelist file.
 
 %s:%s"""
 
-def all_git_paths(repo_root):
-    command_line = ["git", "ls-tree", "-r", "--name-only", "HEAD"]
-    output = subprocess.check_output(command_line, cwd=repo_root)
-    for item in output.split("\n"):
-        yield item
-
 def all_filesystem_paths(repo_root):
     path_filter = PathFilter(repo_root, extras=[".git/*"])
     for dirpath, dirnames, filenames in os.walk(repo_root):
@@ -50,12 +45,6 @@ def all_filesystem_paths(repo_root):
         dirnames[:] = [item for item in dirnames if
                        path_filter(os.path.relpath(os.path.join(dirpath, item) + "/",
                                                    repo_root))]
-
-
-def all_paths(repo_root, ignore_local):
-    fn = all_git_paths if ignore_local else all_filesystem_paths
-    for item in fn(repo_root):
-        yield item
 
 def check_path_length(repo_root, path, css_mode):
     if len(path) + 1 > 150:
@@ -157,6 +146,12 @@ class CRRegexp(Regexp):
     error = "CR AT EOL"
     description = "CR character in line separator"
 
+class SetTimeoutRegexp(Regexp):
+    pattern = b"setTimeout\s*\("
+    error = "SET TIMEOUT"
+    file_extensions = [".html", ".htm", ".js", ".xht", ".xhtml", ".svg"]
+    description = "setTimeout used; step_timeout should typically be used instead"
+
 class W3CTestOrgRegexp(Regexp):
     pattern = b"w3c\-test\.org"
     error = "W3C-TEST.ORG"
@@ -183,6 +178,7 @@ regexps = [item() for item in
            [TrailingWhitespaceRegexp,
             TabsRegexp,
             CRRegexp,
+            SetTimeoutRegexp,
             W3CTestOrgRegexp,
             Webidl2Regexp,
             ConsoleRegexp,
@@ -225,6 +221,33 @@ def check_parsed(repo_root, path, f, css_mode):
 
     if source_file.type == "visual" and not source_file.name_is_visual:
         return [("CONTENT-VISUAL", "Visual test whose filename doesn't end in '-visual'", path, None)]
+
+    for reftest_node in source_file.reftest_nodes:
+        href = reftest_node.attrib.get("href", "")
+        parts = urlsplit(href)
+        if parts.scheme or parts.netloc:
+            errors.append(("ABSOLUTE-URL-REF",
+                     "Reference test with a reference file specified via an absolute URL: '%s'" % href, path, None))
+            continue
+
+        ref_url = urljoin(source_file.url, href)
+        ref_parts = urlsplit(ref_url)
+
+        if source_file.url == ref_url:
+            errors.append(("SAME-FILE-REF",
+                           "Reference test which points at itself as a reference",
+                           path,
+                           None))
+            continue
+
+        assert ref_parts.path != ""
+
+        reference_file = os.path.join(repo_root, ref_parts.path[1:])
+        reference_rel = reftest_node.attrib.get("rel", "")
+
+        if not os.path.isfile(reference_file):
+            errors.append(("NON-EXISTENT-REF",
+                     "Reference test with a non-existent '%s' relationship reference: '%s'" % (reference_rel, href), path, None))
 
     if len(source_file.timeout_nodes) > 1:
         errors.append(("MULTIPLE-TIMEOUT", "More than one meta name='timeout'", path, None))
@@ -341,9 +364,18 @@ def check_python_ast(repo_root, path, f, css_mode):
     return errors
 
 
-broken_metadata = re.compile(b"//\s*META:")
+broken_js_metadata = re.compile(b"//\s*META:")
+broken_python_metadata = re.compile(b"#\s*META:")
+
+
 def check_script_metadata(repo_root, path, f, css_mode):
-    if not path.endswith((".worker.js", ".any.js")):
+    if path.endswith((".worker.js", ".any.js")):
+        meta_re = js_meta_re
+        broken_metadata = broken_js_metadata
+    elif path.endswith(".py"):
+        meta_re = python_meta_re
+        broken_metadata = broken_python_metadata
+    else:
         return []
 
     done = False
@@ -413,8 +445,8 @@ def output_errors_text(errors):
     for error_type, description, path, line_number in errors:
         pos_string = path
         if line_number:
-            pos_string += " %s" % line_number
-        print("%s: %s %s" % (error_type, pos_string, description))
+            pos_string += ":%s" % line_number
+        print("%s: %s (%s)" % (pos_string, description, error_type))
 
 def output_errors_json(errors):
     for error_type, error, path, line_number in errors:
@@ -438,15 +470,13 @@ def parse_args():
                         help="List of paths to lint")
     parser.add_argument("--json", action="store_true",
                         help="Output machine-readable JSON format")
-    parser.add_argument("--ignore-local", action="store_true",
-                        help="Ignore locally added files in the working directory (requires git).")
     parser.add_argument("--css-mode", action="store_true",
                         help="Run CSS testsuite specific lints")
     return parser.parse_args()
 
 def main(force_css_mode=False):
     args = parse_args()
-    paths = args.paths if args.paths else all_paths(repo_root, args.ignore_local)
+    paths = args.paths if args.paths else all_filesystem_paths(repo_root)
     return lint(repo_root, paths, args.json, force_css_mode or args.css_mode)
 
 def lint(repo_root, paths, output_json, css_mode):

@@ -287,6 +287,7 @@ add_task(async function test_bookmarks() {
     }).then(results => {
       browser.test.assertEq(1, results.length, "Expected number of nodes returned by getSubTree");
       browser.test.assertEq("Mozilla Folder", results[0].title, "Folder has the expected title");
+      browser.test.assertEq(bookmarkGuids.unfiledGuid, results[0].parentId, "Folder has the expected parentId");
       let children = results[0].children;
       browser.test.assertEq(4, children.length, "Expected number of bookmarks returned by getSubTree");
       browser.test.assertEq("Firefox", children[0].title, "Bookmark has the expected title");

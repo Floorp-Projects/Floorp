@@ -72,6 +72,23 @@ protected:
     manager->UpdateHitTestingTree(0, root, false, 0, 0);
   }
 
+  // Creates a layer tree with a parent layer that is only scrollable
+  // horizontally, and a child layer that is only scrollable vertically.
+  void CreateScrollHandoffLayerTree4() {
+    const char* layerTreeSyntax = "c(t)";
+    nsIntRegion layerVisibleRegion[] = {
+      nsIntRegion(IntRect(0, 0, 100, 100)),
+      nsIntRegion(IntRect(0, 0, 100, 100))
+    };
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 200, 100));
+    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 200));
+    SetScrollHandoff(layers[1], root);
+    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
+    manager->UpdateHitTestingTree(0, root, false, 0, 0);
+    rootApzc = ApzcOf(root);
+  }
+
   void CreateScrollgrabLayerTree(bool makeParentScrollable = true) {
     const char* layerTreeSyntax = "c(t)";
     nsIntRegion layerVisibleRegion[] = {
@@ -367,6 +384,22 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202b) {
 
   // Make sure nothing is overscrolled.
   EXPECT_FALSE(child->IsOverscrolled());
+  EXPECT_FALSE(rootApzc->IsOverscrolled());
+}
+
+TEST_F(APZScrollHandoffTester, OpposingConstrainedAxes_Bug1201098) {
+  // Enable overscrolling.
+  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+
+  CreateScrollHandoffLayerTree4();
+
+  RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
+
+  // Pan, causing the child APZC to overscroll.
+  Pan(childApzc, 50, 60);
+
+  //Make sure only the child is overscrolled.
+  EXPECT_TRUE(childApzc->IsOverscrolled());
   EXPECT_FALSE(rootApzc->IsOverscrolled());
 }
 
