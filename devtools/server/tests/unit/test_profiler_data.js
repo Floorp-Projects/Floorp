@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable no-shadow, max-nested-callbacks */
 
 "use strict";
 
@@ -8,12 +9,10 @@
  * it is activated.
  */
 
-const Profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
 const INITIAL_WAIT_TIME = 100; // ms
 const MAX_WAIT_TIME = 20000; // ms
 
-function run_test()
-{
+function run_test() {
   get_chrome_actors((client, form) => {
     let actor = form.profilerActor;
     activate_profiler(client, actor, startTime => {
@@ -28,8 +27,7 @@ function run_test()
   do_test_pending();
 }
 
-function activate_profiler(client, actor, callback)
-{
+function activate_profiler(client, actor, callback) {
   client.request({ to: actor, type: "startProfiler" }, response => {
     do_check_true(response.started);
     client.request({ to: actor, type: "isActive" }, response => {
@@ -39,8 +37,7 @@ function activate_profiler(client, actor, callback)
   });
 }
 
-function deactivate_profiler(client, actor, callback)
-{
+function deactivate_profiler(client, actor, callback) {
   client.request({ to: actor, type: "stopProfiler" }, response => {
     do_check_false(response.started);
     client.request({ to: actor, type: "isActive" }, response => {
@@ -50,18 +47,18 @@ function deactivate_profiler(client, actor, callback)
   });
 }
 
-function test_data(client, actor, startTime, callback)
-{
-  function attempt(delay)
-  {
+function test_data(client, actor, startTime, callback) {
+  function attempt(delay) {
     // No idea why, but Components.stack.sourceLine returns null.
-    let funcLine = Components.stack.lineNumber - 3;
+    let funcLine = Components.stack.lineNumber - 2;
 
     // Spin for the requested time, then take a sample.
     let start = Date.now();
     let stack;
     do_print("Attempt: delay = " + delay);
-    while (Date.now() - start < delay) { stack = Components.stack; }
+    while (Date.now() - start < delay) {
+      stack = Components.stack;
+    }
     do_print("Attempt: finished waiting.");
 
     client.request({ to: actor, type: "getProfile", startTime }, response => {
@@ -81,14 +78,14 @@ function test_data(client, actor, startTime, callback)
         if (delay < MAX_WAIT_TIME) {
           // Double the spin-wait time and try again.
           do_print("Attempt: no samples, going around again.");
-          return attempt(delay * 2);
+          attempt(delay * 2);
         } else {
           // We've waited long enough, so just fail.
           do_print("Attempt: waited a long time, but no samples were collected.");
           do_print("Giving up.");
           do_check_true(false);
-          return;
         }
+        return;
       }
 
       // Now check the samples. At least one sample is expected to

@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Test that sources whose URL ends with ".min.js" automatically get black
  * boxed.
@@ -10,16 +12,16 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-black-box");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-black-box", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      testBlackBox();
-    });
+    attachTestTabAndResume(gClient, "test-black-box",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             testBlackBox();
+                           });
   });
   do_test_pending();
 }

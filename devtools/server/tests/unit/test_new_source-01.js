@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Check basic newSource packet sent from server.
  */
@@ -9,27 +11,26 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test_simple_new_source();
-    });
+    attachTestTabAndResume(gClient, "test-stack",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             test_simple_new_source();
+                           });
   });
   do_test_pending();
 }
 
-function test_simple_new_source()
-{
-  gThreadClient.addOneTimeListener("newSource", function (aEvent, aPacket) {
-    do_check_eq(aEvent, "newSource");
-    do_check_eq(aPacket.type, "newSource");
-    do_check_true(!!aPacket.source);
-    do_check_true(!!aPacket.source.url.match(/test_new_source-01.js$/));
+function test_simple_new_source() {
+  gThreadClient.addOneTimeListener("newSource", function (event, packet) {
+    do_check_eq(event, "newSource");
+    do_check_eq(packet.type, "newSource");
+    do_check_true(!!packet.source);
+    do_check_true(!!packet.source.url.match(/test_new_source-01.js$/));
 
     finishClient(gClient);
   });

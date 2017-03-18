@@ -1,11 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable max-nested-callbacks */
+
+"use strict";
 
 /**
  * Test simple requests using the protocol helpers.
  */
 var protocol = require("devtools/shared/protocol");
-var {RetVal, Arg, Option} = protocol;
+var {RetVal, Arg} = protocol;
 var events = require("sdk/event/core");
 var {LongStringActor} = require("devtools/server/actors/string");
 
@@ -20,7 +23,9 @@ function simpleHello() {
   };
 }
 
-DebuggerServer.LONG_STRING_LENGTH = DebuggerServer.LONG_STRING_INITIAL_LENGTH = DebuggerServer.LONG_STRING_READ_LENGTH = 5;
+DebuggerServer.LONG_STRING_LENGTH =
+  DebuggerServer.LONG_STRING_INITIAL_LENGTH =
+  DebuggerServer.LONG_STRING_READ_LENGTH = 5;
 
 var SHORT_STR = "abc";
 var LONG_STR = "abcdefghijklmnop";
@@ -89,8 +94,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
   }
 });
 
-function run_test()
-{
+function run_test() {
   DebuggerServer.createRootActor = (conn => {
     return RootActor(conn);
   });
@@ -107,18 +111,19 @@ function run_test()
     do_check_eq(rootClient.__poolMap.size, size + 1);
   };
 
-
   client.connect().then(([applicationType, traits]) => {
     rootClient = RootFront(client);
 
     // Root actor has no children yet.
     expectRootChildren(0);
 
-    trace.expectReceive({"from":"<actorid>", "applicationType":"xpcshell-tests", "traits":[]});
+    trace.expectReceive({"from": "<actorid>",
+                         "applicationType": "xpcshell-tests",
+                         "traits": []});
     do_check_eq(applicationType, "xpcshell-tests");
     rootClient.shortString().then(ret => {
-      trace.expectSend({"type":"shortString", "to":"<actorid>"});
-      trace.expectReceive({"value":"abc", "from":"<actorid>"});
+      trace.expectSend({"type": "shortString", "to": "<actorid>"});
+      trace.expectReceive({"value": "abc", "from": "<actorid>"});
 
       // Should only own the one reference (itself) at this point.
       expectRootChildren(0);
@@ -130,8 +135,12 @@ function run_test()
     }).then(() => {
       return rootClient.longString();
     }).then(ret => {
-      trace.expectSend({"type":"longString", "to":"<actorid>"});
-      trace.expectReceive({"value":{"type":"longString", "actor":"<actorid>", "length":16, "initial":"abcde"}, "from":"<actorid>"});
+      trace.expectSend({"type": "longString", "to": "<actorid>"});
+      trace.expectReceive({"value": {"type": "longString",
+                                     "actor": "<actorid>",
+                                     "length": 16,
+                                     "initial": "abcde"},
+                           "from": "<actorid>"});
 
       strfront = ret;
       // Should own a reference to itself and an extra string now.
@@ -139,34 +148,36 @@ function run_test()
     }).then(() => {
       return strfront.string();
     }).then(ret => {
-      trace.expectSend({"type":"substring", "start":5, "end":10, "to":"<actorid>"});
-      trace.expectReceive({"substring":"fghij", "from":"<actorid>"});
-      trace.expectSend({"type":"substring", "start":10, "end":15, "to":"<actorid>"});
-      trace.expectReceive({"substring":"klmno", "from":"<actorid>"});
-      trace.expectSend({"type":"substring", "start":15, "end":20, "to":"<actorid>"});
-      trace.expectReceive({"substring":"p", "from":"<actorid>"});
+      trace.expectSend({"type": "substring", "start": 5, "end": 10, "to": "<actorid>"});
+      trace.expectReceive({"substring": "fghij", "from": "<actorid>"});
+      trace.expectSend({"type": "substring", "start": 10, "end": 15, "to": "<actorid>"});
+      trace.expectReceive({"substring": "klmno", "from": "<actorid>"});
+      trace.expectSend({"type": "substring", "start": 15, "end": 20, "to": "<actorid>"});
+      trace.expectReceive({"substring": "p", "from": "<actorid>"});
 
       do_check_eq(ret, LONG_STR);
     }).then(() => {
       return strfront.release();
     }).then(() => {
-      trace.expectSend({"type":"release", "to":"<actorid>"});
-      trace.expectReceive({"from":"<actorid>"});
+      trace.expectSend({"type": "release", "to": "<actorid>"});
+      trace.expectReceive({"from": "<actorid>"});
 
       // That reference should be removed now.
       expectRootChildren(0);
     }).then(() => {
       let deferred = promise.defer();
       rootClient.once("string-event", (str) => {
-        trace.expectSend({"type":"emitShortString", "to":"<actorid>"});
-        trace.expectReceive({"type":"string-event", "str":"abc", "from":"<actorid>"});
+        trace.expectSend({"type": "emitShortString", "to": "<actorid>"});
+        trace.expectReceive({"type": "string-event", "str": "abc", "from": "<actorid>"});
 
         do_check_true(!!str);
         strfront = str;
         // Shouldn't generate any new references
         expectRootChildren(0);
         // will generate no packets.
-        strfront.string().then((value) => { deferred.resolve(value); });
+        strfront.string().then((value) => {
+          deferred.resolve(value);
+        });
       });
       rootClient.emitShortString();
       return deferred.promise;
@@ -178,20 +189,34 @@ function run_test()
     }).then(() => {
       let deferred = promise.defer();
       rootClient.once("string-event", (str) => {
-        trace.expectSend({"type":"emitLongString", "to":"<actorid>"});
-        trace.expectReceive({"type":"string-event", "str":{"type":"longString", "actor":"<actorid>", "length":16, "initial":"abcde"}, "from":"<actorid>"});
+        trace.expectSend({"type": "emitLongString", "to": "<actorid>"});
+        trace.expectReceive({"type": "string-event",
+                             "str": {"type": "longString",
+                                     "actor": "<actorid>",
+                                     "length": 16,
+                                     "initial": "abcde"},
+                             "from": "<actorid>"});
 
         do_check_true(!!str);
         // Should generate one new reference
         expectRootChildren(1);
         strfront = str;
         strfront.string().then((value) => {
-          trace.expectSend({"type":"substring", "start":5, "end":10, "to":"<actorid>"});
-          trace.expectReceive({"substring":"fghij", "from":"<actorid>"});
-          trace.expectSend({"type":"substring", "start":10, "end":15, "to":"<actorid>"});
-          trace.expectReceive({"substring":"klmno", "from":"<actorid>"});
-          trace.expectSend({"type":"substring", "start":15, "end":20, "to":"<actorid>"});
-          trace.expectReceive({"substring":"p", "from":"<actorid>"});
+          trace.expectSend({"type": "substring",
+                            "start": 5,
+                            "end": 10,
+                            "to": "<actorid>"});
+          trace.expectReceive({"substring": "fghij", "from": "<actorid>"});
+          trace.expectSend({"type": "substring",
+                            "start": 10,
+                            "end": 15,
+                            "to": "<actorid>"});
+          trace.expectReceive({"substring": "klmno", "from": "<actorid>"});
+          trace.expectSend({"type": "substring",
+                            "start": 15,
+                            "end": 20,
+                            "to": "<actorid>"});
+          trace.expectReceive({"substring": "p", "from": "<actorid>"});
 
           deferred.resolve(value);
         });
@@ -203,8 +228,8 @@ function run_test()
     }).then(() => {
       return strfront.release();
     }).then(() => {
-      trace.expectSend({"type":"release", "to":"<actorid>"});
-      trace.expectReceive({"from":"<actorid>"});
+      trace.expectSend({"type": "release", "to": "<actorid>"});
+      trace.expectReceive({"from": "<actorid>"});
       expectRootChildren(0);
     }).then(() => {
       client.close().then(() => {

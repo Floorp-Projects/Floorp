@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Make sure we get replies in the same order that we sent their
  * requests even when earlier requests take several event ticks to
@@ -8,8 +10,7 @@
  */
 
 var protocol = require("devtools/shared/protocol");
-var {Arg, Option, RetVal} = protocol;
-var events = require("sdk/event/core");
+var {Arg, RetVal} = protocol;
 
 function simpleHello() {
   return {
@@ -98,8 +99,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
   }
 });
 
-function run_test()
-{
+function run_test() {
   DebuggerServer.createRootActor = RootActor;
   DebuggerServer.init();
 
@@ -116,26 +116,33 @@ function run_test()
     // Execute a call that won't finish processing until 2
     // more calls have happened
     calls.push(rootClient.promiseReturn(2).then(ret => {
-      do_check_eq(sequence, 0); // Check right return order
-      do_check_eq(ret, sequence++); // Check request handling order
+      // Check right return order
+      do_check_eq(sequence, 0);
+      // Check request handling order
+      do_check_eq(ret, sequence++);
     }));
 
     // Put a few requests into the backlog
 
     calls.push(rootClient.simpleReturn().then(ret => {
-      do_check_eq(sequence, 1); // Check right return order
-      do_check_eq(ret, sequence++); // Check request handling order
+      // Check right return order
+      do_check_eq(sequence, 1);
+      // Check request handling order
+      do_check_eq(ret, sequence++);
     }));
 
     calls.push(rootClient.simpleReturn().then(ret => {
-      do_check_eq(sequence, 2); // Check right return order
-      do_check_eq(ret, sequence++); // Check request handling order
+      // Check right return order
+      do_check_eq(sequence, 2);
+      // Check request handling order
+      do_check_eq(ret, sequence++);
     }));
 
     calls.push(rootClient.simpleThrow().then(() => {
       do_check_true(false, "simpleThrow shouldn't succeed!");
     }, error => {
-      do_check_eq(sequence++, 3); // Check right return order
+      // Check right return order
+      do_check_eq(sequence++, 3);
     }));
 
     // While packets are sent in the correct order, rejection handlers
@@ -146,15 +153,18 @@ function run_test()
     calls.push(rootClient.promiseThrow().then(() => {
       do_check_true(false, "promiseThrow shouldn't succeed!");
     }, error => {
-      do_check_eq(sequence++, 4); // Check right return order
+      // Check right return order
+      do_check_eq(sequence++, 4);
       do_check_true(true, "simple throw should throw");
       deferAfterRejection.resolve();
     }));
 
     calls.push(rootClient.simpleReturn().then(ret => {
       return deferAfterRejection.promise.then(function () {
-        do_check_eq(sequence, 5); // Check right return order
-        do_check_eq(ret, sequence++); // Check request handling order
+        // Check right return order
+        do_check_eq(sequence, 5);
+        // Check request handling order
+        do_check_eq(ret, sequence++);
       });
     }));
 
@@ -162,15 +172,19 @@ function run_test()
     // for another simpleReturn before completing
     calls.push(rootClient.promiseReturn(1).then(ret => {
       return deferAfterRejection.promise.then(function () {
-        do_check_eq(sequence, 6); // Check right return order
-        do_check_eq(ret, sequence++); // Check request handling order
+        // Check right return order
+        do_check_eq(sequence, 6);
+        // Check request handling order
+        do_check_eq(ret, sequence++);
       });
     }));
 
     calls.push(rootClient.simpleReturn().then(ret => {
       return deferAfterRejection.promise.then(function () {
-        do_check_eq(sequence, 7); // Check right return order
-        do_check_eq(ret, sequence++); // Check request handling order
+        // Check right return order
+        do_check_eq(sequence, 7);
+        // Check request handling order
+        do_check_eq(ret, sequence++);
       });
     }));
 

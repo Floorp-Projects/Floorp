@@ -1,5 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable no-shadow */
+
+"use strict";
 
 /**
  * Test that we can black box source mapped sources.
@@ -11,31 +14,33 @@ var gThreadClient;
 
 const {SourceNode} = require("source-map");
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-black-box");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-black-box", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
+    attachTestTabAndResume(
+      gClient, "test-black-box",
+      function (response, tabClient, threadClient) {
+        gThreadClient = threadClient;
 
-      promise.resolve(setup_code())
-        .then(black_box_code)
-        .then(run_code)
-        .then(test_correct_location)
-        .then(null, function (error) {
-          do_check_true(false, "Should not get an error, got " + error);
-        })
-        .then(function () {
-          finishClient(gClient);
-        });
-    });
+        promise.resolve(setup_code())
+          .then(black_box_code)
+          .then(run_code)
+          .then(test_correct_location)
+          .then(null, function (error) {
+            do_check_true(false, "Should not get an error, got " + error);
+          })
+          .then(function () {
+            finishClient(gClient);
+          });
+      });
   });
   do_test_pending();
 }
 
 function setup_code() {
+  /* eslint-disable */
   let { code, map } = (new SourceNode(null, null, null, [
     new SourceNode(1, 0, "a.js", "" + function a() {
       return b();
@@ -54,6 +59,7 @@ function setup_code() {
     file: "abc.js",
     sourceRoot: "http://example.com/"
   });
+  /* eslint-enable */
 
   code += "//# sourceMappingURL=data:text/json," + map.toString();
 
@@ -85,8 +91,8 @@ function black_box_code() {
 function run_code() {
   const d = promise.defer();
 
-  gClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    d.resolve(aPacket);
+  gClient.addOneTimeListener("paused", function (event, packet) {
+    d.resolve(packet);
     gThreadClient.resume();
   });
   gDebuggee.a();
@@ -94,9 +100,10 @@ function run_code() {
   return d.promise;
 }
 
-function test_correct_location(aPacket) {
-  do_check_eq(aPacket.why.type, "debuggerStatement",
+function test_correct_location(packet) {
+  do_check_eq(packet.why.type, "debuggerStatement",
               "Should hit a debugger statement.");
-  do_check_eq(aPacket.frame.where.source.url, "http://example.com/c.js",
-              "Should have skipped over the debugger statement in the black boxed source");
+  do_check_eq(packet.frame.where.source.url, "http://example.com/c.js",
+              "Should have skipped over the debugger statement in the" +
+              " black boxed source");
 }

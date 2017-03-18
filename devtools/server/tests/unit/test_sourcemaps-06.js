@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Check that we can load sources whose content is embedded in the
  * "sourcesContent" field of a source map.
@@ -12,34 +14,33 @@ var gThreadClient;
 
 const {SourceNode} = require("source-map");
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-source-map", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test_source_content();
-    });
+    attachTestTabAndResume(gClient, "test-source-map",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             test_source_content();
+                           });
   });
   do_test_pending();
 }
 
-function test_source_content()
-{
+function test_source_content() {
   let numNewSources = 0;
 
-  gThreadClient.addListener("newSource", function _onNewSource(aEvent, aPacket) {
+  gThreadClient.addListener("newSource", function _onNewSource(event, packet) {
     if (++numNewSources !== 3) {
       return;
     }
     gThreadClient.removeListener("newSource", _onNewSource);
 
-    gThreadClient.getSources(function (aResponse) {
-      do_check_true(!aResponse.error, "Should not get an error");
+    gThreadClient.getSources(function (response) {
+      do_check_true(!response.error, "Should not get an error");
 
-      testContents(aResponse.sources, 0, (timesCalled) => {
+      testContents(response.sources, 0, (timesCalled) => {
         do_check_eq(timesCalled, 3);
         finishClient(gClient);
       });
@@ -72,23 +73,21 @@ function testContents(sources, timesCalled, callback) {
     return;
   }
 
-
   let source = sources[0];
   let sourceClient = gThreadClient.source(sources[0]);
 
   if (sourceClient.url) {
-    sourceClient.source((aResponse) => {
-      do_check_true(!aResponse.error,
+    sourceClient.source((response) => {
+      do_check_true(!response.error,
                     "Should not get an error loading the source from sourcesContent");
 
       let expectedContent = "content for " + source.url;
-      do_check_eq(aResponse.source, expectedContent,
+      do_check_eq(response.source, expectedContent,
                   "Should have the expected source content");
 
       testContents(sources.slice(1), timesCalled + 1, callback);
     });
-  }
-  else {
+  } else {
     testContents(sources.slice(1), timesCalled, callback);
   }
 }
