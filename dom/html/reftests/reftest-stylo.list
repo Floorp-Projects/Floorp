@@ -5,7 +5,7 @@ include toblob-todataurl/reftest-stylo.list
 
 fails == 41464-1a.html 41464-1a.html
 fails == 41464-1b.html 41464-1b.html
-fails == 52019-1.html 52019-1.html
+== 52019-1.html 52019-1.html
 fails == 82711-1.html 82711-1.html # Bug 1341637
 fails == 82711-2.html 82711-2.html
 fails == 82711-1-ref.html 82711-1-ref.html
@@ -52,7 +52,7 @@ fails == bug917595-exif-rotated.jpg bug917595-exif-rotated.jpg
 
 fails == href-attr-change-restyles.html href-attr-change-restyles.html
 == figure.html figure.html
-fails == pre-1.html pre-1.html
+== pre-1.html pre-1.html
 == table-border-1.html table-border-1.html
 == table-border-2.html table-border-2.html
 == table-border-2.html table-border-2.html
