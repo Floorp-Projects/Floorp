@@ -15,7 +15,6 @@
 
 #include "mozilla/ArrayUtils.h"
 
-#include "base64.h"
 #include "cert.h"
 #include "nspr.h"
 #include "nss.h"

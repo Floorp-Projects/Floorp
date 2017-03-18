@@ -344,7 +344,7 @@ protected:
   // Assume that this is guaranteed that this is held by the caller when
   // this is used.  (Note that we cannot use AutoRestore for mCalledByJS
   // due to a bit field.)
-  class MOZ_RAII AutoCalledByJSSetter final
+  class MOZ_RAII AutoCalledByJSRestore final
   {
   private:
     nsRange& mRange;
@@ -352,18 +352,18 @@ protected:
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
-    explicit AutoCalledByJSSetter(nsRange& aRange
-                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    explicit AutoCalledByJSRestore(nsRange& aRange
+                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mRange(aRange)
       , mOldValue(aRange.mCalledByJS)
     {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-      mRange.mCalledByJS = true;
     }
-    ~AutoCalledByJSSetter()
+    ~AutoCalledByJSRestore()
     {
       mRange.mCalledByJS = mOldValue;
     }
+    bool SavedValue() const { return mOldValue; }
   };
 
   struct MOZ_STACK_CLASS AutoInvalidateSelection

@@ -6,14 +6,16 @@
 
 #include "ExtendedValidation.h"
 
-#include "base64.h"
 #include "cert.h"
 #include "certdb.h"
 #include "hasht.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/PodOperations.h"
+#include "nsDependentString.h"
+#include "nsString.h"
 #include "pk11pub.h"
 #include "pkix/pkixtypes.h"
 #include "prerror.h"
@@ -1249,25 +1251,28 @@ LoadExtendedValidationInfo()
     // actually present in our loaded root certificates module. It is
     // unnecessary to check this in non-debug builds since we will safely fall
     // back to DV if the EV information is incorrect.
-    mozilla::ScopedAutoSECItem derIssuer;
-    srv = ATOB_ConvertAsciiToItem(&derIssuer, entry.issuer_base64);
-    MOZ_ASSERT(srv == SECSuccess, "Could not base64-decode built-in EV issuer");
-    if (srv != SECSuccess) {
-      return NS_ERROR_FAILURE;
+    nsAutoCString derIssuer;
+    nsresult rv = Base64Decode(nsDependentCString(entry.issuer_base64),
+                               derIssuer);
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Could not base64-decode built-in EV issuer");
+    if (NS_FAILED(rv)) {
+      return rv;
     }
 
-    mozilla::ScopedAutoSECItem serialNumber;
-    srv = ATOB_ConvertAsciiToItem(&serialNumber, entry.serial_base64);
-    MOZ_ASSERT(srv == SECSuccess, "Could not base64-decode built-in EV serial");
-    if (srv != SECSuccess) {
-      return NS_ERROR_FAILURE;
+    nsAutoCString serialNumber;
+    rv = Base64Decode(nsDependentCString(entry.serial_base64), serialNumber);
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Could not base64-decode built-in EV serial");
+    if (NS_FAILED(rv)) {
+      return rv;
     }
 
     CERTIssuerAndSN ias;
-    ias.derIssuer.data = derIssuer.data;
-    ias.derIssuer.len = derIssuer.len;
-    ias.serialNumber.data = serialNumber.data;
-    ias.serialNumber.len = serialNumber.len;
+    ias.derIssuer.data =
+      BitwiseCast<unsigned char*, const char*>(derIssuer.get());
+    ias.derIssuer.len = derIssuer.Length();
+    ias.serialNumber.data =
+      BitwiseCast<unsigned char*, const char*>(serialNumber.get());
+    ias.serialNumber.len = serialNumber.Length();
     ias.serialNumber.type = siUnsignedInteger;
 
     UniqueCERTCertificate cert(CERT_FindCertByIssuerAndSN(nullptr, &ias));
