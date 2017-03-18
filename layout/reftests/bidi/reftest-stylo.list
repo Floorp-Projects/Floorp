@@ -39,7 +39,7 @@ fuzzy-if(Android,9,134) random-if(layersGPUAccelerated) == logicalmarquee.html l
 == unicode-bidi-anonymous-002.html unicode-bidi-anonymous-002.html
 == unicode-bidi-isolate-basic.html unicode-bidi-isolate-basic.html
 fails == unicode-bidi-isolate-aharon.html unicode-bidi-isolate-aharon.html
-fails == unicode-bidi-plaintext.html unicode-bidi-plaintext.html
+== unicode-bidi-plaintext.html unicode-bidi-plaintext.html
 fails == unicode-bidi-plaintext-textarea-1.html unicode-bidi-plaintext-textarea-1.html
 fails == unicode-bidi-plaintext-textarea-2.html unicode-bidi-plaintext-textarea-2.html
 fails == unicode-bidi-plaintext-textarea-3.html unicode-bidi-plaintext-textarea-3.html
@@ -51,8 +51,8 @@ fails == unicode-bidi-plaintext-textarea-4.html unicode-bidi-plaintext-textarea-
 fails == 83958-1a.html 83958-1a.html
 fails == 83958-1b.html 83958-1b.html
 fails == 83958-1c.html 83958-1c.html
-fails == 83958-2a.html 83958-2a.html
-fails == 83958-2b.html 83958-2b.html
+== 83958-2a.html 83958-2a.html
+== 83958-2b.html 83958-2b.html
 == 115921-1.html 115921-1.html
 fails == 115921-2.html 115921-2.html
 == 151407-1.html 151407-1.html
@@ -70,12 +70,12 @@ fails == 115921-2.html 115921-2.html
 fails == 229367-2.html 229367-2.html
 == 229367-3.html 229367-3.html
 == 258928-1.html 258928-1.html
-fails == 263359-1.html 263359-1.html
-fails == 263359-1a.html 263359-1a.html
-fails == 263359-1b.html 263359-1b.html
+== 263359-1.html 263359-1.html
+== 263359-1a.html 263359-1a.html
+== 263359-1b.html 263359-1b.html
 fails == 263359-2.html 263359-2.html
 == 263359-3.html 263359-3.html
-fails == 263359-4.html 263359-4.html
+== 263359-4.html 263359-4.html
 fails == 267459-1.html 267459-1.html
 fails == 267459-2.html 267459-2.html
 == 299065-1.html 299065-1.html
@@ -84,7 +84,7 @@ fails asserts-if(stylo,7) == 332655-1.html 332655-1.html # bug 1335314
 fails asserts-if(stylo,7) == 332655-2.html 332655-2.html # bug 1335314
 fails == 381279-1.html 381279-1.html
 fails == 386339.html 386339.html
-fails == 409375.html 409375.html
+== 409375.html 409375.html
 == 413542-1.html 413542-1.html
 == 413542-2.html 413542-2.html
 fails == 413928-1.html 413928-1.html
@@ -110,13 +110,13 @@ fails == 562169-3a.html 562169-3a.html # bug 1338982
 == 588739-2.html 588739-2.html
 == 588739-3.html 588739-3.html
 == 612843-1.html 612843-1.html
-fails == 613149-1a.html 613149-1a.html
-fails == 613149-1b.html 613149-1b.html
+== 613149-1a.html 613149-1a.html
+== 613149-1b.html 613149-1b.html
 == 613149-2a.html 613149-2a.html
 == 613149-2b.html 613149-2b.html
 == 613157-1.html 613157-1.html
 == 613157-2.html 613157-2.html
-fails == 662288-1.html 662288-1.html
+== 662288-1.html 662288-1.html
 fails == 670226-1.html 670226-1.html
 == 676245-1.html 676245-1.html
 fails == 698291-1.html 698291-1.html
