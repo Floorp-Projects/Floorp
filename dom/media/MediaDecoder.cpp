@@ -393,6 +393,7 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , mPlaybackStatistics(new MediaChannelStatistics())
   , mPinnedForSeek(false)
   , mMinimizePreroll(false)
+  , mMediaTracksConstructed(false)
   , mFiredMetadataLoaded(false)
   , mIsDocumentVisible(false)
   , mElementVisibility(Visibility::UNTRACKED)
@@ -806,7 +807,7 @@ void
 MediaDecoder::OnMetadataUpdate(TimedMetadata&& aMetadata)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  GetOwner()->RemoveMediaTracks();
+  RemoveMediaTracks();
   MetadataLoaded(nsAutoPtr<MediaInfo>(new MediaInfo(*aMetadata.mInfo)),
                  Move(aMetadata.mTags),
                  MediaDecoderEventVisibility::Observable);
@@ -829,7 +830,7 @@ MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
   mMediaSeekable = aInfo->mMediaSeekable;
   mMediaSeekableOnlyInBufferedRanges = aInfo->mMediaSeekableOnlyInBufferedRanges;
   mInfo = aInfo.forget();
-  GetOwner()->ConstructMediaTracks(mInfo);
+  ConstructMediaTracks();
 
   // Make sure the element and the frame (if any) are told about
   // our new size.
@@ -1194,9 +1195,9 @@ MediaDecoder::ChangeState(PlayState aState)
   mPlayState = aState;
 
   if (mPlayState == PLAY_STATE_PLAYING) {
-    GetOwner()->ConstructMediaTracks(mInfo);
+    ConstructMediaTracks();
   } else if (IsEnded()) {
-    GetOwner()->RemoveMediaTracks();
+    RemoveMediaTracks();
   }
 }
 
@@ -1761,6 +1762,32 @@ MediaDecoder::GetOwner() const
   MOZ_DIAGNOSTIC_ASSERT(!mOwner || !mIsMediaElement || mElement);
   // mOwner is valid until shutdown.
   return mOwner;
+}
+
+void
+MediaDecoder::ConstructMediaTracks()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+
+  if (mMediaTracksConstructed || !mInfo) {
+    return;
+  }
+
+  GetOwner()->ConstructMediaTracks(mInfo);
+
+  mMediaTracksConstructed = true;
+}
+
+void
+MediaDecoder::RemoveMediaTracks()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+
+  GetOwner()->RemoveMediaTracks();
+
+  mMediaTracksConstructed = false;
 }
 
 MediaDecoderOwner::NextFrameStatus
