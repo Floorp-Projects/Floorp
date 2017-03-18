@@ -19,6 +19,7 @@ import org.mozilla.gecko.toolbar.PageActionLayout;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextSwitcher;
 import android.widget.TextView;
 
 import com.robotium.solo.Condition;
@@ -90,6 +91,12 @@ public class ToolbarComponent extends BaseComponent {
         return this;
     }
 
+    public ToolbarComponent assertTabCount(final int expectedTabCount) {
+        assertIsNotEditing();
+        fAssertEquals("The correct number of tabs are opened", expectedTabCount, getTabsCount());
+        return this;
+    }
+
     /**
      * Returns the root View for the browser toolbar.
      */
@@ -108,6 +115,16 @@ public class ToolbarComponent extends BaseComponent {
 
     private TextView getUrlTitleText() {
         return (TextView) getToolbarView().findViewById(R.id.url_bar_title);
+    }
+
+    private TextSwitcher getTabsCounter() {
+        return (TextSwitcher) getToolbarView().findViewById(R.id.tabs_counter);
+    }
+
+    private int getTabsCount() {
+        TextView currentView = (TextView) getTabsCounter().getCurrentView();
+        String tabsCountText = currentView.getText().toString();
+        return Integer.parseInt(tabsCountText);
     }
 
     private ImageButton getBackButton() {
