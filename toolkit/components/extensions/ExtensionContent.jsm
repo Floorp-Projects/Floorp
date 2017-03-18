@@ -177,47 +177,47 @@ class CSSCache extends CacheMap {
 }
 
 // Represents a content script.
-function Script(extension, options, deferred = PromiseUtils.defer()) {
-  this.extension = extension;
-  this.options = options;
-  this.run_at = this.options.run_at;
-  this.js = this.options.js || [];
-  this.css = this.options.css || [];
-  this.remove_css = this.options.remove_css;
-  this.match_about_blank = this.options.match_about_blank;
-  this.css_origin = this.options.css_origin;
+class Script {
+  constructor(extension, options, deferred = PromiseUtils.defer()) {
+    this.extension = extension;
+    this.options = options;
+    this.run_at = this.options.run_at;
+    this.js = this.options.js || [];
+    this.css = this.options.css || [];
+    this.remove_css = this.options.remove_css;
+    this.match_about_blank = this.options.match_about_blank;
+    this.css_origin = this.options.css_origin;
 
-  this.deferred = deferred;
+    this.deferred = deferred;
 
-  this.cssCache = extension[this.css_origin === "user" ? "userCSS"
-                                                       : "authorCSS"];
-  this.scriptCache = extension[options.wantReturnValue ? "dynamicScripts"
-                                                       : "staticScripts"];
+    this.cssCache = extension[this.css_origin === "user" ? "userCSS"
+                                                         : "authorCSS"];
+    this.scriptCache = extension[options.wantReturnValue ? "dynamicScripts"
+                                                         : "staticScripts"];
 
-  if (options.wantReturnValue) {
-    this.compileScripts();
-    this.loadCSS();
+    if (options.wantReturnValue) {
+      this.compileScripts();
+      this.loadCSS();
+    }
+
+    this.matches_ = new MatchPattern(this.options.matches);
+    this.exclude_matches_ = new MatchPattern(this.options.exclude_matches || null);
+    // TODO: MatchPattern should pre-mangle host-only patterns so that we
+    // don't need to call a separate match function.
+    this.matches_host_ = new MatchPattern(this.options.matchesHost || null);
+    this.include_globs_ = new MatchGlobs(this.options.include_globs);
+    this.exclude_globs_ = new MatchGlobs(this.options.exclude_globs);
+
+    this.requiresCleanup = !this.remove_css && (this.css.length > 0 || options.cssCode);
   }
 
-  this.matches_ = new MatchPattern(this.options.matches);
-  this.exclude_matches_ = new MatchPattern(this.options.exclude_matches || null);
-  // TODO: MatchPattern should pre-mangle host-only patterns so that we
-  // don't need to call a separate match function.
-  this.matches_host_ = new MatchPattern(this.options.matchesHost || null);
-  this.include_globs_ = new MatchGlobs(this.options.include_globs);
-  this.exclude_globs_ = new MatchGlobs(this.options.exclude_globs);
-
-  this.requiresCleanup = !this.remove_css && (this.css.length > 0 || options.cssCode);
-}
-
-Script.prototype = {
   compileScripts() {
     return this.js.map(url => this.scriptCache.get(url));
-  },
+  }
 
   loadCSS() {
     return this.cssURLs.map(url => this.cssCache.get(url));
-  },
+  }
 
   matchesLoadInfo(uri, loadInfo) {
     if (!this.matchesURI(uri)) {
@@ -229,7 +229,7 @@ Script.prototype = {
     }
 
     return true;
-  },
+  }
 
   matchesURI(uri) {
     if (!(this.matches_.matches(uri) || this.matches_host_.matchesIgnoringPath(uri))) {
@@ -251,7 +251,7 @@ Script.prototype = {
     }
 
     return true;
-  },
+  }
 
   matches(window) {
     let uri = window.document.documentURIObject;
@@ -298,7 +298,7 @@ Script.prototype = {
     }
 
     return true;
-  },
+  }
 
   cleanup(window) {
     if (!this.remove_css) {
@@ -309,7 +309,7 @@ Script.prototype = {
         runSafeSyncWithoutClone(winUtils.removeSheetUsingURIString, url, type);
       }
     }
-  },
+  }
 
   /**
    * Tries to inject this script into the given window and sandbox, if
@@ -391,8 +391,8 @@ Script.prototype = {
         return result;
       }));
     }
-  },
-};
+  }
+}
 
 defineLazyGetter(Script.prototype, "cssURLs", function() {
   // We can handle CSS urls (css) and CSS code (cssCode).
