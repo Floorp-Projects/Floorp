@@ -8,6 +8,7 @@
 #ifndef mozilla_net_HttpChannelChild_h
 #define mozilla_net_HttpChannelChild_h
 
+#include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/PHttpChannelChild.h"
@@ -197,6 +198,9 @@ private:
   // before the constructor message is sent to the parent.
   void SetEventTarget();
 
+  // Get event target for processing network events.
+  already_AddRefed<nsIEventTarget> GetNeckoTarget();
+
   MOZ_MUST_USE nsresult ContinueAsyncOpen();
 
   void DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext);
@@ -295,6 +299,11 @@ private:
   // Used to call OverrideWithSynthesizedResponse in FinishInterceptedRedirect
   RefPtr<OverrideRunnable> mOverrideRunnable;
 
+  // EventTarget for labeling networking events.
+  nsCOMPtr<nsIEventTarget> mNeckoTarget;
+  // Used to ensure atomicity of mNeckoTarget;
+  Mutex mEventTargetMutex;
+
   void FinishInterceptedRedirect();
   void CleanupRedirectingChannel(nsresult rv);
 
@@ -366,6 +375,7 @@ private:
   friend class Redirect1Event;
   friend class Redirect3Event;
   friend class DeleteSelfEvent;
+  friend class HttpFlushedForDiversionEvent;
   friend class HttpAsyncAborter<HttpChannelChild>;
   friend class InterceptStreamListener;
   friend class InterceptedChannelContent;
