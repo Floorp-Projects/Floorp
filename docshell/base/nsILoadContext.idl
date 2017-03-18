@@ -9,6 +9,8 @@
 interface mozIDOMWindowProxy;
 interface nsIDOMElement;
 
+[ref] native OriginAttributes(mozilla::OriginAttributes);
+
 %{C++
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/BasePrincipal.h" // for OriginAttributes
@@ -20,7 +22,7 @@ interface nsIDOMElement;
  * can be queried for various information about where the load is
  * happening.
  */
-[scriptable, uuid(2813a7a3-d084-4d00-acd0-f76620315c02)]
+[builtinclass, scriptable, uuid(2813a7a3-d084-4d00-acd0-f76620315c02)]
 interface nsILoadContext : nsISupports
 {
   /**
@@ -133,16 +135,11 @@ interface nsILoadContext : nsISupports
    * A dictionary of the non-default origin attributes associated with this
    * nsILoadContext.
    */
+  [binaryname(ScriptableOriginAttributes)]
   readonly attribute jsval originAttributes;
 
-%{C++
-#ifdef MOZILLA_INTERNAL_API
   /**
    * The C++ getter for origin attributes.
-   *
-   * Defined in LoadContext.cpp
    */
-  bool GetOriginAttributes(mozilla::OriginAttributes& aAttrs);
-#endif
-%}
+  [noscript, notxpcom] void GetOriginAttributes(out OriginAttributes aAttrs);
 };
