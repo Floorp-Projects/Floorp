@@ -42,15 +42,12 @@ function GridInspector(inspector, window) {
   this.walker = this.inspector.walker;
 
   this.getSwatchColorPickerTooltip = this.getSwatchColorPickerTooltip.bind(this);
-  this.setSelectedNode = this.setSelectedNode.bind(this);
   this.updateGridPanel = this.updateGridPanel.bind(this);
 
   this.onGridLayoutChange = this.onGridLayoutChange.bind(this);
   this.onHighlighterChange = this.onHighlighterChange.bind(this);
   this.onMarkupMutation = this.onMarkupMutation.bind(this);
   this.onSetGridOverlayColor = this.onSetGridOverlayColor.bind(this);
-  this.onShowBoxModelHighlighterForNode =
-    this.onShowBoxModelHighlighterForNode.bind(this);
   this.onShowGridAreaHighlight = this.onShowGridAreaHighlight.bind(this);
   this.onShowGridCellHighlight = this.onShowGridCellHighlight.bind(this);
   this.onSidebarSelect = this.onSidebarSelect.bind(this);
@@ -118,9 +115,7 @@ GridInspector.prototype = {
   getComponentProps() {
     return {
       getSwatchColorPickerTooltip: this.getSwatchColorPickerTooltip,
-      setSelectedNode: this.setSelectedNode,
       onSetGridOverlayColor: this.onSetGridOverlayColor,
-      onShowBoxModelHighlighterForNode: this.onShowBoxModelHighlighterForNode,
       onShowGridAreaHighlight: this.onShowGridAreaHighlight,
       onShowGridCellHighlight: this.onShowGridCellHighlight,
       onToggleGridHighlighter: this.onToggleGridHighlighter,
@@ -223,16 +218,6 @@ GridInspector.prototype = {
   },
 
   /**
-   * Set the inspector selection.
-   *
-   * @param {NodeFront} nodeFront
-   *        The NodeFront corresponding to the new selection.
-   */
-  setSelectedNode(nodeFront) {
-    this.inspector.selection.setNodeFront(nodeFront, "layout-panel");
-  },
-
-  /**
    * Updates the grid panel by dispatching the new grid data. This is called when the
    * layout view becomes visible or the view needs to be updated with new grid data.
    *
@@ -330,20 +315,6 @@ GridInspector.prototype = {
         this.highlighters.showGridHighlighter(node, highlighterSettings);
       }
     }
-  },
-
-  /**
-   * Shows the box-model highlighter on the element corresponding to the provided
-   * NodeFront.
-   *
-   * @param  {NodeFront} nodeFront
-   *         The node to highlight.
-   * @param  {Object} options
-   *         Options passed to the highlighter actor.
-   */
-  onShowBoxModelHighlighterForNode(nodeFront, options) {
-    let toolbox = this.inspector.toolbox;
-    toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
   },
 
   /**
