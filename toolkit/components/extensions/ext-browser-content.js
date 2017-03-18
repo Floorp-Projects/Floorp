@@ -23,6 +23,7 @@ XPCOMUtils.defineLazyGetter(this, "colorUtils", () => {
 });
 
 const {
+  getWinUtils,
   stylesheetMap,
 } = ExtensionUtils;
 
@@ -43,9 +44,7 @@ const BrowserListener = {
     this.oldBackground = null;
 
     if (allowScriptsToClose) {
-      content.QueryInterface(Ci.nsIInterfaceRequestor)
-             .getInterface(Ci.nsIDOMWindowUtils)
-             .allowScriptsToClose();
+      getWinUtils(content).allowScriptsToClose();
     }
 
     // Force external links to open in tabs.
@@ -86,8 +85,7 @@ const BrowserListener = {
   },
 
   loadStylesheets() {
-    let winUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindowUtils);
+    let winUtils = getWinUtils(content);
 
     for (let url of this.stylesheets) {
       winUtils.addSheet(stylesheetMap.get(url), winUtils.AGENT_SHEET);
