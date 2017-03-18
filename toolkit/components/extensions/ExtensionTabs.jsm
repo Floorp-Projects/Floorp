@@ -25,6 +25,7 @@ const {
   DefaultWeakMap,
   EventEmitter,
   ExtensionError,
+  getWinUtils,
 } = ExtensionUtils;
 
 /**
@@ -1147,7 +1148,7 @@ class WindowTrackerBase extends EventEmitter {
     this._windowIds = new DefaultWeakMap(window => {
       window.QueryInterface(Ci.nsIInterfaceRequestor);
 
-      return window.getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+      return getWinUtils(window).outerWindowID;
     });
   }
 

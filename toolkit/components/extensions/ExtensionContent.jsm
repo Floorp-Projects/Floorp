@@ -61,6 +61,7 @@ const {
   defineLazyGetter,
   flushJarCache,
   getInnerWindowID,
+  getWinUtils,
   promiseDocumentReady,
   runSafeSyncWithoutClone,
 } = ExtensionUtils;
@@ -301,8 +302,7 @@ Script.prototype = {
 
   cleanup(window) {
     if (!this.remove_css) {
-      let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = getWinUtils(window);
 
       let type = this.css_origin === "user" ? winUtils.USER_SHEET : winUtils.AUTHOR_SHEET;
       for (let url of this.cssURLs) {
@@ -338,8 +338,7 @@ Script.prototype = {
    */
   tryInject(window, sandbox, shouldRun, when) {
     if (this.cssURLs.length && shouldRun("document_start")) {
-      let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = getWinUtils(window);
 
       let innerWindowID = winUtils.currentInnerWindowID;
 
@@ -1098,10 +1097,7 @@ class ExtensionGlobal {
     MessageChannel.addListener(global, "WebNavigation:GetFrame", this);
     MessageChannel.addListener(global, "WebNavigation:GetAllFrames", this);
 
-    this.windowId = global.content
-                          .QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindowUtils)
-                          .outerWindowID;
+    this.windowId = getWinUtils(global.content).outerWindowID;
 
     global.sendAsyncMessage("Extension:TopWindowID", {windowId: this.windowId});
   }
