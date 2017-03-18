@@ -280,7 +280,10 @@ nsTArray_base<Alloc, Copy>::InsertSlotsAt(index_type aIndex, size_type aCount,
                                           size_type aElemSize,
                                           size_t aElemAlign)
 {
-  MOZ_ASSERT(aIndex <= Length(), "Bogus insertion index");
+  if (MOZ_UNLIKELY(aIndex > Length())) {
+    InvalidArrayIndex_CRASH(aIndex, Length());
+  }
+
   size_type newLen = Length() + aCount;
 
   EnsureCapacity<ActualAlloc>(newLen, aElemSize);

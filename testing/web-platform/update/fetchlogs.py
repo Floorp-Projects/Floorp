@@ -106,12 +106,8 @@ def get_structured_logs(branch, commit, dest=None):
                 prefix = result["platform"] # platform
                 tasks.append((url, prefix, None))
 
-    pool = Pool(8)
-    for item in pool.imap_unordered(download_logs, tasks, 1):
-        pass
-
-def download_logs(args):
-    download(*args)
+    for task in tasks:
+        download(*task)
 
 def main():
     parser = create_parser()

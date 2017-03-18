@@ -6,7 +6,7 @@
 callback = arguments[arguments.length - 1];
 
 function check_done() {
-    if (!document.body.classList.contains('reftest-wait')) {
+    if (!document.documentElement.classList.contains('reftest-wait')) {
         callback();
     } else {
         setTimeout(check_done, 50);

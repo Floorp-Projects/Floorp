@@ -1918,10 +1918,46 @@ policies and contribution forms [3].
         this.notify_complete();
     };
 
+    /*
+     * Determine if any tests share the same `name` property. Return an array
+     * containing the names of any such duplicates.
+     */
+    Tests.prototype.find_duplicates = function() {
+        var names = Object.create(null);
+        var duplicates = [];
+
+        forEach (this.tests,
+                 function(test)
+                 {
+                     if (test.name in names && duplicates.indexOf(test.name) === -1) {
+                        duplicates.push(test.name);
+                     }
+                     names[test.name] = true;
+                 });
+
+        return duplicates;
+    };
+
     Tests.prototype.notify_complete = function() {
         var this_obj = this;
+        var duplicates;
+
         if (this.status.status === null) {
-            this.status.status = this.status.OK;
+            duplicates = this.find_duplicates();
+
+            // Test names are presumed to be unique within test files--this
+            // allows consumers to use them for identification purposes.
+            // Duplicated names violate this expectation and should therefore
+            // be reported as an error.
+            if (duplicates.length) {
+                this.status.status = this.status.ERROR;
+                this.status.message =
+                   duplicates.length + ' duplicate test name' +
+                   (duplicates.length > 1 ? 's' : '') + ': "' +
+                   duplicates.join('", "') + '"';
+            } else {
+                this.status.status = this.status.OK;
+            }
         }
 
         forEach (this.all_done_callbacks,

@@ -1204,8 +1204,7 @@ DownloadsViewItem.prototype = {
 
   cmd_delete() {
     DownloadsCommon.removeAndFinalizeDownload(this.download);
-    PlacesUtils.bhistory.removePage(
-                           NetUtil.newURI(this.download.source.url));
+    PlacesUtils.history.remove(this.download.source.url).catch(Cu.reportError);
   },
 
   downloadsCmd_unblock() {
