@@ -8,7 +8,6 @@
 #include "PublicKeyPinningService.h"
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
-#include "base64.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/PContent.h"

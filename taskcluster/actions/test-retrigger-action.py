@@ -18,10 +18,11 @@ logger = logging.getLogger(__name__)
 
 
 @register_callback_action(
-    title='Schedule mochitest retrigger',
-    symbol='mdr',
-    description="Retriggers the specified mochitest job with additional options",
-    context=[{'test-type': 'mochitest'}],  # mochitest-only
+    title='Schedule test retrigger',
+    symbol='tr',
+    description="Retriggers the specified test job with additional options",
+    context=[{'test-type': 'mochitest'},
+             {'test-type': 'reftest'}],
     order=0,
     schema={
         'type': 'object',
@@ -31,7 +32,7 @@ logger = logging.getLogger(__name__)
                 'maxLength': 255,
                 'default': '',
                 'title': 'Path name',
-                'description': 'Path of mochitest to retrigger'
+                'description': 'Path of test to retrigger'
             },
             'logLevel': {
                 'type': 'string',
@@ -72,7 +73,7 @@ logger = logging.getLogger(__name__)
         'required': ['path']
     }
 )
-def mochitest_retrigger_action(parameters, input, task_group_id, task_id, task):
+def test_retrigger_action(parameters, input, task_group_id, task_id, task):
     new_task_definition = copy.copy(task)
 
     # set new created, deadline, and expiry fields
@@ -87,11 +88,15 @@ def mochitest_retrigger_action(parameters, input, task_group_id, task_id, task):
     # don't want to run mozharness tests, want a custom mach command instead
     new_task_definition['payload']['command'] += ['--no-run-tests']
 
-    custom_mach_command = [
-        'mochitest',
-        '--keep-open=false',
-        '-f', new_task_definition['payload']['env']['MOCHITEST_FLAVOR']
-    ]
+    custom_mach_command = [task['tags']['test-type']]
+
+    # mochitests may specify a flavor
+    if new_task_definition['payload']['env'].get('MOCHITEST_FLAVOR'):
+        custom_mach_command += [
+            '--keep-open=false',
+            '-f',
+            new_task_definition['payload']['env']['MOCHITEST_FLAVOR']
+        ]
 
     enable_e10s = json.loads(new_task_definition['payload']['env'].get(
         'ENABLE_E10S', 'true'))
@@ -101,7 +106,7 @@ def mochitest_retrigger_action(parameters, input, task_group_id, task_id, task):
     custom_mach_command += ['--log-tbpl=-',
                             '--log-tbpl-level={}'.format(input['logLevel'])]
     if input.get('runUntilFail'):
-        custom_mach_command += ['--run-until-fail']
+        custom_mach_command += ['--run-until-failure']
     if input.get('repeat'):
         custom_mach_command += ['--repeat', str(input['repeat'])]
 
@@ -125,4 +130,4 @@ def mochitest_retrigger_action(parameters, input, task_group_id, task_id, task):
     new_task_id = slugid()
     logger.info("Creating new mochitest task with id %s", new_task_id)
     session = requests.Session()
-    create_task(session, new_task_id, 'mochitest-debug', new_task_definition)
+    create_task(session, new_task_id, 'test-retrigger', new_task_definition)

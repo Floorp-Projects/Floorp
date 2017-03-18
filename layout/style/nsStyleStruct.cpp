@@ -2901,7 +2901,7 @@ nsStyleImageLayers::Size::operator==(const Size& aOther) const
 }
 
 nsStyleImageLayers::Layer::Layer()
-  : mClip(StyleGeometryBox::Border)
+  : mClip(StyleGeometryBox::BorderBox)
   , mAttachment(NS_STYLE_IMAGELAYER_ATTACHMENT_SCROLL)
   , mBlendMode(NS_STYLE_BLEND_NORMAL)
   , mComposite(NS_STYLE_MASK_COMPOSITE_ADD)
@@ -2923,10 +2923,10 @@ nsStyleImageLayers::Layer::Initialize(nsStyleImageLayers::LayerType aType)
   mPosition.SetInitialPercentValues(0.0f);
 
   if (aType == LayerType::Background) {
-    mOrigin = StyleGeometryBox::Padding;
+    mOrigin = StyleGeometryBox::PaddingBox;
   } else {
     MOZ_ASSERT(aType == LayerType::Mask, "unsupported layer type.");
-    mOrigin = StyleGeometryBox::Border;
+    mOrigin = StyleGeometryBox::BorderBox;
   }
 }
 
@@ -3269,7 +3269,7 @@ nsStyleDisplay::nsStyleDisplay(const nsPresContext* aContext)
   , mScrollSnapPointsY(eStyleUnit_None)
   , mBackfaceVisibility(NS_STYLE_BACKFACE_VISIBILITY_VISIBLE)
   , mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT)
-  , mTransformBox(NS_STYLE_TRANSFORM_BOX_BORDER_BOX)
+  , mTransformBox(StyleGeometryBox::BorderBox)
   , mSpecifiedTransform(nullptr)
   , mTransformOrigin{ {0.5f, eStyleUnit_Percent}, // Transform is centered on origin
                       {0.5f, eStyleUnit_Percent},

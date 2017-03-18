@@ -52,8 +52,14 @@ add_task(function* () {
       // Test menu items using documentUrlPatterns.
       browser.contextMenus.create({
         title: "documentUrlPatterns-patternMatches-contextAll",
-        documentUrlPatterns: ["*://*/*context.html"],
+        documentUrlPatterns: ["*://*/*context*.html"],
         contexts: ["all"],
+      });
+
+      browser.contextMenus.create({
+        title: "documentUrlPatterns-patternMatches-contextFrame",
+        documentUrlPatterns: ["*://*/*context_frame.html"],
+        contexts: ["frame"],
       });
 
       browser.contextMenus.create({
@@ -245,6 +251,14 @@ add_task(function* () {
     ["documentUrlPatterns-patternDoesNotMatch-contextAll", false],
     ["documentUrlPatterns-patternDoesNotMatch-contextImage", false],
     ["documentUrlPatterns-patternDoesNotMatch-contextLink", false],
+  ];
+  yield confirmContextMenuItems(contextMenu, expected);
+  yield closeContextMenu();
+
+  contextMenu = yield openContextMenuInFrame("frame");
+  expected = [
+    ["documentUrlPatterns-patternMatches-contextAll", true],
+    ["documentUrlPatterns-patternMatches-contextFrame", true],
   ];
   yield confirmContextMenuItems(contextMenu, expected);
   yield closeContextMenu();

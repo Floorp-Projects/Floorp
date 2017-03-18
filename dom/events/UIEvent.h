@@ -93,8 +93,6 @@ public:
 
   int32_t RangeOffset() const;
 
-  bool IsChar() const;
-
 protected:
   ~UIEvent() {}
 
