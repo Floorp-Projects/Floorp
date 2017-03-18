@@ -84,19 +84,19 @@ enum class StyleClear : uint8_t {
   Max = 13  // Max = (Both | Line)
 };
 
-// Define geometry box for clip-path's reference-box, shape-outside's shape
-// box, background-clip, background-origin, mask-clip and mask-origin.
+// Define geometry box for clip-path's reference-box, background-clip,
+// background-origin, mask-clip, mask-origin, shape-box and transform-box.
 enum class StyleGeometryBox : uint8_t {
-  Content,
-  Padding,
-  Border,
-  Margin,  // XXX Bug 1260094 comment 9.
-           // Although margin-box is required by mask-origin and mask-clip, we
-           // do not implement that due to lack of support in other browsers.
-           // clip-path reference-box only.
-  Fill,    // mask-clip, mask-origin and clip-path reference-box only.
-  Stroke,  // mask-clip, mask-origin and clip-path reference-box only.
-  View,    // mask-clip, mask-origin and clip-path reference-box only.
+  ContentBox, // Used by everything, except transform-box.
+  PaddingBox, // Used by everything, except transform-box.
+  BorderBox,
+  MarginBox,  // XXX Bug 1260094 comment 9.
+              // Although margin-box is required by mask-origin and mask-clip,
+              // we do not implement that due to lack of support in other
+              // browsers. clip-path reference-box only.
+  FillBox,    // Used by everything, except shape-box.
+  StrokeBox,  // mask-clip, mask-origin and clip-path reference-box only.
+  ViewBox,    // Used by everything, except shape-box.
   NoClip,  // mask-clip only.
   Text,    // background-clip only.
   NoBox,   // Depending on which kind of element this style value applied on,
@@ -897,11 +897,6 @@ enum class StyleGridTrackBreadth : uint8_t {
 // See nsStyleDisplay
 #define NS_STYLE_TOP_LAYER_NONE   0 // not in the top layer
 #define NS_STYLE_TOP_LAYER_TOP    1 // in the top layer
-
-// See nsStyleDisplay
-#define NS_STYLE_TRANSFORM_BOX_BORDER_BOX                0
-#define NS_STYLE_TRANSFORM_BOX_FILL_BOX                  1
-#define NS_STYLE_TRANSFORM_BOX_VIEW_BOX                  2
 
 // See nsStyleDisplay
 #define NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE         0

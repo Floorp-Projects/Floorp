@@ -255,7 +255,7 @@ public:
   virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>& aControllerResult) = 0;
   virtual void ScanForControllers() = 0;
   virtual void RemoveControllers() = 0;
-  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed);
+  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed, double aValue);
   void NewAxisMove(uint32_t aIndex, uint32_t aAxis, double aValue);
   void NewPoseState(uint32_t aIndex, const dom::GamepadPoseState& aPose);
   void AddGamepad(const VRControllerInfo& controllerInfo);
@@ -266,15 +266,6 @@ protected:
   virtual ~VRSystemManager() { }
 
   uint32_t mControllerCount;
-
-private:
-  virtual void HandleButtonPress(uint32_t aControllerIdx,
-                                 uint64_t aButtonPressed) = 0;
-  virtual void HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
-                              float aValue) = 0;
-  virtual void HandlePoseTracking(uint32_t aControllerIdx,
-                                  const dom::GamepadPoseState& aPose,
-                                  VRControllerHost* aController) = 0;
 };
 
 } // namespace gfx

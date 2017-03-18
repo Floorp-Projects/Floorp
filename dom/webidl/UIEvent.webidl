@@ -34,7 +34,6 @@ partial interface UIEvent {
   readonly attribute unsigned long which;
   readonly attribute Node?         rangeParent;
   readonly attribute long          rangeOffset;
-  readonly attribute boolean       isChar;
 };
 
 dictionary UIEventInit : EventInit

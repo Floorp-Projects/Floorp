@@ -16,7 +16,6 @@ PL_*
 #include ../db/sqlite3/src/sqlite.symbols
 ATOB_AsciiToData
 ATOB_AsciiToData_Util
-ATOB_ConvertAsciiToItem
 ATOB_ConvertAsciiToItem_Util
 BTOA_ConvertItemToAscii_Util
 BTOA_DataToAscii
@@ -180,7 +179,6 @@ HASH_GetType
 HASH_HashBuf
 HASH_ResultLenByOidTag
 HASH_Update
-NSSBase64_DecodeBuffer
 NSSBase64_EncodeItem_Util
 NSS_CMSContentInfo_GetContent
 NSS_CMSContentInfo_SetContent_Data
@@ -509,7 +507,6 @@ SECITEM_AllocArray
 SECITEM_AllocItem
 SECITEM_AllocItem_Util
 SECITEM_ArenaDupItem_Util
-SECITEM_CompareItem
 SECITEM_CompareItem_Util
 SECITEM_CopyItem
 SECITEM_CopyItem_Util
