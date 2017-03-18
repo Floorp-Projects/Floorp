@@ -2647,6 +2647,22 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     return this.layoutActor;
   },
+
+  /**
+   * Get the offset parent of the node
+   * If the offset parent is statically positioned, there is no offset parent
+   * and null is returned.
+   * Returns the DOMNode for the offset parent if it exists
+   */
+  getOffsetParent: function (domnode) {
+    let offsetParent = domnode.rawNode.offsetParent;
+
+    if (!offsetParent || CssLogic.getComputedStyle(offsetParent).position === "static") {
+      return null;
+    }
+
+    return this._ref(offsetParent);
+  },
 });
 
 /**
