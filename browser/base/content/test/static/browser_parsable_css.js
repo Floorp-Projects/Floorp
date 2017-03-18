@@ -107,30 +107,6 @@ function once(target, name) {
   });
 }
 
-function fetchFile(uri) {
-  return new Promise((resolve, reject) => {
-    let xhr = new XMLHttpRequest();
-    xhr.responseType = "text";
-    xhr.open("GET", uri, true);
-    xhr.onreadystatechange = function() {
-      if (this.readyState != this.DONE) {
-        return;
-      }
-      try {
-        resolve(this.responseText);
-      } catch (ex) {
-        ok(false, `Script error reading ${uri}: ${ex}`);
-        resolve("");
-      }
-    };
-    xhr.onerror = error => {
-      ok(false, `XHR error reading ${uri}: ${error}`);
-      resolve("");
-    };
-    xhr.send(null);
-  });
-}
-
 var gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
                  .getService(Ci.nsIChromeRegistry);
 var gChromeMap = new Map();
