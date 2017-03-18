@@ -4,7 +4,8 @@
 
 "use strict";
 
-const { addons, createClass, createFactory, DOM: dom, PropTypes } = require("devtools/client/shared/vendor/react");
+const { addons, createClass, createFactory, DOM: dom, PropTypes } =
+  require("devtools/client/shared/vendor/react");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 
 // Reps
