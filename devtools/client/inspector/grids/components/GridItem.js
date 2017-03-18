@@ -137,7 +137,7 @@ module.exports = createClass({
             object: this.translateNodeFrontToGrip(nodeFront),
             onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
             onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
-            onInspectIconClick: () => setSelectedNode(nodeFront),
+            onInspectIconClick: () => setSelectedNode(nodeFront, "layout-panel"),
           }
         )
       ),
