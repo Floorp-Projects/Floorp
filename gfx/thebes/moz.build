@@ -145,6 +145,8 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'PrintTargetWindows.h',
     ]
     SOURCES += [
+        'gfxDWriteCommon.cpp',
+        'gfxDWriteFonts.cpp',
         'gfxGDIFont.cpp',
         'gfxGDIFontList.cpp',
         'gfxWindowsNativeDrawing.cpp',
@@ -153,14 +155,9 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'PrintTargetPDF.cpp',
         'PrintTargetWindows.cpp',
     ]
-    if CONFIG['MOZ_ENABLE_DWRITE_FONT']:
-        UNIFIED_SOURCES += [
-            'gfxDWriteFontList.cpp',
-        ]
-        SOURCES += [
-            'gfxDWriteCommon.cpp',
-            'gfxDWriteFonts.cpp',
-        ]
+    UNIFIED_SOURCES += [
+        'gfxDWriteFontList.cpp',
+    ]
 
 # Are we targeting x86 or x64?  If so, build gfxAlphaRecoverySSE2.cpp.
 if CONFIG['INTEL_ARCHITECTURE']:
