@@ -654,7 +654,7 @@ fails == 372037-1.html 372037-1.html
 == 372062-1.html 372062-1.html
 == 372063-1.html 372063-1.html
 == 372323-1.xhtml 372323-1.xhtml
-fails == 372553-1.html 372553-1.html
+== 372553-1.html 372553-1.html
 == 372632-1.html 372632-1.html
 fails == 372768-1.html 372768-1.html
 == 373295-1.html 373295-1.html
@@ -709,7 +709,7 @@ fails == 379461-3-container-xhtml.html 379461-3-container-xhtml.html # Bug 13410
 fails == 379461-3-container-xhtml.html 379461-3-container-xhtml.html # Bug 1341095
 == 380004-1.html 380004-1.html
 == 380227-1.html 380227-1.html
-fails == 380825-1.html 380825-1.html
+== 380825-1.html 380825-1.html
 == 380842-1.html 380842-1.html
 == 381130-1.html 381130-1.html
 fails == 381507-1.html 381507-1.html
@@ -769,7 +769,7 @@ fails == 386470-1c.html 386470-1c.html  # Bug 1341725
 == 387876-3a.html 387876-3a.html
 == 387876-3b.html 387876-3b.html
 == 388026-1.html 388026-1.html
-fails == 389074-1.html 389074-1.html
+== 389074-1.html 389074-1.html
 == 389224-1.html 389224-1.html
 == 389224-2.html 389224-2.html
 fails == 389468-1.html 389468-1.html
@@ -943,7 +943,7 @@ fuzzy-if(winWidget,123,1600) == 409659-1a.html 409659-1a.html
 fails == 409659-1c.html 409659-1c.html
 fuzzy-if(winWidget,123,1900) == 409659-1d.html 409659-1d.html
 == 410621-1.html 410621-1.html
-fails == 411059-1.html 411059-1.html
+== 411059-1.html 411059-1.html
 == 411334-1.xml 411334-1.xml
 == 411367-1.html 411367-1.html
 == 411367-2.html 411367-2.html
@@ -1020,12 +1020,12 @@ fails == 421710-1.html 421710-1.html
 fails-if(Android) fails-if(usesRepeatResampling) == 421885-1.xml 421885-1.xml
 == 421955-1.html 421955-1.html
 fails == 422249-1.html 422249-1.html
-fails == 422394-1.html 422394-1.html
+== 422394-1.html 422394-1.html
 fails == 422678-1.html 422678-1.html
 == 423130-1.html 423130-1.html
 == 423385-1.html 423385-1.html
 fails == 423599-1.html 423599-1.html
-fails == 423676-1.html 423676-1.html
+== 423676-1.html 423676-1.html
 fails == 423823-1.html 423823-1.html
 == 424074-1.xul 424074-1.xul
 fails-if(Android) == 424074-1.xul 424074-1.xul
@@ -1672,7 +1672,7 @@ fails == 641770-1.html 641770-1.html
 == 641856-1.html 641856-1.html
 fails == 645491-1.html 645491-1.html
 fails == 645647-1.html 645647-1.html
-fails == 645647-2.html 645647-2.html
+== 645647-2.html 645647-2.html
 fails == 645768-1.html 645768-1.html
 == 650228-1.html 650228-1.html
 fails needs-focus == 652301-1a.html 652301-1a.html
@@ -1797,7 +1797,7 @@ fails == 897491-2.html 897491-2.html
 == 931853-quirks.html 931853-quirks.html
 fails == 933264-1.html 933264-1.html
 == 936670-1.svg 936670-1.svg
-fails == 941940-1.html 941940-1.html
+== 941940-1.html 941940-1.html
 fails == 942017.html 942017.html
 fails == 942672-1.html 942672-1.html
 == 953334-win32-clipping.html 953334-win32-clipping.html
@@ -1827,7 +1827,7 @@ fails == 992447.html 992447.html
 == 1003425-1.html 1003425-1.html
 == 1003425-2.html 1003425-2.html
 == 1005405-1.html 1005405-1.html
-fails == 1012640-1.html 1012640-1.html
+== 1012640-1.html 1012640-1.html
 == 1013054-1.html 1013054-1.html
 == 1018522-1.html 1018522-1.html
 == 1021564-1.html 1021564-1.html

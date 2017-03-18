@@ -37,62 +37,62 @@ fails == 443616-1b.html 443616-1b.html
 == 448111-1.html 448111-1.html
 fails == 490174-1.html 490174-1.html
 == 695538-1.html 695538-1.html
-fails == infer-first-row.html infer-first-row.html
-fails == infer-first-row-and-table.html infer-first-row-and-table.html
-fails == infer-second-row.html infer-second-row.html
-fails == infer-second-row-and-table.html infer-second-row-and-table.html
-fails == infer-table-around-headers-footers-1.html infer-table-around-headers-footers-1.html
-fails == infer-table-around-headers-footers-2.html infer-table-around-headers-footers-2.html
-fails == infer-table-around-headers-footers-3.html infer-table-around-headers-footers-3.html
-fails == infer-rows-inside-rowgroups.html infer-rows-inside-rowgroups.html
-fails == infer-table-row-cell.html infer-table-row-cell.html
-fails == infer-table.html infer-table.html
+== infer-first-row.html infer-first-row.html
+== infer-first-row-and-table.html infer-first-row-and-table.html
+== infer-second-row.html infer-second-row.html
+== infer-second-row-and-table.html infer-second-row-and-table.html
+== infer-table-around-headers-footers-1.html infer-table-around-headers-footers-1.html
+== infer-table-around-headers-footers-2.html infer-table-around-headers-footers-2.html
+== infer-table-around-headers-footers-3.html infer-table-around-headers-footers-3.html
+== infer-rows-inside-rowgroups.html infer-rows-inside-rowgroups.html
+== infer-table-row-cell.html infer-table-row-cell.html
+== infer-table.html infer-table.html
 fails == 3-tables-ref.html 3-tables-ref.html # Bug 1341775
 fails == 3-tables-ref.html 3-tables-ref.html # Bug 1341775
-fails == blocks-divide-tables-1.html blocks-divide-tables-1.html
-fails == blocks-divide-tables-2.html blocks-divide-tables-2.html
-fails == infer-cells-1.html infer-cells-1.html
-fails == infer-cells-2.html infer-cells-2.html
-fails == infer-cells-3.html infer-cells-3.html
-fails == infer-cells-4.html infer-cells-4.html
-fails == cols-test-1.html cols-test-1.html
-fails == cols-test-2.html cols-test-2.html
-fails == cols-test-3.html cols-test-3.html
+== blocks-divide-tables-1.html blocks-divide-tables-1.html
+== blocks-divide-tables-2.html blocks-divide-tables-2.html
+== infer-cells-1.html infer-cells-1.html
+== infer-cells-2.html infer-cells-2.html
+== infer-cells-3.html infer-cells-3.html
+== infer-cells-4.html infer-cells-4.html
+== cols-test-1.html cols-test-1.html
+== cols-test-2.html cols-test-2.html
+== cols-test-3.html cols-test-3.html
 == dynamic-abs-pos-tbody.html dynamic-abs-pos-tbody.html
-fails == dynamic-removal-1.html dynamic-removal-1.html # Bug 1341775
-fails == dynamic-removal-2.html dynamic-removal-2.html # Bug 1341775
-fails == dynamic-removal-3.html dynamic-removal-3.html # Bug 1341775
-fails == dynamic-removal-4.html dynamic-removal-4.html
-fails == dynamic-removal-5.html dynamic-removal-5.html
-fails == dynamic-removal-6.html dynamic-removal-6.html
-fails == dynamic-removal-7.html dynamic-removal-7.html
-fails == dynamic-removal-8.html dynamic-removal-8.html
+== dynamic-removal-1.html dynamic-removal-1.html # Bug 1341775
+== dynamic-removal-2.html dynamic-removal-2.html # Bug 1341775
+== dynamic-removal-3.html dynamic-removal-3.html # Bug 1341775
+== dynamic-removal-4.html dynamic-removal-4.html
+== dynamic-removal-5.html dynamic-removal-5.html
+== dynamic-removal-6.html dynamic-removal-6.html
+== dynamic-removal-7.html dynamic-removal-7.html
+== dynamic-removal-8.html dynamic-removal-8.html
 == dynamic-removal-9.html dynamic-removal-9.html
 == dynamic-removal-10.html dynamic-removal-10.html
 == dynamic-removal-11.html dynamic-removal-11.html
 == dynamic-removal-12.html dynamic-removal-12.html
-fails == dynamic-removal-13.html dynamic-removal-13.html
-fails == dynamic-removal-14.html dynamic-removal-14.html
-fails == dynamic-removal-15.html dynamic-removal-15.html
-fails == dynamic-removal-16.html dynamic-removal-16.html
-fails == dynamic-removal-17.html dynamic-removal-17.html
-fails == dynamic-insert-cell-1.html dynamic-insert-cell-1.html
-fails == dynamic-switch-block-to-cell-1.html dynamic-switch-block-to-cell-1.html
-fails == dynamic-switch-block-to-cell-2.html dynamic-switch-block-to-cell-2.html
-fails == dynamic-switch-block-to-cell-3.html dynamic-switch-block-to-cell-3.html
-fails == dynamic-switch-block-to-cell-4.html dynamic-switch-block-to-cell-4.html
-fails == dynamic-switch-block-to-cell-5.html dynamic-switch-block-to-cell-5.html
-fails == dynamic-switch-inline-to-cell-1.html dynamic-switch-inline-to-cell-1.html
-fails == dynamic-switch-inline-to-cell-2.html dynamic-switch-inline-to-cell-2.html
-fails == dynamic-switch-inline-to-cell-3.html dynamic-switch-inline-to-cell-3.html
-fails == dynamic-switch-inline-to-cell-4.html dynamic-switch-inline-to-cell-4.html
-fails == dynamic-switch-inline-to-cell-5.html dynamic-switch-inline-to-cell-5.html
-fails == white-space-1.html white-space-1.html
-fails == white-space-2.html white-space-2.html # Bug 1341775
-fails == white-space-3.html white-space-3.html
-fails == white-space-4.html white-space-4.html
-fails == white-space-5.html white-space-5.html
-fails == white-space-6.html white-space-6.html
+== dynamic-removal-13.html dynamic-removal-13.html
+== dynamic-removal-14.html dynamic-removal-14.html
+== dynamic-removal-15.html dynamic-removal-15.html
+== dynamic-removal-16.html dynamic-removal-16.html
+== dynamic-removal-17.html dynamic-removal-17.html
+== dynamic-insert-cell-1.html dynamic-insert-cell-1.html
+== dynamic-switch-block-to-cell-1.html dynamic-switch-block-to-cell-1.html
+== dynamic-switch-block-to-cell-2.html dynamic-switch-block-to-cell-2.html
+== dynamic-switch-block-to-cell-3.html dynamic-switch-block-to-cell-3.html
+== dynamic-switch-block-to-cell-4.html dynamic-switch-block-to-cell-4.html
+== dynamic-switch-block-to-cell-5.html dynamic-switch-block-to-cell-5.html
+== dynamic-switch-inline-to-cell-1.html dynamic-switch-inline-to-cell-1.html
+== dynamic-switch-inline-to-cell-2.html dynamic-switch-inline-to-cell-2.html
+== dynamic-switch-inline-to-cell-3.html dynamic-switch-inline-to-cell-3.html
+== dynamic-switch-inline-to-cell-4.html dynamic-switch-inline-to-cell-4.html
+== dynamic-switch-inline-to-cell-5.html dynamic-switch-inline-to-cell-5.html
+== white-space-1.html white-space-1.html
+== white-space-2.html white-space-2.html # Bug 1341775
+== white-space-3.html white-space-3.html
+== white-space-4.html white-space-4.html
+== white-space-5.html white-space-5.html
+== white-space-6.html white-space-6.html
 == white-space-7.html white-space-7.html
 == white-space-8.html white-space-8.html
 == white-space-9.html white-space-9.html
@@ -113,4 +113,4 @@ fails == white-space-6.html white-space-6.html
 == white-space-24.html white-space-24.html
 == white-space-25.html white-space-25.html
 == white-space-26.html white-space-26.html
-fails == white-space-pre-1.html white-space-pre-1.html
+== white-space-pre-1.html white-space-pre-1.html
