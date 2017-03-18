@@ -114,14 +114,11 @@
 #include <limits>
 
 #include "nsIColorPicker.h"
-#include "nsIDatePicker.h"
 #include "nsIStringEnumerator.h"
 #include "HTMLSplitOnSpacesTokenizer.h"
 #include "nsIController.h"
 #include "nsIMIMEInfo.h"
 #include "nsFrameSelection.h"
-
-#include "nsIConsoleService.h"
 
 // input type=date
 #include "js/Date.h"
@@ -547,8 +544,8 @@ GetDOMFileOrDirectoryPath(const OwningFileOrDirectory& aData,
 bool
 HTMLInputElement::ValueAsDateEnabled(JSContext* cx, JSObject* obj)
 {
-  return IsExperimentalFormsEnabled() || IsDatePickerEnabled() ||
-         IsInputDateTimeEnabled();
+  return IsExperimentalFormsEnabled() || IsInputDateTimeEnabled() ||
+    IsInputDateTimeOthersEnabled();
 }
 
 NS_IMETHODIMP
@@ -751,60 +748,6 @@ nsColorPickerShownCallback::Done(const nsAString& aColor)
 
 NS_IMPL_ISUPPORTS(nsColorPickerShownCallback, nsIColorPickerShownCallback)
 
-class DatePickerShownCallback final : public nsIDatePickerShownCallback
-{
-  ~DatePickerShownCallback() {}
-public:
-  DatePickerShownCallback(HTMLInputElement* aInput,
-                          nsIDatePicker* aDatePicker)
-    : mInput(aInput)
-    , mDatePicker(aDatePicker)
-  {}
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Done(const nsAString& aDate) override;
-  NS_IMETHOD Cancel() override;
-
-private:
-  RefPtr<HTMLInputElement> mInput;
-  nsCOMPtr<nsIDatePicker> mDatePicker;
-};
-
-NS_IMETHODIMP
-DatePickerShownCallback::Cancel()
-{
-  mInput->PickerClosed();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DatePickerShownCallback::Done(const nsAString& aDate)
-{
-  nsAutoString oldValue;
-
-  mInput->PickerClosed();
-  mInput->GetValue(oldValue, CallerType::System);
-
-  if(!oldValue.Equals(aDate)){
-    IgnoredErrorResult rv;
-    mInput->SetValue(aDate, CallerType::System, rv);
-    nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
-                            static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
-                            NS_LITERAL_STRING("input"), true,
-                            false);
-    return nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
-                            static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
-                            NS_LITERAL_STRING("change"), true,
-                            false);
-  }
-
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(DatePickerShownCallback, nsIDatePickerShownCallback)
-
-
 bool
 HTMLInputElement::IsPopupBlocked() const
 {
@@ -827,56 +770,6 @@ HTMLInputElement::IsPopupBlocked() const
   uint32_t permission;
   pm->TestPermission(OwnerDoc()->NodePrincipal(), &permission);
   return permission == nsIPopupWindowManager::DENY_POPUP;
-}
-
-nsresult
-HTMLInputElement::InitDatePicker()
-{
-  if (!IsDatePickerEnabled()) {
-    return NS_OK;
-  }
-
-  if (mPickerRunning) {
-    NS_WARNING("Just one nsIDatePicker is allowed");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIDocument> doc = OwnerDoc();
-
-  nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
-  if (!win) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (IsPopupBlocked()) {
-    win->FirePopupBlockedEvent(doc, nullptr, EmptyString(), EmptyString());
-    return NS_OK;
-  }
-
-  // Get Loc title
-  nsXPIDLString title;
-  nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                     "DatePicker", title);
-
-  nsresult rv;
-  nsCOMPtr<nsIDatePicker> datePicker = do_CreateInstance("@mozilla.org/datepicker;1", &rv);
-  if (!datePicker) {
-    return rv;
-  }
-
-  nsAutoString initialValue;
-  GetNonFileValueInternal(initialValue);
-  rv = datePicker->Init(win, title, initialValue);
-
-  nsCOMPtr<nsIDatePickerShownCallback> callback =
-    new DatePickerShownCallback(this, datePicker);
-
-  rv = datePicker->Open(callback);
-  if (NS_SUCCEEDED(rv)) {
-    mPickerRunning = true;
-  }
-
-  return rv;
 }
 
 nsresult
@@ -2548,9 +2441,8 @@ HTMLInputElement::ApplyStep(int32_t aStep)
 bool
 HTMLInputElement::IsExperimentalMobileType(uint8_t aType)
 {
-  return (aType == NS_FORM_INPUT_DATE &&
-    !IsInputDateTimeEnabled() && !IsDatePickerEnabled()) ||
-    (aType == NS_FORM_INPUT_TIME && !IsInputDateTimeEnabled());
+  return (aType == NS_FORM_INPUT_DATE || aType == NS_FORM_INPUT_TIME) &&
+    !IsInputDateTimeEnabled();
 }
 
 bool
@@ -4383,9 +4275,6 @@ HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor)
   if (mType == NS_FORM_INPUT_COLOR) {
     return InitColorPicker();
   }
-  if (mType == NS_FORM_INPUT_DATE) {
-    return InitDatePicker();
-  }
 
   return NS_OK;
 }
@@ -5816,15 +5705,13 @@ HTMLInputElement::ParseTime(const nsAString& aValue, uint32_t* aResult)
 /* static */ bool
 HTMLInputElement::IsDateTimeTypeSupported(uint8_t aDateTimeInputType)
 {
-  return (aDateTimeInputType == NS_FORM_INPUT_DATE &&
-          (IsInputDateTimeEnabled() || IsExperimentalFormsEnabled() ||
-           IsDatePickerEnabled())) ||
-         (aDateTimeInputType == NS_FORM_INPUT_TIME &&
+  return ((aDateTimeInputType == NS_FORM_INPUT_DATE ||
+           aDateTimeInputType == NS_FORM_INPUT_TIME) &&
           (IsInputDateTimeEnabled() || IsExperimentalFormsEnabled())) ||
          ((aDateTimeInputType == NS_FORM_INPUT_MONTH ||
            aDateTimeInputType == NS_FORM_INPUT_WEEK ||
            aDateTimeInputType == NS_FORM_INPUT_DATETIME_LOCAL) &&
-          IsInputDateTimeEnabled());
+          IsInputDateTimeOthersEnabled());
 }
 
 /* static */ bool
@@ -5872,20 +5759,6 @@ HTMLInputElement::IsDirPickerEnabled()
 }
 
 /* static */ bool
-HTMLInputElement::IsDatePickerEnabled()
-{
-  static bool sDatePickerEnabled = false;
-  static bool sDatePickerPrefCached = false;
-  if (!sDatePickerPrefCached) {
-    sDatePickerPrefCached = true;
-    Preferences::AddBoolVarCache(&sDatePickerEnabled, "dom.forms.datepicker",
-                                 false);
-  }
-
-  return sDatePickerEnabled;
-}
-
-/* static */ bool
 HTMLInputElement::IsExperimentalFormsEnabled()
 {
   static bool sExperimentalFormsEnabled = false;
@@ -5912,6 +5785,20 @@ HTMLInputElement::IsInputDateTimeEnabled()
   }
 
   return sDateTimeEnabled;
+}
+
+/* static */ bool
+HTMLInputElement::IsInputDateTimeOthersEnabled()
+{
+  static bool sDateTimeOthersEnabled = false;
+  static bool sDateTimeOthersPrefCached = false;
+  if (!sDateTimeOthersPrefCached) {
+    sDateTimeOthersPrefCached = true;
+    Preferences::AddBoolVarCache(&sDateTimeOthersEnabled,
+                                 "dom.forms.datetime.others", false);
+  }
+
+  return sDateTimeOthersEnabled;
 }
 
 /* static */ bool
@@ -5963,12 +5850,9 @@ HTMLInputElement::ParseAttribute(int32_t aNamespaceID,
     if (aAttribute == nsGkAtoms::type) {
       aResult.ParseEnumValue(aValue, kInputTypeTable, false, kInputDefaultType);
       int32_t newType = aResult.GetEnumValue();
-      if ((IsExperimentalMobileType(newType) &&
-           !IsExperimentalFormsEnabled()) ||
-          (newType == NS_FORM_INPUT_NUMBER && !IsInputNumberEnabled()) ||
+      if ((newType == NS_FORM_INPUT_NUMBER && !IsInputNumberEnabled()) ||
           (newType == NS_FORM_INPUT_COLOR && !IsInputColorEnabled()) ||
-          (IsDateTimeInputType(newType) &&
-           !IsDateTimeTypeSupported(newType))) {
+          (IsDateTimeInputType(newType) && !IsDateTimeTypeSupported(newType))) {
         // There's no public way to set an nsAttrValue to an enum value, but we
         // can just re-parse with a table that doesn't have any types other than
         // "text" in it.

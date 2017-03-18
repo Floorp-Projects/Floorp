@@ -92,17 +92,21 @@ mozJSSubScriptLoader::~mozJSSubScriptLoader()
 NS_IMPL_ISUPPORTS(mozJSSubScriptLoader, mozIJSSubScriptLoader)
 
 static void
-ReportError(JSContext* cx, const char* msg)
+ReportError(JSContext* cx, const nsACString& msg)
 {
-    RootedValue exn(cx, JS::StringValue(JS_NewStringCopyZ(cx, msg)));
-    JS_SetPendingException(cx, exn);
+    NS_ConvertUTF8toUTF16 ucMsg(msg);
+
+    RootedValue exn(cx);
+    if (xpc::NonVoidStringToJsval(cx, ucMsg, &exn)) {
+        JS_SetPendingException(cx, exn);
+    }
 }
 
 static void
 ReportError(JSContext* cx, const char* origMsg, nsIURI* uri)
 {
     if (!uri) {
-        ReportError(cx, origMsg);
+        ReportError(cx, nsDependentCString(origMsg));
         return;
     }
 
@@ -114,7 +118,7 @@ ReportError(JSContext* cx, const char* origMsg, nsIURI* uri)
     nsAutoCString msg(origMsg);
     msg.Append(": ");
     msg.Append(spec);
-    ReportError(cx, msg.get());
+    ReportError(cx, msg);
 }
 
 bool
@@ -620,7 +624,7 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
                           : nullptr;
     nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
     if (!serv) {
-        ReportError(cx, LOAD_ERROR_NOSERVICE);
+        ReportError(cx, NS_LITERAL_CSTRING(LOAD_ERROR_NOSERVICE));
         return NS_OK;
     }
 
@@ -628,13 +632,13 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
     // canonicalized spec.
     rv = NS_NewURI(getter_AddRefs(uri), NS_LossyConvertUTF16toASCII(url).get(), nullptr, serv);
     if (NS_FAILED(rv)) {
-        ReportError(cx, LOAD_ERROR_NOURI);
+        ReportError(cx, NS_LITERAL_CSTRING(LOAD_ERROR_NOURI));
         return NS_OK;
     }
 
     rv = uri->GetSpec(uriStr);
     if (NS_FAILED(rv)) {
-        ReportError(cx, LOAD_ERROR_NOSPEC);
+        ReportError(cx, NS_LITERAL_CSTRING(LOAD_ERROR_NOSPEC));
         return NS_OK;
     }
 

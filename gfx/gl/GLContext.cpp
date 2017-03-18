@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <regex>
+#include <string>
 #include <vector>
 #ifdef MOZ_WIDGET_ANDROID
 #include <sys/mman.h>
@@ -89,6 +91,7 @@ static const char* const sExtensionNames[] = {
     "GL_ARB_ES2_compatibility",
     "GL_ARB_ES3_compatibility",
     "GL_ARB_color_buffer_float",
+    "GL_ARB_compatibility",
     "GL_ARB_copy_buffer",
     "GL_ARB_depth_texture",
     "GL_ARB_draw_buffers",
@@ -195,220 +198,18 @@ static const char* const sExtensionNames[] = {
 };
 
 static bool
-ParseGLSLVersion(GLContext* gl, uint32_t* out_version)
+ParseVersion(const std::string& versionStr, uint32_t* const out_major,
+             uint32_t* const out_minor)
 {
-    if (gl->fGetError() != LOCAL_GL_NO_ERROR) {
-        MOZ_ASSERT(false, "An OpenGL error has been triggered before.");
+    static const std::regex kVersionRegex("([0-9]+)\\.([0-9]+)");
+    std::smatch match;
+    if (!std::regex_search(versionStr, match, kVersionRegex))
         return false;
-    }
 
-    /**
-     * OpenGL 2.x, 3.x, 4.x specifications:
-     *  The VERSION and SHADING_LANGUAGE_VERSION strings are laid out as follows:
-     *
-     *    <version number><space><vendor-specific information>
-     *
-     *  The version number is either of the form major_number.minor_number or
-     *  major_number.minor_number.release_number, where the numbers all have
-     *  one or more digits.
-     *
-     * SHADING_LANGUAGE_VERSION is *almost* identical to VERSION. The
-     * difference is that the minor version always has two digits and the
-     * prefix has an additional 'GLSL ES'
-     *
-     *
-     * OpenGL ES 2.0, 3.0 specifications:
-     *  The VERSION string is laid out as follows:
-     *
-     *     "OpenGL ES N.M vendor-specific information"
-     *
-     *  The version number is either of the form major_number.minor_number or
-     *  major_number.minor_number.release_number, where the numbers all have
-     *  one or more digits.
-     *
-     *
-     * Note:
-     *  We don't care about release_number.
-     */
-    const char* versionString = (const char*) gl->fGetString(LOCAL_GL_SHADING_LANGUAGE_VERSION);
-
-    if (gl->fGetError() != LOCAL_GL_NO_ERROR) {
-        MOZ_ASSERT(false, "glGetString(GL_SHADING_LANGUAGE_VERSION) has generated an error");
-        return false;
-    }
-
-    if (!versionString) {
-        // This happens on the Android emulators. We'll just return 100
-        *out_version = 100;
-        return true;
-    }
-
-    const auto fnSkipPrefix = [&versionString](const char* prefix) {
-        const auto len = strlen(prefix);
-        if (strncmp(versionString, prefix, len) == 0)
-            versionString += len;
-    };
-
-    const char kGLESVersionPrefix[] = "OpenGL ES GLSL ES";
-    fnSkipPrefix(kGLESVersionPrefix);
-
-    if (gl->WorkAroundDriverBugs()) {
-        // Nexus 7 2013 (bug 1234441)
-        const char kBadGLESVersionPrefix[] = "OpenGL ES GLSL";
-        fnSkipPrefix(kBadGLESVersionPrefix);
-    }
-
-    const char* itr = versionString;
-    char* end = nullptr;
-    auto majorVersion = strtol(itr, &end, 10);
-
-    if (!end) {
-        MOZ_ASSERT(false, "Failed to parse the GL major version number.");
-        return false;
-    }
-
-    if (*end != '.') {
-        MOZ_ASSERT(false, "Failed to parse GL's major-minor version number separator.");
-        return false;
-    }
-
-    // we skip the '.' between the major and the minor version
-    itr = end + 1;
-    end = nullptr;
-
-    auto minorVersion = strtol(itr, &end, 10);
-    if (!end) {
-        MOZ_ASSERT(false, "Failed to parse GL's minor version number.");
-        return false;
-    }
-
-    if (majorVersion <= 0 || majorVersion >= 100) {
-        MOZ_ASSERT(false, "Invalid major version.");
-        return false;
-    }
-
-    if (minorVersion < 0 || minorVersion >= 100) {
-        MOZ_ASSERT(false, "Invalid minor version.");
-        return false;
-    }
-
-    *out_version = (uint32_t) majorVersion * 100 + (uint32_t) minorVersion;
-    return true;
-}
-
-static bool
-ParseGLVersion(GLContext* gl, uint32_t* out_version)
-{
-    if (gl->fGetError() != LOCAL_GL_NO_ERROR) {
-        MOZ_ASSERT(false, "An OpenGL error has been triggered before.");
-        return false;
-    }
-
-    /**
-     * B2G emulator bug work around: The emulator implements OpenGL ES 2.0 on
-     * OpenGL 3.2. The bug is that GetIntegerv(LOCAL_GL_{MAJOR,MINOR}_VERSION)
-     * returns OpenGL 3.2 instead of generating an error.
-     */
-    if (!gl->IsGLES()) {
-        /**
-         * OpenGL 3.1 and OpenGL ES 3.0 both introduce GL_{MAJOR,MINOR}_VERSION
-         * with GetIntegerv. So we first try those constants even though we
-         * might not have an OpenGL context supporting them, as this is a
-         * better way than parsing GL_VERSION.
-         */
-        GLint majorVersion = 0;
-        GLint minorVersion = 0;
-
-        const bool ok = (gl->GetPotentialInteger(LOCAL_GL_MAJOR_VERSION,
-                                                 &majorVersion) &&
-                         gl->GetPotentialInteger(LOCAL_GL_MINOR_VERSION,
-                                                 &minorVersion));
-
-        // If it's not an OpenGL (ES) 3.0 context, we will have an error
-        if (ok &&
-            majorVersion > 0 &&
-            minorVersion >= 0)
-        {
-            *out_version = majorVersion * 100 + minorVersion * 10;
-            return true;
-        }
-    }
-
-    /**
-     * We were not able to use GL_{MAJOR,MINOR}_VERSION, so we parse
-     * GL_VERSION.
-     *
-     *
-     * OpenGL 2.x, 3.x, 4.x specifications:
-     *  The VERSION and SHADING_LANGUAGE_VERSION strings are laid out as follows:
-     *
-     *    <version number><space><vendor-specific information>
-     *
-     *  The version number is either of the form major_number.minor_number or
-     *  major_number.minor_number.release_number, where the numbers all have
-     *  one or more digits.
-     *
-     *
-     * OpenGL ES 2.0, 3.0 specifications:
-     *  The VERSION string is laid out as follows:
-     *
-     *     "OpenGL ES N.M vendor-specific information"
-     *
-     *  The version number is either of the form major_number.minor_number or
-     *  major_number.minor_number.release_number, where the numbers all have
-     *  one or more digits.
-     *
-     *
-     * Note:
-     *  We don't care about release_number.
-     */
-    const char* versionString = (const char*)gl->fGetString(LOCAL_GL_VERSION);
-
-    if (gl->fGetError() != LOCAL_GL_NO_ERROR) {
-        MOZ_ASSERT(false, "glGetString(GL_VERSION) has generated an error");
-        return false;
-    } else if (!versionString) {
-        MOZ_ASSERT(false, "glGetString(GL_VERSION) has returned 0");
-        return false;
-    }
-
-    const char kGLESVersionPrefix[] = "OpenGL ES ";
-    if (strncmp(versionString, kGLESVersionPrefix, strlen(kGLESVersionPrefix)) == 0) {
-        versionString += strlen(kGLESVersionPrefix);
-    }
-
-    const char* itr = versionString;
-    char* end = nullptr;
-    auto majorVersion = strtol(itr, &end, 10);
-
-    if (!end) {
-        MOZ_ASSERT(false, "Failed to parse the GL major version number.");
-        return false;
-    } else if (*end != '.') {
-        MOZ_ASSERT(false, "Failed to parse GL's major-minor version number separator.");
-        return false;
-    }
-
-    // we skip the '.' between the major and the minor version
-    itr = end + 1;
-
-    end = nullptr;
-
-    auto minorVersion = strtol(itr, &end, 10);
-    if (!end) {
-        MOZ_ASSERT(false, "Failed to parse GL's minor version number.");
-        return false;
-    }
-
-    if (majorVersion <= 0 || majorVersion >= 100) {
-        MOZ_ASSERT(false, "Invalid major version.");
-        return false;
-    } else if (minorVersion < 0 || minorVersion >= 10) {
-        MOZ_ASSERT(false, "Invalid minor version.");
-        return false;
-    }
-
-    *out_version = (uint32_t)majorVersion * 100 + (uint32_t)minorVersion * 10;
+    const auto& majorStr = match.str(1);
+    const auto& minorStr = match.str(2);
+    *out_major = atoi(majorStr.c_str());
+    *out_minor = atoi(minorStr.c_str());
     return true;
 }
 
@@ -721,32 +522,52 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
     ////////////////
 
     MakeCurrent();
-    MOZ_ASSERT(mProfile != ContextProfile::Unknown);
 
-    uint32_t version = 0;
-    ParseGLVersion(this, &version);
+    const std::string versionStr = (const char*)fGetString(LOCAL_GL_VERSION);
+    if (versionStr.find("OpenGL ES") == 0) {
+        mProfile = ContextProfile::OpenGLES;
+    }
 
-    mShadingLanguageVersion = 100;
-    ParseGLSLVersion(this, &mShadingLanguageVersion);
+    uint32_t majorVer, minorVer;
+    if (!ParseVersion(versionStr, &majorVer, &minorVer)) {
+        MOZ_ASSERT(false, "Failed to parse GL_VERSION");
+        return false;
+    }
+    MOZ_ASSERT(majorVer < 10);
+    MOZ_ASSERT(minorVer < 10);
+    mVersion = majorVer*100 + minorVer*10;
+    if (mVersion < 200) {
+        // Mac OSX 10.6/10.7 machines with Intel GPUs claim only OpenGL 1.4 but
+        // have all the GL2+ extensions that we need.
+        mVersion = 200;
+    }
+
+    ////
+
+    const auto glslVersionStr = (const char*)fGetString(LOCAL_GL_SHADING_LANGUAGE_VERSION);
+    if (!glslVersionStr) {
+        // This happens on the Android emulators. We'll just return 100
+        mShadingLanguageVersion = 100;
+    } else if (ParseVersion(glslVersionStr, &majorVer, &minorVer)) {
+        MOZ_ASSERT(majorVer < 10);
+        MOZ_ASSERT(minorVer < 100);
+        mShadingLanguageVersion = majorVer*100 + minorVer;
+    } else {
+        MOZ_ASSERT(false, "Failed to parse GL_SHADING_LANGUAGE_VERSION");
+        return false;
+    }
 
     if (ShouldSpew()) {
-        printf_stderr("OpenGL version detected: %u\n", version);
-        printf_stderr("OpenGL shading language version detected: %u\n", mShadingLanguageVersion);
+        printf_stderr("GL version detected: %u\n", mVersion);
+        printf_stderr("GLSL version detected: %u\n", mShadingLanguageVersion);
         printf_stderr("OpenGL vendor: %s\n", fGetString(LOCAL_GL_VENDOR));
         printf_stderr("OpenGL renderer: %s\n", fGetString(LOCAL_GL_RENDERER));
     }
 
-    if (version >= mVersion) {
-        mVersion = version;
-    }
-    // Don't fail if version < mVersion, see bug 999445,
-    // Mac OSX 10.6/10.7 machines with Intel GPUs claim only OpenGL 1.4 but
-    // have all the GL2+ extensions that we need.
-
     ////////////////
 
     // Load OpenGL ES 2.0 symbols, or desktop if we aren't using ES 2.
-    if (IsGLES()) {
+    if (mProfile == ContextProfile::OpenGLES) {
         const SymLoadStruct symbols[] = {
             { (PRFuncPtr*) &mSymbols.fGetShaderPrecisionFormat, { "GetShaderPrecisionFormat", nullptr } },
             { (PRFuncPtr*) &mSymbols.fClearDepthf, { "ClearDepthf", nullptr } },
@@ -856,21 +677,41 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
 
     ////////////////
 
-    // We need this for retrieving the list of extensions on Core profiles.
-    if (IsFeatureProvidedByCoreSymbols(GLFeature::get_string_indexed)) {
+    if (mVersion >= 300) { // Both GL3 and ES3.
         const SymLoadStruct symbols[] = {
             { (PRFuncPtr*) &mSymbols.fGetStringi, { "GetStringi", nullptr } },
             END_SYMBOLS
         };
 
-        if (!LoadGLSymbols(this, prefix, trygl, symbols, "get_string_indexed")) {
-            MOZ_RELEASE_ASSERT(false, "GFX: get_string_indexed is required!");
+        if (!LoadGLSymbols(this, prefix, trygl, symbols, "GetStringi")) {
+            MOZ_RELEASE_ASSERT(false, "GFX: GetStringi is required!");
             return false;
         }
     }
 
     InitExtensions();
+    if (mProfile != ContextProfile::OpenGLES) {
+        if (mVersion >= 310 && !IsExtensionSupported(ARB_compatibility)) {
+            mProfile = ContextProfile::OpenGLCore;
+        } else {
+            mProfile = ContextProfile::OpenGLCompatibility;
+        }
+    }
+    MOZ_ASSERT(mProfile != ContextProfile::Unknown);
+
+    if (ShouldSpew()) {
+        const char* profileStr = "";
+        if (mProfile == ContextProfile::OpenGLES) {
+            profileStr = " es";
+        } else if (mProfile == ContextProfile::OpenGLCore) {
+            profileStr = " core";
+        }
+        printf_stderr("Detected profile: %u%s\n", mVersion, profileStr);
+    }
+
     InitFeatures();
+
+    ////
 
     // Disable extensions with partial or incorrect support.
     if (WorkAroundDriverBugs()) {
@@ -1121,8 +962,6 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
                              true);
     }
 
-    mVersionString = nsPrintfCString("%u.%u.%u", mVersion / 100, (mVersion / 10) % 10,
-                                     mVersion % 10);
     return true;
 }
 
@@ -1770,7 +1609,7 @@ GLContext::InitExtensions()
 
     std::vector<nsCString> driverExtensionList;
 
-    if (IsFeatureProvidedByCoreSymbols(GLFeature::get_string_indexed)) {
+    if (mSymbols.fGetStringi) {
         GLuint count = 0;
         GetUIntegerv(LOCAL_GL_NUM_EXTENSIONS, &count);
         for (GLuint i = 0; i < count; i++) {

@@ -2,8 +2,8 @@ import cgi
 import json
 import os
 import traceback
-import urllib
-import urlparse
+
+from six.moves.urllib.parse import parse_qs, quote, unquote, urljoin
 
 from .constants import content_types
 from .pipes import Pipeline, template
@@ -30,7 +30,7 @@ def filesystem_path(base_path, request, url_base="/"):
     if base_path is None:
         base_path = request.doc_root
 
-    path = urllib.unquote(request.url_parts.path)
+    path = unquote(request.url_parts.path)
 
     if path.startswith(url_base):
         path = path[len(url_base):]
@@ -85,11 +85,11 @@ class DirectoryHandler(object):
         # statically defined ones
 
         if base_path != "/":
-            link = urlparse.urljoin(base_path, "..")
+            link = urljoin(base_path, "..")
             yield ("""<li class="dir"><a href="%(link)s">%(name)s</a></li>""" %
                    {"link": link, "name": ".."})
         for item in sorted(os.listdir(path)):
-            link = cgi.escape(urllib.quote(item))
+            link = cgi.escape(quote(item))
             if os.path.isdir(os.path.join(path, item)):
                 link += "/"
                 class_ = "dir"
@@ -128,7 +128,7 @@ class FileHandler(object):
                 byte_ranges = None
             data = self.get_data(response, path, byte_ranges)
             response.content = data
-            query = urlparse.parse_qs(request.url_parts.query)
+            query = parse_qs(request.url_parts.query)
 
             pipeline = None
             if "pipe" in query:

@@ -30,6 +30,9 @@ class AsyncScriptCompiler final : public nsIIncrementalStreamLoaderObserver
                                 , public Runnable
 {
 public:
+    // Note: References to this class are never held by cycle-collected objects.
+    // If at any point a reference is returned to a caller, please update this
+    // class to implement cycle collection.
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIINCREMENTALSTREAMLOADEROBSERVER
     NS_DECL_NSIRUNNABLE
@@ -192,12 +195,15 @@ AsyncScriptCompiler::Reject(JSContext* aCx)
 void
 AsyncScriptCompiler::Reject(JSContext* aCx, const char* aMsg)
 {
-    nsAutoCString msg(aMsg);
-    msg.Append(": ");
-    msg.Append(mURL);
+    nsAutoString msg;
+    msg.AppendASCII(aMsg);
+    msg.AppendLiteral(": ");
+    AppendUTF8toUTF16(mURL, msg);
 
-    RootedValue exn(aCx, StringValue(JS_NewStringCopyZ(aCx, msg.get())));
-    JS_SetPendingException(aCx, exn);
+    RootedValue exn(aCx);
+    if (xpc::NonVoidStringToJsval(aCx, msg, &exn)) {
+        JS_SetPendingException(aCx, exn);
+    }
 
     Reject(aCx);
 }
@@ -305,6 +311,7 @@ PrecompiledScript::ExecuteInGlobal(JSContext* aCx, HandleObject aGlobal,
         Rooted<JSScript*> script(aCx, mScript);
         if (!JS::CloneAndExecuteScript(aCx, script, aRval)) {
             aRv.NoteJSContextException(aCx);
+            return;
         }
     }
 
