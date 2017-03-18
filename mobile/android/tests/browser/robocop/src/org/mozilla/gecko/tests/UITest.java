@@ -142,7 +142,11 @@ abstract class UITest extends BaseRobocopTest
     }
 
     private String getAbsoluteUrl(final String baseUrl, final String url) {
-        return baseUrl + "/" + url.replaceAll("(^/)", "");
+        if (!url.startsWith(baseUrl)) {
+            return baseUrl + "/" + url.replaceAll("(^/)", "");
+        }
+
+        return url;
     }
 
     /**
