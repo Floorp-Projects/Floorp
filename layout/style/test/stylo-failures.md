@@ -165,12 +165,7 @@ to mochitest command.
     * test_value_storage.html `-colors` [96]
     * test_shorthand_property_getters.html `-colors` [1]
   * -moz-box-ordinal-group servo/servo#16000
-    * test_compute_data_with_start_struct.html `-moz-box-` [2]
-    * test_inherit_computation.html `-box-` [4]
-    * test_inherit_storage.html `-box-` [5]
-    * test_initial_computation.html `-box-` [8]
-    * test_initial_storage.html `-box-` [10]
-    * test_value_storage.html `-box-` [118]
+    * test_value_storage.html `-box-` [94]
   * -moz-force-broken-image-icon servo/servo#16001
     * test_compute_data_with_start_struct.html `-moz-force-broken-image-icon` [2]
     * test_inherit_computation.html `-moz-force-broken-image-icon` [2]
