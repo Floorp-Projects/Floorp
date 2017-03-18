@@ -567,14 +567,14 @@ public class GlobalSession implements HttpResponseObserver {
   }
 
   /**
-   * Upload new crypto/keys.
+   * Upload new crypto/keys with X-If-Unmodified-Since=0
    *
    * @param keys
    *          new keys.
    * @param keyUploadDelegate
    *          a delegate.
    */
-  public void uploadKeys(final CollectionKeys keys,
+  public void uploadKeys(final CollectionKeys keys, final long timestamp,
                          final KeyUploadDelegate keyUploadDelegate) {
     SyncStorageRecordRequest request;
     try {
@@ -588,7 +588,7 @@ public class GlobalSession implements HttpResponseObserver {
 
       @Override
       public String ifUnmodifiedSince() {
-        return null;
+        return Utils.millisecondsToDecimalSecondsString(timestamp);
       }
 
       @Override
@@ -827,9 +827,10 @@ public class GlobalSession implements HttpResponseObserver {
               freshStartDelegate.onFreshStartFailed(null);
             }
 
-            // Upload new keys.
+            // Upload new keys. Assert that no other client uploaded keys yet by setting X-I-U-S to 0.
+            // See Bug 1346438.
             Logger.info(LOG_TAG, "Uploading new crypto/keys.");
-            session.uploadKeys(keys, new KeyUploadDelegate() {
+            session.uploadKeys(keys, 0L, new KeyUploadDelegate() {
               @Override
               public void onKeysUploaded() {
                 Logger.info(LOG_TAG, "Uploaded new crypto/keys.");
