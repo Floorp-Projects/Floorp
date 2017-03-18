@@ -61,7 +61,7 @@ fuzzy(1,1) == image-orientation-explicit.html?345 image-orientation-explicit.htm
 
 # Tests for image-orientation used on generated content:
 fails == image-orientation-generated-content.html?from-image image-orientation-generated-content.html?from-image
-fails == image-orientation-generated-content.html?0 image-orientation-generated-content.html?0
+== image-orientation-generated-content.html?0 image-orientation-generated-content.html?0
 fails == image-orientation-generated-content.html?90 image-orientation-generated-content.html?90
 fails == image-orientation-generated-content.html?180 image-orientation-generated-content.html?180
 fails == image-orientation-generated-content.html?270 image-orientation-generated-content.html?270
@@ -75,8 +75,8 @@ fails == image-orientation-generated-content.html?270&flip image-orientation-gen
 == image-orientation-background.html?90&flip image-orientation-background.html?90&flip
 fails == image-orientation-border-image.html?from-image image-orientation-border-image.html?from-image
 fails == image-orientation-border-image.html?90&flip image-orientation-border-image.html?90&flip
-fails == image-orientation-list-style-image.html?from-image image-orientation-list-style-image.html?from-image
-fails == image-orientation-list-style-image.html?90&flip image-orientation-list-style-image.html?90&flip
+== image-orientation-list-style-image.html?from-image image-orientation-list-style-image.html?from-image
+== image-orientation-list-style-image.html?90&flip image-orientation-list-style-image.html?90&flip
 
 # Sanity checks for the image-orientation tests. Ensures that the various
 # combinations of rotations and flips actually look different from each other.

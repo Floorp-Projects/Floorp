@@ -85,8 +85,7 @@ to mochitest command.
   * test_parser_diagnostics_unprintables.html [550]
 * test_bug511909.html: @-moz-document and @media support [4]
 * Style change from DOM API bug 1331301
-  * test_bug534804.html [90]
-  * test_bug73586.html [20]
+  * test_bug534804.html [60]
 * Transition support:
   * test_bug621351.html [4]
   * test_compute_data_with_start_struct.html `transition` [2]
@@ -264,8 +263,8 @@ to mochitest command.
   * test_page_parser.html [30]
   * test_rule_insertion.html `@page` [4]
 * Stylesheet cloning is somehow busted bug 1348481
-  * test_selectors.html `cloned correctly` [155]
-  * ... `matched clone` [198]
+  * test_selectors.html `cloned correctly` [157]
+  * ... `matched clone` [204]
 * Unsupported prefixed values
   * moz-prefixed gradient functions bug 1337655
     * test_value_storage.html `-moz-linear-gradient` [322]
@@ -392,15 +391,12 @@ to mochitest command.
 * Unsupported pseudo-classes
   * :default ##easy##
     * test_bug302186.html [24]
-  * test_bug98997.html: pseudo-class :empty and :-moz-only-whitespace bug 1337068 [75]
   * :-moz-locale-dir
     * test_selectors.html `:-moz-locale-dir` [15]
   * :-moz-lwtheme-*
     * test_selectors.html `:-moz-lwtheme` [3]
   * :-moz-window-inactive bug 1348489
     * test_selectors.html `:-moz-window-inactive` [2]
-  * :-moz-{first,last}-node
-    * test_selectors.html `:-moz-` [6]
   * :dir
     * test_selectors.html `:dir` [18]
 * issues arround font shorthand servo/servo#15032 servo/servo#15036

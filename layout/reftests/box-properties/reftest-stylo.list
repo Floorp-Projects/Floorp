@@ -1,9 +1,9 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 fails == outline-radius-percent-1.html outline-radius-percent-1.html
-fails == min-width-1.html min-width-1.html
-fails == min-height-1.html min-height-1.html
-fails == max-width-1.html max-width-1.html
-fails == max-height-1.html max-height-1.html
+== min-width-1.html min-width-1.html
+== min-height-1.html min-height-1.html
+== max-width-1.html max-width-1.html
+== max-height-1.html max-height-1.html
 fails == width-special-values-block.html width-special-values-block.html
 fails == width-special-values-float.html width-special-values-float.html
 fails == width-special-values-image-block.html width-special-values-image-block.html
