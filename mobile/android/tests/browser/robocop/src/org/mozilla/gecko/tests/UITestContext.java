@@ -47,5 +47,7 @@ public interface UITestContext {
      */
     public String getAbsoluteIpUrl(final String url);
 
+    public void runOnUiThreadSync(Runnable runnable);
+
     public BaseComponent getComponent(final ComponentType type);
 }

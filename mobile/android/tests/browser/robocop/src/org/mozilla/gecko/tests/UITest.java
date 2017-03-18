@@ -7,6 +7,7 @@ package org.mozilla.gecko.tests;
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.Driver;
+import org.mozilla.gecko.RobocopUtils;
 import org.mozilla.gecko.tests.components.AboutHomeComponent;
 import org.mozilla.gecko.tests.components.AppMenuComponent;
 import org.mozilla.gecko.tests.components.BaseComponent;
@@ -147,6 +148,11 @@ abstract class UITest extends BaseRobocopTest
         }
 
         return url;
+    }
+
+    @Override
+    public final void runOnUiThreadSync(Runnable runnable) {
+        RobocopUtils.runOnUiThreadSync(getActivity(), runnable);
     }
 
     /**
