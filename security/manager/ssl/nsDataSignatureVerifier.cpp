@@ -9,12 +9,12 @@
 #include "cms.h"
 #include "cryptohi.h"
 #include "keyhi.h"
+#include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsNSSComponent.h"
 #include "nsString.h"
-#include "nssb64.h"
 #include "pkix/pkixnss.h"
 #include "pkix/pkixtypes.h"
 #include "secerr.h"
@@ -69,15 +69,22 @@ nsDataSignatureVerifier::VerifyData(const nsACString& aData,
   }
 
   // Base 64 decode the key
-  SECItem keyItem;
-  PORT_Memset(&keyItem, 0, sizeof(SECItem));
-  if (!NSSBase64_DecodeBuffer(arena.get(), &keyItem,
-                              PromiseFlatCString(aPublicKey).get(),
-                              aPublicKey.Length())) {
-    return NS_ERROR_FAILURE;
+  // For compatibility reasons we need to remove all whitespace first, since
+  // Base64Decode() will not accept invalid characters.
+  nsAutoCString b64KeyNoWhitespace(aPublicKey);
+  b64KeyNoWhitespace.StripWhitespace();
+  nsAutoCString key;
+  nsresult rv = Base64Decode(b64KeyNoWhitespace, key);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   // Extract the public key from the data
+  SECItem keyItem = {
+    siBuffer,
+    BitwiseCast<unsigned char*, const char*>(key.get()),
+    key.Length(),
+  };
   UniqueCERTSubjectPublicKeyInfo pki(
     SECKEY_DecodeDERSubjectPublicKeyInfo(&keyItem));
   if (!pki) {
@@ -90,17 +97,24 @@ nsDataSignatureVerifier::VerifyData(const nsACString& aData,
   }
 
   // Base 64 decode the signature
-  SECItem signatureItem;
-  PORT_Memset(&signatureItem, 0, sizeof(SECItem));
-  if (!NSSBase64_DecodeBuffer(arena.get(), &signatureItem,
-                              PromiseFlatCString(aSignature).get(),
-                              aSignature.Length())) {
-    return NS_ERROR_FAILURE;
+  // For compatibility reasons we need to remove all whitespace first, since
+  // Base64Decode() will not accept invalid characters.
+  nsAutoCString b64SignatureNoWhitespace(aSignature);
+  b64SignatureNoWhitespace.StripWhitespace();
+  nsAutoCString signature;
+  rv = Base64Decode(b64SignatureNoWhitespace, signature);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   // Decode the signature and algorithm
   CERTSignedData sigData;
   PORT_Memset(&sigData, 0, sizeof(CERTSignedData));
+  SECItem signatureItem = {
+    siBuffer,
+    BitwiseCast<unsigned char*, const char*>(signature.get()),
+    signature.Length(),
+  };
   SECStatus srv = SEC_QuickDERDecodeItem(arena.get(), &sigData,
                                          CERT_SignatureDataTemplate,
                                          &signatureItem);
