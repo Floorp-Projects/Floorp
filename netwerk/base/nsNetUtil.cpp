@@ -68,6 +68,7 @@
 #include "nsISiteSecurityService.h"
 #include "nsHttpHandler.h"
 #include "nsNSSComponent.h"
+#include "nsIOService.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkManager.h"
@@ -1856,11 +1857,12 @@ NS_URIChainHasFlags(nsIURI   *uri,
                     uint32_t  flags,
                     bool     *result)
 {
-    nsresult rv;
-    nsCOMPtr<nsINetUtil> util = do_GetNetUtil(&rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Avoid AddRef and Release'ing the IO service as this can show up in
+    // profiles...
+    auto ios = nsIOService::GetInstance();
+    NS_ENSURE_TRUE(ios, NS_ERROR_FAILURE);
 
-    return util->URIChainHasFlags(uri, flags, result);
+    return ios->URIChainHasFlags(uri, flags, result);
 }
 
 uint32_t
