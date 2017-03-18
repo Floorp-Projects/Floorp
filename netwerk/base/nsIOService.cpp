@@ -336,7 +336,7 @@ nsIOService::InitializeNetworkLinkService()
 }
 
 nsIOService*
-nsIOService::GetInstance() {
+nsIOService::GetAddRefed() {
     if (!gIOService) {
         gIOService = new nsIOService();
         if (!gIOService)
