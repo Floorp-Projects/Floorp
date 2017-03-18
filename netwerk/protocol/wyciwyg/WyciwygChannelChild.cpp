@@ -130,7 +130,7 @@ WyciwygChannelChild::Init(nsIURI* uri)
 // WyciwygChannelChild::PWyciwygChannelChild
 //-----------------------------------------------------------------------------
 
-class WyciwygStartRequestEvent : public ChannelEvent
+class WyciwygStartRequestEvent : public MainThreadChannelEvent
 {
 public:
   WyciwygStartRequestEvent(WyciwygChannelChild* child,
@@ -192,7 +192,7 @@ WyciwygChannelChild::OnStartRequest(const nsresult& statusCode,
     Cancel(rv);
 }
 
-class WyciwygDataAvailableEvent : public ChannelEvent
+class WyciwygDataAvailableEvent : public MainThreadChannelEvent
 {
 public:
   WyciwygDataAvailableEvent(WyciwygChannelChild* child,
@@ -253,7 +253,7 @@ WyciwygChannelChild::OnDataAvailable(const nsCString& data,
   }
 }
 
-class WyciwygStopRequestEvent : public ChannelEvent
+class WyciwygStopRequestEvent : public MainThreadChannelEvent
 {
 public:
   WyciwygStopRequestEvent(WyciwygChannelChild* child,
@@ -305,7 +305,7 @@ WyciwygChannelChild::OnStopRequest(const nsresult& statusCode)
     PWyciwygChannelChild::Send__delete__(this);
 }
 
-class WyciwygCancelEvent : public ChannelEvent
+class WyciwygCancelEvent : public MainThreadChannelEvent
 {
  public:
   WyciwygCancelEvent(WyciwygChannelChild* child, const nsresult& status)
