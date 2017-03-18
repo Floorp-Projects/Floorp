@@ -7,6 +7,7 @@
 const {
   UPDATE_GEOMETRY_EDITOR_ENABLED,
   UPDATE_LAYOUT,
+  UPDATE_OFFSET_PARENT,
 } = require("./index");
 
 module.exports = {
@@ -33,5 +34,15 @@ module.exports = {
       layout,
     };
   },
+
+  /**
+   * Update the offset parent state with the new DOM node.
+   */
+  updateOffsetParent(offsetParent) {
+    return {
+      type: UPDATE_OFFSET_PARENT,
+      offsetParent,
+    };
+  }
 
 };
