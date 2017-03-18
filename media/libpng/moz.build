@@ -44,8 +44,15 @@ if CONFIG['CPU_ARCH'] == 'arm':
 if CONFIG['INTEL_ARCHITECTURE']:
     DEFINES['MOZ_PNG_USE_INTEL_SSE'] = True
     UNIFIED_SOURCES += [
-        'sse2/filter_sse2_intrinsics.c',
-        'sse2/intel_init.c'
+        'intel/filter_sse2_intrinsics.c',
+        'intel/intel_init.c'
+    ]
+
+if CONFIG['HAVE_ALTIVEC']:
+    DEFINES['MOZ_PNG_USE_POWERPC'] = True
+    UNIFIED_SOURCES += [
+        'powerpc/filter_vsx_intrinsics.c',
+        'powerpc/powerpc_init.c'
     ]
 
 Library('mozpng')
