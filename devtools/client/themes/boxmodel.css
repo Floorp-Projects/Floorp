@@ -323,3 +323,12 @@
 .boxmodel-properties-wrapper {
   padding: 0 9px;
 }
+
+/* Box Model Main - Offset Parent */
+
+.boxmodel-offset-parent {
+  position: absolute;
+  top: -20px;
+  right: -10px;
+  color: var(--theme-highlight-purple);
+}
