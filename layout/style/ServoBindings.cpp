@@ -1120,6 +1120,26 @@ Gecko_EnsureStyleTransitionArrayLength(void* aArray, size_t aLen)
   }
 }
 
+void
+Gecko_ClearWillChange(nsStyleDisplay* aDisplay, size_t aLength)
+{
+  aDisplay->mWillChange.Clear();
+  aDisplay->mWillChange.SetCapacity(aLength);
+}
+
+void
+Gecko_AppendWillChange(nsStyleDisplay* aDisplay, nsIAtom* aAtom)
+{
+  aDisplay->mWillChange.AppendElement(aAtom);
+}
+
+void
+Gecko_CopyWillChangeFrom(nsStyleDisplay* aDest, nsStyleDisplay* aSrc)
+{
+  aDest->mWillChange.Clear();
+  aDest->mWillChange.AppendElements(aSrc->mWillChange);
+}
+
 Keyframe*
 Gecko_AnimationAppendKeyframe(RawGeckoKeyframeListBorrowedMut aKeyframes,
                               float aOffset,
