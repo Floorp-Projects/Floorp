@@ -17,6 +17,9 @@ enum VisibilityState { "hidden", "visible", "prerender" };
 /* https://dom.spec.whatwg.org/#dictdef-elementcreationoptions */
 dictionary ElementCreationOptions {
   DOMString is;
+
+  [ChromeOnly]
+  DOMString pseudo;
 };
 
 /* http://dom.spec.whatwg.org/#interface-document */
