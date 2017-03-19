@@ -33,11 +33,12 @@ namespace mozilla {
  * Node in a linked list, containing the style for an element that
  * does not have a frame but whose parent does have a frame.
  */
-struct UndisplayedNode {
+struct UndisplayedNode
+{
   UndisplayedNode(nsIContent* aContent, nsStyleContext* aStyle)
-    : mContent(aContent),
-      mStyle(aStyle),
-      mNext(nullptr)
+    : mContent(aContent)
+    , mStyle(aStyle)
+    , mNext(nullptr)
   {
     MOZ_COUNT_CTOR(mozilla::UndisplayedNode);
   }
@@ -56,9 +57,9 @@ struct UndisplayedNode {
     }
   }
 
-  nsCOMPtr<nsIContent>      mContent;
-  RefPtr<nsStyleContext>  mStyle;
-  UndisplayedNode*          mNext;
+  nsCOMPtr<nsIContent> mContent;
+  RefPtr<nsStyleContext> mStyle;
+  UndisplayedNode* mNext;
 };
 
 } // namespace mozilla
@@ -99,7 +100,7 @@ public:
   void RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame);
   void UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame);
 
-  void      ClearPlaceholderFrameMap();
+  void ClearPlaceholderFrameMap();
 
   // Mapping undisplayed content
   nsStyleContext* GetUndisplayedContent(const nsIContent* aContent)
@@ -156,8 +157,7 @@ public:
   /**
    * Register aContent having a display:contents style context.
    */
-  void SetDisplayContents(nsIContent* aContent,
-                          nsStyleContext* aStyleContext);
+  void SetDisplayContents(nsIContent* aContent, nsStyleContext* aStyleContext);
   /**
    * Change the registered style context for aContent to aStyleContext.
    */
@@ -172,28 +172,26 @@ public:
    * If found, then also unregister any display:contents and display:none
    * style contexts for its descendants.
    */
-  void ClearDisplayContentsIn(nsIContent* aContent,
-                              nsIContent* aParentContent);
+  void ClearDisplayContentsIn(nsIContent* aContent, nsIContent* aParentContent);
   void ClearAllDisplayContentsIn(nsIContent* aParentContent);
 
   // Functions for manipulating the frame model
   void AppendFrames(nsContainerFrame* aParentFrame,
-                    ChildListID       aListID,
-                    nsFrameList&      aFrameList);
+                    ChildListID aListID,
+                    nsFrameList& aFrameList);
 
   void InsertFrames(nsContainerFrame* aParentFrame,
-                    ChildListID       aListID,
-                    nsIFrame*         aPrevFrame,
-                    nsFrameList&      aFrameList);
+                    ChildListID aListID,
+                    nsIFrame* aPrevFrame,
+                    nsFrameList& aFrameList);
 
-  void RemoveFrame(ChildListID     aListID,
-                   nsIFrame*       aOldFrame);
+  void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame);
 
   /*
    * Notification that a frame is about to be destroyed. This allows any
    * outstanding references to the frame to be cleaned up.
    */
-  void     NotifyDestroyingFrame(nsIFrame* aFrame);
+  void NotifyDestroyingFrame(nsIFrame* aFrame);
 
   /*
    * Capture/restore frame state for the frame subtree rooted at aFrame.
@@ -204,20 +202,17 @@ public:
    * of aFrame.
    */
 
-  void CaptureFrameState(nsIFrame*              aFrame,
-                                     nsILayoutHistoryState* aState);
+  void CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState);
 
-  void RestoreFrameState(nsIFrame*              aFrame,
-                                     nsILayoutHistoryState* aState);
+  void RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState);
 
   /*
    * Add/restore state for one frame
    */
-  void CaptureFrameStateFor(nsIFrame*              aFrame,
-                                        nsILayoutHistoryState* aState);
+  void CaptureFrameStateFor(nsIFrame* aFrame, nsILayoutHistoryState* aState);
 
-  void RestoreFrameStateFor(nsIFrame*              aFrame,
-                                        nsILayoutHistoryState* aState);
+  void RestoreFrameStateFor(nsIFrame* aFrame, nsILayoutHistoryState* aState);
+
 protected:
   static nsStyleContext* GetStyleContextInMap(UndisplayedMap* aMap,
                                               const nsIContent* aContent);
