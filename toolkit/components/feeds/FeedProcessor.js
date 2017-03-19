@@ -42,7 +42,7 @@ const ARRAY_CONTRACTID = "@mozilla.org/array;1";
 const SAX_CONTRACTID = "@mozilla.org/saxparser/xmlreader;1";
 const PARSERUTILS_CONTRACTID = "@mozilla.org/parserutils;1";
 
-
+const gMimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
 var gIoService = null;
 
 const XMLNS = "http://www.w3.org/XML/1998/namespace";
@@ -484,8 +484,15 @@ Entry.prototype = {
     if (previous_enc != undefined) {
       previous_enc.QueryInterface(Ci.nsIWritablePropertyBag2);
 
-      if (!bagHasKey(previous_enc, "type") && bagHasKey(new_enc, "type"))
+      if (!bagHasKey(previous_enc, "type") && bagHasKey(new_enc, "type")) {
         previous_enc.setPropertyAsAString("type", new_enc.getPropertyAsAString("type"));
+        try {
+          let handlerInfoWrapper = gMimeService.getFromTypeAndExtension(new_enc.getPropertyAsAString("type"), null);
+          if (handlerInfoWrapper && handlerInfoWrapper.description) {
+            previous_enc.setPropertyAsAString("typeDesc", handlerInfoWrapper.description);
+          }
+        } catch (ext) {}
+      }
 
       if (!bagHasKey(previous_enc, "length") && bagHasKey(new_enc, "length"))
         previous_enc.setPropertyAsAString("length", new_enc.getPropertyAsAString("length"));
