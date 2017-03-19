@@ -1041,95 +1041,99 @@ protected:
   } mValue;
 };
 
-struct nsCSSValue::Array final {
-
-  // return |Array| with reference count of zero
-  static Array* Create(size_t aItemCount) {
-    return new (aItemCount) Array(aItemCount);
-  }
-
-  nsCSSValue& operator[](size_t aIndex) {
-    MOZ_ASSERT(aIndex < mCount, "out of range");
-    return mArray[aIndex];
-  }
-
-  const nsCSSValue& operator[](size_t aIndex) const {
-    MOZ_ASSERT(aIndex < mCount, "out of range");
-    return mArray[aIndex];
-  }
-
-  nsCSSValue& Item(size_t aIndex) { return (*this)[aIndex]; }
-  const nsCSSValue& Item(size_t aIndex) const { return (*this)[aIndex]; }
-
-  size_t Count() const { return mCount; }
-
-  // callers depend on the items being contiguous
-  nsCSSValue* ItemStorage() {
-    return this->First();
-  }
-
-  bool operator==(const Array& aOther) const
-  {
-    if (mCount != aOther.mCount)
-      return false;
-    for (size_t i = 0; i < mCount; ++i)
-      if ((*this)[i] != aOther[i])
-        return false;
-    return true;
-  }
-
-  NS_INLINE_DECL_REFCOUNTING(Array);
-private:
-
-  const size_t mCount;
-  // This must be the last sub-object, since we extend this array to
-  // be of size mCount; it needs to be a sub-object so it gets proper
-  // alignment.
-  nsCSSValue mArray[1];
-
-  void* operator new(size_t aSelfSize, size_t aItemCount) CPP_THROW_NEW {
-    MOZ_ASSERT(aItemCount > 0, "cannot have a 0 item count");
-    return ::operator new(aSelfSize + sizeof(nsCSSValue) * (aItemCount - 1));
-  }
-
-  void operator delete(void* aPtr) { ::operator delete(aPtr); }
-
-  nsCSSValue* First() { return mArray; }
-
-  const nsCSSValue* First() const { return mArray; }
-
-  explicit Array(size_t aItemCount)
-    : mCount(aItemCount)
-  {
-    for (nsCSSValue *val = First() + 1, *val_end = First() + mCount;
-         val != val_end; ++val)
-    {
-      new (val) nsCSSValue();
-    }
-  }
-
-  ~Array()
-  {
-    for (nsCSSValue *val = First() + 1, *val_end = First() + mCount;
-         val != val_end; ++val)
-    {
-      val->~nsCSSValue();
-    }
-  }
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-  {
-    size_t n = aMallocSizeOf(this);
-    for (size_t i = 0; i < mCount; i++) {
-      n += mArray[i].SizeOfExcludingThis(aMallocSizeOf);
-    }
-    return n;
-  }
-
-private:
-  Array(const Array& aOther) = delete;
-  Array& operator=(const Array& aOther) = delete;
+#define DECLARE_CSS_ARRAY(className, refcntMacro)                             \
+struct nsCSSValue::className final {                                          \
+                                                                              \
+  /* return this class with reference count of zero */                        \
+  static className* Create(size_t aItemCount) {                               \
+    return new (aItemCount) className(aItemCount);                            \
+  }                                                                           \
+                                                                              \
+  nsCSSValue& operator[](size_t aIndex) {                                     \
+    MOZ_ASSERT(aIndex < mCount, "out of range");                              \
+    return mArray[aIndex];                                                    \
+  }                                                                           \
+                                                                              \
+  const nsCSSValue& operator[](size_t aIndex) const {                         \
+    MOZ_ASSERT(aIndex < mCount, "out of range");                              \
+    return mArray[aIndex];                                                    \
+  }                                                                           \
+                                                                              \
+  nsCSSValue& Item(size_t aIndex) { return (*this)[aIndex]; }                 \
+  const nsCSSValue& Item(size_t aIndex) const { return (*this)[aIndex]; }     \
+                                                                              \
+  size_t Count() const { return mCount; }                                     \
+                                                                              \
+  /* callers depend on the items being contiguous */                          \
+  nsCSSValue* ItemStorage() {                                                 \
+    return this->First();                                                     \
+  }                                                                           \
+                                                                              \
+  bool operator==(const className& aOther) const                              \
+  {                                                                           \
+    if (mCount != aOther.mCount)                                              \
+      return false;                                                           \
+    for (size_t i = 0; i < mCount; ++i)                                       \
+      if ((*this)[i] != aOther[i])                                            \
+        return false;                                                         \
+    return true;                                                              \
+  }                                                                           \
+                                                                              \
+  refcntMacro(className);                                                     \
+private:                                                                      \
+                                                                              \
+  const size_t mCount;                                                        \
+  /* This must be the last sub-object, since we extend this array to  */      \
+  /* be of size mCount; it needs to be a sub-object so it gets proper */      \
+  /* alignment. */                                                            \
+  nsCSSValue mArray[1];                                                       \
+                                                                              \
+  void* operator new(size_t aSelfSize, size_t aItemCount) CPP_THROW_NEW {     \
+    MOZ_ASSERT(aItemCount > 0, "cannot have a 0 item count");                 \
+    return ::operator new(aSelfSize + sizeof(nsCSSValue) * (aItemCount - 1)); \
+  }                                                                           \
+                                                                              \
+  void operator delete(void* aPtr) { ::operator delete(aPtr); }               \
+                                                                              \
+  nsCSSValue* First() { return mArray; }                                      \
+                                                                              \
+  const nsCSSValue* First() const { return mArray; }                          \
+                                                                              \
+  explicit className(size_t aItemCount)                                       \
+    : mCount(aItemCount)                                                      \
+  {                                                                           \
+    for (nsCSSValue *val = First() + 1, *val_end = First() + mCount;          \
+         val != val_end; ++val)                                               \
+    {                                                                         \
+      new (val) nsCSSValue();                                                 \
+    }                                                                         \
+  }                                                                           \
+                                                                              \
+  ~className()                                                                \
+  {                                                                           \
+    for (nsCSSValue *val = First() + 1, *val_end = First() + mCount;          \
+         val != val_end; ++val)                                               \
+    {                                                                         \
+      val->~nsCSSValue();                                                     \
+    }                                                                         \
+  }                                                                           \
+                                                                              \
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const       \
+  {                                                                           \
+    size_t n = aMallocSizeOf(this);                                           \
+    for (size_t i = 0; i < mCount; i++) {                                     \
+      n += mArray[i].SizeOfExcludingThis(aMallocSizeOf);                      \
+    }                                                                         \
+    return n;                                                                 \
+  }                                                                           \
+                                                                              \
+private:                                                                      \
+  className(const className& aOther) = delete;                                \
+  className& operator=(const className& aOther) = delete;                     \
 };
+
+DECLARE_CSS_ARRAY(Array, NS_INLINE_DECL_REFCOUNTING)
+#undef DECLARE_CSS_ARRAY
 
 // Prefer nsCSSValue::Array for lists of fixed size.
 struct nsCSSValueList {
