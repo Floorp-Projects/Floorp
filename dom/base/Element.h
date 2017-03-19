@@ -463,6 +463,29 @@ public:
 
   void ClearServoData();
 
+  /**
+   * Gets the custom element data used by web components custom element.
+   * Custom element data is created at the first attempt to enqueue a callback.
+   *
+   * @return The custom element data or null if none.
+   */
+  inline CustomElementData* GetCustomElementData() const
+  {
+    nsDOMSlots *slots = GetExistingDOMSlots();
+    if (slots) {
+      return slots->mCustomElementData;
+    }
+    return nullptr;
+  }
+
+  /**
+   * Sets the custom element data, ownership of the
+   * callback data is taken by this element.
+   *
+   * @param aData The custom element data.
+   */
+  void SetCustomElementData(CustomElementData* aData);
+
 protected:
   /**
    * Method to get the _intrinsic_ content state of this element.  This is the
