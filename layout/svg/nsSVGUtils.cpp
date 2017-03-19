@@ -482,7 +482,9 @@ public:
       }
     }
 
-    return svgChildFrame->PaintSVG(aContext, aTransform, dirtyRect);
+    return svgChildFrame->PaintSVG(aContext,
+                                   nsSVGUtils::GetCSSPxToDevPxMatrix(aTarget),
+                                   dirtyRect);
   }
 };
 
@@ -858,6 +860,13 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
         aFrame->GetPosition();
       dirtyRegion = &tmpDirtyRegion;
     }
+
+    gfxContextMatrixAutoSaveRestore saver(target);
+    gfxMatrix devPxToCssPxTM = nsSVGUtils::GetCSSPxToDevPxMatrix(aFrame);
+    DebugOnly<bool> invertible = devPxToCssPxTM.Invert();
+    MOZ_ASSERT(invertible);
+    target->SetMatrix(aTransform * devPxToCssPxTM);
+
     SVGPaintCallback paintCallback;
     result =
       nsFilterInstance::PaintFilteredFrame(aFrame, target->GetDrawTarget(),
