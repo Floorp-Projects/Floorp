@@ -5096,8 +5096,19 @@ nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
                                            LazyComputeBehavior::Assert);
       }
     } else {
-      MOZ_ASSERT(aOriginatingElementOrNull);
       MOZ_ASSERT(aContent->IsInNativeAnonymousSubtree());
+      if (!aOriginatingElementOrNull) {
+        // For pseudo-implementing NAC created by JS using the ChromeOnly
+        // document.createElement(..., { pseudo: ... }) API, we find the
+        // originating element by lookup the tree until we find a non-NAC
+        // ancestor.  (These are the correct semantics for C++-generated pseudo-
+        // implementing NAC as well, but for those cases we already have a
+        // correct originating element passed in.)
+        MOZ_ASSERT(nsCSSPseudoElements::PseudoElementIsJSCreatedNAC(pseudoType));
+        aOriginatingElementOrNull =
+          nsContentUtils::GetClosestNonNativeAnonymousAncestor(aContent->AsElement());
+      }
+      MOZ_ASSERT(aOriginatingElementOrNull);
       result = styleSet->ResolvePseudoElementStyle(aOriginatingElementOrNull,
                                                    pseudoType,
                                                    aParentStyleContext,
