@@ -44,7 +44,7 @@ RestyleManager::ProcessPendingRestyles()
   MOZ_STYLO_FORWARD(ProcessPendingRestyles, ());
 }
 
-nsresult
+void
 RestyleManager::ContentStateChanged(nsIContent* aContent,
                                     EventStates aStateMask)
 {
