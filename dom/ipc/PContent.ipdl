@@ -876,8 +876,6 @@ parent:
 
     async RequestAnonymousTemporaryFile(uint64_t aID);
 
-    sync OpenAnonymousTemporaryFile() returns (FileDescOrError aFD);
-
     /**
      * Keygen requires us to call it after a <keygen> element is parsed and
      * before one is submitted. This is urgent because an extension might use

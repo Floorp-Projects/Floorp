@@ -1062,9 +1062,6 @@ private:
   RecvRequestAnonymousTemporaryFile(const uint64_t& aID) override;
 
   virtual mozilla::ipc::IPCResult
-  RecvOpenAnonymousTemporaryFile(FileDescOrError* aFD) override;
-
-  virtual mozilla::ipc::IPCResult
   RecvKeygenProcessValue(const nsString& oldValue, const nsString& challenge,
                          const nsString& keytype, const nsString& keyparams,
                          nsString* newValue) override;
