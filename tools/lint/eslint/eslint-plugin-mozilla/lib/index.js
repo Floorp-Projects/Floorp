@@ -20,8 +20,7 @@ module.exports = {
     "simpletest": require("../lib/environments/simpletest.js")
   },
   processors: {
-    ".xml": require("../lib/processors/xbl-bindings"),
-    ".js": require("../lib/processors/self-hosted")
+    ".xml": require("../lib/processors/xbl-bindings")
   },
   rules: {
     "avoid-removeChild": require("../lib/rules/avoid-removeChild"),
