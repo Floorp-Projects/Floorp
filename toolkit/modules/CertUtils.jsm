@@ -165,14 +165,8 @@ this.checkCert =
   if (!issuerCert)
     throw new Ce(certNotBuiltInErr, Cr.NS_ERROR_ABORT);
 
-  var tokenNames = issuerCert.getAllTokenNames({});
-
-  if (!tokenNames || !tokenNames.some(isBuiltinToken))
+  if (!issuerCert.isBuiltInRoot)
     throw new Ce(certNotBuiltInErr, Cr.NS_ERROR_ABORT);
-}
-
-function isBuiltinToken(tokenName) {
-  return tokenName == "Builtin Object Token";
 }
 
 /**

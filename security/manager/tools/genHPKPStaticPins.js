@@ -100,21 +100,6 @@ function stripComments(buf) {
   return data;
 }
 
-function isBuiltinToken(tokenName) {
-  return tokenName == "Builtin Object Token";
-}
-
-function isCertBuiltIn(cert) {
-  let tokenNames = cert.getAllTokenNames({});
-  if (!tokenNames) {
-    return false;
-  }
-  if (tokenNames.some(isBuiltinToken)) {
-    return true;
-  }
-  return false;
-}
-
 function download(filename) {
   let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
               .createInstance(Ci.nsIXMLHttpRequest);
@@ -395,7 +380,7 @@ function loadNSSCertinfo(extraCertificates) {
   let certSKDToName = {};
   while (enumerator.hasMoreElements()) {
     let cert = enumerator.getNext().QueryInterface(Ci.nsIX509Cert);
-    if (!isCertBuiltIn(cert)) {
+    if (!cert.isBuiltInRoot) {
       continue;
     }
     let name = cert.displayName;
