@@ -1117,7 +1117,14 @@ private:
     }
   }
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    size_t n = aMallocSizeOf(this);
+    for (size_t i = 0; i < mCount; i++) {
+      n += mArray[i].SizeOfExcludingThis(aMallocSizeOf);
+    }
+    return n;
+  }
 
 private:
   Array(const Array& aOther) = delete;
