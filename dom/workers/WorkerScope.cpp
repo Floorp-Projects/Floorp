@@ -441,7 +441,8 @@ WorkerGlobalScope::GetIndexedDB(ErrorResult& aErrorResult)
 }
 
 already_AddRefed<Promise>
-WorkerGlobalScope::CreateImageBitmap(const ImageBitmapSource& aImage,
+WorkerGlobalScope::CreateImageBitmap(JSContext* aCx,
+                                     const ImageBitmapSource& aImage,
                                      ErrorResult& aRv)
 {
   if (aImage.IsArrayBuffer() || aImage.IsArrayBufferView()) {
@@ -453,7 +454,8 @@ WorkerGlobalScope::CreateImageBitmap(const ImageBitmapSource& aImage,
 }
 
 already_AddRefed<Promise>
-WorkerGlobalScope::CreateImageBitmap(const ImageBitmapSource& aImage,
+WorkerGlobalScope::CreateImageBitmap(JSContext* aCx,
+                                     const ImageBitmapSource& aImage,
                                      int32_t aSx, int32_t aSy, int32_t aSw, int32_t aSh,
                                      ErrorResult& aRv)
 {
@@ -466,16 +468,14 @@ WorkerGlobalScope::CreateImageBitmap(const ImageBitmapSource& aImage,
 }
 
 already_AddRefed<mozilla::dom::Promise>
-WorkerGlobalScope::CreateImageBitmap(const ImageBitmapSource& aImage,
+WorkerGlobalScope::CreateImageBitmap(JSContext* aCx,
+                                     const ImageBitmapSource& aImage,
                                      int32_t aOffset, int32_t aLength,
                                      ImageBitmapFormat aFormat,
                                      const Sequence<ChannelPixelLayout>& aLayout,
                                      ErrorResult& aRv)
 {
-  JSContext* cx = GetCurrentThreadJSContext();
-  MOZ_ASSERT(cx);
-
-  if (!ImageBitmap::ExtensionsEnabled(cx, nullptr)) {
+  if (!ImageBitmap::ExtensionsEnabled(aCx, nullptr)) {
     aRv.Throw(NS_ERROR_TYPE_ERR);
     return nullptr;
   }
