@@ -192,7 +192,7 @@ CacheRegisterAllocator::saveIonLiveRegisters(MacroAssembler& masm, LiveRegisterS
     // work. Try to keep it simple by taking one small step at a time.
 
     // Step 1. Discard any dead operands so we can reuse their registers.
-    freeDeadOperandRegisters();
+    freeDeadOperandLocations(masm);
 
     // Step 2. Figure out the size of our live regs.
     size_t sizeOfLiveRegsInBytes =
@@ -292,6 +292,8 @@ CacheRegisterAllocator::saveIonLiveRegisters(MacroAssembler& masm, LiveRegisterS
         }
         masm.PushRegsInMask(liveRegs);
     }
+    freePayloadSlots_.clear();
+    freeValueSlots_.clear();
 
     MOZ_ASSERT(masm.framePushed() == ionScript->frameSize() + sizeOfLiveRegsInBytes);
 
