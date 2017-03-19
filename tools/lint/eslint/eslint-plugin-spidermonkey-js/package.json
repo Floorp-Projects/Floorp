@@ -1,0 +1,28 @@
+{
+  "name": "eslint-plugin-spidermonkey-js",
+  "version": "0.1.0",
+  "description": "A collection of rules that help enforce JavaScript coding standard in the Mozilla SpiderMonkey project.",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin",
+    "mozilla",
+    "spidermonkey"
+  ],
+  "bugs": {
+    "url": "https://bugzilla.mozilla.org/enter_bug.cgi?product=Testing&component=Lint"
+  },
+  "homepage": "http://gecko.readthedocs.io/en/latest/tools/lint/linters/eslint-plugin-spidermonkey-js.html",
+  "repository": {
+    "type": "hg",
+    "url": "https://hg.mozilla.org/mozilla-central/"
+  },
+  "author": "Mozilla",
+  "main": "lib/index.js",
+  "dependencies": {
+  },
+  "engines": {
+    "node": ">=6.9.1"
+  },
+  "license": "MPL-2.0"
+}
