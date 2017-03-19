@@ -768,9 +768,6 @@ JSObject* CreateDerivedTypedObj(JSContext* cx, HandleObject descr,
                                 HandleObject owner, int32_t offset);
 
 MOZ_MUST_USE bool
-ArraySpliceDense(JSContext* cx, HandleObject obj, uint32_t start, uint32_t deleteCount);
-
-MOZ_MUST_USE bool
 Recompile(JSContext* cx);
 MOZ_MUST_USE bool
 ForcedRecompile(JSContext* cx);
