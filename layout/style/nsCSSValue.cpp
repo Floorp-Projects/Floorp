@@ -2775,16 +2775,6 @@ nsCSSValuePairList_heap::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf
   return n;
 }
 
-size_t
-nsCSSValue::Array::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
-  size_t n = aMallocSizeOf(this);
-  for (size_t i = 0; i < mCount; i++) {
-    n += mArray[i].SizeOfExcludingThis(aMallocSizeOf);
-  }
-  return n;
-}
-
 css::URLValueData::URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
                                 nsStringBuffer* aString,
                                 already_AddRefed<PtrHolder<nsIURI>> aBaseURI,
