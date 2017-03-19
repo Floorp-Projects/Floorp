@@ -178,16 +178,39 @@ function clickMainAction() {
  * For an opened PopupNotification, clicks on the secondary action,
  * and waits for the panel to fully close.
  *
+ * @param actionIndex (Number)
+ *        The index of the secondary action to be clicked. The default
+ *        secondary action (the button shown directly in the panel) is
+ *        treated as having index 0.
+ *
  * @return {Promise}
  *         Resolves once the panel has fired the "popuphidden"
  *         event.
  */
-function clickSecondaryAction() {
+function clickSecondaryAction(actionIndex) {
   let removePromise =
     BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
   let popupNotification = getPopupNotificationNode();
-  popupNotification.secondaryButton.click();
-  return removePromise;
+  if (!actionIndex) {
+    popupNotification.secondaryButton.click();
+    return removePromise;
+  }
+
+  return Task.spawn(function* () {
+    // Click the dropmarker arrow and wait for the menu to show up.
+    let dropdownPromise =
+      BrowserTestUtils.waitForEvent(popupNotification.menupopup, "popupshown");
+    yield EventUtils.synthesizeMouseAtCenter(popupNotification.menubutton, {});
+    yield dropdownPromise;
+
+    // The menuitems in the dropdown are accessible as direct children of the panel,
+    // because they are injected into a <children> node in the XBL binding.
+    // The target action is the menuitem at index actionIndex - 1, because the first
+    // secondary action (index 0) is the button shown directly in the panel.
+    let actionMenuItem = popupNotification.querySelectorAll("menuitem")[actionIndex - 1];
+    yield EventUtils.synthesizeMouseAtCenter(actionMenuItem, {});
+    yield removePromise;
+  });
 }
 
 /**
