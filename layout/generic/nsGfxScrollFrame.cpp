@@ -3609,7 +3609,9 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
 
         // Only restrict to the root composition bounds if necessary,
         // as the required coordinate transformation is expensive.
-        if (wasUsingDisplayPort) {
+        // Note that we call HasDisplayPort again instead of using
+        // wasUsingDisplayPort because we might have just created a display port.
+        if (nsLayoutUtils::HasDisplayPort(content)) {
           const nsPresContext* rootPresContext =
             pc->GetToplevelContentDocumentPresContext();
           if (!rootPresContext) {

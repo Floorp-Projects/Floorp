@@ -36,6 +36,7 @@ class nsIURI;
 namespace mozilla {
 class DeclarationBlock;
 namespace dom {
+struct CustomElementData;
 class DOMIntersectionObserver;
 class Element;
 } // namespace dom
@@ -157,9 +158,6 @@ public:
   virtual nsIContent *GetXBLInsertionParent() const override;
   virtual void SetXBLInsertionParent(nsIContent* aContent) override;
   virtual bool IsLink(nsIURI** aURI) const override;
-
-  virtual CustomElementData *GetCustomElementData() const override;
-  virtual void SetCustomElementData(CustomElementData* aData) override;
 
   virtual void DestroyContent() override;
   virtual void SaveSubtreeState() override;
