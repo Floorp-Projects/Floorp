@@ -168,8 +168,8 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitOutOfLineCallPostWriteElementBarrier(OutOfLineCallPostWriteElementBarrier* ool);
     void visitCallNative(LCallNative* call);
     void emitCallInvokeFunction(LInstruction* call, Register callereg,
-                                bool isConstructing, uint32_t argc,
-                                uint32_t unusedStack);
+                                bool isConstructing, bool ignoresReturnValue,
+                                uint32_t argc, uint32_t unusedStack);
     void visitCallGeneric(LCallGeneric* call);
     void emitCallInvokeFunctionShuffleNewTarget(LCallKnown *call,
                                                 Register calleeReg,
@@ -258,7 +258,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void emitSetPropertyPolymorphic(LInstruction* lir, Register obj,
                                     Register scratch, const ConstantOrRegister& value);
     void visitSetPropertyPolymorphicV(LSetPropertyPolymorphicV* ins);
-    void visitArraySplice(LArraySplice* splice);
     void visitSetPropertyPolymorphicT(LSetPropertyPolymorphicT* ins);
     void visitAbsI(LAbsI* lir);
     void visitAtan2D(LAtan2D* lir);

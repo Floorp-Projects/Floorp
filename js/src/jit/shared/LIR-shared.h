@@ -1910,6 +1910,9 @@ class LJSCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
     bool isConstructing() const {
         return mir()->isConstructing();
     }
+    bool ignoresReturnValue() const {
+        return mir()->ignoresReturnValue();
+    }
 };
 
 // Generates a polymorphic callsite, wherein the function being called is
@@ -2227,34 +2230,6 @@ class LApplyArrayGeneric : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES 
     }
     const LDefinition* getTempStackCounter() {
         return getTemp(1);
-    }
-};
-
-class LArraySplice : public LCallInstructionHelper<0, 3, 0>
-{
-  public:
-    LIR_HEADER(ArraySplice)
-
-    LArraySplice(const LAllocation& object, const LAllocation& start,
-                 const LAllocation& deleteCount)
-    {
-        setOperand(0, object);
-        setOperand(1, start);
-        setOperand(2, deleteCount);
-    }
-
-    MArraySplice* mir() const {
-        return mir_->toArraySplice();
-    }
-
-    const LAllocation* getObject() {
-        return getOperand(0);
-    }
-    const LAllocation* getStart() {
-        return getOperand(1);
-    }
-    const LAllocation* getDeleteCount() {
-        return getOperand(2);
     }
 };
 

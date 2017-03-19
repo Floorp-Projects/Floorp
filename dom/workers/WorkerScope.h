@@ -168,15 +168,18 @@ public:
   bool IsSecureContext() const;
 
   already_AddRefed<Promise>
-  CreateImageBitmap(const ImageBitmapSource& aImage, ErrorResult& aRv);
+  CreateImageBitmap(JSContext* aCx,
+                    const ImageBitmapSource& aImage, ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  CreateImageBitmap(const ImageBitmapSource& aImage,
+  CreateImageBitmap(JSContext* aCx,
+                    const ImageBitmapSource& aImage,
                     int32_t aSx, int32_t aSy, int32_t aSw, int32_t aSh,
                     ErrorResult& aRv);
 
   already_AddRefed<mozilla::dom::Promise>
-  CreateImageBitmap(const ImageBitmapSource& aImage,
+  CreateImageBitmap(JSContext* aCx,
+                    const ImageBitmapSource& aImage,
                     int32_t aOffset, int32_t aLength,
                     mozilla::dom::ImageBitmapFormat aFormat,
                     const mozilla::dom::Sequence<mozilla::dom::ChannelPixelLayout>& aLayout,

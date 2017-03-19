@@ -128,7 +128,10 @@ class MOZ_STACK_CLASS CallArgsBase : public WantUsedRval
   protected:
     Value* argv_;
     unsigned argc_;
-    bool constructing_;
+    bool constructing_:1;
+
+    // True if the caller does not use the return value.
+    bool ignoresReturnValue_:1;
 
   public:
     // CALLEE ACCESS
@@ -162,6 +165,10 @@ class MOZ_STACK_CLASS CallArgsBase : public WantUsedRval
 #endif
 
         return true;
+    }
+
+    bool ignoresReturnValue() const {
+        return ignoresReturnValue_;
     }
 
     MutableHandleValue newTarget() const {
@@ -280,14 +287,17 @@ class MOZ_STACK_CLASS CallArgs : public detail::CallArgsBase<detail::IncludeUsed
 {
   private:
     friend CallArgs CallArgsFromVp(unsigned argc, Value* vp);
-    friend CallArgs CallArgsFromSp(unsigned stackSlots, Value* sp, bool constructing);
+    friend CallArgs CallArgsFromSp(unsigned stackSlots, Value* sp, bool constructing,
+                                   bool ignoresReturnValue);
 
-    static CallArgs create(unsigned argc, Value* argv, bool constructing) {
+    static CallArgs create(unsigned argc, Value* argv, bool constructing,
+                           bool ignoresReturnValue = false) {
         CallArgs args;
         args.clearUsedRval();
         args.argv_ = argv;
         args.argc_ = argc;
         args.constructing_ = constructing;
+        args.ignoresReturnValue_ = ignoresReturnValue;
 #ifdef DEBUG
         MOZ_ASSERT(ValueIsNotGray(args.thisv()));
         MOZ_ASSERT(ValueIsNotGray(args.calleev()));
@@ -316,9 +326,11 @@ CallArgsFromVp(unsigned argc, Value* vp)
 // eventually move it to an internal header.  Embedders should use
 // JS::CallArgsFromVp!
 MOZ_ALWAYS_INLINE CallArgs
-CallArgsFromSp(unsigned stackSlots, Value* sp, bool constructing = false)
+CallArgsFromSp(unsigned stackSlots, Value* sp, bool constructing = false,
+               bool ignoresReturnValue = false)
 {
-    return CallArgs::create(stackSlots - constructing, sp - stackSlots, constructing);
+    return CallArgs::create(stackSlots - constructing, sp - stackSlots, constructing,
+                            ignoresReturnValue);
 }
 
 } // namespace JS
