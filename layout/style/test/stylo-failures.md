@@ -419,9 +419,9 @@ to mochitest command.
   * :dir
     * test_selectors.html `:dir` [10]
 * issues arround font shorthand servo/servo#15032 servo/servo#15036
-  * test_bug377947.html [2]
+  * test_bug377947.html [1]
   * test_value_storage.html `'font'` [144]
-  * test_shorthand_property_getters.html `font shorthand` [2]
+  * test_shorthand_property_getters.html `font shorthand` [1]
   * test_system_font_serialization.html [10]
 * test_value_storage.html `font-size: calc(`: clamp negative value servo/servo#15296 [3]
 * rounding issue
