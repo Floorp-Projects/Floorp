@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/NotificationDB.jsm");
 
 // lazy module getters
 
-/* global AboutHome:false, AddonWatcher:false, AppConstants: false,
+/* global AboutHome:false, AddonWatcher:false,
           BrowserUITelemetry:false, BrowserUsageTelemetry:false, BrowserUtils:false,
           CastingApps:false, CharsetMenu:false, Color:false, ContentSearch:false,
           Deprecated:false, E10SUtils:false, FormValidationHandler:false,
@@ -38,7 +38,6 @@ Cu.import("resource://gre/modules/NotificationDB.jsm");
 [
   ["AboutHome", "resource:///modules/AboutHome.jsm"],
   ["AddonWatcher", "resource://gre/modules/AddonWatcher.jsm"],
-  ["AppConstants", "resource://gre/modules/AppConstants.jsm"],
   ["BrowserUITelemetry", "resource:///modules/BrowserUITelemetry.jsm"],
   ["BrowserUsageTelemetry", "resource:///modules/BrowserUsageTelemetry.jsm"],
   ["BrowserUtils", "resource://gre/modules/BrowserUtils.jsm"],
