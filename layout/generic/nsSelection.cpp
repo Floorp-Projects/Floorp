@@ -1974,9 +1974,10 @@ nsFrameSelection::ScrollSelectionIntoView(SelectionType aSelectionType,
 
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
-  RefPtr<Selection> sel = mDomSelections[index];
-  return sel->ScrollIntoView(aRegion, verticalScroll,
-                             nsIPresShell::ScrollAxis(), flags);
+  return mDomSelections[index]->ScrollIntoView(aRegion,
+                                               verticalScroll,
+                                               nsIPresShell::ScrollAxis(),
+                                               flags);
 }
 
 nsresult
@@ -6170,7 +6171,6 @@ Selection::ScrollSelectionIntoViewEvent::Run()
   int32_t flags = Selection::SCROLL_DO_FLUSH |
                   Selection::SCROLL_SYNCHRONOUS;
 
-  RefPtr<Selection> kungFuDeathGrip = mSelection;
   mSelection->mScrollEvent.Forget();
   mSelection->ScrollIntoView(mRegion, mVerticalScroll,
                              mHorizontalScroll, mFlags | flags);
