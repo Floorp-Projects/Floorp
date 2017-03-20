@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SitePermissions",
@@ -451,29 +453,9 @@ function prompt(aBrowser, aRequest) {
 
   let productName = gBrandBundle.GetStringFromName("brandShortName");
 
-  // Disable the permanent 'Allow' action if the connection isn't secure, or for
-  // screen/audio sharing (because we can't guess which window the user wants to
-  // share without prompting).
-  let reasonForNoPermanentAllow = "";
-  if (sharingScreen) {
-    reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.screen3";
-  } else if (sharingAudio) {
-    reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.audio";
-  } else if (!aRequest.secure) {
-    reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.insecure";
-  }
-
   let options = {
     persistent: true,
     hideClose: !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton"),
-    checkbox: {
-      label: stringBundle.getString("getUserMedia.remember"),
-      checkedState: reasonForNoPermanentAllow ? {
-        disableMainAction: true,
-        warningLabel: stringBundle.getFormattedString(reasonForNoPermanentAllow,
-                                                      [productName])
-      } : undefined,
-    },
     eventCallback(aTopic, aNewBrowser) {
       if (aTopic == "swapping")
         return true;
@@ -812,6 +794,31 @@ function prompt(aBrowser, aRequest) {
       return false;
     }
   };
+
+  // Don't offer "always remember" action in PB mode.
+  if (!PrivateBrowsingUtils.isBrowserPrivate(aBrowser)) {
+
+    // Disable the permanent 'Allow' action if the connection isn't secure, or for
+    // screen/audio sharing (because we can't guess which window the user wants to
+    // share without prompting).
+    let reasonForNoPermanentAllow = "";
+    if (sharingScreen) {
+      reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.screen3";
+    } else if (sharingAudio) {
+      reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.audio";
+    } else if (!aRequest.secure) {
+      reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.insecure";
+    }
+
+    options.checkbox = {
+      label: stringBundle.getString("getUserMedia.remember"),
+      checkedState: reasonForNoPermanentAllow ? {
+        disableMainAction: true,
+        warningLabel: stringBundle.getFormattedString(reasonForNoPermanentAllow,
+                                                      [productName])
+      } : undefined,
+    };
+  }
 
   let iconType = "Devices";
   if (requestTypes.length == 1 && (requestTypes[0] == "Microphone" ||
