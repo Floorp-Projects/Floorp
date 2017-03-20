@@ -5,8 +5,9 @@
 "use strict";
 
 const { Ci } = require("chrome");
-loader.lazyRequireGetter(this, "getOuterId", "sdk/window/utils", true);
-loader.lazyRequireGetter(this, "getBrowserForTab", "sdk/tabs/utils", true);
+
+loader.lazyRequireGetter(this, "CommandState",
+  "devtools/shared/gcli/command-state", true);
 
 var telemetry;
 try {
@@ -16,39 +17,21 @@ try {
   // DevTools Telemetry module only available in Firefox
 }
 
-const EventEmitter = require("devtools/shared/event-emitter");
-const eventEmitter = new EventEmitter();
-
-// exports the event emitter to help test know when this command is toggled
-exports.eventEmitter = eventEmitter;
-
 const gcli = require("gcli/index");
 const l10n = require("gcli/l10n");
-
-const enabledPaintFlashing = new Set();
-
-const isCheckedFor = (tab) =>
-  tab ? enabledPaintFlashing.has(getBrowserForTab(tab).outerWindowID) : false;
 
 /**
  * Fire events and telemetry when paintFlashing happens
  */
-function onPaintFlashingChanged(target, state) {
-  const { flashing, id } = state;
-
+function onPaintFlashingChanged(target, flashing) {
   if (flashing) {
-    enabledPaintFlashing.add(id);
+    CommandState.enableForTarget(target, "paintflashing");
   } else {
-    enabledPaintFlashing.delete(id);
+    CommandState.disableForTarget(target, "paintflashing");
   }
 
-  eventEmitter.emit("changed", { target: target });
-  function fireChange() {
-    eventEmitter.emit("changed", { target: target });
-  }
-
-  target.off("navigate", fireChange);
-  target.once("navigate", fireChange);
+  target.once("will-navigate", () =>
+    CommandState.disableForTarget(target, "paintflashing"));
 
   if (!telemetry) {
     return;
@@ -165,9 +148,9 @@ exports.items = [
     buttonId: "command-button-paintflashing",
     buttonClass: "command-button command-button-invertable",
     state: {
-      isChecked: ({_tab}) => isCheckedFor(_tab),
-      onChange: (_, handler) => eventEmitter.on("changed", handler),
-      offChange: (_, handler) => eventEmitter.off("changed", handler),
+      isChecked: (target) => CommandState.isEnabledForTarget(target, "paintflashing"),
+      onChange: (_, handler) => CommandState.on("changed", handler),
+      offChange: (_, handler) => CommandState.off("changed", handler),
     },
     tooltipText: l10n.lookup("paintflashingTooltip"),
     description: l10n.lookup("paintflashingToggleDesc"),
@@ -195,10 +178,8 @@ exports.items = [
     returnType: "paintFlashingState",
     exec: function (args, context) {
       let { window } = context.environment;
-      let id = getOuterId(window);
-      let flashing = setPaintFlashing(window, args.state);
 
-      return { flashing, id };
+      return setPaintFlashing(window, args.state);
     }
   }
 ];
