@@ -50,10 +50,7 @@ function register_module(categoryName, categoryObject) {
   });
 }
 
-addEventListener("DOMContentLoaded", function onLoad() {
-  removeEventListener("DOMContentLoaded", onLoad);
-  init_all();
-});
+document.addEventListener("DOMContentLoaded", init_all, {once: true});
 
 function init_all() {
   document.documentElement.instantApply = true;
