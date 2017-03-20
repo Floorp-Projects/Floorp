@@ -28,7 +28,6 @@ class txIMatchContext;
 class txIEvalContext;
 class txNodeSet;
 class txXPathNode;
-class txXPathTreeWalker;
 
 /**
  * A Base Class for all XSL Expressions
@@ -395,9 +394,8 @@ public:
      * standalone. The NodeTest node() is different to the
      * Pattern "node()" (document node isn't matched)
      */
-    virtual nsresult matches(const txXPathNode& aNode,
-                             txIMatchContext* aContext,
-                             bool& aMatched) = 0;
+    virtual bool matches(const txXPathNode& aNode,
+                           txIMatchContext* aContext) = 0;
     virtual double getDefaultPriority() = 0;
 
     /**
@@ -426,9 +424,7 @@ public:
 
 #define TX_DECL_NODE_TEST \
     TX_DECL_TOSTRING \
-    nsresult matches(const txXPathNode& aNode, \
-                     txIMatchContext* aContext, \
-                     bool& aMatched) override; \
+    bool matches(const txXPathNode& aNode, txIMatchContext* aContext) override; \
     double getDefaultPriority() override; \
     bool isSensitiveTo(Expr::ContextSensitivity aContext) override;
 
@@ -634,30 +630,10 @@ public:
     }
 
 private:
-    /**
-     * Append the current position of aWalker to aNodes if it matches mNodeTest,
-     * using aContext as the context for matching.
-     */
-    nsresult appendIfMatching(const txXPathTreeWalker& aWalker,
-                              txIMatchContext* aContext,
-                              txNodeSet* aNodes);
-
-    /**
-     * Append the descendants of the current position of aWalker to aNodes if
-     * they match mNodeTest, using aContext as the context for matching.
-     */
-    nsresult appendMatchingDescendants(const txXPathTreeWalker& aWalker,
-                                       txIMatchContext* aContext,
-                                       txNodeSet* aNodes);
-
-    /**
-     * Append the descendants of the current position of aWalker to aNodes in
-     * reverse order if they match mNodeTest, using aContext as the context for
-     * matching.
-     */
-    nsresult appendMatchingDescendantsRev(const txXPathTreeWalker& aWalker,
-                                          txIMatchContext* aContext,
-                                          txNodeSet* aNodes);
+    void fromDescendants(const txXPathNode& aNode, txIMatchContext* aCs,
+                         txNodeSet* aNodes);
+    void fromDescendantsRev(const txXPathNode& aNode, txIMatchContext* aCs,
+                            txNodeSet* aNodes);
 
     nsAutoPtr<txNodeTest> mNodeTest;
     LocationStepType mAxisIdentifier;
