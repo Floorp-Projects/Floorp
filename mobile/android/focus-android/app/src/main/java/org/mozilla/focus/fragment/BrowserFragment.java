@@ -70,7 +70,7 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
         urlView.setText(url);
         urlView.setOnClickListener(this);
 
-        backgroundTransition = (TransitionDrawable) view.findViewById(R.id.urlbar).getBackground();
+        backgroundTransition = (TransitionDrawable) view.findViewById(R.id.background).getBackground();
 
         final View refreshButton = view.findViewById(R.id.refresh);
         if (refreshButton != null) {

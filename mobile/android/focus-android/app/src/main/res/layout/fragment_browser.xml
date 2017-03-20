@@ -2,59 +2,70 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/main_content"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <org.mozilla.focus.web.IWebView
-        android:id="@+id/webview"
+    <View
+        android:id="@+id/background"
+        android:layout_width="match_parent"
+        android:layout_height="81dp"
+        android:background="@drawable/animated_background" />
+
+    <android.support.design.widget.CoordinatorLayout
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_marginTop="25dp"
+        android:id="@+id/main_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        android:orientation="vertical">
 
-    <android.support.design.widget.AppBarLayout
-        android:id="@+id/appbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:elevation="4dp">
-
-        <FrameLayout
-            android:id="@+id/urlbar"
+        <org.mozilla.focus.web.IWebView
+            android:id="@+id/webview"
             android:layout_width="match_parent"
-            android:layout_height="81dp"
-            android:background="@drawable/animated_background"
-            android:paddingTop="25dp"
-            app:layout_scrollFlags="scroll|enterAlways|snap">
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-            <include layout="@layout/toolbar"/>
+        <android.support.design.widget.AppBarLayout
+            android:id="@+id/appbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            app:elevation="0dp">
 
-            <ProgressBar
-                android:id="@+id/progress"
-                style="@android:style/Widget.Material.ProgressBar.Horizontal"
+            <FrameLayout
+                android:id="@+id/urlbar"
                 android:layout_width="match_parent"
-                android:layout_height="2dp"
-                android:layout_gravity="bottom"
-                android:importantForAccessibility="yes" />
+                android:layout_height="56dp"
+                app:layout_scrollFlags="scroll|enterAlways|snap">
 
-        </FrameLayout>
+                <include layout="@layout/toolbar"/>
 
-    </android.support.design.widget.AppBarLayout>
+                <ProgressBar
+                    android:id="@+id/progress"
+                    style="@android:style/Widget.Material.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:layout_gravity="bottom"
+                    android:importantForAccessibility="yes" />
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/erase"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
-        android:layout_marginBottom="24dp"
-        android:layout_marginEnd="24dp"
-        android:elevation="4dp"
-        android:src="@drawable/ic_delete"
-        app:backgroundTint="@color/colorFloatingActionButtonTint"
-        app:rippleColor="#50FFFFFF"
-        app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior"
-        android:contentDescription="@string/content_description_erase" />
+            </FrameLayout>
 
-</android.support.design.widget.CoordinatorLayout>
+        </android.support.design.widget.AppBarLayout>
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/erase"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
+            android:layout_marginBottom="24dp"
+            android:layout_marginEnd="24dp"
+            android:elevation="4dp"
+            android:src="@drawable/ic_delete"
+            app:backgroundTint="@color/colorFloatingActionButtonTint"
+            app:rippleColor="#50FFFFFF"
+            app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior"
+            android:contentDescription="@string/content_description_erase" />
+
+    </android.support.design.widget.CoordinatorLayout>
+</FrameLayout>
