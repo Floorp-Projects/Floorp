@@ -13,16 +13,18 @@ Bug 1192335 - Test getting the byte sizes for allocations.
 <pre id="test">
 <script src="memory-helpers.js" type="application/javascript"></script>
 <script>
-window.onload = function() {
+"use strict";
+
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
   Task.spawn(function* () {
-    var { memory, client } = yield startServerAndGetSelectedTabMemory();
+    let { memory, client } = yield startServerAndGetSelectedTabMemory();
     yield memory.attach();
 
-    var allocs = [];
+    let allocs = [];
     function allocator() {
-      allocs.push(new Object);
+      allocs.push(new Object());
     }
 
     yield memory.startRecordingAllocations();
@@ -31,7 +33,7 @@ window.onload = function() {
     allocator();
     allocator();
 
-    var response = yield memory.getAllocations();
+    let response = yield memory.getAllocations();
     yield memory.stopRecordingAllocations();
 
     ok(response.allocationSizes, "The response should have bytesizes.");
@@ -39,14 +41,15 @@ window.onload = function() {
        "There should be a bytesize for every allocation.");
     ok(response.allocationSizes.length >= 3,
        "There are atleast 3 allocations.");
-    ok(response.allocationSizes.every(isPositiveNumber), "every bytesize is a positive number");
+    ok(response.allocationSizes.every(isPositiveNumber),
+       "every bytesize is a positive number");
 
     yield memory.detach();
     destroyServerAndFinish(client);
   });
 };
 
-function isPositiveNumber (n) {
+function isPositiveNumber(n) {
   return typeof n === "number" && n > 0;
 }
 </script>

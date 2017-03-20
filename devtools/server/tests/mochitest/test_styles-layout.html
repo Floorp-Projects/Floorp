@@ -9,7 +9,7 @@
 <script type="application/javascript">
 "use strict";
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
 };
@@ -17,9 +17,9 @@ window.onload = function() {
 let gWalker = null;
 let gStyles = null;
 
-addTest(function() {
+addTest(function () {
   let url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
+  attachURL(url, function (err, client, tab, doc) {
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
@@ -32,12 +32,12 @@ addTest(function() {
   });
 });
 
-addTest(function() {
+addTest(function () {
   ok(gStyles.getLayout, "The PageStyleActor has a getLayout method");
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   let node = yield gWalker.querySelector(gWalker.rootNode, "#layout-element");
   let layout = yield gStyles.getLayout(node, {});
 
@@ -55,7 +55,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   let node = yield gWalker.querySelector(gWalker.rootNode, "#layout-element");
   let layout = yield gStyles.getLayout(node, {});
 
@@ -79,7 +79,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   let node = yield gWalker.querySelector(gWalker.rootNode,
                                          "#layout-auto-margin-element");
 
@@ -98,7 +98,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addTest(function() {
+addTest(function () {
   gStyles = gWalker = null;
   runNextTest();
 });

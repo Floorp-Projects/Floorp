@@ -11,20 +11,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1121528
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
-const inspector = require("devtools/shared/fronts/inspector");
+"use strict";
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
-}
+};
 
-var gWalker, gDoc;
+let gWalker = null;
+let gDoc = null;
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   let url = document.getElementById("inspectorContent").href;
 
   let def = promise.defer();
-  attachURL(url, function(err, client, tab, doc) {
+  attachURL(url, function (err, client, tab, doc) {
     def.resolve({client, tab, doc});
   });
   let {client, tab, doc} = yield def.promise;
@@ -37,7 +38,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.parents(nodeFront) before the load completes shouldn't fail");
 
@@ -51,7 +52,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.children(nodeFront) before the load completes shouldn't fail");
 
@@ -65,7 +66,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.siblings(nodeFront) before the load completes shouldn't fail");
 
@@ -79,7 +80,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.nextSibling(nodeFront) before the load completes shouldn't fail");
 
@@ -93,7 +94,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.previousSibling(nodeFront) before the load completes shouldn't fail");
 
@@ -107,7 +108,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.addPseudoClassLock(nodeFront) before the load completes " +
     "shouldn't fail");
@@ -122,7 +123,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.removePseudoClassLock(nodeFront) before the load completes " +
     "shouldn't fail");
@@ -137,7 +138,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.clearPseudoClassLocks(nodeFront) before the load completes " +
     "shouldn't fail");
@@ -152,7 +153,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.innerHTML(nodeFront) before the load completes shouldn't fail");
 
@@ -166,7 +167,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.setInnerHTML(nodeFront) before the load completes shouldn't fail");
 
@@ -180,7 +181,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.outerHTML(nodeFront) before the load completes shouldn't fail");
 
@@ -194,7 +195,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.setOuterHTML(nodeFront) before the load completes shouldn't fail");
 
@@ -208,7 +209,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.insertAdjacentHTML(nodeFront) before the load completes shouldn't " +
     "fail");
@@ -224,7 +225,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.removeNode(nodeFront) before the load completes should throw");
 
@@ -243,7 +244,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.removeNodes([nodeFront]) before the load completes should throw");
 
@@ -264,7 +265,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.insertBefore(nodeFront, parent, null) before the load completes " +
     "shouldn't fail");
@@ -280,7 +281,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.insertBefore(nodeFront, parent, sibling) before the load completes " +
     "shouldn't fail");
@@ -297,7 +298,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.editTagName(nodeFront) before the load completes shouldn't fail");
 
@@ -311,7 +312,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.hideNode(nodeFront) before the load completes shouldn't fail");
 
@@ -325,7 +326,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.unhideNode(nodeFront) before the load completes shouldn't fail");
 
@@ -339,7 +340,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.releaseNode(nodeFront) before the load completes shouldn't fail");
 
@@ -353,7 +354,7 @@ addAsyncTest(function*() {
   runNextTest();
 });
 
-addAsyncTest(function*() {
+addAsyncTest(function* () {
   info("Getting a nodeFront, reloading the page, and calling " +
     "walker.querySelector(nodeFront) before the load completes shouldn't fail");
 
@@ -368,7 +369,8 @@ addAsyncTest(function*() {
 });
 
 addTest(function cleanup() {
-  gWalker = gDoc = null;
+  gWalker = null;
+  gDoc = null;
   runNextTest();
 });
   </script>

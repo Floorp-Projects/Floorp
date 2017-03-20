@@ -11,16 +11,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
-const inspector = require("devtools/shared/fronts/inspector");
+"use strict";
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
-}
+};
 
-var gWalker = null;
-var gClient = null;
-var gInspectee = null;
+let gWalker = null;
+let gInspectee = null;
 
 function assertOwnership() {
   return assertOwnershipTrees(gWalker);
@@ -28,13 +27,12 @@ function assertOwnership() {
 
 addTest(function setup() {
   let url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
+  attachURL(url, function (err, client, tab, doc) {
     gInspectee = doc;
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
-      gClient = client;
       gWalker = walker;
     }).then(runNextTest));
   });
@@ -50,7 +48,6 @@ addTest(function setup() {
 addTest(function testRetain() {
   let originalOwnershipSize = 0;
   let bodyFront = null;
-  let frameFront = null;
   let childListFront = null;
   // Get the toplevel body element and retain it.
   promiseDone(gWalker.querySelector(gWalker.rootNode, "body").then(front => {
@@ -60,7 +57,6 @@ addTest(function testRetain() {
     // Get an element in the child frame and retain it.
     return gWalker.querySelector(gWalker.rootNode, "#childFrame");
   }).then(frame => {
-    frameFront = frame;
     return gWalker.children(frame, { maxNodes: 1 }).then(children => {
       return children.nodes[0];
     });
@@ -75,7 +71,6 @@ addTest(function testRetain() {
     // OK, try releasing the parent of the first retained.
     return gWalker.releaseNode(bodyFront.parentNode());
   }).then(() => {
-    let size = assertOwnership();
     let clientTree = clientOwnershipTree(gWalker);
 
     // That request should have freed the parent of the first retained
@@ -84,26 +79,25 @@ addTest(function testRetain() {
        originalOwnershipSize,
        "Should have only lost one item overall.");
     is(gWalker._retainedOrphans.size, 1, "Should have retained one orphan");
-    ok(gWalker._retainedOrphans.has(bodyFront), "Should have retained the expected node.");
+    ok(gWalker._retainedOrphans.has(bodyFront),
+       "Should have retained the expected node.");
   }).then(() => {
     // Unretain the body, which should promote the childListFront to a retained orphan.
     return gWalker.unretainNode(bodyFront);
   }).then(() => {
     assertOwnership();
-    let clientTree = clientOwnershipTree(gWalker);
 
     is(gWalker._retainedOrphans.size, 1, "Should still only have one retained orphan.");
-    ok(!gWalker._retainedOrphans.has(bodyFront), "Should have dropped the body node.")
-    ok(gWalker._retainedOrphans.has(childListFront), "Should have retained the child node.")
+    ok(!gWalker._retainedOrphans.has(bodyFront), "Should have dropped the body node.");
+    ok(gWalker._retainedOrphans.has(childListFront),
+       "Should have retained the child node.");
   }).then(() => {
     // Change the source of the iframe, which should kill the retained orphan.
     gInspectee.querySelector("#childFrame").src = "data:text/html,<html>new child</html>";
     return waitForMutation(gWalker, isUnretained);
   }).then(mutations => {
     assertOwnership();
-    let clientTree = clientOwnershipTree(gWalker);
     is(gWalker._retainedOrphans.size, 0, "Should have no more retained orphans.");
-
   }).then(runNextTest));
 });
 
@@ -123,14 +117,12 @@ addTest(function testWinRace() {
     ]);
   }).then(() => {
     assertOwnership();
-    let clientTree = clientOwnershipTree(gWalker);
     is(gWalker._retainedOrphans.size, 1, "Should have a retained orphan.");
     ok(gWalker._retainedOrphans.has(front), "Should have retained our expected node.");
     return gWalker.unretainNode(front);
   }).then(() => {
     // Make sure we're clear for the next test.
     assertOwnership();
-    let clientTree = clientOwnershipTree(gWalker);
     is(gWalker._retainedOrphans.size, 0, "Should have no more retained orphans.");
   }).then(runNextTest));
 });
@@ -149,19 +141,18 @@ addTest(function testLoseRace() {
     // Verify that we have an outstanding request (no good way to tell that it's a
     // getMutations request, but there's nothing else it would be).
     is(gWalker._requests.length, 1, "Should have an outstanding request.");
-    return gWalker.retainNode(front)
-  }).then(() => { ok(false, "Request should not have succeeded!"); },
+    return gWalker.retainNode(front);
+  }).then(() => ok(false, "Request should not have succeeded!"),
           (err) => {
-    ok(err, "noSuchActor", "Should have lost the race.");
-    let clientTree = clientOwnershipTree(gWalker);
-    is(gWalker._retainedOrphans.size, 0, "Should have no more retained orphans.");
-    // Don't re-throw the error.
-  }).then(runNextTest));
+            ok(err, "noSuchActor", "Should have lost the race.");
+            is(gWalker._retainedOrphans.size, 0, "Should have no more retained orphans.");
+            // Don't re-throw the error.
+          }).then(runNextTest));
 });
 
 addTest(function cleanup() {
-  delete gWalker;
-  delete gClient;
+  gWalker = null;
+  gInspectee = null;
   runNextTest();
 });
 

@@ -15,6 +15,7 @@ element to which code is attached (if any), and how.
 <body>
 <pre id="test">
 <script>
+"use strict";
 
 Components.utils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
@@ -22,65 +23,65 @@ addDebuggerToGlobal(this);
 window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
-  var log = '';
-  var doc, dieter, ulrich, isolde, albrecht;
-  var dbg, iframeDO, DOFor;
+  let log = "";
+  let doc, dieter, ulrich, isolde, albrecht;
+  let dbg, iframeDO, DOFor;
 
   // Create an iframe to debug.
   // We can't use a data: URL here, because we want to test script elements
   // that refer to the JavaScript via 'src' attributes, and data: documents
   // can't refer to those. So we use a separate HTML document.
-  var iframe = document.createElement("iframe");
+  let iframe = document.createElement("iframe");
   iframe.src = "Debugger.Source.prototype.element.html";
   iframe.onload = onLoadHandler;
   document.body.appendChild(iframe);
 
   function onLoadHandler() {
-    log += 'l';
+    log += "l";
 
     // Now that the iframe's window has been created, we can add
     // it as a debuggee.
-    dbg = new Debugger;
+    dbg = new Debugger();
     dbg.onDebuggerStatement = franzDebuggerHandler;
     iframeDO = dbg.addDebuggee(iframe.contentWindow);
     DOFor = iframeDO.makeDebuggeeValue.bind(iframeDO);
 
     // Send a click event to heidi.
     doc = iframe.contentWindow.document;
-    doc.getElementById('heidi').dispatchEvent(new Event('click'));
+    doc.getElementById("heidi").dispatchEvent(new Event("click"));
   }
 
   function franzDebuggerHandler(frame) {
-    log += 'f';
+    log += "f";
 
     // The top stack frame should be franz, belonging to the script element.
-    ok(frame.callee.displayName === 'franz', 'top frame is franz');
-    ok(frame.script.source.element === DOFor(doc.getElementById('franz')),
-       'top frame source belongs to element franz');
+    ok(frame.callee.displayName === "franz", "top frame is franz");
+    ok(frame.script.source.element === DOFor(doc.getElementById("franz")),
+       "top frame source belongs to element franz");
     ok(frame.script.source.elementAttributeName === undefined,
        "top frame source doesn't belong to an attribute");
 
     // The second stack frame should belong to heinrich.
-    ok(frame.older.script.source.element === DOFor(doc.getElementById('heinrich')),
+    ok(frame.older.script.source.element === DOFor(doc.getElementById("heinrich")),
        "second frame source belongs to element heinrich");
     ok(frame.older.script.source.elementAttributeName === undefined,
        "second frame source doesn't belong to an attribute");
 
     // The next stack frame should belong to heidi's onclick handler.
-    ok(frame.older.older.script.source.element === DOFor(doc.getElementById('heidi')),
-       'third frame source belongs to element heidi');
-    ok(frame.older.older.script.source.elementAttributeName === 'onclick',
+    ok(frame.older.older.script.source.element === DOFor(doc.getElementById("heidi")),
+       "third frame source belongs to element heidi");
+    ok(frame.older.older.script.source.elementAttributeName === "onclick",
        "third frame source belongs to 'onclick' attribute");
 
     // Try a dynamically inserted inline script element.
-    ulrich = doc.createElement('script');
-    ulrich.text = 'debugger;'
+    ulrich = doc.createElement("script");
+    ulrich.text = "debugger;";
     dbg.onDebuggerStatement = ulrichDebuggerHandler;
     doc.body.appendChild(ulrich);
   }
 
   function ulrichDebuggerHandler(frame) {
-    log += 'u';
+    log += "u";
 
     // The top frame should be ulrich's text.
     ok(frame.script.source.element === DOFor(ulrich),
@@ -89,23 +90,23 @@ window.onload = function () {
        "top frame is not on an attribute of ulrich");
 
     // Try a dynamically inserted out-of-line script element.
-    isolde = doc.createElement('script');
-    isolde.setAttribute('src', 'Debugger.Source.prototype.element-2.js');
-    isolde.setAttribute('id', 'idolde, my dear');
+    isolde = doc.createElement("script");
+    isolde.setAttribute("src", "Debugger.Source.prototype.element-2.js");
+    isolde.setAttribute("id", "idolde, my dear");
     dbg.onDebuggerStatement = isoldeDebuggerHandler;
     doc.body.appendChild(isolde);
   }
 
   function isoldeDebuggerHandler(frame) {
-    log += 'i';
+    log += "i";
 
     // The top frame should belong to isolde.
     ok(frame.script.source.element === DOFor(isolde),
        "top frame belongs to isolde");
     info("frame.script.source.element is: " + uneval(frame.script.source.element));
-    if (typeof frame.script.source.element.unsafeDereference() == 'object') {
-       info("   toString: " + frame.script.source.element.unsafeDereference());
-       info("   id: " + frame.script.source.element.unsafeDereference().id);
+    if (typeof frame.script.source.element.unsafeDereference() == "object") {
+      info("   toString: " + frame.script.source.element.unsafeDereference());
+      info("   id: " + frame.script.source.element.unsafeDereference().id);
     }
 
     ok(frame.script.source.elementAttributeName === undefined,
@@ -114,20 +115,20 @@ window.onload = function () {
          uneval(frame.script.source.elementAttributeName));
 
     // Try a dynamically created div element with a handler.
-    dieter = doc.createElement('div');
-    dieter.setAttribute('id', 'dieter');
-    dieter.setAttribute('ondrag', 'debugger;');
+    dieter = doc.createElement("div");
+    dieter.setAttribute("id", "dieter");
+    dieter.setAttribute("ondrag", "debugger;");
     dbg.onDebuggerStatement = dieterDebuggerHandler;
-    dieter.dispatchEvent(new Event('drag'));
- }
+    dieter.dispatchEvent(new Event("drag"));
+  }
 
- function dieterDebuggerHandler(frame) {
-    log += 'd';
+  function dieterDebuggerHandler(frame) {
+    log += "d";
 
     // The top frame should belong to dieter's ondrag handler.
     ok(frame.script.source.element === DOFor(dieter),
        "second event's handler belongs to dieter");
-    ok(frame.script.source.elementAttributeName === 'ondrag',
+    ok(frame.script.source.elementAttributeName === "ondrag",
        "second event's handler is on dieter's 'ondrag' element");
 
     // Try sending an 'onresize' event to the window.
@@ -139,43 +140,42 @@ window.onload = function () {
     // won't affect propagation. Then, the content event only runs its
     // 'debugger' statement when the event is cancelable. It's a kludge.
     dbg.onDebuggerStatement = resizeDebuggerHandler;
-    iframe.contentWindow.dispatchEvent(new Event('resize', { cancelable: true }));
+    iframe.contentWindow.dispatchEvent(new Event("resize", { cancelable: true }));
   }
 
   function resizeDebuggerHandler(frame) {
-    log += 'e';
+    log += "e";
 
     // The top frame should belong to the body's 'onresize' handler, even
     // though we sent the message to the window and it was handled.
     ok(frame.script.source.element === DOFor(doc.body),
        "onresize event handler belongs to body element");
-    ok(frame.script.source.elementAttributeName === 'onresize',
+    ok(frame.script.source.elementAttributeName === "onresize",
        "onresize event handler is on body element's 'onresize' attribute");
 
     // In SVG, the event and the attribute that holds that event's handler
     // have different names. Debugger.Source.prototype.elementAttributeName
     // should report (as one might infer) the attribute name, not the event
     // name.
-    albrecht = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    albrecht.setAttribute('onload', 'debugger;');
+    albrecht = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
+    albrecht.setAttribute("onload", "debugger;");
     dbg.onDebuggerStatement = SVGLoadHandler;
     albrecht.dispatchEvent(new Event("SVGLoad"));
   }
 
   function SVGLoadHandler(frame) {
-    log += 's';
+    log += "s";
 
     // The top frame's source should be on albrecht's 'onload' attribute.
     ok(frame.script.source.element === DOFor(albrecht),
        "SVGLoad event handler belongs to albrecht");
-    ok(frame.script.source.elementAttributeName === 'onload',
+    ok(frame.script.source.elementAttributeName === "onload",
        "SVGLoad event handler is on albrecht's 'onload' attribute");
 
-    ok(log === 'lfuides', "all tests actually ran");
+    ok(log === "lfuides", "all tests actually ran");
     SimpleTest.finish();
   }
-}
-
+};
 </script>
 </pre>
 </body>

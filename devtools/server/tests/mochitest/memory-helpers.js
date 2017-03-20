@@ -1,14 +1,16 @@
-var Cu = Components.utils;
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+/* exported Task, startServerAndGetSelectedTabMemory, destroyServerAndFinish,
+   waitForTime, waitUntil */
+"use strict";
 
-var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const Cu = Components.utils;
+
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const Services = require("Services");
 const { Task } = require("devtools/shared/task");
-var Services = require("Services");
-var { DebuggerClient } = require("devtools/shared/client/main");
-var { DebuggerServer } = require("devtools/server/main");
+const { DebuggerClient } = require("devtools/shared/client/main");
+const { DebuggerServer } = require("devtools/server/main");
 
-var { MemoryFront } = require("devtools/shared/fronts/memory");
+const { MemoryFront } = require("devtools/shared/fronts/memory");
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
@@ -19,13 +21,13 @@ SimpleTest.registerCleanupFunction(function () {
 function startServerAndGetSelectedTabMemory() {
   DebuggerServer.init();
   DebuggerServer.addBrowserActors();
-  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
 
   return client.connect()
     .then(() => client.listTabs())
     .then(response => {
-      var form = response.tabs[response.selected];
-      var memory = MemoryFront(client, form, response);
+      let form = response.tabs[response.selected];
+      let memory = MemoryFront(client, form, response);
 
       return { memory, client };
     });
@@ -48,5 +50,6 @@ function waitUntil(predicate) {
   if (predicate()) {
     return Promise.resolve(true);
   }
-  return new Promise(resolve => setTimeout(() => waitUntil(predicate).then(() => resolve(true)), 10));
+  return new Promise(resolve => setTimeout(() => waitUntil(predicate)
+         .then(() => resolve(true)), 10));
 }

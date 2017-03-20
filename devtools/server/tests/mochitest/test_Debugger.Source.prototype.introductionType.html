@@ -16,13 +16,14 @@ JavaScrip appearing in an inline event handler attribute.
 <body>
 <pre id="test">
 <script>
+"use strict";
 
 Components.utils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
-var dbg;
-var iframeDO, doc;
-var Tootles, TootlesDO;
+let dbg;
+let iframeDO, doc;
+let Tootles, TootlesDO;
 
 window.onload = function () {
   SimpleTest.waitForExplicitFinish();
@@ -31,7 +32,7 @@ window.onload = function () {
 
 addTest(function setup() {
   // Create an iframe to debug.
-  var iframe = document.createElement("iframe");
+  let iframe = document.createElement("iframe");
   iframe.src = "data:text/html," +
                "<div id='Tootles' onclick='debugger;'>I'm a DIV!</div>" +
                "<script id='Auddie'>function auddie() { debugger; }<\/script>";
@@ -41,88 +42,84 @@ addTest(function setup() {
   function onLoadHandler() {
     // Now that the iframe's window has been created, we can add
     // it as a debuggee.
-    dbg = new Debugger;
+    dbg = new Debugger();
     iframeDO = dbg.addDebuggee(iframe.contentWindow);
     doc = iframe.contentWindow.document;
-    Tootles = doc.getElementById('Tootles');
+    Tootles = doc.getElementById("Tootles");
     TootlesDO = iframeDO.makeDebuggeeValue(Tootles);
 
     runNextTest();
   }
 });
 
-
 // Check the introduction type of in-markup event handler code.
 // Send a click event to Tootles, whose handler has a 'debugger' statement,
 // and check that script's introduction type.
 addTest(function ClickOnTootles() {
   dbg.onDebuggerStatement = TootlesClickDebugger;
-  Tootles.dispatchEvent(new Event('click'));
+  Tootles.dispatchEvent(new Event("click"));
 
   function TootlesClickDebugger(frame) {
     // some sanity checks
     ok(frame.script.source.element === TootlesDO,
        "top frame source belongs to element 'Tootles'");
-    is(frame.script.source.elementAttributeName, 'onclick',
+    is(frame.script.source.elementAttributeName, "onclick",
        "top frame source belongs to 'onclick' attribute");
 
     // And, the actual point of this test:
-    is(frame.script.source.introductionType, 'eventHandler',
+    is(frame.script.source.introductionType, "eventHandler",
        "top frame source's introductionType is 'eventHandler'");
 
     runNextTest();
   }
 });
-
 
 // Check the introduction type of dynamically added event handler code.
 // Add a drag event handler to Tootles as a string, and then send
 // Tootles a drag event.
 addTest(function DragTootles() {
   dbg.onDebuggerStatement = TootlesDragDebugger;
-  Tootles.setAttribute('ondrag', 'debugger;');
-  Tootles.dispatchEvent(new Event('drag'));
+  Tootles.setAttribute("ondrag", "debugger;");
+  Tootles.dispatchEvent(new Event("drag"));
 
   function TootlesDragDebugger(frame) {
     // sanity checks
     ok(frame.script.source.element === TootlesDO,
        "top frame source belongs to element 'Tootles'");
-    is(frame.script.source.elementAttributeName, 'ondrag',
+    is(frame.script.source.elementAttributeName, "ondrag",
        "top frame source belongs to 'ondrag' attribute");
 
     // And, the actual point of this test:
-    is(frame.script.source.introductionType, 'eventHandler',
+    is(frame.script.source.introductionType, "eventHandler",
        "top frame source's introductionType is 'eventHandler'");
 
     runNextTest();
   }
 });
 
-
 // Check the introduction type of an in-markup script element.
 addTest(function checkAuddie() {
-  var fnDO = iframeDO.getOwnPropertyDescriptor('auddie').value;
-  var AuddieDO = iframeDO.makeDebuggeeValue(doc.getElementById('Auddie'));
+  let fnDO = iframeDO.getOwnPropertyDescriptor("auddie").value;
+  let AuddieDO = iframeDO.makeDebuggeeValue(doc.getElementById("Auddie"));
 
-  is(fnDO.class, 'Function',
+  is(fnDO.class, "Function",
      "Script element 'Auddie' defined function 'auddie'.");
   ok(fnDO.script.source.element === AuddieDO,
      "Function auddie's script belongs to script element 'Auddie'");
   is(fnDO.script.source.elementAttributeName, undefined,
      "Function auddie's script doesn't belong to any attribute of 'Auddie'");
-  is(fnDO.script.source.introductionType, 'scriptElement',
+  is(fnDO.script.source.introductionType, "scriptElement",
      "Function auddie's script's source was introduced by a script element");
 
   runNextTest();
 });
 
-
 // Check the introduction type of a dynamically inserted script element.
 addTest(function InsertRover() {
   dbg.onDebuggerStatement = RoverDebugger;
-  var rover = doc.createElement('script');
-  var roverDO = iframeDO.makeDebuggeeValue(rover);
-  rover.text = 'debugger;';
+  let rover = doc.createElement("script");
+  let roverDO = iframeDO.makeDebuggeeValue(rover);
+  rover.text = "debugger;";
   doc.body.appendChild(rover);
 
   function RoverDebugger(frame) {
@@ -133,17 +130,16 @@ addTest(function InsertRover() {
        "Rover script doesn't belong to an attribute of Rover");
 
     // Check the introduction type.
-    ok(frame.script.source.introductionType === 'scriptElement',
+    ok(frame.script.source.introductionType === "scriptElement",
        "Rover script's introduction type is 'scriptElement'");
 
     runNextTest();
   }
 });
 
-
 // Create a XUL document with a script element, and check its introduction type.
 addTest(function XULDocumentScript() {
-  var xulFrame = document.createElement('iframe');
+  let xulFrame = document.createElement("iframe");
   xulFrame.src = "data:application/vnd.mozilla.xul+xml;charset=utf-8," +
                  "<?xml version=\"1.0\"?>" +
                  "<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'>" +
@@ -155,12 +151,10 @@ addTest(function XULDocumentScript() {
 
   function xulLoaded() {
     info("Loaded XUL document");
-    var xulFrameDO = dbg.addDebuggee(xulFrame.contentWindow);
-    var xulDoc = xulFrame.contentWindow.document;
-    var xulieDO = xulFrameDO.makeDebuggeeValue(xulDoc.getElementById('xulie'));
-    var xulFnDO = xulFrameDO.getOwnPropertyDescriptor('xulScriptFunc').value;
-    is(typeof xulFnDO, 'object', "XUL script element defined 'xulScriptFunc'");
-    is(xulFnDO.class, 'Function',
+    let xulFrameDO = dbg.addDebuggee(xulFrame.contentWindow);
+    let xulFnDO = xulFrameDO.getOwnPropertyDescriptor("xulScriptFunc").value;
+    is(typeof xulFnDO, "object", "XUL script element defined 'xulScriptFunc'");
+    is(xulFnDO.class, "Function",
        "XUL global 'xulScriptFunc' is indeed a function");
 
     // A XUL document's script elements' code gets shared amongst all
@@ -169,12 +163,11 @@ addTest(function XULDocumentScript() {
     is(xulFnDO.script.source.element, undefined,
        "XUL script code should not be attributed to any individual element");
 
-    is(xulFnDO.script.source.introductionType, 'scriptElement',
+    is(xulFnDO.script.source.introductionType, "scriptElement",
        "xulScriptFunc's introduction type is 'scriptElement'");
     runNextTest();
   }
 });
-
 </script>
 </pre>
 </body>

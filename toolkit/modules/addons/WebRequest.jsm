@@ -62,7 +62,7 @@ var RequestId = {
   },
 
   get(channel) {
-    return channel && getData(channel).requestId || this.create(channel);
+    return (channel && getData(channel).requestId) || this.create(channel);
   },
 };
 

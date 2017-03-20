@@ -11,29 +11,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
+"use strict";
+
 const inspector = require("devtools/server/actors/inspector");
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
-}
+};
 
-var gWalker = null;
-var gClient = null;
-
-function assertOwnership() {
-  return assertOwnershipTrees(gWalker);
-}
+let gWalker = null;
+let gInspectee = null;
 
 addTest(function setup() {
   let url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
+  attachURL(url, function (err, client, tab, doc) {
     gInspectee = doc;
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
-    let inspector = InspectorFront(client, tab);
-    promiseDone(inspector.getWalker().then(walker => {
+    let inspectorFront = InspectorFront(client, tab);
+    promiseDone(inspectorFront.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
-      gClient = client;
       gWalker = walker;
     }).then(runNextTest));
   });
@@ -47,9 +44,11 @@ addAsyncTest(function* testRearrange() {
 
   // Move nodeA to the end of the list.
   yield gWalker.insertBefore(nodeA, longlist, null);
-  ok(!gInspectee.querySelector("#a").nextSibling, "a should now be at the end of the list.");
+  ok(!gInspectee.querySelector("#a").nextSibling,
+     "a should now be at the end of the list.");
   children = yield gWalker.children(longlist);
-  is(nodeA, children.nodes[children.nodes.length - 1], "a should now be the last returned child.");
+  is(nodeA, children.nodes[children.nodes.length - 1],
+     "a should now be the last returned child.");
 
   // Now move it to the middle of the list.
   let nextNode = children.nodes[13];
@@ -99,8 +98,8 @@ addAsyncTest(function* testInsertInvalidInput() {
 });
 
 addTest(function cleanup() {
-  delete gWalker;
-  delete gClient;
+  gWalker = null;
+  gInspectee = null;
   runNextTest();
 });
 

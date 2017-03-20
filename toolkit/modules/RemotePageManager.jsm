@@ -169,6 +169,12 @@ function publicMessagePort(port) {
     clean[property] = port[property].bind(port);
   }
 
+  Object.defineProperty(clean, "portID", {
+    get() {
+      return port.portID;
+    }
+  });
+
   if (port instanceof ChromeMessagePort) {
     Object.defineProperty(clean, "browser", {
       get() {

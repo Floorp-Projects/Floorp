@@ -12,17 +12,16 @@ Bug 1060093 - Test DebuggerServer.getProcess
 <body>
 <pre id="test">
 <script type="application/javascript">
+"use strict";
 
 let Cu = Components.utils;
-let Cc = Components.classes;
-let Ci = Components.interfaces;
 
 let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 let {DebuggerClient} = require("devtools/shared/client/main");
 let {DebuggerServer} = require("devtools/server/main");
 let Services = require("Services");
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
   SpecialPowers.pushPrefEnv({
@@ -35,7 +34,7 @@ window.onload = function() {
       ["dom.ipc.processCount", 10],
     ]
   }, runTests);
-}
+};
 
 function runTests() {
   // Instantiate a minimal server
@@ -81,13 +80,13 @@ function runTests() {
   function getProcess() {
     client.mainRoot.listProcesses(response => {
       ok(response.processes.length >= 2, "Got at least the parent process and one child");
-      is(response.processes.length, processCount+1 , "Got one additional process on the second call to listProcesses");
+      is(response.processes.length, processCount + 1,
+         "Got one additional process on the second call to listProcesses");
 
       // Connect to the first content processe available
       let content = response.processes.filter(p => (!p.parent))[0];
 
-      client.getProcess(content.id).then(response => {
-        let actor = response.form;
+      client.getProcess(content.id).then(({form: actor}) => {
         ok(actor.consoleActor, "Got the console actor");
         ok(actor.chromeDebugger, "Got the thread actor");
 
@@ -96,8 +95,8 @@ function runTests() {
           to: actor.consoleActor,
           type: "evaluateJS",
           text: "var a = 42; a"
-        }, function (response) {
-          ok(response.result, 42, "console.eval worked");
+        }, function ({result}) {
+          ok(result, 42, "console.eval worked");
 
           getProcessAgain(actor, content.id);
         });
@@ -118,7 +117,7 @@ function runTests() {
 
   function processScript() {
     let listener = function () {
-      Services.obs.removeObserver(listener, "sdk:loader:destroy", false);
+      Services.obs.removeObserver(listener, "sdk:loader:destroy");
       sendAsyncMessage("test:getProcess-destroy", null);
     };
     Services.obs.addObserver(listener, "sdk:loader:destroy", false);
@@ -127,10 +126,10 @@ function runTests() {
   function closeClient() {
     let onLoaderDestroyed = new Promise(done => {
       let processListener = function () {
-        Services.ppmm.removeMessageListener("test:getProcess-destroy", processListener)
+        Services.ppmm.removeMessageListener("test:getProcess-destroy", processListener);
         done();
       };
-      Services.ppmm.addMessageListener("test:getProcess-destroy", processListener)
+      Services.ppmm.addMessageListener("test:getProcess-destroy", processListener);
     });
     let script = "data:,(" + processScript + ")()";
     Services.ppmm.loadProcessScript(script, true);
@@ -147,7 +146,7 @@ function runTests() {
   function cleanup() {
     DebuggerServer.destroy();
     iframe.remove();
-    SimpleTest.finish()
+    SimpleTest.finish();
   }
 
   connect();

@@ -12,47 +12,48 @@ Bug 1023018 - Tests whether or not the framerate actor can handle time ranges.
 <body>
 <pre id="test">
 <script>
+"use strict";
 
-window.onload = function() {
-  var Cu = Components.utils;
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
+window.onload = function () {
+  const Cu = Components.utils;
 
-  var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  var {DebuggerClient} = require("devtools/shared/client/main");
-  var {DebuggerServer} = require("devtools/server/main");
-  var Services = require("Services");
+  const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  const {DebuggerClient} = require("devtools/shared/client/main");
+  const {DebuggerServer} = require("devtools/server/main");
+  const Services = require("Services");
 
   // Always log packets when running tests.
   Services.prefs.setBoolPref("devtools.debugger.log", true);
-  SimpleTest.registerCleanupFunction(function() {
+  SimpleTest.registerCleanupFunction(function () {
     Services.prefs.clearUserPref("devtools.debugger.log");
   });
 
   SimpleTest.waitForExplicitFinish();
 
-  var {FramerateFront} = require("devtools/shared/fronts/framerate");
-  var START_TICK = 2000;
-  var STOP_TICK = 3000;
-  var TOTAL_TIME = 5000;
+  const {FramerateFront} = require("devtools/shared/fronts/framerate");
+  const START_TICK = 2000;
+  const STOP_TICK = 3000;
+  const TOTAL_TIME = 5000;
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
     DebuggerServer.addBrowserActors();
   }
 
-  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
-    client.listTabs(function onListTabs(aResponse) {
-      var form = aResponse.tabs[aResponse.selected];
-      var front = FramerateFront(client, form);
+    client.listTabs(function onListTabs(response) {
+      let form = response.tabs[response.selected];
+      let front = FramerateFront(client, form);
 
       front.startRecording().then(() => {
+        /* eslint-disable max-nested-callbacks */
         window.setTimeout(() => {
           front.stopRecording(START_TICK, STOP_TICK).then(rawData => {
             onRecordingStopped(front, rawData);
           });
         }, TOTAL_TIME);
+        /* eslint-enable max-nested-callbacks */
       });
     });
   });
@@ -65,17 +66,17 @@ window.onload = function() {
     ok(!rawData.find(e => e > STOP_TICK),
       "There should be no tick after 3000ms.");
 
-    for (var tick of rawData) {
+    for (let tick of rawData) {
       info("Testing tick: " + tick);
       is(typeof tick, "number", "All values should be numbers.");
     }
 
     client.close().then(() => {
       DebuggerServer.destroy();
-      SimpleTest.finish()
+      SimpleTest.finish();
     });
   }
-}
+};
 </script>
 </pre>
 </body>

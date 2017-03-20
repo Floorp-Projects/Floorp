@@ -11,18 +11,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=932937
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
-const inspector = require("devtools/shared/fronts/inspector");
+"use strict";
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
-}
+};
 
-var gWalker = null;
+let gWalker = null;
 
 addTest(function setup() {
   let url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
+  attachURL(url, function (err, client, tab, doc) {
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
 
@@ -45,6 +45,7 @@ addTest(function testLargeImage() {
       is(imageData.size.naturalHeight, 3000, "Natural width of the image correct");
       ok(imageData.size.resized, "Image was resized");
 
+      // eslint-disable-next-line max-nested-callbacks
       imageData.data.string().then(str => {
         ok(str, "We have an image data string!");
         testResizing(imageData, str);
@@ -66,6 +67,7 @@ addTest(function testLargeCanvas() {
       is(imageData.size.naturalHeight, 2000, "Natural width of the image correct");
       ok(imageData.size.resized, "Image was resized");
 
+      // eslint-disable-next-line max-nested-callbacks
       imageData.data.string().then(str => {
         ok(str, "We have an image data string!");
         testResizing(imageData, str);
@@ -87,6 +89,7 @@ addTest(function testSmallImage() {
       is(imageData.size.naturalHeight, 240, "Natural width of the image correct");
       ok(!imageData.size.resized, "Image was NOT resized");
 
+      // eslint-disable-next-line max-nested-callbacks
       imageData.data.string().then(str => {
         ok(str, "We have an image data string!");
         testResizing(imageData, str);
@@ -108,6 +111,7 @@ addTest(function testDataImage() {
       is(imageData.size.naturalHeight, 28, "Natural width of the image correct");
       ok(imageData.size.resized, "Image was resized");
 
+      // eslint-disable-next-line max-nested-callbacks
       imageData.data.string().then(str => {
         ok(str, "We have an image data string!");
         testResizing(imageData, str);
@@ -123,7 +127,7 @@ addTest(function testNonImgOrCanvasElements() {
 });
 
 addTest(function cleanup() {
-  delete gWalker;
+  gWalker = null;
   runNextTest();
 });
 
