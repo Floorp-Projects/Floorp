@@ -72,7 +72,7 @@ enum ChannelState {
 
 class AutoEnterTransaction;
 
-class MessageChannel : HasResultCodes
+class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
 {
     friend class ProcessLink;
     friend class ThreadLink;
@@ -89,7 +89,8 @@ class MessageChannel : HasResultCodes
     typedef IPC::MessageInfo MessageInfo;
     typedef mozilla::ipc::Transport Transport;
 
-    explicit MessageChannel(IToplevelProtocol *aListener);
+    explicit MessageChannel(const char *aName,
+                            IToplevelProtocol *aListener);
     ~MessageChannel();
 
     IToplevelProtocol *Listener() const {
@@ -491,7 +492,12 @@ class MessageChannel : HasResultCodes
     typedef std::map<size_t, Message> MessageMap;
     typedef IPC::Message::msgid_t msgid_t;
 
+    void WillDestroyCurrentMessageLoop() override;
+
   private:
+    // This will be a string literal, so lifetime is not an issue.
+    const char* mName;
+
     // Based on presumption the listener owns and overlives the channel,
     // this is never nullified.
     IToplevelProtocol* mListener;
