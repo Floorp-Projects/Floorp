@@ -126,3 +126,5 @@ fuzzy(1,1) == image-orientation-background.html?90&flip      image-orientation-r
 
 == image-resize-percent-height.html image-resize-ref.html
 == image-resize-percent-width.html image-resize-ref.html
+
+== moz-broken-matching-1.html moz-broken-matching-1-ref.html
