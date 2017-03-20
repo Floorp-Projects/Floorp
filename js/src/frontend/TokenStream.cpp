@@ -737,25 +737,26 @@ TokenStream::reportCompileErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t 
     err.errorNumber = errorNumber;
     err.filename = filename;
     err.isMuted = mutedErrors;
+
+    bool callerFilename = false;
     if (offset == NoOffset) {
         err.lineno = 0;
         err.column = 0;
     } else {
-        err.lineno = srcCoords.lineNum(offset);
-        err.column = srcCoords.columnIndex(offset);
-    }
-
-    // If we have no location information, try to get one from the caller.
-    bool callerFilename = false;
-    if (offset != NoOffset && !err.filename && !cx->helperThread()) {
-        NonBuiltinFrameIter iter(cx,
-                                 FrameIter::FOLLOW_DEBUGGER_EVAL_PREV_LINK,
-                                 cx->compartment()->principals());
-        if (!iter.done() && iter.filename()) {
-            callerFilename = true;
-            err.filename = iter.filename();
-            err.lineno = iter.computeLine(&err.column);
+        // If we have no location information, try to get some from the caller.
+        if (!err.filename && !cx->helperThread()) {
+            NonBuiltinFrameIter iter(cx,
+                                     FrameIter::FOLLOW_DEBUGGER_EVAL_PREV_LINK,
+                                     cx->compartment()->principals());
+            if (!iter.done() && iter.filename()) {
+                err.filename = iter.filename();
+                err.lineno = iter.computeLine(&err.column);
+                callerFilename = true;
+            }
         }
+
+        if (!callerFilename)
+            srcCoords.lineNumAndColumnIndex(offset, &err.lineno, &err.column);
     }
 
     if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber,
