@@ -59,6 +59,12 @@ public class Experiments {
     // Make new activity stream panel available (to replace top sites) (Bug 1313316)
     public static final String ACTIVITY_STREAM = "activity-stream";
 
+    // Show a setting in "experimental features" for enabling/disabling activity stream.
+    public static final String ACTIVITY_STREAM_SETTING = "activity-stream-setting";
+
+    // Enable Activity stream by default for users in the "opt out" group.
+    public static final String ACTIVITY_STREAM_OPT_OUT = "activity-stream-opt-out";
+
     // Tabs tray: Arrange tabs in two columns in portrait mode
     public static final String COMPACT_TABS = "compact-tabs";
 
