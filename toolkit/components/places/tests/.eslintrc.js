@@ -2,8 +2,8 @@
 
 module.exports = {
   "extends": [
-    "../../../../testing/mochitest/mochitest.eslintrc.js",
-    "../../../../testing/mochitest/chrome.eslintrc.js",
-    "../../../../testing/xpcshell/xpcshell.eslintrc.js"
+    "plugin:mozilla/mochitest-test",
+    "plugin:mozilla/chrome-test",
+    "plugin:mozilla/xpcshell-test"
   ]
 };

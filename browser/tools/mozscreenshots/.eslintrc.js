@@ -1,8 +1,8 @@
 "use strict";
 
-module.exports = { // eslint-disable-line no-undef
+module.exports = {
   "extends": [
-    "../../../testing/mochitest/browser.eslintrc.js"
+    "plugin:mozilla/browser-test"
   ],
 
   "rules": {
