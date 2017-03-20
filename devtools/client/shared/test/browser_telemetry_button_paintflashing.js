@@ -44,8 +44,15 @@ function* delayedClicks(toolbox, node, clicks) {
       setTimeout(() => resolve(), TOOL_DELAY);
     });
 
-    let PaintFlashingCmd = require("devtools/shared/gcli/commands/paintflashing");
-    let clicked = PaintFlashingCmd.eventEmitter.once("changed");
+    let { CommandState } = require("devtools/shared/gcli/command-state");
+    let clicked = new Promise(resolve => {
+      CommandState.on("changed", function changed(type, { command }) {
+        if (command === "paintflashing") {
+          CommandState.off("changed", changed);
+          resolve();
+        }
+      });
+    });
 
     info("Clicking button " + node.id);
     node.click();
