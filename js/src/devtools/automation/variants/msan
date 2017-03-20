@@ -1,6 +1,7 @@
 {
-    "configure-args": "--disable-debug --enable-debug-symbols='-gline-tables-only' --disable-jemalloc --enable-memory-sanitizer",
+    "configure-args": "--enable-debug-symbols='-gline-tables-only' --disable-jemalloc --enable-memory-sanitizer",
     "optimize": true,
+    "debug": false,
     "compiler": "clang",
     "env": {
         "JITTEST_EXTRA_ARGS": "--jitflags=interp --ignore-timeouts={DIR}/cgc-jittest-timeouts.txt",
