@@ -37,7 +37,16 @@ txApplyDefaultElementTemplate::execute(txExecutionState& aEs)
 }
 
 nsresult
-txApplyImports::execute(txExecutionState& aEs)
+txApplyImportsEnd::execute(txExecutionState& aEs)
+{
+    aEs.popTemplateRule();
+    aEs.popParamMap();
+    
+    return NS_OK;
+}
+
+nsresult
+txApplyImportsStart::execute(txExecutionState& aEs)
 {
     txExecutionState::TemplateRule* rule = aEs.getCurrentTemplateRule();
     // The frame is set to null when there is no current template rule, or
@@ -59,12 +68,7 @@ txApplyImports::execute(txExecutionState& aEs)
 
     aEs.pushTemplateRule(frame, mode, rule->mParams);
 
-    rv = aEs.runTemplate(templ);
-
-    aEs.popTemplateRule();
-    aEs.popParamMap();
-
-    return rv;
+    return aEs.runTemplate(templ);
 }
 
 txApplyTemplates::txApplyTemplates(const txExpandedName& aMode)
