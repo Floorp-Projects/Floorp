@@ -107,7 +107,7 @@ class OriginKeyStore : public nsISupports
   private:
     void
     PrincipalInfoToString(const ipc::PrincipalInfo& aPrincipalInfo,
-                          nsAutoCString aString)
+                          nsACString& aString)
     {
       switch (aPrincipalInfo.type()) {
         case ipc::PrincipalInfo::TSystemPrincipalInfo:
@@ -124,11 +124,11 @@ class OriginKeyStore : public nsISupports
         case ipc::PrincipalInfo::TContentPrincipalInfo: {
           const ipc::ContentPrincipalInfo& info =
             aPrincipalInfo.get_ContentPrincipalInfo();
-          aString.Assign(info.spec());
+          aString.Assign(info.originNoSuffix());
 
           nsAutoCString suffix;
           info.attrs().CreateSuffix(suffix);
-          suffix.Append(suffix);
+          aString.Append(suffix);
           return;
         }
 
