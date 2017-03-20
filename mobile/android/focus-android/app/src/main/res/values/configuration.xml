@@ -6,10 +6,10 @@
     <!-- We are overriding this value in values-sw600dp -->
     <bool name="is_tablet">false</bool>
 
-    <integer name="erase_animation_alpha_duration">200</integer>
+    <integer name="erase_animation_alpha_duration">250</integer>
     <integer name="erase_animation_scale_duration">100</integer>
     <integer name="erase_animation_translate_duration">100</integer>
-    <integer name="erase_animation_translate_offset">100</integer>
+    <integer name="erase_animation_translate_offset">150</integer>
 
-    <integer name="erase_snackbar_delay">100</integer>
+    <integer name="erase_snackbar_delay">500</integer>
 </resources>
