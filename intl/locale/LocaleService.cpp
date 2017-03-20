@@ -463,7 +463,7 @@ LocaleService::NegotiateLanguages(const char** aRequested,
   // Check that the given string contains only ASCII characters valid in tags
   // (i.e. alphanumerics, plus '-' and '_'), and is non-empty.
   auto validTagChars = [](const char* s) {
-    if (!*s) {
+    if (!s || !*s) {
       return false;
     }
     while (*s) {
