@@ -1367,7 +1367,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
   bool wantNextFrame = (animationProcess != AnimationProcessTypes::eNone);
 
   mAnimationMetricsTracker.UpdateAnimationInProgress(
-    wantNextFrame, layerAreaAnimated);
+    animationProcess, layerAreaAnimated, aVsyncRate);
 
   if (!wantNextFrame) {
     // Clean up the CompositorAnimationStorage because
