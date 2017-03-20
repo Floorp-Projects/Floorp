@@ -4654,7 +4654,7 @@ nsComputedDOMStyle::DoGetJustifyItems()
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString str;
   auto justify =
-    StylePosition()->ComputedJustifyItems(mStyleContext->GetParent());
+    StylePosition()->ComputedJustifyItems(mStyleContext->GetParentAllowServo());
   nsCSSValue::AppendAlignJustifyValueToString(justify, str);
   val->SetString(str);
   return val.forget();

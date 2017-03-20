@@ -1678,8 +1678,8 @@ nsStylePosition::ComputedJustifyItems(nsStyleContext* aParent) const
     return mJustifyItems;
   }
   if (MOZ_LIKELY(aParent)) {
-    auto inheritedJustifyItems =
-      aParent->StylePosition()->ComputedJustifyItems(aParent->GetParent());
+    auto inheritedJustifyItems = aParent->StylePosition()->ComputedJustifyItems(
+      aParent->GetParentAllowServo());
     // "If the inherited value of justify-items includes the 'legacy' keyword,
     // 'auto' computes to the inherited value."  Otherwise, 'normal'.
     if (inheritedJustifyItems & NS_STYLE_JUSTIFY_LEGACY) {
@@ -1696,8 +1696,8 @@ nsStylePosition::UsedJustifySelf(nsStyleContext* aParent) const
     return mJustifySelf;
   }
   if (MOZ_LIKELY(aParent)) {
-    auto inheritedJustifyItems = aParent->StylePosition()->
-      ComputedJustifyItems(aParent->GetParent());
+    auto inheritedJustifyItems = aParent->StylePosition()->ComputedJustifyItems(
+      aParent->GetParentAllowServo());
     return inheritedJustifyItems & ~NS_STYLE_JUSTIFY_LEGACY;
   }
   return NS_STYLE_JUSTIFY_NORMAL;
