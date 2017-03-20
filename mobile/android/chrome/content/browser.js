@@ -4080,7 +4080,7 @@ Tab.prototype = {
           this.browser.addEventListener("pagehide", listener, true);
         }
 
-        if (AppConstants.NIGHTLY_BUILD || AppConstants.MOZ_ANDROID_ACTIVITY_STREAM) {
+        if (AppConstants.NIGHTLY_BUILD) {
           if (!docURI.startsWith("about:")) {
             WebsiteMetadata.parseAsynchronously(this.browser.contentDocument);
           }
