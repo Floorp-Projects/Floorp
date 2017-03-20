@@ -2279,6 +2279,12 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
       continue;
     }
 
+    mozilla::Telemetry::HistogramID id;
+    nsresult rv = internal_GetHistogramEnumId(h->histogram_name().c_str(), &id);
+    if (NS_WARN_IF(NS_FAILED(rv)) || gHistograms[id].keyed) {
+      continue;
+    }
+
     Histogram* original = h;
 #if !defined(MOZ_WIDGET_ANDROID)
     if (subsession) {
