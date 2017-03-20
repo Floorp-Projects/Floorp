@@ -600,10 +600,11 @@ def remove_linux_pgo_try_talos(config, tests):
 
 
 @transforms.add
-def set_mochitest_test_type(config, tests):
+def set_test_type(config, tests):
     for test in tests:
-        if 'mochitest' in test['suite']:
-            test.setdefault('tags', {})['test-type'] = 'mochitest'
+        for test_type in ['mochitest', 'reftest']:
+            if test_type in test['suite'] and 'web-platform' not in test['suite']:
+                test.setdefault('tags', {})['test-type'] = test_type
         yield test
 
 

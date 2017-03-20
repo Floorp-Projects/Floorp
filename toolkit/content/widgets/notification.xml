@@ -515,7 +515,8 @@
                     class="popup-notification-button"
                     xbl:inherits="oncommand=secondarybuttoncommand,label=secondarybuttonlabel,accesskey=secondarybuttonaccesskey,hidden=secondarybuttonhidden"/>
         <xul:toolbarseparator xbl:inherits="hidden=dropmarkerhidden"/>
-        <xul:button type="menu"
+        <xul:button anonid="menubutton"
+                    type="menu"
                     class="popup-notification-button popup-notification-dropmarker"
                     xbl:inherits="onpopupshown=dropmarkerpopupshown,hidden=dropmarkerhidden">
           <xul:menupopup anonid="menupopup"
@@ -547,6 +548,9 @@
       </field>
       <field name="secondaryButton" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "secondarybutton");
+      </field>
+      <field name="menubutton" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "menubutton");
       </field>
       <field name="menupopup" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "menupopup");

@@ -1482,6 +1482,16 @@
     "n_buckets": 50,
     "description": "GIF image decode speed (Kbytes/sec)"
   },
+  "IMAGE_LOAD_TRIGGER_LATENCY_MS": {
+    "alert_emails": ["ehsan@mozilla.com"],
+    "expires_in_version": "60",
+    "bug_numbers": [1347376],
+    "kind": "exponential",
+    "low": 1,
+    "high": 1000,
+    "n_buckets": 50,
+    "description": "Measures the number of milliseconds we spend inside imgLoader::LoadImage(). Note: only calls that take more than 500 microseconds and happen in the content process are included in this probe."
+  },
   "IMAGE_DECODE_SPEED_PNG": {
     "expires_in_version": "never",
     "kind": "exponential",

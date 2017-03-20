@@ -878,7 +878,7 @@ ssl3_ClientHandleStatusRequestXtn(const sslSocket *ss, TLSExtensionData *xtnData
 }
 
 PRUint32 ssl_ticket_lifetime = 2 * 24 * 60 * 60; /* 2 days in seconds */
-#define TLS_EX_SESS_TICKET_VERSION (0x0103)
+#define TLS_EX_SESS_TICKET_VERSION (0x0104)
 
 /*
  * Called from ssl3_SendNewSessionTicket, tls13_SendNewSessionTicket
@@ -1003,7 +1003,8 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
         + 1                                    /* extendedMasterSecretUsed */
         + sizeof(ticket->ticket_lifetime_hint) /* ticket lifetime hint */
         + sizeof(ticket->flags)                /* ticket flags */
-        + 1 + alpnSelection.len;               /* npn value + length field. */
+        + 1 + alpnSelection.len                /* npn value + length field. */
+        + 4;                                   /* maxEarlyData */
 #ifdef UNSAFE_FUZZER_MODE
     padding_length = 0;
 #else
@@ -1151,6 +1152,10 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
         if (rv != SECSuccess)
             goto loser;
     }
+
+    rv = ssl3_AppendNumberToItem(&plaintext, ssl_max_early_data_size, 4);
+    if (rv != SECSuccess)
+        goto loser;
 
     PORT_Assert(plaintext.len == padding_length);
     for (i = 0; i < padding_length; i++)
@@ -1608,6 +1613,12 @@ ssl3_ProcessSessionTicketCommon(sslSocket *ss, SECItem *data)
             goto no_ticket;
     }
 
+    rv = ssl3_ExtConsumeHandshakeNumber(ss, &temp, 4, &buffer, &buffer_len);
+    if (rv != SECSuccess) {
+        goto no_ticket;
+    }
+    parsed_session_ticket->maxEarlyData = temp;
+
 #ifndef UNSAFE_FUZZER_MODE
     /* Done parsing.  Check that all bytes have been consumed. */
     if (buffer_len != padding_length) {
@@ -1642,6 +1653,8 @@ ssl3_ProcessSessionTicketCommon(sslSocket *ss, SECItem *data)
                              &extension_data) != SECSuccess)
             goto no_ticket;
         sid->u.ssl3.locked.sessionTicket.flags = parsed_session_ticket->flags;
+        sid->u.ssl3.locked.sessionTicket.max_early_data_size =
+            parsed_session_ticket->maxEarlyData;
 
         if (parsed_session_ticket->ms_length >
             sizeof(sid->u.ssl3.keys.wrapped_master_secret))

@@ -120,7 +120,13 @@ const signatures = [
 "bQp9Z2/M",
 
 // Invalid signature data ("foobar" base 64 encoded)
-"Zm9vYmFy"
+"Zm9vYmFy",
+
+// Key 1, Data 1, SHA512 hash algorithm, with embedded whitespace.
+`MIGTMA0GCSqGSIb3DQEBDQUAA4GBAF0+XYD/r0Annz1GJ24GTkAlWY/OixCSV6Ix
+   OMM7P2d/jgOP+ICKIpxqaSE0CbkLiegUiidIOWvFqDxQJWlAAukDUWISGFfJMFxX
+ 3jzJ0bBfeNY/1Qo8jMQopcNco/NlNgoSKAUOBtk31aFgNoVC3kWUk6pO97KEiJ+e
+   bQp9Z2/M`,
 ];
 
 const tests = [
@@ -169,6 +175,9 @@ const tests = [
   [0,     1,         2,    false,     true],  // 37
   [0,     16,        0,    false,     true],  // 38
   [1,     16,        0,    false,     true],  // 39
+  // Test embedded whitespace (e.g. signature read directly from file) is
+  // ignored for backwards compatibility purposes.
+  [1,     17,        1,    true,      false],
 ];
 
 function run_test() {

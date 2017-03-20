@@ -23,7 +23,8 @@ skip: true
 """
 
 def test_filter_unicode():
-    tests = make_mock_manifest(("a", 10), ("a/b", 10), ("c", 10))
+    tests = make_mock_manifest(("test", "a", 10), ("test", "a/b", 10),
+                               ("test", "c", 10))
 
     with tempfile.NamedTemporaryFile("wb", suffix=".ini") as f:
         f.write(include_ini.encode('utf-8'))

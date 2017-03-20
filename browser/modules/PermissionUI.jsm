@@ -301,7 +301,8 @@ this.PermissionPromptPrototype = {
           if (this.permissionKey) {
 
             // Permanently store permission.
-            if (state && state.checkboxChecked) {
+            if ((state && state.checkboxChecked) ||
+                promptAction.scope == SitePermissions.SCOPE_PERSISTENT) {
               let scope = SitePermissions.SCOPE_PERSISTENT;
               // Only remember permission for session if in PB mode.
               if (PrivateBrowsingUtils.isBrowserPrivate(this.browser)) {
@@ -539,22 +540,8 @@ DesktopNotificationPermissionPrompt.prototype = {
     let learnMoreURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") + "push";
 
-    let checkbox = {
-      show: true,
-      checked: true,
-      label: gBrowserBundle.GetStringFromName("webNotifications.remember")
-    };
-
-    // In PB mode, the "always remember" checkbox should only remember for the
-    // session.
-    if (PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal)) {
-      checkbox.label =
-        gBrowserBundle.GetStringFromName("webNotifications.rememberForSession");
-    }
-
     return {
       learnMoreURL,
-      checkbox,
       displayURI: false
     };
   },
@@ -583,12 +570,22 @@ DesktopNotificationPermissionPrompt.prototype = {
         accessKey:
           gBrowserBundle.GetStringFromName("webNotifications.allow.accesskey"),
         action: SitePermissions.ALLOW,
+        scope: SitePermissions.SCOPE_PERSISTENT,
       },
       {
-        label: gBrowserBundle.GetStringFromName("webNotifications.dontAllow"),
+        label: gBrowserBundle.GetStringFromName("webNotifications.notNow"),
         accessKey:
-          gBrowserBundle.GetStringFromName("webNotifications.dontAllow.accesskey"),
+          gBrowserBundle.GetStringFromName("webNotifications.notNow.accesskey"),
         action: SitePermissions.BLOCK,
+      },
+      {
+        label: PrivateBrowsingUtils.isBrowserPrivate(this.browser) ?
+          gBrowserBundle.GetStringFromName("webNotifications.neverForSession") :
+          gBrowserBundle.GetStringFromName("webNotifications.never"),
+        accessKey:
+          gBrowserBundle.GetStringFromName("webNotifications.never.accesskey"),
+        action: SitePermissions.BLOCK,
+        scope: SitePermissions.SCOPE_PERSISTENT,
       },
     ];
   },

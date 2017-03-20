@@ -19,7 +19,7 @@ from multiprocessing import Process, Event
 from ..localpaths import repo_root
 
 import sslutils
-from manifest.sourcefile import read_script_metadata
+from manifest.sourcefile import read_script_metadata, js_meta_re
 from wptserve import server as wptserve, handlers
 from wptserve import stash
 from wptserve.logger import set_logger
@@ -63,7 +63,7 @@ fetch_tests_from_worker(new Worker("%(worker_path)s"));
         path = path.replace(".any.worker.html", ".any.js")
         path = path.replace(".worker.html", ".worker.js")
         with open(path, "rb") as f:
-            for key, value in read_script_metadata(f):
+            for key, value in read_script_metadata(f, js_meta_re):
                 if key == b"timeout":
                     if value == b"long":
                         yield '<meta name="timeout" content="long">'
@@ -101,7 +101,7 @@ self.GLOBAL = {
         path = filesystem_path(self.base_path, request, self.url_base)
         path = path.replace(".any.html", ".any.js")
         with open(path, "rb") as f:
-            for key, value in read_script_metadata(f):
+            for key, value in read_script_metadata(f, js_meta_re):
                 if key == b"timeout":
                     if value == b"long":
                         yield '<meta name="timeout" content="long">'
@@ -137,7 +137,7 @@ done();
         path = filesystem_path(self.base_path, request, self.url_base)
         path = path.replace(".any.worker.js", ".any.js")
         with open(path, "rb") as f:
-            for key, value in read_script_metadata(f):
+            for key, value in read_script_metadata(f, js_meta_re):
                 if key == b"timeout":
                     pass
                 elif key == b"script":
@@ -259,7 +259,8 @@ class ServerProc(object):
               ssl_config, **kwargs):
         self.proc = Process(target=self.create_daemon,
                             args=(init_func, host, port, paths, routes, bind_hostname,
-                                  external_config, ssl_config))
+                                  external_config, ssl_config),
+                            kwargs=kwargs)
         self.proc.daemon = True
         self.proc.start()
 

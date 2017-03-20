@@ -504,10 +504,12 @@ exports.localized = localized;
 {
  var pdfjsLib;
  if (typeof __pdfjsdev_webpack__ === 'undefined') {
-  if (typeof require === 'function') {
+  if (typeof window !== 'undefined' && window['pdfjs-dist/build/pdf']) {
+   pdfjsLib = window['pdfjs-dist/build/pdf'];
+  } else if (typeof require === 'function') {
    pdfjsLib = require('../build/pdf.js');
   } else {
-   pdfjsLib = window['pdfjs-dist/build/pdf'];
+   throw new Error('Neither `require` nor `window` found');
   }
  }
  module.exports = pdfjsLib;

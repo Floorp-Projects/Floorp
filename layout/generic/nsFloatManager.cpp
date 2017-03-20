@@ -932,16 +932,16 @@ nsFloatManager::ShapeInfo::ComputeShapeBoxRect(
   LogicalRect rect = aMarginRect;
 
   switch (aShapeOutside.GetReferenceBox()) {
-    case StyleGeometryBox::Content:
+    case StyleGeometryBox::ContentBox:
       rect.Deflate(aWM, aFrame->GetLogicalUsedPadding(aWM));
       MOZ_FALLTHROUGH;
-    case StyleGeometryBox::Padding:
+    case StyleGeometryBox::PaddingBox:
       rect.Deflate(aWM, aFrame->GetLogicalUsedBorder(aWM));
       MOZ_FALLTHROUGH;
-    case StyleGeometryBox::Border:
+    case StyleGeometryBox::BorderBox:
       rect.Deflate(aWM, aFrame->GetLogicalUsedMargin(aWM));
       break;
-    case StyleGeometryBox::Margin:
+    case StyleGeometryBox::MarginBox:
       // Do nothing. rect is already a margin rect.
       break;
     case StyleGeometryBox::NoBox:

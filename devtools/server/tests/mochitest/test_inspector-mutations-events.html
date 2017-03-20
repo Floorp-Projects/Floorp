@@ -10,9 +10,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1157469
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
+"use strict";
 
-window.onload = function() {
-
+window.onload = function () {
   const Cu = Components.utils;
   const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   const {InspectorFront} = require("devtools/shared/fronts/inspector");
@@ -30,11 +30,11 @@ window.onload = function() {
   let eventFront2;
 
   addAsyncTest(function* setup() {
-    info ("Setting up inspector and walker actors.");
+    info("Setting up inspector and walker actors.");
     let url = document.getElementById("inspectorContent").href;
 
     yield new Promise(resolve => {
-      attachURL(url, function(err, client, tab, doc) {
+      attachURL(url, function (err, client, tab, doc) {
         inspectee = doc;
         inspector = InspectorFront(client, tab);
         resolve();
@@ -48,8 +48,8 @@ window.onload = function() {
   });
 
   addAsyncTest(function* setupEventTest() {
-    eventNode1 = inspectee.querySelector("#a")
-    eventNode2 = inspectee.querySelector("#b")
+    eventNode1 = inspectee.querySelector("#a");
+    eventNode2 = inspectee.querySelector("#b");
 
     eventFront1 = yield walker.querySelector(walker.rootNode, "#a");
     eventFront2 = yield walker.querySelector(walker.rootNode, "#b");
@@ -67,7 +67,8 @@ window.onload = function() {
     is(mutations.length, 1, "one mutation expected");
     is(mutations[0].target, eventFront1, "mutation targets eventFront1");
     is(mutations[0].type, "events", "mutation type is events");
-    is(mutations[0].hasEventListeners, true, "mutation target should have event listeners");
+    is(mutations[0].hasEventListeners, true,
+       "mutation target should have event listeners");
     is(eventFront1.hasEventListeners, true, "eventFront1 should have event listeners");
 
     info("remove event listener on a single node");
@@ -77,10 +78,12 @@ window.onload = function() {
     is(mutations.length, 1, "one mutation expected");
     is(mutations[0].target, eventFront1, "mutation targets eventFront1");
     is(mutations[0].type, "events", "mutation type is events");
-    is(mutations[0].hasEventListeners, false, "mutation target should have no event listeners");
-    is(eventFront1.hasEventListeners, false, "eventFront1 should have no event listeners");
+    is(mutations[0].hasEventListeners, false,
+       "mutation target should have no event listeners");
+    is(eventFront1.hasEventListeners, false,
+       "eventFront1 should have no event listeners");
 
-    info("perform several event listener changes on a single node")
+    info("perform several event listener changes on a single node");
     eventNode1.addEventListener("click", eventListener1);
     eventNode1.addEventListener("click", eventListener2);
     eventNode1.removeEventListener("click", eventListener1);
@@ -90,7 +93,8 @@ window.onload = function() {
     is(mutations.length, 1, "one mutation expected");
     is(mutations[0].target, eventFront1, "mutation targets eventFront1");
     is(mutations[0].type, "events", "mutation type is events");
-    is(mutations[0].hasEventListeners, false, "no event listener expected on mutation target");
+    is(mutations[0].hasEventListeners, false,
+       "no event listener expected on mutation target");
     is(eventFront1.hasEventListeners, false, "no event listener expected on node");
 
     runNextTest();
@@ -108,12 +112,14 @@ window.onload = function() {
     // first mutation
     is(mutations[0].target, eventFront1, "first mutation targets eventFront1");
     is(mutations[0].type, "events", "mutation type is events");
-    is(mutations[0].hasEventListeners, true, "mutation target should have event listeners");
+    is(mutations[0].hasEventListeners, true,
+       "mutation target should have event listeners");
     is(eventFront1.hasEventListeners, true, "eventFront1 should have event listeners");
     // second mutation
     is(mutations[1].target, eventFront2, "second mutation targets eventFront2");
     is(mutations[1].type, "events", "mutation type is events");
-    is(mutations[1].hasEventListeners, true, "mutation target should have event listeners");
+    is(mutations[1].hasEventListeners, true,
+       "mutation target should have event listeners");
     is(eventFront2.hasEventListeners, true, "eventFront1 should have event listeners");
 
     info("remove event listeners on both nodes");
@@ -125,13 +131,17 @@ window.onload = function() {
     // first mutation
     is(mutations[0].target, eventFront1, "first mutation targets eventFront1");
     is(mutations[0].type, "events", "mutation type is events");
-    is(mutations[0].hasEventListeners, false, "mutation target should have no event listeners");
-    is(eventFront1.hasEventListeners, false, "eventFront2 should have no event listeners");
+    is(mutations[0].hasEventListeners, false,
+       "mutation target should have no event listeners");
+    is(eventFront1.hasEventListeners, false,
+       "eventFront2 should have no event listeners");
     // second mutation
     is(mutations[1].target, eventFront2, "second mutation targets eventFront2");
     is(mutations[1].type, "events", "mutation type is events");
-    is(mutations[1].hasEventListeners, false, "mutation target should have no event listeners");
-    is(eventFront2.hasEventListeners, false, "eventFront2 should have no event listeners");
+    is(mutations[1].hasEventListeners, false,
+       "mutation target should have no event listeners");
+    is(eventFront2.hasEventListeners, false,
+       "eventFront2 should have no event listeners");
 
     runNextTest();
   });
@@ -142,7 +152,7 @@ window.onload = function() {
     info("try to remove an event listener not previously added");
     eventNode1.removeEventListener("click", eventListener1);
 
-    info("set any attribute on the node to trigger a mutation")
+    info("set any attribute on the node to trigger a mutation");
     eventNode1.setAttribute("data-attr", "somevalue");
 
     let mutations = yield waitForMutations();
@@ -153,9 +163,11 @@ window.onload = function() {
   });
 
   function checkNodesHaveNoEventListener() {
-    is(eventFront1.hasEventListeners, false, "eventFront1 hasEventListeners should be false");
-    is(eventFront2.hasEventListeners, false, "eventFront2 hasEventListeners should be false");
-  };
+    is(eventFront1.hasEventListeners, false,
+       "eventFront1 hasEventListeners should be false");
+    is(eventFront2.hasEventListeners, false,
+       "eventFront2 hasEventListeners should be false");
+  }
 
   function waitForMutations() {
     return new Promise(resolve => {
@@ -166,8 +178,7 @@ window.onload = function() {
   }
 
   runNextTest();
-}
-
+};
   </script>
 </head>
 <body>

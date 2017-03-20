@@ -278,8 +278,6 @@ GLContextWGL::GLContextWGL(CreateContextFlags flags, const SurfaceCaps& caps,
       mPixelFormat(0),
       mIsDoubleBuffered(false)
 {
-    // See 899855
-    SetProfileVersion(ContextProfile::OpenGLCompatibility, 200);
 }
 
 GLContextWGL::GLContextWGL(CreateContextFlags flags, const SurfaceCaps& caps,
@@ -293,8 +291,6 @@ GLContextWGL::GLContextWGL(CreateContextFlags flags, const SurfaceCaps& caps,
       mPixelFormat(aPixelFormat),
       mIsDoubleBuffered(false)
 {
-    // See 899855
-    SetProfileVersion(ContextProfile::OpenGLCompatibility, 200);
 }
 
 GLContextWGL::~GLContextWGL()

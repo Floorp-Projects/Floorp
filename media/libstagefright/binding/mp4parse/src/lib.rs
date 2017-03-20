@@ -238,6 +238,7 @@ pub struct ES_Descriptor {
     pub audio_sample_rate: Option<u32>,
     pub audio_channel_count: Option<u16>,
     pub codec_esds: Vec<u8>,
+    pub decoder_specific_data: Vec<u8>, // Data in DECODER_SPECIFIC_TAG
 }
 
 #[allow(non_camel_case_types)]
@@ -1412,6 +1413,8 @@ fn read_ds_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
     esds.audio_object_type = Some(audio_object_type);
     esds.audio_sample_rate = sample_frequency;
     esds.audio_channel_count = Some(channel_counts);
+    assert!(esds.decoder_specific_data.is_empty());
+    esds.decoder_specific_data.extend(data.iter());
 
     Ok(())
 }

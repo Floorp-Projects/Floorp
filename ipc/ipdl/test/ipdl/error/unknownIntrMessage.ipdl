@@ -1,4 +1,4 @@
-intr protocol unknownSyncMessage {
+intr protocol unknownIntrMessage {
 parent:
     intr Msg();
 };

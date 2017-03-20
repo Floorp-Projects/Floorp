@@ -50,6 +50,7 @@ class VideoFrameContainer;
 class MediaDecoderStateMachine;
 
 enum class MediaEventType : int8_t;
+enum class Visibility : uint8_t;
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with MediaDecoder::GetCurrentTime implementation.
@@ -190,7 +191,7 @@ public:
 
   // Notify activity of the decoder owner is changed.
   virtual void NotifyOwnerActivityChanged(bool aIsDocumentVisible,
-                                          bool aIsElementVisible,
+                                          Visibility aElementVisibility,
                                           bool aIsElementInTree);
 
   // Pause video playback.
@@ -374,7 +375,7 @@ private:
 
   // Called from HTMLMediaElement when owner document activity changes
   virtual void SetElementVisibility(bool aIsDocumentVisible,
-                                    bool aIsElementVisible,
+                                    Visibility aElementVisibility,
                                     bool aIsElementInTree);
 
   // Force override the visible state to hidden.
@@ -711,7 +712,7 @@ protected:
   bool mIsDocumentVisible;
 
   // Tracks the visibility status of owner element.
-  bool mIsElementVisible;
+  Visibility mElementVisibility;
 
   // Tracks the owner is in-tree or not.
   bool mIsElementInTree;

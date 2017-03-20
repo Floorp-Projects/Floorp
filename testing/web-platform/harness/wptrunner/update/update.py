@@ -15,7 +15,10 @@ from state import State
 
 def setup_paths(sync_path):
     sys.path.insert(0, os.path.abspath(sync_path))
-    from tools import localpaths
+    try:
+        from tools import localpaths
+    except ImportError:
+        from wpt_tools import localpaths
 
 class LoadConfig(Step):
     """Step for loading configuration from the ini file and kwargs."""

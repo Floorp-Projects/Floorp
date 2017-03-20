@@ -19,8 +19,8 @@ class Response(object):
     def __repr__(self):
         return "wdclient.Response(status=%d, body=%s)" % (self.status, self.body)
 
-    @staticmethod
-    def from_http_response(http_response):
+    @classmethod
+    def from_http_response(cls, http_response):
         status = http_response.status
         body = http_response.read()
 
@@ -45,7 +45,7 @@ class Response(object):
             #      with a key `value` set to the JSON Serialization of data.
             assert "value" in body
 
-        return Response(status, body)
+        return cls(status, body)
 
 class HTTPWireProtocol(object):
     """Transports messages (commands and responses) over the WebDriver

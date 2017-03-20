@@ -13,7 +13,7 @@
           var el = root.getElementById("one");
           el.checked = true;
           el.nextSibling.addEventListener("transitionend", function() {
-            document.documentElement.removeAttribute("class");
+            setTimeout(()=>{document.documentElement.removeAttribute("class")}, 1000); // wait for the checkbox SVG image to load on Android
           });
       }
 

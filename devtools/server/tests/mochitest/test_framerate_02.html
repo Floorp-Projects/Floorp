@@ -12,30 +12,29 @@ Bug 1007200 - Create a framerate actor
 <body>
 <pre id="test">
 <script>
+"use strict";
 
-window.onload = function() {
-  var Cu = Components.utils;
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
+window.onload = function () {
+  const Cu = Components.utils;
 
-  var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  var {DebuggerClient} = require("devtools/shared/client/main");
-  var {DebuggerServer} = require("devtools/server/main");
-  var Services = require("Services");
+  const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  const {DebuggerClient} = require("devtools/shared/client/main");
+  const {DebuggerServer} = require("devtools/server/main");
+  const Services = require("Services");
 
   // Always log packets when running tests.
   Services.prefs.setBoolPref("devtools.debugger.log", true);
-  SimpleTest.registerCleanupFunction(function() {
+  SimpleTest.registerCleanupFunction(function () {
     Services.prefs.clearUserPref("devtools.debugger.log");
   });
 
   SimpleTest.waitForExplicitFinish();
 
-  var {FramerateFront} = require("devtools/shared/fronts/framerate");
+  const {FramerateFront} = require("devtools/shared/fronts/framerate");
 
   function plotFPS(ticks, interval = 100, clamp = 60) {
-    var timeline = [];
-    var totalTicks = ticks.length;
+    let timeline = [];
+    let totalTicks = ticks.length;
 
     // If the refresh driver didn't get a chance to tick before the
     // recording was stopped, assume framerate was 0.
@@ -45,19 +44,19 @@ window.onload = function() {
       return timeline;
     }
 
-    var frameCount = 0;
-    var prevTime = ticks[0];
+    let frameCount = 0;
+    let prevTime = ticks[0];
 
-    for (var i = 1; i < totalTicks; i++) {
-      var currTime = ticks[i];
+    for (let i = 1; i < totalTicks; i++) {
+      let currTime = ticks[i];
       frameCount++;
 
-      var elapsedTime = currTime - prevTime;
+      let elapsedTime = currTime - prevTime;
       if (elapsedTime < interval) {
         continue;
       }
 
-      var framerate = Math.min(1000 / (elapsedTime / frameCount), clamp);
+      let framerate = Math.min(1000 / (elapsedTime / frameCount), clamp);
       timeline.push({ delta: prevTime, value: framerate });
       timeline.push({ delta: currTime, value: framerate });
 
@@ -66,24 +65,24 @@ window.onload = function() {
     }
 
     return timeline;
-  };
+  }
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
     DebuggerServer.addBrowserActors();
   }
 
-  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
-    client.listTabs(function onListTabs(aResponse) {
-      var form = aResponse.tabs[aResponse.selected];
-      var front = FramerateFront(client, form);
+    client.listTabs(function onListTabs(response) {
+      let form = response.tabs[response.selected];
+      let front = FramerateFront(client, form);
 
       front.stopRecording().then(rawData => {
         ok(rawData, "There should be a recording available.");
         is(rawData.length, 0, "...but it should be empty.");
 
-        var timeline = plotFPS(rawData);
+        let timeline = plotFPS(rawData);
         is(timeline.length, 2,
           "There should be one measurement plotted, with two entries.");
 
@@ -99,14 +98,15 @@ window.onload = function() {
         is(timeline[1].value, 0,
           "The last framerate value should be 0.");
 
+        // eslint-disable-next-line max-nested-callbacks
         client.close().then(() => {
           DebuggerServer.destroy();
-          SimpleTest.finish()
+          SimpleTest.finish();
         });
       });
     });
   });
-}
+};
 </script>
 </pre>
 </body>

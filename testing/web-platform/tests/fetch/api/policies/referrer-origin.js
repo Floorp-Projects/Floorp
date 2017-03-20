@@ -7,7 +7,7 @@ if (this.document === undefined) {
   importScripts("nested-policy.js");
 }
 
-var referrerOrigin = self.location.origin + '/';
+var referrerOrigin = (new URL("/", location.href)).href;
 var fetchedUrl = RESOURCES_DIR + "inspect-headers.py?headers=referer";
 
 promise_test(function(test) {

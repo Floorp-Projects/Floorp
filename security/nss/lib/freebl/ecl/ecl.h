@@ -11,27 +11,16 @@
 #include "blapi.h"
 #include "ecl-exp.h"
 #include "mpi.h"
+#include "eclt.h"
 
 struct ECGroupStr;
 typedef struct ECGroupStr ECGroup;
-
-/* Construct ECGroup from hexadecimal representations of parameters. */
-ECGroup *ECGroup_fromHex(const ECCurveParams *params);
 
 /* Construct ECGroup from named parameters. */
 ECGroup *ECGroup_fromName(const ECCurveName name);
 
 /* Free an allocated ECGroup. */
 void ECGroup_free(ECGroup *group);
-
-/* Construct ECCurveParams from an ECCurveName */
-ECCurveParams *EC_GetNamedCurveParams(const ECCurveName name);
-
-/* Duplicates an ECCurveParams */
-ECCurveParams *ECCurveParams_dup(const ECCurveParams *params);
-
-/* Free an allocated ECCurveParams */
-void EC_FreeCurveParams(ECCurveParams *params);
 
 /* Elliptic curve scalar-point multiplication. Computes Q(x, y) = k * P(x,
  * y).  If x, y = NULL, then P is assumed to be the generator (base point)

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for triggering popup by pointer events</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="target" style="width: 50px; height: 50px; background: green"></div>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function sendMouseEvent(element, eventName, listenEventName, handler) {
+  element.addEventListener(listenEventName, handler, {once: true});
+  synthesizeMouseAtCenter(element, {type: eventName});
+}
+
+function checkAllowOpenPopup(e) {
+  let w = window.open("about:blank");
+  ok(w, "Should allow popup in the " + e.type + " listener");
+  if (w) {
+    w.close();
+  }
+}
+
+function checkBlockOpenPopup(e) {
+  let w = window.open("about:blank");
+  ok(!w, "Should block popup in the " + e.type + " listener");
+  if (w) {
+    w.close();
+  }
+}
+
+function startTest() {
+  let target = document.getElementById("target");
+  // By default, only allow opening popup in the pointerup listener.
+  sendMouseEvent(target, "mousemove", "pointermove", checkBlockOpenPopup);
+  sendMouseEvent(target, "mousedown", "pointerdown", checkBlockOpenPopup);
+  sendMouseEvent(target, "mousemove", "pointermove", checkBlockOpenPopup);
+  sendMouseEvent(target, "mouseup", "pointerup", checkAllowOpenPopup);
+  SpecialPowers.pushPrefEnv({"set": [["dom.popup_allowed_events",
+                                      "pointerdown pointerup"]]}, () => {
+    // Adding pointerdown to preference should work
+    sendMouseEvent(target, "mousemove", "pointermove", checkBlockOpenPopup);
+    sendMouseEvent(target, "mousedown", "pointerdown", checkAllowOpenPopup);
+    sendMouseEvent(target, "mousemove", "pointermove", checkBlockOpenPopup);
+    sendMouseEvent(target, "mouseup", "pointerup", checkAllowOpenPopup);
+    SpecialPowers.pushPrefEnv({"set": [["dom.popup_allowed_events",
+                                        "pointerdown pointerup pointermove"]]}, () => {
+      // Adding pointermove to preference should be no effect.
+      sendMouseEvent(target, "mousemove", "pointermove", checkBlockOpenPopup);
+      sendMouseEvent(target, "mousedown", "pointerdown", checkAllowOpenPopup);
+      sendMouseEvent(target, "mousemove", "pointermove", checkBlockOpenPopup);
+      sendMouseEvent(target, "mouseup", "pointerup", checkAllowOpenPopup);
+      SimpleTest.finish();
+    });
+  });
+}
+
+const DENY_ACTION = SpecialPowers.Ci.nsIPermissionManager.DENY_ACTION;
+
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPermissions([{'type': 'popup', 'allow': DENY_ACTION,
+                                  'context': document}], () => {
+    SpecialPowers.pushPrefEnv({
+      "set": [["dom.w3c_pointer_events.enabled", true]]
+    }, startTest);
+  });
+});
+
+</script>
+</body>
+</html>

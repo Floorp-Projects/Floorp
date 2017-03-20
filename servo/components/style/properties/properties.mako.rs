@@ -31,6 +31,7 @@ use parser::{Parse, ParserContext, ParserContextExtraData};
 use properties::animated_properties::TransitionProperty;
 #[cfg(feature = "servo")] use servo_config::prefs::PREFS;
 use servo_url::ServoUrl;
+use shared_lock::StylesheetGuards;
 use style_traits::ToCss;
 use stylesheets::Origin;
 #[cfg(feature = "servo")] use values::Either;
@@ -1536,7 +1537,10 @@ impl ComputedValues {
         let style = self.get_column();
         match style.column_width {
             Either::First(_width) => true,
-            Either::Second(_auto) => style.column_count.0.is_some(),
+            Either::Second(_auto) => match style.column_count {
+                Either::First(_n) => true,
+                Either::Second(_auto) => false,
+            }
         }
     }
 
@@ -1857,6 +1861,7 @@ bitflags! {
 ///
 pub fn cascade(device: &Device,
                rule_node: &StrongRuleNode,
+               guards: &StylesheetGuards,
                parent_style: Option<<&ComputedValues>,
                layout_parent_style: Option<<&ComputedValues>,
                cascade_info: Option<<&mut CascadeInfo>,
@@ -1879,11 +1884,12 @@ pub fn cascade(device: &Device,
 
     // Hold locks until after the apply_declarations() call returns.
     // Use filter_map because the root node has no style source.
-    let lock_guards = rule_node.self_and_ancestors().filter_map(|node| {
-        node.style_source().map(|source| (source.read(), node.importance()))
+    let declaration_blocks = rule_node.self_and_ancestors().filter_map(|node| {
+        let guard = node.cascade_level().guard(guards);
+        node.style_source().map(|source| (source.read(guard), node.importance()))
     }).collect::<Vec<_>>();
     let iter_declarations = || {
-        lock_guards.iter().flat_map(|&(ref source, source_importance)| {
+        declaration_blocks.iter().flat_map(|&(ref source, source_importance)| {
             source.declarations().iter()
             // Yield declarations later in source order (with more precedence) first.
             .rev()
@@ -2448,7 +2454,7 @@ macro_rules! longhand_properties_idents {
 pub fn test_size_of_property_declaration() {
     use std::mem::size_of;
 
-    let old = 40;
+    let old = 32;
     let new = size_of::<PropertyDeclaration>();
     if new < old {
         panic!("Your changes have decreased the stack size of PropertyDeclaration enum from {} to {}. \
@@ -2468,7 +2474,7 @@ pub fn test_size_of_property_declaration() {
 #[cfg(feature = "testing")]
 pub fn test_size_of_specified_values() {
     use std::mem::size_of;
-    let threshold = 32;
+    let threshold = 24;
 
     let mut longhands = vec![];
     % for property in data.longhands:

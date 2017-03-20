@@ -207,7 +207,7 @@ static void GetStopInformation(nsIFrame* aStopFrame,
   *aStopOpacity = aStopFrame->StyleSVGReset()->mStopOpacity;
 }
 
-mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
+already_AddRefed<gfxPattern>
 nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
                                           const DrawTarget* aDrawTarget,
                                           const gfxMatrix& aContextMatrix,
@@ -235,7 +235,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
   // the corresponding fill or stroke had "none" specified.
   if (nStops == 0) {
     RefPtr<gfxPattern> pattern = new gfxPattern(Color());
-    return MakePair(DrawResult::SUCCESS, Move(pattern));
+    return pattern.forget();
   }
 
   if (nStops == 1 || GradientVectorLengthIsZero()) {
@@ -247,7 +247,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
     Color stopColor2 = Color::FromABGR(stopColor);
     stopColor2.a *= stopOpacity * aGraphicOpacity;
     RefPtr<gfxPattern> pattern = new gfxPattern(stopColor2);
-    return MakePair(DrawResult::SUCCESS, Move(pattern));
+    return pattern.forget();
   }
 
   // Get the transform list (if there is one). We do this after the returns
@@ -256,7 +256,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
   gfxMatrix patternMatrix = GetGradientTransform(aSource, aOverrideBounds);
 
   if (patternMatrix.IsSingular()) {
-    return MakePair(DrawResult::SUCCESS, RefPtr<gfxPattern>());
+    return nullptr;
   }
 
   // revert any vector effect transform so that the gradient appears unchanged
@@ -268,13 +268,12 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
   }
 
   if (!patternMatrix.Invert()) {
-    return MakePair(DrawResult::SUCCESS, RefPtr<gfxPattern>());
+    return nullptr;
   }
 
   RefPtr<gfxPattern> gradient = CreateGradient();
-  if (!gradient || gradient->CairoStatus()) {
-    return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<gfxPattern>());
-  }
+  if (!gradient || gradient->CairoStatus())
+    return nullptr;
 
   uint16_t aSpread = GetSpreadMethod();
   if (aSpread == SVG_SPREADMETHOD_PAD)
@@ -305,7 +304,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
     gradient->AddColorStop(offset, stopColor2);
   }
 
-  return MakePair(DrawResult::SUCCESS, Move(gradient));
+  return gradient.forget();
 }
 
 // Private (helper) methods

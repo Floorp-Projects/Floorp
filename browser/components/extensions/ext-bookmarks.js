@@ -58,8 +58,10 @@ function getTree(rootGuid, onlyChildren) {
       let children = root.children || [];
       return children.map(child => convert(child, root));
     }
+    let treenode = convert(root, null);
+    treenode.parentId = root.parentGuid;
     // It seems like the array always just contains the root node.
-    return [convert(root, null)];
+    return [treenode];
   }).catch(e => Promise.reject({message: e.message}));
 }
 

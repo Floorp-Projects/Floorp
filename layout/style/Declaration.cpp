@@ -404,9 +404,9 @@ Declaration::GetImageLayerValue(
 
     StyleGeometryBox originDefaultValue =
       (aTable == nsStyleImageLayers::kBackgroundLayerTable)
-      ? StyleGeometryBox::Padding : StyleGeometryBox::Border;
+      ? StyleGeometryBox::PaddingBox : StyleGeometryBox::BorderBox;
     if (static_cast<StyleGeometryBox>(clip->mValue.GetIntValue()) !=
-        StyleGeometryBox::Border ||
+        StyleGeometryBox::BorderBox ||
         static_cast<StyleGeometryBox>(origin->mValue.GetIntValue()) !=
         originDefaultValue) {
 #ifdef DEBUG

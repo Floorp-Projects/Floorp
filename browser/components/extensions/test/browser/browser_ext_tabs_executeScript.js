@@ -116,7 +116,8 @@ add_task(function* testExecuteScript() {
         }).then(result => {
           browser.test.fail("Expected error when returning non-structured-clonable object");
         }, error => {
-          browser.test.assertEq("Script returned non-structured-clonable data",
+          browser.test.assertEq("<anonymous code>", error.fileName, "Got expected fileName");
+          browser.test.assertEq("Script '<anonymous code>' result is non-structured-clonable data",
                                 error.message, "Got expected error");
         }),
 
@@ -125,8 +126,19 @@ add_task(function* testExecuteScript() {
         }).then(result => {
           browser.test.fail("Expected error when returning non-structured-clonable object");
         }, error => {
-          browser.test.assertEq("Script returned non-structured-clonable data",
+          browser.test.assertEq("<anonymous code>", error.fileName, "Got expected fileName");
+          browser.test.assertEq("Script '<anonymous code>' result is non-structured-clonable data",
                                 error.message, "Got expected error");
+        }),
+
+        browser.tabs.executeScript({
+          file: "script3.js",
+        }).then(result => {
+          browser.test.fail("Expected error when returning non-structured-clonable object");
+        }, error => {
+          const expected = /Script '.*script3.js' result is non-structured-clonable data/;
+          browser.test.assertTrue(expected.test(error.message), "Got expected error");
+          browser.test.assertTrue(error.fileName.endsWith("script3.js"), "Got expected fileName");
         }),
 
         browser.tabs.executeScript({
@@ -236,6 +248,8 @@ add_task(function* testExecuteScript() {
       },
 
       "script2.js": "27",
+
+      "script3.js": "window",
     },
   });
 

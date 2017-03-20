@@ -40,15 +40,7 @@ add_task(function* setup() {
 add_task(function* test_dynamic_theme_updates() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "theme": {
-        "images": {
-          "headerURL": BACKGROUND_1,
-        },
-        "colors": {
-          "accentcolor": ACCENT_COLOR_1,
-          "textcolor": TEXT_COLOR_1,
-        },
-      },
+      permissions: ["theme"],
     },
     background() {
       browser.test.onMessage.addListener((msg, details) => {
@@ -63,6 +55,18 @@ add_task(function* test_dynamic_theme_updates() {
   });
 
   yield extension.startup();
+
+  extension.sendMessage("update-theme", {
+    "images": {
+      "headerURL": BACKGROUND_1,
+    },
+    "colors": {
+      "accentcolor": ACCENT_COLOR_1,
+      "textcolor": TEXT_COLOR_1,
+    },
+  });
+
+  yield extension.awaitMessage("theme-updated");
 
   validateTheme(BACKGROUND_1, ACCENT_COLOR_1, TEXT_COLOR_1);
 

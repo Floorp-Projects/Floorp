@@ -181,8 +181,9 @@ class SeleniumTestharnessExecutor(TestharnessExecutor):
     def is_alive(self):
         return self.protocol.is_alive()
 
-    def on_protocol_change(self, new_protocol):
-        self.protocol.load_runner(new_protocol)
+    def on_environment_change(self, new_environment):
+        if new_environment["protocol"] != self.last_environment["protocol"]:
+            self.protocol.load_runner(new_environment["protocol"])
 
     def do_test(self, test):
         url = self.test_url(test)

@@ -50,8 +50,11 @@ function* testPrompt(Prompt) {
     let popupNotification = getPopupNotificationNode();
     popupNotification.checkbox.checked = false;
 
-    Assert.equal(notification.secondaryActions.length, 1,
-                 "There should only be 1 secondary action");
+    let isNotificationPrompt = Prompt == PermissionUI.DesktopNotificationPermissionPrompt;
+
+    let expectedSecondaryActionsCount = isNotificationPrompt ? 2 : 1;
+    Assert.equal(notification.secondaryActions.length, expectedSecondaryActionsCount,
+                 "There should only be " + expectedSecondaryActionsCount + " secondary action(s)");
     yield clickSecondaryAction();
     curPerm = SitePermissions.get(principal.URI, permissionKey, browser);
     Assert.deepEqual(curPerm, {
@@ -73,13 +76,19 @@ function* testPrompt(Prompt) {
     TestPrompt.prompt();
     yield shownPromise;
 
-    // Test denying the permission request with the checkbox checked.
+    // Test denying the permission request with the checkbox checked (for geolocation)
+    // or by clicking the "never" option from the dropdown (for notifications).
     popupNotification = getPopupNotificationNode();
-    popupNotification.checkbox.checked = true;
+    let secondaryActionToClickIndex = 0;
+    if (isNotificationPrompt) {
+      secondaryActionToClickIndex = 1;
+    } else {
+      popupNotification.checkbox.checked = true;
+    }
 
-    Assert.equal(notification.secondaryActions.length, 1,
-                 "There should only be 1 secondary action");
-    yield clickSecondaryAction();
+    Assert.equal(notification.secondaryActions.length, expectedSecondaryActionsCount,
+                 "There should only be " + expectedSecondaryActionsCount + " secondary action(s)");
+    yield clickSecondaryAction(secondaryActionToClickIndex);
     curPerm = SitePermissions.get(principal.URI, permissionKey);
     Assert.deepEqual(curPerm, {
                        state: SitePermissions.BLOCK,

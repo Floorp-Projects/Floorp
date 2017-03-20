@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
     'TestAudioMixer.cpp',
     'TestAudioPacketizer.cpp',
     'TestAudioSegment.cpp',
+    'TestBlankVideoDataCreator.cpp',
     'TestGMPCrossOrigin.cpp',
     'TestGMPRemoveAndDelete.cpp',
     'TestGMPUtils.cpp',
@@ -67,6 +68,8 @@ LOCAL_INCLUDES += [
     '/dom/media/encoder',
     '/dom/media/fmp4',
     '/dom/media/gmp',
+    '/dom/media/platforms',
+    '/dom/media/platforms/agnostic',
     '/security/certverifier',
     '/security/pkix/include',
 ]

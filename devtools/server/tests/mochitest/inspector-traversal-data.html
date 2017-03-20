@@ -18,26 +18,27 @@
     }
   </style>
   <script type="text/javascript">
-    window.onload = function() {
+    "use strict";
 
+    window.onload = function () {
       // Set up a basic shadow DOM
-      var host = document.querySelector('#shadow');
+      let host = document.querySelector("#shadow");
       if (host.createShadowRoot) {
-        var root = host.createShadowRoot();
-        root.innerHTML = '<h3>Shadow <em>DOM</em></h3><select multiple></select>';
+        let root = host.createShadowRoot();
+        root.innerHTML = "<h3>Shadow <em>DOM</em></h3><select multiple></select>";
       }
 
       // Put a copy of the body in an iframe to test frame traversal.
-      var body = document.querySelector("body");
-      var data = "data:text/html,<html>" + body.outerHTML + "<html>";
-      var iframe = document.createElement("iframe");
+      let body = document.querySelector("body");
+      let data = "data:text/html,<html>" + body.outerHTML + "<html>";
+      let iframe = document.createElement("iframe");
       iframe.setAttribute("id", "childFrame");
-      iframe.onload = function() {
-        window.opener.postMessage('ready', '*')
+      iframe.onload = function () {
+        window.opener.postMessage("ready", "*");
       };
       iframe.src = data;
       body.appendChild(iframe);
-    }
+    };
   </script>
 </head>
 <body style="background-color:white">

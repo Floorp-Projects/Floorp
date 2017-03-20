@@ -1,5 +1,6 @@
 import json
 import os
+import urlparse
 
 import pytest
 import webdriver
@@ -9,6 +10,7 @@ from util.http_request import HTTPRequest
 
 default_host = "http://127.0.0.1"
 default_port = "4444"
+
 
 @pytest.fixture(scope="session")
 def _session(request):
@@ -26,6 +28,7 @@ def _session(request):
 
     return session
 
+
 @pytest.fixture(scope="function")
 def session(_session, request):
     # finalisers are popped off a stack,
@@ -36,6 +39,25 @@ def session(_session, request):
 
     return _session
 
+
 @pytest.fixture(scope="function")
 def http(session):
     return HTTPRequest(session.transport.host, session.transport.port)
+
+
+@pytest.fixture
+def server_config():
+    return json.loads(os.environ.get("WD_SERVER_CONFIG"))
+
+
+@pytest.fixture
+def url(server_config):
+    def inner(path, query="", fragment=""):
+        rv = urlparse.urlunsplit(("http",
+                                  "%s:%s" % (server_config["host"],
+                                             server_config["ports"]["http"][0]),
+                                  path,
+                                  query,
+                                  fragment))
+        return rv
+    return inner

@@ -22,22 +22,34 @@ t.step(function() {
 
     function onRegister(registration) {
         var sw = registration.installing;
+        sw.addEventListener('statechange', t.step_func(function(event) {
+            if (event.target.state == 'activated') {
+                onActive(sw);
+            }
+        }));
+    }
+
+    function onActive(sw) {
         var port = sendMessagePort(sw);
         port.addEventListener('message', t.step_func(function(event) {
             onMessage(event);
         }), false);
         port.start();
-        sw.addEventListener('statechange', t.step_func(function(event) {
-            if (event.target.state == 'activated')
-                onActive();
-        }));
-    }
-
-    function onActive() {
-        with_iframe(scope).then(function(f) { frames.push(f); });
     }
 
     function onMessage(event) {
+        if (event.data === 'received port') {
+            onPortReady();
+        } else {
+            onResult(event);
+        }
+    }
+
+    function onPortReady() {
+        with_iframe(scope).then(function(f) { frames.push(f); });
+    }
+
+    function onResult(event) {
         assert_equals(
             event.data.url,
             location.href.substring(0, location.href.lastIndexOf('/') + 1) +

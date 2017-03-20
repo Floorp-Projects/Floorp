@@ -3,7 +3,8 @@
 const ORIGIN_URI = Services.io.newURI("http://mochi.test:8888");
 const PERMISSION_NAME = "desktop-notification";
 const PROMPT_ALLOW_BUTTON = -1;
-const PROMPT_BLOCK_BUTTON = 0;
+const PROMPT_NOT_NOW_BUTTON = 0;
+const PROMPT_NEVER_BUTTON = 1;
 const TEST_URL = "http://mochi.test:8888/browser/dom/notification/test/browser/notification.html";
 
 /**
@@ -21,10 +22,16 @@ function clickDoorhangerButton(aButtonIndex) {
   let notification = notifications[0];
 
   if (aButtonIndex == PROMPT_ALLOW_BUTTON) {
-    ok(true, "Triggering main action");
+    ok(true, "Triggering main action (allow the permission)");
     notification.button.doCommand();
+  } else if (aButtonIndex == PROMPT_NEVER_BUTTON) {
+    ok(true, "Triggering secondary action (deny the permission permanently)");
+    // The menuitems in the dropdown are accessible as direct children of the panel,
+    // because they are injected into a <children> node in the XBL binding.
+    // The "never" button is the first menuitem in the dropdown.
+    notification.querySelector("menuitem").doCommand();
   } else {
-    ok(true, "Triggering secondary action");
+    ok(true, "Triggering secondary action (deny the permission temporarily)");
     notification.secondaryButton.doCommand();
   }
 }
@@ -84,9 +91,22 @@ add_task(function* test_requestPermission_granted() {
      "Check permission in perm. manager");
 });
 
-add_task(function* test_requestPermission_denied() {
+add_task(function* test_requestPermission_denied_temporarily() {
   yield tabWithRequest(function() {
-    clickDoorhangerButton(PROMPT_BLOCK_BUTTON);
+    clickDoorhangerButton(PROMPT_NOT_NOW_BUTTON);
+  }, "default");
+
+  ok(!PopupNotifications.getNotification("web-notifications"),
+     "Should remove the doorhanger notification icon if denied");
+
+  is(Services.perms.testPermission(ORIGIN_URI, PERMISSION_NAME),
+     Services.perms.UNKNOWN_ACTION,
+     "Check permission in perm. manager");
+});
+
+add_task(function* test_requestPermission_denied_permanently() {
+  yield tabWithRequest(function*() {
+    yield clickDoorhangerButton(PROMPT_NEVER_BUTTON);
   }, "denied");
 
   ok(!PopupNotifications.getNotification("web-notifications"),
