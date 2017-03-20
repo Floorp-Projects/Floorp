@@ -27,4 +27,6 @@
 
     <color name="snackbarBackground">#33FFFFFF</color>
     <color name="snackbarTextColor">#ffffffff</color>
+
+    <color name="searchHintTextColor">#ffffffff</color>
 </resources>

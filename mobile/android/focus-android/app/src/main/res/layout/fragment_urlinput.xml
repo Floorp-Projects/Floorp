@@ -83,6 +83,7 @@
             android:lines="1"
             android:ellipsize="end"
             android:textSize="14sp"
+            android:textColor="@color/searchHintTextColor"
             android:background="?android:attr/selectableItemBackground" />
 
         <View
