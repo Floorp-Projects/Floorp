@@ -275,6 +275,10 @@ nsDisplayCanvasBackgroundColor::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
+  if (aManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+    return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
+  }
+
   RefPtr<ColorLayer> layer = static_cast<ColorLayer*>
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
   if (!layer) {
@@ -296,6 +300,27 @@ nsDisplayCanvasBackgroundColor::BuildLayer(nsDisplayListBuilder* aBuilder,
                                                       aContainerParameters.mOffset.y, 0));
 
   return layer.forget();
+}
+
+void
+nsDisplayCanvasBackgroundColor::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                        nsTArray<WebRenderParentCommand>& aParentCommands,
+                                                        WebRenderDisplayItemLayer* aLayer)
+{
+  nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
+  nsPoint offset = ToReferenceFrame();
+  nsRect bgClipRect = frame->CanvasArea() + offset;
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+
+  Rect devPxRect(Float(bgClipRect.x / appUnitsPerDevPixel),
+                 Float(bgClipRect.y / appUnitsPerDevPixel),
+                 Float(bgClipRect.width / appUnitsPerDevPixel),
+                 Float(bgClipRect.height / appUnitsPerDevPixel));
+
+  Rect transformedRect = aLayer->RelativeToParent(devPxRect);
+  aBuilder.PushRect(wr::ToWrRect(transformedRect),
+                    aBuilder.BuildClipRegion(wr::ToWrRect(transformedRect)),
+                    wr::ToWrColor(ToDeviceColor(mColor)));
 }
 
 #ifdef MOZ_DUMP_PAINTING
