@@ -135,7 +135,10 @@ ReadSuffixAndSpec(JSStructuredCloneReader* aReader,
     }
 
     nsAutoCString suffix;
-    suffix.SetLength(suffixLength);
+    if (!suffix.SetLength(suffixLength, fallible)) {
+        return false;
+    }
+
     if (!JS_ReadBytes(aReader, suffix.BeginWriting(), suffixLength)) {
         return false;
     }
@@ -144,7 +147,10 @@ ReadSuffixAndSpec(JSStructuredCloneReader* aReader,
         return false;
     }
 
-    aSpec.SetLength(specLength);
+    if (!aSpec.SetLength(specLength, fallible)) {
+        return false;
+    }
+
     if (!JS_ReadBytes(aReader, aSpec.BeginWriting(), specLength)) {
         return false;
     }
@@ -195,7 +201,7 @@ ReadPrincipalInfo(JSStructuredCloneReader* aReader,
             return false;
         }
 
-        aInfo = ContentPrincipalInfo(attrs, spec);
+        aInfo = ContentPrincipalInfo(attrs, void_t(), spec);
     } else {
         MOZ_CRASH("unexpected principal structured clone tag");
     }
