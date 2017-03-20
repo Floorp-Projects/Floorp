@@ -141,8 +141,19 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
     inf.protocolVersion = ss->version;
     inf.cipherSuite = ss->ssl3.hs.cipher_suite;
     inf.canSendEarlyData = !ss->sec.isServer &&
-                           (ss->ssl3.hs.zeroRttState == ssl_0rtt_sent) &&
-                           !ss->firstHsDone;
+                           (ss->ssl3.hs.zeroRttState == ssl_0rtt_sent ||
+                            ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted);
+    /* We shouldn't be able to send early data if the handshake is done. */
+    PORT_Assert(!ss->firstHsDone || !inf.canSendEarlyData);
+
+    if (ss->sec.ci.sid &&
+        (ss->ssl3.hs.zeroRttState == ssl_0rtt_sent ||
+         ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted)) {
+        inf.maxEarlyDataSize =
+            ss->sec.ci.sid->u.ssl3.locked.sessionTicket.max_early_data_size;
+    } else {
+        inf.maxEarlyDataSize = 0;
+    }
 
     memcpy(info, &inf, inf.length);
     return SECSuccess;

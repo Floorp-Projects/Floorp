@@ -18,6 +18,7 @@
 #include "basicutil.h"
 #include "sslerr.h"
 #include "sslt.h"
+#include "blapi.h"
 
 #define SEC_CT_PRIVATE_KEY "private-key"
 #define SEC_CT_PUBLIC_KEY "public-key"
@@ -402,11 +403,6 @@ SECStatus
 SECU_ParseSSLVersionRangeString(const char *input,
                                 const SSLVersionRange defaultVersionRange,
                                 SSLVersionRange *vrange);
-/*
-** Read a hex string into a SecItem.
-*/
-extern SECItem *SECU_HexString2SECItem(PLArenaPool *arena, SECItem *item,
-                                       const char *str);
 
 SECStatus parseGroupList(const char *arg, SSLNamedGroup **enabledGroups,
                          unsigned int *enabledGroupsCount);

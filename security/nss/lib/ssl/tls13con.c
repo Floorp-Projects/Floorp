@@ -2769,6 +2769,11 @@ tls13_SetCipherSpec(sslSocket *ss, TrafficKeyType type,
         dtls_InitRecvdRecords(&spec->recvdRecords);
     }
 
+    if (type == TrafficKeyEarlyApplicationData) {
+        spec->earlyDataRemaining =
+            ss->sec.ci.sid->u.ssl3.locked.sessionTicket.max_early_data_size;
+    }
+
     /* Now that we've set almost everything up, finally cut over. */
     ssl_GetSpecWriteLock(ss);
     tls13_CipherSpecRelease(*specp); /* May delete old cipher. */
@@ -3775,7 +3780,7 @@ tls13_SendClientSecondRound(sslSocket *ss)
  *   } NewSessionTicket;
  */
 
-#define MAX_EARLY_DATA_SIZE (2 << 16) /* Arbitrary limit. */
+PRUint32 ssl_max_early_data_size = (2 << 16); /* Arbitrary limit. */
 
 SECStatus
 tls13_SendNewSessionTicket(sslSocket *ss)
@@ -3845,7 +3850,7 @@ tls13_SendNewSessionTicket(sslSocket *ss)
         if (rv != SECSuccess)
             goto loser;
 
-        rv = ssl3_AppendHandshakeNumber(ss, MAX_EARLY_DATA_SIZE, 4);
+        rv = ssl3_AppendHandshakeNumber(ss, ssl_max_early_data_size, 4);
         if (rv != SECSuccess)
             goto loser;
     }
@@ -4089,6 +4094,28 @@ tls13_FormatAdditionalData(PRUint8 *aad, unsigned int length,
     PORT_Assert((ptr - aad) == length);
 }
 
+PRInt32
+tls13_LimitEarlyData(sslSocket *ss, SSL3ContentType type, PRInt32 toSend)
+{
+    PRInt32 reduced;
+
+    PORT_Assert(type == content_application_data);
+    PORT_Assert(ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3);
+    PORT_Assert(!ss->firstHsDone);
+    if (ss->ssl3.cwSpec->epoch != TrafficKeyEarlyApplicationData) {
+        return toSend;
+    }
+
+    if (IS_DTLS(ss) && toSend > ss->ssl3.cwSpec->earlyDataRemaining) {
+        /* Don't split application data records in DTLS. */
+        return 0;
+    }
+
+    reduced = PR_MIN(toSend, ss->ssl3.cwSpec->earlyDataRemaining);
+    ss->ssl3.cwSpec->earlyDataRemaining -= reduced;
+    return reduced;
+}
+
 SECStatus
 tls13_ProtectRecord(sslSocket *ss,
                     ssl3CipherSpec *cwSpec,
@@ -4239,6 +4266,17 @@ tls13_UnprotectRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *plaintext
     /* Record the type. */
     cText->type = plaintext->buf[plaintext->len - 1];
     --plaintext->len;
+
+    /* Check that we haven't received too much 0-RTT data. */
+    if (crSpec->epoch == TrafficKeyEarlyApplicationData &&
+        cText->type == content_application_data) {
+        if (plaintext->len > crSpec->earlyDataRemaining) {
+            *alert = unexpected_message;
+            PORT_SetError(SSL_ERROR_TOO_MUCH_EARLY_DATA);
+            return SECFailure;
+        }
+        crSpec->earlyDataRemaining -= plaintext->len;
+    }
 
     SSL_TRC(10,
             ("%d: TLS13[%d]: %s received record of length=%d type=%d",

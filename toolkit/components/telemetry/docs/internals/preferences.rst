@@ -100,7 +100,7 @@ The following prefs are for testing purpose only.
 
 ``toolkit.telemetry.minSubsessionLength``
 
-  Minimum length of a telemetry subsession (seconds).
+  Minimum length of a telemetry subsession and throttling time for common environment changes (seconds).
 
 ``toolkit.telemetry.collectInterval``
 
