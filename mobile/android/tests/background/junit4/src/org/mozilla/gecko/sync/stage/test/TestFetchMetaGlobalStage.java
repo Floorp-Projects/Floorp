@@ -9,6 +9,7 @@ import org.json.simple.JSONArray;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.android.sync.net.test.TestGlobalSession;
 import org.mozilla.android.sync.net.test.TestMetaGlobal;
 import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockGlobalSessionCallback;
@@ -21,6 +22,7 @@ import org.mozilla.gecko.sync.CollectionKeys;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.GlobalSession;
+import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.MetaGlobal;
 import org.mozilla.gecko.sync.NonObjectJSONException;
@@ -28,9 +30,11 @@ import org.mozilla.gecko.sync.SyncConfigurationException;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.FreshStartDelegate;
+import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
 import org.mozilla.gecko.sync.delegates.KeyUploadDelegate;
 import org.mozilla.gecko.sync.delegates.WipeServerDelegate;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
+import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.stage.FetchMetaGlobalStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
 import org.simpleframework.http.Request;
@@ -42,6 +46,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.ProtocolVersion;
+import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
+import ch.boye.httpclientandroidlib.message.BasicStatusLine;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -69,14 +78,7 @@ public class TestFetchMetaGlobalStage {
   private InfoCollections infoCollections;
   private KeyBundle syncKeyBundle;
   private MockGlobalSessionCallback callback;
-  private GlobalSession session;
-
-  private boolean calledRequiresUpgrade = false;
-  private boolean calledProcessMissingMetaGlobal = false;
-  private boolean calledFreshStart = false;
-  private boolean calledWipeServer = false;
-  private boolean calledUploadKeys = false;
-  private boolean calledResetAllStages = false;
+  private LocalMockGlobalSession session;
 
   private static void assertSameContents(JSONArray expected, Set<String> actual) {
     assertEquals(expected.size(), actual.size());
@@ -85,77 +87,96 @@ public class TestFetchMetaGlobalStage {
     }
   }
 
+  private class LocalMockGlobalSession extends MockGlobalSession {
+    private boolean calledRequiresUpgrade = false;
+    private boolean calledProcessMissingMetaGlobal = false;
+    private boolean calledFreshStart = false;
+    private boolean calledWipeServer = false;
+    private boolean calledUploadKeys = false;
+    private boolean calledResetAllStages = false;
+    private boolean calledRestart = false;
+    private boolean calledAbort = false;
+
+    public LocalMockGlobalSession(String username, String password, KeyBundle keyBundle, GlobalSessionCallback callback) throws SyncConfigurationException, IllegalArgumentException, NonObjectJSONException, IOException {
+      super(username, password, keyBundle, callback);
+    }
+
+    @Override
+    protected void prepareStages() {
+      super.prepareStages();
+      withStage(Stage.fetchMetaGlobal, new FetchMetaGlobalStage());
+    }
+
+    @Override
+    public void requiresUpgrade() {
+      calledRequiresUpgrade = true;
+      this.abort(null, "Requires upgrade");
+    }
+
+    @Override
+    public void processMissingMetaGlobal(MetaGlobal mg) {
+      calledProcessMissingMetaGlobal = true;
+      this.abort(null, "Missing meta/global");
+    }
+
+    // Don't really uploadKeys.
+    @Override
+    public void uploadKeys(CollectionKeys keys, long lastModified, KeyUploadDelegate keyUploadDelegate) {
+      calledUploadKeys = true;
+      keyUploadDelegate.onKeysUploaded();
+    }
+
+    // On fresh start completed, just stop.
+    @Override
+    public void freshStart() {
+      calledFreshStart = true;
+      freshStart(this, new FreshStartDelegate() {
+        @Override
+        public void onFreshStartFailed(Exception e) {
+          WaitHelper.getTestWaiter().performNotify(e);
+        }
+
+        @Override
+        public void onFreshStart() {
+          WaitHelper.getTestWaiter().performNotify();
+        }
+      });
+    }
+
+    // Don't really wipeServer.
+    @Override
+    protected void wipeServer(final AuthHeaderProvider authHeaderProvider, final WipeServerDelegate wipeDelegate) {
+      calledWipeServer = true;
+      wipeDelegate.onWiped(System.currentTimeMillis());
+    }
+
+    @Override
+    protected void restart() throws AlreadySyncingException {
+      calledRestart = true;
+      WaitHelper.getTestWaiter().performNotify();
+    }
+
+    @Override
+    public void abort(Exception e, String reason) {
+      calledAbort = true;
+      super.abort(e, reason);
+    }
+
+    // Don't really resetAllStages.
+    @Override
+    public void resetAllStages() {
+      calledResetAllStages = true;
+    }
+  }
+
   @Before
   public void setUp() throws Exception {
-    calledRequiresUpgrade = false;
-    calledProcessMissingMetaGlobal = false;
-    calledFreshStart = false;
-    calledWipeServer = false;
-    calledUploadKeys = false;
-    calledResetAllStages = false;
-
     // Set info collections to not have crypto.
     infoCollections = new InfoCollections(new ExtendedJSONObject(TEST_INFO_COLLECTIONS_JSON));
 
     syncKeyBundle = new KeyBundle(TEST_USERNAME, TEST_SYNC_KEY);
     callback = new MockGlobalSessionCallback();
-    session = new MockGlobalSession(TEST_USERNAME, TEST_PASSWORD,
-      syncKeyBundle, callback) {
-      @Override
-      protected void prepareStages() {
-        super.prepareStages();
-        withStage(Stage.fetchMetaGlobal, new FetchMetaGlobalStage());
-      }
-
-      @Override
-      public void requiresUpgrade() {
-        calledRequiresUpgrade = true;
-        this.abort(null, "Requires upgrade");
-      }
-
-      @Override
-      public void processMissingMetaGlobal(MetaGlobal mg) {
-        calledProcessMissingMetaGlobal = true;
-        this.abort(null, "Missing meta/global");
-      }
-
-      // Don't really uploadKeys.
-      @Override
-      public void uploadKeys(CollectionKeys keys, KeyUploadDelegate keyUploadDelegate) {
-        calledUploadKeys = true;
-        keyUploadDelegate.onKeysUploaded();
-      }
-
-      // On fresh start completed, just stop.
-      @Override
-      public void freshStart() {
-        calledFreshStart = true;
-        freshStart(this, new FreshStartDelegate() {
-          @Override
-          public void onFreshStartFailed(Exception e) {
-            WaitHelper.getTestWaiter().performNotify(e);
-          }
-
-          @Override
-          public void onFreshStart() {
-            WaitHelper.getTestWaiter().performNotify();
-          }
-        });
-      }
-
-      // Don't really wipeServer.
-      @Override
-      protected void wipeServer(final AuthHeaderProvider authHeaderProvider, final WipeServerDelegate wipeDelegate) {
-        calledWipeServer = true;
-        wipeDelegate.onWiped(System.currentTimeMillis());
-      }
-
-      // Don't really resetAllStages.
-      @Override
-      public void resetAllStages() {
-        calledResetAllStages = true;
-      }
-    };
+    session = new LocalMockGlobalSession(TEST_USERNAME, TEST_PASSWORD, syncKeyBundle, callback);
     session.config.setClusterURL(new URI(TEST_CLUSTER_URL));
     session.config.infoCollections = infoCollections;
   }
@@ -185,7 +206,7 @@ public class TestFetchMetaGlobalStage {
     doSession(server);
 
     assertEquals(true, callback.calledError);
-    assertTrue(calledRequiresUpgrade);
+    assertTrue(session.calledRequiresUpgrade);
   }
 
   @SuppressWarnings("unchecked")
@@ -217,8 +238,8 @@ public class TestFetchMetaGlobalStage {
     doSession(server);
 
     assertTrue(callback.calledSuccess);
-    assertFalse(calledProcessMissingMetaGlobal);
-    assertFalse(calledResetAllStages);
+    assertFalse(session.calledProcessMissingMetaGlobal);
+    assertFalse(session.calledResetAllStages);
     assertEquals(TEST_SYNC_ID, session.config.metaGlobal.getSyncID());
     assertEquals(TEST_STORAGE_VERSION, session.config.metaGlobal.getStorageVersion().longValue());
     assertEquals(TEST_SYNC_ID, session.config.syncID);
@@ -250,8 +271,8 @@ public class TestFetchMetaGlobalStage {
     doSession(server);
 
     assertEquals(true, callback.calledSuccess);
-    assertFalse(calledProcessMissingMetaGlobal);
-    assertTrue(calledResetAllStages);
+    assertFalse(session.calledProcessMissingMetaGlobal);
+    assertTrue(session.calledResetAllStages);
     assertEquals(TEST_SYNC_ID, session.config.metaGlobal.getSyncID());
     assertEquals(TEST_STORAGE_VERSION, session.config.metaGlobal.getStorageVersion().longValue());
     assertEquals(TEST_SYNC_ID, session.config.syncID);
@@ -299,7 +320,7 @@ public class TestFetchMetaGlobalStage {
     doSession(server);
 
     assertEquals(true, callback.calledError);
-    assertTrue(calledProcessMissingMetaGlobal);
+    assertTrue(session.calledProcessMissingMetaGlobal);
   }
 
   /**
@@ -311,7 +332,7 @@ public class TestFetchMetaGlobalStage {
     MockServer server = new MockServer(200, TestMetaGlobal.TEST_META_GLOBAL_EMPTY_PAYLOAD_RESPONSE);
     doSession(server);
 
-    assertTrue(calledFreshStart);
+    assertTrue(session.calledFreshStart);
   }
 
   /**
@@ -323,7 +344,7 @@ public class TestFetchMetaGlobalStage {
     MockServer server = new MockServer(200, TestMetaGlobal.TEST_META_GLOBAL_NO_PAYLOAD_RESPONSE);
     doSession(server);
 
-    assertTrue(calledFreshStart);
+    assertTrue(session.calledFreshStart);
   }
 
   /**
@@ -384,11 +405,62 @@ public class TestFetchMetaGlobalStage {
     };
     doFreshStart(server);
 
-    assertTrue(this.calledFreshStart);
-    assertTrue(this.calledWipeServer);
-    assertTrue(this.calledUploadKeys);
+    assertTrue(session.calledFreshStart);
+    assertTrue(session.calledWipeServer);
+    assertTrue(session.calledUploadKeys);
     assertTrue(mgUploaded.get());
     assertFalse(mgDownloaded.get());
     assertEquals(GlobalSession.STORAGE_VERSION, uploadedMg.getStorageVersion().longValue());
+  }
+
+  @Test
+  public void testFreshStartDelegateSuccess() {
+    final FreshStartDelegate freshStartDelegate = GlobalSession.makeFreshStartDelegate(session);
+
+    WaitHelper.getTestWaiter().performWait(WaitHelper.onThreadRunnable(
+            new Runnable() {
+              @Override
+              public void run() {
+                freshStartDelegate.onFreshStart();
+              }
+            }
+    ));
+
+    assertTrue(session.calledRestart);
+    assertFalse(session.calledAbort);
+  }
+
+  @Test
+  public void testFreshStartDelegate412() {
+    final FreshStartDelegate freshStartDelegate = GlobalSession.makeFreshStartDelegate(session);
+
+    WaitHelper.getTestWaiter().performWait(WaitHelper.onThreadRunnable(
+            new Runnable() {
+              @Override
+              public void run() {
+                freshStartDelegate.onFreshStartFailed(TestGlobalSession.makeHttpFailureException(412));
+              }
+            }
+    ));
+
+    assertTrue(session.calledRestart);
+    assertFalse(session.calledAbort);
+  }
+
+  @Test
+  public void testFreshStartDelegateNon412() {
+    final FreshStartDelegate freshStartDelegate = GlobalSession.makeFreshStartDelegate(session);
+
+    WaitHelper.getTestWaiter().performWait(WaitHelper.onThreadRunnable(
+            new Runnable() {
+              @Override
+              public void run() {
+                freshStartDelegate.onFreshStartFailed(TestGlobalSession.makeHttpFailureException(400));
+              }
+            }
+    ));
+
+    assertFalse(session.calledRestart);
+    assertTrue(session.calledAbort);
   }
 }

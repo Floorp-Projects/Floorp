@@ -5,6 +5,7 @@
 package org.mozilla.gecko.sync;
 
 import android.content.Context;
+import android.support.annotation.VisibleForTesting;
 
 import org.json.simple.JSONArray;
 import org.mozilla.gecko.background.common.log.Logger;
@@ -409,44 +410,17 @@ public class GlobalSession implements HttpResponseObserver {
     Runnable doUpload = new Runnable() {
       @Override
       public void run() {
-        config.metaGlobal.upload(new MetaGlobalDelegate() {
-          @Override
-          public void handleSuccess(MetaGlobal global, SyncStorageResponse response) {
-            Logger.info(LOG_TAG, "Successfully uploaded updated meta/global record.");
-            // Engine changes are stored as diffs, so update enabled engines in config to match uploaded meta/global.
-            config.enabledEngineNames = config.metaGlobal.getEnabledEngineNames();
-            // Clear userSelectedEngines because they are updated in config and meta/global.
-            config.userSelectedEngines = null;
-
-            synchronized (monitor) {
-              monitor.notify();
-            }
-          }
-
-          @Override
-          public void handleMissing(MetaGlobal global, SyncStorageResponse response) {
-            Logger.warn(LOG_TAG, "Got 404 missing uploading updated meta/global record; shouldn't happen.  Ignoring.");
-            synchronized (monitor) {
-              monitor.notify();
-            }
-          }
-
-          @Override
-          public void handleFailure(SyncStorageResponse response) {
-            Logger.warn(LOG_TAG, "Failed to upload updated meta/global record; ignoring.");
-            synchronized (monitor) {
-              monitor.notify();
-            }
-          }
-
-          @Override
-          public void handleError(Exception e) {
-            Logger.warn(LOG_TAG, "Got exception trying to upload updated meta/global record; ignoring.", e);
-            synchronized (monitor) {
-              monitor.notify();
-            }
-          }
-        });
+        // During regular meta/global upload, set X-I-U-S to the last-modified value of meta/global
+        // in info/collections, to ensure we catch concurrent modifications by other clients.
+        Long lastModifiedTimestamp = config.infoCollections.getTimestamp("meta");
+        // Theoretically, meta/global's timestamp might be missing from info/collections.
+        // The safest thing in that case is to assert that meta/global hasn't been modified by other
+        // clients by setting X-I-U-S to 0.
+        // See Bug 1346438.
+        if (lastModifiedTimestamp == null) {
+          lastModifiedTimestamp = 0L;
+        }
+        config.metaGlobal.upload(lastModifiedTimestamp, makeMetaGlobalUploadDelegate(config, callback, monitor));
       }
     };
 
@@ -460,6 +434,55 @@ public class GlobalSession implements HttpResponseObserver {
         Logger.error(LOG_TAG, "Uploading updated meta/global interrupted; continuing.");
       }
     }
+  }
+
+  @VisibleForTesting
+  public static MetaGlobalDelegate makeMetaGlobalUploadDelegate(final SyncConfiguration config, final GlobalSessionCallback callback, final Object monitor) {
+    return new MetaGlobalDelegate() {
+      @Override
+      public void handleSuccess(MetaGlobal global, SyncStorageResponse response) {
+        Logger.info(LOG_TAG, "Successfully uploaded updated meta/global record.");
+        // Engine changes are stored as diffs, so update enabled engines in config to match uploaded meta/global.
+        config.enabledEngineNames = config.metaGlobal.getEnabledEngineNames();
+        // Clear userSelectedEngines because they are updated in config and meta/global.
+        config.userSelectedEngines = null;
+
+        synchronized (monitor) {
+          monitor.notify();
+        }
+      }
+
+      @Override
+      public void handleMissing(MetaGlobal global, SyncStorageResponse response) {
+        Logger.warn(LOG_TAG, "Got 404 missing uploading updated meta/global record; shouldn't happen.  Ignoring.");
+        synchronized (monitor) {
+          monitor.notify();
+        }
+      }
+
+      @Override
+      public void handleFailure(SyncStorageResponse response) {
+        Logger.warn(LOG_TAG, "Failed to upload updated meta/global record; ignoring.");
+
+        // If we encountered a concurrent modification while uploading meta/global, request that
+        // sync of all stages happens once we're done.
+        if (response.getStatusCode() == 412) {
+          callback.handleFullSyncNecessary();
+        }
+
+        synchronized (monitor) {
+          monitor.notify();
+        }
+      }
+
+      @Override
+      public void handleError(Exception e) {
+        Logger.warn(LOG_TAG, "Got exception trying to upload updated meta/global record; ignoring.", e);
+        synchronized (monitor) {
+          monitor.notify();
+        }
+      }
+    };
   }
 
 
@@ -709,12 +732,32 @@ public class GlobalSession implements HttpResponseObserver {
    * Do a fresh start then quietly finish the sync, starting another.
    */
   public void freshStart() {
-    final GlobalSession globalSession = this;
-    freshStart(this, new FreshStartDelegate() {
+    freshStart(this, makeFreshStartDelegate(this));
+  }
 
+  @VisibleForTesting
+  public static FreshStartDelegate makeFreshStartDelegate(final GlobalSession globalSession) {
+    return new FreshStartDelegate() {
       @Override
       public void onFreshStartFailed(Exception e) {
-        globalSession.abort(e, "Fresh start failed.");
+        if (!(e instanceof  HTTPFailureException)) {
+          globalSession.abort(e, "Fresh start failed.");
+          return;
+        }
+
+        if (((HTTPFailureException) e).response.getStatusCode() != 412) {
+          globalSession.abort(e, "Fresh start failed with non-412 status code.");
+          return;
+        }
+
+        // In case of a concurrent modification during a fresh start, restart global session.
+        try {
+          // We are not persisting SyncConfiguration at this point; we can't be sure of its state.
+          globalSession.restart();
+        } catch (AlreadySyncingException restartException) {
+          Logger.warn(LOG_TAG, "Got exception restarting sync after freshStart failure.", restartException);
+          globalSession.abort(restartException, "Got exception restarting sync after freshStart failure.");
+        }
       }
 
       @Override
@@ -728,7 +771,7 @@ public class GlobalSession implements HttpResponseObserver {
           globalSession.abort(e, "Got exception after freshStart.");
         }
       }
-    });
+    };
   }
 
   /**
@@ -762,11 +805,11 @@ public class GlobalSession implements HttpResponseObserver {
 
         Logger.info(LOG_TAG, "Uploading new meta/global with sync ID " + mg.syncID + ".");
 
-        // It would be good to set the X-If-Unmodified-Since header to `timestamp`
-        // for this PUT to ensure at least some level of transactionality.
-        // Unfortunately, the servers don't support it after a wipe right now
-        // (bug 693893), so we're going to defer this until bug 692700.
-        mg.upload(new MetaGlobalDelegate() {
+        // During a fresh start, set X-I-U-S to 0 to ensure we don't race with other clients.
+        // Since we are performing a fresh start, we are asserting that meta/global was not uploaded
+        // by other clients.
+        // See Bug 1346438.
+        mg.upload(0L, new MetaGlobalDelegate() {
           @Override
           public void handleSuccess(MetaGlobal uploadedGlobal, SyncStorageResponse uploadResponse) {
             Logger.info(LOG_TAG, "Uploaded new meta/global with sync ID " + uploadedGlobal.syncID + ".");

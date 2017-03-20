@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.sync;
 
+import android.support.annotation.Nullable;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,6 +69,7 @@ public class InfoCollections {
    *          The collection to inspect.
    * @return the timestamp in milliseconds since epoch.
    */
+  @Nullable
   public Long getTimestamp(String collection) {
     if (timestamps == null) {
       return null;
