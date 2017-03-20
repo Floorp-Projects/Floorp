@@ -51,7 +51,7 @@ protected:
 
     nsresult ProcessData(nsIRequest *aRequest, nsISupports *aCtxt);
     nsresult ParseFormat(const char* buf);
-    nsresult ParseData(nsIDirIndex* aIdx, char* aDataStr);
+    nsresult ParseData(nsIDirIndex* aIdx, char* aDataStr, int32_t lineLen);
 
     struct Field {
         const char *mName;
