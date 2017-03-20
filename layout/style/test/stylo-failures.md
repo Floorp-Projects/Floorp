@@ -378,7 +378,6 @@ to mochitest command.
   * background-position invalid 3-value form **issue to be filed**
     * test_shorthand_property_getters.html `should serialize to 4-value` [2]
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
-  * ... `got "--`: CSS-wide keywords in custom properties servo/servo#15401 [3]
   * image-layer values should omit some of its parts when they are initial servo/servo#15951
     * test_shorthand_property_getters.html `background` [2]
   * counter-{reset,increment} doesn't serialize none servo/servo#15977
