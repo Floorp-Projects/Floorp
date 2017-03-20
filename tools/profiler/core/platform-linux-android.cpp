@@ -79,70 +79,6 @@ Thread::GetCurrentId()
   return gettid();
 }
 
-#if !defined(GP_OS_android)
-
-// Keep track of when any of our threads calls fork(), so we can
-// temporarily disable signal delivery during the fork() call.  Not
-// doing so appears to cause a kind of race, in which signals keep
-// getting delivered to the thread doing fork(), which keeps causing
-// it to fail and be restarted; hence forward progress is delayed a
-// great deal.  A side effect of this is to permanently disable
-// sampling in the child process.  See bug 837390.
-
-// Unfortunately this is only doable on non-Android, since Bionic
-// doesn't have pthread_atfork.
-
-// In the parent, before the fork, record the pausedness state, and then pause.
-static void
-paf_prepare()
-{
-  // This function can run off the main thread.
-
-  MOZ_RELEASE_ASSERT(gPS);
-
-  PS::AutoLock lock(gPSMutex);
-
-  gPS->SetWasPaused(lock, gPS->IsPaused(lock));
-  gPS->SetIsPaused(lock, true);
-}
-
-// In the parent, after the fork, return pausedness to the pre-fork state.
-static void
-paf_parent()
-{
-  // This function can run off the main thread.
-
-  MOZ_RELEASE_ASSERT(gPS);
-
-  PS::AutoLock lock(gPSMutex);
-
-  gPS->SetIsPaused(lock, gPS->WasPaused(lock));
-  gPS->SetWasPaused(lock, false);
-}
-
-// In the child, after the fork, leave the profiler paused.
-static void
-paf_child()
-{
-  // This function can run off the main thread.
-
-  MOZ_RELEASE_ASSERT(gPS);
-
-  PS::AutoLock lock(gPSMutex);
-
-  gPS->SetWasPaused(lock, false);
-}
-
-// Set up the fork handlers.
-static void*
-setup_atfork()
-{
-  pthread_atfork(paf_prepare, paf_parent, paf_child);
-  return nullptr;
-}
-
-#endif /* !defined(GP_OS_android) */
-
 static void SetSampleContext(TickSample* sample, mcontext_t& mcontext)
 {
   // Extracting the sample from the context is extremely machine dependent.
@@ -581,6 +517,7 @@ SamplerThread::SigHandlerCoordinator* SamplerThread::sSigHandlerCoordinator =
   nullptr;
 
 #if defined(GP_OS_android)
+
 static struct sigaction gOldSigstartHandler;
 const int SIGSTART = SIGUSR2;
 
@@ -694,13 +631,55 @@ PlatformInit(PS::LockRef aLock)
   }
 }
 
-#else
+#else /* !defined(GP_OS_android) */
+
+// We use pthread_atfork() to temporarily disable signal delivery during any
+// fork() call. Without that, fork() can be repeatedly interrupted by signal
+// delivery, requiring it to be repeatedly restarted, which can lead to *long*
+// delays. See bug 837390.
+//
+// We provide no paf_child() function to run in the child after forking. This
+// is fine because we always immediately exec() after fork(), and exec()
+// clobbers all process state. (At one point we did have a paf_child()
+// function, but it caused problems related to locking gPSMutex. See bug
+// 1348374.)
+//
+// Unfortunately all this is only doable on non-Android because Bionic doesn't
+// have pthread_atfork.
+
+// In the parent, before the fork, record IsPaused, and then pause.
+static void
+paf_prepare()
+{
+  // This function can run off the main thread.
+
+  MOZ_RELEASE_ASSERT(gPS);
+
+  PS::AutoLock lock(gPSMutex);
+
+  gPS->SetWasPaused(lock, gPS->IsPaused(lock));
+  gPS->SetIsPaused(lock, true);
+}
+
+// In the parent, after the fork, return IsPaused to the pre-fork state.
+static void
+paf_parent()
+{
+  // This function can run off the main thread.
+
+  MOZ_RELEASE_ASSERT(gPS);
+
+  PS::AutoLock lock(gPSMutex);
+
+  gPS->SetIsPaused(lock, gPS->WasPaused(lock));
+  gPS->SetWasPaused(lock, false);
+}
 
 static void
 PlatformInit(PS::LockRef aLock)
 {
   // Set up the fork handlers.
-  setup_atfork();
+  pthread_atfork(paf_prepare, paf_parent, nullptr);
 }
 
 #endif
