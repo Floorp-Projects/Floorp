@@ -1796,7 +1796,7 @@ nsTreeBodyFrame::MarkDirtyIfSelect()
 nsresult
 nsTreeBodyFrame::CreateTimer(const LookAndFeel::IntID aID,
                              nsTimerCallbackFunc aFunc, int32_t aType,
-                             nsITimer** aTimer)
+                             nsITimer** aTimer, const char* aName)
 {
   // Get the delay from the look and feel service.
   int32_t delay = LookAndFeel::GetInt(aID, 0);
@@ -1807,8 +1807,11 @@ nsTreeBodyFrame::CreateTimer(const LookAndFeel::IntID aID,
   // Zero value means that this feature is completely disabled.
   if (delay > 0) {
     timer = do_CreateInstance("@mozilla.org/timer;1");
-    if (timer)
-      timer->InitWithFuncCallback(aFunc, this, delay, aType);
+    if (timer) {
+      timer->SetTarget(
+          mContent->OwnerDoc()->EventTargetFor(TaskCategory::Other));
+      timer->InitWithNamedFuncCallback(aFunc, this, delay, aType, aName);
+    }
   }
 
   NS_IF_ADDREF(*aTimer = timer);
@@ -2642,7 +2645,8 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
         // Set a timer to trigger the tree scrolling.
         CreateTimer(LookAndFeel::eIntID_TreeLazyScrollDelay,
                     LazyScrollCallback, nsITimer::TYPE_ONE_SHOT,
-                    getter_AddRefs(mSlots->mTimer));
+                    getter_AddRefs(mSlots->mTimer),
+                    "nsTreeBodyFrame::LazyScrollCallback");
        }
 #endif
       // Bail out to prevent spring loaded timer and feedback line settings.
@@ -2680,7 +2684,8 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
               // This node isn't expanded, set a timer to expand it.
               CreateTimer(LookAndFeel::eIntID_TreeOpenDelay,
                           OpenCallback, nsITimer::TYPE_ONE_SHOT,
-                          getter_AddRefs(mSlots->mTimer));
+                          getter_AddRefs(mSlots->mTimer),
+                          "nsTreeBodyFrame::OpenCallback");
             }
           }
         }
@@ -2754,7 +2759,8 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
       // Close all spring loaded folders except the drop folder.
       CreateTimer(LookAndFeel::eIntID_TreeCloseDelay,
                   CloseCallback, nsITimer::TYPE_ONE_SHOT,
-                  getter_AddRefs(mSlots->mTimer));
+                  getter_AddRefs(mSlots->mTimer),
+                  "nsTreeBodyFrame::CloseCallback");
     }
   }
 
@@ -4691,7 +4697,8 @@ nsTreeBodyFrame::LazyScrollCallback(nsITimer *aTimer, void *aClosure)
       // Set a new timer to scroll the tree repeatedly.
       self->CreateTimer(LookAndFeel::eIntID_TreeScrollDelay,
                         ScrollCallback, nsITimer::TYPE_REPEATING_SLACK,
-                        getter_AddRefs(self->mSlots->mTimer));
+                        getter_AddRefs(self->mSlots->mTimer),
+                        "nsTreeBodyFrame::ScrollCallback");
       self->ScrollByLines(self->mSlots->mScrollLines);
       // ScrollByLines may have deleted |self|.
     }
