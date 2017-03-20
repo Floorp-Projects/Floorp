@@ -39,6 +39,10 @@ class ShapedObject : public JSObject
 
     Shape* shape() const { return this->shape_; }
 
+    void traceShape(JSTracer* trc) {
+        TraceEdge(trc, &shape_, "shape");
+    }
+
     static size_t offsetOfShape() { return offsetof(ShapedObject, shape_); }
 
   private:
