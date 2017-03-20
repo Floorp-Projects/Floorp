@@ -84,6 +84,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
 
         if (getArguments().containsKey(ARGUMENT_URL)) {
             urlView.setText(getArguments().getString(ARGUMENT_URL));
+            clearView.setVisibility(View.VISIBLE);
         }
 
         return view;
