@@ -367,6 +367,12 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     }
   }
 
+  // Create the preview anonymous content if needed.
+  Element* previewNode = txtCtrl->CreatePreviewNode();
+  NS_ENSURE_TRUE(previewNode, NS_ERROR_OUT_OF_MEMORY);
+
+  aElements.AppendElement(previewNode);
+
   rv = UpdateValueDisplay(false);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -424,9 +430,14 @@ nsTextControlFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
   }
 
   nsIContent* placeholder = txtCtrl->GetPlaceholderNode();
-  if (placeholder && !(aFilter & nsIContent::eSkipPlaceholderContent))
+  if (placeholder && !(aFilter & nsIContent::eSkipPlaceholderContent)) {
     aElements.AppendElement(placeholder);
+  }
 
+  nsIContent* preview = txtCtrl->GetPreviewNode();
+  if (preview) {
+    aElements.AppendElement(preview);
+  }
 }
 
 nscoord
