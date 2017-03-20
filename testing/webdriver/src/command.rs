@@ -1629,8 +1629,8 @@ impl ToJson for PointerDownAction {
 pub struct PointerMoveAction {
     pub duration: Nullable<u64>,
     pub origin: PointerOrigin,
-    pub x: Nullable<u64>,
-    pub y: Nullable<u64>
+    pub x: Nullable<i64>,
+    pub y: Nullable<i64>
 }
 
 impl Parameters for PointerMoveAction {
@@ -1650,18 +1650,18 @@ impl Parameters for PointerMoveAction {
 
         let x = match body.find("x") {
             Some(x) => {
-                Some(try_opt!(x.as_u64(),
+                Some(try_opt!(x.as_i64(),
                               ErrorStatus::InvalidArgument,
-                              "Parameter 'x' was not a positive integer"))
+                              "Parameter 'x' was not an integer"))
             },
             None => None
         };
 
         let y = match body.find("y") {
             Some(y) => {
-                Some(try_opt!(y.as_u64(),
+                Some(try_opt!(y.as_i64(),
                               ErrorStatus::InvalidArgument,
-                              "Parameter 'y' was not a positive integer"))
+                              "Parameter 'y' was not an integer"))
             },
             None => None
         };
