@@ -246,12 +246,5 @@ mp_err ec_group_set_gf2m233(ECGroup *group, ECCurveName name);
 /* Optimized point multiplication */
 mp_err ec_group_set_gfp256_32(ECGroup *group, ECCurveName name);
 
-/* Optimized floating-point arithmetic */
-#ifdef ECL_USE_FP
-mp_err ec_group_set_secp160r1_fp(ECGroup *group);
-mp_err ec_group_set_nistp192_fp(ECGroup *group);
-mp_err ec_group_set_nistp224_fp(ECGroup *group);
-#endif
-
 SECStatus ec_Curve25519_mul(PRUint8 *q, const PRUint8 *s, const PRUint8 *p);
 #endif /* __ecl_priv_h_ */
