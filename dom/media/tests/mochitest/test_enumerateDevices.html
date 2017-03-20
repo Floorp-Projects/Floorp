@@ -117,8 +117,7 @@ runTest(async () => {
        "Same origin deviceId for " + device.label + " must match");
   }
   for (let device of differentOriginDevices) {
-    // TODO: s/todo/ok/ once bug 1340163 is fixed.
-    todo(!devices.find(d => d.deviceId == device.deviceId),
+    ok(!devices.find(d => d.deviceId == device.deviceId),
          "Different origin deviceId for " + device.label + " must be different");
   }
 
