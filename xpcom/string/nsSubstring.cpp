@@ -370,9 +370,24 @@ void Gecko_AppendCString(nsACString* aThis, const nsACString* aOther)
   aThis->Append(*aOther);
 }
 
-void Gecko_TruncateCString(nsACString* aThis)
+void Gecko_SetLengthCString(nsACString* aThis, uint32_t aLength)
 {
-  aThis->Truncate();
+  aThis->SetLength(aLength);
+}
+
+bool Gecko_FallibleAssignCString(nsACString* aThis, const nsACString* aOther)
+{
+  return aThis->Assign(*aOther, mozilla::fallible);
+}
+
+bool Gecko_FallibleAppendCString(nsACString* aThis, const nsACString* aOther)
+{
+  return aThis->Append(*aOther, mozilla::fallible);
+}
+
+bool Gecko_FallibleSetLengthCString(nsACString* aThis, uint32_t aLength)
+{
+  return aThis->SetLength(aLength, mozilla::fallible);
 }
 
 void Gecko_FinalizeString(nsAString* aThis)
@@ -390,9 +405,24 @@ void Gecko_AppendString(nsAString* aThis, const nsAString* aOther)
   aThis->Append(*aOther);
 }
 
-void Gecko_TruncateString(nsAString* aThis)
+void Gecko_SetLengthString(nsAString* aThis, uint32_t aLength)
 {
-  aThis->Truncate();
+  aThis->SetLength(aLength);
+}
+
+bool Gecko_FallibleAssignString(nsAString* aThis, const nsAString* aOther)
+{
+  return aThis->Assign(*aOther, mozilla::fallible);
+}
+
+bool Gecko_FallibleAppendString(nsAString* aThis, const nsAString* aOther)
+{
+  return aThis->Append(*aOther, mozilla::fallible);
+}
+
+bool Gecko_FallibleSetLengthString(nsAString* aThis, uint32_t aLength)
+{
+  return aThis->SetLength(aLength, mozilla::fallible);
 }
 
 } // extern "C"
