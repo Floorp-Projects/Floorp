@@ -2399,9 +2399,10 @@ ReflowInput::InitConstraints(nsPresContext*     aPresContext,
       if (alignCBType == nsGkAtoms::gridContainerFrame) {
         // Shrink-wrap grid items that will be aligned (rather than stretched)
         // in its inline axis.
-        auto inlineAxisAlignment = wm.IsOrthogonalTo(cbwm) ?
-          mStylePosition->UsedAlignSelf(mFrame->StyleContext()->GetParent()) :
-          mStylePosition->UsedJustifySelf(mFrame->StyleContext()->GetParent());
+        auto inlineAxisAlignment =
+          wm.IsOrthogonalTo(cbwm)
+            ? mStylePosition->UsedAlignSelf(alignCB->StyleContext())
+            : mStylePosition->UsedJustifySelf(alignCB->StyleContext());
         if ((inlineAxisAlignment != NS_STYLE_ALIGN_STRETCH &&
              inlineAxisAlignment != NS_STYLE_ALIGN_NORMAL) ||
             mStyleMargin->mMargin.GetIStartUnit(wm) == eStyleUnit_Auto ||
