@@ -857,6 +857,25 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
       }
     }
     break;
+  case ePointerEventClass:
+    if (aEvent->IsTrusted() &&
+        aEvent->AsPointerEvent()->button == WidgetMouseEvent::eLeftButton) {
+      switch(aEvent->mMessage) {
+      case ePointerUp:
+        if (PopupAllowedForEvent("pointerup")) {
+          abuse = openControlled;
+        }
+        break;
+      case ePointerDown:
+        if (PopupAllowedForEvent("pointerdown")) {
+          abuse = openControlled;
+        }
+        break;
+      default:
+        break;
+      }
+    }
+    break;
   case eFormEventClass:
     // For these following events only allow popups if they're
     // triggered while handling user input. See
