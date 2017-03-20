@@ -1938,6 +1938,65 @@ nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams,
   return PaintStyleImageLayerWithSC(aParams, aRenderingCtx, sc, *aParams.frame->StyleBorder());
 }
 
+bool
+nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(nsPresContext& aPresCtx,
+                                                                nsIFrame *aFrame,
+                                                                const nsStyleBackground* aBackgroundStyle,
+                                                                int32_t aLayer)
+{
+  if (!aBackgroundStyle) {
+    return false;
+  }
+
+  MOZ_ASSERT(aFrame &&
+             aLayer >= 0 &&
+             (uint32_t)aLayer < aBackgroundStyle->mImage.mLayers.Length());
+
+  // We cannot draw native themed backgrounds
+  const nsStyleDisplay* displayData = aFrame->StyleDisplay();
+  if (displayData->UsedAppearance()) {
+    nsITheme *theme = aPresCtx.GetTheme();
+    if (theme && theme->ThemeSupportsWidget(&aPresCtx,
+                                            aFrame,
+                                            displayData->UsedAppearance())) {
+      return false;
+    }
+  }
+
+  // We only support painting gradients for a single style image layer
+  return aBackgroundStyle->mImage.mLayers[aLayer].mImage.GetType() == eStyleImageType_Gradient;
+}
+
+void
+nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams& aParams,
+                                                             mozilla::wr::DisplayListBuilder& aBuilder,
+                                                             mozilla::layers::WebRenderDisplayItemLayer* aLayer)
+{
+  NS_PRECONDITION(aParams.frame,
+                  "Frame is expected to be provided to BuildWebRenderDisplayItemsForStyleImageLayer");
+
+  nsStyleContext *sc;
+  if (!FindBackground(aParams.frame, &sc)) {
+    // We don't want to bail out if moz-appearance is set on a root
+    // node. If it has a parent content node, bail because it's not
+    // a root, otherwise keep going in order to let the theme stuff
+    // draw the background. The canvas really should be drawing the
+    // bg, but there's no way to hook that up via css.
+    if (!aParams.frame->StyleDisplay()->UsedAppearance()) {
+      return;
+    }
+
+    nsIContent* content = aParams.frame->GetContent();
+    if (!content || content->GetParent()) {
+      return;
+    }
+
+    sc = aParams.frame->StyleContext();
+  }
+
+  return BuildWebRenderDisplayItemsForStyleImageLayerWithSC(aParams, aBuilder, aLayer, sc, *aParams.frame->StyleBorder());
+}
+
 static bool
 IsOpaqueBorderEdge(const nsStyleBorder& aBorder, mozilla::Side aSide)
 {
@@ -2645,6 +2704,61 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
   }
 
   return result;
+}
+
+void
+nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBGParams& aParams,
+                                                                   mozilla::wr::DisplayListBuilder& aBuilder,
+                                                                   mozilla::layers::WebRenderDisplayItemLayer* aLayer,
+                                                                   nsStyleContext *aBackgroundSC,
+                                                                   const nsStyleBorder& aBorder)
+{
+  MOZ_ASSERT(CanBuildWebRenderDisplayItemsForStyleImageLayer(aParams.presCtx,
+                                                             aParams.frame,
+                                                             aBackgroundSC->StyleBackground(),
+                                                             aParams.layer));
+
+  MOZ_ASSERT(!(aParams.paintFlags & PAINTBG_MASK_IMAGE));
+
+  nscoord appUnitsPerPixel = aParams.presCtx.AppUnitsPerDevPixel();
+  ImageLayerClipState clipState;
+
+  clipState.mBGClipArea = *aParams.bgClipRect;
+  clipState.mCustomClip = true;
+  clipState.mHasRoundedCorners = false;
+  SetupDirtyRects(clipState.mBGClipArea, aParams.dirtyRect, appUnitsPerPixel,
+                  &clipState.mDirtyRectInAppUnits,
+                  &clipState.mDirtyRectInDevPx);
+
+  // Compute the outermost boundary of the area that might be painted.
+  // Same coordinate space as aParams.borderArea & aParams.bgClipRect.
+  Sides skipSides = aParams.frame->GetSkipSides();
+  nsRect paintBorderArea =
+    ::BoxDecorationRectForBackground(aParams.frame, aParams.borderArea,
+                                     skipSides, &aBorder);
+
+  const nsStyleImageLayers& layers = aBackgroundSC->StyleBackground()->mImage;
+  const nsStyleImageLayers::Layer& layer = layers.mLayers[aParams.layer];
+
+  // Skip the following layer painting code if we found the dirty region is
+  // empty or the current layer is not selected for drawing.
+  if (clipState.mDirtyRectInDevPx.IsEmpty()) {
+    return;
+  }
+
+  nsBackgroundLayerState state =
+    PrepareImageLayer(&aParams.presCtx, aParams.frame,
+                      aParams.paintFlags, paintBorderArea,
+                      clipState.mBGClipArea, layer, nullptr);
+
+  if (!state.mFillArea.IsEmpty()) {
+    state.mImageRenderer.BuildWebRenderDisplayItemsForLayer(&aParams.presCtx,
+                                   aBuilder, aLayer,
+                                   state.mDestArea, state.mFillArea,
+                                   state.mAnchor + paintBorderArea.TopLeft(),
+                                   clipState.mDirtyRectInAppUnits,
+                                   state.mRepeatSize, aParams.opacity);
+  }
 }
 
 nsRect
