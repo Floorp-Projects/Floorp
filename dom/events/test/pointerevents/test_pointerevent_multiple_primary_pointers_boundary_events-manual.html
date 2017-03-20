@@ -10,47 +10,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
     <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
     <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
     <script type="text/javascript" src="mochitest_support_external.js"></script>
-    <script type="text/javascript" src="apz_test_utils.js"></script>
-    <script type="text/javascript" src="apz_test_native_event_utils.js"></script>
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
     <script type="text/javascript">
       SimpleTest.waitForExplicitFinish();
       function startTest() {
-        // Suppress checking pointer id in this test case because we need to
-        // trigger this test case with synthesized native touch events.
-        runTestInNewWindow("pointerevent_multiple_primary_pointers_boundary_events-manual.html", true);
+        runTestInNewWindow("pointerevent_multiple_primary_pointers_boundary_events-manual.html");
       }
       function executeTest(int_win) {
         sendMouseEvent(int_win, "target0", "mousemove");
-
-        int_win.document.getElementById("target1").addEventListener("mouseenter", () => {
-          // Can't dispatch these events in the callback of synthesizeNativeTap
-          // because the callback is invoked before the touch generated mouse
-          // events.
-          window.addEventListener("message", function(aEvent) {
-            if (aEvent.data == "ContinueTest") {
-              sendMouseEvent(int_win, "target0", "mousemove");
-              sendMouseEvent(int_win, "done", "mousemove");
-              sendMouseEvent(int_win, "done", "mousedown");
-              sendMouseEvent(int_win, "done", "mouseup");
-            }
-          });
-          window.postMessage("ContinueTest", "*");
-        }, {once: true});
-
-        if (isApzEnabled()) {
-          // Synthesize native touch events to let apz generate compatibility
-          // mouse events when e10s enabled
-          synthesizeNativeTap(int_win.document.getElementById('target1'), 1, 1);
-        } else {
-          // Synthesize touch and mouse events when e10s disabled.
-          sendTouchEvent(int_win, "target1", "touchstart");
-          sendMouseEvent(int_win, "target1", "mousedown");
-          sendTouchEvent(int_win, "target1", "touchmove");
-          sendMouseEvent(int_win, "target1", "mousemove");
-          sendTouchEvent(int_win, "target1", "touchend");
-          sendMouseEvent(int_win, "target1", "mouseup");
-        }
+        sendTouchEvent(int_win, "target1", "touchstart");
+        sendTouchEvent(int_win, "target1", "touchend");
+        sendMouseEvent(int_win, "target0", "mousemove");
+        sendMouseEvent(int_win, "done",    "mousedown");
+        sendMouseEvent(int_win, "done",    "mouseup");
       }
     </script>
   </head>
