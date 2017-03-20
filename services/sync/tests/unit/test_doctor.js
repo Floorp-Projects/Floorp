@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const { Doctor, REPAIR_ADVANCE_PERIOD } = Cu.import("resource://services-sync/doctor.js", {});
+Cu.import("resource://gre/modules/Services.jsm");
 
 initTestLogging("Trace");
 
@@ -9,6 +10,52 @@ function mockDoctor(mocks) {
   // Clone the object and put mocks in that.
   return Object.assign({}, Doctor, mocks);
 }
+
+add_task(async function test_validation_interval() {
+  let now = 1000;
+  let doctor = mockDoctor({
+    _now() {
+      // note that the function being mocked actually returns seconds.
+      return now;
+    },
+  });
+
+  let engine = {
+    name: "test-engine",
+    getValidator() {
+      return {
+        validate(engine) {
+          return {};
+        }
+      }
+    },
+  }
+
+  // setup prefs which enable test-engine validation.
+  Services.prefs.setBoolPref("services.sync.engine.test-engine.validation.enabled", true);
+  Services.prefs.setIntPref("services.sync.engine.test-engine.validation.percentageChance", 100);
+  Services.prefs.setIntPref("services.sync.engine.test-engine.validation.maxRecords", 1);
+  // And say we should validate every 10 seconds.
+  Services.prefs.setIntPref("services.sync.engine.test-engine.validation.interval", 10);
+
+  deepEqual(doctor._getEnginesToValidate([engine]), {
+    "test-engine": {
+      engine,
+      maxRecords: 1,
+    }
+  });
+  // We haven't advanced the timestamp, so we should not validate again.
+  deepEqual(doctor._getEnginesToValidate([engine]), {});
+  // Advance our clock by 11 seconds.
+  now += 11;
+  // We should validate again.
+  deepEqual(doctor._getEnginesToValidate([engine]), {
+    "test-engine": {
+      engine,
+      maxRecords: 1,
+    }
+  });
+});
 
 add_task(async function test_repairs_start() {
   let repairStarted = false;
