@@ -19,7 +19,7 @@ function check_telemetry() {
                     .getHistogramById("SSL_CERT_ERROR_OVERRIDES")
                     .snapshot();
   equal(histogram.counts[0], 0, "Should have 0 unclassified counts");
-  equal(histogram.counts[2], 8,
+  equal(histogram.counts[2], 9,
         "Actual and expected SEC_ERROR_UNKNOWN_ISSUER counts should match");
   equal(histogram.counts[3], 1,
         "Actual and expected SEC_ERROR_CA_CERT_INVALID counts should match");
@@ -33,7 +33,7 @@ function check_telemetry() {
         "Actual and expected SEC_ERROR_INADEQUATE_KEY_USAGE counts should match");
   equal(histogram.counts[8], 2,
         "Actual and expected SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED counts should match");
-  equal(histogram.counts[9], 10,
+  equal(histogram.counts[9], 13,
         "Actual and expected SSL_ERROR_BAD_CERT_DOMAIN counts should match");
   equal(histogram.counts[10], 5,
         "Actual and expected SEC_ERROR_EXPIRED_CERTIFICATE counts should match");
@@ -58,11 +58,11 @@ function check_telemetry() {
                            .snapshot();
   equal(keySizeHistogram.counts[0], 0,
         "Actual and expected unchecked key size counts should match");
-  equal(keySizeHistogram.counts[1], 12,
+  equal(keySizeHistogram.counts[1], 16,
         "Actual and expected successful verifications of 2048-bit keys should match");
   equal(keySizeHistogram.counts[2], 0,
         "Actual and expected successful verifications of 1024-bit keys should match");
-  equal(keySizeHistogram.counts[3], 58,
+  equal(keySizeHistogram.counts[3], 60,
         "Actual and expected verification failures unrelated to key size should match");
 
   run_next_test();
@@ -113,6 +113,7 @@ function run_test() {
   fakeOCSPResponder.start(8888);
 
   add_simple_tests();
+  add_localhost_tests();
   add_combo_tests();
   add_distrust_tests();
 
@@ -269,6 +270,19 @@ function add_simple_tests() {
               "IDN certificate should not have matching override using (non-ascii) host");
     run_next_test();
   });
+}
+
+function add_localhost_tests() {
+  add_cert_override_test("localhost",
+                         Ci.nsICertOverrideService.ERROR_MISMATCH |
+                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                         SEC_ERROR_UNKNOWN_ISSUER);
+  add_cert_override_test("127.0.0.1",
+                         Ci.nsICertOverrideService.ERROR_MISMATCH,
+                         SSL_ERROR_BAD_CERT_DOMAIN);
+  add_cert_override_test("::1",
+                         Ci.nsICertOverrideService.ERROR_MISMATCH,
+                         SSL_ERROR_BAD_CERT_DOMAIN);
 }
 
 function add_combo_tests() {
