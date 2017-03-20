@@ -30,7 +30,6 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withParent;
 import static android.view.KeyEvent.KEYCODE_ENTER;
 import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.Matchers.allOf;
@@ -89,8 +88,6 @@ public class TrashcanTest {
                 .enabled(true));
         ViewInteraction floatingEraseButton = onView(
                 allOf(withId(R.id.erase),
-                        withParent(allOf(withId(R.id.main_content),
-                                withParent(withId(R.id.container)))),
                         isDisplayed()));
         UiObject erasedMsg = mDevice.findObject(new UiSelector()
                 .text("Your browsing history has been erased.")
