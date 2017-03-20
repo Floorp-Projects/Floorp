@@ -146,6 +146,7 @@ namespace JS {
     _(LoosyInt32BooleanCompare)                                         \
     _(CallsValueOf)                                                     \
     _(StrictCompare)                                                    \
+    _(InitHole)                                                         \
                                                                         \
     _(ICOptStub_GenericSuccess)                                         \
                                                                         \
