@@ -843,6 +843,20 @@ EqualStringsHelper(JSString* str1, JSString* str2);
 MOZ_MUST_USE bool
 CheckIsCallable(JSContext* cx, HandleValue v, CheckIsCallableKind kind);
 
+template <bool HandleMissing>
+bool
+GetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp);
+
+template <bool HandleMissing>
+bool
+GetNativeDataPropertyByValue(JSContext* cx, JSObject* obj, Value* vp);
+
+bool
+SetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* val);
+
+bool
+ObjectHasGetterSetter(JSContext* cx, JSObject* obj, Shape* propShape);
+
 } // namespace jit
 } // namespace js
 

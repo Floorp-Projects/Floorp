@@ -961,10 +961,11 @@ template
 void jit::TraceCacheIRStub(JSTracer* trc, IonICStub* stub, const CacheIRStubInfo* stubInfo);
 
 bool
-CacheIRWriter::stubDataEqualsMaybeUpdate(uint8_t* stubData) const
+CacheIRWriter::stubDataEqualsMaybeUpdate(uint8_t* stubData, bool* updated) const
 {
     MOZ_ASSERT(!failed());
 
+    *updated = false;
     const uintptr_t* stubDataWords = reinterpret_cast<const uintptr_t*>(stubData);
 
     // If DOMExpandoGeneration fields are different but all other stub fields
@@ -990,8 +991,10 @@ CacheIRWriter::stubDataEqualsMaybeUpdate(uint8_t* stubData) const
         stubDataWords += sizeof(uint64_t) / sizeof(uintptr_t);
     }
 
-    if (expandoGenerationIsDifferent)
+    if (expandoGenerationIsDifferent) {
         copyStubData(stubData);
+        *updated = true;
+    }
 
     return true;
 }
@@ -2200,5 +2203,57 @@ CacheIRCompiler::emitWrapResult()
     masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
 
     masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitMegamorphicLoadSlotByValueResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
+    bool handleMissing = reader.readBool();
+
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // idVal will be in vp[0], result will be stored in vp[1].
+    masm.reserveStack(sizeof(Value));
+    masm.Push(idVal);
+    masm.moveStackPtrTo(idVal.scratchReg());
+
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    volatileRegs.takeUnchecked(scratch);
+    volatileRegs.takeUnchecked(idVal);
+    masm.PushRegsInMask(volatileRegs);
+
+    masm.setupUnalignedABICall(scratch);
+    masm.loadJSContext(scratch);
+    masm.passABIArg(scratch);
+    masm.passABIArg(obj);
+    masm.passABIArg(idVal.scratchReg());
+    if (handleMissing)
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValue<true>)));
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValue<false>)));
+    masm.mov(ReturnReg, scratch);
+    masm.PopRegsInMask(volatileRegs);
+
+    masm.Pop(idVal);
+
+    Label ok;
+    uint32_t framePushed = masm.framePushed();
+    masm.branchIfTrueBool(scratch, &ok);
+    masm.adjustStack(sizeof(Value));
+    masm.jump(failure->label());
+
+    masm.bind(&ok);
+    masm.setFramePushed(framePushed);
+    masm.loadTypedOrValue(Address(masm.getStackPointer(), 0), output);
+    masm.adjustStack(sizeof(Value));
     return true;
 }
