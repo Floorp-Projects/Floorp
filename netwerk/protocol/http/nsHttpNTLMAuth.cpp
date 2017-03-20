@@ -27,6 +27,8 @@
 #include "nsISSLStatusProvider.h"
 #endif
 #include "mozilla/Attributes.h"
+#include "mozilla/Base64.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -379,29 +381,28 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
           len--;
 
         // decode into the input secbuffer
-        inBufLen = (len * 3)/4;      // sufficient size (see plbase64.h)
-        inBuf = moz_xmalloc(inBufLen);
-        if (!inBuf)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        if (PL_Base64Decode(challenge, len, (char *) inBuf) == nullptr) {
-            free(inBuf);
-            return NS_ERROR_UNEXPECTED; // improper base64 encoding
+        rv = Base64Decode(challenge, len, (char**)&inBuf, &inBufLen);
+        if (NS_FAILED(rv)) {
+            return rv;
         }
     }
 
     rv = module->GetNextToken(inBuf, inBufLen, &outBuf, &outBufLen);
     if (NS_SUCCEEDED(rv)) {
         // base64 encode data in output buffer and prepend "NTLM "
-        int credsLen = 5 + ((outBufLen + 2)/3)*4;
-        *creds = (char *) moz_xmalloc(credsLen + 1);
-        if (!*creds)
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        else {
-            memcpy(*creds, "NTLM ", 5);
-            PL_Base64Encode((char *) outBuf, outBufLen, *creds + 5);
-            (*creds)[credsLen] = '\0'; // null terminate
+        CheckedUint32 credsLen = ((CheckedUint32(outBufLen) + 2) / 3) * 4;
+        credsLen += 5; // "NTLM "
+        credsLen += 1; // null terminate
+
+        if (!credsLen.isValid()) {
+          rv = NS_ERROR_FAILURE;
+        } else {
+          *creds = (char *) moz_xmalloc(credsLen.value());
+          memcpy(*creds, "NTLM ", 5);
+          PL_Base64Encode((char *) outBuf, outBufLen, *creds + 5);
+          (*creds)[credsLen.value() - 1] = '\0'; // null terminate
         }
+
         // OK, we are done with |outBuf|
         free(outBuf);
     }
