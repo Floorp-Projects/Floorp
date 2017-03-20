@@ -1,7 +1,7 @@
 "use strict";
 
-module.exports = {  // eslint-disable-line no-undef
-  "extends": "../../../../../testing/xpcshell/xpcshell.eslintrc.js",
+module.exports = {
+  "extends": "plugin:mozilla/xpcshell-test",
 
   "globals": {
     "browser": false,
