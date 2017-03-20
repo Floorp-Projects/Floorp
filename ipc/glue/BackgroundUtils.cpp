@@ -94,6 +94,18 @@ PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
         return nullptr;
       }
 
+      // When the principal is serialized, the origin is extract from it. This
+      // can fail, and in case, here we will havea Tvoid_t. If we have a string,
+      // it must match with what the_new_principal.getOrigin returns.
+      if (info.originNoSuffix().type() == ContentPrincipalInfoOriginNoSuffix::TnsCString) {
+        nsAutoCString originNoSuffix;
+        rv = principal->GetOrigin(originNoSuffix);
+        if (NS_WARN_IF(NS_FAILED(rv)) ||
+            !info.originNoSuffix().get_nsCString().Equals(originNoSuffix)) {
+          MOZ_CRASH("If the origin was in the contentPrincipalInfo, it must be available when deserialized");
+        }
+      }
+
       return principal.forget();
     }
 
@@ -222,8 +234,18 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
     return rv;
   }
 
+  ContentPrincipalInfoOriginNoSuffix infoOriginNoSuffix;
+
+  nsCString originNoSuffix;
+  rv = aPrincipal->GetOriginNoSuffix(originNoSuffix);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    infoOriginNoSuffix = void_t();
+  } else {
+    infoOriginNoSuffix = originNoSuffix;
+  }
+
   *aPrincipalInfo = ContentPrincipalInfo(aPrincipal->OriginAttributesRef(),
-                                         spec);
+                                         infoOriginNoSuffix, spec);
   return NS_OK;
 }
 
