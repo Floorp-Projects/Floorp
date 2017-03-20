@@ -39,7 +39,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--dep', action='store_true',
                     help='do not clobber the objdir before building')
 parser.add_argument('--platform', '-p', type=str, metavar='PLATFORM',
-                    default='', help='build platform')
+                    default='', help='build platform, including a suffix ("-debug" or "") used by buildbot to override the variant\'s "debug" setting. The platform can be used to specify 32 vs 64 bits.')
 parser.add_argument('--timeout', '-t', type=int, metavar='TIMEOUT',
                     default=10800,
                     help='kill job after TIMEOUT seconds')
@@ -160,6 +160,9 @@ if opt is not None:
     CONFIGURE_ARGS += (" --enable-optimize" if opt else " --disable-optimize")
 
 opt = args.debug
+if opt is None and args.platform:
+    # Override variant['debug'].
+    opt = ('-debug' in args.platform)
 if opt is None:
     opt = variant.get('debug')
 if opt is not None:
