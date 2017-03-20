@@ -86,6 +86,11 @@ const data = {
     ],
     "should not crash on invalid input": [
       [null, ["fr-FR"], []],
+      [[null], [], []],
+      [[undefined], [], []],
+      [[undefined], [null], []],
+      [[undefined], [undefined], []],
+      [[null], [null], null, null, []],
       [undefined, ["fr-FR"], []],
       [2, ["fr-FR"], []],
       ["fr-FR", ["fr-FR"], []],
