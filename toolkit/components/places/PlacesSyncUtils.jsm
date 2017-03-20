@@ -1391,7 +1391,7 @@ var tagItem = Task.async(function(item, tags) {
   }
 
   // Remove leading and trailing whitespace, then filter out empty tags.
-  let newTags = tags.map(tag => tag.trim()).filter(Boolean);
+  let newTags = tags ? tags.map(tag => tag.trim()).filter(Boolean) : [];
 
   // Removing the last tagged item will also remove the tag. To preserve
   // tag IDs, we temporarily tag a dummy URI, ensuring the tags exist.
