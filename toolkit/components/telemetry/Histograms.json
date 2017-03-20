@@ -11275,5 +11275,16 @@
     "n_buckets": 100,
     "bug_numbers": [1341531],
     "description": "Time (ms) for the APZ handled wheel event to dispatch, but before handlers executing."
+  },
+  "IPC_SYNC_MESSAGE_MANAGER_LATENCY_MS": {
+    "alert_emails": ["michael@thelayzells.com"],
+    "bug_numbers": [1348113],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "low": 32,
+    "high": 750,
+    "n_buckets": 40,
+    "keyed": true,
+    "description": "Measures the number of milliseconds we spend waiting for sync message manager IPC messages to finish sending, keyed by message name. Note: only messages that wait for more than 500 microseconds are included in this probe."
   }
 }

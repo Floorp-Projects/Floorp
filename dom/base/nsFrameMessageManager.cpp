@@ -658,11 +658,18 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
 
   nsTArray<StructuredCloneData> retval;
 
+  TimeStamp start = TimeStamp::Now();
   sSendingSyncMessage |= aIsSync;
   bool ok = mCallback->DoSendBlockingMessage(aCx, aMessageName, data, objects,
                                              aPrincipal, &retval, aIsSync);
   if (aIsSync) {
     sSendingSyncMessage = false;
+  }
+
+  uint32_t latencyMs = round((TimeStamp::Now() - start).ToMilliseconds());
+  if (latencyMs >= kMinTelemetrySyncMessageManagerLatencyMs) {
+    Telemetry::Accumulate(Telemetry::IPC_SYNC_MESSAGE_MANAGER_LATENCY_MS,
+                          NS_ConvertUTF16toUTF8(aMessageName), latencyMs);
   }
 
   if (!ok) {
