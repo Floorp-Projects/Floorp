@@ -1,6 +1,8 @@
+"use strict";
+
 const {Cc, Ci} = require("chrome");
-const cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"].
-  getService(Ci.nsIMessageListenerManager);
+const cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+             .getService(Ci.nsIMessageListenerManager);
 const { DebuggerServer } = require("devtools/server/main");
 
 exports.setupChild = function (a, b, c) {

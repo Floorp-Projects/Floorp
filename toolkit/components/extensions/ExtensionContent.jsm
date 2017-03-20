@@ -1140,7 +1140,10 @@ class ExtensionGlobal {
         // we try to send it back over the message manager.
         Cu.cloneInto(result, target);
       } catch (e) {
-        return Promise.reject({message: "Script returned non-structured-clonable data"});
+        const {js} = options;
+        const fileName = js.length ? js[js.length - 1] : "<anonymous code>";
+        const message = `Script '${fileName}' result is non-structured-clonable data`;
+        return Promise.reject({message, fileName});
       }
       return result;
     });

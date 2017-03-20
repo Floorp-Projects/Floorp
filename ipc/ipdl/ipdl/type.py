@@ -1130,7 +1130,7 @@ class CheckTypes(TcheckVisitor):
 
             if mtype.isCtor() or mtype.isDtor():
                 message_type = "constructor" if mtype.isCtor() else "destructor"
-                error_message = ("%s messages can't use compression (here, in protocol `%s'" %
+                error_message = ("%s messages can't use compression (here, in protocol `%s')" %
                                  (message_type, pname))
             else:
                 error_message = ("message `%s' in protocol `%s' requests compression but is not async" %

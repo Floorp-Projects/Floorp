@@ -12,6 +12,7 @@ Bug 1181100 - Test DebuggerServerConnection.setupInParent and DebuggerServer.set
 <body>
 <pre id="test">
 <script type="application/javascript">
+"use strict";
 
 let Cu = Components.utils;
 let Cc = Components.classes;
@@ -22,7 +23,7 @@ let {DebuggerClient} = require("devtools/shared/client/main");
 let {DebuggerServer} = require("devtools/server/main");
 let Services = require("Services");
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
   SpecialPowers.pushPrefEnv({
@@ -32,15 +33,13 @@ window.onload = function() {
       ["dom.mozBrowserFramesEnabled", true]
     ]
   }, runTests);
-}
+};
 
 function runTests() {
   // Create a minimal iframe with a message manager
   let iframe = document.createElement("iframe");
   iframe.mozbrowser = true;
   document.body.appendChild(iframe);
-
-  let mm = iframe.frameLoader.messageManager;
 
   // Instantiate a minimal server
   if (!DebuggerServer.initialized) {
@@ -76,7 +75,7 @@ function runTests() {
 
   // Wait also for a reponse from setupInParent called from setup-in-child.js
   let onParent = (_, topic, args) => {
-    Services.obs.removeObserver(onParent, "test:setupParent", false);
+    Services.obs.removeObserver(onParent, "test:setupParent");
     args = JSON.parse(args);
 
     is(args[0], true, "Got `mm` argument, a message manager");
@@ -99,10 +98,9 @@ function runTests() {
     client.close().then(function () {
       DebuggerServer.destroy();
       iframe.remove();
-      SimpleTest.finish()
+      SimpleTest.finish();
     });
   }
-
 }
 </script>
 </pre>

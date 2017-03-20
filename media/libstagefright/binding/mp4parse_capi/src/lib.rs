@@ -147,11 +147,11 @@ impl Default for mp4parse_byte_data {
 }
 
 impl mp4parse_byte_data {
-    fn set_data(&mut self, data: &Vec<u8>) {
+    fn set_data(&mut self, data: &[u8]) {
         self.length = data.len() as u32;
         self.data = data.as_ptr();
     }
-    fn set_indices(&mut self, data: &Vec<mp4parse_indice>) {
+    fn set_indices(&mut self, data: &[mp4parse_indice]) {
         self.length = data.len() as u32;
         self.indices = data.as_ptr();
     }
@@ -178,6 +178,11 @@ pub struct mp4parse_track_audio_info {
     pub bit_depth: u16,
     pub sample_rate: u32,
     pub profile: u16,
+    // TODO:
+    //  codec_specific_data is AudioInfo.mCodecSpecificConfig,
+    //  codec_specific_config is AudioInfo.mExtraData.
+    //  It'd be better to change name same as AudioInfo.
+    pub codec_specific_data: mp4parse_byte_data,
     pub codec_specific_config: mp4parse_byte_data,
     pub protected_data: mp4parse_sinf_info,
 }
@@ -306,7 +311,7 @@ pub unsafe extern fn mp4parse_free(parser: *mut mp4parse_parser) {
     let _ = Box::from_raw(parser);
 }
 
-/// Enable mp4_parser log.
+/// Enable `mp4_parser` log.
 #[no_mangle]
 pub unsafe extern fn mp4parse_log(enable: bool) {
     mp4parse::set_debug_mode(enable);
@@ -525,6 +530,8 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
             }
             (*info).codec_specific_config.length = v.codec_esds.len() as u32;
             (*info).codec_specific_config.data = v.codec_esds.as_ptr();
+            (*info).codec_specific_data.length = v.decoder_specific_data.len() as u32;
+            (*info).codec_specific_data.data = v.decoder_specific_data.as_ptr();
             if let Some(rate) = v.audio_sample_rate {
                 (*info).sample_rate = rate;
             }
@@ -570,7 +577,7 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
     }
 
     match audio.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
-        Some(ref p) => {
+        Some(p) => {
             if let Some(ref tenc) = p.tenc {
                 (*info).protected_data.is_encrypted = tenc.is_encrypted;
                 (*info).protected_data.iv_size = tenc.iv_size;
@@ -633,7 +640,7 @@ pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut mp4parse_parser,
     }
 
     match video.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
-        Some(ref p) => {
+        Some(p) => {
             if let Some(ref tenc) = p.tenc {
                 (*info).protected_data.is_encrypted = tenc.is_encrypted;
                 (*info).protected_data.iv_size = tenc.iv_size;
@@ -932,8 +939,8 @@ fn create_sample_table(track: &Track, track_offset_time: i64) -> Option<Vec<mp4p
     }
 
     // Mark the sync sample in sample_table according to 'stss'.
-    match &track.stss {
-        &Some(ref v) => {
+    match track.stss {
+        Some(ref v) => {
             for iter in &v.samples {
                 sample_table[(iter - 1) as usize].sync = true;
             }
@@ -941,8 +948,8 @@ fn create_sample_table(track: &Track, track_offset_time: i64) -> Option<Vec<mp4p
         _ => {}
     }
 
-    let ctts_iter = match &track.ctts {
-        &Some(ref v) => Some(v.samples.as_slice().iter()),
+    let ctts_iter = match track.ctts {
+        Some(ref v) => Some(v.samples.as_slice().iter()),
         _ => None,
     };
 
@@ -1006,7 +1013,7 @@ fn create_sample_table(track: &Track, track_offset_time: i64) -> Option<Vec<mp4p
             let current_index = sort_table[i] as usize;
             let peek_index = sort_table[i + 1] as usize;
             let next_start_composition_time = sample_table[peek_index].start_composition;
-            let ref mut sample = sample_table[current_index];
+            let sample = &mut sample_table[current_index];
             sample.end_composition = next_start_composition_time;
         }
     }
@@ -1072,10 +1079,11 @@ pub unsafe extern fn mp4parse_is_fragmented(parser: *mut mp4parse_parser, track_
 
 /// Get 'pssh' system id and 'pssh' box content for eme playback.
 ///
-/// The data format in 'info' passing to gecko is:
-///   system_id
-///   pssh box size (in native endian)
-///   pssh box content (including header)
+/// The data format of the `info` struct passed to gecko is:
+///
+/// - system id (16 byte uuid)
+/// - pssh box size (32-bit native endian)
+/// - pssh box content (including header)
 #[no_mangle]
 pub unsafe extern fn mp4parse_get_pssh_info(parser: *mut mp4parse_parser, info: *mut mp4parse_pssh_info) -> mp4parse_error {
     if parser.is_null() || info.is_null() || (*parser).poisoned() {
@@ -1103,7 +1111,7 @@ pub unsafe extern fn mp4parse_get_pssh_info(parser: *mut mp4parse_parser, info: 
         pssh_data.extend_from_slice(pssh.box_content.as_slice());
     }
 
-    info.data.set_data(&pssh_data);
+    info.data.set_data(pssh_data);
 
     MP4PARSE_OK
 }

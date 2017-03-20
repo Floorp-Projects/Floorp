@@ -13,24 +13,27 @@ Bug 1068144 - Test getting the timestamps for allocations.
 <pre id="test">
 <script src="memory-helpers.js" type="application/javascript"></script>
 <script>
-window.onload = function() {
+"use strict";
+
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
   Task.spawn(function* () {
-    var { memory, client } = yield startServerAndGetSelectedTabMemory();
+    let { memory, client } = yield startServerAndGetSelectedTabMemory();
     yield memory.attach();
 
-    var allocs = [];
+    let allocs = [];
     function allocator() {
-      allocs.push(new Object);
+      allocs.push(new Object());
     }
 
     // Using setTimeout results in wildly varying delays that make it hard to
     // test our timestamps and results in intermittent failures. Instead, we
     // actually spin an empty loop for a whole millisecond.
     function actuallyWaitOneWholeMillisecond() {
-      var start = window.performance.now();
-      while (window.performance.now() - start < 1.000) ;
+      let start = window.performance.now();
+      // eslint-disable-next-line curly
+      while (window.performance.now() - start < 1.000);
     }
 
     yield memory.startRecordingAllocations();
@@ -41,36 +44,39 @@ window.onload = function() {
     actuallyWaitOneWholeMillisecond();
     allocator();
 
-    var response = yield memory.getAllocations();
+    let response = yield memory.getAllocations();
     yield memory.stopRecordingAllocations();
 
     ok(response.allocationsTimestamps, "The response should have timestamps.");
     is(response.allocationsTimestamps.length, response.allocations.length,
        "There should be a timestamp for every allocation.");
 
-    var allocatorIndices = response.allocations
+    let allocatorIndices = response.allocations
       .map(function (a, idx) {
-        var frame = response.frames[a];
+        let frame = response.frames[a];
         if (frame && frame.functionDisplayName === "allocator") {
           return idx;
         }
+        return null;
       })
       .filter(function (idx) {
-        return idx !== undefined;
+        return idx !== null;
       });
 
-    is(allocatorIndices.length, 3, "Should have our 3 allocations from the `allocator` timeouts.");
+    is(allocatorIndices.length, 3,
+       "Should have our 3 allocations from the `allocator` timeouts.");
 
-    var lastTimestamp;
-    for (var i = 0; i < 3; i++) {
-      var timestamp = response.allocationsTimestamps[allocatorIndices[i]];
+    let lastTimestamp;
+    for (let i = 0; i < 3; i++) {
+      let timestamp = response.allocationsTimestamps[allocatorIndices[i]];
       info("timestamp", timestamp);
       ok(timestamp, "We should have a timestamp for the `allocator` allocation.");
 
       if (lastTimestamp) {
-        var delta = timestamp - lastTimestamp;
+        let delta = timestamp - lastTimestamp;
         info("delta since last timestamp", delta);
-        ok(delta >= 1 /* ms */,
+        // ms
+        ok(delta >= 1,
            "The timestamp should be about 1 ms after the last timestamp.");
       }
 

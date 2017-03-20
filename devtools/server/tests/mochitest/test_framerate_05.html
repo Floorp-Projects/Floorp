@@ -12,37 +12,37 @@ Bug 1034648 - Tests whether a framerate recording can be cancelled.
 <body>
 <pre id="test">
 <script>
+"use strict";
 
-window.onload = function() {
-  var Cu = Components.utils;
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
+window.onload = function () {
+  let Cu = Components.utils;
 
-  var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  var {DebuggerClient} = require("devtools/shared/client/main");
-  var {DebuggerServer} = require("devtools/server/main");
-  var Services = require("Services");
+  const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  const {DebuggerClient} = require("devtools/shared/client/main");
+  const {DebuggerServer} = require("devtools/server/main");
+  const Services = require("Services");
 
   // Always log packets when running tests.
   Services.prefs.setBoolPref("devtools.debugger.log", true);
-  SimpleTest.registerCleanupFunction(function() {
+  SimpleTest.registerCleanupFunction(function () {
     Services.prefs.clearUserPref("devtools.debugger.log");
   });
 
   SimpleTest.waitForExplicitFinish();
 
-  var {FramerateFront} = require("devtools/shared/fronts/framerate");
+  const {FramerateFront} = require("devtools/shared/fronts/framerate");
 
   DebuggerServer.init();
   DebuggerServer.addBrowserActors();
 
-  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
-    client.listTabs(function onListTabs(aResponse) {
-      var form = aResponse.tabs[aResponse.selected];
-      var front = FramerateFront(client, form);
+    client.listTabs(function onListTabs(response) {
+      let form = response.tabs[response.selected];
+      let front = FramerateFront(client, form);
 
       front.startRecording().then(() => {
+        /* eslint-disable max-nested-callbacks */
         window.setTimeout(() => {
           front.cancelRecording().then(() => {
             window.setTimeout(() => {
@@ -60,17 +60,18 @@ window.onload = function() {
 
                   client.close().then(() => {
                     DebuggerServer.destroy();
-                    SimpleTest.finish()
+                    SimpleTest.finish();
                   });
                 });
               });
             }, 1000);
           });
         }, 1000);
+        /* eslint-enable max-nested-callbacks */
       });
     });
   });
-}
+};
 </script>
 </pre>
 </body>
