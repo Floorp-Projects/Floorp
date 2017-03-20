@@ -1975,15 +1975,15 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
 
   aSavedResponseOut->mValue.principalInfo() = void_t();
   if (!serializedInfo.IsEmpty()) {
-    nsAutoCString specNoSuffix;
+    nsAutoCString originNoSuffix;
     OriginAttributes attrs;
-    if (!attrs.PopulateFromOrigin(serializedInfo, specNoSuffix)) {
+    if (!attrs.PopulateFromOrigin(serializedInfo, originNoSuffix)) {
       NS_WARNING("Something went wrong parsing a serialized principal!");
       return NS_ERROR_FAILURE;
     }
 
     aSavedResponseOut->mValue.principalInfo() =
-      mozilla::ipc::ContentPrincipalInfo(attrs, void_t(), specNoSuffix);
+      mozilla::ipc::ContentPrincipalInfo(attrs, originNoSuffix);
   }
 
   rv = state->GetBlobAsUTF8String(6, aSavedResponseOut->mValue.channelInfo().securityInfo());

@@ -243,8 +243,7 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
       nsAutoCString spec;
       spec.AppendPrintf("spec write %d", i);
       reg.principal() =
-        mozilla::ipc::ContentPrincipalInfo(mozilla::OriginAttributes(i, i % 2),
-                                           mozilla::void_t(), spec);
+        mozilla::ipc::ContentPrincipalInfo(mozilla::OriginAttributes(i, i % 2), spec);
 
       swr->TestRegisterServiceWorker(reg);
     }
@@ -598,8 +597,7 @@ TEST(ServiceWorkerRegistrar, TestDedupeWrite)
       nsAutoCString spec;
       spec.AppendPrintf("spec write dedupe/%d", i);
       reg.principal() =
-        mozilla::ipc::ContentPrincipalInfo(mozilla::OriginAttributes(0, false),
-                                           mozilla::void_t(), spec);
+        mozilla::ipc::ContentPrincipalInfo(mozilla::OriginAttributes(0, false), spec);
 
       swr->TestRegisterServiceWorker(reg);
     }
