@@ -617,7 +617,7 @@ imgRequestProxy* NewStaticProxy(imgRequestProxy* aThis)
 {
   nsCOMPtr<nsIPrincipal> currentPrincipal;
   aThis->GetImagePrincipal(getter_AddRefs(currentPrincipal));
-  RefPtr<image::Image> image = aThis->GetImage();
+  RefPtr<Image> image = aThis->GetImage();
   return new imgRequestProxyStatic(image, currentPrincipal);
 }
 
