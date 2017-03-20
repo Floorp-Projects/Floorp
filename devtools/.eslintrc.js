@@ -233,8 +233,8 @@ module.exports = {
     "no-fallthrough": "error",
     // Allow the use of leading or trailing decimal points in numeric literals.
     "no-floating-decimal": "off",
-    // Disallow comments inline after code.
-    "no-inline-comments": "error",
+    // Allow comments inline after code.
+    "no-inline-comments": "off",
     // Disallow if as the only statement in an else block.
     "no-lonely-if": "error",
     // Allow mixing regular variable and require declarations (not a node env).
