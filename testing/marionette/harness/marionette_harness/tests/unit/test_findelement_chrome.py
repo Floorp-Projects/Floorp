@@ -6,23 +6,29 @@ from marionette_driver.by import By
 from marionette_driver.errors import NoSuchElementException
 from marionette_driver.marionette import HTMLElement
 
-from marionette_harness import MarionetteTestCase
+from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
-class TestElementsChrome(MarionetteTestCase):
+class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
-        MarionetteTestCase.setUp(self)
+        super(TestElementsChrome, self).setUp()
+
         self.marionette.set_context("chrome")
-        self.win = self.marionette.current_window_handle
-        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', 'foo', 'chrome,centerscreen');")
-        self.marionette.switch_to_window('foo')
-        self.assertNotEqual(self.win, self.marionette.current_window_handle)
+
+        def open_window_with_js():
+            self.marionette.execute_script("""
+              window.open('chrome://marionette/content/test.xul',
+                          'foo', 'chrome,centerscreen');
+            """)
+
+        win = self.open_window(open_window_with_js)
+        self.marionette.switch_to_window(win)
 
     def tearDown(self):
-        self.assertNotEqual(self.win, self.marionette.current_window_handle)
-        self.marionette.execute_script("window.close();")
-        self.marionette.switch_to_window(self.win)
-        MarionetteTestCase.tearDown(self)
+        self.close_all_windows()
+
+        super(TestElementsChrome, self).tearDown()
 
     def test_id(self):
         el = self.marionette.execute_script("return window.document.getElementById('textInput');")
@@ -50,14 +56,16 @@ class TestElementsChrome(MarionetteTestCase):
         self.assertTrue(el.id in [found_el.id for found_el in found_els])
 
     def test_tag_name(self):
-        el = self.marionette.execute_script("return window.document.getElementsByTagName('vbox')[0];")
+        el = self.marionette.execute_script(
+            "return window.document.getElementsByTagName('vbox')[0];")
         found_el = self.marionette.find_element(By.TAG_NAME, "vbox")
         self.assertEquals('vbox', found_el.tag_name)
         self.assertEqual(HTMLElement, type(found_el))
         self.assertEqual(el, found_el)
 
     def test_class_name(self):
-        el = self.marionette.execute_script("return window.document.getElementsByClassName('asdf')[0];")
+        el = self.marionette.execute_script(
+            "return window.document.getElementsByClassName('asdf')[0];")
         found_el = self.marionette.find_element(By.CLASS_NAME, "asdf")
         self.assertEqual(HTMLElement, type(found_el))
         self.assertEqual(el, found_el)
@@ -70,13 +78,22 @@ class TestElementsChrome(MarionetteTestCase):
 
     def test_not_found(self):
         self.marionette.timeout.implicit = 1
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "I'm not on the page")
+        self.assertRaises(NoSuchElementException,
+                          self.marionette.find_element, By.ID, "I'm not on the page")
         self.marionette.timeout.implicit = 0
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "I'm not on the page")
+        self.assertRaises(NoSuchElementException,
+                          self.marionette.find_element, By.ID, "I'm not on the page")
 
     def test_timeout(self):
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "myid")
         self.marionette.timeout.implicit = 4
-        self.marionette.execute_script("window.setTimeout(function() {var b = window.document.createElement('button'); b.id = 'myid'; document.getElementById('things').appendChild(b);}, 1000)")
+        self.marionette.execute_script("""
+            window.setTimeout(function () {
+              var b = window.document.createElement('button');
+              b.id = 'myid';
+              document.getElementById('things').appendChild(b);
+            }, 1000); """)
         self.assertEqual(HTMLElement, type(self.marionette.find_element(By.ID, "myid")))
-        self.marionette.execute_script("window.document.getElementById('things').removeChild(window.document.getElementById('myid'));")
+        self.marionette.execute_script("""
+            var elem = window.document.getElementById('things');
+            elem.removeChild(window.document.getElementById('myid')); """)
