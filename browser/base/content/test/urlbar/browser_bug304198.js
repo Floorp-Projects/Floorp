@@ -48,6 +48,9 @@ add_task(function* () {
         resolve();
       }, {once: true});
       gURLBar.focus();
+      if (gURLBar.selectionStart == gURLBar.selectionEnd) {
+        gURLBar.selectionStart = gURLBar.selectionEnd = gURLBar.textValue.length;
+      }
       EventUtils.synthesizeKey("VK_BACK_SPACE", {});
     });
   }
