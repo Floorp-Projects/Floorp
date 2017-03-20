@@ -65,10 +65,24 @@ function closeGlobalTab() {
   gTab = null;
 }
 
+var gTabsProgressListener = {
+  onLocationChange(aBrowser, aWebProgress, aRequest, aLocation, aFlags) {
+    if (!gTab || gTab.linkedBrowser != aBrowser) {
+      return;
+    }
+
+    unregisterGlobalTab();
+  },
+}
+
 function unregisterGlobalTab() {
   gTab.removeEventListener("TabClose", unregisterGlobalTab);
-  gTab.ownerGlobal.removeEventListener("unload", unregisterGlobalTab);
+  let win = gTab.ownerGlobal;
+  win.removeEventListener("unload", unregisterGlobalTab);
+  win.gBrowser.removeTabsProgressListener(gTabsProgressListener);
+
   gTab.removeAttribute("customizemode");
+
   gTab = null;
 }
 
@@ -177,6 +191,9 @@ CustomizeMode.prototype = {
                          "chrome://browser/skin/customizableui/customizeFavicon.ico");
 
     gTab.addEventListener("TabClose", unregisterGlobalTab);
+
+    win.gBrowser.addTabsProgressListener(gTabsProgressListener);
+
     win.addEventListener("unload", unregisterGlobalTab);
 
     if (gTab.selected) {
