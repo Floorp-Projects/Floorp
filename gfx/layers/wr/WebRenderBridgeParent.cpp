@@ -37,6 +37,17 @@ bool is_in_render_thread()
   return mozilla::wr::RenderThread::IsInRenderThread();
 }
 
+bool is_glcontext_egl(void* glcontext_ptr)
+{
+  MOZ_ASSERT(glcontext_ptr);
+
+  mozilla::gl::GLContext* glcontext = reinterpret_cast<mozilla::gl::GLContext*>(glcontext_ptr);
+  if (!glcontext) {
+    return false;
+  }
+  return glcontext->GetContextType() == mozilla::gl::GLContextType::EGL;
+}
+
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
 {
   MOZ_ASSERT(glcontext_ptr);
