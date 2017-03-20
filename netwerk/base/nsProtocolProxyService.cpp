@@ -1524,8 +1524,14 @@ nsProtocolProxyService::LoadHostFilters(const char *filters)
         HostInfo *hinfo = new HostInfo();
         hinfo->port = portLocation ? atoi(portLocation + 1) : 0;
 
+        // PR_StringToNetAddr can't parse brackets enclosed IPv6
+        nsAutoCString addrString = str;
+        if (str.Length() > 0 && str.First() == '[' && str.Last() == ']') {
+            addrString = Substring(str, 1, str.Length() - 2);
+        }
+
         PRNetAddr addr;
-        if (PR_StringToNetAddr(str.get(), &addr) == PR_SUCCESS) {
+        if (PR_StringToNetAddr(addrString.get(), &addr) == PR_SUCCESS) {
             hinfo->is_ipaddr   = true;
             hinfo->ip.family   = PR_AF_INET6; // we always store address as IPv6
             hinfo->ip.mask_len = maskLocation ? atoi(maskLocation + 1) : 128;
@@ -1573,7 +1579,7 @@ nsProtocolProxyService::LoadHostFilters(const char *filters)
 
 //#define DEBUG_DUMP_FILTERS
 #ifdef DEBUG_DUMP_FILTERS
-        printf("loaded filter[%u]:\n", mHostFiltersArray.Length());
+        printf("loaded filter[%zu]:\n", mHostFiltersArray.Length());
         printf("  is_ipaddr = %u\n", hinfo->is_ipaddr);
         printf("  port = %u\n", hinfo->port);
         if (hinfo->is_ipaddr) {

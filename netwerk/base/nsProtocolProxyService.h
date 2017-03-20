@@ -54,6 +54,7 @@ public:
 
 protected:
     friend class nsAsyncResolveRequest;
+    friend class TestProtocolProxyService_LoadHostFilters_Test; // for gtest
 
     ~nsProtocolProxyService();
 
