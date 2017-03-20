@@ -188,7 +188,7 @@ public:
 
   virtual void NotifyCounterStylesAreDirty() override;
 
-  virtual nsresult ReconstructFrames(void) override;
+  virtual void ReconstructFrames(void) override;
   virtual void Freeze() override;
   virtual void Thaw() override;
   virtual void FireOrClearDelayedEvents(bool aFireEvents) override;
