@@ -73,7 +73,6 @@ UNIFIED_SOURCES += [
     'MultipartImage.cpp',
     'OrientedImage.cpp',
     'ProgressTracker.cpp',
-    'RasterImage.cpp',
     'ScriptedNotificationObserver.cpp',
     'ShutdownTracker.cpp',
     'SourceBuffer.cpp',
@@ -85,6 +84,11 @@ UNIFIED_SOURCES += [
 ]
 if CONFIG['MOZ_ENABLE_SKIA']:
     UNIFIED_SOURCES += [ 'Downscaler.cpp']
+
+# These files can't be unified because of ImageLogging.h #include order issues.
+SOURCES += [
+    'RasterImage.cpp',
+]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
