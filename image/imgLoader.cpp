@@ -128,7 +128,7 @@ public:
         }
 
         RefPtr<imgRequest> req = entry->GetRequest();
-        RefPtr<image::Image> image = req->GetImage();
+        RefPtr<Image> image = req->GetImage();
         if (!image) {
           continue;
         }
@@ -401,7 +401,7 @@ private:
                                       nsTArray<ImageMemoryCounter>* aArray,
                                       bool aIsUsed)
   {
-    RefPtr<image::Image> image = aRequest->GetImage();
+    RefPtr<Image> image = aRequest->GetImage();
     if (!image) {
       return;
     }
