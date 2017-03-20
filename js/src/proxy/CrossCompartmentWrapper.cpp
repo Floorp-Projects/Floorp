@@ -543,6 +543,12 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
             AutoWrapperRooter wobj(cx, WrapperValue(e));
             JSObject* wrapped = UncheckedUnwrap(wobj);
 
+            // We never nuke script source objects, since only ever used internally by the JS
+            // engine, and are expected to remain valid throughout a scripts lifetime.
+            if (MOZ_UNLIKELY(wrapped->is<ScriptSourceObject>())) {
+                continue;
+            }
+
             // We only skip nuking window references that point to a target
             // compartment, not the ones that belong to it.
             if (nukeReferencesToWindow == DontNukeWindowReferences &&
