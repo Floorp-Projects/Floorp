@@ -7001,7 +7001,7 @@ class MDiv : public MBinaryArithInstruction
     bool canBeNegativeOverflow_;
     bool canBeDivideByZero_;
     bool canBeNegativeDividend_;
-    bool unsigned_;
+    bool unsigned_;             // If false, signedness will be derived from operands
     bool trapOnError_;
     wasm::TrapOffset trapOffset_;
 
@@ -7139,7 +7139,7 @@ class MDiv : public MBinaryArithInstruction
 
 class MMod : public MBinaryArithInstruction
 {
-    bool unsigned_;
+    bool unsigned_;             // If false, signedness will be derived from operands
     bool canBeNegativeDividend_;
     bool canBePowerOfTwoDivisor_;
     bool canBeDivideByZero_;
