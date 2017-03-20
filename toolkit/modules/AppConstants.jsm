@@ -302,13 +302,6 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
-  MOZ_ANDROID_ACTIVITY_STREAM:
-#ifdef MOZ_ANDROID_ACTIVITY_STREAM
-  true,
-#else
-  false,
-#endif
-
   DLL_PREFIX: "@DLL_PREFIX@",
   DLL_SUFFIX: "@DLL_SUFFIX@",
 

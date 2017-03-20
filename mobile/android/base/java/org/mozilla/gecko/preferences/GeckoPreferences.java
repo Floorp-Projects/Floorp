@@ -714,7 +714,6 @@ public class GeckoPreferences
                     i--;
                     continue;
                 } else if (PREFS_CATEGORY_EXPERIMENTAL_FEATURES.equals(key)
-                        && !AppConstants.MOZ_ANDROID_ACTIVITY_STREAM
                         && !AppConstants.MOZ_ANDROID_CUSTOM_TABS) {
                     preferences.removePreference(pref);
                     i--;
