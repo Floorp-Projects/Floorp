@@ -12,25 +12,23 @@ Bug 921191 - allow inspection/editing of SVG elements' CSS properties
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
-const inspector = require("devtools/server/actors/inspector");
+"use strict";
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
-}
+};
 
-var gWalker = null;
-var gStyles = null;
-var gClient = null;
+let gWalker = null;
+let gStyles = null;
 
 addTest(function setup() {
   let url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
+  attachURL(url, function (err, client, tab, doc) {
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
-      gClient = client;
       gWalker = walker;
       return inspector.getPageStyle();
     }).then(styles => {
@@ -49,9 +47,8 @@ addTest(function inheritedUserStyles() {
 });
 
 addTest(function cleanup() {
-  delete gStyles;
-  delete gWalker;
-  delete gClient;
+  gStyles = null;
+  gWalker = null;
   runNextTest();
 });
 

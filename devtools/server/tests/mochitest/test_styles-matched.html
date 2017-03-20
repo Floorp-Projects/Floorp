@@ -11,27 +11,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
-const inspector = require("devtools/server/actors/inspector");
+"use strict";
+
 const CssLogic = require("devtools/shared/inspector/css-logic");
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
-}
+};
 
-var gWalker = null;
-var gStyles = null;
-var gClient = null;
+let gWalker = null;
+let gStyles = null;
+let gInspectee = null;
 
 addTest(function setup() {
   let url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
+  attachURL(url, function (err, client, tab, doc) {
     gInspectee = doc;
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
-      gClient = client;
       gWalker = walker;
       return inspector.getPageStyle();
     }).then(styles => {
@@ -47,17 +47,22 @@ addTest(function testMatchedStyles() {
     is(matched[0].sourceText, "this.style", "First match comes from the element style");
     is(matched[0].selector, "@element.style", "Element style has a special selector");
     is(matched[0].value, "10px", "First match has the expected value");
-    is(matched[0].status, CssLogic.STATUS.BEST, "First match is the best match")
+    is(matched[0].status, CssLogic.STATUS.BEST, "First match is the best match");
     is(matched[0].rule.type, 100, "First match is an element style");
-    is(matched[0].rule.href, gInspectee.defaultView.location.href, "Node style comes from this document")
+    is(matched[0].rule.href, gInspectee.defaultView.location.href,
+       "Node style comes from this document");
 
     is(matched[1].sourceText, ".inheritable-rule", "Second match comes from a rule");
     is(matched[1].selector, ".inheritable-rule", "Second style has a selector");
     is(matched[1].value, "15px", "Second match has the expected value");
-    is(matched[1].status, CssLogic.STATUS.PARENT_MATCH, "Second match is from the parent")
-    is(matched[1].rule.parentStyleSheet.href, null, "Inline stylesheet shouldn't have an href");
-    is(matched[1].rule.parentStyleSheet.nodeHref, gInspectee.defaultView.location.href, "Inline stylesheet's nodeHref should match the current document");
-    ok(!matched[1].rule.parentStyleSheet.system, "Inline stylesheet shouldn't be a system stylesheet.");
+    is(matched[1].status, CssLogic.STATUS.PARENT_MATCH,
+       "Second match is from the parent");
+    is(matched[1].rule.parentStyleSheet.href, null,
+       "Inline stylesheet shouldn't have an href");
+    is(matched[1].rule.parentStyleSheet.nodeHref, gInspectee.defaultView.location.href,
+       "Inline stylesheet's nodeHref should match the current document");
+    ok(!matched[1].rule.parentStyleSheet.system,
+       "Inline stylesheet shouldn't be a system stylesheet.");
   }).then(runNextTest));
 });
 
@@ -77,9 +82,9 @@ addTest(function testSystemStyles() {
 });
 
 addTest(function cleanup() {
-  delete gStyles;
-  delete gWalker;
-  delete gClient;
+  gStyles = null;
+  gWalker = null;
+  gInspectee = null;
   runNextTest();
 });
 

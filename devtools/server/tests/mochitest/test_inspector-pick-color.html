@@ -13,25 +13,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1262439
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
-window.onload = function() {
-  const Cu = Components.utils;
-  Cu.import("resource://devtools/shared/Loader.jsm");
-  const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
-  const {InspectorFront} = devtools.require("devtools/shared/fronts/inspector");
-  const {console} = Cu.import("resource://gre/modules/Console.jsm", {});
+"use strict";
+
+window.onload = function () {
+  const {InspectorFront} = require("devtools/shared/fronts/inspector");
 
   SimpleTest.waitForExplicitFinish();
 
   let win = null;
   let inspector = null;
 
-  addAsyncTest(function*() {
+  addAsyncTest(function* () {
     info("Setting up inspector actor");
 
     let url = document.getElementById("inspectorContent").href;
 
     yield new Promise(resolve => {
-      attachURL(url, function(err, client, tab, doc) {
+      attachURL(url, function (err, client, tab, doc) {
         win = doc.defaultView;
         inspector = InspectorFront(client, tab);
         resolve();
@@ -41,7 +39,7 @@ window.onload = function() {
     runNextTest();
   });
 
-  addAsyncTest(function*() {
+  addAsyncTest(function* () {
     info("Start picking a color from the page");
     yield inspector.pickColorFromPage();
 
@@ -55,7 +53,7 @@ window.onload = function() {
     runNextTest();
   });
 
-  addAsyncTest(function*() {
+  addAsyncTest(function* () {
     info("Start picking a color from the page");
     yield inspector.pickColorFromPage();
 
@@ -73,7 +71,7 @@ window.onload = function() {
     runNextTest();
   });
 
-  addAsyncTest(function*() {
+  addAsyncTest(function* () {
     info("Start picking a color from the page");
     yield inspector.pickColorFromPage();
 

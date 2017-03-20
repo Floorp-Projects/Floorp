@@ -1,3 +1,5 @@
+"use strict";
+
 var {Ci} = require("chrome");
 var Services = require("Services");
 

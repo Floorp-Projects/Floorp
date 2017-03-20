@@ -11,26 +11,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
-const inspector = require("devtools/server/actors/inspector");
+"use strict";
+
 const {isCssPropertyKnown} = require("devtools/server/actors/css-properties");
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
-}
+};
 
 var gWalker = null;
 var gStyles = null;
-var gClient = null;
+var gInspectee = null;
 
 addAsyncTest(function* setup() {
   let url = document.getElementById("inspectorContent").href;
   let inspector;
 
   yield new Promise(resolve => {
-    attachURL(url, function(err, client, tab, doc) {
+    attachURL(url, function (err, client, tab, doc) {
       gInspectee = doc;
-      gClient = client;
       let {InspectorFront} = require("devtools/shared/fronts/inspector");
       inspector = InspectorFront(client, tab);
       resolve();
@@ -95,9 +95,9 @@ function* removeProperty(rule, index, name) {
 }
 
 addTest(function cleanup() {
-  delete gStyles;
-  delete gWalker;
-  delete gClient;
+  gStyles = null;
+  gWalker = null;
+  gInspectee = null;
   runNextTest();
 });
 

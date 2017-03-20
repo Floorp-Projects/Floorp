@@ -238,10 +238,14 @@ MP4AudioInfo::Update(const mp4parse_track_info* track,
     mProfile = audio->profile;
   }
 
-  const uint8_t* cdata = audio->codec_specific_config.data;
-  size_t size = audio->codec_specific_config.length;
-  if (size > 0) {
-    mCodecSpecificConfig->AppendElements(cdata, size);
+  if (audio->codec_specific_config.length > 0) {
+    mExtraData->AppendElements(audio->codec_specific_config.data,
+                               audio->codec_specific_config.length);
+  }
+
+  if (audio->codec_specific_data.length > 0) {
+    mCodecSpecificConfig->AppendElements(audio->codec_specific_data.data,
+                                         audio->codec_specific_data.length);
   }
 }
 

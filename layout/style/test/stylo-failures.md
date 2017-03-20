@@ -173,13 +173,6 @@ to mochitest command.
     * test_initial_computation.html `-moz-force-broken-image-icon` [4]
     * test_initial_storage.html `-moz-force-broken-image-icon` [4]
     * test_value_storage.html `-moz-force-broken-image-icon` [4]
-  * -{moz,webkit}-text-size-adjust servo/servo#16002
-    * test_compute_data_with_start_struct.html `-text-size-adjust` [2]
-    * test_inherit_computation.html `-text-size-adjust` [8]
-    * test_inherit_storage.html `-text-size-adjust` [10]
-    * test_initial_computation.html `-text-size-adjust` [4]
-    * test_initial_storage.html `-text-size-adjust` [5]
-    * test_value_storage.html `-text-size-adjust` [12]
   * -moz-transform: need different parsing rules servo/servo#16003
     * test_inherit_computation.html `-moz-transform`: need different parsing rules [2]
     * test_inherit_storage.html `transform`: for -moz-transform [3]
@@ -419,9 +412,9 @@ to mochitest command.
   * :dir
     * test_selectors.html `:dir` [10]
 * issues arround font shorthand servo/servo#15032 servo/servo#15036
-  * test_bug377947.html [2]
+  * test_bug377947.html [1]
   * test_value_storage.html `'font'` [144]
-  * test_shorthand_property_getters.html `font shorthand` [2]
+  * test_shorthand_property_getters.html `font shorthand` [1]
   * test_system_font_serialization.html [10]
 * test_value_storage.html `font-size: calc(`: clamp negative value servo/servo#15296 [3]
 * rounding issue

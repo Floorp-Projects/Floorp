@@ -85,7 +85,7 @@ function background() {
     let byteLength = parseInt(upload, 10);
     if (byteLength) {
       browser.test.assertTrue(!!requestBody.raw, `Binary upload ${details.url} #${details.requestId} ${upload} have a raw attribute`);
-      browser.test.assertEq(byteLength, requestBody.raw && requestBody.raw.map(r => r.bytes && r.bytes.byteLength || 0).reduce((a, b) => a + b), `Binary upload size matches`);
+      browser.test.assertEq(byteLength, requestBody.raw && requestBody.raw.map(r => r.bytes ? r.bytes.byteLength : 0).reduce((a, b) => a + b), `Binary upload size matches`);
       return;
     }
     if ("raw" in requestBody) {
