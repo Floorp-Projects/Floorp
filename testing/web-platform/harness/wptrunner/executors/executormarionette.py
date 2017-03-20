@@ -264,6 +264,23 @@ class MarionetteProtocol(Protocol):
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             self.marionette.execute_script(script)
 
+    def clear_origin(self, url):
+        self.logger.info("Clearing origin %s" % (url))
+        script = """
+            let url = '%s';
+            let uri = Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Ci.nsIIOService)
+                                .newURI(url);
+            let ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                                .getService(Ci.nsIScriptSecurityManager);
+            let principal = ssm.createCodebasePrincipal(uri, {});
+            let qms = Components.classes["@mozilla.org/dom/quota-manager-service;1"]
+                                .getService(Components.interfaces.nsIQuotaManagerService);
+            qms.clearStoragesForPrincipal(principal, "default", true);
+            """ % url
+        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
+            self.marionette.execute_script(script)
+
 
 class RemoteMarionetteProtocol(Protocol):
     def __init__(self, executor, browser):
@@ -325,6 +342,11 @@ class ExecuteAsyncScriptRun(object):
         self.result_flag = threading.Event()
 
     def run(self):
+        index = self.url.rfind("/storage/");
+        if index != -1:
+            # Clear storage
+            self.protocol.clear_origin(self.url)
+
         timeout = self.timeout
 
         try:
