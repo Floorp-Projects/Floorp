@@ -5,14 +5,15 @@
  */
 
 /**
- * Represents a pre-compiled JS script, which can be repeatedly exeuted in
+ * Represents a pre-compiled JS script, which can be repeatedly executed in
  * different globals without being re-parsed.
  */
 [ChromeOnly, Exposed=(Window,System)]
 interface PrecompiledScript {
   /**
-   * Executes the script in the global of the given object, and returns the
-   * value of its last expression, if compiled with a return value.
+   * Executes the script in the context of, and with the security principal
+   * of, the given object's global. If compiled with a return value, returns
+   * the value of the script's last expression. Otherwise returns undefined.
    */
   [Throws]
   any executeInGlobal(object global);

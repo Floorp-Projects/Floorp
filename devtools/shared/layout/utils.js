@@ -633,6 +633,23 @@ function getCurrentZoom(node) {
 exports.getCurrentZoom = getCurrentZoom;
 
 /**
+ * Get the display pixel ratio for a given window.
+ * The `devicePixelRatio` property is affected by the zoom (see bug 809788), so we have to
+ * divide by the zoom value in order to get just the display density, expressed as pixel
+ * ratio (the physical display pixel compares to a pixel on a “normal” density screen).
+ *
+ * @param {DOMNode|DOMWindow}
+ *        The node for which the zoom factor should be calculated, or its
+ *        owner window.
+ * @return {Number}
+ */
+function getDisplayPixelRatio(node) {
+  let win = getWindowFor(node);
+  return win.devicePixelRatio / utilsFor(win).fullZoom;
+}
+exports.getDisplayPixelRatio = getDisplayPixelRatio;
+
+/**
  * Returns the window's dimensions for the `window` given.
  *
  * @return {Object} An object with `width` and `height` properties, representing the

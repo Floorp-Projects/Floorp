@@ -602,8 +602,8 @@ class AutoDetectInvalidation
 };
 
 MOZ_MUST_USE bool
-InvokeFunction(JSContext* cx, HandleObject obj0, bool constructing, uint32_t argc, Value* argv,
-               MutableHandleValue rval);
+InvokeFunction(JSContext* cx, HandleObject obj0, bool constructing, bool ignoresReturnValue,
+               uint32_t argc, Value* argv, MutableHandleValue rval);
 MOZ_MUST_USE bool
 InvokeFunctionShuffleNewTarget(JSContext* cx, HandleObject obj, uint32_t numActualArgs,
                                uint32_t numFormalArgs, Value* argv, MutableHandleValue rval);
@@ -766,9 +766,6 @@ InitBaselineFrameForOsr(BaselineFrame* frame, InterpreterFrame* interpFrame,
 
 JSObject* CreateDerivedTypedObj(JSContext* cx, HandleObject descr,
                                 HandleObject owner, int32_t offset);
-
-MOZ_MUST_USE bool
-ArraySpliceDense(JSContext* cx, HandleObject obj, uint32_t start, uint32_t deleteCount);
 
 MOZ_MUST_USE bool
 Recompile(JSContext* cx);

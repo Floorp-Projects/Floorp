@@ -265,13 +265,15 @@ public:
 
     mContent = nsIPresShell::GetCapturingContent();
 
-    if (!mTimer)
-    {
+    if (!mTimer) {
       nsresult result;
       mTimer = do_CreateInstance("@mozilla.org/timer;1", &result);
+      mTimer->SetTarget(
+        mPresContext->Document()->EventTargetFor(TaskCategory::Other));
 
-      if (NS_FAILED(result))
+      if (NS_FAILED(result)) {
         return result;
+      }
     }
 
     return mTimer->InitWithCallback(this, mDelay, nsITimer::TYPE_ONE_SHOT);
@@ -279,8 +281,7 @@ public:
 
   nsresult Stop()
   {
-    if (mTimer)
-    {
+    if (mTimer) {
       mTimer->Cancel();
       mTimer = nullptr;
     }
@@ -308,15 +309,17 @@ public:
     {
       AutoWeakFrame frame =
         mContent ? mPresContext->GetPrimaryFrameFor(mContent) : nullptr;
-      if (!frame)
+      if (!frame) {
         return NS_OK;
+      }
       mContent = nullptr;
 
       nsPoint pt = mPoint -
         frame->GetOffsetTo(mPresContext->PresShell()->FrameManager()->GetRootFrame());
       mFrameSelection->HandleDrag(frame, pt);
-      if (!frame.IsAlive())
+      if (!frame.IsAlive()) {
         return NS_OK;
+      }
 
       NS_ASSERTION(frame->PresContext() == mPresContext, "document mismatch?");
       mSelection->DoAutoScroll(frame, pt);
@@ -327,9 +330,9 @@ public:
 protected:
   virtual ~nsAutoScrollTimer()
   {
-   if (mTimer) {
-     mTimer->Cancel();
-   }
+    if (mTimer) {
+      mTimer->Cancel();
+    }
   }
 
 private:
@@ -1724,8 +1727,9 @@ nsFrameSelection::StartAutoScrollTimer(nsIFrame *aFrame,
                                        uint32_t  aDelay)
 {
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index])
+  if (!mDomSelections[index]) {
     return NS_ERROR_NULL_POINTER;
+  }
 
   return mDomSelections[index]->StartAutoScrollTimer(aFrame, aPoint, aDelay);
 }
@@ -1734,8 +1738,9 @@ void
 nsFrameSelection::StopAutoScrollTimer()
 {
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index])
+  if (!mDomSelections[index]) {
     return;
+  }
 
   mDomSelections[index]->StopAutoScrollTimer();
 }
@@ -4825,23 +4830,25 @@ Selection::StartAutoScrollTimer(nsIFrame* aFrame, nsPoint& aPoint,
   NS_PRECONDITION(aFrame, "Need a frame");
 
   nsresult result;
-  if (!mFrameSelection)
+  if (!mFrameSelection) {
     return NS_OK;//nothing to do
+  }
 
-  if (!mAutoScrollTimer)
-  {
+  if (!mAutoScrollTimer) {
     mAutoScrollTimer = new nsAutoScrollTimer();
 
     result = mAutoScrollTimer->Init(mFrameSelection, this);
 
-    if (NS_FAILED(result))
+    if (NS_FAILED(result)) {
       return result;
+    }
   }
 
   result = mAutoScrollTimer->SetDelay(aDelay);
 
-  if (NS_FAILED(result))
+  if (NS_FAILED(result)) {
     return result;
+  }
 
   return DoAutoScroll(aFrame, aPoint);
 }
@@ -4852,7 +4859,7 @@ Selection::StopAutoScrollTimer()
   if (mAutoScrollTimer) {
     return mAutoScrollTimer->Stop();
   }
-  return NS_OK; 
+  return NS_OK;
 }
 
 nsresult
@@ -4860,8 +4867,9 @@ Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint& aPoint)
 {
   NS_PRECONDITION(aFrame, "Need a frame");
 
-  if (mAutoScrollTimer)
+  if (mAutoScrollTimer) {
     (void)mAutoScrollTimer->Stop();
+  }
 
   nsPresContext* presContext = aFrame->PresContext();
   nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
@@ -6185,6 +6193,7 @@ Selection::PostScrollSelectionIntoViewEvent(
   RefPtr<ScrollSelectionIntoViewEvent> ev =
     new ScrollSelectionIntoViewEvent(this, aRegion, aVertical, aHorizontal,
                                      aFlags);
+  mScrollEvent = ev;
   nsresult rv;
   nsIDocument* doc = GetParentObject();
   if (doc) {
@@ -6195,10 +6204,10 @@ Selection::PostScrollSelectionIntoViewEvent(
     rv = NS_DispatchToCurrentThread(ev);
   }
 
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mScrollEvent = ev;
-  return NS_OK;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mScrollEvent = nullptr; // no need to hold on to the event
+  }
+  return rv;
 }
 
 NS_IMETHODIMP

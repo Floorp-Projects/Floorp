@@ -30,8 +30,6 @@ namespace impl {
 enum class OculusControllerAxisType : uint16_t {
   ThumbstickXAxis,
   ThumbstickYAxis,
-  IndexTrigger,
-  HandTrigger,
   NumVRControllerAxisType
 };
 
@@ -99,11 +97,19 @@ public:
   explicit VRControllerOculus(dom::GamepadHand aHand);
   float GetAxisMove(uint32_t aAxis);
   void SetAxisMove(uint32_t aAxis, float aValue);
+  float GetIndexTrigger();
+  void SetIndexTrigger(float aValue);
+  float GetHandTrigger();
+  void SetHandTrigger(float aValue);
 
 protected:
   virtual ~VRControllerOculus();
+
+private:
   float mAxisMove[static_cast<uint32_t>(
                   OculusControllerAxisType::NumVRControllerAxisType)];
+  float mIndexTrigger;
+  float mHandTrigger;
 };
 
 } // namespace impl
@@ -127,13 +133,19 @@ protected:
   { }
 
 private:
-  virtual void HandleButtonPress(uint32_t aControllerIdx,
-                                 uint64_t aButtonPressed) override;
-  virtual void HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
-                              float aValue) override;
-  virtual void HandlePoseTracking(uint32_t aControllerIdx,
-                                  const dom::GamepadPoseState& aPose,
-                                  VRControllerHost* aController) override;
+  void HandleButtonPress(uint32_t aControllerIdx,
+                         uint32_t aButton,
+                         uint64_t aButtonMask,
+                         uint64_t aButtonPressed);
+  void HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
+                      float aValue);
+  void HandlePoseTracking(uint32_t aControllerIdx,
+                          const dom::GamepadPoseState& aPose,
+                          VRControllerHost* aController);
+  void HandleTriggerPress(uint32_t aControllerIdx, uint32_t aButton,
+                          float aValue);
+  void HandleTouchEvent(uint32_t aControllerIdx, uint32_t aButton,
+                        uint64_t aTouchMask, uint64_t aTouched);
 
   RefPtr<impl::VRDisplayOculus> mHMDInfo;
   nsTArray<RefPtr<impl::VRControllerOculus>> mOculusController;

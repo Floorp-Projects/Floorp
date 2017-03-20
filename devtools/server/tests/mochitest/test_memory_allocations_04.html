@@ -13,27 +13,29 @@ Bug 1068171 - Test controlling the memory actor's allocation sampling probabilit
 <pre id="test">
 <script src="memory-helpers.js" type="application/javascript"></script>
 <script>
-window.onload = function() {
+"use strict";
+
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
   Task.spawn(function* () {
-    var { memory, client } = yield startServerAndGetSelectedTabMemory();
+    let { memory, client } = yield startServerAndGetSelectedTabMemory();
     yield memory.attach();
 
-    var allocs = [];
+    let allocs = [];
     function allocator() {
-      for (var i = 0; i < 100; i++) {
+      for (let i = 0; i < 100; i++) {
         allocs.push({});
       }
     }
 
-    var testProbability = Task.async(function* (p, expected) {
+    let testProbability = Task.async(function* (p, expected) {
       info("probability = " + p);
       yield memory.startRecordingAllocations({
         probability: p
       });
       allocator();
-      var response = yield memory.getAllocations();
+      let response = yield memory.getAllocations();
       yield memory.stopRecordingAllocations();
       return response.allocations.length;
     });

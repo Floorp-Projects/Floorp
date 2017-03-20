@@ -418,11 +418,10 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource)
   ctx->SetMatrix(mPaintTransform *
                  gfxMatrix::Translation(-neededRect.TopLeft()));
   GeneralPattern pattern;
-  DrawResult result = DrawResult::SUCCESS;
   if (aSource == &mFillPaint) {
-    result = nsSVGUtils::MakeFillPatternFor(mTargetFrame, ctx, &pattern);
+    nsSVGUtils::MakeFillPatternFor(mTargetFrame, ctx, &pattern);
   } else if (aSource == &mStrokePaint) {
-    result = nsSVGUtils::MakeStrokePatternFor(mTargetFrame, ctx, &pattern);
+    nsSVGUtils::MakeStrokePatternFor(mTargetFrame, ctx, &pattern);
   }
 
   if (pattern.GetPattern()) {
@@ -433,7 +432,7 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource)
   aSource->mSourceSurface = offscreenDT->Snapshot();
   aSource->mSurfaceRect = neededRect;
 
-  return result;
+  return DrawResult::SUCCESS;
 }
 
 DrawResult

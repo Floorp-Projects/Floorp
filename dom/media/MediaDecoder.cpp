@@ -297,12 +297,12 @@ MediaDecoder::ResourceCallback::NotifyBytesConsumed(int64_t aBytes,
 
 void
 MediaDecoder::NotifyOwnerActivityChanged(bool aIsDocumentVisible,
-                                         bool aIsElementVisible,
+                                         Visibility aElementVisibility,
                                          bool aIsElementInTree)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  SetElementVisibility(aIsDocumentVisible, aIsElementVisible, aIsElementInTree);
+  SetElementVisibility(aIsDocumentVisible, aElementVisibility, aIsElementInTree);
 
   NotifyCompositor();
 }
@@ -395,7 +395,7 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , mMinimizePreroll(false)
   , mFiredMetadataLoaded(false)
   , mIsDocumentVisible(false)
-  , mIsElementVisible(false)
+  , mElementVisibility(Visibility::UNTRACKED)
   , mIsElementInTree(false)
   , mForcedHidden(false)
   , mHasSuspendTaint(false)
@@ -1281,12 +1281,12 @@ MediaDecoder::NotifyCompositor()
 
 void
 MediaDecoder::SetElementVisibility(bool aIsDocumentVisible,
-                                   bool aIsElementVisible,
+                                   Visibility aElementVisibility,
                                    bool aIsElementInTree)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mIsDocumentVisible = aIsDocumentVisible;
-  mIsElementVisible = aIsElementVisible;
+  mElementVisibility = aElementVisibility;
   mIsElementInTree = aIsElementInTree;
   UpdateVideoDecodeMode();
 }
@@ -1315,6 +1315,12 @@ MediaDecoder::UpdateVideoDecodeMode()
     return;
   }
 
+  // If an element is in-tree with UNTRACKED visibility, the visibility is
+  // incomplete and don't update the video decode mode.
+  if (mIsElementInTree && mElementVisibility == Visibility::UNTRACKED) {
+    return;
+  }
+
   // If mHasSuspendTaint is set, never suspend the video decoder.
   if (mHasSuspendTaint) {
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
@@ -1336,7 +1342,8 @@ MediaDecoder::UpdateVideoDecodeMode()
   // Otherwise, depends on the owner's visibility state.
   // A element is visible only if its document is visible and the element
   // itself is visible.
-  if (mIsDocumentVisible && mIsElementVisible) {
+  if (mIsDocumentVisible &&
+      mElementVisibility == Visibility::APPROXIMATELY_VISIBLE) {
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
   } else {
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);

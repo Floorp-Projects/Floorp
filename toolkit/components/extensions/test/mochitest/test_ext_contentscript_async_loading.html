@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test content script async loading</title>
+  <script src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+"use strict";
+
+add_task(function* test_async_loading() {
+  const adder = `(function add(a = 1) { this.count += a; })();\n`;
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [{
+        matches: ["https://example.org/"],
+        js: ["first.js", "second.js"],
+      }],
+    },
+    files: {
+      "first.js": `
+        this.count = 0;
+        ${adder.repeat(50000)};  // 2Mb
+        browser.test.assertEq(this.count, 50000, "A 50k line script");
+
+        this.order = (this.order || 0) + 1;
+        browser.test.sendMessage("first", this.order);
+      `,
+      "second.js": `
+        this.order = (this.order || 0) + 1;
+        browser.test.sendMessage("second", this.order);
+      `,
+    },
+  });
+
+  yield extension.startup();
+  const win = window.open("https://example.org/");
+
+  const [first, second] = yield Promise.all([
+    extension.awaitMessage("first"),
+    extension.awaitMessage("second"),
+  ]);
+
+  is(first, 1, "first.js finished execution first.");
+  is(second, 2, "second.js finished execution second.");
+
+  yield extension.unload();
+  win.close();
+});
+
+</script>

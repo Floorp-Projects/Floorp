@@ -14,43 +14,45 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
 <pre id="test">
   <script type="application/javascript" src="./director-helpers.js"></script>
   <script type="application/javascript">
-const WAIT_EVENT_TIMEOUT = 3000;
+"use strict";
 
-window.onload = function() {
+window.onload = function () {
   Task.spawn(function* () {
     SimpleTest.waitForExplicitFinish();
 
-    var tests = [
+    let tests = [
       runDirectorRegistryActorTest
     ].map((testCase) => {
       return function* () {
         setup();
         yield testCase().then(null, (e) => {
           console.error("Exception during testCase run", e);
-          ok(false, "Exception during testCase run: " + [e, e.fileName, e.lineNumber].join("\n\t"));
+          ok(false, "Exception during testCase run: "
+                    + [e, e.fileName, e.lineNumber].join("\n\t"));
         });
 
         teardown();
       };
     });
 
-    for (var test of tests) {
+    for (let test of tests) {
       yield test();
     }
   }).then(
     function success() {
-      SimpleTest.finish()
+      SimpleTest.finish();
     },
     function error(e) {
       console.error("Exception during testCase run", e);
-      ok(false, "Exception during testCase run: " + [e, e.fileName, e.lineNumber].join("\n\t"));
+      ok(false, "Exception during testCase run: "
+                + [e, e.fileName, e.lineNumber].join("\n\t"));
 
       SimpleTest.finish();
     }
   );
 };
 
-var targetWin = null;
+let targetWin = null;
 
 function setup() {
   if (!DebuggerServer.initialized) {
@@ -70,30 +72,26 @@ function teardown() {
   }
 }
 
-/***********************************
- *  test cases
- **********************************/
-
-
 function runDirectorRegistryActorTest() {
   let testDirectorScriptOptions = {
-    scriptCode: "(" + (function() {
-      module.exports = function({port}) {
-        port.onmessage = function(evt) {
+    scriptCode: "(" + (function () {
+      module.exports = function ({port}) {
+        port.onmessage = function (evt) {
           // echo messages
           evt.target.postMessage(evt.data);
         };
       };
     }).toString() + ")();",
     scriptOptions: {}
-  }
+  };
 
   return Task.spawn(function* () {
     let { client, root } = yield newConnectedDebuggerClient();
 
-    var directorRegistryClient = new DirectorRegistryFront(client, root);
+    let directorRegistryClient = new DirectorRegistryFront(client, root);
 
-    let installed = yield directorRegistryClient.install("testDirectorScript", testDirectorScriptOptions);
+    let installed = yield directorRegistryClient.install("testDirectorScript",
+                                                         testDirectorScriptOptions);
     is(installed, true, "DirectorManager.install returns true");
 
     let list = yield directorRegistryClient.list();
@@ -106,8 +104,6 @@ function runDirectorRegistryActorTest() {
     yield client.close();
   });
 }
-
-
   </script>
 </pre>
 </body>

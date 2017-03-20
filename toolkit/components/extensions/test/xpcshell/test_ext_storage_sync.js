@@ -121,7 +121,7 @@ class KintoServer {
       let body = JSON.parse(bodyStr);
       let defaults = body.defaults;
       for (let req of body.requests) {
-        let headers = Object.assign({}, defaults && defaults.headers || {}, req.headers);
+        let headers = Object.assign({}, (defaults && defaults.headers) || {}, req.headers);
         // FIXME: assert auth is "Bearer ...token..."
         this.posts.push(Object.assign({}, req, {headers}));
       }

@@ -40,7 +40,7 @@ def main(output, *filenames):
     index = 0
     for e in events:
         category = e.category
-        if not category in grouped:
+        if category not in grouped:
             grouped[category] = []
         grouped[category].append((index, e))
         index += len(e.enum_labels)

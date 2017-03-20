@@ -13,27 +13,29 @@ Bug 1132764 - Test controlling the maximum allocations log length over the RDP.
 <pre id="test">
 <script src="memory-helpers.js" type="application/javascript"></script>
 <script>
-window.onload = function() {
+"use strict";
+
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
   Task.spawn(function* () {
-    var { memory, client } = yield startServerAndGetSelectedTabMemory();
+    let { memory, client } = yield startServerAndGetSelectedTabMemory();
     yield memory.attach();
 
-    var allocs = [];
-    var eventsFired = 0;
-    var intervalId = null;
-    function onAlloc () {
+    let allocs = [];
+    let eventsFired = 0;
+    let intervalId = null;
+    function onAlloc() {
       eventsFired++;
     }
-    function startAllocating () {
+    function startAllocating() {
       intervalId = setInterval(() => {
-        for (var i = 100000; --i;) {
+        for (let i = 100000; --i;) {
           allocs.push(new Object());
         }
       }, 1);
     }
-    function stopAllocating () {
+    function stopAllocating() {
       clearInterval(intervalId);
     }
 
@@ -44,14 +46,15 @@ window.onload = function() {
     });
 
     yield waitUntil(() => eventsFired > 5);
-    ok(eventsFired > 5, "Some allocation events fired without allocating much via auto drain");
+    ok(eventsFired > 5,
+       "Some allocation events fired without allocating much via auto drain");
     yield memory.stopRecordingAllocations();
 
     // Set a really high auto drain timer so we can test if
     // it fires on GC
     eventsFired = 0;
-    var startTime = performance.now();
-    var drainTimer = 1000000;
+    let startTime = performance.now();
+    let drainTimer = 1000000;
     yield memory.startRecordingAllocations({
       drainAllocationsTimeout: drainTimer
     });
@@ -62,7 +65,8 @@ window.onload = function() {
       return eventsFired > 1;
     });
     stopAllocating();
-    ok(performance.now() - drainTimer < startTime, "Allocation events fired on GC before timer");
+    ok(performance.now() - drainTimer < startTime,
+       "Allocation events fired on GC before timer");
     yield memory.stopRecordingAllocations();
 
     memory.off("allocations", onAlloc);

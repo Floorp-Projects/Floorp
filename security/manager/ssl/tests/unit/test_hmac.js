@@ -92,8 +92,7 @@ function testVectors() {
     {
       algoID: Ci.nsICryptoHMAC.SHA512, algoName: "SHA-512",
       expectedDigest: "164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737",
-      // TODO(Bug 1338897): Stop inserting CRLFs every 64 characters.
-      expectedBase64: "Fkt6e/z4GeLjlfvnO1bgo4e9ZCIugx/WECcM1+olBVSXWL91wFqZSm0DT2X48Ob9\r\nyuqxo01Ka0tjbgcKOLznNw==",
+      expectedBase64: "Fkt6e/z4GeLjlfvnO1bgo4e9ZCIugx/WECcM1+olBVSXWL91wFqZSm0DT2X48Ob9yuqxo01Ka0tjbgcKOLznNw==",
     },
   ];
 

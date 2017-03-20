@@ -13,11 +13,13 @@ Bug 1067491 - Test that frames keep the same index while we are recording.
 <pre id="test">
 <script src="memory-helpers.js" type="application/javascript"></script>
 <script>
-window.onload = function() {
+"use strict";
+
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
   Task.spawn(function* () {
-    var { memory, client } = yield startServerAndGetSelectedTabMemory();
+    let { memory, client } = yield startServerAndGetSelectedTabMemory();
     yield memory.attach();
 
     yield memory.startRecordingAllocations();
@@ -26,18 +28,18 @@ window.onload = function() {
     // allocating directly in the generator), but with getAllocations() calls in
     // between.
 
-    var allocs = [];
+    let allocs = [];
     function allocator() {
       allocs.push({});
     }
 
     setTimeout(allocator, 1);
     yield waitForTime(2);
-    var first = yield memory.getAllocations();
+    let first = yield memory.getAllocations();
 
     setTimeout(allocator, 1);
     yield waitForTime(2);
-    var second = yield memory.getAllocations();
+    let second = yield memory.getAllocations();
 
     yield memory.stopRecordingAllocations();
 
@@ -48,7 +50,6 @@ window.onload = function() {
     // but before the second.
 
     function assertSameFrame(a, b) {
-      info("Checking frames at index " + i + ":");
       info("  First frame = " + JSON.stringify(a, null, 4));
       info("  Second frame = " + JSON.stringify(b, null, 4));
 
@@ -64,7 +65,8 @@ window.onload = function() {
       is(a.parent, b.parent);
     }
 
-    for (var i = 0; i < first.frames.length; i++) {
+    for (let i = 0; i < first.frames.length; i++) {
+      info("Checking frames at index " + i + ":");
       assertSameFrame(first.frames[i], second.frames[i]);
     }
 

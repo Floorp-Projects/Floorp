@@ -304,6 +304,15 @@ typedef struct SSLPreliminaryChannelInfoStr {
      */
     PRBool canSendEarlyData;
 
+    /* The following fields were added in NSS 3.31. */
+    /* The number of early data octets that a client is permitted to send on
+     * this connection.  The value will be zero if the connection was not
+     * resumed or early data is not permitted.  For a client, this value only
+     * has meaning if |canSendEarlyData| is true.  For a server, this indicates
+     * the value that was advertised in the session ticket that was used to
+     * resume this session. */
+    PRUint32 maxEarlyDataSize;
+
     /* When adding new fields to this structure, please document the
      * NSS version in which they were added. */
 } SSLPreliminaryChannelInfo;

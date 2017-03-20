@@ -35,7 +35,6 @@
 /** @type {number} */ Event.prototype.clientY;
 /** @type {boolean} */ Event.prototype.ctrlKey;
 /** @type {EventTarget} */ Event.prototype.explicitOriginalTarget;
-/** @type {boolean} */ Event.prototype.isChar;
 /** @type {number} */ Event.prototype.keyCode;
 /** @type {number} */ Event.prototype.layerX;
 /** @type {number} */ Event.prototype.layerY;

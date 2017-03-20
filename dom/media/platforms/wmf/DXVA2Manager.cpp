@@ -900,51 +900,52 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
 
   texture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
 
-  if (mutex) {
-    hr = mutex->AcquireSync(0, 2000);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  } else if (mDevice != DeviceManagerDx::Get()->GetCompositorDevice()) {
-    NS_ENSURE_TRUE(mSyncObject, E_FAIL);
+  {
+    AutoTextureLock(mutex, hr, 2000);
+    if (mutex && (FAILED(hr) || hr == WAIT_TIMEOUT || hr == WAIT_ABANDONED)) {
+      return hr;
+    }
+
+    if (!mutex && mDevice != DeviceManagerDx::Get()->GetCompositorDevice()) {
+      NS_ENSURE_TRUE(mSyncObject, E_FAIL);
+    }
+
+    if (client && client->GetFormat() == SurfaceFormat::NV12) {
+      // Our video frame is stored in a non-sharable ID3D11Texture2D. We need
+      // to create a copy of that frame as a sharable resource, save its share
+      // handle, and put that handle into the rendering pipeline.
+
+      RefPtr<IMFMediaBuffer> buffer;
+      hr = aVideoSample->GetBufferByIndex(0, getter_AddRefs(buffer));
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+      RefPtr<IMFDXGIBuffer> dxgiBuf;
+      hr = buffer->QueryInterface((IMFDXGIBuffer**)getter_AddRefs(dxgiBuf));
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+      RefPtr<ID3D11Texture2D> tex;
+      hr = dxgiBuf->GetResource(__uuidof(ID3D11Texture2D), getter_AddRefs(tex));
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+      UINT index;
+      dxgiBuf->GetSubresourceIndex(&index);
+      mContext->CopySubresourceRegion(texture, 0, 0, 0, 0, tex, index, nullptr);
+    } else {
+      // Our video sample is in NV12 format but our output texture is in BGRA.
+      // Use MFT to do color conversion.
+      hr = mTransform->Input(aVideoSample);
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+      RefPtr<IMFSample> sample;
+      hr = CreateOutputSample(sample, texture);
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+      hr = mTransform->Output(&sample);
+    }
   }
-
-  if (client && client->GetFormat() == SurfaceFormat::NV12) {
-    // Our video frame is stored in a non-sharable ID3D11Texture2D. We need
-    // to create a copy of that frame as a sharable resource, save its share
-    // handle, and put that handle into the rendering pipeline.
-
-    RefPtr<IMFMediaBuffer> buffer;
-    hr = aVideoSample->GetBufferByIndex(0, getter_AddRefs(buffer));
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-    RefPtr<IMFDXGIBuffer> dxgiBuf;
-    hr = buffer->QueryInterface((IMFDXGIBuffer**)getter_AddRefs(dxgiBuf));
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-    RefPtr<ID3D11Texture2D> tex;
-    hr = dxgiBuf->GetResource(__uuidof(ID3D11Texture2D), getter_AddRefs(tex));
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-    UINT index;
-    dxgiBuf->GetSubresourceIndex(&index);
-    mContext->CopySubresourceRegion(texture, 0, 0, 0, 0, tex, index, nullptr);
-  } else {
-    // Our video sample is in NV12 format but our output texture is in BGRA.
-    // Use MFT to do color conversion.
-    hr = mTransform->Input(aVideoSample);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-    RefPtr<IMFSample> sample;
-    hr = CreateOutputSample(sample, texture);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-    hr = mTransform->Output(&sample);
-  }
-
   if (!mutex && mDevice != DeviceManagerDx::Get()->GetCompositorDevice()) {
     client->SyncWithObject(mSyncObject);
     mSyncObject->FinalizeFrame();
-  } else if (mutex) {
-    mutex->ReleaseSync(0);
   }
 
   image.forget(aOutImage);

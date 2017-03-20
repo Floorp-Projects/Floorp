@@ -1,6 +1,14 @@
 <head>
   <!-- Static (not dynamically inserted) inline script. -->
-  <script id='franz'>function franz() { debugger; }</script>
+  <script id='franz'>
+  /* exported franz */
+  "use strict";
+
+  function franz() {
+    // eslint-disable-next-line no-debugger
+    debugger;
+  }
+  </script>
 
   <!-- Static out-of-line script element. -->
   <script id='heinrich' src='Debugger.Source.prototype.element.js'></script>

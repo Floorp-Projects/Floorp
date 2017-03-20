@@ -10,8 +10,8 @@
 #include "CryptoTask.h"
 #include "NSSCertDBTrustDomain.h"
 #include "ScopedNSSTypes.h"
-#include "base64.h"
 #include "certdb.h"
+#include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
@@ -19,6 +19,7 @@
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDataSignatureVerifier.h"
+#include "nsDependentString.h"
 #include "nsHashKeys.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsIFile.h"
@@ -31,7 +32,6 @@
 #include "nsProxyRelease.h"
 #include "nsString.h"
 #include "nsTHashtable.h"
-#include "nssb64.h"
 #include "pkix/pkix.h"
 #include "pkix/pkixnss.h"
 #include "plstr.h"
@@ -45,6 +45,15 @@ using namespace mozilla::psm;
 extern mozilla::LazyLogModule gPIPNSSLog;
 
 namespace {
+
+// The digest must have a lifetime greater than or equal to the returned string.
+inline nsDependentCSubstring
+DigestToDependentString(const Digest& digest)
+{
+  return nsDependentCSubstring(
+    BitwiseCast<char*, unsigned char*>(digest.get().data),
+    digest.get().len);
+}
 
 // Reads a maximum of 1MB from a stream into the supplied buffer.
 // The reason for the 1MB limit is because this function is used to read
@@ -164,11 +173,12 @@ FindAndLoadOneEntry(nsIZipReader * zip,
 //            size of our I/O.
 nsresult
 VerifyStreamContentDigest(nsIInputStream* stream,
-                          const SECItem& digestFromManifest, SECItem& buf)
+                          const nsCString& digestFromManifest, SECItem& buf)
 {
   MOZ_ASSERT(buf.len > 0);
-  if (digestFromManifest.len != SHA1_LENGTH)
+  if (digestFromManifest.Length() != SHA1_LENGTH) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+  }
 
   nsresult rv;
   uint64_t len64;
@@ -217,7 +227,8 @@ VerifyStreamContentDigest(nsIInputStream* stream,
   rv = digest.End(SEC_OID_SHA1, digestContext);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (SECITEM_CompareItem(&digestFromManifest, &digest.get()) != SECEqual) {
+  nsDependentCSubstring digestStr(DigestToDependentString(digest));
+  if (!digestStr.Equals(digestFromManifest)) {
     return NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY;
   }
 
@@ -226,7 +237,7 @@ VerifyStreamContentDigest(nsIInputStream* stream,
 
 nsresult
 VerifyEntryContentDigest(nsIZipReader* zip, const nsACString& aFilename,
-                         const SECItem& digestFromManifest, SECItem& buf)
+                         const nsCString& digestFromManifest, SECItem& buf)
 {
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = zip->GetInputStream(aFilename, getter_AddRefs(stream));
@@ -244,7 +255,7 @@ VerifyEntryContentDigest(nsIZipReader* zip, const nsACString& aFilename,
 // @param buf A scratch buffer that we use for doing the I/O
 nsresult
 VerifyFileContentDigest(nsIFile* aDir, const nsAString& aFilename,
-                        const SECItem& digestFromManifest, SECItem& buf)
+                        const nsCString& digestFromManifest, SECItem& buf)
 {
   // Find the file corresponding to the manifest path
   nsCOMPtr<nsIFile> file;
@@ -440,14 +451,14 @@ CheckManifestVersion(const char* & nextLineStart,
 // filebuf must be null-terminated. On output, mfDigest will contain the
 // decoded value of SHA1-Digest-Manifest.
 nsresult
-ParseSF(const char* filebuf, /*out*/ SECItem & mfDigest)
+ParseSF(const char* filebuf, /*out*/ nsCString& mfDigest)
 {
-  nsresult rv;
-
   const char* nextLineStart = filebuf;
-  rv = CheckManifestVersion(nextLineStart, NS_LITERAL_CSTRING(JAR_SF_HEADER));
-  if (NS_FAILED(rv))
+  nsresult rv = CheckManifestVersion(nextLineStart,
+                                     NS_LITERAL_CSTRING(JAR_SF_HEADER));
+  if (NS_FAILED(rv)) {
     return rv;
+  }
 
   // Find SHA1-Digest-Manifest
   for (;;) {
@@ -471,7 +482,7 @@ ParseSF(const char* filebuf, /*out*/ SECItem & mfDigest)
     }
 
     if (attrName.LowerCaseEqualsLiteral("sha1-digest-manifest")) {
-      rv = MapSECStatus(ATOB_ConvertAsciiToItem(&mfDigest, attrValue.get()));
+      rv = Base64Decode(attrValue, mfDigest);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -527,7 +538,7 @@ ParseMF(const char* filebuf, nsIZipReader * zip,
   }
 
   nsAutoCString curItemName;
-  ScopedAutoSECItem digest;
+  nsAutoCString digest;
 
   for (;;) {
     nsAutoCString curLine;
@@ -543,7 +554,7 @@ ParseMF(const char* filebuf, nsIZipReader * zip,
         return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
       }
 
-      if (digest.len == 0) {
+      if (digest.IsEmpty()) {
         // We require every entry to have a digest, since we require every
         // entry to be signed and we don't allow duplicate entries.
         return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
@@ -568,7 +579,7 @@ ParseMF(const char* filebuf, nsIZipReader * zip,
       // reset so we know we haven't encountered either of these for the next
       // item yet.
       curItemName.Truncate();
-      digest.reset();
+      digest.Truncate();
 
       continue; // skip the rest of the loop below
     }
@@ -585,12 +596,14 @@ ParseMF(const char* filebuf, nsIZipReader * zip,
     // (1) Digest:
     if (attrName.LowerCaseEqualsLiteral("sha1-digest"))
     {
-      if (digest.len > 0) // multiple SHA1 digests in section
+      if (!digest.IsEmpty()) { // multiple SHA1 digests in section
         return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+      }
 
-      rv = MapSECStatus(ATOB_ConvertAsciiToItem(&digest, attrValue.get()));
-      if (NS_FAILED(rv))
+      rv = Base64Decode(attrValue, digest);
+      if (NS_FAILED(rv)) {
         return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+      }
 
       continue;
     }
@@ -754,7 +767,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
     return rv;
   }
 
-  ScopedAutoSECItem mfDigest;
+  nsAutoCString mfDigest;
   rv = ParseSF(BitwiseCast<char*, unsigned char*>(sfBuffer.data), mfDigest);
   if (NS_FAILED(rv)) {
     return rv;
@@ -770,7 +783,9 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
     return rv;
   }
 
-  if (SECITEM_CompareItem(&mfDigest, &mfCalculatedDigest.get()) != SECEqual) {
+  nsDependentCSubstring calculatedDigest(
+    DigestToDependentString(mfCalculatedDigest));
+  if (!mfDigest.Equals(calculatedDigest)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
 
@@ -1050,7 +1065,7 @@ ParseMFUnpacked(const char* aFilebuf, nsIFile* aDir,
   }
 
   nsAutoString curItemName;
-  ScopedAutoSECItem digest;
+  nsAutoCString digest;
 
   for (;;) {
     nsAutoCString curLine;
@@ -1068,7 +1083,7 @@ ParseMFUnpacked(const char* aFilebuf, nsIFile* aDir,
         return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
       }
 
-      if (digest.len == 0) {
+      if (digest.IsEmpty()) {
         // We require every entry to have a digest, since we require every
         // entry to be signed and we don't allow duplicate entries.
         return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
@@ -1096,7 +1111,7 @@ ParseMFUnpacked(const char* aFilebuf, nsIFile* aDir,
       // reset so we know we haven't encountered either of these for the next
       // item yet.
       curItemName.Truncate();
-      digest.reset();
+      digest.Truncate();
 
       continue; // skip the rest of the loop below
     }
@@ -1112,12 +1127,12 @@ ParseMFUnpacked(const char* aFilebuf, nsIFile* aDir,
 
     // (1) Digest:
     if (attrName.LowerCaseEqualsLiteral("sha1-digest")) {
-      if (digest.len > 0) {
+      if (!digest.IsEmpty()) {
         // multiple SHA1 digests in section
         return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
       }
 
-      rv = MapSECStatus(ATOB_ConvertAsciiToItem(&digest, attrValue.get()));
+      rv = Base64Decode(attrValue, digest);
       if (NS_FAILED(rv)) {
         return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
       }
@@ -1310,7 +1325,7 @@ VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
 
   // Get the expected manifest hash from the signed .sf file
 
-  ScopedAutoSECItem mfDigest;
+  nsAutoCString mfDigest;
   rv = ParseSF(BitwiseCast<char*, unsigned char*>(sfBuffer.data), mfDigest);
   if (NS_FAILED(rv)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
@@ -1326,7 +1341,9 @@ VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
 
-  if (SECITEM_CompareItem(&mfDigest, &mfCalculatedDigest.get()) != SECEqual) {
+  nsDependentCSubstring calculatedDigest(
+    DigestToDependentString(mfCalculatedDigest));
+  if (!mfDigest.Equals(calculatedDigest)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
 

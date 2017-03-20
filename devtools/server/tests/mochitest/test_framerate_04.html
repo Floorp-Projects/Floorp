@@ -13,26 +13,28 @@ Bug 1023018 - Tests if the framerate actor keeps recording after navigations.
 <body>
 <pre id="test">
 <script>
+"use strict";
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
-  var {FramerateFront} = require("devtools/shared/fronts/framerate");
-  var {TargetFactory} = require("devtools/client/framework/target");
+  const {FramerateFront} = require("devtools/shared/fronts/framerate");
+  const {TargetFactory} = require("devtools/client/framework/target");
 
-  var url = document.getElementById("testContent").href;
+  let url = document.getElementById("testContent").href;
   attachURL(url, onTab);
 
   function onTab(_, client, form, contentDoc) {
-    var contentWin = contentDoc.defaultView;
-    var chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
-    var selectedTab = chromeWin.gBrowser.selectedTab;
+    let contentWin = contentDoc.defaultView;
+    let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+    let selectedTab = chromeWin.gBrowser.selectedTab;
 
-    var target = TargetFactory.forTab(selectedTab);
-    var front = FramerateFront(client, form);
+    let target = TargetFactory.forTab(selectedTab);
+    let front = FramerateFront(client, form);
 
     front.startRecording().then(() => {
       window.setTimeout(() => {
         front.getPendingTicks().then(firstBatch => {
+          /* eslint-disable max-nested-callbacks */
           target.once("will-navigate", () => {
             window.setTimeout(() => {
               front.stopRecording().then(secondBatch => {
@@ -40,6 +42,7 @@ window.onload = function() {
               });
             }, 1000);
           });
+          /* eslint-enable max-nested-callbacks */
           contentWin.location.reload();
         });
       }, 1000);
@@ -50,7 +53,7 @@ window.onload = function() {
     ok(firstBatch, "There should be a first batch recording available.");
     ok(secondBatch, "There should be a second batch recording available.");
 
-    var diff = secondBatch.length - firstBatch.length;
+    let diff = secondBatch.length - firstBatch.length;
     info("Difference in ticks: " + diff);
     ok(diff > 0, "More ticks should be recorded in the second batch.");
 
@@ -61,10 +64,10 @@ window.onload = function() {
 
     client.close().then(() => {
       DebuggerServer.destroy();
-      SimpleTest.finish()
+      SimpleTest.finish();
     });
   }
-}
+};
 </script>
 </pre>
 <a id="testContent" target="_blank" href="inspector_getImageData.html">Test Document</a>

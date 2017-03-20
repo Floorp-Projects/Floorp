@@ -2787,7 +2787,7 @@ public:
 
   void ObsoleteSheet(const nsAString& aSheetURI, mozilla::ErrorResult& rv);
 
-  already_AddRefed<mozilla::dom::Promise> BlockParsing(mozilla::OwningNonNull<mozilla::dom::Promise> aPromise,
+  already_AddRefed<mozilla::dom::Promise> BlockParsing(mozilla::dom::Promise& aPromise,
                                                        mozilla::ErrorResult& aRv);
 
   already_AddRefed<nsIURI> GetMozDocumentURIIfNotForErrorPages();

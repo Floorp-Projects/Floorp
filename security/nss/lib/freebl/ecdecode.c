@@ -22,57 +22,6 @@
     if (SECSuccess != (rv = func)) \
     goto cleanup
 
-/*
- * Initializes a SECItem from a hexadecimal string
- *
- * Warning: This function ignores leading 00's, so any leading 00's
- * in the hexadecimal string must be optional.
- */
-static SECItem *
-hexString2SECItem(PLArenaPool *arena, SECItem *item, const char *str)
-{
-    int i = 0;
-    int byteval = 0;
-    int tmp = PORT_Strlen(str);
-
-    PORT_Assert(arena);
-    PORT_Assert(item);
-
-    if ((tmp % 2) != 0)
-        return NULL;
-
-    /* skip leading 00's unless the hex string is "00" */
-    while ((tmp > 2) && (str[0] == '0') && (str[1] == '0')) {
-        str += 2;
-        tmp -= 2;
-    }
-
-    item->data = (unsigned char *)PORT_ArenaAlloc(arena, tmp / 2);
-    if (item->data == NULL)
-        return NULL;
-    item->len = tmp / 2;
-
-    while (str[i]) {
-        if ((str[i] >= '0') && (str[i] <= '9'))
-            tmp = str[i] - '0';
-        else if ((str[i] >= 'a') && (str[i] <= 'f'))
-            tmp = str[i] - 'a' + 10;
-        else if ((str[i] >= 'A') && (str[i] <= 'F'))
-            tmp = str[i] - 'A' + 10;
-        else
-            return NULL;
-
-        byteval = byteval * 16 + tmp;
-        if ((i % 2) != 0) {
-            item->data[i / 2] = byteval;
-            byteval = 0;
-        }
-        i++;
-    }
-
-    return item;
-}
-
 /* Copy all of the fields from srcParams into dstParams
  */
 SECStatus
@@ -120,12 +69,10 @@ cleanup:
 }
 
 static SECStatus
-gf_populate_params(ECCurveName name, ECFieldType field_type, ECParams *params)
+gf_populate_params_bytes(ECCurveName name, ECFieldType field_type, ECParams *params)
 {
     SECStatus rv = SECFailure;
-    const ECCurveParams *curveParams;
-    /* 2 ['0'+'4'] + MAX_ECKEY_LEN * 2 [x,y] * 2 [hex string] + 1 ['\0'] */
-    char genenc[3 + 2 * 2 * MAX_ECKEY_LEN];
+    const ECCurveBytes *curveParams;
 
     if ((name < ECCurve_noName) || (name > ECCurve_pastLastCurve))
         goto cleanup;
@@ -134,26 +81,19 @@ gf_populate_params(ECCurveName name, ECFieldType field_type, ECParams *params)
     CHECK_OK(curveParams);
     params->fieldID.size = curveParams->size;
     params->fieldID.type = field_type;
-    if (field_type == ec_field_GFp ||
-        field_type == ec_field_plain) {
-        CHECK_OK(hexString2SECItem(params->arena, &params->fieldID.u.prime,
-                                   curveParams->irr));
-    } else {
-        CHECK_OK(hexString2SECItem(params->arena, &params->fieldID.u.poly,
-                                   curveParams->irr));
+    if (field_type != ec_field_GFp && field_type != ec_field_plain) {
+        return SECFailure;
     }
-    CHECK_OK(hexString2SECItem(params->arena, &params->curve.a,
-                               curveParams->curvea));
-    CHECK_OK(hexString2SECItem(params->arena, &params->curve.b,
-                               curveParams->curveb));
-    genenc[0] = '0';
-    genenc[1] = '4';
-    genenc[2] = '\0';
-    strcat(genenc, curveParams->genx);
-    strcat(genenc, curveParams->geny);
-    CHECK_OK(hexString2SECItem(params->arena, &params->base, genenc));
-    CHECK_OK(hexString2SECItem(params->arena, &params->order,
-                               curveParams->order));
+    params->fieldID.u.prime.len = curveParams->scalarSize;
+    params->fieldID.u.prime.data = (unsigned char *)curveParams->irr;
+    params->curve.a.len = curveParams->scalarSize;
+    params->curve.a.data = (unsigned char *)curveParams->curvea;
+    params->curve.b.len = curveParams->scalarSize;
+    params->curve.b.data = (unsigned char *)curveParams->curveb;
+    params->base.len = curveParams->pointSize;
+    params->base.data = (unsigned char *)curveParams->base;
+    params->order.len = curveParams->scalarSize;
+    params->order.data = (unsigned char *)curveParams->order;
     params->cofactor = curveParams->cofactor;
 
     rv = SECSuccess;
@@ -216,29 +156,30 @@ EC_FillParams(PLArenaPool *arena, const SECItem *encodedParams,
             /* Populate params for prime256v1 aka secp256r1
              * (the NIST P-256 curve)
              */
-            CHECK_SEC_OK(gf_populate_params(ECCurve_X9_62_PRIME_256V1, ec_field_GFp,
-                                            params));
+            CHECK_SEC_OK(gf_populate_params_bytes(ECCurve_X9_62_PRIME_256V1,
+                                                  ec_field_GFp, params));
             break;
 
         case SEC_OID_SECG_EC_SECP384R1:
             /* Populate params for secp384r1
              * (the NIST P-384 curve)
              */
-            CHECK_SEC_OK(gf_populate_params(ECCurve_SECG_PRIME_384R1, ec_field_GFp,
-                                            params));
+            CHECK_SEC_OK(gf_populate_params_bytes(ECCurve_SECG_PRIME_384R1,
+                                                  ec_field_GFp, params));
             break;
 
         case SEC_OID_SECG_EC_SECP521R1:
             /* Populate params for secp521r1
              * (the NIST P-521 curve)
              */
-            CHECK_SEC_OK(gf_populate_params(ECCurve_SECG_PRIME_521R1, ec_field_GFp,
-                                            params));
+            CHECK_SEC_OK(gf_populate_params_bytes(ECCurve_SECG_PRIME_521R1,
+                                                  ec_field_GFp, params));
             break;
 
         case SEC_OID_CURVE25519:
             /* Populate params for Curve25519 */
-            CHECK_SEC_OK(gf_populate_params(ECCurve25519, ec_field_plain, params));
+            CHECK_SEC_OK(gf_populate_params_bytes(ECCurve25519, ec_field_plain,
+                                                  params));
             break;
 
         default:
@@ -296,16 +237,20 @@ int
 EC_GetPointSize(const ECParams *params)
 {
     ECCurveName name = params->name;
-    const ECCurveParams *curveParams;
+    const ECCurveBytes *curveParams;
 
     if ((name < ECCurve_noName) || (name > ECCurve_pastLastCurve) ||
         ((curveParams = ecCurve_map[name]) == NULL)) {
-        /* unknown curve, calculate point size from params. assume standard curves with 2 points 
+        /* unknown curve, calculate point size from params. assume standard curves with 2 points
          * and a point compression indicator byte */
         int sizeInBytes = (params->fieldID.size + 7) / 8;
         return sizeInBytes * 2 + 1;
     }
-    return curveParams->pointSize;
+    if (name == ECCurve25519) {
+        /* Only X here */
+        return curveParams->scalarSize;
+    }
+    return curveParams->pointSize - 1;
 }
 
 #endif /* NSS_DISABLE_ECC */

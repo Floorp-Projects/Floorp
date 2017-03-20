@@ -14,7 +14,7 @@ function runtimeApiFactory(context) {
       onMessageExternal: context.messenger.onMessageExternal("runtime.onMessageExternal"),
 
       connect: function(extensionId, connectInfo) {
-        let name = connectInfo !== null && connectInfo.name || "";
+        let name = (connectInfo !== null && connectInfo.name) || "";
         extensionId = extensionId || extension.id;
         let recipient = {extensionId};
 

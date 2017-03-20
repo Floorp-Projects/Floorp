@@ -12,37 +12,38 @@ Bug 895360 - [app manager] Device meta data actor
 <body>
 <pre id="test">
 <script>
+"use strict";
 
-window.onload = function() {
-  var Cu = Components.utils;
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
+window.onload = function () {
+  const Cu = Components.utils;
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
 
-  var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  var {DebuggerClient} = require("devtools/shared/client/main");
-  var {DebuggerServer} = require("devtools/server/main");
-  var Services = require("Services");
+  const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  const {DebuggerClient} = require("devtools/shared/client/main");
+  const {DebuggerServer} = require("devtools/server/main");
+  const Services = require("Services");
 
   SimpleTest.waitForExplicitFinish();
 
-  var {getDeviceFront} = require("devtools/shared/fronts/device");
+  const {getDeviceFront} = require("devtools/shared/fronts/device");
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
     DebuggerServer.addBrowserActors();
   }
 
-  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
-    client.listTabs(function onListTabs(aResponse) {
-      var d = getDeviceFront(client, aResponse);
+    client.listTabs(function onListTabs(response) {
+      let d = getDeviceFront(client, response);
 
-      var desc;
-      var appInfo = Services.appinfo;
-      var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let desc;
+      let appInfo = Services.appinfo;
+      let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDOMWindowUtils);
 
-
-      var localDesc = {
+      let localDesc = {
         appid: appInfo.ID,
         vendor: appInfo.vendor,
         name: appInfo.name,
@@ -53,38 +54,38 @@ window.onload = function() {
         geckobuildid: appInfo.platformBuildID,
         geckoversion: appInfo.platformVersion,
         useragent: window.navigator.userAgent,
-        locale: Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry).getSelectedLocale("global"),
+        locale: Cc["@mozilla.org/chrome/chrome-registry;1"]
+                .getService(Ci.nsIXULChromeRegistry).getSelectedLocale("global"),
         os: appInfo.OS,
         processor: appInfo.XPCOMABI.split("-")[0],
         compiler: appInfo.XPCOMABI.split("-")[1],
         dpi: utils.displayDPI,
         width: window.screen.width,
         height: window.screen.height
-      }
+      };
 
       function checkValues() {
-        for (var key in localDesc) {
+        for (let key in localDesc) {
           is(desc[key], localDesc[key], "valid field (" + key + ")");
         }
 
-        var currProfD = Services.dirsvc.get("ProfD", Ci.nsIFile);
-        var profileDir = currProfD.path;
-        ok(profileDir.indexOf(desc.profile.length > 0 && desc.profile) != -1, "valid profile name");
+        let currProfD = Services.dirsvc.get("ProfD", Ci.nsIFile);
+        let profileDir = currProfD.path;
+        ok(profileDir.indexOf(desc.profile.length > 0 && desc.profile) != -1,
+           "valid profile name");
 
         client.close().then(() => {
           DebuggerServer.destroy();
-          SimpleTest.finish()
+          SimpleTest.finish();
         });
       }
 
-
-      d.getDescription().then((v) => desc = v)
-      .then(checkValues);
-
+      d.getDescription().then(function (v) {
+        desc = v;
+      }).then(checkValues);
     });
   });
-
-}
+};
 </script>
 </pre>
 </body>
