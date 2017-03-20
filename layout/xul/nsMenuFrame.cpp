@@ -525,6 +525,8 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
 
       // We're a menu, we're built, we're closed, and no timer has been kicked off.
       mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
+      mOpenTimer->SetTarget(
+          mContent->OwnerDoc()->EventTargetFor(TaskCategory::Other));
       mOpenTimer->InitWithCallback(mTimerMediator, menuDelay, nsITimer::TYPE_ONE_SHOT);
     }
   }
@@ -1237,6 +1239,8 @@ nsMenuFrame::StartBlinking(WidgetGUIEvent* aEvent, bool aFlipChecked)
 
   // Set up a timer to blink back on.
   mBlinkTimer = do_CreateInstance("@mozilla.org/timer;1");
+  mBlinkTimer->SetTarget(
+      mContent->OwnerDoc()->EventTargetFor(TaskCategory::Other));
   mBlinkTimer->InitWithCallback(mTimerMediator, kBlinkDelay, nsITimer::TYPE_ONE_SHOT);
   mBlinkState = 1;
 }
@@ -1480,8 +1484,8 @@ NS_IMPL_ISUPPORTS(nsMenuTimerMediator, nsITimerCallback)
  * Constructs a wrapper around an nsMenuFrame.
  * @param aFrame nsMenuFrame to create a wrapper around.
  */
-nsMenuTimerMediator::nsMenuTimerMediator(nsMenuFrame *aFrame) :
-  mFrame(aFrame)
+nsMenuTimerMediator::nsMenuTimerMediator(nsMenuFrame *aFrame)
+  : mFrame(aFrame)
 {
   NS_ASSERTION(mFrame, "Must have frame");
 }
@@ -1510,4 +1514,26 @@ NS_IMETHODIMP nsMenuTimerMediator::Notify(nsITimer* aTimer)
 void nsMenuTimerMediator::ClearFrame()
 {
   mFrame = nullptr;
+}
+
+/**
+ * Get the name of this timer callback.
+ * @param aName the name to return
+ */
+NS_IMETHODIMP
+nsMenuTimerMediator::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("nsMenuTimerMediator");
+  return NS_OK;
+}
+
+/**
+ * Set the name to this timer callback.
+ * @param aName the name to set
+ */
+NS_IMETHODIMP
+nsMenuTimerMediator::SetName(const char* aName)
+{
+  // We don't need to change the name for nsMenuTimerMediator.
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
