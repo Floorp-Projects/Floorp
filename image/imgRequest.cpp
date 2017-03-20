@@ -509,11 +509,11 @@ imgRequest::HasConsumers() const
   return progressTracker && progressTracker->ObserverCount() > 0;
 }
 
-already_AddRefed<image::Image>
+already_AddRefed<Image>
 imgRequest::GetImage() const
 {
   MutexAutoLock lock(mMutex);
-  RefPtr<image::Image> image = mImage;
+  RefPtr<Image> image = mImage;
   return image.forget();
 }
 
@@ -905,7 +905,7 @@ imgRequest::CheckListenerChain()
 
 struct NewPartResult final
 {
-  explicit NewPartResult(image::Image* aExistingImage)
+  explicit NewPartResult(Image* aExistingImage)
     : mImage(aExistingImage)
     , mIsFirstPart(!aExistingImage)
     , mSucceeded(false)
@@ -914,7 +914,7 @@ struct NewPartResult final
 
   nsAutoCString mContentType;
   nsAutoCString mContentDisposition;
-  RefPtr<image::Image> mImage;
+  RefPtr<Image> mImage;
   const bool mIsFirstPart;
   bool mSucceeded;
   bool mShouldResetCacheEntry;
@@ -922,7 +922,7 @@ struct NewPartResult final
 
 static NewPartResult
 PrepareForNewPart(nsIRequest* aRequest, nsIInputStream* aInStr, uint32_t aCount,
-                  ImageURL* aURI, bool aIsMultipart, image::Image* aExistingImage,
+                  ImageURL* aURI, bool aIsMultipart, Image* aExistingImage,
                   ProgressTracker* aProgressTracker, uint32_t aInnerWindowId)
 {
   NewPartResult result(aExistingImage);
@@ -967,18 +967,17 @@ PrepareForNewPart(nsIRequest* aRequest, nsIInputStream* aInStr, uint32_t aCount,
   if (aIsMultipart) {
     // Create the ProgressTracker and image for this part.
     RefPtr<ProgressTracker> progressTracker = new ProgressTracker();
-    RefPtr<image::Image> partImage =
-      image::ImageFactory::CreateImage(aRequest, progressTracker,
-                                       result.mContentType,
-                                       aURI, /* aIsMultipart = */ true,
-                                       aInnerWindowId);
+    RefPtr<Image> partImage =
+      ImageFactory::CreateImage(aRequest, progressTracker, result.mContentType,
+                                aURI, /* aIsMultipart = */ true,
+                                aInnerWindowId);
 
     if (result.mIsFirstPart) {
       // First part for a multipart channel. Create the MultipartImage wrapper.
       MOZ_ASSERT(aProgressTracker, "Shouldn't have given away tracker yet");
       aProgressTracker->SetIsMultipart();
       result.mImage =
-        image::ImageFactory::CreateMultipartImage(partImage, aProgressTracker);
+        ImageFactory::CreateMultipartImage(partImage, aProgressTracker);
     } else {
       // Transition to the new part.
       auto multipartImage = static_cast<MultipartImage*>(aExistingImage);
@@ -993,10 +992,9 @@ PrepareForNewPart(nsIRequest* aRequest, nsIInputStream* aInStr, uint32_t aCount,
 
     // Create an image using our progress tracker.
     result.mImage =
-      image::ImageFactory::CreateImage(aRequest, aProgressTracker,
-                                       result.mContentType,
-                                       aURI, /* aIsMultipart = */ false,
-                                       aInnerWindowId);
+      ImageFactory::CreateImage(aRequest, aProgressTracker, result.mContentType,
+                                aURI, /* aIsMultipart = */ false,
+                                aInnerWindowId);
   }
 
   MOZ_ASSERT(result.mImage);
