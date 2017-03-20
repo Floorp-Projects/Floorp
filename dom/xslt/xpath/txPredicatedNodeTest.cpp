@@ -16,25 +16,20 @@ txPredicatedNodeTest::txPredicatedNodeTest(txNodeTest* aNodeTest,
                  "predicate must not be context-nodeset-sensitive");
 }
 
-nsresult
+bool
 txPredicatedNodeTest::matches(const txXPathNode& aNode,
-                              txIMatchContext* aContext,
-                              bool& aMatched)
+                              txIMatchContext* aContext)
 {
-    nsresult rv = mNodeTest->matches(aNode, aContext, aMatched);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!aMatched) {
-        return NS_OK;
+    if (!mNodeTest->matches(aNode, aContext)) {
+        return false;
     }
 
     txSingleNodeContext context(aNode, aContext);
     RefPtr<txAExprResult> res;
-    rv = mPredicate->evaluate(&context, getter_AddRefs(res));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = mPredicate->evaluate(&context, getter_AddRefs(res));
+    NS_ENSURE_SUCCESS(rv, false);
 
-    aMatched = res->booleanValue();
-    return NS_OK;
+    return res->booleanValue();
 }
 
 double

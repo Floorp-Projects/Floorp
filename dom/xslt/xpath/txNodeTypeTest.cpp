@@ -8,51 +8,32 @@
 #include "txIXPathContext.h"
 #include "txXPathTreeWalker.h"
 
-nsresult
-txNodeTypeTest::matches(const txXPathNode& aNode, txIMatchContext* aContext,
-                        bool& aMatched)
+bool txNodeTypeTest::matches(const txXPathNode& aNode,
+                               txIMatchContext* aContext)
 {
     switch (mNodeType) {
         case COMMENT_TYPE:
         {
-            aMatched = txXPathNodeUtils::isComment(aNode);
-            return NS_OK;
+            return txXPathNodeUtils::isComment(aNode);
         }
         case TEXT_TYPE:
         {
-            aMatched = txXPathNodeUtils::isText(aNode);
-            if (aMatched) {
-                bool allowed;
-                nsresult rv = aContext->isStripSpaceAllowed(aNode, allowed);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                aMatched = !allowed;
-            }
-            return NS_OK;
+            return txXPathNodeUtils::isText(aNode) &&
+                   !aContext->isStripSpaceAllowed(aNode);
         }
         case PI_TYPE:
         {
-            aMatched = txXPathNodeUtils::isProcessingInstruction(aNode) &&
-                       (!mNodeName ||
-                        txXPathNodeUtils::localNameEquals(aNode, mNodeName));
-            return NS_OK;
+            return txXPathNodeUtils::isProcessingInstruction(aNode) &&
+                   (!mNodeName ||
+                    txXPathNodeUtils::localNameEquals(aNode, mNodeName));
         }
         case NODE_TYPE:
         {
-            if (txXPathNodeUtils::isText(aNode)) {
-                bool allowed;
-                nsresult rv = aContext->isStripSpaceAllowed(aNode, allowed);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                aMatched = !allowed;
-            } else {
-                aMatched = true;
-            }
-            return NS_OK;
+            return !txXPathNodeUtils::isText(aNode) ||
+                   !aContext->isStripSpaceAllowed(aNode);
         }
     }
-
-    NS_NOTREACHED("Didn't deal with all values of the NodeType enum!");
+    return true;
 }
 
 txNodeTest::NodeTestType

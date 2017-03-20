@@ -46,10 +46,9 @@ private:
      * position.
      *
      */
-    static nsresult getSiblingCount(txXPathTreeWalker& aWalker,
-                                    txPattern* aCountPattern,
-                                    txIMatchContext* aContext,
-                                    int32_t* aCount);
+    static int32_t getSiblingCount(txXPathTreeWalker& aWalker,
+                                   txPattern* aCountPattern,
+                                   txIMatchContext* aContext);
     
     static bool getPrevInDocumentOrder(txXPathTreeWalker& aWalker);
 

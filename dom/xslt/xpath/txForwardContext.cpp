@@ -30,11 +30,10 @@ nsresult txForwardContext::getVariable(int32_t aNamespace, nsIAtom* aLName,
     return mInner->getVariable(aNamespace, aLName, aResult);
 }
 
-nsresult
-txForwardContext::isStripSpaceAllowed(const txXPathNode& aNode, bool& aAllowed)
+bool txForwardContext::isStripSpaceAllowed(const txXPathNode& aNode)
 {
     NS_ASSERTION(mInner, "mInner is null!!!");
-    return mInner->isStripSpaceAllowed(aNode, aAllowed);
+    return mInner->isStripSpaceAllowed(aNode);
 }
 
 void* txForwardContext::getPrivateContext()

@@ -49,8 +49,9 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             nodes->setReverse();
 
             do {
-                rv = appendIfMatching(walker, aContext, nodes);
-                NS_ENSURE_SUCCESS(rv, rv);
+                if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                    nodes->append(walker.getCurrentPosition());
+                }
             } while (walker.moveToParent());
 
             break;
@@ -62,29 +63,29 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             }
 
             do {
-                rv = appendIfMatching(walker, aContext, nodes);
-                NS_ENSURE_SUCCESS(rv, rv);
+                if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                    nodes->append(walker.getCurrentPosition());
+                }
             } while (walker.moveToNextAttribute());
             break;
         }
         case DESCENDANT_OR_SELF_AXIS:
         {
-            rv = appendIfMatching(walker, aContext, nodes);
-            NS_ENSURE_SUCCESS(rv, rv);
+            if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                nodes->append(walker.getCurrentPosition());
+            }
             MOZ_FALLTHROUGH;
         }
         case DESCENDANT_AXIS:
         {
-            rv = appendMatchingDescendants(walker, aContext, nodes);
-            NS_ENSURE_SUCCESS(rv, rv);
+            fromDescendants(walker.getCurrentPosition(), aContext, nodes);
             break;
         }
         case FOLLOWING_AXIS:
         {
             if (txXPathNodeUtils::isAttribute(walker.getCurrentPosition())) {
                 walker.moveToParent();
-                rv = appendMatchingDescendants(walker, aContext, nodes);
-                NS_ENSURE_SUCCESS(rv, rv);
+                fromDescendants(walker.getCurrentPosition(), aContext, nodes);
             }
             bool cont = true;
             while (!walker.moveToNextSibling()) {
@@ -94,11 +95,11 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 }
             }
             while (cont) {
-                rv = appendIfMatching(walker, aContext, nodes);
-                NS_ENSURE_SUCCESS(rv, rv);
+                if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                    nodes->append(walker.getCurrentPosition());
+                }
 
-                rv = appendMatchingDescendants(walker, aContext, nodes);
-                NS_ENSURE_SUCCESS(rv, rv);
+                fromDescendants(walker.getCurrentPosition(), aContext, nodes);
 
                 while (!walker.moveToNextSibling()) {
                     if (!walker.moveToParent()) {
@@ -112,8 +113,9 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         case FOLLOWING_SIBLING_AXIS:
         {
             while (walker.moveToNextSibling()) {
-                rv = appendIfMatching(walker, aContext, nodes);
-                NS_ENSURE_SUCCESS(rv, rv);
+                if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                    nodes->append(walker.getCurrentPosition());
+                }
             }
             break;
         }
@@ -125,9 +127,9 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             break;
         case PARENT_AXIS :
         {
-            if (walker.moveToParent()) {
-                rv = appendIfMatching(walker, aContext, nodes);
-                NS_ENSURE_SUCCESS(rv, rv);
+            if (walker.moveToParent() &&
+                mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                nodes->append(walker.getCurrentPosition());
             }
             break;
         }
@@ -143,11 +145,11 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 }
             }
             while (cont) {
-                rv = appendMatchingDescendantsRev(walker, aContext, nodes);
-                NS_ENSURE_SUCCESS(rv, rv);
+                fromDescendantsRev(walker.getCurrentPosition(), aContext, nodes);
 
-                rv = appendIfMatching(walker, aContext, nodes);
-                NS_ENSURE_SUCCESS(rv, rv);
+                if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                    nodes->append(walker.getCurrentPosition());
+                }
 
                 while (!walker.moveToPreviousSibling()) {
                     if (!walker.moveToParent()) {
@@ -163,15 +165,17 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             nodes->setReverse();
 
             while (walker.moveToPreviousSibling()) {
-                rv = appendIfMatching(walker, aContext, nodes);
-                NS_ENSURE_SUCCESS(rv, rv);
+                if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                    nodes->append(walker.getCurrentPosition());
+                }
             }
             break;
         }
         case SELF_AXIS:
         {
-            rv = appendIfMatching(walker, aContext, nodes);
-            NS_ENSURE_SUCCESS(rv, rv);
+            if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                nodes->append(walker.getCurrentPosition());
+            }
             break;
         }
         default: // Children Axis
@@ -181,8 +185,9 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             }
 
             do {
-                rv = appendIfMatching(walker, aContext, nodes);
-                NS_ENSURE_SUCCESS(rv, rv);
+                if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                    nodes->append(walker.getCurrentPosition());
+                }
             } while (walker.moveToNextSibling());
             break;
         }
@@ -201,62 +206,42 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_OK;
 }
 
-nsresult
-LocationStep::appendIfMatching(const txXPathTreeWalker& aWalker,
-                               txIMatchContext* aContext,
-                               txNodeSet* aNodes)
+void LocationStep::fromDescendants(const txXPathNode& aNode,
+                                   txIMatchContext* aCs,
+                                   txNodeSet* aNodes)
 {
-    bool matched;
-    const txXPathNode& child = aWalker.getCurrentPosition();
-    nsresult rv = mNodeTest->matches(child, aContext, matched);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (matched) {
-        aNodes->append(child);
-    }
-    return NS_OK;
-}
-
-nsresult
-LocationStep::appendMatchingDescendants(const txXPathTreeWalker& aWalker,
-                                        txIMatchContext* aContext,
-                                        txNodeSet* aNodes)
-{
-    txXPathTreeWalker walker(aWalker);
+    txXPathTreeWalker walker(aNode);
     if (!walker.moveToFirstChild()) {
-        return NS_OK;
+        return;
     }
 
     do {
-        nsresult rv = appendIfMatching(walker, aContext, aNodes);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = appendMatchingDescendants(walker, aContext, aNodes);
-        NS_ENSURE_SUCCESS(rv, rv);
+        const txXPathNode& child = walker.getCurrentPosition();
+        if (mNodeTest->matches(child, aCs)) {
+            aNodes->append(child);
+        }
+        fromDescendants(child, aCs, aNodes);
     } while (walker.moveToNextSibling());
-
-    return NS_OK;
 }
 
-nsresult
-LocationStep::appendMatchingDescendantsRev(const txXPathTreeWalker& aWalker,
-                                           txIMatchContext* aContext,
-                                           txNodeSet* aNodes)
+void LocationStep::fromDescendantsRev(const txXPathNode& aNode,
+                                      txIMatchContext* aCs,
+                                      txNodeSet* aNodes)
 {
-    txXPathTreeWalker walker(aWalker);
+    txXPathTreeWalker walker(aNode);
     if (!walker.moveToLastChild()) {
-        return NS_OK;
+        return;
     }
 
     do {
-        nsresult rv = appendMatchingDescendantsRev(walker, aContext, aNodes);
-        NS_ENSURE_SUCCESS(rv, rv);
+        const txXPathNode& child = walker.getCurrentPosition();
+        fromDescendantsRev(child, aCs, aNodes);
 
-        rv = appendIfMatching(walker, aContext, aNodes);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (mNodeTest->matches(child, aCs)) {
+            aNodes->append(child);
+        }
+
     } while (walker.moveToPreviousSibling());
-
-    return NS_OK;
 }
 
 Expr::ExprType

@@ -27,11 +27,9 @@ txApplyDefaultElementTemplate::execute(txExecutionState& aEs)
     txExecutionState::TemplateRule* rule = aEs.getCurrentTemplateRule();
     txExpandedName mode(rule->mModeNsId, rule->mModeLocalName);
     txStylesheet::ImportFrame* frame = 0;
-    txInstruction* templ;
-    nsresult rv =
+    txInstruction* templ =
         aEs.mStylesheet->findTemplate(aEs.getEvalContext()->getContextNode(),
-                                      mode, &aEs, nullptr, &templ, &frame);
-    NS_ENSURE_SUCCESS(rv, rv);
+                                      mode, &aEs, nullptr, &frame);
 
     aEs.pushTemplateRule(frame, mode, aEs.mTemplateParams);
 
@@ -55,11 +53,9 @@ txApplyImports::execute(txExecutionState& aEs)
 
     txStylesheet::ImportFrame* frame = 0;
     txExpandedName mode(rule->mModeNsId, rule->mModeLocalName);
-    txInstruction* templ;
-    rv = aEs.mStylesheet->findTemplate(aEs.getEvalContext()->getContextNode(),
-                                       mode, &aEs, rule->mFrame, &templ,
-                                       &frame);
-    NS_ENSURE_SUCCESS(rv, rv);
+    txInstruction* templ =
+        aEs.mStylesheet->findTemplate(aEs.getEvalContext()->getContextNode(),
+                                      mode, &aEs, rule->mFrame, &frame);
 
     aEs.pushTemplateRule(frame, mode, rule->mParams);
 
@@ -80,11 +76,9 @@ nsresult
 txApplyTemplates::execute(txExecutionState& aEs)
 {
     txStylesheet::ImportFrame* frame = 0;
-    txInstruction* templ;
-    nsresult rv =
+    txInstruction* templ =
         aEs.mStylesheet->findTemplate(aEs.getEvalContext()->getContextNode(),
-                                      mMode, &aEs, nullptr, &templ, &frame);
-    NS_ENSURE_SUCCESS(rv, rv);
+                                      mMode, &aEs, nullptr, &frame);
 
     aEs.pushTemplateRule(frame, mMode, aEs.mTemplateParams);
 
