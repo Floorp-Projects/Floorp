@@ -2466,7 +2466,7 @@ EmitLoad(FunctionCompiler& f, ValType type, Scalar::Type viewType)
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.trapIfNotAsmJS());
     auto* ins = f.load(addr.base, &access, type);
-    if (!ins)
+    if (!f.inDeadCode() && !ins)
         return false;
 
     f.iter().setResult(ins);
@@ -2611,7 +2611,7 @@ EmitAtomicsLoad(FunctionCompiler& f)
                             MembarBeforeLoad, MembarAfterLoad);
 
     auto* ins = f.load(addr.base, &access, ValType::I32);
-    if (!ins)
+    if (!f.inDeadCode() && !ins)
         return false;
 
     f.iter().setResult(ins);
@@ -2650,7 +2650,7 @@ EmitAtomicsBinOp(FunctionCompiler& f)
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()));
 
     auto* ins = f.atomicBinopHeap(op, addr.base, &access, value);
-    if (!ins)
+    if (!f.inDeadCode() && !ins)
         return false;
 
     f.iter().setResult(ins);
@@ -2670,7 +2670,7 @@ EmitAtomicsCompareExchange(FunctionCompiler& f)
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()));
 
     auto* ins = f.atomicCompareExchangeHeap(addr.base, &access, oldValue, newValue);
-    if (!ins)
+    if (!f.inDeadCode() && !ins)
         return false;
 
     f.iter().setResult(ins);
@@ -2689,7 +2689,7 @@ EmitAtomicsExchange(FunctionCompiler& f)
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()));
 
     auto* ins = f.atomicExchangeHeap(addr.base, &access, value);
-    if (!ins)
+    if (!f.inDeadCode() && !ins)
         return false;
 
     f.iter().setResult(ins);
@@ -2916,7 +2916,7 @@ EmitSimdLoad(FunctionCompiler& f, ValType resultType, unsigned numElems)
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()), numElems);
 
     auto* ins = f.load(addr.base, &access, resultType);
-    if (!ins)
+    if (!f.inDeadCode() && !ins)
         return false;
 
     f.iter().setResult(ins);
