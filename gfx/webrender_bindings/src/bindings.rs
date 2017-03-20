@@ -540,6 +540,7 @@ extern "C" {
     fn is_in_compositor_thread() -> bool;
     fn is_in_render_thread() -> bool;
     fn is_in_main_thread() -> bool;
+    fn is_glcontext_egl(glcontext_ptr: *mut c_void) -> bool;
 }
 
 struct CppNotifier {
@@ -602,22 +603,23 @@ pub extern "C" fn wr_renderer_render(renderer: &mut Renderer, width: u32, height
 
 // Call wr_renderer_render() before calling this function.
 #[no_mangle]
-pub unsafe extern "C" fn wr_renderer_readback(width: u32,
+pub unsafe extern "C" fn wr_renderer_readback(renderer: &mut Renderer,
+                                              width: u32,
                                               height: u32,
                                               dst_buffer: *mut u8,
                                               buffer_size: usize) {
     assert!(is_in_render_thread());
 
-    gl::flush();
+    renderer.gl().flush();
 
     let mut slice = slice::from_raw_parts_mut(dst_buffer, buffer_size);
-    gl::read_pixels_into_buffer(0,
-                                0,
-                                width as gl::GLsizei,
-                                height as gl::GLsizei,
-                                gl::BGRA,
-                                gl::UNSIGNED_BYTE,
-                                slice);
+    renderer.gl().read_pixels_into_buffer(0,
+                                          0,
+                                          width as gl::GLsizei,
+                                          height as gl::GLsizei,
+                                          gl::BGRA,
+                                          gl::UNSIGNED_BYTE,
+                                          slice);
 }
 
 #[no_mangle]
@@ -687,10 +689,15 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         None
     };
 
-    gl::load_with(|symbol| get_proc_address(gl_context, symbol));
-    gl::clear_color(0.3, 0.0, 0.0, 1.0);
+    let gl;
+    if unsafe { is_glcontext_egl(gl_context) } {
+      gl = unsafe { gl::GlesFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
+    } else {
+      gl = unsafe { gl::GlFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
+    }
+    gl.clear_color(0.3, 0.0, 0.0, 1.0);
 
-    let version = gl::get_string(gl::VERSION);
+    let version = gl.get_string(gl::VERSION);
 
     println!("WebRender - OpenGL version new {}", version);
 
@@ -703,7 +710,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     };
 
     let window_size = DeviceUintSize::new(window_width, window_height);
-    let (renderer, sender) = match Renderer::new(opts, window_size) {
+    let (renderer, sender) = match Renderer::new(gl, opts, window_size) {
         Ok((renderer, sender)) => (renderer, sender),
         Err(e) => {
             println!(" Failed to create a Renderer: {:?}", e);
