@@ -90,10 +90,6 @@ xul|*.numberbox-input-box {
   border-width: 0;
 }
 
-xul|*.text-link:-moz-focusring {
-  border: 1px dotted -moz-DialogText;
-}
-
 xul|menulist:-moz-focusring > xul|*.menulist-label-box,
 xul|radio[focused="true"] > xul|*.radio-label-box,
 html|input[type="checkbox"]:-moz-focusring + html|label:before {
