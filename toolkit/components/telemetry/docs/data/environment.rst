@@ -257,6 +257,10 @@ Structure:
         },
         persona: <string>, // id of the current persona, null on GONK
       },
+      experiments: {
+        "<experiment id>": { branch: "<branch>" },
+        // ...
+      }
     }
 
 build
@@ -374,3 +378,7 @@ activeAddons
 ~~~~~~~~~~~~
 
 Starting from Firefox 44, the length of the following string fields: ``name``, ``description`` and ``version`` is limited to 100 characters. The same limitation applies to the same fields in ``theme`` and ``activePlugins``.
+
+experiments
+-----------
+For each experiment we collect the ``id`` and the ``branch`` the client is enrolled in. Both fields are truncated to 100 characters and a warning is printed when that happens. This section will eventually supersede ``addons/activeExperiment``.
