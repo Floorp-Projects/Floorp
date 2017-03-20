@@ -49,6 +49,10 @@ private:
   struct AnimationData {
     // The start time of the current animation.
     TimeStamp mStart;
+    // The timestamp of the most recent animation frame.
+    TimeStamp mLastFrameTime;
+    // The longest animation frame length encountered so far.
+    TimeDuration mLongestFrame;
     // The number of frames composited for the current animation.
     uint32_t mFrameCount;
 
@@ -64,7 +68,8 @@ private:
                                  bool aInProgress,
                                  AnimationData& aAnimationData,
                                  TimeDuration aVsyncInterval,
-                                 Telemetry::HistogramID aHistogram);
+                                 Telemetry::HistogramID aThroughputHistogram,
+                                 Telemetry::HistogramID aMaxDropsHistogram);
 
   // The start time of the current compositor animation. This just tracks
   // whether the compositor is running an animation, without regard to which
