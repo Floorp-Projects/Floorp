@@ -1340,7 +1340,8 @@ RestyleManager::GetNextContinuationWithSameStyle(
   nsStyleContext* nextStyle = nextContinuation->StyleContext();
   if (nextStyle != aOldStyleContext) {
     NS_ASSERTION(aOldStyleContext->GetPseudo() != nextStyle->GetPseudo() ||
-                 aOldStyleContext->GetParent() != nextStyle->GetParent(),
+                 aOldStyleContext->GetParentAllowServo() !=
+                   nextStyle->GetParentAllowServo(),
                  "continuations should have the same style context");
     nextContinuation = nullptr;
     if (aHaveMoreContinuations) {
