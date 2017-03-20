@@ -7,9 +7,18 @@
 #define mozilla_layers_AnimationMetricsTracker_h
 
 #include "mozilla/TimeStamp.h"
+#include "mozilla/TypedEnumBits.h"
 
 namespace mozilla {
 namespace layers {
+
+enum class AnimationProcessTypes {
+  eNone = 0x0,
+  eContent = 0x1,
+  eChrome = 0x2
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AnimationProcessTypes)
 
 /**
  * Tracks the start and end of compositor animations.
