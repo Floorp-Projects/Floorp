@@ -611,6 +611,7 @@ FunctionScope::create(ExclusiveContext* cx, Handle<Data*> data,
             return nullptr;
 
         copy->hasParameterExprs = hasParameterExprs;
+        copy->canonicalFunction.init(fun);
 
         // An environment may be needed regardless of existence of any closed over
         // bindings:
@@ -627,8 +628,6 @@ FunctionScope::create(ExclusiveContext* cx, Handle<Data*> data,
         Scope* scope = Scope::create(cx, ScopeKind::Function, enclosing, envShape);
         if (!scope)
             return nullptr;
-
-        copy->canonicalFunction.init(fun);
 
         funScope = &scope->as<FunctionScope>();
         funScope->initData(Move(copy.get()));
@@ -674,11 +673,11 @@ FunctionScope::clone(JSContext* cx, Handle<FunctionScope*> scope, HandleFunction
         if (!dataClone)
             return nullptr;
 
-        Scope* scopeClone= Scope::create(cx, scope->kind(), enclosing, envShape);
+        dataClone->canonicalFunction.init(fun);
+
+        Scope* scopeClone = Scope::create(cx, scope->kind(), enclosing, envShape);
         if (!scopeClone)
             return nullptr;
-
-        dataClone->canonicalFunction.init(fun);
 
         funScopeClone = &scopeClone->as<FunctionScope>();
         funScopeClone->initData(Move(dataClone.get()));
