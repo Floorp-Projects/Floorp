@@ -184,7 +184,6 @@ public:
     // the idle connection list. It is called when the idle connection detects
     // that the network peer has closed the transport.
     MOZ_MUST_USE nsresult CloseIdleConnection(nsHttpConnection *);
-    MOZ_MUST_USE nsresult RemoveIdleConnection(nsHttpConnection *);
 
     // The connection manager needs to know when a normal HTTP connection has been
     // upgraded to SPDY because the dispatch and idle semantics are a little
@@ -298,9 +297,7 @@ private:
 
         nsHalfOpenSocket(nsConnectionEntry *ent,
                          nsAHttpTransaction *trans,
-                         uint32_t caps,
-                         bool speculative,
-                         bool isFromPredictor);
+                         uint32_t caps);
 
         MOZ_MUST_USE nsresult SetupStreams(nsISocketTransport **,
                                            nsIAsyncInputStream **,
@@ -318,8 +315,10 @@ private:
         nsAHttpTransaction *Transaction() { return mTransaction; }
 
         bool IsSpeculative() { return mSpeculative; }
+        void SetSpeculative(bool val) { mSpeculative = val; }
 
         bool IsFromPredictor() { return mIsFromPredictor; }
+        void SetIsFromPredictor(bool val) { mIsFromPredictor = val; }
 
         bool Allow1918() { return mAllow1918; }
         void SetAllow1918(bool val) { mAllow1918 = val; }
@@ -327,9 +326,6 @@ private:
         bool HasConnected() { return mHasConnected; }
 
         void PrintDiagnostics(nsCString &log);
-
-        bool Claim();
-        void Unclaim();
     private:
         nsConnectionEntry              *mEnt;
         RefPtr<nsAHttpTransaction>   mTransaction;
@@ -370,13 +366,6 @@ private:
 
         bool                           mPrimaryConnectedOK;
         bool                           mBackupConnectedOK;
-
-        // A nsHalfOpenSocket can be made for a concrete non-null transaction,
-        // but the transaction can be dispatch to another connection. In that
-        // case we can free this transaction to be claimed by other
-        // transactions.
-        bool                           mFreeToUse;
-        nsresult                       mPrimaryStreamStatus;
     };
     friend class nsHalfOpenSocket;
 
