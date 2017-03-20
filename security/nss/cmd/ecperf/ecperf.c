@@ -26,70 +26,6 @@
 
 #include "pkcs11f.h"
 
-/* mapping between ECCurveName enum and pointers to ECCurveParams */
-static SECOidTag ecCurve_oid_map[] = {
-    SEC_OID_UNKNOWN,                /* ECCurve_noName */
-    SEC_OID_ANSIX962_EC_PRIME192V1, /* ECCurve_NIST_P192 */
-    SEC_OID_SECG_EC_SECP224R1,      /* ECCurve_NIST_P224 */
-    SEC_OID_ANSIX962_EC_PRIME256V1, /* ECCurve_NIST_P256 */
-    SEC_OID_SECG_EC_SECP384R1,      /* ECCurve_NIST_P384 */
-    SEC_OID_SECG_EC_SECP521R1,      /* ECCurve_NIST_P521 */
-    SEC_OID_SECG_EC_SECT163K1,      /* ECCurve_NIST_K163 */
-    SEC_OID_SECG_EC_SECT163R1,      /* ECCurve_NIST_B163 */
-    SEC_OID_SECG_EC_SECT233K1,      /* ECCurve_NIST_K233 */
-    SEC_OID_SECG_EC_SECT233R1,      /* ECCurve_NIST_B233 */
-    SEC_OID_SECG_EC_SECT283K1,      /* ECCurve_NIST_K283 */
-    SEC_OID_SECG_EC_SECT283R1,      /* ECCurve_NIST_B283 */
-    SEC_OID_SECG_EC_SECT409K1,      /* ECCurve_NIST_K409 */
-    SEC_OID_SECG_EC_SECT409R1,      /* ECCurve_NIST_B409 */
-    SEC_OID_SECG_EC_SECT571K1,      /* ECCurve_NIST_K571 */
-    SEC_OID_SECG_EC_SECT571R1,      /* ECCurve_NIST_B571 */
-    SEC_OID_ANSIX962_EC_PRIME192V2,
-    SEC_OID_ANSIX962_EC_PRIME192V3,
-    SEC_OID_ANSIX962_EC_PRIME239V1,
-    SEC_OID_ANSIX962_EC_PRIME239V2,
-    SEC_OID_ANSIX962_EC_PRIME239V3,
-    SEC_OID_ANSIX962_EC_C2PNB163V1,
-    SEC_OID_ANSIX962_EC_C2PNB163V2,
-    SEC_OID_ANSIX962_EC_C2PNB163V3,
-    SEC_OID_ANSIX962_EC_C2PNB176V1,
-    SEC_OID_ANSIX962_EC_C2TNB191V1,
-    SEC_OID_ANSIX962_EC_C2TNB191V2,
-    SEC_OID_ANSIX962_EC_C2TNB191V3,
-    SEC_OID_ANSIX962_EC_C2PNB208W1,
-    SEC_OID_ANSIX962_EC_C2TNB239V1,
-    SEC_OID_ANSIX962_EC_C2TNB239V2,
-    SEC_OID_ANSIX962_EC_C2TNB239V3,
-    SEC_OID_ANSIX962_EC_C2PNB272W1,
-    SEC_OID_ANSIX962_EC_C2PNB304W1,
-    SEC_OID_ANSIX962_EC_C2TNB359V1,
-    SEC_OID_ANSIX962_EC_C2PNB368W1,
-    SEC_OID_ANSIX962_EC_C2TNB431R1,
-    SEC_OID_SECG_EC_SECP112R1,
-    SEC_OID_SECG_EC_SECP112R2,
-    SEC_OID_SECG_EC_SECP128R1,
-    SEC_OID_SECG_EC_SECP128R2,
-    SEC_OID_SECG_EC_SECP160K1,
-    SEC_OID_SECG_EC_SECP160R1,
-    SEC_OID_SECG_EC_SECP160R2,
-    SEC_OID_SECG_EC_SECP192K1,
-    SEC_OID_SECG_EC_SECP224K1,
-    SEC_OID_SECG_EC_SECP256K1,
-    SEC_OID_SECG_EC_SECT113R1,
-    SEC_OID_SECG_EC_SECT113R2,
-    SEC_OID_SECG_EC_SECT131R1,
-    SEC_OID_SECG_EC_SECT131R2,
-    SEC_OID_SECG_EC_SECT163R1,
-    SEC_OID_SECG_EC_SECT193R1,
-    SEC_OID_SECG_EC_SECT193R2,
-    SEC_OID_SECG_EC_SECT239K1,
-    SEC_OID_UNKNOWN, /* ECCurve_WTLS_1 */
-    SEC_OID_UNKNOWN, /* ECCurve_WTLS_8 */
-    SEC_OID_UNKNOWN, /* ECCurve_WTLS_9 */
-    SEC_OID_CURVE25519,
-    SEC_OID_UNKNOWN /* ECCurve_pastLastCurve */
-};
-
 typedef SECStatus (*op_func)(void *, void *, void *);
 typedef SECStatus (*pk11_op_func)(CK_SESSION_HANDLE, void *, void *, void *);
 
@@ -374,30 +310,6 @@ PKCS11_Verify(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE *hKey,
     return SECSuccess;
 }
 
-static SECStatus
-ecName2params(ECCurveName curve, SECKEYECParams *params)
-{
-    SECOidData *oidData = NULL;
-
-    if ((curve < ECCurve_noName) || (curve > ECCurve_pastLastCurve) ||
-        ((oidData = SECOID_FindOIDByTag(ecCurve_oid_map[curve])) == NULL)) {
-        PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-        return SECFailure;
-    }
-
-    SECITEM_AllocItem(NULL, params, (2 + oidData->oid.len));
-    /*
-     * params->data needs to contain the ASN encoding of an object ID (OID)
-     * representing the named curve. The actual OID is in
-     * oidData->oid.data so we simply prepend 0x06 and OID length
-     */
-    params->data[0] = SEC_ASN1_OBJECT_ID;
-    params->data[1] = oidData->oid.len;
-    memcpy(params->data + 2, oidData->oid.data, oidData->oid.len);
-
-    return SECSuccess;
-}
-
 /* Performs basic tests of elliptic curve cryptography over prime fields.
  * If tests fail, then it prints an error message, aborts, and returns an
  * error code. Otherwise, returns 0. */
@@ -423,7 +335,7 @@ ectest_curve_pkcs11(ECCurveName curve, int iterations, int numThreads)
 
     ecParams.data = NULL;
     ecParams.len = 0;
-    rv = ecName2params(curve, &ecParams);
+    rv = SECU_ecName2params(curve, &ecParams);
     if (rv != SECSuccess) {
         goto cleanup;
     }
@@ -542,9 +454,9 @@ ectest_curve_freebl(ECCurveName curve, int iterations, int numThreads,
     unsigned char sigData[256];
     unsigned char digestData[20];
     double signRate, deriveRate = 0;
-    char genenc[3 + 2 * 2 * MAX_ECKEY_LEN];
     SECStatus rv = SECFailure;
     PLArenaPool *arena;
+    SECItem ecEncodedParams = { siBuffer, NULL, 0 };
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (!arena) {
@@ -556,28 +468,11 @@ ectest_curve_freebl(ECCurveName curve, int iterations, int numThreads,
         return SECFailure;
     }
 
-    ecParams.name = curve;
-    ecParams.type = ec_params_named;
-    ecParams.curveOID.data = NULL;
-    ecParams.curveOID.len = 0;
-    ecParams.curve.seed.data = NULL;
-    ecParams.curve.seed.len = 0;
-    ecParams.DEREncoding.data = NULL;
-    ecParams.DEREncoding.len = 0;
-
-    ecParams.fieldID.size = ecCurve_map[curve]->size;
-    ecParams.fieldID.type = fieldType;
-    SECU_HexString2SECItem(arena, &ecParams.fieldID.u.prime, ecCurve_map[curve]->irr);
-    SECU_HexString2SECItem(arena, &ecParams.curve.a, ecCurve_map[curve]->curvea);
-    SECU_HexString2SECItem(arena, &ecParams.curve.b, ecCurve_map[curve]->curveb);
-    genenc[0] = '0';
-    genenc[1] = '4';
-    genenc[2] = '\0';
-    strcat(genenc, ecCurve_map[curve]->genx);
-    strcat(genenc, ecCurve_map[curve]->geny);
-    SECU_HexString2SECItem(arena, &ecParams.base, genenc);
-    SECU_HexString2SECItem(arena, &ecParams.order, ecCurve_map[curve]->order);
-    ecParams.cofactor = ecCurve_map[curve]->cofactor;
+    rv = SECU_ecName2params(curve, &ecEncodedParams);
+    if (rv != SECSuccess) {
+        goto cleanup;
+    }
+    EC_FillParams(arena, &ecEncodedParams, &ecParams);
 
     PORT_Memset(digestData, 0xa5, sizeof(digestData));
     digest.data = digestData;
@@ -618,6 +513,7 @@ ectest_curve_freebl(ECCurveName curve, int iterations, int numThreads,
     }
 
 cleanup:
+    SECITEM_FreeItem(&ecEncodedParams, PR_FALSE);
     PORT_FreeArena(arena, PR_FALSE);
     PORT_FreeArena(ecPriv->ecParams.arena, PR_FALSE);
     return rv;

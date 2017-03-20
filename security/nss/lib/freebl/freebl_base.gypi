@@ -21,7 +21,6 @@
     'ecdecode.c',
     'ecl/ec_naf.c',
     'ecl/ecl.c',
-    'ecl/ecl_curve.c',
     'ecl/ecl_gf.c',
     'ecl/ecl_mult.c',
     'ecl/ecp_25519.c',
