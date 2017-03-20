@@ -10,22 +10,18 @@
 #include "txExprResult.h"
 #include "txSingleNodeContext.h"
 
-nsresult
-txUnionNodeTest::matches(const txXPathNode& aNode, txIMatchContext* aContext,
-                         bool& aMatched)
+bool
+txUnionNodeTest::matches(const txXPathNode& aNode,
+                         txIMatchContext* aContext)
 {
     uint32_t i, len = mNodeTests.Length();
     for (i = 0; i < len; ++i) {
-        nsresult rv = mNodeTests[i]->matches(aNode, aContext, aMatched);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (aMatched) {
-            return NS_OK;
+        if (mNodeTests[i]->matches(aNode, aContext)) {
+            return true;
         }
     }
 
-    aMatched = false;
-    return NS_OK;
+    return false;
 }
 
 double

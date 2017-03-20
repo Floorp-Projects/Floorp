@@ -338,11 +338,7 @@ nsresult txXSLKey::testNode(const txXPathNode& aNode,
     nsAutoString val;
     uint32_t currKey, numKeys = mKeys.Length();
     for (currKey = 0; currKey < numKeys; ++currKey) {
-        bool matched;
-        nsresult rv = mKeys[currKey].matchPattern->matches(aNode, &aEs, matched);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (matched) {
+        if (mKeys[currKey].matchPattern->matches(aNode, &aEs)) {
             txSingleNodeContext *evalContext =
                 new txSingleNodeContext(aNode, &aEs);
             NS_ENSURE_TRUE(evalContext, NS_ERROR_OUT_OF_MEMORY);

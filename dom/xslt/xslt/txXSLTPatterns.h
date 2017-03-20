@@ -26,9 +26,8 @@ public:
     /*
      * Determines whether this Pattern matches the given node.
      */
-    virtual nsresult matches(const txXPathNode& aNode,
-                             txIMatchContext* aContext,
-                             bool& aMatched) = 0;
+    virtual bool matches(const txXPathNode& aNode,
+                          txIMatchContext* aContext) = 0;
 
     /*
      * Returns the default priority of this Pattern.
@@ -87,8 +86,7 @@ public:
 };
 
 #define TX_DECL_PATTERN_BASE \
-    nsresult matches(const txXPathNode& aNode, txIMatchContext* aContext, \
-                     bool& aMatched) override; \
+    bool matches(const txXPathNode& aNode, txIMatchContext* aContext) override; \
     double getDefaultPriority() override; \
     virtual Expr* getSubExprAt(uint32_t aPos) override; \
     virtual void setSubExprAt(uint32_t aPos, Expr* aExpr) override; \

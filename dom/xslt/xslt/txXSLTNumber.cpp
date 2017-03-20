@@ -108,12 +108,13 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
     // Otherwise use count/from/level
 
     txPattern* countPattern = aCountPattern;
-    nsAutoPtr<txPattern> newCountPattern;
+    bool ownsCountPattern = false;
     const txXPathNode& currNode = aContext->getContextNode();
 
     // Parse count- and from-attributes
 
     if (!aCountPattern) {
+        ownsCountPattern = true;
         txNodeTest* nodeTest;
         uint16_t nodeType = txXPathNodeUtils::getNodeType(currNode);
         switch (nodeType) {
@@ -159,7 +160,7 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
             }
         }
         MOZ_ASSERT(nodeTest);
-        countPattern = newCountPattern = new txStepPattern(nodeTest, false);
+        countPattern = new txStepPattern(nodeTest, false);
     }
 
 
@@ -169,28 +170,14 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
     if (aLevel == eLevelSingle) {
         txXPathTreeWalker walker(currNode);
         do {
-            if (aFromPattern && !walker.isOnNode(currNode)) {
-                bool matched;
-                rv = aFromPattern->matches(walker.getCurrentPosition(),
-                                           aContext, matched);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                if (matched) {
-                    break;
-                }
+            if (aFromPattern && !walker.isOnNode(currNode) &&
+                aFromPattern->matches(walker.getCurrentPosition(), aContext)) {
+                break;
             }
 
-            bool matched;
-            rv = countPattern->matches(walker.getCurrentPosition(), aContext,
-                                       matched);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            if (matched) {
-                int32_t count;
-                rv = getSiblingCount(walker, countPattern, aContext, &count);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                aValues.add(NS_INT32_TO_PTR(count));
+            if (countPattern->matches(walker.getCurrentPosition(), aContext)) {
+                aValues.add(NS_INT32_TO_PTR(getSiblingCount(walker, countPattern,
+                                                            aContext)));
                 break;
             }
 
@@ -202,12 +189,7 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
         if (aFromPattern && aValues.getLength()) {
             bool hasParent;
             while ((hasParent = walker.moveToParent())) {
-                bool matched;
-                rv = aFromPattern->matches(walker.getCurrentPosition(),
-                                           aContext, matched);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                if (matched) {
+                if (aFromPattern->matches(walker.getCurrentPosition(), aContext)) {
                     break;
                 }
             }
@@ -223,28 +205,16 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
         txXPathTreeWalker walker(currNode);
         bool matchedFrom = false;
         do {
-            if (aFromPattern && !walker.isOnNode(currNode)) {
-                rv = aFromPattern->matches(walker.getCurrentPosition(),
-                                           aContext, matchedFrom);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                if (matchedFrom) {
-                    //... we find one that matches from
-                    break;
-                }
+            if (aFromPattern && !walker.isOnNode(currNode) &&
+                aFromPattern->matches(walker.getCurrentPosition(), aContext)) {
+                //... we find one that matches from
+                matchedFrom = true;
+                break;
             }
 
-            bool matched;
-            rv = countPattern->matches(walker.getCurrentPosition(), aContext,
-                                       matched);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            if (matched) {
-                int32_t count;
-                rv = getSiblingCount(walker, countPattern, aContext, &count);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                aValues.add(NS_INT32_TO_PTR(count));
+            if (countPattern->matches(walker.getCurrentPosition(), aContext)) {
+                aValues.add(NS_INT32_TO_PTR(getSiblingCount(walker, countPattern,
+                                                            aContext)));
             }
         } while (walker.moveToParent());
 
@@ -262,22 +232,13 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
 
         txXPathTreeWalker walker(currNode);
         do {
-            if (aFromPattern && !walker.isOnNode(currNode)) {
-                rv = aFromPattern->matches(walker.getCurrentPosition(),
-                                           aContext, matchedFrom);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                if (matchedFrom) {
-                    break;
-                }
+            if (aFromPattern && !walker.isOnNode(currNode) &&
+                aFromPattern->matches(walker.getCurrentPosition(), aContext)) {
+                matchedFrom = true;
+                break;
             }
 
-            bool matched;
-            rv = countPattern->matches(walker.getCurrentPosition(), aContext,
-                                       matched);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            if (matched) {
+            if (countPattern->matches(walker.getCurrentPosition(), aContext)) {
                 ++value;
             }
 
@@ -295,6 +256,10 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
         }
     }
 
+    if (ownsCountPattern) {
+        delete countPattern;
+    }
+    
     return NS_OK;
 }
 
@@ -423,27 +388,18 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
     return NS_OK;
 }
 
-nsresult
+int32_t
 txXSLTNumber::getSiblingCount(txXPathTreeWalker& aWalker,
                               txPattern* aCountPattern,
-                              txIMatchContext* aContext,
-                              int32_t* aCount)
+                              txIMatchContext* aContext)
 {
     int32_t value = 1;
     while (aWalker.moveToPreviousSibling()) {
-        bool matched;
-        nsresult rv = aCountPattern->matches(aWalker.getCurrentPosition(),
-                                             aContext, matched);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (matched) {
+        if (aCountPattern->matches(aWalker.getCurrentPosition(), aContext)) {
             ++value;
         }
     }
-
-    *aCount = value;
-
-    return NS_OK;
+    return value;
 }
 
 bool

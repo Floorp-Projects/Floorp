@@ -26,7 +26,7 @@ public:
     {
         MOZ_CRASH("shouldn't depend on this context");
     }
-    nsresult isStripSpaceAllowed(const txXPathNode& aNode, bool& aAllowed)
+    bool isStripSpaceAllowed(const txXPathNode& aNode)
     {
         MOZ_CRASH("shouldn't depend on this context");
     }

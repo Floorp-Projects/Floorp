@@ -88,8 +88,7 @@ public:
      * Is whitespace stripping allowed for the given node?
      * See http://www.w3.org/TR/xslt#strip
      */
-    virtual nsresult isStripSpaceAllowed(const txXPathNode& aNode,
-                                         bool& aAllowed) = 0;
+    virtual bool isStripSpaceAllowed(const txXPathNode& aNode) = 0;
 
     /**
      * Returns a pointer to the private context
@@ -107,7 +106,7 @@ public:
 #define TX_DECL_MATCH_CONTEXT \
     nsresult getVariable(int32_t aNamespace, nsIAtom* aLName, \
                          txAExprResult*& aResult); \
-    nsresult isStripSpaceAllowed(const txXPathNode& aNode, bool& aAllowed); \
+    bool isStripSpaceAllowed(const txXPathNode& aNode); \
     void* getPrivateContext(); \
     txResultRecycler* recycler(); \
     void receiveError(const nsAString& aMsg, nsresult aRes)

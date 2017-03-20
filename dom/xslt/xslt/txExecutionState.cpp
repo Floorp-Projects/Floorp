@@ -138,11 +138,8 @@ txExecutionState::init(const txXPathNode& aNode,
     // might use us.
     txStylesheet::ImportFrame* frame = 0;
     txExpandedName nullName;
-    txInstruction* templ;
-    rv = mStylesheet->findTemplate(aNode, nullName, this, nullptr, &templ,
-                                   &frame);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    txInstruction* templ = mStylesheet->findTemplate(aNode, nullName,
+                                                     this, nullptr, &frame);
     pushTemplateRule(frame, nullName, nullptr);
 
     return runTemplate(templ);
@@ -295,10 +292,10 @@ txExecutionState::getVariable(int32_t aNamespace, nsIAtom* aLName,
     return NS_OK;
 }
 
-nsresult
-txExecutionState::isStripSpaceAllowed(const txXPathNode& aNode, bool& aAllowed)
+bool
+txExecutionState::isStripSpaceAllowed(const txXPathNode& aNode)
 {
-    return mStylesheet->isStripSpaceAllowed(aNode, this, aAllowed);
+    return mStylesheet->isStripSpaceAllowed(aNode, this);
 }
 
 void*

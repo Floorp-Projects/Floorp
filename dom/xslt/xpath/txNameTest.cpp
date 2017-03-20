@@ -23,9 +23,7 @@ txNameTest::txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, int32_t aNSID,
                  "Go fix txNameTest::matches");
 }
 
-nsresult
-txNameTest::matches(const txXPathNode& aNode, txIMatchContext* aContext,
-                    bool& aMatched)
+bool txNameTest::matches(const txXPathNode& aNode, txIMatchContext* aContext)
 {
     if ((mNodeType == txXPathNodeType::ELEMENT_NODE &&
          !txXPathNodeUtils::isElement(aNode)) ||
@@ -33,34 +31,26 @@ txNameTest::matches(const txXPathNode& aNode, txIMatchContext* aContext,
          !txXPathNodeUtils::isAttribute(aNode)) ||
         (mNodeType == txXPathNodeType::DOCUMENT_NODE &&
          !txXPathNodeUtils::isRoot(aNode))) {
-        aMatched = false;
-        return NS_OK;
+        return false;
     }
 
     // Totally wild?
-    if (mLocalName == nsGkAtoms::_asterisk && !mPrefix) {
-        aMatched = true;
-        return NS_OK;
-    }
+    if (mLocalName == nsGkAtoms::_asterisk && !mPrefix)
+        return true;
 
     // Compare namespaces
     if (mNamespace != txXPathNodeUtils::getNamespaceID(aNode) 
         && !(mNamespace == kNameSpaceID_None &&
              txXPathNodeUtils::isHTMLElementInHTMLDocument(aNode))
-       ) {
-        aMatched = false;
-        return NS_OK;
-    }
+       )
+        return false;
 
     // Name wild?
-    if (mLocalName == nsGkAtoms::_asterisk) {
-        aMatched = true;
-        return NS_OK;
-    }
+    if (mLocalName == nsGkAtoms::_asterisk)
+        return true;
 
     // Compare local-names
-    aMatched = txXPathNodeUtils::localNameEquals(aNode, mLocalName);
-    return NS_OK;
+    return txXPathNodeUtils::localNameEquals(aNode, mLocalName);
 }
 
 /*
