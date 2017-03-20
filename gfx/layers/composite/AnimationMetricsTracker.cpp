@@ -49,12 +49,14 @@ AnimationMetricsTracker::UpdateAnimationInProgress(AnimationProcessTypes aActive
                             (aActive & AnimationProcessTypes::eChrome) != AnimationProcessTypes::eNone,
                             mChromeAnimation,
                             aVsyncInterval,
-                            Telemetry::COMPOSITOR_ANIMATION_THROUGHPUT_CHROME);
+                            Telemetry::COMPOSITOR_ANIMATION_THROUGHPUT_CHROME,
+                            Telemetry::COMPOSITOR_ANIMATION_MAX_CONTIGUOUS_DROPS_CHROME);
   UpdateAnimationThroughput("content",
                             (aActive & AnimationProcessTypes::eContent) != AnimationProcessTypes::eNone,
                             mContentAnimation,
                             aVsyncInterval,
-                            Telemetry::COMPOSITOR_ANIMATION_THROUGHPUT_CONTENT);
+                            Telemetry::COMPOSITOR_ANIMATION_THROUGHPUT_CONTENT,
+                            Telemetry::COMPOSITOR_ANIMATION_MAX_CONTIGUOUS_DROPS_CONTENT);
 }
 
 void
@@ -65,7 +67,8 @@ AnimationMetricsTracker::UpdateApzAnimationInProgress(bool aInProgress,
                             aInProgress,
                             mApzAnimation,
                             aVsyncInterval,
-                            Telemetry::COMPOSITOR_ANIMATION_THROUGHPUT_APZ);
+                            Telemetry::COMPOSITOR_ANIMATION_THROUGHPUT_APZ,
+                            Telemetry::COMPOSITOR_ANIMATION_MAX_CONTIGUOUS_DROPS_APZ);
 }
 
 void
@@ -90,21 +93,28 @@ AnimationMetricsTracker::UpdateAnimationThroughput(const char* aLabel,
                                                    bool aInProgress,
                                                    AnimationData& aAnimation,
                                                    TimeDuration aVsyncInterval,
-                                                   Telemetry::HistogramID aHistogram)
+                                                   Telemetry::HistogramID aThroughputHistogram,
+                                                   Telemetry::HistogramID aMaxDropsHistogram)
 {
   if (aInProgress && !aAnimation.mStart) {
     // the animation just started
     aAnimation.mStart = TimeStamp::Now();
+    aAnimation.mLastFrameTime = aAnimation.mStart;
+    aAnimation.mLongestFrame = TimeDuration();
     aAnimation.mFrameCount = 1;
     AMT_LOG("Compositor animation of type %s just started\n", aLabel);
   } else if (aInProgress && aAnimation.mStart) {
     // the animation continues
     aAnimation.mFrameCount++;
+    TimeStamp now = TimeStamp::Now();
+    aAnimation.mLongestFrame = std::max(aAnimation.mLongestFrame, now - aAnimation.mLastFrameTime);
+    aAnimation.mLastFrameTime = now;
   } else if (!aInProgress && aAnimation.mStart) {
     // the animation just ended
 
+    TimeStamp now = TimeStamp::Now();
     // Get the length and clear aAnimation.mStart before the early-returns below
-    TimeDuration animationLength = TimeStamp::Now() - aAnimation.mStart;
+    TimeDuration animationLength = now - aAnimation.mStart;
     aAnimation.mStart = TimeStamp();
 
     if (aVsyncInterval == TimeDuration::Forever()) {
@@ -130,14 +140,24 @@ AnimationMetricsTracker::UpdateAnimationThroughput(const char* aLabel,
     if (expectedFrameCount <= 0) {
       // Graceful handling of probably impossible thing, unless the clock
       // changes while running?
+      // Note that we also skip the frames-dropped probe if this happens,
+      // because we cannot be sure that the frame length measurements are valid.
       return;
     }
 
     // Scale up by 1000 because telemetry takes ints, truncate intentionally
     // to avoid artificial inflation of the result.
     uint32_t frameHitRatio = (uint32_t)(1000.0f * aAnimation.mFrameCount / expectedFrameCount);
-    Telemetry::Accumulate(aHistogram, frameHitRatio);
+    Telemetry::Accumulate(aThroughputHistogram, frameHitRatio);
     AMT_LOG("Reported frameHitRatio %u\n", frameHitRatio);
+
+    // Get the longest frame time (make sure to check the final frame as well)
+    TimeDuration longestFrame = std::max(aAnimation.mLongestFrame, now - aAnimation.mLastFrameTime);
+    // As above, we round to get the frame count. Additionally we subtract one
+    // from the frame count to get the number of dropped frames.
+    uint32_t framesDropped = std::lround(longestFrame.ToMilliseconds() / vsyncIntervalMs) - 1;
+    AMT_LOG("Longest frame was %fms (%d drops)\n", longestFrame.ToMilliseconds(), framesDropped);
+    Telemetry::Accumulate(aMaxDropsHistogram, framesDropped);
   }
 }
 
