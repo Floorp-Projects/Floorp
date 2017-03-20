@@ -33,6 +33,7 @@
             'ec.h',
             'ecl/ecl-curve.h',
             'ecl/ecl.h',
+            'ecl/eclt.h',
             'hmacct.h',
             'secmpi.h',
             'secrng.h'

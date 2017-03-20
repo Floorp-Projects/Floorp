@@ -50,5 +50,7 @@ unsigned char *SSLInt_CipherSpecToIv(PRBool isServer, ssl3CipherSpec *spec);
 SECStatus SSLInt_EnableShortHeaders(PRFileDesc *fd);
 SECStatus SSLInt_UsingShortHeaders(PRFileDesc *fd, PRBool *result);
 void SSLInt_SetTicketLifetime(uint32_t lifetime);
+void SSLInt_SetMaxEarlyDataSize(uint32_t size);
+SECStatus SSLInt_SetSocketMaxEarlyDataSize(PRFileDesc *fd, uint32_t size);
 
 #endif  // ndef libssl_internals_h_

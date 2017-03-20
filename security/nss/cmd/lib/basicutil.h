@@ -13,6 +13,7 @@
 #include "base64.h"
 #include "secasn1.h"
 #include "secder.h"
+#include "ecl-exp.h"
 #include <stdio.h>
 
 #ifdef SECUTIL_NEW
@@ -85,6 +86,8 @@ SECU_SECItemHexStringToBinary(SECItem *srcdest);
 */
 extern SECItem *SECU_HexString2SECItem(PLArenaPool *arena, SECItem *item,
                                        const char *str);
+
+extern SECStatus SECU_ecName2params(ECCurveName curve, SECItem *params);
 
 /*
  *
