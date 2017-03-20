@@ -64,7 +64,6 @@ const COMPAT = {
   // division of message type into "category" and "severity".
   /* eslint-disable no-multi-spaces */
   /* eslint-disable max-len */
-  /* eslint-disable no-inline-comments */
   PREFERENCE_KEYS: [
     // Error         Warning       Info          Log
     [ "network",     "netwarn",    null,         "networkinfo", ],  // Network
@@ -76,7 +75,6 @@ const COMPAT = {
     [ "secerror",    "secwarn",    null,         null,          ],  // Security
     [ "servererror", "serverwarn", "serverinfo", "serverlog",   ],  // Server Logging
   ],
-  /* eslint-enable no-inline-comments */
   /* eslint-enable max-len */
   /* eslint-enable no-multi-spaces */
 
