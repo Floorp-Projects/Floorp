@@ -166,8 +166,6 @@ public:
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
     override;
   void SetDomain(const nsAString& aDomain, mozilla::ErrorResult& rv);
-  bool IsRegistrableDomainSuffixOfOrEqualTo(const nsAString& aHostSuffixString,
-                                            const nsACString& aOrigHost);
   void GetCookie(nsAString& aCookie, mozilla::ErrorResult& rv);
   void SetCookie(const nsAString& aCookie, mozilla::ErrorResult& rv);
   void NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
@@ -276,10 +274,6 @@ protected:
   static void DocumentWriteTerminationFunc(nsISupports *aRef);
 
   already_AddRefed<nsIURI> GetDomainURI();
-  already_AddRefed<nsIURI> CreateInheritingURIForHost(const nsACString& aHostString);
-  already_AddRefed<nsIURI> RegistrableDomainSuffixOfInternal(const nsAString& aHostSuffixString,
-                                                             nsIURI* aOrigHost);
-
 
   nsresult WriteCommon(JSContext *cx, const nsAString& aText,
                        bool aNewlineTerminate);
