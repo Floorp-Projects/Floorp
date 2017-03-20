@@ -55,13 +55,6 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
     return;
   }
 
-  // XXX This is a temporary hack to make style attribute change works.
-  //     In the future, we should be able to use this hint directly.
-  if (aRestyleHint & eRestyle_StyleAttribute) {
-    aRestyleHint &= ~eRestyle_StyleAttribute;
-    aRestyleHint |= eRestyle_Self | eRestyle_Subtree;
-  }
-
   if (aRestyleHint || aMinChangeHint) {
     Servo_NoteExplicitHints(aElement, aRestyleHint, aMinChangeHint);
   }
