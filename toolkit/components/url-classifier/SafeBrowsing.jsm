@@ -155,7 +155,9 @@ this.SafeBrowsing = {
         throw err;
     }
 
-    if (!info.list || !info.uri) {
+    // The "Phish" reports are about submitting new phishing URLs to Google so
+    // they don't have an associated list URL
+    if (kind != "Phish" && (!info.list || !info.uri)) {
       return null;
     }
 
