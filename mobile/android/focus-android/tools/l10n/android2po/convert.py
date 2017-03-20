@@ -901,11 +901,18 @@ def write_xml(tree, warnfunc=dummy_warn):
             # If the input text contains html, we need to use CDATA to prevent
             # Android's resource processing from turning it into an Android
             # formatted spannable string
-            if len(string_el) == 1:
-                text = etree.tostring(string_el[0], xml_declaration=False)
-                # <br is deliberately open: this protects against people using <br> or <br/>
+            # Each <string> could contain multiple children. Most of our html resources are in
+            # a <ul>, but some have 2 <p>'s in the root, so we convert each child
+            # to text, concat the children, and then do our html detection.
+            # We also skip the 0 children case (which signifies 0 html elements in every case),
+            # since that confuses 'tag in text'.
+            if len(string_el) > 0:
+                elements_text = [etree.tostring(child, xml_declaration=False) for child in string_el]
+                text = ''.join(elements_text)
+
                 if (tag in text for tag in ['<ul>', '<p>', '<br', '<strong>', '<li>']):
-                    del(string_el[0])
+                    # delete all the existing children, since we're readding them as text
+                    del string_el[:]
                     string_el.text = etree.CDATA(text)
 
             root_tags.append(string_el)
