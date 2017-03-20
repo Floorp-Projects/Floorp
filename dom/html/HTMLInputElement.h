@@ -234,6 +234,8 @@ public:
   NS_IMETHOD_(Element*) GetRootEditorNode() override;
   NS_IMETHOD_(Element*) CreatePlaceholderNode() override;
   NS_IMETHOD_(Element*) GetPlaceholderNode() override;
+  NS_IMETHOD_(Element*) CreatePreviewNode() override;
+  NS_IMETHOD_(Element*) GetPreviewNode() override;
   NS_IMETHOD_(void) UpdatePlaceholderVisibility(bool aNotify) override;
   NS_IMETHOD_(bool) GetPlaceholderVisibility() override;
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() override;

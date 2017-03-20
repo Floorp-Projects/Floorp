@@ -183,12 +183,17 @@ public:
   bool IsEmpty() const { return mValue ? mValue->IsEmpty() : true; }
 
   nsresult CreatePlaceholderNode();
+  nsresult CreatePreviewNode();
+  mozilla::dom::Element* CreateEmptyDivNode();
 
   mozilla::dom::Element* GetRootNode() {
     return mRootNode;
   }
   mozilla::dom::Element* GetPlaceholderNode() {
     return mPlaceholderDiv;
+  }
+  mozilla::dom::Element* GetPreviewNode() {
+    return mPreviewDiv;
   }
 
   bool IsSingleLineTextControl() const {
@@ -421,6 +426,7 @@ private:
   nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<mozilla::dom::Element> mRootNode;
   nsCOMPtr<mozilla::dom::Element> mPlaceholderDiv;
+  nsCOMPtr<mozilla::dom::Element> mPreviewDiv;
   nsTextControlFrame* mBoundFrame;
   RefPtr<nsTextInputListener> mTextListener;
   mozilla::Maybe<nsString> mValue;
