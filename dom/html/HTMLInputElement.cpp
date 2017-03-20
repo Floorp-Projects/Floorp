@@ -2891,6 +2891,27 @@ HTMLInputElement::GetPlaceholderVisibility()
   return state->GetPlaceholderVisibility();
 }
 
+NS_IMETHODIMP_(Element*)
+HTMLInputElement::CreatePreviewNode()
+{
+  nsTextEditorState* state = GetEditorState();
+  if (state) {
+    NS_ENSURE_SUCCESS(state->CreatePreviewNode(), nullptr);
+    return state->GetPreviewNode();
+  }
+  return nullptr;
+}
+
+NS_IMETHODIMP_(Element*)
+HTMLInputElement::GetPreviewNode()
+{
+  nsTextEditorState* state = GetEditorState();
+  if (state) {
+    return state->GetPreviewNode();
+  }
+  return nullptr;
+}
+
 void
 HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
 {

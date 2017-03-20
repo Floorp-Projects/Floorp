@@ -155,6 +155,16 @@ public:
   NS_IMETHOD_(mozilla::dom::Element*) GetPlaceholderNode() = 0;
 
   /**
+   * Create the preview anonymous node for the text control and returns it.
+   */
+  NS_IMETHOD_(mozilla::dom::Element*) CreatePreviewNode() = 0;
+
+  /**
+   * Get the preview anonymous node for the text control.
+   */
+  NS_IMETHOD_(mozilla::dom::Element*) GetPreviewNode() = 0;
+
+  /**
    * Initialize the keyboard event listeners.
    */
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() = 0;

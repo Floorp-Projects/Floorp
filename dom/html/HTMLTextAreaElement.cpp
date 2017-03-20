@@ -320,6 +320,20 @@ HTMLTextAreaElement::GetPlaceholderVisibility()
   return mState.GetPlaceholderVisibility();
 }
 
+NS_IMETHODIMP_(Element*)
+HTMLTextAreaElement::CreatePreviewNode()
+{
+  NS_ENSURE_SUCCESS(mState.CreatePreviewNode(), nullptr);
+  return mState.GetPreviewNode();
+}
+
+NS_IMETHODIMP_(Element*)
+HTMLTextAreaElement::GetPreviewNode()
+{
+  return mState.GetPreviewNode();
+}
+
+
 nsresult
 HTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
                                       uint32_t aFlags)
