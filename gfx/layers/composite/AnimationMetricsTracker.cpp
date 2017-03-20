@@ -19,6 +19,7 @@ AnimationMetricsTracker::AnimationMetricsTracker()
   : mMaxLayerAreaAnimated(0)
   , mChromeAnimationFrameCount(0)
   , mContentAnimationFrameCount(0)
+  , mApzAnimationFrameCount(0)
 {
 }
 
@@ -59,6 +60,18 @@ AnimationMetricsTracker::UpdateAnimationInProgress(AnimationProcessTypes aActive
                             mContentAnimationFrameCount,
                             aVsyncInterval,
                             Telemetry::COMPOSITOR_ANIMATION_THROUGHPUT_CONTENT);
+}
+
+void
+AnimationMetricsTracker::UpdateApzAnimationInProgress(bool aInProgress,
+                                                      TimeDuration aVsyncInterval)
+{
+  UpdateAnimationThroughput("apz",
+                            aInProgress,
+                            mApzAnimationStart,
+                            mApzAnimationFrameCount,
+                            aVsyncInterval,
+                            Telemetry::COMPOSITOR_ANIMATION_THROUGHPUT_APZ);
 }
 
 void

@@ -38,6 +38,12 @@ public:
   void UpdateAnimationInProgress(AnimationProcessTypes aActive, uint64_t aLayerArea,
                                  TimeDuration aVsyncInterval);
 
+  /**
+   * Similar to UpdateAnimationInProgress, but this is for APZ animations. Again,
+   * this should be called per composite.
+   */
+  void UpdateApzAnimationInProgress(bool aInProgress, TimeDuration aVsyncInterval);
+
 private:
   void AnimationStarted();
   void AnimationEnded();
@@ -64,6 +70,10 @@ private:
   TimeStamp mContentAnimationStart;
   // The number of frames composited for the current content-process animation.
   uint32_t mContentAnimationFrameCount;
+  // The start time of the current APZ animation.
+  TimeStamp mApzAnimationStart;
+  // The number of frames composited for the current APZ animation.
+  uint32_t mApzAnimationFrameCount;
 };
 
 } // namespace layers
