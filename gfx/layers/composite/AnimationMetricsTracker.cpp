@@ -17,9 +17,6 @@ namespace layers {
 
 AnimationMetricsTracker::AnimationMetricsTracker()
   : mMaxLayerAreaAnimated(0)
-  , mChromeAnimationFrameCount(0)
-  , mContentAnimationFrameCount(0)
-  , mApzAnimationFrameCount(0)
 {
 }
 
@@ -50,14 +47,12 @@ AnimationMetricsTracker::UpdateAnimationInProgress(AnimationProcessTypes aActive
 
   UpdateAnimationThroughput("chrome",
                             (aActive & AnimationProcessTypes::eChrome) != AnimationProcessTypes::eNone,
-                            mChromeAnimationStart,
-                            mChromeAnimationFrameCount,
+                            mChromeAnimation,
                             aVsyncInterval,
                             Telemetry::COMPOSITOR_ANIMATION_THROUGHPUT_CHROME);
   UpdateAnimationThroughput("content",
                             (aActive & AnimationProcessTypes::eContent) != AnimationProcessTypes::eNone,
-                            mContentAnimationStart,
-                            mContentAnimationFrameCount,
+                            mContentAnimation,
                             aVsyncInterval,
                             Telemetry::COMPOSITOR_ANIMATION_THROUGHPUT_CONTENT);
 }
@@ -68,8 +63,7 @@ AnimationMetricsTracker::UpdateApzAnimationInProgress(bool aInProgress,
 {
   UpdateAnimationThroughput("apz",
                             aInProgress,
-                            mApzAnimationStart,
-                            mApzAnimationFrameCount,
+                            mApzAnimation,
                             aVsyncInterval,
                             Telemetry::COMPOSITOR_ANIMATION_THROUGHPUT_APZ);
 }
@@ -94,25 +88,24 @@ AnimationMetricsTracker::AnimationEnded()
 void
 AnimationMetricsTracker::UpdateAnimationThroughput(const char* aLabel,
                                                    bool aInProgress,
-                                                   TimeStamp& aStartTime,
-                                                   uint32_t& aFrameCount,
+                                                   AnimationData& aAnimation,
                                                    TimeDuration aVsyncInterval,
                                                    Telemetry::HistogramID aHistogram)
 {
-  if (aInProgress && !aStartTime) {
+  if (aInProgress && !aAnimation.mStart) {
     // the animation just started
-    aStartTime = TimeStamp::Now();
-    aFrameCount = 1;
+    aAnimation.mStart = TimeStamp::Now();
+    aAnimation.mFrameCount = 1;
     AMT_LOG("Compositor animation of type %s just started\n", aLabel);
-  } else if (aInProgress && aStartTime) {
+  } else if (aInProgress && aAnimation.mStart) {
     // the animation continues
-    aFrameCount++;
-  } else if (!aInProgress && aStartTime) {
+    aAnimation.mFrameCount++;
+  } else if (!aInProgress && aAnimation.mStart) {
     // the animation just ended
 
-    // Get the length and clear aStartTime before the early-returns below
-    TimeDuration animationLength = TimeStamp::Now() - aStartTime;
-    aStartTime = TimeStamp();
+    // Get the length and clear aAnimation.mStart before the early-returns below
+    TimeDuration animationLength = TimeStamp::Now() - aAnimation.mStart;
+    aAnimation.mStart = TimeStamp();
 
     if (aVsyncInterval == TimeDuration::Forever()) {
       AMT_LOG("Invalid vsync interval: forever\n");
@@ -132,8 +125,8 @@ AnimationMetricsTracker::UpdateAnimationThroughput(const char* aLabel,
     // from one composite to another.
     uint32_t expectedFrameCount = std::lround(animationLength.ToMilliseconds() / vsyncIntervalMs);
     AMT_LOG("Type %s ran for %fms (interval: %fms), %u frames (expected: %u)\n",
-        aLabel, animationLength.ToMilliseconds(), vsyncIntervalMs, aFrameCount,
-        expectedFrameCount);
+        aLabel, animationLength.ToMilliseconds(), vsyncIntervalMs,
+        aAnimation.mFrameCount, expectedFrameCount);
     if (expectedFrameCount <= 0) {
       // Graceful handling of probably impossible thing, unless the clock
       // changes while running?
@@ -142,7 +135,7 @@ AnimationMetricsTracker::UpdateAnimationThroughput(const char* aLabel,
 
     // Scale up by 1000 because telemetry takes ints, truncate intentionally
     // to avoid artificial inflation of the result.
-    uint32_t frameHitRatio = (uint32_t)(1000.0f * aFrameCount / expectedFrameCount);
+    uint32_t frameHitRatio = (uint32_t)(1000.0f * aAnimation.mFrameCount / expectedFrameCount);
     Telemetry::Accumulate(aHistogram, frameHitRatio);
     AMT_LOG("Reported frameHitRatio %u\n", frameHitRatio);
   }
