@@ -9,6 +9,7 @@ import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
 
 import java.net.URI;
+import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 
@@ -35,6 +36,8 @@ public class MockGlobalSessionCallback implements GlobalSessionCallback {
   public boolean calledInformMigrated = false;
   public URI calledInformUnauthorizedResponseClusterURL = null;
   public long weaveBackoff = -1;
+  public boolean calledFullSyncNecessary = false;
+  public ArrayList<String> incompleteStages = new ArrayList<>();
 
   @Override
   public void handleSuccess(GlobalSession globalSession) {
@@ -59,7 +62,12 @@ public class MockGlobalSessionCallback implements GlobalSessionCallback {
   @Override
   public void handleIncompleteStage(Stage currentState,
                                     GlobalSession globalSession) {
+    this.incompleteStages.add(currentState.getRepositoryName());
+  }
 
+  @Override
+  public void handleFullSyncNecessary() {
+    this.calledFullSyncNecessary = true;
   }
 
   @Override

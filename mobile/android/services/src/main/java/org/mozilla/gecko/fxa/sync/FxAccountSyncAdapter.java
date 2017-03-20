@@ -34,6 +34,7 @@ import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncDelegate.Result;
 import org.mozilla.gecko.sync.BackoffHandler;
 import org.mozilla.gecko.sync.GlobalSession;
+import org.mozilla.gecko.sync.MetaGlobal;
 import org.mozilla.gecko.sync.PrefsBackoffHandler;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
 import org.mozilla.gecko.sync.SyncConfiguration;
@@ -132,6 +133,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     // Keeps track of incomplete stages during this sync that need to be re-synced once we're done.
     private final List<String> stageNamesForFollowUpSync = Collections.synchronizedList(new ArrayList<String>());
+    private boolean fullSyncNecessary = false;
 
     public SyncDelegate(BlockingQueue<Result> latch, SyncResult syncResult, AndroidFxAccount fxAccount, Collection<String> stageNamesToSync) {
       super(latch, syncResult);
@@ -198,6 +200,14 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     public void handleIncompleteStage(Stage currentState,
                                       GlobalSession globalSession) {
       syncDelegate.requestFollowUpSync(currentState.getRepositoryName());
+    }
+
+    /**
+     * Use with caution, as this will request an immediate follow-up sync of all stages.
+     */
+    @Override
+    public void handleFullSyncNecessary() {
+      syncDelegate.fullSyncNecessary = true;
     }
 
     @Override
@@ -454,6 +464,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     Collection<String> stageNamesToSync = Utils.getStagesToSyncFromBundle(knownStageNames, extras);
 
     final SyncDelegate syncDelegate = new SyncDelegate(latch, syncResult, fxAccount, stageNamesToSync);
+    Result offeredResult = null;
 
     try {
       // This will be the same chunk of SharedPreferences that we pass through to GlobalSession/SyncConfiguration.
@@ -591,12 +602,31 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         }
       });
 
-      latch.take();
+      offeredResult = latch.take();
     } catch (Exception e) {
       Logger.error(LOG_TAG, "Got error syncing.", e);
       syncDelegate.handleError(e);
     } finally {
       fxAccount.releaseSharedAccountStateLock();
+    }
+
+    lastSyncRealtimeMillis = SystemClock.elapsedRealtime();
+
+    // We got to this point without being offered a result, and so it's unwise to proceed with
+    // trying to sync stages again. Nothing else we can do but log an error.
+    if (offeredResult == null) {
+      Logger.error(LOG_TAG, "Did not receive a sync result from the delegate.");
+      return;
+    }
+
+    // Full sync (of all of stages) is necessary if we hit "concurrent modification" errors while
+    // uploading meta/global stage. This is considered both a rare and important event, so it's
+    // deemed safe and necessary to request an immediate sync, which will ignore any back-offs and
+    // will happen right away.
+    if (syncDelegate.fullSyncNecessary) {
+      Logger.info(LOG_TAG, "Syncing done. Full follow-up sync necessary, requesting immediate sync.");
+      fxAccount.requestImmediateSync(null, null);
+      return;
     }
 
     // If there are any incomplete stages, request a follow-up sync. Otherwise, we're done.
@@ -611,12 +641,13 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       );
     }
 
-    if (stagesToSyncAgain.length > 0) {
-      Logger.info(LOG_TAG, "Syncing done. Requesting an immediate follow-up sync.");
-      fxAccount.requestImmediateSync(stagesToSyncAgain, null);
-    } else {
+    if (stagesToSyncAgain.length == 0) {
       Logger.info(LOG_TAG, "Syncing done.");
+      return;
     }
-    lastSyncRealtimeMillis = SystemClock.elapsedRealtime();
+
+    // If there are any other stages marked as incomplete, request that they're synced again.
+    Logger.info(LOG_TAG, "Syncing done. Requesting an immediate follow-up sync.");
+    fxAccount.requestImmediateSync(stagesToSyncAgain, null);
   }
 }
