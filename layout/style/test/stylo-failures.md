@@ -406,7 +406,7 @@ to mochitest command.
   * :-moz-window-inactive bug 1348489
     * test_selectors.html `:-moz-window-inactive` [2]
   * :-moz-{first,last}-node
-    * test_selectors.html `:-moz-` [13]
+    * test_selectors.html `:-moz-` [6]
     * ... `unexpected rule index` [5]
   * :dir
     * test_selectors.html `:dir` [10]
