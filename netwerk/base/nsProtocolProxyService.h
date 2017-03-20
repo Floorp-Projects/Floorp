@@ -274,7 +274,7 @@ protected:
      * @param hostFilters
      *        A "no-proxy-for" exclusion list.
      */
-    void LoadHostFilters(const char *hostFilters);
+    void LoadHostFilters(const nsACString& hostFilters);
 
     /**
      * This method checks the given URI against mHostFiltersArray.

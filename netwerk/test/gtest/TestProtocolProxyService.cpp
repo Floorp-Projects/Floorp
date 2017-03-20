@@ -88,7 +88,7 @@ TEST(TestProtocolProxyService, LoadHostFilters) {
 
   // Anything is allowed when there are no filters set
   printf("Testing empty filter: %s\n", filter.get());
-  pps->LoadHostFilters(filter.get());
+  pps->LoadHostFilters(filter);
 
   CheckLoopbackURLs(true); // only time when loopbacks can be proxied. bug?
   CheckLocalDomain(true);
@@ -99,7 +99,7 @@ TEST(TestProtocolProxyService, LoadHostFilters) {
 
   filter = "example.com, 1.2.3.4/16, [2001::1], 10.0.0.0/8, 2.3.0.0/16:7777, [abcd::1]/64:123, *.test.com";
   printf("Testing filter: %s\n", filter.get());
-  pps->LoadHostFilters(filter.get());
+  pps->LoadHostFilters(filter);
   // Check URLs can no longer use filtered proxy
   CheckURLs(false);
   CheckLoopbackURLs(false);
@@ -112,11 +112,16 @@ TEST(TestProtocolProxyService, LoadHostFilters) {
   // backwards compatibility.
   filter = "<local> blabla.com:10";
   printf("Testing filter: %s\n", filter.get());
-  pps->LoadHostFilters(filter.get());
+  pps->LoadHostFilters(filter);
   CheckURLs(true);
   CheckLoopbackURLs(false);
   CheckLocalDomain(false);
   CheckPortDomain(false);
+
+  // Check that we don't crash on weird input
+  filter = "a b c abc:1x2, ,, * ** *.* *:10 :20 :40/12 */12:90";
+  printf("Testing filter: %s\n", filter.get());
+  pps->LoadHostFilters(filter);
 }
 
 } // namespace net
