@@ -37,6 +37,9 @@ protected:
   static void SelectCallback(nsITimer *aTimer, void *aClosure);
 
 protected:
+  // Helper function to get the content node associated with mTree.
+  already_AddRefed<nsIContent> GetContent();
+
   // Members
   nsCOMPtr<nsITreeBoxObject> mTree; // The tree will hold on to us through the view and let go when it dies.
 
