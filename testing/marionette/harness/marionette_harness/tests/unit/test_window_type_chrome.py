@@ -5,19 +5,19 @@
 from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
-class TestTitleChrome(WindowManagerMixin, MarionetteTestCase):
+class TestWindowTypeChrome(WindowManagerMixin, MarionetteTestCase):
 
     def setUp(self):
-        super(TestTitleChrome, self).setUp()
+        super(TestWindowTypeChrome, self).setUp()
 
         self.marionette.set_context("chrome")
 
     def tearDown(self):
         self.close_all_windows()
 
-        super(TestTitleChrome, self).tearDown()
+        super(TestWindowTypeChrome, self).tearDown()
 
-    def test_get_chrome_title(self):
+    def test_get_window_type(self):
 
         def open_window_with_js():
             self.marionette.execute_script("""
@@ -28,6 +28,6 @@ class TestTitleChrome(WindowManagerMixin, MarionetteTestCase):
         win = self.open_window(open_window_with_js)
         self.marionette.switch_to_window(win)
 
-        title = self.marionette.execute_script(
-            "return window.document.documentElement.getAttribute('title');")
-        self.assertEqual(title, self.marionette.title)
+        window_type = self.marionette.execute_script(
+            "return window.document.documentElement.getAttribute('windowtype');")
+        self.assertEqual(window_type, self.marionette.get_window_type())
