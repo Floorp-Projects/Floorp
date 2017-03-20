@@ -6142,7 +6142,12 @@ IonBuilder::jsop_initelem_array()
 
     uint32_t index = GET_UINT32(pc);
     if (needStub) {
-        MCallInitElementArray* store = MCallInitElementArray::New(alloc(), obj, index, value);
+        MOZ_ASSERT(index <= INT32_MAX,
+                   "the bytecode emitter must fail to compile code that would "
+                   "produce JSOP_INITELEM_ARRAY with an index exceeding "
+                   "int32_t range");
+        MCallInitElementArray* store = MCallInitElementArray::New(alloc(), obj,
+                                                                  constantInt(index), value);
         current->add(store);
         return resumeAfter(store);
     }
