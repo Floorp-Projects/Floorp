@@ -53,6 +53,13 @@ group.add_argument('--no-optimize', action='store_false',
                    dest='optimize',
                    help='generate a non-optimized build. Overrides variant setting.')
 group.set_defaults(optimize=None)
+group = parser.add_mutually_exclusive_group()
+group.add_argument('--debug', action='store_true',
+                   help='generate a debug build. Overrides variant setting.')
+group.add_argument('--no-debug', action='store_false',
+                   dest='debug',
+                   help='generate a non-debug build. Overrides variant setting.')
+group.set_defaults(debug=None)
 parser.add_argument('--run-tests', '--tests', type=str, metavar='TESTSUITE',
                     default='',
                     help="comma-separated set of test suites to add to the variant's default set")
@@ -145,11 +152,18 @@ MAKEFLAGS = env.get('MAKEFLAGS', '-j6' + ('' if AUTOMATION else ' -s'))
 UNAME_M = subprocess.check_output(['uname', '-m']).strip()
 
 CONFIGURE_ARGS = variant['configure-args']
+
 opt = args.optimize
 if opt is None:
     opt = variant.get('optimize')
 if opt is not None:
     CONFIGURE_ARGS += (" --enable-optimize" if opt else " --disable-optimize")
+
+opt = args.debug
+if opt is None:
+    opt = variant.get('debug')
+if opt is not None:
+    CONFIGURE_ARGS += (" --enable-debug" if opt else " --disable-debug")
 
 # Any jobs that wish to produce additional output can save them into the upload
 # directory if there is such a thing, falling back to OBJDIR.
