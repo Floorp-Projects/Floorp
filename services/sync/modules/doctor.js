@@ -106,7 +106,7 @@ this.Doctor = {
       // Update the time now, even if we decline to actually perform a
       // validation. We don't want to check the rest of these more frequently
       // than once a day.
-      Svc.Prefs.set("validation.lastTime", Math.floor(nowSeconds));
+      Svc.Prefs.set(prefPrefix + "validation.lastTime", Math.floor(nowSeconds));
 
       // Validation only occurs a certain percentage of the time.
       let validationProbability = Svc.Prefs.get(prefPrefix + "validation.percentageChance", 0) / 100.0;
