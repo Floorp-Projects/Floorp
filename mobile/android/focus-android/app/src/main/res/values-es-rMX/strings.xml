@@ -13,6 +13,7 @@
   <string name="menu_about">Acerca de</string>
   <string name="menu_help">Ayuda</string>
   <string name="menu_rights">Tus derechos</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s te da el control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#218;salo como navegador privado:\n  "<ul>"\n    "<li>Buscar y navegar directamente en la aplicaci&#243;n</li>"\n    "<li>Bloquear rastreadores (o actualizar las preferencias para permitirlos)</li>"\n    "<li>Borrar para eliminar cookies e historiales de b&#250;squeda y navegaci&#243;n</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s fue creado por Mozilla. Nuestra misi&#243;n es promover un Internet saludable y abierto.<br/>\n<a href="%2$s">Aprender m&#225;s</a></p>]]></string>
   <string name="preference_category_search">Buscar</string>
   <string name="preference_search_engine_default">Predeterminado</string>
   <string name="preference_dialog_title_search_engine">Buscador predeterminado</string>
@@ -29,6 +30,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Enviar datos de uso de forma anónima</string>
   <string name="preference_mozilla_telemetry_summary">Saber más</string>
+  <string name="preference_about">Acerca de %1$s</string>
   <string name="content_description_clear_input">Limpiar registro</string>
   <string name="content_description_dismiss_input">Ignorar</string>
   <string name="content_description_erase">Eliminar historial de navegación</string>
@@ -43,9 +45,10 @@
   <string name="firstrun_button">¡De acuerdo, lo entiendo!</string>
   <string name="firstrun_footer">Para ser honestos, aún así las páginas y servicios pueden saber dónde has estado.</string>
   <string name="your_rights">Tus derechos</string>
-  <string name="external_app_prompt">Este enlace se abrirá con %2$s. ¿Seguro que quieres salir de %1$s?</string>
-  <string name="external_app_prompt_no_app_title">No hay una aplicación disponible para abrir este enlace</string>
-  <string name="external_app_prompt_no_app">Ninguna de las aplicaciones en tu dispositivo pueden abrir este enlace. ¿Quieres salir de %1$s y abrir %2$s para buscar una app adecuada?</string>
+  <string name="external_app_prompt_title">Abrir enlace en otra aplicación</string>
+  <string name="external_app_prompt">Puedes salir de %1$s para abrir este enlace en %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Buscar una aplicación que pueda abrir el enlace</string>
+  <string name="external_app_prompt_no_app">Ninguna de las aplicaciones en tu dispositivo puede abrir este enlace. Puedes salir de %1$s para buscar una aplicación compatible en %2$s.</string>
   <string name="external_multiple_apps_matched_exit">¿Salir de la navegación privada?</string>
   <string name="errorpage_title">Problemas al cargar la página</string>
   <string name="errorpage_refresh">Reintentar</string>

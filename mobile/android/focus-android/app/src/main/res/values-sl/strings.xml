@@ -29,6 +29,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Pošiljaj anonimne podatke o uporabi</string>
   <string name="preference_mozilla_telemetry_summary">Več o tem</string>
+  <string name="preference_about">O %1$su</string>
   <string name="content_description_clear_input">Počisti vnos</string>
   <string name="content_description_dismiss_input">Opusti</string>
   <string name="content_description_erase">Počisti zgodovino brskanja</string>
@@ -42,4 +43,17 @@
   <string name="firstrun_description">Samodejno zavračajte spletne sledilce med brskanjem. Nato z enim dotikom izbrišite obiskane strani, iskanja, piškotke in gesla z naprave.</string>
   <string name="firstrun_button">V redu, razumem!</string>
   <string name="firstrun_footer">Pozor, spletna mesta sama in storitve, ki jih uporabljate, vam še vedno lahko sledijo.</string>
+  <string name="your_rights">Vaše pravice</string>
+  <string name="external_app_prompt_title">Odpri povezavo v drugi aplikaciji</string>
+  <string name="external_app_prompt_no_app_title">Poišči aplikacijo, ki lahko odpre povezavo</string>
+  <string name="external_multiple_apps_matched_exit">Končam zasebno brskanje?</string>
+  <string name="errorpage_title">Napaka pri nalaganju strani</string>
+  <string name="errorpage_refresh">Poskusi znova</string>
+  <string name="error_connectionfailure_title">Povezave ni mogoče vzpostaviti</string>
+  <string name="error_timeout_title">Povezava je potekla</string>
+  <string name="error_hostLookup_title">Strežnika ni mogoče najti</string>
+  <string name="error_malformedURI_title">Neveljaven naslov</string>
+  <string name="error_redirectLoop_title">Stran se ne preusmerja pravilno</string>
+  <string name="error_sslhandshake_title">Varna povezava ni uspela</string>
+  <string name="error_generic_title">Ups</string>
 </resources>

@@ -13,7 +13,7 @@
   <string name="menu_about">O aplikácii</string>
   <string name="menu_help">Pomocník</string>
   <string name="menu_rights">Vaše práva</string>
-  <string name="about_content"><p>%1$s vám dáva kontrolu.</p>\n<p>"Používajte ho ako súkromný prehliadač:\n  "<ul>"\n    "<li>Vyhľadávajte a prehliadajte priamo prostredníctvom aplikácie</li>"\n    "<li>Blokujte sledovacie prvky (v nastaveniach môžete sledovacie prvky povoliť)</li>"\n    "<li>Vymažte cookies, históriu vyhľadávania a prehliadania</li>"\n  "</ul>\n</p>\n<p>%1$s vyvíja Mozilla. Naša misia je podporovať zdravý a otvorený internet.<br/>\n<a href="%2$s">Ďalšie informácie</a></p></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s v&#225;m d&#225;va kontrolu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Pou&#382;&#237;vajte ho ako s&#250;kromn&#253; prehliada&#269;:\n  "<ul>"\n    "<li>Vyh&#318;ad&#225;vajte a prehliadajte priamo prostredn&#237;ctvom aplik&#225;cie</li>"\n    "<li>Blokujte sledovacie prvky (v nastaveniach m&#244;&#382;ete sledovacie prvky povoli&#357;)</li>"\n    "<li>Vyma&#382;te cookies, hist&#243;riu vyh&#318;ad&#225;vania a prehliadania</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vyv&#237;ja Mozilla. Na&#353;a misia je podporova&#357; zdrav&#253; a otvoren&#253; internet.<br/>\n<a href="%2$s">&#270;al&#353;ie inform&#225;cie</a></p>]]></string>
   <string name="preference_category_search">Vyhľadávanie</string>
   <string name="preference_search_engine_default">Predvolený</string>
   <string name="preference_dialog_title_search_engine">Predvolený vyhľadávací modul</string>

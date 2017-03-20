@@ -40,7 +40,6 @@
   <string name="content_description_reload">Actualitza el lloc web</string>
   <string name="firstrun_title">Navegueu sense sentir-vos observats.</string>
   <string name="firstrun_description">Bloquegeu automàticament els elements que us fan el seguiment mentre navegueu. Esborreu amb un sol toc les pàgines visitades, cerques, galetes i contrasenyes del dispositiu.</string>
-  <string name="firstrun_button">Entesos</string>
   <string name="firstrun_footer">Tingueu en compte que els serveis i els llocs web que utilitzeu poden saber igualment on heu estat.</string>
   <string name="your_rights">Els vostres drets</string>
   <string name="external_multiple_apps_matched_exit">Voleu sortir de la navegació privada?</string>

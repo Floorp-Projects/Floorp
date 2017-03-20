@@ -13,7 +13,7 @@
   <string name="menu_about">Über</string>
   <string name="menu_help">Hilfe</string>
   <string name="menu_rights">Ihre Rechte</string>
-  <string name="about_content"><p>%1$s gibt Ihnen die Kontrolle.</p>\n<p>"Verwenden Sie es als privaten Browser:\n  "<ul>"\n    "<li>Suchen und blättern Sie in der App</li>"\n    "<li>Blockieren Sie Tracker (oder aktualisieren Sie die Einstellungen, um Tracker zu erlauben)</li>"\n    "<li>Entfernen Sie Cookies, um Such- und Browserverlauf zu löschen</li>"\n  "</ul>\n</p>\n<p>%1$s wird von Mozilla entwickelt. Unsere Mission ist es, ein gesundes, offenes Internet zu fördern.<br/>\n<a href="%2$s">Erfahren Sie mehr</a></p></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gibt Ihnen die Kontrolle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Verwenden Sie es als privaten Browser:\n  "<ul>"\n    "<li>Suchen und bl&#228;ttern Sie in der App</li>"\n    "<li>Blockieren Sie Tracker (oder aktualisieren Sie die Einstellungen, um Tracker zu erlauben)</li>"\n    "<li>Entfernen Sie Cookies, um Such- und Browserverlauf zu l&#246;schen</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wird von Mozilla entwickelt. Unsere Mission ist es, ein gesundes, offenes Internet zu f&#246;rdern.<br/>\n<a href="%2$s">Erfahren Sie mehr</a></p>]]></string>
   <string name="preference_category_search">Suche</string>
   <string name="preference_search_engine_default">Standard</string>
   <string name="preference_dialog_title_search_engine">Standardsuchmaschine</string>
@@ -46,9 +46,9 @@
   <string name="firstrun_footer">Beachten Sie: Websites und von Ihnen genutzte Dienste können immer noch nachvollziehen, wo Sie waren.</string>
   <string name="your_rights">Ihre Rechte</string>
   <string name="external_app_prompt_title">Link in anderer App öffnen</string>
-  <string name="external_app_prompt">Dieser Link wird in %2$s geöffnet. Möchten Sie %1$s wirklich verlassen?</string>
-  <string name="external_app_prompt_no_app_title">Keine App zur Link-Verarbeitung</string>
-  <string name="external_app_prompt_no_app">Anscheinend kann keine der Apps auf Ihrem Gerät diesen Link öffnen. Möchten Sie %1$s verlassen und %2$s öffnen, um eine passende App zu finden?</string>
+  <string name="external_app_prompt">Sie können %1$s verlassen, um diesen Link in %2$s zu öffnen.</string>
+  <string name="external_app_prompt_no_app_title">App zum Öffnen des Links finden</string>
+  <string name="external_app_prompt_no_app">Anscheinend kann keine der Apps auf Ihrem Gerät diesen Link öffnen. Sie können %1$s verlassen und bei %2$s nach einer App dafür suchen.</string>
   <string name="external_multiple_apps_matched_exit">Privaten Modus verlassen?</string>
   <string name="errorpage_title">Seiten-Ladefehler</string>
   <string name="errorpage_refresh">Erneut versuchen</string>

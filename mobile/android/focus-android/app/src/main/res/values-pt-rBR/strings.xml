@@ -13,6 +13,7 @@
   <string name="menu_about">Sobre</string>
   <string name="menu_help">Ajuda</string>
   <string name="menu_rights">Seus direitos</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s coloca voc&#234; no controle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Use-o como o seu navegador privativo:\n  "<ul>"\n    "<li>Pesquise e navegue direto no aplicativo</li>"\n    "<li>Bloqueie rastreadores (ou atualize as configura&#231;&#245;es para permiti-los)</li>"\n    "<li>Apague para excluir cookies assim como o hist&#243;rico de pesquisa e navega&#231;&#227;o</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#233; produzido pela Mozilla. Nossa miss&#227;o &#233; promover uma Internet saud&#225;vel e aberta.<br/>\n<a href="%2$s">Saiba mais</a></p>]]></string>
   <string name="preference_category_search">Pesquisar</string>
   <string name="preference_search_engine_default">Padrão</string>
   <string name="preference_dialog_title_search_engine">Pesquisa padrão</string>
@@ -29,6 +30,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Enviar dados de uso anonimamente</string>
   <string name="preference_mozilla_telemetry_summary">Saiba mais</string>
+  <string name="preference_about">Sobre o %1$s</string>
   <string name="content_description_clear_input">Limpar campo</string>
   <string name="content_description_dismiss_input">Dispensar</string>
   <string name="content_description_erase">Apagar o histórico de navegação</string>
@@ -43,18 +45,26 @@
   <string name="firstrun_button">Ok, entendi!</string>
   <string name="firstrun_footer">Para ser claro, sites e serviços que você usa ainda podem saber onde você esteve.</string>
   <string name="your_rights">Seus direitos</string>
-  <string name="external_app_prompt">Este link será aberto no %2$s. Tem certeza de que deseja sair do %1$s?</string>
-  <string name="external_app_prompt_no_app_title">Nenhum app para lidar com o link</string>
-  <string name="external_app_prompt_no_app">Nenhuma dos aplicativos no seu dispositivo consegue abrir este link. Deseja sair do %1$s e abrir o %2$s para encontrar um aplicativo adequado?</string>
+  <string name="external_app_prompt_title">Abrir link em um outro app</string>
+  <string name="external_app_prompt">Você pode sair do %1$s para abrir este link no %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Encontrar um app que pode abrir o link</string>
+  <string name="external_app_prompt_no_app">Nenhum aplicativo do seu dispositivo consegue abrir este link. Você pode sair do %1$s para pesquisar no %2$s por um aplicativo compatível.</string>
   <string name="external_multiple_apps_matched_exit">Sair da navegação privativa?</string>
   <string name="errorpage_title">Problemas ao carregar a página</string>
   <string name="errorpage_refresh">Tentar novamente</string>
   <string name="error_connectionfailure_title">Não foi possível conectar</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>O site pode estar temporariamente indispon&#237;vel ou ocupado demais. Tente novamente em alguns instantes.</li>"\n        "<li>Se n&#227;o conseguir carregar nenhuma p&#225;gina, verifique a conex&#227;o de dados ou Wi-Fi do seu dispositivo m&#243;vel.</li>"\n      "</ul>]]></string>
   <string name="error_timeout_title">A conexão expirou</string>
   <string name="error_hostLookup_title">Servidor não encontrado</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Verifique se o endere&#231;o cont&#233;m erros de digita&#231;&#227;o, como\n          "<strong>ww</strong>".example.com ao inv&#233;s de\n          "<strong>www</strong>.example.com</li>"\n        "<li>Se n&#227;o conseguir carregar nenhuma p&#225;gina, verifique a conex&#227;o de dados ou Wi-Fi de seu dispositivo.</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">O endereço não é válido</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Os endere&#231;os da Web s&#227;o geralmente escritos como "<strong>http://www.example.com/</strong></li>"\n  "<li>"Certifique-se de usar barras obl&#237;quas (ex. "<strong>/</strong>).</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">A página não está sendo redirecionada corretamente</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Este problema, &#224;s vezes, pode ser causado pela desativa&#231;&#227;o ou recusa em aceitar os cookies.</li>\n</ul>]]></string>
   <string name="error_unsupportedprotocol_title">O endereço não foi compreendido</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Talvez seja necess&#225;rio instalar outro software para abrir esse endere&#231;o.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Falha na conexão segura</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Isto pode ser um problema com a configura&#231;&#227;o do servidor ou pode ser algu&#233;m tentando se passar pelo servidor.</li>"\n  "<li>Se voc&#234; se conectou a este servidor com sucesso no passado, o erro pode ser tempor&#225;rio, e voc&#234; pode tentar novamente mais tarde.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ops</string>
+  <string name="error_generic_message">Não podemos carregar esta página por algum motivo.</string>
 </resources>

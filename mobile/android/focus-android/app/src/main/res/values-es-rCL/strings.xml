@@ -29,6 +29,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Enviar datos de uso anónimos</string>
   <string name="preference_mozilla_telemetry_summary">Aprender más</string>
+  <string name="preference_about">Acerca de %1$s</string>
   <string name="content_description_clear_input">Limpiar texto ingresado</string>
   <string name="content_description_dismiss_input">Ocultar</string>
   <string name="content_description_erase">Eliminar historial de navegación</string>
@@ -43,8 +44,9 @@
   <string name="firstrun_button">Ok, me quedó clarito</string>
   <string name="firstrun_footer">Es decir, los sitios y servicios que uses todavía pueden saber donde has estado.</string>
   <string name="your_rights">Tus derechos</string>
+  <string name="external_app_prompt_title">Abrir enlace en otra app</string>
   <string name="external_app_prompt">Este enlace se abrirá en %2$s. ¿Estás seguro de que quieres salir de %1$s?</string>
-  <string name="external_app_prompt_no_app_title">No hay app para abrir el enlace</string>
+  <string name="external_app_prompt_no_app_title">Buscar una app que pueda abrir el enlace</string>
   <string name="external_app_prompt_no_app">Ninguna de las aplicaciones en tu dispositivo pueden abrir este enlace. ¿Quieres salir de %1$s y abrir %2$s para buscar una app adecuada?</string>
   <string name="external_multiple_apps_matched_exit">¿Salir de la navegación privada?</string>
   <string name="errorpage_title">Problemas al cargar la página</string>

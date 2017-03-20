@@ -13,8 +13,10 @@
   <string name="menu_about">Tentang</string>
   <string name="menu_help">Bantuan</string>
   <string name="menu_rights">Hak Anda</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s menempatkan Anda dalam kendali.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakan sebagai peramban privat:\n  "<ul>"\n    "<li>Cari dan menjelajah langsung di dalam aplikasi</li>"\n    "<li>Memblokir pelacak (atau ubah di pengaturan untuk izinkan pelacak)</li>"\n    "<li>Hapus untuk menghilangkan kuki termasuk juga pencarian dan riwayat penjelajahan</li>"\n  "</ul>"\n "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s diproduksi oleh Mozilla. Misi kami adalah untuk memelihara Internet yang sehat dan terbuka.<br/>" "<a href="%2$s">Pelajari lebih lanjut</a></p>]]></string>
   <string name="preference_category_search">Cari</string>
   <string name="preference_search_engine_default">Baku</string>
+  <string name="preference_dialog_title_search_engine">Pencarian baku</string>
   <string name="preference_category_privacy">Privasi</string>
   <string name="preference_privacy_block_ads">Blokir pelacak iklan</string>
   <string name="preference_privacy_block_analytics">Blokir pelacak analitik</string>
@@ -23,25 +25,46 @@
   <string name="preference_privacy_block_content_summary">Mungkin menghentikan beberapa video dan laman Web</string>
   <string name="preference_category_performance">Kinerja</string>
   <string name="preference_performance_block_webfonts">Blokir font Web</string>
-  <string name="preference_performance_block_images">Blokir Gambar</string>
+  <string name="preference_performance_block_images">Blokir gambar</string>
   <string name="preference_default_browser">Jadikan peramban utama</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Kirim data penggunaan anonim</string>
   <string name="preference_mozilla_telemetry_summary">Pelajari lebih lanjut</string>
+  <string name="preference_about">Tentang %1$s</string>
   <string name="content_description_clear_input">Bersihkan masukan</string>
+  <string name="content_description_dismiss_input">Tutup</string>
   <string name="content_description_erase">Hapus riwayat penjelajahan</string>
   <string name="content_description_lock">Sambungan aman</string>
   <string name="accessibility_announcement_loading">Memuat</string>
   <string name="accessibility_announcement_loading_finished">Situs web dimuat</string>
+  <string name="content_description_menu">Opsi lainnya</string>
+  <string name="content_description_forward">Navigasi ke selanjutnya</string>
   <string name="content_description_reload">Muat ulang situs web</string>
   <string name="firstrun_title">Menjelajah seperti tidak ada yang mengawasi.</string>
   <string name="firstrun_description">Blokir pelacak daring secara otomatis ketika Anda menjelajah. Kemudian ketuk untuk menghapus laman yang dikunjungi, pencarian, kuki, dan sandi dari perangkat Anda.</string>
   <string name="firstrun_button">Oke, beres!</string>
   <string name="firstrun_footer">Agar jelas, situs dan layanan yang Anda gunakan masih dapat mengetahui di mana Anda berada.</string>
   <string name="your_rights">Hak Anda</string>
+  <string name="external_app_prompt_title">Buka tautan di aplikasi lainnya</string>
+  <string name="external_app_prompt">Anda dapat meninggalkan %1$s untuk membuka tautan ini di %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Temukan aplikasi yang dapat membuka tautan</string>
+  <string name="external_app_prompt_no_app">Tak ada satu pun aplikasi di perangkat Anda dapat membuka tautan ini. Anda dapat meninggalkan %1$s untuk mencari di %2$s untuk mendapatkan aplikasi yang mampu.</string>
+  <string name="external_multiple_apps_matched_exit">Keluar dari Penjelajahan Pribadi?</string>
+  <string name="errorpage_title">Bermasalah memuat laman</string>
   <string name="errorpage_refresh">Coba Lagi</string>
   <string name="error_connectionfailure_title">Tidak dapat tersambung</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Situs ini tidak tersedia untuk sementara atau terlalu sibuk. Coba lagi dalam beberapa saat.</li>"\n        "<li>Jika Anda tidak dapat memuat laman apapun, periksa data ponsel atau sambungan Wi-Fi Anda.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Tenggang waktu sambungan habis</string>
   <string name="error_hostLookup_title">Peladen tidak ditemukan</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Periksa alamat untuk kesalahan pengetikan seperti\n          "<strong>ww</strong>".example.com alih-alih\n          "<strong>www</strong>.example.com</li>"\n        "<li>Jika Anda tidak dapat memuat laman apapun, periksa koneksi data atau Wi-Fi Anda.</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">Alamat tidak valid</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Alamat Web umumnya ditulis seperti "<strong>http://www.example.com/</strong></li>"\n  "<li>"Pastikan Anda menggunakan garis miring (mis. "<strong>/</strong>).</li>"\n "</ul>]]></string>
+  <string name="error_redirectLoop_title">Laman tidak teralihkan dengan benar</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Masalah ini kadangkala disebabkan karena fungsi menerima kuki dinonaktifkan atau ditolak.</li>\n</ul>]]></string>
   <string name="error_unsupportedprotocol_title">Alamat tidak dipahami</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Anda mungkin perlu memasang perangkat lunak lain untuk membuka alamat ini.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Sambungan aman gagal</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Hal ini mungkin dikarenakan ada masalah terkait dengan konfigurasi server, atau bisa jadi ada seseorang mencoba untuk berkedok sebagai server.</li>"\n  "<li>Jika Anda berhasil tersambung ke server ini sebelumnya, gangguan dapat bersifat sementara, dan Anda dapat mencoba kembali nanti.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Ups</string>
+  <string name="error_generic_message">Kami tidak dapat memuat laman ini karena sejumlah alasan.</string>
 </resources>

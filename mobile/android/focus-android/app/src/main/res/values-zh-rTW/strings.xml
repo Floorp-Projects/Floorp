@@ -13,7 +13,7 @@
   <string name="menu_about">關於</string>
   <string name="menu_help">說明</string>
   <string name="menu_rights">您的權利</string>
-  <string name="about_content"><p>%1$s 讓您可自行控制線上生活。</p>\n<p>"可當作私密瀏覽器使用:\n  "<ul>"\n    "<li>直接在程式中搜尋、瀏覽</li>"\n    "<li>封鎖追蹤器（也可調整設定，允許追蹤器）</li>"\n    "<li>清除 Cookie、搜尋紀錄、上網紀錄</li>"\n  "</ul>\n</p>\n<p>%1$s 是由 Mozilla 所打造，我們的使命是培養一個健康、開放的網際網路。<br/>\n<a href="%2$s">了解更多</a></p></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35731;&#24744;&#21487;&#33258;&#34892;&#25511;&#21046;&#32218;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#21487;&#30070;&#20316;&#31169;&#23494;&#28687;&#35261;&#22120;&#20351;&#29992;:\n  "<ul>"\n    "<li>&#30452;&#25509;&#22312;&#31243;&#24335;&#20013;&#25628;&#23563;&#12289;&#28687;&#35261;</li>"\n    "<li>&#23553;&#37782;&#36861;&#36452;&#22120;&#65288;&#20063;&#21487;&#35519;&#25972;&#35373;&#23450;&#65292;&#20801;&#35377;&#36861;&#36452;&#22120;&#65289;</li>"\n    "<li>&#28165;&#38500; Cookie&#12289;&#25628;&#23563;&#32000;&#37636;&#12289;&#19978;&#32178;&#32000;&#37636;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#26159;&#30001; Mozilla &#25152;&#25171;&#36896;&#65292;&#25105;&#20497;&#30340;&#20351;&#21629;&#26159;&#22521;&#39178;&#19968;&#20491;&#20581;&#24247;&#12289;&#38283;&#25918;&#30340;&#32178;&#38555;&#32178;&#36335;&#12290;<br/>\n<a href="%2$s">&#20102;&#35299;&#26356;&#22810;</a></p>]]></string>
   <string name="preference_category_search">搜尋</string>
   <string name="preference_search_engine_default">預設</string>
   <string name="preference_dialog_title_search_engine">預設搜尋引擎</string>
@@ -58,7 +58,7 @@
   <string name="error_hostLookup_title">找不到伺服器</string>
   <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>"&#35531;&#27298;&#26597;&#32178;&#22336;&#26159;&#21542;&#26377;&#25171;&#37679;&#65311;&#20363;&#22914;&#25226; "<strong>www</strong>".example.com &#25171;&#25104; "<strong>ww</strong>.example.com</li><li>&#33509;&#28961;&#27861;&#36617;&#20837;&#20219;&#20309;&#32178;&#31449;&#65292;&#35531;&#27298;&#26597;&#24744;&#30340;&#32178;&#36335;&#36899;&#32218;&#29376;&#24907;&#12290;</li></ul>]]></string>
   <string name="error_malformedURI_title">網址無效</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>"&#32178;&#22336;&#36890;&#24120;&#38263;&#30340;&#20687; "<strong>http://www.example.com/</strong>&#12290;</li><li>"&#35531;&#30906;&#23450;&#24744;&#29992;&#30340;&#26159;&#26012;&#32218; (&#20363;: "<strong>/</strong>)&#12290;</li>" "</ul>]]></string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>"&#32178;&#22336;&#36890;&#24120;&#38263;&#24471;&#20687; "<strong>http://www.example.com/</strong>&#12290;</li><li>"&#35531;&#30906;&#23450;&#24744;&#29992;&#30340;&#26159;&#26012;&#32218; (&#20363;: "<strong>/</strong>)&#12290;</li>" "</ul>]]></string>
   <string name="error_redirectLoop_title">頁面重新導向不正確</string>
   <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" "<li>&#26377;&#26178;&#20505;&#20572;&#29992;&#25110;&#25298;&#32085;&#25509;&#21463; Cookie &#26371;&#36896;&#25104;&#27492;&#21839;&#38988;&#12290;</li>" "</ul>]]></string>
   <string name="error_unsupportedprotocol_title">無法理解的網址</string>

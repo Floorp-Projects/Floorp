@@ -13,7 +13,7 @@
   <string name="menu_about">O programie</string>
   <string name="menu_help">Pomoc</string>
   <string name="menu_rights">O prawach użytkownika</string>
-  <string name="about_content"><p>%1$s daje większą kontrolę.</p>\n<p>"Jako prywatna przeglądarka umożliwia:\n  "<ul>"\n    "<li>wyszukiwanie i przeglądanie prosto z aplikacji</li>"\n    "<li>blokowanie śledzenia (można to zmienić w ustawieniach)</li>"\n    "<li>usuwanie ciasteczek oraz całej historii wyszukiwania i przeglądania</li>"\n  "</ul>\n</p>\n<p>%1$s jest tworzony przez Mozillę. Naszym celem jest wspieranie zdrowego i otwartego Internetu.<br/>\n<a href="%2$s">Więcej informacji</a></p></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s daje wi&#281;ksz&#261; kontrol&#281;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Jako prywatna przegl&#261;darka umo&#380;liwia:\n  "<ul>"\n    "<li>wyszukiwanie i&#160;przegl&#261;danie prosto z&#160;aplikacji</li>"\n    "<li>blokowanie &#347;ledzenia (mo&#380;na to zmieni&#263; w&#160;ustawieniach)</li>"\n    "<li>usuwanie ciasteczek oraz ca&#322;ej historii wyszukiwania i&#160;przegl&#261;dania</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s jest tworzony przez Mozill&#281;. Naszym celem jest wspieranie zdrowego i&#160;otwartego Internetu.<br/>\n<a href="%2$s">Wi&#281;cej informacji</a></p>]]></string>
   <string name="preference_category_search">Wyszukiwanie</string>
   <string name="preference_search_engine_default">Domyślna</string>
   <string name="preference_dialog_title_search_engine">Domyślna wyszukiwarka</string>
@@ -48,7 +48,7 @@
   <string name="external_app_prompt_title">Otwieranie odnośnika w innej aplikacji</string>
   <string name="external_app_prompt">Można wyjść z aplikacji %1$s, aby otworzyć ten odnośnik w aplikacji %2$s.</string>
   <string name="external_app_prompt_no_app_title">Wyszukiwanie aplikacji mogącej otworzyć odnośnik</string>
-  <string name="external_app_prompt_no_app">Żadna aplikacja na urządzeniu nie może otworzyć tego odnośnika. Można wyjść z aplikacji %1$s, aby wyszukać odpowiednią aplikację w sklepie %2$s.</string>
+  <string name="external_app_prompt_no_app">Żadna aplikacja na urządzeniu nie może otworzyć tego odnośnika. Można wyjść z aplikacji %1$s, aby wyszukać odpowiednią aplikację w „%2$s”.</string>
   <string name="external_multiple_apps_matched_exit">Wyjść z trybu prywatnego?</string>
   <string name="errorpage_title">Błąd wczytywania strony</string>
   <string name="errorpage_refresh">Spróbuj ponownie</string>

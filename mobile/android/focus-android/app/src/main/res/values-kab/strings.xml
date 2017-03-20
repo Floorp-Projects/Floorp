@@ -13,7 +13,7 @@
   <string name="menu_about">Γef</string>
   <string name="menu_help">Tallalt</string>
   <string name="menu_rights">Izerfan-inek</string>
-  <string name="about_content"><p>%1$s puts you in control.</p>\n<p>"Seqdec-it d iminig uslig:\n  "<ul>"\n    "<li>Nadi sakin snirem akken iwata deg usnas</li>"\n    "<li>Sewḥel imesfuɣal (neɣ snifel iɣewwaṛen akken ad tsirgeḍ imesfuɣal)</li>"\n    "<li>Erase to delete cookies as well as search and browsing history</li>"\n  "</ul>\n</p>\n<p>%1$s yesnulfa-t-id Mozilla. Tuɣdaṭ-nneɣ is to foster a healthy, open Internet.<br/>\n<a href="%2$s">Learn more</a></p></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s puts you in control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Seqdec-it d iminig uslig:\n  "<ul>"\n    "<li>Nadi sakin snirem akken iwata deg usnas</li>"\n    "<li>Sew&#7717;el imesfu&#611;al (ne&#611; snifel i&#611;ewwa&#7771;en akken ad tsirge&#7693; imesfu&#611;al)</li>"\n    "<li>Erase to delete cookies as well as search and browsing history</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s yesnulfa-t-id Mozilla. Tu&#611;da&#7789;-nne&#611; is to foster a healthy, open Internet.<br/>\n<a href="%2$s">Learn more</a></p>]]></string>
   <string name="preference_category_search">Nadi</string>
   <string name="preference_search_engine_default">Amezwer</string>
   <string name="preference_dialog_title_search_engine">Anadi amezwer</string>

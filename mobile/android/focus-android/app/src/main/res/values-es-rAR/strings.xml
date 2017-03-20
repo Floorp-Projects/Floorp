@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Cancelar</string>
+  <string name="action_ok">Aceptar</string>
   <string name="urlbar_hint">Buscar o ingresar dirección</string>
   <string name="teaser">Navegación privada automática.\nNavegar. Borrar. Repetir.</string>
   <string name="feedback_erase">El historial de navegación fue borrado.</string>
@@ -11,6 +13,10 @@
   <string name="menu_about">Acerca de</string>
   <string name="menu_help">Ayuda</string>
   <string name="menu_rights">Tus derechos</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s te da el control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Usalo como un navegador privado:\n  "<ul>"\n    "<li>Buscar y navegar en la aplicaci&#243;n</li>"\n    "<li>Bloquear rastreadores (o actualizar opciones para permitir rastreadores)</li>"\n    "<li>Borrar para eliminar cookies e historial de b&#250;squeda y navegaci&#243;n</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s es producido por Mozilla. Nuestra misi&#243;n es promover una internet abierta y saludable.<br/>\n<a href="%2$s">Conocer m&#225;s</a></p>]]></string>
+  <string name="preference_category_search">Buscar</string>
+  <string name="preference_search_engine_default">Predeterminado</string>
+  <string name="preference_dialog_title_search_engine">Buscador predeterminado</string>
   <string name="preference_category_privacy">Privacidad</string>
   <string name="preference_privacy_block_ads">Bloquear rastreadores de publicidad</string>
   <string name="preference_privacy_block_analytics">Bloquear rastreadores analíticos</string>
@@ -18,12 +24,15 @@
   <string name="preference_privacy_block_content">Bloquear otros rastreadores de contenidos</string>
   <string name="preference_privacy_block_content_summary">Algunos videos y páginas web pueden fallar</string>
   <string name="preference_category_performance">Rendimiento</string>
+  <string name="preference_performance_block_webfonts">Bloquear tipografía web</string>
   <string name="preference_performance_block_images">Bloquear imágenes</string>
   <string name="preference_default_browser">Establecer navegador predeterminado</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Enviar datos de uso anónimos</string>
   <string name="preference_mozilla_telemetry_summary">Conocer más</string>
+  <string name="preference_about">Acerca de %1$s</string>
   <string name="content_description_clear_input">Borrar entrada</string>
+  <string name="content_description_dismiss_input">Descartar</string>
   <string name="content_description_erase">Limpiar historial de navegación</string>
   <string name="content_description_lock">Conexión segura</string>
   <string name="accessibility_announcement_loading">Cargando</string>
@@ -32,5 +41,30 @@
   <string name="content_description_forward">Navegar hacia adelante</string>
   <string name="content_description_reload">Recargar sitio web</string>
   <string name="firstrun_title">Navegar como si nadie estuviera mirando.</string>
+  <string name="firstrun_description">Bloqueá automáticamente rastreadores en línea al navegar. Depsués tocá para borrar páginas visitadas, búsquedas, cookies y contraseñas de tu dispositivo.</string>
+  <string name="firstrun_button">¡Listo, lo entendí!</string>
   <string name="firstrun_footer">Para ser claros, sitios y servicios que se usen todavía pueden saber donde estuviste.</string>
+  <string name="your_rights">Tus derechos</string>
+  <string name="external_app_prompt_title">Abrir enlace en otra aplicación</string>
+  <string name="external_app_prompt">Podés dejar que %1$s abra este enlace en %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Buscar una app que pueda abrir el enlace</string>
+  <string name="external_app_prompt_no_app">Ninguna de las apps en el dispositivo puede abrir este enlace. Podés dejar que %1$s busque en %2$s una app que pueda.</string>
+  <string name="external_multiple_apps_matched_exit">¿Salir de la navegación privada?</string>
+  <string name="errorpage_title">Problema cargando la página</string>
+  <string name="errorpage_refresh">Intentar nuevamente</string>
+  <string name="error_connectionfailure_title">No se puede conectar</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>El sitio puede estar temporariamente inaccesible o demasiado ocupado. Intent&#225; nuevamente en unos momentos.</li>"\n        "<li>Si no pod&#233;s cargar ninguna p&#225;gina, verific&#225; la conexi&#243;n de datos o Wi-Fi de tu dispositivo.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">La conexión tardó demasiado tiempo</string>
+  <string name="error_hostLookup_title">Servidor no encontrado</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Fijate si la direcci&#243;n no tiene errores de tipeo como\n          "<strong>ww</strong>".example.com en vez de\n          "<strong>www</strong>.example.com</li>"\n        "<li>Si no pod&#233;s cargar ninguna p&#225;gina, verific&#225; la conexi&#243;n de datos o Wi-Fi de tu dispositivo.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">La dirección no es válida</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Las direcciones web normalmente se escriben como "<strong>http://www.example.com/</strong></li>"\n  "<li>"Asegurate de usar las barras correctas (ej. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">La página no está siendo redireccionada correctamente</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Este problema puede estar causado a veces por deshabilitar o rechazar cookies.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">La dirección no fue comprendida</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Necesit&#225;s instalar otro software para abrir esta direcci&#243;n.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Fallo en conexión segura</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Podr&#237;a haber un problema con la configuraci&#243;n del servidor o podr&#237;a ser\nalguien tratando de hacerse pasar por ese servidor.</li>"\n  "<li>Si te conectaste exitosamente a este servidor en el pasado, el error puede\nser temporal y pod&#233;s probar m&#225;s tarde.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Epa</string>
+  <string name="error_generic_message">No se puede cargar esta página por alguna razón.</string>
 </resources>

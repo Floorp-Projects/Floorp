@@ -13,7 +13,7 @@
   <string name="menu_about">Informazioni su</string>
   <string name="menu_help">Aiuto</string>
   <string name="menu_rights">I tuoi diritti</string>
-  <string name="about_content"><p>Prendi il controllo con %1$s.</p>\n<p>"Utilizzalo per la navigazione anonima:\n  "<ul>"\n    "<li>Cerca e naviga direttamente nell’app.</li>"\n    "<li>Blocca il tracciamento (o aggiorna le impostazioni per consentirlo).</li>"\n    "<li>Utilizza “Elimina” per rimuovere i cookie così come la cronologia di ricerca e navigazione.</li>"\n  "</ul>\n</p>\n<p>%1$s è realizzato da Mozilla. La nostra missione è promuovere un Internet integro e aperto.<br/>\n<a href="%2$s">Ulteriori informazioni</a></p></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Prendi il controllo con %1$s.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Utilizzalo per la navigazione anonima:\n  "<ul>"\n    "<li>Cerca e naviga direttamente nell&#8217;app.</li>"\n    "<li>Blocca il tracciamento (o aggiorna le impostazioni per consentirlo).</li>"\n    "<li>Utilizza &#8220;Elimina&#8221; per rimuovere i cookie cos&#236; come la cronologia di ricerca e navigazione.</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#232; realizzato da Mozilla. La nostra missione &#232; promuovere un Internet integro e aperto.<br/>\n<a href="%2$s">Ulteriori informazioni</a></p>]]></string>
   <string name="preference_category_search">Ricerca</string>
   <string name="preference_search_engine_default">Predefinito</string>
   <string name="preference_dialog_title_search_engine">Motore di ricerca predefinito</string>

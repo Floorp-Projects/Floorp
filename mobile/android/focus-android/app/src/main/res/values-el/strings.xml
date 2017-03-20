@@ -1,14 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Ακύρωση</string>
+  <string name="action_ok">OK</string>
   <string name="urlbar_hint">Αναζήτηση ή πληκτρολόγηση διεύθυνσης</string>
   <string name="teaser">Αυτόματη ιδιωτική περιήγηση.\nΠεριήγηση. Διαγραφή. Επανάληψη.</string>
   <string name="feedback_erase">Το ιστορικό περιήγησής έχει εκκαθαριστεί.</string>
   <string name="search_hint">Αναζήτηση για %1$s</string>
-  <string name="menu_share">Κοινή χρήση</string>
+  <string name="menu_share">Κοινή χρήση…</string>
+  <string name="menu_open_with_default_browser">Άνοιγμα με %1$s</string>
+  <string name="menu_open_with_a_browser">Άνοιγμα με…</string>
   <string name="menu_settings">Ρυθμίσεις</string>
   <string name="menu_about">Πληροφορίες</string>
   <string name="menu_help">Βοήθεια</string>
   <string name="menu_rights">Τα δικαιώματά σας</string>
+  <string name="preference_category_search">Αναζήτηση</string>
+  <string name="preference_search_engine_default">Προεπιλογή</string>
+  <string name="preference_dialog_title_search_engine">Προεπιλεγμένη αναζήτηση</string>
   <string name="preference_category_privacy">Απόρρητο</string>
   <string name="preference_privacy_block_ads">Φραγή trackers διαφημίσεων</string>
   <string name="preference_privacy_block_analytics">Φραγή αναλυτικών trackers</string>
@@ -17,7 +24,37 @@
   <string name="preference_privacy_block_content_summary">Ίσως χαλάσει μερικά βίντεο και ιστοσελίδες</string>
   <string name="preference_category_performance">Απόδοση</string>
   <string name="preference_performance_block_webfonts">Φραγή γραμματοσειρών ιστού</string>
+  <string name="preference_performance_block_images">Φραγή εικόνων</string>
+  <string name="preference_default_browser">Ορισμός ως προεπιλεγμένο πρόγραμμα περιήγησης</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Αποστολή ανώνυμων δεδομένων χρήσης</string>
   <string name="preference_mozilla_telemetry_summary">Μάθετε περισσότερα</string>
+  <string name="preference_about">Σχετικά με το %1$s</string>
+  <string name="content_description_clear_input">Εκκαθάριση εισόδου</string>
+  <string name="content_description_dismiss_input">Απόρριψη</string>
+  <string name="content_description_erase">Διαγραφή ιστορικού περιήγησης</string>
+  <string name="content_description_lock">Ασφαλής σύνδεση</string>
+  <string name="accessibility_announcement_loading">Φόρτωση</string>
+  <string name="accessibility_announcement_loading_finished">Η ιστοσελίδα φορτώθηκε</string>
+  <string name="content_description_menu">Περισσότερες επιλογές</string>
+  <string name="content_description_forward">Πλοήγηση προς τα εμπρός</string>
+  <string name="content_description_reload">Επαναφόρτωση ιστοσελίδας</string>
+  <string name="firstrun_title">Περιηγηθείτε σαν να μην σάς παρακολουθεί κανείς.</string>
+  <string name="firstrun_button">OK, το \'πιασα!</string>
+  <string name="your_rights">Τα δικαιώματά σας</string>
+  <string name="external_app_prompt_title">Άνοιγμα συνδέσμου σε άλλη εφαρμογή</string>
+  <string name="external_app_prompt_no_app_title">Βρείτε μια εφαρμογή που μπορεί να ανοίξει το σύνδεσμο</string>
+  <string name="external_multiple_apps_matched_exit">Έξοδος από την ιδιωτική περιήγηση;</string>
+  <string name="errorpage_title">Πρόβλημα κατά τη φόρτωση της σελίδας</string>
+  <string name="errorpage_refresh">Δοκιμάστε ξανά</string>
+  <string name="error_connectionfailure_title">Αδυναμία σύνδεσης</string>
+  <string name="error_timeout_title">Το χρονικό όριο της σύνδεσης έληξε</string>
+  <string name="error_hostLookup_title">Ο διακομιστής δεν βρέθηκε</string>
+  <string name="error_malformedURI_title">Η διεύθυνση δεν είναι έγκυρη</string>
+  <string name="error_redirectLoop_title">Η σελίδα δεν ανακατευθύνεται κανονικά</string>
+  <string name="error_unsupportedprotocol_title">Η διεύθυνση δεν ήταν κατανοητή</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#917;&#957;&#948;&#941;&#967;&#949;&#964;&#945;&#953; &#957;&#945; &#967;&#961;&#949;&#953;&#945;&#963;&#964;&#949;&#943; &#957;&#945; &#949;&#947;&#954;&#945;&#964;&#945;&#963;&#964;&#942;&#963;&#949;&#964;&#949; &#940;&#955;&#955;&#959; &#955;&#959;&#947;&#953;&#963;&#956;&#953;&#954;&#972; &#947;&#953;&#945; &#957;&#945; &#945;&#957;&#959;&#943;&#958;&#949;&#964;&#949; &#945;&#965;&#964;&#942; &#964;&#951; &#948;&#953;&#949;&#973;&#952;&#965;&#957;&#963;&#951;.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Αποτυχία ασφαλούς σύνδεσης</string>
+  <string name="error_generic_title">Ωχ</string>
+  <string name="error_generic_message">Δεν μπορούμε να φορτώσουμε αυτή τη σελίδα για κάποιο λόγο.</string>
 </resources>

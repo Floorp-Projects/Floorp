@@ -13,6 +13,7 @@
   <string name="menu_about">À propos</string>
   <string name="menu_help">Aide</string>
   <string name="menu_rights">Droits de l’utilisateur</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vous aide &#224; rester aux commandes.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Utilisez-le comme un navigateur priv&#233;&#160;:\n<ul>\n<li>Effectuez des recherches et naviguez depuis l&#8217;application</li>\n<li>Bloquez les traqueurs (ou modifiez les param&#232;tres pour les autoriser)</li>\n<li>Effacez les cookies, ainsi que les historiques de navigation et de recherche</li>\n</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s est r&#233;alis&#233; par Mozilla. Notre mission est de d&#233;fendre l&#8217;ouverture et la bonne sant&#233; d&#8217;Internet.<br/>\n<a href="%2$s">En savoir plus</a></p>]]></string>
   <string name="preference_category_search">Recherche</string>
   <string name="preference_search_engine_default">Par défaut</string>
   <string name="preference_dialog_title_search_engine">Moteur de recherche par défaut</string>

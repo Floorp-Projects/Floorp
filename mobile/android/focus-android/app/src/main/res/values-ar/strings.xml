@@ -13,6 +13,7 @@
   <string name="menu_about">عن</string>
   <string name="menu_help">مساعدة</string>
   <string name="menu_rights">حقوقك</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1610;&#1593;&#1591;&#1610;&#1603; %1$s &#1575;&#1604;&#1583;&#1601;&#1577;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1575;&#1587;&#1578;&#1582;&#1583;&#1605;&#1607; &#1603;&#1605;&#1578;&#1589;&#1601;&#1581; &#1582;&#1575;&#1589;:\n  "<ul>"\n    "<li>&#1575;&#1576;&#1581;&#1579; &#1608;&#160;&#1578;&#1589;&#1601;&#1581; &#1605;&#1576;&#1575;&#1588;&#1585;&#1577; &#1601;&#1610; &#1575;&#1604;&#1578;&#1591;&#1576;&#1610;&#1602;</li>"\n    "<li>&#1575;&#1581;&#1592;&#1585; &#1575;&#1604;&#1605;&#1578;&#1593;&#1602;&#1576;&#1575;&#1578; (&#1571;&#1608; &#1581;&#1583;&#1617;&#1579; &#1575;&#1604;&#1573;&#1593;&#1583;&#1575;&#1583;&#1575;&#1578; &#1604;&#1604;&#1587;&#1605;&#1575;&#1581; &#1576;&#1575;&#1604;&#1605;&#1578;&#1593;&#1602;&#1576;&#1575;&#1578;)</li>"\n    "<li>&#1575;&#1605;&#1587;&#1581; &#1575;&#1604;&#1603;&#1593;&#1603;&#1575;&#1578; &#1576;&#1575;&#1604;&#1573;&#1590;&#1575;&#1601;&#1577; &#1573;&#1604;&#1609; &#1581;&#1584;&#1601; &#1578;&#1571;&#1585;&#1610;&#1582; &#1575;&#1604;&#1576;&#1581;&#1579; &#1608;&#160;&#1575;&#1604;&#1578;&#1589;&#1601;&#1581;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#8207;%1$s &#1605;&#1606;&#1578;&#1580; &#1605;&#1606; &#1605;&#1608;&#1586;&#1610;&#1604;&#1575;. &#1605;&#1607;&#1605;&#1578;&#1606;&#1575; &#1578;&#1588;&#1580;&#1610;&#1593; &#1573;&#1606;&#1578;&#1585;&#1606;&#1578; &#1605;&#1601;&#1578;&#1608;&#1581; &#1608;&#160;&#1589;&#1581;&#1610;.<br/>\n<a href="%2$s">&#1575;&#1591;&#1617;&#1604;&#1593; &#1593;&#1604;&#1609; &#1575;&#1604;&#1605;&#1586;&#1610;&#1583;</a></p>]]></string>
   <string name="preference_category_search">ابحث</string>
   <string name="preference_search_engine_default">المبدئي</string>
   <string name="preference_dialog_title_search_engine">محرك البحث المبدئي</string>
@@ -29,6 +30,7 @@
   <string name="preference_category_mozilla">موزيلا</string>
   <string name="preference_mozilla_telemetry">أرسل بيانات استخدام مجهّلة</string>
   <string name="preference_mozilla_telemetry_summary">اطّلع على المزيد</string>
+  <string name="preference_about">عن %1$s</string>
   <string name="content_description_clear_input">امسح الإدخال</string>
   <string name="content_description_dismiss_input">غادِر</string>
   <string name="content_description_erase">امسح تأريخ التصفح</string>
@@ -43,6 +45,10 @@
   <string name="firstrun_button">حسنًا، فهمت</string>
   <string name="firstrun_footer">للتوضيح؛ المواقع و الخدمات التي تستخدمها يمكنها أن تعرف أين كنت.</string>
   <string name="your_rights">حقوقك</string>
+  <string name="external_app_prompt_title">افتح الرابط في تطبيق آخر</string>
+  <string name="external_app_prompt">يمكنك مغادرة %1$s لفتح هذا الرابط في %2$s.</string>
+  <string name="external_app_prompt_no_app_title">ابحث عن تطبيق يدعم فتح الرابط</string>
+  <string name="external_app_prompt_no_app">لا يوجد أي تطبيق على جهازك يدعم فتح هذا الرابط. يمكنك مغادرة %1$s للبحث في %2$s عن تطبيق يدعم الرابط.</string>
   <string name="external_multiple_apps_matched_exit">أتريد مغادرة التصفح الخاص؟</string>
   <string name="errorpage_title">هناك مشكلة في تحميل الصفحة</string>
   <string name="errorpage_refresh">أعِد المحاولة</string>

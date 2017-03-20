@@ -3,7 +3,7 @@
   <string name="action_cancel">Cancelar</string>
   <string name="action_ok">Vale</string>
   <string name="urlbar_hint">Buscar o escribir dirección</string>
-  <string name="teaser">Navegación privada automática.\nNavegar. Eliminar. Repetir.</string>
+  <string name="teaser">Navegación privada automática.\nNavega. Borra. Repite.</string>
   <string name="feedback_erase">Se ha eliminado tu historial de búsqueda.</string>
   <string name="search_hint">Buscar %1$s</string>
   <string name="menu_share">Compartir…</string>
@@ -13,7 +13,7 @@
   <string name="menu_about">Acerca de</string>
   <string name="menu_help">Ayuda</string>
   <string name="menu_rights">Tus derechos</string>
-  <string name="about_content"><p>%1$s te da el control.</p>\n<p>"Úsalo como navegador privado:\n  "<ul>"\n    "<li>Busca y navega en la propia aplicación</li>"\n    "<li>Bloquea a los rastreadores (o actualiza los ajustes para permitirlos)</li>"\n    "<li>Limpia para borrar cookies y los historiales de búsqueda y navegación</li>"\n  "</ul>\n</p>\n<p>Mozilla es la autora de %1$s. Nuestra misión es promover un Internet saludable y abierto.<br/>\n<a href="%2$s">Descubre más</a></p></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s te da el control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#218;salo como navegador privado:\n  "<ul>"\n    "<li>Busca y navega en la propia aplicaci&#243;n</li>"\n    "<li>Bloquea a los rastreadores (o actualiza los ajustes para permitirlos)</li>"\n    "<li>Limpia para borrar cookies y los historiales de b&#250;squeda y navegaci&#243;n</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Mozilla es la autora de %1$s. Nuestra misi&#243;n es promover un Internet saludable y abierto.<br/>\n<a href="%2$s">Descubre m&#225;s</a></p>]]></string>
   <string name="preference_category_search">Búsqueda</string>
   <string name="preference_search_engine_default">Predeterminado</string>
   <string name="preference_dialog_title_search_engine">Buscador predeterminado</string>
@@ -22,7 +22,7 @@
   <string name="preference_privacy_block_analytics">Bloquear rastreadores analíticos</string>
   <string name="preference_privacy_block_social">Bloquear rastreadores sociales</string>
   <string name="preference_privacy_block_content">Bloquear rastreadores de otros contenidos</string>
-  <string name="preference_privacy_block_content_summary">Puede que algunos videos y páginas web no funcionen bien</string>
+  <string name="preference_privacy_block_content_summary">Puede interferir con algunos vídeos y páginas web</string>
   <string name="preference_category_performance">Rendimiento</string>
   <string name="preference_performance_block_webfonts">Bloquear fuentes web</string>
   <string name="preference_performance_block_images">Bloquear imágenes</string>
@@ -40,7 +40,7 @@
   <string name="content_description_menu">Más opciones</string>
   <string name="content_description_forward">Ir hacia delante</string>
   <string name="content_description_reload">Recargar página</string>
-  <string name="firstrun_title">Navega como si nadie te estuviera viendo.</string>
+  <string name="firstrun_title">Navega sin que nadie te observe.</string>
   <string name="firstrun_description">Bloquea automáticamente a los rastreadores online mientras navegas. Luego, elimina las páginas visitadas, búsquedas, cookies y contraseñas de tu dispositivo.</string>
   <string name="firstrun_button">¡Entendido!</string>
   <string name="firstrun_footer">Para ser honestos, aún así las páginas y servicios pueden saber dónde has estado.</string>
@@ -58,13 +58,13 @@
   <string name="error_hostLookup_title">No se encontró el servidor</string>
   <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Comprueba que la direcci&#243;n no tiene nin&#250;n error como\n          "<strong>ww</strong>".example.com en vez de\n          "<strong>www</strong>.example.com</li>"\n        "<li>Si no puedes cargar ninguna p&#225;gina, comprueba la conexi&#243;n de datos o Wi-Fi de tu dispositivo.</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">La dirección no es válida</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Las direcciones web se suelen escribir as&#237;: "<strong>http://www.example.com/</strong></li>"\n  "<li>Comprueba bien que utilizas las barras laterales (<strong/>).</li></ul>]]></string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Las direcciones web se suelen escribir as&#237;: "<strong>http://www.example.com/</strong></li>"\n  "<li>Comprueba bien que utilizas las barras laterales (<strong>/</strong>).</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">La página no se está redireccionando adecuadamente</string>
   <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>A veces, el problema se produce por desactivar o no aceptar el uso de cookies.</li>\n</ul>]]></string>
   <string name="error_unsupportedprotocol_title">No se entendió la dirección</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Puede que necesites instalar otro software para abrir esta direcci&#243;n.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Falló la conexión segura</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Puede que haya un problema con la configuraci&#243;n sel servidor o puede\nque alguien est&#233; intentando suplantar el servidor.</li>"\n  "<li>Si ya te hab&#237;as conectado antes a este servidor sin problemas, puede que el error\nsea temporal y puedes intentarlo m&#225;s tarde.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Puede que haya un problema con la configuraci&#243;n del servidor o puede\nque alguien est&#233; intentando suplantar el servidor.</li>"\n  "<li>Si ya te hab&#237;as conectado antes a este servidor sin problemas, puede que el error\nsea temporal y puedes intentarlo m&#225;s tarde.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Por alguna razón, no podemos cargar esta página.</string>
 </resources>

@@ -13,7 +13,7 @@
   <string name="menu_about">关于</string>
   <string name="menu_help">帮助</string>
   <string name="menu_rights">您的权利</string>
-  <string name="about_content"><p>%1$s 让您掌控线上生活。</p>\n<p>"使用它作为隐私浏览器：\n  "<ul>"\n    "<li>在应用中搜索和浏览</li>"\n    "<li>屏蔽跟踪器（或更新设置以允许跟踪器）</li>"\n    "<li>自动删除 Cookie 及搜索和浏览记录</li>"\n  "</ul>\n</p>\n<p>%1$s 由 Mozilla 出品。我们的使命是促成健康、开放的互联网。<br/>\n<a href="%2$s">详细了解</a></p></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35753;&#24744;&#25484;&#25511;&#32447;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#20351;&#29992;&#23427;&#20316;&#20026;&#38544;&#31169;&#27983;&#35272;&#22120;&#65306;\n  "<ul>"\n    "<li>&#22312;&#24212;&#29992;&#20013;&#25628;&#32034;&#21644;&#27983;&#35272;</li>"\n    "<li>&#23631;&#34109;&#36319;&#36394;&#22120;&#65288;&#25110;&#26356;&#26032;&#35774;&#32622;&#20197;&#20801;&#35768;&#36319;&#36394;&#22120;&#65289;</li>"\n    "<li>&#33258;&#21160;&#21024;&#38500; Cookie &#21450;&#25628;&#32034;&#21644;&#27983;&#35272;&#35760;&#24405;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#30001; Mozilla &#20986;&#21697;&#12290;&#25105;&#20204;&#30340;&#20351;&#21629;&#26159;&#20419;&#25104;&#20581;&#24247;&#12289;&#24320;&#25918;&#30340;&#20114;&#32852;&#32593;&#12290;<br/>\n<a href="%2$s">&#35814;&#32454;&#20102;&#35299;</a></p>]]></string>
   <string name="preference_category_search">搜索</string>
   <string name="preference_search_engine_default">默认</string>
   <string name="preference_dialog_title_search_engine">默认搜索</string>

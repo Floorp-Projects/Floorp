@@ -13,7 +13,7 @@
   <string name="menu_about">Oer</string>
   <string name="menu_help">Help</string>
   <string name="menu_rights">Jo rjochten</string>
-  <string name="about_content"><p>%1$s jout jo de kontrôle.</p>\n<p>"Brûk as in priveebrowser:\n  "<ul>"\n    "<li>Streekrjocht fan de app út sykje en browse</li>"\n    "<li>Trackers blokkearje (of ynstellingen bywurkje om se ta te stean)</li>"\n    "<li>Wiskjen smyt sawol cookies as syk- en navigaasjeskiednis fuort</li>"\n  "</ul>\n</p>\n<p>%1$s wurdt makke troch Mozilla. Us misje is it fersoargjen fan in sûn en iepen ynternet.<br/>\n<a href="%2$s">Mear ynfo</a></p></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s jout jo de kontr&#244;le.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Br&#251;k as in priveebrowser:\n  "<ul>"\n    "<li>Streekrjocht fan de app &#250;t sykje en browse</li>"\n    "<li>Trackers blokkearje (of ynstellingen bywurkje om se ta te stean)</li>"\n    "<li>Wiskjen smyt sawol cookies as syk- en navigaasjeskiednis fuort</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wurdt makke troch Mozilla. Us misje is it fersoargjen fan in s&#251;n en iepen ynternet.<br/>\n<a href="%2$s">Mear ynfo</a></p>]]></string>
   <string name="preference_category_search">Sykje</string>
   <string name="preference_search_engine_default">Standert</string>
   <string name="preference_dialog_title_search_engine">Standertsykmasine</string>
