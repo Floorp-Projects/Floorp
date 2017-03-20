@@ -48,6 +48,9 @@ const BrowserListener = {
              .allowScriptsToClose();
     }
 
+    // Force external links to open in tabs.
+    docShell.isAppTab = true;
+
     addEventListener("DOMWindowCreated", this, true);
     addEventListener("load", this, true);
     addEventListener("DOMContentLoaded", this, true);
