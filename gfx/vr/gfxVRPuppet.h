@@ -99,13 +99,15 @@ protected:
   VRSystemManagerPuppet();
 
 private:
-  virtual void HandleButtonPress(uint32_t aControllerIndex,
-                                 uint64_t aButtonPressed) override;
-  virtual void HandleAxisMove(uint32_t aControllerIndex, uint32_t aAxis,
-                              float aValue) override;
-  virtual void HandlePoseTracking(uint32_t aControllerIndex,
-                                  const dom::GamepadPoseState& aPose,
-                                  VRControllerHost* aController) override;
+  void HandleButtonPress(uint32_t aControllerIdx,
+                         uint32_t aButton,
+                         uint64_t aButtonMask,
+                         uint64_t aButtonPressed);
+  void HandleAxisMove(uint32_t aControllerIndex, uint32_t aAxis,
+                      float aValue);
+  void HandlePoseTracking(uint32_t aControllerIndex,
+                          const dom::GamepadPoseState& aPose,
+                          VRControllerHost* aController);
 
   // there can only be one
   RefPtr<impl::VRDisplayPuppet> mPuppetHMD;

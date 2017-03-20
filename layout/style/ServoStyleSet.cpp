@@ -8,6 +8,7 @@
 
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/ServoRestyleManager.h"
+#include "mozilla/dom/AnonymousContent.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
@@ -60,6 +61,8 @@ ServoStyleSet::Init(nsPresContext* aPresContext)
 void
 ServoStyleSet::BeginShutdown()
 {
+  nsIDocument* doc = mPresContext->Document();
+
   // It's important to do this before mRawSet is released, since that will cause
   // a RuleTree GC, which needs to happen after we have dropped all of the
   // document's strong references to RuleNodes.  We also need to do it here,
@@ -72,9 +75,17 @@ ServoStyleSet::BeginShutdown()
   // Note that this is pretty bad for performance; we should find a way to
   // get by with the ServoNodeDatas being dropped as part of the document
   // going away.
-  DocumentStyleRootIterator iter(mPresContext->Document());
+  DocumentStyleRootIterator iter(doc);
   while (Element* root = iter.GetNextStyleRoot()) {
     ServoRestyleManager::ClearServoDataFromSubtree(root);
+  }
+
+  // We can also have some cloned canvas custom content stored in the document
+  // (as done in nsCanvasFrame::DestroyFrom), due to bug 1348480, when we create
+  // the clone (wastefully) during PresShell destruction.  Clear data from that
+  // clone.
+  for (RefPtr<AnonymousContent>& ac : doc->GetAnonymousContents()) {
+    ServoRestyleManager::ClearServoDataFromSubtree(ac->GetContentNode());
   }
 }
 

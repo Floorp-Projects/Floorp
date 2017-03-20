@@ -1045,6 +1045,17 @@ class InvokeArgs : public detail::GenericArgsBase<NO_CONSTRUCT>
     explicit InvokeArgs(JSContext* cx) : Base(cx) {}
 };
 
+/** Function call args of statically-unknown count. */
+class InvokeArgsMaybeIgnoresReturnValue : public detail::GenericArgsBase<NO_CONSTRUCT>
+{
+    using Base = detail::GenericArgsBase<NO_CONSTRUCT>;
+
+  public:
+    explicit InvokeArgsMaybeIgnoresReturnValue(JSContext* cx, bool ignoresReturnValue) : Base(cx) {
+        this->ignoresReturnValue_ = ignoresReturnValue;
+    }
+};
+
 /** Function call args of statically-known count. */
 template <size_t N>
 class FixedInvokeArgs : public detail::FixedArgsBase<NO_CONSTRUCT, N>

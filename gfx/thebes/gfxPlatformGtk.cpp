@@ -744,14 +744,10 @@ public:
           return;
         }
 
-        mGLContext = gl::GLContextGLX::CreateGLContext(
-            gl::CreateContextFlags::NONE,
-            gl::SurfaceCaps::Any(),
-            false,
-            mXDisplay,
-            root,
-            config,
-            false);
+        mGLContext = gl::GLContextGLX::CreateGLContext(gl::CreateContextFlags::NONE,
+                                                       gl::SurfaceCaps::Any(), false,
+                                                       mXDisplay, root, config, false,
+                                                       nullptr);
 
         if (!mGLContext) {
           lock.NotifyAll();

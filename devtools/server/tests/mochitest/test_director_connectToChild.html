@@ -14,24 +14,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
 <pre id="test">
   <script type="application/javascript" src="./director-helpers.js"></script>
   <script type="application/javascript">
-window.onload = function() {
+"use strict";
+
+window.onload = function () {
   Task.spawn(function* () {
     SimpleTest.waitForExplicitFinish();
 
-    var tests = [
+    let tests = [
       runPropagateDirectorScriptsToChildTest,
     ].map((testCase) => {
       return function* () {
         setup();
         yield testCase().then(null, (e) => {
-          ok(false, "Exception during testCase run: " + [e, e.fileName, e.lineNumber].join("\n\t"));
+          ok(false, "Exception during testCase run: "
+                    + [e, e.fileName, e.lineNumber].join("\n\t"));
         });
 
         teardown();
       };
     });
 
-    for (var test of tests) {
+    for (let test of tests) {
       yield test();
     }
 
@@ -43,7 +46,7 @@ function setup() {
   if (!DebuggerServer.initialized) {
     DebuggerServer.init(() => true);
     DebuggerServer.addBrowserActors();
-    SimpleTest.registerCleanupFunction(function() {
+    SimpleTest.registerCleanupFunction(function () {
       DebuggerServer.destroy();
     });
   }
@@ -54,10 +57,6 @@ function teardown() {
   DebuggerServer.destroy();
 }
 
-/***********************************
- *  test cases
- **********************************/
-
 function runPropagateDirectorScriptsToChildTest() {
   let iframe = document.createElement("iframe");
   iframe.mozbrowser = true;
@@ -65,9 +64,9 @@ function runPropagateDirectorScriptsToChildTest() {
   document.body.appendChild(iframe);
 
   return Task.spawn(function* () {
-    var { client, root, transport } = yield newConnectedDebuggerClient();
+    let { client, root, transport } = yield newConnectedDebuggerClient();
 
-    var directorRegistryClient = new DirectorRegistryFront(client, root);
+    let directorRegistryClient = new DirectorRegistryFront(client, root);
 
     // install a director script
     yield directorRegistryClient.install("testPropagatedDirectorScript", {
@@ -75,19 +74,19 @@ function runPropagateDirectorScriptsToChildTest() {
       scriptOptions: {}
     });
 
-    var conn = transport._serverConnection;
-    var childActor = yield DebuggerServer.connectToChild(conn, iframe);
+    let conn = transport._serverConnection;
+    let childActor = yield DebuggerServer.connectToChild(conn, iframe);
 
     ok(typeof childActor.directorManagerActor !== "undefined",
        "childActor.directorActor should be defined");
 
-    var childDirectorManagerClient = new DirectorManagerFront(client, childActor);
+    let childDirectorManagerClient = new DirectorManagerFront(client, childActor);
 
-    var directorScriptList = yield childDirectorManagerClient.list();
+    let directorScriptList = yield childDirectorManagerClient.list();
 
     ok(directorScriptList.installed.length === 1 &&
        directorScriptList.installed[0] === "testPropagatedDirectorScript",
-       "director scripts propagated correctly")
+       "director scripts propagated correctly");
 
     yield client.close();
   });

@@ -3667,8 +3667,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
   }
  };
 }();
-exports.version = '1.7.359';
-exports.build = 'd471e356';
+exports.version = '1.7.367';
+exports.build = 'f0c45f03';
 exports.getDocument = getDocument;
 exports.PDFDataRangeTransport = PDFDataRangeTransport;
 exports.PDFWorker = PDFWorker;
@@ -4685,8 +4685,8 @@ if (!globalScope.PDFJS) {
  globalScope.PDFJS = {};
 }
 var PDFJS = globalScope.PDFJS;
-PDFJS.version = '1.7.359';
-PDFJS.build = 'd471e356';
+PDFJS.version = '1.7.367';
+PDFJS.build = 'f0c45f03';
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
  sharedUtil.setVerbosityLevel(PDFJS.verbosity);
@@ -7051,7 +7051,7 @@ var TilingPattern = function TilingPatternClosure() {
    0,
    0
   ];
-  this.bbox = IR[4];
+  this.bbox = Util.normalizeRect(IR[4]);
   this.xstep = IR[5];
   this.ystep = IR[6];
   this.paintType = IR[7];
@@ -7135,7 +7135,7 @@ var TilingPattern = function TilingPatternClosure() {
    this.ctx.scale(1 / scale[0], 1 / scale[1]);
   },
   clipBbox: function clipBbox(graphics, bbox, x0, y0, x1, y1) {
-   if (bbox && isArray(bbox) && bbox.length === 4) {
+   if (isArray(bbox) && bbox.length === 4) {
     var bboxWidth = x1 - x0;
     var bboxHeight = y1 - y0;
     graphics.ctx.rect(x0, y0, bboxWidth, bboxHeight);
@@ -7186,8 +7186,8 @@ exports.TilingPattern = TilingPattern;
 
 "use strict";
 
-var pdfjsVersion = '1.7.359';
-var pdfjsBuild = 'd471e356';
+var pdfjsVersion = '1.7.367';
+var pdfjsBuild = 'f0c45f03';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(8);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);

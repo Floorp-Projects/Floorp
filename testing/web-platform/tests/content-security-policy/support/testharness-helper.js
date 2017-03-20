@@ -1,5 +1,5 @@
 function assert_no_csp_event_for_url(test, url) {
-  document.addEventListener("securitypolicyviolation", test.step_func(e => {
+  self.addEventListener("securitypolicyviolation", test.step_func(e => {
     if (e.blockedURI !== url)
       return;
     assert_unreached("SecurityPolicyViolation event fired for " + url);
@@ -12,7 +12,7 @@ function assert_no_event(test, obj, name) {
 
 function waitUntilCSPEventForURL(test, url) {
   return new Promise((resolve, reject) => {
-    document.addEventListener("securitypolicyviolation", test.step_func(e => {
+    self.addEventListener("securitypolicyviolation", test.step_func(e => {
       if (e.blockedURI == url)
         resolve(e);
     }));
@@ -128,4 +128,3 @@ function assert_service_worker_is_blocked(url, description) {
     ]);
   }, description);
 }
-

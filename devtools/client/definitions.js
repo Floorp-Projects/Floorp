@@ -511,11 +511,10 @@ exports.ToolboxButtons = [
                       osString == "Darwin" ? "Cmd+Opt+M" : "Ctrl+Shift+M"),
     isTargetSupported: target => target.isLocalTab,
     onClick(event, toolbox) {
-      let browserWindow = toolbox.win.top;
-      ResponsiveUIManager.handleGcliCommand(browserWindow,
-        browserWindow.gBrowser.selectedTab,
-        "resize toggle",
-        null);
+      let tab = toolbox.target.tab;
+      let browserWindow = tab.ownerDocument.defaultView;
+      ResponsiveUIManager.handleGcliCommand(browserWindow, tab,
+        "resize toggle", null);
     },
     isChecked(toolbox) {
       if (!toolbox.target.tab) {

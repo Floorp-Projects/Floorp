@@ -19,7 +19,7 @@ with open(os.path.join(here, "requirements.txt")) as f:
     deps = f.read().splitlines()
 
 # Browser-specific requirements
-requirements_files = glob.glob(os.path.join(here, "requirements_*.txt"))
+requirements_files = glob.glob("requirements_*.txt")
 
 profile_dest = None
 dest_exists = False

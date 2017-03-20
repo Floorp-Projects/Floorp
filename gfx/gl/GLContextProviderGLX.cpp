@@ -484,7 +484,7 @@ already_AddRefed<GLContextGLX>
 GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
                               bool isOffscreen, Display* display, GLXDrawable drawable,
                               GLXFBConfig cfg, bool deleteDrawable,
-                              gfxXlibSurface* pixmap, ContextProfile profile)
+                              gfxXlibSurface* pixmap)
 {
     GLXLibrary& glx = sGLXLibrary;
 
@@ -517,7 +517,7 @@ GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
                 };
                 attrib_list.AppendElements(robust_attribs, MOZ_ARRAY_LENGTH(robust_attribs));
             }
-            if (profile == ContextProfile::OpenGLCore) {
+            if (!(flags & CreateContextFlags::REQUIRE_COMPAT_PROFILE)) {
                 int core_attribs[] = {
                     LOCAL_GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
                     LOCAL_GLX_CONTEXT_MINOR_VERSION_ARB, 2,
@@ -544,7 +544,7 @@ GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
 
         if (context) {
             glContext = new GLContextGLX(flags, caps, isOffscreen, display, drawable,
-                                         context, deleteDrawable, db, pixmap, profile);
+                                         context, deleteDrawable, db, pixmap);
             if (!glContext->Init())
                 error = true;
         } else {
@@ -710,8 +710,7 @@ GLContextGLX::GLContextGLX(
                   GLXContext aContext,
                   bool aDeleteDrawable,
                   bool aDoubleBuffered,
-                  gfxXlibSurface* aPixmap,
-                  ContextProfile profile)
+                  gfxXlibSurface* aPixmap)
     : GLContext(flags, caps, nullptr, isOffscreen),
       mContext(aContext),
       mDisplay(aDisplay),
@@ -722,9 +721,6 @@ GLContextGLX::GLContextGLX(
       mPixmap(aPixmap),
       mOwnsContext(true)
 {
-    MOZ_ASSERT(mGLX);
-    // See 899855
-    SetProfileVersion(profile, 200);
 }
 
 static bool
@@ -763,8 +759,7 @@ GLContextProviderGLX::CreateWrappingExisting(void* aContext, void* aSurface)
                              (GLXDrawable)aSurface, (GLXContext)aContext,
                              false, // aDeleteDrawable,
                              true,
-                             (gfxXlibSurface*)nullptr,
-                             ContextProfile::OpenGLCompatibility);
+                             (gfxXlibSurface*)nullptr);
 
         glContext->mOwnsContext = false;
         return glContext.forget();
@@ -805,22 +800,14 @@ CreateForWidget(Display* aXDisplay, Window aXWindow,
         return nullptr;
     }
 
-    SurfaceCaps caps = SurfaceCaps::Any();
-    RefPtr<GLContextGLX> gl;
+    CreateContextFlags flags;
     if (aWebRender) {
-      gl = GLContextGLX::CreateGLContext(CreateContextFlags::NONE,
-                                         caps, false,
-                                         aXDisplay, aXWindow, config,
-                                         //TODO: we might want to pass an additional bool to select GL core/compat
-                                         false, nullptr, ContextProfile::OpenGLCore); //WR: required GL 3.2+
+        flags = CreateContextFlags::NONE; // WR needs GL3.2+
     } else {
-      gl = GLContextGLX::CreateGLContext(CreateContextFlags::NONE,
-                                         caps, false,
-                                         aXDisplay, aXWindow, config,
-                                         false);
+        flags = CreateContextFlags::REQUIRE_COMPAT_PROFILE;
     }
-
-    return gl.forget();
+    return GLContextGLX::CreateGLContext(flags, SurfaceCaps::Any(), false, aXDisplay,
+                                         aXWindow, config, false, nullptr);
 }
 
 already_AddRefed<GLContext>
@@ -1001,8 +988,7 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
 
 static already_AddRefed<GLContextGLX>
 CreateOffscreenPixmapContext(CreateContextFlags flags, const IntSize& size,
-                             const SurfaceCaps& minCaps, nsACString* const out_failureId,
-                             ContextProfile profile = ContextProfile::OpenGLCompatibility)
+                             const SurfaceCaps& minCaps, nsACString* const out_failureId)
 {
     GLXLibrary* glx = &sGLXLibrary;
     if (!glx->EnsureInitialized())
@@ -1048,8 +1034,8 @@ CreateOffscreenPixmapContext(CreateContextFlags flags, const IntSize& size,
     if (error || serverError)
         return nullptr;
 
-    return GLContextGLX::CreateGLContext(flags, minCaps, true, display,
-                                         pixmap, config, true, surface, profile);
+    return GLContextGLX::CreateGLContext(flags, minCaps, true, display, pixmap, config,
+                                         true, surface);
 }
 
 /*static*/ already_AddRefed<GLContext>
@@ -1074,14 +1060,8 @@ GLContextProviderGLX::CreateOffscreen(const IntSize& size,
         minBackbufferCaps.stencil = false;
     }
 
-    ContextProfile profile = ContextProfile::OpenGLCore;
-    if (flags & CreateContextFlags::REQUIRE_COMPAT_PROFILE) {
-        profile = ContextProfile::OpenGLCompatibility;
-    }
-
     RefPtr<GLContext> gl;
-    gl = CreateOffscreenPixmapContext(flags, size, minBackbufferCaps, out_failureId,
-                                      profile);
+    gl = CreateOffscreenPixmapContext(flags, size, minBackbufferCaps, out_failureId);
     if (!gl)
         return nullptr;
 

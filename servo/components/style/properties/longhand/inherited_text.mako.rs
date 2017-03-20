@@ -169,6 +169,13 @@ ${helpers.single_keyword("hyphens", "manual none auto",
                          products="gecko", animatable=False, extra_prefixes="moz",
                          spec="https://drafts.csswg.org/css-text/#propdef-hyphens")}
 
+// TODO: Support <percentage>
+${helpers.single_keyword("-moz-text-size-adjust", "auto none",
+                         gecko_constant_prefix="NS_STYLE_TEXT_SIZE_ADJUST",
+                         products="gecko", animatable=False,
+                         spec="https://drafts.csswg.org/css-size-adjust/#adjustment-control",
+                         alias="-webkit-text-size-adjust")}
+
 ${helpers.predefined_type("text-indent",
                           "LengthOrPercentage",
                           "computed::LengthOrPercentage::Length(Au(0))",
@@ -308,7 +315,7 @@ ${helpers.single_keyword("text-align-last",
 </%helpers:longhand>
 
 // FIXME: This prop should be animatable.
-<%helpers:longhand name="letter-spacing" animatable="False"
+<%helpers:longhand name="letter-spacing" boxed="True" animatable="False"
                    spec="https://drafts.csswg.org/css-text/#propdef-letter-spacing">
     use std::fmt;
     use style_traits::ToCss;
@@ -811,7 +818,7 @@ ${helpers.single_keyword("text-align-last",
     }
 </%helpers:longhand>
 
-<%helpers:longhand name="text-emphasis-style" products="gecko" need_clone="True" animatable="False"
+<%helpers:longhand name="text-emphasis-style" products="gecko" need_clone="True" boxed="True" animatable="False"
                    spec="https://drafts.csswg.org/css-text-decor/#propdef-text-emphasis-style">
     use computed_values::writing_mode::T as writing_mode;
     use std::fmt;
@@ -1081,7 +1088,7 @@ ${helpers.predefined_type(
     "-moz-tab-size", "LengthOrNumber",
     "::values::Either::Second(8.0)",
     "parse_non_negative",
-    products="gecko", animatable=False,
+    products="gecko", boxed=True, animatable=False,
     spec="https://drafts.csswg.org/css-text-3/#tab-size-property")}
 
 
@@ -1102,7 +1109,7 @@ ${helpers.predefined_type(
     complex_color=True, need_clone=True,
     spec="https://compat.spec.whatwg.org/#the-webkit-text-stroke-color")}
 
-<%helpers:longhand products="gecko" name="-webkit-text-stroke-width" animatable="False"
+<%helpers:longhand products="gecko" name="-webkit-text-stroke-width" boxed="True" animatable="False"
                    spec="https://compat.spec.whatwg.org/#the-webkit-text-stroke-width">
     use app_units::Au;
     use std::fmt;

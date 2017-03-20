@@ -11,73 +11,124 @@ createHTML({ title: "Run enumerateDevices code", bug: "1046245" });
   Tests covering enumerateDevices API and deviceId constraint. Exercise code.
 */
 
-function mustSucceed(msg, f) {
-  return f().then(() => ok(true, msg + " must succeed"),
-                  e => is(e.name, null, msg + " must succeed: " + e.message));
+async function mustSucceed(msg, f) {
+  try {
+    await f();
+    ok(true, msg + " must succeed");
+  } catch (e) {
+    is(e.name, null, msg + " must succeed: " + e.message);
+  }
 }
 
-function mustFailWith(msg, reason, constraint, f) {
-  return f().then(() => ok(false, msg + " must fail"), e => {
-      is(e.name, reason, msg + " must fail: " + e.message);
-      if (constraint) {
-        is(e.constraint, constraint, msg + " must fail w/correct constraint.");
-      }
-    });
+async function mustFailWith(msg, reason, constraint, f) {
+  try {
+    await f();
+    ok(false, msg + " must fail");
+  } catch(e) {
+    is(e.name, reason, msg + " must fail: " + e.message);
+    if (constraint) {
+      is(e.constraint, constraint, msg + " must fail w/correct constraint.");
+    }
+  }
 }
 
 var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
+var gUM = c => navigator.mediaDevices.getUserMedia(c);
 
-runTest(() =>
-  pushPrefs(["media.navigator.streams.fake", true])
-  .then(() => navigator.mediaDevices.enumerateDevices())
-  .then(devices => {
-    ok(devices.length > 0, "At least one device found");
-    var jsoned = JSON.parse(JSON.stringify(devices));
-    is(jsoned[0].kind, devices[0].kind, "kind survived serializer");
-    is(jsoned[0].deviceId, devices[0].deviceId, "deviceId survived serializer");
-    return devices.reduce((p, d) => {
-      ok(d.kind == "videoinput" || d.kind == "audioinput", "Known device kind");
-      is(d.deviceId.length, 44, "Correct device id length");
-      ok(d.label.length !== undefined, "Device label: " + d.label);
-      is(d.groupId, "", "Don't support groupId yet");
-      var c = {};
-      c[d.kind == "videoinput" ? "video" : "audio"] = { deviceId: d.deviceId };
-      return p
-        .then(() => navigator.mediaDevices.getUserMedia(c))
-        .then(stream => {
-          stream.getTracks().forEach(track => {
-            is(typeof(track.label), "string", "Label is a string")
-            is(track.label, d.label, "Label is the device label")
-          })
-        });
-    }, Promise.resolve());
-  })
+var validateDevice = ({kind, label, deviceId, groupId}) => {
+  ok(kind == "videoinput" || kind == "audioinput", "Known device kind");
+  is(deviceId.length, 44, "deviceId length id as expected for Firefox");
+  ok(label.length !== undefined, "Device label: " + label);
+
+  // TODO: s/todo_// once Bug 1213453 is fixed.
+  todo_isnot(groupId, "", "groupId must be present.");
+}
+
+runTest(async () => {
+  await pushPrefs(["media.navigator.streams.fake", true]);
+
+  // Validate enumerated devices.
+
+  let devices = await navigator.mediaDevices.enumerateDevices();
+  ok(devices.length > 0, "At least one device found");
+  let jsoned = JSON.parse(JSON.stringify(devices));
+  is(jsoned[0].kind, devices[0].kind, "kind survived serializer");
+  is(jsoned[0].deviceId, devices[0].deviceId, "deviceId survived serializer");
+  for (let device of devices) {
+    validateDevice(device);
+    // Test deviceId constraint
+    let deviceId = device.deviceId;
+    let constraints = (device.kind == "videoinput") ? { video: { deviceId } }
+                                                    : { audio: { deviceId } };
+    for (let track of (await gUM(constraints)).getTracks()) {
+      is(typeof(track.label), "string", "Track label is a string");
+      is(track.label, device.label, "Track label is the device label");
+      track.stop();
+    }
+  }
+
+  const unknownId = "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=";
+
   // Check deviceId failure paths for video.
-  .then(() => mustSucceed("unknown plain deviceId on video",
-                          () => navigator.mediaDevices.getUserMedia({
-    video: { deviceId: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" },
-  })))
-  .then(() => mustSucceed("unknown plain deviceId on audio",
-                          () => navigator.mediaDevices.getUserMedia({
-    audio: { deviceId: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" },
-  })))
-  .then(() => mustFailWith("unknown exact deviceId on video",
-                           "OverconstrainedError", "deviceId",
-                           () => navigator.mediaDevices.getUserMedia({
-    video: { deviceId: { exact: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" } },
-  })))
-  .then(() => mustFailWith("unknown exact deviceId on audio",
-                           "OverconstrainedError", "deviceId",
-                           () => navigator.mediaDevices.getUserMedia({
-    audio: { deviceId: { exact: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" } },
-  })))
-  // Check the special case of no devices found.
-  .then(() => pushPrefs(["media.navigator.streams.fake", false],
-                        ["media.audio_loopback_dev", "none"],
-                        ["media.video_loopback_dev", "none"]))
-  .then(() => navigator.mediaDevices.enumerateDevices())
-  .then(devices => ok(devices.length === 0, "No devices found")));
 
+  await mustSucceed("unknown plain deviceId on video",
+                    () => gUM({ video: { deviceId: unknownId } }));
+  await mustSucceed("unknown plain deviceId on audio",
+                    () => gUM({ audio: { deviceId: unknownId } }));
+  await mustFailWith("unknown exact deviceId on video",
+                     "OverconstrainedError", "deviceId",
+                     () => gUM({ video: { deviceId: { exact: unknownId } } }));
+  await mustFailWith("unknown exact deviceId on audio",
+                     "OverconstrainedError", "deviceId",
+                     () => gUM({ audio: { deviceId: { exact: unknownId } } }));
+
+  // Check that deviceIds are stable for same origin and differ across origins.
+
+  const path = "/tests/dom/media/tests/mochitest/test_enumerateDevices_iframe.html";
+  const origins = ["http://mochi.test:8888", "http://test1.mochi.test:8888"];
+  info(window.location);
+
+  let haveDevicesMap = new Promise(resolve => {
+    let map = new Map();
+    window.addEventListener("message", ({origin, data}) => {
+      ok(origins.includes(origin), "Got message from expected origin");
+      map.set(origin, JSON.parse(data));
+      if (map.size < origins.length) return;
+      resolve(map);
+    });
+  });
+
+  await Promise.all(origins.map(origin => {
+    let iframe = document.createElement("iframe");
+    iframe.src = origin + path;
+    info(iframe.src);
+    document.documentElement.appendChild(iframe);
+    return new Promise(resolve => iframe.onload = resolve);
+  }));
+  let devicesMap = await haveDevicesMap;
+  let [sameOriginDevices, differentOriginDevices] = origins.map(o => devicesMap.get(o));
+
+  is(sameOriginDevices.length, devices.length);
+  is(differentOriginDevices.length, devices.length);
+  [...sameOriginDevices, ...differentOriginDevices].forEach(d => validateDevice(d));
+
+  for (let device of sameOriginDevices) {
+    ok(devices.find(d => d.deviceId == device.deviceId),
+       "Same origin deviceId for " + device.label + " must match");
+  }
+  for (let device of differentOriginDevices) {
+    // TODO: s/todo/ok/ once bug 1340163 is fixed.
+    todo(!devices.find(d => d.deviceId == device.deviceId),
+         "Different origin deviceId for " + device.label + " must be different");
+  }
+
+  // Check the special case of no devices found.
+  await pushPrefs(["media.navigator.streams.fake", false],
+                  ["media.audio_loopback_dev", "none"],
+                  ["media.video_loopback_dev", "none"]);
+  devices = await navigator.mediaDevices.enumerateDevices();
+  ok(devices.length === 0, "No devices found");
+});
 </script>
 </pre>
 </body>

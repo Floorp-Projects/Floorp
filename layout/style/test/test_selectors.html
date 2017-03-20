@@ -57,7 +57,7 @@ function run() {
 
         var idx = style_text.parentNode.sheet.cssRules.length - 1;
         if (namespaces == "") {
-            is(idx, 0, "unexpected rule index");
+            is(idx, 0, "unexpected rule index for " + selector);
         }
         if (idx < 0 ||
             style_text.parentNode.sheet.cssRules[idx].type !=
@@ -106,9 +106,14 @@ function run() {
 
         // But when we serialize the serialized result, we should get
         // the same text.
-        var ser2 = style_text.parentNode.sheet.cssRules[idx].selectorText;
-        is(ser2, ser1, "parse+serialize of selector \"" + selector +
-                       "\" is idempotent");
+        isnot(style_text.parentNode.sheet.cssRules[idx], undefined,
+              "parse of selector \"" + ser1 + "\" failed");
+
+        if (style_text.parentNode.sheet.cssRules[idx] !== undefined) {
+            var ser2 = style_text.parentNode.sheet.cssRules[idx].selectorText;
+            is(ser2, ser1, "parse+serialize of selector \"" + selector +
+                           "\" is idempotent");
+        }
 
         ifdoc.body.innerHTML = "";
         style_text.data = "";
@@ -1189,6 +1194,7 @@ function run() {
     test_balanced_unparseable(":-moz-any(div+p)");
     test_balanced_unparseable(":-moz-any(div > p)");
     test_balanced_unparseable(":-moz-any(div>p)");
+    test_balanced_unparseable(":-moz-any('foo')");
     test_parseable(":-moz-any(div, p)");
     test_parseable(":-moz-any( div , p  )");
     test_parseable(":-moz-any(div,p)");
@@ -1246,6 +1252,9 @@ function run() {
     test_balanced_unparseable("::-moz-color-swatch:first-child");
     test_balanced_unparseable("::-moz-color-swatch:hover#foo");
     test_balanced_unparseable(".foo::after:not(.bar) ~ h3");
+
+    test_parseable(":-moz-broken");
+    test_parseable(":-moz-loading");
 
     run_deferred_tests();
 }

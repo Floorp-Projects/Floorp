@@ -962,10 +962,9 @@ fn static_assert() {
     % endfor
 
     pub fn set_z_index(&mut self, v: longhands::z_index::computed_value::T) {
-        use properties::longhands::z_index::computed_value::T;
         match v {
-            T::Auto => self.gecko.mZIndex.set_value(CoordDataValue::Auto),
-            T::Number(n) => self.gecko.mZIndex.set_value(CoordDataValue::Integer(n)),
+            Either::First(n) => self.gecko.mZIndex.set_value(CoordDataValue::Integer(n)),
+            Either::Second(Auto) => self.gecko.mZIndex.set_value(CoordDataValue::Auto),
         }
     }
 
@@ -980,13 +979,12 @@ fn static_assert() {
     }
 
     pub fn clone_z_index(&self) -> longhands::z_index::computed_value::T {
-        use properties::longhands::z_index::computed_value::T;
         return match self.gecko.mZIndex.as_value() {
-            CoordDataValue::Auto => T::Auto,
-            CoordDataValue::Integer(n) => T::Number(n),
+            CoordDataValue::Integer(n) => Either::First(n),
+            CoordDataValue::Auto => Either::Second(Auto),
             _ => {
                 debug_assert!(false);
-                T::Number(0)
+                Either::First(0)
             }
         }
     }
@@ -2000,13 +1998,13 @@ fn static_assert() {
         use properties::longhands::${shorthand}_clip::single_value::computed_value::T;
 
         match servo {
-            T::border_box => StyleGeometryBox::Border,
-            T::padding_box => StyleGeometryBox::Padding,
-            T::content_box => StyleGeometryBox::Content,
+            T::border_box => StyleGeometryBox::BorderBox,
+            T::padding_box => StyleGeometryBox::PaddingBox,
+            T::content_box => StyleGeometryBox::ContentBox,
             % if shorthand == "mask":
-            T::fill_box => StyleGeometryBox::Fill,
-            T::stroke_box => StyleGeometryBox::Stroke,
-            T::view_box => StyleGeometryBox::View,
+            T::fill_box => StyleGeometryBox::FillBox,
+            T::stroke_box => StyleGeometryBox::StrokeBox,
+            T::view_box => StyleGeometryBox::ViewBox,
             T::no_clip => StyleGeometryBox::NoClip,
             % elif shorthand == "background":
             T::text => StyleGeometryBox::Text,
@@ -2019,13 +2017,13 @@ fn static_assert() {
         use properties::longhands::${shorthand}_origin::single_value::computed_value::T;
 
         match servo {
-            T::border_box => StyleGeometryBox::Border,
-            T::padding_box => StyleGeometryBox::Padding,
-            T::content_box => StyleGeometryBox::Content,
+            T::border_box => StyleGeometryBox::BorderBox,
+            T::padding_box => StyleGeometryBox::PaddingBox,
+            T::content_box => StyleGeometryBox::ContentBox,
             % if shorthand == "mask":
-            T::fill_box => StyleGeometryBox::Fill,
-            T::stroke_box => StyleGeometryBox::Stroke,
-            T::view_box => StyleGeometryBox::View,
+            T::fill_box => StyleGeometryBox::FillBox,
+            T::stroke_box => StyleGeometryBox::StrokeBox,
+            T::view_box => StyleGeometryBox::ViewBox,
             % endif
         }
     </%self:simple_image_array_property>
@@ -2608,7 +2606,7 @@ fn static_assert() {
 
 <%self:impl_trait style_struct_name="InheritedText"
                   skip_longhands="text-align text-emphasis-style text-shadow line-height letter-spacing word-spacing
-                                  -webkit-text-stroke-width text-emphasis-position -moz-tab-size">
+                                  -webkit-text-stroke-width text-emphasis-position -moz-tab-size -moz-text-size-adjust">
 
     <% text_align_keyword = Keyword("text-align", "start end left right center justify -moz-center -moz-left " +
                                                   "-moz-right match-parent char") %>
@@ -2790,6 +2788,10 @@ fn static_assert() {
     }
 
     <%call expr="impl_coord_copy('_moz_tab_size', 'mTabSize')"></%call>
+
+    <% text_size_adjust_keyword = Keyword("text-size-adjust", "auto none") %>
+
+    ${impl_keyword('_moz_text_size_adjust', 'mTextSizeAdjust', text_size_adjust_keyword, need_clone=False)}
 
 </%self:impl_trait>
 
@@ -3191,11 +3193,11 @@ clip-path
     pub fn set_column_count(&mut self, v: longhands::column_count::computed_value::T) {
         use gecko_bindings::structs::{NS_STYLE_COLUMN_COUNT_AUTO, nsStyleColumn_kMaxColumnCount};
 
-        self.gecko.mColumnCount = match v.0 {
-            Some(number) => unsafe {
-                cmp::min(number, nsStyleColumn_kMaxColumnCount)
+        self.gecko.mColumnCount = match v {
+            Either::First(number) => unsafe {
+                cmp::min(number as u32, nsStyleColumn_kMaxColumnCount)
             },
-            None => NS_STYLE_COLUMN_COUNT_AUTO
+            Either::Second(Auto) => NS_STYLE_COLUMN_COUNT_AUTO
         };
     }
 
@@ -3336,7 +3338,7 @@ clip-path
 </%self:impl_trait>
 
 <%self:impl_trait style_struct_name="XUL"
-                  skip_longhands="-moz-stack-sizing">
+                  skip_longhands="-moz-stack-sizing -moz-box-ordinal-group">
 
     #[allow(non_snake_case)]
     pub fn set__moz_stack_sizing(&mut self, v: longhands::_moz_stack_sizing::computed_value::T) {
@@ -3345,6 +3347,13 @@ clip-path
     }
 
     ${impl_simple_copy('_moz_stack_sizing', 'mStretchStack')}
+
+    #[allow(non_snake_case)]
+    pub fn set__moz_box_ordinal_group(&mut self, v: i32) {
+        self.gecko.mBoxOrdinal = v as u32;
+    }
+
+    ${impl_simple_copy("_moz_box_ordinal_group", "mBoxOrdinal")}
 </%self:impl_trait>
 
 <%def name="define_ffi_struct_accessor(style_struct)">

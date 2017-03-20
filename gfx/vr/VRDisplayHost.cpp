@@ -164,18 +164,6 @@ VRControllerHost::GetControllerInfo() const
 }
 
 void
-VRControllerHost::SetIndex(uint32_t aIndex)
-{
-  mIndex = aIndex;
-}
-
-uint32_t
-VRControllerHost::GetIndex()
-{
-  return mIndex;
-}
-
-void
 VRControllerHost::SetButtonPressed(uint64_t aBit)
 {
   mButtonPressed = aBit;

@@ -86,7 +86,7 @@ add_task(function* testExecuteScript() {
 
         // If we have the earliest valid states for each script, we're done.
         // Otherwise, try again.
-        success = (states[0] == "loading" || DEBUG &&
+        success = ((states[0] == "loading" || DEBUG) &&
                    states[1] == "interactive" &&
                    states[2] == "complete");
       }

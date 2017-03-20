@@ -668,6 +668,7 @@ class ICSetProp_Fallback : public ICFallbackStub
 
 // Call
 //      JSOP_CALL
+//      JSOP_CALL_IGNORES_RV
 //      JSOP_FUNAPPLY
 //      JSOP_FUNCALL
 //      JSOP_NEW
@@ -938,6 +939,7 @@ class ICCall_Native : public ICMonitoredStub
       protected:
         ICStub* firstMonitorStub_;
         bool isConstructing_;
+        bool ignoresReturnValue_;
         bool isSpread_;
         RootedFunction callee_;
         RootedObject templateObject_;
@@ -947,17 +949,19 @@ class ICCall_Native : public ICMonitoredStub
         virtual int32_t getKey() const {
             return static_cast<int32_t>(engine_) |
                   (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(isConstructing_) << 17) |
-                  (static_cast<int32_t>(isSpread_) << 18);
+                  (static_cast<int32_t>(isSpread_) << 17) |
+                  (static_cast<int32_t>(isConstructing_) << 18) |
+                  (static_cast<int32_t>(ignoresReturnValue_) << 19);
         }
 
       public:
         Compiler(JSContext* cx, ICStub* firstMonitorStub,
                  HandleFunction callee, HandleObject templateObject,
-                 bool isConstructing, bool isSpread, uint32_t pcOffset)
+                 bool isConstructing, bool ignoresReturnValue, bool isSpread, uint32_t pcOffset)
           : ICCallStubCompiler(cx, ICStub::Call_Native),
             firstMonitorStub_(firstMonitorStub),
             isConstructing_(isConstructing),
+            ignoresReturnValue_(ignoresReturnValue),
             isSpread_(isSpread),
             callee_(cx, callee),
             templateObject_(cx, templateObject),

@@ -3890,3 +3890,11 @@ Element::ClearServoData() {
   MOZ_CRASH("Accessing servo node data in non-stylo build");
 #endif
 }
+
+void
+Element::SetCustomElementData(CustomElementData* aData)
+{
+  nsDOMSlots *slots = DOMSlots();
+  MOZ_ASSERT(!slots->mCustomElementData, "Custom element data may not be changed once set.");
+  slots->mCustomElementData = aData;
+}

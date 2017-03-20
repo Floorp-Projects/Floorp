@@ -169,7 +169,7 @@ class EventData:
         rcc_key = 'release_channel_collection'
         rcc = definition.get(rcc_key, 'opt-in')
         allowed_rcc = ["opt-in", "opt-out"]
-        if not rcc in allowed_rcc:
+        if rcc not in allowed_rcc:
             raise ValueError, "%s: value for %s should be one of: %s" %\
                               (self.identifier, rcc_key, ", ".join(allowed_rcc))
 
@@ -190,7 +190,7 @@ class EventData:
                          regex=IDENTIFIER_PATTERN)
 
         # Check expiry.
-        if not 'expiry_version' in definition and not 'expiry_date' in definition:
+        if 'expiry_version' not in definition and 'expiry_date' not in definition:
             raise KeyError, "%s: event is missing an expiration - either expiry_version or expiry_date is required" %\
                             (self.identifier)
         expiry_date = definition.get('expiry_date')

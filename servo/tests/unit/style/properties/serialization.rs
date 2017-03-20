@@ -237,10 +237,10 @@ mod shorthand_serialization {
           let px_30 = BorderWidth::from_length(Length::from_px(30f32));
           let px_10 = BorderWidth::from_length(Length::from_px(10f32));
 
-          properties.push(PropertyDeclaration::BorderTopWidth(px_30.clone()));
-          properties.push(PropertyDeclaration::BorderRightWidth(px_30.clone()));
-          properties.push(PropertyDeclaration::BorderBottomWidth(px_30.clone()));
-          properties.push(PropertyDeclaration::BorderLeftWidth(px_10.clone()));
+          properties.push(PropertyDeclaration::BorderTopWidth(Box::new(px_30.clone())));
+          properties.push(PropertyDeclaration::BorderRightWidth(Box::new(px_30.clone())));
+          properties.push(PropertyDeclaration::BorderBottomWidth(Box::new(px_30.clone())));
+          properties.push(PropertyDeclaration::BorderLeftWidth(Box::new(px_10.clone())));
 
           let blue = CSSColor {
               parsed: ComputedColor::RGBA(RGBA::new(0, 0, 255, 255)),
@@ -270,10 +270,10 @@ mod shorthand_serialization {
 
           let px_30 = BorderWidth::from_length(Length::from_px(30f32));
 
-          properties.push(PropertyDeclaration::BorderTopWidth(px_30.clone()));
-          properties.push(PropertyDeclaration::BorderRightWidth(px_30.clone()));
-          properties.push(PropertyDeclaration::BorderBottomWidth(px_30.clone()));
-          properties.push(PropertyDeclaration::BorderLeftWidth(px_30.clone()));
+          properties.push(PropertyDeclaration::BorderTopWidth(Box::new(px_30.clone())));
+          properties.push(PropertyDeclaration::BorderRightWidth(Box::new(px_30.clone())));
+          properties.push(PropertyDeclaration::BorderBottomWidth(Box::new(px_30.clone())));
+          properties.push(PropertyDeclaration::BorderLeftWidth(Box::new(px_30.clone())));
 
           let blue = CSSColor {
               parsed: ComputedColor::RGBA(RGBA::new(0, 0, 255, 255)),
@@ -314,10 +314,10 @@ mod shorthand_serialization {
             let right_px = BorderWidth::from_length(Length::from_px(15f32));
             let left_px = BorderWidth::from_length(Length::from_px(15f32));
 
-            properties.push(PropertyDeclaration::BorderTopWidth(top_px));
-            properties.push(PropertyDeclaration::BorderRightWidth(right_px));
-            properties.push(PropertyDeclaration::BorderBottomWidth(bottom_px));
-            properties.push(PropertyDeclaration::BorderLeftWidth(left_px));
+            properties.push(PropertyDeclaration::BorderTopWidth(Box::new(top_px)));
+            properties.push(PropertyDeclaration::BorderRightWidth(Box::new(right_px)));
+            properties.push(PropertyDeclaration::BorderBottomWidth(Box::new(bottom_px)));
+            properties.push(PropertyDeclaration::BorderLeftWidth(Box::new(left_px)));
 
             let serialization = shorthand_properties_to_string(properties);
             assert_eq!(serialization, "border-width: 10px 15px;");
@@ -332,10 +332,10 @@ mod shorthand_serialization {
             let bottom_px = BorderWidth::Thick;
             let left_px = BorderWidth::from_length(Length::from_px(15f32));
 
-            properties.push(PropertyDeclaration::BorderTopWidth(top_px));
-            properties.push(PropertyDeclaration::BorderRightWidth(right_px));
-            properties.push(PropertyDeclaration::BorderBottomWidth(bottom_px));
-            properties.push(PropertyDeclaration::BorderLeftWidth(left_px));
+            properties.push(PropertyDeclaration::BorderTopWidth(Box::new(top_px)));
+            properties.push(PropertyDeclaration::BorderRightWidth(Box::new(right_px)));
+            properties.push(PropertyDeclaration::BorderBottomWidth(Box::new(bottom_px)));
+            properties.push(PropertyDeclaration::BorderLeftWidth(Box::new(left_px)));
 
             let serialization = shorthand_properties_to_string(properties);
             assert_eq!(serialization, "border-width: thin medium thick 15px;");
@@ -400,7 +400,7 @@ mod shorthand_serialization {
                 authored: None
             };
 
-            properties.push(PropertyDeclaration::BorderTopWidth(width));
+            properties.push(PropertyDeclaration::BorderTopWidth(Box::new(width)));
             properties.push(PropertyDeclaration::BorderTopStyle(style));
             properties.push(PropertyDeclaration::BorderTopColor(color));
 
@@ -418,7 +418,7 @@ mod shorthand_serialization {
         fn border_top_should_serialize_correctly() {
             let mut properties = Vec::new();
             let (width, style, color) = get_border_property_values();
-            properties.push(PropertyDeclaration::BorderTopWidth(width));
+            properties.push(PropertyDeclaration::BorderTopWidth(Box::new(width)));
             properties.push(PropertyDeclaration::BorderTopStyle(style));
             properties.push(PropertyDeclaration::BorderTopColor(color));
 
@@ -430,7 +430,7 @@ mod shorthand_serialization {
         fn border_right_should_serialize_correctly() {
             let mut properties = Vec::new();
             let (width, style, color) = get_border_property_values();
-            properties.push(PropertyDeclaration::BorderRightWidth(width));
+            properties.push(PropertyDeclaration::BorderRightWidth(Box::new(width)));
             properties.push(PropertyDeclaration::BorderRightStyle(style));
             properties.push(PropertyDeclaration::BorderRightColor(color));
 
@@ -442,7 +442,7 @@ mod shorthand_serialization {
         fn border_bottom_should_serialize_correctly() {
             let mut properties = Vec::new();
             let (width, style, color) = get_border_property_values();
-            properties.push(PropertyDeclaration::BorderBottomWidth(width));
+            properties.push(PropertyDeclaration::BorderBottomWidth(Box::new(width)));
             properties.push(PropertyDeclaration::BorderBottomStyle(style));
             properties.push(PropertyDeclaration::BorderBottomColor(color));
 
@@ -454,7 +454,7 @@ mod shorthand_serialization {
         fn border_left_should_serialize_correctly() {
             let mut properties = Vec::new();
             let (width, style, color) = get_border_property_values();
-            properties.push(PropertyDeclaration::BorderLeftWidth(width));
+            properties.push(PropertyDeclaration::BorderLeftWidth(Box::new(width)));
             properties.push(PropertyDeclaration::BorderLeftStyle(style));
             properties.push(PropertyDeclaration::BorderLeftColor(color));
 
@@ -467,19 +467,19 @@ mod shorthand_serialization {
             let mut properties = Vec::new();
             let (width, style, color) = get_border_property_values();
 
-            properties.push(PropertyDeclaration::BorderTopWidth(width.clone()));
+            properties.push(PropertyDeclaration::BorderTopWidth(Box::new(width.clone())));
             properties.push(PropertyDeclaration::BorderTopStyle(style.clone()));
             properties.push(PropertyDeclaration::BorderTopColor(color.clone()));
 
-            properties.push(PropertyDeclaration::BorderRightWidth(width.clone()));
+            properties.push(PropertyDeclaration::BorderRightWidth(Box::new(width.clone())));
             properties.push(PropertyDeclaration::BorderRightStyle(style.clone()));
             properties.push(PropertyDeclaration::BorderRightColor(color.clone()));
 
-            properties.push(PropertyDeclaration::BorderBottomWidth(width.clone()));
+            properties.push(PropertyDeclaration::BorderBottomWidth(Box::new(width.clone())));
             properties.push(PropertyDeclaration::BorderBottomStyle(style.clone()));
             properties.push(PropertyDeclaration::BorderBottomColor(color.clone()));
 
-            properties.push(PropertyDeclaration::BorderLeftWidth(width.clone()));
+            properties.push(PropertyDeclaration::BorderLeftWidth(Box::new(width.clone())));
             properties.push(PropertyDeclaration::BorderLeftStyle(style.clone()));
             properties.push(PropertyDeclaration::BorderLeftColor(color.clone()));
 
@@ -557,15 +557,14 @@ mod shorthand_serialization {
 
     #[test]
     fn columns_should_serialize_correctly() {
-        use style::properties::longhands::column_count::SpecifiedValue as ColumnCount;
         use style::values::{Auto, Either};
 
         let mut properties = Vec::new();
 
         let width = Either::Second(Auto);
-        let count = ColumnCount::Auto;
+        let count = Either::Second(Auto);
 
-        properties.push(PropertyDeclaration::ColumnWidth(width));
+        properties.push(PropertyDeclaration::ColumnWidth(Box::new(width)));
         properties.push(PropertyDeclaration::ColumnCount(count));
 
         let serialization = shorthand_properties_to_string(properties);
@@ -609,51 +608,58 @@ mod shorthand_serialization {
         assert_eq!(serialization, "flex-flow: row wrap;");
     }
 
-    // TODO: Populate Atom Cache for testing so that the font shorthand can be tested
-    /*
     mod font {
         use super::*;
-        use style::properties::longhands::font_family::computed_value::T as FamilyContainer;
-        use style::properties::longhands::font_family::computed_value::FontFamily;
-        use style::properties::longhands::font_style::computed_value::T as FontStyle;
-        use style::properties::longhands::font_variant::computed_value::T as FontVariant;
-        use style::properties::longhands::font_weight::SpecifiedValue as FontWeight;
-        use style::properties::longhands::font_size::SpecifiedValue as FontSizeContainer;
-        use style::properties::longhands::font_stretch::computed_value::T as FontStretch;
-        use style::properties::longhands::line_height::SpecifiedValue as LineHeight;
+
+        #[test]
+        fn font_should_serialize_to_empty_if_there_are_nondefault_subproperties() {
+            // Test with non-default font-kerning value
+            let block_text = "font-style: italic; \
+                              font-variant: normal; \
+                              font-weight: bolder; \
+                              font-stretch: expanded; \
+                              font-size: 4px; \
+                              line-height: 3; \
+                              font-family: serif; \
+                              font-size-adjust: none; \
+                              font-variant-caps: normal; \
+                              font-variant-position: normal; \
+                              font-language-override: normal; \
+                              font-kerning: none";
+
+            let block = parse_declaration_block(block_text);
+
+            let mut s = String::new();
+            let id = PropertyId::parse("font".into()).unwrap();
+            let x = block.property_value_to_css(&id, &mut s);
+
+            assert_eq!(x.is_ok(), true);
+            assert_eq!(s, "");
+        }
 
         #[test]
         fn font_should_serialize_all_available_properties() {
-            let mut properties = Vec::new();
+            let block_text = "font-style: italic; \
+                              font-variant: normal; \
+                              font-weight: bolder; \
+                              font-stretch: expanded; \
+                              font-size: 4px; \
+                              line-height: 3; \
+                              font-family: serif; \
+                              font-size-adjust: none; \
+                              font-kerning: auto; \
+                              font-variant-caps: normal; \
+                              font-variant-position: normal; \
+                              font-language-override: normal;";
 
+            let block = parse_declaration_block(block_text);
 
-            let font_family = DeclaredValue::Value(
-                FamilyContainer(vec![FontFamily::Generic(atom!("serif"))])
-            );
+            let serialization = block.to_css_string();
 
-
-            let font_style = DeclaredValue::Value(FontStyle::italic);
-            let font_variant = DeclaredValue::Value(FontVariant::normal);
-            let font_weight = DeclaredValue::Value(FontWeight::Bolder);
-            let font_size = DeclaredValue::Value(FontSizeContainer(
-                LengthOrPercentage::Length(NoCalcLength::from_px(4f32)))
-            );
-            let font_stretch = DeclaredValue::Value(FontStretch::expanded);
-            let line_height = DeclaredValue::Value(LineHeight::Number(3f32));
-
-            properties.push(PropertyDeclaration::FontFamily(font_family));
-            properties.push(PropertyDeclaration::FontStyle(font_style));
-            properties.push(PropertyDeclaration::FontVariant(font_variant));
-            properties.push(PropertyDeclaration::FontWeight(font_weight));
-            properties.push(PropertyDeclaration::FontSize(font_size));
-            properties.push(PropertyDeclaration::FontStretch(font_stretch));
-            properties.push(PropertyDeclaration::LineHeight(line_height));
-
-            let serialization = shorthand_properties_to_string(properties);
-            assert_eq!(serialization, "font:;");
+            assert_eq!(serialization, "font: italic normal bolder expanded 4px/3 serif;");
         }
+
     }
-    */
 
     mod background {
         use super::*;

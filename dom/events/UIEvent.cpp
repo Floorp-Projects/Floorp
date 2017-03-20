@@ -329,20 +329,6 @@ UIEvent::GetLayerY(int32_t* aLayerY)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-UIEvent::GetIsChar(bool* aIsChar)
-{
-  *aIsChar = IsChar();
-  return NS_OK;
-}
-
-bool
-UIEvent::IsChar() const
-{
-  WidgetKeyboardEvent* keyEvent = mEvent->AsKeyboardEvent();
-  return keyEvent ? keyEvent->mIsChar : false;
-}
-
 mozilla::dom::Event*
 UIEvent::AsEvent(void)
 {

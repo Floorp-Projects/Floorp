@@ -15,7 +15,6 @@
     _(ArrayShift)                   \
     _(ArrayPush)                    \
     _(ArraySlice)                   \
-    _(ArraySplice)                  \
                                     \
     _(AtomicsCompareExchange)       \
     _(AtomicsExchange)              \

@@ -496,10 +496,10 @@ class TestLoader(object):
         rv = []
         path_parts = os.path.dirname(test_path).split(os.path.sep)
         for i in xrange(1,len(path_parts) + 1):
-            path = os.path.join(os.path.sep.join(path_parts[:i]), "__dir__.ini")
+            path = os.path.join(metadata_path, os.path.sep.join(path_parts[:i]), "__dir__.ini")
             if path not in self.directory_manifests:
-                self.directory_manifests[path] = manifestexpected.get_dir_manifest(
-                    metadata_path, path, self.run_info)
+                self.directory_manifests[path] = manifestexpected.get_dir_manifest(path,
+                                                                                   self.run_info)
             manifest = self.directory_manifests[path]
             if manifest is not None:
                 rv.append(manifest)

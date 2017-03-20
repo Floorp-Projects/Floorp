@@ -7,6 +7,15 @@
     "namespace": "manifest",
     "types": [
       {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "theme"
+          ]
+        }]
+      },
+      {
         "id": "ThemeType",
         "type": "object",
         "properties": {
@@ -202,7 +211,7 @@
   {
     "namespace": "theme",
     "description": "The theme API allows customizing of visual elements of the browser.",
-    "permissions": ["manifest:theme"],
+    "permissions": ["theme"],
     "functions": [
       {
         "name": "update",
