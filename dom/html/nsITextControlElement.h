@@ -165,6 +165,16 @@ public:
   NS_IMETHOD_(mozilla::dom::Element*) GetPreviewNode() = 0;
 
   /**
+   * Update preview value for the text control.
+   */
+  NS_IMETHOD_(void) SetPreviewValue(const nsAString& aValue) = 0;
+
+  /**
+   * Get the current preview value for text control.
+   */
+  NS_IMETHOD_(void) GetPreviewValue(nsAString& aValue) = 0;
+
+  /**
    * Initialize the keyboard event listeners.
    */
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() = 0;
