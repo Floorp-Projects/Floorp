@@ -84,6 +84,7 @@
    * @param Object objectToDecorate
    *        Bind all public methods of EventEmitter to
    *        the objectToDecorate object.
+   * @return Object the object given.
    */
   EventEmitter.decorate = function (objectToDecorate) {
     let emitter = new EventEmitter();
@@ -91,6 +92,8 @@
     objectToDecorate.off = emitter.off.bind(emitter);
     objectToDecorate.once = emitter.once.bind(emitter);
     objectToDecorate.emit = emitter.emit.bind(emitter);
+
+    return objectToDecorate;
   };
 
   EventEmitter.prototype = {
