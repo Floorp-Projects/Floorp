@@ -239,7 +239,7 @@ frontend::ReservedWordToCharZ(PropertyName* str)
 }
 
 PropertyName*
-TokenStream::reservedWordToPropertyName(TokenKind tt) const
+TokenStreamBase::reservedWordToPropertyName(TokenKind tt) const
 {
     MOZ_ASSERT(tt != TOK_NAME);
     switch (tt) {
@@ -406,8 +406,8 @@ TokenStream::SourceCoords::lineNumAndColumnIndex(uint32_t offset, uint32_t* line
 #pragma warning(disable:4351)
 #endif
 
-TokenStream::TokenStream(JSContext* cx, const ReadOnlyCompileOptions& options,
-                         const char16_t* base, size_t length, StrictModeGetter* smg)
+TokenStreamBase::TokenStreamBase(JSContext* cx, const ReadOnlyCompileOptions& options,
+                                 StrictModeGetter* smg)
   : srcCoords(cx, options.lineno),
     options_(options),
     tokens(),
@@ -417,14 +417,20 @@ TokenStream::TokenStream(JSContext* cx, const ReadOnlyCompileOptions& options,
     flags(),
     linebase(0),
     prevLinebase(size_t(-1)),
-    userbuf(cx, base, length, options.column),
     filename(options.filename()),
     displayURL_(nullptr),
     sourceMapURL_(nullptr),
-    tokenbuf(cx),
     cx(cx),
     mutedErrors(options.mutedErrors()),
     strictModeGetter(smg)
+{
+}
+
+TokenStream::TokenStream(JSContext* cx, const ReadOnlyCompileOptions& options,
+                         const char16_t* base, size_t length, StrictModeGetter* smg)
+  : TokenStreamBase(cx, options, smg),
+    userbuf(cx, base, length, options.column),
+    tokenbuf(cx)
 {
     // Nb: the following tables could be static, but initializing them here is
     // much easier.  Don't worry, the time to initialize them for each
@@ -457,10 +463,6 @@ TokenStream::checkOptions()
     return true;
 }
 
-TokenStream::~TokenStream()
-{
-}
-
 // Use the fastest available getc.
 #if defined(HAVE_GETC_UNLOCKED)
 # define fast_getc getc_unlocked
@@ -480,7 +482,7 @@ TokenStream::updateLineInfoForEOL()
 }
 
 MOZ_ALWAYS_INLINE void
-TokenStream::updateFlagsForEOL()
+TokenStreamBase::updateFlagsForEOL()
 {
     flags.isDirtyLine = false;
 }
