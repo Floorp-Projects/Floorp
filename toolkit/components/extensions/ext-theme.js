@@ -118,6 +118,11 @@ class Theme {
     }
   }
 
+  /**
+   * Helper method for loading icons found in the extension's manifest.
+   *
+   * @param {Object} icons Dictionary mapping icon properties to extension URLs.
+   */
   loadIcons(icons) {
     if (!Preferences.get("extensions.webextensions.themes.icons.enabled")) {
       // Return early if icons are disabled.
@@ -171,8 +176,8 @@ extensions.on("manifest_theme", (type, directive, extension, manifest) => {
 extensions.on("shutdown", (type, extension) => {
   let theme = themeMap.get(extension);
 
-  // We won't have a theme if theme's aren't enabled.
   if (!theme) {
+    // We won't have a theme if themes are disabled.
     return;
   }
 
@@ -193,9 +198,9 @@ extensions.registerSchemaAPI("theme", "addon_parent", context => {
         let theme = themeMap.get(extension);
 
         if (!theme) {
-          // Themes which use `update` will not a theme defined
-          // in the manifest. Therefore, we need to initialize the
-          // theme the first time `update` is called.
+          // WebExtensions using the Theme API will not have a theme defined
+          // in the manifest. Therefore, we need to initialize the theme the
+          // first time browser.theme.update is called.
           theme = new Theme(extension.baseURI);
           themeMap.set(extension, theme);
         }
