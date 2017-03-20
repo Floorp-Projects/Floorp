@@ -44,6 +44,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
 const MAX_ADDON_STRING_LENGTH = 100;
 // The maximum length of a string value in the settings.attribution object.
 const MAX_ATTRIBUTION_STRING_LENGTH = 100;
+// The maximum lengths for the experiment id and branch in the experiments section.
+const MAX_EXPERIMENT_ID_LENGTH = 100;
+const MAX_EXPERIMENT_BRANCH_LENGTH = 100;
 
 /**
  * This is a policy object used to override behavior for testing.
@@ -79,6 +82,42 @@ this.TelemetryEnvironment = {
 
   unregisterChangeListener(name) {
     return getGlobal().unregisterChangeListener(name);
+  },
+
+  /**
+   * Add an experiment annotation to the environment.
+   * If an annotation with the same id already exists, it will be overwritten.
+   * This triggers a new subsession, subject to throttling.
+   *
+   * @param {String} id The id of the active experiment.
+   * @param {String} branch The experiment branch.
+   */
+  setExperimentActive(id, branch) {
+    return getGlobal().setExperimentActive(id, branch);
+  },
+
+  /**
+   * Remove an experiment annotation from the environment.
+   * If the annotation exists, a new subsession will triggered.
+   *
+   * @param {String} id The id of the active experiment.
+   */
+  setExperimentInactive(id) {
+    return getGlobal().setExperimentInactive(id);
+  },
+
+  /**
+   * Returns an object containing the data for the active experiments.
+   *
+   * The returned object is of the format:
+   *
+   * {
+   *   "<experiment id>": { branch: "<branch>" },
+   *   // …
+   * }
+   */
+  getActiveExperiments() {
+    return getGlobal().getActiveExperiments();
   },
 
   shutdown() {
@@ -848,6 +887,47 @@ EnvironmentCache.prototype = {
       return;
     }
     this._changeListeners.delete(name);
+  },
+
+  setExperimentActive(id, branch) {
+    this._log.trace("setExperimentActive");
+    // Make sure both the id and the branch have sane lengths.
+    const saneId = limitStringToLength(id, MAX_EXPERIMENT_ID_LENGTH);
+    const saneBranch = limitStringToLength(branch, MAX_EXPERIMENT_BRANCH_LENGTH);
+    if (!saneId || !saneBranch) {
+      this._log.error("setExperimentActive - the provided arguments are not strings.");
+      return;
+    }
+
+    // Warn the user about any content truncation.
+    if (saneId.length != id.length || saneBranch.length != branch.length) {
+      this._log.warn("setExperimentActive - the experiment id or branch were truncated.");
+    }
+
+    let oldEnvironment = Cu.cloneInto(this._currentEnvironment, myScope);
+    // Add the experiment annotation.
+    let experiments = this._currentEnvironment.experiments || {};
+    experiments[saneId] = { "branch": saneBranch };
+    this._currentEnvironment.experiments = experiments;
+    // Notify of the change.
+    this._onEnvironmentChange("experiment-annotation-changed", oldEnvironment);
+  },
+
+  setExperimentInactive(id) {
+    this._log.trace("setExperimentInactive");
+    let experiments = this._currentEnvironment.experiments || {};
+    if (id in experiments) {
+      // Only attempt to notify if a previous annotation was found and removed.
+      let oldEnvironment = Cu.cloneInto(this._currentEnvironment, myScope);
+      // Remove the experiment annotation.
+      delete this._currentEnvironment.experiments[id];
+      // Notify of the change.
+      this._onEnvironmentChange("experiment-annotation-changed", oldEnvironment);
+    }
+  },
+
+  getActiveExperiments() {
+    return Cu.cloneInto(this._currentEnvironment.experiments || {}, myScope);
   },
 
   shutdown() {
