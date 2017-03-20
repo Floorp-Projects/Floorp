@@ -47,10 +47,9 @@ const GRID_LINES_PROPERTIES = {
   }
 };
 
-// px
-const GRID_GAP_PATTERN_WIDTH = 14;
-const GRID_GAP_PATTERN_HEIGHT = 14;
-const GRID_GAP_PATTERN_LINE_DASH = [5, 3];
+const GRID_GAP_PATTERN_WIDTH = 14; // px
+const GRID_GAP_PATTERN_HEIGHT = 14; // px
+const GRID_GAP_PATTERN_LINE_DASH = [5, 3]; // px
 const GRID_GAP_ALPHA = 0.5;
 
 /**

@@ -45,7 +45,6 @@ var TEST_DATA = {
   ]
 };
 
-/* eslint-disable no-inline-comments */
 var EXPECTED_OUTPUT = {
   name: "allocations",
   samples: {
@@ -93,4 +92,3 @@ var EXPECTED_OUTPUT = {
     "C:5:6"
   ],
 };
-/* eslint-enable no-inline-comments */
