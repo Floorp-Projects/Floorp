@@ -16,7 +16,7 @@ var tests = {
   testInput: function (options) {
     let toggleCommand = options.requisition.system.commands.get("paintflashing toggle");
 
-    let _tab = options.tab;
+    let { tab } = options;
 
     let actions = [
       {
@@ -44,7 +44,7 @@ var tests = {
     return helpers.audit(options, actions.map(spec => ({
       setup: spec.command,
       exec: {},
-      post: () => is(toggleCommand.state.isChecked({_tab}), spec.isChecked, spec.label)
+      post: () => is(toggleCommand.state.isChecked({tab}), spec.isChecked, spec.label)
     })));
   },
 };
