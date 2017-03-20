@@ -341,7 +341,22 @@ APZCCallbackHelper::InitializeRootDisplayport(nsIPresShell* aPresShell)
   uint32_t presShellId;
   FrameMetrics::ViewID viewId;
   if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(content, &presShellId, &viewId)) {
-    // Note that the base rect that goes with these margins is set in
+    nsPresContext* pc = aPresShell->GetPresContext();
+    // This code is only correct for root content or toplevel documents.
+    MOZ_ASSERT(!pc || pc->IsRootContentDocument() || !pc->GetParentPresContext());
+    nsIFrame* frame = aPresShell->GetRootScrollFrame();
+    if (!frame) {
+      frame = aPresShell->GetRootFrame();
+    }
+    nsRect baseRect;
+    if (frame) {
+      baseRect =
+        nsRect(nsPoint(0, 0), nsLayoutUtils::CalculateCompositionSizeForFrame(frame));
+    } else if (pc) {
+      baseRect = nsRect(nsPoint(0, 0), pc->GetVisibleArea().Size());
+    }
+    nsLayoutUtils::SetDisplayPortBaseIfNotSet(content, baseRect);
+    // Note that we also set the base rect that goes with these margins in
     // nsRootBoxFrame::BuildDisplayList.
     nsLayoutUtils::SetDisplayPortMargins(content, aPresShell, ScreenMargin(), 0,
         nsLayoutUtils::RepaintMode::DoNotRepaint);
