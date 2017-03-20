@@ -45,12 +45,24 @@ public:
   void UpdateApzAnimationInProgress(bool aInProgress, TimeDuration aVsyncInterval);
 
 private:
+  // A struct to group data that we need for each type of compositor animation.
+  struct AnimationData {
+    // The start time of the current animation.
+    TimeStamp mStart;
+    // The number of frames composited for the current animation.
+    uint32_t mFrameCount;
+
+    AnimationData()
+      : mFrameCount(0)
+    {
+    }
+  };
+
   void AnimationStarted();
   void AnimationEnded();
   void UpdateAnimationThroughput(const char* aLabel,
                                  bool aInProgress,
-                                 TimeStamp& aStartTime,
-                                 uint32_t& aFrameCount,
+                                 AnimationData& aAnimationData,
                                  TimeDuration aVsyncInterval,
                                  Telemetry::HistogramID aHistogram);
 
@@ -62,18 +74,10 @@ private:
   // has touched on any given animation frame.
   uint64_t mMaxLayerAreaAnimated;
 
-  // The start time of the current chrome-process animation.
-  TimeStamp mChromeAnimationStart;
-  // The number of frames composited for the current chrome-process animation.
-  uint32_t mChromeAnimationFrameCount;
-  // The start time of the current content-process animation.
-  TimeStamp mContentAnimationStart;
-  // The number of frames composited for the current content-process animation.
-  uint32_t mContentAnimationFrameCount;
-  // The start time of the current APZ animation.
-  TimeStamp mApzAnimationStart;
-  // The number of frames composited for the current APZ animation.
-  uint32_t mApzAnimationFrameCount;
+  // We keep an instance of the struct for each type of compositor animation.
+  AnimationData mChromeAnimation;
+  AnimationData mContentAnimation;
+  AnimationData mApzAnimation;
 };
 
 } // namespace layers
