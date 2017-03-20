@@ -63,11 +63,6 @@ public class ActivityStream {
      * Is the user eligible to use activity stream or should we hide it from settings etc.?
      */
     public static boolean isUserEligible(Context context) {
-        if (AppConstants.MOZ_ANDROID_ACTIVITY_STREAM) {
-            // If the build flag is enabled then just show the option to the user.
-            return true;
-        }
-
         if (AppConstants.NIGHTLY_BUILD && SwitchBoard.isInExperiment(context, Experiments.ACTIVITY_STREAM)) {
             // If this is a nightly build and the user is part of the activity stream experiment then
             // the option should be visible too. The experiment is limited to Nightly too but I want

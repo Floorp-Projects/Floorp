@@ -318,11 +318,4 @@ public class AppConstants {
 
     // (bug 1266820) Temporarily disabled since no one is working on it.
     public static final boolean SCREENSHOTS_IN_BOOKMARKS_ENABLED = false;
-
-    public static final boolean MOZ_ANDROID_ACTIVITY_STREAM =
-//#ifdef MOZ_ANDROID_ACTIVITY_STREAM
-        true;
-//#else
-        false;
-//#endif
 }

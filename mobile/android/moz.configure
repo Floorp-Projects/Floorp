@@ -48,13 +48,6 @@ project_flag('MOZ_SWITCHBOARD',
              help='Include Switchboard A/B framework on Android',
              default=True)
 
-option(env='MOZ_ANDROID_ACTIVITY_STREAM',
-       help='Enable Activity Stream on Android (replacing the default HomePager)',
-       default=False)
-
-set_config('MOZ_ANDROID_ACTIVITY_STREAM',
-           depends_if('MOZ_ANDROID_ACTIVITY_STREAM')(lambda _: True))
-
 option(env='MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER',
        help='Build and package the install bouncer APK',
        default=True)
