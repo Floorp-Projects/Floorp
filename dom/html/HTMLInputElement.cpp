@@ -2912,6 +2912,24 @@ HTMLInputElement::GetPreviewNode()
   return nullptr;
 }
 
+NS_IMETHODIMP_(void)
+HTMLInputElement::SetPreviewValue(const nsAString& aValue)
+{
+  nsTextEditorState* state = GetEditorState();
+  if (state) {
+    state->SetPreviewText(aValue, true);
+  }
+}
+
+NS_IMETHODIMP_(void)
+HTMLInputElement::GetPreviewValue(nsAString& aValue)
+{
+  nsTextEditorState* state = GetEditorState();
+  if (state) {
+    state->GetPreviewText(aValue);
+  }
+}
+
 void
 HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
 {
