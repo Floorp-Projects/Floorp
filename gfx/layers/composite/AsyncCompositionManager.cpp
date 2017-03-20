@@ -1411,7 +1411,9 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
       nextFrame += aVsyncRate;
     }
 
-    wantNextFrame |= SampleAPZAnimations(LayerMetricsWrapper(root), nextFrame);
+    bool apzAnimating = SampleAPZAnimations(LayerMetricsWrapper(root), nextFrame);
+    mAnimationMetricsTracker.UpdateApzAnimationInProgress(apzAnimating, aVsyncRate);
+    wantNextFrame |= apzAnimating;
   }
 
   HostLayer* rootComposite = root->AsHostLayer();
