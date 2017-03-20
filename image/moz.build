@@ -67,6 +67,7 @@ UNIFIED_SOURCES += [
     'ImageWrapper.cpp',
     'imgFrame.cpp',
     'imgLoader.cpp',
+    'imgRequest.cpp',
     'imgTools.cpp',
     'MultipartImage.cpp',
     'OrientedImage.cpp',
@@ -84,7 +85,6 @@ if CONFIG['MOZ_ENABLE_SKIA']:
 
 # These files can't be unified because of ImageLogging.h #include order issues.
 SOURCES += [
-    'imgRequest.cpp',
     'imgRequestProxy.cpp',
     'ProgressTracker.cpp',
     'RasterImage.cpp',
