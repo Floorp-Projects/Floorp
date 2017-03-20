@@ -4573,6 +4573,10 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
       if (!mBorderImageRenderer) {
         return LAYER_NONE;
       }
+
+      if (!mBorderImageRenderer->mImageRenderer.IsImageContainerAvailable(aManager, flags)) {
+        return LAYER_NONE;
+      }
     }
 
     return LAYER_ACTIVE;
@@ -4666,6 +4670,9 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
   }
 
   uint64_t externalImageId = aLayer->SendImageContainer(container);
+  if (!externalImageId) {
+    return;
+  }
 
   const int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   Rect destRect =
