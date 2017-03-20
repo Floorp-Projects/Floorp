@@ -22,9 +22,9 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
-// This test opens a webpage, and selects "Open With" menu
+// This test opens enters and invalid URL, and Focus should provide an appropriate error message
 @RunWith(AndroidJUnit4.class)
-public class OpenwithDialogTest {
+public class BadURLTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule
@@ -46,40 +46,47 @@ public class OpenwithDialogTest {
     };
 
     @Test
-    public void OpenTest() throws InterruptedException, UiObjectNotFoundException {
+    public void BadURLcheckTest() throws InterruptedException, UiObjectNotFoundException {
         final long waitingTime = TestHelper.waitingTime;
 
-        UiObject openWithBtn = TestHelper.mDevice.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/open_select_browser")
-                .enabled(true));
-        UiObject openWithTitle = TestHelper.mDevice.findObject(new UiSelector()
-                .className("android.widget.TextView")
-                .text("Open with…")
-                .enabled(true));
-        UiObject openWithList = TestHelper.mDevice.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/apps")
-                .enabled(true));
+        UiObject cancelOpenAppBtn = TestHelper.mDevice.findObject(new UiSelector()
+                .resourceId("android:id/button2"));
+        UiObject openAppalert = TestHelper.mDevice.findObject(new UiSelector()
+        .text("Open link in another app"));
 
         /* Wait for First View UI */
         TestHelper.firstViewBtn.waitForExists(waitingTime);
         TestHelper.firstViewBtn.click();
 
-        /* Go to mozilla page */
+        /* provide an invalid URL */
         TestHelper.urlBar.waitForExists(waitingTime);
         TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
-        TestHelper.inlineAutocompleteEditText.setText("mozilla");
+        TestHelper.inlineAutocompleteEditText.setText("htps://www.mozilla.org");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.webView.waitForExists(waitingTime);
+        TestHelper.tryAgainBtn.waitForExists(waitingTime);
 
-        /* Select Open with from menu, check appearance */
-        TestHelper.menuButton.perform(click());
-        openWithBtn.waitForExists(waitingTime);
-        openWithBtn.click();
-        openWithTitle.waitForExists(waitingTime);
-        assertTrue(openWithTitle.exists());
-        assertTrue(openWithList.exists());
+        /* Check for error message */
+        assertTrue(TestHelper.notFoundMsg.exists());
+        assertTrue(TestHelper.notFounddetailedMsg.exists());
+        assertTrue(TestHelper.tryAgainBtn.exists());
+
+        /* provide market URL that is handled by Google Play app */
+        TestHelper.floatingEraseButton.perform(click());
+        TestHelper.urlBar.waitForExists(waitingTime);
+        TestHelper.urlBar.click();
+        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        TestHelper.inlineAutocompleteEditText.clearTextField();
+        TestHelper.inlineAutocompleteEditText.setText("market://details?id=org.mozilla.firefox&referrer=" +
+                "utm_source%3Dmozilla%26utm_medium%3DReferral%26utm_campaign%3Dmozilla-org");
+        TestHelper.pressEnterKey();
+
+        // Wait for the dialog
+        cancelOpenAppBtn.waitForExists(waitingTime);
+        assertTrue(openAppalert.exists());
+        assertTrue(cancelOpenAppBtn.exists());
+        cancelOpenAppBtn.click();
     }
 }

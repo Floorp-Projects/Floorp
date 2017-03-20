@@ -6,33 +6,20 @@
 package org.mozilla.focus.activity;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.ViewInteraction;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.test.uiautomator.By;
-import android.support.test.uiautomator.BySelector;
-import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
-import android.support.test.uiautomator.Until;
-import android.text.format.DateUtils;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.focus.R;
 
-import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.view.KeyEvent.KEYCODE_ENTER;
 import static junit.framework.Assert.assertTrue;
-import static org.hamcrest.Matchers.allOf;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 // This test opens share menu
@@ -50,7 +37,6 @@ public class ShareDialogTest {
             Context appContext = InstrumentationRegistry.getInstrumentation()
                     .getTargetContext()
                     .getApplicationContext();
-            Resources resources = appContext.getResources();
 
             PreferenceManager.getDefaultSharedPreferences(appContext)
                     .edit()
@@ -61,63 +47,41 @@ public class ShareDialogTest {
 
     @Test
     public void shareTest() throws InterruptedException, UiObjectNotFoundException {
-        // Initialize UiDevice instance
-        UiDevice mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        final long waitingTime = DateUtils.SECOND_IN_MILLIS * 2;
+        final long waitingTime = TestHelper.waitingTime;
 
-        UiObject firstViewBtn = mDevice.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/firstrun_exitbutton")
-                .enabled(true));
-        UiObject urlBar = mDevice.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/url")
-                .clickable(true));
-        UiObject inlineAutocompleteEditText = mDevice.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/url_edit")
-                .focused(true)
-                .enabled(true));
-        BySelector hint = By.clazz("android.widget.TextView")
-                .res("org.mozilla.focus.debug","search_hint")
-                .clickable(true);
-        UiObject webView = mDevice.findObject(new UiSelector()
-                .className("android.webkit.Webview")
-                .focused(true)
-                .enabled(true));
-        ViewInteraction menuButton = onView(
-                allOf(withId(R.id.menu),
-                        isDisplayed()));
-        UiObject shareBtn = mDevice.findObject(new UiSelector()
+        UiObject shareBtn = TestHelper.mDevice.findObject(new UiSelector()
                 .resourceId("org.mozilla.focus.debug:id/share")
                 .enabled(true));
-        UiObject menuHeader = mDevice.findObject(new UiSelector()
+        UiObject shareMenuHeader = TestHelper.mDevice.findObject(new UiSelector()
                 .resourceId("android:id/title")
                 .text("Share with")
                 .enabled(true));
-        UiObject appList = mDevice.findObject(new UiSelector()
+        UiObject shareAppList = TestHelper.mDevice.findObject(new UiSelector()
                 .resourceId("android:id/resolver_list")
                 .enabled(true));
 
         /* Wait for app to load, and take the First View screenshot */
-        firstViewBtn.waitForExists(waitingTime);
-        firstViewBtn.click();
+        TestHelper.firstViewBtn.waitForExists(waitingTime);
+        TestHelper.firstViewBtn.click();
 
         /* Go to a webpage */
-        urlBar.waitForExists(waitingTime);
-        urlBar.click();
-        inlineAutocompleteEditText.waitForExists(waitingTime);
-        inlineAutocompleteEditText.clearTextField();
-        inlineAutocompleteEditText.setText("mozilla");
-        mDevice.wait(Until.hasObject(hint),waitingTime);
-        mDevice.pressKeyCode(KEYCODE_ENTER);
-        webView.waitForExists(waitingTime);
+        TestHelper.urlBar.waitForExists(waitingTime);
+        TestHelper.urlBar.click();
+        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        TestHelper.inlineAutocompleteEditText.clearTextField();
+        TestHelper.inlineAutocompleteEditText.setText("mozilla");
+        TestHelper.hint.waitForExists(waitingTime);
+        TestHelper.pressEnterKey();
+        TestHelper.webView.waitForExists(waitingTime);
 
         /* Select share */
-        menuButton.perform(click());
+        TestHelper.menuButton.perform(click());
         shareBtn.waitForExists(waitingTime);
         shareBtn.click();
 
         // For simulators, where apps are not installed, it'll take to message app
-        menuHeader.waitForExists(waitingTime);
-        assertTrue(menuHeader.exists());
-        assertTrue(appList.exists());
+        shareMenuHeader.waitForExists(waitingTime);
+        assertTrue(shareMenuHeader.exists());
+        assertTrue(shareAppList.exists());
     }
 }
