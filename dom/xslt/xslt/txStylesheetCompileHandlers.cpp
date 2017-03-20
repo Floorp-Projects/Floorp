@@ -1312,7 +1312,8 @@ txFnText(const nsAString& aStr, txStylesheetCompilerState& aState)
 /*
   xsl:apply-imports
 
-  txApplyImports
+  txApplyImportsStart
+  txApplyImportsEnd
 */
 static nsresult
 txFnStartApplyImports(int32_t aNamespaceID,
@@ -1324,7 +1325,11 @@ txFnStartApplyImports(int32_t aNamespaceID,
 {
     nsresult rv = NS_OK;
 
-    nsAutoPtr<txInstruction> instr(new txApplyImports);
+    nsAutoPtr<txInstruction> instr(new txApplyImportsStart);
+    rv = aState.addInstruction(Move(instr));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    instr = new txApplyImportsEnd;
     rv = aState.addInstruction(Move(instr));
     NS_ENSURE_SUCCESS(rv, rv);
 
