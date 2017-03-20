@@ -8,6 +8,7 @@
 #ifndef mozilla_net_HttpBaseChannel_h
 #define mozilla_net_HttpBaseChannel_h
 
+#include "mozilla/Atomics.h"
 #include "nsHttp.h"
 #include "nsAutoPtr.h"
 #include "nsHashPropertyBag.h"
@@ -445,6 +446,10 @@ private:
   void ReleaseMainThreadOnlyReferences();
 
 protected:
+  // Use Release-Acquire ordering to ensure the OMT ODA is ignored while channel
+  // is canceled on main thread.
+  Atomic<bool, ReleaseAcquire> mCanceled;
+
   nsTArray<Pair<nsString, nsString>> mSecurityConsoleMessages;
 
   nsCOMPtr<nsIStreamListener>       mListener;
@@ -488,7 +493,6 @@ protected:
   uint8_t                           mRedirectionLimit;
 
   uint32_t                          mApplyConversion            : 1;
-  uint32_t                          mCanceled                   : 1;
   uint32_t                          mIsPending                  : 1;
   uint32_t                          mWasOpened                  : 1;
   // if 1 all "http-on-{opening|modify|etc}-request" observers have been called
