@@ -333,6 +333,17 @@ HTMLTextAreaElement::GetPreviewNode()
   return mState.GetPreviewNode();
 }
 
+NS_IMETHODIMP_(void)
+HTMLTextAreaElement::SetPreviewValue(const nsAString& aValue)
+{
+  mState.SetPreviewText(aValue, true);
+}
+
+NS_IMETHODIMP_(void)
+HTMLTextAreaElement::GetPreviewValue(nsAString& aValue)
+{
+  mState.GetPreviewText(aValue);
+}
 
 nsresult
 HTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
