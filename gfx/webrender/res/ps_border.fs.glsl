@@ -244,16 +244,16 @@ vec4 draw_double_edge_vertical(vec2 local_pos,
                                float distance_from_mix_line,
                                float pixels_per_fragment) {
   // Get our position within this specific segment
-  float position = local_pos.x - vLocalRect.x;
-  return draw_double_edge(position, vLocalRect.z, distance_from_mix_line, pixels_per_fragment);
+  float position = abs(local_pos.x - vRefPoint.x);
+  return draw_double_edge(position, abs(vPieceRect.z), distance_from_mix_line, pixels_per_fragment);
 }
 
 vec4 draw_double_edge_horizontal(vec2 local_pos,
                                  float distance_from_mix_line,
                                  float pixels_per_fragment) {
   // Get our position within this specific segment
-  float position = local_pos.y - vLocalRect.y;
-  return draw_double_edge(position, vLocalRect.w, distance_from_mix_line, pixels_per_fragment);
+  float position = abs(local_pos.y - vRefPoint.y);
+  return draw_double_edge(position, abs(vPieceRect.w), distance_from_mix_line, pixels_per_fragment);
 }
 
 vec4 draw_double_edge_corner_with_radius(vec2 local_pos,

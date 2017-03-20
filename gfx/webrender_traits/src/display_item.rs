@@ -86,6 +86,7 @@ pub struct NormalBorder {
     pub radius: BorderRadius,
 }
 
+#[repr(u32)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum RepeatMode {
     Stretch,
@@ -193,6 +194,7 @@ pub struct BoxShadowDisplayItem {
     pub clip_mode: BoxShadowClipMode,
 }
 
+#[repr(u32)]
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Serialize, Deserialize, Ord, PartialOrd)]
 pub enum ExtendMode {
     Clamp,
@@ -251,7 +253,6 @@ pub struct StackingContext {
     pub filters: ItemRange,
 }
 
-#[repr(C)]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ScrollPolicy {
