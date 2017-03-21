@@ -668,6 +668,29 @@ nsHttpConnectionMgr::CloseIdleConnection(nsHttpConnection *conn)
     return NS_OK;
 }
 
+nsresult
+nsHttpConnectionMgr::RemoveIdleConnection(nsHttpConnection *conn)
+{
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+    LOG(("nsHttpConnectionMgr::RemoveIdleConnection %p conn=%p",
+         this, conn));
+
+    if (!conn->ConnectionInfo()) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    nsConnectionEntry *ent = LookupConnectionEntry(conn->ConnectionInfo(),
+                                                   conn, nullptr);
+
+    if (!ent || !ent->mIdleConns.RemoveElement(conn)) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    mNumIdleConns--;
+    return NS_OK;
+}
+
 // This function lets a connection, after completing the NPN phase,
 // report whether or not it is using spdy through the usingSpdy
 // argument. It would not be necessary if NPN were driven out of
@@ -909,14 +932,10 @@ nsHttpConnectionMgr::DispatchPendingQ(nsTArray<RefPtr<nsHttpConnectionMgr::Pendi
             MOZ_ASSERT(!pendingTransInfo->mActiveConn);
             RefPtr<nsHalfOpenSocket> halfOpen =
                 do_QueryReferent(pendingTransInfo->mHalfOpen);
+            LOG(("nsHttpConnectionMgr::ProcessPendingQForEntry "
+                 "[trans=%p, halfOpen=%p]\n",
+                 pendingTransInfo->mTransaction.get(), halfOpen.get()));
             if (halfOpen) {
-                // The half open socket was made for this transaction, in
-                // that case ent->mHalfOpens[j]->Transaction() == trans or
-                // the half open socket was opened speculatively and this
-                // transaction took it (in this case it must be:
-                // ent->mHalfOpens[j]->Transaction().IsNullTransaction())
-                MOZ_ASSERT(halfOpen->Transaction()->IsNullTransaction() ||
-                           halfOpen->Transaction() == pendingTransInfo->mTransaction);
                 alreadyHalfOpenOrWaitingForTLS = true;
             } else {
                 // If we have not found the halfOpen socket, remove the pointer.
@@ -926,6 +945,9 @@ nsHttpConnectionMgr::DispatchPendingQ(nsTArray<RefPtr<nsHttpConnectionMgr::Pendi
             MOZ_ASSERT(!pendingTransInfo->mHalfOpen);
             RefPtr<nsHttpConnection> activeConn =
                 do_QueryReferent(pendingTransInfo->mActiveConn);
+            LOG(("nsHttpConnectionMgr::ProcessPendingQForEntry "
+                 "[trans=%p, activeConn=%p]\n",
+                 pendingTransInfo->mTransaction.get(), activeConn.get()));
             // Check if this transaction claimed a connection that is still
             // performing tls handshake with a NullHttpTransaction or it is between
             // finishing tls and reclaiming (When nullTrans finishes tls handshake,
@@ -1147,34 +1169,17 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
 
     uint32_t halfOpenLength = ent->mHalfOpens.Length();
     for (uint32_t i = 0; i < halfOpenLength; i++) {
-        if (ent->mHalfOpens[i]->IsSpeculative()) {
-            // We've found a speculative connection in the half
-            // open list. Remove the speculative bit from it and that
-            // connection can later be used for this transaction
-            // (or another one in the pending queue) - we don't
-            // need to open a new connection here.
+        if (ent->mHalfOpens[i]->Claim()) {
+            // We've found a speculative connection or a connection that
+            // is free to be used in the half open list.
+            // A free to be used connection is a connection that was
+            // open for a concrete transaction, but that trunsaction
+            // ended up using another connection.
             LOG(("nsHttpConnectionMgr::MakeNewConnection [ci = %s]\n"
-                 "Found a speculative half open connection\n",
+                 "Found a speculative or a free-to-use half open connection\n",
                  ent->mConnInfo->HashKey().get()));
-
-            uint32_t flags;
-            ent->mHalfOpens[i]->SetSpeculative(false);
             pendingTransInfo->mHalfOpen =
                 do_GetWeakReference(static_cast<nsISupportsWeakReference*>(ent->mHalfOpens[i]));
-            nsISocketTransport *transport = ent->mHalfOpens[i]->SocketTransport();
-            if (transport && NS_SUCCEEDED(transport->GetConnectionFlags(&flags))) {
-                flags &= ~nsISocketTransport::DISABLE_RFC1918;
-                transport->SetConnectionFlags(flags);
-            }
-
-            Telemetry::AutoCounter<Telemetry::HTTPCONNMGR_USED_SPECULATIVE_CONN> usedSpeculativeConn;
-            ++usedSpeculativeConn;
-
-            if (ent->mHalfOpens[i]->IsFromPredictor()) {
-              Telemetry::AutoCounter<Telemetry::PREDICTOR_TOTAL_PRECONNECTS_USED> totalPreconnectsUsed;
-              ++totalPreconnectsUsed;
-            }
-
             // return OK because we have essentially opened a new connection
             // by converting a speculative half-open to general use
             return NS_OK;
@@ -1768,13 +1773,12 @@ nsHttpConnectionMgr::ReleaseClaimedSockets(nsConnectionEntry *ent,
     if (pendingTransInfo->mHalfOpen) {
         RefPtr<nsHalfOpenSocket> halfOpen =
             do_QueryReferent(pendingTransInfo->mHalfOpen);
+        LOG(("nsHttpConnectionMgr::ReleaseClaimedSockets "
+             "[trans=%p halfOpen=%p]",
+             pendingTransInfo->mTransaction.get(),
+             halfOpen.get()));
         if (halfOpen) {
-            if (halfOpen->Transaction() &&
-                halfOpen->Transaction()->IsNullTransaction()) {
-                LOG(("nsHttpConnectionMgr::ReleaseClaimedSockets - mark halfOpne %p "
-                    "speculative again.", halfOpen.get()));
-                halfOpen->SetSpeculative(true);
-            }
+            halfOpen->Unclaim();
         }
         pendingTransInfo->mHalfOpen = nullptr;
     } else if (pendingTransInfo->mActiveConn) {
@@ -1800,21 +1804,16 @@ nsHttpConnectionMgr::CreateTransport(nsConnectionEntry *ent,
                                      PendingTransactionInfo *pendingTransInfo)
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    MOZ_ASSERT((speculative && !pendingTransInfo) ||
+               (!speculative && pendingTransInfo));
 
-    RefPtr<nsHalfOpenSocket> sock = new nsHalfOpenSocket(ent, trans, caps);
+    RefPtr<nsHalfOpenSocket> sock = new nsHalfOpenSocket(ent, trans, caps,
+                                                         speculative,
+                                                         isFromPredictor);
+
     if (speculative) {
-        sock->SetSpeculative(true);
         sock->SetAllow1918(allow1918);
-        Telemetry::AutoCounter<Telemetry::HTTPCONNMGR_TOTAL_SPECULATIVE_CONN> totalSpeculativeConn;
-        ++totalSpeculativeConn;
-
-        if (isFromPredictor) {
-          sock->SetIsFromPredictor(true);
-          Telemetry::AutoCounter<Telemetry::PREDICTOR_TOTAL_PRECONNECTS_CREATED> totalPreconnectsCreated;
-          ++totalPreconnectsCreated;
-        }
     }
-
     // The socket stream holds the reference to the half open
     // socket - so if the stream fails to init the half open
     // will go away.
@@ -1824,6 +1823,8 @@ nsHttpConnectionMgr::CreateTransport(nsConnectionEntry *ent,
     if (pendingTransInfo) {
         pendingTransInfo->mHalfOpen =
             do_GetWeakReference(static_cast<nsISupportsWeakReference*>(sock));
+        DebugOnly<bool> claimed = sock->Claim();
+        MOZ_ASSERT(claimed);
     }
 
     ent->mHalfOpens.AppendElement(sock);
@@ -2157,8 +2158,6 @@ nsHttpConnectionMgr::OnMsgCancelTransaction(int32_t reason, ARefBase *param)
                 RefPtr<nsHalfOpenSocket> half =
                     do_QueryReferent(pendingTransInfo->mHalfOpen);
                 if (half) {
-                    MOZ_ASSERT(trans == half->Transaction() ||
-                               half->Transaction()->IsNullTransaction());
                     half->Abandon();
                 }
                 pendingTransInfo->mHalfOpen = nullptr;
@@ -2904,21 +2903,35 @@ NS_INTERFACE_MAP_END
 nsHttpConnectionMgr::
 nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
                                    nsAHttpTransaction *trans,
-                                   uint32_t caps)
+                                   uint32_t caps,
+                                   bool speculative,
+                                   bool isFromPredictor)
     : mEnt(ent)
     , mTransaction(trans)
     , mDispatchedMTransaction(false)
     , mCaps(caps)
-    , mSpeculative(false)
-    , mIsFromPredictor(false)
+    , mSpeculative(speculative)
+    , mIsFromPredictor(isFromPredictor)
     , mAllow1918(true)
     , mHasConnected(false)
     , mPrimaryConnectedOK(false)
     , mBackupConnectedOK(false)
+    , mFreeToUse(true)
+    , mPrimaryStreamStatus(NS_OK)
 {
     MOZ_ASSERT(ent && trans, "constructor with null arguments");
     LOG(("Creating nsHalfOpenSocket [this=%p trans=%p ent=%s key=%s]\n",
          this, trans, ent->mConnInfo->Origin(), ent->mConnInfo->HashKey().get()));
+
+    if (speculative) {
+        Telemetry::AutoCounter<Telemetry::HTTPCONNMGR_TOTAL_SPECULATIVE_CONN> totalSpeculativeConn;
+        ++totalSpeculativeConn;
+
+        if (isFromPredictor) {
+          Telemetry::AutoCounter<Telemetry::PREDICTOR_TOTAL_PRECONNECTS_CREATED> totalPreconnectsCreated;
+          ++totalPreconnectsCreated;
+        }
+    }
 }
 
 nsHttpConnectionMgr::nsHalfOpenSocket::~nsHalfOpenSocket()
@@ -3095,8 +3108,6 @@ nsresult
 nsHttpConnectionMgr::nsHalfOpenSocket::SetupBackupStreams()
 {
     MOZ_ASSERT(mTransaction);
-    MOZ_ASSERT(!mTransaction->IsNullTransaction(),
-               "null transactions dont have backup streams");
 
     mBackupSynStarted = TimeStamp::Now();
     nsresult rv = SetupStreams(getter_AddRefs(mBackupTransport),
@@ -3120,7 +3131,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupBackupTimer()
 {
     uint16_t timeout = gHttpHandler->GetIdleSynTimeout();
     MOZ_ASSERT(!mSynTimer, "timer already initd");
-    if (timeout && !mTransaction->IsDone() && !mTransaction->IsNullTransaction()) {
+    if (timeout && !mSpeculative) {
         // Setup the timer that will establish a backup socket
         // if we do not get a writable event on the main one.
         // We do this because a lost SYN takes a very long time
@@ -3215,8 +3226,6 @@ nsHttpConnectionMgr::nsHalfOpenSocket::Notify(nsITimer *timer)
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     MOZ_ASSERT(timer == mSynTimer, "wrong timer");
-    MOZ_ASSERT(mTransaction && !mTransaction->IsNullTransaction(),
-               "null transactions dont have backup streams");
 
     DebugOnly<nsresult> rv = SetupBackupStreams();
     MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -3271,8 +3280,6 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         mStreamIn = nullptr;
         mSocketTransport = nullptr;
     } else if (out == mBackupStreamOut) {
-        MOZ_ASSERT(!mTransaction->IsNullTransaction(),
-                   "null transactions dont have backup streams");
         TimeDuration rtt = TimeStamp::Now() - mBackupSynStarted;
         rv = conn->Init(mEnt->mConnInfo,
                         gHttpHandler->ConnMgr()->mMaxRequestDelay,
@@ -3367,6 +3374,35 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
             LOG(("nsHalfOpenSocket::OnOutputStreamReady no transaction match "
                  "returning conn %p to pool\n", conn.get()));
             gHttpHandler->ConnMgr()->OnMsgReclaimConnection(0, conn);
+
+            // We expect that there is at least one tranasction in the pending
+            // queue that can take this connection, but it can happened that
+            // all transactions are blocked or they have took other idle
+            // connections. In that case the connection has been added to the
+            // idle queue.
+            // If the connection is in the idle queue but it is using ssl, make
+            // a nulltransaction for it to finish ssl handshake!
+            if (mEnt->mConnInfo->FirstHopSSL() &&
+                !mEnt->mConnInfo->UsingConnect()) {
+                int32_t idx = mEnt->mIdleConns.IndexOf(conn);
+                if (idx != -1) {
+                    DebugOnly<nsresult> rv = gHttpHandler->ConnMgr()->RemoveIdleConnection(conn);
+                    MOZ_ASSERT(NS_SUCCEEDED(rv));
+                    conn->EndIdleMonitoring();
+                    RefPtr<nsAHttpTransaction> trans;
+                    if (mTransaction->IsNullTransaction() &&
+                        !mDispatchedMTransaction) {
+                        mDispatchedMTransaction = true;
+                        trans = mTransaction;
+                    } else {
+                        trans = new NullHttpTransaction(mEnt->mConnInfo,
+                                                        callbacks, mCaps);
+                    }
+                    gHttpHandler->ConnMgr()->AddActiveConn(conn, mEnt);
+                    rv = gHttpHandler->ConnMgr()->
+                        DispatchAbstractTransaction(mEnt, trans, mCaps, conn, 0);
+                }
+            }
         }
     }
 
@@ -3411,6 +3447,8 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
     if (trans != mSocketTransport) {
         return NS_OK;
     }
+
+    mPrimaryStreamStatus = status;
 
     // if we are doing spdy coalescing and haven't recorded the ip address
     // for this entry before then make the hash key if our dns lookup
@@ -3497,6 +3535,47 @@ nsHttpConnectionMgr::nsHalfOpenSocket::GetInterface(const nsIID &iid,
     return NS_ERROR_NO_INTERFACE;
 }
 
+bool
+nsHttpConnectionMgr::nsHalfOpenSocket::Claim()
+{
+    if (mSpeculative) {
+        mSpeculative = false;
+        uint32_t flags;
+        if (mSocketTransport && NS_SUCCEEDED(mSocketTransport->GetConnectionFlags(&flags))) {
+            flags &= ~nsISocketTransport::DISABLE_RFC1918;
+            mSocketTransport->SetConnectionFlags(flags);
+        }
+
+        Telemetry::AutoCounter<Telemetry::HTTPCONNMGR_USED_SPECULATIVE_CONN> usedSpeculativeConn;
+        ++usedSpeculativeConn;
+
+        if (mIsFromPredictor) {
+            Telemetry::AutoCounter<Telemetry::PREDICTOR_TOTAL_PRECONNECTS_USED> totalPreconnectsUsed;
+            ++totalPreconnectsUsed;
+        }
+
+        if ((mPrimaryStreamStatus == NS_NET_STATUS_CONNECTING_TO) &&
+            mEnt && !mBackupTransport && !mSynTimer) {
+            SetupBackupTimer();
+        }
+    }
+
+    if (mFreeToUse) {
+        mFreeToUse = false;
+        return true;
+    }
+    return false;
+}
+
+void
+nsHttpConnectionMgr::nsHalfOpenSocket::Unclaim()
+{
+    MOZ_ASSERT(!mSpeculative && !mFreeToUse);
+    // We will keep the backup-timer running. Most probably this halfOpen will
+    // be used by a transaction from which this transaction took the halfOpen.
+    // (this is happening because of the transaction priority.)
+    mFreeToUse = true;
+}
 
 already_AddRefed<nsHttpConnection>
 ConnectionHandle::TakeHttpConnection()
