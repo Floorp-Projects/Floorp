@@ -141,12 +141,6 @@ add_task(function*() {
     searchParam: "enable-actions",
     matches: [ makeVisitMatch("bacon", "http://bacon/", { heuristic: true }) ]
   });
-  do_print("visit two word query, keyword.enabled = false");
-  yield check_autocomplete({
-    search: "bacon lovers",
-    searchParam: "enable-actions",
-    matches: [ makeVisitMatch("bacon lovers", "bacon lovers",  { heuristic: true }) ]
-  });
   Services.prefs.setBoolPref("keyword.enabled", keywordEnabled);
 
   do_print("visit url, scheme+host");
