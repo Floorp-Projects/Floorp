@@ -1254,7 +1254,7 @@ pref("privacy.trackingprotection.enabled",  false);
 // Enforce tracking protection in Private Browsing mode
 pref("privacy.trackingprotection.pbmode.enabled",  true);
 // Annotate channels based on the tracking protection list in all modes
-pref("privacy.trackingprotection.annotate_channels",  true);
+pref("privacy.trackingprotection.annotate_channels", false);
 // Lower the priority of network loads for resources on the tracking protection list.
 // Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
 pref("privacy.trackingprotection.lower_network_priority",  false);
