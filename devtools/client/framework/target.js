@@ -351,15 +351,15 @@ TabTarget.prototype = {
   },
 
   get isAddon() {
-    return !!(this._form && this._form.actor && (
-      this._form.actor.match(/conn\d+\.addon\d+/) ||
-      this._form.actor.match(/conn\d+\.webExtension\d+/)
-    ));
+    return !!(this._form && this._form.actor &&
+              this._form.actor.match(/conn\d+\.addon\d+/)) || this.isWebExtension;
   },
 
   get isWebExtension() {
-    return !!(this._form && this._form.actor &&
-              this._form.actor.match(/conn\d+\.webExtension\d+/));
+    return !!(this._form && this._form.actor && (
+      this._form.actor.match(/conn\d+\.webExtension\d+/) ||
+      this._form.actor.match(/child\d+\/webExtension\d+/)
+    ));
   },
 
   get isLocalTab() {
@@ -375,7 +375,7 @@ TabTarget.prototype = {
    * for tools that support the Remote Debugging Protocol even for local
    * connections.
    */
-  makeRemote: function () {
+  makeRemote: async function () {
     if (this._remote) {
       return this._remote.promise;
     }
@@ -398,6 +398,22 @@ TabTarget.prototype = {
       this._client = new DebuggerClient(DebuggerServer.connectPipe());
       // A local TabTarget will never perform chrome debugging.
       this._chrome = false;
+    } else if (this._form.isWebExtension &&
+          this.client.mainRoot.traits.webExtensionAddonConnect) {
+      // The addonActor form is related to a WebExtensionParentActor instance,
+      // which isn't a tab actor on its own, it is an actor living in the parent process
+      // with access to the addon metadata, it can control the addon (e.g. reloading it)
+      // and listen to the AddonManager events related to the lifecycle of the addon
+      // (e.g. when the addon is disabled or uninstalled ).
+      // To retrieve the TabActor instance, we call its "connect" method,
+      // (which fetches the TabActor form from a WebExtensionChildActor instance).
+      let {form} = await this._client.request({
+        to: this._form.actor, type: "connect",
+      });
+
+      this._form = form;
+      this._url = form.url;
+      this._title = form.title;
     }
 
     this._setupRemoteListeners();
