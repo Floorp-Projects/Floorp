@@ -921,14 +921,13 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   border: 1px solid transparent;
 }
 
-.autocomplete-richlistitem[selected=true] {
-  background-color: Highlight;
-}
-
 .ac-title {
   font-size: 1.05em;
 }
 
+.ac-separator,
+.ac-url,
+.ac-action,
 .ac-tags {
   font-size: 0.9em;
 }
@@ -941,18 +940,10 @@ html|span.ac-tag {
   padding: 0 1px;
 }
 
-.ac-separator,
-.ac-url,
-.ac-action {
-  font-size: 0.9em;
+.ac-separator:not([selected=true]),
+.ac-url:not([selected=true]),
+.ac-action:not([selected=true]) {
   color: -moz-nativehyperlinktext;
-}
-
-.ac-title[selected=true],
-.ac-separator[selected],
-.ac-url[selected=true],
-.ac-action[selected=true] {
-  color: inherit !important;
 }
 
 .ac-tags-text[selected] > html|span.ac-tag {

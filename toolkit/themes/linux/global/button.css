@@ -12,7 +12,7 @@
 
 button {
   -moz-appearance: button;
-  margin: 1px 5px 2px 5px;
+  margin: 1px 5px 2px;
   min-width: 6.3em;
   color: ButtonText;
   text-shadow: none;
@@ -33,22 +33,13 @@ button {
 
 /* .......... hover state .......... */
 
-button:hover {
+button:hover:not(:-moz-any(:active,[disabled="true"],[open="true"],[checked="true"])) {
   color: -moz-buttonhovertext;
-}
-
-/* .......... active/open/checked state .......... */
-
-button:hover:active,
-button[open="true"],
-button[checked="true"] {
-  color: ButtonText;
 }
 
 /* .......... disabled state .......... */
 
-button[disabled="true"],
-button[disabled="true"]:hover:active {
+button[disabled="true"] {
   color: GrayText;
 }
 

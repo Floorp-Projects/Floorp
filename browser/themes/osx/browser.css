@@ -1700,13 +1700,16 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 .autocomplete-richlistitem[selected] {
   background-color: hsl(210, 80%, 52%);
+  color: hsl(0, 0%, 100%);
 }
 
 .ac-title {
   font-size: 14px;
-  color: hsl(0, 0%, 0%);
 }
 
+.ac-separator,
+.ac-url,
+.ac-action,
 .ac-tags {
   font-size: 12px;
 }
@@ -1719,29 +1722,16 @@ html|span.ac-tag {
   padding: 0 1px;
 }
 
-.ac-separator,
-.ac-url,
-.ac-action {
-  font-size: 12px;
-}
-
-.ac-separator {
+.ac-separator:not([selected=true]) {
   color: hsl(0, 0%, 50%);
 }
 
-.ac-url {
+.ac-url:not([selected=true]) {
   color: hsl(210, 77%, 47%);
 }
 
-.ac-action {
+.ac-action:not([selected=true]) {
   color: hsl(178, 100%, 28%);
-}
-
-.ac-title[selected],
-.ac-separator[selected],
-.ac-url[selected],
-.ac-action[selected] {
-  color: hsl(0, 0%, 100%);
 }
 
 .ac-tags-text[selected] > html|span.ac-tag {
