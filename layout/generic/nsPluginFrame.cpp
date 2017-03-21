@@ -150,6 +150,7 @@ protected:
 nsPluginFrame::nsPluginFrame(nsStyleContext* aContext)
   : nsFrame(aContext)
   , mInstanceOwner(nullptr)
+  , mOuterView(nullptr)
   , mInnerView(nullptr)
   , mBackgroundSink(nullptr)
   , mReflowCallbackPosted(false)
@@ -194,6 +195,7 @@ nsPluginFrame::Init(nsIContent*       aContent,
          ("Initializing nsPluginFrame %p for content %p\n", this, aContent));
 
   nsFrame::Init(aContent, aParent, aPrevInFlow);
+  CreateView();
 }
 
 void

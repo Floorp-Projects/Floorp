@@ -157,7 +157,11 @@ protected:
    */
   nsIFrame* ObtainIntrinsicSizeFrame();
 
+  nsView* GetViewInternal() const override { return mOuterView; }
+  void SetViewInternal(nsView* aView) override { mOuterView = aView; }
+
   RefPtr<nsFrameLoader> mFrameLoader;
+  nsView* mOuterView;
   nsView* mInnerView;
   bool mIsInline;
   bool mPostedReflowCallback;

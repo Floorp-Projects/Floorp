@@ -613,8 +613,8 @@ public:
    * If the frame is a continuing frame, then aPrevInFlow indicates the previous
    * frame (the frame that was split).
    *
-   * If you want a view associated with your frame, you should create the view
-   * after Init() has returned.
+   * Each subclass that need a view should override this method and call
+   * CreateView() after calling its base class Init().
    *
    * @param   aContent the content object associated with the frame
    * @param   aParent the parent frame
@@ -1607,11 +1607,6 @@ public:
                                 const nsDisplayListSet& aLists,
                                 uint32_t                aFlags = 0);
 
-  /**
-   * Does this frame need a view?
-   */
-  virtual bool NeedsView() { return false; }
-
   bool RefusedAsyncAnimation() const
   {
     return Properties().Get(RefusedAsyncAnimationProperty());
@@ -2445,14 +2440,31 @@ public:
   virtual bool HasAnyNoncollapsedCharacters()
   { return false; }
 
-  /**
-   * Accessor functions to get/set the associated view object
-   *
-   * GetView returns non-null if and only if |HasView| returns true.
-   */
+  //
+  // Accessor functions to an associated view object:
+  //
   bool HasView() const { return !!(mState & NS_FRAME_HAS_VIEW); }
-  nsView* GetView() const;
-  nsresult SetView(nsView* aView);
+protected:
+  virtual nsView* GetViewInternal() const
+  {
+    MOZ_ASSERT_UNREACHABLE("method should have been overridden by subclass");
+    return nullptr;
+  }
+  virtual void SetViewInternal(nsView* aView)
+  {
+    MOZ_ASSERT_UNREACHABLE("method should have been overridden by subclass");
+  }
+public:
+  nsView* GetView() const
+  {
+    if (MOZ_LIKELY(!HasView())) {
+      return nullptr;
+    }
+    nsView* view = GetViewInternal();
+    MOZ_ASSERT(view, "GetViewInternal() should agree with HasView()");
+    return view;
+  }
+  void SetView(nsView* aView);
 
   /**
    * Find the closest view (on |this| or an ancestor).
