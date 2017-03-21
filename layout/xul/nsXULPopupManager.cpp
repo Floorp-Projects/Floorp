@@ -205,6 +205,10 @@ bool
 nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
                           const nsIntPoint* pos, nsIContent** aLastRolledUp)
 {
+  if (aLastRolledUp) {
+    *aLastRolledUp = nullptr;
+  }
+
   // We can disable the autohide behavior via a pref to ease debugging.
   if (nsXULPopupManager::sDevtoolsDisableAutoHide) {
     // Required on linux to allow events to work on other targets.
