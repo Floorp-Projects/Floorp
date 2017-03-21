@@ -101,12 +101,15 @@ public:
   enum {
     SCROLL_SYNCHRONOUS = 1<<1,
     SCROLL_FIRST_ANCESTOR_ONLY = 1<<2,
-    SCROLL_DO_FLUSH = 1<<3,
+    SCROLL_DO_FLUSH = 1<<3,  // only matters if SCROLL_SYNCHRONOUS is passed too
     SCROLL_OVERFLOW_HIDDEN = 1<<5,
     SCROLL_FOR_CARET_MOVE = 1<<6
   };
-  // aDoFlush only matters if aIsSynchronous is true.  If not, we'll just flush
-  // when the scroll event fires so we make sure to scroll to the right place.
+  // If aFlags doesn't contain SCROLL_SYNCHRONOUS, then we'll flush when
+  // the scroll event fires so we make sure to scroll to the right place.
+  // Otherwise, if SCROLL_DO_FLUSH is also in aFlags, then this method will
+  // flush layout and you MUST hold a strong ref on 'this' for the duration
+  // of this call.  This might destroy arbitrary layout objects.
   nsresult      ScrollIntoView(SelectionRegion aRegion,
                                nsIPresShell::ScrollAxis aVertical =
                                  nsIPresShell::ScrollAxis(),
