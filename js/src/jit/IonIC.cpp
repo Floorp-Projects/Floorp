@@ -215,7 +215,6 @@ IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript, IonSetProperty
         RootedValue objv(cx, ObjectValue(*obj));
         RootedScript script(cx, ic->script());
         jsbytecode* pc = ic->pc();
-        bool isTemporarilyUnoptimizable;
         SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(),
                                &isTemporarilyUnoptimizable,
                                objv, idVal, rhs, ic->needsTypeBarrier(), ic->guardHoles());
