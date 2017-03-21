@@ -471,7 +471,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             'installer_path': self.installer_path,
             'raw_log_file': raw_log_file,
             'error_summary_file': error_summary_file,
-            'dm_trans': c['device_manager'],
             # marionette options
             'address': c.get('marionette_address'),
             'gecko_log': os.path.join(dirs["abs_blob_upload_dir"], 'gecko.log'),

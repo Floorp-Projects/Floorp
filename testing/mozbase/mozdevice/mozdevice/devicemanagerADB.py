@@ -233,9 +233,7 @@ class DeviceManagerADB(DeviceManager):
 
     def pushFile(self, localname, destname, retryLimit=None, createDir=True):
         # you might expect us to put the file *in* the directory in this case,
-        # but that would be different behaviour from devicemanagerSUT. Throw
-        # an exception so we have the same behaviour between the two
-        # implementations
+        # but that would be inconsistent with historical behavior.
         retryLimit = retryLimit or self.retryLimit
         if self.dirExists(destname):
             raise DMError("Attempted to push a file (%s) to a directory (%s)!" %
@@ -413,7 +411,6 @@ class DeviceManagerADB(DeviceManager):
         acmd = ["-W"]
         cmd = ' '.join(cmd).strip()
         i = cmd.find(" ")
-        # SUT identifies the URL by looking for :\\ -- another strategy to consider
         re_url = re.compile('^[http|file|chrome|about].*')
         last = cmd.rfind(" ")
         uri = ""

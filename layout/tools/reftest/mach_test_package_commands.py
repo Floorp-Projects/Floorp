@@ -51,7 +51,6 @@ def run_reftest_android(context, args):
     args.utilityPath = context.hostutils
     args.xrePath = context.hostutils
     args.httpdPath = context.module_dir
-    args.dm_trans = 'adb'
     args.ignoreWindowSize = True
     args.printDeviceInfo = False
 
