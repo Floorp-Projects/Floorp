@@ -395,18 +395,12 @@ public:
    * This method returns a change hint (see nsChangeHint.h).  All change
    * hints apply to the frame and its later continuations or ib-split
    * siblings.  Most (all of those except the "NotHandledForDescendants"
-   * hints) also apply to all descendants.  The caller must pass in any
-   * non-inherited hints that resulted from the parent style context's
-   * style change.  The caller *may* pass more hints than needed, but
-   * must not pass less than needed; therefore if the caller doesn't
-   * know, the caller should pass
-   * nsChangeHint_Hints_NotHandledForDescendants.
+   * hints) also apply to all descendants.
    *
    * aEqualStructs must not be null.  Into it will be stored a bitfield
    * representing which structs were compared to be non-equal.
    */
   nsChangeHint CalcStyleDifference(nsStyleContext* aNewContext,
-                                   nsChangeHint aParentHintsNotHandledForDescendants,
                                    uint32_t* aEqualStructs,
                                    uint32_t* aSamePointerStructs);
 
@@ -415,14 +409,12 @@ public:
    * a full-fledged style context.
    */
   nsChangeHint CalcStyleDifference(const ServoComputedValues* aNewComputedValues,
-                                   nsChangeHint aParentHintsNotHandledForDescendants,
                                    uint32_t* aEqualStructs,
                                    uint32_t* aSamePointerStructs);
 
 private:
   template<class StyleContextLike>
   nsChangeHint CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
-                                           nsChangeHint aParentHintsNotHandledForDescendants,
                                            uint32_t* aEqualStructs,
                                            uint32_t* aSamePointerStructs);
 
@@ -506,7 +498,6 @@ public:
 
 #ifdef DEBUG
   void List(FILE* out, int32_t aIndent, bool aListDescendants = true);
-  static void AssertStyleStructMaxDifferenceValid();
   static const char* StructName(nsStyleStructID aSID);
   static bool LookupStruct(const nsACString& aName, nsStyleStructID& aResult);
 #endif
