@@ -143,6 +143,8 @@ apt-get update
 
 # for mp4 codec (used in MSE tests)
 apt-get -q -y -f install ubuntu-restricted-extras
+# TEMPORARY: we do not want flash installed, but the above pulls it in (bug 1349208)
+rm -f /usr/lib/flashplugin-installer/libflashplayer.so
 
 apt-get -q -y -f install \
     libxcb1 \
