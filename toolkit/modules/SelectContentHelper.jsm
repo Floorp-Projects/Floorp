@@ -142,13 +142,13 @@ this.SelectContentHelper.prototype = {
   _calculateUAColors() {
     let dummyOption = this.element.ownerDocument.createElement("option");
     dummyOption.style.setProperty("color", "-moz-comboboxtext", "important");
-    dummyOption.style.setProperty("backgroundColor", "-moz-combobox", "important");
+    dummyOption.style.setProperty("background-color", "-moz-combobox", "important");
     let optionCS = this.element.ownerGlobal.getComputedStyle(dummyOption);
     this._uaBackgroundColor = optionCS.backgroundColor;
     this._uaColor = optionCS.color;
     let dummySelect = this.element.ownerDocument.createElement("select");
     dummySelect.style.setProperty("color", "-moz-fieldtext", "important");
-    dummySelect.style.setProperty("backgroundColor", "-moz-field", "important");
+    dummySelect.style.setProperty("background-color", "-moz-field", "important");
     let selectCS = this.element.ownerGlobal.getComputedStyle(dummySelect);
     this._uaSelectBackgroundColor = selectCS.backgroundColor;
     this._uaSelectColor = selectCS.color;

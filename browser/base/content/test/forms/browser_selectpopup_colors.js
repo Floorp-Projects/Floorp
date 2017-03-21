@@ -60,6 +60,13 @@ const TRANSLUCENT_SELECT_BECOMES_OPAQUE =
   '  <option value="Two" selected="true">{"end": "true"}</option>' +
   "</select></body></html>";
 
+const TRANSLUCENT_SELECT_APPLIES_ON_BASE_COLOR =
+  "<html><head>" +
+  "<body><select id='one' style='background-color: rgba(255,0,0,.55);'>" +
+  '  <option value="One">{"color": "rgb(0, 0, 0)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
+  '  <option value="Two" selected="true">{"end": "true"}</option>' +
+  "</select></body></html>";
+
 const DISABLED_OPTGROUP_AND_OPTIONS =
   "<html><head>" +
   "<body><select id='one'>" +
@@ -140,8 +147,33 @@ function* testSelectColors(select, itemCount, options) {
   if (!options.skipSelectColorTest) {
     is(getComputedStyle(selectPopup).color, options.selectColor,
       "popup has expected foreground color");
-    is(getComputedStyle(selectPopup).backgroundColor, options.selectBgColor,
-      "popup has expected background color");
+
+    // Combine the select popup's backgroundColor and the
+    // backgroundImage color to get the color that is seen by
+    // the user.
+    let base = getComputedStyle(selectPopup).backgroundColor;
+    let [/* unused */, bR, bG, bB] =
+      base.match(/rgb\((\d+), (\d+), (\d+)\)/);
+    bR = parseInt(bR, 10);
+    bG = parseInt(bG, 10);
+    bB = parseInt(bB, 10);
+    let topCoat = getComputedStyle(selectPopup).backgroundImage;
+    if (topCoat == "none") {
+      is(`rgb(${bR}, ${bG}, ${bB})`, options.selectBgColor,
+        "popup has expected background color");
+    } else {
+      let [/* unused */, /* unused */, tR, tG, tB, tA] =
+        topCoat.match(/(rgba?\((\d+), (\d+), (\d+)(?:, (0\.\d+))?\)), \1/);
+      tR = parseInt(tR, 10);
+      tG = parseInt(tG, 10);
+      tB = parseInt(tB, 10);
+      tA = parseFloat(tA) || 1;
+      let actualR = Math.round(tR * tA + bR * (1 - tA));
+      let actualG = Math.round(tG * tA + bG * (1 - tA));
+      let actualB = Math.round(tB * tA + bB * (1 - tA));
+      is(`rgb(${actualR}, ${actualG}, ${actualB})`, options.selectBgColor,
+        "popup has expected background color");
+    }
   }
 
   ok(!child.selected, "The first child should not be selected");
@@ -217,12 +249,25 @@ add_task(function* test_select_background_using_important() {
 // background color has been changed.
 add_task(function* test_translucent_select_becomes_opaque() {
   // The popup is requested to show a translucent background
-  // but we force the alpha channel to 1 on the popup.
+  // but we apply the requested background color on the system's base color.
   let options = {
     selectColor: "rgb(0, 0, 0)",
     selectBgColor: "rgb(255, 255, 255)"
   };
   yield testSelectColors(TRANSLUCENT_SELECT_BECOMES_OPAQUE, 2, options);
+});
+
+// This test checks when a popup has a translucent background color,
+// and that the color painted to the screen of the translucent background
+// matches what the user expects.
+add_task(function* test_translucent_select_applies_on_base_color() {
+  // The popup is requested to show a translucent background
+  // but we apply the requested background color on the system's base color.
+  let options = {
+    selectColor: "rgb(0, 0, 0)",
+    selectBgColor: "rgb(255, 115, 115)"
+  };
+  yield testSelectColors(TRANSLUCENT_SELECT_APPLIES_ON_BASE_COLOR, 2, options);
 });
 
 add_task(function* test_disabled_optgroup_and_options() {
