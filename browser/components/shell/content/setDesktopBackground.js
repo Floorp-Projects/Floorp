@@ -7,12 +7,12 @@ Components.utils.import("resource://gre/modules/AppConstants.jsm");
 var Ci = Components.interfaces;
 
 var gSetBackground = {
-  _position        : AppConstants.platform == "macosx" ? "STRETCH" : "",
-  _backgroundColor : AppConstants.platform != "macosx" ? 0 : undefined,
-  _screenWidth     : 0,
-  _screenHeight    : 0,
-  _image           : null,
-  _canvas          : null,
+  _position: AppConstants.platform == "macosx" ? "STRETCH" : "",
+  _backgroundColor: AppConstants.platform != "macosx" ? 0 : undefined,
+  _screenWidth: 0,
+  _screenHeight: 0,
+  _image: null,
+  _canvas: null,
 
   get _shell() {
     return Components.classes["@mozilla.org/browser/shell-service;1"]

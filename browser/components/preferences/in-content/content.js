@@ -182,18 +182,18 @@ var gContentPane = {
     const kFontSizeFmtVariable      = "font.size.variable.%LANG%";
 
     var preferences = document.getElementById("contentPreferences");
-    var prefs = [{ format   : aIsSerif ? kFontNameFmtSerif : kFontNameFmtSansSerif,
-                   type     : "fontname",
-                   element  : "defaultFont",
-                   fonttype : aIsSerif ? "serif" : "sans-serif" },
-                 { format   : aIsSerif ? kFontNameListFmtSerif : kFontNameListFmtSansSerif,
-                   type     : "unichar",
-                   element  : null,
-                   fonttype : aIsSerif ? "serif" : "sans-serif" },
-                 { format   : kFontSizeFmtVariable,
-                   type     : "int",
-                   element  : "defaultFontSize",
-                   fonttype : null }];
+    var prefs = [{ format: aIsSerif ? kFontNameFmtSerif : kFontNameFmtSansSerif,
+                   type: "fontname",
+                   element: "defaultFont",
+                   fonttype: aIsSerif ? "serif" : "sans-serif" },
+                 { format: aIsSerif ? kFontNameListFmtSerif : kFontNameListFmtSansSerif,
+                   type: "unichar",
+                   element: null,
+                   fonttype: aIsSerif ? "serif" : "sans-serif" },
+                 { format: kFontSizeFmtVariable,
+                   type: "int",
+                   element: "defaultFontSize",
+                   fonttype: null }];
     for (var i = 0; i < prefs.length; ++i) {
       var preference = document.getElementById(prefs[i].format.replace(/%LANG%/, aLanguageGroup));
       if (!preference) {

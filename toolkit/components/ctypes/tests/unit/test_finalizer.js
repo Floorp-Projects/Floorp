@@ -136,10 +136,10 @@ function run_test() {
     }
   );
   const rect_t = new ctypes.StructType("myRECT",
-                                       [{ top   : ctypes.int32_t },
-                                        { left  : ctypes.int32_t },
+                                       [{ top: ctypes.int32_t },
+                                        { left: ctypes.int32_t },
                                         { bottom: ctypes.int32_t },
-                                        { right : ctypes.int32_t }]);
+                                        { right: ctypes.int32_t }]);
   samples.push(
     {
       name: "struct",

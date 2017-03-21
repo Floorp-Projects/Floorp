@@ -35,7 +35,7 @@ function setPreviewBG(backgroundData) {
 }
 
 function sendReceivedEvent() {
-  window.dispatchEvent(new CustomEvent("ScreenshotReceived", {bubbles:true}));
+  window.dispatchEvent(new CustomEvent("ScreenshotReceived", {bubbles: true}));
 }
 
 window.addEventListener("message", function(event) {

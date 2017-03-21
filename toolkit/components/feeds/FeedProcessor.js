@@ -162,31 +162,31 @@ function makePropGetter(key) {
 const RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 // namespace map
 var gNamespaces = {
-  "http://webns.net/mvcb/":"admin",
-  "http://backend.userland.com/rss":"",
-  "http://blogs.law.harvard.edu/tech/rss":"",
-  "http://www.w3.org/2005/Atom":"atom",
-  "http://purl.org/atom/ns#":"atom03",
-  "http://purl.org/rss/1.0/modules/content/":"content",
-  "http://purl.org/dc/elements/1.1/":"dc",
-  "http://purl.org/dc/terms/":"dcterms",
-  "http://www.w3.org/1999/02/22-rdf-syntax-ns#":"rdf",
-  "http://purl.org/rss/1.0/":"rss1",
-  "http://my.netscape.com/rdf/simple/0.9/":"rss1",
-  "http://wellformedweb.org/CommentAPI/":"wfw",
-  "http://purl.org/rss/1.0/modules/wiki/":"wiki",
-  "http://www.w3.org/XML/1998/namespace":"xml",
-  "http://search.yahoo.com/mrss/":"media",
-  "http://search.yahoo.com/mrss":"media"
+  "http://webns.net/mvcb/": "admin",
+  "http://backend.userland.com/rss": "",
+  "http://blogs.law.harvard.edu/tech/rss": "",
+  "http://www.w3.org/2005/Atom": "atom",
+  "http://purl.org/atom/ns#": "atom03",
+  "http://purl.org/rss/1.0/modules/content/": "content",
+  "http://purl.org/dc/elements/1.1/": "dc",
+  "http://purl.org/dc/terms/": "dcterms",
+  "http://www.w3.org/1999/02/22-rdf-syntax-ns#": "rdf",
+  "http://purl.org/rss/1.0/": "rss1",
+  "http://my.netscape.com/rdf/simple/0.9/": "rss1",
+  "http://wellformedweb.org/CommentAPI/": "wfw",
+  "http://purl.org/rss/1.0/modules/wiki/": "wiki",
+  "http://www.w3.org/XML/1998/namespace": "xml",
+  "http://search.yahoo.com/mrss/": "media",
+  "http://search.yahoo.com/mrss": "media"
 }
 
 // We allow a very small set of namespaces in XHTML content,
 // for attributes only
 var gAllowedXHTMLNamespaces = {
-  "http://www.w3.org/XML/1998/namespace":"xml",
+  "http://www.w3.org/XML/1998/namespace": "xml",
   // if someone ns qualifies XHTML, we have to prefix it to avoid an
   // attribute collision.
-  "http://www.w3.org/1999/xhtml":"xhtml"
+  "http://www.w3.org/1999/xhtml": "xhtml"
 }
 
 function FeedResult() {}
@@ -229,7 +229,7 @@ Feed.prototype = {
     items: ["items", "atom03_entries", "entries"],
     id: ["atom:id", "rdf:about"],
     generator: ["generator"],
-    authors : ["authors"],
+    authors: ["authors"],
     contributors: ["contributors"],
     link:  [["link", strToURI], ["rss1:link", strToURI]],
     categories: ["categories", "dc:subject"],
@@ -404,7 +404,7 @@ Entry.prototype = {
     link: [["link", strToURI], ["rss1:link", strToURI]],
     id: [["guid", makePropGetter("guid")], "rdf:about",
          "atom03:id", "atom:id"],
-    authors : ["authors"],
+    authors: ["authors"],
     contributors: ["contributors"],
     summary: ["description", "rss1:description", "dc:description",
               "atom03:summary", "atom:summary"],
@@ -1054,21 +1054,21 @@ function FeedProcessor() {
 
   // These elements can contain (X)HTML or plain text.
   // We keep a table here that contains their default treatment
-  this._textConstructs = {"atom:title":"text",
-                          "atom:summary":"text",
-                          "atom:rights":"text",
-                          "atom:content":"text",
-                          "atom:subtitle":"text",
-                          "description":"html",
-                          "rss1:description":"html",
-                          "dc:description":"html",
-                          "content:encoded":"html",
-                          "title":"text",
-                          "rss1:title":"text",
-                          "atom03:title":"text",
-                          "atom03:tagline":"text",
-                          "atom03:summary":"text",
-                          "atom03:content":"text"};
+  this._textConstructs = {"atom:title": "text",
+                          "atom:summary": "text",
+                          "atom:rights": "text",
+                          "atom:content": "text",
+                          "atom:subtitle": "text",
+                          "description": "html",
+                          "rss1:description": "html",
+                          "dc:description": "html",
+                          "content:encoded": "html",
+                          "title": "text",
+                          "rss1:title": "text",
+                          "atom03:title": "text",
+                          "atom03:tagline": "text",
+                          "atom03:summary": "text",
+                          "atom03:content": "text"};
   this._stack = [];
 
   this._trans = {
@@ -1133,7 +1133,7 @@ function FeedProcessor() {
       "day": new ElementInfo("days", null, rssArrayElement, true)
     },
 
-    "IN_SKIPHOURS":{
+    "IN_SKIPHOURS": {
       "hour": new ElementInfo("hours", null, rssArrayElement, true)
     },
 
@@ -1610,10 +1610,10 @@ FeedProcessor.prototype = {
   // Only for RSS2esque formats
   _findRSSVersion: function FP__findRSSVersion(attributes) {
     var versionAttr = attributes.getValueFromName("", "version").trim();
-    var versions = { "0.91":"rss091",
-                     "0.92":"rss092",
-                     "0.93":"rss093",
-                     "0.94":"rss094" }
+    var versions = { "0.91": "rss091",
+                     "0.92": "rss092",
+                     "0.93": "rss093",
+                     "0.94": "rss094" }
     if (versions[versionAttr])
       return versions[versionAttr];
     if (versionAttr.substr(0, 2) != "2.")

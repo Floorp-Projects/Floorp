@@ -70,8 +70,11 @@ module.exports = {
     // "indent": ["error", 2, { "SwitchCase": 1 }],
 
     // Space after colon not before in property declarations
-    // "key-spacing": ["error", { "beforeColon": false, "afterColon": true,
-    //                            "mode": "minimum" }],
+    "key-spacing": ["error", {
+      "beforeColon": false,
+      "afterColon": true,
+      "mode": "minimum"
+    }],
 
     // Require spaces before and after keywords
     "keyword-spacing": "error",

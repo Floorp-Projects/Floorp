@@ -11,7 +11,7 @@ add_task(function *() {
   // Get the point of the element with the page menu (test-pagemenu) and
   // synthesize a right mouse click there.
   let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-  yield BrowserTestUtils.synthesizeMouse("#test-pagemenu", 5, 5, { type : "contextmenu", button : 2 }, tab.linkedBrowser);
+  yield BrowserTestUtils.synthesizeMouse("#test-pagemenu", 5, 5, { type: "contextmenu", button: 2 }, tab.linkedBrowser);
   yield popupShownPromise;
 
   checkMenu(contextMenu);

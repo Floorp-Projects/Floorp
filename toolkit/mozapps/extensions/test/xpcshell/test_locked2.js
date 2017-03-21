@@ -158,7 +158,7 @@ add_task(function*() {
   if (OS.Constants.libc.O_EXLOCK)
     options.unixFlags = OS.Constants.libc.O_EXLOCK;
 
-  let file = yield OS.File.open(gExtensionsJSON.path, {read:true, write:true, existing:true}, options);
+  let file = yield OS.File.open(gExtensionsJSON.path, {read: true, write: true, existing: true}, options);
 
   let filePermissions = gExtensionsJSON.permissions;
   if (!OS.Constants.Win) {

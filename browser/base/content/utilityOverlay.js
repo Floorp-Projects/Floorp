@@ -790,7 +790,7 @@ function openPreferences(paneID, extraArgs) {
 }
 
 function openAdvancedPreferences(tabID) {
-  openPreferences("paneAdvanced", { "advancedTab" : tabID });
+  openPreferences("paneAdvanced", { "advancedTab": tabID });
 }
 
 /**

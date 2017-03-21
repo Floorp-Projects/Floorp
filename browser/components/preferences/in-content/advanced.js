@@ -512,14 +512,14 @@ var gAdvancedPane = {
 
   showOfflineExceptions() {
     var bundlePreferences = document.getElementById("bundlePreferences");
-    var params = { blockVisible     : false,
-                   sessionVisible   : false,
-                   allowVisible     : false,
-                   prefilledHost    : "",
-                   permissionType   : "offline-app",
-                   manageCapability : Components.interfaces.nsIPermissionManager.DENY_ACTION,
-                   windowTitle      : bundlePreferences.getString("offlinepermissionstitle"),
-                   introText        : bundlePreferences.getString("offlinepermissionstext") };
+    var params = { blockVisible: false,
+                   sessionVisible: false,
+                   allowVisible: false,
+                   prefilledHost: "",
+                   permissionType: "offline-app",
+                   manageCapability: Components.interfaces.nsIPermissionManager.DENY_ACTION,
+                   windowTitle: bundlePreferences.getString("offlinepermissionstitle"),
+                   introText: bundlePreferences.getString("offlinepermissionstext") };
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
                     null, params);
   },

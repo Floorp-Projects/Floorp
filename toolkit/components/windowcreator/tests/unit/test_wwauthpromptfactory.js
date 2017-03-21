@@ -30,7 +30,7 @@ var TestPromptFactory = {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  getPrompt : function tPF_getPrompt(aWindow, aIID) {
+  getPrompt: function tPF_getPrompt(aWindow, aIID) {
     if (aIID.equals(Ci.nsIAuthPrompt) ||
         aIID.equals(Ci.nsIAuthPrompt2)) {
       authPromptRequestReceived = true;

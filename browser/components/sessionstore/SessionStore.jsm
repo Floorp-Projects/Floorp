@@ -4458,7 +4458,7 @@ var SessionStoreInternal = {
    *
    * @returns aString that has been updated with the new title
    */
-  _replaceLoadingTitle : function ssi_replaceLoadingTitle(aString, aTabbrowser, aTab) {
+  _replaceLoadingTitle: function ssi_replaceLoadingTitle(aString, aTabbrowser, aTab) {
     if (aString == aTabbrowser.mStringBundle.getString("tabs.connecting")) {
       aTabbrowser.setTabTitle(aTab);
       [aString, aTab.label] = [aTab.label, aString];
@@ -4471,7 +4471,7 @@ var SessionStoreInternal = {
    * where we don't have any non-popup windows on Windows and Linux. Then we must
    * resize such that we have at least one non-popup window.
    */
-  _capClosedWindows : function ssi_capClosedWindows() {
+  _capClosedWindows: function ssi_capClosedWindows() {
     if (this._closedWindows.length <= this._max_windows_undo)
       return;
     let spliceTo = this._max_windows_undo;

@@ -13,7 +13,7 @@ const UPDATE_TIME_PREF = "browser.safebrowsing.provider.mozilla.nextupdatetime";
 var gBlocklistManager = {
   _type: "",
   _blockLists: [],
-  _brandShortName : null,
+  _brandShortName: null,
   _bundle: null,
   _tree: null,
 

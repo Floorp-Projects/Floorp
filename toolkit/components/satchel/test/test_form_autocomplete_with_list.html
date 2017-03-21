@@ -51,9 +51,9 @@ const shiftModifier = Components.interfaces.nsIDOMEvent.SHIFT_MASK;
 
 function setupFormHistory(aCallback) {
   updateFormHistory([
-    { op : "remove" },
-    { op : "add", fieldname : "field1", value : "historyvalue" },
-    { op : "add", fieldname : "field2", value : "othervalue" },
+    { op: "remove" },
+    { op: "add", fieldname: "field1", value: "historyvalue" },
+    { op: "add", fieldname: "field2", value: "othervalue" },
   ], aCallback);
 }
 

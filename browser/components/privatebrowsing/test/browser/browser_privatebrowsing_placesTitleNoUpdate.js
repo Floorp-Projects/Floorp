@@ -59,7 +59,7 @@ add_task(function* test() {
   yield waitForTitleChanged();
   is(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_2, "The title matches the updated title after updating visit");
 
-  let privateWin = yield BrowserTestUtils.openNewBrowserWindow({private:true});
+  let privateWin = yield BrowserTestUtils.openNewBrowserWindow({private: true});
   yield BrowserTestUtils.browserLoaded(privateWin.gBrowser.addTab(TEST_URL).linkedBrowser);
 
   is(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_2, "The title remains the same after visiting in private window");

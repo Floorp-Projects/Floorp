@@ -89,28 +89,28 @@ var testData = [
    annoName: goodAnnoName, annoVal: val, lastVisit: jan14_2130},
 
   // Begin the invalid queries: Test too early
-  {isInQuery: false, isVisit:true, isDetails: true, title: "moz",
+  {isInQuery: false, isVisit: true, isDetails: true, title: "moz",
    uri: "http://foo.com/tooearly.php", lastVisit: jan6_700},
 
   // Test Bad Annotation
-  {isInQuery: false, isVisit:true, isDetails: true, isPageAnnotation: true,
+  {isInQuery: false, isVisit: true, isDetails: true, isPageAnnotation: true,
    title: "moz", uri: "http://foo.com/badanno.htm", lastVisit: jan12_1730,
    annoName: badAnnoName, annoVal: val},
 
   // Test bad URI
-  {isInQuery: false, isVisit:true, isDetails: true, title: "moz",
+  {isInQuery: false, isVisit: true, isDetails: true, title: "moz",
    uri: "http://somefoo.com/justwrong.htm", lastVisit: jan11_800},
 
   // Test afterward, one to update
-  {isInQuery: false, isVisit:true, isDetails: true, title: "changeme",
+  {isInQuery: false, isVisit: true, isDetails: true, title: "changeme",
    uri: "http://foo.com/changeme1.htm", lastVisit: jan12_1730},
 
   // Test invalid title
-  {isInQuery: false, isVisit:true, isDetails: true, title: "changeme2",
+  {isInQuery: false, isVisit: true, isDetails: true, title: "changeme2",
    uri: "http://foo.com/changeme2.htm", lastVisit: jan7_800},
 
   // Test changing the lastVisit
-  {isInQuery: false, isVisit:true, isDetails: true, title: "moz",
+  {isInQuery: false, isVisit: true, isDetails: true, title: "moz",
    uri: "http://foo.com/changeme3.htm", lastVisit: dec27_800}];
 
 /**
