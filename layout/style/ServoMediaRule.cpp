@@ -9,6 +9,7 @@
 #include "mozilla/ServoMediaRule.h"
 
 #include "mozilla/ServoBindings.h"
+#include "mozilla/ServoMediaList.h"
 
 using namespace mozilla::dom;
 
