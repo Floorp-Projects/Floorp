@@ -80,18 +80,12 @@ endif
 run-cppunittests::
 	@$(PYTHON) $(MOZILLA_DIR)/testing/runcppunittests.py --xre-path=$(DIST)/bin --symbols-path=$(DIST)/crashreporter-symbols $(CPP_UNIT_TESTS)
 
-cppunittests-remote: DM_TRANS?=adb
 cppunittests-remote:
-	@if [ '${TEST_DEVICE}' != '' -o '$(DM_TRANS)' = 'adb' ]; then \
-		$(PYTHON) -u $(MOZILLA_DIR)/testing/remotecppunittests.py \
-			--xre-path=$(DEPTH)/dist/bin \
-			--localLib=$(DEPTH)/dist/$(MOZ_APP_NAME) \
-			--dm_trans=$(DM_TRANS) \
-			--deviceIP=${TEST_DEVICE} \
-			$(CPP_UNIT_TESTS) $(EXTRA_TEST_ARGS); \
-	else \
-		echo 'please prepare your host with environment variables for TEST_DEVICE'; \
-	fi
+	$(PYTHON) -u $(MOZILLA_DIR)/testing/remotecppunittests.py \
+		--xre-path=$(DEPTH)/dist/bin \
+		--localLib=$(DEPTH)/dist/$(MOZ_APP_NAME) \
+		--deviceIP=${TEST_DEVICE} \
+		$(CPP_UNIT_TESTS) $(EXTRA_TEST_ARGS); \
 
 endif # COMPILE_ENVIRONMENT
 endif # CPP_UNIT_TESTS
