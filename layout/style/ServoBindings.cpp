@@ -306,17 +306,12 @@ Gecko_CalcStyleDifference(nsStyleContext* aOldStyleContext,
   MOZ_ASSERT(aOldStyleContext);
   MOZ_ASSERT(aComputedValues);
 
-  // Pass the safe thing, which causes us to miss a potential optimization. See
-  // bug 1289863.
-  nsChangeHint forDescendants = nsChangeHint_Hints_NotHandledForDescendants;
-
   // Eventually, we should compute things out of these flags like
   // ElementRestyler::RestyleSelf does and pass the result to the caller to
   // potentially halt traversal. See bug 1289868.
   uint32_t equalStructs, samePointerStructs;
   nsChangeHint result =
     aOldStyleContext->CalcStyleDifference(aComputedValues,
-                                          forDescendants,
                                           &equalStructs,
                                           &samePointerStructs);
 

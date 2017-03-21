@@ -725,9 +725,6 @@ private:
   // initially zero, and accumulates hints for each same-style continuation
   // and {ib} split sibling we restyle for the node.
   nsChangeHint mHintsHandledBySelf;
-  // See nsStyleContext::CalcStyleDifference
-  nsChangeHint mParentFrameHintsNotHandledForDescendants;
-  nsChangeHint mHintsNotHandledForDescendants;
   RestyleTracker& mRestyleTracker;
   nsTArray<nsCSSSelector*>& mSelectorsForDescendants;
   TreeMatchContext& mTreeMatchContext;
