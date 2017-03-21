@@ -134,7 +134,8 @@ public:
                                        LayersBackend aLayersBackend,
                                        TextureFlags aFlags,
                                        uint64_t aSerial,
-                                       wr::MaybeExternalImageId& aExternalImageId) override;
+                                       wr::MaybeExternalImageId& aExternalImageId,
+                                       nsIEventTarget* aTarget) override;
 
   virtual void HandleFatalError(const char* aName, const char* aMsg) const override;
 

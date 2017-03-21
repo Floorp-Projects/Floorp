@@ -395,6 +395,8 @@ public:
     return mPaintTiming;
   }
 
+  ShadowLayerForwarder* AsLayerForwarder() override { return this; }
+
   // Returns true if aSurface wraps a Shmem.
   static bool IsShmem(SurfaceDescriptor* aSurface);
 
@@ -412,6 +414,11 @@ public:
   LayersIPCActor* GetLayersIPCActor() override { return this; }
 
   ActiveResourceTracker& GetActiveResourceTracker() { return *mActiveResourceTracker.get(); }
+
+  CompositorBridgeChild* GetCompositorBridgeChild();
+
+  nsIEventTarget* GetEventTarget() { return mEventTarget; };
+
 protected:
   virtual ~ShadowLayerForwarder();
 
@@ -426,8 +433,6 @@ protected:
   RefPtr<CompositableClient> FindCompositable(const CompositableHandle& aHandle);
 
   bool InWorkerThread();
-
-  CompositorBridgeChild* GetCompositorBridgeChild();
 
   RefPtr<LayerTransactionChild> mShadowManager;
   RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
