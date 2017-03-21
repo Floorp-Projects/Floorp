@@ -3106,6 +3106,26 @@ pref("dom.idle_period.throttled_length", 10000);
 // The amount of idle time (milliseconds) reserved for a long idle period
 pref("idle_queue.long_period", 50);
 
+// Control the event prioritization on content main thread
+#ifdef NIGHTLY_BUILD
+pref("prioritized_input_events.enabled", true);
+#else
+pref("prioritized_input_events.enabled", false);
+#endif
+
+// The maximum and minimum time (milliseconds) we reserve for handling input
+// events in each frame.
+pref("prioritized_input_events.duration.max", 8);
+pref("prioritized_input_events.duration.min", 1);
+
+// The default amount of time (milliseconds) required for handling a input
+// event.
+pref("prioritized_input_events.default_duration_per_event", 1);
+
+// The number of processed input events we use to predict the amount of time
+// required to process the following input events.
+pref("prioritized_input_events.count_for_prediction", 9);
+
 // The minimum amount of time (milliseconds) required for an idle
 // period to be scheduled on the main thread. N.B. that
 // layout.idle_period.time_limit adds padding at the end of the idle

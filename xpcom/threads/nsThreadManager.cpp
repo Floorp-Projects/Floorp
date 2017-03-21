@@ -11,7 +11,9 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/InputEventStatistics.h"
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/Preferences.h"
 #ifdef MOZ_CANARY
 #include <fcntl.h>
 #include <unistd.h>
@@ -395,6 +397,25 @@ nsThreadManager::DispatchToMainThread(nsIRunnable *aEvent)
   }
 
   return mMainThread->DispatchFromScript(aEvent, 0);
+}
+
+void
+nsThreadManager::EnableMainThreadEventPrioritization()
+{
+  static bool sIsInitialized = false;
+  if (sIsInitialized) {
+    return;
+  }
+  sIsInitialized = true;
+  MOZ_ASSERT(Preferences::IsServiceAvailable());
+  bool enable =
+    Preferences::GetBool("prioritized_input_events.enabled", false);
+
+  if (!enable) {
+    return;
+  }
+  InputEventStatistics::Get().SetEnable(true);
+  mMainThread->EnableEventPrioritization();
 }
 
 NS_IMETHODIMP
