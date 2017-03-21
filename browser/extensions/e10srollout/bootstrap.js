@@ -19,7 +19,7 @@ const TEST_THRESHOLD = {
 
 const ADDON_ROLLOUT_POLICY = {
   "beta"    : "51alladdons", // Any WebExtension or addon except with mpc = false
-  "release" : "51set1",
+  "release" : "50allmpc",
   "esr"     : "esrA", // WebExtensions and Addons with mpc=true
 };
 
@@ -73,7 +73,10 @@ function defineCohort() {
 
     Preferences.set(PREF_E10S_ADDON_BLOCKLIST,
                     // bug 1185672 - Tab Mix Plus
-                    "{dc572301-7619-498c-a57d-39143191b318};");
+                    "{dc572301-7619-498c-a57d-39143191b318};"
+                    // bug 1344345 - Mega
+                    + "firefox@mega.co.nz"
+                    );
   } else {
     Preferences.reset(PREF_E10S_ADDON_POLICY);
   }

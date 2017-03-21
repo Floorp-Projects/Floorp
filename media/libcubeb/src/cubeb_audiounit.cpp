@@ -2307,7 +2307,8 @@ audiounit_setup_stream(cubeb_stream * stm)
 
   AudioDeviceID in_dev = stm->input_device;
   AudioDeviceID out_dev = stm->output_device;
-  if (has_input(stm) && has_output(stm)) {
+  if (has_input(stm) && has_output(stm) &&
+      !getenv("CUBEB_AUDIOUNIT_DISABLE_AGGREGATE_DEVICE")) {
     r = audiounit_create_aggregate_device(stm);
     if (r != CUBEB_OK) {
       stm->aggregate_device_id = 0;
@@ -2318,6 +2319,7 @@ audiounit_setup_stream(cubeb_stream * stm)
       // it after a couple of weeks.
       return r;
     } else {
+      LOG("(%p) Using aggregate device", stm);
       in_dev = out_dev = stm->aggregate_device_id;
     }
   }

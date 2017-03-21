@@ -658,7 +658,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
 
     nsCOMPtr<nsIOutputStream> responseBody;
     rv = mInterceptedChannel->GetResponseBody(getter_AddRefs(responseBody));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_WARN_IF(NS_FAILED(rv)) || !responseBody) {
       return;
     }
 

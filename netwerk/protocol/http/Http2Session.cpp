@@ -2771,7 +2771,11 @@ Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
     LOG3(("Http2Session::WriteSegments %p stream 0x%X mPaddingLength=%d", this,
           mInputFrameID, mPaddingLength));
 
-    if (1U + mPaddingLength == mInputFrameDataSize) {
+    if (1U + mPaddingLength > mInputFrameDataSize) {
+      LOG3(("Http2Session::WriteSegments %p stream 0x%X padding too large for "
+            "frame", this, mInputFrameID));
+      RETURN_SESSION_ERROR(this, PROTOCOL_ERROR);
+    } else if (1U + mPaddingLength == mInputFrameDataSize) {
       // This frame consists entirely of padding, we can just discard it
       LOG3(("Http2Session::WriteSegments %p stream 0x%X frame with only padding",
             this, mInputFrameID));
