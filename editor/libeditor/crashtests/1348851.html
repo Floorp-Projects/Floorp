@@ -1,0 +1,19 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+function boom(){
+  document.designMode = "on";
+  document.execCommand("insertlinebreak");
+  document.designMode = "off";
+  document.designMode = "on";
+  document.execCommand("insertunorderedlist");
+}
+addEventListener("DOMContentLoaded", boom);
+</script>
+</head>
+<body style="display:flex;">
+<!--comment-->
+</body>
+</html>
