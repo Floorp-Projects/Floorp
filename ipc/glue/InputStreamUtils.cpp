@@ -40,9 +40,9 @@ namespace mozilla {
 namespace ipc {
 
 void
-SerializeInputStream(nsIInputStream* aInputStream,
-                     InputStreamParams& aParams,
-                     nsTArray<FileDescriptor>& aFileDescriptors)
+InputStreamHelper::SerializeInputStream(nsIInputStream* aInputStream,
+                                        InputStreamParams& aParams,
+                                        nsTArray<FileDescriptor>& aFileDescriptors)
 {
   MOZ_ASSERT(aInputStream);
 
@@ -59,24 +59,9 @@ SerializeInputStream(nsIInputStream* aInputStream,
   }
 }
 
-void
-SerializeInputStream(nsIInputStream* aInputStream,
-                     OptionalInputStreamParams& aParams,
-                     nsTArray<FileDescriptor>& aFileDescriptors)
-{
-  if (aInputStream) {
-    InputStreamParams params;
-    SerializeInputStream(aInputStream, params, aFileDescriptors);
-    aParams = params;
-  }
-  else {
-    aParams = mozilla::void_t();
-  }
-}
-
 already_AddRefed<nsIInputStream>
-DeserializeInputStream(const InputStreamParams& aParams,
-                       const nsTArray<FileDescriptor>& aFileDescriptors)
+InputStreamHelper::DeserializeInputStream(const InputStreamParams& aParams,
+                                          const nsTArray<FileDescriptor>& aFileDescriptors)
 {
   nsCOMPtr<nsIInputStream> stream;
   nsCOMPtr<nsIIPCSerializableInputStream> serializable;
@@ -162,29 +147,6 @@ DeserializeInputStream(const InputStreamParams& aParams,
 
   stream = do_QueryInterface(serializable);
   MOZ_ASSERT(stream);
-
-  return stream.forget();
-}
-
-already_AddRefed<nsIInputStream>
-DeserializeInputStream(const OptionalInputStreamParams& aParams,
-                       const nsTArray<FileDescriptor>& aFileDescriptors)
-{
-  nsCOMPtr<nsIInputStream> stream;
-
-  switch (aParams.type()) {
-    case OptionalInputStreamParams::Tvoid_t:
-      // Leave stream null.
-      break;
-
-    case OptionalInputStreamParams::TInputStreamParams:
-      stream = DeserializeInputStream(aParams.get_InputStreamParams(),
-                                      aFileDescriptors);
-      break;
-
-    default:
-      MOZ_ASSERT(false, "Unknown params!");
-  }
 
   return stream.forget();
 }
