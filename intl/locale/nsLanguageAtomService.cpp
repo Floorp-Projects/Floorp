@@ -9,12 +9,12 @@
 #include "nsIAtom.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Services.h"
-#include "mozilla/intl/LocaleService.h"
+#include "mozilla/intl/OSPreferences.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/EncodingUtils.h"
 
 using namespace mozilla;
-using mozilla::intl::LocaleService;
+using mozilla::intl::OSPreferences;
 
 static constexpr nsUConvProp kLangGroups[] = {
 #include "langGroups.properties.h"
@@ -51,7 +51,7 @@ nsLanguageAtomService::GetLocaleLanguage()
   do {
     if (!mLocaleLanguage) {
       nsAutoCString locale;
-      LocaleService::GetInstance()->GetAppLocaleAsLangTag(locale);
+      OSPreferences::GetInstance()->GetSystemLocale(locale);
 
       ToLowerCase(locale); // use lowercase for all language atoms
       mLocaleLanguage = NS_Atomize(locale);
