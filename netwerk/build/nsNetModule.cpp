@@ -60,7 +60,7 @@ ContentSnifferCache* gDataSniffers = nullptr;
 
 #include "nsIOService.h"
 typedef mozilla::net::nsIOService nsIOService;
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIOService, nsIOService::GetAddRefed)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIOService, nsIOService::GetInstance)
 
 #include "nsDNSService2.h"
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIDNSService,
