@@ -11,8 +11,6 @@
 
 #include "mozilla/AutoRestore.h"
 
-using namespace mozilla;
-
 nsSMILTimeContainer::nsSMILTimeContainer()
 :
   mParent(nullptr),
