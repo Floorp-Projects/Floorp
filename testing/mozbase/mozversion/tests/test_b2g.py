@@ -12,7 +12,7 @@ import zipfile
 import mozunit
 
 import mozfile
-from mozversion import get_version, errors
+from mozversion import get_version
 
 
 class SourcesTest(unittest.TestCase):
@@ -69,9 +69,6 @@ class SourcesTest(unittest.TestCase):
         v = get_version(self.binary)
         self.assertIsNone(v.get('gaia_changeset'))
         self.assertIsNone(v.get('gaia_date'))
-
-    def test_b2g_fallback_when_no_binary(self):
-        self.assertRaises(errors.RemoteAppNotFoundError, get_version)
 
 if __name__ == '__main__':
     mozunit.main()
