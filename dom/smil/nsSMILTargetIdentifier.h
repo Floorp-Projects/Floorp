@@ -12,7 +12,7 @@
 /**
  * Struct: nsSMILTargetIdentifier
  *
- * Tuple of: { Animated Element, Attribute Name }
+ * Tuple of: { Animated Element, Attribute Name, Attribute Type (CSS vs. XML) }
  *
  * Used in nsSMILAnimationController as hash key for mapping an animation
  * target to the nsSMILCompositor for that target.
@@ -26,18 +26,20 @@ struct nsSMILTargetIdentifier
 {
   nsSMILTargetIdentifier()
     : mElement(nullptr), mAttributeName(nullptr),
-      mAttributeNamespaceID(kNameSpaceID_Unknown) {}
+      mAttributeNamespaceID(kNameSpaceID_Unknown), mIsCSS(false) {}
 
   inline bool Equals(const nsSMILTargetIdentifier& aOther) const
   {
     return (aOther.mElement              == mElement &&
             aOther.mAttributeName        == mAttributeName &&
-            aOther.mAttributeNamespaceID == mAttributeNamespaceID);
+            aOther.mAttributeNamespaceID == mAttributeNamespaceID &&
+            aOther.mIsCSS                == mIsCSS);
   }
 
   RefPtr<mozilla::dom::Element> mElement;
-  RefPtr<nsIAtom>               mAttributeName;
-  int32_t                       mAttributeNamespaceID;
+  RefPtr<nsIAtom>    mAttributeName;
+  int32_t              mAttributeNamespaceID;
+  bool                 mIsCSS;
 };
 
 /**
@@ -55,7 +57,7 @@ class nsSMILWeakTargetIdentifier
 public:
   // Trivial constructor
   nsSMILWeakTargetIdentifier()
-    : mElement(nullptr), mAttributeName(nullptr) {}
+    : mElement(nullptr), mAttributeName(nullptr), mIsCSS(false) {}
 
   // Allow us to update a weak identifier to match a given non-weak identifier
   nsSMILWeakTargetIdentifier&
@@ -63,6 +65,7 @@ public:
   {
     mElement = aOther.mElement;
     mAttributeName = aOther.mAttributeName;
+    mIsCSS = aOther.mIsCSS;
     return *this;
   }
 
@@ -70,12 +73,14 @@ public:
   inline bool Equals(const nsSMILTargetIdentifier& aOther) const
   {
     return (aOther.mElement       == mElement &&
-            aOther.mAttributeName == mAttributeName);
+            aOther.mAttributeName == mAttributeName &&
+            aOther.mIsCSS         == mIsCSS);
   }
 
 private:
   const nsIContent* mElement;
   const nsIAtom*    mAttributeName;
+  bool              mIsCSS;
 };
 
 #endif // NS_SMILTARGETIDENTIFIER_H_

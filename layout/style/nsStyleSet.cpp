@@ -36,6 +36,7 @@
 #include "GeckoProfiler.h"
 #include "nsHTMLCSSStyleSheet.h"
 #include "nsHTMLStyleSheet.h"
+#include "SVGAttrAnimationRuleProcessor.h"
 #include "nsCSSRules.h"
 #include "nsPrintfCString.h"
 #include "nsIFrame.h"
@@ -292,6 +293,7 @@ nsStyleSet::Init(nsPresContext *aPresContext)
   // don't have style sheets.  The other levels will have their calls
   // triggered by DirtyRuleProcessors.
   GatherRuleProcessors(SheetType::PresHint);
+  GatherRuleProcessors(SheetType::SVGAttrAnimation);
   GatherRuleProcessors(SheetType::StyleAttr);
   GatherRuleProcessors(SheetType::Animation);
   GatherRuleProcessors(SheetType::Transition);
@@ -475,6 +477,11 @@ nsStyleSet::GatherRuleProcessors(SheetType aType)
       MOZ_ASSERT(mSheets[aType].IsEmpty());
       mRuleProcessors[aType] =
         PresContext()->Document()->GetAttributeStyleSheet();
+      return NS_OK;
+    case SheetType::SVGAttrAnimation:
+      MOZ_ASSERT(mSheets[aType].IsEmpty());
+      mRuleProcessors[aType] =
+        PresContext()->Document()->GetSVGAttrAnimationRuleProcessor();
       return NS_OK;
     default:
       // keep going
@@ -1108,6 +1115,7 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   //  - UA normal rules                    = Agent        normal
   //  - User normal rules                  = User         normal
   //  - Presentation hints                 = PresHint     normal
+  //  - SVG Animation (highest pres hint)  = SVGAttrAnimation normal
   //  - Author normal rules                = Document     normal
   //  - Override normal rules              = Override     normal
   //  - animation rules                    = Animation    normal
@@ -1139,7 +1147,11 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   aRuleWalker->SetLevel(SheetType::PresHint, false, false);
   if (mRuleProcessors[SheetType::PresHint])
     (*aCollectorFunc)(mRuleProcessors[SheetType::PresHint], aData);
-  nsRuleNode* lastPresHintRN = aRuleWalker->CurrentNode();
+
+  aRuleWalker->SetLevel(SheetType::SVGAttrAnimation, false, false);
+  if (mRuleProcessors[SheetType::SVGAttrAnimation])
+    (*aCollectorFunc)(mRuleProcessors[SheetType::SVGAttrAnimation], aData);
+  nsRuleNode* lastSVGAttrAnimationRN = aRuleWalker->CurrentNode();
 
   aRuleWalker->SetLevel(SheetType::Doc, false, true);
   bool cutOffInheritance = false;
@@ -1213,11 +1225,11 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 
   if (haveImportantDocRules) {
     aRuleWalker->SetLevel(SheetType::Doc, true, false);
-    AddImportantRules(lastDocRN, lastPresHintRN, aRuleWalker);  // doc
+    AddImportantRules(lastDocRN, lastSVGAttrAnimationRN, aRuleWalker);  // doc
   }
 #ifdef DEBUG
   else {
-    AssertNoImportantRules(lastDocRN, lastPresHintRN);
+    AssertNoImportantRules(lastDocRN, lastSVGAttrAnimationRN);
   }
 #endif
 
@@ -1242,7 +1254,7 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 #endif
 
 #ifdef DEBUG
-  AssertNoCSSRules(lastPresHintRN, lastUserRN);
+  AssertNoCSSRules(lastSVGAttrAnimationRN, lastUserRN);
 #endif
 
   if (haveImportantUserRules) {
@@ -1298,6 +1310,9 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
 
   if (mRuleProcessors[SheetType::PresHint])
     (*aFunc)(mRuleProcessors[SheetType::PresHint], aData);
+
+  if (mRuleProcessors[SheetType::SVGAttrAnimation])
+    (*aFunc)(mRuleProcessors[SheetType::SVGAttrAnimation], aData);
 
   bool cutOffInheritance = false;
   if (mBindingManager) {
@@ -1482,6 +1497,7 @@ static const CascadeLevel gCascadeLevels[] = {
   { SheetType::Agent,            false, false, nsRestyleHint(0) },
   { SheetType::User,             false, false, nsRestyleHint(0) },
   { SheetType::PresHint,         false, false, nsRestyleHint(0) },
+  { SheetType::SVGAttrAnimation, false, false, eRestyle_SVGAttrAnimations },
   { SheetType::Doc,              false, false, nsRestyleHint(0) },
   { SheetType::ScopedDoc,        false, false, nsRestyleHint(0) },
   { SheetType::StyleAttr,        false, true,  eRestyle_StyleAttribute |
@@ -1519,6 +1535,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
 
   MOZ_ASSERT(!(aReplacements & ~(eRestyle_CSSTransitions |
                                  eRestyle_CSSAnimations |
+                                 eRestyle_SVGAttrAnimations |
                                  eRestyle_StyleAttribute |
                                  eRestyle_StyleAttribute_Animations)),
              "unexpected replacement bits");
@@ -1635,6 +1652,16 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
               ruleWalker.ForwardOnPossiblyCSSRule(rule);
               ruleWalker.CurrentNode()->SetIsAnimationRule();
             }
+          }
+          break;
+        }
+        case SheetType::SVGAttrAnimation: {
+          SVGAttrAnimationRuleProcessor* ruleProcessor =
+            static_cast<SVGAttrAnimationRuleProcessor*>(
+              mRuleProcessors[SheetType::SVGAttrAnimation].get());
+          if (ruleProcessor &&
+              aPseudoType == CSSPseudoElementType::NotPseudo) {
+            ruleProcessor->ElementRulesMatching(aElement, &ruleWalker);
           }
           break;
         }

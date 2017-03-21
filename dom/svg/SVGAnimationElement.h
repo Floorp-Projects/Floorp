@@ -66,6 +66,7 @@ public:
   Element* GetTargetElementContent();
   virtual bool GetTargetAttributeName(int32_t* aNamespaceID,
                                       nsIAtom** aLocalName) const;
+  virtual nsSMILTargetAttrType GetTargetAttributeType() const;
   nsSMILTimedElement& TimedElement();
   nsSMILTimeContainer* GetTimeContainer();
   virtual nsSMILAnimationFunction& AnimationFunction() = 0;
