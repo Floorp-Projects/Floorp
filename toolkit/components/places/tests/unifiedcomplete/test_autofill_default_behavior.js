@@ -24,7 +24,7 @@ add_task(function* test_default_behavior_host() {
   yield addBookmark( { uri: uri4, title: "tpbk" } );
   yield addBookmark( { uri: uri5, title: "title", tags: ["foo"] } );
 
-  yield setFaviconForHref(uri1.spec, "chrome://global/skin/icons/information-16.png");
+  yield setFaviconForHref(uri1.spec, "chrome://global/skin/icons/info.svg");
   yield setFaviconForHref(uri3.spec, "chrome://global/skin/icons/error-16.png");
   yield setFaviconForHref(uri6.spec, "chrome://global/skin/icons/question-16.png");
 
@@ -45,7 +45,7 @@ add_task(function* test_default_behavior_host() {
   yield check_autocomplete({
     search: "ty",
     matches: [ { uri: uri1, title: "typed", style: [ "autofill", "heuristic" ],
-                 icon: "chrome://global/skin/icons/information-16.png" } ],
+                 icon: "chrome://global/skin/icons/info.svg" } ],
     autofilled: "typed/",
     completed: "typed/"
   });
@@ -116,7 +116,7 @@ add_task(function* test_default_behavior_host() {
   yield check_autocomplete({
     search: "ty",
     matches: [ { uri: uri1, title: "typed", style: [ "autofill", "heuristic" ],
-                 icon: "chrome://global/skin/icons/information-16.png"} ],
+                 icon: "chrome://global/skin/icons/info.svg"} ],
     autofilled: "typed/",
     completed: "typed/"
   });
@@ -223,7 +223,7 @@ add_task(function* test_default_behavior_url() {
   yield addBookmark( { uri: uri3, title: "bookmarked" } );
   yield addBookmark( { uri: uri4, title: "tpbk" } );
 
-  yield setFaviconForHref(uri1.spec, "chrome://global/skin/icons/information-16.png");
+  yield setFaviconForHref(uri1.spec, "chrome://global/skin/icons/info.svg");
   yield setFaviconForHref(uri3.spec, "chrome://global/skin/icons/error-16.png");
 
   // RESTRICT TO HISTORY.
@@ -245,7 +245,7 @@ add_task(function* test_default_behavior_url() {
   yield check_autocomplete({
     search: "typed/t",
     matches: [ { uri: uri1, title: "typed/ty/", style: [ "autofill", "heuristic" ],
-                 icon: "chrome://global/skin/icons/information-16.png"} ],
+                 icon: "chrome://global/skin/icons/info.svg"} ],
     autofilled: "typed/ty/",
     completed: "http://typed/ty/"
   });

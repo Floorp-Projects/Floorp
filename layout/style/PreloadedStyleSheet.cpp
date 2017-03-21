@@ -71,7 +71,7 @@ PreloadedStyleSheet::GetSheet(StyleBackendType aType, StyleSheet** aResult)
     aType == StyleBackendType::Gecko ? mGecko : mServo;
 
   if (!sheet) {
-    RefPtr<css::Loader> loader = new css::Loader(aType);
+    RefPtr<css::Loader> loader = new css::Loader(aType, nullptr);
     nsresult rv = loader->LoadSheetSync(mURI, mParsingMode, true, &sheet);
     NS_ENSURE_SUCCESS(rv, rv);
     MOZ_ASSERT(sheet);
