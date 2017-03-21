@@ -169,15 +169,6 @@ var whitelist = new Set([
    platforms: ["linux"]},
   // Bug 1348559
   {file: "chrome://pippki/content/resetpassword.xul"},
-  // Bug 1348562
-  {file: "chrome://devtools/skin/images/debugging-devices.svg",
-  isFromDevTools: true},
-  {file: "chrome://devtools/skin/images/fast-forward.svg",
-  isFromDevTools: true},
-  {file: "chrome://devtools/skin/images/firebug/spinner.png",
-  isFromDevTools: true},
-  {file: "chrome://devtools/skin/images/noise.png",
-  isFromDevTools: true},
 
 ].filter(item =>
   ("isFromDevTools" in item) == isDevtools &&
