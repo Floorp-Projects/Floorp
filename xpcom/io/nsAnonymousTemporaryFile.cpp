@@ -5,8 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/SyncRunnable.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -15,7 +13,6 @@
 #include "nsString.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "prio.h"
-#include "private/pprio.h"
 
 #ifdef XP_WIN
 #include "nsIObserver.h"
@@ -83,52 +80,13 @@ GetTempDir(nsIFile** aTempDir)
   return NS_OK;
 }
 
-namespace {
-
-class nsRemoteAnonymousTemporaryFileRunnable : public Runnable
-{
-public:
-  dom::FileDescOrError *mResultPtr;
-  explicit nsRemoteAnonymousTemporaryFileRunnable(dom::FileDescOrError *aResultPtr)
-  : mResultPtr(aResultPtr)
-  { }
-
-protected:
-  NS_IMETHOD Run() override {
-    dom::ContentChild* child = dom::ContentChild::GetSingleton();
-    MOZ_ASSERT(child);
-    child->SendOpenAnonymousTemporaryFile(mResultPtr);
-    return NS_OK;
-  }
-};
-
-} // namespace
-
 nsresult
 NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc)
 {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   if (NS_WARN_IF(!aOutFileDesc)) {
     return NS_ERROR_INVALID_ARG;
-  }
-
-  if (dom::ContentChild* child = dom::ContentChild::GetSingleton()) {
-    dom::FileDescOrError fd = NS_OK;
-    if (NS_IsMainThread()) {
-      child->SendOpenAnonymousTemporaryFile(&fd);
-    } else {
-      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-      MOZ_ASSERT(mainThread);
-      SyncRunnable::DispatchToThread(mainThread,
-        new nsRemoteAnonymousTemporaryFileRunnable(&fd));
-    }
-    if (fd.type() == dom::FileDescOrError::Tnsresult) {
-      nsresult rv = fd.get_nsresult();
-      MOZ_ASSERT(NS_FAILED(rv));
-      return rv;
-    }
-    auto rawFD = fd.get_FileDescriptor().ClonePlatformHandle();
-    *aOutFileDesc = PR_ImportFile(PROsfd(rawFD.release()));
-    return NS_OK;
   }
 
   nsresult rv;

@@ -488,13 +488,12 @@ public:
   void Restyle(nsRestyleHint aRestyleHint);
 
   /**
-   * mHintsHandled changes over time; it starts off as the hints that
-   * have been handled by ancestors, and by the end of Restyle it
-   * represents the hints that have been handled for this frame.  This
-   * method is intended to be called after Restyle, to find out what
-   * hints have been handled for this frame.
+   * mHintsHandledBySelf changes over time; it starts off as nsChangeHint(0),
+   * and by the end of Restyle it represents the hints that have been handled
+   * for this frame.  This method is intended to be called after Restyle, to
+   * find out what hints have been handled for this frame.
    */
-  nsChangeHint HintsHandledForFrame() { return mHintsHandled; }
+  nsChangeHint HintsHandledForFrame() { return mHintsHandledBySelf; }
 
   /**
    * Called from GeckoRestyleManager::ComputeAndProcessStyleChange to restyle
@@ -717,15 +716,15 @@ private:
   // framechange hints if we need them.
   nsIContent* const mContent;
   nsStyleChangeList* const mChangeList;
-  // We have already generated change list entries for hints listed in
-  // mHintsHandled (initially it's those handled by ancestors, but by
-  // the end of Restyle it is those handled for this frame as well).  We
-  // need to generate a new change list entry for the frame when its
-  // style comparision returns a hint other than one of these hints.
-  nsChangeHint mHintsHandled;
-  // See nsStyleContext::CalcStyleDifference
-  nsChangeHint mParentFrameHintsNotHandledForDescendants;
-  nsChangeHint mHintsNotHandledForDescendants;
+  // Hints that we computed on an ancestor (and which we already have
+  // generated a change list entry for).  When we traverse to children
+  // after restyling an element, this field accumulates the hints
+  // generated for that element.
+  const nsChangeHint mHintsHandledByAncestors;
+  // Hints that we have computed so far the current node.  This is
+  // initially zero, and accumulates hints for each same-style continuation
+  // and {ib} split sibling we restyle for the node.
+  nsChangeHint mHintsHandledBySelf;
   RestyleTracker& mRestyleTracker;
   nsTArray<nsCSSSelector*>& mSelectorsForDescendants;
   TreeMatchContext& mTreeMatchContext;

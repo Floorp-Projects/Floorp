@@ -689,7 +689,9 @@ EventSourceImpl::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt)
     nsCOMPtr<nsIThreadRetargetableRequest> rr = do_QueryInterface(httpChannel);
     if (rr) {
       rv = rr->RetargetDeliveryTo(this);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        NS_WARNING("Retargeting failed");
+      }
     }
   }
   rv = Dispatch(NewRunnableMethod(this, &EventSourceImpl::AnnounceConnection),

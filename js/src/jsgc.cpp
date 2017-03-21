@@ -7546,7 +7546,11 @@ JS::IsIncrementalGCInProgress(JSContext* cx)
 JS_PUBLIC_API(bool)
 JS::IsIncrementalBarrierNeeded(JSContext* cx)
 {
-    return cx->runtime()->gc.state() == gc::State::Mark && !JS::CurrentThreadIsHeapBusy();
+    if (JS::CurrentThreadIsHeapBusy())
+        return false;
+
+    auto state = cx->runtime()->gc.state();
+    return state != gc::State::NotActive && state <= gc::State::Sweep;
 }
 
 JS_PUBLIC_API(void)

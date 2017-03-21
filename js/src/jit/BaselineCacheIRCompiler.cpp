@@ -434,6 +434,7 @@ BaselineCacheIRCompiler::emitMegamorphicStoreSlot()
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Address nameAddr = stubAddress(reader.stubOffset());
     ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    bool needsTypeBarrier = reader.readBool();
 
     AutoScratchRegister scratch1(allocator, masm);
     AutoScratchRegister scratch2(allocator, masm);
@@ -458,7 +459,10 @@ BaselineCacheIRCompiler::emitMegamorphicStoreSlot()
     masm.loadPtr(nameAddr, scratch2);
     masm.passABIArg(scratch2);
     masm.passABIArg(val.scratchReg());
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, SetNativeDataProperty));
+    if (needsTypeBarrier)
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataProperty<true>)));
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataProperty<false>)));
     masm.mov(ReturnReg, scratch1);
     masm.PopRegsInMask(volatileRegs);
 
