@@ -109,7 +109,30 @@ tasks.whenTaskAdded { task ->
     }
 }
 
+// -------------------------------------------------------------------------------------------------
+// Adjust: Read token from environment variable (Only release builds)
+// -------------------------------------------------------------------------------------------------
 
+android.applicationVariants.all { variant ->
+    print(variant.getName() + ": ")
+
+    if (variant.getName().contains("Release")) {
+        def environmentVariable = variant.getName().contains("klar") ? "ADJUST_TOKEN_KLAR" : "ADJUST_TOKEN_FOCUS"
+
+        def token = System.getenv(environmentVariable) ?: null
+
+        if (token != null) {
+            buildConfigField 'String', 'ADJUST_TOKEN', '"' + token + '"'
+            println "Added adjust token set from environment variable"
+        } else {
+            buildConfigField 'String', 'ADJUST_TOKEN', 'null'
+            println("Not setting adjust token (environment variable not set)")
+        }
+    } else {
+        buildConfigField 'String', 'ADJUST_TOKEN', 'null'
+        println("Not setting adjust token (Not a release build)")
+    }
+}
 
 // -------------------------------------------------------------------------------------------------
 // L10N: Initialize Strings
