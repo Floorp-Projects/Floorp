@@ -10,12 +10,78 @@
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+
+let prefs = {
+  // Enable dump as some errors are only printed on the stdout
+  "browser.dom.window.dump.enabled": true,
+  // Enable the browser toolbox and various chrome-only features
+  "devtools.chrome.enabled": true,
+  "devtools.debugger.remote-enabled": true,
+  // Disable the prompt to ease usage of the browser toolbox
+  "devtools.debugger.prompt-connection": false,
+};
+
+// Values of debug pref before overriding them
+let originalPrefValues = {};
+// MultiWindowKeyListener instance for Ctrl+Alt+R key
+let listener;
+// nsIURI to the addon root folder
+let resourceURI;
 
 function actionOccurred(id) {
   let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   let Telemetry = require("devtools/client/shared/telemetry");
   let telemetry = new Telemetry();
   telemetry.actionOccurred(id);
+}
+
+// Synchronously fetch the content of a given URL
+function readURI(uri) {
+  let stream = NetUtil.newChannel({
+    uri: NetUtil.newURI(uri, "UTF-8"),
+    loadUsingSystemPrincipal: true}
+  ).open2();
+  let count = stream.available();
+  let data = NetUtil.readInputStreamToString(stream, count, {
+    charset: "UTF-8"
+  });
+
+  stream.close();
+
+  return data;
+}
+
+// Read a preference file and set all of its defined pref as default values
+// (This replicate the behavior of preferences files from mozilla-central)
+function processPrefFile(url) {
+  let content = readURI(url);
+  content.match(/pref\("[^"]+",\s*.+\s*\)/g).forEach(item => {
+    let m = item.match(/pref\("([^"]+)",\s*(.+)\s*\)/);
+    let name = m[1];
+    let val = m[2];
+
+    // Prevent overriding prefs that have been changed by the user
+    if (Services.prefs.prefHasUserValue(name)) {
+      return;
+    }
+    let defaultBranch = Services.prefs.getDefaultBranch("");
+    if ((val.startsWith("\"") && val.endsWith("\"")) ||
+        (val.startsWith("'") && val.endsWith("'"))) {
+      defaultBranch.setCharPref(name, val.substr(1, val.length - 2));
+    } else if (val.match(/[0-9]+/)) {
+      defaultBranch.setIntPref(name, parseInt(val, 10));
+    } else if (val == "true" || val == "false") {
+      defaultBranch.setBoolPref(name, val == "true");
+    } else {
+      console.log("Unable to match preference type for value:", val);
+    }
+  });
+}
+
+function setPrefs() {
+  processPrefFile(resourceURI.spec + "./client/preferences/devtools.js");
+  processPrefFile(resourceURI.spec + "./client/preferences/debugger.js");
 }
 
 // Helper to listen to a key on all windows
@@ -136,6 +202,10 @@ function reload(event) {
   Cu.unload("resource://devtools/client/responsivedesign/responsivedesign.jsm");
   Cu.unload("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
   Cu.unload("resource://devtools/shared/deprecated-sync-thenables.js");
+
+  // Update the preferences before starting new code
+  setPrefs();
+
   const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   devtools.require("devtools/client/framework/devtools-browser");
 
@@ -194,20 +264,11 @@ function reload(event) {
   actionOccurred("reloadAddonReload");
 }
 
-let prefs = {
-  // Enable dump as some errors are only printed on the stdout
-  "browser.dom.window.dump.enabled": true,
-  // Enable the browser toolbox and various chrome-only features
-  "devtools.chrome.enabled": true,
-  "devtools.debugger.remote-enabled": true,
-  // Disable the prompt to ease usage of the browser toolbox
-  "devtools.debugger.prompt-connection": false,
-};
-let originalPrefValues = {};
-
-let listener;
-function startup() {
+function startup(data) {
   dump("DevTools addon started.\n");
+
+  resourceURI = data.resourceURI;
+
   listener = new MultiWindowKeyListener({
     keyCode: Ci.nsIDOMKeyEvent.DOM_VK_R, ctrlKey: true, altKey: true,
     callback: reload
