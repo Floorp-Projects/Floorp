@@ -378,7 +378,7 @@ ClientEngine.prototype = {
           continue;
         }
         // fixup the client record, so our copy of _remoteClients matches what we uploaded.
-        clientRecord.commands = this._store.createRecord(id);
+        this._store._remoteClients[id] =  this._store.createRecord(id);
         // we could do better and pass the reference to the record we just uploaded,
         // but this will do for now
       }
