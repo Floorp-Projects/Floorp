@@ -25,7 +25,7 @@ PlaceholderTransaction::PlaceholderTransaction(
   , mCompositionTransaction(nullptr)
   , mCommitted(false)
   , mStartSel(Move(aSelState))
-  , mEditorBase(aEditorBase)
+  , mEditorBase(&aEditorBase)
 {
   mName = aName;
 }
@@ -41,6 +41,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PlaceholderTransaction,
   if (tmp->mStartSel) {
     ImplCycleCollectionUnlink(*tmp->mStartSel);
   }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditorBase);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEndSel);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -49,6 +50,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PlaceholderTransaction,
   if (tmp->mStartSel) {
     ImplCycleCollectionTraverse(cb, *tmp->mStartSel, "mStartSel", 0);
   }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditorBase);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEndSel);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -69,6 +71,10 @@ PlaceholderTransaction::DoTransaction()
 NS_IMETHODIMP
 PlaceholderTransaction::UndoTransaction()
 {
+  if (NS_WARN_IF(!mEditorBase)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   // Undo transactions.
   nsresult rv = EditAggregateTransaction::UndoTransaction();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -76,7 +82,7 @@ PlaceholderTransaction::UndoTransaction()
   NS_ENSURE_TRUE(mStartSel, NS_ERROR_NULL_POINTER);
 
   // now restore selection
-  RefPtr<Selection> selection = mEditorBase.GetSelection();
+  RefPtr<Selection> selection = mEditorBase->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   return mStartSel->RestoreSelection(selection);
 }
@@ -84,12 +90,16 @@ PlaceholderTransaction::UndoTransaction()
 NS_IMETHODIMP
 PlaceholderTransaction::RedoTransaction()
 {
+  if (NS_WARN_IF(!mEditorBase)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   // Redo transactions.
   nsresult rv = EditAggregateTransaction::RedoTransaction();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // now restore selection
-  RefPtr<Selection> selection = mEditorBase.GetSelection();
+  RefPtr<Selection> selection = mEditorBase->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   return mEndSel.RestoreSelection(selection);
 }
@@ -254,7 +264,11 @@ PlaceholderTransaction::Commit()
 nsresult
 PlaceholderTransaction::RememberEndingSelection()
 {
-  RefPtr<Selection> selection = mEditorBase.GetSelection();
+  if (NS_WARN_IF(!mEditorBase)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  RefPtr<Selection> selection = mEditorBase->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   mEndSel.SaveSelection(selection);
   return NS_OK;

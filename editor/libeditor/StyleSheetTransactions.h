@@ -32,7 +32,7 @@ public:
 
 protected:
   // The editor that created this transaction.
-  EditorBase& mEditor;
+  RefPtr<EditorBase> mEditorBase;
   // The style sheet to add.
   RefPtr<mozilla::StyleSheet> mSheet;
 };
@@ -55,7 +55,7 @@ public:
 
 protected:
   // The editor that created this transaction.
-  EditorBase& mEditor;
+  RefPtr<EditorBase> mEditorBase;
   // The style sheet to remove.
   RefPtr<StyleSheet> mSheet;
 

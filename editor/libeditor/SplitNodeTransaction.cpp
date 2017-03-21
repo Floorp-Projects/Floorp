@@ -19,7 +19,7 @@ using namespace dom;
 SplitNodeTransaction::SplitNodeTransaction(EditorBase& aEditorBase,
                                            nsIContent& aNode,
                                            int32_t aOffset)
-  : mEditorBase(aEditorBase)
+  : mEditorBase(&aEditorBase)
   , mExistingRightNode(&aNode)
   , mOffset(aOffset)
 {
@@ -30,6 +30,7 @@ SplitNodeTransaction::~SplitNodeTransaction()
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SplitNodeTransaction, EditTransactionBase,
+                                   mEditorBase,
                                    mParent,
                                    mNewLeftNode)
 
@@ -41,6 +42,10 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 NS_IMETHODIMP
 SplitNodeTransaction::DoTransaction()
 {
+  if (NS_WARN_IF(!mEditorBase)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   // Create a new node
   ErrorResult rv;
   // Don't use .downcast directly because AsContent has an assertion we want
@@ -48,16 +53,16 @@ SplitNodeTransaction::DoTransaction()
   NS_ASSERTION(!rv.Failed() && clone, "Could not create clone");
   NS_ENSURE_TRUE(!rv.Failed() && clone, rv.StealNSResult());
   mNewLeftNode = dont_AddRef(clone.forget().take()->AsContent());
-  mEditorBase.MarkNodeDirty(mExistingRightNode->AsDOMNode());
+  mEditorBase->MarkNodeDirty(mExistingRightNode->AsDOMNode());
 
   // Get the parent node
   mParent = mExistingRightNode->GetParentNode();
   NS_ENSURE_TRUE(mParent, NS_ERROR_NULL_POINTER);
 
   // Insert the new node
-  rv = mEditorBase.SplitNodeImpl(*mExistingRightNode, mOffset, *mNewLeftNode);
-  if (mEditorBase.GetShouldTxnSetSelection()) {
-    RefPtr<Selection> selection = mEditorBase.GetSelection();
+  rv = mEditorBase->SplitNodeImpl(*mExistingRightNode, mOffset, *mNewLeftNode);
+  if (mEditorBase->GetShouldTxnSetSelection()) {
+    RefPtr<Selection> selection = mEditorBase->GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     rv = selection->Collapse(mNewLeftNode, mOffset);
   }
@@ -67,10 +72,14 @@ SplitNodeTransaction::DoTransaction()
 NS_IMETHODIMP
 SplitNodeTransaction::UndoTransaction()
 {
-  MOZ_ASSERT(mNewLeftNode && mParent);
+  if (NS_WARN_IF(!mEditorBase) ||
+      NS_WARN_IF(!mNewLeftNode) ||
+      NS_WARN_IF(!mParent)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   // This assumes Do inserted the new node in front of the prior existing node
-  return mEditorBase.JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent);
+  return mEditorBase->JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent);
 }
 
 /* Redo cannot simply resplit the right node, because subsequent transactions
@@ -80,7 +89,10 @@ SplitNodeTransaction::UndoTransaction()
 NS_IMETHODIMP
 SplitNodeTransaction::RedoTransaction()
 {
-  MOZ_ASSERT(mNewLeftNode && mParent);
+  if (NS_WARN_IF(!mNewLeftNode) ||
+      NS_WARN_IF(!mParent)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   ErrorResult rv;
   // First, massage the existing node so it is in its post-split state

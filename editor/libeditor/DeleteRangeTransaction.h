@@ -61,7 +61,7 @@ protected:
                                      nsIEditor::EDirection aAction);
 
   // The editor for this transaction.
-  EditorBase& mEditorBase;
+  RefPtr<EditorBase> mEditorBase;
 
   // P1 in the range.
   RefPtr<nsRange> mRangeToDelete;

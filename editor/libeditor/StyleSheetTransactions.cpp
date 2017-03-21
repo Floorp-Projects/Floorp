@@ -44,9 +44,9 @@ RemoveStyleSheet(EditorBase& aEditor, StyleSheet* aSheet)
  * AddStyleSheetTransaction
  ******************************************************************************/
 
-AddStyleSheetTransaction::AddStyleSheetTransaction(EditorBase& aEditor,
+AddStyleSheetTransaction::AddStyleSheetTransaction(EditorBase& aEditorBase,
                                                    StyleSheet* aSheet)
-  : mEditor(aEditor)
+  : mEditorBase(&aEditorBase)
   , mSheet(aSheet)
 {
   MOZ_ASSERT(aSheet);
@@ -54,6 +54,7 @@ AddStyleSheetTransaction::AddStyleSheetTransaction(EditorBase& aEditor,
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(AddStyleSheetTransaction,
                                    EditTransactionBase,
+                                   mEditorBase,
                                    mSheet)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AddStyleSheetTransaction)
@@ -62,18 +63,20 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 NS_IMETHODIMP
 AddStyleSheetTransaction::DoTransaction()
 {
-  NS_ENSURE_TRUE(mSheet, NS_ERROR_NOT_INITIALIZED);
-
-  AddStyleSheet(mEditor, mSheet);
+  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mSheet)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  AddStyleSheet(*mEditorBase, mSheet);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 AddStyleSheetTransaction::UndoTransaction()
 {
-  NS_ENSURE_TRUE(mSheet, NS_ERROR_NOT_INITIALIZED);
-
-  RemoveStyleSheet(mEditor, mSheet);
+  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mSheet)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  RemoveStyleSheet(*mEditorBase, mSheet);
   return NS_OK;
 }
 
@@ -88,9 +91,10 @@ AddStyleSheetTransaction::GetTxnDescription(nsAString& aString)
  * RemoveStyleSheetTransaction
  ******************************************************************************/
 
-RemoveStyleSheetTransaction::RemoveStyleSheetTransaction(EditorBase& aEditor,
-                                                         StyleSheet* aSheet)
-  : mEditor(aEditor)
+RemoveStyleSheetTransaction::RemoveStyleSheetTransaction(
+                               EditorBase& aEditorBase,
+                               StyleSheet* aSheet)
+  : mEditorBase(&aEditorBase)
   , mSheet(aSheet)
 {
   MOZ_ASSERT(aSheet);
@@ -98,6 +102,7 @@ RemoveStyleSheetTransaction::RemoveStyleSheetTransaction(EditorBase& aEditor,
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(RemoveStyleSheetTransaction,
                                    EditTransactionBase,
+                                   mEditorBase,
                                    mSheet)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RemoveStyleSheetTransaction)
@@ -106,18 +111,20 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 NS_IMETHODIMP
 RemoveStyleSheetTransaction::DoTransaction()
 {
-  NS_ENSURE_TRUE(mSheet, NS_ERROR_NOT_INITIALIZED);
-
-  RemoveStyleSheet(mEditor, mSheet);
+  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mSheet)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  RemoveStyleSheet(*mEditorBase, mSheet);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 RemoveStyleSheetTransaction::UndoTransaction()
 {
-  NS_ENSURE_TRUE(mSheet, NS_ERROR_NOT_INITIALIZED);
-
-  AddStyleSheet(mEditor, mSheet);
+  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mSheet)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  AddStyleSheet(*mEditorBase, mSheet);
   return NS_OK;
 }
 
