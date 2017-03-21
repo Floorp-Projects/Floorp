@@ -54,6 +54,10 @@ public:
   mozilla::ipc::IPCResult RecvAddLayerTreeIdMapping(nsTArray<LayerTreeIdMapping>&& aMappings) override;
   mozilla::ipc::IPCResult RecvRemoveLayerTreeIdMapping(const LayerTreeIdMapping& aMapping) override;
   mozilla::ipc::IPCResult RecvNotifyGpuObservers(const nsCString& aTopic) override;
+  mozilla::ipc::IPCResult RecvStartProfiler(const ProfilerInitParams& params) override;
+  mozilla::ipc::IPCResult RecvPauseProfiler(const bool& aPause) override;
+  mozilla::ipc::IPCResult RecvStopProfiler() override;
+  mozilla::ipc::IPCResult RecvGatherProfile() override;
   mozilla::ipc::IPCResult RecvRequestMemoryReport(
     const uint32_t& generation,
     const bool& anonymize,
