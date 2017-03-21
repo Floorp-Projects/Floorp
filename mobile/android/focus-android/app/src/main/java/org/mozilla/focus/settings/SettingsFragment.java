@@ -13,7 +13,6 @@ import android.preference.PreferenceScreen;
 import android.support.annotation.Nullable;
 
 import org.mozilla.focus.R;
-import org.mozilla.focus.activity.HelpActivity;
 import org.mozilla.focus.activity.InfoActivity;
 
 public class SettingsFragment extends PreferenceFragment {
@@ -30,8 +29,8 @@ public class SettingsFragment extends PreferenceFragment {
             final Intent intent = InfoActivity.getAboutIntent(getActivity());
             startActivity(intent);
         } else if (preference.getKey().equals(getResources().getString(R.string.pref_key_help))) {
-            final Intent intent = new Intent(getActivity(), HelpActivity.class);
-            startActivity(intent);
+            Intent helpIntent = InfoActivity.getHelpIntent(getActivity());
+            startActivity(helpIntent);
         } else if (preference.getKey().equals(getResources().getString(R.string.pref_key_rights))) {
             final Intent intent = InfoActivity.getRightsIntent(getActivity());
             startActivity(intent);

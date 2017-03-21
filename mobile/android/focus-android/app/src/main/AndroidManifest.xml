@@ -45,8 +45,6 @@
             android:theme="@style/SettingsTheme"
             android:label="@string/menu_settings" />
 
-        <activity android:name=".activity.HelpActivity" />
-
         <activity android:name=".activity.InfoActivity"
                   android:theme="@style/SettingsTheme"/>
 
