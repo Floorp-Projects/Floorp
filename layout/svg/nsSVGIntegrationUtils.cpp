@@ -945,7 +945,6 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
       result &= paintResult.result;
       maskSurface = paintResult.maskSurface;
       if (maskSurface) {
-        MOZ_ASSERT(paintResult.result == DrawResult::SUCCESS);
         shouldPushMask = true;
         maskTransform = paintResult.maskTransform;
         opacityApplied = paintResult.opacityApplied;
