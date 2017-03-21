@@ -8,16 +8,12 @@ EXPORTS += [
     'DMD.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     '../../../mfbt/HashFunctions.cpp',
     '../../../mfbt/JSONWriter.cpp',
     '../../../mfbt/Poison.cpp',
     '../../../mozglue/misc/StackWalk.cpp',
     'DMD.cpp',
-]
-
-SOURCES += [
-    '../../../nsprpub/lib/libc/src/strcpy.c',
 ]
 
 SharedLibrary('dmd')
