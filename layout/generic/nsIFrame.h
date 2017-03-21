@@ -2466,6 +2466,18 @@ public:
    */
   nsIFrame* GetAncestorWithView() const;
 
+  // Sets the view's attributes from the frame style.
+  // - visibility
+  // - clip
+  // Call this when one of these styles changes or when the view has just
+  // been created.
+  // @param aStyleContext can be null, in which case the frame's style context is used
+  static void SyncFrameViewProperties(nsPresContext*  aPresContext,
+                                      nsIFrame*        aFrame,
+                                      nsStyleContext*  aStyleContext,
+                                      nsView*         aView,
+                                      uint32_t         aFlags = 0);
+
   /**
    * Get the offset between the coordinate systems of |this| and aOther.
    * Adding the return value to a point in the coordinate system of |this|
@@ -3616,6 +3628,11 @@ public:
                             const nsStyleCoord& aCoord,
                             ComputeSizeFlags    aFlags = eDefault);
 protected:
+  static void ReparentFrameViewTo(nsIFrame* aFrame,
+                                  nsViewManager* aViewManager,
+                                  nsView*        aNewParentView,
+                                  nsView*        aOldParentView);
+
   // Members
   nsRect           mRect;
   nsIContent*      mContent;

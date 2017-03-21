@@ -595,6 +595,13 @@ protected:
   void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
 public:
+  /**
+   * Helper method to wrap views around frames. Used by containers
+   * under special circumstances (can be used by leaf frames as well)
+   */
+  static void CreateViewForFrame(nsIFrame* aFrame,
+                                 bool aForce);
+
   //given a frame five me the first/last leaf available
   //XXX Robert O'Callahan wants to move these elsewhere
   static void GetLastLeaf(nsPresContext* aPresContext, nsIFrame **aFrame);

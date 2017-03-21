@@ -2436,7 +2436,7 @@ nsMenuPopupFrame::GetAlignmentPosition() const
 }
 
 /**
- * KEEP THIS IN SYNC WITH nsContainerFrame::CreateViewForFrame
+ * KEEP THIS IN SYNC WITH nsFrame::CreateView
  * as much as possible. Until we get rid of views finally...
  */
 void
