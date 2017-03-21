@@ -10,7 +10,6 @@
 #include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/KeyframeAnimationOptionsBinding.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
-#include "mozilla/ServoBindings.h"
 #include "nsCSSParser.h" // For nsCSSParser
 #include "nsIDocument.h"
 #include "nsRuleNode.h"
@@ -113,26 +112,6 @@ TimingParams::ParseEasing(const nsAString& aEasing,
                           ErrorResult& aRv)
 {
   MOZ_ASSERT(aDocument);
-
-  if (aDocument->IsStyledByServo()) {
-    nsTimingFunction timingFunction;
-    nsCString baseString;
-    // FIXME this is using the wrong base uri (bug 1343919)
-    GeckoParserExtraData data(aDocument->GetDocumentURI(),
-                              aDocument->GetDocumentURI(),
-                              aDocument->NodePrincipal());
-    aDocument->GetDocumentURI()->GetSpec(baseString);
-    if (!Servo_ParseEasing(&aEasing, &baseString, &data, &timingFunction)) {
-      aRv.ThrowTypeError<dom::MSG_INVALID_EASING_ERROR>(aEasing);
-      return Nothing();
-    }
-
-    if (timingFunction.mType == nsTimingFunction::Type::Linear) {
-      return Nothing();
-    }
-
-    return Some(ComputedTimingFunction(timingFunction));
-  }
 
   nsCSSValue value;
   nsCSSParser parser;
