@@ -162,6 +162,8 @@ public:
     return set ? set->GetPresContext() : nullptr;
   }
 
+  nsIDocument* Document() const { return mDocument; }
+
   // -- Web IDL --------------------------------------------------------------
 
   IMPL_EVENT_HANDLER(loading)

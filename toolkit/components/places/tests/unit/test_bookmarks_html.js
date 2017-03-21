@@ -176,7 +176,7 @@ add_task(function* test_import_chromefavicon() {
   // 9. empty bookmarks db and continue
 
   const PAGE_URI = NetUtil.newURI("http://example.com/chromefavicon_page");
-  const CHROME_FAVICON_URI = NetUtil.newURI("chrome://global/skin/icons/information-16.png");
+  const CHROME_FAVICON_URI = NetUtil.newURI("chrome://global/skin/icons/info.svg");
   const CHROME_FAVICON_URI_2 = NetUtil.newURI("chrome://global/skin/icons/error-16.png");
 
   do_print("Importing from html");

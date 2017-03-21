@@ -41,6 +41,7 @@
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
@@ -344,7 +345,8 @@ Gecko_DropElementSnapshot(ServoElementSnapshotOwned aSnapshot)
   // descendants of a new display:none root).
   if (MOZ_UNLIKELY(!NS_IsMainThread())) {
     nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([=]() { delete aSnapshot; });
-    NS_DispatchToMainThread(task.forget());
+    SystemGroup::Dispatch("Gecko_DropElementSnapshot", TaskCategory::Other,
+                          task.forget());
   } else {
     delete aSnapshot;
   }

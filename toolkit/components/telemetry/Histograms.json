@@ -10462,11 +10462,11 @@
   },
   "DOM_SCRIPT_SRC_ENCODING": {
     "alert_emails": ["dteller@mozilla.com"],
-    "expires_in_version": "never",
+    "expires_in_version": "61",
     "kind": "count",
     "keyed": true,
     "bug_numbers": [1344152],
-    "description": "Encoding used in a <script src>."
+    "description": "Note the encoding (e.g. 'UTF-8', 'windows-1252', 'ASCII') of each external <script> element that is successfully loaded and decoded."
   },
   "VIDEO_FASTSEEK_USED": {
     "alert_emails": ["lchristie@mozilla.com", "cpearce@mozilla.com"],

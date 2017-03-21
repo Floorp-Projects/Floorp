@@ -443,6 +443,21 @@ BasePrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
 }
 
 NS_IMETHODIMP
+BasePrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
+{
+  // Never destroy an existing CSP on the principal.
+  // This method should only be called in rare cases.
+
+  MOZ_ASSERT(!mCSP, "do not destroy an existing CSP");
+  if (mCSP) {
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
+
+  mCSP = aCsp;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BasePrincipal::EnsureCSP(nsIDOMDocument* aDocument,
                          nsIContentSecurityPolicy** aCSP)
 {
