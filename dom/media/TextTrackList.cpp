@@ -7,6 +7,7 @@
 #include "mozilla/dom/TextTrackListBinding.h"
 #include "mozilla/dom/TrackEvent.h"
 #include "nsThreadUtils.h"
+#include "nsGlobalWindow.h"
 #include "mozilla/dom/TextTrackCue.h"
 #include "mozilla/dom/TextTrackManager.h"
 
@@ -174,6 +175,11 @@ TextTrackList::CreateAndDispatchChangeEvent()
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mPendingTextTrackChange) {
+    nsPIDOMWindowInner* win = GetOwner();
+    if (!win) {
+      return;
+    }
+
     mPendingTextTrackChange = true;
     RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
@@ -181,7 +187,9 @@ TextTrackList::CreateAndDispatchChangeEvent()
     event->SetTrusted(true);
 
     nsCOMPtr<nsIRunnable> eventRunner = new ChangeEventRunner(this, event);
-    NS_DispatchToMainThread(eventRunner);
+    nsGlobalWindow::Cast(win)->Dispatch(
+      "TextTrackList::CreateAndDispatchChangeEvent", TaskCategory::Other,
+      eventRunner.forget());
   }
 }
 
