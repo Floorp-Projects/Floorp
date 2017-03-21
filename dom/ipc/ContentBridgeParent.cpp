@@ -171,6 +171,24 @@ ContentBridgeParent::DeallocPBrowserParent(PBrowserParent* aParent)
   return nsIContentParent::DeallocPBrowserParent(aParent);
 }
 
+mozilla::ipc::IPCResult
+ContentBridgeParent::RecvPBrowserConstructor(PBrowserParent* actor,
+                                             const TabId& tabId,
+                                             const TabId& sameTabGroupAs,
+                                             const IPCTabContext& context,
+                                             const uint32_t& chromeFlags,
+                                             const ContentParentId& cpId,
+                                             const bool& isForBrowser)
+{
+  return nsIContentParent::RecvPBrowserConstructor(actor,
+                                                   tabId,
+                                                   sameTabGroupAs,
+                                                   context,
+                                                   chromeFlags,
+                                                   cpId,
+                                                   isForBrowser);
+}
+
 void
 ContentBridgeParent::NotifyTabDestroyed()
 {
