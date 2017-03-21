@@ -104,7 +104,8 @@ const PINNED_STATE = {
  *
  */
 function* runScenarios(scenarios) {
-  for (let scenario of scenarios) {
+  for (let [scenarioIndex, scenario] of scenarios.entries()) {
+    info("Running scenario " + scenarioIndex);
     // Let's make sure our scenario is sane first.
     Assert.equal(scenario.expectedFlips.length,
                  scenario.expectedRemoteness.length,
@@ -234,10 +235,11 @@ add_task(function*() {
       selectedTab: 3,
       // The initial tab is remote and should go into
       // the background state. The second and third tabs
-      // are new and should be initialized non-remote.
-      expectedFlips: [true, false, true],
-      // Only the selected tab should be remote.
-      expectedRemoteness: [false, false, true],
+      // are new and should initialize remotely as well.
+      // There should therefore be no remoteness flips.
+      expectedFlips: [false, false, false],
+      // All tabs should now be remote.
+      expectedRemoteness: [true, true, true],
     },
 
     // A single remote tab, and this is the one that's going
@@ -249,10 +251,10 @@ add_task(function*() {
       selectedTab: 1,
       // The initial tab is remote and selected, so it should
       // not flip remoteness. The other two new tabs should
-      // be non-remote by default.
+      // initialize as remote unrestored background tabs.
       expectedFlips: [false, false, false],
-      // Only the selected tab should be remote.
-      expectedRemoteness: [true, false, false],
+      // All tabs should now be remote.
+      expectedRemoteness: [true, true, true],
     },
 
     // A single remote tab which starts selected. We set the
@@ -265,10 +267,10 @@ add_task(function*() {
       selectedTab: 0,
       // The initial tab is remote and selected, so it should
       // not flip remoteness. The other two new tabs should
-      // be non-remote by default.
+      // initialize as remote unrestored background tabs.
       expectedFlips: [false, false, false],
-      // Only the selected tab should be remote.
-      expectedRemoteness: [true, false, false],
+      // All tabs should now be remote.
+      expectedRemoteness: [true, true, true],
     },
 
     // An initially remote tab, but we're going to load
@@ -283,8 +285,8 @@ add_task(function*() {
       // so it should stay remote. The second tab is new
       // and pinned, so it should start remote and not flip.
       // The third tab is not pinned, but it is selected,
-      // so it will start non-remote, and then flip remoteness.
-      expectedFlips: [false, false, true],
+      // so it will start remote.
+      expectedFlips: [false, false, false],
       // Both pinned tabs and the selected tabs should all
       // end up being remote.
       expectedRemoteness: [true, true, true],
@@ -296,12 +298,12 @@ add_task(function*() {
       initialSelectedTab: 1,
       stateToRestore: SIMPLE_STATE,
       selectedTab: 2,
-      // The initial tab is non-remote and should stay
-      // that way. The second and third tabs are new and
-      // should be initialized non-remote.
-      expectedFlips: [false, true, false],
-      // Only the selected tab should be remote.
-      expectedRemoteness: [false, true, false],
+      // The initial tab is non-remote and should become remote.
+      // The second and third tabs are new and should be initialized
+      // as remote.
+      expectedFlips: [true, false, false],
+      // All tabs should now be remote.
+      expectedRemoteness: [true, true, true],
     },
 
     // A mixture of remote and non-remote tabs.
@@ -310,12 +312,12 @@ add_task(function*() {
       initialSelectedTab: 1,
       stateToRestore: SIMPLE_STATE,
       selectedTab: 3,
-      // The initial tab is remote and should flip to non-remote
-      // as it is put into the background. The second tab should
-      // stay non-remote, and the third one should stay remote.
-      expectedFlips: [true, false, false],
-      // Only the selected tab should be remote.
-      expectedRemoteness: [false, false, true],
+      // The initial tab is remote and should stay that way, even
+      // when put into the background. The second tab should flip
+      // remoteness, and the third one should stay remote.
+      expectedFlips: [false, true, false],
+      // All tabs should now be remote.
+      expectedRemoteness: [true, true, true],
     },
 
     // An initially non-remote tab, but we're going to load
@@ -330,10 +332,9 @@ add_task(function*() {
       // so it should flip remoteness. The second tab is new
       // and pinned, so it should start remote and not flip.
       // The third tab is not pinned, but it is selected,
-      // so it will start non-remote, and then flip remoteness.
-      expectedFlips: [true, false, true],
-      // Both pinned tabs and the selected tabs should all
-      // end up being remote.
+      // so it will start remote, and not flip remoteness.
+      expectedFlips: [true, false, false],
+      // All tabs should now be remote.
       expectedRemoteness: [true, true, true],
     },
   ];

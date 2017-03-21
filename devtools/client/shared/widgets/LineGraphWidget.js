@@ -11,17 +11,14 @@ const L10N = new LocalizationHelper("devtools/client/locales/graphs.properties")
 // Line graph constants.
 
 const GRAPH_DAMPEN_VALUES_FACTOR = 0.85;
-// px
-const GRAPH_TOOLTIP_SAFE_BOUNDS = 8;
-const GRAPH_MIN_MAX_TOOLTIP_DISTANCE = 14;
+const GRAPH_TOOLTIP_SAFE_BOUNDS = 8; // px
+const GRAPH_MIN_MAX_TOOLTIP_DISTANCE = 14; // px
 
 const GRAPH_BACKGROUND_COLOR = "#0088cc";
-// px
-const GRAPH_STROKE_WIDTH = 1;
+const GRAPH_STROKE_WIDTH = 1; // px
 const GRAPH_STROKE_COLOR = "rgba(255,255,255,0.9)";
-// px
-const GRAPH_HELPER_LINES_DASH = [5];
-const GRAPH_HELPER_LINES_WIDTH = 1;
+const GRAPH_HELPER_LINES_DASH = [5]; // px
+const GRAPH_HELPER_LINES_WIDTH = 1; // px
 const GRAPH_MAXIMUM_LINE_COLOR = "rgba(255,255,255,0.4)";
 const GRAPH_AVERAGE_LINE_COLOR = "rgba(255,255,255,0.7)";
 const GRAPH_MINIMUM_LINE_COLOR = "rgba(255,255,255,0.9)";

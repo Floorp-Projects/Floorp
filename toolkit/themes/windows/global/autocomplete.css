@@ -97,6 +97,11 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   margin: 0;
 }
 
+.autocomplete-richlistitem[selected] {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
 .ac-type-icon {
   width: 16px;
   height: 16px;

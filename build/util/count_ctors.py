@@ -1,6 +1,7 @@
 
 #!/usr/bin/python
 import json
+
 import re
 import subprocess
 import sys
@@ -56,7 +57,8 @@ if __name__ == '__main__':
                 "subtests": [{
                     "name": "num_static_constructors",
                     "value": count_ctors(f),
-                    "alertThreshold": 0.25
+                    "alertChangeType": "absolute",
+                    "alertThreshold": 3
                 }]}
             ]
         }

@@ -3833,8 +3833,16 @@
               window.addEventListener("SwapDocShells", this, true);
               window.addEventListener("EndSwapDocShells", this, true);
               window.addEventListener("MozTabChildNotReady", this, true);
+
+              let tab = this.requestedTab;
+              let browser = tab.linkedBrowser;
+              let tabIsLoaded = !browser.isRemoteBrowser ||
+                                browser.frameLoader.tabParent.hasPresented;
+
               if (!this.minimized) {
-                this.setTabState(this.requestedTab, this.STATE_LOADED);
+                this.log("Initial tab is loaded?: " + tabIsLoaded);
+                this.setTabState(tab, tabIsLoaded ? this.STATE_LOADED
+                                                  : this.STATE_LOADING);
               }
             },
 
