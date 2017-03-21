@@ -1527,5 +1527,184 @@ CheckIsCallable(JSContext* cx, HandleValue v, CheckIsCallableKind kind)
     return true;
 }
 
+template <bool HandleMissing>
+static MOZ_ALWAYS_INLINE bool
+GetNativeDataProperty(JSContext* cx, NativeObject* obj, jsid id, Value* vp)
+{
+    // Fast path used by megamorphic IC stubs. Unlike our other property
+    // lookup paths, this is optimized to be as fast as possible for simple
+    // data property lookups.
+
+    JS::AutoCheckCannotGC nogc;
+
+    MOZ_ASSERT(JSID_IS_ATOM(id) || JSID_IS_SYMBOL(id));
+
+    while (true) {
+        if (Shape* shape = obj->lastProperty()->search(cx, id)) {
+            if (!shape->hasSlot() || !shape->hasDefaultGetter())
+                return false;
+
+            *vp = obj->getSlot(shape->slot());
+            return true;
+        }
+
+        // Property not found. Watch out for Class hooks.
+        if (MOZ_UNLIKELY(!obj->is<PlainObject>())) {
+            if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj) ||
+                obj->getClass()->getGetProperty())
+            {
+                return false;
+            }
+        }
+
+        JSObject* proto = obj->staticPrototype();
+        if (!proto) {
+            if (HandleMissing) {
+                vp->setUndefined();
+                return true;
+            }
+            return false;
+        }
+
+        if (!proto->isNative())
+            return false;
+        obj = &proto->as<NativeObject>();
+    }
+}
+
+template <bool HandleMissing>
+bool
+GetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp)
+{
+    if (MOZ_UNLIKELY(!obj->isNative()))
+        return false;
+    return GetNativeDataProperty<HandleMissing>(cx, &obj->as<NativeObject>(), NameToId(name), vp);
+}
+
+template bool
+GetNativeDataProperty<true>(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp);
+
+template bool
+GetNativeDataProperty<false>(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp);
+
+template <bool HandleMissing>
+bool
+GetNativeDataPropertyByValue(JSContext* cx, JSObject* obj, Value* vp)
+{
+    JS::AutoCheckCannotGC nogc;
+
+    if (MOZ_UNLIKELY(!obj->isNative()))
+        return false;
+
+    // vp[0] contains the id, result will be stored in vp[1].
+    Value idVal = vp[0];
+
+    jsid id;
+    if (MOZ_LIKELY(idVal.isString())) {
+        JSString* s = idVal.toString();
+        JSAtom* atom;
+        if (s->isAtom()) {
+            atom = &s->asAtom();
+        } else {
+            atom = AtomizeString(cx, s);
+            if (!atom)
+                return false;
+        }
+        id = AtomToId(atom);
+    } else if (idVal.isSymbol()) {
+        id = SYMBOL_TO_JSID(idVal.toSymbol());
+    } else {
+        if (!ValueToIdPure(idVal, &id))
+            return false;
+    }
+
+    // Watch out for ids that may be stored in dense elements.
+    static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT < JSID_INT_MAX,
+                  "All dense elements must have integer jsids");
+    if (MOZ_UNLIKELY(JSID_IS_INT(id)))
+        return false;
+
+    Value* res = vp + 1;
+    return GetNativeDataProperty<HandleMissing>(cx, &obj->as<NativeObject>(), id, res);
+}
+
+template bool
+GetNativeDataPropertyByValue<true>(JSContext* cx, JSObject* obj, Value* vp);
+
+template bool
+GetNativeDataPropertyByValue<false>(JSContext* cx, JSObject* obj, Value* vp);
+
+bool
+SetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* val)
+{
+    JS::AutoCheckCannotGC nogc;
+
+    if (MOZ_UNLIKELY(!obj->isNative()))
+        return false;
+
+    NativeObject* nobj = &obj->as<NativeObject>();
+    Shape* shape = nobj->lastProperty()->search(cx, NameToId(name));
+    if (!shape ||
+        !shape->hasSlot() ||
+        !shape->hasDefaultSetter() ||
+        !shape->writable() ||
+        nobj->watched())
+    {
+        return false;
+    }
+
+    if (!HasTypePropertyId(nobj, NameToId(name), *val))
+        return false;
+
+    nobj->setSlot(shape->slot(), *val);
+    return true;
+}
+
+bool
+ObjectHasGetterSetter(JSContext* cx, JSObject* objArg, Shape* propShape)
+{
+    JS::AutoCheckCannotGC nogc;
+
+    MOZ_ASSERT(propShape->hasGetterObject() || propShape->hasSetterObject());
+
+    // Window objects may require outerizing (passing the WindowProxy to the
+    // getter/setter), so we don't support them here.
+    if (MOZ_UNLIKELY(!objArg->isNative() || IsWindow(objArg)))
+        return false;
+
+    NativeObject* nobj = &objArg->as<NativeObject>();
+    jsid id = propShape->propid();
+
+    while (true) {
+        if (Shape* shape = nobj->lastProperty()->search(cx, id)) {
+            if (shape == propShape)
+                return true;
+            if (shape->getterOrUndefined() == propShape->getterOrUndefined() &&
+                shape->setterOrUndefined() == propShape->setterOrUndefined())
+            {
+                return true;
+            }
+            return false;
+        }
+
+        // Property not found. Watch out for Class hooks.
+        if (!nobj->is<PlainObject>()) {
+            if (ClassMayResolveId(cx->names(), nobj->getClass(), id, nobj) ||
+                nobj->getClass()->getGetProperty())
+            {
+                return false;
+            }
+        }
+
+        JSObject* proto = nobj->staticPrototype();
+        if (!proto)
+            return false;
+
+        if (!proto->isNative())
+            return false;
+        nobj = &proto->as<NativeObject>();
+    }
+}
+
 } // namespace jit
 } // namespace js

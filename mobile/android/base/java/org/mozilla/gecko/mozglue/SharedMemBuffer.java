@@ -54,7 +54,11 @@ public final class SharedMemBuffer implements Sample.Buffer {
         if (!src.isDirect()) {
             throw new IOException("SharedMemBuffer only support reading from direct byte buffer.");
         }
-        nativeReadFromDirectBuffer(src, mSharedMem.getPointer(), offset, size);
+        try {
+            nativeReadFromDirectBuffer(src, mSharedMem.getPointer(), offset, size);
+        } catch (NullPointerException e) {
+            throw new IOException(e);
+        }
     }
 
     private native static void nativeReadFromDirectBuffer(ByteBuffer src, long dest, int offset, int size);
@@ -64,7 +68,11 @@ public final class SharedMemBuffer implements Sample.Buffer {
         if (!dest.isDirect()) {
             throw new IOException("SharedMemBuffer only support writing to direct byte buffer.");
         }
-        nativeWriteToDirectBuffer(mSharedMem.getPointer(), dest, offset, size);
+        try {
+            nativeWriteToDirectBuffer(mSharedMem.getPointer(), dest, offset, size);
+        } catch (NullPointerException e) {
+            throw new IOException(e);
+        }
     }
 
     private native static void nativeWriteToDirectBuffer(long src, ByteBuffer dest, int offset, int size);

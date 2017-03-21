@@ -52,14 +52,6 @@ async function runTestCase({extension, openNavTarget, expectedWebNavProps}) {
   is(completedNavMsg.url, url, "Got the expected webNavigation.onCompleted url property");
 }
 
-async function clickContextMenuItem({pageElementSelector, contextMenuItemLabel}) {
-  const contentAreaContextMenu = await openContextMenu(pageElementSelector);
-  const item = contentAreaContextMenu.getElementsByAttribute("label", contextMenuItemLabel);
-  is(item.length, 1, `found contextMenu item for "${contextMenuItemLabel}"`);
-  item[0].click();
-  await closeContextMenu();
-}
-
 add_task(function* test_on_created_navigation_target_from_mouse_click() {
   const tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
 
@@ -119,59 +111,6 @@ add_task(function* test_on_created_navigation_target_from_mouse_click() {
       sourceTabId: expectedSourceTab.sourceTabId,
       sourceFrameId: 0,
       url: `${OPENED_PAGE}#new-tab-from-targetblank-click`,
-    },
-  });
-
-  yield BrowserTestUtils.removeTab(tab);
-
-  yield extension.unload();
-});
-
-add_task(function* test_on_created_navigation_target_from_context_menu() {
-  const tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
-
-  const extension = ExtensionTestUtils.loadExtension({
-    background,
-    manifest: {
-      permissions: ["webNavigation"],
-    },
-  });
-
-  yield extension.startup();
-
-  const expectedSourceTab = yield extension.awaitMessage("expectedSourceTab");
-
-  info("Open link in a new tab from the context menu");
-
-  yield runTestCase({
-    extension,
-    async openNavTarget() {
-      await clickContextMenuItem({
-        pageElementSelector: "#test-create-new-tab-from-context-menu",
-        contextMenuItemLabel: "Open Link in New Tab",
-      });
-    },
-    expectedWebNavProps: {
-      sourceTabId: expectedSourceTab.sourceTabId,
-      sourceFrameId: 0,
-      url: `${OPENED_PAGE}#new-tab-from-context-menu`,
-    },
-  });
-
-  info("Open link in a new window from the context menu");
-
-  yield runTestCase({
-    extension,
-    async openNavTarget() {
-      await clickContextMenuItem({
-        pageElementSelector: "#test-create-new-window-from-context-menu",
-        contextMenuItemLabel: "Open Link in New Window",
-      });
-    },
-    expectedWebNavProps: {
-      sourceTabId: expectedSourceTab.sourceTabId,
-      sourceFrameId: 0,
-      url: `${OPENED_PAGE}#new-window-from-context-menu`,
     },
   });
 
@@ -256,65 +195,3 @@ add_task(function* test_on_created_navigation_target_from_mouse_click_subframe()
   yield extension.unload();
 });
 
-add_task(function* test_on_created_navigation_target_from_context_menu_subframe() {
-  const tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
-
-  const extension = ExtensionTestUtils.loadExtension({
-    background,
-    manifest: {
-      permissions: ["webNavigation"],
-    },
-  });
-
-  yield extension.startup();
-
-  const expectedSourceTab = yield extension.awaitMessage("expectedSourceTab");
-
-  info("Open a subframe link in a new tab from the context menu");
-
-  yield runTestCase({
-    extension,
-    async openNavTarget() {
-      await clickContextMenuItem({
-        pageElementSelector: function() {
-          // This code runs as a framescript in the child process and it returns the
-          // target link in the subframe.
-          return this.content.frames[0] // eslint-disable-line mozilla/no-cpows-in-tests
-            .document.querySelector("#test-create-new-tab-from-context-menu-subframe");
-        },
-        contextMenuItemLabel: "Open Link in New Tab",
-      });
-    },
-    expectedWebNavProps: {
-      sourceTabId: expectedSourceTab.sourceTabId,
-      sourceFrameId: expectedSourceTab.sourceTabFrames[1].frameId,
-      url: `${OPENED_PAGE}#new-tab-from-context-menu-subframe`,
-    },
-  });
-
-  info("Open a subframe link in a new window from the context menu");
-
-  yield runTestCase({
-    extension,
-    async openNavTarget() {
-      await clickContextMenuItem({
-        pageElementSelector: function() {
-          // This code runs as a framescript in the child process and it returns the
-          // target link in the subframe.
-          return this.content.frames[0] // eslint-disable-line mozilla/no-cpows-in-tests
-            .document.querySelector("#test-create-new-window-from-context-menu-subframe");
-        },
-        contextMenuItemLabel: "Open Link in New Window",
-      });
-    },
-    expectedWebNavProps: {
-      sourceTabId: expectedSourceTab.sourceTabId,
-      sourceFrameId: expectedSourceTab.sourceTabFrames[1].frameId,
-      url: `${OPENED_PAGE}#new-window-from-context-menu-subframe`,
-    },
-  });
-
-  yield BrowserTestUtils.removeTab(tab);
-
-  yield extension.unload();
-});

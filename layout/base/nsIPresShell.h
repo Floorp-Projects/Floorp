@@ -1022,7 +1022,7 @@ public:
   /**
    * Reconstruct frames for all elements in the document
    */
-  virtual nsresult ReconstructFrames() = 0;
+  virtual void ReconstructFrames() = 0;
 
   /**
    * Notify that a content node's state has changed

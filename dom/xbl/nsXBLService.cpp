@@ -416,8 +416,10 @@ public:
   ~AutoStyleNewChildren()
   {
     nsIPresShell* presShell = mElement->OwnerDoc()->GetShell();
-    ServoStyleSet* servoSet = presShell ? presShell->StyleSet()->GetAsServo() : nullptr;
-    if (servoSet) {
+    if (!presShell || !presShell->DidInitialize()) {
+      return;
+    }
+    if (ServoStyleSet* servoSet = presShell->StyleSet()->GetAsServo()) {
       // In general the element is always styled by the time we're applying XBL
       // bindings, because we need to style the element to know what the binding
       // URI is. However, programmatic consumers of the XBL service (like the

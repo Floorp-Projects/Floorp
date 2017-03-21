@@ -11,6 +11,7 @@
 #include "mozilla/css/Loader.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/SystemGroup.h"
 #include "nsCSSScanner.h"
 #include "nsIConsoleService.h"
 #include "nsIDocument.h"
@@ -153,7 +154,11 @@ ErrorReporter::~ErrorReporter()
   // balance between performance and memory usage, so we only allow
   // short-term caching.
   if (sSpecCache && sSpecCache->IsInUse() && !sSpecCache->IsPending()) {
-    if (NS_FAILED(NS_DispatchToCurrentThread(sSpecCache))) {
+    nsCOMPtr<nsIRunnable> runnable(sSpecCache);
+    nsresult rv =
+      SystemGroup::Dispatch("ShortTermURISpecCache", TaskCategory::Other,
+                            runnable.forget());
+    if (NS_FAILED(rv)) {
       // Peform the "deferred" cleanup immediately if the dispatch fails.
       sSpecCache->Run();
     } else {

@@ -48,7 +48,7 @@ class FlattenedChildIterator;
 } // namespace dom
 } // namespace mozilla
 
-class nsCSSFrameConstructor : public nsFrameManager
+class nsCSSFrameConstructor final : public nsFrameManager
 {
 public:
   typedef mozilla::CSSPseudoElementType CSSPseudoElementType;
@@ -60,7 +60,7 @@ public:
 
   nsCSSFrameConstructor(nsIDocument* aDocument, nsIPresShell* aPresShell);
   ~nsCSSFrameConstructor(void) {
-    NS_ASSERTION(mUpdateCount == 0, "Dying in the middle of our own update?");
+    MOZ_ASSERT(mUpdateCount == 0, "Dying in the middle of our own update?");
   }
 
   // get the alternate text for a content node
@@ -78,7 +78,7 @@ public:
 
   nsIFrame* ConstructRootFrame();
 
-  nsresult ReconstructDocElementHierarchy();
+  void ReconstructDocElementHierarchy();
 
   // Create frames for content nodes that are marked as needing frames. This
   // should be called before ProcessPendingRestyles.
@@ -208,17 +208,17 @@ public:
   // much easier way than nsFrameConstructorState, and thus, we're allowed to
   // provide a TreeMatchContext to avoid calling InitAncestors repeatedly deep
   // in the DOM.
-  nsresult ContentAppended(nsIContent* aContainer,
-                           nsIContent* aFirstNewContent,
-                           bool aAllowLazyConstruction,
-                           TreeMatchContext* aProvidedTreeMatchContext = nullptr);
+  void ContentAppended(nsIContent* aContainer,
+                       nsIContent* aFirstNewContent,
+                       bool aAllowLazyConstruction,
+                       TreeMatchContext* aProvidedTreeMatchContext = nullptr);
 
   // If aAllowLazyConstruction is true then frame construction of the new child
   // can be done lazily.
-  nsresult ContentInserted(nsIContent* aContainer,
-                           nsIContent* aChild,
-                           nsILayoutHistoryState* aFrameState,
-                           bool aAllowLazyConstruction);
+  void ContentInserted(nsIContent* aContainer,
+                       nsIContent* aChild,
+                       nsILayoutHistoryState* aFrameState,
+                       bool aAllowLazyConstruction);
 
   // Like ContentInserted but handles inserting the children of aContainer in
   // the range [aStartChild, aEndChild).  aStartChild must be non-null.
@@ -231,12 +231,12 @@ public:
   //
   // See ContentAppended to see why we allow passing an already initialized
   // TreeMatchContext.
-  nsresult ContentRangeInserted(nsIContent* aContainer,
-                                nsIContent* aStartChild,
-                                nsIContent* aEndChild,
-                                nsILayoutHistoryState* aFrameState,
-                                bool aAllowLazyConstruction,
-                                TreeMatchContext* aProvidedTreeMatchContext = nullptr);
+  void ContentRangeInserted(nsIContent* aContainer,
+                            nsIContent* aStartChild,
+                            nsIContent* aEndChild,
+                            nsILayoutHistoryState* aFrameState,
+                            bool aAllowLazyConstruction,
+                            TreeMatchContext* aProvidedTreeMatchContext = nullptr);
 
   enum RemoveFlags {
     REMOVE_CONTENT, REMOVE_FOR_RECONSTRUCTION, REMOVE_DESTROY_FRAMES };
@@ -256,15 +256,15 @@ public:
    * only when aFlags == REMOVE_DESTROY_FRAMES, otherwise it will only be
    * captured if we reconstructed frames for an ancestor.
    */
-  nsresult ContentRemoved(nsIContent*  aContainer,
-                          nsIContent*  aChild,
-                          nsIContent*  aOldNextSibling,
-                          RemoveFlags  aFlags,
-                          bool*        aDidReconstruct,
-                          nsIContent** aDestroyedFramesFor = nullptr);
+  void ContentRemoved(nsIContent*  aContainer,
+                      nsIContent*  aChild,
+                      nsIContent*  aOldNextSibling,
+                      RemoveFlags  aFlags,
+                      bool*        aDidReconstruct,
+                      nsIContent** aDestroyedFramesFor = nullptr);
 
-  nsresult CharacterDataChanged(nsIContent* aContent,
-                                CharacterDataChangeInfo* aInfo);
+  void CharacterDataChanged(nsIContent* aContent,
+                            CharacterDataChangeInfo* aInfo);
 
   // If aContent is a text node that has been optimized away due to being
   // whitespace next to a block boundary (or for some other reason), stop
@@ -273,8 +273,8 @@ public:
   // Returns the frame for aContent if there is one.
   nsIFrame* EnsureFrameForTextNode(nsGenericDOMDataNode* aContent);
 
-  // generate the child frames and process bindings
-  nsresult GenerateChildFrames(nsContainerFrame* aFrame);
+  // Generate the child frames and process bindings
+  void GenerateChildFrames(nsContainerFrame* aFrame);
 
   // Should be called when a frame is going to be destroyed and
   // WillDestroyFrameTree hasn't been called yet.
@@ -316,11 +316,11 @@ public:
    */
   InsertionPoint GetInsertionPoint(nsIContent* aContainer, nsIContent* aChild);
 
-  nsresult CreateListBoxContent(nsContainerFrame* aParentFrame,
-                                nsIFrame*         aPrevFrame,
-                                nsIContent*       aChild,
-                                nsIFrame**        aResult,
-                                bool              aIsAppend);
+  void CreateListBoxContent(nsContainerFrame* aParentFrame,
+                            nsIFrame*         aPrevFrame,
+                            nsIContent*       aChild,
+                            nsIFrame**        aResult,
+                            bool              aIsAppend);
 
   // GetInitialContainingBlock() is deprecated in favor of GetRootElementFrame();
   // nsIFrame* GetInitialContainingBlock() { return mRootElementFrame; }
@@ -432,14 +432,14 @@ private:
    * @param [out] aNewContent the content node we create
    * @param [out] aNewFrame the new frame we create
    */
-  nsresult CreateAttributeContent(nsIContent* aParentContent,
-                                  nsIFrame* aParentFrame,
-                                  int32_t aAttrNamespace,
-                                  nsIAtom* aAttrName,
-                                  nsStyleContext* aStyleContext,
-                                  nsCOMArray<nsIContent>& aGeneratedContent,
-                                  nsIContent** aNewContent,
-                                  nsIFrame** aNewFrame);
+  void CreateAttributeContent(nsIContent* aParentContent,
+                              nsIFrame* aParentFrame,
+                              int32_t aAttrNamespace,
+                              nsIAtom* aAttrName,
+                              nsStyleContext* aStyleContext,
+                              nsCOMArray<nsIContent>& aGeneratedContent,
+                              nsIContent** aNewContent,
+                              nsIFrame** aNewFrame);
 
   /**
    * Create a text node containing the given string. If aText is non-null
@@ -477,11 +477,11 @@ private:
   // aParentFrame.  aPrevSibling must be the frame after which aFrameList is to
   // be placed on aParentFrame's principal child list.  It may be null if
   // aFrameList is being added at the beginning of the child list.
-  nsresult AppendFramesToParent(nsFrameConstructorState&       aState,
-                                nsContainerFrame*              aParentFrame,
-                                nsFrameItems&                  aFrameList,
-                                nsIFrame*                      aPrevSibling,
-                                bool                           aIsRecursiveCall = false);
+  void AppendFramesToParent(nsFrameConstructorState&       aState,
+                            nsContainerFrame*              aParentFrame,
+                            nsFrameItems&                  aFrameList,
+                            nsIFrame*                      aPrevSibling,
+                            bool                           aIsRecursiveCall = false);
 
   // BEGIN TABLE SECTION
   /**
@@ -1703,7 +1703,7 @@ private:
   // InitializeSelectFrame puts scrollFrame in aFrameItems if aBuildCombobox is false
   // aBuildCombobox indicates if we are building a combobox that has a dropdown
   // popup widget or not.
-  nsresult
+  void
   InitializeSelectFrame(nsFrameConstructorState& aState,
                         nsContainerFrame*        aScrollFrame,
                         nsContainerFrame*        aScrolledFrame,
@@ -1732,7 +1732,7 @@ private:
    * @param aDestroyedFramesFor if non-null, it will contain the content that
    *   was actually reframed - it may be different than aContent.
    */
-  nsresult
+  void
   RecreateFramesForContent(nsIContent*  aContent,
                            bool         aAsyncInsert,
                            RemoveFlags  aFlags,
@@ -1750,7 +1750,6 @@ private:
   // content that was reframed.
   bool MaybeRecreateContainerForFrameRemoval(nsIFrame*    aFrame,
                                              RemoveFlags  aFlags,
-                                             nsresult*    aResult,
                                              nsIContent** aDestroyedFramesFor);
 
   nsIFrame* CreateContinuingOuterTableFrame(nsIPresShell*     aPresShell,
@@ -1875,9 +1874,9 @@ private:
                              bool                     aIsAppend,
                              nsIFrame*                aPrevSibling);
 
-  nsresult ReframeContainingBlock(nsIFrame*    aFrame,
-                                  RemoveFlags  aFlags,
-                                  nsIContent** aReframeContent);
+  void ReframeContainingBlock(nsIFrame*    aFrame,
+                              RemoveFlags  aFlags,
+                              nsIContent** aReframeContent);
 
   //----------------------------------------
 
@@ -1931,18 +1930,18 @@ private:
   void RecoverLetterFrames(nsContainerFrame* aBlockFrame);
 
   //
-  nsresult RemoveLetterFrames(nsIPresShell*     aPresShell,
-                              nsContainerFrame* aBlockFrame);
+  void RemoveLetterFrames(nsIPresShell*     aPresShell,
+                          nsContainerFrame* aBlockFrame);
 
   // Recursive helper for RemoveLetterFrames
-  nsresult RemoveFirstLetterFrames(nsIPresShell*     aPresShell,
-                                   nsContainerFrame* aFrame,
-                                   nsContainerFrame* aBlockFrame,
-                                   bool*             aStopLooking);
+  void RemoveFirstLetterFrames(nsIPresShell*     aPresShell,
+                               nsContainerFrame* aFrame,
+                               nsContainerFrame* aBlockFrame,
+                               bool*             aStopLooking);
 
   // Special remove method for those pesky floating first-letter frames
-  nsresult RemoveFloatingFirstLetterFrames(nsIPresShell*    aPresShell,
-                                           nsIFrame*        aBlockFrame);
+  void RemoveFloatingFirstLetterFrames(nsIPresShell*    aPresShell,
+                                       nsIFrame*        aBlockFrame);
 
   // Capture state for the frame tree rooted at the frame associated with the
   // content object, aContent
@@ -1973,12 +1972,12 @@ private:
                              nsContainerFrame*        aBlockFrame,
                              nsFrameItems&            aFrameItems);
 
-  nsresult InsertFirstLineFrames(nsFrameConstructorState& aState,
-                                 nsIContent*              aContent,
-                                 nsIFrame*                aBlockFrame,
-                                 nsContainerFrame**       aParentFrame,
-                                 nsIFrame*                aPrevSibling,
-                                 nsFrameItems&            aFrameItems);
+  void InsertFirstLineFrames(nsFrameConstructorState& aState,
+                             nsIContent*              aContent,
+                             nsIFrame*                aBlockFrame,
+                             nsContainerFrame**       aParentFrame,
+                             nsIFrame*                aPrevSibling,
+                             nsFrameItems&            aFrameItems);
 
   /**
    * Find the right frame to use for aContent when looking for sibling
