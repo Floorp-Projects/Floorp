@@ -547,7 +547,7 @@ GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId, jsid id, boo
     }
     writer.typeMonitorResult();
 
-    trackAttached("MegamorphicNativeSlot");
+    trackAttached(handleMissing ? "MegamorphicMissingNativeSlot" : "MegamorphicNativeSlot");
 }
 
 bool
