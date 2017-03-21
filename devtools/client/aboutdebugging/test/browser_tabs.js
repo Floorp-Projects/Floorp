@@ -5,12 +5,6 @@
 
 const TAB_URL = "data:text/html,<title>foo</title>";
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
-    set: [["dom.ipc.processCount", 1]]
-  });
-});
-
 add_task(function* () {
   let { tab, document } = yield openAboutDebugging("tabs");
 

@@ -709,8 +709,9 @@ nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
     streams.SetCapacity(streamCount);
     for (uint32_t index = 0; index < streamCount; index++) {
       InputStreamParams childStreamParams;
-      SerializeInputStream(mStreams[index], childStreamParams,
-                           aFileDescriptors);
+      InputStreamHelper::SerializeInputStream(mStreams[index],
+                                              childStreamParams,
+                                              aFileDescriptors);
 
       streams.AppendElement(childStreamParams);
     }
@@ -741,7 +742,8 @@ nsMultiplexInputStream::Deserialize(const InputStreamParams& aParams,
   uint32_t streamCount = streams.Length();
   for (uint32_t index = 0; index < streamCount; index++) {
     nsCOMPtr<nsIInputStream> stream =
-      DeserializeInputStream(streams[index], aFileDescriptors);
+      InputStreamHelper::DeserializeInputStream(streams[index],
+                                                aFileDescriptors);
     if (!stream) {
       NS_WARNING("Deserialize failed!");
       return false;

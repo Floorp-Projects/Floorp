@@ -21,16 +21,16 @@ def print_array_entry(output, histogram, name_index, exp_index, label_index, lab
     if cpp_guard:
         print("#if defined(%s)" % cpp_guard, file=output)
     print("  { %s, %s, %s, %s, %d, %d, %s, %d, %d, %s },"
-        % (histogram.low(),
-           histogram.high(),
-           histogram.n_buckets(),
-           histogram.nsITelemetry_kind(),
-           name_index,
-           exp_index,
-           histogram.dataset(),
-           label_index,
-           label_count,
-           "true" if histogram.keyed() else "false"), file=output)
+          % (histogram.low(),
+             histogram.high(),
+             histogram.n_buckets(),
+             histogram.nsITelemetry_kind(),
+             name_index,
+             exp_index,
+             histogram.dataset(),
+             label_index,
+             label_count,
+             "true" if histogram.keyed() else "false"), file=output)
     if cpp_guard:
         print("#endif", file=output)
 

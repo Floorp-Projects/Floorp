@@ -98,6 +98,7 @@ static pfn_ovr_GetFloatArray ovr_GetFloatArray = nullptr;
 static pfn_ovr_SetFloatArray ovr_SetFloatArray = nullptr;
 static pfn_ovr_GetString ovr_GetString = nullptr;
 static pfn_ovr_SetString ovr_SetString = nullptr;
+static pfn_ovr_GetBoundaryDimensions ovr_GetBoundaryDimensions = nullptr;
 
 #ifdef XP_WIN
 static pfn_ovr_CreateTextureSwapChainDX ovr_CreateTextureSwapChainDX = nullptr;
@@ -286,6 +287,7 @@ InitializeOculusCAPI()
   REQUIRE_FUNCTION(ovr_SetFloatArray);
   REQUIRE_FUNCTION(ovr_GetString);
   REQUIRE_FUNCTION(ovr_SetString);
+  REQUIRE_FUNCTION(ovr_GetBoundaryDimensions);
 
 #ifdef XP_WIN
 
@@ -356,6 +358,7 @@ VRDisplayOculus::VRDisplayOculus(ovrSession aSession)
   , mVertexBuffer(nullptr)
   , mInputLayout(nullptr)
   , mIsPresenting(false)
+  , mEyeHeight(OVR_DEFAULT_EYE_HEIGHT)
 {
   MOZ_COUNT_CTOR_INHERITED(VRDisplayOculus, VRDisplayHost);
 
@@ -373,6 +376,7 @@ VRDisplayOculus::VRDisplayOculus(ovrSession aSession)
   if (mDesc.AvailableTrackingCaps & ovrTrackingCap_Position) {
     mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Position;
     mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_LinearAcceleration;
+    mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_StageParameters;
   }
   mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_External;
   mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_MountDetection;
@@ -401,6 +405,8 @@ VRDisplayOculus::VRDisplayOculus(ovrSession aSession)
   // take the max of both for eye resolution
   mDisplayInfo.mEyeResolution.width = std::max(texSize[VRDisplayInfo::Eye_Left].w, texSize[VRDisplayInfo::Eye_Right].w);
   mDisplayInfo.mEyeResolution.height = std::max(texSize[VRDisplayInfo::Eye_Left].h, texSize[VRDisplayInfo::Eye_Right].h);
+
+  UpdateStageParameters();
 }
 
 VRDisplayOculus::~VRDisplayOculus() {
@@ -419,9 +425,48 @@ VRDisplayOculus::Destroy()
 }
 
 void
+VRDisplayOculus::UpdateStageParameters()
+{
+  ovrVector3f playArea;
+  ovrResult res = ovr_GetBoundaryDimensions(mSession, ovrBoundary_PlayArea, &playArea);
+  if (res == ovrSuccess) {
+    mDisplayInfo.mStageSize.width = playArea.x;
+    mDisplayInfo.mStageSize.height = playArea.z;
+  } else {
+    // If we fail, fall back to reasonable defaults.
+    // 1m x 1m space
+    mDisplayInfo.mStageSize.width = 1.0f;
+    mDisplayInfo.mStageSize.height = 1.0f;
+  }
+
+  mEyeHeight = ovr_GetFloat(mSession, OVR_KEY_EYE_HEIGHT, OVR_DEFAULT_EYE_HEIGHT);
+
+  mDisplayInfo.mSittingToStandingTransform._11 = 1.0f;
+  mDisplayInfo.mSittingToStandingTransform._12 = 0.0f;
+  mDisplayInfo.mSittingToStandingTransform._13 = 0.0f;
+  mDisplayInfo.mSittingToStandingTransform._14 = 0.0f;
+
+  mDisplayInfo.mSittingToStandingTransform._21 = 0.0f;
+  mDisplayInfo.mSittingToStandingTransform._22 = 1.0f;
+  mDisplayInfo.mSittingToStandingTransform._23 = 0.0f;
+  mDisplayInfo.mSittingToStandingTransform._24 = 0.0f;
+
+  mDisplayInfo.mSittingToStandingTransform._31 = 0.0f;
+  mDisplayInfo.mSittingToStandingTransform._32 = 0.0f;
+  mDisplayInfo.mSittingToStandingTransform._33 = 1.0f;
+  mDisplayInfo.mSittingToStandingTransform._34 = 0.0f;
+
+  mDisplayInfo.mSittingToStandingTransform._41 = 0.0f;
+  mDisplayInfo.mSittingToStandingTransform._42 = mEyeHeight;
+  mDisplayInfo.mSittingToStandingTransform._43 = 0.0f;
+  mDisplayInfo.mSittingToStandingTransform._44 = 1.0f;
+}
+
+void
 VRDisplayOculus::ZeroSensor()
 {
   ovr_RecenterTrackingOrigin(mSession);
+  UpdateStageParameters();
 }
 
 VRHMDSensorState
@@ -440,6 +485,7 @@ VRDisplayOculus::GetSensorState()
   result = GetSensorState(frameDelta);
   result.inputFrameID = mInputFrameID;
   mLastSensorState[result.inputFrameID % kMaxLatencyFrames] = result;
+  result.position[1] -= mEyeHeight;
   return result;
 }
 
@@ -988,6 +1034,11 @@ VRSystemManagerOculus::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
     ovrResult orv = ovr_Create(&session, &luid);
     if (orv == ovrSuccess) {
       mSession = session;
+      orv = ovr_SetTrackingOriginType(session, ovrTrackingOrigin_FloorLevel);
+      if (orv != ovrSuccess) {
+        NS_WARNING("ovr_SetTrackingOriginType failed.\n");
+      }
+
       mHMDInfo = new VRDisplayOculus(session);
     }
   }
@@ -1099,6 +1150,9 @@ VRSystemManagerOculus::HandleInput()
       poseState.linearAcceleration[0] = pose.LinearAcceleration.x;
       poseState.linearAcceleration[1] = pose.LinearAcceleration.y;
       poseState.linearAcceleration[2] = pose.LinearAcceleration.z;
+
+      float eyeHeight = ovr_GetFloat(mSession, OVR_KEY_EYE_HEIGHT, OVR_DEFAULT_EYE_HEIGHT);
+      poseState.position[1] -= eyeHeight;
     }
     HandlePoseTracking(i, poseState, controller);
   }
