@@ -5230,6 +5230,14 @@ ContentParent::RecvFileCreationRequest(const nsID& aID,
                                        const bool& aExistenceCheck,
                                        const bool& aIsFromNsIFile)
 {
+  // We allow the creation of File via this IPC call only for the 'file' process
+  // or for testing.
+  if (!mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE) &&
+      !Preferences::GetBool("dom.file.createInChild", false)) {
+    KillHard("FileCreationRequest is not supported.");
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   RefPtr<BlobImpl> blobImpl;
   nsresult rv =
     FileCreatorHelper::CreateBlobImplForIPC(aFullPath, aType, aName,
