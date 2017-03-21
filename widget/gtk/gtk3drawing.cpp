@@ -18,7 +18,6 @@
 
 #include <math.h>
 
-static gboolean have_arrow_scaling;
 static gboolean checkbox_check_state;
 static gboolean notebook_has_tab_gap;
 
@@ -80,8 +79,6 @@ GetStateFlagsFromGtkTabFlags(GtkTabFlags flags)
 gint
 moz_gtk_init()
 {
-    have_arrow_scaling = (gtk_major_version > 2 ||
-                          (gtk_major_version == 2 && gtk_minor_version >= 12));
     if (gtk_major_version > 3 ||
        (gtk_major_version == 3 && gtk_minor_version >= 14))
         checkbox_check_state = GTK_STATE_FLAG_CHECKED;
@@ -409,9 +406,8 @@ calculate_arrow_rect(GtkWidget* arrow, GdkRectangle* rect,
     gfloat mxalign, myalign;
     GtkMisc* misc = GTK_MISC(arrow);
 
-    if (have_arrow_scaling)
-        gtk_style_context_get_style(gtk_widget_get_style_context(arrow),
-                                    "arrow_scaling", &arrow_scaling, NULL);
+    gtk_style_context_get_style(gtk_widget_get_style_context(arrow),
+                                "arrow_scaling", &arrow_scaling, NULL);
 
     gtk_misc_get_padding(misc, &mxpad, &mypad); 
     extent = MIN((rect->width - mxpad * 2),
