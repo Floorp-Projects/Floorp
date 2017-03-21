@@ -2644,10 +2644,11 @@ GetScrollbarMetrics(GtkOrientation aOrientation)
     // button
     if (hasButtons) {
         metrics->size.button = GetMinMarginBox(MOZ_GTK_SCROLLBAR_BUTTON);
-        // If the buttons will cause Gecko to expand the track to fill
-        // available breadth, then add to the track border to prevent Gecko
-        // from expanding the thumb to fill available breadth.
         if (aOrientation == GTK_ORIENTATION_HORIZONTAL) {
+            metrics->size.button.Rotate();
+            // If the buttons will cause Gecko to expand the track to fill
+            // available breadth, then add to the track border to prevent Gecko
+            // from expanding the thumb to fill available breadth.
             gint extra = metrics->size.button.height - trackSizeForThumb.height;
             if (extra > 0) {
                 // If extra is odd, then the thumb is 0.5 pixels above
