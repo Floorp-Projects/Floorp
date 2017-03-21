@@ -2732,8 +2732,7 @@ nsCSSFrameConstructor::ConstructRootFrame()
   nsView* rootView = mPresShell->GetViewManager()->GetRootView();
   viewportFrame->SetView(rootView);
 
-  nsContainerFrame::SyncFrameViewProperties(mPresShell->GetPresContext(), viewportFrame,
-                                            viewportPseudoStyle, rootView);
+  viewportFrame->SyncFrameViewProperties(rootView);
   nsContainerFrame::SyncWindowProperties(mPresShell->GetPresContext(), viewportFrame,
                                          rootView, nullptr, nsContainerFrame::SET_ASYNC);
 
@@ -3239,10 +3238,6 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
   if (!aBuildCombobox) {
     aState.AddChild(scrollFrame, aFrameItems, aContent,
                     aStyleContext, aParentFrame);
-  }
-
-  if (aBuildCombobox) {
-    nsContainerFrame::CreateViewForFrame(scrollFrame, true);
   }
 
   BuildScrollFrame(aState, aContent, aStyleContext, scrolledFrame,
@@ -3929,8 +3924,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       frameToAddToList = scrollframe;
     } else {
       InitAndRestoreFrame(aState, content, geometricParent, newFrame);
-      // See whether we need to create a view
-      nsContainerFrame::CreateViewForFrame(newFrame, false);
       frameToAddToList = newFrame;
     }
 
