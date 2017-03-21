@@ -6927,36 +6927,54 @@
     "description": "Time spent to display first page in PDF Viewer (ms)"
   },
   "PLUGINS_NOTIFICATION_SHOWN": {
-    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "60",
     "kind": "boolean",
-    "description": "The number of times the click-to-activate notification was shown: false: shown by in-content activation true: shown by location bar activation"
+    "description": "The number of times the click-to-activate notification was shown: false: shown by in-content activation true: shown by location bar activation",
+    "bug_numbers": [902075, 1345894],
+    "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "PLUGINS_NOTIFICATION_PLUGIN_COUNT": {
-    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 5,
-    "description": "The number of plugins present in the click-to-activate notification, minus one (1, 2, 3, 4, more than 4)"
+    "description": "The number of plugins present in the click-to-activate notification, minus one (1, 2, 3, 4, more than 4)",
+    "bug_numbers": [902075, 1345894],
+    "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "PLUGINS_NOTIFICATION_USER_ACTION": {
-    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 3,
-    "description": "User actions taken in the plugin notification: 0: allownow 1: allowalways 2: block"
+    "description": "User actions taken in the plugin notification: 0: allownow 1: allowalways 2: block",
+    "bug_numbers": [902075, 1345894],
+    "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "PLUGINS_INFOBAR_SHOWN": {
-    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "60",
     "kind": "boolean",
-    "description": "Count of when the hidden-plugin infobar was displayed."
+    "description": "Count of when the hidden-plugin infobar was displayed.",
+    "bug_numbers": [902075, 1345894],
+    "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "PLUGINS_INFOBAR_BLOCK": {
-    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "60",
     "kind": "boolean",
-    "description": "Count the number of times the user clicked 'block' on the hidden-plugin infobar."
+    "description": "Count the number of times the user clicked 'block' on the hidden-plugin infobar.",
+    "bug_numbers": [902075, 1345894],
+    "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "PLUGINS_INFOBAR_ALLOW": {
-    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "60",
     "kind": "boolean",
-    "description": "Count the number of times the user clicked 'allow' on the hidden-plugin infobar."
+    "description": "Count the number of times the user clicked 'allow' on the hidden-plugin infobar.",
+    "bug_numbers": [902075, 1345894],
+    "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "POPUP_NOTIFICATION_STATS": {
     "releaseChannelCollection": "opt-out",
