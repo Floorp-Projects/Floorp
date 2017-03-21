@@ -727,9 +727,10 @@ ServoStyleSet::FillKeyframesForName(const nsString& aName,
 }
 
 nsTArray<ComputedKeyframeValues>
-ServoStyleSet::GetComputedKeyframeValuesFor(const nsTArray<Keyframe>& aKeyframes,
-                                            dom::Element* aElement,
-                                            const ServoComputedStyleValues& aServoValues)
+ServoStyleSet::GetComputedKeyframeValuesFor(
+  const nsTArray<Keyframe>& aKeyframes,
+  dom::Element* aElement,
+  const ServoComputedValuesWithParent& aServoValues)
 {
   nsTArray<ComputedKeyframeValues> result(aKeyframes.Length());
 
