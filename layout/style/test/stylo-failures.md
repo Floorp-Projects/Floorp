@@ -122,7 +122,7 @@ to mochitest command.
   * test_value_storage.html `symbols(` [30]
   * ... `list-style-type` [60]
   * ... `'list-style'` [30]
-  * ... `'content`: various value as list-style-type in counter functions [15]
+  * ... `'content`: various value as list-style-type in counter functions [13]
 * test_default_computed_style.html: support of getDefaultComputedStyle [1]
 * @font-face support bug 1290237
   * test_descriptor_storage.html [1]
@@ -182,14 +182,6 @@ to mochitest command.
     * test_value_storage.html `-moz-transform`: need different parsing rules [284]
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
-  * will-change longhand property servo/servo#15706
-    * test_change_hint_optimizations.html [1]
-    * test_compute_data_with_start_struct.html `will-change` [2]
-    * test_inherit_computation.html `will-change` [2]
-    * test_inherit_storage.html `will-change` [2]
-    * test_initial_computation.html `will-change` [4]
-    * test_initial_storage.html `will-change` [4]
-    * test_value_storage.html `will-change` [16]
   * contain longhand property servo/servo#15955
     * test_contain_formatting_context.html [1]
     * test_compute_data_with_start_struct.html `contain` [2]
