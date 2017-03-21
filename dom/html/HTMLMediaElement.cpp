@@ -1030,6 +1030,11 @@ private:
       return false;
     }
 
+    // We should consider any bfcached page or inactive document as non-playing.
+    if (!mOwner->IsActive()) {
+      return false;
+    }
+
     // It might be resumed from remote, we should keep the audio channel agent.
     if (IsSuspended()) {
       return true;
@@ -1037,11 +1042,6 @@ private:
 
     // Are we paused
     if (mOwner->mPaused) {
-      return false;
-    }
-
-    // We should consider any bfcached page or inactive document as non-playing.
-    if (!mOwner->IsActive()) {
       return false;
     }
 
