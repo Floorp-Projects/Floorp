@@ -49,6 +49,9 @@ add_task(function* () {
         resolve();
       });
       gURLBar.focus();
+      if (gURLBar.selectionStart == gURLBar.selectionEnd) {
+        gURLBar.selectionStart = gURLBar.selectionEnd = gURLBar.textValue.length;
+      }
       EventUtils.synthesizeKey("VK_BACK_SPACE", {});
     });
   }
