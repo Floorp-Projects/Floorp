@@ -1725,8 +1725,9 @@ def _generateMessageConstructor(clsname, msgid, segmentSize, nested, prio, prett
 
     if prio == ipdl.ast.NORMAL_PRIORITY:
         prioEnum = 'IPC::Message::NORMAL_PRIORITY'
+    elif prio == ipdl.ast.INPUT_PRIORITY:
+        prioEnum = 'IPC::Message::INPUT_PRIORITY'
     else:
-        assert prio == ipdl.ast.HIGH_PRIORITY
         prioEnum = 'IPC::Message::HIGH_PRIORITY'
 
     func.addstmt(

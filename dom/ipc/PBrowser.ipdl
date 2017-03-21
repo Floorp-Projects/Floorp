@@ -544,6 +544,12 @@ parent:
     async RemotePaintIsReady();
 
     /**
+     * Child informs the parent that the content is ready to handle input
+     * events. This is sent when the TabChild is created.
+     */
+    async RemoteIsReadyToHandleInputEvents();
+
+    /**
      * Child informs the parent that the layer tree is already available.
      */
     async ForcePaintNoOp(uint64_t aLayerObserverEpoch);
@@ -646,7 +652,9 @@ child:
      * When two consecutive mouse move events would be added to the message queue,
      * they are 'compressed' by dumping the oldest one.
      */
-    async RealMouseMoveEvent(WidgetMouseEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId) compress;
+    prio(input) async RealMouseMoveEvent(WidgetMouseEvent event,
+                                         ScrollableLayerGuid aGuid,
+                                         uint64_t aInputBlockId) compress;
     /**
      * Mouse move events with |reason == eSynthesized| are sent via a separate
      * message because they do not generate DOM 'mousemove' events, and the
@@ -654,21 +662,29 @@ child:
      * |reason == eReal| event being dropped in favour of an |eSynthesized|
      * event, and thus a DOM 'mousemove' event to be lost.
      */
-    async SynthMouseMoveEvent(WidgetMouseEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
-    async RealMouseButtonEvent(WidgetMouseEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
-    async RealKeyEvent(WidgetKeyboardEvent event);
-    async MouseWheelEvent(WidgetWheelEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
-    async RealTouchEvent(WidgetTouchEvent aEvent,
-                         ScrollableLayerGuid aGuid,
-                         uint64_t aInputBlockId,
-                         nsEventStatus aApzResponse);
-    async HandleTap(TapType aType, LayoutDevicePoint point, Modifiers aModifiers,
-                    ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
-    async RealTouchMoveEvent(WidgetTouchEvent aEvent,
-                             ScrollableLayerGuid aGuid,
-                             uint64_t aInputBlockId,
-                             nsEventStatus aApzResponse);
-    async RealDragEvent(WidgetDragEvent aEvent, uint32_t aDragAction, uint32_t aDropEffect);
+    prio(input) async SynthMouseMoveEvent(WidgetMouseEvent event,
+                                          ScrollableLayerGuid aGuid,
+                                          uint64_t aInputBlockId);
+    prio(input) async RealMouseButtonEvent(WidgetMouseEvent event,
+                                           ScrollableLayerGuid aGuid,
+                                           uint64_t aInputBlockId);
+    prio(input) async RealKeyEvent(WidgetKeyboardEvent event);
+    prio(input) async MouseWheelEvent(WidgetWheelEvent event,
+                                      ScrollableLayerGuid aGuid,
+                                      uint64_t aInputBlockId);
+    prio(input) async RealTouchEvent(WidgetTouchEvent aEvent,
+                                     ScrollableLayerGuid aGuid,
+                                     uint64_t aInputBlockId,
+                                     nsEventStatus aApzResponse);
+    prio(input) async HandleTap(TapType aType, LayoutDevicePoint point,
+                                Modifiers aModifiers, ScrollableLayerGuid aGuid,
+                                uint64_t aInputBlockId);
+    prio(input) async RealTouchMoveEvent(WidgetTouchEvent aEvent,
+                                         ScrollableLayerGuid aGuid,
+                                         uint64_t aInputBlockId,
+                                         nsEventStatus aApzResponse);
+    prio(input) async RealDragEvent(WidgetDragEvent aEvent,
+                                    uint32_t aDragAction, uint32_t aDropEffect);
     async PluginEvent(WidgetPluginEvent aEvent);
 
     /**
