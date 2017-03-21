@@ -209,6 +209,37 @@ public:
   nsresult
   RemovePermissionsWithAttributes(mozilla::OriginAttributesPattern& aAttrs);
 
+  /**
+   * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
+   * permission keys.
+   *
+   * Get the permission key corresponding to the given Principal. This method is
+   * intentionally infallible, as we want to provide an permission key to every
+   * principal. Principals which don't have meaningful URIs with http://,
+   * https://, or ftp:// schemes are given the default "" Permission Key.
+   *
+   * @param aPrincipal  The Principal which the key is to be extracted from.
+   * @param aPermissionKey  A string which will be filled with the permission key.
+   */
+  static void GetKeyForPrincipal(nsIPrincipal* aPrincipal, nsACString& aPermissionKey);
+
+  /**
+   * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
+   * permission keys.
+   *
+   * Get all permissions keys which could correspond to the given principal.
+   * This method, like GetKeyForPrincipal, is infallible and should always
+   * produce at least one key.
+   *
+   * Unlike GetKeyForPrincipal, this method also gets the keys for base domains
+   * of the given principal. All keys returned by this method must be avaliable
+   * in the content process for a given URL to successfully have its permissions
+   * checked in the `aExactHostMatch = false` situation.
+   *
+   * @param aPrincipal  The Principal which the key is to be extracted from.
+   */
+  static nsTArray<nsCString> GetAllKeysForPrincipal(nsIPrincipal* aPrincipal);
+
 private:
   virtual ~nsPermissionManager();
 
@@ -262,12 +293,6 @@ private:
   nsresult
   RemoveAllModifiedSince(int64_t aModificationTime);
 
-  /**
-   * Retrieve permissions from chrome process.
-   */
-  nsresult
-  FetchPermissions();
-
   nsCOMPtr<mozIStorageConnection> mDBConn;
   nsCOMPtr<mozIStorageAsyncStatement> mStmtInsert;
   nsCOMPtr<mozIStorageAsyncStatement> mStmtDelete;
@@ -281,6 +306,9 @@ private:
 
   // An array to store the strings identifying the different types.
   nsTArray<nsCString>          mTypeArray;
+
+  // The base domains which have their permissions loaded in the current process.
+  nsTHashtable<nsCStringHashKey> mAvailablePermissionKeys;
 
   // Initially, |false|. Set to |true| once shutdown has started, to avoid
   // reopening the database.

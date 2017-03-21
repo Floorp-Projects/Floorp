@@ -7,9 +7,8 @@
 #ifndef mozilla_CondVar_h
 #define mozilla_CondVar_h
 
-#include "prcvar.h"
-
 #include "mozilla/BlockingResourceBase.h"
+#include "mozilla/PlatformConditionVariable.h"
 #include "mozilla/Mutex.h"
 
 #ifdef MOZILLA_INTERNAL_API
@@ -43,11 +42,6 @@ public:
     , mLock(&aLock)
   {
     MOZ_COUNT_CTOR(CondVar);
-    // |aLock| must necessarily already be known to the deadlock detector
-    mCvar = PR_NewCondVar(mLock->mLock);
-    if (!mCvar) {
-      MOZ_CRASH("Can't allocate mozilla::CondVar");
-    }
   }
 
   /**
@@ -56,11 +50,6 @@ public:
    **/
   ~CondVar()
   {
-    NS_ASSERTION(mCvar && mLock,
-                 "improperly constructed CondVar or double free");
-    PR_DestroyCondVar(mCvar);
-    mCvar = 0;
-    mLock = 0;
     MOZ_COUNT_DTOR(CondVar);
   }
 
@@ -75,9 +64,12 @@ public:
 #ifdef MOZILLA_INTERNAL_API
     GeckoProfilerThreadSleepRAII sleep;
 #endif //MOZILLA_INTERNAL_API
-    // NSPR checks for lock ownership
-    return PR_WaitCondVar(mCvar, aInterval) == PR_SUCCESS ? NS_OK :
-                                                            NS_ERROR_FAILURE;
+    if (aInterval == PR_INTERVAL_NO_TIMEOUT) {
+      mImpl.wait(*mLock);
+    } else {
+      mImpl.wait_for(*mLock, TimeDuration::FromMilliseconds(double(aInterval)));
+    }
+    return NS_OK;
   }
 #else
   nsresult Wait(PRIntervalTime aInterval = PR_INTERVAL_NO_TIMEOUT);
@@ -89,8 +81,8 @@ public:
    **/
   nsresult Notify()
   {
-    // NSPR checks for lock ownership
-    return PR_NotifyCondVar(mCvar) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
+    mImpl.notify_one();
+    return NS_OK;
   }
 
   /**
@@ -99,8 +91,8 @@ public:
    **/
   nsresult NotifyAll()
   {
-    // NSPR checks for lock ownership
-    return PR_NotifyAllCondVar(mCvar) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
+    mImpl.notify_all();
+    return NS_OK;
   }
 
 #ifdef DEBUG
@@ -130,11 +122,11 @@ public:
 
 private:
   CondVar();
-  CondVar(CondVar&);
-  CondVar& operator=(CondVar&);
+  CondVar(const CondVar&) = delete;
+  CondVar& operator=(const CondVar&) = delete;
 
   Mutex* mLock;
-  PRCondVar* mCvar;
+  detail::ConditionVariableImpl mImpl;
 };
 
 
