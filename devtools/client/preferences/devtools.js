@@ -308,6 +308,9 @@ pref("devtools.webconsole.new-frontend-enabled", false);
 // https://docs.google.com/document/d/19TKnMJD3CMBzwByNE4aBBVWnl-AEan8Sf4hxi6J-eps/edit
 pref("devtools.source-map.locations.enabled", false);
 
+// Enable client-side mapping service for source maps
+pref("devtools.source-map.client-service.enabled", true);
+
 // The number of lines that are displayed in the web console.
 pref("devtools.hud.loglimit", 1000);
 
