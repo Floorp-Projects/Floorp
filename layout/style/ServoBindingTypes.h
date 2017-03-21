@@ -35,6 +35,7 @@ class nsCSSValue;
 class nsIDocument;
 class nsINode;
 class nsPresContext;
+struct nsTimingFunction;
 
 using mozilla::dom::StyleChildrenIterator;
 using mozilla::ServoElementSnapshot;
@@ -121,6 +122,8 @@ DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoKeyframeList)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoKeyframeList)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoComputedKeyframeValuesList)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoStyleAnimationList)
+DECL_BORROWED_MUT_REF_TYPE_FOR(nsTimingFunction)
+DECL_BORROWED_REF_TYPE_FOR(nsTimingFunction)
 
 #undef DECL_ARC_REF_TYPE_FOR
 #undef DECL_OWNED_REF_TYPE_FOR

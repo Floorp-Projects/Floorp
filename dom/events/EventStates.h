@@ -25,7 +25,7 @@ class EventStates
 {
 public:
   typedef uint64_t InternalType;
-  typedef uint16_t ServoType;
+  typedef uint64_t ServoType;
 
   constexpr EventStates()
     : mStates(0)

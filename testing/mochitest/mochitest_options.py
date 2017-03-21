@@ -1012,9 +1012,15 @@ class AndroidArguments(ArgumentContainer):
             options.robocopIni = os.path.abspath(options.robocopIni)
 
             if not options.robocopApk and build_obj:
-                options.robocopApk = os.path.join(build_obj.topobjdir, 'mobile', 'android',
-                                                  'tests', 'browser',
-                                                  'robocop', 'robocop-debug.apk')
+                if build_obj.substs.get('MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE'):
+                    options.robocopApk = os.path.join(build_obj.topobjdir, 'gradle', 'build',
+                                                      'mobile', 'android', 'app', 'outputs', 'apk',
+                                                      'app-automation-debug-androidTest-'
+                                                      'unaligned.apk')
+                else:
+                    options.robocopApk = os.path.join(build_obj.topobjdir, 'mobile', 'android',
+                                                      'tests', 'browser',
+                                                      'robocop', 'robocop-debug.apk')
 
         if options.robocopApk != "":
             if not os.path.exists(options.robocopApk):

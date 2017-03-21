@@ -6,8 +6,7 @@
 
 const { BATCH_ACTIONS, BATCH_ENABLE, BATCH_RESET } = require("../constants");
 
-// ms
-const REQUESTS_REFRESH_RATE = 50;
+const REQUESTS_REFRESH_RATE = 50; // ms
 
 /**
  * Middleware that watches for actions with a "batch = true" value in their meta field.

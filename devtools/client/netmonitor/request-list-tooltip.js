@@ -11,10 +11,8 @@ const {
 const { WEBCONSOLE_L10N } = require("./utils/l10n");
 const { formDataURI } = require("./utils/request-utils");
 
-// px
-const REQUESTS_TOOLTIP_IMAGE_MAX_DIM = 400;
-// px
-const REQUESTS_TOOLTIP_STACK_TRACE_WIDTH = 600;
+const REQUESTS_TOOLTIP_IMAGE_MAX_DIM = 400; // px
+const REQUESTS_TOOLTIP_STACK_TRACE_WIDTH = 600; // px
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 

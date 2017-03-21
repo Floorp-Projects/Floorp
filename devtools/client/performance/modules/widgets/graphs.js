@@ -25,10 +25,8 @@ const { createTierGraphDataFromFrameNode } = require("devtools/client/performanc
 /**
  * For line graphs
  */
-// px
-const HEIGHT = 35;
-// px
-const STROKE_WIDTH = 1;
+const HEIGHT = 35; // px
+const STROKE_WIDTH = 1; // px
 const DAMPEN_VALUES = 0.95;
 const CLIPHEAD_LINE_COLOR = "#666";
 const SELECTION_LINE_COLOR = "#555";
@@ -39,12 +37,9 @@ const MEMORY_GRAPH_COLOR_NAME = "graphs-blue";
 /**
  * For timeline overview
  */
-// px
-const MARKERS_GRAPH_HEADER_HEIGHT = 14;
-// px
-const MARKERS_GRAPH_ROW_HEIGHT = 10;
-// px
-const MARKERS_GROUP_VERTICAL_PADDING = 4;
+const MARKERS_GRAPH_HEADER_HEIGHT = 14; // px
+const MARKERS_GRAPH_ROW_HEIGHT = 10; // px
+const MARKERS_GROUP_VERTICAL_PADDING = 4; // px
 
 /**
  * For optimization graph

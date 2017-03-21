@@ -15,8 +15,7 @@ const { AbstractTreeItem } = require("resource://devtools/client/shared/widgets/
 const URL_LABEL_TOOLTIP = L10N.getStr("table.url.tooltiptext");
 const VIEW_OPTIMIZATIONS_TOOLTIP = L10N.getStr("table.view-optimizations.tooltiptext2");
 
-// px
-const CALL_TREE_INDENTATION = 16;
+const CALL_TREE_INDENTATION = 16; // px
 
 // Used for rendering values in cells
 const FORMATTERS = {
