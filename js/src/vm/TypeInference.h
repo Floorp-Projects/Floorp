@@ -402,7 +402,7 @@ class TypeSet
     void print(FILE* fp = stderr);
 
     /* Whether this set contains a specific type. */
-    inline bool hasType(Type type) const;
+    MOZ_ALWAYS_INLINE bool hasType(Type type) const;
 
     TypeFlags baseFlags() const { return flags & TYPE_FLAG_BASE_MASK; }
     bool unknown() const { return !!(flags & TYPE_FLAG_UNKNOWN); }

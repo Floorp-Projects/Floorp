@@ -1343,7 +1343,7 @@ js::EnsureTrackPropertyTypes(JSContext* cx, JSObject* obj, jsid id)
         }
     }
 
-    MOZ_ASSERT(obj->group()->unknownProperties() || TrackPropertyTypes(cx, obj, id));
+    MOZ_ASSERT(obj->group()->unknownProperties() || TrackPropertyTypes(obj, id));
 }
 
 bool
