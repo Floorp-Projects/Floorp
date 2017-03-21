@@ -68,7 +68,7 @@ SERVO_BINDING_FUNC(Servo_StyleSet_NoteStyleSheetsChanged, void,
 SERVO_BINDING_FUNC(Servo_StyleSet_FillKeyframesForName, bool,
                    RawServoStyleSetBorrowed set,
                    const nsACString* property,
-                   const nsTimingFunction* timing_function,
+                   nsTimingFunctionBorrowed timing_function,
                    ServoComputedValuesBorrowed computed_values,
                    RawGeckoKeyframeListBorrowedMut keyframe_list)
 
