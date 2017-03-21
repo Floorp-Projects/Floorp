@@ -13,6 +13,7 @@
 
 #include "jit/BaselineICList.h"
 #include "jit/BaselineJIT.h"
+#include "jit/ICState.h"
 #include "jit/MacroAssembler.h"
 #include "jit/SharedICList.h"
 #include "jit/SharedICRegisters.h"
@@ -735,8 +736,7 @@ class ICFallbackStub : public ICStub
     ICEntry* icEntry_;
 
     // The number of stubs kept in the IC entry.
-    uint32_t numOptimizedStubs_ : 31;
-    uint32_t invalid_ : 1;
+    ICState state_;
 
     // A pointer to the location stub pointer that needs to be
     // changed to add a new "last" stub immediately before the fallback
@@ -748,15 +748,13 @@ class ICFallbackStub : public ICStub
     ICFallbackStub(Kind kind, JitCode* stubCode)
       : ICStub(kind, ICStub::Fallback, stubCode),
         icEntry_(nullptr),
-        numOptimizedStubs_(0),
-        invalid_(false),
+        state_(),
         lastStubPtrAddr_(nullptr) {}
 
     ICFallbackStub(Kind kind, Trait trait, JitCode* stubCode)
       : ICStub(kind, trait, stubCode),
         icEntry_(nullptr),
-        numOptimizedStubs_(0),
-        invalid_(false),
+        state_(),
         lastStubPtrAddr_(nullptr)
     {
         MOZ_ASSERT(trait == ICStub::Fallback ||
@@ -769,15 +767,19 @@ class ICFallbackStub : public ICStub
     }
 
     inline size_t numOptimizedStubs() const {
-        return (size_t) numOptimizedStubs_;
+        return state_.numOptimizedStubs();
     }
 
     void setInvalid() {
-        invalid_ = 1;
+        state_.setInvalid();
     }
 
     bool invalid() const {
-        return invalid_;
+        return state_.invalid();
+    }
+
+    ICState& state() {
+        return state_;
     }
 
     // The icEntry and lastStubPtrAddr_ fields can't be initialized when the stub is
@@ -799,7 +801,7 @@ class ICFallbackStub : public ICStub
         stub->setNext(this);
         *lastStubPtrAddr_ = stub;
         lastStubPtrAddr_ = stub->addressOfNext();
-        numOptimizedStubs_++;
+        state_.trackAttached();
     }
 
     ICStubConstIterator beginChainConst() const {
@@ -826,6 +828,8 @@ class ICFallbackStub : public ICStub
         }
         return count;
     }
+
+    void discardStubs(JSContext* cx);
 
     void unlinkStub(Zone* zone, ICStub* prev, ICStub* stub);
     void unlinkStubsWithKind(JSContext* cx, ICStub::Kind kind);
@@ -2324,7 +2328,6 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
     { }
 
   public:
-    static const uint32_t MAX_OPTIMIZED_STUBS = 16;
     static const size_t UNOPTIMIZABLE_ACCESS_BIT = 0;
     static const size_t ACCESSED_GETTER_BIT = 1;
 
@@ -2363,35 +2366,6 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
             if (!stub || !stub->initMonitoringChain(cx, space, engine_))
                 return nullptr;
             return stub;
-        }
-    };
-};
-
-// Stub for sites, which are too polymorphic (i.e. MAX_OPTIMIZED_STUBS was reached)
-class ICGetProp_Generic : public ICMonitoredStub
-{
-    friend class ICStubSpace;
-
-  protected:
-    explicit ICGetProp_Generic(JitCode* stubCode, ICStub* firstMonitorStub)
-      : ICMonitoredStub(ICStub::GetProp_Generic, stubCode, firstMonitorStub) {}
-
-  public:
-    static ICGetProp_Generic* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                                    ICGetProp_Generic& other);
-
-    class Compiler : public ICStubCompiler {
-      protected:
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-        ICStub* firstMonitorStub_;
-      public:
-        explicit Compiler(JSContext* cx, ICStub* firstMonitorStub)
-          : ICStubCompiler(cx, ICStub::GetProp_Generic, ICStubEngine::Baseline),
-            firstMonitorStub_(firstMonitorStub)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetProp_Generic>(space, getStubCode(), firstMonitorStub_);
         }
     };
 };

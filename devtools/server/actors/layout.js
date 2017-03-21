@@ -125,11 +125,16 @@ var LayoutActor = ActorClassWithSpec(layoutSpec, {
    * @return {Array} An array of GridActor objects.
    */
   getAllGrids: function (rootNode, traverseFrames) {
+    let grids = [];
+
+    if (!rootNode) {
+      return grids;
+    }
+
     if (!traverseFrames) {
       return this.getGrids(rootNode.rawNode);
     }
 
-    let grids = [];
     for (let {document} of this.tabActor.windows) {
       grids = [...grids, ...this.getGrids(document.documentElement)];
     }
