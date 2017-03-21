@@ -7,6 +7,7 @@
 #include "WMF.h"
 #endif
 #include "GPUParent.h"
+#include "GeckoProfiler.h"
 #include "gfxConfig.h"
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
@@ -373,6 +374,58 @@ GPUParent::RecvNotifyGpuObservers(const nsCString& aTopic)
   if (obsSvc) {
     obsSvc->NotifyObservers(nullptr, aTopic.get(), nullptr);
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+GPUParent::RecvStartProfiler(const ProfilerInitParams& params)
+{
+  nsTArray<const char*> featureArray;
+  for (size_t i = 0; i < params.features().Length(); ++i) {
+    featureArray.AppendElement(params.features()[i].get());
+  }
+
+  nsTArray<const char*> threadNameFilterArray;
+  for (size_t i = 0; i < params.threadFilters().Length(); ++i) {
+    threadNameFilterArray.AppendElement(params.threadFilters()[i].get());
+  }
+  profiler_start(params.entries(), params.interval(),
+                 featureArray.Elements(), featureArray.Length(),
+                 threadNameFilterArray.Elements(),
+                 threadNameFilterArray.Length());
+
+ return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+GPUParent::RecvStopProfiler()
+{
+  profiler_stop();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+GPUParent::RecvPauseProfiler(const bool& aPause)
+{
+  if (aPause) {
+    profiler_pause();
+  } else {
+    profiler_resume();
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+GPUParent::RecvGatherProfile()
+{
+  nsCString profileCString;
+  UniquePtr<char[]> profile = profiler_get_profile();
+  if (profile) {
+    profileCString = nsDependentCString(profile.get());
+  }
+
+  Unused << SendProfile(profileCString);
   return IPC_OK();
 }
 
