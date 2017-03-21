@@ -83,7 +83,11 @@ function initTest(test, token) {
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv(
-  {"set": [["logging.MediaDecoder", "Debug"]]},
+  {"set": [
+    ["logging.MediaDecoder", "Debug"],
+    ["logging.nsMediaElement", "Debug"],
+    ["logging.MediaCache", "Debug"],
+  ]},
   manager.runTests.bind(manager, gCloneTests, initTest));
 
 </script>
