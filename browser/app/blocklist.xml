@@ -2180,6 +2180,11 @@
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="23.0.0.205" minVersion="23.0.0.185" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
+    <pluginItem blockID="26c2a4e2-9aff-4ab1-b654-20e478b375f0" os="Linux">
+      <match exp="libflashplayer\.so" name="filename"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="24.0.0.221" minVersion="24.0.0.194" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
     <pluginItem blockID="p248">
       <match exp="Scorch\.plugin" name="filename"/>
       <versionRange maxVersion="6.2.0b88" minVersion="0" severity="1"/>
@@ -2205,6 +2210,11 @@
     </pluginItem>
     <pluginItem blockID="p31">
       <match exp="NPMySrch.dll" name="filename"/>
+    </pluginItem>
+    <pluginItem blockID="2b608fae-1750-4a06-a142-0bc9ba17a7d0">
+      <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="24.0.0.221" minVersion="24.0.0.194" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="p1020">
       <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
