@@ -981,19 +981,18 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 }
 
 void
-nsIFrame::ReparentFrameViewTo(nsIFrame* aFrame,
-                              nsViewManager* aViewManager,
+nsIFrame::ReparentFrameViewTo(nsViewManager* aViewManager,
                               nsView*        aNewParentView,
                               nsView*        aOldParentView)
 {
-  if (aFrame->HasView()) {
+  if (HasView()) {
 #ifdef MOZ_XUL
-    if (aFrame->GetType() == nsGkAtoms::menuPopupFrame) {
+    if (GetType() == nsGkAtoms::menuPopupFrame) {
       // This view must be parented by the root view, don't reparent it.
       return;
     }
 #endif
-    nsView* view = aFrame->GetView();
+    nsView* view = GetView();
     // Verify that the current parent view is what we think it is
     //nsView*  parentView;
     //NS_ASSERTION(parentView == aOldParentView, "unexpected parent view");
@@ -1001,17 +1000,17 @@ nsIFrame::ReparentFrameViewTo(nsIFrame* aFrame,
     aViewManager->RemoveChild(view);
     
     // The view will remember the Z-order and other attributes that have been set on it.
-    nsView* insertBefore = nsLayoutUtils::FindSiblingViewFor(aNewParentView, aFrame);
+    nsView* insertBefore = nsLayoutUtils::FindSiblingViewFor(aNewParentView, this);
     aViewManager->InsertChild(aNewParentView, view, insertBefore, insertBefore != nullptr);
-  } else if (aFrame->GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW) {
-    nsIFrame::ChildListIterator lists(aFrame);
+  } else if (GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW) {
+    nsIFrame::ChildListIterator lists(this);
     for (; !lists.IsDone(); lists.Next()) {
       // Iterate the child frames, and check each child frame to see if it has
       // a view
       nsFrameList::Enumerator childFrames(lists.CurrentList());
       for (; !childFrames.AtEnd(); childFrames.Next()) {
-        ReparentFrameViewTo(childFrames.get(), aViewManager,
-                            aNewParentView, aOldParentView);
+        childFrames.get()->ReparentFrameViewTo(aViewManager, aNewParentView,
+                                               aOldParentView);
       }
     }
   }
@@ -1085,7 +1084,7 @@ nsFrame::CreateView()
   // we know this frame has no view, so it will crawl the children. Also,
   // we know that any descendants with views must have 'parentView' as their
   // parent view.
-  ReparentFrameViewTo(this, viewManager, view, parentView);
+  ReparentFrameViewTo(viewManager, view, parentView);
 
   // Remember our view
   SetView(view);
