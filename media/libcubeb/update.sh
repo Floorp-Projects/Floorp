@@ -66,3 +66,6 @@ if [ -n "$rev" ]; then
 else
   echo "Remember to update README_MOZILLA with the version details."
 fi
+
+echo "Applying a patch on top of $rev"
+patch -p3 < temp-patch-debug-drift.patch

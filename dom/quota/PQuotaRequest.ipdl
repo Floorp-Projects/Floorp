@@ -33,6 +33,15 @@ struct ResetAllResponse
 {
 };
 
+struct PersistedResponse
+{
+  bool persisted;
+};
+
+struct PersistResponse
+{
+};
+
 union RequestResponse
 {
   nsresult;
@@ -42,6 +51,8 @@ union RequestResponse
   ClearDataResponse;
   ClearAllResponse;
   ResetAllResponse;
+  PersistedResponse;
+  PersistResponse;
 };
 
 protocol PQuotaRequest

@@ -18796,10 +18796,12 @@ Maintenance::DirectoryWork()
           MOZ_ASSERT(origin.IsEmpty());
 
           int64_t dummyTimeStamp;
+          bool dummyPersisted;
           nsCString dummySuffix;
           if (NS_WARN_IF(NS_FAILED(
                 quotaManager->GetDirectoryMetadata2(originDir,
                                                     &dummyTimeStamp,
+                                                    &dummyPersisted,
                                                     dummySuffix,
                                                     group,
                                                     origin)))) {

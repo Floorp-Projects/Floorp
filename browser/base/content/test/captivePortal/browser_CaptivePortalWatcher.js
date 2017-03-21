@@ -1,5 +1,9 @@
 "use strict";
 
+// Bug 1318389 - This test does a lot of window and tab manipulation,
+//               causing it to take a long time on debug.
+requestLongerTimeout(2);
+
 add_task(setupPrefsAndRecentWindowBehavior);
 
 // Each of the test cases below is run twice: once for login-success and once
