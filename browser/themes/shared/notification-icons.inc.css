@@ -306,3 +306,11 @@ html|*#webRTC-previewVideo {
   }
 }
 %endif
+
+/* UPDATE */
+.popup-notification-icon[popupid="update-available"],
+.popup-notification-icon[popupid="update-manual"],
+.popup-notification-icon[popupid="update-restart"] {
+  background: #74BF43 url(chrome://browser/skin/notification-icons.svg#update) no-repeat center;
+  border-radius: 50%;
+}
