@@ -210,9 +210,3 @@ gfxPattern::GetSolidColor(Color& aColorOut)
 
  return false;
 }
-
-int
-gfxPattern::CairoStatus()
-{
-  return CAIRO_STATUS_SUCCESS;
-}
