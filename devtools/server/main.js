@@ -1009,7 +1009,7 @@ var DebuggerServer = {
    *         A promise object that is resolved once the connection is
    *         established.
    */
-  connectToChild(connection, frame, onDestroy) {
+  connectToChild(connection, frame, onDestroy, {addonId} = {}) {
     let deferred = SyncPromise.defer();
 
     // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
@@ -1122,6 +1122,9 @@ var DebuggerServer = {
     };
 
     let destroy = DevToolsUtils.makeInfallible(function () {
+      events.off(connection, "closed", destroy);
+      Services.obs.removeObserver(onMessageManagerClose, "message-manager-close");
+
       // provides hook to actor modules that need to exchange messages
       // between e10s parent and child processes
       parentModules.forEach(mod => {
@@ -1168,8 +1171,6 @@ var DebuggerServer = {
 
       // Cleanup all listeners
       untrackMessageManager();
-      Services.obs.removeObserver(onMessageManagerClose, "message-manager-close");
-      events.off(connection, "closed", destroy);
     });
 
     // Listen for various messages and frame events
@@ -1188,7 +1189,7 @@ var DebuggerServer = {
     // when user unplug the device or we lose the connection somehow.
     events.on(connection, "closed", destroy);
 
-    mm.sendAsyncMessage("debug:connect", { prefix });
+    mm.sendAsyncMessage("debug:connect", { prefix, addonId });
 
     return deferred.promise;
   },
