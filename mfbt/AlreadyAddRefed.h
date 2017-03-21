@@ -27,6 +27,14 @@ struct unused_t;
  *
  * TODO Move already_AddRefed to namespace mozilla.  This has not yet been done
  * because of the sheer number of usages of already_AddRefed.
+ *
+ * When should you use already_AddRefed<>?
+ * * Ensure a consumer takes ownership of a reference
+ * * Pass ownership without calling AddRef/Release (sometimes required in
+ *   off-main-thread code)
+ * * The ref pointer type you're using doesn't support move construction
+ *
+ * Otherwise, use Move(RefPtr/nsCOMPtr/etc).
  */
 template<class T>
 struct MOZ_MUST_USE_TYPE MOZ_NON_AUTOABLE already_AddRefed
