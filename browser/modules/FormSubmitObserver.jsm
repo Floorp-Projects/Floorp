@@ -236,5 +236,5 @@ FormSubmitObserver.prototype =
             (target.ownerDocument && target.ownerDocument == this._content.document));
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver])
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver])
 };

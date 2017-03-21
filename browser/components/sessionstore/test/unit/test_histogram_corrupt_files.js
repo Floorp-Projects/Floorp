@@ -73,7 +73,7 @@ add_task(function* test_one_file_valid() {
   let invalidSession = "data/sessionstore_invalid.js";
   let validSession = "data/sessionstore_valid.js";
   reset_session({
-    clean : invalidSession,
+    clean: invalidSession,
     cleanBackup: validSession,
     recovery: invalidSession,
     recoveryBackup: invalidSession
@@ -95,7 +95,7 @@ add_task(function* test_all_files_corrupt() {
   // Corrupting all backup files.
   let invalidSession = "data/sessionstore_invalid.js";
   reset_session({
-    clean : invalidSession,
+    clean: invalidSession,
     cleanBackup: invalidSession,
     recovery: invalidSession,
     recoveryBackup: invalidSession

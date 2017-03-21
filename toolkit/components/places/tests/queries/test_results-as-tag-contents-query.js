@@ -109,7 +109,7 @@ add_task(function* test_results_as_tag_contents_query() {
                  { isDetails: true,
                    uri: "http://foo.com/changeme2.html",
                    title: "zydeco",
-                   isBookmark:true,
+                   isBookmark: true,
                    isTag: true,
                    tagArray: ["bugzilla", "moz"] }];
   yield task_populateDB(change2);

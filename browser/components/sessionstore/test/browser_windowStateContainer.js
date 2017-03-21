@@ -95,7 +95,7 @@ add_task(function* () {
 
   let win2 = yield BrowserTestUtils.openNewBrowserWindow();
 
-  let tab2 = win2.gBrowser.addTab("http://example.com/", { userContextId : 1 });
+  let tab2 = win2.gBrowser.addTab("http://example.com/", { userContextId: 1 });
   yield promiseBrowserLoaded(tab2.linkedBrowser);
   yield TabStateFlusher.flush(tab2.linkedBrowser);
 

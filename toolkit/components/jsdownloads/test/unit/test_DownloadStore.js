@@ -263,9 +263,9 @@ add_task(function* test_save_reload_unknownProperties() {
     target: { path: getTempFile(TEST_TARGET_FILE_NAME).path,
               target1: "download3target1",
               target2: "download3target2" },
-    saver : { type: "copy",
-              saver1: "download3saver1",
-              saver2: "download3saver2" },
+    saver: { type: "copy",
+             saver1: "download3saver1",
+             saver2: "download3saver2" },
   });
   listForSave.add(download3);
 

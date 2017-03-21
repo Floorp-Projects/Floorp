@@ -67,7 +67,7 @@ const HistorySyncUtils = PlacesSyncUtils.history = Object.freeze({
       FROM moz_places
       WHERE url_hash = hash(:url) AND url = :url
       LIMIT 1`,
-      { url:canonicalURL.href }
+      { url: canonicalURL.href }
     );
     return rows.length ? rows[0].getResultByName("frecency") : -1;
   }),

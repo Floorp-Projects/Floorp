@@ -1398,7 +1398,7 @@ add_task(function* test_defaultSearchEngine() {
   data = TelemetryEnvironment.currentEnvironment;
   checkEnvironmentData(data);
   Assert.equal(data.settings.defaultSearchEngine, "NONE");
-  Assert.deepEqual(data.settings.defaultSearchEngineData, {name:"NONE"});
+  Assert.deepEqual(data.settings.defaultSearchEngineData, {name: "NONE"});
 
   // Add a new search engine (this will have no engine identifier).
   const SEARCH_ENGINE_ID = "telemetry_default";
@@ -1454,7 +1454,7 @@ add_task(function* test_defaultSearchEngine() {
   data = TelemetryEnvironment.currentEnvironment;
   checkEnvironmentData(data);
   Assert.deepEqual(data.settings.defaultSearchEngineData,
-                   {"name":"engine-telemetry", "loadPath":"[other]/engine.xml", "origin":"verified"});
+                   {"name": "engine-telemetry", "loadPath": "[other]/engine.xml", "origin": "verified"});
 
   // Now break this engine's load path hash.
   promise = new Promise(resolve => {

@@ -1523,7 +1523,7 @@
           var browseWithCaretOn = this.mPrefs.getBoolPref(kPrefCaretBrowsingOn, false);
           var warn = this.mPrefs.getBoolPref(kPrefWarnOnEnable, true);
           if (warn && !browseWithCaretOn) {
-            var checkValue = {value:false};
+            var checkValue = {value: false};
             var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                           .getService(Components.interfaces.nsIPromptService);
 

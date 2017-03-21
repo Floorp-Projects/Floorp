@@ -31,7 +31,7 @@ add_task(function* test() {
 
 
   // Step 2
-  let private_window = yield BrowserTestUtils.openNewBrowserWindow({ private : true });
+  let private_window = yield BrowserTestUtils.openNewBrowserWindow({ private: true });
   let private_browser = private_window.getBrowser().selectedBrowser;
   private_browser.loadURI(prefix + "?action=set&name=test2&value=value2");
   yield BrowserTestUtils.browserLoaded(private_browser);
@@ -56,7 +56,7 @@ add_task(function* test() {
   // Reopen the private window again, without privateBrowsing, which should clear the
   // the private storage.
   private_window.close();
-  private_window = yield BrowserTestUtils.openNewBrowserWindow({ private : false });
+  private_window = yield BrowserTestUtils.openNewBrowserWindow({ private: false });
   private_browser = null;
   yield new Promise(resolve => Cu.schedulePreciseGC(resolve));
   private_browser = private_window.getBrowser().selectedBrowser;
@@ -71,7 +71,7 @@ add_task(function* test() {
   // Making it private again should clear the storage and it shouldn't
   // be able to see the old private storage as well.
   private_window.close();
-  private_window = yield BrowserTestUtils.openNewBrowserWindow({ private : true });
+  private_window = yield BrowserTestUtils.openNewBrowserWindow({ private: true });
   private_browser = null;
   yield new Promise(resolve => Cu.schedulePreciseGC(resolve));
   private_browser = private_window.getBrowser().selectedBrowser;

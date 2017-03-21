@@ -1242,11 +1242,11 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
 
   // Compute iteration space for input and output and check for compatibility.
   var inputType = TypeOfTypedObject(inArray);
-  var {iterationSpace:inIterationSpace, grainType:inGrainType} =
+  var {iterationSpace: inIterationSpace, grainType: inGrainType} =
     ComputeIterationSpace(inputType, depth, inArray.length);
   if (!IsObject(inGrainType) || !ObjectIsTypeDescr(inGrainType))
     ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
-  var {iterationSpace, grainType:outGrainType, totalLength} =
+  var {iterationSpace, grainType: outGrainType, totalLength} =
     ComputeIterationSpace(outputType, depth, outputType.length);
   for (var i = 0; i < depth; i++)
     if (inIterationSpace[i] !== iterationSpace[i])

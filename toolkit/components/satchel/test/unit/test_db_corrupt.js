@@ -46,7 +46,7 @@ add_test(function test_corruptFormHistoryDB_emptyInit() {
   FormHistory.count({}, {
     handleResult(aNumEntries) {
       do_check_true(aNumEntries == 0);
-      FormHistory.count({ fieldname : "name-A", value : "value-A" }, {
+      FormHistory.count({ fieldname: "name-A", value: "value-A" }, {
         handleResult(aNumEntries2) {
           do_check_true(aNumEntries2 == 0);
           run_next_test();

@@ -397,12 +397,12 @@ var pktUI = (function() {
 
         pktUIMessaging.addMessageListener(iframe, "collapseSavePanel", function(panelId, data) {
             if (!pktApi.isPremiumUser() && !isInOverflowMenu())
-                resizePanel({width:savePanelWidth, height:savePanelHeights.collapsed});
+                resizePanel({width: savePanelWidth, height: savePanelHeights.collapsed});
         });
 
         pktUIMessaging.addMessageListener(iframe, "expandSavePanel", function(panelId, data) {
             if (!isInOverflowMenu())
-                resizePanel({width:savePanelWidth, height:savePanelHeights.expanded});
+                resizePanel({width: savePanelWidth, height: savePanelHeights.expanded});
         });
 
         // Ask for recently accessed/used tags for auto complete

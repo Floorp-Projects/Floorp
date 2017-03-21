@@ -519,41 +519,41 @@ function* setupFormHistory() {
         op: "remove"
      },
      {
-        op : "add",
-        fieldname : "10minutes",
-        value : "10m"
+        op: "add",
+        fieldname: "10minutes",
+        value: "10m"
       }, {
-        op : "add",
-        fieldname : "1hour",
-        value : "1h"
+        op: "add",
+        fieldname: "1hour",
+        value: "1h"
       }, {
-        op : "add",
-        fieldname : "1hour10minutes",
-        value : "1h10m"
+        op: "add",
+        fieldname: "1hour10minutes",
+        value: "1h10m"
       }, {
-        op : "add",
-        fieldname : "2hour",
-        value : "2h"
+        op: "add",
+        fieldname: "2hour",
+        value: "2h"
       }, {
-        op : "add",
-        fieldname : "2hour10minutes",
-        value : "2h10m"
+        op: "add",
+        fieldname: "2hour10minutes",
+        value: "2h10m"
       }, {
-        op : "add",
-        fieldname : "4hour",
-        value : "4h"
+        op: "add",
+        fieldname: "4hour",
+        value: "4h"
       }, {
-        op : "add",
-        fieldname : "4hour10minutes",
-        value : "4h10m"
+        op: "add",
+        fieldname: "4hour10minutes",
+        value: "4h10m"
       }, {
-        op : "add",
-        fieldname : "today",
-        value : "1d"
+        op: "add",
+        fieldname: "today",
+        value: "1d"
       }, {
-        op : "add",
-        fieldname : "b4today",
-        value : "1y"
+        op: "add",
+        fieldname: "b4today",
+        value: "1y"
       }]);
 
   // Artifically age the entries to the proper vintage.

@@ -16,10 +16,10 @@ function LoginManagerCrypto_SDR() {
 
 LoginManagerCrypto_SDR.prototype = {
 
-  classID : Components.ID("{dc6c2976-0f73-4f1f-b9ff-3d72b4e28309}"),
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerCrypto]),
+  classID: Components.ID("{dc6c2976-0f73-4f1f-b9ff-3d72b4e28309}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsILoginManagerCrypto]),
 
-  __decoderRing : null,  // nsSecretDecoderRing service
+  __decoderRing: null,  // nsSecretDecoderRing service
   get _decoderRing() {
     if (!this.__decoderRing)
       this.__decoderRing = Cc["@mozilla.org/security/sdr;1"].
@@ -27,7 +27,7 @@ LoginManagerCrypto_SDR.prototype = {
     return this.__decoderRing;
   },
 
-  __utfConverter : null, // UCS2 <--> UTF8 string conversion
+  __utfConverter: null, // UCS2 <--> UTF8 string conversion
   get _utfConverter() {
     if (!this.__utfConverter) {
       this.__utfConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
@@ -41,7 +41,7 @@ LoginManagerCrypto_SDR.prototype = {
     this.__utfConverter = null;
   },
 
-  _uiBusy : false,
+  _uiBusy: false,
 
 
   init() {

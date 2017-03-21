@@ -10,7 +10,7 @@
 
 var stateBackup = ss.getBrowserState();
 
-var state = {windows:[{tabs:[{entries:[
+var state = {windows: [{tabs: [{entries: [
   {
     docIdentifier: 1,
     url: "http://example.com",

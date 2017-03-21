@@ -12,7 +12,7 @@ function run_test() {
   do_check_eq(0, statement.getInt32(0));
 
   // These are the different types of aGroup arguments we'll test.
-  var anObject = {"foo":"bar"};                                // a simple object
+  var anObject = {"foo": "bar"};                               // a simple object
   var uri = ContentPrefTest.getURI("http://www.example.com/"); // nsIURI
   var stringURI = "www.example.com";                           // typeof = "string"
   var stringObjectURI = new String("www.example.com");         // typeof = "object"

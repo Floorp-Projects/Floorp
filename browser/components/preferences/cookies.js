@@ -16,12 +16,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
                                   "resource://gre/modules/ContextualIdentityService.jsm");
 
 var gCookiesWindow = {
-  _cm               : Components.classes["@mozilla.org/cookiemanager;1"]
-                                .getService(Components.interfaces.nsICookieManager),
-  _hosts            : {},
-  _hostOrder        : [],
-  _tree             : null,
-  _bundle           : null,
+  _cm: Components.classes["@mozilla.org/cookiemanager;1"]
+                    .getService(Components.interfaces.nsICookieManager),
+  _hosts: {},
+  _hostOrder: [],
+  _tree: null,
+  _bundle: null,
 
   init() {
     var os = Components.classes["@mozilla.org/observer-service;1"]
@@ -194,12 +194,12 @@ var gCookiesWindow = {
   },
 
   _view: {
-    _filtered   : false,
-    _filterSet  : [],
+    _filtered: false,
+    _filterSet: [],
     _filterValue: "",
-    _rowCount   : 0,
-    _cacheValid : 0,
-    _cacheItems : [],
+    _rowCount: 0,
+    _cacheValid: 0,
+    _cacheItems: [],
     get rowCount() {
       return this._rowCount;
     },
@@ -225,7 +225,7 @@ var gCookiesWindow = {
           return currHost;
         hostIndex = count;
 
-        var cacheEntry = { "start" : i, "count" : count };
+        var cacheEntry = { "start": i, "count": count };
         var cacheStart = count;
 
         if (currHost.open) {
@@ -446,11 +446,11 @@ var gCookiesWindow = {
 
   _addCookie(aStrippedHost, aCookie, aHostCount) {
     if (!(aStrippedHost in this._hosts) || !this._hosts[aStrippedHost]) {
-      this._hosts[aStrippedHost] = { cookies   : [],
-                                     rawHost   : aStrippedHost,
-                                     level     : 0,
-                                     open      : false,
-                                     container : true };
+      this._hosts[aStrippedHost] = { cookies: [],
+                                     rawHost: aStrippedHost,
+                                     level: 0,
+                                     open: false,
+                                     container: true };
       this._hostOrder.push(aStrippedHost);
       ++aHostCount.value;
     }
@@ -460,16 +460,16 @@ var gCookiesWindow = {
   },
 
   _makeCookieObject(aStrippedHost, aCookie) {
-    var c = { name            : aCookie.name,
-              value           : aCookie.value,
-              isDomain        : aCookie.isDomain,
-              host            : aCookie.host,
-              rawHost         : aStrippedHost,
-              path            : aCookie.path,
-              isSecure        : aCookie.isSecure,
-              expires         : aCookie.expires,
-              level           : 1,
-              container       : false,
+    var c = { name: aCookie.name,
+              value: aCookie.value,
+              isDomain: aCookie.isDomain,
+              host: aCookie.host,
+              rawHost: aStrippedHost,
+              path: aCookie.path,
+              isSecure: aCookie.isSecure,
+              expires: aCookie.expires,
+              level: 1,
+              container: false,
               originAttributes: aCookie.originAttributes };
     return c;
   },
@@ -736,7 +736,7 @@ var gCookiesWindow = {
     }
   },
 
-  _lastSortProperty : "",
+  _lastSortProperty: "",
   _lastSortAscending: false,
   sort(aProperty) {
     var ascending = (aProperty == this._lastSortProperty) ? !this._lastSortAscending : true;

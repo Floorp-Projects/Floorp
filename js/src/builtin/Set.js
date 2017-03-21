@@ -62,7 +62,7 @@ function SetSpecies() {
 _SetCanonicalName(SetSpecies, "get [Symbol.species]");
 
 
-var setIteratorTemp = { setIterationResult : null };
+var setIteratorTemp = { setIterationResult: null };
 
 function SetIteratorNext() {
     // Step 1.

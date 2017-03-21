@@ -78,7 +78,7 @@ function focusInChild() {
       id = getWindowDocId(event.originalTarget) + "-document";
     else
       id = event.originalTarget.id;
-    sendSyncMessage("Browser:FocusChanged", { details : event.type + ": " + id });
+    sendSyncMessage("Browser:FocusChanged", { details: event.type + ": " + id });
   }
 
   addEventListener("focus", eventListener, true);

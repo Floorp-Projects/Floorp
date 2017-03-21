@@ -14,20 +14,20 @@ function nsLoginInfo() {}
 
 nsLoginInfo.prototype = {
 
-  classID : Components.ID("{0f2f347c-1e4f-40cc-8efd-792dea70a85e}"),
+  classID: Components.ID("{0f2f347c-1e4f-40cc-8efd-792dea70a85e}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsILoginInfo, Ci.nsILoginMetaInfo]),
 
   //
   // nsILoginInfo interfaces...
   //
 
-  hostname      : null,
-  formSubmitURL : null,
-  httpRealm     : null,
-  username      : null,
-  password      : null,
-  usernameField : null,
-  passwordField : null,
+  hostname: null,
+  formSubmitURL: null,
+  httpRealm: null,
+  username: null,
+  password: null,
+  usernameField: null,
+  passwordField: null,
 
   init(aHostname, aFormSubmitURL, aHttpRealm,
                   aUsername, aPassword,
@@ -82,11 +82,11 @@ nsLoginInfo.prototype = {
   // nsILoginMetaInfo interfaces...
   //
 
-  guid : null,
-  timeCreated : null,
-  timeLastUsed : null,
-  timePasswordChanged : null,
-  timesUsed : null
+  guid: null,
+  timeCreated: null,
+  timeLastUsed: null,
+  timePasswordChanged: null,
+  timesUsed: null
 
 }; // end of nsLoginInfo implementation
 

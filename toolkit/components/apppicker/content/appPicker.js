@@ -9,7 +9,7 @@ function AppPicker() {}
 AppPicker.prototype =
 {
     // Class members
-    _incomingParams:null,
+    _incomingParams: null,
 
     /**
     * Init the dialog and populate the application list

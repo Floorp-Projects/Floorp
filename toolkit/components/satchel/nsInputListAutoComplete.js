@@ -11,7 +11,7 @@ Components.utils.import("resource://gre/modules/nsFormAutoCompleteResult.jsm");
 function InputListAutoComplete() {}
 
 InputListAutoComplete.prototype = {
-  classID       : Components.ID("{bf1e01d0-953e-11df-981c-0800200c9a66}"),
+  classID: Components.ID("{bf1e01d0-953e-11df-981c-0800200c9a66}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIInputListAutoComplete]),
 
   autoCompleteSearch(aUntrimmedSearchString, aField) {

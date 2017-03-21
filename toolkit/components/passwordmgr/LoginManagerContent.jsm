@@ -44,7 +44,7 @@ var gEnabled, gAutofillForms, gStoreWhenAutocompleteOff;
 var gLastContextMenuEventTimeStamp = Number.NEGATIVE_INFINITY;
 
 var observer = {
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                           Ci.nsIFormSubmitObserver,
                                           Ci.nsIWebProgressListener,
                                           Ci.nsIDOMEventListener,
@@ -161,7 +161,7 @@ function messageManagerFromWindow(win) {
 // This object maps to the "child" process (even in the single-process case).
 var LoginManagerContent = {
 
-  __formFillService : null, // FormFillController, for username autocompleting
+  __formFillService: null, // FormFillController, for username autocompleting
   get _formFillService() {
     if (!this.__formFillService)
       this.__formFillService =
@@ -693,7 +693,7 @@ var LoginManagerContent = {
       }
 
       pwFields[pwFields.length] = {
-                                    index   : i,
+                                    index: i,
                                     element
                                   };
     }
@@ -744,8 +744,8 @@ var LoginManagerContent = {
         // The field from the password override may be in a different FormLike.
         let formLike = LoginFormFactory.createFromField(pwOverrideField);
         pwFields = [{
-          index   : [...formLike.elements].indexOf(pwOverrideField),
-          element : pwOverrideField,
+          index: [...formLike.elements].indexOf(pwOverrideField),
+          element: pwOverrideField,
         }];
       }
 
@@ -1446,11 +1446,11 @@ function UserAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messag
 }
 
 UserAutoCompleteResult.prototype = {
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult,
                                           Ci.nsISupportsWeakReference]),
 
   // private
-  logins : null,
+  logins: null,
 
   // Allow autoCompleteSearch to get at the JS object so it can
   // modify some readonly properties for internal use.
@@ -1459,11 +1459,11 @@ UserAutoCompleteResult.prototype = {
   },
 
   // Interfaces from idl...
-  searchString : null,
-  searchResult : Ci.nsIAutoCompleteResult.RESULT_NOMATCH,
-  defaultIndex : -1,
-  errorDescription : "",
-  matchCount : 0,
+  searchString: null,
+  searchResult: Ci.nsIAutoCompleteResult.RESULT_NOMATCH,
+  defaultIndex: -1,
+  errorDescription: "",
+  matchCount: 0,
 
   getValueAt(index) {
     if (index < 0 || index >= this.matchCount) {

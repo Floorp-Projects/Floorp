@@ -711,7 +711,7 @@ this.AddonRepository = {
    */
   getSearchURL(aSearchTerms) {
     let url = this._formatURLPref(PREF_GETADDONS_BROWSESEARCHRESULTS, {
-      TERMS : encodeURIComponent(aSearchTerms)
+      TERMS: encodeURIComponent(aSearchTerms)
     });
     return (url != null) ? url : "about:blank";
   },
@@ -761,7 +761,7 @@ this.AddonRepository = {
 
     let params = {
       API_VERSION,
-      IDS : ids.map(encodeURIComponent).join(",")
+      IDS: ids.map(encodeURIComponent).join(",")
     };
 
     let pref = PREF_GETADDONS_BYIDS;
@@ -873,7 +873,7 @@ this.AddonRepository = {
       API_VERSION,
 
       // Get twice as many results to account for potential filtering
-      MAX_RESULTS : 2 * aMaxResults
+      MAX_RESULTS: 2 * aMaxResults
     });
 
     let handleResults = (aElements, aTotalResults) => {
@@ -906,10 +906,10 @@ this.AddonRepository = {
 
     let substitutions = {
       API_VERSION,
-      TERMS : encodeURIComponent(aSearchTerms),
+      TERMS: encodeURIComponent(aSearchTerms),
       // Get twice as many results to account for potential filtering
-      MAX_RESULTS : 2 * aMaxResults,
-      COMPATIBILITY_MODE : compatMode,
+      MAX_RESULTS: 2 * aMaxResults,
+      COMPATIBILITY_MODE: compatMode,
     };
 
     let url = this._formatURLPref(PREF_GETADDONS_GETSEARCHRESULTS, substitutions);
