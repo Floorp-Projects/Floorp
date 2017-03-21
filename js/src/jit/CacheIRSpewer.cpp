@@ -86,6 +86,7 @@ CacheIRSpewer::beginCache(LockGuard<Mutex>&, const IRGenerator& gen)
     j.beginObject();
     j.stringProperty("name", "%s", CacheKindNames[uint8_t(gen.cacheKind_)]);
     j.stringProperty("file", "%s", gen.script_->filename());
+    j.integerProperty("mode", int(gen.mode_));
     if (jsbytecode* pc = gen.pc_) {
         unsigned column;
         j.integerProperty("line", PCToLineNumber(gen.script_, pc, &column));
