@@ -663,11 +663,6 @@ const CustomizableWidgets = [
     tooltiptext: "zoom-controls.tooltiptext2",
     defaultArea: CustomizableUI.AREA_PANEL,
     onBuild(aDocument) {
-      const kPanelId = "PanelUI-popup";
-      let areaType = CustomizableUI.getAreaType(this.currentArea);
-      let inPanel = areaType == CustomizableUI.TYPE_MENU_PANEL;
-      let inToolbar = areaType == CustomizableUI.TYPE_TOOLBAR;
-
       let buttons = [{
         id: "zoom-out-button",
         command: "cmd_fullZoomReduce",
@@ -705,40 +700,6 @@ const CustomizableWidgets = [
         node.appendChild(btnNode);
       });
 
-      // The middle node is the 'Reset Zoom' button.
-      let zoomResetButton = node.childNodes[2];
-      let window = aDocument.defaultView;
-      function updateZoomResetButton() {
-        let updateDisplay = true;
-        // Label should always show 100% in customize mode, so don't update:
-        if (aDocument.documentElement.hasAttribute("customizing")) {
-          updateDisplay = false;
-        }
-        // XXXgijs in some tests we get called very early, and there's no docShell on the
-        // tabbrowser. This breaks the zoom toolkit code (see bug 897410). Don't let that happen:
-        let zoomFactor = 100;
-        try {
-          zoomFactor = Math.round(window.ZoomManager.zoom * 100);
-        } catch (e) {}
-        zoomResetButton.setAttribute("label", CustomizableUI.getLocalizedProperty(
-          buttons[1], "label", [updateDisplay ? zoomFactor : 100]
-        ));
-      }
-
-      // Register ourselves with the service so we know when the zoom prefs change.
-      Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:location-change", false);
-      window.addEventListener("FullZoomChange", updateZoomResetButton);
-
-      if (inPanel) {
-        let panel = aDocument.getElementById(kPanelId);
-        panel.addEventListener("popupshowing", updateZoomResetButton);
-      } else {
-        if (inToolbar) {
-          let container = window.gBrowser.tabContainer;
-          container.addEventListener("TabSelect", updateZoomResetButton);
-        }
-        updateZoomResetButton();
-      }
       updateCombinedWidgetStyle(node, this.currentArea, true);
 
       let listener = {
@@ -747,56 +708,33 @@ const CustomizableWidgets = [
             return;
 
           updateCombinedWidgetStyle(node, aArea, true);
-          updateZoomResetButton();
-
-          let newAreaType = CustomizableUI.getAreaType(aArea);
-          if (newAreaType == CustomizableUI.TYPE_MENU_PANEL) {
-            let panel = aDocument.getElementById(kPanelId);
-            panel.addEventListener("popupshowing", updateZoomResetButton);
-          } else if (newAreaType == CustomizableUI.TYPE_TOOLBAR) {
-            let container = window.gBrowser.tabContainer;
-            container.addEventListener("TabSelect", updateZoomResetButton);
-          }
         }.bind(this),
 
         onWidgetRemoved: function(aWidgetId, aPrevArea) {
           if (aWidgetId != this.id)
             return;
 
-          let formerAreaType = CustomizableUI.getAreaType(aPrevArea);
-          if (formerAreaType == CustomizableUI.TYPE_MENU_PANEL) {
-            let panel = aDocument.getElementById(kPanelId);
-            panel.removeEventListener("popupshowing", updateZoomResetButton);
-          } else if (formerAreaType == CustomizableUI.TYPE_TOOLBAR) {
-            let container = window.gBrowser.tabContainer;
-            container.removeEventListener("TabSelect", updateZoomResetButton);
-          }
-
           // When a widget is demoted to the palette ('removed'), it's visual
           // style should change.
           updateCombinedWidgetStyle(node, null, true);
-          updateZoomResetButton();
         }.bind(this),
 
         onWidgetReset: function(aWidgetNode) {
           if (aWidgetNode != node)
             return;
           updateCombinedWidgetStyle(node, this.currentArea, true);
-          updateZoomResetButton();
         }.bind(this),
 
         onWidgetUndoMove: function(aWidgetNode) {
           if (aWidgetNode != node)
             return;
           updateCombinedWidgetStyle(node, this.currentArea, true);
-          updateZoomResetButton();
         }.bind(this),
 
         onWidgetMoved: function(aWidgetId, aArea) {
           if (aWidgetId != this.id)
             return;
           updateCombinedWidgetStyle(node, aArea, true);
-          updateZoomResetButton();
         }.bind(this),
 
         onWidgetInstanceRemoved: function(aWidgetId, aDoc) {
@@ -804,25 +742,7 @@ const CustomizableWidgets = [
             return;
 
           CustomizableUI.removeListener(listener);
-          Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:location-change");
-          window.removeEventListener("FullZoomChange", updateZoomResetButton);
-          let panel = aDoc.getElementById(kPanelId);
-          panel.removeEventListener("popupshowing", updateZoomResetButton);
-          let container = aDoc.defaultView.gBrowser.tabContainer;
-          container.removeEventListener("TabSelect", updateZoomResetButton);
         }.bind(this),
-
-        onCustomizeStart(aWindow) {
-          if (aWindow.document == aDocument) {
-            updateZoomResetButton();
-          }
-        },
-
-        onCustomizeEnd(aWindow) {
-          if (aWindow.document == aDocument) {
-            updateZoomResetButton();
-          }
-        },
 
         onWidgetDrag: function(aWidgetId, aArea) {
           if (aWidgetId != this.id)
