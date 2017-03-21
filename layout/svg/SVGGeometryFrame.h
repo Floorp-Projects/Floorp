@@ -120,8 +120,8 @@ protected:
   virtual uint16_t GetHitTestFlags();
 private:
   enum { eRenderFill = 1, eRenderStroke = 2 };
-  void Render(gfxContext* aContext, uint32_t aRenderComponents,
-              const gfxMatrix& aTransform);
+  DrawResult Render(gfxContext* aContext, uint32_t aRenderComponents,
+                    const gfxMatrix& aTransform);
 
   /**
    * @param aMatrix The transform that must be multiplied onto aContext to

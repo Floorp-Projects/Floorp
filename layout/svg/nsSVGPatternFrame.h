@@ -40,7 +40,7 @@ public:
   explicit nsSVGPatternFrame(nsStyleContext* aContext);
 
   // nsSVGPaintServerFrame methods:
-  virtual already_AddRefed<gfxPattern>
+  virtual mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
     GetPaintServerPattern(nsIFrame *aSource,
                           const DrawTarget* aDrawTarget,
                           const gfxMatrix& aContextMatrix,
@@ -106,7 +106,7 @@ protected:
     return GetLengthValue(aIndex, mContent);
   }
 
-  already_AddRefed<SourceSurface>
+  mozilla::Pair<DrawResult, RefPtr<SourceSurface>>
   PaintPattern(const DrawTarget* aDrawTarget,
                Matrix *patternMatrix,
                const Matrix &aContextMatrix,

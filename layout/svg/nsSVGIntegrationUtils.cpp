@@ -925,7 +925,6 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
       result &= paintResult.result;
       maskSurface = paintResult.maskSurface;
       if (maskSurface) {
-        MOZ_ASSERT(paintResult.result == DrawResult::SUCCESS);
         shouldPushMask = true;
         maskTransform = paintResult.maskTransform;
         opacityApplied = paintResult.opacityApplied;
@@ -1232,10 +1231,12 @@ nsSVGIntegrationUtils::DrawableFromPaintServer(nsIFrame*         aFrame,
     gfxRect overrideBounds(0, 0,
                            aPaintServerSize.width, aPaintServerSize.height);
     overrideBounds.ScaleInverse(aFrame->PresContext()->AppUnitsPerDevPixel());
-    RefPtr<gfxPattern> pattern =
-    server->GetPaintServerPattern(aTarget, aDrawTarget,
-                                  aContextMatrix, &nsStyleSVG::mFill, 1.0,
-                                  &overrideBounds);
+    DrawResult result = DrawResult::SUCCESS;
+    RefPtr<gfxPattern> pattern;
+    Tie(result, pattern) =
+      server->GetPaintServerPattern(aTarget, aDrawTarget,
+                                    aContextMatrix, &nsStyleSVG::mFill, 1.0,
+                                    &overrideBounds);
 
     if (!pattern)
       return nullptr;
