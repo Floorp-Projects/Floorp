@@ -51,6 +51,11 @@ public class DefaultGlobalSessionCallback implements GlobalSessionCallback {
   }
 
   @Override
+  public void handleFullSyncNecessary() {
+
+  }
+
+  @Override
   public boolean shouldBackOffStorage() {
     return false;
   }
