@@ -523,8 +523,10 @@ HTMLCanvasElement::DispatchPrintCallback(nsITimerCallback* aCallback)
   mPrintState = new HTMLCanvasPrintState(this, mCurrentContext, aCallback);
 
   RefPtr<nsRunnableMethod<HTMLCanvasElement> > renderEvent =
-        NewRunnableMethod(this, &HTMLCanvasElement::CallPrintCallback);
-  return NS_DispatchToCurrentThread(renderEvent);
+    NewRunnableMethod(this, &HTMLCanvasElement::CallPrintCallback);
+  return OwnerDoc()->Dispatch("HTMLCanvasElement::CallPrintCallback",
+                              TaskCategory::Other,
+                              renderEvent.forget());
 }
 
 void
