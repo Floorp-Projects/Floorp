@@ -5876,6 +5876,84 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     return NS_OK;
 }
 
+namespace {
+
+class InitLocalBlockListXpcCallback final : public nsIURIClassifierCallback {
+public:
+  using CallbackType = nsHttpChannel::InitLocalBlockListCallback;
+
+  explicit InitLocalBlockListXpcCallback(const CallbackType& aCallback)
+    : mCallback(aCallback)
+  {
+  }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIURICLASSIFIERCALLBACK
+
+private:
+  ~InitLocalBlockListXpcCallback() = default;
+
+  CallbackType mCallback;
+};
+
+NS_IMPL_ISUPPORTS(InitLocalBlockListXpcCallback, nsIURIClassifierCallback)
+
+/*virtual*/ nsresult
+InitLocalBlockListXpcCallback::OnClassifyComplete(nsresult /*aErrorCode*/,
+                                               const nsACString& aLists, // Only this matters.
+                                               const nsACString& /*aProvider*/,
+                                               const nsACString& /*aPrefix*/)
+{
+    bool localBlockList = !aLists.IsEmpty();
+    mCallback(localBlockList);
+    return NS_OK;
+}
+
+} // end of unnamed namespace/
+
+bool
+nsHttpChannel::InitLocalBlockList(const InitLocalBlockListCallback& aCallback)
+{
+    mLocalBlocklist = false;
+
+    if (!(mLoadFlags & LOAD_CLASSIFY_URI)) {
+        return false;
+    }
+
+    // Check to see if this principal exists on local blocklists.
+    nsCOMPtr<nsIURIClassifier> classifier = do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID);
+    RefPtr<nsChannelClassifier> channelClassifier = new nsChannelClassifier(this);
+    bool tpEnabled = false;
+    channelClassifier->ShouldEnableTrackingProtection(&tpEnabled);
+    if (!classifier || !tpEnabled) {
+        return false;
+    }
+
+    // We skip speculative connections by setting mLocalBlocklist only
+    // when tracking protection is enabled. Though we could do this for
+    // both phishing and malware, it is not necessary for correctness,
+    // since no network events will be received while the
+    // nsChannelClassifier is in progress. See bug 1122691.
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = GetURI(getter_AddRefs(uri));
+    if (NS_FAILED(rv) || !uri) {
+        return false;
+    }
+
+    nsAutoCString tables;
+    Preferences::GetCString("urlclassifier.trackingTable", &tables);
+    nsTArray<nsCString> results;
+
+    RefPtr<InitLocalBlockListXpcCallback> xpcCallback
+        = new InitLocalBlockListXpcCallback(aCallback);
+    rv = classifier->AsyncClassifyLocalWithTables(uri, tables, xpcCallback);
+    if (NS_FAILED(rv)) {
+        return false;
+    }
+
+    return true;
+}
+
 NS_IMETHODIMP
 nsHttpChannel::AsyncOpen2(nsIStreamListener *aListener)
 {
@@ -6030,42 +6108,6 @@ nsHttpChannel::BeginConnect()
     if (mAPIRedirectToURI) {
         return AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
     }
-    // Check to see if this principal exists on local blocklists.
-    RefPtr<nsChannelClassifier> channelClassifier = new nsChannelClassifier(this);
-    if (mLoadFlags & LOAD_CLASSIFY_URI) {
-        nsCOMPtr<nsIURIClassifier> classifier = do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID);
-        bool tpEnabled = false;
-        channelClassifier->ShouldEnableTrackingProtection(&tpEnabled);
-        if (classifier && tpEnabled) {
-            // We skip speculative connections by setting mLocalBlocklist only
-            // when tracking protection is enabled. Though we could do this for
-            // both phishing and malware, it is not necessary for correctness,
-            // since no network events will be received while the
-            // nsChannelClassifier is in progress. See bug 1122691.
-
-            // We cannot check the entity whitelist here (IsTrackerWhitelisted())
-            // because that method is asynchronous and we need to run
-            // synchronously here.
-            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1100024#c2.
-            nsCOMPtr<nsIURI> uri;
-            rv = GetURI(getter_AddRefs(uri));
-            if (NS_SUCCEEDED(rv) && uri) {
-                nsAutoCString tables;
-                Preferences::GetCString("urlclassifier.trackingTable", &tables);
-                nsTArray<nsCString> results;
-                rv = classifier->ClassifyLocalWithTables(uri, tables, results);
-                if (NS_SUCCEEDED(rv) && !results.IsEmpty()) {
-                    LOG(("nsHttpChannel::ClassifyLocalWithTables found "
-                         "uri on local tracking blocklist [this=%p]",
-                         this));
-                    mLocalBlocklist = true;
-                } else {
-                    LOG(("nsHttpChannel::ClassifyLocalWithTables no result "
-                         "found [this=%p]", this));
-                }
-            }
-        }
-    }
 
     // If mTimingEnabled flag is not set after OnModifyRequest() then
     // clear the already recorded AsyncOpen value for consistency.
@@ -6077,28 +6119,6 @@ nsHttpChannel::BeginConnect()
 
     if (mLoadFlags & VALIDATE_ALWAYS || BYPASS_LOCAL_CACHE(mLoadFlags))
         mCaps |= NS_HTTP_REFRESH_DNS;
-
-    if (!mLocalBlocklist && !mConnectionInfo->UsingHttpProxy() &&
-        !(mLoadFlags & (LOAD_NO_NETWORK_IO | LOAD_ONLY_FROM_CACHE))) {
-        // Start a DNS lookup very early in case the real open is queued the DNS can
-        // happen in parallel. Do not do so in the presence of an HTTP proxy as
-        // all lookups other than for the proxy itself are done by the proxy.
-        // Also we don't do a lookup if the LOAD_NO_NETWORK_IO or
-        // LOAD_ONLY_FROM_CACHE flags are set.
-        //
-        // We keep the DNS prefetch object around so that we can retrieve
-        // timing information from it. There is no guarantee that we actually
-        // use the DNS prefetch data for the real connection, but as we keep
-        // this data around for 3 minutes by default, this should almost always
-        // be correct, and even when it isn't, the timing still represents _a_
-        // valid DNS lookup timing for the site, even if it is not _the_
-        // timing we used.
-        LOG(("nsHttpChannel::BeginConnect [this=%p] prefetching%s\n",
-             this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : ""));
-        mDNSPrefetch = new nsDNSPrefetch(mURI, originAttributes,
-                                         this, mTimingEnabled);
-        mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
-    }
 
     // Adjust mCaps according to our request headers:
     //  - If "Connection: close" is set as a request header, then do not bother
@@ -6152,6 +6172,65 @@ nsHttpChannel::BeginConnect()
         return ContinueBeginConnectWithResult();
     }
 
+    // We are about to do a async lookup to check if the URI is a
+    // tracker. The result will be delivered along with the callback.
+    // Chances are the lookup is not needed so InitLocalBlockList()
+    // will return false and then we can BeginConnectActual() right away.
+    RefPtr<nsHttpChannel> self = this;
+    bool willCallback = InitLocalBlockList([self](bool aLocalBlockList) -> void  {
+        self->mLocalBlocklist = aLocalBlockList;
+        nsresult rv = self->BeginConnectActual();
+        if (NS_FAILED(rv)) {
+            // Since this error is thrown asynchronously so that the caller
+            // of BeginConnect() will not do clean up for us. We have to do
+            // it on our own.
+            self->CloseCacheEntry(false);
+            Unused << self->AsyncAbort(rv);
+        }
+    });
+
+    if (!willCallback) {
+        // We can do BeginConnectActual immediately if mLocalBlockList is initialized
+        // synchronously. Note that we don't need to handle the failure because
+        // BeginConnect() will return synchronously and the caller will be responsible
+        // for handling it.
+        return BeginConnectActual();
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsHttpChannel::BeginConnectActual()
+{
+    if (mCanceled) {
+        return mStatus;
+    }
+
+    if (!mLocalBlocklist && !mConnectionInfo->UsingHttpProxy() &&
+        !(mLoadFlags & (LOAD_NO_NETWORK_IO | LOAD_ONLY_FROM_CACHE))) {
+        // Start a DNS lookup very early in case the real open is queued the DNS can
+        // happen in parallel. Do not do so in the presence of an HTTP proxy as
+        // all lookups other than for the proxy itself are done by the proxy.
+        // Also we don't do a lookup if the LOAD_NO_NETWORK_IO or
+        // LOAD_ONLY_FROM_CACHE flags are set.
+        //
+        // We keep the DNS prefetch object around so that we can retrieve
+        // timing information from it. There is no guarantee that we actually
+        // use the DNS prefetch data for the real connection, but as we keep
+        // this data around for 3 minutes by default, this should almost always
+        // be correct, and even when it isn't, the timing still represents _a_
+        // valid DNS lookup timing for the site, even if it is not _the_
+        // timing we used.
+        LOG(("nsHttpChannel::BeginConnect [this=%p] prefetching%s\n",
+             this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : ""));
+        OriginAttributes originAttributes;
+        NS_GetOriginAttributes(this, originAttributes);
+        mDNSPrefetch = new nsDNSPrefetch(mURI, originAttributes,
+                                         this, mTimingEnabled);
+        mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
+    }
+
     // mLocalBlocklist is true only if tracking protection is enabled and the
     // URI is a tracking domain, it makes no guarantees about phishing or
     // malware, so if LOAD_CLASSIFY_URI is true we must call
@@ -6161,7 +6240,7 @@ nsHttpChannel::BeginConnect()
         // Here we call ContinueBeginConnectWithResult and not
         // ContinueBeginConnect so that in the case of an error we do not start
         // channelClassifier.
-        rv = ContinueBeginConnectWithResult();
+        nsresult rv = ContinueBeginConnectWithResult();
         if (NS_FAILED(rv)) {
             return rv;
         }
@@ -6171,6 +6250,7 @@ nsHttpChannel::BeginConnect()
     // been called, after optionally cancelling the channel once we have a
     // remote verdict. We call a concrete class instead of an nsI* that might
     // be overridden.
+    RefPtr<nsChannelClassifier> channelClassifier = new nsChannelClassifier(this);
     LOG(("nsHttpChannel::Starting nsChannelClassifier %p [this=%p]",
          channelClassifier.get(), this));
     channelClassifier->Start();

@@ -22,7 +22,7 @@ import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 
-public class MetaGlobal implements SyncStorageRequestDelegate {
+public class MetaGlobal {
   private static final String LOG_TAG = "MetaGlobal";
   protected String metaURL;
 
@@ -54,19 +54,18 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
     try {
       this.isUploading = false;
       SyncStorageRecordRequest r = new SyncStorageRecordRequest(this.metaURL);
-      r.delegate = this;
+      r.delegate = new MetaUploadDelegate(this, null);
       r.get();
     } catch (URISyntaxException e) {
       this.callback.handleError(e);
     }
   }
 
-  public void upload(MetaGlobalDelegate callback) {
+  public void upload(long lastModifiedTimestamp, MetaGlobalDelegate callback) {
     try {
       this.isUploading = true;
       SyncStorageRecordRequest r = new SyncStorageRecordRequest(this.metaURL);
-
-      r.delegate = this;
+      r.delegate = new MetaUploadDelegate(this, lastModifiedTimestamp);
       this.callback = callback;
       r.put(this.asCryptoRecord());
     } catch (Exception e) {
@@ -319,25 +318,6 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
     return null;
   }
 
-  @Override
-  public AuthHeaderProvider getAuthHeaderProvider() {
-    return authHeaderProvider;
-  }
-
-  @Override
-  public String ifUnmodifiedSince() {
-    return null;
-  }
-
-  @Override
-  public void handleRequestSuccess(SyncStorageResponse response) {
-    if (this.isUploading) {
-      this.handleUploadSuccess(response);
-    } else {
-      this.handleDownloadSuccess(response);
-    }
-  }
-
   private void handleUploadSuccess(SyncStorageResponse response) {
     this.callback.handleSuccess(this, response);
   }
@@ -356,17 +336,49 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
     this.callback.handleFailure(response);
   }
 
-  @Override
-  public void handleRequestFailure(SyncStorageResponse response) {
-    if (response.getStatusCode() == 404) {
-      this.callback.handleMissing(this, response);
-      return;
-    }
-    this.callback.handleFailure(response);
-  }
+  private static class MetaUploadDelegate implements SyncStorageRequestDelegate {
+    private final MetaGlobal metaGlobal;
+    private final Long ifUnmodifiedSinceTimestamp;
 
-  @Override
-  public void handleRequestError(Exception e) {
-    this.callback.handleError(e);
+    /* package-local */ MetaUploadDelegate(final MetaGlobal metaGlobal, final Long ifUnmodifiedSinceTimestamp) {
+      this.metaGlobal = metaGlobal;
+      this.ifUnmodifiedSinceTimestamp = ifUnmodifiedSinceTimestamp;
+    }
+
+    @Override
+    public AuthHeaderProvider getAuthHeaderProvider() {
+      return metaGlobal.authHeaderProvider;
+    }
+
+    @Override
+    public String ifUnmodifiedSince() {
+      if (ifUnmodifiedSinceTimestamp == null) {
+        return null;
+      }
+      return Utils.millisecondsToDecimalSecondsString(ifUnmodifiedSinceTimestamp);
+    }
+
+    @Override
+    public void handleRequestSuccess(SyncStorageResponse response) {
+      if (metaGlobal.isUploading) {
+        metaGlobal.handleUploadSuccess(response);
+      } else {
+        metaGlobal.handleDownloadSuccess(response);
+      }
+    }
+
+    @Override
+    public void handleRequestFailure(SyncStorageResponse response) {
+      if (response.getStatusCode() == 404) {
+        metaGlobal.callback.handleMissing(metaGlobal, response);
+        return;
+      }
+      metaGlobal.callback.handleFailure(response);
+    }
+
+    @Override
+    public void handleRequestError(Exception e) {
+      metaGlobal.callback.handleError(e);
+    }
   }
 }

@@ -5,6 +5,10 @@ module.exports = {
     "../../../toolkit/.eslintrc.js"
   ],
 
+  "plugins": [
+    "spidermonkey-js"
+  ],
+
   "rules": {
     // We should fix those at some point, but we use this to detect NaNs.
     "no-self-compare": "off",

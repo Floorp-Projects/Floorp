@@ -34,6 +34,12 @@ ESLint Plugin Mozilla
 In addition to default ESLint rules, there are several Mozilla-specific rules that are defined in
 the :doc:`Mozilla ESLint Plugin <eslint-plugin-mozilla>`.
 
+ESLint Plugin SpiderMonkey JS
+-----------------------------
+
+In addition to default ESLint rules, there is an extra processor for SpiderMonkey
+code :doc:`Mozilla ESLint SpiderMonkey JS <eslint-plugin-spidermonkey-js>`.
+
 
 .. _ESLint: http://eslint.org/
 .. _ESLint's documentation: http://eslint.org/docs/user-guide/configuring
@@ -43,3 +49,4 @@ the :doc:`Mozilla ESLint Plugin <eslint-plugin-mozilla>`.
    :hidden:
 
    eslint-plugin-mozilla
+   eslint-plugin-spidermonkey-js

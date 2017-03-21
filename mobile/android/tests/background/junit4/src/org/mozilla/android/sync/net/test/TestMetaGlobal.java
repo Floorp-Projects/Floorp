@@ -296,7 +296,7 @@ public class TestMetaGlobal {
     WaitHelper.getTestWaiter().performWait(WaitHelper.onThreadRunnable(new Runnable() {
       @Override
       public void run() {
-        global.upload(delegate);
+        global.upload(0L, delegate);
       }
     }));
 
