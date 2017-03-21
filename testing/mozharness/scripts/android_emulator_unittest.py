@@ -191,13 +191,17 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         # constructed in start_emulator.
         env['LD_LIBRARY_PATH'] = self.abs_dirs['abs_work_dir']
 
+        # Write a default ddms.cfg to avoid unwanted prompts
+        avd_home_dir = self.abs_dirs['abs_avds_dir']
+        with open(os.path.join(avd_home_dir, "ddms.cfg"), 'w') as f:
+            f.write("pingOptIn=false\npingId=0\n")
+
         # Set environment variables to help emulator find the AVD.
         # In newer versions of the emulator, ANDROID_AVD_HOME should
         # point to the 'avd' directory.
         # For older versions of the emulator, ANDROID_SDK_HOME should
         # point to the directory containing the '.android' directory
         # containing the 'avd' directory.
-        avd_home_dir = self.abs_dirs['abs_avds_dir']
         env['ANDROID_AVD_HOME'] = os.path.join(avd_home_dir, 'avd')
         env['ANDROID_SDK_HOME'] = os.path.abspath(os.path.join(avd_home_dir, '..'))
 
