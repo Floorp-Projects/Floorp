@@ -10,18 +10,20 @@ using namespace mozilla;
 
 TEST(BlankVideoDataCreator, ShouldNotOverflow)
 {
+  RefPtr<MediaRawData> mrd = new MediaRawData();
   const uint32_t width = 1;
   const uint32_t height = 1;
   BlankVideoDataCreator creater(width, height, nullptr);
-  RefPtr<MediaData> data = creater.Create(new MediaRawData());
+  RefPtr<MediaData> data = creater.Create(mrd);
   EXPECT_NE(data.get(), nullptr);
 }
 
 TEST(BlankVideoDataCreator, ShouldOverflow)
 {
+  RefPtr<MediaRawData> mrd = new MediaRawData();
   const uint32_t width = UINT_MAX;
   const uint32_t height = UINT_MAX;
   BlankVideoDataCreator creater(width, height, nullptr);
-  RefPtr<MediaData> data = creater.Create(new MediaRawData());
+  RefPtr<MediaData> data = creater.Create(mrd);
   EXPECT_EQ(data.get(), nullptr);
 }
