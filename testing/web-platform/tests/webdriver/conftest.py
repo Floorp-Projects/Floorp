@@ -36,7 +36,6 @@ def session(_session, request):
     request.addfinalizer(lambda: cleanup.switch_to_top_level_browsing_context(_session))
     request.addfinalizer(lambda: cleanup.restore_windows(_session))
     request.addfinalizer(lambda: cleanup.dismiss_user_prompts(_session))
-    request.addfinalizer(lambda: cleanup.ensure_valid_window(_session))
 
     return _session
 

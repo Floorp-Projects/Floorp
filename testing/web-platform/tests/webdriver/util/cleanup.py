@@ -1,14 +1,5 @@
 import webdriver
 
-
-def ensure_valid_window(session):
-    """If current window is not open anymore, ensure to have a valid one selected."""
-    try:
-        session.window_handle
-    except webdriver.NoSuchWindowException:
-        session.window_handle = session.handles[0]
-
-
 def dismiss_user_prompts(session):
     """Dismisses any open user prompts in windows."""
     current_window = session.window_handle
@@ -21,7 +12,6 @@ def dismiss_user_prompts(session):
             pass
 
     session.window_handle = current_window
-
 
 def restore_windows(session):
     """Closes superfluous windows opened by the test without ending
@@ -36,14 +26,12 @@ def restore_windows(session):
 
     session.window_handle = current_window
 
-
 def switch_to_top_level_browsing_context(session):
     """If the current browsing context selected by WebDriver is a
     `<frame>` or an `<iframe>`, switch it back to the top-level
     browsing context.
     """
     session.switch_frame(None)
-
 
 def _windows(session, exclude=None):
     """Set of window handles, filtered by an `exclude` list if
