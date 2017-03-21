@@ -52,6 +52,12 @@ struct MozGtkSize {
     gint resultHeight = height + aBorder.top + aBorder.bottom;
     return {resultWidth, resultHeight};
   }
+  void Rotate()
+  {
+    gint tmp = width;
+    width = height;
+    height = tmp;
+  }
 };
 
 typedef struct {
