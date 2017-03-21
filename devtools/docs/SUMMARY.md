@@ -18,6 +18,11 @@
     * [Guidelines](frontend/redux-guidelines.md)
     * [Tips](frontend/redux-tips.md)
 * [Backend](backend/backend.md)
-  * [Protocol](backend/protocol.md)
+  * [Remote Debugging Protocol](backend/protocol.md)
   * [Debugger API](backend/debugger-api.md)
   * [Backward Compatibility](backend/backward-compatibility.md)
+  * Actors
+    * [Actors Organization](backend/actor-hierarchy.md)
+    * [Handling Multi-Processes in Actors](backend/actor-e10s-handling.md)
+    * [Writing Actors With protocol.js](backend/protocol.js.md)
+    * [Registering A New Actor](backend/actor-registration.md)
