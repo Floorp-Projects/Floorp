@@ -16,6 +16,7 @@
 
 #include "mozilla/dom/FlyWebDiscoveryManager.h"
 #include "mozilla/dom/FlyWebDiscoveryManagerBinding.h"
+#include "mozilla/dom/Element.h"
 
 namespace mozilla {
 namespace dom {
