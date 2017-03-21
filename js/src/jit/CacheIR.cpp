@@ -687,6 +687,10 @@ GetPropIRGenerator::tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperan
     if (unwrapped->compartment()->zone() != cx_->compartment()->zone())
         return false;
 
+    RootedObject wrappedGlobal(cx_, &obj->global());
+    if (!cx_->compartment()->wrap(cx_, &wrappedGlobal))
+        return false;
+
     AutoCompartment ac(cx_, unwrapped);
 
     // The first CCW for iframes is almost always wrapping another WindowProxy
@@ -725,7 +729,7 @@ GetPropIRGenerator::tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperan
     ObjOperandId wrapperTargetId = writer.loadWrapperTarget(objId);
 
     // If the compartment of the wrapped object is different we should fail.
-    writer.guardCompartment(wrapperTargetId, unwrapped->compartment());
+    writer.guardCompartment(wrapperTargetId, wrappedGlobal, unwrapped->compartment());
 
     ObjOperandId unwrappedId = wrapperTargetId;
     if (isWindowProxy) {
