@@ -39,6 +39,8 @@ ViewportFrame::Init(nsIContent*       aContent,
                     nsIFrame*         aPrevInFlow)
 {
   nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  // No need to call CreateView() here - the frame ctor will call SetView()
+  // with the ViewManager's root view, so we'll assign it in SetViewInternal().
 
   nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(this);
   if (parent) {

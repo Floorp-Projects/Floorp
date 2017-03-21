@@ -595,6 +595,12 @@ protected:
   void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
 public:
+  /**
+   * Helper method to create a view for a frame.  Only used by a few sub-classes
+   * that need a view.
+   */
+  void CreateView();
+
   //given a frame five me the first/last leaf available
   //XXX Robert O'Callahan wants to move these elsewhere
   static void GetLastLeaf(nsPresContext* aPresContext, nsIFrame **aFrame);

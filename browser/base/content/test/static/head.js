@@ -125,3 +125,27 @@ function* generateEntriesFromJarFile(jarFile, extension) {
   }
   zr.close();
 }
+
+function fetchFile(uri) {
+  return new Promise((resolve, reject) => {
+    let xhr = new XMLHttpRequest();
+    xhr.responseType = "text";
+    xhr.open("GET", uri, true);
+    xhr.onreadystatechange = function() {
+      if (this.readyState != this.DONE) {
+        return;
+      }
+      try {
+        resolve(this.responseText);
+      } catch (ex) {
+        ok(false, `Script error reading ${uri}: ${ex}`);
+        resolve("");
+      }
+    };
+    xhr.onerror = error => {
+      ok(false, `XHR error reading ${uri}: ${error}`);
+      resolve("");
+    };
+    xhr.send(null);
+  });
+}
