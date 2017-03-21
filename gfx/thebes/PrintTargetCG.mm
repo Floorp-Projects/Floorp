@@ -94,16 +94,30 @@ PrintTargetCG::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
     if (!dt || !dt->IsValid()) {
       return nullptr;
     }
+    mRefDT = dt.forget();
+  }
 
-    if (aRecorder) {
-      dt = CreateRecordingDrawTarget(aRecorder, dt);
+  if (aRecorder) {
+    if (!mRecordingRefDT) {
+      RefPtr<DrawTarget> dt = CreateRecordingDrawTarget(aRecorder, mRefDT);
       if (!dt || !dt->IsValid()) {
         return nullptr;
       }
+      mRecordingRefDT = dt.forget();
+#ifdef DEBUG
+      mRecorder = aRecorder;
+#endif
     }
+#ifdef DEBUG
+    else {
+      MOZ_ASSERT(aRecorder == mRecorder,
+                 "Caching mRecordingRefDT assumes the aRecorder is an invariant");
+    }
+#endif
 
-    mRefDT = dt.forget();
+    return do_AddRef(mRecordingRefDT);
   }
+
   return do_AddRef(mRefDT);
 }
 
