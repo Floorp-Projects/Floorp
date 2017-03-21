@@ -8,8 +8,6 @@
 
 const { classes: Cc, interfaces: Ci } = Components;
 
-const REL_PATH_DATA = "chrome/toolkit/mozapps/update/tests/data/";
-
 function getTestDataFile(aFilename) {
   let file = Cc["@mozilla.org/file/directory_service;1"].
             getService(Ci.nsIProperties).get("CurWorkD", Ci.nsILocalFile);
@@ -23,20 +21,25 @@ function getTestDataFile(aFilename) {
   return file;
 }
 
-function loadHelperScript() {
-  let scriptFile = getTestDataFile("sharedUpdateXML.js");
+function loadHelperScript(aScriptFile) {
   let io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService2);
-  let scriptSpec = io.newFileURI(scriptFile).spec;
+  let scriptSpec = io.newFileURI(aScriptFile).spec;
   let scriptloader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                      getService(Ci.mozIJSSubScriptLoader);
   scriptloader.loadSubScript(scriptSpec, this);
 }
-loadHelperScript();
 
-const URL_HOST = "http://example.com";
-const URL_PATH_UPDATE_XML = "/chrome/toolkit/mozapps/update/tests/chrome/update.sjs";
-const URL_HTTP_UPDATE_SJS = URL_HOST + URL_PATH_UPDATE_XML;
+var scriptFile = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsILocalFile);
+scriptFile.initWithPath(getState("__LOCATION__"));
+scriptFile = scriptFile.parent;
+scriptFile.append("testConstants.js");
+loadHelperScript(scriptFile);
+
+scriptFile = getTestDataFile("sharedUpdateXML.js");
+loadHelperScript(scriptFile);
+
 const SERVICE_URL = URL_HOST + "/" + REL_PATH_DATA + FILE_SIMPLE_MAR;
+const BAD_SERVICE_URL = URL_HOST + "/" + REL_PATH_DATA + "not_here.mar";
 
 const SLOW_MAR_DOWNLOAD_INTERVAL = 100;
 var gTimer;
@@ -108,15 +111,17 @@ function handleRequest(aRequest, aResponse) {
 
   let size;
   let patches = "";
+  let url = params.badURL ? BAD_SERVICE_URL : SERVICE_URL;
+
   if (!params.partialPatchOnly) {
     size = SIZE_SIMPLE_MAR + (params.invalidCompleteSize ? "1" : "");
-    patches += getRemotePatchString("complete", SERVICE_URL, "SHA512",
+    patches += getRemotePatchString("complete", url, "SHA512",
                                     SHA512_HASH_SIMPLE_MAR, size);
   }
 
   if (!params.completePatchOnly) {
     size = SIZE_SIMPLE_MAR + (params.invalidPartialSize ? "1" : "");
-    patches += getRemotePatchString("partial", SERVICE_URL, "SHA512",
+    patches += getRemotePatchString("partial", url, "SHA512",
                                     SHA512_HASH_SIMPLE_MAR, size);
   }
 

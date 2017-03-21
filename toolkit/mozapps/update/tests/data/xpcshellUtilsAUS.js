@@ -34,6 +34,8 @@
 const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr,
         utils: Cu } = Components;
 
+const URL_HTTP_UPDATE_SJS = "http://test_details/";
+
 /* global INSTALL_LOCALE, MOZ_APP_NAME, BIN_SUFFIX, MOZ_APP_VENDOR */
 /* global MOZ_APP_BASENAME, APP_BIN_SUFFIX, APP_INFO_NAME, APP_INFO_VENDOR */
 /* global IS_WIN, IS_MACOSX, IS_UNIX, IS_ANDROID, IS_TOOLKIT_GONK */
