@@ -18,8 +18,8 @@ function Prompter() {
 }
 
 Prompter.prototype = {
-    classID          : Components.ID("{1c978d25-b37f-43a8-a2d6-0c7a239ead87}"),
-    QueryInterface   : XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIPromptService, Ci.nsIPromptService2]),
+    classID: Components.ID("{1c978d25-b37f-43a8-a2d6-0c7a239ead87}"),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIPromptService, Ci.nsIPromptService2]),
 
 
     /* ----------  private members  ---------- */
@@ -118,7 +118,7 @@ Prompter.prototype = {
 
 // Common utils not specific to a particular prompter style.
 var PromptUtilsTemp = {
-    __proto__ : PromptUtils,
+    __proto__: PromptUtils,
 
     getLocalizedString(key, formatArgs) {
         if (formatArgs)
@@ -499,15 +499,15 @@ function ModalPrompter(domWin) {
     this.domWin = domWin;
 }
 ModalPrompter.prototype = {
-    domWin : null,
+    domWin: null,
     /*
      * Default to not using a tab-modal prompt, unless the caller opts in by
      * QIing to nsIWritablePropertyBag and setting the value of this property
      * to true.
      */
-    allowTabModal : false,
+    allowTabModal: false,
 
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIPrompt, Ci.nsIAuthPrompt,
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt, Ci.nsIAuthPrompt,
                                             Ci.nsIAuthPrompt2,
                                             Ci.nsIWritablePropertyBag2]),
 
@@ -873,8 +873,8 @@ ModalPrompter.prototype = {
 function AuthPromptAdapterFactory() {
 }
 AuthPromptAdapterFactory.prototype = {
-    classID          : Components.ID("{6e134924-6c3a-4d86-81ac-69432dd971dc}"),
-    QueryInterface   : XPCOMUtils.generateQI([Ci.nsIAuthPromptAdapterFactory]),
+    classID: Components.ID("{6e134924-6c3a-4d86-81ac-69432dd971dc}"),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAuthPromptAdapterFactory]),
 
     /* ----------  nsIAuthPromptAdapterFactory ---------- */
 
@@ -889,8 +889,8 @@ function AuthPromptAdapter(oldPrompter) {
     this.oldPrompter = oldPrompter;
 }
 AuthPromptAdapter.prototype = {
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIAuthPrompt2]),
-    oldPrompter    : null,
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAuthPrompt2]),
+    oldPrompter: null,
 
     /* ----------  nsIAuthPrompt2 ---------- */
 

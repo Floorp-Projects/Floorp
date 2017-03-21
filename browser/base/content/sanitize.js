@@ -189,8 +189,8 @@ Sanitizer.prototype = {
   // and can optionally specify a specific range.  If timespan is not ignored,
   // and range is not set, sanitize() will use the value of the timespan
   // pref to determine a range
-  ignoreTimespan : true,
-  range : null,
+  ignoreTimespan: true,
+  range: null,
 
   items: {
     cache: {

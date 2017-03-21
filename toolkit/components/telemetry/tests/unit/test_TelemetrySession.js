@@ -382,7 +382,7 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
     range: [1, 2],
     bucket_count: 3,
     histogram_type: 3,
-    values: {0:1, 1:0},
+    values: {0: 1, 1: 0},
     sum: 0
   };
   let flag = payload.histograms[TELEMETRY_TEST_FLAG];
@@ -393,7 +393,7 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
     range: [1, 2],
     bucket_count: 3,
     histogram_type: 4,
-    values: {0:1, 1:0},
+    values: {0: 1, 1: 0},
     sum: 1,
   };
   let count = payload.histograms[TELEMETRY_TEST_COUNT];
@@ -405,7 +405,7 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
       range: [1, 2],
       bucket_count: 3,
       histogram_type: 2,
-      values: {0:2, 1:successfulPings, 2:0},
+      values: {0: 2, 1: successfulPings, 2: 0},
       sum: successfulPings
     };
     let tc = payload.histograms[TELEMETRY_SUCCESS];
@@ -448,14 +448,14 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
       range: [1, 2],
       bucket_count: 3,
       histogram_type: 4,
-      values: {0:2, 1:0},
+      values: {0: 2, 1: 0},
       sum: 2,
     },
     "b": {
       range: [1, 2],
       bucket_count: 3,
       histogram_type: 4,
-      values: {0:1, 1:0},
+      values: {0: 1, 1: 0},
       sum: 1,
     },
   };

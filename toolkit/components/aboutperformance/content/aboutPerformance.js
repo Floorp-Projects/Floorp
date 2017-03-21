@@ -103,7 +103,7 @@ let tabFinder = {
       return null;
     }
     let tabbrowser = browser.getTabBrowser();
-    return {tabbrowser, tab:tabbrowser.getTabForBrowser(browser)};
+    return {tabbrowser, tab: tabbrowser.getTabForBrowser(browser)};
   },
 
   getAny(ids) {

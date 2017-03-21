@@ -234,7 +234,7 @@ function fakeMonotonicNow(ms) {
 // Fake the timeout functions for TelemetryController sending.
 function fakePingSendTimer(set, clear) {
   let module = Cu.import("resource://gre/modules/TelemetrySend.jsm", {});
-  let obj = Cu.cloneInto({set, clear}, module, {cloneFunctions:true});
+  let obj = Cu.cloneInto({set, clear}, module, {cloneFunctions: true});
   module.Policy.setSchedulerTickTimeout = obj.set;
   module.Policy.clearSchedulerTickTimeout = obj.clear;
 }

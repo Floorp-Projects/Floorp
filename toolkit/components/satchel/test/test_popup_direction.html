@@ -35,9 +35,9 @@ add_task(function* test_popup_direction() {
   var input = $_(1, "field1");
 
   yield new Promise(resolve => updateFormHistory([
-    { op : "remove" },
-    { op : "add", fieldname : "field1", value : "value1" },
-    { op : "add", fieldname : "field1", value : "value2" },
+    { op: "remove" },
+    { op: "add", fieldname: "field1", value: "value1" },
+    { op: "add", fieldname: "field1", value: "value2" },
   ], resolve));
 
   for (let direction of ["ltr", "rtl"]) {

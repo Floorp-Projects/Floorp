@@ -159,7 +159,7 @@ var PKT_SAVED_OVERLAY = function(options) {
                     var r = new RegExp("^" + term);
                     for (var i = 0; i < myself.userTags.length; i++) {
                         if (r.test(myself.userTags[i]) && limit > 0) {
-                            returnlist.push({name:myself.userTags[i]});
+                            returnlist.push({name: myself.userTags[i]});
                             limit--;
                         }
                     }
@@ -182,7 +182,7 @@ var PKT_SAVED_OVERLAY = function(options) {
                     return null;
                 }
                 myself.hideTagsError();
-                return {name:myself.sanitizeText(text.toLowerCase())};
+                return {name: myself.sanitizeText(text.toLowerCase())};
             },
             onReady() {
                 $(".token-input-dropdown").addClass("token-input-dropdown-tag");
@@ -195,7 +195,7 @@ var PKT_SAVED_OVERLAY = function(options) {
                             return;
                         }
                         myself.justaddedsuggested = true;
-                        inputwrapper.find(".pkt_ext_tag_input").tokenInput("add", {id:inputwrapper.find(".token-input-token").length, name:tag.text()});
+                        inputwrapper.find(".pkt_ext_tag_input").tokenInput("add", {id: inputwrapper.find(".token-input-token").length, name: tag.text()});
                         tag.addClass("token-suggestedtag-inactive");
                         $(".token-input-input-token input").focus();
                     });
@@ -242,7 +242,7 @@ var PKT_SAVED_OVERLAY = function(options) {
                 if (selected.length) {
                     e.preventDefault();
                     e.stopImmediatePropagation();
-                    inputwrapper.find(".pkt_ext_tag_input").tokenInput("remove", {name:selected.find("p").text()});
+                    inputwrapper.find(".pkt_ext_tag_input").tokenInput("remove", {name: selected.find("p").text()});
                 }
             } else if ($(e.target).parent().hasClass("token-input-input-token")) {
                 e.stopImmediatePropagation();

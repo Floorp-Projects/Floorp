@@ -1170,7 +1170,7 @@ add_task(function* test_update_livemark() {
         kind: "livemark",
         parentSyncId: "menu",
         syncId: livemark.guid,
-        feed:feedURI,
+        feed: feedURI,
         site: site + "/new",
       });
       notEqual(newLivemark, livemark,

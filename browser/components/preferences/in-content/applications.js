@@ -847,25 +847,25 @@ var gApplicationsPane = {
   // Convenience & Performance Shortcuts
 
   // These get defined by init().
-  _brandShortName : null,
-  _prefsBundle    : null,
-  _list           : null,
-  _filter         : null,
+  _brandShortName: null,
+  _prefsBundle: null,
+  _list: null,
+  _filter: null,
 
-  _prefSvc      : Cc["@mozilla.org/preferences-service;1"].
-                  getService(Ci.nsIPrefBranch),
+  _prefSvc: Cc["@mozilla.org/preferences-service;1"].
+            getService(Ci.nsIPrefBranch),
 
-  _mimeSvc      : Cc["@mozilla.org/mime;1"].
-                  getService(Ci.nsIMIMEService),
+  _mimeSvc: Cc["@mozilla.org/mime;1"].
+            getService(Ci.nsIMIMEService),
 
-  _helperAppSvc : Cc["@mozilla.org/uriloader/external-helper-app-service;1"].
-                  getService(Ci.nsIExternalHelperAppService),
+  _helperAppSvc: Cc["@mozilla.org/uriloader/external-helper-app-service;1"].
+                 getService(Ci.nsIExternalHelperAppService),
 
-  _handlerSvc   : Cc["@mozilla.org/uriloader/handler-service;1"].
-                  getService(Ci.nsIHandlerService),
+  _handlerSvc: Cc["@mozilla.org/uriloader/handler-service;1"].
+               getService(Ci.nsIHandlerService),
 
-  _ioSvc        : Cc["@mozilla.org/network/io-service;1"].
-                  getService(Ci.nsIIOService),
+  _ioSvc: Cc["@mozilla.org/network/io-service;1"].
+          getService(Ci.nsIIOService),
 
 
   // Initialization & Destruction

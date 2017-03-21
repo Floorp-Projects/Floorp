@@ -49,18 +49,18 @@ add_task(function* runTest() {
   let state, action;
 
   state = {
-    msg         : "hello world",
-    iconClass   : "alert-icon",
-    titleHidden : true,
-    textHidden  : true,
-    passHidden  : true,
-    checkHidden : true,
-    textValue   : "",
-    passValue   : "",
-    checkMsg    : "",
-    checked     : false,
-    focused     : "button0",
-    defButton   : "button0",
+    msg: "hello world",
+    iconClass: "alert-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: true,
+    checkHidden: true,
+    textValue: "",
+    passValue: "",
+    checkMsg: "",
+    checked: false,
+    focused: "button0",
+    defButton: "button0",
   };
   action = {
     buttonClick: "ok",
@@ -118,27 +118,27 @@ add_task(function* runTestAuth() {
   let state, action;
 
   state = {
-    msg         : "http://mochi.test:8888 is requesting your username " +
-                  "and password. The site says: “mochitest”",
-    title       : "Authentication Required",
-    textValue   : "",
-    passValue   : "",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "http://mochi.test:8888 is requesting your username " +
+         "and password. The site says: “mochitest”",
+    title: "Authentication Required",
+    textValue: "",
+    passValue: "",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
 
   action = {
-    buttonClick : "ok",
-    setCheckbox : false,
-    textField   : "mochiuser1",
-    passField   : "mochipass1",
+    buttonClick: "ok",
+    setCheckbox: false,
+    textField: "mochiuser1",
+    passField: "mochipass1",
   };
 
   let promptDone = handlePrompt(state, action);
@@ -155,27 +155,27 @@ add_task(function* runTestAuth() {
   // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
   isTabModal = false;
   state = {
-    msg         : "http://example.com is requesting your username and password. " +
-                  "WARNING: Your password will not be sent to the website you are currently visiting!",
-    title       : "Authentication Required",
-    textValue   : "",
-    passValue   : "",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "http://example.com is requesting your username and password. " +
+         "WARNING: Your password will not be sent to the website you are currently visiting!",
+    title: "Authentication Required",
+    textValue: "",
+    passValue: "",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
 
   action = {
-    buttonClick : "ok",
-    setCheckbox : false,
-    textField   : "mochiuser2",
-    passField   : "mochipass2",
+    buttonClick: "ok",
+    setCheckbox: false,
+    textField: "mochiuser2",
+    passField: "mochipass2",
   };
 
   promptDone = handlePrompt(state, action);

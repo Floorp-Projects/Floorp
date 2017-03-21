@@ -37,19 +37,19 @@
     uri: "https://foo.com/", lastVisit: today},
 
    // Begin the invalid queries: wrong search term
-   {isInQuery: false, isVisit:true, isDetails: true, title: "m o z",
+   {isInQuery: false, isVisit: true, isDetails: true, title: "m o z",
     uri: "http://foo.com/tooearly.php", lastVisit: today},
 
    // Test bad URI
-   {isInQuery: false, isVisit:true, isDetails: true, title: "moz",
+   {isInQuery: false, isVisit: true, isDetails: true, title: "moz",
     uri: "http://sffoo.com/justwrong.htm", lastVisit: yesterday},
 
    // Test what we do with escaping in titles
-   {isInQuery: false, isVisit:true, isDetails: true, title: "m%0o%0z",
+   {isInQuery: false, isVisit: true, isDetails: true, title: "m%0o%0z",
     uri: "http://foo.com/changeme1.htm", lastVisit: yesterday},
 
    // Test another invalid title - for updating later
-   {isInQuery: false, isVisit:true, isDetails: true, title: "m,oz",
+   {isInQuery: false, isVisit: true, isDetails: true, title: "m,oz",
     uri: "http://foo.com/changeme2.htm", lastVisit: yesterday}];
 
 /**
@@ -102,7 +102,7 @@ add_task(function* test_searchterms_domain() {
   // Add one and take one out of query set, and simply change one so that it
   // still applies to the query.
   do_print("Updating More Items");
-  var change3 = [{isDetails: true, uri:"http://foo.com/changeme2.htm",
+  var change3 = [{isDetails: true, uri: "http://foo.com/changeme2.htm",
                   title: "moz"},
                  {isDetails: true, uri: "http://mail.foo.com/yiihah",
                   title: "moz now updated"},

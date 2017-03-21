@@ -25,7 +25,7 @@ function RemoteWebProgressRequest(spec, originalSpec, requestCPOW) {
 }
 
 RemoteWebProgressRequest.prototype = {
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIChannel]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIChannel]),
 
   get URI() { return this._uri.clone(); },
   get originalURI() { return this._originalURI.clone(); }

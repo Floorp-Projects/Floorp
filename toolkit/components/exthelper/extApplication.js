@@ -413,7 +413,7 @@ SessionStorage.prototype = {
     return this.has(aName) ? this._storage[aName] : aDefaultValue;
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.extISessionStorage])
+  QueryInterface: XPCOMUtils.generateQI([Ci.extISessionStorage])
 };
 
 // =================================================

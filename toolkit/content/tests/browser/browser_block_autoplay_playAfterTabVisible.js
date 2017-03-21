@@ -1,10 +1,10 @@
 const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_nonAutoplayAudio.html";
 
 var SuspendedType = {
-  NONE_SUSPENDED             : 0,
-  SUSPENDED_PAUSE            : 1,
-  SUSPENDED_BLOCK            : 2,
-  SUSPENDED_PAUSE_DISPOSABLE : 3
+  NONE_SUSPENDED: 0,
+  SUSPENDED_PAUSE: 1,
+  SUSPENDED_BLOCK: 2,
+  SUSPENDED_PAUSE_DISPOSABLE: 3
 };
 
 function check_audio_suspended(suspendedType) {

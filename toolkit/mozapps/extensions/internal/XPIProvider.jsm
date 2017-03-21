@@ -214,14 +214,14 @@ const STATIC_BLOCKLIST_PATTERNS = [
 
 
 const BOOTSTRAP_REASONS = {
-  APP_STARTUP     : 1,
-  APP_SHUTDOWN    : 2,
-  ADDON_ENABLE    : 3,
-  ADDON_DISABLE   : 4,
-  ADDON_INSTALL   : 5,
-  ADDON_UNINSTALL : 6,
-  ADDON_UPGRADE   : 7,
-  ADDON_DOWNGRADE : 8
+  APP_STARTUP: 1,
+  APP_SHUTDOWN: 2,
+  ADDON_ENABLE: 3,
+  ADDON_DISABLE: 4,
+  ADDON_INSTALL: 5,
+  ADDON_UNINSTALL: 6,
+  ADDON_UPGRADE: 7,
+  ADDON_DOWNGRADE: 8
 };
 
 // Map new string type identifiers to old style nsIUpdateItem types
@@ -7973,9 +7973,9 @@ function DirectoryInstallLocation(aName, aDirectory, aScope) {
 }
 
 DirectoryInstallLocation.prototype = {
-  _name       : "",
-  _directory   : null,
-  _IDToFileMap : null,  // mapping from add-on ID to nsIFile
+  _name: "",
+  _directory: null,
+  _IDToFileMap: null,  // mapping from add-on ID to nsIFile
 
   /**
    * Reads a directory linked to in a file.
@@ -8986,10 +8986,10 @@ function WinRegInstallLocation(aName, aRootKey, aScope) {
 }
 
 WinRegInstallLocation.prototype = {
-  _name       : "",
-  _rootKey    : null,
-  _scope      : null,
-  _IDToFileMap : null,  // mapping from ID to nsIFile
+  _name: "",
+  _rootKey: null,
+  _scope: null,
+  _IDToFileMap: null,  // mapping from ID to nsIFile
 
   /**
    * Retrieves the path of this Application's data key in the registry.

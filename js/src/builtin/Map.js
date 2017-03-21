@@ -60,7 +60,7 @@ function MapEntries() {
 }
 _SetCanonicalName(MapEntries, "entries");
 
-var iteratorTemp = { mapIterationResultPair : null };
+var iteratorTemp = { mapIterationResultPair: null };
 
 function MapIteratorNext() {
     // Step 1.

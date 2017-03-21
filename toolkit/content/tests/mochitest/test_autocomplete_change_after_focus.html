@@ -23,8 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=998893
       let chromeScript = SpecialPowers.loadChromeScript(function() {
         const {FormHistory} = Components.utils.import("resource://gre/modules/FormHistory.jsm", null);
         FormHistory.update([
-          { op : "bump", fieldname: "field1", value: "Default text option" },
-          { op : "bump", fieldname: "field1", value: "New value option" },
+          { op: "bump", fieldname: "field1", value: "Default text option" },
+          { op: "bump", fieldname: "field1", value: "New value option" },
         ], {
           handleCompletion() {
             sendAsyncMessage("Test:Resume");

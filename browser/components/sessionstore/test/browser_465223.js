@@ -18,7 +18,7 @@ function test() {
   promiseWindowLoaded(newWin).then(() => {
     ss.setWindowValue(newWin, uniqueKey1, uniqueValue1);
 
-    let newState = { windows: [{ tabs:[{ entries: [] }], extData: {} }] };
+    let newState = { windows: [{ tabs: [{ entries: [] }], extData: {} }] };
     newState.windows[0].extData[uniqueKey2] = uniqueValue2;
     ss.setWindowState(newWin, JSON.stringify(newState), false);
 

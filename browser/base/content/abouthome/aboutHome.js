@@ -53,7 +53,7 @@ window.addEventListener("pageshow", function() {
   window.addEventListener("resize", fitToWidth);
 
   // Ask chrome to update snippets.
-  var event = new CustomEvent("AboutHomeLoad", {bubbles:true});
+  var event = new CustomEvent("AboutHomeLoad", {bubbles: true});
   document.dispatchEvent(event);
 });
 
@@ -241,7 +241,7 @@ function setupSearch() {
  * Inform the test harness that we're done loading the page.
  */
 function loadCompleted() {
-  var event = new CustomEvent("AboutHomeLoadSnippetsCompleted", {bubbles:true});
+  var event = new CustomEvent("AboutHomeLoadSnippetsCompleted", {bubbles: true});
   document.dispatchEvent(event);
 }
 
@@ -254,7 +254,7 @@ function loadSnippets() {
     throw new Error("Snippets map has not properly been initialized");
 
   // Allow tests to modify the snippets map before using it.
-  var event = new CustomEvent("AboutHomeLoadSnippets", {bubbles:true});
+  var event = new CustomEvent("AboutHomeLoadSnippets", {bubbles: true});
   document.dispatchEvent(event);
 
   // Check cached snippets version.

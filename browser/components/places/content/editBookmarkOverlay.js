@@ -671,7 +671,7 @@ var gEditItemOverlay = {
     if (!this.initialized || !this._paneInfo.isBookmark)
       return;
 
-    let annotation = { name : PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO };
+    let annotation = { name: PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO };
     if (this._loadInSidebarCheckbox.checked)
       annotation.value = true;
 

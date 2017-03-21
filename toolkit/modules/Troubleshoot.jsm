@@ -593,7 +593,7 @@ if (AppConstants.MOZ_CRASHREPORTER) {
     let reportsNew = reports.filter(report => (now - report.date < Troubleshoot.kMaxCrashAge));
     let reportsSubmitted = reportsNew.filter(report => (!report.pending));
     let reportsPendingCount = reportsNew.length - reportsSubmitted.length;
-    let data = {submitted : reportsSubmitted, pending : reportsPendingCount};
+    let data = {submitted: reportsSubmitted, pending: reportsPendingCount};
     done(data);
   }
 }

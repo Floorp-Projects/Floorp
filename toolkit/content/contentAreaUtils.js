@@ -459,13 +459,13 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
 
     var persistArgs = {
       sourceURI,
-      sourceReferrer    : aReferrer,
-      sourceDocument    : useSaveDocument ? aDocument : null,
-      targetContentType : (saveAsType == kSaveAsType_Text) ? "text/plain" : null,
-      targetFile        : file,
-      sourceCacheKey    : aCacheKey,
-      sourcePostData    : nonCPOWDocument ? getPostData(aDocument) : null,
-      bypassCache       : aShouldBypassCache,
+      sourceReferrer: aReferrer,
+      sourceDocument: useSaveDocument ? aDocument : null,
+      targetContentType: (saveAsType == kSaveAsType_Text) ? "text/plain" : null,
+      targetFile: file,
+      sourceCacheKey: aCacheKey,
+      sourcePostData: nonCPOWDocument ? getPostData(aDocument) : null,
+      bypassCache: aShouldBypassCache,
       isPrivate,
     };
 
