@@ -4,37 +4,23 @@
 
 from marionette_driver.by import By
 
-from marionette_harness import MarionetteTestCase, skip, WindowManagerMixin
+from marionette_harness import MarionetteTestCase, skip
 
 
-class TestElementState(WindowManagerMixin, MarionetteTestCase):
-
+class TestIsElementEnabledChrome(MarionetteTestCase):
     def setUp(self):
-        super(TestElementState, self).setUp()
-
+        MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
-
-        def open_window_with_js():
-            self.marionette.execute_script("""
-              window.open('chrome://marionette/content/test.xul',
-                          'foo', 'chrome,centerscreen');
-            """)
-
-        self.win = self.open_window(open_window_with_js)
-        self.marionette.switch_to_window(self.win)
+        self.win = self.marionette.current_window_handle
+        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', 'foo', 'chrome,centerscreen');")
+        self.marionette.switch_to_window('foo')
+        self.assertNotEqual(self.win, self.marionette.current_window_handle)
 
     def tearDown(self):
-        self.close_all_windows()
-
-        super(TestElementState, self).tearDown()
-
-    @skip("Switched off in bug 896043, and to be turned on in bug 896046")
-    def test_is_displayed(self):
-        l = self.marionette.find_element(By.ID, "textInput")
-        self.assertTrue(l.is_displayed())
-        self.marionette.execute_script("arguments[0].hidden = true;", [l])
-        self.assertFalse(l.is_displayed())
-        self.marionette.execute_script("arguments[0].hidden = false;", [l])
+        self.assertNotEqual(self.win, self.marionette.current_window_handle)
+        self.marionette.execute_script("window.close();")
+        self.marionette.switch_to_window(self.win)
+        MarionetteTestCase.tearDown(self)
 
     def test_enabled(self):
         l = self.marionette.find_element(By.ID, "textInput")
@@ -49,10 +35,51 @@ class TestElementState(WindowManagerMixin, MarionetteTestCase):
         self.assertTrue(rect['x'] > 0)
         self.assertTrue(rect['y'] > 0)
 
-    def test_get_attribute(self):
+
+@skip("Switched off in bug 896043, and to be turned on in bug 896046")
+class TestIsElementDisplayed(MarionetteTestCase):
+    def test_isDisplayed(self):
+        l = self.marionette.find_element(By.ID, "textInput")
+        self.assertTrue(l.is_displayed())
+        self.marionette.execute_script("arguments[0].hidden = true;", [l])
+        self.assertFalse(l.is_displayed())
+        self.marionette.execute_script("arguments[0].hidden = false;", [l])
+
+
+class TestGetElementAttributeChrome(MarionetteTestCase):
+    def setUp(self):
+        MarionetteTestCase.setUp(self)
+        self.marionette.set_context("chrome")
+        self.win = self.marionette.current_window_handle
+        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', 'foo', 'chrome,centerscreen');")
+        self.marionette.switch_to_window('foo')
+        self.assertNotEqual(self.win, self.marionette.current_window_handle)
+
+    def tearDown(self):
+        self.assertNotEqual(self.win, self.marionette.current_window_handle)
+        self.marionette.execute_script("window.close();")
+        self.marionette.switch_to_window(self.win)
+        MarionetteTestCase.tearDown(self)
+
+    def test_get(self):
         el = self.marionette.execute_script("return window.document.getElementById('textInput');")
         self.assertEqual(el.get_attribute("id"), "textInput")
 
-    def test_get_property(self):
+class TestGetElementProperty(MarionetteTestCase):
+    def setUp(self):
+        MarionetteTestCase.setUp(self)
+        self.marionette.set_context("chrome")
+        self.win = self.marionette.current_window_handle
+        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', 'foo', 'chrome,centerscreen');")
+        self.marionette.switch_to_window('foo')
+        self.assertNotEqual(self.win, self.marionette.current_window_handle)
+
+    def tearDown(self):
+        self.assertNotEqual(self.win, self.marionette.current_window_handle)
+        self.marionette.execute_script("window.close();")
+        self.marionette.switch_to_window(self.win)
+        MarionetteTestCase.tearDown(self)
+
+    def test_get(self):
         el = self.marionette.execute_script("return window.document.getElementById('textInput');")
         self.assertEqual(el.get_property("id"), "textInput")

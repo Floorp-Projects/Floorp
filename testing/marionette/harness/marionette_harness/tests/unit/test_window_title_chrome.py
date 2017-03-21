@@ -2,32 +2,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette_harness import MarionetteTestCase, WindowManagerMixin
+from marionette_harness import MarionetteTestCase
 
 
-class TestTitleChrome(WindowManagerMixin, MarionetteTestCase):
-
+class TestTitleChrome(MarionetteTestCase):
     def setUp(self):
-        super(TestTitleChrome, self).setUp()
-
+        MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
+        self.win = self.marionette.current_window_handle
+        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', 'foo', 'chrome,centerscreen');")
+        self.marionette.switch_to_window('foo')
+        self.assertNotEqual(self.win, self.marionette.current_window_handle)
 
     def tearDown(self):
-        self.close_all_windows()
-
-        super(TestTitleChrome, self).tearDown()
+        self.assertNotEqual(self.win, self.marionette.current_window_handle)
+        self.marionette.execute_script("window.close();")
+        self.marionette.switch_to_window(self.win)
+        MarionetteTestCase.tearDown(self)
 
     def test_get_chrome_title(self):
-
-        def open_window_with_js():
-            self.marionette.execute_script("""
-              window.open('chrome://marionette/content/test.xul',
-                          'foo', 'chrome,centerscreen');
-            """)
-
-        win = self.open_window(open_window_with_js)
-        self.marionette.switch_to_window(win)
-
-        title = self.marionette.execute_script(
-            "return window.document.documentElement.getAttribute('title');")
+        title = self.marionette.execute_script("return window.document.documentElement.getAttribute('title');")
         self.assertEqual(title, self.marionette.title)
+        self.assertEqual('Title Test', self.marionette.title)
