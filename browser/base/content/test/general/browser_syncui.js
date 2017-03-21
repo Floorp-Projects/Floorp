@@ -6,7 +6,7 @@ var {Weave} = Cu.import("resource://services-sync/main.js", {});
 
 var stringBundle = Cc["@mozilla.org/intl/stringbundle;1"]
                    .getService(Ci.nsIStringBundleService)
-                   .createBundle("chrome://weave/locale/services/sync.properties");
+                   .createBundle("chrome://weave/locale/sync.properties");
 
 // ensure test output sees log messages.
 Log.repository.getLogger("browserwindow.syncui").addAppender(new Log.DumpAppender());

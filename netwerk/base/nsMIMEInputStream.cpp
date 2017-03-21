@@ -269,7 +269,8 @@ nsMIMEInputStream::Serialize(InputStreamParams& aParams,
 
     if (mStream) {
         InputStreamParams wrappedParams;
-        SerializeInputStream(mStream, wrappedParams, aFileDescriptors);
+        InputStreamHelper::SerializeInputStream(mStream, wrappedParams,
+                                                aFileDescriptors);
 
         NS_ASSERTION(wrappedParams.type() != InputStreamParams::T__None,
                      "Wrapped stream failed to serialize!");
@@ -304,8 +305,9 @@ nsMIMEInputStream::Deserialize(const InputStreamParams& aParams,
 
     if (wrappedParams.type() == OptionalInputStreamParams::TInputStreamParams) {
         nsCOMPtr<nsIInputStream> stream;
-        stream = DeserializeInputStream(wrappedParams.get_InputStreamParams(),
-                                        aFileDescriptors);
+        stream =
+            InputStreamHelper::DeserializeInputStream(wrappedParams.get_InputStreamParams(),
+                                                      aFileDescriptors);
         if (!stream) {
             NS_WARNING("Failed to deserialize wrapped stream!");
             return false;

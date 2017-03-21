@@ -29,10 +29,6 @@ LOCAL_INCLUDES += [
     '/xpcom/build',
 ]
 
-USE_LIBS += [
-    'mozglue',
-]
-
 if CONFIG['LIBFUZZER']:
     USE_LIBS += [ 'fuzzer' ]
     LOCAL_INCLUDES += [
