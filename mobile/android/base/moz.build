@@ -998,6 +998,8 @@ gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough', '-J-Xmx512m', '-J-
 # gecko-thirdparty is a good place to put small independent libraries
 gtjar = add_java_jar('gecko-thirdparty')
 gtjar.sources += [ thirdparty_source_dir + f for f in [
+    'com/booking/rtlviewpager/PagerAdapterWrapper.java',
+    'com/booking/rtlviewpager/RtlViewPager.java',
     'com/jakewharton/disklrucache/DiskLruCache.java',
     'com/jakewharton/disklrucache/StrictLineReader.java',
     'com/jakewharton/disklrucache/Util.java',
