@@ -33,12 +33,13 @@ enum nsChangeHint {
   nsChangeHint_ClearAncestorIntrinsics = 1 << 2,
 
   // Invalidate intrinsic widths on the frame's descendants.  Must not be set
-  // without also setting nsChangeHint_ClearAncestorIntrinsics.
+  // without also setting nsChangeHint_ClearAncestorIntrinsics,
+  // nsChangeHint_NeedDirtyReflow and nsChangeHint_NeedReflow.
   nsChangeHint_ClearDescendantIntrinsics = 1 << 3,
 
   // Force unconditional reflow of all descendants.  Must not be set without
-  // setting nsChangeHint_NeedReflow, but is independent of both the
-  // Clear*Intrinsics flags.
+  // setting nsChangeHint_NeedReflow, but can be set regardless of whether the
+  // Clear*Intrinsics flags are set.
   nsChangeHint_NeedDirtyReflow = 1 << 4,
 
   // change requires view to be updated, if there is one (e.g., clip:).
@@ -185,12 +186,14 @@ enum nsChangeHint {
   /**
    * Indicates that the reflow changes the size or position of the
    * element, and thus the reflow must start from at least the frame's
-   * parent.
+   * parent.  Must be not be set without also setting nsChangeHint_NeedReflow
+   * and nsChangeHint_ClearAncestorIntrinsics.
    */
   nsChangeHint_ReflowChangesSizeOrPosition = 1 << 23,
 
   /**
    * Indicates that the style changes the computed BSize --- e.g. 'height'.
+   * Must not be set without also setting nsChangeHint_NeedReflow.
    */
   nsChangeHint_UpdateComputedBSize = 1 << 24,
 
