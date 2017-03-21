@@ -21,6 +21,7 @@
   const host_track = "http://trackertest.org/";
   const path_ping = "tests/toolkit/components/url-classifier/tests/mochitest/ping.sjs";
   const TP_ENABLE_PREF = "privacy.trackingprotection.enabled";
+  const RETRY_TIMEOUT_MS = 200;
 
   var testData = [
     { url: "trackertest.org/",
@@ -37,9 +38,8 @@
     ping(id, host_nottrack);
 
     return new Promise(function(resolve, reject) {
-      setTimeout(function() {
-        isPinged(id, expectPing, msg, resolve);
-      }, timeout);
+      // Retry at most 30 seconds.
+      isPingedWithRetry(id, expectPing, msg, resolve, 30 * 1000 / RETRY_TIMEOUT_MS);
     });
   }
 
@@ -85,17 +85,28 @@
     document.body.removeChild(elm);
   }
 
-  function isPinged(id, expected, msg, callback) {
+  function isPingedWithRetry(id, expected, msg, callback, retryCnt) {
     var url = "http://mochi.test:8888/" + path_ping;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url + "?id=" + id);
     xhr.onload = function() {
       var isPinged = xhr.response === "ping";
-      is(expected, isPinged, msg);
-
-      callback();
+      let success = isPinged === expected;
+      if (success || 0 === retryCnt) {
+        is(expected, isPinged, msg);
+        callback();
+        return;
+      }
+      // Retry on failure.
+      setTimeout(() => {
+        isPingedWithRetry(id, expected, msg, callback, retryCnt - 1);
+      }, RETRY_TIMEOUT_MS);
     };
     xhr.send();
+  }
+
+  function isPinged(id, expected, msg, callback) {
+    isPingedWithRetry(id, expected, msg, callback, 0);
   }
 
   function cleanup() {

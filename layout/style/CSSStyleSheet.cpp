@@ -988,7 +988,7 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
     loader = mDocument->CSSLoader();
     NS_ASSERTION(loader, "Document with no CSS loader!");
   } else {
-    loader = new css::Loader(StyleBackendType::Gecko);
+    loader = new css::Loader(StyleBackendType::Gecko, nullptr);
   }
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);

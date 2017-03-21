@@ -218,7 +218,7 @@ LoadSheet(nsIURI* aURI,
           StyleBackendType aType,
           RefPtr<StyleSheet>* aResult)
 {
-  RefPtr<css::Loader> loader = new css::Loader(aType);
+  RefPtr<css::Loader> loader = new css::Loader(aType, nullptr);
   return loader->LoadSheetSync(aURI, aParsingMode, true, aResult);
 }
 
