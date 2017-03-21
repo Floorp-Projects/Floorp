@@ -55,6 +55,20 @@ check_ffi_type!(_mix_blend_mode_repr enum MixBlendMode as u32);
 check_ffi_type!(_box_shadow_clip_mode_repr enum BoxShadowClipMode as u32);
 check_ffi_type!(_namespace_id_repr struct IdNamespace as (u32));
 
+const GL_FORMAT_BGRA_GL: gl::GLuint = gl::BGRA;
+const GL_FORMAT_BGRA_GLES: gl::GLuint = gl::BGRA_EXT;
+
+fn get_gl_format_bgra(gl: &gl::Gl) -> gl::GLuint {
+    match gl.get_type() {
+        gl::GlType::Gl => {
+            GL_FORMAT_BGRA_GL
+        }
+        gl::GlType::Gles => {
+            GL_FORMAT_BGRA_GLES
+        }
+    }
+}
+
 #[repr(C)]
 pub enum WrGradientExtendMode {
     Clamp,
@@ -617,7 +631,7 @@ pub unsafe extern "C" fn wr_renderer_readback(renderer: &mut Renderer,
                                           0,
                                           width as gl::GLsizei,
                                           height as gl::GLsizei,
-                                          gl::BGRA,
+                                          get_gl_format_bgra(renderer.gl()),
                                           gl::UNSIGNED_BYTE,
                                           slice);
 }
