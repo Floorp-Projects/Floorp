@@ -16,6 +16,7 @@
 #include "AudioChannelAgent.h"
 #include "nsAttrValue.h"
 #include "mozilla/dom/AudioChannelBinding.h"
+#include "mozilla/Logging.h"
 
 #include <functional>
 
@@ -102,7 +103,7 @@ public:
 
   static bool IsAudioChannelMutedByDefault();
 
-  static PRLogModuleInfo* GetAudioChannelLog();
+  static LogModule* GetAudioChannelLog();
 
   static bool IsEnableAudioCompeting();
 
