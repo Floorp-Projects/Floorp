@@ -690,36 +690,10 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
       (aAnimElem->IsSVGElement(nsGkAtoms::animateTransform)))
     return false;
 
-  // Look up target (animated) attribute-type
-  nsSMILTargetAttrType attributeType = aAnimElem->GetTargetAttributeType();
-
-  // Check if an 'auto' attributeType refers to a CSS property or XML attribute.
-  // Note that SMIL requires we search for CSS properties first. So if they
-  // overlap, 'auto' = 'CSS'. (SMILANIM 3.1)
-  bool isCSS = false;
-  if (attributeType == eSMILTargetAttrType_auto) {
-    if (attributeNamespaceID == kNameSpaceID_None) {
-      // width/height are special as they may be attributes or for
-      // outer-<svg> elements, mapped into style.
-      if (attributeName == nsGkAtoms::width ||
-          attributeName == nsGkAtoms::height) {
-        isCSS = targetElem->GetNameSpaceID() != kNameSpaceID_SVG;
-      } else {
-        nsCSSPropertyID prop =
-          nsCSSProps::LookupProperty(nsDependentAtomString(attributeName),
-                                     CSSEnabledState::eForAllContent);
-        isCSS = nsSMILCSSProperty::IsPropertyAnimatable(prop);
-      }
-    }
-  } else {
-    isCSS = (attributeType == eSMILTargetAttrType_CSS);
-  }
-
   // Construct the key
-  aResult.mElement = targetElem;
-  aResult.mAttributeName = attributeName;
+  aResult.mElement              = targetElem;
+  aResult.mAttributeName        = attributeName;
   aResult.mAttributeNamespaceID = attributeNamespaceID;
-  aResult.mIsCSS = isCSS;
 
   return true;
 }
@@ -739,13 +713,9 @@ nsSMILAnimationController::AddStyleUpdatesTo(RestyleTracker& aTracker)
       continue;
     }
 
-    // mIsCSS true means that the rules are the ones returned from
-    // Element::GetSMILOverrideStyleDeclaration (via nsSMILCSSProperty objects),
-    // and mIsCSS false means the rules are nsSMILMappedAttribute objects
-    // returned from nsSVGElement::GetAnimatedContentDeclarationBlock.
-    nsRestyleHint rshint = key.mIsCSS ? eRestyle_StyleAttribute_Animations
-                                      : eRestyle_SVGAttrAnimations;
-    aTracker.AddPendingRestyle(key.mElement, rshint, nsChangeHint(0));
+    aTracker.AddPendingRestyle(key.mElement,
+                               eRestyle_StyleAttribute_Animations,
+                               nsChangeHint(0));
   }
 
   mMightHavePendingStyleUpdates = false;
