@@ -19,6 +19,7 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.StyleRes;
 import android.support.annotation.VisibleForTesting;
+import android.support.design.widget.Snackbar;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.util.SparseArrayCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -36,12 +37,14 @@ import android.widget.ProgressBar;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.SnackbarBuilder;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.menu.GeckoMenu;
-import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.menu.GeckoMenu;
+import org.mozilla.gecko.menu.GeckoMenuInflater;
+import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 
@@ -91,6 +94,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         actionBarPresenter = new ActionBarPresenter(actionBar);
         actionBarPresenter.displayUrlOnly(getIntent().getDataString());
         actionBarPresenter.setBackgroundColor(toolbarColor, getWindow());
+        actionBarPresenter.setTextLongClickListener(new UrlCopyListener());
         actionBar.setDisplayHomeAsUpEnabled(true);
 
         Tabs.registerOnTabsChangedListener(this);
@@ -450,6 +454,24 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             Intent chooserIntent = Intent.createChooser(shareIntent, getString(R.string.share_title));
             chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(chooserIntent);
+        }
+    }
+
+    /**
+     * Listener when user long-click ActionBar to copy URL.
+     */
+    private class UrlCopyListener implements View.OnLongClickListener {
+        @Override
+        public boolean onLongClick(View v) {
+            final String url = Tabs.getInstance().getSelectedTab().getURL();
+            if (!TextUtils.isEmpty(url)) {
+                Clipboard.setText(url);
+                SnackbarBuilder.builder(CustomTabsActivity.this)
+                        .message(R.string.custom_tabs_hint_url_copy)
+                        .duration(Snackbar.LENGTH_SHORT)
+                        .buildAndShow();
+            }
+            return true;
         }
     }
 }

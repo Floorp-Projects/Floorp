@@ -125,6 +125,15 @@ public class ActionBarPresenter {
     }
 
     /**
+     * To assign a long-click-listener to text area of ActionBar
+     * @param listener then callback to trigger
+     */
+    public void setTextLongClickListener(View.OnLongClickListener listener) {
+        mTitleView.setOnLongClickListener(listener);
+        mUrlView.setOnLongClickListener(listener);
+    }
+
+    /**
      * To get primary color of Title of ActionBar
      *
      * @return color code of primary color
