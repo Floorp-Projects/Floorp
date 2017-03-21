@@ -353,7 +353,8 @@ VRManagerChild::CreateTexture(const SurfaceDescriptor& aSharedData,
                               LayersBackend aLayersBackend,
                               TextureFlags aFlags,
                               uint64_t aSerial,
-                              wr::MaybeExternalImageId& aExternalImageId)
+                              wr::MaybeExternalImageId& aExternalImageId,
+                              nsIEventTarget* aTarget)
 {
   return SendPTextureConstructor(aSharedData, aLayersBackend, aFlags, aSerial);
 }
