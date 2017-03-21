@@ -314,6 +314,25 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
                 setTimeout(function() { cb() }, 250);
                 """, script_timeout=100)
 
+    @skip_if_mobile("New windows not supported in Fennec")
+    def test_invalid_chrome_handle(self):
+        try:
+            win = self.open_window()
+            self.marionette.switch_to_window(win)
+
+            # Close new window and don't switch back to the original one
+            self.marionette.close_chrome_window()
+            self.assertNotEqual(self.start_window, win)
+
+            # Call execute_script on an invalid chrome handle
+            with self.marionette.using_context('chrome'):
+                self.marionette.execute_script("""
+                    return true;
+                """)
+
+        finally:
+            self.close_all_windows()
+
     def test_lasting_side_effects(self):
         pass
 
