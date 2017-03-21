@@ -11,8 +11,6 @@
 
 #include "nsFontFaceLoader.h"
 
-#include "mozilla/Logging.h"
-
 #include "nsError.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
@@ -55,6 +53,8 @@ nsFontFaceLoader::nsFontFaceLoader(gfxUserFontEntry* aUserFontEntry,
     mFontFaceSet(aFontFaceSet),
     mChannel(aChannel)
 {
+  MOZ_ASSERT(mFontFaceSet,
+             "We should get a valid FontFaceSet from the caller!");
   mStartTime = TimeStamp::Now();
 }
 
@@ -87,10 +87,13 @@ nsFontFaceLoader::StartedLoading(nsIStreamLoader* aStreamLoader)
   if (loadTimeout > 0) {
     mLoadTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (mLoadTimer) {
-      mLoadTimer->InitWithFuncCallback(LoadTimerCallback,
-                                       static_cast<void*>(this),
-                                       loadTimeout,
-                                       nsITimer::TYPE_ONE_SHOT);
+      mLoadTimer->SetTarget(
+        mFontFaceSet->Document()->EventTargetFor(TaskCategory::Other));
+      mLoadTimer->InitWithNamedFuncCallback(LoadTimerCallback,
+                                            static_cast<void*>(this),
+                                            loadTimeout,
+                                            nsITimer::TYPE_ONE_SHOT,
+                                            "LoadTimerCallback");
     }
   } else {
     mUserFontEntry->mFontDataLoadingState = gfxUserFontEntry::LOADING_SLOWLY;

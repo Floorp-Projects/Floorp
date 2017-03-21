@@ -29,9 +29,8 @@
 
 #include <stdio.h>
 
+#include "linux/handler/guid_generator.h"
 #include "linux/handler/minidump_descriptor.h"
-
-#include "common/linux/guid_creator.h"
 
 namespace google_breakpad {
 

@@ -74,6 +74,7 @@ APZThreadUtils::IsControllerThread()
 }
 
 NS_IMPL_ISUPPORTS(GenericTimerCallbackBase, nsITimerCallback)
+NS_IMPL_ISUPPORTS(GenericNamedTimerCallbackBase, nsITimerCallback, nsINamed)
 
 } // namespace layers
 } // namespace mozilla

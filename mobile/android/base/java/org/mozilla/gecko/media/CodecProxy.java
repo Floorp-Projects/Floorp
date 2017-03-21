@@ -170,32 +170,38 @@ public final class CodecProxy {
             Log.e(LOGTAG, "cannot send input to an ended codec");
             return false;
         }
+
+        boolean eos = info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM;
+        mCallbacks.setEndOfInput(eos);
+
+        if (eos) {
+            return sendInput(Sample.EOS);
+        }
+
         try {
-            Sample sample = processInput(bytes, info, cryptoInfo);
-            if (sample == null) {
-                return false;
-            }
+            return sendInput(mRemote.dequeueInput(info.size).set(bytes, info, cryptoInfo));
+        } catch (RemoteException e) {
+            Log.e(LOGTAG, "fail to dequeue input buffer", e);
+            return false;
+        } catch (IOException e) {
+            Log.e(LOGTAG, "fail to copy input data.", e);
+            // Balance dequeue/queue.
+            return sendInput(null);
+        }
+    }
+
+    private boolean sendInput(Sample sample) {
+        try {
             mRemote.queueInput(sample);
-            sample.dispose();
+            if (sample != null) {
+                sample.dispose();
+            }
         } catch (Exception e) {
-            Log.e(LOGTAG, "fail to input sample: size=" + info.size +
-                    ", pts=" + info.presentationTimeUs +
-                    ", flags=" + Integer.toHexString(info.flags), e);
+            Log.e(LOGTAG, "fail to queue input:" + sample, e);
             return false;
         }
 
         return true;
-    }
-
-    private Sample processInput(ByteBuffer bytes, BufferInfo info, CryptoInfo cryptoInfo)
-            throws RemoteException, IOException {
-        if (info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
-            mCallbacks.setEndOfInput(true);
-            return Sample.EOS;
-        } else {
-            mCallbacks.setEndOfInput(false);
-            return mRemote.dequeueInput(info.size).set(bytes, info, cryptoInfo);
-        }
     }
 
     @WrapForJNI
