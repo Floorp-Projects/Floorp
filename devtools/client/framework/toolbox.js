@@ -525,6 +525,23 @@ Toolbox.prototype = {
     return this.browserRequire("devtools/client/framework/components/toolbox-controller");
   },
 
+  /**
+   * A common access point for the client-side mapping service for source maps that
+   * any panel can use.
+   */
+  get sourceMapService() {
+    if (!Services.prefs.getBoolPref("devtools.source-map.client-service.enabled")) {
+      return null;
+    }
+    if (this._sourceMapService) {
+      return this._sourceMapService;
+    }
+    // Uses browser loader to access the `Worker` global.
+    this._sourceMapService =
+      this.browserRequire("devtools/client/shared/source-map/index");
+    return this._sourceMapService;
+  },
+
   // Return HostType id for telemetry
   _getTelemetryHostId: function () {
     switch (this.hostType) {
@@ -2269,6 +2286,11 @@ Toolbox.prototype = {
     if (this._deprecatedServerSourceMapService) {
       this._deprecatedServerSourceMapService.destroy();
       this._deprecatedServerSourceMapService = null;
+    }
+
+    if (this._sourceMapService) {
+      this._sourceMapService.destroyWorker();
+      this._sourceMapService = null;
     }
 
     if (this.webconsolePanel) {
