@@ -40,7 +40,7 @@ config = {
             "mar_channel_ids": [],
             "channel_names": ["release", "release-localtest", "release-cdntest"],
             "rules_to_update": ["firefox-release-cdntest", "firefox-release-localtest"],
-            "publish_rules": ["firefox-release"],
+            "publish_rules": ["firefox-release", "firefox-release-nowebsense-bypass"],
         },
     },
     "balrog_use_dummy_suffix": False,
