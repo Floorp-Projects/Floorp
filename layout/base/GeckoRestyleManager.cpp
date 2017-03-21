@@ -967,21 +967,10 @@ GeckoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
       }
 #endif
 
-      // Make sure to call CalcStyleDifference so that the new context ends
-      // up resolving all the structs the old context resolved.
+      // Ensure the new context ends up resolving all the structs the old
+      // context resolved.
       if (!copyFromContinuation) {
-        uint32_t equalStructs;
-        uint32_t samePointerStructs;
-        DebugOnly<nsChangeHint> styleChange =
-          oldContext->CalcStyleDifference(newContext, nsChangeHint(0),
-                                          &equalStructs,
-                                          &samePointerStructs);
-        // The style change is always 0 because we have the same rulenode and
-        // CalcStyleDifference optimizes us away.  That's OK, though:
-        // reparenting should never trigger a frame reconstruct, and whenever
-        // it's happening we already plan to reflow and repaint the frames.
-        NS_ASSERTION(!(styleChange & nsChangeHint_ReconstructFrame),
-                     "Our frame tree is likely to be bogus!");
+        newContext->EnsureSameStructsCached(oldContext);
       }
 
       aFrame->SetStyleContext(newContext);
@@ -1033,23 +1022,9 @@ GeckoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
                                                  newContext, nullptr);
         if (newExtraContext) {
           if (newExtraContext != oldExtraContext) {
-            // Make sure to call CalcStyleDifference so that the new
-            // context ends up resolving all the structs the old context
-            // resolved.
-            uint32_t equalStructs;
-            uint32_t samePointerStructs;
-            DebugOnly<nsChangeHint> styleChange =
-              oldExtraContext->CalcStyleDifference(newExtraContext,
-                                                   nsChangeHint(0),
-                                                   &equalStructs,
-                                                   &samePointerStructs);
-            // The style change is always 0 because we have the same
-            // rulenode and CalcStyleDifference optimizes us away.  That's
-            // OK, though: reparenting should never trigger a frame
-            // reconstruct, and whenever it's happening we already plan to
-            // reflow and repaint the frames.
-            NS_ASSERTION(!(styleChange & nsChangeHint_ReconstructFrame),
-                         "Our frame tree is likely to be bogus!");
+            // Ensure the new context ends up resolving all the structs the old
+            // context resolved.
+            newContext->EnsureSameStructsCached(oldContext);
           }
 
           aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);

@@ -387,14 +387,6 @@ public:
   #undef STYLE_STRUCT
 
   /**
-   * Ensures that this context's computed struct list is at least the old
-   * context's.
-   *
-   * aOldContext must not be null.
-   */
-  void EnsureStructsForServo(const nsStyleContext* aOldContext);
-
-  /**
    * Compute the style changes needed during restyling when this style
    * context is being replaced by aNewContext.  (This is nonsymmetric since
    * we optimize by skipping comparison for styles that have never been
@@ -435,6 +427,12 @@ private:
                                            uint32_t* aSamePointerStructs);
 
 public:
+  /**
+   * Ensures the same structs are cached on this style context as would be
+   * done if we called aOther->CalcDifference(this).
+   */
+  void EnsureSameStructsCached(nsStyleContext* aOldContext);
+
   /**
    * Get a color that depends on link-visitedness using this and
    * this->GetStyleIfVisited().
