@@ -193,6 +193,11 @@ const ignorableWhitelist = new Set([
   // referenced by something in xslt-qa, so the exception won't be used when
   // running the test on a local non-packaged build.
   "chrome://communicator/skin/communicator.css",
+
+  // These 2 files are unreferenced only when building without the crash
+  // reporter (eg. Linux x64 asan builds on treeherder)
+  "chrome://global/locale/crashes.dtd",
+  "chrome://global/locale/crashes.properties",
 ]);
 for (let entry of ignorableWhitelist)
   whitelist.add(entry);
