@@ -4567,16 +4567,7 @@ this.XPIProvider = {
 
      for (let [id, val] of this.activeAddons) {
        if (aInstanceID == val.instanceID) {
-         if (val.safeWrapper) {
-           return Promise.resolve(val.safeWrapper);
-         }
-
-         return new Promise(resolve => {
-           this.getAddonByID(id, function(addon) {
-             val.safeWrapper = new PrivateWrapper(addon);
-             resolve(val.safeWrapper);
-           });
-         });
+         return new Promise(resolve => this.getAddonByID(id, resolve));
        }
      }
 
@@ -4843,7 +4834,7 @@ this.XPIProvider = {
 
     for (let [id, val] of this.activeAddons) {
       aConnection.setAddonOptions(
-        id, { global: val.debugGlobal || val.bootstrapScope });
+        id, { global: val.bootstrapScope });
     }
   },
 
@@ -5159,8 +5150,6 @@ this.XPIProvider = {
                                aMultiprocessCompatible, aRunInSafeMode,
                                aDependencies, hasEmbeddedWebExtension) {
     this.activeAddons.set(aId, {
-      debugGlobal: null,
-      safeWrapper: null,
       bootstrapScope: null,
       // a Symbol passed to this add-on, which it can use to identify itself
       instanceID: Symbol(aId),
@@ -8121,68 +8110,6 @@ AddonWrapper.prototype = {
     return getURIForResourceInFile(addon._sourceBundle, aPath);
   }
 };
-
-/**
- * The PrivateWrapper is used to expose certain functionality only when being
- * called with the add-on instanceID, disallowing other add-ons to access it.
- */
-function PrivateWrapper(aAddon) {
-  AddonWrapper.call(this, aAddon);
-}
-
-PrivateWrapper.prototype = Object.create(AddonWrapper.prototype);
-Object.assign(PrivateWrapper.prototype, {
-  addonId() {
-    return this.id;
-  },
-
-  /**
-   * Retrieves the preferred global context to be used from the
-   * add-on debugging window.
-   *
-   * @returns  global
-   *         The object set as global context. Must be a window object.
-   */
-  getDebugGlobal(global) {
-    let activeAddon = XPIProvider.activeAddons.get(this.id);
-    if (activeAddon) {
-      return activeAddon.debugGlobal;
-    }
-
-    return null;
-  },
-
-  /**
-   * Defines a global context to be used in the console
-   * of the add-on debugging window.
-   *
-   * @param  global
-   *         The object to set as global context. Must be a window object.
-   */
-  setDebugGlobal(global) {
-    if (!global) {
-      // If the new global is null, notify the listeners regardless
-      // from the current state of the addon.
-      // NOTE: this happen after the addon has been disabled and
-      // the global will never be set to null otherwise.
-      AddonManagerPrivate.callAddonListeners("onPropertyChanged",
-                                             addonFor(this),
-                                             ["debugGlobal"]);
-    } else {
-      let activeAddon = XPIProvider.activeAddons.get(this.id);
-      if (activeAddon) {
-        let globalChanged = activeAddon.debugGlobal != global;
-        activeAddon.debugGlobal = global;
-
-        if (globalChanged) {
-          AddonManagerPrivate.callAddonListeners("onPropertyChanged",
-                                                 addonFor(this),
-                                                 ["debugGlobal"]);
-        }
-      }
-    }
-  }
-});
 
 function chooseValue(aAddon, aObj, aProp) {
   let repositoryAddon = aAddon._repositoryAddon;
