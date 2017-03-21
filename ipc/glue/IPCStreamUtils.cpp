@@ -392,7 +392,7 @@ DeserializeIPCStream(const IPCStream& aValue)
     Unused << fdSetActor->Send__delete__(fdSetActor);
   }
 
-  return DeserializeInputStream(streamWithFds.stream(), fds);
+  return InputStreamHelper::DeserializeInputStream(streamWithFds.stream(), fds);
 }
 
 already_AddRefed<nsIInputStream>
