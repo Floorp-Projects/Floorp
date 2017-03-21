@@ -5,6 +5,11 @@ load(libdir + "asserts.js");
 if (!isAsmJSCompilationAvailable())
     quit();
 
+// This test runs a lot of code and is very slow with --ion-eager. Use a minimum
+// Ion warmup trigger of 2 to avoid timeouts.
+if (getJitCompilerOptions()["ion.warmup.trigger"] < 5)
+    setJitCompilerOption("ion.warmup.trigger", 5);
+
 var ab = new ArrayBuffer(BUF_MIN);
 
 // Compute a set of interesting indices.

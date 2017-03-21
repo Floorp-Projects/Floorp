@@ -3879,11 +3879,12 @@ JSObject::traceChildren(JSTracer* trc)
 {
     TraceEdge(trc, &group_, "group");
 
+    if (is<ShapedObject>())
+        as<ShapedObject>().traceShape(trc);
+
     const Class* clasp = group_->clasp();
     if (clasp->isNative()) {
         NativeObject* nobj = &as<NativeObject>();
-
-        TraceEdge(trc, &nobj->shape_, "shape");
 
         {
             GetObjectSlotNameFunctor func(nobj);

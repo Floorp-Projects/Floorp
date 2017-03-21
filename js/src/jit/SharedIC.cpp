@@ -175,7 +175,6 @@ ICStub::NonCacheIRStubMakesGCCalls(Kind kind)
       case Call_ScriptedFunCall:
       case Call_StringSplit:
       case WarmUpCounter_Fallback:
-      case GetProp_Generic:
       case RetSub_Fallback:
       // These two fallback stubs don't actually make non-tail calls,
       // but the fallback code for the bailout path needs to pop the stub frame
@@ -355,8 +354,7 @@ ICFallbackStub::unlinkStub(Zone* zone, ICStub* prev, ICStub* stub)
         }
     }
 
-    MOZ_ASSERT(numOptimizedStubs_ > 0);
-    numOptimizedStubs_--;
+    state_.trackUnlinkedStub();
 
     if (zone->needsIncrementalBarrier()) {
         // We are removing edges from ICStub to gcthings. Perform one final trace
@@ -390,6 +388,13 @@ ICFallbackStub::unlinkStubsWithKind(JSContext* cx, ICStub::Kind kind)
         if (iter->kind() == kind)
             iter.unlink(cx);
     }
+}
+
+void
+ICFallbackStub::discardStubs(JSContext* cx)
+{
+    for (ICStubIterator iter = beginChain(); !iter.atEnd(); iter++)
+        iter.unlink(cx);
 }
 
 void
@@ -1993,52 +1998,36 @@ DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_
                op == JSOP_LENGTH ||
                op == JSOP_GETBOUNDNAME);
 
-    // Grab our old shape before it goes away.
-    RootedShape oldShape(cx);
-    if (val.isObject())
-        oldShape = val.toObject().maybeShape();
+    RootedPropertyName name(cx, script->getName(pc));
 
-    bool attached = false;
     // There are some reasons we can fail to attach a stub that are temporary.
     // We want to avoid calling noteUnoptimizableAccess() if the reason we
     // failed to attach a stub is one of those temporary reasons, since we might
     // end up attaching a stub for the exact same access later.
     bool isTemporarilyUnoptimizable = false;
 
-    RootedPropertyName name(cx, script->getName(pc));
+    if (stub->state().maybeTransition())
+        stub->discardStubs(cx);
 
-    // After the Genericstub was added, we should never reach the Fallbackstub again.
-    MOZ_ASSERT(!stub->hasStub(ICStub::GetProp_Generic));
-
-    if (stub->numOptimizedStubs() >= ICGetProp_Fallback::MAX_OPTIMIZED_STUBS && !stub.invalid()) {
-        // Discard all stubs in this IC and replace with generic getprop stub.
-        for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++)
-            iter.unlink(cx);
-        ICGetProp_Generic::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub());
-        ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
-        if (!newStub)
-            return false;
-        stub->addNewStub(newStub);
-        attached = true;
-    }
-
-    if (!attached && !JitOptions.disableCacheIR) {
+    bool attached = false;
+    if (stub->state().canAttachStub()) {
         RootedValue idVal(cx, StringValue(name));
-        GetPropIRGenerator gen(cx, script, pc, CacheKind::GetProp, &isTemporarilyUnoptimizable,
-                               val, idVal, CanAttachGetter::Yes);
+        GetPropIRGenerator gen(cx, script, pc, CacheKind::GetProp, stub->state().mode(),
+                               &isTemporarilyUnoptimizable, val, idVal, CanAttachGetter::Yes);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                                         ICStubEngine::Baseline, script,
-                                                        stub);
+                                                        stub, &attached);
             if (newStub) {
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
-                attached = true;
                 if (gen.shouldNotePreliminaryObjectStub())
                     newStub->toCacheIR_Monitored()->notePreliminaryObject();
                 else if (gen.shouldUnlinkPreliminaryObjectStubs())
                     StripPreliminaryObjectStubs(cx, stub);
             }
         }
+        if (!attached && !isTemporarilyUnoptimizable)
+            stub->state().trackNotAttached();
     }
 
     if (!ComputeGetPropResult(cx, frame, op, name, val, res))
@@ -2120,60 +2109,6 @@ ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<
         void* address = code->raw() + returnOffset_;
         cx->compartment()->jitCompartment()->initBaselineGetPropReturnAddr(address);
     }
-}
-
-/* static */ ICGetProp_Generic*
-ICGetProp_Generic::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                         ICGetProp_Generic& other)
-{
-    return New<ICGetProp_Generic>(cx, space, other.jitCode(), firstMonitorStub);
-}
-
-static bool
-DoGetPropGeneric(JSContext* cx, BaselineFrame* frame, ICGetProp_Generic* stub,
-                 MutableHandleValue val, MutableHandleValue res)
-{
-    ICFallbackStub* fallback = stub->getChainFallback();
-    JSScript* script = frame->script();
-    jsbytecode* pc = fallback->icEntry()->pc(script);
-    JSOp op = JSOp(*pc);
-    RootedPropertyName name(cx, script->getName(pc));
-    return ComputeGetPropResult(cx, frame, op, name, val, res);
-}
-
-typedef bool (*DoGetPropGenericFn)(JSContext*, BaselineFrame*, ICGetProp_Generic*,
-                                   MutableHandleValue, MutableHandleValue);
-static const VMFunction DoGetPropGenericInfo =
-    FunctionInfo<DoGetPropGenericFn>(DoGetPropGeneric, "DoGetPropGeneric");
-
-bool
-ICGetProp_Generic::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
-
-    Register scratch = regs.takeAnyExcluding(ICTailCallReg);
-
-    // Sync for the decompiler.
-    if (engine_ == Engine::Baseline)
-        EmitStowICValues(masm, 1);
-
-    enterStubFrame(masm, scratch);
-
-    // Push arguments.
-    masm.Push(R0);
-    masm.Push(ICStubReg);
-    PushStubPayload(masm, R0.scratchReg());
-
-    if (!callVM(DoGetPropGenericInfo, masm))
-        return false;
-
-    leaveStubFrame(masm);
-
-    if (engine_ == Engine::Baseline)
-        EmitUnstowICValues(masm, 1, /* discard = */ true);
-
-    EmitEnterTypeMonitorIC(masm);
-    return true;
 }
 
 void

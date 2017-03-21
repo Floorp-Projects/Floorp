@@ -25,21 +25,4 @@ UnbindCacheEntriesFromDocument(
   }
 }
 
-/**
- * Clear the cache and shutdown the accessibles.
- */
-template <class T>
-static void
-ClearCache(nsRefPtrHashtable<nsPtrHashKey<const void>, T>& aCache)
-{
-  for (auto iter = aCache.Iter(); !iter.Done(); iter.Next()) {
-    T* accessible = iter.Data();
-    MOZ_ASSERT(accessible);
-    if (accessible && !accessible->IsDefunct()) {
-      accessible->Shutdown();
-    }
-    iter.Remove();
-  }
-}
-
 #endif

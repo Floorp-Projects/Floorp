@@ -1380,4 +1380,14 @@ void Gecko_AppendUTF8toString(nsAString* aThis, const nsACString* aOther)
   AppendUTF8toUTF16(*aOther, *aThis);
 }
 
+bool Gecko_FallibleAppendUTF16toCString(nsACString* aThis, const nsAString* aOther)
+{
+  return AppendUTF16toUTF8(*aOther, *aThis, mozilla::fallible);
+}
+
+bool Gecko_FallibleAppendUTF8toString(nsAString* aThis, const nsACString* aOther)
+{
+  return AppendUTF8toUTF16(*aOther, *aThis, mozilla::fallible);
+}
+
 }

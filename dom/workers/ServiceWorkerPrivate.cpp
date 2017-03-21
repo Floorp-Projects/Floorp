@@ -1580,7 +1580,8 @@ private:
     nsresult rv2 =
       DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(),
                                            event, nullptr);
-    if (NS_WARN_IF(NS_FAILED(rv2)) || !event->WaitToRespond()) {
+    if ((NS_WARN_IF(NS_FAILED(rv2)) && rv2 != NS_ERROR_XPC_JS_THREW_EXCEPTION) ||
+        !event->WaitToRespond()) {
       nsCOMPtr<nsIRunnable> runnable;
       MOZ_ASSERT(!aWorkerPrivate->UsesSystemPrincipal(),
                  "We don't support system-principal serviceworkers");

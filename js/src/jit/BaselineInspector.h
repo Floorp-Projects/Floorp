@@ -137,6 +137,9 @@ class BaselineInspector
                                             bool* isOwnProperty, ReceiverVector& receivers,
                                             ObjectGroupVector& convertUnboxedGroups);
 
+    MOZ_MUST_USE bool megamorphicGetterSetterFunction(jsbytecode* pc, bool isGetter,
+                                                      JSFunction** getterOrSetter);
+
     MOZ_MUST_USE bool commonSetPropFunction(jsbytecode* pc, JSObject** holder, Shape** holderShape,
                                             JSFunction** commonSetter, bool* isOwnProperty,
                                             ReceiverVector& receivers,

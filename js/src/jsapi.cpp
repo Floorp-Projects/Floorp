@@ -6341,8 +6341,10 @@ CreateErrorNoteVA(JSContext* cx,
                   ErrorArgumentsType argumentsType, va_list ap)
 {
     auto note = MakeUnique<JSErrorNotes::Note>();
-    if (!note)
+    if (!note) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     note->errorNumber = errorNumber;
     note->filename = filename;
@@ -6424,8 +6426,10 @@ UniquePtr<JSErrorNotes>
 JSErrorNotes::copy(JSContext* cx)
 {
     auto copiedNotes = MakeUnique<JSErrorNotes>();
-    if (!copiedNotes)
+    if (!copiedNotes) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     for (auto&& note : *this) {
         js::UniquePtr<JSErrorNotes::Note> copied(CopyErrorNote(cx, note.get()));
