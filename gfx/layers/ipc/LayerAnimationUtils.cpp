@@ -19,20 +19,26 @@ AnimationUtils::TimingFunctionToComputedTimingFunction(
     case TimingFunction::Tnull_t:
       return Nothing();
     case TimingFunction::TCubicBezierFunction: {
+      ComputedTimingFunction result;
       CubicBezierFunction cbf = aTimingFunction.get_CubicBezierFunction();
-      return Some(ComputedTimingFunction::CubicBezier(cbf.x1(), cbf.y1(),
-                                                      cbf.x2(), cbf.y2()));
+      result.Init(nsTimingFunction(cbf.x1(), cbf.y1(), cbf.x2(), cbf.y2()));
+      return Some(result);
     }
     case TimingFunction::TStepFunction: {
       StepFunction sf = aTimingFunction.get_StepFunction();
       nsTimingFunction::Type type = sf.type() == 1 ?
         nsTimingFunction::Type::StepStart :
         nsTimingFunction::Type::StepEnd;
-      return Some(ComputedTimingFunction::Steps(type, sf.steps()));
+      ComputedTimingFunction result;
+      result.Init(nsTimingFunction(type, sf.steps()));
+      return Some(result);
     }
     case TimingFunction::TFramesFunction: {
       FramesFunction ff = aTimingFunction.get_FramesFunction();
-      return Some(ComputedTimingFunction::Frames(ff.frames()));
+      ComputedTimingFunction result;
+      result.Init(nsTimingFunction(nsTimingFunction::Type::Frames,
+                                   ff.frames()));
+      return Some(result);
     }
     default:
       MOZ_ASSERT_UNREACHABLE(
