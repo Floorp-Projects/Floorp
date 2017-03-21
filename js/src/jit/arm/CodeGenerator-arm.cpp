@@ -2378,9 +2378,9 @@ CodeGeneratorARM::emitWasmLoad(T* lir)
     }
 
     if (resultType == MIRType::Int64)
-        masm.wasmLoadI64(mir->access(), ptr, ptr, ToOutRegister64(lir));
+        masm.wasmLoadI64(mir->access(), HeapReg, ptr, ptr, ToOutRegister64(lir));
     else
-        masm.wasmLoad(mir->access(), ptr, ptr, ToAnyRegister(lir->output()));
+        masm.wasmLoad(mir->access(), HeapReg, ptr, ptr, ToAnyRegister(lir->output()));
 }
 
 void
@@ -2406,15 +2406,16 @@ CodeGeneratorARM::emitWasmUnalignedLoad(T* lir)
     Register tmp1 = ToRegister(lir->getTemp(1));
 
     if (resultType == MIRType::Int64) {
-        masm.wasmUnalignedLoadI64(mir->access(), ptr, ptr, ToOutRegister64(lir), tmp1);
+        masm.wasmUnalignedLoadI64(mir->access(), HeapReg, ptr, ptr, ToOutRegister64(lir), tmp1);
     } else if (IsFloatingPointType(resultType)) {
         Register tmp2(ToRegister(lir->getTemp(2)));
         Register tmp3(Register::Invalid());
         if (mir->access().byteSize() == 8)
             tmp3 = ToRegister(lir->getTemp(3));
-        masm.wasmUnalignedLoadFP(mir->access(), ptr, ptr, ToFloatRegister(lir->output()), tmp1, tmp2, tmp3);
+        masm.wasmUnalignedLoadFP(mir->access(), HeapReg, ptr, ptr, ToFloatRegister(lir->output()),
+                                 tmp1, tmp2, tmp3);
     } else {
-        masm.wasmUnalignedLoad(mir->access(), ptr, ptr, ToRegister(lir->output()), tmp1);
+        masm.wasmUnalignedLoad(mir->access(), HeapReg, ptr, ptr, ToRegister(lir->output()), tmp1);
     }
 }
 
@@ -2461,9 +2462,10 @@ CodeGeneratorARM::emitWasmStore(T* lir)
 
     if (accessType == Scalar::Int64)
         masm.wasmStoreI64(mir->access(), ToRegister64(lir->getInt64Operand(lir->ValueIndex)),
-                          ptr, ptr);
+                          HeapReg, ptr, ptr);
     else
-        masm.wasmStore(mir->access(), ToAnyRegister(lir->getOperand(lir->ValueIndex)), ptr, ptr);
+        masm.wasmStore(mir->access(), ToAnyRegister(lir->getOperand(lir->ValueIndex)), HeapReg,
+                       ptr, ptr);
 }
 
 void
@@ -2490,12 +2492,12 @@ CodeGeneratorARM::emitWasmUnalignedStore(T* lir)
     if (accessType == Scalar::Int64) {
         masm.wasmUnalignedStoreI64(mir->access(),
                                    ToRegister64(lir->getInt64Operand(LWasmUnalignedStoreI64::ValueIndex)),
-                                   ptr, ptr, valOrTmp);
+                                   HeapReg, ptr, ptr, valOrTmp);
     } else if (accessType == Scalar::Float32 || accessType == Scalar::Float64) {
         FloatRegister value = ToFloatRegister(lir->getOperand(LWasmUnalignedStore::ValueIndex));
-        masm.wasmUnalignedStoreFP(mir->access(), value, ptr, ptr, valOrTmp);
+        masm.wasmUnalignedStoreFP(mir->access(), value, HeapReg, ptr, ptr, valOrTmp);
     } else {
-        masm.wasmUnalignedStore(mir->access(), valOrTmp, ptr, ptr);
+        masm.wasmUnalignedStore(mir->access(), valOrTmp, HeapReg, ptr, ptr);
     }
 }
 

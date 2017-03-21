@@ -769,10 +769,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOperandId(id);
         buffer_.writeByte(uint32_t(handleMissing));
     }
-    void megamorphicStoreSlot(ObjOperandId obj, PropertyName* name, ValOperandId rhs) {
+    void megamorphicStoreSlot(ObjOperandId obj, PropertyName* name, ValOperandId rhs,
+                              bool needsTypeBarrier) {
         writeOpWithOperandId(CacheOp::MegamorphicStoreSlot, obj);
         addStubField(uintptr_t(name), StubField::Type::String);
         writeOperandId(rhs);
+        buffer_.writeByte(needsTypeBarrier);
     }
 
     void loadBooleanResult(bool val) {

@@ -37,7 +37,15 @@ interface mozIDOMWindow;
 interface nsIPermission;
 interface nsISimpleEnumerator;
 
-[scriptable, uuid(4dcb3851-eba2-4e42-b236-82d2596fca22)]
+%{ C++
+namespace IPC {
+struct Permission;
+}
+#include "nsTArrayForwardDeclare.h"
+%}
+[ref] native IPCPermissionArrayRef(nsTArray<IPC::Permission>);
+
+[scriptable, builtinclass, uuid(4dcb3851-eba2-4e42-b236-82d2596fca22)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -273,6 +281,40 @@ interface nsIPermissionManager : nsISupports
                         in boolean exactHost,
                         in uint64_t sessionExpireTime,
                         in uint64_t persistentExpireTime);
+
+  /**
+   * The content process doesn't have access to every permission. Instead, when
+   * LOAD_DOCUMENT_URI channels for http://, https://, and ftp:// URIs are
+   * opened, the permissions for those channels are sent down to the content
+   * process before the OnStartRequest message. Permissions for principals with
+   * other schemes are sent down at process startup.
+   *
+   * Permissions are keyed and grouped by "Permission Key"s.
+   * `nsPermissionManager::GetKeyForPrincipal` provides the mechanism for
+   * determining the permission key for a given principal.
+   *
+   * This method may only be called in the parent process. It fills the nsTArray
+   * argument with the IPC::Permission objects which have a matching permission
+   * key.
+   *
+   * @param permissionKey  The key to use to find the permissions of interest.
+   * @param perms  An array which will be filled with the permissions which
+   *               match the given permission key.
+   */
+  void getPermissionsWithKey(in ACString permissionKey, out IPCPermissionArrayRef perms);
+
+  /**
+   * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
+   * Permission keys.
+   *
+   * `SetPermissionsWithKey` may only be called in the Child process, and
+   * initializes the permission manager with the permissions for a given
+   * Permission key. marking permissions with that key as avaliable.
+   *
+   * @param permissionKey  The key for the permissions which have been sent over.
+   * @param perms  An array with the permissions which match the given key.
+   */
+  void setPermissionsWithKey(in ACString permissionKey, in IPCPermissionArrayRef perms);
 };
 
 %{ C++

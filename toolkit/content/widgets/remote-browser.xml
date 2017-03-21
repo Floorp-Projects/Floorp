@@ -568,6 +568,14 @@
         <parameter name="aPrincipal"/>
         <body>
           <![CDATA[
+            // Ensure that the content process has the permissions which are
+            // needed to create a document with the given principal.
+            let permissionPrincipal =
+              BrowserUtils.principalWithMatchingOA(aPrincipal, this.contentPrincipal);
+            let {frameLoader} = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
+            frameLoader.tabParent.transmitPermissionsForPrincipal(permissionPrincipal);
+
+            // Create the about blank content viewer in the content process
             this.messageManager.sendAsyncMessage("Browser:CreateAboutBlank", aPrincipal);
           ]]>
         </body>

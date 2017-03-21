@@ -189,7 +189,7 @@ protected:
     , mHaveRequest(false)
     , mIsCompletionPromise(aIsCompletionPromise)
 #ifdef PROMISE_DEBUG
-    , mMagic4(mMutex.mLock)
+    , mMagic4(&mMutex)
 #endif
   {
     PROMISE_LOG("%s creating MozPromise (%p)", mCreationSite, this);
@@ -700,7 +700,7 @@ public:
   void ThenInternal(AbstractThread* aResponseThread, ThenValueBase* aThenValue,
                     const char* aCallSite)
   {
-    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == mMutex.mLock);
+    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == &mMutex);
     MOZ_ASSERT(aResponseThread);
     MutexAutoLock lock(mMutex);
     MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveRequest);
@@ -857,7 +857,7 @@ public:
   // AssertIsDead() only.
   void AssertIsDead()
   {
-    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == mMutex.mLock);
+    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == &mMutex);
     MutexAutoLock lock(mMutex);
     for (auto&& then : mThenValues) {
       then->AssertIsDead();
@@ -952,7 +952,7 @@ public:
   template<typename ResolveValueT_>
   void Resolve(ResolveValueT_&& aResolveValue, const char* aResolveSite)
   {
-    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == mMutex.mLock);
+    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == &mMutex);
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s resolving MozPromise (%p created at %s)", aResolveSite, this, mCreationSite);
@@ -963,7 +963,7 @@ public:
   template<typename RejectValueT_>
   void Reject(RejectValueT_&& aRejectValue, const char* aRejectSite)
   {
-    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == mMutex.mLock);
+    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == &mMutex);
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s rejecting MozPromise (%p created at %s)", aRejectSite, this, mCreationSite);
@@ -974,7 +974,7 @@ public:
   template<typename ResolveOrRejectValue_>
   void ResolveOrReject(ResolveOrRejectValue_&& aValue, const char* aSite)
   {
-    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == mMutex.mLock);
+    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == &mMutex);
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s resolveOrRejecting MozPromise (%p created at %s)", aSite, this, mCreationSite);

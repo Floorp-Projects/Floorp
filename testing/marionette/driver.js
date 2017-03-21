@@ -414,6 +414,8 @@ GeckoDriver.prototype.whenBrowserStarted = function (win, isNewSession) {
       // opened after this call
       mm.loadFrameScript(FRAME_SCRIPT, true);
       Preferences.set(CONTENT_LISTENER_PREF, true);
+
+      Preferences.set("dom.file.createInChild", true);
     }
   } else {
     logger.error(

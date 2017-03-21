@@ -589,6 +589,10 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvProvideAnonymousTemporaryFile(const uint64_t& aID, const FileDescOrError& aFD) override;
 
+  mozilla::ipc::IPCResult
+  RecvSetPermissionsWithKey(const nsCString& aPermissionKey,
+                            nsTArray<IPC::Permission>&& aPerms) override;
+
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   bool
   SendGetA11yContentId();
