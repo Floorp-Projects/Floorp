@@ -43,6 +43,7 @@ toolkit.jar:
   skin/classic/global/icons/close-win7@2x.png              (icons/close-win7@2x.png)
   skin/classic/global/icons/close-inverted-win7.png        (icons/close-inverted-win7.png)
   skin/classic/global/icons/close-inverted-win7@2x.png     (icons/close-inverted-win7@2x.png)
+  skin/classic/global/icons/information-16.png             (icons/information-16.png)
   skin/classic/global/icons/resizer.png                    (icons/resizer.png)
   skin/classic/global/icons/sslWarning.png                 (icons/sslWarning.png)
 * skin/classic/global/in-content/common.css                (in-content/common.css)

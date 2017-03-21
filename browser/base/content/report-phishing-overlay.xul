@@ -29,7 +29,7 @@
               accesskey="&safeb.palm.notdeceptive.accesskey;"
               insertbefore="aboutSeparator"
               observes="reportPhishingErrorBroadcaster"
-              oncommand="openUILinkIn(gSafeBrowsing.getReportURL('PhishMistake'), 'tab');"
+              oncommand="ReportFalseDeceptiveSite();"
               onclick="checkForMiddleClick(this, event);"/>
   </menupopup>
 </overlay>
