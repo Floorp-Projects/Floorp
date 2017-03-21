@@ -266,6 +266,7 @@ MP4VideoInfo::Update(const mp4parse_track_info* track,
   mDisplay.height = video->display_height;
   mImage.width = video->image_width;
   mImage.height = video->image_height;
+  mRotation = ToSupportedRotation(video->rotation);
   if (video->extra_data.data) {
     mExtraData->AppendElements(video->extra_data.data, video->extra_data.length);
   }
