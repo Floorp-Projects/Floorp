@@ -272,7 +272,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
   }
 
   RefPtr<gfxPattern> gradient = CreateGradient();
-  if (!gradient || gradient->CairoStatus())
+  if (!gradient)
     return nullptr;
 
   uint16_t aSpread = GetSpreadMethod();

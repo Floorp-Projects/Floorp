@@ -146,7 +146,7 @@ struct AnimationProperty
   }
 };
 
-struct ServoComputedStyleValues
+struct ServoComputedValuesWithParent
 {
   const ServoComputedValues* mCurrentStyle;
   const ServoComputedValues* mParentStyle;
@@ -218,7 +218,7 @@ public:
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                     nsStyleContext* aStyleContext);
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
-                    const ServoComputedStyleValues& aServoValues);
+                    const ServoComputedValuesWithParent& aServoValues);
 
   // Returns true if the effect includes |aProperty| regardless of whether the
   // property is overridden by !important rule.
@@ -247,7 +247,7 @@ public:
   // |aStyleContext| to resolve specified values.
   void UpdateProperties(nsStyleContext* aStyleContext);
   // Servo version of the above function.
-  void UpdateProperties(const ServoComputedStyleValues& aServoValues);
+  void UpdateProperties(const ServoComputedValuesWithParent& aServoValues);
 
   // Update various bits of state related to running ComposeStyle().
   // We need to update this outside ComposeStyle() because we should avoid
@@ -309,7 +309,7 @@ public:
   // This is used for deciding the animation is paint-only.
   void CalculateCumulativeChangeHint(nsStyleContext* aStyleContext);
   void CalculateCumulativeChangeHint(
-    const ServoComputedStyleValues& aServoValues)
+    const ServoComputedValuesWithParent& aServoValues)
   {
   }
 
@@ -411,7 +411,7 @@ protected:
   // Ensure the base styles is available for any properties in |aProperties|.
   void EnsureBaseStyles(nsStyleContext* aStyleContext,
                         const nsTArray<AnimationProperty>& aProperties);
-  void EnsureBaseStyles(const ServoComputedStyleValues& aServoValues,
+  void EnsureBaseStyles(const ServoComputedValuesWithParent& aServoValues,
                         const nsTArray<AnimationProperty>& aProperties)
   {
     // FIXME: Bug 1311257: Support missing keyframes.

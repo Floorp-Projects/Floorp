@@ -28,7 +28,7 @@ class CSSStyleSheet;
 class ServoRestyleManager;
 class ServoStyleSheet;
 struct Keyframe;
-struct ServoComputedStyleValues;
+struct ServoComputedValuesWithParent;
 } // namespace mozilla
 class nsIDocument;
 class nsStyleContext;
@@ -245,7 +245,8 @@ public:
   nsTArray<ComputedKeyframeValues>
   GetComputedKeyframeValuesFor(const nsTArray<Keyframe>& aKeyframes,
                                dom::Element* aElement,
-                               const ServoComputedStyleValues& aServoValues);
+                               const ServoComputedValuesWithParent&
+                                 aServoValues);
 
 private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,

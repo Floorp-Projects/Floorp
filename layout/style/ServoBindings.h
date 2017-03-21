@@ -144,7 +144,7 @@ void Gecko_DropStyleChildrenIterator(StyleChildrenIteratorOwned it);
 RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowedMut it);
 
 // Selector Matching.
-uint16_t Gecko_ElementState(RawGeckoElementBorrowed element);
+uint64_t Gecko_ElementState(RawGeckoElementBorrowed element);
 bool Gecko_IsLink(RawGeckoElementBorrowed element);
 bool Gecko_IsTextNode(RawGeckoNodeBorrowed node);
 bool Gecko_IsVisitedLink(RawGeckoElementBorrowed element);
