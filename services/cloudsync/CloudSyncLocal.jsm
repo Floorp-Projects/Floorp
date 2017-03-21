@@ -18,7 +18,7 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 
 function lazyStrings(name) {
   return () => Services.strings.createBundle(
-    `chrome://weave/locale/services//${name}.properties`);
+    `chrome://weave/locale/${name}.properties`);
 }
 
 this.Str = {};
