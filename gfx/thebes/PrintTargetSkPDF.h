@@ -66,7 +66,6 @@ private:
   sk_sp<SkDocument> mRefPDFDoc;
   sk_sp<SkCanvas> mRefCanvas;
   SkDynamicMemoryWStream mRefOStream;
-  RefPtr<DrawTarget> mRefDT;
 };
 
 } // namespace gfx
