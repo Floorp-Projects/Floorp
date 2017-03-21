@@ -6,7 +6,6 @@
 
 UNIFIED_SOURCES += [
     'elfutils.cc',
-    'guid_creator.cc',
     'linux_libc_support.cc',
     'memory_mapped_file.cc',
     'safe_readlink.cc',
@@ -29,7 +28,6 @@ HOST_SOURCES += [
     'elf_symbols_to_module.cc',
     'elfutils.cc',
     'file_id.cc',
-    'guid_creator.cc',
     'linux_libc_support.cc',
     'memory_mapped_file.cc',
 ]

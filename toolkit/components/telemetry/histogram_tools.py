@@ -371,14 +371,14 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                 continue
             if not isinstance(definition[key], key_type):
                 raise ValueError, ('value for key "{0}" in Histogram "{1}" '
-                        'should be {2}').format(key, name, nice_type_name(key_type))
+                                   'should be {2}').format(key, name, nice_type_name(key_type))
 
         for key, key_type in type_checked_list_fields.iteritems():
             if key not in definition:
                 continue
             if not all(isinstance(x, key_type) for x in definition[key]):
                 raise ValueError, ('all values for list "{0}" in Histogram "{1}" '
-                        'should be {2}').format(key, name, nice_type_name(key_type))
+                                   'should be {2}').format(key, name, nice_type_name(key_type))
 
     @staticmethod
     def check_keys(name, definition, allowed_keys):
@@ -393,8 +393,8 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         if whitelists is not None and self._n_buckets > 100 and type(self._n_buckets) is int:
             if self._name not in whitelists['n_buckets']:
                 raise KeyError, ('New histogram "%s" is not permitted to have more than 100 buckets. '
-                                'Histograms with large numbers of buckets use disproportionately high amounts of resources. '
-                                'Contact the Telemetry team (e.g. in #telemetry) if you think an exception ought to be made.' % self._name)
+                                 'Histograms with large numbers of buckets use disproportionately high amounts of resources. '
+                                 'Contact the Telemetry team (e.g. in #telemetry) if you think an exception ought to be made.' % self._name)
 
     @staticmethod
     def boolean_flag_bucket_parameters(definition):

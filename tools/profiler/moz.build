@@ -60,7 +60,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
             SOURCES += [
                 '/toolkit/crashreporter/google-breakpad/src/common/linux/elfutils.cc',
                 '/toolkit/crashreporter/google-breakpad/src/common/linux/file_id.cc',
-                '/toolkit/crashreporter/google-breakpad/src/common/linux/guid_creator.cc',
                 '/toolkit/crashreporter/google-breakpad/src/common/linux/linux_libc_support.cc',
                 '/toolkit/crashreporter/google-breakpad/src/common/linux/memory_mapped_file.cc',
             ]
