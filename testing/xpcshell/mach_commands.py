@@ -146,19 +146,13 @@ class XPCShellRunner(MozbuildObject):
 
 class AndroidXPCShellRunner(MozbuildObject):
     """Get specified DeviceManager"""
-    def get_devicemanager(self, devicemanager, ip, port, remote_test_root):
+    def get_devicemanager(self, ip, port, remote_test_root):
         import mozdevice
         dm = None
-        if devicemanager == "adb":
-            if ip:
-                dm = mozdevice.DroidADB(ip, port, packageName=None, deviceRoot=remote_test_root)
-            else:
-                dm = mozdevice.DroidADB(packageName=None, deviceRoot=remote_test_root)
+        if ip:
+            dm = mozdevice.DroidADB(ip, port, packageName=None, deviceRoot=remote_test_root)
         else:
-            if ip:
-                dm = mozdevice.DroidSUT(ip, port, deviceRoot=remote_test_root)
-            else:
-                raise Exception("You must provide a device IP to connect to via the --ip option")
+            dm = mozdevice.DroidADB(packageName=None, deviceRoot=remote_test_root)
         return dm
 
     """Run Android xpcshell tests."""
@@ -170,7 +164,7 @@ class AndroidXPCShellRunner(MozbuildObject):
 
         import remotexpcshelltests
 
-        dm = self.get_devicemanager(kwargs["dm_trans"], kwargs["deviceIP"], kwargs["devicePort"],
+        dm = self.get_devicemanager(kwargs["deviceIP"], kwargs["devicePort"],
                                     kwargs["remoteTestRoot"])
 
         log = kwargs.pop("log")
