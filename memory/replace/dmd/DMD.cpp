@@ -20,6 +20,8 @@
 #include <windows.h>
 #include <process.h>
 #else
+#include <pthread.h>
+#include <sys/types.h>
 #include <unistd.h>
 #endif
 
@@ -440,9 +442,6 @@ public:
 
 #else
 
-#include <pthread.h>
-#include <sys/types.h>
-
 class MutexBase
 {
   pthread_mutex_t mMutex;
@@ -526,8 +525,6 @@ public:
 #define DMD_SET_TLS_DATA(i_, v_)        TlsSetValue((i_), (v_))
 
 #else
-
-#include <pthread.h>
 
 #define DMD_TLS_INDEX_TYPE               pthread_key_t
 #define DMD_CREATE_TLS_INDEX(i_)         pthread_key_create(&(i_), nullptr)
