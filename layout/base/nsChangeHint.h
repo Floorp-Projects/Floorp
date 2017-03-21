@@ -368,6 +368,26 @@ static_assert(!(nsChangeHint_Hints_AlwaysHandledForDescendants &
   nsChangeHint_Hints_SometimesHandledForDescendants        \
 )
 
+// Redefine the old NS_STYLE_HINT constants in terms of the new hint structure
+#define NS_STYLE_HINT_VISUAL \
+  nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView | \
+               nsChangeHint_SchedulePaint)
+#define nsChangeHint_AllReflowHints                     \
+  nsChangeHint(nsChangeHint_NeedReflow |                \
+               nsChangeHint_ReflowChangesSizeOrPosition|\
+               nsChangeHint_ClearAncestorIntrinsics |   \
+               nsChangeHint_ClearDescendantIntrinsics | \
+               nsChangeHint_NeedDirtyReflow)
+#define NS_STYLE_HINT_REFLOW \
+  nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_AllReflowHints)
+
+#define nsChangeHint_Hints_CanIgnoreIfNotVisible   \
+  nsChangeHint(NS_STYLE_HINT_VISUAL |              \
+               nsChangeHint_NeutralChange |        \
+               nsChangeHint_UpdateOpacityLayer |   \
+               nsChangeHint_UpdateTransformLayer | \
+               nsChangeHint_UpdateUsesOpacity)
+
 // NB: Once we drop support for the old style system, this logic should be
 // inlined in the Servo style system to eliminate the FFI call.
 inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint) {
@@ -403,25 +423,36 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
   return result;
 }
 
-// Redefine the old NS_STYLE_HINT constants in terms of the new hint structure
-#define NS_STYLE_HINT_VISUAL \
-  nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView | \
-               nsChangeHint_SchedulePaint)
-#define nsChangeHint_AllReflowHints                     \
-  nsChangeHint(nsChangeHint_NeedReflow |                \
-               nsChangeHint_ReflowChangesSizeOrPosition|\
-               nsChangeHint_ClearAncestorIntrinsics |   \
-               nsChangeHint_ClearDescendantIntrinsics | \
-               nsChangeHint_NeedDirtyReflow)
-#define NS_STYLE_HINT_REFLOW \
-  nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_AllReflowHints)
+inline nsChangeHint
+NS_HintsHandledForDescendantsIn(nsChangeHint aChangeHint)
+{
+  return aChangeHint & ~NS_HintsNotHandledForDescendantsIn(aChangeHint);
+}
 
-#define nsChangeHint_Hints_CanIgnoreIfNotVisible   \
-  nsChangeHint(NS_STYLE_HINT_VISUAL |              \
-               nsChangeHint_NeutralChange |        \
-               nsChangeHint_UpdateOpacityLayer |   \
-               nsChangeHint_UpdateTransformLayer | \
-               nsChangeHint_UpdateUsesOpacity)
+// Returns the change hints in aOurChange that are not subsumed by those
+// in aHintsHandled (which are hints that have been handled by an ancestor).
+inline nsChangeHint
+NS_RemoveSubsumedHints(nsChangeHint aOurChange, nsChangeHint aHintsHandled)
+{
+  nsChangeHint result =
+    aOurChange & ~NS_HintsHandledForDescendantsIn(aHintsHandled);
+
+  if (result & (nsChangeHint_ClearAncestorIntrinsics |
+                nsChangeHint_ClearDescendantIntrinsics |
+                nsChangeHint_NeedDirtyReflow |
+                nsChangeHint_ReflowChangesSizeOrPosition |
+                nsChangeHint_UpdateComputedBSize)) {
+    result |= nsChangeHint_NeedReflow;
+  }
+
+  if (result & (nsChangeHint_ClearDescendantIntrinsics)) {
+    MOZ_ASSERT(result & nsChangeHint_ClearAncestorIntrinsics);
+    result |= // nsChangeHint_ClearAncestorIntrinsics |
+              nsChangeHint_NeedDirtyReflow;
+  }
+
+  return result;
+}
 
 /**
  * |nsRestyleHint| is a bitfield for the result of
