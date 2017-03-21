@@ -1,9 +1,29 @@
 "use strict";
 
 module.exports = {
+  // When adding items to this file please check for effects on sub-directories.
+  "plugins": [
+    "mozilla"
+  ],
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 8
+  },
   // When adding items to this file please check for effects on all of toolkit
   // and browser
   "rules": {
+    "mozilla/avoid-removeChild": "error",
+    "mozilla/avoid-nsISupportsString-preferences": "error",
+    "mozilla/import-globals": "error",
+    "mozilla/no-import-into-var-and-global": "error",
+    "mozilla/no-useless-parameters": "error",
+    "mozilla/no-useless-removeEventListener": "error",
+    "mozilla/use-default-preference-values": "error",
+    "mozilla/use-ownerGlobal": "error",
+
     // Braces only needed for multi-line arrow function blocks
     // "arrow-body-style": ["error", "as-needed"],
 
@@ -194,6 +214,9 @@ module.exports = {
     // Disallow control flow statements in finally blocks
     "no-unsafe-finally": "error",
 
+    // No (!foo in bar) or (!object instanceof Class)
+    "no-unsafe-negation": "error",
+
     // No declaring variables that are never used
     "no-unused-vars": ["error", {
       "vars": "local",
@@ -262,10 +285,6 @@ module.exports = {
     // Don't concatenate string literals together (unless they span multiple
     // lines)
     "no-useless-concat": "error"
-  },
-  "env": {
-    "es6": true,
-    "browser": true
   },
   "globals": {
     "BroadcastChannel": false,
