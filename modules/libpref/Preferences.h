@@ -289,6 +289,39 @@ public:
                                           MatchKind aMatchKind = PrefixMatch);
 
   /**
+   * Like RegisterCallback, but registers a callback for a prefix of multiple
+   * pref names, not a single pref name.
+   */
+  static nsresult RegisterPrefixCallback(PrefChangedFunc aCallback,
+                                         const char* aPref,
+                                         void* aClosure = nullptr)
+  {
+    return RegisterCallback(aCallback, aPref, aClosure, PrefixMatch);
+  }
+
+  /**
+   * Like RegisterPrefixCallback, but also calls the callback immediately for
+   * initialization.
+   */
+  static nsresult RegisterPrefixCallbackAndCall(PrefChangedFunc aCallback,
+                                                const char* aPref,
+                                                void* aClosure = nullptr)
+  {
+    return RegisterCallbackAndCall(aCallback, aPref, aClosure, PrefixMatch);
+  }
+
+  /**
+   * Unregister a callback registered with RegisterPrefixCallback or
+   * RegisterPrefixCallbackAndCall.
+   */
+  static nsresult UnregisterPrefixCallback(PrefChangedFunc aCallback,
+                                           const char* aPref,
+                                           void* aClosure = nullptr)
+  {
+    return UnregisterCallback(aCallback, aPref, aClosure, PrefixMatch);
+  }
+
+  /**
    * Adds the aVariable to cache table.  aVariable must be a pointer for a
    * static variable.  The value will be modified when the pref value is
    * changed but note that even if you modified it, the value isn't assigned to
