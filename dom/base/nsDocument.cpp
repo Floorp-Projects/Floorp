@@ -7932,12 +7932,9 @@ nsDocument::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 
   // Load events must not propagate to |window| object, see bug 335251.
   if (aVisitor.mEvent->mMessage != eLoad) {
-    nsPIDOMWindowInner* innerWindow = GetInnerWindow();
-    if (innerWindow && innerWindow->IsCurrentInnerWindow()) {
-      nsGlobalWindow* window = nsGlobalWindow::Cast(GetWindow());
-      aVisitor.mParentTarget =
-        window ? window->GetTargetForEventTargetChain() : nullptr;
-    }
+    nsGlobalWindow* window = nsGlobalWindow::Cast(GetWindow());
+    aVisitor.mParentTarget =
+      window ? window->GetTargetForEventTargetChain() : nullptr;
   }
   return NS_OK;
 }

@@ -481,6 +481,50 @@ const TEST_DATA = [
                   index: 2},
     expected: "position:absolute;top50px;height:50px;width:60px;",
   },
+
+  {
+    desc: "url regression test for bug 1321970",
+    input: "",
+    instruction: {type: "create", name: "p", value: "url(", priority: "",
+                  index: 0, enabled: true},
+    expected: "p: url();",
+    changed: {0: "url()"}
+  },
+
+  {
+    desc: "url semicolon regression test for bug 1321970",
+    input: "",
+    instruction: {type: "create", name: "p", value: "url(;", priority: "",
+                  index: 0, enabled: true},
+    expected: "p: url();",
+    changed: {0: "url()"}
+  },
+
+  {
+    desc: "basic regression test for bug 1321970",
+    input: "",
+    instruction: {type: "create", name: "p", value: "(", priority: "",
+                  index: 0, enabled: true},
+    expected: "p: \\(;",
+    changed: {0: "\\("}
+  },
+
+  {
+    desc: "unbalanced regression test for bug 1321970",
+    input: "",
+    instruction: {type: "create", name: "p", value: "({[})", priority: "",
+                  index: 0, enabled: true},
+    expected: "p: ({\\[});",
+    changed: {0: "({\\[})"}
+  },
+
+  {
+    desc: "function regression test for bug 1321970",
+    input: "",
+    instruction: {type: "create", name: "p", value: "func(1,2)", priority: "",
+                  index: 0, enabled: true},
+    expected: "p: func(1,2);",
+  },
 ];
 
 function rewriteDeclarations(inputString, instruction, defaultIndentation) {

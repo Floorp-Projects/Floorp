@@ -733,7 +733,7 @@ nsSVGPatternFrame::GetPaintServerPattern(nsIFrame *aSource,
 
   RefPtr<gfxPattern> pattern = new gfxPattern(surface, pMatrix);
 
-  if (!pattern || pattern->CairoStatus())
+  if (!pattern)
     return nullptr;
 
   pattern->SetExtend(ExtendMode::REPEAT);

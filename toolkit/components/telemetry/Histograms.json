@@ -9700,7 +9700,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 20,
-    "description": "Sanitize: Time it takes to sanitize the open windows list (ms)"
+    "description": "Sanitize: Time it takes to sanitize the open windows list (ms). On Android, this is the time it takes to close all open tabs (ms)."
   },
   "PWMGR_BLOCKLIST_NUM_SITES": {
     "expires_in_version": "never",

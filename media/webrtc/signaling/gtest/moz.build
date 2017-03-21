@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # TODO: bug 1172551 - get these tests working on iOS
-if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit':
     LOCAL_INCLUDES += [
       '/ipc/chromium/src',
       '/media/mtransport',
@@ -30,3 +30,6 @@ if CONFIG['_MSC_VER']:
     # with VS2015.
     # reinterpret_cast': conversion from 'DWORD' to 'HANDLE' of greater size
     CXXFLAGS += ['-wd4312']
+
+    # Disable warning for decorated name length exceeded, name was truncated
+    CXXFLAGS += ['-wd4503']

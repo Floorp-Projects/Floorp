@@ -19,5 +19,6 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'command-state.js',
     'templater.js'
 )

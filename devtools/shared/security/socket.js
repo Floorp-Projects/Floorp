@@ -358,7 +358,7 @@ function _storeCertOverride(s, host, port) {
   let overrideBits = Ci.nsICertOverrideService.ERROR_UNTRUSTED |
                      Ci.nsICertOverrideService.ERROR_MISMATCH;
   certOverrideService.rememberValidityOverride(host, port, cert, overrideBits,
-                                               true /* temporary */); // eslint-disable-line
+                                               true /* temporary */);
 }
 
 /**

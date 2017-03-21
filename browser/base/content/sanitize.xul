@@ -1,16 +1,13 @@
 <?xml version="1.0"?>
 
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+<!-- -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- -->
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/sanitizeDialog.css"?>
 
-#ifdef CRH_DIALOG_TREE_VIEW
-<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
-#endif
 
 <?xml-stylesheet href="chrome://browser/content/sanitizeDialog.css"?>
 
@@ -36,16 +33,6 @@
     <script type="application/javascript"
             src="chrome://browser/content/sanitize.js"/>
 
-#ifdef CRH_DIALOG_TREE_VIEW
-    <script type="application/javascript"
-            src="chrome://global/content/globalOverlay.js"/>
-    <script type="application/javascript"
-            src="chrome://browser/content/places/treeView.js"/>
-    <script type="application/javascript"><![CDATA[
-      Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
-      Components.utils.import("resource:///modules/PlacesUIUtils.jsm");
-    ]]></script>
-#endif
 
     <script type="application/javascript"
             src="chrome://browser/content/sanitizeDialog.js"/>
@@ -77,9 +64,6 @@
                 onselect="gSanitizePromptDialog.selectByTimespan();"
                 flex="1">
         <menupopup id="sanitizeDurationPopup">
-#ifdef CRH_DIALOG_TREE_VIEW
-          <menuitem label="" value="-1" id="sanitizeDurationCustom"/>
-#endif
           <menuitem label="&clearTimeDuration.lastHour;" value="1"/>
           <menuitem label="&clearTimeDuration.last2Hours;" value="2"/>
           <menuitem label="&clearTimeDuration.last4Hours;" value="3"/>
@@ -94,22 +78,6 @@
 
     <separator class="thin"/>
 
-#ifdef CRH_DIALOG_TREE_VIEW
-    <deck id="durationDeck">
-      <tree id="placesTree" flex="1" hidecolumnpicker="true" rows="10"
-            disabled="true" disableKeyNavigation="true">
-        <treecols>
-          <treecol id="date" label="&clearTimeDuration.dateColumn;" flex="1"/>
-          <splitter class="tree-splitter"/>
-          <treecol id="title" label="&clearTimeDuration.nameColumn;" flex="5"/>
-        </treecols>
-        <treechildren id="placesTreechildren"
-                      ondragstart="gSanitizePromptDialog.grippyMoved('ondragstart', event);"
-                      ondragover="gSanitizePromptDialog.grippyMoved('ondragover', event);"
-                      onkeypress="gSanitizePromptDialog.grippyMoved('onkeypress', event);"
-                      onmousedown="gSanitizePromptDialog.grippyMoved('onmousedown', event);"/>
-      </tree>
-#endif
 
       <vbox id="sanitizeEverythingWarningBox">
         <spacer flex="1"/>
@@ -123,9 +91,6 @@
         <spacer flex="1"/>
       </vbox>
 
-#ifdef CRH_DIALOG_TREE_VIEW
-    </deck>
-#endif
 
     <separator class="thin"/>
 

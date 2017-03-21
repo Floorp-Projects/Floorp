@@ -1,16 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- /* globals getOuterId, getBrowserForTab */
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
-const eventEmitter = new EventEmitter();
 const events = require("sdk/event/core");
 
-loader.lazyRequireGetter(this, "getOuterId", "sdk/window/utils", true);
-loader.lazyRequireGetter(this, "getBrowserForTab", "sdk/tabs/utils", true);
+loader.lazyRequireGetter(this, "CommandState",
+  "devtools/shared/gcli/command-state", true);
 
 const l10n = require("gcli/l10n");
 require("devtools/server/actors/inspector");
@@ -18,10 +15,6 @@ const { MeasuringToolHighlighter, HighlighterEnvironment } =
   require("devtools/server/actors/highlighters");
 
 const highlighters = new WeakMap();
-const visibleHighlighters = new Set();
-
-const isCheckedFor = (tab) =>
-  tab ? visibleHighlighters.has(getBrowserForTab(tab).outerWindowID) : false;
 
 exports.items = [
   // The client measure command is used to maintain the toolbar button state
@@ -36,34 +29,28 @@ exports.items = [
     buttonClass: "command-button command-button-invertable",
     tooltipText: l10n.lookup("measureTooltip"),
     state: {
-      isChecked: ({_tab}) => isCheckedFor(_tab),
-      onChange: (target, handler) => eventEmitter.on("changed", handler),
-      offChange: (target, handler) => eventEmitter.off("changed", handler)
+      isChecked: (target) => CommandState.isEnabledForTarget(target, "measure"),
+      onChange: (target, handler) => CommandState.on("changed", handler),
+      offChange: (target, handler) => CommandState.off("changed", handler)
     },
     exec: function* (args, context) {
       let { target } = context.environment;
 
       // Pipe the call to the server command.
       let response = yield context.updateExec("measure_server");
-      let { visible, id } = response.data;
+      let isEnabled = response.data;
 
-      if (visible) {
-        visibleHighlighters.add(id);
+      if (isEnabled) {
+        CommandState.enableForTarget(target, "measure");
       } else {
-        visibleHighlighters.delete(id);
+        CommandState.disableForTarget(target, "measure");
       }
-
-      eventEmitter.emit("changed", { target });
 
       // Toggle off the button when the page navigates because the measuring
       // tool is removed automatically by the MeasuringToolHighlighter on the
       // server then.
-      let onNavigate = () => {
-        visibleHighlighters.delete(id);
-        eventEmitter.emit("changed", { target });
-      };
-      target.off("will-navigate", onNavigate);
-      target.once("will-navigate", onNavigate);
+      target.once("will-navigate", () =>
+        CommandState.disableForTarget(target, "measure"));
     }
   },
   // The server measure command is hidden by default, it's just used by the
@@ -76,14 +63,13 @@ exports.items = [
     exec: function (args, context) {
       let env = context.environment;
       let { document } = env;
-      let id = getOuterId(env.window);
 
       // Calling the command again after the measuring tool has been shown once,
       // hides it.
       if (highlighters.has(document)) {
         let { highlighter } = highlighters.get(document);
         highlighter.destroy();
-        return {visible: false, id};
+        return false;
       }
 
       // Otherwise, display the measuring tool.
@@ -106,7 +92,7 @@ exports.items = [
       });
 
       highlighter.show();
-      return {visible: true, id};
+      return true;
     }
   }
 ];
