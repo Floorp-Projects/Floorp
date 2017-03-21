@@ -533,6 +533,9 @@ protected:
   // view, and is initially hidden.
   void CreatePopupView();
 
+  nsView* GetViewInternal() const override { return mView; }
+  void SetViewInternal(nsView* aView) override { mView = aView; }
+
   // Returns true if the popup should try to remain at the same relative
   // location as the anchor while it is open. If the anchor becomes hidden
   // either directly or indirectly because a parent popup or other element
@@ -555,6 +558,7 @@ protected:
   nsCOMPtr<nsIContent> mTriggerContent;
 
   nsMenuFrame* mCurrentMenu; // The current menu that is active.
+  nsView* mView;
 
   RefPtr<nsXULPopupShownEvent> mPopupShownDispatcher;
 

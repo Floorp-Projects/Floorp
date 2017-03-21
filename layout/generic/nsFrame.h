@@ -596,11 +596,10 @@ protected:
 
 public:
   /**
-   * Helper method to wrap views around frames. Used by containers
-   * under special circumstances (can be used by leaf frames as well)
+   * Helper method to create a view for a frame.  Only used by a few sub-classes
+   * that need a view.
    */
-  static void CreateViewForFrame(nsIFrame* aFrame,
-                                 bool aForce);
+  void CreateView();
 
   //given a frame five me the first/last leaf available
   //XXX Robert O'Callahan wants to move these elsewhere
