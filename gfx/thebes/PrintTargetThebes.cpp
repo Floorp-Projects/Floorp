@@ -65,14 +65,30 @@ PrintTargetThebes::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
     if (!dt || !dt->IsValid()) {
       return nullptr;
     }
-    if (aRecorder) {
-      dt = CreateRecordingDrawTarget(aRecorder, dt);
+    mRefDT = dt->CreateSimilarDrawTarget(IntSize(1,1), dt->GetFormat());
+  }
+
+  if (aRecorder) {
+    if (!mRecordingRefDT) {
+      RefPtr<DrawTarget> dt = CreateRecordingDrawTarget(aRecorder, mRefDT);
       if (!dt || !dt->IsValid()) {
         return nullptr;
       }
+      mRecordingRefDT = dt.forget();
+#ifdef DEBUG
+      mRecorder = aRecorder;
+#endif
     }
-    mRefDT = dt->CreateSimilarDrawTarget(IntSize(1,1), dt->GetFormat());
+#ifdef DEBUG
+    else {
+      MOZ_ASSERT(aRecorder == mRecorder,
+                 "Caching mRecordingRefDT assumes the aRecorder is an invariant");
+    }
+#endif
+
+    return do_AddRef(mRecordingRefDT);
   }
+
   return do_AddRef(mRefDT);
 }
 
