@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         final BrowserFragment browserFragment = (BrowserFragment) getSupportFragmentManager().findFragmentByTag(BrowserFragment.FRAGMENT_TAG);
-        if (browserFragment != null && browserFragment.canGoBack()) {
+        if (browserFragment != null && browserFragment.isVisible() && browserFragment.canGoBack()) {
             browserFragment.goBack();
             return;
         }
