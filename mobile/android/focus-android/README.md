@@ -19,7 +19,7 @@ Build instructions
 1. Clone the repository:
 
   ```shell
-  git clone https://github.com/mozilla/focus-android
+  git clone https://github.com/mozilla-mobile/focus-android
   ```
 
 1. Import the project into Android Studio or build on the command line:
