@@ -593,6 +593,8 @@ child:
 
     async ProvideAnonymousTemporaryFile(uint64_t aID, FileDescOrError aFD);
 
+    async SetPermissionsWithKey(nsCString aPermissionKey, Permission[] aPermissions);
+
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
@@ -785,9 +787,6 @@ parent:
                       uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
                       nsCString category);
 
-    // nsIPermissionManager messages
-    sync ReadPermissions() returns (Permission[] permissions);
-
     // Places the items within dataTransfer on the clipboard.
     async SetClipboard(IPCDataTransfer aDataTransfer,
                        bool aIsPrivateData,
@@ -875,8 +874,6 @@ parent:
     async BackUpXResources(FileDescriptor aXSocketFd);
 
     async RequestAnonymousTemporaryFile(uint64_t aID);
-
-    sync OpenAnonymousTemporaryFile() returns (FileDescOrError aFD);
 
     /**
      * Keygen requires us to call it after a <keygen> element is parsed and

@@ -5,6 +5,8 @@
 
 #include "domstubs.idl"
 
+interface nsIPrincipal;
+
 [builtinclass, scriptable, uuid(8e49f7b0-1f98-4939-bf91-e9c39cd56434)]
 interface nsITabParent : nsISupports
 {
@@ -61,4 +63,10 @@ interface nsITabParent : nsISupports
    * it.
    */
   readonly attribute boolean hasPresented;
+
+  /**
+   * Ensures that the content process which has this tab parent has all of the
+   * permissions required to load a document with the given principal.
+   */
+  void transmitPermissionsForPrincipal(in nsIPrincipal aPrincipal);
 };

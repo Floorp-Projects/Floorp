@@ -39,34 +39,17 @@
 #include "nsINavHistoryService.h"
 #include "nsToolkitCompsCID.h"
 #include "nsIObserverService.h"
+#include "nsPrintfCString.h"
 
 static nsPermissionManager *gPermissionManager = nullptr;
 
 using mozilla::dom::ContentParent;
-using mozilla::dom::ContentChild;
 using mozilla::Unused; // ha!
 
 static bool
 IsChildProcess()
 {
   return XRE_IsContentProcess();
-}
-
-/**
- * @returns The child process object, or if we are not in the child
- *          process, nullptr.
- */
-static ContentChild*
-ChildProcess()
-{
-  if (IsChildProcess()) {
-    ContentChild* cpc = ContentChild::GetSingleton();
-    if (!cpc)
-      MOZ_CRASH("Content Process is nullptr!");
-    return cpc;
-  }
-
-  return nullptr;
 }
 
 static void
@@ -191,6 +174,54 @@ GetNextSubDomainForHost(const nsACString& aHost)
   }
 
   return subDomain;
+}
+
+// This function produces a nsIPrincipal which is identical to the current
+// nsIPrincipal, except that it has one less subdomain segment. It returns
+// `nullptr` if there are no more segments to remove.
+already_AddRefed<nsIPrincipal>
+GetNextSubDomainPrincipal(nsIPrincipal* aPrincipal)
+{
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv) || !uri) {
+    return nullptr;
+  }
+
+  nsAutoCString host;
+  rv = uri->GetHost(host);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  nsCString domain = GetNextSubDomainForHost(host);
+  if (domain.IsEmpty()) {
+    return nullptr;
+  }
+
+  // Create a new principal which is identical to the current one, but with the new host
+  nsCOMPtr<nsIURI> newURI;
+  rv = uri->Clone(getter_AddRefs(newURI));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  rv = newURI->SetHost(domain);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  // Copy the attributes over
+  mozilla::OriginAttributes attrs = aPrincipal->OriginAttributesRef();
+
+  // Disable userContext and firstParty isolation for permissions.
+  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
+                        mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
+
+  nsCOMPtr<nsIPrincipal> principal =
+    mozilla::BasePrincipal::CreateCodebasePrincipal(newURI, attrs);
+
+  return principal.forget();
 }
 
 class ClearOriginDataObserver final : public nsIObserver {
@@ -615,6 +646,22 @@ nsPermissionManager::PermissionKey::CreateFromPrincipal(nsIPrincipal* aPrincipal
     return nullptr;
   }
 
+#ifdef DEBUG
+  // Creating a PermissionsKey to look up a permission if we haven't had those
+  // keys synced down yet is problematic, so we do a check here and crash on
+  // debug builds if we see it happening.
+  if (XRE_IsContentProcess()) {
+    nsAutoCString permissionKey;
+    GetKeyForPrincipal(aPrincipal, permissionKey);
+
+    if (!gPermissionManager->mAvailablePermissionKeys.Contains(permissionKey)) {
+      NS_WARNING(nsPrintfCString("This content process hasn't received the "
+                                 "permissions for %s yet", permissionKey.get()).get());
+      MOZ_CRASH("The content process hasn't recieved permissions for an origin yet.");
+    }
+  }
+#endif
+
   return new PermissionKey(origin);
 }
 
@@ -798,8 +845,9 @@ nsPermissionManager::Init()
   mMemoryOnlyDB = mozilla::Preferences::GetBool("permissions.memory_only", false);
 
   if (IsChildProcess()) {
-    // Stop here; we don't need the DB in the child process
-    return FetchPermissions();
+    // Stop here; we don't need the DB in the child process. Instead we will be
+    // sent permissions as we need them by our parent process.
+    return NS_OK;
   }
 
   nsCOMPtr<nsIObserverService> observerService =
@@ -1566,11 +1614,14 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
     IPC::Permission permission(origin, aType, aPermission,
                                aExpireType, aExpireTime);
 
+    nsAutoCString permissionKey;
+    GetKeyForPrincipal(aPrincipal, permissionKey);
+
     nsTArray<ContentParent*> cplist;
     ContentParent::GetAll(cplist);
     for (uint32_t i = 0; i < cplist.Length(); ++i) {
       ContentParent* cp = cplist[i];
-      if (cp->NeedsPermissionsUpdate())
+      if (cp->NeedsPermissionsUpdate(permissionKey))
         Unused << cp->SendAddPermission(permission);
     }
   }
@@ -2180,46 +2231,11 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
 
   // If aExactHostMatch wasn't true, we can check if the base domain has a permission entry.
   if (!aExactHostMatch) {
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
-    if (NS_FAILED(rv)) {
-      return nullptr;
-    }
-
-    nsAutoCString host;
-    rv = uri->GetHost(host);
-    if (NS_FAILED(rv)) {
-      return nullptr;
-    }
-
-    nsCString domain = GetNextSubDomainForHost(host);
-    if (domain.IsEmpty()) {
-      return nullptr;
-    }
-
-    // Create a new principal which is identical to the current one, but with the new host
-    nsCOMPtr<nsIURI> newURI;
-    rv = uri->Clone(getter_AddRefs(newURI));
-    if (NS_FAILED(rv)) {
-      return nullptr;
-    }
-
-    rv = newURI->SetHost(domain);
-    if (NS_FAILED(rv)) {
-      return nullptr;
-    }
-
-    // Copy the attributes over
-    mozilla::OriginAttributes attrs = aPrincipal->OriginAttributesRef();
-
-    // Disable userContext and firstParty isolation for permissions.
-    attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
-                          mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
-
     nsCOMPtr<nsIPrincipal> principal =
-      mozilla::BasePrincipal::CreateCodebasePrincipal(newURI, attrs);
-
-    return GetPermissionHashKey(principal, aType, aExactHostMatch);
+      GetNextSubDomainPrincipal(aPrincipal);
+    if (principal) {
+      return GetPermissionHashKey(principal, aType, aExactHostMatch);
+    }
   }
 
   // No entry, really...
@@ -2228,6 +2244,13 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
 
 NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 {
+  if (XRE_IsContentProcess()) {
+    NS_WARNING("nsPermissionManager's enumerator is not avaliable in the "
+               "content process, as not all permissions may be avaliable.");
+    *aEnum = nullptr;
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   // roll an nsCOMArray of all our permissions, then hand out an enumerator
   nsCOMArray<nsIPermission> array;
 
@@ -2909,19 +2932,87 @@ nsPermissionManager::UpdateExpireTime(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-nsresult
-nsPermissionManager::FetchPermissions() {
-  MOZ_ASSERT(IsChildProcess(), "FetchPermissions can only be invoked in child process");
-  // Get the permissions from the parent process
-  InfallibleTArray<IPC::Permission> perms;
-  ChildProcess()->SendReadPermissions(&perms);
+NS_IMETHODIMP
+nsPermissionManager::GetPermissionsWithKey(const nsACString& aPermissionKey,
+                                           nsTArray<IPC::Permission>& aPerms)
+{
+  aPerms.Clear();
+  if (NS_WARN_IF(XRE_IsContentProcess())) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  for (uint32_t i = 0; i < perms.Length(); i++) {
-    const IPC::Permission &perm = perms[i];
+  for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
+    PermissionHashKey* entry = iter.Get();
 
+    // XXX: Is it worthwhile to have a shortcut Origin->Key implementation? as
+    // we could implement this without creating a codebase principal.
+
+    // Fetch the principal for the given origin.
+    nsCOMPtr<nsIPrincipal> principal;
+    nsresult rv = GetPrincipalFromOrigin(entry->GetKey()->mOrigin,
+                                         getter_AddRefs(principal));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+    // Get the permission key and make sure that it matches the aPermissionKey
+    // passed in.
+    nsAutoCString permissionKey;
+    GetKeyForPrincipal(principal, permissionKey);
+
+    if (permissionKey != aPermissionKey) {
+      continue;
+    }
+
+    for (const auto& permEntry : entry->GetPermissions()) {
+      // Given how "default" permissions work and the possibility of them being
+      // overridden with UNKNOWN_ACTION, we might see this value here - but we
+      // do not want to send it to the content process.
+      if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
+        continue;
+      }
+
+      aPerms.AppendElement(IPC::Permission(entry->GetKey()->mOrigin,
+                                           mTypeArray.ElementAt(permEntry.mType),
+                                           permEntry.mPermission,
+                                           permEntry.mExpireType,
+                                           permEntry.mExpireTime));
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPermissionManager::SetPermissionsWithKey(const nsACString& aPermissionKey,
+                                           nsTArray<IPC::Permission>& aPerms)
+{
+  if (NS_WARN_IF(XRE_IsParentProcess())) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // Record that we have seen the permissions with the given permission key.
+  if (NS_WARN_IF(mAvailablePermissionKeys.Contains(aPermissionKey))) {
+    // NOTE: We shouldn't be sent two InitializePermissionsWithKey for the same
+    // key, but it's possible.
+    return NS_OK;
+  }
+  mAvailablePermissionKeys.PutEntry(aPermissionKey);
+
+  // Add the permissions locally to our process
+  for (IPC::Permission& perm : aPerms) {
     nsCOMPtr<nsIPrincipal> principal;
     nsresult rv = GetPrincipalFromOrigin(perm.origin, getter_AddRefs(principal));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+#ifdef DEBUG
+    nsAutoCString permissionKey;
+    GetKeyForPrincipal(principal, permissionKey);
+    MOZ_ASSERT(permissionKey == aPermissionKey,
+               "The permission keys which were sent over should match!");
+#endif
 
     // The child process doesn't care about modification times - it neither
     // reads nor writes, nor removes them based on the date - so 0 (which
@@ -2932,4 +3023,65 @@ nsPermissionManager::FetchPermissions() {
                 true /* ignoreSessionPermissions */);
   }
   return NS_OK;
+}
+
+/* static */ void
+nsPermissionManager::GetKeyForPrincipal(nsIPrincipal* aPrincipal, nsACString& aKey)
+{
+  MOZ_ASSERT(aPrincipal);
+  aKey.Truncate();
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv) || !uri)) {
+    // NOTE: We don't propagate the error here, instead we produce the default
+    // "" permission key. This means that we can assign every principal a key,
+    // even if the GetURI operation on that principal is not meaningful.
+    aKey.Truncate();
+    return;
+  }
+
+  nsAutoCString scheme;
+  rv = uri->GetScheme(scheme);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // NOTE: Produce the default "" key as a fallback.
+    aKey.Truncate();
+    return;
+  }
+
+  // URIs which have schemes other than http, https and ftp share the ""
+  // permission key.
+  if (scheme.EqualsLiteral("http") ||
+      scheme.EqualsLiteral("https") ||
+      scheme.EqualsLiteral("ftp")) {
+    rv = GetOriginFromPrincipal(aPrincipal, aKey);
+    if (NS_SUCCEEDED(rv)) {
+      return;
+    }
+  }
+
+  // NOTE: Produce the default "" key as a fallback.
+  aKey.Truncate();
+  return;
+}
+
+/* static */ nsTArray<nsCString>
+nsPermissionManager::GetAllKeysForPrincipal(nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(aPrincipal);
+
+  nsTArray<nsCString> keys;
+  nsCOMPtr<nsIPrincipal> prin = aPrincipal;
+  while (prin) {
+    // Add the key to the list
+    nsCString* key = keys.AppendElement();
+    GetKeyForPrincipal(prin, *key);
+
+    // Get the next subdomain principal and loop back around.
+    prin = GetNextSubDomainPrincipal(prin);
+  }
+
+  MOZ_ASSERT(keys.Length() >= 1,
+             "Every principal should have at least one key.");
+  return keys;
 }
