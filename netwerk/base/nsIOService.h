@@ -45,12 +45,6 @@ namespace mozilla {
 namespace net {
 class NeckoChild;
 class nsAsyncRedirectVerifyHelper;
-class nsIOService;
-
-/**
- * Reference to the IO service singleton. May be null.
- */
-extern nsIOService* gIOService;
 
 class nsIOService final : public nsIIOService2
                         , public nsIObserver
@@ -71,8 +65,7 @@ public:
     // Gets the singleton instance of the IO Service, creating it as needed
     // Returns nullptr on out of memory or failure to initialize.
     // Returns an addrefed pointer.
-    static nsIOService* GetAddRefed();
-    static nsIOService* GetInstance() { return gIOService; }
+    static nsIOService* GetInstance();
 
     nsresult Init();
     nsresult NewURI(const char* aSpec, nsIURI* aBaseURI,
@@ -200,6 +193,11 @@ public:
     static uint32_t   gDefaultSegmentSize;
     static uint32_t   gDefaultSegmentCount;
 };
+
+/**
+ * Reference to the IO service singleton. May be null.
+ */
+extern nsIOService* gIOService;
 
 } // namespace net
 } // namespace mozilla
