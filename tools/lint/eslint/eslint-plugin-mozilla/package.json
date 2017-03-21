@@ -21,11 +21,11 @@
   "main": "lib/index.js",
   "dependencies": {
     "escope": "^3.6.0",
-    "espree": "^3.2.0",
+    "espree": "^3.4.0",
     "estraverse": "^4.2.0",
     "globals": "^9.14.0",
     "ini-parser": "^0.0.2",
-    "sax": "^1.1.4"
+    "sax": "^1.2.2"
   },
   "engines": {
     "node": ">=6.9.1"
