@@ -129,7 +129,7 @@ public class RtlViewPager extends ViewPager {
             registerRtlDataSetObserver(adapter);
         }
         super.setAdapter(adapter);
-        if (rtlReady) {
+        if (rtlReady && adapter.getCount() > 0) {
             setCurrentItemWithoutNotification(0);
         }
     }
