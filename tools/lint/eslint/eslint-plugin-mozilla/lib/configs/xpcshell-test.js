@@ -1,9 +1,11 @@
 // Parent config file for all xpcshell files.
+"use strict";
+
 module.exports = {
   rules: {
     "mozilla/import-headjs-globals": "warn",
     "mozilla/mark-test-function-used": "warn",
-    "no-shadow": "error",
+    "no-shadow": "error"
   },
 
   // All globals made available in the test environment.
@@ -65,7 +67,8 @@ module.exports = {
     "todo_check_false": false,
     "todo_check_true": false,
     // Firefox specific function.
+    // eslint-disable-next-line max-len
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/uneval
-    "uneval": false,
+    "uneval": false
   }
 };

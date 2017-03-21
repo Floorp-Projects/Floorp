@@ -12,6 +12,12 @@
 // Plugin Definition
 //------------------------------------------------------------------------------
 module.exports = {
+  configs: {
+    "browser-test": require("../lib/configs/browser-test"),
+    "chrome-test": require("../lib/configs/chrome-test"),
+    "mochitest-test": require("../lib/configs/mochitest-test"),
+    "xpcshell-test": require("../lib/configs/xpcshell-test")
+  },
   environments: {
     "browser-window": require("../lib/environments/browser-window.js"),
     "chrome-worker": require("../lib/environments/chrome-worker.js"),
@@ -47,22 +53,22 @@ module.exports = {
     "var-only-at-top-level": require("../lib/rules/var-only-at-top-level")
   },
   rulesConfig: {
-    "avoid-removeChild": 0,
-    "avoid-nsISupportsString-preferences": 0,
-    "balanced-listeners": 0,
-    "import-globals": 0,
-    "import-headjs-globals": 0,
-    "mark-test-function-used": 0,
-    "no-aArgs": 0,
-    "no-cpows-in-tests": 0,
-    "no-single-arg-cu-import": 0,
-    "no-import-into-var-and-global": 0,
-    "no-useless-parameters": 0,
-    "no-useless-removeEventListener": 0,
-    "reject-importGlobalProperties": 0,
-    "reject-some-requires": 0,
-    "use-default-preference-values": 0,
-    "use-ownerGlobal": 0,
-    "var-only-at-top-level": 0
+    "avoid-removeChild": "off",
+    "avoid-nsISupportsString-preferences": "off",
+    "balanced-listeners": "off",
+    "import-globals": "off",
+    "import-headjs-globals": "off",
+    "mark-test-function-used": "off",
+    "no-aArgs": "off",
+    "no-cpows-in-tests": "off",
+    "no-single-arg-cu-import": "off",
+    "no-import-into-var-and-global": "off",
+    "no-useless-parameters": "off",
+    "no-useless-removeEventListener": "off",
+    "reject-importGlobalProperties": "off",
+    "reject-some-requires": "off",
+    "use-default-preference-values": "off",
+    "use-ownerGlobal": "off",
+    "var-only-at-top-level": "off"
   }
 };
