@@ -4,7 +4,7 @@
 
 from marionette_driver import By, Wait
 
-from marionette_harness import MarionetteTestCase, skip_if_mobile, WindowManagerMixin
+from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
@@ -47,7 +47,7 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.marionette.switch_to_window(self.start_tab)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
 
-    def test_window_handles_after_opening_new_browser_window(self):
+    def test_window_handles_after_opening_new_window(self):
         def open_with_link():
             link = self.marionette.find_element(By.ID, "new-window")
             link.click()
@@ -76,28 +76,6 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.marionette.switch_to_window(self.start_tab)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
         self.assertEqual(self.marionette.get_url(), self.test_page)
-
-    @skip_if_mobile("Fennec doesn't support other chrome windows")
-    def test_window_handles_after_opening_new_non_browser_window(self):
-        def open_with_link():
-            self.marionette.navigate(self.marionette.absolute_url("blob_download.html"))
-            link = self.marionette.find_element(By.ID, "blob-download")
-            link.click()
-
-        # We open a new window but are actually interested in the new tab
-        new_tab = self.open_tab(trigger=open_with_link)
-        self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs) + 1)
-        self.assertEqual(self.marionette.current_window_handle, self.start_tab)
-
-        self.marionette.switch_to_window(new_tab)
-        self.assertEqual(self.marionette.current_window_handle, new_tab)
-
-        # Close the opened window and carry on in our original tab.
-        self.marionette.close()
-        self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs))
-
-        self.marionette.switch_to_window(self.start_tab)
-        self.assertEqual(self.marionette.current_window_handle, self.start_tab)
 
     def test_window_handles_after_closing_original_tab(self):
         def open_with_link():
