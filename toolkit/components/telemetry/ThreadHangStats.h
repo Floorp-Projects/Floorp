@@ -231,6 +231,7 @@ private:
 public:
   TimeHistogram mActivity;
   mozilla::Vector<HangHistogram, 4> mHangs;
+  uint32_t mNativeStackCnt;
 
   explicit ThreadHangStats(const char* aName)
     : mName(aName)
