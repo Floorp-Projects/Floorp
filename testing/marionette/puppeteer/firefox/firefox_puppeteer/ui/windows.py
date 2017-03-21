@@ -188,7 +188,9 @@ class Windows(BaseLib):
             raise NoSuchWindowException("No window found for '{}'"
                                         .format(target))
 
-        self.marionette.switch_to_window(target_handle)
+        # only switch if necessary
+        if target_handle != self.marionette.current_chrome_window_handle:
+            self.marionette.switch_to_window(target_handle)
 
         return self.create_window_instance(target_handle)
 
@@ -413,9 +415,7 @@ class BaseWindow(BaseLib):
         keys.append(command_key.lower())
 
         self.switch_to()
-
-        with self.marionette.using_context("chrome"):
-            self.window_element.send_keys(*keys)
+        self.window_element.send_keys(*keys)
 
     def switch_to(self, focus=False):
         """Switches the context to this chrome window.
