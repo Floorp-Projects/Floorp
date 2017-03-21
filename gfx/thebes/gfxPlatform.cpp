@@ -762,7 +762,7 @@ gfxPlatform::Init()
     TexturePoolOGL::Init();
 #endif
 
-    Preferences::RegisterCallbackAndCall(RecordingPrefChanged, "gfx.2d.recording", nullptr);
+    Preferences::RegisterCallbackAndCall(RecordingPrefChanged, "gfx.2d.recording");
 
     CreateCMSOutputProfile();
 
