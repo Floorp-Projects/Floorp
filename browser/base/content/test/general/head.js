@@ -188,22 +188,6 @@ function setTestPluginEnabledState(newEnabledState, pluginName) {
   });
 }
 
-// after a test is done using the plugin doorhanger, we should just clear
-// any permissions that may have crept in
-function clearAllPluginPermissions() {
-  clearAllPermissionsByPrefix("plugin");
-}
-
-function clearAllPermissionsByPrefix(aPrefix) {
-  let perms = Services.perms.enumerator;
-  while (perms.hasMoreElements()) {
-    let perm = perms.getNext();
-    if (perm.type.startsWith(aPrefix)) {
-      Services.perms.removePermission(perm);
-    }
-  }
-}
-
 function pushPrefs(...aPrefs) {
   let deferred = Promise.defer();
   SpecialPowers.pushPrefEnv({"set": aPrefs}, deferred.resolve);
