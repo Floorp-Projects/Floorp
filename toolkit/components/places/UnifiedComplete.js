@@ -1569,6 +1569,20 @@ Search.prototype = {
       fixupInfo = Services.uriFixup.getFixupURIInfo(this._originalSearchString,
                                                     flags);
     } catch (e) {
+      if (e.result == Cr.NS_ERROR_MALFORMED_URI && !Prefs.keywordEnabled) {
+        let value = PlacesUtils.mozActionURI("visiturl", {
+          url: this._originalSearchString,
+          input: this._originalSearchString,
+        });
+        this._addMatch({
+          value,
+          comment: this._originalSearchString,
+          style: "action visiturl",
+          frecency: 0,
+        });
+
+        return true;
+      }
       return false;
     }
 
