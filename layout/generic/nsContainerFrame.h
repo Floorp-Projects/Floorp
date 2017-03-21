@@ -155,13 +155,6 @@ public:
   virtual void DeleteNextInFlowChild(nsIFrame* aNextInFlow,
                                      bool      aDeletingEmptyFrames);
 
-  /**
-   * Helper method to wrap views around frames. Used by containers
-   * under special circumstances (can be used by leaf frames as well)
-   */
-  static void CreateViewForFrame(nsIFrame* aFrame,
-                                 bool aForce);
-
   // Positions the frame's view based on the frame's origin
   static void PositionFrameView(nsIFrame* aKidFrame);
 
@@ -197,18 +190,6 @@ public:
                                    nsView*              aView,
                                    nsRenderingContext*  aRC,
                                    uint32_t             aFlags);
-
-  // Sets the view's attributes from the frame style.
-  // - visibility
-  // - clip
-  // Call this when one of these styles changes or when the view has just
-  // been created.
-  // @param aStyleContext can be null, in which case the frame's style context is used
-  static void SyncFrameViewProperties(nsPresContext*  aPresContext,
-                                      nsIFrame*        aFrame,
-                                      nsStyleContext*  aStyleContext,
-                                      nsView*         aView,
-                                      uint32_t         aFlags = 0);
 
   /**
    * Converts the minimum and maximum sizes given in inner window app units to
