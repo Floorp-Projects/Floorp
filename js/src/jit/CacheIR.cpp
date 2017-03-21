@@ -2155,10 +2155,7 @@ SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId,
         return false;
     }
 
-    if (mode_ == ICState::Mode::Megamorphic &&
-        cacheKind_ == CacheKind::SetProp &&
-        !IsPreliminaryObject(obj))
-    {
+    if (mode_ == ICState::Mode::Megamorphic && cacheKind_ == CacheKind::SetProp) {
         writer.megamorphicStoreSlot(objId, JSID_TO_ATOM(id)->asPropertyName(), rhsId);
         writer.returnFromIC();
         trackAttached("MegamorphicNativeSlot");
