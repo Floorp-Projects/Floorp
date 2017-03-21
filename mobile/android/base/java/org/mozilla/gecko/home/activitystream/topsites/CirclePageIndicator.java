@@ -386,13 +386,13 @@ public class CirclePageIndicator
             return;
         }
         if (mViewPager != null) {
-            mViewPager.setOnPageChangeListener(null);
+            mViewPager.removeOnPageChangeListener(this);
         }
         if (view.getAdapter() == null) {
             throw new IllegalStateException("ViewPager does not have adapter instance.");
         }
         mViewPager = view;
-        mViewPager.setOnPageChangeListener(this);
+        mViewPager.addOnPageChangeListener(this);
         invalidate();
     }
 
