@@ -106,8 +106,8 @@ default-preferences pref(image.downscale-during-decode.enabled,false)
 == downscale-32px.html?.jpg downscale-32px.html?.jpg
 == downscale-32px.html?.png downscale-32px.html?.png
 == downscale-32px.html?.svg downscale-32px.html?.svg
-fails fails == downscale-32px.html?-bmp-in.ico downscale-32px.html?.bmp-in.ico
-fails fails == downscale-32px.html?-png-in.ico downscale-32px.html?.png-in.ico
+== downscale-32px.html?-bmp-in.ico downscale-32px.html?-bmp-in.ico
+== downscale-32px.html?-png-in.ico downscale-32px.html?-png-in.ico
 
 # RUN TESTS WITH DOWNSCALE-DURING-DECODE ENABLED:
 # #
