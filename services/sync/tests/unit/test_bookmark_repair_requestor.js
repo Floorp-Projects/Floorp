@@ -133,16 +133,16 @@ add_task(async function test_requestor_one_client_no_response() {
   // the command should now be outgoing.
   checkOutgoingCommand(mockService, "client-a");
 
-  checkState(requestor.STATE.SENT_REQUEST);
+  checkState(BookmarkRepairRequestor.STATE.SENT_REQUEST);
   // asking it to continue stays in that state until we timeout or the command
   // is removed.
   requestor.continueRepairs();
-  checkState(requestor.STATE.SENT_REQUEST);
+  checkState(BookmarkRepairRequestor.STATE.SENT_REQUEST);
 
   // now pretend that client synced.
   mockService.clientsEngine._sentCommands = {};
   requestor.continueRepairs();
-  checkState(requestor.STATE.SENT_SECOND_REQUEST);
+  checkState(BookmarkRepairRequestor.STATE.SENT_SECOND_REQUEST);
   // the command should be outgoing again.
   checkOutgoingCommand(mockService, "client-a");
 
@@ -194,7 +194,7 @@ add_task(async function test_requestor_one_client_no_sync() {
   // the command should now be outgoing.
   checkOutgoingCommand(mockService, "client-a");
 
-  checkState(requestor.STATE.SENT_REQUEST);
+  checkState(BookmarkRepairRequestor.STATE.SENT_REQUEST);
 
   // pretend we are now in the future.
   let theFuture = Date.now() + 300000000;
@@ -245,7 +245,7 @@ add_task(async function test_requestor_latest_client_used() {
   requestor.startRepairs(validationInfo, Utils.makeGUID());
   // the repair command should be outgoing to the most-recent client.
   checkOutgoingCommand(mockService, "client-late");
-  checkState(requestor.STATE.SENT_REQUEST);
+  checkState(BookmarkRepairRequestor.STATE.SENT_REQUEST);
   // and this test is done - reset the repair.
   requestor.prefs.resetBranch();
 });
@@ -271,7 +271,7 @@ add_task(async function test_requestor_client_vanishes() {
   // the command should now be outgoing.
   checkOutgoingCommand(mockService, "client-a");
 
-  checkState(requestor.STATE.SENT_REQUEST);
+  checkState(BookmarkRepairRequestor.STATE.SENT_REQUEST);
 
   mockService.clientsEngine._sentCommands = {};
   // Now let's pretend the client vanished.
@@ -279,7 +279,7 @@ add_task(async function test_requestor_client_vanishes() {
 
   requestor.continueRepairs();
   // We should have moved on to client-b.
-  checkState(requestor.STATE.SENT_REQUEST);
+  checkState(BookmarkRepairRequestor.STATE.SENT_REQUEST);
   checkOutgoingCommand(mockService, "client-b");
 
   // Now let's pretend client B wrote all missing IDs.
@@ -349,7 +349,7 @@ add_task(async function test_requestor_success_responses() {
   // the command should now be outgoing.
   checkOutgoingCommand(mockService, "client-a");
 
-  checkState(requestor.STATE.SENT_REQUEST);
+  checkState(BookmarkRepairRequestor.STATE.SENT_REQUEST);
 
   mockService.clientsEngine._sentCommands = {};
   // Now let's pretend the client wrote a response.
@@ -362,7 +362,7 @@ add_task(async function test_requestor_success_responses() {
   }
   requestor.continueRepairs(response);
   // We should have moved on to client 2.
-  checkState(requestor.STATE.SENT_REQUEST);
+  checkState(BookmarkRepairRequestor.STATE.SENT_REQUEST);
   checkOutgoingCommand(mockService, "client-b");
 
   // Now let's pretend client B write the missing ID.
@@ -469,7 +469,7 @@ add_task(async function test_requestor_already_repairing_continue() {
   // the command should now be outgoing.
   checkOutgoingCommand(mockService, "client-a");
 
-  checkState(requestor.STATE.SENT_REQUEST);
+  checkState(BookmarkRepairRequestor.STATE.SENT_REQUEST);
   mockService.clientsEngine._sentCommands = {};
 
   // Now let's pretend the client wrote a response (it doesn't matter what's in here)
