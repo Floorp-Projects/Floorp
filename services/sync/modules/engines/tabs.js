@@ -210,13 +210,11 @@ TabStore.prototype = {
     });
 
     // Figure out how many tabs we can pack into a payload.
-    // See bug 535326 comment 8 for an explanation of the estimation
-    // If the server configuration is absent, we use the old max payload size of 28K
-    let size = JSON.stringify(tabs).length;
+    // We use byteLength here because the data is not encrypted in ascii yet.
+    let size = new TextEncoder("utf-8").encode(JSON.stringify(tabs)).byteLength;
     let origLength = tabs.length;
-    const MAX_TAB_SIZE = (this.engine.service.serverConfiguration ?
-                          this.engine.service.serverConfiguration.max_record_payload_bytes :
-                          28672) / 4 * 3 - 1500;
+    // See bug 535326 comment 8 for an explanation of the estimation
+    const MAX_TAB_SIZE = this.engine.maxRecordPayloadBytes / 4 * 3 - 1500;
     if (size > MAX_TAB_SIZE) {
       // Estimate a little more than the direct fraction to maximize packing
       let cutoff = Math.ceil(tabs.length * MAX_TAB_SIZE / size);
