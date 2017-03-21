@@ -60,6 +60,7 @@ GetDocumentFromView(nsView* aView)
 
 nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
   : nsAtomicContainerFrame(aContext)
+  , mOuterView(nullptr)
   , mInnerView(nullptr)
   , mIsInline(false)
   , mPostedReflowCallback(false)
@@ -121,17 +122,10 @@ nsSubDocumentFrame::Init(nsIContent*       aContent,
 
   nsAtomicContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  // We are going to create an inner view.  If we need a view for the
-  // OuterFrame but we wait for the normal view creation path in
-  // nsCSSFrameConstructor, then we will lose because the inner view's
-  // parent will already have been set to some outer view (e.g., the
-  // canvas) when it really needs to have this frame's view as its
-  // parent. So, create this frame's view right away, whether we
-  // really need it or not, and the inner view will get it as the
-  // parent.
-  if (!HasView()) {
-    nsFrame::CreateViewForFrame(this, true);
-  }
+  // CreateView() creates this frame's view, stored in mOuterView.  It needs to
+  // be created first since it's the parent of the inner view, stored in
+  // mInnerView.
+  CreateView();
   EnsureInnerView();
 
   // Set the primary frame now so that nsDocumentViewer::FindContainerView
