@@ -22,6 +22,7 @@ interface nsIRunnable : nsISupports
 interface nsIRunnablePriority : nsISupports
 {
     const unsigned short PRIORITY_NORMAL = 0;
-    const unsigned short PRIORITY_HIGH = 1;
+    const unsigned short PRIORITY_INPUT = 1;
+    const unsigned short PRIORITY_HIGH = 2;
     readonly attribute unsigned long priority;
 };

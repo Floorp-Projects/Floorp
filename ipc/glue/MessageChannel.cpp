@@ -1971,8 +1971,20 @@ MessageChannel::MessageTask::Clear()
 NS_IMETHODIMP
 MessageChannel::MessageTask::GetPriority(uint32_t* aPriority)
 {
-  *aPriority = mMessage.priority() == Message::HIGH_PRIORITY ?
-               PRIORITY_HIGH : PRIORITY_NORMAL;
+  switch (mMessage.priority()) {
+  case Message::NORMAL_PRIORITY:
+    *aPriority = PRIORITY_NORMAL;
+    break;
+  case Message::INPUT_PRIORITY:
+    *aPriority = PRIORITY_INPUT;
+    break;
+  case Message::HIGH_PRIORITY:
+    *aPriority = PRIORITY_HIGH;
+    break;
+  default:
+    MOZ_ASSERT(false);
+    break;
+  }
   return NS_OK;
 }
 
