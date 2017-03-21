@@ -644,7 +644,7 @@ public class BrowserApp extends GeckoApp
             }
         });
 
-        mProgressView = (ToolbarProgressView) findViewById(R.id.progress);
+        mProgressView = (ToolbarProgressView) findViewById(R.id.page_progress);
         mProgressView.setDynamicToolbar(mDynamicToolbar);
         mBrowserToolbar.setProgressBar(mProgressView);
 
