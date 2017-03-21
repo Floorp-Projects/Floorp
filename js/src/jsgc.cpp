@@ -7382,7 +7382,11 @@ JS::IsIncrementalGCInProgress(JSContext* cx)
 JS_PUBLIC_API(bool)
 JS::IsIncrementalBarrierNeeded(JSContext* cx)
 {
-    return cx->gc.state() == gc::State::Mark && !cx->isHeapBusy();
+    if (cx->isHeapBusy())
+        return false;
+
+    auto state = cx->gc.state();
+    return state != gc::State::NotActive && state <= gc::State::Sweep;
 }
 
 struct IncrementalReferenceBarrierFunctor {
