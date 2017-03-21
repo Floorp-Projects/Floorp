@@ -597,6 +597,12 @@ TabActor.prototype = {
     this._updateChildDocShells();
   },
 
+  _unwatchDocShell(docShell) {
+    if (this._progressListener) {
+      this._progressListener.unwatch(docShell);
+    }
+  },
+
   onSwitchToFrame(request) {
     let windowId = request.windowId;
     let win;
@@ -700,9 +706,43 @@ TabActor.prototype = {
   },
 
   _onDocShellDestroy(docShell) {
+    // Stop watching this docshell (the unwatch() method will check if we
+    // started watching it before).
+    this._unwatchDocShell(docShell);
+
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     this._notifyDocShellDestroy(webProgress);
+
+    if (webProgress.DOMWindow == this._originalWindow) {
+      // If the original top level document we connected to is removed,
+      // we try to switch to any other top level document
+      let rootDocShells = this.docShells
+                              .filter(d => {
+                                return d != this.docShell &&
+                                       this._isRootDocShell(d);
+                              });
+      if (rootDocShells.length > 0) {
+        let newRoot = rootDocShells[0];
+        this._originalWindow = newRoot.DOMWindow;
+        this._changeTopLevelDocument(this._originalWindow);
+      } else {
+        // If for some reason (typically during Firefox shutdown), the original
+        // document is destroyed, and there is no other top level docshell,
+        // we detach the tab actor to unregister all listeners and prevent any
+        // exception
+        this.exit();
+      }
+      return;
+    }
+
+    // If the currently targeted context is destroyed,
+    // and we aren't on the top-level document,
+    // we have to switch to the top-level one.
+    if (webProgress.DOMWindow == this.window &&
+        this.window != this._originalWindow) {
+      this._changeTopLevelDocument(this._originalWindow);
+    }
   },
 
   _isRootDocShell(docShell) {
@@ -715,36 +755,34 @@ TabActor.prototype = {
     return !docShell.parent;
   },
 
+  _docShellToWindow(docShell) {
+    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIWebProgress);
+    let window = webProgress.DOMWindow;
+    let id = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindowUtils)
+                   .outerWindowID;
+    let parentID = undefined;
+    // Ignore the parent of the original document on non-e10s firefox,
+    // as we get the xul window as parent and don't care about it.
+    if (window.parent && window != this._originalWindow) {
+      parentID = window.parent
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDOMWindowUtils)
+                       .outerWindowID;
+    }
+
+    return {
+      id,
+      parentID,
+      url: window.location.href,
+      title: window.document.title,
+    };
+  },
+
   // Convert docShell list to windows objects list being sent to the client
   _docShellsToWindows(docshells) {
-    return docshells.map(docShell => {
-      let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIWebProgress);
-      let window = webProgress.DOMWindow;
-      let id = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindowUtils)
-                     .outerWindowID;
-      let parentID = undefined;
-      // Ignore the parent of the original document on non-e10s firefox,
-      // as we get the xul window as parent and don't care about it.
-      if (window.parent && window != this._originalWindow) {
-        parentID = window.parent
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils)
-                         .outerWindowID;
-      }
-
-      // Collect the addonID from the document origin attributes.
-      let addonID = window.document.nodePrincipal.addonId;
-
-      return {
-        id,
-        parentID,
-        addonID,
-        url: window.location.href,
-        title: window.document.title,
-      };
-    });
+    return docshells.map(docShell => this._docShellToWindow(docShell));
   },
 
   _notifyDocShellsUpdate(docshells) {
@@ -780,41 +818,6 @@ TabActor.prototype = {
         destroy: true
       }]
     });
-
-    // Stop watching this docshell (the unwatch() method will check if we
-    // started watching it before).
-    webProgress.QueryInterface(Ci.nsIDocShell);
-    this._progressListener.unwatch(webProgress);
-
-    if (webProgress.DOMWindow == this._originalWindow) {
-      // If the original top level document we connected to is removed,
-      // we try to switch to any other top level document
-      let rootDocShells = this.docShells
-                              .filter(d => {
-                                return d != this.docShell &&
-                                       this._isRootDocShell(d);
-                              });
-      if (rootDocShells.length > 0) {
-        let newRoot = rootDocShells[0];
-        this._originalWindow = newRoot.DOMWindow;
-        this._changeTopLevelDocument(this._originalWindow);
-      } else {
-        // If for some reason (typically during Firefox shutdown), the original
-        // document is destroyed, and there is no other top level docshell,
-        // we detach the tab actor to unregister all listeners and prevent any
-        // exception
-        this.exit();
-      }
-      return;
-    }
-
-    // If the currently targeted context is destroyed,
-    // and we aren't on the top-level document,
-    // we have to switch to the top-level one.
-    if (webProgress.DOMWindow == this.window &&
-        this.window != this._originalWindow) {
-      this._changeTopLevelDocument(this._originalWindow);
-    }
   },
 
   _notifyDocShellDestroyAll() {
@@ -866,7 +869,7 @@ TabActor.prototype = {
     // Check for docShell availability, as it can be already gone
     // during Firefox shutdown.
     if (this.docShell) {
-      this._progressListener.unwatch(this.docShell);
+      this._unwatchDocShell(this.docShell);
       this._restoreDocumentSettings();
     }
     if (this._progressListener) {
