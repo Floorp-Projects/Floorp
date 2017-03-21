@@ -554,7 +554,8 @@ nsBufferedInputStream::Serialize(InputStreamParams& aParams,
         MOZ_ASSERT(stream);
 
         InputStreamParams wrappedParams;
-        SerializeInputStream(stream, wrappedParams, aFileDescriptors);
+        InputStreamHelper::SerializeInputStream(stream, wrappedParams,
+                                                aFileDescriptors);
 
         params.optionalStream() = wrappedParams;
     }
@@ -582,8 +583,9 @@ nsBufferedInputStream::Deserialize(const InputStreamParams& aParams,
 
     nsCOMPtr<nsIInputStream> stream;
     if (wrappedParams.type() == OptionalInputStreamParams::TInputStreamParams) {
-        stream = DeserializeInputStream(wrappedParams.get_InputStreamParams(),
-                                        aFileDescriptors);
+        stream =
+          InputStreamHelper::DeserializeInputStream(wrappedParams.get_InputStreamParams(),
+                                                    aFileDescriptors);
         if (!stream) {
             NS_WARNING("Failed to deserialize wrapped stream!");
             return false;
