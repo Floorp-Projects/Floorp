@@ -411,10 +411,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
         tm = static_cast<nsSVGElement*>(kid->GetContent())->
                PrependLocalTransformsTo(tm, eUserSpaceToParent);
       }
-      DrawResult result = nsSVGUtils::PaintFrameWithEffects(kid, *ctx, tm);
-      if (result != DrawResult::SUCCESS) {
-        return nullptr;
-      }
+      Unused << nsSVGUtils::PaintFrameWithEffects(kid, *ctx, tm);
     }
     patternWithChildren->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
   }
