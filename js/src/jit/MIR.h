@@ -13718,15 +13718,14 @@ class MWasmBoundsCheck
   : public MBinaryInstruction,
     public NoTypePolicy::Data
 {
-    bool redundant_;
     wasm::TrapOffset trapOffset_;
 
     explicit MWasmBoundsCheck(MDefinition* index, MDefinition* boundsCheckLimit, wasm::TrapOffset trapOffset)
       : MBinaryInstruction(index, boundsCheckLimit),
-        redundant_(false),
         trapOffset_(trapOffset)
     {
-        setGuard(); // Effectful: throws for OOB.
+        // Bounds check is effectful: it throws for OOB.
+        setGuard();
     }
 
   public:
@@ -13739,11 +13738,11 @@ class MWasmBoundsCheck
     }
 
     bool isRedundant() const {
-        return redundant_;
+        return !isGuard();
     }
 
-    void setRedundant(bool val) {
-        redundant_ = val;
+    void setRedundant() {
+        setNotGuard();
     }
 
     wasm::TrapOffset trapOffset() const {
