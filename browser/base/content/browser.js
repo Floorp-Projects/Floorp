@@ -2571,8 +2571,13 @@ function URLBarSetURI(aURI) {
     valid = !isBlankPageURL(uri.spec);
   }
 
+  let isDifferentValidValue = valid && value != gURLBar.value;
   gURLBar.value = value;
   gURLBar.valueIsTyped = !valid;
+  if (isDifferentValidValue) {
+    gURLBar.selectionStart = gURLBar.selectionEnd = 0;
+  }
+
   SetPageProxyState(valid ? "valid" : "invalid");
 }
 

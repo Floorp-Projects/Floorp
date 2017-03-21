@@ -382,6 +382,126 @@ BaselineCacheIRCompiler::emitLoadDynamicSlotResult()
 }
 
 bool
+BaselineCacheIRCompiler::emitMegamorphicLoadSlotResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Address nameAddr = stubAddress(reader.stubOffset());
+    bool handleMissing = reader.readBool();
+
+    AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+    AutoScratchRegister scratch2(allocator, masm);
+    AutoScratchRegister scratch3(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.Push(UndefinedValue());
+    masm.moveStackPtrTo(scratch3.get());
+
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    volatileRegs.takeUnchecked(scratch1);
+    volatileRegs.takeUnchecked(scratch2);
+    volatileRegs.takeUnchecked(scratch3);
+    masm.PushRegsInMask(volatileRegs);
+
+    masm.setupUnalignedABICall(scratch1);
+    masm.loadJSContext(scratch1);
+    masm.passABIArg(scratch1);
+    masm.passABIArg(obj);
+    masm.loadPtr(nameAddr, scratch2);
+    masm.passABIArg(scratch2);
+    masm.passABIArg(scratch3);
+    if (handleMissing)
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataProperty<true>)));
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataProperty<false>)));
+    masm.mov(ReturnReg, scratch2);
+    masm.PopRegsInMask(volatileRegs);
+
+    masm.loadTypedOrValue(Address(masm.getStackPointer(), 0), output);
+    masm.adjustStack(sizeof(Value));
+
+    masm.branchIfFalseBool(scratch2, failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitMegamorphicStoreSlot()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Address nameAddr = stubAddress(reader.stubOffset());
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+
+    AutoScratchRegister scratch1(allocator, masm);
+    AutoScratchRegister scratch2(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.Push(val);
+    masm.moveStackPtrTo(val.scratchReg());
+
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    volatileRegs.takeUnchecked(scratch1);
+    volatileRegs.takeUnchecked(scratch2);
+    volatileRegs.takeUnchecked(val);
+    masm.PushRegsInMask(volatileRegs);
+
+    masm.setupUnalignedABICall(scratch1);
+    masm.loadJSContext(scratch1);
+    masm.passABIArg(scratch1);
+    masm.passABIArg(obj);
+    masm.loadPtr(nameAddr, scratch2);
+    masm.passABIArg(scratch2);
+    masm.passABIArg(val.scratchReg());
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, SetNativeDataProperty));
+    masm.mov(ReturnReg, scratch1);
+    masm.PopRegsInMask(volatileRegs);
+
+    masm.loadValue(Address(masm.getStackPointer(), 0), val);
+    masm.adjustStack(sizeof(Value));
+
+    masm.branchIfFalseBool(scratch1, failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardHasGetterSetter()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Address shapeAddr = stubAddress(reader.stubOffset());
+
+    AutoScratchRegister scratch1(allocator, masm);
+    AutoScratchRegister scratch2(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    volatileRegs.takeUnchecked(scratch1);
+    volatileRegs.takeUnchecked(scratch2);
+    masm.PushRegsInMask(volatileRegs);
+
+    masm.setupUnalignedABICall(scratch1);
+    masm.loadJSContext(scratch1);
+    masm.passABIArg(scratch1);
+    masm.passABIArg(obj);
+    masm.loadPtr(shapeAddr, scratch2);
+    masm.passABIArg(scratch2);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectHasGetterSetter));
+    masm.mov(ReturnReg, scratch1);
+    masm.PopRegsInMask(volatileRegs);
+
+    masm.branchIfFalseBool(scratch1, failure->label());
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitCallScriptedGetterResult()
 {
     MOZ_ASSERT(engine_ == ICStubEngine::Baseline);
@@ -1737,11 +1857,13 @@ static const size_t MaxOptimizedCacheIRStubs = 16;
 ICStub*
 jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
                                CacheKind kind, ICStubEngine engine, JSScript* outerScript,
-                               ICFallbackStub* stub)
+                               ICFallbackStub* stub, bool* attached)
 {
     // We shouldn't GC or report OOM (or any other exception) here.
     AutoAssertNoPendingException aanpe(cx);
     JS::AutoCheckCannotGC nogc;
+
+    MOZ_ASSERT(!*attached);
 
     if (writer.failed())
         return nullptr;
@@ -1810,6 +1932,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     // for some reason and the IR generator doesn't check for exactly the same
     // conditions.
     for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd(); iter++) {
+        bool updated = false;
         switch (stubKind) {
           case CacheIRStubKind::Regular: {
             if (!iter->isCacheIR_Regular())
@@ -1817,7 +1940,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
             auto otherStub = iter->toCacheIR_Regular();
             if (otherStub->stubInfo() != stubInfo)
                 continue;
-            if (!writer.stubDataEqualsMaybeUpdate(otherStub->stubDataStart()))
+            if (!writer.stubDataEqualsMaybeUpdate(otherStub->stubDataStart(), &updated))
                 continue;
             break;
           }
@@ -1827,7 +1950,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
             auto otherStub = iter->toCacheIR_Monitored();
             if (otherStub->stubInfo() != stubInfo)
                 continue;
-            if (!writer.stubDataEqualsMaybeUpdate(otherStub->stubDataStart()))
+            if (!writer.stubDataEqualsMaybeUpdate(otherStub->stubDataStart(), &updated))
                 continue;
             break;
           }
@@ -1837,7 +1960,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
             auto otherStub = iter->toCacheIR_Updated();
             if (otherStub->stubInfo() != stubInfo)
                 continue;
-            if (!writer.stubDataEqualsMaybeUpdate(otherStub->stubDataStart()))
+            if (!writer.stubDataEqualsMaybeUpdate(otherStub->stubDataStart(), &updated))
                 continue;
             break;
           }
@@ -1846,6 +1969,8 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
         // We found a stub that's exactly the same as the stub we're about to
         // attach. Just return nullptr, the caller should do nothing in this
         // case.
+        if (updated)
+            *attached = true;
         return nullptr;
     }
 
@@ -1864,6 +1989,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
         auto newStub = new(newStubMem) ICCacheIR_Regular(code, stubInfo);
         writer.copyStubData(newStub->stubDataStart());
         stub->addNewStub(newStub);
+        *attached = true;
         return newStub;
       }
       case CacheIRStubKind::Monitored: {
@@ -1872,6 +1998,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
         auto newStub = new(newStubMem) ICCacheIR_Monitored(code, monitorStub, stubInfo);
         writer.copyStubData(newStub->stubDataStart());
         stub->addNewStub(newStub);
+        *attached = true;
         return newStub;
       }
       case CacheIRStubKind::Updated: {
@@ -1882,6 +2009,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
         }
         writer.copyStubData(newStub->stubDataStart());
         stub->addNewStub(newStub);
+        *attached = true;
         return newStub;
       }
     }

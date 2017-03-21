@@ -59,6 +59,16 @@ struct ResetAllParams
 {
 };
 
+struct PersistedParams
+{
+  PrincipalInfo principalInfo;
+};
+
+struct PersistParams
+{
+  PrincipalInfo principalInfo;
+};
+
 union RequestParams
 {
   InitParams;
@@ -67,6 +77,8 @@ union RequestParams
   ClearDataParams;
   ClearAllParams;
   ResetAllParams;
+  PersistedParams;
+  PersistParams;
 };
 
 protocol PQuota

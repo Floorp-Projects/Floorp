@@ -699,8 +699,7 @@ RecompileBaselineScriptForDebugMode(JSContext* cx, JSScript* script,
     _(Call_ClassHook)                           \
     _(Call_ScriptedApplyArray)                  \
     _(Call_ScriptedApplyArguments)              \
-    _(Call_ScriptedFunCall)                     \
-    _(GetProp_Generic)
+    _(Call_ScriptedFunCall)
 
 static bool
 CloneOldBaselineStub(JSContext* cx, DebugModeOSREntryVector& entries, size_t entryIndex)

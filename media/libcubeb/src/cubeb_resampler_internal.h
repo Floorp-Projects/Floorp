@@ -179,6 +179,12 @@ public:
     speex_resampler_destroy(speex_resampler);
   }
 
+  void internal_buffer_sizes(size_t buf_sizes[2])
+  {
+    buf_sizes[0] = resampling_in_buffer.length();
+    buf_sizes[1] = resampling_out_buffer.length();
+  }
+
   /** Sometimes, it is necessary to add latency on one way of a two-way
    * resampler so that the stream are synchronized. This must be called only on
    * a fresh resampler, otherwise, silent samples will be inserted in the
@@ -365,6 +371,11 @@ public:
   {
     length += frames;
     delay_input_buffer.push_silence(frames_to_samples(frames));
+  }
+  void internal_buffer_sizes(size_t buf_sizes[2])
+  {
+    buf_sizes[0] = delay_input_buffer.length();
+    buf_sizes[1] = delay_output_buffer.length();
   }
   /** Push some frames into the delay line.
    * @parameter buffer the frames to push.
