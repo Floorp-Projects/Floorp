@@ -2033,19 +2033,16 @@ RuntimeService::Init()
   MOZ_ASSERT(!gRuntimeServiceDuringInit, "This should be false!");
   gRuntimeServiceDuringInit = true;
 
-  if (NS_FAILED(Preferences::RegisterCallback(
+  if (NS_FAILED(Preferences::RegisterPrefixCallback(
                                  LoadJSGCMemoryOptions,
-                                 PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX,
-                                 nullptr)) ||
-      NS_FAILED(Preferences::RegisterCallbackAndCall(
+                                 PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX)) ||
+      NS_FAILED(Preferences::RegisterPrefixCallbackAndCall(
                             LoadJSGCMemoryOptions,
-                            PREF_WORKERS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX,
-                            nullptr)) ||
+                            PREF_WORKERS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX)) ||
 #ifdef JS_GC_ZEAL
       NS_FAILED(Preferences::RegisterCallback(
                                              LoadGCZealOptions,
-                                             PREF_JS_OPTIONS_PREFIX PREF_GCZEAL,
-                                             nullptr)) ||
+                                             PREF_JS_OPTIONS_PREFIX PREF_GCZEAL)) ||
 #endif
 
 #define WORKER_SIMPLE_PREF(name, getter, NAME)                                \
@@ -2064,13 +2061,11 @@ RuntimeService::Init()
 #undef WORKER_SIMPLE_PREF
 #undef WORKER_PREF
 
-      NS_FAILED(Preferences::RegisterCallbackAndCall(
+      NS_FAILED(Preferences::RegisterPrefixCallbackAndCall(
                                                    LoadContextOptions,
-                                                   PREF_WORKERS_OPTIONS_PREFIX,
-                                                   nullptr)) ||
-      NS_FAILED(Preferences::RegisterCallback(LoadContextOptions,
-                                              PREF_JS_OPTIONS_PREFIX,
-                                              nullptr))) {
+                                                   PREF_WORKERS_OPTIONS_PREFIX)) ||
+      NS_FAILED(Preferences::RegisterPrefixCallback(LoadContextOptions,
+                                                    PREF_JS_OPTIONS_PREFIX))) {
     NS_WARNING("Failed to register pref callbacks!");
   }
 
@@ -2216,12 +2211,10 @@ RuntimeService::Cleanup()
   NS_ASSERTION(!mWindowMap.Count(), "All windows should have been released!");
 
   if (mObserved) {
-    if (NS_FAILED(Preferences::UnregisterCallback(LoadContextOptions,
-                                                  PREF_JS_OPTIONS_PREFIX,
-                                                  nullptr)) ||
-        NS_FAILED(Preferences::UnregisterCallback(LoadContextOptions,
-                                                  PREF_WORKERS_OPTIONS_PREFIX,
-                                                  nullptr)) ||
+    if (NS_FAILED(Preferences::UnregisterPrefixCallback(LoadContextOptions,
+                                                        PREF_JS_OPTIONS_PREFIX)) ||
+        NS_FAILED(Preferences::UnregisterPrefixCallback(LoadContextOptions,
+                                                        PREF_WORKERS_OPTIONS_PREFIX)) ||
 
 #define WORKER_SIMPLE_PREF(name, getter, NAME)                                \
       NS_FAILED(Preferences::UnregisterCallback(                              \
@@ -2231,8 +2224,7 @@ RuntimeService::Cleanup()
 #define WORKER_PREF(name, callback)                                           \
       NS_FAILED(Preferences::UnregisterCallback(                              \
                   callback,                                                   \
-                  name,                                                       \
-                  nullptr)) ||
+                  name)) ||
 #include "WorkerPrefs.h"
 #undef WORKER_SIMPLE_PREF
 #undef WORKER_PREF
@@ -2240,17 +2232,14 @@ RuntimeService::Cleanup()
 #ifdef JS_GC_ZEAL
         NS_FAILED(Preferences::UnregisterCallback(
                                              LoadGCZealOptions,
-                                             PREF_JS_OPTIONS_PREFIX PREF_GCZEAL,
-                                             nullptr)) ||
+                                             PREF_JS_OPTIONS_PREFIX PREF_GCZEAL)) ||
 #endif
-        NS_FAILED(Preferences::UnregisterCallback(
+        NS_FAILED(Preferences::UnregisterPrefixCallback(
                                  LoadJSGCMemoryOptions,
-                                 PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX,
-                                 nullptr)) ||
-        NS_FAILED(Preferences::UnregisterCallback(
+                                 PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX)) ||
+        NS_FAILED(Preferences::UnregisterPrefixCallback(
                             LoadJSGCMemoryOptions,
-                            PREF_WORKERS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX,
-                            nullptr))) {
+                            PREF_WORKERS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX))) {
       NS_WARNING("Failed to unregister pref callbacks!");
     }
 

@@ -186,12 +186,10 @@ TextEditor::GetDefaultEditorPrefs(int32_t& aNewlineHandling,
                                   int32_t& aCaretStyle)
 {
   if (sNewlineHandlingPref == -1) {
-    Preferences::RegisterCallback(EditorPrefsChangedCallback,
-                                  "editor.singleLine.pasteNewlines");
-    EditorPrefsChangedCallback("editor.singleLine.pasteNewlines", nullptr);
-    Preferences::RegisterCallback(EditorPrefsChangedCallback,
-                                  "layout.selection.caret_style");
-    EditorPrefsChangedCallback("layout.selection.caret_style", nullptr);
+    Preferences::RegisterCallbackAndCall(EditorPrefsChangedCallback,
+                                         "editor.singleLine.pasteNewlines");
+    Preferences::RegisterCallbackAndCall(EditorPrefsChangedCallback,
+                                         "layout.selection.caret_style");
   }
 
   aNewlineHandling = sNewlineHandlingPref;
