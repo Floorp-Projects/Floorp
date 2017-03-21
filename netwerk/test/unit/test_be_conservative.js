@@ -73,6 +73,7 @@ class InputStreamCallback {
 
   stop() {
     this.stopped = true;
+    this.output.close();
   }
 }
 
@@ -89,9 +90,7 @@ class TLSServerSecurityObserver {
     do_print(`TLS version used: ${status.tlsVersionUsed}`);
 
     if (this.stopped) {
-      do_print("handshake done callback stopped - closing streams and bailing");
-      this.input.close();
-      this.output.close();
+      do_print("handshake done callback stopped - bailing");
       return;
     }
 
@@ -102,6 +101,8 @@ class TLSServerSecurityObserver {
 
   stop() {
     this.stopped = true;
+    this.input.close();
+    this.output.close();
     this.callbacks.forEach((callback) => {
       callback.stop();
     });
