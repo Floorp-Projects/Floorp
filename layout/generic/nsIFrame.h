@@ -2487,8 +2487,7 @@ public:
   static void SyncFrameViewProperties(nsPresContext*  aPresContext,
                                       nsIFrame*        aFrame,
                                       nsStyleContext*  aStyleContext,
-                                      nsView*         aView,
-                                      uint32_t         aFlags = 0);
+                                      nsView*         aView);
 
   /**
    * Get the offset between the coordinate systems of |this| and aOther.
