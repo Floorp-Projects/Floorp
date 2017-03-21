@@ -603,6 +603,9 @@ public:
   void LiveResizeStarted() override;
   void LiveResizeStopped() override;
 
+  void SetReadyToHandleInputEvents() { mIsReadyToHandleInputEvents = true; }
+  bool IsReadyToHandleInputEvents() { return mIsReadyToHandleInputEvents; }
+
 protected:
   bool ReceiveMessage(const nsString& aMessage,
                       bool aSync,
@@ -627,6 +630,8 @@ protected:
   virtual bool DeallocPRenderFrameParent(PRenderFrameParent* aFrame) override;
 
   virtual mozilla::ipc::IPCResult RecvRemotePaintIsReady() override;
+
+  virtual mozilla::ipc::IPCResult RecvRemoteIsReadyToHandleInputEvents() override;
 
   virtual mozilla::ipc::IPCResult RecvForcePaintNoOp(const uint64_t& aLayerObserverEpoch) override;
 
@@ -777,6 +782,9 @@ private:
   // True if at least one window hosted in the TabChild has added a
   // beforeunload event listener.
   bool mHasBeforeUnload;
+
+  // True when the remote browser is created and ready to handle input events.
+  bool mIsReadyToHandleInputEvents;
 
 public:
   static TabParent* GetTabParentFromLayersId(uint64_t aLayersId);
