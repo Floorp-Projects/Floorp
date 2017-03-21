@@ -777,11 +777,11 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
             aResult = threshold;
         }
         break;
-    case eIntID_ScrollArrowStyle:
-        moz_gtk_init();
-        aResult =
-            ConvertGTKStepperStyleToMozillaScrollArrowStyle(moz_gtk_get_scrollbar_widget());
+    case eIntID_ScrollArrowStyle: {
+        GtkWidget* scrollbar = GetWidget(MOZ_GTK_SCROLLBAR_HORIZONTAL);
+        aResult = ConvertGTKStepperStyleToMozillaScrollArrowStyle(scrollbar);
         break;
+    }
     case eIntID_ScrollSliderStyle:
         aResult = eScrollThumbStyle_Proportional;
         break;
