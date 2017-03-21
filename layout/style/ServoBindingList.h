@@ -118,6 +118,11 @@ SERVO_BINDING_FUNC(Servo_ParseProperty,
                    const nsACString* property, const nsACString* value,
                    const nsACString* base,
                    const GeckoParserExtraData* data)
+SERVO_BINDING_FUNC(Servo_ParseEasing, bool,
+                   const nsAString* easing,
+                   const nsACString* base,
+                   const GeckoParserExtraData* data,
+                   nsTimingFunctionBorrowedMut output)
 SERVO_BINDING_FUNC(Servo_GetComputedKeyframeValues, void,
                    RawGeckoKeyframeListBorrowed keyframes,
                    ServoComputedValuesBorrowed style,
