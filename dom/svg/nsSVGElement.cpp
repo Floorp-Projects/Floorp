@@ -47,7 +47,6 @@
 #include "nsIFrame.h"
 #include "nsQueryObject.h"
 #include <stdarg.h>
-#include "nsSMILMappedAttribute.h"
 #include "SVGMotionSMILAttr.h"
 #include "nsAttrValueOrString.h"
 #include "nsSMILAnimationController.h"
@@ -934,34 +933,6 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   return NS_OK;
 }
 
-void
-nsSVGElement::WalkAnimatedContentStyleRules(nsRuleWalker* aRuleWalker)
-{
-  // Update & walk the animated content style rule, to include style from
-  // animated mapped attributes.  But first, get nsPresContext to check
-  // whether this is a "no-animation restyle". (This should match the check
-  // in nsHTMLCSSStyleSheet::RulesMatching(), where we determine whether to
-  // apply the SMILOverrideStyle.)
-  RestyleManager* restyleManager =
-    aRuleWalker->PresContext()->RestyleManager();
-  MOZ_ASSERT(restyleManager->IsGecko(),
-             "stylo: Servo-backed style system should not be calling "
-             "WalkAnimatedContentStyleRules");
-  if (!restyleManager->AsGecko()->SkipAnimationRules()) {
-    // update/walk the animated content style rule.
-    DeclarationBlock* animContentDeclBlock = GetAnimatedContentDeclarationBlock();
-    if (!animContentDeclBlock) {
-      UpdateAnimatedContentDeclarationBlock();
-      animContentDeclBlock = GetAnimatedContentDeclarationBlock();
-    }
-    if (animContentDeclBlock) {
-      css::Declaration* declaration = animContentDeclBlock->AsGecko();
-      declaration->SetImmutable();
-      aRuleWalker->Forward(declaration);
-    }
-  }
-}
-
 NS_IMETHODIMP_(bool)
 nsSVGElement::IsAttributeMapped(const nsIAtom* name) const
 {
@@ -1379,85 +1350,6 @@ const DeclarationBlock*
 nsSVGElement::GetContentDeclarationBlock() const
 {
   return mContentDeclarationBlock;
-}
-
-static void
-ParseMappedAttrAnimValueCallback(void*    aObject,
-                                 nsIAtom* aPropertyName,
-                                 void*    aPropertyValue,
-                                 void*    aData)
-{
-  MOZ_ASSERT(aPropertyName != SMIL_MAPPED_ATTR_STYLEDECL_ATOM,
-             "animated content style rule should have been removed "
-             "from properties table already (we're rebuilding it now)");
-
-  MappedAttrParser* mappedAttrParser = static_cast<MappedAttrParser*>(aData);
-  MOZ_ASSERT(mappedAttrParser, "parser should be non-null");
-
-  nsStringBuffer* animValBuf = static_cast<nsStringBuffer*>(aPropertyValue);
-  MOZ_ASSERT(animValBuf, "animated value should be non-null");
-
-  nsString animValStr;
-  nsContentUtils::PopulateStringFromStringBuffer(animValBuf, animValStr);
-
-  mappedAttrParser->ParseMappedAttrValue(aPropertyName, animValStr);
-}
-
-// Callback for freeing animated content decl block, in property table.
-static void
-ReleaseDeclBlock(void*    aObject,       /* unused */
-                 nsIAtom* aPropertyName,
-                 void*    aPropertyValue,
-                 void*    aData          /* unused */)
-{
-  MOZ_ASSERT(aPropertyName == SMIL_MAPPED_ATTR_STYLEDECL_ATOM,
-             "unexpected property name, for animated content style rule");
-  auto decl = static_cast<DeclarationBlock*>(aPropertyValue);
-  MOZ_ASSERT(decl, "unexpected null decl");
-  decl->Release();
-}
-
-void
-nsSVGElement::UpdateAnimatedContentDeclarationBlock()
-{
-  MOZ_ASSERT(!GetAnimatedContentDeclarationBlock(),
-             "Animated content declaration block already set");
-
-  nsIDocument* doc = OwnerDoc();
-  if (!doc) {
-    NS_ERROR("SVG element without owner document");
-    return;
-  }
-
-  // FIXME (bug 1342557): Support SMIL in Servo
-  MappedAttrParser mappedAttrParser(doc->CSSLoader(), doc->GetDocumentURI(),
-                                    GetBaseURI(), this, StyleBackendType::Gecko);
-  doc->PropertyTable(SMIL_MAPPED_ATTR_ANIMVAL)->
-    Enumerate(this, ParseMappedAttrAnimValueCallback, &mappedAttrParser);
- 
-  RefPtr<DeclarationBlock> animContentDeclBlock =
-    mappedAttrParser.GetDeclarationBlock();
-
-  if (animContentDeclBlock) {
-#ifdef DEBUG
-    nsresult rv =
-#endif
-      SetProperty(SMIL_MAPPED_ATTR_ANIMVAL,
-                  SMIL_MAPPED_ATTR_STYLEDECL_ATOM,
-                  animContentDeclBlock.forget().take(),
-                  ReleaseDeclBlock);
-    MOZ_ASSERT(rv == NS_OK,
-               "SetProperty failed (or overwrote something)");
-  }
-}
-
-DeclarationBlock*
-nsSVGElement::GetAnimatedContentDeclarationBlock()
-{
-  return
-    static_cast<DeclarationBlock*>(GetProperty(SMIL_MAPPED_ATTR_ANIMVAL,
-                                               SMIL_MAPPED_ATTR_STYLEDECL_ATOM,
-                                               nullptr));
 }
 
 /**
