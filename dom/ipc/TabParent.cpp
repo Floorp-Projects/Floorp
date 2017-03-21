@@ -2806,6 +2806,18 @@ TabParent::NavigateByKey(bool aForward, bool aForDocumentNavigation)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TabParent::TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal)
+{
+  nsCOMPtr<nsIContentParent> manager = Manager();
+  if (!manager->IsContentParent()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return manager->AsContentParent()
+    ->TransmitPermissionsForPrincipal(aPrincipal);
+}
+
 class LayerTreeUpdateRunnable final
   : public mozilla::Runnable
 {

@@ -53,48 +53,48 @@ class TypeChecker:
         # Check fields that can be one of two different types.
         if self._kind is OneOf:
             if not isinstance(value, self._args[0]) and not isinstance(value, self._args[1]):
-                raise ValueError, "%s: failed type check for %s - expected %s or %s, got %s" %\
-                                  (identifier, key,
-                                   nice_type_name(self._args[0]),
-                                   nice_type_name(self._args[1]),
-                                   nice_type_name(type(value)))
+                raise ValueError("%s: failed type check for %s - expected %s or %s, got %s" %
+                                 (identifier, key,
+                                  nice_type_name(self._args[0]),
+                                  nice_type_name(self._args[1]),
+                                  nice_type_name(type(value))))
             return
 
         # Check basic type of value.
         if not isinstance(value, self._kind):
-            raise ValueError, "%s: failed type check for %s - expected %s, got %s" %\
-                              (identifier, key,
-                               nice_type_name(self._kind),
-                               nice_type_name(type(value)))
+            raise ValueError("%s: failed type check for %s - expected %s, got %s" %
+                             (identifier, key,
+                              nice_type_name(self._kind),
+                              nice_type_name(type(value))))
 
         # Check types of values in lists.
         if self._kind is list:
             if len(value) < 1:
-                raise ValueError, "%s: failed check for %s - list should not be empty" % (identifier, key)
+                raise ValueError("%s: failed check for %s - list should not be empty" % (identifier, key))
             for x in value:
                 if not isinstance(x, self._args[0]):
-                    raise ValueError, "%s: failed type check for %s - expected list value type %s, got %s" %\
-                                      (identifier, key,
-                                       nice_type_name(self._args[0]),
-                                       nice_type_name(type(x)))
+                    raise ValueError("%s: failed type check for %s - expected list value type %s, got %s" %
+                                     (identifier, key,
+                                      nice_type_name(self._args[0]),
+                                      nice_type_name(type(x))))
 
         # Check types of keys and values in dictionaries.
         elif self._kind is dict:
             if len(value.keys()) < 1:
-                    raise ValueError, "%s: failed check for %s - dict should not be empty" % (identifier, key)
+                    raise ValueError("%s: failed check for %s - dict should not be empty" % (identifier, key))
             for x in value.iterkeys():
                 if not isinstance(x, self._args[0]):
-                    raise ValueError, "%s: failed dict type check for %s - expected key type %s, got %s" %\
-                                      (identifier, key,
-                                       nice_type_name(self._args[0]),
-                                       nice_type_name(type(x)))
+                    raise ValueError("%s: failed dict type check for %s - expected key type %s, got %s" %
+                                     (identifier, key,
+                                      nice_type_name(self._args[0]),
+                                      nice_type_name(type(x))))
             for k, v in value.iteritems():
                 if not isinstance(x, self._args[1]):
-                    raise ValueError, "%s: failed dict type check for %s - expected value type %s for key %s, got %s" %\
-                                      (identifier, key,
-                                       nice_type_name(self._args[1]),
-                                       k,
-                                       nice_type_name(type(x)))
+                    raise ValueError("%s: failed dict type check for %s - expected value type %s for key %s, got %s" %
+                                     (identifier, key,
+                                      nice_type_name(self._args[1]),
+                                      k,
+                                      nice_type_name(type(x))))
 
 
 def type_check_event_fields(identifier, name, definition):
@@ -141,8 +141,8 @@ def string_check(identifier, field, value, min_length=1, max_length=None, regex=
                          (identifier, value, field, max_length))
     # Regex check.
     if regex and not re.match(regex, value):
-        raise ValueError, '%s: string value "%s" for %s is not matching pattern "%s"' % \
-                          (identifier, value, field, regex)
+        raise ValueError('%s: string value "%s" for %s is not matching pattern "%s"' %
+                         (identifier, value, field, regex))
 
 
 class EventData:
@@ -170,8 +170,8 @@ class EventData:
         rcc = definition.get(rcc_key, 'opt-in')
         allowed_rcc = ["opt-in", "opt-out"]
         if rcc not in allowed_rcc:
-            raise ValueError, "%s: value for %s should be one of: %s" %\
-                              (self.identifier, rcc_key, ", ".join(allowed_rcc))
+            raise ValueError("%s: value for %s should be one of: %s" %
+                             (self.identifier, rcc_key, ", ".join(allowed_rcc)))
 
         # Check record_in_processes.
         record_in_processes = definition.get('record_in_processes')
@@ -182,8 +182,8 @@ class EventData:
         # Check extra_keys.
         extra_keys = definition.get('extra_keys', {})
         if len(extra_keys.keys()) > MAX_EXTRA_KEYS_COUNT:
-            raise ValueError, "%s: number of extra_keys exceeds limit %d" %\
-                              (self.identifier, MAX_EXTRA_KEYS_COUNT)
+            raise ValueError("%s: number of extra_keys exceeds limit %d" %
+                             (self.identifier, MAX_EXTRA_KEYS_COUNT))
         for key in extra_keys.iterkeys():
             string_check(self.identifier, field='extra_keys', value=key,
                          min_length=1, max_length=MAX_EXTRA_KEY_NAME_LENGTH,
@@ -191,13 +191,13 @@ class EventData:
 
         # Check expiry.
         if 'expiry_version' not in definition and 'expiry_date' not in definition:
-            raise KeyError, "%s: event is missing an expiration - either expiry_version or expiry_date is required" %\
-                            (self.identifier)
+            raise KeyError("%s: event is missing an expiration - either expiry_version or expiry_date is required" %
+                           (self.identifier))
         expiry_date = definition.get('expiry_date')
         if expiry_date and isinstance(expiry_date, basestring) and expiry_date != 'never':
             if not re.match(DATE_PATTERN, expiry_date):
-                raise ValueError, "%s: event has invalid expiry_date, it should be either 'never' or match this format: %s" %\
-                                  (self.identifier, DATE_PATTERN)
+                raise ValueError("%s: event has invalid expiry_date, it should be either 'never' or match this format: %s" %
+                                 (self.identifier, DATE_PATTERN))
             # Parse into date.
             definition['expiry_date'] = datetime.datetime.strptime(expiry_date, '%Y-%m-%d')
 

@@ -2132,10 +2132,11 @@ bool
 Accessible::RemoveChild(Accessible* aChild)
 {
   MOZ_DIAGNOSTIC_ASSERT(aChild, "No child was given");
+  MOZ_DIAGNOSTIC_ASSERT(aChild->mParent, "No parent");
   MOZ_DIAGNOSTIC_ASSERT(aChild->mParent == this, "Wrong parent");
   MOZ_DIAGNOSTIC_ASSERT(aChild->mIndexInParent != -1, "Unbound child was given");
   MOZ_DIAGNOSTIC_ASSERT((mStateFlags & eKidsMutating) || aChild->IsDefunct() || aChild->IsDoc(),
-                        "Defunct child was given");
+                        "Illicit children change");
 
   int32_t index = static_cast<uint32_t>(aChild->mIndexInParent);
   if (mChildren.SafeElementAt(index) != aChild) {

@@ -42,7 +42,11 @@ file.append("test");
 file.append("chrome");
 file.append("fileconstructor_file.png");
 
-File.createFromFileName(file.path).then(function(domFile) {
+SpecialPowers.pushPrefEnv({ set: [ "dom.file.createInChild" ]})
+.then(() => {
+  return File.createFromFileName(file.path);
+})
+.then(function(domFile) {
   ok(domfile instanceof File, "File() should return a File");
   is(domfile.type, "image/png", "File should be a PNG");
   is(domfile.size, 95, "File has size 95 (and more importantly we can read it)");
