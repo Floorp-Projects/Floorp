@@ -41,7 +41,11 @@ partial interface File {
   readonly attribute DOMString mozFullPath;
 };
 
-// Mozilla extensions - main-thread only
+// Mozilla extensions
+// These 2 methods can be used only in these conditions:
+// - the main-thread
+// - parent process OR file process OR, only for testing, with pref
+//   `dom.file.createInChild' set to true.
 [Exposed=(Window)]
 partial interface File {
   [ChromeOnly, Throws, NeedsCallerType]
