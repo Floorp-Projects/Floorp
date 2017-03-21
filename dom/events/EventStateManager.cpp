@@ -2829,6 +2829,7 @@ NodeAllowsClickThrough(nsINode* aNode)
 
 void
 EventStateManager::PostHandleKeyboardEvent(WidgetKeyboardEvent* aKeyboardEvent,
+                                           nsIFrame* aTargetFrame,
                                            nsEventStatus& aStatus)
 {
   if (aStatus == nsEventStatus_eConsumeNoDefault) {
@@ -2836,6 +2837,24 @@ EventStateManager::PostHandleKeyboardEvent(WidgetKeyboardEvent* aKeyboardEvent,
   }
 
   if (!aKeyboardEvent->HasBeenPostedToRemoteProcess()) {
+    if (aKeyboardEvent->IsWaitingReplyFromRemoteProcess()) {
+      RefPtr<TabParent> remote = aTargetFrame ?
+        TabParent::GetFrom(aTargetFrame->GetContent()) : nullptr;
+      if (remote && !remote->IsReadyToHandleInputEvents()) {
+        // We need to dispatch the event to the browser element again if we were
+        // waiting for the key reply but the event wasn't sent to the content
+        // process due to the remote browser wasn't ready.
+        WidgetKeyboardEvent keyEvent(*aKeyboardEvent);
+        aKeyboardEvent->MarkAsHandledInRemoteProcess();
+        EventDispatcher::Dispatch(remote->GetOwnerElement(), mPresContext,
+                                  &keyEvent);
+        if (keyEvent.DefaultPrevented()) {
+          aKeyboardEvent->PreventDefault(!keyEvent.DefaultPreventedByContent());
+          aStatus = nsEventStatus_eConsumeNoDefault;
+          return;
+        }
+      }
+    }
     // The widget expects a reply for every keyboard event. If the event wasn't
     // dispatched to a content process (non-e10s or no content process
     // running), we need to short-circuit here. Otherwise, we need to wait for
@@ -3487,7 +3506,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   case eKeyPress:
     {
       WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
-      PostHandleKeyboardEvent(keyEvent, *aStatus);
+      PostHandleKeyboardEvent(keyEvent, mCurrentTarget, *aStatus);
     }
     break;
 

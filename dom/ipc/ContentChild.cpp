@@ -1175,6 +1175,9 @@ ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
   GfxInfoBase::SetFeatureStatus(aXPCOMInit.gfxFeatureStatus());
 
   DataStorage::SetCachedStorageEntries(aXPCOMInit.dataStorage());
+
+  // Enable input event prioritization.
+  nsThreadManager::get().EnableMainThreadEventPrioritization();
 }
 
 mozilla::ipc::IPCResult
