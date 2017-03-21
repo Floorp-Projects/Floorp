@@ -272,11 +272,16 @@ QuotaRequestChild::Recv__delete__(const RequestResponse& aResponse)
     case RequestResponse::TClearDataResponse:
     case RequestResponse::TClearAllResponse:
     case RequestResponse::TResetAllResponse:
+    case RequestResponse::TPersistResponse:
       HandleResponse();
       break;
 
     case RequestResponse::TInitOriginResponse:
       HandleResponse(aResponse.get_InitOriginResponse().created());
+      break;
+
+    case RequestResponse::TPersistedResponse:
+      HandleResponse(aResponse.get_PersistedResponse().persisted());
       break;
 
     default:
