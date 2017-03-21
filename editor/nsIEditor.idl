@@ -172,7 +172,7 @@ interface nsIEditor  : nsISupports
 
   /** transactionManager Get the transaction manager the editor is using.
     */
-  attribute nsITransactionManager transactionManager;
+  readonly attribute nsITransactionManager transactionManager;
 
   /** doTransaction() fires a transaction.
     * It is provided here so clients can create their own transactions.
