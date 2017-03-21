@@ -379,12 +379,12 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
   }
   dt->ClearRect(Rect(0, 0, surfaceSize.width, surfaceSize.height));
 
-  RefPtr<gfxContext> gfx = gfxContext::CreateOrNull(dt);
-  MOZ_ASSERT(gfx); // already checked the draw target above
+  RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
+  MOZ_ASSERT(ctx); // already checked the draw target above
 
   if (aGraphicOpacity != 1.0f) {
-    gfx->Save();
-    gfx->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, aGraphicOpacity);
+    ctx->Save();
+    ctx->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, aGraphicOpacity);
   }
 
   // OK, now render -- note that we use "firstKid", which
@@ -412,7 +412,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
         tm = static_cast<nsSVGElement*>(kid->GetContent())->
                PrependLocalTransformsTo(tm, eUserSpaceToParent);
       }
-      DrawResult result = nsSVGUtils::PaintFrameWithEffects(kid, *gfx, tm);
+      DrawResult result = nsSVGUtils::PaintFrameWithEffects(kid, *ctx, tm);
       if (result != DrawResult::SUCCESS) {
         return nullptr;
       }
@@ -423,8 +423,8 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
   patternWithChildren->mSource = nullptr;
 
   if (aGraphicOpacity != 1.0f) {
-    gfx->PopGroupAndBlend();
-    gfx->Restore();
+    ctx->PopGroupAndBlend();
+    ctx->Restore();
   }
 
   // caller now owns the surface
