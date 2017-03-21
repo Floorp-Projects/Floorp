@@ -773,7 +773,7 @@ nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
     gCSSLoader_Servo;
 
   if (!loader) {
-    loader = new mozilla::css::Loader(mBackendType);
+    loader = new Loader(mBackendType, nullptr);
     if (!loader) {
       ErrorLoadingSheet(aURI, "no Loader", eCrash);
       return;

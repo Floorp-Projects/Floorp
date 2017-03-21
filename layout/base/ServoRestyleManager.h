@@ -63,8 +63,7 @@ public:
                                 nsIContent* aChild);
   void RestyleForAppend(nsIContent* aContainer,
                         nsIContent* aFirstNewContent);
-  nsresult ContentStateChanged(nsIContent* aContent,
-                               EventStates aStateMask);
+  void ContentStateChanged(nsIContent* aContent, EventStates aStateMask);
   void AttributeWillChange(dom::Element* aElement,
                            int32_t aNameSpaceID,
                            nsIAtom* aAttribute,

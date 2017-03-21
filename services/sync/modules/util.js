@@ -218,7 +218,7 @@ this.Utils = {
 
   lazyStrings: function Weave_lazyStrings(name) {
     return () => Services.strings.createBundle(
-      `chrome://weave/locale/services/${name}.properties`);
+      `chrome://weave/locale/${name}.properties`);
   },
 
   deepEquals: function eq(a, b) {

@@ -256,7 +256,8 @@ SlicedInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
   MOZ_ASSERT(mWeakIPCSerializableInputStream);
 
   SlicedInputStreamParams params;
-  SerializeInputStream(mInputStream, params.stream(), aFileDescriptors);
+  InputStreamHelper::SerializeInputStream(mInputStream, params.stream(),
+                                          aFileDescriptors);
   params.start() = mStart;
   params.length() = mLength;
   params.curPos() = mCurPos;
@@ -282,7 +283,8 @@ SlicedInputStream::Deserialize(const mozilla::ipc::InputStreamParams& aParams,
     aParams.get_SlicedInputStreamParams();
 
   nsCOMPtr<nsIInputStream> stream =
-    DeserializeInputStream(params.stream(), aFileDescriptors);
+    InputStreamHelper::DeserializeInputStream(params.stream(),
+                                              aFileDescriptors);
   if (!stream) {
     NS_WARNING("Deserialize failed!");
     return false;

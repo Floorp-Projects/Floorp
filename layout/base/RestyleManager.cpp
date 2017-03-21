@@ -1172,12 +1172,8 @@ SyncViewsAndInvalidateDescendants(nsIFrame* aFrame, nsChangeHint aChange)
                                       nsChangeHint_SchedulePaint)),
                "Invalid change flag");
 
-  nsView* view = aFrame->GetView();
-  if (view) {
-    if (aChange & nsChangeHint_SyncFrameView) {
-      nsContainerFrame::SyncFrameViewProperties(aFrame->PresContext(), aFrame,
-                                                nullptr, view);
-    }
+  if (aChange & nsChangeHint_SyncFrameView) {
+    aFrame->SyncFrameViewProperties();
   }
 
   nsIFrame::ChildListIterator lists(aFrame);

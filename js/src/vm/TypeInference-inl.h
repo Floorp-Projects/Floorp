@@ -414,7 +414,7 @@ HasTypePropertyId(JSObject* obj, jsid id, TypeSet::Type type)
         return true;
 
     if (HeapTypeSet* types = obj->group()->maybeGetProperty(IdToTypeId(id)))
-        return types->hasType(type);
+        return types->hasType(type) && !types->nonConstantProperty();
 
     return false;
 }

@@ -385,6 +385,9 @@ private:
   RefPtr<mozilla::css::ImageValue> mImageValue;
   RefPtr<mozilla::dom::ImageTracker> mImageTracker;
 
+  // Cache DocGroup for dispatching events in the destructor.
+  RefPtr<mozilla::dom::DocGroup> mDocGroup;
+
   Mode mModeFlags;
   bool mResolved;
 };

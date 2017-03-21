@@ -1680,13 +1680,17 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
         unit == eCSSUnit_RGBAColor) {
       nscolor color = GetColorValue();
       // For brevity, we omit the alpha component if it's equal to 255 (full
-      // opaque). Also, we try to preserve the author-specified function name,
-      // unless it's rgba() and we're omitting the alpha component - then we
-      // use rgb().
+      // opaque). Also, we use "rgba" rather than "rgb" when the color includes
+      // the non-opaque alpha value, for backwards-compat (even though they're
+      // aliases as of css-color-4).
+      // e.g.:
+      //   rgba(1, 2, 3, 1.0) => rgb(1, 2, 3)
+      //   rgba(1, 2, 3, 0.5) => rgba(1, 2, 3, 0.5)
+
       uint8_t a = NS_GET_A(color);
       bool showAlpha = (a != 255);
 
-      if (unit == eCSSUnit_RGBAColor && showAlpha) {
+      if (showAlpha) {
         aResult.AppendLiteral("rgba(");
       } else {
         aResult.AppendLiteral("rgb(");
@@ -3057,7 +3061,9 @@ css::ImageValue::Initialize(nsIDocument* aDocument)
 
 css::ImageValue::~ImageValue()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(NS_IsMainThread() || mRequests.Count() == 0,
+             "Destructor should run on main thread, or on non-main thread "
+             "when mRequest is empty!");
 
   for (auto iter = mRequests.Iter(); !iter.Done(); iter.Next()) {
     nsIDocument* doc = iter.Key();

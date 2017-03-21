@@ -84,11 +84,20 @@ def eslint_setup():
     if not call_process("eslint", cmd):
         return 1
 
-    # Install in-tree ESLint plugin
+    # Install in-tree ESLint plugin mozilla.
     cmd = [npm_path, "install",
            os.path.join(module_path, "eslint-plugin-mozilla")]
     print("Installing eslint-plugin-mozilla using \"%s\"..." % (" ".join(cmd)))
     if not call_process("eslint-plugin-mozilla", cmd):
+        return 1
+
+    eslint_path = os.path.join(module_path, "node_modules", ".bin", "eslint")
+
+    # Install in-tree ESLint plugin spidermonkey.
+    cmd = [npm_path, "install",
+           os.path.join(module_path, "eslint-plugin-spidermonkey-js")]
+    print("Installing eslint-plugin-spidermonkey-js using \"%s\"..." % (" ".join(cmd)))
+    if not call_process("eslint-plugin-spidermonkey-js", cmd):
         return 1
 
     eslint_path = os.path.join(module_path, "node_modules", ".bin", "eslint")
@@ -120,11 +129,17 @@ def expected_eslint_modules():
     with open(expected_modules_path, "r") as f:
         expected_modules = json.load(f)["dependencies"]
 
-    # Also read the in-tree ESLint plugin version
+    # Also read the in-tree ESLint plugin mozilla version
     mozilla_json_path = os.path.join(get_eslint_module_path(),
                                      "eslint-plugin-mozilla", "package.json")
     with open(mozilla_json_path, "r") as f:
         expected_modules["eslint-plugin-mozilla"] = json.load(f)["version"]
+
+    # Also read the in-tree ESLint plugin spidermonkey version
+    mozilla_json_path = os.path.join(get_eslint_module_path(),
+                                     "eslint-plugin-spidermonkey-js", "package.json")
+    with open(mozilla_json_path, "r") as f:
+        expected_modules["eslint-plugin-spidermonkey-js"] = json.load(f)["version"]
 
     return expected_modules
 

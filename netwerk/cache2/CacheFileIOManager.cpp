@@ -1090,6 +1090,7 @@ CacheFileIOManager::CacheFileIOManager()
   , mTreeCreated(false)
   , mTreeCreationFailed(false)
   , mOverLimitEvicting(false)
+  , mCacheSizeOnHardLimit(false)
   , mRemovingTrashDirs(false)
 {
   LOG(("CacheFileIOManager::CacheFileIOManager [this=%p]", this));
@@ -1991,8 +1992,15 @@ CacheFileIOManager::WriteInternal(CacheFileHandle *aHandle, int64_t aOffset,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // Check whether this write would cause critical low disk space.
+  // When this operation would increase cache size, check whether the cache size
+  // reached the hard limit and whether it would cause critical low disk space.
   if (aHandle->mFileSize < aOffset + aCount) {
+    if (mOverLimitEvicting && mCacheSizeOnHardLimit) {
+      LOG(("CacheFileIOManager::WriteInternal() - failing because cache size "
+           "reached hard limit!"));
+      return NS_ERROR_FILE_DISK_FULL;
+    }
+
     int64_t freeSpace = -1;
     rv = mCacheDirectory->GetDiskSpaceAvailable(&freeSpace);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2523,8 +2531,15 @@ CacheFileIOManager::TruncateSeekSetEOFInternal(CacheFileHandle *aHandle,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // Check whether this operation would cause critical low disk space.
+  // When this operation would increase cache size, check whether the cache size
+  // reached the hard limit and whether it would cause critical low disk space.
   if (aHandle->mFileSize < aEOFPos) {
+    if (mOverLimitEvicting && mCacheSizeOnHardLimit) {
+      LOG(("CacheFileIOManager::TruncateSeekSetEOFInternal() - failing because "
+           "cache size reached hard limit!"));
+      return NS_ERROR_FILE_DISK_FULL;
+    }
+
     int64_t freeSpace = -1;
     rv = mCacheDirectory->GetDiskSpaceAvailable(&freeSpace);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2789,6 +2804,20 @@ CacheFileIOManager::OverLimitEvictionInternal()
     if (cacheUsage > cacheLimit) {
       LOG(("CacheFileIOManager::OverLimitEvictionInternal() - Cache size over "
            "limit. [cacheSize=%u, limit=%u]", cacheUsage, cacheLimit));
+
+      // We allow cache size to go over the specified limit. Eviction should
+      // keep the size within the limit in a long run, but in case the eviction
+      // is too slow, the cache could go way over the limit. To prevent this we
+      // set flag mCacheSizeOnHardLimit when the size reaches 105% of the limit
+      // and WriteInternal() and TruncateSeekSetEOFInternal() fail to cache
+      // additional data.
+      if ((cacheUsage - cacheLimit) > (cacheLimit / 20)) {
+        LOG(("CacheFileIOManager::OverLimitEvictionInternal() - Cache size "
+             "reached hard limit."));
+        mCacheSizeOnHardLimit = true;
+      } else {
+        mCacheSizeOnHardLimit = false;
+      }
     } else if (freeSpace != 1 && freeSpace < freeSpaceLimit) {
       LOG(("CacheFileIOManager::OverLimitEvictionInternal() - Free space under "
            "limit. [freeSpace=%" PRId64 ", freeSpaceLimit=%u]", freeSpace,
@@ -2798,6 +2827,8 @@ CacheFileIOManager::OverLimitEvictionInternal()
            "free space in limits. [cacheSize=%ukB, cacheSizeLimit=%ukB, "
            "freeSpace=%" PRId64 ", freeSpaceLimit=%u]", cacheUsage, cacheLimit,
            freeSpace, freeSpaceLimit));
+
+      mCacheSizeOnHardLimit = false;
       return NS_OK;
     }
 

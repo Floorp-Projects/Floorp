@@ -104,7 +104,8 @@ to mochitest command.
 * test_bug798843_pref.html: conditional opentype svg support [7]
 * test_computed_style.html `gradient`: -moz-prefixed radient value [9]
 * ... `mask`: mask-image isn't set properly bug 1347398 [2]
-* ... `rgba`: svg paint should distinguish whether there is fallback bug 1347409 [4]
+* ... `fill`: svg paint should distinguish whether there is fallback bug 1347409 [2]
+* ... `stroke`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * ... `#foo`: local ref url should be preserved bug 1347412 [5]
 * character not properly escaped servo/servo#15947
   * test_parse_url.html [4]
@@ -320,6 +321,8 @@ to mochitest command.
   * new syntax of rgba?() and hsla?() functions servo/rust-cssparser#113
     * test_value_storage.html `'color'` [35]
     * ... `rgb(100, 100.0, 100)` [1]
+    * test_computed_style.html `css-color-4` [8]
+    * test_specified_value_serialization.html `css-color-4` [8]
   * color interpolation hint not supported servo/servo#15166
     * test_value_storage.html `'linear-gradient` [50]
   * two-keyword form of background-repeat/mask-repeat servo/servo#14954
@@ -363,7 +366,7 @@ to mochitest command.
     * test_value_storage.html `'transform` [104]
     * ... `"transform` [66]
     * ... `-webkit-transform` [109]
-    * test_specified_value_serialization.html [27]
+    * test_specified_value_serialization.html `bug-721136` [27]
     * test_units_angle.html [3]
   * {background,mask}-position lacks comma for serialization servo/servo#15200
     * test_value_storage.html `background-position` [81]
@@ -378,7 +381,6 @@ to mochitest command.
   * background-position invalid 3-value form **issue to be filed**
     * test_shorthand_property_getters.html `should serialize to 4-value` [2]
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
-  * ... `got "--`: CSS-wide keywords in custom properties servo/servo#15401 [3]
   * image-layer values should omit some of its parts when they are initial servo/servo#15951
     * test_shorthand_property_getters.html `background` [2]
   * counter-{reset,increment} doesn't serialize none servo/servo#15977
@@ -407,7 +409,7 @@ to mochitest command.
   * :-moz-window-inactive bug 1348489
     * test_selectors.html `:-moz-window-inactive` [2]
   * :-moz-{first,last}-node
-    * test_selectors.html `:-moz-` [13]
+    * test_selectors.html `:-moz-` [6]
     * ... `unexpected rule index` [5]
   * :dir
     * test_selectors.html `:dir` [10]

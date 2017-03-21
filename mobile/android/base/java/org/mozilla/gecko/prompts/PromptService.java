@@ -19,17 +19,17 @@ import android.util.Log;
 public class PromptService implements BundleEventListener {
     private static final String LOGTAG = "GeckoPromptService";
 
-    private final Context mContext;
+    private final GeckoApp mGeckoApp;
 
-    public PromptService(Context context) {
-        GeckoApp.getEventDispatcher().registerUiThreadListener(this,
+    public PromptService(GeckoApp geckoApp) {
+        mGeckoApp = geckoApp;
+        mGeckoApp.getAppEventDispatcher().registerUiThreadListener(this,
             "Prompt:Show",
             "Prompt:ShowTop");
-        mContext = context;
     }
 
     public void destroy() {
-        GeckoApp.getEventDispatcher().unregisterUiThreadListener(this,
+        mGeckoApp.getAppEventDispatcher().unregisterUiThreadListener(this,
             "Prompt:Show",
             "Prompt:ShowTop");
     }
@@ -39,7 +39,7 @@ public class PromptService implements BundleEventListener {
     public void handleMessage(final String event, final GeckoBundle message,
                               final EventCallback callback) {
         Prompt p;
-        p = new Prompt(mContext, new Prompt.PromptCallback() {
+        p = new Prompt(mGeckoApp, new Prompt.PromptCallback() {
             @Override
             public void onPromptFinished(final GeckoBundle result) {
                 callback.sendSuccess(result);

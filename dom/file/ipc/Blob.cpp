@@ -993,7 +993,8 @@ RemoteInputStream::BlockAndWaitForStream()
     nsTArray<FileDescriptor> fds;
     OptionalFileDescriptorSetToFDs(optionalFDs, fds);
 
-    nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(params, fds);
+    nsCOMPtr<nsIInputStream> stream =
+      InputStreamHelper::DeserializeInputStream(params, fds);
     MOZ_ASSERT(stream);
 
     SetStream(stream);
@@ -4450,7 +4451,7 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
   if (mBlobImpl->IsMemoryFile()) {
     InputStreamParams params;
     nsTArray<FileDescriptor> fds;
-    SerializeInputStream(stream, params, fds);
+    InputStreamHelper::SerializeInputStream(stream, params, fds);
 
     MOZ_ASSERT(params.type() != InputStreamParams::T__None);
     MOZ_ASSERT(fds.IsEmpty());
@@ -4788,7 +4789,8 @@ InputStreamChild::Recv__delete__(const InputStreamParams& aParams,
     const_cast<OptionalFileDescriptorSet&>(aOptionalSet),
     fds);
 
-  nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(aParams, fds);
+  nsCOMPtr<nsIInputStream> stream =
+    InputStreamHelper::DeserializeInputStream(aParams, fds);
   MOZ_ASSERT(stream);
 
   mRemoteStream->SetStream(stream);
