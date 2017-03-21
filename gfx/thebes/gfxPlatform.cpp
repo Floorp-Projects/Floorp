@@ -2207,9 +2207,7 @@ gfxPlatform::InitAcceleration()
 
   if (XRE_IsParentProcess()) {
     Preferences::RegisterCallbackAndCall(VideoDecodingFailedChangedCallback,
-                                         "media.hardware-video-decoding.failed",
-                                         nullptr,
-                                         Preferences::ExactMatch);
+                                         "media.hardware-video-decoding.failed");
     InitGPUProcessPrefs();
     InitWebRenderConfig();
   }
