@@ -228,7 +228,6 @@ UNIFIED_SOURCES += [
     'StyleAnimationValue.cpp',
     'StyleRule.cpp',
     'StyleSheet.cpp',
-    'SVGAttrAnimationRuleProcessor.cpp',
 ]
 
 # - nsCSSRuleProcessor.cpp needs to be built separately because it uses
