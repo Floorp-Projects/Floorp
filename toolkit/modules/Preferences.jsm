@@ -115,9 +115,7 @@ Preferences._set = function(prefName, prefValue) {
 
   switch (prefType) {
     case "String":
-      {
-        this._prefBranch.setStringPref(prefName, prefValue);
-      }
+      this._prefBranch.setStringPref(prefName, prefValue);
       break;
 
     case "Number":
