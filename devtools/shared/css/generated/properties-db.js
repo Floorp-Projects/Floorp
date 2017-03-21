@@ -2865,6 +2865,7 @@ exports.CSS_PROPERTIES = {
       "column-rule-color",
       "column-rule-style",
       "column-rule-width",
+      "column-span",
       "column-width",
       "contain",
       "content",
@@ -9345,6 +9346,10 @@ exports.PREFERENCES = [
   [
     "color-adjust",
     "layout.css.color-adjust.enabled"
+  ],
+  [
+    "column-span",
+    "layout.css.column-span.enabled"
   ],
   [
     "contain",
