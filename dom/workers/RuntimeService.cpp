@@ -2049,14 +2049,11 @@ RuntimeService::Init()
       NS_FAILED(Preferences::RegisterCallbackAndCall(                         \
                   WorkerPrefChanged,                                          \
                   name,                                                       \
-                  reinterpret_cast<void*>(WORKERPREF_##NAME),                 \
-                  Preferences::ExactMatch)) ||
+                  reinterpret_cast<void*>(WORKERPREF_##NAME))) ||
 #define WORKER_PREF(name, callback)                                           \
       NS_FAILED(Preferences::RegisterCallbackAndCall(                         \
                   callback,                                                   \
-                  name,                                                       \
-                  nullptr,                                                    \
-                  Preferences::ExactMatch)) ||
+                  name)) ||
 #include "WorkerPrefs.h"
 #undef WORKER_SIMPLE_PREF
 #undef WORKER_PREF
