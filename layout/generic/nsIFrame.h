@@ -2478,16 +2478,13 @@ public:
    */
   nsIFrame* GetAncestorWithView() const;
 
-  // Sets the view's attributes from the frame style.
-  // - visibility
-  // - clip
-  // Call this when one of these styles changes or when the view has just
-  // been created.
-  // @param aStyleContext can be null, in which case the frame's style context is used
-  static void SyncFrameViewProperties(nsPresContext*  aPresContext,
-                                      nsIFrame*        aFrame,
-                                      nsStyleContext*  aStyleContext,
-                                      nsView*         aView);
+  /**
+   * Sets the view's attributes from the frame style.
+   * Call this for nsChangeHint_SyncFrameView style changes or when the view
+   * has just been created.
+   * @param aView the frame's view or use GetView() if nullptr is given
+   */
+  void SyncFrameViewProperties(nsView* aView = nullptr);
 
   /**
    * Get the offset between the coordinate systems of |this| and aOther.

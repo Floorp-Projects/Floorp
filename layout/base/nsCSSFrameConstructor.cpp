@@ -2732,8 +2732,7 @@ nsCSSFrameConstructor::ConstructRootFrame()
   nsView* rootView = mPresShell->GetViewManager()->GetRootView();
   viewportFrame->SetView(rootView);
 
-  nsContainerFrame::SyncFrameViewProperties(mPresShell->GetPresContext(), viewportFrame,
-                                            viewportPseudoStyle, rootView);
+  viewportFrame->SyncFrameViewProperties(rootView);
   nsContainerFrame::SyncWindowProperties(mPresShell->GetPresContext(), viewportFrame,
                                          rootView, nullptr, nsContainerFrame::SET_ASYNC);
 
