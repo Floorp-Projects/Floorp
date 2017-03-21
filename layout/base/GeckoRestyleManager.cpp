@@ -1307,9 +1307,9 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
               GeckoRestyleManager::ChangeHintToString(aChangeToAssume).get());
   LOG_RESTYLE_INDENT();
 
-  // nsChangeHint_UpdateEffects is inherited, but it can be set due to changes
-  // in inherited properties (fill and stroke).  Avoid propagating it into
-  // text nodes.
+  // nsChangeHint_UpdateEffects is not handled for descendants, but it can be
+  // set due to changes in inherited properties (fill and stroke).  Avoid
+  // propagating it into text nodes.
   if ((ourChange & nsChangeHint_UpdateEffects) &&
       mContent && !mContent->IsElement()) {
     ourChange &= ~nsChangeHint_UpdateEffects;
