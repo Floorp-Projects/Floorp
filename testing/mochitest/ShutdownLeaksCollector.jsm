@@ -7,6 +7,7 @@ var Cc = Components.classes;
 var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 this.EXPORTED_SYMBOLS = ["ContentCollector"];
 
@@ -36,19 +37,36 @@ var ContentCollector = {
         Cu.forceGC();
         Cu.forceCC();
 
-        Cu.schedulePreciseShrinkingGC(() => {
-          Cu.forceCC();
+        let shutdownCleanup = aCallback => {
+          Cu.schedulePreciseShrinkingGC(() => {
+            // Run the GC and CC a few times to make sure that as much
+            // as possible is freed.
+            Cu.forceGC();
+            Cu.forceCC();
+            aCallback();
+          });
+        };
 
-          let pid = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processID;
-          dump("Completed ShutdownLeaks collections in process " + pid + "\n")});
-
-          let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
-                       .getService(Ci.nsISyncMessageSender);
-          cpmm.removeMessageListener("browser-test:collect-request", this);
+        shutdownCleanup(() => {
+          setTimeout(() => {
+            shutdownCleanup(() => {
+              this.finish();
+            })
+          }, 1000);
+        });
 
         break;
     }
-  }
+  },
+
+  finish() {
+    let pid = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processID;
+    dump("Completed ShutdownLeaks collections in process " + pid + "\n");
+
+    let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+                 .getService(Ci.nsISyncMessageSender);
+    cpmm.removeMessageListener("browser-test:collect-request", this);
+  },
 
 };
 ContentCollector.init();

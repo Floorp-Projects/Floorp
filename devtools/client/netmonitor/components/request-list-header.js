@@ -14,10 +14,8 @@ const Actions = require("../actions/index");
 const WaterfallBackground = require("../waterfall-background");
 const { getFormattedTime } = require("../utils/format-utils");
 
-// ms
-const REQUESTS_WATERFALL_HEADER_TICKS_MULTIPLE = 5;
-// px
-const REQUESTS_WATERFALL_HEADER_TICKS_SPACING_MIN = 60;
+const REQUESTS_WATERFALL_HEADER_TICKS_MULTIPLE = 5; // ms
+const REQUESTS_WATERFALL_HEADER_TICKS_SPACING_MIN = 60; // px
 
 const HEADERS = [
   { name: "status", label: "status3" },

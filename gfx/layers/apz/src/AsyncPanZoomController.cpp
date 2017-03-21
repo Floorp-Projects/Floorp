@@ -672,12 +672,10 @@ AsyncPanZoomController::InitializeGlobalState()
 
   MOZ_ASSERT(NS_IsMainThread());
 
-  gZoomAnimationFunction = new ComputedTimingFunction();
-  gZoomAnimationFunction->Init(
+  gZoomAnimationFunction = new ComputedTimingFunction(
     nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
   ClearOnShutdown(&gZoomAnimationFunction);
-  gVelocityCurveFunction = new ComputedTimingFunction();
-  gVelocityCurveFunction->Init(
+  gVelocityCurveFunction = new ComputedTimingFunction(
     nsTimingFunction(gfxPrefs::APZCurveFunctionX1(),
                      gfxPrefs::APZCurveFunctionY1(),
                      gfxPrefs::APZCurveFunctionX2(),
