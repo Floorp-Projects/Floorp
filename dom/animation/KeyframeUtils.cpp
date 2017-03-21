@@ -595,7 +595,7 @@ KeyframeUtils::ApplyDistributeSpacing(nsTArray<Keyframe>& aKeyframes)
 KeyframeUtils::GetComputedKeyframeValues(
   const nsTArray<Keyframe>& aKeyframes,
   dom::Element* aElement,
-  const ServoComputedStyleValues& aServoValues)
+  const ServoComputedValuesWithParent& aServoValues)
 {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(aElement->IsStyledByServo());
