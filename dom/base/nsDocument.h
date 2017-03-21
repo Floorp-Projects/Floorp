@@ -444,7 +444,7 @@ protected:
     // implement one interface.
 
     // XXXbz I wish we could just derive the _allcaps thing from _i
-#define DECL_SHIM(_i, _allcaps, _customfwd)                                  \
+#define DECL_SHIM(_i, _allcaps)                                              \
     class _i##Shim final : public nsIInterfaceRequestor,                     \
                            public _i                                         \
     {                                                                        \
@@ -459,25 +459,17 @@ protected:
       NS_DECL_ISUPPORTS                                                      \
       NS_FORWARD_NSIINTERFACEREQUESTOR(mIfReq->)                             \
       NS_FORWARD_##_allcaps(mRealPtr->)                                      \
-      _customfwd                                                             \
     private:                                                                 \
       nsCOMPtr<nsIInterfaceRequestor> mIfReq;                                \
       nsCOMPtr<_i> mRealPtr;                                                 \
     };
 
-#define DECL_FORWARD_CPP_GETORIGINATTRIBUTES                                 \
-      NS_IMETHODIMP_(void)                                                   \
-        GetOriginAttributes(mozilla::OriginAttributes& aAttrs) override      \
-      {                                                                      \
-        mRealPtr->GetOriginAttributes(aAttrs);                               \
-      }
-    DECL_SHIM(nsILoadContext, NSILOADCONTEXT, DECL_FORWARD_CPP_GETORIGINATTRIBUTES)
-    DECL_SHIM(nsIProgressEventSink, NSIPROGRESSEVENTSINK, )
-    DECL_SHIM(nsIChannelEventSink, NSICHANNELEVENTSINK, )
-    DECL_SHIM(nsISecurityEventSink, NSISECURITYEVENTSINK, )
-    DECL_SHIM(nsIApplicationCacheContainer, NSIAPPLICATIONCACHECONTAINER, )
+    DECL_SHIM(nsILoadContext, NSILOADCONTEXT)
+    DECL_SHIM(nsIProgressEventSink, NSIPROGRESSEVENTSINK)
+    DECL_SHIM(nsIChannelEventSink, NSICHANNELEVENTSINK)
+    DECL_SHIM(nsISecurityEventSink, NSISECURITYEVENTSINK)
+    DECL_SHIM(nsIApplicationCacheContainer, NSIAPPLICATIONCACHECONTAINER)
 #undef DECL_SHIM
-#undef DECL_FORWARD_CPP_GETORIGINATTRIBUTES
   };
 
   /**

@@ -806,8 +806,6 @@ protected:
 
   void UpdateGlobalHistoryTitle(nsIURI* aURI);
 
-  void GetOriginAttributes(mozilla::OriginAttributes& aAttrs) override;
-
   // Dimensions of the docshell
   nsIntRect mBounds;
   nsString mName;
