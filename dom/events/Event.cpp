@@ -245,24 +245,11 @@ Event::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 NS_IMETHODIMP
 Event::GetType(nsAString& aType)
 {
-  if (!mIsMainThreadEvent || !mEvent->mSpecifiedEventTypeString.IsEmpty()) {
+  if (!mIsMainThreadEvent) {
     aType = mEvent->mSpecifiedEventTypeString;
     return NS_OK;
   }
-  const char* name = GetEventName(mEvent->mMessage);
-
-  if (name) {
-    CopyASCIItoUTF16(name, aType);
-    return NS_OK;
-  } else if (mEvent->mMessage == eUnidentifiedEvent &&
-             mEvent->mSpecifiedEventType) {
-    // Remove "on"
-    aType = Substring(nsDependentAtomString(mEvent->mSpecifiedEventType), 2);
-    mEvent->mSpecifiedEventTypeString = aType;
-    return NS_OK;
-  }
-
-  aType.Truncate();
+  GetWidgetEventType(mEvent, aType);
   return NS_OK;
 }
 
@@ -1289,6 +1276,30 @@ Event::GetShadowRelatedTarget(nsIContent* aCurrentTarget,
   }
 
   return nullptr;
+}
+
+void
+Event::GetWidgetEventType(WidgetEvent* aEvent, nsAString& aType)
+{
+  if (!aEvent->mSpecifiedEventTypeString.IsEmpty()) {
+    aType = aEvent->mSpecifiedEventTypeString;
+    return;
+  }
+
+  const char* name = GetEventName(aEvent->mMessage);
+
+  if (name) {
+    CopyASCIItoUTF16(name, aType);
+    return;
+  } else if (aEvent->mMessage == eUnidentifiedEvent &&
+             aEvent->mSpecifiedEventType) {
+    // Remove "on"
+    aType = Substring(nsDependentAtomString(aEvent->mSpecifiedEventType), 2);
+    aEvent->mSpecifiedEventTypeString = aType;
+    return;
+  }
+
+  aType.Truncate();
 }
 
 NS_IMETHODIMP
