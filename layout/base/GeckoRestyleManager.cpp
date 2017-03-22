@@ -967,21 +967,10 @@ GeckoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
       }
 #endif
 
-      // Make sure to call CalcStyleDifference so that the new context ends
-      // up resolving all the structs the old context resolved.
+      // Ensure the new context ends up resolving all the structs the old
+      // context resolved.
       if (!copyFromContinuation) {
-        uint32_t equalStructs;
-        uint32_t samePointerStructs;
-        DebugOnly<nsChangeHint> styleChange =
-          oldContext->CalcStyleDifference(newContext, nsChangeHint(0),
-                                          &equalStructs,
-                                          &samePointerStructs);
-        // The style change is always 0 because we have the same rulenode and
-        // CalcStyleDifference optimizes us away.  That's OK, though:
-        // reparenting should never trigger a frame reconstruct, and whenever
-        // it's happening we already plan to reflow and repaint the frames.
-        NS_ASSERTION(!(styleChange & nsChangeHint_ReconstructFrame),
-                     "Our frame tree is likely to be bogus!");
+        newContext->EnsureSameStructsCached(oldContext);
       }
 
       aFrame->SetStyleContext(newContext);
@@ -1033,23 +1022,9 @@ GeckoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
                                                  newContext, nullptr);
         if (newExtraContext) {
           if (newExtraContext != oldExtraContext) {
-            // Make sure to call CalcStyleDifference so that the new
-            // context ends up resolving all the structs the old context
-            // resolved.
-            uint32_t equalStructs;
-            uint32_t samePointerStructs;
-            DebugOnly<nsChangeHint> styleChange =
-              oldExtraContext->CalcStyleDifference(newExtraContext,
-                                                   nsChangeHint(0),
-                                                   &equalStructs,
-                                                   &samePointerStructs);
-            // The style change is always 0 because we have the same
-            // rulenode and CalcStyleDifference optimizes us away.  That's
-            // OK, though: reparenting should never trigger a frame
-            // reconstruct, and whenever it's happening we already plan to
-            // reflow and repaint the frames.
-            NS_ASSERTION(!(styleChange & nsChangeHint_ReconstructFrame),
-                         "Our frame tree is likely to be bogus!");
+            // Ensure the new context ends up resolving all the structs the old
+            // context resolved.
+            newContext->EnsureSameStructsCached(oldContext);
           }
 
           aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
@@ -1084,10 +1059,8 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
     // comment above assertion at start of ElementRestyler::Restyle.)
   , mContent(mFrame->GetContent() ? mFrame->GetContent() : mParentContent)
   , mChangeList(aChangeList)
-  , mHintsHandled(aHintsHandledByAncestors &
-                  ~NS_HintsNotHandledForDescendantsIn(aHintsHandledByAncestors))
-  , mParentFrameHintsNotHandledForDescendants(nsChangeHint(0))
-  , mHintsNotHandledForDescendants(nsChangeHint(0))
+  , mHintsHandledByAncestors(aHintsHandledByAncestors)
+  , mHintsHandledBySelf(nsChangeHint(0))
   , mRestyleTracker(aRestyleTracker)
   , mSelectorsForDescendants(aSelectorsForDescendants)
   , mTreeMatchContext(aTreeMatchContext)
@@ -1106,6 +1079,9 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
 #endif
 {
   MOZ_ASSERT_IF(mContent, !mContent->IsStyledByServo());
+  MOZ_ASSERT(!(mHintsHandledByAncestors & nsChangeHint_ReconstructFrame),
+             "why restyle descendants if we are reconstructing the frame for "
+             "an ancestor?");
 }
 
 ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
@@ -1118,11 +1094,22 @@ ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
     // comment above assertion at start of ElementRestyler::Restyle.)
   , mContent(mFrame->GetContent() ? mFrame->GetContent() : mParentContent)
   , mChangeList(aParentRestyler.mChangeList)
-  , mHintsHandled(aParentRestyler.mHintsHandled &
-                  ~NS_HintsNotHandledForDescendantsIn(aParentRestyler.mHintsHandled))
-  , mParentFrameHintsNotHandledForDescendants(
-      aParentRestyler.mHintsNotHandledForDescendants)
-  , mHintsNotHandledForDescendants(nsChangeHint(0))
+  , mHintsHandledByAncestors(
+      // Note that when FOR_OUT_OF_FLOW_CHILD, the out-of-flow may not be a
+      // geometric descendant of the frame where we started the reresolve.
+      // Therefore, even if mHintsHandledByAncestors already includes
+      // nsChangeHint_AllReflowHints/ we don't want to pass that on to the
+      // out-of-flow reresolve, since that can lead to the out-of-flow not
+      // getting reflowed when it should be (eg a reresolve starting at <body>
+      // that involves reflowing the <body> would miss reflowing fixed-pos
+      // nodes that also need reflow).  In the cases when the out-of-flow _is_
+      // a geometric descendant of a frame we already have a reflow hint
+      // for, reflow coalescing should keep us from doing the work twice.
+      (aParentRestyler.mHintsHandledByAncestors |
+       aParentRestyler.mHintsHandledBySelf) &
+      ((aConstructorFlags & FOR_OUT_OF_FLOW_CHILD) ?
+       ~nsChangeHint_AllReflowHints : ~nsChangeHint(0)))
+  , mHintsHandledBySelf(nsChangeHint(0))
   , mRestyleTracker(aParentRestyler.mRestyleTracker)
   , mSelectorsForDescendants(aParentRestyler.mSelectorsForDescendants)
   , mTreeMatchContext(aParentRestyler.mTreeMatchContext)
@@ -1141,19 +1128,9 @@ ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
 #endif
 {
   MOZ_ASSERT_IF(mContent, !mContent->IsStyledByServo());
-  if (aConstructorFlags & FOR_OUT_OF_FLOW_CHILD) {
-    // Note that the out-of-flow may not be a geometric descendant of
-    // the frame where we started the reresolve.  Therefore, even if
-    // mHintsHandled already includes nsChangeHint_AllReflowHints we
-    // don't want to pass that on to the out-of-flow reresolve, since
-    // that can lead to the out-of-flow not getting reflowed when it
-    // should be (eg a reresolve starting at <body> that involves
-    // reflowing the <body> would miss reflowing fixed-pos nodes that
-    // also need reflow).  In the cases when the out-of-flow _is_ a
-    // geometric descendant of a frame we already have a reflow hint
-    // for, reflow coalescing should keep us from doing the work twice.
-    mHintsHandled &= ~nsChangeHint_AllReflowHints;
-  }
+  MOZ_ASSERT(!(mHintsHandledByAncestors & nsChangeHint_ReconstructFrame),
+             "why restyle descendants if we are reconstructing the frame for "
+             "an ancestor?");
 }
 
 ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
@@ -1166,12 +1143,9 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
     // comment above assertion at start of ElementRestyler::Restyle.)
   , mContent(mFrame->GetContent() ? mFrame->GetContent() : mParentContent)
   , mChangeList(aParentRestyler.mChangeList)
-  , mHintsHandled(aParentRestyler.mHintsHandled &
-                  ~NS_HintsNotHandledForDescendantsIn(aParentRestyler.mHintsHandled))
-  , mParentFrameHintsNotHandledForDescendants(
-      // assume the worst
-      nsChangeHint_Hints_NotHandledForDescendants)
-  , mHintsNotHandledForDescendants(nsChangeHint(0))
+  , mHintsHandledByAncestors(aParentRestyler.mHintsHandledByAncestors |
+                             aParentRestyler.mHintsHandledBySelf)
+  , mHintsHandledBySelf(nsChangeHint(0))
   , mRestyleTracker(aParentRestyler.mRestyleTracker)
   , mSelectorsForDescendants(aParentRestyler.mSelectorsForDescendants)
   , mTreeMatchContext(aParentRestyler.mTreeMatchContext)
@@ -1190,6 +1164,9 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
 #endif
 {
   MOZ_ASSERT_IF(mContent, !mContent->IsStyledByServo());
+  MOZ_ASSERT(!(mHintsHandledByAncestors & nsChangeHint_ReconstructFrame),
+             "why restyle descendants if we are reconstructing the frame for "
+             "an ancestor?");
 }
 
 ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
@@ -1209,10 +1186,8 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
   , mParentContent(nullptr)
   , mContent(aContent)
   , mChangeList(aChangeList)
-  , mHintsHandled(aHintsHandledByAncestors &
-                  ~NS_HintsNotHandledForDescendantsIn(aHintsHandledByAncestors))
-  , mParentFrameHintsNotHandledForDescendants(nsChangeHint(0))
-  , mHintsNotHandledForDescendants(nsChangeHint(0))
+  , mHintsHandledByAncestors(aHintsHandledByAncestors)
+  , mHintsHandledBySelf(nsChangeHint(0))
   , mRestyleTracker(aRestyleTracker)
   , mSelectorsForDescendants(aSelectorsForDescendants)
   , mTreeMatchContext(aTreeMatchContext)
@@ -1227,6 +1202,9 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
   , mVisibleKidsOfHiddenElement(aVisibleKidsOfHiddenElement)
 #endif
 {
+  MOZ_ASSERT(!(mHintsHandledByAncestors & nsChangeHint_ReconstructFrame),
+             "why restyle descendants if we are reconstructing the frame for "
+             "an ancestor?");
 }
 
 void
@@ -1295,7 +1273,6 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
 
   nsChangeHint ourChange =
     aOldContext->CalcStyleDifference(aNewContext,
-                                     mParentFrameHintsNotHandledForDescendants,
                                      aEqualStructs,
                                      aSamePointerStructs);
   NS_ASSERTION(!(ourChange & nsChangeHint_AllReflowHints) ||
@@ -1307,29 +1284,42 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
               GeckoRestyleManager::ChangeHintToString(aChangeToAssume).get());
   LOG_RESTYLE_INDENT();
 
-  // nsChangeHint_UpdateEffects is inherited, but it can be set due to changes
-  // in inherited properties (fill and stroke).  Avoid propagating it into
-  // text nodes.
+  // nsChangeHint_UpdateEffects is not handled for descendants, but it can be
+  // set due to changes in inherited properties (fill and stroke).  Avoid
+  // propagating it into text nodes.
   if ((ourChange & nsChangeHint_UpdateEffects) &&
       mContent && !mContent->IsElement()) {
     ourChange &= ~nsChangeHint_UpdateEffects;
   }
 
   ourChange |= aChangeToAssume;
-  if (!NS_IsHintSubset(ourChange, mHintsHandled)) {
-    mHintsHandled |= ourChange;
+
+  nsChangeHint changeToAppend =
+    NS_RemoveSubsumedHints(ourChange, mHintsHandledByAncestors);
+
+  // mHintsHandledBySelf starts off as nsChangeHint(0), when restyling a given
+  // frame, and accumulates change hints for each same-style-continuation and
+  // {ib}-split sibling following it.  Most of the time, any subsequent frames
+  // we restyle with this ElementRestyler will generate exactly the same
+  // |changeToAppend| that we have already stored in mHintsHandledBySelf.  If
+  // we generate some hints that weren't handled by an earler same-style-
+  // continuation or {ib}-split sibling, then we record the entire
+  // |changeToAppend| value.  (We could use something like
+  // NS_RemoveSubsumedHints, but aimed at removing hints handled only for the
+  // current element instead.  However, we should probably just fix these rare
+  // cases as part of bug 918064.)
+  if (!NS_IsHintSubset(changeToAppend, mHintsHandledBySelf)) {
+    mHintsHandledBySelf |= changeToAppend;
     if (!(ourChange & nsChangeHint_ReconstructFrame) || mContent) {
       LOG_RESTYLE("appending change %s",
-                  GeckoRestyleManager::ChangeHintToString(ourChange).get());
-      mChangeList->AppendChange(mFrame, mContent, ourChange);
+                  RestyleManager::ChangeHintToString(changeToAppend).get());
+      mChangeList->AppendChange(mFrame, mContent, changeToAppend);
     } else {
-      LOG_RESTYLE("change has already been handled");
+      LOG_RESTYLE("ignoring ReconstructFrame change with no content");
     }
+  } else {
+    LOG_RESTYLE("change has already been handled");
   }
-  mHintsNotHandledForDescendants |=
-    NS_HintsNotHandledForDescendantsIn(ourChange);
-  LOG_RESTYLE("mHintsNotHandledForDescendants = %s",
-              GeckoRestyleManager::ChangeHintToString(mHintsNotHandledForDescendants).get());
 }
 
 class MOZ_RAII AutoSelectorArrayTruncater final
@@ -1733,8 +1723,8 @@ ElementRestyler::MoveStyleContextsForChildren(nsStyleContext* aOldContext)
  * with the same style), all of its next continuations with the same
  * style, and all ib-split siblings of the same type (either block or
  * inline, skipping the intermediates of the other type) and accumulate
- * changes into mChangeList given that mHintsHandled is already accumulated
- * for an ancestor.
+ * changes into mChangeList given that mHintsHandledByAncestors is already
+ * accumulated for an ancestor.
  * mParentContent is the content node used to resolve the parent style
  * context.  This means that, for pseudo-elements, it is the content
  * that should be used for selector matching (rather than the fake
@@ -1795,9 +1785,13 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     mContent->OwnerDoc()->FlushPendingLinkUpdates();
     nsAutoPtr<RestyleTracker::RestyleData> restyleData;
     if (mRestyleTracker.GetRestyleData(mContent->AsElement(), restyleData)) {
-      if (!NS_IsHintSubset(restyleData->mChangeHint, mHintsHandled)) {
-        mHintsHandled |= restyleData->mChangeHint;
-        mChangeList->AppendChange(mFrame, mContent, restyleData->mChangeHint);
+      nsChangeHint changeToAppend =
+        NS_RemoveSubsumedHints(restyleData->mChangeHint,
+                               mHintsHandledByAncestors);
+      // See the comment in CaptureChange about why we use NS_IsHintSubset here.
+      if (!NS_IsHintSubset(changeToAppend, mHintsHandledBySelf)) {
+        mHintsHandledBySelf |= changeToAppend;
+        mChangeList->AppendChange(mFrame, mContent, changeToAppend);
       }
       mSelectorsForDescendants.AppendElements(
           restyleData->mRestyleHintData.mSelectorsForDescendants);
@@ -1915,7 +1909,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
 
     // Send the accessibility notifications that RestyleChildren otherwise
     // would have sent.
-    if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
+    if (!(mHintsHandledBySelf & nsChangeHint_ReconstructFrame)) {
       InitializeAccessibilityNotifications(mFrame->StyleContext());
       SendAccessibilityNotifications();
     }
@@ -1928,7 +1922,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   }
 
   if (result == RestyleResult::eStopWithStyleChange &&
-      !(mHintsHandled & nsChangeHint_ReconstructFrame)) {
+      !(mHintsHandledBySelf & nsChangeHint_ReconstructFrame)) {
     MOZ_ASSERT(mFrame->StyleContext() != oldContext,
                "RestyleResult::eStopWithStyleChange should only be returned "
                "if we got a new style context or we will reconstruct");
@@ -1947,7 +1941,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     if (canStop) {
       // Send the accessibility notifications that RestyleChildren otherwise
       // would have sent.
-      if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
+      if (!(mHintsHandledBySelf & nsChangeHint_ReconstructFrame)) {
         InitializeAccessibilityNotifications(mFrame->StyleContext());
         SendAccessibilityNotifications();
       }
@@ -1984,11 +1978,11 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   }
 
   // No need to do this if we're planning to reframe already.
-  // It's also important to check mHintsHandled since we use
-  // mFrame->StyleContext(), which is out of date if mHintsHandled
+  // It's also important to check mHintsHandledBySelf since we use
+  // mFrame->StyleContext(), which is out of date if mHintsHandledBySelf
   // has a ReconstructFrame hint.  Using an out of date style
   // context could trigger assertions about mismatched rule trees.
-  if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
+  if (!(mHintsHandledBySelf & nsChangeHint_ReconstructFrame)) {
     RestyleChildren(childRestyleHint);
   }
 
@@ -2471,13 +2465,6 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
     canStopWithStyleChange = false;
   }
 
-  if (providerFrame != aSelf->GetParent()) {
-    // We don't actually know what the parent style context's
-    // non-inherited hints were, so assume the worst.
-    mParentFrameHintsNotHandledForDescendants =
-      nsChangeHint_Hints_NotHandledForDescendants;
-  }
-
   LOG_RESTYLE("parentContext = %p", parentContext);
 
   // do primary context
@@ -2552,7 +2539,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
                                                          mTreeMatchContext);
           if (!newContext) {
             // This pseudo should no longer exist; gotta reframe
-            mHintsHandled |= nsChangeHint_ReconstructFrame;
+            mHintsHandledBySelf |= nsChangeHint_ReconstructFrame;
             mChangeList->AppendChange(aSelf, element,
                                       nsChangeHint_ReconstructFrame);
             // We're reframing anyway; just keep the same context
@@ -2670,7 +2657,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
       // same-style continuations (bug 918064), we need to check again here to
       // determine whether it is safe to stop restyling.
       if (result == RestyleResult::eStop) {
-        oldContext->CalcStyleDifference(newContext, nsChangeHint(0),
+        oldContext->CalcStyleDifference(newContext,
                                         &equalStructs,
                                         &samePointerStructs);
         if (equalStructs != NS_STYLE_INHERIT_MASK) {
@@ -2773,7 +2760,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
       result = RestyleResult::eContinueAndForceDescendants;
     }
 
-    if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
+    if (!(mHintsHandledBySelf & nsChangeHint_ReconstructFrame)) {
       // If the frame gets regenerated, let it keep its old context,
       // which is important to maintain various invariants about
       // frame types matching their style contexts.
@@ -2909,7 +2896,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
       uint32_t samePointerStructs;
       CaptureChange(oldExtraContext, newExtraContext, assumeDifferenceHint,
                     &equalStructs, &samePointerStructs);
-      if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
+      if (!(mHintsHandledBySelf & nsChangeHint_ReconstructFrame)) {
         LOG_RESTYLE("setting new extra style context");
         aSelf->SetAdditionalStyleContext(contextIndex, newExtraContext);
       } else {
@@ -2926,7 +2913,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
 void
 ElementRestyler::RestyleChildren(nsRestyleHint aChildRestyleHint)
 {
-  MOZ_ASSERT(!(mHintsHandled & nsChangeHint_ReconstructFrame),
+  MOZ_ASSERT(!(mHintsHandledBySelf & nsChangeHint_ReconstructFrame),
              "No need to do this if we're planning to reframe already.");
 
   // We'd like style resolution to be exact in the sense that an
@@ -2948,11 +2935,11 @@ ElementRestyler::RestyleChildren(nsRestyleHint aChildRestyleHint)
   // Check whether we might need to create a new ::before frame.
   // There's no need to do this if we're planning to reframe already
   // or if we're not forcing restyles on kids.
-  // It's also important to check mHintsHandled since we use
-  // mFrame->StyleContext(), which is out of date if mHintsHandled has a
-  // ReconstructFrame hint.  Using an out of date style context could
+  // It's also important to check mHintsHandledBySelf since we use
+  // mFrame->StyleContext(), which is out of date if mHintsHandledBySelf
+  // has a ReconstructFrame hint.  Using an out of date style context could
   // trigger assertions about mismatched rule trees.
-  if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
+  if (!(mHintsHandledBySelf & nsChangeHint_ReconstructFrame) &&
       mightReframePseudos) {
     MaybeReframeForBeforePseudo();
   }
@@ -2962,12 +2949,12 @@ ElementRestyler::RestyleChildren(nsRestyleHint aChildRestyleHint)
   // new style contexts to be resolved on all of this frame's
   // descendants anyway, so we want to avoid wasting time processing
   // style contexts that we're just going to throw away anyway. - dwh
-  // It's also important to check mHintsHandled since reresolving the
+  // It's also important to check mHintsHandledBySelf since reresolving the
   // kids would use mFrame->StyleContext(), which is out of date if
-  // mHintsHandled has a ReconstructFrame hint; doing this could trigger
-  // assertions about mismatched rule trees.
+  // mHintsHandledBySelf has a ReconstructFrame hint; doing this could
+  // trigger assertions about mismatched rule trees.
   nsIFrame* lastContinuation;
-  if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
+  if (!(mHintsHandledBySelf & nsChangeHint_ReconstructFrame)) {
     InitializeAccessibilityNotifications(mFrame->StyleContext());
 
     for (nsIFrame* f = mFrame; f;
@@ -2981,7 +2968,7 @@ ElementRestyler::RestyleChildren(nsRestyleHint aChildRestyleHint)
 
   // Check whether we might need to create a new ::after frame.
   // See comments above regarding :before.
-  if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
+  if (!(mHintsHandledBySelf & nsChangeHint_ReconstructFrame) &&
       mightReframePseudos) {
     MaybeReframeForAfterPseudo(lastContinuation);
   }
@@ -2996,19 +2983,22 @@ ElementRestyler::RestyleChildrenOfDisplayContentsElement(
   nsRestyleHint          aRestyleHint,
   const RestyleHintData& aRestyleHintData)
 {
-  MOZ_ASSERT(!(mHintsHandled & nsChangeHint_ReconstructFrame), "why call me?");
+  MOZ_ASSERT(!(mHintsHandledBySelf & nsChangeHint_ReconstructFrame),
+             "why call me?");
 
   const bool mightReframePseudos = aRestyleHint & eRestyle_Subtree;
   DoRestyleUndisplayedDescendants(nsRestyleHint(0), mContent, aNewContext);
-  if (!(mHintsHandled & nsChangeHint_ReconstructFrame) && mightReframePseudos) {
+  if (!(mHintsHandledBySelf & nsChangeHint_ReconstructFrame) &&
+      mightReframePseudos) {
     MaybeReframeForPseudo(CSSPseudoElementType::before,
                           aParentFrame, nullptr, mContent, aNewContext);
   }
-  if (!(mHintsHandled & nsChangeHint_ReconstructFrame) && mightReframePseudos) {
+  if (!(mHintsHandledBySelf & nsChangeHint_ReconstructFrame) &&
+      mightReframePseudos) {
     MaybeReframeForPseudo(CSSPseudoElementType::after,
                           aParentFrame, nullptr, mContent, aNewContext);
   }
-  if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
+  if (!(mHintsHandledBySelf & nsChangeHint_ReconstructFrame)) {
     InitializeAccessibilityNotifications(aNewContext);
 
     // Then process child frames for content that is a descendant of mContent.
@@ -3030,7 +3020,7 @@ ElementRestyler::RestyleChildrenOfDisplayContentsElement(
       }
     }
   }
-  if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
+  if (!(mHintsHandledBySelf & nsChangeHint_ReconstructFrame)) {
     SendAccessibilityNotifications();
   }
 }
@@ -3296,7 +3286,7 @@ ElementRestyler::MaybeReframeForPseudo(CSSPseudoElementType aPseudoType,
     // Have to create the new ::before/::after frame.
     LOG_RESTYLE("MaybeReframeForPseudo, appending "
                 "nsChangeHint_ReconstructFrame");
-    mHintsHandled |= nsChangeHint_ReconstructFrame;
+    mHintsHandledBySelf |= nsChangeHint_ReconstructFrame;
     mChangeList->AppendChange(aFrame, aContent, nsChangeHint_ReconstructFrame);
   }
 }

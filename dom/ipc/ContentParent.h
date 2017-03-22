@@ -377,10 +377,7 @@ public:
     return mScriptableHelper;
   }
 
-  bool NeedsPermissionsUpdate() const
-  {
-    return mSendPermissionUpdates;
-  }
+  bool NeedsPermissionsUpdate(const nsACString& aPermissionKey) const;
 
   /**
    * Kill our subprocess and make sure it dies.  Should only be used
@@ -640,6 +637,10 @@ public:
   // Use the PHangMonitor channel to ask the child to repaint a tab.
   void ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch);
 
+  nsresult TransmitPermissionsFor(nsIChannel* aChannel);
+
+  nsresult TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal);
+
 protected:
   void OnChannelConnected(int32_t pid) override;
 
@@ -779,6 +780,13 @@ private:
 
   // Start the force-kill timer on shutdown.
   void StartForceKillTimer();
+
+  // Ensure that the permissions for the giben Permission key are set in the
+  // content process.
+  //
+  // See nsIPermissionManager::GetPermissionsForKey for more information on
+  // these keys.
+  void EnsurePermissionsByKey(const nsCString& aKey);
 
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
 
@@ -926,8 +934,6 @@ private:
 
   virtual mozilla::ipc::IPCResult RecvReadFontList(InfallibleTArray<FontListEntry>* retValue) override;
 
-  virtual mozilla::ipc::IPCResult RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions) override;
-
   virtual mozilla::ipc::IPCResult RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
                                                    const bool& aIsPrivateData,
                                                    const IPC::Principal& aRequestingPrincipal,
@@ -1062,9 +1068,6 @@ private:
   RecvRequestAnonymousTemporaryFile(const uint64_t& aID) override;
 
   virtual mozilla::ipc::IPCResult
-  RecvOpenAnonymousTemporaryFile(FileDescOrError* aFD) override;
-
-  virtual mozilla::ipc::IPCResult
   RecvKeygenProcessValue(const nsString& oldValue, const nsString& challenge,
                          const nsString& keytype, const nsString& keyparams,
                          nsString* newValue) override;
@@ -1181,7 +1184,6 @@ private:
   // still pass through.
   bool mIsAlive;
 
-  bool mSendPermissionUpdates;
   bool mIsForBrowser;
 
   // These variables track whether we've called Close() and KillHard() on our
@@ -1227,6 +1229,8 @@ private:
   // This hashtable is used to run GetFilesHelper objects in the parent process.
   // GetFilesHelper can be aborted by receiving RecvDeleteGetFilesRequest.
   nsRefPtrHashtable<nsIDHashKey, GetFilesHelper> mGetFilesPendingRequests;
+
+  nsTHashtable<nsCStringHashKey> mActivePermissionKeys;
 
   nsTArray<nsCString> mBlobURLs;
 #ifdef MOZ_CRASHREPORTER

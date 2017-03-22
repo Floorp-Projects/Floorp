@@ -2392,12 +2392,13 @@ public class BrowserApp extends GeckoApp
         }
 
         final Tabs tabs = Tabs.getInstance();
+        final Tab selectedTab = tabs.getSelectedTab();
         final Tab tab;
 
         if (AboutPages.isAboutReader(url)) {
-            tab = tabs.getFirstReaderTabForUrl(url, tabs.getSelectedTab().isPrivate());
+            tab = tabs.getFirstReaderTabForUrl(url, selectedTab.isPrivate(), selectedTab.getType());
         } else {
-            tab = tabs.getFirstTabForUrl(url, tabs.getSelectedTab().isPrivate());
+            tab = tabs.getFirstTabForUrl(url, selectedTab.isPrivate(), selectedTab.getType());
         }
 
         if (tab == null) {

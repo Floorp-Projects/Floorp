@@ -23,7 +23,7 @@ enum class CSSPseudoElementType : uint8_t;
 class ErrorResult;
 struct Keyframe;
 struct PropertyStyleAnimationValuePair;
-struct ServoComputedStyleValues;
+struct ServoComputedValuesWithParent;
 
 namespace dom {
 class Element;
@@ -88,7 +88,7 @@ public:
   static nsTArray<ComputedKeyframeValues>
   GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
                             dom::Element* aElement,
-                            const ServoComputedStyleValues& aServoValues);
+                            const ServoComputedValuesWithParent& aServoValues);
 
   /**
    * Fills in the mComputedOffset member of each keyframe in the given array
@@ -117,7 +117,7 @@ public:
                            SpacingMode aSpacingMode,
                            nsCSSPropertyID aProperty,
                            nsTArray<ComputedKeyframeValues>& aComputedValues,
-                           const ServoComputedStyleValues& aServoValues)
+                           const ServoComputedValuesWithParent& aServoValues)
   {
     NS_WARNING("stylo: ApplySpacing not implemented yet");
   }

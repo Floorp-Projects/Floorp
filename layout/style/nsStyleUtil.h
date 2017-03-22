@@ -138,6 +138,13 @@ public:
   static bool IsSignificantChild(nsIContent* aChild,
                                    bool aTextIsSignificant,
                                    bool aWhitespaceIsSignificant);
+
+  /*
+   * Thread-safe version of IsSignificantChild()
+   */
+  static bool ThreadSafeIsSignificantChild(const nsIContent* aChild,
+                                           bool aTextIsSignificant,
+                                           bool aWhitespaceIsSignificant);
   /**
    * Returns true if our object-fit & object-position properties might cause
    * a replaced element's contents to overflow its content-box (requiring

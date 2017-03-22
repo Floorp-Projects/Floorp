@@ -186,11 +186,7 @@ pref("dom.enable_performance_observer", false);
 #endif
 
 // Enable requestIdleCallback API
-#ifdef NIGHTLY_BUILD
 pref("dom.requestIdleCallback.enabled", true);
-#else
-pref("dom.requestIdleCallback.enabled", false);
-#endif
 
 // Whether the Gamepad API is enabled
 pref("dom.gamepad.enabled", true);
@@ -1589,6 +1585,9 @@ pref("network.http.spdy.default-hpack-buffer", 65536); // 64k
 // the origin host without using a proxy.
 pref("network.http.altsvc.enabled", true);
 pref("network.http.altsvc.oe", true);
+
+// Turn on 0RTT data for TLS 1.3
+pref("security.tls.enable_0rtt_data", true);
 
 pref("network.http.diagnostics", false);
 
@@ -5212,8 +5211,11 @@ pref("browser.safebrowsing.provider.google.reportMalwareMistakeURL", "https://%L
 pref("browser.safebrowsing.provider.google4.pver", "4");
 pref("browser.safebrowsing.provider.google4.lists", "goog-badbinurl-proto,goog-downloadwhite-proto,goog-phish-proto,googpub-phish-proto,goog-malware-proto,goog-unwanted-proto");
 pref("browser.safebrowsing.provider.google4.updateURL", "https://safebrowsing.googleapis.com/v4/threatListUpdates:fetch?$ct=application/x-protobuf&key=%GOOGLE_API_KEY%");
-// Leave it empty until we roll out v4 hash completion feature. See Bug 1323856.
+#ifdef NIGHTLY_BUILD
+pref("browser.safebrowsing.provider.google4.gethashURL", "https://safebrowsing.googleapis.com/v4/fullHashes:find?$ct=application/x-protobuf&key=%GOOGLE_API_KEY%");
+#else
 pref("browser.safebrowsing.provider.google4.gethashURL", "");
+#endif // NIGHTLY_BUILD
 pref("browser.safebrowsing.provider.google4.reportURL", "https://safebrowsing.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
 pref("browser.safebrowsing.provider.google4.reportPhishMistakeURL", "https://%LOCALE%.phish-error.mozilla.com/?hl=%LOCALE%&url=");
 pref("browser.safebrowsing.provider.google4.reportMalwareMistakeURL", "https://%LOCALE%.malware-error.mozilla.com/?hl=%LOCALE%&url=");

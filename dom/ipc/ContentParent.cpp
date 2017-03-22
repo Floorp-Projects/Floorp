@@ -181,6 +181,7 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsICaptivePortalService.h"
+#include "nsIObjectLoadingContent.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -1330,6 +1331,10 @@ ContentParent::Init()
   }
 #endif
 
+  // Ensure that the default set of permissions are avaliable in the content
+  // process before we try to load any URIs in it.
+  EnsurePermissionsByKey(EmptyCString());
+
   RefPtr<GeckoMediaPluginServiceParent> gmps(GeckoMediaPluginServiceParent::GetSingleton());
   gmps->UpdateContentProcessGMPCapabilities();
 
@@ -2061,7 +2066,6 @@ ContentParent::ContentParent(ContentParent* aOpener,
   , mNumDestroyingTabs(0)
   , mIsAvailable(true)
   , mIsAlive(true)
-  , mSendPermissionUpdates(false)
   , mIsForBrowser(!mRemoteType.IsEmpty())
   , mCalledClose(false)
   , mCalledKillHard(false)
@@ -2460,57 +2464,6 @@ ContentParent::RecvReadFontList(InfallibleTArray<FontListEntry>* retValue)
 #ifdef ANDROID
   gfxAndroidPlatform::GetPlatform()->GetSystemFontList(retValue);
 #endif
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions)
-{
-#ifdef MOZ_PERMISSIONS
-  nsCOMPtr<nsIPermissionManager> permissionManagerIface =
-    services::GetPermissionManager();
-  nsPermissionManager* permissionManager =
-    static_cast<nsPermissionManager*>(permissionManagerIface.get());
-  MOZ_ASSERT(permissionManager,
-             "We have no permissionManager in the Chrome process !");
-
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  DebugOnly<nsresult> rv = permissionManager->GetEnumerator(getter_AddRefs(enumerator));
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "Could not get enumerator!");
-  while(1) {
-    bool hasMore;
-    enumerator->HasMoreElements(&hasMore);
-    if (!hasMore)
-      break;
-
-    nsCOMPtr<nsISupports> supp;
-    enumerator->GetNext(getter_AddRefs(supp));
-    nsCOMPtr<nsIPermission> perm = do_QueryInterface(supp);
-
-    nsCOMPtr<nsIPrincipal> principal;
-    perm->GetPrincipal(getter_AddRefs(principal));
-    nsCString origin;
-    if (principal) {
-      principal->GetOrigin(origin);
-    }
-    nsCString type;
-    perm->GetType(type);
-    uint32_t capability;
-    perm->GetCapability(&capability);
-    uint32_t expireType;
-    perm->GetExpireType(&expireType);
-    int64_t expireTime;
-    perm->GetExpireTime(&expireTime);
-
-    aPermissions->AppendElement(IPC::Permission(origin, type,
-                                                capability, expireType,
-                                                expireTime));
-  }
-
-  // Ask for future changes
-  mSendPermissionUpdates = true;
-#endif
-
   return IPC_OK();
 }
 
@@ -4161,24 +4114,6 @@ ContentParent::RecvRequestAnonymousTemporaryFile(const uint64_t& aID)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-ContentParent::RecvOpenAnonymousTemporaryFile(FileDescOrError *aFD)
-{
-  PRFileDesc *prfd;
-  nsresult rv = NS_OpenAnonymousTemporaryFile(&prfd);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // Returning false will kill the child process; instead
-    // propagate the error and let the child handle it.
-    *aFD = rv;
-    return IPC_OK();
-  }
-  *aFD = FileDescriptor(FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(prfd)));
-  // The FileDescriptor object owns a duplicate of the file handle; we
-  // must close the original (and clean up the NSPR descriptor).
-  PR_Close(prfd);
-  return IPC_OK();
-}
-
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 
 mozilla::ipc::IPCResult
@@ -5121,6 +5056,101 @@ ContentParent::ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch
   ProcessHangMonitor::ForcePaint(mHangMonitorActor, aTabParent, aLayerObserverEpoch);
 }
 
+nsresult
+ContentParent::TransmitPermissionsFor(nsIChannel* aChannel)
+{
+  MOZ_ASSERT(aChannel);
+#ifdef MOZ_PERMISSIONS
+  // Check if this channel is going to be used to create a document. If it has
+  // LOAD_DOCUMENT_URI set it is trivially creating a document. If
+  // LOAD_HTML_OBJECT_DATA is set it may or may not be used to create a
+  // document, depending on its MIME type.
+  nsLoadFlags loadFlags;
+  nsresult rv = aChannel->GetLoadFlags(&loadFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!(loadFlags & nsIChannel::LOAD_DOCUMENT_URI)) {
+    if (loadFlags & nsIRequest::LOAD_HTML_OBJECT_DATA) {
+      nsAutoCString mimeType;
+      aChannel->GetContentType(mimeType);
+      if (nsContentUtils::HtmlObjectContentTypeForMIMEType(mimeType, nullptr) !=
+          nsIObjectLoadingContent::TYPE_DOCUMENT) {
+        // The MIME type would not cause the creation of a document
+        return NS_OK;
+      }
+    } else {
+      // neither flag was set
+      return NS_OK;
+    }
+  }
+
+  // Get the principal for the channel result, so that we can get the permission
+  // key for the document which will be created from this response.
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  if (NS_WARN_IF(!ssm)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = ssm->GetChannelResultPrincipal(aChannel, getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TransmitPermissionsForPrincipal(principal);
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
+  return NS_OK;
+}
+
+nsresult
+ContentParent::TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal)
+{
+#ifdef MOZ_PERMISSIONS
+  // Create the key, and send it down to the content process.
+  nsTArray<nsCString> keys =
+    nsPermissionManager::GetAllKeysForPrincipal(aPrincipal);
+  MOZ_ASSERT(keys.Length() >= 1);
+  for (auto& key : keys) {
+    EnsurePermissionsByKey(key);
+  }
+#endif
+
+  return NS_OK;
+}
+
+void
+ContentParent::EnsurePermissionsByKey(const nsCString& aKey)
+{
+#ifdef MOZ_PERMISSIONS
+  // NOTE: Make sure to initialize the permission manager before updating the
+  // mActivePermissionKeys list. If the permission manager is being initialized
+  // by this call to GetPermissionManager, and we've added the key to
+  // mActivePermissionKeys, then the permission manager will send down a
+  // SendAddPermission before receiving the SendSetPermissionsWithKey message.
+  nsCOMPtr<nsIPermissionManager> permManager =
+    services::GetPermissionManager();
+
+  if (mActivePermissionKeys.Contains(aKey)) {
+    return;
+  }
+  mActivePermissionKeys.PutEntry(aKey);
+
+  nsTArray<IPC::Permission> perms;
+  nsresult rv = permManager->GetPermissionsWithKey(aKey, perms);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  Unused << SendSetPermissionsWithKey(aKey, perms);
+#endif
+}
+
+bool
+ContentParent::NeedsPermissionsUpdate(const nsACString& aPermissionKey) const
+{
+  return mActivePermissionKeys.Contains(aPermissionKey);
+}
+
 mozilla::ipc::IPCResult
 ContentParent::RecvAccumulateChildHistograms(
                 InfallibleTArray<Accumulation>&& aAccumulations)
@@ -5230,6 +5260,14 @@ ContentParent::RecvFileCreationRequest(const nsID& aID,
                                        const bool& aExistenceCheck,
                                        const bool& aIsFromNsIFile)
 {
+  // We allow the creation of File via this IPC call only for the 'file' process
+  // or for testing.
+  if (!mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE) &&
+      !Preferences::GetBool("dom.file.createInChild", false)) {
+    KillHard("FileCreationRequest is not supported.");
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   RefPtr<BlobImpl> blobImpl;
   nsresult rv =
     FileCreatorHelper::CreateBlobImplForIPC(aFullPath, aType, aName,

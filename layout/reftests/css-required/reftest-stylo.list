@@ -22,7 +22,7 @@ fails == css-required-dyn-6.html css-required-dyn-6.html
 == css-required-hidden.html css-required-hidden.html
 fails == css-required-button.html css-required-button.html
 fails == css-required-submit.html css-required-submit.html
-== css-required-image.html css-required-image.html
+fails == css-required-image.html css-required-image.html
 fails == css-required-reset.html css-required-reset.html
 
 # Following elements can be optional but can't be required

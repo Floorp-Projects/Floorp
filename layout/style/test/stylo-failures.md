@@ -122,7 +122,7 @@ to mochitest command.
   * test_value_storage.html `symbols(` [30]
   * ... `list-style-type` [60]
   * ... `'list-style'` [30]
-  * ... `'content`: various value as list-style-type in counter functions [15]
+  * ... `'content`: various value as list-style-type in counter functions [13]
 * test_default_computed_style.html: support of getDefaultComputedStyle [1]
 * @font-face support bug 1290237
   * test_descriptor_storage.html [1]
@@ -182,14 +182,6 @@ to mochitest command.
     * test_value_storage.html `-moz-transform`: need different parsing rules [284]
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
-  * will-change longhand property servo/servo#15706
-    * test_change_hint_optimizations.html [1]
-    * test_compute_data_with_start_struct.html `will-change` [2]
-    * test_inherit_computation.html `will-change` [2]
-    * test_inherit_storage.html `will-change` [2]
-    * test_initial_computation.html `will-change` [4]
-    * test_initial_storage.html `will-change` [4]
-    * test_value_storage.html `will-change` [16]
   * contain longhand property servo/servo#15955
     * test_contain_formatting_context.html [1]
     * test_compute_data_with_start_struct.html `contain` [2]
@@ -273,8 +265,8 @@ to mochitest command.
   * test_page_parser.html [30]
   * test_rule_insertion.html `@page` [4]
 * Stylesheet cloning is somehow busted bug 1348481
-  * test_selectors.html `cloned correctly` [150]
-  * ... `matched clone` [195]
+  * test_selectors.html `cloned correctly` [155]
+  * ... `matched clone` [198]
 * Unsupported prefixed values
   * moz-prefixed gradient functions bug 1337655
     * test_value_storage.html `-moz-linear-gradient` [322]
@@ -410,9 +402,8 @@ to mochitest command.
     * test_selectors.html `:-moz-window-inactive` [2]
   * :-moz-{first,last}-node
     * test_selectors.html `:-moz-` [6]
-    * ... `unexpected rule index` [5]
   * :dir
-    * test_selectors.html `:dir` [10]
+    * test_selectors.html `:dir` [18]
 * issues arround font shorthand servo/servo#15032 servo/servo#15036
   * test_bug377947.html [1]
   * test_value_storage.html `'font'` [144]
@@ -490,7 +481,7 @@ to mochitest command.
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
 * test_variables.html `url`: url in custom property [1]
 * test_pseudoelement_state.html: doesn't seem to work at all, but only range-thumb fails... [4]
-* test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [8]
+* test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [6]
 
 ## Ignore
 

@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -19,6 +20,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.security.MessageDigest;
 import java.util.zip.GZIPOutputStream;
 
 import org.mozilla.gecko.AppConstants.Versions;
@@ -138,6 +140,7 @@ public class CrashReporter extends AppCompatActivity
         mPendingExtrasFile = new File(pendingDir, extrasFile.getName());
         moveFile(extrasFile, mPendingExtrasFile);
 
+        computeMinidumpHash(mPendingExtrasFile, mPendingMinidumpFile);
         mExtrasStringMap = new HashMap<String, String>();
         readStringsFromFile(mPendingExtrasFile.getPath(), mExtrasStringMap);
 
@@ -265,6 +268,46 @@ public class CrashReporter extends AppCompatActivity
     public void onRestartClick(View v) {  // bound via crash_reporter.xml
         doRestart();
         backgroundSendReport();
+    }
+
+    private void computeMinidumpHash(File extraFile, File minidump) {
+        try {
+            FileInputStream stream = new FileInputStream(minidump);
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+
+            try {
+                byte[] buffer = new byte[4096];
+                int readBytes;
+
+                while ((readBytes = stream.read(buffer)) != -1) {
+                    md.update(buffer, 0, readBytes);
+                }
+            } finally {
+              stream.close();
+            }
+
+            byte[] digest = md.digest();
+            StringBuilder hash = new StringBuilder(84);
+
+            hash.append("MinidumpSha256Hash=");
+
+            for (int i = 0; i < digest.length; i++) {
+              hash.append(Integer.toHexString((digest[i] & 0xf0) >> 4));
+              hash.append(Integer.toHexString(digest[i] & 0x0f));
+            }
+
+            hash.append('\n');
+
+            FileWriter writer = new FileWriter(extraFile, /* append */ true);
+
+            try {
+                writer.write(hash.toString());
+            } finally {
+                writer.close();
+            }
+        } catch (Exception e) {
+            Log.e(LOGTAG, "exception while computing the minidump hash: ", e);
+        }
     }
 
     private boolean readStringsFromFile(String filePath, Map<String, String> stringMap) {

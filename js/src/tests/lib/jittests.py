@@ -665,28 +665,19 @@ def push_progs(options, device, progs):
 
 def run_tests_remote(tests, num_tests, prefix, options):
     # Setup device with everything needed to run our tests.
-    from mozdevice import devicemanagerADB, devicemanagerSUT
+    from mozdevice import devicemanagerADB
 
-    if options.device_transport == 'adb':
-        if options.device_ip:
-            dm = devicemanagerADB.DeviceManagerADB(
-                options.device_ip, options.device_port,
-                deviceSerial=options.device_serial,
-                packageName=None,
-                deviceRoot=options.remote_test_root)
-        else:
-            dm = devicemanagerADB.DeviceManagerADB(
-                deviceSerial=options.device_serial,
-                packageName=None,
-                deviceRoot=options.remote_test_root)
-    else:
-        dm = devicemanagerSUT.DeviceManagerSUT(
+    if options.device_ip:
+        dm = devicemanagerADB.DeviceManagerADB(
             options.device_ip, options.device_port,
+            deviceSerial=options.device_serial,
+            packageName=None,
             deviceRoot=options.remote_test_root)
-        if options.device_ip == None:
-            print('Error: you must provide a device IP to connect to via the'
-                  ' --device option')
-            sys.exit(1)
+    else:
+        dm = devicemanagerADB.DeviceManagerADB(
+            deviceSerial=options.device_serial,
+            packageName=None,
+            deviceRoot=options.remote_test_root)
 
     # Update the test root to point to our test directory.
     jit_tests_dir = posixpath.join(options.remote_test_root, 'jit-tests')
