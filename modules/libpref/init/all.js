@@ -5639,7 +5639,7 @@ pref("fuzzing.enabled", false);
 
 // Set advanced layers preferences here.
 pref("layers.advanced.border-layers", false);
-#ifdef MOZ_ENABLE_WEBRENDER
+#ifdef MOZ_BUILD_WEBRENDER
 pref("layers.advanced.caret-layers", true);
 #else
 pref("layers.advanced.caret-layers", false);
