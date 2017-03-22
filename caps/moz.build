@@ -40,10 +40,10 @@ SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    'ContentPrincipal.cpp',
     'DomainPolicy.cpp',
     'ExpandedPrincipal.cpp',
     'nsJSPrincipals.cpp',
-    'nsPrincipal.cpp',
     'nsScriptSecurityManager.cpp',
     'NullPrincipal.cpp',
     'NullPrincipalURI.cpp',

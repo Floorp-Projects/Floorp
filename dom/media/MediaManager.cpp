@@ -28,7 +28,6 @@
 #include "nsIIDNService.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "nsPrincipal.h"
 #include "nsICryptoHash.h"
 #include "nsICryptoHMAC.h"
 #include "nsIKeyModule.h"

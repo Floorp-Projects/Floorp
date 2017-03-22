@@ -131,7 +131,7 @@ using mozilla::dom::AudioChannelAgent;
 #include "nsTextServicesCID.h"
 
 #include "nsScriptSecurityManager.h"
-#include "nsPrincipal.h"
+#include "ContentPrincipal.h"
 #include "SystemPrincipal.h"
 #include "NullPrincipal.h"
 #include "nsNetCID.h"
@@ -590,7 +590,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCSPContext)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CSPService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMixedContentBlocker)
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrincipal)
+NS_GENERIC_FACTORY_CONSTRUCTOR(ContentPrincipal)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(SystemPrincipal,
     nsScriptSecurityManager::SystemPrincipalSingletonConstructor)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NullPrincipal, Init)
@@ -1027,7 +1027,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_PARENTPROCESSMESSAGEMANAGER_CID, false, nullptr, CreateParentMessageManager },
   { &kNS_CHILDPROCESSMESSAGEMANAGER_CID, false, nullptr, CreateChildMessageManager },
   { &kNS_SCRIPTSECURITYMANAGER_CID, false, nullptr, Construct_nsIScriptSecurityManager },
-  { &kNS_PRINCIPAL_CID, false, nullptr, nsPrincipalConstructor },
+  { &kNS_PRINCIPAL_CID, false, nullptr, ContentPrincipalConstructor },
   { &kNS_SYSTEMPRINCIPAL_CID, false, nullptr, SystemPrincipalConstructor },
   { &kNS_NULLPRINCIPAL_CID, false, nullptr, NullPrincipalConstructor },
   { &kNS_DEVICE_SENSORS_CID, false, nullptr, nsDeviceSensorsConstructor },
