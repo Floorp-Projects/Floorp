@@ -30,7 +30,8 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla = [
-    'BasePrincipal.h'
+    'BasePrincipal.h',
+    'OriginAttributes.h',
 ]
 
 SOURCES += [
@@ -47,6 +48,7 @@ UNIFIED_SOURCES += [
     'nsScriptSecurityManager.cpp',
     'NullPrincipal.cpp',
     'NullPrincipalURI.cpp',
+    'OriginAttributes.cpp',
     'SystemPrincipal.cpp',
 ]
 
