@@ -44,7 +44,6 @@ class DebugFrame
 
     // The fields below are initialized by the baseline compiler.
     uint32_t    funcIndex_;
-    uint32_t    reserved0_;
 
     union
     {
@@ -71,8 +70,8 @@ class DebugFrame
         static_assert(offsetof(DebugFrame, tlsData_) + sizeof(TlsData*) ==
                       offsetof(DebugFrame, frame_),
                       "TLS pointer must be a field just before the wasm frame");
-        static_assert(sizeof(DebugFrame) % 8 == 0 && offsetof(DebugFrame, frame_) % 8 == 0,
-                      "DebugFrame and its portion is 8-bytes aligned for AbstractFramePtr");
+        static_assert(sizeof(DebugFrame) % 8 == 0,
+                      "DebugFrame is 8-bytes aligned for AbstractFramePtr");
     }
 
   public:

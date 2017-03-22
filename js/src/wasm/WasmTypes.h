@@ -1454,6 +1454,10 @@ WASM_DECLARE_POD_VECTOR(MemoryAccess, MemoryAccessVector)
 
 struct Frame
 {
+    // The saved value of WasmTlsReg on entry to the function. This is
+    // effectively the callee's instance.
+    TlsData* tls;
+
     // The value of WasmActivation::fp on entry to the function (before being
     // overwritten by this Frame's address).
     uint8_t* callerFP;
@@ -1462,9 +1466,6 @@ struct Frame
     // address is pushed by the first instruction of the prologue).
     void* returnAddress;
 };
-
-static_assert(sizeof(Frame) == 2 * sizeof(void*), "?!");
-static const uint32_t FrameBytesAfterReturnAddress = sizeof(void*);
 
 } // namespace wasm
 } // namespace js
