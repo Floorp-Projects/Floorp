@@ -38,8 +38,7 @@ DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
                                            int64_t aStartTime,
                                            const AudioInfo& aInfo,
                                            dom::AudioChannel aChannel)
-  : AudioSink(aAudioQueue)
-  , mStartTime(aStartTime)
+  : mStartTime(aStartTime)
   , mLastGoodPosition(0)
   , mInfo(aInfo)
   , mChannel(aChannel)
@@ -53,6 +52,7 @@ DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
   , mFramesParsed(0)
   , mLastEndTime(0)
   , mIsAudioDataAudible(false)
+  , mAudioQueue(aAudioQueue)
 {
   bool resampling = MediaPrefs::AudioSinkResampling();
 
@@ -385,10 +385,10 @@ DecodedAudioDataSink::NotifyAudioNeeded()
 
   // Always ensure we have two processed frames pending to allow for processing
   // latency.
-  while (AudioQueue().GetSize() && (AudioQueue().IsFinished() ||
+  while (mAudioQueue.GetSize() && (mAudioQueue.IsFinished() ||
                                     mProcessedQueueLength < LOW_AUDIO_USECS ||
                                     mProcessedQueue.GetSize() < 2)) {
-    RefPtr<AudioData> data = AudioQueue().PopFront();
+    RefPtr<AudioData> data = mAudioQueue.PopFront();
 
     // Ignore the element with 0 frames and try next.
     if (!data->mFrames) {
@@ -491,7 +491,7 @@ DecodedAudioDataSink::NotifyAudioNeeded()
     }
   }
 
-  if (AudioQueue().IsFinished()) {
+  if (mAudioQueue.IsFinished()) {
     // We have reached the end of the data, drain the resampler.
     DrainConverter();
     mProcessedQueue.Finish();
