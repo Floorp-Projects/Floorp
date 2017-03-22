@@ -343,13 +343,6 @@ PDMFactory::CreatePDMs()
     return;
   }
 
-#ifdef MOZ_WIDGET_ANDROID
-  if(MediaPrefs::PDMAndroidMediaCodecPreferred() &&
-     MediaPrefs::PDMAndroidMediaCodecEnabled()) {
-    m = new AndroidDecoderModule();
-    StartupPDM(m);
-  }
-#endif
 #ifdef XP_WIN
   if (MediaPrefs::PDMWMFEnabled()) {
     m = new WMFDecoderModule();
@@ -387,7 +380,7 @@ PDMFactory::CreatePDMs()
 #ifdef MOZ_WIDGET_ANDROID
   if(MediaPrefs::PDMAndroidMediaCodecEnabled()){
     m = new AndroidDecoderModule();
-    StartupPDM(m);
+    StartupPDM(m, MediaPrefs::PDMAndroidMediaCodecPreferred());
   }
 #endif
 
@@ -410,10 +403,14 @@ PDMFactory::CreateNullPDM()
 }
 
 bool
-PDMFactory::StartupPDM(PlatformDecoderModule* aPDM)
+PDMFactory::StartupPDM(PlatformDecoderModule* aPDM, bool aInsertAtBeginning)
 {
   if (aPDM && NS_SUCCEEDED(aPDM->Startup())) {
-    mCurrentPDMs.AppendElement(aPDM);
+    if (aInsertAtBeginning) {
+      mCurrentPDMs.InsertElementAt(0, aPDM);
+    } else {
+      mCurrentPDMs.AppendElement(aPDM);
+    }
     return true;
   }
   return false;
