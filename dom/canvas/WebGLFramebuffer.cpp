@@ -1504,13 +1504,6 @@ WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnu
             return;
         }
 
-        if (!texImageTarget.IsValueLegal(tex->Target().get())) {
-            mContext->ErrorInvalidValue("%s: `texture` does not belong to"
-                                        " TexImageTarget",
-                                        funcName);
-            return;
-        }
-
         texImageTarget = tex->Target().get();
         switch (texImageTarget.get()) {
         case LOCAL_GL_TEXTURE_3D:
