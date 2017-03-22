@@ -88,6 +88,7 @@ typedef struct mp4parse_track_video_info {
 	uint32_t display_height;
 	uint16_t image_width;
 	uint16_t image_height;
+	uint16_t rotation;
 	mp4parse_byte_data extra_data;
 	mp4parse_sinf_info protected_data;
 } mp4parse_track_video_info;
