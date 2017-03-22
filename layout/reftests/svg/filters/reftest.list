@@ -66,6 +66,8 @@ skip-if(d2d) == feGaussianBlur-cap-large-directional-radius-on-software.html feG
 # no tests for feTurbulence
 
 == filter-clipped-rect-01.svg pass.svg
+== filter-in-pattern-01.svg pass.svg
+fuzzy(5,67) != filter-in-pattern-02.svg filter-in-pattern-02-ref.svg
 == filter-inner-svg-01.svg pass.svg
 == filter-inner-svg-02.svg pass.svg
 == filter-inner-svg-03.svg pass.svg
