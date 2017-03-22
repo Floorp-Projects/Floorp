@@ -518,6 +518,7 @@ WEBIDL_FILES = [
     'Fetch.webidl',
     'FetchController.webidl',
     'FetchEvent.webidl',
+    'FetchObserver.webidl',
     'FetchSignal.webidl',
     'File.webidl',
     'FileList.webidl',
