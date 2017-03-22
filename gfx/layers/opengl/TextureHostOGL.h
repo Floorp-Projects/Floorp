@@ -137,7 +137,7 @@ class TextureImageTextureSourceOGL final : public DataTextureSource
 public:
   explicit TextureImageTextureSourceOGL(CompositorOGL *aCompositor,
                                         TextureFlags aFlags = TextureFlags::DEFAULT)
-    : mCompositor(aCompositor)
+    : mGL(aCompositor->gl())
     , mFlags(aFlags)
     , mIterating(false)
   {}
@@ -151,10 +151,6 @@ public:
 
   void EnsureBuffer(const gfx::IntSize& aSize,
                     gfxContentType aContentType);
-
-  void CopyTo(const gfx::IntRect& aSourceRect,
-              DataTextureSource* aDest,
-              const gfx::IntRect& aDestRect);
 
   virtual TextureImageTextureSourceOGL* AsTextureImageTextureSource() override { return this; }
 
@@ -177,7 +173,7 @@ public:
 
   virtual bool IsValid() const override { return !!mTexImage; }
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
   virtual GLenum GetWrapMode() const override
   {
@@ -213,7 +209,7 @@ public:
 
 protected:
   RefPtr<gl::TextureImage> mTexImage;
-  RefPtr<CompositorOGL> mCompositor;
+  RefPtr<gl::GLContext> mGL;
   TextureFlags mFlags;
   bool mIterating;
 };
@@ -260,7 +256,7 @@ public:
 
   virtual void DeallocateDeviceData() override;
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
   void SetSize(gfx::IntSize aSize) { mSize = aSize; }
 
@@ -268,11 +264,14 @@ public:
 
   GLuint GetTextureHandle() const { return mTextureHandle; }
 
-  gl::GLContext* gl() const;
+  gl::GLContext* gl() const {
+    return mGL;
+  }
 
 protected:
   void DeleteTextureHandle();
 
+  RefPtr<gl::GLContext> mGL;
   RefPtr<CompositorOGL> mCompositor;
   GLuint mTextureHandle;
   GLenum mTextureTarget;
@@ -344,7 +343,7 @@ class SurfaceTextureSource : public TextureSource
                            , public TextureSourceOGL
 {
 public:
-  SurfaceTextureSource(CompositorOGL* aCompositor,
+  SurfaceTextureSource(TextureSourceProvider* aProvider,
                        mozilla::gl::AndroidSurfaceTexture* aSurfTex,
                        gfx::SurfaceFormat aFormat,
                        GLenum aTarget,
@@ -372,12 +371,14 @@ public:
 
   virtual void DeallocateDeviceData() override;
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
-  gl::GLContext* gl() const;
+  gl::GLContext* gl() const {
+    return mGL;
+  }
 
 protected:
-  RefPtr<CompositorOGL> mCompositor;
+  RefPtr<gl::GLContext> mGL;
   RefPtr<gl::AndroidSurfaceTexture> mSurfTex;
   const gfx::SurfaceFormat mFormat;
   const GLenum mTextureTarget;
@@ -468,11 +469,14 @@ public:
   // We don't own anything.
   virtual void DeallocateDeviceData() override {}
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
-  gl::GLContext* gl() const;
+  gl::GLContext* gl() const {
+    return mGL;
+  }
 
 protected:
+  RefPtr<gl::GLContext> mGL;
   RefPtr<CompositorOGL> mCompositor;
   const EGLImage mImage;
   const gfx::SurfaceFormat mFormat;
