@@ -109,6 +109,7 @@ nsTextControlFrame::nsTextControlFrame(nsStyleContext* aContext)
   , mEditorHasBeenInitialized(false)
   , mIsProcessing(false)
   , mUsePlaceholder(false)
+  , mUsePreview(false)
 #ifdef DEBUG
   , mInEditorInitialization(false)
 #endif
@@ -367,11 +368,15 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     }
   }
 
-  // Create the preview anonymous content if needed.
-  Element* previewNode = txtCtrl->CreatePreviewNode();
-  NS_ENSURE_TRUE(previewNode, NS_ERROR_OUT_OF_MEMORY);
+  mUsePreview = txtCtrl->IsPreviewEnabled();
 
-  aElements.AppendElement(previewNode);
+  if (mUsePreview) {
+    // Create the preview anonymous content if needed.
+    Element* previewNode = txtCtrl->CreatePreviewNode();
+    NS_ENSURE_TRUE(previewNode, NS_ERROR_OUT_OF_MEMORY);
+
+    aElements.AppendElement(previewNode);
+  }
 
   rv = UpdateValueDisplay(false);
   NS_ENSURE_SUCCESS(rv, rv);
