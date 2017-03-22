@@ -21,7 +21,7 @@
 #include "nsNetCID.h"
 #include "nsError.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsPrincipal.h"
+#include "ContentPrincipal.h"
 #include "nsScriptSecurityManager.h"
 #include "pratom.h"
 
@@ -188,7 +188,7 @@ NullPrincipal::Read(nsIObjectInputStream* aStream)
 {
   // Note - NullPrincipal use NS_GENERIC_FACTORY_CONSTRUCTOR_INIT, which means
   // that the Init() method has already been invoked by the time we deserialize.
-  // This is in contrast to nsPrincipal, which uses NS_GENERIC_FACTORY_CONSTRUCTOR,
+  // This is in contrast to ContentPrincipal, which uses NS_GENERIC_FACTORY_CONSTRUCTOR,
   // in which case ::Read needs to invoke Init().
 
   nsAutoCString spec;

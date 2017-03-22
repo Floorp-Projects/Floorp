@@ -98,7 +98,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 
-#include "nsPrincipal.h"
+#include "ContentPrincipal.h"
 
 #ifdef XP_WIN
 #include "mozilla/plugins/PPluginWidgetParent.h"

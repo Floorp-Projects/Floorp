@@ -21,7 +21,6 @@
 #include "nsJSPrincipals.h"
 #include "mozilla/BasePrincipal.h"
 #include "SystemPrincipal.h"
-#include "nsPrincipal.h"
 #include "NullPrincipal.h"
 #include "DomainPolicy.h"
 #include "nsXPIDLString.h"
