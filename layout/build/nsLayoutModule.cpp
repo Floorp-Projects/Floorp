@@ -133,7 +133,7 @@ using mozilla::dom::AudioChannelAgent;
 #include "nsScriptSecurityManager.h"
 #include "nsPrincipal.h"
 #include "nsSystemPrincipal.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 #include "nsNetCID.h"
 #ifndef MOZ_WIDGET_GONK
 #if defined(MOZ_WIDGET_ANDROID)
@@ -593,7 +593,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMixedContentBlocker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrincipal)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemPrincipal,
     nsScriptSecurityManager::SystemPrincipalSingletonConstructor)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNullPrincipal, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NullPrincipal, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStructuredCloneContainer)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(OSFileConstantsService)
@@ -1029,7 +1029,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_SCRIPTSECURITYMANAGER_CID, false, nullptr, Construct_nsIScriptSecurityManager },
   { &kNS_PRINCIPAL_CID, false, nullptr, nsPrincipalConstructor },
   { &kNS_SYSTEMPRINCIPAL_CID, false, nullptr, nsSystemPrincipalConstructor },
-  { &kNS_NULLPRINCIPAL_CID, false, nullptr, nsNullPrincipalConstructor },
+  { &kNS_NULLPRINCIPAL_CID, false, nullptr, NullPrincipalConstructor },
   { &kNS_DEVICE_SENSORS_CID, false, nullptr, nsDeviceSensorsConstructor },
 #ifndef MOZ_WIDGET_GONK
 #if defined(ANDROID)
