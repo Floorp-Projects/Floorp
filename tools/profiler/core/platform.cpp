@@ -535,6 +535,7 @@ MergeStacksIntoProfile(ProfileBuffer* aBuffer, TickSample* aSample,
       registerState.pc = aSample->pc;
       registerState.sp = aSample->sp;
       registerState.lr = aSample->lr;
+      registerState.fp = aSample->fp;
 
       JS::ProfilingFrameIterator jsIter(pseudoStack->mContext,
                                         registerState,

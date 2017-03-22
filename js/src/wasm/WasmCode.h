@@ -239,8 +239,8 @@ class CodeRange
         DebugTrap,         // calls C++ to handle debug event such as
                            // enter/leave frame or breakpoint
         FarJumpIsland,     // inserted to connect otherwise out-of-range insns
-        Inline             // stub that is jumped-to, not called, and thus
-                           // replaces/loses preceding innermost frame
+        Inline,            // stub that is jumped-to within prologue/epilogue
+        Throw              // special stack-unwinding stub
     };
 
   private:

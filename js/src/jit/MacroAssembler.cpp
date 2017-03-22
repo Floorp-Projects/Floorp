@@ -2962,6 +2962,19 @@ MacroAssembler::wasmEmitTrapOutOfLineCode()
     clearTrapSites();
 }
 
+void
+MacroAssembler::wasmAssertNonExitInvariants(Register activation)
+{
+#ifdef DEBUG
+    // WasmActivation.exitFP should be null when outside any exit frame.
+    Label ok;
+    Address exitFP(activation, WasmActivation::offsetOfExitFP());
+    branchPtr(Assembler::Equal, exitFP, ImmWord(0), &ok);
+    breakpoint();
+    bind(&ok);
+#endif
+}
+
 //}}} check_macroassembler_style
 
 void

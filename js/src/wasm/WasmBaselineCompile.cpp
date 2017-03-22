@@ -2371,10 +2371,6 @@ class BaseCompiler
             restoreResult();
         }
 
-        // The epilogue assumes WasmTlsReg is valid so reload it in case it was
-        // clobbered by the body.
-        masm.loadWasmTlsRegFromFrame();
-
         GenerateFunctionEpilogue(masm, localSize_, &offsets_);
 
 #if defined(JS_ION_PERF)
@@ -5169,8 +5165,15 @@ BaseCompiler::sniffConditionalControlCmp(Cond compareOp, ValType operandType)
     MOZ_ASSERT(latentOp_ == LatentOp::None, "Latent comparison state not properly reset");
 
     switch (iter_.peekOp()) {
-      case uint16_t(Op::BrIf):
       case uint16_t(Op::Select):
+#ifdef JS_CODEGEN_X86
+        // On x86, with only 5 available registers, a latent i64 binary
+        // comparison takes 4 leaving only 1 which is not enough for select.
+        if (operandType == ValType::I64)
+            return false;
+#endif
+        MOZ_FALLTHROUGH;
+      case uint16_t(Op::BrIf):
       case uint16_t(Op::If):
         setLatentCompare(compareOp, operandType);
         return true;
@@ -7489,6 +7492,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     availGPR_.take(HeapReg);
 #endif
+    availGPR_.take(FramePointer);
 
 #ifdef DEBUG
     setupRegisterLeakCheck();

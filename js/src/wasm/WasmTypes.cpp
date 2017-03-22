@@ -174,8 +174,8 @@ WasmHandleThrow()
     MOZ_ASSERT(activation);
 
     // FrameIterator iterates down wasm frames in the activation starting at
-    // WasmActivation::fp. Pass Unwind::True to pop WasmActivation::fp once each
-    // time FrameIterator is incremented, ultimately leaving WasmActivation::fp
+    // WasmActivation::exitFP. Pass Unwind::True to pop WasmActivation::exitFP
+    // once each time FrameIterator is incremented, ultimately leaving exitFP
     // null when the FrameIterator is done(). This is necessary to prevent a
     // DebugFrame from being observed again after we just called onLeaveFrame
     // (which would lead to the frame being re-added to the map of live frames,
