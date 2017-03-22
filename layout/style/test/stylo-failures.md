@@ -73,7 +73,6 @@ to mochitest command.
   * @support
     * test_supports_rules.html [1]
 * test_box_size_keywords.html: moz-prefixed intrinsic size keyword value [64]
-* test_bug229915.html: sibling selector with dynamic change bug 1330885 [5]
 * test_bug357614.html: case-insensitivity for old attrs in attr selector servo/servo#15006 [2]
 * mapped attribute not supported
   * test_bug363146.html [2]
