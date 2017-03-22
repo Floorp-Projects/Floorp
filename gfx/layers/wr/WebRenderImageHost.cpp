@@ -134,7 +134,7 @@ WebRenderImageHost::SetCompositor(Compositor* aCompositor)
 {
   if (mCompositor != aCompositor) {
     for (auto& img : mImages) {
-      img.mTextureHost->SetCompositor(aCompositor);
+      img.mTextureHost->SetTextureSourceProvider(aCompositor);
     }
   }
   CompositableHost::SetCompositor(aCompositor);

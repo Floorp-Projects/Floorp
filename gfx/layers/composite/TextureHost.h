@@ -451,13 +451,15 @@ public:
    void Updated(const nsIntRegion* aRegion = nullptr);
 
   /**
-   * Sets this TextureHost's compositor.
-   * A TextureHost can change compositor on certain occasions, in particular if
-   * it belongs to an async Compositable.
+   * Sets this TextureHost's compositor. A TextureHost can change compositor
+   * on certain occasions, in particular if it belongs to an async Compositable.
    * aCompositor can be null, in which case the TextureHost must cleanup  all
-   * of it's device textures.
+   * of its device textures.
+   *
+   * Setting mProvider from this callback implicitly causes the texture to
+   * be locked for an extra frame after being detached from a compositable.
    */
-  virtual void SetCompositor(Compositor* aCompositor) {}
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) {}
 
   /**
    * Should be overridden in order to deallocate the data that is associated
@@ -581,8 +583,6 @@ public:
 
   TextureReadLock* GetReadLock() { return mReadLock; }
 
-  virtual Compositor* GetCompositor() = 0;
-
   virtual BufferTextureHost* AsBufferTextureHost() { return nullptr; }
 
   virtual WebRenderTextureHost* AsWebRenderTextureHost() { return nullptr; }
@@ -603,6 +603,7 @@ protected:
   void CallNotifyNotUsed();
 
   PTextureParent* mActor;
+  RefPtr<TextureSourceProvider> mProvider;
   RefPtr<TextureReadLock> mReadLock;
   TextureFlags mFlags;
   int mCompositableCount;
@@ -650,9 +651,7 @@ public:
 
   virtual void DeallocateDeviceData() override;
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
-
-  virtual Compositor* GetCompositor() override { return mCompositor; }
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
   /**
    * Return the format that is exposed to the compositor when calling
