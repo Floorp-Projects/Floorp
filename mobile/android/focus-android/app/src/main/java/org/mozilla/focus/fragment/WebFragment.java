@@ -71,18 +71,12 @@ public abstract class WebFragment extends Fragment {
     @Override
     public void onDestroy() {
         if (webView != null) {
+            webView.setCallback(null);
             webView.destroy();
             webView = null;
         }
 
         super.onDestroy();
-    }
-
-    @Override
-    public void onDetach() {
-        webView.setCallback(null);
-
-        super.onDetach();
     }
 
     @Override
