@@ -9,11 +9,13 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/FetchObserverBinding.h"
+#include "mozilla/dom/FetchSignal.h"
 
 namespace mozilla {
 namespace dom {
 
 class FetchObserver final : public DOMEventTargetHelper
+                          , public FetchSignal::Follower
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -22,7 +24,7 @@ public:
   static bool
   IsEnabled(JSContext* aCx, JSObject* aGlobal);
 
-  FetchObserver(nsIGlobalObject* aGlobal, FetchState aState);
+  FetchObserver(nsIGlobalObject* aGlobal, FetchSignal* aSignal);
 
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -33,6 +35,12 @@ public:
   IMPL_EVENT_HANDLER(statechange);
   IMPL_EVENT_HANDLER(requestprogress);
   IMPL_EVENT_HANDLER(responseprogress);
+
+  void
+  Aborted() override;
+
+  void
+  SetState(FetchState aState);
 
 private:
   ~FetchObserver() = default;
