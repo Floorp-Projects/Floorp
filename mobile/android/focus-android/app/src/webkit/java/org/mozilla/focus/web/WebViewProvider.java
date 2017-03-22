@@ -8,7 +8,6 @@ package org.mozilla.focus.web;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.os.Build;
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
@@ -156,6 +155,26 @@ public class WebViewProvider {
             if (BuildConfig.DEBUG) {
                 setWebContentsDebuggingEnabled(true);
             }
+
+            setLongClickable(true);
+
+            setOnLongClickListener(new OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    final HitTestResult hitTestResult = getHitTestResult();
+
+                    switch (hitTestResult.getType()) {
+                        case HitTestResult.SRC_ANCHOR_TYPE:
+                        case HitTestResult.SRC_IMAGE_ANCHOR_TYPE:
+                            final String url = hitTestResult.getExtra();
+
+                            callback.onLinkLongPress(url);
+                            return true;
+
+                    }
+                    return false;
+                }
+            });
         }
 
         @Override

@@ -145,6 +145,14 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                 return webView != null && IntentUtils.handleExternalUri(getContext(), webView, url);
             }
+
+            @Override
+            public void onLinkLongPress(final String url) {
+                final Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_TEXT, url);
+                startActivity(shareIntent);
+            }
         };
     }
 
