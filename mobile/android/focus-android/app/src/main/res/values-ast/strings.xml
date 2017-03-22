@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Encaboxar</string>
+  <string name="action_ok">Aceutar</string>
   <string name="urlbar_hint">Gueta o introduz direiciones</string>
   <string name="teaser">Restolar en priváu automático.\nRestola. Desanicia. Repiti.</string>
   <string name="feedback_erase">Desanicióse\'l to historial de restolar.</string>
@@ -24,6 +26,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Unviar datos anónimos d\'usu</string>
   <string name="preference_mozilla_telemetry_summary">Deprendi más</string>
+  <string name="preference_about">Tocante a %1$s</string>
   <string name="content_description_clear_input">Llimpiar entrada</string>
   <string name="content_description_dismiss_input">Escartar</string>
   <string name="content_description_erase">Desaniciar historial de restolar</string>

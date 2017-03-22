@@ -29,6 +29,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">ສົ່ງຂໍ້ມູນການໃຊ້ງານແບບບໍ່ລະບຸຕົວຕົນ</string>
   <string name="preference_mozilla_telemetry_summary">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+  <string name="preference_about">ກ່ຽວກັບ %1$s</string>
   <string name="content_description_clear_input">ລົບລ້າງຂໍ້ມູນທີ່ປ້ອນເຂົ້າ</string>
   <string name="content_description_dismiss_input">ຍົກເລີກ</string>
   <string name="content_description_erase">ລຶບປະຫວັດການທ່ອງເວັບ</string>
@@ -43,13 +44,18 @@
   <string name="firstrun_button">ຕົກລົງ, ເຂົ້າໃຈແລ້ວ!</string>
   <string name="firstrun_footer">ເພື່ອເຮັດໃຫ້ຊັດເຈນ, ບາງເວັບໄຊທ໌ ແລະ ບໍລິການທີ່ທ່ານໃຊ້ຍັງຄົງເຮັດໃຫ້ທ່ານສາມາດຮັບຮູ້ໄດ້ວ່າທ່ານໄດ້ໄປຢູ່ໃສ່ມາ.</string>
   <string name="your_rights">ສິດທິຂອງທ່ານ</string>
-  <string name="external_app_prompt">ລີ້ງນີ້ຈະເປີດຢູ່ໃນ %2$s. ແນ່ໃຈແລ້ວບໍ່ວ່າທ່ານຕ້ອງການຈະອອກຈາກ %1$s?</string>
-  <string name="external_app_prompt_no_app_title">ບໍ່ມີແອັບເພື່ອຈັດການກັບລີ້ງ</string>
-  <string name="external_app_prompt_no_app">ບໍ່ມີແອັບໃດເລີຍໃນອຸປະກອນຂອງທ່ານທີ່ຈະສາມາດເປີດລີ້ງນີ້ໄດ້. ທ່ານຕ້ອງການຈະອອກຈາກ %1$s ແລະ ເປີດ %2$s ເພື່ອຊອກຫາແອັບທີ່ສາມາດເປີດລີ້ງນີ້ໄດ້ຫລືບໍ່?</string>
+  <string name="external_app_prompt_title">ເປີດລີ້ງນີ້ໃນແອັບອື່ນ</string>
+  <string name="external_app_prompt">ທ່ານສາມາດອອກຈາກ %1$s ເພື່ອເປີດລີ້ງນີ້ໃນ %2$s.</string>
+  <string name="external_app_prompt_no_app_title">ຊອກຫາແອັບທີ່ສາມາດເປີດລີ້ງນີ້</string>
+  <string name="external_app_prompt_no_app">ບໍ່ມີແອັບໃດເລີຍໃນອຸປະກອນຂອງທ່ານທີ່ຈະສາມາດເປີດລີ້ງນີ້ໄດ້. ທ່ານສາມາດອອກຈາກ %1$s ເພື່ອຄົ້ນຫາ %2$s ແອັບທີ່ສາມາດເປີດລີ້ງນີ້ໄດ້.</string>
   <string name="external_multiple_apps_matched_exit">ຕ້ອງການອອກຈາກການທອງເວັບແບບສ່ວນຕົວບໍ່?</string>
   <string name="errorpage_title">ເກີດມີບັນຫາໃນການໂຫລດຫນ້າເວັບ</string>
   <string name="errorpage_refresh">ລອງໃຫມ່ອີກຄັ້ງ</string>
   <string name="error_connectionfailure_title">ບໍ່ສາມາດເຊື່ອມຕໍ່ໄດ້</string>
   <string name="error_timeout_title">ການເຊື່ອມຕໍ່ຫມົດເວລາ</string>
   <string name="error_hostLookup_title">ບໍ່ພົບເຊີເວີ</string>
+  <string name="error_malformedURI_title">ທີ່ຢູ່ບໍ່ຖືກຕ້ອງ</string>
+  <string name="error_redirectLoop_title">ຫນ້າເວັບນີ້ບໍ່ໄດ້ປ່ຽນເສັ້ນທາງຢ່າງຖືກຕ້ອງ</string>
+  <string name="error_unsupportedprotocol_title">ບໍ່ເຂົ້າໃຈທີ່ຢູ່</string>
+  <string name="error_generic_message">ພວກເຮົາບໍ່ສາມາດໂຫລດຫນ້າເວັບນີ້ໄດ້ດ້ວຍເຫດຜົນບາງປະການ.</string>
 </resources>

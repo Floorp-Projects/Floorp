@@ -45,7 +45,7 @@
   <string name="firstrun_button">OK, begrepen!</string>
   <string name="firstrun_footer">Voor de duidelijkheid: websites en services die u gebruikt, kunnen nog steeds zien waar u bent geweest.</string>
   <string name="your_rights">Uw rechten</string>
-  <string name="external_app_prompt_title">Koppeling openen in een andere app</string>
+  <string name="external_app_prompt_title">Koppeling openen in andere app</string>
   <string name="external_app_prompt">U kunt %1$s verlaten om deze koppeling in %2$s te openen.</string>
   <string name="external_app_prompt_no_app_title">Een app zoeken die de koppeling kan openen</string>
   <string name="external_app_prompt_no_app">Geen enkele app op uw apparaat kan deze koppeling openen. U kunt %1$s verlaten om bij %2$s naar een app te zoeken die dat wel kan.</string>
@@ -66,5 +66,5 @@
   <string name="error_sslhandshake_title">Beveiligde verbinding mislukt</string>
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dit kan een probleem met de serverconfiguratie zijn, of iemand probeert\ndeze server na te bootsen.</li>"\n  "<li>Als u in het verleden wel met succes verbinding hebt gemaakt met deze server,\ndan is de fout wellicht tijdelijk en kunt u het later nogmaals proberen.</li>\n</ul>]]></string>
   <string name="error_generic_title">Oei</string>
-  <string name="error_generic_message">De pagina kan om de een of andere reden niet worden geladen.</string>
+  <string name="error_generic_message">Deze pagina kan om de een of andere reden niet worden geladen.</string>
 </resources>

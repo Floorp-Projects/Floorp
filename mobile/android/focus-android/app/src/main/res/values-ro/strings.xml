@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_ok">Ok</string>
+  <string name="urlbar_hint">Caută sau introdu adresa</string>
+  <string name="search_hint">Caută %1$s</string>
+  <string name="menu_settings">Setări</string>
+  <string name="menu_about">Despre</string>
+  <string name="menu_help">Ajutor</string>
+  <string name="menu_rights">Drepturile tale</string>
+</resources>

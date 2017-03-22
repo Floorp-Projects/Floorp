@@ -45,9 +45,9 @@
   <string name="firstrun_footer">Es decir, los sitios y servicios que uses todavía pueden saber donde has estado.</string>
   <string name="your_rights">Tus derechos</string>
   <string name="external_app_prompt_title">Abrir enlace en otra app</string>
-  <string name="external_app_prompt">Este enlace se abrirá en %2$s. ¿Estás seguro de que quieres salir de %1$s?</string>
+  <string name="external_app_prompt">Puedes salir de %1$s para abrir este enlace en %2$s.</string>
   <string name="external_app_prompt_no_app_title">Buscar una app que pueda abrir el enlace</string>
-  <string name="external_app_prompt_no_app">Ninguna de las aplicaciones en tu dispositivo pueden abrir este enlace. ¿Quieres salir de %1$s y abrir %2$s para buscar una app adecuada?</string>
+  <string name="external_app_prompt_no_app">Ninguna de las aplicaciones en tu dispositivo puede abrir este enlace. Puedes salir de %1$s para buscar en %2$s por una app que pueda.</string>
   <string name="external_multiple_apps_matched_exit">¿Salir de la navegación privada?</string>
   <string name="errorpage_title">Problemas al cargar la página</string>
   <string name="errorpage_refresh">Volver a intentarlo</string>

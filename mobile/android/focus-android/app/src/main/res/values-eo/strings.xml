@@ -1,5 +1,70 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Nuligi</string>
+  <string name="action_ok">Akcepti</string>
   <string name="urlbar_hint">Serĉu ion aŭ tajpu adreson</string>
   <string name="teaser">Aŭtomata privata retumo.\nRetumu. Viŝu. Ripetu.</string>
+  <string name="feedback_erase">Via retuma historio estis viŝita.</string>
+  <string name="search_hint">Serĉi %1$s</string>
+  <string name="menu_share">Dividi…</string>
+  <string name="menu_open_with_default_browser">Malfermi per %1$s</string>
+  <string name="menu_open_with_a_browser">Malfermi per…</string>
+  <string name="menu_settings">Agordoj</string>
+  <string name="menu_about">Pri</string>
+  <string name="menu_help">Helpo</string>
+  <string name="menu_rights">Viaj rajtoj</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s igas vin reganto.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Uzu &#285;in kiel privatan retumilon:\n  "<ul>"\n    "<li>Ser&#265;i kaj retumi rekte en la programo</li>"\n    "<li>Bloki spurilojn (a&#365; &#349;an&#285;i agordojn por permesi spurilojn)</li>"\n    "<li>Forigi kuketojn kaj anka&#365; retuman kaj ser&#265;an historion</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s estas farita de Mozilla. Nia misio estas stimuli sanan kaj malfermitan interreton.<br/>\n<a href="%2$s">Pli da informo</a></p>]]></string>
+  <string name="preference_category_search">Serĉi</string>
+  <string name="preference_search_engine_default">Norma</string>
+  <string name="preference_dialog_title_search_engine">Norma serĉilo</string>
+  <string name="preference_category_privacy">Privateco</string>
+  <string name="preference_privacy_block_ads">Bloki reklamajn spurilojn</string>
+  <string name="preference_privacy_block_analytics">Bloki analizajn spurilojn</string>
+  <string name="preference_privacy_block_social">Bloki sociajn spurilojn</string>
+  <string name="preference_privacy_block_content">Bloki spurilojn en aliaj enhavoj</string>
+  <string name="preference_privacy_block_content_summary">Tio povas misfunkciigi kelkajn filmetojn kaj retpaĝojn</string>
+  <string name="preference_category_performance">Efikeco</string>
+  <string name="preference_performance_block_webfonts">Bloki retajn tiparojn</string>
+  <string name="preference_performance_block_images">Bloki bildojn</string>
+  <string name="preference_default_browser">Igi ĉefa retumilo</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Sendi anonimajn datumojn pri uzo</string>
+  <string name="preference_mozilla_telemetry_summary">Pli da informo</string>
+  <string name="preference_about">Pri %1$s</string>
+  <string name="content_description_clear_input">Viŝi kampon</string>
+  <string name="content_description_dismiss_input">Ignori</string>
+  <string name="content_description_erase">Viŝi retuman historion</string>
+  <string name="content_description_lock">Sekura konekto</string>
+  <string name="accessibility_announcement_loading">Ŝargado</string>
+  <string name="accessibility_announcement_loading_finished">Retejo ŝargita</string>
+  <string name="content_description_menu">Pli da elektebloj</string>
+  <string name="content_description_forward">Retumi antaŭen</string>
+  <string name="content_description_reload">Reŝargi retejon</string>
+  <string name="firstrun_title">Retumu, kvazaŭ neniu vin rigardus.</string>
+  <string name="firstrun_description">Aŭtomate bloki retajn spurilojn dum vi retumas. Poste tuŝetu por forigi vizititajn paĝojn, serĉojn, kuketojn kaj pasvortojn el via aparato.</string>
+  <string name="firstrun_button">Bone, mi komprenis!</string>
+  <string name="firstrun_footer">Ni klarigu, retejoj kaj servoj plu scios kie vi estis.</string>
+  <string name="your_rights">Viaj rajtoj</string>
+  <string name="external_app_prompt_title">Malfermi ligilon en alia programo</string>
+  <string name="external_app_prompt">Vi povas forlasi %1$s por malfermi tiun ĉi ligilon en %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Serĉi programon, kiu povas malfermi ligilon</string>
+  <string name="external_app_prompt_no_app">Neniu programo en via aparato povas malfermi tiun ĉi ligilon. Vi povas forlasi %1$s por serĉi en %2$s programon kiu povas fari tion.</string>
+  <string name="external_multiple_apps_matched_exit">Ĉu eliri el privata retumo?</string>
+  <string name="errorpage_title">Problemo dum ŝargado de paĝo</string>
+  <string name="errorpage_refresh">Provi denove</string>
+  <string name="error_connectionfailure_title">Ne eblas konekti</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>La retejo povas esti nuntempe ne alirebla, a&#365; tro okupata. Bonvolu klopodi denove post iom da tempo.</li>"\n        "<li>Se vi ne povas malfermi iun ajn pa&#285;on, kontrolu la datuman a&#365; sendratan konekton de via po&#349;aparato.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">La tempo por la konekto elĉerpiĝis</string>
+  <string name="error_hostLookup_title">Servilo ne trovita</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kontrolu en la literumo de la adreso ke ne estu eraroj kiel\n          "<strong>ww</strong>".example.com anstata&#365;\n          "<strong>www</strong>.example.com</li>"\n        "<li>Se vi ne povas malfermi iun ajn pa&#285;on , kontrolu la datuman a&#365; sendratan konekton de via aparato.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">La adreso ne estas valida</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Retadresoj estas kutime &#265;i tiel skribitaj "<strong>http://www.example.com/</strong></li>"\n  "<li>"Estu certa uzi la &#285;ustajn oblikvajn strekojn (i.e. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">La paĝo malbone redirektas</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Tio povas okazi kelkfoje kiam oni malebligas a&#365; rifuzas kuketojn.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">La adreso ne estis komprenita</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Vi eble bezonas instali alian programon por povi malfermi tiun &#265;i adreson.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Malsukcesa sekura konekto</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Tio povus esti problemo kun la agordoj de la servilo, a&#365; iu kiu klopodas trompe &#349;ajnigi esti tiu servilo.</li>"\n  "<li>Se vi konekti&#285;is al tiu servilo en la pasinto, la eraro povas esti momenta, kaj vi povos klopodi denove poste.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Fuŝ\'</string>
+  <string name="error_generic_message">Ni ne povas ŝargi tiun ĉi paĝon pro iu kialo.</string>
 </resources>
