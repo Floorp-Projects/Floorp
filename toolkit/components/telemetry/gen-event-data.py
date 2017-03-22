@@ -75,13 +75,13 @@ def write_common_event_table(events, output, string_table, extra_table):
 
         # Write the common info structure
         print("  {%d, %d, %d, %d, %d, %s, %s}," %
-                (string_table.stringIndex(e.category),
-                 string_table.stringIndex(e.expiry_version),
-                 extras[0],  # extra keys index
-                 extras[1],  # extra keys count
-                 e.expiry_day,
-                 e.dataset,
-                 " | ".join(e.record_in_processes_enum)),
+              (string_table.stringIndex(e.category),
+               string_table.stringIndex(e.expiry_version),
+               extras[0],  # extra keys index
+               extras[1],  # extra keys count
+               e.expiry_day,
+               e.dataset,
+               " | ".join(e.record_in_processes_enum)),
               file=output)
 
     print("};", file=output)
@@ -96,13 +96,13 @@ def write_event_table(events, output, string_table):
     for common_info_index, e in enumerate(events):
         for method_name, object_name in itertools.product(e.methods, e.objects):
             print("  // category: %s, method: %s, object: %s" %
-                    (e.category, method_name, object_name),
+                  (e.category, method_name, object_name),
                   file=output)
 
             print("  {gCommonEventInfo[%d], %d, %d}," %
-                    (common_info_index,
-                     string_table.stringIndex(method_name),
-                     string_table.stringIndex(object_name)),
+                  (common_info_index,
+                   string_table.stringIndex(method_name),
+                   string_table.stringIndex(object_name)),
                   file=output)
 
     print("};", file=output)
