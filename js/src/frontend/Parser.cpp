@@ -1016,8 +1016,10 @@ Parser<ParseHandler>::reportRedeclaration(HandlePropertyName name, DeclarationKi
     }
 
     auto notes = MakeUnique<JSErrorNotes>();
-    if (!notes)
+    if (!notes) {
+        ReportOutOfMemory(pc->sc()->context);
         return;
+    }
 
     uint32_t line, column;
     tokenStream.srcCoords.lineNumAndColumnIndex(prevPos, &line, &column);
