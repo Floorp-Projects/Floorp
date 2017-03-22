@@ -54,8 +54,6 @@ public:
 private:
     ~OfflineCacheUpdateParent();
 
-    NS_IMETHOD_(void) GetOriginAttributes(mozilla::OriginAttributes& aAttrs) override;
-
     bool mIPCClosed;
 
     nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
