@@ -102,8 +102,13 @@ class BlocklistClient {
     });
   }
 
+  get identifier() {
+    return `${this.bucketName}/${this.collectionName}`;
+  }
+
   get filename() {
-    return `${this.bucketName}/${this.collectionName}.json`;
+    const identifier = OS.Path.join(...this.identifier.split("/"));
+    return `${identifier}.json`;
   }
 
   /**
