@@ -5355,10 +5355,9 @@ QuotaManager::GetInfoForChrome(nsACString* aSuffix,
 
 // static
 bool
-QuotaManager::IsOriginWhitelistedForPersistentStorage(const nsACString& aOrigin)
+QuotaManager::IsOriginInternal(const nsACString& aOrigin)
 {
-  // The first prompt and quota tracking is not required for these origins in
-  // persistent storage.
+  // The first prompt is not required for these origins.
   if (aOrigin.EqualsLiteral(kChromeOrigin) ||
       StringBeginsWith(aOrigin, nsDependentCString(kAboutHomeOriginPrefix)) ||
       StringBeginsWith(aOrigin, nsDependentCString(kIndexedDBOriginPrefix)) ||
@@ -6762,8 +6761,7 @@ GetUsageOp::TraverseRepository(QuotaManager* aQuotaManager,
       return rv;
     }
 
-    if (!mGetAll &&
-        aQuotaManager->IsOriginWhitelistedForPersistentStorage(origin)) {
+    if (!mGetAll && aQuotaManager->IsOriginInternal(origin)) {
       continue;
     }
 
@@ -8471,9 +8469,7 @@ CreateOrUpgradeDirectoryMetadataHelper::CreateOrUpgradeMetadataFiles()
       }
     }
     else {
-      bool persistent =
-        QuotaManager::IsOriginWhitelistedForPersistentStorage(
-                                                             originProps.mSpec);
+      bool persistent = QuotaManager::IsOriginInternal(originProps.mSpec);
       originProps.mTimestamp = GetLastModifiedTime(originDir, persistent);
     }
 
@@ -8617,9 +8613,8 @@ CreateOrUpgradeDirectoryMetadataHelper::ProcessOriginDirectory(
       return rv;
     }
 
-    // Move whitelisted origins to new persistent storage.
-    if (QuotaManager::IsOriginWhitelistedForPersistentStorage(
-                                                          aOriginProps.mSpec)) {
+    // Move internal origins to new persistent storage.
+    if (QuotaManager::IsOriginInternal(aOriginProps.mSpec)) {
       if (!mPermanentStorageDir) {
         mPermanentStorageDir =
           do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
