@@ -8683,6 +8683,7 @@ class LWasmCallBase : public LInstruction
         //  - internal/indirect calls do by the internal wasm ABI
         //  - import calls do by explicitly saving/restoring at the callsite
         //  - builtin calls do because the TLS reg is non-volatile
+        // See also CodeGeneratorShared::emitWasmCallBase.
         return !reg.isFloat() && reg.gpr() == WasmTlsReg;
     }
 
