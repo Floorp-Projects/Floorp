@@ -1460,7 +1460,7 @@ fails == 531200-1.html 531200-1.html
 == 531371-1.html 531371-1.html
 == 534526-1a.html 534526-1a.html
 fails == 534526-1b.html 534526-1b.html
-fails == 534804-1.html 534804-1.html # Bug 1330885
+== 534804-1.html 534804-1.html
 == 534808-1.html 534808-1.html
 == 534808-2.html 534808-2.html
 == 534919-1.html 534919-1.html

@@ -84,8 +84,6 @@ to mochitest command.
   * test_bug413958.html `monitorConsole` [3]
   * test_parser_diagnostics_unprintables.html [550]
 * test_bug511909.html: @-moz-document and @media support [4]
-* Style change from DOM API bug 1331301
-  * test_bug534804.html [60]
 * Transition support:
   * test_bug621351.html [4]
   * test_compute_data_with_start_struct.html `transition` [2]
