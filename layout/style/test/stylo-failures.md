@@ -265,8 +265,8 @@ to mochitest command.
   * test_page_parser.html [30]
   * test_rule_insertion.html `@page` [4]
 * Stylesheet cloning is somehow busted bug 1348481
-  * test_selectors.html `cloned correctly` [150]
-  * ... `matched clone` [195]
+  * test_selectors.html `cloned correctly` [155]
+  * ... `matched clone` [198]
 * Unsupported prefixed values
   * moz-prefixed gradient functions bug 1337655
     * test_value_storage.html `-moz-linear-gradient` [322]
@@ -402,9 +402,8 @@ to mochitest command.
     * test_selectors.html `:-moz-window-inactive` [2]
   * :-moz-{first,last}-node
     * test_selectors.html `:-moz-` [6]
-    * ... `unexpected rule index` [5]
   * :dir
-    * test_selectors.html `:dir` [10]
+    * test_selectors.html `:dir` [18]
 * issues arround font shorthand servo/servo#15032 servo/servo#15036
   * test_bug377947.html [1]
   * test_value_storage.html `'font'` [144]
