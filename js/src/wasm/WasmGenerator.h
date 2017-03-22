@@ -212,7 +212,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     typedef HashSet<uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> Uint32Set;
     typedef Vector<CompileTask, 0, SystemAllocPolicy> CompileTaskVector;
     typedef Vector<CompileTask*, 0, SystemAllocPolicy> CompileTaskPtrVector;
-    typedef EnumeratedArray<Trap, Trap::Limit, ProfilingOffsets> TrapExitOffsetArray;
+    typedef EnumeratedArray<Trap, Trap::Limit, CallableOffsets> TrapExitOffsetArray;
 
     // Constant parameters
     CompileMode                     compileMode_;

@@ -445,8 +445,8 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
 // normal wasm function for the purposes of exports and table calls. In
 // particular, the wrapper function provides:
 //  - a table entry, so JS imports can be put into tables
-//  - normal (non-)profiling entries, so that, if the import is re-exported,
-//    an entry stub can be generated and called without any special cases
+//  - normal entries, so that, if the import is re-exported, an entry stub can
+//    be generated and called without any special cases
 FuncOffsets
 wasm::GenerateImportFunction(jit::MacroAssembler& masm, const FuncImport& fi, SigIdDesc sigId)
 {
@@ -497,7 +497,7 @@ wasm::GenerateImportFunction(jit::MacroAssembler& masm, const FuncImport& fi, Si
 // Generate a stub that is called via the internal ABI derived from the
 // signature of the import and calls into an appropriate callImport C++
 // function, having boxed all the ABI arguments into a homogeneous Value array.
-ProfilingOffsets
+CallableOffsets
 wasm::GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t funcImportIndex,
                                Label* throwLabel)
 {
@@ -519,7 +519,7 @@ wasm::GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint3
     unsigned argBytes = Max<size_t>(1, fi.sig().args().length()) * sizeof(Value);
     unsigned framePushed = StackDecrementForCall(masm, ABIStackAlignment, argOffset + argBytes);
 
-    ProfilingOffsets offsets;
+    CallableOffsets offsets;
     GenerateExitPrologue(masm, framePushed, ExitReason::ImportInterp, &offsets);
 
     // Fill the argument array.
@@ -626,7 +626,7 @@ static const unsigned SavedTlsReg = sizeof(void*);
 // Generate a stub that is called via the internal ABI derived from the
 // signature of the import and calls into a compatible JIT function,
 // having boxed all the ABI arguments into the JIT stack frame layout.
-ProfilingOffsets
+CallableOffsets
 wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLabel)
 {
     masm.setFramePushed(0);
@@ -644,7 +644,7 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
     unsigned jitFramePushed = StackDecrementForCall(masm, JitStackAlignment, totalJitFrameBytes) -
                               sizeOfRetAddr;
 
-    ProfilingOffsets offsets;
+    CallableOffsets offsets;
     GenerateExitPrologue(masm, jitFramePushed, ExitReason::ImportJit, &offsets);
 
     // 1. Descriptor
@@ -864,10 +864,10 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
 }
 
 // Generate a stub that calls into ReportTrap with the right trap reason.
-// This stub is called with ABIStackAlignment by a trap out-of-line path. A
-// profiling prologue/epilogue is used so that stack unwinding picks up the
+// This stub is called with ABIStackAlignment by a trap out-of-line path. An
+// exit prologue/epilogue is used so that stack unwinding picks up the
 // current WasmActivation. Unwinding will begin at the caller of this trap exit.
-ProfilingOffsets
+CallableOffsets
 wasm::GenerateTrapExit(MacroAssembler& masm, Trap trap, Label* throwLabel)
 {
     masm.haltingAlign(CodeAlignment);
@@ -879,7 +879,7 @@ wasm::GenerateTrapExit(MacroAssembler& masm, Trap trap, Label* throwLabel)
 
     uint32_t framePushed = StackDecrementForCall(masm, ABIStackAlignment, args);
 
-    ProfilingOffsets offsets;
+    CallableOffsets offsets;
     GenerateExitPrologue(masm, framePushed, ExitReason::Trap, &offsets);
 
     ABIArgMIRTypeIter i(args);
@@ -1174,7 +1174,7 @@ wasm::GenerateDebugTrapStub(MacroAssembler& masm, Label* throwLabel)
 
     masm.setFramePushed(0);
 
-    ProfilingOffsets offsets;
+    CallableOffsets offsets;
     GenerateExitPrologue(masm, 0, ExitReason::DebugTrap, &offsets);
 
     // Save all registers used between baseline compiler operations.
