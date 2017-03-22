@@ -226,7 +226,7 @@ class GLTextureSource : public TextureSource
                       , public TextureSourceOGL
 {
 public:
-  GLTextureSource(CompositorOGL* aCompositor,
+  GLTextureSource(TextureSourceProvider* aProvider,
                   GLuint aTextureHandle,
                   GLenum aTarget,
                   gfx::IntSize aSize,
@@ -297,9 +297,7 @@ public:
   // We don't own anything.
   virtual void DeallocateDeviceData() override {}
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
-
-  virtual Compositor* GetCompositor() override { return mCompositor; }
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
   virtual bool Lock() override;
 
@@ -330,7 +328,6 @@ protected:
   GLsync mSync;
   const gfx::IntSize mSize;
   const bool mHasAlpha;
-  RefPtr<CompositorOGL> mCompositor;
   RefPtr<GLTextureSource> mTextureSource;
 };
 
@@ -397,9 +394,7 @@ public:
 
   virtual void DeallocateDeviceData() override;
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
-
-  virtual Compositor* GetCompositor() override { return mCompositor; }
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
   virtual bool Lock() override;
 
@@ -440,7 +435,7 @@ class EGLImageTextureSource : public TextureSource
                             , public TextureSourceOGL
 {
 public:
-  EGLImageTextureSource(CompositorOGL* aCompositor,
+  EGLImageTextureSource(TextureSourceProvider* aProvider,
                         EGLImage aImage,
                         gfx::SurfaceFormat aFormat,
                         GLenum aTarget,
@@ -485,7 +480,7 @@ protected:
   const gfx::IntSize mSize;
 };
 
-class EGLImageTextureHost : public TextureHost
+class EGLImageTextureHost final : public TextureHost
 {
 public:
   EGLImageTextureHost(TextureFlags aFlags,
@@ -499,9 +494,7 @@ public:
   // We don't own anything.
   virtual void DeallocateDeviceData() override {}
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
-
-  virtual Compositor* GetCompositor() override { return mCompositor; }
+  void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
   virtual bool Lock() override;
 
@@ -531,11 +524,8 @@ protected:
   const EGLSync mSync;
   const gfx::IntSize mSize;
   const bool mHasAlpha;
-  RefPtr<CompositorOGL> mCompositor;
   RefPtr<EGLImageTextureSource> mTextureSource;
 };
-
-CompositorOGL* AssertGLCompositor(Compositor* aCompositor);
 
 } // namespace layers
 } // namespace mozilla

@@ -72,9 +72,7 @@ public:
   // MacIOSurfaceTextureSourceOGL doesn't own any GL texture
   virtual void DeallocateDeviceData() override {}
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
-
-  virtual Compositor* GetCompositor() override { return mCompositor; }
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
   virtual bool Lock() override;
 
@@ -103,7 +101,6 @@ public:
 protected:
   GLTextureSource* CreateTextureSourceForPlane(size_t aPlane);
 
-  RefPtr<CompositorOGL> mCompositor;
   RefPtr<GLTextureSource> mTextureSource;
   RefPtr<MacIOSurface> mSurface;
 };
