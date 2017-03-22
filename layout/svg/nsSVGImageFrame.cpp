@@ -65,7 +65,7 @@ protected:
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  // nsISVGChildFrame interface:
+  // nsSVGDisplayableFrame interface:
   virtual DrawResult PaintSVG(gfxContext& aContext,
                               const gfxMatrix& aTransform,
                               const nsIntRect* aDirtyRect = nullptr) override;
@@ -159,6 +159,12 @@ nsSVGImageFrame::Init(nsIContent*       aContent,
   if (GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
     // Non-display frames are likely to be patterns, masks or the like.
     // Treat them as always visible.
+    // This call must happen before the FrameCreated. This is because the
+    // primary frame pointer on our content node isn't set until after this
+    // function ends, so there is no way for the resulting OnVisibilityChange
+    // notification to get a frame. FrameCreated has a workaround for this in
+    // that it passes our frame around so it can be accessed. OnVisibilityChange
+    // doesn't have that workaround.
     IncApproximateVisibleCount();
   }
 
@@ -323,7 +329,7 @@ nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext,
 }
 
 //----------------------------------------------------------------------
-// nsISVGChildFrame methods:
+// nsSVGDisplayableFrame methods:
 DrawResult
 nsSVGImageFrame::PaintSVG(gfxContext& aContext,
                           const gfxMatrix& aTransform,

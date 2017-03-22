@@ -10,7 +10,7 @@
 #include "nsContainerFrame.h"
 #include "nsFrame.h"
 #include "nsIFrame.h"
-#include "nsISVGChildFrame.h"
+#include "nsSVGDisplayableFrame.h"
 #include "nsQueryFrame.h"
 #include "nsRect.h"
 #include "nsSVGUtils.h"
@@ -108,7 +108,7 @@ protected:
  * SVG namespace. Do *not* blindly cast to SVG element types.
  */
 class nsSVGDisplayContainerFrame : public nsSVGContainerFrame,
-                                   public nsISVGChildFrame
+                                   public nsSVGDisplayableFrame
 {
 protected:
   explicit nsSVGDisplayContainerFrame(nsStyleContext* aContext)
@@ -139,7 +139,7 @@ public:
   virtual bool IsSVGTransformed(Matrix *aOwnTransform = nullptr,
                                 Matrix *aFromParentTransform = nullptr) const override;
 
-  // nsISVGChildFrame interface:
+  // nsSVGDisplayableFrame interface:
   virtual DrawResult PaintSVG(gfxContext& aContext,
                               const gfxMatrix& aTransform,
                               const nsIntRect *aDirtyRect = nullptr) override;

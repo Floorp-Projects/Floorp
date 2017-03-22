@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test Background Video Is Tainted By createImageBitmap</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="manifest.js"></script>
+<script src="background_video.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script type="text/javascript">
+"use strict";
+
+var manager = new MediaTestManager;
+
+startTest({
+  desc: 'Test Background Video Is Tainted By createImageBitmap',
+  prefs: [
+    [ "media.test.video-suspend", true ],
+    [ "media.suspend-bkgnd-video.enabled", true ],
+    [ "media.suspend-bkgnd-video.delay-ms", 1000 ]
+  ],
+  tests: gDecodeSuspendTests,
+  runTest: (test, token) => {
+    ok(true, `${test.name}`);
+    let v = appendVideoToDoc(test.name, token);
+    manager.started(token);
+
+    waitUntilPlaying(v)
+      .then(() => createImageBitmap(v))
+      .then(() => {
+        ok(v.hasSuspendTaint(), "Video is tainted after drawing to canvas");
+        return checkVideoDoesntSuspend(v);
+      })
+      .then(() => {
+        ok(true, 'Video ended before decode was suspended');
+        manager.finished(token);
+      })
+      .catch((e) => {
+        ok(false, 'Test failed: ' + e.toString());
+        manager.finished(token);
+      });
+  }
+});
+</script>

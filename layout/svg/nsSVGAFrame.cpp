@@ -49,7 +49,7 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("SVGA"), aResult);
   }
 #endif
-  // nsISVGChildFrame interface:
+  // nsSVGDisplayableFrame interface:
   virtual void NotifySVGChanged(uint32_t aFlags) override;
   
   // nsSVGContainerFrame methods:
@@ -110,7 +110,7 @@ nsSVGAFrame::GetType() const
 }
 
 //----------------------------------------------------------------------
-// nsISVGChildFrame methods
+// nsSVGDisplayableFrame methods
 
 void
 nsSVGAFrame::NotifySVGChanged(uint32_t aFlags)

@@ -46,7 +46,7 @@ pref(layout.float-fragments-inside-column.enabled,true) == float-clear-002.html 
 == resize-reflow-000.html resize-reflow-000.html
 == resize-reflow-001.html resize-reflow-001.html
 == table-page-break-before-auto-1.html table-page-break-before-auto-1.html
-fails == table-page-break-before-auto-2.html table-page-break-before-auto-2-ref.html
+== table-page-break-before-auto-2.html table-page-break-before-auto-2.html
 == table-page-break-before-always-1.html table-page-break-before-always-1.html
 == table-page-break-before-left-1.html table-page-break-before-left-1.html
 == table-page-break-before-right-1.html table-page-break-before-right-1.html

@@ -28,13 +28,14 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
-import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class HomePager extends ViewPager implements HomeScreen {
+import com.booking.rtlviewpager.RtlViewPager;
+
+public class HomePager extends RtlViewPager implements HomeScreen {
 
     @Override
     public boolean requestFocus(int direction, Rect previouslyFocusedRect) {
@@ -172,7 +173,7 @@ public class HomePager extends ViewPager implements HomeScreen {
         setFocusableInTouchMode(true);
 
         mOriginalBackground = getBackground();
-        setOnPageChangeListener(new PageChangeListener());
+        addOnPageChangeListener(new PageChangeListener());
 
         mLoadState = LoadState.UNLOADED;
     }
@@ -180,7 +181,7 @@ public class HomePager extends ViewPager implements HomeScreen {
     @Override
     public void addView(View child, int index, ViewGroup.LayoutParams params) {
         if (child instanceof Decor) {
-            ((ViewPager.LayoutParams) params).isDecor = true;
+            ((RtlViewPager.LayoutParams) params).isDecor = true;
             mDecor = (Decor) child;
             mTabStrip = child;
 
@@ -519,7 +520,7 @@ public class HomePager extends ViewPager implements HomeScreen {
         }
     }
 
-    private class PageChangeListener implements ViewPager.OnPageChangeListener {
+    private class PageChangeListener implements RtlViewPager.OnPageChangeListener {
         @Override
         public void onPageSelected(int position) {
             notifyPanelSelected(position);

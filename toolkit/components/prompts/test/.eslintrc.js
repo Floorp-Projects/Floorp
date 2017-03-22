@@ -2,7 +2,7 @@
 
 module.exports = {
   "extends": [
-    "../../../../testing/mochitest/mochitest.eslintrc.js"
+    "plugin:mozilla/mochitest-test"
   ],
   "rules": {
     // ownerGlobal doesn't exist in content privileged windows.

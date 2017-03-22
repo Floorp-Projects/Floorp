@@ -66,9 +66,14 @@ UNIFIED_SOURCES += [
     'ImageOps.cpp',
     'ImageWrapper.cpp',
     'imgFrame.cpp',
+    'imgLoader.cpp',
+    'imgRequest.cpp',
+    'imgRequestProxy.cpp',
     'imgTools.cpp',
     'MultipartImage.cpp',
     'OrientedImage.cpp',
+    'ProgressTracker.cpp',
+    'RasterImage.cpp',
     'ScriptedNotificationObserver.cpp',
     'ShutdownTracker.cpp',
     'SourceBuffer.cpp',
@@ -80,15 +85,6 @@ UNIFIED_SOURCES += [
 ]
 if CONFIG['MOZ_ENABLE_SKIA']:
     UNIFIED_SOURCES += [ 'Downscaler.cpp']
-
-# These files can't be unified because of ImageLogging.h #include order issues.
-SOURCES += [
-    'imgLoader.cpp',
-    'imgRequest.cpp',
-    'imgRequestProxy.cpp',
-    'ProgressTracker.cpp',
-    'RasterImage.cpp',
-]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

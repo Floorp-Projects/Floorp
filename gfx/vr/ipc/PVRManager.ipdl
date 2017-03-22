@@ -50,7 +50,7 @@ parent:
   async ResetSensor(uint32_t aDisplayID);
 
   sync GetSensorState(uint32_t aDisplayID) returns(VRHMDSensorState aState);
-  sync SetHaveEventListener(bool aHaveEventListener);
+  async SetHaveEventListener(bool aHaveEventListener);
 
   async ControllerListenerAdded();
   async ControllerListenerRemoved();

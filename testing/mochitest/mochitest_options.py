@@ -11,7 +11,7 @@ import json
 import os
 import tempfile
 
-from mozdevice import DroidADB, DroidSUT
+from mozdevice import DroidADB
 from mozprofile import DEFAULT_PORTS
 import mozinfo
 import mozlog
@@ -873,12 +873,6 @@ class AndroidArguments(ArgumentContainer):
           "help": "ip address of remote device to test",
           "default": None,
           }],
-        [["--dm_trans"],
-         {"choices": ["adb", "sut"],
-          "default": "adb",
-          "help": "The transport to use for communication with the device [default: adb].",
-          "suppress": True,
-          }],
         [["--adbpath"],
          {"dest": "adbPath",
           "default": None,
@@ -957,21 +951,13 @@ class AndroidArguments(ArgumentContainer):
             options.log_mach = '-'
 
         device_args = {'deviceRoot': options.remoteTestRoot}
-        if options.dm_trans == "adb":
-            device_args['adbPath'] = options.adbPath
-            if options.deviceIP:
-                device_args['host'] = options.deviceIP
-                device_args['port'] = options.devicePort
-            elif options.deviceSerial:
-                device_args['deviceSerial'] = options.deviceSerial
-            options.dm = DroidADB(**device_args)
-        elif options.dm_trans == 'sut':
-            if options.deviceIP is None:
-                parser.error(
-                    "If --dm_trans = sut, you must provide a device IP")
+        device_args['adbPath'] = options.adbPath
+        if options.deviceIP:
             device_args['host'] = options.deviceIP
             device_args['port'] = options.devicePort
-            options.dm = DroidSUT(**device_args)
+        elif options.deviceSerial:
+            device_args['deviceSerial'] = options.deviceSerial
+        options.dm = DroidADB(**device_args)
 
         if not options.remoteTestRoot:
             options.remoteTestRoot = options.dm.deviceRoot
@@ -1026,9 +1012,15 @@ class AndroidArguments(ArgumentContainer):
             options.robocopIni = os.path.abspath(options.robocopIni)
 
             if not options.robocopApk and build_obj:
-                options.robocopApk = os.path.join(build_obj.topobjdir, 'mobile', 'android',
-                                                  'tests', 'browser',
-                                                  'robocop', 'robocop-debug.apk')
+                if build_obj.substs.get('MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE'):
+                    options.robocopApk = os.path.join(build_obj.topobjdir, 'gradle', 'build',
+                                                      'mobile', 'android', 'app', 'outputs', 'apk',
+                                                      'app-automation-debug-androidTest-'
+                                                      'unaligned.apk')
+                else:
+                    options.robocopApk = os.path.join(build_obj.topobjdir, 'mobile', 'android',
+                                                      'tests', 'browser',
+                                                      'robocop', 'robocop-debug.apk')
 
         if options.robocopApk != "":
             if not os.path.exists(options.robocopApk):

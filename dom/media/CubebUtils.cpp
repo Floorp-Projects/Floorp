@@ -415,15 +415,11 @@ Maybe<uint32_t> GetCubebMSGLatencyInFrames()
 
 void InitLibrary()
 {
-  PrefChanged(PREF_VOLUME_SCALE, nullptr);
-  Preferences::RegisterCallback(PrefChanged, PREF_VOLUME_SCALE);
-  PrefChanged(PREF_CUBEB_LATENCY_PLAYBACK, nullptr);
-  PrefChanged(PREF_CUBEB_LATENCY_MSG, nullptr);
-  PrefChanged(PREF_CUBEB_BACKEND, nullptr);
-  Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_BACKEND);
-  Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
-  Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY_MSG);
-  Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LOG_LEVEL);
+  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_VOLUME_SCALE);
+  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
+  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_LATENCY_MSG);
+  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_BACKEND);
+  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_LOG_LEVEL);
 #ifndef MOZ_WIDGET_ANDROID
   NS_DispatchToMainThread(NS_NewRunnableFunction(&InitBrandName));
 #endif

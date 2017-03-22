@@ -28,7 +28,7 @@ class CSSStyleSheet;
 class ServoRestyleManager;
 class ServoStyleSheet;
 struct Keyframe;
-struct ServoComputedStyleValues;
+struct ServoComputedValuesWithParent;
 } // namespace mozilla
 class nsIDocument;
 class nsStyleContext;
@@ -245,7 +245,8 @@ public:
   nsTArray<ComputedKeyframeValues>
   GetComputedKeyframeValuesFor(const nsTArray<Keyframe>& aKeyframes,
                                dom::Element* aElement,
-                               const ServoComputedStyleValues& aServoValues);
+                               const ServoComputedValuesWithParent&
+                                 aServoValues);
 
 private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
@@ -285,6 +286,8 @@ private:
    * Perform processes that we should do before traversing.
    */
   void PreTraverse();
+  // Subset of the pre-traverse steps that involve syncing up data
+  void PreTraverseSync();
 
   already_AddRefed<ServoComputedValues> ResolveStyleLazily(dom::Element* aElement,
                                                            nsIAtom* aPseudoTag);

@@ -306,17 +306,12 @@ Gecko_CalcStyleDifference(nsStyleContext* aOldStyleContext,
   MOZ_ASSERT(aOldStyleContext);
   MOZ_ASSERT(aComputedValues);
 
-  // Pass the safe thing, which causes us to miss a potential optimization. See
-  // bug 1289863.
-  nsChangeHint forDescendants = nsChangeHint_Hints_NotHandledForDescendants;
-
   // Eventually, we should compute things out of these flags like
   // ElementRestyler::RestyleSelf does and pass the result to the caller to
   // potentially halt traversal. See bug 1289868.
   uint32_t equalStructs, samePointerStructs;
   nsChangeHint result =
     aOldStyleContext->CalcStyleDifference(aComputedValues,
-                                          forDescendants,
                                           &equalStructs,
                                           &samePointerStructs);
 
@@ -489,6 +484,18 @@ nscolor Gecko_GetLookAndFeelSystemColor(int32_t aId,
   LookAndFeel::ColorID colorId = static_cast<LookAndFeel::ColorID>(aId);
   LookAndFeel::GetColor(colorId, useStandinsForNativeColors, &result);
   return result;
+}
+
+bool
+Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed aElement,
+                           CSSPseudoClassType aType,
+                           const char16_t* aIdent,
+                           bool* aSetSlowSelectorFlag)
+{
+  EventStates dummyMask; // mask is never read because we pass aDependence=nullptr
+  return nsCSSRuleProcessor::StringPseudoMatches(aElement, aType, aIdent,
+                                                 aElement->OwnerDoc(), true,
+                                                 dummyMask, false, aSetSlowSelectorFlag, nullptr);
 }
 
 template <typename Implementor>
@@ -1111,6 +1118,26 @@ Gecko_EnsureStyleTransitionArrayLength(void* aArray, size_t aLen)
   for (size_t i = oldLength; i < aLen; ++i) {
     (*base)[i].SetInitialValues();
   }
+}
+
+void
+Gecko_ClearWillChange(nsStyleDisplay* aDisplay, size_t aLength)
+{
+  aDisplay->mWillChange.Clear();
+  aDisplay->mWillChange.SetCapacity(aLength);
+}
+
+void
+Gecko_AppendWillChange(nsStyleDisplay* aDisplay, nsIAtom* aAtom)
+{
+  aDisplay->mWillChange.AppendElement(aAtom);
+}
+
+void
+Gecko_CopyWillChangeFrom(nsStyleDisplay* aDest, nsStyleDisplay* aSrc)
+{
+  aDest->mWillChange.Clear();
+  aDest->mWillChange.AppendElements(aSrc->mWillChange);
 }
 
 Keyframe*

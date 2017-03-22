@@ -144,7 +144,7 @@ void Gecko_DropStyleChildrenIterator(StyleChildrenIteratorOwned it);
 RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowedMut it);
 
 // Selector Matching.
-uint16_t Gecko_ElementState(RawGeckoElementBorrowed element);
+uint64_t Gecko_ElementState(RawGeckoElementBorrowed element);
 bool Gecko_IsLink(RawGeckoElementBorrowed element);
 bool Gecko_IsTextNode(RawGeckoNodeBorrowed node);
 bool Gecko_IsVisitedLink(RawGeckoElementBorrowed element);
@@ -297,6 +297,10 @@ void Gecko_EnsureImageLayersLength(nsStyleImageLayers* layers, size_t len,
 void Gecko_EnsureStyleAnimationArrayLength(void* array, size_t len);
 void Gecko_EnsureStyleTransitionArrayLength(void* array, size_t len);
 
+void Gecko_ClearWillChange(nsStyleDisplay* display, size_t length);
+void Gecko_AppendWillChange(nsStyleDisplay* display, nsIAtom* atom);
+void Gecko_CopyWillChangeFrom(nsStyleDisplay* dest, nsStyleDisplay* src);
+
 mozilla::Keyframe* Gecko_AnimationAppendKeyframe(RawGeckoKeyframeListBorrowedMut keyframes,
                                                  float offset,
                                                  const nsTimingFunction* timingFunction);
@@ -376,6 +380,11 @@ const nsMediaFeature* Gecko_GetMediaFeatures();
 // because forward-declaring a nested enum/struct is impossible
 nscolor Gecko_GetLookAndFeelSystemColor(int32_t color_id,
                                         RawGeckoPresContextBorrowed pres_context);
+
+bool Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed element,
+                                mozilla::CSSPseudoClassType type,
+                                const char16_t* ident,
+                                bool* set_slow_selector);
 
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                                       \

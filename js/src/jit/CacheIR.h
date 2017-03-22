@@ -769,10 +769,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOperandId(id);
         buffer_.writeByte(uint32_t(handleMissing));
     }
-    void megamorphicStoreSlot(ObjOperandId obj, PropertyName* name, ValOperandId rhs) {
+    void megamorphicStoreSlot(ObjOperandId obj, PropertyName* name, ValOperandId rhs,
+                              bool needsTypeBarrier) {
         writeOpWithOperandId(CacheOp::MegamorphicStoreSlot, obj);
         addStubField(uintptr_t(name), StubField::Type::String);
         writeOperandId(rhs);
+        buffer_.writeByte(needsTypeBarrier);
     }
 
     void loadBooleanResult(bool val) {
@@ -980,6 +982,9 @@ class MOZ_RAII IRGenerator
     bool maybeGuardInt32Index(const Value& index, ValOperandId indexId,
                               uint32_t* int32Index, Int32OperandId* int32IndexId);
 
+    ObjOperandId guardDOMProxyExpandoObjectAndShape(JSObject* obj, ObjOperandId objId,
+                                                    const Value& expandoVal, JSObject* expandoObj);
+
     void emitIdGuard(ValOperandId valId, jsid id);
 
     friend class CacheIRSpewer;
@@ -1184,6 +1189,8 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
                                    ValOperandId rhsId);
     bool tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId objId, HandleId id,
                                      ValOperandId rhsId);
+    bool tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId, HandleId id,
+                                  ValOperandId rhsId);
     bool tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId);
     bool tryAttachProxyElement(HandleObject obj, ObjOperandId objId, ValOperandId rhsId);
 

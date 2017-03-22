@@ -53,7 +53,6 @@ const {getClientCssProperties} = require("devtools/shared/fronts/css-properties"
 
 // Autocompletion types.
 
-/* eslint-disable no-inline-comments */
 const CSS_STATES = {
   "null": "null",
   property: "property",    // foo { bar|: … }
@@ -73,7 +72,6 @@ const SELECTOR_STATES = {
   attribute: "attribute",  // foo[b|
   value: "value",          // foo[bar=b|
 };
-/* eslint-enable no-inline-comments */
 
 /**
  * Constructor for the autocompletion object.
