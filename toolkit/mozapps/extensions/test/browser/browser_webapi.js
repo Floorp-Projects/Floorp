@@ -114,8 +114,10 @@ add_task(testWithAPI(function*(browser) {
   }
 
   const PERM = "extensions.webextPermissionPrompts";
-  yield SpecialPowers.pushPrefEnv({clear: [[PERM]]});
-  yield check(false, `mozAddonManager.permissionPromptsEnabled is false when ${PERM} is unset`);
+  if (Services.prefs.getBoolPref(PERM, false) == false) {
+    yield SpecialPowers.pushPrefEnv({clear: [[PERM]]});
+    yield check(false, `mozAddonManager.permissionPromptsEnabled is false when ${PERM} is unset`);
+  }
 
   yield SpecialPowers.pushPrefEnv({set: [[PERM, true]]});
   yield check(true, `mozAddonManager.permissionPromptsEnabled is true when ${PERM} is set`);
