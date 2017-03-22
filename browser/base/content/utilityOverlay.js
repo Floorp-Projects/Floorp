@@ -255,6 +255,19 @@ function openLinkIn(url, where, params) {
     aRelatedToCurrent = false;
   }
 
+  // Teach the principal about the right OA to use, e.g. in case when
+  // opening a link in a new private window, or in a new container tab.
+  // Please note we do not have to do that for SystemPrincipals and we
+  // can not do it for NullPrincipals since NullPrincipals are only
+  // identical if they actually are the same object (See Bug: 1346759)
+  if (aPrincipal && aPrincipal.isCodebasePrincipal) {
+    let attrs = {
+      userContextId: aUserContextId,
+      privateBrowsingId: aIsPrivate || (w && PrivateBrowsingUtils.isWindowPrivate(w)),
+    };
+    aPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(aPrincipal.URI, attrs);
+  }
+
   if (!w || where == "window") {
     // This propagates to window.arguments.
     var sa = Cc["@mozilla.org/array;1"].
