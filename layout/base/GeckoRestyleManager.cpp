@@ -3038,16 +3038,14 @@ ElementRestyler::ComputeStyleChangeFor(nsIFrame*          aFrame,
                                          aSwappedStructOwners)
 {
   nsIContent* content = aFrame->GetContent();
-  nsAutoCString localDescriptor;
+  std::string elemDesc;
   if (profiler_is_active() && content) {
-    std::string elemDesc = ToString(*content);
-    localDescriptor.Assign(elemDesc.c_str());
+    elemDesc = ToString(*content);
   }
 
-  PROFILER_LABEL_PRINTF("ElementRestyler", "ComputeStyleChangeFor",
-                        js::ProfileEntry::Category::CSS,
-                        content ? "Element: %s" : "%s",
-                        content ? localDescriptor.get() : "");
+  PROFILER_LABEL_DYNAMIC("ElementRestyler", "ComputeStyleChangeFor",
+                         js::ProfileEntry::Category::CSS,
+                         content ? elemDesc.c_str() : "<unknown>");
   if (aMinChange) {
     aChangeList->AppendChange(aFrame, content, aMinChange);
   }

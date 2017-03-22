@@ -249,11 +249,12 @@ public:
   void push(const char* aName, js::ProfileEntry::Category aCategory,
             uint32_t line)
   {
-    push(aName, aCategory, nullptr, false, line);
+    push(aName, aCategory, nullptr, false, line, nullptr);
   }
 
   void push(const char* aName, js::ProfileEntry::Category aCategory,
-            void* aStackAddress, bool aCopy, uint32_t line)
+            void* aStackAddress, bool aCopy, uint32_t line,
+            const char* aDynamicString)
   {
     if (size_t(mStackPointer) >= mozilla::ArrayLength(mStack)) {
       mStackPointer++;
@@ -266,6 +267,7 @@ public:
     // that mStack is always consistent.
     entry.initCppFrame(aStackAddress, line);
     entry.setLabel(aName);
+    entry.setDynamicString(aDynamicString);
     MOZ_ASSERT(entry.flags() == js::ProfileEntry::IS_CPP_ENTRY);
     entry.setCategory(aCategory);
 
