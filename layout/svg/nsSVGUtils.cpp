@@ -1104,113 +1104,127 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
   if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
     aFrame = aFrame->GetParent();
   }
-  gfxRect bbox;
-  nsSVGDisplayableFrame* svg = do_QueryFrame(aFrame);
-  const bool hasSVGLayout = aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT;
-  if (hasSVGLayout || aFrame->IsSVGText() ||
-      // if we evaluate the following, |svg| can only be an outer-<svg> or null
-      (svg && !(aFlags & eUseFrameBoundsForOuterSVG))) {
+
+  if (aFrame->IsSVGText()) {
     // It is possible to apply a gradient, pattern, clipping path, mask or
     // filter to text. When one of these facilities is applied to text
     // the bounding box is the entire text element in all
     // cases.
-    if (aFrame->IsSVGText()) {
-      nsIFrame* ancestor = GetFirstNonAAncestorFrame(aFrame);
-      if (ancestor && ancestor->IsSVGText()) {
-        while (ancestor->GetType() != nsGkAtoms::svgTextFrame) {
-          ancestor = ancestor->GetParent();
-        }
-      }
-      svg = do_QueryFrame(ancestor);
-    }
-    nsIContent* content = aFrame->GetContent();
-    if (content->IsSVGElement() &&
-        !static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
-      return bbox;
-    }
-
-    FrameProperties props = aFrame->Properties();
-
-    if (aFlags == eBBoxIncludeFillGeometry) {
-      gfxRect* prop = props.Get(ObjectBoundingBoxProperty());
-      if (prop) {
-        return *prop;
+    nsIFrame* ancestor = GetFirstNonAAncestorFrame(aFrame);
+    if (ancestor && ancestor->IsSVGText()) {
+      while (ancestor->GetType() != nsGkAtoms::svgTextFrame) {
+        ancestor = ancestor->GetParent();
       }
     }
-
-    gfxMatrix matrix;
-    if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
-      // The spec says getBBox "Returns the tight bounding box in *current user
-      // space*". So we should really be doing this for all elements, but that
-      // needs investigation to check that we won't break too much content.
-      // NOTE: When changing this to apply to other frame types, make sure to
-      // also update nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset.
-      MOZ_ASSERT(content->IsSVGElement(), "bad cast");
-      nsSVGElement *element = static_cast<nsSVGElement*>(content);
-      matrix = element->PrependLocalTransformsTo(matrix, eChildToUserSpace);
-    }
-    bbox = svg->GetBBoxContribution(ToMatrix(matrix), aFlags).ToThebesRect();
-    // Account for 'clipped'.
-    if (aFlags & nsSVGUtils::eBBoxIncludeClipped) {
-      gfxRect clipRect(0, 0, 0, 0);
-      float x, y, width, height;
-      gfxMatrix tm;
-      gfxRect fillBBox =
-        svg->GetBBoxContribution(ToMatrix(tm),
-                                 nsSVGUtils::eBBoxIncludeFill).ToThebesRect();
-      x = fillBBox.x;
-      y = fillBBox.y;
-      width = fillBBox.width;
-      height = fillBBox.height;
-      bool hasClip = aFrame->StyleDisplay()->IsScrollableOverflow();
-      if (hasClip) {
-        clipRect =
-          nsSVGUtils::GetClipRectForFrame(aFrame, x, y, width, height);
-          if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame ||
-              aFrame->GetType() == nsGkAtoms::svgUseFrame) {
-            clipRect = matrix.TransformBounds(clipRect);
-          }
-      }
-      nsSVGEffects::EffectProperties effectProperties =
-        nsSVGEffects::GetEffectProperties(aFrame);
-      if (effectProperties.HasInvalidClipPath()) {
-        bbox = gfxRect(0, 0, 0, 0);
-      } else {
-        nsSVGClipPathFrame *clipPathFrame =
-          effectProperties.GetClipPathFrame();
-        if (clipPathFrame) {
-          SVGClipPathElement *clipContent =
-            static_cast<SVGClipPathElement*>(clipPathFrame->GetContent());
-          RefPtr<SVGAnimatedEnumeration> units = clipContent->ClipPathUnits();
-          if (units->AnimVal() == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-            matrix.Translate(gfxPoint(x, y));
-            matrix.Scale(width, height);
-          } else if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
-            matrix.Reset();
-          }
-          bbox =
-            clipPathFrame->GetBBoxForClipPathFrame(bbox, matrix).ToThebesRect();
-        }
-
-        if (hasClip) {
-          bbox = bbox.Intersect(clipRect);
-        }
-
-        if (bbox.IsEmpty()) {
-          bbox = gfxRect(0, 0, 0, 0);
-        }
-      }
-    }
-
-    if (aFlags == eBBoxIncludeFillGeometry) {
-      // Obtaining the bbox for objectBoundingBox calculations is common so we
-      // cache the result for future calls, since calculation can be expensive:
-      props.Set(ObjectBoundingBoxProperty(), new gfxRect(bbox));
-    }
-
-    return bbox;
+    aFrame = ancestor;
   }
-  return nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(aFrame);
+
+  nsSVGDisplayableFrame* svg = do_QueryFrame(aFrame);
+  const bool hasSVGLayout = aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT;
+  if (hasSVGLayout && !svg) {
+    // An SVG frame, but not one that can be displayed directly (for
+    // example, nsGradientFrame). These can't contribute to the bbox.
+    return gfxRect();
+  }
+
+  const bool isOuterSVG = svg && !hasSVGLayout;
+  MOZ_ASSERT_IF(isOuterSVG, aFrame->GetType() == nsGkAtoms::svgOuterSVGFrame);
+  if (!svg ||
+      (isOuterSVG && (aFlags & eUseFrameBoundsForOuterSVG))) {
+    // An HTML element or an SVG outer frame.
+    MOZ_ASSERT(!hasSVGLayout);
+    return nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(aFrame);
+  }
+
+  MOZ_ASSERT(svg);
+
+  nsIContent* content = aFrame->GetContent();
+  if (content->IsSVGElement() &&
+      !static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
+    return gfxRect();
+  }
+
+  FrameProperties props = aFrame->Properties();
+
+  if (aFlags == eBBoxIncludeFillGeometry) {
+    gfxRect* prop = props.Get(ObjectBoundingBoxProperty());
+    if (prop) {
+      return *prop;
+    }
+  }
+
+  gfxMatrix matrix;
+  if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
+    // The spec says getBBox "Returns the tight bounding box in *current user
+    // space*". So we should really be doing this for all elements, but that
+    // needs investigation to check that we won't break too much content.
+    // NOTE: When changing this to apply to other frame types, make sure to
+    // also update nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset.
+    MOZ_ASSERT(content->IsSVGElement(), "bad cast");
+    nsSVGElement *element = static_cast<nsSVGElement*>(content);
+    matrix = element->PrependLocalTransformsTo(matrix, eChildToUserSpace);
+  }
+  gfxRect bbox =
+    svg->GetBBoxContribution(ToMatrix(matrix), aFlags).ToThebesRect();
+  // Account for 'clipped'.
+  if (aFlags & nsSVGUtils::eBBoxIncludeClipped) {
+    gfxRect clipRect(0, 0, 0, 0);
+    float x, y, width, height;
+    gfxMatrix tm;
+    gfxRect fillBBox =
+      svg->GetBBoxContribution(ToMatrix(tm),
+                               nsSVGUtils::eBBoxIncludeFill).ToThebesRect();
+    x = fillBBox.x;
+    y = fillBBox.y;
+    width = fillBBox.width;
+    height = fillBBox.height;
+    bool hasClip = aFrame->StyleDisplay()->IsScrollableOverflow();
+    if (hasClip) {
+      clipRect =
+        nsSVGUtils::GetClipRectForFrame(aFrame, x, y, width, height);
+        if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame ||
+            aFrame->GetType() == nsGkAtoms::svgUseFrame) {
+          clipRect = matrix.TransformBounds(clipRect);
+        }
+    }
+    nsSVGEffects::EffectProperties effectProperties =
+      nsSVGEffects::GetEffectProperties(aFrame);
+    if (effectProperties.HasInvalidClipPath()) {
+      bbox = gfxRect(0, 0, 0, 0);
+    } else {
+      nsSVGClipPathFrame *clipPathFrame =
+        effectProperties.GetClipPathFrame();
+      if (clipPathFrame) {
+        SVGClipPathElement *clipContent =
+          static_cast<SVGClipPathElement*>(clipPathFrame->GetContent());
+        RefPtr<SVGAnimatedEnumeration> units = clipContent->ClipPathUnits();
+        if (units->AnimVal() == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+          matrix.Translate(gfxPoint(x, y));
+          matrix.Scale(width, height);
+        } else if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
+          matrix.Reset();
+        }
+        bbox =
+          clipPathFrame->GetBBoxForClipPathFrame(bbox, matrix).ToThebesRect();
+      }
+
+      if (hasClip) {
+        bbox = bbox.Intersect(clipRect);
+      }
+
+      if (bbox.IsEmpty()) {
+        bbox = gfxRect(0, 0, 0, 0);
+      }
+    }
+  }
+
+  if (aFlags == eBBoxIncludeFillGeometry) {
+    // Obtaining the bbox for objectBoundingBox calculations is common so we
+    // cache the result for future calls, since calculation can be expensive:
+    props.Set(ObjectBoundingBoxProperty(), new gfxRect(bbox));
+  }
+
+  return bbox;
 }
 
 gfxPoint
