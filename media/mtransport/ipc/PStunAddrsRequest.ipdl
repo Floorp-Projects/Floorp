@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PNecko;
+
+using class mozilla::NrIceStunAddr from "mtransport/nricestunaddr.h";
+using NrIceStunAddrArray from "mozilla/net/PStunAddrsParams.h";
+
+include "mozilla/net/NrIceStunAddrMessageUtils.h";
+
+namespace mozilla {
+namespace net {
+
+async protocol PStunAddrsRequest
+{
+  manager PNecko;
+
+parent:
+  async GetStunAddrs();
+
+  async __delete__();
+
+child:
+  async OnStunAddrsAvailable(NrIceStunAddrArray iceStunAddrs);
+};
+
+} // namespace net
+} // namespace mozilla
