@@ -175,6 +175,16 @@ public:
   NS_IMETHOD_(void) GetPreviewValue(nsAString& aValue) = 0;
 
   /**
+   * Enable preview for text control.
+   */
+  NS_IMETHOD_(void) EnablePreview() = 0;
+
+  /**
+   * Find out whether this control enables preview for form autofoll.
+   */
+  NS_IMETHOD_(bool) IsPreviewEnabled() = 0;
+
+  /**
    * Initialize the keyboard event listeners.
    */
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() = 0;
