@@ -27,6 +27,11 @@ struct InitOriginParams
   PersistenceType persistenceType;
 };
 
+struct AllUsageParams
+{
+  bool getAll;
+};
+
 struct OriginUsageParams
 {
   PrincipalInfo principalInfo;
@@ -35,6 +40,7 @@ struct OriginUsageParams
 
 union UsageRequestParams
 {
+  AllUsageParams;
   OriginUsageParams;
 };
 

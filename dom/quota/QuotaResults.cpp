@@ -10,6 +10,43 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
+UsageResult::UsageResult(const nsACString& aOrigin,
+                         bool aPersisted,
+                         uint64_t aUsage)
+  : mOrigin(aOrigin)
+  , mUsage(aUsage)
+  , mPersisted(aPersisted)
+{
+}
+
+NS_IMPL_ISUPPORTS(UsageResult,
+                  nsIQuotaUsageResult)
+
+NS_IMETHODIMP
+UsageResult::GetOrigin(nsACString& aOrigin)
+{
+  aOrigin = mOrigin;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UsageResult::GetPersisted(bool* aPersisted)
+{
+  MOZ_ASSERT(aPersisted);
+
+  *aPersisted = mPersisted;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UsageResult::GetUsage(uint64_t* aUsage)
+{
+  MOZ_ASSERT(aUsage);
+
+  *aUsage = mUsage;
+  return NS_OK;
+}
+
 OriginUsageResult::OriginUsageResult(uint64_t aUsage,
                                      uint64_t aFileUsage,
                                      uint64_t aLimit)
