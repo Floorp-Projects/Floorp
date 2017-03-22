@@ -50,6 +50,9 @@ dictionary RequestInit {
 
   [Func="FetchController::IsEnabled"]
   FetchSignal signal;
+
+  [Func="FetchObserver::IsEnabled"]
+  ObserverCallback observe;
 };
 
 // Gecko currently does not ship RequestContext, so please don't use it in IDL
