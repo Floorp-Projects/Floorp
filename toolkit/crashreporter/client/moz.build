@@ -28,6 +28,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['_UNICODE'] = True
     USE_LIBS += [
         'google_breakpad_libxul_s',
+        'nss',
     ]
     OS_LIBS += [
         'comctl32',
@@ -48,6 +49,7 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
     USE_LIBS += [
         'breakpad_common_s',
         'breakpad_mac_common_s',
+        'nss',
     ]
 elif CONFIG['OS_ARCH'] == 'SunOS':
     SOURCES += [

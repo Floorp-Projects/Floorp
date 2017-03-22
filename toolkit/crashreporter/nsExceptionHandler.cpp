@@ -187,6 +187,9 @@ static XP_CHAR* crashReporterPath;
 static XP_CHAR* memoryReportPath;
 #if !defined(MOZ_WIDGET_ANDROID)
 static XP_CHAR* minidumpAnalyzerPath;
+#ifdef XP_MACOSX
+static XP_CHAR* libraryPath; // Path where the NSS library is
+#endif // XP_MACOSX
 #endif // !defined(MOZ_WIDGET_ANDROID)
 
 // Where crash events should go.
@@ -390,20 +393,6 @@ JitExceptionHandler(void *exceptionRecord, void *context)
  */
 static const SIZE_T kReserveSize = 0x4000000; // 64 MB
 static void* gBreakpadReservedVM;
-#endif
-
-#ifdef XP_MACOSX
-static cpu_type_t pref_cpu_types[2] = {
-#if defined(__i386__)
-                                 CPU_TYPE_X86,
-#elif defined(__x86_64__)
-                                 CPU_TYPE_X86_64,
-#elif defined(__ppc__)
-                                 CPU_TYPE_POWERPC,
-#endif
-                                 CPU_TYPE_ANY };
-
-static posix_spawnattr_t spawnattr;
 #endif
 
 #if defined(MOZ_WIDGET_ANDROID)
@@ -841,45 +830,27 @@ LaunchProgram(const XP_CHAR* aProgramPath, const XP_CHAR* aMinidumpPath,
     CloseHandle(pi.hThread);
   }
 #elif defined(XP_UNIX)
-#ifdef XP_MACOSX
-  pid_t pid = 0;
-  char* const my_argv[] = {
-    const_cast<char*>(aProgramPath),
-    const_cast<char*>(aMinidumpPath),
-    nullptr
-  };
-
-  char **env = nullptr;
-  char ***nsEnv = _NSGetEnviron();
-  if (nsEnv)
-    env = *nsEnv;
-
-  int rv = posix_spawnp(&pid, my_argv[0], nullptr, &spawnattr, my_argv, env);
-
-  if (rv != 0) {
-    return false;
-  } else if (aWait) {
-    waitpid(pid, nullptr, 0);
-  }
-
-#else // !XP_MACOSX
   pid_t pid = sys_fork();
 
   if (pid == -1) {
     return false;
   } else if (pid == 0) {
+#ifdef XP_LINUX
     // need to clobber this, as libcurl might load NSS,
     // and we want it to load the system NSS.
     unsetenv("LD_LIBRARY_PATH");
+#else // XP_MACOSX
+    // Needed to locate NSS and its dependencies
+    setenv("DYLD_LIBRARY_PATH", libraryPath, /* overwrite */ 1);
+#endif
     Unused << execl(aProgramPath,
                     aProgramPath, aMinidumpPath, (char*)0);
     _exit(1);
   } else {
     if (aWait) {
-      sys_waitpid(pid, nullptr, __WALL);
+      waitpid(pid, nullptr, 0);
     }
   }
-#endif // XP_MACOSX
 #endif // XP_UNIX
 
   return true;
@@ -1649,6 +1620,20 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
       return rv;
     }
 
+#ifdef XP_MACOSX
+    nsCOMPtr<nsIFile> libPath;
+    rv = aXREDirectory->Clone(getter_AddRefs(libPath));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+    }
+
+    nsAutoString libraryPath_temp;
+    rv = libPath->GetPath(libraryPath_temp);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+    }
+#endif // XP_MACOSX
+
     nsAutoString minidumpAnalyzerPath_temp;
     rv = LocateExecutable(aXREDirectory,
                           NS_LITERAL_CSTRING(MINIDUMP_ANALYZER_FILENAME),
@@ -1665,6 +1650,9 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #else
   crashReporterPath = ToNewCString(crashReporterPath_temp);
   minidumpAnalyzerPath = ToNewCString(minidumpAnalyzerPath_temp);
+#ifdef XP_MACOSX
+  libraryPath = ToNewCString(libraryPath_temp);
+#endif
 #endif // XP_WIN32
 #else
     // On Android, we launch using the application package name instead of a
@@ -1691,25 +1679,6 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
   if (!BuildTempPath(tempPath)) {
     return NS_ERROR_FAILURE;
   }
-
-#ifdef XP_MACOSX
-  // Initialize spawn attributes, since this calls malloc.
-  if (posix_spawnattr_init(&spawnattr) != 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Set spawn attributes.
-  size_t attr_count = ArrayLength(pref_cpu_types);
-  size_t attr_ocount = 0;
-  if (posix_spawnattr_setbinpref_np(&spawnattr,
-                                    attr_count,
-                                    pref_cpu_types,
-                                    &attr_ocount) != 0 ||
-      attr_ocount != attr_count) {
-    posix_spawnattr_destroy(&spawnattr);
-    return NS_ERROR_FAILURE;
-  }
-#endif
 
 #ifdef XP_WIN32
   ReserveBreakpadVM();
@@ -2141,6 +2110,19 @@ nsresult UnsetExceptionHandler()
     crashReporterPath = nullptr;
   }
 
+#if !defined(MOZ_WIDGET_ANDROID)
+  if (minidumpAnalyzerPath) {
+    free(minidumpAnalyzerPath);
+    minidumpAnalyzerPath = nullptr;
+  }
+#ifdef XP_MACOSX
+  if (libraryPath) {
+    free(libraryPath);
+    libraryPath = nullptr;
+  }
+#endif // XP_MACOSX
+#endif // !defined(MOZ_WIDGET_ANDROID)
+
   if (eventsDirectory) {
     free(eventsDirectory);
     eventsDirectory = nullptr;
@@ -2155,10 +2137,6 @@ nsresult UnsetExceptionHandler()
     free(memoryReportPath);
     memoryReportPath = nullptr;
   }
-
-#ifdef XP_MACOSX
-  posix_spawnattr_destroy(&spawnattr);
-#endif
 
   if (!gExceptionHandler)
     return NS_ERROR_NOT_INITIALIZED;
@@ -2955,9 +2933,7 @@ void
 DeleteMinidumpFilesForID(const nsAString& id)
 {
   nsCOMPtr<nsIFile> minidumpFile;
-  GetMinidumpForID(id, getter_AddRefs(minidumpFile));
-  bool exists = false;
-  if (minidumpFile && NS_SUCCEEDED(minidumpFile->Exists(&exists)) && exists) {
+  if (GetMinidumpForID(id, getter_AddRefs(minidumpFile))) {
     nsCOMPtr<nsIFile> childExtraFile;
     GetExtraFileForMinidump(minidumpFile, getter_AddRefs(childExtraFile));
     if (childExtraFile) {
@@ -2970,9 +2946,17 @@ DeleteMinidumpFilesForID(const nsAString& id)
 bool
 GetMinidumpForID(const nsAString& id, nsIFile** minidump)
 {
-  if (!GetMinidumpLimboDir(minidump))
+  if (!GetMinidumpLimboDir(minidump)) {
     return false;
+  }
+
   (*minidump)->Append(id + NS_LITERAL_STRING(".dmp"));
+
+  bool exists;
+  if (NS_FAILED((*minidump)->Exists(&exists)) || !exists) {
+    return false;
+  }
+
   return true;
 }
 
@@ -2989,9 +2973,17 @@ GetIDFromMinidump(nsIFile* minidump, nsAString& id)
 bool
 GetExtraFileForID(const nsAString& id, nsIFile** extraFile)
 {
-  if (!GetMinidumpLimboDir(extraFile))
+  if (!GetMinidumpLimboDir(extraFile)) {
     return false;
+  }
+
   (*extraFile)->Append(id + NS_LITERAL_STRING(".extra"));
+
+  bool exists;
+  if (NS_FAILED((*extraFile)->Exists(&exists)) || !exists) {
+    return false;
+  }
+
   return true;
 }
 
@@ -3042,7 +3034,7 @@ RunMinidumpAnalyzer(const nsAString& id)
 #if !defined(MOZ_WIDGET_ANDROID)
   nsCOMPtr<nsIFile> file;
 
-  if (CrashReporter::GetMinidumpForID(id, getter_AddRefs(file)) && file) {
+  if (CrashReporter::GetMinidumpForID(id, getter_AddRefs(file))) {
 #ifdef XP_WIN
     nsAutoString path;
     file->GetPath(path);
