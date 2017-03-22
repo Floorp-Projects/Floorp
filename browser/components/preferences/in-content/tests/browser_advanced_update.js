@@ -85,9 +85,12 @@ function resetPreferences() {
 
 function formatInstallDate(sec) {
   var date = new Date(sec);
+  const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                 .getService(Ci.nsIXULChromeRegistry)
+                 .getSelectedLocale("global", true);
   const dtOptions = { year: "numeric", month: "long", day: "numeric",
                       hour: "numeric", minute: "numeric", second: "numeric" };
-  return date.toLocaleString(undefined, dtOptions);
+  return date.toLocaleString(locale, dtOptions);
 }
 
 registerCleanupFunction(resetPreferences);

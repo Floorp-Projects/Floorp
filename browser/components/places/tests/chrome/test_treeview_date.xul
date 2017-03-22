@@ -104,6 +104,9 @@
         ok(rc >= 3, "Rows found");
         let columns = tree.columns;
         ok(columns.count > 0, "Columns found");
+        const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                       .getService(Ci.nsIXULChromeRegistry)
+                       .getSelectedLocale("global", true);
         for (let r = 0; r < rc; r++) {
           let node = treeView.nodeForTreeIndex(r);
           ok(node, "Places node found");
@@ -135,7 +138,7 @@
                   // a redirecting uri could be put in the tree while we test.
                   break;
                 }
-                let timeStr = timeObj.toLocaleString(undefined, dtOptions);
+                let timeStr = timeObj.toLocaleString(locale, dtOptions);
 
                 is(text, timeStr, "Date format is correct");
                 break;

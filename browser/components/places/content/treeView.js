@@ -499,8 +499,11 @@ PlacesTreeView.prototype = {
   __todayFormatter: null,
   get _todayFormatter() {
     if (!this.__todayFormatter) {
+      const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                     .getService(Ci.nsIXULChromeRegistry)
+                     .getSelectedLocale("global", true);
       const dtOptions = { hour: "numeric", minute: "numeric" };
-      this.__todayFormatter = new Intl.DateTimeFormat(undefined, dtOptions);
+      this.__todayFormatter = new Intl.DateTimeFormat(locale, dtOptions);
     }
     return this.__todayFormatter;
   },
@@ -508,9 +511,12 @@ PlacesTreeView.prototype = {
   __dateFormatter: null,
   get _dateFormatter() {
     if (!this.__dateFormatter) {
+      const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                     .getService(Ci.nsIXULChromeRegistry)
+                     .getSelectedLocale("global", true);
       const dtOptions = { year: "numeric", month: "numeric", day: "numeric",
                           hour: "numeric", minute: "numeric" };
-      this.__dateFormatter = new Intl.DateTimeFormat(undefined, dtOptions);
+      this.__dateFormatter = new Intl.DateTimeFormat(locale, dtOptions);
     }
     return this.__dateFormatter;
   },

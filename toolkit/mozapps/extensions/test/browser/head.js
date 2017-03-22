@@ -499,8 +499,11 @@ function get_string(aName, ...aArgs) {
 }
 
 function formatDate(aDate) {
+  const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                 .getService(Ci.nsIXULChromeRegistry)
+                 .getSelectedLocale("global", true);
   const dtOptions = { year: "numeric", month: "long", day: "numeric" };
-  return aDate.toLocaleDateString(undefined, dtOptions);
+  return aDate.toLocaleDateString(locale, dtOptions);
 }
 
 function is_hidden(aElement) {
