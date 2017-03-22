@@ -4,4 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <bool name="is_tablet">true</bool>
+
+    <dimen name="bottom_sheet_width">480dp</dimen>
 </resources>

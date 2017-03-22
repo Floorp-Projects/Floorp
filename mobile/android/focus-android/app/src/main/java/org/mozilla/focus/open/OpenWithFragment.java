@@ -6,10 +6,12 @@
 package org.mozilla.focus.open;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.v7.app.AppCompatDialogFragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -17,6 +19,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 
 import org.mozilla.focus.R;
 
@@ -43,7 +46,7 @@ public class OpenWithFragment extends AppCompatDialogFragment implements AppAdap
 
         final View view = LayoutInflater.from(wrapper).inflate(R.layout.fragment_open_with, null);
 
-        final Dialog dialog = new BottomSheetDialog(wrapper);
+        final Dialog dialog = new CustomWidthBottomSheetDialog(wrapper);
         dialog.setContentView(view);
 
         final RecyclerView appList = (RecyclerView) view.findViewById(R.id.apps);
@@ -54,6 +57,20 @@ public class OpenWithFragment extends AppCompatDialogFragment implements AppAdap
         appList.setAdapter(adapter);
 
         return dialog;
+    }
+
+    static class CustomWidthBottomSheetDialog extends BottomSheetDialog {
+        public CustomWidthBottomSheetDialog(@NonNull Context context) {
+            super(context);
+        }
+
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            int width = getContext().getResources().getDimensionPixelSize(R.dimen.bottom_sheet_width);
+            getWindow().setLayout(width > 0 ? width : ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT);
+        }
     }
 
     @Override
