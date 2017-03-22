@@ -66,7 +66,7 @@ function* runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
 
   let awaitTabSwitch;
   if (aExpectSwitch) {
-    awaitTabSwitch = BrowserTestUtils.tabRemoved(testTab)
+    awaitTabSwitch = BrowserTestUtils.removeTab(testTab, {dontRemove: true})
   }
 
   // Execute the selected action.
