@@ -2659,16 +2659,10 @@
               // We need to block while calling permitUnload() because it
               // processes the event queue and may lead to another removeTab()
               // call before permitUnload() returns.
-
-              TelemetryStopwatch.start("FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS", aTab);
-
               aTab._pendingPermitUnload = true;
               let {permitUnload, timedOut} = aTab.linkedPanel ?
                   browser.permitUnload() : {permitUnload: true, timedOut: false};
               delete aTab._pendingPermitUnload;
-
-              TelemetryStopwatch.finish("FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS", aTab);
-
               // If we were closed during onbeforeunload, we return false now
               // so we don't (try to) close the same tab again. Of course, we
               // also stop if the unload was cancelled by the user:
