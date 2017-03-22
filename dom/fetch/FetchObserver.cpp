@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FetchObserver.h"
+#include "mozilla/dom/Event.h"
 
 namespace mozilla {
 namespace dom {
@@ -44,10 +45,14 @@ FetchObserver::IsEnabled(JSContext* aCx, JSObject* aGlobal)
 }
 
 FetchObserver::FetchObserver(nsIGlobalObject* aGlobal,
-                             FetchState aState)
+                             FetchSignal* aSignal)
   : DOMEventTargetHelper(aGlobal)
-  , mState(aState)
-{}
+  , mState(FetchState::Requesting)
+{
+  if (aSignal) {
+    Follow(aSignal);
+  }
+}
 
 JSObject*
 FetchObserver::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
@@ -59,6 +64,52 @@ FetchState
 FetchObserver::State() const
 {
   return mState;
+}
+
+void
+FetchObserver::Aborted()
+{
+  SetState(FetchState::Aborted);
+}
+
+void
+FetchObserver::SetState(FetchState aState)
+{
+  MOZ_ASSERT(mState < aState);
+
+  if (mState == FetchState::Aborted ||
+      mState == FetchState::Errored ||
+      mState == FetchState::Complete) {
+    // We are already in a final state.
+    return;
+  }
+
+  // We cannot pass from Requesting to Complete directly.
+  if (mState == FetchState::Requesting &&
+      aState == FetchState::Complete) {
+    SetState(FetchState::Responding);
+  }
+
+  mState = aState;
+
+  if (mState == FetchState::Aborted ||
+      mState == FetchState::Errored ||
+      mState == FetchState::Complete) {
+    Unfollow();
+  }
+
+  EventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+
+  // TODO which kind of event should we dispatch here?
+
+  RefPtr<Event> event =
+    Event::Constructor(this, NS_LITERAL_STRING("statechange"), init);
+  event->SetTrusted(true);
+
+  bool dummy;
+  DispatchEvent(event, &dummy);
 }
 
 } // dom namespace
