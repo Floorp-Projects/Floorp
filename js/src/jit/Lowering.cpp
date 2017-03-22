@@ -4369,13 +4369,7 @@ LIRGenerator::visitWasmReturn(MWasmReturn* ins)
     MDefinition* rval = ins->getOperand(0);
 
     if (rval->type() == MIRType::Int64) {
-        LWasmReturnI64* lir = new(alloc()) LWasmReturnI64(useInt64Fixed(rval, ReturnReg64));
-
-        // Preserve the TLS pointer we were passed in `WasmTlsReg`.
-        MDefinition* tlsPtr = ins->getOperand(1);
-        lir->setOperand(INT64_PIECES, useFixed(tlsPtr, WasmTlsReg));
-
-        add(lir);
+        add(new(alloc()) LWasmReturnI64(useInt64Fixed(rval, ReturnReg64)));
         return;
     }
 
@@ -4391,23 +4385,13 @@ LIRGenerator::visitWasmReturn(MWasmReturn* ins)
     else
         MOZ_CRASH("Unexpected wasm return type");
 
-    // Preserve the TLS pointer we were passed in `WasmTlsReg`.
-    MDefinition* tlsPtr = ins->getOperand(1);
-    lir->setOperand(1, useFixed(tlsPtr, WasmTlsReg));
-
     add(lir);
 }
 
 void
 LIRGenerator::visitWasmReturnVoid(MWasmReturnVoid* ins)
 {
-    auto* lir = new(alloc()) LWasmReturnVoid;
-
-    // Preserve the TLS pointer we were passed in `WasmTlsReg`.
-    MDefinition* tlsPtr = ins->getOperand(0);
-    lir->setOperand(0, useFixed(tlsPtr, WasmTlsReg));
-
-    add(lir);
+    add(new(alloc()) LWasmReturnVoid);
 }
 
 void

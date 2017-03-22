@@ -1735,7 +1735,7 @@ class WasmActivation : public Activation
     WasmActivation* prevWasm_;
     void* entrySP_;
     void* resumePC_;
-    uint8_t* fp_;
+    uint8_t* exitFP_;
     wasm::ExitReason exitReason_;
 
   public:
@@ -1748,16 +1748,16 @@ class WasmActivation : public Activation
         return true;
     }
 
-    // Returns a pointer to the base of the innermost stack frame of wasm code
-    // in this activation.
-    uint8_t* fp() const { return fp_; }
+    // Returns null or the final wasm::Frame* when wasm exited this
+    // WasmActivation.
+    uint8_t* exitFP() const { return exitFP_; }
 
     // Returns the reason why wasm code called out of wasm code.
     wasm::ExitReason exitReason() const { return exitReason_; }
 
     // Written by JIT code:
     static unsigned offsetOfEntrySP() { return offsetof(WasmActivation, entrySP_); }
-    static unsigned offsetOfFP() { return offsetof(WasmActivation, fp_); }
+    static unsigned offsetOfExitFP() { return offsetof(WasmActivation, exitFP_); }
     static unsigned offsetOfExitReason() { return offsetof(WasmActivation, exitReason_); }
 
     // Read/written from SIGSEGV handler:
@@ -1765,7 +1765,7 @@ class WasmActivation : public Activation
     void* resumePC() const { return resumePC_; }
 
     // Used by wasm::FrameIterator during stack unwinding.
-    void unwindFP(uint8_t* fp) { fp_ = fp; }
+    void unwindExitFP(uint8_t* exitFP) { exitFP_ = exitFP; exitReason_ = wasm::ExitReason::None; }
 };
 
 // A FrameIter walks over a context's stack of JS script activations,

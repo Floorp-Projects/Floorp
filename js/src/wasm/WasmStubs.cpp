@@ -262,12 +262,25 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe)
         }
     }
 
+    // Set the FramePointer to null for the benefit of debugging.
+    masm.movePtr(ImmWord(0), FramePointer);
+
     // Call into the real function.
     masm.assertStackAlignment(WasmStackAlignment);
     masm.call(CallSiteDesc(CallSiteDesc::Func), fe.funcIndex());
+    masm.assertStackAlignment(WasmStackAlignment);
+
+#ifdef DEBUG
+    // Assert FramePointer was returned to null by the callee.
+    Label ok;
+    masm.branchTestPtr(Assembler::Zero, FramePointer, FramePointer, &ok);
+    masm.breakpoint();
+    masm.bind(&ok);
+#endif
 
     // Recover the stack pointer value before dynamic alignment.
     masm.loadWasmActivationFromTls(scratch);
+    masm.wasmAssertNonExitInvariants(scratch);
     masm.loadStackPtr(Address(scratch, WasmActivation::offsetOfEntrySP()));
     masm.setFramePushed(FramePushedForEntrySP);
 
@@ -704,9 +717,11 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
     masm.callJitNoProfiler(callee);
     AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddr);
 
-    // Reload the TLS reg which has been clobbered by Ion code. The TLS reg is
-    // non-volatile and so preserved by the native-ABI calls below.
+    // The JIT callee clobbers all registers, including WasmTlsReg and
+    // FrameRegister, so restore those here.
     masm.loadWasmTlsRegFromFrame();
+    masm.moveStackPtrTo(FramePointer);
+    masm.addPtr(Imm32(masm.framePushed()), FramePointer);
 
     {
         // Disable Activation.
@@ -888,11 +903,11 @@ wasm::GenerateTrapExit(MacroAssembler& masm, Trap trap, Label* throwLabel)
 // Generate a stub which is only used by the signal handlers to handle out of
 // bounds access by experimental SIMD.js and Atomics and unaligned accesses on
 // ARM. This stub is executed by direct PC transfer from the faulting memory
-// access and thus the stack depth is unknown. Since WasmActivation::fp is not
-// set before calling the error reporter, the current wasm activation will be
-// lost. This stub should be removed when SIMD.js and Atomics are moved to wasm
-// and given proper traps and when we use a non-faulting strategy for unaligned
-// ARM access.
+// access and thus the stack depth is unknown. Since WasmActivation::exitFP is
+// not set before calling the error reporter, the current wasm activation will
+// be lost. This stub should be removed when SIMD.js and Atomics are moved to
+// wasm and given proper traps and when we use a non-faulting strategy for
+// unaligned ARM access.
 static Offsets
 GenerateGenericMemoryAccessTrap(MacroAssembler& masm, SymbolicAddress reporter, Label* throwLabel)
 {
@@ -1109,16 +1124,7 @@ wasm::GenerateThrowStub(MacroAssembler& masm, Label* throwLabel)
 
     // HandleThrow returns the innermost WasmActivation* in ReturnReg.
     Register act = ReturnReg;
-
-#ifdef DEBUG
-    // We are about to pop all frames in this WasmActivation. Checking if fp is
-    // set to null to maintain the invariant that fp is either null or pointing
-    // to a valid frame.
-    Label ok;
-    masm.branchPtr(Assembler::Equal, Address(act, WasmActivation::offsetOfFP()), ImmWord(0), &ok);
-    masm.breakpoint();
-    masm.bind(&ok);
-#endif
+    masm.wasmAssertNonExitInvariants(act);
 
     masm.setFramePushed(FramePushedForEntrySP);
     masm.loadStackPtr(Address(act, WasmActivation::offsetOfEntrySP()));

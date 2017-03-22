@@ -89,7 +89,6 @@ enum class ExitReason : uint32_t
     None,          // default state, the pc is in wasm code
     ImportJit,     // fast-path call directly into JIT code
     ImportInterp,  // slow-path call into C++ Invoke()
-    Native,        // call to native C++ code (e.g., Math.sin, ToInt32(), interrupt)
     Trap,          // call to trap handler for the trap in WasmActivation::trap
     DebugTrap      // call to debug trap handler
 };
@@ -101,12 +100,12 @@ class ProfilingFrameIterator
     const WasmActivation* activation_;
     const Code* code_;
     const CodeRange* codeRange_;
-    uint8_t* callerFP_;
+    void* callerFP_;
     void* callerPC_;
     void* stackAddress_;
     ExitReason exitReason_;
 
-    void initFromFP();
+    void initFromExitFP();
 
   public:
     ProfilingFrameIterator();
