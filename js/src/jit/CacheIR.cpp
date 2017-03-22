@@ -547,7 +547,7 @@ GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId, jsid id, boo
     }
     writer.typeMonitorResult();
 
-    trackAttached("MegamorphicNativeSlot");
+    trackAttached(handleMissing ? "MegamorphicMissingNativeSlot" : "MegamorphicNativeSlot");
 }
 
 bool
@@ -773,6 +773,27 @@ GetPropIRGenerator::tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, 
     return true;
 }
 
+ObjOperandId
+IRGenerator::guardDOMProxyExpandoObjectAndShape(JSObject* obj, ObjOperandId objId,
+                                                const Value& expandoVal, JSObject* expandoObj)
+{
+    MOZ_ASSERT(IsCacheableDOMProxy(obj));
+
+    writer.guardShape(objId, obj->maybeShape());
+
+    // Shape determines Class, so now it must be a DOM proxy.
+    ValOperandId expandoValId;
+    if (expandoVal.isObject())
+        expandoValId = writer.loadDOMExpandoValue(objId);
+    else
+        expandoValId = writer.loadDOMExpandoValueIgnoreGeneration(objId);
+
+    // Guard the expando is an object and shape guard.
+    ObjOperandId expandoObjId = writer.guardIsObject(expandoValId);
+    writer.guardShape(expandoObjId, expandoObj->as<NativeObject>().shape());
+    return expandoObjId;
+}
+
 bool
 GetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId, HandleId id)
 {
@@ -780,13 +801,12 @@ GetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objI
 
     RootedValue expandoVal(cx_, GetProxyExtra(obj, GetDOMProxyExpandoSlot()));
     RootedObject expandoObj(cx_);
-    ExpandoAndGeneration* expandoAndGeneration = nullptr;
     if (expandoVal.isObject()) {
         expandoObj = &expandoVal.toObject();
     } else {
         MOZ_ASSERT(!expandoVal.isUndefined(),
                    "How did a missing expando manage to shadow things?");
-        expandoAndGeneration = static_cast<ExpandoAndGeneration*>(expandoVal.toPrivate());
+        auto expandoAndGeneration = static_cast<ExpandoAndGeneration*>(expandoVal.toPrivate());
         MOZ_ASSERT(expandoAndGeneration);
         expandoObj = &expandoAndGeneration->expando.toObject();
     }
@@ -805,20 +825,8 @@ GetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objI
     MOZ_ASSERT(holder == expandoObj);
 
     maybeEmitIdGuard(id);
-    writer.guardShape(objId, obj->maybeShape());
-
-    // Shape determines Class, so now it must be a DOM proxy.
-    ValOperandId expandoValId;
-    if (expandoVal.isObject()) {
-        expandoValId = writer.loadDOMExpandoValue(objId);
-    } else {
-        MOZ_ASSERT(expandoAndGeneration);
-        expandoValId = writer.loadDOMExpandoValueIgnoreGeneration(objId);
-    }
-
-    // Guard the expando is an object and shape guard.
-    ObjOperandId expandoObjId = writer.guardIsObject(expandoValId);
-    writer.guardShape(expandoObjId, expandoObj->as<NativeObject>().shape());
+    ObjOperandId expandoObjId =
+        guardDOMProxyExpandoObjectAndShape(obj, objId, expandoVal, expandoObj);
 
     if (canCache == CanAttachReadSlot) {
         // Load from the expando's slots.
@@ -2128,20 +2136,20 @@ LookupShapeForSetSlot(NativeObject* obj, jsid id)
     return nullptr;
 }
 
-bool
-SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId, HandleId id,
-                                           ValOperandId rhsId)
+static bool
+CanAttachNativeSetSlot(JSContext* cx, HandleObject obj, HandleId id,
+                       bool* isTemporarilyUnoptimizable, MutableHandleShape propShape)
 {
     if (!obj->isNative())
         return false;
 
-    RootedShape propShape(cx_, LookupShapeForSetSlot(&obj->as<NativeObject>(), id));
+    propShape.set(LookupShapeForSetSlot(&obj->as<NativeObject>(), id));
     if (!propShape)
         return false;
 
-    RootedObjectGroup group(cx_, JSObject::getGroup(cx_, obj));
+    ObjectGroup* group = JSObject::getGroup(cx, obj);
     if (!group) {
-        cx_->recoverFromOutOfMemory();
+        cx->recoverFromOutOfMemory();
         return false;
     }
 
@@ -2149,11 +2157,22 @@ SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId,
     // properties, TI will not mark the property as having been
     // overwritten. Don't attach a stub in this case, so that we don't
     // execute another write to the property without TI seeing that write.
-    EnsureTrackPropertyTypes(cx_, obj, id);
+    EnsureTrackPropertyTypes(cx, obj, id);
     if (!PropertyHasBeenMarkedNonConstant(obj, id)) {
-        *isTemporarilyUnoptimizable_ = true;
+        *isTemporarilyUnoptimizable = true;
         return false;
     }
+
+    return true;
+}
+
+bool
+SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId, HandleId id,
+                                           ValOperandId rhsId)
+{
+    RootedShape propShape(cx_);
+    if (!CanAttachNativeSetSlot(cx_, obj, id, isTemporarilyUnoptimizable_, &propShape))
+        return false;
 
     if (mode_ == ICState::Mode::Megamorphic && cacheKind_ == CacheKind::SetProp) {
         writer.megamorphicStoreSlot(objId, JSID_TO_ATOM(id)->asPropertyName(), rhsId,
@@ -2803,6 +2822,58 @@ SetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId o
 }
 
 bool
+SetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId, HandleId id,
+                                             ValOperandId rhsId)
+{
+    MOZ_ASSERT(IsCacheableDOMProxy(obj));
+
+    RootedValue expandoVal(cx_, GetProxyExtra(obj, GetDOMProxyExpandoSlot()));
+    RootedObject expandoObj(cx_);
+    if (expandoVal.isObject()) {
+        expandoObj = &expandoVal.toObject();
+    } else {
+        MOZ_ASSERT(!expandoVal.isUndefined(),
+                   "How did a missing expando manage to shadow things?");
+        auto expandoAndGeneration = static_cast<ExpandoAndGeneration*>(expandoVal.toPrivate());
+        MOZ_ASSERT(expandoAndGeneration);
+        expandoObj = &expandoAndGeneration->expando.toObject();
+    }
+
+    RootedShape propShape(cx_);
+    if (CanAttachNativeSetSlot(cx_, expandoObj, id, isTemporarilyUnoptimizable_, &propShape)) {
+        maybeEmitIdGuard(id);
+        ObjOperandId expandoObjId =
+            guardDOMProxyExpandoObjectAndShape(obj, objId, expandoVal, expandoObj);
+
+        NativeObject* nativeExpandoObj = &expandoObj->as<NativeObject>();
+        writer.guardGroup(expandoObjId, nativeExpandoObj->group());
+        typeCheckInfo_.set(nativeExpandoObj->group(), id);
+
+        EmitStoreSlotAndReturn(writer, expandoObjId, nativeExpandoObj, propShape, rhsId);
+        trackAttached("DOMProxyExpandoSlot");
+        return true;
+    }
+
+    RootedObject holder(cx_);
+    if (CanAttachSetter(cx_, pc_, expandoObj, id, &holder, &propShape,
+                        isTemporarilyUnoptimizable_))
+    {
+        // Note that we don't actually use the expandoObjId here after the
+        // shape guard. The DOM proxy (objId) is passed to the setter as
+        // |this|.
+        maybeEmitIdGuard(id);
+        guardDOMProxyExpandoObjectAndShape(obj, objId, expandoVal, expandoObj);
+
+        MOZ_ASSERT(holder == expandoObj);
+        EmitCallSetterNoGuards(writer, expandoObj, expandoObj, propShape, objId, rhsId);
+        trackAttached("DOMProxyExpandoSetter");
+        return true;
+    }
+
+    return false;
+}
+
+bool
 SetPropIRGenerator::tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id,
                                    ValOperandId rhsId)
 {
@@ -2820,6 +2891,13 @@ SetPropIRGenerator::tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleI
       case ProxyStubType::None:
         break;
       case ProxyStubType::DOMExpando:
+        if (tryAttachDOMProxyExpando(obj, objId, id, rhsId))
+            return true;
+        if (*isTemporarilyUnoptimizable_) {
+            // Scripted setter without JIT code. Just wait.
+            return false;
+        }
+        MOZ_FALLTHROUGH; // Fall through to the generic shadowed case.
       case ProxyStubType::DOMShadowed:
         return tryAttachDOMProxyShadowed(obj, objId, id, rhsId);
       case ProxyStubType::DOMUnshadowed:

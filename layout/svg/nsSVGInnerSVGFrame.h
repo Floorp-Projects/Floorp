@@ -51,7 +51,7 @@ public:
                                      nsIAtom*        aAttribute,
                                      int32_t         aModType) override;
 
-  // nsISVGChildFrame interface:
+  // nsSVGDisplayableFrame interface:
   virtual DrawResult PaintSVG(gfxContext& aContext,
                               const gfxMatrix& aTransform,
                               const nsIntRect *aDirtyRect = nullptr) override;

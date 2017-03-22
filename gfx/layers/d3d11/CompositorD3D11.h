@@ -26,7 +26,7 @@ struct VertexShaderConstants
   float renderTargetOffset[4];
   gfx::Rect textureCoords;
   gfx::Rect layerQuad;
-  gfx::Rect maskQuad;
+  float maskTransform[4][4];
   float backdropTransform[4][4];
 };
 
@@ -138,6 +138,9 @@ public:
   }
 
   virtual void ForcePresent();
+
+  // For TextureSourceProvider.
+  ID3D11Device* GetD3D11Device() const override { return mDevice; }
 
   ID3D11Device* GetDevice() { return mDevice; }
 
