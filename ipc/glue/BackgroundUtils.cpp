@@ -17,7 +17,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "mozilla/LoadInfo.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -70,7 +70,7 @@ PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
         return nullptr;
       }
 
-      principal = nsNullPrincipal::Create(info.attrs(), uri);
+      principal = NullPrincipal::Create(info.attrs(), uri);
       return principal.forget();
     }
 

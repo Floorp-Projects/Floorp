@@ -22,7 +22,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "nsSystemPrincipal.h"
 #include "nsPrincipal.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 #include "DomainPolicy.h"
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
@@ -1141,7 +1141,7 @@ nsScriptSecurityManager::CreateNullPrincipal(JS::Handle<JS::Value> aOriginAttrib
   if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
       return NS_ERROR_INVALID_ARG;
   }
-  nsCOMPtr<nsIPrincipal> prin = nsNullPrincipal::Create(attrs);
+  nsCOMPtr<nsIPrincipal> prin = NullPrincipal::Create(attrs);
   prin.forget(aPrincipal);
   return NS_OK;
 }
