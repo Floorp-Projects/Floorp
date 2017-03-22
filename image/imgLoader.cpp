@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Undefine windows version of LoadImage because our code uses that name.
+#undef LoadImage
+
 #include "ImageLogging.h"
 #include "imgLoader.h"
 
@@ -128,7 +131,7 @@ public:
         }
 
         RefPtr<imgRequest> req = entry->GetRequest();
-        RefPtr<Image> image = req->GetImage();
+        RefPtr<image::Image> image = req->GetImage();
         if (!image) {
           continue;
         }
@@ -401,7 +404,7 @@ private:
                                       nsTArray<ImageMemoryCounter>* aArray,
                                       bool aIsUsed)
   {
-    RefPtr<Image> image = aRequest->GetImage();
+    RefPtr<image::Image> image = aRequest->GetImage();
     if (!image) {
       return;
     }

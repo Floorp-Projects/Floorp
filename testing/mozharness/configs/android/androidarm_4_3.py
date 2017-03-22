@@ -33,7 +33,6 @@ config = {
         ] """,
     "emulator_process_name": "emulator64-arm",
     "emulator_extra_args": "-show-kernel -debug init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket",
-    "device_manager": "adb",
     "exes": {
         'adb': '%(abs_work_dir)s/android-sdk18/platform-tools/adb',
     },
@@ -65,7 +64,6 @@ config = {
             "run_filename": "runtestsremote.py",
             "testsdir": "mochitest",
             "options": [
-                "--dm_trans=adb",
                 "--app=%(app)s",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
@@ -87,7 +85,6 @@ config = {
             "run_filename": "runtestsremote.py",
             "testsdir": "mochitest",
             "options": [
-                "--dm_trans=adb",
                 "--app=%(app)s",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
@@ -108,7 +105,6 @@ config = {
             "run_filename": "runtestsremote.py",
             "testsdir": "mochitest",
             "options": [
-                "--dm_trans=adb",
                 "--app=%(app)s",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
@@ -130,7 +126,6 @@ config = {
             "run_filename": "runtestsremote.py",
             "testsdir": "mochitest",
             "options": [
-                "--dm_trans=adb",
                 "--app=%(app)s",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
@@ -150,7 +145,6 @@ config = {
             "run_filename": "runtestsremote.py",
             "testsdir": "mochitest",
             "options": [
-                "--dm_trans=adb",
                 "--app=%(app)s",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
@@ -170,7 +164,6 @@ config = {
             "run_filename": "runtestsremote.py",
             "testsdir": "mochitest",
             "options": [
-                "--dm_trans=adb",
                 "--app=%(app)s",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
@@ -192,7 +185,6 @@ config = {
             "run_filename": "runrobocop.py",
             "testsdir": "mochitest",
             "options": [
-                "--dm_trans=adb",
                 "--app=%(app)s",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
@@ -215,7 +207,6 @@ config = {
             "options": [
                 "--app=%(app)s",
                 "--ignore-window-size",
-                "--dm_trans=adb",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
                 "--utility-path=%(utility_path)s",
@@ -238,7 +229,6 @@ config = {
             "options": [
                 "--app=%(app)s",
                 "--ignore-window-size",
-                "--dm_trans=adb",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
                 "--utility-path=%(utility_path)s",
@@ -258,7 +248,6 @@ config = {
             "options": [
                 "--app=%(app)s",
                 "--ignore-window-size",
-                "--dm_trans=adb",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
                 "--utility-path=%(utility_path)s",
@@ -278,7 +267,6 @@ config = {
             "options": [
                 "--app=%(app)s",
                 "--ignore-window-size",
-                "--dm_trans=adb",
                 "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s",
                 "--utility-path=%(utility_path)s",
@@ -297,7 +285,6 @@ config = {
             "options": [
                 "--app=%(app)s",
                 "--ignore-window-size",
-                "--dm_trans=adb",
                 "--remote-webserver=%(remote_webserver)s", "--xre-path=%(xre_path)s",
                 "--utility-path=%(utility_path)s", "--http-port=%(http_port)s",
                 "--ssl-port=%(ssl_port)s", "--httpd-path", "%(modules_dir)s",
@@ -314,7 +301,6 @@ config = {
             "options": [
                 "--app=%(app)s",
                 "--ignore-window-size",
-                "--dm_trans=adb",
                 "--remote-webserver=%(remote_webserver)s", "--xre-path=%(xre_path)s",
                 "--utility-path=%(utility_path)s", "--http-port=%(http_port)s",
                 "--ssl-port=%(ssl_port)s", "--httpd-path", "%(modules_dir)s",
@@ -329,7 +315,6 @@ config = {
             "testsdir": "xpcshell",
             "install": False,
             "options": [
-                "--dm_trans=adb",
                 "--xre-path=%(xre_path)s",
                 "--testing-modules-dir=%(modules_dir)s",
                 "--apk=%(installer_path)s",
@@ -349,7 +334,6 @@ config = {
             "options": [
                 "--symbols-path=%(symbols_path)s",
                 "--xre-path=%(xre_path)s",
-                "--dm_trans=adb",
                 "--localBinDir=../bin",
                 "--apk=%(installer_path)s",
                 ".",

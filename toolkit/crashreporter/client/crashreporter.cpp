@@ -11,12 +11,20 @@
 #endif
 
 #include <fstream>
+#include <iomanip>
 #include <sstream>
 #include <memory>
 #include <ctime>
 #include <cstdlib>
 #include <cstring>
 #include <string>
+
+#ifdef XP_LINUX
+#include <dlfcn.h>
+#endif
+
+#include "nss.h"
+#include "sechash.h"
 
 using std::string;
 using std::istream;
@@ -436,6 +444,117 @@ bool ShouldEnableSending()
   return ((rand() % 100) < MOZ_CRASHREPORTER_ENABLE_PERCENT);
 }
 
+static string ComputeDumpHash() {
+#ifdef XP_LINUX
+  // On Linux we rely on the system-provided libcurl which uses nss so we have
+  // to also use the system-provided nss instead of the ones we have bundled.
+  const char* libnssNames[] = {
+    "libnss3.so",
+#ifndef HAVE_64BIT_BUILD
+    // 32-bit versions on 64-bit hosts
+    "/usr/lib32/libnss3.so",
+#endif
+  };
+  void* lib = nullptr;
+
+  for (const char* libname : libnssNames) {
+    lib = dlopen(libname, RTLD_NOW);
+
+    if (lib) {
+      break;
+    }
+  }
+
+  if (!lib) {
+    return "";
+  }
+
+  SECStatus (*NSS_Initialize)(const char*, const char*, const char*,
+                              const char*, PRUint32);
+  HASHContext* (*HASH_Create)(HASH_HashType);
+  void (*HASH_Destroy)(HASHContext*);
+  void (*HASH_Begin)(HASHContext*);
+  void (*HASH_Update)(HASHContext*, const unsigned char*, unsigned int);
+  void (*HASH_End)(HASHContext*, unsigned char*, unsigned int*, unsigned int);
+
+  *(void**) (&NSS_Initialize) = dlsym(lib, "NSS_Initialize");
+  *(void**) (&HASH_Create) = dlsym(lib, "HASH_Create");
+  *(void**) (&HASH_Destroy) = dlsym(lib, "HASH_Destroy");
+  *(void**) (&HASH_Begin) = dlsym(lib, "HASH_Begin");
+  *(void**) (&HASH_Update) = dlsym(lib, "HASH_Update");
+  *(void**) (&HASH_End) = dlsym(lib, "HASH_End");
+
+  if (!HASH_Create || !HASH_Destroy || !HASH_Begin || !HASH_Update ||
+      !HASH_End) {
+    return "";
+  }
+#endif
+  // Minimal NSS initialization so we can use the hash functions
+  const PRUint32 kNssFlags = NSS_INIT_READONLY | NSS_INIT_NOROOTINIT |
+                             NSS_INIT_NOMODDB | NSS_INIT_NOCERTDB;
+  if (NSS_Initialize(nullptr, "", "", "", kNssFlags) != SECSuccess) {
+    return "";
+  }
+
+  HASHContext* hashContext = HASH_Create(HASH_AlgSHA256);
+
+  if (!hashContext) {
+    return "";
+  }
+
+  HASH_Begin(hashContext);
+
+  ifstream* f = UIOpenRead(gReporterDumpFile, /* binary */ true);
+  bool error = false;
+
+  // Read the minidump contents
+  if (f->is_open()) {
+    uint8_t buff[4096];
+
+    do {
+      f->read((char*) buff, sizeof(buff));
+
+      if (f->bad()) {
+        error = true;
+        break;
+      }
+
+      HASH_Update(hashContext, buff, f->gcount());
+    } while (!f->eof());
+
+    f->close();
+  } else {
+    error = true;
+  }
+
+  delete f;
+
+  // Finalize the hash computation
+  uint8_t result[SHA256_LENGTH];
+  uint32_t resultLen = 0;
+
+  HASH_End(hashContext, result, &resultLen, SHA256_LENGTH);
+
+  if (resultLen != SHA256_LENGTH) {
+    error = true;
+  }
+
+  HASH_Destroy(hashContext);
+
+  if (!error) {
+    ostringstream hash;
+
+    for (size_t i = 0; i < SHA256_LENGTH; i++) {
+      hash << std::setw(2) << std::setfill('0') << std::hex
+           << static_cast<unsigned int>(result[i]);
+    }
+
+    return hash.str();
+  } else {
+    return ""; // If we encountered an error, return an empty hash
+  }
+}
+
 } // namespace CrashReporter
 
 using namespace CrashReporter;
@@ -638,9 +757,15 @@ int main(int argc, char** argv)
     }
 
     // Assemble and send the crash ping
+    string hash;
     string pingUuid;
 
-    if (SendCrashPing(queryParameters, pingUuid)) {
+    hash = ComputeDumpHash();
+    if (!hash.empty()) {
+      AppendToEventFile("MinidumpSha256Hash", hash);
+    }
+
+    if (SendCrashPing(queryParameters, hash, pingUuid)) {
       AppendToEventFile("CrashPingUUID", pingUuid);
     }
 

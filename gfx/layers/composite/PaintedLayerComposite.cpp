@@ -85,7 +85,7 @@ PaintedLayerComposite::SetLayerManager(HostLayerManager* aManager)
   LayerComposite::SetLayerManager(aManager);
   mManager = aManager;
   if (mBuffer && mCompositor) {
-    mBuffer->SetCompositor(mCompositor);
+    mBuffer->SetTextureSourceProvider(mCompositor);
   }
 }
 
@@ -101,7 +101,7 @@ PaintedLayerComposite::RenderLayer(const gfx::IntRect& aClipRect,
 
   Compositor* compositor = mCompositeManager->GetCompositor();
 
-  MOZ_ASSERT(mBuffer->GetCompositor() == compositor &&
+  MOZ_ASSERT(mBuffer->GetTextureSourceProvider() == compositor &&
              mBuffer->GetLayer() == this,
              "buffer is corrupted");
 
@@ -121,7 +121,7 @@ PaintedLayerComposite::RenderLayer(const gfx::IntRect& aClipRect,
                      const gfx::IntRect& clipRect) {
     mBuffer->SetPaintWillResample(MayResample());
 
-    mBuffer->Composite(this, effectChain, GetEffectiveOpacity(),
+    mBuffer->Composite(compositor, this, effectChain, GetEffectiveOpacity(),
                        GetEffectiveTransform(), GetSamplingFilter(),
                        clipRect, &visibleRegion, aGeometry);
   });
