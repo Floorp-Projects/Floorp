@@ -27,10 +27,11 @@ public:
         return mInner->getVariable(aNamespace, aLName, aResult);
     }
 
-    bool isStripSpaceAllowed(const txXPathNode& aNode) override
+    nsresult isStripSpaceAllowed(const txXPathNode& aNode,
+                                 bool& aAllowed) override
     {
         NS_ASSERTION(mInner, "mInner is null!!!");
-        return mInner->isStripSpaceAllowed(aNode);
+        return mInner->isStripSpaceAllowed(aNode, aAllowed);
     }
 
     void* getPrivateContext() override
