@@ -2020,7 +2020,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   if (!IsOn(c.mVideo) && !IsOn(c.mAudio)) {
     RefPtr<MediaStreamError> error =
         new MediaStreamError(aWindow,
-                             NS_LITERAL_STRING("NotSupportedError"),
+                             NS_LITERAL_STRING("TypeError"),
                              NS_LITERAL_STRING("audio and/or video is required"));
     onFailure->OnError(error);
     return NS_OK;
