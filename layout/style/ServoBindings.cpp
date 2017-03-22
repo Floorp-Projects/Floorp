@@ -904,6 +904,12 @@ Gecko_Atomize(const char* aString, uint32_t aLength)
   return NS_Atomize(nsDependentCSubstring(aString, aLength)).take();
 }
 
+nsIAtom*
+Gecko_Atomize16(const nsAString* aString)
+{
+  return NS_Atomize(*aString).take();
+}
+
 void
 Gecko_AddRefAtom(nsIAtom* aAtom)
 {
@@ -976,6 +982,33 @@ Gecko_CopyFontFamilyFrom(nsFont* dst, const nsFont* src)
 {
   dst->fontlist = src->fontlist;
 }
+
+void
+Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
+                        const nsStyleFont* aFont, RawGeckoPresContextBorrowed aPresContext)
+{
+
+  const nsFont* defaultVariableFont =
+    aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
+                                 aFont->mLanguage);
+
+  // We have passed uninitialized memory to this function,
+  // initialize it. We can't simply return an nsFont because then
+  // we need to know its size beforehand. Servo cannot initialize nsFont
+  // itself, so this will do.
+  nsFont* system = new (aDest) nsFont(*defaultVariableFont);
+
+  *system = *defaultVariableFont;
+  LookAndFeel::FontID fontID = static_cast<LookAndFeel::FontID>(aFontId);
+  nsRuleNode::ComputeSystemFont(system, fontID, aPresContext, defaultVariableFont);
+}
+
+void
+Gecko_nsFont_Destroy(nsFont* aDest)
+{
+  aDest->~nsFont();
+}
+
 
 void
 Gecko_SetImageOrientation(nsStyleVisibility* aVisibility,
