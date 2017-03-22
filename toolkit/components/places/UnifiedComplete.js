@@ -49,8 +49,8 @@ const PREF_SUGGEST_SEARCHES =       [ "suggest.searches",       false ];
 
 const PREF_MAX_CHARS_FOR_SUGGEST =  [ "maxCharsForSearchSuggestions", 20];
 
-const PREF_PREFILL_SITES_ENABLED =  [ "usepreloadedtopurls.enabled",   true ];
-const PREF_PREFILL_SITES_EXPIRE_DAYS = [ "usepreloadedtopurls.expire_days",  14 ];
+const PREF_PRELOADED_SITES_ENABLED =  [ "usepreloadedtopurls.enabled",   true ];
+const PREF_PRELOADED_SITES_EXPIRE_DAYS = [ "usepreloadedtopurls.expire_days",  14 ];
 
 // AutoComplete query type constants.
 // Describes the various types of queries that we can process rows for.
@@ -475,8 +475,8 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     store.suggestTyped = prefs.get(...PREF_SUGGEST_HISTORY_ONLYTYPED);
     store.suggestSearches = prefs.get(...PREF_SUGGEST_SEARCHES);
     store.maxCharsForSearchSuggestions = prefs.get(...PREF_MAX_CHARS_FOR_SUGGEST);
-    store.prefillSitesEnabled = prefs.get(...PREF_PREFILL_SITES_ENABLED);
-    store.prefillSitesExpireDays = prefs.get(...PREF_PREFILL_SITES_EXPIRE_DAYS);
+    store.preloadedSitesEnabled = prefs.get(...PREF_PRELOADED_SITES_ENABLED);
+    store.preloadedSitesExpireDays = prefs.get(...PREF_PRELOADED_SITES_EXPIRE_DAYS);
     store.keywordEnabled = Services.prefs.getBoolPref("keyword.enabled", true);
 
     // If history is not set, onlyTyped value should be ignored.
@@ -547,9 +547,9 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
   return Object.seal(store);
 });
 
-// Prefill Sites related
+// Preloaded Sites related
 
-function PrefillSite(url, title) {
+function PreloadedSite(url, title) {
   this.uri = NetUtil.newURI(url);
   this.title = title;
   this._matchTitle = title.toLowerCase();
@@ -559,16 +559,16 @@ function PrefillSite(url, title) {
 }
 
 /**
- * Storage object for Prefill Sites.
+ * Storage object for Preloaded Sites.
  *   add(url, title): adds a site to storage
  *   populate(sites) : populates the  storage with array of [url,title]
- *   sites[]: resulting array of sites (PrefillSite objects)
+ *   sites[]: resulting array of sites (PreloadedSite objects)
  */
-XPCOMUtils.defineLazyGetter(this, "PrefillSiteStorage", () => Object.seal({
+XPCOMUtils.defineLazyGetter(this, "PreloadedSiteStorage", () => Object.seal({
   sites: [],
 
   add(url, title) {
-    let site = new PrefillSite(url, title);
+    let site = new PreloadedSite(url, title);
     this.sites.push(site);
   },
 
@@ -974,8 +974,8 @@ Search.prototype = {
     }
     queries.push(this._searchQuery);
 
-    // Check for Prefill Sites Expiry before Autofill
-    yield this._checkPrefillSitesExpiry();
+    // Check for Preloaded Sites Expiry before Autofill
+    yield this._checkPreloadedSitesExpiry();
 
     // Add the first heuristic result, if any.  Set _addingHeuristicFirstMatch
     // to true so that when the result is added, "heuristic" can be included in
@@ -1040,7 +1040,7 @@ Search.prototype = {
       ExtensionSearchHandler.handleInputCancelled();
     }
 
-    this._matchPrefillSites();
+    this._matchPreloadedSites();
 
     // Ensure to fill any remaining space. Suggestions which come from extensions are
     // inserted at the beginning, so any suggestions
@@ -1048,17 +1048,17 @@ Search.prototype = {
   }),
 
 
-  *_checkPrefillSitesExpiry() {
-    if (!Prefs.prefillSitesEnabled)
+  *_checkPreloadedSitesExpiry() {
+    if (!Prefs.preloadedSitesEnabled)
       return;
     let profileCreationDate = yield ProfileAgeCreatedPromise;
     let daysSinceProfileCreation = (Date.now() - profileCreationDate) / MS_PER_DAY;
-    if (daysSinceProfileCreation > Prefs.prefillSitesExpireDays)
+    if (daysSinceProfileCreation > Prefs.preloadedSitesExpireDays)
       Services.prefs.setBoolPref("browser.urlbar.usepreloadedtopurls.enabled", false);
   },
 
-  _matchPrefillSites() {
-    if (!Prefs.prefillSitesEnabled)
+  _matchPreloadedSites() {
+    if (!Prefs.preloadedSitesEnabled)
       return;
 
     // In case user typed just "https://" or "www." or "https://www."
@@ -1074,13 +1074,13 @@ Search.prototype = {
     let strictMatches = [];
     let looseMatches = [];
 
-    for (let site of PrefillSiteStorage.sites) {
+    for (let site of PreloadedSiteStorage.sites) {
       if (this._searchStringScheme && this._searchStringScheme !== site.uri.scheme)
         continue;
       let match = {
         value: site.uri.spec,
         comment: site.title,
-        style: "prefill-site",
+        style: "preloaded-top-site",
         frecency: FRECENCY_DEFAULT - 1,
       };
       if (site.uri.host.includes(this._searchStringFromWWW) ||
@@ -1094,8 +1094,8 @@ Search.prototype = {
     [...strictMatches, ...looseMatches].forEach(this._addMatch, this);
   },
 
-  _matchPrefillSiteForAutofill() {
-    if (!Prefs.prefillSitesEnabled)
+  _matchPreloadedSiteForAutofill() {
+    if (!Prefs.preloadedSitesEnabled)
       return false;
 
     if (!(this._searchStringScheme === "" ||
@@ -1119,12 +1119,12 @@ Search.prototype = {
       return site.uri.host.startsWith(this._searchStringFromWWW)
              && matchScheme(site, this);
     }
-    let site = PrefillSiteStorage.sites.find(matchStrict, this)
+    let site = PreloadedSiteStorage.sites.find(matchStrict, this)
     if (site) {
       let match = {
         // We keep showing prefix that user typed, then what we match on
         value: searchStringSchemePrefix + site.uri.host + "/",
-        style: "autofill",
+        style: "autofill preloaded-top-site",
         finalCompleteValue: site.uri.spec,
         frecency: FRECENCY_DEFAULT,
       };
@@ -1134,18 +1134,18 @@ Search.prototype = {
     }
 
     // If no strict result found - we try loose match
-    // regardless of "www." in prefill-sites or search string
+    // regardless of "www." in Preloaded-sites or search string
     function matchLoose(site) {
       return site._hostWithoutWWW.startsWith(this._searchString)
              && matchScheme(site, this);
     }
-    site = PrefillSiteStorage.sites.find(matchLoose, this);
+    site = PreloadedSiteStorage.sites.find(matchLoose, this);
     if (site) {
       let match = {
         // We keep showing prefix that user typed, then what we match on
         value: searchStringSchemePrefix + this._searchStringWWW +
                site._hostWithoutWWW + "/",
-        style: "autofill",
+        style: "autofill preloaded-top-site",
         // On loose match, result should always have "www."
         finalCompleteValue: site.uri.scheme + "://www." +
                             site._hostWithoutWWW + "/",
@@ -1207,7 +1207,7 @@ Search.prototype = {
     }
 
     if (this.pending && shouldAutofill) {
-      let matched = this._matchPrefillSiteForAutofill();
+      let matched = this._matchPreloadedSiteForAutofill();
       if (matched) {
         return true;
       }
@@ -2153,7 +2153,7 @@ function UnifiedComplete() {
   // open pages should be set to false.
   Prefs;
 
-  if (Prefs.prefillSitesEnabled) {
+  if (Prefs.preloadedSitesEnabled) {
     // force initializing the profile age check
     // to ensure the off-main-thread-IO happens ASAP
     // and we don't have to wait for it when doing an autocomplete lookup
@@ -2161,7 +2161,7 @@ function UnifiedComplete() {
 
     fetch("chrome://global/content/unifiedcomplete-top-urls.json")
       .then(response => response.json())
-      .then(sites => PrefillSiteStorage.populate(sites))
+      .then(sites => PreloadedSiteStorage.populate(sites))
       .catch(ex => Cu.reportError(ex));
   }
 }
@@ -2229,8 +2229,8 @@ UnifiedComplete.prototype = {
     SwitchToTabStorage.delete(uri, userContextId);
   },
 
-  populatePrefillSiteStorage(json) {
-    PrefillSiteStorage.populate(json);
+  populatePreloadedSiteStorage(json) {
+    PreloadedSiteStorage.populate(json);
   },
 
   // nsIAutoCompleteSearch
