@@ -1,0 +1,40 @@
+<script>
+function ok(a, msg) {
+  parent.postMessage({ type: "check", status: !!a, message: msg }, "*");
+}
+
+function is(a, b, msg) {
+  ok(a === b, msg);
+}
+
+function testWebIDL() {
+  ok("FetchController" in self, "We have a FetchController prototype");
+  ok("FetchSignal" in self, "We have a FetchSignal prototype");
+
+  var fc = new FetchController();
+  ok(!!fc, "FetchController can be created");
+  ok(fc instanceof FetchController, "FetchController is a FetchController");
+
+  ok(!!fc.signal, "FetchController has a signal");
+  ok(fc.signal instanceof FetchSignal, "fetchSignal is a FetchSignal");
+  is(fc.signal.aborted, false, "By default FetchSignal.aborted is false");
+  next();
+}
+
+var steps = [
+  testWebIDL,
+];
+
+function next() {
+  if (!steps.length) {
+    parent.postMessage({ type: "finish" }, "*");
+    return;
+  }
+
+  var step = steps.shift();
+  step();
+}
+
+next();
+
+</script>
