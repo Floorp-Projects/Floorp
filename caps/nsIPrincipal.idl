@@ -357,7 +357,7 @@ interface nsIPrincipal : nsISerializable
 };
 
 /**
- * If nsSystemPrincipal is too risky to use, but we want a principal to access
+ * If SystemPrincipal is too risky to use, but we want a principal to access
  * more than one origin, ExpandedPrincipals letting us define an array of
  * principals it subsumes. So script with an ExpandedPrincipals will gain
  * same origin access when at least one of its principals it contains gained

@@ -45,9 +45,9 @@ UNIFIED_SOURCES += [
     'nsJSPrincipals.cpp',
     'nsPrincipal.cpp',
     'nsScriptSecurityManager.cpp',
-    'nsSystemPrincipal.cpp',
     'NullPrincipal.cpp',
     'NullPrincipalURI.cpp',
+    'SystemPrincipal.cpp',
 ]
 
 LOCAL_INCLUDES += [

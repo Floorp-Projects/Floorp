@@ -20,7 +20,7 @@
 #include "nspr.h"
 #include "nsJSPrincipals.h"
 #include "mozilla/BasePrincipal.h"
-#include "nsSystemPrincipal.h"
+#include "SystemPrincipal.h"
 #include "nsPrincipal.h"
 #include "NullPrincipal.h"
 #include "DomainPolicy.h"
@@ -1335,7 +1335,7 @@ nsresult nsScriptSecurityManager::Init()
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Create our system principal singleton
-    RefPtr<nsSystemPrincipal> system = nsSystemPrincipal::Create();
+    RefPtr<SystemPrincipal> system = SystemPrincipal::Create();
 
     mSystemPrincipal = system;
 
@@ -1407,13 +1407,13 @@ nsScriptSecurityManager::InitStatics()
 // Currently this nsGenericFactory constructor is used only from FastLoad
 // (XPCOM object deserialization) code, when "creating" the system principal
 // singleton.
-nsSystemPrincipal *
+SystemPrincipal *
 nsScriptSecurityManager::SystemPrincipalSingletonConstructor()
 {
     nsIPrincipal *sysprin = nullptr;
     if (gScriptSecMan)
         NS_ADDREF(sysprin = gScriptSecMan->mSystemPrincipal);
-    return static_cast<nsSystemPrincipal*>(sysprin);
+    return static_cast<SystemPrincipal*>(sysprin);
 }
 
 struct IsWhitespace {
