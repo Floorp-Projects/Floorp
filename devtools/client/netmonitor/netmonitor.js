@@ -23,8 +23,6 @@ var Netmonitor = {
     const { configureStore } = require("./store");
     const store = window.gStore = configureStore();
     const { NetMonitorController } = require("./netmonitor-controller");
-    NetMonitorController.toolbox = toolbox;
-    NetMonitorController._target = toolbox.target;
     this.NetMonitorController = NetMonitorController;
 
     // Components
@@ -37,7 +35,12 @@ var Netmonitor = {
 
     render(Provider({ store }, NetworkMonitor()), this.root);
 
-    return NetMonitorController.startupNetMonitor();
+    return NetMonitorController.startupNetMonitor({
+      client: {
+        getTabTarget: () => toolbox.target,
+      },
+      toolbox,
+    });
   },
 
   destroy: () => {
