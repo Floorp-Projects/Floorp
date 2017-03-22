@@ -89,7 +89,7 @@ private:
 
   const RefPtr<AbstractThread> mOwnerThread;
   UniquePtr<Creator> mCreator;
-  RefPtr<AudioSink> mAudioSink;
+  UniquePtr<AudioSink> mAudioSink;
   RefPtr<GenericPromise> mEndPromise;
 
   bool mIsStarted;
