@@ -1,6 +1,6 @@
 {
-  "name": "mach-eslint",
-  "description": "ESLint and external plugins for use with mach",
+  "name": "Mozilla ESLint Setup",
+  "description": "This package file is for setup of ESLint only for editor integration.",
   "repository": {},
   "license": "MPL-2.0",
   "dependencies": {
