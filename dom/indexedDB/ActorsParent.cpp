@@ -21246,8 +21246,7 @@ FactoryOp::CheckPermission(ContentParent* aContentParent,
     if (State::Initial == mState) {
       QuotaManager::GetInfoForChrome(&mSuffix, &mGroup, &mOrigin);
 
-      MOZ_ASSERT(
-        QuotaManager::IsOriginWhitelistedForPersistentStorage(mOrigin));
+      MOZ_ASSERT(QuotaManager::IsOriginInternal(mOrigin));
 
       mEnforcingQuota = false;
     }
@@ -21279,7 +21278,7 @@ FactoryOp::CheckPermission(ContentParent* aContentParent,
   PermissionRequestBase::PermissionValue permission;
 
   if (persistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-    if (QuotaManager::IsOriginWhitelistedForPersistentStorage(origin)) {
+    if (QuotaManager::IsOriginInternal(origin)) {
       permission = PermissionRequestBase::kPermissionAllowed;
     } else {
 #ifdef IDB_MOBILE
