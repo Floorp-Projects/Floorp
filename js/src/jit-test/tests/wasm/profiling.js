@@ -125,7 +125,7 @@ testError(
     (func (export "") (call $foo))
 )`,
 WebAssembly.RuntimeError,
-["", ">", "1,>", "0,1,>", "trap handling,0,1,>", ""]);
+["", ">", "1,>", "0,1,>", "interstitial,0,1,>", "trap handling,0,1,>", ""]);
 
 testError(
 `(module
