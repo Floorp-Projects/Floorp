@@ -28,10 +28,6 @@
 #include "mozilla/gfx/Logging.h"        // for gfxCriticalError
 #include "mozilla/UniquePtr.h"
 
-#if defined(MOZ_WIDGET_GTK)
-#include "gfxPlatformGtk.h" // xxx - for UseFcFontList
-#endif
-
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
 #endif
@@ -1730,16 +1726,6 @@ gfxFontGroup::~gfxFontGroup()
 void
 gfxFontGroup::BuildFontList()
 {
-    bool enumerateFonts = true;
-
-#if defined(MOZ_WIDGET_GTK)
-    // xxx - eliminate this once gfxPangoFontGroup is no longer needed
-    enumerateFonts = gfxPlatformGtk::UseFcFontList();
-#endif
-    if (!enumerateFonts) {
-        return;
-    }
-
     // initialize fonts in the font family list
     AutoTArray<gfxFontFamily*,10> fonts;
     gfxPlatformFontList *pfl = gfxPlatformFontList::PlatformFontList();
