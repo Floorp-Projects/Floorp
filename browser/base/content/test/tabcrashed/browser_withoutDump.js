@@ -25,7 +25,7 @@ add_task(function* test_without_dump() {
     let tab = gBrowser.getTabForBrowser(browser);
     yield BrowserTestUtils.crashBrowser(browser);
 
-    let tabRemovedPromise = BrowserTestUtils.tabRemoved(tab);
+    let tabRemovedPromise = BrowserTestUtils.removeTab(tab, { dontRemove: true });
 
     yield ContentTask.spawn(browser, null, function*() {
       let doc = content.document;
