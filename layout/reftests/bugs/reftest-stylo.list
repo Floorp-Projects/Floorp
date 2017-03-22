@@ -818,7 +818,7 @@ fails == 395107-5.html 395107-5.html
 fails == 395130-1.html 395130-1.html
 fails == 395130-2.html 395130-2.html
 == 395331-1.xml 395331-1.xml
-fails == 395390-1.html 395390-1.html
+== 395390-1.html 395390-1.html
 == 396286-1.html 396286-1.html
 fails == 397428-1.html 397428-1.html
 == 397844-1.xhtml 397844-1.xhtml
