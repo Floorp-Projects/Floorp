@@ -78,6 +78,13 @@ function testAllGetReadableDates() {
   const sixdaysago      = new Date(2000, 11, 25, 11, 30, 15);
   const sevendaysago    = new Date(2000, 11, 24, 11, 30, 15);
 
+  // TODO: Remove Intl fallback when no longer needed (bug 1344543).
+  const locale = typeof Intl === "undefined"
+                 ? undefined
+                 : Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                                     .getService(Components.interfaces.nsIXULChromeRegistry)
+                                     .getSelectedLocale("global", true);
+
   let dts = Components.classes["@mozilla.org/intl/scriptabledateformat;1"].
             getService(Components.interfaces.nsIScriptableDateFormat);
 
@@ -90,15 +97,15 @@ function testAllGetReadableDates() {
   testGetReadableDates(twodaysago,
                        typeof Intl === "undefined"
                        ? twodaysago.toLocaleFormat("%A")
-                       : twodaysago.toLocaleDateString(undefined, { weekday: "long" }));
+                       : twodaysago.toLocaleDateString(locale, { weekday: "long" }));
   testGetReadableDates(sixdaysago,
                        typeof Intl === "undefined"
                        ? sixdaysago.toLocaleFormat("%A")
-                       : sixdaysago.toLocaleDateString(undefined, { weekday: "long" }));
+                       : sixdaysago.toLocaleDateString(locale, { weekday: "long" }));
   testGetReadableDates(sevendaysago,
                        (typeof Intl === "undefined"
                         ? sevendaysago.toLocaleFormat("%B")
-                        : sevendaysago.toLocaleDateString(undefined, { month: "long" })) + " " +
+                        : sevendaysago.toLocaleDateString(locale, { month: "long" })) + " " +
                        sevendaysago.getDate().toString().padStart(2, "0"));
 
   let [, dateTimeFull] = DownloadUtils.getReadableDates(today_11_30);

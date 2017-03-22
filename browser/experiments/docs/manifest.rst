@@ -194,9 +194,7 @@ locale
 
    A locale identifier is a string like ``en-US`` or ``zh-CN`` and is
    obtained by looking at
-   ``LocaleService.getAppLocaleAsLangTag()``.
-   For infamous `ja-JP-mac` case, this will return it in
-   the language tag form (`ja-JP-mac`).
+   ``nsIXULChromeRegistry.getSelectedLocale("global")``.
 
    The client should compare its locale identifier to members of this array.
    If a match is found, the experiment is applicable.

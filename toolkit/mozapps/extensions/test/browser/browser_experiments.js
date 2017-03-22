@@ -96,7 +96,8 @@ add_task(function* initializeState() {
     }
   });
 
-  gIsEnUsLocale = Services.locale.getAppLocaleAsLangTag() == "en-US";
+  let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
+  gIsEnUsLocale = chrome.getSelectedLocale("global") == "en-US";
 
   // The Experiments Manager will interfere with us by preventing installs
   // of experiments it doesn't know about. We remove it from the equation

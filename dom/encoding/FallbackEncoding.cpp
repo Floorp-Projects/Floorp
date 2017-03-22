@@ -8,11 +8,9 @@
 
 #include "mozilla/dom/EncodingUtils.h"
 #include "nsUConvPropertySearch.h"
+#include "nsIChromeRegistry.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/intl/LocaleService.h"
-
-using mozilla::intl::LocaleService;
 
 namespace mozilla {
 namespace dom {
@@ -68,7 +66,11 @@ FallbackEncoding::Get(nsACString& aFallback)
   }
 
   nsAutoCString locale;
-  LocaleService::GetInstance()->GetAppLocaleAsLangTag(locale);
+  nsCOMPtr<nsIXULChromeRegistry> registry =
+    mozilla::services::GetXULChromeRegistryService();
+  if (registry) {
+    registry->GetSelectedLocale(NS_LITERAL_CSTRING("global"), false, locale);
+  }
 
   // Let's lower case the string just in case unofficial language packs
   // don't stick to conventions.

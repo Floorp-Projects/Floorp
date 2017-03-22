@@ -4,9 +4,9 @@
 function run_test() {
   var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
                   getService(Ci.nsIURLFormatter);
-  var locale = Cc["@mozilla.org/intl/localeservice;1"].
-               getService(Ci.mozILocaleService).
-               getAppLocaleAsLangTag();
+  var locale = Cc["@mozilla.org/chrome/chrome-registry;1"].
+               getService(Ci.nsIXULChromeRegistry).
+               getSelectedLocale("global");
   var prefs = Cc["@mozilla.org/preferences-service;1"].
               getService(Ci.nsIPrefBranch);
   var sysInfo = Cc["@mozilla.org/system-info;1"].

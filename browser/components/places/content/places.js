@@ -411,8 +411,11 @@ var PlacesOrganizer = {
   populateRestoreMenu: function PO_populateRestoreMenu() {
     let restorePopup = document.getElementById("fileRestorePopup");
 
+    const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                   .getService(Ci.nsIXULChromeRegistry)
+                   .getSelectedLocale("global", true);
     const dtOptions = { year: "numeric", month: "long", day: "numeric" };
-    let dateFormatter = new Intl.DateTimeFormat(undefined, dtOptions);
+    let dateFormatter = new Intl.DateTimeFormat(locale, dtOptions);
 
     // Remove existing menu items.  Last item is the restoreFromFile item.
     while (restorePopup.childNodes.length > 1)
