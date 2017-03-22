@@ -2341,8 +2341,9 @@ class BaseCompiler
         masm.breakpoint();
 
         // Patch the add in the prologue so that it checks against the correct
-        // frame size.
+        // frame size. Flush the constant pool in case it needs to be patched.
         MOZ_ASSERT(maxFramePushed_ >= localSize_);
+        masm.flush();
         masm.patchAdd32ToPtr(stackAddOffset_, Imm32(-int32_t(maxFramePushed_ - localSize_)));
 
         // Since we just overflowed the stack, to be on the safe side, pop the
