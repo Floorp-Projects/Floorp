@@ -19,11 +19,9 @@ namespace mozilla {
 
 extern LazyLogModule gMediaDecoderLog;
 #define SINK_LOG(msg, ...) \
-  MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, \
-    ("DecodedAudioDataSink=%p " msg, this, ##__VA_ARGS__))
+  MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, ("AudioSink=%p " msg, this, ##__VA_ARGS__))
 #define SINK_LOG_V(msg, ...) \
-  MOZ_LOG(gMediaDecoderLog, LogLevel::Verbose, \
-  ("DecodedAudioDataSink=%p " msg, this, ##__VA_ARGS__))
+  MOZ_LOG(gMediaDecoderLog, LogLevel::Verbose, ("AudioSink=%p " msg, this, ##__VA_ARGS__))
 
 namespace media {
 
@@ -33,17 +31,17 @@ static const int64_t AUDIO_FUZZ_FRAMES = 1;
 // Amount of audio frames we will be processing ahead of use
 static const int32_t LOW_AUDIO_USECS = 300000;
 
-DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
-                                           MediaQueue<AudioData>& aAudioQueue,
-                                           int64_t aStartTime,
-                                           const AudioInfo& aInfo,
-                                           dom::AudioChannel aChannel)
+AudioSink::AudioSink(AbstractThread* aThread,
+                     MediaQueue<AudioData>& aAudioQueue,
+                     int64_t aStartTime,
+                     const AudioInfo& aInfo,
+                     dom::AudioChannel aChannel)
   : mStartTime(aStartTime)
   , mLastGoodPosition(0)
   , mInfo(aInfo)
   , mChannel(aChannel)
   , mPlaying(true)
-  , mMonitor("DecodedAudioDataSink")
+  , mMonitor("AudioSink")
   , mWritten(0)
   , mErrored(false)
   , mPlaybackComplete(false)
@@ -78,21 +76,21 @@ DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
     : (MediaPrefs::AudioSinkForceStereo() ? 2 : mInfo.mChannels);
 }
 
-DecodedAudioDataSink::~DecodedAudioDataSink()
+AudioSink::~AudioSink()
 {
 }
 
 RefPtr<GenericPromise>
-DecodedAudioDataSink::Init(const PlaybackParams& aParams)
+AudioSink::Init(const PlaybackParams& aParams)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
   mAudioQueueListener = mAudioQueue.PushEvent().Connect(
-    mOwnerThread, this, &DecodedAudioDataSink::OnAudioPushed);
+    mOwnerThread, this, &AudioSink::OnAudioPushed);
   mAudioQueueFinishListener = mAudioQueue.FinishEvent().Connect(
-    mOwnerThread, this, &DecodedAudioDataSink::NotifyAudioNeeded);
+    mOwnerThread, this, &AudioSink::NotifyAudioNeeded);
   mProcessedQueueListener = mProcessedQueue.PopEvent().Connect(
-    mOwnerThread, this, &DecodedAudioDataSink::OnAudioPopped);
+    mOwnerThread, this, &AudioSink::OnAudioPopped);
 
   // To ensure at least one audio packet will be popped from AudioQueue and
   // ready to be played.
@@ -106,7 +104,7 @@ DecodedAudioDataSink::Init(const PlaybackParams& aParams)
 }
 
 int64_t
-DecodedAudioDataSink::GetPosition()
+AudioSink::GetPosition()
 {
   int64_t pos;
   if (mAudioStream &&
@@ -123,7 +121,7 @@ DecodedAudioDataSink::GetPosition()
 }
 
 bool
-DecodedAudioDataSink::HasUnplayedFrames()
+AudioSink::HasUnplayedFrames()
 {
   // Experimentation suggests that GetPositionInFrames() is zero-indexed,
   // so we need to add 1 here before comparing it to mWritten.
@@ -137,7 +135,7 @@ DecodedAudioDataSink::HasUnplayedFrames()
 }
 
 void
-DecodedAudioDataSink::Shutdown()
+AudioSink::Shutdown()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
@@ -155,7 +153,7 @@ DecodedAudioDataSink::Shutdown()
 }
 
 void
-DecodedAudioDataSink::SetVolume(double aVolume)
+AudioSink::SetVolume(double aVolume)
 {
   if (mAudioStream) {
     mAudioStream->SetVolume(aVolume);
@@ -163,7 +161,7 @@ DecodedAudioDataSink::SetVolume(double aVolume)
 }
 
 void
-DecodedAudioDataSink::SetPlaybackRate(double aPlaybackRate)
+AudioSink::SetPlaybackRate(double aPlaybackRate)
 {
   MOZ_ASSERT(aPlaybackRate != 0, "Don't set the playbackRate to 0 on AudioStream");
   if (mAudioStream) {
@@ -172,7 +170,7 @@ DecodedAudioDataSink::SetPlaybackRate(double aPlaybackRate)
 }
 
 void
-DecodedAudioDataSink::SetPreservesPitch(bool aPreservesPitch)
+AudioSink::SetPreservesPitch(bool aPreservesPitch)
 {
   if (mAudioStream) {
     mAudioStream->SetPreservesPitch(aPreservesPitch);
@@ -180,7 +178,7 @@ DecodedAudioDataSink::SetPreservesPitch(bool aPreservesPitch)
 }
 
 void
-DecodedAudioDataSink::SetPlaying(bool aPlaying)
+AudioSink::SetPlaying(bool aPlaying)
 {
   if (!mAudioStream || mPlaying == aPlaying || mPlaybackComplete) {
     return;
@@ -195,7 +193,7 @@ DecodedAudioDataSink::SetPlaying(bool aPlaying)
 }
 
 nsresult
-DecodedAudioDataSink::InitializeAudioStream(const PlaybackParams& aParams)
+AudioSink::InitializeAudioStream(const PlaybackParams& aParams)
 {
   mAudioStream = new AudioStream(*this);
   // When AudioQueue is empty, there is no way to know the channel layout of
@@ -224,7 +222,7 @@ DecodedAudioDataSink::InitializeAudioStream(const PlaybackParams& aParams)
 }
 
 int64_t
-DecodedAudioDataSink::GetEndTime() const
+AudioSink::GetEndTime() const
 {
   int64_t written;
   {
@@ -242,7 +240,7 @@ DecodedAudioDataSink::GetEndTime() const
 }
 
 UniquePtr<AudioStream::Chunk>
-DecodedAudioDataSink::PopFrames(uint32_t aFrames)
+AudioSink::PopFrames(uint32_t aFrames)
 {
   class Chunk : public AudioStream::Chunk {
   public:
@@ -337,14 +335,14 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
 }
 
 bool
-DecodedAudioDataSink::Ended() const
+AudioSink::Ended() const
 {
   // Return true when error encountered so AudioStream can start draining.
   return mProcessedQueue.IsFinished() || mErrored;
 }
 
 void
-DecodedAudioDataSink::Drained()
+AudioSink::Drained()
 {
   SINK_LOG("Drained");
   mPlaybackComplete = true;
@@ -352,7 +350,7 @@ DecodedAudioDataSink::Drained()
 }
 
 void
-DecodedAudioDataSink::CheckIsAudible(const AudioData* aData)
+AudioSink::CheckIsAudible(const AudioData* aData)
 {
   MOZ_ASSERT(aData);
 
@@ -364,21 +362,21 @@ DecodedAudioDataSink::CheckIsAudible(const AudioData* aData)
 }
 
 void
-DecodedAudioDataSink::OnAudioPopped(const RefPtr<AudioData>& aSample)
+AudioSink::OnAudioPopped(const RefPtr<AudioData>& aSample)
 {
   SINK_LOG_V("AudioStream has used an audio packet.");
   NotifyAudioNeeded();
 }
 
 void
-DecodedAudioDataSink::OnAudioPushed(const RefPtr<AudioData>& aSample)
+AudioSink::OnAudioPushed(const RefPtr<AudioData>& aSample)
 {
   SINK_LOG_V("One new audio packet available.");
   NotifyAudioNeeded();
 }
 
 void
-DecodedAudioDataSink::NotifyAudioNeeded()
+AudioSink::NotifyAudioNeeded()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn(),
              "Not called from the owner's thread");
@@ -413,7 +411,7 @@ DecodedAudioDataSink::NotifyAudioNeeded()
         uint32_t newRate = data->mRate;
         CheckedInt64 result = SaferMultDiv(mFramesParsed, newRate, oldRate);
         if (!result.isValid()) {
-          NS_WARNING("Int overflow in DecodedAudioDataSink");
+          NS_WARNING("Int overflow in AudioSink");
           mErrored = true;
           return;
         }
@@ -436,7 +434,7 @@ DecodedAudioDataSink::NotifyAudioNeeded()
     CheckedInt64 missingFrames = sampleTime - mFramesParsed;
 
     if (!missingFrames.isValid()) {
-      NS_WARNING("Int overflow in DecodedAudioDataSink");
+      NS_WARNING("Int overflow in AudioSink");
       mErrored = true;
       return;
     }
@@ -453,7 +451,7 @@ DecodedAudioDataSink::NotifyAudioNeeded()
       missingFrames =
         SaferMultDiv(missingFrames.value(), mOutputRate, data->mRate);
       if (!missingFrames.isValid()) {
-        NS_WARNING("Int overflow in DecodedAudioDataSink");
+        NS_WARNING("Int overflow in AudioSink");
         mErrored = true;
         return;
       }
@@ -464,7 +462,7 @@ DecodedAudioDataSink::NotifyAudioNeeded()
       if (missingFrames.value()) {
         AlignedAudioBuffer silenceData(missingFrames.value() * mOutputChannels);
         if (!silenceData) {
-          NS_WARNING("OOM in DecodedAudioDataSink");
+          NS_WARNING("OOM in AudioSink");
           mErrored = true;
           return;
         }
@@ -499,7 +497,7 @@ DecodedAudioDataSink::NotifyAudioNeeded()
 }
 
 uint32_t
-DecodedAudioDataSink::PushProcessedAudio(AudioData* aData)
+AudioSink::PushProcessedAudio(AudioData* aData)
 {
   if (!aData || !aData->mFrames) {
     return 0;
@@ -510,7 +508,7 @@ DecodedAudioDataSink::PushProcessedAudio(AudioData* aData)
 }
 
 already_AddRefed<AudioData>
-DecodedAudioDataSink::CreateAudioFromBuffer(AlignedAudioBuffer&& aBuffer,
+AudioSink::CreateAudioFromBuffer(AlignedAudioBuffer&& aBuffer,
                                             AudioData* aReference)
 {
   uint32_t frames = aBuffer.Length() / mOutputChannels;
@@ -519,7 +517,7 @@ DecodedAudioDataSink::CreateAudioFromBuffer(AlignedAudioBuffer&& aBuffer,
   }
   CheckedInt64 duration = FramesToUsecs(frames, mOutputRate);
   if (!duration.isValid()) {
-    NS_WARNING("Int overflow in DecodedAudioDataSink");
+    NS_WARNING("Int overflow in AudioSink");
     mErrored = true;
     return nullptr;
   }
@@ -535,7 +533,7 @@ DecodedAudioDataSink::CreateAudioFromBuffer(AlignedAudioBuffer&& aBuffer,
 }
 
 uint32_t
-DecodedAudioDataSink::DrainConverter(uint32_t aMaxFrames)
+AudioSink::DrainConverter(uint32_t aMaxFrames)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
