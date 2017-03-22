@@ -468,7 +468,7 @@ SET TIMEOUT: css/css-transitions-2/transitioncancel-001.html
 SET TIMEOUT: css/css-values-3/reference/vh_not_refreshing_on_chrome-ref.html
 SET TIMEOUT: css/css-values-3/reference/vh_not_refreshing_on_chrome_iframe-ref.html
 SET TIMEOUT: css/css-values-3/vh_not_refreshing_on_chrome.html
-SET TIMEOUT: css/css-values-3/vh_not_refreshing_on_chrome_iframe.html
+SET TIMEOUT: css/css-values-3/support/vh_not_refreshing_on_chrome_iframe.html
 SET TIMEOUT: css/css-writing-modes-3/orthogonal-parent-shrink-to-fit-001.html
 SET TIMEOUT: css/css-writing-modes-3/orthogonal-parent-shrink-to-fit-001a.html
 SET TIMEOUT: css/css-writing-modes-3/orthogonal-parent-shrink-to-fit-001b.html
