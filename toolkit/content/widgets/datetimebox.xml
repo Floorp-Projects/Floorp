@@ -486,7 +486,7 @@
         this.mDayPeriodPlaceHolder = ]]>"&time.dayperiod.placeholder;"<![CDATA[;
         /* eslint-enable no-multi-spaces */
 
-        this.mHour12 = true;
+        this.mHour12 = this.is12HourTime(this.mLocales);
         this.mSeparatorText = ":";
         this.mMillisecSeparatorText = ".";
         this.mMaxLength = 2;
@@ -669,6 +669,19 @@
         </body>
       </method>
 
+      <method name="is12HourTime">
+        <parameter name="aLocales"/>
+          <body>
+          <![CDATA[
+            let options = (new Intl.DateTimeFormat(aLocales, {
+              hour: "numeric"
+            })).resolvedOptions();
+
+            return options.hour12;
+          ]]>
+          </body>
+      </method>
+
       <method name="setFieldsFromInputValue">
         <body>
         <![CDATA[
@@ -841,8 +854,9 @@
             let now = new Date();
 
             if (aTargetField == this.mHourField) {
+              value = now.getHours();
               if (this.mHour12) {
-                value = now.getHours() % this.mMaxHour || this.mMaxHour;
+                value = (value % this.mMaxHour) || this.mMaxHour;
               }
             } else if (aTargetField == this.mMinuteField) {
               value = now.getMinutes();
@@ -988,12 +1002,17 @@
           }
 
           if (aField.maxLength == this.mMaxLength) { // For hour, minute and second
-            if (aField == this.mHourField && this.mHour12) {
-              if (aValue == "00") {
+            if (aField == this.mHourField) {
+              if (this.mHour12) {
+                // Try to change to 12hr format if user input is 0 or greater
+                // than 12.
+                if (value == 0 && aValue.length == aField.maxLength) {
+                  value = this.mMaxHour;
+                } else {
+                  value = (value > this.mMaxHour) ? value % this.mMaxHour : value;
+                }
+              } else if (value > this.mMaxHour) {
                 value = this.mMaxHour;
-              } else {
-                // Change to 12hr format if user input is greater than 12.
-                value = (value > this.mMaxHour) ? value % this.mMaxHour : value;
               }
             }
             // prepend zero

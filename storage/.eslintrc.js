@@ -2,7 +2,7 @@
 
 module.exports = {
   "extends": [
-    "../toolkit/.eslintrc.js"
+    "plugin:mozilla/recommended"
   ],
 
   rules: {

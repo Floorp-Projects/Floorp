@@ -741,6 +741,26 @@ nsStyleUtil::IsSignificantChild(nsIContent* aChild, bool aTextIsSignificant,
           !aChild->TextIsOnlyWhitespace());
 }
 
+/* static */ bool
+nsStyleUtil::ThreadSafeIsSignificantChild(const nsIContent* aChild,
+                                          bool aTextIsSignificant,
+                                          bool aWhitespaceIsSignificant)
+{
+  NS_ASSERTION(!aWhitespaceIsSignificant || aTextIsSignificant,
+               "Nonsensical arguments");
+
+  bool isText = aChild->IsNodeOfType(nsINode::eTEXT);
+
+  if (!isText && !aChild->IsNodeOfType(nsINode::eCOMMENT) &&
+      !aChild->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
+    return true;
+  }
+
+  return aTextIsSignificant && isText && aChild->TextLength() != 0 &&
+         (aWhitespaceIsSignificant ||
+          !aChild->ThreadSafeTextIsOnlyWhitespace());
+}
+
 // For a replaced element whose concrete object size is no larger than the
 // element's content-box, this method checks whether the given
 // "object-position" coordinate might cause overflow in its dimension.
