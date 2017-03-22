@@ -146,11 +146,18 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         // Replace all fragments with a fresh browser fragment. This means we either remove the
         // HomeFragment with an UrlInputFragment on top or an old BrowserFragment with an
         // UrlInputFragment.
-        getActivity().getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.container, BrowserFragment.create(url), BrowserFragment.FRAGMENT_TAG)
-                .addToBackStack("browser")
-                .commit();
+        final BrowserFragment browserFragment = (BrowserFragment) getActivity().getSupportFragmentManager()
+                .findFragmentByTag(BrowserFragment.FRAGMENT_TAG);
+
+        if (browserFragment != null) {
+            browserFragment.loadURL(url);
+        } else {
+            getActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.container, BrowserFragment.create(url), BrowserFragment.FRAGMENT_TAG)
+                    .addToBackStack("browser")
+                    .commit();
+        }
     }
 
     @Override
