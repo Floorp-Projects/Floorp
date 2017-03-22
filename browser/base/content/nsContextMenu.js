@@ -1741,8 +1741,13 @@ nsContextMenu.prototype = {
 
   mediaCommand : function CM_mediaCommand(command, data) {
     let mm = this.browser.messageManager;
+    let win = this.browser.ownerGlobal;
+    let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
     mm.sendAsyncMessage("ContextMenu:MediaCommand",
-                        {command: command, data: data},
+                        {command: command,
+                         data: data,
+                         handlingUserInput: windowUtils.isHandlingUserInput},
                         {element: this.target});
   },
 
