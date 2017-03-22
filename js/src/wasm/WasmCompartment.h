@@ -39,7 +39,7 @@ class Compartment
 {
     InstanceVector instances_;
     volatile bool  mutatingInstances_;
-    size_t         activationCount_;
+    size_t         interruptedCount_;
 
     friend class js::WasmActivation;
 
@@ -87,6 +87,11 @@ class Compartment
     // removed.
 
     Instance* lookupInstanceDeprecated(const void* pc) const;
+
+    // The wasm::Compartment must be notified when execution is interrupted
+    // while executing in wasm code in this compartment.
+
+    void setInterrupted(bool interrupted);
 
     // Ensure all Instances in this JSCompartment have profiling labels created.
 

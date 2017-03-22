@@ -75,6 +75,7 @@ class FrameIterator
     JSAtom* functionDisplayAtom() const;
     unsigned lineOrBytecode() const;
     const CodeRange* codeRange() const { return codeRange_; }
+    bool hasInstance() const;
     Instance* instance() const;
     bool debugEnabled() const;
     DebugFrame* debugFrame() const;
@@ -132,6 +133,11 @@ GenerateFunctionPrologue(jit::MacroAssembler& masm, unsigned framePushed, const 
                          FuncOffsets* offsets);
 void
 GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets);
+
+// Mark all instance objects live on the stack.
+
+void
+TraceActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc);
 
 } // namespace wasm
 } // namespace js

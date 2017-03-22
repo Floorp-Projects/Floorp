@@ -206,10 +206,18 @@ FrameIterator::lineOrBytecode() const
                      : (codeRange_ ? codeRange_->funcLineOrBytecode() : 0);
 }
 
+bool
+FrameIterator::hasInstance() const
+{
+    MOZ_ASSERT(!done());
+    return !!fp_;
+}
+
 Instance*
 FrameIterator::instance() const
 {
     MOZ_ASSERT(!done());
+    MOZ_ASSERT(hasInstance());
     return FrameToDebugFrame(fp_)->instance();
 }
 
@@ -771,4 +779,17 @@ ProfilingFrameIterator::label() const
     }
 
     MOZ_CRASH("bad code range kind");
+}
+
+void
+wasm::TraceActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc)
+{
+    for (ActivationIterator iter(cx, target); !iter.done(); ++iter) {
+        if (iter.activation()->isWasm()) {
+            for (FrameIterator fi(iter.activation()->asWasm()); !fi.done(); ++fi) {
+                if (fi.hasInstance())
+                    fi.instance()->trace(trc);
+            }
+        }
+    }
 }
