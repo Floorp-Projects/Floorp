@@ -309,7 +309,7 @@ JumpRange()
 typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> OffsetMap;
 
 bool
-ModuleGenerator::patchCallSites(TrapExitOffsetArray* maybeTrapExits)
+ModuleGenerator::patchCallSites()
 {
     masm_.haltingAlign(CodeAlignment);
 
@@ -366,19 +366,12 @@ ModuleGenerator::patchCallSites(TrapExitOffsetArray* maybeTrapExits)
             break;
           }
           case CallSiteDesc::TrapExit: {
-            if (maybeTrapExits) {
-                uint32_t calleeOffset = (*maybeTrapExits)[cs.trap()].begin;
-                MOZ_RELEASE_ASSERT(calleeOffset < INT32_MAX);
-
-                if (uint32_t(abs(int32_t(calleeOffset) - int32_t(callerOffset))) < JumpRange()) {
-                    masm_.patchCall(callerOffset, calleeOffset);
-                    break;
-                }
-            }
-
             if (!existingTrapFarJumps[cs.trap()]) {
+                // See MacroAssembler::wasmEmitTrapOutOfLineCode for why we must
+                // reload the TLS register on this path.
                 Offsets offsets;
                 offsets.begin = masm_.currentOffset();
+                masm_.loadPtr(Address(FramePointer, offsetof(Frame, tls)), WasmTlsReg);
                 masm_.append(TrapFarJump(cs.trap(), masm_.farJumpWithPatch()));
                 offsets.end = masm_.currentOffset();
                 if (masm_.oom())
@@ -640,7 +633,7 @@ ModuleGenerator::finishCodegen()
     // then far jumps. Patching callsites can generate far jumps so there is an
     // ordering dependency.
 
-    if (!patchCallSites(&trapExits))
+    if (!patchCallSites())
         return false;
 
     if (!patchFarJumps(trapExits, debugTrapStub))

@@ -257,7 +257,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool funcIsCompiled(uint32_t funcIndex) const;
     const CodeRange& funcCodeRange(uint32_t funcIndex) const;
     uint32_t numFuncImports() const;
-    MOZ_MUST_USE bool patchCallSites(TrapExitOffsetArray* maybeTrapExits = nullptr);
+    MOZ_MUST_USE bool patchCallSites();
     MOZ_MUST_USE bool patchFarJumps(const TrapExitOffsetArray& trapExits, const Offsets& debugTrapStub);
     MOZ_MUST_USE bool finishTask(CompileTask* task);
     MOZ_MUST_USE bool finishOutstandingTask();
