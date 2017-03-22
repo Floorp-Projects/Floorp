@@ -2591,7 +2591,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   transition: 1s background-color ease-out;
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {
+.tabbrowser-arrowscrollbox > .scrollbutton-down[highlight] {
   background-color: Highlight;
   transition: none;
 }
