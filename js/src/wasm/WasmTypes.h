@@ -41,6 +41,7 @@
 namespace js {
 
 class PropertyName;
+class WasmActivation;
 class WasmFunctionCallObject;
 namespace jit {
     struct BaselineScript;
@@ -948,12 +949,12 @@ class CallSiteAndTarget : public CallSite
 
 typedef Vector<CallSiteAndTarget, 0, SystemAllocPolicy> CallSiteAndTargetVector;
 
-// A wasm::SymbolicAddress represents a pointer to a well-known function or
-// object that is embedded in wasm code. Since wasm code is serialized and
-// later deserialized into a different address space, symbolic addresses must be
-// used for *all* pointers into the address space. The MacroAssembler records a
-// list of all SymbolicAddresses and the offsets of their use in the code for
-// later patching during static linking.
+// A wasm::SymbolicAddress represents a pointer to a well-known function that is
+// embedded in wasm code. Since wasm code is serialized and later deserialized
+// into a different address space, symbolic addresses must be used for *all*
+// pointers into the address space. The MacroAssembler records a list of all
+// SymbolicAddresses and the offsets of their use in the code for later patching
+// during static linking.
 
 enum class SymbolicAddress
 {
@@ -988,8 +989,6 @@ enum class SymbolicAddress
     LogD,
     PowD,
     ATan2D,
-    ContextPtr,
-    ReportOverRecursed,
     HandleExecutionInterrupt,
     HandleDebugTrap,
     HandleThrow,
@@ -1021,7 +1020,7 @@ bool
 IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode);
 
 void*
-AddressOf(SymbolicAddress imm, JSContext* cx);
+AddressOf(SymbolicAddress imm);
 
 // Assumptions captures ambient state that must be the same when compiling and
 // deserializing a module for the compiled code to be valid. If it's not, then
