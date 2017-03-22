@@ -232,6 +232,7 @@ RawServoAnimationValueBorrowedOrNull Gecko_AnimationGetBaseStyle(
 
 // Atoms.
 nsIAtom* Gecko_Atomize(const char* aString, uint32_t aLength);
+nsIAtom* Gecko_Atomize16(const nsAString* aString);
 void Gecko_AddRefAtom(nsIAtom* aAtom);
 void Gecko_ReleaseAtom(nsIAtom* aAtom);
 const uint16_t* Gecko_GetAtomAsUTF16(nsIAtom* aAtom, uint32_t* aLength);
@@ -243,6 +244,11 @@ void Gecko_FontFamilyList_Clear(FontFamilyList* aList);
 void Gecko_FontFamilyList_AppendNamed(FontFamilyList* aList, nsIAtom* aName, bool aQuoted);
 void Gecko_FontFamilyList_AppendGeneric(FontFamilyList* list, FontFamilyType familyType);
 void Gecko_CopyFontFamilyFrom(nsFont* dst, const nsFont* src);
+// will not run destructors on dst, give it uninitialized memory
+// font_id is LookAndFeel::FontID
+void Gecko_nsFont_InitSystem(nsFont* dst, int32_t font_id,
+                             const nsStyleFont* font, RawGeckoPresContextBorrowed pres_context);
+void Gecko_nsFont_Destroy(nsFont* dst);
 
 // Visibility style
 void Gecko_SetImageOrientation(nsStyleVisibility* aVisibility,
