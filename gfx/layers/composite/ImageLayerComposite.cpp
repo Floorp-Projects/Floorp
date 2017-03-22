@@ -76,7 +76,7 @@ ImageLayerComposite::SetLayerManager(HostLayerManager* aManager)
   LayerComposite::SetLayerManager(aManager);
   mManager = aManager;
   if (mImageHost) {
-    mImageHost->SetCompositor(mCompositor);
+    mImageHost->SetTextureSourceProvider(mCompositor);
   }
 }
 
@@ -101,7 +101,7 @@ ImageLayerComposite::RenderLayer(const IntRect& aClipRect,
 
   RenderWithAllMasks(this, mCompositor, aClipRect,
                      [&](EffectChain& effectChain, const IntRect& clipRect) {
-    mImageHost->SetCompositor(mCompositor);
+    mImageHost->SetTextureSourceProvider(mCompositor);
     mImageHost->Composite(mCompositor, this, effectChain,
                           GetEffectiveOpacity(),
                           GetEffectiveTransformForBuffer(),

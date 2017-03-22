@@ -57,14 +57,14 @@ TiledLayerBufferComposite::~TiledLayerBufferComposite()
 }
 
 void
-TiledLayerBufferComposite::SetCompositor(Compositor* aCompositor)
+TiledLayerBufferComposite::SetTextureSourceProvider(TextureSourceProvider* aProvider)
 {
-  MOZ_ASSERT(aCompositor);
+  MOZ_ASSERT(aProvider);
   for (TileHost& tile : mRetainedTiles) {
     if (tile.IsPlaceholderTile()) continue;
-    tile.mTextureHost->SetTextureSourceProvider(aCompositor);
+    tile.mTextureHost->SetTextureSourceProvider(aProvider);
     if (tile.mTextureHostOnWhite) {
-      tile.mTextureHostOnWhite->SetTextureSourceProvider(aCompositor);
+      tile.mTextureHostOnWhite->SetTextureSourceProvider(aProvider);
     }
   }
 }
@@ -116,10 +116,10 @@ TiledContentHost::GenEffect(const gfx::SamplingFilter aSamplingFilter)
 
 void
 TiledContentHost::Attach(Layer* aLayer,
-                         Compositor* aCompositor,
+                         TextureSourceProvider* aProvider,
                          AttachFlags aFlags /* = NO_FLAGS */)
 {
-  CompositableHost::Attach(aLayer, aCompositor, aFlags);
+  CompositableHost::Attach(aLayer, aProvider, aFlags);
 }
 
 void

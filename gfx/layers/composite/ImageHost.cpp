@@ -177,12 +177,12 @@ ImageHost::GetAsTextureHost(IntRect* aPictureRect)
 }
 
 void ImageHost::Attach(Layer* aLayer,
-                       Compositor* aCompositor,
+                       TextureSourceProvider* aProvider,
                        AttachFlags aFlags)
 {
-  CompositableHost::Attach(aLayer, aCompositor, aFlags);
+  CompositableHost::Attach(aLayer, aProvider, aFlags);
   for (auto& img : mImages) {
-    img.mTextureHost->SetTextureSourceProvider(aCompositor);
+    img.mTextureHost->SetTextureSourceProvider(aProvider);
     img.mTextureHost->Updated();
   }
 }
@@ -343,14 +343,14 @@ ImageHost::Composite(Compositor* aCompositor,
 }
 
 void
-ImageHost::SetCompositor(Compositor* aCompositor)
+ImageHost::SetTextureSourceProvider(TextureSourceProvider* aProvider)
 {
-  if (mCompositor != aCompositor) {
+  if (mTextureSourceProvider != aProvider) {
     for (auto& img : mImages) {
-      img.mTextureHost->SetTextureSourceProvider(aCompositor);
+      img.mTextureHost->SetTextureSourceProvider(aProvider);
     }
   }
-  CompositableHost::SetCompositor(aCompositor);
+  CompositableHost::SetTextureSourceProvider(aProvider);
 }
 
 void
