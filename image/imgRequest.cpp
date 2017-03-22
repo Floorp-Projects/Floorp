@@ -541,10 +541,48 @@ imgRequest::AdjustPriority(imgRequestProxy* proxy, int32_t delta)
     return;
   }
 
+  AdjustPriorityInternal(delta);
+}
+
+void
+imgRequest::AdjustPriorityInternal(int32_t aDelta)
+{
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
   if (p) {
-    p->AdjustPriority(delta);
+    p->AdjustPriority(aDelta);
   }
+}
+
+void
+imgRequest::BoostPriority(uint32_t aCategory)
+{
+  uint32_t newRequestedCategory =
+    (mBoostCategoriesRequested & aCategory) ^ aCategory;
+  if (!newRequestedCategory) {
+    // priority boost for each category can only apply once.
+    return;
+  }
+
+  MOZ_LOG(gImgLog, LogLevel::Debug,
+         ("[this=%p] imgRequest::BoostPriority for category %x",
+          this, newRequestedCategory));
+
+  int32_t delta = 0;
+
+  if (newRequestedCategory & imgIRequest::CATEGORY_FRAME_INIT) {
+    --delta;
+  }
+
+  if (newRequestedCategory & imgIRequest::CATEGORY_SIZE_QUERY) {
+    --delta;
+  }
+
+  if (newRequestedCategory & imgIRequest::CATEGORY_DISPLAY) {
+    delta += nsISupportsPriority::PRIORITY_HIGH;
+  }
+
+  AdjustPriorityInternal(delta);
+  mBoostCategoriesRequested |= newRequestedCategory;
 }
 
 bool

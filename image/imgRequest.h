@@ -171,6 +171,8 @@ public:
   /// of @aProxy.
   void AdjustPriority(imgRequestProxy* aProxy, int32_t aDelta);
 
+  void BoostPriority(uint32_t aCategory);
+
   /// Returns a weak pointer to the underlying request.
   nsIRequest* GetRequest() const { return mRequest; }
 
@@ -223,6 +225,8 @@ private:
   /// Returns true if StartDecoding() was called.
   bool IsDecodeRequested() const;
 
+  void AdjustPriorityInternal(int32_t aDelta);
+
   // Weak reference to parent loader; this request cannot outlive its owner.
   imgLoader* mLoader;
   nsCOMPtr<nsIRequest> mRequest;
@@ -274,6 +278,9 @@ private:
   ReferrerPolicy mReferrerPolicy;
 
   nsresult mImageErrorCode;
+
+  // The categories of prioritization strategy that have been requested.
+  uint32_t mBoostCategoriesRequested = 0;
 
   mutable mozilla::Mutex mMutex;
 
