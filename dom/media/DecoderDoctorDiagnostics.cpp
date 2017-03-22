@@ -239,36 +239,47 @@ DecoderDoctorDocumentWatcher::EnsureTimerIsStarted()
   }
 }
 
+enum class ReportParam : uint8_t
+{
+  // Marks the end of the parameter list.
+  // Keep this zero! (For implicit zero-inits when used in definitions below.)
+  None = 0,
+
+  Formats
+};
+
 struct NotificationAndReportStringId
 {
   // Notification type, handled by browser-media.js.
   dom::DecoderDoctorNotificationType mNotificationType;
   // Console message id. Key in dom/locales/.../chrome/dom/dom.properties.
   const char* mReportStringId;
+  static const int maxReportParams = 4;
+  ReportParam mReportParams[maxReportParams];
 };
 
 // Note: ReportStringIds are limited to alphanumeric only.
 static const NotificationAndReportStringId sMediaWidevineNoWMF=
   { dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
-    "MediaWidevineNoWMF" };
+    "MediaWidevineNoWMF", { ReportParam::None } };
 static const NotificationAndReportStringId sMediaWMFNeeded =
   { dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
-    "MediaWMFNeeded" };
+    "MediaWMFNeeded", { ReportParam::Formats } };
 static const NotificationAndReportStringId sMediaPlatformDecoderNotFound =
   { dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
-    "MediaPlatformDecoderNotFound" };
+    "MediaPlatformDecoderNotFound", { ReportParam::Formats } };
 static const NotificationAndReportStringId sMediaCannotPlayNoDecoders =
   { dom::DecoderDoctorNotificationType::Cannot_play,
-    "MediaCannotPlayNoDecoders" };
+    "MediaCannotPlayNoDecoders", { ReportParam::Formats } };
 static const NotificationAndReportStringId sMediaNoDecoders =
   { dom::DecoderDoctorNotificationType::Can_play_but_some_missing_decoders,
-    "MediaNoDecoders" };
+    "MediaNoDecoders", { ReportParam::Formats } };
 static const NotificationAndReportStringId sCannotInitializePulseAudio =
   { dom::DecoderDoctorNotificationType::Cannot_initialize_pulseaudio,
-    "MediaCannotInitializePulseAudio" };
+    "MediaCannotInitializePulseAudio", { ReportParam::None } };
 static const NotificationAndReportStringId sUnsupportedLibavcodec =
   { dom::DecoderDoctorNotificationType::Unsupported_libavcodec,
-    "MediaUnsupportedLibavcodec" };
+    "MediaUnsupportedLibavcodec", { ReportParam::None } };
 
 static const NotificationAndReportStringId *const
 sAllNotificationsAndReportStringIds[] =
@@ -317,30 +328,33 @@ DispatchNotification(nsISupports* aSubject,
 static void
 ReportToConsole(nsIDocument* aDocument,
                 const char* aConsoleStringId,
-                const nsAString& aParams)
+                nsTArray<const char16_t*>& aParams)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aDocument);
 
-  // 'params' will only be forwarded for non-empty strings.
-  const char16_t* params[1] = { aParams.Data() };
-  DD_DEBUG("DecoderDoctorDiagnostics.cpp:ReportToConsole(doc=%p) ReportToConsole - aMsg='%s' params[0]='%s'",
+  DD_DEBUG("DecoderDoctorDiagnostics.cpp:ReportToConsole(doc=%p) ReportToConsole"
+           " - aMsg='%s' params={%s}",
            aDocument, aConsoleStringId,
-           aParams.IsEmpty() ? "<no params>" : NS_ConvertUTF16toUTF8(params[0]).get());
+           aParams.IsEmpty()
+           ? "<no params>"
+           : NS_ConvertUTF16toUTF8(aParams[0]).get());
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("Media"),
                                   aDocument,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   aConsoleStringId,
-                                  aParams.IsEmpty() ? nullptr : params,
-                                  aParams.IsEmpty() ? 0 : 1);
+                                  aParams.IsEmpty()
+                                  ? nullptr
+                                  : aParams.Elements(),
+                                  aParams.Length());
 }
 
 static void
 ReportAnalysis(nsIDocument* aDocument,
                const NotificationAndReportStringId& aNotification,
                bool aIsSolved,
-               const nsAString& aParams)
+               const nsAString& aFormats = NS_LITERAL_STRING(""))
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -350,7 +364,23 @@ ReportAnalysis(nsIDocument* aDocument,
 
   // Report non-solved issues to console.
   if (!aIsSolved) {
-    ReportToConsole(aDocument, aNotification.mReportStringId, aParams);
+    // Build parameter array needed by console message.
+    AutoTArray<const char16_t*,
+               NotificationAndReportStringId::maxReportParams> params;
+    for (int i = 0; i < NotificationAndReportStringId::maxReportParams; ++i) {
+      if (aNotification.mReportParams[i] == ReportParam::None) {
+        break;
+      }
+      switch (aNotification.mReportParams[i]) {
+      case ReportParam::Formats:
+        params.AppendElement(aFormats.Data());
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Bad notification parameter choice");
+        break;
+      }
+    }
+    ReportToConsole(aDocument, aNotification.mReportStringId, params);
   }
 
   // "media.decoder-doctor.notifications-allowed" controls which notifications
@@ -365,7 +395,7 @@ ReportAnalysis(nsIDocument* aDocument,
   if (filter.EqualsLiteral("*")
       || StringListContains(filter, aNotification.mReportStringId)) {
     DispatchNotification(
-      aDocument->GetInnerWindow(), aNotification, aIsSolved, aParams);
+      aDocument->GetInnerWindow(), aNotification, aIsSolved, aFormats);
   }
 }
 
