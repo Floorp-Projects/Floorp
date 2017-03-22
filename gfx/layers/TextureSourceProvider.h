@@ -98,6 +98,10 @@ public:
 
   virtual int32_t GetMaxTextureSize() const = 0;
 
+  // Return whether or not this provider is still valid (i.e., is still being
+  // used to composite).
+  virtual bool IsValid() const = 0;
+
 protected:
   // Should be called at the end of each composition.
   void ReadUnlockTextures();

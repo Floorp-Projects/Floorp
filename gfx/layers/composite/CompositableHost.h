@@ -92,7 +92,7 @@ public:
   virtual CompositableType GetType() = 0;
 
   // If base class overrides, it should still call the parent implementation
-  virtual void SetCompositor(Compositor* aCompositor);
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider);
 
   // composite the contents of this buffer host to the compositor's surface
   virtual void Composite(Compositor* aCompositor,
@@ -141,10 +141,7 @@ public:
 
   void RemoveMaskEffect();
 
-  Compositor* GetCompositor() const
-  {
-    return mCompositor;
-  }
+  TextureSourceProvider* GetTextureSourceProvider() const;
 
   Layer* GetLayer() const { return mLayer; }
   void SetLayer(Layer* aLayer) { mLayer = aLayer; }
@@ -159,13 +156,13 @@ public:
   static const AttachFlags FORCE_DETACH = 2;
 
   virtual void Attach(Layer* aLayer,
-                      Compositor* aCompositor,
+                      TextureSourceProvider* aProvider,
                       AttachFlags aFlags = NO_FLAGS)
   {
-    MOZ_ASSERT(aCompositor, "Compositor is required");
+    MOZ_ASSERT(aProvider);
     NS_ASSERTION(aFlags & ALLOW_REATTACH || !mAttached,
                  "Re-attaching compositables must be explicitly authorised");
-    SetCompositor(aCompositor);
+    SetTextureSourceProvider(aProvider);
     SetLayer(aLayer);
     mAttached = true;
     mKeepAttached = aFlags & KEEP_ATTACHED;
@@ -246,7 +243,7 @@ protected:
   TextureInfo mTextureInfo;
   AsyncCompositableRef mAsyncRef;
   uint64_t mCompositorID;
-  RefPtr<Compositor> mCompositor;
+  RefPtr<TextureSourceProvider> mTextureSourceProvider;
   Layer* mLayer;
   uint32_t mFlashCounter; // used when the pref "layers.flash-borders" is true.
   bool mAttached;

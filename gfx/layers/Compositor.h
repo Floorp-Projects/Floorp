@@ -533,7 +533,7 @@ public:
   // A stale Compositor has no CompositorBridgeParent; it will not process
   // frames and should not be used.
   void SetInvalid();
-  virtual bool IsValid() const;
+  virtual bool IsValid() const override;
   CompositorBridgeParent* GetCompositorBridgeParent() const {
     return mParent;
   }

@@ -255,14 +255,14 @@ ContentHostTexture::UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
 }
 
 void
-ContentHostTexture::SetCompositor(Compositor* aCompositor)
+ContentHostTexture::SetTextureSourceProvider(TextureSourceProvider* aProvider)
 {
-  ContentHostBase::SetCompositor(aCompositor);
+  ContentHostBase::SetTextureSourceProvider(aProvider);
   if (mTextureHost) {
-    mTextureHost->SetTextureSourceProvider(aCompositor);
+    mTextureHost->SetTextureSourceProvider(aProvider);
   }
   if (mTextureHostOnWhite) {
-    mTextureHostOnWhite->SetTextureSourceProvider(aCompositor);
+    mTextureHostOnWhite->SetTextureSourceProvider(aProvider);
   }
 }
 
