@@ -107,22 +107,30 @@ public class Browsers {
                 continue;
             }
 
+            if (!info.activityInfo.exported) {
+                continue;
+            }
+
             browsers.put(info.activityInfo.packageName, info.activityInfo);
         }
     }
 
     private ActivityInfo findDefault(PackageManager packageManager, String url) {
-        final Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse(url));
+        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
 
         final ResolveInfo resolveInfo = packageManager.resolveActivity(intent, 0);
         if (resolveInfo == null || resolveInfo.activityInfo == null) {
             return null;
         }
 
-        if ("android".equals(resolveInfo.activityInfo.packageName)) {
-            // If there's actually no default then Android might return a system activity that we
-            // are not interested in.
+        if (!resolveInfo.activityInfo.exported) {
+            // We are not allowed to launch this activity.
+            return null;
+        }
+
+        if (!browsers.containsKey(resolveInfo.activityInfo.packageName)) {
+            // This default browser wasn't returned when we asked for *all* browsers. It's likely
+            // that this is actually the resolver activity (aka intent chooser). Let's ignore it.
             return null;
         }
 
