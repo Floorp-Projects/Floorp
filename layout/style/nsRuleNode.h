@@ -16,6 +16,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedArray.h"
 #include "mozilla/RuleNodeCacheConditions.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/SheetType.h"
 #include "nsPresContext.h"
 #include "nsStyleStruct.h"
@@ -1098,6 +1099,9 @@ private:
   static void StoreStyleOnContext(nsStyleContext* aContext,
                                   nsStyleStructID aSID,
                                   void* aStruct);
+  static void ComputeSystemFont(nsFont* aSystemFont,
+                                mozilla::LookAndFeel::FontID aFontID,
+                                const nsPresContext* aPresContext);
 };
 
 /**
