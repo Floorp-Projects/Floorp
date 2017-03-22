@@ -1,11 +1,11 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == bounds-1.html bounds-1.html
 fails == size-1.html size-1.html
-fails == size-2.html size-2.html
+== size-2.html size-2.html
 fails HTTP(..) == baseline-1.html baseline-1.html
 HTTP(..) == centering-1.xul centering-1.xul
 == dynamic-height-1.xul dynamic-height-1.xul
 fails == select.html select.html
-fails == intrinsic-size.html intrinsic-size.html
+== intrinsic-size.html intrinsic-size.html
 fails == line-height-0.5.html line-height-0.5.html
 fails == line-height-1.5.html line-height-1.5.html

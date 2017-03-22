@@ -112,8 +112,8 @@ fails == 1135361-ruby-justify-1.html 1135361-ruby-justify-1.html
 == 1136557-1-nested-spans.html 1136557-1-nested-spans.html
 == 1136557-2-nested-spans.html 1136557-2-nested-spans.html
 == 1136557-3-nested-spans.html 1136557-3-nested-spans.html
-fails == 1138356-1-button-contents-alignment.html 1138356-1-button-contents-alignment.html
-fails == 1138356-2-button-contents-alignment.html 1138356-2-button-contents-alignment.html
+== 1138356-1-button-contents-alignment.html 1138356-1-button-contents-alignment.html
+== 1138356-2-button-contents-alignment.html 1138356-2-button-contents-alignment.html
 
 # Font inflation behaves wrong in vertical writing mode: bug 1138495
 pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == font-inflation-1a.html font-inflation-1a.html

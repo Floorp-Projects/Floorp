@@ -36,8 +36,8 @@ fuzzy(12,9445) fuzzy-if(d2d,13,10926) == boxshadow-inset-large-offset.html boxsh
 == overflow-not-scrollable-1.html overflow-not-scrollable-1.html
 == overflow-not-scrollable-1.html overflow-not-scrollable-1.html
 == overflow-not-scrollable-2.html overflow-not-scrollable-2.html
-fails == 611574-1.html 611574-1.html
-fails == 611574-2.html 611574-2.html
+== 611574-1.html 611574-1.html
+== 611574-2.html 611574-2.html
 == fieldset.html fieldset.html
 fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset-inset.html fieldset-inset.html
 == 1178575.html 1178575.html
