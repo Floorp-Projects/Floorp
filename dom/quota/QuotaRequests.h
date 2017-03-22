@@ -72,11 +72,7 @@ class UsageRequest final
 {
   nsCOMPtr<nsIQuotaUsageCallback> mCallback;
 
-  uint64_t mUsage;
-  uint64_t mFileUsage;
-
-  // Group Limit.
-  uint64_t mLimit;
+  nsCOMPtr<nsIVariant> mResult;
 
   QuotaUsageRequestChild* mBackgroundActor;
 
@@ -98,7 +94,7 @@ public:
   }
 
   void
-  SetResult(uint64_t aUsage, uint64_t aFileUsage, uint64_t aLimit);
+  SetResult(nsIVariant* aResult);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_NSIQUOTAREQUESTBASE(RequestBase::)
