@@ -12,7 +12,8 @@ from taskgraph.transforms.job.run_task import (
     docker_worker_run_task,
     native_engine_run_task,
 )
-from voluptuous import Schema, Required
+from taskgraph.util.schema import Schema
+from voluptuous import Required
 
 mach_schema = Schema({
     Required('using'): 'mach',

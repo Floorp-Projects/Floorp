@@ -18,6 +18,7 @@ from taskgraph.util.schema import (
     validate_schema,
     optionally_keyed_by,
     resolve_keyed_by,
+    Schema,
 )
 from taskgraph.util.treeherder import split_symbol, join_symbol
 from voluptuous import (
@@ -25,7 +26,6 @@ from voluptuous import (
     Extra,
     Optional,
     Required,
-    Schema,
 )
 
 

@@ -4,8 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import re
 import copy
 import pprint
+import collections
 import voluptuous
 
 from .attributes import keymatch
@@ -126,3 +128,54 @@ def resolve_keyed_by(item, field, item_name, **extra_values):
         raise Exception(
             "No {} matching {!r} nor 'default' found while determining item {} in {}".format(
                 keyed_by, key, field, item_name))
+
+# Schemas for YAML files should use dashed identifiers by default.  If there are
+# components of the schema for which there is a good reason to use another format,
+# they can be whitelisted here.
+WHITELISTED_SCHEMA_IDENTIFIERS = [
+    # upstream-artifacts are handed directly to scriptWorker, which expects interCaps
+    lambda path: "[u'upstream-artifacts']" in path,
+
+    # chainOfTrust (TODO)
+    lambda path: path.startswith("schema[u'chainOfTrust']"),
+
+    # attributes (TODO)
+    lambda path: path.startswith("schema[u'attributes']"),
+]
+
+
+def check_schema(schema):
+    identifier_re = re.compile('^[a-z][a-z0-9-]*$')
+
+    def whitelisted(path):
+        return any(f(path) for f in WHITELISTED_SCHEMA_IDENTIFIERS)
+
+    def iter(path, sch):
+        if isinstance(sch, collections.Mapping):
+            for k, v in sch.iteritems():
+                child = "{}[{!r}]".format(path, k)
+                if isinstance(k, (voluptuous.Optional, voluptuous.Required)):
+                    k = str(k)
+                if isinstance(k, basestring):
+                    if not identifier_re.match(k) and not whitelisted(child):
+                        raise RuntimeError(
+                            'YAML schemas should use dashed lower-case identifiers, '
+                            'not {!r} @ {}'.format(k, child))
+                iter(child, v)
+        elif isinstance(sch, (list, tuple)):
+            for i, v in enumerate(sch):
+                iter("{}[{}]".format(path, i), v)
+        elif isinstance(sch, voluptuous.Any):
+            for v in sch.validators:
+                iter(path, v)
+    iter('schema', schema.schema)
+
+
+def Schema(*args, **kwargs):
+    """
+    Operates identically to voluptuous.Schema, but applying some taskgraph-specific checks
+    in the process.
+    """
+    schema = voluptuous.Schema(*args, **kwargs)
+    check_schema(schema)
+    return schema
