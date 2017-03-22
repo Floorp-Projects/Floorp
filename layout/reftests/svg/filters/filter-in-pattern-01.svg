@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice">
+ <defs>
+  <filter id="blur">
+    <feGaussianBlur stdDeviation="0" />
+  </filter>
+  <pattern id="pattern1" patternUnits="userSpaceOnUse" width="10" height="10">
+    <rect width="10" height="10" fill="lime" filter="url(#blur)" />
+  </pattern>
+ </defs>
+ <rect width="100%" height="100%" fill="red"/>
+ <rect width="100%" height="100%" fill="url(#pattern1)"/>
+</svg>
