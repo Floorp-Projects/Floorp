@@ -949,7 +949,8 @@ Tick(PS::LockRef aLock, ProfileBuffer* aBuffer, TickSample* aSample)
 {
   ThreadInfo& threadInfo = *aSample->threadInfo;
 
-  aBuffer->addTag(ProfileBufferEntry::ThreadId(threadInfo.ThreadId()));
+  MOZ_ASSERT(threadInfo.LastSample().mThreadId == threadInfo.ThreadId());
+  aBuffer->addTagThreadId(threadInfo.LastSample());
 
   mozilla::TimeDuration delta = aSample->timestamp - gPS->StartTime(aLock);
   aBuffer->addTag(ProfileBufferEntry::Time(delta.ToMilliseconds()));
