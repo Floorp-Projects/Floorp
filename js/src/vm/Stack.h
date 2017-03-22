@@ -1755,10 +1755,6 @@ class WasmActivation : public Activation
     // Returns the reason why wasm code called out of wasm code.
     wasm::ExitReason exitReason() const { return exitReason_; }
 
-    // Read by JIT code:
-    static unsigned offsetOfContext() { return offsetof(WasmActivation, cx_); }
-    static unsigned offsetOfResumePC() { return offsetof(WasmActivation, resumePC_); }
-
     // Written by JIT code:
     static unsigned offsetOfEntrySP() { return offsetof(WasmActivation, entrySP_); }
     static unsigned offsetOfFP() { return offsetof(WasmActivation, fp_); }

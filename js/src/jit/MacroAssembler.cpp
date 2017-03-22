@@ -2972,14 +2972,6 @@ MacroAssembler::loadWasmActivationFromTls(Register dest)
 }
 
 void
-MacroAssembler::loadWasmActivationFromSymbolicAddress(Register dest)
-{
-    movePtr(wasm::SymbolicAddress::ContextPtr, dest);
-    loadPtr(Address(dest, 0), dest);
-    loadPtr(Address(dest, JSContext::offsetOfWasmActivation()), dest);
-}
-
-void
 MacroAssembler::loadWasmTlsRegFromFrame(Register dest)
 {
     loadPtr(Address(getStackPointer(), framePushed() + offsetof(wasm::Frame, tls)), dest);
