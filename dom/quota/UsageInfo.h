@@ -18,27 +18,13 @@ class UsageInfo
 {
 public:
   UsageInfo()
-  : mCanceled(false), mDatabaseUsage(0), mFileUsage(0), mLimit(0)
+    : mDatabaseUsage(0)
+    , mFileUsage(0)
+    , mLimit(0)
   { }
 
   virtual ~UsageInfo()
   { }
-
-  bool
-  Canceled()
-  {
-    return mCanceled;
-  }
-
-  nsresult
-  Cancel()
-  {
-    if (mCanceled.exchange(true)) {
-      NS_WARNING("Canceled more than once?!");
-      return NS_ERROR_UNEXPECTED;
-    }
-    return NS_OK;
-  }
 
   void
   AppendToDatabaseUsage(uint64_t aUsage)
@@ -103,9 +89,6 @@ public:
       *aUsage = UINT64_MAX;
     }
   }
-
-protected:
-  mozilla::Atomic<bool> mCanceled;
 
 private:
   uint64_t mDatabaseUsage;
