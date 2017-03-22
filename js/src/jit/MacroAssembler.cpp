@@ -2980,9 +2980,9 @@ MacroAssembler::loadWasmActivationFromSymbolicAddress(Register dest)
 }
 
 void
-MacroAssembler::loadWasmTlsRegFromFrame()
+MacroAssembler::loadWasmTlsRegFromFrame(Register dest)
 {
-    loadPtr(Address(getStackPointer(), framePushed() + offsetof(wasm::Frame, tls)), WasmTlsReg);
+    loadPtr(Address(getStackPointer(), framePushed() + offsetof(wasm::Frame, tls)), dest);
 }
 
 void

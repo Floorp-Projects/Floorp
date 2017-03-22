@@ -41,6 +41,7 @@
 namespace js {
 
 class PropertyName;
+class WasmFunctionCallObject;
 namespace jit {
     struct BaselineScript;
     enum class RoundingMode;
@@ -1465,6 +1466,116 @@ struct Frame
     // The return address pushed by the call (in the case of ARM/MIPS the return
     // address is pushed by the first instruction of the prologue).
     void* returnAddress;
+
+    // Helper functions:
+
+    Instance* instance() const { return tls->instance; }
+};
+
+// A DebugFrame is a Frame with additional fields that are added after the
+// normal function prologue by the baseline compiler. If a Module is compiled
+// with debugging enabled, then all its code creates DebugFrames on the stack
+// instead of just Frames. These extra fields are used by the Debugger API.
+
+class DebugFrame
+{
+    // The results field left uninitialized and only used during the baseline
+    // compiler's return sequence to allow the debugger to inspect and modify
+    // the return value of a frame being debugged.
+    union
+    {
+        int32_t resultI32_;
+        int64_t resultI64_;
+        float resultF32_;
+        double resultF64_;
+    };
+
+    // The returnValue() method returns a HandleValue pointing to this field.
+    js::Value cachedReturnJSValue_;
+
+    // The function index of this frame. Technically, this could be derived
+    // given a PC into this frame (which could lookup the CodeRange which has
+    // the function index), but this isn't always readily available.
+    uint32_t funcIndex_;
+
+    // Flags whose meaning are described below.
+    union
+    {
+        struct
+        {
+            bool observing_ : 1;
+            bool isDebuggee_ : 1;
+            bool prevUpToDate_ : 1;
+            bool hasCachedSavedFrame_ : 1;
+            bool hasCachedReturnJSValue_ : 1;
+        };
+        void* flagsWord_;
+    };
+
+    // Padding so that DebugFrame has Alignment.
+#if JS_BITS_PER_WORD == 32
+    void* padding_;
+#endif
+
+    // The Frame goes at the end since the stack grows down.
+    Frame frame_;
+
+  public:
+    Frame& frame() { return frame_; }
+    uint32_t funcIndex() const { return funcIndex_; }
+    Instance* instance() const { return frame_.instance(); }
+    GlobalObject* global() const;
+    JSObject* environmentChain() const;
+    bool getLocal(uint32_t localIndex, MutableHandleValue vp);
+
+    // The return value must be written from the unboxed representation in the
+    // results union into cachedReturnJSValue_ by updateReturnJSValue() before
+    // returnValue() can return a Handle to it.
+
+    void updateReturnJSValue();
+    HandleValue returnValue() const;
+    void clearReturnJSValue();
+
+    // Once the debugger observes a frame, it must be notified via
+    // onLeaveFrame() before the frame is popped. Calling observe() ensures the
+    // leave frame traps are enabled. Both methods are idempotent so the caller
+    // doesn't have to worry about calling them more than once.
+
+    void observe(JSContext* cx);
+    void leave(JSContext* cx);
+
+    // The 'isDebugge' bit is initialized to false and set by the WebAssembly
+    // runtime right before a frame is exposed to the debugger, as required by
+    // the Debugger API. The bit is then used for Debugger-internal purposes
+    // afterwards.
+
+    bool isDebuggee() const { return isDebuggee_; }
+    void setIsDebuggee() { isDebuggee_ = true; }
+    void unsetIsDebuggee() { isDebuggee_ = false; }
+
+    // These are opaque boolean flags used by the debugger to implement
+    // AbstractFramePtr. They are initialized to false and not otherwise read or
+    // written by wasm code or runtime.
+
+    bool prevUpToDate() const { return prevUpToDate_; }
+    void setPrevUpToDate() { prevUpToDate_ = true; }
+    void unsetPrevUpToDate() { prevUpToDate_ = false; }
+
+    bool hasCachedSavedFrame() const { return hasCachedSavedFrame_; }
+    void setHasCachedSavedFrame() { hasCachedSavedFrame_ = true; }
+
+    // DebugFrame is accessed directly by JIT code.
+
+    static constexpr size_t offsetOfResults() { return offsetof(DebugFrame, resultI32_); }
+    static constexpr size_t offsetOfFlagsWord() { return offsetof(DebugFrame, flagsWord_); }
+    static constexpr size_t offsetOfFuncIndex() { return offsetof(DebugFrame, funcIndex_); }
+    static constexpr size_t offsetOfFrame() { return offsetof(DebugFrame, frame_); }
+
+    // DebugFrames are aligned to 8-byte aligned, allowing them to be placed in
+    // an AbstractFramePtr.
+
+    static const unsigned Alignment = 8;
+    static void alignmentStaticAsserts();
 };
 
 } // namespace wasm

@@ -25,6 +25,7 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/SavedFrame.h"
 #include "wasm/WasmFrameIterator.h"
+#include "wasm/WasmTypes.h"
 
 struct JSCompartment;
 
@@ -166,6 +167,7 @@ class AbstractFramePtr
     MOZ_IMPLICIT AbstractFramePtr(wasm::DebugFrame* fp)
       : ptr_(fp ? uintptr_t(fp) | Tag_WasmDebugFrame : 0)
     {
+        static_assert(wasm::DebugFrame::Alignment >= TagMask, "aligned");
         MOZ_ASSERT_IF(fp, asWasmDebugFrame() == fp);
     }
 
