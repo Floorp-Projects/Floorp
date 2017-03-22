@@ -32,15 +32,15 @@ var NetMonitorController = {
   /**
    * Initializes the view and connects the monitor client.
    *
-   * @return object
-   *         A promise that is resolved when the monitor finishes startup.
+   * @param {Object} connection connection data wrapper
+   * @return {Object} A promise that is resolved when the monitor finishes startup.
    */
-  startupNetMonitor() {
+  startupNetMonitor(connection) {
     if (this._startup) {
       return this._startup;
     }
     this._startup = new Promise(async (resolve) => {
-      await this.connect();
+      await this.connect(connection);
       resolve();
     });
     return this._startup;
@@ -74,10 +74,10 @@ var NetMonitorController = {
    * started listening to network requests by now, this is largely
    * netmonitor-specific initialization.
    *
-   * @return object
-   *         A promise that is resolved when the monitor finishes connecting.
+   * @param {Object} connection connection data wrapper
+   * @return {Object} A promise that is resolved when the monitor finishes connecting.
    */
-  connect() {
+  connect(connection) {
     if (this._connection) {
       return this._connection;
     }
@@ -86,9 +86,9 @@ var NetMonitorController = {
     this._connection = new Promise(async (resolve) => {
       // Some actors like AddonActor or RootActor for chrome debugging
       // aren't actual tabs.
-      if (this._target.isTabActor) {
-        this.tabClient = this._target.activeTab;
-      }
+      this.toolbox = connection.toolbox;
+      this._target = connection.client.getTabTarget();
+      this.tabClient = this._target.isTabActor ? this._target.activeTab : null;
 
       let connectTimeline = () => {
         // Don't start up waiting for timeline markers if the server isn't
@@ -315,7 +315,9 @@ var NetMonitorController = {
    * Open a given source in Debugger
    */
   viewSourceInDebugger(sourceURL, sourceLine) {
-    return this.toolbox.viewSourceInDebugger(sourceURL, sourceLine);
+    if (this.toolbox) {
+      this.toolbox.viewSourceInDebugger(sourceURL, sourceLine);
+    }
   },
 
   /**
