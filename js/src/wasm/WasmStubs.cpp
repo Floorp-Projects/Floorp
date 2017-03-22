@@ -452,8 +452,7 @@ wasm::GenerateImportFunction(jit::MacroAssembler& masm, const FuncImport& fi, Si
 {
     masm.setFramePushed(0);
 
-    unsigned tlsBytes = sizeof(void*);
-    unsigned framePushed = StackDecrementForCall(masm, WasmStackAlignment, fi.sig().args(), tlsBytes);
+    unsigned framePushed = StackDecrementForCall(masm, WasmStackAlignment, fi.sig().args());
 
     FuncOffsets offsets;
     GenerateFunctionPrologue(masm, framePushed, sigId, &offsets);
@@ -474,16 +473,12 @@ wasm::GenerateImportFunction(jit::MacroAssembler& masm, const FuncImport& fi, Si
         StackCopy(masm, i.mirType(), scratch, src, dst);
     }
 
-    // Save the TLS register so it can be restored later.
-    uint32_t tlsStackOffset = i.stackBytesConsumedSoFar();
-    masm.storePtr(WasmTlsReg, Address(masm.getStackPointer(), tlsStackOffset));
-
     // Call the import exit stub.
     CallSiteDesc desc(CallSiteDesc::Dynamic);
     masm.wasmCallImport(desc, CalleeDesc::import(fi.tlsDataOffset()));
 
     // Restore the TLS register and pinned regs, per wasm function ABI.
-    masm.loadPtr(Address(masm.getStackPointer(), tlsStackOffset), WasmTlsReg);
+    masm.loadWasmTlsRegFromFrame();
     masm.loadWasmPinnedRegsFromTls();
 
     GenerateFunctionEpilogue(masm, framePushed, &offsets);
@@ -621,8 +616,6 @@ wasm::GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint3
     return offsets;
 }
 
-static const unsigned SavedTlsReg = sizeof(void*);
-
 // Generate a stub that is called via the internal ABI derived from the
 // signature of the import and calls into a compatible JIT function,
 // having boxed all the ABI arguments into the JIT stack frame layout.
@@ -640,7 +633,7 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
     static_assert(WasmStackAlignment >= JitStackAlignment, "subsumes");
     unsigned sizeOfRetAddr = sizeof(void*);
     unsigned jitFrameBytes = 3 * sizeof(void*) + (1 + fi.sig().args().length()) * sizeof(Value);
-    unsigned totalJitFrameBytes = sizeOfRetAddr + jitFrameBytes + SavedTlsReg;
+    unsigned totalJitFrameBytes = sizeOfRetAddr + jitFrameBytes;
     unsigned jitFramePushed = StackDecrementForCall(masm, JitStackAlignment, totalJitFrameBytes) -
                               sizeOfRetAddr;
 
@@ -683,12 +676,6 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
     FillArgumentArray(masm, fi.sig().args(), argOffset, offsetToCallerStackArgs, scratch, ToValue(true));
     argOffset += fi.sig().args().length() * sizeof(Value);
     MOZ_ASSERT(argOffset == jitFrameBytes);
-
-    // 6. Jit code will clobber all registers, even non-volatiles. WasmTlsReg
-    //    must be kept live for the benefit of the epilogue, so push it on the
-    //    stack so that it can be restored before the epilogue.
-    static_assert(SavedTlsReg == sizeof(void*), "stack frame accounting");
-    masm.storePtr(WasmTlsReg, Address(masm.getStackPointer(), jitFrameBytes));
 
     {
         // Enable Activation.
@@ -795,11 +782,9 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
     Label done;
     masm.bind(&done);
 
-    // Ion code does not respect the system ABI's callee-saved register
-    // conventions so reload any assumed-non-volatile registers. Note that the
-    // reserveStack(sizeOfRetAddr) above means that the stack pointer is at a
-    // different offset than when WasmTlsReg was stored.
-    masm.loadPtr(Address(masm.getStackPointer(), jitFrameBytes + sizeOfRetAddr), WasmTlsReg);
+    // The epilogue requires WasmTlsReg and Ion code clobbers all registers,
+    // even ABI non-volatiles.
+    masm.loadWasmTlsRegFromFrame();
 
     GenerateExitEpilogue(masm, masm.framePushed(), ExitReason::ImportJit, &offsets);
 
