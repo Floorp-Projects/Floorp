@@ -97,7 +97,6 @@
 #endif
 
 #include "wasm/WasmBinaryIterator.h"
-#include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmValidate.h"
@@ -199,30 +198,18 @@ static constexpr int32_t TlsSlotSize = sizeof(void*);
 static constexpr int32_t TlsSlotOffset = TlsSlotSize;
 
 BaseLocalIter::BaseLocalIter(const ValTypeVector& locals,
-                                     size_t argsLength,
-                                     bool debugEnabled)
+                             size_t argsLength,
+                             bool debugEnabled)
   : locals_(locals),
     argsLength_(argsLength),
     argsRange_(locals.begin(), argsLength),
     argsIter_(argsRange_),
     index_(0),
-    localSize_(0),
+    localSize_(debugEnabled ? DebugFrame::offsetOfFrame() : 0),
+    reservedSize_(localSize_),
     done_(false)
 {
     MOZ_ASSERT(argsLength <= locals.length());
-
-    // Reserve a stack slot for the TLS pointer outside the locals range so it
-    // isn't zero-filled like the normal locals.
-    DebugOnly<int32_t> tlsSlotOffset = pushLocal(TlsSlotSize);
-    MOZ_ASSERT(tlsSlotOffset == TlsSlotOffset);
-    if (debugEnabled) {
-        // If debug information is generated, constructing DebugFrame record:
-        // reserving some data before TLS pointer. The TLS pointer allocated
-        // above and regular wasm::Frame data starts after locals.
-        localSize_ += DebugFrame::offsetOfTlsData();
-        MOZ_ASSERT(DebugFrame::offsetOfFrame() == localSize_);
-    }
-    reservedSize_ = localSize_;
 
     settle();
 }
@@ -627,10 +614,6 @@ class BaseCompiler
 
     Vector<Local, 8, SystemAllocPolicy> localInfo_;
     Vector<OutOfLineCode*, 8, SystemAllocPolicy> outOfLine_;
-
-    // Index into localInfo_ of the special local used for saving the TLS
-    // pointer. This follows the function's real arguments and locals.
-    uint32_t                    tlsSlot_;
 
     // On specific platforms we sometimes need to use specific registers.
 
@@ -2229,9 +2212,6 @@ class BaseCompiler
 
         maxFramePushed_ = localSize_;
 
-        // The TLS pointer is always passed as a hidden argument in WasmTlsReg.
-        // Save it into its assigned local slot.
-        storeToFramePtr(WasmTlsReg, localInfo_[tlsSlot_].offs());
         if (debugEnabled_) {
             // Initialize funcIndex and flag fields of DebugFrame.
             size_t debugFrame = masm.framePushed() - DebugFrame::offsetOfFrame();
@@ -2390,8 +2370,9 @@ class BaseCompiler
             restoreResult();
         }
 
-        // Restore the TLS register in case it was overwritten by the function.
-        loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+        // The epilogue assumes WasmTlsReg is valid so reload it in case it was
+        // clobbered by the body.
+        masm.loadWasmTlsRegFromFrame();
 
         GenerateFunctionEpilogue(masm, localSize_, &offsets_);
 
@@ -2481,7 +2462,7 @@ class BaseCompiler
             // On x86 there are no pinned registers, so don't waste time
             // reloading the Tls.
 #ifndef JS_CODEGEN_X86
-            loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+            masm.loadWasmTlsRegFromFrame();
             masm.loadWasmPinnedRegsFromTls();
 #endif
         }
@@ -2678,7 +2659,7 @@ class BaseCompiler
                                    const FunctionCall& call)
     {
         // Builtin method calls assume the TLS register has been set.
-        loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+        masm.loadWasmTlsRegFromFrame();
 
         CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Symbolic);
         masm.wasmCallBuiltinInstanceMethod(instanceArg, builtin);
@@ -3317,56 +3298,56 @@ class BaseCompiler
     void loadGlobalVarI32(unsigned globalDataOffset, RegI32 r)
     {
         ScratchI32 tmp(*this);
-        loadFromFramePtr(tmp, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+        masm.loadWasmTlsRegFromFrame(tmp);
         masm.load32(Address(tmp, globalToTlsOffset(globalDataOffset)), r);
     }
 
     void loadGlobalVarI64(unsigned globalDataOffset, RegI64 r)
     {
         ScratchI32 tmp(*this);
-        loadFromFramePtr(tmp, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+        masm.loadWasmTlsRegFromFrame(tmp);
         masm.load64(Address(tmp, globalToTlsOffset(globalDataOffset)), r);
     }
 
     void loadGlobalVarF32(unsigned globalDataOffset, RegF32 r)
     {
         ScratchI32 tmp(*this);
-        loadFromFramePtr(tmp, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+        masm.loadWasmTlsRegFromFrame(tmp);
         masm.loadFloat32(Address(tmp, globalToTlsOffset(globalDataOffset)), r);
     }
 
     void loadGlobalVarF64(unsigned globalDataOffset, RegF64 r)
     {
         ScratchI32 tmp(*this);
-        loadFromFramePtr(tmp, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+        masm.loadWasmTlsRegFromFrame(tmp);
         masm.loadDouble(Address(tmp, globalToTlsOffset(globalDataOffset)), r);
     }
 
     void storeGlobalVarI32(unsigned globalDataOffset, RegI32 r)
     {
         ScratchI32 tmp(*this);
-        loadFromFramePtr(tmp, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+        masm.loadWasmTlsRegFromFrame(tmp);
         masm.store32(r, Address(tmp, globalToTlsOffset(globalDataOffset)));
     }
 
     void storeGlobalVarI64(unsigned globalDataOffset, RegI64 r)
     {
         ScratchI32 tmp(*this);
-        loadFromFramePtr(tmp, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+        masm.loadWasmTlsRegFromFrame(tmp);
         masm.store64(r, Address(tmp, globalToTlsOffset(globalDataOffset)));
     }
 
     void storeGlobalVarF32(unsigned globalDataOffset, RegF32 r)
     {
         ScratchI32 tmp(*this);
-        loadFromFramePtr(tmp, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+        masm.loadWasmTlsRegFromFrame(tmp);
         masm.storeFloat32(r, Address(tmp, globalToTlsOffset(globalDataOffset)));
     }
 
     void storeGlobalVarF64(unsigned globalDataOffset, RegF64 r)
     {
         ScratchI32 tmp(*this);
-        loadFromFramePtr(tmp, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+        masm.loadWasmTlsRegFromFrame(tmp);
         masm.storeDouble(r, Address(tmp, globalToTlsOffset(globalDataOffset)));
     }
 
@@ -5804,11 +5785,8 @@ BaseCompiler::emitCallArgs(const ValTypeVector& argTypes, FunctionCall& baseline
     for (size_t i = 0; i < numArgs; ++i)
         passArg(baselineCall, argTypes[i], peek(numArgs - 1 - i));
 
-    // Pass the TLS pointer as a hidden argument in WasmTlsReg.  Load
-    // it directly out if its stack slot so we don't interfere with
-    // the stk_.
     if (baselineCall.loadTlsBefore)
-        loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+        masm.loadWasmTlsRegFromFrame();
 
     return true;
 }
@@ -6450,7 +6428,7 @@ BaseCompiler::maybeLoadTlsForAccess(bool omitBoundsCheck)
     RegI32 tls = invalidI32();
     if (needTlsForAccess(omitBoundsCheck)) {
         tls = needI32();
-        loadFromFramePtr(tls, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+        masm.loadWasmTlsRegFromFrame(tls);
     }
     return tls;
 }
@@ -7473,7 +7451,6 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
 #ifdef DEBUG
       scratchRegisterTaken_(false),
 #endif
-      tlsSlot_(0),
 #ifdef JS_CODEGEN_X64
       specific_rax(RegI64(Register64(rax))),
       specific_rcx(RegI64(Register64(rcx))),
@@ -7533,14 +7510,8 @@ BaseCompiler::init()
 
     const ValTypeVector& args = func_.sig().args();
 
-    // localInfo_ contains an entry for every local in locals_, followed by
-    // entries for special locals. Currently the only special local is the TLS
-    // pointer.
-    tlsSlot_ = locals_.length();
-    if (!localInfo_.resize(locals_.length() + 1))
+    if (!localInfo_.resize(locals_.length()))
         return false;
-
-    localInfo_[tlsSlot_].init(MIRType::Pointer, TlsSlotOffset);
 
     BaseLocalIter i(locals_, args.length(), debugEnabled_);
     varLow_ = i.reservedSize();

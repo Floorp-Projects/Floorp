@@ -1520,7 +1520,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void loadWasmActivationFromTls(Register dest);
     void loadWasmActivationFromSymbolicAddress(Register dest);
-    void loadWasmTlsRegFromFrame();
+    void loadWasmTlsRegFromFrame(Register dest = WasmTlsReg);
 
     template<typename T>
     void loadTypedOrValue(const T& src, TypedOrValueRegister dest) {
