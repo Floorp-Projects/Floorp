@@ -1458,8 +1458,7 @@ struct Frame
     // effectively the callee's instance.
     TlsData* tls;
 
-    // The value of WasmActivation::fp on entry to the function (before being
-    // overwritten by this Frame's address).
+    // The caller's Frame*.
     uint8_t* callerFP;
 
     // The return address pushed by the call (in the case of ARM/MIPS the return

@@ -1464,6 +1464,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     // including "normal" OutOfLineCode.
     void wasmEmitTrapOutOfLineCode();
 
+    // Assert invariants that should be true within any non-exit-stub wasm code.
+    void wasmAssertNonExitInvariants(Register activation);
+
   public:
     // ========================================================================
     // Clamping functions.

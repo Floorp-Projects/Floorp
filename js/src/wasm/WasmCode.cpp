@@ -307,7 +307,7 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
     kind_(kind)
 {
     MOZ_ASSERT(begin_ <= end_);
-    MOZ_ASSERT(kind_ == Entry || kind_ == Inline ||
+    MOZ_ASSERT(kind_ == Entry || kind_ == Inline || kind_ == Throw ||
                kind_ == FarJumpIsland || kind_ == DebugTrap);
 }
 
