@@ -592,29 +592,35 @@ static bool clip_to_limit(const SkRegion& orig, SkRegion* reduced) {
 }
 
 /**
-  * Variant of SkScalarRoundToInt, identical to SkDScalarRoundToInt except when the input fraction
-  * is 0.5. In this case only, round the value down. This is used to round the top and left
-  * of a rectangle, and corresponds to the way the scan converter treats the top and left edges.
+  * Variants of SkScalarRoundToInt, identical to SkDScalarRoundToInt except when the input fraction
+  * is 0.5. When SK_RASTERIZE_EVEN_ROUNDING is enabled, we must bias the result before rounding to
+  * account for potential FDot6 rounding edge-cases.
+  */
+#ifdef SK_RASTERIZE_EVEN_ROUNDING
+static const double kRoundBias = 0.5 / SK_FDot6One;
+#else
+static const double kRoundBias = 0.0;
+#endif
+
+/**
+  * Round the value down. This is used to round the top and left of a rectangle,
+  * and corresponds to the way the scan converter treats the top and left edges.
   */
 static inline int round_down_to_int(SkScalar x) {
     double xx = x;
-    xx += 0.5;
-    double floorXX = floor(xx);
-    return (int)floorXX - (xx == floorXX);
+    xx -= 0.5 + kRoundBias;
+    return (int)ceil(xx);
 }
 
-#ifdef SK_RASTERIZE_EVEN_ROUNDING
 /**
-  * Variant of SkDScalarRoundToInt that allows offseting the input by a small fraction
-  * while trying to preserve intermediate double-precision (rather than directly adding
-  * the bias to the input at lower single-precision).
+  * Round the value up. This is used to round the bottom and right of a rectangle,
+  * and corresponds to the way the scan converter treats the bottom and right edges.
   */
-static inline int round_biased_to_int(SkScalar x, SkScalar bias) {
+static inline int round_up_to_int(SkScalar x) {
     double xx = x;
-    xx += 0.5 + bias;
+    xx += 0.5 + kRoundBias;
     return (int)floor(xx);
 }
-#endif
 
 /**
   *  Variant of SkRect::round() that explicitly performs the rounding step (i.e. floor(x + 0.5))
@@ -635,26 +641,21 @@ static inline int round_biased_to_int(SkScalar x, SkScalar bias) {
   *      SkASSERT(0 == iright);  // <--- succeeds
   *
   *
-  *  If using SK_RASTERIZE_EVEN_ROUNDING, we need to ensure that bottom and right account for
-  *  edges bounded by this rect being rounded to FDot6 format before being later rounded to an
-  *  integer. For example, a value like 0.499 can be below 0.5, but round to 0.5 as FDot6, which
-  *  would finally round to the integer 1, instead of just rounding to 0.
+  *  If using SK_RASTERIZE_EVEN_ROUNDING, we need to ensure we account for edges bounded by this
+  *  rect being rounded to FDot6 format before being later rounded to an integer. For example, a
+  *  value like 0.499 can be below 0.5, but round to 0.5 as FDot6, which would finally round to
+  *  the integer 1, instead of just rounding to 0.
   *
   *  To handle this, a small bias of half an FDot6 increment is added before actually rounding to
   *  an integer value. This simulates the rounding of SkScalarRoundToFDot6 without incurring the
   *  range loss of converting to FDot6 format first, preserving the integer range for the SkIRect.
-  *  Thus, bottom and right are rounded in this manner (biased up), ensuring the rect is large enough.
-  *  Top and left can round as normal since they will round (biased down) to values less or equal
-  *  to the desired rect origin.
+  *  Thus, bottom and right are rounded in this manner (biased up), ensuring the rect is large
+  *  enough.
   */
 static void round_asymmetric_to_int(const SkRect& src, SkIRect* dst) {
     SkASSERT(dst);
     dst->set(round_down_to_int(src.fLeft), round_down_to_int(src.fTop),
-#ifdef SK_RASTERIZE_EVEN_ROUNDING
-             round_biased_to_int(src.fRight, 0.5f / SK_FDot6One), round_biased_to_int(src.fBottom, 0.5f / SK_FDot6One));
-#else
-             SkDScalarRoundToInt(src.fRight), SkDScalarRoundToInt(src.fBottom));
-#endif
+             round_up_to_int(src.fRight), round_up_to_int(src.fBottom));
 }
 
 void SkScan::FillPath(const SkPath& path, const SkRegion& origClip,
