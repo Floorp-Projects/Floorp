@@ -27,6 +27,13 @@ public:
   { }
 
   void
+  Append(const UsageInfo& aUsageInfo)
+  {
+    IncrementUsage(&mDatabaseUsage, aUsageInfo.mDatabaseUsage);
+    IncrementUsage(&mFileUsage, aUsageInfo.mFileUsage);
+  }
+
+  void
   AppendToDatabaseUsage(uint64_t aUsage)
   {
     IncrementUsage(&mDatabaseUsage, aUsage);
