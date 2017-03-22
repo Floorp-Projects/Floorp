@@ -776,7 +776,7 @@
                        onclick="ReaderParent.buttonClick(event);"/>
                 <toolbarbutton id="urlbar-zoom-button"
                        onclick="FullZoom.reset();"
-                       tooltiptext="&urlbar.zoomReset.tooltip;"
+                       tooltip="dynamic-shortcut-tooltip"
                        hidden="true"/>
               </hbox>
               <hbox id="userContext-icons" hidden="true">
@@ -791,11 +791,11 @@
                              class="chromeclass-toolbar-additional"
                              command="Browser:ReloadOrDuplicate"
                              onclick="checkForMiddleClick(this, event);"
-                             tooltiptext="&reloadButton.tooltip;"/>
+                             tooltip="dynamic-shortcut-tooltip"/>
               <toolbarbutton id="urlbar-stop-button"
                              class="chromeclass-toolbar-additional"
                              command="Browser:Stop"
-                             tooltiptext="&stopButton.tooltip;"/>
+                             tooltip="dynamic-shortcut-tooltip"/>
             </textbox>
           </hbox>
         </toolbaritem>
