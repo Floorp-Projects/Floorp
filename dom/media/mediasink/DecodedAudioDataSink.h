@@ -3,8 +3,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#if !defined(DecodedAudioDataSink_h__)
-#define DecodedAudioDataSink_h__
+#ifndef AudioSink_h__
+#define AudioSink_h__
 
 #include "AudioStream.h"
 #include "MediaEventSource.h"
@@ -26,18 +26,18 @@ class AudioConverter;
 
 namespace media {
 
-class DecodedAudioDataSink : private AudioStream::DataSource {
+class AudioSink : private AudioStream::DataSource {
   using PlaybackParams = MediaSink::PlaybackParams;
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodedAudioDataSink)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioSink)
 
 public:
-  DecodedAudioDataSink(AbstractThread* aThread,
-                       MediaQueue<AudioData>& aAudioQueue,
-                       int64_t aStartTime,
-                       const AudioInfo& aInfo,
-                       dom::AudioChannel aChannel);
+  AudioSink(AbstractThread* aThread,
+            MediaQueue<AudioData>& aAudioQueue,
+            int64_t aStartTime,
+            const AudioInfo& aInfo,
+            dom::AudioChannel aChannel);
 
-  // Return a promise which will be resolved when DecodedAudioDataSink
+  // Return a promise which will be resolved when AudioSink
   // finishes playing, or rejected if any error.
   RefPtr<GenericPromise> Init(const PlaybackParams& aParams);
 
@@ -52,7 +52,7 @@ public:
   // played.
   bool HasUnplayedFrames();
 
-  // Shut down the DecodedAudioDataSink's resources.
+  // Shut down the AudioSink's resources.
   void Shutdown();
 
   void SetVolume(double aVolume);
@@ -65,7 +65,7 @@ public:
   }
 
 private:
-  virtual ~DecodedAudioDataSink();
+  virtual ~AudioSink();
 
   // Allocate and initialize mAudioStream. Returns NS_OK on success.
   nsresult InitializeAudioStream(const PlaybackParams& aParams);
@@ -166,4 +166,4 @@ private:
 } // namespace media
 } // namespace mozilla
 
-#endif
+#endif // AudioSink_h__

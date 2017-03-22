@@ -22,7 +22,7 @@ template <class T> class MediaQueue;
 
 namespace media {
 
-class DecodedAudioDataSink;
+class AudioSink;
 
 /**
  * A wrapper around AudioSink to provide the interface of MediaSink.
@@ -32,7 +32,7 @@ class AudioSinkWrapper : public MediaSink {
   class Creator {
   public:
     virtual ~Creator() {}
-    virtual DecodedAudioDataSink* Create() = 0;
+    virtual AudioSink* Create() = 0;
   };
 
   // Wrap around a function object which creates AudioSinks.
@@ -40,7 +40,7 @@ class AudioSinkWrapper : public MediaSink {
   class CreatorImpl : public Creator {
   public:
     explicit CreatorImpl(const Function& aFunc) : mFunction(aFunc) {}
-    DecodedAudioDataSink* Create() override { return mFunction(); }
+    AudioSink* Create() override { return mFunction(); }
   private:
     Function mFunction;
   };
@@ -89,7 +89,7 @@ private:
 
   const RefPtr<AbstractThread> mOwnerThread;
   UniquePtr<Creator> mCreator;
-  RefPtr<DecodedAudioDataSink> mAudioSink;
+  RefPtr<AudioSink> mAudioSink;
   RefPtr<GenericPromise> mEndPromise;
 
   bool mIsStarted;
