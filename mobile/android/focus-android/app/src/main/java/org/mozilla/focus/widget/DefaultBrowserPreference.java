@@ -13,14 +13,17 @@ import android.preference.Preference;
 import android.provider.Settings;
 import android.util.AttributeSet;
 
+import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
 
 @TargetApi(Build.VERSION_CODES.N)
 public class DefaultBrowserPreference extends Preference {
+    @SuppressWarnings("unused") // Instantiated from XML
     public DefaultBrowserPreference(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
+    @SuppressWarnings("unused") // Instantiated from XML
     public DefaultBrowserPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
@@ -31,8 +34,7 @@ public class DefaultBrowserPreference extends Preference {
             Intent intent = new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS);
             getContext().startActivity(intent);
         } else {
-            // This link apparently doesn't need the usual SUMO processing: it's not app specific, but platform specific
-            final String url = "https://support.mozilla.org/kb/make-firefox-default-browser-android?utm_source=inproduct&amp;utm_medium=settings&amp;utm_campaign=mobileandroid";
+            final String url = getContext().getResources().getString(R.string.url_sumo_default_browser);
 
             final Intent intent = InfoActivity.getIntentFor(getContext(), url, getTitle().toString());
             getContext().startActivity(intent);

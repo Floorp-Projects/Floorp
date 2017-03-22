@@ -4,4 +4,5 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <string name="url_sumo_help">https://support.mozilla.org/kb/klar-android-de</string>
+    <string name="url_sumo_default_browser">https://support.mozilla.org/kb/klar-default-android-de</string>
 </resources>
