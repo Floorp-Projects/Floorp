@@ -13,6 +13,7 @@ mtransport_lcppsrcs = [
     'nricemediastream.cpp',
     'nriceresolver.cpp',
     'nriceresolverfake.cpp',
+    'nricestunaddr.cpp',
     'nrinterfaceprioritizer.cpp',
     'rlogconnector.cpp',
     'simpletokenbucket.cpp',

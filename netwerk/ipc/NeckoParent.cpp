@@ -25,6 +25,7 @@
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/ChannelDiverterParent.h"
 #include "mozilla/net/IPCTransportProvider.h"
+#include "mozilla/net/StunAddrsRequestParent.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabContext.h"
@@ -324,6 +325,22 @@ NeckoParent::RecvPHttpChannelConstructor(
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
+}
+
+PStunAddrsRequestParent*
+NeckoParent::AllocPStunAddrsRequestParent()
+{
+  StunAddrsRequestParent* p = new StunAddrsRequestParent();
+  p->AddRef();
+  return p;
+}
+
+bool
+NeckoParent::DeallocPStunAddrsRequestParent(PStunAddrsRequestParent* aActor)
+{
+  StunAddrsRequestParent* p = static_cast<StunAddrsRequestParent*>(aActor);
+  p->Release();
+  return true;
 }
 
 PAltDataOutputStreamParent*
