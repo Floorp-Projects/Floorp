@@ -10,6 +10,7 @@
 
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "nsClassHashtable.h"
 
 namespace mozilla {
 
