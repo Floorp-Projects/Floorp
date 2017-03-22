@@ -90,6 +90,10 @@ interface imgIContainer : nsISupports
    */
   readonly attribute int32_t height;
 
+  %{C++
+  virtual nsresult GetNativeSizes(nsTArray<nsIntSize>& aNativeSizes) const = 0;
+  %}
+
   /**
    * The intrinsic size of this image in appunits. If the image has no intrinsic
    * size in a dimension, -1 will be returned for that dimension. In the case of

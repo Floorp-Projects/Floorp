@@ -242,6 +242,8 @@ nsICODecoder::ReadDirEntry(const char* aData)
     }
   }
 
+  mImageMetadata.AddNativeSize(entrySize);
+
   if (desiredSize) {
     // Calculate the delta between this resource's size and the desired size, so
     // we can see if it is better than our current-best option.  In the case of
