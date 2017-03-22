@@ -9,6 +9,7 @@ const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js", {});
 const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js", {});
 const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js", {});
+const { UptakeTelemetry } = Cu.import("resource://services-common/uptake-telemetry.js", {});
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
@@ -190,13 +191,14 @@ add_task(function* test_sends_reload_message_when_blocklist_has_changes() {
 });
 add_task(clear_state);
 
-add_task(function* test_do_nothing_when_blocklist_is_up_to_date() {
+add_task(function* test_telemetry_reports_up_to_date() {
   for (let {client} of gBlocklistClients) {
     yield client.maybeSync(2000, Date.now() - 1000, {loadDump: false});
     const filePath = OS.Path.join(OS.Constants.Path.profileDir, client.filename);
     const profFile = new FileUtils.File(filePath);
     const fileLastModified = profFile.lastModifiedTime = profFile.lastModifiedTime - 1000;
     const serverTime = Date.now();
+    const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
 
     yield client.maybeSync(3000, serverTime);
 
@@ -205,11 +207,86 @@ add_task(function* test_do_nothing_when_blocklist_is_up_to_date() {
     // Server time was updated.
     const after = Services.prefs.getIntPref(client.lastCheckTimePref);
     equal(after, Math.round(serverTime / 1000));
+    // No Telemetry was sent.
+    const endHistogram = getUptakeTelemetrySnapshot(client.identifier);
+    const expectedIncrements = {[UptakeTelemetry.STATUS.UP_TO_DATE]: 1};
+    checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
   }
 });
 add_task(clear_state);
 
+add_task(function* test_telemetry_if_sync_succeeds() {
+  // We test each client because Telemetry requires preleminary declarations.
+  for (let {client} of gBlocklistClients) {
+    const serverTime = Date.now();
+    const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
 
+    yield client.maybeSync(2000, serverTime, {loadDump: false});
+
+    const endHistogram = getUptakeTelemetrySnapshot(client.identifier);
+    const expectedIncrements = {[UptakeTelemetry.STATUS.SUCCESS]: 1};
+    checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+  }
+});
+add_task(clear_state);
+
+add_task(function* test_telemetry_reports_if_application_fails() {
+  const {client} = gBlocklistClients[0];
+  const serverTime = Date.now();
+  const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
+  const backup = client.processCallback;
+  client.processCallback = () => { throw new Error("boom"); };
+
+  try {
+    yield client.maybeSync(2000, serverTime, {loadDump: false});
+  } catch (e) {}
+
+  client.processCallback = backup;
+
+  const endHistogram = getUptakeTelemetrySnapshot(client.identifier);
+  const expectedIncrements = {[UptakeTelemetry.STATUS.APPLY_ERROR]: 1};
+  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+});
+add_task(clear_state);
+
+add_task(function* test_telemetry_reports_if_sync_fails() {
+  const {client} = gBlocklistClients[0];
+  const serverTime = Date.now();
+
+  const sqliteHandle = yield FirefoxAdapter.openConnection({path: kintoFilename});
+  const collection = kintoCollection(client.collectionName, sqliteHandle);
+  yield collection.db.saveLastModified(9999);
+  yield sqliteHandle.close();
+
+  const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
+
+  try {
+    yield client.maybeSync(10000, serverTime);
+  } catch (e) {}
+
+  const endHistogram = getUptakeTelemetrySnapshot(client.identifier);
+  const expectedIncrements = {[UptakeTelemetry.STATUS.SYNC_ERROR]: 1};
+  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+});
+add_task(clear_state);
+
+add_task(function* test_telemetry_reports_unknown_errors() {
+  const {client} = gBlocklistClients[0];
+  const serverTime = Date.now();
+  const backup = FirefoxAdapter.openConnection;
+  FirefoxAdapter.openConnection = () => { throw new Error("Internal"); };
+  const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
+
+  try {
+    yield client.maybeSync(2000, serverTime);
+  } catch (e) {}
+
+  FirefoxAdapter.openConnection = backup;
+  const endHistogram = getUptakeTelemetrySnapshot(client.identifier);
+  const expectedIncrements = {[UptakeTelemetry.STATUS.UNKNOWN_ERROR]: 1};
+  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+});
+add_task(clear_state);
 
 // get a response for a given request from sample data
 function getSampleResponse(req, port) {
@@ -406,6 +483,20 @@ function getSampleResponse(req, port) {
         "os": "Darwin 11",
         "featureStatus": "BLOCKED_DEVICE"
       }]})
+    },
+    "GET:/v1/buckets/blocklists/collections/addons/records?_sort=-last_modified&_since=9999": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+      ],
+      "status": {status: 503, statusText: "Service Unavailable"},
+      "responseBody": JSON.stringify({
+        code: 503,
+        errno: 999,
+        error: "Service Unavailable",
+      })
     }
   };
   return responses[`${req.method}:${req.path}?${req.queryString}`] ||

@@ -27,6 +27,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "FirefoxAdapter",
                                   "resource://services-common/kinto-storage-adapter.js");
 XPCOMUtils.defineLazyModuleGetter(this, "CanonicalJSON",
                                   "resource://gre/modules/CanonicalJSON.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UptakeTelemetry",
+                                  "resource://services-common/uptake-telemetry.js");
 
 const KEY_APPDIR                             = "XCurProcD";
 const PREF_SETTINGS_SERVER                   = "services.settings.server";
@@ -203,6 +205,7 @@ class BlocklistClient {
     }
 
     let sqliteHandle;
+    let reportStatus = null;
     try {
       // Synchronize remote data into a local Sqlite DB.
       sqliteHandle = await FirefoxAdapter.openConnection({path: KINTO_STORAGE_PATH});
@@ -233,6 +236,7 @@ class BlocklistClient {
       // to record the fact that a check happened.
       if (lastModified <= collectionLastModified) {
         this.updateLastCheck(serverTime);
+        reportStatus = UptakeTelemetry.STATUS.UP_TO_DATE;
         return;
       }
 
@@ -240,16 +244,25 @@ class BlocklistClient {
       try {
         const {ok} = await collection.sync({remote});
         if (!ok) {
+          // Some synchronization conflicts occured.
+          reportStatus = UptakeTelemetry.STATUS.CONFLICT_ERROR;
           throw new Error("Sync failed");
         }
       } catch (e) {
         if (e.message == INVALID_SIGNATURE) {
+          // Signature verification failed during synchronzation.
+          reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
           // if sync fails with a signature error, it's likely that our
           // local data has been modified in some way.
           // We will attempt to fix this by retrieving the whole
           // remote collection.
           const payload = await fetchRemoteCollection(remote, collection);
-          await this.validateCollectionSignature(remote, payload, collection, {ignoreLocal: true});
+          try {
+            await this.validateCollectionSignature(remote, payload, collection, {ignoreLocal: true});
+          } catch (e) {
+            reportStatus = UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR;
+            throw e;
+          }
           // if the signature is good (we haven't thrown), and the remote
           // last_modified is newer than the local last_modified, replace the
           // local data
@@ -259,18 +272,46 @@ class BlocklistClient {
             await collection.loadDump(payload.data);
           }
         } else {
+          // The sync has thrown, it can be a network or a general error.
+          if (/NetworkError/.test(e.message)) {
+            reportStatus = UptakeTelemetry.STATUS.NETWORK_ERROR;
+          } else if (/Backoff/.test(e.message)) {
+            reportStatus = UptakeTelemetry.STATUS.BACKOFF;
+          } else {
+            reportStatus = UptakeTelemetry.STATUS.SYNC_ERROR;
+          }
           throw e;
         }
       }
       // Read local collection of records.
       const {data} = await collection.list();
 
-      await this.processCallback(data);
+      // Handle the obtained records (ie. apply locally).
+      try {
+        await this.processCallback(data);
+      } catch (e) {
+        reportStatus = UptakeTelemetry.STATUS.APPLY_ERROR;
+        throw e;
+      }
 
       // Track last update.
       this.updateLastCheck(serverTime);
+    } catch (e) {
+      // No specific error was tracked, mark it as unknown.
+      if (reportStatus === null) {
+        reportStatus = UptakeTelemetry.STATUS.UNKNOWN_ERROR;
+      }
+      throw e;
     } finally {
-      await sqliteHandle.close();
+      if (sqliteHandle) {
+        await sqliteHandle.close();
+      }
+      // No error was reported, this is a success!
+      if (reportStatus === null) {
+        reportStatus = UptakeTelemetry.STATUS.SUCCESS;
+      }
+      // Report success/error status to Telemetry.
+      UptakeTelemetry.report(this.identifier, reportStatus);
     }
   }
 

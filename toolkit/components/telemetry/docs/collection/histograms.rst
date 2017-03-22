@@ -85,6 +85,8 @@ Flag histograms will ignore any changes after the flag is set, so once the flag 
 
 This histogram type is used when you want to record a count of something. It only stores a single value and defaults to `0`.
 
+.. _histogram-type-keyed:
+
 Keyed Histograms
 ----------------
 

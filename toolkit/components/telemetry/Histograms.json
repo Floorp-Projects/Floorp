@@ -5803,6 +5803,17 @@
     "releaseChannelCollection": "opt-out",
     "description": "Update: the update wizard page displayed when the UI was closed (mapped in toolkit/mozapps/update/UpdateTelemetry.jsm)"
   },
+  "UPTAKE_REMOTE_CONTENT_RESULT_1": {
+    "record_in_processes": ["all"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "keyed": true,
+    "labels": ["up_to_date", "success", "backoff", "pref_disabled", "parse_error", "content_error", "sign_error", "sign_retry_error", "conflict_error", "sync_error", "apply_error", "server_error", "certificate_error", "download_error", "timeout_error", "network_error", "offline_error", "cleanup_error", "unknown_error", "custom_1_error", "custom_2_error", "custom_3_error", "custom_4_error", "custom_5_error"],
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["storage-team@mozilla.com"],
+    "bug_numbers": [1254099],
+    "description": "Generic histogram to track uptake of remote content like blocklists, settings or updates."
+  },
   "UPDATE_NOTIFICATION_SHOWN": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
