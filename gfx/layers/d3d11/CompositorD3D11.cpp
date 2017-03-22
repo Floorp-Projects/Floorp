@@ -1002,8 +1002,14 @@ CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
     const gfx::Matrix4x4& maskTransform = maskEffect->mMaskTransform;
     NS_ASSERTION(maskTransform.Is2D(), "How did we end up with a 3D transform here?!");
     Rect bounds = Rect(Point(), Size(maskEffect->mSize));
+    bounds = maskTransform.As2D().TransformBounds(bounds);
 
-    mVSConstants.maskQuad = maskTransform.As2D().TransformBounds(bounds);
+    Matrix4x4 transform;
+    transform._11 = 1.0f / bounds.width;
+    transform._22 = 1.0f / bounds.height;
+    transform._41 = float(-bounds.x) / bounds.width;
+    transform._42 = float(-bounds.y) / bounds.height;
+    memcpy(mVSConstants.maskTransform, &transform._11, 64);
   }
 
   D3D11_RECT scissor;

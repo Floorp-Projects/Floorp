@@ -340,7 +340,7 @@ FRAME_STATE_BIT(GridContainer, 23, NS_STATE_GRID_SYNTHESIZE_BASELINE)
 
 // == Frame state bits that apply to SVG frames ===============================
 
-FRAME_STATE_GROUP(SVG, nsISVGChildFrame)
+FRAME_STATE_GROUP(SVG, nsSVGDisplayableFrame)
 FRAME_STATE_GROUP(SVG, nsSVGContainerFrame)
 
 FRAME_STATE_BIT(SVG, 20, NS_STATE_IS_OUTER_SVG)

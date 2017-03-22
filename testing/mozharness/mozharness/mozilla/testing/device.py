@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
-'''Interact with a device via ADB or SUT.
+'''Interact with a device via ADB
 
 This code is largely from
 https://hg.mozilla.org/build/tools/file/default/sut_tools
@@ -276,7 +276,6 @@ class ADBDeviceHandler(BaseDeviceHandler):
         self.device_root = device_root
         return self.device_root
 
-    # TODO from here on down needs to be copied to Base+SUT
     def wait_for_device(self, interval=60, max_attempts=20):
         self.info("Waiting for device to come back...")
         time.sleep(interval)
@@ -415,242 +414,9 @@ class ADBDeviceHandler(BaseDeviceHandler):
             self.debug("%s file doesn't exist; skipping." % hosts_file)
 
 
-# SUTDeviceHandler {{{1
-class SUTDeviceHandler(BaseDeviceHandler):
-    def __init__(self, **kwargs):
-        super(SUTDeviceHandler, self).__init__(**kwargs)
-        self.devicemanager = None
-        self.default_port = 20701
-        self.default_heartbeat_port = 20700
-        self.DMError = None
-
-    def query_devicemanager(self):
-        if self.devicemanager:
-            return self.devicemanager
-        c = self.config
-        site_packages_path = self.script_obj.query_python_site_packages_path()
-        dm_path = os.path.join(site_packages_path, 'mozdevice')
-        sys.path.append(dm_path)
-        try:
-            from devicemanagerSUT import DeviceManagerSUT
-            from devicemanagerSUT import DMError
-            self.DMError = DMError
-            self.devicemanager = DeviceManagerSUT(c['device_ip'])
-            # TODO configurable?
-            self.devicemanager.debug = c.get('devicemanager_debug_level', 0)
-        except ImportError, e:
-            self.fatal("Can't import DeviceManagerSUT! %s\nDid you check out talos?" % str(e))
-        return self.devicemanager
-
-    # maintenance {{{2
-    def ping_device(self):
-        #TODO writeme
-        pass
-
-    def check_device(self):
-        self.info("Checking for device root to verify the device is alive.")
-        dev_root = self.query_device_root(strict=True)
-        if not dev_root:
-            self.add_device_flag(DEVICE_UNREACHABLE)
-            self.fatal("Can't get dev_root from devicemanager; is the device up?")
-        self.info("Found a dev_root of %s." % str(dev_root))
-
-    def wait_for_device(self, interval=60, max_attempts=20):
-        self.info("Waiting for device to come back...")
-        time.sleep(interval)
-        success = False
-        attempts = 0
-        while attempts <= max_attempts:
-            attempts += 1
-            self.info("Try %d" % attempts)
-            if self.query_device_root() is not None:
-                success = True
-                break
-            time.sleep(interval)
-        if not success:
-            self.add_device_flag(DEVICE_UNREACHABLE)
-            self.fatal("Waiting for tegra timed out.")
-        else:
-            self.info("Device came back.")
-
-    def cleanup_device(self, reboot=False):
-        c = self.config
-        dev_root = self.query_device_root()
-        dm = self.query_devicemanager()
-        if dm.dirExists(dev_root):
-            self.info("Removing dev_root %s..." % dev_root)
-            try:
-                dm.removeDir(dev_root)
-            except self.DMError:
-                self.add_device_flag(DEVICE_CANT_REMOVE_DEVROOT)
-                self.fatal("Can't remove dev_root!")
-        if c.get("enable_automation"):
-            self.remove_etc_hosts()
-        # TODO I need to abstract this uninstall as we'll need to clean
-        # multiple packages off devices.
-        if c.get("device_package_name"):
-            if dm.dirExists('/data/data/%s' % c['device_package_name']):
-                self.info("Uninstalling %s..." % c['device_package_name'])
-                dm.uninstallAppAndReboot(c['device_package_name'])
-                self.wait_for_device()
-            elif reboot:
-                self.reboot_device()
-
-    # device calls {{{2
-    def query_device_root(self, strict=False):
-        c = self.config
-        dm = self.query_devicemanager()
-        dev_root = dm.getDeviceRoot()
-        if strict and c.get('enable_automation'):
-            if not str(dev_root).startswith("/mnt/sdcard"):
-                self.add_device_flag(DEVICE_MISSING_SDCARD)
-                self.fatal("dev_root from devicemanager [%s] is not correct!" %
-                           str(dev_root))
-        if not dev_root or dev_root == "/tests":
-            return None
-        return dev_root
-
-    def query_device_time(self):
-        dm = self.query_devicemanager()
-        timestamp = int(dm.getCurrentTime())  # epoch time in milliseconds
-        dt = datetime.datetime.utcfromtimestamp(timestamp / 1000)
-        self.info("Current device time is %s" % dt.strftime('%Y/%m/%d %H:%M:%S'))
-        return dt
-
-    def set_device_time(self):
-        dm = self.query_devicemanager()
-        s = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
-        self.info("Setting device time to %s" % s)
-        try:
-            dm.sendCMD(['settime %s' % s])
-            return True
-        except self.DMError, e:
-            self.add_device_flag(DEVICE_CANT_SET_TIME)
-            self.fatal("Exception while setting device time: %s" % str(e))
-
-    def install_app(self, file_path):
-        dev_root = self.query_device_root(strict=True)
-        if not dev_root:
-            self.add_device_flag(DEVICE_UNREACHABLE)
-            # TODO wait_for_device?
-            self.fatal("dev_root %s not correct!" % str(dev_root))
-
-        dm = self.query_devicemanager()
-
-        c = self.config
-        if c.get('enable_automation'):
-            self.query_device_time()
-            self.set_device_time()
-            self.query_device_time()
-            dm.getInfo('process')
-            dm.getInfo('memory')
-            dm.getInfo('uptime')
-
-        # This target needs to not use os.path.join due to differences with win
-        # Paths vs. unix paths.
-        target = "/".join([dev_root, os.path.basename(file_path)])
-        self.info("Installing %s on device..." % file_path)
-        dm.pushFile(file_path, target)
-        # TODO screen resolution
-        # TODO do something with status?
-        try:
-            dm.installApp(target)
-            self.info('-' * 42)
-            self.info("Sleeping for 90 seconds...")
-            time.sleep(90)
-            self.info('installApp(%s) done - gathering debug info' % target)
-            try:
-                self.info(repr(dm.getInfo('process')))
-                self.info(repr(dm.getInfo('memory')))
-                self.info(repr(dm.getInfo('uptime')))
-                self.info(repr(dm.sendCMD(['exec su -c "logcat -d -v time *:W"'])))
-            except Exception, e:
-                self.info("Exception hit while trying to run logcat: %s" % str(e))
-                self.fatal("Remote Device Error: can't run logcat")
-        except self.DMError:
-            self.fatal("Remote Device Error: installApp() call failed - exiting")
-
-    def reboot_device(self):
-        dm = self.query_devicemanager()
-        # logcat?
-        self.info("Rebooting device...")
-        try:
-            dm.reboot()
-        except self.DMError:
-            self.add_device_flag(DEVICE_NOT_REBOOTED)
-            self.fatal("Can't reboot device!")
-        self.wait_for_device()
-        dm.getInfo('uptime')
-
-    # device type specific {{{2
-    def remove_etc_hosts(self, hosts_file="/system/etc/hosts"):
-        c = self.config
-        # TODO figure this out
-        if c['device_type'] not in ("tegra250",) or True:
-            self.debug("No need to remove /etc/hosts on a non-Tegra250.")
-            return
-        dm = self.query_devicemanager()
-        if dm.fileExists(hosts_file):
-            self.info("Removing %s file." % hosts_file)
-            try:
-                dm.sendCMD(['exec mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system'])
-                dm.sendCMD(['exec rm %s' % hosts_file])
-            except self.DMError:
-                self.add_device_flag(DEVICE_CANT_REMOVE_ETC_HOSTS)
-                self.fatal("Unable to remove %s!" % hosts_file)
-            if dm.fileExists(hosts_file):
-                self.add_device_flag(DEVICE_CANT_REMOVE_ETC_HOSTS)
-                self.fatal("Unable to remove %s!" % hosts_file)
-        else:
-            self.debug("%s file doesn't exist; skipping." % hosts_file)
-
-
-# SUTDeviceMozdeviceMixin {{{1
-class SUTDeviceMozdeviceMixin(SUTDeviceHandler):
-    '''
-    This SUT device manager class makes calls through mozdevice (from mozbase) [1]
-    directly rather than calling SUT tools.
-
-    [1] https://github.com/mozilla/mozbase/blob/master/mozdevice/mozdevice/devicemanagerSUT.py
-    '''
-    dm = None
-
-    def query_devicemanager(self):
-        if self.dm:
-            return self.dm
-        sys.path.append(self.query_python_site_packages_path())
-        from mozdevice.devicemanagerSUT import DeviceManagerSUT
-        self.info("Connecting to: %s" % self.mozpool_device)
-        self.dm = DeviceManagerSUT(self.mozpool_device)
-        # No need for 300 second SUT socket timeouts here
-        self.dm.default_timeout = 30
-        return self.dm
-
-    def query_file(self, filename):
-        dm = self.query_devicemanager()
-        if not dm.fileExists(filename):
-            raise Exception("Expected file (%s) not found" % filename)
-
-        file_contents = dm.pullFile(filename)
-        if file_contents is None:
-            raise Exception("Unable to read file (%s)" % filename)
-
-        return file_contents
-
-    def set_device_epoch_time(self, timestamp=int(time.time())):
-        dm = self.query_devicemanager()
-        dm._runCmds([{'cmd': 'setutime %s' % timestamp}])
-        return dm._runCmds([{'cmd': 'clok'}])
-
-    def get_logcat(self):
-        dm = self.query_devicemanager()
-        return dm.getLogcat()
-
-
 # DeviceMixin {{{1
 DEVICE_PROTOCOL_DICT = {
     'adb': ADBDeviceHandler,
-    'sut': SUTDeviceHandler,
 }
 
 device_config_options = [[
@@ -669,7 +435,7 @@ device_config_options = [[
     ["--device-heartbeat-port"],
     {"action": "store",
      "dest": "device_heartbeat_port",
-     "help": "Specify the heartbeat port of the SUT device."
+     "help": "Specify the heartbeat port of the device."
      }
 ], [
     ["--device-protocol"],
@@ -694,7 +460,7 @@ device_config_options = [[
     ["--devicemanager-path"],
     {"action": "store",
      "dest": "devicemanager_path",
-     "help": "Specify the parent dir of devicemanagerSUT.py."
+     "help": "Specify the parent dir of devicemanager.py."
      }
 ]]
 

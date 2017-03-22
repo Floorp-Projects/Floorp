@@ -136,7 +136,7 @@ public:
   // by the sum of the resolutions of all parent layers' FrameMetrics.
   const CSSToParentLayerScale2D& GetFrameResolution() { return mFrameResolution; }
 
-  void SetCompositor(Compositor* aCompositor);
+  void SetTextureSourceProvider(TextureSourceProvider* aProvider);
 
   void AddAnimationInvalidation(nsIntRegion& aRegion);
 protected:
@@ -194,18 +194,18 @@ public:
     return mTiledBuffer.GetValidRegion();
   }
 
-  virtual void SetCompositor(Compositor* aCompositor) override
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override
   {
-    MOZ_ASSERT(aCompositor);
-    CompositableHost::SetCompositor(aCompositor);
-    mTiledBuffer.SetCompositor(aCompositor);
-    mLowPrecisionTiledBuffer.SetCompositor(aCompositor);
+    CompositableHost::SetTextureSourceProvider(aProvider);
+    mTiledBuffer.SetTextureSourceProvider(aProvider);
+    mLowPrecisionTiledBuffer.SetTextureSourceProvider(aProvider);
   }
 
   bool UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
                            const SurfaceDescriptorTiles& aTiledDescriptor);
 
-  virtual void Composite(LayerComposite* aLayer,
+  virtual void Composite(Compositor* aCompositor,
+                         LayerComposite* aLayer,
                          EffectChain& aEffectChain,
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,
@@ -219,7 +219,7 @@ public:
   virtual TiledContentHost* AsTiledContentHost() override { return this; }
 
   virtual void Attach(Layer* aLayer,
-                      Compositor* aCompositor,
+                      TextureSourceProvider* aProvider,
                       AttachFlags aFlags = NO_FLAGS) override;
 
   virtual void Detach(Layer* aLayer = nullptr,
@@ -236,6 +236,7 @@ public:
 private:
 
   void RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
+                         Compositor* aCompositor,
                          const gfx::Color* aBackgroundColor,
                          EffectChain& aEffectChain,
                          float aOpacity,
@@ -247,6 +248,7 @@ private:
 
   // Renders a single given tile.
   void RenderTile(TileHost& aTile,
+                  Compositor* aCompositor,
                   EffectChain& aEffectChain,
                   float aOpacity,
                   const gfx::Matrix4x4& aTransform,

@@ -32,7 +32,7 @@ RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py \
   $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
 
 REMOTE_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/remotereftest.py \
-  --dm_trans=$(DM_TRANS) --ignore-window-size \
+  --ignore-window-size \
   --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
   --httpd-path=_tests/modules --suite reftest \
   --extra-profile-file=$(topsrcdir)/mobile/android/fonts \
@@ -53,7 +53,6 @@ reftest:
 	$(CHECK_TEST_ERROR)
 
 reftest-remote: TEST_PATH?=layout/reftests/reftest.list
-reftest-remote: DM_TRANS?=adb
 reftest-remote:
 	@if [ '${MOZ_HOST_BIN}' = '' ]; then \
         echo 'environment variable MOZ_HOST_BIN must be set to a directory containing host xpcshell'; \
@@ -61,8 +60,6 @@ reftest-remote:
         echo 'MOZ_HOST_BIN does not specify a directory'; \
     elif [ ! -f ${MOZ_HOST_BIN}/xpcshell ]; then \
         echo 'xpcshell not found in MOZ_HOST_BIN'; \
-    elif [ '${TEST_DEVICE}' = '' -a '$(DM_TRANS)' != 'adb' ]; then \
-        echo 'please prepare your host with the environment variable TEST_DEVICE'; \
     else \
         ln -s $(abspath $(topsrcdir)) _tests/reftest/tests; \
         $(call REMOTE_REFTEST,'tests/$(TEST_PATH)'); \
@@ -87,18 +84,12 @@ REMOTE_CPPUNITTESTS = \
 	$(PYTHON) -u $(topsrcdir)/testing/remotecppunittests.py \
 	  --xre-path=$(DEPTH)/dist/bin \
 	  --localLib=$(DEPTH)/dist/fennec \
-	  --dm_trans=$(DM_TRANS) \
 	  --deviceIP=${TEST_DEVICE} \
 	  $(TEST_PATH) $(EXTRA_TEST_ARGS)
 
 # Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] cppunittests-remote|.
-cppunittests-remote: DM_TRANS?=adb
 cppunittests-remote:
-	@if [ '${TEST_DEVICE}' != '' -o '$(DM_TRANS)' = 'adb' ]; \
-          then $(call REMOTE_CPPUNITTESTS); \
-        else \
-          echo 'please prepare your host with environment variables for TEST_DEVICE'; \
-        fi
+	$(call REMOTE_CPPUNITTESTS);
 
 jetpack-tests:
 	cd $(topsrcdir)/addon-sdk/source && $(PYTHON) bin/cfx -b $(abspath $(browser_path)) --parseable testpkgs

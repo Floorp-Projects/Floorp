@@ -38,6 +38,7 @@
 #include "mozilla/Telemetry.h"
 
 #include "BodyExtractor.h"
+#include "FetchObserver.h"
 #include "InternalRequest.h"
 #include "InternalResponse.h"
 
@@ -51,38 +52,141 @@ namespace dom {
 
 using namespace workers;
 
+// This class helps the proxying of FetchSignal changes cross threads.
+class FetchSignalProxy final : public FetchSignal::Follower
+{
+  // This is created and released on the main-thread.
+  RefPtr<FetchSignal> mSignalMainThread;
+
+  // This value is used only for the creation of FetchSignal on the
+  // main-thread. They are not updated.
+  const bool mAborted;
+
+  // This runnable propagates changes from the FetchSignal on workers to the
+  // FetchSignal on main-thread.
+  class FetchSignalProxyRunnable final : public Runnable
+  {
+    RefPtr<FetchSignalProxy> mProxy;
+
+  public:
+    explicit FetchSignalProxyRunnable(FetchSignalProxy* aProxy)
+      : mProxy(aProxy)
+    {}
+
+    NS_IMETHOD
+    Run() override
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+      FetchSignal* signal = mProxy->GetOrCreateSignalForMainThread();
+      signal->Abort();
+      return NS_OK;
+    }
+  };
+
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchSignalProxy)
+
+  explicit FetchSignalProxy(FetchSignal* aSignal)
+    : mAborted(aSignal->Aborted())
+  {
+    Follow(aSignal);
+  }
+
+  void
+  Aborted() override
+  {
+    RefPtr<FetchSignalProxyRunnable> runnable =
+      new FetchSignalProxyRunnable(this);
+    NS_DispatchToMainThread(runnable);
+  }
+
+  FetchSignal*
+  GetOrCreateSignalForMainThread()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (!mSignalMainThread) {
+      mSignalMainThread = new FetchSignal(mAborted);
+    }
+    return mSignalMainThread;
+  }
+
+  void
+  Shutdown()
+  {
+    Unfollow();
+  }
+
+private:
+  ~FetchSignalProxy()
+  {
+    NS_ReleaseOnMainThread(mSignalMainThread.forget());
+  }
+};
+
 class WorkerFetchResolver final : public FetchDriverObserver
 {
   friend class MainThreadFetchRunnable;
+  friend class WorkerDataAvailableRunnable;
+  friend class WorkerFetchResponseEndBase;
   friend class WorkerFetchResponseEndRunnable;
   friend class WorkerFetchResponseRunnable;
 
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
+  RefPtr<FetchSignalProxy> mSignalProxy;
+  RefPtr<FetchObserver> mFetchObserver;
+
 public:
   // Returns null if worker is shutting down.
   static already_AddRefed<WorkerFetchResolver>
-  Create(workers::WorkerPrivate* aWorkerPrivate, Promise* aPromise)
+  Create(workers::WorkerPrivate* aWorkerPrivate, Promise* aPromise,
+         FetchSignal* aSignal, FetchObserver* aObserver)
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
-    RefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(aWorkerPrivate, aPromise);
+    RefPtr<PromiseWorkerProxy> proxy =
+      PromiseWorkerProxy::Create(aWorkerPrivate, aPromise);
     if (!proxy) {
       return nullptr;
     }
 
-    RefPtr<WorkerFetchResolver> r = new WorkerFetchResolver(proxy);
+    RefPtr<FetchSignalProxy> signalProxy;
+    if (aSignal) {
+      signalProxy = new FetchSignalProxy(aSignal);
+    }
+
+    RefPtr<WorkerFetchResolver> r =
+      new WorkerFetchResolver(proxy, signalProxy, aObserver);
     return r.forget();
+  }
+
+  FetchSignal*
+  GetFetchSignal()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!mSignalProxy) {
+      return nullptr;
+    }
+
+    return mSignalProxy->GetOrCreateSignalForMainThread();
   }
 
   void
   OnResponseAvailableInternal(InternalResponse* aResponse) override;
 
   void
-  OnResponseEnd() override;
+  OnResponseEnd(FetchDriverObserver::EndReason eReason) override;
+
+  void
+  OnDataAvailable() override;
 
 private:
-  explicit WorkerFetchResolver(PromiseWorkerProxy* aProxy)
+   WorkerFetchResolver(PromiseWorkerProxy* aProxy,
+                       FetchSignalProxy* aSignalProxy,
+                       FetchObserver* aObserver)
     : mPromiseProxy(aProxy)
+    , mSignalProxy(aSignalProxy)
+    , mFetchObserver(aObserver)
   {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(mPromiseProxy);
@@ -99,12 +203,16 @@ class MainThreadFetchResolver final : public FetchDriverObserver
 {
   RefPtr<Promise> mPromise;
   RefPtr<Response> mResponse;
+  RefPtr<FetchObserver> mFetchObserver;
 
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   NS_DECL_OWNINGTHREAD
 public:
-  explicit MainThreadFetchResolver(Promise* aPromise);
+  MainThreadFetchResolver(Promise* aPromise, FetchObserver* aObserver)
+    : mPromise(aPromise)
+    , mFetchObserver(aObserver)
+  {}
 
   void
   OnResponseAvailableInternal(InternalResponse* aResponse) override;
@@ -114,10 +222,20 @@ public:
     mLoadGroup = aLoadGroup;
   }
 
-  virtual void OnResponseEnd() override
+  void
+  OnResponseEnd(FetchDriverObserver::EndReason aReason) override
   {
+    if (aReason == eAborted) {
+      mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    }
+
+    mFetchObserver = nullptr;
+
     FlushConsoleReport();
   }
+
+  void
+  OnDataAvailable() override;
 
 private:
   ~MainThreadFetchResolver();
@@ -169,9 +287,11 @@ public:
       fetch->SetWorkerScript(spec);
     }
 
+    RefPtr<FetchSignal> signal = mResolver->GetFetchSignal();
+
     // ...but release it before calling Fetch, because mResolver's callback can
     // be called synchronously and they want the mutex, too.
-    return fetch->Fetch(mResolver);
+    return fetch->Fetch(signal, mResolver);
   }
 };
 
@@ -207,6 +327,18 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
 
   RefPtr<InternalRequest> r = request->GetInternalRequest();
 
+  RefPtr<FetchSignal> signal;
+  if (aInit.mSignal.WasPassed()) {
+    signal = &aInit.mSignal.Value();
+    // Let's FetchDriver to deal with an already aborted signal.
+  }
+
+  RefPtr<FetchObserver> observer;
+  if (aInit.mObserve.WasPassed()) {
+    observer = new FetchObserver(aGlobal, signal);
+    aInit.mObserve.Value().HandleEvent(*observer);
+  }
+
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
     nsCOMPtr<nsIDocument> doc;
@@ -235,11 +367,12 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
 
     Telemetry::Accumulate(Telemetry::FETCH_IS_MAINTHREAD, 1);
 
-    RefPtr<MainThreadFetchResolver> resolver = new MainThreadFetchResolver(p);
+    RefPtr<MainThreadFetchResolver> resolver =
+      new MainThreadFetchResolver(p, observer);
     RefPtr<FetchDriver> fetch = new FetchDriver(r, principal, loadGroup);
     fetch->SetDocument(doc);
     resolver->SetLoadGroup(loadGroup);
-    aRv = fetch->Fetch(resolver);
+    aRv = fetch->Fetch(signal, resolver);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -253,23 +386,20 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
       r->SetSkipServiceWorker();
     }
 
-    RefPtr<WorkerFetchResolver> resolver = WorkerFetchResolver::Create(worker, p);
+    RefPtr<WorkerFetchResolver> resolver =
+      WorkerFetchResolver::Create(worker, p, signal, observer);
     if (!resolver) {
       NS_WARNING("Could not add WorkerFetchResolver workerHolder to worker");
       aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
       return nullptr;
     }
 
-    RefPtr<MainThreadFetchRunnable> run = new MainThreadFetchRunnable(resolver, r);
+    RefPtr<MainThreadFetchRunnable> run =
+      new MainThreadFetchRunnable(resolver, r);
     worker->DispatchToMainThread(run.forget());
   }
 
   return p.forget();
-}
-
-MainThreadFetchResolver::MainThreadFetchResolver(Promise* aPromise)
-  : mPromise(aPromise)
-{
 }
 
 void
@@ -279,13 +409,36 @@ MainThreadFetchResolver::OnResponseAvailableInternal(InternalResponse* aResponse
   AssertIsOnMainThread();
 
   if (aResponse->Type() != ResponseType::Error) {
+    if (mFetchObserver) {
+      mFetchObserver->SetState(FetchState::Complete);
+    }
+
     nsCOMPtr<nsIGlobalObject> go = mPromise->GetParentObject();
     mResponse = new Response(go, aResponse);
     mPromise->MaybeResolve(mResponse);
   } else {
+    if (mFetchObserver) {
+      mFetchObserver->SetState(FetchState::Errored);
+    }
+
     ErrorResult result;
     result.ThrowTypeError<MSG_FETCH_FAILED>();
     mPromise->MaybeReject(result);
+  }
+}
+
+void
+MainThreadFetchResolver::OnDataAvailable()
+{
+  NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver);
+  AssertIsOnMainThread();
+
+  if (!mFetchObserver) {
+    return;
+  }
+
+  if (mFetchObserver->State() == FetchState::Requesting) {
+    mFetchObserver->SetState(FetchState::Responding);
   }
 }
 
@@ -307,6 +460,7 @@ public:
     , mResolver(aResolver)
     , mInternalResponse(aResponse)
   {
+     MOZ_ASSERT(mResolver);
   }
 
   bool
@@ -318,10 +472,18 @@ public:
     RefPtr<Promise> promise = mResolver->mPromiseProxy->WorkerPromise();
 
     if (mInternalResponse->Type() != ResponseType::Error) {
+      if (mResolver->mFetchObserver) {
+        mResolver->mFetchObserver->SetState(FetchState::Complete);
+      }
+
       RefPtr<nsIGlobalObject> global = aWorkerPrivate->GlobalScope();
       RefPtr<Response> response = new Response(global, mInternalResponse);
       promise->MaybeResolve(response);
     } else {
+      if (mResolver->mFetchObserver) {
+        mResolver->mFetchObserver->SetState(FetchState::Errored);
+      }
+
       ErrorResult result;
       result.ThrowTypeError<MSG_FETCH_FAILED>();
       promise->MaybeReject(result);
@@ -330,14 +492,42 @@ public:
   }
 };
 
+class WorkerDataAvailableRunnable final : public MainThreadWorkerRunnable
+{
+  RefPtr<WorkerFetchResolver> mResolver;
+public:
+  WorkerDataAvailableRunnable(WorkerPrivate* aWorkerPrivate,
+                              WorkerFetchResolver* aResolver)
+    : MainThreadWorkerRunnable(aWorkerPrivate)
+    , mResolver(aResolver)
+  {
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+
+    if (mResolver->mFetchObserver &&
+        mResolver->mFetchObserver->State() == FetchState::Requesting) {
+      mResolver->mFetchObserver->SetState(FetchState::Responding);
+    }
+
+    return true;
+  }
+};
+
 class WorkerFetchResponseEndBase
 {
-  RefPtr<PromiseWorkerProxy> mPromiseProxy;
+protected:
+  RefPtr<WorkerFetchResolver> mResolver;
+
 public:
-  explicit WorkerFetchResponseEndBase(PromiseWorkerProxy* aPromiseProxy)
-    : mPromiseProxy(aPromiseProxy)
+  explicit WorkerFetchResponseEndBase(WorkerFetchResolver* aResolver)
+    : mResolver(aResolver)
   {
-    MOZ_ASSERT(mPromiseProxy);
+    MOZ_ASSERT(aResolver);
   }
 
   void
@@ -345,23 +535,41 @@ public:
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
-    mPromiseProxy->CleanUp();
+
+    mResolver->mPromiseProxy->CleanUp();
+
+    mResolver->mFetchObserver = nullptr;
+
+    if (mResolver->mSignalProxy) {
+      mResolver->mSignalProxy->Shutdown();
+      mResolver->mSignalProxy = nullptr;
+    }
   }
 };
 
 class WorkerFetchResponseEndRunnable final : public MainThreadWorkerRunnable
                                            , public WorkerFetchResponseEndBase
 {
+  FetchDriverObserver::EndReason mReason;
+
 public:
-  explicit WorkerFetchResponseEndRunnable(PromiseWorkerProxy* aPromiseProxy)
-    : MainThreadWorkerRunnable(aPromiseProxy->GetWorkerPrivate())
-    , WorkerFetchResponseEndBase(aPromiseProxy)
+  WorkerFetchResponseEndRunnable(WorkerPrivate* aWorkerPrivate,
+                                 WorkerFetchResolver* aResolver,
+                                 FetchDriverObserver::EndReason aReason)
+    : MainThreadWorkerRunnable(aWorkerPrivate)
+    , WorkerFetchResponseEndBase(aResolver)
+    , mReason(aReason)
   {
   }
 
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
+    if (mReason == FetchDriverObserver::eAborted) {
+      RefPtr<Promise> promise = mResolver->mPromiseProxy->WorkerPromise();
+      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    }
+
     WorkerRunInternal(aWorkerPrivate);
     return true;
   }
@@ -380,9 +588,10 @@ class WorkerFetchResponseEndControlRunnable final : public MainThreadWorkerContr
                                                   , public WorkerFetchResponseEndBase
 {
 public:
-  explicit WorkerFetchResponseEndControlRunnable(PromiseWorkerProxy* aPromiseProxy)
-    : MainThreadWorkerControlRunnable(aPromiseProxy->GetWorkerPrivate())
-    , WorkerFetchResponseEndBase(aPromiseProxy)
+  WorkerFetchResponseEndControlRunnable(WorkerPrivate* aWorkerPrivate,
+                                        WorkerFetchResolver* aResolver)
+    : MainThreadWorkerControlRunnable(aWorkerPrivate)
+    , WorkerFetchResponseEndBase(aResolver)
   {
   }
 
@@ -416,7 +625,22 @@ WorkerFetchResolver::OnResponseAvailableInternal(InternalResponse* aResponse)
 }
 
 void
-WorkerFetchResolver::OnResponseEnd()
+WorkerFetchResolver::OnDataAvailable()
+{
+  AssertIsOnMainThread();
+
+  MutexAutoLock lock(mPromiseProxy->Lock());
+  if (mPromiseProxy->CleanedUp()) {
+    return;
+  }
+
+  RefPtr<WorkerDataAvailableRunnable> r =
+    new WorkerDataAvailableRunnable(mPromiseProxy->GetWorkerPrivate(), this);
+  Unused << r->Dispatch();
+}
+
+void
+WorkerFetchResolver::OnResponseEnd(FetchDriverObserver::EndReason aReason)
 {
   AssertIsOnMainThread();
   MutexAutoLock lock(mPromiseProxy->Lock());
@@ -427,11 +651,13 @@ WorkerFetchResolver::OnResponseEnd()
   FlushConsoleReport();
 
   RefPtr<WorkerFetchResponseEndRunnable> r =
-    new WorkerFetchResponseEndRunnable(mPromiseProxy);
+    new WorkerFetchResponseEndRunnable(mPromiseProxy->GetWorkerPrivate(),
+                                       this, aReason);
 
   if (!r->Dispatch()) {
     RefPtr<WorkerFetchResponseEndControlRunnable> cr =
-      new WorkerFetchResponseEndControlRunnable(mPromiseProxy);
+      new WorkerFetchResponseEndControlRunnable(mPromiseProxy->GetWorkerPrivate(),
+                                                this);
     // This can fail if the worker thread is canceled or killed causing
     // the PromiseWorkerProxy to give up its WorkerHolder immediately,
     // allowing the worker thread to become Dead.

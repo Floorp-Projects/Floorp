@@ -10,7 +10,7 @@
 #include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "nsFrame.h"
-#include "nsISVGChildFrame.h"
+#include "nsSVGDisplayableFrame.h"
 #include "nsLiteralString.h"
 #include "nsQueryFrame.h"
 #include "nsSVGUtils.h"
@@ -39,7 +39,7 @@ NS_NewSVGGeometryFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 namespace mozilla {
 
 class SVGGeometryFrame : public nsFrame
-                       , public nsISVGChildFrame
+                       , public nsSVGDisplayableFrame
 {
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
@@ -100,7 +100,7 @@ public:
   // SVGGeometryFrame methods
   gfxMatrix GetCanvasTM();
 protected:
-  // nsISVGChildFrame interface:
+  // nsSVGDisplayableFrame interface:
   virtual DrawResult PaintSVG(gfxContext& aContext,
                               const gfxMatrix& aTransform,
                               const nsIntRect* aDirtyRect = nullptr) override;

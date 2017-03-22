@@ -67,15 +67,8 @@ WebRenderTextureHost::GetAsSurface()
   return mWrappedTextureHost->GetAsSurface();
 }
 
-Compositor*
-WebRenderTextureHost::GetCompositor()
-{
-  //MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-  return nullptr;
-}
-
 void
-WebRenderTextureHost::SetCompositor(Compositor* aCompositor)
+WebRenderTextureHost::SetTextureSourceProvider(TextureSourceProvider* aProvider)
 {
 }
 
