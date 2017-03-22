@@ -49,7 +49,7 @@ StunAddrsRequestParent::GetStunAddrs_s()
   ASSERT_ON_THREAD(mSTSThread);
 
   // get the stun addresses while on STS thread
-  NrIceStunAddrArray addrs; // = NrIceCtx::GetStunAddrs();
+  NrIceStunAddrArray addrs = NrIceCtx::GetStunAddrs();
 
   // in order to return the result over IPC, we need to be on main thread
   RUN_ON_THREAD(mMainThread,
