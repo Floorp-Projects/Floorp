@@ -6,7 +6,7 @@
 
 #include "nsPrintfCString.h"
 #include "MediaQueue.h"
-#include "DecodedAudioDataSink.h"
+#include "AudioSink.h"
 #include "VideoUtils.h"
 #include "AudioConverter.h"
 

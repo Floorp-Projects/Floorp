@@ -15,8 +15,8 @@
 
 #include "gfx2DGlue.h"
 
+#include "mediasink/AudioSink.h"
 #include "mediasink/AudioSinkWrapper.h"
-#include "mediasink/DecodedAudioDataSink.h"
 #include "mediasink/DecodedStream.h"
 #include "mediasink/OutputStreamManager.h"
 #include "mediasink/VideoSink.h"
