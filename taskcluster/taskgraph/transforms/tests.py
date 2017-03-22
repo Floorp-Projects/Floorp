@@ -25,12 +25,12 @@ from taskgraph.util.treeherder import split_symbol, join_symbol
 from taskgraph.util.schema import (
     validate_schema,
     optionally_keyed_by,
+    Schema,
 )
 from voluptuous import (
     Any,
     Optional,
     Required,
-    Schema,
 )
 
 import copy
