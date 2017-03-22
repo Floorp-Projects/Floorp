@@ -27,7 +27,7 @@ struct InitOriginParams
   PersistenceType persistenceType;
 };
 
-struct UsageParams
+struct OriginUsageParams
 {
   PrincipalInfo principalInfo;
   bool getGroupUsage;
@@ -35,7 +35,7 @@ struct UsageParams
 
 union UsageRequestParams
 {
-  UsageParams;
+  OriginUsageParams;
 };
 
 struct ClearOriginParams

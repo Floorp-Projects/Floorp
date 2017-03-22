@@ -7,7 +7,7 @@
 #include "nsISupports.idl"
 
 [scriptable, function, uuid(96df03d2-116a-493f-bb0b-118c212a6b32)]
-interface nsIQuotaUsageResult : nsISupports
+interface nsIQuotaOriginUsageResult : nsISupports
 {
   readonly attribute unsigned long long usage;
 
