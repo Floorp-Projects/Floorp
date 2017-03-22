@@ -122,7 +122,7 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe)
     Register scratch = ABINonArgReturnReg1;
 
     // Read the arguments of wasm::ExportFuncPtr according to the native ABI.
-    // The entry stub's frame is only 1 word, not the usual 2 for wasm::Frame.
+    // The entry stub's frame is 1 word.
     const unsigned argBase = sizeof(void*) + masm.framePushed();
     ABIArgGenerator abi;
     ABIArg arg;

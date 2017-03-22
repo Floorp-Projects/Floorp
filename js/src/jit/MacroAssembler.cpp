@@ -2931,6 +2931,13 @@ MacroAssembler::wasmEmitTrapOutOfLineCode()
             if (size_t dec = StackDecrementForCall(ABIStackAlignment, alreadyPushed, toPush))
                 reserveStack(dec);
 
+            // To call the trap handler function, we must have the WasmTlsReg
+            // filled since this is the normal calling ABI. To avoid requiring
+            // every trapping operation to have the TLS register filled for the
+            // rare case that it takes a trap, we instead restore it here on the
+            // out-of-line path.
+            loadWasmTlsRegFromFrame();
+
             // Call the trap's exit, using the bytecode offset of the trap site.
             // Note that this code is inside the same CodeRange::Function as the
             // trap site so it's as if the trapping instruction called the
@@ -2956,6 +2963,27 @@ MacroAssembler::wasmEmitTrapOutOfLineCode()
 }
 
 //}}} check_macroassembler_style
+
+void
+MacroAssembler::loadWasmActivationFromTls(Register dest)
+{
+    loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, cx)), dest);
+    loadPtr(Address(dest, JSContext::offsetOfWasmActivation()), dest);
+}
+
+void
+MacroAssembler::loadWasmActivationFromSymbolicAddress(Register dest)
+{
+    movePtr(wasm::SymbolicAddress::ContextPtr, dest);
+    loadPtr(Address(dest, 0), dest);
+    loadPtr(Address(dest, JSContext::offsetOfWasmActivation()), dest);
+}
+
+void
+MacroAssembler::loadWasmTlsRegFromFrame()
+{
+    loadPtr(Address(getStackPointer(), framePushed() + offsetof(wasm::Frame, tls)), WasmTlsReg);
+}
 
 void
 MacroAssembler::BranchType::emit(MacroAssembler& masm)

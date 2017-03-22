@@ -1517,15 +1517,10 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadJSContext(dest);
         loadPtr(Address(dest, offsetof(JSContext, activation_)), dest);
     }
-    void loadWasmActivationFromTls(Register dest) {
-        loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, cx)), dest);
-        loadPtr(Address(dest, JSContext::offsetOfWasmActivation()), dest);
-    }
-    void loadWasmActivationFromSymbolicAddress(Register dest) {
-        movePtr(wasm::SymbolicAddress::ContextPtr, dest);
-        loadPtr(Address(dest, 0), dest);
-        loadPtr(Address(dest, JSContext::offsetOfWasmActivation()), dest);
-    }
+
+    void loadWasmActivationFromTls(Register dest);
+    void loadWasmActivationFromSymbolicAddress(Register dest);
+    void loadWasmTlsRegFromFrame();
 
     template<typename T>
     void loadTypedOrValue(const T& src, TypedOrValueRegister dest) {
