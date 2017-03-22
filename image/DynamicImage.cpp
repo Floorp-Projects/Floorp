@@ -127,6 +127,12 @@ DynamicImage::GetHeight(int32_t* aHeight)
   return NS_OK;
 }
 
+nsresult
+DynamicImage::GetNativeSizes(nsTArray<IntSize>& aNativeSizes) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP
 DynamicImage::GetIntrinsicSize(nsSize* aSize)
 {
