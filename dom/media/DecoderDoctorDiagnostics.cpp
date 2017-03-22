@@ -32,14 +32,6 @@ static mozilla::LazyLogModule sDecoderDoctorLog("DecoderDoctor");
 
 namespace mozilla {
 
-struct NotificationAndReportStringId
-{
-  // Notification type, handled by browser-media.js.
-  dom::DecoderDoctorNotificationType mNotificationType;
-  // Console message id. Key in dom/locales/.../chrome/dom/dom.properties.
-  const char* mReportStringId;
-};
-
 // Class that collects a sequence of diagnostics from the same document over a
 // small period of time, in order to provide a synthesized analysis.
 //
@@ -246,6 +238,14 @@ DecoderDoctorDocumentWatcher::EnsureTimerIsStarted()
     }
   }
 }
+
+struct NotificationAndReportStringId
+{
+  // Notification type, handled by browser-media.js.
+  dom::DecoderDoctorNotificationType mNotificationType;
+  // Console message id. Key in dom/locales/.../chrome/dom/dom.properties.
+  const char* mReportStringId;
+};
 
 // Note: ReportStringIds are limited to alphanumeric only.
 static const NotificationAndReportStringId sMediaWidevineNoWMF=
