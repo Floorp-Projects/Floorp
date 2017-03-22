@@ -50,6 +50,8 @@ nsNSSShutDownList::nsNSSShutDownList()
 nsNSSShutDownList::~nsNSSShutDownList()
 {
   MOZ_ASSERT(this == singleton);
+  MOZ_ASSERT(sInShutdown,
+             "evaporateAllNSSResourcesAndShutDown() should have been called");
   singleton = nullptr;
 }
 
@@ -126,7 +128,7 @@ nsresult nsNSSShutDownList::doPK11Logout()
   return NS_OK;
 }
 
-nsresult nsNSSShutDownList::evaporateAllNSSResources()
+nsresult nsNSSShutDownList::evaporateAllNSSResourcesAndShutDown()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   if (!NS_IsMainThread()) {
@@ -149,6 +151,8 @@ nsresult nsNSSShutDownList::evaporateAllNSSResources()
   if (!singleton) {
     return NS_OK;
   }
+
+  sInShutdown = true;
 
   {
     StaticMutexAutoUnlock unlock(sListLock);
@@ -183,6 +187,8 @@ nsresult nsNSSShutDownList::evaporateAllNSSResources()
   }
 
   singleton->mActivityState.releaseCurrentThreadActivityRestriction();
+  delete singleton;
+
   return NS_OK;
 }
 
@@ -209,17 +215,6 @@ bool nsNSSShutDownList::construct(const StaticMutexAutoLock& /*proofOfLock*/)
   }
 
   return !!singleton;
-}
-
-void nsNSSShutDownList::shutdown()
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  StaticMutexAutoLock lock(sListLock);
-  sInShutdown = true;
-
-  if (singleton) {
-    delete singleton;
-  }
 }
 
 nsNSSActivityState::nsNSSActivityState()
@@ -285,4 +280,10 @@ nsNSSShutDownPreventionLock::nsNSSShutDownPreventionLock()
 nsNSSShutDownPreventionLock::~nsNSSShutDownPreventionLock()
 {
   nsNSSShutDownList::leaveActivityState();
+}
+
+bool
+nsNSSShutDownObject::isAlreadyShutDown() const
+{
+  return mAlreadyShutDown || sInShutdown;
 }

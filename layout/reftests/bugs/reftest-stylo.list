@@ -818,7 +818,7 @@ fails == 395107-5.html 395107-5.html
 fails == 395130-1.html 395130-1.html
 fails == 395130-2.html 395130-2.html
 == 395331-1.xml 395331-1.xml
-fails == 395390-1.html 395390-1.html
+== 395390-1.html 395390-1.html
 == 396286-1.html 396286-1.html
 fails == 397428-1.html 397428-1.html
 == 397844-1.xhtml 397844-1.xhtml
@@ -1652,7 +1652,7 @@ fails == 622585-1.html 622585-1.html
 == 625409-1.html 625409-1.html
 == 627393-1.html 627393-1.html
 fuzzy-if(skiaContent,1,500) == 630835-1.html 630835-1.html
-== 631352-1.html 631352-1.html
+fails == 631352-1.html 631352-1.html
 == 632423-1.html 632423-1.html
 skip-if(Android) random-if(winWidget||OSX==1010) == 632781-verybig.html 632781-verybig.html
 == 632781-normalsize.html 632781-normalsize.html
@@ -1829,7 +1829,7 @@ fails == 992447.html 992447.html
 == 1005405-1.html 1005405-1.html
 fails == 1012640-1.html 1012640-1.html
 == 1013054-1.html 1013054-1.html
-fails == 1018522-1.html 1018522-1.html
+== 1018522-1.html 1018522-1.html
 == 1021564-1.html 1021564-1.html
 == 1021564-2.html 1021564-2.html
 == 1021564-3.html 1021564-3.html
@@ -1953,7 +1953,7 @@ fails pref(layout.css.overflow-clip-box.enabled,true) == 1226278.html 1226278.ht
 == 1230466.html 1230466.html
 == 1238243-1.html 1238243-1.html
 == 1238243-2.html 1238243-2.html
-fails == 1239564.html 1239564.html
+== 1239564.html 1239564.html
 fails == 1242172-1.html 1242172-1.html
 fails == 1242172-2.html 1242172-2.html
 == 1242781.html 1242781.html

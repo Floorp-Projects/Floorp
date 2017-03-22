@@ -3,7 +3,7 @@
 module.exports = {
   rules: {
     // XXX Bug 1326071 - This should be reduced down - probably to 20 or to
-    // be removed & synced with the toolkit/.eslintrc.js value.
+    // be removed & synced with the mozilla/recommended value.
     "complexity": ["error", {"max": 69}],
   }
 };

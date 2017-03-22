@@ -8,8 +8,8 @@ default-preferences pref(layout.css.prefixes.webkit,true)
 # WebKit/Blink on them.  (The reference case represents the WebKit/Blink
 # rendering.) We could probably make them pass by implementing some quirks, if
 # it turns out that the web depends on WebKit/Blink's behavior in these cases.
-fails == webkit-box-anon-flex-items-1a.html webkit-box-anon-flex-items-1a.html
-fails == webkit-box-anon-flex-items-1b.html webkit-box-anon-flex-items-1b.html
+== webkit-box-anon-flex-items-1a.html webkit-box-anon-flex-items-1a.html
+== webkit-box-anon-flex-items-1b.html webkit-box-anon-flex-items-1b.html
 == webkit-box-anon-flex-items-2.html webkit-box-anon-flex-items-2.html
 == webkit-box-anon-flex-items-3.html webkit-box-anon-flex-items-3.html
 

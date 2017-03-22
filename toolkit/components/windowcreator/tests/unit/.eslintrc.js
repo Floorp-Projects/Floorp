@@ -2,6 +2,6 @@
 
 module.exports = { // eslint-disable-line no-undef
   "extends": [
-    "../../../../../testing/xpcshell/xpcshell.eslintrc.js",
+    "plugin:mozilla/xpcshell-test",
   ]
 };

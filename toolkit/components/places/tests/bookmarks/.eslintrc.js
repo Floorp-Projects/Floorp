@@ -2,7 +2,7 @@
 
 module.exports = {
   "extends": [
-    "../../../../../testing/xpcshell/xpcshell.eslintrc.js"
+    "plugin:mozilla/xpcshell-test"
   ],
   "parserOptions": {
     "ecmaVersion": 8,
