@@ -94,8 +94,7 @@ nsImageLoadingContent::nsImageLoadingContent()
     mNewRequestsWillNeedAnimationReset(false),
     mStateChangerDepth(0),
     mCurrentRequestRegistered(false),
-    mPendingRequestRegistered(false),
-    mFrameCreateCalled(false)
+    mPendingRequestRegistered(false)
 {
   if (!nsContentUtils::GetImgLoaderForChannel(nullptr, nullptr)) {
     mLoadingEnabled = false;
@@ -482,8 +481,6 @@ nsImageLoadingContent::FrameCreated(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "aFrame is null");
 
-  mFrameCreateCalled = true;
-
   TrackImage(mCurrentRequest, aFrame);
   TrackImage(mPendingRequest, aFrame);
 
@@ -505,8 +502,6 @@ NS_IMETHODIMP_(void)
 nsImageLoadingContent::FrameDestroyed(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "aFrame is null");
-
-  mFrameCreateCalled = false;
 
   // We need to make sure that our image request is deregistered.
   nsPresContext* presContext = GetFramePresContext();
