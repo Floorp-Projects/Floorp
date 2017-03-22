@@ -28,15 +28,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=996069
 
     ifr.wrappedJSObject.finishTest = function() {
       // If we got here we did not hit the NS_ReleaseAssert...
-      ok(true, "nsExpandedPrincipal should not be inherited by content windows");
+      ok(true, "ExpandedPrincipal should not be inherited by content windows");
 
       // But let's be sure that the new window does not have nsEP
       newWin.wrappedJSObject.obj = Cu.evalInSandbox("var obj = { foo: 'bar' }; obj", sb);
       try {
         newWin.eval("obj.foo");
-        ok(false, "newWin should not have access to object from a scope with nsExpandedPrincipal");
+        ok(false, "newWin should not have access to object from a scope with ExpandedPrincipal");
       } catch (e) {
-        ok(/Permission denied/.exec(e.message), "newWin should not have access to object from a scope with nsExpandedPrincipal");
+        ok(/Permission denied/.exec(e.message), "newWin should not have access to object from a scope with ExpandedPrincipal");
       }
       newWin.close();
       SimpleTest.finish();
