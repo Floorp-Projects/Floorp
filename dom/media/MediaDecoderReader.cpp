@@ -153,11 +153,11 @@ nsresult MediaDecoderReader::ResetDecode(TrackSet aTracks)
   return NS_OK;
 }
 
-RefPtr<MediaDecoderReader::MediaDataPromise>
+RefPtr<MediaDecoderReader::VideoDataPromise>
 MediaDecoderReader::DecodeToFirstVideoData()
 {
   MOZ_ASSERT(OnTaskQueue());
-  typedef MediaDecoderReader::MediaDataPromise PromiseType;
+  typedef VideoDataPromise PromiseType;
   RefPtr<PromiseType::Private> p = new PromiseType::Private(__func__);
   RefPtr<MediaDecoderReader> self = this;
   InvokeUntil([self] () -> bool {
@@ -285,11 +285,11 @@ private:
   RefPtr<MediaDecoderReader> mReader;
 };
 
-RefPtr<MediaDecoderReader::MediaDataPromise>
+RefPtr<MediaDecoderReader::VideoDataPromise>
 MediaDecoderReader::RequestVideoData(bool aSkipToNextKeyframe,
                                      int64_t aTimeThreshold)
 {
-  RefPtr<MediaDataPromise> p = mBaseVideoPromise.Ensure(__func__);
+  RefPtr<VideoDataPromise> p = mBaseVideoPromise.Ensure(__func__);
   bool skip = aSkipToNextKeyframe;
   while (VideoQueue().GetSize() == 0 &&
          !VideoQueue().IsFinished()) {
@@ -317,10 +317,10 @@ MediaDecoderReader::RequestVideoData(bool aSkipToNextKeyframe,
   return p;
 }
 
-RefPtr<MediaDecoderReader::MediaDataPromise>
+RefPtr<MediaDecoderReader::AudioDataPromise>
 MediaDecoderReader::RequestAudioData()
 {
-  RefPtr<MediaDataPromise> p = mBaseAudioPromise.Ensure(__func__);
+  RefPtr<AudioDataPromise> p = mBaseAudioPromise.Ensure(__func__);
   while (AudioQueue().GetSize() == 0 &&
          !AudioQueue().IsFinished()) {
     if (!DecodeAudioData()) {

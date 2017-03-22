@@ -42,7 +42,7 @@ MediaDecoderReaderWrapper::ReadMetadata()
                 &MediaDecoderReaderWrapper::OnMetadataNotRead);
 }
 
-RefPtr<MediaDecoderReaderWrapper::MediaDataPromise>
+RefPtr<MediaDecoderReaderWrapper::AudioDataPromise>
 MediaDecoderReaderWrapper::RequestAudioData()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
@@ -52,13 +52,13 @@ MediaDecoderReaderWrapper::RequestAudioData()
   return InvokeAsync(mReader->OwnerThread(), mReader.get(),
                      __func__, &MediaDecoderReader::RequestAudioData)
     ->Then(mOwnerThread, __func__,
-           [startTime] (MediaData* aAudio) {
+           [startTime] (AudioData* aAudio) {
              aAudio->AdjustForStartTime(startTime);
            },
            [] (const MediaResult& aError) {});
 }
 
-RefPtr<MediaDecoderReaderWrapper::MediaDataPromise>
+RefPtr<MediaDecoderReaderWrapper::VideoDataPromise>
 MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
                                             media::TimeUnit aTimeThreshold)
 {
@@ -74,7 +74,7 @@ MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
                      &MediaDecoderReader::RequestVideoData,
                      aSkipToNextKeyframe, aTimeThreshold.ToMicroseconds())
     ->Then(mOwnerThread, __func__,
-           [startTime] (MediaData* aVideo) {
+           [startTime] (VideoData* aVideo) {
              aVideo->AdjustForStartTime(startTime);
            },
            [] (const MediaResult& aError) {});
