@@ -2314,7 +2314,7 @@ gfxPlatform::InitWebRenderConfig()
       NS_LITERAL_CSTRING("FEATURE_FAILURE_SAFE_MODE"));
   }
 
-#ifndef MOZ_ENABLE_WEBRENDER
+#ifndef MOZ_BUILD_WEBRENDER
   featureWebRender.ForceDisable(
     FeatureStatus::Unavailable,
     "Build doesn't include WebRender",
