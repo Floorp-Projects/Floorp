@@ -38,7 +38,7 @@ public class GeckoCustomTabsService extends CustomTabsService {
     @Override
     protected boolean warmup(long flags) {
 
-        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SERVICE,"customtab-warmup");
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SERVICE, "customtab-warmup");
 
         if (DEBUG) {
             Log.v(LOGTAG, "warming up...");
