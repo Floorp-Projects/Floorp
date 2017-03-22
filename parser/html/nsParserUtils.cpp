@@ -36,7 +36,7 @@
 #include "nsTreeSanitizer.h"
 #include "nsHtml5Module.h"
 #include "mozilla/dom/DocumentFragment.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 
 #define XHTML_DIV_TAG "div xmlns=\"http://www.w3.org/1999/xhtml\""
 
@@ -76,7 +76,7 @@ nsParserUtils::Sanitize(const nsAString& aFromStr,
 {
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), "about:blank");
-  nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::Create();
+  nsCOMPtr<nsIPrincipal> principal = NullPrincipal::Create();
   nsCOMPtr<nsIDOMDocument> domDocument;
   nsresult rv = NS_NewDOMDocument(getter_AddRefs(domDocument),
                                   EmptyString(),

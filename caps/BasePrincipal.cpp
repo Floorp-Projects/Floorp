@@ -19,7 +19,7 @@
 #include "nsPrincipal.h"
 #include "nsNetUtil.h"
 #include "nsIURIWithPrincipal.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 #include "nsScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 
@@ -645,7 +645,7 @@ BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAt
   nsresult rv = NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
                                     &inheritsPrincipal);
   if (NS_FAILED(rv) || inheritsPrincipal) {
-    return nsNullPrincipal::Create(aAttrs);
+    return NullPrincipal::Create(aAttrs);
   }
 
   // Check whether the URI knows what its principal is supposed to be.
@@ -654,7 +654,7 @@ BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAt
     nsCOMPtr<nsIPrincipal> principal;
     uriPrinc->GetPrincipal(getter_AddRefs(principal));
     if (!principal) {
-      return nsNullPrincipal::Create(aAttrs);
+      return NullPrincipal::Create(aAttrs);
     }
     RefPtr<BasePrincipal> concrete = Cast(principal);
     return concrete.forget();
@@ -674,7 +674,7 @@ BasePrincipal::CreateCodebasePrincipal(const nsACString& aOrigin)
              "CreateCodebasePrincipal does not support System and Expanded principals");
 
   MOZ_ASSERT(!StringBeginsWith(aOrigin, NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME ":")),
-             "CreateCodebasePrincipal does not support nsNullPrincipal");
+             "CreateCodebasePrincipal does not support NullPrincipal");
 
   nsAutoCString originNoSuffix;
   mozilla::OriginAttributes attrs;
