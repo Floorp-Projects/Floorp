@@ -687,8 +687,7 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
         Register act = WasmIonExitRegE1;
 
         // JitActivation* act = cx->activation();
-        masm.movePtr(SymbolicAddress::ContextPtr, cx);
-        masm.loadPtr(Address(cx, 0), cx);
+        masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, cx)), cx);
         masm.loadPtr(Address(cx, JSContext::offsetOfActivation()), act);
 
         // act.active_ = true;
@@ -705,20 +704,24 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
     masm.callJitNoProfiler(callee);
     AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddr);
 
+    // Reload the TLS reg which has been clobbered by Ion code. The TLS reg is
+    // non-volatile and so preserved by the native-ABI calls below.
+    masm.loadWasmTlsRegFromFrame();
+
     {
         // Disable Activation.
         //
-        // This sequence needs three registers, and must preserve the JSReturnReg_Data and
-        // JSReturnReg_Type, so there are five live registers.
+        // This sequence needs three registers and must preserve WasmTlsReg,
+        // JSReturnReg_Data and JSReturnReg_Type.
         MOZ_ASSERT(JSReturnReg_Data == WasmIonExitRegReturnData);
         MOZ_ASSERT(JSReturnReg_Type == WasmIonExitRegReturnType);
+        MOZ_ASSERT(WasmTlsReg == WasmIonExitTlsReg);
         Register cx = WasmIonExitRegD0;
         Register act = WasmIonExitRegD1;
         Register tmp = WasmIonExitRegD2;
 
         // JitActivation* act = cx->activation();
-        masm.movePtr(SymbolicAddress::ContextPtr, cx);
-        masm.loadPtr(Address(cx, 0), cx);
+        masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, cx)), cx);
         masm.loadPtr(Address(cx, JSContext::offsetOfActivation()), act);
 
         // cx->jitTop = act->prevJitTop_;
@@ -781,10 +784,6 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
 
     Label done;
     masm.bind(&done);
-
-    // The epilogue requires WasmTlsReg and Ion code clobbers all registers,
-    // even ABI non-volatiles.
-    masm.loadWasmTlsRegFromFrame();
 
     GenerateExitEpilogue(masm, masm.framePushed(), ExitReason::ImportJit, &offsets);
 
@@ -928,13 +927,17 @@ wasm::GenerateUnalignedExit(MacroAssembler& masm, Label* throwLabel)
     return GenerateGenericMemoryAccessTrap(masm, SymbolicAddress::ReportUnalignedAccess, throwLabel);
 }
 
+#if defined(JS_CODEGEN_ARM)
+static const LiveRegisterSet AllRegsExceptPCSP(
+    GeneralRegisterSet(Registers::AllMask & ~((uint32_t(1) << Registers::sp) |
+                                              (uint32_t(1) << Registers::pc))),
+    FloatRegisterSet(FloatRegisters::AllDoubleMask));
+static_assert(!SupportsSimd, "high lanes of SIMD registers need to be saved too.");
+#else
 static const LiveRegisterSet AllRegsExceptSP(
     GeneralRegisterSet(Registers::AllMask & ~(uint32_t(1) << Registers::StackPointer)),
     FloatRegisterSet(FloatRegisters::AllMask));
-
-static const LiveRegisterSet AllAllocatableRegs = LiveRegisterSet(
-    GeneralRegisterSet(Registers::AllocatableMask),
-    FloatRegisterSet(FloatRegisters::AllMask));
+#endif
 
 // The async interrupt-callback exit is called from arbitrarily-interrupted wasm
 // code. That means we must first save *all* registers and restore *all*
@@ -956,17 +959,10 @@ wasm::GenerateInterruptExit(MacroAssembler& masm, Label* throwLabel)
     // Be very careful here not to perturb the machine state before saving it
     // to the stack. In particular, add/sub instructions may set conditions in
     // the flags register.
-    masm.push(Imm32(0));            // space for resumePC
-    masm.pushFlags();               // after this we are safe to use sub
-    masm.setFramePushed(0);         // set to zero so we can use masm.framePushed() below
+    masm.push(Imm32(0));            // space used as return address, updated below
+    masm.setFramePushed(0);         // set to 0 now so that framePushed is offset of return address
+    masm.PushFlags();               // after this we are safe to use sub
     masm.PushRegsInMask(AllRegsExceptSP); // save all GP/FP registers (except SP)
-
-    Register scratch = ABINonArgReturnReg0;
-
-    // Store resumePC into the reserved space.
-    masm.loadWasmActivationFromSymbolicAddress(scratch);
-    masm.loadPtr(Address(scratch, WasmActivation::offsetOfResumePC()), scratch);
-    masm.storePtr(scratch, Address(masm.getStackPointer(), masm.framePushed() + sizeof(void*)));
 
     // We know that StackPointer is word-aligned, but not necessarily
     // stack-aligned, so we need to align it dynamically.
@@ -975,18 +971,27 @@ wasm::GenerateInterruptExit(MacroAssembler& masm, Label* throwLabel)
     if (ShadowStackSpace)
         masm.subFromStackPtr(Imm32(ShadowStackSpace));
 
+    // Make the call to C++, which preserves ABINonVolatileReg.
     masm.assertStackAlignment(ABIStackAlignment);
     masm.call(SymbolicAddress::HandleExecutionInterrupt);
 
-    masm.branchIfFalseBool(ReturnReg, throwLabel);
+    // HandleExecutionInterrupt returns null if execution is interrupted and
+    // the resumption pc otherwise.
+    masm.branchTestPtr(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
 
-    // Restore the StackPointer to its position before the call.
+    // Restore the stack pointer then store resumePC into the stack slow that
+    // will be popped by the 'ret' below.
     masm.moveToStackPtr(ABINonVolatileReg);
+    masm.storePtr(ReturnReg, Address(StackPointer, masm.framePushed()));
 
-    // Restore the machine state to before the interrupt.
-    masm.PopRegsInMask(AllRegsExceptSP); // restore all GP/FP registers (except SP)
-    masm.popFlags();              // after this, nothing that sets conditions
-    masm.ret();                   // pop resumePC into PC
+    // Restore the machine state to before the interrupt. After popping flags,
+    // no instructions can be executed which set flags.
+    masm.PopRegsInMask(AllRegsExceptSP);
+    masm.PopFlags();
+
+    // Return to the resumePC stored into this stack slot above.
+    MOZ_ASSERT(masm.framePushed() == 0);
+    masm.ret();
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     // Reserve space to store resumePC and HeapReg.
     masm.subFromStackPtr(Imm32(2 * sizeof(intptr_t)));
@@ -1034,61 +1039,40 @@ wasm::GenerateInterruptExit(MacroAssembler& masm, Label* throwLabel)
     masm.as_jr(HeapReg);
     masm.loadPtr(Address(StackPointer, -sizeof(intptr_t)), HeapReg);
 #elif defined(JS_CODEGEN_ARM)
-    masm.setFramePushed(0);         // set to zero so we can use masm.framePushed() below
+    masm.push(Imm32(0));            // space used as return address, updated below
+    masm.setFramePushed(0);         // set to 0 now so that framePushed is offset of return address
+    masm.PushRegsInMask(AllRegsExceptPCSP); // save all GP/FP registers (except PC and SP)
 
-    // Save all GPR, except the stack pointer.
-    masm.PushRegsInMask(LiveRegisterSet(
-                            GeneralRegisterSet(Registers::AllMask & ~(1<<Registers::sp)),
-                            FloatRegisterSet(uint32_t(0))));
-
-    // Save both the APSR and FPSCR in non-volatile registers.
+    // Save SP, APSR and FPSCR in non-volatile registers.
     masm.as_mrs(r4);
     masm.as_vmrs(r5);
-    // Save the stack pointer in a non-volatile register.
-    masm.mov(sp,r6);
-    // Align the stack.
-    masm.as_bic(sp, sp, Imm8(7));
+    masm.mov(sp, r6);
 
-    // Store resumePC into the return PC stack slot.
-    masm.loadWasmActivationFromSymbolicAddress(IntArgReg0);
-    masm.loadPtr(Address(IntArgReg0, WasmActivation::offsetOfResumePC()), IntArgReg1);
-    masm.storePtr(IntArgReg1, Address(r6, 14 * sizeof(uint32_t*)));
+    // We know that StackPointer is word-aligned, but not necessarily
+    // stack-aligned, so we need to align it dynamically.
+    masm.andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
 
-    // Save all FP registers
-    static_assert(!SupportsSimd, "high lanes of SIMD registers need to be saved too.");
-    masm.PushRegsInMask(LiveRegisterSet(GeneralRegisterSet(0),
-                                        FloatRegisterSet(FloatRegisters::AllDoubleMask)));
-
+    // Make the call to C++, which preserves the non-volatile registers.
     masm.assertStackAlignment(ABIStackAlignment);
     masm.call(SymbolicAddress::HandleExecutionInterrupt);
 
-    masm.branchIfFalseBool(ReturnReg, throwLabel);
+    // HandleExecutionInterrupt returns null if execution is interrupted and
+    // the resumption pc otherwise.
+    masm.branchTestPtr(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
 
-    // Restore the machine state to before the interrupt. this will set the pc!
+    // Restore the stack pointer then store resumePC into the stack slow that
+    // will be popped by the 'ret' below.
+    masm.mov(r6, sp);
+    masm.storePtr(ReturnReg, Address(sp, masm.framePushed()));
 
-    // Restore all FP registers
-    masm.PopRegsInMask(LiveRegisterSet(GeneralRegisterSet(0),
-                                       FloatRegisterSet(FloatRegisters::AllDoubleMask)));
-    masm.mov(r6,sp);
+    // Restore the machine state to before the interrupt. After popping flags,
+    // no instructions can be executed which set flags.
     masm.as_vmsr(r5);
     masm.as_msr(r4);
-    // Restore all GP registers
-    masm.startDataTransferM(IsLoad, sp, IA, WriteBack);
-    masm.transferReg(r0);
-    masm.transferReg(r1);
-    masm.transferReg(r2);
-    masm.transferReg(r3);
-    masm.transferReg(r4);
-    masm.transferReg(r5);
-    masm.transferReg(r6);
-    masm.transferReg(r7);
-    masm.transferReg(r8);
-    masm.transferReg(r9);
-    masm.transferReg(r10);
-    masm.transferReg(r11);
-    masm.transferReg(r12);
-    masm.transferReg(lr);
-    masm.finishDataTransfer();
+    masm.PopRegsInMask(AllRegsExceptPCSP);
+
+    // Return to the resumePC stored into this stack slot above.
+    MOZ_ASSERT(masm.framePushed() == 0);
     masm.ret();
 #elif defined(JS_CODEGEN_ARM64)
     MOZ_CRASH();
@@ -1123,22 +1107,22 @@ wasm::GenerateThrowStub(MacroAssembler& masm, Label* throwLabel)
         masm.subFromStackPtr(Imm32(ShadowStackSpace));
     masm.call(SymbolicAddress::HandleThrow);
 
-    Register scratch = ABINonArgReturnReg0;
-    masm.loadWasmActivationFromSymbolicAddress(scratch);
+    // HandleThrow returns the innermost WasmActivation* in ReturnReg.
+    Register act = ReturnReg;
 
 #ifdef DEBUG
     // We are about to pop all frames in this WasmActivation. Checking if fp is
     // set to null to maintain the invariant that fp is either null or pointing
     // to a valid frame.
     Label ok;
-    masm.branchPtr(Assembler::Equal, Address(scratch, WasmActivation::offsetOfFP()), ImmWord(0), &ok);
+    masm.branchPtr(Assembler::Equal, Address(act, WasmActivation::offsetOfFP()), ImmWord(0), &ok);
     masm.breakpoint();
     masm.bind(&ok);
 #endif
 
     masm.setFramePushed(FramePushedForEntrySP);
-    masm.loadStackPtr(Address(scratch, WasmActivation::offsetOfEntrySP()));
-    masm.Pop(scratch);
+    masm.loadStackPtr(Address(act, WasmActivation::offsetOfEntrySP()));
+    masm.Pop(ReturnReg);
     masm.PopRegsInMask(NonVolatileRegs);
     MOZ_ASSERT(masm.framePushed() == 0);
 
@@ -1148,6 +1132,10 @@ wasm::GenerateThrowStub(MacroAssembler& masm, Label* throwLabel)
     offsets.end = masm.currentOffset();
     return offsets;
 }
+
+static const LiveRegisterSet AllAllocatableRegs = LiveRegisterSet(
+    GeneralRegisterSet(Registers::AllocatableMask),
+    FloatRegisterSet(FloatRegisters::AllMask));
 
 // Generate a stub that handle toggable enter/leave frame traps or breakpoints.
 // The trap records frame pointer (via GenerateExitPrologue) and saves most of

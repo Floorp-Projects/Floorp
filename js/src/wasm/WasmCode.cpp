@@ -111,7 +111,7 @@ StaticallyLink(CodeSegment& cs, const LinkData& linkData, JSContext* cx)
         const Uint32Vector& offsets = linkData.symbolicLinks[imm];
         for (size_t i = 0; i < offsets.length(); i++) {
             uint8_t* patchAt = cs.base() + offsets[i];
-            void* target = AddressOf(imm, cx);
+            void* target = AddressOf(imm);
             Assembler::PatchDataWithValueCheck(CodeLocationLabel(patchAt),
                                                PatchedImmPtr(target),
                                                PatchedImmPtr((void*)-1));
