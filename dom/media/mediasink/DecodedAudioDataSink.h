@@ -30,7 +30,7 @@ class DecodedAudioDataSink : public AudioSink,
                              private AudioStream::DataSource {
 public:
   DecodedAudioDataSink(AbstractThread* aThread,
-                       MediaQueue<MediaData>& aAudioQueue,
+                       MediaQueue<AudioData>& aAudioQueue,
                        int64_t aStartTime,
                        const AudioInfo& aInfo,
                        dom::AudioChannel aChannel);
@@ -125,8 +125,8 @@ private:
   const RefPtr<AbstractThread> mOwnerThread;
 
   // Audio Processing objects and methods
-  void OnAudioPopped(const RefPtr<MediaData>& aSample);
-  void OnAudioPushed(const RefPtr<MediaData>& aSample);
+  void OnAudioPopped(const RefPtr<AudioData>& aSample);
+  void OnAudioPushed(const RefPtr<AudioData>& aSample);
   void NotifyAudioNeeded();
   // Drain the converter and add the output to the processed audio queue.
   // A maximum of aMaxFrames will be added.
