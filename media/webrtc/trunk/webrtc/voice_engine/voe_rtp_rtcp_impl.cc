@@ -357,6 +357,22 @@ int VoERTP_RTCPImpl::GetRTCPStatistics(int channel, CallStatistics& stats) {
   return channelPtr->GetRTPStatistics(stats);
 }
 
+int VoERTP_RTCPImpl::GetRTCPPacketTypeCounters(int channel,
+                                               RtcpPacketTypeCounter& stats) {
+  if (!_shared->statistics().Initialized()) {
+   _shared->SetLastError(VE_NOT_INITED, kTraceError);
+   return -1;
+  }
+  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+  voe::Channel* channelPtr = ch.channel();
+  if (channelPtr == NULL) {
+    _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
+                          "GetRTCPPacketTypeCounters() failed to locate channel");
+    return -1;
+  }
+  return channelPtr->GetRTCPPacketTypeCounters(stats);
+}
+
 int VoERTP_RTCPImpl::GetRemoteRTCPReportBlocks(
     int channel, std::vector<ReportBlock>* report_blocks) {
   if (!_shared->statistics().Initialized()) {

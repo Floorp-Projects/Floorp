@@ -165,6 +165,12 @@ bool WebrtcAudioConduit::SetLocalCNAME(const char* cname)
   return !mPtrRTP->SetRTCP_CNAME(mChannel, temp);
 }
 
+bool WebrtcAudioConduit::GetPacketTypeStats(
+  webrtc::RtcpPacketTypeCounter* aPacketCounts)
+{
+  return !mPtrVoERTP_RTCP->GetRTCPPacketTypeCounters(mChannel, *aPacketCounts);
+}
+
 bool WebrtcAudioConduit::GetAVStats(int32_t* jitterBufferDelayMs,
                                     int32_t* playoutBufferDelayMs,
                                     int32_t* avSyncOffsetMs) {
