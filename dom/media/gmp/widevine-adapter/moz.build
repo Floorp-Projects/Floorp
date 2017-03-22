@@ -16,6 +16,7 @@ SOURCES += [
 
 EXPORTS += [
     'WidevineDecryptor.h',
+    'WidevineFileIO.h',
     'WidevineUtils.h',
     'WidevineVideoFrame.h'
 ]
