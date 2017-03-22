@@ -85,6 +85,9 @@ dependencies {
     compile 'com.android.support:cardview-v7:25.1.1'
     compile 'com.android.support:recyclerview-v7:25.1.1'
 
+    releaseCompile 'com.adjust.sdk:adjust-android:4.11.1'
+    releaseCompile 'com.google.android.gms:play-services-analytics:10.2.0' // Required by Adjust
+
     geckoCompile(name: 'geckoview-195049fabb7a', ext: 'aar')
 
     testCompile 'junit:junit:4.12'
@@ -123,7 +126,7 @@ android.applicationVariants.all { variant ->
 
         if (token != null) {
             buildConfigField 'String', 'ADJUST_TOKEN', '"' + token + '"'
-            println "Added adjust token set from environment variable"
+            println "Added adjust token set from environment variable (" + environmentVariable + ")"
         } else {
             buildConfigField 'String', 'ADJUST_TOKEN', 'null'
             println("Not setting adjust token (environment variable not set)")

@@ -8,6 +8,7 @@ package org.mozilla.focus;
 import android.app.Application;
 
 import org.mozilla.focus.search.SearchEngineManager;
+import org.mozilla.focus.utils.AdjustHelper;
 
 public class FocusApplication extends Application {
     @Override
@@ -15,5 +16,7 @@ public class FocusApplication extends Application {
         super.onCreate();
 
         SearchEngineManager.getInstance().init(this);
+
+        AdjustHelper.setupAdjustIfNeeded(this);
     }
 }
