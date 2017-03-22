@@ -32,6 +32,7 @@
 #include "nsNetCID.h"
 #include "plbase64.h"
 #include "plstr.h"
+#include "mozilla/Base64.h"
 #include "prprf.h"
 #include "mozilla/Logging.h"
 #include "prmem.h"
@@ -44,6 +45,8 @@
 #include "nsIHttpAuthenticatorCallback.h"
 #include "mozilla/Mutex.h"
 #include "nsICancelable.h"
+
+using mozilla::Base64Decode;
 
 //-----------------------------------------------------------------------------
 
@@ -531,17 +534,14 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChanne
         while (challenge[len - 1] == '=')
             len--;
 
-        inTokenLen = (len * 3)/4;
-        inToken = malloc(inTokenLen);
-        if (!inToken)
-            return (NS_ERROR_OUT_OF_MEMORY);
-
         //
         // Decode the response that followed the "Negotiate" token
         //
-        if (PL_Base64Decode(challenge, len, (char *) inToken) == nullptr) {
-            free(inToken);
-            return(NS_ERROR_UNEXPECTED);
+        nsresult rv =
+            Base64Decode(challenge, len, (char**)&inToken, &inTokenLen);
+
+        if (NS_FAILED(rv)) {
+            return rv;
         }
     }
     else {
