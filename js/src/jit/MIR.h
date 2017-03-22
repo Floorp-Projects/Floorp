@@ -14305,15 +14305,12 @@ class MWasmCall final
     wasm::CalleeDesc callee_;
     FixedList<AnyRegister> argRegs_;
     uint32_t spIncrement_;
-    uint32_t tlsStackOffset_;
     ABIArg instanceArg_;
 
-    MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee, uint32_t spIncrement,
-              uint32_t tlsStackOffset)
+    MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee, uint32_t spIncrement)
       : desc_(desc),
         callee_(callee),
-        spIncrement_(spIncrement),
-        tlsStackOffset_(tlsStackOffset)
+        spIncrement_(spIncrement)
     { }
 
   public:
@@ -14326,15 +14323,12 @@ class MWasmCall final
     };
     typedef Vector<Arg, 8, SystemAllocPolicy> Args;
 
-    static const uint32_t DontSaveTls = UINT32_MAX;
-
     static MWasmCall* New(TempAllocator& alloc,
                           const wasm::CallSiteDesc& desc,
                           const wasm::CalleeDesc& callee,
                           const Args& args,
                           MIRType resultType,
                           uint32_t spIncrement,
-                          uint32_t tlsStackOffset,
                           MDefinition* tableIndex = nullptr);
 
     static MWasmCall* NewBuiltinInstanceMethodCall(TempAllocator& alloc,
@@ -14343,8 +14337,7 @@ class MWasmCall final
                                                    const ABIArg& instanceArg,
                                                    const Args& args,
                                                    MIRType resultType,
-                                                   uint32_t spIncrement,
-                                                   uint32_t tlsStackOffset);
+                                                   uint32_t spIncrement);
 
     size_t numArgs() const {
         return argRegs_.length();
@@ -14361,13 +14354,6 @@ class MWasmCall final
     }
     uint32_t spIncrement() const {
         return spIncrement_;
-    }
-    bool saveTls() const {
-        return tlsStackOffset_ != DontSaveTls;
-    }
-    uint32_t tlsStackOffset() const {
-        MOZ_ASSERT(saveTls());
-        return tlsStackOffset_;
     }
 
     bool possiblyCalls() const override {
