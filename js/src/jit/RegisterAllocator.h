@@ -289,8 +289,10 @@ class RegisterAllocator
             allRegisters_.take(AnyRegister(HeapLenReg));
 #endif
         } else {
-            if (FramePointer != InvalidReg && mir->instrumentedProfiling())
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64)
+            if (mir->instrumentedProfiling())
                 allRegisters_.take(AnyRegister(FramePointer));
+#endif
         }
     }
 
