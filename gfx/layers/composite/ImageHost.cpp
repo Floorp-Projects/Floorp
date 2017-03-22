@@ -188,7 +188,8 @@ void ImageHost::Attach(Layer* aLayer,
 }
 
 void
-ImageHost::Composite(LayerComposite* aLayer,
+ImageHost::Composite(Compositor* aCompositor,
+                     LayerComposite* aLayer,
                      EffectChain& aEffectChain,
                      float aOpacity,
                      const gfx::Matrix4x4& aTransform,
@@ -212,7 +213,7 @@ ImageHost::Composite(LayerComposite* aLayer,
   }
 
   TimedImage* img = &mImages[imageIndex];
-  img->mTextureHost->SetTextureSourceProvider(GetCompositor());
+  img->mTextureHost->SetTextureSourceProvider(aCompositor);
   SetCurrentTextureHost(img->mTextureHost);
 
   {
@@ -241,7 +242,7 @@ ImageHost::Composite(LayerComposite* aLayer,
       return;
     }
 
-    if (!GetCompositor()->SupportsEffect(effect->mType)) {
+    if (!aCompositor->SupportsEffect(effect->mType)) {
       return;
     }
 
@@ -300,15 +301,15 @@ ImageHost::Composite(LayerComposite* aLayer,
           effect->mTextureCoords.y = effect->mTextureCoords.YMost();
           effect->mTextureCoords.height = -effect->mTextureCoords.height;
         }
-        GetCompositor()->DrawGeometry(rect, aClipRect, aEffectChain,
-                                      aOpacity, aTransform, aGeometry);
-        GetCompositor()->DrawDiagnostics(diagnosticFlags | DiagnosticFlags::BIGIMAGE,
-                                         rect, aClipRect, aTransform, mFlashCounter);
+        aCompositor->DrawGeometry(rect, aClipRect, aEffectChain,
+                                  aOpacity, aTransform, aGeometry);
+        aCompositor->DrawDiagnostics(diagnosticFlags | DiagnosticFlags::BIGIMAGE,
+                                     rect, aClipRect, aTransform, mFlashCounter);
       } while (it->NextTile());
       it->EndBigImageIteration();
       // layer border
-      GetCompositor()->DrawDiagnostics(diagnosticFlags, pictureRect,
-                                       aClipRect, aTransform, mFlashCounter);
+      aCompositor->DrawDiagnostics(diagnosticFlags, pictureRect,
+                                   aClipRect, aTransform, mFlashCounter);
     } else {
       IntSize textureSize = mCurrentTextureSource->GetSize();
       effect->mTextureCoords = Rect(Float(img->mPictureRect.x) / textureSize.width,
@@ -321,11 +322,11 @@ ImageHost::Composite(LayerComposite* aLayer,
         effect->mTextureCoords.height = -effect->mTextureCoords.height;
       }
 
-      GetCompositor()->DrawGeometry(pictureRect, aClipRect, aEffectChain,
-                                    aOpacity, aTransform, aGeometry);
-      GetCompositor()->DrawDiagnostics(diagnosticFlags,
-                                       pictureRect, aClipRect,
-                                       aTransform, mFlashCounter);
+      aCompositor->DrawGeometry(pictureRect, aClipRect, aEffectChain,
+                                aOpacity, aTransform, aGeometry);
+      aCompositor->DrawDiagnostics(diagnosticFlags,
+                                   pictureRect, aClipRect,
+                                   aTransform, mFlashCounter);
     }
   }
 
