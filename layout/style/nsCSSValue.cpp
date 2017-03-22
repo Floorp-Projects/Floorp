@@ -172,6 +172,10 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mArray = aCopy.mValue.mArray;
     mValue.mArray->AddRef();
   }
+  else if (UnitHasThreadSafeArrayValue()) {
+    mValue.mThreadSafeArray = aCopy.mValue.mThreadSafeArray;
+    mValue.mThreadSafeArray->AddRef();
+  }
   else if (eCSSUnit_URL == mUnit) {
     mValue.mURL = aCopy.mValue.mURL;
     mValue.mURL->AddRef();
@@ -287,6 +291,9 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (UnitHasArrayValue()) {
       return *mValue.mArray == *aOther.mValue.mArray;
+    }
+    else if (UnitHasThreadSafeArrayValue()) {
+      return *mValue.mThreadSafeArray == *aOther.mValue.mThreadSafeArray;
     }
     else if (eCSSUnit_URL == mUnit) {
       return mValue.mURL->Equals(*aOther.mValue.mURL);
@@ -436,6 +443,9 @@ void nsCSSValue::DoReset()
     DO_RELEASE(mComplexColor);
   } else if (UnitHasArrayValue()) {
     DO_RELEASE(mArray);
+  } else if (UnitHasThreadSafeArrayValue()) {
+    // ThreadSafe arrays are ok to release on any thread.
+    mValue.mThreadSafeArray->Release();
   } else if (eCSSUnit_URL == mUnit) {
     DO_RELEASE(mURL);
   } else if (eCSSUnit_Image == mUnit) {
@@ -569,6 +579,15 @@ void nsCSSValue::SetArrayValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
   MOZ_ASSERT(UnitHasArrayValue(), "bad unit");
   mValue.mArray = aValue;
   mValue.mArray->AddRef();
+}
+
+void nsCSSValue::SetThreadSafeArrayValue(nsCSSValue::ThreadSafeArray* aValue, nsCSSUnit aUnit)
+{
+  Reset();
+  mUnit = aUnit;
+  MOZ_ASSERT(UnitHasThreadSafeArrayValue(), "bad unit");
+  mValue.mThreadSafeArray = aValue;
+  mValue.mThreadSafeArray->AddRef();
 }
 
 void nsCSSValue::SetURLValue(mozilla::css::URLValue* aValue)
@@ -1339,10 +1358,29 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
       nsStyleUtil::AppendEscapedCSSIdent(buffer, aResult);
     }
   }
-  else if (eCSSUnit_Array <= unit && unit <= eCSSUnit_Symbols) {
+  else if (eCSSUnit_Counter <= unit && unit <= eCSSUnit_Counters) {
     switch (unit) {
       case eCSSUnit_Counter:  aResult.AppendLiteral("counter(");  break;
       case eCSSUnit_Counters: aResult.AppendLiteral("counters("); break;
+      default: MOZ_ASSERT_UNREACHABLE("bad enum");
+    }
+
+    nsCSSValue::ThreadSafeArray *array = GetThreadSafeArrayValue();
+    bool mark = false;
+    for (size_t i = 0, i_end = array->Count(); i < i_end; ++i) {
+      if (mark && array->Item(i).GetUnit() != eCSSUnit_Null) {
+        aResult.AppendLiteral(", ");
+      }
+      nsCSSPropertyID prop = (i == array->Count() - 1)
+        ? eCSSProperty_list_style_type : aProperty;
+      if (array->Item(i).GetUnit() != eCSSUnit_Null) {
+        array->Item(i).AppendToString(prop, aResult, aSerialization);
+        mark = true;
+      }
+    }
+  }
+  else if (eCSSUnit_Array <= unit && unit <= eCSSUnit_Symbols) {
+    switch (unit) {
       case eCSSUnit_Cubic_Bezier: aResult.AppendLiteral("cubic-bezier("); break;
       case eCSSUnit_Steps: aResult.AppendLiteral("steps("); break;
       case eCSSUnit_Symbols: aResult.AppendLiteral("symbols("); break;
@@ -1386,10 +1424,7 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
         }
         continue;
       }
-      nsCSSPropertyID prop =
-        ((eCSSUnit_Counter <= unit && unit <= eCSSUnit_Counters) &&
-         i == array->Count() - 1)
-        ? eCSSProperty_list_style_type : aProperty;
+      nsCSSPropertyID prop = aProperty;
       if (array->Item(i).GetUnit() != eCSSUnit_Null) {
         array->Item(i).AppendToString(prop, aResult, aSerialization);
         mark = true;
