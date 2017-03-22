@@ -224,6 +224,24 @@ RasterImage::GetHeight(int32_t* aHeight)
 }
 
 //******************************************************************************
+nsresult
+RasterImage::GetNativeSizes(nsTArray<IntSize>& aNativeSizes) const
+{
+  if (mError) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mNativeSizes.IsEmpty()) {
+    aNativeSizes.Clear();
+    aNativeSizes.AppendElement(mSize);
+  } else {
+    aNativeSizes = mNativeSizes;
+  }
+
+  return NS_OK;
+}
+
+//******************************************************************************
 NS_IMETHODIMP
 RasterImage::GetIntrinsicSize(nsSize* aSize)
 {
@@ -706,6 +724,7 @@ RasterImage::SetMetadata(const ImageMetadata& aMetadata,
     // Set the size and flag that we have it.
     mSize = size;
     mOrientation = orientation;
+    mNativeSizes = aMetadata.GetNativeSizes();
     mHasSize = true;
   }
 
