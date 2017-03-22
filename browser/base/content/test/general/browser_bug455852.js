@@ -7,7 +7,7 @@ add_task(function*() {
   var tab = gBrowser.selectedTab;
   gPrefService.setBoolPref("browser.tabs.closeWindowWithLastTab", false);
 
-  let tabClosedPromise = BrowserTestUtils.tabRemoved(tab);
+  let tabClosedPromise = BrowserTestUtils.removeTab(tab, {dontRemove: true});
   EventUtils.synthesizeKey("w", { accelKey: true });
   yield tabClosedPromise;
 
