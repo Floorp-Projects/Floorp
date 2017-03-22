@@ -1513,7 +1513,7 @@ MediaFormatReader::ShouldSkip(bool aSkipToNextKeyframe,
          && !nextKeyframe.IsInfinite();
 }
 
-RefPtr<MediaDecoderReader::MediaDataPromise>
+RefPtr<MediaDecoderReader::VideoDataPromise>
 MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
                                     int64_t aTimeThreshold)
 {
@@ -1528,19 +1528,19 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
 
   if (!HasVideo()) {
     LOG("called with no video track");
-    return MediaDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+    return VideoDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                              __func__);
   }
 
   if (IsSeeking()) {
     LOG("called mid-seek. Rejecting.");
-    return MediaDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED,
+    return VideoDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED,
                                              __func__);
   }
 
   if (mShutdown) {
     NS_WARNING("RequestVideoData on shutdown MediaFormatReader!");
-    return MediaDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED,
+    return VideoDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED,
                                              __func__);
   }
 
@@ -1550,12 +1550,12 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
   // information.
   if (!mVideo.HasInternalSeekPending()
       && ShouldSkip(aSkipToNextKeyframe, timeThreshold)) {
-    RefPtr<MediaDataPromise> p = mVideo.EnsurePromise(__func__);
+    RefPtr<VideoDataPromise> p = mVideo.EnsurePromise(__func__);
     SkipVideoDemuxToNextKeyFrame(timeThreshold);
     return p;
   }
 
-  RefPtr<MediaDataPromise> p = mVideo.EnsurePromise(__func__);
+  RefPtr<VideoDataPromise> p = mVideo.EnsurePromise(__func__);
   ScheduleUpdate(TrackInfo::kVideoTrack);
 
   return p;
@@ -1630,7 +1630,7 @@ MediaFormatReader::OnVideoDemuxCompleted(
   ScheduleUpdate(TrackInfo::kVideoTrack);
 }
 
-RefPtr<MediaDecoderReader::MediaDataPromise>
+RefPtr<MediaDecoderReader::AudioDataPromise>
 MediaFormatReader::RequestAudioData()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -1645,23 +1645,23 @@ MediaFormatReader::RequestAudioData()
 
   if (!HasAudio()) {
     LOG("called with no audio track");
-    return MediaDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+    return AudioDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                              __func__);
   }
 
   if (IsSeeking()) {
     LOG("called mid-seek. Rejecting.");
-    return MediaDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED,
+    return AudioDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED,
                                              __func__);
   }
 
   if (mShutdown) {
     NS_WARNING("RequestAudioData on shutdown MediaFormatReader!");
-    return MediaDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED,
+    return AudioDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED,
                                              __func__);
   }
 
-  RefPtr<MediaDataPromise> p = mAudio.EnsurePromise(__func__);
+  RefPtr<AudioDataPromise> p = mAudio.EnsurePromise(__func__);
   ScheduleUpdate(TrackInfo::kAudioTrack);
 
   return p;
@@ -2379,7 +2379,7 @@ MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack)
       mInfo.mAudio.mRate = audioData->mRate;
       mInfo.mAudio.mChannels = audioData->mChannels;
     }
-    mAudio.ResolvePromise(aData, __func__);
+    mAudio.ResolvePromise(audioData, __func__);
   } else if (aTrack == TrackInfo::kVideoTrack) {
     VideoData* videoData = static_cast<VideoData*>(aData);
 
@@ -2389,7 +2389,7 @@ MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack)
           videoData->mDisplay.width, videoData->mDisplay.height);
       mInfo.mVideo.mDisplay = videoData->mDisplay;
     }
-    mVideo.ResolvePromise(aData, __func__);
+    mVideo.ResolvePromise(videoData, __func__);
   }
 }
 

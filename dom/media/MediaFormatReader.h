@@ -37,10 +37,10 @@ public:
   size_t SizeOfVideoQueueInFrames() override;
   size_t SizeOfAudioQueueInFrames() override;
 
-  RefPtr<MediaDataPromise>
+  RefPtr<VideoDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold) override;
 
-  RefPtr<MediaDataPromise> RequestAudioData() override;
+  RefPtr<AudioDataPromise> RequestAudioData() override;
 
   RefPtr<MetadataPromise> AsyncReadMetadata() override;
 
@@ -316,8 +316,6 @@ private:
     // Indicate if we have a pending promise for decoded frame.
     // Rejecting the promise will stop the reader from decoding ahead.
     virtual bool HasPromise() const = 0;
-    virtual RefPtr<MediaDataPromise> EnsurePromise(const char* aMethodName) = 0;
-    virtual void ResolvePromise(MediaData* aData, const char* aMethodName) = 0;
     virtual void RejectPromise(const MediaResult& aError,
                                const char* aMethodName) = 0;
 
@@ -396,6 +394,7 @@ private:
 
   };
 
+  template <typename Type>
   class DecoderDataWithPromise : public DecoderData
   {
   public:
@@ -412,14 +411,14 @@ private:
       return mHasPromise;
     }
 
-    RefPtr<MediaDataPromise> EnsurePromise(const char* aMethodName) override
+    RefPtr<DataPromise<Type>> EnsurePromise(const char* aMethodName)
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
       mHasPromise = true;
       return mPromise.Ensure(aMethodName);
     }
 
-    void ResolvePromise(MediaData* aData, const char* aMethodName) override
+    void ResolvePromise(Type* aData, const char* aMethodName)
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
       mPromise.Resolve(aData, aMethodName);
@@ -435,12 +434,12 @@ private:
     }
 
   private:
-    MozPromiseHolder<MediaDataPromise> mPromise;
+    MozPromiseHolder<DataPromise<Type>> mPromise;
     Atomic<bool> mHasPromise;
   };
 
-  DecoderDataWithPromise mAudio;
-  DecoderDataWithPromise mVideo;
+  DecoderDataWithPromise<AudioData> mAudio;
+  DecoderDataWithPromise<VideoData> mVideo;
 
   // Returns true when the decoder for this track needs input.
   bool NeedInput(DecoderData& aDecoder);

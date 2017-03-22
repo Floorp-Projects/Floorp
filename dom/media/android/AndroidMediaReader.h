@@ -35,7 +35,7 @@ class AndroidMediaReader : public MediaDecoderReader
   int64_t mAudioSeekTimeUs;
   RefPtr<VideoData> mLastVideoFrame;
   MozPromiseHolder<MediaDecoderReader::SeekPromise> mSeekPromise;
-  MozPromiseRequestHolder<MediaDecoderReader::MediaDataPromise> mSeekRequest;
+  MozPromiseRequestHolder<MediaDecoderReader::VideoDataPromise> mSeekRequest;
 public:
   AndroidMediaReader(AbstractMediaDecoder* aDecoder,
                      const MediaContainerType& aContainerType);
