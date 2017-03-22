@@ -2630,13 +2630,15 @@
 
             var browser = this.getBrowserForTab(aTab);
 
-            if (!aTab._pendingPermitUnload && !aAdoptedByTab && !aSkipPermitUnload) {
+            if (!aTab._pendingPermitUnload &&
+                !aSkipPermitUnload &&
+                aTab.linkedPanel &&
+                !aAdoptedByTab) {
               // We need to block while calling permitUnload() because it
               // processes the event queue and may lead to another removeTab()
               // call before permitUnload() returns.
               aTab._pendingPermitUnload = true;
-              let {permitUnload, timedOut} = aTab.linkedPanel ?
-                  browser.permitUnload() : {permitUnload: true, timedOut: false};
+              let {permitUnload, timedOut} = browser.permitUnload();
               delete aTab._pendingPermitUnload;
               // If we were closed during onbeforeunload, we return false now
               // so we don't (try to) close the same tab again. Of course, we
