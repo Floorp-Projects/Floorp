@@ -89,7 +89,13 @@ static bool
 WasmHandleExecutionInterrupt()
 {
     WasmActivation* activation = JSContext::innermostWasmActivation();
+
+    // wasm::Compartment requires notification when execution is interrupted in
+    // the compartment. Only the innermost compartment has been interrupted;
+    // enclosing compartments necessarily exited through an exit stub.
+    activation->compartment()->wasm.setInterrupted(true);
     bool success = CheckForInterrupt(activation->cx());
+    activation->compartment()->wasm.setInterrupted(false);
 
     // Preserve the invariant that having a non-null resumePC means that we are
     // handling an interrupt.  Note that resumePC has already been copied onto
@@ -167,11 +173,33 @@ WasmHandleDebugTrap()
 static void
 WasmHandleThrow()
 {
-    WasmActivation* activation = JSContext::innermostWasmActivation();
-    MOZ_ASSERT(activation);
-    JSContext* cx = activation->cx();
+    JSContext* cx = TlsContext.get();
 
-    for (FrameIterator iter(activation, FrameIterator::Unwind::True); !iter.done(); ++iter) {
+    WasmActivation* activation = cx->wasmActivationStack();
+    MOZ_ASSERT(activation);
+
+    // FrameIterator iterates down wasm frames in the activation starting at
+    // WasmActivation::fp. Pass Unwind::True to pop WasmActivation::fp once each
+    // time FrameIterator is incremented, ultimately leaving WasmActivation::fp
+    // null when the FrameIterator is done(). This is necessary to prevent a
+    // DebugFrame from being observed again after we just called onLeaveFrame
+    // (which would lead to the frame being re-added to the map of live frames,
+    // right as it becomes trash).
+    FrameIterator iter(activation, FrameIterator::Unwind::True);
+    if (iter.done())
+        return;
+
+    // Live wasm code on the stack is kept alive (in wasm::TraceActivations) by
+    // marking the instance of every wasm::Frame found by FrameIterator.
+    // However, as explained above, we're popping frames while iterating which
+    // means that a GC during this loop could collect the code of frames whose
+    // code is still on the stack. This is actually mostly fine: as soon as we
+    // return to the throw stub, the entire stack will be popped as a whole,
+    // returning to the C++ caller. However, we must keep the throw stub alive
+    // itself which is owned by the innermost instance.
+    RootedWasmInstanceObject keepAlive(cx, iter.instance()->object());
+
+    for (; !iter.done(); ++iter) {
         if (!iter.debugEnabled())
             continue;
 
