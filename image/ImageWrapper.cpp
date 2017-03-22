@@ -139,12 +139,6 @@ ImageWrapper::GetHeight(int32_t* aHeight)
   return mInnerImage->GetHeight(aHeight);
 }
 
-nsresult
-ImageWrapper::GetNativeSizes(nsTArray<IntSize>& aNativeSizes) const
-{
-  return mInnerImage->GetNativeSizes(aNativeSizes);
-}
-
 NS_IMETHODIMP
 ImageWrapper::GetIntrinsicSize(nsSize* aSize)
 {

@@ -11,10 +11,11 @@
 #include "mozilla/Maybe.h"
 #include "nsSize.h"
 #include "Orientation.h"
-#include "FrameTimeout.h"
 
 namespace mozilla {
 namespace image {
+
+class RasterImage;
 
 // The metadata about an image that decoders accumulate as they decode.
 class ImageMetadata
@@ -63,13 +64,6 @@ public:
   nsIntSize GetSize() const { return *mSize; }
   bool HasSize() const { return mSize.isSome(); }
 
-  void AddNativeSize(const nsIntSize& aSize)
-  {
-    mNativeSizes.AppendElement(aSize);
-  }
-
-  const nsTArray<nsIntSize>& GetNativeSizes() const { return mNativeSizes; }
-
   Orientation GetOrientation() const { return *mOrientation; }
   bool HasOrientation() const { return mOrientation.isSome(); }
 
@@ -95,9 +89,6 @@ private:
 
   Maybe<nsIntSize> mSize;
   Maybe<Orientation> mOrientation;
-
-  // Sizes the image can natively decode to.
-  nsTArray<nsIntSize> mNativeSizes;
 
   bool mHasAnimation : 1;
 };
