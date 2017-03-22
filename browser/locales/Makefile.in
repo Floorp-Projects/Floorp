@@ -44,6 +44,9 @@ MOZ_PKG_MAC_ICON=$(ABS_DIST)/branding/disk.icns
 MOZ_PKG_MAC_EXTRA=--symlink '/Applications:/ '
 endif
 
+MOZ_SFX_PACKAGE=$(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
+MOZ_INSTALLER_PATH=$(topsrcdir)/browser/installer/windows
+
 ifeq (WINNT,$(OS_ARCH))
 UNINSTALLER_PACKAGE_HOOK = $(RM) -r $(STAGEDIST)/uninstall; \
     $(NSINSTALL) -D $(STAGEDIST)/uninstall; \
