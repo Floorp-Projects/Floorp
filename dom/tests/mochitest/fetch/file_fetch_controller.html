@@ -21,8 +21,76 @@ function testWebIDL() {
   next();
 }
 
+function testUpdateData() {
+  var fc = new FetchController();
+ 
+  is(fc.signal.aborted, false, "By default FetchSignal.aborted is false");
+ 
+  fc.abort();
+  is(fc.signal.aborted, true, "Signal is aborted");
+ 
+  next();
+}
+ 
+function testFollowingOurself() {
+  // Let's follow ourself
+  var fc = new FetchController();
+  fc.follow(fc.signal);
+ 
+  fc.abort();
+  is(fc.signal.aborted, true, "Signal is aborted");
+ 
+  next();
+}
+ 
+function testFollowingOther() {
+  // Let's follow another one
+  var fc1 = new FetchController();
+  var fc2 = new FetchController();
+  fc1.follow(fc2.signal);
+ 
+  fc2.abort();
+ 
+  is(fc1.signal.aborted, true, "Signal is aborted");
+  is(fc2.signal.aborted, true, "Signal is aborted");
+ 
+  next();
+}
+
+function testFollowingLoop() {
+  // fc1 -> fc2 -> fc3 -> fc1
+  var fc1 = new FetchController();
+  var fc2 = new FetchController();
+  var fc3 = new FetchController();
+  fc1.follow(fc2.signal);
+  fc2.follow(fc3.signal);
+  fc3.follow(fc1.signal);
+ 
+  fc3.abort();
+ 
+  is(fc1.signal.aborted, true, "Signal is aborted");
+  is(fc2.signal.aborted, true, "Signal is aborted");
+  is(fc3.signal.aborted, true, "Signal is aborted");
+ 
+  next();
+}
+ 
+function testAbortEvent() {
+  var fc = new FetchController();
+  fc.signal.onabort = function(e) {
+    is(e.type, "abort", "Abort received");
+    next();
+  }
+  fc.abort();
+}
+ 
 var steps = [
   testWebIDL,
+  testUpdateData,
+  testFollowingOurself,
+  testFollowingOther,
+  testFollowingLoop,
+  testAbortEvent,
 ];
 
 function next() {

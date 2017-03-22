@@ -8,16 +8,16 @@
 #define mozilla_dom_FetchController_h
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/FetchSignal.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace dom {
 
-class FetchSignal;
-
 class FetchController final : public nsISupports
                             , public nsWrapperCache
+                            , public FetchSignal::Follower
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -48,6 +48,13 @@ public:
 
   void
   Unfollow(FetchSignal& aSignal);
+
+  FetchSignal*
+  Following() const;
+
+  // FetchSignal::Follower
+
+  void Aborted() override;
 
 private:
   ~FetchController() = default;
