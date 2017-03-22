@@ -263,7 +263,7 @@ function getPersistedFromMetadata(readBuffer)
 
 function grabUsageAndContinueHandler(request)
 {
-  testGenerator.next(request.usage);
+  testGenerator.next(request.result.usage);
 }
 
 function getUsage(usageHandler)

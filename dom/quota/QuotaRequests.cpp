@@ -95,9 +95,6 @@ UsageRequest::UsageRequest(nsIPrincipal* aPrincipal,
                            nsIQuotaUsageCallback* aCallback)
   : RequestBase(aPrincipal)
   , mCallback(aCallback)
-  , mUsage(0)
-  , mFileUsage(0)
-  , mLimit(0)
   , mBackgroundActor(nullptr)
   , mCanceled(false)
 {
@@ -126,14 +123,14 @@ UsageRequest::SetBackgroundActor(QuotaUsageRequestChild* aBackgroundActor)
 }
 
 void
-UsageRequest::SetResult(uint64_t aUsage, uint64_t aFileUsage, uint64_t aLimit)
+UsageRequest::SetResult(nsIVariant* aResult)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(aResult);
   MOZ_ASSERT(!mHaveResultOrErrorCode);
 
-  mUsage = aUsage;
-  mFileUsage = aFileUsage;
-  mLimit = aLimit;
+  mResult = aResult;
+
   mHaveResultOrErrorCode = true;
 
   FireCallback();
@@ -149,43 +146,18 @@ NS_IMPL_ADDREF_INHERITED(UsageRequest, RequestBase)
 NS_IMPL_RELEASE_INHERITED(UsageRequest, RequestBase)
 
 NS_IMETHODIMP
-UsageRequest::GetUsage(uint64_t* aUsage)
+UsageRequest::GetResult(nsIVariant** aResult)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(aResult);
 
   if (!mHaveResultOrErrorCode) {
     return NS_ERROR_FAILURE;
   }
 
-  *aUsage = mUsage;
-  return NS_OK;
-}
+  MOZ_ASSERT(mResult);
 
-NS_IMETHODIMP
-UsageRequest::GetFileUsage(uint64_t* aFileUsage)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aFileUsage);
-
-  if (!mHaveResultOrErrorCode) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aFileUsage = mFileUsage;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-UsageRequest::GetLimit(uint64_t* aLimit)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aLimit);
-
-  if (!mHaveResultOrErrorCode) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aLimit = mLimit;
+  NS_ADDREF(*aResult = mResult);
   return NS_OK;
 }
 

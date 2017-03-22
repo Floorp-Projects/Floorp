@@ -516,7 +516,7 @@ function verifyWasmModule(module1, module2)
 
 function grabFileUsageAndContinueHandler(request)
 {
-  testGenerator.next(request.fileUsage);
+  testGenerator.next(request.result.fileUsage);
 }
 
 function getUsage(usageHandler)

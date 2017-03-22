@@ -133,20 +133,30 @@ GetStorageEstimate(nsIQuotaUsageRequest* aRequest,
 {
   MOZ_ASSERT(aRequest);
 
-  uint64_t usage;
-  nsresult rv = aRequest->GetUsage(&usage);
+  nsCOMPtr<nsIVariant> result;
+  nsresult rv = aRequest->GetResult(getter_AddRefs(result));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  uint64_t limit;
-  rv = aRequest->GetLimit(&limit);
+  nsID* iid;
+  nsCOMPtr<nsISupports> supports;
+  rv = result->GetAsInterface(&iid, getter_AddRefs(supports));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  aStorageEstimate.mUsage.Construct() = usage;
-  aStorageEstimate.mQuota.Construct() = limit;
+  free(iid);
+
+  nsCOMPtr<nsIQuotaUsageResult> usageResult = do_QueryInterface(supports);
+  MOZ_ASSERT(usageResult);
+
+  MOZ_ALWAYS_SUCCEEDS(
+    usageResult->GetUsage(&aStorageEstimate.mUsage.Construct()));
+
+  MOZ_ALWAYS_SUCCEEDS(
+    usageResult->GetLimit(&aStorageEstimate.mQuota.Construct()));
+
   return NS_OK;
 }
 
