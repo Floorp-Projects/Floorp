@@ -20,8 +20,8 @@ use webrender_traits::{AuxiliaryLists, ClipDisplayItem, ClipRegion, ColorF, Devi
 use webrender_traits::{DeviceUintSize, DisplayItem, Epoch, FilterOp, ImageDisplayItem, LayerPoint};
 use webrender_traits::{LayerRect, LayerSize, LayerToScrollTransform, LayoutTransform};
 use webrender_traits::{MixBlendMode, PipelineId, ScrollEventPhase, ScrollLayerId};
-use webrender_traits::{ScrollLayerState, ScrollLocation, ScrollPolicy, ServoScrollRootId};
-use webrender_traits::{SpecificDisplayItem, StackingContext, TileOffset, WorldPoint};
+use webrender_traits::{ScrollLayerState, ScrollLocation, ScrollPolicy, SpecificDisplayItem};
+use webrender_traits::{StackingContext, TileOffset, WorldPoint};
 
 #[derive(Copy, Clone, PartialEq, PartialOrd, Debug)]
 pub struct FrameId(pub u32);
@@ -231,12 +231,8 @@ impl Frame {
     }
 
     /// Returns true if any nodes actually changed position or false otherwise.
-    pub fn scroll_nodes(&mut self,
-                        origin: LayerPoint,
-                        pipeline_id: PipelineId,
-                        scroll_root_id: ServoScrollRootId)
-                         -> bool {
-        self.clip_scroll_tree.scroll_nodes(origin, pipeline_id, scroll_root_id)
+    pub fn scroll_nodes(&mut self, origin: LayerPoint, id: ScrollLayerId) -> bool {
+        self.clip_scroll_tree.scroll_nodes(origin, id)
     }
 
     /// Returns true if any nodes actually changed position or false otherwise.
@@ -349,7 +345,6 @@ impl Frame {
                                              pipeline_id,
                                              &clip_rect,
                                              &item.content_size,
-                                             item.scroll_root_id,
                                              clip,
                                              &mut self.clip_scroll_tree);
 
@@ -522,7 +517,6 @@ impl Frame {
             pipeline_id,
             &LayerRect::new(LayerPoint::zero(), iframe_rect.size),
             &iframe_clip.main.size,
-            Some(ServoScrollRootId(0)),
             iframe_clip,
             &mut self.clip_scroll_tree);
 
