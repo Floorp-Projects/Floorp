@@ -4,7 +4,7 @@ This document specifies how actions exposed by the *decision task* are to be
 presented and triggered from Treeherder, or similar user interfaces.
 
 The *decision task* creates an artifact ``public/actions.json`` to be consumed
-by a user interface such as Treeherder. The `public/actions.json`` file
+by a user interface such as Treeherder. The ``public/actions.json`` file
 specifies actions that can be triggered such as:
 
  * Retrigger a task,
@@ -21,7 +21,7 @@ This has two purposes:
  2. Strongly decouple build/test configuration from Treeherder.
 
 For details on how define custom actions in-tree, refer to
-:doc:`the in-tree actions section <in-tree-actions>`, this document merely
+:doc:`the in-tree actions section <action-details>`. This document merely
 specifies how ``actions.json`` shall be interpreted.
 
 
@@ -37,7 +37,7 @@ The ``public/actions.json`` artifact has a ``variables`` property that is a
 mapping from variable names to JSON values to be used as constants.
 These variables can be referenced from task templates, but beware that they
 may overshadow builtin variables. This is mainly useful to deduplicate commonly
-used values, in-order to reduce template size, this features does not
+used values, in order to reduce template size. This feature does not
 introduce further expressiveness.
 
 
@@ -63,7 +63,7 @@ See section on *Action Kind: ``task``* below for details.
 
 Action Context
 --------------
-Few actions are relevant in all contexts, for this reason each action specifies
+Few actions are relevant in all contexts. For this reason each action specifies
 a ``context`` property. This property specifies when an action is relevant.
 Actions *relevant* for a task should be displayed in a context menu for the
 given task. Similarly actions *not relevant* for a given task, should not be
@@ -124,7 +124,7 @@ It is expected that such user interfaces will attempt to auto-generate HTML
 forms from JSON schema specified. However, a user-interface implementor may also
 decide to hand write an HTML form for a particularly common or complex JSON
 schema. As long as the input generated from the form conforms to the schema
-specified for the given action. To ensure that implements should do a deep
+specified for the given action. To ensure that, implementers should do a deep
 comparison between a schema for which a hand-written HTML form exists, and the
 schema required by the action.
 
@@ -144,14 +144,16 @@ assumed that consumers will render these ``description`` properties as markdown.
 
 Action Kind: ``task``
 ---------------------
-An action with ``kind: 'task'`` is backed by an action task. That is when
-triggered the action creates a new task, and this is the result of the task.
-The task created by the action, may be useful in its own right, or it may
-simplify trigger in-tree scripts that creates new tasks. This way in-tree
-scripts can be triggered to execute complicated actions such as backfilling.
+
+An action with ``kind: 'task'`` is backed by an action task. That is, when the
+action is triggered by the user, the usre interface creates a new task,
+referred to as an *action task*.  The task created by the action may be useful
+in its own right, or it may simplify trigger in-tree scripts that create new
+tasks, similar to a decision task. This way in-tree scripts can be triggered to
+execute complicated actions such as backfilling.
 
 Actions of the ``'task'`` *kind* **must** have a ``task`` property. This
-property specifies the task template to be parameterized and created in-order
+property specifies the task template to be parameterized and created in order
 to trigger the action.
 
 The template is parameterized with the following variables:
@@ -187,7 +189,8 @@ The template is an object that is parameterized by:
   The template language is currently under active development and additional
   features will be added in the future. Once feature complete the template
   language will be frozen to avoid breaking backwards compatibility for user
-  interface implementors.
+  interface implementors. See `JSON-E <https://github.com/taskcluster/json-e>`_
+  for details.
 
 The following **example** demonstrates how a task template can specify
 timestamps and dump input JSON into environment variables::

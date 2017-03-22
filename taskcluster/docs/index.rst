@@ -28,7 +28,7 @@ check out the :doc:`how-to section <how-tos>`.
     yaml-templates
     docker-images
     cron
-    how-tos
-    in-tree-actions
+    actions
     action-spec
+    how-tos
     reference
