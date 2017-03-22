@@ -30,17 +30,17 @@ with Files('**'):
 with Files('docs/**'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools')
 
-with Files('docs/memory-panel.md'):
+with Files('docs/tools/memory-panel.md'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Memory')
 
-with Files('docs/debugger-panel.md'):
+with Files('docs/tools/debugger-panel.md'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Debugger')
 
-with Files('docs/debugger-api.md'):
+with Files('docs/backend/debugger-api.md'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Debugger')
 
-with Files('docs/http-inspector.md'):
+with Files('docs/tools/http-inspector.md'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Console')
 
-with Files('docs/inspector-panel.md'):
+with Files('docs/tools/inspector-panel.md'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Inspector')
