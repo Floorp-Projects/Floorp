@@ -12,3 +12,5 @@
 
 DOCUMENT_WARNING(IgnoringWillChangeOverBudget)
 DOCUMENT_WARNING(PreventDefaultFromPassiveListener)
+DOCUMENT_WARNING(SVGReferenceLoop)
+DOCUMENT_WARNING(SVGReferenceChainLengthExceeded)

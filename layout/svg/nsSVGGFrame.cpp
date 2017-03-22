@@ -48,7 +48,7 @@ nsSVGGFrame::GetType() const
 }
 
 //----------------------------------------------------------------------
-// nsISVGChildFrame methods
+// nsSVGDisplayableFrame methods
 
 void
 nsSVGGFrame::NotifySVGChanged(uint32_t aFlags)

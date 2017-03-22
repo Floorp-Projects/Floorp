@@ -10,14 +10,14 @@
 #include "nsAutoPtr.h"
 #include "nsContainerFrame.h"
 #include "nsIPresShell.h"
-#include "nsISVGChildFrame.h"
+#include "nsSVGDisplayableFrame.h"
 #include "nsRegion.h"
 #include "nsSVGUtils.h"
 
 class gfxContext;
 
 class nsSVGForeignObjectFrame : public nsContainerFrame
-                              , public nsISVGChildFrame
+                              , public nsSVGDisplayableFrame
 {
   friend nsContainerFrame*
   NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -73,7 +73,7 @@ public:
   }
 #endif
 
-  // nsISVGChildFrame interface:
+  // nsSVGDisplayableFrame interface:
   virtual DrawResult PaintSVG(gfxContext& aContext,
                               const gfxMatrix& aTransform,
                               const nsIntRect* aDirtyRect = nullptr) override;

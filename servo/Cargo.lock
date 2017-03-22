@@ -251,7 +251,7 @@ dependencies = [
 [[package]]
 name = "browserhtml"
 version = "0.1.17"
-source = "git+https://github.com/browserhtml/browserhtml?branch=crate#cd5374a970fd404377ab418ac1e4a358db47691f"
+source = "git+https://github.com/browserhtml/browserhtml?branch=crate#7c66ae9a3e29d35230d5b9f16d19a562b1312c87"
 
 [[package]]
 name = "build-apk"
@@ -925,7 +925,6 @@ dependencies = [
  "atomic_refcell 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cssparser 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "lazy_static 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.21 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "parking_lot 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",

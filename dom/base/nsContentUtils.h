@@ -2798,6 +2798,23 @@ public:
    */
   static Element* GetClosestNonNativeAnonymousAncestor(Element* aElement);
 
+  /**
+   * Returns one of the nsIObjectLoadingContent::TYPE_ values describing the
+   * content type which will be used for the given MIME type when loaded within
+   * an nsObjectLoadingContent.
+   *
+   * NOTE: This method doesn't take capabilities into account. The caller must
+   * take that into account.
+   *
+   * @param aMIMEType  The MIME type of the document being loaded.
+   * @param aContent The nsIContent object which is performing the load. May be
+   *                 nullptr in which case the docshell's plugin permissions
+   *                 will not be checked.
+   */
+  static uint32_t
+  HtmlObjectContentTypeForMIMEType(const nsCString& aMIMEType,
+                                   nsIContent* aContent);
+
 private:
   static bool InitializeEventTable();
 

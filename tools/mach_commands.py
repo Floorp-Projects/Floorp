@@ -260,7 +260,7 @@ class FormatProvider(MachCommandBase):
         from subprocess import Popen, PIPE
 
         if os.path.exists(".hg"):
-            diff_process = Popen(["hg", "diff", "-U0", "-r", "tip^",
+            diff_process = Popen(["hg", "diff", "-U0", "-r", ".^",
                                   "--include", "glob:**.c", "--include", "glob:**.cpp",
                                   "--include", "glob:**.h",
                                   "--exclude", "listfile:.clang-format-ignore"], stdout=PIPE)

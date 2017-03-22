@@ -128,7 +128,6 @@ external-media-tests-twitch:
     e10s: false
     instance-size:
         by-test-platform:
-            linux.*: xlarge
             default: default
     tier: 2
     max-run-time: 5400

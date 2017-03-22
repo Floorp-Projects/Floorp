@@ -707,6 +707,7 @@ IonCacheIRCompiler::emitMegamorphicStoreSlot()
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     PropertyName* name = stringStubField(reader.stubOffset())->asAtom().asPropertyName();
     ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    bool needsTypeBarrier = reader.readBool();
 
     AutoScratchRegister scratch1(allocator, masm);
     AutoScratchRegister scratch2(allocator, masm);
@@ -731,7 +732,10 @@ IonCacheIRCompiler::emitMegamorphicStoreSlot()
     masm.movePtr(ImmGCPtr(name), scratch2);
     masm.passABIArg(scratch2);
     masm.passABIArg(val.scratchReg());
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, SetNativeDataProperty));
+    if (needsTypeBarrier)
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataProperty<true>)));
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataProperty<false>)));
     masm.mov(ReturnReg, scratch1);
     masm.PopRegsInMask(volatileRegs);
 

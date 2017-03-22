@@ -47,7 +47,7 @@ public:
                                     nsIAtom*        aAttribute,
                                     int32_t         aModType) override;
 
-  // nsISVGChildFrame interface:
+  // nsSVGDisplayableFrame interface:
   virtual void NotifySVGChanged(uint32_t aFlags) override;
 
   // nsSVGContainerFrame methods:

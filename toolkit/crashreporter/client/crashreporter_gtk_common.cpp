@@ -374,26 +374,6 @@ bool UIGetSettingsPath(const string& vendor,
   return true;
 }
 
-bool UIEnsurePathExists(const string& path)
-{
-  int ret = mkdir(path.c_str(), S_IRWXU);
-  int e = errno;
-  if (ret == -1 && e != EEXIST)
-    return false;
-
-  return true;
-}
-
-bool UIFileExists(const string& path)
-{
-  struct stat sb;
-  int ret = stat(path.c_str(), &sb);
-  if (ret == -1 || !(sb.st_mode & S_IFREG))
-    return false;
-
-  return true;
-}
-
 bool UIMoveFile(const string& file, const string& newfile)
 {
   if (!rename(file.c_str(), newfile.c_str()))
@@ -423,31 +403,4 @@ bool UIMoveFile(const string& file, const string& newfile)
   int status;
   waitpid(pID, &status, 0);
   return UIFileExists(newfile);
-}
-
-bool UIDeleteFile(const string& file)
-{
-  return (unlink(file.c_str()) != -1);
-}
-
-std::ifstream* UIOpenRead(const string& filename)
-{
-  return new std::ifstream(filename.c_str(), std::ios::in);
-}
-
-std::ofstream* UIOpenWrite(const string& filename,
-                           bool append, // append=false
-                           bool binary) // binary=false
-{
-  std::ios_base::openmode mode = std::ios::out;
-
-  if (append) {
-    mode = mode | std::ios::app;
-  }
-
-  if (binary) {
-    mode = mode | std::ios::binary;
-  }
-
-  return new std::ofstream(filename.c_str(), mode);
 }

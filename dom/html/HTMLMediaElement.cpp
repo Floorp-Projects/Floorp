@@ -1030,6 +1030,11 @@ private:
       return false;
     }
 
+    // We should consider any bfcached page or inactive document as non-playing.
+    if (!mOwner->IsActive()) {
+      return false;
+    }
+
     // It might be resumed from remote, we should keep the audio channel agent.
     if (IsSuspended()) {
       return true;
@@ -1037,11 +1042,6 @@ private:
 
     // Are we paused
     if (mOwner->mPaused) {
-      return false;
-    }
-
-    // We should consider any bfcached page or inactive document as non-playing.
-    if (!mOwner->IsActive()) {
       return false;
     }
 
@@ -1532,12 +1532,7 @@ HTMLMediaElement::SetVisible(bool aVisible)
 already_AddRefed<layers::Image>
 HTMLMediaElement::GetCurrentImage()
 {
-  // Mark the decoder owned by the element as tainted so that the
-  // suspend-video-decoder is disabled.
-  mHasSuspendTaint = true;
-  if (mDecoder) {
-    mDecoder->SetSuspendTaint(true);
-  }
+  MarkAsTainted();
 
   // TODO: In bug 1345404, handle case when video decoder is already suspended.
   ImageContainer* container = GetImageContainer();
@@ -3334,7 +3329,8 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
 {
   MOZ_RELEASE_ASSERT(aGraph);
 
-    MarkAsContentSource(CallerAPI::CAPTURE_STREAM);
+  MarkAsContentSource(CallerAPI::CAPTURE_STREAM);
+  MarkAsTainted();
 
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   if (!window) {
@@ -3723,7 +3719,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mDefaultPlaybackStartPosition(0.0),
     mIsAudioTrackAudible(false),
     mHasSuspendTaint(false),
-    mMediaTracksConstructed(false),
     mVisibilityState(Visibility::UNTRACKED),
     mErrorSink(new ErrorSink(this)),
     mAudioChannelWrapper(new AudioChannelAgentCallback(this, mAudioChannel))
@@ -7423,11 +7418,7 @@ HTMLMediaElement::GetDocument() const
 void
 HTMLMediaElement::ConstructMediaTracks(const MediaInfo* aInfo)
 {
-  if (mMediaTracksConstructed || !aInfo) {
-    return;
-  }
-
-  mMediaTracksConstructed = true;
+  MOZ_ASSERT(aInfo);
 
   AudioTrackList* audioList = AudioTracks();
   if (audioList && aInfo->HasAudio()) {
@@ -7461,8 +7452,6 @@ HTMLMediaElement::RemoveMediaTracks()
   if (videoList) {
     videoList->RemoveTracks();
   }
-
-  mMediaTracksConstructed = false;
 }
 
 class MediaElementGMPCrashHelper : public GMPCrashHelper
@@ -7489,6 +7478,16 @@ already_AddRefed<GMPCrashHelper>
 HTMLMediaElement::CreateGMPCrashHelper()
 {
   return MakeAndAddRef<MediaElementGMPCrashHelper>(this);
+}
+
+void
+HTMLMediaElement::MarkAsTainted()
+{
+  mHasSuspendTaint = true;
+
+  if (mDecoder) {
+    mDecoder->SetSuspendTaint(true);
+  }
 }
 
 bool HasDebuggerPrivilege(JSContext* aCx, JSObject* aObj)

@@ -6,14 +6,13 @@
 #ifndef __NS_SVGCLIPPATHFRAME_H__
 #define __NS_SVGCLIPPATHFRAME_H__
 
-#include "AutoReferenceLimiter.h"
 #include "gfxMatrix.h"
 #include "mozilla/Attributes.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGUtils.h"
 
 class gfxContext;
-class nsISVGChildFrame;
+class nsSVGDisplayableFrame;
 
 class nsSVGClipPathFrame : public nsSVGContainerFrame
 {
@@ -27,7 +26,7 @@ class nsSVGClipPathFrame : public nsSVGContainerFrame
 protected:
   explicit nsSVGClipPathFrame(nsStyleContext* aContext)
     : nsSVGContainerFrame(aContext)
-    , mReferencing(mozilla::AutoReferenceLimiter::notReferencing)
+    , mIsBeingProcessed(false)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
@@ -112,7 +111,7 @@ public:
   // Check if this clipPath is made up of more than one geometry object.
   // If so, the clipping API in cairo isn't enough and we need to use
   // mask based clipping.
-  bool IsTrivial(nsISVGChildFrame **aSingleChild = nullptr);
+  bool IsTrivial(nsSVGDisplayableFrame **aSingleChild = nullptr);
 
   bool IsValid();
 
@@ -176,9 +175,9 @@ private:
   // may not even be called soon/any more.
   gfxMatrix mMatrixForChildren;
 
-  // Flag used by AutoReferenceLimiter while we're processing an instance of
-  // this class to protect against (break) reference loops.
-  int16_t mReferencing;
+  // Flag used to indicate whether a methods that may reenter due to
+  // following a reference to another instance is currently executing.
+  bool mIsBeingProcessed;
 };
 
 #endif

@@ -118,7 +118,7 @@ public:
   // nsISVGSVGFrame interface:
   virtual void NotifyViewportOrTransformChanged(uint32_t aFlags) override;
 
-  // nsISVGChildFrame methods:
+  // nsSVGDisplayableFrame methods:
   virtual DrawResult PaintSVG(gfxContext& aContext,
                               const gfxMatrix& aTransform,
                               const nsIntRect* aDirtyRect = nullptr) override;

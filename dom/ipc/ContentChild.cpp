@@ -3013,7 +3013,8 @@ ContentChild::RecvBlobURLRegistration(const nsCString& aURI, PBlobChild* aBlobCh
 mozilla::ipc::IPCResult
 ContentChild::RecvBlobURLUnregistration(const nsCString& aURI)
 {
-  nsHostObjectProtocolHandler::RemoveDataEntry(aURI);
+  nsHostObjectProtocolHandler::RemoveDataEntry(aURI,
+                                               /* aBroadcastToOtherProcesses = */ false);
   return IPC_OK();
 }
 
@@ -3260,6 +3261,16 @@ ContentChild::AsyncOpenAnonymousTemporaryFile(AnonymousTemporaryFileCallback aCa
   return NS_OK;
 }
 
+mozilla::ipc::IPCResult
+ContentChild::RecvSetPermissionsWithKey(const nsCString& aPermissionKey,
+                                        nsTArray<IPC::Permission>&& aPerms)
+{
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+    services::GetPermissionManager();
+  permissionManager->SetPermissionsWithKey(aPermissionKey, aPerms);
+
+  return IPC_OK();
+}
 
 } // namespace dom
 } // namespace mozilla
