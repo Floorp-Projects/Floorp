@@ -223,7 +223,7 @@ function grabFileUsageAndContinueHandler(request)
   testGenerator.next(request.result.fileUsage);
 }
 
-function getUsage(usageHandler)
+function getCurrentUsage(usageHandler)
 {
   let qms = SpecialPowers.Services.qms;
   let principal = SpecialPowers.wrap(document).nodePrincipal;

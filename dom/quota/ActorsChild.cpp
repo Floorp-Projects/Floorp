@@ -142,17 +142,18 @@ QuotaUsageRequestChild::HandleResponse(nsresult aResponse)
 }
 
 void
-QuotaUsageRequestChild::HandleResponse(const UsageResponse& aResponse)
+QuotaUsageRequestChild::HandleResponse(const OriginUsageResponse& aResponse)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
 
-  RefPtr<UsageResult> result = new UsageResult(aResponse.usage(),
-                                               aResponse.fileUsage(),
-                                               aResponse.limit());
+  RefPtr<OriginUsageResult> result =
+    new OriginUsageResult(aResponse.usage(),
+                          aResponse.fileUsage(),
+                          aResponse.limit());
 
   RefPtr<nsVariant> variant = new nsVariant();
-  variant->SetAsInterface(NS_GET_IID(nsIQuotaUsageResult), result);
+  variant->SetAsInterface(NS_GET_IID(nsIQuotaOriginUsageResult), result);
 
   mRequest->SetResult(variant);
 }
@@ -181,8 +182,8 @@ QuotaUsageRequestChild::Recv__delete__(const UsageRequestResponse& aResponse)
       HandleResponse(aResponse.get_nsresult());
       break;
 
-    case UsageRequestResponse::TUsageResponse:
-      HandleResponse(aResponse.get_UsageResponse());
+    case UsageRequestResponse::TOriginUsageResponse:
+      HandleResponse(aResponse.get_OriginUsageResponse());
       break;
 
     default:

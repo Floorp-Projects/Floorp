@@ -23,7 +23,7 @@ interface nsIQuotaRequestBase : nsISupports
 interface nsIQuotaUsageRequest : nsIQuotaRequestBase
 {
   // The result can contain one of these types:
-  //   nsIQuotaUsageResult
+  //   nsIQuotaOriginUsageResult
   [must_use] readonly attribute nsIVariant result;
 
   attribute nsIQuotaUsageCallback callback;
