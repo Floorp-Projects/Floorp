@@ -1042,7 +1042,7 @@ private:
   RecvStopIdleMaintenance() override;
 };
 
-class GetUsageOp final
+class GetOriginUsageOp final
   : public NormalOriginOperationBase
   , public PQuotaUsageRequestParent
 {
@@ -1051,19 +1051,19 @@ class GetUsageOp final
   // limit.
   UsageInfo mUsageInfo;
 
-  const UsageParams mParams;
+  const OriginUsageParams mParams;
   nsCString mSuffix;
   nsCString mGroup;
   bool mGetGroupUsage;
 
 public:
-  explicit GetUsageOp(const UsageRequestParams& aParams);
+  explicit GetOriginUsageOp(const UsageRequestParams& aParams);
 
   MOZ_IS_CLASS_INIT bool
   Init(Quota* aQuota);
 
 private:
-  ~GetUsageOp()
+  ~GetOriginUsageOp()
   { }
 
   MOZ_IS_CLASS_INIT virtual nsresult
@@ -6230,7 +6230,7 @@ Quota::ActorDestroy(ActorDestroyReason aWhy)
 PQuotaUsageRequestParent*
 Quota::AllocPQuotaUsageRequestParent(const UsageRequestParams& aParams)
 {
-  RefPtr<GetUsageOp> actor = new GetUsageOp(aParams);
+  RefPtr<GetOriginUsageOp> actor = new GetOriginUsageOp(aParams);
 
   // Transfer ownership to IPDL.
   return actor.forget().take();
@@ -6244,7 +6244,7 @@ Quota::RecvPQuotaUsageRequestConstructor(PQuotaUsageRequestParent* aActor,
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != UsageRequestParams::T__None);
 
-  auto* op = static_cast<GetUsageOp*>(aActor);
+  auto* op = static_cast<GetOriginUsageOp*>(aActor);
 
   if (NS_WARN_IF(!op->Init(this))) {
     return IPC_FAIL_NO_REASON(this);
@@ -6261,8 +6261,8 @@ Quota::DeallocPQuotaUsageRequestParent(PQuotaUsageRequestParent* aActor)
   MOZ_ASSERT(aActor);
 
   // Transfer ownership back from IPDL.
-  RefPtr<GetUsageOp> actor =
-    dont_AddRef(static_cast<GetUsageOp*>(aActor));
+  RefPtr<GetOriginUsageOp> actor =
+    dont_AddRef(static_cast<GetOriginUsageOp*>(aActor));
   return true;
 }
 
@@ -6414,19 +6414,19 @@ Quota::RecvStopIdleMaintenance()
   return IPC_OK();
 }
 
-GetUsageOp::GetUsageOp(const UsageRequestParams& aParams)
+GetOriginUsageOp::GetOriginUsageOp(const UsageRequestParams& aParams)
   : NormalOriginOperationBase(Nullable<PersistenceType>(),
                               OriginScope::FromNull(),
                               /* aExclusive */ false)
-  , mParams(aParams.get_UsageParams())
-  , mGetGroupUsage(aParams.get_UsageParams().getGroupUsage())
+  , mParams(aParams.get_OriginUsageParams())
+  , mGetGroupUsage(aParams.get_OriginUsageParams().getGroupUsage())
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aParams.type() == UsageRequestParams::TUsageParams);
+  MOZ_ASSERT(aParams.type() == UsageRequestParams::TOriginUsageParams);
 }
 
 bool
-GetUsageOp::Init(Quota* aQuota)
+GetOriginUsageOp::Init(Quota* aQuota)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aQuota);
@@ -6438,7 +6438,7 @@ GetUsageOp::Init(Quota* aQuota)
 }
 
 nsresult
-GetUsageOp::DoInitOnMainThread()
+GetOriginUsageOp::DoInitOnMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(GetState() == State_Initializing);
@@ -6467,8 +6467,8 @@ GetUsageOp::DoInitOnMainThread()
 }
 
 nsresult
-GetUsageOp::AddToUsage(QuotaManager* aQuotaManager,
-                       PersistenceType aPersistenceType)
+GetOriginUsageOp::AddToUsage(QuotaManager* aQuotaManager,
+                             PersistenceType aPersistenceType)
 {
   AssertIsOnIOThread();
 
@@ -6580,12 +6580,12 @@ GetUsageOp::AddToUsage(QuotaManager* aQuotaManager,
 }
 
 nsresult
-GetUsageOp::DoDirectoryWork(QuotaManager* aQuotaManager)
+GetOriginUsageOp::DoDirectoryWork(QuotaManager* aQuotaManager)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(mUsageInfo.TotalUsage() == 0);
 
-  PROFILER_LABEL("Quota", "GetUsageOp::DoDirectoryWork",
+  PROFILER_LABEL("Quota", "GetOriginUsageOp::DoDirectoryWork",
                  js::ProfileEntry::Category::OTHER);
 
   nsresult rv;
@@ -6621,7 +6621,7 @@ GetUsageOp::DoDirectoryWork(QuotaManager* aQuotaManager)
 }
 
 void
-GetUsageOp::SendResults()
+GetOriginUsageOp::SendResults()
 {
   AssertIsOnOwningThread();
 
@@ -6637,7 +6637,7 @@ GetUsageOp::SendResults()
     UsageRequestResponse response;
 
     if (NS_SUCCEEDED(mResultCode)) {
-      UsageResponse usageResponse;
+      OriginUsageResponse usageResponse;
 
       // We'll get the group usage when mGetGroupUsage is true and get the
       // origin usage when mGetGroupUsage is false.
@@ -6659,7 +6659,7 @@ GetUsageOp::SendResults()
 }
 
 void
-GetUsageOp::ActorDestroy(ActorDestroyReason aWhy)
+GetOriginUsageOp::ActorDestroy(ActorDestroyReason aWhy)
 {
   AssertIsOnOwningThread();
 
@@ -6667,7 +6667,7 @@ GetUsageOp::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 mozilla::ipc::IPCResult
-GetUsageOp::RecvCancel()
+GetOriginUsageOp::RecvCancel()
 {
   AssertIsOnOwningThread();
 

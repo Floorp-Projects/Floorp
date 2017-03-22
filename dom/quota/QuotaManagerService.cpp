@@ -596,7 +596,7 @@ QuotaManagerService::GetUsageForPrincipal(nsIPrincipal* aPrincipal,
 
   RefPtr<UsageRequest> request = new UsageRequest(aPrincipal, aCallback);
 
-  UsageParams params;
+  OriginUsageParams params;
 
   nsresult rv = CheckedPrincipalToPrincipalInfo(aPrincipal,
                                                 params.principalInfo());

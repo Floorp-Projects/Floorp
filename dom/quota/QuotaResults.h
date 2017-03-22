@@ -13,24 +13,24 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
-class UsageResult
-  : public nsIQuotaUsageResult
+class OriginUsageResult
+  : public nsIQuotaOriginUsageResult
 {
   uint64_t mUsage;
   uint64_t mFileUsage;
   uint64_t mLimit;
 
 public:
-  UsageResult(uint64_t aUsage,
-              uint64_t aFileUsage,
-              uint64_t aLimit);
+  OriginUsageResult(uint64_t aUsage,
+                    uint64_t aFileUsage,
+                    uint64_t aLimit);
 
 private:
-  virtual ~UsageResult()
+  virtual ~OriginUsageResult()
   { }
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIQUOTAUSAGERESULT
+  NS_DECL_NSIQUOTAORIGINUSAGERESULT
 };
 
 } // namespace quota

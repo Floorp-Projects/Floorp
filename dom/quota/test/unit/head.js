@@ -266,7 +266,7 @@ function grabUsageAndContinueHandler(request)
   testGenerator.next(request.result.usage);
 }
 
-function getUsage(usageHandler)
+function getCurrentUsage(usageHandler)
 {
   let principal = Cc["@mozilla.org/systemprincipal;1"]
                     .createInstance(Ci.nsIPrincipal);

@@ -10,20 +10,20 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
-UsageResult::UsageResult(uint64_t aUsage,
-                         uint64_t aFileUsage,
-                         uint64_t aLimit)
+OriginUsageResult::OriginUsageResult(uint64_t aUsage,
+                                     uint64_t aFileUsage,
+                                     uint64_t aLimit)
   : mUsage(aUsage)
   , mFileUsage(aFileUsage)
   , mLimit(aLimit)
 {
 }
 
-NS_IMPL_ISUPPORTS(UsageResult,
-                  nsIQuotaUsageResult)
+NS_IMPL_ISUPPORTS(OriginUsageResult,
+                  nsIQuotaOriginUsageResult)
 
 NS_IMETHODIMP
-UsageResult::GetUsage(uint64_t* aUsage)
+OriginUsageResult::GetUsage(uint64_t* aUsage)
 {
   MOZ_ASSERT(aUsage);
 
@@ -32,7 +32,7 @@ UsageResult::GetUsage(uint64_t* aUsage)
 }
 
 NS_IMETHODIMP
-UsageResult::GetFileUsage(uint64_t* aFileUsage)
+OriginUsageResult::GetFileUsage(uint64_t* aFileUsage)
 {
   MOZ_ASSERT(aFileUsage);
 
@@ -41,7 +41,7 @@ UsageResult::GetFileUsage(uint64_t* aFileUsage)
 }
 
 NS_IMETHODIMP
-UsageResult::GetLimit(uint64_t* aLimit)
+OriginUsageResult::GetLimit(uint64_t* aLimit)
 {
   MOZ_ASSERT(aLimit);
 
