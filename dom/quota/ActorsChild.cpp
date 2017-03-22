@@ -142,6 +142,42 @@ QuotaUsageRequestChild::HandleResponse(nsresult aResponse)
 }
 
 void
+QuotaUsageRequestChild::HandleResponse(const nsTArray<OriginUsage>& aResponse)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mRequest);
+
+  RefPtr<nsVariant> variant = new nsVariant();
+
+  if (aResponse.IsEmpty()) {
+    variant->SetAsEmptyArray();
+  } else {
+    nsTArray<RefPtr<UsageResult>> usageResults;
+
+    const uint32_t count = aResponse.Length();
+
+    usageResults.SetCapacity(count);
+
+    for (uint32_t index = 0; index < count; index++) {
+      auto& originUsage = aResponse[index];
+
+      RefPtr<UsageResult> usageResult = new UsageResult(originUsage.origin(),
+                                                        originUsage.persisted(),
+                                                        originUsage.usage());
+
+      usageResults.AppendElement(usageResult.forget());
+    }
+
+    variant->SetAsArray(nsIDataType::VTYPE_INTERFACE_IS,
+                        &NS_GET_IID(nsIQuotaUsageResult),
+                        usageResults.Length(),
+                        static_cast<void*>(usageResults.Elements()));
+  }
+
+  mRequest->SetResult(variant);
+}
+
+void
 QuotaUsageRequestChild::HandleResponse(const OriginUsageResponse& aResponse)
 {
   AssertIsOnOwningThread();
@@ -180,6 +216,10 @@ QuotaUsageRequestChild::Recv__delete__(const UsageRequestResponse& aResponse)
   switch (aResponse.type()) {
     case UsageRequestResponse::Tnsresult:
       HandleResponse(aResponse.get_nsresult());
+      break;
+
+    case UsageRequestResponse::TAllUsageResponse:
+      HandleResponse(aResponse.get_AllUsageResponse().originUsages());
       break;
 
     case UsageRequestResponse::TOriginUsageResponse:

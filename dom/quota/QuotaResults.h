@@ -13,6 +13,26 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
+class UsageResult
+  : public nsIQuotaUsageResult
+{
+  nsCString mOrigin;
+  uint64_t mUsage;
+  bool mPersisted;
+
+public:
+  UsageResult(const nsACString& aOrigin,
+              bool aPersisted,
+              uint64_t aUsage);
+
+private:
+  virtual ~UsageResult()
+  { }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIQUOTAUSAGERESULT
+};
+
 class OriginUsageResult
   : public nsIQuotaOriginUsageResult
 {

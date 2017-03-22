@@ -91,6 +91,15 @@ RequestBase::GetResultCode(nsresult* aResultCode)
   return NS_OK;
 }
 
+UsageRequest::UsageRequest(nsIQuotaUsageCallback* aCallback)
+  : mCallback(aCallback)
+  , mBackgroundActor(nullptr)
+  , mCanceled(false)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aCallback);
+}
+
 UsageRequest::UsageRequest(nsIPrincipal* aPrincipal,
                            nsIQuotaUsageCallback* aCallback)
   : RequestBase(aPrincipal)
