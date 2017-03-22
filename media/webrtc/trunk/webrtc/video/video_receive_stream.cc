@@ -407,5 +407,10 @@ int64_t VideoReceiveStream::GetRtt() const {
   return -1;
 }
 
+bool
+VideoReceiveStream::GetRemoteRTCPSenderInfo(RTCPSenderInfo* sender_info) const {
+  return -1 != vie_channel_->GetRemoteRTCPSenderInfo(sender_info);
+}
+
 }  // namespace internal
 }  // namespace webrtc

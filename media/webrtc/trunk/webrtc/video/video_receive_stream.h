@@ -76,6 +76,7 @@ class VideoReceiveStream : public webrtc::VideoReceiveStream,
 
   void SetSyncChannel(VoiceEngine* voice_engine, int audio_channel_id) override;
   int64_t GetRtt() const override;
+  bool GetRemoteRTCPSenderInfo(RTCPSenderInfo* sender_info) const override;
  private:
   TransportAdapter transport_adapter_;
   EncodedFrameCallbackAdapter encoded_frame_proxy_;
