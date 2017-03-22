@@ -2,7 +2,7 @@
 
 module.exports = {
   "extends": [
-    "../../toolkit/.eslintrc.js"
+    "plugin:mozilla/recommended"
   ],
   "rules": {
     // Enforce return statements in callbacks of array methods.

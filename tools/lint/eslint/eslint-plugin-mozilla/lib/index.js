@@ -16,6 +16,7 @@ module.exports = {
     "browser-test": require("../lib/configs/browser-test"),
     "chrome-test": require("../lib/configs/chrome-test"),
     "mochitest-test": require("../lib/configs/mochitest-test"),
+    "recommended": require("../lib/configs/recommended"),
     "xpcshell-test": require("../lib/configs/xpcshell-test")
   },
   environments: {
