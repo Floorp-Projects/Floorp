@@ -1043,9 +1043,48 @@ private:
   RecvStopIdleMaintenance() override;
 };
 
-class GetOriginUsageOp final
+class QuotaUsageRequestBase
   : public NormalOriginOperationBase
   , public PQuotaUsageRequestParent
+{
+public:
+  // May be overridden by subclasses if they need to perform work on the
+  // background thread before being run.
+  virtual bool
+  Init(Quota* aQuota);
+
+protected:
+  QuotaUsageRequestBase()
+    : NormalOriginOperationBase(Nullable<PersistenceType>(),
+                                OriginScope::FromNull(),
+                                /* aExclusive */ false)
+  { }
+
+  nsresult
+  GetUsageForOrigin(QuotaManager* aQuotaManager,
+                    PersistenceType aPersistenceType,
+                    const nsACString& aGroup,
+                    const nsACString& aOrigin,
+                    UsageInfo* aUsageInfo);
+
+  // Subclasses use this override to set the IPDL response value.
+  virtual void
+  GetResponse(UsageRequestResponse& aResponse) = 0;
+
+private:
+  void
+  SendResults() override;
+
+  // IPDL methods.
+  void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  mozilla::ipc::IPCResult
+  RecvCancel() override;
+};
+
+class GetOriginUsageOp final
+  : public QuotaUsageRequestBase
 {
   // If mGetGroupUsage is false, we use mUsageInfo to record the origin usage
   // and the file usage. Otherwise, we use it to record the group usage and the
@@ -1061,7 +1100,7 @@ public:
   explicit GetOriginUsageOp(const UsageRequestParams& aParams);
 
   MOZ_IS_CLASS_INIT bool
-  Init(Quota* aQuota);
+  Init(Quota* aQuota) override;
 
 private:
   ~GetOriginUsageOp()
@@ -1070,22 +1109,11 @@ private:
   MOZ_IS_CLASS_INIT virtual nsresult
   DoInitOnMainThread() override;
 
-  nsresult
-  AddToUsage(QuotaManager* aQuotaManager,
-             PersistenceType aPersistenceType);
-
   virtual nsresult
   DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
-  virtual void
-  SendResults() override;
-
-  // IPDL methods.
-  virtual void
-  ActorDestroy(ActorDestroyReason aWhy) override;
-
-  virtual mozilla::ipc::IPCResult
-  RecvCancel() override;
+  void
+  GetResponse(UsageRequestResponse& aResponse) override;
 };
 
 class QuotaRequestBase
@@ -6235,7 +6263,21 @@ Quota::ActorDestroy(ActorDestroyReason aWhy)
 PQuotaUsageRequestParent*
 Quota::AllocPQuotaUsageRequestParent(const UsageRequestParams& aParams)
 {
-  RefPtr<GetOriginUsageOp> actor = new GetOriginUsageOp(aParams);
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aParams.type() != UsageRequestParams::T__None);
+
+  RefPtr<QuotaUsageRequestBase> actor;
+
+  switch (aParams.type()) {
+    case UsageRequestParams::TOriginUsageParams:
+      actor = new GetOriginUsageOp(aParams);
+      break;
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+
+  MOZ_ASSERT(actor);
 
   // Transfer ownership to IPDL.
   return actor.forget().take();
@@ -6249,7 +6291,7 @@ Quota::RecvPQuotaUsageRequestConstructor(PQuotaUsageRequestParent* aActor,
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != UsageRequestParams::T__None);
 
-  auto* op = static_cast<GetOriginUsageOp*>(aActor);
+  auto* op = static_cast<QuotaUsageRequestBase*>(aActor);
 
   if (NS_WARN_IF(!op->Init(this))) {
     return IPC_FAIL_NO_REASON(this);
@@ -6266,8 +6308,8 @@ Quota::DeallocPQuotaUsageRequestParent(PQuotaUsageRequestParent* aActor)
   MOZ_ASSERT(aActor);
 
   // Transfer ownership back from IPDL.
-  RefPtr<GetOriginUsageOp> actor =
-    dont_AddRef(static_cast<GetOriginUsageOp*>(aActor));
+  RefPtr<QuotaUsageRequestBase> actor =
+    dont_AddRef(static_cast<QuotaUsageRequestBase*>(aActor));
   return true;
 }
 
@@ -6341,6 +6383,7 @@ Quota::RecvPQuotaRequestConstructor(PQuotaRequestParent* aActor,
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
   auto* op = static_cast<QuotaRequestBase*>(aActor);
+
   if (NS_WARN_IF(!op->Init(this))) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -6419,67 +6462,32 @@ Quota::RecvStopIdleMaintenance()
   return IPC_OK();
 }
 
-GetOriginUsageOp::GetOriginUsageOp(const UsageRequestParams& aParams)
-  : NormalOriginOperationBase(Nullable<PersistenceType>(),
-                              OriginScope::FromNull(),
-                              /* aExclusive */ false)
-  , mParams(aParams.get_OriginUsageParams())
-  , mGetGroupUsage(aParams.get_OriginUsageParams().getGroupUsage())
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aParams.type() == UsageRequestParams::TOriginUsageParams);
-}
-
 bool
-GetOriginUsageOp::Init(Quota* aQuota)
+QuotaUsageRequestBase::Init(Quota* aQuota)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aQuota);
 
-  mNeedsMainThreadInit = true;
   mNeedsQuotaManagerInit = true;
 
   return true;
 }
 
 nsresult
-GetOriginUsageOp::DoInitOnMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(GetState() == State_Initializing);
-  MOZ_ASSERT(mNeedsMainThreadInit);
-
-  const PrincipalInfo& principalInfo = mParams.principalInfo();
-
-  nsresult rv;
-  nsCOMPtr<nsIPrincipal> principal =
-    PrincipalInfoToPrincipal(principalInfo, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Figure out which origin we're dealing with.
-  nsCString origin;
-  rv = QuotaManager::GetInfoFromPrincipal(principal, &mSuffix, &mGroup,
-                                          &origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  mOriginScope.SetFromOrigin(origin);
-
-  return NS_OK;
-}
-
-nsresult
-GetOriginUsageOp::AddToUsage(QuotaManager* aQuotaManager,
-                             PersistenceType aPersistenceType)
+QuotaUsageRequestBase::GetUsageForOrigin(QuotaManager* aQuotaManager,
+                                         PersistenceType aPersistenceType,
+                                         const nsACString& aGroup,
+                                         const nsACString& aOrigin,
+                                         UsageInfo* aUsageInfo)
 {
   AssertIsOnIOThread();
+  MOZ_ASSERT(aQuotaManager);
+  MOZ_ASSERT(aUsageInfo);
+  MOZ_ASSERT(aUsageInfo->TotalUsage() == 0);
 
   nsCOMPtr<nsIFile> directory;
   nsresult rv = aQuotaManager->GetDirectoryForOrigin(aPersistenceType,
-                                                     mOriginScope.GetOrigin(),
+                                                     aOrigin,
                                                      getter_AddRefs(directory));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -6493,8 +6501,7 @@ GetOriginUsageOp::AddToUsage(QuotaManager* aQuotaManager,
     bool initialized;
 
     if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-      initialized =
-        aQuotaManager->IsOriginInitialized(mOriginScope.GetOrigin());
+      initialized = aQuotaManager->IsOriginInitialized(aOrigin);
     } else {
       initialized = aQuotaManager->IsTemporaryStorageInitialized();
     }
@@ -6567,21 +6574,120 @@ GetOriginUsageOp::AddToUsage(QuotaManager* aQuotaManager,
 
       if (initialized) {
         rv = client->GetUsageForOrigin(aPersistenceType,
-                                       mGroup,
-                                       mOriginScope.GetOrigin(),
+                                       aGroup,
+                                       aOrigin,
                                        mCanceled,
-                                       &mUsageInfo);
+                                       aUsageInfo);
       }
       else {
         rv = client->InitOrigin(aPersistenceType,
-                                mGroup,
-                                mOriginScope.GetOrigin(),
+                                aGroup,
+                                aOrigin,
                                 mCanceled,
-                                &mUsageInfo);
+                                aUsageInfo);
       }
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
+
+  return NS_OK;
+}
+
+void
+QuotaUsageRequestBase::SendResults()
+{
+  AssertIsOnOwningThread();
+
+  if (IsActorDestroyed()) {
+    if (NS_SUCCEEDED(mResultCode)) {
+      mResultCode = NS_ERROR_FAILURE;
+    }
+  } else {
+    if (mCanceled) {
+      mResultCode = NS_ERROR_FAILURE;
+    }
+
+    UsageRequestResponse response;
+
+    if (NS_SUCCEEDED(mResultCode)) {
+      GetResponse(response);
+    } else {
+      response = mResultCode;
+    }
+
+    Unused << PQuotaUsageRequestParent::Send__delete__(this, response);
+  }
+}
+
+void
+QuotaUsageRequestBase::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnOwningThread();
+
+  NoteActorDestroyed();
+}
+
+mozilla::ipc::IPCResult
+QuotaUsageRequestBase::RecvCancel()
+{
+  AssertIsOnOwningThread();
+
+  if (mCanceled.exchange(true)) {
+    NS_WARNING("Canceled more than once?!");
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  return IPC_OK();
+}
+
+GetOriginUsageOp::GetOriginUsageOp(const UsageRequestParams& aParams)
+  : mParams(aParams.get_OriginUsageParams())
+  , mGetGroupUsage(aParams.get_OriginUsageParams().getGroupUsage())
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aParams.type() == UsageRequestParams::TOriginUsageParams);
+}
+
+bool
+GetOriginUsageOp::Init(Quota* aQuota)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aQuota);
+
+  if (NS_WARN_IF(!QuotaUsageRequestBase::Init(aQuota))) {
+    return false;
+  }
+
+  mNeedsMainThreadInit = true;
+
+  return true;
+}
+
+nsresult
+GetOriginUsageOp::DoInitOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(GetState() == State_Initializing);
+  MOZ_ASSERT(mNeedsMainThreadInit);
+
+  const PrincipalInfo& principalInfo = mParams.principalInfo();
+
+  nsresult rv;
+  nsCOMPtr<nsIPrincipal> principal =
+    PrincipalInfoToPrincipal(principalInfo, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Figure out which origin we're dealing with.
+  nsCString origin;
+  rv = QuotaManager::GetInfoFromPrincipal(principal, &mSuffix, &mGroup,
+                                          &origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mOriginScope.SetFromOrigin(origin);
 
   return NS_OK;
 }
@@ -6618,72 +6724,40 @@ GetOriginUsageOp::DoDirectoryWork(QuotaManager* aQuotaManager)
 
   // Add all the persistent/temporary/default storage files we care about.
   for (const PersistenceType type : kAllPersistenceTypes) {
-    rv = AddToUsage(aQuotaManager, type);
+    UsageInfo usageInfo;
+    rv = GetUsageForOrigin(aQuotaManager,
+                           type,
+                           mGroup,
+                           mOriginScope.GetOrigin(),
+                           &usageInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    mUsageInfo.Append(usageInfo);
   }
 
   return NS_OK;
 }
 
 void
-GetOriginUsageOp::SendResults()
+GetOriginUsageOp::GetResponse(UsageRequestResponse& aResponse)
 {
   AssertIsOnOwningThread();
 
-  if (IsActorDestroyed()) {
-    if (NS_SUCCEEDED(mResultCode)) {
-      mResultCode = NS_ERROR_FAILURE;
-    }
+  OriginUsageResponse usageResponse;
+
+  // We'll get the group usage when mGetGroupUsage is true and get the
+  // origin usage when mGetGroupUsage is false.
+  usageResponse.usage() = mUsageInfo.TotalUsage();
+
+  if (mGetGroupUsage) {
+    usageResponse.limit() = mUsageInfo.Limit();
   } else {
-    if (mCanceled) {
-      mResultCode = NS_ERROR_FAILURE;
-    }
-
-    UsageRequestResponse response;
-
-    if (NS_SUCCEEDED(mResultCode)) {
-      OriginUsageResponse usageResponse;
-
-      // We'll get the group usage when mGetGroupUsage is true and get the
-      // origin usage when mGetGroupUsage is false.
-      usageResponse.usage() = mUsageInfo.TotalUsage();
-
-      if (mGetGroupUsage) {
-        usageResponse.limit() = mUsageInfo.Limit();
-      } else {
-        usageResponse.fileUsage() = mUsageInfo.FileUsage();
-      }
-
-      response = usageResponse;
-    } else {
-      response = mResultCode;
-    }
-
-    Unused << PQuotaUsageRequestParent::Send__delete__(this, response);
-  }
-}
-
-void
-GetOriginUsageOp::ActorDestroy(ActorDestroyReason aWhy)
-{
-  AssertIsOnOwningThread();
-
-  NoteActorDestroyed();
-}
-
-mozilla::ipc::IPCResult
-GetOriginUsageOp::RecvCancel()
-{
-  AssertIsOnOwningThread();
-
-  if (mCanceled.exchange(true)) {
-    NS_WARNING("Canceled more than once?!");
-    return IPC_FAIL_NO_REASON(this);
+    usageResponse.fileUsage() = mUsageInfo.FileUsage();
   }
 
-  return IPC_OK();
+  aResponse = usageResponse;
 }
 
 bool
