@@ -17,6 +17,7 @@ import android.widget.PopupWindow;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
+import org.mozilla.focus.utils.ViewUtils;
 
 public class BrowserMenu extends PopupWindow {
     public BrowserMenu(Context context, BrowserFragment fragment) {
@@ -38,6 +39,8 @@ public class BrowserMenu extends PopupWindow {
     }
 
     public void show(View anchor) {
-        super.showAsDropDown(anchor, 0, -(anchor.getHeight() + anchor.getPaddingBottom()));
+        final int xOffset = ViewUtils.isRTL(anchor) ? -anchor.getWidth() : 0;
+
+        super.showAsDropDown(anchor, xOffset, -(anchor.getHeight() + anchor.getPaddingBottom()));
     }
 }

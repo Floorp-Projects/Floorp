@@ -9,6 +9,7 @@ import android.content.Context;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.ViewCompat;
 import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -50,5 +51,9 @@ public class ViewUtils {
                 snackbar.show();
             }
         }, delayMillis);
+    }
+
+    public static boolean isRTL(View view) {
+        return ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_RTL;
     }
 }
