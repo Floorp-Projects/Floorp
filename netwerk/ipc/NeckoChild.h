@@ -30,6 +30,10 @@ protected:
                            const HttpChannelCreationArgs& aOpenArgs) override;
   virtual bool DeallocPHttpChannelChild(PHttpChannelChild*) override;
 
+  virtual PStunAddrsRequestChild* AllocPStunAddrsRequestChild() override;
+  virtual bool
+    DeallocPStunAddrsRequestChild(PStunAddrsRequestChild* aActor) override;
+
   virtual PAltDataOutputStreamChild* AllocPAltDataOutputStreamChild(const nsCString& type, PHttpChannelChild* channel) override;
   virtual bool DeallocPAltDataOutputStreamChild(PAltDataOutputStreamChild* aActor) override;
 

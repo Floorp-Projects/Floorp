@@ -12,6 +12,7 @@ EXPORTS.mtransport += [
     '../nricectx.h',
     '../nricemediastream.h',
     '../nriceresolverfake.h',
+    '../nricestunaddr.h',
     '../rlogconnector.h',
     '../runnable_utils.h',
     '../sigslot.h',
