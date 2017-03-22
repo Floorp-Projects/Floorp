@@ -762,7 +762,7 @@ struct SigWithId : Sig
 typedef Vector<SigWithId, 0, SystemAllocPolicy> SigWithIdVector;
 typedef Vector<const SigWithId*, 0, SystemAllocPolicy> SigWithIdPtrVector;
 
-// The (,Profiling,Func)Offsets classes are used to record the offsets of
+// The (,Callable,Func)Offsets classes are used to record the offsets of
 // different key points in a CodeRange during compilation.
 
 struct Offsets
@@ -782,62 +782,39 @@ struct Offsets
     }
 };
 
-struct ProfilingOffsets : Offsets
+struct CallableOffsets : Offsets
 {
-    MOZ_IMPLICIT ProfilingOffsets(uint32_t profilingReturn = 0)
-      : Offsets(), profilingReturn(profilingReturn)
+    MOZ_IMPLICIT CallableOffsets(uint32_t ret = 0)
+      : Offsets(), ret(ret)
     {}
 
-    // For CodeRanges with ProfilingOffsets, 'begin' is the offset of the
-    // profiling entry.
-    uint32_t profilingEntry() const { return begin; }
-
-    // The profiling return is the offset of the return instruction, which
-    // precedes the 'end' by a variable number of instructions due to
-    // out-of-line codegen.
-    uint32_t profilingReturn;
+    // The offset of the return instruction precedes 'end' by a variable number
+    // of instructions due to out-of-line codegen.
+    uint32_t ret;
 
     void offsetBy(uint32_t offset) {
         Offsets::offsetBy(offset);
-        profilingReturn += offset;
+        ret += offset;
     }
 };
 
-struct FuncOffsets : ProfilingOffsets
+struct FuncOffsets : CallableOffsets
 {
     MOZ_IMPLICIT FuncOffsets()
-      : ProfilingOffsets(),
-        tableEntry(0),
-        tableProfilingJump(0),
-        nonProfilingEntry(0),
-        profilingJump(0),
-        profilingEpilogue(0)
+      : CallableOffsets(),
+        normalEntry(0)
     {}
 
     // Function CodeRanges have a table entry which takes an extra signature
     // argument which is checked against the callee's signature before falling
-    // through to the normal prologue. When profiling is enabled, a nop on the
-    // fallthrough is patched to instead jump to the profiling epilogue.
-    uint32_t tableEntry;
-    uint32_t tableProfilingJump;
-
-    // Function CodeRanges have an additional non-profiling entry that comes
-    // after the profiling entry and a non-profiling epilogue that comes before
-    // the profiling epilogue.
-    uint32_t nonProfilingEntry;
-
-    // When profiling is enabled, the 'nop' at offset 'profilingJump' is
-    // overwritten to be a jump to 'profilingEpilogue'.
-    uint32_t profilingJump;
-    uint32_t profilingEpilogue;
+    // through to the normal prologue. The table entry is thus at the beginning
+    // of the CodeRange and the normal entry is at some offset after the table
+    // entry.
+    uint32_t normalEntry;
 
     void offsetBy(uint32_t offset) {
-        ProfilingOffsets::offsetBy(offset);
-        tableEntry += offset;
-        tableProfilingJump += offset;
-        nonProfilingEntry += offset;
-        profilingJump += offset;
-        profilingEpilogue += offset;
+        CallableOffsets::offsetBy(offset);
+        normalEntry += offset;
     }
 };
 
@@ -926,26 +903,18 @@ class CallSiteDesc
 class CallSite : public CallSiteDesc
 {
     uint32_t returnAddressOffset_;
-    uint32_t stackDepth_;
 
   public:
     CallSite() {}
 
-    CallSite(CallSiteDesc desc, uint32_t returnAddressOffset, uint32_t stackDepth)
+    CallSite(CallSiteDesc desc, uint32_t returnAddressOffset)
       : CallSiteDesc(desc),
-        returnAddressOffset_(returnAddressOffset),
-        stackDepth_(stackDepth)
+        returnAddressOffset_(returnAddressOffset)
     { }
 
     void setReturnAddressOffset(uint32_t r) { returnAddressOffset_ = r; }
     void offsetReturnAddressBy(int32_t o) { returnAddressOffset_ += o; }
     uint32_t returnAddressOffset() const { return returnAddressOffset_; }
-
-    // The stackDepth measures the amount of stack space pushed since the
-    // function was called. In particular, this includes the pushed return
-    // address on all archs (whether or not the call instruction pushes the
-    // return address (x86/x64) or the prologue does (ARM/MIPS)).
-    uint32_t stackDepth() const { return stackDepth_; }
 };
 
 WASM_DECLARE_POD_VECTOR(CallSite, CallSiteVector)
@@ -1485,10 +1454,8 @@ WASM_DECLARE_POD_VECTOR(MemoryAccess, MemoryAccessVector)
 
 struct Frame
 {
-    // The caller's saved frame pointer. In non-profiling mode, internal
-    // wasm-to-wasm calls don't update fp and thus don't save the caller's
-    // frame pointer; the space is reserved, however, so that profiling mode can
-    // reuse the same function body without recompiling.
+    // The value of WasmActivation::fp on entry to the function (before being
+    // overwritten by this Frame's address).
     uint8_t* callerFP;
 
     // The return address pushed by the call (in the case of ARM/MIPS the return

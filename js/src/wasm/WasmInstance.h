@@ -152,10 +152,6 @@ class Instance
     void onMovingGrowMemory(uint8_t* prevMemoryBase);
     void onMovingGrowTable();
 
-    // See Code::ensureProfilingState comment.
-
-    MOZ_MUST_USE bool ensureProfilingState(JSContext* cx, bool enabled);
-
     // Debug support:
     bool debugEnabled() const { return code_->metadata().debugEnabled; }
     bool enterFrameTrapsEnabled() const { return enterFrameTrapsEnabled_; }

@@ -29,8 +29,7 @@ using namespace wasm;
 
 Compartment::Compartment(Zone* zone)
   : mutatingInstances_(false),
-    activationCount_(0),
-    profilingEnabled_(false)
+    activationCount_(0)
 {}
 
 Compartment::~Compartment()
@@ -73,8 +72,7 @@ Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceOb
     Instance& instance = instanceObj->instance();
     MOZ_ASSERT(this == &instance.compartment()->wasm);
 
-    if (!instance.ensureProfilingState(cx, profilingEnabled_))
-        return false;
+    instance.code().ensureProfilingLabels(cx->runtime()->geckoProfiler().enabled());
 
     size_t index;
     if (BinarySearchIf(instances_, 0, instances_.length(), InstanceComparator(instance), &index))
@@ -139,38 +137,11 @@ Compartment::lookupInstanceDeprecated(const void* pc) const
     return instances_[index];
 }
 
-bool
-Compartment::ensureProfilingState(JSContext* cx)
+void
+Compartment::ensureProfilingLabels(bool profilingEnabled)
 {
-    bool newProfilingEnabled = cx->runtime()->geckoProfiler().enabled();
-    if (profilingEnabled_ == newProfilingEnabled)
-        return true;
-
-    // Since one Instance can call another Instance in the same compartment
-    // directly without calling through Instance::callExport(), when profiling
-    // is enabled, enable it for the entire compartment at once. It is only safe
-    // to enable profiling when the wasm is not on the stack, so delay enabling
-    // profiling until there are no live WasmActivations in this compartment.
-
-    if (activationCount_ > 0)
-        return true;
-
-    for (Instance* instance : instances_) {
-        if (!instance->ensureProfilingState(cx, newProfilingEnabled))
-            return false;
-    }
-
-    profilingEnabled_ = newProfilingEnabled;
-    return true;
-}
-
-bool
-Compartment::profilingEnabled() const
-{
-    // Profiling can asynchronously interrupt the mutation of the instances_
-    // vector which is used by lookupCode() during stack-walking. To handle
-    // this rare case, disable profiling during mutation.
-    return profilingEnabled_ && !mutatingInstances_;
+    for (Instance* instance : instances_)
+        instance->code().ensureProfilingLabels(profilingEnabled);
 }
 
 void

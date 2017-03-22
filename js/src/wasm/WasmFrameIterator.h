@@ -36,9 +36,8 @@ class CodeRange;
 class DebugFrame;
 class Instance;
 class SigIdDesc;
-struct CallThunk;
 struct FuncOffsets;
-struct ProfilingOffsets;
+struct CallableOffsets;
 struct TrapOffset;
 
 // Iterates over the frames of a single WasmActivation, called synchronously
@@ -95,8 +94,7 @@ enum class ExitReason : uint32_t
 };
 
 // Iterates over the frames of a single WasmActivation, given an
-// asynchrously-interrupted thread's state. If the activation's
-// module is not in profiling mode, the activation is skipped.
+// asynchronously-interrupted thread's state.
 class ProfilingFrameIterator
 {
     const WasmActivation* activation_;
@@ -125,26 +123,15 @@ class ProfilingFrameIterator
 
 void
 GenerateExitPrologue(jit::MacroAssembler& masm, unsigned framePushed, ExitReason reason,
-                     ProfilingOffsets* offsets);
+                     CallableOffsets* offsets);
 void
 GenerateExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, ExitReason reason,
-                     ProfilingOffsets* offsets);
+                     CallableOffsets* offsets);
 void
 GenerateFunctionPrologue(jit::MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
                          FuncOffsets* offsets);
 void
 GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets);
-
-// Runtime patching to enable/disable profiling
-
-void
-ToggleProfiling(const Code& code, const CallSite& callSite, bool enabled);
-
-void
-ToggleProfiling(const Code& code, const CallThunk& callThunk, bool enabled);
-
-void
-ToggleProfiling(const Code& code, const CodeRange& codeRange, bool enabled);
 
 } // namespace wasm
 } // namespace js
