@@ -9631,8 +9631,8 @@ nsDocument::ForgetImagePreload(nsIURI* aURI)
   }
 }
 
-EventStates
-nsDocument::GetDocumentState()
+void
+nsDocument::UpdatePossiblyStaleDocumentState()
 {
   if (!mGotDocumentState.HasState(NS_DOCUMENT_STATE_RTL_LOCALE)) {
     if (IsDocumentRightToLeft()) {
@@ -9648,7 +9648,19 @@ nsDocument::GetDocumentState()
     }
     mGotDocumentState |= NS_DOCUMENT_STATE_WINDOW_INACTIVE;
   }
+}
+
+EventStates
+nsDocument::ThreadSafeGetDocumentState() const
+{
   return mDocumentState;
+}
+
+EventStates
+nsDocument::GetDocumentState()
+{
+  UpdatePossiblyStaleDocumentState();
+  return ThreadSafeGetDocumentState();
 }
 
 namespace {

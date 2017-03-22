@@ -782,6 +782,17 @@ extern "C" {
                                                   len: usize);
 }
 extern "C" {
+    pub fn Gecko_ClearWillChange(display: *mut nsStyleDisplay, length: usize);
+}
+extern "C" {
+    pub fn Gecko_AppendWillChange(display: *mut nsStyleDisplay,
+                                  atom: *mut nsIAtom);
+}
+extern "C" {
+    pub fn Gecko_CopyWillChangeFrom(dest: *mut nsStyleDisplay,
+                                    src: *mut nsStyleDisplay);
+}
+extern "C" {
     pub fn Gecko_AnimationAppendKeyframe(keyframes:
                                              RawGeckoKeyframeListBorrowedMut,
                                          offset: f32,
@@ -1002,6 +1013,12 @@ extern "C" {
                                            pres_context:
                                                RawGeckoPresContextBorrowed)
      -> nscolor;
+}
+extern "C" {
+    pub fn Gecko_MatchStringArgPseudo(element: RawGeckoElementBorrowed,
+                                      type_: CSSPseudoClassType,
+                                      ident: *const u16,
+                                      set_slow_selector: *mut bool) -> bool;
 }
 extern "C" {
     pub fn Gecko_Construct_Default_nsStyleFont(ptr: *mut nsStyleFont,

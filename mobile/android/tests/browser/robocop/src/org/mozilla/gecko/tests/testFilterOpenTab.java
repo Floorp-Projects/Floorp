@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.PrivateTab;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.db.BrowserContract;
@@ -17,6 +16,8 @@ import org.mozilla.gecko.db.TabsProvider;
 import android.content.ContentProvider;
 import android.content.Context;
 import android.database.Cursor;
+
+import static org.mozilla.gecko.Tab.TabType;
 
 /**
  * Tests that local tabs are filtered prior to upload.
@@ -55,11 +56,11 @@ public class testFilterOpenTab extends ContentProviderTest {
     }
 
     private Tab createTab(int id, String url, boolean external, int parentId, String title) {
-        return new Tab((Context) getActivity(), id, url, external, parentId, title);
+        return new Tab((Context) getActivity(), id, url, external, parentId, title, TabType.BROWSING);
     }
 
     private Tab createPrivateTab(int id, String url, boolean external, int parentId, String title) {
-        return new PrivateTab((Context) getActivity(), id, url, external, parentId, title);
+        return new PrivateTab((Context) getActivity(), id, url, external, parentId, title, TabType.BROWSING);
     }
 
     @Override

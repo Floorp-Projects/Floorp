@@ -1,14 +1,17 @@
-// Parent config file for all mochitest files.
+// Parent config file for all browser-chrome files.
+"use strict";
+
 module.exports = {
-  rules: {
+  "rules": {
     "mozilla/import-headjs-globals": "warn",
-    "mozilla/mark-test-function-used": "warn",
+    "mozilla/mark-test-function-used": "warn"
   },
 
   "env": {
     "browser": true,
     "mozilla/browser-window": true,
-    "mozilla/simpletest": true,
+    "mozilla/simpletest": true
+    //"node": true
   },
 
   "plugins": [
@@ -23,9 +26,12 @@ module.exports = {
     "addLoadEvent": false,
     "Assert": false,
     "BrowserTestUtils": false,
+    "content": false,
     "ContentTask": false,
+    "ContentTaskUtils": false,
     "EventUtils": false,
     "executeSoon": false,
+    "expectUncaughtException": false,
     "export_assertions": false,
     "extractJarToTmp": false,
     "finish": false,
@@ -34,19 +40,22 @@ module.exports = {
     "getTestFilePath": false,
     "gTestPath": false,
     "info": false,
+    "ignoreAllUncaughtExceptions": false,
     "is": false,
     "isnot": false,
     "ok": false,
+    "PromiseDebugging": false,
     "privateNoteIntentionalCrash": false,
-    "promise": false,
     "registerCleanupFunction": false,
     "requestLongerTimeout": false,
     "SpecialPowers": false,
+    "TestUtils": false,
+    "thisTestLeaksUncaughtRejectionsAndShouldBeFixed": false,
     "todo": false,
     "todo_is": false,
     "todo_isnot": false,
     "waitForClipboard": false,
     "waitForExplicitFinish": false,
-    "waitForFocus": false,
+    "waitForFocus": false
   }
 };

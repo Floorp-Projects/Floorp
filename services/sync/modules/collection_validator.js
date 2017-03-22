@@ -82,6 +82,15 @@ class CollectionValidator {
     return Promise.reject("Must implement");
   }
 
+  /**
+   * Can we guarantee validation will fail with a reason that isn't actually a
+   * problem? For example, if we know there are pending changes left over from
+   * the last sync, this should resolve to false. By default resolves to true.
+   */
+  async canValidate() {
+    return true;
+  }
+
   // Turn the client item into something that can be compared with the server item,
   // and is also safe to mutate.
   normalizeClientItem(item) {
