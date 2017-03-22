@@ -474,9 +474,8 @@ MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm)
         stackForCall += ComputeByteAlignment(stackForCall + sizeof(intptr_t),
                                              ABIStackAlignment);
     } else {
-        static_assert(sizeof(wasm::Frame) % ABIStackAlignment == 0,
-                      "wasm::Frame should be part of the stack alignment.");
-        stackForCall += ComputeByteAlignment(stackForCall + framePushed(),
+        uint32_t alignmentAtPrologue = callFromWasm ? sizeof(wasm::Frame) : 0;
+        stackForCall += ComputeByteAlignment(stackForCall + framePushed() + alignmentAtPrologue,
                                              ABIStackAlignment);
     }
 
