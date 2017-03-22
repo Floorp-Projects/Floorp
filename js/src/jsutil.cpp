@@ -39,7 +39,7 @@ mozilla::Atomic<AutoEnterOOMUnsafeRegion*> AutoEnterOOMUnsafeRegion::owner_;
 namespace oom {
 
 JS_PUBLIC_DATA(uint32_t) targetThread = 0;
-JS_PUBLIC_DATA(MOZ_THREAD_LOCAL(uint32_t)) threadType;
+MOZ_THREAD_LOCAL(uint32_t) threadType;
 JS_PUBLIC_DATA(uint64_t) maxAllocations = UINT64_MAX;
 JS_PUBLIC_DATA(uint64_t) counter = 0;
 JS_PUBLIC_DATA(bool) failAlways = true;
