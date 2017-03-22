@@ -1711,7 +1711,6 @@ gfxFontGroup::gfxFontGroup(const FontFamilyList& aFontFamilyList,
     , mPageLang(gfxPlatformFontList::GetFontPrefLangFor(aStyle->language))
     , mLastPrefFirstFont(false)
     , mSkipDrawing(false)
-    , mSkipUpdateUserFonts(false)
 {
     // We don't use SetUserFontSet() here, as we want to unconditionally call
     // BuildFontList() rather than only do UpdateUserFonts() if it changed.
@@ -2440,7 +2439,7 @@ gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget,
                  "don't call InitScriptRun with aborted shaping state");
 
     // confirm the load state of userfonts in the list
-    if (!mSkipUpdateUserFonts && mUserFontSet &&
+    if (mUserFontSet &&
         mCurrGeneration != mUserFontSet->GetGeneration()) {
         UpdateUserFonts();
     }
@@ -3178,8 +3177,6 @@ gfxFontGroup::GetRebuildGeneration()
     return mUserFontSet->GetRebuildGeneration();
 }
 
-// note: gfxPangoFontGroup overrides UpdateUserFonts, such that
-//       BuildFontList is never used
 void
 gfxFontGroup::UpdateUserFonts()
 {
