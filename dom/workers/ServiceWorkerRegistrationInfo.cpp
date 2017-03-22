@@ -70,6 +70,8 @@ ServiceWorkerRegistrationInfo::Clear()
     mActiveWorker->WorkerPrivate()->NoteDeadServiceWorkerInfo();
     mActiveWorker = nullptr;
   }
+
+  NotifyChromeRegistrationListeners();
 }
 
 ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(const nsACString& aScope,
@@ -283,6 +285,8 @@ ServiceWorkerRegistrationInfo::FinishActivate(bool aSuccess)
 
   // Activation never fails, so aSuccess is ignored.
   mActiveWorker->UpdateState(ServiceWorkerState::Activated);
+  NotifyChromeRegistrationListeners();
+
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
     // browser shutdown started during async activation completion step
@@ -350,8 +354,6 @@ ServiceWorkerRegistrationInfo::UpdateRegistrationStateProperties(WhichServiceWor
          this,
          &ServiceWorkerRegistrationInfo::AsyncUpdateRegistrationStateProperties, aWorker, aTransition);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable.forget()));
-
-  NotifyChromeRegistrationListeners();
 }
 
 void
@@ -496,6 +498,8 @@ ServiceWorkerRegistrationInfo::ClearInstalling()
                                     Invalidate);
   mInstallingWorker->UpdateState(ServiceWorkerState::Redundant);
   mInstallingWorker = nullptr;
+
+  NotifyChromeRegistrationListeners();
 }
 
 void
@@ -525,6 +529,7 @@ ServiceWorkerRegistrationInfo::TransitionInstallingToWaiting()
   UpdateRegistrationStateProperties(WhichServiceWorker::INSTALLING_WORKER,
                                     TransitionToNextState);
   mWaitingWorker->UpdateState(ServiceWorkerState::Installed);
+  NotifyChromeRegistrationListeners();
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
@@ -559,6 +564,7 @@ ServiceWorkerRegistrationInfo::SetActive(ServiceWorkerInfo* aServiceWorker)
   mActiveWorker = aServiceWorker;
   mActiveWorker->SetActivateStateUncheckedWithoutEvent(ServiceWorkerState::Activated);
   UpdateRegistrationStateProperties(WhichServiceWorker::ACTIVE_WORKER, Invalidate);
+  NotifyChromeRegistrationListeners();
 }
 
 void
@@ -578,6 +584,7 @@ ServiceWorkerRegistrationInfo::TransitionWaitingToActive()
   UpdateRegistrationStateProperties(WhichServiceWorker::WAITING_WORKER,
                                     TransitionToNextState);
   mActiveWorker->UpdateState(ServiceWorkerState::Activating);
+  NotifyChromeRegistrationListeners();
 }
 
 bool
