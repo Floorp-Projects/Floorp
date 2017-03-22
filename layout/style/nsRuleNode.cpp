@@ -9027,7 +9027,7 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
           nsStyleContentType type =
             unit == eCSSUnit_Counter ? eStyleContentType_Counter
                                      : eStyleContentType_Counters;
-          data.SetCounters(type, value.GetArrayValue());
+          data.SetCounters(type, value.GetThreadSafeArrayValue());
           break;
         }
         case eCSSUnit_Enumerated:
