@@ -1206,7 +1206,7 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
     }
 
     // Check for a linear input string.
-    masm.branchIfRope(input, failure);
+    masm.branchIfRopeOrExternal(input, temp1, failure);
 
     // Get the RegExpShared for the RegExp.
     masm.loadPtr(Address(regexp, NativeObject::getFixedSlotOffset(RegExpObject::PRIVATE_SLOT)), temp1);
@@ -7608,10 +7608,7 @@ CodeGenerator::visitSubstr(LSubstr* lir)
 
     // Use slow path for ropes.
     masm.bind(&nonZero);
-    static_assert(JSString::ROPE_FLAGS == 0,
-                  "rope flags must be zero for (flags & TYPE_FLAGS_MASK) == 0 "
-                  "to be a valid is-rope check");
-    masm.branchTest32(Assembler::Zero, stringFlags, Imm32(JSString::TYPE_FLAGS_MASK), slowPath);
+    masm.branchIfRopeOrExternal(string, temp, slowPath);
 
     // Handle inlined strings by creating a FatInlineString.
     masm.branchTest32(Assembler::Zero, stringFlags, Imm32(JSString::INLINE_CHARS_BIT), &notInline);
