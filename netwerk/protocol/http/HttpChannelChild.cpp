@@ -1978,11 +1978,13 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
 
   mAsyncOpenTime = TimeStamp::Now();
 #ifdef MOZ_TASK_TRACER
-  nsCOMPtr<nsIURI> uri;
-  GetURI(getter_AddRefs(uri));
-  nsAutoCString urispec;
-  uri->GetSpec(urispec);
-  tasktracer::AddLabel("HttpChannelChild::AsyncOpen %s", urispec.get());
+  if (tasktracer::IsStartLogging()) {
+    nsCOMPtr<nsIURI> uri;
+    GetURI(getter_AddRefs(uri));
+    nsAutoCString urispec;
+    uri->GetSpec(urispec);
+    tasktracer::AddLabel("HttpChannelChild::AsyncOpen %s", urispec.get());
+  }
 #endif
   
 

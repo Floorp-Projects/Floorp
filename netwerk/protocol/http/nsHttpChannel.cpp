@@ -5774,7 +5774,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     LOG(("nsHttpChannel::AsyncOpen [this=%p]\n", this));
 
 #ifdef MOZ_TASK_TRACER
-    {
+    if (tasktracer::IsStartLogging()) {
         uint64_t sourceEventId, parentTaskId;
         tasktracer::SourceEventType sourceEventType;
         GetCurTraceInfo(&sourceEventId, &parentTaskId, &sourceEventType);
