@@ -679,5 +679,11 @@ ImageTestCase TruncatedSmallGIFTestCase()
   return ImageTestCase("green-1x1-truncated.gif", "image/gif", IntSize(1, 1));
 }
 
+ImageTestCase GreenMultipleSizesICOTestCase()
+{
+  return ImageTestCase("green-multiple-sizes.ico", "image/x-icon",
+                       IntSize(256, 256));
+}
+
 } // namespace image
 } // namespace mozilla

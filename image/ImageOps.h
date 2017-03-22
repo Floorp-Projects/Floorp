@@ -9,6 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsRect.h"
+#include "ImageMetadata.h"
 
 class gfxDrawable;
 class imgIContainer;
@@ -24,10 +25,23 @@ namespace image {
 
 class Image;
 struct Orientation;
+class SourceBuffer;
 
 class ImageOps
 {
 public:
+  class ImageBuffer {
+  public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageOps::ImageBuffer);
+  protected:
+    friend class ImageOps;
+
+    ImageBuffer() { }
+    virtual ~ImageBuffer() { }
+
+    virtual already_AddRefed<SourceBuffer> GetSourceBuffer() const = 0;
+  };
+
   /**
    * Creates a version of an existing image which does not animate and is frozen
    * at the first frame.
@@ -75,6 +89,39 @@ public:
   CreateFromDrawable(gfxDrawable* aDrawable);
 
   /**
+   * Create a buffer to be used with DecodeMetadata and DecodeToSurface. Reusing
+   * an ImageBuffer representing the given input stream is more efficient if one
+   * has multiple Decode* calls to make on that stream.
+   *
+   * @param aInputStream An input stream containing an encoded image.
+   * @return An image buffer derived from the input stream.
+   */
+  static already_AddRefed<ImageBuffer>
+  CreateImageBuffer(nsIInputStream* aInputStream);
+
+  /**
+   * Decodes an image's metadata from an nsIInputStream into the given
+   * structure. This function may be called off-main-thread.
+   *
+   * @param aInputStream An input stream containing an encoded image.
+   * @param aMimeType The MIME type of the image.
+   * @param aMetadata Where the image metadata is stored upon success.
+   * @return The status of the operation.
+   */
+  static nsresult
+  DecodeMetadata(nsIInputStream* aInputStream,
+                 const nsACString& aMimeType,
+                 ImageMetadata& aMetadata);
+
+  /**
+   * Same as above but takes an ImageBuffer instead of nsIInputStream.
+   */
+  static nsresult
+  DecodeMetadata(ImageBuffer* aBuffer,
+                 const nsACString& aMimeType,
+                 ImageMetadata& aMetadata);
+
+  /**
    * Decodes an image from an nsIInputStream directly into a SourceSurface,
    * without ever creating an Image or imgIContainer (which are mostly
    * main-thread-only). That means that this function may be called
@@ -89,9 +136,21 @@ public:
   static already_AddRefed<gfx::SourceSurface>
   DecodeToSurface(nsIInputStream* aInputStream,
                   const nsACString& aMimeType,
-                  uint32_t aFlags);
+                  uint32_t aFlags,
+                  const Maybe<gfx::IntSize>& aSize = Nothing());
+
+  /**
+   * Same as above but takes an ImageBuffer instead of nsIInputStream.
+   */
+  static already_AddRefed<gfx::SourceSurface>
+  DecodeToSurface(ImageBuffer* aBuffer,
+                  const nsACString& aMimeType,
+                  uint32_t aFlags,
+                  const Maybe<gfx::IntSize>& aSize = Nothing());
 
 private:
+  class ImageBufferImpl;
+
   // This is a static utility class, so disallow instantiation.
   virtual ~ImageOps() = 0;
 };

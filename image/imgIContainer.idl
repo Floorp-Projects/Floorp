@@ -559,4 +559,11 @@ interface imgIContainer : nsISupports
    * document.
    */
   [noscript, notxpcom] void propagateUseCounters(in nsIDocument aDocument);
+
+  %{C++
+  /*
+   * Get the set of sizes the image can decode to natively.
+   */
+  virtual nsresult GetNativeSizes(nsTArray<nsIntSize>& aNativeSizes) const = 0;
+  %}
 };
