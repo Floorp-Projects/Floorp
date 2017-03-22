@@ -703,6 +703,10 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 
     // Adjust the length in case unescaping shortened the string.
     loc.Truncate(nsUnescapeCount(loc.BeginWriting()));
+
+    if (loc.IsEmpty()) {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
     if (loc.First() == char16_t('.'))
         pushBuffer.AppendLiteral(" class=\"hidden-object\"");
 
