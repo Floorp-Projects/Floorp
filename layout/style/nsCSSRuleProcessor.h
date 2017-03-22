@@ -39,6 +39,7 @@ class nsCSSCounterStyleRule;
 namespace mozilla {
 class CSSStyleSheet;
 enum class CSSPseudoElementType : uint8_t;
+enum class CSSPseudoClassType : uint8_t;
 namespace css {
 class DocumentRule;
 } // namespace css
@@ -132,6 +133,40 @@ public:
   static bool RestrictedSelectorMatches(mozilla::dom::Element* aElement,
                                         nsCSSSelector* aSelector,
                                         TreeMatchContext& aTreeMatchContext);
+  /**
+   * Checks if a function-like ident-containing pseudo (:pseudo(ident))
+   * matches a given element.
+   *
+   * Returns true if it parses and matches, Some(false) if it
+   * parses but does not match. Asserts if it fails to parse; only
+   * call this when you're sure it's a string-like pseudo.
+   *
+   * In Servo mode, please ensure that UpdatePossiblyStaleDocumentState()
+   * has been called first.
+   *
+   * @param aElement The element we are trying to match
+   * @param aPseudo The name of the pseudoselector
+   * @param aString The identifier inside the pseudoselector (cannot be null)
+   * @param aDocument The document
+   * @param aForStyling Is this matching operation for the creation of a style context?
+   *                    (For setting the slow selector flag)
+   * @param aStateMask Mask containing states which we should exclude.
+   *                   Ignored if aDependence is null
+   * @param aIsGecko Set if Gecko.
+   * @param aSetSlowSelectorFlag Outparam, set if the caller is
+   *                             supposed to set the slow selector flag.
+   * @param aDependence Pointer to be set to true if we ignored a state due to
+   *                    aStateMask. Can be null.
+   */
+  static bool StringPseudoMatches(const mozilla::dom::Element* aElement,
+                                  mozilla::CSSPseudoClassType aPseudo,
+                                  const char16_t* aString,
+                                  const nsIDocument* aDocument,
+                                  bool aForStyling,
+                                  mozilla::EventStates aStateMask,
+                                  bool aIsGecko,
+                                  bool* aSetSlowSelectorFlag,
+                                  bool* const aDependence = nullptr);
 
   // nsIStyleRuleProcessor
   virtual void RulesMatching(ElementRuleProcessorData* aData) override;

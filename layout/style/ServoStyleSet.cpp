@@ -148,7 +148,7 @@ ServoStyleSet::GetContext(nsIContent* aContent,
   Element* element = aContent->AsElement();
 
 
-  ResolveMappedAttrDeclarationBlocks();
+  PreTraverseSync();
   RefPtr<ServoComputedValues> computedValues;
   if (aMayCompute == LazyComputeBehavior::Allow) {
     computedValues = ResolveStyleLazily(element, nullptr);
@@ -190,9 +190,19 @@ ServoStyleSet::ResolveMappedAttrDeclarationBlocks()
 }
 
 void
-ServoStyleSet::PreTraverse()
+ServoStyleSet::PreTraverseSync()
 {
   ResolveMappedAttrDeclarationBlocks();
+
+  // This is lazily computed and pseudo matching needs to access
+  // it so force computation early.
+  mPresContext->Document()->GetDocumentState();
+}
+
+void
+ServoStyleSet::PreTraverse()
+{
+  PreTraverseSync();
 
   // Process animation stuff that we should avoid doing during the parallel
   // traversal.

@@ -587,6 +587,7 @@ var TPS = {
         waiter();
         Logger.logInfo("signout complete");
       }
+      Authentication.deleteEmail(this.config.fx_account.username);
     } catch (e) {
       Logger.logError("Failed to sign out: " + Log.exceptionStr(e));
     }

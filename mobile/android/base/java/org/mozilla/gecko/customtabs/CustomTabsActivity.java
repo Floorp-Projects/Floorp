@@ -38,6 +38,8 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 
@@ -69,6 +71,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         if (savedInstanceState != null) {
             toolbarColor = savedInstanceState.getInt(SAVED_TOOLBAR_COLOR, DEFAULT_ACTION_BAR_COLOR);
         } else {
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "customtab");
             toolbarColor = getIntent().getIntExtra(EXTRA_TOOLBAR_COLOR, DEFAULT_ACTION_BAR_COLOR);
         }
 

@@ -6,11 +6,8 @@
 package org.mozilla.gecko;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.json.JSONObject;
@@ -33,7 +30,6 @@ import org.mozilla.gecko.widget.SiteLogins;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -47,6 +43,7 @@ public class Tab {
 
     private static Pattern sColorPattern;
     private final int mId;
+    private TabType mType;
     private final BrowserDB mDB;
     private long mLastUsed;
     private String mUrl;
@@ -122,10 +119,11 @@ public class Tab {
         NONE         // Non error pages
     }
 
-    public Tab(Context context, int id, String url, boolean external, int parentId, String title) {
+    public Tab(Context context, int id, String url, boolean external, int parentId, String title, TabType type) {
         mAppContext = context.getApplicationContext();
         mDB = BrowserDB.from(context);
         mId = id;
+        mType = type;
         mUrl = url;
         mBaseDomain = "";
         mUserRequested = "";
@@ -767,6 +765,16 @@ public class Tab {
 
     public boolean isPrivate() {
         return false;
+    }
+
+    public TabType getType() {
+        return mType;
+    }
+
+    public enum TabType {
+        BROWSING,
+        CUSTOMTAB,
+        WEBAPP
     }
 
     /**

@@ -827,15 +827,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl
   }
 
   // Create ImageBitmap.
-  ImageContainer *container = aVideoEl.GetImageContainer();
-
-  if (!container) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return nullptr;
-  }
-
-  AutoLockImage lockImage(container);
-  layers::Image* data = lockImage.GetImage();
+  RefPtr<layers::Image> data = aVideoEl.GetCurrentImage();
   if (!data) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;

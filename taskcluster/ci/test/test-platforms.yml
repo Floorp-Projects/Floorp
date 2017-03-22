@@ -25,29 +25,22 @@ linux32/opt:
     test-sets:
         -  linux32-tests
         -  linux32-opt-tests
-        - external-media-tests
-        - external-media-tests-slow
 linux32-nightly/opt:
     build-platform: linux-nightly/opt
     test-sets:
         -  linux32-tests
         -  linux32-opt-tests
-        - external-media-tests
-        - external-media-tests-slow
         - awsy
 
 linux64/debug:
     build-platform: linux64/debug
     test-sets:
         - common-tests
-        - external-media-tests
         - web-platform-tests
 linux64/opt:
     build-platform: linux64/opt
     test-sets:
         - common-tests
-        - external-media-tests
-        - external-media-tests-slow
         - web-platform-tests
         - opt-only-tests
         - desktop-screenshot-capture
@@ -56,7 +49,6 @@ linux64-nightly/opt:
     build-platform: linux64-nightly/opt
     test-sets:
         - common-tests
-        - external-media-tests
         - web-platform-tests
         - opt-only-tests
         - desktop-screenshot-capture
@@ -68,8 +60,6 @@ linux64-pgo/opt:
     build-platform: linux64-pgo/opt
     test-sets:
         - common-tests
-        - external-media-tests
-        - external-media-tests-slow
         - web-platform-tests
         - talos
 
