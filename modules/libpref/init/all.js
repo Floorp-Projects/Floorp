@@ -4204,13 +4204,7 @@ pref("intl.ime.use_simple_context_on_password_field", true);
 pref("intl.ime.use_simple_context_on_password_field", false);
 #endif
 
-# enable new platform fontlist for linux on GTK platforms
-# temporary pref to allow flipping back to the existing
-# gfxPangoFontGroup/gfxFontconfigUtils code for handling system fonts
-
 #ifdef MOZ_WIDGET_GTK
-pref("gfx.font_rendering.fontconfig.fontlist.enabled", true);
-
 // maximum number of fonts to substitute for a generic
 pref("gfx.font_rendering.fontconfig.max_generic_substitutions", 3);
 #endif
