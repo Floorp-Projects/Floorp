@@ -25,7 +25,8 @@ namespace mozilla {
  */
 class MediaDecoderReaderWrapper {
   typedef MediaDecoderReader::MetadataPromise MetadataPromise;
-  typedef MediaDecoderReader::MediaDataPromise MediaDataPromise;
+  typedef MediaDecoderReader::AudioDataPromise AudioDataPromise;
+  typedef MediaDecoderReader::VideoDataPromise VideoDataPromise;
   typedef MediaDecoderReader::SeekPromise SeekPromise;
   typedef MediaDecoderReader::WaitForDataPromise WaitForDataPromise;
   typedef MediaDecoderReader::TrackSet TrackSet;
@@ -38,9 +39,9 @@ public:
   media::TimeUnit StartTime() const;
   RefPtr<MetadataPromise> ReadMetadata();
 
-  RefPtr<MediaDataPromise> RequestAudioData();
+  RefPtr<AudioDataPromise> RequestAudioData();
 
-  RefPtr<MediaDataPromise>
+  RefPtr<VideoDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
 
   RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType);

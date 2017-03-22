@@ -84,8 +84,12 @@ public:
 
   using MetadataPromise =
     MozPromise<RefPtr<MetadataHolder>, MediaResult, IsExclusive>;
-  using MediaDataPromise =
-    MozPromise<RefPtr<MediaData>, MediaResult, IsExclusive>;
+
+  template <typename Type>
+  using DataPromise = MozPromise<RefPtr<Type>, MediaResult, IsExclusive>;
+  using AudioDataPromise = DataPromise<AudioData>;
+  using VideoDataPromise = DataPromise<VideoData>;
+
   using SeekPromise = MozPromise<media::TimeUnit, SeekRejectValue, IsExclusive>;
 
   // Note that, conceptually, WaitForData makes sense in a non-exclusive sense.
@@ -140,13 +144,13 @@ public:
   //
   // The decode should be performed asynchronously, and the promise should
   // be resolved when it is complete.
-  virtual RefPtr<MediaDataPromise> RequestAudioData();
+  virtual RefPtr<AudioDataPromise> RequestAudioData();
 
   // Requests one video sample from the reader.
   //
   // If aSkipToKeyframe is true, the decode should skip ahead to the
   // the next keyframe at or after aTimeThreshold microseconds.
-  virtual RefPtr<MediaDataPromise>
+  virtual RefPtr<VideoDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold);
 
   // By default, the state machine polls the reader once per second when it's
@@ -271,7 +275,7 @@ protected:
   // Recomputes mBuffered.
   virtual void UpdateBuffered();
 
-  RefPtr<MediaDataPromise> DecodeToFirstVideoData();
+  RefPtr<VideoDataPromise> DecodeToFirstVideoData();
 
   // Queue of audio frames. This queue is threadsafe, and is accessed from
   // the audio, decoder, state machine, and main threads.
@@ -377,8 +381,8 @@ private:
 
   // Promises used only for the base-class (sync->async adapter) implementation
   // of Request{Audio,Video}Data.
-  MozPromiseHolder<MediaDataPromise> mBaseAudioPromise;
-  MozPromiseHolder<MediaDataPromise> mBaseVideoPromise;
+  MozPromiseHolder<AudioDataPromise> mBaseAudioPromise;
+  MozPromiseHolder<VideoDataPromise> mBaseVideoPromise;
 
   MediaEventListener mDataArrivedListener;
 };
