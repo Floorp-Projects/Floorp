@@ -7,7 +7,8 @@ Support for running spidermonkey jobs via dedicated scripts
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from voluptuous import Schema, Required, Optional, Any
+from taskgraph.util.schema import Schema
+from voluptuous import Required, Optional, Any
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
