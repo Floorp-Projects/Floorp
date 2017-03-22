@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1345119
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1345119</title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="inspector-helpers.js"></script>
+  <script type="application/javascript">
+"use strict";
+
+window.onload = function () {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+};
+
+var gWalker;
+var gHTMLNode;
+var gBodyNode;
+
+addTest(function setup() {
+  let url = document.getElementById("inspectorContent").href;
+  attachURL(url, function (err, client, tab, doc) {
+    let {InspectorFront} = require("devtools/shared/fronts/inspector");
+    let inspector = InspectorFront(client, tab);
+
+    promiseDone(inspector.getWalker().then(walker => {
+      gWalker = walker;
+      return gWalker.querySelector(gWalker.rootNode, "body");
+    }).then(node => {
+      gBodyNode = node;
+      return gWalker.querySelector(gWalker.rootNode, "html");
+    }).then(node => {
+      gHTMLNode = node;
+    }).then(runNextTest));
+  });
+});
+
+addTest(function () {
+  info("Try to get the offset parent for a node that is absolutely positioned inside a " +
+    "relative node");
+  gWalker.querySelector(gWalker.rootNode, "#absolute_child").then(node => {
+    return gWalker.getOffsetParent(node);
+  }).then(offsetParent => {
+    ok(offsetParent, "The node has an offset parent");
+    gWalker.querySelector(gWalker.rootNode, "#relative_parent").then(parent => {
+      ok(offsetParent === parent, "The offset parent is the correct node");
+      runNextTest();
+    });
+  });
+});
+
+addTest(function () {
+  info("Try to get the offset parent for a node that is absolutely positioned outside a" +
+    " relative node");
+  gWalker.querySelector(gWalker.rootNode, "#no_parent").then(node => {
+    return gWalker.getOffsetParent(node);
+  }).then(offsetParent => {
+    ok(offsetParent === gBodyNode || offsetParent === gHTMLNode,
+      "The node's offset parent is the body or html node");
+    runNextTest();
+  });
+});
+
+addTest(function () {
+  info("Try to get the offset parent for a relatively positioned node");
+  gWalker.querySelector(gWalker.rootNode, "#relative_parent").then(node => {
+    return gWalker.getOffsetParent(node);
+  }).then(offsetParent => {
+    ok(offsetParent === gBodyNode || offsetParent === gHTMLNode,
+      "The node's offset parent is the body or html node");
+    runNextTest();
+  });
+});
+
+addTest(function () {
+  info("Try to get the offset parent for a statically positioned node");
+  gWalker.querySelector(gWalker.rootNode, "#static").then(node => {
+    return gWalker.getOffsetParent(node);
+  }).then(offsetParent => {
+    ok(offsetParent === gBodyNode || offsetParent === gHTMLNode,
+      "The node's offset parent is the body or html node");
+    runNextTest();
+  });
+});
+
+addTest(function () {
+  info("Try to get the offset parent for a fixed positioned node");
+  gWalker.querySelector(gWalker.rootNode, "#fixed").then(node => {
+    return gWalker.getOffsetParent(node);
+  }).then(offsetParent => {
+    ok(offsetParent === gBodyNode || offsetParent === gHTMLNode,
+      "The node's offset parent is the body or html node");
+    runNextTest();
+  });
+});
+
+addTest(function () {
+  info("Try to get the offset parent for the body");
+  gWalker.querySelector(gWalker.rootNode, "body").then(node => {
+    return gWalker.getOffsetParent(node);
+  }).then(offsetParent => {
+    ok(!offsetParent, "The body has no offset parent");
+    runNextTest();
+  });
+});
+
+addTest(function () {
+  gWalker = null;
+  gBodyNode = null;
+  runNextTest();
+});
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1345119">Mozilla Bug 1345119</a>
+<a id="inspectorContent" target="_blank" href="inspector_getOffsetParent.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
