@@ -84,13 +84,94 @@ function testAbortEvent() {
   fc.abort();
 }
  
+function testAbortedFetch() {
+  var fc = new FetchController();
+  fc.abort();
+
+  fetch('data:,foo', { signal: fc.signal }).then(() => {
+    ok(false, "Fetch should not return a resolved promise");
+  }, e => {
+    is(e.name, "AbortError", "We have an abort error");
+  }).then(next);
+}
+
+function testFetchAndAbort() {
+  var fc = new FetchController();
+
+  var p = fetch('data:,foo', { signal: fc.signal });
+  fc.abort();
+
+  p.then(() => {
+    ok(false, "Fetch should not return a resolved promise");
+  }, e => {
+    is(e.name, "AbortError", "We have an abort error");
+  }).then(next);
+}
+
+function testWorkerAbortedFetch() {
+  function worker() {
+    var fc = new FetchController();
+    fc.abort();
+
+    fetch('data:,foo', { signal: fc.signal }).then(() => {
+      postMessage(false);
+    }, e => {
+      postMessage(e.name == "AbortError");
+    });
+  }
+
+  var str = worker.toString();
+  var content = str.substring(0, str.length - 1).split('\n').splice(1).join(' ');
+  var url = URL.createObjectURL(new Blob([content], { type: "application/javascript" }));
+  var w = new Worker(url);
+  w.onmessage = function(e) {
+    ok(e.data, "Abort + Fetch works in workers");
+    next();
+  }
+}
+
+function testWorkerFetchAndAbort() {
+  function worker() {
+    var fc = new FetchController();
+
+    var p = fetch('data:,foo', { signal: fc.signal });
+    fc.abort();
+
+    p.then(() => {
+      postMessage(false);
+    }, e => {
+      postMessage(e.name == "AbortError");
+    });
+  }
+
+  var str = worker.toString();
+  var content = str.substring(0, str.length - 1).split('\n').splice(1).join(' ');
+  var url = URL.createObjectURL(new Blob([content], { type: "application/javascript" }));
+  var w = new Worker(url);
+  w.onmessage = function(e) {
+    ok(e.data, "Abort + Fetch works in workers");
+    next();
+  }
+}
+
 var steps = [
+  // Simple stuff
   testWebIDL,
   testUpdateData,
+
+  // Following algorithm
   testFollowingOurself,
   testFollowingOther,
   testFollowingLoop,
+
+  // Event propagation
   testAbortEvent,
+
+  // fetch + signaling
+  testAbortedFetch,
+  testFetchAndAbort,
+  testWorkerAbortedFetch,
+  testWorkerFetchAndAbort,
 ];
 
 function next() {

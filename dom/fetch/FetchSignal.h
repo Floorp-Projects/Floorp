@@ -40,6 +40,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FetchSignal, DOMEventTargetHelper)
 
   FetchSignal(FetchController* aController, bool aAborted);
+  explicit FetchSignal(bool aAborted);
 
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
