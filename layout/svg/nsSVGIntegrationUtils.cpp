@@ -192,8 +192,14 @@ nsSVGIntegrationUtils::GetSVGCoordContextForNonSVGFrame(nsIFrame* aNonSVGFrame)
 gfxRect
 nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame)
 {
+  // Except for nsSVGOuterSVGFrame, we shouldn't be getting here with SVG
+  // frames at all. This function is for elements that are laid out using the
+  // CSS box model rules.
   NS_ASSERTION(!(aNonSVGFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT),
                "Frames with SVG layout should not get here");
+  MOZ_ASSERT_IF(aNonSVGFrame->IsFrameOfType(nsIFrame::eSVG),
+                aNonSVGFrame->GetType() == nsGkAtoms::svgOuterSVGFrame);
+
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aNonSVGFrame);
   // 'r' is in "user space":
