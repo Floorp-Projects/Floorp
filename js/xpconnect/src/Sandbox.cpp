@@ -20,7 +20,7 @@
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
 #include "nsNullPrincipal.h"
-#include "nsExpandedPrincipal.h"
+#include "ExpandedPrincipal.h"
 #include "WrapperFactory.h"
 #include "xpcprivate.h"
 #include "xpc_make_class.h"
@@ -1439,8 +1439,8 @@ GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj,
         }
     }
 
-    RefPtr<nsExpandedPrincipal> result =
-        nsExpandedPrincipal::Create(allowedDomains, attrs.ref());
+    RefPtr<ExpandedPrincipal> result =
+        ExpandedPrincipal::Create(allowedDomains, attrs.ref());
     result.forget(out);
     return true;
 }
