@@ -818,7 +818,11 @@ pref("gfx.logging.peak-texture-usage.enabled", false);
 
 pref("gfx.ycbcr.accurate-conversion", false);
 
+#ifdef MOZ_ENABLE_WEBRENDER
 pref("gfx.webrender.enabled", true);
+#else
+pref("gfx.webrender.enabled", false);
+#endif
 
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
@@ -5639,7 +5643,7 @@ pref("fuzzing.enabled", false);
 
 // Set advanced layers preferences here.
 pref("layers.advanced.border-layers", false);
-#ifdef MOZ_BUILD_WEBRENDER
+#ifdef MOZ_ENABLE_WEBRENDER
 pref("layers.advanced.caret-layers", true);
 #else
 pref("layers.advanced.caret-layers", false);
