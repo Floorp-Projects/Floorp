@@ -1295,9 +1295,7 @@ Navigator::SendBeacon(const nsAString& aUrl,
     aRv.Throw(NS_ERROR_DOM_BAD_URI);
     return false;
   }
-  mozilla::net::ReferrerPolicy referrerPolicy = doc->GetReferrerPolicy();
-  rv = httpChannel->SetReferrerWithPolicy(documentURI, referrerPolicy);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  httpChannel->SetReferrer(documentURI);
 
   nsCString mimeType;
   if (!aData.IsNull()) {
