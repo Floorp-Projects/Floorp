@@ -1,0 +1,33 @@
+<script>
+function ok(a, msg) {
+  parent.postMessage({ type: "check", status: !!a, message: msg }, "*");
+}
+
+function is(a, b, msg) {
+  ok(a === b, msg);
+}
+
+function testObserver() {
+  ok("FetchObserver" in self, "We have a FetchObserver prototype");
+
+  fetch('data:,foo', { observe: o => {
+  }});
+}
+
+var steps = [
+  testObserver,
+];
+
+function next() {
+  if (!steps.length) {
+    parent.postMessage({ type: "finish" }, "*");
+    return;
+  }
+
+  var step = steps.shift();
+  step();
+}
+
+next();
+
+</script>
