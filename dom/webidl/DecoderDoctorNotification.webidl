@@ -10,6 +10,8 @@ enum DecoderDoctorNotificationType {
   "can-play-but-some-missing-decoders",
   "cannot-initialize-pulseaudio",
   "unsupported-libavcodec",
+  "decode-error",
+  "decode-warning",
 };
 
 dictionary DecoderDoctorNotification {
@@ -20,4 +22,10 @@ dictionary DecoderDoctorNotification {
   required DOMString decoderDoctorReportId;
   // If provided, formats (or key systems) at issue.
   DOMString formats;
+  // If provided, technical details about the decode-error/warning.
+  DOMString decodeIssue;
+  // If provided, URL of the document where the issue happened.
+  DOMString docURL;
+  // If provided, URL of the media resource that caused a decode-error/warning.
+  DOMString resourceURL;
 };
