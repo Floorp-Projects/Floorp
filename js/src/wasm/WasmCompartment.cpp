@@ -29,12 +29,12 @@ using namespace wasm;
 
 Compartment::Compartment(Zone* zone)
   : mutatingInstances_(false),
-    activationCount_(0)
+    interruptedCount_(0)
 {}
 
 Compartment::~Compartment()
 {
-    MOZ_ASSERT(activationCount_ == 0);
+    MOZ_ASSERT(interruptedCount_ == 0);
     MOZ_ASSERT(instances_.empty());
     MOZ_ASSERT(!mutatingInstances_);
 }
@@ -57,10 +57,14 @@ void
 Compartment::trace(JSTracer* trc)
 {
     // A WasmInstanceObject that was initially reachable when called can become
-    // unreachable while executing on the stack. Since wasm does not otherwise
-    // scan the stack during GC to identify live instances, we mark all instance
-    // objects live if there is any running wasm in the compartment.
-    if (activationCount_) {
+    // unreachable while executing on the stack. When execution in a compartment
+    // is interrupted inside wasm code, wasm::TraceActivations() may miss frames
+    // due to its use of FrameIterator which assumes wasm has exited through an
+    // exit stub. This could be fixed by changing wasm::TraceActivations() to
+    // use a ProfilingFrameIterator, which inspects register state, but for now
+    // just mark everything in the compartment in this super-rare case.
+
+    if (interruptedCount_) {
         for (Instance* i : instances_)
             i->trace(trc);
     }
@@ -135,6 +139,17 @@ Compartment::lookupInstanceDeprecated(const void* pc) const
         return nullptr;
 
     return instances_[index];
+}
+
+void
+Compartment::setInterrupted(bool interrupted)
+{
+    if (interrupted) {
+        interruptedCount_++;
+    } else {
+        MOZ_ASSERT(interruptedCount_ > 0);
+        interruptedCount_--;
+    }
 }
 
 void
