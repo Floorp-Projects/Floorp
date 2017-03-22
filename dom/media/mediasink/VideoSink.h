@@ -31,7 +31,7 @@ class VideoSink : public MediaSink
 public:
   VideoSink(AbstractThread* aThread,
             MediaSink* aAudioSink,
-            MediaQueue<MediaData>& aVideoQueue,
+            MediaQueue<VideoData>& aVideoQueue,
             VideoFrameContainer* aContainer,
             FrameStatistics& aFrameStats,
             uint32_t aVQueueSentToCompositerSize);
@@ -74,7 +74,7 @@ private:
   virtual ~VideoSink();
 
   // VideoQueue listener related.
-  void OnVideoQueuePushed(RefPtr<MediaData>&& aSample);
+  void OnVideoQueuePushed(RefPtr<VideoData>&& aSample);
   void OnVideoQueueFinished();
   void ConnectListener();
   void DisconnectListener();
@@ -106,13 +106,13 @@ private:
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   }
 
-  MediaQueue<MediaData>& VideoQueue() const {
+  MediaQueue<VideoData>& VideoQueue() const {
     return mVideoQueue;
   }
 
   const RefPtr<AbstractThread> mOwnerThread;
   RefPtr<MediaSink> mAudioSink;
-  MediaQueue<MediaData>& mVideoQueue;
+  MediaQueue<VideoData>& mVideoQueue;
   VideoFrameContainer* mContainer;
 
   // Producer ID to help ImageContainer distinguish different streams of

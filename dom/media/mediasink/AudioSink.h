@@ -14,7 +14,6 @@
 
 namespace mozilla {
 
-class MediaData;
 template <class T> class MediaQueue;
 
 namespace media {
@@ -26,7 +25,7 @@ namespace media {
 class AudioSink {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioSink)
-  AudioSink(MediaQueue<MediaData>& aAudioQueue)
+  AudioSink(MediaQueue<AudioData>& aAudioQueue)
     : mAudioQueue(aAudioQueue)
   {}
 
@@ -57,13 +56,11 @@ public:
 protected:
   virtual ~AudioSink() {}
 
-  virtual MediaQueue<MediaData>& AudioQueue() const {
+  virtual MediaQueue<AudioData>& AudioQueue() const {
     return mAudioQueue;
   }
 
-  // To queue audio data (no matter it's plain or encoded or encrypted, depends
-  // on the subclass)
-  MediaQueue<MediaData>& mAudioQueue;
+  MediaQueue<AudioData>& mAudioQueue;
 };
 
 } // namespace media
