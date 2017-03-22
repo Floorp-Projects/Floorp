@@ -155,7 +155,8 @@ struct ChannelStatistics : public RtcpStatistics {
 };
 
 // Statistics callback, called at each generation of a new RTCP report block.
-class StatisticsProxy : public RtcpStatisticsCallback {
+class StatisticsProxy : public RtcpStatisticsCallback,
+   public RtcpPacketTypeCounterObserver {
  public:
   StatisticsProxy(uint32_t ssrc)
    : stats_lock_(CriticalSectionWrapper::CreateCriticalSection()),
@@ -186,6 +187,20 @@ class StatisticsProxy : public RtcpStatisticsCallback {
     return stats_;
   }
 
+  void RtcpPacketTypesCounterUpdated(uint32_t ssrc,
+      const RtcpPacketTypeCounter& packet_counter) override {
+    CriticalSectionScoped cs(stats_lock_.get());
+    if (ssrc != ssrc_) {
+      return;
+    }
+    packet_counter_ = packet_counter;
+ };
+
+ void GetPacketTypeCounter(RtcpPacketTypeCounter& aPacketTypeCounter) {
+    CriticalSectionScoped cs(stats_lock_.get());
+    aPacketTypeCounter = packet_counter_;
+ }
+
  private:
   // StatisticsUpdated calls are triggered from threads in the RTP module,
   // while GetStats calls can be triggered from the public voice engine API,
@@ -193,6 +208,7 @@ class StatisticsProxy : public RtcpStatisticsCallback {
   rtc::scoped_ptr<CriticalSectionWrapper> stats_lock_;
   uint32_t ssrc_;
   ChannelStatistics stats_;
+  RtcpPacketTypeCounter packet_counter_;
 };
 
 class VoERtcpObserver : public RtcpBandwidthObserver {
@@ -936,7 +952,7 @@ Channel::Channel(int32_t channelId,
     statistics_proxy_.reset(new StatisticsProxy(_rtpRtcpModule->SSRC()));
     rtp_receive_statistics_->RegisterRtcpStatisticsCallback(
         statistics_proxy_.get());
-
+    configuration.rtcp_packet_type_counter_observer = statistics_proxy_.get();
     Config audioproc_config;
     audioproc_config.Set<ExperimentalAgc>(new ExperimentalAgc(false));
     audioproc_config.Set<ExtendedFilter>(
@@ -3272,6 +3288,14 @@ Channel::GetRTPStatistics(CallStatistics& stats)
       stats.capture_start_ntp_time_ms_ = capture_start_ntp_time_ms_;
     }
     return 0;
+}
+
+int Channel::GetRTCPPacketTypeCounters(RtcpPacketTypeCounter& stats) {
+  if (_rtpRtcpModule->RTCP() == RtcpMode::kOff) {
+    return -1;
+  }
+  statistics_proxy_->GetPacketTypeCounter(stats);
+  return 0;
 }
 
 int Channel::SetREDStatus(bool enable, int redPayloadtype) {
