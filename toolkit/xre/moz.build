@@ -37,6 +37,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     ]
     DEFINES['PROXY_PRINTING'] = 1
     LOCAL_INCLUDES += [
+        '../../other-licenses/nsis/Contrib/CityHash/cityhash',
         '../components/printingui/win',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
