@@ -949,19 +949,10 @@ CodeGeneratorX86::visitDivOrModI64(LDivOrModI64* lir)
 {
     Register64 lhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Lhs));
     Register64 rhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Rhs));
+    Register temp = ToRegister(lir->temp());
     Register64 output = ToOutRegister64(lir);
 
     MOZ_ASSERT(output == ReturnReg64);
-
-    // We are free to clobber all registers, since this is a call instruction.
-    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-    regs.take(lhs.low);
-    regs.take(lhs.high);
-    if (lhs != rhs) {
-        regs.take(rhs.low);
-        regs.take(rhs.high);
-    }
-    Register temp = regs.takeAny();
 
     Label done;
 
@@ -1006,19 +997,10 @@ CodeGeneratorX86::visitUDivOrModI64(LUDivOrModI64* lir)
 {
     Register64 lhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Lhs));
     Register64 rhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Rhs));
+    Register temp = ToRegister(lir->temp());
     Register64 output = ToOutRegister64(lir);
 
     MOZ_ASSERT(output == ReturnReg64);
-
-    // We are free to clobber all registers, since this is a call instruction.
-    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-    regs.take(lhs.low);
-    regs.take(lhs.high);
-    if (lhs != rhs) {
-        regs.take(rhs.low);
-        regs.take(rhs.high);
-    }
-    Register temp = regs.takeAny();
 
     // Prevent divide by zero.
     if (lir->canBeDivideByZero())

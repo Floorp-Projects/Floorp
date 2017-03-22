@@ -818,6 +818,12 @@ LIRGeneratorShared::useInt64Fixed(MDefinition* mir, Register64 regs, bool useAtS
 }
 
 LInt64Allocation
+LIRGeneratorShared::useInt64FixedAtStart(MDefinition* mir, Register64 regs)
+{
+    return useInt64Fixed(mir, regs, true);
+}
+
+LInt64Allocation
 LIRGeneratorShared::useInt64(MDefinition* mir, bool useAtStart)
 {
     // On 32-bit platforms, always load the value in registers.
