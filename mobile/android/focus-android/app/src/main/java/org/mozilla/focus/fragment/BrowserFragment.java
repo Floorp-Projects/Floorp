@@ -110,8 +110,6 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                 progressView.announceForAccessibility(getString(R.string.accessibility_announcement_loading));
 
-                urlView.setText(url);
-
                 backgroundTransition.resetTransition();
 
                 progressView.setVisibility(View.VISIBLE);
@@ -132,6 +130,11 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 }
 
                 updateToolbarButtonStates();
+            }
+
+            @Override
+            public void onURLChanged(String url) {
+                urlView.setText(url);
             }
 
             @Override

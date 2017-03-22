@@ -8,8 +8,12 @@ package org.mozilla.focus.web;
 public interface IWebView {
     interface Callback {
         void onPageStarted(String url);
+
         void onPageFinished(boolean isSecure);
         void onProgress(int progress);
+
+        void onURLChanged(final String url);
+
         /** Return true if the URL was handled, false if we should continue loading the current URL. */
         boolean handleExternalUrl(String url);
         void onLinkLongPress(String url);

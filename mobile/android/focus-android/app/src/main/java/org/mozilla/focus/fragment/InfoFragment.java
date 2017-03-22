@@ -85,6 +85,10 @@ public class InfoFragment extends WebFragment {
             @Override
             public void onLinkLongPress(final String url) {
             };
+
+            @Override
+            public void onURLChanged(String url) {
+            }
         };
     }
 
