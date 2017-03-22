@@ -234,31 +234,9 @@ nsFilterInstance::ComputeTargetBBoxInFilterSpace()
 {
   gfxRect targetBBoxInFilterSpace = UserSpaceToFilterSpace(mTargetBBox);
   targetBBoxInFilterSpace.RoundOut();
-  if (!gfxUtils::GfxRectToIntRect(targetBBoxInFilterSpace,
-                                  &mTargetBBoxInFilterSpace)) {
-    // The target's bbox is way too big if there is float->int overflow.
-    return false;
-  }
 
-  if (!mTargetFrame || !mTargetFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    return true;
-  }
-
-  // SVG graphic elements will always be clipped by svg::svg element, so we
-  // should clip mTargetBBoxInFilterSpace by the bounded parent SVG frame
-  // anyway to shrink the size of surface that we are going to create later in
-  // BuildSourcePaint and BuildSourceImage.
-  MOZ_ASSERT(mTargetFrame->IsFrameOfType(nsIFrame::eSVG));
-  nsIFrame* svgFrame = nsSVGUtils::GetNearestSVGViewport(mTargetFrame);
-  if (svgFrame) {
-    nscoord A2D = svgFrame->PresContext()->AppUnitsPerCSSPixel();
-    nsIntRect bounds =
-      svgFrame->GetVisualOverflowRect().ToOutsidePixels(A2D);
-
-    mTargetBBoxInFilterSpace = mTargetBBoxInFilterSpace.Intersect(bounds);
-  }
-
-  return true;
+  return gfxUtils::GfxRectToIntRect(targetBBoxInFilterSpace,
+                                    &mTargetBBoxInFilterSpace);
 }
 
 bool
