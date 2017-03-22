@@ -15,12 +15,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(FetchSignal)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FetchSignal,
                                                   DOMEventTargetHelper)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mController)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mController)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FetchSignal,
                                                 DOMEventTargetHelper)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mController)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FetchSignal)
@@ -54,6 +54,11 @@ FetchSignal::Abort()
   MOZ_ASSERT(!mAborted);
   mAborted = true;
 
+  // Let's inform the followers.
+  for (uint32_t i = 0; i < mFollowers.Length(); ++i) {
+    mFollowers[i]->Aborted();
+  }
+
   EventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
@@ -64,7 +69,73 @@ FetchSignal::Abort()
     Event::Constructor(this, NS_LITERAL_STRING("abort"), init);
   event->SetTrusted(true);
 
-  DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+  bool dummy;
+  DispatchEvent(event, &dummy);
+}
+
+void
+FetchSignal::AddFollower(FetchSignal::Follower* aFollower)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aFollower);
+  if (!mFollowers.Contains(aFollower)) {
+    mFollowers.AppendElement(aFollower);
+  }
+}
+
+void
+FetchSignal::RemoveFollower(FetchSignal::Follower* aFollower)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aFollower);
+  mFollowers.RemoveElement(aFollower);
+}
+
+bool
+FetchSignal::CanAcceptFollower(FetchSignal::Follower* aFollower) const
+{
+  MOZ_DIAGNOSTIC_ASSERT(aFollower);
+
+  if (aFollower == mController) {
+    return false;
+  }
+
+  FetchSignal* following = mController->Following();
+  if (!following) {
+    return true;
+  }
+
+  return following->CanAcceptFollower(aFollower);
+}
+
+// FetchSignal::Follower
+// ----------------------------------------------------------------------------
+
+FetchSignal::Follower::~Follower()
+{
+  Unfollow();
+}
+
+void
+FetchSignal::Follower::Follow(FetchSignal* aSignal)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aSignal);
+
+  if (!aSignal->CanAcceptFollower(this)) {
+    return;
+  }
+
+  Unfollow();
+
+  mFollowingSignal = aSignal;
+  aSignal->AddFollower(this);
+}
+
+void
+FetchSignal::Follower::Unfollow()
+{
+  if (mFollowingSignal) {
+    mFollowingSignal->RemoveFollower(this);
+    mFollowingSignal = nullptr;
+  }
 }
 
 } // dom namespace
