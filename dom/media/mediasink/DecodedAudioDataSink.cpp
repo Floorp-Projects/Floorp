@@ -34,7 +34,7 @@ static const int64_t AUDIO_FUZZ_FRAMES = 1;
 static const int32_t LOW_AUDIO_USECS = 300000;
 
 DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
-                                           MediaQueue<MediaData>& aAudioQueue,
+                                           MediaQueue<AudioData>& aAudioQueue,
                                            int64_t aStartTime,
                                            const AudioInfo& aInfo,
                                            dom::AudioChannel aChannel)
@@ -364,14 +364,14 @@ DecodedAudioDataSink::CheckIsAudible(const AudioData* aData)
 }
 
 void
-DecodedAudioDataSink::OnAudioPopped(const RefPtr<MediaData>& aSample)
+DecodedAudioDataSink::OnAudioPopped(const RefPtr<AudioData>& aSample)
 {
   SINK_LOG_V("AudioStream has used an audio packet.");
   NotifyAudioNeeded();
 }
 
 void
-DecodedAudioDataSink::OnAudioPushed(const RefPtr<MediaData>& aSample)
+DecodedAudioDataSink::OnAudioPushed(const RefPtr<AudioData>& aSample)
 {
   SINK_LOG_V("One new audio packet available.");
   NotifyAudioNeeded();
@@ -388,8 +388,7 @@ DecodedAudioDataSink::NotifyAudioNeeded()
   while (AudioQueue().GetSize() && (AudioQueue().IsFinished() ||
                                     mProcessedQueueLength < LOW_AUDIO_USECS ||
                                     mProcessedQueue.GetSize() < 2)) {
-    RefPtr<AudioData> data =
-      dont_AddRef(AudioQueue().PopFront().take()->As<AudioData>());
+    RefPtr<AudioData> data = AudioQueue().PopFront();
 
     // Ignore the element with 0 frames and try next.
     if (!data->mFrames) {
