@@ -69,7 +69,7 @@ var f = asmLink(asmCompile('global','ffis',USE_ASM + "var ffi=ffis.ffi; function
 f(0);
 assertStackContainsSeq(stacks, "");
 f(+1);
-assertStackContainsSeq(stacks, "");
+assertStackContainsSeq(stacks, "<,g,f,>");
 f(0);
 assertStackContainsSeq(stacks, "<,g,f,>");
 f(-1);
