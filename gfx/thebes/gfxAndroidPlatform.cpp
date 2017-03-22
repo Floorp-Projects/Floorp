@@ -10,6 +10,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/CountingAllocatorBase.h"
 #include "mozilla/intl/LocaleService.h"
+#include "mozilla/intl/OSPreferences.h"
 #include "mozilla/Preferences.h"
 
 #include "gfx2DGlue.h"
@@ -35,6 +36,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using mozilla::intl::LocaleService;
+using mozilla::intl::OSPreferences;
 
 static FT_Library gPlatformFTLibrary = nullptr;
 
@@ -139,6 +141,13 @@ IsJapaneseLocale()
         const nsDependentCSubstring lang(appLocale, 0, 2);
         if (lang.EqualsLiteral("ja")) {
             sIsJapanese = true;
+        } else {
+            OSPreferences::GetInstance()->GetSystemLocale(appLocale);
+
+            const nsDependentCSubstring lang(appLocale, 0, 2);
+            if (lang.EqualsLiteral("ja")) {
+                sIsJapanese = true;
+            }
         }
     }
 
