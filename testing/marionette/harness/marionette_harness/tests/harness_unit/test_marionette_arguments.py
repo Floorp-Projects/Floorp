@@ -30,4 +30,4 @@ def test_parse_arg_socket_timeout(socket_timeout):
 if __name__ == '__main__':
     import sys
     sys.exit(pytest.main(
-        ['-p', 'no:terminalreporter', '--log-tbpl=-', __file__]))
+        ['--log-tbpl=-', __file__]))
