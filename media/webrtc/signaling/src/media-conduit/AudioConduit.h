@@ -201,11 +201,16 @@ public:
   }
   bool GetRemoteSSRC(unsigned int* ssrc) override;
   bool SetLocalCNAME(const char* cname) override;
+
+  bool
+  GetPacketTypeStats(webrtc::RtcpPacketTypeCounter* aPacketCounts) override;
+
   bool GetVideoEncoderStats(double* framerateMean,
                             double* framerateStdDev,
                             double* bitrateMean,
                             double* bitrateStdDev,
-                            uint32_t* droppedFrames) override
+                            uint32_t* droppedFrames,
+                            uint32_t* framesEncoded) override
   {
     return false;
   }

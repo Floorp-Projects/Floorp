@@ -120,12 +120,15 @@ WebrtcVideoConduit::SendStreamStatistics::Update(
   if (!aStats.substreams.empty()) {
     const webrtc::FrameCounts& fc =
       aStats.substreams.begin()->second.frame_counts;
-    CSFLogVerbose(logTag, "%s: framerate: %u, bitrate: %u, dropped frames delta: %u",
-                  __FUNCTION__, aStats.encode_frame_rate, aStats.media_bitrate_bps,
-                  (mSentFrames - (fc.key_frames + fc.delta_frames)) - mDroppedFrames);
-    mDroppedFrames = mSentFrames - (fc.key_frames + fc.delta_frames);
+    mFramesEncoded = fc.key_frames + fc.delta_frames;
+    CSFLogVerbose(logTag,
+                  "%s: framerate: %u, bitrate: %u, dropped frames delta: %u",
+                  __FUNCTION__, aStats.encode_frame_rate,
+                  aStats.media_bitrate_bps,
+                  mFramesDeliveredToEncoder - mFramesEncoded - mDroppedFrames);
+    mDroppedFrames = mFramesDeliveredToEncoder - mFramesEncoded;
   } else {
-    CSFLogVerbose(logTag, "%s aStats.substreams is empty", __FUNCTION__);
+    CSFLogVerbose(logTag, "%s stats.substreams is empty", __FUNCTION__);
   }
 };
 
@@ -211,11 +214,21 @@ WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall)
     CSFLogDebug(logTag, "StreamStats polling scheduled for VideoConduit: %p", aClosure);
     auto self = static_cast<WebrtcVideoConduit*>(aClosure);
     MutexAutoLock lock(self->mCodecMutex);
+    MOZ_ASSERT(!self->mEngineTransmitting || !self->mEngineReceiving,
+      "Video conduit is not both receiving and transmitting");
     if (self->mEngineTransmitting && self->mSendStream) {
-      self->mSendStreamStats.Update(self->mSendStream->GetStats());
+      const auto& stats = self->mSendStream->GetStats();
+      self->mSendStreamStats.Update(stats);
+      if (stats.substreams.empty()) {
+        return;
+      }
+      self->mPacketCounts =
+        stats.substreams.begin()->second.rtcp_packet_type_counts;
     }
     if (self->mEngineReceiving && self->mRecvStream) {
-      self->mRecvStreamStats.Update(self->mRecvStream->GetStats());
+      const auto& stats = self->mRecvStream->GetStats();
+      self->mRecvStreamStats.Update(stats);
+      self->mPacketCounts = stats.rtcp_packet_type_counts;
     }
   };
   mVideoStatsTimer->InitWithFuncCallback(
@@ -747,11 +760,26 @@ WebrtcVideoConduit::GetRemoteSSRC(unsigned int* ssrc)
 }
 
 bool
+WebrtcVideoConduit::GetPacketTypeStats(
+    webrtc::RtcpPacketTypeCounter* aPacketCounts)
+{
+  MutexAutoLock lock(mCodecMutex);
+  if ((!mEngineTransmitting || !mSendStream) // Not transmitting
+      && (!mEngineReceiving || !mRecvStream)) // And not receiving
+  {
+    return false;
+  }
+  *aPacketCounts = mPacketCounts;
+  return true;
+}
+
+bool
 WebrtcVideoConduit::GetVideoEncoderStats(double* framerateMean,
                                          double* framerateStdDev,
                                          double* bitrateMean,
                                          double* bitrateStdDev,
-                                         uint32_t* droppedFrames)
+                                         uint32_t* droppedFrames,
+                                         uint32_t* framesEncoded)
 {
   {
     MutexAutoLock lock(mCodecMutex);
@@ -761,6 +789,7 @@ WebrtcVideoConduit::GetVideoEncoderStats(double* framerateMean,
     mSendStreamStats.GetVideoStreamStats(*framerateMean, *framerateStdDev,
       *bitrateMean, *bitrateStdDev);
     mSendStreamStats.DroppedFrames(*droppedFrames);
+    *framesEncoded = mSendStreamStats.FramesEncoded();
     return true;
   }
 }
@@ -1774,7 +1803,7 @@ WebrtcVideoConduit::SendVideoFrame(webrtc::VideoFrame& frame)
     }
   }
 
-  mSendStreamStats.SentFrame();
+  mSendStreamStats.FrameDeliveredToEncoder();
   CSFLogDebug(logTag, "%s Inserted a frame", __FUNCTION__);
   return kMediaConduitNoError;
 }

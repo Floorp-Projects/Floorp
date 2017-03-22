@@ -355,6 +355,7 @@ public:
                          unsigned int& maxJitterMs,
                          unsigned int& discardedPackets,
                          unsigned int& cumulativeLost);
+    int GetRTCPPacketTypeCounters(RtcpPacketTypeCounter& stats);
     int GetRemoteRTCPReportBlocks(std::vector<ReportBlock>* report_blocks);
     int GetRTPStatistics(CallStatistics& stats);
     int SetREDStatus(bool enable, int redPayloadtype);
