@@ -114,8 +114,8 @@ RestyleTracker::DoProcessRestyles()
       docURL = uri->GetSpecOrDefault();
     }
   }
-  PROFILER_LABEL_PRINTF("RestyleTracker", "ProcessRestyles",
-                        js::ProfileEntry::Category::CSS, "(%s)", docURL.get());
+  PROFILER_LABEL_DYNAMIC("RestyleTracker", "ProcessRestyles",
+                         js::ProfileEntry::Category::CSS, docURL.get());
 
   nsDocShell* docShell = static_cast<nsDocShell*>(mRestyleManager->PresContext()->GetDocShell());
   RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
