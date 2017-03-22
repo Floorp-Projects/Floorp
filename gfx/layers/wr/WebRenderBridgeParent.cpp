@@ -113,6 +113,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mDestroyed(false)
 {
   MOZ_ASSERT(mCompositableHolder);
+  mCompositableHolder->AddPipeline(mPipelineId);
   if (mWidget) {
     MOZ_ASSERT(!mCompositorScheduler);
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
@@ -327,7 +328,7 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
           mApi->AddExternalImageBuffer(key,
                                        descriptor,
                                        wrTexture->GetExternalImageKey());
-          mCompositableHolder->HoldExternalImage(aEpoch, texture->AsWebRenderTextureHost());
+          mCompositableHolder->HoldExternalImage(mPipelineId, aEpoch, texture->AsWebRenderTextureHost());
           keysToDelete.push_back(key);
           break;
         }
@@ -570,9 +571,6 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch)
     }
     mPendingTransactionIds.pop();
   }
-
-  mCompositableHolder->Update(aEpoch);
-
   return id;
 }
 
@@ -609,9 +607,7 @@ WebRenderBridgeParent::ClearResources()
       DeleteOldImages();
     }
   }
-  if (mCompositableHolder) {
-    mCompositableHolder->Destroy();
-  }
+  mCompositableHolder->RemovePipeline(mPipelineId);
   mExternalImageIds.Clear();
 
   if (mWidget && mCompositorScheduler) {
