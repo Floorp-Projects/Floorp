@@ -261,9 +261,21 @@ function getPersistedFromMetadata(readBuffer)
   return !!view[persistedPosition];
 }
 
+function grabResultAndContinueHandler(request)
+{
+  testGenerator.next(request.result);
+}
+
 function grabUsageAndContinueHandler(request)
 {
   testGenerator.next(request.result.usage);
+}
+
+function getUsage(usageHandler, getAll)
+{
+  let request = SpecialPowers._getQuotaManager().getUsage(usageHandler, getAll);
+
+  return request;
 }
 
 function getCurrentUsage(usageHandler)

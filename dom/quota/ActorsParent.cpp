@@ -1083,6 +1083,32 @@ private:
   RecvCancel() override;
 };
 
+class GetUsageOp final
+  : public QuotaUsageRequestBase
+{
+  nsTArray<OriginUsage> mOriginUsages;
+  nsDataHashtable<nsCStringHashKey, uint32_t> mOriginUsagesIndex;
+
+  bool mGetAll;
+
+public:
+  explicit GetUsageOp(const UsageRequestParams& aParams);
+
+private:
+  ~GetUsageOp()
+  { }
+
+  nsresult
+  TraverseRepository(QuotaManager* aQuotaManager,
+                     PersistenceType aPersistenceType);
+
+  nsresult
+  DoDirectoryWork(QuotaManager* aQuotaManager) override;
+
+  void
+  GetResponse(UsageRequestResponse& aResponse) override;
+};
+
 class GetOriginUsageOp final
   : public QuotaUsageRequestBase
 {
@@ -6269,6 +6295,10 @@ Quota::AllocPQuotaUsageRequestParent(const UsageRequestParams& aParams)
   RefPtr<QuotaUsageRequestBase> actor;
 
   switch (aParams.type()) {
+    case UsageRequestParams::TAllUsageParams:
+      actor = new GetUsageOp(aParams);
+      break;
+
     case UsageRequestParams::TOriginUsageParams:
       actor = new GetOriginUsageOp(aParams);
       break;
@@ -6638,6 +6668,181 @@ QuotaUsageRequestBase::RecvCancel()
   }
 
   return IPC_OK();
+}
+
+GetUsageOp::GetUsageOp(const UsageRequestParams& aParams)
+  : mGetAll(aParams.get_AllUsageParams().getAll())
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aParams.type() == UsageRequestParams::TAllUsageParams);
+}
+
+nsresult
+GetUsageOp::TraverseRepository(QuotaManager* aQuotaManager,
+                               PersistenceType aPersistenceType)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aQuotaManager);
+
+  nsresult rv;
+
+  nsCOMPtr<nsIFile> directory =
+    do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = directory->InitWithPath(aQuotaManager->GetStoragePath(aPersistenceType));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool exists;
+  rv = directory->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!exists) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool persistent = aPersistenceType == PERSISTENCE_TYPE_PERSISTENT;
+
+  bool hasMore;
+  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
+         hasMore && !mCanceled) {
+    nsCOMPtr<nsISupports> entry;
+    rv = entries->GetNext(getter_AddRefs(entry));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCOMPtr<nsIFile> originDir = do_QueryInterface(entry);
+    MOZ_ASSERT(originDir);
+
+    bool isDirectory;
+    rv = originDir->IsDirectory(&isDirectory);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!isDirectory) {
+      nsString leafName;
+      rv = originDir->GetLeafName(leafName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      if (!IsOSMetadata(leafName)) {
+        UNKNOWN_FILE_WARNING(leafName);
+      }
+      continue;
+    }
+
+    int64_t timestamp;
+    bool persisted;
+    nsCString suffix;
+    nsCString group;
+    nsCString origin;
+    rv = aQuotaManager->GetDirectoryMetadata2WithRestore(originDir,
+                                                         persistent,
+                                                         &timestamp,
+                                                         &persisted,
+                                                         suffix,
+                                                         group,
+                                                         origin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!mGetAll &&
+        aQuotaManager->IsOriginWhitelistedForPersistentStorage(origin)) {
+      continue;
+    }
+
+    OriginUsage* originUsage;
+
+    // We can't store pointers to OriginUsage objects in the hashtable
+    // since AppendElement() reallocates its internal array buffer as number
+    // of elements grows.
+    uint32_t index;
+    if (mOriginUsagesIndex.Get(origin, &index)) {
+      originUsage = &mOriginUsages[index];
+    } else {
+      index = mOriginUsages.Length();
+
+      originUsage = mOriginUsages.AppendElement();
+
+      originUsage->origin() = origin;
+      originUsage->persisted() = false;
+      originUsage->usage() = 0;
+
+      mOriginUsagesIndex.Put(origin, index);
+    }
+
+    if (aPersistenceType == PERSISTENCE_TYPE_DEFAULT) {
+      originUsage->persisted() = persisted;
+    }
+
+    UsageInfo usageInfo;
+    rv = GetUsageForOrigin(aQuotaManager,
+                           aPersistenceType,
+                           group,
+                           origin,
+                           &usageInfo);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    originUsage->usage() = originUsage->usage() + usageInfo.TotalUsage();
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+GetUsageOp::DoDirectoryWork(QuotaManager* aQuotaManager)
+{
+  AssertIsOnIOThread();
+
+  PROFILER_LABEL("Quota", "GetUsageOp::DoDirectoryWork",
+                 js::ProfileEntry::Category::OTHER);
+
+  nsresult rv;
+
+  for (const PersistenceType type : kAllPersistenceTypes) {
+    rv = TraverseRepository(aQuotaManager, type);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+void
+GetUsageOp::GetResponse(UsageRequestResponse& aResponse)
+{
+  AssertIsOnOwningThread();
+
+  aResponse = AllUsageResponse();
+
+  if (!mOriginUsages.IsEmpty()) {
+    nsTArray<OriginUsage>& originUsages =
+      aResponse.get_AllUsageResponse().originUsages();
+
+    mOriginUsages.SwapElements(originUsages);
+  }
 }
 
 GetOriginUsageOp::GetOriginUsageOp(const UsageRequestParams& aParams)
