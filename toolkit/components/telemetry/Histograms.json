@@ -5030,24 +5030,6 @@
     "n_buckets": 30,
     "description": "Firefox: Time taken to kick off image compression of the canvas that will be used during swiping through history (ms)."
   },
-  "FX_TAB_CLOSE_TIME_ANIM_MS": {
-    "alert_emails": ["mconley@mozilla.com", "hkirschner@mozilla.com"],
-    "bug_numbers": [1340842],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "description": "Firefox: Time taken from the point of closing a tab (with animation), to the browser element being removed from the DOM. (ms)."
-  },
-  "FX_TAB_CLOSE_TIME_NO_ANIM_MS": {
-    "alert_emails": ["mconley@mozilla.com", "hkirschner@mozilla.com"],
-    "bug_numbers": [1340842],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "description": "Firefox: Time taken from the point of closing a tab (without animation) to the browser element being removed from the DOM. (ms)."
-  },
   "FX_TAB_ANIM_OPEN_PREVIEW_FRAME_INTERVAL_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
