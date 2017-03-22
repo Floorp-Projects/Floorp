@@ -26,3 +26,4 @@
     * [Handling Multi-Processes in Actors](backend/actor-e10s-handling.md)
     * [Writing Actors With protocol.js](backend/protocol.js.md)
     * [Registering A New Actor](backend/actor-registration.md)
+    * [Actor Best Practices](backend/actor-best-practices.md)
