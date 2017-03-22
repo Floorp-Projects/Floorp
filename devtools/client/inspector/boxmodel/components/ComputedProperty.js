@@ -28,7 +28,6 @@ module.exports = createClass({
     return dom.div(
       {
         className: "property-view",
-        "data-property-name": name,
         tabIndex: "0",
         ref: container => {
           this.container = container;
