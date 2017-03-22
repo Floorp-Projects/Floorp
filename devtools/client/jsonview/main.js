@@ -50,7 +50,7 @@ var JsonView = {
    * in the parent process.
    */
   onSave: function (message) {
-    JsonViewUtils.getTargetFile(file => {
+    JsonViewUtils.getTargetFile().then(file => {
       if (file) {
         JsonViewUtils.saveToFile(file, message.data);
       }
