@@ -730,7 +730,7 @@ GlobalHelperThreadState::ensureInitialized()
     if (threads)
         return true;
 
-    threads = js::UniquePtr<HelperThreadVector>(js_new<HelperThreadVector>());
+    threads = js::MakeUnique<HelperThreadVector>();
     if (!threads || !threads->initCapacity(threadCount))
         return false;
 
@@ -1629,7 +1629,7 @@ js::PauseCurrentHelperThread()
 bool
 JSContext::addPendingCompileError(frontend::CompileError** error)
 {
-    UniquePtr<frontend::CompileError> errorPtr(new_<frontend::CompileError>());
+    auto errorPtr = make_unique<frontend::CompileError>();
     if (!errorPtr)
         return false;
     if (!helperThread()->parseTask()->errors.append(errorPtr.get())) {
