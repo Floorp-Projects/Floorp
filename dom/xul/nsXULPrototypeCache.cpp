@@ -11,6 +11,7 @@
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 
+#include "nsIChromeRegistry.h"
 #include "nsIFile.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
@@ -27,11 +28,9 @@
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/intl/LocaleService.h"
 
 using namespace mozilla;
 using namespace mozilla::scache;
-using mozilla::intl::LocaleService;
 
 static bool gDisableXULCache = false; // enabled by default
 static const char kDisableXULCachePref[] = "nglayout.debug.disable_xul_cache";
@@ -500,8 +499,12 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
     rv = aURI->GetHost(package);
     if (NS_FAILED(rv))
         return rv;
+    nsCOMPtr<nsIXULChromeRegistry> chromeReg
+        = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
     nsAutoCString locale;
-    LocaleService::GetInstance()->GetAppLocaleAsLangTag(locale);
+    rv = chromeReg->GetSelectedLocale(package, false, locale);
+    if (NS_FAILED(rv))
+        return rv;
 
     nsAutoCString fileChromePath, fileLocale;
 

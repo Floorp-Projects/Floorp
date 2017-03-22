@@ -189,9 +189,12 @@ FeedWriter.prototype = {
   __dateFormatter: null,
   get _dateFormatter() {
     if (!this.__dateFormatter) {
+      const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                     .getService(Ci.nsIXULChromeRegistry)
+                     .getSelectedLocale("global", true);
       const dtOptions = { year: "numeric", month: "long", day: "numeric",
                           hour: "numeric", minute: "numeric" };
-      this.__dateFormatter = new Intl.DateTimeFormat(undefined, dtOptions);
+      this.__dateFormatter = new Intl.DateTimeFormat(locale, dtOptions);
     }
     return this.__dateFormatter;
   },

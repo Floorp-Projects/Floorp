@@ -132,7 +132,8 @@ function* getSystemInfo() {
     geckoversion: geckoVersion,
 
     // Locale used in this build
-    locale: Services.locale.getAppLocaleAsLangTag(),
+    locale: Cc["@mozilla.org/chrome/chrome-registry;1"]
+              .getService(Ci.nsIXULChromeRegistry).getSelectedLocale("global"),
 
     /**
      * Information regarding the operating system.

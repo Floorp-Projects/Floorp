@@ -88,7 +88,9 @@ nsURLFormatterService.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIURLFormatter]),
 
   _defaults: {
-    LOCALE:           () => Services.locale.getAppLocaleAsLangTag(),
+    LOCALE:           () => Cc["@mozilla.org/chrome/chrome-registry;1"].
+                            getService(Ci.nsIXULChromeRegistry).
+                            getSelectedLocale('global'),
     REGION:           function() {
       try {
         // When the geoip lookup failed to identify the region, we fallback to
