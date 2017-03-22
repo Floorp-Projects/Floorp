@@ -13,8 +13,8 @@ float4x4 mProjection : register(vs, c4);
 float4 vRenderTargetOffset : register(vs, c8);
 rect vTextureCoords : register(vs, c9);
 rect vLayerQuad : register(vs, c10);
-rect vMaskQuad : register(vs, c11);
-float4x4 mBackdropTransform : register(vs, c12);
+float4x4 mMaskTransform : register(vs, c11);
+float4x4 mBackdropTransform : register(vs, c15);
 
 float4 fLayerColor : register(ps, c0);
 float fLayerOpacity : register(ps, c1);
@@ -144,16 +144,8 @@ VS_OUTPUT LayerQuadVS(const VS_INPUT aVertex)
   return outp;
 }
 
-VS_MASK_OUTPUT LayerQuadMaskVS(const VS_INPUT aVertex)
+float3 MaskCoords(float4 aPosition)
 {
-  VS_MASK_OUTPUT outp;
-  float4 position = TransformedPosition(aVertex.vPosition);
-
-  outp.vPosition = VertexPosition(position);
-
-  // calculate the position on the mask texture
-  outp.vMaskCoords.x = (position.x - vMaskQuad.x) / vMaskQuad.z;
-  outp.vMaskCoords.y = (position.y - vMaskQuad.y) / vMaskQuad.w;
   // We use the w coord to do non-perspective correct interpolation:
   // the quad might be transformed in 3D, in which case it will have some
   // perspective. The graphics card will do perspective-correct interpolation
@@ -162,11 +154,17 @@ VS_MASK_OUTPUT LayerQuadMaskVS(const VS_INPUT aVertex)
   // ourselves, we do this by multiplying all coords by w here, and dividing by
   // w in the pixel shader (post-interpolation), we pass w in outp.vMaskCoords.z.
   // See http://en.wikipedia.org/wiki/Texture_mapping#Perspective_correctness
-  outp.vMaskCoords.z = 1;
-  outp.vMaskCoords *= position.w;
+  return float3(mul(mMaskTransform, (aPosition / aPosition.w)).xy, 1.0) * aPosition.w;
+}
 
+VS_MASK_OUTPUT LayerQuadMaskVS(const VS_INPUT aVertex)
+{
+  float4 position = TransformedPosition(aVertex.vPosition);
+
+  VS_MASK_OUTPUT outp;
+  outp.vPosition = VertexPosition(position);
+  outp.vMaskCoords = MaskCoords(position);
   outp.vTexCoords = TexCoords(aVertex.vPosition.xy);
-
   return outp;
 }
 
@@ -192,13 +190,8 @@ VS_MASK_OUTPUT LayerDynamicMaskVS(const VS_TEX_INPUT aVertex)
   outp.vPosition = VertexPosition(position);
 
   // calculate the position on the mask texture
-  outp.vMaskCoords.x = (position.x - vMaskQuad.x) / vMaskQuad.z;
-  outp.vMaskCoords.y = (position.y - vMaskQuad.y) / vMaskQuad.w;
-  outp.vMaskCoords.z = 1;
-  outp.vMaskCoords *= position.w;
-
+  outp.vMaskCoords = MaskCoords(position);
   outp.vTexCoords = aVertex.vTexCoords;
-
   return outp;
 }
 

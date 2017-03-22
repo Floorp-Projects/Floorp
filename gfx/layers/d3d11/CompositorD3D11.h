@@ -26,7 +26,7 @@ struct VertexShaderConstants
   float renderTargetOffset[4];
   gfx::Rect textureCoords;
   gfx::Rect layerQuad;
-  gfx::Rect maskQuad;
+  float maskTransform[4][4];
   float backdropTransform[4][4];
 };
 
