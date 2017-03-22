@@ -261,7 +261,7 @@ public:
       return;
     }
 
-    volatile js::ProfileEntry& entry = mStack[mStackPointer];
+    volatile js::ProfileEntry& entry = mStack[int(mStackPointer)];
 
     // Make sure we increment the pointer after the name has been written such
     // that mStack is always consistent.
@@ -288,8 +288,7 @@ public:
 
   uint32_t stackSize() const
   {
-    return std::min(mStackPointer,
-                    mozilla::sig_safe_t(mozilla::ArrayLength(mStack)));
+    return std::min(uint32_t(mStackPointer), uint32_t(mozilla::ArrayLength(mStack)));
   }
 
   // Set the JSContext of the thread to be sampled. Sampling cannot begin until
@@ -304,7 +303,7 @@ public:
 
     js::SetContextProfilingStack(aContext,
                                  (js::ProfileEntry*) mStack,
-                                 (uint32_t*) &mStackPointer,
+                                 &mStackPointer,
                                  (uint32_t) mozilla::ArrayLength(mStack));
     pollJSSampling();
   }
@@ -425,7 +424,7 @@ private:
 
   // This may exceed the length of mStack, so instead use the stackSize() method
   // to determine the number of valid samples in mStack.
-  mozilla::sig_safe_t mStackPointer;
+  mozilla::Atomic<uint32_t> mStackPointer;
 
   // mSleep tracks whether the thread is sleeping, and if so, whether it has
   // been previously observed. This is used for an optimization: in some cases,
