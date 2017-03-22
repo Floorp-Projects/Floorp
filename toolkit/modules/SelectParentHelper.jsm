@@ -55,13 +55,7 @@ this.SelectParentHelper = {
         selectBackgroundColor != uaSelectBackgroundColor &&
         selectBackgroundColor != "rgba(0, 0, 0, 0)" &&
         selectBackgroundColor != selectColor) {
-      let rgba = selectBackgroundColor.match(/rgba\((\d+), (\d+), (\d+),/);
-      if (rgba) {
-        let [, r, g, b] = rgba;
-        ruleBody = `background-color: rgb(${r}, ${g}, ${b});`;
-      } else {
-        ruleBody = `background-color: ${selectBackgroundColor};`;
-      }
+      ruleBody = `background-image: linear-gradient(${selectBackgroundColor}, ${selectBackgroundColor});`;
       usedSelectBackgroundColor = selectBackgroundColor;
     } else {
       usedSelectBackgroundColor = uaSelectBackgroundColor;

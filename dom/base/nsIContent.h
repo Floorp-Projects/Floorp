@@ -559,6 +559,11 @@ public:
   virtual bool TextIsOnlyWhitespace() = 0;
 
   /**
+   * Thread-safe version of TextIsOnlyWhitespace.
+   */
+  virtual bool ThreadSafeTextIsOnlyWhitespace() const = 0;
+
+  /**
    * Method to see if the text node contains data that is useful
    * for a translation: i.e., it consists of more than just whitespace,
    * digits and punctuation.
