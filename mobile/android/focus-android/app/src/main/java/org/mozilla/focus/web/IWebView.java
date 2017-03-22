@@ -5,8 +5,6 @@
 
 package org.mozilla.focus.web;
 
-import android.net.Uri;
-
 public interface IWebView {
     interface Callback {
         void onPageStarted(String url);
@@ -17,6 +15,12 @@ public interface IWebView {
     }
 
     void setCallback(Callback callback);
+
+    void onPause();
+
+    void onResume();
+
+    void destroy();
 
     void reload();
 

@@ -62,6 +62,16 @@ public class WebViewProvider {
         }
 
         @Override
+        public void onPause() {
+
+        }
+
+        @Override
+        public void onResume() {
+
+        }
+
+        @Override
         public void reload() {
             // TODO: Reload website
         }

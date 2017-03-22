@@ -14,6 +14,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -29,7 +30,7 @@ import org.mozilla.focus.web.IWebView;
 /**
  * Fragment for displaying the browser UI.
  */
-public class BrowserFragment extends Fragment implements View.OnClickListener {
+public class BrowserFragment extends WebFragment implements View.OnClickListener {
     public static final String FRAGMENT_TAG = "browser";
 
     private static final int ANIMATION_DURATION = 300;
@@ -48,7 +49,6 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
 
     private TransitionDrawable backgroundTransition;
     private TextView urlView;
-    private IWebView webView;
     private ProgressBar progressView;
     private View lockView;
     private View menuView;
@@ -62,12 +62,16 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public String getInitialUrl() {
+        return getArguments().getString(ARGUMENT_URL);
+    }
+
+    @Override
+    public View inflateLayout(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_browser, container, false);
-        final String url = getArguments().getString(ARGUMENT_URL);
 
         urlView = (TextView) view.findViewById(R.id.url);
-        urlView.setText(url);
+        urlView.setText(getInitialUrl());
         urlView.setOnClickListener(this);
 
         backgroundTransition = (TransitionDrawable) view.findViewById(R.id.background).getBackground();
@@ -94,9 +98,12 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
         menuView = view.findViewById(R.id.menu);
         menuView.setOnClickListener(this);
 
-        webView = (IWebView) view.findViewById(R.id.webview);
+        return view;
+    }
 
-        webView.setCallback(new IWebView.Callback() {
+    @Override
+    public IWebView.Callback createCallback() {
+        return new IWebView.Callback() {
             @Override
             public void onPageStarted(final String url) {
                 lockView.setVisibility(View.GONE);
@@ -134,13 +141,11 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
 
             @Override
             public boolean handleExternalUrl(final String url) {
-                return IntentUtils.handleExternalUri(getContext(), webView, url);
+                final IWebView webView = getWebView();
+
+                return webView != null && IntentUtils.handleExternalUri(getContext(), webView, url);
             }
-        });
-
-        webView.loadUrl(url);
-
-        return view;
+        };
     }
 
     @Override
@@ -159,8 +164,11 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
                         .commit();
                 break;
 
-            case R.id.erase:
-                webView.cleanup();
+            case R.id.erase: {
+                final IWebView webView = getWebView();
+                if (webView != null) {
+                    webView.cleanup();
+                }
 
                 getActivity().getSupportFragmentManager()
                         .beginTransaction()
@@ -173,25 +181,45 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
                         getResources().getInteger(R.integer.erase_snackbar_delay));
 
                 break;
+            }
 
-            case R.id.back:
-                webView.goBack();
+
+            case R.id.back: {
+                final IWebView webView = getWebView();
+                if (webView != null) {
+                    webView.goBack();
+                }
                 break;
+            }
 
-            case R.id.forward:
-                webView.goForward();
+            case R.id.forward: {
+                final IWebView webView = getWebView();
+                if (webView != null) {
+                    webView.goForward();
+                }
                 break;
+            }
 
-            case R.id.refresh:
-                webView.reload();
+            case R.id.refresh: {
+                final IWebView webView = getWebView();
+                if (webView != null) {
+                    webView.reload();
+                }
                 break;
+            }
 
-            case R.id.share:
+            case R.id.share: {
+                final IWebView webView = getWebView();
+                if (webView == null) {
+                    return;
+                }
+
                 final Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain");
                 shareIntent.putExtra(Intent.EXTRA_TEXT, webView.getUrl());
                 startActivity(shareIntent);
                 break;
+            }
 
             case R.id.settings:
                 final Intent settingsIntent = new Intent(getActivity(), SettingsActivity.class);
@@ -199,6 +227,11 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
                 break;
 
             case R.id.open_default: {
+                final IWebView webView = getWebView();
+                if (webView == null) {
+                    return;
+                }
+
                 final Browsers browsers = new Browsers(getContext(), webView.getUrl());
 
                 final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(webView.getUrl()));
@@ -208,6 +241,11 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
             }
 
             case R.id.open_firefox: {
+                final IWebView webView = getWebView();
+                if (webView == null) {
+                    return;
+                }
+
                 final Browsers browsers = new Browsers(getContext(), webView.getUrl());
 
                 if (browsers.isInstalled(Browsers.KnownBrowser.FIREFOX)) {
@@ -224,6 +262,11 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
             }
 
             case R.id.open_select_browser: {
+                final IWebView webView = getWebView();
+                if (webView == null) {
+                    return;
+                }
+
                 final Browsers browsers = new Browsers(getContext(), webView.getUrl());
 
                 final OpenWithFragment fragment = OpenWithFragment.newInstance(
@@ -235,15 +278,13 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-
-        webView.setCallback(null);
-    }
-
     private void updateToolbarButtonStates() {
         if (forwardButton == null || backButton == null) {
+            return;
+        }
+
+        final IWebView webView = getWebView();
+        if (webView == null) {
             return;
         }
 
@@ -257,19 +298,26 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
         backButton.setAlpha(canGoBack ? 1.0f : 0.5f);
     }
 
+    @Nullable
     public String getUrl() {
-        return webView.getUrl();
+        final IWebView webView = getWebView();
+        return webView != null ? webView.getUrl() : null;
     }
 
     public boolean canGoForward() {
-        return webView.canGoForward();
+        final IWebView webView = getWebView();
+        return webView != null && webView.canGoForward();
     }
 
     public boolean canGoBack() {
-        return webView.canGoBack();
+        final IWebView webView = getWebView();
+        return webView != null && webView.canGoBack();
     }
 
     public void goBack() {
-        webView.goBack();
+        final IWebView webView = getWebView();
+        if (webView != null) {
+            webView.goBack();
+        }
     }
 }
