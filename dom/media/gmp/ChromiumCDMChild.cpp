@@ -6,6 +6,7 @@
 #include "ChromiumCDMChild.h"
 #include "GMPContentChild.h"
 #include "WidevineUtils.h"
+#include "WidevineFileIO.h"
 #include "WidevineVideoFrame.h"
 #include "GMPLog.h"
 #include "GMPPlatform.h"
@@ -223,7 +224,10 @@ ChromiumCDMChild::CreateFileIO(cdm::FileIOClient * aClient)
 {
   MOZ_ASSERT(IsOnMessageLoopThread());
   GMP_LOG("ChromiumCDMChild::CreateFileIO()");
-  return nullptr;
+  if (!mPersistentStateAllowed) {
+    return nullptr;
+  }
+  return new WidevineFileIO(aClient);
 }
 
 bool
@@ -240,6 +244,7 @@ ChromiumCDMChild::RecvInit(const bool& aAllowDistinctiveIdentifier,
   GMP_LOG("ChromiumCDMChild::RecvInit(distinctiveId=%d, persistentState=%d)",
           aAllowDistinctiveIdentifier,
           aAllowPersistentState);
+  mPersistentStateAllowed = aAllowPersistentState;
   if (mCDM) {
     mCDM->Initialize(aAllowDistinctiveIdentifier, aAllowPersistentState);
   }
