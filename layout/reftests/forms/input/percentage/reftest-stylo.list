@@ -1,2 +1,2 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == padding.html padding.html # Bug 1340696
+== padding.html padding.html # Bug 1340696
