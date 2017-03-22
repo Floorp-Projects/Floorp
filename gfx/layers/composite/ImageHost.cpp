@@ -182,9 +182,7 @@ void ImageHost::Attach(Layer* aLayer,
 {
   CompositableHost::Attach(aLayer, aCompositor, aFlags);
   for (auto& img : mImages) {
-    if (GetCompositor()) {
-      img.mTextureHost->SetCompositor(GetCompositor());
-    }
+    img.mTextureHost->SetCompositor(aCompositor);
     img.mTextureHost->Updated();
   }
 }

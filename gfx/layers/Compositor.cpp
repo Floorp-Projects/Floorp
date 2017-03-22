@@ -48,7 +48,7 @@ Compositor::~Compositor()
 void
 Compositor::Destroy()
 {
-  ReadUnlockTextures();
+  TextureSourceProvider::Destroy();
   FlushPendingNotifyNotUsed();
   mIsDestroyed = true;
 }
@@ -58,50 +58,6 @@ Compositor::EndFrame()
 {
   ReadUnlockTextures();
   mLastCompositionEndTime = TimeStamp::Now();
-}
-
-void
-Compositor::ReadUnlockTextures()
-{
-  for (auto& texture : mUnlockAfterComposition) {
-    texture->ReadUnlock();
-  }
-  mUnlockAfterComposition.Clear();
-}
-
-void
-Compositor::UnlockAfterComposition(TextureHost* aTexture)
-{
-  mUnlockAfterComposition.AppendElement(aTexture);
-}
-
-void
-Compositor::NotifyNotUsedAfterComposition(TextureHost* aTextureHost)
-{
-  MOZ_ASSERT(!mIsDestroyed);
-
-  mNotifyNotUsedAfterComposition.AppendElement(aTextureHost);
-
-  // If Compositor holds many TextureHosts without compositing,
-  // the TextureHosts should be flushed to reduce memory consumption.
-  const int thresholdCount = 5;
-  const double thresholdSec = 2.0f;
-  if (mNotifyNotUsedAfterComposition.Length() > thresholdCount) {
-    TimeDuration duration = mLastCompositionEndTime ? TimeStamp::Now() - mLastCompositionEndTime : TimeDuration();
-    // Check if we could flush
-    if (duration.ToSeconds() > thresholdSec) {
-      FlushPendingNotifyNotUsed();
-    }
-  }
-}
-
-void
-Compositor::FlushPendingNotifyNotUsed()
-{
-  for (auto& textureHost : mNotifyNotUsedAfterComposition) {
-    textureHost->CallNotifyNotUsed();
-  }
-  mNotifyNotUsedAfterComposition.Clear();
 }
 
 /* static */ void
@@ -672,6 +628,15 @@ Compositor::IsValid() const
 void
 Compositor::SetDispAcquireFence(Layer* aLayer)
 {
+}
+
+bool
+Compositor::NotifyNotUsedAfterComposition(TextureHost* aTextureHost)
+{
+  if (IsDestroyed() || AsBasicCompositor()) {
+    return false;
+  }
+  return TextureSourceProvider::NotifyNotUsedAfterComposition(aTextureHost);
 }
 
 } // namespace layers

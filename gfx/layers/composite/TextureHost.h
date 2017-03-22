@@ -611,6 +611,7 @@ protected:
   friend class Compositor;
   friend class TextureParent;
   friend class TiledLayerBufferComposite;
+  friend class TextureSourceProvider;
 };
 
 /**
