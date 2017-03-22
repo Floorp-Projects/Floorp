@@ -958,7 +958,7 @@ void
 Gecko_SetContentDataArray(nsStyleContentData* aContent,
                           nsStyleContentType aType, uint32_t aLen)
 {
-  nsCSSValue::Array* arr = nsCSSValue::Array::Create(aLen);
+  nsCSSValue::ThreadSafeArray* arr = nsCSSValue::ThreadSafeArray::Create(aLen);
   aContent->SetCounters(aType, arr);
 }
 

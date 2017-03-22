@@ -443,9 +443,9 @@ enum nsCSSUnit {
   eCSSUnit_Font_Format  = 16,     // (char16_t*) a font format name
   eCSSUnit_Element      = 17,     // (char16_t*) an element id
 
-  eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
-  eCSSUnit_Counter      = 21,     // (nsCSSValue::Array*) a counter(string,[string]) value
-  eCSSUnit_Counters     = 22,     // (nsCSSValue::Array*) a counters(string,string[,string]) value
+  eCSSUnit_Counter      = 20,     // (nsCSSValue::ThreadSafeArray*) a counter(string,[string]) value
+  eCSSUnit_Counters     = 21,     // (nsCSSValue::ThreadSafeArray*) a counters(string,string[,string]) value
+  eCSSUnit_Array        = 22,     // (nsCSSValue::Array*) a list of values
   eCSSUnit_Cubic_Bezier = 23,     // (nsCSSValue::Array*) a list of float values
   eCSSUnit_Steps        = 24,     // (nsCSSValue::Array*) a list of (integer, enumerated)
   eCSSUnit_Symbols      = 25,     // (nsCSSValue::Array*) a symbols(enumerated, symbols) value
@@ -582,6 +582,8 @@ class nsCSSValue {
 public:
   struct Array;
   friend struct Array;
+  struct ThreadSafeArray;
+  friend struct ThreadSafeArray;
 
   friend struct mozilla::css::URLValueData;
 
@@ -679,6 +681,8 @@ public:
 
   bool      UnitHasStringValue() const
     { return eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Element; }
+  bool      UnitHasThreadSafeArrayValue() const
+    { return eCSSUnit_Counter <= mUnit && mUnit <= eCSSUnit_Counters; }
   bool      UnitHasArrayValue() const
     { return eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Calc_Divided; }
 
@@ -781,6 +785,12 @@ public:
   {
     MOZ_ASSERT(UnitHasArrayValue(), "not an array value");
     return mValue.mArray;
+  }
+
+  ThreadSafeArray* GetThreadSafeArrayValue() const
+  {
+    MOZ_ASSERT(UnitHasThreadSafeArrayValue(), "not a threadsafe array value");
+    return mValue.mThreadSafeArray;
   }
 
   nsIURI* GetURLValue() const
@@ -922,6 +932,7 @@ public:
   void SetComplexColorValue(
     already_AddRefed<mozilla::css::ComplexColorValue> aValue);
   void SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
+  void SetThreadSafeArrayValue(nsCSSValue::ThreadSafeArray* aArray, nsCSSUnit aUnit);
   void SetURLValue(mozilla::css::URLValue* aURI);
   void SetImageValue(mozilla::css::ImageValue* aImage);
   void SetGradientValue(nsCSSValueGradient* aGradient);
@@ -1022,6 +1033,7 @@ protected:
     nscolor    mColor;
     nsIAtom* MOZ_OWNING_REF mAtom;
     Array* MOZ_OWNING_REF mArray;
+    ThreadSafeArray* MOZ_OWNING_REF mThreadSafeArray;
     mozilla::css::URLValue* MOZ_OWNING_REF mURL;
     mozilla::css::ImageValue* MOZ_OWNING_REF mImage;
     mozilla::css::GridTemplateAreasValue* MOZ_OWNING_REF mGridTemplateAreas;
@@ -1041,6 +1053,9 @@ protected:
   } mValue;
 };
 
+// We use this macro to declare equivalent logic for Array and ThreadSafeArray.
+// It would be much nicer to use a superclass, but the dynamically-sized nature
+// of the interesting part of the class makes that tricky.
 #define DECLARE_CSS_ARRAY(className, refcntMacro)                             \
 struct nsCSSValue::className final {                                          \
                                                                               \
@@ -1133,6 +1148,7 @@ private:                                                                      \
 };
 
 DECLARE_CSS_ARRAY(Array, NS_INLINE_DECL_REFCOUNTING)
+DECLARE_CSS_ARRAY(ThreadSafeArray, NS_INLINE_DECL_THREADSAFE_REFCOUNTING)
 #undef DECLARE_CSS_ARRAY
 
 // Prefer nsCSSValue::Array for lists of fixed size.
