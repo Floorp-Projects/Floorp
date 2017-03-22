@@ -3214,9 +3214,10 @@ var SessionStoreInternal = {
       let forceNotRemote = !winData.tabs[t].pinned;
       let tab = reuseExisting ? tabbrowser.tabs[t] :
                                 tabbrowser.addTab("about:blank",
-                                                  {skipAnimation: true,
-                                                   forceNotRemote,
-                                                   userContextId});
+                                                  { skipAnimation: true,
+                                                    forceNotRemote,
+                                                    userContextId,
+                                                    skipBackgroundNotify: true });
 
       // If we inserted a new tab because the userContextId didn't match with the
       // open tab, even though `t < openTabCount`, we need to remove that open tab
