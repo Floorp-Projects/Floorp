@@ -1,0 +1,86 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- The page shown when logged in... -->
+
+<!ENTITY engine.bookmarks.label     "Bookmarks">
+<!ENTITY engine.bookmarks.accesskey "m">
+<!ENTITY engine.tabs.label2         "Open Tabs">
+<!ENTITY engine.tabs.accesskey      "T">
+<!ENTITY engine.history.label       "History">
+<!ENTITY engine.history.accesskey   "r">
+<!ENTITY engine.passwords.label     "Passwords">
+<!ENTITY engine.passwords.accesskey "P">
+<!ENTITY engine.prefs.label         "Preferences">
+<!ENTITY engine.prefs.accesskey     "S">
+<!ENTITY engine.addons.label        "Add-ons">
+<!ENTITY engine.addons.accesskey    "A">
+
+<!-- Device Settings -->
+<!ENTITY fxaSyncDeviceName.label       "Device Name">
+<!ENTITY changeSyncDeviceName.label "Change Device Name…">
+<!ENTITY changeSyncDeviceName.accesskey "h">
+<!ENTITY cancelChangeSyncDeviceName.label "Cancel">
+<!ENTITY cancelChangeSyncDeviceName.accesskey "n">
+<!ENTITY saveChangeSyncDeviceName.label "Save">
+<!ENTITY saveChangeSyncDeviceName.accesskey "v">
+
+<!-- Footer stuff -->
+<!ENTITY prefs.tosLink.label        "Terms of Service">
+<!ENTITY fxaPrivacyNotice.link.label "Privacy Notice">
+
+<!-- LOCALIZATION NOTE (signedInUnverified.beforename.label,
+signedInUnverified.aftername.label): these two string are used respectively
+before and after the account email address. Localizers can use one of them, or
+both, to better adapt this sentence to their language.
+-->
+<!ENTITY signedInUnverified.beforename.label "">
+<!ENTITY signedInUnverified.aftername.label "is not verified.">
+
+<!-- LOCALIZATION NOTE (signedInLoginFailure.beforename.label,
+signedInLoginFailure.aftername.label): these two string are used respectively
+before and after the account email address. Localizers can use one of them, or
+both, to better adapt this sentence to their language.
+-->
+<!ENTITY signedInLoginFailure.beforename.label "Please sign in to reconnect">
+<!ENTITY signedInLoginFailure.aftername.label "">
+
+<!ENTITY notSignedIn.label           "You are not signed in.">
+<!ENTITY signIn.label                "Sign in">
+<!ENTITY signIn.accesskey            "g">
+<!ENTITY profilePicture.tooltip      "Change profile picture">
+<!ENTITY verifiedManage.label        "Manage Account">
+<!ENTITY verifiedManage.accesskey    "o">
+<!ENTITY disconnect.label            "Disconnect…">
+<!ENTITY disconnect.accesskey        "D">
+<!ENTITY verify.label                "Verify Email">
+<!ENTITY verify.accesskey            "V">
+<!ENTITY forget.label                "Forget this Email">
+<!ENTITY forget.accesskey            "F">
+
+<!ENTITY signedOut.caption            "Take Your Web With You">
+<!ENTITY signedOut.description        "Synchronize your bookmarks, history, tabs, passwords, add-ons, and preferences across all your devices.">
+<!ENTITY signedOut.accountBox.title   "Connect with a &syncBrand.fxAccount.label;">
+<!ENTITY signedOut.accountBox.create  "Create Account">
+<!ENTITY signedOut.accountBox.create.accesskey  "C">
+<!ENTITY signedOut.accountBox.signin  "Sign In">
+<!ENTITY signedOut.accountBox.signin.accesskey  "I">
+
+<!ENTITY signedIn.engines.label       "Sync Across All Devices">
+
+<!-- LOCALIZATION NOTE (mobilePromo3.*): the following strings will be used to
+     create a single sentence with active links.
+     The resulting sentence in English is: "Download Firefox for
+     Android or iOS to sync with your mobile device." -->
+
+<!ENTITY mobilePromo3.start            "Download Firefox for ">
+<!-- LOCALIZATION NOTE (mobilePromo3.androidLink): This is a link title that links to https://www.mozilla.org/firefox/android/ -->
+<!ENTITY mobilePromo3.androidLink      "Android">
+
+<!-- LOCALIZATION NOTE (mobilePromo3.iOSBefore): This is text displayed between mobilePromo3.androidLink and mobilePromo3.iosLink -->
+<!ENTITY mobilePromo3.iOSBefore         " or ">
+<!-- LOCALIZATION NOTE (mobilePromo3.iOSLink): This is a link title that links to https://www.mozilla.org/firefox/ios/ -->
+<!ENTITY mobilePromo3.iOSLink          "iOS">
+
+<!ENTITY mobilePromo3.end              " to sync with your mobile device.">
