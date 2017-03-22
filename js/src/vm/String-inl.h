@@ -181,6 +181,9 @@ JSDependentString::new_(js::ExclusiveContext* cx, JSLinearString* baseArg, size_
                : js::NewInlineString<char16_t>(cx, base, start, length);
     }
 
+    if (baseArg->isExternal() && !baseArg->ensureFlat(cx->asJSContext()))
+        return nullptr;
+
     JSDependentString* str = static_cast<JSDependentString*>(js::Allocate<JSString, js::NoGC>(cx));
     if (str) {
         str->init(cx, baseArg, start, length);
