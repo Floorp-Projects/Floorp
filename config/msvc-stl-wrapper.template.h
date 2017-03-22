@@ -19,12 +19,6 @@
 #  define MOZ_INCLUDE_MOZALLOC_H_FROM_${HEADER}
 #endif
 
-// Code built with !_HAS_EXCEPTIONS calls std::_Throw(), but the win2k
-// CRT doesn't export std::_Throw().  So we define it.
-#ifndef mozilla_Throw_h
-#  include "mozilla/throw_msvc.h"
-#endif
-
 #ifdef _DEBUG
 // From
 //   http://msdn.microsoft.com/en-us/library/aa985982%28VS.80%29.aspx
