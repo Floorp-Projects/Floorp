@@ -143,7 +143,7 @@ protected:
   // Protected because we're refcounted
   virtual ~PrintTarget();
 
-  already_AddRefed<DrawTarget>
+  static already_AddRefed<DrawTarget>
   CreateRecordingDrawTarget(DrawEventRecorder* aRecorder,
                             DrawTarget* aDrawTarget);
 
