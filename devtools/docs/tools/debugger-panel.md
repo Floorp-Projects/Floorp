@@ -1,1 +1,2 @@
-You can find the debugger documentation on [the debugger.html GitHub repository](https://devtools-html.github.io/debugger.html/).
+
+This is just a stub until we write debugger docs.
