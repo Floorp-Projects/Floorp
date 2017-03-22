@@ -6,7 +6,7 @@ By highlighter, we mean anything that DevTools displays on top of the content pa
 
 The most obvious form of highlighter is the box-model highlighter, whose job is to display the 4 box-model regions on top of a given element in the content page, as illustrated in the following screen capture:
 
-![Box-model highlighter](../resources/box-model-highlighter-screenshot.png)
+![Box-model highlighter](./img/box-model-highlighter-screenshot.png)
 
 But there can be a wide variety of highlighters. In particular, highlighters are a pretty good way to give detailed information about:
 
