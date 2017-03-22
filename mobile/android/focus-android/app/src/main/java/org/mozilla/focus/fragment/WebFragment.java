@@ -42,14 +42,13 @@ public abstract class WebFragment extends Fragment {
         final View view = inflateLayout(inflater, container, savedInstanceState);
 
         webView = (IWebView) view.findViewById(R.id.webview);
+        isWebViewAvailable = true;
         webView.setCallback(createCallback());
 
         final String url = getInitialUrl();
         if (url != null) {
             webView.loadUrl(url);
         }
-
-        isWebViewAvailable = true;
 
         return view;
     }
