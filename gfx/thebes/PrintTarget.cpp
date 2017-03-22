@@ -160,7 +160,7 @@ PrintTarget::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
   return do_AddRef(mRefDT);
 }
 
-already_AddRefed<DrawTarget>
+/* static */ already_AddRefed<DrawTarget>
 PrintTarget::CreateRecordingDrawTarget(DrawEventRecorder* aRecorder,
                                        DrawTarget* aDrawTarget)
 {
