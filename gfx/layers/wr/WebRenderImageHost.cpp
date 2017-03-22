@@ -117,7 +117,8 @@ void WebRenderImageHost::Attach(Layer* aLayer,
 }
 
 void
-WebRenderImageHost::Composite(LayerComposite* aLayer,
+WebRenderImageHost::Composite(Compositor* aCompositor,
+                     LayerComposite* aLayer,
                      EffectChain& aEffectChain,
                      float aOpacity,
                      const gfx::Matrix4x4& aTransform,

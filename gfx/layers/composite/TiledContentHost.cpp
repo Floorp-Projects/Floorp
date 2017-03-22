@@ -389,7 +389,8 @@ TiledLayerBufferComposite::Clear()
 }
 
 void
-TiledContentHost::Composite(LayerComposite* aLayer,
+TiledContentHost::Composite(Compositor* aCompositor,
+                            LayerComposite* aLayer,
                             EffectChain& aEffectChain,
                             float aOpacity,
                             const gfx::Matrix4x4& aTransform,
@@ -398,7 +399,6 @@ TiledContentHost::Composite(LayerComposite* aLayer,
                             const nsIntRegion* aVisibleRegion /* = nullptr */,
                             const Maybe<gfx::Polygon>& aGeometry)
 {
-  MOZ_ASSERT(mCompositor);
   // Reduce the opacity of the low-precision buffer to make it a
   // little more subtle and less jarring. In particular, text
   // rendered at low-resolution and scaled tends to look pretty
@@ -438,18 +438,19 @@ TiledContentHost::Composite(LayerComposite* aLayer,
 #endif
 
   // Render the low and high precision buffers.
-  RenderLayerBuffer(mLowPrecisionTiledBuffer,
+  RenderLayerBuffer(mLowPrecisionTiledBuffer, aCompositor,
                     lowPrecisionOpacityReduction < 1.0f ? &backgroundColor : nullptr,
                     aEffectChain, lowPrecisionOpacityReduction * aOpacity,
                     aSamplingFilter, aClipRect, *renderRegion, aTransform, aGeometry);
 
-  RenderLayerBuffer(mTiledBuffer, nullptr, aEffectChain, aOpacity, aSamplingFilter,
+  RenderLayerBuffer(mTiledBuffer, aCompositor, nullptr, aEffectChain, aOpacity, aSamplingFilter,
                     aClipRect, *renderRegion, aTransform, aGeometry);
 }
 
 
 void
 TiledContentHost::RenderTile(TileHost& aTile,
+                             Compositor* aCompositor,
                              EffectChain& aEffectChain,
                              float aOpacity,
                              const gfx::Matrix4x4& aTransform,
@@ -502,7 +503,7 @@ TiledContentHost::RenderTile(TileHost& aTile,
                                   textureRect.width / aTextureBounds.width,
                                   textureRect.height / aTextureBounds.height);
 
-    mCompositor->DrawGeometry(graphicsRect, aClipRect, aEffectChain, opacity,
+    aCompositor->DrawGeometry(graphicsRect, aClipRect, aEffectChain, opacity,
                               aTransform, aVisibleRect, aGeometry);
   }
 
@@ -510,12 +511,13 @@ TiledContentHost::RenderTile(TileHost& aTile,
   if (aTile.mTextureHostOnWhite) {
     flags |= DiagnosticFlags::COMPONENT_ALPHA;
   }
-  mCompositor->DrawDiagnostics(flags,
+  aCompositor->DrawDiagnostics(flags,
                                aScreenRegion, aClipRect, aTransform, mFlashCounter);
 }
 
 void
 TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
+                                    Compositor* aCompositor,
                                     const Color* aBackgroundColor,
                                     EffectChain& aEffectChain,
                                     float aOpacity,
@@ -525,10 +527,6 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
                                     gfx::Matrix4x4 aTransform,
                                     const Maybe<Polygon>& aGeometry)
 {
-  if (!mCompositor) {
-    NS_WARNING("Can't render tiled content host - no compositor");
-    return;
-  }
   float resolution = aLayerBuffer.GetResolution();
   gfx::Size layerScale(1, 1);
 
@@ -579,7 +577,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
     for (auto iter = backgroundRegion.RectIter(); !iter.Done(); iter.Next()) {
       const IntRect& rect = iter.Get();
       Rect graphicsRect(rect.x, rect.y, rect.width, rect.height);
-      mCompositor->DrawGeometry(graphicsRect, aClipRect, effect,
+      aCompositor->DrawGeometry(graphicsRect, aClipRect, effect,
                                 1.0, aTransform, aGeometry);
     }
   }
@@ -603,7 +601,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
     }
 
     tileDrawRegion.ScaleRoundOut(resolution, resolution);
-    RenderTile(tile, aEffectChain, aOpacity,
+    RenderTile(tile, aCompositor, aEffectChain, aOpacity,
                aTransform, aSamplingFilter, aClipRect, tileDrawRegion,
                tileOffset * resolution, aLayerBuffer.GetTileSize(),
                gfx::Rect(visibleRect.x, visibleRect.y,
@@ -617,8 +615,8 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
 
   gfx::Rect rect(visibleRect.x, visibleRect.y,
                  visibleRect.width, visibleRect.height);
-  GetCompositor()->DrawDiagnostics(DiagnosticFlags::CONTENT | componentAlphaDiagnostic,
-                                   rect, aClipRect, aTransform, mFlashCounter);
+  aCompositor->DrawDiagnostics(DiagnosticFlags::CONTENT | componentAlphaDiagnostic,
+                               rect, aClipRect, aTransform, mFlashCounter);
 }
 
 void

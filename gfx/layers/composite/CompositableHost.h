@@ -95,7 +95,8 @@ public:
   virtual void SetCompositor(Compositor* aCompositor);
 
   // composite the contents of this buffer host to the compositor's surface
-  virtual void Composite(LayerComposite* aLayer,
+  virtual void Composite(Compositor* aCompositor,
+                         LayerComposite* aLayer,
                          EffectChain& aEffectChain,
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,

@@ -102,7 +102,7 @@ ImageLayerComposite::RenderLayer(const IntRect& aClipRect,
   RenderWithAllMasks(this, mCompositor, aClipRect,
                      [&](EffectChain& effectChain, const IntRect& clipRect) {
     mImageHost->SetCompositor(mCompositor);
-    mImageHost->Composite(this, effectChain,
+    mImageHost->Composite(mCompositor, this, effectChain,
                           GetEffectiveOpacity(),
                           GetEffectiveTransformForBuffer(),
                           GetSamplingFilter(),
