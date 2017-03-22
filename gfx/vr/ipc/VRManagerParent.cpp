@@ -443,7 +443,8 @@ VRManagerParent::SendGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
 {
   // GamepadManager only exists at the content process
   // or the same process in non-e10s mode.
-  if (mIsContentChild || IsSameProcess()) {
+  if (mHaveControllerListener &&
+      (mIsContentChild || IsSameProcess())) {
     return PVRManagerParent::SendGamepadUpdate(aGamepadEvent);
   } else {
     return true;

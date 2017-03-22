@@ -341,6 +341,17 @@ VRSystemManagerPuppet::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
   aHMDResult.AppendElement(mPuppetHMD);
 }
 
+bool
+VRSystemManagerPuppet::GetIsPresenting()
+{
+  if (mPuppetHMD) {
+    VRDisplayInfo displayInfo(mPuppetHMD->GetDisplayInfo());
+    return displayInfo.GetIsPresenting();
+  }
+
+  return false;
+}
+
 void
 VRSystemManagerPuppet::HandleInput()
 {
