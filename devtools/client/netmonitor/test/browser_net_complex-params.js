@@ -42,7 +42,7 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[2]);
   yield wait;
-  testParamsTab1("a", '"b"', "foo", '"bar"');
+  testParamsTab1("a", '"b"', "?foo", '"bar"');
 
   wait = waitForDOM(document, "#params-panel tr:not(.tree-section).treeRow", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
