@@ -23,6 +23,7 @@ interface nsIGfxInfo : nsISupports
    * These are valid across all platforms.
    */
   readonly attribute DOMString ContentBackend;
+  readonly attribute boolean WebRenderEnabled;
 
   // XXX: Switch to a list of devices, rather than explicitly numbering them.
 
