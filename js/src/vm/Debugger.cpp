@@ -2549,7 +2549,7 @@ Debugger::updateExecutionObservabilityOfFrames(JSContext* cx, const ExecutionObs
                     oldestEnabledFrame.setIsDebuggee();
                 }
                 if (iter.abstractFramePtr().isWasmDebugFrame())
-                    iter.abstractFramePtr().asWasmDebugFrame()->observeFrame(cx);
+                    iter.abstractFramePtr().asWasmDebugFrame()->observe(cx);
             } else {
 #ifdef DEBUG
                 // Debugger.Frame lifetimes are managed by the debug epilogue,

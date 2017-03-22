@@ -17,7 +17,6 @@
 #include "js/GCAPI.h"
 #include "vm/Debugger.h"
 #include "vm/Opcodes.h"
-#include "wasm/WasmDebugFrame.h"
 
 #include "jit/JitFrameIterator-inl.h"
 #include "vm/EnvironmentObject-inl.h"

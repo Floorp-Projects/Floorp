@@ -18,7 +18,6 @@
 
 #include "wasm/WasmFrameIterator.h"
 
-#include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmInstance.h"
 
 #include "jit/MacroAssembler-inl.h"

@@ -28,6 +28,7 @@
 #include "jit/MacroAssembler.h"
 #include "js/Conversions.h"
 #include "vm/Interpreter.h"
+#include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmSignalHandlers.h"
@@ -115,7 +116,7 @@ WasmHandleDebugTrap()
             return true;
         DebugFrame* frame = iter.debugFrame();
         frame->setIsDebuggee();
-        frame->observeFrame(cx);
+        frame->observe(cx);
         // TODO call onEnterFrame
         JSTrapStatus status = Debugger::onEnterFrame(cx, frame);
         if (status == JSTRAP_RETURN) {
@@ -131,7 +132,7 @@ WasmHandleDebugTrap()
         DebugFrame* frame = iter.debugFrame();
         frame->updateReturnJSValue();
         bool ok = Debugger::onLeaveFrame(cx, frame, nullptr, true);
-        frame->leaveFrame(cx);
+        frame->leave(cx);
         return ok;
     }
 
@@ -196,7 +197,7 @@ WasmHandleThrow()
             // TODO properly handle success and resume wasm execution.
             JS_ReportErrorASCII(cx, "Unexpected success from onLeaveFrame");
         }
-        frame->leaveFrame(cx);
+        frame->leave(cx);
      }
 }
 
@@ -998,3 +999,122 @@ wasm::ComputeMappedSize(uint32_t maxSize)
 }
 
 #endif  // WASM_HUGE_MEMORY
+
+void
+DebugFrame::alignmentStaticAsserts()
+{
+    // VS2017 doesn't consider offsetOfFrame() to be a constexpr, so we have
+    // to use offsetof directly. These asserts can't be at class-level
+    // because the type is incomplete.
+
+    static_assert(WasmStackAlignment >= Alignment,
+                  "Aligned by ABI before pushing DebugFrame");
+    static_assert((offsetof(DebugFrame, frame_) + sizeof(Frame)) % Alignment == 0,
+                  "Aligned after pushing DebugFrame");
+}
+
+GlobalObject*
+DebugFrame::global() const
+{
+    return &instance()->object()->global();
+}
+
+JSObject*
+DebugFrame::environmentChain() const
+{
+    return &global()->lexicalEnvironment();
+}
+
+bool
+DebugFrame::getLocal(uint32_t localIndex, MutableHandleValue vp)
+{
+    ValTypeVector locals;
+    size_t argsLength;
+    if (!instance()->code().debugGetLocalTypes(funcIndex(), &locals, &argsLength))
+        return false;
+
+    BaseLocalIter iter(locals, argsLength, /* debugEnabled = */ true);
+    while (!iter.done() && iter.index() < localIndex)
+        iter++;
+    MOZ_ALWAYS_TRUE(!iter.done());
+
+    uint8_t* frame = static_cast<uint8_t*>((void*)this) + offsetOfFrame();
+    void* dataPtr = frame - iter.frameOffset();
+    switch (iter.mirType()) {
+      case jit::MIRType::Int32:
+          vp.set(Int32Value(*static_cast<int32_t*>(dataPtr)));
+          break;
+      case jit::MIRType::Int64:
+          // Just display as a Number; it's ok if we lose some precision
+          vp.set(NumberValue((double)*static_cast<int64_t*>(dataPtr)));
+          break;
+      case jit::MIRType::Float32:
+          vp.set(NumberValue(JS::CanonicalizeNaN(*static_cast<float*>(dataPtr))));
+          break;
+      case jit::MIRType::Double:
+          vp.set(NumberValue(JS::CanonicalizeNaN(*static_cast<double*>(dataPtr))));
+          break;
+      default:
+          MOZ_CRASH("local type");
+    }
+    return true;
+}
+
+void
+DebugFrame::updateReturnJSValue()
+{
+    hasCachedReturnJSValue_ = true;
+    ExprType returnType = instance()->code().debugGetResultType(funcIndex());
+    switch (returnType) {
+      case ExprType::Void:
+          cachedReturnJSValue_.setUndefined();
+          break;
+      case ExprType::I32:
+          cachedReturnJSValue_.setInt32(resultI32_);
+          break;
+      case ExprType::I64:
+          // Just display as a Number; it's ok if we lose some precision
+          cachedReturnJSValue_.setDouble((double)resultI64_);
+          break;
+      case ExprType::F32:
+          cachedReturnJSValue_.setDouble(JS::CanonicalizeNaN(resultF32_));
+          break;
+      case ExprType::F64:
+          cachedReturnJSValue_.setDouble(JS::CanonicalizeNaN(resultF64_));
+          break;
+      default:
+          MOZ_CRASH("result type");
+    }
+}
+
+HandleValue
+DebugFrame::returnValue() const
+{
+    MOZ_ASSERT(hasCachedReturnJSValue_);
+    return HandleValue::fromMarkedLocation(&cachedReturnJSValue_);
+}
+
+void
+DebugFrame::clearReturnJSValue()
+{
+    hasCachedReturnJSValue_ = true;
+    cachedReturnJSValue_.setUndefined();
+}
+
+void
+DebugFrame::observe(JSContext* cx)
+{
+   if (!observing_) {
+       instance()->code().adjustEnterAndLeaveFrameTrapsState(cx, /* enabled = */ true);
+       observing_ = true;
+   }
+}
+
+void
+DebugFrame::leave(JSContext* cx)
+{
+    if (observing_) {
+       instance()->code().adjustEnterAndLeaveFrameTrapsState(cx, /* enabled = */ false);
+       observing_ = false;
+    }
+}
