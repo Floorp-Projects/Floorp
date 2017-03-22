@@ -1310,6 +1310,10 @@ protected:
   // Pass information for deciding the video decode mode to decoder.
   void NotifyDecoderActivityChanges() const;
 
+  // Mark the decoder owned by the element as tainted so that the
+  // suspend-video-decoder is disabled.
+  void MarkAsTainted();
+
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<MediaDecoder> mDecoder;

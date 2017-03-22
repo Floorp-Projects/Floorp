@@ -1532,12 +1532,7 @@ HTMLMediaElement::SetVisible(bool aVisible)
 already_AddRefed<layers::Image>
 HTMLMediaElement::GetCurrentImage()
 {
-  // Mark the decoder owned by the element as tainted so that the
-  // suspend-video-decoder is disabled.
-  mHasSuspendTaint = true;
-  if (mDecoder) {
-    mDecoder->SetSuspendTaint(true);
-  }
+  MarkAsTainted();
 
   // TODO: In bug 1345404, handle case when video decoder is already suspended.
   ImageContainer* container = GetImageContainer();
@@ -3335,6 +3330,7 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
   MOZ_RELEASE_ASSERT(aGraph);
 
   MarkAsContentSource(CallerAPI::CAPTURE_STREAM);
+  MarkAsTainted();
 
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   if (!window) {
@@ -7482,6 +7478,16 @@ already_AddRefed<GMPCrashHelper>
 HTMLMediaElement::CreateGMPCrashHelper()
 {
   return MakeAndAddRef<MediaElementGMPCrashHelper>(this);
+}
+
+void
+HTMLMediaElement::MarkAsTainted()
+{
+  mHasSuspendTaint = true;
+
+  if (mDecoder) {
+    mDecoder->SetSuspendTaint(true);
+  }
 }
 
 bool HasDebuggerPrivilege(JSContext* aCx, JSObject* aObj)
