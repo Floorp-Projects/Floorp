@@ -36,14 +36,11 @@ public:
 
   virtual void DeallocateDeviceData() override { }
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
-
   virtual void Updated() override { }
 
   static gfx::SurfaceFormat ContentTypeToSurfaceFormat(gfxContentType aType);
 
 protected:
-  RefPtr<BasicCompositor> mCompositor;
   RefPtr<gfxXlibSurface> mSurface;
   RefPtr<gfx::SourceSurface> mSourceSurface;
 };

@@ -62,7 +62,7 @@ X11TextureHost::SetCompositor(Compositor* aCompositor)
 {
   mCompositor = aCompositor;
   if (mTextureSource) {
-    mTextureSource->SetCompositor(aCompositor);
+    mTextureSource->SetTextureSourceProvider(aCompositor);
   }
 }
 

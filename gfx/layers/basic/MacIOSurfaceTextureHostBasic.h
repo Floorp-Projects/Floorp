@@ -27,8 +27,7 @@ class MacIOSurfaceTextureSourceBasic
     public TextureSource
 {
 public:
-  MacIOSurfaceTextureSourceBasic(BasicCompositor* aCompositor,
-                                 MacIOSurface* aSurface);
+  explicit MacIOSurfaceTextureSourceBasic(MacIOSurface* aSurface);
   virtual ~MacIOSurfaceTextureSourceBasic();
 
   virtual const char* Name() const override { return "MacIOSurfaceTextureSourceBasic"; }
@@ -41,10 +40,7 @@ public:
 
   virtual void DeallocateDeviceData() override { }
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
-
 protected:
-  RefPtr<BasicCompositor> mCompositor;
   RefPtr<MacIOSurface> mSurface;
   RefPtr<gfx::SourceSurface> mSourceSurface;
 };
