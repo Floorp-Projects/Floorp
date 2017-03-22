@@ -97,6 +97,10 @@ Telemetry.prototype = {
       histogram: "DEVTOOLS_COMPUTEDVIEW_OPENED_COUNT",
       timerHistogram: "DEVTOOLS_COMPUTEDVIEW_TIME_ACTIVE_SECONDS"
     },
+    layoutview: {
+      histogram: "DEVTOOLS_LAYOUTVIEW_OPENED_COUNT",
+      timerHistogram: "DEVTOOLS_LAYOUTVIEW_TIME_ACTIVE_SECONDS"
+    },
     fontinspector: {
       histogram: "DEVTOOLS_FONTINSPECTOR_OPENED_COUNT",
       timerHistogram: "DEVTOOLS_FONTINSPECTOR_TIME_ACTIVE_SECONDS"

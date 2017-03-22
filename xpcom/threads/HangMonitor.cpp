@@ -287,11 +287,11 @@ Startup()
   MOZ_ASSERT(!gMonitor, "Hang monitor already initialized");
   gMonitor = new Monitor("HangMonitor");
 
-  Preferences::RegisterCallback(PrefChanged, kHangMonitorPrefName, nullptr);
+  Preferences::RegisterCallback(PrefChanged, kHangMonitorPrefName);
   PrefChanged(nullptr, nullptr);
 
 #ifdef REPORT_CHROME_HANGS
-  Preferences::RegisterCallback(PrefChanged, kTelemetryPrefName, nullptr);
+  Preferences::RegisterCallback(PrefChanged, kTelemetryPrefName);
   winMainThreadHandle =
     OpenThread(THREAD_ALL_ACCESS, FALSE, GetCurrentThreadId());
   if (!winMainThreadHandle) {

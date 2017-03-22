@@ -414,7 +414,6 @@ class MachCommands(MachCommandBase):
         options.symbols_path = symbols_path
         options.manifest_path = manifest_path
         options.xre_path = self.bindir
-        options.dm_trans = "adb"
         options.local_lib = self.bindir.replace('bin', 'fennec')
         for file in os.listdir(os.path.join(self.topobjdir, "dist")):
             if file.endswith(".apk") and file.startswith("fennec"):

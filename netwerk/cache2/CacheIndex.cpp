@@ -27,7 +27,7 @@
 #define kMinUnwrittenChanges   300
 #define kMinDumpInterval       20000 // in milliseconds
 #define kMaxBufSize            16384
-#define kIndexVersion          0x00000003
+#define kIndexVersion          0x00000004
 #define kUpdateIndexStartDelay 50000 // in milliseconds
 
 #define INDEX_NAME      "index"
@@ -917,12 +917,14 @@ nsresult
 CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
                         const uint32_t      *aFrecency,
                         const uint32_t      *aExpirationTime,
+                        const bool          *aHasAltData,
                         const uint32_t      *aSize)
 {
   LOG(("CacheIndex::UpdateEntry() [hash=%08x%08x%08x%08x%08x, "
-       "frecency=%s, expirationTime=%s, size=%s]", LOGSHA1(aHash),
+       "frecency=%s, expirationTime=%s, hasAltData=%s, size=%s]", LOGSHA1(aHash),
        aFrecency ? nsPrintfCString("%u", *aFrecency).get() : "",
        aExpirationTime ? nsPrintfCString("%u", *aExpirationTime).get() : "",
+       aHasAltData ? (*aHasAltData ? "true" : "false") : "",
        aSize ? nsPrintfCString("%u", *aSize).get() : ""));
 
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
@@ -953,7 +955,7 @@ CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
       MOZ_ASSERT(index->mPendingUpdates.Count() == 0);
       MOZ_ASSERT(entry);
 
-      if (!HasEntryChanged(entry, aFrecency, aExpirationTime, aSize)) {
+      if (!HasEntryChanged(entry, aFrecency, aExpirationTime, aHasAltData, aSize)) {
         return NS_OK;
       }
 
@@ -1511,6 +1513,7 @@ bool
 CacheIndex::HasEntryChanged(CacheIndexEntry *aEntry,
                             const uint32_t  *aFrecency,
                             const uint32_t  *aExpirationTime,
+                            const bool      *aHasAltData,
                             const uint32_t  *aSize)
 {
   if (aFrecency && *aFrecency != aEntry->GetFrecency()) {
@@ -1518,6 +1521,10 @@ CacheIndex::HasEntryChanged(CacheIndexEntry *aEntry,
   }
 
   if (aExpirationTime && *aExpirationTime != aEntry->GetExpirationTime()) {
+    return true;
+  }
+
+  if (aHasAltData && *aHasAltData != aEntry->GetHasAltData()) {
     return true;
   }
 
@@ -2636,7 +2643,7 @@ CacheIndex::SetupDirectoryEnumerator()
   return NS_OK;
 }
 
-void
+nsresult
 CacheIndex::InitEntryFromDiskData(CacheIndexEntry *aEntry,
                                   CacheFileMetadata *aMetaData,
                                   int64_t aFileSize)
@@ -2657,9 +2664,18 @@ CacheIndex::InitEntryFromDiskData(CacheIndexEntry *aEntry,
   aMetaData->GetFrecency(&frecency);
   aEntry->SetFrecency(frecency);
 
+  const char *altData = aMetaData->GetElement(CacheFileUtils::kAltDataKey);
+  bool hasAltData = altData ? true : false;
+  if (hasAltData &&
+      NS_FAILED(CacheFileUtils::ParseAlternativeDataInfo(altData, nullptr, nullptr))) {
+    return NS_ERROR_FAILURE;
+  }
+  aEntry->SetHasAltData(hasAltData);
+
   aEntry->SetFileSize(static_cast<uint32_t>(
                         std::min(static_cast<int64_t>(PR_UINT32_MAX),
                                  (aFileSize + 0x3FF) >> 10)));
+  return NS_OK;
 }
 
 bool
@@ -2802,10 +2818,15 @@ CacheIndex::BuildIndex()
     } else {
       CacheIndexEntryAutoManage entryMng(&hash, this);
       entry = mIndex.PutEntry(hash);
-      InitEntryFromDiskData(entry, meta, size);
-      LOG(("CacheIndex::BuildIndex() - Added entry to index. [hash=%s]",
-           leaf.get()));
-      entry->Log();
+      if (NS_FAILED(InitEntryFromDiskData(entry, meta, size))) {
+        LOG(("CacheIndex::BuildIndex() - CacheFile::InitEntryFromDiskData() "
+             "failed, removing file. [name=%s]", leaf.get()));
+        file->Remove(false);
+      } else {
+        LOG(("CacheIndex::BuildIndex() - Added entry to index. [name=%s]",
+             leaf.get()));
+        entry->Log();
+      }
     }
   }
 
@@ -3040,6 +3061,16 @@ CacheIndex::UpdateIndex()
     if (NS_FAILED(rv)) {
       LOG(("CacheIndex::UpdateIndex() - CacheFileMetadata::SyncReadMetadata() "
            "failed, removing file. [name=%s]", leaf.get()));
+    } else {
+      entry = mIndex.PutEntry(hash);
+      rv = InitEntryFromDiskData(entry, meta, size);
+      if (NS_FAILED(rv)) {
+        LOG(("CacheIndex::UpdateIndex() - CacheIndex::InitEntryFromDiskData "
+             "failed, removing file. [name=%s]", leaf.get()));
+      }
+    }
+
+    if (NS_FAILED(rv)) {
       file->Remove(false);
       if (entry) {
         entry->MarkRemoved();
@@ -3047,11 +3078,9 @@ CacheIndex::UpdateIndex()
         entry->MarkDirty();
       }
     } else {
-      entry = mIndex.PutEntry(hash);
-      InitEntryFromDiskData(entry, meta, size);
-      LOG(("CacheIndex::UpdateIndex() - Added/updated entry to/in index. "
-           "[hash=%s]", leaf.get()));
-      entry->Log();
+        LOG(("CacheIndex::UpdateIndex() - Added/updated entry to/in index. "
+             "[name=%s]", leaf.get()));
+        entry->Log();
     }
   }
 

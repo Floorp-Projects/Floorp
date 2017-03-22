@@ -550,7 +550,10 @@ ParseAlternativeDataInfo(const char *aInfo, int64_t *_offset, nsACString *_type)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  *_offset = altDataOffset;
+  if (_offset) {
+    *_offset = altDataOffset;
+  }
+
   if (_type) {
     mozilla::Unused << p.ReadUntil(Tokenizer::Token::EndOfFile(), *_type);
   }

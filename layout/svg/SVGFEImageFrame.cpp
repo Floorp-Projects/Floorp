@@ -107,6 +107,12 @@ SVGFEImageFrame::Init(nsIContent*       aContent,
   nsFrame::Init(aContent, aParent, aPrevInFlow);
 
   // We assume that feImage's are always visible.
+  // This call must happen before the FrameCreated. This is because the
+  // primary frame pointer on our content node isn't set until after this
+  // function ends, so there is no way for the resulting OnVisibilityChange
+  // notification to get a frame. FrameCreated has a workaround for this in
+  // that it passes our frame around so it can be accessed. OnVisibilityChange
+  // doesn't have that workaround.
   IncApproximateVisibleCount();
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader =

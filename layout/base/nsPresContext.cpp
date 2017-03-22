@@ -338,12 +338,12 @@ nsPresContext::Destroy()
   }
 
   // Unregister preference callbacks
-  Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
-                                  "font.",
-                                  this);
-  Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
-                                  "browser.display.",
-                                  this);
+  Preferences::UnregisterPrefixCallback(nsPresContext::PrefChangedCallback,
+                                        "font.",
+                                        this);
+  Preferences::UnregisterPrefixCallback(nsPresContext::PrefChangedCallback,
+                                        "browser.display.",
+                                        this);
   Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
                                   "browser.underline_anchors",
                                   this);
@@ -359,15 +359,15 @@ nsPresContext::Destroy()
   Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
                                   "image.animation_mode",
                                   this);
-  Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
-                                  "bidi.",
-                                  this);
+  Preferences::UnregisterPrefixCallback(nsPresContext::PrefChangedCallback,
+                                        "bidi.",
+                                        this);
   Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
                                   "dom.send_after_paint_to_content",
                                   this);
-  Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
-                                  "gfx.font_rendering.",
-                                  this);
+  Preferences::UnregisterPrefixCallback(nsPresContext::PrefChangedCallback,
+                                        "gfx.font_rendering.",
+                                        this);
   Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
                                   "layout.css.dpi",
                                   this);
@@ -879,12 +879,12 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
 
   // Register callbacks so we're notified when the preferences change
-  Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
-                                "font.",
-                                this);
-  Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
-                                "browser.display.",
-                                this);
+  Preferences::RegisterPrefixCallback(nsPresContext::PrefChangedCallback,
+                                      "font.",
+                                      this);
+  Preferences::RegisterPrefixCallback(nsPresContext::PrefChangedCallback,
+                                      "browser.display.",
+                                      this);
   Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
                                 "browser.underline_anchors",
                                 this);
@@ -900,15 +900,15 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
                                 "image.animation_mode",
                                 this);
-  Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
-                                "bidi.",
-                                this);
+  Preferences::RegisterPrefixCallback(nsPresContext::PrefChangedCallback,
+                                      "bidi.",
+                                      this);
   Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
                                 "dom.send_after_paint_to_content",
                                 this);
-  Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
-                                "gfx.font_rendering.",
-                                this);
+  Preferences::RegisterPrefixCallback(nsPresContext::PrefChangedCallback,
+                                      "gfx.font_rendering.",
+                                      this);
   Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
                                 "layout.css.dpi",
                                 this);

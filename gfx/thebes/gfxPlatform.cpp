@@ -762,7 +762,7 @@ gfxPlatform::Init()
     TexturePoolOGL::Init();
 #endif
 
-    Preferences::RegisterCallbackAndCall(RecordingPrefChanged, "gfx.2d.recording", nullptr);
+    Preferences::RegisterCallbackAndCall(RecordingPrefChanged, "gfx.2d.recording");
 
     CreateCMSOutputProfile();
 
@@ -2207,9 +2207,7 @@ gfxPlatform::InitAcceleration()
 
   if (XRE_IsParentProcess()) {
     Preferences::RegisterCallbackAndCall(VideoDecodingFailedChangedCallback,
-                                         "media.hardware-video-decoding.failed",
-                                         nullptr,
-                                         Preferences::ExactMatch);
+                                         "media.hardware-video-decoding.failed");
     InitGPUProcessPrefs();
     InitWebRenderConfig();
   }

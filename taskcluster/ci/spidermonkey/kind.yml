@@ -29,6 +29,7 @@ job-defaults:
             # appended to this list
             - js/public/**
             - js/src/**
+            - taskcluster/ci/spidermonkey/kind.yml
 
 jobs:
     sm-package/opt:
@@ -181,3 +182,13 @@ jobs:
             symbol: SM-tc(nu)
         run:
             spidermonkey-variant: nonunified
+
+    sm-fuzzing/opt:
+        description: "Spidermonkey Fuzzing"
+        index:
+            job-name: sm-fuzzing
+        treeherder:
+            platform: linux64/opt
+            symbol: SM-tc(f)
+        run:
+            spidermonkey-variant: fuzzing

@@ -7772,6 +7772,14 @@
     "description": "Number of times the DevTools Computed View has been opened.",
     "releaseChannelCollection": "opt-out"
   },
+  "DEVTOOLS_LAYOUTVIEW_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1347552],
+    "description": "Number of times the DevTools Layout View has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
   "DEVTOOLS_FONTINSPECTOR_OPENED_COUNT": {
     "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
@@ -8066,6 +8074,15 @@
     "high": 10000000,
     "n_buckets": 100,
     "description": "How long has the computed view been active (seconds)"
+  },
+  "DEVTOOLS_LAYOUTVIEW_TIME_ACTIVE_SECONDS": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "bug_numbers": [1347552],
+    "high": 10000000,
+    "n_buckets": 100,
+    "description": "How long has the layout view been active (seconds)"
   },
   "DEVTOOLS_FONTINSPECTOR_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "never",
