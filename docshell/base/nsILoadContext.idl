@@ -20,7 +20,7 @@ interface nsIDOMElement;
  * can be queried for various information about where the load is
  * happening.
  */
-[builtinclass, scriptable, uuid(2813a7a3-d084-4d00-acd0-f76620315c02)]
+[scriptable, uuid(2813a7a3-d084-4d00-acd0-f76620315c02)]
 interface nsILoadContext : nsISupports
 {
   /**
@@ -139,8 +139,10 @@ interface nsILoadContext : nsISupports
 #ifdef MOZILLA_INTERNAL_API
   /**
    * The C++ getter for origin attributes.
+   *
+   * Defined in LoadContext.cpp
    */
-  NS_IMETHOD_(void) GetOriginAttributes(mozilla::OriginAttributes& aAttrs) = 0;
+  bool GetOriginAttributes(mozilla::OriginAttributes& aAttrs);
 #endif
 %}
 };
