@@ -55,7 +55,7 @@ public:
   }
 #endif
 
-  // nsISVGChildFrame interface:
+  // nsSVGDisplayableFrame interface:
   virtual void ReflowSVG() override;
   virtual void NotifySVGChanged(uint32_t aFlags) override;
 
@@ -177,7 +177,7 @@ nsSVGUseFrame::IsLeaf() const
 
 
 //----------------------------------------------------------------------
-// nsISVGChildFrame methods
+// nsSVGDisplayableFrame methods
 
 void
 nsSVGUseFrame::ReflowSVG()

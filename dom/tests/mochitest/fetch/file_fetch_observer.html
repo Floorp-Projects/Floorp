@@ -1,0 +1,146 @@
+<script>
+function ok(a, msg) {
+  parent.postMessage({ type: "check", status: !!a, message: msg }, "*");
+}
+
+function is(a, b, msg) {
+  ok(a === b, msg);
+}
+
+function testObserver() {
+  ok("FetchObserver" in self, "We have a FetchObserver prototype");
+
+  fetch('http://mochi.test:8888/tests/dom/tests/mochitest/fetch/slow.sjs', { observe: o => {
+    ok(!!o, "We have an observer");
+    ok(o instanceof FetchObserver, "The correct object has been passed");
+    is(o.state, "requesting", "By default the state is requesting");
+    next();
+  }});
+}
+
+function testObserveAbort() {
+  var fc = new FetchController();
+
+  fetch('http://mochi.test:8888/tests/dom/tests/mochitest/fetch/slow.sjs', {
+    signal: fc.signal,
+    observe: o => {
+      o.onstatechange = () => {
+        ok(true, "StateChange event dispatched");
+        if (o.state == "aborted") {
+          ok(true, "Aborted!");
+          next();
+        }
+      }
+      fc.abort();
+    }
+  });
+}
+
+function testObserveComplete() {
+  var fc = new FetchController();
+
+  fetch('http://mochi.test:8888/tests/dom/tests/mochitest/fetch/slow.sjs', {
+    signal: fc.signal,
+    observe: o => {
+      o.onstatechange = () => {
+        ok(true, "StateChange event dispatched");
+        if (o.state == "complete") {
+          ok(true, "Operation completed");
+          next();
+        }
+      }
+    }
+  });
+}
+
+function testObserveErrored() {
+  var fc = new FetchController();
+
+  fetch('foo: bar', {
+    signal: fc.signal,
+    observe: o => {
+      o.onstatechange = () => {
+        ok(true, "StateChange event dispatched");
+        if (o.state == "errored") {
+          ok(true, "Operation completed");
+          next();
+        }
+      }
+    }
+  });
+}
+
+function testObserveResponding() {
+  var fc = new FetchController();
+
+  fetch('http://mochi.test:8888/tests/dom/tests/mochitest/fetch/slow.sjs', {
+    signal: fc.signal,
+    observe: o => {
+      o.onstatechange = () => {
+        if (o.state == "responding") {
+          ok(true, "We have responding events");
+          next();
+        }
+      }
+    }
+  });
+}
+
+function workify(worker) {
+  function methods() {
+    function ok(a, msg) {
+      postMessage( { type: 'check', state: !!a, message: msg });
+    };
+    function is(a, b, msg) {
+      postMessage( { type: 'check', state: a === b, message: msg });
+    };
+    function next() {
+      postMessage( { type: 'finish' });
+    };
+  }
+
+  var str = methods.toString();
+  var methodsContent = str.substring(0, str.length - 1).split('\n').splice(1).join('\n');
+
+  str = worker.toString();
+  var workerContent = str.substring(0, str.length - 1).split('\n').splice(1).join('\n');
+
+  var content = methodsContent + workerContent;
+  var url = URL.createObjectURL(new Blob([content], { type: "application/javascript" }));
+  var w = new Worker(url);
+  w.onmessage = e => {
+    if (e.data.type == 'check') {
+      ok(e.data.state, "WORKER: " + e.data.message);
+    } else if (e.data.type == 'finish') {
+      next();
+    } else {
+      ok(false, "Something went wrong");
+    }
+  }
+}
+
+var steps = [
+  testObserver,
+  testObserveAbort,
+  function() { workify(testObserveAbort); },
+  testObserveComplete,
+  function() { workify(testObserveComplete); },
+  testObserveErrored,
+  function() { workify(testObserveErrored); },
+  testObserveResponding,
+  function() { workify(testObserveResponding); },
+];
+
+function next() {
+  if (!steps.length) {
+    parent.postMessage({ type: "finish" }, "*");
+    return;
+  }
+
+  var step = steps.shift();
+  step();
+}
+
+next();
+
+</script>

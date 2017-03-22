@@ -12,6 +12,7 @@
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "mozilla/ConsoleReportCollector.h"
+#include "mozilla/dom/FetchSignal.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/RefPtr.h"
 
@@ -49,7 +50,14 @@ public:
     mGotResponseAvailable = true;
     OnResponseAvailableInternal(aResponse);
   }
-  virtual void OnResponseEnd()
+
+  enum EndReason
+  {
+    eAborted,
+    eByNetworking,
+  };
+
+  virtual void OnResponseEnd(EndReason aReason)
   { };
 
   nsIConsoleReportCollector* GetReporter() const
@@ -58,6 +66,9 @@ public:
   }
 
   virtual void FlushConsoleReport() = 0;
+
+  virtual void OnDataAvailable() = 0;
+
 protected:
   virtual ~FetchDriverObserver()
   { };
@@ -72,7 +83,8 @@ private:
 class FetchDriver final : public nsIStreamListener,
                           public nsIChannelEventSink,
                           public nsIInterfaceRequestor,
-                          public nsIThreadRetargetableStreamListener
+                          public nsIThreadRetargetableStreamListener,
+                          public FetchSignal::Follower
 {
 public:
   NS_DECL_ISUPPORTS
@@ -82,9 +94,12 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
-  explicit FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
-                       nsILoadGroup* aLoadGroup);
-  NS_IMETHOD Fetch(FetchDriverObserver* aObserver);
+  FetchDriver(InternalRequest* aRequest,
+              nsIPrincipal* aPrincipal,
+              nsILoadGroup* aLoadGroup);
+
+  nsresult Fetch(FetchSignal* aSignal,
+                 FetchDriverObserver* aObserver);
 
   void
   SetDocument(nsIDocument* aDocument);
@@ -96,6 +111,11 @@ public:
     mWorkerScript = aWorkerScirpt;
   }
 
+  // FetchSignal::Follower
+
+  void
+  Aborted() override;
+
 private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
@@ -104,6 +124,7 @@ private:
   nsCOMPtr<nsIOutputStream> mPipeOutputStream;
   RefPtr<FetchDriverObserver> mObserver;
   nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<nsIChannel> mChannel;
   nsAutoPtr<SRICheckDataVerifier> mSRIDataVerifier;
   SRIMetadata mSRIMetadata;
   nsCString mWorkerScript;

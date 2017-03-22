@@ -183,7 +183,7 @@ class LocalB2GVersion(B2GVersion):
 
 class RemoteB2GVersion(B2GVersion):
 
-    def __init__(self, sources=None, dm_type='adb', host=None,
+    def __init__(self, sources=None, host=None,
                  device_serial=None, adb_host=None, adb_port=None,
                  **kwargs):
         B2GVersion.__init__(self, sources, **kwargs)
@@ -195,18 +195,9 @@ class RemoteB2GVersion(B2GVersion):
                                   " of a remote device")
             raise
 
-        if dm_type == 'adb':
-            dm = mozdevice.DeviceManagerADB(deviceSerial=device_serial,
-                                            serverHost=adb_host,
-                                            serverPort=adb_port)
-        elif dm_type == 'sut':
-            if not host:
-                raise errors.RemoteAppNotFoundError(
-                    'A host for SUT must be supplied.')
-            dm = mozdevice.DeviceManagerSUT(host=host)
-        else:
-            raise errors.RemoteAppNotFoundError(
-                'Unknown device manager type: %s' % dm_type)
+        dm = mozdevice.DeviceManagerADB(deviceSerial=device_serial,
+                                        serverHost=adb_host,
+                                        serverPort=adb_port)
 
         if not sources:
             path = 'system/sources.xml'
@@ -253,7 +244,7 @@ class RemoteB2GVersion(B2GVersion):
                     break
 
 
-def get_version(binary=None, sources=None, dm_type=None, host=None,
+def get_version(binary=None, sources=None, host=None,
                 device_serial=None, adb_host=None, adb_port=None):
     """
     Returns the application version information as a dict. You can specify
@@ -265,8 +256,7 @@ def get_version(binary=None, sources=None, dm_type=None, host=None,
 
     :param binary: Path to the binary for the application or Android APK file
     :param sources: Path to the sources.xml file (Firefox OS)
-    :param dm_type: Device manager type. Must be 'adb' or 'sut' (Firefox OS)
-    :param host: Host address of remote Firefox OS instance (SUT)
+    :param host: Host address of remote Firefox OS instance (not used with ADB)
     :param device_serial: Serial identifier of Firefox OS device (ADB)
     :param adb_host: Host address of ADB server
     :param adb_port: Port of ADB server
@@ -284,7 +274,6 @@ def get_version(binary=None, sources=None, dm_type=None, host=None,
             # we had a binary argument, do not search for remote B2G
             raise
         version = RemoteB2GVersion(sources=sources,
-                                   dm_type=dm_type,
                                    host=host,
                                    adb_host=adb_host,
                                    adb_port=adb_port,
@@ -322,7 +311,6 @@ def cli(args=sys.argv[1:]):
     )
 
     args = parser.parse_args()
-    dm_type = os.environ.get('DM_TRANS', 'adb')
     host = os.environ.get('TEST_DEVICE')
 
     mozlog.commandline.setup_logging(
@@ -330,7 +318,6 @@ def cli(args=sys.argv[1:]):
 
     get_version(binary=args.binary,
                 sources=args.sources,
-                dm_type=dm_type,
                 host=host,
                 device_serial=args.device,
                 adb_host=args.adb_host,

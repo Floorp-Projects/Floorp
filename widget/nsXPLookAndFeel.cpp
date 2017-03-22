@@ -444,7 +444,9 @@ nsXPLookAndFeel::Init()
   // XXX If we could reorganize the pref names, we should separate the branch
   //     for each types.  Then, we could reduce the unnecessary loop from
   //     nsXPLookAndFeel::OnPrefChanged().
-  Preferences::RegisterCallback(OnPrefChanged, "ui.");
+  Preferences::RegisterPrefixCallback(OnPrefChanged, "ui.");
+  // We really do just want the accessibility.tabfocus pref, not other prefs
+  // that start with that string.
   Preferences::RegisterCallback(OnPrefChanged, "accessibility.tabfocus");
 
   unsigned int i;

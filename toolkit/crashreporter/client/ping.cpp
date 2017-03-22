@@ -164,7 +164,8 @@ CreateMetadataNode(StringTable& strings)
 
 // Create the payload node of the crash ping
 static Json::Value
-CreatePayloadNode(StringTable& strings, const string& aSessionId)
+CreatePayloadNode(StringTable& strings, const string& aHash,
+                  const string& aSessionId)
 {
   Json::Value payload;
 
@@ -174,6 +175,7 @@ CreatePayloadNode(StringTable& strings, const string& aSessionId)
   payload["crashTime"] = CurrentDate(kISO8601DateHours);
   payload["hasCrashEnvironment"] = true;
   payload["crashId"] = GetDumpLocalID();
+  payload["minidumpSha256Hash"] = aHash;
   payload["processType"] = "main"; // This is always a main crash
 
   // Parse the stack traces
@@ -219,7 +221,7 @@ CreateApplicationNode(const string& aVendor, const string& aName,
 
 // Create the root node of the crash ping
 static Json::Value
-CreateRootNode(StringTable& strings, const string& aUuid,
+CreateRootNode(StringTable& strings, const string& aUuid, const string& aHash,
                const string& aClientId, const string& aSessionId,
                const string& aName, const string& aVersion,
                const string& aChannel, const string& aBuildId)
@@ -252,7 +254,7 @@ CreateRootNode(StringTable& strings, const string& aUuid,
     root["environment"] = environment;
   }
 
-  root["payload"] = CreatePayloadNode(strings, aSessionId);
+  root["payload"] = CreatePayloadNode(strings, aHash, aSessionId);
   root["application"] = CreateApplicationNode(strings["Vendor"], aName,
                                               aVersion, aChannel, aBuildId,
                                               architecture, xpcomAbi);
@@ -282,7 +284,7 @@ GenerateSubmissionUrl(const string& aUrl, const string& aId,
 // Returns true if the ping was assembled and handed over to the pingsender
 // correctly, false otherwise and populates the aUUID field with the ping UUID.
 bool
-SendCrashPing(StringTable& strings, string& pingUuid)
+SendCrashPing(StringTable& strings, const string& aHash, string& pingUuid)
 {
   string clientId    = strings[kTelemetryClientId];
   string serverUrl   = strings[kTelemetryUrl];
@@ -305,7 +307,7 @@ SendCrashPing(StringTable& strings, string& pingUuid)
     return false;
   }
 
-  Json::Value root = CreateRootNode(strings, uuid, clientId, sessionId,
+  Json::Value root = CreateRootNode(strings, uuid, aHash, clientId, sessionId,
                                     name, version, channel, buildId);
 
   // Write out the result

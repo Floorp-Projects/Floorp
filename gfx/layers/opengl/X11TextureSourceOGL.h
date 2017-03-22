@@ -41,16 +41,18 @@ public:
 
   virtual void DeallocateDeviceData() override;
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
   virtual void Updated() override { mUpdated = true; }
 
-  gl::GLContext* gl() const;
+  gl::GLContext* gl() const {
+    return mGL;
+  }
 
   static gfx::SurfaceFormat ContentTypeToSurfaceFormat(gfxContentType aType);
 
 protected:
-  RefPtr<CompositorOGL> mCompositor;
+  RefPtr<gl::GLContext> mGL;
   RefPtr<gfxXlibSurface> mSurface;
   RefPtr<gfx::SourceSurface> mSourceSurface;
   GLuint mTexture;

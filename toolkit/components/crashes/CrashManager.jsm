@@ -40,30 +40,44 @@ function dateToDays(date) {
 }
 
 /**
- * Parse the string stored in the specified field as JSON and then remove the
- * field from the object. The string might also be returned without parsing.
+ * Get a field from the specified object and remove it.
  *
  * @param obj {Object} The object holding the field
  * @param field {String} The name of the field to be parsed and removed
- * @param [parseAsJson=true] {Boolean} If true parse the field's contents as if
- *        it were JSON code, otherwise return the rew string.
  *
- * @returns {Object|String} the parsed object or the raw string
+ * @returns {String} the field contents as a string, null if none was found
  */
-function parseAndRemoveField(obj, field, parseAsJson = true) {
+function getAndRemoveField(obj, field) {
   let value = null;
 
   if (field in obj) {
-    if (!parseAsJson) {
-      // We split extra files on LF characters but Windows-generated ones might
-      // contain trailing CR characters so trim them here.
-      value = obj[field].trim();
-    } else {
-      try {
-        value = JSON.parse(obj[field]);
-      } catch (e) {
-        Cu.reportError(e);
-      }
+    // We split extra files on LF characters but Windows-generated ones might
+    // contain trailing CR characters so trim them here.
+    value = obj[field].trim();
+
+    delete obj[field];
+  }
+
+  return value;
+}
+
+/**
+ * Parse the string stored in the specified field as JSON and then remove the
+ * field from the object.
+ *
+ * @param obj {Object} The object holding the field
+ * @param field {String} The name of the field to be parsed and removed
+ *
+ * @returns {Object} the parsed object, null if none was found
+ */
+function parseAndRemoveField(obj, field) {
+  let value = null;
+
+  if (field in obj) {
+    try {
+      value = JSON.parse(obj[field]);
+    } catch (e) {
+      Cu.reportError(e);
     }
 
     delete obj[field];
@@ -459,7 +473,7 @@ this.CrashManager.prototype = Object.freeze({
       if (processType === this.PROCESS_TYPE_CONTENT) {
         this._sendCrashPing(id, processType, date, metadata);
       }
-   }.bind(this));
+    }.bind(this));
 
     return promise;
   },
@@ -637,12 +651,12 @@ this.CrashManager.prototype = Object.freeze({
     let reportMeta = Cu.cloneInto(metadata, myScope);
     let crashEnvironment = parseAndRemoveField(reportMeta,
                                                "TelemetryEnvironment");
-    let sessionId = parseAndRemoveField(reportMeta, "TelemetrySessionId",
-                                        /* parseAsJson */ false);
+    let sessionId = getAndRemoveField(reportMeta, "TelemetrySessionId");
     let stackTraces = parseAndRemoveField(reportMeta, "StackTraces");
+    let minidumpSha256Hash = getAndRemoveField(reportMeta,
+                                               "MinidumpSha256Hash");
     // If CrashPingUUID is not present then Telemetry will generate a new UUID
-    let pingId = parseAndRemoveField(reportMeta, "CrashPingUUID",
-                                     /* parseAsJson */ false);
+    let pingId = getAndRemoveField(reportMeta, "CrashPingUUID");
 
     // Filter the remaining annotations to remove privacy-sensitive ones
     reportMeta = this._filterAnnotations(reportMeta);
@@ -654,6 +668,7 @@ this.CrashManager.prototype = Object.freeze({
         crashTime: date.toISOString().slice(0, 13) + ":00:00.000Z", // per-hour resolution
         sessionId,
         crashId,
+        minidumpSha256Hash,
         processType: type,
         stackTraces,
         metadata: reportMeta,

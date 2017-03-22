@@ -15,7 +15,7 @@
 #include "mozilla/gfx/2D.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
-#include "nsISVGChildFrame.h"
+#include "nsSVGDisplayableFrame.h"
 #include "nsStyleContext.h"
 #include "nsSVGEffects.h"
 #include "SVGGeometryFrame.h"
@@ -403,9 +403,9 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
     for (nsIFrame* kid = firstKid; kid;
          kid = kid->GetNextSibling()) {
       // The CTM of each frame referencing us can be different
-      nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
+      nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
       if (SVGFrame) {
-        SVGFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
+        SVGFrame->NotifySVGChanged(nsSVGDisplayableFrame::TRANSFORM_CHANGED);
       }
       gfxMatrix tm = *(patternWithChildren->mCTM);
       if (kid->GetContent()->IsSVGElement()) {

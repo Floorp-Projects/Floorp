@@ -49,6 +49,30 @@ interface nsICrashReporter : nsISupports
   attribute nsIFile minidumpPath;
 
   /**
+   * Get the minidump file corresponding to the specified ID.
+   *
+   * @param id
+   *        ID of the crash. Likely a UUID.
+   *
+   * @return The minidump file associated with the ID.
+   *
+   * @throw NS_ERROR_FILE_NOT_FOUND if the minidump could not be found
+   */
+  nsIFile getMinidumpForID(in AString id);
+
+  /**
+   * Get the extra file corresponding to the specified ID.
+   *
+   * @param id
+   *        ID of the crash. Likely a UUID.
+   *
+   * @return The extra file associated with the ID.
+   *
+   * @throw NS_ERROR_FILE_NOT_FOUND if the extra file could not be found
+   */
+  nsIFile getExtraFileForID(in AString id);
+
+  /**
    * Add some extra data to be submitted with a crash report.
    *
    * @param key

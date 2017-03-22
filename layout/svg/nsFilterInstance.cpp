@@ -17,7 +17,7 @@
 #include "gfxUtils.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PatternHelpers.h"
-#include "nsISVGChildFrame.h"
+#include "nsSVGDisplayableFrame.h"
 #include "nsCSSFilterInstance.h"
 #include "nsSVGFilterInstance.h"
 #include "nsSVGFilterPaintCallback.h"

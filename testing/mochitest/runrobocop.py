@@ -102,7 +102,7 @@ class RobocopTestRunner(MochitestDesktop):
             "Android sdk version '%s'; will use this to filter manifests" %
             str(androidVersion))
         mozinfo.info['android_version'] = androidVersion
-        if (self.options.dm_trans == 'adb' and self.options.robocopApk):
+        if self.options.robocopApk:
             self.dm._checkCmd(["install", "-r", self.options.robocopApk])
             self.log.debug("Robocop APK %s installed" %
                            self.options.robocopApk)

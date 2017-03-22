@@ -8700,12 +8700,18 @@ UnionBorderBoxes(nsIFrame* aFrame, bool aApplyTransform,
   // we expect, we need to make them narrow to their children's outline.
   // aOutValid is set to false if the returned nsRect is not valid
   // and should not be included in the outline rectangle.
-  aOutValid = !aFrame->IsFrameOfType(nsIFrame::eSVGContainer)
+  aOutValid = !(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)
+              || !aFrame->IsFrameOfType(nsIFrame::eSVGContainer)
               || aFrame->GetType() == nsGkAtoms::svgTextFrame;
+
+  nsRect u;
+
+  if (!aFrame->FrameMaintainsOverflow()) {
+    return u;
+  }
 
   // Start from our border-box, transformed.  See comment below about
   // transform of children.
-  nsRect u;
   bool doTransform = aApplyTransform && aFrame->IsTransformed();
   if (doTransform) {
     u = nsDisplayTransform::TransformRect(bounds, aFrame, &bounds);
@@ -8899,8 +8905,8 @@ bool
 nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
                                  nsSize aNewSize, nsSize* aOldSize)
 {
-  NS_ASSERTION(FrameMaintainsOverflow(),
-               "Don't call - overflow rects not maintained on these SVG frames");
+  MOZ_ASSERT(FrameMaintainsOverflow(),
+             "Don't call - overflow rects not maintained on these SVG frames");
 
   nsRect bounds(nsPoint(0, 0), aNewSize);
   // Store the passed in overflow area if we are a preserve-3d frame or we have
