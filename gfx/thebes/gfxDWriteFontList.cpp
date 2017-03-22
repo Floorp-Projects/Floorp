@@ -5,7 +5,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/intl/LocaleService.h"
+#include "mozilla/intl/OSPreferences.h"
 
 #include "gfxDWriteFontList.h"
 #include "gfxDWriteFonts.h"
@@ -27,7 +27,7 @@
 #include "harfbuzz/hb.h"
 
 using namespace mozilla;
-using mozilla::intl::LocaleService;
+using mozilla::intl::OSPreferences;
 
 #define LOG_FONTLIST(args) MOZ_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
                                LogLevel::Debug, args)
@@ -274,7 +274,9 @@ gfxDWriteFontFamily::LocalizedName(nsAString &aLocalizedName)
     aLocalizedName.AssignLiteral("Unknown Font");
     HRESULT hr;
     nsAutoCString locale;
-    LocaleService::GetInstance()->GetAppLocaleAsLangTag(locale);
+    // We use system locale here because it's what user expects to see.
+    // See bug 1349454 for details.
+    OSPreferences::GetInstance()->GetSystemLocale(locale);
 
     RefPtr<IDWriteLocalizedStrings> names;
 
