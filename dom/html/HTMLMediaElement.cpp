@@ -3334,7 +3334,7 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
 {
   MOZ_RELEASE_ASSERT(aGraph);
 
-    MarkAsContentSource(CallerAPI::CAPTURE_STREAM);
+  MarkAsContentSource(CallerAPI::CAPTURE_STREAM);
 
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   if (!window) {
