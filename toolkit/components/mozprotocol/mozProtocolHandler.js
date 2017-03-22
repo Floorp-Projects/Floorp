@@ -37,7 +37,7 @@ mozProtocolHandler.prototype = {
   },
 
   newChannel(uri) {
-    return this.newChannel(uri, null);
+    return this.newChannel2(uri, null);
   },
 
   classID: Components.ID("{47a45e5f-691e-4799-8686-14f8d3fc0f8c}"),
