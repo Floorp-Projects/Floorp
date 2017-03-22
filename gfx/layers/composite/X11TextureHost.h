@@ -32,9 +32,7 @@ public:
   X11TextureHost(TextureFlags aFlags,
                  const SurfaceDescriptorX11& aDescriptor);
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
-
-  virtual Compositor* GetCompositor() override { return mCompositor; }
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
   virtual bool Lock() override;
 

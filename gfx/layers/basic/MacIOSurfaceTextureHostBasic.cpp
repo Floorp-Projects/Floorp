@@ -59,7 +59,7 @@ MacIOSurfaceTextureSourceBasic::GetSurface(gfx::DrawTarget* aTarget)
 bool
 MacIOSurfaceTextureHostBasic::Lock()
 {
-  if (!mCompositor) {
+  if (!mProvider) {
     return false;
   }
 
@@ -70,16 +70,17 @@ MacIOSurfaceTextureHostBasic::Lock()
 }
 
 void
-MacIOSurfaceTextureHostBasic::SetCompositor(Compositor* aCompositor)
+MacIOSurfaceTextureHostBasic::SetTextureSourceProvider(TextureSourceProvider* aProvider)
 {
-  BasicCompositor* compositor = AssertBasicCompositor(aCompositor);
-  if (!compositor) {
+  if (!aProvider->AsCompositor() || !aProvider->AsCompositor()->AsBasicCompositor()) {
     mTextureSource = nullptr;
     return;
   }
-  mCompositor = compositor;
+
+  mProvider = aProvider;
+
   if (mTextureSource) {
-    mTextureSource->SetTextureSourceProvider(compositor);
+    mTextureSource->SetTextureSourceProvider(aProvider);
   }
 }
 
