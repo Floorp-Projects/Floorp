@@ -21,6 +21,7 @@ from taskgraph.util.schema import (
     Schema,
 )
 from taskgraph.util.treeherder import split_symbol, join_symbol
+from taskgraph.transforms.job import job_description_schema
 from voluptuous import (
     Any,
     Extra,
@@ -37,6 +38,10 @@ taskref_or_string = Any(
     basestring,
     {Required('task-reference'): basestring})
 
+# Voluptuous uses marker objects as dictionary *keys*, but they are not
+# comparable, so we cast all of the keys back to regular strings
+job_description_schema = {str(k): v for k, v in job_description_schema.schema.iteritems()}
+
 l10n_description_schema = Schema({
     # Name for this job, inferred from the dependent job before validation
     Required('name'): basestring,
@@ -46,9 +51,6 @@ l10n_description_schema = Schema({
 
     # max run time of the task
     Required('run-time'): _by_platform(int),
-
-    # Data used by chain of trust (see `chain_of_trust` in this file)
-    Optional('chainOfTrust'): {Extra: object},
 
     # All l10n jobs use mozharness
     Required('mozharness'): {
@@ -126,7 +128,10 @@ l10n_description_schema = Schema({
     # Run the task when the listed files change (if present).
     Optional('when'): {
         'files-changed': [basestring]
-    }
+    },
+
+    # passed through directly to the job description
+    Optional('extra'): job_description_schema['extra'],
 })
 
 transforms = TransformSequence()
@@ -328,11 +333,9 @@ def mh_options_replace_project(config, jobs):
 @transforms.add
 def chain_of_trust(config, jobs):
     for job in jobs:
-        job.setdefault('chainOfTrust', {})
-        job['chainOfTrust'].setdefault('inputs', {})
-        job['chainOfTrust']['inputs']['docker-image'] = {
-            "task-reference": "<docker-image>"
-        }
+        # add the docker image to the chain of trust inputs in task.extra
+        cot = job.setdefault('extra', {}).setdefault('chainOfTrust', {})
+        cot.setdefault('inputs', {})['docker-image'] = {"task-reference": "<docker-image>"}
         yield job
 
 
@@ -354,9 +357,7 @@ def make_job_description(config, jobs):
                 'max-run-time': job['run-time'],
                 'chain-of-trust': True,
             },
-            'extra': {
-                'chainOfTrust': job['chainOfTrust'],
-            },
+            'extra': job['extra'],
             'worker-type': job['worker-type'],
             'description': job['description'],
             'run': {
