@@ -463,9 +463,6 @@ private:
   // registered with the refresh driver.
   bool mCurrentRequestRegistered;
   bool mPendingRequestRegistered;
-
-  // True when FrameCreate has been called but FrameDestroy has not.
-  bool mFrameCreateCalled;
 };
 
 #endif // nsImageLoadingContent_h__
