@@ -160,6 +160,7 @@ public class WebViewProvider {
 
         @Override
         public void setCallback(Callback callback) {
+            this.callback = callback;
             client.setCallback(callback);
         }
 
