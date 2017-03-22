@@ -46,7 +46,7 @@ var tests = [
     constraint: "mediaSource" },
   { message: "emtpy constraint fails",
     constraints: { },
-    error: "NotSupportedError" },
+    error: "TypeError" },
   { message: "Triggering mock failure in default video device fails",
     constraints: { video: { deviceId: 'bad device' }, fake: true },
     error: "NotReadableError" },
