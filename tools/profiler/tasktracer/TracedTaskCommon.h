@@ -28,9 +28,21 @@ public:
 
   void DispatchTask(int aDelayTimeMs = 0);
 
-  void SetTLSTraceInfo();
-  void GetTLSTraceInfo();
+  void SetTLSTraceInfo() {
+    if (mIsTraceInfoInit) {
+      DoSetTLSTraceInfo();
+    }
+  }
+  void GetTLSTraceInfo() {
+    if (IsStartLogging()) {
+      DoGetTLSTraceInfo();
+    }
+  }
   void ClearTLSTraceInfo();
+
+private:
+  void DoSetTLSTraceInfo();
+  void DoGetTLSTraceInfo();
 
 protected:
   void Init();
@@ -94,9 +106,21 @@ public:
    */
   class AutoRunTask : public AutoSaveCurTraceInfo {
     VirtualTask* mTask;
+    void StartScope(VirtualTask *aTask);
+    void StopScope();
   public:
-    explicit AutoRunTask(VirtualTask *aTask);
-    ~AutoRunTask();
+    explicit AutoRunTask(VirtualTask *aTask)
+      : AutoSaveCurTraceInfo()
+      , mTask(aTask) {
+      if (HasSavedTraceInfo()) {
+        StartScope(aTask);
+      }
+    }
+    ~AutoRunTask() {
+      if (HasSavedTraceInfo()) {
+        StopScope();
+      }
+    }
   };
 };
 
