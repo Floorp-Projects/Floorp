@@ -253,6 +253,6 @@ skip-if(stylo) pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/f
 skip-if(stylo) pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-004.html selectors-4/focus-within-shadow-004.html # Bug 1292285
 skip-if(stylo) pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-005.html selectors-4/focus-within-shadow-005.html # Bug 1292285
 == selectors-4/of-type-selectors.xhtml selectors-4/of-type-selectors.xhtml
-fails == selectors-4/selector-required.html selectors-4/selector-required.html
+== selectors-4/selector-required.html selectors-4/selector-required.html
 == selectors-4/selectors-dir-selector-ltr-001.html selectors-4/selectors-dir-selector-ltr-001.html
 == selectors-4/selectors-dir-selector-rtl-001.html selectors-4/selectors-dir-selector-rtl-001.html

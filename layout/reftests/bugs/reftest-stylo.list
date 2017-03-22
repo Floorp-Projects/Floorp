@@ -530,7 +530,7 @@ fails == 349695-1b.html 349695-1b.html
 == 356775-1.html 356775-1.html
 == 359869-1.html 359869-1.html
 fails == 359903-1.html 359903-1.html
-fails == 359903-2.html 359903-2.html
+== 359903-2.html 359903-2.html
 == 360065-1.html 360065-1.html
 == 360746-1.html 360746-1.html
 == 360757-1a.html 360757-1a.html
@@ -739,7 +739,7 @@ HTTP(..) == 385569-1b.html 385569-1b.html
 == 385823-2b.html 385823-2b.html
 == 385823-2c.html 385823-2c.html
 fails == 385870-1.html 385870-1.html
-fails == 385870-2.html 385870-2.html
+== 385870-2.html 385870-2.html
 == 386014-1a.html 386014-1a.html
 == 386014-1b.html 386014-1b.html
 == 386014-1c.html 386014-1c.html
@@ -862,8 +862,8 @@ fails == 402567-4.html 402567-4.html
 fails == 402807-1.html 402807-1.html
 == 402940-1.html 402940-1.html
 == 402940-1b.html 402940-1b.html
-fails == 402940-2.html 402940-2.html
-fails == 402940-3.html 402940-3.html
+== 402940-2.html 402940-2.html
+== 402940-3.html 402940-3.html
 == 402950-1.html 402950-1.html
 == 403129-1.html 403129-1.html
 == 403129-2.html 403129-2.html
@@ -1024,7 +1024,7 @@ fails == 422249-1.html 422249-1.html
 fails == 422678-1.html 422678-1.html
 == 423130-1.html 423130-1.html
 == 423385-1.html 423385-1.html
-== 423599-1.html 423599-1.html
+fails == 423599-1.html 423599-1.html
 == 423676-1.html 423676-1.html
 == 423823-1.html 423823-1.html
 == 424074-1.xul 424074-1.xul
@@ -1596,7 +1596,7 @@ fails == 589615-1b.html 589615-1b.html
 == 589672-1.html 589672-1.html
 == 589682-1.html 589682-1.html
 == 593243-1.html 593243-1.html
-fails == 593243-2.html 593243-2.html
+== 593243-2.html 593243-2.html
 == 593544-1.html 593544-1.html
 == 594333-1.html 594333-1.html
 == 594624-1.html 594624-1.html
@@ -1876,8 +1876,8 @@ skip == 1121748-2.html 1121748-2.html
 == 1127107-2-capitalize.html 1127107-2-capitalize.html
 == 1127679-1a-inline-flex-relpos.html 1127679-1a-inline-flex-relpos.html
 == 1128354-1.html 1128354-1.html
-fails == 1130231-1-button-padding-rtl.html 1130231-1-button-padding-rtl.html
-fails == 1130231-2-button-padding-rtl.html 1130231-2-button-padding-rtl.html
+== 1130231-1-button-padding-rtl.html 1130231-1-button-padding-rtl.html
+== 1130231-2-button-padding-rtl.html 1130231-2-button-padding-rtl.html
 # The 1133905-*.html reftests only make sense on platforms where both APZ and
 # <meta viewport> are enabled.
 # (Note: bug 1308702 covers these tests' failures on Android)
@@ -1946,7 +1946,7 @@ fails == 1202512-2.html 1202512-2.html
 == 1207326-1.html 1207326-1.html
 == 1209603-1.html 1209603-1.html
 == 1209994-1.html 1209994-1.html
-fails == 1209994-2.html 1209994-2.html
+== 1209994-2.html 1209994-2.html
 == 1209994-3.html 1209994-3.html
 fails == 1209994-4.html 1209994-4.html
 == 1222226-1.html 1222226-1.html

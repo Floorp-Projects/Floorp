@@ -266,10 +266,9 @@ to mochitest command.
   * :dir
     * test_selectors.html `:dir` [18]
 * issues arround font shorthand bug 1349417
-  * test_bug377947.html [1]
-  * test_value_storage.html `'font'` [160]
+  * test_value_storage.html `'font'` [128]
   * test_shorthand_property_getters.html `font shorthand` [1]
-  * test_system_font_serialization.html [10]
+  * test_system_font_serialization.html [5]
 * clamp negative value from calc() servo/servo#15296
   * test_value_storage.html `font-size: calc(` [3]
   * ... `font-size: var(--a)` [3]
