@@ -139,6 +139,9 @@ public:
 
   virtual void ForcePresent();
 
+  // For TextureSourceProvider.
+  ID3D11Device* GetD3D11Device() const override { return mDevice; }
+
   ID3D11Device* GetDevice() { return mDevice; }
 
   ID3D11DeviceContext* GetDC() { return mContext; }
