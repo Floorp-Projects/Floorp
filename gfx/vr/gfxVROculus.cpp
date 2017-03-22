@@ -1048,6 +1048,17 @@ VRSystemManagerOculus::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
   }
 }
 
+bool
+VRSystemManagerOculus::GetIsPresenting()
+{
+  if (mHMDInfo) {
+    VRDisplayInfo displayInfo(mHMDInfo->GetDisplayInfo());
+    return displayInfo.GetIsPresenting();
+  }
+
+  return false;
+}
+
 void
 VRSystemManagerOculus::HandleInput()
 {

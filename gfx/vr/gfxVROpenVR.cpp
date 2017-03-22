@@ -523,6 +523,17 @@ VRSystemManagerOpenVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
   }
 }
 
+bool
+VRSystemManagerOpenVR::GetIsPresenting()
+{
+  if (mOpenVRHMD) {
+    VRDisplayInfo displayInfo(mOpenVRHMD->GetDisplayInfo());
+    return displayInfo.GetIsPresenting();
+  }
+
+  return false;
+}
+
 void
 VRSystemManagerOpenVR::HandleInput()
 {
