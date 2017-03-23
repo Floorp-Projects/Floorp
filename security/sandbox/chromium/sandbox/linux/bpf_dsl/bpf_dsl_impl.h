@@ -5,8 +5,9 @@
 #ifndef SANDBOX_LINUX_BPF_DSL_BPF_DSL_IMPL_H_
 #define SANDBOX_LINUX_BPF_DSL_BPF_DSL_IMPL_H_
 
+#include <memory>
+
 #include "base/macros.h"
-#include "base/memory/ref_counted.h"
 #include "sandbox/linux/bpf_dsl/codegen.h"
 #include "sandbox/sandbox_export.h"
 
@@ -18,7 +19,7 @@ class PolicyCompiler;
 namespace internal {
 
 // Internal interface implemented by BoolExpr implementations.
-class BoolExprImpl : public base::RefCounted<BoolExprImpl> {
+class BoolExprImpl {
  public:
   // Compile uses |pc| to emit a CodeGen::Node that conditionally continues
   // to either |then_node| or |false_node|, depending on whether the represented
@@ -32,12 +33,11 @@ class BoolExprImpl : public base::RefCounted<BoolExprImpl> {
   virtual ~BoolExprImpl() {}
 
  private:
-  friend class base::RefCounted<BoolExprImpl>;
   DISALLOW_COPY_AND_ASSIGN(BoolExprImpl);
 };
 
 // Internal interface implemented by ResultExpr implementations.
-class ResultExprImpl : public base::RefCounted<ResultExprImpl> {
+class ResultExprImpl {
  public:
   // Compile uses |pc| to emit a CodeGen::Node that executes the
   // represented result expression.
@@ -58,7 +58,6 @@ class ResultExprImpl : public base::RefCounted<ResultExprImpl> {
   virtual ~ResultExprImpl() {}
 
  private:
-  friend class base::RefCounted<ResultExprImpl>;
   DISALLOW_COPY_AND_ASSIGN(ResultExprImpl);
 };
 

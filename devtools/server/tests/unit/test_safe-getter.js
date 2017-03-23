@@ -1,9 +1,10 @@
+/* eslint-disable strict */
 function run_test() {
   Components.utils.import("resource://gre/modules/jsdebugger.jsm");
   addDebuggerToGlobal(this);
-  var g = testGlobal("test");
-  var dbg = new Debugger();
-  var gw = dbg.addDebuggee(g);
+  let g = testGlobal("test");
+  let dbg = new Debugger();
+  let gw = dbg.addDebuggee(g);
 
   g.eval(`
     // This is not a CCW.

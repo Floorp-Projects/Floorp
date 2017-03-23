@@ -45,8 +45,6 @@ SBOX_TESTS_COMMAND int CheckIntegrityLevel(int argc, wchar_t **argv) {
 }
 
 TEST(IntegrityLevelTest, TestLowILReal) {
-  if (base::win::GetVersion() != base::win::VERSION_VISTA)
-    return;
 
   TestRunner runner(JOB_LOCKDOWN, USER_INTERACTIVE, USER_INTERACTIVE);
 
@@ -62,8 +60,6 @@ TEST(IntegrityLevelTest, TestLowILReal) {
 }
 
 TEST(DelayedIntegrityLevelTest, TestLowILDelayed) {
-  if (base::win::GetVersion() != base::win::VERSION_VISTA)
-    return;
 
   TestRunner runner(JOB_LOCKDOWN, USER_INTERACTIVE, USER_INTERACTIVE);
 
@@ -78,8 +74,6 @@ TEST(DelayedIntegrityLevelTest, TestLowILDelayed) {
 }
 
 TEST(IntegrityLevelTest, TestNoILChange) {
-  if (base::win::GetVersion() != base::win::VERSION_VISTA)
-    return;
 
   TestRunner runner(JOB_LOCKDOWN, USER_INTERACTIVE, USER_INTERACTIVE);
 

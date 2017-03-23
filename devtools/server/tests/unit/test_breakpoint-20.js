@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Verify that when two of the "same" source are loaded concurrently (like e10s
  * frame scripts), breakpoints get hit in scripts defined by all sources.
@@ -8,11 +10,8 @@
 
 var gDebuggee;
 var gClient;
-var gTraceClient;
-var gThreadClient;
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-breakpoints");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
@@ -22,7 +21,8 @@ function run_test()
   do_test_pending();
 }
 
-const testBreakpoint = Task.async(function* (threadResponse, tabClient, threadClient, tabResponse) {
+const testBreakpoint = Task.async(function* (threadResponse, tabClient,
+                                             threadClient, tabResponse) {
   evalSetupCode();
 
   // Load the test source once.
@@ -34,7 +34,7 @@ const testBreakpoint = Task.async(function* (threadResponse, tabClient, threadCl
   // Set a breakpoint in the test source.
 
   const source = yield getSource(threadClient, "test.js");
-  const [response, bpClient] = yield setBreakpoint(source, {
+  const [response, ] = yield setBreakpoint(source, {
     line: 3
   });
   ok(!response.error, "Shouldn't get an error setting the BP.");

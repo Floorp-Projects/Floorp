@@ -645,6 +645,8 @@ js::RemapAllWrappersForObject(JSContext* cx, JSObject* oldTargetArg,
 {
     MOZ_ASSERT(!IsInsideNursery(oldTargetArg));
     MOZ_ASSERT(!IsInsideNursery(newTargetArg));
+    MOZ_ASSERT(JS::ObjectIsNotGray(oldTargetArg));
+    MOZ_ASSERT(JS::ObjectIsNotGray(newTargetArg));
 
     RootedValue origv(cx, ObjectValue(*oldTargetArg));
     RootedObject newTarget(cx, newTargetArg);
@@ -699,7 +701,8 @@ js::RecomputeWrappers(JSContext* cx, const CompartmentFilter& sourceFilter,
     // Recompute all the wrappers in the list.
     for (const WrapperValue& v : toRecompute) {
         JSObject* wrapper = &v.toObject();
-        JSObject* wrapped = Wrapper::wrappedObject(wrapper);
+        JSObject* wrapped = Wrapper::wrappedObjectMaybeGray(wrapper);
+        JS::ExposeObjectToActiveJS(wrapped);
         RemapWrapper(cx, wrapper, wrapped);
     }
 
