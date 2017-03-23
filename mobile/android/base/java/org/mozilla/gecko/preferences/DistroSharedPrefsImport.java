@@ -24,15 +24,20 @@ public class DistroSharedPrefsImport {
         if (distribution == null) {
             return;
         }
-
-        final JSONObject preferences = distribution.getAndroidPreferences();
-        if (preferences.length() == 0) {
-            return;
+        // There are two types of preferences : Application-scoped and profile-scoped (bug 1295675)
+        final JSONObject appPref = distribution.getPreferences(Distribution.PREF_KEY_APPLICATION_PREFERENCES);
+        if (appPref.length() != 0) {
+            applyPreferences(appPref, GeckoSharedPrefs.forApp(context).edit());
         }
 
-        final Iterator<?> keys = preferences.keys();
-        final SharedPreferences.Editor sharedPreferences = GeckoSharedPrefs.forProfile(context).edit();
+        final JSONObject profilePref = distribution.getPreferences(Distribution.PREF_KEY_PROFILE_PREFERENCES);
+        if (appPref.length() != 0) {
+            applyPreferences(profilePref, GeckoSharedPrefs.forProfile(context).edit());
+        }
+    }
 
+    private static void applyPreferences(JSONObject preferences, SharedPreferences.Editor sharedPreferences) {
+        final Iterator<?> keys = preferences.keys();
         while (keys.hasNext()) {
             final String key = (String) keys.next();
             final Object value;
