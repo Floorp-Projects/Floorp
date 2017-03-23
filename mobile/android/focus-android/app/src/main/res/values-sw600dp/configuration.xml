@@ -6,4 +6,5 @@
     <bool name="is_tablet">true</bool>
 
     <dimen name="bottom_sheet_width">480dp</dimen>
+    <dimen name="bottom_sheet_peekheight">320dp</dimen>
 </resources>
