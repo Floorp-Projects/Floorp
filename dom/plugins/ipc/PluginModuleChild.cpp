@@ -2719,6 +2719,18 @@ PluginModuleChild::RecvStopProfiler()
 }
 
 mozilla::ipc::IPCResult
+PluginModuleChild::RecvPauseProfiler(const bool& aPause)
+{
+    if (aPause) {
+        profiler_pause();
+    } else {
+        profiler_resume();
+    }
+
+    return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvGatherProfile()
 {
     nsCString profileCString;
