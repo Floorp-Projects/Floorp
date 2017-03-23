@@ -52,7 +52,6 @@ fn standard_routes<U:WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Ro
                 (Delete, "/session/{sessionId}/cookie/{name}", Route::DeleteCookie),
                 (Get, "/session/{sessionId}/timeouts", Route::GetTimeouts),
                 (Post, "/session/{sessionId}/timeouts", Route::SetTimeouts),
-                //(Post, "/session/{sessionId}/actions", Route::Actions),
                 (Post, "/session/{sessionId}/element/{elementId}/click", Route::ElementClick),
                 (Post, "/session/{sessionId}/element/{elementId}/tap", Route::ElementTap),
                 (Post, "/session/{sessionId}/element/{elementId}/clear", Route::ElementClear),
@@ -65,17 +64,6 @@ fn standard_routes<U:WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Ro
                 (Get, "/session/{sessionId}/element/{elementId}/screenshot", Route::TakeElementScreenshot),
                 (Post, "/session/{sessionId}/actions", Route::PerformActions),
                 (Delete, "/session/{sessionId}/actions", Route::ReleaseActions),
-                // TODO Remove this when > v0.5 is released. There for compatibility reasons with existing
-                //      Webdriver implementations.
-                (Get, "/session/{sessionId}/alert_text", Route::GetAlertText),
-                (Post, "/session/{sessionId}/alert_text", Route::SendAlertText),
-                (Post, "/session/{sessionId}/accept_alert", Route::AcceptAlert),
-                (Post, "/session/{sessionId}/dismiss_alert", Route::DismissAlert),
-                (Get, "/session/{sessionId}/window_handle", Route::GetWindowHandle),
-                (Get, "/session/{sessionId}/window_handles", Route::GetWindowHandles),
-                (Delete, "/session/{sessionId}/window_handle", Route::CloseWindow),
-                (Post, "/session/{sessionId}/execute_async", Route::ExecuteAsyncScript),
-                (Post, "/session/{sessionId}/execute", Route::ExecuteScript),
                 (Get, "/status", Route::Status),]
 }
 
