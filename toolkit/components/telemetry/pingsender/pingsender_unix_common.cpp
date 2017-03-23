@@ -33,6 +33,8 @@ public:
   CURLcode (*easy_setopt)(CURL*, CURLoption, ...);
   CURLcode (*easy_perform)(CURL*);
   CURLcode (*easy_getinfo)(CURL*, CURLINFO, ...);
+  curl_slist* (*slist_append)(curl_slist*, const char*);
+  void (*slist_free_all)(curl_slist*);
   const char* (*easy_strerror)(CURLcode);
   void (*easy_cleanup)(CURL*);
 
@@ -46,6 +48,8 @@ CurlWrapper::CurlWrapper()
   , easy_setopt(nullptr)
   , easy_perform(nullptr)
   , easy_getinfo(nullptr)
+  , slist_append(nullptr)
+  , slist_free_all(nullptr)
   , easy_strerror(nullptr)
   , easy_cleanup(nullptr)
   , mLib(nullptr)
@@ -104,6 +108,8 @@ CurlWrapper::Init()
   *(void**) (&easy_setopt) = dlsym(mLib, "curl_easy_setopt");
   *(void**) (&easy_perform) = dlsym(mLib, "curl_easy_perform");
   *(void**) (&easy_getinfo) = dlsym(mLib, "curl_easy_getinfo");
+  *(void**) (&slist_append) = dlsym(mLib, "curl_slist_append");
+  *(void**) (&slist_free_all) = dlsym(mLib, "curl_slist_free_all");
   *(void**) (&easy_strerror) = dlsym(mLib, "curl_easy_strerror");
   *(void**) (&easy_cleanup) = dlsym(mLib, "curl_easy_cleanup");
 
@@ -111,6 +117,8 @@ CurlWrapper::Init()
       !easy_setopt ||
       !easy_perform ||
       !easy_getinfo ||
+      !slist_append ||
+      !slist_free_all ||
       !easy_strerror ||
       !easy_cleanup) {
     PINGSENDER_LOG("ERROR: libcurl is missing one of the required symbols\n");
@@ -133,6 +141,22 @@ CurlWrapper::Post(const string& url, const string& payload)
   easy_setopt(mCurl, CURLOPT_URL, url.c_str());
   easy_setopt(mCurl, CURLOPT_USERAGENT, kUserAgent);
 
+  // Build the date header.
+  std::string dateHeader = GenerateDateHeader();
+
+  // Set the custom headers.
+  curl_slist* headerChunk = nullptr;
+  headerChunk = slist_append(headerChunk, kCustomVersionHeader);
+  headerChunk = slist_append(headerChunk, kContentEncodingHeader);
+  headerChunk = slist_append(headerChunk, dateHeader.c_str());
+  CURLcode err = easy_setopt(mCurl, CURLOPT_HTTPHEADER, headerChunk);
+  if (err != CURLE_OK) {
+    PINGSENDER_LOG("ERROR: Failed to set HTTP headers, %s\n",
+                   easy_strerror(err));
+    slist_free_all(headerChunk);
+    return false;
+  }
+
   // Set the size of the POST data
   easy_setopt(mCurl, CURLOPT_POSTFIELDSIZE, payload.length());
 
@@ -144,7 +168,9 @@ CurlWrapper::Post(const string& url, const string& payload)
 
   // Block until the operation is performend. Ignore the response, if the POST
   // fails we can't do anything about it.
-  CURLcode err = easy_perform(mCurl);
+  err = easy_perform(mCurl);
+  // Whatever happens, we want to clean up the header memory.
+  slist_free_all(headerChunk);
 
   if (err != CURLE_OK) {
     PINGSENDER_LOG("ERROR: Failed to send HTTP request, %s\n",
