@@ -91,6 +91,7 @@ nsExtProtocolChannel::nsExtProtocolChannel(nsIURI* aURI,
   : mUrl(aURI)
   , mOriginalURI(aURI)
   , mStatus(NS_OK)
+  , mLoadFlags(nsIRequest::LOAD_NORMAL)
   , mWasOpened(false)
   , mConnectedParent(false)
   , mLoadInfo(aLoadInfo)
