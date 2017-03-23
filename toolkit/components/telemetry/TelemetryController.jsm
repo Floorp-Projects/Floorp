@@ -12,8 +12,10 @@ const Cu = Components.utils;
 const myScope = this;
 
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/debug.js", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);

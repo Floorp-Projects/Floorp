@@ -144,10 +144,6 @@ var SysInfo = {
     }
   },
 
-  getPropertyAsUint32(name) {
-      return this.get(name);
-  },
-
   get(name) {
     return this._genuine.get(name);
   },
