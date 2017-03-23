@@ -264,7 +264,7 @@ HttpBaseChannel::Init(nsIURI *aURI,
                       nsProxyInfo *aProxyInfo,
                       uint32_t aProxyResolveFlags,
                       nsIURI *aProxyURI,
-                      const nsID& aChannelId)
+                      uint64_t aChannelId)
 {
   LOG(("HttpBaseChannel::Init [this=%p]\n", this));
 
@@ -1333,25 +1333,18 @@ HttpBaseChannel::nsContentEncodings::PrepareForNext(void)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpBaseChannel::GetChannelId(nsACString& aChannelId)
+HttpBaseChannel::GetChannelId(uint64_t *aChannelId)
 {
-  char id[NSID_LENGTH];
-  mChannelId.ToProvidedString(id);
-  aChannelId.AssignASCII(id);
+  NS_ENSURE_ARG_POINTER(aChannelId);
+  *aChannelId = mChannelId;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::SetChannelId(const nsACString& aChannelId)
+HttpBaseChannel::SetChannelId(uint64_t aChannelId)
 {
-  nsID newId;
-  nsAutoCString idStr(aChannelId);
-  if (newId.Parse(idStr.get())) {
-    mChannelId = newId;
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
+  mChannelId = aChannelId;
+  return NS_OK;
 }
 
 NS_IMETHODIMP HttpBaseChannel::GetTopLevelContentWindowId(uint64_t *aWindowId)
