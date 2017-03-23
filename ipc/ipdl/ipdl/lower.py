@@ -4150,7 +4150,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                  ExprAddrOf(ExprVar(p.var().name + 'Copy')),
                                  msgexpr, ExprAddrOf(itervar),
                                  errfn, p.bareType(side).name,
-                                 p.name)
+                                 sentinelKey=p.name,
+                                 errfnSentinel=errfnSentinel())
                 for p in params ]
             + [ self.endRead(msgvar, itervar) ]
             # Move the message back to its source before sending.

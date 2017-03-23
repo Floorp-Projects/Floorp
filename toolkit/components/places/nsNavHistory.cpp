@@ -2532,6 +2532,7 @@ nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
 NS_IMETHODIMP
 nsNavHistory::RemovePages(nsIURI **aURIs, uint32_t aLength)
 {
+  PLACES_WARN_DEPRECATED();
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURIs);
 
@@ -2572,6 +2573,7 @@ nsNavHistory::RemovePages(nsIURI **aURIs, uint32_t aLength)
 NS_IMETHODIMP
 nsNavHistory::RemovePage(nsIURI *aURI)
 {
+  PLACES_WARN_DEPRECATED();
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
 

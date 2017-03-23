@@ -134,6 +134,11 @@ void
 CompositorVsyncScheduler::ScheduleComposition()
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  if (!mVsyncObserver) {
+    // Destroy was already called on this object.
+    return;
+  }
+
   if (mAsapScheduling) {
     // Used only for performance testing purposes
     PostCompositeTask(TimeStamp::Now());

@@ -1,4 +1,5 @@
 use gleam::gl;
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -34,11 +35,11 @@ impl Serialize for GLLimits {
 }
 
 impl GLLimits {
-    pub fn detect() -> GLLimits {
+    pub fn detect(gl_: &gl::Gl) -> GLLimits {
         GLLimits {
-            max_vertex_attribs: gl::get_integer_v(gl::MAX_VERTEX_ATTRIBS) as u32,
-            max_tex_size: gl::get_integer_v(gl::MAX_TEXTURE_SIZE) as u32,
-            max_cube_map_tex_size: gl::get_integer_v(gl::MAX_CUBE_MAP_TEXTURE_SIZE) as u32
+            max_vertex_attribs: gl_.get_integer_v(gl::MAX_VERTEX_ATTRIBS) as u32,
+            max_tex_size: gl_.get_integer_v(gl::MAX_TEXTURE_SIZE) as u32,
+            max_cube_map_tex_size: gl_.get_integer_v(gl::MAX_CUBE_MAP_TEXTURE_SIZE) as u32
         }
     }
 }

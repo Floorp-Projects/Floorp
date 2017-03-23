@@ -21,13 +21,13 @@
                   onclick="checkForMiddleClick(this, event);"/>
         <menuitem id="context-reload"
                   class="menuitem-iconic"
-                  tooltiptext="&reloadButton.tooltip;"
+                  tooltip="dynamic-shortcut-tooltip"
                   aria-label="&reloadCmd.label;"
                   oncommand="gContextMenu.reload(event);"
                   onclick="checkForMiddleClick(this, event);"/>
         <menuitem id="context-stop"
                   class="menuitem-iconic"
-                  tooltiptext="&stopButton.tooltip;"
+                  tooltip="dynamic-shortcut-tooltip"
                   aria-label="&stopCmd.label;"
                   command="Browser:Stop"/>
         <menuitem id="context-bookmarkpage"

@@ -98,24 +98,20 @@ impl NativeGLContextMethods for OSMesaContext {
     }
 
     fn unbind(&self) -> Result<(), &'static str> {
-        // OSMesa doesn't allow any API to unbind a context before [1], and just
-        // bails out on null context, buffer, or whatever, so not much we can do
-        // here. Thus, ignore the failure and just flush the context if we're
-        // using an old OSMesa version.
-        //
-        // [1]: https://www.mail-archive.com/mesa-dev@lists.freedesktop.org/msg128408.html
         if self.is_current() {
             let ret = unsafe {
                 osmesa_sys::OSMesaMakeCurrent(ptr::null_mut(),
                                               ptr::null_mut(), 0, 0, 0)
             };
             if ret == gl::FALSE {
-                gl::flush();
+                return Err("OSMesaMakeCurrent");
             }
         }
 
         Ok(())
     }
+
+    fn is_osmesa(&self) -> bool { true }
 }
 
 impl Drop for OSMesaContext {

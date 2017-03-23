@@ -46,7 +46,6 @@ pub struct ClipDisplayItem {
     pub content_size: LayoutSize,
     pub id: ScrollLayerId,
     pub parent_id: ScrollLayerId,
-    pub scroll_root_id: Option<ServoScrollRootId>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -86,6 +85,7 @@ pub struct NormalBorder {
     pub radius: BorderRadius,
 }
 
+#[repr(u32)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum RepeatMode {
     Stretch,
@@ -193,6 +193,7 @@ pub struct BoxShadowDisplayItem {
     pub clip_mode: BoxShadowClipMode,
 }
 
+#[repr(u32)]
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Serialize, Deserialize, Ord, PartialOrd)]
 pub enum ExtendMode {
     Clamp,
@@ -251,7 +252,6 @@ pub struct StackingContext {
     pub filters: ItemRange,
 }
 
-#[repr(C)]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ScrollPolicy {
@@ -509,48 +509,45 @@ impl ComplexClipRegion {
     }
 }
 
-#[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct ServoScrollRootId(pub usize);
-
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct ScrollLayerId {
-    pub pipeline_id: PipelineId,
-    pub info: ScrollLayerInfo,
+pub enum ScrollLayerId {
+    Clip(usize, PipelineId),
+    ClipExternalId(usize, PipelineId),
+    ReferenceFrame(usize, PipelineId),
 }
 
 impl ScrollLayerId {
     pub fn root_scroll_layer(pipeline_id: PipelineId) -> ScrollLayerId {
-        ScrollLayerId {
-            pipeline_id: pipeline_id,
-            info: ScrollLayerInfo::Scrollable(0),
-        }
+        ScrollLayerId::Clip(0, pipeline_id)
     }
 
     pub fn root_reference_frame(pipeline_id: PipelineId) -> ScrollLayerId {
-        ScrollLayerId {
-            pipeline_id: pipeline_id,
-            info: ScrollLayerInfo::ReferenceFrame(0),
+        ScrollLayerId::ReferenceFrame(0, pipeline_id)
+    }
+
+    pub fn new(id: usize, pipeline_id: PipelineId) -> ScrollLayerId {
+        ScrollLayerId::ClipExternalId(id, pipeline_id)
+    }
+
+    pub fn pipeline_id(&self) -> PipelineId {
+        match *self {
+            ScrollLayerId::Clip(_, pipeline_id) => pipeline_id,
+            ScrollLayerId::ClipExternalId(_, pipeline_id) => pipeline_id,
+            ScrollLayerId::ReferenceFrame(_, pipeline_id) => pipeline_id,
         }
     }
 
     pub fn is_reference_frame(&self) -> bool {
-        match self.info {
-            ScrollLayerInfo::Scrollable(..) => false,
-            ScrollLayerInfo::ReferenceFrame(..) => true,
+        match *self {
+            ScrollLayerId::ReferenceFrame(..) => true,
+            _ => false,
         }
     }
 
-    pub fn new(pipeline_id: PipelineId, index: usize) -> ScrollLayerId {
-        ScrollLayerId {
-            pipeline_id: pipeline_id,
-            info: ScrollLayerInfo::Scrollable(index),
+    pub fn external_id(&self) -> Option<usize> {
+        match *self {
+            ScrollLayerId::ClipExternalId(id, _) => Some(id),
+            _ => None,
         }
     }
-}
-
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub enum ScrollLayerInfo {
-    Scrollable(usize),
-    ReferenceFrame(usize),
 }

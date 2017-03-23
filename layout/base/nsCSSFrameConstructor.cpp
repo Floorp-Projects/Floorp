@@ -1741,7 +1741,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
 
     case eStyleContentType_Counter:
     case eStyleContentType_Counters: {
-      nsCSSValue::Array* counters = data.GetCounters();
+      nsCSSValue::ThreadSafeArray* counters = data.GetCounters();
       nsCounterList* counterList = mCounterManager.CounterListFor(
           nsDependentString(counters->Item(0).GetStringBufferValue()));
 

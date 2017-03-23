@@ -854,6 +854,15 @@ nsImageRenderer::GetImage()
   return image.forget();
 }
 
+bool
+nsImageRenderer::IsImageContainerAvailable(layers::LayerManager* aManager, uint32_t aFlags)
+{
+  if (!mImageContainer) {
+    return false;
+  }
+  return mImageContainer->IsImageContainerAvailable(aManager, aFlags);
+}
+
 void
 nsImageRenderer::PurgeCacheForViewportChange(
   const Maybe<nsSize>& aSVGViewportSize, const bool aHasIntrinsicRatio)

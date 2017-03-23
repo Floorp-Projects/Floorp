@@ -4,19 +4,16 @@ use std::path::PathBuf;
 use std::os::raw::{c_void, c_char};
 use gleam::gl;
 
-use webrender_traits::{BorderSide, BorderStyle, BorderRadius};
-use webrender_traits::{BorderWidths, BorderDetails, NormalBorder};
-use webrender_traits::{RepeatMode, ImageBorder, NinePatchDescriptor};
-use webrender_traits::{PipelineId, ComplexClipRegion, ClipRegion, PropertyBinding};
-use webrender_traits::{Epoch, ExtendMode, ColorF, GlyphInstance, GradientStop, ImageDescriptor};
-use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering};
-use webrender_traits::{FilterOp, MixBlendMode};
-use webrender_traits::{ExternalImageId, RenderApi, FontKey};
-use webrender_traits::{DeviceUintSize, DeviceUintRect, DeviceUintPoint, ExternalEvent};
-use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
-use webrender_traits::{BoxShadowClipMode, LayerPixel, ServoScrollRootId, IdNamespace};
-use webrender_traits::{BuiltDisplayListDescriptor, AuxiliaryListsDescriptor};
-use webrender_traits::{BuiltDisplayList, AuxiliaryLists, ItemRange};
+use webrender_traits::{AuxiliaryLists, AuxiliaryListsDescriptor, BorderDetails, BorderRadius};
+use webrender_traits::{BorderSide, BorderStyle, BorderWidths, BoxShadowClipMode, BuiltDisplayList};
+use webrender_traits::{BuiltDisplayListDescriptor, ClipRegion, ColorF, ComplexClipRegion};
+use webrender_traits::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, Epoch, ExtendMode};
+use webrender_traits::{ExternalEvent, ExternalImageId, FilterOp, FontKey, GlyphInstance};
+use webrender_traits::{GradientStop, IdNamespace, ImageBorder, ImageData, ImageDescriptor};
+use webrender_traits::{ImageFormat, ImageKey, ImageMask, ImageRendering, ItemRange, LayerPixel};
+use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform, MixBlendMode};
+use webrender_traits::{NinePatchDescriptor, NormalBorder, PipelineId, PropertyBinding, RenderApi};
+use webrender_traits::RepeatMode;
 use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
@@ -57,6 +54,20 @@ check_ffi_type!(_image_rendering_repr enum ImageRendering as u32);
 check_ffi_type!(_mix_blend_mode_repr enum MixBlendMode as u32);
 check_ffi_type!(_box_shadow_clip_mode_repr enum BoxShadowClipMode as u32);
 check_ffi_type!(_namespace_id_repr struct IdNamespace as (u32));
+
+const GL_FORMAT_BGRA_GL: gl::GLuint = gl::BGRA;
+const GL_FORMAT_BGRA_GLES: gl::GLuint = gl::BGRA_EXT;
+
+fn get_gl_format_bgra(gl: &gl::Gl) -> gl::GLuint {
+    match gl.get_type() {
+        gl::GlType::Gl => {
+            GL_FORMAT_BGRA_GL
+        }
+        gl::GlType::Gles => {
+            GL_FORMAT_BGRA_GLES
+        }
+    }
+}
 
 #[repr(C)]
 pub enum WrGradientExtendMode {
@@ -543,6 +554,7 @@ extern "C" {
     fn is_in_compositor_thread() -> bool;
     fn is_in_render_thread() -> bool;
     fn is_in_main_thread() -> bool;
+    fn is_glcontext_egl(glcontext_ptr: *mut c_void) -> bool;
 }
 
 struct CppNotifier {
@@ -605,22 +617,23 @@ pub extern "C" fn wr_renderer_render(renderer: &mut Renderer, width: u32, height
 
 // Call wr_renderer_render() before calling this function.
 #[no_mangle]
-pub unsafe extern "C" fn wr_renderer_readback(width: u32,
+pub unsafe extern "C" fn wr_renderer_readback(renderer: &mut Renderer,
+                                              width: u32,
                                               height: u32,
                                               dst_buffer: *mut u8,
                                               buffer_size: usize) {
     assert!(is_in_render_thread());
 
-    gl::flush();
+    renderer.gl().flush();
 
     let mut slice = slice::from_raw_parts_mut(dst_buffer, buffer_size);
-    gl::read_pixels_into_buffer(0,
-                                0,
-                                width as gl::GLsizei,
-                                height as gl::GLsizei,
-                                gl::BGRA,
-                                gl::UNSIGNED_BYTE,
-                                slice);
+    renderer.gl().read_pixels_into_buffer(0,
+                                          0,
+                                          width as gl::GLsizei,
+                                          height as gl::GLsizei,
+                                          get_gl_format_bgra(renderer.gl()),
+                                          gl::UNSIGNED_BYTE,
+                                          slice);
 }
 
 #[no_mangle]
@@ -690,10 +703,15 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         None
     };
 
-    gl::load_with(|symbol| get_proc_address(gl_context, symbol));
-    gl::clear_color(0.3, 0.0, 0.0, 1.0);
+    let gl;
+    if unsafe { is_glcontext_egl(gl_context) } {
+      gl = unsafe { gl::GlesFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
+    } else {
+      gl = unsafe { gl::GlFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
+    }
+    gl.clear_color(0.3, 0.0, 0.0, 1.0);
 
-    let version = gl::get_string(gl::VERSION);
+    let version = gl.get_string(gl::VERSION);
 
     println!("WebRender - OpenGL version new {}", version);
 
@@ -706,7 +724,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     };
 
     let window_size = DeviceUintSize::new(window_width, window_height);
-    let (renderer, sender) = match Renderer::new(opts, window_size) {
+    let (renderer, sender) = match Renderer::new(gl, opts, window_size) {
         Ok((renderer, sender)) => (renderer, sender),
         Err(e) => {
             println!(" Failed to create a Renderer: {:?}", e);
@@ -1036,9 +1054,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                None,
                                mix_blend_mode,
                                filters);
-    state.frame_builder.dl_builder.push_scroll_layer(clip_region,
-                                                     bounds.size,
-                                                     Some(ServoScrollRootId(1)));
+    state.frame_builder.dl_builder.push_scroll_layer(clip_region, bounds.size, None);
 }
 
 #[no_mangle]
@@ -1064,9 +1080,7 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
         }
     });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], mask);
-    state.frame_builder.dl_builder.push_scroll_layer(clip_region,
-                                                     bounds.size,
-                                                     Some(ServoScrollRootId(1)));
+    state.frame_builder.dl_builder.push_scroll_layer(clip_region, bounds.size, None);
 }
 
 #[no_mangle]

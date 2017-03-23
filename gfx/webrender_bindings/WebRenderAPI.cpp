@@ -228,7 +228,8 @@ WebRenderAPI::Readback(gfx::IntSize size,
             virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override
             {
                 aRenderThread.UpdateAndRender(aWindowId);
-                wr_renderer_readback(mSize.width, mSize.height, mBuffer, mBufferSize);
+                wr_renderer_readback(aRenderThread.GetRenderer(aWindowId)->GetWrRenderer(),
+                                     mSize.width, mSize.height, mBuffer, mBufferSize);
                 layers::AutoCompleteTask complete(mTask);
             }
 
