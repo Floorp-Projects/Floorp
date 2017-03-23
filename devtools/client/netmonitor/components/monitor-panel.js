@@ -13,6 +13,7 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const Actions = require("../actions/index");
+const { getLongString } = require("../utils/client");
 const { Prefs } = require("../utils/prefs");
 const { getFormDataSections } = require("../utils/request-utils");
 const { getSelectedRequest } = require("../selectors/index");
@@ -69,7 +70,7 @@ const MonitorPanel = createClass({
         requestHeaders,
         requestHeadersFromUploadStream,
         requestPostData,
-        window.gNetwork.getString.bind(window.gNetwork),
+        getLongString,
       ).then((newFormDataSections) => {
         updateRequest(
           request.id,

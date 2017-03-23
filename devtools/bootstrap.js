@@ -10,12 +10,78 @@
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+
+let prefs = {
+  // Enable dump as some errors are only printed on the stdout
+  "browser.dom.window.dump.enabled": true,
+  // Enable the browser toolbox and various chrome-only features
+  "devtools.chrome.enabled": true,
+  "devtools.debugger.remote-enabled": true,
+  // Disable the prompt to ease usage of the browser toolbox
+  "devtools.debugger.prompt-connection": false,
+};
+
+// Values of debug pref before overriding them
+let originalPrefValues = {};
+// MultiWindowKeyListener instance for Ctrl+Alt+R key
+let listener;
+// nsIURI to the addon root folder
+let resourceURI;
 
 function actionOccurred(id) {
   let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   let Telemetry = require("devtools/client/shared/telemetry");
   let telemetry = new Telemetry();
   telemetry.actionOccurred(id);
+}
+
+// Synchronously fetch the content of a given URL
+function readURI(uri) {
+  let stream = NetUtil.newChannel({
+    uri: NetUtil.newURI(uri, "UTF-8"),
+    loadUsingSystemPrincipal: true}
+  ).open2();
+  let count = stream.available();
+  let data = NetUtil.readInputStreamToString(stream, count, {
+    charset: "UTF-8"
+  });
+
+  stream.close();
+
+  return data;
+}
+
+// Read a preference file and set all of its defined pref as default values
+// (This replicate the behavior of preferences files from mozilla-central)
+function processPrefFile(url) {
+  let content = readURI(url);
+  content.match(/pref\("[^"]+",\s*.+\s*\)/g).forEach(item => {
+    let m = item.match(/pref\("([^"]+)",\s*(.+)\s*\)/);
+    let name = m[1];
+    let val = m[2];
+
+    // Prevent overriding prefs that have been changed by the user
+    if (Services.prefs.prefHasUserValue(name)) {
+      return;
+    }
+    let defaultBranch = Services.prefs.getDefaultBranch("");
+    if ((val.startsWith("\"") && val.endsWith("\"")) ||
+        (val.startsWith("'") && val.endsWith("'"))) {
+      defaultBranch.setCharPref(name, val.substr(1, val.length - 2));
+    } else if (val.match(/[0-9]+/)) {
+      defaultBranch.setIntPref(name, parseInt(val, 10));
+    } else if (val == "true" || val == "false") {
+      defaultBranch.setBoolPref(name, val == "true");
+    } else {
+      console.log("Unable to match preference type for value:", val);
+    }
+  });
+}
+
+function setPrefs() {
+  processPrefFile(resourceURI.spec + "./client/preferences/devtools.js");
+  processPrefFile(resourceURI.spec + "./client/preferences/debugger.js");
 }
 
 // Helper to listen to a key on all windows
@@ -76,20 +142,22 @@ let getTopLevelWindow = function (window) {
 function reload(event) {
   // We automatically reload the toolbox if we are on a browser tab
   // with a toolbox already opened
-  let top = getTopLevelWindow(event.view);
-  let isBrowser = top.location.href.includes("/browser.xul");
   let reloadToolbox = false;
-  if (isBrowser && top.gBrowser) {
-    // We do not use any devtools code before the call to Loader.jsm reload as
-    // any attempt to use Loader.jsm to load a module will instanciate a new
-    // Loader.
-    let nbox = top.gBrowser.getNotificationBox();
-    reloadToolbox =
-      top.document.getAnonymousElementByAttribute(nbox, "class",
-        "devtools-toolbox-bottom-iframe") ||
-      top.document.getAnonymousElementByAttribute(nbox, "class",
-        "devtools-toolbox-side-iframe") ||
-      Services.wm.getMostRecentWindow("devtools:toolbox");
+  if (event) {
+    let top = getTopLevelWindow(event.view);
+    let isBrowser = top.location.href.includes("/browser.xul");
+    if (isBrowser && top.gBrowser) {
+      // We do not use any devtools code before the call to Loader.jsm reload as
+      // any attempt to use Loader.jsm to load a module will instanciate a new
+      // Loader.
+      let nbox = top.gBrowser.getNotificationBox();
+      reloadToolbox =
+        top.document.getAnonymousElementByAttribute(nbox, "class",
+          "devtools-toolbox-bottom-iframe") ||
+        top.document.getAnonymousElementByAttribute(nbox, "class",
+          "devtools-toolbox-side-iframe") ||
+        Services.wm.getMostRecentWindow("devtools:toolbox");
+    }
   }
   let browserConsole = Services.wm.getMostRecentWindow("devtools:webconsole");
   let reopenBrowserConsole = false;
@@ -136,6 +204,10 @@ function reload(event) {
   Cu.unload("resource://devtools/client/responsivedesign/responsivedesign.jsm");
   Cu.unload("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
   Cu.unload("resource://devtools/shared/deprecated-sync-thenables.js");
+
+  // Update the preferences before starting new code
+  setPrefs();
+
   const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   devtools.require("devtools/client/framework/devtools-browser");
 
@@ -178,6 +250,7 @@ function reload(event) {
     setTimeout(() => {
       let { TargetFactory } = devtools.require("devtools/client/framework/target");
       let { gDevTools } = devtools.require("devtools/client/framework/devtools");
+      let top = getTopLevelWindow(event.view);
       let target = TargetFactory.forTab(top.gBrowser.selectedTab);
       gDevTools.showToolbox(target);
     }, 1000);
@@ -194,20 +267,11 @@ function reload(event) {
   actionOccurred("reloadAddonReload");
 }
 
-let prefs = {
-  // Enable dump as some errors are only printed on the stdout
-  "browser.dom.window.dump.enabled": true,
-  // Enable the browser toolbox and various chrome-only features
-  "devtools.chrome.enabled": true,
-  "devtools.debugger.remote-enabled": true,
-  // Disable the prompt to ease usage of the browser toolbox
-  "devtools.debugger.prompt-connection": false,
-};
-let originalPrefValues = {};
-
-let listener;
-function startup() {
+function startup(data) {
   dump("DevTools addon started.\n");
+
+  resourceURI = data.resourceURI;
+
   listener = new MultiWindowKeyListener({
     keyCode: Ci.nsIDOMKeyEvent.DOM_VK_R, ctrlKey: true, altKey: true,
     callback: reload
@@ -225,6 +289,8 @@ function startup() {
       originalPrefValues[name] = userValue;
     }
   }
+
+  reload();
 }
 function shutdown() {
   listener.stop();
@@ -240,6 +306,11 @@ function shutdown() {
   }
 }
 function install() {
-  actionOccurred("reloadAddonInstalled");
+  try {
+    actionOccurred("reloadAddonInstalled");
+  } catch (e) {
+    // When installing on Firefox builds without devtools, telemetry doesn't
+    // work yet and throws.
+  }
 }
 function uninstall() {}
