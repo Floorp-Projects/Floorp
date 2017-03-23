@@ -9,6 +9,7 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/GPUChild.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -304,4 +305,9 @@ void gfxPrefs::CopyPrefValue(const GfxPrefValue* aValue, float* aOutValue)
 void gfxPrefs::CopyPrefValue(const GfxPrefValue* aValue, std::string* aOutValue)
 {
   *aOutValue = aValue->get_nsCString().get();
+}
+
+bool gfxPrefs::OverrideBase_WebRender()
+{
+  return gfx::gfxVars::UseWebRender();
 }

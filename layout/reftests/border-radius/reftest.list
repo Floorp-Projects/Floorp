@@ -34,7 +34,7 @@ fuzzy-if(skiaContent,1,2728) == corner-4.html corner-4-ref.svg
 
 # Test that radii too long are reduced
 == border-reduce-height.html border-reduce-height-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == border-reduce-height.html border-reduce-height-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == border-reduce-height.html border-reduce-height-ref.html
 
 # Tests for border clipping
 fails == clipping-1.html clipping-1-ref.html # background color should completely fill box; bug 466572
