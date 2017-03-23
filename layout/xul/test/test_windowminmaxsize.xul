@@ -13,9 +13,9 @@
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
 <panel id="panel" onpopupshown="doPanelTest(this)" onpopuphidden="nextPopupTest(this)"
-       align="start" pack="start" style="-moz-appearance: none; margin: 0; border: 0; padding: 0;">
+       align="start" pack="start" style="-moz-appearance: none; appearance: none; margin: 0; border: 0; padding: 0;">
   <resizer id="popupresizer" dir="bottomright" flex="1" width="60" height="60"
-           style="-moz-appearance: none; margin: 0; border: 0; padding: 0;"/>
+           style="-moz-appearance: none; appearance: none; margin: 0; border: 0; padding: 0;"/>
 </panel>
 
 <script>
@@ -27,8 +27,8 @@ var gTestId = -1;
 
 var prefix = "data:application/vnd.mozilla.xul+xml,<?xml-stylesheet href='chrome://global/skin' type='text/css'?><window " +
              "xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' " +
-             "align='start' pack='start' style='-moz-appearance: none; margin: 0; padding: 0; border: 0; ";
-var suffix = "><resizer dir='bottomright' flex='1' width='150' height='150' style='-moz-appearance: none; margin: 0; border: 0; padding: 0;'/></window>";
+             "align='start' pack='start' style='-moz-appearance: none; appearance: none; margin: 0; padding: 0; border: 0; ";
+var suffix = "><resizer dir='bottomright' flex='1' width='150' height='150' style='-moz-appearance: none; appearance: none; margin: 0; border: 0; padding: 0;'/></window>";
 var titledpanel = "<panel noautohide='true' titlebar='normal' minwidth='120' minheight='140'/><label value='Test'/>";
 
 // width and height in the tests below specify the expected size of the window.
