@@ -7,6 +7,7 @@ package org.mozilla.focus.web;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
+import android.support.v7.widget.LinearLayoutCompat;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -27,15 +28,27 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
 
     private IWebView.Callback callback;
 
+    boolean errorReceived;
+
     public void setCallback(IWebView.Callback callback) {
         this.callback = callback;
     }
 
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
-        if (callback != null) {
+        if (errorReceived) {
+            // When dealing with error pages, webkit sometimes sends onPageStarted()
+            // without a matching onPageFinished(). We hack around that by using
+            // a flag to ignore the first onPageStarted() after onReceivedError() has
+            // been called. (The usual chain is: onPageStarted(url), onReceivedError(url),
+            // onPageFinished(url), onPageStarted(url), finally and only sometimes: onPageFinished().
+            // Since the final onPageFinished isn't guaranteed (and we know we're showing an error
+            // page already), we don't need to send the onPageStarted() callback a second time anyway.
+            errorReceived = false;
+        } else if (callback != null) {
             callback.onPageStarted(url);
         }
+
         super.onPageStarted(view, url, favicon);
     }
 
@@ -91,6 +104,7 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
     @Override
     public void onReceivedError(final WebView webView, int errorCode,
                                 final String description, String failingUrl) {
+        errorReceived = true;
 
         // This is a hack: onReceivedError(WebView, WebResourceRequest, WebResourceError) is API 23+ only,
         // - the WebResourceRequest would let us know if the error affects the main frame or not. As a workaround
