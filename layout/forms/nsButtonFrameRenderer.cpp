@@ -319,7 +319,7 @@ void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder,
   nsPresContext *presContext = mFrame->PresContext();
   const nsStyleDisplay *disp = mFrame->StyleDisplay();
   if (!mFrame->IsThemed(disp) ||
-      !presContext->GetTheme()->ThemeDrawsFocusForWidget(disp->mAppearance)) {
+      !presContext->GetTheme()->ThemeDrawsFocusForWidget(disp->UsedAppearance())) {
     nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
 
     // Draw the -moz-focus-inner border
@@ -341,7 +341,7 @@ nsDisplayButtonForeground::GetLayerState(nsDisplayListBuilder* aBuilder,
     nsPresContext *presContext = mFrame->PresContext();
     const nsStyleDisplay *disp = mFrame->StyleDisplay();
     if (!mFrame->IsThemed(disp) ||
-        !presContext->GetTheme()->ThemeDrawsFocusForWidget(disp->mAppearance)) {
+        !presContext->GetTheme()->ThemeDrawsFocusForWidget(disp->UsedAppearance())) {
       nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
       br = mBFR->CreateInnerFocusBorderRenderer(aBuilder, presContext, nullptr, mVisibleRect, r);
     }
