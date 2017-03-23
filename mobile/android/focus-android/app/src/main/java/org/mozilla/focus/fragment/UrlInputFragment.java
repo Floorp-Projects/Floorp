@@ -149,7 +149,10 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         final BrowserFragment browserFragment = (BrowserFragment) getActivity().getSupportFragmentManager()
                 .findFragmentByTag(BrowserFragment.FRAGMENT_TAG);
 
-        if (browserFragment != null) {
+        if (browserFragment != null && browserFragment.isVisible()) {
+            // Reuse existing visible fragment - in this case we know the user is already browsing.
+            // The fragment might exist if we "erased" a browsing session, hence we need to check
+            // for visibility in addition to existence.
             browserFragment.loadURL(url);
         } else {
             getActivity().getSupportFragmentManager()
