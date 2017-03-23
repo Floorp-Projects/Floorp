@@ -8,13 +8,13 @@
 #include "gfxConfig.h"
 #include "gfxCrashReporterUtils.h"
 #include "gfxUtils.h"
-#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
+#include "mozilla/webrender/RenderThread.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsIGfxInfo.h"
@@ -151,7 +151,7 @@ static bool
 IsAccelAngleSupported(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
                       nsACString* const out_failureId)
 {
-    if (CompositorThreadHolder::IsInCompositorThread()) {
+    if (wr::RenderThread::IsInRenderThread()) {
         // We can only enter here with WebRender, so assert that this is a
         // WebRender-enabled build.
 #ifndef MOZ_BUILD_WEBRENDER

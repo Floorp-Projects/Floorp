@@ -4,9 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from voluptuous import Schema, Required
+from voluptuous import Required
 from taskgraph.util.taskcluster import get_artifact_url
 from taskgraph.transforms.job import run_job_using
+from taskgraph.util.schema import Schema
 from taskgraph.transforms.tests import (
     test_description_schema,
     get_firefox_version,

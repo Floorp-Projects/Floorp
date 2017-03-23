@@ -10,6 +10,8 @@ const Services = require("Services");
 const Actions = require("../actions/index");
 const { EVENTS } = require("../constants");
 
+let activeConsole;
+
 /**
  * Called for each location change in the monitored tab.
  *
@@ -45,6 +47,7 @@ function willNavigate(type) {
  * @param {Object} tabTarget
  */
 function onFirefoxConnect(tabTarget) {
+  activeConsole = tabTarget.activeConsole;
   tabTarget.on("navigate", navigated);
   tabTarget.on("will-navigate", willNavigate);
 }
@@ -55,11 +58,44 @@ function onFirefoxConnect(tabTarget) {
  * @param {Object} tabTarget
  */
 function onFirefoxDisconnect(tabTarget) {
+  activeConsole = null;
   tabTarget.off("navigate", navigated);
   tabTarget.off("will-navigate", willNavigate);
 }
 
+/**
+ * Retrieve webconsole object
+ *
+ * @returns {Object} webConsole
+ */
+function getWebConsoleClient() {
+  return activeConsole;
+}
+
+/**
+ * Fetches the full text of a LongString.
+ *
+ * @param object | string stringGrip
+ *        The long string grip containing the corresponding actor.
+ *        If you pass in a plain string (by accident or because you're lazy),
+ *        then a promise of the same string is simply returned.
+ * @return object Promise
+ *         A promise that is resolved when the full string contents
+ *         are available, or rejected if something goes wrong.
+ */
+function getLongString(stringGrip) {
+  // FIXME: this.webConsoleClient will be undefined in mochitest,
+  // so we return string instantly to skip undefined error
+  if (typeof stringGrip === "string") {
+    return Promise.resolve(stringGrip);
+  }
+
+  return activeConsole.getString(stringGrip);
+}
+
 module.exports = {
+  getLongString,
+  getWebConsoleClient,
   onFirefoxConnect,
   onFirefoxDisconnect,
 };

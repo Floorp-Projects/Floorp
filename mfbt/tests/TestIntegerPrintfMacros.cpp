@@ -642,13 +642,13 @@ TestScanSigned8()
   Input<int8_t> u;
 
   PoisonInput(u);
-  sscanf("-17", "%" SCNd8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == -17);
+  sscanf("-17", "%" SCNd8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == -17);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("042", "%" SCNi8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 042);
+  sscanf("042", "%" SCNi8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 042);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 #endif
 }
@@ -659,13 +659,13 @@ TestScanSigned16()
   Input<int16_t> u;
 
   PoisonInput(u);
-  sscanf("-1742", "%" SCNd16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == -1742);
+  sscanf("-1742", "%" SCNd16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == -1742);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("04217", "%" SCNi16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 04217);
+  sscanf("04217", "%" SCNi16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 04217);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -675,13 +675,13 @@ TestScanSigned32()
   Input<int32_t> u;
 
   PoisonInput(u);
-  sscanf("-174257", "%" SCNd32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == -174257);
+  sscanf("-174257", "%" SCNd32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == -174257);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("0423571", "%" SCNi32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 0423571);
+  sscanf("0423571", "%" SCNi32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 0423571);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -691,13 +691,13 @@ TestScanSigned64()
   Input<int64_t> u;
 
   PoisonInput(u);
-  sscanf("-17425238927232", "%" SCNd64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == -INT64_C(17425238927232));
+  sscanf("-17425238927232", "%" SCNd64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == -INT64_C(17425238927232));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("042333576571", "%" SCNi64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == INT64_C(042333576571));
+  sscanf("042333576571", "%" SCNi64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == INT64_C(042333576571));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -717,13 +717,13 @@ TestScanSignedLeast8()
   Input<int_least8_t> u;
 
   PoisonInput(u);
-  sscanf("-17", "%" SCNdLEAST8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == -17);
+  sscanf("-17", "%" SCNdLEAST8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == -17);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("042", "%" SCNiLEAST8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 042);
+  sscanf("042", "%" SCNiLEAST8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 042);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 #endif
 }
@@ -734,13 +734,13 @@ TestScanSignedLeast16()
   Input<int_least16_t> u;
 
   PoisonInput(u);
-  sscanf("-1742", "%" SCNdLEAST16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == -1742);
+  sscanf("-1742", "%" SCNdLEAST16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == -1742);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("04217", "%" SCNiLEAST16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 04217);
+  sscanf("04217", "%" SCNiLEAST16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 04217);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -750,13 +750,13 @@ TestScanSignedLeast32()
   Input<int_least32_t> u;
 
   PoisonInput(u);
-  sscanf("-174257", "%" SCNdLEAST32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == -174257);
+  sscanf("-174257", "%" SCNdLEAST32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == -174257);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("0423571", "%" SCNiLEAST32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 0423571);
+  sscanf("0423571", "%" SCNiLEAST32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 0423571);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -766,13 +766,13 @@ TestScanSignedLeast64()
   Input<int_least64_t> u;
 
   PoisonInput(u);
-  sscanf("-17425238927232", "%" SCNdLEAST64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == -INT64_C(17425238927232));
+  sscanf("-17425238927232", "%" SCNdLEAST64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == -INT64_C(17425238927232));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("042333576571", "%" SCNiLEAST64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == INT64_C(042333576571));
+  sscanf("042333576571", "%" SCNiLEAST64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == INT64_C(042333576571));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -792,13 +792,13 @@ TestScanSignedFast8()
   Input<int_fast8_t> u;
 
   PoisonInput(u);
-  sscanf("-17", "%" SCNdFAST8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == -17);
+  sscanf("-17", "%" SCNdFAST8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == -17);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("042", "%" SCNiFAST8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 042);
+  sscanf("042", "%" SCNiFAST8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 042);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 #endif
 }
@@ -809,13 +809,13 @@ TestScanSignedFast16()
   Input<int_fast16_t> u;
 
   PoisonInput(u);
-  sscanf("-1742", "%" SCNdFAST16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == -1742);
+  sscanf("-1742", "%" SCNdFAST16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == -1742);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("04217", "%" SCNiFAST16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 04217);
+  sscanf("04217", "%" SCNiFAST16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 04217);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -825,13 +825,13 @@ TestScanSignedFast32()
   Input<int_fast32_t> u;
 
   PoisonInput(u);
-  sscanf("-174257", "%" SCNdFAST32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == -174257);
+  sscanf("-174257", "%" SCNdFAST32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == -174257);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("0423571", "%" SCNiFAST32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 0423571);
+  sscanf("0423571", "%" SCNiFAST32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 0423571);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -841,13 +841,13 @@ TestScanSignedFast64()
   Input<int_fast64_t> u;
 
   PoisonInput(u);
-  sscanf("-17425238927232", "%" SCNdFAST64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == -INT64_C(17425238927232));
+  sscanf("-17425238927232", "%" SCNdFAST64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == -INT64_C(17425238927232));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("042333576571", "%" SCNiFAST64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == INT64_C(042333576571));
+  sscanf("042333576571", "%" SCNiFAST64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == INT64_C(042333576571));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -866,13 +866,13 @@ TestScanSignedMax()
   Input<intmax_t> u;
 
   PoisonInput(u);
-  sscanf("-432157943248732", "%" SCNdMAX, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == -INTMAX_C(432157943248732));
+  sscanf("-432157943248732", "%" SCNdMAX, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == -INTMAX_C(432157943248732));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("04233357236571", "%" SCNiMAX, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == INTMAX_C(04233357236571));
+  sscanf("04233357236571", "%" SCNiMAX, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == INTMAX_C(04233357236571));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -882,13 +882,13 @@ TestScanSignedPtr()
   Input<intptr_t> u;
 
   PoisonInput(u);
-  sscanf("12345678", "%" SCNdPTR, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == intptr_t(reinterpret_cast<void*>(12345678)));
+  sscanf("12345678", "%" SCNdPTR, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == intptr_t(reinterpret_cast<void*>(12345678)));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("04233357236", "%" SCNiPTR, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == intptr_t(reinterpret_cast<void*>(04233357236)));
+  sscanf("04233357236", "%" SCNiPTR, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == intptr_t(reinterpret_cast<void*>(04233357236)));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -919,18 +919,18 @@ TestScanUnsigned8()
   Input<uint8_t> u;
 
   PoisonInput(u);
-  sscanf("17", "%" SCNo8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 017);
+  sscanf("17", "%" SCNo8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 017);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("42", "%" SCNu8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 42);
+  sscanf("42", "%" SCNu8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 42);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("2A", "%" SCNx8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 0x2A);
+  sscanf("2A", "%" SCNx8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 0x2A);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 #endif
 }
@@ -941,18 +941,18 @@ TestScanUnsigned16()
   Input<uint16_t> u;
 
   PoisonInput(u);
-  sscanf("1742", "%" SCNo16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 01742);
+  sscanf("1742", "%" SCNo16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 01742);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("4217", "%" SCNu16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 4217);
+  sscanf("4217", "%" SCNu16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 4217);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("2ABC", "%" SCNx16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 0x2ABC);
+  sscanf("2ABC", "%" SCNx16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 0x2ABC);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -962,18 +962,18 @@ TestScanUnsigned32()
   Input<uint32_t> u;
 
   PoisonInput(u);
-  sscanf("17421742", "%" SCNo32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 017421742);
+  sscanf("17421742", "%" SCNo32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 017421742);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("4217867", "%" SCNu32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 4217867);
+  sscanf("4217867", "%" SCNu32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 4217867);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("2ABCBEEF", "%" SCNx32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 0x2ABCBEEF);
+  sscanf("2ABCBEEF", "%" SCNx32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 0x2ABCBEEF);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -983,18 +983,18 @@ TestScanUnsigned64()
   Input<uint64_t> u;
 
   PoisonInput(u);
-  sscanf("17421742173", "%" SCNo64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == UINT64_C(017421742173));
+  sscanf("17421742173", "%" SCNo64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == UINT64_C(017421742173));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("421786713579", "%" SCNu64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == UINT64_C(421786713579));
+  sscanf("421786713579", "%" SCNu64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == UINT64_C(421786713579));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("DEADBEEF7457E", "%" SCNx64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == UINT64_C(0xDEADBEEF7457E));
+  sscanf("DEADBEEF7457E", "%" SCNx64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == UINT64_C(0xDEADBEEF7457E));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -1014,18 +1014,18 @@ TestScanUnsignedLeast8()
   Input<uint_least8_t> u;
 
   PoisonInput(u);
-  sscanf("17", "%" SCNoLEAST8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 017);
+  sscanf("17", "%" SCNoLEAST8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 017);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("42", "%" SCNuLEAST8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 42);
+  sscanf("42", "%" SCNuLEAST8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 42);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("2A", "%" SCNxLEAST8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 0x2A);
+  sscanf("2A", "%" SCNxLEAST8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 0x2A);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 #endif
 }
@@ -1036,18 +1036,18 @@ TestScanUnsignedLeast16()
   Input<uint_least16_t> u;
 
   PoisonInput(u);
-  sscanf("1742", "%" SCNoLEAST16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 01742);
+  sscanf("1742", "%" SCNoLEAST16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 01742);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("4217", "%" SCNuLEAST16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 4217);
+  sscanf("4217", "%" SCNuLEAST16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 4217);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("2ABC", "%" SCNxLEAST16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 0x2ABC);
+  sscanf("2ABC", "%" SCNxLEAST16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 0x2ABC);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -1057,18 +1057,18 @@ TestScanUnsignedLeast32()
   Input<uint_least32_t> u;
 
   PoisonInput(u);
-  sscanf("17421742", "%" SCNoLEAST32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 017421742);
+  sscanf("17421742", "%" SCNoLEAST32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 017421742);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("4217867", "%" SCNuLEAST32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 4217867);
+  sscanf("4217867", "%" SCNuLEAST32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 4217867);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("2ABCBEEF", "%" SCNxLEAST32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 0x2ABCBEEF);
+  sscanf("2ABCBEEF", "%" SCNxLEAST32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 0x2ABCBEEF);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -1078,18 +1078,18 @@ TestScanUnsignedLeast64()
   Input<uint_least64_t> u;
 
   PoisonInput(u);
-  sscanf("17421742173", "%" SCNoLEAST64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == UINT64_C(017421742173));
+  sscanf("17421742173", "%" SCNoLEAST64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == UINT64_C(017421742173));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("421786713579", "%" SCNuLEAST64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == UINT64_C(421786713579));
+  sscanf("421786713579", "%" SCNuLEAST64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == UINT64_C(421786713579));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("DEADBEEF7457E", "%" SCNxLEAST64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == UINT64_C(0xDEADBEEF7457E));
+  sscanf("DEADBEEF7457E", "%" SCNxLEAST64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == UINT64_C(0xDEADBEEF7457E));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -1109,18 +1109,18 @@ TestScanUnsignedFast8()
   Input<uint_fast8_t> u;
 
   PoisonInput(u);
-  sscanf("17", "%" SCNoFAST8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 017);
+  sscanf("17", "%" SCNoFAST8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 017);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("42", "%" SCNuFAST8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 42);
+  sscanf("42", "%" SCNuFAST8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 42);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("2A", "%" SCNxFAST8, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 0x2A);
+  sscanf("2A", "%" SCNxFAST8, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 0x2A);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 #endif
 }
@@ -1131,18 +1131,18 @@ TestScanUnsignedFast16()
   Input<uint_fast16_t> u;
 
   PoisonInput(u);
-  sscanf("1742", "%" SCNoFAST16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 01742);
+  sscanf("1742", "%" SCNoFAST16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 01742);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("4217", "%" SCNuFAST16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 4217);
+  sscanf("4217", "%" SCNuFAST16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 4217);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("2ABC", "%" SCNxFAST16, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 0x2ABC);
+  sscanf("2ABC", "%" SCNxFAST16, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 0x2ABC);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -1152,18 +1152,18 @@ TestScanUnsignedFast32()
   Input<uint_fast32_t> u;
 
   PoisonInput(u);
-  sscanf("17421742", "%" SCNoFAST32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 017421742);
+  sscanf("17421742", "%" SCNoFAST32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 017421742);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("4217867", "%" SCNuFAST32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 4217867);
+  sscanf("4217867", "%" SCNuFAST32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 4217867);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("2ABCBEEF", "%" SCNxFAST32, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == 0x2ABCBEEF);
+  sscanf("2ABCBEEF", "%" SCNxFAST32, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == 0x2ABCBEEF);
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -1173,18 +1173,18 @@ TestScanUnsignedFast64()
   Input<uint_fast64_t> u;
 
   PoisonInput(u);
-  sscanf("17421742173", "%" SCNoFAST64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == UINT64_C(017421742173));
+  sscanf("17421742173", "%" SCNoFAST64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == UINT64_C(017421742173));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("421786713579", "%" SCNuFAST64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == UINT64_C(421786713579));
+  sscanf("421786713579", "%" SCNuFAST64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == UINT64_C(421786713579));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("DEADBEEF7457E", "%" SCNxFAST64, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == UINT64_C(0xDEADBEEF7457E));
+  sscanf("DEADBEEF7457E", "%" SCNxFAST64, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == UINT64_C(0xDEADBEEF7457E));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -1203,18 +1203,18 @@ TestScanUnsignedMax()
   Input<uintmax_t> u;
 
   PoisonInput(u);
-  sscanf("14220563454333534", "%" SCNoMAX, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == UINTMAX_C(432157943248732));
+  sscanf("14220563454333534", "%" SCNoMAX, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == UINTMAX_C(432157943248732));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("432157943248732", "%" SCNuMAX, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == UINTMAX_C(432157943248732));
+  sscanf("432157943248732", "%" SCNuMAX, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == UINTMAX_C(432157943248732));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("4c337ca791", "%" SCNxMAX, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == UINTMAX_C(327281321873));
+  sscanf("4c337ca791", "%" SCNxMAX, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == UINTMAX_C(327281321873));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 
@@ -1224,18 +1224,18 @@ TestScanUnsignedPtr()
   Input<uintptr_t> u;
 
   PoisonInput(u);
-  sscanf("57060516", "%" SCNoPTR, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == uintptr_t(reinterpret_cast<void*>(12345678)));
+  sscanf("57060516", "%" SCNoPTR, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == uintptr_t(reinterpret_cast<void*>(12345678)));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("87654321", "%" SCNuPTR, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == uintptr_t(reinterpret_cast<void*>(87654321)));
+  sscanf("87654321", "%" SCNuPTR, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == uintptr_t(reinterpret_cast<void*>(87654321)));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 
   PoisonInput(u);
-  sscanf("4c3a791", "%" SCNxPTR, &u.i);
-  MOZ_RELEASE_ASSERT(u.i == uintptr_t(reinterpret_cast<void*>(0x4c3a791)));
+  sscanf("4c3a791", "%" SCNxPTR, &u.mI);
+  MOZ_RELEASE_ASSERT(u.mI == uintptr_t(reinterpret_cast<void*>(0x4c3a791)));
   MOZ_RELEASE_ASSERT(ExtraBitsUntouched(u));
 }
 

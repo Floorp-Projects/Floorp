@@ -11,8 +11,8 @@ use {FontKey, GlyphInstance, GlyphOptions, Gradient, GradientDisplayItem, Gradie
 use {IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask, ImageRendering, ItemRange};
 use {LayoutPoint, LayoutRect, LayoutSize, LayoutTransform, MixBlendMode, PipelineId};
 use {PropertyBinding, PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
-use {RectangleDisplayItem, ScrollLayerId, ScrollPolicy, ServoScrollRootId, SpecificDisplayItem};
-use {StackingContext, TextDisplayItem, WebGLContextId, WebGLDisplayItem, YuvColorSpace};
+use {RectangleDisplayItem, ScrollLayerId, ScrollPolicy, SpecificDisplayItem, StackingContext};
+use {TextDisplayItem, WebGLContextId, WebGLDisplayItem, YuvColorSpace};
 use YuvImageDisplayItem;
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -341,17 +341,20 @@ impl DisplayListBuilder {
     pub fn define_clip(&mut self,
                        clip: ClipRegion,
                        content_size: LayoutSize,
-                       scroll_root_id: Option<ServoScrollRootId>)
+                       id: Option<ScrollLayerId>)
                        -> ScrollLayerId {
-        let scroll_layer_id = self.next_scroll_layer_id;
-        self.next_scroll_layer_id += 1;
+        let id = match id {
+            Some(id) => id,
+            None => {
+                self.next_scroll_layer_id += 1;
+                ScrollLayerId::Clip(self.next_scroll_layer_id - 1, self.pipeline_id)
+            }
+        };
 
-        let id = ScrollLayerId::new(self.pipeline_id, scroll_layer_id);
         let item = SpecificDisplayItem::Clip(ClipDisplayItem {
             content_size: content_size,
             id: id,
             parent_id: *self.clip_stack.last().unwrap(),
-            scroll_root_id: scroll_root_id,
         });
 
         self.push_item(item, clip.main, clip);
@@ -361,8 +364,8 @@ impl DisplayListBuilder {
     pub fn push_scroll_layer(&mut self,
                              clip: ClipRegion,
                              content_size: LayoutSize,
-                             scroll_root_id: Option<ServoScrollRootId>) {
-        let id = self.define_clip(clip, content_size, scroll_root_id);
+                             id: Option<ScrollLayerId>) {
+        let id = self.define_clip(clip, content_size, id);
         self.clip_stack.push(id);
     }
 
@@ -414,6 +417,7 @@ impl DisplayListBuilder {
                 _ => {}
             }
             i.clip.complex = self.auxiliary_lists_builder.add_complex_clip_regions(aux.complex_clip_regions(&i.clip.complex));
+            i.scroll_layer_id = *self.clip_stack.last().unwrap();
             self.list.push(i);
         }
     }
