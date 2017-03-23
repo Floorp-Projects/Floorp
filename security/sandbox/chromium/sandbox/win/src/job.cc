@@ -5,6 +5,7 @@
 #include "sandbox/win/src/job.h"
 
 #include <stddef.h>
+#include <utility>
 
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/restricted_token.h"
@@ -103,7 +104,7 @@ DWORD Job::UserHandleGrantAccess(HANDLE handle) {
 }
 
 base::win::ScopedHandle Job::Take() {
-  return job_handle_.Pass();
+  return std::move(job_handle_);
 }
 
 DWORD Job::AssignProcessToJob(HANDLE process_handle) {
