@@ -1194,8 +1194,6 @@ GetLayersBackendName(layers::LayersBackend aBackend)
       return "none";
     case layers::LayersBackend::LAYERS_OPENGL:
       return "opengl";
-    case layers::LayersBackend::LAYERS_D3D9:
-      return "d3d9";
     case layers::LayersBackend::LAYERS_D3D11:
       return "d3d11";
     case layers::LayersBackend::LAYERS_CLIENT:
