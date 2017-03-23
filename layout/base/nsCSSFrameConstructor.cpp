@@ -1913,6 +1913,10 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
     }
   }
 
+  if (aParentContent->IsStyledByServo()) {
+    mPresShell->StyleSet()->AsServo()->StyleNewSubtree(container);
+  }
+
   AddFrameConstructionItemsInternal(aState, container, aParentFrame, elemName,
                                     kNameSpaceID_None, true,
                                     pseudoStyleContext,
