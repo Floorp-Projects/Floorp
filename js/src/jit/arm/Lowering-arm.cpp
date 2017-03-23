@@ -893,11 +893,12 @@ LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 
     if (byteSize(ins->access().type()) != 4 && !HasLDSTREXBHD()) {
         LAsmJSCompareExchangeCallout* lir =
-            new(alloc()) LAsmJSCompareExchangeCallout(useRegisterAtStart(base),
-                                                      useRegisterAtStart(ins->oldValue()),
-                                                      useRegisterAtStart(ins->newValue()),
-                                                      useFixed(ins->tls(), WasmTlsReg),
-                                                      temp(), temp());
+            new(alloc()) LAsmJSCompareExchangeCallout(useFixedAtStart(base, IntArgReg2),
+                                                      useFixedAtStart(ins->oldValue(), IntArgReg3),
+                                                      useFixedAtStart(ins->newValue(), CallTempReg0),
+                                                      useFixedAtStart(ins->tls(), WasmTlsReg),
+                                                      tempFixed(IntArgReg0),
+                                                      tempFixed(IntArgReg1));
         defineReturn(lir, ins);
         return;
     }
@@ -917,17 +918,18 @@ LIRGeneratorARM::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
     MOZ_ASSERT(ins->access().type() < Scalar::Float32);
     MOZ_ASSERT(ins->access().offset() == 0);
 
-    const LAllocation base = useRegisterAtStart(ins->base());
-    const LAllocation value = useRegisterAtStart(ins->value());
-
     if (byteSize(ins->access().type()) < 4 && !HasLDSTREXBHD()) {
         // Call out on ARMv6.
-        defineReturn(new(alloc()) LAsmJSAtomicExchangeCallout(base, value,
-                                                              useFixed(ins->tls(), WasmTlsReg),
-                                                              temp(), temp()), ins);
+        defineReturn(new(alloc()) LAsmJSAtomicExchangeCallout(useFixedAtStart(ins->base(), IntArgReg2),
+                                                              useFixedAtStart(ins->value(), IntArgReg3),
+                                                              useFixedAtStart(ins->tls(), WasmTlsReg),
+                                                              tempFixed(IntArgReg0),
+                                                              tempFixed(IntArgReg1)), ins);
         return;
     }
 
+    const LAllocation base = useRegisterAtStart(ins->base());
+    const LAllocation value = useRegisterAtStart(ins->value());
     define(new(alloc()) LAsmJSAtomicExchangeHeap(base, value), ins);
 }
 
@@ -942,10 +944,11 @@ LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 
     if (byteSize(ins->access().type()) != 4 && !HasLDSTREXBHD()) {
         LAsmJSAtomicBinopCallout* lir =
-            new(alloc()) LAsmJSAtomicBinopCallout(useRegisterAtStart(base),
-                                                  useRegisterAtStart(ins->value()),
-                                                  useFixed(ins->tls(), WasmTlsReg),
-                                                  temp(), temp());
+            new(alloc()) LAsmJSAtomicBinopCallout(useFixedAtStart(base, IntArgReg2),
+                                                  useFixedAtStart(ins->value(), IntArgReg3),
+                                                  useFixedAtStart(ins->tls(), WasmTlsReg),
+                                                  tempFixed(IntArgReg0),
+                                                  tempFixed(IntArgReg1));
         defineReturn(lir, ins);
         return;
     }

@@ -7,6 +7,7 @@
 #include "nsSVGPatternFrame.h"
 
 // Keep others in (case-insensitive) order:
+#include "AutoReferenceChainGuard.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxMatrix.h"
@@ -28,30 +29,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
-
-//----------------------------------------------------------------------
-// Helper classes
-
-class MOZ_RAII nsSVGPatternFrame::AutoPatternReferencer
-{
-public:
-  explicit AutoPatternReferencer(nsSVGPatternFrame *aFrame
-                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mFrame(aFrame)
-  {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    // Reference loops should normally be detected in advance and handled, so
-    // we're not expecting to encounter them here
-    MOZ_ASSERT(!mFrame->mLoopFlag, "Undetected reference loop!");
-    mFrame->mLoopFlag = true;
-  }
-  ~AutoPatternReferencer() {
-    mFrame->mLoopFlag = false;
-  }
-private:
-  nsSVGPatternFrame *mFrame;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
 
 //----------------------------------------------------------------------
 // Implementation
@@ -443,9 +420,18 @@ nsSVGPatternFrame::GetPatternWithChildren()
     return this;
 
   // No, see if we chain to someone who does
-  AutoPatternReferencer patternRef(this);
 
-  nsSVGPatternFrame* next = GetReferencedPatternIfNotInUse();
+  // Before we recurse, make sure we'll break reference loops and over long
+  // reference chains:
+  static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
+  AutoReferenceChainGuard refChainGuard(this, &mLoopFlag,
+                                        &sRefChainLengthCounter);
+  if (MOZ_UNLIKELY(!refChainGuard.Reference())) {
+    // Break reference chain
+    return nullptr;
+  }
+
+  nsSVGPatternFrame* next = GetReferencedPattern();
   if (!next)
     return nullptr;
 
@@ -461,12 +447,21 @@ nsSVGPatternFrame::GetEnumValue(uint32_t aIndex, nsIContent *aDefault)
   if (thisEnum.IsExplicitlySet())
     return thisEnum.GetAnimValue();
 
-  AutoPatternReferencer patternRef(this);
+  // Before we recurse, make sure we'll break reference loops and over long
+  // reference chains:
+  static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
+  AutoReferenceChainGuard refChainGuard(this, &mLoopFlag,
+                                        &sRefChainLengthCounter);
+  if (MOZ_UNLIKELY(!refChainGuard.Reference())) {
+    // Break reference chain
+    return static_cast<SVGPatternElement *>(aDefault)->
+             mEnumAttributes[aIndex].GetAnimValue();
+  }
 
-  nsSVGPatternFrame *next = GetReferencedPatternIfNotInUse();
-  return next ? next->GetEnumValue(aIndex, aDefault) :
-    static_cast<SVGPatternElement *>(aDefault)->
-      mEnumAttributes[aIndex].GetAnimValue();
+  nsSVGPatternFrame *next = GetReferencedPattern();
+  return next ? next->GetEnumValue(aIndex, aDefault)
+              : static_cast<SVGPatternElement*>(aDefault)->
+                  mEnumAttributes[aIndex].GetAnimValue();
 }
 
 nsSVGAnimatedTransformList*
@@ -478,11 +473,19 @@ nsSVGPatternFrame::GetPatternTransformList(nsIContent* aDefault)
   if (thisTransformList && thisTransformList->IsExplicitlySet())
     return thisTransformList;
 
-  AutoPatternReferencer patternRef(this);
+  // Before we recurse, make sure we'll break reference loops and over long
+  // reference chains:
+  static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
+  AutoReferenceChainGuard refChainGuard(this, &mLoopFlag,
+                                        &sRefChainLengthCounter);
+  if (MOZ_UNLIKELY(!refChainGuard.Reference())) {
+    // Break reference chain
+    return static_cast<SVGPatternElement*>(aDefault)->mPatternTransform.get();
+  }
 
-  nsSVGPatternFrame *next = GetReferencedPatternIfNotInUse();
-  return next ? next->GetPatternTransformList(aDefault) :
-    static_cast<SVGPatternElement *>(aDefault)->mPatternTransform.get();
+  nsSVGPatternFrame *next = GetReferencedPattern();
+  return next ? next->GetPatternTransformList(aDefault)
+              : static_cast<SVGPatternElement*>(aDefault)->mPatternTransform.get();
 }
 
 gfxMatrix
@@ -505,11 +508,19 @@ nsSVGPatternFrame::GetViewBox(nsIContent* aDefault)
   if (thisViewBox.IsExplicitlySet())
     return thisViewBox;
 
-  AutoPatternReferencer patternRef(this);
+  // Before we recurse, make sure we'll break reference loops and over long
+  // reference chains:
+  static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
+  AutoReferenceChainGuard refChainGuard(this, &mLoopFlag,
+                                        &sRefChainLengthCounter);
+  if (MOZ_UNLIKELY(!refChainGuard.Reference())) {
+    // Break reference chain
+    return static_cast<SVGPatternElement *>(aDefault)->mViewBox;
+  }
 
-  nsSVGPatternFrame *next = GetReferencedPatternIfNotInUse();
-  return next ? next->GetViewBox(aDefault) :
-    static_cast<SVGPatternElement *>(aDefault)->mViewBox;
+  nsSVGPatternFrame *next = GetReferencedPattern();
+  return next ? next->GetViewBox(aDefault)
+              : static_cast<SVGPatternElement *>(aDefault)->mViewBox;
 }
 
 const SVGAnimatedPreserveAspectRatio &
@@ -521,11 +532,19 @@ nsSVGPatternFrame::GetPreserveAspectRatio(nsIContent *aDefault)
   if (thisPar.IsExplicitlySet())
     return thisPar;
 
-  AutoPatternReferencer patternRef(this);
+  // Before we recurse, make sure we'll break reference loops and over long
+  // reference chains:
+  static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
+  AutoReferenceChainGuard refChainGuard(this, &mLoopFlag,
+                                        &sRefChainLengthCounter);
+  if (MOZ_UNLIKELY(!refChainGuard.Reference())) {
+    // Break reference chain
+    return static_cast<SVGPatternElement *>(aDefault)->mPreserveAspectRatio;
+  }
 
-  nsSVGPatternFrame *next = GetReferencedPatternIfNotInUse();
-  return next ? next->GetPreserveAspectRatio(aDefault) :
-    static_cast<SVGPatternElement *>(aDefault)->mPreserveAspectRatio;
+  nsSVGPatternFrame *next = GetReferencedPattern();
+  return next ? next->GetPreserveAspectRatio(aDefault)
+              : static_cast<SVGPatternElement *>(aDefault)->mPreserveAspectRatio;
 }
 
 const nsSVGLength2 *
@@ -537,11 +556,19 @@ nsSVGPatternFrame::GetLengthValue(uint32_t aIndex, nsIContent *aDefault)
   if (thisLength->IsExplicitlySet())
     return thisLength;
 
-  AutoPatternReferencer patternRef(this);
+  // Before we recurse, make sure we'll break reference loops and over long
+  // reference chains:
+  static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
+  AutoReferenceChainGuard refChainGuard(this, &mLoopFlag,
+                                        &sRefChainLengthCounter);
+  if (MOZ_UNLIKELY(!refChainGuard.Reference())) {
+    // Break reference chain
+    return &static_cast<SVGPatternElement *>(aDefault)->mLengthAttributes[aIndex];
+  }
 
-  nsSVGPatternFrame *next = GetReferencedPatternIfNotInUse();
-  return next ? next->GetLengthValue(aIndex, aDefault) :
-    &static_cast<SVGPatternElement *>(aDefault)->mLengthAttributes[aIndex];
+  nsSVGPatternFrame *next = GetReferencedPattern();
+  return next ? next->GetLengthValue(aIndex, aDefault)
+              : &static_cast<SVGPatternElement *>(aDefault)->mLengthAttributes[aIndex];
 }
 
 // Private (helper) methods
@@ -593,22 +620,6 @@ nsSVGPatternFrame::GetReferencedPattern()
     return nullptr;
 
   return static_cast<nsSVGPatternFrame*>(result);
-}
-
-nsSVGPatternFrame *
-nsSVGPatternFrame::GetReferencedPatternIfNotInUse()
-{
-  nsSVGPatternFrame *referenced = GetReferencedPattern();
-  if (!referenced)
-    return nullptr;
-
-  if (referenced->mLoopFlag) {
-    // XXXjwatt: we should really send an error to the JavaScript Console here:
-    NS_WARNING("pattern reference loop detected while inheriting attribute!");
-    return nullptr;
-  }
-
-  return referenced;
 }
 
 gfxRect

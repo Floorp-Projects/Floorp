@@ -84,21 +84,21 @@ void
 MacroAssembler::call(const wasm::CallSiteDesc& desc, const Register reg)
 {
     CodeOffset l = call(reg);
-    append(desc, l, framePushed());
+    append(desc, l);
 }
 
 void
 MacroAssembler::call(const wasm::CallSiteDesc& desc, uint32_t funcDefIndex)
 {
     CodeOffset l = callWithPatch();
-    append(desc, l, framePushed(), funcDefIndex);
+    append(desc, l, funcDefIndex);
 }
 
 void
 MacroAssembler::call(const wasm::CallSiteDesc& desc, wasm::Trap trap)
 {
     CodeOffset l = callWithPatch();
-    append(desc, l, framePushed(), trap);
+    append(desc, l, trap);
 }
 
 // ===============================================================
