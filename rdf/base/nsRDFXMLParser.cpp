@@ -13,7 +13,7 @@
 #include "nsParserCIID.h"
 #include "nsStringStream.h"
 #include "nsNetUtil.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
@@ -113,7 +113,7 @@ nsRDFXMLParser::ParseString(nsIRDFDataSource* aSink, nsIURI* aBaseURI, const nsA
     rv = NS_NewCStringInputStream(getter_AddRefs(stream), aString);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
+    nsCOMPtr<nsIPrincipal> nullPrincipal = NullPrincipal::Create();
 
     // The following channel is never openend, so it does not matter what
     // securityFlags we pass; let's follow the principle of least privilege.

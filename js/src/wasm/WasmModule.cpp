@@ -440,11 +440,11 @@ Module::extractCode(JSContext* cx, MutableHandleValue vp)
             if (!JS_DefineProperty(cx, segment, "funcIndex", value, JSPROP_ENUMERATE))
                 return false;
 
-            value.setNumber((uint32_t)p.funcNonProfilingEntry());
+            value.setNumber((uint32_t)p.funcNormalEntry());
             if (!JS_DefineProperty(cx, segment, "funcBodyBegin", value, JSPROP_ENUMERATE))
                 return false;
 
-            value.setNumber((uint32_t)p.funcProfilingEpilogue());
+            value.setNumber((uint32_t)p.end());
             if (!JS_DefineProperty(cx, segment, "funcBodyEnd", value, JSPROP_ENUMERATE))
                 return false;
         }
@@ -521,7 +521,6 @@ Module::initSegments(JSContext* cx,
     for (const ElemSegment& seg : elemSegments_) {
         Table& table = *tables[seg.tableIndex];
         uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
-        bool profilingEnabled = instance.code().profilingEnabled();
         const CodeRangeVector& codeRanges = metadata().codeRanges;
         uint8_t* codeBase = instance.codeBase();
 
@@ -539,9 +538,7 @@ Module::initSegments(JSContext* cx,
             } else {
                 const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices[i]];
                 uint32_t entryOffset = table.isTypedFunction()
-                                       ? profilingEnabled
-                                         ? cr.funcProfilingEntry()
-                                         : cr.funcNonProfilingEntry()
+                                       ? cr.funcNormalEntry()
                                        : cr.funcTableEntry();
                 table.set(offset + i, codeBase + entryOffset, instance);
             }

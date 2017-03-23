@@ -21,7 +21,7 @@
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsGlobalWindow.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 
 using namespace mozilla::dom;
 
@@ -465,10 +465,10 @@ LoadInfo::GetSandboxedLoadingPrincipal(nsIPrincipal** aPrincipal)
   if (!mSandboxedLoadingPrincipal) {
     if (mLoadingPrincipal) {
       mSandboxedLoadingPrincipal =
-        nsNullPrincipal::CreateWithInheritedAttributes(mLoadingPrincipal);
+        NullPrincipal::CreateWithInheritedAttributes(mLoadingPrincipal);
     } else {
       OriginAttributes attrs(mOriginAttributes);
-      mSandboxedLoadingPrincipal = nsNullPrincipal::Create(attrs);
+      mSandboxedLoadingPrincipal = NullPrincipal::Create(attrs);
     }
   }
   MOZ_ASSERT(mSandboxedLoadingPrincipal);
@@ -717,7 +717,7 @@ LoadInfo::ResetPrincipalsToNullPrincipal()
   // take the originAttributes from the LoadInfo and create
   // a new NullPrincipal using those origin attributes.
   nsCOMPtr<nsIPrincipal> newNullPrincipal =
-    nsNullPrincipal::Create(mOriginAttributes);
+    NullPrincipal::Create(mOriginAttributes);
 
   MOZ_ASSERT(mInternalContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT ||
              !mLoadingPrincipal,

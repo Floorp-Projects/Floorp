@@ -16,7 +16,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIPresShell.h"
 #include "nsNetUtil.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 #include "nsIInputStream.h"
 #include "nsStringStream.h"
 #include "nsStreamUtils.h"
@@ -359,7 +359,7 @@ gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen)
     rv = NS_NewURI(getter_AddRefs(uri), mSVGGlyphsDocumentURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::Create();
+    nsCOMPtr<nsIPrincipal> principal = NullPrincipal::Create();
 
     nsCOMPtr<nsIDOMDocument> domDoc;
     rv = NS_NewDOMDocument(getter_AddRefs(domDoc),

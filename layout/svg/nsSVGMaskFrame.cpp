@@ -7,6 +7,7 @@
 #include "nsSVGMaskFrame.h"
 
 // Keep others in (case-insensitive) order:
+#include "AutoReferenceChainGuard.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "mozilla/gfx/2D.h"
@@ -204,14 +205,14 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGMaskFrame)
 mozilla::Pair<DrawResult, RefPtr<SourceSurface>>
 nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
 {
-  // If the flag is set when we get here, it means this mask frame
-  // has already been used painting the current mask, and the document
-  // has a mask reference loop.
-  if (mInUse) {
-    NS_WARNING("Mask loop detected!");
+  // Make sure we break reference loops and over long reference chains:
+  static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
+  AutoReferenceChainGuard refChainGuard(this, &mInUse,
+                                        &sRefChainLengthCounter);
+  if (MOZ_UNLIKELY(!refChainGuard.Reference())) {
+    // Break reference chain
     return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
   }
-  AutoMaskReferencer maskRef(this);
 
   gfxRect maskArea = GetMaskArea(aParams.maskedFrame);
   gfxContext* context = aParams.ctx;

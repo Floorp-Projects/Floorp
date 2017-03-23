@@ -29,13 +29,12 @@ using namespace wasm;
 
 Compartment::Compartment(Zone* zone)
   : mutatingInstances_(false),
-    activationCount_(0),
-    profilingEnabled_(false)
+    interruptedCount_(0)
 {}
 
 Compartment::~Compartment()
 {
-    MOZ_ASSERT(activationCount_ == 0);
+    MOZ_ASSERT(interruptedCount_ == 0);
     MOZ_ASSERT(instances_.empty());
     MOZ_ASSERT(!mutatingInstances_);
 }
@@ -58,10 +57,14 @@ void
 Compartment::trace(JSTracer* trc)
 {
     // A WasmInstanceObject that was initially reachable when called can become
-    // unreachable while executing on the stack. Since wasm does not otherwise
-    // scan the stack during GC to identify live instances, we mark all instance
-    // objects live if there is any running wasm in the compartment.
-    if (activationCount_) {
+    // unreachable while executing on the stack. When execution in a compartment
+    // is interrupted inside wasm code, wasm::TraceActivations() may miss frames
+    // due to its use of FrameIterator which assumes wasm has exited through an
+    // exit stub. This could be fixed by changing wasm::TraceActivations() to
+    // use a ProfilingFrameIterator, which inspects register state, but for now
+    // just mark everything in the compartment in this super-rare case.
+
+    if (interruptedCount_) {
         for (Instance* i : instances_)
             i->trace(trc);
     }
@@ -73,8 +76,7 @@ Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceOb
     Instance& instance = instanceObj->instance();
     MOZ_ASSERT(this == &instance.compartment()->wasm);
 
-    if (!instance.ensureProfilingState(cx, profilingEnabled_))
-        return false;
+    instance.code().ensureProfilingLabels(cx->runtime()->geckoProfiler().enabled());
 
     size_t index;
     if (BinarySearchIf(instances_, 0, instances_.length(), InstanceComparator(instance), &index))
@@ -139,38 +141,22 @@ Compartment::lookupInstanceDeprecated(const void* pc) const
     return instances_[index];
 }
 
-bool
-Compartment::ensureProfilingState(JSContext* cx)
+void
+Compartment::setInterrupted(bool interrupted)
 {
-    bool newProfilingEnabled = cx->runtime()->geckoProfiler().enabled();
-    if (profilingEnabled_ == newProfilingEnabled)
-        return true;
-
-    // Since one Instance can call another Instance in the same compartment
-    // directly without calling through Instance::callExport(), when profiling
-    // is enabled, enable it for the entire compartment at once. It is only safe
-    // to enable profiling when the wasm is not on the stack, so delay enabling
-    // profiling until there are no live WasmActivations in this compartment.
-
-    if (activationCount_ > 0)
-        return true;
-
-    for (Instance* instance : instances_) {
-        if (!instance->ensureProfilingState(cx, newProfilingEnabled))
-            return false;
+    if (interrupted) {
+        interruptedCount_++;
+    } else {
+        MOZ_ASSERT(interruptedCount_ > 0);
+        interruptedCount_--;
     }
-
-    profilingEnabled_ = newProfilingEnabled;
-    return true;
 }
 
-bool
-Compartment::profilingEnabled() const
+void
+Compartment::ensureProfilingLabels(bool profilingEnabled)
 {
-    // Profiling can asynchronously interrupt the mutation of the instances_
-    // vector which is used by lookupCode() during stack-walking. To handle
-    // this rare case, disable profiling during mutation.
-    return profilingEnabled_ && !mutatingInstances_;
+    for (Instance* instance : instances_)
+        instance->code().ensureProfilingLabels(profilingEnabled);
 }
 
 void

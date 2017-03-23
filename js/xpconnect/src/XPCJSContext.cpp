@@ -342,7 +342,7 @@ PrincipalImmuneToScriptPolicy(nsIPrincipal* aPrincipal)
     if (nsXPConnect::SecurityManager()->IsSystemPrincipal(aPrincipal))
         return true;
 
-    // nsExpandedPrincipal gets a free pass.
+    // ExpandedPrincipal gets a free pass.
     nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal);
     if (ep)
         return true;
@@ -888,7 +888,7 @@ XPCJSContext::FinalizeCallback(JSFreeOp* fop,
 }
 
 /* static */ void
-XPCJSContext::WeakPointerZoneGroupCallback(JSContext* cx, void* data)
+XPCJSContext::WeakPointerZonesCallback(JSContext* cx, void* data)
 {
     // Called before each sweeping slice -- after processing any final marking
     // triggered by barriers -- to clear out any references to things that are
@@ -1582,7 +1582,7 @@ XPCJSContext::~XPCJSContext()
     // callbacks if we aren't careful. Null out the relevant callbacks.
     js::SetActivityCallback(Context(), nullptr, nullptr);
     JS_RemoveFinalizeCallback(Context(), FinalizeCallback);
-    JS_RemoveWeakPointerZoneGroupCallback(Context(), WeakPointerZoneGroupCallback);
+    JS_RemoveWeakPointerZonesCallback(Context(), WeakPointerZonesCallback);
     JS_RemoveWeakPointerCompartmentCallback(Context(), WeakPointerCompartmentCallback);
 
     // Clear any pending exception.  It might be an XPCWrappedJS, and if we try
@@ -3502,7 +3502,7 @@ XPCJSContext::Initialize()
     mPrevDoCycleCollectionCallback = JS::SetDoCycleCollectionCallback(cx,
             DoCycleCollectionCallback);
     JS_AddFinalizeCallback(cx, FinalizeCallback, nullptr);
-    JS_AddWeakPointerZoneGroupCallback(cx, WeakPointerZoneGroupCallback, this);
+    JS_AddWeakPointerZonesCallback(cx, WeakPointerZonesCallback, this);
     JS_AddWeakPointerCompartmentCallback(cx, WeakPointerCompartmentCallback, this);
     JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     js::SetPreserveWrapperCallback(cx, PreserveWrapper);

@@ -102,7 +102,7 @@ BEGIN_TEST(testWeakMap_keyDelegates)
     while (JS::IsIncrementalGCInProgress(cx))
         cx->runtime()->gc.debugGCSlice(budget);
 #ifdef DEBUG
-    CHECK(map->zone()->lastZoneGroupIndex() < delegateRoot->zone()->lastZoneGroupIndex());
+    CHECK(map->zone()->lastSweepGroupIndex() < delegateRoot->zone()->lastSweepGroupIndex());
 #endif
 
     /* Add our entry to the weakmap. */
@@ -124,7 +124,7 @@ BEGIN_TEST(testWeakMap_keyDelegates)
      * necessary because of the presence of the delegate and the CCW.
      */
 #ifdef DEBUG
-    CHECK(map->zone()->lastZoneGroupIndex() == delegateRoot->zone()->lastZoneGroupIndex());
+    CHECK(map->zone()->lastSweepGroupIndex() == delegateRoot->zone()->lastSweepGroupIndex());
 #endif
 
     /* Check that when the delegate becomes unreachable the entry is removed. */

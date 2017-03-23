@@ -24,6 +24,10 @@
 #include "nsXULAppAPI.h"
 #include "jsfriendapi.h"
 
+#ifdef XP_WIN
+#include "mozilla/TlsAllocationTracker.h"
+#endif
+
 #if defined(XP_WIN32)
 #ifdef WIN32_LEAN_AND_MEAN
 #undef WIN32_LEAN_AND_MEAN
@@ -1385,6 +1389,13 @@ PrepareChildExceptionTimeAnnotations()
       WriteAnnotation(apiData, "TopPendingIPCType", topPendingIPCTypeBuffer);
     }
   }
+
+#ifdef XP_WIN
+  const char* tlsAllocations = mozilla::GetTlsAllocationStacks();
+  if (tlsAllocations) {
+    WriteAnnotation(apiData, "TlsAllocations", tlsAllocations);
+  }
+#endif
 }
 
 #ifdef XP_WIN

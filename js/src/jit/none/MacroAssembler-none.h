@@ -48,6 +48,7 @@ static constexpr Register WasmIonExitRegE1 { Registers::invalid_reg };
 
 static constexpr Register WasmIonExitRegReturnData { Registers::invalid_reg };
 static constexpr Register WasmIonExitRegReturnType { Registers::invalid_reg };
+static constexpr Register WasmIonExitTlsReg = { Registers::invalid_reg };
 static constexpr Register WasmIonExitRegD0 { Registers::invalid_reg };
 static constexpr Register WasmIonExitRegD1 { Registers::invalid_reg };
 static constexpr Register WasmIonExitRegD2 { Registers::invalid_reg };
@@ -415,7 +416,6 @@ class MacroAssemblerNone : public Assembler
     bool buildOOLFakeExitFrame(void*) { MOZ_CRASH(); }
     void loadWasmGlobalPtr(uint32_t, Register) { MOZ_CRASH(); }
     void loadWasmActivationFromTls(Register) { MOZ_CRASH(); }
-    void loadWasmActivationFromSymbolicAddress(Register) { MOZ_CRASH(); }
     void loadWasmPinnedRegsFromTls() { MOZ_CRASH(); }
 
     void setPrinter(Sprinter*) { MOZ_CRASH(); }

@@ -50,7 +50,7 @@
 #include "nsIEditor.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsISHistory.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsGlobalWindow.h"
 #include "nsPIWindowRoot.h"
@@ -98,7 +98,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 
-#include "nsPrincipal.h"
+#include "ContentPrincipal.h"
 
 #ifdef XP_WIN
 #include "mozilla/plugins/PPluginWidgetParent.h"
@@ -831,7 +831,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Use referrer as long as it is not an nsNullPrincipalURI.
+  // Use referrer as long as it is not an NullPrincipalURI.
   // We could add a method such as GetReferrerURI to principals to make this
   // cleaner, but given that we need to start using Source Browsing Context for
   // referrer (see Bug 960639) this may be wasted effort at this stage.

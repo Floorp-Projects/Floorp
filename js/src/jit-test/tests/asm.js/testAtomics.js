@@ -1872,15 +1872,51 @@ setARMHwCapFlags('vfp');
 
 asmCompile('stdlib', 'ffi', 'heap',
     USE_ASM + `
+    var atomic_cmpxchg = stdlib.Atomics.compareExchange;
     var atomic_exchange = stdlib.Atomics.exchange;
+    var atomic_add = stdlib.Atomics.add;
+    var atomic_sub = stdlib.Atomics.sub;
+    var atomic_and = stdlib.Atomics.and;
+    var atomic_or = stdlib.Atomics.or;
+    var atomic_xor = stdlib.Atomics.xor;
     var i8a = new stdlib.Int8Array(heap);
 
+    function do_cas() {
+        var v = 0;
+        v = atomic_cmpxchg(i8a, 100, 0, -1);
+        return v|0;
+    }
     function do_xchg() {
         var v = 0;
         v = atomic_exchange(i8a, 200, 37);
         return v|0;
     }
+    function do_add() {
+        var v = 0;
+        v = atomic_add(i8a, 10, 37);
+        return v|0;
+    }
+    function do_sub() {
+        var v = 0;
+        v = atomic_sub(i8a, 10, 37);
+        return v|0;
+    }
+    function do_and() {
+        var v = 0;
+        v = atomic_and(i8a, 10, 37);
+        return v|0;
+    }
+    function do_or() {
+        var v = 0;
+        v = atomic_or(i8a, 10, 37);
+        return v|0;
+    }
+    function do_xor() {
+        var v = 0;
+        v = atomic_xor(i8a, 10, 37);
+        return v|0;
+    }
 
-    return { xchg: do_xchg }
+    return { cas:do_cas, xchg: do_xchg, add: do_add, sub: do_sub, and: do_and, or: do_or, xor: do_xor }
 `);
 

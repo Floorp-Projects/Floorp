@@ -164,7 +164,7 @@ ScriptSettingsStackEntry::~ScriptSettingsStackEntry()
 // If the entry or incumbent global ends up being something that the subject
 // principal doesn't subsume, we don't want to use it. This never happens on
 // the web, but can happen with asymmetric privilege relationships (i.e.
-// nsExpandedPrincipal and System Principal).
+// ExpandedPrincipal and System Principal).
 //
 // The most correct thing to use instead would be the topmost global on the
 // callstack whose principal is subsumed by the subject principal. But that's

@@ -22,7 +22,7 @@
 #include "nsIScriptError.h"
 #include "nsCRTGlue.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 #include "mozilla/Maybe.h"
 #include <algorithm>
 
@@ -407,7 +407,7 @@ nsJSON::DecodeInternal(JSContext* cx,
   }
 
   nsresult rv;
-  nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
+  nsCOMPtr<nsIPrincipal> nullPrincipal = NullPrincipal::Create();
 
   // The ::Decode function is deprecated [Bug 675797] and the following
   // channel is never openend, so it does not matter what securityFlags

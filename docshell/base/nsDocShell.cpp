@@ -120,7 +120,7 @@
 #include "nsITimer.h"
 #include "nsISHistoryInternal.h"
 #include "nsIPrincipal.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 #include "nsISHEntry.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPromptFactory.h"
@@ -1501,7 +1501,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
       //
       // We didn't inherit OriginAttributes here as ExpandedPrincipal doesn't
       // have origin attributes.
-      principalToInherit = nsNullPrincipal::CreateWithInheritedAttributes(this);
+      principalToInherit = NullPrincipal::CreateWithInheritedAttributes(this);
       inheritPrincipal = false;
     }
   }
@@ -1514,7 +1514,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
     inheritPrincipal = false;
     // If aFirstParty is true and the pref 'privacy.firstparty.isolate' is
     // enabled, we will set firstPartyDomain on the origin attributes.
-    principalToInherit = nsNullPrincipal::CreateWithInheritedAttributes(this, aFirstParty);
+    principalToInherit = NullPrincipal::CreateWithInheritedAttributes(this, aFirstParty);
   }
 
   // If the triggeringPrincipal is not passed explicitly, we first try to create
@@ -8127,9 +8127,9 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
     nsCOMPtr<nsIPrincipal> principal;
     if (mSandboxFlags & SANDBOXED_ORIGIN) {
       if (aPrincipal) {
-        principal = nsNullPrincipal::CreateWithInheritedAttributes(aPrincipal);
+        principal = NullPrincipal::CreateWithInheritedAttributes(aPrincipal);
       } else {
-        principal = nsNullPrincipal::CreateWithInheritedAttributes(this);
+        principal = NullPrincipal::CreateWithInheritedAttributes(this);
       }
     } else {
       principal = aPrincipal;
@@ -12409,13 +12409,13 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
       if (!principalToInherit) {
         if (loadInfo->GetLoadingSandboxed()) {
           if (loadInfo->LoadingPrincipal()) {
-            principalToInherit = nsNullPrincipal::CreateWithInheritedAttributes(
+            principalToInherit = NullPrincipal::CreateWithInheritedAttributes(
             loadInfo->LoadingPrincipal());
           } else {
             // get the OriginAttributes
             OriginAttributes attrs;
             loadInfo->GetOriginAttributes(&attrs);
-            principalToInherit = nsNullPrincipal::Create(attrs);
+            principalToInherit = NullPrincipal::Create(attrs);
           }
         } else {
           principalToInherit = loadInfo->PrincipalToInherit();
@@ -12606,7 +12606,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
       // Ensure that we have a triggeringPrincipal.  Otherwise javascript:
       // URIs will pick it up from the about:blank page we just loaded,
       // and we don't really want even that in this case.
-      triggeringPrincipal = nsNullPrincipal::CreateWithInheritedAttributes(this);
+      triggeringPrincipal = NullPrincipal::CreateWithInheritedAttributes(this);
     }
   }
 
@@ -14378,7 +14378,7 @@ nsDocShell::GetPrintPreview(nsIWebBrowserPrint** aPrintPreview)
     // we QI the mContentViewer if the current URI is either about:blank
     // or about:printpreview.
     Stop(nsIWebNavigation::STOP_ALL);
-    nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::CreateWithInheritedAttributes(this);
+    nsCOMPtr<nsIPrincipal> principal = NullPrincipal::CreateWithInheritedAttributes(this);
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("about:printpreview"));
     nsresult rv = CreateAboutBlankContentViewer(principal, uri);

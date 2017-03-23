@@ -269,10 +269,14 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     JS::CompileOptions options(cx);
     options.setFileAndLine(mURL.get(), 1)
            .setVersion(JSVERSION_DEFAULT);
-    nsJSUtils::EvaluateOptions evalOptions(cx);
-    evalOptions.setCoerceToString(true);
-    rv = nsJSUtils::EvaluateString(cx, NS_ConvertUTF8toUTF16(script),
-                                   globalJSObject, options, evalOptions, &v);
+    {
+        nsJSUtils::ExecutionContext exec(cx, globalJSObject);
+        exec.SetCoerceToString(true);
+        exec.CompileAndExec(options, NS_ConvertUTF8toUTF16(script));
+        rv = exec.ExtractReturnValue(&v);
+    }
+
+    js::AssertSameCompartment(cx, v);
 
     if (NS_FAILED(rv) || !(v.isString() || v.isUndefined())) {
         return NS_ERROR_MALFORMED_URI;

@@ -82,11 +82,6 @@
 #include "mozilla/dom/PerformanceTiming.h"
 #include "mozilla/layers/APZThreadUtils.h"
 
-#if defined(MOZ_WIDGET_GTK)
-#include "gfxPlatformGtk.h" // xxx - for UseFcFontList
-#endif
-
-
 // Needed for Start/Stop of Image Animation
 #include "imgIContainer.h"
 #include "nsIImageLoadingContent.h"
@@ -2230,19 +2225,12 @@ nsPresContext::UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont)
   if (!mShell)
     return;
 
-  bool usePlatformFontList = true;
-#if defined(MOZ_WIDGET_GTK)
-  usePlatformFontList = gfxPlatformGtk::UseFcFontList();
-#endif
-
-  // xxx - until the Linux platform font list is always used, use full
-  // restyle to force updates with gfxPangoFontGroup usage
   // Note: this method is called without a font when rules in the userfont set
   // are updated, which may occur during reflow as a result of the lazy
   // initialization of the userfont set. It would be better to avoid a full
   // restyle but until this method is only called outside of reflow, schedule a
   // full restyle in these cases.
-  if (!usePlatformFontList || !aUpdatedFont) {
+  if (!aUpdatedFont) {
     PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW, eRestyle_ForceDescendants);
     return;
   }

@@ -88,10 +88,6 @@
 #include "GLContextProvider.h"
 #include "mozilla/gfx/Logging.h"
 
-#if defined(MOZ_WIDGET_GTK)
-#include "gfxPlatformGtk.h" // xxx - for UseFcFontList
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
 #include "TexturePoolOGL.h"
 #include "mozilla/layers/UiCompositorControllerChild.h"
@@ -711,17 +707,9 @@ gfxPlatform::Init()
     gPlatform->ComputeTileSize();
 
     nsresult rv;
-
-    bool usePlatformFontList = true;
-#if defined(MOZ_WIDGET_GTK)
-    usePlatformFontList = gfxPlatformGtk::UseFcFontList();
-#endif
-
-    if (usePlatformFontList) {
-        rv = gfxPlatformFontList::Init();
-        if (NS_FAILED(rv)) {
-            MOZ_CRASH("Could not initialize gfxPlatformFontList");
-        }
+    rv = gfxPlatformFontList::Init();
+    if (NS_FAILED(rv)) {
+        MOZ_CRASH("Could not initialize gfxPlatformFontList");
     }
 
     gPlatform->mScreenReferenceSurface =
@@ -2301,12 +2289,13 @@ gfxPlatform::InitWebRenderConfig()
 {
   FeatureState& featureWebRender = gfxConfig::GetFeature(Feature::WEBRENDER);
 
-  featureWebRender.EnableByDefault();
+  featureWebRender.DisableByDefault(
+      FeatureStatus::OptIn,
+      "WebRender is an opt-in feature",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_DEFAULT_OFF"));
 
-  if (!Preferences::GetBool("gfx.webrender.enabled", false)) {
-    featureWebRender.UserDisable(
-      "User disabled WebRender",
-      NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_DISABLED"));
+  if (Preferences::GetBool("gfx.webrender.enabled", false)) {
+    featureWebRender.UserEnable("Enabled by pref");
   }
 
   // WebRender relies on the GPU process when on Windows
@@ -2326,7 +2315,7 @@ gfxPlatform::InitWebRenderConfig()
       NS_LITERAL_CSTRING("FEATURE_FAILURE_SAFE_MODE"));
   }
 
-#ifndef MOZ_ENABLE_WEBRENDER
+#ifndef MOZ_BUILD_WEBRENDER
   featureWebRender.ForceDisable(
     FeatureStatus::Unavailable,
     "Build doesn't include WebRender",

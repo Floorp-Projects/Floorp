@@ -2451,7 +2451,7 @@ GCMarker::enterWeakMarkingMode()
     if (weakMapAction() == ExpandWeakMaps) {
         tag_ = TracerKindTag::WeakMarking;
 
-        for (GCZoneGroupIter zone(runtime()); !zone.done(); zone.next()) {
+        for (GCSweepGroupIter zone(runtime()); !zone.done(); zone.next()) {
             for (WeakMapBase* m : zone->gcWeakMapList()) {
                 if (m->marked)
                     (void) m->markIteratively(this);

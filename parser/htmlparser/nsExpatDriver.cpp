@@ -27,7 +27,7 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsUnicharInputStream.h"
 #include "nsContentUtils.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/SizePrintfMacros.h"
@@ -793,7 +793,7 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
       }
     }
     if (!loadingPrincipal) {
-      loadingPrincipal = nsNullPrincipal::Create();
+      loadingPrincipal = NullPrincipal::Create();
     }
     rv = NS_NewChannel(getter_AddRefs(channel),
                        uri,

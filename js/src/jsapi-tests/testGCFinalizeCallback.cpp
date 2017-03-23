@@ -175,7 +175,7 @@ bool checkMultipleGroups()
 bool checkFinalizeStatus()
 {
     /*
-     * The finalize callback should be called twice for each zone group
+     * The finalize callback should be called twice for each sweep group
      * finalized, with status JSFINALIZE_GROUP_START and JSFINALIZE_GROUP_END,
      * and then once more with JSFINALIZE_COLLECTION_END.
      */

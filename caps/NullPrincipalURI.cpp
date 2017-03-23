@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsNullPrincipalURI.h"
+#include "NullPrincipalURI.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
@@ -16,21 +16,21 @@
 #include "nsIUUIDGenerator.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-//// nsNullPrincipalURI
+//// NullPrincipalURI
 
-nsNullPrincipalURI::nsNullPrincipalURI()
+NullPrincipalURI::NullPrincipalURI()
   : mPath(mPathBytes, ArrayLength(mPathBytes), ArrayLength(mPathBytes) - 1)
 {
 }
 
-nsNullPrincipalURI::nsNullPrincipalURI(const nsNullPrincipalURI& aOther)
+NullPrincipalURI::NullPrincipalURI(const NullPrincipalURI& aOther)
   : mPath(mPathBytes, ArrayLength(mPathBytes), ArrayLength(mPathBytes) - 1)
 {
   mPath.Assign(aOther.mPath);
 }
 
 nsresult
-nsNullPrincipalURI::Init()
+NullPrincipalURI::Init()
 {
   // FIXME: bug 327161 -- make sure the uuid generator is reseeding-resistant.
   nsCOMPtr<nsIUUIDGenerator> uuidgen = services::GetUUIDGenerator();
@@ -51,10 +51,10 @@ nsNullPrincipalURI::Init()
 }
 
 /* static */
-already_AddRefed<nsNullPrincipalURI>
-nsNullPrincipalURI::Create()
+already_AddRefed<NullPrincipalURI>
+NullPrincipalURI::Create()
 {
-  RefPtr<nsNullPrincipalURI> uri = new nsNullPrincipalURI();
+  RefPtr<NullPrincipalURI> uri = new NullPrincipalURI();
   nsresult rv = uri->Init();
   NS_ENSURE_SUCCESS(rv, nullptr);
   return uri.forget();
@@ -63,13 +63,13 @@ nsNullPrincipalURI::Create()
 static NS_DEFINE_CID(kNullPrincipalURIImplementationCID,
                      NS_NULLPRINCIPALURI_IMPLEMENTATION_CID);
 
-NS_IMPL_ADDREF(nsNullPrincipalURI)
-NS_IMPL_RELEASE(nsNullPrincipalURI)
+NS_IMPL_ADDREF(NullPrincipalURI)
+NS_IMPL_RELEASE(NullPrincipalURI)
 
-NS_INTERFACE_MAP_BEGIN(nsNullPrincipalURI)
+NS_INTERFACE_MAP_BEGIN(NullPrincipalURI)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURI)
   if (aIID.Equals(kNullPrincipalURIImplementationCID))
-    foundInterface = static_cast<nsIURI *>(this);
+    foundInterface = static_cast<nsIURI*>(this);
   else
   NS_INTERFACE_MAP_ENTRY(nsIURI)
   NS_INTERFACE_MAP_ENTRY(nsISizeOf)
@@ -80,23 +80,23 @@ NS_INTERFACE_MAP_END
 //// nsIURI
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetAsciiHost(nsACString &_host)
+NullPrincipalURI::GetAsciiHost(nsACString& _host)
 {
   _host.Truncate();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetAsciiHostPort(nsACString &_hostport)
+NullPrincipalURI::GetAsciiHostPort(nsACString& _hostport)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetAsciiSpec(nsACString &_spec)
+NullPrincipalURI::GetAsciiSpec(nsACString& _spec)
 {
   nsAutoCString buffer;
-  // Ignore the return value -- nsNullPrincipalURI::GetSpec() is infallible.
+  // Ignore the return value -- NullPrincipalURI::GetSpec() is infallible.
   Unused << GetSpec(buffer);
   // This uses the infallible version of |NS_EscapeURL| as |GetSpec| is
   // already infallible.
@@ -105,141 +105,141 @@ nsNullPrincipalURI::GetAsciiSpec(nsACString &_spec)
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetHost(nsACString &_host)
+NullPrincipalURI::GetHost(nsACString& _host)
 {
   _host.Truncate();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SetHost(const nsACString &aHost)
+NullPrincipalURI::SetHost(const nsACString& aHost)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetHostPort(nsACString &_host)
+NullPrincipalURI::GetHostPort(nsACString& _host)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SetHostPort(const nsACString &aHost)
+NullPrincipalURI::SetHostPort(const nsACString& aHost)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SetHostAndPort(const nsACString &aHost)
+NullPrincipalURI::SetHostAndPort(const nsACString& aHost)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetOriginCharset(nsACString &_charset)
+NullPrincipalURI::GetOriginCharset(nsACString& _charset)
 {
   _charset.Truncate();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetPassword(nsACString &_password)
+NullPrincipalURI::GetPassword(nsACString& _password)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SetPassword(const nsACString &aPassword)
+NullPrincipalURI::SetPassword(const nsACString& aPassword)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetPath(nsACString &_path)
+NullPrincipalURI::GetPath(nsACString& _path)
 {
   _path = mPath;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SetPath(const nsACString &aPath)
+NullPrincipalURI::SetPath(const nsACString& aPath)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetFilePath(nsACString &aFilePath)
+NullPrincipalURI::GetFilePath(nsACString& aFilePath)
 {
   aFilePath.Truncate();
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SetFilePath(const nsACString &aFilePath)
+NullPrincipalURI::SetFilePath(const nsACString& aFilePath)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetQuery(nsACString &aQuery)
+NullPrincipalURI::GetQuery(nsACString& aQuery)
 {
   aQuery.Truncate();
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SetQuery(const nsACString &aQuery)
+NullPrincipalURI::SetQuery(const nsACString& aQuery)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetRef(nsACString &_ref)
+NullPrincipalURI::GetRef(nsACString& _ref)
 {
   _ref.Truncate();
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SetRef(const nsACString &aRef)
+NullPrincipalURI::SetRef(const nsACString& aRef)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetPrePath(nsACString &_prePath)
+NullPrincipalURI::GetPrePath(nsACString& _prePath)
 {
   _prePath = NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME ":");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetPort(int32_t *_port)
+NullPrincipalURI::GetPort(int32_t* _port)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SetPort(int32_t aPort)
+NullPrincipalURI::SetPort(int32_t aPort)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetScheme(nsACString &_scheme)
+NullPrincipalURI::GetScheme(nsACString& _scheme)
 {
   _scheme = NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SetScheme(const nsACString &aScheme)
+NullPrincipalURI::SetScheme(const nsACString& aScheme)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetSpec(nsACString &_spec)
+NullPrincipalURI::GetSpec(nsACString& _spec)
 {
   _spec = NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME ":") + mPath;
   return NS_OK;
@@ -247,77 +247,77 @@ nsNullPrincipalURI::GetSpec(nsACString &_spec)
 
 // result may contain unescaped UTF-8 characters
 NS_IMETHODIMP
-nsNullPrincipalURI::GetSpecIgnoringRef(nsACString &result)
+NullPrincipalURI::GetSpecIgnoringRef(nsACString& _result)
 {
-  return GetSpec(result);
+  return GetSpec(_result);
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetHasRef(bool *result)
+NullPrincipalURI::GetHasRef(bool* _result)
 {
-  *result = false;
+  *_result = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SetSpec(const nsACString &aSpec)
+NullPrincipalURI::SetSpec(const nsACString& aSpec)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetUsername(nsACString &_username)
+NullPrincipalURI::GetUsername(nsACString& _username)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SetUsername(const nsACString &aUsername)
+NullPrincipalURI::SetUsername(const nsACString& aUsername)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::GetUserPass(nsACString &_userPass)
+NullPrincipalURI::GetUserPass(nsACString& _userPass)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SetUserPass(const nsACString &aUserPass)
+NullPrincipalURI::SetUserPass(const nsACString& aUserPass)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::Clone(nsIURI **_newURI)
+NullPrincipalURI::Clone(nsIURI** _newURI)
 {
-  nsCOMPtr<nsIURI> uri = new nsNullPrincipalURI(*this);
+  nsCOMPtr<nsIURI> uri = new NullPrincipalURI(*this);
   uri.forget(_newURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::CloneIgnoringRef(nsIURI **_newURI)
+NullPrincipalURI::CloneIgnoringRef(nsIURI** _newURI)
 {
-  // GetRef/SetRef not supported by nsNullPrincipalURI, so
+  // GetRef/SetRef not supported by NullPrincipalURI, so
   // CloneIgnoringRef() is the same as Clone().
   return Clone(_newURI);
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::CloneWithNewRef(const nsACString& newRef, nsIURI **_newURI)
+NullPrincipalURI::CloneWithNewRef(const nsACString& newRef, nsIURI** _newURI)
 {
-  // GetRef/SetRef not supported by nsNullPrincipalURI, so
+  // GetRef/SetRef not supported by NullPrincipalURI, so
   // CloneWithNewRef() is the same as Clone().
   return Clone(_newURI);
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::Equals(nsIURI *aOther, bool *_equals)
+NullPrincipalURI::Equals(nsIURI* aOther, bool* _equals)
 {
   *_equals = false;
-  RefPtr<nsNullPrincipalURI> otherURI;
+  RefPtr<NullPrincipalURI> otherURI;
   nsresult rv = aOther->QueryInterface(kNullPrincipalURIImplementationCID,
                                        getter_AddRefs(otherURI));
   if (NS_SUCCEEDED(rv)) {
@@ -327,23 +327,23 @@ nsNullPrincipalURI::Equals(nsIURI *aOther, bool *_equals)
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::EqualsExceptRef(nsIURI *aOther, bool *_equals)
+NullPrincipalURI::EqualsExceptRef(nsIURI* aOther, bool* _equals)
 {
-  // GetRef/SetRef not supported by nsNullPrincipalURI, so
+  // GetRef/SetRef not supported by NullPrincipalURI, so
   // EqualsExceptRef() is the same as Equals().
   return Equals(aOther, _equals);
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::Resolve(const nsACString &aRelativePath,
-                            nsACString &_resolvedURI)
+NullPrincipalURI::Resolve(const nsACString& aRelativePath,
+                            nsACString& _resolvedURI)
 {
   _resolvedURI = aRelativePath;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNullPrincipalURI::SchemeIs(const char *aScheme, bool *_schemeIs)
+NullPrincipalURI::SchemeIs(const char* aScheme, bool* _schemeIs)
 {
   *_schemeIs = (0 == nsCRT::strcasecmp(NS_NULLPRINCIPAL_SCHEME, aScheme));
   return NS_OK;
@@ -353,13 +353,13 @@ nsNullPrincipalURI::SchemeIs(const char *aScheme, bool *_schemeIs)
 //// nsIIPCSerializableURI
 
 void
-nsNullPrincipalURI::Serialize(mozilla::ipc::URIParams &aParams)
+NullPrincipalURI::Serialize(mozilla::ipc::URIParams& aParams)
 {
   aParams = mozilla::ipc::NullPrincipalURIParams();
 }
 
 bool
-nsNullPrincipalURI::Deserialize(const mozilla::ipc::URIParams &aParams)
+NullPrincipalURI::Deserialize(const mozilla::ipc::URIParams& aParams)
 {
   if (aParams.type() != mozilla::ipc::URIParams::TNullPrincipalURIParams) {
     MOZ_ASSERT_UNREACHABLE("unexpected URIParams type");
@@ -376,13 +376,13 @@ nsNullPrincipalURI::Deserialize(const mozilla::ipc::URIParams &aParams)
 //// nsISizeOf
 
 size_t
-nsNullPrincipalURI::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+NullPrincipalURI::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return mPath.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }
 
 size_t
-nsNullPrincipalURI::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+NullPrincipalURI::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
-

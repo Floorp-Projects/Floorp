@@ -1299,6 +1299,10 @@ RecordedSourceSurfaceCreation::~RecordedSourceSurfaceCreation()
 bool
 RecordedSourceSurfaceCreation::PlayEvent(Translator *aTranslator) const
 {
+  if (!mData) {
+    return false;
+  }
+
   RefPtr<SourceSurface> src = aTranslator->GetReferenceDrawTarget()->
     CreateSourceSurfaceFromData(mData, mSize, mSize.width * BytesPerPixel(mFormat), mFormat);
   aTranslator->AddSourceSurface(mRefPtr, src);
@@ -1311,6 +1315,7 @@ RecordedSourceSurfaceCreation::RecordToStream(ostream &aStream) const
   WriteElement(aStream, mRefPtr);
   WriteElement(aStream, mSize);
   WriteElement(aStream, mFormat);
+  MOZ_ASSERT(mData);
   for (int y = 0; y < mSize.height; y++) {
     aStream.write((const char*)mData + y * mStride, BytesPerPixel(mFormat) * mSize.width);
   }
@@ -1322,8 +1327,12 @@ RecordedSourceSurfaceCreation::RecordedSourceSurfaceCreation(istream &aStream)
   ReadElement(aStream, mRefPtr);
   ReadElement(aStream, mSize);
   ReadElement(aStream, mFormat);
-  mData = (uint8_t*)new char[mSize.width * mSize.height * BytesPerPixel(mFormat)];
-  aStream.read((char*)mData, mSize.width * mSize.height * BytesPerPixel(mFormat));
+  mData = (uint8_t*)new (fallible) char[mSize.width * mSize.height * BytesPerPixel(mFormat)];
+  if (!mData) {
+    gfxWarning() << "RecordedSourceSurfaceCreation failed to allocate data";
+  } else {
+    aStream.read((char*)mData, mSize.width * mSize.height * BytesPerPixel(mFormat));
+  }
 }
 
 void

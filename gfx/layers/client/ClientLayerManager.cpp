@@ -826,7 +826,6 @@ ClientLayerManager::GetBackendName(nsAString& aName)
     case LayersBackend::LAYERS_NONE: aName.AssignLiteral("None"); return;
     case LayersBackend::LAYERS_BASIC: aName.AssignLiteral("Basic"); return;
     case LayersBackend::LAYERS_OPENGL: aName.AssignLiteral("OpenGL"); return;
-    case LayersBackend::LAYERS_D3D9: aName.AssignLiteral("Direct3D 9"); return;
     case LayersBackend::LAYERS_D3D11: {
 #ifdef XP_WIN
       if (DeviceManagerDx::Get()->IsWARP()) {
