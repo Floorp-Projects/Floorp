@@ -3,23 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsCollationMacUC.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
+#include "nsCollation.h"
 #include "nsIServiceManager.h"
 #include "prmem.h"
 #include "nsString.h"
 
-NS_IMPL_ISUPPORTS(nsCollationMacUC, nsICollation)
+NS_IMPL_ISUPPORTS(nsCollation, nsICollation)
 
-nsCollationMacUC::nsCollationMacUC()
+nsCollation::nsCollation()
   : mInit(false)
   , mHasCollator(false)
   , mLastStrength(-1)
   , mCollatorICU(nullptr)
 { }
 
-nsCollationMacUC::~nsCollationMacUC()
+nsCollation::~nsCollation()
 {
 #ifdef DEBUG
   nsresult res =
@@ -28,9 +26,10 @@ nsCollationMacUC::~nsCollationMacUC()
   NS_ASSERTION(NS_SUCCEEDED(res), "CleanUpCollator failed");
 }
 
-nsresult nsCollationMacUC::ConvertStrength(const int32_t aNSStrength,
-                                           UCollationStrength* aICUStrength,
-                                           UColAttributeValue* aCaseLevelOut)
+nsresult
+nsCollation::ConvertStrength(const int32_t aNSStrength,
+                             UCollationStrength* aICUStrength,
+                             UColAttributeValue* aCaseLevelOut)
 {
   NS_ENSURE_ARG_POINTER(aICUStrength);
   NS_ENSURE_TRUE((aNSStrength < 4), NS_ERROR_FAILURE);
@@ -62,7 +61,8 @@ nsresult nsCollationMacUC::ConvertStrength(const int32_t aNSStrength,
   return NS_OK;
 }
 
-nsresult nsCollationMacUC::EnsureCollator(const int32_t newStrength)
+nsresult
+nsCollation::EnsureCollator(const int32_t newStrength)
 {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);
   if (mHasCollator && (mLastStrength == newStrength))
@@ -102,7 +102,8 @@ nsresult nsCollationMacUC::EnsureCollator(const int32_t newStrength)
   return NS_OK;
 }
 
-nsresult nsCollationMacUC::CleanUpCollator(void)
+nsresult
+nsCollation::CleanUpCollator(void)
 {
   if (mHasCollator) {
     ucol_close(mCollatorICU);
@@ -112,10 +113,10 @@ nsresult nsCollationMacUC::CleanUpCollator(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCollationMacUC::Initialize(const nsACString& locale)
+NS_IMETHODIMP
+nsCollation::Initialize(const nsACString& locale)
 {
   NS_ENSURE_TRUE((!mInit), NS_ERROR_ALREADY_INITIALIZED);
-  nsCOMPtr<nsILocale> appLocale;
 
   mLocale = locale;
 
@@ -123,8 +124,9 @@ NS_IMETHODIMP nsCollationMacUC::Initialize(const nsACString& locale)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCollationMacUC::AllocateRawSortKey(int32_t strength, const nsAString& stringIn,
-                                                   uint8_t** key, uint32_t* outLen)
+NS_IMETHODIMP
+nsCollation::AllocateRawSortKey(int32_t strength, const nsAString& stringIn,
+                                uint8_t** key, uint32_t* outLen)
 {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_ARG_POINTER(key);
@@ -155,8 +157,9 @@ NS_IMETHODIMP nsCollationMacUC::AllocateRawSortKey(int32_t strength, const nsASt
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCollationMacUC::CompareString(int32_t strength, const nsAString& string1,
-                                              const nsAString& string2, int32_t* result)
+NS_IMETHODIMP
+nsCollation::CompareString(int32_t strength, const nsAString& string1,
+                           const nsAString& string2, int32_t* result)
 {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_ARG_POINTER(result);
@@ -189,9 +192,10 @@ NS_IMETHODIMP nsCollationMacUC::CompareString(int32_t strength, const nsAString&
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCollationMacUC::CompareRawSortKey(const uint8_t* key1, uint32_t len1,
-                                                  const uint8_t* key2, uint32_t len2,
-                                                  int32_t* result)
+NS_IMETHODIMP
+nsCollation::CompareRawSortKey(const uint8_t* key1, uint32_t len1,
+                               const uint8_t* key2, uint32_t len2,
+                               int32_t* result)
 {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_ARG_POINTER(key1);

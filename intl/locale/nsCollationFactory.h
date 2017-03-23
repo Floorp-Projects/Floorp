@@ -12,8 +12,6 @@
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
 
-class nsIUnicodeEncoder;
-
 // Create a collation interface for the current app's locale.
 // 
 class nsCollationFactory final : public nsICollationFactory {
@@ -25,26 +23,6 @@ public:
   NS_DECL_NSICOLLATIONFACTORY
 
   nsCollationFactory() {}
-};
-
-
-struct nsCollation {
-
-public: 
-
-  nsCollation();
-  
-  ~nsCollation();
-
-  // normalize string before collation key generation
-  nsresult NormalizeString(const nsAString& stringIn, nsAString& stringOut);
-
-  // charset conversion util, C string buffer is allocate by PR_Malloc, caller should call PR_Free
-  nsresult SetCharset(const char* aCharset);
-  nsresult UnicodeToChar(const nsAString& aSrc, char** dst);
-
-protected:
-  nsCOMPtr <nsIUnicodeEncoder>            mEncoder;
 };
 
 #endif  /* nsCollationFactory_h__ */
