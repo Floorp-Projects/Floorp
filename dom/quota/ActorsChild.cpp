@@ -9,6 +9,7 @@
 #include "nsVariant.h"
 #include "QuotaManagerService.h"
 #include "QuotaRequests.h"
+#include "QuotaResults.h"
 
 namespace mozilla {
 namespace dom {
@@ -141,14 +142,56 @@ QuotaUsageRequestChild::HandleResponse(nsresult aResponse)
 }
 
 void
-QuotaUsageRequestChild::HandleResponse(const UsageResponse& aResponse)
+QuotaUsageRequestChild::HandleResponse(const nsTArray<OriginUsage>& aResponse)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
 
-  mRequest->SetResult(aResponse.usage(),
-                      aResponse.fileUsage(),
-                      aResponse.limit());
+  RefPtr<nsVariant> variant = new nsVariant();
+
+  if (aResponse.IsEmpty()) {
+    variant->SetAsEmptyArray();
+  } else {
+    nsTArray<RefPtr<UsageResult>> usageResults;
+
+    const uint32_t count = aResponse.Length();
+
+    usageResults.SetCapacity(count);
+
+    for (uint32_t index = 0; index < count; index++) {
+      auto& originUsage = aResponse[index];
+
+      RefPtr<UsageResult> usageResult = new UsageResult(originUsage.origin(),
+                                                        originUsage.persisted(),
+                                                        originUsage.usage());
+
+      usageResults.AppendElement(usageResult.forget());
+    }
+
+    variant->SetAsArray(nsIDataType::VTYPE_INTERFACE_IS,
+                        &NS_GET_IID(nsIQuotaUsageResult),
+                        usageResults.Length(),
+                        static_cast<void*>(usageResults.Elements()));
+  }
+
+  mRequest->SetResult(variant);
+}
+
+void
+QuotaUsageRequestChild::HandleResponse(const OriginUsageResponse& aResponse)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mRequest);
+
+  RefPtr<OriginUsageResult> result =
+    new OriginUsageResult(aResponse.usage(),
+                          aResponse.fileUsage(),
+                          aResponse.limit());
+
+  RefPtr<nsVariant> variant = new nsVariant();
+  variant->SetAsInterface(NS_GET_IID(nsIQuotaOriginUsageResult), result);
+
+  mRequest->SetResult(variant);
 }
 
 void
@@ -175,8 +218,12 @@ QuotaUsageRequestChild::Recv__delete__(const UsageRequestResponse& aResponse)
       HandleResponse(aResponse.get_nsresult());
       break;
 
-    case UsageRequestResponse::TUsageResponse:
-      HandleResponse(aResponse.get_UsageResponse());
+    case UsageRequestResponse::TAllUsageResponse:
+      HandleResponse(aResponse.get_AllUsageResponse().originUsages());
+      break;
+
+    case UsageRequestResponse::TOriginUsageResponse:
+      HandleResponse(aResponse.get_OriginUsageResponse());
       break;
 
     default:

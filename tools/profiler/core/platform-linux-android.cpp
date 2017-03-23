@@ -390,8 +390,8 @@ public:
             }
 
             if (info->Stack()->CanDuplicateLastSampleDueToSleep() &&
-                gPS->Buffer(lock)->DuplicateLastSample(info->ThreadId(),
-                                                       gPS->StartTime(lock))) {
+                gPS->Buffer(lock)->DuplicateLastSample(gPS->StartTime(lock),
+                                                       info->LastSample())) {
               continue;
             }
 

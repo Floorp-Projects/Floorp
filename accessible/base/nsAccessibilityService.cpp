@@ -595,6 +595,7 @@ nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
     }
 
     if (child) {
+      MOZ_DIAGNOSTIC_ASSERT(child->Parent(), "Unattached accessible from tree");
       document->ContentRemoved(child->Parent(), aChildNode);
 #ifdef A11Y_LOG
       if (logging::IsEnabled(logging::eTree))

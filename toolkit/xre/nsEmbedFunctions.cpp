@@ -25,6 +25,7 @@
 #ifdef XP_WIN
 #include <process.h>
 #include "mozilla/ipc/WindowsMessageLoop.h"
+#include "mozilla/TlsAllocationTracker.h"
 #endif
 
 #include "nsAppDirectoryServiceDefs.h"
@@ -358,6 +359,14 @@ XRE_InitChildProcess(int aArgc,
 #endif
 
 #if defined(XP_WIN)
+#ifndef DEBUG
+  // XXX Bug 1320134: added for diagnosing the crashes because we're running out
+  // of TLS indices on Windows. Remove after the root cause is found.
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::InitTlsAllocationTracker();
+  }
+#endif
+
   // From the --attach-console support in nsNativeAppSupportWin.cpp, but
   // here we are a content child process, so we always attempt to attach
   // to the parent's (ie, the browser's) console.
@@ -696,6 +705,14 @@ XRE_InitChildProcess(int aArgc,
 #endif
     }
   }
+
+#if defined(XP_WIN) && !defined(DEBUG)
+  // XXX Bug 1320134: added for diagnosing the crashes because we're running out
+  // of TLS indices on Windows. Remove after the root cause is found.
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::ShutdownTlsAllocationTracker();
+  }
+#endif
 
   Telemetry::DestroyStatisticsRecorder();
   return XRE_DeinitCommandLine();

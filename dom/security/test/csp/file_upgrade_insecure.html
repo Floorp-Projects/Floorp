@@ -57,6 +57,7 @@
       else {
         window.parent.postMessage({result: "websocket-error"}, "*");
       }
+      mySocket.close();
     };
     mySocket.onerror = function(e) {
       // debug information for Bug 1316305

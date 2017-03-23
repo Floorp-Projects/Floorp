@@ -35,7 +35,7 @@ TraceChild(JSTracer* trc, void* data)
 JavaScriptChild::~JavaScriptChild()
 {
     JSContext* cx = dom::danger::GetJSContext();
-    JS_RemoveWeakPointerZoneGroupCallback(cx, UpdateChildWeakPointersBeforeSweepingZoneGroup);
+    JS_RemoveWeakPointerZonesCallback(cx, UpdateChildWeakPointersBeforeSweepingZoneGroup);
     JS_RemoveExtraGCRootsTracer(cx, TraceChild, this);
 }
 
@@ -48,7 +48,7 @@ JavaScriptChild::init()
         return false;
 
     JSContext* cx = dom::danger::GetJSContext();
-    JS_AddWeakPointerZoneGroupCallback(cx, UpdateChildWeakPointersBeforeSweepingZoneGroup, this);
+    JS_AddWeakPointerZonesCallback(cx, UpdateChildWeakPointersBeforeSweepingZoneGroup, this);
     JS_AddExtraGCRootsTracer(cx, TraceChild, this);
     return true;
 }

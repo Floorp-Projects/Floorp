@@ -30,6 +30,7 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
   , mStackTop(aStackTop)
   , mPendingDelete(false)
   , mHasProfile(false)
+  , mLastSample(aThreadId)
 {
   MOZ_COUNT_CTOR(ThreadInfo);
   mThread = NS_GetCurrentThread();

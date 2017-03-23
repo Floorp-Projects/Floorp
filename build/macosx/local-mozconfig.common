@@ -32,6 +32,11 @@ fi
 ldflags="$ldflags -Wl,-no_data_in_code_info"
 export LDFLAGS="$ldflags"
 
+# Until bug 1342503 is fixed, we can't build some of the webrender dependencies
+# on buildbot OS X builders, because rustc will use some random system toolchain
+# instead of the one we package with tooltool.
+ac_add_options --disable-webrender
+
 # If not set use the system default clang
 if [ -z "$CC" ]; then
     export CC=clang

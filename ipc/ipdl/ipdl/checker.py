@@ -55,6 +55,7 @@ def checkSyncMessage(tu, syncMsgList, errout=sys.stderr):
 
 def checkFixedSyncMessages(config, errout=sys.stderr):
     fixed = SyncMessageChecker.getFixedSyncMessages()
+    error_free = True
     for item in fixed:
         protocol = item.split('::')[0]
         # Ignore things like sync messages in test protocols we didn't compile.
@@ -63,3 +64,5 @@ def checkFixedSyncMessages(config, errout=sys.stderr):
            'platform' not in config.options(item):
             print >>errout, 'Error: Sync IPC message %s not found, it appears to be fixed.\n' \
                             'Please remove it from sync-messages.ini.' % item
+            error_free = False
+    return error_free

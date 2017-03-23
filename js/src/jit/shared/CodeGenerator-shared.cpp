@@ -1499,35 +1499,37 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
     masm.bind(&ok);
 #endif
 
-    // Save the caller's TLS register in a reserved stack slot (below the
-    // call's stack arguments) for retrieval after the call.
-    if (mir->saveTls())
-        masm.storePtr(WasmTlsReg, Address(masm.getStackPointer(), mir->tlsStackOffset()));
+    // LWasmCallBase::isCallPreserved() assumes that all MWasmCalls preserve the
+    // TLS and pinned regs. The only case where where we don't have to reload
+    // the TLS and pinned regs is when the callee preserves them.
+    bool reloadRegs = true;
 
     const wasm::CallSiteDesc& desc = mir->desc();
     const wasm::CalleeDesc& callee = mir->callee();
     switch (callee.which()) {
       case wasm::CalleeDesc::Func:
         masm.call(desc, callee.funcIndex());
+        reloadRegs = false;
         break;
       case wasm::CalleeDesc::Import:
         masm.wasmCallImport(desc, callee);
         break;
-      case wasm::CalleeDesc::WasmTable:
       case wasm::CalleeDesc::AsmJSTable:
+      case wasm::CalleeDesc::WasmTable:
         masm.wasmCallIndirect(desc, callee, ins->needsBoundsCheck());
+        reloadRegs = callee.which() == wasm::CalleeDesc::WasmTable && callee.wasmTableIsExternal();
         break;
       case wasm::CalleeDesc::Builtin:
         masm.call(callee.builtin());
+        reloadRegs = false;
         break;
       case wasm::CalleeDesc::BuiltinInstanceMethod:
         masm.wasmCallBuiltinInstanceMethod(mir->instanceArg(), callee.builtin());
         break;
     }
 
-    // After return, restore the caller's TLS and pinned registers.
-    if (mir->saveTls()) {
-        masm.loadPtr(Address(masm.getStackPointer(), mir->tlsStackOffset()), WasmTlsReg);
+    if (reloadRegs) {
+        masm.loadWasmTlsRegFromFrame();
         masm.loadWasmPinnedRegsFromTls();
     }
 

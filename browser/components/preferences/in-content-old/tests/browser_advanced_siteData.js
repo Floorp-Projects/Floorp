@@ -132,7 +132,7 @@ function getQuotaUsage(origin) {
   return new Promise(resolve => {
     let uri = NetUtil.newURI(origin);
     let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-    Services.qms.getUsageForPrincipal(principal, request => resolve(request.usage));
+    Services.qms.getUsageForPrincipal(principal, request => resolve(request.result.usage));
   });
 }
 

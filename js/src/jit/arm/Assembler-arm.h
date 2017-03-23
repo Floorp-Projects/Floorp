@@ -73,7 +73,7 @@ static constexpr Register IntArgReg0 = r0;
 static constexpr Register IntArgReg1 = r1;
 static constexpr Register IntArgReg2 = r2;
 static constexpr Register IntArgReg3 = r3;
-static constexpr Register HeapReg = r11;
+static constexpr Register HeapReg = r10;
 static constexpr Register CallTempNonArgRegs[] = { r5, r6, r7, r8 };
 static const uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
@@ -134,7 +134,7 @@ static constexpr FloatRegister InvalidFloatReg;
 static constexpr Register JSReturnReg_Type = r3;
 static constexpr Register JSReturnReg_Data = r2;
 static constexpr Register StackPointer = sp;
-static constexpr Register FramePointer = InvalidReg;
+static constexpr Register FramePointer = r11;
 static constexpr Register ReturnReg = r0;
 static constexpr Register64 ReturnReg64(r1, r0);
 static constexpr FloatRegister ReturnFloat32Reg = { FloatRegisters::d0, VFPRegister::Single };
@@ -168,6 +168,7 @@ static constexpr Register WasmIonExitRegE1 = r1;
 // None of these may be the second scratch register (lr).
 static constexpr Register WasmIonExitRegReturnData = r2;
 static constexpr Register WasmIonExitRegReturnType = r3;
+static constexpr Register WasmIonExitTlsReg = r9;
 static constexpr Register WasmIonExitRegD0 = r0;
 static constexpr Register WasmIonExitRegD1 = r1;
 static constexpr Register WasmIonExitRegD2 = r4;

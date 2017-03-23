@@ -131,7 +131,7 @@ function* testSteps()
 
     info("Getting usage");
 
-    request = getUsage(continueToNextStepSync);
+    request = getCurrentUsage(continueToNextStepSync);
     yield undefined;
 
     ok(request.resultCode == NS_ERROR_UNEXPECTED, "Get usage failed");
@@ -140,7 +140,7 @@ function* testSteps()
 
     info("Getting usage");
 
-    request = getUsage(continueToNextStepSync);
+    request = getCurrentUsage(continueToNextStepSync);
     yield undefined;
 
     ok(request.resultCode == NS_OK, "Get usage succeeded");
@@ -156,7 +156,7 @@ function* testSteps()
 
     info("Getting usage");
 
-    request = getUsage(continueToNextStepSync);
+    request = getCurrentUsage(continueToNextStepSync);
     yield undefined;
 
     ok(request.resultCode == NS_OK, "Get usage succeeded");

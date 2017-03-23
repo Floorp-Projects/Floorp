@@ -15,7 +15,7 @@
 
 #include "mozAutoDocUpdate.h"
 #include "nsMediaList.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 
 namespace mozilla {
 
@@ -202,7 +202,7 @@ StyleSheet::SetEnabled(bool aEnabled)
 StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
                                ReferrerPolicy aReferrerPolicy,
                                const dom::SRIMetadata& aIntegrity)
-  : mPrincipal(nsNullPrincipal::Create())
+  : mPrincipal(NullPrincipal::Create())
   , mCORSMode(aCORSMode)
   , mReferrerPolicy(aReferrerPolicy)
   , mIntegrity(aIntegrity)
@@ -212,7 +212,7 @@ StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
 #endif
 {
   if (!mPrincipal) {
-    NS_RUNTIMEABORT("nsNullPrincipal::Init failed");
+    NS_RUNTIMEABORT("NullPrincipal::Init failed");
   }
 }
 

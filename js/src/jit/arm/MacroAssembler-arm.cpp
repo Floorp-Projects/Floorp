@@ -5138,7 +5138,7 @@ MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc)
 {
     CodeOffset offset(currentOffset());
     ma_nop();
-    append(desc, CodeOffset(currentOffset()), framePushed());
+    append(desc, CodeOffset(currentOffset()));
     return offset;
 }
 

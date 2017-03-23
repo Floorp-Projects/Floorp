@@ -10,7 +10,7 @@
 #include "XPCWrapper.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionNoteRootCallback.h"
-#include "nsExpandedPrincipal.h"
+#include "ExpandedPrincipal.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "nsIAddonInterposition.h"
@@ -290,14 +290,14 @@ XPCWrappedNativeScope::EnsureContentXBLScope(JSContext* cx)
     options.proto = global;
     options.sameZoneAs = global;
 
-    // Use an nsExpandedPrincipal to create asymmetric security.
+    // Use an ExpandedPrincipal to create asymmetric security.
     nsIPrincipal* principal = GetPrincipal();
     MOZ_ASSERT(!nsContentUtils::IsExpandedPrincipal(principal));
     nsTArray<nsCOMPtr<nsIPrincipal>> principalAsArray(1);
     principalAsArray.AppendElement(principal);
-    RefPtr<nsExpandedPrincipal> ep =
-        nsExpandedPrincipal::Create(principalAsArray,
-                                    principal->OriginAttributesRef());
+    RefPtr<ExpandedPrincipal> ep =
+        ExpandedPrincipal::Create(principalAsArray,
+                                  principal->OriginAttributesRef());
 
     // Create the sandbox.
     RootedValue v(cx);

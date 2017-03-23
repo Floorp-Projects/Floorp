@@ -122,8 +122,9 @@ function* testSteps()
   let usageBeforeMaintenance;
 
   quotaManagerService.getUsageForPrincipal(principal, (request) => {
-    ok(request.usage > 0, "Usage is non-zero");
-    usageBeforeMaintenance = request.usage;
+    let usage = request.result.usage;
+    ok(usage > 0, "Usage is non-zero");
+    usageBeforeMaintenance = usage;
     continueToNextStep();
   });
   yield undefined;
@@ -155,8 +156,9 @@ function* testSteps()
   let usageAfterMaintenance;
 
   quotaManagerService.getUsageForPrincipal(principal, (request) => {
-    ok(request.usage > 0, "Usage is non-zero");
-    usageAfterMaintenance = request.usage;
+    let usage = request.result.usage;
+    ok(usage > 0, "Usage is non-zero");
+    usageAfterMaintenance = usage;
     continueToNextStep();
   });
   yield undefined;

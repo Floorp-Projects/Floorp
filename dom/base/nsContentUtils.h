@@ -1578,12 +1578,12 @@ public:
   static bool IsSystemPrincipal(nsIPrincipal* aPrincipal);
 
   /**
-   * Returns true if aPrincipal is an nsExpandedPrincipal.
+   * Returns true if aPrincipal is an ExpandedPrincipal.
    */
   static bool IsExpandedPrincipal(nsIPrincipal* aPrincipal);
 
   /**
-   * Returns true if aPrincipal is the system or an nsExpandedPrincipal.
+   * Returns true if aPrincipal is the system or an ExpandedPrincipal.
    */
   static bool IsSystemOrExpandedPrincipal(nsIPrincipal* aPrincipal)
   {

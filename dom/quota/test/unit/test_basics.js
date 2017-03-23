@@ -38,7 +38,7 @@ function* testSteps()
 
   info("Getting usage");
 
-  getUsage(grabUsageAndContinueHandler);
+  getCurrentUsage(grabUsageAndContinueHandler);
   let usage = yield undefined;
 
   ok(usage == 0, "Usage is zero");
@@ -53,7 +53,7 @@ function* testSteps()
 
   info("Getting usage");
 
-  getUsage(grabUsageAndContinueHandler);
+  getCurrentUsage(grabUsageAndContinueHandler);
   usage = yield undefined;
 
   ok(usage > 0, "Usage is not zero");

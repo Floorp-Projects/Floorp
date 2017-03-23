@@ -57,9 +57,6 @@ class CodeSegment
     uint8_t* outOfBoundsCode_;
     uint8_t* unalignedAccessCode_;
 
-    // The profiling mode may be changed dynamically.
-    bool profilingEnabled_;
-
   public:
 #ifdef MOZ_VTUNE
     unsigned vtune_method_id_; // Zero if unset.
@@ -242,28 +239,24 @@ class CodeRange
         DebugTrap,         // calls C++ to handle debug event such as
                            // enter/leave frame or breakpoint
         FarJumpIsland,     // inserted to connect otherwise out-of-range insns
-        Inline             // stub that is jumped-to, not called, and thus
-                           // replaces/loses preceding innermost frame
+        Inline,            // stub that is jumped-to within prologue/epilogue
+        Throw              // special stack-unwinding stub
     };
 
   private:
     // All fields are treated as cacheable POD:
     uint32_t begin_;
-    uint32_t profilingReturn_;
+    uint32_t ret_;
     uint32_t end_;
     uint32_t funcIndex_;
     uint32_t funcLineOrBytecode_;
-    uint8_t funcBeginToTableEntry_;
-    uint8_t funcBeginToTableProfilingJump_;
-    uint8_t funcBeginToNonProfilingEntry_;
-    uint8_t funcProfilingJumpToProfilingReturn_;
-    uint8_t funcProfilingEpilogueToProfilingReturn_;
+    uint8_t funcBeginToNormalEntry_;
     Kind kind_ : 8;
 
   public:
     CodeRange() = default;
     CodeRange(Kind kind, Offsets offsets);
-    CodeRange(Kind kind, ProfilingOffsets offsets);
+    CodeRange(Kind kind, CallableOffsets offsets);
     CodeRange(uint32_t funcIndex, uint32_t lineOrBytecode, FuncOffsets offsets);
 
     // All CodeRanges have a begin and end.
@@ -293,41 +286,30 @@ class CodeRange
     bool isInline() const {
         return kind() == Inline;
     }
+    bool isThunk() const {
+        return kind() == FarJumpIsland;
+    }
 
-    // Every CodeRange except entry and inline stubs has a profiling return
-    // which is used for asynchronous profiling to determine the frame pointer.
+    // Every CodeRange except entry and inline stubs are callable and have a
+    // return statement. Asynchronous frame iteration needs to know the offset
+    // of the return instruction to calculate the frame pointer.
 
-    uint32_t profilingReturn() const {
+    uint32_t ret() const {
         MOZ_ASSERT(isFunction() || isImportExit() || isTrapExit());
-        return profilingReturn_;
+        return ret_;
     }
 
-    // Functions have offsets which allow patching to selectively execute
-    // profiling prologues/epilogues.
+    // Function CodeRanges have two entry points: one for normal calls (with a
+    // known signature) and one for table calls (which involves dynamic
+    // signature checking).
 
-    uint32_t funcProfilingEntry() const {
-        MOZ_ASSERT(isFunction());
-        return begin();
-    }
     uint32_t funcTableEntry() const {
         MOZ_ASSERT(isFunction());
-        return begin_ + funcBeginToTableEntry_;
+        return begin_;
     }
-    uint32_t funcTableProfilingJump() const {
+    uint32_t funcNormalEntry() const {
         MOZ_ASSERT(isFunction());
-        return begin_ + funcBeginToTableProfilingJump_;
-    }
-    uint32_t funcNonProfilingEntry() const {
-        MOZ_ASSERT(isFunction());
-        return begin_ + funcBeginToNonProfilingEntry_;
-    }
-    uint32_t funcProfilingJump() const {
-        MOZ_ASSERT(isFunction());
-        return profilingReturn_ - funcProfilingJumpToProfilingReturn_;
-    }
-    uint32_t funcProfilingEpilogue() const {
-        MOZ_ASSERT(isFunction());
-        return profilingReturn_ - funcProfilingEpilogueToProfilingReturn_;
+        return begin_ + funcBeginToNormalEntry_;
     }
     uint32_t funcIndex() const {
         MOZ_ASSERT(isFunction());
@@ -353,25 +335,6 @@ class CodeRange
 };
 
 WASM_DECLARE_POD_VECTOR(CodeRange, CodeRangeVector)
-
-// A CallThunk describes the offset and target of thunks so that they may be
-// patched at runtime when profiling is toggled. Thunks are emitted to connect
-// callsites that are too far away from callees to fit in a single call
-// instruction's relative offset.
-
-struct CallThunk
-{
-    uint32_t offset;
-    union {
-        uint32_t funcIndex;
-        uint32_t codeRangeIndex;
-    } u;
-
-    CallThunk(uint32_t offset, uint32_t funcIndex) : offset(offset) { u.funcIndex = funcIndex; }
-    CallThunk() = default;
-};
-
-WASM_DECLARE_POD_VECTOR(CallThunk, CallThunkVector)
 
 // A wasm module can either use no memory, a unshared memory (ArrayBuffer) or
 // shared memory (SharedArrayBuffer).
@@ -463,7 +426,6 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     MemoryAccessVector    memoryAccesses;
     CodeRangeVector       codeRanges;
     CallSiteVector        callSites;
-    CallThunkVector       callThunks;
     NameInBytecodeVector  funcNames;
     CustomSectionVector   customSections;
     CacheableChars        filename;
@@ -560,8 +522,9 @@ class Code
     const SharedMetadata     metadata_;
     const SharedBytes        maybeBytecode_;
     UniqueGeneratedSourceMap maybeSourceMap_;
-    CacheableCharsVector     funcLabels_;
-    bool                     profilingEnabled_;
+
+    // Mutated at runtime:
+    CacheableCharsVector     profilingLabels_;
 
     // State maintained when debugging is enabled:
 
@@ -602,15 +565,11 @@ class Code
     bool getOffsetLocation(JSContext* cx, uint32_t offset, bool* found, size_t* lineno, size_t* column);
     bool totalSourceLines(JSContext* cx, uint32_t* count);
 
-    // Each Code has a profiling mode that is updated to match the runtime's
-    // profiling mode when there are no other activations of the code live on
-    // the stack. Once in profiling mode, ProfilingFrameIterator can be used to
-    // asynchronously walk the stack. Otherwise, the ProfilingFrameIterator will
-    // skip any activations of this code.
+    // To save memory, profilingLabels_ are generated lazily when profiling mode
+    // is enabled.
 
-    MOZ_MUST_USE bool ensureProfilingState(JSRuntime* rt, bool enabled);
-    bool profilingEnabled() const { return profilingEnabled_; }
-    const char* profilingLabel(uint32_t funcIndex) const { return funcLabels_[funcIndex].get(); }
+    void ensureProfilingLabels(bool profilingEnabled);
+    const char* profilingLabel(uint32_t funcIndex) const;
 
     // The Code can track enter/leave frame events. Any such event triggers
     // debug trap. The enter/leave frame events enabled or disabled across

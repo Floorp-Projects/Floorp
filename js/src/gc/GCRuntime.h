@@ -788,9 +788,9 @@ class GCRuntime
     void callObjectsTenuredCallback();
     MOZ_MUST_USE bool addFinalizeCallback(JSFinalizeCallback callback, void* data);
     void removeFinalizeCallback(JSFinalizeCallback func);
-    MOZ_MUST_USE bool addWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback,
+    MOZ_MUST_USE bool addWeakPointerZonesCallback(JSWeakPointerZonesCallback callback,
                                                       void* data);
-    void removeWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback);
+    void removeWeakPointerZonesCallback(JSWeakPointerZonesCallback callback);
     MOZ_MUST_USE bool addWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback callback,
                                                         void* data);
     void removeWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback callback);
@@ -802,7 +802,7 @@ class GCRuntime
 
     void setFullCompartmentChecks(bool enable);
 
-    JS::Zone* getCurrentZoneGroup() { return currentZoneGroup; }
+    JS::Zone* getCurrentSweepGroup() { return currentSweepGroup; }
     void setFoundBlackGrayEdges(TenuredCell& target) {
         AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!foundBlackGrayEdges.ref().append(&target))
@@ -978,13 +978,13 @@ class GCRuntime
     void markAllGrayReferences(gcstats::Phase phase);
 
     void beginSweepPhase(bool lastGC, AutoLockForExclusiveAccess& lock);
-    void findZoneGroups(AutoLockForExclusiveAccess& lock);
+    void groupZonesForSweeping(AutoLockForExclusiveAccess& lock);
     MOZ_MUST_USE bool findInterZoneEdges();
-    void getNextZoneGroup();
-    void endMarkingZoneGroup();
-    void beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock);
+    void getNextSweepGroup();
+    void endMarkingSweepGroup();
+    void beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock);
     bool shouldReleaseObservedTypes();
-    void endSweepingZoneGroup();
+    void endSweepingSweepGroup();
     IncrementalProgress sweepPhase(SliceBudget& sliceBudget, AutoLockForExclusiveAccess& lock);
     void endSweepPhase(bool lastGC, AutoLockForExclusiveAccess& lock);
     bool allCCVisibleZonesWereCollected() const;
@@ -1024,7 +1024,7 @@ class GCRuntime
 #endif
 
     void callFinalizeCallbacks(FreeOp* fop, JSFinalizeStatus status) const;
-    void callWeakPointerZoneGroupCallbacks() const;
+    void callWeakPointerZonesCallbacks() const;
     void callWeakPointerCompartmentCallbacks(JSCompartment* comp) const;
 
   public:
@@ -1196,14 +1196,14 @@ class GCRuntime
     ActiveThreadOrGCTaskData<LifoAlloc> blocksToFreeAfterSweeping;
 
   private:
-    /* Index of current zone group (for stats). */
-    ActiveThreadData<unsigned> zoneGroupIndex;
+    /* Index of current sweep group (for stats). */
+    ActiveThreadData<unsigned> sweepGroupIndex;
 
     /*
      * Incremental sweep state.
      */
-    ActiveThreadData<JS::Zone*> zoneGroups;
-    ActiveThreadOrGCTaskData<JS::Zone*> currentZoneGroup;
+    ActiveThreadData<JS::Zone*> sweepGroups;
+    ActiveThreadOrGCTaskData<JS::Zone*> currentSweepGroup;
     ActiveThreadData<bool> sweepingTypes;
     ActiveThreadData<unsigned> finalizePhase;
     ActiveThreadData<JS::Zone*> sweepZone;
@@ -1295,7 +1295,7 @@ class GCRuntime
     Callback<JS::DoCycleCollectionCallback> gcDoCycleCollectionCallback;
     Callback<JSObjectsTenuredCallback> tenuredCallback;
     CallbackVector<JSFinalizeCallback> finalizeCallbacks;
-    CallbackVector<JSWeakPointerZoneGroupCallback> updateWeakPointerZoneGroupCallbacks;
+    CallbackVector<JSWeakPointerZonesCallback> updateWeakPointerZonesCallbacks;
     CallbackVector<JSWeakPointerCompartmentCallback> updateWeakPointerCompartmentCallbacks;
 
     MemoryCounter<GCRuntime> mallocCounter;

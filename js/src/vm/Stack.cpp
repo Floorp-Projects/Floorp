@@ -17,7 +17,6 @@
 #include "js/GCAPI.h"
 #include "vm/Debugger.h"
 #include "vm/Opcodes.h"
-#include "wasm/WasmDebugFrame.h"
 
 #include "jit/JitFrameIterator-inl.h"
 #include "vm/EnvironmentObject-inl.h"
@@ -1647,15 +1646,13 @@ WasmActivation::WasmActivation(JSContext* cx)
   : Activation(cx, Wasm),
     entrySP_(nullptr),
     resumePC_(nullptr),
-    fp_(nullptr),
+    exitFP_(nullptr),
     exitReason_(wasm::ExitReason::None)
 {
     (void) entrySP_;  // silence "unused private member" warning
 
     prevWasm_ = cx->wasmActivationStack_;
     cx->wasmActivationStack_ = this;
-
-    cx->compartment()->wasm.activationCount_++;
 
     // Now that the WasmActivation is fully initialized, make it visible to
     // asynchronous profiling.
@@ -1667,13 +1664,11 @@ WasmActivation::~WasmActivation()
     // Hide this activation from the profiler before is is destroyed.
     unregisterProfiling();
 
-    MOZ_ASSERT(fp_ == nullptr);
+    MOZ_ASSERT(exitFP_ == nullptr);
+    MOZ_ASSERT(exitReason_ == wasm::ExitReason::None);
 
     MOZ_ASSERT(cx_->wasmActivationStack_ == this);
     cx_->wasmActivationStack_ = prevWasm_;
-
-    MOZ_ASSERT(cx_->compartment()->wasm.activationCount_ > 0);
-    cx_->compartment()->wasm.activationCount_--;
 }
 
 InterpreterFrameIterator&

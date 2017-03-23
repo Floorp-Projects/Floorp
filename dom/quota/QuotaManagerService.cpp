@@ -585,6 +585,31 @@ QuotaManagerService::InitStoragesForPrincipal(
 }
 
 NS_IMETHODIMP
+QuotaManagerService::GetUsage(nsIQuotaUsageCallback* aCallback,
+                              bool aGetAll,
+                              nsIQuotaUsageRequest** _retval)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aCallback);
+
+  RefPtr<UsageRequest> request = new UsageRequest(aCallback);
+
+  AllUsageParams params;
+
+  params.getAll() = aGetAll;
+
+  nsAutoPtr<PendingRequestInfo> info(new UsageRequestInfo(request, params));
+
+  nsresult rv = InitiateRequest(info);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  request.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 QuotaManagerService::GetUsageForPrincipal(nsIPrincipal* aPrincipal,
                                           nsIQuotaUsageCallback* aCallback,
                                           bool aGetGroupUsage,
@@ -596,7 +621,7 @@ QuotaManagerService::GetUsageForPrincipal(nsIPrincipal* aPrincipal,
 
   RefPtr<UsageRequest> request = new UsageRequest(aPrincipal, aCallback);
 
-  UsageParams params;
+  OriginUsageParams params;
 
   nsresult rv = CheckedPrincipalToPrincipalInfo(aPrincipal,
                                                 params.principalInfo());

@@ -22,11 +22,10 @@ interface nsIQuotaRequestBase : nsISupports
 [scriptable, uuid(166e28e6-cf6d-4927-a6d7-b51bca9d3469)]
 interface nsIQuotaUsageRequest : nsIQuotaRequestBase
 {
-  [must_use] readonly attribute unsigned long long usage;
-
-  [must_use] readonly attribute unsigned long long fileUsage;
-
-  [must_use] readonly attribute unsigned long long limit;
+  // The result can contain one of these types:
+  //   array of nsIQuotaUsageResult
+  //   nsIQuotaOriginUsageResult
+  [must_use] readonly attribute nsIVariant result;
 
   attribute nsIQuotaUsageCallback callback;
 
@@ -37,6 +36,9 @@ interface nsIQuotaUsageRequest : nsIQuotaRequestBase
 [scriptable, uuid(22890e3e-ff25-4372-9684-d901060e2f6c)]
 interface nsIQuotaRequest : nsIQuotaRequestBase
 {
+  // The result can contain one of these types:
+  //   void
+  //   bool
   [must_use] readonly attribute nsIVariant result;
 
   attribute nsIQuotaCallback callback;
