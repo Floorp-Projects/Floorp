@@ -28,7 +28,6 @@ class nsIRequestContextService;
 class nsISiteSecurityService;
 class nsIStreamConverterService;
 class nsIThrottlingService;
-class nsIUUIDGenerator;
 
 
 namespace mozilla {
@@ -619,11 +618,12 @@ private:
                                nsIInterfaceRequestor *aCallbacks,
                                bool anonymous);
 
-    // UUID generator for channelIds
-    nsCOMPtr<nsIUUIDGenerator> mUUIDGen;
+    // State for generating channelIds
+    uint32_t mProcessId;
+    uint32_t mNextChannelId;
 
 public:
-    MOZ_MUST_USE nsresult NewChannelId(nsID *channelId);
+    MOZ_MUST_USE nsresult NewChannelId(uint64_t& channelId);
 };
 
 extern nsHttpHandler *gHttpHandler;
