@@ -608,9 +608,14 @@ var gPermissionObject = {
     exactHostMatch: true
   },
 
-  "indexedDB": {}
+  "indexedDB": {},
+
+  "focus-tab-by-prompt": {
+    exactHostMatch: true,
+    states: [ SitePermissions.UNKNOWN, SitePermissions.ALLOW ],
+  },
+
 };
 
 XPCOMUtils.defineLazyPreferenceGetter(SitePermissions, "temporaryPermissionExpireTime",
                                       "privacy.temporary_permission_expire_time_ms", 3600 * 1000);
-
