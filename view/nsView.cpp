@@ -1082,8 +1082,9 @@ nsView::DidCompositeWindow(uint64_t aTransactionId,
 
     nsPresContext* context = presShell->GetPresContext();
     nsRootPresContext* rootContext = context->GetRootPresContext();
-    MOZ_ASSERT(rootContext, "rootContext must be valid.");
-    rootContext->NotifyDidPaintForSubtree(aTransactionId, aCompositeEnd);
+    if (rootContext) {
+      rootContext->NotifyDidPaintForSubtree(aTransactionId, aCompositeEnd);
+    }
 
     // If the two timestamps are identical, this was likely a fake composite
     // event which wouldn't be terribly useful to display.
