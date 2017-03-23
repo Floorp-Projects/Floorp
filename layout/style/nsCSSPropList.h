@@ -463,7 +463,17 @@ CSS_PROP_DISPLAY(
 CSS_PROP_DISPLAY(
     -moz-appearance,
     _moz_appearance,
-    CSS_PROP_DOMPROP_PREFIXED(Appearance),
+    MozAppearance,
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kMozAppearanceKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_Discrete)
+CSS_PROP_DISPLAY(
+    appearance,
+    appearance,
+    Appearance,
     CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HK,
