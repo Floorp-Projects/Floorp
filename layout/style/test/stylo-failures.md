@@ -79,7 +79,7 @@ to mochitest command.
   * test_bug389464.html: also font-size computation [1]
   * test_html_attribute_computed_values.html: also list-style-type [8]
 * test_bug387615.html: servo/servo#15006 [1]
-* test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [3]
+* test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [1]
 * console support:
   * test_bug413958.html `monitorConsole` [3]
   * test_parser_diagnostics_unprintables.html [550]
@@ -102,7 +102,6 @@ to mochitest command.
 * ... `mask`: mask-image isn't set properly bug 1347398 [2]
 * ... `fill`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * ... `stroke`: svg paint should distinguish whether there is fallback bug 1347409 [2]
-* ... `#foo`: local ref url should be preserved bug 1347412 [5]
 * character not properly escaped servo/servo#15947
   * test_parse_url.html [4]
   * test_bug829816.html [8]

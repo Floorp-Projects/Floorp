@@ -6160,21 +6160,16 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   if (eCSSUnit_URL == bindingValue->GetUnit()) {
     mozilla::css::URLValue* url = bindingValue->GetURLStructValue();
     NS_ASSERTION(url, "What's going on here?");
-
-    if (MOZ_LIKELY(url->GetURI())) {
-      display->mBinding = url;
-    } else {
-      display->mBinding = nullptr;
-    }
+    display->mBinding.Set(url);
   }
   else if (eCSSUnit_None == bindingValue->GetUnit() ||
            eCSSUnit_Initial == bindingValue->GetUnit() ||
            eCSSUnit_Unset == bindingValue->GetUnit()) {
-    display->mBinding = nullptr;
+    display->mBinding.Set(nullptr);
   }
   else if (eCSSUnit_Inherit == bindingValue->GetUnit()) {
     conditions.SetUncacheable();
-    display->mBinding = parentDisplay->mBinding;
+    display->mBinding.Set(parentDisplay->mBinding);
   }
 
   // position: enum, inherit, initial

@@ -1183,9 +1183,9 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
                                IsShrinking aShrinking,
                                int64_t aSliceMillis)
 {
-  PROFILER_LABEL_PRINTF("nsJSContext", "GarbageCollectNow",
-                        js::ProfileEntry::Category::GC,
-                        "%s", JS::gcreason::ExplainReason(aReason));
+  PROFILER_LABEL_DYNAMIC("nsJSContext", "GarbageCollectNow",
+                         js::ProfileEntry::Category::GC,
+                         JS::gcreason::ExplainReason(aReason));
 
   MOZ_ASSERT_IF(aSliceMillis, aIncremental == IncrementalGC);
 

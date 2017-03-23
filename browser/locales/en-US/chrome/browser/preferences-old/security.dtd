@@ -1,0 +1,40 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!ENTITY  general.label                 "General">
+
+<!ENTITY  warnOnAddonInstall.label        "Warn you when sites try to install add-ons">
+<!ENTITY  warnOnAddonInstall.accesskey    "W">
+
+<!-- LOCALIZATION NOTE (enableSafeBrowsing.label, blockDownloads.label, blockUncommonUnwanted.label):
+  It is important that wording follows the guidelines outlined on this page:
+  https://developers.google.com/safe-browsing/developers_guide_v2#AcceptableUsage
+-->
+<!ENTITY  enableSafeBrowsing.label        "Block dangerous and deceptive content">
+<!ENTITY  enableSafeBrowsing.accesskey    "B">
+
+<!ENTITY  blockDownloads.label            "Block dangerous downloads">
+<!ENTITY  blockDownloads.accesskey        "D">
+
+<!ENTITY  blockUncommonAndUnwanted.label     "Warn you about unwanted and uncommon software">
+<!ENTITY  blockUncommonAndUnwanted.accesskey "C">
+
+<!ENTITY  addonExceptions.label         "Exceptions…">
+<!ENTITY  addonExceptions.accesskey     "E">
+
+
+<!ENTITY  logins.label                  "Logins">
+
+<!ENTITY  rememberLogins.label          "Remember logins for sites">
+<!ENTITY  rememberLogins.accesskey      "R">
+<!ENTITY  passwordExceptions.label      "Exceptions…">
+<!ENTITY  passwordExceptions.accesskey  "x">
+
+<!ENTITY  useMasterPassword.label        "Use a master password">
+<!ENTITY  useMasterPassword.accesskey    "U">
+<!ENTITY  changeMasterPassword.label     "Change Master Password…">
+<!ENTITY  changeMasterPassword.accesskey "M">
+
+<!ENTITY  savedLogins.label              "Saved Logins…">
+<!ENTITY  savedLogins.accesskey          "L">

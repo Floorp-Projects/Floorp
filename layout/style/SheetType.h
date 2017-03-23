@@ -21,7 +21,6 @@ enum class SheetType : uint8_t {
   Agent, // CSS
   User, // CSS
   PresHint,
-  SVGAttrAnimation,
   Doc, // CSS
   ScopedDoc,
   StyleAttr,

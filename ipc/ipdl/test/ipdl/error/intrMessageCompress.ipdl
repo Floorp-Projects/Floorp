@@ -1,3 +1,6 @@
+//error: message `foo' in protocol `intrMessageCompress' requests compression but is not async
+//error: message `bar' in protocol `intrMessageCompress' requests compression but is not async
+
 intr protocol intrMessageCompress {
 parent:
     intr foo() compress;

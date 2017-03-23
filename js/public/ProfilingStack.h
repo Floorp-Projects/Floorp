@@ -36,8 +36,13 @@ class ProfileEntry
     //
     // A ProfileEntry represents both a C++ profile entry and a JS one.
 
-    // Descriptive string of this entry.
+    // Descriptive string of this entry. Can be a static string or a dynamic
+    // string. If it's a dynamic string (which will need to be copied during
+    // sampling), then isCopyLabel() needs to return true.
     const char * volatile string;
+
+    // An additional descriptive string of this entry. Can be null.
+    const char * volatile dynamicString;
 
     // Stack pointer for non-JS entries, the script pointer otherwise.
     void * volatile spOrScript;
@@ -57,8 +62,8 @@ class ProfileEntry
         // a JS or CPP frame with `initJsFrame` or `initCppFrame` respectively.
         IS_CPP_ENTRY = 0x01,
 
-        // Indicate that copying the frame label is not necessary when taking a
-        // sample of the pseudostack.
+        // Indicates that the label string is not a static string and needs to
+        // be copied during sampling.
         FRAME_LABEL_COPY = 0x02,
 
         // This ProfileEntry is a dummy entry indicating the start of a run
@@ -107,6 +112,9 @@ class ProfileEntry
 
     void setLabel(const char* aString) volatile { string = aString; }
     const char* label() const volatile { return string; }
+
+    void setDynamicString(const char* aDynamicString) volatile { dynamicString = aDynamicString; }
+    const char* getDynamicString() const volatile { return dynamicString; }
 
     void initJsFrame(JSScript* aScript, jsbytecode* aPc) volatile {
         flags_ = 0;
