@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that we can nest event loops and then automatically exit nested event
 // loops when requested.
 
@@ -10,23 +12,26 @@ var gThreadActor;
 
 function run_test() {
   initTestDebuggerServer();
-  let gDebuggee = addTestGlobal("test-nesting");
+  addTestGlobal("test-nesting");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-nesting", function (aResponse, aTabClient, aThreadClient) {
-      // Reach over the protocol connection and get a reference to the thread
-      // actor.
-      gThreadActor = aThreadClient._transport._serverConnection.getActor(aThreadClient._actor);
+    attachTestTabAndResume(
+      gClient, "test-nesting",
+      function (response, tabClient, threadClient) {
+        // Reach over the protocol connection and get a reference to the thread
+        // actor.
+        gThreadActor =
+          threadClient._transport._serverConnection.getActor(threadClient._actor);
 
-      test_nesting();
-    });
+        test_nesting();
+      });
   });
   do_test_pending();
 }
 
 function test_nesting() {
   const thread = gThreadActor;
-  const { resolve, reject, promise: p } = promise.defer();
+  const { resolve, promise: p } = promise.defer();
 
   // The following things should happen (in order):
   // 1. In the new event loop (created by unsafeSynchronize)

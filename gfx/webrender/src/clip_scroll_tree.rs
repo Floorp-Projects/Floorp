@@ -7,15 +7,14 @@ use fnv::FnvHasher;
 use std::collections::{HashMap, HashSet};
 use std::hash::BuildHasherDefault;
 use webrender_traits::{LayerPoint, LayerRect, LayerToScrollTransform, LayerToWorldTransform};
-use webrender_traits::{PipelineId, ScrollEventPhase, ScrollLayerId, ScrollLayerInfo};
-use webrender_traits::{ScrollLayerRect, ScrollLayerState, ScrollLocation, ServoScrollRootId};
-use webrender_traits::{WorldPoint, as_scroll_parent_rect};
+use webrender_traits::{PipelineId, ScrollEventPhase, ScrollLayerId, ScrollLayerRect};
+use webrender_traits::{ScrollLayerState, ScrollLocation, WorldPoint, as_scroll_parent_rect};
 
 pub type ScrollStates = HashMap<ScrollLayerId, ScrollingState, BuildHasherDefault<FnvHasher>>;
 
 pub struct ClipScrollTree {
     pub nodes: HashMap<ScrollLayerId, ClipScrollNode, BuildHasherDefault<FnvHasher>>,
-    pub pending_scroll_offsets: HashMap<(PipelineId, ServoScrollRootId), LayerPoint>,
+    pub pending_scroll_offsets: HashMap<ScrollLayerId, LayerPoint>,
 
     /// The ScrollLayerId of the currently scrolling node. Used to allow the same
     /// node to scroll even if a touch operation leaves the boundaries of that node.
@@ -90,7 +89,7 @@ impl ClipScrollTree {
                 }
             }
 
-            if let ScrollLayerInfo::ReferenceFrame(_) = scroll_layer_id.info {
+            if scroll_layer_id.is_reference_frame() {
                 return None;
             }
 
@@ -109,15 +108,10 @@ impl ClipScrollTree {
 
     pub fn get_scroll_node_state(&self) -> Vec<ScrollLayerState> {
         let mut result = vec![];
-        for (_, node) in self.nodes.iter() {
+        for (id, node) in self.nodes.iter() {
             match node.node_type {
-                NodeType::Clip(ref info) if info.scroll_root_id.is_some() => {
-                    result.push(ScrollLayerState {
-                        pipeline_id: node.pipeline_id,
-                        scroll_root_id: info.scroll_root_id.unwrap(),
-                        scroll_offset: node.scrolling.offset,
-                    })
-                }
+                NodeType::Clip(_) => result.push(
+                    ScrollLayerState { id: *id, scroll_offset: node.scrolling.offset }),
                 _ => {},
             }
         }
@@ -129,7 +123,7 @@ impl ClipScrollTree {
 
         let mut scroll_states = HashMap::with_hasher(Default::default());
         for (layer_id, old_node) in &mut self.nodes.drain() {
-            if !self.pipelines_to_discard.contains(&layer_id.pipeline_id) {
+            if !self.pipelines_to_discard.contains(&layer_id.pipeline_id()) {
                 scroll_states.insert(layer_id, old_node.scrolling);
             }
         }
@@ -138,40 +132,24 @@ impl ClipScrollTree {
         scroll_states
     }
 
-    pub fn scroll_nodes(&mut self,
-                        origin: LayerPoint,
-                        pipeline_id: PipelineId,
-                        scroll_root_id: ServoScrollRootId)
-                        -> bool {
+    pub fn scroll_nodes(&mut self, origin: LayerPoint, id: ScrollLayerId) -> bool {
+        if id.is_reference_frame() {
+            warn!("Tried to scroll a reference frame.");
+            return false;
+        }
+
         if self.nodes.is_empty() {
-            self.pending_scroll_offsets.insert((pipeline_id, scroll_root_id), origin);
+            self.pending_scroll_offsets.insert(id, origin);
             return false;
         }
 
         let origin = LayerPoint::new(origin.x.max(0.0), origin.y.max(0.0));
-
-        let mut scrolled_a_node = false;
-        let mut found_node = false;
-        for (layer_id, node) in self.nodes.iter_mut() {
-            if layer_id.pipeline_id != pipeline_id {
-                continue;
-            }
-
-            match node.node_type {
-                NodeType::Clip(ref info) if info.scroll_root_id != Some(scroll_root_id) => continue,
-                NodeType::ReferenceFrame(..) => continue,
-                NodeType::Clip(_) => {},
-            }
-
-            found_node = true;
-            scrolled_a_node |= node.set_scroll_origin(&origin);
+        if let Some(node) = self.nodes.get_mut(&id) {
+            return node.set_scroll_origin(&origin);
         }
 
-        if !found_node {
-            self.pending_scroll_offsets.insert((pipeline_id, scroll_root_id), origin);
-        }
-
-        scrolled_a_node
+        self.pending_scroll_offsets.insert(id, origin);
+        false
     }
 
     pub fn scroll(&mut self,
@@ -244,37 +222,7 @@ impl ClipScrollTree {
             scroll_layer_id
         };
 
-        // TODO(mrobinson): Once we remove the concept of shared scroll root ids we can remove
-        // this entirely and just scroll the node based on the ScrollLayerId.
-        let scroll_root_id = {
-            let node = self.nodes.get_mut(&scroll_layer_id).unwrap();
-            let scroll_root_id = match node.node_type {
-                NodeType::Clip(ref info) => info.scroll_root_id,
-                NodeType::ReferenceFrame(..) => unreachable!("Tried to scroll a reference frame."),
-            };
-
-            if scroll_root_id.is_none() {
-                return node.scroll(scroll_location, phase);
-            }
-
-            scroll_root_id
-        };
-
-        let mut scrolled_a_node = false;
-        for (layer_id, node) in self.nodes.iter_mut() {
-            if layer_id.pipeline_id != scroll_layer_id.pipeline_id {
-                continue;
-            }
-
-            match node.node_type {
-                NodeType::Clip(ref info) if info.scroll_root_id == scroll_root_id => { }
-                _ => continue,
-            }
-
-            let scrolled_this_node = node.scroll(scroll_location, phase);
-            scrolled_a_node = scrolled_a_node || scrolled_this_node;
-        }
-        scrolled_a_node
+        self.nodes.get_mut(&scroll_layer_id).unwrap().scroll(scroll_location, phase)
     }
 
     pub fn update_all_node_transforms(&mut self, pan: LayerPoint) {
@@ -351,16 +299,7 @@ impl ClipScrollTree {
 
             node.finalize(&scrolling_state);
 
-            let scroll_root_id = match node.node_type {
-                NodeType::Clip(ref info) if info.scroll_root_id.is_some() =>
-                    info.scroll_root_id.unwrap(),
-                _ => continue,
-            };
-
-
-            let pipeline_id = scroll_layer_id.pipeline_id;
-            if let Some(pending_offset) =
-                self.pending_scroll_offsets.remove(&(pipeline_id, scroll_root_id)) {
+            if let Some(pending_offset) = self.pending_scroll_offsets.remove(&scroll_layer_id) {
                 node.set_scroll_origin(&pending_offset);
             }
         }
@@ -373,10 +312,9 @@ impl ClipScrollTree {
                                pipeline_id: PipelineId,
                                parent_id: Option<ScrollLayerId>)
                                -> ScrollLayerId {
-        let reference_frame_id = ScrollLayerId {
-            pipeline_id: pipeline_id,
-            info: ScrollLayerInfo::ReferenceFrame(self.current_reference_frame_id),
-        };
+
+        let reference_frame_id =
+            ScrollLayerId::ReferenceFrame(self.current_reference_frame_id, pipeline_id);
         self.current_reference_frame_id += 1;
 
         let node = ClipScrollNode::new_reference_frame(parent_id,
@@ -403,7 +341,7 @@ impl ClipScrollTree {
         self.pipelines_to_discard.insert(pipeline_id);
 
         match self.current_scroll_layer_id {
-            Some(id) if id.pipeline_id == pipeline_id => self.current_scroll_layer_id = None,
+            Some(id) if id.pipeline_id() == pipeline_id => self.current_scroll_layer_id = None,
             _ => {}
         }
     }

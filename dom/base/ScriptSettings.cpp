@@ -376,6 +376,13 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
     if (exn.isObject()) {
       JS::Rooted<JSObject*> exnObj(aCx, &exn.toObject());
 
+      // Make sure we can actually read things from it.  This UncheckedUwrap is
+      // safe because we're only getting data for a debug printf.  In
+      // particular, we do not expose this data to anyone, which is very
+      // important; otherwise it could be a cross-origin information leak.
+      exnObj = js::UncheckedUnwrap(exnObj);
+      JSAutoCompartment ac(aCx, exnObj);
+
       nsAutoJSString stack, filename, name, message;
       int32_t line;
 

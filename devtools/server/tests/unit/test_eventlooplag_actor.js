@@ -7,8 +7,7 @@
 
 "use strict";
 
-function run_test()
-{
+function run_test() {
   let {EventLoopLagFront} = require("devtools/shared/fronts/eventlooplag");
 
   DebuggerServer.init();
@@ -17,7 +16,6 @@ function run_test()
   // As seen in EventTracer.cpp
   let threshold = 20;
   let interval = 10;
-
 
   let front;
   let client = new DebuggerClient(DebuggerServer.connectPipe());

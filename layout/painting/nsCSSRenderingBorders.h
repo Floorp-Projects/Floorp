@@ -105,6 +105,7 @@ public:
   // draw the entire border
   void DrawBorders();
 
+  bool CanCreateWebrenderCommands();
   void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                mozilla::layers::WebRenderDisplayItemLayer* aLayer);
 

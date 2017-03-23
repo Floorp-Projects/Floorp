@@ -161,7 +161,7 @@ impl DebugRenderer {
     pub fn render(&mut self,
                   device: &mut Device,
                   viewport_size: &DeviceUintSize) {
-        let _gm = GpuMarker::new("debug");
+        let _gm = GpuMarker::new(device.rc_gl(), "debug");
         device.disable_depth();
         device.set_blend(true);
         device.set_blend_mode_alpha();

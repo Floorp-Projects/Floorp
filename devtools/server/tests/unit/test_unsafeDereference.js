@@ -1,6 +1,8 @@
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/publicdomain/zero/1.0/
 
+/* eslint-disable strict */
+
 // Test Debugger.Object.prototype.unsafeDereference in the presence of
 // interesting cross-compartment wrappers.
 //
@@ -14,13 +16,14 @@ addDebuggerToGlobal(this);
 
 // Add a method to Debugger.Object for fetching value properties
 // conveniently.
-Debugger.Object.prototype.getProperty = function (aName) {
-  let desc = this.getOwnPropertyDescriptor(aName);
-  if (!desc)
+Debugger.Object.prototype.getProperty = function (name) {
+  let desc = this.getOwnPropertyDescriptor(name);
+  if (!desc) {
     return undefined;
+  }
   if (!desc.value) {
     throw Error("Debugger.Object.prototype.getProperty: " +
-                "not a value property: " + aName);
+                "not a value property: " + name);
   }
   return desc.value;
 };
@@ -33,7 +36,7 @@ function run_test() {
   // Create an objects in this compartment, and one in each sandbox. We'll
   // refer to the objects as "mainObj", "contentObj", and "chromeObj", in
   // variable and property names.
-  var mainObj = { name: "mainObj" };
+  let mainObj = { name: "mainObj" };
   Components.utils.evalInSandbox('var contentObj = { name: "contentObj" };',
                                  contentBox);
   Components.utils.evalInSandbox('var chromeObj = { name: "chromeObj" };',
@@ -41,8 +44,8 @@ function run_test() {
 
   // Give each global a pointer to all the other globals' objects.
   contentBox.mainObj = chromeBox.mainObj = mainObj;
-  var contentObj = chromeBox.contentObj = contentBox.contentObj;
-  var chromeObj = contentBox.chromeObj = chromeBox.chromeObj;
+  let contentObj = chromeBox.contentObj = contentBox.contentObj;
+  let chromeObj = contentBox.chromeObj = chromeBox.chromeObj;
 
   // First, a whole bunch of basic sanity checks, to ensure that JavaScript
   // evaluated in various scopes really does see the world the way this
@@ -91,7 +94,7 @@ function run_test() {
   // would.
 
   // Create a debugger, debugging our two sandboxes.
-  let dbg = new Debugger;
+  let dbg = new Debugger();
 
   // Create Debugger.Object instances referring to the two sandboxes, as
   // seen from their own compartments.

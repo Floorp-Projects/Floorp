@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Bug 1122064 - make sure that scripts introduced via onNewScripts
  * properly populate the `ScriptStore` with all there nested child
@@ -10,27 +12,23 @@
 var gDebuggee;
 var gClient;
 var gThreadClient;
-var gCallback;
 
-function run_test()
-{
+function run_test() {
   run_test_with_server(DebuggerServer, function () {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
 }
 
-function run_test_with_server(aServer, aCallback)
-{
-  gCallback = aCallback;
-  initTestDebuggerServer(aServer);
-  gDebuggee = addTestGlobal("test-breakpoints", aServer);
-  gClient = new DebuggerClient(aServer.connectPipe());
+function run_test_with_server(server, callback) {
+  initTestDebuggerServer(server);
+  gDebuggee = addTestGlobal("test-breakpoints", server);
+  gClient = new DebuggerClient(server.connectPipe());
   gClient.connect().then(function () {
     attachTestTabAndResume(gClient,
                            "test-breakpoints",
-                           function (aResponse, aTabClient, aThreadClient) {
-                             gThreadClient = aThreadClient;
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
                              test();
                            });
   });
@@ -62,6 +60,7 @@ const test = Task.async(function* () {
   finishClient(gClient);
 });
 
+/* eslint-disable */
 function evalCode() {
   // Start a new script
   Components.utils.evalInSandbox(

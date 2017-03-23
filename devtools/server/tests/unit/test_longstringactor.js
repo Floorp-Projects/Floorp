@@ -14,8 +14,7 @@ function run_test() {
 
 const TEST_STRING = "This is a very long string!";
 
-function makeMockLongStringActor()
-{
+function makeMockLongStringActor() {
   let string = TEST_STRING;
   let actor = new LongStringActor(string);
   actor.actorID = "longString1";
@@ -27,8 +26,7 @@ function makeMockLongStringActor()
   return actor;
 }
 
-function test_LSA_destroy()
-{
+function test_LSA_destroy() {
   let actor = makeMockLongStringActor();
   do_check_eq(actor.registeredPool.longStringActors[TEST_STRING], actor);
 
@@ -36,27 +34,18 @@ function test_LSA_destroy()
   do_check_eq(actor.registeredPool.longStringActors[TEST_STRING], void 0);
 }
 
-function test_LSA_substring()
-{
-  let actor = makeMockLongStringActor();
-  do_check_eq(actor._substring(0, 4), TEST_STRING.substring(0, 4));
-  do_check_eq(actor._substring(6, 9), TEST_STRING.substring(6, 9));
-  do_check_eq(actor._substring(0, TEST_STRING.length), TEST_STRING);
-}
-
-function test_LSA_grip()
-{
+function test_LSA_grip() {
   let actor = makeMockLongStringActor();
 
   let grip = actor.grip();
   do_check_eq(grip.type, "longString");
-  do_check_eq(grip.initial, TEST_STRING.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH));
+  do_check_eq(grip.initial,
+              TEST_STRING.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH));
   do_check_eq(grip.length, TEST_STRING.length);
   do_check_eq(grip.actor, actor.actorID);
 }
 
-function test_LSA_onSubstring()
-{
+function test_LSA_onSubstring() {
   let actor = makeMockLongStringActor();
   let response;
 

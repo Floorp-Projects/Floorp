@@ -1,6 +1,7 @@
 use euclid::Size2D;
 use gleam::gl;
 use gleam::gl::types::{GLuint};
+use std::rc::Rc;
 
 use NativeGLContextMethods;
 use GLContextAttributes;
@@ -12,6 +13,7 @@ use ColorAttachmentType;
 
 /// This is a wrapper over a native headless GL context
 pub struct GLContext<Native> {
+    gl_: Rc<gl::Gl>,
     native_context: Native,
     /// This an abstraction over a custom framebuffer
     /// with attachments according to WebGLContextAttributes
@@ -26,22 +28,31 @@ pub struct GLContext<Native> {
 }
 
 impl<Native> GLContext<Native>
-    where Native: NativeGLContextMethods
+    where Native: NativeGLContextMethods,
 {
-    pub fn create(shared_with: Option<&Native::Handle>) -> Result<GLContext<Native>, &'static str> {
-        Self::create_shared_with_dispatcher(shared_with, None)
+    pub fn create(api_type: gl::GlType,
+                  shared_with: Option<&Native::Handle>)
+                  -> Result<Self, &'static str> {
+        Self::create_shared_with_dispatcher(api_type, shared_with, None)
     }
 
-    pub fn create_shared_with_dispatcher(shared_with: Option<&Native::Handle>,
+    pub fn create_shared_with_dispatcher(api_type: gl::GlType,
+                                         shared_with: Option<&Native::Handle>,
                                          dispatcher: Option<Box<GLContextDispatcher>>)
-        -> Result<GLContext<Native>, &'static str> {
+        -> Result<Self, &'static str> {
         let native_context = try!(Native::create_shared_with_dispatcher(shared_with, dispatcher));
+        let gl_ = match api_type {
+            gl::GlType::Gl => unsafe { gl::GlFns::load_with(|s| Self::get_proc_address(s) as *const _) },
+            gl::GlType::Gles => unsafe { gl::GlesFns::load_with(|s| Self::get_proc_address(s) as *const _) },
+        };
+
         try!(native_context.make_current());
         let attributes = GLContextAttributes::any();
         let formats = GLFormats::detect(&attributes);
-        let limits = GLLimits::detect();
+        let limits = GLLimits::detect(&*gl_);
 
         Ok(GLContext {
+            gl_: gl_,
             native_context: native_context,
             draw_buffer: None,
             attributes: attributes,
@@ -64,20 +75,30 @@ impl<Native> GLContext<Native>
     pub fn new(size: Size2D<i32>,
                attributes: GLContextAttributes,
                color_attachment_type: ColorAttachmentType,
+               api_type: gl::GlType,
                shared_with: Option<&Native::Handle>)
-        -> Result<GLContext<Native>, &'static str> {
-        Self::new_shared_with_dispatcher(size, attributes, color_attachment_type, shared_with, None)
+        -> Result<Self, &'static str> {
+        Self::new_shared_with_dispatcher(size,
+                                         attributes,
+                                         color_attachment_type,
+                                         api_type,
+                                         shared_with,
+                                         None)
     }
 
     pub fn new_shared_with_dispatcher(size: Size2D<i32>,
                                       attributes: GLContextAttributes,
                                       color_attachment_type: ColorAttachmentType,
+                                      api_type: gl::GlType,
                                       shared_with: Option<&Native::Handle>,
                                       dispatcher: Option<Box<GLContextDispatcher>>)
-        -> Result<GLContext<Native>, &'static str> {
+        -> Result<Self, &'static str> {
         // We create a headless context with a dummy size, we're painting to the
         // draw_buffer's framebuffer anyways.
-        let mut context = try!(Self::create_shared_with_dispatcher(shared_with, dispatcher));
+        let mut context =
+            try!(Self::create_shared_with_dispatcher(api_type,
+                                                     shared_with,
+                                                     dispatcher));
 
         context.formats = GLFormats::detect(&attributes);
         context.attributes = attributes;
@@ -90,9 +111,10 @@ impl<Native> GLContext<Native>
     #[inline(always)]
     pub fn with_default_color_attachment(size: Size2D<i32>,
                                          attributes: GLContextAttributes,
+                                         api_type: gl::GlType,
                                          shared_with: Option<&Native::Handle>)
-        -> Result<GLContext<Native>, &'static str> {
-        GLContext::new(size, attributes, ColorAttachmentType::default(), shared_with)
+        -> Result<Self, &'static str> {
+        Self::new(size, attributes, ColorAttachmentType::default(), api_type, shared_with)
     }
 
     #[inline(always)]
@@ -102,7 +124,20 @@ impl<Native> GLContext<Native>
 
     #[inline(always)]
     pub fn unbind(&self) -> Result<(), &'static str> {
-        self.native_context.unbind()
+        let ret = self.native_context.unbind();
+
+        // OSMesa doesn't allow any API to unbind a context before [1], and just
+        // bails out on null context, buffer, or whatever, so not much we can do
+        // here. Thus, ignore the failure and just flush the context if we're
+        // using an old OSMesa version.
+        //
+        // [1]: https://www.mail-archive.com/mesa-dev@lists.freedesktop.org/msg128408.html
+        if self.native_context.is_osmesa() && ret.is_err() {
+            self.gl().flush();
+            return Ok(())
+        }
+
+        ret
     }
 
     #[inline(always)]
@@ -113,6 +148,14 @@ impl<Native> GLContext<Native>
     #[inline(always)]
     pub fn handle(&self) -> Native::Handle {
         self.native_context.handle()
+    }
+
+    pub fn gl(&self) -> &gl::Gl {
+        &*self.gl_
+    }
+
+    pub fn clone_gl(&self) -> Rc<gl::Gl> {
+        self.gl_.clone()
     }
 
     // Allow borrowing these unmutably
@@ -141,12 +184,12 @@ impl<Native> GLContext<Native>
             return db.get_framebuffer();
         }
 
-        let ret = gl::get_integer_v(gl::FRAMEBUFFER_BINDING);
+        let ret = self.gl().get_integer_v(gl::FRAMEBUFFER_BINDING);
         ret as GLuint
     }
 
     pub fn draw_buffer_size(&self) -> Option<Size2D<i32>> {
-        self.draw_buffer.as_ref().map( |db| db.size() )
+        self.draw_buffer.as_ref().map(|db| db.size())
     }
 
     // We resize just replacing the draw buffer, we don't perform size optimizations
@@ -160,6 +203,24 @@ impl<Native> GLContext<Native>
             Err("No DrawBuffer found")
         }
     }
+
+    fn init_offscreen(&mut self, size: Size2D<i32>, color_attachment_type: ColorAttachmentType) -> Result<(), &'static str> {
+        try!(self.create_draw_buffer(size, color_attachment_type));
+
+        debug_assert!(self.is_current());
+
+        self.gl().clear_color(0.0, 0.0, 0.0, 0.0);
+        self.gl().clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
+        self.gl().scissor(0, 0, size.width, size.height);
+        self.gl().viewport(0, 0, size.width, size.height);
+
+        Ok(())
+    }
+
+    fn create_draw_buffer(&mut self, size: Size2D<i32>, color_attachment_type: ColorAttachmentType) -> Result<(), &'static str> {
+        self.draw_buffer = Some(try!(DrawBuffer::new(self, size, color_attachment_type)));
+        Ok(())
+    }
 }
 
 // Dispatches functions to the thread where a NativeGLContext is bound.
@@ -167,29 +228,4 @@ impl<Native> GLContext<Native>
 // where the context we share from is bound. See the WGL implementation for more details.
 pub trait GLContextDispatcher {
     fn dispatch(&self, Box<Fn() + Send>);
-}
-
-trait GLContextPrivateMethods {
-    fn init_offscreen(&mut self, Size2D<i32>, ColorAttachmentType) -> Result<(), &'static str>;
-    fn create_draw_buffer(&mut self, Size2D<i32>, ColorAttachmentType) -> Result<(), &'static str>;
-}
-
-impl<T: NativeGLContextMethods> GLContextPrivateMethods for GLContext<T> {
-    fn init_offscreen(&mut self, size: Size2D<i32>, color_attachment_type: ColorAttachmentType) -> Result<(), &'static str> {
-        try!(self.create_draw_buffer(size, color_attachment_type));
-
-        debug_assert!(self.is_current());
-
-        gl::clear_color(0.0, 0.0, 0.0, 0.0);
-        gl::clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
-        gl::scissor(0, 0, size.width, size.height);
-        gl::viewport(0, 0, size.width, size.height);
-
-        Ok(())
-    }
-
-    fn create_draw_buffer(&mut self, size: Size2D<i32>, color_attachment_type: ColorAttachmentType) -> Result<(), &'static str> {
-        self.draw_buffer = Some(try!(DrawBuffer::new(&self, size, color_attachment_type)));
-        Ok(())
-    }
 }

@@ -12,7 +12,7 @@
 
 namespace base {
 
-typedef subtle::Atomic32 AtomicRefCount;
+typedef subtle::AtomicWord AtomicRefCount;
 
 // Increment a reference count by "increment", which must exceed 0.
 inline void AtomicRefCountIncN(volatile AtomicRefCount *ptr,

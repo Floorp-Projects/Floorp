@@ -1839,6 +1839,8 @@ CompositorBridgeParent::NotifyDidCompositeToPipeline(const wr::PipelineId& aPipe
   }
   MOZ_ASSERT(mWrBridge);
 
+  mWrBridge->CompositableHolder()->Update(aPipelineId, aEpoch);
+
   if (mWrBridge->PipelineId() == aPipelineId) {
     uint64_t transactionId = mWrBridge->FlushTransactionIdsForEpoch(aEpoch);
     Unused << SendDidComposite(0, transactionId, aCompositeStart, aCompositeEnd);

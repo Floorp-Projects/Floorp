@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Check that stepping over an implicit return makes sense. Bug 1155966.
  */
@@ -16,16 +18,17 @@ function run_test() {
   });
 }
 
-function run_test_with_server(aServer, aCallback) {
-  gCallback = aCallback;
-  initTestDebuggerServer(aServer);
-  gDebuggee = addTestGlobal("test-stepping", aServer);
-  gClient = new DebuggerClient(aServer.connectPipe());
+function run_test_with_server(server, callback) {
+  gCallback = callback;
+  initTestDebuggerServer(server);
+  gDebuggee = addTestGlobal("test-stepping", server);
+  gClient = new DebuggerClient(server.connectPipe());
   gClient.connect(testSteppingAndReturns);
 }
 
 const testSteppingAndReturns = Task.async(function* () {
-  const [attachResponse, tabClient, threadClient] = yield attachTestTabAndResume(gClient, "test-stepping");
+  const [attachResponse,, threadClient] = yield attachTestTabAndResume(gClient,
+                                                                       "test-stepping");
   ok(!attachResponse.error, "Should not get an error attaching");
 
   dumpn("Evaluating test code and waiting for first debugger statement");
@@ -64,6 +67,7 @@ const testSteppingAndReturns = Task.async(function* () {
 });
 
 function evaluateTestCode() {
+  /* eslint-disable */
   Cu.evalInSandbox(
     `                                   //  1
     function implicitReturn() {         //  2
@@ -89,4 +93,5 @@ function evaluateTestCode() {
     "test_stepping-07-test-code.js",
     1
   );
+  /* eslint-enable */
 }

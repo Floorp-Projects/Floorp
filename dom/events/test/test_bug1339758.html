@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1339758
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1339758</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1339758 **/
+  var expectNonZeroCoordinates = false;
+  SimpleTest.waitForExplicitFinish();
+
+  function testCoordinates(e) {
+   var coordinateProperties =
+     [ "screenX",
+       "screenY",
+       "clientX",
+       "clientY",
+       "offsetX",
+       "offsetY",
+       "movementX",
+       "movementY",
+       "layerX",
+       "layerY",
+       "x",
+       "y" ];
+    for (var i in coordinateProperties) {
+      if (e[coordinateProperties[i]] != 0) {
+        ok(expectNonZeroCoordinates, e.target.id + " got at least some non-zero coordinate property: " + i);
+        return;
+      }
+    }
+    ok(!expectNonZeroCoordinates, "Non-zero coordinates weren't expected");
+  }
+
+  function runTests() {
+    info("Testing click events which should have only 0 coordinates.");
+    document.getElementById("div_target").click();
+    document.getElementById("a_target").focus();
+    sendKey("RETURN");
+    document.getElementById("input_target").focus();
+    sendKey("RETURN");
+
+    info("Testing click events which should have also non-zero coordinates.");
+    expectNonZeroCoordinates = true;
+    // Test script created MouseEvents
+    sendMouseEvent({ type: "click"}, document.getElementById("a_target"));
+    sendMouseEvent({ type: "click"}, document.getElementById("input_target"));
+
+    // Test widget level mouse events
+    synthesizeMouse(document.getElementById("a_target"), 2, 2, {});
+    synthesizeMouse(document.getElementById("input_target"), 2, 2, {});
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForFocus(runTests);
+
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1339758">Mozilla Bug 1339758</a>
+<p id="display"></p>
+
+<div id="div_target" onclick="testCoordinates(event)">&nbsp;</div>
+<a href="#" id="a_target" onclick="testCoordinates(event);">test link</a><br>
+<input type="button" id="input_target" onclick="testCoordinates(event);" value="test button">
+
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
