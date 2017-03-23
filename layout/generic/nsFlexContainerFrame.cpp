@@ -1405,7 +1405,7 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
     bool canOverride = true;
     aPresContext->GetTheme()->
       GetMinimumWidgetSize(aPresContext, aChildFrame,
-                           disp->mAppearance,
+                           disp->UsedAppearance(),
                            &widgetMinSize, &canOverride);
 
     nscoord widgetMainMinSize =
