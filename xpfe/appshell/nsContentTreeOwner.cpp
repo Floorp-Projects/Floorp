@@ -763,7 +763,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const char16_t* aTitle)
       //
       // location bar is turned off, find the browser location
       //
-      // use the document's nsPrincipal to find the true owner
+      // use the document's ContentPrincipal to find the true owner
       // in case of javascript: or data: documents
       //
       nsCOMPtr<nsIDocShellTreeItem> dsitem;

@@ -9347,12 +9347,14 @@ public:
   InitOrigin(PersistenceType aPersistenceType,
              const nsACString& aGroup,
              const nsACString& aOrigin,
+             const AtomicBool& aCanceled,
              UsageInfo* aUsageInfo) override;
 
   nsresult
   GetUsageForOrigin(PersistenceType aPersistenceType,
                     const nsACString& aGroup,
                     const nsACString& aOrigin,
+                    const AtomicBool& aCanceled,
                     UsageInfo* aUsageInfo) override;
 
   void
@@ -9394,13 +9396,14 @@ private:
 
   nsresult
   GetDatabaseFilenames(nsIFile* aDirectory,
-                       UsageInfo* aUsageInfo,
+                       const AtomicBool& aCanceled,
                        bool aForUpgrade,
                        nsTArray<nsString>& aSubdirsToProcess,
                        nsTHashtable<nsStringHashKey>& aDatabaseFilename);
 
   nsresult
   GetUsageForDirectoryInternal(nsIFile* aDirectory,
+                               const AtomicBool& aCanceled,
                                UsageInfo* aUsageInfo,
                                bool aDatabaseFiles);
 
@@ -17828,10 +17831,11 @@ QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory)
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
 
+  AtomicBool dummy(false);
   AutoTArray<nsString, 20> subdirsToProcess;
   nsTHashtable<nsStringHashKey> databaseFilenames(20);
   nsresult rv = GetDatabaseFilenames(aDirectory,
-                                     nullptr,
+                                     /* aCanceled */ dummy,
                                      /* aForUpgrade */ true,
                                      subdirsToProcess,
                                      databaseFilenames);
@@ -17924,6 +17928,7 @@ nsresult
 QuotaClient::InitOrigin(PersistenceType aPersistenceType,
                         const nsACString& aGroup,
                         const nsACString& aOrigin,
+                        const AtomicBool& aCanceled,
                         UsageInfo* aUsageInfo)
 {
   AssertIsOnIOThread();
@@ -17942,7 +17947,7 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   AutoTArray<nsString, 20> subdirsToProcess;
   nsTHashtable<nsStringHashKey> databaseFilenames(20);
   rv = GetDatabaseFilenames(directory,
-                            aUsageInfo,
+                            aCanceled,
                             /* aForUpgrade */ false,
                             subdirsToProcess,
                             databaseFilenames);
@@ -17974,7 +17979,9 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   const NS_ConvertASCIItoUTF16 walSuffix(kSQLiteWALSuffix,
                                          LiteralStringLength(kSQLiteWALSuffix));
 
-  for (auto iter = databaseFilenames.ConstIter(); !iter.Done(); iter.Next()) {
+  for (auto iter = databaseFilenames.ConstIter();
+       !iter.Done() && !aCanceled;
+       iter.Next()) {
     auto& databaseFilename = iter.Get()->GetKey();
 
     nsCOMPtr<nsIFile> fmDirectory;
@@ -18022,7 +18029,7 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       return rv;
     }
 
-    if (aUsageInfo && !aUsageInfo->Canceled()) {
+    if (aUsageInfo) {
       int64_t fileSize;
       rv = databaseFile->GetFileSize(&fileSize);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -18059,6 +18066,7 @@ nsresult
 QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
                                const nsACString& aGroup,
                                const nsACString& aOrigin,
+                               const AtomicBool& aCanceled,
                                UsageInfo* aUsageInfo)
 {
   AssertIsOnIOThread();
@@ -18071,7 +18079,7 @@ QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
     return rv;
   }
 
-  rv = GetUsageForDirectoryInternal(directory, aUsageInfo, true);
+  rv = GetUsageForDirectoryInternal(directory, aCanceled, aUsageInfo, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -18260,12 +18268,13 @@ QuotaClient::GetDirectory(PersistenceType aPersistenceType,
 nsresult
 QuotaClient::GetDatabaseFilenames(
                               nsIFile* aDirectory,
-                              UsageInfo* aUsageInfo,
+                              const AtomicBool& aCanceled,
                               bool aForUpgrade,
                               nsTArray<nsString>& aSubdirsToProcess,
                               nsTHashtable<nsStringHashKey>& aDatabaseFilenames)
 {
   AssertIsOnIOThread();
+  MOZ_ASSERT(aDirectory);
 
   nsCOMPtr<nsISimpleEnumerator> entries;
   nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
@@ -18286,7 +18295,7 @@ QuotaClient::GetDatabaseFilenames(
   bool hasMore;
   while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
          hasMore &&
-         (!aUsageInfo || !aUsageInfo->Canceled())) {
+         !aCanceled) {
     nsCOMPtr<nsISupports> entry;
     rv = entries->GetNext(getter_AddRefs(entry));
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -18362,6 +18371,7 @@ QuotaClient::GetDatabaseFilenames(
 
 nsresult
 QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
+                                          const AtomicBool& aCanceled,
                                           UsageInfo* aUsageInfo,
                                           bool aDatabaseFiles)
 {
@@ -18388,7 +18398,7 @@ QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
   bool hasMore;
   while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
          hasMore &&
-         !aUsageInfo->Canceled()) {
+         !aCanceled) {
     nsCOMPtr<nsISupports> entry;
     rv = entries->GetNext(getter_AddRefs(entry));
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -18423,7 +18433,7 @@ QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
 
     if (isDirectory) {
       if (aDatabaseFiles) {
-        rv = GetUsageForDirectoryInternal(file, aUsageInfo, false);
+        rv = GetUsageForDirectoryInternal(file, aCanceled, aUsageInfo, false);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -21236,8 +21246,7 @@ FactoryOp::CheckPermission(ContentParent* aContentParent,
     if (State::Initial == mState) {
       QuotaManager::GetInfoForChrome(&mSuffix, &mGroup, &mOrigin);
 
-      MOZ_ASSERT(
-        QuotaManager::IsOriginWhitelistedForPersistentStorage(mOrigin));
+      MOZ_ASSERT(QuotaManager::IsOriginInternal(mOrigin));
 
       mEnforcingQuota = false;
     }
@@ -21269,7 +21278,7 @@ FactoryOp::CheckPermission(ContentParent* aContentParent,
   PermissionRequestBase::PermissionValue permission;
 
   if (persistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-    if (QuotaManager::IsOriginWhitelistedForPersistentStorage(origin)) {
+    if (QuotaManager::IsOriginInternal(origin)) {
       permission = PermissionRequestBase::kPermissionAllowed;
     } else {
 #ifdef IDB_MOBILE

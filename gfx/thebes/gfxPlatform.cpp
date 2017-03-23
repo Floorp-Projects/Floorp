@@ -88,10 +88,6 @@
 #include "GLContextProvider.h"
 #include "mozilla/gfx/Logging.h"
 
-#if defined(MOZ_WIDGET_GTK)
-#include "gfxPlatformGtk.h" // xxx - for UseFcFontList
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
 #include "TexturePoolOGL.h"
 #include "mozilla/layers/UiCompositorControllerChild.h"
@@ -711,17 +707,9 @@ gfxPlatform::Init()
     gPlatform->ComputeTileSize();
 
     nsresult rv;
-
-    bool usePlatformFontList = true;
-#if defined(MOZ_WIDGET_GTK)
-    usePlatformFontList = gfxPlatformGtk::UseFcFontList();
-#endif
-
-    if (usePlatformFontList) {
-        rv = gfxPlatformFontList::Init();
-        if (NS_FAILED(rv)) {
-            MOZ_CRASH("Could not initialize gfxPlatformFontList");
-        }
+    rv = gfxPlatformFontList::Init();
+    if (NS_FAILED(rv)) {
+        MOZ_CRASH("Could not initialize gfxPlatformFontList");
     }
 
     gPlatform->mScreenReferenceSurface =

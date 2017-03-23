@@ -427,14 +427,19 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
   JS::CompileOptions options(cx);
   options.setFileAndLine(uriSpec.get(), mLineNumber)
          .setVersion(JSVERSION_LATEST);
-  nsJSUtils::EvaluateOptions evalOptions(cx);
-  if (!nsJSUtils::GetScopeChainForElement(cx, boundElement,
-                                          evalOptions.scopeChain)) {
+  JS::AutoObjectVector scopeChain(cx);
+  if (!nsJSUtils::GetScopeChainForElement(cx, boundElement, scopeChain)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  rv = nsJSUtils::EvaluateString(cx, nsDependentString(mFieldText,
-                                                       mFieldTextLength),
-                                 scopeObject, options, evalOptions, &result);
+  rv = NS_OK;
+  {
+    nsJSUtils::ExecutionContext exec(cx, scopeObject);
+    exec.SetScopeChain(scopeChain);
+    exec.CompileAndExec(options, nsDependentString(mFieldText,
+                                                   mFieldTextLength));
+    rv = exec.ExtractReturnValue(&result);
+  }
+
   if (NS_FAILED(rv)) {
     return rv;
   }

@@ -18,16 +18,6 @@
    obj:/lib64/libdbus-1.so.3.4.0
    ...
 }
-{
-   Bug 793600
-   Memcheck:Leak
-   fun:realloc
-   obj:/usr/lib64/libfontconfig.so.1.4.4
-   ...
-   fun:FcDefaultSubstitute
-   fun:_ZN17gfxPangoFontGroup11MakeFontSetEP14_PangoLanguagedP9nsAutoRefI10_FcPatternE
-   ...
-}
 # Fontconfig is going fancy with its cache structure and that confuses valgrind.
 # https://bugs.freedesktop.org/show_bug.cgi?id=8215
 # https://bugs.freedesktop.org/show_bug.cgi?id=8428
