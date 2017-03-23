@@ -483,6 +483,11 @@ nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
     if (NS_FAILED(rv))
         return rv;
 
+    // Remember the name we're using so we can clean up
+    rv = lockFile->Clone(getter_AddRefs(mLockFile));
+    if (NS_FAILED(rv))
+        return rv;
+
 #if defined(XP_MACOSX)
     // First, try locking using fcntl. It is more reliable on
     // a local machine, but may not be supported by an NFS server.
@@ -658,4 +663,13 @@ nsresult nsProfileLock::Unlock(bool aFatalSignal)
     }
 
     return rv;
+}
+
+nsresult nsProfileLock::Cleanup()
+{
+    if (mLockFile) {
+        return mLockFile->Remove(false);
+    }
+
+    return NS_OK;
 }
