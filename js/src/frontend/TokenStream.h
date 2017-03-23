@@ -269,6 +269,37 @@ class StrictModeGetter {
     virtual bool strictMode() = 0;
 };
 
+/**
+ * Metadata for a compilation error (or warning) at a particular offset, or at
+ * no offset (i.e. with respect to a script overall).
+ */
+struct ErrorMetadata
+{
+    // The file/URL where the error occurred.
+    const char* filename;
+
+    // The line and column numbers where the error occurred.  If the error
+    // is with respect to the entire script and not with respect to a
+    // particular location, these will both be zero.
+    uint32_t lineNumber;
+    uint32_t columnNumber;
+
+    // If the error occurs at a particular location, context surrounding the
+    // location of the error: the line that contained the error, or a small
+    // portion of it if the line is long.
+    //
+    // This information is provided on a best-effort basis: code populating
+    // ErrorMetadata instances isn't obligated to supply this.
+    UniqueTwoByteChars lineOfContext;
+
+    // If |lineOfContext| is non-null, its length.
+    size_t lineLength;
+
+    // If |lineOfContext| is non-null, the offset within it of the token that
+    // triggered the error.
+    size_t tokenOffset;
+};
+
 class TokenStreamBase
 {
   protected:
@@ -646,10 +677,24 @@ class MOZ_STACK_CLASS TokenStream final : public TokenStreamBase
     // Warn at the current offset.
     MOZ_MUST_USE bool warning(unsigned errorNumber, ...);
 
+  private:
+    // Compute a line of context for an otherwise-filled-in |err| at the given
+    // offset in this token stream.  (This function basically exists to make
+    // |computeErrorMetadata| more readable and shouldn't be called elsewhere.)
+    MOZ_MUST_USE bool computeLineOfContext(ErrorMetadata* err, uint32_t offset);
+
+  public:
+    // Compute error metadata for an error at no offset.
+    void computeErrorMetadataNoOffset(ErrorMetadata* err);
+
+    // Compute error metadata for an error at the given offset.
+    MOZ_MUST_USE bool computeErrorMetadata(ErrorMetadata* err, uint32_t offset);
+
     // General-purpose error reporters.  You should avoid calling these
     // directly, and instead use the more succinct alternatives (error(),
     // warning(), &c.) in TokenStream, Parser, and BytecodeEmitter.
-    bool reportCompileErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset, unsigned flags,
+    bool reportCompileErrorNumberVA(ErrorMetadata&& metadata,
+                                    UniquePtr<JSErrorNotes> notes, unsigned flags,
                                     unsigned errorNumber, va_list args);
     bool reportStrictModeErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
                                        bool strictMode, unsigned errorNumber, va_list args);

@@ -3569,8 +3569,15 @@ BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
 
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream().reportCompileErrorNumberVA(nullptr, pos.begin, JSREPORT_ERROR,
-                                                           errorNumber, args);
+
+    ErrorMetadata metadata;
+    bool result = tokenStream().computeErrorMetadata(&metadata, pos.begin);
+    if (result) {
+        result =
+            tokenStream().reportCompileErrorNumberVA(Move(metadata), nullptr, JSREPORT_ERROR,
+                                                     errorNumber, args);
+    }
+
     va_end(args);
     return result;
 }
