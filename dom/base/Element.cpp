@@ -2135,6 +2135,7 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
     pointerId = sourceMouseEvent->pointerId;
     inputSource = sourceMouseEvent->inputSource;
   } else if (aSourceEvent->mClass == eKeyboardEventClass) {
+    event.mFlags.mIsPositionless = true;
     inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
   }
   event.pressure = pressure;
