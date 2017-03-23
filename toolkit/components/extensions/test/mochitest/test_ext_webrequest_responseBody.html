@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>WebRequest response body filter test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+"use strict";
+
+const SEQUENTIAL = false;
+
+const PARTS = [
+  `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title></title>
+    </head>
+    <body>`,
+  "Lorem ipsum dolor sit amet, <br>",
+  "consectetur adipiscing elit, <br>",
+  "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. <br>",
+  "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. <br>",
+  "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. <br>",
+  "Excepteur sint occaecat cupidatat non proident, <br>",
+  "sunt in culpa qui officia deserunt mollit anim id est laborum.<br>",
+  `
+    </body>
+    </html>`,
+].map(part => `${part}\n`);
+
+const TIMEOUT = AppConstants.DEBUG ? 2000 : 200;
+const TASKS = [
+  {
+    url: "slow_response.sjs",
+    task(filter, resolve, num) {
+      let decoder = new TextDecoder("utf-8");
+
+      browser.test.assertEq("uninitialized", filter.status,
+                            `(${num}): Got expected initial status`);
+
+      filter.onstart = event => {
+        browser.test.assertEq("transferringdata", filter.status,
+                              `(${num}): Got expected onStart status`);
+      };
+
+      filter.onstop = event => {
+        browser.test.fail(`(${num}): Got unexpected onStop event while disconnected`);
+      };
+
+      let n = 0;
+      filter.ondata = async event => {
+        let str = decoder.decode(event.data, {stream: true});
+
+        if (n < 3) {
+          browser.test.assertEq(JSON.stringify(PARTS[n]),
+                                JSON.stringify(str),
+                                `(${num}): Got expected part`);
+        }
+        n++;
+
+        filter.write(event.data);
+
+        if (n == 3) {
+          filter.suspend();
+
+          browser.test.assertEq("suspended", filter.status,
+                                `(${num}): Got expected suspended status`);
+
+          let fail = event => {
+            browser.test.fail(`(${num}): Got unexpected data event while suspended`);
+          };
+          filter.addEventListener("data", fail);
+
+          await new Promise(resolve => setTimeout(resolve, TIMEOUT * 3));
+
+          browser.test.assertEq("suspended", filter.status,
+                                `(${num}): Got expected suspended status`);
+
+          filter.removeEventListener("data", fail);
+          filter.resume();
+          browser.test.assertEq("transferringdata", filter.status,
+                                `(${num}): Got expected resumed status`);
+        } else if (n > 4) {
+          filter.disconnect();
+
+          filter.addEventListener("data", event => {
+            browser.test.fail(`(${num}): Got unexpected data event while disconnected`);
+          });
+
+          browser.test.assertEq("disconnected", filter.status,
+                                `(${num}): Got expected disconnected status`);
+
+          resolve();
+        }
+      };
+
+      filter.onerror = event => {
+        browser.test.fail(`(${num}): Got unexpected error event: ${filter.error}`);
+      };
+    },
+    verify(response) {
+      is(response, PARTS.join(""), "Got expected final HTML");
+    },
+  },
+  {
+    url: "slow_response.sjs",
+    task(filter, resolve, num) {
+      let decoder = new TextDecoder("utf-8");
+
+      filter.onstop = event => {
+        browser.test.fail(`(${num}): Got unexpected onStop event while disconnected`);
+      };
+
+      let n = 0;
+      filter.ondata = async event => {
+        let str = decoder.decode(event.data, {stream: true});
+
+        if (n < 3) {
+          browser.test.assertEq(JSON.stringify(PARTS[n]),
+                                JSON.stringify(str),
+                                `(${num}): Got expected part`);
+        }
+        n++;
+
+        filter.write(event.data);
+
+        if (n == 3) {
+          filter.suspend();
+
+          await new Promise(resolve => setTimeout(resolve, TIMEOUT * 3));
+
+          filter.disconnect();
+
+          resolve();
+        }
+      };
+
+      filter.onerror = event => {
+        browser.test.fail(`(${num}): Got unexpected error event: ${filter.error}`);
+      };
+    },
+    verify(response) {
+      is(response, PARTS.join(""), "Got expected final HTML");
+    },
+  },
+  {
+    url: "slow_response.sjs",
+    task(filter, resolve, num) {
+      let encoder = new TextEncoder("utf-8");
+
+      filter.onstop = event => {
+        browser.test.fail(`(${num}): Got unexpected onStop event while disconnected`);
+      };
+
+      let n = 0;
+      filter.ondata = async event => {
+        n++;
+
+        filter.write(event.data);
+
+        function checkState(state) {
+          browser.test.assertEq(state, filter.status, `(${num}): Got expected status`);
+        }
+        if (n == 3) {
+          filter.resume();
+          checkState("transferringdata");
+          filter.suspend();
+          checkState("suspended");
+          filter.suspend();
+          checkState("suspended");
+          filter.resume();
+          checkState("transferringdata");
+          filter.suspend();
+          checkState("suspended");
+
+          await new Promise(resolve => setTimeout(resolve, TIMEOUT * 3));
+
+          checkState("suspended");
+          filter.disconnect();
+          checkState("disconnected");
+
+          for (let method of ["suspend", "resume", "close"]) {
+            browser.test.assertThrows(
+              () => {
+                filter[method]();
+              },
+              /.*/,
+              `(${num}): ${method}() should throw while disconnected`);
+          }
+
+          browser.test.assertThrows(
+            () => {
+              filter.write(encoder.encode("Foo bar"));
+            },
+            /.*/,
+            `(${num}): write() should throw while disconnected`);
+
+          filter.disconnect();
+
+          resolve();
+        }
+      };
+
+      filter.onerror = event => {
+        browser.test.fail(`(${num}): Got unexpected error event: ${filter.error}`);
+      };
+    },
+    verify(response) {
+      is(response, PARTS.join(""), "Got expected final HTML");
+    },
+  },
+  {
+    url: "slow_response.sjs",
+    task(filter, resolve, num) {
+      let encoder = new TextEncoder("utf-8");
+      let decoder = new TextDecoder("utf-8");
+
+      filter.onstop = event => {
+        browser.test.fail(`(${num}): Got unexpected onStop event while closed`);
+      };
+
+      browser.test.assertThrows(
+        () => {
+          filter.write(encoder.encode("Foo bar"));
+        },
+        /.*/,
+        `(${num}): write() should throw prior to connection`);
+
+      let n = 0;
+      filter.ondata = async event => {
+        n++;
+
+        filter.write(event.data);
+
+        browser.test.log(`(${num}): Got part ${n}: ${JSON.stringify(decoder.decode(event.data))}`);
+
+        function checkState(state) {
+          browser.test.assertEq(state, filter.status, `(${num}): Got expected status`);
+        }
+        if (n == 3) {
+          filter.close();
+
+          checkState("closed");
+
+          for (let method of ["suspend", "resume", "disconnect"]) {
+            browser.test.assertThrows(
+              () => {
+                filter[method]();
+              },
+              /.*/,
+              `(${num}): ${method}() should throw while closed`);
+          }
+
+          browser.test.assertThrows(
+            () => {
+              filter.write(encoder.encode("Foo bar"));
+            },
+            /.*/,
+            `(${num}): write() should throw while closed`);
+
+          filter.close();
+
+          resolve();
+        }
+      };
+
+      filter.onerror = event => {
+        browser.test.fail(`(${num}): Got unexpected error event: ${filter.error}`);
+      };
+    },
+    verify(response) {
+      is(response, PARTS.slice(0, 3).join(""), "Got expected final HTML");
+    },
+  },
+  {
+    url: "lorem.html.gz",
+    task(filter, resolve, num) {
+      let response = "";
+      let decoder = new TextDecoder("utf-8");
+
+      filter.onstart = event => {
+        browser.test.log(`(${num}): Request start`);
+      };
+
+      filter.onstop = event => {
+        browser.test.assertEq("finishedtransferringdata", filter.status,
+                              `(${num}): Got expected onStop status`);
+
+        filter.close();
+        browser.test.assertEq("closed", filter.status,
+                              `Got expected closed status`);
+
+
+        browser.test.assertEq(JSON.stringify(PARTS.join("")),
+                              JSON.stringify(response),
+                              `(${num}): Got expected response`);
+
+        resolve();
+      };
+
+      filter.ondata = event => {
+        let str = decoder.decode(event.data, {stream: true});
+        response += str;
+
+        filter.write(event.data);
+      };
+
+      filter.onerror = event => {
+        browser.test.fail(`(${num}): Got unexpected error event: ${filter.error}`);
+      };
+    },
+    verify(response) {
+      is(response, PARTS.join(""), "Got expected final HTML");
+    },
+  },
+];
+
+function serializeTest(test, num) {
+  /* globals ExtensionTestCommon */
+
+  let url = `${test.url}?test_num=${num}`;
+  let task = ExtensionTestCommon.serializeFunction(test.task);
+
+  return `{url: ${JSON.stringify(url)}, task: ${task}}`;
+}
+
+add_task(async function() {
+  function background(TASKS) {
+    async function runTest(test, num, details) {
+      browser.test.log(`Running test #${num}: ${details.url}`);
+
+      let filter = browser.webRequest.filterResponseData(details.requestId);
+
+      try {
+        await new Promise(resolve => {
+          test.task(filter, resolve, num, details);
+        });
+      } catch (e) {
+        browser.test.fail(`Task #${num} threw an unexpected exception: ${e} :: ${e.stack}`);
+      }
+
+      browser.test.log(`Finished test #${num}: ${details.url}`);
+      browser.test.sendMessage(`finished-${num}`);
+    }
+
+    browser.webRequest.onBeforeRequest.addListener(
+      details => {
+        for (let [num, test] of TASKS.entries()) {
+          if (details.url.endsWith(test.url)) {
+            runTest(test, num, details);
+            break;
+          }
+        }
+      }, {
+        urls: ["http://mochi.test/*?test_num=*"],
+      },
+      ["blocking"]);
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `
+      const PARTS = ${JSON.stringify(PARTS)};
+      const TIMEOUT = ${TIMEOUT};
+
+      (${background})([${TASKS.map(serializeTest)}])
+    `,
+
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+        "http://mochi.test/",
+      ],
+    },
+  });
+
+  await extension.startup();
+
+  async function runTest(test, num) {
+    let url = `${test.url}?test_num=${num}`;
+
+    let resp = await fetch(url);
+    let body = await resp.text();
+
+    await extension.awaitMessage(`finished-${num}`);
+
+    info(`Verifying test #${num}: ${url}`);
+    await test.verify(body);
+  }
+
+  if (SEQUENTIAL) {
+    for (let [num, test] of TASKS.entries()) {
+      await runTest(test, num);
+    }
+  } else {
+    await Promise.all(TASKS.map(runTest));
+  }
+
+  await extension.unload();
+});
+
+add_task(async function test_permissions() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.test.assertEq(
+          undefined, browser.webRequest.filterResponseData,
+          "filterResponseData is undefined without blocking permissions");
+    },
+
+    manifest: {
+      permissions: [
+        "webRequest",
+        "http://mochi.test/",
+      ],
+    },
+  });
+
+  await extension.startup();
+  await extension.unload();
+});
+
+add_task(async function test_invalidId() {
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      let filter = browser.webRequest.filterResponseData("34159628");
+
+      await new Promise(resolve => { filter.onerror = resolve; });
+
+      browser.test.assertEq("Invalid request ID",
+                            filter.error,
+                            "Got expected error");
+
+      browser.test.notifyPass("invalid-request-id");
+    },
+
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+        "http://mochi.test/",
+      ],
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("invalid-request-id");
+  await extension.unload();
+});
+</script>
+</body>
+</html>
