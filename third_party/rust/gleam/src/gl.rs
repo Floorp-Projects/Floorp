@@ -11,13 +11,17 @@ use std::mem;
 use std::mem::size_of;
 use std::os::raw::{c_char, c_int, c_void};
 use std::ptr;
-use std::str::{self};
+use std::rc::Rc;
+use std::str;
 use std::iter::repeat;
 use std::ffi::{CString, CStr};
 use ffi;
 
 pub use ffi::types::*;
 pub use ffi::*;
+
+pub use ffi_gl::Gl as GlFfi;
+pub use ffi_gles::Gles2 as GlesFfi;
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum GlType {
@@ -26,76 +30,25 @@ pub enum GlType {
 }
 
 impl Default for GlType {
-  #[cfg(target_os="android")]
-  fn default() -> GlType {
-    GlType::Gles
-  }
-  #[cfg(not(target_os="android"))]
-  fn default() -> GlType {
-    GlType::Gl
-  }
-}
-
-#[inline]
-pub fn buffer_data<T>(target: GLenum, data: &[T], usage: GLenum) {
-    unsafe {
-        ffi::BufferData(target,
-                       (data.len() * size_of::<T>()) as GLsizeiptr,
-                       data.as_ptr() as *const GLvoid,
-                       usage);
+    #[cfg(target_os="android")]
+    fn default() -> GlType {
+        GlType::Gles
     }
-}
-
-#[inline]
-pub fn buffer_data_raw<T>(target: GLenum, data: &T, usage: GLenum) {
-    unsafe {
-        ffi::BufferData(target,
-                        size_of::<T>() as GLsizeiptr,
-                        data as *const T as *const GLvoid,
-                        usage);
-    }
-}
-
-#[inline]
-pub fn buffer_sub_data<T>(target: GLenum, offset: isize, data: &[T]) {
-    unsafe {
-        ffi::BufferSubData(target,
-                           offset,
-                           (data.len() * size_of::<T>()) as GLsizeiptr,
-                           data.as_ptr() as *const GLvoid);
-    }
-}
-
-pub fn shader_source(shader: GLuint, strings: &[&[u8]]) {
-    let pointers: Vec<*const u8> = strings.iter().map(|string| (*string).as_ptr()).collect();
-    let lengths: Vec<GLint> = strings.iter().map(|string| string.len() as GLint).collect();
-    unsafe {
-        ffi::ShaderSource(shader, pointers.len() as GLsizei,
-                         pointers.as_ptr() as *const *const GLchar, lengths.as_ptr());
-    }
-    drop(lengths);
-    drop(pointers);
-}
-
-#[cfg(not(target_os="android"))]
-pub fn read_buffer(mode: GLenum) {
-    unsafe {
-        ffi::ReadBuffer(mode);
+    #[cfg(not(target_os="android"))]
+    fn default() -> GlType {
+        GlType::Gl
     }
 }
 
 fn calculate_length(width: GLsizei, height: GLsizei, format: GLenum, pixel_type: GLenum) -> usize {
     let colors = match format {
         ffi::RGB => 3,
-#[cfg(not(target_os="android"))]
         ffi::BGR => 3,
 
         ffi::RGBA => 4,
-#[cfg(not(target_os="android"))]
         ffi::BGRA => 4,
 
         ffi::ALPHA => 1,
-#[cfg(target_os="android")]
         ffi::LUMINANCE => 1,
         _ => panic!("unsupported format for read_pixels"),
     };
@@ -107,333 +60,85 @@ fn calculate_length(width: GLsizei, height: GLsizei, format: GLenum, pixel_type:
     return (width * height * colors * depth) as usize;
 }
 
-pub fn read_pixels_into_buffer(x: GLint, y: GLint, width: GLsizei, height: GLsizei,
-                               format: GLenum, pixel_type: GLenum, dst_buffer: &mut [u8]) {
-    // Assumes that the user properly allocated the size for dst_buffer.
-    assert!(calculate_length(width, height, format, pixel_type) == dst_buffer.len());
-
-    unsafe {
-        // We don't want any alignment padding on pixel rows.
-        ffi::PixelStorei(ffi::PACK_ALIGNMENT, 1);
-        ffi::ReadPixels(x, y, width, height, format, pixel_type, dst_buffer.as_mut_ptr() as *mut c_void);
-    }
-}
-
-pub fn read_pixels(x: GLint, y: GLint, width: GLsizei, height: GLsizei, format: GLenum, pixel_type: GLenum) -> Vec<u8> {
-    let len = calculate_length(width, height, format, pixel_type);
-    let mut pixels: Vec<u8> = Vec::new();
-    pixels.reserve(len);
-    unsafe { pixels.set_len(len); }
-
-    read_pixels_into_buffer(x, y, width, height, format, pixel_type, pixels.as_mut_slice());
-
-    pixels
-}
-
-#[inline]
-pub fn sample_coverage(value: GLclampf, invert: bool) {
-    unsafe {
-        ffi::SampleCoverage(value, invert as GLboolean);
-    }
-}
-
-#[inline]
-pub fn polygon_offset(factor: GLfloat, units: GLfloat) {
-    unsafe {
-        ffi::PolygonOffset(factor, units);
-    }
-}
-
-#[inline]
-pub fn pixel_store_i(name: GLenum, param: GLint) {
-    unsafe {
-        ffi::PixelStorei(name, param);
-    }
-}
-
-#[inline]
-pub fn gen_buffers(n: GLsizei) -> Vec<GLuint> {
-    unsafe {
-        let mut result: Vec<_> = repeat(0 as GLuint).take(n as usize).collect();
-        ffi::GenBuffers(n, result.as_mut_ptr());
-        return result;
-    }
-}
-
-#[inline]
-pub fn gen_renderbuffers(n: GLsizei) -> Vec<GLuint> {
-    unsafe {
-        let mut result: Vec<_> = repeat(0 as GLuint).take(n as usize).collect();
-        ffi::GenRenderbuffers(n, result.as_mut_ptr());
-        return result;
-    }
-}
-
-#[inline]
-pub fn gen_framebuffers(n: GLsizei) -> Vec<GLuint> {
-    unsafe {
-        let mut result: Vec<_> = repeat(0 as GLuint).take(n as usize).collect();
-        ffi::GenFramebuffers(n, result.as_mut_ptr());
-        return result;
-    }
-}
-
-#[inline]
-pub fn gen_textures(n: GLsizei) -> Vec<GLuint> {
-    unsafe {
-        let mut result: Vec<_> = repeat(0 as GLuint).take(n as usize).collect();
-        ffi::GenTextures(n, result.as_mut_ptr());
-        return result;
-    }
-}
-
-#[inline]
-pub fn gen_vertex_arrays(n: GLsizei) -> Vec<GLuint> {
-    unsafe {
-        let mut result: Vec<_> = repeat(0 as GLuint).take(n as usize).collect();
-        ffi::GenVertexArrays(n, result.as_mut_ptr());
-        return result;
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn gen_queries(n: GLsizei) -> Vec<GLuint> {
-    unsafe {
-        let mut result = vec![0; n as usize];
-        ffi::GenQueries(n, result.as_mut_ptr());
-        return result;
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn begin_query(target: GLenum, id: GLuint) {
-    unsafe {
-        ffi::BeginQuery(target, id);
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn end_query(target: GLenum) {
-    unsafe {
-        ffi::EndQuery(target);
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn query_counter(id: GLuint, target: GLenum) {
-    unsafe {
-        ffi::QueryCounter(id, target);
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn get_query_object_iv(id: GLuint, pname: GLenum) -> i32 {
-    unsafe {
-        let mut result = 0;
-        ffi::GetQueryObjectiv(id, pname, &mut result);
-        result
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn get_query_object_uiv(id: GLuint, pname: GLenum) -> u32 {
-    unsafe {
-        let mut result = 0;
-        ffi::GetQueryObjectuiv(id, pname, &mut result);
-        result
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn get_query_object_i64v(id: GLuint, pname: GLenum) -> i64 {
-    unsafe {
-        let mut result = 0;
-        ffi::GetQueryObjecti64v(id, pname, &mut result);
-        result
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn get_query_object_ui64v(id: GLuint, pname: GLenum) -> u64 {
-    unsafe {
-        let mut result = 0;
-        ffi::GetQueryObjectui64v(id, pname, &mut result);
-        result
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn delete_queries(queries: &[GLuint]) {
-    unsafe {
-        ffi::DeleteQueries(queries.len() as GLsizei, queries.as_ptr());
-    }
-}
-
-#[inline]
-pub fn delete_vertex_arrays(vertex_arrays: &[GLuint]) {
-    unsafe {
-        ffi::DeleteVertexArrays(vertex_arrays.len() as GLsizei, vertex_arrays.as_ptr());
-    }
-}
-
-#[inline]
-pub fn delete_buffers(buffers: &[GLuint]) {
-    unsafe {
-        ffi::DeleteBuffers(buffers.len() as GLsizei, buffers.as_ptr());
-    }
-}
-
-#[inline]
-pub fn delete_renderbuffers(renderbuffers: &[GLuint]) {
-    unsafe {
-        ffi::DeleteRenderbuffers(renderbuffers.len() as GLsizei, renderbuffers.as_ptr());
-    }
-}
-
-#[inline]
-pub fn delete_framebuffers(framebuffers: &[GLuint]) {
-    unsafe {
-        ffi::DeleteFramebuffers(framebuffers.len() as GLsizei, framebuffers.as_ptr());
-    }
-}
-
-// NB: The name of this function is wrong, it's here for compatibility reasons,
-// but should be removed.
-#[inline]
-pub fn delete_frame_buffers(framebuffers: &[GLuint]) {
-    delete_framebuffers(framebuffers);
-}
-
-#[inline]
-pub fn delete_textures(textures: &[GLuint]) {
-    unsafe {
-        ffi::DeleteTextures(textures.len() as GLsizei, textures.as_ptr());
-    }
-}
-
-#[inline]
-pub fn framebuffer_renderbuffer(target: GLenum,
+pub trait Gl {
+    fn get_type(&self) -> GlType;
+    fn buffer_data_untyped(&self,
+                           target: GLenum,
+                           size: GLsizeiptr,
+                           data: *const GLvoid,
+                           usage: GLenum);
+    fn buffer_sub_data_untyped(&self,
+                               target: GLenum,
+                               offset: isize,
+                               size: GLsizeiptr,
+                               data: *const GLvoid);
+    fn shader_source(&self, shader: GLuint, strings: &[&[u8]]);
+    fn read_buffer(&self, mode: GLenum);
+    fn read_pixels_into_buffer(&self,
+                               x: GLint,
+                               y: GLint,
+                               width: GLsizei,
+                               height: GLsizei,
+                               format: GLenum,
+                               pixel_type: GLenum,
+                               dst_buffer: &mut [u8]);
+    fn read_pixels(&self,
+                   x: GLint,
+                   y: GLint,
+                   width: GLsizei,
+                   height: GLsizei,
+                   format: GLenum,
+                   pixel_type: GLenum)
+                   -> Vec<u8>;
+    fn sample_coverage(&self, value: GLclampf, invert: bool);
+    fn polygon_offset(&self, factor: GLfloat, units: GLfloat);
+    fn pixel_store_i(&self, name: GLenum, param: GLint);
+    fn gen_buffers(&self, n: GLsizei) -> Vec<GLuint>;
+    fn gen_renderbuffers(&self, n: GLsizei) -> Vec<GLuint>;
+    fn gen_framebuffers(&self, n: GLsizei) -> Vec<GLuint>;
+    fn gen_textures(&self, n: GLsizei) -> Vec<GLuint>;
+    fn gen_vertex_arrays(&self, n: GLsizei) -> Vec<GLuint>;
+    fn gen_queries(&self, n: GLsizei) -> Vec<GLuint>;
+    fn begin_query(&self, target: GLenum, id: GLuint);
+    fn end_query(&self, target: GLenum);
+    fn query_counter(&self, id: GLuint, target: GLenum);
+    fn get_query_object_iv(&self, id: GLuint, pname: GLenum) -> i32;
+    fn get_query_object_uiv(&self, id: GLuint, pname: GLenum) -> u32;
+    fn get_query_object_i64v(&self, id: GLuint, pname: GLenum) -> i64;
+    fn get_query_object_ui64v(&self, id: GLuint, pname: GLenum) -> u64;
+    fn delete_queries(&self, queries: &[GLuint]);
+    fn delete_vertex_arrays(&self, vertex_arrays: &[GLuint]);
+    fn delete_buffers(&self, buffers: &[GLuint]);
+    fn delete_renderbuffers(&self, renderbuffers: &[GLuint]);
+    fn delete_framebuffers(&self, framebuffers: &[GLuint]);
+    fn delete_textures(&self, textures: &[GLuint]);
+    fn framebuffer_renderbuffer(&self,
+                                target: GLenum,
                                 attachment: GLenum,
                                 renderbuffertarget: GLenum,
-                                renderbuffer: GLuint) {
-    unsafe {
-        ffi::FramebufferRenderbuffer(target,
-                                     attachment,
-                                     renderbuffertarget,
-                                     renderbuffer);
-    }
-}
-
-#[inline]
-pub fn renderbuffer_storage(target: GLenum,
+                                renderbuffer: GLuint);
+    fn renderbuffer_storage(&self,
+                            target: GLenum,
                             internalformat: GLenum,
                             width: GLsizei,
-                            height: GLsizei) {
-    unsafe {
-        ffi::RenderbufferStorage(target,
-                                 internalformat,
-                                 width,
-                                 height);
-    }
-}
-
-#[inline]
-pub fn depth_func(func: GLenum) {
-    unsafe {
-        ffi::DepthFunc(func);
-    }
-}
-
-#[inline]
-pub fn active_texture(texture: GLenum) {
-    unsafe {
-        ffi::ActiveTexture(texture);
-    }
-}
-
-#[inline]
-pub fn attach_shader(program: GLuint, shader: GLuint) {
-    unsafe {
-        ffi::AttachShader(program, shader);
-    }
-}
-
-#[inline]
-pub fn bind_attrib_location(program: GLuint, index: GLuint, name: &str) {
-    let c_string = CString::new(name).unwrap();
-    unsafe {
-        ffi::BindAttribLocation(program, index, c_string.as_ptr())
-    }
-}
-
-#[inline]
-pub fn get_uniform_block_index(program: GLuint, name: &str) -> GLuint {
-    let c_string = CString::new(name).unwrap();
-    unsafe {
-        ffi::GetUniformBlockIndex(program, c_string.as_ptr())
-    }
-}
-
-#[inline]
-pub fn bind_buffer_base(target: GLenum, index: GLuint, buffer: GLuint) {
-    unsafe {
-        ffi::BindBufferBase(target, index, buffer);
-    }
-}
-
-#[inline]
-pub fn uniform_block_binding(program: GLuint, uniform_block_index: GLuint, uniform_block_binding: GLuint) {
-    unsafe {
-        ffi::UniformBlockBinding(program, uniform_block_index, uniform_block_binding);
-    }
-}
-
-#[inline]
-pub fn bind_buffer(target: GLenum, buffer: GLuint) {
-    unsafe {
-        ffi::BindBuffer(target, buffer);
-    }
-}
-
-#[inline]
-pub fn bind_vertex_array(vao: GLuint) {
-    unsafe {
-        ffi::BindVertexArray(vao);
-    }
-}
-
-#[inline]
-pub fn bind_renderbuffer(target: GLenum, renderbuffer: GLuint) {
-    unsafe {
-        ffi::BindRenderbuffer(target, renderbuffer);
-    }
-}
-
-#[inline]
-pub fn bind_framebuffer(target: GLenum, framebuffer: GLuint) {
-    unsafe {
-        ffi::BindFramebuffer(target, framebuffer);
-    }
-}
-
-#[inline]
-pub fn bind_texture(target: GLenum, texture: GLuint) {
-    unsafe {
-        ffi::BindTexture(target, texture);
-    }
-}
-
-// FIXME: Does not verify buffer size -- unsafe!
-pub fn tex_image_2d(target: GLenum,
+                            height: GLsizei);
+    fn depth_func(&self, func: GLenum);
+    fn active_texture(&self, texture: GLenum);
+    fn attach_shader(&self, program: GLuint, shader: GLuint);
+    fn bind_attrib_location(&self, program: GLuint, index: GLuint, name: &str);
+    fn get_uniform_block_index(&self, program: GLuint, name: &str) -> GLuint;
+    fn bind_buffer_base(&self, target: GLenum, index: GLuint, buffer: GLuint);
+    fn uniform_block_binding(&self,
+                             program: GLuint,
+                             uniform_block_index: GLuint,
+                             uniform_block_binding: GLuint);
+    fn bind_buffer(&self, target: GLenum, buffer: GLuint);
+    fn bind_vertex_array(&self, vao: GLuint);
+    fn bind_renderbuffer(&self, target: GLenum, renderbuffer: GLuint);
+    fn bind_framebuffer(&self, target: GLenum, framebuffer: GLuint);
+    fn bind_texture(&self, target: GLenum, texture: GLuint);
+    fn tex_image_2d(&self,
+                    target: GLenum,
                     level: GLint,
                     internal_format: GLint,
                     width: GLsizei,
@@ -441,52 +146,26 @@ pub fn tex_image_2d(target: GLenum,
                     border: GLint,
                     format: GLenum,
                     ty: GLenum,
-                    opt_data: Option<&[u8]>) {
-    match opt_data {
-        Some(data) => {
-            unsafe {
-                ffi::TexImage2D(target, level, internal_format, width, height, border, format, ty,
-                                data.as_ptr() as *const GLvoid);
-            }
-        }
-        None => {
-            unsafe {
-                ffi::TexImage2D(target, level, internal_format, width, height, border, format, ty,
-                               ptr::null());
-            }
-        }
-    }
-}
-
-pub fn compressed_tex_image_2d(target: GLenum,
+                    opt_data: Option<&[u8]>);
+    fn compressed_tex_image_2d(&self,
+                               target: GLenum,
                                level: GLint,
                                internal_format: GLenum,
                                width: GLsizei,
                                height: GLsizei,
                                border: GLint,
-                               data: &[u8]) {
-    unsafe {
-        ffi::CompressedTexImage2D(target, level, internal_format, width, height, border,
-                                  data.len() as GLsizei, data.as_ptr() as *const GLvoid);
-    }
-}
-
-pub fn compressed_tex_sub_image_2d(target: GLenum,
+                               data: &[u8]);
+    fn compressed_tex_sub_image_2d(&self,
+                                   target: GLenum,
                                    level: GLint,
                                    xoffset: GLint,
                                    yoffset: GLint,
                                    width: GLsizei,
                                    height: GLsizei,
                                    format: GLenum,
-                                   data: &[u8]) {
-    unsafe {
-        ffi::CompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format,
-                                     data.len() as GLsizei, data.as_ptr() as *const GLvoid);
-    }
-}
-
-// FIXME: Does not verify buffer size -- unsafe!
-pub fn tex_image_3d(target: GLenum,
+                                   data: &[u8]);
+    fn tex_image_3d(&self,
+                    target: GLenum,
                     level: GLint,
                     internal_format: GLint,
                     width: GLsizei,
@@ -495,67 +174,27 @@ pub fn tex_image_3d(target: GLenum,
                     border: GLint,
                     format: GLenum,
                     ty: GLenum,
-                    opt_data: Option<&[u8]>) {
-    unsafe {
-        let pdata = match opt_data {
-            Some(data) => mem::transmute(data.as_ptr()),
-            None => ptr::null(),
-        };
-        ffi::TexImage3D(target,
-                        level,
-                        internal_format,
-                        width,
-                        height,
-                        depth,
-                        border,
-                        format,
-                        ty,
-                        pdata);
-    }
-}
-
-pub fn copy_tex_image_2d(target: GLenum,
+                    opt_data: Option<&[u8]>);
+    fn copy_tex_image_2d(&self,
+                         target: GLenum,
                          level: GLint,
                          internal_format: GLenum,
                          x: GLint,
                          y: GLint,
                          width: GLsizei,
                          height: GLsizei,
-                         border: GLint) {
-    unsafe {
-        ffi::CopyTexImage2D(target,
-                            level,
-                            internal_format,
-                            x,
-                            y,
-                            width,
-                            height,
-                            border);
-    }
-}
-
-pub fn copy_tex_sub_image_2d(target: GLenum,
+                         border: GLint);
+    fn copy_tex_sub_image_2d(&self,
+                             target: GLenum,
                              level: GLint,
                              xoffset: GLint,
                              yoffset: GLint,
                              x: GLint,
                              y: GLint,
                              width: GLsizei,
-                             height: GLsizei) {
-    unsafe {
-        ffi::CopyTexSubImage2D(target,
-                               level,
-                               xoffset,
-                               yoffset,
-                               x,
-                               y,
-                               width,
-                               height);
-    }
-}
-
-#[inline]
-pub fn copy_tex_sub_image_3d(target: GLenum,
+                             height: GLsizei);
+    fn copy_tex_sub_image_3d(&self,
+                             target: GLenum,
                              level: GLint,
                              xoffset: GLint,
                              yoffset: GLint,
@@ -563,21 +202,9 @@ pub fn copy_tex_sub_image_3d(target: GLenum,
                              x: GLint,
                              y: GLint,
                              width: GLsizei,
-                             height: GLsizei) {
-    unsafe {
-        ffi::CopyTexSubImage3D(target,
-                               level,
-                               xoffset,
-                               yoffset,
-                               zoffset,
-                               x,
-                               y,
-                               width,
-                               height);
-    }
-}
-
-pub fn tex_sub_image_2d(target: GLenum,
+                             height: GLsizei);
+    fn tex_sub_image_2d(&self,
+                        target: GLenum,
                         level: GLint,
                         xoffset: GLint,
                         yoffset: GLint,
@@ -585,13 +212,9 @@ pub fn tex_sub_image_2d(target: GLenum,
                         height: GLsizei,
                         format: GLenum,
                         ty: GLenum,
-                        data: &[u8]) {
-    unsafe {
-        ffi::TexSubImage2D(target, level, xoffset, yoffset, width, height, format, ty, data.as_ptr() as *const c_void);
-    }
-}
-
-pub fn tex_sub_image_3d(target: GLenum,
+                        data: &[u8]);
+    fn tex_sub_image_3d(&self,
+                        target: GLenum,
                         level: GLint,
                         xoffset: GLint,
                         yoffset: GLint,
@@ -601,938 +224,189 @@ pub fn tex_sub_image_3d(target: GLenum,
                         depth: GLsizei,
                         format: GLenum,
                         ty: GLenum,
-                        data: &[u8]) {
-    unsafe {
-        ffi::TexSubImage3D(target,
-                           level,
-                           xoffset,
-                           yoffset,
-                           zoffset,
-                           width,
-                           height,
-                           depth,
-                           format,
-                           ty,
-                           data.as_ptr() as *const c_void);
-    }
-}
-
-#[inline]
-pub fn get_integer_v(name: GLenum) -> GLint {
-    let mut result: GLint = 0 as GLint;
-    unsafe {
-        ffi::GetIntegerv(name, &mut result);
-    }
-    result
-}
-
-#[inline]
-pub fn get_boolean_v(name: GLenum) -> GLboolean {
-    let mut result: GLboolean = 0 as GLboolean;
-    unsafe {
-        ffi::GetBooleanv(name, &mut result);
-    }
-    result
-}
-
-
-#[inline]
-pub fn get_float_v(name: GLenum) -> GLfloat {
-    let mut result: GLfloat = 0 as GLfloat;
-    unsafe {
-        ffi::GetFloatv(name, &mut result);
-    }
-    result
-}
-
-#[inline]
-pub fn tex_parameter_i(target: GLenum, pname: GLenum, param: GLint) {
-    unsafe {
-        ffi::TexParameteri(target, pname, param);
-    }
-}
-
-#[inline]
-pub fn tex_parameter_f(target: GLenum, pname: GLenum, param: GLfloat) {
-    unsafe {
-        ffi::TexParameterf(target, pname, param);
-    }
-}
-
-#[inline]
-pub fn framebuffer_texture_2d(target: GLenum,
+                        data: &[u8]);
+    fn get_integer_v(&self, name: GLenum) -> GLint;
+    fn get_boolean_v(&self, name: GLenum) -> GLboolean;
+    fn get_float_v(&self, name: GLenum) -> GLfloat;
+    fn tex_parameter_i(&self, target: GLenum, pname: GLenum, param: GLint);
+    fn tex_parameter_f(&self, target: GLenum, pname: GLenum, param: GLfloat);
+    fn framebuffer_texture_2d(&self,
+                              target: GLenum,
                               attachment: GLenum,
                               textarget: GLenum,
                               texture: GLuint,
-                              level: GLint) {
-    unsafe {
-        ffi::FramebufferTexture2D(target, attachment, textarget, texture, level);
-    }
-}
-
-#[inline]
-pub fn framebuffer_texture_layer(target: GLenum,
+                              level: GLint);
+    fn framebuffer_texture_layer(&self,
+                                 target: GLenum,
                                  attachment: GLenum,
                                  texture: GLuint,
                                  level: GLint,
-                                 layer: GLint) {
-    unsafe {
-        ffi::FramebufferTextureLayer(target, attachment, texture, level, layer);
-    }
-}
-
-#[inline]
-pub fn blit_framebuffer(srcX0: GLint,
-                        srcY0: GLint,
-                        srcX1: GLint,
-                        srcY1: GLint,
-                        dstX0: GLint,
-                        dstY0: GLint,
-                        dstX1: GLint,
-                        dstY1: GLint,
+                                 layer: GLint);
+    fn blit_framebuffer(&self,
+                        src_x0: GLint,
+                        src_y0: GLint,
+                        src_x1: GLint,
+                        src_y1: GLint,
+                        dst_x0: GLint,
+                        dst_y0: GLint,
+                        dst_x1: GLint,
+                        dst_y1: GLint,
                         mask: GLbitfield,
-                        filter: GLenum) {
-    unsafe {
-        ffi::BlitFramebuffer(srcX0,
-                             srcY0,
-                             srcX1,
-                             srcY1,
-                             dstX0,
-                             dstY0,
-                             dstX1,
-                             dstY1,
-                             mask,
-                             filter);
-    }
-}
-
-#[inline]
-pub fn vertex_attrib_4f(index: GLuint,
-                        x: GLfloat,
-                        y: GLfloat,
-                        z: GLfloat,
-                        w: GLfloat) {
-    unsafe {
-        ffi::VertexAttrib4f(index, x, y, z, w)
-    }
-}
-
-#[inline]
-pub fn vertex_attrib_pointer_f32(index: GLuint,
+                        filter: GLenum);
+    fn vertex_attrib_4f(&self, index: GLuint, x: GLfloat, y: GLfloat, z: GLfloat, w: GLfloat);
+    fn vertex_attrib_pointer_f32(&self,
+                                 index: GLuint,
                                  size: GLint,
                                  normalized: bool,
                                  stride: GLsizei,
-                                 offset: GLuint) {
-    unsafe {
-        ffi::VertexAttribPointer(index,
-                                size,
-                                ffi::FLOAT,
-                                normalized as GLboolean,
-                                stride,
-                                offset as *const GLvoid)
-    }
-}
-
-#[inline]
-pub fn vertex_attrib_pointer(index: GLuint,
+                                 offset: GLuint);
+    fn vertex_attrib_pointer(&self,
+                             index: GLuint,
                              size: GLint,
                              type_: GLenum,
                              normalized: bool,
                              stride: GLsizei,
-                             offset: GLuint) {
-    unsafe {
-        ffi::VertexAttribPointer(index,
-                                 size,
-                                 type_,
-                                 normalized as GLboolean,
-                                 stride,
-                                 offset as *const GLvoid)
-    }
-}
-
-#[inline]
-pub fn vertex_attrib_i_pointer(index: GLuint,
+                             offset: GLuint);
+    fn vertex_attrib_i_pointer(&self,
+                               index: GLuint,
                                size: GLint,
                                type_: GLenum,
                                stride: GLsizei,
-                               offset: GLuint) {
-    unsafe {
-        ffi::VertexAttribIPointer(index,
-                                  size,
-                                  type_,
-                                  stride,
-                                  offset as *const GLvoid)
-    }
-}
-
-#[inline]
-pub fn vertex_attrib_divisor(index: GLuint, divisor: GLuint) {
-    unsafe {
-        ffi::VertexAttribDivisor(index, divisor)
-    }
-}
-
-#[inline]
-pub fn viewport(x: GLint, y: GLint, width: GLsizei, height: GLsizei) {
-    unsafe {
-        ffi::Viewport(x, y, width, height);
-    }
-}
-
-#[inline]
-pub fn scissor(x: GLint, y: GLint, width: GLsizei, height: GLsizei) {
-    unsafe {
-        ffi::Scissor(x, y, width, height);
-    }
-}
-
-#[inline]
-pub fn line_width(width: GLfloat) {
-    unsafe {
-        ffi::LineWidth(width);
-    }
-}
-
-#[inline]
-pub fn use_program(program: GLuint) {
-    unsafe {
-        ffi::UseProgram(program);
-    }
-}
-
-#[inline]
-pub fn validate_program(program: GLuint) {
-    unsafe {
-        ffi::ValidateProgram(program);
-    }
-}
-
-#[inline]
-pub fn draw_arrays(mode: GLenum, first: GLint, count: GLsizei) {
-    unsafe {
-        return ffi::DrawArrays(mode, first, count);
-    }
-}
-
-#[inline]
-pub fn draw_arrays_instanced(mode: GLenum, first: GLint, count: GLsizei, primcount: GLsizei) {
-    unsafe {
-        return ffi::DrawArraysInstanced(mode, first, count, primcount);
-    }
-}
-
-#[inline]
-pub fn draw_elements(mode: GLenum, count: GLsizei, element_type: GLenum, indices_offset: GLuint) {
-    unsafe {
-        return ffi::DrawElements(mode, count, element_type, indices_offset as *const c_void)
-    }
-}
-
-#[inline]
-pub fn draw_elements_instanced(mode: GLenum,
+                               offset: GLuint);
+    fn vertex_attrib_divisor(&self, index: GLuint, divisor: GLuint);
+    fn viewport(&self, x: GLint, y: GLint, width: GLsizei, height: GLsizei);
+    fn scissor(&self, x: GLint, y: GLint, width: GLsizei, height: GLsizei);
+    fn line_width(&self, width: GLfloat);
+    fn use_program(&self, program: GLuint);
+    fn validate_program(&self, program: GLuint);
+    fn draw_arrays(&self, mode: GLenum, first: GLint, count: GLsizei);
+    fn draw_arrays_instanced(&self,
+                             mode: GLenum,
+                             first: GLint,
+                             count: GLsizei,
+                             primcount: GLsizei);
+    fn draw_elements(&self,
+                     mode: GLenum,
+                     count: GLsizei,
+                     element_type: GLenum,
+                     indices_offset: GLuint);
+    fn draw_elements_instanced(&self,
+                               mode: GLenum,
                                count: GLsizei,
                                element_type: GLenum,
                                indices_offset: GLuint,
-                               primcount: GLsizei) {
-    unsafe {
-        return ffi::DrawElementsInstanced(mode,
-                                          count,
-                                          element_type,
-                                          indices_offset as *const c_void,
-                                          primcount)
-    }
+                               primcount: GLsizei);
+    fn blend_color(&self, r: f32, g: f32, b: f32, a: f32);
+    fn blend_func(&self, sfactor: GLenum, dfactor: GLenum);
+    fn blend_func_separate(&self,
+                           src_rgb: GLenum,
+                           dest_rgb: GLenum,
+                           src_alpha: GLenum,
+                           dest_alpha: GLenum);
+    fn blend_equation(&self, mode: GLenum);
+    fn blend_equation_separate(&self, mode_rgb: GLenum, mode_alpha: GLenum);
+    fn color_mask(&self, r: bool, g: bool, b: bool, a: bool);
+    fn cull_face(&self, mode: GLenum);
+    fn front_face(&self, mode: GLenum);
+    fn enable(&self, cap: GLenum);
+    fn disable(&self, cap: GLenum);
+    fn hint(&self, param_name: GLenum, param_val: GLenum);
+    fn is_enabled(&self, cap: GLenum) -> GLboolean;
+    fn is_shader(&self, shader: GLuint) -> GLboolean;
+    fn is_texture(&self, texture: GLenum) -> GLboolean;
+    fn is_framebuffer(&self, framebuffer: GLenum) -> GLboolean;
+    fn is_renderbuffer(&self, renderbuffer: GLenum) -> GLboolean;
+    fn check_frame_buffer_status(&self, target: GLenum) -> GLenum;
+    fn enable_vertex_attrib_array(&self, index: GLuint);
+    fn disable_vertex_attrib_array(&self, index: GLuint);
+    fn uniform_1f(&self, location: GLint, v0: GLfloat);
+    fn uniform_1fv(&self, location: GLint, values: &[f32]);
+    fn uniform_1i(&self, location: GLint, v0: GLint);
+    fn uniform_1iv(&self, location: GLint, values: &[i32]);
+    fn uniform_1ui(&self, location: GLint, v0: GLuint);
+    fn uniform_2f(&self, location: GLint, v0: GLfloat, v1: GLfloat);
+    fn uniform_2fv(&self, location: GLint, values: &[f32]);
+    fn uniform_2i(&self, location: GLint, v0: GLint, v1: GLint);
+    fn uniform_2iv(&self, location: GLint, values: &[i32]);
+    fn uniform_2ui(&self, location: GLint, v0: GLuint, v1: GLuint);
+    fn uniform_3f(&self, location: GLint, v0: GLfloat, v1: GLfloat, v2: GLfloat);
+    fn uniform_3fv(&self, location: GLint, values: &[f32]);
+    fn uniform_3i(&self, location: GLint, v0: GLint, v1: GLint, v2: GLint);
+    fn uniform_3iv(&self, location: GLint, values: &[i32]);
+    fn uniform_3ui(&self, location: GLint, v0: GLuint, v1: GLuint, v2: GLuint);
+    fn uniform_4f(&self, location: GLint, x: GLfloat, y: GLfloat, z: GLfloat, w: GLfloat);
+    fn uniform_4i(&self, location: GLint, x: GLint, y: GLint, z: GLint, w: GLint);
+    fn uniform_4iv(&self, location: GLint, values: &[i32]);
+    fn uniform_4ui(&self, location: GLint, x: GLuint, y: GLuint, z: GLuint, w: GLuint);
+    fn uniform_4fv(&self, location: GLint, values: &[f32]);
+    fn uniform_matrix_2fv(&self, location: GLint, transpose: bool, value: &[f32]);
+    fn uniform_matrix_3fv(&self, location: GLint, transpose: bool, value: &[f32]);
+    fn uniform_matrix_4fv(&self, location: GLint, transpose: bool, value: &[f32]);
+    fn depth_mask(&self, flag: bool);
+    fn depth_range(&self, near: f64, far: f64);
+    fn get_active_attrib(&self, program: GLuint, index: GLuint) -> (i32, u32, String);
+    fn get_active_uniform(&self, program: GLuint, index: GLuint) -> (i32, u32, String);
+    fn get_attrib_location(&self, program: GLuint, name: &str) -> c_int;
+    fn get_frag_data_location(&self, program: GLuint, name: &str) -> c_int;
+    fn get_uniform_location(&self, program: GLuint, name: &str) -> c_int;
+    fn get_program_info_log(&self, program: GLuint) -> String;
+    fn get_program_iv(&self, program: GLuint, pname: GLenum) -> GLint;
+    fn get_vertex_attrib_iv(&self, index: GLuint, pname: GLenum) -> GLint;
+    fn get_vertex_attrib_fv(&self, index: GLuint, pname: GLenum) -> Vec<GLfloat>;
+    fn get_buffer_parameter_iv(&self, target: GLuint, pname: GLenum) -> GLint;
+    fn get_shader_info_log(&self, shader: GLuint) -> String;
+    fn get_string(&self, which: GLenum) -> String;
+    fn get_shader_iv(&self, shader: GLuint, pname: GLenum) -> GLint;
+    fn compile_shader(&self, shader: GLuint);
+    fn create_program(&self) -> GLuint;
+    fn delete_program(&self, program: GLuint);
+    fn create_shader(&self, shader_type: GLenum) -> GLuint;
+    fn delete_shader(&self, shader: GLuint);
+    fn detach_shader(&self, program: GLuint, shader: GLuint);
+    fn link_program(&self, program: GLuint);
+    fn clear_color(&self, r: f32, g: f32, b: f32, a: f32);
+    fn clear(&self, buffer_mask: GLbitfield);
+    fn clear_depth(&self, depth: f64);
+    fn clear_stencil(&self, s: GLint);
+    fn flush(&self);
+    fn finish(&self);
+    fn get_error(&self) -> GLenum;
+    fn stencil_mask(&self, mask: GLuint);
+    fn stencil_mask_separate(&self, face: GLenum, mask: GLuint);
+    fn stencil_func(&self, func: GLenum, ref_: GLint, mask: GLuint);
+    fn stencil_func_separate(&self, face: GLenum, func: GLenum, ref_: GLint, mask: GLuint);
+    fn stencil_op(&self, sfail: GLenum, dpfail: GLenum, dppass: GLenum);
+    fn stencil_op_separate(&self, face: GLenum, sfail: GLenum, dpfail: GLenum, dppass: GLenum);
+    fn egl_image_target_texture2d_oes(&self, target: GLenum, image: GLeglImageOES);
+    fn generate_mipmap(&self, target: GLenum);
+    fn insert_event_marker_ext(&self, message: &str);
+    fn push_group_marker_ext(&self, message: &str);
+    fn pop_group_marker_ext(&self);
+}
+
+#[inline]
+pub fn buffer_data<T>(gl_: &Gl, target: GLenum, data: &[T], usage: GLenum) {
+    gl_.buffer_data_untyped(target,
+                            (data.len() * size_of::<T>()) as GLsizeiptr,
+                            data.as_ptr() as *const GLvoid,
+                            usage)
+}
+
+#[inline]
+pub fn buffer_data_raw<T>(gl_: &Gl, target: GLenum, data: &T, usage: GLenum) {
+    gl_.buffer_data_untyped(target,
+                            size_of::<T>() as GLsizeiptr,
+                            data as *const T as *const GLvoid,
+                            usage)
 }
 
 #[inline]
-pub fn blend_color(r: f32, g: f32, b: f32, a: f32) {
-    unsafe {
-        ffi::BlendColor(r, g, b, a);
-    }
+pub fn buffer_sub_data<T>(gl_: &Gl, target: GLenum, offset: isize, data: &[T]) {
+    gl_.buffer_sub_data_untyped(target,
+                                offset,
+                                (data.len() * size_of::<T>()) as GLsizeiptr,
+                                data.as_ptr() as *const GLvoid);
 }
 
-#[inline]
-pub fn blend_func(sfactor: GLenum, dfactor: GLenum) {
-    unsafe {
-        ffi::BlendFunc(sfactor, dfactor);
-    }
-}
-
-#[inline]
-pub fn blend_func_separate(src_rgb: GLenum, dest_rgb: GLenum, src_alpha: GLenum, dest_alpha: GLenum) {
-    unsafe {
-        ffi::BlendFuncSeparate(src_rgb, dest_rgb, src_alpha, dest_alpha);
-    }
-}
-
-#[inline]
-pub fn blend_equation(mode: GLenum) {
-    unsafe {
-        ffi::BlendEquation(mode);
-    }
-}
-
-#[inline]
-pub fn blend_equation_separate(mode_rgb: GLenum, mode_alpha: GLenum) {
-    unsafe {
-        ffi::BlendEquationSeparate(mode_rgb, mode_alpha);
-    }
-}
-
-#[inline]
-pub fn color_mask(r: bool, g: bool, b: bool, a: bool) {
-    unsafe {
-        ffi::ColorMask(r as GLboolean, g as GLboolean, b as GLboolean, a as GLboolean);
-    }
-}
-
-#[inline]
-pub fn cull_face(mode: GLenum) {
-    unsafe {
-        ffi::CullFace(mode);
-    }
-}
-
-#[inline]
-pub fn front_face(mode: GLenum) {
-    unsafe {
-        ffi::FrontFace(mode);
-    }
-}
-
-#[inline]
-pub fn enable(cap: GLenum) {
-    unsafe {
-        ffi::Enable(cap);
-    }
-}
-
-#[inline]
-pub fn disable(cap: GLenum) {
-    unsafe {
-        ffi::Disable(cap);
-    }
-}
-
-#[inline]
-pub fn hint(param_name: GLenum, param_val: GLenum) {
-    unsafe {
-        ffi::Hint(param_name, param_val);
-    }
-}
-
-#[inline]
-pub fn is_enabled(cap: GLenum) -> GLboolean {
-    unsafe {
-        ffi::IsEnabled(cap)
-    }
-}
-
-#[inline]
-pub fn is_shader(shader: GLuint) -> GLboolean {
-    unsafe {
-        ffi::IsShader(shader)
-    }
-}
-
-#[inline]
-pub fn is_texture(texture: GLenum) -> GLboolean {
-    unsafe {
-        ffi::IsTexture(texture)
-    }
-}
-
-#[inline]
-pub fn is_framebuffer(framebuffer: GLenum) -> GLboolean {
-    unsafe {
-        ffi::IsFramebuffer(framebuffer)
-    }
-}
-
-#[inline]
-pub fn is_renderbuffer(renderbuffer: GLenum) -> GLboolean {
-    unsafe {
-        ffi::IsRenderbuffer(renderbuffer)
-    }
-}
-
-#[inline]
-pub fn check_frame_buffer_status(target: GLenum) -> GLenum {
-    unsafe {
-        ffi::CheckFramebufferStatus(target)
-    }
-}
-
-#[inline]
-pub fn enable_vertex_attrib_array(index: GLuint) {
-    unsafe {
-        ffi::EnableVertexAttribArray(index);
-    }
-}
-
-#[inline]
-pub fn disable_vertex_attrib_array(index: GLuint) {
-    unsafe {
-        ffi::DisableVertexAttribArray(index);
-    }
-}
-
-#[inline]
-pub fn uniform_1f(location: GLint, v0: GLfloat) {
-    unsafe {
-        ffi::Uniform1f(location, v0);
-    }
-}
-
-#[inline]
-pub fn uniform_1fv(location: GLint, values: &[f32]) {
-    unsafe {
-        ffi::Uniform1fv(location,
-                        values.len() as GLsizei,
-                        values.as_ptr());
-    }
-}
-
-#[inline]
-pub fn uniform_1i(location: GLint, v0: GLint) {
-    unsafe {
-        ffi::Uniform1i(location, v0);
-    }
-}
-
-#[inline]
-pub fn uniform_1iv(location: GLint, values: &[i32]) {
-    unsafe {
-        ffi::Uniform1iv(location,
-                        values.len() as GLsizei,
-                        values.as_ptr());
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn uniform_1ui(location: GLint, v0: GLuint) {
-    unsafe {
-        ffi::Uniform1ui(location, v0);
-    }
-}
-
-#[inline]
-pub fn uniform_2f(location: GLint, v0: GLfloat, v1: GLfloat) {
-    unsafe {
-        ffi::Uniform2f(location, v0, v1);
-    }
-}
-
-#[inline]
-pub fn uniform_2fv(location: GLint, values: &[f32]) {
-    unsafe {
-        ffi::Uniform2fv(location,
-                        (values.len() / 2) as GLsizei,
-                        values.as_ptr());
-    }
-}
-
-#[inline]
-pub fn uniform_2i(location: GLint, v0: GLint, v1: GLint) {
-    unsafe {
-        ffi::Uniform2i(location, v0, v1);
-    }
-}
-
-#[inline]
-pub fn uniform_2iv(location: GLint, values: &[i32]) {
-    unsafe {
-        ffi::Uniform2iv(location,
-                        (values.len() / 2) as GLsizei,
-                        values.as_ptr());
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn uniform_2ui(location: GLint, v0: GLuint, v1: GLuint) {
-    unsafe {
-        ffi::Uniform2ui(location, v0, v1);
-    }
-}
-
-#[inline]
-pub fn uniform_3f(location: GLint, v0: GLfloat, v1: GLfloat, v2: GLfloat) {
-    unsafe {
-        ffi::Uniform3f(location, v0, v1, v2);
-    }
-}
-
-#[inline]
-pub fn uniform_3fv(location: GLint, values: &[f32]) {
-    unsafe {
-        ffi::Uniform3fv(location,
-                        (values.len() / 3) as GLsizei,
-                        values.as_ptr());
-    }
-}
-
-#[inline]
-pub fn uniform_3i(location: GLint, v0: GLint, v1: GLint, v2: GLint) {
-    unsafe {
-        ffi::Uniform3i(location, v0, v1, v2);
-    }
-}
-
-#[inline]
-pub fn uniform_3iv(location: GLint, values: &[i32]) {
-    unsafe {
-        ffi::Uniform3iv(location,
-                        (values.len() / 3) as GLsizei,
-                        values.as_ptr());
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn uniform_3ui(location: GLint, v0: GLuint, v1: GLuint, v2: GLuint) {
-    unsafe {
-        ffi::Uniform3ui(location, v0, v1, v2);
-    }
-}
-
-#[inline]
-pub fn uniform_4f(location: GLint, x: GLfloat, y: GLfloat, z: GLfloat, w: GLfloat) {
-    unsafe {
-        ffi::Uniform4f(location, x, y, z, w);
-    }
-}
-
-#[inline]
-pub fn uniform_4i(location: GLint, x: GLint, y: GLint, z: GLint, w: GLint) {
-    unsafe {
-        ffi::Uniform4i(location, x, y, z, w);
-    }
-}
-
-#[inline]
-pub fn uniform_4iv(location: GLint, values: &[i32]) {
-    unsafe {
-        ffi::Uniform4iv(location,
-                        (values.len() / 4) as GLsizei,
-                        values.as_ptr());
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn uniform_4ui(location: GLint, x: GLuint, y: GLuint, z: GLuint, w: GLuint) {
-    unsafe {
-        ffi::Uniform4ui(location, x, y, z, w);
-    }
-}
-
-#[inline]
-pub fn uniform_4fv(location: GLint, values: &[f32]) {
-    unsafe {
-        ffi::Uniform4fv(location,
-                        (values.len() / 4) as GLsizei,
-                        values.as_ptr());
-    }
-}
-
-#[inline]
-pub fn uniform_matrix_2fv(location: GLint, transpose: bool, value: &[f32]) {
-    unsafe {
-        ffi::UniformMatrix2fv(location,
-                              (value.len() / 4) as GLsizei,
-                              transpose as GLboolean,
-                              value.as_ptr());
-    }
-}
-
-#[inline]
-pub fn uniform_matrix_3fv(location: GLint, transpose: bool, value: &[f32]) {
-    unsafe {
-        ffi::UniformMatrix3fv(location,
-                              (value.len() / 9) as GLsizei,
-                              transpose as GLboolean,
-                              value.as_ptr());
-    }
-}
-
-#[inline]
-pub fn uniform_matrix_4fv(location: GLint, transpose: bool, value: &[f32]) {
-    unsafe {
-        ffi::UniformMatrix4fv(location,
-                              (value.len() / 16) as GLsizei,
-                              transpose as GLboolean,
-                              value.as_ptr());
-    }
-}
-
-#[inline]
-pub fn depth_mask(flag: bool) {
-    unsafe {
-        ffi::DepthMask(flag as GLboolean);
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn depth_range(near: f64, far: f64) {
-    unsafe {
-        ffi::DepthRange(near as GLclampd, far as GLclampd);
-    }
-}
-
-#[cfg(target_os="android")]
-#[inline]
-pub fn depth_range(near: f64, far: f64) {
-    unsafe {
-        ffi::DepthRangef(near as GLclampf, far as GLclampf);
-    }
-}
-
-#[inline]
-pub fn get_active_attrib(program: GLuint, index: GLuint) -> (i32, u32, String) {
-    let buf_size = get_program_iv(program, ffi::ACTIVE_ATTRIBUTE_MAX_LENGTH);
-    let mut name = vec![0u8; buf_size as usize];
-    let mut length = 0 as GLsizei;
-    let mut size = 0 as i32;
-    let mut type_ = 0 as u32;
-    unsafe {
-        ffi::GetActiveAttrib(program, index, buf_size, &mut length, &mut size, &mut type_, name.as_mut_ptr() as *mut GLchar);
-    }
-    name.truncate(if length > 0 {length as usize} else {0});
-    (size, type_, String::from_utf8(name).unwrap())
-}
-
-#[inline]
-pub fn get_active_uniform(program: GLuint, index: GLuint) -> (i32, u32, String) {
-    let buf_size = get_program_iv(program, ffi::ACTIVE_UNIFORM_MAX_LENGTH);
-    let mut name = vec![0 as u8; buf_size as usize];
-    let mut length: GLsizei = 0;
-    let mut size: i32 = 0;
-    let mut type_: u32 = 0;
-
-    unsafe {
-        ffi::GetActiveUniform(program, index, buf_size, &mut length, &mut size,
-                              &mut type_, name.as_mut_ptr() as *mut GLchar);
-    }
-
-    name.truncate(if length > 0 { length as usize } else { 0 });
-
-    (size, type_, String::from_utf8(name).unwrap())
-}
-
-#[inline]
-pub fn get_attrib_location(program: GLuint, name: &str) -> c_int {
-    let name = CString::new(name).unwrap();
-    unsafe {
-        ffi::GetAttribLocation(program, name.as_ptr())
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn get_frag_data_location(program: GLuint, name: &str) -> c_int {
-    let name = CString::new(name).unwrap();
-    unsafe {
-        ffi::GetFragDataLocation(program, name.as_ptr())
-    }
-}
-
-#[inline]
-pub fn get_uniform_location(program: GLuint, name: &str) -> c_int {
-    let name = CString::new(name).unwrap();
-    unsafe {
-        ffi::GetUniformLocation(program, name.as_ptr())
-    }
-}
-
-pub fn get_program_info_log(program: GLuint) -> String {
-    unsafe {
-        let mut result = vec![0u8; 1024];
-        let mut result_len: GLsizei = 0 as GLsizei;
-        ffi::GetProgramInfoLog(program,
-                            1024 as GLsizei,
-                            &mut result_len,
-                            result.as_mut_ptr() as *mut GLchar);
-        result.truncate(if result_len > 0 {result_len as usize} else {0});
-        String::from_utf8(result).unwrap()
-    }
-}
-
-#[inline]
-pub fn get_program_iv(program: GLuint, pname: GLenum) -> GLint {
-    unsafe {
-        let mut result: GLint = 0 as GLint;
-        ffi::GetProgramiv(program, pname, &mut result);
-        return result;
-    }
-}
-
-#[inline]
-pub fn get_vertex_attrib_iv(index: GLuint, pname: GLenum) -> GLint {
-    unsafe {
-        let mut result: GLint = 0 as GLint;
-        ffi::GetVertexAttribiv(index, pname, &mut result);
-        return result;
-    }
-}
-
-#[inline]
-pub fn get_vertex_attrib_fv(index: GLuint, pname: GLenum) -> Vec<GLfloat> {
-    unsafe {
-        let mut result = vec![0 as GLfloat; 4];
-        ffi::GetVertexAttribfv(index, pname, result.as_mut_ptr());
-        return result;
-    }
-}
-
-#[inline]
-pub fn get_buffer_parameter_iv(target: GLuint, pname: GLenum) -> GLint {
-    unsafe {
-        let mut result: GLint = 0 as GLint;
-        ffi::GetBufferParameteriv(target, pname, &mut result);
-        return result;
-    }
-}
-
-pub fn get_shader_info_log(shader: GLuint) -> String {
-    unsafe {
-        let mut result = vec![0u8; 1024];
-        let mut result_len: GLsizei = 0 as GLsizei;
-        ffi::GetShaderInfoLog(shader,
-                           1024 as GLsizei,
-                           &mut result_len,
-                           result.as_mut_ptr() as *mut GLchar);
-        result.truncate(if result_len > 0 {result_len as usize} else {0});
-        String::from_utf8(result).unwrap()
-    }
-}
-
-#[inline]
-pub fn get_string(which: GLenum) -> String {
-    unsafe {
-        let llstr = ffi::GetString(which);
-        if !llstr.is_null() {
-            return str::from_utf8_unchecked(CStr::from_ptr(llstr as *const c_char).to_bytes()).to_string();
-        } else {
-            return "".to_string();
-        }
-    }
-}
-
-#[inline]
-pub fn get_shader_iv(shader: GLuint, pname: GLenum) -> GLint {
-    unsafe {
-        let mut result: GLint = 0 as GLint;
-        ffi::GetShaderiv(shader, pname, &mut result);
-        return result;
-    }
-}
-
-#[inline]
-pub fn compile_shader(shader: GLuint) {
-    unsafe {
-        ffi::CompileShader(shader);
-    }
-}
-
-#[inline]
-pub fn create_program() -> GLuint {
-    unsafe {
-        return ffi::CreateProgram();
-    }
-}
-
-#[inline]
-pub fn delete_program(program: GLuint) {
-    unsafe {
-        ffi::DeleteProgram(program);
-    }
-}
-
-#[inline]
-pub fn create_shader(shader_type: GLenum) -> GLuint {
-    unsafe {
-        return ffi::CreateShader(shader_type);
-    }
-}
-
-#[inline]
-pub fn delete_shader(shader: GLuint) {
-    unsafe {
-        ffi::DeleteShader(shader);
-    }
-}
-
-#[inline]
-pub fn detach_shader(program: GLuint, shader: GLuint) {
-    unsafe {
-        ffi::DetachShader(program, shader);
-    }
-}
-
-#[inline]
-pub fn link_program(program: GLuint) {
-    unsafe {
-        return ffi::LinkProgram(program);
-    }
-}
-
-#[inline]
-pub fn clear_color(r: f32, g: f32, b: f32, a: f32) {
-    unsafe {
-        ffi::ClearColor(r, g, b, a);
-    }
-}
-
-#[inline]
-pub fn clear(buffer_mask: GLbitfield) {
-    unsafe {
-        ffi::Clear(buffer_mask);
-    }
-}
-
-#[cfg(not(target_os="android"))]
-#[inline]
-pub fn clear_depth(depth: f64) {
-    unsafe {
-        ffi::ClearDepth(depth as GLclampd);
-    }
-}
-
-#[cfg(target_os="android")]
-#[inline]
-pub fn clear_depth(depth: f64) {
-    unsafe {
-        ffi::ClearDepthf(depth as GLclampf);
-    }
-}
-
-#[inline]
-pub fn clear_stencil(s: GLint) {
-    unsafe {
-        ffi::ClearStencil(s);
-    }
-}
-
-#[inline]
-pub fn flush() {
-    unsafe {
-        ffi::Flush();
-    }
-}
-
-#[inline]
-pub fn finish() {
-    unsafe {
-        ffi::Finish();
-    }
-}
-
-#[inline]
-pub fn get_error() -> GLenum {
-    unsafe {
-        ffi::GetError()
-    }
-}
-
-#[inline]
-pub fn stencil_mask(mask: GLuint) {
-    unsafe {
-        ffi::StencilMask(mask)
-    }
-}
-
-#[inline]
-pub fn stencil_mask_separate(face: GLenum, mask: GLuint) {
-    unsafe {
-        ffi::StencilMaskSeparate(face, mask)
-    }
-}
-
-#[inline]
-pub fn stencil_func(func: GLenum,
-                    ref_: GLint,
-                    mask: GLuint) {
-    unsafe {
-        ffi::StencilFunc(func, ref_, mask)
-    }
-}
-
-#[inline]
-pub fn stencil_func_separate(face: GLenum,
-                             func: GLenum,
-                             ref_: GLint,
-                             mask: GLuint) {
-    unsafe {
-        ffi::StencilFuncSeparate(face, func, ref_, mask)
-    }
-}
-
-#[inline]
-pub fn stencil_op(sfail: GLenum,
-                  dpfail: GLenum,
-                  dppass: GLenum) {
-    unsafe {
-        ffi::StencilOp(sfail, dpfail, dppass)
-    }
-}
-
-#[inline]
-pub fn stencil_op_separate(face: GLenum,
-                           sfail: GLenum,
-                           dpfail: GLenum,
-                           dppass: GLenum) {
-    unsafe {
-        ffi::StencilOpSeparate(face, sfail, dpfail, dppass)
-    }
-}
-
-#[cfg(target_os="android")]
-extern {
-    pub fn glEGLImageTargetTexture2DOES(target: GLenum, image: GLeglImageOES);
-}
-
-#[cfg(target_os="android")]
-pub fn egl_image_target_texture2d_oes(target: GLenum, image: GLeglImageOES) {
-    unsafe {
-        glEGLImageTargetTexture2DOES(target, image);
-    }
-}
-
-#[inline]
-pub fn generate_mipmap(target: GLenum) {
-    unsafe {
-        ffi::GenerateMipmap(target)
-    }
-}
-
-#[inline]
-#[cfg(not(target_os="android"))]
-pub fn insert_event_marker_ext(message: &str) {
-    if ffi::InsertEventMarkerEXT::is_loaded() {
-        unsafe {
-            ffi::InsertEventMarkerEXT(message.len() as GLsizei, message.as_ptr() as *const _);
-        }
-    }
-}
-
-#[inline]
-#[cfg(not(target_os="android"))]
-pub fn push_group_marker_ext(message: &str) {
-    if ffi::PushGroupMarkerEXT::is_loaded() {
-        unsafe {
-            ffi::PushGroupMarkerEXT(message.len() as GLsizei, message.as_ptr() as *const _);
-        }
-    }
-}
-
-#[inline]
-#[cfg(not(target_os="android"))]
-pub fn pop_group_marker_ext() {
-    if ffi::PopGroupMarkerEXT::is_loaded() {
-        unsafe {
-            ffi::PopGroupMarkerEXT();
-        }
-    }
-}
+include!("gl_fns.rs");
+include!("gles_fns.rs");

@@ -23,36 +23,54 @@ WebRenderCompositableHolder::WebRenderCompositableHolder()
 WebRenderCompositableHolder::~WebRenderCompositableHolder()
 {
   MOZ_COUNT_DTOR(WebRenderCompositableHolder);
-  MOZ_ASSERT(mWebRenderTextureHosts.empty());
+  MOZ_ASSERT(mPipelineTexturesHolders.IsEmpty());
 }
 
 void
-WebRenderCompositableHolder::Destroy()
+WebRenderCompositableHolder::AddPipeline(const wr::PipelineId& aPipelineId)
 {
-  while (!mWebRenderTextureHosts.empty()) {
-    mWebRenderTextureHosts.pop();
+  uint64_t id = wr::AsUint64(aPipelineId);
+
+  MOZ_ASSERT(!mPipelineTexturesHolders.Get(id));
+  PipelineTexturesHolder* holder = new PipelineTexturesHolder();
+  mPipelineTexturesHolders.Put(id, holder);
+}
+
+void
+WebRenderCompositableHolder::RemovePipeline(const wr::PipelineId& aPipelineId)
+{
+  uint64_t id = wr::AsUint64(aPipelineId);
+  if (mPipelineTexturesHolders.Get(id)) {
+    mPipelineTexturesHolders.Remove(id);
   }
 }
 
 void
-WebRenderCompositableHolder::HoldExternalImage(const wr::Epoch& aEpoch, WebRenderTextureHost* aTexture)
+WebRenderCompositableHolder::HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, WebRenderTextureHost* aTexture)
 {
   MOZ_ASSERT(aTexture);
+  PipelineTexturesHolder* holder = mPipelineTexturesHolders.Get(wr::AsUint64(aPipelineId));
+  MOZ_ASSERT(holder);
+  if (!holder) {
+    return;
+  }
   // Hold WebRenderTextureHost until end of its usage on RenderThread
-  mWebRenderTextureHosts.push(ForwardingTextureHosts(aEpoch, aTexture));
+  holder->mTextureHosts.push(ForwardingTextureHost(aEpoch, aTexture));
 }
 
 void
-WebRenderCompositableHolder::Update(const wr::Epoch& aEpoch)
+WebRenderCompositableHolder::Update(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch)
 {
-  if (mWebRenderTextureHosts.empty()) {
+  PipelineTexturesHolder* holder = mPipelineTexturesHolders.Get(wr::AsUint64(aPipelineId));
+  if (!holder || holder->mTextureHosts.empty()) {
     return;
   }
-  while (!mWebRenderTextureHosts.empty()) {
-    if (aEpoch <= mWebRenderTextureHosts.front().mEpoch) {
+
+  while (!holder->mTextureHosts.empty()) {
+    if (aEpoch <= holder->mTextureHosts.front().mEpoch) {
       break;
     }
-    mWebRenderTextureHosts.pop();
+    holder->mTextureHosts.pop();
   }
 }
 

@@ -503,52 +503,104 @@ struct TransformVertexInfo {
     vec4 clipped_local_rect;
 };
 
+float cross2(vec2 v0, vec2 v1) {
+    return v0.x * v1.y - v0.y * v1.x;
+}
+
+// Return intersection of line (p0,p1) and line (p2,p3)
+vec2 intersect_lines(vec2 p0, vec2 p1, vec2 p2, vec2 p3) {
+    vec2 d0 = p0 - p1;
+    vec2 d1 = p2 - p3;
+
+    float s0 = cross2(p0, p1);
+    float s1 = cross2(p2, p3);
+
+    float d = cross2(d0, d1);
+    float nx = s0 * d1.x - d0.x * s1;
+    float ny = s0 * d1.y - d0.y * s1;
+
+    return vec2(nx / d, ny / d);
+}
+
 TransformVertexInfo write_transform_vertex(RectWithSize instance_rect,
                                            RectWithSize local_clip_rect,
                                            float z,
                                            Layer layer,
                                            AlphaBatchTask task) {
-    vec2 lp0_base = instance_rect.p0;
-    vec2 lp1_base = instance_rect.p0 + instance_rect.size;
+    RectWithEndpoint local_rect = to_rect_with_endpoint(instance_rect);
 
-    vec2 lp0 = clamp_rect(clamp_rect(lp0_base, local_clip_rect),
-                          layer.local_clip_rect);
-    vec2 lp1 = clamp_rect(clamp_rect(lp1_base, local_clip_rect),
-                          layer.local_clip_rect);
+    vec2 current_local_pos, prev_local_pos, next_local_pos;
 
-    vec4 clipped_local_rect = vec4(lp0, lp1 - lp0);
+    // Select the current vertex and the previous/next vertices,
+    // based on the vertex ID that is known based on the instance rect.
+    switch (gl_VertexID) {
+        case 0:
+            current_local_pos = vec2(local_rect.p0.x, local_rect.p0.y);
+            next_local_pos = vec2(local_rect.p0.x, local_rect.p1.y);
+            prev_local_pos = vec2(local_rect.p1.x, local_rect.p0.y);
+            break;
+        case 1:
+            current_local_pos = vec2(local_rect.p1.x, local_rect.p0.y);
+            next_local_pos = vec2(local_rect.p0.x, local_rect.p0.y);
+            prev_local_pos = vec2(local_rect.p1.x, local_rect.p1.y);
+            break;
+        case 2:
+            current_local_pos = vec2(local_rect.p0.x, local_rect.p1.y);
+            prev_local_pos = vec2(local_rect.p0.x, local_rect.p0.y);
+            next_local_pos = vec2(local_rect.p1.x, local_rect.p1.y);
+            break;
+        case 3:
+            current_local_pos = vec2(local_rect.p1.x, local_rect.p1.y);
+            prev_local_pos = vec2(local_rect.p0.x, local_rect.p1.y);
+            next_local_pos = vec2(local_rect.p1.x, local_rect.p0.y);
+            break;
+    }
 
-    vec2 p0 = lp0;
-    vec2 p1 = vec2(lp1.x, lp0.y);
-    vec2 p2 = vec2(lp0.x, lp1.y);
-    vec2 p3 = lp1;
+    // Transform them to world space
+    vec4 current_world_pos = layer.transform * vec4(current_local_pos, 0.0, 1.0);
+    vec4 prev_world_pos = layer.transform * vec4(prev_local_pos, 0.0, 1.0);
+    vec4 next_world_pos = layer.transform * vec4(next_local_pos, 0.0, 1.0);
 
-    vec4 t0 = layer.transform * vec4(p0, 0, 1);
-    vec4 t1 = layer.transform * vec4(p1, 0, 1);
-    vec4 t2 = layer.transform * vec4(p2, 0, 1);
-    vec4 t3 = layer.transform * vec4(p3, 0, 1);
+    // Convert to device space
+    vec2 current_device_pos = uDevicePixelRatio * current_world_pos.xy / current_world_pos.w;
+    vec2 prev_device_pos = uDevicePixelRatio * prev_world_pos.xy / prev_world_pos.w;
+    vec2 next_device_pos = uDevicePixelRatio * next_world_pos.xy / next_world_pos.w;
 
-    vec2 tp0 = t0.xy / t0.w;
-    vec2 tp1 = t1.xy / t1.w;
-    vec2 tp2 = t2.xy / t2.w;
-    vec2 tp3 = t3.xy / t3.w;
+    // Get the normals of each of the vectors between the current and next/prev vertices.
+    const float amount = 2.0;
+    vec2 dir_prev = normalize(current_device_pos - prev_device_pos);
+    vec2 dir_next = normalize(current_device_pos - next_device_pos);
+    vec2 norm_prev = vec2(-dir_prev.y,  dir_prev.x);
+    vec2 norm_next = vec2( dir_next.y, -dir_next.x);
 
-    // compute a CSS space aligned bounding box
-    vec2 min_pos = uDevicePixelRatio * min(min(tp0.xy, tp1.xy), min(tp2.xy, tp3.xy));
-    vec2 max_pos = uDevicePixelRatio * max(max(tp0.xy, tp1.xy), max(tp2.xy, tp3.xy));
+    // Push those lines out along the normal by a specific amount of device pixels.
+    vec2 adjusted_prev_p0 = current_device_pos + norm_prev * amount;
+    vec2 adjusted_prev_p1 = prev_device_pos + norm_prev * amount;
+    vec2 adjusted_next_p0 = current_device_pos + norm_next * amount;
+    vec2 adjusted_next_p1 = next_device_pos + norm_next * amount;
 
-    // compute the device space position of this vertex
-    vec2 device_pos = mix(min_pos, max_pos, aPosition.xy);
+    // Intersect those adjusted lines to find the actual vertex position.
+    vec2 device_pos = intersect_lines(adjusted_prev_p0,
+                                      adjusted_prev_p1,
+                                      adjusted_next_p0,
+                                      adjusted_next_p1);
 
-    // compute the point position in side the layer, in CSS space
-    vec4 layer_pos = get_layer_pos(device_pos / uDevicePixelRatio, layer);
+    // Calculate the snap amount based on the first vertex as a reference point.
+    vec4 world_p0 = layer.transform * vec4(local_rect.p0, 0.0, 1.0);
+    vec2 device_p0 = uDevicePixelRatio * world_p0.xy / world_p0.w;
+    vec2 snap_delta = device_p0 - floor(device_p0 + 0.5);
 
-    // apply the task offset
-    vec2 final_pos = device_pos - task.screen_space_origin + task.render_target_origin;
+    // Apply offsets for the render task to get correct screen location.
+    vec2 final_pos = device_pos -
+                     snap_delta -
+                     task.screen_space_origin +
+                     task.render_target_origin;
 
     gl_Position = uTransform * vec4(final_pos, z, 1.0);
 
-    return TransformVertexInfo(layer_pos.xyw, device_pos, clipped_local_rect);
+    vec4 layer_pos = get_layer_pos(device_pos / uDevicePixelRatio, layer);
+
+    return TransformVertexInfo(layer_pos.xyw, device_pos, vec4(instance_rect.p0, instance_rect.size));
 }
 
 #endif //WR_FEATURE_TRANSFORM
@@ -663,20 +715,35 @@ void write_clip(vec2 global_pos, ClipArea area) {
 #endif //WR_VERTEX_SHADER
 
 #ifdef WR_FRAGMENT_SHADER
-float distance_from_rect(vec2 p, vec2 origin, vec2 size) {
-    vec2 clamped = clamp(p, origin, origin + size);
-    return distance(clamped, p);
+float signed_distance_rect(vec2 pos, vec2 p0, vec2 p1) {
+    vec2 d = max(p0 - pos, pos - p1);
+    return length(max(vec2(0.0), d)) + min(0.0, max(d.x, d.y));
 }
 
 vec2 init_transform_fs(vec3 local_pos, vec4 local_rect, out float fragment_alpha) {
     fragment_alpha = 1.0;
     vec2 pos = local_pos.xy / local_pos.z;
 
-    float border_distance = distance_from_rect(pos, local_rect.xy, local_rect.zw);
-    if (border_distance != 0.0) {
-        float delta = length(fwidth(local_pos.xy));
-        fragment_alpha = 1.0 - smoothstep(0.0, 1.0, border_distance / delta * 2.0);
-    }
+    // Because the local rect is placed on whole coordinates, but the interpolation
+    // occurs at pixel centers, we need to offset the signed distance by that amount.
+    // In the simple case of no zoom, and no transform, this is 0.5. However, we
+    // need to scale this by the amount that the local rect is changing by per
+    // fragment, based on the current zoom and transform.
+    vec2 fw = fwidth(pos.xy);
+    vec2 dxdy = 0.5 * fw;
+
+    // Now get the actual signed distance. Inset the local rect by the offset amount
+    // above to get correct distance values. This ensures that we only apply
+    // anti-aliasing when the fragment has partial coverage.
+    float d = signed_distance_rect(pos,
+                                   local_rect.xy + dxdy,
+                                   local_rect.xy + local_rect.zw - dxdy);
+
+    // Find the appropriate distance to apply the AA smoothstep over.
+    float afwidth = 0.5 / length(fw);
+
+    // Only apply AA to fragments outside the signed distance field.
+    fragment_alpha = 1.0 - smoothstep(0.0, afwidth, d);
 
     return pos;
 }

@@ -1,6 +1,6 @@
 [package]
 name = "webrender"
-version = "0.24.0"
+version = "0.25.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -18,11 +18,11 @@ bit-set = "0.4"
 byteorder = "1.0"
 euclid = "0.11"
 fnv = "1.0"
-gleam = "0.2.30"
+gleam = "0.4.1"
 lazy_static = "0.2"
 log = "0.3"
 num-traits = "0.1.32"
-offscreen_gl_context = {version = "0.6", features = ["serde", "osmesa"]}
+offscreen_gl_context = {version = "0.8.0", features = ["serde", "osmesa"]}
 time = "0.1"
 threadpool = "1.3.2"
 webrender_traits = {path = "../webrender_traits"}

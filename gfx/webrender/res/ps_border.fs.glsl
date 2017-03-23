@@ -56,12 +56,57 @@ float alpha_for_solid_border(float distance_from_ref,
   return 1.0 - smoothstep(0.0, 1.0, distance_from_border);
 }
 
+float alpha_for_solid_ellipse_border(vec2 local_pos,
+                                     vec2 inner_radius,
+                                     vec2 outer_radius,
+                                     float pixels_per_fragment) {
+  vec2 distance_from_ref = local_pos - vRefPoint;
+
+  float nudge = pixels_per_fragment;
+  inner_radius += nudge;
+  outer_radius -= nudge;
+
+  float inner_ellipse = distance_from_ref.x * distance_from_ref.x / inner_radius.x / inner_radius.x +
+                        distance_from_ref.y * distance_from_ref.y / inner_radius.y / inner_radius.y;
+  float outer_ellipse = distance_from_ref.x * distance_from_ref.x / outer_radius.x / outer_radius.x +
+                        distance_from_ref.y * distance_from_ref.y / outer_radius.y / outer_radius.y;
+  if (inner_ellipse > 1.0 && outer_ellipse < 1.0) {
+      return 1.0;
+  }
+
+  vec2 offset = step(inner_radius.yx, inner_radius.xy) *
+                (sqrt(abs(inner_radius.x * inner_radius.x - inner_radius.y * inner_radius.y)));
+  vec2 focus1 = vRefPoint + offset;
+  vec2 focus2 = vRefPoint - offset;
+
+  float inner_distance_from_border = max(inner_radius.x, inner_radius.y) -
+                                     (distance(focus1, local_pos) + distance(focus2, local_pos)) / 2.0;
+
+  offset = step(outer_radius.yx, outer_radius.xy) *
+           (sqrt(abs(outer_radius.x * outer_radius.x - outer_radius.y * outer_radius.y)));
+  focus1 = vRefPoint + offset;
+  focus2 = vRefPoint - offset;
+  float outer_distance_from_border = (distance(focus1, local_pos) + distance(focus2, local_pos)) / 2.0 -
+                                     max(outer_radius.x, outer_radius.y);
+
+  float distance_from_border = max(inner_distance_from_border, outer_distance_from_border);
+
+  // Move the distance back into pixels.
+  distance_from_border /= pixels_per_fragment;
+
+  return 1.0 - smoothstep(0.0, 1.0, distance_from_border);
+}
+
 float alpha_for_solid_border_corner(vec2 local_pos,
-                                    float inner_radius,
-                                    float outer_radius,
+                                    vec2 inner_radius,
+                                    vec2 outer_radius,
                                     float pixels_per_fragment) {
-  float distance_from_ref = distance(vRefPoint, local_pos);
-  return alpha_for_solid_border(distance_from_ref, inner_radius, outer_radius, pixels_per_fragment);
+  if (inner_radius.x == inner_radius.y && outer_radius.x == outer_radius.y) {
+    float distance_from_ref = distance(vRefPoint, local_pos);
+    return alpha_for_solid_border(distance_from_ref, inner_radius.x, outer_radius.x, pixels_per_fragment);
+  } else {
+    return alpha_for_solid_ellipse_border(local_pos, inner_radius, outer_radius, pixels_per_fragment);
+  }
 }
 
 vec4 draw_dotted_edge(vec2 local_pos, vec4 piece_rect, float pixels_per_fragment) {
@@ -144,8 +189,8 @@ void draw_dashed_or_dotted_border(vec2 local_pos, float distance_from_mix_line) 
       oFragColor = get_fragment_color(distance_from_mix_line, pixels_per_fragment);
       if (vRadii.x > 0.0) {
         oFragColor *= vec4(1.0, 1.0, 1.0, alpha_for_solid_border_corner(local_pos,
-                                                                  vRadii.z,
-                                                                  vRadii.x,
+                                                                  vRadii.zw,
+                                                                  vRadii.xy,
                                                                   pixels_per_fragment));
       }
 
@@ -199,16 +244,16 @@ vec4 draw_double_edge_vertical(vec2 local_pos,
                                float distance_from_mix_line,
                                float pixels_per_fragment) {
   // Get our position within this specific segment
-  float position = local_pos.x - vLocalRect.x;
-  return draw_double_edge(position, vLocalRect.z, distance_from_mix_line, pixels_per_fragment);
+  float position = abs(local_pos.x - vRefPoint.x);
+  return draw_double_edge(position, abs(vPieceRect.z), distance_from_mix_line, pixels_per_fragment);
 }
 
 vec4 draw_double_edge_horizontal(vec2 local_pos,
                                  float distance_from_mix_line,
                                  float pixels_per_fragment) {
   // Get our position within this specific segment
-  float position = local_pos.y - vLocalRect.y;
-  return draw_double_edge(position, vLocalRect.w, distance_from_mix_line, pixels_per_fragment);
+  float position = abs(local_pos.y - vRefPoint.y);
+  return draw_double_edge(position, abs(vPieceRect.w), distance_from_mix_line, pixels_per_fragment);
 }
 
 vec4 draw_double_edge_corner_with_radius(vec2 local_pos,
@@ -216,17 +261,20 @@ vec4 draw_double_edge_corner_with_radius(vec2 local_pos,
                                          float pixels_per_fragment) {
   float total_border_width = vRadii.x - vRadii.z;
   float one_third_width = total_border_width / 3.0;
+  float total_border_height = vRadii.y - vRadii.w;
+  float one_third_height = total_border_height / 3.0;
 
   // Contribution of the outer border segment.
   float alpha = alpha_for_solid_border_corner(local_pos,
-                                              vRadii.x - one_third_width,
-                                              vRadii.x,
+                                              vec2(vRadii.x - one_third_width,
+                                                   vRadii.y - one_third_height),
+                                              vec2(vRadii.x, vRadii.y),
                                               pixels_per_fragment);
 
   // Contribution of the inner border segment.
   alpha += alpha_for_solid_border_corner(local_pos,
-                                         vRadii.z,
-                                         vRadii.z + one_third_width,
+                                         vec2(vRadii.z, vRadii.w),
+                                         vec2(vRadii.z + one_third_width, vRadii.w + one_third_height),
                                          pixels_per_fragment);
   return get_fragment_color(distance_from_mix_line, pixels_per_fragment) * vec4(1.0, 1.0, 1.0, alpha);
 }
@@ -291,7 +339,7 @@ void draw_solid_border(float distanceFromMixLine, vec2 localPos) {
       oFragColor = get_fragment_color(distanceFromMixLine, pixelsPerFragment);
 
       if (vRadii.x > 0.0) {
-        float alpha = alpha_for_solid_border_corner(localPos, vRadii.z, vRadii.x, pixelsPerFragment);
+        float alpha = alpha_for_solid_border_corner(localPos, vRadii.zw, vRadii.xy, pixelsPerFragment);
         oFragColor *= vec4(1.0, 1.0, 1.0, alpha);
       }
 

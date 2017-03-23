@@ -6,14 +6,12 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use channel::{self, MsgSender, PayloadHelperMethods, PayloadSender};
 use offscreen_gl_context::{GLContextAttributes, GLLimits};
 use std::cell::Cell;
-use {ColorF, ImageDescriptor};
-use {FontKey, ImageKey, NativeFontHandle, ServoScrollRootId};
-use {GlyphKey, GlyphDimensions, ImageData, WebGLContextId, WebGLCommand};
-use {DeviceIntSize, LayoutPoint, LayoutSize, WorldPoint};
-use {DeviceIntPoint, DeviceUintRect, DeviceUintSize, LayoutTransform};
-use {BuiltDisplayList, BuiltDisplayListDescriptor, AuxiliaryLists, AuxiliaryListsDescriptor};
 use std::fmt;
 use std::marker::PhantomData;
+use {AuxiliaryLists, AuxiliaryListsDescriptor, BuiltDisplayList, BuiltDisplayListDescriptor};
+use {ColorF, DeviceIntPoint, DeviceIntSize, DeviceUintRect, DeviceUintSize, FontKey};
+use {GlyphDimensions, GlyphKey, ImageData, ImageDescriptor, ImageKey, LayoutPoint, LayoutSize};
+use {LayoutTransform, NativeFontHandle, ScrollLayerId, WebGLCommand, WebGLContextId, WorldPoint};
 
 pub type TileSize = u16;
 
@@ -48,7 +46,7 @@ pub enum ApiMsg {
     SetRootPipeline(PipelineId),
     SetWindowParameters(DeviceUintSize, DeviceUintRect),
     Scroll(ScrollLocation, WorldPoint, ScrollEventPhase),
-    ScrollLayersWithScrollId(LayoutPoint, PipelineId, ServoScrollRootId),
+    ScrollLayerWithId(LayoutPoint, ScrollLayerId),
     TickScrollingBounce,
     TranslatePointToLayerSpace(WorldPoint, MsgSender<(LayoutPoint, PipelineId)>),
     GetScrollLayerState(MsgSender<Vec<ScrollLayerState>>),
@@ -79,7 +77,7 @@ impl fmt::Debug for ApiMsg {
             &ApiMsg::SetRootDisplayList(..) => { write!(f, "ApiMsg::SetRootDisplayList") }
             &ApiMsg::SetRootPipeline(..) => { write!(f, "ApiMsg::SetRootPipeline") }
             &ApiMsg::Scroll(..) => { write!(f, "ApiMsg::Scroll") }
-            &ApiMsg::ScrollLayersWithScrollId(..) => { write!(f, "ApiMsg::ScrollLayersWithScrollId") }
+            &ApiMsg::ScrollLayerWithId(..) => { write!(f, "ApiMsg::ScrollLayerWithId") }
             &ApiMsg::TickScrollingBounce => { write!(f, "ApiMsg::TickScrollingBounce") }
             &ApiMsg::TranslatePointToLayerSpace(..) => { write!(f, "ApiMsg::TranslatePointToLayerSpace") }
             &ApiMsg::GetScrollLayerState(..) => { write!(f, "ApiMsg::GetScrollLayerState") }
@@ -310,11 +308,8 @@ impl RenderApi {
         self.api_sender.send(msg).unwrap();
     }
 
-    pub fn scroll_layers_with_scroll_root_id(&self,
-                                             new_scroll_origin: LayoutPoint,
-                                             pipeline_id: PipelineId,
-                                             scroll_root_id: ServoScrollRootId) {
-        let msg = ApiMsg::ScrollLayersWithScrollId(new_scroll_origin, pipeline_id, scroll_root_id);
+    pub fn scroll_layer_with_id(&self, new_scroll_origin: LayoutPoint, id: ScrollLayerId) {
+        let msg = ApiMsg::ScrollLayerWithId(new_scroll_origin, id);
         self.api_sender.send(msg).unwrap();
     }
 
@@ -436,8 +431,7 @@ pub enum ScrollEventPhase {
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct ScrollLayerState {
-    pub pipeline_id: PipelineId,
-    pub scroll_root_id: ServoScrollRootId,
+    pub id: ScrollLayerId,
     pub scroll_offset: LayoutPoint,
 }
 
