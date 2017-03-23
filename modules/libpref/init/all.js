@@ -5646,6 +5646,7 @@ pref("layers.advanced.border-layers", false);
 #ifdef MOZ_ENABLE_WEBRENDER
 pref("layers.advanced.caret-layers", true);
 pref("layers.advanced.boxshadow-outer-layers", false);
+pref("layers.advanced.boxshadow-inset-layers", true);
 #else
 pref("layers.advanced.caret-layers", false);
 #endif
