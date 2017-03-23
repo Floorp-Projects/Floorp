@@ -425,9 +425,7 @@ TabTarget.prototype = {
     };
 
     let attachConsole = () => {
-      this._client.attachConsole(this._form.consoleActor,
-                                 [ "NetworkActivity" ],
-                                 onConsoleAttached);
+      this._client.attachConsole(this._form.consoleActor, [], onConsoleAttached);
     };
 
     if (this.isLocalTab) {
