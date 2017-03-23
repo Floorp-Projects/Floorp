@@ -36,7 +36,6 @@ private:
   ProfilerControllingProcess* mProcess;
   RefPtr<ProfilerObserver> mObserver;
   nsCString mProfile;
-  bool mIsProfilerActive;
 };
 
 } // namespace mozilla
