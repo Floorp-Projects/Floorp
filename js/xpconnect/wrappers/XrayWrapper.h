@@ -99,12 +99,6 @@ public:
     JSObject* ensureExpandoObject(JSContext* cx, JS::HandleObject wrapper,
                                   JS::HandleObject target);
 
-    // Slots for holder objects.
-    enum {
-        HOLDER_SLOT_CACHED_PROTO = 0,
-        HOLDER_SHARED_SLOT_COUNT
-    };
-
     JSObject* getHolder(JSObject* wrapper);
     JSObject* ensureHolder(JSContext* cx, JS::HandleObject wrapper);
     virtual JSObject* createHolder(JSContext* cx, JSObject* wrapper) = 0;
@@ -114,8 +108,6 @@ public:
     bool cloneExpandoChain(JSContext* cx, JS::HandleObject dst, JS::HandleObject src);
 
 protected:
-    static const JSClass HolderClass;
-
     // Get the JSClass we should use for our expando object.
     virtual const JSClass* getExpandoClass(JSContext* cx,
                                            JS::HandleObject target) const;
@@ -309,7 +301,7 @@ public:
     }
 
     enum {
-        SLOT_PROTOKEY = HOLDER_SHARED_SLOT_COUNT,
+        SLOT_PROTOKEY = 0,
         SLOT_ISPROTOTYPE,
         SLOT_CONSTRUCTOR_FOR,
         SLOT_COUNT
@@ -429,7 +421,7 @@ public:
 
     virtual JSObject* createHolder(JSContext* cx, JSObject* wrapper) override
     {
-        return JS_NewObjectWithGivenProto(cx, &HolderClass, nullptr);
+        return JS_NewObjectWithGivenProto(cx, nullptr, nullptr);
     }
 
     static OpaqueXrayTraits singleton;
