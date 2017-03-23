@@ -2980,7 +2980,7 @@ public:
   explicit AutoBackgroundSetter(NSView* aView) {
     if (nsCocoaFeatures::OnElCapitanOrLater() &&
         [[aView window] isKindOfClass:[ToolbarWindow class]]) {
-      mWindow = (ToolbarWindow*)[aView window];
+      mWindow = [(ToolbarWindow*)[aView window] retain];
       [mWindow setTemporaryBackgroundColor];
     } else {
       mWindow = nullptr;
@@ -2990,11 +2990,12 @@ public:
   ~AutoBackgroundSetter() {
     if (mWindow) {
       [mWindow restoreBackgroundColor];
+      [mWindow release];
     }
   }
 
 private:
-  ToolbarWindow* mWindow;
+  ToolbarWindow* mWindow; // strong
 };
 
 void
