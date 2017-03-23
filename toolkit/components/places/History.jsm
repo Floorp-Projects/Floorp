@@ -697,7 +697,10 @@ var cleanupPages = Task.async(function*(db, pages) {
   if (pageIdsToRemove.length > 0) {
     let idsList = sqlList(pageIdsToRemove);
     // Note, we are already in a transaction, since callers create it.
-    yield db.execute(`DELETE FROM moz_places WHERE id IN ( ${ idsList } )`);
+    // Check relations regardless, to avoid creating orphans in case of
+    // async race conditions.
+    yield db.execute(`DELETE FROM moz_places WHERE id IN ( ${ idsList } )
+                      AND foreign_count = 0 AND last_visit_date ISNULL`);
     // Hosts accumulated during the places delete are updated through a trigger
     // (see nsPlacesTriggers.h).
     yield db.executeCached(`DELETE FROM moz_updatehosts_temp`);

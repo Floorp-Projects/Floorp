@@ -241,7 +241,7 @@ const EXPIRATION_QUERIES = {
   QUERY_EXPIRE_URIS: {
     sql: `DELETE FROM moz_places WHERE id IN (
             SELECT p_id FROM expiration_notify WHERE p_id NOTNULL
-          )`,
+          ) AND foreign_count = 0 AND last_visit_date ISNULL`,
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
              ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
   },
