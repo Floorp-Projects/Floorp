@@ -321,8 +321,8 @@ function nsStringEnumerator(items) {
 }
 
 nsStringEnumerator.prototype = {
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIStringEnumerator]),
-  _nextIndex : 0,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIStringEnumerator]),
+  _nextIndex: 0,
   hasMore() {
     return this._nextIndex < this._items.length;
   },

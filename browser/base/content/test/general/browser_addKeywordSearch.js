@@ -46,7 +46,7 @@ add_task(function*() {
       });
 
       yield BrowserTestUtils.synthesizeMouseAtCenter(`#${id} > input`,
-                                                     { type : "contextmenu", button : 2 },
+                                                     { type: "contextmenu", button: 2 },
                                                      tab.linkedBrowser);
       let target = yield contextMenuPromise;
 

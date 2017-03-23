@@ -222,7 +222,7 @@ add_task(function* test_datareporting_many() {
   Assert.ok(ok, "callback should have been true");
 
   checkDirectoryContains(targetDir, {
-    "datareporting" : {
+    "datareporting": {
       "state.json": shouldBeCopied,
       "session-state.json": shouldBeCopied,
     }
@@ -241,7 +241,7 @@ add_task(function* test_no_session_state() {
   Assert.ok(ok, "callback should have been true");
 
   checkDirectoryContains(targetDir, {
-    "datareporting" : {
+    "datareporting": {
       "state.json": stateContent,
     }
   });
@@ -259,7 +259,7 @@ add_task(function* test_no_state() {
   Assert.ok(ok, "callback should have been true");
 
   checkDirectoryContains(targetDir, {
-    "datareporting" : {
+    "datareporting": {
       "session-state.json": sessionStateContent,
     }
   });

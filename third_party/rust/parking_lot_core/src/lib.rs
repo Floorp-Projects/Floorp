@@ -38,7 +38,7 @@
 
 #![warn(missing_docs)]
 #![cfg_attr(feature = "nightly", feature(const_fn))]
-#![cfg_attr(feature = "nightly", feature(integer_atomics))]
+#![cfg_attr(all(feature = "nightly", target_os = "linux"), feature(integer_atomics))]
 #![cfg_attr(feature = "nightly", feature(asm))]
 
 extern crate smallvec;
@@ -59,7 +59,7 @@ mod thread_parker;
 #[path = "thread_parker/unix.rs"]
 mod thread_parker;
 #[cfg(windows)]
-#[path = "thread_parker/windows.rs"]
+#[path = "thread_parker/windows/mod.rs"]
 mod thread_parker;
 #[cfg(not(any(windows, unix)))]
 #[path = "thread_parker/generic.rs"]

@@ -1626,11 +1626,8 @@ function openOptionsInTab(optionsURL) {
 }
 
 function formatDate(aDate) {
-  const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
-                 .getService(Ci.nsIXULChromeRegistry)
-                 .getSelectedLocale("global", true);
   const dtOptions = { year: "numeric", month: "long", day: "numeric" };
-  return aDate.toLocaleDateString(locale, dtOptions);
+  return aDate.toLocaleDateString(undefined, dtOptions);
 }
 
 

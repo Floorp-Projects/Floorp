@@ -13,6 +13,7 @@
 </div>
 <pre id="test">
 
+<script src="head.js"></script>
 <script class="testbody" type="text/javascript">
 
 const MALWARE_LIST = "test-malware-simple";
@@ -64,53 +65,16 @@ function getGethashCounter() {
   });
 }
 
-// calculate the fullhash and send it to gethash server
-function addCompletionToServer(list, url) {
-  return new Promise(function(resolve, reject) {
-    var listParam = "list=" + list;
-    var fullhashParam = "fullhash=" + hash(url);
-
-    var xhr = new XMLHttpRequest;
-    xhr.open("PUT", GETHASH_URL + "?" + listParam + "&" + fullhashParam, true);
-    xhr.setRequestHeader("Content-Type", "text/plain");
-    xhr.onreadystatechange = function() {
-      if (this.readyState == this.DONE) {
-        resolve();
-      }
-    };
-    xhr.send();
-  });
-}
-
-function hash(str) {
-  function bytesFromString(str) {
-    var converter =
-      SpecialPowers.Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                       .createInstance(SpecialPowers.Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-    return converter.convertToByteArray(str);
-  }
-
-  var hasher = SpecialPowers.Cc["@mozilla.org/security/hash;1"]
-                               .createInstance(SpecialPowers.Ci.nsICryptoHash);
-
-  var data = bytesFromString(str);
-  hasher.init(hasher.SHA256);
-  hasher.update(data, data.length);
-
-  return hasher.finish(true);
-}
-
 // setup function allows classifier send gethash request for test database
 // also it calculate to fullhash for url and store those hashes in gethash sjs.
 function setup() {
   classifierHelper.allowCompletion([MALWARE_LIST, UNWANTED_LIST], GETHASH_URL);
 
   return Promise.all([
-    addCompletionToServer(MALWARE_LIST, MALWARE_HOST1),
-    addCompletionToServer(MALWARE_LIST, MALWARE_HOST2),
-    addCompletionToServer(UNWANTED_LIST, UNWANTED_HOST1),
-    addCompletionToServer(UNWANTED_LIST, UNWANTED_HOST2),
+    addCompletionToServer(MALWARE_LIST, MALWARE_HOST1, GETHASH_URL),
+    addCompletionToServer(MALWARE_LIST, MALWARE_HOST2, GETHASH_URL),
+    addCompletionToServer(UNWANTED_LIST, UNWANTED_HOST1, GETHASH_URL),
+    addCompletionToServer(UNWANTED_LIST, UNWANTED_HOST2, GETHASH_URL),
   ]);
 }
 

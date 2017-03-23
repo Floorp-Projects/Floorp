@@ -46,7 +46,6 @@ enum class LayersBackend : int8_t {
   LAYERS_NONE = 0,
   LAYERS_BASIC,
   LAYERS_OPENGL,
-  LAYERS_D3D9,
   LAYERS_D3D11,
   LAYERS_CLIENT,
   LAYERS_WR,

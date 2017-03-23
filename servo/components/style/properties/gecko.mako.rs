@@ -156,7 +156,7 @@ impl ComputedValues {
 
     #[allow(non_snake_case)]
     pub fn has_moz_binding(&self) -> bool {
-        !self.get_box().gecko.mBinding.mRawPtr.is_null()
+        !self.get_box().gecko.mBinding.mPtr.mRawPtr.is_null()
     }
 
     // FIXME(bholley): Implement this properly.
@@ -507,20 +507,13 @@ fn color_to_nscolor_zero_currentcolor(color: Color) -> structs::nscolor {
     % endif
 </%def>
 
-<%def name="impl_css_url(ident, gecko_ffi_name, need_clone=False, only_resolved=False)">
+<%def name="impl_css_url(ident, gecko_ffi_name, need_clone=False)">
     #[allow(non_snake_case)]
     pub fn set_${ident}(&mut self, v: longhands::${ident}::computed_value::T) {
         use gecko_bindings::sugar::refptr::RefPtr;
         match v {
             Either::First(url) => {
                 let refptr = unsafe {
-                    % if only_resolved:
-                        // -moz-binding can't handle relative URIs
-                        if !url.has_resolved() {
-                            self.gecko.${gecko_ffi_name}.clear();
-                            return;
-                        }
-                    % endif
                     let ptr = bindings::Gecko_NewURLValue(url.for_ffi());
                     if ptr.is_null() {
                         self.gecko.${gecko_ffi_name}.clear();
@@ -953,7 +946,7 @@ fn static_assert() {
 <%self:impl_trait style_struct_name="Position"
                   skip_longhands="${skip_position_longhands} z-index box-sizing order align-content
                                   justify-content align-self justify-self align-items
-                                  justify-items grid-auto-rows grid-auto-columns">
+                                  justify-items grid-auto-rows grid-auto-columns grid-auto-flow">
     % for side in SIDES:
     <% impl_split_style_coord("%s" % side.ident,
                               "mOffset",
@@ -1103,6 +1096,27 @@ fn static_assert() {
     }
     % endfor
 
+    pub fn set_grid_auto_flow(&mut self, v: longhands::grid_auto_flow::computed_value::T) {
+        use gecko_bindings::structs::NS_STYLE_GRID_AUTO_FLOW_ROW;
+        use gecko_bindings::structs::NS_STYLE_GRID_AUTO_FLOW_COLUMN;
+        use gecko_bindings::structs::NS_STYLE_GRID_AUTO_FLOW_DENSE;
+        use properties::longhands::grid_auto_flow::computed_value::AutoFlow::{Row, Column};
+
+        self.gecko.mGridAutoFlow = 0;
+
+        let value = match v.autoflow {
+            Row => NS_STYLE_GRID_AUTO_FLOW_ROW,
+            Column => NS_STYLE_GRID_AUTO_FLOW_COLUMN,
+        };
+
+        self.gecko.mGridAutoFlow |= value as u8;
+
+        if v.dense {
+            self.gecko.mGridAutoFlow |= NS_STYLE_GRID_AUTO_FLOW_DENSE as u8;
+        }
+    }
+
+    ${impl_simple_copy('grid_auto_flow', 'mGridAutoFlow')}
 </%self:impl_trait>
 
 <% skip_outline_longhands = " ".join("outline-style outline-width".split() +
@@ -1611,7 +1625,7 @@ fn static_assert() {
         longhands::scroll_snap_coordinate::computed_value::T(vec)
     }
 
-    ${impl_css_url('_moz_binding', 'mBinding', only_resolved=True)}
+    ${impl_css_url('_moz_binding', 'mBinding.mPtr')}
 
     <%def name="transform_function_arm(name, keyword, items)">
         <%

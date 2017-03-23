@@ -177,6 +177,7 @@ int nr_ice_ctx_create_with_credentials(char *label, UINT4 flags, char* ufrag, ch
 void nr_ice_ctx_add_flags(nr_ice_ctx *ctx, UINT4 flags);
 void nr_ice_ctx_remove_flags(nr_ice_ctx *ctx, UINT4 flags);
 int nr_ice_ctx_destroy(nr_ice_ctx **ctxp);
+int nr_ice_set_local_addresses(nr_ice_ctx *ctx, nr_local_addr* stun_addrs, int stun_addr_ct);
 int nr_ice_gather(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg);
 int nr_ice_add_candidate(nr_ice_ctx *ctx, nr_ice_candidate *cand);
 void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg);

@@ -164,7 +164,7 @@ body > div > div {width: 1000px;height: 1000px;}\
     yield ContentTask.spawn(gBrowser.selectedBrowser,
                             { scrollVert,
                               scrollHori,
-                              elemid : test.elem,
+                              elemid: test.elem,
                               checkWindow: test.testwindow },
       function* (args) {
         let msg = "";

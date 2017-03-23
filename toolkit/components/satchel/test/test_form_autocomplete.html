@@ -149,39 +149,39 @@ const shiftModifier = Event.SHIFT_MASK;
 
 function setupFormHistory(aCallback) {
   updateFormHistory([
-    { op : "remove" },
-    { op : "add", fieldname : "field1", value : "value1" },
-    { op : "add", fieldname : "field1", value : "value2" },
-    { op : "add", fieldname : "field1", value : "value3" },
-    { op : "add", fieldname : "field1", value : "value4" },
-    { op : "add", fieldname : "field2", value : "value1" },
-    { op : "add", fieldname : "field3", value : "a" },
-    { op : "add", fieldname : "field3", value : "aa" },
-    { op : "add", fieldname : "field3", value : "aaz" },
-    { op : "add", fieldname : "field3", value : "aa\xe6" }, // 0xae == latin ae pair (0xc6 == AE)
-    { op : "add", fieldname : "field3", value : "az" },
-    { op : "add", fieldname : "field3", value : "z" },
-    { op : "add", fieldname : "field4", value : "a\xe6" },
-    { op : "add", fieldname : "field4", value : "aa a\xe6" },
-    { op : "add", fieldname : "field4", value : "aba\xe6" },
-    { op : "add", fieldname : "field4", value : "bc d\xe6" },
-    { op : "add", fieldname : "field5", value : "1" },
-    { op : "add", fieldname : "field5", value : "12" },
-    { op : "add", fieldname : "field5", value : "123" },
-    { op : "add", fieldname : "field5", value : "1234" },
-    { op : "add", fieldname : "field6", value : "value" },
-    { op : "add", fieldname : "field7", value : "value" },
-    { op : "add", fieldname : "field8", value : "value" },
-    { op : "add", fieldname : "field9", value : "value" },
-    { op : "add", fieldname : "field10", value : "42" },
-    { op : "add", fieldname : "field11", value : "2010-10-10" }, // not used, since type=date doesn't have autocomplete currently
-    { op : "add", fieldname : "field12", value : "21:21" }, // not used, since type=time doesn't have autocomplete currently
-    { op : "add", fieldname : "field13", value : "32" },  // not used, since type=range doesn't have a drop down menu
-    { op : "add", fieldname : "field14", value : "#ffffff" }, // not used, since type=color doesn't have autocomplete currently
-    { op : "add", fieldname : "field15", value : "2016-08" },
-    { op : "add", fieldname : "field16", value : "2016-W32" },
-    { op : "add", fieldname : "field17", value : "2016-10-21T10:10" },
-    { op : "add", fieldname : "searchbar-history", value : "blacklist test" },
+    { op: "remove" },
+    { op: "add", fieldname: "field1", value: "value1" },
+    { op: "add", fieldname: "field1", value: "value2" },
+    { op: "add", fieldname: "field1", value: "value3" },
+    { op: "add", fieldname: "field1", value: "value4" },
+    { op: "add", fieldname: "field2", value: "value1" },
+    { op: "add", fieldname: "field3", value: "a" },
+    { op: "add", fieldname: "field3", value: "aa" },
+    { op: "add", fieldname: "field3", value: "aaz" },
+    { op: "add", fieldname: "field3", value: "aa\xe6" }, // 0xae == latin ae pair (0xc6 == AE)
+    { op: "add", fieldname: "field3", value: "az" },
+    { op: "add", fieldname: "field3", value: "z" },
+    { op: "add", fieldname: "field4", value: "a\xe6" },
+    { op: "add", fieldname: "field4", value: "aa a\xe6" },
+    { op: "add", fieldname: "field4", value: "aba\xe6" },
+    { op: "add", fieldname: "field4", value: "bc d\xe6" },
+    { op: "add", fieldname: "field5", value: "1" },
+    { op: "add", fieldname: "field5", value: "12" },
+    { op: "add", fieldname: "field5", value: "123" },
+    { op: "add", fieldname: "field5", value: "1234" },
+    { op: "add", fieldname: "field6", value: "value" },
+    { op: "add", fieldname: "field7", value: "value" },
+    { op: "add", fieldname: "field8", value: "value" },
+    { op: "add", fieldname: "field9", value: "value" },
+    { op: "add", fieldname: "field10", value: "42" },
+    { op: "add", fieldname: "field11", value: "2010-10-10" }, // not used, since type=date doesn't have autocomplete currently
+    { op: "add", fieldname: "field12", value: "21:21" }, // not used, since type=time doesn't have autocomplete currently
+    { op: "add", fieldname: "field13", value: "32" },  // not used, since type=range doesn't have a drop down menu
+    { op: "add", fieldname: "field14", value: "#ffffff" }, // not used, since type=color doesn't have autocomplete currently
+    { op: "add", fieldname: "field15", value: "2016-08" },
+    { op: "add", fieldname: "field16", value: "2016-W32" },
+    { op: "add", fieldname: "field17", value: "2016-10-21T10:10" },
+    { op: "add", fieldname: "searchbar-history", value: "blacklist test" },
   ], aCallback);
 }
 
@@ -1026,7 +1026,7 @@ function runTest() { // eslint-disable-line complexity
 }
 
 function addEntry(name, value) {
-  updateFormHistory({ op : "add", fieldname : name, value }, runTest);
+  updateFormHistory({ op: "add", fieldname: name, value }, runTest);
 }
 
 // Runs the next test when scroll event occurs

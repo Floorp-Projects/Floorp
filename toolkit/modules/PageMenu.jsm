@@ -246,7 +246,7 @@ this.PageMenuParent = function PageMenuParent() {
 }
 
 PageMenuParent.prototype = {
-  __proto__ : PageMenu.prototype,
+  __proto__: PageMenu.prototype,
 
   /*
    * Given a target node and popup, add the context menu to the popup. This is
@@ -282,7 +282,7 @@ this.PageMenuChild = function PageMenuChild() {
 }
 
 PageMenuChild.prototype = {
-  __proto__ : PageMenu.prototype,
+  __proto__: PageMenu.prototype,
 
   /*
    * Given a target node, return a JSON object for the custom menu commands. The

@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
@@ -44,6 +45,8 @@ function* tearDownAddon(addon) {
 }
 
 add_task(function* test_reloading_a_temp_addon() {
+  if (AppConstants.MOZ_APP_NAME == "thunderbird")
+    return;
   yield promiseRestartManager();
   yield AddonManager.installTemporaryAddon(do_get_addon(sampleAddon.name));
   const addon = yield promiseAddonByID(sampleAddon.id)

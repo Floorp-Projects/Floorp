@@ -20,7 +20,6 @@
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
 #include "nsContentPolicyUtils.h"
-#include "nsPrincipal.h"
 
 using namespace mozilla;
 

@@ -378,6 +378,12 @@ js::AssertSameCompartment(JSContext* cx, JSObject* obj)
     assertSameCompartment(cx, obj);
 }
 
+JS_FRIEND_API(void)
+js::AssertSameCompartment(JSContext* cx, JS::HandleValue v)
+{
+    assertSameCompartment(cx, v);
+}
+
 #ifdef DEBUG
 JS_FRIEND_API(void)
 js::AssertSameCompartment(JSObject* objA, JSObject* objB)

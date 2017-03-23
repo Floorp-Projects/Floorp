@@ -87,7 +87,10 @@ txExecutionState::~txExecutionState()
 
     txStackIterator handlerIter(&mResultHandlerStack);
     while (handlerIter.hasNext()) {
-        delete (txAXMLEventHandler*)handlerIter.next();
+        txAXMLEventHandler* handler = (txAXMLEventHandler*)handlerIter.next();
+        if (handler != mObsoleteHandler) {
+          delete handler;
+        }
     }
 
     txStackIterator paramIter(&mParamStack);
@@ -157,6 +160,17 @@ txExecutionState::end(nsresult aResult)
         return NS_OK;
     }
     return mOutputHandler->endDocument(aResult);
+}
+
+void
+txExecutionState::popAndDeleteEvalContext()
+{
+  if (!mEvalContextStack.isEmpty()) {
+    auto ctx = popEvalContext();
+    if (ctx != mInitialEvalContext) {
+      delete ctx;
+    }
+  }
 }
 
 void

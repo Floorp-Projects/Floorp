@@ -14,6 +14,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/net/StunAddrsRequestChild.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIProtocolProxyCallback.h"
 
@@ -431,6 +432,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   RefPtr<WebRtcCallWrapper> mCall;
 
  private:
+  void InitLocalAddrs(); // for stun local address IPC request
   nsresult InitProxy();
   class ProtocolProxyQueryHandler : public nsIProtocolProxyCallback {
    public:
@@ -447,6 +449,17 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
     void SetProxyOnPcm(nsIProxyInfo& proxyinfo);
     RefPtr<PeerConnectionMedia> pcm_;
     virtual ~ProtocolProxyQueryHandler() {}
+  };
+
+  class StunAddrsHandler : public net::StunAddrsListener {
+   public:
+    explicit StunAddrsHandler(PeerConnectionMedia *pcm) :
+      pcm_(pcm) {}
+    void OnStunAddrsAvailable(
+        const mozilla::net::NrIceStunAddrArray& addrs) override;
+   private:
+    RefPtr<PeerConnectionMedia> pcm_;
+    virtual ~StunAddrsHandler() {}
   };
 
   // Shutdown media transport. Must be called on STS thread.
@@ -522,7 +535,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
                               uint16_t aDefaultRtcpPort,
                               uint16_t aMLine);
   bool IsIceCtxReady() const {
-    return mProxyResolveCompleted;
+    return mProxyResolveCompleted && mLocalAddrsCompleted;
   }
 
   // The parent PC
@@ -576,6 +589,15 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // Used to track the state of ice restart
   IceRestartState mIceRestartState;
+
+  // Used to cancel incoming stun addrs response
+  RefPtr<net::StunAddrsRequestChild> mStunAddrsRequest;
+
+  // Used to track the state of the stun addr IPC request
+  bool mLocalAddrsCompleted;
+
+  // Used to store the result of the stun addr IPC request
+  nsTArray<NrIceStunAddr> mStunAddrs;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PeerConnectionMedia)
 };

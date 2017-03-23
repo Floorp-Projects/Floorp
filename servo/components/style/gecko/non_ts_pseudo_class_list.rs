@@ -59,8 +59,14 @@ macro_rules! apply_non_ts_list {
                     PSEUDO_CLASS_INTERNAL),
                 ("-moz-handler-crashed", MozHandlerCrashed, mozHandlerCrashed, IN_HANDLER_CRASHED_STATE,
                     PSEUDO_CLASS_INTERNAL),
+                ("required", Required, required, IN_REQUIRED_STATE, _),
+                ("optional", Optional, optional, IN_OPTIONAL_STATE, _),
                 ("read-write", ReadWrite, _, IN_READ_WRITE_STATE, _),
                 ("read-only", ReadOnly, _, IN_READ_WRITE_STATE, _),
+
+                ("-moz-first-node", MozFirstNode, firstNode, _, _),
+                ("-moz-last-node", MozLastNode, lastNode, _, _),
+                ("-moz-only-whitespace", MozOnlyWhitespace, mozOnlyWhitespace, _, _),
 
                 ("-moz-browser-frame", MozBrowserFrame, mozBrowserFrame, _, PSEUDO_CLASS_INTERNAL),
                 ("-moz-table-border-nonzero", MozTableBorderNonzero, mozTableBorderNonzero, _, PSEUDO_CLASS_INTERNAL),

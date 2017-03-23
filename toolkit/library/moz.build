@@ -380,7 +380,7 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     FINAL_TARGET_FILES += ['!dependentlibs.list', '!dependentlibs.list.gtest']
 
 # WebRender dependencies
-if CONFIG['MOZ_ENABLE_WEBRENDER']:
+if CONFIG['MOZ_BUILD_WEBRENDER']:
     if CONFIG['OS_ARCH'] == 'Linux':
         OS_LIBS += [
             'GL',

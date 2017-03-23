@@ -270,9 +270,9 @@ struct Zone : public JS::shadow::Zone,
     void prepareForCompacting();
 
 #ifdef DEBUG
-    // For testing purposes, return the index of the zone group which this zone
+    // For testing purposes, return the index of the sweep group which this zone
     // was swept in in the last GC.
-    unsigned lastZoneGroupIndex() { return gcLastZoneGroupIndex; }
+    unsigned lastSweepGroupIndex() { return gcLastSweepGroupIndex; }
 #endif
 
     using DebuggerVector = js::Vector<js::Debugger*, 0, js::SystemAllocPolicy>;
@@ -348,7 +348,7 @@ struct Zone : public JS::shadow::Zone,
     WeakEdges& gcWeakRefs() { return gcWeakRefs_.ref(); }
 
   private:
-    // List of non-ephemeron weak containers to sweep during beginSweepingZoneGroup.
+    // List of non-ephemeron weak containers to sweep during beginSweepingSweepGroup.
     js::ZoneGroupData<mozilla::LinkedList<WeakCache<void*>>> weakCaches_;
   public:
     mozilla::LinkedList<WeakCache<void*>>& weakCaches() { return weakCaches_.ref(); }
@@ -368,16 +368,16 @@ struct Zone : public JS::shadow::Zone,
   private:
     // A set of edges from this zone to other zones.
     //
-    // This is used during GC while calculating zone groups to record edges that
-    // can't be determined by examining this zone by itself.
-    js::ZoneGroupData<ZoneSet> gcZoneGroupEdges_;
+    // This is used during GC while calculating sweep groups to record edges
+    // that can't be determined by examining this zone by itself.
+    js::ZoneGroupData<ZoneSet> gcSweepGroupEdges_;
 
     // Zones with dead proxies require an extra scan through the wrapper map,
     // so track whether any dead proxies are known to exist.
     js::ZoneGroupData<bool> hasDeadProxies_;
 
   public:
-    ZoneSet& gcZoneGroupEdges() { return gcZoneGroupEdges_.ref(); }
+    ZoneSet& gcSweepGroupEdges() { return gcSweepGroupEdges_.ref(); }
 
     bool hasDeadProxies() { return hasDeadProxies_; }
     void setHasDeadProxies(bool b) { hasDeadProxies_ = b; }
@@ -485,7 +485,7 @@ struct Zone : public JS::shadow::Zone,
     }
 
 #ifdef DEBUG
-    js::ZoneGroupData<unsigned> gcLastZoneGroupIndex;
+    js::ZoneGroupData<unsigned> gcLastSweepGroupIndex;
 #endif
 
     static js::HashNumber UniqueIdToHash(uint64_t uid) {

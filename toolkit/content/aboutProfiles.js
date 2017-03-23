@@ -249,7 +249,7 @@ function removeProfile(profile) {
                           bundle.GetStringFromName("dontDeleteFiles"),
                           null,
                           bundle.GetStringFromName("deleteFiles"),
-                          null, {value:0});
+                          null, {value: 0});
     if (buttonPressed == 1) {
       return;
     }

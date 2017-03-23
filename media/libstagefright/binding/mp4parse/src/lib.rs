@@ -10,11 +10,13 @@ extern crate afl;
 
 extern crate byteorder;
 extern crate bitreader;
+extern crate num_traits;
 use byteorder::{ReadBytesExt, WriteBytesExt};
 use bitreader::{BitReader, ReadInto};
 use std::io::{Read, Take};
 use std::io::Cursor;
 use std::cmp;
+use num_traits::Num;
 
 mod boxes;
 use boxes::{BoxType, FourCC};
@@ -118,6 +120,19 @@ struct MovieHeaderBox {
     duration: u64,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct Matrix {
+    pub a: i32, // 16.16 fix point
+    pub b: i32, // 16.16 fix point
+    pub u: i32, // 2.30 fix point
+    pub c: i32, // 16.16 fix point
+    pub d: i32, // 16.16 fix point
+    pub v: i32, // 2.30 fix point
+    pub x: i32, // 16.16 fix point
+    pub y: i32, // 16.16 fix point
+    pub w: i32, // 2.30 fix point
+}
+
 /// Track header box 'tkhd'
 #[derive(Debug, Clone)]
 pub struct TrackHeaderBox {
@@ -126,6 +141,7 @@ pub struct TrackHeaderBox {
     pub duration: u64,
     pub width: u32,
     pub height: u32,
+    pub matrix: Matrix,
 }
 
 /// Edit list box 'elst'
@@ -406,12 +422,20 @@ pub struct MediaScaledTime(pub u64);
 /// The track's local (mdhd) timescale.
 /// Members are timescale units per second and the track id.
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct TrackTimeScale(pub u64, pub usize);
+pub struct TrackTimeScale<T: Num>(pub T, pub usize);
 
 /// A time to be scaled by the track's local (mdhd) timescale.
 /// Members are time in scale units and the track id.
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct TrackScaledTime(pub u64, pub usize);
+pub struct TrackScaledTime<T: Num>(pub T, pub usize);
+
+impl <T> std::ops::Add for TrackScaledTime<T> where T: Num {
+    type Output = TrackScaledTime<T>;
+
+    fn add(self, other: TrackScaledTime<T>) -> TrackScaledTime<T> {
+        TrackScaledTime::<T>(self.0 + other.0, self.1)
+    }
+}
 
 /// A fragmented file contains no sample data in stts, stsc, and stco.
 #[derive(Debug, Default)]
@@ -431,12 +455,12 @@ impl EmptySampleTableBoxes {
 
 #[derive(Debug, Default)]
 pub struct Track {
-    id: usize,
+    pub id: usize,
     pub track_type: TrackType,
     pub empty_duration: Option<MediaScaledTime>,
-    pub media_time: Option<TrackScaledTime>,
-    pub timescale: Option<TrackTimeScale>,
-    pub duration: Option<TrackScaledTime>,
+    pub media_time: Option<TrackScaledTime<u64>>,
+    pub timescale: Option<TrackTimeScale<u64>>,
+    pub duration: Option<TrackScaledTime<u64>>,
     pub track_id: Option<u32>,
     pub codec_type: CodecType,
     pub empty_sample_boxes: EmptySampleTableBoxes,
@@ -793,7 +817,7 @@ fn read_edts<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<()> {
                 if elst.edits[idx].media_time < 0 {
                     return Err(Error::InvalidData("unexpected negative media time in edit"));
                 }
-                track.media_time = Some(TrackScaledTime(elst.edits[idx].media_time as u64,
+                track.media_time = Some(TrackScaledTime::<u64>(elst.edits[idx].media_time as u64,
                                                         track.id));
                 log!("{:?}", elst);
             }
@@ -804,16 +828,16 @@ fn read_edts<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<()> {
     Ok(())
 }
 
-fn parse_mdhd<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<(MediaHeaderBox, Option<TrackScaledTime>, Option<TrackTimeScale>)> {
+fn parse_mdhd<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<(MediaHeaderBox, Option<TrackScaledTime<u64>>, Option<TrackTimeScale<u64>>)> {
     let mdhd = read_mdhd(f)?;
     let duration = match mdhd.duration {
         std::u64::MAX => None,
-        duration => Some(TrackScaledTime(duration, track.id)),
+        duration => Some(TrackScaledTime::<u64>(duration, track.id)),
     };
     if mdhd.timescale == 0 {
         return Err(Error::InvalidData("zero timescale in mdhd"));
     }
-    let timescale = Some(TrackTimeScale(mdhd.timescale as u64, track.id));
+    let timescale = Some(TrackTimeScale::<u64>(mdhd.timescale as u64, track.id));
     Ok((mdhd, duration, timescale))
 }
 
@@ -989,7 +1013,14 @@ fn read_tkhd<T: Read>(src: &mut BMFFBox<T>) -> Result<TrackHeaderBox> {
         _ => return Err(Error::InvalidData("unhandled tkhd version")),
     };
     // Skip uninteresting fields.
-    skip(src, 52)?;
+    skip(src, 16)?;
+
+    let matrix = Matrix{
+        a: be_i32(src)?, b: be_i32(src)?, u: be_i32(src)?,
+        c: be_i32(src)?, d: be_i32(src)?, v: be_i32(src)?,
+        x: be_i32(src)?, y: be_i32(src)?, w: be_i32(src)?,
+    };
+
     let width = be_u32(src)?;
     let height = be_u32(src)?;
     Ok(TrackHeaderBox {
@@ -998,6 +1029,7 @@ fn read_tkhd<T: Read>(src: &mut BMFFBox<T>) -> Result<TrackHeaderBox> {
         duration: duration,
         width: width,
         height: height,
+        matrix: matrix,
     })
 }
 
@@ -1165,12 +1197,10 @@ fn read_ctts<T: Read>(src: &mut BMFFBox<T>) -> Result<CompositionOffsetBox> {
     let mut offsets = Vec::new();
     for _ in 0..counts {
         let (sample_count, time_offset) = match version {
-            0 => {
-                let count = be_u32(src)?;
-                let offset = TimeOffsetVersion::Version0(be_u32(src)?);
-                (count, offset)
-            },
-            1 => {
+            // According to spec, Version0 shoule be used when version == 0;
+            // however, some buggy contents have negative value when version == 0.
+            // So we always use Version1 here.
+            0...1 => {
                 let count = be_u32(src)?;
                 let offset = TimeOffsetVersion::Version1(be_i32(src)?);
                 (count, offset)

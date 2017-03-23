@@ -31,7 +31,7 @@ function testBug600545() {
   let state = { windows: [
     {
       tabs: [
-        { entries: [{ url: "http://example.org#0", triggeringPrincipal_base64 }], pinned:true },
+        { entries: [{ url: "http://example.org#0", triggeringPrincipal_base64 }], pinned: true },
         { entries: [{ url: "http://example.com#1", triggeringPrincipal_base64 }] },
         { entries: [{ url: "http://example.com#2", triggeringPrincipal_base64 }] },
       ],

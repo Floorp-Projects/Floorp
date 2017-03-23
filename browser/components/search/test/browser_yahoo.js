@@ -48,7 +48,7 @@ function test() {
     wrappedJSObject: {
       queryCharset: "UTF-8",
       "_iconURL": "resource://search-plugins/images/yahoo.ico",
-      _urls : [
+      _urls: [
         {
           type: "application/x-suggestions+json",
           method: "GET",

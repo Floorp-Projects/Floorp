@@ -7,7 +7,7 @@
 
 var stateBackup = ss.getBrowserState();
 
-var state = {entries:[
+var state = {entries: [
   {
     docIdentifier: 1,
     url: "http://example.com?1",

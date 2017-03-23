@@ -1623,18 +1623,24 @@ public:
   InitOrigin(PersistenceType aPersistenceType,
              const nsACString& aGroup,
              const nsACString& aOrigin,
+             const AtomicBool& aCanceled,
              UsageInfo* aUsageInfo) override
   {
     if (!aUsageInfo) {
       return NS_OK;
     }
-    return GetUsageForOrigin(aPersistenceType, aGroup, aOrigin, aUsageInfo);
+    return GetUsageForOrigin(aPersistenceType,
+                             aGroup,
+                             aOrigin,
+                             aCanceled,
+                             aUsageInfo);
   }
 
   nsresult
   GetUsageForOrigin(PersistenceType aPersistenceType,
                     const nsACString& aGroup,
                     const nsACString& aOrigin,
+                    const AtomicBool& aCanceled,
                     UsageInfo* aUsageInfo) override
   {
     QuotaManager* qm = QuotaManager::Get();
@@ -1658,7 +1664,7 @@ public:
 
     bool hasMore;
     while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
-           hasMore && !aUsageInfo->Canceled()) {
+           hasMore && !aCanceled) {
       nsCOMPtr<nsISupports> entry;
       rv = entries->GetNext(getter_AddRefs(entry));
       NS_ENSURE_SUCCESS(rv, rv);

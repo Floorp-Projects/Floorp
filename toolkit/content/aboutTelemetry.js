@@ -1070,8 +1070,8 @@ SymbolicationRequest.prototype.fetchSymbols =
 function SymbolicationRequest_fetchSymbols() {
   let symbolServerURI =
     Preferences.get(PREF_SYMBOL_SERVER_URI, DEFAULT_SYMBOL_SERVER_URI);
-  let request = {"memoryMap" : this.memoryMap, "stacks" : this.stacks,
-                 "version" : 3};
+  let request = {"memoryMap": this.memoryMap, "stacks": this.stacks,
+                 "version": 3};
   let requestJSON = JSON.stringify(request);
 
   this.symbolRequest = new XMLHttpRequest();

@@ -13077,9 +13077,14 @@ nsGlobalWindow::RunTimeoutHandler(Timeout* aTimeout,
       AutoEntryScript aes(this, reason, true);
       JS::CompileOptions options(aes.cx());
       options.setFileAndLine(filename, lineNo).setVersion(JSVERSION_DEFAULT);
+      options.setNoScriptRval(true);
       JS::Rooted<JSObject*> global(aes.cx(), FastGetGlobalJSObject());
-      nsresult rv =
-        nsJSUtils::EvaluateString(aes.cx(), script, global, options);
+      nsresult rv = NS_OK;
+      {
+        nsJSUtils::ExecutionContext exec(aes.cx(), global);
+        rv = exec.CompileAndExec(options, script);
+      }
+
       if (rv == NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
         abortIntervalHandler = true;
       }

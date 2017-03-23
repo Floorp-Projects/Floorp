@@ -31,6 +31,8 @@ class UsageInfo;
 class Client
 {
 public:
+  typedef mozilla::Atomic<bool> AtomicBool;
+
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   enum Type {
@@ -100,12 +102,14 @@ public:
   InitOrigin(PersistenceType aPersistenceType,
              const nsACString& aGroup,
              const nsACString& aOrigin,
+             const AtomicBool& aCanceled,
              UsageInfo* aUsageInfo) = 0;
 
   virtual nsresult
   GetUsageForOrigin(PersistenceType aPersistenceType,
                     const nsACString& aGroup,
                     const nsACString& aOrigin,
+                    const AtomicBool& aCanceled,
                     UsageInfo* aUsageInfo) = 0;
 
   virtual void

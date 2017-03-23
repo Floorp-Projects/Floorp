@@ -169,7 +169,7 @@ public class TabsPanel extends LinearLayout
 
         mTabWidget.setTabSelectionListener(this);
 
-        mMenuButton = findViewById(R.id.menu);
+        mMenuButton = findViewById(R.id.tabs_menu);
         mMenuButton.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {

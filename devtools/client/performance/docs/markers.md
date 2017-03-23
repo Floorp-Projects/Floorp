@@ -54,7 +54,6 @@ needs to figure out the computational style of an element. Fired via
   * "eRestyle_LaterSiblings"
   * "eRestyle_CSSTransitions"
   * "eRestyle_CSSAnimations"
-  * "eRestyle_SVGAttrAnimations"
   * "eRestyle_StyleAttribute"
   * "eRestyle_StyleAttribute_Animations"
   * "eRestyle_Force"

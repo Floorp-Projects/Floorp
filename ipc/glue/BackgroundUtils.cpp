@@ -11,13 +11,13 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/net/NeckoChannelParams.h"
-#include "nsExpandedPrincipal.h"
-#include "nsPrincipal.h"
+#include "ExpandedPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "mozilla/LoadInfo.h"
-#include "nsNullPrincipal.h"
+#include "ContentPrincipal.h"
+#include "NullPrincipal.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -70,7 +70,7 @@ PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
         return nullptr;
       }
 
-      principal = nsNullPrincipal::Create(info.attrs(), uri);
+      principal = NullPrincipal::Create(info.attrs(), uri);
       return principal.forget();
     }
 
@@ -124,8 +124,8 @@ PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
         whitelist.AppendElement(wlPrincipal);
       }
 
-      RefPtr<nsExpandedPrincipal> expandedPrincipal =
-        nsExpandedPrincipal::Create(whitelist, info.attrs());
+      RefPtr<ExpandedPrincipal> expandedPrincipal =
+        ExpandedPrincipal::Create(whitelist, info.attrs());
       if (!expandedPrincipal) {
         NS_WARNING("could not instantiate expanded principal");
         return nullptr;

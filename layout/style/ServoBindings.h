@@ -115,6 +115,9 @@ uint32_t Gecko_ChildrenCount(RawGeckoNodeBorrowed node);
 bool Gecko_NodeIsElement(RawGeckoNodeBorrowed node);
 bool Gecko_IsInDocument(RawGeckoNodeBorrowed node);
 bool Gecko_FlattenedTreeParentIsParent(RawGeckoNodeBorrowed node);
+bool Gecko_IsSignificantChild(RawGeckoNodeBorrowed node,
+                              bool text_is_significant,
+                              bool whitespace_is_significant);
 RawGeckoNodeBorrowedOrNull Gecko_GetParentNode(RawGeckoNodeBorrowed node);
 RawGeckoNodeBorrowedOrNull Gecko_GetFirstChild(RawGeckoNodeBorrowed node);
 RawGeckoNodeBorrowedOrNull Gecko_GetLastChild(RawGeckoNodeBorrowed node);
@@ -128,6 +131,7 @@ RawGeckoElementBorrowedOrNull Gecko_GetDocumentElement(RawGeckoDocumentBorrowed 
 void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
                           mozilla::ServoStyleSheet* parent,
                           RawServoImportRuleBorrowed import_rule,
+                          nsIURI* base_uri,
                           const uint8_t* url_bytes,
                           uint32_t url_length,
                           const uint8_t* media_bytes,

@@ -173,7 +173,7 @@ function LoginObserver(captivePortalDetector) {
     /*
      * Check if login activity is finished according to HTTP burst.
      */
-    notify : function notify() {
+    notify: function notify() {
       switch (state) {
         case LOGIN_OBSERVER_STATE_BURST:
           // Wait while network stays idle for a short period

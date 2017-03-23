@@ -126,6 +126,7 @@ static constexpr Register WasmIonExitRegE1 = r1;
 // None of these may be the second scratch register.
 static constexpr Register WasmIonExitRegReturnData = r2;
 static constexpr Register WasmIonExitRegReturnType = r3;
+static constexpr Register WasmIonExitTlsReg = r17;
 static constexpr Register WasmIonExitRegD0 = r0;
 static constexpr Register WasmIonExitRegD1 = r1;
 static constexpr Register WasmIonExitRegD2 = r4;

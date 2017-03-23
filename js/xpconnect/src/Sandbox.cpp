@@ -19,8 +19,8 @@
 #include "nsIURI.h"
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
-#include "nsNullPrincipal.h"
-#include "nsExpandedPrincipal.h"
+#include "NullPrincipal.h"
+#include "ExpandedPrincipal.h"
 #include "WrapperFactory.h"
 #include "xpcprivate.h"
 #include "xpc_make_class.h"
@@ -1049,7 +1049,7 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
         if (sop) {
             principal = sop->GetPrincipal();
         } else {
-            RefPtr<nsNullPrincipal> nullPrin = nsNullPrincipal::Create();
+            RefPtr<NullPrincipal> nullPrin = NullPrincipal::Create();
             principal = nullPrin;
         }
     }
@@ -1439,8 +1439,8 @@ GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj,
         }
     }
 
-    RefPtr<nsExpandedPrincipal> result =
-        nsExpandedPrincipal::Create(allowedDomains, attrs.ref());
+    RefPtr<ExpandedPrincipal> result =
+        ExpandedPrincipal::Create(allowedDomains, attrs.ref());
     result.forget(out);
     return true;
 }
@@ -1784,7 +1784,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative* wrappe
         }
     } else if (args[0].isNull()) {
         // Null means that we just pass prinOrSop = nullptr, and get an
-        // nsNullPrincipal.
+        // NullPrincipal.
         ok = true;
     }
 

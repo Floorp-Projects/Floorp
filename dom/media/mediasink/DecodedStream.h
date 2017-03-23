@@ -20,7 +20,8 @@
 namespace mozilla {
 
 class DecodedStreamData;
-class MediaData;
+class AudioData;
+class VideoData;
 class MediaStream;
 class OutputStreamManager;
 struct PlaybackInfoInit;
@@ -35,8 +36,8 @@ class DecodedStream : public media::MediaSink {
 public:
   DecodedStream(AbstractThread* aOwnerThread,
                 AbstractThread* aMainThread,
-                MediaQueue<MediaData>& aAudioQueue,
-                MediaQueue<MediaData>& aVideoQueue,
+                MediaQueue<AudioData>& aAudioQueue,
+                MediaQueue<VideoData>& aVideoQueue,
                 OutputStreamManager* aOutputStreamManager,
                 const bool& aSameOrigin,
                 const PrincipalHandle& aPrincipalHandle);
@@ -110,8 +111,8 @@ private:
   int64_t mLastOutputTime = 0; // microseconds
   MediaInfo mInfo;
 
-  MediaQueue<MediaData>& mAudioQueue;
-  MediaQueue<MediaData>& mVideoQueue;
+  MediaQueue<AudioData>& mAudioQueue;
+  MediaQueue<VideoData>& mVideoQueue;
 
   MediaEventListener mAudioPushListener;
   MediaEventListener mVideoPushListener;

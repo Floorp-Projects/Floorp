@@ -30,7 +30,7 @@ do_get_profile();
 const DIRECTORY_LINKS_FILE = "directoryLinks.json";
 const DIRECTORY_FRECENCY = 1000;
 const SUGGESTED_FRECENCY = Infinity;
-const kURLData = {"directory": [{"url":"http://example.com", "title":"LocalSource"}]};
+const kURLData = {"directory": [{"url": "http://example.com", "title": "LocalSource"}]};
 const kTestURL = "data:application/json," + JSON.stringify(kURLData);
 
 // DirectoryLinksProvider preferences
@@ -57,7 +57,7 @@ Services.prefs.setCharPref(kPingUrlPref, kPingUrl);
 Services.prefs.setBoolPref(kNewtabEnhancedPref, true);
 
 const kHttpHandlerData = {};
-kHttpHandlerData[kExamplePath] = {"directory": [{"url":"http://example.com", "title":"RemoteSource"}]};
+kHttpHandlerData[kExamplePath] = {"directory": [{"url": "http://example.com", "title": "RemoteSource"}]};
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
                               "nsIBinaryInputStream",
@@ -1107,10 +1107,10 @@ add_task(function* test_DirectoryLinksProvider_enhancedURIs() {
 
   let data = {
     "suggested": [
-      {url: "http://example.net", enhancedImageURI: "data:,net1", title:"SuggestedTitle", adgroup_name: "Test", frecent_sites: ["test.com"]}
+      {url: "http://example.net", enhancedImageURI: "data:,net1", title: "SuggestedTitle", adgroup_name: "Test", frecent_sites: ["test.com"]}
     ],
     "directory": [
-      {url: "http://example.net", enhancedImageURI: "data:,net2", title:"DirectoryTitle"}
+      {url: "http://example.net", enhancedImageURI: "data:,net2", title: "DirectoryTitle"}
     ]
   };
   let dataURI = "data:application/json," + JSON.stringify(data);
