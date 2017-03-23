@@ -16,6 +16,7 @@
 
 #include "mozilla/Assertions.h"
 
+#include "GeckoProfiler.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/Conversions.h"
@@ -64,51 +65,94 @@ public:
                                   const nsAString& aBody,
                                   JSObject** aFunctionObject);
 
-  struct MOZ_STACK_CLASS EvaluateOptions {
-    bool coerceToString;
-    JS::AutoObjectVector scopeChain;
 
-    explicit EvaluateOptions(JSContext* cx)
-      : coerceToString(false)
-      , scopeChain(cx)
-    {}
+  // ExecutionContext is used to switch compartment.
+  class MOZ_STACK_CLASS ExecutionContext {
+    // Register stack annotations for the Gecko profiler.
+    mozilla::SamplerStackFrameRAII mSamplerRAII;
 
-    EvaluateOptions& setCoerceToString(bool aCoerce) {
-      coerceToString = aCoerce;
+    JSContext* mCx;
+
+    // Handles switching to our global's compartment.
+    JSAutoCompartment mCompartment;
+
+    // Set to a valid handle if a return value is expected.
+    JS::Rooted<JS::Value> mRetValue;
+
+    // Scope chain in which the execution takes place.
+    JS::AutoObjectVector mScopeChain;
+
+    // returned value forwarded when we have to interupt the execution eagerly
+    // with mSkip.
+    nsresult mRv;
+
+    // Used to skip upcoming phases in case of a failure.  In such case the
+    // result is carried by mRv.
+    bool mSkip;
+
+    // Should the result be serialized before being returned.
+    bool mCoerceToString;
+
+#ifdef DEBUG
+    // Should we set the return value.
+    bool mWantsReturnValue;
+
+    bool mExpectScopeChain;
+#endif
+
+   public:
+
+    // Enter compartment in which the code would be executed.  The JSContext
+    // must come from an AutoEntryScript that has had
+    // TakeOwnershipOfErrorReporting() called on it.
+    ExecutionContext(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
+
+    ExecutionContext(const ExecutionContext&) = delete;
+    ExecutionContext(ExecutionContext&&) = delete;
+
+    ~ExecutionContext() {
+      // This flag is resetted, when the returned value is extracted.
+      MOZ_ASSERT(!mWantsReturnValue);
+    }
+
+    // The returned value would be converted to a string if the
+    // |aCoerceToString| is flag set.
+    ExecutionContext& SetCoerceToString(bool aCoerceToString) {
+      mCoerceToString = aCoerceToString;
       return *this;
     }
+
+    // Set the scope chain in which the code should be executed.
+    void SetScopeChain(const JS::AutoObjectVector& aScopeChain);
+
+    // Copy the returned value in the mutable handle argument, in case of a
+    // evaluation failure either during the execution or the conversion of the
+    // result to a string, the nsresult would be set to the corresponding result
+    // code, and the mutable handle argument would remain unchanged.
+    //
+    // The value returned in the mutable handle argument is part of the
+    // compartment given as argument to the ExecutionContext constructor. If the
+    // caller is in a different compartment, then the out-param value should be
+    // wrapped by calling |JS_WrapValue|.
+    MOZ_MUST_USE nsresult
+    ExtractReturnValue(JS::MutableHandle<JS::Value> aRetValue);
+
+    // After getting a notification that an off-thread compilation terminated,
+    // this function will synchronize the result by moving it to the main thread
+    // before starting the execution of the script.
+    //
+    // The compiled script would be returned in the |aScript| out-param.
+    MOZ_MUST_USE nsresult SyncAndExec(void **aOffThreadToken,
+                                      JS::MutableHandle<JSScript*> aScript);
+
+    // Compile a script contained in a SourceBuffer, and execute it.
+    nsresult CompileAndExec(JS::CompileOptions& aCompileOptions,
+                            JS::SourceBufferHolder& aSrcBuf);
+
+    // Compile a script contained in a string, and execute it.
+    nsresult CompileAndExec(JS::CompileOptions& aCompileOptions,
+                            const nsAString& aScript);
   };
-
-  // aEvaluationGlobal is the global to evaluate in.  The return value
-  // will then be wrapped back into the compartment aCx is in when
-  // this function is called.  For all the EvaluateString overloads,
-  // the JSContext must come from an AutoJSAPI that has had
-  // TakeOwnershipOfErrorReporting() called on it.
-  static nsresult EvaluateString(JSContext* aCx,
-                                 const nsAString& aScript,
-                                 JS::Handle<JSObject*> aEvaluationGlobal,
-                                 JS::CompileOptions &aCompileOptions,
-                                 const EvaluateOptions& aEvaluateOptions,
-                                 JS::MutableHandle<JS::Value> aRetValue);
-
-  static nsresult EvaluateString(JSContext* aCx,
-                                 JS::SourceBufferHolder& aSrcBuf,
-                                 JS::Handle<JSObject*> aEvaluationGlobal,
-                                 JS::CompileOptions &aCompileOptions,
-                                 const EvaluateOptions& aEvaluateOptions,
-                                 JS::MutableHandle<JS::Value> aRetValue);
-
-
-  static nsresult EvaluateString(JSContext* aCx,
-                                 const nsAString& aScript,
-                                 JS::Handle<JSObject*> aEvaluationGlobal,
-                                 JS::CompileOptions &aCompileOptions);
-
-  static nsresult EvaluateString(JSContext* aCx,
-                                 JS::SourceBufferHolder& aSrcBuf,
-                                 JS::Handle<JSObject*> aEvaluationGlobal,
-                                 JS::CompileOptions &aCompileOptions,
-                                 void **aOffThreadToken);
 
   static nsresult CompileModule(JSContext* aCx,
                                 JS::SourceBufferHolder& aSrcBuf,
@@ -129,16 +173,6 @@ public:
                                       JS::AutoObjectVector& aScopeChain);
 
   static void ResetTimeZone();
-
-private:
-  // Implementation for our EvaluateString bits
-  static nsresult EvaluateString(JSContext* aCx,
-                                 JS::SourceBufferHolder& aSrcBuf,
-                                 JS::Handle<JSObject*> aEvaluationGlobal,
-                                 JS::CompileOptions& aCompileOptions,
-                                 const EvaluateOptions& aEvaluateOptions,
-                                 JS::MutableHandle<JS::Value> aRetValue,
-                                 void **aOffThreadToken);
 };
 
 template<typename T>

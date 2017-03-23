@@ -40,11 +40,11 @@ function LoginManagerPromptFactory() {
 
 LoginManagerPromptFactory.prototype = {
 
-  classID : Components.ID("{749e62f4-60ae-4569-a8a2-de78b649660e}"),
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  classID: Components.ID("{749e62f4-60ae-4569-a8a2-de78b649660e}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
-  _asyncPrompts : {},
-  _asyncPromptInProgress : false,
+  _asyncPrompts: {},
+  _asyncPromptInProgress: false,
 
   observe(subject, topic, data) {
     this.log("Observed: " + topic);
@@ -241,17 +241,17 @@ function LoginManagerPrompter() {}
 
 LoginManagerPrompter.prototype = {
 
-  classID : Components.ID("{8aa66d77-1bbb-45a6-991e-b8f47751c291}"),
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIAuthPrompt,
+  classID: Components.ID("{8aa66d77-1bbb-45a6-991e-b8f47751c291}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAuthPrompt,
                                           Ci.nsIAuthPrompt2,
                                           Ci.nsILoginManagerPrompter]),
 
-  _factory       : null,
-  _chromeWindow  : null,
-  _browser       : null,
-  _opener        : null,
+  _factory: null,
+  _chromeWindow: null,
+  _browser: null,
+  _opener: null,
 
-  __pwmgr : null, // Password Manager service
+  __pwmgr: null, // Password Manager service
   get _pwmgr() {
     if (!this.__pwmgr)
       this.__pwmgr = Cc["@mozilla.org/login-manager;1"].
@@ -259,7 +259,7 @@ LoginManagerPrompter.prototype = {
     return this.__pwmgr;
   },
 
-  __promptService : null, // Prompt service for user interaction
+  __promptService: null, // Prompt service for user interaction
   get _promptService() {
     if (!this.__promptService)
       this.__promptService =
@@ -269,7 +269,7 @@ LoginManagerPrompter.prototype = {
   },
 
 
-  __strBundle : null, // String bundle for L10N
+  __strBundle: null, // String bundle for L10N
   get _strBundle() {
     if (!this.__strBundle) {
       var bunService = Cc["@mozilla.org/intl/stringbundle;1"].
@@ -284,7 +284,7 @@ LoginManagerPrompter.prototype = {
   },
 
 
-  __ellipsis : null,
+  __ellipsis: null,
   get _ellipsis() {
     if (!this.__ellipsis) {
       this.__ellipsis = "\u2026";
@@ -351,7 +351,7 @@ LoginManagerPrompter.prototype = {
                                      Cr.NS_ERROR_NOT_IMPLEMENTED);
 
     var selectedLogin = null;
-    var checkBox = { value : false };
+    var checkBox = { value: false };
     var checkBoxLabel = null;
     var [hostname, realm, unused] = this._getRealmInfo(aPasswordRealm);
 
@@ -451,7 +451,7 @@ LoginManagerPrompter.prototype = {
       throw new Components.Exception("promptPassword doesn't support SAVE_PASSWORD_FOR_SESSION",
                                      Cr.NS_ERROR_NOT_IMPLEMENTED);
 
-    var checkBox = { value : false };
+    var checkBox = { value: false };
     var checkBoxLabel = null;
     var [hostname, realm, username] = this._getRealmInfo(aPasswordRealm);
 
@@ -549,7 +549,7 @@ LoginManagerPrompter.prototype = {
    */
   promptAuth(aChannel, aLevel, aAuthInfo) {
     var selectedLogin = null;
-    var checkbox = { value : false };
+    var checkbox = { value: false };
     var checkboxLabel = null;
     var epicfail = false;
     var canAutologin = false;
@@ -708,7 +708,7 @@ LoginManagerPrompter.prototype = {
         channel: aChannel,
         authInfo: aAuthInfo,
         level: aLevel,
-        inProgress : false,
+        inProgress: false,
         prompter: this
       };
 

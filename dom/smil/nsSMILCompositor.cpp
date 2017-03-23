@@ -25,8 +25,7 @@ nsSMILCompositor::HashKey(KeyTypePointer aKey)
   // its 2 lowest-order bits. (Those shifted-off bits will always be 0 since
   // our pointers will be word-aligned.)
   return (NS_PTR_TO_UINT32(aKey->mElement.get()) >> 2) +
-    NS_PTR_TO_UINT32(aKey->mAttributeName.get()) +
-    (aKey->mIsCSS ? 1 : 0);
+    NS_PTR_TO_UINT32(aKey->mAttributeName.get());
 }
 
 // Cycle-collection support
@@ -127,18 +126,26 @@ nsSMILCompositor::ClearAnimationEffects()
 nsISMILAttr*
 nsSMILCompositor::CreateSMILAttr()
 {
-  if (mKey.mIsCSS) {
-    nsCSSPropertyID propId =
-      nsCSSProps::LookupProperty(nsDependentAtomString(mKey.mAttributeName),
-                                 CSSEnabledState::eForAllContent);
-    if (nsSMILCSSProperty::IsPropertyAnimatable(propId)) {
-      return new nsSMILCSSProperty(propId, mKey.mElement.get());
+  nsCSSPropertyID propID =
+    nsCSSProps::LookupProperty(nsDependentAtomString(mKey.mAttributeName),
+                               CSSEnabledState::eForAllContent);
+  if (nsSMILCSSProperty::IsPropertyAnimatable(propID)) {
+    // If we are animating the 'width' or 'height' of an outer SVG
+    // element we should animate it as a CSS property, but for other elements
+    // (e.g. <rect>) we should animate it as a length attribute.
+    // The easiest way to test for an outer SVG element, is to see if it is an
+    // SVG-namespace element mapping its width/height attribute to style.
+    bool animateAsAttr = (mKey.mAttributeName == nsGkAtoms::width ||
+                          mKey.mAttributeName == nsGkAtoms::height) &&
+                         mKey.mElement->GetNameSpaceID() == kNameSpaceID_SVG &&
+                         !mKey.mElement->IsAttributeMapped(mKey.mAttributeName);
+    if (!animateAsAttr) {
+      return new nsSMILCSSProperty(propID, mKey.mElement.get());
     }
-  } else {
-    return mKey.mElement->GetAnimatedAttr(mKey.mAttributeNamespaceID,
-                                          mKey.mAttributeName);
   }
-  return nullptr;
+
+  return mKey.mElement->GetAnimatedAttr(mKey.mAttributeNamespaceID,
+                                        mKey.mAttributeName);
 }
 
 uint32_t

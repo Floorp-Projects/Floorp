@@ -499,11 +499,8 @@ function get_string(aName, ...aArgs) {
 }
 
 function formatDate(aDate) {
-  const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
-                 .getService(Ci.nsIXULChromeRegistry)
-                 .getSelectedLocale("global", true);
   const dtOptions = { year: "numeric", month: "long", day: "numeric" };
-  return aDate.toLocaleDateString(locale, dtOptions);
+  return aDate.toLocaleDateString(undefined, dtOptions);
 }
 
 function is_hidden(aElement) {
@@ -1455,4 +1452,24 @@ function getTestPluginTag() {
   }
   ok(false, "Unable to find plugin");
   return null;
+}
+
+// Wait for and then acknowledge (by pressing the primary button) the
+// given notification.
+function promiseNotification(id = "addon-webext-permissions") {
+  if (!Services.prefs.getBoolPref("extensions.webextPermissionPrompts", false)) {
+    return Promise.resolve();
+  }
+
+  return new Promise(resolve => {
+    function popupshown() {
+      let notification = PopupNotifications.getNotification(id);
+      if (notification) {
+        PopupNotifications.panel.removeEventListener("popupshown", popupshown);
+        PopupNotifications.panel.firstChild.button.click();
+        resolve();
+      }
+    }
+    PopupNotifications.panel.addEventListener("popupshown", popupshown);
+  });
 }

@@ -81,11 +81,6 @@ function promiseSetDisabled(addon) {
 let cleanup;
 
 add_task(function* () {
-  // XXX remove this when prompts are enabled by default
-  yield SpecialPowers.pushPrefEnv({set: [
-    ["extensions.webextPermissionPrompts", true],
-  ]});
-
   // ICON_URL wouldn't ever appear as an actual webextension icon, but
   // we're just mocking out the addon here, so all we care about is that
   // that it propagates correctly to the popup.

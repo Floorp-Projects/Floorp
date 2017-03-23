@@ -21,13 +21,13 @@ function Permission(principal, type, capability) {
 }
 
 var gPermissionManager = {
-  _type                 : "",
-  _permissions          : [],
-  _permissionsToAdd     : new Map(),
-  _permissionsToDelete  : new Map(),
-  _bundle               : null,
-  _tree                 : null,
-  _observerRemoved      : false,
+  _type: "",
+  _permissions: [],
+  _permissionsToAdd: new Map(),
+  _permissionsToDelete: new Map(),
+  _bundle: null,
+  _tree: null,
+  _observerRemoved: false,
 
   _view: {
     _rowCount: 0,

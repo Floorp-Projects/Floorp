@@ -39,8 +39,7 @@ class Compartment
 {
     InstanceVector instances_;
     volatile bool  mutatingInstances_;
-    size_t         activationCount_;
-    bool           profilingEnabled_;
+    size_t         interruptedCount_;
 
     friend class js::WasmActivation;
 
@@ -89,12 +88,14 @@ class Compartment
 
     Instance* lookupInstanceDeprecated(const void* pc) const;
 
-    // To ensure profiling is enabled (so that wasm frames are not lost in
-    // profiling callstacks), ensureProfilingState must be called before calling
-    // the first wasm function in a compartment.
+    // The wasm::Compartment must be notified when execution is interrupted
+    // while executing in wasm code in this compartment.
 
-    bool ensureProfilingState(JSContext* cx);
-    bool profilingEnabled() const;
+    void setInterrupted(bool interrupted);
+
+    // Ensure all Instances in this JSCompartment have profiling labels created.
+
+    void ensureProfilingLabels(bool profilingEnabled);
 
     // about:memory reporting
 

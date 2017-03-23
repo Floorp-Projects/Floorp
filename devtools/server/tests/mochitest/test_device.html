@@ -16,7 +16,6 @@ Bug 895360 - [app manager] Device meta data actor
 
 window.onload = function () {
   const Cu = Components.utils;
-  const Cc = Components.classes;
   const Ci = Components.interfaces;
 
   const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
@@ -54,8 +53,7 @@ window.onload = function () {
         geckobuildid: appInfo.platformBuildID,
         geckoversion: appInfo.platformVersion,
         useragent: window.navigator.userAgent,
-        locale: Cc["@mozilla.org/chrome/chrome-registry;1"]
-                .getService(Ci.nsIXULChromeRegistry).getSelectedLocale("global"),
+        locale: Services.locale.getAppLocaleAsLangTag(),
         os: appInfo.OS,
         processor: appInfo.XPCOMABI.split("-")[0],
         compiler: appInfo.XPCOMABI.split("-")[1],

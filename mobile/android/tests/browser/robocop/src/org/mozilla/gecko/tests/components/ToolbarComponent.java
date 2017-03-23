@@ -19,6 +19,7 @@ import org.mozilla.gecko.toolbar.PageActionLayout;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextSwitcher;
 import android.widget.TextView;
 
 import com.robotium.solo.Condition;
@@ -28,8 +29,7 @@ import com.robotium.solo.Solo;
  * A class representing any interactions that take place on the Toolbar.
  */
 public class ToolbarComponent extends BaseComponent {
-
-    private static final String URL_HTTP_PREFIX = "http://";
+    public static final String URL_HTTP_PREFIX = "http://";
 
     // We are waiting up to 30 seconds instead of the default waiting time because reader mode
     // parsing can take quite some time on slower devices (Bug 1142699)
@@ -90,6 +90,12 @@ public class ToolbarComponent extends BaseComponent {
         return this;
     }
 
+    public ToolbarComponent assertTabCount(final int expectedTabCount) {
+        assertIsNotEditing();
+        fAssertEquals("The correct number of tabs are opened", expectedTabCount, getTabsCount());
+        return this;
+    }
+
     /**
      * Returns the root View for the browser toolbar.
      */
@@ -108,6 +114,16 @@ public class ToolbarComponent extends BaseComponent {
 
     private TextView getUrlTitleText() {
         return (TextView) getToolbarView().findViewById(R.id.url_bar_title);
+    }
+
+    private TextSwitcher getTabsCounter() {
+        return (TextSwitcher) getToolbarView().findViewById(R.id.tabs_counter);
+    }
+
+    private int getTabsCount() {
+        TextView currentView = (TextView) getTabsCounter().getCurrentView();
+        String tabsCountText = currentView.getText().toString();
+        return Integer.parseInt(tabsCountText);
     }
 
     private ImageButton getBackButton() {
@@ -164,7 +180,7 @@ public class ToolbarComponent extends BaseComponent {
     /**
      * Returns the title of the page. Note that this makes no assertions to Toolbar state and
      * may return a value that may never be visible to the user. Callers likely want to use
-     * {@link assertTitle} instead.
+     * {@link #assertTitle} instead.
      */
     public String getPotentiallyInconsistentTitle() {
         return getTitleHelper(false);

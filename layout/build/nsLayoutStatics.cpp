@@ -32,7 +32,7 @@
 #include "nsImageFrame.h"
 #include "nsLayoutStylesheetCache.h"
 #include "mozilla/RuleProcessorCache.h"
-#include "nsPrincipal.h"
+#include "ContentPrincipal.h"
 #include "nsRange.h"
 #include "nsRegion.h"
 #include "nsRepeatService.h"
@@ -270,7 +270,7 @@ nsLayoutStatics::Initialize()
   nsLayoutUtils::Initialize();
   nsIPresShell::InitializeStatics();
   TouchManager::InitializeStatics();
-  nsPrincipal::InitializeStatics();
+  ContentPrincipal::InitializeStatics();
 
   nsCORSListenerProxy::Startup();
 

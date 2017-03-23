@@ -104,8 +104,8 @@ public:
    * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
    *
    * Usage:
-   *   nsTArray<nsCString> appLocales;
-   *   LocaleService::GetInstance()->GetRequestedLocales(appLocales);
+   *   nsTArray<nsCString> reqLocales;
+   *   LocaleService::GetInstance()->GetRequestedLocales(reqLocales);
    *
    * Returns a boolean indicating if the attempt to retrieve prefs
    * was successful.
@@ -113,6 +113,26 @@ public:
    * (See mozILocaleService.idl for a JS-callable version of this.)
    */
   bool GetRequestedLocales(nsTArray<nsCString>& aRetVal);
+
+  /**
+   * Returns a list of available locales that can be used to
+   * localize the app.
+   *
+   * The result is an unsorted list of valid locale IDs and it should be
+   * used as a availableLocales input list for languages negotiation.
+   *
+   * Example: ["de", "en-US", "pl", "sr-Cyrl", "zh-Hans-HK"]
+   *
+   * Usage:
+   *   nsTArray<nsCString> availLocales;
+   *   LocaleService::GetInstance()->GetAvailableLocales(availLocales);
+   *
+   * Returns a boolean indicating if the attempt to retrieve at least
+   * one locale was successful.
+   *
+   * (See mozILocaleService.idl for a JS-callable version of this.)
+   */
+  bool GetAvailableLocales(nsTArray<nsCString>& aRetVal);
 
   /**
    * Triggers a refresh of the language negotiation process.

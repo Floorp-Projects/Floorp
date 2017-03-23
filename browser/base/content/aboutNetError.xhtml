@@ -96,7 +96,7 @@
         panel.style.display = "block";
         document.getElementById("netErrorButtonContainer").style.display = "none";
         document.getElementById("prefResetButton").addEventListener("click", function resetPreferences(e) {
-          const event = new CustomEvent("AboutNetErrorResetPreferences", {bubbles:true});
+          const event = new CustomEvent("AboutNetErrorResetPreferences", {bubbles: true});
           document.dispatchEvent(event);
         });
         addAutofocus("prefResetButton", "beforeend");
@@ -127,7 +127,7 @@
 
           if (panel.style.display == "block") {
             // send event to trigger telemetry ping
-            var event = new CustomEvent("AboutNetErrorUIExpanded", {bubbles:true});
+            var event = new CustomEvent("AboutNetErrorUIExpanded", {bubbles: true});
             document.dispatchEvent(event);
           }
         });
@@ -292,7 +292,7 @@
           }
         }, true, true);
 
-        var event = new CustomEvent("AboutNetErrorLoad", {bubbles:true});
+        var event = new CustomEvent("AboutNetErrorLoad", {bubbles: true});
         document.dispatchEvent(event);
 
         if (err == "inadequateSecurityError") {
@@ -315,7 +315,7 @@
 
         document.getElementById("openPortalLoginPageButton")
                 .addEventListener("click", () => {
-          let event = new CustomEvent("AboutNetErrorOpenCaptivePortal", {bubbles:true});
+          let event = new CustomEvent("AboutNetErrorOpenCaptivePortal", {bubbles: true});
           document.dispatchEvent(event);
         });
 
@@ -362,7 +362,7 @@
           }
         }, true, true);
 
-        let event = new CustomEvent("AboutNetErrorLoad", {bubbles:true});
+        let event = new CustomEvent("AboutNetErrorLoad", {bubbles: true});
         document.getElementById("advancedButton").dispatchEvent(event);
 
         addDomainErrorLinks();

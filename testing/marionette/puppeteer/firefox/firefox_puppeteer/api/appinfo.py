@@ -30,9 +30,9 @@ class AppInfo(BaseLib):
     def locale(self):
         with self.marionette.using_context('chrome'):
             return self.marionette.execute_script("""
-              return Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                               .getService(Components.interfaces.nsIXULChromeRegistry)
-                               .getSelectedLocale("global");
+              return Components.classes["@mozilla.org/intl/localeservice;1"]
+                               .getService(Components.interfaces.mozILocaleService)
+                               .getAppLocaleAsLangTag();
             """)
 
     @property

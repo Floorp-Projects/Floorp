@@ -2609,6 +2609,24 @@ private:
 
 } // namespace mozilla
 
+// Consumers expect to be able to null-test mBinding to determine whether there
+// is a valid binding URI. Since we can't do URL resolution during parallel
+// style struct computation, we can't just null out the binding if the URL turns
+// out to be invalid. As such, we use this wrapper class to maintain this
+// behavior dynamically.
+class BindingHolder {
+public:
+  BindingHolder() {}
+  explicit BindingHolder(mozilla::css::URLValue* aPtr) : mPtr(aPtr) {}
+  operator mozilla::css::URLValue*() const { return Get(); }
+  mozilla::css::URLValue* operator->() const { return Get(); }
+  mozilla::css::URLValue* Get() const { return (mPtr && mPtr->GetURI()) ? mPtr.get() : nullptr; }
+  mozilla::css::URLValue* ForceGet() const { return mPtr.get(); }
+  void Set(mozilla::css::URLValue* aPtr) { mPtr = aPtr; }
+private:
+  RefPtr<mozilla::css::URLValue> mPtr;
+};
+
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
 {
   typedef mozilla::StyleGeometryBox StyleGeometryBox;
@@ -2634,7 +2652,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
 
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
-  RefPtr<mozilla::css::URLValue> mBinding; // [reset]
+  BindingHolder mBinding;                  // [reset]
   mozilla::StyleDisplay mDisplay;          // [reset] see nsStyleConsts.h StyleDisplay
   mozilla::StyleDisplay mOriginalDisplay;  // [reset] saved mDisplay for
                                            //         position:absolute/fixed

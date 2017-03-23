@@ -77,7 +77,7 @@ var corpus = [
       url: "https://www.mozilla.org/",
       // shortUrl: this.getShortURL(),
       // og:image
-      previews:["https://www.mozilla.org/favicon.png"],
+      previews: ["https://www.mozilla.org/favicon.png"],
       // og:site_name
       siteName: ">My simple test page<"
     }

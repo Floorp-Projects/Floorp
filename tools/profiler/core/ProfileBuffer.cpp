@@ -39,6 +39,14 @@ void ProfileBuffer::addTag(const ProfileBufferEntry& aTag)
   }
 }
 
+void ProfileBuffer::addTagThreadId(LastSample& aLS)
+{
+  // This is the start of a sample, so make a note of its location in |aLS|.
+  aLS.mGeneration = mGeneration;
+  aLS.mPos = mWritePos;
+  addTag(ProfileBufferEntry::ThreadId(aLS.mThreadId));
+}
+
 void ProfileBuffer::addStoredMarker(ProfilerMarker *aStoredMarker) {
   aStoredMarker->SetGeneration(mGeneration);
   mStoredMarkers.insert(aStoredMarker);

@@ -58,6 +58,7 @@
       else {
         window.parent.postMessage({result: "websocket-error"}, "*");
       }
+      mySocket.close();
     };
     mySocket.onerror = function(e) {
       window.parent.postMessage({result: "websocket-unexpected-error"}, "*");

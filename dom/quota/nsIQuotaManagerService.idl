@@ -42,6 +42,21 @@ interface nsIQuotaManagerService : nsISupports
                            in ACString aPersistenceType);
 
   /**
+   * Schedules an asynchronous callback that will inspect all origins and
+   * return the total amount of disk space being used by storages for each
+   * origin separately.
+   *
+   * @param aCallback
+   *        The callback that will be called when the usage is available.
+   * @param aGetAll
+   *        An optional boolean to indicate inspection of all origins,
+   *        including internal ones.
+   */
+  [must_use] nsIQuotaUsageRequest
+  getUsage(in nsIQuotaUsageCallback aCallback,
+           [optional] in boolean aGetAll);
+
+  /**
    * Schedules an asynchronous callback that will return the total amount of
    * disk space being used by storages for the given origin.
    *

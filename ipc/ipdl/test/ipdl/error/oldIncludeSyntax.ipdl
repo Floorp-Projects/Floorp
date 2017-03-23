@@ -1,3 +1,5 @@
+//error: bad syntax near `Foo.ipdl'
+
 include protocol "Foo.ipdl";
 
 protocol oldIncludeSyntax {

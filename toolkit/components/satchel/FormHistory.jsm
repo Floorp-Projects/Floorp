@@ -153,34 +153,34 @@ function sendNotification(aType, aData) {
  */
 
 const dbSchema = {
-  tables : {
-    moz_formhistory : {
-      "id"        : "INTEGER PRIMARY KEY",
-      "fieldname" : "TEXT NOT NULL",
-      "value"     : "TEXT NOT NULL",
-      "timesUsed" : "INTEGER",
-      "firstUsed" : "INTEGER",
-      "lastUsed"  : "INTEGER",
-      "guid"      : "TEXT",
+  tables: {
+    moz_formhistory: {
+      "id": "INTEGER PRIMARY KEY",
+      "fieldname": "TEXT NOT NULL",
+      "value": "TEXT NOT NULL",
+      "timesUsed": "INTEGER",
+      "firstUsed": "INTEGER",
+      "lastUsed": "INTEGER",
+      "guid": "TEXT",
     },
     moz_deleted_formhistory: {
-        "id"          : "INTEGER PRIMARY KEY",
-        "timeDeleted" : "INTEGER",
-        "guid"        : "TEXT"
+        "id": "INTEGER PRIMARY KEY",
+        "timeDeleted": "INTEGER",
+        "guid": "TEXT"
     }
   },
-  indices : {
-    moz_formhistory_index : {
-      table   : "moz_formhistory",
-      columns : [ "fieldname" ]
+  indices: {
+    moz_formhistory_index: {
+      table: "moz_formhistory",
+      columns: [ "fieldname" ]
     },
-    moz_formhistory_lastused_index : {
-      table   : "moz_formhistory",
-      columns : [ "lastUsed" ]
+    moz_formhistory_lastused_index: {
+      table: "moz_formhistory",
+      columns: [ "lastUsed" ]
     },
-    moz_formhistory_guid_index : {
-      table   : "moz_formhistory",
-      columns : [ "guid" ]
+    moz_formhistory_guid_index: {
+      table: "moz_formhistory",
+      columns: [ "guid" ]
     },
   }
 };
@@ -283,8 +283,8 @@ function makeAddStatement(aNewData, aNow, aBindingArrays) {
 function makeBumpStatement(aGuid, aNow, aBindingArrays) {
   let query = "UPDATE moz_formhistory SET timesUsed = timesUsed + 1, lastUsed = :lastUsed WHERE guid = :guid";
   let queryParams = {
-    lastUsed : aNow,
-    guid : aGuid,
+    lastUsed: aNow,
+    guid: aGuid,
   };
 
   return dbCreateAsyncStatement(query, queryParams, aBindingArrays);
@@ -704,7 +704,7 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
         aCallbacks.handleError(aError);
       }
     },
-    handleResult : NOOP
+    handleResult: NOOP
   };
 
   dbConnection.executeAsync(stmts, stmts.length, handlers);
@@ -726,7 +726,7 @@ function expireOldEntriesDeletion(aExpireTime, aBeginningCount) {
   FormHistory.update([
     {
       op: "remove",
-      lastUsedEnd : aExpireTime,
+      lastUsedEnd: aExpireTime,
     }], {
       handleCompletion() {
         expireOldEntriesVacuum(aExpireTime, aBeginningCount);
@@ -750,11 +750,11 @@ function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
 
         let stmt = dbCreateAsyncStatement("VACUUM");
         stmt.executeAsync({
-          handleResult : NOOP,
+          handleResult: NOOP,
           handleError(aError) {
             log("expireVacuumError");
           },
-          handleCompletion : NOOP
+          handleCompletion: NOOP
         });
       }
 
@@ -771,7 +771,7 @@ this.FormHistory = {
     return Prefs.enabled;
   },
 
-  search : function formHistorySearch(aSelectTerms, aSearchData, aCallbacks) {
+  search: function formHistorySearch(aSelectTerms, aSearchData, aCallbacks) {
     // if no terms selected, select everything
     aSelectTerms = (aSelectTerms) ? aSelectTerms : validFields;
     validateSearchData(aSearchData, "Search");
@@ -798,7 +798,7 @@ this.FormHistory = {
         }
       },
 
-      handleCompletion : function searchCompletionHandler(aReason) {
+      handleCompletion: function searchCompletionHandler(aReason) {
         if (aCallbacks && aCallbacks.handleCompletion) {
           aCallbacks.handleCompletion(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ? 0 : 1);
         }
@@ -808,11 +808,11 @@ this.FormHistory = {
     stmt.executeAsync(handlers);
   },
 
-  count : function formHistoryCount(aSearchData, aCallbacks) {
+  count: function formHistoryCount(aSearchData, aCallbacks) {
     validateSearchData(aSearchData, "Count");
     let stmt = makeCountStatement(aSearchData);
     let handlers = {
-      handleResult : function countResultHandler(aResultSet) {
+      handleResult: function countResultHandler(aResultSet) {
         let row = aResultSet.getNextRow();
         let count = row.getResultByName("numEntries");
         if (aCallbacks && aCallbacks.handleResult) {
@@ -826,7 +826,7 @@ this.FormHistory = {
         }
       },
 
-      handleCompletion : function searchCompletionHandler(aReason) {
+      handleCompletion: function searchCompletionHandler(aReason) {
         if (aCallbacks && aCallbacks.handleCompletion) {
           aCallbacks.handleCompletion(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ? 0 : 1);
         }
@@ -836,7 +836,7 @@ this.FormHistory = {
     stmt.executeAsync(handlers);
   },
 
-  update : function formHistoryUpdate(aChanges, aCallbacks) {
+  update: function formHistoryUpdate(aChanges, aCallbacks) {
     // Used to keep track of how many searches have been started. When that number
     // are finished, updateFormHistoryWrite can be called.
     let numSearches = 0;
@@ -915,18 +915,18 @@ this.FormHistory = {
       FormHistory.search(
         [ "guid" ],
         {
-          fieldname : change.fieldname,
-          value : change.value
+          fieldname: change.fieldname,
+          value: change.value
         }, {
-          foundResult : false,
+          foundResult: false,
           handleResult(aResult) {
             if (this.foundResult) {
               log("Database contains multiple entries with the same fieldname/value pair.");
               if (aCallbacks && aCallbacks.handleError) {
                 aCallbacks.handleError({
-                  message :
+                  message:
                     "Database contains multiple entries with the same fieldname/value pair.",
-                  result : 19 // Constraint violation
+                  result: 19 // Constraint violation
                 });
               }
 
@@ -1047,10 +1047,10 @@ this.FormHistory = {
           let value = row.getResultByName("value");
           let frecency = row.getResultByName("frecency");
           let entry = {
-            text :          value,
-            textLowerCase : value.toLowerCase(),
+            text:          value,
+            textLowerCase: value.toLowerCase(),
             frecency,
-            totalScore :    Math.round(frecency * row.getResultByName("boundaryBonuses"))
+            totalScore:    Math.round(frecency * row.getResultByName("boundaryBonuses"))
           };
           if (aCallbacks && aCallbacks.handleResult) {
             aCallbacks.handleResult(entry);

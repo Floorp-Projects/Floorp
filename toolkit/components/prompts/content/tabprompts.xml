@@ -94,22 +94,22 @@
             }
 
             this.ui = {
-                prompt             : this,
-                loginContainer     : getElement("loginContainer"),
-                loginTextbox       : getElement("loginTextbox"),
-                loginLabel         : getElement("loginLabel"),
-                password1Container : getElement("password1Container"),
-                password1Textbox   : getElement("password1Textbox"),
-                password1Label     : getElement("password1Label"),
-                infoBody           : getElement("info.body"),
-                infoTitle          : getElement("info.title"),
-                infoIcon           : null,
-                checkbox           : getElement("checkbox"),
-                checkboxContainer  : getElement("checkboxContainer"),
-                button3            : getElement("button3"),
-                button2            : getElement("button2"),
-                button1            : getElement("button1"),
-                button0            : getElement("button0"),
+                prompt: this,
+                loginContainer: getElement("loginContainer"),
+                loginTextbox: getElement("loginTextbox"),
+                loginLabel: getElement("loginLabel"),
+                password1Container: getElement("password1Container"),
+                password1Textbox: getElement("password1Textbox"),
+                password1Label: getElement("password1Label"),
+                infoBody: getElement("info.body"),
+                infoTitle: getElement("info.title"),
+                infoIcon: null,
+                checkbox: getElement("checkbox"),
+                checkboxContainer: getElement("checkboxContainer"),
+                button3: getElement("button3"),
+                button2: getElement("button2"),
+                button1: getElement("button1"),
+                button0: getElement("button0"),
                 // focusTarget (for BUTTON_DELAY_ENABLE) not yet supported
             };
 

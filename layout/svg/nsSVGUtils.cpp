@@ -433,15 +433,16 @@ nsSVGUtils::GetUserToCanvasTM(nsIFrame *aFrame)
   return tm;
 }
 
-void 
+void
 nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, uint32_t aFlags)
 {
   for (nsIFrame* kid : aFrame->PrincipalChildList()) {
     nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
-      SVGFrame->NotifySVGChanged(aFlags); 
+      SVGFrame->NotifySVGChanged(aFlags);
     } else {
-      NS_ASSERTION(kid->IsFrameOfType(nsIFrame::eSVG) || kid->IsSVGText(),
+      NS_ASSERTION(kid->IsFrameOfType(nsIFrame::eSVG) ||
+                   nsSVGUtils::IsInSVGTextSubtree(kid),
                    "SVG frame expected");
       // recurse into the children of container frames e.g. <clipPath>, <mask>
       // in case they have child frames with transformation matrices
@@ -482,7 +483,9 @@ public:
       }
     }
 
-    return svgFrame->PaintSVG(aContext, aTransform, dirtyRect);
+    return svgFrame->PaintSVG(aContext,
+                              nsSVGUtils::GetCSSPxToDevPxMatrix(aTarget),
+                              dirtyRect);
   }
 };
 
@@ -630,7 +633,7 @@ private:
       mSourceCtx->Multiply(aTransform);
       nsRect overflowRect = mFrame->GetVisualOverflowRectRelativeToSelf();
       if (mFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
-          mFrame->IsSVGText()) {
+          nsSVGUtils::IsInSVGTextSubtree(mFrame)) {
         // Unlike containers, leaf frames do not include GetPosition() in
         // GetCanvasTM().
         overflowRect = overflowRect + mFrame->GetPosition();
@@ -693,7 +696,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
     // SVG doesn't maintain bounds/overflow rects.
     nsRect overflowRect = aFrame->GetVisualOverflowRectRelativeToSelf();
     if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
-        aFrame->IsSVGText()) {
+        nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
       // Unlike containers, leaf frames do not include GetPosition() in
       // GetCanvasTM().
       overflowRect = overflowRect + aFrame->GetPosition();
@@ -858,6 +861,13 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
         aFrame->GetPosition();
       dirtyRegion = &tmpDirtyRegion;
     }
+
+    gfxContextMatrixAutoSaveRestore saver(target);
+    gfxMatrix devPxToCssPxTM = nsSVGUtils::GetCSSPxToDevPxMatrix(aFrame);
+    DebugOnly<bool> invertible = devPxToCssPxTM.Invert();
+    MOZ_ASSERT(invertible);
+    target->SetMatrix(aTransform * devPxToCssPxTM);
+
     SVGPaintCallback paintCallback;
     result =
       nsFilterInstance::PaintFilteredFrame(aFrame, target->GetDrawTarget(),
@@ -1095,113 +1105,127 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
   if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
     aFrame = aFrame->GetParent();
   }
-  gfxRect bbox;
-  nsSVGDisplayableFrame* svg = do_QueryFrame(aFrame);
-  const bool hasSVGLayout = aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT;
-  if (hasSVGLayout || aFrame->IsSVGText() ||
-      // if we evaluate the following, |svg| can only be an outer-<svg> or null
-      (svg && !(aFlags & eUseFrameBoundsForOuterSVG))) {
+
+  if (nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
     // It is possible to apply a gradient, pattern, clipping path, mask or
     // filter to text. When one of these facilities is applied to text
     // the bounding box is the entire text element in all
     // cases.
-    if (aFrame->IsSVGText()) {
-      nsIFrame* ancestor = GetFirstNonAAncestorFrame(aFrame);
-      if (ancestor && ancestor->IsSVGText()) {
-        while (ancestor->GetType() != nsGkAtoms::svgTextFrame) {
-          ancestor = ancestor->GetParent();
-        }
-      }
-      svg = do_QueryFrame(ancestor);
-    }
-    nsIContent* content = aFrame->GetContent();
-    if (content->IsSVGElement() &&
-        !static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
-      return bbox;
-    }
-
-    FrameProperties props = aFrame->Properties();
-
-    if (aFlags == eBBoxIncludeFillGeometry) {
-      gfxRect* prop = props.Get(ObjectBoundingBoxProperty());
-      if (prop) {
-        return *prop;
+    nsIFrame* ancestor = GetFirstNonAAncestorFrame(aFrame);
+    if (ancestor && nsSVGUtils::IsInSVGTextSubtree(ancestor)) {
+      while (ancestor->GetType() != nsGkAtoms::svgTextFrame) {
+        ancestor = ancestor->GetParent();
       }
     }
-
-    gfxMatrix matrix;
-    if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
-      // The spec says getBBox "Returns the tight bounding box in *current user
-      // space*". So we should really be doing this for all elements, but that
-      // needs investigation to check that we won't break too much content.
-      // NOTE: When changing this to apply to other frame types, make sure to
-      // also update nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset.
-      MOZ_ASSERT(content->IsSVGElement(), "bad cast");
-      nsSVGElement *element = static_cast<nsSVGElement*>(content);
-      matrix = element->PrependLocalTransformsTo(matrix, eChildToUserSpace);
-    }
-    bbox = svg->GetBBoxContribution(ToMatrix(matrix), aFlags).ToThebesRect();
-    // Account for 'clipped'.
-    if (aFlags & nsSVGUtils::eBBoxIncludeClipped) {
-      gfxRect clipRect(0, 0, 0, 0);
-      float x, y, width, height;
-      gfxMatrix tm;
-      gfxRect fillBBox =
-        svg->GetBBoxContribution(ToMatrix(tm),
-                                 nsSVGUtils::eBBoxIncludeFill).ToThebesRect();
-      x = fillBBox.x;
-      y = fillBBox.y;
-      width = fillBBox.width;
-      height = fillBBox.height;
-      bool hasClip = aFrame->StyleDisplay()->IsScrollableOverflow();
-      if (hasClip) {
-        clipRect =
-          nsSVGUtils::GetClipRectForFrame(aFrame, x, y, width, height);
-          if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame ||
-              aFrame->GetType() == nsGkAtoms::svgUseFrame) {
-            clipRect = matrix.TransformBounds(clipRect);
-          }
-      }
-      nsSVGEffects::EffectProperties effectProperties =
-        nsSVGEffects::GetEffectProperties(aFrame);
-      if (effectProperties.HasInvalidClipPath()) {
-        bbox = gfxRect(0, 0, 0, 0);
-      } else {
-        nsSVGClipPathFrame *clipPathFrame =
-          effectProperties.GetClipPathFrame();
-        if (clipPathFrame) {
-          SVGClipPathElement *clipContent =
-            static_cast<SVGClipPathElement*>(clipPathFrame->GetContent());
-          RefPtr<SVGAnimatedEnumeration> units = clipContent->ClipPathUnits();
-          if (units->AnimVal() == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-            matrix.Translate(gfxPoint(x, y));
-            matrix.Scale(width, height);
-          } else if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
-            matrix.Reset();
-          }
-          bbox =
-            clipPathFrame->GetBBoxForClipPathFrame(bbox, matrix).ToThebesRect();
-        }
-
-        if (hasClip) {
-          bbox = bbox.Intersect(clipRect);
-        }
-
-        if (bbox.IsEmpty()) {
-          bbox = gfxRect(0, 0, 0, 0);
-        }
-      }
-    }
-
-    if (aFlags == eBBoxIncludeFillGeometry) {
-      // Obtaining the bbox for objectBoundingBox calculations is common so we
-      // cache the result for future calls, since calculation can be expensive:
-      props.Set(ObjectBoundingBoxProperty(), new gfxRect(bbox));
-    }
-
-    return bbox;
+    aFrame = ancestor;
   }
-  return nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(aFrame);
+
+  nsSVGDisplayableFrame* svg = do_QueryFrame(aFrame);
+  const bool hasSVGLayout = aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT;
+  if (hasSVGLayout && !svg) {
+    // An SVG frame, but not one that can be displayed directly (for
+    // example, nsGradientFrame). These can't contribute to the bbox.
+    return gfxRect();
+  }
+
+  const bool isOuterSVG = svg && !hasSVGLayout;
+  MOZ_ASSERT_IF(isOuterSVG, aFrame->GetType() == nsGkAtoms::svgOuterSVGFrame);
+  if (!svg ||
+      (isOuterSVG && (aFlags & eUseFrameBoundsForOuterSVG))) {
+    // An HTML element or an SVG outer frame.
+    MOZ_ASSERT(!hasSVGLayout);
+    return nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(aFrame);
+  }
+
+  MOZ_ASSERT(svg);
+
+  nsIContent* content = aFrame->GetContent();
+  if (content->IsSVGElement() &&
+      !static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
+    return gfxRect();
+  }
+
+  FrameProperties props = aFrame->Properties();
+
+  if (aFlags == eBBoxIncludeFillGeometry) {
+    gfxRect* prop = props.Get(ObjectBoundingBoxProperty());
+    if (prop) {
+      return *prop;
+    }
+  }
+
+  gfxMatrix matrix;
+  if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
+    // The spec says getBBox "Returns the tight bounding box in *current user
+    // space*". So we should really be doing this for all elements, but that
+    // needs investigation to check that we won't break too much content.
+    // NOTE: When changing this to apply to other frame types, make sure to
+    // also update nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset.
+    MOZ_ASSERT(content->IsSVGElement(), "bad cast");
+    nsSVGElement *element = static_cast<nsSVGElement*>(content);
+    matrix = element->PrependLocalTransformsTo(matrix, eChildToUserSpace);
+  }
+  gfxRect bbox =
+    svg->GetBBoxContribution(ToMatrix(matrix), aFlags).ToThebesRect();
+  // Account for 'clipped'.
+  if (aFlags & nsSVGUtils::eBBoxIncludeClipped) {
+    gfxRect clipRect(0, 0, 0, 0);
+    float x, y, width, height;
+    gfxMatrix tm;
+    gfxRect fillBBox =
+      svg->GetBBoxContribution(ToMatrix(tm),
+                               nsSVGUtils::eBBoxIncludeFill).ToThebesRect();
+    x = fillBBox.x;
+    y = fillBBox.y;
+    width = fillBBox.width;
+    height = fillBBox.height;
+    bool hasClip = aFrame->StyleDisplay()->IsScrollableOverflow();
+    if (hasClip) {
+      clipRect =
+        nsSVGUtils::GetClipRectForFrame(aFrame, x, y, width, height);
+        if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame ||
+            aFrame->GetType() == nsGkAtoms::svgUseFrame) {
+          clipRect = matrix.TransformBounds(clipRect);
+        }
+    }
+    nsSVGEffects::EffectProperties effectProperties =
+      nsSVGEffects::GetEffectProperties(aFrame);
+    if (effectProperties.HasInvalidClipPath()) {
+      bbox = gfxRect(0, 0, 0, 0);
+    } else {
+      nsSVGClipPathFrame *clipPathFrame =
+        effectProperties.GetClipPathFrame();
+      if (clipPathFrame) {
+        SVGClipPathElement *clipContent =
+          static_cast<SVGClipPathElement*>(clipPathFrame->GetContent());
+        RefPtr<SVGAnimatedEnumeration> units = clipContent->ClipPathUnits();
+        if (units->AnimVal() == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+          matrix.Translate(gfxPoint(x, y));
+          matrix.Scale(width, height);
+        } else if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
+          matrix.Reset();
+        }
+        bbox =
+          clipPathFrame->GetBBoxForClipPathFrame(bbox, matrix).ToThebesRect();
+      }
+
+      if (hasClip) {
+        bbox = bbox.Intersect(clipRect);
+      }
+
+      if (bbox.IsEmpty()) {
+        bbox = gfxRect(0, 0, 0, 0);
+      }
+    }
+  }
+
+  if (aFlags == eBBoxIncludeFillGeometry) {
+    // Obtaining the bbox for objectBoundingBox calculations is common so we
+    // cache the result for future calls, since calculation can be expensive:
+    props.Set(ObjectBoundingBoxProperty(), new gfxRect(bbox));
+  }
+
+  return bbox;
 }
 
 gfxPoint
@@ -1215,7 +1239,7 @@ nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(nsIFrame *aFrame)
 
   // Leaf frames apply their own offset inside their user space.
   if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
-      aFrame->IsSVGText()) {
+      nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
     return nsLayoutUtils::RectToGfxRect(aFrame->GetRect(),
                                          nsPresContext::AppUnitsPerCSSPixel()).TopLeft();
   }
@@ -1379,7 +1403,8 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                                           nsTextFrame* aFrame,
                                           const gfxMatrix& aMatrix)
 {
-  NS_ASSERTION(aFrame->IsSVGText(), "expected an nsTextFrame for SVG text");
+  NS_ASSERTION(nsSVGUtils::IsInSVGTextSubtree(aFrame),
+               "expected an nsTextFrame for SVG text");
   return ::PathExtentsToMaxStrokeExtents(aPathExtents, aFrame, 0.5, aMatrix);
 }
 

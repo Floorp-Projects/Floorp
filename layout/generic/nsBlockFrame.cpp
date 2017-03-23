@@ -468,7 +468,7 @@ nsBlockFrame::GetType() const
 void
 nsBlockFrame::InvalidateFrame(uint32_t aDisplayItemKey)
 {
-  if (IsSVGText()) {
+  if (nsSVGUtils::IsInSVGTextSubtree(this)) {
     NS_ASSERTION(GetParent()->GetType() == nsGkAtoms::svgTextFrame,
                  "unexpected block frame in SVG text");
     GetParent()->InvalidateFrame();
@@ -480,7 +480,7 @@ nsBlockFrame::InvalidateFrame(uint32_t aDisplayItemKey)
 void
 nsBlockFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
 {
-  if (IsSVGText()) {
+  if (nsSVGUtils::IsInSVGTextSubtree(this)) {
     NS_ASSERTION(GetParent()->GetType() == nsGkAtoms::svgTextFrame,
                  "unexpected block frame in SVG text");
     GetParent()->InvalidateFrame();
@@ -1917,7 +1917,7 @@ IsAlignedLeft(uint8_t aAlignment,
               uint8_t aUnicodeBidi,
               nsIFrame* aFrame)
 {
-  return aFrame->IsSVGText() ||
+  return nsSVGUtils::IsInSVGTextSubtree(aFrame) ||
          NS_STYLE_TEXT_ALIGN_LEFT == aAlignment ||
          (((NS_STYLE_TEXT_ALIGN_START == aAlignment &&
            NS_STYLE_DIRECTION_LTR == aDirection) ||
@@ -4599,7 +4599,7 @@ nsBlockFrame::PlaceLine(BlockReflowInput& aState,
    * In other words, isLastLine really means isLastLineAndWeCare.
    */
   bool isLastLine =
-    !IsSVGText() &&
+    !nsSVGUtils::IsInSVGTextSubtree(this) &&
     ((NS_STYLE_TEXT_ALIGN_AUTO != styleText->mTextAlignLast ||
       NS_STYLE_TEXT_ALIGN_JUSTIFY == styleText->mTextAlign) &&
      (aLineLayout.GetLineEndsInBR() ||

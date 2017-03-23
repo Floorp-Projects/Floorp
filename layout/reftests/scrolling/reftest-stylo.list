@@ -7,7 +7,7 @@ HTTP == fixed-opacity-1.html fixed-opacity-1.html
 HTTP == fixed-opacity-2.html fixed-opacity-2.html
 == fixed-text-1.html fixed-text-1.html
 HTTP == fixed-text-2.html fixed-text-2.html
-fails == iframe-border-radius.html iframe-border-radius.html
+== iframe-border-radius.html iframe-border-radius.html
 == image-1.html image-1.html
 == opacity-mixed-scrolling-1.html opacity-mixed-scrolling-1.html
 fails == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html

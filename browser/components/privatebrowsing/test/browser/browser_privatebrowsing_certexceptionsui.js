@@ -21,7 +21,7 @@ function test() {
   // Test the certificate exceptions dialog
   function doTest() {
     let params = {
-      exceptionAdded : false,
+      exceptionAdded: false,
       location: INVALID_CERT_LOCATION,
       prefetchCert: true,
     };

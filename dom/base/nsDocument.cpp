@@ -106,7 +106,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
@@ -188,7 +188,6 @@
 #include "mozilla/dom/nsCSPUtils.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsHTMLCSSStyleSheet.h"
-#include "SVGAttrAnimationRuleProcessor.h"
 #include "mozilla/dom/DOMImplementation.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Comment.h"
@@ -2301,11 +2300,6 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet();
   }
 
-  if (!mSVGAttrAnimationRuleProcessor) {
-    mSVGAttrAnimationRuleProcessor =
-      new mozilla::SVGAttrAnimationRuleProcessor();
-  }
-
   // Now set up our style sets
   nsCOMPtr<nsIPresShell> shell = GetShell();
   if (shell) {
@@ -2723,7 +2717,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   if (cspSandboxFlags & SANDBOXED_ORIGIN) {
     // If the new CSP sandbox flags do not have the allow-same-origin flag
     // reset the document principal to a null principal
-    principal = nsNullPrincipal::Create();
+    principal = NullPrincipal::Create();
     SetPrincipal(principal);
   }
 
@@ -12374,12 +12368,6 @@ nsDocument::DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
   aWindowSizes->mDOMOtherSize +=
     mAttrStyleSheet ?
     mAttrStyleSheet->DOMSizeOfIncludingThis(aWindowSizes->mMallocSizeOf) :
-    0;
-
-  aWindowSizes->mDOMOtherSize +=
-    mSVGAttrAnimationRuleProcessor ?
-    mSVGAttrAnimationRuleProcessor->DOMSizeOfIncludingThis(
-                                      aWindowSizes->mMallocSizeOf) :
     0;
 
   aWindowSizes->mDOMOtherSize +=

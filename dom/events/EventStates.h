@@ -12,7 +12,7 @@
 
 namespace mozilla {
 
-#define NS_EVENT_STATE_HIGHEST_SERVO_BIT 19
+#define NS_EVENT_STATE_HIGHEST_SERVO_BIT 21
 
 /**
  * EventStates is the class used to represent the event states of nsIContent
@@ -238,6 +238,10 @@ private:
 #define NS_EVENT_STATE_HANDLER_DISABLED NS_DEFINE_EVENT_STATE_MACRO(18)
 // Handler for the content has crashed
 #define NS_EVENT_STATE_HANDLER_CRASHED NS_DEFINE_EVENT_STATE_MACRO(19)
+// Content is required.
+#define NS_EVENT_STATE_REQUIRED      NS_DEFINE_EVENT_STATE_MACRO(20)
+// Content is optional (and can be required).
+#define NS_EVENT_STATE_OPTIONAL      NS_DEFINE_EVENT_STATE_MACRO(21)
 
 /*
  * Bits below here do not have Servo-related ordering constraints.
@@ -247,11 +251,7 @@ private:
  */
 
 // Drag is hovering over content.
-#define NS_EVENT_STATE_DRAGOVER      NS_DEFINE_EVENT_STATE_MACRO(20)
-// Content is required.
-#define NS_EVENT_STATE_REQUIRED      NS_DEFINE_EVENT_STATE_MACRO(21)
-// Content is optional (and can be required).
-#define NS_EVENT_STATE_OPTIONAL      NS_DEFINE_EVENT_STATE_MACRO(22)
+#define NS_EVENT_STATE_DRAGOVER      NS_DEFINE_EVENT_STATE_MACRO(22)
 // Link has been visited.
 #define NS_EVENT_STATE_VISITED       NS_DEFINE_EVENT_STATE_MACRO(23)
 // Link hasn't been visited.

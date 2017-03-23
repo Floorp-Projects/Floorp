@@ -16,7 +16,7 @@ var checkExists = function(num) { do_check_true(num > 0); next_test(); }
 var checkNotExists = function(num) { do_check_true(!num); next_test(); }
 
 var TestObserver = {
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   observe(subject, topic, data) {
     do_check_eq(topic, "satchel-storage-changed");

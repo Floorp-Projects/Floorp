@@ -1115,9 +1115,6 @@ protected:
                                           // download to complete (or fallback
                                           // timer to fire)
 
-    // xxx - gfxPangoFontGroup skips UpdateUserFonts
-    bool                    mSkipUpdateUserFonts;
-
     /**
      * Textrun creation short-cuts for special cases where we don't need to
      * call a font shaper to generate glyphs.

@@ -12,6 +12,13 @@
 #include <pthread.h>
 #endif
 
+#ifdef XP_WIN
+#include <process.h>
+#define getpid _getpid
+#else
+#include <unistd.h> // for getpid()
+#endif
+
 ThreadInfo::ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
                        mozilla::NotNull<PseudoStack*> aPseudoStack,
                        void* aStackTop)
@@ -23,6 +30,7 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
   , mStackTop(aStackTop)
   , mPendingDelete(false)
   , mHasProfile(false)
+  , mLastSample(aThreadId)
 {
   MOZ_COUNT_CTOR(ThreadInfo);
   mThread = NS_GetCurrentThread();
@@ -137,7 +145,8 @@ ThreadInfo::StreamSamplesAndMarkers(ProfileBuffer* aBuffer,
                          XRE_ChildProcessTypeToString(XRE_GetProcessType()));
 
   aWriter.StringProperty("name", Name());
-  aWriter.IntProperty("tid", static_cast<int>(mThreadId));
+  aWriter.IntProperty("tid", static_cast<int64_t>(mThreadId));
+  aWriter.IntProperty("pid", static_cast<int64_t>(getpid()));
 
   aWriter.StartObjectProperty("samples");
   {
@@ -259,4 +268,3 @@ ThreadInfo::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 
   return n;
 }
-

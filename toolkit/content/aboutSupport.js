@@ -134,7 +134,7 @@ var snapshotFormatters = {
       }
       return $.new("tr", [
         $.new("td", [
-          $.new("a", crash.id, null, {href : reportURL + crash.id})
+          $.new("a", crash.id, null, {href: reportURL + crash.id})
         ]),
         $.new("td", formattedDate)
       ]);
@@ -171,7 +171,7 @@ var snapshotFormatters = {
         $.new("td", experiment.active),
         $.new("td", experiment.endDate),
         $.new("td", [
-          $.new("a", experiment.detailURL, null, {href : experiment.detailURL, })
+          $.new("a", experiment.detailURL, null, {href: experiment.detailURL, })
         ]),
         $.new("td", experiment.branch),
       ]);
@@ -684,9 +684,9 @@ function assembleFromGraphicsFailure(i, data) {
     what = "Assert";
     message = message.substring(8);
   }
-  let assembled = {"index" : index,
-                   "header" : ("(#" + index + ") " + what),
-                   "message" : message};
+  let assembled = {"index": index,
+                   "header": ("(#" + index + ") " + what),
+                   "message": message};
   return assembled;
 }
 

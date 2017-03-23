@@ -11,6 +11,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/intl/OSPreferences.h"
 #include "nsIObserverService.h"
+#include "nsStringEnumerator.h"
 #include "nsIToolkitChromeRegistry.h"
 
 #ifdef ENABLE_INTL_API
@@ -170,6 +171,33 @@ LocaleService::GetRequestedLocales(nsTArray<nsCString>& aRetVal)
   // we'll want to allow user to specify a list of requested locales.
   aRetVal.AppendElement(locale);
   return true;
+}
+
+bool
+LocaleService::GetAvailableLocales(nsTArray<nsCString>& aRetVal)
+{
+  nsCOMPtr<nsIToolkitChromeRegistry> cr =
+    mozilla::services::GetToolkitChromeRegistryService();
+
+  nsCOMPtr<nsIUTF8StringEnumerator> localesEnum;
+
+  nsresult rv =
+    cr->GetLocalesForPackage(NS_LITERAL_CSTRING("global"), getter_AddRefs(localesEnum));
+  if (!NS_SUCCEEDED(rv)) {
+    return false;
+  }
+
+  bool more;
+  while (NS_SUCCEEDED(rv = localesEnum->HasMore(&more)) && more) {
+    nsAutoCString localeStr;
+    rv = localesEnum->GetNext(localeStr);
+    if (!NS_SUCCEEDED(rv)) {
+      return false;
+    }
+
+    aRetVal.AppendElement(localeStr);
+  }
+  return !aRetVal.IsEmpty();
 }
 
 void
@@ -659,5 +687,22 @@ LocaleService::SetRequestedLocales(const char** aRequested,
   }
 
   Preferences::SetBool(MATCH_OS_LOCALE_PREF, aRequestedCount == 0);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LocaleService::GetAvailableLocales(uint32_t* aCount, char*** aOutArray)
+{
+  AutoTArray<nsCString, 100> availableLocales;
+  bool res = GetAvailableLocales(availableLocales);
+
+  if (!res) {
+    NS_ERROR("Couldn't retrieve available locales!");
+    return NS_ERROR_FAILURE;
+  }
+
+  *aCount = availableLocales.Length();
+  *aOutArray = CreateOutArray(availableLocales);
+
   return NS_OK;
 }

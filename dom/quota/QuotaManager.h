@@ -398,7 +398,7 @@ public:
                    nsACString* aOrigin);
 
   static bool
-  IsOriginWhitelistedForPersistentStorage(const nsACString& aOrigin);
+  IsOriginInternal(const nsACString& aOrigin);
 
   static void
   ChromeOrigin(nsACString& aOrigin);

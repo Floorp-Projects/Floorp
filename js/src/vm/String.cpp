@@ -928,6 +928,9 @@ AutoStableStringChars::init(JSContext* cx, JSString* s)
 
     MOZ_ASSERT(state_ == Uninitialized);
 
+    if (linearString->isExternal() && !linearString->ensureFlat(cx))
+        return false;
+
     // If the chars are inline then we need to copy them since they may be moved
     // by a compacting GC.
     if (baseIsInline(linearString)) {
@@ -958,6 +961,9 @@ AutoStableStringChars::initTwoByte(JSContext* cx, JSString* s)
 
     if (linearString->hasLatin1Chars())
         return copyAndInflateLatin1Chars(cx, linearString);
+
+    if (linearString->isExternal() && !linearString->ensureFlat(cx))
+        return false;
 
     // If the chars are inline then we need to copy them since they may be moved
     // by a compacting GC.
