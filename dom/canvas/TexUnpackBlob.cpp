@@ -291,6 +291,25 @@ TexUnpackBlob::TexUnpackBlob(const WebGLContext* webgl, TexImageTarget target,
     MOZ_ASSERT_IF(!IsTarget3D(target), mDepth == 1);
 }
 
+static bool
+HasColorAndAlpha(const WebGLTexelFormat format)
+{
+    switch (format) {
+    case WebGLTexelFormat::RA8:
+    case WebGLTexelFormat::RA16F:
+    case WebGLTexelFormat::RA32F:
+    case WebGLTexelFormat::RGBA8:
+    case WebGLTexelFormat::RGBA5551:
+    case WebGLTexelFormat::RGBA4444:
+    case WebGLTexelFormat::RGBA16F:
+    case WebGLTexelFormat::RGBA32F:
+    case WebGLTexelFormat::BGRA8:
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool
 TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
                                const uint32_t rowLength, const uint32_t rowCount,
@@ -314,16 +333,18 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
     const auto dstOrigin = gl::OriginPos::BottomLeft;
 
     if (srcFormat != dstFormat) {
-        webgl->GeneratePerfWarning("%s: Conversion requires pixel reformatting.",
-                                   funcName);
-    } else if (mSrcIsPremult != dstIsPremult) {
+        webgl->GeneratePerfWarning("%s: Conversion requires pixel reformatting. (%u->%u)",
+                                   funcName, uint32_t(srcFormat),
+                                   uint32_t(dstFormat));
+    } else if (mSrcIsPremult != dstIsPremult && HasColorAndAlpha(srcFormat)) {
         webgl->GeneratePerfWarning("%s: Conversion requires change in"
-                                   "alpha-premultiplication.",
+                                   " alpha-premultiplication.",
                                    funcName);
     } else if (srcOrigin != dstOrigin) {
         webgl->GeneratePerfWarning("%s: Conversion requires y-flip.", funcName);
     } else if (srcStride != dstStride) {
-        webgl->GeneratePerfWarning("%s: Conversion requires change in stride.", funcName);
+        webgl->GeneratePerfWarning("%s: Conversion requires change in stride. (%u->%u)",
+                                   funcName, uint32_t(srcStride), uint32_t(dstStride));
     } else {
         return true;
     }
