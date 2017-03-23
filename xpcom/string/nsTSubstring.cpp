@@ -11,6 +11,11 @@
 
 using double_conversion::DoubleToStringConverter;
 
+const nsTSubstring_CharT::size_type nsTSubstring_CharT::kMaxCapacity =
+    (nsTSubstring_CharT::size_type(-1) /
+        2 - sizeof(nsStringBuffer)) /
+    sizeof(nsTSubstring_CharT::char_type) - 2;
+
 #ifdef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
 nsTSubstring_CharT::nsTSubstring_CharT(char_type* aData, size_type aLength,
                                        uint32_t aFlags)
@@ -54,13 +59,8 @@ nsTSubstring_CharT::MutatePrep(size_type aCapacity, char_type** aOldData,
   // to be allocating 2GB+ strings anyway.
   static_assert((sizeof(nsStringBuffer) & 0x1) == 0,
                 "bad size for nsStringBuffer");
-  const size_type kMaxCapacity =
-    (size_type(-1) / 2 - sizeof(nsStringBuffer)) / sizeof(char_type) - 2;
-  if (aCapacity > kMaxCapacity) {
-    // Also assert for |aCapacity| equal to |size_type(-1)|, since we used to
-    // use that value to flag immutability.
-    NS_ASSERTION(aCapacity != size_type(-1), "Bogus capacity");
-    return false;
+  if (!CheckCapacity(aCapacity)) {
+      return false;
   }
 
   // |curCapacity == 0| means that the buffer is immutable or 0-sized, so we
@@ -507,6 +507,8 @@ nsTSubstring_CharT::Adopt(char_type* aData, size_type aLength)
     if (aLength == size_type(-1)) {
       aLength = char_traits::length(aData);
     }
+
+    MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "adopting a too-long string");
 
     mData = aData;
     mLength = aLength;
