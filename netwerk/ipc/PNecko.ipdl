@@ -116,7 +116,7 @@ parent:
                         nsString password, nsString domain);
   async OnAuthCancelled(uint64_t callbackId, bool userCancel);
 
-  async RemoveRequestContext(nsCString rcid);
+  async RemoveRequestContext(uint64_t rcid);
 
   async PAltDataOutputStream(nsCString type, PHttpChannel channel);
 
