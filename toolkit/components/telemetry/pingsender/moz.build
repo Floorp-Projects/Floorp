@@ -15,6 +15,10 @@ if CONFIG['OS_TARGET'] != 'Android':
         '/toolkit/crashreporter/google-breakpad/src',
     ]
 
+    USE_LIBS += [
+        'zlib',
+    ]
+
 if CONFIG['OS_TARGET'] == 'WINNT':
     UNIFIED_SOURCES += [
         'pingsender_win.cpp',
