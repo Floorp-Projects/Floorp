@@ -688,6 +688,9 @@ gfxPlatform::Init()
     #error "No gfxPlatform implementation available"
 #endif
     gPlatform->InitAcceleration();
+    if (XRE_IsParentProcess()) {
+      gPlatform->InitWebRenderConfig();
+    }
 
     if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
       GPUProcessManager* gpu = GPUProcessManager::Get();
@@ -2209,7 +2212,6 @@ gfxPlatform::InitAcceleration()
     Preferences::RegisterCallbackAndCall(VideoDecodingFailedChangedCallback,
                                          "media.hardware-video-decoding.failed");
     InitGPUProcessPrefs();
-    InitWebRenderConfig();
   }
 }
 
