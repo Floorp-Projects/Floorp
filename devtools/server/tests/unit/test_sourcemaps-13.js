@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Test that we don't permanently cache source maps across reloads.
  */
@@ -12,17 +14,17 @@ var gTabClient;
 
 const {SourceNode} = require("source-map");
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-source-map", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      gTabClient = aTabClient;
-      setup_code();
-    });
+    attachTestTabAndResume(gClient, "test-source-map",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             gTabClient = tabClient;
+                             setup_code();
+                           });
   });
   do_test_pending();
 }
@@ -92,7 +94,7 @@ function test_new_sources() {
 
     // Should now have TEMP_FILE_2 as a source.
     do_check_eq(sources.length, 1);
-    let s = sources.filter(s => s.url === getFileUrl(TEMP_FILE_2, true))[0];
+    let s = sources.filter(source => source.url === getFileUrl(TEMP_FILE_2, true))[0];
     do_check_true(!!s);
 
     finish_test();

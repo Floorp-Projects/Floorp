@@ -27,9 +27,11 @@ class DecodeToSurfaceRunnable : public Runnable
 public:
   DecodeToSurfaceRunnable(RefPtr<SourceSurface>& aSurface,
                           nsIInputStream* aInputStream,
+                          ImageOps::ImageBuffer* aImageBuffer,
                           const ImageTestCase& aTestCase)
     : mSurface(aSurface)
     , mInputStream(aInputStream)
+    , mImageBuffer(aImageBuffer)
     , mTestCase(aTestCase)
   { }
 
@@ -41,16 +43,35 @@ public:
 
   void Go()
   {
-    mSurface =
-      ImageOps::DecodeToSurface(mInputStream,
-                                nsDependentCString(mTestCase.mMimeType),
-                                imgIContainer::DECODE_FLAGS_DEFAULT);
+    Maybe<IntSize> outputSize;
+    if (mTestCase.mOutputSize != mTestCase.mSize) {
+      outputSize.emplace(mTestCase.mOutputSize);
+    }
+
+    if (mImageBuffer) {
+      mSurface =
+        ImageOps::DecodeToSurface(mImageBuffer,
+                                  nsDependentCString(mTestCase.mMimeType),
+                                  imgIContainer::DECODE_FLAGS_DEFAULT,
+                                  outputSize);
+    } else {
+      mSurface =
+        ImageOps::DecodeToSurface(mInputStream,
+                                  nsDependentCString(mTestCase.mMimeType),
+                                  imgIContainer::DECODE_FLAGS_DEFAULT,
+                                  outputSize);
+    }
     ASSERT_TRUE(mSurface != nullptr);
 
     EXPECT_TRUE(mSurface->IsDataSourceSurface());
     EXPECT_TRUE(mSurface->GetFormat() == SurfaceFormat::B8G8R8X8 ||
                 mSurface->GetFormat() == SurfaceFormat::B8G8R8A8);
-    EXPECT_EQ(mTestCase.mSize, mSurface->GetSize());
+
+    if (outputSize) {
+      EXPECT_EQ(*outputSize, mSurface->GetSize());
+    } else {
+      EXPECT_EQ(mTestCase.mSize, mSurface->GetSize());
+    }
 
     EXPECT_TRUE(IsSolidColor(mSurface, BGRAColor::Green(),
                              mTestCase.mFlags & TEST_CASE_IS_FUZZY ? 1 : 0));
@@ -59,14 +80,19 @@ public:
 private:
   RefPtr<SourceSurface>& mSurface;
   nsCOMPtr<nsIInputStream> mInputStream;
+  RefPtr<ImageOps::ImageBuffer> mImageBuffer;
   ImageTestCase mTestCase;
 };
 
 static void
-RunDecodeToSurface(const ImageTestCase& aTestCase)
+RunDecodeToSurface(const ImageTestCase& aTestCase,
+                   ImageOps::ImageBuffer* aImageBuffer = nullptr)
 {
-  nsCOMPtr<nsIInputStream> inputStream = LoadFile(aTestCase.mPath);
-  ASSERT_TRUE(inputStream != nullptr);
+  nsCOMPtr<nsIInputStream> inputStream;
+  if (!aImageBuffer) {
+    inputStream = LoadFile(aTestCase.mPath);
+    ASSERT_TRUE(inputStream != nullptr);
+  }
 
   nsCOMPtr<nsIThread> thread;
   nsresult rv =
@@ -77,7 +103,7 @@ RunDecodeToSurface(const ImageTestCase& aTestCase)
   // DecodeToSurface doesn't require any main-thread-only code.
   RefPtr<SourceSurface> surface;
   nsCOMPtr<nsIRunnable> runnable =
-    new DecodeToSurfaceRunnable(surface, inputStream, aTestCase);
+    new DecodeToSurfaceRunnable(surface, inputStream, aImageBuffer, aTestCase);
   thread->Dispatch(runnable, nsIThread::DISPATCH_SYNC);
 
   thread->Shutdown();
@@ -121,4 +147,44 @@ TEST_F(ImageDecodeToSurface, Corrupt)
                               nsDependentCString(testCase.mMimeType),
                               imgIContainer::DECODE_FLAGS_DEFAULT);
   EXPECT_TRUE(surface == nullptr);
+}
+
+TEST_F(ImageDecodeToSurface, ICOMultipleSizes)
+{
+  ImageTestCase testCase = GreenMultipleSizesICOTestCase();
+
+  nsCOMPtr<nsIInputStream> inputStream = LoadFile(testCase.mPath);
+  ASSERT_TRUE(inputStream != nullptr);
+
+  RefPtr<ImageOps::ImageBuffer> buffer =
+    ImageOps::CreateImageBuffer(inputStream);
+  ASSERT_TRUE(buffer != nullptr);
+
+  ImageMetadata metadata;
+  nsresult rv = ImageOps::DecodeMetadata(buffer,
+                                         nsDependentCString(testCase.mMimeType),
+                                         metadata);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_TRUE(metadata.HasSize());
+  EXPECT_EQ(testCase.mSize, metadata.GetSize());
+
+  const nsTArray<IntSize>& nativeSizes = metadata.GetNativeSizes();
+  ASSERT_EQ(6u, nativeSizes.Length());
+
+  IntSize expectedSizes[] = {
+    IntSize(16, 16),
+    IntSize(32, 32),
+    IntSize(64, 64),
+    IntSize(128, 128),
+    IntSize(256, 256),
+    IntSize(256, 128),
+  };
+
+  for (int i = 0; i < 6; ++i) {
+    EXPECT_EQ(expectedSizes[i], nativeSizes[i]);
+
+    // Request decoding at native size
+    testCase.mOutputSize = nativeSizes[i];
+    RunDecodeToSurface(testCase, buffer);
+  }
 }

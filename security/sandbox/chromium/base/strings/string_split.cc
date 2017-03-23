@@ -227,18 +227,22 @@ bool SplitStringIntoKeyValuePairs(StringPiece input,
   return success;
 }
 
-void SplitStringUsingSubstr(StringPiece16 input,
-                            StringPiece16 delimiter,
-                            std::vector<string16>* result) {
-  SplitStringUsingSubstrT(input, delimiter, TRIM_WHITESPACE, SPLIT_WANT_ALL,
-                          result);
+std::vector<string16> SplitStringUsingSubstr(StringPiece16 input,
+                                             StringPiece16 delimiter,
+                                             WhitespaceHandling whitespace,
+                                             SplitResult result_type) {
+  std::vector<string16> result;
+  SplitStringUsingSubstrT(input, delimiter, whitespace, result_type, &result);
+  return result;
 }
 
-void SplitStringUsingSubstr(StringPiece input,
-                            StringPiece delimiter,
-                            std::vector<std::string>* result) {
-  SplitStringUsingSubstrT(input, delimiter, TRIM_WHITESPACE, SPLIT_WANT_ALL,
-                          result);
+std::vector<std::string> SplitStringUsingSubstr(StringPiece input,
+                                                StringPiece delimiter,
+                                                WhitespaceHandling whitespace,
+                                                SplitResult result_type) {
+  std::vector<std::string> result;
+  SplitStringUsingSubstrT(input, delimiter, whitespace, result_type, &result);
+  return result;
 }
 
 std::vector<StringPiece16> SplitStringPieceUsingSubstr(
