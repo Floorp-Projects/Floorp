@@ -1,3 +1,5 @@
+//error: manager `multimanDupMgrsMgr' appears multiple times
+
 include protocol multimanDupMgrsMgr;
 
 protocol multimanDupMgrs {

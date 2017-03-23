@@ -254,9 +254,6 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-0
 == mapped-attr-long-url-1.svg mapped-attr-long-url-1.svg
 == mapped-attr-long-url-2.svg mapped-attr-long-url-2.svg
 
-# interaction between xml mapped attributes and their css equivalents
-== mapped-attr-vs-css-prop-1.svg mapped-attr-vs-css-prop-1.svg
-
 == min-1.svg min-1.svg
 
 == smil-transitions-interaction-1a.svg smil-transitions-interaction-1a.svg

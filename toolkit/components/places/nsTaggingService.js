@@ -591,7 +591,7 @@ function TagAutoCompleteSearch() {
 }
 
 TagAutoCompleteSearch.prototype = {
-  _stopped : false,
+  _stopped: false,
 
   /*
    * Search for a given string and notify a listener (either synchronously

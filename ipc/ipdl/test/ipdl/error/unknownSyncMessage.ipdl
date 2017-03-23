@@ -1,3 +1,5 @@
+//error: Unknown sync IPC message unknownSyncMessage::Msg
+
 sync protocol unknownSyncMessage {
 parent:
     sync Msg();

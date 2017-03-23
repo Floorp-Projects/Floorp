@@ -75,9 +75,9 @@ FormHistoryStartup.prototype = {
         let entries = message.data;
         let changes = entries.map(function(entry) {
           return {
-            op : "bump",
-            fieldname : entry.name,
-            value : entry.value,
+            op: "bump",
+            fieldname: entry.name,
+            value: entry.value,
           }
         });
 

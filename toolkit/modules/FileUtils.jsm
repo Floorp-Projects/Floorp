@@ -16,15 +16,15 @@ XPCOMUtils.defineLazyServiceGetter(this, "gDirService",
                                    "nsIProperties");
 
 this.FileUtils = {
-  MODE_RDONLY   : 0x01,
-  MODE_WRONLY   : 0x02,
-  MODE_RDWR     : 0x04,
-  MODE_CREATE   : 0x08,
-  MODE_APPEND   : 0x10,
-  MODE_TRUNCATE : 0x20,
+  MODE_RDONLY: 0x01,
+  MODE_WRONLY: 0x02,
+  MODE_RDWR: 0x04,
+  MODE_CREATE: 0x08,
+  MODE_APPEND: 0x10,
+  MODE_TRUNCATE: 0x20,
 
-  PERMS_FILE      : 0o644,
-  PERMS_DIRECTORY : 0o755,
+  PERMS_FILE: 0o644,
+  PERMS_DIRECTORY: 0o755,
 
   /**
    * Gets a file at the specified hierarchy under a nsIDirectoryService key.

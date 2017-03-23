@@ -512,18 +512,18 @@ var BookmarkPropertiesPanel = {
     var childTransactions = [];
 
     if (this._description) {
-      let annoObj = { name   : PlacesUIUtils.DESCRIPTION_ANNO,
-                      type   : Ci.nsIAnnotationService.TYPE_STRING,
-                      flags  : 0,
-                      value  : this._description,
+      let annoObj = { name: PlacesUIUtils.DESCRIPTION_ANNO,
+                      type: Ci.nsIAnnotationService.TYPE_STRING,
+                      flags: 0,
+                      value: this._description,
                       expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
       let editItemTxn = new PlacesSetItemAnnotationTransaction(-1, annoObj);
       childTransactions.push(editItemTxn);
     }
 
     if (this._loadInSidebar) {
-      let annoObj = { name   : PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO,
-                      value  : true };
+      let annoObj = { name: PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO,
+                      value: true };
       let setLoadTxn = new PlacesSetItemAnnotationTransaction(-1, annoObj);
       childTransactions.push(setLoadTxn);
     }

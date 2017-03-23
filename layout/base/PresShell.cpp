@@ -4088,8 +4088,8 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     "Display"
   };
 
-  PROFILER_LABEL_PRINTF("PresShell", "Flush",
-    js::ProfileEntry::Category::GRAPHICS, "(FlushType::%s)",
+  PROFILER_LABEL_DYNAMIC("PresShell", "Flush",
+    js::ProfileEntry::Category::GRAPHICS,
     flushTypeNames[flushType]);
 #endif
 
@@ -6357,9 +6357,9 @@ PresShell::Paint(nsView*        aViewToPaint,
   if (contentRoot) {
     uri = contentRoot->GetDocumentURI();
   }
-  PROFILER_LABEL_PRINTF("PresShell", "Paint",
-    js::ProfileEntry::Category::GRAPHICS, "(%s)",
-    uri ? uri->GetSpecOrDefault().get() : "N/A");
+  nsCString uriString = uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A");
+  PROFILER_LABEL_DYNAMIC("PresShell", "Paint",
+    js::ProfileEntry::Category::GRAPHICS, Move(uriString));
 #endif
 
   Maybe<js::AutoAssertNoContentJS> nojs;
@@ -8059,16 +8059,28 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
             nsPresContext::InteractionType::eKeyInteraction,
             aEvent->mTimeStamp);
         }
+
+        Telemetry::AccumulateTimeDelta(Telemetry::KEYBOARD_EVENT_RECEIVED_MS, aEvent->mTimeStamp);
         break;
       }
       case eMouseDown:
       case eMouseUp:
+        Telemetry::AccumulateTimeDelta(Telemetry::MOUSE_CLICK_EVENT_RECEIVED_MS, aEvent->mTimeStamp);
+        MOZ_FALLTHROUGH;
       case ePointerDown:
       case ePointerUp:
         isHandlingUserInput = true;
         mPresContext->RecordInteractionTime(
           nsPresContext::InteractionType::eClickInteraction,
           aEvent->mTimeStamp);
+        break;
+
+      case eMouseMove:
+        if (aEvent->mFlags.mHandledByAPZ) {
+          Telemetry::AccumulateTimeDelta(Telemetry::APZ_HANDLED_MOUSE_MOVE_EVENT_RECEIVED_MS, aEvent->mTimeStamp);
+        } else {
+          Telemetry::AccumulateTimeDelta(Telemetry::MOUSE_MOVE_EVENT_RECEIVED_MS, aEvent->mTimeStamp);
+        }
         break;
 
       case eDrop: {
@@ -8082,6 +8094,18 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
         }
         break;
       }
+
+      case eWheel:
+        if (aEvent->mFlags.mHandledByAPZ) {
+          Telemetry::AccumulateTimeDelta(Telemetry::APZ_HANDLED_WHEEL_EVENT_RECEIVED_MS, aEvent->mTimeStamp);
+        }
+        break;
+
+      case eTouchMove:
+        if (aEvent->mFlags.mHandledByAPZ) {
+          Telemetry::AccumulateTimeDelta(Telemetry::APZ_HANDLED_TOUCH_MOVE_EVENT_RECEIVED_MS, aEvent->mTimeStamp);
+        }
+        break;
 
       default:
         break;
@@ -9176,9 +9200,9 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
 
 #ifdef MOZ_GECKO_PROFILER
   nsIURI* uri = mDocument->GetDocumentURI();
-  PROFILER_LABEL_PRINTF("PresShell", "DoReflow",
-    js::ProfileEntry::Category::GRAPHICS, "(%s)",
-    uri ? uri->GetSpecOrDefault().get() : "N/A");
+  nsCString uriString = uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A");
+  PROFILER_LABEL_DYNAMIC("PresShell", "DoReflow",
+    js::ProfileEntry::Category::GRAPHICS, Move(uriString));
 #endif
 
   nsDocShell* docShell = static_cast<nsDocShell*>(GetPresContext()->GetDocShell());

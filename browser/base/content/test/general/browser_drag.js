@@ -11,14 +11,14 @@ function test() {
   var urlString = value + "\n" + content.document.title;
   var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
   var expected = [ [
-    { type  : "text/x-moz-url",
-      data  : urlString },
-    { type  : "text/uri-list",
-      data  : value },
-    { type  : "text/plain",
-      data  : value },
-    { type  : "text/html",
-      data  : htmlString }
+    { type: "text/x-moz-url",
+      data: urlString },
+    { type: "text/uri-list",
+      data: value },
+    { type: "text/plain",
+      data: value },
+    { type: "text/html",
+      data: htmlString }
   ] ];
   // set the valid attribute so dropping is allowed
   var oldstate = gURLBar.getAttribute("pageproxystate");

@@ -4,6 +4,7 @@
 
 import os
 import platform
+import signal
 import subprocess
 import sys
 
@@ -109,6 +110,7 @@ def update_properties():
 class FirefoxBrowser(Browser):
     used_ports = set()
     init_timeout = 60
+    shutdown_timeout = 60
 
     def __init__(self, logger, binary, prefs_root, debug_info=None,
                  symbols_path=None, stackwalk_binary=None, certutil_binary=None,
@@ -190,11 +192,19 @@ class FirefoxBrowser(Browser):
 
         return preferences
 
-    def stop(self):
-        self.logger.debug("Stopping browser")
-        if self.runner is not None:
+    def stop(self, force=False):
+        if self.runner is not None and self.runner.is_running():
             try:
-                self.runner.stop()
+                # For Firefox we assume that stopping the runner prompts the
+                # browser to shut down. This allows the leak log to be written
+                for clean, stop_f in [(True, lambda: self.runner.wait(self.shutdown_timeout)),
+                                      (False, lambda: self.runner.stop(signal.SIGTERM)),
+                                      (False, lambda: self.runner.stop(signal.SIGKILL))]:
+                    if not force or not clean:
+                        retcode = stop_f()
+                        if retcode is not None:
+                            self.logger.info("Browser exited with return code %s" % retcode)
+                            break
             except OSError:
                 # This can happen on Windows if the process is already dead
                 pass

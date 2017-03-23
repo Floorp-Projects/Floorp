@@ -32,13 +32,13 @@ var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch
 var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
 
 var proxyAuthinfo = {
-  username : "",
-  password : "",
-  domain   : "",
+  username: "",
+  password: "",
+  domain: "",
 
-  flags : Ci.nsIAuthInformation.AUTH_PROXY,
-  authenticationScheme : "basic",
-  realm : ""
+  flags: Ci.nsIAuthInformation.AUTH_PROXY,
+  authenticationScheme: "basic",
+  realm: ""
 };
 
 // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
@@ -142,22 +142,22 @@ add_task(function* setup() {
 add_task(function* test_noAutologin() {
   // test proxy login (default = no autologin), make sure it prompts.
   state = {
-    msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password. The site says: “Proxy Realm”",
-    title       : "Authentication Required",
-    textValue   : "proxuser",
-    passValue   : "proxpass",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password. The site says: “Proxy Realm”",
+    title: "Authentication Required",
+    textValue: "proxuser",
+    passValue: "proxpass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
+    buttonClick: "ok",
   };
   proxyAuthinfo.username = "";
   proxyAuthinfo.password = "";
@@ -200,22 +200,22 @@ add_task(function* test_autologin() {
 add_task(function* test_autologin_incorrect() {
   // test proxy login (with autologin), ensure it prompts after a failed auth.
   state = {
-    msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password. The site says: “Proxy Realm”",
-    title       : "Authentication Required",
-    textValue   : "proxuser",
-    passValue   : "proxpass",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password. The site says: “Proxy Realm”",
+    title: "Authentication Required",
+    textValue: "proxuser",
+    passValue: "proxpass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
+    buttonClick: "ok",
   };
 
   proxyAuthinfo.username = "";
@@ -238,13 +238,13 @@ add_task(function* test_autologin_incorrect() {
 add_task(function* test_autologin_private() {
   // test proxy login (with autologin), ensure it prompts in Private Browsing mode.
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "proxuser",
-    passValue   : "proxpass",
+    msg: "the message",
+    title: "the title",
+    textValue: "proxuser",
+    passValue: "proxpass",
   };
   action = {
-    buttonClick : "ok",
+    buttonClick: "ok",
   };
 
   proxyAuthinfo.username = "";

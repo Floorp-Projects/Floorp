@@ -73,21 +73,17 @@ to mochitest command.
   * @support
     * test_supports_rules.html [1]
 * test_box_size_keywords.html: moz-prefixed intrinsic size keyword value [64]
-* test_bug229915.html: sibling selector with dynamic change bug 1330885 [5]
 * test_bug357614.html: case-insensitivity for old attrs in attr selector servo/servo#15006 [2]
 * mapped attribute not supported
   * test_bug363146.html [2]
   * test_bug389464.html: also font-size computation [1]
   * test_html_attribute_computed_values.html: also list-style-type [8]
 * test_bug387615.html: servo/servo#15006 [1]
-* test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [3]
+* test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [1]
 * console support:
   * test_bug413958.html `monitorConsole` [3]
   * test_parser_diagnostics_unprintables.html [550]
 * test_bug511909.html: @-moz-document and @media support [4]
-* Style change from DOM API bug 1331301
-  * test_bug534804.html [90]
-  * test_bug73586.html [20]
 * Transition support:
   * test_bug621351.html [4]
   * test_compute_data_with_start_struct.html `transition` [2]
@@ -106,7 +102,6 @@ to mochitest command.
 * ... `mask`: mask-image isn't set properly bug 1347398 [2]
 * ... `fill`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * ... `stroke`: svg paint should distinguish whether there is fallback bug 1347409 [2]
-* ... `#foo`: local ref url should be preserved bug 1347412 [5]
 * character not properly escaped servo/servo#15947
   * test_parse_url.html [4]
   * test_bug829816.html [8]
@@ -265,8 +260,8 @@ to mochitest command.
   * test_page_parser.html [30]
   * test_rule_insertion.html `@page` [4]
 * Stylesheet cloning is somehow busted bug 1348481
-  * test_selectors.html `cloned correctly` [155]
-  * ... `matched clone` [198]
+  * test_selectors.html `cloned correctly` [157]
+  * ... `matched clone` [204]
 * Unsupported prefixed values
   * moz-prefixed gradient functions bug 1337655
     * test_value_storage.html `-moz-linear-gradient` [322]
@@ -393,15 +388,12 @@ to mochitest command.
 * Unsupported pseudo-classes
   * :default ##easy##
     * test_bug302186.html [24]
-  * test_bug98997.html: pseudo-class :empty and :-moz-only-whitespace bug 1337068 [75]
   * :-moz-locale-dir
     * test_selectors.html `:-moz-locale-dir` [15]
   * :-moz-lwtheme-*
     * test_selectors.html `:-moz-lwtheme` [3]
   * :-moz-window-inactive bug 1348489
     * test_selectors.html `:-moz-window-inactive` [2]
-  * :-moz-{first,last}-node
-    * test_selectors.html `:-moz-` [6]
   * :dir
     * test_selectors.html `:dir` [18]
 * issues arround font shorthand servo/servo#15032 servo/servo#15036

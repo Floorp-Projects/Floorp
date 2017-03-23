@@ -100,7 +100,7 @@ child:
    */
   async StartProfiler(ProfilerInitParams params);
   async StopProfiler();
-
+  async PauseProfiler(bool aPause);
   async GatherProfile();
 
   async SettingChanged(PluginSettings settings);

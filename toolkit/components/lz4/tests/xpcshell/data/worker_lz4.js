@@ -27,7 +27,7 @@ function do_check_eq(a, b) {
 }
 
 function do_test_complete() {
-  self.postMessage({kind: "do_test_complete", args:[]});
+  self.postMessage({kind: "do_test_complete", args: []});
 }
 
 self.onmessage = function() {

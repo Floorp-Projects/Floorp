@@ -55,15 +55,15 @@ var security = {
 
       var retval = {
         hostName,
-        cAName : issuerName,
-        encryptionAlgorithm : undefined,
-        encryptionStrength : undefined,
+        cAName: issuerName,
+        encryptionAlgorithm: undefined,
+        encryptionStrength: undefined,
         version: undefined,
         isBroken,
         isMixed,
         isEV,
         cert,
-        certificateTransparency : undefined
+        certificateTransparency: undefined
       };
 
       var version;
@@ -111,15 +111,15 @@ var security = {
     }
     return {
       hostName,
-      cAName : "",
-      encryptionAlgorithm : "",
-      encryptionStrength : 0,
+      cAName: "",
+      encryptionAlgorithm: "",
+      encryptionStrength: 0,
       version: "",
       isBroken,
       isMixed,
       isEV,
-      cert : null,
-      certificateTransparency : null
+      cert: null,
+      certificateTransparency: null
     };
   },
 
@@ -165,7 +165,7 @@ var security = {
       win.focus();
     } else
       window.openDialog("chrome://browser/content/preferences/cookies.xul",
-                        "Browser:Cookies", "", {filterString : eTLD});
+                        "Browser:Cookies", "", {filterString: eTLD});
   },
 
   /**
@@ -175,7 +175,7 @@ var security = {
     LoginHelper.openPasswordManager(window, this._getSecurityInfo().hostName);
   },
 
-  _cert : null
+  _cert: null
 };
 
 function securityOnLoad(uri, windowInfo) {

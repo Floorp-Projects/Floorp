@@ -325,13 +325,13 @@ protected:
 
   void ReaderSuspendedChanged();
 
-  // Inserts MediaData* samples into their respective MediaQueues.
+  // Inserts a sample into the Audio/Video queue.
   // aSample must not be null.
-  void PushAudio(MediaData* aSample);
-  void PushVideo(MediaData* aSample);
+  void PushAudio(AudioData* aSample);
+  void PushVideo(VideoData* aSample);
 
-  void OnAudioPopped(const RefPtr<MediaData>& aSample);
-  void OnVideoPopped(const RefPtr<MediaData>& aSample);
+  void OnAudioPopped(const RefPtr<AudioData>& aSample);
+  void OnVideoPopped(const RefPtr<VideoData>& aSample);
 
   void AudioAudibleChanged(bool aAudible);
 
@@ -339,8 +339,8 @@ protected:
   void SetPlaybackRate(double aPlaybackRate);
   void PreservesPitchChanged();
 
-  MediaQueue<MediaData>& AudioQueue() { return mAudioQueue; }
-  MediaQueue<MediaData>& VideoQueue() { return mVideoQueue; }
+  MediaQueue<AudioData>& AudioQueue() { return mAudioQueue; }
+  MediaQueue<VideoData>& VideoQueue() { return mVideoQueue; }
 
   // True if we are low in decoded audio/video data.
   // May not be invoked when mReader->UseBufferingHeuristics() is false.
@@ -506,10 +506,10 @@ private:
 
   // Queue of audio frames. This queue is threadsafe, and is accessed from
   // the audio, decoder, state machine, and main threads.
-  MediaQueue<MediaData> mAudioQueue;
+  MediaQueue<AudioData> mAudioQueue;
   // Queue of video frames. This queue is threadsafe, and is accessed from
   // the decoder, state machine, and main threads.
-  MediaQueue<MediaData> mVideoQueue;
+  MediaQueue<VideoData> mVideoQueue;
 
   UniquePtr<StateObject> mStateObj;
 
@@ -613,10 +613,11 @@ private:
 
   // Only one of a given pair of ({Audio,Video}DataPromise, WaitForDataPromise)
   // should exist at any given moment.
-  using MediaDataPromise = MediaDecoderReader::MediaDataPromise;
+  using AudioDataPromise = MediaDecoderReader::AudioDataPromise;
+  using VideoDataPromise = MediaDecoderReader::VideoDataPromise;
   using WaitForDataPromise = MediaDecoderReader::WaitForDataPromise;
-  MozPromiseRequestHolder<MediaDataPromise> mAudioDataRequest;
-  MozPromiseRequestHolder<MediaDataPromise> mVideoDataRequest;
+  MozPromiseRequestHolder<AudioDataPromise> mAudioDataRequest;
+  MozPromiseRequestHolder<VideoDataPromise> mVideoDataRequest;
   MozPromiseRequestHolder<WaitForDataPromise> mAudioWaitRequest;
   MozPromiseRequestHolder<WaitForDataPromise> mVideoWaitRequest;
 

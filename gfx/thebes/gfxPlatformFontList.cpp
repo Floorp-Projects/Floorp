@@ -5,6 +5,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/intl/LocaleService.h"
+#include "mozilla/intl/OSPreferences.h"
 
 #include "gfxPlatformFontList.h"
 #include "gfxTextRun.h"
@@ -29,6 +30,7 @@
 
 using namespace mozilla;
 using mozilla::intl::LocaleService;
+using mozilla::intl::OSPreferences;
 
 #define LOG_FONTLIST(args) MOZ_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
                                LogLevel::Debug, args)
@@ -1091,23 +1093,47 @@ gfxPlatformFontList::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], uint32_t &aL
             }
         }
 
+        // Try using app's locale
         nsAutoCString localeStr;
         LocaleService::GetInstance()->GetAppLocaleAsLangTag(localeStr);
 
-        const nsACString& lang = Substring(localeStr, 0, 2);
-        if (lang.EqualsLiteral("ja")) {
-            AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Japanese);
-        } else if (lang.EqualsLiteral("zh")) {
-            const nsACString& region = Substring(localeStr, 3, 2);
-            if (region.EqualsLiteral("CN")) {
-                AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseCN);
-            } else if (region.EqualsLiteral("TW")) {
-                AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseTW);
-            } else if (region.EqualsLiteral("HK")) {
-                AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseHK);
-            }
-        } else if (lang.EqualsLiteral("ko")) {
-            AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Korean);
+        {
+          const nsACString& lang = Substring(localeStr, 0, 2);
+          if (lang.EqualsLiteral("ja")) {
+              AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Japanese);
+          } else if (lang.EqualsLiteral("zh")) {
+              const nsACString& region = Substring(localeStr, 3, 2);
+              if (region.EqualsLiteral("CN")) {
+                  AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseCN);
+              } else if (region.EqualsLiteral("TW")) {
+                  AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseTW);
+              } else if (region.EqualsLiteral("HK")) {
+                  AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseHK);
+              }
+          } else if (lang.EqualsLiteral("ko")) {
+              AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Korean);
+          }
+        }
+
+        // Then test OS locale
+        OSPreferences::GetInstance()->GetSystemLocale(localeStr);
+
+        {
+          const nsACString& lang = Substring(localeStr, 0, 2);
+          if (lang.EqualsLiteral("ja")) {
+              AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Japanese);
+          } else if (lang.EqualsLiteral("zh")) {
+              const nsACString& region = Substring(localeStr, 3, 2);
+              if (region.EqualsLiteral("CN")) {
+                  AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseCN);
+              } else if (region.EqualsLiteral("TW")) {
+                  AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseTW);
+              } else if (region.EqualsLiteral("HK")) {
+                  AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseHK);
+              }
+          } else if (lang.EqualsLiteral("ko")) {
+              AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Korean);
+          }
         }
 
         // last resort... (the order is same as old gfx.)

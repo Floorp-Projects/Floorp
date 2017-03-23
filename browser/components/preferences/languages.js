@@ -5,10 +5,10 @@
 
 var gLanguagesDialog = {
 
-  _availableLanguagesList : [],
-  _acceptLanguages        : { },
+  _availableLanguagesList: [],
+  _acceptLanguages: { },
 
-  _selectedItemID         : null,
+  _selectedItemID: null,
 
   init() {
     if (!this._availableLanguagesList.length)

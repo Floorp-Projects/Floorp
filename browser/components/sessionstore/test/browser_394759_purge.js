@@ -35,7 +35,7 @@ function test() {
   const REMEMBER = Date.now(), FORGET = Math.random();
   let testState = {
     windows: [ { tabs: [{ entries: [{ url: "http://example.com/", triggeringPrincipal_base64 }] }], selected: 1 } ],
-    _closedWindows : [
+    _closedWindows: [
       // _closedWindows[0]
       {
         tabs: [

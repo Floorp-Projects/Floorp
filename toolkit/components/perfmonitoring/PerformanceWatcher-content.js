@@ -34,7 +34,7 @@ let toMsg = function(alerts) {
     for (let k of ["reason", "highestJank", "highestCPOW"]) {
       serializableDetails[k] = details[k];
     }
-    result.push({source:serializableSource, details:serializableDetails});
+    result.push({source: serializableSource, details: serializableDetails});
   }
   return result;
 }

@@ -93,7 +93,7 @@ class Browser(object):
         pass
 
     @abstractmethod
-    def stop(self):
+    def stop(self, force=False):
         """Stop the running browser process."""
         pass
 
@@ -136,7 +136,7 @@ class NullBrowser(Browser):
         per test)"""
         pass
 
-    def stop(self):
+    def stop(self, force=False):
         pass
 
     def pid(self):

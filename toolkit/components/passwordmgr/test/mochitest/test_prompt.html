@@ -96,23 +96,23 @@ add_task(function* setup() {
 
 add_task(function* test_prompt_accept() {
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "abc",
-    passValue   : "",
-    iconClass   : "question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : true,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "abc",
+    passValue: "",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: true,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
-    textField   : "xyz",
+    buttonClick: "ok",
+    textField: "xyz",
   };
   promptDone = handlePrompt(state, action);
   isOk = prompter1.prompt(defaultTitle, defaultMsg, "http://example.com",
@@ -125,22 +125,22 @@ add_task(function* test_prompt_accept() {
 
 add_task(function* test_prompt_cancel() {
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "abc",
-    passValue   : "",
-    iconClass   : "question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : true,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "abc",
+    passValue: "",
+    iconClass: "question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: true,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "cancel",
+    buttonClick: "cancel",
   };
   promptDone = handlePrompt(state, action);
   isOk = prompter1.prompt(defaultTitle, defaultMsg, "http://example.com",
@@ -152,23 +152,23 @@ add_task(function* test_prompt_cancel() {
 add_task(function* test_promptPassword_defaultAccept() {
   // Default password provided, existing logins are ignored.
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "",
-    passValue   : "inputpw",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : true,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "passField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "",
+    passValue: "inputpw",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "passField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
-    passField   : "secret",
+    buttonClick: "ok",
+    passField: "secret",
   };
   pword.value = "inputpw";
   promptDone = handlePrompt(state, action);
@@ -182,22 +182,22 @@ add_task(function* test_promptPassword_defaultAccept() {
 add_task(function* test_promptPassword_defaultCancel() {
   // Default password provided, existing logins are ignored.
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "",
-    passValue   : "inputpw",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : true,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "passField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "",
+    passValue: "inputpw",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "passField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "cancel",
+    buttonClick: "cancel",
   };
   pword.value = "inputpw";
   promptDone = handlePrompt(state, action);
@@ -210,23 +210,23 @@ add_task(function* test_promptPassword_defaultCancel() {
 add_task(function* test_promptPassword_emptyAccept() {
   // No default password provided, realm does not match existing login.
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "",
-    passValue   : "",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : true,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "passField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "",
+    passValue: "",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "passField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
-    passField   : "secret",
+    buttonClick: "ok",
+    passField: "secret",
   };
   pword.value = null;
   promptDone = handlePrompt(state, action);
@@ -250,23 +250,23 @@ add_task(function* test_promptPassword_noMatchingPasswordForEmptyUN() {
   // No default password provided, none of the logins from this host are
   // password-only so the user is prompted.
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "",
-    passValue   : "",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : true,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "passField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "",
+    passValue: "",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "passField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
-    passField   : "secret",
+    buttonClick: "ok",
+    passField: "secret",
   };
   pword.value = null;
   promptDone = handlePrompt(state, action);
@@ -327,23 +327,23 @@ add_task(function* test_promptPassword_usernameEncoding() {
 add_task(function* test_promptPassword_realm() {
   // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "",
-    passValue   : "",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : true,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "passField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "",
+    passValue: "",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "passField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
-    passField   : "fill2pass",
+    buttonClick: "ok",
+    passField: "fill2pass",
   };
   pword.value = null;
   promptDone = handlePrompt(state, action);
@@ -357,23 +357,23 @@ add_task(function* test_promptPassword_realm() {
 add_task(function* test_promptPassword_realm2() {
   // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "",
-    passValue   : "",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : true,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "passField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "",
+    passValue: "",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: true,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "passField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
-    passField   : "fill2pass",
+    buttonClick: "ok",
+    passField: "fill2pass",
   };
   pword.value = null;
   promptDone = handlePrompt(state, action);
@@ -386,24 +386,24 @@ add_task(function* test_promptPassword_realm2() {
 
 add_task(function* test_promptUsernameAndPassword_accept() {
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "inuser",
-    passValue   : "inpass",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "inuser",
+    passValue: "inpass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
-    textField   : "outuser",
-    passField   : "outpass",
+    buttonClick: "ok",
+    textField: "outuser",
+    passField: "outpass",
   };
   uname.value = "inuser";
   pword.value = "inpass";
@@ -418,22 +418,22 @@ add_task(function* test_promptUsernameAndPassword_accept() {
 
 add_task(function* test_promptUsernameAndPassword_cancel() {
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "inuser",
-    passValue   : "inpass",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "inuser",
+    passValue: "inpass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "cancel",
+    buttonClick: "cancel",
   };
   uname.value = "inuser";
   pword.value = "inpass";
@@ -447,22 +447,22 @@ add_task(function* test_promptUsernameAndPassword_cancel() {
 add_task(function* test_promptUsernameAndPassword_autofill() {
   // test filling in existing password-only login
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "",
-    passValue   : "examplepass",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : false,
-    checkMsg    : "Use Password Manager to remember this password.",
-    checked     : true,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "",
+    passValue: "examplepass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: false,
+    checkMsg: "Use Password Manager to remember this password.",
+    checked: true,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
+    buttonClick: "ok",
   };
   uname.value = null;
   pword.value = null;
@@ -479,22 +479,22 @@ add_task(function* test_promptUsernameAndPassword_multipleExisting() {
   // test filling in existing login (undetermined from multiple selection)
   // user2name/user2pass would also be valid to fill here.
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "user1name",
-    passValue   : "user1pass",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : false,
-    checkMsg    : "Use Password Manager to remember this password.",
-    checked     : true,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "user1name",
+    passValue: "user1pass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: false,
+    checkMsg: "Use Password Manager to remember this password.",
+    checked: true,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
+    buttonClick: "ok",
   };
   uname.value = null;
   pword.value = null;
@@ -510,22 +510,22 @@ add_task(function* test_promptUsernameAndPassword_multipleExisting() {
 add_task(function* test_promptUsernameAndPassword_multipleExisting1() {
   // test filling in existing login (user1 from multiple selection)
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "user1name",
-    passValue   : "user1pass",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : false,
-    checkMsg    : "Use Password Manager to remember this password.",
-    checked     : true,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "user1name",
+    passValue: "user1pass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: false,
+    checkMsg: "Use Password Manager to remember this password.",
+    checked: true,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
+    buttonClick: "ok",
   };
   uname.value = "user1name";
   pword.value = null;
@@ -541,22 +541,22 @@ add_task(function* test_promptUsernameAndPassword_multipleExisting1() {
 add_task(function* test_promptUsernameAndPassword_multipleExisting2() {
   // test filling in existing login (user2 from multiple selection)
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "user2name",
-    passValue   : "user2pass",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : false,
-    checkMsg    : "Use Password Manager to remember this password.",
-    checked     : true,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "user2name",
+    passValue: "user2pass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: false,
+    checkMsg: "Use Password Manager to remember this password.",
+    checked: true,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
+    buttonClick: "ok",
   };
   uname.value = "user2name";
   pword.value = null;
@@ -572,23 +572,23 @@ add_task(function* test_promptUsernameAndPassword_multipleExisting2() {
 add_task(function* test_promptUsernameAndPassword_passwordChange() {
   // test changing password
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "user2name",
-    passValue   : "user2pass",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : false,
-    checkMsg    : "Use Password Manager to remember this password.",
-    checked     : true,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "user2name",
+    passValue: "user2pass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: false,
+    checkMsg: "Use Password Manager to remember this password.",
+    checked: true,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
-    passField   : "NEWuser2pass",
+    buttonClick: "ok",
+    passField: "NEWuser2pass",
   };
   uname.value = "user2name";
   pword.value = null;
@@ -604,23 +604,23 @@ add_task(function* test_promptUsernameAndPassword_passwordChange() {
 add_task(function* test_promptUsernameAndPassword_changePasswordBack() {
   // test changing password (back to original value)
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "user2name",
-    passValue   : "NEWuser2pass",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : false,
-    checkMsg    : "Use Password Manager to remember this password.",
-    checked     : true,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "user2name",
+    passValue: "NEWuser2pass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: false,
+    checkMsg: "Use Password Manager to remember this password.",
+    checked: true,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
-    passField   : "user2pass",
+    buttonClick: "ok",
+    passField: "user2pass",
   };
   uname.value = "user2name";
   pword.value = null;
@@ -636,24 +636,24 @@ add_task(function* test_promptUsernameAndPassword_changePasswordBack() {
 add_task(function* test_promptUsernameAndPassword_realm() {
   // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "",
-    passValue   : "",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "",
+    passValue: "",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
-    textField   : "fill2user",
-    passField   : "fill2pass",
+    buttonClick: "ok",
+    textField: "fill2user",
+    passField: "fill2pass",
   };
   uname.value = null;
   pword.value = null;
@@ -669,24 +669,24 @@ add_task(function* test_promptUsernameAndPassword_realm() {
 add_task(function* test_promptUsernameAndPassword_realm2() {
   // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
   state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "",
-    passValue   : "",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "the message",
+    title: "the title",
+    textValue: "",
+    passValue: "",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
-    textField   : "fill2user",
-    passField   : "fill2pass",
+    buttonClick: "ok",
+    textField: "fill2user",
+    passField: "fill2pass",
   };
   uname.value = null;
   pword.value = null;

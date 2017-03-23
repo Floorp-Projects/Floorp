@@ -38,8 +38,8 @@ var input = $_(1, "field1");
 
 function setupFormHistory(aCallback) {
   updateFormHistory([
-    { op : "remove" },
-    { op : "add", fieldname : "field1", value : "Sec" },
+    { op: "remove" },
+    { op: "add", fieldname: "field1", value: "Sec" },
   ], () => {
     spawn_task(aCallback);
   });

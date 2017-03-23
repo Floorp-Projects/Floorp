@@ -18,6 +18,10 @@
 # include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 #include "mozilla/ipc/CrashReporterHost.h"
+#include "mozilla/Unused.h"
+#ifdef MOZ_GECKO_PROFILER
+#include "CrossProcessProfilerController.h"
+#endif
 
 namespace mozilla {
 namespace gfx {
@@ -64,6 +68,10 @@ GPUChild::Init()
   SendInit(prefs, updates, devicePrefs);
 
   gfxVars::AddReceiver(this);
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  mProfilerController = CrossProcessProfilerController::ForProtocol(this);
+#endif
 }
 
 void
@@ -185,6 +193,17 @@ GPUChild::RecvNotifyDeviceReset()
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+GPUChild::RecvProfile(const nsCString& aProfile)
+{
+#ifdef MOZ_GECKO_PROFILER
+  if (mProfilerController) {
+    mProfilerController->RecvProfile(aProfile);
+  }
+#endif
+  return IPC_OK();
+}
+
 bool
 GPUChild::SendRequestMemoryReport(const uint32_t& aGeneration,
                                   const bool& aAnonymize,
@@ -220,6 +239,30 @@ GPUChild::RecvFinishMemoryReport(const uint32_t& aGeneration)
 }
 
 void
+GPUChild::SendStartProfiler(const ProfilerInitParams& aParams)
+{
+  Unused << PGPUChild::SendStartProfiler(aParams);
+}
+
+void
+GPUChild::SendStopProfiler()
+{
+  Unused << PGPUChild::SendStopProfiler();
+}
+
+void
+GPUChild::SendPauseProfiler(const bool& aPause)
+{
+  Unused << PGPUChild::SendPauseProfiler(aPause);
+}
+
+void
+GPUChild::SendGatherProfile()
+{
+  Unused << PGPUChild::SendGatherProfile();
+}
+
+void
 GPUChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   if (aWhy == AbnormalShutdown) {
@@ -239,6 +282,10 @@ GPUChild::ActorDestroy(ActorDestroyReason aWhy)
     }
 
   }
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  mProfilerController = nullptr;
+#endif
 
   gfxVars::RemoveReceiver(this);
   mHost->OnChannelClosed();

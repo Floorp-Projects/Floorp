@@ -46,7 +46,7 @@ function* expectFocusOnF6(backward, expectedDocument, expectedElement, onContent
 
       if (!contentExpectedElement) {
         sendSyncMessage("BrowserTest:FocusChanged",
-                        { details : "expected element " + arg.expectedElementId + " not found" });
+                        { details: "expected element " + arg.expectedElementId + " not found" });
         return;
       }
 
