@@ -431,7 +431,7 @@ load 812665.html
 load 813372-1.html
 load 817219.html
 load 818454.html
-load 822865.html
+pref(layout.css.moz-appearance.enabled,true) load 822865.html
 load 824300.html
 load 824862.html
 load 826163.html
