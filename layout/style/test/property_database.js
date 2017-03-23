@@ -7787,6 +7787,13 @@ if (IsCSSPropertyPrefEnabled("layout.css.appearance.enabled")) {
     other_values: [ "none" ],
     invalid_values: [ "button" ]
   };
+  gCSSProperties["-webkit-appearance"] = {
+    domProp: "webkitAppearance",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "appearance",
+    subproperties: [ "appearance" ],
+  };
 }
 if (IsCSSPropertyPrefEnabled("layout.css.moz-appearance.enabled")) {
   gCSSProperties["-moz-appearance"] = {
