@@ -312,15 +312,17 @@ private: // methods
    */
   RawAccessFrameRef GetRawFrame(uint32_t aFrameNum) const;
 
-  /// @return the given frame's timeout.
-  FrameTimeout GetTimeoutForFrame(uint32_t aFrameNum) const;
+  /// @return the given frame's timeout if it is available
+  Maybe<FrameTimeout> GetTimeoutForFrame(AnimationState& aState,
+                                         uint32_t aFrameNum) const;
 
   /**
    * Get the time the frame we're currently displaying is supposed to end.
    *
-   * In the error case, returns an "infinity" timestamp.
+   * In the error case (like if the requested frame is not currently
+   * decoded), returns None().
    */
-  TimeStamp GetCurrentImgFrameEndTime(AnimationState& aState) const;
+  Maybe<TimeStamp> GetCurrentImgFrameEndTime(AnimationState& aState) const;
 
   bool DoBlend(gfx::IntRect* aDirtyRect,
                uint32_t aPrevFrameIndex,
