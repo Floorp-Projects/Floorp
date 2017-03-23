@@ -289,13 +289,13 @@ NullHttpChannel::RedirectTo(nsIURI *aNewURI)
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetRequestContextID(nsID *_retval)
+NullHttpChannel::GetRequestContextID(uint64_t *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetRequestContextID(const nsID rcID)
+NullHttpChannel::SetRequestContextID(uint64_t rcID)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

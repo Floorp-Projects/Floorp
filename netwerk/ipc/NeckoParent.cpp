@@ -908,7 +908,7 @@ NeckoParent::RecvPredReset()
 }
 
 mozilla::ipc::IPCResult
-NeckoParent::RecvRemoveRequestContext(const nsCString& rcid)
+NeckoParent::RecvRemoveRequestContext(const uint64_t& rcid)
 {
   nsCOMPtr<nsIRequestContextService> rcsvc =
     do_GetService("@mozilla.org/network/request-context-service;1");
@@ -916,9 +916,7 @@ NeckoParent::RecvRemoveRequestContext(const nsCString& rcid)
     return IPC_OK();
   }
 
-  nsID id;
-  id.Parse(rcid.BeginReading());
-  rcsvc->RemoveRequestContext(id);
+  rcsvc->RemoveRequestContext(rcid);
 
   return IPC_OK();
 }

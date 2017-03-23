@@ -12,8 +12,6 @@
 #include "nsIObserver.h"
 #include "nsIRequestContext.h"
 
-class nsIUUIDGenerator;
-
 namespace mozilla {
 namespace net {
 
@@ -37,8 +35,9 @@ private:
 
   static RequestContextService *sSelf;
 
-  nsInterfaceHashtable<nsIDHashKey, nsIRequestContext> mTable;
-  nsCOMPtr<nsIUUIDGenerator> mUUIDGen;
+  nsInterfaceHashtable<nsUint64HashKey, nsIRequestContext> mTable;
+  uint32_t mRCIDNamespace;
+  uint32_t mNextRCID;
 };
 
 } // ::mozilla::net
