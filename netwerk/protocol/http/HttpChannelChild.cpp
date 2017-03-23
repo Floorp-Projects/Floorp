@@ -2070,46 +2070,27 @@ HttpChannelChild::SetEventTarget()
 {
   nsCOMPtr<nsILoadInfo> loadInfo;
   GetLoadInfo(getter_AddRefs(loadInfo));
-  if (!loadInfo) {
+
+  RefPtr<Dispatcher> dispatcher =
+    nsContentUtils::GetDispatcherByLoadInfo(loadInfo);
+
+  if (!dispatcher) {
     return;
   }
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  loadInfo->GetLoadingDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  RefPtr<Dispatcher> dispatcher;
-  if (doc) {
-    dispatcher = doc->GetDocGroup();
-  } else {
-    // There's no document yet, but this might be a top-level load where we can
-    // find a TabGroup.
-    uint64_t outerWindowId;
-    if (NS_FAILED(loadInfo->GetOuterWindowID(&outerWindowId))) {
-      // No window. This might be an add-on XHR, a service worker request, or
-      // something else.
-      return;
-    }
-    RefPtr<nsGlobalWindow> window = nsGlobalWindow::GetOuterWindowWithId(outerWindowId);
-    if (!window) {
-      return;
-    }
-
 #ifdef DEBUG
+  if (dispatcher->AsTabGroup()) {
     // We have a TabGroup. This must be a top-level load.
     bool isMainDocumentChannel;
     GetIsMainDocumentChannel(&isMainDocumentChannel);
     MOZ_ASSERT(isMainDocumentChannel);
+  }
 #endif
 
-    dispatcher = window->TabGroup();
-  }
-
-  if (dispatcher) {
-    nsCOMPtr<nsIEventTarget> target =
-      dispatcher->EventTargetFor(TaskCategory::Network);
-    gNeckoChild->SetEventTargetForActor(this, target);
-    mEventQ->RetargetDeliveryTo(target);
-  }
+  nsCOMPtr<nsIEventTarget> target =
+    dispatcher->EventTargetFor(TaskCategory::Network);
+  gNeckoChild->SetEventTargetForActor(this, target);
+  mEventQ->RetargetDeliveryTo(target);
 }
 
 nsresult
