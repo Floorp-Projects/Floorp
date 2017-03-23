@@ -2416,7 +2416,7 @@ class BaseCompiler
         if (maxFramePushed_ > 256 * 1024)
             return false;
 
-        return true;
+        return !masm.oom();
     }
 
     //////////////////////////////////////////////////////////////////////
