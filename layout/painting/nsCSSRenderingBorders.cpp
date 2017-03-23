@@ -3531,6 +3531,24 @@ nsCSSBorderRenderer::DrawBorders()
   }
 }
 
+bool
+nsCSSBorderRenderer::CanCreateWebrenderCommands()
+{
+  NS_FOR_CSS_SIDES(i) {
+    if (mCompositeColors[i] != nullptr) {
+      return false;
+    }
+
+    if (mBorderStyles[i] == NS_STYLE_BORDER_STYLE_DOUBLE ||
+        mBorderStyles[i] == NS_STYLE_BORDER_STYLE_DOTTED ||
+        mBorderStyles[i] == NS_STYLE_BORDER_STYLE_DASHED) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void
 nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                              layers::WebRenderDisplayItemLayer* aLayer)

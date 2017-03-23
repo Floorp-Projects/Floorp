@@ -65,7 +65,7 @@ with Files('nsPluginFrame.*'):
     BUG_COMPONENT = ('Core', 'Plug-ins')
 
 with Files('nsVideoFrame.*'):
-    BUG_COMPONENT = ('Core', 'Video/Audio')
+    BUG_COMPONENT = ('Core', 'Audio/Video')
 
 with Files('*Selection*'):
     BUG_COMPONENT = ('Core', 'Selection')

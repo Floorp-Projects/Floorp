@@ -65,12 +65,10 @@
 }
 
 .popup-notification-button:hover:not([disabled]) {
-  outline: 1px solid var(--arrowpanel-dimmed);
   background-color: var(--arrowpanel-dimmed);
 }
 
 .popup-notification-button:hover:active:not([disabled]) {
-  outline: 1px solid var(--arrowpanel-dimmed-further);
   background-color: var(--arrowpanel-dimmed-further);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }

@@ -8,11 +8,12 @@ Support for running jobs that are invoked via the `run-task` script.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.job import run_job_using
+from taskgraph.util.schema import Schema
 from taskgraph.transforms.job.common import (
     add_build_dependency,
     support_vcs_checkout,
 )
-from voluptuous import Schema, Required, Any
+from voluptuous import Required, Any
 
 run_task_schema = Schema({
     Required('using'): 'run-task',

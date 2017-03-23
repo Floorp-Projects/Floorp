@@ -16,14 +16,16 @@ import logging
 import os
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import validate_schema
+from taskgraph.util.schema import (
+    validate_schema,
+    Schema,
+)
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import (
     Any,
     Extra,
     Optional,
     Required,
-    Schema,
 )
 
 logger = logging.getLogger(__name__)

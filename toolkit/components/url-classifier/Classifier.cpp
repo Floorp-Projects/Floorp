@@ -22,7 +22,6 @@
 #include "mozilla/Base64.h"
 #include "mozilla/Unused.h"
 #include "mozilla/SizePrintfMacros.h"
-#include "mozilla/TypedEnumBits.h"
 #include "nsIUrlClassifierUtils.h"
 #include "nsUrlClassifierDBService.h"
 
@@ -415,16 +414,6 @@ Classifier::TableRequest(nsACString& aResult)
   mIsTableRequestResultOutdated = false;
 }
 
-// This is used to record the matching statistics for v2 and v4.
-enum class PrefixMatch : uint8_t {
-  eNoMatch = 0x00,
-  eMatchV2Prefix = 0x01,
-  eMatchV4Prefix = 0x02,
-  eMatchBoth = eMatchV2Prefix | eMatchV4Prefix
-};
-
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(PrefixMatch)
-
 nsresult
 Classifier::Check(const nsACString& aSpec,
                   const nsACString& aTables,
@@ -465,8 +454,6 @@ Classifier::Check(const nsACString& aSpec,
       break;
     }
   }
-
-  PrefixMatch matchingStatistics = PrefixMatch::eNoMatch;
 
   // Now check each lookup fragment against the entries in the DB.
   for (uint32_t i = 0; i < fragments.Length(); i++) {
@@ -519,20 +506,9 @@ Classifier::Check(const nsACString& aSpec,
           continue;
         }
 
-        if (result->mProtocolV2) {
-          matchingStatistics |= PrefixMatch::eMatchV2Prefix;
-          result->mMatchResult = MatchResult::eV2Prefix;
-        } else {
-          matchingStatistics |= PrefixMatch::eMatchV2Prefix;
-          result->mMatchResult = MatchResult::eV4Prefix;
-        }
+        result->mMatchResult = result->mProtocolV2 ?
+                               MatchResult::eV2Prefix : MatchResult::eV4Prefix;
       }
-    }
-
-    // TODO : This will be removed in Bug 1338033.
-    if (shouldDoTelemetry) {
-      Telemetry::Accumulate(Telemetry::URLCLASSIFIER_PREFIX_MATCH,
-                            static_cast<uint8_t>(matchingStatistics));
     }
   }
 

@@ -201,6 +201,16 @@ static inline WrSize ToWrSize(const LayerSize size)
   return ls;
 }
 
+static inline WrBorderRadius ToWrUniformBorderRadius(const LayerSize& aSize)
+{
+  WrBorderRadius br;
+  br.top_left = ToWrSize(aSize);
+  br.top_right = ToWrSize(aSize);
+  br.bottom_left = ToWrSize(aSize);
+  br.bottom_right = ToWrSize(aSize);
+  return br;
+}
+
 static inline WrBorderRadius ToWrBorderRadius(const LayerSize& topLeft, const LayerSize& topRight,
                                               const LayerSize& bottomLeft, const LayerSize& bottomRight)
 {
@@ -285,6 +295,16 @@ template<class T>
 static inline WrRect ToWrRect(const gfx::IntRectTyped<T>& rect)
 {
   return ToWrRect(IntRectToRect(rect));
+}
+
+template<class T>
+static inline WrComplexClipRegion ToWrComplexClipRegion(const gfx::RectTyped<T>& rect,
+                                                        const LayerSize& size)
+{
+  WrComplexClipRegion complex_clip;
+  complex_clip.rect = wr::ToWrRect(rect);
+  complex_clip.radii = wr::ToWrUniformBorderRadius(size);
+  return complex_clip;
 }
 
 static inline WrPoint ToWrPoint(const gfx::Point& point)

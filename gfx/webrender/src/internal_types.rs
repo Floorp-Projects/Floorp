@@ -6,6 +6,7 @@ use app_units::Au;
 use device::TextureFilter;
 use euclid::{TypedPoint2D, UnknownUnit};
 use fnv::FnvHasher;
+use gleam::gl;
 use offscreen_gl_context::{NativeGLContext, NativeGLContextHandle};
 use offscreen_gl_context::{GLContext, NativeGLContextMethods, GLContextDispatcher};
 use offscreen_gl_context::{OSMesaContext, OSMesaContextHandle};
@@ -74,6 +75,7 @@ impl GLContextHandleWrapper {
                 let ctx = GLContext::<NativeGLContext>::new_shared_with_dispatcher(size.to_untyped(),
                                                                                    attributes,
                                                                                    ColorAttachmentType::Texture,
+                                                                                   gl::GlType::default(),
                                                                                    Some(handle),
                                                                                    dispatcher);
                 ctx.map(GLContextWrapper::Native)
@@ -82,6 +84,7 @@ impl GLContextHandleWrapper {
                 let ctx = GLContext::<OSMesaContext>::new_shared_with_dispatcher(size.to_untyped(),
                                                                                  attributes,
                                                                                  ColorAttachmentType::Texture,
+                                                                                 gl::GlType::default(),
                                                                                  Some(handle),
                                                                                  dispatcher);
                 ctx.map(GLContextWrapper::OSMesa)

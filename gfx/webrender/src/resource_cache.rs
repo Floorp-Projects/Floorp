@@ -658,13 +658,48 @@ impl ResourceCache {
                 // external handle doesn't need to update the texture_cache.
             }
             ImageData::Raw(..) | ImageData::ExternalBuffer(..) | ImageData::Blob(..) => {
+                let descriptor = if let Some(tile) = request.tile {
+                    let tile_size = image_template.tiling.unwrap() as u32;
+                    let image_descriptor = &image_template.descriptor;
+                    let stride = image_descriptor.compute_stride();
+                    let bpp = image_descriptor.format.bytes_per_pixel().unwrap();
+
+                    // Storage for the tiles on the right and bottom edges is shrunk to
+                    // fit the image data (See decompose_tiled_image in frame.rs).
+                    let actual_width = if (tile.x as u32) < image_descriptor.width / tile_size {
+                        tile_size
+                    } else {
+                        image_descriptor.width % tile_size
+                    };
+
+                    let actual_height = if (tile.y as u32) < image_descriptor.height / tile_size {
+                        tile_size
+                    } else {
+                        image_descriptor.height % tile_size
+                    };
+
+                    let offset = image_descriptor.offset + tile.y as u32 * tile_size * stride
+                                                         + tile.x as u32 * tile_size * bpp;
+
+                    ImageDescriptor {
+                        width: actual_width,
+                        height: actual_height,
+                        stride: Some(stride),
+                        offset: offset,
+                        format: image_descriptor.format,
+                        is_opaque: image_descriptor.is_opaque,
+                    }
+                } else {
+                    image_template.descriptor.clone()
+                };
+
                 match self.cached_images.entry(request.clone(), self.current_frame_id) {
                     Occupied(entry) => {
                         let image_id = entry.get().texture_cache_id;
 
                         if entry.get().epoch != image_template.epoch {
                             self.texture_cache.update(image_id,
-                                                      image_template.descriptor,
+                                                      descriptor,
                                                       image_data);
 
                             // Update the cached epoch
@@ -682,50 +717,11 @@ impl ResourceCache {
                             ImageRendering::Auto | ImageRendering::CrispEdges => TextureFilter::Linear,
                         };
 
-                        if let Some(tile) = request.tile {
-                            let tile_size = image_template.tiling.unwrap() as u32;
-                            let image_descriptor = image_template.descriptor.clone();
-                            let stride = image_descriptor.compute_stride();
-                            let bpp = image_descriptor.format.bytes_per_pixel().unwrap();
-
-                            // Storage for the tiles on the right and bottom edges is shrunk to
-                            // fit the image data (See decompose_tiled_image in frame.rs).
-                            let actual_width = if (tile.x as u32) < image_descriptor.width / tile_size {
-                                tile_size
-                            } else {
-                                image_descriptor.width % tile_size
-                            };
-
-                            let actual_height = if (tile.y as u32) < image_descriptor.height / tile_size {
-                                tile_size
-                            } else {
-                                image_descriptor.height % tile_size
-                            };
-
-                            let offset = image_descriptor.offset + tile.y as u32 * tile_size * stride
-                                                                 + tile.x as u32 * tile_size * bpp;
-
-                            let tile_descriptor = ImageDescriptor {
-                                width: actual_width,
-                                height: actual_height,
-                                stride: Some(stride),
-                                offset: offset,
-                                format: image_descriptor.format,
-                                is_opaque: image_descriptor.is_opaque,
-                            };
-
-                            self.texture_cache.insert(image_id,
-                                                      tile_descriptor,
-                                                      filter,
-                                                      image_data,
-                                                      texture_cache_profile);
-                        } else {
-                            self.texture_cache.insert(image_id,
-                                                      image_template.descriptor,
-                                                      filter,
-                                                      image_data,
-                                                      texture_cache_profile);
-                        }
+                        self.texture_cache.insert(image_id,
+                                                  descriptor,
+                                                  filter,
+                                                  image_data,
+                                                  texture_cache_profile);
 
                         entry.insert(CachedImageInfo {
                             texture_cache_id: image_id,

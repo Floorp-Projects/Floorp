@@ -7,7 +7,7 @@ extern crate log;
 #[cfg(feature="serde")]
 extern crate serde;
 
-#[cfg(target_os="linux")]
+#[cfg(all(target_os="linux", feature="x11"))]
 extern crate x11;
 #[cfg(target_os="macos")]
 extern crate cgl;
@@ -29,6 +29,7 @@ extern crate lazy_static;
 
 mod platform;
 pub use platform::{NativeGLContext, NativeGLContextMethods, NativeGLContextHandle};
+
 #[cfg(feature="osmesa")]
 pub use platform::{OSMesaContext, OSMesaContextHandle};
 
@@ -53,7 +54,7 @@ pub use gl_formats::GLFormats;
 mod gl_limits;
 pub use gl_limits::GLLimits;
 
-#[cfg(target_os="linux")]
+#[cfg(all(target_os="linux", feature="x11"))]
 #[allow(improper_ctypes)]
 mod glx {
     include!(concat!(env!("OUT_DIR"), "/glx_bindings.rs"));

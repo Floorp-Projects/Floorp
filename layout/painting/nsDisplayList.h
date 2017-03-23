@@ -2889,6 +2889,9 @@ public:
   }
 
 protected:
+  void CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                          nsTArray<WebRenderParentCommand>& aParentCommands,
+                                          WebRenderDisplayItemLayer* aLayer);
   nsRegion CalculateBounds(const nsStyleBorder& aStyleBorder);
 
   mozilla::Array<mozilla::gfx::Color, 4> mColors;
@@ -2897,7 +2900,7 @@ protected:
   mozilla::Array<uint8_t, 4> mBorderStyles;
   mozilla::LayerRect mRect;
 
-  // For border image
+  mozilla::Maybe<nsCSSBorderRenderer> mBorderRenderer;
   mozilla::Maybe<nsCSSBorderImageRenderer> mBorderImageRenderer;
 
   nsRect mBounds;
@@ -3408,6 +3411,8 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
+
+  bool CanBuildWebRenderDisplayItems();
   virtual void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        nsTArray<WebRenderParentCommand>& aParentCommands,
                                        WebRenderDisplayItemLayer* aLayer) override;
