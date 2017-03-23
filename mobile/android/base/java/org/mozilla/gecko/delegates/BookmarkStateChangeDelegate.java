@@ -10,15 +10,11 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.EditBookmarkDialog;
@@ -37,8 +33,6 @@ import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
-
-import java.lang.ref.WeakReference;
 
 /**
  * Delegate to watch for bookmark state changes.
