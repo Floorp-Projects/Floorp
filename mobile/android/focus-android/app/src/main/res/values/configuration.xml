@@ -12,6 +12,4 @@
     <integer name="erase_animation_translate_offset">150</integer>
 
     <integer name="erase_snackbar_delay">500</integer>
-
-    <dimen name="bottom_sheet_width">0dp</dimen>
 </resources>
