@@ -44,13 +44,26 @@ __wptrunner__ = {"product": "firefox",
                  "update_properties": "update_properties"}
 
 
+def get_timeout_multiplier(test_type, run_info_data, **kwargs):
+    if kwargs["timeout_multiplier"] is not None:
+        return kwargs["timeout_multiplier"]
+    if test_type == "reftest":
+        if run_info_data["debug"] or run_info_data.get("asan"):
+            return 4
+        else:
+            return 2
+    elif run_info_data["debug"] or run_info_data.get("asan"):
+        return 3
+    return None
+
+
 def check_args(**kwargs):
     require_arg(kwargs, "binary")
     if kwargs["ssl_type"] != "none":
         require_arg(kwargs, "certutil_binary")
 
 
-def browser_kwargs(**kwargs):
+def browser_kwargs(test_type, run_info_data, **kwargs):
     return {"binary": kwargs["binary"],
             "prefs_root": kwargs["prefs_root"],
             "debug_info": kwargs["debug_info"],
@@ -60,7 +73,10 @@ def browser_kwargs(**kwargs):
             "ca_certificate_path": kwargs["ssl_env"].ca_cert_path(),
             "e10s": kwargs["gecko_e10s"],
             "stackfix_dir": kwargs["stackfix_dir"],
-            "binary_args": kwargs["binary_args"]}
+            "binary_args": kwargs["binary_args"],
+            "timeout_multiplier": get_timeout_multiplier(test_type,
+                                                         run_info_data,
+                                                         **kwargs)}
 
 
 def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
@@ -68,14 +84,9 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
     executor_kwargs = base_executor_kwargs(test_type, server_config,
                                            cache_manager, **kwargs)
     executor_kwargs["close_after_done"] = test_type != "reftest"
-    if kwargs["timeout_multiplier"] is None:
-        if test_type == "reftest":
-            if run_info_data["debug"] or run_info_data.get("asan"):
-                executor_kwargs["timeout_multiplier"] = 4
-            else:
-                executor_kwargs["timeout_multiplier"] = 2
-        elif run_info_data["debug"] or run_info_data.get("asan"):
-            executor_kwargs["timeout_multiplier"] = 3
+    executor_kwargs["timeout_multiplier"] = get_timeout_multiplier(test_type,
+                                                                   run_info_data,
+                                                                   **kwargs)
     if test_type == "wdspec":
         executor_kwargs["webdriver_binary"] = kwargs.get("webdriver_binary")
         fxOptions = {}
@@ -115,7 +126,7 @@ class FirefoxBrowser(Browser):
     def __init__(self, logger, binary, prefs_root, debug_info=None,
                  symbols_path=None, stackwalk_binary=None, certutil_binary=None,
                  ca_certificate_path=None, e10s=False, stackfix_dir=None,
-                 binary_args=None):
+                 binary_args=None, timeout_multiplier=None):
         Browser.__init__(self, logger)
         self.binary = binary
         self.prefs_root = prefs_root
@@ -134,6 +145,8 @@ class FirefoxBrowser(Browser):
                                                         self.symbols_path)
         else:
             self.stack_fixer = None
+        if timeout_multiplier:
+            self.init_timeout = self.init_timeout * timeout_multiplier
 
     def start(self):
         self.marionette_port = get_free_port(2828, exclude=self.used_ports)
