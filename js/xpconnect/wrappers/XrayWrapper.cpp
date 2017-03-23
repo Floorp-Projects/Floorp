@@ -201,12 +201,9 @@ XPCWrappedNativeXrayTraits::getWN(JSObject* wrapper)
 }
 
 const JSClass XPCWrappedNativeXrayTraits::HolderClass = {
-    "NativePropertyHolder", JSCLASS_HAS_RESERVED_SLOTS(HOLDER_SHARED_SLOT_COUNT)
+    "NativePropertyHolder"
 };
 
-const JSClass XrayTraits::HolderClass = {
-    "XrayHolder", JSCLASS_HAS_RESERVED_SLOTS(HOLDER_SHARED_SLOT_COUNT)
-};
 
 const JSClass JSXrayTraits::HolderClass = {
     "JSXrayHolder", JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT)
@@ -1857,7 +1854,7 @@ DOMXrayTraits::preserveWrapper(JSObject* target)
 JSObject*
 DOMXrayTraits::createHolder(JSContext* cx, JSObject* wrapper)
 {
-    return JS_NewObjectWithGivenProto(cx, &HolderClass, nullptr);
+    return JS_NewObjectWithGivenProto(cx, nullptr, nullptr);
 }
 
 const JSClass*
