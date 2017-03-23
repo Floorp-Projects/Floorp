@@ -57,7 +57,6 @@ function Selection(walker) {
   EventEmitter.decorate(this);
 
   this._onMutations = this._onMutations.bind(this);
-  this.setNodeFront = this.setNodeFront.bind(this);
   this.setWalker(walker);
 }
 

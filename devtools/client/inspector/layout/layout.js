@@ -33,11 +33,6 @@ LayoutView.prototype = {
     }
 
     let {
-      setSelectedNode,
-      onShowBoxModelHighlighterForNode,
-    } = this.inspector.getCommonComponentProps();
-
-    let {
       onHideBoxModelHighlighter,
       onShowBoxModelEditor,
       onShowBoxModelHighlighter,
@@ -46,7 +41,9 @@ LayoutView.prototype = {
 
     let {
       getSwatchColorPickerTooltip,
+      setSelectedNode,
       onSetGridOverlayColor,
+      onShowBoxModelHighlighterForNode,
       onShowGridAreaHighlight,
       onShowGridCellHighlight,
       onToggleGridHighlighter,
