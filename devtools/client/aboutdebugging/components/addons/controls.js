@@ -77,6 +77,7 @@ module.exports = createClass({
             type: "checkbox",
             checked: !debugDisabled,
             onChange: this.onEnableAddonDebuggingChange,
+            role: "checkbox",
           }),
           dom.label({
             className: "addons-debugging-label",
