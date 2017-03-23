@@ -5,15 +5,21 @@
 package org.mozilla.focus.web;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
-import android.support.v7.widget.LinearLayoutCompat;
+import android.support.v4.util.ArrayMap;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import org.mozilla.focus.R;
+import org.mozilla.focus.utils.HtmlLoader;
+import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.webkit.ErrorPage;
 import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
+
+import java.util.Map;
 
 /**
  * WebViewClient layer that handles browser specific WebViewClient functionality, such as error pages
@@ -62,6 +68,11 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
 
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
+        if (url.equals("focusabout:")) {
+            loadAbout(view);
+            return true;
+        }
+
         // shouldOverrideUrlLoading() is called for both the main frame, and iframes.
         // That can get problematic if an iframe tries to load an unsupported URL.
         // We then try to either handle that URL (ask to open relevant app), or extract
@@ -146,6 +157,25 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
         }
 
         super.onReceivedError(webView, errorCode, description, failingUrl);
+    }
+
+    private void loadAbout(final WebView webView) {
+        final Resources resources = webView.getContext().getResources();
+
+        final Map<String, String> substitutionMap = new ArrayMap<>();
+        final String appName = webView.getContext().getResources().getString(R.string.app_name);
+        final String learnMoreURL = SupportUtils.getManifestoURL();
+
+        final String aboutContent = resources.getString(R.string.about_content, appName, learnMoreURL);
+        substitutionMap.put("%about-content%", aboutContent);
+
+        final String wordmark = HtmlLoader.loadPngAsDataURI(webView.getContext(), R.drawable.wordmark);
+        substitutionMap.put("%wordmark%", wordmark);
+
+        final String data = HtmlLoader.loadResourceFile(webView.getContext(), R.raw.about, substitutionMap);
+        // We use a file:/// base URL so that we have the right origin to load file:/// css and
+        // image resources.
+        webView.loadDataWithBaseURL("file:///android_res/raw/about.html", data, "text/html", "UTF-8", null);
     }
 
 }

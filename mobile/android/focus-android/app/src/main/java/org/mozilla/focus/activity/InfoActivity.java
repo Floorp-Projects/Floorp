@@ -10,17 +10,13 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.util.ArrayMap;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.AttributeSet;
 import android.view.View;
-import android.webkit.WebView;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.InfoFragment;
-import org.mozilla.focus.utils.HtmlLoader;
-import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
 
@@ -44,7 +40,9 @@ public class InfoActivity extends AppCompatActivity {
     }
 
     public static final Intent getAboutIntent(final Context context) {
-        return getIntentFor(context, "about:", context.getResources().getString(R.string.menu_about));
+        // We can't use "about:" because webview silently swallows about: pages, hence we use
+        // a custom scheme.
+        return getIntentFor(context, "focusabout:", context.getResources().getString(R.string.menu_about));
     }
 
     public static final Intent getRightsIntent(final Context context) {
@@ -83,29 +81,6 @@ public class InfoActivity extends AppCompatActivity {
                 finish();
             }
         });
-    }
-
-    private void loadURL(final String url, final WebView webView) {
-        if (url.equals("about:")) {
-            final Resources resources = webView.getContext().getResources();
-
-            final Map<String, String> substitutionMap = new ArrayMap<>();
-            final String appName = webView.getContext().getResources().getString(R.string.app_name);
-            final String learnMoreURL = SupportUtils.getManifestoURL();
-
-            final String aboutContent = resources.getString(R.string.about_content, appName, learnMoreURL);
-            substitutionMap.put("%about-content%", aboutContent);
-
-            final String wordmark = HtmlLoader.loadPngAsDataURI(webView.getContext(), R.drawable.wordmark);
-            substitutionMap.put("%wordmark%", wordmark);
-
-            final String data = HtmlLoader.loadResourceFile(webView.getContext(), R.raw.about, substitutionMap);
-            // We use a file:/// base URL so that we have the right origin to load file:/// css and
-            // image resources.
-            webView.loadDataWithBaseURL("file:///android_res/raw/about.html", data, "text/html", "UTF-8", null);
-        } else {
-            webView.loadUrl(url);
-        }
     }
 
     @Override
