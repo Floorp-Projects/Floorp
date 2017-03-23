@@ -1,11 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable max-nested-callbacks */
+
+"use strict";
 
 /**
  * Test simple requests using the protocol helpers.
  */
 var protocol = require("devtools/shared/protocol");
-var {preEvent, types, Arg, Option, RetVal} = protocol;
+var {preEvent, types, Arg, RetVal} = protocol;
 
 var events = require("sdk/event/core");
 
@@ -17,8 +20,6 @@ function simpleHello() {
   };
 }
 
-var testTypes = {};
-
 // Predeclaring the actor type so that it can be used in the
 // implementation of the child actor.
 types.addActorType("childActor");
@@ -27,12 +28,12 @@ const childSpec = protocol.generateActorSpec({
   typeName: "childActor",
 
   events: {
-    "event1" : {
+    "event1": {
       a: Arg(0),
       b: Arg(1),
       c: Arg(2)
     },
-    "event2" : {
+    "event2": {
       a: Arg(0),
       b: Arg(1),
       c: Arg(2)
@@ -90,9 +91,13 @@ const childSpec = protocol.generateActorSpec({
 
 var ChildActor = protocol.ActorClassWithSpec(childSpec, {
   // Actors returned by this actor should be owned by the root actor.
-  marshallPool: function () { return this.parent(); },
+  marshallPool: function () {
+    return this.parent();
+  },
 
-  toString: function () { return "[ChildActor " + this.childID + "]"; },
+  toString: function () {
+    return "[ChildActor " + this.childID + "]";
+  },
 
   initialize: function (conn, id) {
     protocol.Actor.prototype.initialize.call(this, conn);
@@ -166,9 +171,13 @@ var ChildFront = protocol.FrontClassWithSpec(childSpec, {
     protocol.Front.prototype.destroy.call(this);
   },
 
-  marshallPool: function () { return this.parent(); },
+  marshallPool: function () {
+    return this.parent();
+  },
 
-  toString: function () { return "[child front " + this.childID + "]"; },
+  toString: function () {
+    return "[child front " + this.childID + "]";
+  },
 
   form: function (form, detail) {
     if (detail === "actorid") {
@@ -183,7 +192,9 @@ var ChildFront = protocol.FrontClassWithSpec(childSpec, {
   }),
 
   onEvent2a: preEvent("event2", function (a, b, c) {
-    return promise.resolve().then(() => this.event2arg3 = c);
+    return promise.resolve().then(() => {
+      this.event2arg3 = c;
+    });
   }),
 
   onEvent2b: preEvent("event2", function (a, b, c) {
@@ -227,7 +238,9 @@ const rootSpec = protocol.generateActorSpec({
 
 var rootActor = null;
 var RootActor = protocol.ActorClassWithSpec(rootSpec, {
-  toString: function () { return "[root actor]"; },
+  toString: function () {
+    return "[root actor]";
+  },
 
   initialize: function (conn) {
     rootActor = this;
@@ -264,7 +277,8 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   getManyChildren: function () {
     return {
-      foo: "bar", // note that this isn't in the specialization array.
+      // note that this isn't in the specialization array.
+      foo: "bar",
       child5: this.getChild("child5"),
       more: [ this.getChild("child6"), this.getChild("child7") ]
     };
@@ -288,7 +302,9 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 });
 
 var RootFront = protocol.FrontClassWithSpec(rootSpec, {
-  toString: function () { return "[root front]"; },
+  toString: function () {
+    return "[root front]";
+  },
   initialize: function (client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);
@@ -319,8 +335,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
   })
 });
 
-function run_test()
-{
+function run_test() {
   DebuggerServer.createRootActor = (conn => {
     return RootActor(conn);
   });
@@ -329,7 +344,9 @@ function run_test()
   let trace = connectPipeTracing();
   let client = new DebuggerClient(trace);
   client.connect().then(([applicationType, traits]) => {
-    trace.expectReceive({"from":"<actorid>", "applicationType":"xpcshell-tests", "traits":[]});
+    trace.expectReceive({"from": "<actorid>",
+                         "applicationType": "xpcshell-tests",
+                         "traits": []});
     do_check_eq(applicationType, "xpcshell-tests");
 
     let rootFront = RootFront(client);
@@ -344,8 +361,8 @@ function run_test()
     };
 
     rootFront.getChild("child1").then(ret => {
-      trace.expectSend({"type":"getChild", "str":"child1", "to":"<actorid>"});
-      trace.expectReceive({"actor":"<actorid>", "from":"<actorid>"});
+      trace.expectSend({"type": "getChild", "str": "child1", "to": "<actorid>"});
+      trace.expectReceive({"actor": "<actorid>", "from": "<actorid>"});
 
       childFront = ret;
       do_check_true(childFront instanceof ChildFront);
@@ -355,49 +372,57 @@ function run_test()
       // Request the child again, make sure the same is returned.
       return rootFront.getChild("child1");
     }).then(ret => {
-      trace.expectSend({"type":"getChild", "str":"child1", "to":"<actorid>"});
-      trace.expectReceive({"actor":"<actorid>", "from":"<actorid>"});
+      trace.expectSend({"type": "getChild", "str": "child1", "to": "<actorid>"});
+      trace.expectReceive({"actor": "<actorid>", "from": "<actorid>"});
 
       expectRootChildren(1);
       do_check_true(ret === childFront);
     }).then(() => {
       return childFront.echo("hello");
     }).then(ret => {
-      trace.expectSend({"type":"echo", "str":"hello", "to":"<actorid>"});
-      trace.expectReceive({"str":"hello", "from":"<actorid>"});
+      trace.expectSend({"type": "echo", "str": "hello", "to": "<actorid>"});
+      trace.expectReceive({"str": "hello", "from": "<actorid>"});
 
       do_check_eq(ret, "hello");
     }).then(() => {
       return childFront.getDetail1();
     }).then(ret => {
-      trace.expectSend({"type":"getDetail1", "to":"<actorid>"});
-      trace.expectReceive({"actor":"<actorid>", "childID":"child1", "detail":"detail1", "from":"<actorid>"});
+      trace.expectSend({"type": "getDetail1", "to": "<actorid>"});
+      trace.expectReceive({"actor": "<actorid>",
+                           "childID": "child1",
+                           "detail": "detail1",
+                           "from": "<actorid>"});
       do_check_true(ret === childFront);
       do_check_eq(childFront.detail, "detail1");
     }).then(() => {
       return childFront.getDetail2();
     }).then(ret => {
-      trace.expectSend({"type":"getDetail2", "to":"<actorid>"});
-      trace.expectReceive({"actor":"<actorid>", "childID":"child1", "detail":"detail2", "from":"<actorid>"});
+      trace.expectSend({"type": "getDetail2", "to": "<actorid>"});
+      trace.expectReceive({"actor": "<actorid>",
+                           "childID": "child1",
+                           "detail": "detail2",
+                           "from": "<actorid>"});
       do_check_true(ret === childFront);
       do_check_eq(childFront.detail, "detail2");
     }).then(() => {
       return childFront.getIDDetail();
     }).then(ret => {
-      trace.expectSend({"type":"getIDDetail", "to":"<actorid>"});
-      trace.expectReceive({"idDetail": childFront.actorID, "from":"<actorid>"});
+      trace.expectSend({"type": "getIDDetail", "to": "<actorid>"});
+      trace.expectReceive({"idDetail": childFront.actorID, "from": "<actorid>"});
       do_check_true(ret === childFront);
     }).then(() => {
       return childFront.getSibling("siblingID");
     }).then(ret => {
-      trace.expectSend({"type":"getSibling", "id":"siblingID", "to":"<actorid>"});
-      trace.expectReceive({"sibling":{"actor":"<actorid>", "childID":"siblingID"}, "from":"<actorid>"});
+      trace.expectSend({"type": "getSibling", "id": "siblingID", "to": "<actorid>"});
+      trace.expectReceive({"sibling": {"actor": "<actorid>", "childID": "siblingID"},
+                           "from": "<actorid>"});
 
       expectRootChildren(2);
     }).then(ret => {
       return rootFront.getTemporaryChild("temp1").then(temp1 => {
-        trace.expectSend({"type":"getTemporaryChild", "id":"temp1", "to":"<actorid>"});
-        trace.expectReceive({"child":{"actor":"<actorid>", "childID":"temp1"}, "from":"<actorid>"});
+        trace.expectSend({"type": "getTemporaryChild", "id": "temp1", "to": "<actorid>"});
+        trace.expectReceive({"child": {"actor": "<actorid>", "childID": "temp1"},
+                             "from": "<actorid>"});
 
         // At this point we expect two direct children, plus the temporary holder
         // which should hold 1 itself.
@@ -406,8 +431,11 @@ function run_test()
 
         expectRootChildren(3);
         return rootFront.getTemporaryChild("temp2").then(temp2 => {
-          trace.expectSend({"type":"getTemporaryChild", "id":"temp2", "to":"<actorid>"});
-          trace.expectReceive({"child":{"actor":"<actorid>", "childID":"temp2"}, "from":"<actorid>"});
+          trace.expectSend({"type": "getTemporaryChild",
+                            "id": "temp2",
+                            "to": "<actorid>"});
+          trace.expectReceive({"child": {"actor": "<actorid>", "childID": "temp2"},
+                               "from": "<actorid>"});
 
           // Same amount of direct children, and an extra in the temporary holder.
           expectRootChildren(3);
@@ -416,12 +444,11 @@ function run_test()
 
           // Get the children of the temporary holder...
           let checkActors = rootActor._temporaryHolder.__poolMap.values();
-          let checkFronts = rootFront._temporaryHolder.__poolMap.values();
 
           // Now release the temporary holders and expect them to drop again.
           return rootFront.clearTemporaryChildren().then(() => {
-            trace.expectSend({"type":"clearTemporaryChildren", "to":"<actorid>"});
-            trace.expectReceive({"from":"<actorid>"});
+            trace.expectSend({"type": "clearTemporaryChildren", "to": "<actorid>"});
+            trace.expectReceive({"from": "<actorid>"});
 
             expectRootChildren(2);
             do_check_false(!!rootActor._temporaryHolder);
@@ -436,8 +463,12 @@ function run_test()
     }).then(ret => {
       return rootFront.getChildren(["child1", "child2"]);
     }).then(ret => {
-      trace.expectSend({"type":"getChildren", "ids":["child1", "child2"], "to":"<actorid>"});
-      trace.expectReceive({"children":[{"actor":"<actorid>", "childID":"child1"}, {"actor":"<actorid>", "childID":"child2"}], "from":"<actorid>"});
+      trace.expectSend({"type": "getChildren",
+                        "ids": ["child1", "child2"],
+                        "to": "<actorid>"});
+      trace.expectReceive({"children": [{"actor": "<actorid>", "childID": "child1"},
+                                        {"actor": "<actorid>", "childID": "child2"}],
+                           "from": "<actorid>"});
 
       expectRootChildren(3);
       do_check_true(ret[0] === childFront);
@@ -448,7 +479,8 @@ function run_test()
       // going to trigger events on the first child, so an event
       // triggered on the second should cause immediate failures.
 
-      let set = new Set(["event1", "event2", "named-event", "object-event", "array-object-event"]);
+      let set = new Set(["event1", "event2", "named-event",
+                         "object-event", "array-object-event"]);
 
       childFront.on("event1", (a, b, c) => {
         do_check_eq(a, 1);
@@ -497,22 +529,36 @@ function run_test()
       ret[1].on("array-object-event", fail);
 
       return childFront.emitEvents().then(() => {
-        trace.expectSend({"type":"emitEvents", "to":"<actorid>"});
-        trace.expectReceive({"type":"event1", "a":1, "b":2, "c":3, "from":"<actorid>"});
-        trace.expectReceive({"type":"event2", "a":4, "b":5, "c":6, "from":"<actorid>"});
-        trace.expectReceive({"type":"namedEvent", "a":1, "b":2, "c":3, "from":"<actorid>"});
-        trace.expectReceive({"type":"objectEvent", "detail":{"actor":"<actorid>", "childID":"child1", "detail":"detail1"}, "from":"<actorid>"});
-        trace.expectReceive({"type":"arrayObjectEvent", "detail":[{"actor":"<actorid>", "childID":"child1", "detail":"detail2"}], "from":"<actorid>"});
-        trace.expectReceive({"value":"correct response", "from":"<actorid>"});
-
+        trace.expectSend({"type": "emitEvents", "to": "<actorid>"});
+        trace.expectReceive({"type": "event1", "a": 1, "b": 2, "c": 3,
+                             "from": "<actorid>"});
+        trace.expectReceive({"type": "event2", "a": 4, "b": 5, "c": 6,
+                             "from": "<actorid>"});
+        trace.expectReceive({"type": "namedEvent", "a": 1, "b": 2, "c": 3,
+                             "from": "<actorid>"});
+        trace.expectReceive({"type": "objectEvent",
+                             "detail": {"actor": "<actorid>",
+                                        "childID": "child1",
+                                        "detail": "detail1"},
+                             "from": "<actorid>"});
+        trace.expectReceive({"type": "arrayObjectEvent",
+                             "detail": [{"actor": "<actorid>",
+                                         "childID": "child1",
+                                         "detail": "detail2"}],
+                             "from": "<actorid>"});
+        trace.expectReceive({"value": "correct response", "from": "<actorid>"});
 
         do_check_eq(set.size, 0);
       });
     }).then(ret => {
       return rootFront.getManyChildren();
     }).then(ret => {
-      trace.expectSend({"type":"getManyChildren", "to":"<actorid>"});
-      trace.expectReceive({"foo":"bar", "child5":{"actor":"<actorid>", "childID":"child5"}, "more":[{"actor":"<actorid>", "childID":"child6"}, {"actor":"<actorid>", "childID":"child7"}], "from":"<actorid>"});
+      trace.expectSend({"type": "getManyChildren", "to": "<actorid>"});
+      trace.expectReceive({"foo": "bar",
+                           "child5": {"actor": "<actorid>", "childID": "child5"},
+                           "more": [{"actor": "<actorid>", "childID": "child6"},
+                                    {"actor": "<actorid>", "childID": "child7"}],
+                           "from": "<actorid>"});
 
       // Check all the crazy stuff we did in getManyChildren
       do_check_eq(ret.foo, "bar");

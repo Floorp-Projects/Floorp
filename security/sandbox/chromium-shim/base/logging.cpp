@@ -28,6 +28,8 @@
 
 #include <algorithm>
 
+#include "mozilla/Unused.h"
+
 namespace logging {
 
 namespace {
@@ -127,6 +129,7 @@ Win32ErrorLogMessage::Win32ErrorLogMessage(const char* file,
                                            SystemErrorCode err)
     : err_(err),
       log_message_(file, line, severity) {
+  mozilla::Unused << err_;
 }
 
 Win32ErrorLogMessage::~Win32ErrorLogMessage() {
@@ -138,6 +141,7 @@ ErrnoLogMessage::ErrnoLogMessage(const char* file,
                                  SystemErrorCode err)
     : err_(err),
       log_message_(file, line, severity) {
+  mozilla::Unused << err_;
 }
 
 ErrnoLogMessage::~ErrnoLogMessage() {

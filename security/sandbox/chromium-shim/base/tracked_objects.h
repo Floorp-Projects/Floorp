@@ -6,6 +6,9 @@
 
 #ifndef _SECURITY_SANDBOX_TRACKED_OBJECTS_H_
 #define _SECURITY_SANDBOX_TRACKED_OBJECTS_H_
+
+#include "mozilla/Assertions.h"
+
 namespace tracked_objects
 {
   class ThreadData
@@ -13,6 +16,7 @@ namespace tracked_objects
   public:
     static void InitializeThreadContext(const std::string& name)
     {
+      MOZ_CRASH();
     }
   };
 }

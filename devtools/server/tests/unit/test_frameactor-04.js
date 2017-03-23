@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Verify the "frames" request on the thread.
  */
@@ -9,16 +11,16 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test_pause_frame();
-    });
+    attachTestTabAndResume(gClient, "test-stack",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             test_pause_frame();
+                           });
   });
   do_test_pending();
 }
@@ -46,17 +48,18 @@ var gSliceTests = [
 
 function test_frame_slice() {
   if (gSliceTests.length == 0) {
-    gThreadClient.resume(function () { finishClient(gClient); });
+    gThreadClient.resume(() => finishClient(gClient));
     return;
   }
 
   let test = gSliceTests.shift();
-  gThreadClient.getFrames(test.start, test.count, function (aResponse) {
-    var testFrames = gFrames.slice(test.start, test.count ? test.start + test.count : undefined);
-    do_check_eq(testFrames.length, aResponse.frames.length);
-    for (var i = 0; i < testFrames.length; i++) {
+  gThreadClient.getFrames(test.start, test.count, function (response) {
+    let testFrames = gFrames.slice(test.start,
+                                   test.count ? test.start + test.count : undefined);
+    do_check_eq(testFrames.length, response.frames.length);
+    for (let i = 0; i < testFrames.length; i++) {
       let expected = testFrames[i];
-      let actual = aResponse.frames[i];
+      let actual = response.frames[i];
 
       if (test.resetActors) {
         expected.actor = actual.actor;
@@ -70,9 +73,8 @@ function test_frame_slice() {
   });
 }
 
-function test_pause_frame()
-{
-  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket1) {
+function test_pause_frame() {
+  gThreadClient.addOneTimeListener("paused", function (event, packet) {
     test_frame_slice();
   });
 

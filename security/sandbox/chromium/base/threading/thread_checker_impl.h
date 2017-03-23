@@ -7,17 +7,18 @@
 
 #include "base/base_export.h"
 #include "base/compiler_specific.h"
+#include "base/sequence_token.h"
 #include "base/synchronization/lock.h"
 #include "base/threading/platform_thread.h"
 
 namespace base {
 
-// Real implementation of ThreadChecker, for use in debug mode, or
-// for temporary use in release mode (e.g. to CHECK on a threading issue
-// seen only in the wild).
+// Real implementation of ThreadChecker, for use in debug mode, or for temporary
+// use in release mode (e.g. to CHECK on a threading issue seen only in the
+// wild).
 //
-// Note: You should almost always use the ThreadChecker class to get the
-// right version for your build configuration.
+// Note: You should almost always use the ThreadChecker class to get the right
+// version for your build configuration.
 class BASE_EXPORT ThreadCheckerImpl {
  public:
   ThreadCheckerImpl();
@@ -31,12 +32,29 @@ class BASE_EXPORT ThreadCheckerImpl {
   void DetachFromThread();
 
  private:
-  void EnsureThreadIdAssigned() const;
+  void EnsureAssigned() const;
 
+  // Members are mutable so that CalledOnValidThread() can set them.
+
+  // Synchronizes access to all members.
   mutable base::Lock lock_;
-  // This is mutable so that CalledOnValidThread can set it.
-  // It's guarded by |lock_|.
-  mutable PlatformThreadRef valid_thread_id_;
+
+  // Thread on which CalledOnValidThread() may return true.
+  mutable PlatformThreadRef thread_id_;
+
+  // TaskToken for which CalledOnValidThread() always returns true. This allows
+  // CalledOnValidThread() to return true when called multiple times from the
+  // same task, even if it's not running in a single-threaded context itself
+  // (allowing usage of ThreadChecker/NonThreadSafe objects on the stack in the
+  // scope of one-off tasks). Note: CalledOnValidThread() may return true even
+  // if the current TaskToken is not equal to this.
+  mutable TaskToken task_token_;
+
+  // SequenceToken for which CalledOnValidThread() may return true. Used to
+  // ensure that CalledOnValidThread() doesn't return true for TaskScheduler
+  // tasks that happen to run on the same thread but weren't posted to the same
+  // SingleThreadTaskRunner.
+  mutable SequenceToken sequence_token_;
 };
 
 }  // namespace base

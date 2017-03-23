@@ -3,18 +3,19 @@
 
 "use strict";
 
-const Profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
-
 function check_actors(expect) {
-  do_check_eq(expect, DebuggerServer.tabActorFactories.hasOwnProperty("registeredActor1"));
-  do_check_eq(expect, DebuggerServer.tabActorFactories.hasOwnProperty("registeredActor2"));
+  do_check_eq(expect,
+              DebuggerServer.tabActorFactories.hasOwnProperty("registeredActor1"));
+  do_check_eq(expect,
+              DebuggerServer.tabActorFactories.hasOwnProperty("registeredActor2"));
 
-  do_check_eq(expect, DebuggerServer.globalActorFactories.hasOwnProperty("registeredActor2"));
-  do_check_eq(expect, DebuggerServer.globalActorFactories.hasOwnProperty("registeredActor1"));
+  do_check_eq(expect,
+              DebuggerServer.globalActorFactories.hasOwnProperty("registeredActor2"));
+  do_check_eq(expect,
+              DebuggerServer.globalActorFactories.hasOwnProperty("registeredActor1"));
 }
 
-function run_test()
-{
+function run_test() {
   // Allow incoming connections.
   DebuggerServer.init();
   DebuggerServer.addBrowserActors();
@@ -74,19 +75,19 @@ function test_lazy_api() {
   client.connect().then(function onConnect() {
     client.listTabs(onListTabs);
   });
-  function onListTabs(aResponse) {
+  function onListTabs(response) {
     // On listTabs, the actor is still not loaded,
     // but we can see its name in the list of available actors
     do_check_false(isActorLoaded);
     do_check_false(isActorInstanciated);
-    do_check_true("lazyActor" in aResponse);
+    do_check_true("lazyActor" in response);
 
     let {LazyFront} = require("xpcshell-test/registertestactors-03");
-    let front = LazyFront(client, aResponse);
+    let front = LazyFront(client, response);
     front.hello().then(onRequest);
   }
-  function onRequest(aResponse) {
-    do_check_eq(aResponse, "world");
+  function onRequest(response) {
+    do_check_eq(response, "world");
 
     // Finally, the actor is loaded on the first request being made to it
     do_check_true(isActorLoaded);
