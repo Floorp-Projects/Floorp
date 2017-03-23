@@ -17,6 +17,7 @@ import org.mozilla.focus.web.IWebView;
 
 public class InfoFragment extends WebFragment {
     private ProgressBar progressView;
+    private View webView;
 
     private static final String ARGUMENT_URL = "url";
 
@@ -36,6 +37,16 @@ public class InfoFragment extends WebFragment {
                               @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_info, container, false);
         progressView = (ProgressBar) view.findViewById(R.id.progress);
+        webView = view.findViewById(R.id.webview);
+
+        final String url = getInitialUrl();
+        if (!(url.startsWith("http://") || url.startsWith("https://"))) {
+            // Hide webview until content has loaded, if we're loading built in about/rights/etc
+            // pages: this avoid a white flash (on slower devices) between the screen appearing,
+            // and the about/right/etc content appearing. We don't do this for SUMO and other
+            // external pages, because they are both light-coloured, and significantly slower loading.
+            webView.setVisibility(View.INVISIBLE);
+        }
 
         return view;
     }
@@ -55,6 +66,10 @@ public class InfoFragment extends WebFragment {
                 progressView.announceForAccessibility(getString(R.string.accessibility_announcement_loading_finished));
 
                 progressView.setVisibility(View.INVISIBLE);
+
+                if (webView.getVisibility() != View.VISIBLE) {
+                    webView.setVisibility(View.VISIBLE);
+                }
             }
 
             @Override
