@@ -36,7 +36,10 @@ class Timeouts(object):
             self._marionette._send_message("timeouts", {"type": name, "ms": ms})
 
     def _get(self, name):
-        ms = self._marionette._send_message("getTimeouts", key=name)
+        ts = self._marionette._send_message("getTimeouts")
+        if name not in ts:
+            raise KeyError()
+        ms = ts[name]
         return ms / 1000
 
     @property
@@ -63,7 +66,11 @@ class Timeouts(object):
         minutes (or 300 seconds).
 
         """
-        return self._get("pageLoad")
+        # remove fallback when Firefox 56 is stable
+        try:
+            return self._get("pageLoad")
+        except KeyError:
+            return self._get("page load")
 
     @page_load.setter
     def page_load(self, sec):
@@ -71,7 +78,11 @@ class Timeouts(object):
         to wait for the page loading to complete.
 
         """
-        self._set("pageLoad", sec)
+        # remove fallback when Firefox 56 is stable
+        try:
+            self._set("pageLoad", sec)
+        except errors.InvalidArgumentException:
+            return self._set("page load", sec)
 
     @property
     def implicit(self):
