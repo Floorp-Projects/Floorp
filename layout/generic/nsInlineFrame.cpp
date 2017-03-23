@@ -65,7 +65,7 @@ nsInlineFrame::GetType() const
 void
 nsInlineFrame::InvalidateFrame(uint32_t aDisplayItemKey)
 {
-  if (IsSVGText()) {
+  if (nsSVGUtils::IsInSVGTextSubtree(this)) {
     nsIFrame* svgTextFrame =
       nsLayoutUtils::GetClosestFrameOfType(GetParent(),
                                            nsGkAtoms::svgTextFrame);
@@ -78,7 +78,7 @@ nsInlineFrame::InvalidateFrame(uint32_t aDisplayItemKey)
 void
 nsInlineFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
 {
-  if (IsSVGText()) {
+  if (nsSVGUtils::IsInSVGTextSubtree(this)) {
     nsIFrame* svgTextFrame =
       nsLayoutUtils::GetClosestFrameOfType(GetParent(),
                                            nsGkAtoms::svgTextFrame);
@@ -487,7 +487,7 @@ nsInlineFrame::AttributeChanged(int32_t aNameSpaceID,
     return rv;
   }
 
-  if (IsSVGText()) {
+  if (nsSVGUtils::IsInSVGTextSubtree(this)) {
     SVGTextFrame* f = static_cast<SVGTextFrame*>(
       nsLayoutUtils::GetClosestFrameOfType(this, nsGkAtoms::svgTextFrame));
     f->HandleAttributeChangeInDescendant(mContent->AsElement(),

@@ -24,6 +24,7 @@ include protocol PDataChannel;
 include protocol PTransportProvider;
 include protocol PChildToParentStream; //FIXME: bug #792908
 include protocol PParentToChildStream; //FIXME: bug #792908
+include protocol PStunAddrsRequest;
 
 include protocol PRtspController;
 include protocol PRtspChannel;
@@ -59,6 +60,7 @@ nested(upto inside_cpow) sync protocol PNecko
   manages PChannelDiverter;
   manages PTransportProvider;
   manages PAltDataOutputStream;
+  manages PStunAddrsRequest;
 
 parent:
   async __delete__();
@@ -117,6 +119,8 @@ parent:
   async RemoveRequestContext(nsCString rcid);
 
   async PAltDataOutputStream(nsCString type, PHttpChannel channel);
+
+  async PStunAddrsRequest();
 
   /**
    * Throttling of channels

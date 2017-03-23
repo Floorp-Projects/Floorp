@@ -1223,10 +1223,10 @@ function insertBookmark(item, parent) {
         `INSERT INTO moz_bookmarks (fk, type, parent, position, title,
                                     dateAdded, lastModified, guid,
                                     syncChangeCounter, syncStatus)
-         VALUES ((SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url), :type, :parent,
-                 :index, :title, :date_added, :last_modified, :guid,
-                 :syncChangeCounter, :syncStatus)
-        `, { url: item.hasOwnProperty("url") ? item.url.href : "nonexistent",
+         VALUES (CASE WHEN :url ISNULL THEN NULL ELSE (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url) END,
+                 :type, :parent, :index, :title, :date_added, :last_modified,
+                 :guid, :syncChangeCounter, :syncStatus)
+        `, { url: item.hasOwnProperty("url") ? item.url.href : null,
              type: item.type, parent: parent._id, index: item.index,
              title: item.title, date_added: PlacesUtils.toPRTime(item.dateAdded),
              last_modified: PlacesUtils.toPRTime(item.lastModified), guid: item.guid,

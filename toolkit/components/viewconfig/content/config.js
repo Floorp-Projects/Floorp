@@ -63,8 +63,8 @@ var view = {
     return "";
   },
   getColumnProperties(col) { return ""; },
-  treebox : null,
-  selection : null,
+  treebox: null,
+  selection: null,
   isContainer(index) { return false; },
   isContainerOpen(index) { return false; },
   isContainerEmpty(index) { return false; },

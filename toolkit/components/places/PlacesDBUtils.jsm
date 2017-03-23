@@ -66,7 +66,7 @@ this.PlacesDBUtils = {
     }
   },
 
-  _isShuttingDown : false,
+  _isShuttingDown: false,
   shutdown: function PDBU_shutdown() {
     PlacesDBUtils._isShuttingDown = true;
   },

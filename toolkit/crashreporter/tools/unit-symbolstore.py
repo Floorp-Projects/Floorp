@@ -14,9 +14,11 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import buildconfig
 
 from mock import patch
 from mozpack.manifests import InstallManifest
+import mozpack.path as mozpath
 
 import symbolstore
 
@@ -34,16 +36,17 @@ def write_pdb(filename):
     # write out a fake DLL too
     open(os.path.splitext(filename)[0] + ".dll", "w").write("aaa")
 
-writer = {'Windows': write_pdb,
-          'Microsoft': write_pdb,
+def target_platform():
+    return buildconfig.substs['OS_TARGET']
+
+writer = {'WINNT': write_pdb,
           'Linux': write_elf,
           'Sunos5': write_elf,
-          'Darwin': write_macho}[platform.system()]
-extension = {'Windows': ".pdb",
-             'Microsoft': ".pdb",
+          'Darwin': write_macho}[target_platform()]
+extension = {'WINNT': ".pdb",
              'Linux': ".so",
              'Sunos5': ".so",
-             'Darwin': ".dylib"}[platform.system()]
+             'Darwin': ".dylib"}[target_platform()]
 
 def add_extension(files):
     return [f + extension for f in files]
@@ -308,7 +311,7 @@ class TestRepoManifest(HelperMixin, unittest.TestCase):
         self.assertEqual("git:example.com/bar/something_else:src3.c:00000000",
                          symbolstore.GetVCSFilename(file3, d.srcdirs)[0])
 
-if platform.system() in ("Windows", "Microsoft"):
+if target_platform() == 'WINNT':
     class TestFixFilenameCase(HelperMixin, unittest.TestCase):
         def test_fix_filename_case(self):
             # self.test_dir is going to be 8.3 paths...
@@ -516,7 +519,6 @@ class TestFunctional(HelperMixin, unittest.TestCase):
     '''
     def setUp(self):
         HelperMixin.setUp(self)
-        import buildconfig
         self.skip_test = False
         if buildconfig.substs['MOZ_BUILD_APP'] != 'browser':
             self.skip_test = True
@@ -524,7 +526,7 @@ class TestFunctional(HelperMixin, unittest.TestCase):
         self.script_path = os.path.join(self.topsrcdir, 'toolkit',
                                         'crashreporter', 'tools',
                                         'symbolstore.py')
-        if platform.system() in ("Windows", "Microsoft"):
+        if target_platform() == 'WINNT':
             if buildconfig.substs['MSVC_HAS_DIA_SDK']:
                 self.dump_syms = os.path.join(buildconfig.topobjdir,
                                               'dist', 'host', 'bin',
@@ -572,7 +574,10 @@ class TestFunctional(HelperMixin, unittest.TestCase):
         self.assertTrue(len(file_lines) >= 1,
                          'should have nsBrowserApp.cpp FILE line')
         filename = file_lines[0].split(None, 2)[2]
-        self.assertEqual('hg:', filename[:3])
+
+        # Skip this check for local git repositories.
+        if os.path.isdir(mozpath.join(self.topsrcdir, '.hg')):
+            self.assertEqual('hg:', filename[:3])
 
 
 if __name__ == '__main__':

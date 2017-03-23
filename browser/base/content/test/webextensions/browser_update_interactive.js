@@ -8,9 +8,6 @@ add_task(function* setup() {
     // We don't have pre-pinned certificates for the local mochitest server
     ["extensions.install.requireBuiltInCerts", false],
     ["extensions.update.requireBuiltInCerts", false],
-
-    // XXX remove this when prompts are enabled by default
-    ["extensions.webextPermissionPrompts", true],
   ]});
 });
 

@@ -80,22 +80,22 @@ runInParent(() => {
 
 add_task(function* test_iframe() {
   let state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest”",
-    title       : "Authentication Required",
-    textValue   : "mochiuser1",
-    passValue   : "mochipass1",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest”",
+    title: "Authentication Required",
+    textValue: "mochiuser1",
+    passValue: "mochipass1",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   let action = {
-    buttonClick : "ok",
+    buttonClick: "ok",
   };
   promptDone = handlePrompt(state, action);
 
@@ -109,22 +109,22 @@ add_task(function* test_iframe() {
                       iframe.contentDocument);
 
   state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest2”",
-    title       : "Authentication Required",
-    textValue   : "mochiuser2",
-    passValue   : "mochipass2",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest2”",
+    title: "Authentication Required",
+    textValue: "mochiuser2",
+    passValue: "mochipass2",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
+    buttonClick: "ok",
   };
   promptDone = handlePrompt(state, action);
   // We've already authenticated to this host:port. For this next
@@ -150,23 +150,23 @@ add_task(function* test_iframe() {
   // expected password (to trigger an auth prompt, and change-password
   // popup notification).
   state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest”",
-    title       : "Authentication Required",
-    textValue   : "mochiuser1",
-    passValue   : "mochipass1",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest”",
+    title: "Authentication Required",
+    textValue: "mochiuser1",
+    passValue: "mochipass1",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
-    passField   : "mochipass1-new",
+    buttonClick: "ok",
+    passField: "mochipass1-new",
   };
   promptDone = handlePrompt(state, action);
   iframeLoaded = onloadPromiseFor("iframe");
@@ -182,23 +182,23 @@ add_task(function* test_iframe() {
   // to (but have an existing saved login for, so that we'll trigger
   // a change-password popup notification.
   state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest3”",
-    title       : "Authentication Required",
-    textValue   : "mochiuser3",
-    passValue   : "mochipass3-old",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest3”",
+    title: "Authentication Required",
+    textValue: "mochiuser3",
+    passValue: "mochipass3-old",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
-    passField   : "mochipass3-new",
+    buttonClick: "ok",
+    passField: "mochipass3-new",
   };
   promptDone = handlePrompt(state, action);
   iframeLoaded = onloadPromiseFor("iframe");
@@ -228,24 +228,24 @@ add_task(function* test_iframe() {
   });
 
   state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest3”",
-    title       : "Authentication Required",
-    textValue   : "",
-    passValue   : "",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    msg: "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest3”",
+    title: "Authentication Required",
+    textValue: "",
+    passValue: "",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   action = {
-    buttonClick : "ok",
-    textField   : "mochiuser3",
-    passField   : "mochipass3-old",
+    buttonClick: "ok",
+    textField: "mochiuser3",
+    passField: "mochipass3-old",
   };
   // Trigger a new prompt, so we can test adding a new login.
   promptDone = handlePrompt(state, action);
@@ -262,23 +262,23 @@ add_task(function* test_iframe() {
 
 add_task(function* test_schemeUpgrade() {
   let state = {
-    msg         : "https://example.com is requesting your username and password. " +
+    msg: "https://example.com is requesting your username and password. " +
                   "WARNING: Your password will not be sent to the website you are currently visiting!",
-    title       : "Authentication Required",
-    textValue   : "httpUser",
-    passValue   : "httpPass",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    title: "Authentication Required",
+    textValue: "httpUser",
+    passValue: "httpPass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   let action = {
-    buttonClick : "ok",
+    buttonClick: "ok",
   };
   let promptDone = handlePrompt(state, action);
 
@@ -295,23 +295,23 @@ add_task(function* test_schemeUpgrade() {
 
 add_task(function* test_schemeDowngrade() {
   let state = {
-    msg         : "http://example.com is requesting your username and password. " +
+    msg: "http://example.com is requesting your username and password. " +
                   "WARNING: Your password will not be sent to the website you are currently visiting!",
-    title       : "Authentication Required",
-    textValue   : "", // empty because we shouldn't downgrade
-    passValue   : "",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    title: "Authentication Required",
+    textValue: "", // empty because we shouldn't downgrade
+    passValue: "",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   let action = {
-    buttonClick : "cancel",
+    buttonClick: "cancel",
   };
   let promptDone = handlePrompt(state, action);
 
@@ -326,23 +326,23 @@ add_task(function* test_schemeDowngrade() {
 
 add_task(function* test_schemeUpgrade_dedupe() {
   let state = {
-    msg         : "https://example.org is requesting your username and password. " +
+    msg: "https://example.org is requesting your username and password. " +
                   "WARNING: Your password will not be sent to the website you are currently visiting!",
-    title       : "Authentication Required",
-    textValue   : "dedupeUser",
-    passValue   : "httpsPass",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
+    title: "Authentication Required",
+    textValue: "dedupeUser",
+    passValue: "httpsPass",
+    iconClass: "authentication-icon question-icon",
+    titleHidden: true,
+    textHidden: false,
+    passHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
+    focused: "textField",
+    defButton: "button0",
   };
   let action = {
-    buttonClick : "ok",
+    buttonClick: "ok",
   };
   let promptDone = handlePrompt(state, action);
 

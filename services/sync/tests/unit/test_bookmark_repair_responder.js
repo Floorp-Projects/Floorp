@@ -21,7 +21,7 @@ Log.repository.getLogger("Sqlite").level = Log.Level.Error;
 var recordedEvents = [];
 Service.recordTelemetryEvent = (object, method, value, extra = undefined) => {
   recordedEvents.push({ object, method, value, extra });
-}
+};
 
 function checkRecordedEvents(expected) {
   deepEqual(recordedEvents, expected);

@@ -112,9 +112,7 @@ function getAddons() {
  * @return {String} JSON data of application details
  */
 function getApplicationDetails() {
-  var locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
-               .getService(Ci.nsIXULChromeRegistry)
-               .getSelectedLocale("global");
+  var locale = Services.locale.getAppLocaleAsLangTag();
 
   // Put all our necessary information into JSON and return it:
   // appinfo, startupinfo, and addons

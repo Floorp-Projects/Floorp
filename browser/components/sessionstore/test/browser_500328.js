@@ -24,7 +24,7 @@ let checkState = Task.async(function*(browser) {
       ContentTask.spawn(browser, null, function() {
         is(content.testState, "foo",
            "testState after going back");
-        is(JSON.stringify(content.history.state), JSON.stringify({obj1:1}),
+        is(JSON.stringify(content.history.state), JSON.stringify({obj1: 1}),
            "first popstate object.");
 
         // Add a node with id "new-elem" to the document.
@@ -95,9 +95,9 @@ add_task(function* test() {
     //   testURL?page2  (state object: {obj3:/^a$/})  <-- newest
     function contentTest() {
       let history = content.window.history;
-      history.pushState({obj1:1}, "title-obj1");
-      history.pushState({obj2:2}, "title-obj2", "?page2");
-      history.replaceState({obj3:/^a$/}, "title-obj3");
+      history.pushState({obj1: 1}, "title-obj1");
+      history.pushState({obj2: 2}, "title-obj2", "?page2");
+      history.replaceState({obj3: /^a$/}, "title-obj3");
     }
     yield ContentTask.spawn(browser, null, contentTest);
     yield TabStateFlusher.flush(browser);

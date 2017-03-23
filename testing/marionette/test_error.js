@@ -89,6 +89,33 @@ add_test(function test_stringify() {
   run_next_test();
 });
 
+add_test(function test_pprint() {
+  equal('[object Object] {"foo":"bar"}', error.pprint`${{foo: "bar"}}`);
+
+  equal("[object Number] 42", error.pprint`${42}`);
+  equal("[object Boolean] true", error.pprint`${true}`);
+  equal("[object Undefined] undefined", error.pprint`${undefined}`);
+  equal("[object Null] null", error.pprint`${null}`);
+
+  let complexObj = {toJSON: () => "foo"};
+  equal('[object Object] "foo"', error.pprint`${complexObj}`);
+
+  let cyclic = {};
+  cyclic.me = cyclic;
+  equal("[object Object] <cyclic object value>", error.pprint`${cyclic}`);
+
+  let el = {
+    nodeType: 1,
+    localName: "input",
+    id: "foo",
+    classList: {length: 1},
+    className: "bar baz",
+  };
+  equal('<input id="foo" class="bar baz">', error.pprint`${el}`);
+
+  run_next_test();
+});
+
 add_test(function test_toJSON() {
   let e0 = new WebDriverError();
   let e0s = e0.toJSON();
@@ -167,6 +194,34 @@ add_test(function test_WebDriverError() {
   run_next_test();
 });
 
+add_test(function test_ElementClickInterceptedError() {
+  let otherEl = {
+    nodeType: 1,
+    localName: "a",
+    classList: [],
+  };
+  let obscuredEl = {
+    nodeType: 1,
+    localName: "b",
+    classList: [],
+    ownerDocument: {
+      elementFromPoint: function (x, y) {
+        return otherEl;
+      },
+    },
+  };
+
+  let err = new ElementClickInterceptedError(obscuredEl, {x: 1, y: 2});
+  equal("ElementClickInterceptedError", err.name);
+  equal("Element <b> is not clickable at point (1,2) " +
+      "because another element <a> obscures it",
+      err.message);
+  equal("element click intercepted", err.status);
+  ok(err instanceof WebDriverError);
+
+  run_next_test();
+});
+
 add_test(function test_ElementNotAccessibleError() {
   let err = new ElementNotAccessibleError("foo");
   equal("ElementNotAccessibleError", err.name);
@@ -177,11 +232,11 @@ add_test(function test_ElementNotAccessibleError() {
   run_next_test();
 });
 
-add_test(function test_ElementNotVisibleError() {
-  let err = new ElementNotVisibleError("foo");
-  equal("ElementNotVisibleError", err.name);
+add_test(function test_ElementNotInteractableError() {
+  let err = new ElementNotInteractableError("foo");
+  equal("ElementNotInteractableError", err.name);
   equal("foo", err.message);
-  equal("element not visible", err.status);
+  equal("element not interactable", err.status);
   ok(err instanceof WebDriverError);
 
   run_next_test();

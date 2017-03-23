@@ -7,18 +7,41 @@
 #include "vm/Printer.h"
 
 #include "mozilla/PodOperations.h"
+#include "mozilla/Printf.h"
 
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 
 #include "jscntxt.h"
-#include "jsprf.h"
 #include "jsutil.h"
 
 #include "ds/LifoAlloc.h"
 
 using mozilla::PodCopy;
+
+namespace
+{
+
+class GenericPrinterPrintfTarget : public mozilla::PrintfTarget
+{
+public:
+
+    explicit GenericPrinterPrintfTarget(js::GenericPrinter& p)
+        : printer(p)
+    {
+    }
+
+    bool append(const char* sp, size_t len) {
+        return printer.put(sp, len);
+    }
+
+private:
+
+    js::GenericPrinter& printer;
+};
+
+}
 
 namespace js {
 
@@ -58,15 +81,12 @@ GenericPrinter::vprintf(const char* fmt, va_list ap)
     if (strchr(fmt, '%') == nullptr)
         return put(fmt);
 
-    char* bp;
-    bp = JS_vsmprintf(fmt, ap);      /* XXX vsaprintf */
-    if (!bp) {
+    GenericPrinterPrintfTarget printer(*this);
+    if (!printer.vprint(fmt, ap)) {
         reportOutOfMemory();
         return false;
     }
-    bool r = put(bp);
-    js_free(bp);
-    return r;
+    return true;
 }
 
 const size_t Sprinter::DefaultSize = 64;
@@ -198,25 +218,6 @@ Sprinter::put(const char* s, size_t len)
 }
 
 bool
-Sprinter::vprintf(const char* fmt, va_list ap)
-{
-    InvariantChecker ic(this);
-
-    do {
-        va_list aq;
-        va_copy(aq, ap);
-        int i = vsnprintf(base + offset, size - offset, fmt, aq);
-        va_end(aq);
-        if (i > -1 && (size_t) i < size - offset) {
-            offset += i;
-            return true;
-        }
-    } while (realloc_(size * 2));
-
-    return false;
-}
-
-bool
 Sprinter::putString(JSString* s)
 {
     InvariantChecker ic(this);
@@ -264,14 +265,10 @@ Sprinter::jsprintf(const char* format, ...)
     va_list ap;
     va_start(ap, format);
 
-    UniquePtr<char, JS::FreePolicy> chars(JS_vsmprintf(format, ap));      /* XXX vsaprintf */
+    bool r = vprintf(format, ap);
     va_end(ap);
-    if (!chars) {
-        reportOutOfMemory();
-        return false;
-    }
 
-    return put(chars.get());
+    return r;
 }
 
 const char js_EscapeMap[] = {
@@ -452,29 +449,6 @@ Fprinter::put(const char* s, size_t len)
     return true;
 }
 
-bool
-Fprinter::printf(const char* fmt, ...)
-{
-    MOZ_ASSERT(file_);
-    va_list ap;
-    va_start(ap, fmt);
-    bool r = vfprintf(file_, fmt, ap);
-    if (!r)
-        reportOutOfMemory();
-    va_end(ap);
-    return r;
-}
-
-bool
-Fprinter::vprintf(const char* fmt, va_list ap)
-{
-    MOZ_ASSERT(file_);
-    bool r = vfprintf(file_, fmt, ap);
-    if (!r)
-        reportOutOfMemory();
-    return r;
-}
-
 LSprinter::LSprinter(LifoAlloc* lifoAlloc)
   : alloc_(lifoAlloc),
     head_(nullptr),
@@ -573,34 +547,6 @@ LSprinter::put(const char* s, size_t len)
 
     MOZ_ASSERT(len <= INT_MAX);
     return true;
-}
-
-bool
-LSprinter::printf(const char* fmt, ...)
-{
-    va_list va;
-    va_start(va, fmt);
-    bool r = vprintf(fmt, va);
-    va_end(va);
-    return r;
-}
-
-bool
-LSprinter::vprintf(const char* fmt, va_list ap)
-{
-    // Simple shortcut to avoid allocating strings.
-    if (strchr(fmt, '%') == nullptr)
-        return put(fmt);
-
-    char* bp;
-    bp = JS_vsmprintf(fmt, ap);      /* XXX vsaprintf */
-    if (!bp) {
-        reportOutOfMemory();
-        return false;
-    }
-    bool r = put(bp);
-    js_free(bp);
-    return r;
 }
 
 void

@@ -544,14 +544,8 @@ XPCOMUtils.defineConstant(this, "PanelUI", PanelUI);
 
 /**
  * Gets the currently selected locale for display.
- * @return  the selected locale or "en-US" if none is selected
+ * @return  the selected locale
  */
 function getLocale() {
-  try {
-    let chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"]
-                           .getService(Ci.nsIXULChromeRegistry);
-    return chromeRegistry.getSelectedLocale("browser");
-  } catch (ex) {
-    return "en-US";
-  }
+  return Services.locale.getAppLocaleAsLangTag();
 }

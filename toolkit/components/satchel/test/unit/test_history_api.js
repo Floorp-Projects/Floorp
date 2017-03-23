@@ -202,7 +202,7 @@ add_task(function* () {
   yield promiseCountEntries("time-B", null, checkExists); // firstUsed=1000, lastUsed=1099
   yield promiseCountEntries("time-C", null, checkExists); // firstUsed=1099, lastUsed=1099
   yield promiseCountEntries("time-D", null, checkExists); // firstUsed=2001, lastUsed=2001
-  yield promiseUpdate({ op : "remove", firstUsedStart: 1050, firstUsedEnd: 2000 });
+  yield promiseUpdate({ op: "remove", firstUsedStart: 1050, firstUsedEnd: 2000 });
 
   yield promiseCountEntries("time-A", null, checkExists);
   yield promiseCountEntries("time-B", null, checkExists);
@@ -213,7 +213,7 @@ add_task(function* () {
   // ===== 6 =====
   // Test removing by time range (multiple entries)
   testnum++;
-  yield promiseUpdate({ op : "remove", firstUsedStart: 1000, firstUsedEnd: 2000 });
+  yield promiseUpdate({ op: "remove", firstUsedStart: 1000, firstUsedEnd: 2000 });
 
   yield promiseCountEntries("time-A", null, checkNotExists);
   yield promiseCountEntries("time-B", null, checkNotExists);
@@ -284,7 +284,7 @@ add_task(function* () {
   results = yield promiseSearchEntries(["guid"], { fieldname: "field1", value: "value1" });
   let guid = processFirstResult(results)[3];
 
-  yield promiseUpdate({ op : "update", guid, value: "modifiedValue" });
+  yield promiseUpdate({ op: "update", guid, value: "modifiedValue" });
   yield promiseCountEntries("field1", "modifiedValue", checkExists);
   yield promiseCountEntries("field1", "value1", checkNotExists);
   yield promiseCountEntries("field1", "value1b", checkExists);
@@ -293,7 +293,7 @@ add_task(function* () {
   // ===== 13 =====
   // Add a single entry with times
   testnum++;
-  yield promiseUpdate({ op : "add", fieldname: "field2", value: "value2",
+  yield promiseUpdate({ op: "add", fieldname: "field2", value: "value2",
                         timesUsed: 20, firstUsed: 100, lastUsed: 500 });
 
   results = yield promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
@@ -308,7 +308,7 @@ add_task(function* () {
   // ===== 14 =====
   // Bump an entry, which updates its lastUsed field
   testnum++;
-  yield promiseUpdate({ op : "bump", fieldname: "field2", value: "value2",
+  yield promiseUpdate({ op: "bump", fieldname: "field2", value: "value2",
                         timesUsed: 20, firstUsed: 100, lastUsed: 500 });
   results = yield promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
                                        { fieldname: "field2", value: "value2" });
@@ -321,7 +321,7 @@ add_task(function* () {
   // ===== 15 =====
   // Bump an entry that does not exist
   testnum++;
-  yield promiseUpdate({ op : "bump", fieldname: "field3", value: "value3",
+  yield promiseUpdate({ op: "bump", fieldname: "field3", value: "value3",
                         timesUsed: 10, firstUsed: 50, lastUsed: 400 });
   results = yield promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
                                        { fieldname: "field3", value: "value3" });
@@ -336,7 +336,7 @@ add_task(function* () {
   testnum++;
   results = yield promiseSearchEntries(["guid"], { fieldname: "field3", value: "value3" });
   guid = processFirstResult(results)[3];
-  yield promiseUpdate({ op : "bump", guid, timesUsed: 20, firstUsed: 55, lastUsed: 400 });
+  yield promiseUpdate({ op: "bump", guid, timesUsed: 20, firstUsed: 55, lastUsed: 400 });
   results = yield promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
                                        { fieldname: "field3", value: "value3" });
   [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
@@ -353,7 +353,7 @@ add_task(function* () {
   results = yield promiseSearchEntries(["guid"], { fieldname: "field1", value: "value1b" });
   guid = processFirstResult(results)[3];
 
-  yield promiseUpdate({ op : "remove", guid});
+  yield promiseUpdate({ op: "remove", guid});
   yield promiseCountEntries("field1", "modifiedValue", checkExists);
   yield promiseCountEntries("field1", "value1b", checkNotExists);
   yield promiseCountEntries(null, null, num => do_check_eq(num, 3));
@@ -364,14 +364,14 @@ add_task(function* () {
   // ===== 18 =====
   // Add yet another single entry
   testnum++;
-  yield promiseUpdate({ op : "add", fieldname: "field4", value: "value4",
+  yield promiseUpdate({ op: "add", fieldname: "field4", value: "value4",
                         timesUsed: 5, firstUsed: 230, lastUsed: 600 });
   yield promiseCountEntries(null, null, num => do_check_eq(num, 4));
 
   // ===== 19 =====
   // Remove an entry by time
   testnum++;
-  yield promiseUpdate({ op : "remove", firstUsedStart: 60, firstUsedEnd: 250 });
+  yield promiseUpdate({ op: "remove", firstUsedStart: 60, firstUsedEnd: 250 });
   yield promiseCountEntries("field1", "modifiedValue", checkExists);
   yield promiseCountEntries("field2", "value2", checkNotExists);
   yield promiseCountEntries("field3", "value3", checkExists);
@@ -383,15 +383,15 @@ add_task(function* () {
   // Bump multiple existing entries at once
   testnum++;
 
-  yield promiseUpdate([{ op : "add", fieldname: "field5", value: "value5",
+  yield promiseUpdate([{ op: "add", fieldname: "field5", value: "value5",
                          timesUsed: 5, firstUsed: 230, lastUsed: 600 },
-                       { op : "add", fieldname: "field6", value: "value6",
+                       { op: "add", fieldname: "field6", value: "value6",
                          timesUsed: 12, firstUsed: 430, lastUsed: 700 }]);
   yield promiseCountEntries(null, null, num => do_check_eq(num, 4));
 
   yield promiseUpdate([
-                       { op : "bump", fieldname: "field5", value: "value5" },
-                       { op : "bump", fieldname: "field6", value: "value6" }]);
+                       { op: "bump", fieldname: "field5", value: "value5" },
+                       { op: "bump", fieldname: "field6", value: "value6" }]);
   results = yield promiseSearchEntries(["fieldname", "timesUsed", "firstUsed", "lastUsed"], { });
 
   do_check_eq(6, results[2].timesUsed);
@@ -411,22 +411,22 @@ add_task(function* () {
 
   // Cannot use arrow functions, see bug 1237961.
   Assert.rejects(promiseUpdate(
-                   { op : "bump", fieldname: "field5", value: "value5" }),
+                   { op: "bump", fieldname: "field5", value: "value5" }),
                  function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
                  "bumping when form history is disabled should fail");
   Assert.rejects(promiseUpdate(
-                   { op : "add", fieldname: "field5", value: "value5" }),
+                   { op: "add", fieldname: "field5", value: "value5" }),
                  function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
                  "Adding when form history is disabled should fail");
   Assert.rejects(promiseUpdate([
-                     { op : "update", fieldname: "field5", value: "value5" },
-                     { op : "remove", fieldname: "field5", value: "value5" }
+                     { op: "update", fieldname: "field5", value: "value5" },
+                     { op: "remove", fieldname: "field5", value: "value5" }
                    ]),
                  function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
                  "mixed operations when form history is disabled should fail");
   Assert.rejects(promiseUpdate([
                      null, undefined, "", 1, {},
-                     { op : "remove", fieldname: "field5", value: "value5" }
+                     { op: "remove", fieldname: "field5", value: "value5" }
                    ]),
                  function(err) { return err.result == Ci.mozIStorageError.MISUSE; },
                  "Invalid entries when form history is disabled should fail");

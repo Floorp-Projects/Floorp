@@ -87,7 +87,11 @@ function startServer(cert, expectingPeerCert, clientCertificateConfig,
         }
       }, 0, 0, Services.tm.currentThread);
     },
-    onStopListening: function() {}
+    onStopListening: function() {
+      do_print("onStopListening");
+      input.close();
+      output.close();
+    }
   };
 
   tlsServer.setSessionCache(false);
@@ -96,7 +100,7 @@ function startServer(cert, expectingPeerCert, clientCertificateConfig,
 
   tlsServer.asyncListen(listener);
 
-  return tlsServer.port;
+  return tlsServer;
 }
 
 function storeCertOverride(port, cert) {
@@ -136,6 +140,9 @@ function startClient(port, cert, expectingBadCertAlert) {
       } catch (e) {
         let errorCode = -1 * (e.result & 0xFFFF);
         if (expectingBadCertAlert && errorCode == SSL_ERROR_BAD_CERT_ALERT) {
+          do_print("Got bad cert alert as expected");
+          input.close();
+          output.close();
           inputDeferred.resolve();
         } else {
           inputDeferred.reject(e);
@@ -221,13 +228,15 @@ add_task(function*() {
   for (let v of versions) {
     prefs.setIntPref("security.tls.version.max", v.prefValue);
     for (let t of tests) {
-      let port = startServer(cert,
-                             t.expectingPeerCert,
-                             t.clientCertificateConfig,
-                             v.version,
-                             v.versionStr);
-      storeCertOverride(port, cert);
-      yield startClient(port, t.sendClientCert ? cert : null, t.expectingBadCertAlert);
+      let server = startServer(cert,
+                               t.expectingPeerCert,
+                               t.clientCertificateConfig,
+                               v.version,
+                               v.versionStr);
+      storeCertOverride(server.port, cert);
+      yield startClient(server.port, t.sendClientCert ? cert : null,
+                        t.expectingBadCertAlert);
+      server.close();
     }
   }
 });
