@@ -511,9 +511,10 @@ class TestRunnerManager(threading.Thread):
                     return None, None
             try:
                 # Need to block here just to allow for contention with other processes
-                test = test_queue.get(block=True, timeout=1)
+                test = test_queue.get(block=True, timeout=2)
             except Empty:
-                pass
+                if test_queue.empty():
+                    test_queue = None
         return test, test_queue
 
     def run_test(self):
