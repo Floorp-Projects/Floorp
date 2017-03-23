@@ -5,17 +5,26 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
+    'mozIWebRequestService.idl',
     'nsIWebRequestListener.idl',
 ]
 
 XPIDL_MODULE = 'webextensions'
 
+UNIFIED_SOURCES += [
+    'nsWebRequestListener.cpp',
+    'WebRequestService.cpp',
+]
+
 EXPORTS += [
     'nsWebRequestListener.h',
 ]
 
-UNIFIED_SOURCES += [
-    'nsWebRequestListener.cpp',
+EXPORTS.mozilla += [
+    'WebRequestService.h',
 ]
 
 FINAL_LIBRARY = 'xul'
+
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "WebExtensions: Request Handling")

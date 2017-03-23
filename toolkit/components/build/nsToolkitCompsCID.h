@@ -92,6 +92,9 @@
 #define NS_ADDONPATHSERVICE_CONTRACTID \
     "@mozilla.org/addon-path-service;1"
 
+#define NS_WEBREQUESTSERVICE_CONTRACTID \
+  "@mozilla.org/addons/webrequest-service;1"
+
 /////////////////////////////////////////////////////////////////////////////
 
 #define ALERT_NOTIFICATION_CID \
@@ -192,3 +195,7 @@
 
 #define NS_ADDON_POLICY_SERVICE_CONTRACTID \
   "@mozilla.org/addons/policy-service;1"
+
+// {5dd0c968-d74d-42c3-b930-36145f885c3b}
+#define NS_WEBREQUEST_SERVICE_CID \
+{ 0x5dd0c968, 0xd74d, 0x42c3, { 0xb9, 0x30, 0x36, 0x14, 0x5f, 0x88, 0x5c, 0x3b } }
