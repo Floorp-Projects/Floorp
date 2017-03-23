@@ -24,12 +24,12 @@ linux32/opt:
     test-sets:
         -  linux32-tests
         -  linux32-opt-tests
+        -  awsy
 linux32-nightly/opt:
     build-platform: linux-nightly/opt
     test-sets:
         -  linux32-tests
         -  linux32-opt-tests
-        - awsy
 
 linux64/debug:
     build-platform: linux64/debug
@@ -44,6 +44,7 @@ linux64/opt:
         - opt-only-tests
         - desktop-screenshot-capture
         - talos
+        - awsy
 linux64-nightly/opt:
     build-platform: linux64-nightly/opt
     test-sets:
@@ -52,7 +53,6 @@ linux64-nightly/opt:
         - opt-only-tests
         - desktop-screenshot-capture
         - talos
-        - awsy
 
 # TODO: use 'pgo' and 'asan' labels here, instead of -pgo/opt
 linux64-pgo/opt:
