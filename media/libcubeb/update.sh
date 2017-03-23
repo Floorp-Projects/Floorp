@@ -63,3 +63,9 @@ if [ -n "$rev" ]; then
 else
   echo "Remember to update README_MOZILLA with the version details."
 fi
+
+echo "Applying a patch on top of $version"
+patch -p3 < ./fix-crashes.patch
+
+echo "Applying a patch on top of $version"
+patch -p3 < ./uplift-cubeb-f07ee6d-to-aurora.patch
