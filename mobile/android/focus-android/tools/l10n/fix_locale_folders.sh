@@ -24,9 +24,16 @@ do
 
 		echo "Fixing ${folder} -> ${fixed_folder}"
 
-		rm -rf "${fixed_folder}"
+		# The target folder might already have some data (e.g. our urls.xml),
+		# hence we only copy newly generated files over (and keep existing
+		# non-generated files).
+		if [ ! -d "${fixed_folder}" ]; then
+		    mkdir "${fixed_folder}"
+		fi
 
-		mv "$folder" "${fixed_folder}"
+		cp -r "$folder"/* "${fixed_folder}"
+
+		rm -rf "$folder"
 	fi
 done
 
