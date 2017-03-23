@@ -6,8 +6,12 @@
 
 const { addons, createClass, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
+const { throttle } = require("devtools/client/inspector/shared/utils");
 
 const Types = require("../types");
+
+// The delay prior to executing the grid cell highlighting.
+const GRID_CELL_MOUSEOVER_TIMEOUT = 150;
 
 // Move SVG grid to the right 100 units, so that it is not flushed against the edge of
 // layout border
@@ -33,6 +37,13 @@ module.exports = createClass({
     return {
       selectedGrids: [],
     };
+  },
+
+  componentWillMount() {
+    // Throttle the grid highlighting of grid cells. It makes the UX smoother by not
+    // lagging the grid cell highlighting if a lot of grid cells are mouseover in a
+    // quick succession.
+    this.highlightCell = throttle(this.highlightCell, GRID_CELL_MOUSEOVER_TIMEOUT);
   },
 
   componentWillReceiveProps({ grids }) {
@@ -64,6 +75,31 @@ module.exports = createClass({
     }
 
     return gridArea.name;
+  },
+
+  highlightCell({ target }) {
+    const {
+      grids,
+      onShowGridAreaHighlight,
+      onShowGridCellHighlight,
+    } = this.props;
+    const name = target.getAttribute("data-grid-area-name");
+    const id = target.getAttribute("data-grid-id");
+    const fragmentIndex = target.getAttribute("data-grid-fragment-index");
+    const color = target.getAttribute("stroke");
+    const rowNumber = target.getAttribute("data-grid-row");
+    const columnNumber = target.getAttribute("data-grid-column");
+
+    target.setAttribute("fill", color);
+
+    if (name) {
+      onShowGridAreaHighlight(grids[id].nodeFront, name, color);
+    }
+
+    if (fragmentIndex && rowNumber && columnNumber) {
+      onShowGridCellHighlight(grids[id].nodeFront, fragmentIndex,
+        rowNumber, columnNumber);
+    }
   },
 
   /**
@@ -186,29 +222,9 @@ module.exports = createClass({
     onShowGridCellHighlight(grids[id].nodeFront);
   },
 
-  onMouseOverCell({ target }) {
-    const {
-      grids,
-      onShowGridAreaHighlight,
-      onShowGridCellHighlight,
-    } = this.props;
-    const name = target.getAttribute("data-grid-area-name");
-    const id = target.getAttribute("data-grid-id");
-    const fragmentIndex = target.getAttribute("data-grid-fragment-index");
-    const color = target.getAttribute("stroke");
-    const rowNumber = target.getAttribute("data-grid-row");
-    const columnNumber = target.getAttribute("data-grid-column");
-
-    target.setAttribute("fill", color);
-
-    if (name) {
-      onShowGridAreaHighlight(grids[id].nodeFront, name, color);
-    }
-
-    if (fragmentIndex && rowNumber && columnNumber) {
-      onShowGridCellHighlight(grids[id].nodeFront, fragmentIndex,
-        rowNumber, columnNumber);
-    }
+  onMouseOverCell(event) {
+    event.persist();
+    this.highlightCell(event);
   },
 
   render() {
