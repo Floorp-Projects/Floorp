@@ -477,7 +477,7 @@ CSS_PROP_DISPLAY(
     Appearance,
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME,
-    "layout.css.appearance.enabled",
+    "layout.css.appearance.enabled", // also controls -webkit-appearance
     VARIANT_HK,
     kAppearanceKTable,
     CSS_PROP_NO_OFFSET,
