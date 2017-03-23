@@ -1,3 +1,5 @@
+use capabilities::{SpecNewSessionParameters, LegacyNewSessionParameters,
+                   CapabilitiesMatching, BrowserCapabilities, Capabilities};
 use common::{Date, Nullable, WebElement, FrameId, LocatorStrategy};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
 use httpapi::{Route, WebDriverExtensionRoute, VoidWebDriverExtensionRoute};
@@ -428,26 +430,16 @@ pub trait Parameters: Sized {
     fn from_json(body: &Json) -> WebDriverResult<Self>;
 }
 
+/// Wrapper around the two supported variants of new session paramters
+///
+/// The Spec variant is used for storing spec-compliant parameters whereas
+/// the legacy variant is used to store desiredCapabilities/requiredCapabilities
+/// parameters, and is intended to minimise breakage as we transition users to
+/// the spec design.
 #[derive(PartialEq)]
-pub struct NewSessionParameters {
-    pub desired: BTreeMap<String, Json>,
-    pub required: BTreeMap<String, Json>,
-}
-
-impl NewSessionParameters {
-    pub fn get(&self, name: &str) -> Option<&Json> {
-        self.required.get(name).or_else(|| self.desired.get(name))
-    }
-
-    pub fn consume(&mut self, name: &str) -> Option<Json> {
-        let required = self.required.remove(name);
-        let desired = self.desired.remove(name);
-        if required.is_some() {
-            required
-        } else {
-            desired
-        }
-    }
+pub enum NewSessionParameters {
+    Spec(SpecNewSessionParameters),
+    Legacy(LegacyNewSessionParameters)
 }
 
 impl Parameters for NewSessionParameters {
@@ -455,38 +447,30 @@ impl Parameters for NewSessionParameters {
         let data = try_opt!(body.as_object(),
                             ErrorStatus::UnknownError,
                             "Message body was not an object");
-
-        let desired_capabilities =
-            if let Some(capabilities) = data.get("desiredCapabilities") {
-                try_opt!(capabilities.as_object(),
-                         ErrorStatus::InvalidArgument,
-                         "'desiredCapabilities' parameter is not an object").clone()
-            } else {
-                BTreeMap::new()
-            };
-
-        let required_capabilities =
-            if let Some(capabilities) = data.get("requiredCapabilities") {
-                try_opt!(capabilities.as_object(),
-                         ErrorStatus::InvalidArgument,
-                         "'requiredCapabilities' parameter is not an object").clone()
-            } else {
-                BTreeMap::new()
-            };
-
-        Ok(NewSessionParameters {
-            desired: desired_capabilities,
-            required: required_capabilities
-        })
+        if data.get("capabilities").is_some() {
+            Ok(NewSessionParameters::Spec(try!(SpecNewSessionParameters::from_json(body))))
+        } else {
+            Ok(NewSessionParameters::Legacy(try!(LegacyNewSessionParameters::from_json(body))))
+        }
     }
 }
 
 impl ToJson for NewSessionParameters {
     fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("desiredCapabilities".to_owned(), self.desired.to_json());
-        data.insert("requiredCapabilities".to_owned(), self.required.to_json());
-        Json::Object(data)
+        match self {
+            &NewSessionParameters::Spec(ref x) => x.to_json(),
+            &NewSessionParameters::Legacy(ref x) => x.to_json()
+        }
+    }
+}
+
+impl CapabilitiesMatching for NewSessionParameters {
+    fn match_browser<T: BrowserCapabilities>(&self, browser_capabilities: &mut T)
+                                             -> WebDriverResult<Option<Capabilities>> {
+        match self {
+            &NewSessionParameters::Spec(ref x) => x.match_browser(browser_capabilities),
+            &NewSessionParameters::Legacy(ref x) => x.match_browser(browser_capabilities)
+        }
     }
 }
 
