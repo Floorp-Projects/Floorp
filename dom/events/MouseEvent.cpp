@@ -344,6 +344,10 @@ MouseEvent::GetScreenX(int32_t* aScreenX)
 int32_t
 MouseEvent::ScreenX(CallerType aCallerType)
 {
+  if (mEvent->mFlags.mIsPositionless) {
+    return 0;
+  }
+
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     // Sanitize to something sort of like client cooords, but not quite
     // (defaulting to (0,0) instead of our pre-specified client coords).
@@ -365,6 +369,10 @@ MouseEvent::GetScreenY(int32_t* aScreenY)
 int32_t
 MouseEvent::ScreenY(CallerType aCallerType)
 {
+  if (mEvent->mFlags.mIsPositionless) {
+    return 0;
+  }
+
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     // Sanitize to something sort of like client cooords, but not quite
     // (defaulting to (0,0) instead of our pre-specified client coords).
@@ -387,6 +395,10 @@ MouseEvent::GetClientX(int32_t* aClientX)
 int32_t
 MouseEvent::ClientX()
 {
+  if (mEvent->mFlags.mIsPositionless) {
+    return 0;
+  }
+
   return Event::GetClientCoords(mPresContext, mEvent, mEvent->mRefPoint,
                                 mClientPoint).x;
 }
@@ -402,6 +414,10 @@ MouseEvent::GetClientY(int32_t* aClientY)
 int32_t
 MouseEvent::ClientY()
 {
+  if (mEvent->mFlags.mIsPositionless) {
+    return 0;
+  }
+
   return Event::GetClientCoords(mPresContext, mEvent, mEvent->mRefPoint,
                                 mClientPoint).y;
 }
@@ -409,6 +425,9 @@ MouseEvent::ClientY()
 int32_t
 MouseEvent::OffsetX()
 {
+  if (mEvent->mFlags.mIsPositionless) {
+    return 0;
+  }
   return Event::GetOffsetCoords(mPresContext, mEvent, mEvent->mRefPoint,
                                 mClientPoint).x;
 }
@@ -416,6 +435,9 @@ MouseEvent::OffsetX()
 int32_t
 MouseEvent::OffsetY()
 {
+  if (mEvent->mFlags.mIsPositionless) {
+    return 0;
+  }
   return Event::GetOffsetCoords(mPresContext, mEvent, mEvent->mRefPoint,
                                 mClientPoint).y;
 }

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 /**
  * Test if getExecutableLines return correct information
  */
@@ -20,8 +22,8 @@ function run_test() {
     attachTestTabAndResume(
       gClient,
       "test-get-executable-lines",
-      function (aResponse, aTabClient, aThreadClient) {
-        gThreadClient = aThreadClient;
+      function (response, tabClient, threadClient) {
+        gThreadClient = threadClient;
         test_executable_lines();
       }
     );

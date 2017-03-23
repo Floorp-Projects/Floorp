@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "base/debug/activity_tracker.h"
 #include "base/logging.h"
 #include "base/synchronization/condition_variable.h"
 #include "base/synchronization/lock.h"
@@ -39,12 +40,11 @@ namespace base {
 // -----------------------------------------------------------------------------
 // This is just an abstract base class for waking the two types of waiters
 // -----------------------------------------------------------------------------
-WaitableEvent::WaitableEvent(bool manual_reset, bool initially_signaled)
-    : kernel_(new WaitableEventKernel(manual_reset, initially_signaled)) {
-}
+WaitableEvent::WaitableEvent(ResetPolicy reset_policy,
+                             InitialState initial_state)
+    : kernel_(new WaitableEventKernel(reset_policy, initial_state)) {}
 
-WaitableEvent::~WaitableEvent() {
-}
+WaitableEvent::~WaitableEvent() = default;
 
 void WaitableEvent::Reset() {
   base::AutoLock locked(kernel_->lock_);
@@ -158,6 +158,9 @@ void WaitableEvent::Wait() {
 }
 
 bool WaitableEvent::TimedWait(const TimeDelta& max_time) {
+  // Record the event that this thread is blocking upon (for hang diagnosis).
+  base::debug::ScopedEventWaitActivity event_activity(this);
+
   base::ThreadRestrictions::AssertWaitAllowed();
   const TimeTicks end_time(TimeTicks::Now() + max_time);
   const bool finite_time = max_time.ToInternalValue() >= 0;
@@ -232,6 +235,9 @@ size_t WaitableEvent::WaitMany(WaitableEvent** raw_waitables,
                                size_t count) {
   base::ThreadRestrictions::AssertWaitAllowed();
   DCHECK(count) << "Cannot wait on no events";
+
+  // Record an event (the first) that this thread is blocking upon.
+  base::debug::ScopedEventWaitActivity event_activity(raw_waitables[0]);
 
   // We need to acquire the locks in a globally consistent order. Thus we sort
   // the array of waitables by address. We actually sort a pairs so that we can
@@ -348,14 +354,13 @@ size_t WaitableEvent::EnqueueMany
 // -----------------------------------------------------------------------------
 // Private functions...
 
-WaitableEvent::WaitableEventKernel::WaitableEventKernel(bool manual_reset,
-                                                        bool initially_signaled)
-    : manual_reset_(manual_reset),
-      signaled_(initially_signaled) {
-}
+WaitableEvent::WaitableEventKernel::WaitableEventKernel(
+    ResetPolicy reset_policy,
+    InitialState initial_state)
+    : manual_reset_(reset_policy == ResetPolicy::MANUAL),
+      signaled_(initial_state == InitialState::SIGNALED) {}
 
-WaitableEvent::WaitableEventKernel::~WaitableEventKernel() {
-}
+WaitableEvent::WaitableEventKernel::~WaitableEventKernel() = default;
 
 // -----------------------------------------------------------------------------
 // Wake all waiting waiters. Called with lock held.

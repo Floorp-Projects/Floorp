@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable no-shadow, max-nested-callbacks */
 
 "use strict";
 
@@ -12,8 +13,7 @@ const INITIAL_WAIT_TIME = 100; // ms
 const MAX_WAIT_TIME = 20000; // ms
 const MAX_PROFILER_ENTRIES = 10000000;
 
-function run_test()
-{
+function run_test() {
   // Ensure the profiler is not running when the test starts (it could
   // happen if the MOZ_PROFILER_STARTUP environment variable is set).
   Profiler.StopProfiler();
@@ -36,8 +36,7 @@ function run_test()
   do_test_pending();
 }
 
-function check_buffer(client, actor, callback)
-{
+function check_buffer(client, actor, callback) {
   client.request({ to: actor, type: "isActive" }, response => {
     do_check_true(typeof response.position === "number");
     do_check_true(typeof response.totalSize === "number");
@@ -51,8 +50,7 @@ function check_buffer(client, actor, callback)
   });
 }
 
-function check_empty_buffer(client, actor, callback)
-{
+function check_empty_buffer(client, actor, callback) {
   client.request({ to: actor, type: "isActive" }, response => {
     do_check_false(Profiler.IsActive());
     do_check_false(response.isActive);
@@ -65,19 +63,18 @@ function check_empty_buffer(client, actor, callback)
   });
 }
 
-function activate_profiler(client, actor, callback)
-{
-  client.request({ to: actor, type: "startProfiler", entries: MAX_PROFILER_ENTRIES }, response => {
-    do_check_true(response.started);
-    client.request({ to: actor, type: "isActive" }, response => {
-      do_check_true(response.isActive);
-      callback(response.currentTime);
+function activate_profiler(client, actor, callback) {
+  client.request(
+    { to: actor, type: "startProfiler", entries: MAX_PROFILER_ENTRIES }, response => {
+      do_check_true(response.started);
+      client.request({ to: actor, type: "isActive" }, response => {
+        do_check_true(response.isActive);
+        callback(response.currentTime);
+      });
     });
-  });
 }
 
-function deactivate_profiler(client, actor, callback)
-{
+function deactivate_profiler(client, actor, callback) {
   client.request({ to: actor, type: "stopProfiler" }, response => {
     do_check_false(response.started);
     client.request({ to: actor, type: "isActive" }, response => {
@@ -87,18 +84,15 @@ function deactivate_profiler(client, actor, callback)
   });
 }
 
-function wait_for_samples(client, actor, callback)
-{
-  function attempt(delay)
-  {
-    // No idea why, but Components.stack.sourceLine returns null.
-    let funcLine = Components.stack.lineNumber - 3;
-
+function wait_for_samples(client, actor, callback) {
+  function attempt(delay) {
     // Spin for the requested time, then take a sample.
     let start = Date.now();
-    let stack;
+
     do_print("Attempt: delay = " + delay);
-    while (Date.now() - start < delay) { stack = Components.stack; }
+    while (Date.now() - start < delay) {
+      /* Empty */
+    }
     do_print("Attempt: finished waiting.");
 
     client.request({ to: actor, type: "getProfile" }, response => {
@@ -109,14 +103,14 @@ function wait_for_samples(client, actor, callback)
         if (delay < MAX_WAIT_TIME) {
           // Double the spin-wait time and try again.
           do_print("Attempt: no samples, going around again.");
-          return attempt(delay * 2);
+          attempt(delay * 2);
         } else {
           // We've waited long enough, so just fail.
           do_print("Attempt: waited a long time, but no samples were collected.");
           do_print("Giving up.");
           do_check_true(false);
-          return;
         }
+        return;
       }
       callback();
     });

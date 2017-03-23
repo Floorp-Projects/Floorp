@@ -20,7 +20,8 @@
 #include "nsError.h"
 #include "nsIConverterInputStream.h"
 #include "nsIInputStream.h"
-#include "nsISeekableStream.h"
+#include "nsIMultiplexInputStream.h"
+#include "nsStringStream.h"
 #include "nsISupportsImpl.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
@@ -133,17 +134,23 @@ FileReaderSync::ReadAsText(Blob& aBlob,
   }
 
   nsAutoCString encoding;
-  unsigned char sniffBuf[3] = { 0, 0, 0 };
-  uint32_t numRead;
-  aRv = stream->Read(reinterpret_cast<char*>(sniffBuf),
-                     sizeof(sniffBuf), &numRead);
+
+  nsCString sniffBuf;
+  if (!sniffBuf.SetLength(3, fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  uint32_t numRead = 0;
+  aRv = stream->Read(sniffBuf.BeginWriting(), sniffBuf.Length(), &numRead);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
   // The BOM sniffing is baked into the "decode" part of the Encoding
   // Standard, which the File API references.
-  if (!nsContentUtils::CheckForBOM(sniffBuf, numRead, encoding)) {
+  if (!nsContentUtils::CheckForBOM((const unsigned char*)sniffBuf.BeginReading(),
+                                   numRead, encoding)) {
     // BOM sniffing failed. Try the API argument.
     if (!aEncoding.WasPassed() ||
         !EncodingUtils::FindEncodingForLabel(aEncoding.Value(),
@@ -167,20 +174,39 @@ FileReaderSync::ReadAsText(Blob& aBlob,
     }
   }
 
-  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(stream);
-  if (!seekable) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
+  if (numRead < sniffBuf.Length()) {
+    sniffBuf.Truncate(numRead);
   }
 
-  // Seek to 0 because to undo the BOM sniffing advance. UTF-8 and UTF-16
-  // decoders will swallow the BOM.
-  aRv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+  // Let's recreate the full stream using a:
+  // multiplexStream(stringStream + original stream)
+  // In theory, we could try to see if the inputStream is a nsISeekableStream,
+  // but this doesn't work correctly for nsPipe3 - See bug 1349570.
+
+  nsCOMPtr<nsIInputStream> stringStream;
+  aRv = NS_NewCStringInputStream(getter_AddRefs(stringStream), sniffBuf);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
-  aRv = ConvertStream(stream, encoding.get(), aResult);
+  nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
+    do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+  if (NS_WARN_IF(!multiplexStream)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  aRv = multiplexStream->AppendStream(stringStream);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  aRv = multiplexStream->AppendStream(stream);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  aRv = ConvertStream(multiplexStream, encoding.get(), aResult);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

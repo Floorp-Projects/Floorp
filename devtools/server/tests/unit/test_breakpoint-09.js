@@ -1,5 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable no-shadow, max-nested-callbacks */
+
+"use strict";
 
 /**
  * Check that removing a breakpoint works.
@@ -10,51 +13,49 @@ var gClient;
 var gThreadClient;
 var gCallback;
 
-function run_test()
-{
+function run_test() {
   run_test_with_server(DebuggerServer, function () {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
 }
 
-function run_test_with_server(aServer, aCallback)
-{
-  gCallback = aCallback;
-  initTestDebuggerServer(aServer);
-  gDebuggee = addTestGlobal("test-stack", aServer);
-  gClient = new DebuggerClient(aServer.connectPipe());
+function run_test_with_server(server, callback) {
+  gCallback = callback;
+  initTestDebuggerServer(server);
+  gDebuggee = addTestGlobal("test-stack", server);
+  gClient = new DebuggerClient(server.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test_remove_breakpoint();
-    });
+    attachTestTabAndResume(gClient, "test-stack",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             test_remove_breakpoint();
+                           });
   });
 }
 
-function test_remove_breakpoint()
-{
+function test_remove_breakpoint() {
   let done = false;
-  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    let source = gThreadClient.source(aPacket.frame.where.source);
+  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+    let source = gThreadClient.source(packet.frame.where.source);
     let location = { line: gDebuggee.line0 + 2 };
 
-    source.setBreakpoint(location, function (aResponse, bpClient) {
-      gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
+    source.setBreakpoint(location, function (response, bpClient) {
+      gThreadClient.addOneTimeListener("paused", function (event, packet) {
         // Check the return value.
-        do_check_eq(aPacket.type, "paused");
-        do_check_eq(aPacket.frame.where.source.actor, source.actor);
-        do_check_eq(aPacket.frame.where.line, location.line);
-        do_check_eq(aPacket.why.type, "breakpoint");
-        do_check_eq(aPacket.why.actors[0], bpClient.actor);
+        do_check_eq(packet.type, "paused");
+        do_check_eq(packet.frame.where.source.actor, source.actor);
+        do_check_eq(packet.frame.where.line, location.line);
+        do_check_eq(packet.why.type, "breakpoint");
+        do_check_eq(packet.why.actors[0], bpClient.actor);
         // Check that the breakpoint worked.
         do_check_eq(gDebuggee.a, undefined);
 
         // Remove the breakpoint.
-        bpClient.remove(function (aResponse) {
+        bpClient.remove(function (response) {
           done = true;
           gThreadClient.addOneTimeListener("paused",
-                                           function (aEvent, aPacket) {
+                                           function (event, packet) {
             // The breakpoint should not be hit again.
                                              gThreadClient.resume(function () {
                                                do_check_true(false);
@@ -62,15 +63,13 @@ function test_remove_breakpoint()
                                            });
           gThreadClient.resume();
         });
-
       });
       // Continue until the breakpoint is hit.
       gThreadClient.resume();
-
     });
-
   });
 
+  /* eslint-disable */
   Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
                    "function foo(stop) {\n" + // line0 + 1
                    "  this.a = 1;\n" +        // line0 + 2
@@ -81,6 +80,7 @@ function test_remove_breakpoint()
                    "debugger;\n" +            // line1 + 7
                    "foo();\n",                // line1 + 8
                    gDebuggee);
+  /* eslint-enable */
   if (!done) {
     do_check_true(false);
   }

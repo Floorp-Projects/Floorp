@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test the DebuggerClient.request API.
 
 var gClient, gActorId;
@@ -24,8 +26,7 @@ TestActor.prototype.requestTypes = {
   "error": TestActor.prototype.error
 };
 
-function run_test()
-{
+function run_test() {
   DebuggerServer.addGlobalActor(TestActor);
 
   DebuggerServer.init();
@@ -42,13 +43,12 @@ function run_test()
   run_next_test();
 }
 
-function init()
-{
+function init() {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect()
     .then(() => gClient.listTabs())
-    .then(aResponse => {
-      gActorId = aResponse.test;
+    .then(response => {
+      gActorId = response.test;
       run_next_test();
     });
 }
@@ -72,8 +72,7 @@ function checkStack(expectedName) {
   ok(false, "Incomplete stack");
 }
 
-function test_client_request_callback()
-{
+function test_client_request_callback() {
   // Test that DebuggerClient.request accepts a `onResponse` callback as 2nd argument
   gClient.request({
     to: gActorId,
@@ -86,8 +85,7 @@ function test_client_request_callback()
   });
 }
 
-function test_client_request_promise()
-{
+function test_client_request_promise() {
   // Test that DebuggerClient.request returns a promise that resolves on response
   let request = gClient.request({
     to: gActorId,
@@ -102,8 +100,7 @@ function test_client_request_promise()
   });
 }
 
-function test_client_request_promise_error()
-{
+function test_client_request_promise_error() {
   // Test that DebuggerClient.request returns a promise that reject when server
   // returns an explicit error message
   let request = gClient.request({
@@ -122,8 +119,7 @@ function test_client_request_promise_error()
   });
 }
 
-function test_client_request_event_emitter()
-{
+function test_client_request_event_emitter() {
   // Test that DebuggerClient.request returns also an EventEmitter object
   let request = gClient.request({
     to: gActorId,
@@ -156,7 +152,8 @@ function test_close_client_while_sending_requests() {
   let expectReply = promise.defer();
   gClient.expectReply("root", function (response) {
     do_check_eq(response.error, "connectionClosed");
-    do_check_eq(response.message, "server side packet can't be received as the connection just closed.");
+    do_check_eq(response.message,
+                "server side packet can't be received as the connection just closed.");
     expectReply.resolve();
   });
 
@@ -165,22 +162,23 @@ function test_close_client_while_sending_requests() {
       ok(false, "First request unexpectedly succeed while closing the connection");
     }, response => {
       do_check_eq(response.error, "connectionClosed");
-      do_check_eq(response.message, "'hello' active request packet to '" + gActorId + "' can't be sent as the connection just closed.");
+      do_check_eq(response.message, "'hello' active request packet to '" +
+                  gActorId + "' can't be sent as the connection just closed.");
     })
     .then(() => pendingRequest)
     .then(() => {
       ok(false, "Second request unexpectedly succeed while closing the connection");
     }, response => {
       do_check_eq(response.error, "connectionClosed");
-      do_check_eq(response.message, "'hello' pending request packet to '" + gActorId + "' can't be sent as the connection just closed.");
+      do_check_eq(response.message, "'hello' pending request packet to '" +
+                  gActorId + "' can't be sent as the connection just closed.");
     })
     .then(() => expectReply.promise)
     .then(run_next_test);
   });
 }
 
-function test_client_request_after_close()
-{
+function test_client_request_after_close() {
   // Test that DebuggerClient.request fails after we called client.close()
   // (with promise API)
   let request = gClient.request({
@@ -193,22 +191,23 @@ function test_client_request_after_close()
   }, response => {
     ok(true, "Request failed after client.close");
     do_check_eq(response.error, "connectionClosed");
-    ok(response.message.match(/'hello' request packet to '.*' can't be sent as the connection is closed./));
+    ok(response.message.match(
+        /'hello' request packet to '.*' can't be sent as the connection is closed./));
     run_next_test();
   });
 }
 
-function test_client_request_after_close_callback()
-{
+function test_client_request_after_close_callback() {
   // Test that DebuggerClient.request fails after we called client.close()
   // (with callback API)
-  let request = gClient.request({
+  gClient.request({
     to: gActorId,
     type: "hello"
   }, response => {
     ok(true, "Request failed after client.close");
     do_check_eq(response.error, "connectionClosed");
-    ok(response.message.match(/'hello' request packet to '.*' can't be sent as the connection is closed./));
+    ok(response.message.match(
+        /'hello' request packet to '.*' can't be sent as the connection is closed./));
     run_next_test();
   });
 }

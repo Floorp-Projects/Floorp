@@ -1,6 +1,5 @@
 use gleam::gl;
 use euclid::Size2D;
-use std::sync::{Once, ONCE_INIT};
 
 use GLContext;
 #[cfg(all(target_os = "linux", feature = "test_egl_in_linux"))]
@@ -19,32 +18,19 @@ use std::sync::mpsc;
 #[link(name="OpenGL", kind="framework")]
 extern {}
 
-#[cfg(target_os="linux")]
+#[cfg(all(target_os="linux", feature="x11"))]
 #[link(name="GL")]
 extern {}
-
-#[cfg(not(target_os="android"))]
-static LOAD_GL: Once = ONCE_INIT;
-
-#[cfg(not(target_os="android"))]
-fn load_gl() {
-    LOAD_GL.call_once(|| {
-        gl::load_with(|s| GLContext::<NativeGLContext>::get_proc_address(s) as *const _);
-    });
-}
-#[cfg(target_os="android")]
-fn load_gl() {
-}
 
 fn test_gl_context<T: NativeGLContextMethods>(context: &GLContext<T>) {
     context.make_current().unwrap();
 
-    gl::clear_color(1.0, 0.0, 0.0, 1.0);
-    gl::clear(gl::COLOR_BUFFER_BIT);
+    context.gl().clear_color(1.0, 0.0, 0.0, 1.0);
+    context.gl().clear(gl::COLOR_BUFFER_BIT);
 
     let size = context.draw_buffer_size().unwrap();
 
-    let pixels = gl::read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
+    let pixels = context.gl().read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
 
     assert!(pixels.len() == (size.width * size.height * 4) as usize);
     test_pixels(&pixels);
@@ -65,10 +51,10 @@ fn test_pixels(pixels: &[u8]) {
 #[test]
 #[cfg(not(feature = "test_osmesa"))]
 fn test_unbinding() {
-    load_gl();
     let ctx = GLContext::<NativeGLContext>::new(Size2D::new(256, 256),
                                                 GLContextAttributes::default(),
                                                 ColorAttachmentType::Renderbuffer,
+                                                gl::GlType::default(),
                                                 None).unwrap();
 
     assert!(NativeGLContext::current_handle().is_some());
@@ -79,20 +65,20 @@ fn test_unbinding() {
 
 #[test]
 fn test_renderbuffer_color_attachment() {
-    load_gl();
     test_gl_context(&GLContext::<NativeGLContext>::new(Size2D::new(256, 256),
                                                        GLContextAttributes::default(),
                                                        ColorAttachmentType::Renderbuffer,
+                                                       gl::GlType::default(),
                                                        None).unwrap());
 }
 
 #[test]
 fn test_texture_color_attachment() {
-    load_gl();
     let size = Size2D::new(256, 256);
     let context = GLContext::<NativeGLContext>::new(size,
                                                     GLContextAttributes::default(),
                                                     ColorAttachmentType::Texture,
+                                                    gl::GlType::default(),
                                                     None).unwrap();
     test_gl_context(&context);
 
@@ -100,7 +86,7 @@ fn test_texture_color_attachment() {
     let texture_id = context.borrow_draw_buffer().unwrap().get_bound_texture_id().unwrap();
     assert!(texture_id != 0);
 
-    assert!(gl::get_error() == gl::NO_ERROR);
+    assert!(context.gl().get_error() == gl::NO_ERROR);
 
     // Actually we just check that writing to the framebuffer works, and that there's a texture
     // attached to it. Doing a getTexImage should be a good idea, but it's not available on gles,
@@ -108,18 +94,17 @@ fn test_texture_color_attachment() {
     //
     // This is done in the `test_sharing` test though, so if that passes we know everything
     // works and we're just happy.
-    let vec = gl::read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
+    let vec = context.gl().read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
     test_pixels(&vec);
 }
 
 #[test]
 fn test_sharing() {
-    load_gl();
-
     let size = Size2D::new(256, 256);
     let primary = GLContext::<NativeGLContext>::new(size,
                                                     GLContextAttributes::default(),
                                                     ColorAttachmentType::Texture,
+                                                    gl::GlType::default(),
                                                     None).unwrap();
 
     let primary_texture_id = primary.borrow_draw_buffer().unwrap().get_bound_texture_id().unwrap();
@@ -128,6 +113,7 @@ fn test_sharing() {
     let secondary = GLContext::<NativeGLContext>::new(size,
                                                       GLContextAttributes::default(),
                                                       ColorAttachmentType::Texture,
+                                                      gl::GlType::default(),
                                                       Some(&primary.handle())).unwrap();
 
     // Paint the second context red
@@ -139,39 +125,36 @@ fn test_sharing() {
     assert!(secondary_texture_id != 0);
 
     primary.make_current().unwrap();
-    assert!(unsafe { gl::IsTexture(secondary_texture_id) != 0 });
+    assert!(primary.gl().is_texture(secondary_texture_id) != 0);
 
-    // Clearing and re-binding to a framebuffer instead of using getTexImage since it's not
-    // available in GLES2
-    gl::clear_color(0.0, 0.0, 0.0, 1.0);
-    gl::clear(gl::COLOR_BUFFER_BIT);
+    // Clearing and re-binding to a framebuffer instead of using getTexImage
+    // since it's not available in GLES2
+    primary.gl().clear_color(0.0, 0.0, 0.0, 1.0);
+    primary.gl().clear(gl::COLOR_BUFFER_BIT);
 
-    let vec = gl::read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
+    let vec = primary.gl().read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
     test_pixels_eq(&vec, &[0, 0, 0, 255]);
 
-    gl::bind_texture(gl::TEXTURE_2D, secondary_texture_id);
+    primary.gl().bind_texture(gl::TEXTURE_2D, secondary_texture_id);
 
-    unsafe {
-        gl::FramebufferTexture2D(gl::FRAMEBUFFER,
-                                 gl::COLOR_ATTACHMENT0,
-                                 gl::TEXTURE_2D,
-                                 secondary_texture_id, 0);
-    }
+    primary.gl().framebuffer_texture_2d(gl::FRAMEBUFFER,
+                                        gl::COLOR_ATTACHMENT0,
+                                        gl::TEXTURE_2D,
+                                        secondary_texture_id, 0);
 
-    let vec = gl::read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
-    assert!(gl::get_error() == gl::NO_ERROR);
+    let vec = primary.gl().read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
+    assert!(primary.gl().get_error() == gl::NO_ERROR);
 
     test_pixels(&vec);
 }
 
 #[test]
 fn test_multithread_render() {
-    load_gl();
-
     let size = Size2D::new(256, 256);
     let primary = GLContext::<NativeGLContext>::new(size,
                                                     GLContextAttributes::default(),
                                                     ColorAttachmentType::Texture,
+                                                    gl::GlType::default(),
                                                     None).unwrap();
     test_gl_context(&primary);
     let (tx, rx) = mpsc::channel();
@@ -179,16 +162,17 @@ fn test_multithread_render() {
     thread::spawn(move ||{
         //create the context in a different thread
         let secondary = GLContext::<NativeGLContext>::new(size,
-                                                      GLContextAttributes::default(),
-                                                      ColorAttachmentType::Texture,
-                                                      None).unwrap();
+                                                          GLContextAttributes::default(),
+                                                          ColorAttachmentType::Texture,
+                                                          gl::GlType::default(),
+                                                          None).unwrap();
         secondary.make_current().unwrap();
         assert!(secondary.is_current());
         //render green adn test pixels
-        gl::clear_color(0.0, 1.0, 0.0, 1.0);
-        gl::clear(gl::COLOR_BUFFER_BIT);
+        secondary.gl().clear_color(0.0, 1.0, 0.0, 1.0);
+        secondary.gl().clear(gl::COLOR_BUFFER_BIT);
 
-        let vec = gl::read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
+        let vec = secondary.gl().read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
         test_pixels_eq(&vec, &[0, 255, 0, 255]);
 
         tx.send(()).unwrap();
@@ -202,7 +186,7 @@ fn test_multithread_render() {
     assert!(primary.is_current());
 
     // The colors must remain unchanged
-    let vec = gl::read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
+    let vec = primary.gl().read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
     test_pixels_eq(&vec, &[255, 0, 0, 255]);
 
     end_tx.send(()).unwrap();
@@ -214,12 +198,11 @@ unsafe impl Send for SGLUint {}
 
 #[test]
 fn test_multithread_sharing() {
-    load_gl();
-
     let size = Size2D::new(256, 256);
     let primary = GLContext::<NativeGLContext>::new(size,
                                                     GLContextAttributes::default(),
                                                     ColorAttachmentType::Texture,
+                                                    gl::GlType::default(),
                                                     None).unwrap();
     primary.make_current().unwrap();
 
@@ -238,6 +221,7 @@ fn test_multithread_sharing() {
         let secondary = GLContext::<NativeGLContext>::new(size,
                                                       GLContextAttributes::default(),
                                                       ColorAttachmentType::Texture,
+                                                      gl::GlType::default(),
                                                       Some(&primary_handle)).unwrap();
         // Make the context current on this thread only
         secondary.make_current().unwrap();
@@ -255,24 +239,23 @@ fn test_multithread_sharing() {
 
     primary.make_current().unwrap();
 
-    // Clearing and re-binding to a framebuffer instead of using getTexImage since it's not
-    // available in GLES2
-    gl::clear_color(0.0, 0.0, 0.0, 1.0);
-    gl::clear(gl::COLOR_BUFFER_BIT);
+    // Clearing and re-binding to a framebuffer instead of using getTexImage
+    // since it's not available in GLES2
+    primary.gl().clear_color(0.0, 0.0, 0.0, 1.0);
+    primary.gl().clear(gl::COLOR_BUFFER_BIT);
 
-    let vec = gl::read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
+    let vec = primary.gl().read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
     test_pixels_eq(&vec, &[0, 0, 0, 255]);
 
 
-    unsafe {
-        gl::FramebufferTexture2D(gl::FRAMEBUFFER,
-                                 gl::COLOR_ATTACHMENT0,
-                                 gl::TEXTURE_2D,
-                                 secondary_texture_id, 0);
-    }
+    primary.gl().framebuffer_texture_2d(gl::FRAMEBUFFER,
+                                        gl::COLOR_ATTACHMENT0,
+                                        gl::TEXTURE_2D,
+                                        secondary_texture_id,
+                                        0);
 
-    let vec = gl::read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
-    assert!(gl::get_error() == gl::NO_ERROR);
+    let vec = primary.gl().read_pixels(0, 0, size.width, size.height, gl::RGBA, gl::UNSIGNED_BYTE);
+    assert!(primary.gl().get_error() == gl::NO_ERROR);
 
     test_pixels(&vec);
     end_tx.send(()).unwrap();
@@ -280,19 +263,17 @@ fn test_multithread_sharing() {
 
 #[test]
 fn test_limits() {
-    load_gl();
-
     let size = Size2D::new(256, 256);
     let context = GLContext::<NativeGLContext>::new(size,
                                                     GLContextAttributes::default(),
                                                     ColorAttachmentType::Texture,
+                                                    gl::GlType::default(),
                                                     None).unwrap();
     assert!(context.borrow_limits().max_vertex_attribs != 0);
 }
 
 #[test]
 fn test_no_alpha() {
-    load_gl();
     let mut attributes = GLContextAttributes::default();
     attributes.alpha = false;
 
@@ -300,13 +281,13 @@ fn test_no_alpha() {
     let context = GLContext::<NativeGLContext>::new(size,
                                                     attributes,
                                                     ColorAttachmentType::Texture,
+                                                    gl::GlType::default(),
                                                     None).unwrap();
     assert!(context.borrow_limits().max_vertex_attribs != 0);
 }
 
 #[test]
 fn test_no_depth() {
-    load_gl();
     let mut attributes = GLContextAttributes::default();
     attributes.depth = false;
 
@@ -314,13 +295,13 @@ fn test_no_depth() {
     let context = GLContext::<NativeGLContext>::new(size,
                                                     attributes,
                                                     ColorAttachmentType::Texture,
+                                                    gl::GlType::default(),
                                                     None).unwrap();
     assert!(context.borrow_limits().max_vertex_attribs != 0);
 }
 
 #[test]
 fn test_no_depth_no_alpha() {
-    load_gl();
     let mut attributes = GLContextAttributes::default();
     attributes.depth = false;
     attributes.alpha = false;
@@ -329,13 +310,13 @@ fn test_no_depth_no_alpha() {
     let context = GLContext::<NativeGLContext>::new(size,
                                                     attributes,
                                                     ColorAttachmentType::Texture,
+                                                    gl::GlType::default(),
                                                     None).unwrap();
     assert!(context.borrow_limits().max_vertex_attribs != 0);
 }
 
 #[test]
 fn test_no_premul_alpha() {
-    load_gl();
     let mut attributes = GLContextAttributes::default();
     attributes.depth = false;
     attributes.alpha = false;
@@ -345,13 +326,13 @@ fn test_no_premul_alpha() {
     let context = GLContext::<NativeGLContext>::new(size,
                                                     attributes,
                                                     ColorAttachmentType::Texture,
+                                                    gl::GlType::default(),
                                                     None).unwrap();
     assert!(context.borrow_limits().max_vertex_attribs != 0);
 }
 
 #[test]
 fn test_in_a_row() {
-    load_gl();
     let mut attributes = GLContextAttributes::default();
     attributes.depth = false;
     attributes.alpha = false;
@@ -361,6 +342,7 @@ fn test_in_a_row() {
     let context = GLContext::<NativeGLContext>::new(size,
                                                     attributes.clone(),
                                                     ColorAttachmentType::Texture,
+                                                    gl::GlType::default(),
                                                     None).unwrap();
 
     let handle = context.handle();
@@ -368,20 +350,21 @@ fn test_in_a_row() {
     GLContext::<NativeGLContext>::new(size,
                                       attributes.clone(),
                                       ColorAttachmentType::Texture,
+                                      gl::GlType::default(),
                                       Some(&handle)).unwrap();
 
     GLContext::<NativeGLContext>::new(size,
                                       attributes.clone(),
                                       ColorAttachmentType::Texture,
+                                      gl::GlType::default(),
                                       Some(&handle)).unwrap();
 }
 
 #[test]
 fn test_zero_size() {
-    load_gl();
-
     GLContext::<NativeGLContext>::new(Size2D::new(0, 320),
                                       GLContextAttributes::default(),
                                       ColorAttachmentType::Texture,
+                                      gl::GlType::default(),
                                       None).unwrap();
 }

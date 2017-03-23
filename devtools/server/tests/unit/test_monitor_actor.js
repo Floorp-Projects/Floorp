@@ -7,8 +7,7 @@
 
 "use strict";
 
-function run_test()
-{
+function run_test() {
   let EventEmitter = require("devtools/shared/event-emitter");
 
   function MonitorClient(client, form) {
@@ -64,7 +63,7 @@ function run_test()
         do_check_eq(event.curve, "test");
         do_check_eq(event.value, 42);
         do_check_eq(event.time, time);
-        monitor.stop(function (aResponse) {
+        monitor.stop(function (response) {
           monitor.destroy();
           finishClient(client);
         });

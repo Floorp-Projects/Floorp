@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Check that adding a breakpoint in the same place returns the same actor.
  */
@@ -9,16 +11,16 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      testSameBreakpoint();
-    });
+    attachTestTabAndResume(gClient, "test-stack",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             testSameBreakpoint();
+                           });
   });
   do_test_pending();
 }
@@ -34,10 +36,11 @@ const testSameBreakpoint = Task.async(function* () {
     line: 2
   };
 
-  let [firstResponse, firstBpClient] = yield setBreakpoint(source, wholeLineLocation);
-  let [secondResponse, secondBpClient] = yield setBreakpoint(source, wholeLineLocation);
+  let [, firstBpClient] = yield setBreakpoint(source, wholeLineLocation);
+  let [, secondBpClient] = yield setBreakpoint(source, wholeLineLocation);
 
-  do_check_eq(firstBpClient.actor, secondBpClient.actor, "Should get the same actor w/ whole line breakpoints");
+  do_check_eq(firstBpClient.actor, secondBpClient.actor,
+              "Should get the same actor w/ whole line breakpoints");
 
   // Specific column
 
@@ -46,15 +49,17 @@ const testSameBreakpoint = Task.async(function* () {
     column: 6
   };
 
-  [firstResponse, firstBpClient] = yield setBreakpoint(source, columnLocation);
-  [secondResponse, secondBpClient] = yield setBreakpoint(source, columnLocation);
+  [, firstBpClient] = yield setBreakpoint(source, columnLocation);
+  [, secondBpClient] = yield setBreakpoint(source, columnLocation);
 
-  do_check_eq(secondBpClient.actor, secondBpClient.actor, "Should get the same actor column breakpoints");
+  do_check_eq(secondBpClient.actor, secondBpClient.actor,
+              "Should get the same actor column breakpoints");
 
   finishClient(gClient);
 });
 
 function evalCode() {
+  /* eslint-disable */
   Components.utils.evalInSandbox(
     "" + function doStuff(k) { // line 1
       let arg = 15;            // line 2 - Step in here
@@ -66,4 +71,5 @@ function evalCode() {
     SOURCE_URL,
     1
   );
+  /* eslint-enable */
 }

@@ -10,6 +10,7 @@
 
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "nsClassHashtable.h"
 
 namespace mozilla {
 
@@ -33,14 +34,15 @@ protected:
   ~WebRenderCompositableHolder();
 
 public:
-  void Destroy();
-  void HoldExternalImage(const wr::Epoch& aEpoch, WebRenderTextureHost* aTexture);
-  void Update(const wr::Epoch& aEpoch);
+  void AddPipeline(const wr::PipelineId& aPipelineId);
+  void RemovePipeline(const wr::PipelineId& aPipelineId);
+  void HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, WebRenderTextureHost* aTexture);
+  void Update(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
 
 private:
 
-  struct ForwardingTextureHosts {
-    ForwardingTextureHosts(const wr::Epoch& aEpoch, TextureHost* aTexture)
+  struct ForwardingTextureHost {
+    ForwardingTextureHost(const wr::Epoch& aEpoch, TextureHost* aTexture)
       : mEpoch(aEpoch)
       , mTexture(aTexture)
     {}
@@ -48,8 +50,12 @@ private:
     CompositableTextureHostRef mTexture;
   };
 
-  // Holds forwarding WebRenderTextureHosts.
-  std::queue<ForwardingTextureHosts> mWebRenderTextureHosts;
+  struct PipelineTexturesHolder {
+    // Holds forwarding WebRenderTextureHosts.
+    std::queue<ForwardingTextureHost> mTextureHosts;
+  };
+
+  nsClassHashtable<nsUint64HashKey, PipelineTexturesHolder> mPipelineTexturesHolders;
 };
 
 } // namespace layers
