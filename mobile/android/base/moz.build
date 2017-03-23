@@ -482,6 +482,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'animation/Rotate3DAnimation.java',
     'animation/ViewHelper.java',
     'ANRReporter.java',
+    'bookmarks/BookmarkUtils.java',
     'BootReceiver.java',
     'BrowserApp.java',
     'BrowserLocaleManager.java',
