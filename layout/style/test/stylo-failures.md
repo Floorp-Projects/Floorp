@@ -102,7 +102,6 @@ to mochitest command.
 * ... `mask`: mask-image isn't set properly bug 1347398 [2]
 * ... `fill`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * ... `stroke`: svg paint should distinguish whether there is fallback bug 1347409 [2]
-* ... `#foo`: local ref url should be preserved bug 1347412 [5]
 * character not properly escaped servo/servo#15947
   * test_parse_url.html [4]
   * test_bug829816.html [8]
