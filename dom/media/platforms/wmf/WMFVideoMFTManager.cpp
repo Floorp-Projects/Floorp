@@ -384,10 +384,9 @@ FindD3D9BlacklistedDLL()
 class CreateDXVAManagerEvent : public Runnable
 {
 public:
-  CreateDXVAManagerEvent(LayersBackend aBackend,
-                         layers::KnowsCompositor* aKnowsCompositor,
+  CreateDXVAManagerEvent(layers::KnowsCompositor* aKnowsCompositor,
                          nsCString& aFailureReason)
-    : mBackend(aBackend)
+    : mBackend(LayersBackend::LAYERS_D3D11)
     , mKnowsCompositor(aKnowsCompositor)
     , mFailureReason(aFailureReason)
   {
@@ -435,7 +434,7 @@ public:
 };
 
 bool
-WMFVideoMFTManager::InitializeDXVA(bool aForceD3D9)
+WMFVideoMFTManager::InitializeDXVA()
 {
   // If we use DXVA but aren't running with a D3D layer manager then the
   // readback of decoded video frames from GPU to CPU memory grinds painting
@@ -447,17 +446,14 @@ WMFVideoMFTManager::InitializeDXVA(bool aForceD3D9)
   }
   MOZ_ASSERT(!mDXVA2Manager);
   LayersBackend backend = GetCompositorBackendType(mKnowsCompositor);
-  if (backend != LayersBackend::LAYERS_D3D9
-      && backend != LayersBackend::LAYERS_D3D11) {
+  if (backend != LayersBackend::LAYERS_D3D11) {
     mDXVAFailureReason.AssignLiteral("Unsupported layers backend");
     return false;
   }
 
   // The DXVA manager must be created on the main thread.
   RefPtr<CreateDXVAManagerEvent> event =
-    new CreateDXVAManagerEvent(aForceD3D9 ? LayersBackend::LAYERS_D3D9
-                                          : backend,
-                               mKnowsCompositor,
+    new CreateDXVAManagerEvent(mKnowsCompositor,
                                mDXVAFailureReason);
 
   if (NS_IsMainThread()) {
@@ -499,7 +495,7 @@ WMFVideoMFTManager::Init()
     return false;
   }
 
-  bool success = InitInternal(/* aForceD3D9 = */ false);
+  bool success = InitInternal();
 
   if (success && mDXVA2Manager) {
     // If we had some failures but eventually made it work,
@@ -515,10 +511,10 @@ WMFVideoMFTManager::Init()
 }
 
 bool
-WMFVideoMFTManager::InitInternal(bool aForceD3D9)
+WMFVideoMFTManager::InitInternal()
 {
   mUseHwAccel = false; // default value; changed if D3D setup succeeds.
-  bool useDxva = InitializeDXVA(aForceD3D9);
+  bool useDxva = InitializeDXVA();
 
   RefPtr<MFTDecoder> decoder(new MFTDecoder());
 
@@ -836,8 +832,7 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   nsIntRect pictureRegion = mVideoInfo.ScaledImageRect(videoWidth, videoHeight);
 
   LayersBackend backend = GetCompositorBackendType(mKnowsCompositor);
-  if (backend != LayersBackend::LAYERS_D3D9 &&
-      backend != LayersBackend::LAYERS_D3D11) {
+  if (backend != LayersBackend::LAYERS_D3D11) {
     RefPtr<VideoData> v =
       VideoData::CreateAndCopyData(mVideoInfo,
                                    mImageContainer,

@@ -452,7 +452,7 @@ struct WrVecU8 {
 // an error and causes the build to fail. So for wr_* functions called by
 // destructors in C++ classes, use WR_DESTRUCTOR_SAFE_FUNC instead, which omits
 // the unreachable annotation.
-#ifdef MOZ_ENABLE_WEBRENDER
+#ifdef MOZ_BUILD_WEBRENDER
 #  define WR_INLINE
 #  define WR_FUNC
 #  define WR_DESTRUCTOR_SAFE_FUNC

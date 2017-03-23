@@ -134,6 +134,41 @@ module.exports = createClass({
     height = this.getHeightValue(height);
     width = this.getWidthValue(width);
 
+    let contentBox = layout["box-sizing"] == "content-box" ?
+      dom.p(
+        {
+          className: "boxmodel-size",
+        },
+        BoxModelEditable({
+          box: "content",
+          property: "width",
+          textContent: width,
+          onShowBoxModelEditor
+        }),
+        dom.span(
+          {},
+          "\u00D7"
+        ),
+        BoxModelEditable({
+          box: "content",
+          property: "height",
+          textContent: height,
+          onShowBoxModelEditor
+        })
+      )
+      :
+      dom.p(
+        {
+          className: "boxmodel-size",
+        },
+        dom.span(
+          {
+            title: BOXMODEL_L10N.getStr("boxmodel.content"),
+          },
+          SHARED_L10N.getFormatStr("dimensions", width, height)
+        )
+      );
+
     return dom.div(
       {
         className: "boxmodel-main",
@@ -198,7 +233,7 @@ module.exports = createClass({
                 title: BOXMODEL_L10N.getStr("boxmodel.padding"),
               },
               dom.div({
-                className: "boxmodel-content",
+                className: "boxmodel-contents",
                 "data-box": "content",
                 title: BOXMODEL_L10N.getStr("boxmodel.content"),
               })
@@ -330,18 +365,7 @@ module.exports = createClass({
         textContent: paddingLeft,
         onShowBoxModelEditor,
       }),
-      dom.p(
-        {
-          className: "boxmodel-size",
-        },
-        dom.span(
-          {
-            "data-box": "content",
-            title: BOXMODEL_L10N.getStr("boxmodel.content"),
-          },
-          SHARED_L10N.getFormatStr("dimensions", width, height)
-        )
-      )
+      contentBox
     );
   },
 

@@ -18,7 +18,6 @@
 
 #include "wasm/WasmFrameIterator.h"
 
-#include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmInstance.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -45,11 +44,10 @@ CallerFPFromFP(void* fp)
     return reinterpret_cast<Frame*>(fp)->callerFP;
 }
 
-static TlsData*
-TlsDataFromFP(void *fp)
+static DebugFrame*
+FrameToDebugFrame(void* fp)
 {
-    void* debugFrame = (uint8_t*)fp - DebugFrame::offsetOfFrame();
-    return reinterpret_cast<DebugFrame*>(debugFrame)->tlsData();
+    return reinterpret_cast<DebugFrame*>((uint8_t*)fp - DebugFrame::offsetOfFrame());
 }
 
 FrameIterator::FrameIterator()
@@ -69,33 +67,30 @@ FrameIterator::FrameIterator(WasmActivation* activation, Unwind unwind)
     code_(nullptr),
     callsite_(nullptr),
     codeRange_(nullptr),
-    fp_(activation->fp()),
+    fp_(nullptr),
     unwind_(unwind),
     missingFrameMessage_(false)
 {
-    if (fp_) {
-        settle();
+    // When execution is interrupted, the embedding may capture a stack trace.
+    // Since we've lost all the register state, we can't unwind the full stack
+    // like ProfilingFrameIterator does. However, we can recover the interrupted
+    // function via the resumePC and at least print that frame.
+    if (void* resumePC = activation->resumePC()) {
+        code_ = activation->compartment()->wasm.lookupCode(resumePC);
+        codeRange_ = code_->lookupRange(resumePC);
+        MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
+        MOZ_ASSERT(!done());
         return;
     }
 
-    void* pc = activation_->resumePC();
-    if (!pc) {
+    fp_ = activation->exitFP();
+
+    if (!fp_) {
         MOZ_ASSERT(done());
         return;
     }
 
-    code_ = activation_->compartment()->wasm.lookupCode(pc);
-    MOZ_ASSERT(code_);
-
-    const CodeRange* codeRange = code_->lookupRange(pc);
-    MOZ_ASSERT(codeRange);
-
-    if (codeRange->kind() == CodeRange::Function)
-        codeRange_ = codeRange;
-    else
-        missingFrameMessage_ = true;
-
-    MOZ_ASSERT(!done());
+    settle();
 }
 
 bool
@@ -123,37 +118,32 @@ void
 FrameIterator::settle()
 {
     if (unwind_ == Unwind::True)
-        activation_->unwindFP(fp_);
+        activation_->unwindExitFP(fp_);
 
     void* returnAddress = ReturnAddressFromFP(fp_);
 
-    code_ = activation_->compartment()->wasm.lookupCode(returnAddress);
-    MOZ_ASSERT(code_);
+    fp_ = CallerFPFromFP(fp_);
 
-    codeRange_ = code_->lookupRange(returnAddress);
-    MOZ_ASSERT(codeRange_);
-
-    if (codeRange_->kind() == CodeRange::Entry) {
-        fp_ = nullptr;
+    if (!fp_) {
         code_ = nullptr;
         codeRange_ = nullptr;
         callsite_ = nullptr;
 
         if (unwind_ == Unwind::True)
-            activation_->unwindFP(nullptr);
+            activation_->unwindExitFP(nullptr);
 
         MOZ_ASSERT(done());
         return;
     }
 
-    MOZ_RELEASE_ASSERT(codeRange_->kind() == CodeRange::Function);
+    code_ = activation_->compartment()->wasm.lookupCode(returnAddress);
+    MOZ_ASSERT(code_);
+
+    codeRange_ = code_->lookupRange(returnAddress);
+    MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
 
     callsite_ = code_->lookupCallSite(returnAddress);
     MOZ_ASSERT(callsite_);
-
-    DebugOnly<uint8_t*> oldfp = fp_;
-    fp_ += callsite_->stackDepth();
-    MOZ_ASSERT_IF(code_->profilingEnabled(), fp_ == CallerFPFromFP(oldfp));
 
     MOZ_ASSERT(!done());
 }
@@ -187,8 +177,7 @@ FrameIterator::functionDisplayAtom() const
     JSContext* cx = activation_->cx();
 
     if (missingFrameMessage_) {
-        const char* msg = "asm.js/wasm frames may be missing; enable the profiler before running "
-                          "to see all frames";
+        const char* msg = "asm.js/wasm frames may be missing below this one";
         JSAtom* atom = Atomize(cx, msg, strlen(msg));
         if (!atom) {
             cx->clearPendingException();
@@ -217,11 +206,19 @@ FrameIterator::lineOrBytecode() const
                      : (codeRange_ ? codeRange_->funcLineOrBytecode() : 0);
 }
 
+bool
+FrameIterator::hasInstance() const
+{
+    MOZ_ASSERT(!done());
+    return !!fp_;
+}
+
 Instance*
 FrameIterator::instance() const
 {
-    MOZ_ASSERT(!done() && debugEnabled());
-    return TlsDataFromFP(fp_)->instance;
+    MOZ_ASSERT(!done());
+    MOZ_ASSERT(hasInstance());
+    return FrameToDebugFrame(fp_)->instance();
 }
 
 bool
@@ -238,9 +235,7 @@ DebugFrame*
 FrameIterator::debugFrame() const
 {
     MOZ_ASSERT(!done() && debugEnabled());
-    // The fp() points to wasm::Frame.
-    void* buf = static_cast<uint8_t*>(fp_) - DebugFrame::offsetOfFrame();
-    return static_cast<DebugFrame*>(buf);
+    return FrameToDebugFrame(fp_);
 }
 
 const CallSite*
@@ -255,70 +250,64 @@ FrameIterator::debugTrapCallsite() const
 /*****************************************************************************/
 // Prologue/epilogue code generation
 
-// These constants reflect statically-determined offsets in the profiling
+// These constants reflect statically-determined offsets in the
 // prologue/epilogue. The offsets are dynamically asserted during code
 // generation.
 #if defined(JS_CODEGEN_X64)
-# if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
-static const unsigned PostStorePrePopFP = 0;
-# endif
-static const unsigned PushedFP = 26;
-static const unsigned StoredFP = 33;
+static const unsigned PushedFP = 1;
+static const unsigned PushedTLS = 3;
+static const unsigned PoppedTLS = 1;
 #elif defined(JS_CODEGEN_X86)
-# if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
-static const unsigned PostStorePrePopFP = 0;
-# endif
-static const unsigned PushedFP = 16;
-static const unsigned StoredFP = 19;
+static const unsigned PushedFP = 1;
+static const unsigned PushedTLS = 2;
+static const unsigned PoppedTLS = 1;
 #elif defined(JS_CODEGEN_ARM)
+static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 4;
-static const unsigned PushedFP = 28;
-static const unsigned StoredFP = 32;
-static const unsigned PostStorePrePopFP = 4;
+static const unsigned PushedFP = 8;
+static const unsigned PushedTLS = 12;
+static const unsigned PoppedTLS = 4;
 #elif defined(JS_CODEGEN_ARM64)
+static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 0;
 static const unsigned PushedFP = 0;
-static const unsigned StoredFP = 0;
-static const unsigned PostStorePrePopFP = 0;
+static const unsigned PushedTLS = 0;
+static const unsigned PoppedTLS = 0;
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-static const unsigned PushedRetAddr = 8;
-static const unsigned PushedFP = 36;
-static const unsigned StoredFP = 40;
-static const unsigned PostStorePrePopFP = 4;
+static const unsigned BeforePushRetAddr = 0;
+static const unsigned PushedRetAddr = 4;
+static const unsigned PushedFP = 8;
+static const unsigned PushedTLS = 12;
+static const unsigned PoppedTLS = 4;
 #elif defined(JS_CODEGEN_NONE)
-# if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
-static const unsigned PostStorePrePopFP = 0;
-# endif
-static const unsigned PushedFP = 1;
-static const unsigned StoredFP = 1;
+static const unsigned PushedFP = 0;
+static const unsigned PushedTLS = 0;
+static const unsigned PoppedTLS = 0;
 #else
 # error "Unknown architecture!"
 #endif
 
 static void
-PushRetAddr(MacroAssembler& masm)
+PushRetAddr(MacroAssembler& masm, unsigned entry)
 {
 #if defined(JS_CODEGEN_ARM)
+    MOZ_ASSERT(masm.currentOffset() - entry == BeforePushRetAddr);
     masm.push(lr);
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    MOZ_ASSERT(masm.currentOffset() - entry == BeforePushRetAddr);
     masm.push(ra);
 #else
     // The x86/x64 call instruction pushes the return address.
 #endif
 }
 
-// Generate a prologue that maintains WasmActivation::fp as the virtual frame
-// pointer so that ProfilingFrameIterator can walk the stack at any pc in
-// generated code.
 static void
-GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
-                          ProfilingOffsets* offsets)
+GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
+                         uint32_t* entry)
 {
-    Register scratch = ABINonArgReg0;
-
     // ProfilingFrameIterator needs to know the offsets of several key
     // instructions from entry. To save space, we make these offsets static
     // constants and assert that they match the actual codegen below. On ARM,
@@ -329,102 +318,75 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason
         AutoForbidPools afp(&masm, /* number of instructions in scope = */ 8);
 #endif
 
-        offsets->begin = masm.currentOffset();
+        *entry = masm.currentOffset();
 
-        PushRetAddr(masm);
-        MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - offsets->begin);
-
-        masm.loadWasmActivationFromSymbolicAddress(scratch);
-        masm.push(Address(scratch, WasmActivation::offsetOfFP()));
-        MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - offsets->begin);
-
-        masm.storePtr(masm.getStackPointer(), Address(scratch, WasmActivation::offsetOfFP()));
-        MOZ_ASSERT_IF(!masm.oom(), StoredFP == masm.currentOffset() - offsets->begin);
+        PushRetAddr(masm, *entry);
+        MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - *entry);
+        masm.push(FramePointer);
+        MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
+        masm.push(WasmTlsReg);
+        MOZ_ASSERT_IF(!masm.oom(), PushedTLS == masm.currentOffset() - *entry);
+        masm.moveStackPtrTo(FramePointer);
     }
 
-    if (reason != ExitReason::None)
-        masm.store32(Imm32(int32_t(reason)), Address(scratch, WasmActivation::offsetOfExitReason()));
+    if (reason != ExitReason::None) {
+        Register scratch = ABINonArgReg0;
+        masm.loadWasmActivationFromTls(scratch);
+        masm.wasmAssertNonExitInvariants(scratch);
+        Address exitReason(scratch, WasmActivation::offsetOfExitReason());
+        masm.store32(Imm32(int32_t(reason)), exitReason);
+        Address exitFP(scratch, WasmActivation::offsetOfExitFP());
+        masm.storePtr(FramePointer, exitFP);
+    }
 
     if (framePushed)
         masm.subFromStackPtr(Imm32(framePushed));
 }
 
-// Generate the inverse of GenerateProfilingPrologue.
 static void
-GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
-                          ProfilingOffsets* offsets)
+GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
+                         uint32_t* ret)
 {
-    Register scratch = ABINonArgReturnReg0;
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    Register scratch2 = ABINonArgReturnReg1;
-#endif
-
     if (framePushed)
         masm.addToStackPtr(Imm32(framePushed));
 
-    masm.loadWasmActivationFromSymbolicAddress(scratch);
 
     if (reason != ExitReason::None) {
-        masm.store32(Imm32(int32_t(ExitReason::None)),
-                     Address(scratch, WasmActivation::offsetOfExitReason()));
+        Register scratch = ABINonArgReturnReg0;
+        masm.loadWasmActivationFromTls(scratch);
+        Address exitFP(scratch, WasmActivation::offsetOfExitFP());
+        masm.storePtr(ImmWord(0), exitFP);
+        Address exitReason(scratch, WasmActivation::offsetOfExitReason());
+        masm.store32(Imm32(int32_t(ExitReason::None)), exitReason);
     }
 
-    // ProfilingFrameIterator assumes fixed offsets of the last few
-    // instructions from profilingReturn, so AutoForbidPools to ensure that
-    // unintended instructions are not automatically inserted.
-    {
+    // Forbid pools for the same reason as described in GenerateCallablePrologue.
 #if defined(JS_CODEGEN_ARM)
-        AutoForbidPools afp(&masm, /* number of instructions in scope = */ 4);
+    AutoForbidPools afp(&masm, /* number of instructions in scope = */ 3);
 #endif
 
-        // sp protects the stack from clobber via asynchronous signal handlers
-        // and the async interrupt exit. Since activation.fp can be read at any
-        // time and still points to the current frame, be careful to only update
-        // sp after activation.fp has been repointed to the caller's frame.
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-        masm.loadPtr(Address(masm.getStackPointer(), 0), scratch2);
-        masm.storePtr(scratch2, Address(scratch, WasmActivation::offsetOfFP()));
-        DebugOnly<uint32_t> prePop = masm.currentOffset();
-        masm.addToStackPtr(Imm32(sizeof(void *)));
-        MOZ_ASSERT_IF(!masm.oom(), PostStorePrePopFP == masm.currentOffset() - prePop);
-#else
-        masm.pop(Address(scratch, WasmActivation::offsetOfFP()));
-        MOZ_ASSERT(PostStorePrePopFP == 0);
-#endif
-
-        offsets->profilingReturn = masm.currentOffset();
-        masm.ret();
-    }
+    masm.pop(WasmTlsReg);
+    DebugOnly<uint32_t> poppedTLS = masm.currentOffset();
+    masm.pop(FramePointer);
+    *ret = masm.currentOffset();
+    masm.ret();
+    MOZ_ASSERT_IF(!masm.oom(), PoppedTLS == *ret - poppedTLS);
 }
 
-// In profiling mode, we need to maintain fp so that we can unwind the stack at
-// any pc. In non-profiling mode, the only way to observe WasmActivation::fp is
-// to call out to C++ so, as an optimization, we don't update fp. To avoid
-// recompilation when the profiling mode is toggled, we generate both prologues
-// a priori and switch between prologues when the profiling mode is toggled.
-// Specifically, ToggleProfiling patches all callsites to either call the
-// profiling or non-profiling entry point.
 void
 wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
                                FuncOffsets* offsets)
 {
 #if defined(JS_CODEGEN_ARM)
     // Flush pending pools so they do not get dumped between the 'begin' and
-    // 'entry' offsets since the difference must be less than UINT8_MAX.
+    // 'normalEntry' offsets since the difference must be less than UINT8_MAX
+    // to be stored in CodeRange::funcBeginToNormalEntry_.
     masm.flushBuffer();
 #endif
-
     masm.haltingAlign(CodeAlignment);
 
-    GenerateProfilingPrologue(masm, framePushed, ExitReason::None, offsets);
-    Label body;
-    masm.jump(&body);
-
-    // Generate table entry thunk:
-    masm.haltingAlign(CodeAlignment);
-    offsets->tableEntry = masm.currentOffset();
+    // Generate table entry:
+    offsets->begin = masm.currentOffset();
     TrapOffset trapOffset(0);  // ignored by masm.wasmEmitTrapOutOfLineCode
     TrapDesc trap(trapOffset, Trap::IndirectCallBadSig, masm.framePushed());
     switch (sigId.kind()) {
@@ -440,66 +402,38 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
       case SigIdDesc::Kind::None:
         break;
     }
-    offsets->tableProfilingJump = masm.nopPatchableToNearJump().offset();
 
-    // Generate normal prologue:
+    // Generate normal entry:
     masm.nopAlign(CodeAlignment);
-    offsets->nonProfilingEntry = masm.currentOffset();
-    PushRetAddr(masm);
-    masm.subFromStackPtr(Imm32(framePushed + FrameBytesAfterReturnAddress));
+    GenerateCallablePrologue(masm, framePushed, ExitReason::None, &offsets->normalEntry);
 
-    // Prologue join point, body begin:
-    masm.bind(&body);
     masm.setFramePushed(framePushed);
 }
 
-// Similar to GenerateFunctionPrologue (see comment), we generate both a
-// profiling and non-profiling epilogue a priori. When the profiling mode is
-// toggled, ToggleProfiling patches the 'profiling jump' to either be a nop
-// (falling through to the normal prologue) or a jump (jumping to the profiling
-// epilogue).
 void
 wasm::GenerateFunctionEpilogue(MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets)
 {
     MOZ_ASSERT(masm.framePushed() == framePushed);
-
-#if defined(JS_CODEGEN_ARM)
-    // Flush pending pools so they do not get dumped between the profilingReturn
-    // and profilingJump/profilingEpilogue offsets since the difference must be
-    // less than UINT8_MAX.
-    masm.flushBuffer();
-#endif
-
-    // Generate a nop that is overwritten by a jump to the profiling epilogue
-    // when profiling is enabled.
-    offsets->profilingJump = masm.nopPatchableToNearJump().offset();
-
-    // Normal epilogue:
-    masm.addToStackPtr(Imm32(framePushed + FrameBytesAfterReturnAddress));
-    masm.ret();
+    GenerateCallableEpilogue(masm, framePushed, ExitReason::None, &offsets->ret);
     masm.setFramePushed(0);
-
-    // Profiling epilogue:
-    offsets->profilingEpilogue = masm.currentOffset();
-    GenerateProfilingEpilogue(masm, framePushed, ExitReason::None, offsets);
 }
 
 void
 wasm::GenerateExitPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
-                           ProfilingOffsets* offsets)
+                           CallableOffsets* offsets)
 {
     masm.haltingAlign(CodeAlignment);
-    GenerateProfilingPrologue(masm, framePushed, reason, offsets);
+    GenerateCallablePrologue(masm, framePushed, reason, &offsets->begin);
     masm.setFramePushed(framePushed);
 }
 
 void
 wasm::GenerateExitEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
-                           ProfilingOffsets* offsets)
+                           CallableOffsets* offsets)
 {
     // Inverse of GenerateExitPrologue:
     MOZ_ASSERT(masm.framePushed() == framePushed);
-    GenerateProfilingEpilogue(masm, framePushed, reason, offsets);
+    GenerateCallableEpilogue(masm, framePushed, reason, &offsets->ret);
     masm.setFramePushed(0);
 }
 
@@ -527,21 +461,11 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation)
     stackAddress_(nullptr),
     exitReason_(ExitReason::None)
 {
-    // If profiling hasn't been enabled for this instance, then CallerFPFromFP
-    // will be trash, so ignore the entire activation. In practice, this only
-    // happens if profiling is enabled while the instance is on the stack (in
-    // which case profiling will be enabled when the instance becomes inactive
-    // and gets called again).
-    if (!activation_->compartment()->wasm.profilingEnabled()) {
-        MOZ_ASSERT(done());
-        return;
-    }
-
-    initFromFP();
+    initFromExitFP();
 }
 
 static inline void
-AssertMatchesCallSite(const WasmActivation& activation, void* callerPC, void* callerFP, void* fp)
+AssertMatchesCallSite(const WasmActivation& activation, void* callerPC, void* callerFP)
 {
 #ifdef DEBUG
     Code* code = activation.compartment()->wasm.lookupCode(callerPC);
@@ -557,15 +481,13 @@ AssertMatchesCallSite(const WasmActivation& activation, void* callerPC, void* ca
 
     const CallSite* callsite = code->lookupCallSite(callerPC);
     MOZ_ASSERT(callsite);
-
-    MOZ_ASSERT(callerFP == (uint8_t*)fp + callsite->stackDepth());
 #endif
 }
 
 void
-ProfilingFrameIterator::initFromFP()
+ProfilingFrameIterator::initFromExitFP()
 {
-    uint8_t* fp = activation_->fp();
+    uint8_t* fp = activation_->exitFP();
     stackAddress_ = fp;
 
     // If a signal was handled while entering an activation, the frame will
@@ -600,13 +522,14 @@ ProfilingFrameIterator::initFromFP()
         fp = CallerFPFromFP(fp);
         callerPC_ = ReturnAddressFromFP(fp);
         callerFP_ = CallerFPFromFP(fp);
-        AssertMatchesCallSite(*activation_, callerPC_, callerFP_, fp);
+        AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         break;
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
       case CodeRange::TrapExit:
       case CodeRange::DebugTrap:
       case CodeRange::Inline:
+      case CodeRange::Throw:
       case CodeRange::FarJumpIsland:
         MOZ_CRASH("Unexpected CodeRange kind");
     }
@@ -615,27 +538,10 @@ ProfilingFrameIterator::initFromFP()
     // This allows the variety of exit reasons to show up in the callstack.
     exitReason_ = activation_->exitReason();
 
-    // In the case of calls to builtins or asynchronous interrupts, no exit path
-    // is taken so the exitReason is None. Coerce these to the Native exit
-    // reason so that self-time is accounted for.
-    if (exitReason_ == ExitReason::None)
-        exitReason_ = ExitReason::Native;
-
     MOZ_ASSERT(!done());
 }
 
 typedef JS::ProfilingFrameIterator::RegisterState RegisterState;
-
-static bool
-InThunk(const CodeRange& codeRange, uint32_t offsetInModule)
-{
-    if (codeRange.kind() == CodeRange::FarJumpIsland)
-        return true;
-
-    return codeRange.isFunction() &&
-           offsetInModule >= codeRange.funcTableEntry() &&
-           offsetInModule < codeRange.funcNonProfilingEntry();
-}
 
 ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
                                                const RegisterState& state)
@@ -647,13 +553,10 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
     stackAddress_(nullptr),
     exitReason_(ExitReason::None)
 {
-    // If profiling hasn't been enabled for this instance, then CallerFPFromFP
-    // will be trash, so ignore the entire activation. In practice, this only
-    // happens if profiling is enabled while the instance is on the stack (in
-    // which case profiling will be enabled when the instance becomes inactive
-    // and gets called again).
-    if (!activation_->compartment()->wasm.profilingEnabled()) {
-        MOZ_ASSERT(done());
+    // In the case of ImportJitExit, the fp register may be temporarily
+    // clobbered on return from Ion so always use activation.fp when it is set.
+    if (activation.exitFP()) {
+        initFromExitFP();
         return;
     }
 
@@ -661,87 +564,98 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
     // exit trampoline or signal handler.
     code_ = activation_->compartment()->wasm.lookupCode(state.pc);
     if (!code_) {
-        initFromFP();
+        MOZ_ASSERT(done());
         return;
     }
 
-    // Note: fp may be null while entering and leaving the activation.
-    uint8_t* fp = activation.fp();
+    // When the pc is inside the prologue/epilogue, the innermost call's Frame
+    // is not complete and thus fp points to the second-to-innermost call's
+    // Frame. Since fp can only tell you about its caller, naively unwinding
+    // while pc is in the prologue/epilogue would skip the second-to-innermost
+    // call. To avoid this problem, we use the static structure of the code in
+    // the prologue and epilogue to do the Right Thing.
+    uint8_t* fp = (uint8_t*)state.fp;
+    uint8_t* pc = (uint8_t*)state.pc;
+    void** sp = (void**)state.sp;
 
-    const CodeRange* codeRange = code_->lookupRange(state.pc);
+    const CodeRange* codeRange = code_->lookupRange(pc);
+    uint32_t offsetInModule = pc - code_->segment().base();
+    MOZ_ASSERT(offsetInModule >= codeRange->begin());
+    MOZ_ASSERT(offsetInModule < codeRange->end());
+
+    // Compute the offset of the pc from the (normal) entry of the code range.
+    // The stack state of the pc for the entire table-entry is equivalent to
+    // that of the first pc of the normal-entry. Thus, we can simplify the below
+    // case analysis by redirecting all pc-in-table-entry cases to the
+    // pc-at-normal-entry case.
+    uint32_t offsetFromEntry;
+    if (codeRange->isFunction()) {
+        if (offsetInModule < codeRange->funcNormalEntry())
+            offsetFromEntry = 0;
+        else
+            offsetFromEntry = offsetInModule - codeRange->funcNormalEntry();
+    } else {
+        offsetFromEntry = offsetInModule - codeRange->begin();
+    }
+
     switch (codeRange->kind()) {
       case CodeRange::Function:
       case CodeRange::FarJumpIsland:
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
-      case CodeRange::TrapExit: {
-        // When the pc is inside the prologue/epilogue, the innermost call's
-        // Frame is not complete and thus fp points to the second-to-innermost
-        // call's Frame. Since fp can only tell you about its caller (via
-        // ReturnAddressFromFP(fp)), naively unwinding while pc is in the
-        // prologue/epilogue would skip the second-to- innermost call. To avoid
-        // this problem, we use the static structure of the code in the prologue
-        // and epilogue to do the Right Thing.
-        uint32_t offsetInModule = (uint8_t*)state.pc - code_->segment().base();
-        MOZ_ASSERT(offsetInModule >= codeRange->begin());
-        MOZ_ASSERT(offsetInModule < codeRange->end());
-        uint32_t offsetInCodeRange = offsetInModule - codeRange->begin();
-        void** sp = (void**)state.sp;
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-        if (offsetInCodeRange < PushedRetAddr || InThunk(*codeRange, offsetInModule)) {
-            // First instruction of the ARM/MIPS function; the return address is
-            // still in lr and fp still holds the caller's fp.
+      case CodeRange::TrapExit:
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+        if (offsetFromEntry == BeforePushRetAddr || codeRange->isThunk()) {
+            // The return address is still in lr and fp holds the caller's fp.
             callerPC_ = state.lr;
             callerFP_ = fp;
-            AssertMatchesCallSite(*activation_, callerPC_, callerFP_, sp - 2);
-        } else if (offsetInModule == codeRange->profilingReturn() - PostStorePrePopFP) {
-            // Second-to-last instruction of the ARM/MIPS function; fp points to
-            // the caller's fp; have not yet popped Frame.
-            callerPC_ = ReturnAddressFromFP(sp);
-            callerFP_ = CallerFPFromFP(sp);
-            AssertMatchesCallSite(*activation_, callerPC_, callerFP_, sp);
+            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         } else
 #endif
-        if (offsetInCodeRange < PushedFP || offsetInModule == codeRange->profilingReturn() ||
-            InThunk(*codeRange, offsetInModule))
-        {
-            // The return address has been pushed on the stack but not fp; fp
-            // still points to the caller's fp.
-            callerPC_ = *sp;
+        if (offsetFromEntry == PushedRetAddr || codeRange->isThunk()) {
+            // The return address has been pushed on the stack but fp still
+            // points to the caller's fp.
+            callerPC_ = sp[0];
             callerFP_ = fp;
-            AssertMatchesCallSite(*activation_, callerPC_, callerFP_, sp - 1);
-        } else if (offsetInCodeRange < StoredFP) {
-            // The full Frame has been pushed; fp still points to the caller's
-            // frame.
+            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+        } else if (offsetFromEntry == PushedFP) {
+            // The return address and caller's fp have been pushed on the stack; fp
+            // is still the caller's fp.
+            callerPC_ = sp[1];
+            callerFP_ = sp[0];
+            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+        } else if (offsetFromEntry == PushedTLS) {
+            // The full Frame has been pushed; fp is still the caller's fp.
             MOZ_ASSERT(fp == CallerFPFromFP(sp));
             callerPC_ = ReturnAddressFromFP(sp);
-            callerFP_ = CallerFPFromFP(sp);
-            AssertMatchesCallSite(*activation_, callerPC_, callerFP_, sp);
+            callerFP_ = fp;
+            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+        } else if (offsetInModule == codeRange->ret() - PoppedTLS) {
+            // The TLS field of the Frame has been popped.
+            callerPC_ = sp[1];
+            callerFP_ = sp[0];
+        } else if (offsetInModule == codeRange->ret()) {
+            // Both the TLS and callerFP fields have been popped and fp now
+            // points to the caller's frame.
+            callerPC_ = sp[0];
+            callerFP_ = fp;
+            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         } else {
             // Not in the prologue/epilogue.
             callerPC_ = ReturnAddressFromFP(fp);
             callerFP_ = CallerFPFromFP(fp);
-            AssertMatchesCallSite(*activation_, callerPC_, callerFP_, fp);
+            AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         }
         break;
-      }
-      case CodeRange::Entry: {
+      case CodeRange::Entry:
         // The entry trampoline is the final frame in an WasmActivation. The entry
         // trampoline also doesn't GeneratePrologue/Epilogue so we can't use
         // the general unwinding logic above.
-        MOZ_ASSERT(!fp);
         callerPC_ = nullptr;
         callerFP_ = nullptr;
         break;
-      }
       case CodeRange::DebugTrap:
-      case CodeRange::Inline: {
-        // The throw stub clears WasmActivation::fp on it's way out.
-        if (!fp) {
-            MOZ_ASSERT(done());
-            return;
-        }
-
+      case CodeRange::Inline:
         // Most inline code stubs execute after the prologue/epilogue have
         // completed so we can simply unwind based on fp. The only exception is
         // the async interrupt stub, since it can be executed at any time.
@@ -749,13 +663,18 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
         // skipped frames. Thus, we use simply unwind based on fp.
         callerPC_ = ReturnAddressFromFP(fp);
         callerFP_ = CallerFPFromFP(fp);
-        AssertMatchesCallSite(*activation_, callerPC_, callerFP_, fp);
+        AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         break;
-      }
+      case CodeRange::Throw:
+        // The throw stub executes a small number of instructions before popping
+        // the entire activation. To simplify testing, we simply pretend throw
+        // stubs have already popped the entire stack.
+        MOZ_ASSERT(done());
+        return;
     }
 
     codeRange_ = codeRange;
-    stackAddress_ = state.sp;
+    stackAddress_ = sp;
     MOZ_ASSERT(!done());
 }
 
@@ -784,6 +703,7 @@ ProfilingFrameIterator::operator++()
 
     switch (codeRange_->kind()) {
       case CodeRange::Entry:
+      case CodeRange::Throw:
         MOZ_ASSERT(callerFP_ == nullptr);
         callerPC_ = nullptr;
         break;
@@ -796,7 +716,7 @@ ProfilingFrameIterator::operator++()
       case CodeRange::FarJumpIsland:
         stackAddress_ = callerFP_;
         callerPC_ = ReturnAddressFromFP(callerFP_);
-        AssertMatchesCallSite(*activation_, callerPC_, CallerFPFromFP(callerFP_), callerFP_);
+        AssertMatchesCallSite(*activation_, callerPC_, CallerFPFromFP(callerFP_));
         callerFP_ = CallerFPFromFP(callerFP_);
         break;
     }
@@ -816,7 +736,6 @@ ProfilingFrameIterator::label() const
     //     devtools/client/performance/modules/logic/frame-utils.js
     const char* importJitDescription = "fast FFI trampoline (in asm.js)";
     const char* importInterpDescription = "slow FFI trampoline (in asm.js)";
-    const char* nativeDescription = "native call (in asm.js)";
     const char* trapDescription = "trap handling (in asm.js)";
     const char* debugTrapDescription = "debug trap handling (in asm.js)";
 
@@ -827,8 +746,6 @@ ProfilingFrameIterator::label() const
         return importJitDescription;
       case ExitReason::ImportInterp:
         return importInterpDescription;
-      case ExitReason::Native:
-        return nativeDescription;
       case ExitReason::Trap:
         return trapDescription;
       case ExitReason::DebugTrap:
@@ -844,99 +761,21 @@ ProfilingFrameIterator::label() const
       case CodeRange::DebugTrap:        return debugTrapDescription;
       case CodeRange::Inline:           return "inline stub (in asm.js)";
       case CodeRange::FarJumpIsland:    return "interstitial (in asm.js)";
+      case CodeRange::Throw:            MOZ_CRASH("no frame for throw stubs");
     }
 
     MOZ_CRASH("bad code range kind");
 }
 
-/*****************************************************************************/
-// Runtime patching to enable/disable profiling
-
 void
-wasm::ToggleProfiling(const Code& code, const CallSite& callSite, bool enabled)
+wasm::TraceActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc)
 {
-    if (callSite.kind() != CallSite::Func)
-        return;
-
-    uint8_t* callerRetAddr = code.segment().base() + callSite.returnAddressOffset();
-
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-    void* callee = X86Encoding::GetRel32Target(callerRetAddr);
-#elif defined(JS_CODEGEN_ARM)
-    uint8_t* caller = callerRetAddr - 4;
-    Instruction* callerInsn = reinterpret_cast<Instruction*>(caller);
-    BOffImm calleeOffset;
-    callerInsn->as<InstBLImm>()->extractImm(&calleeOffset);
-    void* callee = calleeOffset.getDest(callerInsn);
-#elif defined(JS_CODEGEN_ARM64)
-    MOZ_CRASH();
-    void* callee = nullptr;
-    (void)callerRetAddr;
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    uint8_t* caller = callerRetAddr - 2 * sizeof(uint32_t);
-    InstImm* callerInsn = reinterpret_cast<InstImm*>(caller);
-    BOffImm16 calleeOffset;
-    callerInsn->extractImm16(&calleeOffset);
-    void* callee = calleeOffset.getDest(reinterpret_cast<Instruction*>(caller));
-#elif defined(JS_CODEGEN_NONE)
-    MOZ_CRASH();
-    void* callee = nullptr;
-#else
-# error "Missing architecture"
-#endif
-
-    const CodeRange* codeRange = code.lookupRange(callee);
-    if (!codeRange->isFunction())
-        return;
-
-    uint8_t* from = code.segment().base() + codeRange->funcNonProfilingEntry();
-    uint8_t* to = code.segment().base() + codeRange->funcProfilingEntry();
-    if (!enabled)
-        Swap(from, to);
-
-    MOZ_ASSERT(callee == from);
-
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-    X86Encoding::SetRel32(callerRetAddr, to);
-#elif defined(JS_CODEGEN_ARM)
-    new (caller) InstBLImm(BOffImm(to - caller), Assembler::Always);
-#elif defined(JS_CODEGEN_ARM64)
-    (void)to;
-    MOZ_CRASH();
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    new (caller) InstImm(op_regimm, zero, rt_bgezal, BOffImm16(to - caller));
-#elif defined(JS_CODEGEN_NONE)
-    MOZ_CRASH();
-#else
-# error "Missing architecture"
-#endif
-}
-
-void
-wasm::ToggleProfiling(const Code& code, const CallThunk& callThunk, bool enabled)
-{
-    const CodeRange& cr = code.metadata().codeRanges[callThunk.u.codeRangeIndex];
-    uint32_t calleeOffset = enabled ? cr.funcProfilingEntry() : cr.funcNonProfilingEntry();
-    MacroAssembler::repatchFarJump(code.segment().base(), callThunk.offset, calleeOffset);
-}
-
-void
-wasm::ToggleProfiling(const Code& code, const CodeRange& codeRange, bool enabled)
-{
-    if (!codeRange.isFunction())
-        return;
-
-    uint8_t* codeBase = code.segment().base();
-    uint8_t* profilingEntry     = codeBase + codeRange.funcProfilingEntry();
-    uint8_t* tableProfilingJump = codeBase + codeRange.funcTableProfilingJump();
-    uint8_t* profilingJump      = codeBase + codeRange.funcProfilingJump();
-    uint8_t* profilingEpilogue  = codeBase + codeRange.funcProfilingEpilogue();
-
-    if (enabled) {
-        MacroAssembler::patchNopToNearJump(tableProfilingJump, profilingEntry);
-        MacroAssembler::patchNopToNearJump(profilingJump, profilingEpilogue);
-    } else {
-        MacroAssembler::patchNearJumpToNop(tableProfilingJump);
-        MacroAssembler::patchNearJumpToNop(profilingJump);
+    for (ActivationIterator iter(cx, target); !iter.done(); ++iter) {
+        if (iter.activation()->isWasm()) {
+            for (FrameIterator fi(iter.activation()->asWasm()); !fi.done(); ++fi) {
+                if (fi.hasInstance())
+                    fi.instance()->trace(trc);
+            }
+        }
     }
 }

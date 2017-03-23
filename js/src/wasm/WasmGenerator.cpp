@@ -309,7 +309,7 @@ JumpRange()
 typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> OffsetMap;
 
 bool
-ModuleGenerator::patchCallSites(TrapExitOffsetArray* maybeTrapExits)
+ModuleGenerator::patchCallSites()
 {
     masm_.haltingAlign(CodeAlignment);
 
@@ -338,7 +338,7 @@ ModuleGenerator::patchCallSites(TrapExitOffsetArray* maybeTrapExits)
             break;
           case CallSiteDesc::Func: {
             if (funcIsCompiled(cs.funcIndex())) {
-                uint32_t calleeOffset = funcCodeRange(cs.funcIndex()).funcNonProfilingEntry();
+                uint32_t calleeOffset = funcCodeRange(cs.funcIndex()).funcNormalEntry();
                 MOZ_RELEASE_ASSERT(calleeOffset < INT32_MAX);
 
                 if (uint32_t(abs(int32_t(calleeOffset) - int32_t(callerOffset))) < JumpRange()) {
@@ -351,7 +351,7 @@ ModuleGenerator::patchCallSites(TrapExitOffsetArray* maybeTrapExits)
             if (!p) {
                 Offsets offsets;
                 offsets.begin = masm_.currentOffset();
-                uint32_t jumpOffset = masm_.farJumpWithPatch().offset();
+                masm_.append(CallFarJump(cs.funcIndex(), masm_.farJumpWithPatch()));
                 offsets.end = masm_.currentOffset();
                 if (masm_.oom())
                     return false;
@@ -360,30 +360,18 @@ ModuleGenerator::patchCallSites(TrapExitOffsetArray* maybeTrapExits)
                     return false;
                 if (!existingCallFarJumps.add(p, cs.funcIndex(), offsets.begin))
                     return false;
-
-                // Record calls' far jumps in metadata since they must be
-                // repatched at runtime when profiling mode is toggled.
-                if (!metadata_->callThunks.emplaceBack(jumpOffset, cs.funcIndex()))
-                    return false;
             }
 
             masm_.patchCall(callerOffset, p->value());
             break;
           }
           case CallSiteDesc::TrapExit: {
-            if (maybeTrapExits) {
-                uint32_t calleeOffset = (*maybeTrapExits)[cs.trap()].begin;
-                MOZ_RELEASE_ASSERT(calleeOffset < INT32_MAX);
-
-                if (uint32_t(abs(int32_t(calleeOffset) - int32_t(callerOffset))) < JumpRange()) {
-                    masm_.patchCall(callerOffset, calleeOffset);
-                    break;
-                }
-            }
-
             if (!existingTrapFarJumps[cs.trap()]) {
+                // See MacroAssembler::wasmEmitTrapOutOfLineCode for why we must
+                // reload the TLS register on this path.
                 Offsets offsets;
                 offsets.begin = masm_.currentOffset();
+                masm_.loadPtr(Address(FramePointer, offsetof(Frame, tls)), WasmTlsReg);
                 masm_.append(TrapFarJump(cs.trap(), masm_.farJumpWithPatch()));
                 offsets.end = masm_.currentOffset();
                 if (masm_.oom())
@@ -429,12 +417,8 @@ ModuleGenerator::patchCallSites(TrapExitOffsetArray* maybeTrapExits)
 bool
 ModuleGenerator::patchFarJumps(const TrapExitOffsetArray& trapExits, const Offsets& debugTrapStub)
 {
-    for (CallThunk& callThunk : metadata_->callThunks) {
-        uint32_t funcIndex = callThunk.u.funcIndex;
-        callThunk.u.codeRangeIndex = funcToCodeRange_[funcIndex];
-        CodeOffset farJump(callThunk.offset);
-        masm_.patchFarJump(farJump, funcCodeRange(funcIndex).funcNonProfilingEntry());
-    }
+    for (const CallFarJump& farJump : masm_.callFarJumps())
+        masm_.patchFarJump(farJump.jump, funcCodeRange(farJump.funcIndex).funcNormalEntry());
 
     for (const TrapFarJump& farJump : masm_.trapFarJumps())
         masm_.patchFarJump(farJump.jump, trapExits[farJump.trap].begin);
@@ -534,7 +518,7 @@ ModuleGenerator::finishFuncExports()
 }
 
 typedef Vector<Offsets, 0, SystemAllocPolicy> OffsetVector;
-typedef Vector<ProfilingOffsets, 0, SystemAllocPolicy> ProfilingOffsetVector;
+typedef Vector<CallableOffsets, 0, SystemAllocPolicy> CallableOffsetVector;
 
 bool
 ModuleGenerator::finishCodegen()
@@ -550,8 +534,8 @@ ModuleGenerator::finishCodegen()
     // due to the large absolute offsets temporarily stored by Label::bind().
 
     OffsetVector entries;
-    ProfilingOffsetVector interpExits;
-    ProfilingOffsetVector jitExits;
+    CallableOffsetVector interpExits;
+    CallableOffsetVector jitExits;
     TrapExitOffsetArray trapExits;
     Offsets outOfBoundsExit;
     Offsets unalignedAccessExit;
@@ -632,7 +616,7 @@ ModuleGenerator::finishCodegen()
         return false;
 
     throwStub.offsetBy(offsetInWhole);
-    if (!metadata_->codeRanges.emplaceBack(CodeRange::Inline, throwStub))
+    if (!metadata_->codeRanges.emplaceBack(CodeRange::Throw, throwStub))
         return false;
 
     debugTrapStub.offsetBy(offsetInWhole);
@@ -649,7 +633,7 @@ ModuleGenerator::finishCodegen()
     // then far jumps. Patching callsites can generate far jumps so there is an
     // ordering dependency.
 
-    if (!patchCallSites(&trapExits))
+    if (!patchCallSites())
         return false;
 
     if (!patchFarJumps(trapExits, debugTrapStub))
@@ -1168,7 +1152,6 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     metadata_->memoryAccesses.podResizeToFit();
     metadata_->codeRanges.podResizeToFit();
     metadata_->callSites.podResizeToFit();
-    metadata_->callThunks.podResizeToFit();
     metadata_->debugTrapFarJumpOffsets.podResizeToFit();
     metadata_->debugFuncToCodeRange.podResizeToFit();
 

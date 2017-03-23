@@ -19,7 +19,6 @@
 #include "js/Debug.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/GeneratorObject.h"
-#include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmInstance.h"
 
 #include "jsobjinlines.h"
@@ -455,7 +454,7 @@ AbstractFramePtr::environmentChain() const
     if (isBaselineFrame())
         return asBaselineFrame()->environmentChain();
     if (isWasmDebugFrame())
-        return asWasmDebugFrame()->environmentChain();
+        return &global()->lexicalEnvironment();
     return asRematerializedFrame()->environmentChain();
 }
 

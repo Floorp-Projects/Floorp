@@ -1217,6 +1217,14 @@ gfxWindowsPlatform::SetupClearTypeParams()
             }
         }
 
+        if (GetDefaultContentBackend() == BackendType::SKIA) {
+          // Skia doesn't support a contrast value outside of 0-1, so default to 1.0
+          if (contrast < 0.0 || contrast > 1.0) {
+            NS_WARNING("Custom dwrite contrast not supported in Skia. Defaulting to 1.0.");
+            contrast = 1.0;
+          }
+        }
+
         // For parameters that have not been explicitly set,
         // we copy values from default params (or our overridden value for contrast)
         if (gamma < 1.0 || gamma > 2.2) {

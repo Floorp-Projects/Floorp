@@ -13718,15 +13718,14 @@ class MWasmBoundsCheck
   : public MBinaryInstruction,
     public NoTypePolicy::Data
 {
-    bool redundant_;
     wasm::TrapOffset trapOffset_;
 
     explicit MWasmBoundsCheck(MDefinition* index, MDefinition* boundsCheckLimit, wasm::TrapOffset trapOffset)
       : MBinaryInstruction(index, boundsCheckLimit),
-        redundant_(false),
         trapOffset_(trapOffset)
     {
-        setGuard(); // Effectful: throws for OOB.
+        // Bounds check is effectful: it throws for OOB.
+        setGuard();
     }
 
   public:
@@ -13739,11 +13738,11 @@ class MWasmBoundsCheck
     }
 
     bool isRedundant() const {
-        return redundant_;
+        return !isGuard();
     }
 
-    void setRedundant(bool val) {
-        redundant_ = val;
+    void setRedundant() {
+        setNotGuard();
     }
 
     wasm::TrapOffset trapOffset() const {
@@ -14247,12 +14246,11 @@ class MWasmParameter : public MNullaryInstruction
 };
 
 class MWasmReturn
-  : public MAryControlInstruction<2, 0>,
+  : public MAryControlInstruction<1, 0>,
     public NoTypePolicy::Data
 {
-    explicit MWasmReturn(MDefinition* ins, MDefinition* tlsPtr) {
+    explicit MWasmReturn(MDefinition* ins) {
         initOperand(0, ins);
-        initOperand(1, tlsPtr);
     }
 
   public:
@@ -14261,13 +14259,9 @@ class MWasmReturn
 };
 
 class MWasmReturnVoid
-  : public MAryControlInstruction<1, 0>,
+  : public MAryControlInstruction<0, 0>,
     public NoTypePolicy::Data
 {
-    explicit MWasmReturnVoid(MDefinition* tlsPtr) {
-        initOperand(0, tlsPtr);
-    }
-
   public:
     INSTRUCTION_HEADER(WasmReturnVoid)
     TRIVIAL_NEW_WRAPPERS
@@ -14305,15 +14299,12 @@ class MWasmCall final
     wasm::CalleeDesc callee_;
     FixedList<AnyRegister> argRegs_;
     uint32_t spIncrement_;
-    uint32_t tlsStackOffset_;
     ABIArg instanceArg_;
 
-    MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee, uint32_t spIncrement,
-              uint32_t tlsStackOffset)
+    MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee, uint32_t spIncrement)
       : desc_(desc),
         callee_(callee),
-        spIncrement_(spIncrement),
-        tlsStackOffset_(tlsStackOffset)
+        spIncrement_(spIncrement)
     { }
 
   public:
@@ -14326,15 +14317,12 @@ class MWasmCall final
     };
     typedef Vector<Arg, 8, SystemAllocPolicy> Args;
 
-    static const uint32_t DontSaveTls = UINT32_MAX;
-
     static MWasmCall* New(TempAllocator& alloc,
                           const wasm::CallSiteDesc& desc,
                           const wasm::CalleeDesc& callee,
                           const Args& args,
                           MIRType resultType,
                           uint32_t spIncrement,
-                          uint32_t tlsStackOffset,
                           MDefinition* tableIndex = nullptr);
 
     static MWasmCall* NewBuiltinInstanceMethodCall(TempAllocator& alloc,
@@ -14343,8 +14331,7 @@ class MWasmCall final
                                                    const ABIArg& instanceArg,
                                                    const Args& args,
                                                    MIRType resultType,
-                                                   uint32_t spIncrement,
-                                                   uint32_t tlsStackOffset);
+                                                   uint32_t spIncrement);
 
     size_t numArgs() const {
         return argRegs_.length();
@@ -14361,13 +14348,6 @@ class MWasmCall final
     }
     uint32_t spIncrement() const {
         return spIncrement_;
-    }
-    bool saveTls() const {
-        return tlsStackOffset_ != DontSaveTls;
-    }
-    uint32_t tlsStackOffset() const {
-        MOZ_ASSERT(saveTls());
-        return tlsStackOffset_;
     }
 
     bool possiblyCalls() const override {
