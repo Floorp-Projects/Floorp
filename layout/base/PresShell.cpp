@@ -2010,13 +2010,11 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight, nscoord a
                                                      nsITimer::TYPE_ONE_SHOT);
       }
     } else {
-      RefPtr<nsRunnableMethod<PresShell>> event =
-        NewRunnableMethod(this, &PresShell::FireResizeEvent);
-      nsresult rv = mDocument->Dispatch("PresShell::FireResizeEvent",
-                                        TaskCategory::Other,
-                                        do_AddRef(event));
-      if (NS_SUCCEEDED(rv)) {
-        mResizeEvent = event;
+      RefPtr<nsRunnableMethod<PresShell> > resizeEvent =
+        NewRunnableMethod("PresShell::FireResizeEvent",
+                          this, &PresShell::FireResizeEvent);
+      if (NS_SUCCEEDED(NS_DispatchToCurrentThread(resizeEvent))) {
+        mResizeEvent = resizeEvent;
         SetNeedStyleFlush();
       }
     }
@@ -6258,15 +6256,11 @@ PresShell::ScheduleApproximateFrameVisibilityUpdateNow()
     return;
   }
 
-  RefPtr<nsRunnableMethod<PresShell>> event =
-    NewRunnableMethod(this, &PresShell::UpdateApproximateFrameVisibility);
-  nsresult rv =
-    mDocument->Dispatch("PresShell::UpdateApproximateFrameVisibility",
-                        TaskCategory::Other,
-                        do_AddRef(event));
-
-  if (NS_SUCCEEDED(rv)) {
-    mUpdateApproximateFrameVisibilityEvent = event;
+  RefPtr<nsRunnableMethod<PresShell> > ev =
+    NewRunnableMethod("PresShell::UpdateApproximateFrameVisibility",
+                      this, &PresShell::UpdateApproximateFrameVisibility);
+  if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+    mUpdateApproximateFrameVisibilityEvent = ev;
   }
 }
 
