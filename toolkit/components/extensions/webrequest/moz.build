@@ -13,7 +13,13 @@ XPIDL_MODULE = 'webextensions'
 
 UNIFIED_SOURCES += [
     'nsWebRequestListener.cpp',
+    'StreamFilterChild.cpp',
+    'StreamFilterParent.cpp',
     'WebRequestService.cpp',
+]
+
+IPDL_SOURCES += [
+    'PStreamFilter.ipdl',
 ]
 
 EXPORTS += [
@@ -23,6 +29,13 @@ EXPORTS += [
 EXPORTS.mozilla += [
     'WebRequestService.h',
 ]
+
+EXPORTS.mozilla.extensions += [
+    'StreamFilterChild.h',
+    'StreamFilterParent.h',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
