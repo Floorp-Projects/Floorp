@@ -17,6 +17,7 @@
   * [Redux](frontend/redux.md)
     * [Guidelines](frontend/redux-guidelines.md)
     * [Tips](frontend/redux-tips.md)
+  * [Telemetry](frontend/telemetry.md)
 * [Backend](backend/backend.md)
   * [Remote Debugging Protocol](backend/protocol.md)
   * [Debugger API](backend/debugger-api.md)
