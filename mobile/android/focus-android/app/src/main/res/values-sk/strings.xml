@@ -31,7 +31,7 @@
   <string name="preference_mozilla_telemetry">Odosielať anonymné údaje o používaní</string>
   <string name="preference_mozilla_telemetry_summary">Ďalšie informácie</string>
   <string name="preference_about">O aplikácii %1$s</string>
-  <string name="content_description_clear_input">Vyčistiť vstup</string>
+  <string name="content_description_clear_input">Vymazať pole</string>
   <string name="content_description_dismiss_input">Zavrieť</string>
   <string name="content_description_erase">Vymazať históriu prehliadania</string>
   <string name="content_description_lock">Zabezpečené pripojenie</string>
