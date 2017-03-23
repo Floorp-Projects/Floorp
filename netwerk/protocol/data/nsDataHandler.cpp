@@ -95,7 +95,9 @@ nsDataHandler::NewURI(const nsACString &aSpec,
         if (base64 || (strncmp(contentType.get(),"text/",5) != 0 &&
                        contentType.Find("xml") == kNotFound)) {
             // it's ascii encoded binary, don't let any spaces in
-            spec.StripWhitespace();
+            if (!spec.StripWhitespace(mozilla::fallible)) {
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
         }
 
         uri = do_CreateInstance(kSimpleURICID, &rv);
@@ -221,14 +223,18 @@ nsDataHandler::ParseURI(nsCString& spec,
         } else {
             contentType.Assign(buffer);
             ToLowerCase(contentType);
-            contentType.StripWhitespace();
+            if (!contentType.StripWhitespace(mozilla::fallible)) {
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
         }
 
         if (semiColon && contentCharset) {
             char *charset = PL_strcasestr(semiColon + 1, "charset=");
             if (charset) {
                 contentCharset->Assign(charset + sizeof("charset=") - 1);
-                contentCharset->StripWhitespace();
+                if (!contentCharset->StripWhitespace(mozilla::fallible)) {
+                    return NS_ERROR_OUT_OF_MEMORY;
+                }
             }
         }
 
