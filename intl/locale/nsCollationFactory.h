@@ -4,8 +4,8 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsCollation_h__
-#define nsCollation_h__
+#ifndef nsCollationFactory_h__
+#define nsCollationFactory_h__
 
 
 #include "nsICollation.h"
@@ -21,10 +21,8 @@ class nsCollationFactory final : public nsICollationFactory {
   ~nsCollationFactory() {}
 
 public: 
-  NS_DECL_ISUPPORTS 
-
-  NS_IMETHOD CreateCollation(nsICollation** instancePtr) override;
-  NS_IMETHOD CreateCollationForLocale(const nsACString& locale, nsICollation** instancePtr) override;
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICOLLATIONFACTORY
 
   nsCollationFactory() {}
 };
@@ -49,4 +47,4 @@ protected:
   nsCOMPtr <nsIUnicodeEncoder>            mEncoder;
 };
 
-#endif  /* nsCollation_h__ */
+#endif  /* nsCollationFactory_h__ */
