@@ -1,6 +1,6 @@
 [package]
 name = "parking_lot_core"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
 description = "An advanced API for creating custom synchronization primitives."
 documentation = "https://amanieu.github.io/parking_lot/parking_lot_core/index.html"
@@ -9,7 +9,7 @@ repository = "https://github.com/Amanieu/parking_lot"
 keywords = ["mutex", "condvar", "rwlock", "once", "thread"]
 
 [dependencies]
-smallvec = "0.1"
+smallvec = "0.3"
 rand = "0.3"
 
 [target.'cfg(unix)'.dependencies]
