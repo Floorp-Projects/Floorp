@@ -9,7 +9,7 @@
 
 
 #include "nsICollation.h"
-#include "nsCollation.h"  // static library
+#include "nsCollationFactory.h"  // static library
 #include "plstr.h"
 #include "mozilla/Attributes.h"
 #include "nsString.h"

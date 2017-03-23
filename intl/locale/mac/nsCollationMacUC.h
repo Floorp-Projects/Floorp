@@ -8,7 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "nsICollation.h"
-#include "nsCollation.h"
+#include "nsCollationFactory.h"
 #include "nsString.h"
 
 #include "unicode/ucol.h"
