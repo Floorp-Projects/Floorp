@@ -144,6 +144,7 @@ DEBIAN_DISTROS = (
     'Elementary OS',
     'Elementary',
     '"elementary OS"',
+    '"elementary"'
 )
 
 
