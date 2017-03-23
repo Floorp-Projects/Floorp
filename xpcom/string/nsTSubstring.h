@@ -1111,6 +1111,20 @@ protected:
     size_type aNewLen = size_type(-1));
 
   /**
+   * Checks if the given capacity is valid for this string type.
+   */
+  static MOZ_MUST_USE bool CheckCapacity(size_type aCapacity) {
+    if (aCapacity > kMaxCapacity) {
+      // Also assert for |aCapacity| equal to |size_type(-1)|, since we used to
+      // use that value to flag immutability.
+      NS_ASSERTION(aCapacity != size_type(-1), "Bogus capacity");
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
    * this helper function stores the specified dataFlags in mFlags
    */
   void SetDataFlags(uint32_t aDataFlags)
@@ -1122,6 +1136,7 @@ protected:
   void NS_FASTCALL ReplaceLiteral(index_type aCutStart, size_type aCutLength,
                                   const char_type* aData, size_type aLength);
 
+  static const size_type kMaxCapacity;
 public:
 
   // NOTE: this method is declared public _only_ for convenience for
