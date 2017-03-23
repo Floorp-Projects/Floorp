@@ -373,7 +373,7 @@ fails == 315920-7a.html 315920-7a.html
 fails == 315920-7b.html 315920-7b.html
 fails == 315920-7c.html 315920-7c.html
 fails == 315920-8a.html 315920-8a.html
-== 315920-8b.html 315920-8b.html
+fails == 315920-8b.html 315920-8b.html # bug 1349909
 fails == 315920-9.html 315920-9.html
 == 315920-10.html 315920-10.html
 fails == 315920-11.html 315920-11.html
@@ -381,7 +381,7 @@ fails == 315920-12a.html 315920-12a.html
 fails == 315920-12b.html 315920-12b.html
 fails == 315920-12c.html 315920-12c.html
 fails == 315920-13a.html 315920-13a.html
-== 315920-13b.html 315920-13b.html
+fails == 315920-13b.html 315920-13b.html # bug 1349909
 fails == 315920-14.html 315920-14.html
 == 315920-15.html 315920-15.html
 fails == 315920-16.html 315920-16.html
