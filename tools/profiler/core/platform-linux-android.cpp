@@ -477,42 +477,6 @@ readCSVArray(char* aCsvList, const char** aBuffer)
   return count;
 }
 
-// Support some of the env variables reported in ReadProfilerEnvVars, plus some
-// extra stuff.
-static void
-ReadProfilerVars(const char* aFileName,
-                 const char** aFeatures, uint32_t* aFeatureCount,
-                 const char** aThreadNames, uint32_t* aThreadCount)
-{
-  FILE* file = fopen(aFileName, "r");
-  const int bufferSize = 1024;
-  char line[bufferSize];
-  char* feature;
-  char* value;
-  char* savePtr;
-
-  if (file) {
-    PS::AutoLock lock(gPSMutex);
-
-    while (fgets(line, bufferSize, file) != nullptr) {
-      feature = strtok_r(line, "=", &savePtr);
-      value = strtok_r(nullptr, "", &savePtr);
-
-      if (strncmp(feature, "MOZ_PROFILER_INTERVAL", bufferSize) == 0) {
-        set_profiler_interval(lock, value);
-      } else if (strncmp(feature, "MOZ_PROFILER_ENTRIES", bufferSize) == 0) {
-        set_profiler_entries(lock, value);
-      } else if (strncmp(feature, "MOZ_PROFILER_FEATURES", bufferSize) == 0) {
-        *aFeatureCount = readCSVArray(value, aFeatures);
-      } else if (strncmp(feature, "threads", bufferSize) == 0) {
-        *aThreadCount = readCSVArray(value, aThreadNames);
-      }
-    }
-
-    fclose(file);
-  }
-}
-
 static void
 DoStartTask()
 {
@@ -527,11 +491,39 @@ DoStartTask()
   const char* features[10];
   const char* profilerConfigFile = "/data/local/tmp/profiler.options";
 
-  ReadProfilerVars(profilerConfigFile, features, &featureCount, threadNames, &threadCount);
+  // Support some of the usual env variables, plus some extra stuff.
+  FILE* file = fopen(profilerConfigFile, "r");
+  int entries = PROFILE_DEFAULT_ENTRIES;
+  int interval = PROFILE_DEFAULT_INTERVAL;
+
+  if (file) {
+    const int bufferSize = 1024;
+    char line[bufferSize];
+    while (fgets(line, bufferSize, file) != nullptr) {
+      char* savePtr;
+      char* feature = strtok_r(line, "=", &savePtr);
+      char* value = strtok_r(nullptr, "", &savePtr);
+
+      if (strncmp(feature, "MOZ_PROFILER_STARTUP_ENTRIES", bufferSize) == 0) {
+        GetEntries(value, &entries);
+      } else if (strncmp(feature, "MOZ_PROFILER_STARTUP_INTERVAL",
+                         bufferSize) == 0) {
+        GetInterval(value, &interval);
+      } else if (strncmp(feature, "MOZ_PROFILER_STARTUP_FEATURES",
+                         bufferSize) == 0) {
+        featureCount = readCSVArray(value, features);
+      } else if (strncmp(feature, "threads", bufferSize) == 0) {
+        threadCount = readCSVArray(value, threadNames);
+      }
+    }
+
+    fclose(file);
+  }
+
   MOZ_ASSERT(featureCount < 10);
   MOZ_ASSERT(threadCount < 10);
 
-  profiler_start(PROFILE_DEFAULT_ENTRIES, /* interval */ 1,
+  profiler_start(entries, interval,
                  features, featureCount, threadNames, threadCount);
 
   freeArray(threadNames, threadCount);
