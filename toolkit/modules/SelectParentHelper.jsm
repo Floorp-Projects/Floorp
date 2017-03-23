@@ -192,10 +192,13 @@ this.SelectParentHelper = {
       let selectedIndex = msg.data.selectedIndex;
       let uaBackgroundColor = msg.data.uaBackgroundColor;
       let uaColor = msg.data.uaColor;
+      let uaSelectBackgroundColor = msg.data.uaSelectBackgroundColor;
+      let uaSelectColor = msg.data.uaSelectColor;
       let selectBackgroundColor = msg.data.selectBackgroundColor;
       let selectColor = msg.data.selectColor;
       this.populate(currentMenulist, options, selectedIndex,
                     currentZoom, uaBackgroundColor, uaColor,
+                    uaSelectBackgroundColor, uaSelectColor,
                     selectBackgroundColor, selectColor);
     }
   },
