@@ -62,11 +62,7 @@ impl AtomicUsize {
                             _: Ordering)
                             -> Result<usize, usize> {
         let res = self.0.compare_and_swap(old, new, order);
-        if res == old {
-            Ok(res)
-        } else {
-            Err(res)
-        }
+        if res == old { Ok(res) } else { Err(res) }
     }
     #[inline]
     pub fn compare_exchange_weak(&self,
@@ -76,10 +72,6 @@ impl AtomicUsize {
                                  _: Ordering)
                                  -> Result<usize, usize> {
         let res = self.0.compare_and_swap(old, new, order);
-        if res == old {
-            Ok(res)
-        } else {
-            Err(res)
-        }
+        if res == old { Ok(res) } else { Err(res) }
     }
 }

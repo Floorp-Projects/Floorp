@@ -13,7 +13,7 @@ use std::time::{Instant, Duration};
 use std::cell::{Cell, UnsafeCell};
 use std::ptr;
 use std::mem;
-use smallvec::SmallVec8;
+use smallvec::SmallVec;
 use rand::{self, XorShiftRng, Rng};
 use thread_parker::ThreadParker;
 use word_lock::WordLock;
@@ -723,7 +723,7 @@ pub unsafe fn unpark_all(key: usize, unpark_token: UnparkToken) -> usize {
     let mut link = &bucket.queue_head;
     let mut current = bucket.queue_head.get();
     let mut previous = ptr::null();
-    let mut threads = SmallVec8::new();
+    let mut threads = SmallVec::<[_; 8]>::new();
     while !current.is_null() {
         if (*current).key.load(Ordering::Relaxed) == key {
             // Remove the thread from the queue
@@ -942,7 +942,7 @@ unsafe fn unpark_filter_internal(key: usize,
     let mut link = &bucket.queue_head;
     let mut current = bucket.queue_head.get();
     let mut previous = ptr::null();
-    let mut threads = SmallVec8::new();
+    let mut threads = SmallVec::<[_; 8]>::new();
     let mut result = UnparkResult {
         unparked_threads: 0,
         have_more_threads: false,
