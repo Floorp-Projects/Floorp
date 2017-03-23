@@ -75,6 +75,32 @@ static void Set##Name##ChangeCallback(Pref::ChangeCallback aCallback) {       \
 private:                                                                      \
 PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
 
+// This declares an "override" pref, which is exposed as a "bool" pref by the API,
+// but is internally stored as a tri-state int pref with three possible values:
+// - A value of 0 means that it has been force-disabled, and is exposed as a
+//   false-valued bool.
+// - A value of 1 means that it has been force-enabled, and is exposed as a
+//   true-valued bool.
+// - A value of 2 (the default) means that it returns the provided BaseValue
+//   as a boolean. The BaseValue may be a constant expression or a function.
+// If the prefs defined with this macro are listed in prefs files (e.g. all.js),
+// then they must be listed with an int value (default to 2, but you can use 0
+// or 1 if you want to force it on or off).
+#define DECL_OVERRIDE_PREF(Update, Prefname, Name, BaseValue)                 \
+public:                                                                       \
+static bool Name() { MOZ_ASSERT(SingletonExists());                           \
+    int32_t val = GetSingleton().mPref##Name.mValue;                          \
+    return val == 2 ? !!(BaseValue) : !!val; }                                  \
+static void Set##Name(bool aVal) { MOZ_ASSERT(SingletonExists());             \
+    GetSingleton().mPref##Name.Set(UpdatePolicy::Update, Get##Name##PrefName(), aVal ? 1 : 0); } \
+static const char* Get##Name##PrefName() { return Prefname; }                 \
+static int32_t Get##Name##PrefDefault() { return 2; }                         \
+static void Set##Name##ChangeCallback(Pref::ChangeCallback aCallback) {       \
+    MOZ_ASSERT(SingletonExists());                                            \
+    GetSingleton().mPref##Name.SetChangeCallback(aCallback); }                \
+private:                                                                      \
+PrefTemplate<UpdatePolicy::Update, int32_t, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
+
 namespace mozilla {
 namespace gfx {
 class GfxPrefValue;   // defined in PGPU.ipdl
