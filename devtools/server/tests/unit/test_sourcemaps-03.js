@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Check setting breakpoints in source mapped sources.
  */
@@ -11,27 +13,26 @@ var gThreadClient;
 
 const {SourceNode} = require("source-map");
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-source-map", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test_simple_source_map();
-    });
+    attachTestTabAndResume(gClient, "test-source-map",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             test_simple_source_map();
+                           });
   });
   do_test_pending();
 }
 
-function testBreakpointMapping(aName, aCallback)
-{
+function testBreakpointMapping(name, callback) {
   Task.spawn(function* () {
     let response = yield waitForPause(gThreadClient);
     do_check_eq(response.why.type, "debuggerStatement");
 
-    const source = yield getSource(gThreadClient, "http://example.com/www/js/" + aName + ".js");
+    const source = yield getSource(gThreadClient, "http://example.com/www/js/" + name + ".js");
     response = yield setBreakpoint(source, {
       // Setting the breakpoint on an empty line so that it is pushed down one
       // line and we can check the source mapped actualLocation later.
@@ -47,7 +48,7 @@ function testBreakpointMapping(aName, aCallback)
     // because of our breakpoint, we resume again to finish the eval, and
     // finally receive our last pause which has the result of the client
     // evaluation.
-    response = yield gThreadClient.eval(null, aName + "()");
+    response = yield gThreadClient.eval(null, name + "()");
     do_check_eq(response.type, "resumed");
 
     response = yield waitForPause(gThreadClient);
@@ -62,11 +63,11 @@ function testBreakpointMapping(aName, aCallback)
 
     response = yield waitForPause(gThreadClient);
     do_check_eq(response.why.type, "clientEvaluated");
-    do_check_eq(response.why.frameFinished.return, aName);
+    do_check_eq(response.why.frameFinished.return, name);
 
     response = yield resume(gThreadClient);
 
-    aCallback();
+    callback();
   });
 
   gDebuggee.eval("(" + function () {
@@ -74,26 +75,27 @@ function testBreakpointMapping(aName, aCallback)
   } + "());");
 }
 
-function test_simple_source_map()
-{
+function test_simple_source_map() {
   let expectedSources = new Set([
     "http://example.com/www/js/a.js",
     "http://example.com/www/js/b.js",
     "http://example.com/www/js/c.js"
   ]);
 
-  gThreadClient.addListener("newSource", function _onNewSource(aEvent, aPacket) {
-    expectedSources.delete(aPacket.source.url);
+  gThreadClient.addListener("newSource", function _onNewSource(event, packet) {
+    expectedSources.delete(packet.source.url);
     if (expectedSources.size > 0) {
       return;
     }
     gThreadClient.removeListener("newSource", _onNewSource);
 
+    function finish() {
+      finishClient(gClient);
+    }
+
     testBreakpointMapping("a", function () {
       testBreakpointMapping("b", function () {
-        testBreakpointMapping("c", function () {
-          finishClient(gClient);
-        });
+        testBreakpointMapping("c", finish);
       });
     });
   });

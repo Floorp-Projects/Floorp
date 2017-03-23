@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable no-shadow, max-nested-callbacks */
 
 "use strict";
 
@@ -10,8 +11,7 @@
 
 const Profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
 
-function run_test()
-{
+function run_test() {
   get_chrome_actors((client1, form1) => {
     let actor1 = form1.profilerActor;
     get_chrome_actors((client2, form2) => {
@@ -29,8 +29,7 @@ function run_test()
   do_test_pending();
 }
 
-function activate_profiler(client, actor, callback)
-{
+function activate_profiler(client, actor, callback) {
   client.request({ to: actor, type: "startProfiler" }, response => {
     do_check_true(response.started);
     do_check_true(Profiler.IsActive());
@@ -42,8 +41,7 @@ function activate_profiler(client, actor, callback)
   });
 }
 
-function deactivate_profiler(client, actor, callback)
-{
+function deactivate_profiler(client, actor, callback) {
   client.request({ to: actor, type: "stopProfiler" }, response => {
     do_check_false(response.started);
     do_check_true(Profiler.IsActive());
@@ -55,8 +53,7 @@ function deactivate_profiler(client, actor, callback)
   });
 }
 
-function test_close(client1, actor1, client2, actor2, callback)
-{
+function test_close(client1, actor1, client2, actor2, callback) {
   activate_profiler(client1, actor1, () => {
     activate_profiler(client2, actor2, () => {
       deactivate_profiler(client1, actor1, () => {

@@ -1,5 +1,7 @@
+"use strict";
+
 var protocol = require("devtools/shared/protocol");
-var {Arg, Option, RetVal} = protocol;
+var {RetVal} = protocol;
 
 protocol.types.addActorType("child");
 protocol.types.addActorType("root");
@@ -171,6 +173,7 @@ const run_test = Test(function* () {
     yield rootFront.getUnknownDetail();
     do_check_true(false);
   } catch (ex) {
+    // empty
   }
 
   yield client.close();

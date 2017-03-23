@@ -76,6 +76,8 @@ public:
 
   RenderTextureHost* GetRenderTexture(uint64_t aExternalImageId);
 
+  WrRenderer* GetWrRenderer() { return mWrRenderer; }
+
 protected:
 
   RefPtr<RenderThread> mThread;

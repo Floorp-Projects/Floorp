@@ -1,44 +1,44 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Check getting sources before there are any.
  */
 
-var gDebuggee;
 var gClient;
 var gThreadClient;
 
 var gNumTimesSourcesSent = 0;
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-stack");
+  addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.request = (function (request) {
-    return function (aRequest, aOnResponse) {
-      if (aRequest.type === "sources") {
+  gClient.request = (function (origRequest) {
+    return function (request, onResponse) {
+      if (request.type === "sources") {
         ++gNumTimesSourcesSent;
       }
-      return request.call(this, aRequest, aOnResponse);
+      return origRequest.call(this, request, onResponse);
     };
   }(gClient.request));
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test_listing_zero_sources();
-    });
+    attachTestTabAndResume(gClient, "test-stack",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             test_listing_zero_sources();
+                           });
   });
   do_test_pending();
 }
 
-function test_listing_zero_sources()
-{
-  gThreadClient.getSources(function (aPacket) {
-    do_check_true(!aPacket.error);
-    do_check_true(!!aPacket.sources);
-    do_check_eq(aPacket.sources.length, 0);
+function test_listing_zero_sources() {
+  gThreadClient.getSources(function (packet) {
+    do_check_true(!packet.error);
+    do_check_true(!!packet.sources);
+    do_check_eq(packet.sources.length, 0);
 
     do_check_true(gNumTimesSourcesSent <= 1,
                   "Should only send one sources request at most, even though we"

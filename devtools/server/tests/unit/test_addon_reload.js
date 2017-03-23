@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable no-shadow */
 
-const protocol = require("devtools/shared/protocol");
+"use strict";
+
 const {AddonManager} = require("resource://gre/modules/AddonManager.jsm");
 
 startupAddonsManager();
@@ -80,7 +82,7 @@ add_task(function* testReloadExitedAddon() {
   // Uninstall the decoy add-on, which should cause its actor to exit.
   const onUninstalled = promiseAddonEvent("onUninstalled");
   installedAddon2.uninstall();
-  const [uninstalledAddon] = yield onUninstalled;
+  yield onUninstalled;
 
   // Try to re-list all add-ons after a reload.
   // This was throwing an exception because of the exited actor.

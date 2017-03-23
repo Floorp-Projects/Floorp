@@ -115,6 +115,10 @@ DevPixelsToCSSPixels(const LayoutDeviceIntPoint& aPoint,
 nsIntPoint
 UIEvent::GetMovementPoint()
 {
+  if (mEvent->mFlags.mIsPositionless) {
+    return nsIntPoint(0, 0);
+  }
+
   if (mPrivateDataDuplicated || mEventIsInternal) {
     return mMovementPoint;
   }
@@ -191,6 +195,10 @@ UIEvent::GetPageX(int32_t* aPageX)
 int32_t
 UIEvent::PageX() const
 {
+  if (mEvent->mFlags.mIsPositionless) {
+    return 0;
+  }
+
   if (mPrivateDataDuplicated) {
     return mPagePoint.x;
   }
@@ -210,6 +218,10 @@ UIEvent::GetPageY(int32_t* aPageY)
 int32_t
 UIEvent::PageY() const
 {
+  if (mEvent->mFlags.mIsPositionless) {
+    return 0;
+  }
+
   if (mPrivateDataDuplicated) {
     return mPagePoint.y;
   }
@@ -291,6 +303,10 @@ UIEvent::RangeOffset() const
 nsIntPoint
 UIEvent::GetLayerPoint() const
 {
+  if (mEvent->mFlags.mIsPositionless) {
+    return nsIntPoint(0, 0);
+  }
+
   if (!mEvent ||
       (mEvent->mClass != eMouseEventClass &&
        mEvent->mClass != eMouseScrollEventClass &&

@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Check that we source map frame locations for the frame we are paused at.
  */
@@ -16,20 +18,22 @@ function run_test() {
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-source-map", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      promise.resolve(define_code())
-        .then(run_code)
-        .then(test_frame_location)
-        .then(null, error => {
-          dump(error + "\n");
-          dump(error.stack);
-          do_check_true(false);
-        })
-        .then(() => {
-          finishClient(gClient);
-        });
-    });
+    attachTestTabAndResume(
+      gClient, "test-source-map",
+      function (response, tabClient, threadClient) {
+        gThreadClient = threadClient;
+        promise.resolve(define_code())
+          .then(run_code)
+          .then(test_frame_location)
+          .then(null, error => {
+            dump(error + "\n");
+            dump(error.stack);
+            do_check_true(false);
+          })
+          .then(() => {
+            finishClient(gClient);
+          });
+      });
   });
   do_test_pending();
 }
@@ -58,8 +62,8 @@ function define_code() {
 
 function run_code() {
   const d = promise.defer();
-  gClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    d.resolve(aPacket);
+  gClient.addOneTimeListener("paused", function (event, packet) {
+    d.resolve(packet);
     gThreadClient.resume();
   });
   gDebuggee.a();

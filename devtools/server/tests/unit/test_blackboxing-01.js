@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Test basic black boxing.
  */
@@ -9,16 +11,16 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-black-box");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-black-box", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      testBlackBox();
-    });
+    attachTestTabAndResume(gClient, "test-black-box",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             testBlackBox();
+                           });
   });
   do_test_pending();
 }
@@ -43,27 +45,27 @@ const testBlackBox = Task.async(function* () {
 
   // Test that we can step into `doStuff` when we are not black boxed.
   yield runTest(
-    function onSteppedLocation(aLocation) {
-      do_check_eq(aLocation.source.url, BLACK_BOXED_URL);
-      do_check_eq(aLocation.line, 2);
+    function onSteppedLocation(location) {
+      do_check_eq(location.source.url, BLACK_BOXED_URL);
+      do_check_eq(location.line, 2);
     },
-    function onDebuggerStatementFrames(aFrames) {
-      do_check_true(!aFrames.some(f => f.where.source.isBlackBoxed));
+    function onDebuggerStatementFrames(frames) {
+      do_check_true(!frames.some(f => f.where.source.isBlackBoxed));
     }
   );
 
-  let blackBoxResponse = yield blackBox(sourceClient);
+  yield blackBox(sourceClient);
   do_check_true(sourceClient.isBlackBoxed);
 
   // Test that we step through `doStuff` when we are black boxed and its frame
   // doesn't show up.
   yield runTest(
-    function onSteppedLocation(aLocation) {
-      do_check_eq(aLocation.source.url, SOURCE_URL);
-      do_check_eq(aLocation.line, 4);
+    function onSteppedLocation(location) {
+      do_check_eq(location.source.url, SOURCE_URL);
+      do_check_eq(location.line, 4);
     },
-    function onDebuggerStatementFrames(aFrames) {
-      for (let f of aFrames) {
+    function onDebuggerStatementFrames(frames) {
+      for (let f of frames) {
         if (f.where.source.url == BLACK_BOXED_URL) {
           do_check_true(f.where.source.isBlackBoxed);
         } else {
@@ -73,17 +75,17 @@ const testBlackBox = Task.async(function* () {
     }
   );
 
-  let unBlackBoxResponse = yield unBlackBox(sourceClient);
+  yield unBlackBox(sourceClient);
   do_check_true(!sourceClient.isBlackBoxed);
 
   // Test that we can step into `doStuff` again.
   yield runTest(
-    function onSteppedLocation(aLocation) {
-      do_check_eq(aLocation.source.url, BLACK_BOXED_URL);
-      do_check_eq(aLocation.line, 2);
+    function onSteppedLocation(location) {
+      do_check_eq(location.source.url, BLACK_BOXED_URL);
+      do_check_eq(location.line, 2);
     },
-    function onDebuggerStatementFrames(aFrames) {
-      do_check_true(!aFrames.some(f => f.where.source.isBlackBoxed));
+    function onDebuggerStatementFrames(frames) {
+      do_check_true(!frames.some(f => f.where.source.isBlackBoxed));
     }
   );
 
@@ -91,6 +93,7 @@ const testBlackBox = Task.async(function* () {
 });
 
 function evalCode() {
+  /* eslint-disable */
   Components.utils.evalInSandbox(
     "" + function doStuff(k) { // line 1
       let arg = 15;            // line 2 - Step in here
@@ -116,6 +119,7 @@ function evalCode() {
     SOURCE_URL,
     1
   );
+  /* eslint-enable */
 }
 
 const runTest = Task.async(function* (onSteppedLocation, onDebuggerStatementFrames) {

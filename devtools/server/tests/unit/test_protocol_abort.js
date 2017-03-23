@@ -1,14 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Outstanding requests should be rejected when the connection aborts
  * unexpectedly.
  */
 
 var protocol = require("devtools/shared/protocol");
-var {Arg, Option, RetVal} = protocol;
-var events = require("sdk/event/core");
+var {RetVal} = protocol;
 
 function simpleHello() {
   return {

@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Test simple requests using the protocol helpers.
  */
@@ -173,8 +175,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
   }
 });
 
-function run_test()
-{
+function run_test() {
   DebuggerServer.createRootActor = (conn => {
     return RootActor(conn);
   });
@@ -185,6 +186,7 @@ function run_test()
       missing: preEvent("missing-event", function () {
       })
     });
+    void badActor;
   });
 
   protocol.types.getType("array:array:array:number");
@@ -198,20 +200,22 @@ function run_test()
   let rootClient;
 
   client.connect().then(([applicationType, traits]) => {
-    trace.expectReceive({"from":"<actorid>", "applicationType":"xpcshell-tests", "traits":[]});
+    trace.expectReceive({"from": "<actorid>",
+                         "applicationType": "xpcshell-tests",
+                         "traits": []});
     do_check_eq(applicationType, "xpcshell-tests");
 
     rootClient = RootFront(client);
 
     rootClient.simpleReturn().then(ret => {
-      trace.expectSend({"type":"simpleReturn", "to":"<actorid>"});
-      trace.expectReceive({"value":1, "from":"<actorid>"});
+      trace.expectSend({"type": "simpleReturn", "to": "<actorid>"});
+      trace.expectReceive({"value": 1, "from": "<actorid>"});
       do_check_eq(ret, 1);
     }).then(() => {
       return rootClient.promiseReturn();
     }).then(ret => {
-      trace.expectSend({"type":"promiseReturn", "to":"<actorid>"});
-      trace.expectReceive({"value":1, "from":"<actorid>"});
+      trace.expectSend({"type": "promiseReturn", "to": "<actorid>"});
+      trace.expectReceive({"value": 1, "from": "<actorid>"});
       do_check_eq(ret, 1);
     }).then(() => {
       // Missing argument should throw an exception
@@ -221,15 +225,23 @@ function run_test()
 
       return rootClient.simpleArgs(5, 10);
     }).then(ret => {
-      trace.expectSend({"type":"simpleArgs", "firstArg":5, "secondArg":10, "to":"<actorid>"});
-      trace.expectReceive({"firstResponse":6, "secondResponse":11, "from":"<actorid>"});
+      trace.expectSend({"type": "simpleArgs",
+                        "firstArg": 5,
+                        "secondArg": 10,
+                        "to": "<actorid>"});
+      trace.expectReceive({"firstResponse": 6,
+                           "secondResponse": 11,
+                           "from": "<actorid>"});
       do_check_eq(ret.firstResponse, 6);
       do_check_eq(ret.secondResponse, 11);
     }).then(() => {
       return rootClient.nestedArgs(1, 2, 3);
     }).then(ret => {
-      trace.expectSend({"type":"nestedArgs", "firstArg":1, "nest":{"secondArg":2, "nest":{"thirdArg":3}}, "to":"<actorid>"});
-      trace.expectReceive({"a":1, "b":2, "c":3, "from":"<actorid>"});
+      trace.expectSend({"type": "nestedArgs",
+                        "firstArg": 1,
+                        "nest": {"secondArg": 2, "nest": {"thirdArg": 3}},
+                        "to": "<actorid>"});
+      trace.expectReceive({"a": 1, "b": 2, "c": 3, "from": "<actorid>"});
       do_check_eq(ret.a, 1);
       do_check_eq(ret.b, 2);
       do_check_eq(ret.c, 3);
@@ -239,56 +251,59 @@ function run_test()
         "option2": 10
       });
     }).then(ret => {
-      trace.expectSend({"type":"optionArgs", "option1":5, "option2":10, "to":"<actorid>"});
-      trace.expectReceive({"option1":5, "option2":10, "from":"<actorid>"});
+      trace.expectSend({"type": "optionArgs",
+                        "option1": 5,
+                        "option2": 10,
+                        "to": "<actorid>"});
+      trace.expectReceive({"option1": 5, "option2": 10, "from": "<actorid>"});
       do_check_eq(ret.option1, 5);
       do_check_eq(ret.option2, 10);
     }).then(() => {
       return rootClient.optionArgs({});
     }).then(ret => {
-      trace.expectSend({"type":"optionArgs", "to":"<actorid>"});
-      trace.expectReceive({"from":"<actorid>"});
+      trace.expectSend({"type": "optionArgs", "to": "<actorid>"});
+      trace.expectReceive({"from": "<actorid>"});
       do_check_true(typeof (ret.option1) === "undefined");
       do_check_true(typeof (ret.option2) === "undefined");
     }).then(() => {
       // Explicitly call an optional argument...
       return rootClient.optionalArgs(5, 10);
     }).then(ret => {
-      trace.expectSend({"type":"optionalArgs", "a":5, "b":10, "to":"<actorid>"});
-      trace.expectReceive({"value":10, "from":"<actorid>"});
+      trace.expectSend({"type": "optionalArgs", "a": 5, "b": 10, "to": "<actorid>"});
+      trace.expectReceive({"value": 10, "from": "<actorid>"});
       do_check_eq(ret, 10);
     }).then(() => {
       // Now don't pass the optional argument, expect the default.
       return rootClient.optionalArgs(5);
     }).then(ret => {
-      trace.expectSend({"type":"optionalArgs", "a":5, "to":"<actorid>"});
-      trace.expectReceive({"value":200, "from":"<actorid>"});
+      trace.expectSend({"type": "optionalArgs", "a": 5, "to": "<actorid>"});
+      trace.expectReceive({"value": 200, "from": "<actorid>"});
       do_check_eq(ret, 200);
     }).then(ret => {
       return rootClient.arrayArgs([0, 1, 2, 3, 4, 5]);
     }).then(ret => {
-      trace.expectSend({"type":"arrayArgs", "a":[0, 1, 2, 3, 4, 5], "to":"<actorid>"});
-      trace.expectReceive({"arrayReturn":[0, 1, 2, 3, 4, 5], "from":"<actorid>"});
+      trace.expectSend({"type": "arrayArgs", "a": [0, 1, 2, 3, 4, 5], "to": "<actorid>"});
+      trace.expectReceive({"arrayReturn": [0, 1, 2, 3, 4, 5], "from": "<actorid>"});
       do_check_eq(ret[0], 0);
       do_check_eq(ret[5], 5);
     }).then(() => {
       return rootClient.arrayArgs([[5]]);
     }).then(ret => {
-      trace.expectSend({"type":"arrayArgs", "a":[[5]], "to":"<actorid>"});
-      trace.expectReceive({"arrayReturn":[[5]], "from":"<actorid>"});
+      trace.expectSend({"type": "arrayArgs", "a": [[5]], "to": "<actorid>"});
+      trace.expectReceive({"arrayReturn": [[5]], "from": "<actorid>"});
       do_check_eq(ret[0][0], 5);
     }).then(() => {
       return rootClient.renamedEcho("hello");
     }).then(str => {
-      trace.expectSend({"type":"echo", "a":"hello", "to":"<actorid>"});
-      trace.expectReceive({"value":"hello", "from":"<actorid>"});
+      trace.expectSend({"type": "echo", "a": "hello", "to": "<actorid>"});
+      trace.expectReceive({"value": "hello", "from": "<actorid>"});
 
       do_check_eq(str, "hello");
 
       let deferred = promise.defer();
       rootClient.on("oneway", (response) => {
-        trace.expectSend({"type":"testOneWay", "a":"hello", "to":"<actorid>"});
-        trace.expectReceive({"type":"oneway", "a":"hello", "from":"<actorid>"});
+        trace.expectSend({"type": "testOneWay", "a": "hello", "to": "<actorid>"});
+        trace.expectReceive({"type": "oneway", "a": "hello", "from": "<actorid>"});
 
         do_check_eq(response, "hello");
         deferred.resolve();
@@ -298,8 +313,11 @@ function run_test()
     }).then(() => {
       let deferred = promise.defer();
       rootClient.on("falsyOptions", res => {
-        trace.expectSend({"type":"emitFalsyOptions", "to":"<actorid>"});
-        trace.expectReceive({"type":"falsyOptions", "farce":false, "zero": 0, "from":"<actorid>"});
+        trace.expectSend({"type": "emitFalsyOptions", "to": "<actorid>"});
+        trace.expectReceive({"type": "falsyOptions",
+                             "farce": false,
+                             "zero": 0,
+                             "from": "<actorid>"});
 
         do_check_true(res.zero === 0);
         do_check_true(res.farce === false);

@@ -5,7 +5,8 @@
 #ifndef BASE_STRINGS_UTF_STRING_CONVERSION_UTILS_H_
 #define BASE_STRINGS_UTF_STRING_CONVERSION_UTILS_H_
 
-// This should only be used by the various UTF string conversion files.
+// Low-level UTF handling functions. Most code will want to use the functions
+// in utf_string_conversions.h
 
 #include <stddef.h>
 #include <stdint.h>

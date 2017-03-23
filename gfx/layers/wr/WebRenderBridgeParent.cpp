@@ -37,6 +37,17 @@ bool is_in_render_thread()
   return mozilla::wr::RenderThread::IsInRenderThread();
 }
 
+bool is_glcontext_egl(void* glcontext_ptr)
+{
+  MOZ_ASSERT(glcontext_ptr);
+
+  mozilla::gl::GLContext* glcontext = reinterpret_cast<mozilla::gl::GLContext*>(glcontext_ptr);
+  if (!glcontext) {
+    return false;
+  }
+  return glcontext->GetContextType() == mozilla::gl::GLContextType::EGL;
+}
+
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
 {
   MOZ_ASSERT(glcontext_ptr);
@@ -102,6 +113,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mDestroyed(false)
 {
   MOZ_ASSERT(mCompositableHolder);
+  mCompositableHolder->AddPipeline(mPipelineId);
   if (mWidget) {
     MOZ_ASSERT(!mCompositorScheduler);
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
@@ -316,7 +328,7 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
           mApi->AddExternalImageBuffer(key,
                                        descriptor,
                                        wrTexture->GetExternalImageKey());
-          mCompositableHolder->HoldExternalImage(aEpoch, texture->AsWebRenderTextureHost());
+          mCompositableHolder->HoldExternalImage(mPipelineId, aEpoch, texture->AsWebRenderTextureHost());
           keysToDelete.push_back(key);
           break;
         }
@@ -337,10 +349,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
 
         keysToDelete.push_back(key);
         dSurf->Unmap();
-        // XXX workaround for releasing Readlock. See Bug 1339625
-        if(host->GetType() == CompositableType::CONTENT_SINGLE) {
-          host->CleanupResources();
-        }
         break;
       }
       case WebRenderParentCommand::TCompositableOperation: {
@@ -563,9 +571,6 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch)
     }
     mPendingTransactionIds.pop();
   }
-
-  mCompositableHolder->Update(aEpoch);
-
   return id;
 }
 
@@ -602,9 +607,7 @@ WebRenderBridgeParent::ClearResources()
       DeleteOldImages();
     }
   }
-  if (mCompositableHolder) {
-    mCompositableHolder->Destroy();
-  }
+  mCompositableHolder->RemovePipeline(mPipelineId);
   mExternalImageIds.Clear();
 
   if (mWidget && mCompositorScheduler) {

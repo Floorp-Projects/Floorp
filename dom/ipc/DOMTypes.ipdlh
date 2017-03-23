@@ -19,12 +19,6 @@ using struct mozilla::SerializedStructuredCloneBuffer
 namespace mozilla {
 namespace dom {
 
-union OptionalID
-{
-  nsID;
-  void_t;
-};
-
 struct MessagePortIdentifier
 {
   nsID uuid;

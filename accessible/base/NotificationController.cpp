@@ -755,8 +755,11 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
       childDoc->Shutdown();
     }
   }
-
   mHangingChildDocuments.Clear();
+  MOZ_ASSERT(mDocument, "Illicit document shutdown");
+  if (!mDocument) {
+    return;
+  }
 
   // If the document is ready and all its subdocuments are completely loaded
   // then process the document load.

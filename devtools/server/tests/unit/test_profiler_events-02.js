@@ -48,7 +48,8 @@ add_task(function* () {
   yield waitForTime(500);
   yield front.stopProfiler();
 
-  do_check_true(eventsCalled === 0, "No 'profiler-status' events should be fired before registering.");
+  do_check_true(eventsCalled === 0,
+                "No 'profiler-status' events should be fired before registering.");
 
   let ret = yield front.registerEventNotifications({ events: ["profiler-status"] });
   do_check_true(ret.registered.length === 1);
@@ -56,11 +57,13 @@ add_task(function* () {
   yield front.startProfiler();
   yield handledThreeTimes.promise;
   yield front.stopProfiler();
-  do_check_true(eventsCalled >= 3, "profiler-status fired atleast three times while recording");
+  do_check_true(eventsCalled >= 3,
+                "profiler-status fired atleast three times while recording");
 
   let totalEvents = eventsCalled;
   yield waitForTime(50);
-  do_check_true(totalEvents === eventsCalled, "No more profiler-status events after recording.");
+  do_check_true(totalEvents === eventsCalled,
+                "No more profiler-status events after recording.");
 });
 
 function getChromeActors() {
