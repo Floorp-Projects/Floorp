@@ -9,6 +9,7 @@
 #include <stdint.h>                     // for uint8_t, uint16_t
 #include <sys/types.h>                  // for int16_t
 #include "gfxFontFamilyList.h"
+#include "gfxFontConstants.h"           // for NS_FONT_KERNING_AUTO, etc
 #include "gfxFontFeatures.h"
 #include "gfxFontVariations.h"
 #include "mozilla/RefPtr.h"             // for RefPtr
@@ -46,52 +47,52 @@ struct nsFont {
   mozilla::FontFamilyList fontlist;
 
   // The style of font (normal, italic, oblique; see gfxFontConstants.h)
-  uint8_t style;
+  uint8_t style = NS_FONT_STYLE_NORMAL;
 
   // Force this font to not be considered a 'generic' font, even if
   // the name is the same as a CSS generic font family.
-  bool systemFont;
+  bool systemFont = false;
 
   // Variant subproperties
-  uint8_t variantCaps;
-  uint8_t variantNumeric;
-  uint8_t variantPosition;
-  uint8_t variantWidth;
+  uint8_t variantCaps = NS_FONT_VARIANT_CAPS_NORMAL;
+  uint8_t variantNumeric = 0;
+  uint8_t variantPosition = NS_FONT_VARIANT_POSITION_NORMAL;
+  uint8_t variantWidth = NS_FONT_VARIANT_WIDTH_NORMAL;
 
-  uint16_t variantLigatures;
-  uint16_t variantEastAsian;
+  uint16_t variantLigatures = 0;
+  uint16_t variantEastAsian = 0;
 
   // Some font-variant-alternates property values require
   // font-specific settings defined via @font-feature-values rules.
   // These are resolved *after* font matching occurs.
 
   // -- bitmask for both enumerated and functional propvals
-  uint16_t variantAlternates;
+  uint16_t variantAlternates = 0;
 
   // Smoothing - controls subpixel-antialiasing (currently OSX only)
-  uint8_t smoothing;
+  uint8_t smoothing = NS_FONT_SMOOTHING_AUTO;
 
   // The weight of the font; see gfxFontConstants.h.
-  uint16_t weight;
+  uint16_t weight = NS_FONT_WEIGHT_NORMAL;
 
   // The stretch of the font (the sum of various NS_FONT_STRETCH_*
   // constants; see gfxFontConstants.h).
-  int16_t stretch;
+  int16_t stretch = NS_FONT_STRETCH_NORMAL;
 
   // Kerning
-  uint8_t kerning;
+  uint8_t kerning = NS_FONT_KERNING_AUTO;
 
   // Synthesis setting, controls use of fake bolding/italics
-  uint8_t synthesis;
+  uint8_t synthesis = NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE;
 
   // The logical size of the font, in nscoord units
-  nscoord size;
+  nscoord size = 0;
 
   // The aspect-value (ie., the ratio actualsize:actualxheight) that any
   // actual physical font created from this font structure must have when
   // rendering or measuring a string. A value of -1.0 means no adjustment
   // needs to be done; otherwise the value must be nonnegative.
-  float sizeAdjust;
+  float sizeAdjust = -1.0f;
 
   // -- list of value tags for font-specific alternate features
   nsTArray<gfxAlternateValue> alternateValues;
@@ -142,9 +143,6 @@ struct nsFont {
   void AddFontFeaturesToStyle(gfxFontStyle *aStyle) const;
 
   void AddFontVariationsToStyle(gfxFontStyle *aStyle) const;
-
-protected:
-  void Init(); // helper method for initialization
 };
 
 #define NS_FONT_VARIANT_NORMAL            0
