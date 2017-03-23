@@ -26,9 +26,6 @@ config = {
     "cmd_timeout": 6500,
     "pip_index": False,
     "exes": {
-        'python': PYTHON,
-        'virtualenv': [PYTHON, '/tools/misc-python/virtualenv.py'],
-        'tooltool.py': "/tools/tooltool.py",
     },
     "title": os.uname()[1].lower().split('.')[0],
     "default_actions": [
