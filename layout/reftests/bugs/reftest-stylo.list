@@ -386,10 +386,10 @@ fails == 315920-14.html 315920-14.html
 == 315920-15.html 315920-15.html
 fails == 315920-16.html 315920-16.html
 fails == 315920-17.html 315920-17.html
-skip-if(stylo) == 315920-18a.html 315920-18a.html # bug 1338982, which makes this timing-dependent
-skip-if(stylo) == 315920-18b.html 315920-18b.html # bug 1338982, which makes this timing-dependent
-skip-if(stylo) == 315920-18c.html 315920-18c.html # bug 1338982, which makes this timing-dependent
-skip-if(stylo) == 315920-18d.html 315920-18d.html # bug 1338982, which makes this timing-dependent
+== 315920-18a.html 315920-18a.html
+== 315920-18b.html 315920-18b.html
+== 315920-18c.html 315920-18c.html
+== 315920-18d.html 315920-18d.html
 fails == 315920-18e.html 315920-18e.html
 fails == 315920-18f.html 315920-18f.html
 fails == 315920-18g.html 315920-18g.html
