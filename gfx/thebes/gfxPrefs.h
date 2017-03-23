@@ -464,6 +464,7 @@ private:
   DECL_GFX_PREF(Live, "layers.advanced.boxshadow-outer-layers", LayersAllowOuterBoxShadow, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.bullet-layers",         LayersAllowBulletLayers, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.button-foreground-layers", LayersAllowButtonForegroundLayers, bool, false);
+  DECL_GFX_PREF(Live, "layers.advanced.canvas-background-color", LayersAllowCanvasBackgroundColorLayers, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.caret-layers",          LayersAllowCaretLayers, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.displaybuttonborder-layers", LayersAllowDisplayButtonBorder, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.image-layers",          LayersAllowImageLayers, bool, false);
