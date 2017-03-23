@@ -43,11 +43,18 @@ class TimeDelta;
 // be better off just using an Windows event directly.
 class BASE_EXPORT WaitableEvent {
  public:
-  // If manual_reset is true, then to set the event state to non-signaled, a
-  // consumer must call the Reset method.  If this parameter is false, then the
-  // system automatically resets the event state to non-signaled after a single
-  // waiting thread has been released.
-  WaitableEvent(bool manual_reset, bool initially_signaled);
+  // Indicates whether a WaitableEvent should automatically reset the event
+  // state after a single waiting thread has been released or remain signaled
+  // until Reset() is manually invoked.
+  enum class ResetPolicy { MANUAL, AUTOMATIC };
+
+  // Indicates whether a new WaitableEvent should start in a signaled state or
+  // not.
+  enum class InitialState { SIGNALED, NOT_SIGNALED };
+
+  // Constructs a WaitableEvent with policy and initial state as detailed in
+  // the above enums.
+  WaitableEvent(ResetPolicy reset_policy, InitialState initial_state);
 
 #if defined(OS_WIN)
   // Create a WaitableEvent from an Event HANDLE which has already been
@@ -150,7 +157,7 @@ class BASE_EXPORT WaitableEvent {
   struct WaitableEventKernel :
       public RefCountedThreadSafe<WaitableEventKernel> {
    public:
-    WaitableEventKernel(bool manual_reset, bool initially_signaled);
+    WaitableEventKernel(ResetPolicy reset_policy, InitialState initial_state);
 
     bool Dequeue(Waiter* waiter, void* tag);
 

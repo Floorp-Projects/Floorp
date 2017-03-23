@@ -6,6 +6,7 @@
 
 #include <stddef.h>
 
+#include "base/debug/activity_tracker.h"
 #include "base/debug/alias.h"
 #include "base/debug/profiler.h"
 #include "base/logging.h"
@@ -13,7 +14,6 @@
 #include "base/threading/thread_restrictions.h"
 #include "base/tracked_objects.h"
 #include "base/win/scoped_handle.h"
-#include "base/win/windows_version.h"
 
 namespace base {
 
@@ -100,10 +100,8 @@ bool CreateThreadInternal(size_t stack_size,
                           PlatformThreadHandle* out_thread_handle,
                           ThreadPriority priority) {
   unsigned int flags = 0;
-  if (stack_size > 0 && base::win::GetVersion() >= base::win::VERSION_XP) {
+  if (stack_size > 0) {
     flags = STACK_SIZE_PARAM_IS_A_RESERVATION;
-  } else {
-    stack_size = 0;
   }
 
   ThreadParams* params = new ThreadParams;
@@ -199,12 +197,23 @@ bool PlatformThread::CreateWithPriority(size_t stack_size, Delegate* delegate,
 
 // static
 bool PlatformThread::CreateNonJoinable(size_t stack_size, Delegate* delegate) {
-  return CreateThreadInternal(stack_size, delegate, nullptr,
-                              ThreadPriority::NORMAL);
+  return CreateNonJoinableWithPriority(stack_size, delegate,
+                                       ThreadPriority::NORMAL);
+}
+
+// static
+bool PlatformThread::CreateNonJoinableWithPriority(size_t stack_size,
+                                                   Delegate* delegate,
+                                                   ThreadPriority priority) {
+  return CreateThreadInternal(stack_size, delegate, nullptr /* non-joinable */,
+                              priority);
 }
 
 // static
 void PlatformThread::Join(PlatformThreadHandle thread_handle) {
+  // Record the event that this thread is blocking upon (for hang diagnosis).
+  base::debug::ScopedThreadJoinActivity thread_activity(&thread_handle);
+
   DCHECK(thread_handle.platform_handle());
   // TODO(willchan): Enable this check once I can get it to work for Windows
   // shutdown.
@@ -217,16 +226,19 @@ void PlatformThread::Join(PlatformThreadHandle thread_handle) {
 
   // Wait for the thread to exit.  It should already have terminated but make
   // sure this assumption is valid.
-  DWORD result = WaitForSingleObject(thread_handle.platform_handle(), INFINITE);
-  if (result != WAIT_OBJECT_0) {
-    // Debug info for bug 127931.
-    DWORD error = GetLastError();
-    debug::Alias(&error);
-    debug::Alias(&result);
-    CHECK(false);
-  }
-
+  CHECK_EQ(WAIT_OBJECT_0,
+           WaitForSingleObject(thread_handle.platform_handle(), INFINITE));
   CloseHandle(thread_handle.platform_handle());
+}
+
+// static
+void PlatformThread::Detach(PlatformThreadHandle thread_handle) {
+  CloseHandle(thread_handle.platform_handle());
+}
+
+// static
+bool PlatformThread::CanIncreaseCurrentThreadPriority() {
+  return true;
 }
 
 // static
@@ -251,7 +263,7 @@ void PlatformThread::SetCurrentThreadPriority(ThreadPriority priority) {
   }
   DCHECK_NE(desired_priority, THREAD_PRIORITY_ERROR_RETURN);
 
-#ifndef NDEBUG
+#if DCHECK_IS_ON()
   const BOOL success =
 #endif
       ::SetThreadPriority(PlatformThread::CurrentHandle().platform_handle(),
