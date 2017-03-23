@@ -1437,17 +1437,11 @@ nsRefreshDriver::SetHighPrecisionTimersEnabled(bool aEnable)
 
       nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
       if (timer) {
-        if (nsPresContext* pc = GetPresContext())
-          timer->SetTarget(
-              pc->Document()->EventTargetFor(TaskCategory::Other));
-        }
         timer.forget(&sDisableHighPrecisionTimersTimer);
-        sDisableHighPrecisionTimersTimer->
-          InitWithNamedFuncCallback(DisableHighPrecisionTimersCallback,
-                                    nullptr,
-                                    90 * 1000,
-                                    nsITimer::TYPE_ONE_SHOT,
-                                    "DisableHighPrecisionTimersCallback");
+        sDisableHighPrecisionTimersTimer->InitWithFuncCallback(DisableHighPrecisionTimersCallback,
+                                                               nullptr,
+                                                               90 * 1000,
+                                                               nsITimer::TYPE_ONE_SHOT);
       } else {
         // might happen if we're shutting down XPCOM; just drop the time period down
         // immediately
