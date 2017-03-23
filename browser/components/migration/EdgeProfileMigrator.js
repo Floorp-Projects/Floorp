@@ -37,7 +37,6 @@ XPCOMUtils.defineLazyGetter(this, "gEdgeDatabase", function() {
   let expectedLocation = edgeDir.clone();
   expectedLocation.appendRelativePath("nouser1\\120712-0049\\DBStore\\spartan.edb");
   if (expectedLocation.exists() && expectedLocation.isReadable() && expectedLocation.isFile()) {
-    expectedLocation.normalize();
     return expectedLocation;
   }
   // We used to recurse into arbitrary subdirectories here, but that code
@@ -172,9 +171,6 @@ EdgeReadingListMigrator.prototype = {
   },
 
   _migrateReadingList: Task.async(function*(parentGuid) {
-    if (yield ESEDBReader.dbLocked(gEdgeDatabase)) {
-      throw new Error("Edge seems to be running - its database is locked.");
-    }
     let columnFn = db => {
       let columns = [
         {name: "URL", type: "string"},
@@ -253,9 +249,6 @@ EdgeBookmarksMigrator.prototype = {
   },
 
   _migrateBookmarks: Task.async(function*() {
-    if (yield ESEDBReader.dbLocked(gEdgeDatabase)) {
-      throw new Error("Edge seems to be running - its database is locked.");
-    }
     let {toplevelBMs, toolbarBMs} = this._fetchBookmarksFromDB();
     if (toplevelBMs.length) {
       let parentGuid = PlacesUtils.bookmarks.menuGuid;
