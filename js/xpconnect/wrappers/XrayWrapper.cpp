@@ -201,7 +201,7 @@ XPCWrappedNativeXrayTraits::getWN(JSObject* wrapper)
 }
 
 const JSClass XPCWrappedNativeXrayTraits::HolderClass = {
-    "NativePropertyHolder", JSCLASS_HAS_RESERVED_SLOTS(2)
+    "NativePropertyHolder"
 };
 
 
