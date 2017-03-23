@@ -51,15 +51,6 @@ SVGAnimateMotionElement::GetTargetAttributeName(int32_t *aNamespaceID,
   return true;
 }
 
-nsSMILTargetAttrType
-SVGAnimateMotionElement::GetTargetAttributeType() const
-{
-  // <animateMotion> doesn't take an attributeType, since it doesn't target an
-  // 'attribute' per se.  We'll just return 'XML' for simplicity.  (This just
-  // needs to match what we expect in nsSVGElement::GetAnimAttr.)
-  return eSMILTargetAttrType_XML;
-}
-
 } // namespace dom
 } // namespace mozilla
 

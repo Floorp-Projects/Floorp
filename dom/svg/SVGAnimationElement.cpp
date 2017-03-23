@@ -112,21 +112,6 @@ SVGAnimationElement::GetTargetAttributeName(int32_t *aNamespaceID,
                         aNamespaceID, aLocalName));
 }
 
-nsSMILTargetAttrType
-SVGAnimationElement::GetTargetAttributeType() const
-{
-  nsIContent::AttrValuesArray typeValues[] = { &nsGkAtoms::css,
-                                               &nsGkAtoms::XML,
-                                               nullptr};
-  nsSMILTargetAttrType smilTypes[] = { eSMILTargetAttrType_CSS,
-                                       eSMILTargetAttrType_XML };
-  int32_t index = FindAttrValueIn(kNameSpaceID_None,
-                                  nsGkAtoms::attributeType,
-                                  typeValues,
-                                  eCaseMatters);
-  return (index >= 0) ? smilTypes[index] : eSMILTargetAttrType_auto;
-}
-
 nsSMILTimedElement&
 SVGAnimationElement::TimedElement()
 {

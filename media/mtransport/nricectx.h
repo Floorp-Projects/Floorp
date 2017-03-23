@@ -63,8 +63,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nsAutoPtr.h"
 #include "nsIEventTarget.h"
 #include "nsITimer.h"
+#include "nsTArray.h"
 
 #include "m_cpp_utils.h"
+#include "nricestunaddr.h"
 
 typedef struct nr_ice_ctx_ nr_ice_ctx;
 typedef struct nr_ice_peer_ctx_ nr_ice_peer_ctx;
@@ -232,6 +234,11 @@ class NrIceCtx {
                                 bool allow_link_local = false);
   static std::string GetNewUfrag();
   static std::string GetNewPwd();
+
+  // static GetStunAddrs for use in parent process to support
+  // sandboxing restrictions
+  static nsTArray<NrIceStunAddr> GetStunAddrs();
+  void SetStunAddrs(const nsTArray<NrIceStunAddr>& addrs);
 
   bool Initialize();
   bool Initialize(const std::string& ufrag, const std::string& pwd);

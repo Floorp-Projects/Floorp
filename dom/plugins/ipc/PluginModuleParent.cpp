@@ -31,6 +31,9 @@
 #include "nsPrintfCString.h"
 #include "prsystem.h"
 #include "PluginQuirks.h"
+#ifdef MOZ_GECKO_PROFILER
+#include "CrossProcessProfilerController.h"
+#endif
 #include "GeckoProfiler.h"
 #include "nsPluginTags.h"
 #include "nsUnicharUtils.h"
@@ -43,11 +46,6 @@
 #include "PluginUtilsWin.h"
 #endif
 
-#ifdef MOZ_GECKO_PROFILER
-#include "nsIProfiler.h"
-#include "nsIProfileSaveEvent.h"
-#endif
-
 #ifdef MOZ_WIDGET_GTK
 #include <glib.h>
 #elif XP_MACOSX
@@ -58,6 +56,9 @@
 using base::KillProcess;
 
 using mozilla::PluginLibrary;
+#ifdef MOZ_GECKO_PROFILER
+using mozilla::CrossProcessProfilerController;
+#endif
 using mozilla::ipc::MessageChannel;
 using mozilla::ipc::GeckoChildProcessHost;
 
@@ -634,19 +635,7 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
     }
 
 #ifdef MOZ_GECKO_PROFILER
-    nsCOMPtr<nsIProfiler> profiler(do_GetService("@mozilla.org/tools/profiler;1"));
-    bool profilerActive = false;
-    DebugOnly<nsresult> rv = profiler->IsActive(&profilerActive);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    if (profilerActive) {
-        nsCOMPtr<nsIProfilerStartParams> currentProfilerParams;
-        rv = profiler->GetStartParams(getter_AddRefs(currentProfilerParams));
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-        mIsProfilerActive = true;
-
-        StartProfiler(currentProfilerParams);
-    }
+    mProfilerController = MakeUnique<CrossProcessProfilerController>(this);
 #endif
 }
 
@@ -772,18 +761,11 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
     , mAsyncInitRv(NS_ERROR_NOT_INITIALIZED)
     , mAsyncInitError(NPERR_NO_ERROR)
     , mContentParent(nullptr)
-#ifdef MOZ_GECKO_PROFILER
-    , mIsProfilerActive(false)
-#endif
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
     sInstantiated = true;
     mSandboxLevel = aSandboxLevel;
     mRunID = GeckoChildProcessHost::GetUniqueID();
-
-#ifdef MOZ_GECKO_PROFILER
-    InitPluginProfiling();
-#endif
 
     mozilla::HangMonitor::RegisterAnnotator(*this);
 }
@@ -795,7 +777,7 @@ PluginModuleChromeParent::~PluginModuleChromeParent()
     }
 
 #ifdef MOZ_GECKO_PROFILER
-    ShutdownPluginProfiling();
+    mProfilerController = nullptr;
 #endif
 
 #ifdef XP_WIN
@@ -3277,130 +3259,13 @@ PluginModuleChromeParent::OnCrash(DWORD processID)
 
 #endif // MOZ_CRASHREPORTER_INJECTOR
 
-#ifdef MOZ_GECKO_PROFILER
-class PluginProfilerObserver final : public nsIObserver,
-                                     public nsSupportsWeakReference
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-
-    explicit PluginProfilerObserver(PluginModuleChromeParent* pmp)
-      : mPmp(pmp)
-    {}
-
-private:
-    ~PluginProfilerObserver() {}
-    PluginModuleChromeParent* mPmp;
-};
-
-NS_IMPL_ISUPPORTS(PluginProfilerObserver, nsIObserver, nsISupportsWeakReference)
-
-NS_IMETHODIMP
-PluginProfilerObserver::Observe(nsISupports *aSubject,
-                                const char *aTopic,
-                                const char16_t *aData)
-{
-    if (!strcmp(aTopic, "profiler-started")) {
-        nsCOMPtr<nsIProfilerStartParams> params(do_QueryInterface(aSubject));
-        mPmp->StartProfiler(params);
-    } else if (!strcmp(aTopic, "profiler-stopped")) {
-        mPmp->StopProfiler();
-    } else if (!strcmp(aTopic, "profiler-subprocess-gather")) {
-        mPmp->GatherAsyncProfile();
-    } else if (!strcmp(aTopic, "profiler-subprocess")) {
-        nsCOMPtr<nsIProfileSaveEvent> pse = do_QueryInterface(aSubject);
-        mPmp->GatheredAsyncProfile(pse);
-    }
-    return NS_OK;
-}
-
-void
-PluginModuleChromeParent::InitPluginProfiling()
-{
-    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
-    if (observerService) {
-        mProfilerObserver = new PluginProfilerObserver(this);
-        observerService->AddObserver(mProfilerObserver, "profiler-started", false);
-        observerService->AddObserver(mProfilerObserver, "profiler-stopped", false);
-        observerService->AddObserver(mProfilerObserver, "profiler-subprocess-gather", false);
-        observerService->AddObserver(mProfilerObserver, "profiler-subprocess", false);
-    }
-}
-
-void
-PluginModuleChromeParent::ShutdownPluginProfiling()
-{
-    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
-    if (observerService) {
-        observerService->RemoveObserver(mProfilerObserver, "profiler-started");
-        observerService->RemoveObserver(mProfilerObserver, "profiler-stopped");
-        observerService->RemoveObserver(mProfilerObserver, "profiler-subprocess-gather");
-        observerService->RemoveObserver(mProfilerObserver, "profiler-subprocess");
-    }
-}
-
-void
-PluginModuleChromeParent::StartProfiler(nsIProfilerStartParams* aParams)
-{
-    if (NS_WARN_IF(!aParams)) {
-        return;
-    }
-
-    ProfilerInitParams ipcParams;
-
-    ipcParams.enabled() = true;
-    aParams->GetEntries(&ipcParams.entries());
-    aParams->GetInterval(&ipcParams.interval());
-    ipcParams.features() = aParams->GetFeatures();
-    ipcParams.threadFilters() = aParams->GetThreadFilterNames();
-
-    Unused << SendStartProfiler(ipcParams);
-
-    nsCOMPtr<nsIProfiler> profiler(do_GetService("@mozilla.org/tools/profiler;1"));
-    if (NS_WARN_IF(!profiler)) {
-        return;
-    }
-    mIsProfilerActive = true;
-}
-
-void
-PluginModuleChromeParent::StopProfiler()
-{
-    mIsProfilerActive = false;
-    Unused << SendStopProfiler();
-}
-
-void
-PluginModuleChromeParent::GatherAsyncProfile()
-{
-    if (NS_WARN_IF(!mIsProfilerActive)) {
-        return;
-    }
-    profiler_will_gather_OOP_profile();
-    Unused << SendGatherProfile();
-}
-
-void
-PluginModuleChromeParent::GatheredAsyncProfile(nsIProfileSaveEvent* aSaveEvent)
-{
-    if (aSaveEvent && !mProfile.IsEmpty()) {
-        aSaveEvent->AddSubProfile(mProfile.get());
-        mProfile.Truncate();
-    }
-}
-#endif // MOZ_GECKO_PROFILER
-
 mozilla::ipc::IPCResult
 PluginModuleChromeParent::RecvProfile(const nsCString& aProfile)
 {
 #ifdef MOZ_GECKO_PROFILER
-    if (NS_WARN_IF(!mIsProfilerActive)) {
-        return IPC_OK();
+    if (mProfilerController) {
+        mProfilerController->RecvProfile(aProfile);
     }
-
-    mProfile = aProfile;
-    profiler_gathered_OOP_profile();
 #endif
     return IPC_OK();
 }

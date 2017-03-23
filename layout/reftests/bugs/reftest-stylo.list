@@ -1983,10 +1983,10 @@ fails == 1316719-1a.html 1316719-1a.html
 fails == 1316719-1b.html 1316719-1b.html
 fails == 1316719-1c.html 1316719-1c.html
 
-fails HTTP == 652991-1a.html 652991-1a.html
-fails HTTP == 652991-1b.html 652991-1b.html
-fails HTTP == 652991-2.html 652991-2.html
-fails HTTP == 652991-3.html 652991-3.html
+HTTP == 652991-1a.html 652991-1a.html
+HTTP == 652991-1b.html 652991-1b.html
+HTTP == 652991-2.html 652991-2.html
+HTTP == 652991-3.html 652991-3.html
 fails HTTP == 652991-4.html 652991-4.html
 
 

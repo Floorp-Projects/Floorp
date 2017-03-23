@@ -1,3 +1,5 @@
+//error: protocol `SyncAsyncManagee' requires more powerful send semantics than its manager `SyncAsyncManager' provides
+
 include protocol SyncAsyncManagee;
 
 async protocol SyncAsyncManager {

@@ -301,12 +301,29 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   /**
    * Resolves to true if there are known sync changes.
    */
-  havePendingChanges() {
-    // This could be optimized to use a more efficient query -- We don't need
-    // grab all the records if all we care about is whether or not any exist.
-    return PlacesUtils.withConnectionWrapper("BookmarkSyncUtils: havePendingChanges",
-      db => pullSyncChanges(db, true).then(changes => Object.keys(changes).length > 0));
-  },
+  havePendingChanges: Task.async(function* () {
+    let db = yield PlacesUtils.promiseDBConnection();
+    let rows = yield db.executeCached(`
+      WITH RECURSIVE
+      syncedItems(id, guid, syncChangeCounter) AS (
+        SELECT b.id, b.guid, b.syncChangeCounter
+         FROM moz_bookmarks b
+         WHERE b.guid IN ('menu________', 'toolbar_____', 'unfiled_____',
+                          'mobile______')
+        UNION ALL
+        SELECT b.id, b.guid, b.syncChangeCounter
+        FROM moz_bookmarks b
+        JOIN syncedItems s ON b.parent = s.id
+      ),
+      changedItems(guid) AS (
+        SELECT guid FROM syncedItems
+        WHERE syncChangeCounter >= 1
+        UNION ALL
+        SELECT guid FROM moz_bookmarks_deleted
+      )
+      SELECT EXISTS(SELECT guid FROM changedItems) AS haveChanges`);
+    return !!rows[0].getResultByName("haveChanges");
+  }),
 
   /**
    * Returns a changeset containing local bookmark changes since the last sync.
@@ -1697,13 +1714,11 @@ function addRowToChangeRecords(row, changeRecords) {
  *
  * @param db
  *        The Sqlite.jsm connection handle.
- * @param preventUpdate {boolean}
- *        Should we skip updating the records we pull.
  * @return {Promise} resolved once all items have been fetched.
  * @resolves to an object containing records for changed bookmarks, keyed by
  *           the sync ID.
  */
-var pullSyncChanges = Task.async(function* (db, preventUpdate = false) {
+var pullSyncChanges = Task.async(function* (db) {
   let changeRecords = {};
 
   yield db.executeCached(`
@@ -1728,9 +1743,7 @@ var pullSyncChanges = Task.async(function* (db, preventUpdate = false) {
     { deletedSyncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL },
     row => addRowToChangeRecords(row, changeRecords));
 
-  if (!preventUpdate) {
-    yield markChangesAsSyncing(db, changeRecords);
-  }
+  yield markChangesAsSyncing(db, changeRecords);
 
   return changeRecords;
 });

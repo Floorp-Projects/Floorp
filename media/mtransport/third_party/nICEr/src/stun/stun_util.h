@@ -44,6 +44,9 @@ int nr_stun_startup(void);
 
 int nr_stun_xor_mapped_address(UINT4 magicCookie, UINT12 transactionId, nr_transport_addr *from, nr_transport_addr *to);
 
+// removes duplicates, and based on prefs, loopback and link_local addresses
+int nr_stun_filter_local_addresses(nr_local_addr addrs[], int *count);
+
 int nr_stun_find_local_addresses(nr_local_addr addrs[], int maxaddrs, int *count);
 
 int nr_stun_different_transaction(UCHAR *msg, int len, nr_stun_message *req);
