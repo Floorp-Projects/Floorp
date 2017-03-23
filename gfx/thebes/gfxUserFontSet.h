@@ -248,14 +248,6 @@ public:
     // Look up names in a fontlist and return true if any are in the set
     bool ContainsUserFontSetFonts(const mozilla::FontFamilyList& aFontList) const;
 
-    // Lookup a font entry for a given style, returns null if not loaded.
-    // aFamily must be a family returned by our LookupFamily method.
-    // (only used by gfxPangoFontGroup for now)
-    gfxUserFontEntry* FindUserFontEntryAndLoad(gfxFontFamily* aFamily,
-                                               const gfxFontStyle& aFontStyle,
-                                               bool& aNeedsBold,
-                                               bool& aWaitForUserFont);
-
     // check whether the given source is allowed to be loaded;
     // returns the Principal (for use in the key when caching the loaded font),
     // and whether the load should bypass the cache (force-reload).

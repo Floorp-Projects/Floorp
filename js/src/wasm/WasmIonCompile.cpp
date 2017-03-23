@@ -55,22 +55,6 @@ typedef OpIter<IonCompilePolicy> IonOpIter;
 
 class FunctionCompiler;
 
-// TlsUsage describes how the TLS register is used during a function call.
-
-enum class TlsUsage
-{
-    Unused,     // No particular action is taken with respect to the TLS register.
-    Need,       // The TLS register must be reloaded just before the call.
-    CallerSaved // Same, plus space must be allocated to save/restore the TLS
-                // register.
-};
-
-static bool
-NeedsTls(TlsUsage usage)
-{
-    return usage == TlsUsage::Need || usage == TlsUsage::CallerSaved;
-}
-
 // CallCompileState describes a call that is being compiled. Due to expression
 // nesting, multiple calls can be in the middle of compilation at the same time
 // and these are tracked in a stack by FunctionCompiler.
@@ -92,11 +76,6 @@ class CallCompileState
     // much to bump the stack pointer before making the call. See
     // FunctionCompiler::startCall() comment below.
     uint32_t spIncrement_;
-
-    // Set by FunctionCompiler::finishCall(), tells a potentially-inter-module
-    // call the offset of the reserved space in which it can save the caller's
-    // WasmTlsReg.
-    uint32_t tlsStackOffset_;
 
     // Accumulates the register arguments while compiling arguments.
     MWasmCall::Args regArgs_;
@@ -123,7 +102,6 @@ class CallCompileState
       : lineOrBytecode_(lineOrBytecode),
         maxChildStackBytes_(0),
         spIncrement_(0),
-        tlsStackOffset_(MWasmCall::DontSaveTls),
         childClobbers_(false)
     { }
 };
@@ -995,7 +973,7 @@ class FunctionCompiler
             outer->childClobbers_ = true;
     }
 
-    bool finishCall(CallCompileState* call, TlsUsage tls)
+    bool finishCall(CallCompileState* call)
     {
         MOZ_ALWAYS_TRUE(callStack_.popCopy() == call);
 
@@ -1004,22 +982,10 @@ class FunctionCompiler
             return true;
         }
 
-        if (NeedsTls(tls)) {
-            if (!call->regArgs_.append(MWasmCall::Arg(AnyRegister(WasmTlsReg), tlsPointer_)))
-                return false;
-        }
+        if (!call->regArgs_.append(MWasmCall::Arg(AnyRegister(WasmTlsReg), tlsPointer_)))
+            return false;
 
         uint32_t stackBytes = call->abi_.stackBytesConsumedSoFar();
-
-        // If this is a potentially-inter-module call, allocate an extra word of
-        // stack space to save/restore the caller's WasmTlsReg during the call.
-        // Record the stack offset before including spIncrement since MWasmCall
-        // will use this offset after having bumped the stack pointer.
-        if (tls == TlsUsage::CallerSaved) {
-            call->tlsStackOffset_ = stackBytes;
-            stackBytes += sizeof(void*);
-        }
-
         if (call->childClobbers_) {
             call->spIncrement_ = AlignBytes(call->maxChildStackBytes_, WasmStackAlignment);
             for (MWasmStackArg* stackArg : call->stackArgs_)
@@ -1052,8 +1018,7 @@ class FunctionCompiler
         CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Func);
         MIRType ret = ToMIRType(sig.ret());
         auto callee = CalleeDesc::function(funcIndex);
-        auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ret,
-                                   call.spIncrement_, MWasmCall::DontSaveTls);
+        auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ret, call.spIncrement_);
         if (!ins)
             return false;
 
@@ -1078,7 +1043,6 @@ class FunctionCompiler
             const TableDesc& table = env_.tables[env_.asmJSSigToTableIndex[sigIndex]];
             MOZ_ASSERT(IsPowerOfTwo(table.limits.initial));
             MOZ_ASSERT(!table.external);
-            MOZ_ASSERT(call.tlsStackOffset_ == MWasmCall::DontSaveTls);
 
             MConstant* mask = MConstant::New(alloc(), Int32Value(table.limits.initial - 1));
             curBlock_->add(mask);
@@ -1091,14 +1055,12 @@ class FunctionCompiler
             MOZ_ASSERT(sig.id.kind() != SigIdDesc::Kind::None);
             MOZ_ASSERT(env_.tables.length() == 1);
             const TableDesc& table = env_.tables[0];
-            MOZ_ASSERT(table.external == (call.tlsStackOffset_ != MWasmCall::DontSaveTls));
-
             callee = CalleeDesc::wasmTable(table, sig.id);
         }
 
         CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Dynamic);
         auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ToMIRType(sig.ret()),
-                                   call.spIncrement_, call.tlsStackOffset_, index);
+                                   call.spIncrement_, index);
         if (!ins)
             return false;
 
@@ -1115,12 +1077,10 @@ class FunctionCompiler
             return true;
         }
 
-        MOZ_ASSERT(call.tlsStackOffset_ != MWasmCall::DontSaveTls);
-
         CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Dynamic);
         auto callee = CalleeDesc::import(globalDataOffset);
         auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ToMIRType(ret),
-                                   call.spIncrement_, call.tlsStackOffset_);
+                                   call.spIncrement_);
         if (!ins)
             return false;
 
@@ -1140,7 +1100,7 @@ class FunctionCompiler
         CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Symbolic);
         auto callee = CalleeDesc::builtin(builtin);
         auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ToMIRType(ret),
-                                   call.spIncrement_, MWasmCall::DontSaveTls);
+                                   call.spIncrement_);
         if (!ins)
             return false;
 
@@ -1160,8 +1120,7 @@ class FunctionCompiler
         CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Symbolic);
         auto* ins = MWasmCall::NewBuiltinInstanceMethodCall(alloc(), desc, builtin,
                                                             call.instanceArg_, call.regArgs_,
-                                                            ToMIRType(ret), call.spIncrement_,
-                                                            call.tlsStackOffset_);
+                                                            ToMIRType(ret), call.spIncrement_);
         if (!ins)
             return false;
 
@@ -1181,7 +1140,7 @@ class FunctionCompiler
         if (inDeadCode())
             return;
 
-        MWasmReturn* ins = MWasmReturn::New(alloc(), operand, tlsPointer_);
+        MWasmReturn* ins = MWasmReturn::New(alloc(), operand);
         curBlock_->end(ins);
         curBlock_ = nullptr;
     }
@@ -1191,7 +1150,7 @@ class FunctionCompiler
         if (inDeadCode())
             return;
 
-        MWasmReturnVoid* ins = MWasmReturnVoid::New(alloc(), tlsPointer_);
+        MWasmReturnVoid* ins = MWasmReturnVoid::New(alloc());
         curBlock_->end(ins);
         curBlock_ = nullptr;
     }
@@ -2018,11 +1977,8 @@ EmitUnreachable(FunctionCompiler& f)
 typedef IonOpIter::ValueVector DefVector;
 
 static bool
-EmitCallArgs(FunctionCompiler& f, const Sig& sig, const DefVector& args, TlsUsage tls,
-             CallCompileState* call)
+EmitCallArgs(FunctionCompiler& f, const Sig& sig, const DefVector& args, CallCompileState* call)
 {
-    MOZ_ASSERT(NeedsTls(tls));
-
     if (!f.startCall(call))
         return false;
 
@@ -2031,7 +1987,7 @@ EmitCallArgs(FunctionCompiler& f, const Sig& sig, const DefVector& args, TlsUsag
             return false;
     }
 
-    return f.finishCall(call, tls);
+    return f.finishCall(call);
 }
 
 static bool
@@ -2048,15 +2004,13 @@ EmitCall(FunctionCompiler& f)
         return true;
 
     const Sig& sig = *f.env().funcSigs[funcIndex];
-    bool import = f.env().funcIsImport(funcIndex);
-    TlsUsage tls = import ? TlsUsage::CallerSaved : TlsUsage::Need;
 
     CallCompileState call(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, args, tls, &call))
+    if (!EmitCallArgs(f, sig, args, &call))
         return false;
 
     MDefinition* def;
-    if (import) {
+    if (f.env().funcIsImport(funcIndex)) {
         uint32_t globalDataOffset = f.env().funcImportGlobalDataOffsets[funcIndex];
         if (!f.callImport(globalDataOffset, call, sig.ret(), &def))
             return false;
@@ -2093,12 +2047,8 @@ EmitCallIndirect(FunctionCompiler& f, bool oldStyle)
 
     const Sig& sig = f.env().sigs[sigIndex];
 
-    TlsUsage tls = !f.env().isAsmJS() && f.env().tables[0].external
-                   ? TlsUsage::CallerSaved
-                   : TlsUsage::Need;
-
     CallCompileState call(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, args, tls, &call))
+    if (!EmitCallArgs(f, sig, args, &call))
         return false;
 
     MDefinition* def;
@@ -2581,7 +2531,7 @@ EmitUnaryMathBuiltinCall(FunctionCompiler& f, SymbolicAddress callee, ValType op
     if (!f.passArg(input, operandType, &call))
         return false;
 
-    if (!f.finishCall(&call, TlsUsage::Unused))
+    if (!f.finishCall(&call))
         return false;
 
     MDefinition* def;
@@ -2612,7 +2562,7 @@ EmitBinaryMathBuiltinCall(FunctionCompiler& f, SymbolicAddress callee, ValType o
     if (!f.passArg(rhs, operandType, &call))
         return false;
 
-    if (!f.finishCall(&call, TlsUsage::Unused))
+    if (!f.finishCall(&call))
         return false;
 
     MDefinition* def;
@@ -3217,10 +3167,7 @@ EmitGrowMemory(FunctionCompiler& f)
     if (!f.passArg(delta, ValType::I32, &args))
         return false;
 
-    // As a short-cut, pretend this is an inter-module call so that any pinned
-    // heap pointer will be reloaded after the call. This hack will go away once
-    // we can stop pinning registers.
-    f.finishCall(&args, TlsUsage::CallerSaved);
+    f.finishCall(&args);
 
     MDefinition* ret;
     if (!f.builtinInstanceMethodCall(SymbolicAddress::GrowMemory, args, ValType::I32, &ret))
@@ -3246,7 +3193,7 @@ EmitCurrentMemory(FunctionCompiler& f)
     if (!f.passInstance(&args))
         return false;
 
-    f.finishCall(&args, TlsUsage::Need);
+    f.finishCall(&args);
 
     MDefinition* ret;
     if (!f.builtinInstanceMethodCall(SymbolicAddress::CurrentMemory, args, ValType::I32, &ret))

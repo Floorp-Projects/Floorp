@@ -978,32 +978,6 @@ gfxUserFontSet::AddUserFontEntry(const nsAString& aFamilyName,
     }
 }
 
-gfxUserFontEntry*
-gfxUserFontSet::FindUserFontEntryAndLoad(gfxFontFamily* aFamily,
-                                         const gfxFontStyle& aFontStyle,
-                                         bool& aNeedsBold,
-                                         bool& aWaitForUserFont)
-{
-    aWaitForUserFont = false;
-    gfxFontEntry* fe = aFamily->FindFontForStyle(aFontStyle, aNeedsBold);
-    NS_ASSERTION(!fe || fe->mIsUserFontContainer,
-                 "should only have userfont entries in userfont families");
-    if (!fe) {
-        return nullptr;
-    }
-
-    gfxUserFontEntry* userFontEntry = static_cast<gfxUserFontEntry*>(fe);
-
-    // start the load if it hasn't been loaded
-    userFontEntry->Load();
-    if (userFontEntry->GetPlatformFontEntry()) {
-        return userFontEntry;
-    }
-
-    aWaitForUserFont = userFontEntry->WaitForUserFont();
-    return nullptr;
-}
-
 void
 gfxUserFontSet::IncrementGeneration(bool aIsRebuild)
 {

@@ -258,27 +258,6 @@ AudioSink::PopFrames(uint32_t aFrames)
     AudioDataValue* const mData;
   };
 
-  class SilentChunk : public AudioStream::Chunk {
-  public:
-    SilentChunk(uint32_t aFrames, uint32_t aChannels, uint32_t aRate)
-      : mFrames(aFrames)
-      , mChannels(aChannels)
-      , mRate(aRate)
-      , mData(MakeUnique<AudioDataValue[]>(aChannels * aFrames)) {
-      memset(mData.get(), 0, aChannels * aFrames * sizeof(AudioDataValue));
-    }
-    const AudioDataValue* Data() const { return mData.get(); }
-    uint32_t Frames() const { return mFrames; }
-    uint32_t Channels() const { return mChannels; }
-    uint32_t Rate() const { return mRate; }
-    AudioDataValue* GetWritable() const { return mData.get(); }
-  private:
-    const uint32_t mFrames;
-    const uint32_t mChannels;
-    const uint32_t mRate;
-    UniquePtr<AudioDataValue[]> mData;
-  };
-
   bool needPopping = false;
   if (!mCurrentData) {
     // No data in the queue. Return an empty chunk.

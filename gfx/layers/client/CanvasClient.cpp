@@ -336,9 +336,7 @@ TexClientFromReadback(SharedSurface* src, CompositableForwarder* allocator,
 
     // RB_SWAPPED doesn't work with D3D11. (bug 1051010)
     // RB_SWAPPED doesn't work with Basic. (bug ???????)
-    // RB_SWAPPED doesn't work with D3D9. (bug ???????)
     bool layersNeedsManualSwap = layersBackend == LayersBackend::LAYERS_BASIC ||
-                                 layersBackend == LayersBackend::LAYERS_D3D9 ||
                                  layersBackend == LayersBackend::LAYERS_D3D11;
     if (texClient->HasFlags(TextureFlags::RB_SWAPPED) &&
         layersNeedsManualSwap)

@@ -81,9 +81,7 @@ public:
 
 protected:
   // Internal methods for handling referenced patterns
-  class AutoPatternReferencer;
   nsSVGPatternFrame* GetReferencedPattern();
-  nsSVGPatternFrame* GetReferencedPatternIfNotInUse();
 
   // Accessors to lookup pattern attributes
   uint16_t GetEnumValue(uint32_t aIndex, nsIContent *aDefault);

@@ -24,7 +24,7 @@
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIProtocolHandler.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 #include "mozilla/Monitor.h"
 #include "plstr.h"
 #include "prtime.h"

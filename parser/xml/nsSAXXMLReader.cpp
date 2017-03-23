@@ -6,7 +6,7 @@
 #include "nsIInputStream.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsStreamUtils.h"
@@ -496,7 +496,7 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
   rv = EnsureBaseURI();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
+  nsCOMPtr<nsIPrincipal> nullPrincipal = NullPrincipal::Create();
 
   // The following channel is never openend, so it does not matter what
   // securityFlags we pass; let's follow the principle of least privilege.

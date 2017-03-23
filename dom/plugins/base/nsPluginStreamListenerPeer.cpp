@@ -33,7 +33,7 @@
 #include "GeckoProfiler.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsDataHashtable.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 
 #define BYTERANGE_REQUEST_CONTEXT 0x01020304
 

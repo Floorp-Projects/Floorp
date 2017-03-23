@@ -41,7 +41,7 @@
 #include "SerializedLoadContext.h"
 #include "nsAuthInformationHolder.h"
 #include "nsIAuthPromptCallback.h"
-#include "nsPrincipal.h"
+#include "ContentPrincipal.h"
 #include "nsINetworkPredictor.h"
 #include "nsINetworkPredictorVerifier.h"
 #include "nsISpeculativeConnect.h"

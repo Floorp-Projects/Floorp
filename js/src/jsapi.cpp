@@ -1382,16 +1382,16 @@ JS_RemoveFinalizeCallback(JSContext* cx, JSFinalizeCallback cb)
 }
 
 JS_PUBLIC_API(bool)
-JS_AddWeakPointerZoneGroupCallback(JSContext* cx, JSWeakPointerZoneGroupCallback cb, void* data)
+JS_AddWeakPointerZonesCallback(JSContext* cx, JSWeakPointerZonesCallback cb, void* data)
 {
     AssertHeapIsIdle();
-    return cx->runtime()->gc.addWeakPointerZoneGroupCallback(cb, data);
+    return cx->runtime()->gc.addWeakPointerZonesCallback(cb, data);
 }
 
 JS_PUBLIC_API(void)
-JS_RemoveWeakPointerZoneGroupCallback(JSContext* cx, JSWeakPointerZoneGroupCallback cb)
+JS_RemoveWeakPointerZonesCallback(JSContext* cx, JSWeakPointerZonesCallback cb)
 {
-    cx->runtime()->gc.removeWeakPointerZoneGroupCallback(cb);
+    cx->runtime()->gc.removeWeakPointerZonesCallback(cb);
 }
 
 JS_PUBLIC_API(bool)

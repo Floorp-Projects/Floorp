@@ -41,7 +41,7 @@
 #include "nsISocketTransportService.h"
 #include "nsIURI.h"
 #include "nsILoadInfo.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 #include "nsIAuthPrompt2.h"
 #include "nsIFTPChannelParentInternal.h"
 

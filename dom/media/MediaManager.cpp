@@ -28,7 +28,6 @@
 #include "nsIIDNService.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "nsPrincipal.h"
 #include "nsICryptoHash.h"
 #include "nsICryptoHMAC.h"
 #include "nsIKeyModule.h"
@@ -54,7 +53,7 @@
 #include "VideoUtils.h"
 #include "Latency.h"
 #include "nsProxyRelease.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 #include "nsVariant.h"
 
 // For snprintf
@@ -1155,7 +1154,7 @@ public:
 
       nsCOMPtr<nsIPrincipal> principal;
       if (mPeerIdentity) {
-        principal = nsNullPrincipal::CreateWithInheritedAttributes(window->GetExtantDoc()->NodePrincipal());
+        principal = NullPrincipal::CreateWithInheritedAttributes(window->GetExtantDoc()->NodePrincipal());
       } else {
         principal = window->GetExtantDoc()->NodePrincipal();
       }

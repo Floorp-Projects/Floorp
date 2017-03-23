@@ -8605,13 +8605,13 @@ class LWasmParameterI64 : public LInstructionHelper<INT64_PIECES, 0, 0>
     LIR_HEADER(WasmParameterI64);
 };
 
-class LWasmReturn : public LInstructionHelper<0, 2, 0>
+class LWasmReturn : public LInstructionHelper<0, 1, 0>
 {
   public:
     LIR_HEADER(WasmReturn);
 };
 
-class LWasmReturnI64 : public LInstructionHelper<0, INT64_PIECES + 1, 0>
+class LWasmReturnI64 : public LInstructionHelper<0, INT64_PIECES, 0>
 {
   public:
     LIR_HEADER(WasmReturnI64)
@@ -8621,7 +8621,7 @@ class LWasmReturnI64 : public LInstructionHelper<0, INT64_PIECES + 1, 0>
     }
 };
 
-class LWasmReturnVoid : public LInstructionHelper<0, 1, 0>
+class LWasmReturnVoid : public LInstructionHelper<0, 0, 0>
 {
   public:
     LIR_HEADER(WasmReturnVoid);
@@ -8683,6 +8683,7 @@ class LWasmCallBase : public LInstruction
         //  - internal/indirect calls do by the internal wasm ABI
         //  - import calls do by explicitly saving/restoring at the callsite
         //  - builtin calls do because the TLS reg is non-volatile
+        // See also CodeGeneratorShared::emitWasmCallBase.
         return !reg.isFloat() && reg.gpr() == WasmTlsReg;
     }
 

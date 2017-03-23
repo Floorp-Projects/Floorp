@@ -19,16 +19,6 @@
    ...
 }
 {
-   Bug 793600
-   Memcheck:Leak
-   fun:realloc
-   obj:/usr/lib/libfontconfig.so.1.4.4
-   ...
-   fun:FcDefaultSubstitute
-   fun:_ZN17gfxPangoFontGroup11MakeFontSetEP14_PangoLanguagedP9nsAutoRefI10_FcPatternE
-   ...
-}
-{
    Bug 794366
    Memcheck:Leak
    ...

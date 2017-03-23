@@ -31,7 +31,7 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/Likely.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 #include "ScriptSettings.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/LocationBinding.h"
@@ -164,7 +164,7 @@ Location::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
         sourceURI = docCurrentURI;
       }
       else {
-        // Use principalURI as long as it is not an nsNullPrincipalURI.  We
+        // Use principalURI as long as it is not an NullPrincipalURI.  We
         // could add a method such as GetReferrerURI to principals to make this
         // cleaner, but given that we need to start using Source Browsing
         // Context for referrer (see Bug 960639) this may be wasted effort at

@@ -84,21 +84,21 @@ void
 MacroAssembler::call(const wasm::CallSiteDesc& desc, const Register reg)
 {
     CodeOffset l = call(reg);
-    append(desc, l, framePushed());
+    append(desc, l);
 }
 
 void
 MacroAssembler::call(const wasm::CallSiteDesc& desc, uint32_t funcDefIndex)
 {
     CodeOffset l = callWithPatch();
-    append(desc, l, framePushed(), funcDefIndex);
+    append(desc, l, funcDefIndex);
 }
 
 void
 MacroAssembler::call(const wasm::CallSiteDesc& desc, wasm::Trap trap)
 {
     CodeOffset l = callWithPatch();
-    append(desc, l, framePushed(), trap);
+    append(desc, l, trap);
 }
 
 // ===============================================================
@@ -393,6 +393,19 @@ MacroAssembler::branchIfRope(Register str, Label* label)
     Address flags(str, JSString::offsetOfFlags());
     static_assert(JSString::ROPE_FLAGS == 0, "Rope type flags must be 0");
     branchTest32(Assembler::Zero, flags, Imm32(JSString::TYPE_FLAGS_MASK), label);
+}
+
+void
+MacroAssembler::branchIfRopeOrExternal(Register str, Register temp, Label* label)
+{
+    Address flags(str, JSString::offsetOfFlags());
+    move32(Imm32(JSString::TYPE_FLAGS_MASK), temp);
+    and32(flags, temp);
+
+    static_assert(JSString::ROPE_FLAGS == 0, "Rope type flags must be 0");
+    branchTest32(Assembler::Zero, temp, temp, label);
+
+    branch32(Assembler::Equal, temp, Imm32(JSString::EXTERNAL_FLAGS), label);
 }
 
 void

@@ -210,6 +210,8 @@ class BuildOutputManager(LoggingMixin):
         # TODO convert terminal footer to config file setting.
         if not terminal or os.environ.get('MACH_NO_TERMINAL_FOOTER', None):
             return
+        if os.environ.get('INSIDE_EMACS', None):
+            return
 
         self.t = terminal
         self.footer = BuildProgressFooter(terminal, monitor)

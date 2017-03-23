@@ -601,6 +601,13 @@ MacroAssembler::Push(FloatRegister t)
 }
 
 void
+MacroAssembler::PushFlags()
+{
+    pushFlags();
+    adjustFrame(sizeof(intptr_t));
+}
+
+void
 MacroAssembler::Pop(const Operand op)
 {
     pop(op);
@@ -626,6 +633,13 @@ MacroAssembler::Pop(const ValueOperand& val)
 {
     popValue(val);
     implicitPop(sizeof(Value));
+}
+
+void
+MacroAssembler::PopFlags()
+{
+    popFlags();
+    implicitPop(sizeof(intptr_t));
 }
 
 // ===============================================================
@@ -741,7 +755,7 @@ MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc)
 {
     CodeOffset offset(currentOffset());
     masm.nop_five();
-    append(desc, CodeOffset(currentOffset()), framePushed());
+    append(desc, CodeOffset(currentOffset()));
     MOZ_ASSERT_IF(!oom(), size() - offset.offset() == ToggledCallSize(nullptr));
     return offset;
 }

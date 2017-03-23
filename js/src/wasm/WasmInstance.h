@@ -78,7 +78,7 @@ class Instance
     TableTls& tableTls(const TableDesc& td) const;
 
     // Import call slow paths which are called directly from wasm code.
-    friend void* AddressOf(SymbolicAddress, JSContext*);
+    friend void* AddressOf(SymbolicAddress);
     static int32_t callImport_void(Instance*, int32_t, int32_t, uint64_t*);
     static int32_t callImport_i32(Instance*, int32_t, int32_t, uint64_t*);
     static int32_t callImport_i64(Instance*, int32_t, int32_t, uint64_t*);
@@ -151,10 +151,6 @@ class Instance
 
     void onMovingGrowMemory(uint8_t* prevMemoryBase);
     void onMovingGrowTable();
-
-    // See Code::ensureProfilingState comment.
-
-    MOZ_MUST_USE bool ensureProfilingState(JSContext* cx, bool enabled);
 
     // Debug support:
     bool debugEnabled() const { return code_->metadata().debugEnabled; }

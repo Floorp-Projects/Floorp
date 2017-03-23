@@ -8,7 +8,19 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
-struct UsageResponse
+struct OriginUsage
+{
+  nsCString origin;
+  bool persisted;
+  uint64_t usage;
+};
+
+struct AllUsageResponse
+{
+  OriginUsage[] originUsages;
+};
+
+struct OriginUsageResponse
 {
   uint64_t usage;
   uint64_t fileUsage;
@@ -18,7 +30,8 @@ struct UsageResponse
 union UsageRequestResponse
 {
   nsresult;
-  UsageResponse;
+  AllUsageResponse;
+  OriginUsageResponse;
 };
 
 protocol PQuotaUsageRequest
