@@ -229,7 +229,9 @@ ContentPrincipal::GetOriginInternal(nsACString& aOrigin)
   // of the spec, and the beginning of the origin attributes) is not present
   // in the origin string
   nsCOMPtr<nsIStandardURL> standardURL = do_QueryInterface(origin);
-  NS_ENSURE_TRUE(standardURL, NS_ERROR_FAILURE);
+  if (!standardURL) {
+    return NS_ERROR_FAILURE;
+  }
 
   rv = origin->GetAsciiSpec(aOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
