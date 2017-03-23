@@ -57,6 +57,16 @@ browser/chrome/en-US/locale/browser/preferences/sync.dtd
 browser/chrome/en-US/locale/browser/preferences/privacy.dtd
 browser/chrome/en-US/locale/browser/preferences/advanced.dtd
 browser/chrome/en-US/locale/browser/preferences/preferences.properties
+browser/chrome/browser/skin/classic/browser/preferences/in-content-old/search.css
+browser/chrome/browser/skin/classic/browser/preferences/in-content-old/containers.css
+browser/chrome/browser/skin/classic/browser/preferences/in-content-old/favicon.ico
+browser/chrome/browser/skin/classic/browser/preferences/in-content-old/icons.svg
+browser/chrome/browser/skin/classic/browser/preferences/in-content-old/preferences.css
+browser/chrome/browser/skin/classic/browser/preferences/in-content/search.css
+browser/chrome/browser/skin/classic/browser/preferences/in-content/containers.css
+browser/chrome/browser/skin/classic/browser/preferences/in-content/favicon.ico
+browser/chrome/browser/skin/classic/browser/preferences/in-content/icons.svg
+browser/chrome/browser/skin/classic/browser/preferences/in-content/preferences.css
 # browser branding / themes is bug 1313106
 browser/chrome/browser/content/branding/icon128.png
 browser/chrome/browser/content/branding/icon16.png
