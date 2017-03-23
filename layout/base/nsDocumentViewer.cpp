@@ -2135,11 +2135,7 @@ nsDocumentViewer::Show(void)
 
   // Notify observers that a new page has been shown. This will get run
   // from the event loop after we actually draw the page.
-  RefPtr<nsDocumentShownDispatcher> event =
-    new nsDocumentShownDispatcher(mDocument);
-  mDocument->Dispatch("nsDocumentShownDispatcher",
-                      TaskCategory::Other,
-                      event.forget());
+  NS_DispatchToMainThread(new nsDocumentShownDispatcher(mDocument));
 
   return NS_OK;
 }
@@ -4631,3 +4627,4 @@ nsDocumentShownDispatcher::Run()
   }
   return NS_OK;
 }
+
