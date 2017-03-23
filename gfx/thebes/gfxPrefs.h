@@ -485,13 +485,13 @@ private:
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps.print-histogram",  FPSPrintHistogram, bool, false);
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps.write-to-file", WriteFPSToFile, bool, false);
   DECL_GFX_PREF(Once, "layers.acceleration.force-enabled",     LayersAccelerationForceEnabledDoNotUseDirectly, bool, false);
-  DECL_GFX_PREF(Live, "layers.advanced.border-layers",         LayersAllowBorderLayers, bool, false);
+  DECL_OVERRIDE_PREF(Live, "layers.advanced.border-layers",    LayersAllowBorderLayers, false);
   DECL_GFX_PREF(Live, "layers.advanced.boxshadow-inset-layers", LayersAllowInsetBoxShadow, bool, false);
-  DECL_GFX_PREF(Live, "layers.advanced.boxshadow-outer-layers", LayersAllowOuterBoxShadow, bool, false);
+  DECL_OVERRIDE_PREF(Live, "layers.advanced.boxshadow-outer-layers", LayersAllowOuterBoxShadow, false);
   DECL_GFX_PREF(Live, "layers.advanced.bullet-layers",         LayersAllowBulletLayers, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.button-foreground-layers", LayersAllowButtonForegroundLayers, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.canvas-background-color", LayersAllowCanvasBackgroundColorLayers, bool, false);
-  DECL_GFX_PREF(Live, "layers.advanced.caret-layers",          LayersAllowCaretLayers, bool, false);
+  DECL_OVERRIDE_PREF(Live, "layers.advanced.caret-layers",     LayersAllowCaretLayers, gfxPrefs::OverrideBase_WebRender());
   DECL_GFX_PREF(Live, "layers.advanced.displaybuttonborder-layers", LayersAllowDisplayButtonBorder, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.image-layers",          LayersAllowImageLayers, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.outline-layers",        LayersAllowOutlineLayers, bool, false);
@@ -737,6 +737,11 @@ private:
   static void CopyPrefValue(const GfxPrefValue* aValue, std::string* aOutValue);
 
   static void AssertMainThread();
+
+  // Some wrapper functions for the DECL_OVERRIDE_PREF prefs' base values, so
+  // that we don't to include all sorts of header files into this gfxPrefs.h
+  // file.
+  static bool OverrideBase_WebRender();
 
   gfxPrefs();
   ~gfxPrefs();
