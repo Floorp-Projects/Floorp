@@ -9,10 +9,11 @@ fn main() {
     let target = env::var("TARGET").unwrap();
     let dest = PathBuf::from(&env::var("OUT_DIR").unwrap());
 
-    if target.contains("linux") {
+    if target.contains("linux") && cfg!(feature = "x11") {
         let mut file = File::create(&dest.join("glx_bindings.rs")).unwrap();
         Registry::new(Api::Glx, (1, 4), Profile::Core, Fallbacks::All, [])
             .write_bindings(gl_generator::StaticGenerator, &mut file).unwrap();
+        println!("cargo:rustc-link-lib=GL");
     }
 
     if target.contains("android") || (target.contains("linux") && cfg!(feature = "test_egl_in_linux")) {
@@ -46,6 +47,10 @@ fn main() {
                       ])
             .write_bindings(gl_generator::StructGenerator, &mut file).unwrap();
 
+        println!("cargo:rustc-link-lib=opengl32");
+    }
 
+    if target.contains("darwin") {
+        println!("cargo:rustc-link-lib=framework=OpenGL");
     }
 }

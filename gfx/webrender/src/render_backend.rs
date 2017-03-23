@@ -260,12 +260,12 @@ impl RenderBackend {
                                 None => self.notify_compositor_of_new_scroll_frame(false),
                             }
                         }
-                        ApiMsg::ScrollLayersWithScrollId(origin, pipeline_id, scroll_root_id) => {
-                            profile_scope!("ScrollLayersWithScrollId");
+                        ApiMsg::ScrollLayerWithId(origin, id) => {
+                            profile_scope!("ScrollLayerWithScrollId");
                             let frame = {
                                 let counters = &mut profile_counters.texture_cache;
                                 profile_counters.total_time.profile(|| {
-                                    if self.frame.scroll_nodes(origin, pipeline_id, scroll_root_id) {
+                                    if self.frame.scroll_nodes(origin, id) {
                                         Some(self.render(counters))
                                     } else {
                                         None

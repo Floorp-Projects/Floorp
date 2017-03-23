@@ -20,7 +20,6 @@ impl ImageKey {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct ExternalImageId(pub u64);
 
-#[repr(C)]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum ImageFormat {
@@ -108,6 +107,7 @@ pub type BlobImageData = Vec<u8>;
 
 pub type BlobImageResult = Result<RasterizedBlobImage, BlobImageError>;
 
+#[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct BlobImageDescriptor {
     pub width: u32,
