@@ -2,20 +2,50 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-//! Small vectors in various sizes. These store a certain number of elements inline and fall back
-//! to the heap for larger allocations.
+//! Small vectors in various sizes. These store a certain number of elements inline, and fall back
+//! to the heap for larger allocations.  This can be a useful optimization for improving cache
+//! locality and reducing allocator traffic for workloads that fit within the inline buffer.
 
+#[cfg(feature="heapsizeof")]
+extern crate heapsize;
+
+use std::borrow::{Borrow, BorrowMut};
 use std::cmp;
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::iter::{IntoIterator, FromIterator};
 use std::mem;
 use std::ops;
 use std::ptr;
 use std::slice;
+#[cfg(feature="heapsizeof")]
+use std::os::raw::c_void;
 
+#[cfg(feature="heapsizeof")]
+use heapsize::{HeapSizeOf, heap_size_of};
 use SmallVecData::{Inline, Heap};
 
-
+/// Common operations implemented by both `Vec` and `SmallVec`.
+///
+/// This can be used to write generic code that works with both `Vec` and `SmallVec`.
+///
+/// ## Example
+///
+/// ```rust
+/// use smallvec::{VecLike, SmallVec8};
+///
+/// fn initialize<V: VecLike<u8>>(v: &mut V) {
+///     for i in 0..5 {
+///         v.push(i);
+///     }
+/// }
+///
+/// let mut vec = Vec::new();
+/// initialize(&mut vec);
+///
+/// let mut small_vec = SmallVec8::new();
+/// initialize(&mut small_vec);
+/// ```
 pub trait VecLike<T>:
         ops::Index<usize, Output=T> +
         ops::IndexMut<usize> +
@@ -27,19 +57,14 @@ pub trait VecLike<T>:
         ops::IndexMut<ops::RangeTo<usize>> +
         ops::Index<ops::RangeFull, Output=[T]> +
         ops::IndexMut<ops::RangeFull> +
-        ops::Deref +
-        ops::DerefMut {
+        ops::DerefMut<Target = [T]> +
+        Extend<T> {
 
-    fn len(&self) -> usize;
+    /// Append an element to the vector.
     fn push(&mut self, value: T);
 }
 
 impl<T> VecLike<T> for Vec<T> {
-    #[inline]
-    fn len(&self) -> usize {
-        Vec::len(self)
-    }
-
     #[inline]
     fn push(&mut self, value: T) {
         Vec::push(self, value);
@@ -51,11 +76,11 @@ unsafe fn deallocate<T>(ptr: *mut T, capacity: usize) {
     // Let it drop.
 }
 
-pub struct SmallVecMoveIterator<'a, T: 'a> {
+pub struct Drain<'a, T: 'a> {
     iter: slice::IterMut<'a,T>,
 }
 
-impl<'a, T: 'a> Iterator for SmallVecMoveIterator<'a,T> {
+impl<'a, T: 'a> Iterator for Drain<'a,T> {
     type Item = T;
 
     #[inline]
@@ -69,9 +94,30 @@ impl<'a, T: 'a> Iterator for SmallVecMoveIterator<'a,T> {
             }
         }
     }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
-impl<'a, T: 'a> Drop for SmallVecMoveIterator<'a,T> {
+impl<'a, T: 'a> DoubleEndedIterator for Drain<'a, T> {
+    #[inline]
+    fn next_back(&mut self) -> Option<T> {
+        match self.iter.next_back() {
+            None => None,
+            Some(reference) => {
+                unsafe {
+                    Some(ptr::read(reference))
+                }
+            }
+        }
+    }
+}
+
+impl<'a, T> ExactSizeIterator for Drain<'a, T> { }
+
+impl<'a, T: 'a> Drop for Drain<'a,T> {
     fn drop(&mut self) {
         // Destroy the remaining elements.
         for _ in self.by_ref() {}
@@ -81,6 +127,15 @@ impl<'a, T: 'a> Drop for SmallVecMoveIterator<'a,T> {
 enum SmallVecData<A: Array> {
     Inline { array: A },
     Heap { ptr: *mut A::Item, capacity: usize },
+}
+
+impl<A: Array> SmallVecData<A> {
+    fn ptr_mut(&mut self) -> *mut A::Item {
+        match *self {
+            Inline { ref mut array } => array.ptr_mut(),
+            Heap { ptr, .. } => ptr,
+        }
+    }
 }
 
 unsafe impl<A: Array + Send> Send for SmallVecData<A> {}
@@ -103,26 +158,84 @@ impl<A: Array> Drop for SmallVecData<A> {
     }
 }
 
-
+/// A `Vec`-like container that can store a small number of elements inline.
+///
+/// `SmallVec` acts like a vector, but can store a limited amount of data inline within the
+/// `Smallvec` struct rather than in a separate allocation.  If the data exceeds this limit, the
+/// `SmallVec` will "spill" its data onto the heap, allocating a new buffer to hold it.
+///
+/// The amount of data that a `SmallVec` can store inline depends on its backing store. The backing
+/// store can be any type that implements the `Array` trait; usually it is a small fixed-sized
+/// array.  For example a `SmallVec<[u64; 8]>` can hold up to eight 64-bit integers inline.
+///
+/// Type aliases like `SmallVec8<T>` are provided as convenient shorthand for types like
+/// `SmallVec<[T; 8]>`.
+///
+/// ## Example
+///
+/// ```rust
+/// use smallvec::SmallVec;
+/// let mut v = SmallVec::<[u8; 4]>::new(); // initialize an empty vector
+///
+/// use smallvec::SmallVec4;
+/// let mut v: SmallVec4<u8> = SmallVec::new(); // alternate way to write the above
+///
+/// // SmallVec4 can hold up to 4 items without spilling onto the heap.
+/// v.extend(0..4);
+/// assert_eq!(v.len(), 4);
+/// assert!(!v.spilled());
+///
+/// // Pushing another element will force the buffer to spill:
+/// v.push(4);
+/// assert_eq!(v.len(), 5);
+/// assert!(v.spilled());
+/// ```
 pub struct SmallVec<A: Array> {
     len: usize,
     data: SmallVecData<A>,
 }
 
 impl<A: Array> SmallVec<A> {
+    /// Construct an empty vector
+    #[inline]
+    pub fn new() -> SmallVec<A> {
+        unsafe {
+            SmallVec {
+                len: 0,
+                data: Inline { array: mem::uninitialized() },
+            }
+        }
+    }
+
+    /// Sets the length of a vector.
+    ///
+    /// This will explicitly set the size of the vector, without actually
+    /// modifying its buffers, so it is up to the caller to ensure that the
+    /// vector is actually the specified size.
     pub unsafe fn set_len(&mut self, new_len: usize) {
         self.len = new_len
     }
 
+    /// The maximum number of elements this vector can hold inline
+    #[inline]
     pub fn inline_size(&self) -> usize {
         A::size()
     }
+
+    /// The number of elements stored in the vector
+    #[inline]
     pub fn len(&self) -> usize {
         self.len
     }
+
+    /// Returns `true` if the vector is empty
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
+
+    /// The number of items the vector can hold without reallocating
+    #[inline]
     pub fn capacity(&self) -> usize {
         match self.data {
             Inline { .. } => A::size(),
@@ -130,6 +243,8 @@ impl<A: Array> SmallVec<A> {
         }
     }
 
+    /// Returns `true` if the data has spilled into a separate heap-allocated buffer.
+    #[inline]
     pub fn spilled(&self) -> bool {
         match self.data {
             Inline { .. } => false,
@@ -137,27 +252,24 @@ impl<A: Array> SmallVec<A> {
         }
     }
 
-    /// NB: For efficiency reasons (avoiding making a second copy of the inline elements), this
-    /// actually clears out the original array instead of moving it.
-    /// FIXME: Rename this to `drain`? It’s more like `Vec::drain` than `Vec::into_iter`.
-    pub fn into_iter<'a>(&'a mut self) -> SmallVecMoveIterator<'a, A::Item> {
+    /// Empty the vector and return an iterator over its former contents.
+    pub fn drain(&mut self) -> Drain<A::Item> {
         unsafe {
             let current_len = self.len();
             self.set_len(0);
 
-            let ptr = match self.data {
-                Inline { ref mut array } => array.ptr_mut(),
-                Heap { ptr, .. } => ptr,
-            };
+            let ptr = self.data.ptr_mut();
 
             let slice = slice::from_raw_parts_mut(ptr, current_len);
 
-            SmallVecMoveIterator {
+            Drain {
                 iter: slice.iter_mut(),
             }
         }
     }
 
+    /// Append an item to the vector.
+    #[inline]
     pub fn push(&mut self, value: A::Item) {
         let cap = self.capacity();
         if self.len == cap {
@@ -171,12 +283,16 @@ impl<A: Array> SmallVec<A> {
         }
     }
 
+    /// Append elements from an iterator.
+    ///
+    /// This function is deprecated; it has been replaced by `Extend::extend`.
+    #[deprecated(note = "Use `extend` instead")]
     pub fn push_all_move<V: IntoIterator<Item=A::Item>>(&mut self, other: V) {
-        for value in other {
-            self.push(value)
-        }
+        self.extend(other)
     }
 
+    /// Remove an item from the end of the vector and return it, or None if empty.
+    #[inline]
     pub fn pop(&mut self) -> Option<A::Item> {
         if self.len == 0 {
             return None
@@ -193,7 +309,11 @@ impl<A: Array> SmallVec<A> {
         }
     }
 
+    /// Re-allocate to set the capacity to `new_cap`.
+    ///
+    /// Panics if `new_cap` is less than the vector's length.
     pub fn grow(&mut self, new_cap: usize) {
+        assert!(new_cap >= self.len);
         let mut vec: Vec<A::Item> = Vec::with_capacity(new_cap);
         let new_alloc = vec.as_mut_ptr();
         unsafe {
@@ -211,6 +331,13 @@ impl<A: Array> SmallVec<A> {
         }
     }
 
+    /// Reserve capacity for `additional` more elements to be inserted.
+    ///
+    /// May reserve more space to avoid frequent reallocations.
+    ///
+    /// If the new capacity would overflow `usize` then it will be set to `usize::max_value()`
+    /// instead. (This means that inserting `additional` new elements is not guaranteed to be
+    /// possible after calling this function.)
     pub fn reserve(&mut self, additional: usize) {
         let len = self.len();
         if self.capacity() - len < additional {
@@ -221,6 +348,9 @@ impl<A: Array> SmallVec<A> {
         }
     }
 
+    /// Reserve the minumum capacity for `additional` more elements to be inserted.
+    ///
+    /// Panics if the new capacity overflows `usize`.
     pub fn reserve_exact(&mut self, additional: usize) {
         let len = self.len();
         if self.capacity() - len < additional {
@@ -231,13 +361,34 @@ impl<A: Array> SmallVec<A> {
         }
     }
 
+    /// Shrink the capacity of the vector as much as possible.
+    ///
+    /// When possible, this will move data from an external heap buffer to the vector's inline
+    /// storage.
     pub fn shrink_to_fit(&mut self) {
         let len = self.len;
-        if self.spilled() && self.capacity() > len {
+        if self.inline_size() >= len {
+            unsafe {
+                let (ptr, capacity) = match self.data {
+                    Inline { .. } => return,
+                    Heap { ptr, capacity } => (ptr, capacity),
+                };
+                ptr::write(&mut self.data, Inline { array: mem::uninitialized() });
+                ptr::copy_nonoverlapping(ptr, self.as_mut_ptr(), len);
+                deallocate(ptr, capacity);
+            }
+        } else if self.capacity() > len {
             self.grow(len);
         }
     }
 
+    /// Shorten the vector, keeping the first `len` elements and dropping the rest.
+    ///
+    /// If `len` is greater than or equal to the vector's current length, this has no
+    /// effect.
+    ///
+    /// This does not re-allocate.  If you want the vector's capacity to shrink, call
+    /// `shrink_to_fit` after truncating.
     pub fn truncate(&mut self, len: usize) {
         let end_ptr = self.as_ptr();
         while len < self.len {
@@ -249,16 +400,28 @@ impl<A: Array> SmallVec<A> {
         }
     }
 
+    /// Remove the element at position `index`, replacing it with the last element.
+    ///
+    /// This does not preserve ordering, but is O(1).
+    ///
+    /// Panics if `index` is out of bounds.
+    #[inline]
     pub fn swap_remove(&mut self, index: usize) -> A::Item {
         let len = self.len;
         self.swap(len - 1, index);
         self.pop().unwrap()
     }
 
+    /// Remove all elements from the vector.
+    #[inline]
     pub fn clear(&mut self) {
         self.truncate(0);
     }
 
+    /// Remove and return the element at position `index`, shifting all elements after it to the
+    /// left.
+    ///
+    /// Panics if `index` is out of bounds.
     pub fn remove(&mut self, index: usize) -> A::Item {
         let len = self.len();
 
@@ -273,6 +436,9 @@ impl<A: Array> SmallVec<A> {
         }
     }
 
+    /// Insert an element at position `index`, shifting all elements after it to the right.
+    ///
+    /// Panics if `index` is out of bounds.
     pub fn insert(&mut self, index: usize, element: A::Item) {
         self.reserve(1);
 
@@ -284,6 +450,92 @@ impl<A: Array> SmallVec<A> {
             ptr::copy(ptr, ptr.offset(1), len - index);
             ptr::write(ptr, element);
             self.set_len(len + 1);
+        }
+    }
+
+    pub fn insert_many<I: IntoIterator<Item=A::Item>>(&mut self, index: usize, iterable: I) {
+        let iter = iterable.into_iter();
+        let (lower_size_bound, _) = iter.size_hint();
+        assert!(lower_size_bound <= std::isize::MAX as usize);  // Ensure offset is indexable
+        assert!(index + lower_size_bound >= index);  // Protect against overflow
+        self.reserve(lower_size_bound);
+
+        unsafe {
+            let old_len = self.len;
+            assert!(index <= old_len);
+            let ptr = self.as_mut_ptr().offset(index as isize);
+            ptr::copy(ptr, ptr.offset(lower_size_bound as isize), old_len - index);
+            for (off, element) in iter.enumerate() {
+                if off < lower_size_bound {
+                    ptr::write(ptr.offset(off as isize), element);
+                    self.len = self.len + 1;
+                } else {
+                    // Iterator provided more elements than the hint.
+                    assert!(index + off >= index);  // Protect against overflow.
+                    self.insert(index + off, element);
+                }
+            }
+            let num_added = self.len - old_len;
+            if num_added < lower_size_bound {
+                // Iterator provided fewer elements than the hint
+                ptr::copy(ptr.offset(lower_size_bound as isize), ptr.offset(num_added as isize), old_len - index);
+            }
+        }
+    }
+
+    /// Convert a SmallVec to a Vec, without reallocating if the SmallVec has already spilled onto
+    /// the heap.
+    pub fn into_vec(self) -> Vec<A::Item> {
+        match self.data {
+            Inline { .. } => self.into_iter().collect(),
+            Heap { ptr, capacity } => unsafe {
+                let v = Vec::from_raw_parts(ptr, self.len, capacity);
+                mem::forget(self);
+                v
+            }
+        }
+    }
+}
+
+impl<A: Array> SmallVec<A> where A::Item: Copy {
+    pub fn from_slice(slice: &[A::Item]) -> Self {
+        let mut vec = Self::new();
+        vec.extend_from_slice(slice);
+        vec
+    }
+
+    pub fn insert_from_slice(&mut self, index: usize, slice: &[A::Item]) {
+        self.reserve(slice.len());
+
+        let len = self.len;
+        assert!(index <= len);
+
+        unsafe {
+            let slice_ptr = slice.as_ptr();
+            let ptr = self.as_mut_ptr().offset(index as isize);
+            ptr::copy(ptr, ptr.offset(slice.len() as isize), len - index);
+            ptr::copy(slice_ptr, ptr, slice.len());
+            self.set_len(len + slice.len());
+        }
+    }
+
+    #[inline]
+    pub fn extend_from_slice(&mut self, slice: &[A::Item]) {
+        let len = self.len();
+        self.insert_from_slice(len, slice);
+    }
+}
+
+#[cfg(feature="heapsizeof")]
+impl<A: Array> HeapSizeOf for SmallVec<A> where A::Item: HeapSizeOf {
+    fn heap_size_of_children(&self) -> usize {
+        match self.data {
+            Inline { .. } => 0,
+            Heap { ptr, .. } => {
+                self.iter().fold(
+                    unsafe { heap_size_of(ptr as *const c_void) },
+                    |n, elem| n + elem.heap_size_of_children())
+            },
         }
     }
 }
@@ -305,13 +557,45 @@ impl<A: Array> ops::Deref for SmallVec<A> {
 impl<A: Array> ops::DerefMut for SmallVec<A> {
     #[inline]
     fn deref_mut(&mut self) -> &mut [A::Item] {
-        let ptr = match self.data {
-            Inline { ref mut array } => array.ptr_mut(),
-            Heap { ptr, .. } => ptr,
-        };
+        let ptr = self.data.ptr_mut();
         unsafe {
             slice::from_raw_parts_mut(ptr, self.len)
         }
+    }
+}
+
+impl<A: Array> AsRef<[A::Item]> for SmallVec<A> {
+    #[inline]
+    fn as_ref(&self) -> &[A::Item] {
+        self
+    }
+}
+
+impl<A: Array> AsMut<[A::Item]> for SmallVec<A> {
+    #[inline]
+    fn as_mut(&mut self) -> &mut [A::Item] {
+        self
+    }
+}
+
+impl<A: Array> Borrow<[A::Item]> for SmallVec<A> {
+    #[inline]
+    fn borrow(&self) -> &[A::Item] {
+        self
+    }
+}
+
+impl<A: Array> BorrowMut<[A::Item]> for SmallVec<A> {
+    #[inline]
+    fn borrow_mut(&mut self) -> &mut [A::Item] {
+        self
+    }
+}
+
+impl<'a, A: Array> From<&'a [A::Item]> for SmallVec<A> where A::Item: Clone {
+    #[inline]
+    fn from(slice: &'a [A::Item]) -> SmallVec<A> {
+        slice.into_iter().cloned().collect()
     }
 }
 
@@ -343,11 +627,6 @@ impl_index!(ops::RangeFull, [A::Item]);
 
 impl<A: Array> VecLike<A::Item> for SmallVec<A> {
     #[inline]
-    fn len(&self) -> usize {
-        SmallVec::len(self)
-    }
-
-    #[inline]
     fn push(&mut self, value: A::Item) {
         SmallVec::push(self, value);
     }
@@ -361,8 +640,8 @@ impl<A: Array> FromIterator<A::Item> for SmallVec<A> {
     }
 }
 
-impl<A: Array> SmallVec<A> {
-    pub fn extend<I: IntoIterator<Item=A::Item>>(&mut self, iterable: I) {
+impl<A: Array> Extend<A::Item> for SmallVec<A> {
+    fn extend<I: IntoIterator<Item=A::Item>>(&mut self, iterable: I) {
         let iter = iterable.into_iter();
         let (lower_size_bound, _) = iter.size_hint();
 
@@ -384,15 +663,10 @@ impl<A: Array> fmt::Debug for SmallVec<A> where A::Item: fmt::Debug {
     }
 }
 
-impl<A: Array> SmallVec<A> {
+impl<A: Array> Default for SmallVec<A> {
     #[inline]
-    pub fn new() -> SmallVec<A> {
-        unsafe {
-            SmallVec {
-                len: 0,
-                data: Inline { array: mem::zeroed() },
-            }
-        }
+    fn default() -> SmallVec<A> {
+        SmallVec::new()
     }
 }
 
@@ -443,32 +717,132 @@ impl<A: Array> Ord for SmallVec<A> where A::Item: Ord {
     }
 }
 
+impl<A: Array> Hash for SmallVec<A> where A::Item: Hash {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        (**self).hash(state)
+    }
+}
+
 unsafe impl<A: Array> Send for SmallVec<A> where A::Item: Send {}
+
+pub struct IntoIter<A: Array> {
+    data: SmallVecData<A>,
+    current: usize,
+    end: usize,
+}
+
+impl<A: Array> Drop for IntoIter<A> {
+    fn drop(&mut self) {
+        for _ in self { }
+    }
+}
+
+impl<A: Array> Iterator for IntoIter<A> {
+    type Item = A::Item;
+
+    #[inline]
+    fn next(&mut self) -> Option<A::Item> {
+        if self.current == self.end {
+            None
+        }
+        else {
+            unsafe {
+                let current = self.current as isize;
+                self.current += 1;
+                Some(ptr::read(self.data.ptr_mut().offset(current)))
+            }
+        }
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let size = self.end - self.current;
+        (size, Some(size))
+    }
+}
+
+impl<A: Array> DoubleEndedIterator for IntoIter<A> {
+    #[inline]
+    fn next_back(&mut self) -> Option<A::Item> {
+        if self.current == self.end {
+            None
+        }
+        else {
+            unsafe {
+                self.end -= 1;
+                Some(ptr::read(self.data.ptr_mut().offset(self.end as isize)))
+            }
+        }
+    }
+}
+
+impl<A: Array> ExactSizeIterator for IntoIter<A> { }
+
+impl<A: Array> IntoIterator for SmallVec<A> {
+    type IntoIter = IntoIter<A>;
+    type Item = A::Item;
+    fn into_iter(mut self) -> Self::IntoIter {
+        let len = self.len();
+        unsafe {
+            // Only grab the `data` field, the `IntoIter` type handles dropping of the elements
+            let data = ptr::read(&mut self.data);
+            mem::forget(self);
+            IntoIter {
+                data: data,
+                current: 0,
+                end: len,
+            }
+        }
+    }
+}
+
+impl<'a, A: Array> IntoIterator for &'a SmallVec<A> {
+    type IntoIter = slice::Iter<'a, A::Item>;
+    type Item = &'a A::Item;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl<'a, A: Array> IntoIterator for &'a mut SmallVec<A> {
+    type IntoIter = slice::IterMut<'a, A::Item>;
+    type Item = &'a mut A::Item;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
 
 // TODO: Remove these and its users.
 
 /// Deprecated alias to ease transition from an earlier version.
+#[deprecated]
 pub type SmallVec1<T> = SmallVec<[T; 1]>;
 
 /// Deprecated alias to ease transition from an earlier version.
+#[deprecated]
 pub type SmallVec2<T> = SmallVec<[T; 2]>;
 
 /// Deprecated alias to ease transition from an earlier version.
+#[deprecated]
 pub type SmallVec4<T> = SmallVec<[T; 4]>;
 
 /// Deprecated alias to ease transition from an earlier version.
+#[deprecated]
 pub type SmallVec8<T> = SmallVec<[T; 8]>;
 
 /// Deprecated alias to ease transition from an earlier version.
+#[deprecated]
 pub type SmallVec16<T> = SmallVec<[T; 16]>;
 
 /// Deprecated alias to ease transition from an earlier version.
+#[deprecated]
 pub type SmallVec24<T> = SmallVec<[T; 24]>;
 
 /// Deprecated alias to ease transition from an earlier version.
+#[deprecated]
 pub type SmallVec32<T> = SmallVec<[T; 32]>;
 
-
+/// Types that can be used as the backing store for a SmallVec
 pub unsafe trait Array {
     type Item;
     fn size() -> usize;
@@ -489,7 +863,7 @@ macro_rules! impl_array(
     }
 );
 
-impl_array!(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 24, 32,
+impl_array!(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 24, 32, 36,
             0x40, 0x80, 0x100, 0x200, 0x400, 0x800, 0x1000, 0x2000, 0x4000, 0x8000,
             0x10000, 0x20000, 0x40000, 0x80000, 0x100000);
 
@@ -497,6 +871,12 @@ impl_array!(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 24, 32,
 pub mod tests {
     use SmallVec;
     use std::borrow::ToOwned;
+    use std::iter::FromIterator;
+
+    #[cfg(feature="heapsizeof")]
+    use heapsize::HeapSizeOf;
+    #[cfg(feature="heapsizeof")]
+    use std::mem::size_of;
 
     // We heap allocate all these strings so that double frees will show up under valgrind.
 
@@ -564,16 +944,110 @@ pub mod tests {
     }
 
     #[test]
+    fn drain() {
+        let mut v: SmallVec<[u8; 2]> = SmallVec::new();
+        v.push(3);
+        assert_eq!(v.drain().collect::<Vec<_>>(), &[3]);
+
+        // spilling the vec
+        v.push(3);
+        v.push(4);
+        v.push(5);
+        assert_eq!(v.drain().collect::<Vec<_>>(), &[3, 4, 5]);
+    }
+
+    #[test]
+    fn drain_rev() {
+        let mut v: SmallVec<[u8; 2]> = SmallVec::new();
+        v.push(3);
+        assert_eq!(v.drain().rev().collect::<Vec<_>>(), &[3]);
+
+        // spilling the vec
+        v.push(3);
+        v.push(4);
+        v.push(5);
+        assert_eq!(v.drain().rev().collect::<Vec<_>>(), &[5, 4, 3]);
+    }
+
+    #[test]
     fn into_iter() {
         let mut v: SmallVec<[u8; 2]> = SmallVec::new();
         v.push(3);
         assert_eq!(v.into_iter().collect::<Vec<_>>(), &[3]);
 
         // spilling the vec
+        let mut v: SmallVec<[u8; 2]> = SmallVec::new();
         v.push(3);
         v.push(4);
         v.push(5);
         assert_eq!(v.into_iter().collect::<Vec<_>>(), &[3, 4, 5]);
+    }
+
+    #[test]
+    fn into_iter_rev() {
+        let mut v: SmallVec<[u8; 2]> = SmallVec::new();
+        v.push(3);
+        assert_eq!(v.into_iter().rev().collect::<Vec<_>>(), &[3]);
+
+        // spilling the vec
+        let mut v: SmallVec<[u8; 2]> = SmallVec::new();
+        v.push(3);
+        v.push(4);
+        v.push(5);
+        assert_eq!(v.into_iter().rev().collect::<Vec<_>>(), &[5, 4, 3]);
+    }
+
+    #[test]
+    fn into_iter_drop() {
+        use std::cell::Cell;
+
+        struct DropCounter<'a>(&'a Cell<i32>);
+
+        impl<'a> Drop for DropCounter<'a> {
+            fn drop(&mut self) {
+                self.0.set(self.0.get() + 1);
+            }
+        }
+
+        {
+            let cell = Cell::new(0);
+            let mut v: SmallVec<[DropCounter; 2]> = SmallVec::new();
+            v.push(DropCounter(&cell));
+            v.into_iter();
+            assert_eq!(cell.get(), 1);
+        }
+
+        {
+            let cell = Cell::new(0);
+            let mut v: SmallVec<[DropCounter; 2]> = SmallVec::new();
+            v.push(DropCounter(&cell));
+            v.push(DropCounter(&cell));
+            assert!(v.into_iter().next().is_some());
+            assert_eq!(cell.get(), 2);
+        }
+
+        {
+            let cell = Cell::new(0);
+            let mut v: SmallVec<[DropCounter; 2]> = SmallVec::new();
+            v.push(DropCounter(&cell));
+            v.push(DropCounter(&cell));
+            v.push(DropCounter(&cell));
+            assert!(v.into_iter().next().is_some());
+            assert_eq!(cell.get(), 3);
+        }
+        {
+            let cell = Cell::new(0);
+            let mut v: SmallVec<[DropCounter; 2]> = SmallVec::new();
+            v.push(DropCounter(&cell));
+            v.push(DropCounter(&cell));
+            v.push(DropCounter(&cell));
+            {
+                let mut it = v.into_iter();
+                assert!(it.next().is_some());
+                assert!(it.next_back().is_some());
+            }
+            assert_eq!(cell.get(), 3);
+        }
     }
 
     #[test]
@@ -612,6 +1086,76 @@ pub mod tests {
         v.insert(1, Box::new(3));
 
         assert_eq!(&v.iter().map(|v| **v).collect::<Vec<_>>(), &[0, 3, 2]);
+    }
+
+    #[test]
+    fn test_insert_many() {
+        let mut v: SmallVec<[u8; 8]> = SmallVec::new();
+        for x in 0..4 {
+            v.push(x);
+        }
+        assert_eq!(v.len(), 4);
+        v.insert_many(1, [5, 6].iter().cloned());
+        assert_eq!(&v.iter().map(|v| *v).collect::<Vec<_>>(), &[0, 5, 6, 1, 2, 3]);
+    }
+
+    struct MockHintIter<T: Iterator>{x: T, hint: usize}
+    impl<T: Iterator> Iterator for MockHintIter<T> {
+        type Item = T::Item;
+        fn next(&mut self) -> Option<Self::Item> {self.x.next()}
+        fn size_hint(&self) -> (usize, Option<usize>) {(self.hint, None)}
+    }
+
+    #[test]
+    fn test_insert_many_short_hint() {
+        let mut v: SmallVec<[u8; 8]> = SmallVec::new();
+        for x in 0..4 {
+            v.push(x);
+        }
+        assert_eq!(v.len(), 4);
+        v.insert_many(1, MockHintIter{x: [5, 6].iter().cloned(), hint: 5});
+        assert_eq!(&v.iter().map(|v| *v).collect::<Vec<_>>(), &[0, 5, 6, 1, 2, 3]);
+    }
+
+    #[test]
+    fn test_insert_many_long_hint() {
+        let mut v: SmallVec<[u8; 8]> = SmallVec::new();
+        for x in 0..4 {
+            v.push(x);
+        }
+        assert_eq!(v.len(), 4);
+        v.insert_many(1, MockHintIter{x: [5, 6].iter().cloned(), hint: 1});
+        assert_eq!(&v.iter().map(|v| *v).collect::<Vec<_>>(), &[0, 5, 6, 1, 2, 3]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_invalid_grow() {
+        let mut v: SmallVec<[u8; 8]> = SmallVec::new();
+        v.extend(0..8);
+        v.grow(5);
+    }
+
+    #[test]
+    fn test_insert_from_slice() {
+        let mut v: SmallVec<[u8; 8]> = SmallVec::new();
+        for x in 0..4 {
+            v.push(x);
+        }
+        assert_eq!(v.len(), 4);
+        v.insert_from_slice(1, &[5, 6]);
+        assert_eq!(&v.iter().map(|v| *v).collect::<Vec<_>>(), &[0, 5, 6, 1, 2, 3]);
+    }
+
+    #[test]
+    fn test_extend_from_slice() {
+        let mut v: SmallVec<[u8; 8]> = SmallVec::new();
+        for x in 0..4 {
+            v.push(x);
+        }
+        assert_eq!(v.len(), 4);
+        v.extend_from_slice(&[5, 6]);
+        assert_eq!(&v.iter().map(|v| *v).collect::<Vec<_>>(), &[0, 1, 2, 3, 5, 6]);
     }
 
     #[test]
@@ -668,5 +1212,155 @@ pub mod tests {
         assert!(b > a);
         assert!(b < c);
         assert!(c > b);
+    }
+
+    #[test]
+    fn test_hash() {
+        use std::hash::Hash;
+        use std::collections::hash_map::DefaultHasher;
+
+        {
+            let mut a: SmallVec<[u32; 2]> = SmallVec::new();
+            let b = [1, 2];
+            a.extend(b.iter().cloned());
+            let mut hasher = DefaultHasher::new();
+            assert_eq!(a.hash(&mut hasher), b.hash(&mut hasher));
+        }
+        {
+            let mut a: SmallVec<[u32; 2]> = SmallVec::new();
+            let b = [1, 2, 11, 12];
+            a.extend(b.iter().cloned());
+            let mut hasher = DefaultHasher::new();
+            assert_eq!(a.hash(&mut hasher), b.hash(&mut hasher));
+        }
+    }
+
+    #[test]
+    fn test_as_ref() {
+        let mut a: SmallVec<[u32; 2]> = SmallVec::new();
+        a.push(1);
+        assert_eq!(a.as_ref(), [1]);
+        a.push(2);
+        assert_eq!(a.as_ref(), [1, 2]);
+        a.push(3);
+        assert_eq!(a.as_ref(), [1, 2, 3]);
+    }
+
+    #[test]
+    fn test_as_mut() {
+        let mut a: SmallVec<[u32; 2]> = SmallVec::new();
+        a.push(1);
+        assert_eq!(a.as_mut(), [1]);
+        a.push(2);
+        assert_eq!(a.as_mut(), [1, 2]);
+        a.push(3);
+        assert_eq!(a.as_mut(), [1, 2, 3]);
+        a.as_mut()[1] = 4;
+        assert_eq!(a.as_mut(), [1, 4, 3]);
+    }
+
+    #[test]
+    fn test_borrow() {
+        use std::borrow::Borrow;
+
+        let mut a: SmallVec<[u32; 2]> = SmallVec::new();
+        a.push(1);
+        assert_eq!(a.borrow(), [1]);
+        a.push(2);
+        assert_eq!(a.borrow(), [1, 2]);
+        a.push(3);
+        assert_eq!(a.borrow(), [1, 2, 3]);
+    }
+
+    #[test]
+    fn test_borrow_mut() {
+        use std::borrow::BorrowMut;
+
+        let mut a: SmallVec<[u32; 2]> = SmallVec::new();
+        a.push(1);
+        assert_eq!(a.borrow_mut(), [1]);
+        a.push(2);
+        assert_eq!(a.borrow_mut(), [1, 2]);
+        a.push(3);
+        assert_eq!(a.borrow_mut(), [1, 2, 3]);
+        BorrowMut::<[u32]>::borrow_mut(&mut a)[1] = 4;
+        assert_eq!(a.borrow_mut(), [1, 4, 3]);
+    }
+
+    #[test]
+    fn test_from() {
+        assert_eq!(&SmallVec::<[u32; 2]>::from(&[1][..])[..], [1]);
+        assert_eq!(&SmallVec::<[u32; 2]>::from(&[1, 2, 3][..])[..], [1, 2, 3]);
+    }
+
+    #[test]
+    fn test_from_slice() {
+        assert_eq!(&SmallVec::<[u32; 2]>::from_slice(&[1][..])[..], [1]);
+        assert_eq!(&SmallVec::<[u32; 2]>::from_slice(&[1, 2, 3][..])[..], [1, 2, 3]);
+    }
+
+    #[cfg(feature="heapsizeof")]
+    #[test]
+    fn test_heap_size_of_children() {
+        let mut vec = SmallVec::<[u32; 2]>::new();
+        assert_eq!(vec.heap_size_of_children(), 0);
+        vec.push(1);
+        vec.push(2);
+        assert_eq!(vec.heap_size_of_children(), 0);
+        vec.push(3);
+        assert_eq!(vec.heap_size_of_children(), 16);
+
+        // Now check with reserved space
+        let mut vec = SmallVec::<[u32; 2]>::new();
+        vec.reserve(10);  // Rounds up to 16
+        assert_eq!(vec.heap_size_of_children(), 64);
+
+        // Check with nested heap structures
+        let mut vec = SmallVec::<[Vec<u32>; 2]>::new();
+        vec.reserve(10);
+        vec.push(vec![2, 3, 4]);
+        assert_eq!(vec.heap_size_of_children(),
+                   vec![2, 3, 4].heap_size_of_children() + 16 * size_of::<Vec<u32>>());
+    }
+
+    #[test]
+    fn test_exact_size_iterator() {
+        let mut vec = SmallVec::<[u32; 2]>::from(&[1, 2, 3][..]);
+        assert_eq!(vec.clone().into_iter().len(), 3);
+        assert_eq!(vec.drain().len(), 3);
+    }
+
+    #[test]
+    fn veclike_deref_slice() {
+        use super::VecLike;
+
+        fn test<T: VecLike<i32>>(vec: &mut T) {
+            assert!(!vec.is_empty());
+            assert_eq!(vec.len(), 3);
+
+            vec.sort();
+            assert_eq!(&vec[..], [1, 2, 3]);
+        }
+
+        let mut vec = SmallVec::<[i32; 2]>::from(&[3, 1, 2][..]);
+        test(&mut vec);
+    }
+
+    #[test]
+    fn shrink_to_fit_unspill() {
+        let mut vec = SmallVec::<[u8; 2]>::from_iter(0..3);
+        vec.pop();
+        assert!(vec.spilled());
+        vec.shrink_to_fit();
+        assert!(!vec.spilled(), "shrink_to_fit will un-spill if possible");
+    }
+
+    #[test]
+    fn test_into_vec() {
+        let vec = SmallVec::<[u8; 2]>::from_iter(0..2);
+        assert_eq!(vec.into_vec(), vec![0, 1]);
+
+        let vec = SmallVec::<[u8; 2]>::from_iter(0..3);
+        assert_eq!(vec.into_vec(), vec![0, 1, 2]);
     }
 }

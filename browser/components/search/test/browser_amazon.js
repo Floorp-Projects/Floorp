@@ -34,7 +34,7 @@ function test() {
     wrappedJSObject: {
       queryCharset: "UTF-8",
       "_iconURL": "resource://search-plugins/images/amazon.ico",
-      _urls : [
+      _urls: [
         {
           type: "application/x-suggestions+json",
           method: "GET",

@@ -36,8 +36,8 @@
          * we need to do SpecialPowers.wrapCallbackObject directly on the prototype.
          */
         dialogMonitor.prototype = SpecialPowers.wrapCallbackObject({
-            windowsOpen : 0,
-            windowsRegistered : 0,
+            windowsOpen: 0,
+            windowsRegistered: 0,
 
             QueryInterface(iid) {
                 const interfaces = [Ci.nsIObserver, Ci.nsISupports];

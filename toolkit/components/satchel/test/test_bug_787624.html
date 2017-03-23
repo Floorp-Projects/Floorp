@@ -66,9 +66,9 @@ add_task(function* test_popup_not_move_input() {
   var rect = input.getBoundingClientRect();
 
   yield new Promise(resolve => updateFormHistory([
-    { op : "remove" },
-    { op : "add", fieldname : "field1", value : "value1" },
-    { op : "add", fieldname : "field1", value : "value2" },
+    { op: "remove" },
+    { op: "add", fieldname: "field1", value: "value1" },
+    { op: "add", fieldname: "field1", value: "value2" },
   ], resolve));
 
   let popupShown = waitForNextPopup();

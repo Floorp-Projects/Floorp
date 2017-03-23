@@ -47,7 +47,9 @@ marionette-harness:
     when:
         files-changed:
           - 'testing/marionette/harness/**'
-          - 'testing/mozbase/mozlog/mozlog/pytest_mozlog/**'
+          - 'testing/mozbase/mozlog/mozlog/**'
+          - 'testing/mozbase/mozlog/setup.py'
+          - 'testing/mozbase/packages.txt'
           - 'python/mach_commands.py'
 
 mozbase:

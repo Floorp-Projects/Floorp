@@ -154,7 +154,7 @@ AutoCompleteSearch.prototype = {
   name: null,
 
   // AutoCompleteResult
-  _result:null,
+  _result: null,
 
 
   /**

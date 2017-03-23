@@ -33,7 +33,7 @@ function* test_download_state_complete(aTab, aDownload, aPrivate, aCanceled) {
 }
 
 function* test_createDownload_common(aPrivate, aType) {
-  let win = yield BrowserTestUtils.openNewBrowserWindow({ private : aPrivate});
+  let win = yield BrowserTestUtils.openNewBrowserWindow({ private: aPrivate});
 
   let tab = yield BrowserTestUtils.openNewForegroundTab(win.gBrowser, getRootDirectory(gTestPath) + "testFile.html");
   let download = yield Downloads.createDownload({

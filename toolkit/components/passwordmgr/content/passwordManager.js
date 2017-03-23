@@ -641,7 +641,7 @@ function CopyPassword() {
   let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                   getService(Ci.nsIClipboardHelper);
   let row = signonsTree.currentIndex;
-  let password = signonsTreeView.getCellText(row, {id : "passwordCol" });
+  let password = signonsTreeView.getCellText(row, {id: "passwordCol" });
   clipboard.copyString(password);
   Services.telemetry.getHistogramById("PWMGR_MANAGE_COPIED_PASSWORD").add(1);
 }
@@ -651,7 +651,7 @@ function CopyUsername() {
   let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                   getService(Ci.nsIClipboardHelper);
   let row = signonsTree.currentIndex;
-  let username = signonsTreeView.getCellText(row, {id : "userCol" });
+  let username = signonsTreeView.getCellText(row, {id: "userCol" });
   clipboard.copyString(username);
   Services.telemetry.getHistogramById("PWMGR_MANAGE_COPIED_USERNAME").add(1);
 }

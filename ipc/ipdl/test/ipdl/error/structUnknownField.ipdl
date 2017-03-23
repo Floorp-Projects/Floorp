@@ -1,3 +1,5 @@
+//error: field `i' of struct `S' has unknown type `Foobers'
+
 struct S {
     Foobers i;
 };

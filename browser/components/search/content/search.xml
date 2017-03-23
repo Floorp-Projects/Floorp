@@ -426,9 +426,9 @@
           // Save the current value in the form history
           if (aData && !PrivateBrowsingUtils.isWindowPrivate(window) && this.FormHistory.enabled) {
             this.FormHistory.update(
-              { op : "bump",
-                fieldname : textBox.getAttribute("autocompletesearchparam"),
-                value : aData },
+              { op: "bump",
+                fieldname: textBox.getAttribute("autocompletesearchparam"),
+                value: aData },
               { handleError(aError) {
                   Components.utils.reportError("Saving search to form history failed: " + aError.message);
               }});
@@ -843,7 +843,7 @@
             case "cmd_clearhistory":
               var param = this._self.getAttribute("autocompletesearchparam");
 
-              BrowserSearch.searchBar.FormHistory.update({ op : "remove", fieldname : param }, null);
+              BrowserSearch.searchBar.FormHistory.update({ op: "remove", fieldname: param }, null);
               this._self.value = "";
               break;
             case "cmd_togglesuggest":

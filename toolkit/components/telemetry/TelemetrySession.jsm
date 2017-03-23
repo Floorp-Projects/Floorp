@@ -672,7 +672,7 @@ var Impl = {
   _slowSQLStartup: {},
   _hasWindowRestoredObserver: false,
   _hasXulWindowVisibleObserver: false,
-  _startupIO : {},
+  _startupIO: {},
   // The previous build ID, if this is the first run with a new build.
   // Null if this is the first run, or the previous build ID is unknown.
   _previousBuildId: null,

@@ -195,41 +195,41 @@
     this.randomID = 0;
 
     this.Utils = {
-      debug : false,
-      video : null,
-      videocontrols : null,
-      controlBar : null,
-      playButton : null,
-      muteButton : null,
-      volumeControl  : null,
-      durationLabel  : null,
-      positionLabel  : null,
-      scrubber       : null,
-      progressBar    : null,
-      bufferBar      : null,
-      statusOverlay  : null,
-      controlsSpacer : null,
-      clickToPlay    : null,
-      controlsOverlay : null,
-      fullscreenButton : null,
-      layoutControls : null,
+      debug: false,
+      video: null,
+      videocontrols: null,
+      controlBar: null,
+      playButton: null,
+      muteButton: null,
+      volumeControl: null,
+      durationLabel: null,
+      positionLabel: null,
+      scrubber: null,
+      progressBar: null,
+      bufferBar: null,
+      statusOverlay: null,
+      controlsSpacer: null,
+      clickToPlay: null,
+      controlsOverlay: null,
+      fullscreenButton: null,
+      layoutControls: null,
       currentTextTrackIndex: 0,
 
       textTracksCount: 0,
-      randomID : 0,
-      videoEvents : ["play", "pause", "ended", "volumechange", "loadeddata",
-                     "loadstart", "timeupdate", "progress",
-                     "playing", "waiting", "canplay", "canplaythrough",
-                     "seeking", "seeked", "emptied", "loadedmetadata",
-                     "error", "suspend", "stalled",
-                     "mozexitvideosuspend"],
+      randomID: 0,
+      videoEvents: ["play", "pause", "ended", "volumechange", "loadeddata",
+                    "loadstart", "timeupdate", "progress",
+                    "playing", "waiting", "canplay", "canplaythrough",
+                    "seeking", "seeked", "emptied", "loadedmetadata",
+                    "error", "suspend", "stalled",
+                    "mozexitvideosuspend"],
 
       showHours: false,
-      firstFrameShown : false,
-      timeUpdateCount : 0,
-      maxCurrentTimeSeen : 0,
+      firstFrameShown: false,
+      timeUpdateCount: 0,
+      maxCurrentTimeSeen: 0,
       isPausedByDragging: false,
-      _isAudioOnly : false,
+      _isAudioOnly: false,
 
       get isAudioOnly() { return this._isAudioOnly; },
       set isAudioOnly(val) {
@@ -254,7 +254,7 @@
                this.controlBar.getAttribute("fadeout") === "true";
       },
 
-      suppressError : false,
+      suppressError: false,
 
       setupStatusFader(immediate) {
         // Since the play button will be showing, we don't want to
@@ -1002,8 +1002,8 @@
         this.bufferBar.value = endTime;
       },
 
-      _controlsHiddenByTimeout : false,
-      _showControlsTimeout : 0,
+      _controlsHiddenByTimeout: false,
+      _showControlsTimeout: 0,
       SHOW_CONTROLS_TIMEOUT_MS: 500,
       _showControlsFn() {
         if (Utils.video.matches("video:hover")) {
@@ -1013,7 +1013,7 @@
         }
       },
 
-      _hideControlsTimeout : 0,
+      _hideControlsTimeout: 0,
       _hideControlsFn() {
         if (!Utils.scrubber.isDragging) {
           Utils.startFade(Utils.controlBar, false);
@@ -1021,7 +1021,7 @@
           Utils._controlsHiddenByTimeout = true;
         }
       },
-      HIDE_CONTROLS_TIMEOUT_MS : 2000,
+      HIDE_CONTROLS_TIMEOUT_MS: 2000,
       onMouseMove(event) {
         // Pause playing video when the mouse is dragging over the control bar.
         if (this.scrubber.startToDrag) {
@@ -1663,8 +1663,8 @@
         return doc.mozSyntheticDocument && win === win.top;
       },
 
-      controlBarMinHeight : 40,
-      adjustedVideoSize : {},
+      controlBarMinHeight: 40,
+      adjustedVideoSize: {},
       adjustControlSize() {
         if (this.videocontrols.isTouchControls) {
           return;
@@ -2188,9 +2188,9 @@
     <![CDATA[
     this.randomID = 0;
     this.Utils = {
-      randomID : 0,
-      videoEvents : ["play",
-                     "playing"],
+      randomID: 0,
+      videoEvents: ["play",
+                    "playing"],
       controlListeners: [],
       terminateEventListeners() {
         for (let event of this.videoEvents) {

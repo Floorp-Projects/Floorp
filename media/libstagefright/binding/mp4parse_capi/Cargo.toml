@@ -23,6 +23,7 @@ build = false
 [dependencies]
 byteorder = "1.0.0"
 mp4parse = {version = "0.7.1", path = "../mp4parse"}
+num-traits = "0.1.37"
 
 # Somewhat heavy-handed, but we want at least -Z force-overflow-checks=on.
 [profile.release]

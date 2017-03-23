@@ -10,18 +10,18 @@ const Telemetry = Services.telemetry;
 
 var MetricsChecker = {
   HISTOGRAMS: {
-    OPPORTUNITIES         : Services.telemetry.getHistogramById("TRANSLATION_OPPORTUNITIES"),
-    OPPORTUNITIES_BY_LANG : Services.telemetry.getKeyedHistogramById("TRANSLATION_OPPORTUNITIES_BY_LANGUAGE"),
-    PAGES                 : Services.telemetry.getHistogramById("TRANSLATED_PAGES"),
-    PAGES_BY_LANG         : Services.telemetry.getKeyedHistogramById("TRANSLATED_PAGES_BY_LANGUAGE"),
-    CHARACTERS            : Services.telemetry.getHistogramById("TRANSLATED_CHARACTERS"),
-    DENIED                : Services.telemetry.getHistogramById("DENIED_TRANSLATION_OFFERS"),
-    AUTO_REJECTED         : Services.telemetry.getHistogramById("AUTO_REJECTED_TRANSLATION_OFFERS"),
-    SHOW_ORIGINAL         : Services.telemetry.getHistogramById("REQUESTS_OF_ORIGINAL_CONTENT"),
-    TARGET_CHANGES        : Services.telemetry.getHistogramById("CHANGES_OF_TARGET_LANGUAGE"),
-    DETECTION_CHANGES     : Services.telemetry.getHistogramById("CHANGES_OF_DETECTED_LANGUAGE"),
-    SHOW_UI               : Services.telemetry.getHistogramById("SHOULD_TRANSLATION_UI_APPEAR"),
-    DETECT_LANG           : Services.telemetry.getHistogramById("SHOULD_AUTO_DETECT_LANGUAGE"),
+    OPPORTUNITIES: Services.telemetry.getHistogramById("TRANSLATION_OPPORTUNITIES"),
+    OPPORTUNITIES_BY_LANG: Services.telemetry.getKeyedHistogramById("TRANSLATION_OPPORTUNITIES_BY_LANGUAGE"),
+    PAGES: Services.telemetry.getHistogramById("TRANSLATED_PAGES"),
+    PAGES_BY_LANG: Services.telemetry.getKeyedHistogramById("TRANSLATED_PAGES_BY_LANGUAGE"),
+    CHARACTERS: Services.telemetry.getHistogramById("TRANSLATED_CHARACTERS"),
+    DENIED: Services.telemetry.getHistogramById("DENIED_TRANSLATION_OFFERS"),
+    AUTO_REJECTED: Services.telemetry.getHistogramById("AUTO_REJECTED_TRANSLATION_OFFERS"),
+    SHOW_ORIGINAL: Services.telemetry.getHistogramById("REQUESTS_OF_ORIGINAL_CONTENT"),
+    TARGET_CHANGES: Services.telemetry.getHistogramById("CHANGES_OF_TARGET_LANGUAGE"),
+    DETECTION_CHANGES: Services.telemetry.getHistogramById("CHANGES_OF_DETECTED_LANGUAGE"),
+    SHOW_UI: Services.telemetry.getHistogramById("SHOULD_TRANSLATION_UI_APPEAR"),
+    DETECT_LANG: Services.telemetry.getHistogramById("SHOULD_AUTO_DETECT_LANGUAGE"),
   },
 
   reset() {
@@ -180,9 +180,9 @@ add_task(function* test_telemetry() {
   yield translate("<h1>Hallo Welt!</h1><h1>Bratwurst!</h1>", "de");
   yield MetricsChecker.checkAdditions({
     opportunitiesCount: 2,
-    opportunitiesCountByLang: { "ru" : 1, "de" : 1 },
+    opportunitiesCountByLang: { "ru": 1, "de": 1 },
     pageCount: 1,
-    pageCountByLang: { "de -> en" : 1 },
+    pageCountByLang: { "de -> en": 1 },
     charCount: 21,
     deniedOffers: 0
   });
@@ -276,11 +276,11 @@ add_task(function* test_never_offer_translation() {
 add_task(function* test_translation_preferences() {
 
   let preferenceChecks = {
-    "browser.translation.ui.show" : [
+    "browser.translation.ui.show": [
       {value: false, expected: {showUI: 0}},
       {value: true, expected: {showUI: 1}}
     ],
-    "browser.translation.detectLanguage" : [
+    "browser.translation.detectLanguage": [
       {value: false, expected: {detectLang: 0}},
       {value: true, expected: {detectLang: 1}}
     ],

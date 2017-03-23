@@ -165,10 +165,26 @@ int nr_sockaddr_to_transport_addr(struct sockaddr *saddr, int protocol, int keep
 
 int nr_transport_addr_copy(nr_transport_addr *to, nr_transport_addr *from)
   {
-    memcpy(to,from,sizeof(nr_transport_addr));
-    to->addr=(struct sockaddr *)((char *)to + ((char *)from->addr - (char *)from));
+    int _status;
 
-    return(0);
+    memcpy(to,from,sizeof(nr_transport_addr));
+
+    // with IPC serialization, we should not assume that the pointer
+    // in from->addr is correct
+    switch (to->ip_version) {
+      case NR_IPV4:
+        to->addr=(struct sockaddr *)&to->u.addr4;
+        break;
+      case NR_IPV6:
+        to->addr=(struct sockaddr *)&to->u.addr6;
+        break;
+      default:
+        ABORT(R_BAD_ARGS);
+    }
+
+    _status=0;
+  abort:
+    return(_status);
   }
 
 int nr_transport_addr_copy_keep_ifname(nr_transport_addr *to, nr_transport_addr *from)

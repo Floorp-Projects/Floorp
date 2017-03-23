@@ -264,9 +264,7 @@
                      "C\u1EA3m \u01A1n"]
               };
 
-              let locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
-                             .getService(Ci.nsIXULChromeRegistry)
-                             .getSelectedLocale("browser");
+              let locale = Services.locale.getAppLocaleAsLangTag();
               if (!(locale in localizedStrings))
                 locale = "en";
               let strings = localizedStrings[locale];

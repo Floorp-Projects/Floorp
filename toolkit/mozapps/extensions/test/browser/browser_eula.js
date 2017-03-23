@@ -16,7 +16,7 @@ function test() {
   Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 15);
   Services.prefs.setCharPref("extensions.getAddons.search.url", TESTROOT + "browser_eula.xml");
 
-  open_manager(null, function(aWindow) {
+  open_manager("addons://list/extension", function(aWindow) {
     gManagerWindow = aWindow;
     run_next_test();
   });
@@ -49,11 +49,12 @@ function installSearchResult(aCallback) {
     let status = get_node(item, "install-status");
     EventUtils.synthesizeMouseAtCenter(get_node(status, "install-remote-btn"), {}, gManagerWindow);
 
-    item.mInstall.addListener({
-      onInstallEnded() {
-        executeSoon(aCallback);
-      }
+    let promptPromise = promiseNotification();
+    let installPromise = new Promise(resolve => {
+      item.mInstall.addListener({onInstallEnded: resolve});
     });
+
+    promptPromise.then(() => installPromise).then(aCallback);
   });
 }
 
