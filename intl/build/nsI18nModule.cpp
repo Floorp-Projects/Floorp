@@ -61,15 +61,7 @@ NS_DEFINE_NAMED_CID(NS_COLLATIONFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_SCRIPTABLEDATEFORMAT_CID);
 NS_DEFINE_NAMED_CID(NS_LANGUAGEATOMSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_PLATFORMCHARSET_CID);
-#ifdef XP_WIN
 NS_DEFINE_NAMED_CID(NS_COLLATION_CID);
-#endif
-#ifdef USE_UNIX_LOCALE
-NS_DEFINE_NAMED_CID(NS_COLLATION_CID);
-#endif
-#ifdef USE_MAC_LOCALE
-NS_DEFINE_NAMED_CID(NS_COLLATION_CID);
-#endif
 
 static const mozilla::Module::CIDEntry kIntlCIDs[] = {
     { &kMOZ_LOCALESERVICE_CID, false, nullptr, mozilla::intl::LocaleServiceConstructor },
@@ -89,15 +81,7 @@ static const mozilla::Module::CIDEntry kIntlCIDs[] = {
     { &kNS_SCRIPTABLEDATEFORMAT_CID, false, nullptr, NS_NewScriptableDateFormat },
     { &kNS_LANGUAGEATOMSERVICE_CID, false, nullptr, nsLanguageAtomServiceConstructor },
     { &kNS_PLATFORMCHARSET_CID, false, nullptr, nsPlatformCharsetConstructor },
-#ifdef XP_WIN
-    { &kNS_COLLATION_CID, false, nullptr, nsCollationWinConstructor },
-#endif
-#ifdef USE_UNIX_LOCALE
-    { &kNS_COLLATION_CID, false, nullptr, nsCollationUnixConstructor },
-#endif
-#ifdef USE_MAC_LOCALE
-    { &kNS_COLLATION_CID, false, nullptr, nsCollationMacUCConstructor },
-#endif
+    { &kNS_COLLATION_CID, false, nullptr, nsCollationConstructor },
     { nullptr }
 };
 
@@ -119,15 +103,7 @@ static const mozilla::Module::ContractIDEntry kIntlContracts[] = {
     { NS_SCRIPTABLEDATEFORMAT_CONTRACTID, &kNS_SCRIPTABLEDATEFORMAT_CID },
     { NS_LANGUAGEATOMSERVICE_CONTRACTID, &kNS_LANGUAGEATOMSERVICE_CID },
     { NS_PLATFORMCHARSET_CONTRACTID, &kNS_PLATFORMCHARSET_CID },
-#ifdef XP_WIN
     { NS_COLLATION_CONTRACTID, &kNS_COLLATION_CID },
-#endif
-#ifdef USE_UNIX_LOCALE
-    { NS_COLLATION_CONTRACTID, &kNS_COLLATION_CID },
-#endif
-#ifdef USE_MAC_LOCALE
-    { NS_COLLATION_CONTRACTID, &kNS_COLLATION_CID },
-#endif
     { nullptr }
 };
 

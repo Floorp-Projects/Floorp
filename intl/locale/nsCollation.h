@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsCollationMacUC_h_
-#define nsCollationMacUC_h_
+#ifndef nsCollation_h_
+#define nsCollation_h_
 
 #include "mozilla/Attributes.h"
 #include "nsICollation.h"
@@ -13,10 +13,10 @@
 
 #include "unicode/ucol.h"
 
-class nsCollationMacUC final : public nsICollation {
+class nsCollation final : public nsICollation {
 
 public:
-  nsCollationMacUC();
+  nsCollation();
 
   // nsISupports interface
   NS_DECL_ISUPPORTS
@@ -25,7 +25,7 @@ public:
   NS_DECL_NSICOLLATION
 
 protected:
-  ~nsCollationMacUC();
+  ~nsCollation();
 
   nsresult ConvertStrength(const int32_t aStrength,
                            UCollationStrength* aStrengthOut,
@@ -41,4 +41,4 @@ private:
   UCollator* mCollatorICU;
 };
 
-#endif  /* nsCollationMacUC_h_ */
+#endif  /* nsCollation_h_ */
