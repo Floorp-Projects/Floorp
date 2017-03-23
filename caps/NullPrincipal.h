@@ -9,8 +9,8 @@
  * same-origin with anything but themselves.
  */
 
-#ifndef nsNullPrincipal_h__
-#define nsNullPrincipal_h__
+#ifndef NullPrincipal_h
+#define NullPrincipal_h
 
 #include "nsIPrincipal.h"
 #include "nsJSPrincipals.h"
@@ -30,13 +30,13 @@ class nsIURI;
 
 #define NS_NULLPRINCIPAL_SCHEME "moz-nullprincipal"
 
-class nsNullPrincipal final : public mozilla::BasePrincipal
+class NullPrincipal final : public mozilla::BasePrincipal
 {
 public:
   // This should only be used by deserialization, and the factory constructor.
   // Other consumers should use the Create and CreateWithInheritedAttributes
   // methods.
-  nsNullPrincipal()
+  NullPrincipal()
     : BasePrincipal(eNullPrincipal)
   {
   }
@@ -53,15 +53,16 @@ public:
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
   nsresult GetOriginInternal(nsACString& aOrigin) override;
 
-  static already_AddRefed<nsNullPrincipal> CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom);
+  static already_AddRefed<NullPrincipal> CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom);
 
   // Create NullPrincipal with origin attributes from docshell.
   // If aIsFirstParty is true, and the pref 'privacy.firstparty.isolate' is also
   // enabled, the mFirstPartyDomain value of the origin attributes will be set
   // to NULL_PRINCIPAL_FIRST_PARTY_DOMAIN.
-  static already_AddRefed<nsNullPrincipal> CreateWithInheritedAttributes(nsIDocShell* aDocShell, bool aIsFirstParty = false);
+  static already_AddRefed<NullPrincipal>
+  CreateWithInheritedAttributes(nsIDocShell* aDocShell, bool aIsFirstParty = false);
 
-  static already_AddRefed<nsNullPrincipal>
+  static already_AddRefed<NullPrincipal>
   Create(const mozilla::OriginAttributes& aOriginAttributes = mozilla::OriginAttributes(),
          nsIURI* aURI = nullptr);
 
@@ -71,7 +72,7 @@ public:
   virtual nsresult GetScriptLocation(nsACString &aStr) override;
 
  protected:
-  virtual ~nsNullPrincipal() {}
+  virtual ~NullPrincipal() = default;
 
   bool SubsumesInternal(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration) override
   {
@@ -83,4 +84,4 @@ public:
   nsCOMPtr<nsIURI> mURI;
 };
 
-#endif // nsNullPrincipal_h__
+#endif // NullPrincipal_h__

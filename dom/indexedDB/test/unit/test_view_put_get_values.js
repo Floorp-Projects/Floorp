@@ -80,7 +80,7 @@ function* testSteps()
     verifyView(request.result, viewData.view);
     yield undefined;
 
-    getUsage(grabFileUsageAndContinueHandler);
+    getCurrentUsage(grabFileUsageAndContinueHandler);
     let fileUsage = yield undefined;
 
     if (external) {

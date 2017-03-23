@@ -10,186 +10,16 @@
 #include "nsJSPrincipals.h"
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/ChromeUtils.h"
-#include "mozilla/dom/ChromeUtilsBinding.h"
-#include "nsIScriptSecurityManager.h"
+#include "mozilla/OriginAttributes.h"
 
 class nsIContentSecurityPolicy;
 class nsIObjectOutputStream;
 class nsIObjectInputStream;
 class nsIURI;
 
-class nsExpandedPrincipal;
+class ExpandedPrincipal;
 
 namespace mozilla {
-
-// Base OriginAttributes class. This has several subclass flavors, and is not
-// directly constructable itself.
-class OriginAttributes : public dom::OriginAttributesDictionary
-{
-public:
-  OriginAttributes() {}
-
-  OriginAttributes(uint32_t aAppId, bool aInIsolatedMozBrowser)
-  {
-    mAppId = aAppId;
-    mInIsolatedMozBrowser = aInIsolatedMozBrowser;
-  }
-
-  explicit OriginAttributes(const OriginAttributesDictionary& aOther)
-    : OriginAttributesDictionary(aOther)
-  {}
-
-  void SetFirstPartyDomain(const bool aIsTopLevelDocument, nsIURI* aURI);
-  void SetFirstPartyDomain(const bool aIsTopLevelDocument, const nsACString& aDomain);
-
-  enum {
-    STRIP_FIRST_PARTY_DOMAIN = 0x01,
-    STRIP_USER_CONTEXT_ID = 0x02,
-  };
-
-  inline void StripAttributes(uint32_t aFlags)
-  {
-    if (aFlags & STRIP_FIRST_PARTY_DOMAIN) {
-      mFirstPartyDomain.Truncate();
-    }
-
-    if (aFlags & STRIP_USER_CONTEXT_ID) {
-      mUserContextId = nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID;
-    }
-  }
-
-  bool operator==(const OriginAttributes& aOther) const
-  {
-    return mAppId == aOther.mAppId &&
-           mInIsolatedMozBrowser == aOther.mInIsolatedMozBrowser &&
-           mUserContextId == aOther.mUserContextId &&
-           mPrivateBrowsingId == aOther.mPrivateBrowsingId &&
-           mFirstPartyDomain == aOther.mFirstPartyDomain;
-  }
-
-  bool operator!=(const OriginAttributes& aOther) const
-  {
-    return !(*this == aOther);
-  }
-
-  // Serializes/Deserializes non-default values into the suffix format, i.e.
-  // |!key1=value1&key2=value2|. If there are no non-default attributes, this
-  // returns an empty string.
-  void CreateSuffix(nsACString& aStr) const;
-
-  // Don't use this method for anything else than debugging!
-  void CreateAnonymizedSuffix(nsACString& aStr) const;
-
-  MOZ_MUST_USE bool PopulateFromSuffix(const nsACString& aStr);
-
-  // Populates the attributes from a string like
-  // |uri!key1=value1&key2=value2| and returns the uri without the suffix.
-  MOZ_MUST_USE bool PopulateFromOrigin(const nsACString& aOrigin,
-                                       nsACString& aOriginNoSuffix);
-
-  // Helper function to match mIsPrivateBrowsing to existing private browsing
-  // flags. Once all other flags are removed, this can be removed too.
-  void SyncAttributesWithPrivateBrowsing(bool aInPrivateBrowsing);
-
-  // check if "privacy.firstparty.isolate" is enabled.
-  static inline bool IsFirstPartyEnabled()
-  {
-    return sFirstPartyIsolation;
-  }
-
-  // check if the access of window.opener across different FPDs is restricted.
-  // We only restrict the access of window.opener when first party isolation
-  // is enabled and "privacy.firstparty.isolate.restrict_opener_access" is on.
-  static inline bool IsRestrictOpenerAccessForFPI()
-  {
-    // We always want to restrict window.opener if first party isolation is
-    // disabled.
-    return !sFirstPartyIsolation || sRestrictedOpenerAccess;
-  }
-
-  // returns true if the originAttributes suffix has mPrivateBrowsingId value
-  // different than 0.
-  static bool IsPrivateBrowsing(const nsACString& aOrigin);
-
-  static void InitPrefs();
-
-private:
-  static bool sFirstPartyIsolation;
-  static bool sRestrictedOpenerAccess;
-};
-
-class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary
-{
-public:
-  // To convert a JSON string to an OriginAttributesPattern, do the following:
-  //
-  // OriginAttributesPattern pattern;
-  // if (!pattern.Init(aJSONString)) {
-  //   ... // handle failure.
-  // }
-  OriginAttributesPattern() {}
-
-  explicit OriginAttributesPattern(const OriginAttributesPatternDictionary& aOther)
-    : OriginAttributesPatternDictionary(aOther) {}
-
-  // Performs a match of |aAttrs| against this pattern.
-  bool Matches(const OriginAttributes& aAttrs) const
-  {
-    if (mAppId.WasPassed() && mAppId.Value() != aAttrs.mAppId) {
-      return false;
-    }
-
-    if (mInIsolatedMozBrowser.WasPassed() && mInIsolatedMozBrowser.Value() != aAttrs.mInIsolatedMozBrowser) {
-      return false;
-    }
-
-    if (mUserContextId.WasPassed() && mUserContextId.Value() != aAttrs.mUserContextId) {
-      return false;
-    }
-
-    if (mPrivateBrowsingId.WasPassed() && mPrivateBrowsingId.Value() != aAttrs.mPrivateBrowsingId) {
-      return false;
-    }
-
-    if (mFirstPartyDomain.WasPassed() && mFirstPartyDomain.Value() != aAttrs.mFirstPartyDomain) {
-      return false;
-    }
-
-    return true;
-  }
-
-  bool Overlaps(const OriginAttributesPattern& aOther) const
-  {
-    if (mAppId.WasPassed() && aOther.mAppId.WasPassed() &&
-        mAppId.Value() != aOther.mAppId.Value()) {
-      return false;
-    }
-
-    if (mInIsolatedMozBrowser.WasPassed() &&
-        aOther.mInIsolatedMozBrowser.WasPassed() &&
-        mInIsolatedMozBrowser.Value() != aOther.mInIsolatedMozBrowser.Value()) {
-      return false;
-    }
-
-    if (mUserContextId.WasPassed() && aOther.mUserContextId.WasPassed() &&
-        mUserContextId.Value() != aOther.mUserContextId.Value()) {
-      return false;
-    }
-
-    if (mPrivateBrowsingId.WasPassed() && aOther.mPrivateBrowsingId.WasPassed() &&
-        mPrivateBrowsingId.Value() != aOther.mPrivateBrowsingId.Value()) {
-      return false;
-    }
-
-    if (mFirstPartyDomain.WasPassed() && aOther.mFirstPartyDomain.WasPassed() &&
-        mFirstPartyDomain.Value() != aOther.mFirstPartyDomain.Value()) {
-      return false;
-    }
-
-    return true;
-  }
-};
 
 /*
  * Base class from which all nsIPrincipal implementations inherit. Use this for
@@ -283,7 +113,7 @@ protected:
   // principal would allow the load ignoring any common behavior implemented in
   // BasePrincipal::CheckMayLoad.
   virtual bool MayLoadInternal(nsIURI* aURI) = 0;
-  friend class ::nsExpandedPrincipal;
+  friend class ::ExpandedPrincipal;
 
   // This function should be called as the last step of the initialization of the
   // principal objects.  It's typically called as the last step from the Init()

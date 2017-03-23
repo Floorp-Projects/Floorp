@@ -6,8 +6,8 @@
 
 /* The privileged system principal. */
 
-#ifndef nsSystemPrincipal_h__
-#define nsSystemPrincipal_h__
+#ifndef SystemPrincipal_h
+#define SystemPrincipal_h
 
 #include "nsIPrincipal.h"
 #include "nsJSPrincipals.h"
@@ -20,15 +20,15 @@
 #define NS_SYSTEMPRINCIPAL_CONTRACTID "@mozilla.org/systemprincipal;1"
 
 
-class nsSystemPrincipal final : public mozilla::BasePrincipal
+class SystemPrincipal final : public mozilla::BasePrincipal
 {
-  nsSystemPrincipal()
+  SystemPrincipal()
     : BasePrincipal(eSystemPrincipal)
   {
   }
 
 public:
-  static already_AddRefed<nsSystemPrincipal> Create();
+  static already_AddRefed<SystemPrincipal> Create();
 
   NS_DECL_NSISERIALIZABLE
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
@@ -48,9 +48,10 @@ public:
   virtual nsresult GetScriptLocation(nsACString &aStr) override;
 
 protected:
-  virtual ~nsSystemPrincipal(void) {}
+  virtual ~SystemPrincipal(void) {}
 
-  bool SubsumesInternal(nsIPrincipal *aOther, DocumentDomainConsideration aConsideration) override
+  bool SubsumesInternal(nsIPrincipal *aOther,
+                        DocumentDomainConsideration aConsideration) override
   {
     return true;
   }
@@ -61,4 +62,4 @@ protected:
   }
 };
 
-#endif // nsSystemPrincipal_h__
+#endif // SystemPrincipal_h

@@ -94,7 +94,7 @@
 #include "nsIImageLoadingContent.h"
 #include "mozilla/Preferences.h"
 #include "nsVersionComparator.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 
 #if defined(XP_WIN)
 #include "nsIWindowMediator.h"

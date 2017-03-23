@@ -80,12 +80,12 @@
  *
  * Slice n+1: Sweep:      Mark objects in unswept zones that were newly
  *                        identified as alive (see below). Then sweep more zone
- *                        groups.
+ *                        sweep groups.
  *
  *          ... JS code runs ...
  *
  * Slice n+2: Sweep:      Mark objects in unswept zones that were newly
- *                        identified as alive. Then sweep more zone groups.
+ *                        identified as alive. Then sweep more zones.
  *
  *          ... JS code runs ...
  *
@@ -161,7 +161,7 @@
  * conditions to change such that incremental collection is no longer safe. In
  * this case, the collection is 'reset' by ResetIncrementalGC(). If we are in
  * the mark state, this just stops marking, but if we have started sweeping
- * already, we continue until we have swept the current zone group. Following a
+ * already, we continue until we have swept the current sweep group. Following a
  * reset, a new non-incremental collection is started.
  *
  * Compacting GC
@@ -838,9 +838,9 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     lastMarkSlice(false),
     sweepOnBackgroundThread(false),
     blocksToFreeAfterSweeping((size_t) JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    zoneGroupIndex(0),
-    zoneGroups(nullptr),
-    currentZoneGroup(nullptr),
+    sweepGroupIndex(0),
+    sweepGroups(nullptr),
+    currentSweepGroup(nullptr),
     sweepZone(nullptr),
     sweepKind(AllocKind::FIRST),
     abortSweepAfterCurrentGroup(false),
@@ -1420,27 +1420,27 @@ GCRuntime::callFinalizeCallbacks(FreeOp* fop, JSFinalizeStatus status) const
 }
 
 bool
-GCRuntime::addWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback, void* data)
+GCRuntime::addWeakPointerZonesCallback(JSWeakPointerZonesCallback callback, void* data)
 {
-    return updateWeakPointerZoneGroupCallbacks.ref().append(
-            Callback<JSWeakPointerZoneGroupCallback>(callback, data));
+    return updateWeakPointerZonesCallbacks.ref().append(
+            Callback<JSWeakPointerZonesCallback>(callback, data));
 }
 
 void
-GCRuntime::removeWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback)
+GCRuntime::removeWeakPointerZonesCallback(JSWeakPointerZonesCallback callback)
 {
-    for (auto& p : updateWeakPointerZoneGroupCallbacks.ref()) {
+    for (auto& p : updateWeakPointerZonesCallbacks.ref()) {
         if (p.op == callback) {
-            updateWeakPointerZoneGroupCallbacks.ref().erase(&p);
+            updateWeakPointerZonesCallbacks.ref().erase(&p);
             break;
         }
     }
 }
 
 void
-GCRuntime::callWeakPointerZoneGroupCallbacks() const
+GCRuntime::callWeakPointerZonesCallbacks() const
 {
-    for (auto const& p : updateWeakPointerZoneGroupCallbacks.ref())
+    for (auto const& p : updateWeakPointerZonesCallbacks.ref())
         p.op(TlsContext.get(), p.data);
 }
 
@@ -2561,7 +2561,7 @@ GCRuntime::updateRuntimePointersToRelocatedCells(AutoLockForExclusiveAccess& loc
     blocksToFreeAfterSweeping.ref().freeAll();
 
     // Call callbacks to get the rest of the system to fixup other untraced pointers.
-    callWeakPointerZoneGroupCallbacks();
+    callWeakPointerZonesCallbacks();
 }
 
 void
@@ -4057,7 +4057,7 @@ GCRuntime::markWeakReferences(gcstats::Phase phase)
 void
 GCRuntime::markWeakReferencesInCurrentGroup(gcstats::Phase phase)
 {
-    markWeakReferences<GCZoneGroupIter>(phase);
+    markWeakReferences<GCSweepGroupIter>(phase);
 }
 
 template <class ZoneIterT, class CompartmentIterT>
@@ -4080,7 +4080,7 @@ GCRuntime::markGrayReferences(gcstats::Phase phase)
 void
 GCRuntime::markGrayReferencesInCurrentGroup(gcstats::Phase phase)
 {
-    markGrayReferences<GCZoneGroupIter, GCCompartmentGroupIter>(phase);
+    markGrayReferences<GCSweepGroupIter, GCCompartmentGroupIter>(phase);
 }
 
 void
@@ -4466,7 +4466,7 @@ JSCompartment::findDeadProxyZoneEdges(bool* foundAny)
             if (IsDeadProxyObject(&value.toObject())) {
                 *foundAny = true;
                 CrossCompartmentKey& key = e.front().mutableKey();
-                if (!key.as<JSObject*>()->zone()->gcZoneGroupEdges().put(zone()))
+                if (!key.as<JSObject*>()->zone()->gcSweepGroupEdges().put(zone()))
                     return false;
             }
         }
@@ -4490,7 +4490,7 @@ Zone::findOutgoingEdges(ZoneComponentFinder& finder)
     for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next())
         comp->findOutgoingEdges(finder);
 
-    for (ZoneSet::Range r = gcZoneGroupEdges().all(); !r.empty(); r.popFront()) {
+    for (ZoneSet::Range r = gcSweepGroupEdges().all(); !r.empty(); r.popFront()) {
         if (r.front()->isGCMarking())
             finder.addEdgeTo(r.front());
     }
@@ -4534,11 +4534,11 @@ GCRuntime::findInterZoneEdges()
 }
 
 void
-GCRuntime::findZoneGroups(AutoLockForExclusiveAccess& lock)
+GCRuntime::groupZonesForSweeping(AutoLockForExclusiveAccess& lock)
 {
 #ifdef DEBUG
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
-        MOZ_ASSERT(zone->gcZoneGroupEdges().empty());
+        MOZ_ASSERT(zone->gcSweepGroupEdges().empty());
 #endif
 
     JSContext* cx = TlsContext.get();
@@ -4550,22 +4550,22 @@ GCRuntime::findZoneGroups(AutoLockForExclusiveAccess& lock)
         MOZ_ASSERT(zone->isGCMarking());
         finder.addNode(zone);
     }
-    zoneGroups = finder.getResultsList();
-    currentZoneGroup = zoneGroups;
-    zoneGroupIndex = 0;
+    sweepGroups = finder.getResultsList();
+    currentSweepGroup = sweepGroups;
+    sweepGroupIndex = 0;
 
     for (GCZonesIter zone(rt); !zone.done(); zone.next())
-        zone->gcZoneGroupEdges().clear();
+        zone->gcSweepGroupEdges().clear();
 
 #ifdef DEBUG
-    for (Zone* head = currentZoneGroup; head; head = head->nextGroup()) {
+    for (Zone* head = currentSweepGroup; head; head = head->nextGroup()) {
         for (Zone* zone = head; zone; zone = zone->nextNodeInGroup())
             MOZ_ASSERT(zone->isGCMarking());
     }
 
-    MOZ_ASSERT_IF(!isIncremental, !currentZoneGroup->nextGroup());
+    MOZ_ASSERT_IF(!isIncremental, !currentSweepGroup->nextGroup());
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
-        MOZ_ASSERT(zone->gcZoneGroupEdges().empty());
+        MOZ_ASSERT(zone->gcSweepGroupEdges().empty());
 #endif
 }
 
@@ -4573,26 +4573,26 @@ static void
 ResetGrayList(JSCompartment* comp);
 
 void
-GCRuntime::getNextZoneGroup()
+GCRuntime::getNextSweepGroup()
 {
-    currentZoneGroup = currentZoneGroup->nextGroup();
-    ++zoneGroupIndex;
-    if (!currentZoneGroup) {
+    currentSweepGroup = currentSweepGroup->nextGroup();
+    ++sweepGroupIndex;
+    if (!currentSweepGroup) {
         abortSweepAfterCurrentGroup = false;
         return;
     }
 
-    for (Zone* zone = currentZoneGroup; zone; zone = zone->nextNodeInGroup()) {
+    for (Zone* zone = currentSweepGroup; zone; zone = zone->nextNodeInGroup()) {
         MOZ_ASSERT(zone->isGCMarking());
         MOZ_ASSERT(!zone->isQueuedForBackgroundSweep());
     }
 
     if (!isIncremental)
-        ZoneComponentFinder::mergeGroups(currentZoneGroup);
+        ZoneComponentFinder::mergeGroups(currentSweepGroup);
 
     if (abortSweepAfterCurrentGroup) {
         MOZ_ASSERT(!isIncremental);
-        for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+        for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
             MOZ_ASSERT(!zone->gcNextGraphComponent);
             MOZ_ASSERT(zone->isGCMarking());
             zone->setNeedsIncrementalBarrier(false, Zone::UpdateJit);
@@ -4604,7 +4604,7 @@ GCRuntime::getNextZoneGroup()
             ResetGrayList(comp);
 
         abortSweepAfterCurrentGroup = false;
-        currentZoneGroup = nullptr;
+        currentSweepGroup = nullptr;
     }
 }
 
@@ -4853,7 +4853,7 @@ js::NotifyGCPostSwap(JSObject* a, JSObject* b, unsigned removedFlags)
 }
 
 void
-GCRuntime::endMarkingZoneGroup()
+GCRuntime::endMarkingSweepGroup()
 {
     gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_MARK);
 
@@ -4871,7 +4871,7 @@ GCRuntime::endMarkingZoneGroup()
      * these will be marked through, as they are not marked with
      * MarkCrossCompartmentXXX.
      */
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
         MOZ_ASSERT(zone->isGCMarkingBlack());
         zone->setGCState(Zone::MarkGray);
     }
@@ -4885,7 +4885,7 @@ GCRuntime::endMarkingZoneGroup()
     markWeakReferencesInCurrentGroup(gcstats::PHASE_SWEEP_MARK_GRAY_WEAK);
 
     /* Restore marking state. */
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
         MOZ_ASSERT(zone->isGCMarkingGray());
         zone->setGCState(Zone::Mark);
     }
@@ -5010,7 +5010,7 @@ using WeakCacheTaskVector = mozilla::Vector<SweepWeakCacheTask, 0, SystemAllocPo
 static void
 SweepWeakCachesFromActiveCooperatingThread(JSRuntime* rt)
 {
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
         for (JS::WeakCache<void*>* cache : zone->weakCaches()) {
             SweepWeakCacheTask task(rt, *cache);
             task.runFromActiveCooperatingThread(rt);
@@ -5022,7 +5022,7 @@ static WeakCacheTaskVector
 PrepareWeakCacheTasks(JSRuntime* rt)
 {
     WeakCacheTaskVector out;
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
         for (JS::WeakCache<void*>* cache : zone->weakCaches()) {
             if (!out.append(SweepWeakCacheTask(rt, *cache))) {
                 SweepWeakCachesFromActiveCooperatingThread(rt);
@@ -5034,15 +5034,15 @@ PrepareWeakCacheTasks(JSRuntime* rt)
 }
 
 void
-GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
+GCRuntime::beginSweepingSweepGroup(AutoLockForExclusiveAccess& lock)
 {
     /*
-     * Begin sweeping the group of zones in gcCurrentZoneGroup,
-     * performing actions that must be done before yielding to caller.
+     * Begin sweeping the group of zones in currentSweepGroup, performing
+     * actions that must be done before yielding to caller.
      */
 
     bool sweepingAtoms = false;
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
         /* Set the GC state to sweeping. */
         MOZ_ASSERT(zone->isGCMarking());
         zone->setGCState(Zone::Sweep);
@@ -5057,7 +5057,7 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
             rt->sweepZoneCallback(zone);
 
 #ifdef DEBUG
-        zone->gcLastZoneGroupIndex = zoneGroupIndex;
+        zone->gcLastSweepGroupIndex = sweepGroupIndex;
 #endif
     }
 
@@ -5071,7 +5071,7 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
     SweepMiscTask sweepMiscTask(rt);
     WeakCacheTaskVector sweepCacheTasks = PrepareWeakCacheTasks(rt);
 
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
         /* Clear all weakrefs that point to unmarked things. */
         for (auto edge : zone->gcWeakRefs()) {
             /* Edges may be present multiple times, so may already be nulled. */
@@ -5080,22 +5080,22 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
         }
         zone->gcWeakRefs().clear();
 
-        /* No need to look up any more weakmap keys from this zone group. */
+        /* No need to look up any more weakmap keys from this sweep group. */
         AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!zone->gcWeakKeys().clear())
-            oomUnsafe.crash("clearing weak keys in beginSweepingZoneGroup()");
+            oomUnsafe.crash("clearing weak keys in beginSweepingSweepGroup()");
     }
 
     {
         gcstats::AutoPhase ap(stats(), gcstats::PHASE_FINALIZE_START);
         callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_START);
         {
-            gcstats::AutoPhase ap2(stats(), gcstats::PHASE_WEAK_ZONEGROUP_CALLBACK);
-            callWeakPointerZoneGroupCallbacks();
+            gcstats::AutoPhase ap2(stats(), gcstats::PHASE_WEAK_ZONES_CALLBACK);
+            callWeakPointerZonesCallbacks();
         }
         {
             gcstats::AutoPhase ap2(stats(), gcstats::PHASE_WEAK_COMPARTMENT_CALLBACK);
-            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
                 for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
                     callWeakPointerCompartmentCallbacks(comp);
             }
@@ -5109,7 +5109,7 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
 
     {
         gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_COMPARTMENTS);
-        gcstats::AutoSCC scc(stats(), zoneGroupIndex);
+        gcstats::AutoSCC scc(stats(), sweepGroupIndex);
 
         {
             AutoLockHelperThreadState helperLock;
@@ -5136,7 +5136,7 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
                 c->sweepTemplateObjects();
             }
 
-            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next())
+            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
                 zone->sweepWeakMaps();
 
             // Bug 1071218: the following two methods have not yet been
@@ -5159,26 +5159,26 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
 
         {
             gcstats::AutoPhase apdc(stats(), gcstats::PHASE_SWEEP_DISCARD_CODE);
-            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next())
+            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
                 zone->discardJitCode(&fop);
         }
 
         {
             gcstats::AutoPhase ap1(stats(), gcstats::PHASE_SWEEP_TYPES);
             gcstats::AutoPhase ap2(stats(), gcstats::PHASE_SWEEP_TYPES_BEGIN);
-            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next())
+            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
                 zone->beginSweepTypes(&fop, releaseObservedTypes && !zone->isPreservingCode());
         }
 
         {
             gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_BREAKPOINT);
-            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next())
+            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
                 zone->sweepBreakpoints(&fop);
         }
 
         {
             gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_BREAKPOINT);
-            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next())
+            for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
                 zone->sweepUniqueIds(&fop);
         }
     }
@@ -5191,7 +5191,7 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
 
     {
         gcstats::AutoPhase ap(stats(), gcstats::PHASE_SWEEP_COMPARTMENTS);
-        gcstats::AutoSCC scc(stats(), zoneGroupIndex);
+        gcstats::AutoSCC scc(stats(), sweepGroupIndex);
 
         AutoLockHelperThreadState helperLock;
         joinTask(sweepCCWrappersTask, gcstats::PHASE_SWEEP_CC_WRAPPER, helperLock);
@@ -5211,29 +5211,29 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
      * Objects are finalized immediately but this may change in the future.
      */
 
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-        gcstats::AutoSCC scc(stats(), zoneGroupIndex);
+    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
+        gcstats::AutoSCC scc(stats(), sweepGroupIndex);
         zone->arenas.queueForegroundObjectsForSweep(&fop);
     }
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-        gcstats::AutoSCC scc(stats(), zoneGroupIndex);
+    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
+        gcstats::AutoSCC scc(stats(), sweepGroupIndex);
         for (unsigned i = 0; i < ArrayLength(IncrementalFinalizePhases); ++i)
             zone->arenas.queueForForegroundSweep(&fop, IncrementalFinalizePhases[i]);
     }
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-        gcstats::AutoSCC scc(stats(), zoneGroupIndex);
+    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
+        gcstats::AutoSCC scc(stats(), sweepGroupIndex);
         for (unsigned i = 0; i < ArrayLength(BackgroundFinalizePhases); ++i)
             zone->arenas.queueForBackgroundSweep(&fop, BackgroundFinalizePhases[i]);
     }
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-        gcstats::AutoSCC scc(stats(), zoneGroupIndex);
+    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
+        gcstats::AutoSCC scc(stats(), sweepGroupIndex);
         zone->arenas.queueForegroundThingsForSweep(&fop);
     }
 
     sweepingTypes = true;
 
     finalizePhase = 0;
-    sweepZone = currentZoneGroup;
+    sweepZone = currentSweepGroup;
     sweepKind = AllocKind::FIRST;
 
     {
@@ -5243,10 +5243,10 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
 }
 
 void
-GCRuntime::endSweepingZoneGroup()
+GCRuntime::endSweepingSweepGroup()
 {
     /* Update the GC state for zones we have swept. */
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
         MOZ_ASSERT(zone->isGCSweeping());
         AutoLockGC lock(rt);
         zone->setGCState(Zone::Finished);
@@ -5256,7 +5256,7 @@ GCRuntime::endSweepingZoneGroup()
 
     /* Start background thread to sweep zones if required. */
     ZoneList zones;
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next())
+    for (GCSweepGroupIter zone(rt); !zone.done(); zone.next())
         zones.append(zone);
     if (sweepOnBackgroundThread)
         queueZonesForBackgroundSweep(zones);
@@ -5299,9 +5299,9 @@ GCRuntime::beginSweepPhase(bool destroyingRuntime, AutoLockForExclusiveAccess& l
     AssertNoWrappersInGrayList(rt);
     DropStringWrappers(rt);
 
-    findZoneGroups(lock);
-    endMarkingZoneGroup();
-    beginSweepingZoneGroup(lock);
+    groupZonesForSweeping(lock);
+    endMarkingSweepGroup();
+    beginSweepingSweepGroup(lock);
 }
 
 bool
@@ -5391,10 +5391,10 @@ GCRuntime::sweepPhase(SliceBudget& sliceBudget, AutoLockForExclusiveAccess& lock
         // Sweep dead type information stored in scripts and object groups, but
         // don't finalize them yet. We have to sweep dead information from both
         // live and dead scripts and object groups, so that no dead references
-        // remain in them. Type inference can end up crawling these zones
-        // again, such as for TypeCompartment::markSetsUnknown, and if this
-        // happens after sweeping for the zone group finishes we won't be able
-        // to determine which things in the zone are live.
+        // remain in them. Type inference can end up crawling these zones again,
+        // such as for TypeCompartment::markSetsUnknown, and if this happens
+        // after sweeping for the sweep group finishes we won't be able to
+        // determine which things in the zone are live.
         if (sweepingTypes) {
             gcstats::AutoPhase ap1(stats(), gcstats::PHASE_SWEEP_COMPARTMENTS);
             gcstats::AutoPhase ap2(stats(), gcstats::PHASE_SWEEP_TYPES);
@@ -5425,7 +5425,7 @@ GCRuntime::sweepPhase(SliceBudget& sliceBudget, AutoLockForExclusiveAccess& lock
                 al.mergeForegroundSweptObjectArenas();
             }
 
-            sweepZone = currentZoneGroup;
+            sweepZone = currentSweepGroup;
             sweepingTypes = false;
         }
 
@@ -5456,7 +5456,7 @@ GCRuntime::sweepPhase(SliceBudget& sliceBudget, AutoLockForExclusiveAccess& lock
                 }
                 sweepKind = AllocKind::FIRST;
             }
-            sweepZone = currentZoneGroup;
+            sweepZone = currentSweepGroup;
         }
 
         /* Remove dead shapes from the shape tree, but don't finalize them yet. */
@@ -5474,13 +5474,13 @@ GCRuntime::sweepPhase(SliceBudget& sliceBudget, AutoLockForExclusiveAccess& lock
             }
         }
 
-        endSweepingZoneGroup();
-        getNextZoneGroup();
-        if (!currentZoneGroup)
+        endSweepingSweepGroup();
+        getNextSweepGroup();
+        if (!currentSweepGroup)
             return Finished;
 
-        endMarkingZoneGroup();
-        beginSweepingZoneGroup(lock);
+        endMarkingSweepGroup();
+        beginSweepingSweepGroup(lock);
     }
 }
 
@@ -5807,7 +5807,7 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoLockForExclusiveAccess
         for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
             c->scheduledForDestruction = false;
 
-        /* Finish sweeping the current zone group, then abort. */
+        /* Finish sweeping the current sweep group, then abort. */
         abortSweepAfterCurrentGroup = true;
 
         /* Don't perform any compaction after sweeping. */

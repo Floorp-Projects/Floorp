@@ -585,7 +585,7 @@ typedef void
 (* JSFinalizeCallback)(JSFreeOp* fop, JSFinalizeStatus status, bool isZoneGC, void* data);
 
 typedef void
-(* JSWeakPointerZoneGroupCallback)(JSContext* cx, void* data);
+(* JSWeakPointerZonesCallback)(JSContext* cx, void* data);
 
 typedef void
 (* JSWeakPointerCompartmentCallback)(JSContext* cx, JSCompartment* comp, void* data);
@@ -1720,7 +1720,7 @@ JS_RemoveFinalizeCallback(JSContext* cx, JSFinalizeCallback cb);
  * about.
  *
  * Since sweeping is incremental, we have several callbacks to avoid repeatedly
- * having to visit all embedder structures. The WeakPointerZoneGroupCallback is
+ * having to visit all embedder structures. The WeakPointerZonesCallback is
  * called once for each strongly connected group of zones, whereas the
  * WeakPointerCompartmentCallback is called once for each compartment that is
  * visited while sweeping. Structures that cannot contain references in more
@@ -1739,10 +1739,10 @@ JS_RemoveFinalizeCallback(JSContext* cx, JSFinalizeCallback cb);
  */
 
 extern JS_PUBLIC_API(bool)
-JS_AddWeakPointerZoneGroupCallback(JSContext* cx, JSWeakPointerZoneGroupCallback cb, void* data);
+JS_AddWeakPointerZonesCallback(JSContext* cx, JSWeakPointerZonesCallback cb, void* data);
 
 extern JS_PUBLIC_API(void)
-JS_RemoveWeakPointerZoneGroupCallback(JSContext* cx, JSWeakPointerZoneGroupCallback cb);
+JS_RemoveWeakPointerZonesCallback(JSContext* cx, JSWeakPointerZonesCallback cb);
 
 extern JS_PUBLIC_API(bool)
 JS_AddWeakPointerCompartmentCallback(JSContext* cx, JSWeakPointerCompartmentCallback cb,
