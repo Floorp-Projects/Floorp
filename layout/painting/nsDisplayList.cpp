@@ -2924,7 +2924,7 @@ static nsStyleContext* GetBackgroundStyleContext(nsIFrame* aFrame)
     // a root, other wise keep going in order to let the theme stuff
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
-    if (!aFrame->StyleDisplay()->mAppearance) {
+    if (!aFrame->StyleDisplay()->UsedAppearance()) {
       return nullptr;
     }
 
@@ -3071,7 +3071,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
 
   if (isThemed) {
     nsITheme* theme = presContext->GetTheme();
-    if (theme->NeedToClearBackgroundBehindWidget(aFrame, aFrame->StyleDisplay()->mAppearance) &&
+    if (theme->NeedToClearBackgroundBehindWidget(aFrame, aFrame->StyleDisplay()->UsedAppearance()) &&
         aBuilder->IsInChromeDocumentOrPopup() && !aBuilder->IsInTransform()) {
       bgItemList.AppendNewToTop(
         new (aBuilder) nsDisplayClearBackground(aBuilder, aFrame));
@@ -3624,19 +3624,19 @@ nsDisplayThemedBackground::nsDisplayThemedBackground(nsDisplayListBuilder* aBuil
   MOZ_COUNT_CTOR(nsDisplayThemedBackground);
 
   const nsStyleDisplay* disp = mFrame->StyleDisplay();
-  mAppearance = disp->mAppearance;
+  mAppearance = disp->UsedAppearance();
   mFrame->IsThemed(disp, &mThemeTransparency);
 
   // Perform necessary RegisterThemeGeometry
   nsITheme* theme = mFrame->PresContext()->GetTheme();
   nsITheme::ThemeGeometryType type =
-    theme->ThemeGeometryTypeForWidget(mFrame, disp->mAppearance);
+    theme->ThemeGeometryTypeForWidget(mFrame, disp->UsedAppearance());
   if (type != nsITheme::eThemeGeometryTypeUnknown) {
     RegisterThemeGeometry(aBuilder, aFrame, type);
   }
 
-  if (disp->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
-      disp->mAppearance == NS_THEME_WIN_GLASS) {
+  if (disp->UsedAppearance() == NS_THEME_WIN_BORDERLESS_GLASS ||
+      disp->UsedAppearance() == NS_THEME_WIN_GLASS) {
     aBuilder->SetGlassDisplayItem(this);
   }
 
@@ -3770,7 +3770,7 @@ nsDisplayThemedBackground::GetBoundsInternal() {
   nsRect r = mBackgroundRect - ToReferenceFrame();
   presContext->GetTheme()->
       GetWidgetOverflow(presContext->DeviceContext(), mFrame,
-                        mFrame->StyleDisplay()->mAppearance, &r);
+                        mFrame->StyleDisplay()->UsedAppearance(), &r);
   return r + ToReferenceFrame();
 }
 

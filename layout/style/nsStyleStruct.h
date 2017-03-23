@@ -2661,7 +2661,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
                                            //         otherwise equal to
                                            //         mDisplay
   uint8_t mContain;             // [reset] see nsStyleConsts.h NS_STYLE_CONTAIN_*
-//private:  XXX not yet
+private:
   friend class nsComputedDOMStyle;
   friend class nsRuleNode;
   uint8_t mMozAppearance;       // [reset]
