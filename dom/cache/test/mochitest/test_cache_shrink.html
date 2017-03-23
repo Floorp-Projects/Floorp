@@ -37,7 +37,8 @@ function storageUsage() {
     var qms = SpecialPowers.Services.qms;
     var principal = SpecialPowers.wrap(document).nodePrincipal;
     var cb = SpecialPowers.wrapCallback(function(request) {
-      resolve(request.usage, request.fileUsage);
+      var result = request.result;
+      resolve(result.usage, result.fileUsage);
     });
     qms.getUsageForPrincipal(principal, cb);
   });

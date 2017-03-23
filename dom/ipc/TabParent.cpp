@@ -58,7 +58,6 @@
 #include "nsIDOMWindowUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadInfo.h"
-#include "nsPrincipal.h"
 #include "nsIPromptFactory.h"
 #include "nsIURI.h"
 #include "nsIWindowWatcher.h"
@@ -69,6 +68,7 @@
 #include "nsViewManager.h"
 #include "nsVariant.h"
 #include "nsIWidget.h"
+#include "nsNetUtil.h"
 #ifndef XP_WIN
 #include "nsJARProtocolHandler.h"
 #endif

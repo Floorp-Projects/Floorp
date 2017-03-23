@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsPrincipal.h"
+#include "ContentPrincipal.h"
 
 #include "mozIThirdPartyUtil.h"
 #include "nscore.h"
@@ -19,6 +19,8 @@
 #include "nsJSPrincipals.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIClassInfoImpl.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 #include "nsIProtocolHandler.h"
 #include "nsError.h"
 #include "nsIContentSecurityPolicy.h"
@@ -58,25 +60,25 @@ GetAddonPolicyService(nsresult* aRv)
   return addonPolicyService;
 }
 
-NS_IMPL_CLASSINFO(nsPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
+NS_IMPL_CLASSINFO(ContentPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_PRINCIPAL_CID)
-NS_IMPL_QUERY_INTERFACE_CI(nsPrincipal,
+NS_IMPL_QUERY_INTERFACE_CI(ContentPrincipal,
                            nsIPrincipal,
                            nsISerializable)
-NS_IMPL_CI_INTERFACE_GETTER(nsPrincipal,
+NS_IMPL_CI_INTERFACE_GETTER(ContentPrincipal,
                             nsIPrincipal,
                             nsISerializable)
 
 // Called at startup:
 /* static */ void
-nsPrincipal::InitializeStatics()
+ContentPrincipal::InitializeStatics()
 {
   Preferences::AddBoolVarCache(&gCodeBasePrincipalSupport,
                                "signed.applets.codebase_principal_support",
                                false);
 }
 
-nsPrincipal::nsPrincipal()
+ContentPrincipal::ContentPrincipal()
   : BasePrincipal(eCodebasePrincipal)
   , mCodebaseImmutable(false)
   , mDomainImmutable(false)
@@ -84,7 +86,7 @@ nsPrincipal::nsPrincipal()
 {
 }
 
-nsPrincipal::~nsPrincipal()
+ContentPrincipal::~ContentPrincipal()
 {
   // let's clear the principal within the csp to avoid a tangling pointer
   if (mCSP) {
@@ -93,7 +95,8 @@ nsPrincipal::~nsPrincipal()
 }
 
 nsresult
-nsPrincipal::Init(nsIURI *aCodebase, const OriginAttributes& aOriginAttributes)
+ContentPrincipal::Init(nsIURI *aCodebase,
+                       const OriginAttributes& aOriginAttributes)
 {
   NS_ENSURE_STATE(!mInitialized);
   NS_ENSURE_ARG(aCodebase);
@@ -123,13 +126,13 @@ nsPrincipal::Init(nsIURI *aCodebase, const OriginAttributes& aOriginAttributes)
 }
 
 nsresult
-nsPrincipal::GetScriptLocation(nsACString &aStr)
+ContentPrincipal::GetScriptLocation(nsACString &aStr)
 {
   return mCodebase->GetSpec(aStr);
 }
 
 nsresult
-nsPrincipal::GetOriginInternal(nsACString& aOrigin)
+ContentPrincipal::GetOriginInternal(nsACString& aOrigin)
 {
   if (!mCodebase) {
     return NS_ERROR_FAILURE;
@@ -249,12 +252,12 @@ nsPrincipal::GetOriginInternal(nsACString& aOrigin)
 }
 
 bool
-nsPrincipal::SubsumesInternal(nsIPrincipal* aOther,
-                              BasePrincipal::DocumentDomainConsideration aConsideration)
+ContentPrincipal::SubsumesInternal(nsIPrincipal* aOther,
+                                   BasePrincipal::DocumentDomainConsideration aConsideration)
 {
   MOZ_ASSERT(aOther);
 
-  // For nsPrincipal, Subsumes is equivalent to Equals.
+  // For ContentPrincipal, Subsumes is equivalent to Equals.
   if (aOther == this) {
     return true;
   }
@@ -286,7 +289,7 @@ nsPrincipal::SubsumesInternal(nsIPrincipal* aOther,
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetURI(nsIURI** aURI)
+ContentPrincipal::GetURI(nsIURI** aURI)
 {
   if (mCodebaseImmutable) {
     NS_ADDREF(*aURI = mCodebase);
@@ -302,7 +305,7 @@ nsPrincipal::GetURI(nsIURI** aURI)
 }
 
 bool
-nsPrincipal::MayLoadInternal(nsIURI* aURI)
+ContentPrincipal::MayLoadInternal(nsIURI* aURI)
 {
   // See if aURI is something like a Blob URI that is actually associated with
   // a principal.
@@ -338,7 +341,7 @@ nsPrincipal::MayLoadInternal(nsIURI* aURI)
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetHashValue(uint32_t* aValue)
+ContentPrincipal::GetHashValue(uint32_t* aValue)
 {
   NS_PRECONDITION(mCodebase, "Need a codebase");
 
@@ -347,7 +350,7 @@ nsPrincipal::GetHashValue(uint32_t* aValue)
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetDomain(nsIURI** aDomain)
+ContentPrincipal::GetDomain(nsIURI** aDomain)
 {
   if (!mDomain) {
     *aDomain = nullptr;
@@ -363,7 +366,7 @@ nsPrincipal::GetDomain(nsIURI** aDomain)
 }
 
 NS_IMETHODIMP
-nsPrincipal::SetDomain(nsIURI* aDomain)
+ContentPrincipal::SetDomain(nsIURI* aDomain)
 {
   mDomain = NS_TryToMakeImmutable(aDomain);
   mDomainImmutable = URIIsImmutable(mDomain);
@@ -384,7 +387,7 @@ nsPrincipal::SetDomain(nsIURI* aDomain)
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetBaseDomain(nsACString& aBaseDomain)
+ContentPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 {
   // For a file URI, we return the file path.
   if (NS_URIIsLocalFile(mCodebase)) {
@@ -419,7 +422,7 @@ nsPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetAddonId(nsAString& aAddonId)
+ContentPrincipal::GetAddonId(nsAString& aAddonId)
 {
   if (mAddonIdCache.isSome()) {
     aAddonId.Assign(mAddonIdCache.ref());
@@ -448,7 +451,7 @@ nsPrincipal::GetAddonId(nsAString& aAddonId)
 };
 
 NS_IMETHODIMP
-nsPrincipal::Read(nsIObjectInputStream* aStream)
+ContentPrincipal::Read(nsIObjectInputStream* aStream)
 {
   nsCOMPtr<nsISupports> supports;
   nsCOMPtr<nsIURI> codebase;
@@ -494,7 +497,7 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
 }
 
 NS_IMETHODIMP
-nsPrincipal::Write(nsIObjectOutputStream* aStream)
+ContentPrincipal::Write(nsIObjectOutputStream* aStream)
 {
   NS_ENSURE_STATE(mCodebase);
   nsresult rv = NS_WriteOptionalCompoundObject(aStream, mCodebase, NS_GET_IID(nsIURI),

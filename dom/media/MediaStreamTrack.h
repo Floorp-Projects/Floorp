@@ -97,7 +97,7 @@ public:
    * This is used in WebRTC. A peerIdentity constrained MediaStreamTrack cannot
    * be sent across the network to anything other than a peer with the provided
    * identity. If this is set, then GetPrincipal() should return an instance of
-   * nsNullPrincipal.
+   * NullPrincipal.
    *
    * A track's PeerIdentity is immutable and will not change during the track's
    * lifetime.

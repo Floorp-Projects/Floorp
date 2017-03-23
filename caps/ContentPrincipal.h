@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsPrincipal_h__
-#define nsPrincipal_h__
+#ifndef ContentPrincipal_h
+#define ContentPrincipal_h
 
 #include "nsCOMPtr.h"
 #include "nsJSPrincipals.h"
@@ -15,7 +15,7 @@
 #include "nsScriptSecurityManager.h"
 #include "mozilla/BasePrincipal.h"
 
-class nsPrincipal final : public mozilla::BasePrincipal
+class ContentPrincipal final : public mozilla::BasePrincipal
 {
 public:
   NS_DECL_NSISERIALIZABLE
@@ -29,7 +29,7 @@ public:
   bool IsCodebasePrincipal() const override { return true; }
   nsresult GetOriginInternal(nsACString& aOrigin) override;
 
-  nsPrincipal();
+  ContentPrincipal();
 
   // Init() must be called before the principal is in a usable state.
   nsresult Init(nsIURI* aCodebase,
@@ -50,9 +50,10 @@ public:
   bool mInitialized;
 
 protected:
-  virtual ~nsPrincipal();
+  virtual ~ContentPrincipal();
 
-  bool SubsumesInternal(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration) override;
+  bool SubsumesInternal(nsIPrincipal* aOther,
+                        DocumentDomainConsideration aConsideration) override;
   bool MayLoadInternal(nsIURI* aURI) override;
 
 private:
@@ -64,4 +65,4 @@ private:
 { 0x653e0e4d, 0x3ee4, 0x45fa, \
   { 0xb2, 0x72, 0x97, 0xc2, 0x0b, 0xc0, 0x1e, 0xb8 } }
 
-#endif // nsPrincipal_h__
+#endif // ContentPrincipal_h

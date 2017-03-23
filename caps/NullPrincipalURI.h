@@ -8,8 +8,8 @@
  * This wraps nsSimpleURI so that all calls to it are done on the main thread.
  */
 
-#ifndef __nsNullPrincipalURI_h__
-#define __nsNullPrincipalURI_h__
+#ifndef __NullPrincipalURI_h__
+#define __NullPrincipalURI_h__
 
 #include "nsIURI.h"
 #include "nsISizeOf.h"
@@ -17,7 +17,7 @@
 #include "mozilla/Attributes.h"
 #include "nsIIPCSerializableURI.h"
 #include "mozilla/MemoryReporting.h"
-#include "nsNullPrincipal.h"
+#include "NullPrincipal.h"
 #include "nsID.h"
 
 // {51fcd543-3b52-41f7-b91b-6b54102236e6}
@@ -25,9 +25,9 @@
   {0x51fcd543, 0x3b52, 0x41f7, \
     {0xb9, 0x1b, 0x6b, 0x54, 0x10, 0x22, 0x36, 0xe6} }
 
-class nsNullPrincipalURI final : public nsIURI
-                               , public nsISizeOf
-                               , public nsIIPCSerializableURI
+class NullPrincipalURI final : public nsIURI
+                             , public nsISizeOf
+                             , public nsIIPCSerializableURI
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -40,15 +40,15 @@ public:
 
   // NB: This constructor exists only for deserialization.  Everyone
   // else should call Create.
-  nsNullPrincipalURI();
+  NullPrincipalURI();
 
   // Returns null on failure.
-  static already_AddRefed<nsNullPrincipalURI> Create();
+  static already_AddRefed<NullPrincipalURI> Create();
 
 private:
-  nsNullPrincipalURI(const nsNullPrincipalURI& aOther);
+  NullPrincipalURI(const NullPrincipalURI& aOther);
 
-  ~nsNullPrincipalURI() {}
+  ~NullPrincipalURI() {}
 
   nsresult Init();
 
@@ -56,4 +56,4 @@ private:
   nsFixedCString mPath;
 };
 
-#endif // __nsNullPrincipalURI_h__
+#endif // __NullPrincipalURI_h__
