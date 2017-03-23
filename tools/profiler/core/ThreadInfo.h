@@ -34,8 +34,6 @@ public:
   virtual void SetPendingDelete();
   bool IsPendingDelete() const { return mPendingDelete; }
 
-  bool CanInvokeJS() const;
-
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   ProfileBuffer::LastSample& LastSample() { return mLastSample; }
