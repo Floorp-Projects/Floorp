@@ -19,6 +19,7 @@ include protocol PHttpBackgroundChannel;
 include protocol PIPCBlobInputStream;
 include protocol PPendingIPCBlob;
 include protocol PMessagePort;
+include protocol PStreamFilter;
 include protocol PCameras;
 include protocol PQuota;
 include protocol PChildToParentStream;
@@ -68,6 +69,7 @@ sync protocol PBackground
   manages PIPCBlobInputStream;
   manages PPendingIPCBlob;
   manages PMessagePort;
+  manages PStreamFilter;
   manages PCameras;
   manages PQuota;
   manages PChildToParentStream;
@@ -111,6 +113,8 @@ parent:
   async PCacheStorage(Namespace aNamespace, PrincipalInfo aPrincipalInfo);
 
   async PMessagePort(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
+
+  async PStreamFilter(uint64_t channelId, nsString addonId);
 
   async PChildToParentStream();
 
