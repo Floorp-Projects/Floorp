@@ -82,6 +82,7 @@ extern "C" {
 #include "stun_client_ctx.h"
 #include "stun_reg.h"
 #include "stun_server_ctx.h"
+#include "stun_util.h"
 #include "ice_codeword.h"
 #include "ice_ctx.h"
 #include "ice_candidate.h"
@@ -518,6 +519,51 @@ NrIceCtx::GetNewPwd()
   RFREE(pwd);
 
   return pwdStr;
+}
+
+#define MAXADDRS 100 // mirrors setting in ice_ctx.c
+
+/* static */
+nsTArray<NrIceStunAddr>
+NrIceCtx::GetStunAddrs()
+{
+  nsTArray<NrIceStunAddr> addrs;
+
+  nr_local_addr local_addrs[MAXADDRS];
+  int addr_ct=0;
+
+  // most likely running on parent process and need crypto vtbl
+  // initialized on Windows (Linux and OSX don't seem to care)
+  if (!initialized) {
+    nr_crypto_vtbl = &nr_ice_crypto_nss_vtbl;
+  }
+
+  MOZ_MTLOG(ML_INFO, "NrIceCtx static call to find local stun addresses");
+  if (nr_stun_find_local_addresses(local_addrs, MAXADDRS, &addr_ct)) {
+    MOZ_MTLOG(ML_INFO, "Error finding local stun addresses");
+  } else {
+    for(int i=0; i<addr_ct; ++i) {
+      NrIceStunAddr addr(&local_addrs[i]);
+      addrs.AppendElement(addr);
+    }
+  }
+
+  return addrs;
+}
+
+void
+NrIceCtx::SetStunAddrs(const nsTArray<NrIceStunAddr>& addrs)
+{
+  nr_local_addr* local_addrs;
+  local_addrs = new nr_local_addr[addrs.Length()];
+
+  for(size_t i=0; i<addrs.Length(); ++i) {
+    nr_local_addr_copy(&local_addrs[i],
+                       const_cast<nr_local_addr*>(&addrs[i].localAddr()));
+  }
+  nr_ice_set_local_addresses(ctx_, local_addrs, addrs.Length());
+
+  delete[] local_addrs;
 }
 
 bool

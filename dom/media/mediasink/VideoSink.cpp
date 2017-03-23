@@ -31,7 +31,7 @@ static const int64_t MIN_UPDATE_INTERVAL_US = 1000000 / (60 * 2);
 
 VideoSink::VideoSink(AbstractThread* aThread,
                      MediaSink* aAudioSink,
-                     MediaQueue<MediaData>& aVideoQueue,
+                     MediaQueue<VideoData>& aVideoQueue,
                      VideoFrameContainer* aContainer,
                      FrameStatistics& aFrameStats,
                      uint32_t aVQueueSentToCompositerSize)
@@ -255,13 +255,12 @@ VideoSink::Shutdown()
 }
 
 void
-VideoSink::OnVideoQueuePushed(RefPtr<MediaData>&& aSample)
+VideoSink::OnVideoQueuePushed(RefPtr<VideoData>&& aSample)
 {
   AssertOwnerThread();
   // Listen to push event, VideoSink should try rendering ASAP if first frame
   // arrives but update scheduler is not triggered yet.
-  VideoData* v = aSample->As<VideoData>();
-  if (!v->IsSentToCompositor()) {
+  if (!aSample->IsSentToCompositor()) {
     // Since we push rendered frames back to the queue, we will receive
     // push events for them. We only need to trigger render loop
     // when this frame is not rendered yet.
@@ -291,9 +290,8 @@ VideoSink::Redraw(const VideoInfo& aInfo)
     return;
   }
 
-  RefPtr<MediaData> frame = VideoQueue().PeekFront();
-  if (frame) {
-    VideoData* video = frame->As<VideoData>();
+  RefPtr<VideoData> video = VideoQueue().PeekFront();
+  if (video) {
     video->MarkSentToCompositor();
     mContainer->SetCurrentFrame(video->mDisplay, video->mImage, TimeStamp::Now());
     return;
@@ -350,7 +348,7 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
 {
   AssertOwnerThread();
 
-  AutoTArray<RefPtr<MediaData>,16> frames;
+  AutoTArray<RefPtr<VideoData>,16> frames;
   VideoQueue().GetFirstElements(aMaxFrames, &frames);
   if (frames.IsEmpty() || !mContainer) {
     return;
@@ -360,7 +358,7 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
   TimeStamp lastFrameTime;
   MediaSink::PlaybackParams params = mAudioSink->GetPlaybackParams();
   for (uint32_t i = 0; i < frames.Length(); ++i) {
-    VideoData* frame = frames[i]->As<VideoData>();
+    VideoData* frame = frames[i];
 
     frame->MarkSentToCompositor();
 
@@ -402,7 +400,7 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
   }
 
   if (images.Length() > 0) {
-    mContainer->SetCurrentFrames(frames[0]->As<VideoData>()->mDisplay, images);
+    mContainer->SetCurrentFrames(frames[0]->mDisplay, images);
   }
 }
 
@@ -421,9 +419,9 @@ VideoSink::UpdateRenderedVideoFrames()
   int64_t lastFrameEndTime = 0;
   while (VideoQueue().GetSize() > mMinVideoQueueSize &&
          clockTime >= VideoQueue().PeekFront()->GetEndTime()) {
-    RefPtr<MediaData> frame = VideoQueue().PopFront();
+    RefPtr<VideoData> frame = VideoQueue().PopFront();
     lastFrameEndTime = frame->GetEndTime();
-    if (frame->As<VideoData>()->IsSentToCompositor()) {
+    if (frame->IsSentToCompositor()) {
       mFrameStats.NotifyPresentedFrame();
     } else {
       mFrameStats.NotifyDecodedFrames({ 0, 0, 1 });
@@ -435,7 +433,7 @@ VideoSink::UpdateRenderedVideoFrames()
   // The presentation end time of the last video frame displayed is either
   // the end time of the current frame, or if we dropped all frames in the
   // queue, the end time of the last frame we removed from the queue.
-  RefPtr<MediaData> currentFrame = VideoQueue().PeekFront();
+  RefPtr<VideoData> currentFrame = VideoQueue().PeekFront();
   mVideoFrameEndTime = std::max(mVideoFrameEndTime,
     currentFrame ? currentFrame->GetEndTime() : lastFrameEndTime);
 
@@ -446,7 +444,7 @@ VideoSink::UpdateRenderedVideoFrames()
   // Get the timestamp of the next frame. Schedule the next update at
   // the start time of the next frame. If we don't have a next frame,
   // we will run render loops again upon incoming frames.
-  nsTArray<RefPtr<MediaData>> frames;
+  nsTArray<RefPtr<VideoData>> frames;
   VideoQueue().GetFirstElements(2, &frames);
   if (frames.Length() < 2) {
     return;

@@ -411,6 +411,8 @@ AddDynamicCodeLocationTag(ProfileBuffer* aBuffer, const char* aStr)
   }
 }
 
+static const int SAMPLER_MAX_STRING_LENGTH = 128;
+
 static void
 AddPseudoEntry(ProfileBuffer* aBuffer, volatile js::ProfileEntry& entry,
                PseudoStack* stack, void* lastpc)
@@ -426,8 +428,17 @@ AddPseudoEntry(ProfileBuffer* aBuffer, volatile js::ProfileEntry& entry,
   // First entry has kind CodeLocation. Check for magic pointer bit 1 to
   // indicate copy.
   const char* sampleLabel = entry.label();
+  const char* dynamicString = entry.getDynamicString();
+  char combinedStringBuffer[SAMPLER_MAX_STRING_LENGTH];
 
-  if (entry.isCopyLabel()) {
+  if (entry.isCopyLabel() || dynamicString) {
+    if (dynamicString) {
+      int bytesWritten =
+        SprintfLiteral(combinedStringBuffer, "%s %s", sampleLabel, dynamicString);
+      if (bytesWritten > 0) {
+        sampleLabel = combinedStringBuffer;
+      }
+    }
     // Store the string using 1 or more EmbeddedString tags.
     // That will happen to the preceding tag.
     AddDynamicCodeLocationTag(aBuffer, sampleLabel);
@@ -2867,11 +2878,28 @@ profiler_get_backtrace_noalloc(char *output, size_t outputSize)
   uint32_t pseudoCount = pseudoStack->stackSize();
 
   for (uint32_t i = 0; i < pseudoCount; i++) {
-    size_t len = strlen(pseudoFrames[i].label());
-    if (output + len >= bound)
-      break;
-    strcpy(output, pseudoFrames[i].label());
-    output += len;
+    const char* label = pseudoFrames[i].label();
+    const char* dynamicString = pseudoFrames[i].getDynamicString();
+    size_t labelLength = strlen(label);
+    if (dynamicString) {
+      // Put the label, a space, and the dynamic string into output.
+      size_t dynamicStringLength = strlen(dynamicString);
+      if (output + labelLength + 1 + dynamicStringLength >= bound) {
+        break;
+      }
+      strcpy(output, label);
+      output += labelLength;
+      *output++ = ' ';
+      strcpy(output, dynamicString);
+      output += dynamicStringLength;
+    } else {
+      // Only put the label into output.
+      if (output + labelLength >= bound) {
+        break;
+      }
+      strcpy(output, label);
+      output += labelLength;
+    }
     *output++ = '\0';
     *output = '\0';
   }

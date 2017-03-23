@@ -85,7 +85,7 @@ __NodeActor__
 ## Highlighters
 
 One of the important aspects of the inspector is the highlighters.
-Some documentation already at: https://wiki.mozilla.org/DevTools/Highlighter
+You can find a lot more [documentation about highlighters here](highlighters.md).
 
 We don't just have 1 highlighter, we have a framework for highlighters:
 - a (chrome-only) platform API to inject markup in a native-anonymous node in content (that works on all targets)

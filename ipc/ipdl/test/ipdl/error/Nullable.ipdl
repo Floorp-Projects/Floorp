@@ -1,3 +1,5 @@
+//error: `nullable' qualifier for type `int' makes no sense
+
 protocol Nullable {
 child:
     async Msg(nullable int i);

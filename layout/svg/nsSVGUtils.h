@@ -267,42 +267,41 @@ public:
      Input: content - object to be used for determining user space
      Input: length - length to be converted
   */
-  static float UserSpace(nsSVGElement *aSVGElement, const nsSVGLength2 *aLength);
+  static float UserSpace(nsSVGElement *aSVGElement,
+                         const nsSVGLength2 *aLength);
   static float UserSpace(nsIFrame *aFrame, const nsSVGLength2 *aLength);
-  static float UserSpace(const mozilla::dom::UserSpaceMetrics& aMetrics, const nsSVGLength2 *aLength);
+  static float UserSpace(const mozilla::dom::UserSpaceMetrics& aMetrics,
+                         const nsSVGLength2 *aLength);
 
   /* Find the outermost SVG frame of the passed frame */
-  static nsSVGOuterSVGFrame *
-  GetOuterSVGFrame(nsIFrame *aFrame);
+  static nsSVGOuterSVGFrame* GetOuterSVGFrame(nsIFrame *aFrame);
 
   /**
    * Get the covered region for a frame. Return null if it's not an SVG frame.
    * @param aRect gets a rectangle in app units
    * @return the outer SVG frame which aRect is relative to
    */
-  static nsIFrame*
-  GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame, nsRect* aRect);
+  static nsIFrame* GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame,
+                                                    nsRect* aRect);
 
   /* Paint SVG frame with SVG effects - aDirtyRect is the area being
    * redrawn, in device pixel coordinates relative to the outer svg */
-  static DrawResult
-  PaintFrameWithEffects(nsIFrame *aFrame,
-                        gfxContext& aContext,
-                        const gfxMatrix& aTransform,
-                        const nsIntRect *aDirtyRect = nullptr);
+  static DrawResult PaintFrameWithEffects(nsIFrame *aFrame,
+                                          gfxContext& aContext,
+                                          const gfxMatrix& aTransform,
+                                          const nsIntRect *aDirtyRect = nullptr);
 
   /* Hit testing - check if point hits the clipPath of indicated
    * frame.  Returns true if no clipPath set. */
-  static bool
-  HitTestClip(nsIFrame *aFrame, const gfxPoint &aPoint);
-  
+  static bool HitTestClip(nsIFrame *aFrame, const gfxPoint &aPoint);
+
   /**
    * Hit testing - check if point hits any children of aFrame.  aPoint is
    * expected to be in the coordinate space established by aFrame for its
    * children (e.g. the space established by the 'viewBox' attribute on <svg>).
    */
-  static nsIFrame *
-  HitTestChildren(nsSVGDisplayContainerFrame *aFrame, const gfxPoint &aPoint);
+  static nsIFrame* HitTestChildren(nsSVGDisplayContainerFrame *aFrame,
+                                   const gfxPoint &aPoint);
 
   /*
    * Returns the CanvasTM of the indicated frame, whether it's a
@@ -326,19 +325,16 @@ public:
    * Notify the descendants of aFrame of a change to one of their ancestors
    * that might affect them.
    */
-  static void
-  NotifyChildrenOfSVGChange(nsIFrame *aFrame, uint32_t aFlags);
+  static void NotifyChildrenOfSVGChange(nsIFrame *aFrame, uint32_t aFlags);
 
   /*
    * Get frame's covered region by walking the children and doing union.
    */
-  static nsRect
-  GetCoveredRegion(const nsFrameList &aFrames);
+  static nsRect GetCoveredRegion(const nsFrameList &aFrames);
 
-  static nsRect
-  TransformFrameRectToOuterSVG(const nsRect& aRect,
-                               const gfxMatrix& aMatrix,
-                               nsPresContext* aPresContext);
+  static nsRect TransformFrameRectToOuterSVG(const nsRect& aRect,
+                                             const gfxMatrix& aMatrix,
+                                             nsPresContext* aPresContext);
 
   /*
    * Convert a surface size to an integer for use by thebes
@@ -355,10 +351,9 @@ public:
   /*
    * Hit test a given rectangle/matrix.
    */
-  static bool
-  HitTestRect(const mozilla::gfx::Matrix &aMatrix,
-              float aRX, float aRY, float aRWidth, float aRHeight,
-              float aX, float aY);
+  static bool HitTestRect(const mozilla::gfx::Matrix &aMatrix,
+                          float aRX, float aRY, float aRWidth, float aRHeight,
+                          float aX, float aY);
 
 
   /**
@@ -368,9 +363,9 @@ public:
    * The arguments for aX, aY, aWidth and aHeight should be the dimensions of
    * the viewport established by aFrame.
    */
-  static gfxRect
-  GetClipRectForFrame(nsIFrame *aFrame,
-                      float aX, float aY, float aWidth, float aHeight);
+  static gfxRect GetClipRectForFrame(nsIFrame *aFrame,
+                                     float aX, float aY, float aWidth,
+                                     float aHeight);
 
   static void SetClipRect(gfxContext *aContext,
                           const gfxMatrix &aCTM,
@@ -381,8 +376,7 @@ public:
    * not applying filters and not both stroking and filling, we can
    * generate the same result without going through the overhead of a
    * push/pop group. */
-  static bool
-  CanOptimizeOpacity(nsIFrame *aFrame);
+  static bool CanOptimizeOpacity(nsIFrame *aFrame);
 
   /**
    * Take the CTM to userspace for an element, and adjust it to a CTM to its
@@ -392,10 +386,9 @@ public:
    *
    * If the bbox is empty, this will return a singular matrix.
    */
-  static gfxMatrix
-  AdjustMatrixForUnits(const gfxMatrix &aMatrix,
-                       nsSVGEnum *aUnits,
-                       nsIFrame *aFrame);
+  static gfxMatrix AdjustMatrixForUnits(const gfxMatrix &aMatrix,
+                                        nsSVGEnum *aUnits,
+                                        nsIFrame *aFrame);
 
   enum BBoxFlags {
     eBBoxIncludeFill           = 1 << 0,
@@ -439,14 +432,12 @@ public:
    * @param aFrame the object in which to interpret user-space units;
    * may be null if aUnits is SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
    */
-  static gfxRect
-  GetRelativeRect(uint16_t aUnits, const nsSVGLength2 *aXYWH,
-                  const gfxRect& aBBox, nsIFrame *aFrame);
+  static gfxRect GetRelativeRect(uint16_t aUnits, const nsSVGLength2 *aXYWH,
+                                 const gfxRect& aBBox, nsIFrame *aFrame);
 
-  static gfxRect
-  GetRelativeRect(uint16_t aUnits, const nsSVGLength2 *aXYWH,
-                  const gfxRect& aBBox,
-                  const mozilla::dom::UserSpaceMetrics& aMetrics);
+  static gfxRect GetRelativeRect(uint16_t aUnits, const nsSVGLength2 *aXYWH,
+                                 const gfxRect& aBBox,
+                                 const mozilla::dom::UserSpaceMetrics& aMetrics);
 
   /**
    * Find the first frame, starting with aStartFrame and going up its
@@ -503,11 +494,10 @@ public:
   static nscolor GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
 
-  static void
-  MakeFillPatternFor(nsIFrame *aFrame,
-                     gfxContext* aContext,
-                     GeneralPattern* aOutPattern,
-                     SVGContextPaint* aContextPaint = nullptr);
+  static void MakeFillPatternFor(nsIFrame *aFrame,
+                                 gfxContext* aContext,
+                                 GeneralPattern* aOutPattern,
+                                 SVGContextPaint* aContextPaint = nullptr);
 
   static void
   MakeStrokePatternFor(nsIFrame* aFrame,
@@ -560,6 +550,7 @@ public:
    * @return true if rendering succeeded
    */
   static bool PaintSVGGlyph(Element* aElement, gfxContext* aContext);
+
   /**
    * Get the extents of a SVG glyph.
    * @param aElement the SVG glyph element
@@ -577,10 +568,9 @@ public:
    *
    * @param aToCanvas Transform from userspace to canvas device space.
    */
-  static nsRect
-  ToCanvasBounds(const gfxRect &aUserspaceRect,
-                 const gfxMatrix &aToCanvas,
-                 const nsPresContext *presContext);
+  static nsRect ToCanvasBounds(const gfxRect &aUserspaceRect,
+                               const gfxMatrix &aToCanvas,
+                               const nsPresContext *presContext);
 
   struct MaskUsage {
     bool shouldGenerateMaskLayer;
@@ -595,11 +585,10 @@ public:
     { }
   };
 
-  static void
-  DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity, MaskUsage& aUsage);
+  static void DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity,
+                                 MaskUsage& aUsage);
 
-  static float
-  ComputeOpacity(nsIFrame* aFrame, bool aHandleOpacity);
+  static float ComputeOpacity(nsIFrame* aFrame, bool aHandleOpacity);
 
   /**
    * SVG frames expect to paint in SVG user units, which are equal to CSS px
@@ -607,8 +596,12 @@ public:
    * gfxContext's current transform to convert the context's current units from
    * its usual dev pixels to SVG user units/CSS px to keep the SVG code happy.
    */
-  static gfxMatrix
-  GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame);
+  static gfxMatrix GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame);
+
+  static bool IsInSVGTextSubtree(const nsIFrame* aFrame) {
+    // Returns true if the frame is an SVGTextFrame or one of its descendants.
+    return aFrame->GetStateBits() & NS_FRAME_IS_SVG_TEXT;
+  }
 };
 
 #endif

@@ -116,6 +116,39 @@ nr_stun_xor_mapped_address(UINT4 magicCookie, UINT12 transactionId, nr_transport
 }
 
 int
+nr_stun_filter_local_addresses(nr_local_addr addrs[], int *count)
+{
+    int r,_status;
+    char allow_loopback = 0;
+    char allow_link_local = 0;
+
+    if ((r=NR_reg_get_char(NR_STUN_REG_PREF_ALLOW_LOOPBACK_ADDRS,
+                           &allow_loopback))) {
+        if (r != R_NOT_FOUND) {
+            ABORT(r);
+        }
+    }
+
+    if ((r=NR_reg_get_char(NR_STUN_REG_PREF_ALLOW_LINK_LOCAL_ADDRS,
+                           &allow_link_local))) {
+        if (r != R_NOT_FOUND) {
+            ABORT(r);
+        }
+    }
+
+    if ((r=nr_stun_remove_duplicate_addrs(addrs,
+                                          !allow_loopback,
+                                          !allow_link_local,
+                                          count))) {
+        ABORT(r);
+    }
+
+    _status=0;
+ abort:
+    return _status;
+}
+
+int
 nr_stun_find_local_addresses(nr_local_addr addrs[], int maxaddrs, int *count)
 {
     int r,_status;
@@ -123,29 +156,15 @@ nr_stun_find_local_addresses(nr_local_addr addrs[], int maxaddrs, int *count)
 
     *count = 0;
 
+#if 0
+    // this really goes with the code commented out below. (mjf)
     if ((r=NR_reg_get_child_count(NR_STUN_REG_PREF_ADDRESS_PRFX, (unsigned int*)count)))
         if (r != R_NOT_FOUND)
             ABORT(r);
+#endif
 
     if (*count == 0) {
-        char allow_loopback;
-        char allow_link_local;
-
-        if ((r=NR_reg_get_char(NR_STUN_REG_PREF_ALLOW_LOOPBACK_ADDRS, &allow_loopback))) {
-            if (r == R_NOT_FOUND)
-                allow_loopback = 0;
-            else
-                ABORT(r);
-        }
-
-        if ((r=NR_reg_get_char(NR_STUN_REG_PREF_ALLOW_LINK_LOCAL_ADDRS, &allow_link_local))) {
-            if (r == R_NOT_FOUND)
-                allow_link_local = 0;
-            else
-                ABORT(r);
-        }
-
-        if ((r=nr_stun_get_addrs(addrs, maxaddrs, !allow_loopback, !allow_link_local, count)))
+        if ((r=nr_stun_get_addrs(addrs, maxaddrs, count)))
             ABORT(r);
 
         goto done;
