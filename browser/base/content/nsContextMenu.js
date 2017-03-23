@@ -574,24 +574,30 @@ nsContextMenu.prototype = {
     return gDevToolsBrowser.inspectNode(gBrowser.selectedTab, this.target);
   },
 
-  // Set various context menu attributes based on the state of the world.
+  /**
+   * Set various context menu attributes based on the state of the world.
+   * Note: If the context menu is on a remote process the supplied parameters
+   * will be overwritten with data from gContextMenuContentData.
+   *
+   * @param {Object} aNode The node that this menu is being opened on.
+   * @param {nsIDOMNode} aRangeParent The parent node for where the selection ends.
+   * @param {Integer} aRangeOffset The end position of where the selction ends.
+   */
   setTarget(aNode, aRangeParent, aRangeOffset) {
     // gContextMenuContentData.isRemote tells us if the event came from a remote
     // process. gContextMenuContentData can be null if something (like tests)
     // opens the context menu directly.
-    let editFlags;
     this.isRemote = gContextMenuContentData && gContextMenuContentData.isRemote;
     if (this.isRemote) {
       aNode = gContextMenuContentData.event.target;
       aRangeParent = gContextMenuContentData.event.rangeParent;
       aRangeOffset = gContextMenuContentData.event.rangeOffset;
-      editFlags = gContextMenuContentData.editFlags;
     }
 
     const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     if (aNode.nodeType == Node.DOCUMENT_NODE ||
         // Not display on XUL element but relax for <label class="text-link">
-        (aNode.namespaceURI == xulNS && !isXULTextLinkLabel(aNode))) {
+        (aNode.namespaceURI == xulNS && !this._isXULTextLinkLabel(aNode))) {
       this.shouldDisplay = false;
       return;
     }
@@ -646,12 +652,15 @@ nsContextMenu.prototype = {
     let ownerDoc = this.target.ownerDocument;
     this.ownerDoc = ownerDoc;
 
+    let editFlags;
+
     // If this is a remote context menu event, use the information from
     // gContextMenuContentData instead.
     if (this.isRemote) {
       this.browser = gContextMenuContentData.browser;
       this.principal = gContextMenuContentData.principal;
       this.frameOuterWindowID = gContextMenuContentData.frameOuterWindowID;
+      editFlags = gContextMenuContentData.editFlags;
     } else {
       editFlags = SpellCheckHelper.isEditable(this.target, window);
       this.browser = ownerDoc.defaultView
@@ -669,104 +678,134 @@ nsContextMenu.prototype = {
 
     // Check if we are in a synthetic document (stand alone image, video, etc.).
     this.inSyntheticDoc = ownerDoc.mozSyntheticDocument;
-    // First, do checks for nodes that never have children.
-    if (this.target.nodeType == Node.ELEMENT_NODE) {
-      // See if the user clicked on an image. This check mirrors
-      // nsDocumentViewer::GetInImage. Make sure to update both if this is
-      // changed.
-      if (this.target instanceof Ci.nsIImageLoadingContent &&
-          this.target.currentURI) {
-        this.onImage = true;
 
-        var request =
-          this.target.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
-        if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
-          this.onLoadedImage = true;
-        if (request &&
-            (request.imageStatus & request.STATUS_LOAD_COMPLETE) &&
-            !(request.imageStatus & request.STATUS_ERROR)) {
-          this.onCompletedImage = true;
-        }
+    this._setTargetForNodesNoChildren(editFlags, aRangeParent, aRangeOffset);
 
-        this.mediaURL = this.target.currentURI.spec;
+    this._setTargetForNodesWithChildren(editFlags, aRangeParent, aRangeOffset);
+  },
 
-        var descURL = this.target.getAttribute("longdesc");
-        if (descURL) {
-          this.imageDescURL = makeURLAbsolute(ownerDoc.body.baseURI, descURL);
-        }
-      } else if (this.target instanceof HTMLCanvasElement) {
-        this.onCanvas = true;
-      } else if (this.target instanceof HTMLVideoElement) {
-        let mediaURL = this.target.currentSrc || this.target.src;
-        if (this.isMediaURLReusable(mediaURL)) {
-          this.mediaURL = mediaURL;
-        }
-        if (this._isProprietaryDRM()) {
-          this.onDRMMedia = true;
-        }
-        // Firefox always creates a HTMLVideoElement when loading an ogg file
-        // directly. If the media is actually audio, be smarter and provide a
-        // context menu with audio operations.
-        if (this.target.readyState >= this.target.HAVE_METADATA &&
-            (this.target.videoWidth == 0 || this.target.videoHeight == 0)) {
-          this.onAudio = true;
-        } else {
-          this.onVideo = true;
-        }
-      } else if (this.target instanceof HTMLAudioElement) {
-        this.onAudio = true;
-        let mediaURL = this.target.currentSrc || this.target.src;
-        if (this.isMediaURLReusable(mediaURL)) {
-          this.mediaURL = mediaURL;
-        }
-        if (this._isProprietaryDRM()) {
-          this.onDRMMedia = true;
-        }
-      } else if (editFlags & (SpellCheckHelper.INPUT | SpellCheckHelper.TEXTAREA)) {
-        this.onTextInput = (editFlags & SpellCheckHelper.TEXTINPUT) !== 0;
-        this.onNumeric = (editFlags & SpellCheckHelper.NUMERIC) !== 0;
-        this.onEditableArea = (editFlags & SpellCheckHelper.EDITABLE) !== 0;
-        this.onPassword = (editFlags & SpellCheckHelper.PASSWORD) !== 0;
-        if (this.onEditableArea) {
-          if (this.isRemote) {
-            InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
-          } else {
-            InlineSpellCheckerUI.init(this.target.QueryInterface(Ci.nsIDOMNSEditableElement).editor);
-            InlineSpellCheckerUI.initFromEvent(aRangeParent, aRangeOffset);
-          }
-        }
-        this.onKeywordField = (editFlags & SpellCheckHelper.KEYWORD);
-      } else if (this.target instanceof HTMLHtmlElement) {
-        var bodyElt = ownerDoc.body;
-        if (bodyElt) {
-          let computedURL;
-          try {
-            computedURL = this.getComputedURL(bodyElt, "background-image");
-            this._hasMultipleBGImages = false;
-          } catch (e) {
-            this._hasMultipleBGImages = true;
-          }
-          if (computedURL) {
-            this.hasBGImage = true;
-            this.bgImageURL = makeURLAbsolute(bodyElt.baseURI,
-                                              computedURL);
-          }
-        }
-      } else if ((this.target instanceof HTMLEmbedElement ||
-                this.target instanceof HTMLObjectElement ||
-                this.target instanceof HTMLAppletElement) &&
-               this.target.displayedType == HTMLObjectElement.TYPE_NULL &&
-               this.target.pluginFallbackType == HTMLObjectElement.PLUGIN_CLICK_TO_PLAY) {
-        this.onCTPPlugin = true;
-      }
-
-      this.canSpellCheck = this._isSpellCheckEnabled(this.target);
-    } else if (this.target.nodeType == Node.TEXT_NODE) {
+  /**
+   * Sets up the parts of the context menu for when when nodes have no children.
+   *
+   * @param {Integer} editFlags The edit flags for the node. See SpellCheckHelper
+   *                            for the details.
+   * @param {nsIDOMNode} rangeParent The parent node for where the selection ends.
+   * @param {Integer} rangeOffset The end position of where the selction ends.
+   */
+  _setTargetForNodesNoChildren(editFlags, rangeParent, rangeOffset) {
+    if (this.target.nodeType == Node.TEXT_NODE) {
       // For text nodes, look at the parent node to determine the spellcheck attribute.
       this.canSpellCheck = this.target.parentNode &&
                            this._isSpellCheckEnabled(this.target);
+      return;
     }
 
+    // We only deal with TEXT_NODE and ELEMENT_NODE in this function, so return
+    // early if we don't have one.
+    if (this.target.nodeType != Node.ELEMENT_NODE) {
+      return;
+    }
+    // See if the user clicked on an image. This check mirrors
+    // nsDocumentViewer::GetInImage. Make sure to update both if this is
+    // changed.
+    if (this.target instanceof Ci.nsIImageLoadingContent &&
+        this.target.currentURI) {
+      this.onImage = true;
+
+      var request =
+        this.target.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+      if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
+        this.onLoadedImage = true;
+      if (request &&
+          (request.imageStatus & request.STATUS_LOAD_COMPLETE) &&
+          !(request.imageStatus & request.STATUS_ERROR)) {
+        this.onCompletedImage = true;
+      }
+
+      this.mediaURL = this.target.currentURI.spec;
+
+      var descURL = this.target.getAttribute("longdesc");
+      if (descURL) {
+        this.imageDescURL = makeURLAbsolute(this.ownerDoc.body.baseURI, descURL);
+      }
+    } else if (this.target instanceof HTMLCanvasElement) {
+      this.onCanvas = true;
+    } else if (this.target instanceof HTMLVideoElement) {
+      let mediaURL = this.target.currentSrc || this.target.src;
+      if (this.isMediaURLReusable(mediaURL)) {
+        this.mediaURL = mediaURL;
+      }
+      if (this._isProprietaryDRM()) {
+        this.onDRMMedia = true;
+      }
+      // Firefox always creates a HTMLVideoElement when loading an ogg file
+      // directly. If the media is actually audio, be smarter and provide a
+      // context menu with audio operations.
+      if (this.target.readyState >= this.target.HAVE_METADATA &&
+          (this.target.videoWidth == 0 || this.target.videoHeight == 0)) {
+        this.onAudio = true;
+      } else {
+        this.onVideo = true;
+      }
+    } else if (this.target instanceof HTMLAudioElement) {
+      this.onAudio = true;
+      let mediaURL = this.target.currentSrc || this.target.src;
+      if (this.isMediaURLReusable(mediaURL)) {
+        this.mediaURL = mediaURL;
+      }
+      if (this._isProprietaryDRM()) {
+        this.onDRMMedia = true;
+      }
+    } else if (editFlags & (SpellCheckHelper.INPUT | SpellCheckHelper.TEXTAREA)) {
+      this.onTextInput = (editFlags & SpellCheckHelper.TEXTINPUT) !== 0;
+      this.onNumeric = (editFlags & SpellCheckHelper.NUMERIC) !== 0;
+      this.onEditableArea = (editFlags & SpellCheckHelper.EDITABLE) !== 0;
+      this.onPassword = (editFlags & SpellCheckHelper.PASSWORD) !== 0;
+      if (this.onEditableArea) {
+        if (this.isRemote) {
+          InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
+        } else {
+          InlineSpellCheckerUI.init(this.target.QueryInterface(Ci.nsIDOMNSEditableElement).editor);
+          InlineSpellCheckerUI.initFromEvent(rangeParent, rangeOffset);
+        }
+      }
+      this.onKeywordField = (editFlags & SpellCheckHelper.KEYWORD);
+    } else if (this.target instanceof HTMLHtmlElement) {
+      var bodyElt = this.ownerDoc.body;
+      if (bodyElt) {
+        let computedURL;
+        try {
+          computedURL = this.getComputedURL(bodyElt, "background-image");
+          this._hasMultipleBGImages = false;
+        } catch (e) {
+          this._hasMultipleBGImages = true;
+        }
+        if (computedURL) {
+          this.hasBGImage = true;
+          this.bgImageURL = makeURLAbsolute(bodyElt.baseURI,
+                                            computedURL);
+        }
+      }
+    } else if ((this.target instanceof HTMLEmbedElement ||
+              this.target instanceof HTMLObjectElement ||
+              this.target instanceof HTMLAppletElement) &&
+             this.target.displayedType == HTMLObjectElement.TYPE_NULL &&
+             this.target.pluginFallbackType == HTMLObjectElement.PLUGIN_CLICK_TO_PLAY) {
+      this.onCTPPlugin = true;
+    }
+
+    this.canSpellCheck = this._isSpellCheckEnabled(this.target);
+  },
+
+  /**
+   * Sets up the parts of the context menu for when when nodes have children.
+   *
+   * @param {Integer} editFlags The edit flags for the node. See SpellCheckHelper
+   *                            for the details.
+   * @param {nsIDOMNode} rangeParent The parent node for where the selection ends.
+   * @param {Integer} rangeOffset The end position of where the selction ends.
+   */
+  _setTargetForNodesWithChildren(editFlags, rangeParent, rangeOffset) {
     // Second, bubble out, looking for items of interest that can have childen.
     // Always pick the innermost link, background image, etc.
     var elem = this.target;
@@ -776,7 +815,7 @@ nsContextMenu.prototype = {
         if (!this.onLink &&
             // Be consistent with what hrefAndLinkNodeForClickEvent
             // does in browser.js
-             (isXULTextLinkLabel(elem) ||
+             (this._isXULTextLinkLabel(elem) ||
               (elem instanceof HTMLAnchorElement && elem.href) ||
               (elem instanceof HTMLAreaElement && elem.href) ||
               elem instanceof HTMLLinkElement ||
@@ -834,11 +873,11 @@ nsContextMenu.prototype = {
       this.onMathML = true;
 
     // See if the user clicked in a frame.
-    var docDefaultView = ownerDoc.defaultView;
+    var docDefaultView = this.ownerDoc.defaultView;
     if (docDefaultView != docDefaultView.top) {
       this.inFrame = true;
 
-      if (ownerDoc.isSrcdocDocument) {
+      if (this.ownerDoc.isSrcdocDocument) {
           this.inSrcdocFrame = true;
       }
     }
@@ -862,26 +901,33 @@ nsContextMenu.prototype = {
         if (this.isRemote) {
           InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
         } else {
-          var targetWin = ownerDoc.defaultView;
+          var targetWin = this.ownerDoc.defaultView;
           var editingSession = targetWin.QueryInterface(Ci.nsIInterfaceRequestor)
                                         .getInterface(Ci.nsIWebNavigation)
                                         .QueryInterface(Ci.nsIInterfaceRequestor)
                                         .getInterface(Ci.nsIEditingSession);
           InlineSpellCheckerUI.init(editingSession.getEditorForWindow(targetWin));
-          InlineSpellCheckerUI.initFromEvent(aRangeParent, aRangeOffset);
+          InlineSpellCheckerUI.initFromEvent(rangeParent, rangeOffset);
         }
         var canSpell = InlineSpellCheckerUI.canSpellCheck && this.canSpellCheck;
         this.showItem("spell-check-enabled", canSpell);
         this.showItem("spell-separator", canSpell);
       }
     }
+  },
 
-    function isXULTextLinkLabel(node) {
-      return node.namespaceURI == xulNS &&
-             node.tagName == "label" &&
-             node.classList.contains("text-link") &&
-             node.href;
-    }
+  /**
+   * Determines if a node is a XUL Text link.
+   *
+   * @param {Object} node The object to test.
+   * @returns {Boolean} true if the object is a XUL text link.
+   */
+  _isXULTextLinkLabel(node) {
+    const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    return node.namespaceURI == xulNS &&
+           node.tagName == "label" &&
+           node.classList.contains("text-link") &&
+           node.href;
   },
 
   // Returns the computed style attribute for the given element.
