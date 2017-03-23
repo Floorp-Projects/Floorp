@@ -70,13 +70,13 @@ impl ToJson for CloseWindowResponse {
 #[derive(RustcEncodable, Debug)]
 pub struct NewSessionResponse {
     pub sessionId: String,
-    pub value: json::Json
+    pub capabilities: json::Json
 }
 
 impl NewSessionResponse {
-    pub fn new(session_id: String, value: json::Json) -> NewSessionResponse {
+    pub fn new(session_id: String, capabilities: json::Json) -> NewSessionResponse {
         NewSessionResponse {
-            value: value,
+            capabilities: capabilities,
             sessionId: session_id
         }
     }
@@ -283,7 +283,7 @@ mod tests {
         let resp = WebDriverResponse::NewSession(
             NewSessionResponse::new("test".into(),
                                     Json::Object(BTreeMap::new())));
-        let expected = r#"{"value": {"sessionId": "test", "value": {}}}"#;
+        let expected = r#"{"value": {"sessionId": "test", "capabilities": {}}}"#;
         test(resp, expected);
     }
 
