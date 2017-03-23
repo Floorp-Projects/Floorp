@@ -128,9 +128,7 @@ class GTests(object):
         # ASan specific environment stuff
         if mozinfo.info["asan"]:
             # Symbolizer support
-            llvmsym = os.path.join(
-                self.xre_path,
-                "llvm-symbolizer" + mozinfo.info["bin_suffix"].encode('ascii'))
+            llvmsym = os.path.join(self.xre_path, "llvm-symbolizer")
             if os.path.isfile(llvmsym):
                 env["ASAN_SYMBOLIZER_PATH"] = llvmsym
                 log.info("gtest | ASan using symbolizer at %s", llvmsym)

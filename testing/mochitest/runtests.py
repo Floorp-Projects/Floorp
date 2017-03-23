@@ -1554,7 +1554,7 @@ toolbar#nav-bar {
 
     def buildBrowserEnv(self, options, debugger=False, env=None):
         """build the environment variables for the specific test and operating system"""
-        if mozinfo.info["asan"] and mozinfo.isLinux and mozinfo.bits == 64:
+        if mozinfo.info["asan"]:
             lsanPath = SCRIPT_DIR
         else:
             lsanPath = None
@@ -2029,7 +2029,7 @@ toolbar#nav-bar {
             else:
                 shutdownLeaks = None
 
-            if mozinfo.info["asan"] and mozinfo.isLinux and mozinfo.bits == 64:
+            if mozinfo.info["asan"] and (mozinfo.isLinux or mozinfo.isMac):
                 lsanLeaks = LSANLeaks(self.log)
             else:
                 lsanLeaks = None
