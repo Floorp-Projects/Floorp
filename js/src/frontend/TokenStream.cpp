@@ -687,7 +687,11 @@ TokenStream::reportStrictModeErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32
     else
         return true;
 
-    return reportCompileErrorNumberVA(Move(notes), offset, flags, errorNumber, args);
+    ErrorMetadata metadata;
+    if (!computeErrorMetadata(&metadata, offset))
+        return false;
+
+    return reportCompileErrorNumberVA(Move(metadata), Move(notes), flags, errorNumber, args);
 }
 
 void
@@ -712,8 +716,109 @@ CompileError::throwError(JSContext* cx)
     ErrorToException(cx, this, nullptr, nullptr);
 }
 
+void
+TokenStream::computeErrorMetadataNoOffset(ErrorMetadata* err)
+{
+    err->filename = filename;
+    err->lineNumber = 0;
+    err->columnNumber = 0;
+
+    MOZ_ASSERT(err->lineOfContext == nullptr);
+}
+
 bool
-TokenStream::reportCompileErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
+TokenStream::computeErrorMetadata(ErrorMetadata* err, uint32_t offset)
+{
+    if (offset == NoOffset) {
+        computeErrorMetadataNoOffset(err);
+        return true;
+    }
+
+    // If this TokenStream doesn't have location information, try to get it
+    // from the caller.
+    if (!filename && !cx->helperThread()) {
+        NonBuiltinFrameIter iter(cx,
+                                 FrameIter::FOLLOW_DEBUGGER_EVAL_PREV_LINK,
+                                 cx->compartment()->principals());
+        if (!iter.done() && iter.filename()) {
+            err->filename = iter.filename();
+            err->lineNumber = iter.computeLine(&err->columnNumber);
+
+            // We can't get a line of context if we're using the caller's
+            // location, so we're done.
+            return true;
+        }
+    }
+
+    // Otherwise this TokenStream's location information should be used.
+    err->filename = filename;
+    srcCoords.lineNumAndColumnIndex(offset,
+                                    &err->lineNumber, &err->columnNumber);
+
+    // Add a line of context from this TokenStream to help with debugging.
+    return computeLineOfContext(err, offset);
+}
+
+bool
+TokenStream::computeLineOfContext(ErrorMetadata* err, uint32_t offset)
+{
+    // This function presumes |err| is filled in *except* for line-of-context
+    // fields.  It exists to make |TokenStream::computeErrorMetadata|, above,
+    // more readable.
+
+    // We only have line-start information for the current line.  If the error
+    // is on a different line, we can't easily provide context.  (This means
+    // any error in a multi-line token, e.g. an unterminated multiline string
+    // literal, won't have context.)
+    if (err->lineNumber != lineno)
+        return true;
+
+    // We show only a portion (a "window") of the line around the erroneous
+    // token -- the first char in the token, plus |windowRadius| chars before
+    // it and |windowRadius - 1| chars after it.  This is because for a very
+    // long line, printing the whole line is (a) not that helpful, and (b) can
+    // waste a lot of memory.  See bug 634444.
+    constexpr size_t windowRadius = 60;
+
+    // The window must start within the current line, no earlier than
+    // |windowRadius| characters before |offset|.
+    MOZ_ASSERT(offset >= linebase);
+    size_t windowStart = (offset - linebase > windowRadius) ?
+                         offset - windowRadius :
+                         linebase;
+
+    // The window must start within the portion of the current line that we
+    // actually have in our buffer.
+    if (windowStart < userbuf.startOffset())
+        windowStart = userbuf.startOffset();
+
+    // The window must end within the current line, no later than
+    // windowRadius after offset.
+    size_t windowEnd = userbuf.findEOLMax(offset, windowRadius);
+    size_t windowLength = windowEnd - windowStart;
+    MOZ_ASSERT(windowLength <= windowRadius * 2);
+
+    // Create the windowed string, not including the potential line
+    // terminator.
+    StringBuffer windowBuf(cx);
+    if (!windowBuf.append(userbuf.rawCharPtrAt(windowStart), windowLength) ||
+        !windowBuf.append('\0'))
+    {
+        return false;
+    }
+
+    err->lineOfContext.reset(windowBuf.stealChars());
+    if (!err->lineOfContext)
+        return false;
+
+    err->lineLength = windowLength;
+    err->tokenOffset = offset - windowStart;
+    return true;
+}
+
+bool
+TokenStream::reportCompileErrorNumberVA(ErrorMetadata&& metadata,
+                                        UniquePtr<JSErrorNotes> notes,
                                         unsigned flags, unsigned errorNumber, va_list args)
 {
     bool warning = JSREPORT_IS_WARNING(flags);
@@ -735,83 +840,19 @@ TokenStream::reportCompileErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t 
     err.notes = Move(notes);
     err.flags = flags;
     err.errorNumber = errorNumber;
-    err.filename = filename;
     err.isMuted = mutedErrors;
 
-    bool callerFilename = false;
-    if (offset == NoOffset) {
-        err.lineno = 0;
-        err.column = 0;
-    } else {
-        // If we have no location information, try to get some from the caller.
-        if (!err.filename && !cx->helperThread()) {
-            NonBuiltinFrameIter iter(cx,
-                                     FrameIter::FOLLOW_DEBUGGER_EVAL_PREV_LINK,
-                                     cx->compartment()->principals());
-            if (!iter.done() && iter.filename()) {
-                err.filename = iter.filename();
-                err.lineno = iter.computeLine(&err.column);
-                callerFilename = true;
-            }
-        }
+    err.filename = metadata.filename;
+    err.lineno = metadata.lineNumber;
+    err.column = metadata.columnNumber;
 
-        if (!callerFilename)
-            srcCoords.lineNumAndColumnIndex(offset, &err.lineno, &err.column);
-    }
+    if (UniqueTwoByteChars lineOfContext = Move(metadata.lineOfContext))
+        err.initOwnedLinebuf(lineOfContext.release(), metadata.lineLength, metadata.tokenOffset);
 
     if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber,
                                 nullptr, ArgumentsAreLatin1, &err, args))
     {
         return false;
-    }
-
-    // Given a token, T, that we want to complain about: if T's (starting)
-    // lineno doesn't match TokenStream's lineno, that means we've scanned past
-    // the line that T starts on, which makes it hard to print some or all of
-    // T's (starting) line for context.
-    //
-    // So we don't even try, leaving report.linebuf and friends zeroed.  This
-    // means that any error involving a multi-line token (e.g. an unterminated
-    // multi-line string literal) won't have a context printed.
-    if (offset != NoOffset && err.lineno == lineno && !callerFilename) {
-        // We show only a portion (a "window") of the line around the erroneous
-        // token -- the first char in the token, plus |windowRadius| chars
-        // before it and |windowRadius - 1| chars after it.  This is because
-        // lines can be very long and printing the whole line is (a) not that
-        // helpful, and (b) can waste a lot of memory.  See bug 634444.
-        static const size_t windowRadius = 60;
-
-        // The window must start within the current line, no earlier than
-        // windowRadius characters before offset.
-        size_t windowStart = (offset - linebase > windowRadius) ?
-                             offset - windowRadius :
-                             linebase;
-
-        // The window must start within the portion of the current line
-        // that we actually have in our buffer.
-        if (windowStart < userbuf.startOffset())
-            windowStart = userbuf.startOffset();
-
-        // The window must end within the current line, no later than
-        // windowRadius after offset.
-        size_t windowEnd = userbuf.findEOLMax(offset, windowRadius);
-        size_t windowLength = windowEnd - windowStart;
-        MOZ_ASSERT(windowLength <= windowRadius * 2);
-
-        // Create the windowed strings.
-        StringBuffer windowBuf(cx);
-        if (!windowBuf.append(userbuf.rawCharPtrAt(windowStart), windowLength) ||
-            !windowBuf.append('\0'))
-        {
-            return false;
-        }
-
-        // The window into the offending source line, without final \n.
-        UniqueTwoByteChars linebuf(windowBuf.stealChars());
-        if (!linebuf)
-            return false;
-
-        err.initOwnedLinebuf(linebuf.release(), windowLength, offset - windowStart);
     }
 
     if (!cx->helperThread())
@@ -836,8 +877,14 @@ TokenStream::reportError(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = reportCompileErrorNumberVA(nullptr, currentToken().pos.begin, JSREPORT_ERROR,
-                                             errorNumber, args);
+
+    ErrorMetadata metadata;
+    bool result = computeErrorMetadata(&metadata, currentToken().pos.begin);
+    if (result) {
+        result = reportCompileErrorNumberVA(Move(metadata), nullptr, JSREPORT_ERROR, errorNumber,
+                                            args);
+    }
+
     va_end(args);
     return result;
 }
@@ -847,8 +894,13 @@ TokenStream::reportErrorNoOffset(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = reportCompileErrorNumberVA(nullptr, NoOffset, JSREPORT_ERROR,
+
+    ErrorMetadata metadata;
+    computeErrorMetadataNoOffset(&metadata);
+
+    bool result = reportCompileErrorNumberVA(Move(metadata), nullptr, JSREPORT_ERROR,
                                              errorNumber, args);
+
     va_end(args);
     return result;
 }
@@ -858,8 +910,14 @@ TokenStream::warning(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = reportCompileErrorNumberVA(nullptr, currentToken().pos.begin, JSREPORT_WARNING,
-                                             errorNumber, args);
+
+    ErrorMetadata metadata;
+    bool result = computeErrorMetadata(&metadata, currentToken().pos.begin);
+    if (result) {
+        result = reportCompileErrorNumberVA(Move(metadata), nullptr, JSREPORT_WARNING, errorNumber,
+                                            args);
+    }
+
     va_end(args);
     return result;
 }
@@ -871,7 +929,12 @@ TokenStream::reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint
     if (!options().extraWarningsOption)
         return true;
 
-    return reportCompileErrorNumberVA(Move(notes), offset, JSREPORT_STRICT|JSREPORT_WARNING,
+    ErrorMetadata metadata;
+    if (!computeErrorMetadata(&metadata, offset))
+        return false;
+
+    return reportCompileErrorNumberVA(Move(metadata), Move(notes),
+                                      JSREPORT_STRICT | JSREPORT_WARNING,
                                       errorNumber, args);
 }
 
@@ -880,10 +943,15 @@ TokenStream::reportAsmJSError(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    unsigned flags = options().throwOnAsmJSValidationFailureOption
-                     ? JSREPORT_ERROR
-                     : JSREPORT_WARNING;
-    reportCompileErrorNumberVA(nullptr, offset, flags, errorNumber, args);
+
+    ErrorMetadata metadata;
+    if (computeErrorMetadata(&metadata, offset)) {
+        unsigned flags = options().throwOnAsmJSValidationFailureOption
+                         ? JSREPORT_ERROR
+                         : JSREPORT_WARNING;
+        reportCompileErrorNumberVA(Move(metadata), nullptr, flags, errorNumber, args);
+    }
+
     va_end(args);
 }
 
@@ -892,12 +960,16 @@ TokenStream::error(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
+
+    ErrorMetadata metadata;
+    if (computeErrorMetadata(&metadata, currentToken().pos.begin)) {
 #ifdef DEBUG
-    bool result =
+        bool result =
 #endif
-        reportCompileErrorNumberVA(nullptr, currentToken().pos.begin, JSREPORT_ERROR,
-                                   errorNumber, args);
-    MOZ_ASSERT(!result, "reporting an error returned true?");
+            reportCompileErrorNumberVA(Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+        MOZ_ASSERT(!result, "reporting an error returned true?");
+    }
+
     va_end(args);
 }
 
@@ -906,11 +978,16 @@ TokenStream::errorAt(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
+
+    ErrorMetadata metadata;
+    if (computeErrorMetadata(&metadata, offset)) {
 #ifdef DEBUG
-    bool result =
+        bool result =
 #endif
-        reportCompileErrorNumberVA(nullptr, offset, JSREPORT_ERROR, errorNumber, args);
-    MOZ_ASSERT(!result, "reporting an error returned true?");
+            reportCompileErrorNumberVA(Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+        MOZ_ASSERT(!result, "reporting an error returned true?");
+    }
+
     va_end(args);
 }
 
