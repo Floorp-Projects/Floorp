@@ -1130,14 +1130,12 @@ GeckoDriver.prototype.goForward = function* (cmd, resp) {
   yield goForward;
 };
 
-/**
- * Causes the browser to reload the page in in current top-level browsing context.
- */
-GeckoDriver.prototype.refresh = function* (cmd, resp) {
+/** Refresh the page. */
+GeckoDriver.prototype.refresh = function*(cmd, resp) {
   assert.content(this.context);
   assert.window(this.getCurrentWindow());
 
-  yield this.listener.refresh({pageTimeout: this.timeouts.pageLoad});
+  yield this.listener.refresh();
 };
 
 /**
