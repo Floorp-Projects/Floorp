@@ -17,6 +17,7 @@
 #include "mozilla/plugins/PluginTypes.h"
 #include "mozilla/ipc/TaskFactory.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Unused.h"
 #include "npapi.h"
 #include "npfunctions.h"
 #include "nsDataHashtable.h"
@@ -28,15 +29,20 @@
 #include "sandboxPermissions.h"
 #endif
 #endif
+#include "ProfilerControllingProcess.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
 
-class nsIProfileSaveEvent;
 class nsPluginTag;
 
 namespace mozilla {
+
+#ifdef MOZ_GECKO_PROFILER
+class CrossProcessProfilerController;
+#endif
+
 
 namespace ipc {
 class CrashReporterHost;
@@ -79,6 +85,7 @@ class FinishInjectorInitTask;
 class PluginModuleParent
     : public PPluginModuleParent
     , public PluginLibrary
+    , public mozilla::ProfilerControllingProcess
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     , public CrashReporter::InjectorCrashCallback
 #endif
@@ -139,6 +146,23 @@ public:
     }
 
     int GetQuirks() { return mQuirks; }
+
+    void SendStartProfiler(const ProfilerInitParams& aParams) override
+    {
+        Unused << PPluginModuleParent::SendStartProfiler(aParams);
+    }
+    void SendStopProfiler() override
+    {
+        Unused << PPluginModuleParent::SendStopProfiler();
+    }
+    void SendPauseProfiler(const bool& aPause) override
+    {
+        Unused << PPluginModuleParent::SendPauseProfiler(aPause);
+    }
+    void SendGatherProfile() override
+    {
+        Unused << PPluginModuleParent::SendGatherProfile();
+    }
 
 protected:
     virtual mozilla::ipc::RacyInterruptPolicy
@@ -338,7 +362,6 @@ protected:
     nsNPAPIPlugin* mPlugin;
     ipc::TaskFactory<PluginModuleParent> mTaskFactory;
     nsString mHangID;
-    RefPtr<nsIObserver> mProfilerObserver;
     TimeDuration mTimeBlocked;
     nsCString mPluginName;
     nsCString mPluginVersion;
@@ -503,13 +526,6 @@ class PluginModuleChromeParent
 
     void CachedSettingChanged();
 
-#ifdef  MOZ_GECKO_PROFILER
-    void GatherAsyncProfile();
-    void GatheredAsyncProfile(nsIProfileSaveEvent* aSaveEvent);
-    void StartProfiler(nsIProfilerStartParams* aParams);
-    void StopProfiler();
-#endif
-
     virtual mozilla::ipc::IPCResult
     RecvProfile(const nsCString& aProfile) override;
 
@@ -565,11 +581,6 @@ private:
     void CleanupFromTimeout(const bool aByHangUI);
 
     virtual void UpdatePluginTimeout() override;
-
-#ifdef MOZ_GECKO_PROFILER
-    void InitPluginProfiling();
-    void ShutdownPluginProfiling();
-#endif
 
     void RegisterSettingsCallbacks();
     void UnregisterSettingsCallbacks();
@@ -670,9 +681,8 @@ private:
     dom::ContentParent* mContentParent;
     nsCOMPtr<nsIObserver> mPluginOfflineObserver;
 #ifdef MOZ_GECKO_PROFILER
-    bool mIsProfilerActive;
+    UniquePtr<CrossProcessProfilerController> mProfilerController;
 #endif
-    nsCString mProfile;
     bool mIsBlocklisted;
     static bool sInstantiated;
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)

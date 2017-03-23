@@ -25,6 +25,10 @@
 
 #include "mozilla/a11y/PDocAccessible.h"
 #include "AudioChannelService.h"
+#ifdef MOZ_GECKO_PROFILER
+#include "CrossProcessProfilerController.h"
+#endif
+#include "GeckoProfiler.h"
 #include "GMPServiceParent.h"
 #include "HandlerServiceParent.h"
 #include "IHistory.h"
@@ -87,7 +91,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
-#include "GeckoProfiler.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
@@ -234,11 +237,6 @@
 
 #ifdef MOZ_TOOLKIT_SEARCH
 #include "nsIBrowserSearchService.h"
-#endif
-
-#ifdef MOZ_GECKO_PROFILER
-#include "nsIProfiler.h"
-#include "nsIProfileSaveEvent.h"
 #endif
 
 #ifdef XP_WIN
@@ -563,14 +561,6 @@ static const char* sObserverTopics[] = {
   "file-watcher-update",
 #ifdef ACCESSIBILITY
   "a11y-init-or-shutdown",
-#endif
-#ifdef MOZ_GECKO_PROFILER
-  "profiler-started",
-  "profiler-stopped",
-  "profiler-paused",
-  "profiler-resumed",
-  "profiler-subprocess-gather",
-  "profiler-subprocess",
 #endif
   "cacheservice:empty-cache",
 };
@@ -1071,6 +1061,38 @@ ContentParent::RecvRemovePermission(const IPC::Principal& aPrincipal,
   return IPC_OK();
 }
 
+void
+ContentParent::SendStartProfiler(const ProfilerInitParams& aParams)
+{
+  if (mSubprocess && mIsAlive) {
+    Unused << PContentParent::SendStartProfiler(aParams);
+  }
+}
+
+void
+ContentParent::SendStopProfiler()
+{
+  if (mSubprocess && mIsAlive) {
+    Unused << PContentParent::SendStopProfiler();
+  }
+}
+
+void
+ContentParent::SendPauseProfiler(const bool& aPause)
+{
+  if (mSubprocess && mIsAlive) {
+    Unused << PContentParent::SendPauseProfiler(aPause);
+  }
+}
+
+void
+ContentParent::SendGatherProfile()
+{
+  if (mSubprocess && mIsAlive) {
+    Unused << PContentParent::SendGatherProfile();
+  }
+}
+
 mozilla::ipc::IPCResult
 ContentParent::RecvConnectPluginBridge(const uint32_t& aPluginId,
                                        nsresult* aRv,
@@ -1315,20 +1337,7 @@ ContentParent::Init()
 #endif
 
 #ifdef MOZ_GECKO_PROFILER
-  nsCOMPtr<nsIProfiler> profiler(do_GetService("@mozilla.org/tools/profiler;1"));
-  bool profilerActive = false;
-  DebugOnly<nsresult> rv = profiler->IsActive(&profilerActive);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-  if (profilerActive) {
-    nsCOMPtr<nsIProfilerStartParams> currentProfilerParams;
-    rv = profiler->GetStartParams(getter_AddRefs(currentProfilerParams));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    mIsProfilerActive = true;
-
-    StartProfiler(currentProfilerParams);
-  }
+  mProfilerController = MakeUnique<CrossProcessProfilerController>(this);
 #endif
 
   // Ensure that the default set of permissions are avaliable in the content
@@ -1726,9 +1735,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
   mConsoleService = nullptr;
 
 #ifdef MOZ_GECKO_PROFILER
-  if (mIsProfilerActive && !mProfile.IsEmpty()) {
-    profiler_OOP_exit_profile(mProfile);
-  }
+  mProfilerController = nullptr;
 #endif
 
   if (obs) {
@@ -2073,9 +2080,6 @@ ContentParent::ContentParent(ContentParent* aOpener,
   , mShutdownPending(false)
   , mIPCOpen(true)
   , mHangMonitorActor(nullptr)
-#ifdef MOZ_GECKO_PROFILER
-  , mIsProfilerActive(false)
-#endif
 {
   // Insert ourselves into the global linked list of ContentParent objects.
   if (!sContentParents) {
@@ -2669,27 +2673,6 @@ ContentParent::Observe(nsISupports* aSubject,
     NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
   }
 
-#ifdef MOZ_GECKO_PROFILER
-  // Need to do this before the mIsAlive check to avoid missing profiles.
-  if (!strcmp(aTopic, "profiler-subprocess-gather")) {
-    if (mIsProfilerActive) {
-      profiler_will_gather_OOP_profile();
-      if (mIsAlive && mSubprocess) {
-        Unused << SendGatherProfile();
-      }
-    }
-  }
-  else if (!strcmp(aTopic, "profiler-subprocess")) {
-    nsCOMPtr<nsIProfileSaveEvent> pse = do_QueryInterface(aSubject);
-    if (pse) {
-      if (!mProfile.IsEmpty()) {
-        pse->AddSubProfile(mProfile.get());
-        mProfile.Truncate();
-      }
-    }
-  }
-#endif
-
   if (!mIsAlive || !mSubprocess)
     return NS_OK;
 
@@ -2771,22 +2754,6 @@ ContentParent::Observe(nsISupports* aSubject,
       // accessibility gets shutdown in chrome process.
       Unused << SendShutdownA11y();
     }
-  }
-#endif
-#ifdef MOZ_GECKO_PROFILER
-  else if (!strcmp(aTopic, "profiler-started")) {
-    nsCOMPtr<nsIProfilerStartParams> params(do_QueryInterface(aSubject));
-    StartProfiler(params);
-  }
-  else if (!strcmp(aTopic, "profiler-stopped")) {
-    mIsProfilerActive = false;
-    Unused << SendStopProfiler();
-  }
-  else if (!strcmp(aTopic, "profiler-paused")) {
-    Unused << SendPauseProfiler(true);
-  }
-  else if (!strcmp(aTopic, "profiler-resumed")) {
-    Unused << SendPauseProfiler(false);
   }
 #endif
   else if (!strcmp(aTopic, "cacheservice:empty-cache")) {
@@ -4699,11 +4666,9 @@ mozilla::ipc::IPCResult
 ContentParent::RecvProfile(const nsCString& aProfile)
 {
 #ifdef MOZ_GECKO_PROFILER
-  if (NS_WARN_IF(!mIsProfilerActive)) {
-    return IPC_OK();
+  if (mProfilerController) {
+    mProfilerController->RecvProfile(aProfile);
   }
-  mProfile = aProfile;
-  profiler_gathered_OOP_profile();
 #endif
   return IPC_OK();
 }
@@ -4792,32 +4757,6 @@ ContentParent::RecvNotifyBenchmarkResult(const nsString& aCodecName,
                          VP9Benchmark::sBenchmarkVersionID);
   }
   return IPC_OK();
-}
-
-void
-ContentParent::StartProfiler(nsIProfilerStartParams* aParams)
-{
-#ifdef MOZ_GECKO_PROFILER
-  if (NS_WARN_IF(!aParams)) {
-    return;
-  }
-
-  ProfilerInitParams ipcParams;
-
-  ipcParams.enabled() = true;
-  aParams->GetEntries(&ipcParams.entries());
-  aParams->GetInterval(&ipcParams.interval());
-  ipcParams.features() = aParams->GetFeatures();
-  ipcParams.threadFilters() = aParams->GetThreadFilterNames();
-
-  Unused << SendStartProfiler(ipcParams);
-
-  nsCOMPtr<nsIProfiler> profiler(do_GetService("@mozilla.org/tools/profiler;1"));
-  if (NS_WARN_IF(!profiler)) {
-    return;
-  }
-  mIsProfilerActive = true;
-#endif
 }
 
 mozilla::ipc::IPCResult

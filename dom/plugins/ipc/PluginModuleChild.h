@@ -127,6 +127,7 @@ protected:
 
     virtual mozilla::ipc::IPCResult RecvStartProfiler(const ProfilerInitParams& params) override;
     virtual mozilla::ipc::IPCResult RecvStopProfiler() override;
+    virtual mozilla::ipc::IPCResult RecvPauseProfiler(const bool& aPause) override;
     virtual mozilla::ipc::IPCResult RecvGatherProfile() override;
 
     virtual mozilla::ipc::IPCResult
