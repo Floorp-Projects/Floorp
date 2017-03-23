@@ -8,9 +8,11 @@ extern crate hyper;
 extern crate regex;
 extern crate cookie;
 extern crate time;
+extern crate url;
 
 #[macro_use] pub mod macros;
 pub mod httpapi;
+pub mod capabilities;
 pub mod command;
 pub mod common;
 pub mod error;
