@@ -161,7 +161,7 @@ to mochitest command.
     * test_value_storage.html `-colors` [96]
     * test_shorthand_property_getters.html `-colors` [1]
   * -moz-box-ordinal-group servo/servo#16000
-    * test_value_storage.html `-box-` [94]
+    * test_value_storage.html `-box-` [6]
   * -moz-force-broken-image-icon servo/servo#16001
     * test_compute_data_with_start_struct.html `-moz-force-broken-image-icon` [2]
     * test_inherit_computation.html `-moz-force-broken-image-icon` [2]
@@ -361,8 +361,6 @@ to mochitest command.
     * ... `for '-webkit-mask-position` [188]
     * ... `for '-webkit-mask` [45]
     * test_shorthand_property_getters.html `background-position` [1]
-  * box-shadow wrong order of &lt;length&gt; values servo/servo#15203
-    * test_value_storage.html `box-shadow` [44]
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
   * background-position invalid 3-value form **issue to be filed**
