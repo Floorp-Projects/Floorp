@@ -447,14 +447,18 @@ class CompileInfo
     // the frame is active on the stack.  This implies that these definitions
     // would have to be executed and that they cannot be removed even if they
     // are unused.
-    bool isObservableSlot(uint32_t slot) const {
-        if (isObservableFrameSlot(slot))
-            return true;
+    inline bool isObservableSlot(uint32_t slot) const {
+        if (slot >= firstLocalSlot()) {
+            // The |this| slot for a derived class constructor is a local slot.
+            if (thisSlotForDerivedClassConstructor_)
+                return *thisSlotForDerivedClassConstructor_ == slot;
+            return false;
+        }
 
-        if (isObservableArgumentSlot(slot))
-            return true;
+        if (slot < firstArgSlot())
+            return isObservableFrameSlot(slot);
 
-        return false;
+        return isObservableArgumentSlot(slot);
     }
 
     bool isObservableFrameSlot(uint32_t slot) const {

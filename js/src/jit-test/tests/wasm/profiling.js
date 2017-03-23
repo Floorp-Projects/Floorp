@@ -125,7 +125,7 @@ testError(
     (func (export "") (call $foo))
 )`,
 WebAssembly.RuntimeError,
-["", ">", "1,>", "0,1,>", "trap handling,0,1,>", "inline stub,0,1,>", "trap handling,0,1,>", ""]);
+["", ">", "1,>", "0,1,>", "interstitial,0,1,>", "trap handling,0,1,>", ""]);
 
 testError(
 `(module
@@ -140,7 +140,7 @@ WebAssembly.RuntimeError,
 // Technically we have this one *one-instruction* interval where
 // the caller is lost (the stack with "1,>"). It's annoying to fix and shouldn't
 // mess up profiles in practice so we ignore it.
-["", ">", "0,>", "1,0,>", "1,>", "trap handling,0,>", "inline stub,0,>", "trap handling,0,>", ""]);
+["", ">", "0,>", "1,0,>", "1,>", "trap handling,0,>", ""]);
 
 (function() {
     var e = wasmEvalText(`

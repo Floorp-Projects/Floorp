@@ -330,6 +330,7 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
             // Trace active interpreter and JIT stack roots.
             TraceInterpreterActivations(cx, target, trc);
             jit::TraceJitActivations(cx, target, trc);
+            wasm::TraceActivations(cx, target, trc);
 
             // Trace legacy C stack roots.
             AutoGCRooter::traceAll(target, trc);

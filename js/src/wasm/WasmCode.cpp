@@ -111,7 +111,7 @@ StaticallyLink(CodeSegment& cs, const LinkData& linkData, JSContext* cx)
         const Uint32Vector& offsets = linkData.symbolicLinks[imm];
         for (size_t i = 0; i < offsets.length(); i++) {
             uint8_t* patchAt = cs.base() + offsets[i];
-            void* target = AddressOf(imm, cx);
+            void* target = AddressOf(imm);
             Assembler::PatchDataWithValueCheck(CodeLocationLabel(patchAt),
                                                PatchedImmPtr(target),
                                                PatchedImmPtr((void*)-1));
@@ -299,60 +299,44 @@ FuncImport::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 
 CodeRange::CodeRange(Kind kind, Offsets offsets)
   : begin_(offsets.begin),
-    profilingReturn_(0),
+    ret_(0),
     end_(offsets.end),
     funcIndex_(0),
     funcLineOrBytecode_(0),
-    funcBeginToTableEntry_(0),
-    funcBeginToTableProfilingJump_(0),
-    funcBeginToNonProfilingEntry_(0),
-    funcProfilingJumpToProfilingReturn_(0),
-    funcProfilingEpilogueToProfilingReturn_(0),
+    funcBeginToNormalEntry_(0),
     kind_(kind)
 {
     MOZ_ASSERT(begin_ <= end_);
-    MOZ_ASSERT(kind_ == Entry || kind_ == Inline ||
+    MOZ_ASSERT(kind_ == Entry || kind_ == Inline || kind_ == Throw ||
                kind_ == FarJumpIsland || kind_ == DebugTrap);
 }
 
-CodeRange::CodeRange(Kind kind, ProfilingOffsets offsets)
+CodeRange::CodeRange(Kind kind, CallableOffsets offsets)
   : begin_(offsets.begin),
-    profilingReturn_(offsets.profilingReturn),
+    ret_(offsets.ret),
     end_(offsets.end),
     funcIndex_(0),
     funcLineOrBytecode_(0),
-    funcBeginToTableEntry_(0),
-    funcBeginToTableProfilingJump_(0),
-    funcBeginToNonProfilingEntry_(0),
-    funcProfilingJumpToProfilingReturn_(0),
-    funcProfilingEpilogueToProfilingReturn_(0),
+    funcBeginToNormalEntry_(0),
     kind_(kind)
 {
-    MOZ_ASSERT(begin_ < profilingReturn_);
-    MOZ_ASSERT(profilingReturn_ < end_);
+    MOZ_ASSERT(begin_ < ret_);
+    MOZ_ASSERT(ret_ < end_);
     MOZ_ASSERT(kind_ == ImportJitExit || kind_ == ImportInterpExit || kind_ == TrapExit);
 }
 
 CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffsets offsets)
   : begin_(offsets.begin),
-    profilingReturn_(offsets.profilingReturn),
+    ret_(offsets.ret),
     end_(offsets.end),
     funcIndex_(funcIndex),
     funcLineOrBytecode_(funcLineOrBytecode),
-    funcBeginToTableEntry_(offsets.tableEntry - begin_),
-    funcBeginToTableProfilingJump_(offsets.tableProfilingJump - begin_),
-    funcBeginToNonProfilingEntry_(offsets.nonProfilingEntry - begin_),
-    funcProfilingJumpToProfilingReturn_(profilingReturn_ - offsets.profilingJump),
-    funcProfilingEpilogueToProfilingReturn_(profilingReturn_ - offsets.profilingEpilogue),
+    funcBeginToNormalEntry_(offsets.normalEntry - begin_),
     kind_(Function)
 {
-    MOZ_ASSERT(begin_ < profilingReturn_);
-    MOZ_ASSERT(profilingReturn_ < end_);
-    MOZ_ASSERT(offsets.tableEntry - begin_ <= UINT8_MAX);
-    MOZ_ASSERT(offsets.tableProfilingJump - begin_ <= UINT8_MAX);
-    MOZ_ASSERT(offsets.nonProfilingEntry - begin_ <= UINT8_MAX);
-    MOZ_ASSERT(profilingReturn_ - offsets.profilingJump <= UINT8_MAX);
-    MOZ_ASSERT(profilingReturn_ - offsets.profilingEpilogue <= UINT8_MAX);
+    MOZ_ASSERT(begin_ < ret_);
+    MOZ_ASSERT(ret_ < end_);
+    MOZ_ASSERT(offsets.normalEntry - begin_ <= UINT8_MAX);
 }
 
 static size_t
@@ -413,7 +397,6 @@ Metadata::serializedSize() const
            SerializedPodVectorSize(memoryAccesses) +
            SerializedPodVectorSize(codeRanges) +
            SerializedPodVectorSize(callSites) +
-           SerializedPodVectorSize(callThunks) +
            SerializedPodVectorSize(funcNames) +
            SerializedPodVectorSize(customSections) +
            filename.serializedSize();
@@ -434,7 +417,6 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, memoryAccesses);
     cursor = SerializePodVector(cursor, codeRanges);
     cursor = SerializePodVector(cursor, callSites);
-    cursor = SerializePodVector(cursor, callThunks);
     cursor = SerializePodVector(cursor, funcNames);
     cursor = SerializePodVector(cursor, customSections);
     cursor = filename.serialize(cursor);
@@ -453,7 +435,6 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = DeserializePodVector(cursor, &memoryAccesses)) &&
     (cursor = DeserializePodVector(cursor, &codeRanges)) &&
     (cursor = DeserializePodVector(cursor, &callSites)) &&
-    (cursor = DeserializePodVector(cursor, &callThunks)) &&
     (cursor = DeserializePodVector(cursor, &funcNames)) &&
     (cursor = DeserializePodVector(cursor, &customSections)) &&
     (cursor = filename.deserialize(cursor));
@@ -476,7 +457,6 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            memoryAccesses.sizeOfExcludingThis(mallocSizeOf) +
            codeRanges.sizeOfExcludingThis(mallocSizeOf) +
            callSites.sizeOfExcludingThis(mallocSizeOf) +
-           callThunks.sizeOfExcludingThis(mallocSizeOf) +
            funcNames.sizeOfExcludingThis(mallocSizeOf) +
            customSections.sizeOfExcludingThis(mallocSizeOf) +
            filename.sizeOfExcludingThis(mallocSizeOf);
@@ -578,7 +558,6 @@ Code::Code(UniqueCodeSegment segment,
   : segment_(Move(segment)),
     metadata_(&metadata),
     maybeBytecode_(maybeBytecode),
-    profilingEnabled_(false),
     enterAndLeaveFrameTrapsCounter_(0)
 {
     MOZ_ASSERT_IF(metadata_->debugEnabled, maybeBytecode);
@@ -986,77 +965,67 @@ Code::clearBreakpointsIn(JSContext* cx, WasmInstanceObject* instance, js::Debugg
 }
 
 
-bool
-Code::ensureProfilingState(JSRuntime* rt, bool newProfilingEnabled)
+// When enabled, generate profiling labels for every name in funcNames_ that is
+// the name of some Function CodeRange. This involves malloc() so do it now
+// since, once we start sampling, we'll be in a signal-handing context where we
+// cannot malloc.
+void
+Code::ensureProfilingLabels(bool profilingEnabled)
 {
-    if (profilingEnabled_ == newProfilingEnabled)
-        return true;
+    if (!profilingEnabled) {
+        profilingLabels_.clear();
+        return;
+    }
 
-    // When enabled, generate profiling labels for every name in funcNames_
-    // that is the name of some Function CodeRange. This involves malloc() so
-    // do it now since, once we start sampling, we'll be in a signal-handing
-    // context where we cannot malloc.
-    if (newProfilingEnabled) {
-        for (const CodeRange& codeRange : metadata_->codeRanges) {
-            if (!codeRange.isFunction())
-                continue;
+    if (!profilingLabels_.empty())
+        return;
 
-            ToCStringBuf cbuf;
-            const char* bytecodeStr = NumberToCString(nullptr, &cbuf, codeRange.funcLineOrBytecode());
-            MOZ_ASSERT(bytecodeStr);
+    for (const CodeRange& codeRange : metadata_->codeRanges) {
+        if (!codeRange.isFunction())
+            continue;
 
-            UTF8Bytes name;
-            if (!getFuncName(codeRange.funcIndex(), &name) || !name.append(" (", 2))
-                return false;
+        ToCStringBuf cbuf;
+        const char* bytecodeStr = NumberToCString(nullptr, &cbuf, codeRange.funcLineOrBytecode());
+        MOZ_ASSERT(bytecodeStr);
 
-            if (const char* filename = metadata_->filename.get()) {
-                if (!name.append(filename, strlen(filename)))
-                    return false;
-            } else {
-                if (!name.append('?'))
-                    return false;
-            }
+        UTF8Bytes name;
+        if (!getFuncName(codeRange.funcIndex(), &name) || !name.append(" (", 2))
+            return;
 
-            if (!name.append(':') ||
-                !name.append(bytecodeStr, strlen(bytecodeStr)) ||
-                !name.append(")\0", 2))
-            {
-                return false;
-            }
-
-            UniqueChars label(name.extractOrCopyRawBuffer());
-            if (!label)
-                return false;
-
-            if (codeRange.funcIndex() >= funcLabels_.length()) {
-                if (!funcLabels_.resize(codeRange.funcIndex() + 1))
-                    return false;
-            }
-
-            funcLabels_[codeRange.funcIndex()] = Move(label);
+        if (const char* filename = metadata_->filename.get()) {
+            if (!name.append(filename, strlen(filename)))
+                return;
+        } else {
+            if (!name.append('?'))
+                return;
         }
-    } else {
-        funcLabels_.clear();
+
+        if (!name.append(':') ||
+            !name.append(bytecodeStr, strlen(bytecodeStr)) ||
+            !name.append(")\0", 2))
+        {
+            return;
+        }
+
+        UniqueChars label(name.extractOrCopyRawBuffer());
+        if (!label)
+            return;
+
+        if (codeRange.funcIndex() >= profilingLabels_.length()) {
+            if (!profilingLabels_.resize(codeRange.funcIndex() + 1))
+                return;
+        }
+
+        profilingLabels_[codeRange.funcIndex()] = Move(label);
     }
+}
 
-    // Only mutate the code after the fallible operations are complete to avoid
-    // the need to rollback.
-    profilingEnabled_ = newProfilingEnabled;
-
-    {
-        AutoWritableJitCode awjc(segment_->base(), segment_->length());
-        AutoFlushICache afc("Code::ensureProfilingState");
-        AutoFlushICache::setRange(uintptr_t(segment_->base()), segment_->length());
-
-        for (const CallSite& callSite : metadata_->callSites)
-            ToggleProfiling(*this, callSite, newProfilingEnabled);
-        for (const CallThunk& callThunk : metadata_->callThunks)
-            ToggleProfiling(*this, callThunk, newProfilingEnabled);
-        for (const CodeRange& codeRange : metadata_->codeRanges)
-            ToggleProfiling(*this, codeRange, newProfilingEnabled);
-    }
-
-    return true;
+const char*
+Code::profilingLabel(uint32_t funcIndex) const
+{
+    if (funcIndex >= profilingLabels_.length() || !profilingLabels_[funcIndex])
+        return "?";
+    return profilingLabels_[funcIndex].get();
 }
 
 void
