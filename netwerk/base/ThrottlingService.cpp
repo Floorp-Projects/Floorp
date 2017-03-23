@@ -131,14 +131,9 @@ ThrottlingService::AddChannel(nsIHttpChannel *channel)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsAutoCString strKey;
-  nsresult rv = channel->GetChannelId(strKey);
+  uint64_t key;
+  nsresult rv = channel->GetChannelId(&key);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsID key;
-  if (!key.Parse(strKey.get())) {
-    return NS_ERROR_UNEXPECTED;
-  }
 
   if (mChannelHash.Get(key, nullptr)) {
     // We already have this channel under our control, not adding it again.
@@ -178,14 +173,9 @@ ThrottlingService::RemoveChannel(nsIHttpChannel *channel)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsAutoCString strKey;
-  nsresult rv = channel->GetChannelId(strKey);
+  uint64_t key;
+  nsresult rv = channel->GetChannelId(&key);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsID key;
-  if (!key.Parse(strKey.get())) {
-    return NS_ERROR_UNEXPECTED;
-  }
 
   if (!mChannelHash.Get(key, nullptr)) {
     // TODO - warn?

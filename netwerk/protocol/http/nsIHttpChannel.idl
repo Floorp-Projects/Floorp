@@ -454,7 +454,7 @@ interface nsIHttpChannel : nsIChannel
      * the channel activity needs to be monitored across process boundaries,
      * like in devtools net monitor. See bug 1274556.
      */
-    [must_use] attribute ACString channelId;
+    [must_use] attribute uint64_t channelId;
 
     /**
      * ID of the top-level document's inner window.  Identifies the content
