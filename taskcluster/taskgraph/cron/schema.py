@@ -7,10 +7,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from voluptuous import Schema, Any, Required, All
+from voluptuous import Any, Required, All
 from taskgraph.util.schema import (
     optionally_keyed_by,
     validate_schema,
+    Schema,
 )
 
 

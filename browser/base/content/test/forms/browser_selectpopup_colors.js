@@ -91,6 +91,15 @@ const DISABLED_OPTGROUP_AND_OPTIONS =
   '  <option value="Two" selected="true">{"end": "true"}</option>' +
   "</select></body></html>";
 
+const SELECT_CHANGES_COLOR_ON_FOCUS =
+  "<html><head><style>" +
+  "  select:focus { background-color: orange; color: black; }" +
+  "</style></head>" +
+  "<body><select id='one'>" +
+  '  <option>{"color": "rgb(0, 0, 0)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
+  '  <option selected="true">{"end": "true"}</option>' +
+  "</select></body></html>";
+
 function getSystemColor(color) {
   // Need to convert system color to RGB color.
   let textarea = document.createElementNS("http://www.w3.org/1999/xhtml", "textarea");
@@ -278,4 +287,13 @@ add_task(function* test_disabled_optgroup_and_options() {
 
   yield testSelectColors(DISABLED_OPTGROUP_AND_OPTIONS, 17,
                          {skipSelectColorTest: true});
+});
+
+add_task(function* test_disabled_optgroup_and_options() {
+  let options = {
+    selectColor: "rgb(0, 0, 0)",
+    selectBgColor: "rgb(255, 165, 0)"
+  };
+
+  yield testSelectColors(SELECT_CHANGES_COLOR_ON_FOCUS, 2, options);
 });

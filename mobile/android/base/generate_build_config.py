@@ -37,8 +37,7 @@ def main(output_file, input_filename):
     CONFIG.update(buildconfig.substs)
     DEFINES = {}
 
-    for var in ('MOZ_ANDROID_ACTIVITY_STREAM'
-                'MOZ_ANDROID_ANR_REPORTER',
+    for var in ('MOZ_ANDROID_ANR_REPORTER',
                 'MOZ_ANDROID_BEAM',
                 'MOZ_ANDROID_CUSTOM_TABS',
                 'MOZ_ANDROID_DOWNLOADS_INTEGRATION',

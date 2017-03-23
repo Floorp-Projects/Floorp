@@ -3862,28 +3862,7 @@ gfxFont::RemoveGlyphChangeObserver(GlyphChangeObserver *aObserver)
     mGlyphChangeObservers->RemoveEntry(aObserver);
 }
 
-
 #define DEFAULT_PIXEL_FONT_SIZE 16.0f
-
-/*static*/ uint32_t
-gfxFontStyle::ParseFontLanguageOverride(const nsString& aLangTag)
-{
-  if (!aLangTag.Length() || aLangTag.Length() > 4) {
-    return NO_FONT_LANGUAGE_OVERRIDE;
-  }
-  uint32_t index, result = 0;
-  for (index = 0; index < aLangTag.Length(); ++index) {
-    char16_t ch = aLangTag[index];
-    if (!nsCRT::IsAscii(ch)) { // valid tags are pure ASCII
-      return NO_FONT_LANGUAGE_OVERRIDE;
-    }
-    result = (result << 8) + ch;
-  }
-  while (index++ < 4) {
-    result = (result << 8) + 0x20;
-  }
-  return result;
-}
 
 gfxFontStyle::gfxFontStyle() :
     language(nsGkAtoms::x_western),
@@ -3907,10 +3886,10 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
                            bool aPrinterFont,
                            bool aAllowWeightSynthesis,
                            bool aAllowStyleSynthesis,
-                           const nsString& aLanguageOverride):
+                           uint32_t aLanguageOverride):
     language(aLanguage),
     size(aSize), sizeAdjust(aSizeAdjust), baselineOffset(0.0f),
-    languageOverride(ParseFontLanguageOverride(aLanguageOverride)),
+    languageOverride(aLanguageOverride),
     weight(aWeight), stretch(aStretch),
     style(aStyle),
     variantCaps(NS_FONT_VARIANT_CAPS_NORMAL),
