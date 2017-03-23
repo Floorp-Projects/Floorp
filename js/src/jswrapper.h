@@ -141,6 +141,7 @@ class JS_FRIEND_API(Wrapper) : public BaseProxyHandler
     static const Wrapper* wrapperHandler(JSObject* wrapper);
 
     static JSObject* wrappedObject(JSObject* wrapper);
+    static JSObject* wrappedObjectMaybeGray(JSObject* wrapper);
 
     unsigned flags() const {
         return mFlags;
