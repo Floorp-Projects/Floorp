@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('*'):
-    BUG_COMPONENT = ('Core', 'Video/Audio: Recording')
+    BUG_COMPONENT = ('Core', 'Audio/Video: Recording')
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     DIRS += ['fmp4_muxer']
