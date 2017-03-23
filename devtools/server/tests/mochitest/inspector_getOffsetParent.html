@@ -8,9 +8,11 @@
     <div id="no_parent" style="position: absolute"></div>
     <div id="fixed" style="position: fixed"></div>
     <script>
+       "use strict";
+
        window.onload = () => {
-         window.opener.postMessage('ready', '*')
-       }
+         window.opener.postMessage("ready", "*");
+       };
      </script>
 </body>
 </html>
