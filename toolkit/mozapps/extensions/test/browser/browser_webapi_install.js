@@ -197,7 +197,11 @@ function makeRegularTest(options, what) {
       },
     ];
 
+    let promptPromise = promiseNotification("addon-installed");
+
     yield testInstall(browser, options, steps, what);
+
+    yield promptPromise;
 
     let version = Services.prefs.getIntPref("webapitest.active_version");
     is(version, 1, "the install really did work");

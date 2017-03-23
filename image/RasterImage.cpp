@@ -107,6 +107,9 @@ RasterImage::~RasterImage()
 
   // Record Telemetry.
   Telemetry::Accumulate(Telemetry::IMAGE_DECODE_COUNT, mDecodeCount);
+  if (mAnimationState) {
+    Telemetry::Accumulate(Telemetry::IMAGE_ANIMATED_DECODE_COUNT, mDecodeCount);
+  }
 }
 
 nsresult
@@ -1132,19 +1135,19 @@ LaunchDecodingTask(IDecodingTask* aTask,
                    bool aHaveSourceData)
 {
   if (aHaveSourceData) {
+    nsCString uri(aImage->GetURIString());
+
     // If we have all the data, we can sync decode if requested.
     if (aFlags & imgIContainer::FLAG_SYNC_DECODE) {
-      PROFILER_LABEL_PRINTF("DecodePool", "SyncRunIfPossible",
-        js::ProfileEntry::Category::GRAPHICS,
-        "%s", aImage->GetURIString().get());
+      PROFILER_LABEL_DYNAMIC("DecodePool", "SyncRunIfPossible",
+        js::ProfileEntry::Category::GRAPHICS, uri.get());
       DecodePool::Singleton()->SyncRunIfPossible(aTask);
       return true;
     }
 
     if (aFlags & imgIContainer::FLAG_SYNC_DECODE_IF_FAST) {
-      PROFILER_LABEL_PRINTF("DecodePool", "SyncRunIfPreferred",
-        js::ProfileEntry::Category::GRAPHICS,
-        "%s", aImage->GetURIString().get());
+      PROFILER_LABEL_DYNAMIC("DecodePool", "SyncRunIfPreferred",
+        js::ProfileEntry::Category::GRAPHICS, uri.get());
       return DecodePool::Singleton()->SyncRunIfPreferred(aTask);
     }
   }
@@ -1428,6 +1431,11 @@ RasterImage::Draw(gfxContext* aContext,
       TimeDuration drawLatency = TimeStamp::Now() - mDrawStartTime;
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_ON_DRAW_LATENCY,
                             int32_t(drawLatency.ToMicroseconds()));
+      if (mAnimationState) {
+        Telemetry::Accumulate(Telemetry::IMAGE_ANIMATED_DECODE_ON_DRAW_LATENCY,
+                              int32_t(drawLatency.ToMicroseconds()));
+
+      }
       mDrawStartTime = TimeStamp();
   }
 
@@ -1676,6 +1684,11 @@ RasterImage::NotifyDecodeComplete(const DecoderFinalStatus& aStatus,
     if (aStatus.mFinished) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_TIME,
                             int32_t(aTelemetry.mDecodeTime.ToMicroseconds()));
+
+      if (mAnimationState) {
+        Telemetry::Accumulate(Telemetry::IMAGE_ANIMATED_DECODE_TIME,
+                              int32_t(aTelemetry.mDecodeTime.ToMicroseconds()));
+      }
 
       if (aTelemetry.mSpeedHistogram) {
         Telemetry::Accumulate(*aTelemetry.mSpeedHistogram, aTelemetry.Speed());

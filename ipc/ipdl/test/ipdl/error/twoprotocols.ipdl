@@ -1,5 +1,7 @@
 // it's an error to define two protocols in the same file
 
+//error: only one protocol definition per file
+
 protocol p1 {
 child: async Msg();
 };

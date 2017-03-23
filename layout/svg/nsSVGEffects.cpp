@@ -418,7 +418,8 @@ nsSVGTextPathProperty::DoUpdate()
   if (!frame)
     return;
 
-  NS_ASSERTION(frame->IsFrameOfType(nsIFrame::eSVG) || frame->IsSVGText(),
+  NS_ASSERTION(frame->IsFrameOfType(nsIFrame::eSVG) ||
+               nsSVGUtils::IsInSVGTextSubtree(frame),
                "SVG frame expected");
 
   // Avoid getting into an infinite loop of reflows if the <textPath> is

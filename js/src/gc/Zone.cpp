@@ -37,7 +37,7 @@ JS::Zone::Zone(JSRuntime* rt, ZoneGroup* group)
     gcWeakRefs_(group),
     weakCaches_(group),
     gcWeakKeys_(group, SystemAllocPolicy(), rt->randomHashCodeScrambler()),
-    gcZoneGroupEdges_(group),
+    gcSweepGroupEdges_(group),
     hasDeadProxies_(group),
     typeDescrObjects_(group, this, SystemAllocPolicy()),
     markedAtoms_(group),
@@ -50,7 +50,7 @@ JS::Zone::Zone(JSRuntime* rt, ZoneGroup* group)
     data(group, nullptr),
     isSystem(group, false),
 #ifdef DEBUG
-    gcLastZoneGroupIndex(group, 0),
+    gcLastSweepGroupIndex(group, 0),
 #endif
     jitZone_(group, nullptr),
     gcState_(NoGC),
@@ -90,7 +90,7 @@ bool Zone::init(bool isSystemArg)
 {
     isSystem = isSystemArg;
     return uniqueIds().init() &&
-           gcZoneGroupEdges().init() &&
+           gcSweepGroupEdges().init() &&
            gcWeakKeys().init() &&
            typeDescrObjects().init() &&
            markedAtoms().init();
@@ -159,8 +159,8 @@ Zone::sweepBreakpoints(FreeOp* fop)
                 GCPtrNativeObject& dbgobj = bp->debugger->toJSObjectRef();
 
                 // If we are sweeping, then we expect the script and the
-                // debugger object to be swept in the same zone group, except if
-                // the breakpoint was added after we computed the zone
+                // debugger object to be swept in the same sweep group, except
+                // if the breakpoint was added after we computed the sweep
                 // groups. In this case both script and debugger object must be
                 // live.
                 MOZ_ASSERT_IF(isGCSweeping() && dbgobj->zone()->isCollecting(),

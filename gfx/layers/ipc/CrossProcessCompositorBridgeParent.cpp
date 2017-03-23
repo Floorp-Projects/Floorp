@@ -203,7 +203,7 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
                                                                 TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                                                 uint32_t *aIdNamespace)
 {
-#ifndef MOZ_ENABLE_WEBRENDER
+#ifndef MOZ_BUILD_WEBRENDER
   // Extra guard since this in the parent process and we don't want a malicious
   // child process invoking this codepath before it's ready
   MOZ_RELEASE_ASSERT(false);
@@ -238,7 +238,7 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
 bool
 CrossProcessCompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor)
 {
-#ifndef MOZ_ENABLE_WEBRENDER
+#ifndef MOZ_BUILD_WEBRENDER
   // Extra guard since this in the parent process and we don't want a malicious
   // child process invoking this codepath before it's ready
   MOZ_RELEASE_ASSERT(false);

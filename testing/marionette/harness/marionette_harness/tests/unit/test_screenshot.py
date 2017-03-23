@@ -40,6 +40,10 @@ class ScreenCaptureTestCase(MarionetteTestCase):
 
         self._device_pixel_ratio = None
 
+        # Ensure that each screenshot test runs on a blank page to avoid left
+        # over elements or focus which could interfer with taking screenshots
+        self.marionette.navigate("about:blank")
+
     @property
     def device_pixel_ratio(self):
         if self._device_pixel_ratio is None:

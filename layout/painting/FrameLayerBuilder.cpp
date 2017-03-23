@@ -6007,8 +6007,8 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
       continue;
 
 #ifdef MOZ_DUMP_PAINTING
-    PROFILER_LABEL_PRINTF("DisplayList", "Draw",
-      js::ProfileEntry::Category::GRAPHICS, "%s", cdi->mItem->Name());
+    PROFILER_LABEL_DYNAMIC("DisplayList", "Draw",
+      js::ProfileEntry::Category::GRAPHICS, cdi->mItem->Name());
 #else
     PROFILER_LABEL("DisplayList", "Draw",
       js::ProfileEntry::Category::GRAPHICS);

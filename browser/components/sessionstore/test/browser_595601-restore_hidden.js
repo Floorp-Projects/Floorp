@@ -1,15 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var windowState = {windows:[{tabs:[
-  {entries:[{url:"http://example.com#1", triggeringPrincipal_base64}]},
-  {entries:[{url:"http://example.com#2", triggeringPrincipal_base64}]},
-  {entries:[{url:"http://example.com#3", triggeringPrincipal_base64}]},
-  {entries:[{url:"http://example.com#4", triggeringPrincipal_base64}]},
-  {entries:[{url:"http://example.com#5", triggeringPrincipal_base64}], hidden: true},
-  {entries:[{url:"http://example.com#6", triggeringPrincipal_base64}], hidden: true},
-  {entries:[{url:"http://example.com#7", triggeringPrincipal_base64}], hidden: true},
-  {entries:[{url:"http://example.com#8", triggeringPrincipal_base64}], hidden: true}
+var windowState = {windows: [{tabs: [
+  {entries: [{url: "http://example.com#1", triggeringPrincipal_base64}]},
+  {entries: [{url: "http://example.com#2", triggeringPrincipal_base64}]},
+  {entries: [{url: "http://example.com#3", triggeringPrincipal_base64}]},
+  {entries: [{url: "http://example.com#4", triggeringPrincipal_base64}]},
+  {entries: [{url: "http://example.com#5", triggeringPrincipal_base64}], hidden: true},
+  {entries: [{url: "http://example.com#6", triggeringPrincipal_base64}], hidden: true},
+  {entries: [{url: "http://example.com#7", triggeringPrincipal_base64}], hidden: true},
+  {entries: [{url: "http://example.com#8", triggeringPrincipal_base64}], hidden: true}
 ]}]};
 
 function test() {

@@ -50,6 +50,7 @@ class Viewport {
     this.onDimensionChanged = null;
     this.onPageChanged = null;
     this.onPasswordRequest = null;
+    this.onFullscreenChange = null;
 
     this._viewportController.addEventListener('scroll', this);
     this._viewportController.addEventListener('copy', this);
@@ -441,6 +442,10 @@ class Viewport {
         this._setZoom(this._computeFittingZoom());
       }
 
+      if (typeof this.onFullscreenChange === 'function') {
+        this.onFullscreenChange(fullscreen);
+      }
+
       this._fullscreenStatus = fullscreen ? 'fullscreen' : 'none';
 
       // Reset position to the beginning of the current page.
@@ -707,7 +712,7 @@ class Viewport {
     return element == this._viewportController;
   }
 
-  bindUIEvent(type, listener) {
+  bindUIEvent(type, listener, useCapture = false) {
     if (type == 'fullscreenchange' || type == 'MozScrolledAreaChanged') {
       // These two events won't be bound on a target because they should be
       // fully controlled by UI layer, and we'll manually trigger the resize
@@ -719,11 +724,11 @@ class Viewport {
         this._runtimeOnResizedListener.push(listener);
         break;
       default:
-        this._getEventTarget(type).addEventListener(type, listener);
+        this._getEventTarget(type).addEventListener(type, listener, useCapture);
     }
   }
 
-  unbindUIEvent(type, listener) {
+  unbindUIEvent(type, listener, useCapture = false) {
     if (type == 'fullscreenchange' || type == 'MozScrolledAreaChanged') {
       return;
     }
@@ -733,7 +738,7 @@ class Viewport {
           this._runtimeOnResizedListener.filter(item => item != listener);
         break;
       default:
-        this._getEventTarget(type).removeEventListener(type, listener);
+        this._getEventTarget(type).removeEventListener(type, listener, useCapture);
     }
   }
 
@@ -773,6 +778,9 @@ class Viewport {
         break;
       case 'command':
         this._handleCommand(message.name);
+        break;
+      case 'goToPage':
+        this.page = message.page;
         break;
     }
   }

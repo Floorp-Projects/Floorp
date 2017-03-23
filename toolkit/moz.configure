@@ -693,12 +693,37 @@ def servo_target_dir(value):
 set_config('SERVO_TARGET_DIR', servo_target_dir)
 
 # WebRender integration
-option('--enable-webrender', help='Include WebRender')
+option('--enable-webrender', nargs='?', choices=('build',),
+       help='Include WebRender in the build and/or enable it at runtime')
 
-set_config('MOZ_ENABLE_WEBRENDER',
-           depends_if('--enable-webrender')(lambda _: True))
-set_define('MOZ_ENABLE_WEBRENDER',
-           depends_if('--enable-webrender')(lambda _: True))
+@depends('--enable-webrender', milestone, target)
+def webrender(value, milestone, target):
+    build_webrender = None
+    enable_webrender = None
+
+    if target.os == 'Android':
+        # we can't yet build WebRender on Android, see bug 1323612.
+        pass
+    elif value.origin == 'default':
+        # if nothing is specified, default to just building on Nightly
+        build_webrender = milestone.is_nightly
+    elif value == 'build':
+        # if explicitly set to 'build', then we build but don't enable
+        build_webrender = True
+    elif bool(value):
+        # if set to true, then build and enable
+        build_webrender = True
+        enable_webrender = True
+
+    # in all other cases, don't build it or enable it (defaults are fine)
+    return namespace(
+        build = build_webrender,
+        enable = enable_webrender,
+    )
+
+set_config('MOZ_BUILD_WEBRENDER', delayed_getattr(webrender, 'build'))
+set_define('MOZ_BUILD_WEBRENDER', delayed_getattr(webrender, 'build'))
+set_config('MOZ_ENABLE_WEBRENDER', delayed_getattr(webrender, 'enable'))
 
 # Printing
 # ==============================================================

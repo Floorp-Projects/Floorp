@@ -111,8 +111,8 @@ this.PageThumbs = {
   /**
    * The calculated width and height of the thumbnails.
    */
-  _thumbnailWidth : 0,
-  _thumbnailHeight : 0,
+  _thumbnailWidth: 0,
+  _thumbnailHeight: 0,
 
   /**
    * The scheme to use for thumbnail urls.

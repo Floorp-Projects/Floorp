@@ -447,6 +447,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void Push(const ImmPtr imm) PER_SHARED_ARCH;
     void Push(const ImmGCPtr ptr) PER_SHARED_ARCH;
     void Push(FloatRegister reg) PER_SHARED_ARCH;
+    void PushFlags() DEFINED_ON(x86_shared);
     void Push(jsid id, Register scratchReg);
     void Push(TypedOrValueRegister v);
     void Push(const ConstantOrRegister& v);
@@ -462,6 +463,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void Pop(Register reg) PER_SHARED_ARCH;
     void Pop(FloatRegister t) PER_SHARED_ARCH;
     void Pop(const ValueOperand& val) PER_SHARED_ARCH;
+    void PopFlags() DEFINED_ON(x86_shared);
     void popRooted(VMFunction::RootType rootType, Register cellReg, const ValueOperand& valueReg);
 
     // Move the stack pointer based on the requested amount.
@@ -1113,6 +1115,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchIfTrueBool(Register reg, Label* label);
 
     inline void branchIfRope(Register str, Label* label);
+    inline void branchIfRopeOrExternal(Register str, Register temp, Label* label);
 
     inline void branchLatin1String(Register string, Label* label);
     inline void branchTwoByteString(Register string, Label* label);
@@ -1461,6 +1464,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     // including "normal" OutOfLineCode.
     void wasmEmitTrapOutOfLineCode();
 
+    // Assert invariants that should be true within any non-exit-stub wasm code.
+    void wasmAssertNonExitInvariants(Register activation);
+
   public:
     // ========================================================================
     // Clamping functions.
@@ -1516,15 +1522,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadJSContext(dest);
         loadPtr(Address(dest, offsetof(JSContext, activation_)), dest);
     }
-    void loadWasmActivationFromTls(Register dest) {
-        loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, cx)), dest);
-        loadPtr(Address(dest, JSContext::offsetOfWasmActivation()), dest);
-    }
-    void loadWasmActivationFromSymbolicAddress(Register dest) {
-        movePtr(wasm::SymbolicAddress::ContextPtr, dest);
-        loadPtr(Address(dest, 0), dest);
-        loadPtr(Address(dest, JSContext::offsetOfWasmActivation()), dest);
-    }
+
+    void loadWasmActivationFromTls(Register dest);
+    void loadWasmTlsRegFromFrame(Register dest = WasmTlsReg);
 
     template<typename T>
     void loadTypedOrValue(const T& src, TypedOrValueRegister dest) {

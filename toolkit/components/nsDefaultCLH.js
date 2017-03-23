@@ -37,11 +37,11 @@ nsDefaultCLH.prototype = {
 
   /* nsISupports */
 
-  QueryInterface : XPCOMUtils.generateQI([nsICommandLineHandler]),
+  QueryInterface: XPCOMUtils.generateQI([nsICommandLineHandler]),
 
   /* nsICommandLineHandler */
 
-  handle : function clh_handle(cmdLine) {
+  handle: function clh_handle(cmdLine) {
     var printDir;
     while ((printDir = cmdLine.handleFlagWithParam("print-xpcom-dir", false))) {
       var out = "print-xpcom-dir(\"" + printDir + "\"): ";
@@ -110,7 +110,7 @@ nsDefaultCLH.prototype = {
     } catch (e) { }
   },
 
-  helpInfo : "",
+  helpInfo: "",
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsDefaultCLH]);

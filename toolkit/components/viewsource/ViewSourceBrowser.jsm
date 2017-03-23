@@ -250,7 +250,7 @@ ViewSourceBrowser.prototype = {
         this.bundle.GetStringFromName("goToLineText"),
         input,
         null,
-        {value:0});
+        {value: 0});
 
     if (!ok)
       return;

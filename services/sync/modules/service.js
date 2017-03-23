@@ -230,12 +230,13 @@ Sync11Service.prototype = {
       cryptoKeys.ciphertext = cipherText;
       cryptoKeys.cleartext  = null;
 
-      let uploadResp = cryptoKeys.upload(this.resource(this.cryptoKeysURL));
-      if (uploadResp.success)
+      let uploadResp = this._uploadCryptoKeys(cryptoKeys, cryptoResp.obj.modified);
+      if (uploadResp.success) {
         this._log.info("Successfully re-uploaded keys. Continuing sync.");
-      else
+      } else {
         this._log.warn("Got error response re-uploading keys. " +
                        "Continuing sync; let's try again later.");
+      }
 
       return false;            // Don't try again: same keys.
 
@@ -676,8 +677,7 @@ Sync11Service.prototype = {
     this._log.info("Encrypting new key bundle.");
     wbo.encrypt(this.identity.syncKeyBundle);
 
-    this._log.info("Uploading...");
-    let uploadRes = wbo.upload(this.resource(this.cryptoKeysURL));
+    let uploadRes = this._uploadCryptoKeys(wbo, 0);
     if (uploadRes.status != 200) {
       this._log.warn("Got status " + uploadRes.status + " uploading new keys. What to do? Throw!");
       this.errorHandler.checkServerError(uploadRes);
@@ -902,16 +902,9 @@ Sync11Service.prototype = {
 
       if (this.recordManager.response.status == 404) {
         this._log.debug("No meta/global record on the server. Creating one.");
-        newMeta = new WBORecord("meta", "global");
-        newMeta.payload.syncID = this.syncID;
-        newMeta.payload.storageVersion = STORAGE_VERSION;
-        newMeta.payload.declined = this.engineManager.getDeclined();
-
-        newMeta.isNew = true;
-
-        this.recordManager.set(this.metaURL, newMeta);
-        let uploadRes = newMeta.upload(this.resource(this.metaURL));
-        if (!uploadRes.success) {
+        try {
+          this._uploadNewMetaGlobal();
+        } catch (uploadRes) {
           this._log.warn("Unable to upload new meta/global. Failing remote setup.");
           this.errorHandler.checkServerError(uploadRes);
           return false;
@@ -1116,21 +1109,50 @@ Sync11Service.prototype = {
   },
 
   /**
-   * Upload meta/global, throwing the response on failure.
+   * Upload a fresh meta/global record
+   * @throws the response object if the upload request was not a success
+   */
+  _uploadNewMetaGlobal() {
+    let meta = new WBORecord("meta", "global");
+    meta.payload.syncID = this.syncID;
+    meta.payload.storageVersion = STORAGE_VERSION;
+    meta.payload.declined = this.engineManager.getDeclined();
+    meta.modified = 0;
+    meta.isNew = true;
+
+    this.uploadMetaGlobal(meta);
+  },
+
+  /**
+   * Upload meta/global, throwing the response on failure
+   * @param {WBORecord} meta meta/global record
+   * @throws the response object if the request was not a success
    */
   uploadMetaGlobal(meta) {
-    this._log.debug("Uploading meta/global: " + JSON.stringify(meta));
-
-    // It would be good to set the X-If-Unmodified-Since header to `timestamp`
-    // for this PUT to ensure at least some level of transactionality.
-    // Unfortunately, the servers don't support it after a wipe right now
-    // (bug 693893), so we're going to defer this until bug 692700.
+    this._log.debug("Uploading meta/global", meta);
     let res = this.resource(this.metaURL);
+    res.setHeader("X-If-Unmodified-Since", meta.modified);
     let response = res.put(meta);
     if (!response.success) {
       throw response;
     }
+    // From https://docs.services.mozilla.com/storage/apis-1.5.html:
+    // "Successful responses will return the new last-modified time for the collection."
+    meta.modified = response.obj;
     this.recordManager.set(this.metaURL, meta);
+  },
+
+  /**
+   * Upload crypto/keys
+   * @param {WBORecord} cryptoKeys crypto/keys record
+   * @param {Number} lastModified known last modified timestamp (in decimal seconds),
+   *                 will be used to set the X-If-Unmodified-Since header
+   */
+  _uploadCryptoKeys(cryptoKeys, lastModified) {
+    this._log.debug(`Uploading crypto/keys (lastModified: ${lastModified})`);
+    let res = this.resource(this.cryptoKeysURL);
+    res.setHeader("X-If-Unmodified-Since", lastModified);
+    return res.put(cryptoKeys);
   },
 
   _freshStart: function _freshStart() {
@@ -1142,17 +1164,11 @@ Sync11Service.prototype = {
     this.wipeServer();
 
     // Upload a new meta/global record.
-    let meta = new WBORecord("meta", "global");
-    meta.payload.syncID = this.syncID;
-    meta.payload.storageVersion = STORAGE_VERSION;
-    meta.payload.declined = this.engineManager.getDeclined();
-    meta.isNew = true;
-
-    // uploadMetaGlobal throws on failure -- including race conditions.
+    // _uploadNewMetaGlobal throws on failure -- including race conditions.
     // If we got into a race condition, we'll abort the sync this way, too.
     // That's fine. We'll just wait till the next sync. The client that we're
     // racing is probably busy uploading stuff right now anyway.
-    this.uploadMetaGlobal(meta);
+    this._uploadNewMetaGlobal();
 
     // Wipe everything we know about except meta because we just uploaded it
     // TODO: there's a bug here. We should be calling resetClient, no?

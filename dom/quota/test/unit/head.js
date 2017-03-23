@@ -261,12 +261,24 @@ function getPersistedFromMetadata(readBuffer)
   return !!view[persistedPosition];
 }
 
-function grabUsageAndContinueHandler(request)
+function grabResultAndContinueHandler(request)
 {
-  testGenerator.next(request.usage);
+  testGenerator.next(request.result);
 }
 
-function getUsage(usageHandler)
+function grabUsageAndContinueHandler(request)
+{
+  testGenerator.next(request.result.usage);
+}
+
+function getUsage(usageHandler, getAll)
+{
+  let request = SpecialPowers._getQuotaManager().getUsage(usageHandler, getAll);
+
+  return request;
+}
+
+function getCurrentUsage(usageHandler)
 {
   let principal = Cc["@mozilla.org/systemprincipal;1"]
                     .createInstance(Ci.nsIPrincipal);

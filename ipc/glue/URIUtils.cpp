@@ -16,7 +16,7 @@
 #include "nsJARURI.h"
 #include "nsIIconURI.h"
 #include "nsHostObjectURI.h"
-#include "nsNullPrincipalURI.h"
+#include "NullPrincipalURI.h"
 #include "nsJSProtocolHandler.h"
 #include "nsNetCID.h"
 #include "nsSimpleNestedURI.h"
@@ -100,7 +100,7 @@ DeserializeURI(const URIParams& aParams)
       break;
 
     case URIParams::TNullPrincipalURIParams:
-      serializable = new nsNullPrincipalURI();
+      serializable = new NullPrincipalURI();
       break;
 
     case URIParams::TSimpleNestedURIParams:

@@ -58,9 +58,9 @@ function handlePrompt(state, action) {
 add_task(function* test_select_empty_list() {
     info("Starting test: Select (0 items, ok)");
     let state = {
-        msg   : "This is the select text.",
-        title : "TestTitle",
-        items : [],
+        msg: "This is the select text.",
+        title: "TestTitle",
+        items: [],
     };
     let action = {
         buttonClick: "ok",
@@ -79,9 +79,9 @@ add_task(function* test_select_empty_list() {
 add_task(function* test_select_ok() {
     info("Starting test: Select (3 items, ok)");
     let state = {
-        msg   : "This is the select text.",
-        title : "TestTitle",
-        items : ["one", "two", "three"],
+        msg: "This is the select text.",
+        title: "TestTitle",
+        items: ["one", "two", "three"],
     };
     let action = {
         buttonClick: "ok",
@@ -100,9 +100,9 @@ add_task(function* test_select_ok() {
 add_task(function* test_select_item() {
     info("Starting test: Select (3 items, selection changed, ok)");
     let state = {
-        msg   : "This is the select text.",
-        title : "TestTitle",
-        items : ["one", "two", "three"],
+        msg: "This is the select text.",
+        title: "TestTitle",
+        items: ["one", "two", "three"],
     };
     let action = {
         buttonClick: "ok",
@@ -122,9 +122,9 @@ add_task(function* test_select_item() {
 add_task(function* test_cancel_prompt() {
     info("Starting test: Select (3 items, cancel)");
     let state = {
-        msg   : "This is the select text.",
-        title : "TestTitle",
-        items : ["one", "two", "three"],
+        msg: "This is the select text.",
+        title: "TestTitle",
+        items: ["one", "two", "three"],
     };
     let action = {
         buttonClick: "cancel",

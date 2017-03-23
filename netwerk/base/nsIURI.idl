@@ -63,7 +63,7 @@
  * old (pre-gecko6) nsIURI IID and swap in the current IID instead, in order
  * for sessionstore to work after an upgrade.  If this IID is revved further,
  * we will need to add additional checks there for all intermediate IIDs, until
- * nsPrincipal is fixed to serialize its URIs as nsISupports (bug 662693).
+ * ContentPrincipal is fixed to serialize its URIs as nsISupports (bug 662693).
  */
 [scriptable, uuid(92073a54-6d78-4f30-913a-b871813208c6)]
 interface nsIURI : nsISupports

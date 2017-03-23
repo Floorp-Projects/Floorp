@@ -174,10 +174,10 @@ WMFAudioMFTManager::Init()
   hr = outputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
-  hr = outputType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
+  hr = outputType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
-  hr = outputType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
+  hr = outputType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 32);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   hr = decoder->SetMediaTypes(inputType, outputType);
@@ -302,8 +302,8 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
     mAudioTimeOffset = media::TimeUnit::FromMicroseconds(timestampHns / 10);
     mMustRecaptureAudioPosition = false;
   }
-  // We can assume PCM 16 output.
-  int32_t numSamples = currentLength / 2;
+  // Output is made of floats.
+  int32_t numSamples = currentLength / sizeof(float);
   int32_t numFrames = numSamples / mAudioChannels;
   MOZ_ASSERT(numFrames >= 0);
   MOZ_ASSERT(numSamples >= 0);
@@ -318,10 +318,7 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
     return E_OUTOFMEMORY;
   }
 
-  int16_t* pcm = (int16_t*)data;
-  for (int32_t i = 0; i < numSamples; ++i) {
-    audioData[i] = AudioSampleToFloat(pcm[i]);
-  }
+  PodCopy(audioData.Data(), reinterpret_cast<float*>(data), numSamples);
 
   buffer->Unlock();
 

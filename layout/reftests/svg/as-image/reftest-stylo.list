@@ -126,7 +126,7 @@ fails == img-fragment-2a.html img-fragment-2a.html
 fails == img-fragment-2b.html img-fragment-2b.html
 fails == img-fragment-2c.html img-fragment-2c.html
 
-fails == list-simple-1.html list-simple-1.html
+== list-simple-1.html list-simple-1.html
 
 == svg-image-simple-1.svg svg-image-simple-1.svg
 == svg-image-simple-2.svg svg-image-simple-2.svg
