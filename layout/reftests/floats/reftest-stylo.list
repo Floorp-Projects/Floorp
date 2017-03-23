@@ -91,10 +91,10 @@ fails == float-in-rtl-vrl-4d.html float-in-rtl-vrl-4d.html
 fails == orthogonal-floats-1c.html orthogonal-floats-1c.html
 fails == orthogonal-floats-1d.html orthogonal-floats-1d.html
 
-fails pref(layout.css.float-logical-values.enabled,true) == logical-float-side-1.html logical-float-side-1.html
-fails pref(layout.css.float-logical-values.enabled,true) == logical-float-side-2.html logical-float-side-2.html
-fails pref(layout.css.float-logical-values.enabled,true) == logical-float-side-3.html logical-float-side-3.html
-fails pref(layout.css.float-logical-values.enabled,true) == logical-float-side-4.html logical-float-side-4.html
+pref(layout.css.float-logical-values.enabled,true) == logical-float-side-1.html logical-float-side-1.html
+pref(layout.css.float-logical-values.enabled,true) == logical-float-side-2.html logical-float-side-2.html
+pref(layout.css.float-logical-values.enabled,true) == logical-float-side-3.html logical-float-side-3.html
+pref(layout.css.float-logical-values.enabled,true) == logical-float-side-4.html logical-float-side-4.html
 
 fails == float-in-rtl-slr-1a.html float-in-rtl-slr-1a.html
 fails == float-in-rtl-slr-1b.html float-in-rtl-slr-1b.html
