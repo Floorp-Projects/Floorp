@@ -27,7 +27,6 @@ class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
     def setUp(self):
         super(BaseNavigationTestCase, self).setUp()
 
-        self.test_page_frameset = self.marionette.absolute_url("frameset.html")
         self.test_page_insecure = self.fixtures.where_is("test.html", on="https")
         self.test_page_not_remote = "about:robots"
         self.test_page_remote = self.marionette.absolute_url("test.html")
@@ -127,14 +126,31 @@ class TestNavigate(BaseNavigationTestCase):
         self.marionette.navigate("about:blank")
         self.assertEqual("about:blank", self.marionette.get_url())
 
+    def test_refresh(self):
+        self.marionette.navigate(self.test_page_remote)
+        self.assertEqual("Marionette Test", self.marionette.title)
+        self.assertTrue(self.marionette.execute_script(
+            """var elem = window.document.createElement('div'); elem.id = 'someDiv';
+            window.document.body.appendChild(elem); return true;"""))
+        self.assertFalse(self.marionette.execute_script(
+            "return window.document.getElementById('someDiv') == undefined"))
+        self.marionette.refresh()
+        # TODO(ato): Bug 1291320
+        time.sleep(0.2)
+        self.assertEqual("Marionette Test", self.marionette.title)
+        self.assertTrue(self.marionette.execute_script(
+            "return window.document.getElementById('someDiv') == undefined"))
+
     def test_navigate_in_child_frame_changes_to_top(self):
-        self.marionette.navigate(self.test_page_frameset)
+        page_frameset = self.marionette.absolute_url("frameset.html")
+
+        self.marionette.navigate(page_frameset)
         frame = self.marionette.find_element(By.NAME, "third")
         self.marionette.switch_to_frame(frame)
         self.assertRaises(errors.NoSuchElementException,
                           self.marionette.find_element, By.NAME, "third")
 
-        self.marionette.navigate(self.test_page_frameset)
+        self.marionette.navigate(page_frameset)
         self.marionette.find_element(By.NAME, "third")
 
     @skip_if_mobile("Bug 1323755 - Socket timeout")
@@ -471,65 +487,6 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
              "error": errors.InsecureCertificateException},
         ]
         self.run_bfcache_test(test_pages)
-
-
-class TestRefresh(BaseNavigationTestCase):
-
-    def test_basic(self):
-        self.marionette.navigate(self.test_page_remote)
-        self.assertEqual(self.test_page_remote, self.marionette.get_url())
-
-        self.marionette.execute_script("""
-          let elem = window.document.createElement('div');
-          elem.id = 'someDiv';
-          window.document.body.appendChild(elem);
-        """)
-        self.marionette.find_element(By.ID, "someDiv")
-
-        self.marionette.refresh()
-        self.assertEqual(self.test_page_remote, self.marionette.get_url())
-        with self.assertRaises(errors.NoSuchElementException):
-            self.marionette.find_element(By.ID, "someDiv")
-
-    def test_refresh_in_child_frame_navigates_to_top(self):
-        self.marionette.navigate(self.test_page_frameset)
-        self.assertEqual(self.test_page_frameset, self.marionette.get_url())
-
-        frame = self.marionette.find_element(By.NAME, "third")
-        self.marionette.switch_to_frame(frame)
-        self.assertRaises(errors.NoSuchElementException,
-                          self.marionette.find_element, By.NAME, "third")
-
-        self.marionette.refresh()
-        self.marionette.find_element(By.NAME, "third")
-
-    def test_image(self):
-        image = self.marionette.absolute_url('black.png')
-
-        self.marionette.navigate(image)
-        self.assertEqual(image, self.marionette.get_url())
-
-        self.marionette.refresh()
-        self.assertEqual(image, self.marionette.get_url())
-
-    def test_timeout_error(self):
-        slow_page = self.marionette.absolute_url("slow?delay=3")
-
-        self.marionette.navigate(slow_page)
-        self.assertEqual(slow_page, self.marionette.get_url())
-
-        self.marionette.timeout.page_load = 0.5
-        with self.assertRaises(errors.TimeoutException):
-            self.marionette.refresh()
-        self.assertEqual(slow_page, self.marionette.get_url())
-
-    def test_insecure_error(self):
-        with self.assertRaises(errors.InsecureCertificateException):
-            self.marionette.navigate(self.test_page_insecure)
-        self.assertEqual(self.test_page_insecure, self.marionette.get_url())
-
-        with self.assertRaises(errors.InsecureCertificateException):
-            self.marionette.refresh()
 
 
 class TestTLSNavigation(MarionetteTestCase):
