@@ -970,7 +970,7 @@ FrameHasPositionedPlaceholderDescendants(nsIFrame* aFrame,
           nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
         // If SVG text frames could appear here, they could confuse us since
         // they ignore their position style ... but they can't.
-        NS_ASSERTION(!outOfFlow->IsSVGText(),
+        NS_ASSERTION(!nsSVGUtils::IsInSVGTextSubtree(outOfFlow),
                      "SVG text frames can't be out of flow");
         if (aPositionMask & (1 << outOfFlow->StyleDisplay()->mPosition)) {
           return true;
@@ -1093,7 +1093,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       }
     }
     if (aChange & nsChangeHint_UpdateTextPath) {
-      if (aFrame->IsSVGText()) {
+      if (nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
         // Invalidate and reflow the entire SVGTextFrame:
         NS_ASSERTION(aFrame->GetContent()->IsSVGElement(nsGkAtoms::textPath),
                      "expected frame for a <textPath> element");

@@ -433,15 +433,16 @@ nsSVGUtils::GetUserToCanvasTM(nsIFrame *aFrame)
   return tm;
 }
 
-void 
+void
 nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, uint32_t aFlags)
 {
   for (nsIFrame* kid : aFrame->PrincipalChildList()) {
     nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
-      SVGFrame->NotifySVGChanged(aFlags); 
+      SVGFrame->NotifySVGChanged(aFlags);
     } else {
-      NS_ASSERTION(kid->IsFrameOfType(nsIFrame::eSVG) || kid->IsSVGText(),
+      NS_ASSERTION(kid->IsFrameOfType(nsIFrame::eSVG) ||
+                   nsSVGUtils::IsInSVGTextSubtree(kid),
                    "SVG frame expected");
       // recurse into the children of container frames e.g. <clipPath>, <mask>
       // in case they have child frames with transformation matrices
@@ -632,7 +633,7 @@ private:
       mSourceCtx->Multiply(aTransform);
       nsRect overflowRect = mFrame->GetVisualOverflowRectRelativeToSelf();
       if (mFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
-          mFrame->IsSVGText()) {
+          nsSVGUtils::IsInSVGTextSubtree(mFrame)) {
         // Unlike containers, leaf frames do not include GetPosition() in
         // GetCanvasTM().
         overflowRect = overflowRect + mFrame->GetPosition();
@@ -695,7 +696,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
     // SVG doesn't maintain bounds/overflow rects.
     nsRect overflowRect = aFrame->GetVisualOverflowRectRelativeToSelf();
     if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
-        aFrame->IsSVGText()) {
+        nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
       // Unlike containers, leaf frames do not include GetPosition() in
       // GetCanvasTM().
       overflowRect = overflowRect + aFrame->GetPosition();
@@ -1105,13 +1106,13 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
     aFrame = aFrame->GetParent();
   }
 
-  if (aFrame->IsSVGText()) {
+  if (nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
     // It is possible to apply a gradient, pattern, clipping path, mask or
     // filter to text. When one of these facilities is applied to text
     // the bounding box is the entire text element in all
     // cases.
     nsIFrame* ancestor = GetFirstNonAAncestorFrame(aFrame);
-    if (ancestor && ancestor->IsSVGText()) {
+    if (ancestor && nsSVGUtils::IsInSVGTextSubtree(ancestor)) {
       while (ancestor->GetType() != nsGkAtoms::svgTextFrame) {
         ancestor = ancestor->GetParent();
       }
@@ -1238,7 +1239,7 @@ nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(nsIFrame *aFrame)
 
   // Leaf frames apply their own offset inside their user space.
   if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
-      aFrame->IsSVGText()) {
+      nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
     return nsLayoutUtils::RectToGfxRect(aFrame->GetRect(),
                                          nsPresContext::AppUnitsPerCSSPixel()).TopLeft();
   }
@@ -1402,7 +1403,8 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                                           nsTextFrame* aFrame,
                                           const gfxMatrix& aMatrix)
 {
-  NS_ASSERTION(aFrame->IsSVGText(), "expected an nsTextFrame for SVG text");
+  NS_ASSERTION(nsSVGUtils::IsInSVGTextSubtree(aFrame),
+               "expected an nsTextFrame for SVG text");
   return ::PathExtentsToMaxStrokeExtents(aPathExtents, aFrame, 0.5, aMatrix);
 }
 

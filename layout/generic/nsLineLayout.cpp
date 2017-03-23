@@ -79,7 +79,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mDirtyNextLine(false),
     mLineAtStart(false),
     mHasRuby(false),
-    mSuppressLineWrap(aOuterReflowInput->mFrame->IsSVGText())
+    mSuppressLineWrap(nsSVGUtils::IsInSVGTextSubtree(aOuterReflowInput->mFrame))
 {
   MOZ_ASSERT(aOuterReflowInput, "aOuterReflowInput must not be null");
   NS_ASSERTION(aFloatManager || aOuterReflowInput->mFrame->GetType() ==
@@ -1740,7 +1740,7 @@ static float
 GetInflationForBlockDirAlignment(nsIFrame* aFrame,
                                  nscoord aInflationMinFontSize)
 {
-  if (aFrame->IsSVGText()) {
+  if (nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
     const nsIFrame* container =
       nsLayoutUtils::GetClosestFrameOfType(aFrame, nsGkAtoms::svgTextFrame);
     NS_ASSERTION(container, "expected to find an ancestor SVGTextFrame");
@@ -3140,7 +3140,7 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
     }
   }
 
-  bool isSVG = mBlockReflowInput->mFrame->IsSVGText();
+  bool isSVG = nsSVGUtils::IsInSVGTextSubtree(mBlockReflowInput->mFrame);
   bool doTextAlign = remainingISize > 0 || textAlignTrue;
 
   int32_t additionalGaps = 0;
