@@ -13,10 +13,9 @@
  * @param {object} headers - the "requestHeaders".
  * @param {object} uploadHeaders - the "requestHeadersFromUploadStream".
  * @param {object} postData - the "requestPostData".
- * @param {function} getString - callback to retrieve a string from a LongStringGrip.
  * @return {array} a promise list that is resolved with the extracted form data.
  */
-async function getFormDataSections(headers, uploadHeaders, postData, getString) {
+async function getFormDataSections(headers, uploadHeaders, postData, getLongString) {
   let formDataSections = [];
 
   let requestHeaders = headers.headers;
@@ -29,11 +28,11 @@ async function getFormDataSections(headers, uploadHeaders, postData, getString) 
 
   let contentTypeLongString = contentTypeHeader ? contentTypeHeader.value : "";
 
-  let contentType = await getString(contentTypeLongString);
+  let contentType = await getLongString(contentTypeLongString);
 
   if (contentType.includes("x-www-form-urlencoded")) {
     let postDataLongString = postData.postData.text;
-    let text = await getString(postDataLongString);
+    let text = await getLongString(postDataLongString);
 
     for (let section of text.split(/\r\n|\r|\n/)) {
       // Before displaying it, make sure this section of the POST data
@@ -51,12 +50,11 @@ async function getFormDataSections(headers, uploadHeaders, postData, getString) 
  * Fetch headers full content from actor server
  *
  * @param {object} headers - a object presents headers data
- * @param {function} getString - callback to retrieve a string from a LongStringGrip
  * @return {object} a headers object with updated content payload
  */
-async function fetchHeaders(headers, getString) {
+async function fetchHeaders(headers, getLongString) {
   for (let { value } of headers.headers) {
-    headers.headers.value = await getString(value);
+    headers.headers.value = await getLongString(value);
   }
   return headers;
 }

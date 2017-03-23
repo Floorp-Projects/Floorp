@@ -11,6 +11,7 @@ const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const { HarExporter } = require("./har/har-exporter");
+const { getLongString } = require("./utils/client");
 const { L10N } = require("./utils/l10n");
 const {
   formDataURI,
@@ -146,7 +147,8 @@ RequestListContextMenu.prototype = {
 
     menu.append(new MenuItem({
       type: "separator",
-      visible: !!selectedRequest,
+      visible: !!(window.NetMonitorController.supportsCustomRequest &&
+               selectedRequest && !selectedRequest.isCustom),
     }));
 
     menu.append(new MenuItem({
@@ -221,7 +223,7 @@ RequestListContextMenu.prototype = {
       selected.requestHeaders,
       selected.requestHeadersFromUploadStream,
       selected.requestPostData,
-      window.gNetwork.getString.bind(window.gNetwork));
+      getLongString);
 
     let params = [];
     formDataSections.forEach(section => {
@@ -238,7 +240,7 @@ RequestListContextMenu.prototype = {
     // Fall back to raw payload.
     if (!string) {
       let postData = selected.requestPostData.postData.text;
-      string = await window.gNetwork.getString(postData);
+      string = await getLongString(postData);
       if (Services.appinfo.OS !== "WINNT") {
         string = string.replace(/\r/g, "");
       }
@@ -264,14 +266,14 @@ RequestListContextMenu.prototype = {
 
     // Fetch header values.
     for (let { name, value } of selected.requestHeaders.headers) {
-      let text = await window.gNetwork.getString(value);
+      let text = await getLongString(value);
       data.headers.push({ name: name, value: text });
     }
 
     // Fetch the request payload.
     if (selected.requestPostData) {
       let postData = selected.requestPostData.postData.text;
-      data.postDataText = await window.gNetwork.getString(postData);
+      data.postDataText = await getLongString(postData);
     }
 
     clipboardHelper.copyString(Curl.generateCommand(data));
@@ -305,7 +307,7 @@ RequestListContextMenu.prototype = {
   copyImageAsDataUri() {
     const { mimeType, text, encoding } = this.selectedRequest.responseContent.content;
 
-    window.gNetwork.getString(text).then(string => {
+    getLongString(text).then(string => {
       let data = formDataURI(mimeType, encoding, string);
       clipboardHelper.copyString(data);
     });
@@ -317,7 +319,7 @@ RequestListContextMenu.prototype = {
   copyResponse() {
     const { text } = this.selectedRequest.responseContent.content;
 
-    window.gNetwork.getString(text).then(string => {
+    getLongString(text).then(string => {
       clipboardHelper.copyString(string);
     });
   },
@@ -341,7 +343,7 @@ RequestListContextMenu.prototype = {
     let title = form.title || form.url;
 
     return {
-      getString: window.gNetwork.getString.bind(window.gNetwork),
+      getString: getLongString,
       items: this.sortedRequests,
       title: title
     };

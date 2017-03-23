@@ -3020,7 +3020,7 @@ public:
     return mContent.mString;
   }
 
-  nsCSSValue::Array* GetCounters() const
+  nsCSSValue::ThreadSafeArray* GetCounters() const
   {
     MOZ_ASSERT(mType == eStyleContentType_Counter ||
                mType == eStyleContentType_Counters);
@@ -3061,7 +3061,7 @@ public:
     mContent.mString = NS_strdup(aString);
   }
 
-  void SetCounters(nsStyleContentType aType, nsCSSValue::Array* aCounters)
+  void SetCounters(nsStyleContentType aType, nsCSSValue::ThreadSafeArray* aCounters)
   {
     MOZ_ASSERT(aType == eStyleContentType_Counter ||
                aType == eStyleContentType_Counters);
@@ -3094,7 +3094,9 @@ private:
   union {
     char16_t *mString;
     nsStyleImageRequest* mImage;
-    nsCSSValue::Array* mCounters;
+    // NB: We need threadsafe refcounts here to enable inheritance in the
+    // parallel style traversal.
+    nsCSSValue::ThreadSafeArray* mCounters;
   } mContent;
 };
 

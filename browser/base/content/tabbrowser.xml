@@ -2194,6 +2194,7 @@
             var aDisallowInheritPrincipal;
             var aOpener;
             var aCreateLazyBrowser;
+            var aSkipBackgroundNotify;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -2220,6 +2221,7 @@
               aOpener                   = params.opener;
               aIsPrerendered            = params.isPrerendered;
               aCreateLazyBrowser        = params.createLazyBrowser;
+              aSkipBackgroundNotify     = params.skipBackgroundNotify;
             }
 
             // if we're adding tabs, we're past interrupt mode, ditch the owner
@@ -2254,6 +2256,11 @@
             }
 
             t.setAttribute("onerror", "this.removeAttribute('image');");
+
+            if (aSkipBackgroundNotify) {
+              t.setAttribute("skipbackgroundnotify", true);
+            }
+
             t.className = "tabbrowser-tab";
 
             this.tabContainer._unlockTabSizing();
@@ -2656,12 +2663,11 @@
                 !aSkipPermitUnload &&
                 aTab.linkedPanel &&
                 !aAdoptedByTab) {
+              TelemetryStopwatch.start("FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS", aTab);
+
               // We need to block while calling permitUnload() because it
               // processes the event queue and may lead to another removeTab()
               // call before permitUnload() returns.
-
-              TelemetryStopwatch.start("FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS", aTab);
-
               aTab._pendingPermitUnload = true;
               let {permitUnload, timedOut} = browser.permitUnload();
               delete aTab._pendingPermitUnload;
@@ -2672,8 +2678,6 @@
               // so we don't (try to) close the same tab again. Of course, we
               // also stop if the unload was cancelled by the user:
               if (aTab.closing || (!timedOut && !permitUnload)) {
-                // NB: deliberately keep the _closedDuringPermitUnload set to
-                // true so we keep exiting early in case of multiple calls.
                 return false;
               }
             }
@@ -6313,10 +6317,10 @@
                                                  selected.left - scrollRect.left);
           }
 
-          if (!this._animateElement.hasAttribute("notifybgtab")) {
-            this._animateElement.setAttribute("notifybgtab", "true");
+          if (!this._animateElement.hasAttribute("highlight")) {
+            this._animateElement.setAttribute("highlight", "true");
             setTimeout(function(ele) {
-              ele.removeAttribute("notifybgtab");
+              ele.removeAttribute("highlight");
             }, 150, this._animateElement);
           }
         ]]></body>
@@ -6404,7 +6408,7 @@
           if (tab.getAttribute("selected") == "true") {
             this._fillTrailingGap();
             this._handleTabSelect();
-          } else {
+          } else if (!tab.hasAttribute("skipbackgroundnotify")) {
             this._notifyBackgroundTab(tab);
           }
 
