@@ -109,7 +109,7 @@ struct nsFont {
   // Language system tag, to override document language;
   // this is an OpenType "language system" tag represented as a 32-bit integer
   // (see http://www.microsoft.com/typography/otspec/languagetags.htm).
-  nsString languageOverride;
+  uint32_t languageOverride = 0;
 
   // initialize the font with a fontlist
   nsFont(const mozilla::FontFamilyList& aFontlist, nscoord aSize);
