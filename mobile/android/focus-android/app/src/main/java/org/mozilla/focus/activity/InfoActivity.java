@@ -13,13 +13,16 @@ import android.support.annotation.Nullable;
 import android.support.v4.util.ArrayMap;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.AttributeSet;
 import android.view.View;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.fragment.InfoFragment;
 import org.mozilla.focus.utils.HtmlLoader;
 import org.mozilla.focus.utils.SupportUtils;
+import org.mozilla.focus.web.IWebView;
+import org.mozilla.focus.web.WebViewProvider;
 
 import java.util.Map;
 
@@ -62,25 +65,9 @@ public class InfoActivity extends AppCompatActivity {
         final String url = getIntent().getStringExtra(EXTRA_URL);
         final String title = getIntent().getStringExtra(EXTRA_TITLE);
 
-        final WebView webView = (WebView) findViewById(R.id.webview);
-        // By default WebView will try to open links and redirects in an external browser (and sumo
-        // links usually use a redirect to get to the desired target page). Somehow, setting a default
-        // WebViewClient() is enough to disable that behaviour.
-        webView.setWebViewClient(new WebViewClient() {
-
-            // We also hide the webview until it loads: webview shows a blank white screen until
-            // loading has finished, and loading is noticeably slow - we can avoid
-            // the jarring whitescreen (which can be visible up to 1-2s on really bad phones)
-            // by keeping it hidden until the (dark) content has loaded.
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-
-                view.setVisibility(View.VISIBLE);
-            }
-        });
-
-        loadURL(url, webView);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.infofragment, InfoFragment.create(url))
+                .commit();
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle(title);
@@ -119,5 +106,14 @@ public class InfoActivity extends AppCompatActivity {
         } else {
             webView.loadUrl(url);
         }
+    }
+
+    @Override
+    public View onCreateView(String name, Context context, AttributeSet attrs) {
+        if (name.equals(IWebView.class.getName())) {
+            return WebViewProvider.create(this, attrs);
+        }
+
+        return super.onCreateView(name, context, attrs);
     }
 }

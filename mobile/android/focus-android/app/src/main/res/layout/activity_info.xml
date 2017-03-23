@@ -15,9 +15,8 @@
         android:background="?attr/colorPrimary"
         android:elevation="4dp"/>
 
-    <WebView
-        android:id="@+id/webview"
-        android:visibility="gone"
+    <FrameLayout
+        android:id="@+id/infofragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
