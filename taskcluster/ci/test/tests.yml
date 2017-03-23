@@ -9,10 +9,6 @@ cppunit:
     description: "CPP Unit Tests"
     suite: cppunittest
     treeherder-symbol: tc(Cpp)
-    instance-size:
-        by-test-platform:
-            linux64-ccov/opt: xlarge
-            default: default
     e10s: false
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
@@ -68,7 +64,6 @@ crashtest:
     e10s:
         by-test-platform:
             windows.*: false # Bug 1304435
-            linux64-ccov/opt: false
             macosx64/debug: true
             default: both
     mozharness:
@@ -177,17 +172,9 @@ firefox-ui-functional-local:
     description: "Firefox-ui-tests functional run"
     suite: "firefox-ui/functional local"
     treeherder-symbol: tc-Fxfn-l(en-US)
-    instance-size:
-        by-test-platform:
-            linux64-ccov/opt: xlarge
-            default: default
     max-run-time: 5400
     tier: 1
     docker-image: {"in-tree": "desktop1604-test"}
-    e10s:
-        by-test-platform:
-            linux64-ccov/opt: false
-            default: both
     mozharness:
         script: firefox_ui_tests/functional.py
         config:
@@ -201,17 +188,9 @@ firefox-ui-functional-remote:
     description: "Firefox-ui-tests functional run"
     suite: "firefox-ui/functional remote"
     treeherder-symbol: tc-Fxfn-r(en-US)
-    instance-size:
-        by-test-platform:
-            linux64-ccov/opt: xlarge
-            default: default
     max-run-time: 5400
     tier: 2
     docker-image: {"in-tree": "desktop1604-test"}
-    e10s:
-        by-test-platform:
-            linux64-ccov/opt: false
-            default: both
     mozharness:
         script: firefox_ui_tests/functional.py
         config:
@@ -252,10 +231,6 @@ jittest:
     description: "JIT Test run"
     suite: jittest/jittest-chunked
     treeherder-symbol: tc(Jit)
-    instance-size:
-        by-test-platform:
-            linux64-ccov/opt: xlarge
-            default: default
     e10s: false
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
@@ -314,7 +289,6 @@ jsreftest:
             # Bug 1321782
             windows.*: false
             android.*: false
-            linux64-ccov/opt: false
             macosx.*: true
             default: both
     max-run-time:
@@ -367,7 +341,6 @@ marionette:
     instance-size:
         by-test-platform:
             android.*: xlarge
-            linux64-ccov/opt: xlarge
             default: default
     docker-image: {"in-tree": "desktop1604-test"}
     tier:
@@ -380,7 +353,6 @@ marionette:
             default: 1
     e10s:
         by-test-platform:
-            linux64-ccov/opt: false
             macosx.*: true
             default: both
     mozharness:
@@ -425,7 +397,6 @@ mochitest:
             linux.*: 10
     e10s:
         by-test-platform:
-            linux64-ccov/opt: false
             linux64-jsdcov/opt: false
             android.*: false
             macosx64/debug: true
@@ -472,10 +443,6 @@ mochitest-a11y:
     description: "Mochitest a11y run"
     suite: mochitest/a11y
     treeherder-symbol: tc-M(a11y)
-    instance-size:
-        by-test-platform:
-            linux64-ccov/opt: xlarge
-            default: default
     loopback-video: true
     e10s: false
     docker-image: {"in-tree": "desktop1604-test"}
@@ -519,7 +486,6 @@ mochitest-browser-chrome:
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
-            linux64-ccov/opt: false
             macosx64/debug: true
             default: both
     max-run-time:
@@ -554,7 +520,6 @@ mochitest-browser-chrome:
     instance-size:
         by-test-platform:
             linux64-jsdcov/opt: xlarge
-            linux64-ccov/opt: xlarge
             default: legacy
     allow-software-gl-layers: false
 
@@ -597,7 +562,6 @@ mochitest-chrome:
     instance-size:
         by-test-platform:
             android.*: xlarge
-            linux64-ccov/opt: xlarge
             default: default
     chunks:
         by-test-platform:
@@ -647,7 +611,6 @@ mochitest-clipboard:
     e10s:
       by-test-platform:
         macosx64/debug: true
-        linux64-ccov/opt: false
         default: both
     mozharness:
         by-test-platform:
@@ -698,7 +661,6 @@ mochitest-devtools-chrome:
             default: ['all']
     e10s:
         by-test-platform:
-            linux64-ccov/opt: false
             linux64-jsdcov/opt: false
             # Bug 1304433: mochitest-devtools-chrome (e10s) not greened on windows
             windows.*: false
@@ -737,10 +699,6 @@ mochitest-gpu:
     description: "Mochitest GPU run"
     suite: mochitest/gpu
     treeherder-symbol: tc-M(gpu)
-    instance-size:
-        by-test-platform:
-            linux64-ccov/opt: xlarge
-            default: default
     loopback-video: true
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
@@ -752,7 +710,6 @@ mochitest-gpu:
             windows.*: both
             android.*: false
             macosx64/opt: both
-            linux64-ccov/opt: false
             default: true
     mozharness:
         by-test-platform:
@@ -787,10 +744,6 @@ mochitest-jetpack:
     description: "Mochitest jetpack run"
     suite: mochitest/jetpack-package
     treeherder-symbol: tc-M(JP)
-    instance-size:
-        by-test-platform:
-            linux64-ccov/opt: xlarge
-            default: default
     loopback-video: true
     e10s: false
     max-run-time: 5400
@@ -827,12 +780,10 @@ mochitest-media:
     e10s:
       by-test-platform:
         macosx64/debug: true
-        linux64-ccov/opt: false
         default: both
     instance-size:
         by-test-platform:
             android.*: xlarge
-            linux64-ccov/opt: xlarge
             default: large
     chunks:
         by-test-platform:
@@ -914,7 +865,6 @@ mochitest-webgl:
     e10s:
       by-test-platform:
         macosx.*: true
-        linux64-ccov/opt: false
         default: both
     loopback-video: true
     max-run-time:
@@ -924,7 +874,6 @@ mochitest-webgl:
     instance-size:
         by-test-platform:
             android.*: xlarge
-            linux64-ccov/opt: xlarge
             default: default
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -1026,7 +975,6 @@ reftest:
             default: 3600
     e10s:
         by-test-platform:
-            linux64-ccov/opt: false
             macosx.*: true
             default: both
     mozharness:
@@ -1062,10 +1010,6 @@ reftest-no-accel:
     description: "Reftest not accelerated run"
     suite: reftest/reftest-no-accel
     treeherder-symbol: tc-R(Ru)
-    instance-size:
-        by-test-platform:
-            linux64-ccov/opt: xlarge
-            default: default
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
@@ -1075,10 +1019,6 @@ reftest-no-accel:
         by-test-platform:
             macosx.*: 1
             default: 8
-    e10s:
-        by-test-platform:
-            linux64-ccov/opt: false
-            default: both
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
@@ -1369,7 +1309,6 @@ web-platform-tests:
         default: 12
     e10s:
         by-test-platform:
-            linux64-ccov/opt: false
             macosx.*: true
             default: both
     max-run-time: 7200
