@@ -19,4 +19,4 @@ UNIFIED_SOURCES += [
 FINAL_LIBRARY = 'xul'
 
 with Files('**'):
-    BUG_COMPONENT = ('Core', 'Video/Audio')
+    BUG_COMPONENT = ('Core', 'Audio/Video')
