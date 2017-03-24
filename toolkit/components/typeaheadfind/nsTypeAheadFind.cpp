@@ -1308,6 +1308,86 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   return false;
 }
 
+NS_IMETHODIMP
+nsTypeAheadFind::IsRangeRendered(nsIDOMRange *aRange,
+                                bool *aResult)
+{
+  // Jump through hoops to extract the docShell from the range.
+  nsCOMPtr<nsIDOMNode> node;
+  aRange->GetStartContainer(getter_AddRefs(node));
+  nsCOMPtr<nsIDOMDocument> document;
+  node->GetOwnerDocument(getter_AddRefs(document));
+  nsCOMPtr<mozIDOMWindowProxy> window;
+  document->GetDefaultView(getter_AddRefs(window));
+  nsCOMPtr<nsIWebNavigation> navNav (do_GetInterface(window));
+  nsCOMPtr<nsIDocShell> docShell (do_GetInterface(navNav));
+
+  // Set up the arguments needed to check if a range is visible.
+  nsCOMPtr<nsIPresShell> presShell (docShell->GetPresShell());
+  RefPtr<nsPresContext> presContext = presShell->GetPresContext();
+  *aResult = IsRangeRendered(presShell, presContext, aRange);
+  return NS_OK;
+}
+
+bool
+nsTypeAheadFind::IsRangeRendered(nsIPresShell *aPresShell,
+                                 nsPresContext *aPresContext,
+                                 nsIDOMRange *aRange)
+{
+  NS_ASSERTION(aPresShell && aPresContext && aRange,
+               "params are invalid");
+
+  nsCOMPtr<nsIDOMNode> node;
+  aRange->GetCommonAncestorContainer(getter_AddRefs(node));
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+  if (!content) {
+    return false;
+  }
+
+  nsIFrame *frame = content->GetPrimaryFrame();
+  if (!frame) {
+    return false;  // No frame! Not visible then.
+  }
+
+  if (!frame->StyleVisibility()->IsVisible()) {
+    return false;
+  }
+
+  // Having a primary frame doesn't mean that the range is visible inside the
+  // viewport. Do a hit-test to determine that quickly and properly.
+  AutoTArray<nsIFrame*,8> frames;
+  nsIFrame *rootFrame = aPresShell->GetRootFrame();
+  RefPtr<nsRange> range = static_cast<nsRange*>(aRange);
+  RefPtr<mozilla::dom::DOMRectList> rects = range->GetClientRects(true, false);
+  for (uint32_t i = 0; i < rects->Length(); ++i) {
+    RefPtr<mozilla::dom::DOMRect> rect = rects->Item(i);
+    nsRect r(nsPresContext::CSSPixelsToAppUnits((float)rect->X()),
+             nsPresContext::CSSPixelsToAppUnits((float)rect->Y()),
+             nsPresContext::CSSPixelsToAppUnits((float)rect->Width()),
+             nsPresContext::CSSPixelsToAppUnits((float)rect->Height()));
+    // Append visible frames to frames array.
+    nsLayoutUtils::GetFramesForArea(rootFrame, r, frames,
+      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
+      nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME |
+      nsLayoutUtils::ONLY_VISIBLE);
+
+    // See if any of the frames contain the content. If they do, then the range
+    // is visible. We search for the content rather than the original frame,
+    // because nsTextContinuation frames might be returned instead of the
+    // original frame.
+    for (const auto &f: frames) {
+      if (f->GetContent() == content) {
+        return true;
+      }
+    }
+
+    frames.ClearAndRetainStorage();
+  }
+
+  return false;
+}
+
 already_AddRefed<nsIPresShell>
 nsTypeAheadFind::GetPresShell()
 {
