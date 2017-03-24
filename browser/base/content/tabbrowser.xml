@@ -2705,7 +2705,7 @@
                 // This call actually closes the window, unless the user
                 // cancels the operation.  We are finished here in both cases.
                 this._windowIsClosing = window.closeWindow(true, window.warnAboutClosingWindow);
-                return null;
+                return false;
               }
 
               newTab = true;
