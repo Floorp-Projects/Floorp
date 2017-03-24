@@ -82,6 +82,7 @@ function nearestAncestorMethods(csu, field)
 // if we the method is assumed to be non-GC'ing by annotation.
 function findVirtualFunctions(initialCSU, field)
 {
+    var fieldName = field.Name[0];
     var worklist = [initialCSU];
     var functions = new Set();
 
@@ -97,9 +98,9 @@ function findVirtualFunctions(initialCSU, field)
 
     while (worklist.length) {
         var csu = worklist.pop();
-        if (isSuppressedVirtualMethod(csu, field))
+        if (isSuppressedVirtualMethod(csu, fieldName))
             return [ new Set(), true ];
-        if (isOverridableField(initialCSU, csu, field)) {
+        if (isOverridableField(initialCSU, csu, fieldName)) {
             // We will still resolve the virtual function call, because it's
             // nice to have as complete a callgraph as possible for other uses.
             // But push a token saying that we can run arbitrary code.
@@ -186,7 +187,7 @@ function getCallees(edge)
             // Field call known to not GC; mark it as suppressed so direct
             // invocations will be ignored
             callees.push({'kind': "field", 'csu': csuName, 'field': fieldName,
-                          'suppressed': true});
+                          'suppressed': true, 'isVirtual': true});
         }
     } else {
         functions = new Set([null]); // field call
@@ -205,7 +206,8 @@ function getCallees(edge)
             // call ("field call") or a virtual method that can be overridden
             // in extensions. Use the isVirtual property so that callers can
             // tell which case holds.
-            callees.push({'kind': "field", 'csu': csuName, 'field': fieldName});
+            callees.push({'kind': "field", 'csu': csuName, 'field': fieldName,
+			  'isVirtual': "FieldInstanceFunction" in field});
             fullyResolved = false;
         } else {
             callees.push({'kind': "direct", 'name': name});
@@ -291,8 +293,9 @@ function processBody(functionName, body)
                     printOnce("D " + prologue + memo(callee.name));
                 }
             } else if (callee.kind == 'field') {
-                var { csu, field } = callee;
-                printOnce("F " + prologue + "CLASS " + csu + " FIELD " + field);
+                var { csu, field, isVirtual } = callee;
+                const tag = isVirtual ? 'V' : 'F';
+                printOnce(tag + " " + prologue + "CLASS " + csu + " FIELD " + field);
             } else if (callee.kind == 'resolved-field') {
                 // Fully-resolved field (virtual method) call. Record the
                 // callgraph edges. Do not consider suppression, since it is
