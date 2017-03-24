@@ -14,6 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Unused.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -665,8 +666,8 @@ class MOZ_STACK_CLASS TokenStream final : public TokenStreamBase
     }
 
     // TokenStream-specific error reporters.
-    bool reportError(unsigned errorNumber, ...);
-    bool reportErrorNoOffset(unsigned errorNumber, ...);
+    void reportError(unsigned errorNumber, ...);
+    void reportErrorNoOffset(unsigned errorNumber, ...);
 
     // Report the given error at the current offset.
     void error(unsigned errorNumber, ...);
@@ -693,9 +694,12 @@ class MOZ_STACK_CLASS TokenStream final : public TokenStreamBase
     // General-purpose error reporters.  You should avoid calling these
     // directly, and instead use the more succinct alternatives (error(),
     // warning(), &c.) in TokenStream, Parser, and BytecodeEmitter.
-    bool reportCompileErrorNumberVA(ErrorMetadata&& metadata,
-                                    UniquePtr<JSErrorNotes> notes, unsigned flags,
-                                    unsigned errorNumber, va_list args);
+    void compileError(ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes, unsigned flags,
+                      unsigned errorNumber, va_list args);
+
+    MOZ_MUST_USE bool compileWarning(ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,
+                                     unsigned flags, unsigned errorNumber, va_list args);
+
     bool reportStrictModeErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
                                        bool strictMode, unsigned errorNumber, va_list args);
     bool reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
@@ -836,8 +840,11 @@ class MOZ_STACK_CLASS TokenStream final : public TokenStreamBase
         // to return TOK_EOL.
         if (lookahead != 0) {
             bool onThisLine;
-            if (!srcCoords.isOnThisLine(curr.pos.end, lineno, &onThisLine))
-                return reportError(JSMSG_OUT_OF_MEMORY);
+            if (!srcCoords.isOnThisLine(curr.pos.end, lineno, &onThisLine)) {
+                reportError(JSMSG_OUT_OF_MEMORY);
+                return false;
+            }
+
             if (onThisLine) {
                 MOZ_ASSERT(!flags.hadError);
                 verifyConsistentModifier(modifier, nextToken());
