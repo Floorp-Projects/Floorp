@@ -44,6 +44,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
 XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
                                   "resource://gre/modules/WebNavigationFrames.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
+                                   "@mozilla.org/content/style-sheet-service;1",
+                                   "nsIStyleSheetService");
+
 const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer", "initWithCallback");
 
 Cu.import("resource://gre/modules/ExtensionChild.jsm");
@@ -105,32 +109,34 @@ var apiManager = new class extends SchemaAPIManager {
   }
 }();
 
-const SCRIPT_EXPIRY_TIMEOUT_MS = 300000;
-const SCRIPT_CLEAR_TIMEOUT_MS = 5000;
+const SCRIPT_EXPIRY_TIMEOUT_MS = 5 * 60 * 1000;
+const SCRIPT_CLEAR_TIMEOUT_MS = 5 * 1000;
+
+const CSS_EXPIRY_TIMEOUT_MS = 30 * 60 * 1000;
 
 const scriptCaches = new WeakSet();
 
-class ScriptCache extends DefaultMap {
-  constructor(options) {
-    super(url => ChromeUtils.compileScript(url, options));
+class CacheMap extends DefaultMap {
+  constructor(timeout, getter) {
+    super(getter);
 
-    this.expiryTimeout = SCRIPT_EXPIRY_TIMEOUT_MS;
+    this.expiryTimeout = timeout;
 
     scriptCaches.add(this);
   }
 
   get(url) {
-    let script = super.get(url);
+    let promise = super.get(url);
 
-    script.lastUsed = Date.now();
-    if (script.timer) {
-      script.timer.cancel();
+    promise.lastUsed = Date.now();
+    if (promise.timer) {
+      promise.timer.cancel();
     }
-    script.timer = Timer(this.delete.bind(this, url),
-                         this.expiryTimeout,
-                         Ci.nsITimer.TYPE_ONE_SHOT);
+    promise.timer = Timer(this.delete.bind(this, url),
+                          this.expiryTimeout,
+                          Ci.nsITimer.TYPE_ONE_SHOT);
 
-    return script;
+    return promise;
   }
 
   delete(url) {
@@ -143,11 +149,29 @@ class ScriptCache extends DefaultMap {
 
   clear(timeout = SCRIPT_CLEAR_TIMEOUT_MS) {
     let now = Date.now();
-    for (let [url, script] of this.entries()) {
-      if (now - script.lastUsed >= timeout) {
+    for (let [url, promise] of this.entries()) {
+      if (now - promise.lastUsed >= timeout) {
         this.delete(url);
       }
     }
+  }
+}
+
+class ScriptCache extends CacheMap {
+  constructor(options) {
+    super(SCRIPT_EXPIRY_TIMEOUT_MS,
+          url => ChromeUtils.compileScript(url, options));
+  }
+}
+
+class CSSCache extends CacheMap {
+  constructor(sheetType) {
+    super(CSS_EXPIRY_TIMEOUT_MS, url => {
+      let uri = Services.io.newURI(url);
+      return styleSheetService.preloadSheetAsync(uri, sheetType).then(sheet => {
+        return {url, sheet};
+      });
+    });
   }
 }
 
@@ -164,10 +188,14 @@ function Script(extension, options, deferred = PromiseUtils.defer()) {
 
   this.deferred = deferred;
 
+  this.cssCache = extension[this.css_origin === "user" ? "userCSS"
+                                                       : "authorCSS"];
   this.scriptCache = extension[options.wantReturnValue ? "dynamicScripts"
                                                        : "staticScripts"];
+
   if (options.wantReturnValue) {
     this.compileScripts();
+    this.loadCSS();
   }
 
   this.matches_ = new MatchPattern(this.options.matches);
@@ -186,19 +214,8 @@ Script.prototype = {
     return this.js.map(url => this.scriptCache.get(url));
   },
 
-  get cssURLs() {
-    // We can handle CSS urls (css) and CSS code (cssCode).
-    let urls = [];
-    for (let url of this.css) {
-      urls.push(this.extension.baseURI.resolve(url));
-    }
-
-    if (this.options.cssCode) {
-      let url = "data:text/css;charset=utf-8," + encodeURIComponent(this.options.cssCode);
-      urls.push(url);
-    }
-
-    return urls;
+  loadCSS() {
+    return this.cssURLs.map(url => this.cssCache.get(url));
   },
 
   matchesLoadInfo(uri, loadInfo) {
@@ -320,19 +337,31 @@ Script.prototype = {
    *        the injection.
    */
   tryInject(window, sandbox, shouldRun, when) {
-    if (shouldRun("document_start")) {
-      let {cssURLs} = this;
-      if (cssURLs.length > 0) {
-        let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
+    if (this.cssURLs.length && shouldRun("document_start")) {
+      let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
 
-        let method = this.remove_css ? winUtils.removeSheetUsingURIString : winUtils.loadSheetUsingURIString;
-        let type = this.css_origin === "user" ? winUtils.USER_SHEET : winUtils.AUTHOR_SHEET;
-        for (let url of cssURLs) {
-          runSafeSyncWithoutClone(method, url, type);
+      let innerWindowID = winUtils.currentInnerWindowID;
+
+      let type = this.css_origin === "user" ? winUtils.USER_SHEET : winUtils.AUTHOR_SHEET;
+
+      if (this.remove_css) {
+        for (let url of this.cssURLs) {
+          runSafeSyncWithoutClone(winUtils.removeSheetUsingURIString, url, type);
         }
 
         this.deferred.resolve();
+      } else {
+        this.deferred.resolve(
+          Promise.all(this.loadCSS()).then(sheets => {
+            if (winUtils.currentInnerWindowID !== innerWindowID) {
+              return;
+            }
+
+            for (let {sheet} of sheets) {
+              runSafeSyncWithoutClone(winUtils.addSheet, sheet, type);
+            }
+          }));
       }
     }
 
@@ -365,6 +394,18 @@ Script.prototype = {
     }
   },
 };
+
+defineLazyGetter(Script.prototype, "cssURLs", function() {
+  // We can handle CSS urls (css) and CSS code (cssCode).
+  let urls = this.css.slice();
+
+  if (this.options.cssCode) {
+    urls.push("data:text/css;charset=utf-8," + encodeURIComponent(this.options.cssCode));
+  }
+
+  return urls;
+});
+
 
 function getWindowMessageManager(contentWindow) {
   let ir = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -869,6 +910,7 @@ DocumentManager = {
     for (let extension of ExtensionManager.extensions.values()) {
       for (let script of extension.scripts) {
         if (script.matchesLoadInfo(uri, loadInfo)) {
+          script.loadCSS();
           script.compileScripts();
         }
       }
@@ -978,6 +1020,14 @@ defineLazyGetter(BrowserExtensionContent.prototype, "staticScripts", () => {
 
 defineLazyGetter(BrowserExtensionContent.prototype, "dynamicScripts", () => {
   return new ScriptCache({hasReturnValue: true});
+});
+
+defineLazyGetter(BrowserExtensionContent.prototype, "userCSS", () => {
+  return new CSSCache(Ci.nsIStyleSheetService.USER_SHEET);
+});
+
+defineLazyGetter(BrowserExtensionContent.prototype, "authorCSS", () => {
+  return new CSSCache(Ci.nsIStyleSheetService.AUTHOR_SHEET);
 });
 
 ExtensionManager = {
