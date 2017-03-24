@@ -157,60 +157,63 @@ function getCallees(edge)
         return [];
 
     var callee = edge.Exp[0];
-    var callees = [];
     if (callee.Kind == "Var") {
         assert(callee.Variable.Kind == "Func");
-        callees.push({'kind': 'direct', 'name': callee.Variable.Name[0]});
-    } else {
-        assert(callee.Kind == "Drf");
-        if (callee.Exp[0].Kind == "Fld") {
-            var field = callee.Exp[0].Field;
-            var fieldName = field.Name[0];
-            var csuName = field.FieldCSU.Type.Name;
-            var functions;
-            if ("FieldInstanceFunction" in field) {
-                let suppressed;
-                [ functions, suppressed ] = findVirtualFunctions(csuName, fieldName, suppressed);
-                if (suppressed) {
-                    // Field call known to not GC; mark it as suppressed so
-                    // direct invocations will be ignored
-                    callees.push({'kind': "field", 'csu': csuName, 'field': fieldName,
-                                  'suppressed': true});
-                }
-            } else {
-                functions = new Set([null]); // field call
-            }
+        return [{'kind': 'direct', 'name': callee.Variable.Name[0]}];
+    }
 
-            // Known set of virtual call targets. Treat them as direct calls to
-            // all possible resolved types, but also record edges from this
-            // field call to each final callee. When the analysis is checking
-            // whether an edge can GC and it sees an unrooted pointer held live
-            // across this field call, it will know whether any of the direct
-            // callees can GC or not.
-            var targets = [];
-            var fullyResolved = true;
-            for (var name of functions) {
-                if (name === null) {
-                    // Unknown set of call targets, meaning either a function
-                    // pointer call ("field call") or a virtual method that can
-                    // be overridden in extensions.
-                    callees.push({'kind': "field", 'csu': csuName, 'field': fieldName});
-                    fullyResolved = false;
-                } else {
-                    callees.push({'kind': "direct", 'name': name});
-                    targets.push({'kind': "direct", 'name': name});
-                }
-            }
-            if (fullyResolved)
-                callees.push({'kind': "resolved-field", 'csu': csuName, 'field': fieldName, 'callees': targets});
-        } else if (callee.Exp[0].Kind == "Var") {
-            // indirect call through a variable.
-            callees.push({'kind': "indirect", 'variable': callee.Exp[0].Variable.Name[0]});
+    assert(callee.Kind == "Drf");
+    const called = callee.Exp[0];
+    if (called.Kind == "Var") {
+        // indirect call through a variable.
+        return [{'kind': "indirect", 'variable': callee.Exp[0].Variable.Name[0]}];
+    }
+
+    if (called.Kind != "Fld") {
+        // unknown call target.
+        return [{'kind': "unknown"}];
+    }
+
+    var callees = [];
+    var field = callee.Exp[0].Field;
+    var fieldName = field.Name[0];
+    var csuName = field.FieldCSU.Type.Name;
+    var functions;
+    if ("FieldInstanceFunction" in field) {
+        let suppressed;
+        [ functions, suppressed ] = findVirtualFunctions(csuName, fieldName, suppressed);
+        if (suppressed) {
+            // Field call known to not GC; mark it as suppressed so direct
+            // invocations will be ignored
+            callees.push({'kind': "field", 'csu': csuName, 'field': fieldName,
+                          'suppressed': true});
+        }
+    } else {
+        functions = new Set([null]); // field call
+    }
+
+    // Known set of virtual call targets. Treat them as direct calls to all
+    // possible resolved types, but also record edges from this field call to
+    // each final callee. When the analysis is checking whether an edge can GC
+    // and it sees an unrooted pointer held live across this field call, it
+    // will know whether any of the direct callees can GC or not.
+    var targets = [];
+    var fullyResolved = true;
+    for (var name of functions) {
+        if (name === null) {
+            // Unknown set of call targets, meaning either a function pointer
+            // call ("field call") or a virtual method that can be overridden
+            // in extensions. Use the isVirtual property so that callers can
+            // tell which case holds.
+            callees.push({'kind': "field", 'csu': csuName, 'field': fieldName});
+            fullyResolved = false;
         } else {
-            // unknown call target.
-            callees.push({'kind': "unknown"});
+            callees.push({'kind': "direct", 'name': name});
+            targets.push({'kind': "direct", 'name': name});
         }
     }
+    if (fullyResolved)
+        callees.push({'kind': "resolved-field", 'csu': csuName, 'field': fieldName, 'callees': targets});
 
     return callees;
 }
