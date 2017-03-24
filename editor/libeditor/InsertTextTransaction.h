@@ -76,7 +76,7 @@ private:
   nsString mStringToInsert;
 
   // The editor, which we'll need to get the selection.
-  EditorBase& mEditorBase;
+  RefPtr<EditorBase> mEditorBase;
 
   RangeUpdater* mRangeUpdater;
 };

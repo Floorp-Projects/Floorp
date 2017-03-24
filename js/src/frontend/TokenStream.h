@@ -489,10 +489,9 @@ class MOZ_STACK_CLASS TokenStream
         bool sawOctalEscape:1;  // Saw an octal character escape.
         bool hadError:1;        // Hit a syntax error, at start or during a
                                 // token.
-        bool hitOOM:1;          // Hit OOM.
 
         Flags()
-          : isEOF(), isDirtyLine(), sawOctalEscape(), hadError(), hitOOM()
+          : isEOF(), isDirtyLine(), sawOctalEscape(), hadError()
         {}
     };
 
@@ -959,8 +958,13 @@ class MOZ_STACK_CLASS TokenStream
 
     MOZ_MUST_USE bool getStringOrTemplateToken(int untilChar, Token** tp);
 
-    int32_t getChar();
+    // Try to get the next character, normalizing '\r', '\r\n', and '\n' into
+    // '\n'.  Also updates internal line-counter state.  Return true on success
+    // and store the character in |*c|.  Return false and leave |*c| undefined
+    // on failure.
+    MOZ_MUST_USE bool getChar(int32_t* cp);
     int32_t getCharIgnoreEOL();
+
     void ungetChar(int32_t c);
     void ungetCharIgnoreEOL(int32_t c);
     Token* newToken(ptrdiff_t adjust);
@@ -987,12 +991,14 @@ class MOZ_STACK_CLASS TokenStream
     }
 
     void consumeKnownChar(int32_t expect) {
-        mozilla::DebugOnly<int32_t> c = getChar();
+        int32_t c;
+        MOZ_ALWAYS_TRUE(getChar(&c));
         MOZ_ASSERT(c == expect);
     }
 
     MOZ_MUST_USE bool peekChar(int32_t* c) {
-        *c = getChar();
+        if (!getChar(c))
+            return false;
         ungetChar(*c);
         return true;
     }
@@ -1012,7 +1018,7 @@ class MOZ_STACK_CLASS TokenStream
         }
     }
 
-    void updateLineInfoForEOL();
+    MOZ_MUST_USE MOZ_ALWAYS_INLINE bool updateLineInfoForEOL();
     void updateFlagsForEOL();
 
     const Token& nextToken() const {

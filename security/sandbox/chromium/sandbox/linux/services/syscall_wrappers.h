@@ -28,10 +28,6 @@ SANDBOX_EXPORT pid_t sys_getpid(void);
 
 SANDBOX_EXPORT pid_t sys_gettid(void);
 
-SANDBOX_EXPORT ssize_t sys_write(int fd,
-                                 const char* buffer,
-                                 size_t buffer_size);
-
 SANDBOX_EXPORT long sys_clone(unsigned long flags);
 
 // |regs| is not supported and must be passed as nullptr. |child_stack| must be

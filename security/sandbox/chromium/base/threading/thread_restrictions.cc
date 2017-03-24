@@ -4,7 +4,7 @@
 
 #include "base/threading/thread_restrictions.h"
 
-#if DCHECK_IS_ON()
+#if ENABLE_THREAD_RESTRICTIONS
 
 #include "base/lazy_instance.h"
 #include "base/logging.h"
@@ -35,7 +35,7 @@ bool ThreadRestrictions::SetIOAllowed(bool allowed) {
 // static
 void ThreadRestrictions::AssertIOAllowed() {
   if (g_io_disallowed.Get().Get()) {
-    NOTREACHED() <<
+    LOG(FATAL) <<
         "Function marked as IO-only was called from a thread that "
         "disallows IO!  If this thread really should be allowed to "
         "make IO calls, adjust the call to "
@@ -54,14 +54,10 @@ bool ThreadRestrictions::SetSingletonAllowed(bool allowed) {
 // static
 void ThreadRestrictions::AssertSingletonAllowed() {
   if (g_singleton_disallowed.Get().Get()) {
-    NOTREACHED() << "LazyInstance/Singleton is not allowed to be used on this "
-                 << "thread.  Most likely it's because this thread is not "
-                 << "joinable (or the current task is running with "
-                 << "TaskShutdownBehavior::CONTINUE_ON_SHUTDOWN semantics), so "
-                 << "AtExitManager may have deleted the object on shutdown, "
-                 << "leading to a potential shutdown crash. If you need to use "
-                 << "the object from this context, it'll have to be updated to "
-                 << "use Leaky traits.";
+    LOG(FATAL) << "LazyInstance/Singleton is not allowed to be used on this "
+               << "thread.  Most likely it's because this thread is not "
+               << "joinable, so AtExitManager may have deleted the object "
+               << "on shutdown, leading to a potential shutdown crash.";
   }
 }
 
@@ -73,8 +69,8 @@ void ThreadRestrictions::DisallowWaiting() {
 // static
 void ThreadRestrictions::AssertWaitAllowed() {
   if (g_wait_disallowed.Get().Get()) {
-    NOTREACHED() << "Waiting is not allowed to be used on this thread to "
-                 << "prevent jank and deadlock.";
+    LOG(FATAL) << "Waiting is not allowed to be used on this thread to prevent "
+               << "jank and deadlock.";
   }
 }
 
@@ -86,4 +82,4 @@ bool ThreadRestrictions::SetWaitAllowed(bool allowed) {
 
 }  // namespace base
 
-#endif  // DCHECK_IS_ON()
+#endif  // ENABLE_THREAD_RESTRICTIONS

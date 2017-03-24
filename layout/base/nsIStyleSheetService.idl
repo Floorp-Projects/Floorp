@@ -55,6 +55,14 @@ interface nsIStyleSheetService : nsISupports
                                       in unsigned long type);
 
   /**
+   * Asynchronously loads a style sheet from |sheetURI| and returns a Promise
+   * which resolves to the new style sheet object, which can be used with
+   * nsIDOMWindowUtils.addSheet, when it has completed loading.
+   */
+  [implicit_jscontext]
+  jsval preloadSheetAsync(in nsIURI sheetURI, in unsigned long type);
+
+  /**
    * Remove the style sheet at |sheetURI| from the list of style sheets
    * specified by |type|.  The removal takes effect immediately, even for
    * already-loaded documents.

@@ -32,6 +32,7 @@
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/MediaKeySystemAccess.h"
 #include "nsPrintfCString.h"
+#include "ChromiumCDMProxy.h"
 
 namespace mozilla {
 
@@ -343,12 +344,23 @@ MediaKeys::CreateCDMProxy(nsIEventTarget* aMainThread)
   } else
 #endif
   {
-    proxy = new GMPCDMProxy(this,
-                            mKeySystem,
-                            new MediaKeysGMPCrashHelper(this),
-                            mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
-                            mConfig.mPersistentState == MediaKeysRequirement::Required,
-                            aMainThread);
+    if (MediaPrefs::EMEChromiumAPIEnabled()) {
+      proxy = new ChromiumCDMProxy(
+        this,
+        mKeySystem,
+        new MediaKeysGMPCrashHelper(this),
+        mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
+        mConfig.mPersistentState == MediaKeysRequirement::Required,
+        aMainThread);
+    } else {
+      proxy = new GMPCDMProxy(
+        this,
+        mKeySystem,
+        new MediaKeysGMPCrashHelper(this),
+        mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
+        mConfig.mPersistentState == MediaKeysRequirement::Required,
+        aMainThread);
+    }
   }
   return proxy.forget();
 }

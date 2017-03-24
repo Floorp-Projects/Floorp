@@ -118,8 +118,6 @@ void ConditionVariable::TimedWait(const TimeDelta& max_time) {
 #endif  // OS_ANDROID && HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC
 #endif  // OS_MACOSX
 
-  // On failure, we only expect the CV to timeout. Any other error value means
-  // that we've unexpectedly woken up.
   DCHECK(rv == 0 || rv == ETIMEDOUT);
 #if DCHECK_IS_ON()
   user_lock_->CheckUnheldAndMark();

@@ -17,6 +17,7 @@
 
 namespace mozilla {
 class MediaRawData;
+class ChromiumCDMProxy;
 
 enum DecryptStatus {
   Ok = 0,
@@ -114,6 +115,7 @@ public:
   // Uses the CDM to load a presistent session stored on disk.
   // Calls MediaKeys::OnSessionActivated() when session is loaded.
   virtual void LoadSession(PromiseId aPromiseId,
+                           dom::MediaKeySessionType aSessionType,
                            const nsAString& aSessionId) = 0;
 
   // Main thread only.
@@ -222,6 +224,8 @@ public:
 #endif
 
   virtual uint32_t GetDecryptorId() { return 0; }
+
+  virtual ChromiumCDMProxy* AsChromiumCDMProxy() { return nullptr; }
 
 protected:
   virtual ~CDMProxy() {}

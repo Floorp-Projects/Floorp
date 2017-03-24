@@ -229,6 +229,47 @@ GeckoMediaPluginService::Init()
   return GetThread(getter_AddRefs(thread));
 }
 
+RefPtr<GetCDMParentPromise>
+GeckoMediaPluginService::GetCDM(const NodeId& aNodeId,
+                                nsTArray<nsCString> aTags,
+                                GMPCrashHelper* aHelper)
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+
+  if (mShuttingDownOnGMPThread || aTags.IsEmpty()) {
+    return GetCDMParentPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  typedef MozPromiseHolder<GetCDMParentPromise> PromiseHolder;
+  PromiseHolder* rawHolder(new PromiseHolder());
+  RefPtr<GetCDMParentPromise> promise = rawHolder->Ensure(__func__);
+  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  RefPtr<GMPCrashHelper> helper(aHelper);
+  GetContentParent(
+    aHelper, aNodeId, NS_LITERAL_CSTRING(CHROMIUM_CDM_API), aTags)
+    ->Then(thread,
+           __func__,
+           [rawHolder, helper](RefPtr<GMPContentParent::CloseBlocker> wrapper) {
+             RefPtr<GMPContentParent> parent = wrapper->mParent;
+             UniquePtr<PromiseHolder> holder(rawHolder);
+             RefPtr<ChromiumCDMParent> cdm = parent->GetChromiumCDM();
+             if (!parent) {
+               holder->Reject(NS_ERROR_FAILURE, __func__);
+               return;
+             }
+             if (helper) {
+               cdm->SetCrashHelper(helper);
+             }
+             holder->Resolve(cdm, __func__);
+           },
+           [rawHolder] {
+             UniquePtr<PromiseHolder> holder(rawHolder);
+             holder->Reject(NS_ERROR_FAILURE, __func__);
+           });
+
+  return promise;
+}
+
 void
 GeckoMediaPluginService::ShutdownGMPThread()
 {

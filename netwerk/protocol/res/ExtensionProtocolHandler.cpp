@@ -138,44 +138,26 @@ ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
   const char* kToType = "text/css";
 
   nsCOMPtr<nsIInputStream> inputStream;
-  if (aLoadInfo &&
-      aLoadInfo->GetSecurityMode() == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
-    // If the channel needs to enforce CORS, we need to open the channel async.
+  nsCOMPtr<nsIOutputStream> outputStream;
+  rv = NS_NewPipe(getter_AddRefs(inputStream), getter_AddRefs(outputStream),
+                  0, UINT32_MAX, true, false);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIOutputStream> outputStream;
-    rv = NS_NewPipe(getter_AddRefs(inputStream), getter_AddRefs(outputStream),
-                    0, UINT32_MAX, true, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIStreamListener> listener;
+  nsCOMPtr<nsIRequestObserver> observer = new PipeCloser(outputStream);
+  rv = NS_NewSimpleStreamListener(getter_AddRefs(listener), outputStream, observer);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIStreamListener> listener;
-    nsCOMPtr<nsIRequestObserver> observer = new PipeCloser(outputStream);
-    rv = NS_NewSimpleStreamListener(getter_AddRefs(listener), outputStream, observer);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIStreamListener> converter;
+  rv = convService->AsyncConvertData(kFromType, kToType, listener,
+                                     aURI, getter_AddRefs(converter));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIStreamListener> converter;
-    rv = convService->AsyncConvertData(kFromType, kToType, listener,
-                                       aURI, getter_AddRefs(converter));
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsILoadInfo> loadInfo =
+    static_cast<LoadInfo*>(aLoadInfo)->CloneForNewRequest();
+  (*result)->SetLoadInfo(loadInfo);
 
-    nsCOMPtr<nsILoadInfo> loadInfo =
-      static_cast<LoadInfo*>(aLoadInfo)->CloneForNewRequest();
-    (*result)->SetLoadInfo(loadInfo);
-
-    rv = (*result)->AsyncOpen2(converter);
-  } else {
-    // Stylesheet loads for extension content scripts require a sync channel.
-
-    nsCOMPtr<nsIInputStream> sourceStream;
-    if (aLoadInfo && aLoadInfo->GetEnforceSecurity()) {
-      rv = (*result)->Open2(getter_AddRefs(sourceStream));
-    } else {
-      rv = (*result)->Open(getter_AddRefs(sourceStream));
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = convService->Convert(sourceStream, kFromType, kToType,
-                              aURI, getter_AddRefs(inputStream));
-  }
+  rv = (*result)->AsyncOpen2(converter);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> channel;

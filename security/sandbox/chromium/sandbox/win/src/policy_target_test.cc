@@ -170,20 +170,25 @@ SBOX_TESTS_COMMAND int PolicyTargetTest_process(int argc, wchar_t **argv) {
 
 TEST(PolicyTargetTest, SetInformationThread) {
   TestRunner runner;
-  runner.SetTestState(BEFORE_REVERT);
-  EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"PolicyTargetTest_token"));
+  if (base::win::GetVersion() >= base::win::VERSION_XP) {
+    runner.SetTestState(BEFORE_REVERT);
+    EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"PolicyTargetTest_token"));
+  }
 
   runner.SetTestState(AFTER_REVERT);
   EXPECT_EQ(ERROR_NO_TOKEN, runner.RunTest(L"PolicyTargetTest_token"));
 
   runner.SetTestState(EVERY_STATE);
-  EXPECT_EQ(SBOX_TEST_FAILED, runner.RunTest(L"PolicyTargetTest_steal"));
+  if (base::win::GetVersion() >= base::win::VERSION_XP)
+    EXPECT_EQ(SBOX_TEST_FAILED, runner.RunTest(L"PolicyTargetTest_steal"));
 }
 
 TEST(PolicyTargetTest, OpenThreadToken) {
   TestRunner runner;
-  runner.SetTestState(BEFORE_REVERT);
-  EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"PolicyTargetTest_token2"));
+  if (base::win::GetVersion() >= base::win::VERSION_XP) {
+    runner.SetTestState(BEFORE_REVERT);
+    EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"PolicyTargetTest_token2"));
+  }
 
   runner.SetTestState(AFTER_REVERT);
   EXPECT_EQ(ERROR_NO_TOKEN, runner.RunTest(L"PolicyTargetTest_token2"));
@@ -191,6 +196,8 @@ TEST(PolicyTargetTest, OpenThreadToken) {
 
 TEST(PolicyTargetTest, OpenThreadTokenEx) {
   TestRunner runner;
+  if (base::win::GetVersion() < base::win::VERSION_XP)
+    return;
 
   runner.SetTestState(BEFORE_REVERT);
   EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"PolicyTargetTest_token3"));
@@ -238,17 +245,14 @@ TEST(PolicyTargetTest, DesktopPolicy) {
 
   // Launch the app.
   ResultCode result = SBOX_ALL_OK;
-  ResultCode warning_result = SBOX_ALL_OK;
-  DWORD last_error = ERROR_SUCCESS;
   base::win::ScopedProcessInformation target;
 
   TargetPolicy* policy = broker->CreatePolicy();
   policy->SetAlternateDesktop(false);
   policy->SetTokenLevel(USER_INTERACTIVE, USER_LOCKDOWN);
   PROCESS_INFORMATION temp_process_info = {};
-  result =
-      broker->SpawnTarget(prog_name, arguments.c_str(), policy, &warning_result,
-                          &last_error, &temp_process_info);
+  result = broker->SpawnTarget(prog_name, arguments.c_str(), policy,
+                               &temp_process_info);
   base::string16 desktop_name = policy->GetAlternateDesktop();
   policy->Release();
 
@@ -305,17 +309,14 @@ TEST(PolicyTargetTest, WinstaPolicy) {
 
   // Launch the app.
   ResultCode result = SBOX_ALL_OK;
-  ResultCode warning_result = SBOX_ALL_OK;
   base::win::ScopedProcessInformation target;
 
   TargetPolicy* policy = broker->CreatePolicy();
   policy->SetAlternateDesktop(true);
   policy->SetTokenLevel(USER_INTERACTIVE, USER_LOCKDOWN);
   PROCESS_INFORMATION temp_process_info = {};
-  DWORD last_error = ERROR_SUCCESS;
-  result =
-      broker->SpawnTarget(prog_name, arguments.c_str(), policy, &warning_result,
-                          &last_error, &temp_process_info);
+  result = broker->SpawnTarget(prog_name, arguments.c_str(), policy,
+                               &temp_process_info);
   base::string16 desktop_name = policy->GetAlternateDesktop();
   policy->Release();
 
@@ -355,6 +356,9 @@ TEST(PolicyTargetTest, WinstaPolicy) {
 // Launches the app in the sandbox and share a handle with it. The app should
 // be able to use the handle.
 TEST(PolicyTargetTest, ShareHandleTest) {
+  // The way we share handles via STARTUPINFOEX does not work on XP.
+  if (base::win::GetVersion() < base::win::VERSION_VISTA)
+    return;
 
   BrokerServices* broker = GetBroker();
   ASSERT_TRUE(broker != NULL);
@@ -378,25 +382,22 @@ TEST(PolicyTargetTest, ShareHandleTest) {
   GetModuleFileNameW(NULL, prog_name, MAX_PATH);
 
   TargetPolicy* policy = broker->CreatePolicy();
-  policy->AddHandleToShare(read_only_view.handle().GetHandle());
+  void* shared_handle =
+      policy->AddHandleToShare(read_only_view.handle().GetHandle());
 
   base::string16 arguments(L"\"");
   arguments += prog_name;
   arguments += L"\" -child 0 shared_memory_handle ";
-  arguments += base::UintToString16(
-      base::win::HandleToUint32(read_only_view.handle().GetHandle()));
+  arguments += base::UintToString16(base::win::HandleToUint32(shared_handle));
 
   // Launch the app.
   ResultCode result = SBOX_ALL_OK;
-  ResultCode warning_result = SBOX_ALL_OK;
   base::win::ScopedProcessInformation target;
 
   policy->SetTokenLevel(USER_INTERACTIVE, USER_LOCKDOWN);
   PROCESS_INFORMATION temp_process_info = {};
-  DWORD last_error = ERROR_SUCCESS;
-  result =
-      broker->SpawnTarget(prog_name, arguments.c_str(), policy, &warning_result,
-                          &last_error, &temp_process_info);
+  result = broker->SpawnTarget(prog_name, arguments.c_str(), policy,
+                               &temp_process_info);
   policy->Release();
 
   EXPECT_EQ(SBOX_ALL_OK, result);

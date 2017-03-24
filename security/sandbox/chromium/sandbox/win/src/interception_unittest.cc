@@ -10,10 +10,10 @@
 #include <stddef.h>
 
 #include <algorithm>
-#include <memory>
 #include <set>
 
 #include "base/bits.h"
+#include "base/memory/scoped_ptr.h"
 #include "sandbox/win/src/interception.h"
 #include "sandbox/win/src/interception_internal.h"
 #include "sandbox/win/src/interceptors.h"
@@ -183,7 +183,7 @@ TEST(InterceptionManagerTest, BufferLayout1) {
   ASSERT_EQ(18u, interceptions.interceptions_.size());
 
   size_t buffer_size = interceptions.GetBufferSize();
-  std::unique_ptr<BYTE[]> local_buffer(new BYTE[buffer_size]);
+  scoped_ptr<BYTE[]> local_buffer(new BYTE[buffer_size]);
 
   ASSERT_TRUE(interceptions.SetupConfigBuffer(local_buffer.get(),
                                               buffer_size));
@@ -236,7 +236,7 @@ TEST(InterceptionManagerTest, BufferLayout2) {
   ASSERT_EQ(5u, interceptions.interceptions_.size());
 
   size_t buffer_size = interceptions.GetBufferSize();
-  std::unique_ptr<BYTE[]> local_buffer(new BYTE[buffer_size]);
+  scoped_ptr<BYTE[]> local_buffer(new BYTE[buffer_size]);
 
   ASSERT_TRUE(interceptions.SetupConfigBuffer(local_buffer.get(),
                                               buffer_size));

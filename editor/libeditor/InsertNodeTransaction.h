@@ -50,7 +50,7 @@ protected:
   int32_t mOffset;
 
   // The editor for this transaction.
-  EditorBase& mEditorBase;
+  RefPtr<EditorBase> mEditorBase;
 };
 
 } // namespace mozilla

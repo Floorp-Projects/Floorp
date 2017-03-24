@@ -100,7 +100,7 @@ public:
   void DeleteProcess();
 
   GMPState State() const;
-  nsIThread* GMPThread();
+  nsCOMPtr<nsIThread> GMPThread();
 
   // A GMP can either be a single instance shared across all NodeIds (like
   // in the OpenH264 case), or we can require a new plugin instance for every
@@ -207,7 +207,6 @@ private:
 
   nsTArray<RefPtr<GMPTimerParent>> mTimers;
   nsTArray<RefPtr<GMPStorageParent>> mStorage;
-  nsCOMPtr<nsIThread> mGMPThread;
   // NodeId the plugin is assigned to, or empty if the the plugin is not
   // assigned to a NodeId.
   nsCString mNodeId;

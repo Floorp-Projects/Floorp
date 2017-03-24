@@ -9,6 +9,12 @@ using GMPMediaKeyStatus from "gmp-decryption.h";
 namespace mozilla {
 namespace gmp {
 
+struct NodeIdData {
+  nsString mOrigin;
+  nsString mTopLevelOrigin;
+  nsString mGMPName;
+};
+
 struct GMPDecryptionData {
   uint8_t[] mKeyId;
   uint8_t[] mIV;
@@ -52,6 +58,49 @@ struct GMPVideoi420FrameData
 struct GMPKeyInformation {
   uint8_t[] keyId;
   GMPMediaKeyStatus status;
+};
+
+struct CDMInputBuffer {
+  uint8_t[] mData;
+  uint8_t[] mKeyId;
+  uint8_t[] mIV;
+  int64_t mTimestamp;
+  int64_t mDuration;
+  uint16_t[] mClearBytes;
+  uint32_t[] mCipherBytes;
+  bool mIsEncrypted;
+};
+
+struct CDMVideoDecoderConfig {
+  uint32_t mCodec;
+  uint32_t mProfile;
+  uint32_t mFormat;
+  int32_t mImageWidth;
+  int32_t mImageHeight;
+  uint8_t[] mExtraData;
+};
+
+struct CDMKeyInformation {
+  uint8_t[] mKeyId;
+  uint32_t mStatus;
+  uint32_t mSystemCode;
+};
+
+struct CDMVideoPlane {
+  uint32_t mPlaneOffset;
+  uint32_t mStride;
+};
+
+struct CDMVideoFrame {
+  uint32_t mFormat;
+  int32_t mImageWidth;
+  int32_t mImageHeight;
+  uint8_t[] mData;
+  CDMVideoPlane mYPlane;
+  CDMVideoPlane mUPlane;
+  CDMVideoPlane mVPlane;
+  int64_t mTimestamp;
+  int64_t mDuration;
 };
 
 }

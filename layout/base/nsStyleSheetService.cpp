@@ -15,6 +15,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
@@ -283,6 +284,28 @@ nsStyleSheetService::SheetRegistered(nsIURI *sheetURI,
   return NS_OK;
 }
 
+static nsresult
+GetParsingMode(uint32_t aSheetType, css::SheetParsingMode* aParsingMode)
+{
+  switch (aSheetType) {
+    case nsStyleSheetService::AGENT_SHEET:
+      *aParsingMode = css::eAgentSheetFeatures;
+      return NS_OK;
+
+    case nsStyleSheetService::USER_SHEET:
+      *aParsingMode = css::eUserSheetFeatures;
+      return NS_OK;
+
+    case nsStyleSheetService::AUTHOR_SHEET:
+      *aParsingMode = css::eAuthorSheetFeatures;
+      return NS_OK;
+
+    default:
+      NS_WARNING("invalid sheet type argument");
+      return NS_ERROR_INVALID_ARG;
+  }
+}
+
 NS_IMETHODIMP
 nsStyleSheetService::PreloadSheet(nsIURI* aSheetURI, uint32_t aSheetType,
                                   nsIPreloadedStyleSheet** aSheet)
@@ -290,33 +313,53 @@ nsStyleSheetService::PreloadSheet(nsIURI* aSheetURI, uint32_t aSheetType,
   NS_PRECONDITION(aSheet, "Null out param");
   NS_ENSURE_ARG_POINTER(aSheetURI);
 
-  *aSheet = nullptr;
-
   css::SheetParsingMode parsingMode;
-  switch (aSheetType) {
-    case AGENT_SHEET:
-      parsingMode = css::eAgentSheetFeatures;
-      break;
-
-    case USER_SHEET:
-      parsingMode = css::eUserSheetFeatures;
-      break;
-
-    case AUTHOR_SHEET:
-      parsingMode = css::eAuthorSheetFeatures;
-      break;
-
-    default:
-      NS_WARNING("invalid sheet type argument");
-      return NS_ERROR_INVALID_ARG;
-  }
+  nsresult rv = GetParsingMode(aSheetType, &parsingMode);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<PreloadedStyleSheet> sheet;
-  nsresult rv = PreloadedStyleSheet::Create(aSheetURI, parsingMode,
-                                            getter_AddRefs(sheet));
+  rv = PreloadedStyleSheet::Create(aSheetURI, parsingMode,
+                                   getter_AddRefs(sheet));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = sheet->Preload();
   NS_ENSURE_SUCCESS(rv, rv);
 
   sheet.forget(aSheet);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStyleSheetService::PreloadSheetAsync(nsIURI* aSheetURI, uint32_t aSheetType,
+                                       JSContext* aCx,
+                                       JS::MutableHandleValue aRval)
+{
+  NS_ENSURE_ARG_POINTER(aSheetURI);
+
+  css::SheetParsingMode parsingMode;
+  nsresult rv = GetParsingMode(aSheetType, &parsingMode);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIGlobalObject> global =
+    xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+  NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
+
+  ErrorResult errv;
+  RefPtr<dom::Promise> promise = dom::Promise::Create(global, errv);
+  if (errv.Failed()) {
+    return errv.StealNSResult();
+  }
+
+  RefPtr<PreloadedStyleSheet> sheet;
+  rv = PreloadedStyleSheet::Create(aSheetURI, parsingMode,
+                                   getter_AddRefs(sheet));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  sheet->PreloadAsync(WrapNotNull(promise));
+
+  if (!ToJSValue(aCx, promise, aRval)) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
