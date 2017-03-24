@@ -1,8 +1,8 @@
 /* -*- tab-width: 2; indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set ts=2 sw=2 sts=2 et tw=80: */
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/ContextualIdentityService.jsm");
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
@@ -261,12 +261,14 @@ nsContextMenu.prototype = {
     // Set as Desktop background depends on whether an image was clicked on,
     // and only works if we have a shell service.
     var haveSetDesktopBackground = false;
-#ifdef HAVE_SHELL_SERVICE
-    // Only enable Set as Desktop Background if we can get the shell service.
-    var shell = getShellService();
-    if (shell)
-      haveSetDesktopBackground = shell.canSetDesktopBackground;
-#endif
+
+    if (AppConstants.HAVE_SHELL_SERVICE) {
+      // Only enable Set as Desktop Background if we can get the shell service.
+      var shell = getShellService();
+      if (shell)
+        haveSetDesktopBackground = shell.canSetDesktopBackground;
+    }
+
     this.showItem("context-setDesktopBackground",
                   haveSetDesktopBackground && this.onLoadedImage);
 
@@ -447,10 +449,11 @@ nsContextMenu.prototype = {
     this.showItem("context-sep-copylink", this.onLink &&
                   (this.onImage || this.onVideo || this.onAudio));
 
-#ifdef CONTEXT_COPY_IMAGE_CONTENTS
     // Copy image contents depends on whether we're on an image.
+    // Note: the element doesn't exist on all platforms, but showItem() takes
+    // care of that by itself.
     this.showItem("context-copyimage-contents", this.onImage);
-#endif
+
     // Copy image location depends on whether we're on an image.
     this.showItem("context-copyimage", this.onImage);
     this.showItem("context-copyvideourl", this.onVideo);
@@ -1213,27 +1216,28 @@ nsContextMenu.prototype = {
       // Confirm since it's annoying if you hit this accidentally.
       const kDesktopBackgroundURL =
                     "chrome://browser/content/setDesktopBackground.xul";
-#ifdef XP_MACOSX
-      // On Mac, the Set Desktop Background window is not modal.
-      // Don't open more than one Set Desktop Background window.
-      const wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-                 getService(Ci.nsIWindowMediator);
-      let dbWin = wm.getMostRecentWindow("Shell:SetDesktopBackground");
-      if (dbWin) {
-        dbWin.gSetBackground.init(image);
-        dbWin.focus();
-      }
-      else {
+
+      if (AppConstants.platform == "macosx") {
+        // On Mac, the Set Desktop Background window is not modal.
+        // Don't open more than one Set Desktop Background window.
+        const wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+                   getService(Ci.nsIWindowMediator);
+        let dbWin = wm.getMostRecentWindow("Shell:SetDesktopBackground");
+        if (dbWin) {
+          dbWin.gSetBackground.init(image);
+          dbWin.focus();
+        }
+        else {
+          openDialog(kDesktopBackgroundURL, "",
+                     "centerscreen,chrome,dialog=no,dependent,resizable=no",
+                     image);
+        }
+      } else {
+        // On non-Mac platforms, the Set Wallpaper dialog is modal.
         openDialog(kDesktopBackgroundURL, "",
-                   "centerscreen,chrome,dialog=no,dependent,resizable=no",
+                   "centerscreen,chrome,dialog,modal,dependent",
                    image);
       }
-#else
-      // On non-Mac platforms, the Set Wallpaper dialog is modal.
-      openDialog(kDesktopBackgroundURL, "",
-                 "centerscreen,chrome,dialog,modal,dependent",
-                 image);
-#endif
     };
 
     mm.addMessageListener("ContextMenu:SetAsDesktopBackground:Result", onMessage);
@@ -1513,7 +1517,14 @@ nsContextMenu.prototype = {
   // Utilities //
   ///////////////
 
-  // Show/hide one item (specified via name or the item element itself).
+  /**
+   * Show/hide one item (specified via name or the item element itself).
+   * If the element is not found, then this function finishes silently.
+   *
+   * @param {Element|String} aItemOrId The item element or the name of the element
+   *                                   to show.
+   * @param {Boolean} aShow Set to true to show the item, false to hide it.
+   */
   showItem: function(aItemOrId, aShow) {
     var item = aItemOrId.constructor == String ?
       document.getElementById(aItemOrId) : aItemOrId;
