@@ -67,3 +67,35 @@ add_task(function* testGetAvailableStates() {
                    [ SitePermissions.ALLOW,
                      SitePermissions.BLOCK ]);
 });
+
+add_task(function* testExactHostMatch() {
+  let uri = Services.io.newURI("https://example.com");
+  let subUri = Services.io.newURI("https://test1.example.com");
+
+  let exactHostMatched = ["desktop-notification", "camera", "microphone", "screen", "geo"];
+  let nonExactHostMatched = ["image", "cookie", "popup", "install", "indexedDB"];
+
+  let permissions = SitePermissions.listPermissions();
+  for (let permission of permissions) {
+    SitePermissions.set(uri, permission, SitePermissions.ALLOW);
+
+    if (exactHostMatched.includes(permission)) {
+      // Check that the sub-origin does not inherit the permission from its parent.
+      Assert.equal(SitePermissions.get(subUri, permission).state, SitePermissions.UNKNOWN);
+    } else if (nonExactHostMatched.includes(permission)) {
+      // Check that the sub-origin does inherit the permission from its parent.
+      Assert.equal(SitePermissions.get(subUri, permission).state, SitePermissions.ALLOW);
+    } else {
+      Assert.ok(false, `Found an unknown permission ${permission} in exact host match test.` +
+                       "Please add new permissions from SitePermissions.jsm to this test.");
+    }
+
+    // Check that the permission can be made specific to the sub-origin.
+    SitePermissions.set(subUri, permission, SitePermissions.BLOCK);
+    Assert.equal(SitePermissions.get(subUri, permission).state, SitePermissions.BLOCK);
+    Assert.equal(SitePermissions.get(uri, permission).state, SitePermissions.ALLOW);
+
+    SitePermissions.remove(subUri, permission);
+    SitePermissions.remove(uri, permission);
+  }
+});
