@@ -40,7 +40,7 @@ public:
   already_AddRefed<ChromiumCDMParent> GetChromiumCDM();
   void ChromiumCDMDestroyed(ChromiumCDMParent* aCDM);
 
-  nsIThread* GMPThread();
+  nsCOMPtr<nsIThread> GMPThread();
 
   // GMPSharedMem
   void CheckThread() override;

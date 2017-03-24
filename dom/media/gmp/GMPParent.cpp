@@ -324,7 +324,7 @@ void
 GMPParent::ChildTerminated()
 {
   RefPtr<GMPParent> self(this);
-  nsIThread* gmpThread = GMPThread();
+  nsCOMPtr<nsIThread> gmpThread = GMPThread();
 
   if (!gmpThread) {
     // Bug 1163239 - this can happen on shutdown.
@@ -373,26 +373,20 @@ GMPParent::State() const
   return mState;
 }
 
-// Not changing to use mService since we'll be removing it
-nsIThread*
+nsCOMPtr<nsIThread>
 GMPParent::GMPThread()
 {
-  if (!mGMPThread) {
-    nsCOMPtr<mozIGeckoMediaPluginService> mps = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
-    MOZ_ASSERT(mps);
-    if (!mps) {
-      return nullptr;
-    }
-    // Not really safe if we just grab to the mGMPThread, as we don't know
-    // what thread we're running on and other threads may be trying to
-    // access this without locks!  However, debug only, and primary failure
-    // mode outside of compiler-helped TSAN is a leak.  But better would be
-    // to use swap() under a lock.
-    mps->GetThread(getter_AddRefs(mGMPThread));
-    MOZ_ASSERT(mGMPThread);
+  nsCOMPtr<mozIGeckoMediaPluginService> mps =
+    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+  MOZ_ASSERT(mps);
+  if (!mps) {
+    return nullptr;
   }
-
-  return mGMPThread;
+  // Note: GeckoMediaPluginService::GetThread() is threadsafe, and returns
+  // nullptr if the GeckoMediaPluginService has started shutdown.
+  nsCOMPtr<nsIThread> gmpThread;
+  mps->GetThread(getter_AddRefs(gmpThread));
+  return gmpThread;
 }
 
 /* static */
@@ -590,7 +584,8 @@ GMPParent::RecvPGMPTimerConstructor(PGMPTimerParent* actor)
 PGMPTimerParent*
 GMPParent::AllocPGMPTimerParent()
 {
-  GMPTimerParent* p = new GMPTimerParent(GMPThread());
+  nsCOMPtr<nsIThread> thread = GMPThread();
+  GMPTimerParent* p = new GMPTimerParent(thread);
   mTimers.AppendElement(p); // Released in DeallocPGMPTimerParent, or on shutdown.
   return p;
 }
