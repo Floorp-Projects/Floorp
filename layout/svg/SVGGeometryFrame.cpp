@@ -122,8 +122,14 @@ nsDisplaySVGGeometry::Paint(nsDisplayListBuilder* aBuilder,
 
   gfxMatrix tm = nsSVGUtils::GetCSSPxToDevPxMatrix(mFrame) *
                    gfxMatrix::Translation(devPixelOffset);
+
+  uint32_t flag = aBuilder->ShouldSyncDecodeImages()
+                  ? imgIContainer::FLAG_SYNC_DECODE
+                  : imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
+
   DrawResult result =
-    static_cast<SVGGeometryFrame*>(mFrame)->PaintSVG(*aCtx->ThebesContext(), tm);
+    static_cast<SVGGeometryFrame*>(mFrame)->PaintSVG(*aCtx->ThebesContext(),
+                                                     tm, nullptr, flag);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
 }
@@ -280,7 +286,8 @@ SVGGeometryFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 DrawResult
 SVGGeometryFrame::PaintSVG(gfxContext& aContext,
                            const gfxMatrix& aTransform,
-                           const nsIntRect* aDirtyRect)
+                           const nsIntRect* aDirtyRect,
+                           uint32_t aFlags)
 {
   if (!StyleVisibility()->IsVisible())
     return DrawResult::SUCCESS;

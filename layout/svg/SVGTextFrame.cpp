@@ -3562,7 +3562,8 @@ ShouldPaintCaret(const TextRenderedRun& aThisRun, nsCaret* aCaret)
 DrawResult
 SVGTextFrame::PaintSVG(gfxContext& aContext,
                        const gfxMatrix& aTransform,
-                       const nsIntRect *aDirtyRect)
+                       const nsIntRect *aDirtyRect,
+                       uint32_t aFlags)
 {
   DrawTarget& aDrawTarget = *aContext.GetDrawTarget();
 
