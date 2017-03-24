@@ -10326,22 +10326,6 @@ nsDocument::RemoveResponsiveContent(nsIContent* aContent)
 }
 
 void
-nsDocument::AddMediaContent(nsIContent* aContent)
-{
-  MOZ_ASSERT(aContent);
-  MOZ_ASSERT(aContent->IsHTMLElement(nsGkAtoms::video) ||
-             aContent->IsHTMLElement(nsGkAtoms::audio));
-  mMediaContent.PutEntry(aContent);
-}
-
-void
-nsDocument::RemoveMediaContent(nsIContent* aContent)
-{
-  MOZ_ASSERT(aContent);
-  mMediaContent.RemoveEntry(aContent);
-}
-
-void
 nsDocument::NotifyMediaFeatureValuesChanged()
 {
   for (auto iter = mResponsiveContent.ConstIter(); !iter.Done();
