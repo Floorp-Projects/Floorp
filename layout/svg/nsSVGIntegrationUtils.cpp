@@ -1136,7 +1136,7 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   if (mFrame->GetStateBits() & NS_FRAME_DRAWING_AS_PAINTSERVER)
     return false;
 
-  mFrame->AddStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
+  AutoSetRestorePaintServerState paintServer(mFrame);
 
   aContext->Save();
 
@@ -1203,8 +1203,6 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   }
 
   aContext->Restore();
-
-  mFrame->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
 
   return true;
 }

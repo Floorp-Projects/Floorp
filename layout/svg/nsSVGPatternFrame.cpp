@@ -380,7 +380,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
   // Delay checking NS_FRAME_DRAWING_AS_PAINTSERVER bit until here so we can
   // give back a clear surface if there's a loop
   if (!(patternWithChildren->GetStateBits() & NS_FRAME_DRAWING_AS_PAINTSERVER)) {
-    patternWithChildren->AddStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
+    AutoSetRestorePaintServerState paintServer(patternWithChildren);
     for (nsIFrame* kid = firstKid; kid;
          kid = kid->GetNextSibling()) {
       // The CTM of each frame referencing us can be different
@@ -398,7 +398,6 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
         return nullptr;
       }
     }
-    patternWithChildren->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
   }
 
   patternWithChildren->mSource = nullptr;
