@@ -81,15 +81,3 @@ exports.haveHeapSnapshotTempFile = function (snapshotId) {
   return OS.File.stat(path).then(() => true,
                                  () => false);
 };
-
-/**
- * Given a heap snapshot's file path, extricate the snapshot id.
- *
- * @param {String} path
- *
- * @returns String
- */
-exports.getSnapshotIdFromPath = function (path) {
-  return path.slice(OS.Constants.Path.tmpDir.length + 1,
-                    path.length - ".fxsnapshot".length);
-};
