@@ -1436,6 +1436,8 @@ class Marionette(object):
 
         :returns: a dictionary with x and y
         """
+        warnings.warn("get_window_position() has been deprecated, please use get_window_rect()",
+                      DeprecationWarning)
         return self._send_message(
             "getWindowPosition", key="value" if self.protocol == 1 else None)
 
@@ -1469,6 +1471,10 @@ class Marionette(object):
         return self._send_message("setWindowRect", {"x": x, "y": y,
                                                     "height": height,
                                                     "width": width})
+
+    @property
+    def window_rect(self):
+        return self._send_message("getWindowRect")
 
     @property
     def title(self):
@@ -2154,6 +2160,8 @@ class Marionette(object):
 
         :returns: dictionary representation of current window width and height
         """
+        warnings.warn("window_size property has been deprecated, please use get_window_rect()",
+                      DeprecationWarning)
         return self._send_message("getWindowSize",
                                   key="value" if self.protocol == 1 else None)
 
