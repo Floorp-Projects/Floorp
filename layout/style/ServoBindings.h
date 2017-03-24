@@ -43,6 +43,7 @@ namespace mozilla {
 using mozilla::FontFamilyList;
 using mozilla::FontFamilyType;
 using mozilla::ServoElementSnapshot;
+class nsCSSFontFaceRule;
 struct nsMediaFeature;
 struct nsStyleList;
 struct nsStyleImage;
@@ -72,6 +73,13 @@ struct nsStyleDisplay;
   { NS_ADDREF(aPtr); }                                                        \
   void Gecko_Release##name_##ArbitraryThread(ThreadSafe##name_##Holder* aPtr) \
   { NS_RELEASE(aPtr); }                                                       \
+
+#define NS_DECL_FFI_REFCOUNTING(class_, name_)  \
+  void Gecko_##name_##_AddRef(class_* aPtr);    \
+  void Gecko_##name_##_Release(class_* aPtr);
+#define NS_IMPL_FFI_REFCOUNTING(class_, name_)                    \
+  void Gecko_##name_##_AddRef(class_* aPtr) { NS_ADDREF(aPtr); }  \
+  void Gecko_##name_##_Release(class_* aPtr) { NS_RELEASE(aPtr); }
 
 
 #define DEFINE_ARRAY_TYPE_FOR(type_)                                \
@@ -382,6 +390,12 @@ void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSour
 nscoord Gecko_nsStyleFont_GetBaseSize(const nsStyleFont* font, RawGeckoPresContextBorrowed pres_context);
 
 const nsMediaFeature* Gecko_GetMediaFeatures();
+
+// Font face rule
+// Creates and returns a new (already-addrefed) nsCSSFontFaceRule object.
+nsCSSFontFaceRule* Gecko_CSSFontFaceRule_Create();
+void Gecko_CSSFontFaceRule_GetCssText(const nsCSSFontFaceRule* rule, nsAString* result);
+NS_DECL_FFI_REFCOUNTING(nsCSSFontFaceRule, CSSFontFaceRule);
 
 // We use an int32_t here instead of a LookAndFeel::ColorID
 // because forward-declaring a nested enum/struct is impossible
