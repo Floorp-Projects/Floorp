@@ -389,7 +389,6 @@ to mochitest command.
 * test_value_storage.html `: var(--a)`: extra whitespace is added for shorthand with variables servo/servo#15295 [*]
 * border-width computed wrong bug 1335990
   * test_parse_rule.html `border-style` [4]
-  * test_initial_computation.html `0px", expected "3px` [48]
 * Negative value should be rejected
   * test_property_syntax_errors.html `transition-duration`: servo/servo#15343 [20]
   * ... `perspective'`: servo/servo#15449 [20]
