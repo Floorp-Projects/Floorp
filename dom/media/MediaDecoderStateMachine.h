@@ -112,7 +112,6 @@ class OutputStreamManager;
 class TaskQueue;
 
 extern LazyLogModule gMediaDecoderLog;
-extern LazyLogModule gMediaSampleLog;
 
 enum class MediaEventType : int8_t
 {
