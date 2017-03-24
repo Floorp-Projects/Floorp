@@ -278,6 +278,7 @@ fuzzy-if(skiaContent,1,10000) == mask-basic-02.svg mask-basic-02-ref.svg
 == mask-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
 == mask-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
 fuzzy(1,5000) == mask-opacity-01.svg mask-opacity-01-ref.svg
+!= mask-root-svg.svg about:blank
 == mask-transformed-01.svg mask-transformed-01-ref.svg
 == mask-transformed-02.svg pass.svg
 == mask-transformed-child-01.svg mask-transformed-child-01-ref.svg
