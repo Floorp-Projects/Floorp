@@ -373,7 +373,7 @@ fails == 315920-7a.html 315920-7a.html
 fails == 315920-7b.html 315920-7b.html
 fails == 315920-7c.html 315920-7c.html
 fails == 315920-8a.html 315920-8a.html
-== 315920-8b.html 315920-8b.html
+fails == 315920-8b.html 315920-8b.html # bug 1349909
 fails == 315920-9.html 315920-9.html
 == 315920-10.html 315920-10.html
 fails == 315920-11.html 315920-11.html
@@ -381,15 +381,15 @@ fails == 315920-12a.html 315920-12a.html
 fails == 315920-12b.html 315920-12b.html
 fails == 315920-12c.html 315920-12c.html
 fails == 315920-13a.html 315920-13a.html
-== 315920-13b.html 315920-13b.html
+fails == 315920-13b.html 315920-13b.html # bug 1349909
 fails == 315920-14.html 315920-14.html
 == 315920-15.html 315920-15.html
 fails == 315920-16.html 315920-16.html
 fails == 315920-17.html 315920-17.html
-skip-if(stylo) == 315920-18a.html 315920-18a.html # bug 1338982, which makes this timing-dependent
-skip-if(stylo) == 315920-18b.html 315920-18b.html # bug 1338982, which makes this timing-dependent
-skip-if(stylo) == 315920-18c.html 315920-18c.html # bug 1338982, which makes this timing-dependent
-skip-if(stylo) == 315920-18d.html 315920-18d.html # bug 1338982, which makes this timing-dependent
+== 315920-18a.html 315920-18a.html
+== 315920-18b.html 315920-18b.html
+== 315920-18c.html 315920-18c.html
+== 315920-18d.html 315920-18d.html
 fails == 315920-18e.html 315920-18e.html
 fails == 315920-18f.html 315920-18f.html
 fails == 315920-18g.html 315920-18g.html
@@ -1853,7 +1853,7 @@ fails pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-grid.h
 == 1062108-1.html 1062108-1.html
 fails == 1062792-1.html 1062792-1.html
 == 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow.html
-fails pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1.html # Bug 1293844
+pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1.html
 fails == 1069716-1.html 1069716-1.html
 == 1078262-1.html 1078262-1.html
 pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1.html

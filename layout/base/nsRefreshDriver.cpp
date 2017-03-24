@@ -1437,11 +1437,17 @@ nsRefreshDriver::SetHighPrecisionTimersEnabled(bool aEnable)
 
       nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
       if (timer) {
+        if (nsPresContext* pc = GetPresContext()) {
+          timer->SetTarget(
+              pc->Document()->EventTargetFor(TaskCategory::Other));
+        }
         timer.forget(&sDisableHighPrecisionTimersTimer);
-        sDisableHighPrecisionTimersTimer->InitWithFuncCallback(DisableHighPrecisionTimersCallback,
-                                                               nullptr,
-                                                               90 * 1000,
-                                                               nsITimer::TYPE_ONE_SHOT);
+        sDisableHighPrecisionTimersTimer->
+          InitWithNamedFuncCallback(DisableHighPrecisionTimersCallback,
+                                    nullptr,
+                                    90 * 1000,
+                                    nsITimer::TYPE_ONE_SHOT,
+                                    "DisableHighPrecisionTimersCallback");
       } else {
         // might happen if we're shutting down XPCOM; just drop the time period down
         // immediately
@@ -1891,7 +1897,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           continue;
 
         if (!tracingLayoutFlush) {
-          tracingLayoutFlush.emplace("Paint", "Reflow");
+          tracingLayoutFlush.emplace("Paint", "Reflow", Move(mReflowCause));
           mReflowCause = nullptr;
         }
 
@@ -2111,8 +2117,17 @@ nsRefreshDriver::Thaw()
       // updates our mMostRecentRefresh, but the DoRefresh call won't run
       // and notify our observers until we get back to the event loop.
       // Thus MostRecentRefresh() will lie between now and the DoRefresh.
-      NS_DispatchToCurrentThread(NewRunnableMethod(this, &nsRefreshDriver::DoRefresh));
-      EnsureTimerStarted();
+      RefPtr<nsRunnableMethod<nsRefreshDriver>> event =
+        NewRunnableMethod(this, &nsRefreshDriver::DoRefresh);
+      nsPresContext* pc = GetPresContext();
+      if (pc) {
+        pc->Document()->Dispatch("nsRefreshDriver::DoRefresh",
+                                 TaskCategory::Other,
+                                 event.forget());
+        EnsureTimerStarted();
+      } else {
+        NS_ERROR("Thawing while document is being destroyed");
+      }
     }
   }
 }

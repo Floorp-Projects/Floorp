@@ -30,6 +30,7 @@ public:
 
   NS_IMETHOD GetWidth(int32_t* aWidth) override;
   NS_IMETHOD GetHeight(int32_t* aHeight) override;
+  nsresult GetNativeSizes(nsTArray<gfx::IntSize>& aNativeSizes) const override;
   NS_IMETHOD GetIntrinsicSize(nsSize* aSize) override;
   NS_IMETHOD GetIntrinsicRatio(nsSize* aRatio) override;
   NS_IMETHOD_(already_AddRefed<SourceSurface>)

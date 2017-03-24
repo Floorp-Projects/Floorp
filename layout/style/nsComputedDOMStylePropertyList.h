@@ -39,7 +39,7 @@
  * Implementations of CSS styles *
 \* ***************************** */
 
-COMPUTED_STYLE_PROP(align_content,                   AlignContent)
+COMPUTED_STYLE_PROP(align_content,                 AlignContent)
 COMPUTED_STYLE_PROP(align_items,                   AlignItems)
 COMPUTED_STYLE_PROP(align_self,                    AlignSelf)
 //// COMPUTED_STYLE_PROP(animation,                Animation)
@@ -51,6 +51,7 @@ COMPUTED_STYLE_PROP(animation_iteration_count,     AnimationIterationCount)
 COMPUTED_STYLE_PROP(animation_name,                AnimationName)
 COMPUTED_STYLE_PROP(animation_play_state,          AnimationPlayState)
 COMPUTED_STYLE_PROP(animation_timing_function,     AnimationTimingFunction)
+COMPUTED_STYLE_PROP(appearance,                    Appearance)
 COMPUTED_STYLE_PROP(backface_visibility,           BackfaceVisibility)
 //// COMPUTED_STYLE_PROP(background,               Background)
 COMPUTED_STYLE_PROP(background_attachment,         BackgroundAttachment)
@@ -274,7 +275,7 @@ COMPUTED_STYLE_PROP(z_index,                       ZIndex)
  * Implementations of -moz- styles *
 \* ******************************* */
 
-COMPUTED_STYLE_PROP(_moz_appearance,               Appearance)
+COMPUTED_STYLE_PROP(_moz_appearance,               MozAppearance)
 COMPUTED_STYLE_PROP(_moz_binding,                  Binding)
 COMPUTED_STYLE_PROP(_moz_border_bottom_colors,     BorderBottomColors)
 COMPUTED_STYLE_PROP(_moz_border_left_colors,       BorderLeftColors)

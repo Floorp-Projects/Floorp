@@ -134,9 +134,12 @@ EvaluationExceptionToNSResult(JSContext* aCx)
 
 nsJSUtils::ExecutionContext::ExecutionContext(JSContext* aCx,
                                               JS::Handle<JSObject*> aGlobal)
-  : mSamplerRAII("nsJSUtils::ExecutionContext", /* PROFILER_LABEL */
-                 js::ProfileEntry::Category::JS, __LINE__)
-  , mCx(aCx)
+  :
+#ifdef MOZ_GECKO_PROFILER
+    mSamplerRAII("nsJSUtils::ExecutionContext", /* PROFILER_LABEL */
+                 js::ProfileEntry::Category::JS, __LINE__),
+#endif
+    mCx(aCx)
   , mCompartment(aCx, aGlobal)
   , mRetValue(aCx)
   , mScopeChain(aCx)

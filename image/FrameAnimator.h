@@ -21,6 +21,7 @@ namespace mozilla {
 namespace image {
 
 class RasterImage;
+class DrawableSurface;
 
 class AnimationState
 {
@@ -305,15 +306,19 @@ private: // methods
    * @returns a RefreshResult that shows whether the frame was successfully
    *          advanced, and its resulting dirty rect.
    */
-  RefreshResult AdvanceFrame(AnimationState& aState, TimeStamp aTime);
+  RefreshResult AdvanceFrame(AnimationState& aState,
+                             DrawableSurface& aFrames,
+                             TimeStamp aTime);
 
   /**
    * Get the @aIndex-th frame in the frame index, ignoring results of blending.
    */
-  RawAccessFrameRef GetRawFrame(uint32_t aFrameNum) const;
+  RawAccessFrameRef GetRawFrame(DrawableSurface& aFrames,
+                                uint32_t aFrameNum) const;
 
   /// @return the given frame's timeout if it is available
   Maybe<FrameTimeout> GetTimeoutForFrame(AnimationState& aState,
+                                         DrawableSurface& aFrames,
                                          uint32_t aFrameNum) const;
 
   /**
@@ -322,9 +327,11 @@ private: // methods
    * In the error case (like if the requested frame is not currently
    * decoded), returns None().
    */
-  Maybe<TimeStamp> GetCurrentImgFrameEndTime(AnimationState& aState) const;
+  Maybe<TimeStamp> GetCurrentImgFrameEndTime(AnimationState& aState,
+                                             DrawableSurface& aFrames) const;
 
-  bool DoBlend(gfx::IntRect* aDirtyRect,
+  bool DoBlend(DrawableSurface& aFrames,
+               gfx::IntRect* aDirtyRect,
                uint32_t aPrevFrameIndex,
                uint32_t aNextFrameIndex);
 

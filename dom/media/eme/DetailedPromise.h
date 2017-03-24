@@ -37,7 +37,7 @@ public:
   void MaybeResolve(const T& aArg)
   {
     EME_LOG("%s promise resolved", mName.get());
-    MaybeReportTelemetry(Succeeded);
+    MaybeReportTelemetry(eStatus::kSucceeded);
     Promise::MaybeResolve<T>(aArg);
   }
 
@@ -57,8 +57,8 @@ private:
                            Telemetry::HistogramID aFailureLatencyProbe);
   virtual ~DetailedPromise();
 
-  enum Status { Succeeded, Failed };
-  void MaybeReportTelemetry(Status aStatus);
+  enum eStatus { kSucceeded, kFailed };
+  void MaybeReportTelemetry(eStatus aStatus);
 
   nsCString mName;
   bool mResponded;

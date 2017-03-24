@@ -119,7 +119,7 @@ private:
   uint32_t mPluginId;
   GMPDecryptorProxyCallback* mCallback;
 #ifdef DEBUG
-  nsIThread* const mGMPThread;
+  nsCOMPtr<nsIThread> const mGMPThread;
 #endif
 };
 

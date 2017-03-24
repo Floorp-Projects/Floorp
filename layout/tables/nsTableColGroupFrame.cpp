@@ -296,15 +296,18 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
 #ifdef DEBUG
         nsIFrame* providerFrame;
         nsStyleContext* psc = colFrame->GetParentStyleContext(&providerFrame);
-        if (colFrame->StyleContext()->GetParent() == psc) {
-          NS_ASSERTION(col->StyleContext() == colFrame->StyleContext() &&
-                       col->GetContent() == colFrame->GetContent(),
-                       "How did that happen??");
+        if (psc->StyleSource().IsGeckoRuleNodeOrNull()) {
+          // This check code is useful only in Gecko-backed style system.
+          if (colFrame->StyleContext()->GetParent() == psc) {
+            NS_ASSERTION(col->StyleContext() == colFrame->StyleContext() &&
+                         col->GetContent() == colFrame->GetContent(),
+                         "How did that happen??");
+          }
+          // else colFrame is being removed because of a frame
+          // reconstruct on it, and its style context is still the old
+          // one, so we can't assert anything about how it compares to
+          // col's style context.
         }
-        // else colFrame is being removed because of a frame
-        // reconstruct on it, and its style context is still the old
-        // one, so we can't assert anything about how it compares to
-        // col's style context.
 #endif
         nextCol = col->GetNextCol();
         RemoveFrame(kPrincipalList, col);

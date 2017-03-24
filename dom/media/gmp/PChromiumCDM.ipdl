@@ -1,0 +1,106 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PGMPContent;
+include GMPTypes;
+
+namespace mozilla {
+namespace gmp {
+
+async protocol PChromiumCDM
+{
+  manager PGMPContent;
+child:
+
+  // cdm::ContentDecryptionModule8
+  async Init(bool aAllowDistinctiveIdentifier,
+             bool aAllowPersistentState);
+
+  async SetServerCertificate(uint32_t aPromiseId,
+                             uint8_t[] aServerCert);
+
+  async CreateSessionAndGenerateRequest(uint32_t aPromiseId,
+                                        uint32_t aSessionType,
+                                        uint32_t aInitDataType,
+                                        uint8_t[] aInitData);
+
+  async LoadSession(uint32_t aPromiseId,
+                    uint32_t aSessionType,
+                    nsCString aSessionId);
+
+  async UpdateSession(uint32_t aPromiseId,
+                      nsCString aSessionId,
+                      uint8_t[] aResponse);
+
+  async CloseSession(uint32_t aPromiseId,
+                     nsCString aSessionId);
+
+  async RemoveSession(uint32_t aPromiseId,
+                      nsCString aSessionId);
+
+  async Decrypt(uint32_t aId, CDMInputBuffer aBuffer);
+
+  async InitializeVideoDecoder(CDMVideoDecoderConfig aConfig);
+
+  async DeinitializeVideoDecoder();
+
+  async ResetVideoDecoder();
+
+  async DecryptAndDecodeFrame(CDMInputBuffer aBuffer);
+
+  async Drain();
+
+  async Destroy();
+
+parent:
+  async __delete__();
+
+  // cdm::Host8
+  async OnResolveNewSessionPromise(uint32_t aPromiseId, nsCString aSessionId);
+
+  async OnResolvePromise(uint32_t aPromiseId);
+
+  async OnRejectPromise(uint32_t aPromiseId,
+                        uint32_t aError,
+                        uint32_t aSystemCode,
+                        nsCString aErrorMessage);
+
+  async OnSessionMessage(nsCString aSessionId,
+                         uint32_t aMessageType,
+                         uint8_t[] aMessage);
+
+  async OnSessionKeysChange(nsCString aSessionId,
+                            CDMKeyInformation[] aKeysInfo);
+
+  async OnExpirationChange(nsCString aSessionId,
+                           double aSecondsSinceEpoch);
+
+  async OnSessionClosed(nsCString aSessionId);
+
+  async OnLegacySessionError(nsCString aSessionId,
+                             uint32_t aError,
+                             uint32_t aSystemCode,
+                             nsCString aMessage);
+
+  async ResolveLoadSessionPromise(uint32_t aPromiseId, bool aSuccessful);
+
+  // Return values of cdm::ContentDecryptionModule8::Decrypt
+  async Decrypted(uint32_t aId, uint32_t aStatus, uint8_t[] aData);
+
+  async OnDecoderInitDone(uint32_t aStatus);
+
+  // Return values of cdm::ContentDecryptionModule8::DecryptAndDecodeFrame
+  async Decoded(CDMVideoFrame aFrame);
+  async DecodeFailed(uint32_t aStatus);
+
+  async ResetVideoDecoderComplete();
+
+  async DrainComplete();
+
+  async Shutdown();
+};
+
+} // namespace gmp
+} // namespace mozilla

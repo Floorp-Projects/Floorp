@@ -29,6 +29,7 @@
 
 #include "nsAlgorithm.h" // for clamped()
 #include "nscore.h"
+#include "nsCRT.h" // for IsAscii()
 #include "nsIWidget.h"
 #include "nsIPresShell.h"
 #include "nsFontMetrics.h"
@@ -4035,11 +4036,13 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     aFont->mFont.languageOverride = aParentFont->mFont.languageOverride;
   } else if (eCSSUnit_Normal == languageOverrideValue->GetUnit() ||
              eCSSUnit_Initial == languageOverrideValue->GetUnit()) {
-    aFont->mFont.languageOverride.Truncate();
+    aFont->mFont.languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
   } else if (eCSSUnit_System_Font == languageOverrideValue->GetUnit()) {
     aFont->mFont.languageOverride = systemFont.languageOverride;
   } else if (eCSSUnit_String == languageOverrideValue->GetUnit()) {
-    languageOverrideValue->GetStringValue(aFont->mFont.languageOverride);
+    nsAutoString lang;
+    languageOverrideValue->GetStringValue(lang);
+    aFont->mFont.languageOverride = ParseFontLanguageOverride(lang);
   }
 
   // -moz-min-font-size-ratio: percent, inherit
@@ -4406,6 +4409,26 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
   }
 
   COMPUTE_END_INHERITED(Font, font)
+}
+
+/*static*/ uint32_t
+nsRuleNode::ParseFontLanguageOverride(const nsAString& aLangTag)
+{
+  if (!aLangTag.Length() || aLangTag.Length() > 4) {
+    return NO_FONT_LANGUAGE_OVERRIDE;
+  }
+  uint32_t index, result = 0;
+  for (index = 0; index < aLangTag.Length(); ++index) {
+    char16_t ch = aLangTag[index];
+    if (!nsCRT::IsAscii(ch)) { // valid tags are pure ASCII
+      return NO_FONT_LANGUAGE_OVERRIDE;
+    }
+    result = (result << 8) + ch;
+  }
+  while (index++ < 4) {
+    result = (result << 8) + 0x20;
+  }
+  return result;
 }
 
 template <typename T>
@@ -6148,12 +6171,19 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   // See ReflowInput::CalculateHypotheticalBox
   display->mOriginalDisplay = display->mDisplay;
 
-  // appearance: enum, inherit, initial
+  // -moz-appearance: enum, inherit, initial
+  SetValue(*aRuleData->ValueForMozAppearance(),
+           display->mMozAppearance, conditions,
+           SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
+           parentDisplay->mMozAppearance,
+           NS_THEME_NONE);
+
+  // appearance: auto | none
   SetValue(*aRuleData->ValueForAppearance(),
            display->mAppearance, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentDisplay->mAppearance,
-           NS_THEME_NONE);
+           NS_THEME_AUTO);
 
   // binding: url, none, inherit
   const nsCSSValue* bindingValue = aRuleData->ValueForBinding();
@@ -8646,7 +8676,7 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
   if (MOZ_UNLIKELY(justifyItemsValue.GetUnit() == eCSSUnit_Inherit)) {
     if (MOZ_LIKELY(parentContext)) {
       pos->mJustifyItems =
-        parentPos->ComputedJustifyItems(parentContext->GetParent());
+        parentPos->ComputedJustifyItems(parentContext->GetParentAllowServo());
     } else {
       pos->mJustifyItems = NS_STYLE_JUSTIFY_NORMAL;
     }
@@ -9004,7 +9034,7 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
           nsStyleContentType type =
             unit == eCSSUnit_Counter ? eStyleContentType_Counter
                                      : eStyleContentType_Counters;
-          data.SetCounters(type, value.GetArrayValue());
+          data.SetCounters(type, value.GetThreadSafeArrayValue());
           break;
         }
         case eCSSUnit_Enumerated:

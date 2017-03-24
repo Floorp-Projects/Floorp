@@ -139,6 +139,9 @@ public:
   // It is also set to true for the events (in a DelayedInputEvent), which will
   // be dispatched afterwards.
   bool mIsSuppressedOrDelayed : 1;
+  // Certain mouse events can be marked as positionless to return 0 from
+  // coordinate related getters.
+  bool mIsPositionless : 1;
 
   // If the event is being handled in target phase, returns true.
   inline bool InTargetPhase() const

@@ -49,7 +49,7 @@ public:
 protected:
   virtual ~SplitNodeTransaction();
 
-  EditorBase& mEditorBase;
+  RefPtr<EditorBase> mEditorBase;
 
   // The node to operate upon.
   nsCOMPtr<nsIContent> mExistingRightNode;

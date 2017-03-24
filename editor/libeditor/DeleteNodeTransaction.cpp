@@ -15,7 +15,7 @@ namespace mozilla {
 DeleteNodeTransaction::DeleteNodeTransaction(EditorBase& aEditorBase,
                                              nsINode& aNodeToDelete,
                                              RangeUpdater* aRangeUpdater)
-  : mEditorBase(aEditorBase)
+  : mEditorBase(&aEditorBase)
   , mNodeToDelete(&aNodeToDelete)
   , mParentNode(aNodeToDelete.GetParentNode())
   , mRangeUpdater(aRangeUpdater)
@@ -31,6 +31,7 @@ DeleteNodeTransaction::~DeleteNodeTransaction()
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteNodeTransaction, EditTransactionBase,
+                                   mEditorBase,
                                    mNodeToDelete,
                                    mParentNode,
                                    mRefNode)
@@ -43,8 +44,8 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 bool
 DeleteNodeTransaction::CanDoIt() const
 {
-  if (NS_WARN_IF(!mNodeToDelete) || !mParentNode ||
-      !mEditorBase.IsModifiableNode(mParentNode)) {
+  if (NS_WARN_IF(!mNodeToDelete) || NS_WARN_IF(!mEditorBase) ||
+      !mParentNode || !mEditorBase->IsModifiableNode(mParentNode)) {
     return false;
   }
   return true;

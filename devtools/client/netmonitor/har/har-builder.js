@@ -269,7 +269,6 @@ HarBuilder.prototype = {
           file.requestHeaders,
           file.requestHeadersFromUploadStream,
           file.requestPostData,
-          this._options.getString
         ).then(formDataSections => {
           formDataSections.forEach(section => {
             let paramsArray = parseQueryString(section);

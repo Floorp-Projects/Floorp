@@ -163,7 +163,15 @@ public:
 #endif
   }
 
-  nsStyleContext* GetParent() const { return mParent; }
+  nsStyleContext* GetParent() const {
+    MOZ_ASSERT(mSource.IsGeckoRuleNode(),
+               "This should be used only in Gecko-backed style system!");
+    return mParent;
+  }
+
+  nsStyleContext* GetParentAllowServo() const {
+    return mParent;
+  }
 
   nsIAtom* GetPseudo() const { return mPseudoTag; }
   mozilla::CSSPseudoElementType GetPseudoType() const {

@@ -79,7 +79,8 @@ Thread::GetCurrentId()
   return gettid();
 }
 
-static void SetSampleContext(TickSample* sample, mcontext_t& mcontext)
+static void
+SetSampleContext(TickSample* sample, mcontext_t& mcontext)
 {
   // Extracting the sample from the context is extremely machine dependent.
 #if defined(GP_ARCH_x86)
@@ -101,42 +102,21 @@ static void SetSampleContext(TickSample* sample, mcontext_t& mcontext)
 }
 
 #if defined(GP_OS_android)
-#define SYS_tgkill __NR_tgkill
+# define SYS_tgkill __NR_tgkill
 #endif
 
-int tgkill(pid_t tgid, pid_t tid, int signalno) {
+int
+tgkill(pid_t tgid, pid_t tid, int signalno)
+{
   return syscall(SYS_tgkill, tgid, tid, signalno);
-}
-
-class PlatformData {
- public:
-  PlatformData()
-  {
-    MOZ_COUNT_CTOR(PlatformData);
-  }
-
-  ~PlatformData()
-  {
-    MOZ_COUNT_DTOR(PlatformData);
-  }
-};
-
-UniquePlatformData
-AllocPlatformData(int aThreadId)
-{
-  return UniquePlatformData(new PlatformData);
-}
-
-void
-PlatformDataDestructor::operator()(PlatformData* aData)
-{
-  delete aData;
 }
 
 static void
 SleepMicro(int aMicroseconds)
 {
-  if (MOZ_UNLIKELY(aMicroseconds >= 1000000)) {
+  aMicroseconds = std::max(0, aMicroseconds);
+
+  if (aMicroseconds >= 1000000) {
     // Use usleep for larger intervals, because the nanosleep
     // code below only supports intervals < 1 second.
     MOZ_ALWAYS_TRUE(!::usleep(aMicroseconds));
@@ -158,10 +138,23 @@ SleepMicro(int aMicroseconds)
   MOZ_ASSERT(!rv, "nanosleep call failed");
 }
 
-// The sampler thread controls sampling and runs whenever the profiler is
-// active. It periodically runs through all registered threads, finds those
-// that should be sampled, then pauses and samples them.
-//
+class PlatformData
+{
+public:
+  explicit PlatformData(int aThreadId)
+  {
+    MOZ_COUNT_CTOR(PlatformData);
+  }
+
+  ~PlatformData()
+  {
+    MOZ_COUNT_DTOR(PlatformData);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////
+// BEGIN SamplerThread target specifics
+
 // The only way to reliably interrupt a Linux thread and inspect its register
 // and stack state is by sending a signal to it, and doing the work inside the
 // signal handler.  But we don't want to run much code inside the signal
@@ -196,350 +189,307 @@ SleepMicro(int aMicroseconds)
 //   sSigHandlerCoordinator.  We can
 //   safely reuse it for some other thread.
 //
-class SamplerThread
+
+// A type used to coordinate between the sampler (signal sending) thread and
+// the thread currently being sampled (the samplee, which receives the
+// signals).
+//
+// The first message is sent using a SIGPROF signal delivery.  The subsequent
+// three are sent using sem_wait/sem_post pairs.  They are named accordingly
+// in the following struct.
+struct SigHandlerCoordinator
 {
-private:
-  // A type used to coordinate between the sampler (signal sending) thread and
-  // the thread currently being sampled (the samplee, which receives the
-  // signals).
-  //
-  // The first message is sent using a SIGPROF signal delivery.  The subsequent
-  // three are sent using sem_wait/sem_post pairs.  They are named accordingly
-  // in the following struct.
-  struct SigHandlerCoordinator
+  SigHandlerCoordinator()
   {
-    SigHandlerCoordinator()
-    {
-      PodZero(&mUContext);
-      int r = sem_init(&mMessage2, /* pshared */ 0, 0);
-      r    |= sem_init(&mMessage3, /* pshared */ 0, 0);
-      r    |= sem_init(&mMessage4, /* pshared */ 0, 0);
-      MOZ_ASSERT(r == 0);
-    }
-
-    ~SigHandlerCoordinator()
-    {
-      int r = sem_destroy(&mMessage2);
-      r    |= sem_destroy(&mMessage3);
-      r    |= sem_destroy(&mMessage4);
-      MOZ_ASSERT(r == 0);
-    }
-
-    sem_t mMessage2; // To sampler: "context is in sSigHandlerCoordinator"
-    sem_t mMessage3; // To samplee: "resume"
-    sem_t mMessage4; // To sampler: "finished with sSigHandlerCoordinator"
-    ucontext_t mUContext; // Context at signal
-  };
-
-  static void* ThreadEntry(void* aArg)
-  {
-    auto thread = static_cast<SamplerThread*>(aArg);
-    prctl(PR_SET_NAME, "SamplerThread", 0, 0, 0);
-    thread->Run();
-    return nullptr;
-  }
-
-public:
-  SamplerThread(PS::LockRef aLock, uint32_t aActivityGeneration,
-                double aInterval)
-    : mActivityGeneration(aActivityGeneration)
-    , mIntervalMicro(std::max(1, int(floor(aInterval * 1000 + 0.5))))
-  {
-    MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-#if defined(USE_EHABI_STACKWALK)
-    mozilla::EHABIStackWalkInit();
-#elif defined(USE_LUL_STACKWALK)
-    bool createdLUL = false;
-    lul::LUL* lul = gPS->LUL(aLock);
-    if (!lul) {
-      lul = new lul::LUL(logging_sink_for_LUL);
-      gPS->SetLUL(aLock, lul);
-      // Read all the unwind info currently available.
-      read_procmaps(lul);
-      createdLUL = true;
-    }
-#endif
-
-    // Request profiling signals.
-    struct sigaction sa;
-    sa.sa_sigaction = MOZ_SIGNAL_TRAMPOLINE(SigprofHandler);
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = SA_RESTART | SA_SIGINFO;
-    if (sigaction(SIGPROF, &sa, &mOldSigprofHandler) != 0) {
-      MOZ_CRASH("Error installing SIGPROF handler in the profiler");
-    }
-
-#if defined(USE_LUL_STACKWALK)
-    if (createdLUL) {
-      // Switch into unwind mode. After this point, we can't add or remove any
-      // unwind info to/from this LUL instance. The only thing we can do with
-      // it is Unwind() calls.
-      lul->EnableUnwinding();
-
-      // Has a test been requested?
-      if (PR_GetEnv("MOZ_PROFILER_LUL_TEST")) {
-         int nTests = 0, nTestsPassed = 0;
-         RunLulUnitTests(&nTests, &nTestsPassed, lul);
-      }
-    }
-#endif
-
-    // Start the sampling thread. It repeatedly sends a SIGPROF signal. Sending
-    // the signal ourselves instead of relying on itimer provides much better
-    // accuracy.
-    if (pthread_create(&mThread, nullptr, ThreadEntry, this) != 0) {
-      MOZ_CRASH("pthread_create failed");
-    }
-  }
-
-  ~SamplerThread() {
-    pthread_join(mThread, nullptr);
-  }
-
-  void Stop(PS::LockRef aLock) {
-    MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-    // Restore old signal handler. This is global state so it's important that
-    // we do it now, while gPSMutex is locked. It's safe to do this now even
-    // though this SamplerThread is still alive, because the next time the main
-    // loop of Run() iterates it won't get past the mActivityGeneration check,
-    // and so won't send any signals.
-    sigaction(SIGPROF, &mOldSigprofHandler, 0);
-  }
-
-  static void SigprofHandler(int aSignal, siginfo_t* aInfo, void* aContext) {
-    // Avoid TSan warning about clobbering errno.
-    int savedErrno = errno;
-
-    MOZ_ASSERT(aSignal == SIGPROF);
-    MOZ_ASSERT(sSigHandlerCoordinator);
-
-    // By sending us this signal, the sampler thread has sent us message 1 in
-    // the comment above, with the meaning "|sSigHandlerCoordinator| is ready
-    // for use, please copy your register context into it."
-    sSigHandlerCoordinator->mUContext = *static_cast<ucontext_t*>(aContext);
-
-    // Send message 2: tell the sampler thread that the context has been copied
-    // into |sSigHandlerCoordinator->mUContext|.  sem_post can never fail by
-    // being interrupted by a signal, so there's no loop around this call.
-    int r = sem_post(&sSigHandlerCoordinator->mMessage2);
+    PodZero(&mUContext);
+    int r = sem_init(&mMessage2, /* pshared */ 0, 0);
+    r    |= sem_init(&mMessage3, /* pshared */ 0, 0);
+    r    |= sem_init(&mMessage4, /* pshared */ 0, 0);
     MOZ_ASSERT(r == 0);
+  }
 
-    // At this point, the sampler thread assumes we are suspended, so we must
-    // not touch any global state here.
-
-    // Wait for message 3: the sampler thread tells us to resume.
-    while (true) {
-      r = sem_wait(&sSigHandlerCoordinator->mMessage3);
-      if (r == -1 && errno == EINTR) {
-        // Interrupted by a signal.  Try again.
-        continue;
-      }
-      // We don't expect any other kind of failure
-      MOZ_ASSERT(r == 0);
-      break;
-    }
-
-    // Send message 4: tell the sampler thread that we are finished accessing
-    // |sSigHandlerCoordinator|.  After this point it is not safe to touch
-    // |sSigHandlerCoordinator|.
-    r = sem_post(&sSigHandlerCoordinator->mMessage4);
+  ~SigHandlerCoordinator()
+  {
+    int r = sem_destroy(&mMessage2);
+    r    |= sem_destroy(&mMessage3);
+    r    |= sem_destroy(&mMessage4);
     MOZ_ASSERT(r == 0);
-
-    errno = savedErrno;
   }
 
-  void Run() {
-    // This function runs on the sampler thread.
-
-    int vm_tgid_ = getpid();
-    DebugOnly<int> my_tid = gettid();
-
-    TimeDuration lastSleepOverhead = 0;
-    TimeStamp sampleStart = TimeStamp::Now();
-
-    while (true) {
-      // This scope is for |lock|. It ends before we sleep below.
-      {
-        PS::AutoLock lock(gPSMutex);
-
-        // At this point profiler_stop() might have been called, and
-        // profiler_start() might have been called on another thread.
-        // Alternatively, profiler_shutdown() might have been called and gPS
-        // may be null. In all these cases, PS::sActivityGeneration will no
-        // longer equal mActivityGeneration, so we must exit immediately, but
-        // without touching gPS. (This is why PS::sActivityGeneration must be
-        // static.)
-        if (PS::ActivityGeneration(lock) != mActivityGeneration) {
-          return;
-        }
-
-        gPS->Buffer(lock)->deleteExpiredStoredMarkers();
-
-        if (!gPS->IsPaused(lock)) {
-          bool isFirstProfiledThread = true;
-
-          const PS::ThreadVector& threads = gPS->Threads(lock);
-          for (uint32_t i = 0; i < threads.size(); i++) {
-            ThreadInfo* info = threads[i];
-
-            if (!info->HasProfile() || info->IsPendingDelete()) {
-              // We are not interested in profiling this thread.
-              continue;
-            }
-
-            if (info->Stack()->CanDuplicateLastSampleDueToSleep() &&
-                gPS->Buffer(lock)->DuplicateLastSample(gPS->StartTime(lock),
-                                                       info->LastSample())) {
-              continue;
-            }
-
-            info->UpdateThreadResponsiveness();
-
-            int threadId = info->ThreadId();
-            MOZ_ASSERT(threadId != my_tid);
-
-            int64_t rssMemory = 0;
-            int64_t ussMemory = 0;
-            if (isFirstProfiledThread && gPS->FeatureMemory(lock)) {
-              rssMemory = nsMemoryReporterManager::ResidentFast();
-              ussMemory = nsMemoryReporterManager::ResidentUnique();
-            }
-
-            // Suspend the samplee thread and get its context.
-            SigHandlerCoordinator coord;   // on sampler thread's stack
-            sSigHandlerCoordinator = &coord;
-
-            // Send message 1 to the samplee (the thread to be sampled), by
-            // signalling at it.
-            int r = tgkill(vm_tgid_, threadId, SIGPROF);
-            MOZ_ASSERT(r == 0);
-
-            // Wait for message 2 from the samplee, indicating that the context
-            // is available and that the thread is suspended.
-            while (true) {
-              r = sem_wait(&sSigHandlerCoordinator->mMessage2);
-              if (r == -1 && errno == EINTR) {
-                // Interrupted by a signal.  Try again.
-                continue;
-              }
-              // We don't expect any other kind of failure.
-              MOZ_ASSERT(r == 0);
-              break;
-            }
-
-            // The samplee thread is now frozen and
-            // sSigHandlerCoordinator->mUContext is valid.  We can poke around
-            // in it and unwind its stack as we like.
-
-            TickSample sample;
-            sample.context = &sSigHandlerCoordinator->mUContext;
-
-            // Extract the current pc and sp.
-            SetSampleContext(&sample,
-                             sSigHandlerCoordinator->mUContext.uc_mcontext);
-            sample.threadInfo = info;
-            sample.timestamp = mozilla::TimeStamp::Now();
-            sample.rssMemory = rssMemory;
-            sample.ussMemory = ussMemory;
-
-            Tick(lock, gPS->Buffer(lock), &sample);
-
-            // Send message 3 to the samplee, which tells it to resume.
-            r = sem_post(&sSigHandlerCoordinator->mMessage3);
-            MOZ_ASSERT(r == 0);
-
-            // Wait for message 4 from the samplee, which tells us that it has
-            // finished with |sSigHandlerCoordinator|.
-            while (true) {
-              r = sem_wait(&sSigHandlerCoordinator->mMessage4);
-              if (r == -1 && errno == EINTR) {
-                continue;
-              }
-              MOZ_ASSERT(r == 0);
-              break;
-            }
-
-            // This isn't strictly necessary, but doing so does help pick up
-            // anomalies in which the signal handler is running even though
-            // this loop thinks it shouldn't be.
-            sSigHandlerCoordinator = nullptr;
-
-            isFirstProfiledThread = false;
-          }
-#if defined(USE_LUL_STACKWALK)
-          // The LUL unwind object accumulates frame statistics. Periodically
-          // we should poke it to give it a chance to print those statistics.
-          // This involves doing I/O (fprintf, __android_log_print, etc.) and
-          // so can't safely be done from the unwinder threads, which is why it
-          // is done here.
-          gPS->LUL(lock)->MaybeShowStats();
-#endif
-        }
-        // gPSMutex is unlocked here.
-      }
-
-      TimeStamp targetSleepEndTime =
-        sampleStart + TimeDuration::FromMicroseconds(mIntervalMicro);
-      TimeStamp beforeSleep = TimeStamp::Now();
-      TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
-      double sleepTime = std::max(0.0, (targetSleepDuration - lastSleepOverhead).ToMicroseconds());
-      SleepMicro(sleepTime);
-      sampleStart = TimeStamp::Now();
-      lastSleepOverhead = sampleStart - (beforeSleep + TimeDuration::FromMicroseconds(sleepTime));
-    }
-  }
-
-private:
-  // The activity generation, for detecting when the sampler thread must stop.
-  const uint32_t mActivityGeneration;
-
-  // The pthread_t for the sampler thread.
-  pthread_t mThread;
-
-  // The interval between samples, measured in microseconds.
-  const int mIntervalMicro;
-
-  // Used to restore the SIGPROF handler when ours is removed.
-  struct sigaction mOldSigprofHandler;
-
-  // This is the one-and-only variable used to communicate between the sampler
-  // thread and the samplee thread's signal handler. It's static because the
-  // samplee thread's signal handler is static.
-  static SigHandlerCoordinator* sSigHandlerCoordinator;
-
-  SamplerThread(const SamplerThread&) = delete;
-  void operator=(const SamplerThread&) = delete;
+  sem_t mMessage2; // To sampler: "context is in sSigHandlerCoordinator"
+  sem_t mMessage3; // To samplee: "resume"
+  sem_t mMessage4; // To sampler: "finished with sSigHandlerCoordinator"
+  ucontext_t mUContext; // Context at signal
 };
 
-SamplerThread::SigHandlerCoordinator* SamplerThread::sSigHandlerCoordinator =
-  nullptr;
+struct SigHandlerCoordinator* SamplerThread::sSigHandlerCoordinator = nullptr;
+
+static void
+SigprofHandler(int aSignal, siginfo_t* aInfo, void* aContext)
+{
+  // Avoid TSan warning about clobbering errno.
+  int savedErrno = errno;
+
+  MOZ_ASSERT(aSignal == SIGPROF);
+  MOZ_ASSERT(SamplerThread::sSigHandlerCoordinator);
+
+  // By sending us this signal, the sampler thread has sent us message 1 in
+  // the comment above, with the meaning "|sSigHandlerCoordinator| is ready
+  // for use, please copy your register context into it."
+  SamplerThread::sSigHandlerCoordinator->mUContext =
+    *static_cast<ucontext_t*>(aContext);
+
+  // Send message 2: tell the sampler thread that the context has been copied
+  // into |sSigHandlerCoordinator->mUContext|.  sem_post can never fail by
+  // being interrupted by a signal, so there's no loop around this call.
+  int r = sem_post(&SamplerThread::sSigHandlerCoordinator->mMessage2);
+  MOZ_ASSERT(r == 0);
+
+  // At this point, the sampler thread assumes we are suspended, so we must
+  // not touch any global state here.
+
+  // Wait for message 3: the sampler thread tells us to resume.
+  while (true) {
+    r = sem_wait(&SamplerThread::sSigHandlerCoordinator->mMessage3);
+    if (r == -1 && errno == EINTR) {
+      // Interrupted by a signal.  Try again.
+      continue;
+    }
+    // We don't expect any other kind of failure
+    MOZ_ASSERT(r == 0);
+    break;
+  }
+
+  // Send message 4: tell the sampler thread that we are finished accessing
+  // |sSigHandlerCoordinator|.  After this point it is not safe to touch
+  // |sSigHandlerCoordinator|.
+  r = sem_post(&SamplerThread::sSigHandlerCoordinator->mMessage4);
+  MOZ_ASSERT(r == 0);
+
+  errno = savedErrno;
+}
+
+static void*
+ThreadEntry(void* aArg)
+{
+  auto thread = static_cast<SamplerThread*>(aArg);
+  prctl(PR_SET_NAME, "SamplerThread", 0, 0, 0);
+  thread->mSamplerTid = gettid();
+  thread->Run();
+  return nullptr;
+}
+
+SamplerThread::SamplerThread(PS::LockRef aLock, uint32_t aActivityGeneration,
+                             double aIntervalMilliseconds)
+  : mActivityGeneration(aActivityGeneration)
+  , mIntervalMicroseconds(
+      std::max(1, int(floor(aIntervalMilliseconds * 1000 + 0.5))))
+  , mMyPid(getpid())
+  // We don't know what the sampler thread's ID will be until it runs, so set
+  // mSamplerTid to a dummy value and fill it in for real in ThreadEntry().
+  , mSamplerTid(-1)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+#if defined(USE_EHABI_STACKWALK)
+  mozilla::EHABIStackWalkInit();
+#elif defined(USE_LUL_STACKWALK)
+  bool createdLUL = false;
+  lul::LUL* lul = gPS->LUL(aLock);
+  if (!lul) {
+    lul = new lul::LUL(logging_sink_for_LUL);
+    gPS->SetLUL(aLock, lul);
+    // Read all the unwind info currently available.
+    read_procmaps(lul);
+    createdLUL = true;
+  }
+#endif
+
+  // Request profiling signals.
+  struct sigaction sa;
+  sa.sa_sigaction = MOZ_SIGNAL_TRAMPOLINE(SigprofHandler);
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_RESTART | SA_SIGINFO;
+  if (sigaction(SIGPROF, &sa, &mOldSigprofHandler) != 0) {
+    MOZ_CRASH("Error installing SIGPROF handler in the profiler");
+  }
+
+#if defined(USE_LUL_STACKWALK)
+  if (createdLUL) {
+    // Switch into unwind mode. After this point, we can't add or remove any
+    // unwind info to/from this LUL instance. The only thing we can do with
+    // it is Unwind() calls.
+    lul->EnableUnwinding();
+
+    // Has a test been requested?
+    if (PR_GetEnv("MOZ_PROFILER_LUL_TEST")) {
+      int nTests = 0, nTestsPassed = 0;
+      RunLulUnitTests(&nTests, &nTestsPassed, lul);
+    }
+  }
+#endif
+
+  // Start the sampling thread. It repeatedly sends a SIGPROF signal. Sending
+  // the signal ourselves instead of relying on itimer provides much better
+  // accuracy.
+  if (pthread_create(&mThread, nullptr, ThreadEntry, this) != 0) {
+    MOZ_CRASH("pthread_create failed");
+  }
+}
+
+SamplerThread::~SamplerThread()
+{
+  pthread_join(mThread, nullptr);
+}
+
+void
+SamplerThread::Stop(PS::LockRef aLock)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  // Restore old signal handler. This is global state so it's important that
+  // we do it now, while gPSMutex is locked. It's safe to do this now even
+  // though this SamplerThread is still alive, because the next time the main
+  // loop of Run() iterates it won't get past the mActivityGeneration check,
+  // and so won't send any signals.
+  sigaction(SIGPROF, &mOldSigprofHandler, 0);
+}
+
+void
+SamplerThread::SuspendAndSampleAndResumeThread(
+  PS::LockRef aLock, ThreadInfo* aThreadInfo, bool aIsFirstProfiledThread)
+{
+  // Only one sampler thread can be sampling at once.  So we expect to have
+  // complete control over |sSigHandlerCoordinator|.
+  MOZ_ASSERT(!sSigHandlerCoordinator);
+
+  int sampleeTid = aThreadInfo->ThreadId();
+  MOZ_RELEASE_ASSERT(sampleeTid != mSamplerTid);
+
+  //----------------------------------------------------------------//
+  // Collect auxiliary information whilst the samplee thread is still
+  // running.
+
+  int64_t rssMemory = 0;
+  int64_t ussMemory = 0;
+  if (aIsFirstProfiledThread && gPS->FeatureMemory(aLock)) {
+    rssMemory = nsMemoryReporterManager::ResidentFast();
+    ussMemory = nsMemoryReporterManager::ResidentUnique();
+  }
+
+  TickSample sample;
+  sample.threadInfo = aThreadInfo;
+  sample.timestamp = mozilla::TimeStamp::Now();
+  sample.rssMemory = rssMemory;
+  sample.ussMemory = ussMemory;
+
+  //----------------------------------------------------------------//
+  // Suspend the samplee thread and get its context.
+
+  SigHandlerCoordinator coord;   // on sampler thread's stack
+  sSigHandlerCoordinator = &coord;
+
+  // Send message 1 to the samplee (the thread to be sampled), by
+  // signalling at it.
+  int r = tgkill(mMyPid, sampleeTid, SIGPROF);
+  MOZ_ASSERT(r == 0);
+
+  // Wait for message 2 from the samplee, indicating that the context
+  // is available and that the thread is suspended.
+  while (true) {
+    r = sem_wait(&sSigHandlerCoordinator->mMessage2);
+    if (r == -1 && errno == EINTR) {
+      // Interrupted by a signal.  Try again.
+      continue;
+    }
+    // We don't expect any other kind of failure.
+    MOZ_ASSERT(r == 0);
+    break;
+  }
+
+  //----------------------------------------------------------------//
+  // Sample the target thread.
+
+  // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+  //
+  // The profiler's "critical section" begins here.  In the critical section,
+  // we must not do any dynamic memory allocation, nor try to acquire any lock
+  // or any other unshareable resource.  This is because the thread to be
+  // sampled has been suspended at some entirely arbitrary point, and we have
+  // no idea which unsharable resources (locks, essentially) it holds.  So any
+  // attempt to acquire any lock, including the implied locks used by the
+  // malloc implementation, risks deadlock.
+
+  // The samplee thread is now frozen and sSigHandlerCoordinator->mUContext is
+  // valid.  We can poke around in it and unwind its stack as we like.
+
+  sample.context = &sSigHandlerCoordinator->mUContext;
+
+  // Extract the current pc and sp.
+  SetSampleContext(&sample,
+                   sSigHandlerCoordinator->mUContext.uc_mcontext);
+
+  Tick(aLock, gPS->Buffer(aLock), &sample);
+
+  //----------------------------------------------------------------//
+  // Resume the target thread.
+
+  // Send message 3 to the samplee, which tells it to resume.
+  r = sem_post(&sSigHandlerCoordinator->mMessage3);
+  MOZ_ASSERT(r == 0);
+
+  // Wait for message 4 from the samplee, which tells us that it has
+  // finished with |sSigHandlerCoordinator|.
+  while (true) {
+    r = sem_wait(&sSigHandlerCoordinator->mMessage4);
+    if (r == -1 && errno == EINTR) {
+      continue;
+    }
+    MOZ_ASSERT(r == 0);
+    break;
+   }
+
+  // The profiler's critical section ends here.  After this point, none of the
+  // critical section limitations documented above apply.
+  //
+  // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+
+  // This isn't strictly necessary, but doing so does help pick up anomalies
+  // in which the signal handler is running when it shouldn't be.
+  sSigHandlerCoordinator = nullptr;
+}
+
+// END SamplerThread target specifics
+////////////////////////////////////////////////////////////////////////
 
 #if defined(GP_OS_android)
 
 static struct sigaction gOldSigstartHandler;
 const int SIGSTART = SIGUSR2;
 
-static void freeArray(const char** array, int size) {
-  for (int i = 0; i < size; i++) {
-    free((void*) array[i]);
+static void
+freeArray(const char** aArray, int aSize)
+{
+  for (int i = 0; i < aSize; i++) {
+    free((void*) aArray[i]);
   }
 }
 
-static uint32_t readCSVArray(char* csvList, const char** buffer) {
+static uint32_t
+readCSVArray(char* aCsvList, const char** aBuffer)
+{
   uint32_t count;
   char* savePtr;
-  int newlinePos = strlen(csvList) - 1;
-  if (csvList[newlinePos] == '\n') {
-    csvList[newlinePos] = '\0';
+  int newlinePos = strlen(aCsvList) - 1;
+  if (aCsvList[newlinePos] == '\n') {
+    aCsvList[newlinePos] = '\0';
   }
 
-  char* item = strtok_r(csvList, ",", &savePtr);
+  char* item = strtok_r(aCsvList, ",", &savePtr);
   for (count = 0; item; item = strtok_r(nullptr, ",", &savePtr)) {
     int length = strlen(item) + 1;  // Include \0
     char* newBuf = (char*) malloc(sizeof(char) * length);
-    buffer[count] = newBuf;
+    aBuffer[count] = newBuf;
     strncpy(newBuf, item, length);
     count++;
   }
@@ -550,10 +500,11 @@ static uint32_t readCSVArray(char* csvList, const char** buffer) {
 // Support some of the env variables reported in ReadProfilerEnvVars, plus some
 // extra stuff.
 static void
-ReadProfilerVars(const char* fileName,
-                 const char** features, uint32_t* featureCount,
-                 const char** threadNames, uint32_t* threadCount) {
-  FILE* file = fopen(fileName, "r");
+ReadProfilerVars(const char* aFileName,
+                 const char** aFeatures, uint32_t* aFeatureCount,
+                 const char** aThreadNames, uint32_t* aThreadCount)
+{
+  FILE* file = fopen(aFileName, "r");
   const int bufferSize = 1024;
   char line[bufferSize];
   char* feature;
@@ -572,9 +523,9 @@ ReadProfilerVars(const char* fileName,
       } else if (strncmp(feature, "MOZ_PROFILER_ENTRIES", bufferSize) == 0) {
         set_profiler_entries(lock, value);
       } else if (strncmp(feature, "MOZ_PROFILER_FEATURES", bufferSize) == 0) {
-        *featureCount = readCSVArray(value, features);
+        *aFeatureCount = readCSVArray(value, aFeatures);
       } else if (strncmp(feature, "threads", bufferSize) == 0) {
-        *threadCount = readCSVArray(value, threadNames);
+        *aThreadCount = readCSVArray(value, aThreadNames);
       }
     }
 
@@ -582,7 +533,9 @@ ReadProfilerVars(const char* fileName,
   }
 }
 
-static void DoStartTask() {
+static void
+DoStartTask()
+{
   uint32_t featureCount = 0;
   uint32_t threadCount = 0;
 
@@ -605,7 +558,9 @@ static void DoStartTask() {
   freeArray(features, featureCount);
 }
 
-static void SigstartHandler(int aSignal, siginfo_t* aInfo, void* aContext) {
+static void
+SigstartHandler(int aSignal, siginfo_t* aInfo, void* aContext)
+{
   class StartTask : public Runnable {
   public:
     NS_IMETHOD Run() override {
@@ -684,7 +639,8 @@ PlatformInit(PS::LockRef aLock)
 
 #endif
 
-void TickSample::PopulateContext(void* aContext)
+void
+TickSample::PopulateContext(void* aContext)
 {
   MOZ_ASSERT(aContext);
   ucontext_t* pContext = reinterpret_cast<ucontext_t*>(aContext);

@@ -1,5 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint-disable no-shadow, max-nested-callbacks */
+
+"use strict";
 
 /**
  * Check that requesting a thread-lifetime actor twice for the same
@@ -10,33 +13,32 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-grips");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-grips", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test_thread_lifetime();
-    });
+    attachTestTabAndResume(gClient, "test-grips",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             test_thread_lifetime();
+                           });
   });
   do_test_pending();
 }
 
-function test_thread_lifetime()
-{
-  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    let pauseGrip = aPacket.frame.arguments[0];
+function test_thread_lifetime() {
+  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+    let pauseGrip = packet.frame.arguments[0];
 
-    gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function (aResponse) {
+    gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function (response) {
       // Successful promotion won't return an error.
-      do_check_eq(aResponse.error, undefined);
+      do_check_eq(response.error, undefined);
 
-      let threadGrip1 = aResponse.from;
+      let threadGrip1 = response.from;
 
-      gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function (aResponse) {
-        do_check_eq(threadGrip1, aResponse.from);
+      gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function (response) {
+        do_check_eq(threadGrip1, response.from);
         gThreadClient.resume(function () {
           finishClient(gClient);
         });
