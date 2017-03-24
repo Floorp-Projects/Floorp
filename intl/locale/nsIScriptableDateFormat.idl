@@ -132,8 +132,7 @@ interface nsIScriptableDateFormat : nsISupports
      * you depend on any specific format or language.
      *
      * @param locale
-     *        Locale code of locale used to format the date or an empty string
-     *        to follow user preference.
+              Ignored. If you want to use specific locale, use Intl API instead.
      * @param dateFormatSelector
      *        Indicate which format should preferably be used for the date.
      *        Use one of the dateFormat* constants.
