@@ -26,4 +26,4 @@ skip-if(stylo) == display-contents-fieldset.html display-contents-fieldset.html 
 asserts(2-10) == display-contents-xbl-5.xul display-contents-xbl-5.xul
 skip-if(stylo) == display-contents-list-item-child.html display-contents-list-item-child.html # disabled for bug 1340607
 == display-contents-writing-mode-1.html display-contents-writing-mode-1.html
-fails == display-contents-writing-mode-2.html display-contents-writing-mode-2.html
+== display-contents-writing-mode-2.html display-contents-writing-mode-2.html
