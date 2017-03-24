@@ -103,8 +103,8 @@ function createPanel(attrs)
   button.label = "OK";
   button.width = 120;
   button.height = 40;
-  button.setAttribute("style", "-moz-appearance: none; border: 0; margin: 0;");
-  panel.setAttribute("style", "-moz-appearance: none; border: 0; margin: 0;");
+  button.setAttribute("style", "-moz-appearance: none; appearance: none; border: 0; margin: 0;");
+  panel.setAttribute("style", "-moz-appearance: none; appearance: none; border: 0; margin: 0;");
   return document.documentElement.appendChild(panel);
 }
 

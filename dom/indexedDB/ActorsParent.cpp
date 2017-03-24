@@ -26491,9 +26491,13 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
       }
 
       key.SetFromInteger(autoIncrementNum);
-    } else if (key.IsFloat() &&
-               key.ToFloat() >= mMetadata->mNextAutoIncrementId) {
-      autoIncrementNum = floor(key.ToFloat());
+    } else if (key.IsFloat()) {
+      double numericKey = key.ToFloat();
+      numericKey = std::min(numericKey, double(1LL << 53));
+      numericKey = floor(numericKey);
+      if (numericKey >= mMetadata->mNextAutoIncrementId) {
+        autoIncrementNum = numericKey;
+      }
     }
 
     if (keyUnset && mMetadata->mCommonMetadata.keyPath().IsValid()) {

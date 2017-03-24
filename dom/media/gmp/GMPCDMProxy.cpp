@@ -328,6 +328,7 @@ GMPCDMProxy::gmp_CreateSession(UniquePtr<CreateSessionData>&& aData)
 
 void
 GMPCDMProxy::LoadSession(PromiseId aPromiseId,
+                         dom::MediaKeySessionType aSessionType,
                          const nsAString& aSessionId)
 {
   MOZ_ASSERT(NS_IsMainThread());

@@ -11,6 +11,7 @@
 #include "mozilla/dom/GamepadBinding.h"
 #include "mozilla/dom/GamepadButton.h"
 #include "mozilla/dom/GamepadPose.h"
+#include "mozilla/dom/GamepadHapticActuator.h"
 #include "mozilla/dom/Performance.h"
 #include <stdint.h>
 #include "nsCOMPtr.h"
@@ -41,8 +42,11 @@ class Gamepad final : public nsISupports,
 public:
   Gamepad(nsISupports* aParent,
           const nsAString& aID, uint32_t aIndex,
+          uint32_t aHashKey,
           GamepadMappingType aMapping, GamepadHand aHand,
-          uint32_t aNumButtons, uint32_t aNumAxes);
+          uint32_t aNumButtons, uint32_t aNumAxes,
+          uint32_t aNumHaptics);
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Gamepad)
 
@@ -96,6 +100,11 @@ public:
     return mIndex;
   }
 
+  uint32_t HashKey() const
+  {
+    return mHashKey;
+  }
+
   void GetButtons(nsTArray<RefPtr<GamepadButton>>& aButtons) const
   {
     aButtons = mButtons;
@@ -111,6 +120,11 @@ public:
     return mPose;
   }
 
+  void GetHapticActuators(nsTArray<RefPtr<GamepadHapticActuator>>& aHapticActuators) const
+  {
+    aHapticActuators = mHapticActuators;
+  }
+
 private:
   virtual ~Gamepad() {}
   void UpdateTimestamp();
@@ -119,6 +133,8 @@ protected:
   nsCOMPtr<nsISupports> mParent;
   nsString mID;
   uint32_t mIndex;
+  // the gamepad hash key in GamepadManager
+  uint32_t mHashKey;
 
   // The mapping in use.
   GamepadMappingType mMapping;
@@ -132,6 +148,7 @@ protected:
   nsTArray<double> mAxes;
   DOMHighResTimeStamp mTimestamp;
   RefPtr<GamepadPose> mPose;
+  nsTArray<RefPtr<GamepadHapticActuator>> mHapticActuators;
 };
 
 } // namespace dom

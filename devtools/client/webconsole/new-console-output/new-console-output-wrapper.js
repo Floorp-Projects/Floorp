@@ -85,7 +85,8 @@ NewConsoleOutputWrapper.prototype = {
             return panel.panelWin.NetMonitorController.inspectRequest(requestId);
           });
         },
-        sourceMapService: this.toolbox ? this.toolbox._sourceMapService : null,
+        sourceMapService:
+          this.toolbox ? this.toolbox._deprecatedServerSourceMapService : null,
         openLink: url => this.jsterm.hud.owner.openLink(url),
         createElement: nodename => {
           return this.document.createElementNS("http://www.w3.org/1999/xhtml", nodename);

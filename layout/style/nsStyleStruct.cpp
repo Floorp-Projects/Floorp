@@ -1678,8 +1678,8 @@ nsStylePosition::ComputedJustifyItems(nsStyleContext* aParent) const
     return mJustifyItems;
   }
   if (MOZ_LIKELY(aParent)) {
-    auto inheritedJustifyItems =
-      aParent->StylePosition()->ComputedJustifyItems(aParent->GetParent());
+    auto inheritedJustifyItems = aParent->StylePosition()->ComputedJustifyItems(
+      aParent->GetParentAllowServo());
     // "If the inherited value of justify-items includes the 'legacy' keyword,
     // 'auto' computes to the inherited value."  Otherwise, 'normal'.
     if (inheritedJustifyItems & NS_STYLE_JUSTIFY_LEGACY) {
@@ -1696,8 +1696,8 @@ nsStylePosition::UsedJustifySelf(nsStyleContext* aParent) const
     return mJustifySelf;
   }
   if (MOZ_LIKELY(aParent)) {
-    auto inheritedJustifyItems = aParent->StylePosition()->
-      ComputedJustifyItems(aParent->GetParent());
+    auto inheritedJustifyItems = aParent->StylePosition()->ComputedJustifyItems(
+      aParent->GetParentAllowServo());
     return inheritedJustifyItems & ~NS_STYLE_JUSTIFY_LEGACY;
   }
   return NS_STYLE_JUSTIFY_NORMAL;
@@ -3260,7 +3260,8 @@ nsStyleDisplay::nsStyleDisplay(const nsPresContext* aContext)
   : mDisplay(StyleDisplay::Inline)
   , mOriginalDisplay(StyleDisplay::Inline)
   , mContain(NS_STYLE_CONTAIN_NONE)
-  , mAppearance(NS_THEME_NONE)
+  , mMozAppearance(NS_THEME_NONE)
+  , mAppearance(NS_THEME_AUTO)
   , mPosition(NS_STYLE_POSITION_STATIC)
   , mFloat(StyleFloat::None)
   , mOriginalFloat(StyleFloat::None)
@@ -3322,6 +3323,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mDisplay(aSource.mDisplay)
   , mOriginalDisplay(aSource.mOriginalDisplay)
   , mContain(aSource.mContain)
+  , mMozAppearance(aSource.mMozAppearance)
   , mAppearance(aSource.mAppearance)
   , mPosition(aSource.mPosition)
   , mFloat(aSource.mFloat)
@@ -3437,10 +3439,10 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
    * if this does become common perhaps a faster-path might be worth while.
    */
 
-  if ((mAppearance == NS_THEME_TEXTFIELD &&
-       aNewData.mAppearance != NS_THEME_TEXTFIELD) ||
-      (mAppearance != NS_THEME_TEXTFIELD &&
-       aNewData.mAppearance == NS_THEME_TEXTFIELD)) {
+  if ((mMozAppearance == NS_THEME_TEXTFIELD &&
+       aNewData.mMozAppearance != NS_THEME_TEXTFIELD) ||
+      (mMozAppearance != NS_THEME_TEXTFIELD &&
+       aNewData.mMozAppearance == NS_THEME_TEXTFIELD)) {
     // This is for <input type=number> where we allow authors to specify a
     // |-moz-appearance:textfield| to get a control without a spinner. (The
     // spinner is present for |-moz-appearance:number-input| but also other
@@ -3469,6 +3471,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
       || mBreakInside != aNewData.mBreakInside
       || mBreakBefore != aNewData.mBreakBefore
       || mBreakAfter != aNewData.mBreakAfter
+      || mMozAppearance != aNewData.mMozAppearance
       || mAppearance != aNewData.mAppearance
       || mOrient != aNewData.mOrient
       || mOverflowClipBox != aNewData.mOverflowClipBox) {

@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Check getSources functionality when there are lots of sources.
  */
@@ -9,29 +11,28 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-sources");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-sources", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test_simple_listsources();
-    });
+    attachTestTabAndResume(gClient, "test-sources",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             test_simple_listsources();
+                           });
   });
   do_test_pending();
 }
 
-function test_simple_listsources()
-{
-  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    gThreadClient.getSources(function (aResponse) {
+function test_simple_listsources() {
+  gThreadClient.addOneTimeListener("paused", function (event, packet) {
+    gThreadClient.getSources(function (response) {
       do_check_true(
-        !aResponse.error,
+        !response.error,
         "There shouldn't be an error fetching large amounts of sources.");
 
-      do_check_true(aResponse.sources.some(function (s) {
+      do_check_true(response.sources.some(function (s) {
         return s.url.match(/foo-999.js$/);
       }));
 

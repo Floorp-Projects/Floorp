@@ -214,7 +214,7 @@ fuzzy-if(skiaContent,1,800000) == filters-and-group-opacity-01.svg filters-and-g
 == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
 == foreignObject-change-transform-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
-== foreignObject-form-theme.svg foreignObject-form-theme-ref.html
+pref(layout.css.moz-appearance.enabled,true) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html
 == foreignObject-img-form-theme.html foreignObject-img-form-theme-ref.html
 == foreignObject-move-repaint-01.svg pass.svg
 == foreignObject-overflow-01.svg pass.svg
@@ -278,6 +278,7 @@ fuzzy-if(skiaContent,1,10000) == mask-basic-02.svg mask-basic-02-ref.svg
 == mask-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
 == mask-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
 fuzzy(1,5000) == mask-opacity-01.svg mask-opacity-01-ref.svg
+!= mask-root-svg.svg about:blank
 == mask-transformed-01.svg mask-transformed-01-ref.svg
 == mask-transformed-02.svg pass.svg
 == mask-transformed-child-01.svg mask-transformed-child-01-ref.svg

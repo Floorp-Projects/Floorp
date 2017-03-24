@@ -1,0 +1,134 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test gamepad</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript" src="mock_gamepad.js"></script>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var tests = [
+  poseadd,
+  posecheck,
+  haptictest
+];
+var gamepad_index = 0;
+var testNum = 0;
+var poseOrient = new Float32Array([-0.203, -0.235, 0.740, -0.596]);
+var posePos = new Float32Array([-0.0233, -0.707, -0.763]);
+var poseAngVel = new Float32Array([-0.0008, 0.00147, 0.001]);
+var poseAngAcc = new Float32Array([-0.494, 0.476, -0.241]);
+var poseLinVel = new Float32Array([0.003,0.024,-0.068]);
+var poseLinAcc = new Float32Array([-1.211,21.427,-2.348]);
+
+window.addEventListener("gamepadconnected", connecthandler);
+window.addEventListener("gamepadbuttondown", function() {
+  // Wait to ensure that all frames received the button press as well.
+  SpecialPowers.executeSoon(tests[testNum++]);
+});
+
+function pressButton() {
+  GamepadService.newButtonEvent(gamepad_index, 0, true);
+  GamepadService.newButtonEvent(gamepad_index, 0, false);
+}
+
+function startTest() {
+  SpecialPowers.pushPrefEnv({ "set": [["dom.gamepad.extensions.enabled", true]] });
+  // Add a gamepad
+  GamepadService.addGamepad("test gamepad", // id
+                     GamepadService.standardMapping,
+                     GamepadService.leftHand,
+                     4,
+                     2,
+                     1).then(function(i) {
+                      gamepad_index = i;
+                       // Simulate button events on the gamepad we added
+                      pressButton();
+                     });
+}
+
+function connecthandler(e) {
+  ok(e.gamepad.timestamp <= performance.now(),
+     "gamepad.timestamp should less than or equal to performance.now()");
+  is(e.gamepad.index, 0, "correct gamepad index");
+  is(e.gamepad.id, "test gamepad", "correct gamepad name");
+  is(e.gamepad.mapping, "standard", "standard mapping");
+  is(e.gamepad.hand, "left", "left hand");
+  is(e.gamepad.buttons.length, 4, "correct number of buttons");
+  is(e.gamepad.axes.length, 2, "correct number of axes");
+  is(e.gamepad.hapticActuators.length, 1, "correct number of haptics");
+}
+
+function checkValueInFloat32Array(array1, array2) {
+  if (array1.length != array2.length) {
+    return false;
+  }
+  var index = 0;
+  while (index < array2.length) {
+    if (array1[index] != array2[index]) {
+      return false;
+    }
+    ++index;
+  }
+  return true;
+}
+
+function poseadd() {
+  GamepadService.newPoseMove(gamepad_index, poseOrient,
+                             posePos, poseAngVel, poseAngAcc,
+                             poseLinVel, poseLinAcc);
+  pressButton();
+}
+
+function posecheck() {
+  var gamepads = navigator.getGamepads();
+  var pose = gamepads[0].pose;
+  is(gamepads[0].pose.hasOrientation, true,
+     "correct gamepadPose hasOrientation");
+  is(gamepads[0].pose.hasPosition, true,
+     "correct gamepadPose hasPosition");
+  is(checkValueInFloat32Array(pose.orientation, poseOrient), true,
+     "correct gamepadPose orientation");
+  is(checkValueInFloat32Array(pose.position, posePos), true,
+     "correct gamepadPose position");
+  is(checkValueInFloat32Array(pose.angularVelocity, poseAngVel), true,
+     "correct gamepadPose angularVelocity");
+  is(checkValueInFloat32Array(pose.angularAcceleration, poseAngAcc), true,
+     "correct gamepadPose angularAcceleration");
+  is(checkValueInFloat32Array(pose.linearVelocity, poseLinVel), true,
+     "correct gamepadPose linearVelocity");
+  is(checkValueInFloat32Array(pose.linearAcceleration, poseLinAcc), true,
+     "correct gamepadPose linearAcceleration");
+  pressButton();
+}
+
+function setFrameVisible(f, visible) {
+  var Ci = SpecialPowers.Ci;
+  var docshell = SpecialPowers.wrap(f.contentWindow).QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShell);
+  docshell.isActive = visible;
+}
+
+function haptictest() {
+  var gamepads = navigator.getGamepads();
+  var hapticActuators = gamepads[0].hapticActuators[0];
+  hapticActuators.pulse(1, 100).then(function(result) {
+    is(result, true, "gamepad hapticActuators test success.");
+    GamepadService.removeGamepad(gamepad_index);
+    SimpleTest.finish();
+  });
+  // When page is background, we should stop our haptics and still
+  // can get the promise.
+  var f1 = document.getElementById('f1');
+  setFrameVisible(f1, false);
+}
+
+</script>
+<iframe id="f1" src="gamepad_frame_state.html" onload="runGamepadTest(startTest)"></iframe>
+</body>
+</html>
+

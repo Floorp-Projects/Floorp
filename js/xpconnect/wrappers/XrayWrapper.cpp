@@ -201,9 +201,12 @@ XPCWrappedNativeXrayTraits::getWN(JSObject* wrapper)
 }
 
 const JSClass XPCWrappedNativeXrayTraits::HolderClass = {
-    "NativePropertyHolder", JSCLASS_HAS_RESERVED_SLOTS(2)
+    "NativePropertyHolder", JSCLASS_HAS_RESERVED_SLOTS(HOLDER_SHARED_SLOT_COUNT)
 };
 
+const JSClass XrayTraits::HolderClass = {
+    "XrayHolder", JSCLASS_HAS_RESERVED_SLOTS(HOLDER_SHARED_SLOT_COUNT)
+};
 
 const JSClass JSXrayTraits::HolderClass = {
     "JSXrayHolder", JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT)
@@ -1854,7 +1857,7 @@ DOMXrayTraits::preserveWrapper(JSObject* target)
 JSObject*
 DOMXrayTraits::createHolder(JSContext* cx, JSObject* wrapper)
 {
-    return JS_NewObjectWithGivenProto(cx, nullptr, nullptr);
+    return JS_NewObjectWithGivenProto(cx, &HolderClass, nullptr);
 }
 
 const JSClass*
@@ -2407,16 +2410,35 @@ XrayWrapper<Base, Traits>::getPrototype(JSContext* cx, JS::HandleObject wrapper,
     // only if there's been a set. If there's not an expando, or the expando
     // slot is |undefined|, hand back the default proto, appropriately wrapped.
 
-    RootedValue v(cx);
     if (expando) {
-        JSAutoCompartment ac(cx, expando);
-        v = JS_GetReservedSlot(expando, JSSLOT_EXPANDO_PROTOTYPE);
+        RootedValue v(cx);
+        { // Scope for JSAutoCompartment
+            JSAutoCompartment ac(cx, expando);
+            v = JS_GetReservedSlot(expando, JSSLOT_EXPANDO_PROTOTYPE);
+        }
+        if (!v.isUndefined()) {
+            protop.set(v.toObjectOrNull());
+            return JS_WrapObject(cx, protop);
+        }
     }
-    if (v.isUndefined())
-        return getPrototypeHelper(cx, wrapper, target, protop);
 
-    protop.set(v.toObjectOrNull());
-    return JS_WrapObject(cx, protop);
+    // Check our holder, and cache there if we don't have it cached already.
+    RootedObject holder(cx, Traits::singleton.ensureHolder(cx, wrapper));
+    if (!holder)
+        return false;
+
+    Value cached = js::GetReservedSlot(holder,
+                                       Traits::HOLDER_SLOT_CACHED_PROTO);
+    if (cached.isUndefined()) {
+        if (!getPrototypeHelper(cx, wrapper, target, protop))
+            return false;
+
+        js::SetReservedSlot(holder, Traits::HOLDER_SLOT_CACHED_PROTO,
+                            ObjectOrNullValue(protop));
+    } else {
+        protop.set(cached.toObjectOrNull());
+    }
+    return true;
 }
 
 template <typename Base, typename Traits>

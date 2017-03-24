@@ -15,6 +15,7 @@
 #include "prio.h"
 #include "nsIConsoleService.h"
 #include "mozIGeckoMediaPluginService.h"
+#include "GMPService.h"
 
 namespace mozilla {
 
@@ -228,6 +229,14 @@ LogToConsole(const nsAString& aMsg)
   }
   nsAutoString msg(aMsg);
   console->LogStringMessage(msg.get());
+}
+
+RefPtr<AbstractThread>
+GetGMPAbstractThread()
+{
+  RefPtr<gmp::GeckoMediaPluginService> service =
+    gmp::GeckoMediaPluginService::GetGeckoMediaPluginService();
+  return service ? service->GetAbstractGMPThread() : nullptr;
 }
 
 } // namespace mozilla
