@@ -2052,6 +2052,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mTransformingByAPZ(false)
   , mScrollableByAPZ(false)
   , mZoomableByAPZ(false)
+  , mSuppressScrollbarRepaints(false)
   , mScrollsClipOnUnscrolledOutOfFlow(false)
   , mVelocityQueue(aOuter->PresContext())
 {
