@@ -261,34 +261,40 @@ FrameIterator::debugTrapCallsite() const
 static const unsigned PushedRetAddr = 0;
 static const unsigned PushedTLS = 2;
 static const unsigned PushedFP = 3;
+static const unsigned SetFP = 6;
 static const unsigned PoppedFP = 2;
 #elif defined(JS_CODEGEN_X86)
 static const unsigned PushedRetAddr = 0;
 static const unsigned PushedTLS = 1;
 static const unsigned PushedFP = 2;
+static const unsigned SetFP = 4;
 static const unsigned PoppedFP = 1;
 #elif defined(JS_CODEGEN_ARM)
 static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 4;
 static const unsigned PushedTLS = 8;
 static const unsigned PushedFP = 12;
+static const unsigned SetFP = 16;
 static const unsigned PoppedFP = 4;
 #elif defined(JS_CODEGEN_ARM64)
 static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 0;
 static const unsigned PushedTLS = 0;
 static const unsigned PushedFP = 0;
+static const unsigned SetFP = 0;
 static const unsigned PoppedFP = 0;
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 4;
 static const unsigned PushedTLS = 8;
 static const unsigned PushedFP = 12;
+static const unsigned SetFP = 16;
 static const unsigned PoppedFP = 4;
 #elif defined(JS_CODEGEN_NONE)
 static const unsigned PushedRetAddr = 0;
 static const unsigned PushedTLS = 0;
 static const unsigned PushedFP = 0;
+static const unsigned SetFP = 0;
 static const unsigned PoppedFP = 0;
 #else
 # error "Unknown architecture!"
@@ -331,6 +337,7 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
         masm.push(FramePointer);
         MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
         masm.moveStackPtrTo(FramePointer);
+        MOZ_ASSERT_IF(!masm.oom(), SetFP == masm.currentOffset() - *entry);
     }
 
     if (reason != ExitReason::None) {
@@ -790,4 +797,32 @@ wasm::TraceActivations(JSContext* cx, const CooperatingContext& target, JSTracer
             }
         }
     }
+}
+
+Instance*
+wasm::LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp)
+{
+    // Assume bug-caused faults can be raised at any PC and apply the logic of
+    // ProfilingFrameIterator to reject any pc outside the (post-prologue,
+    // pre-epilogue) body of a wasm function. This is exhaustively tested by the
+    // simulators which call this function at every load/store before even
+    // knowing whether there is a fault.
+
+    Code* code = activation->compartment()->wasm.lookupCode(pc);
+    if (!code)
+        return nullptr;
+
+    const CodeRange* codeRange = code->lookupRange(pc);
+    if (!codeRange || !codeRange->isFunction())
+        return nullptr;
+
+    size_t offsetInModule = ((uint8_t*)pc) - code->segment().base();
+    if (offsetInModule < codeRange->funcNormalEntry() + SetFP)
+        return nullptr;
+    if (offsetInModule >= codeRange->ret() - PoppedFP)
+        return nullptr;
+
+    Instance* instance = reinterpret_cast<Frame*>(fp)->tls->instance;
+    MOZ_RELEASE_ASSERT(&instance->code() == code);
+    return instance;
 }
