@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/PServiceWorkerUpdaterChild.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/MozPromise.h"
 
 namespace mozilla {
 namespace dom {
@@ -17,13 +18,19 @@ namespace workers {
 class ServiceWorkerUpdaterChild final : public PServiceWorkerUpdaterChild
 {
 public:
-  ServiceWorkerUpdaterChild(Runnable* aSuccessRunnable,
+  ServiceWorkerUpdaterChild(GenericPromise* aPromise,
+                            Runnable* aSuccessRunnable,
                             Runnable* aFailureRunnable);
 
   mozilla::ipc::IPCResult
   RecvProceed(const bool& aAllowed) override;
 
 private:
+  void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  MozPromiseRequestHolder<GenericPromise> mPromiseHolder;
+
   RefPtr<Runnable> mSuccessRunnable;
   RefPtr<Runnable> mFailureRunnable;
 };
