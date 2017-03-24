@@ -69,7 +69,6 @@ using namespace mozilla::media;
 #undef LOG
 #undef LOGV
 #undef LOGW
-#undef SAMPLE_LOG
 #undef SFMT
 #undef SLOG
 #undef SWARN
@@ -77,7 +76,6 @@ using namespace mozilla::media;
 #define FMT(x, ...) "Decoder=%p " x, mDecoderID, ##__VA_ARGS__
 #define LOG(x, ...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug,   (FMT(x, ##__VA_ARGS__)))
 #define LOGV(x, ...) MOZ_LOG(gMediaDecoderLog, LogLevel::Verbose, (FMT(x, ##__VA_ARGS__)))
-#define SAMPLE_LOG(x, ...)  MOZ_LOG(gMediaSampleLog,  LogLevel::Debug,   (FMT(x, ##__VA_ARGS__)))
 #define LOGW(x, ...) NS_WARNING(nsPrintfCString(FMT(x, ##__VA_ARGS__)).get())
 
 // Used by StateObject and its sub-classes
@@ -2891,7 +2889,7 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
 void MediaDecoderStateMachine::UpdatePlaybackPositionInternal(int64_t aTime)
 {
   MOZ_ASSERT(OnTaskQueue());
-  SAMPLE_LOG("UpdatePlaybackPositionInternal(%" PRId64 ")", aTime);
+  LOGV("UpdatePlaybackPositionInternal(%" PRId64 ")", aTime);
 
   mCurrentPosition = aTime;
   NS_ASSERTION(mCurrentPosition >= 0, "CurrentTime should be positive!");
@@ -3130,8 +3128,8 @@ MediaDecoderStateMachine::RequestAudioData()
   MOZ_ASSERT(IsAudioDecoding());
   MOZ_ASSERT(!IsRequestingAudioData());
   MOZ_ASSERT(!IsWaitingAudioData());
-  SAMPLE_LOG("Queueing audio task - queued=%" PRIuSIZE ", decoder-queued=%" PRIuSIZE,
-             AudioQueue().GetSize(), mReader->SizeOfAudioQueueInFrames());
+  LOGV("Queueing audio task - queued=%" PRIuSIZE ", decoder-queued=%" PRIuSIZE,
+       AudioQueue().GetSize(), mReader->SizeOfAudioQueueInFrames());
 
   RefPtr<MediaDecoderStateMachine> self = this;
   mReader->RequestAudioData()->Then(
@@ -3142,12 +3140,12 @@ MediaDecoderStateMachine::RequestAudioData()
       // audio->GetEndTime() is not always mono-increasing in chained ogg.
       mDecodedAudioEndTime =
         std::max(aAudio->GetEndTime(), mDecodedAudioEndTime);
-      SAMPLE_LOG("OnAudioDecoded [%" PRId64 ",%" PRId64 "]", aAudio->mTime,
-                 aAudio->GetEndTime());
+      LOGV("OnAudioDecoded [%" PRId64 ",%" PRId64 "]", aAudio->mTime,
+           aAudio->GetEndTime());
       mStateObj->HandleAudioDecoded(aAudio);
     },
     [this, self] (const MediaResult& aError) {
-      SAMPLE_LOG("OnAudioNotDecoded aError=%" PRIu32, static_cast<uint32_t>(aError.Code()));
+      LOGV("OnAudioNotDecoded aError=%" PRIu32, static_cast<uint32_t>(aError.Code()));
       mAudioDataRequest.Complete();
       switch (aError.Code()) {
         case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
@@ -3173,11 +3171,10 @@ MediaDecoderStateMachine::RequestVideoData(bool aSkipToNextKeyframe,
   MOZ_ASSERT(IsVideoDecoding());
   MOZ_ASSERT(!IsRequestingVideoData());
   MOZ_ASSERT(!IsWaitingVideoData());
-  SAMPLE_LOG(
-    "Queueing video task - queued=%" PRIuSIZE ", decoder-queued=%" PRIoSIZE
-    ", skip=%i, time=%" PRId64,
-    VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames(),
-    aSkipToNextKeyframe, aCurrentTime.ToMicroseconds());
+  LOGV("Queueing video task - queued=%" PRIuSIZE ", decoder-queued=%" PRIoSIZE
+       ", skip=%i, time=%" PRId64,
+       VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames(),
+       aSkipToNextKeyframe, aCurrentTime.ToMicroseconds());
 
   TimeStamp videoDecodeStartTime = TimeStamp::Now();
   RefPtr<MediaDecoderStateMachine> self = this;
@@ -3189,12 +3186,12 @@ MediaDecoderStateMachine::RequestVideoData(bool aSkipToNextKeyframe,
       // Handle abnormal or negative timestamps.
       mDecodedVideoEndTime =
         std::max(mDecodedVideoEndTime, aVideo->GetEndTime());
-      SAMPLE_LOG("OnVideoDecoded [%" PRId64 ",%" PRId64 "]", aVideo->mTime,
-                 aVideo->GetEndTime());
+      LOGV("OnVideoDecoded [%" PRId64 ",%" PRId64 "]", aVideo->mTime,
+           aVideo->GetEndTime());
       mStateObj->HandleVideoDecoded(aVideo, videoDecodeStartTime);
     },
     [this, self] (const MediaResult& aError) {
-      SAMPLE_LOG("OnVideoNotDecoded aError=%" PRIu32 , static_cast<uint32_t>(aError.Code()));
+      LOGV("OnVideoNotDecoded aError=%" PRIu32 , static_cast<uint32_t>(aError.Code()));
       mVideoDataRequest.Complete();
       switch (aError.Code()) {
         case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
