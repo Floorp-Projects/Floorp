@@ -6,11 +6,11 @@
 
 <html:style>
     #prog {
-        -moz-appearance: none; appearance: none;
+        -moz-appearance: none;
         background-color: blue;
     }
     #prog .progress-bar {
-        -moz-appearance: none; appearance: none;
+        -moz-appearance: none;
         border-radius: 3px 3px;
         background-color: red;
     }
