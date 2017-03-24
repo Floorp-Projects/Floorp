@@ -28,6 +28,15 @@ function addToNamedSet(map, name, entry)
     map.get(name).add(entry);
 }
 
+function fieldKey(csuName, field)
+{
+    // Note: not dealing with overloading correctly.
+    var nargs = 0;
+    if (field.Type.Kind == "Function" && "TypeFunctionArguments" in field.Type)
+	nargs = field.Type.TypeFunctionArguments.length;
+    return csuName + ":" + field.Name[0] + ":" + nargs;
+}
+
 // CSU is "Class/Struct/Union"
 function processCSU(csuName, csu)
 {
@@ -44,17 +53,16 @@ function processCSU(csuName, csu)
         if ("Variable" in field) {
             // Note: not dealing with overloading correctly.
             var name = field.Variable.Name[0];
-            var key = csuName + ":" + field.Field[0].Name[0];
-            addToNamedSet(classFunctions, key, name);
+            addToNamedSet(classFunctions, fieldKey(csuName, field.Field[0]), name);
         }
     }
 }
 
 // Return the nearest ancestor method definition, or all nearest definitions in
 // the case of multiple inheritance.
-function nearestAncestorMethods(csu, method)
+function nearestAncestorMethods(csu, field)
 {
-    var key = csu + ":" + method;
+    var key = fieldKey(csu, field);
 
     if (classFunctions.has(key))
         return new Set(classFunctions.get(key));
@@ -62,7 +70,7 @@ function nearestAncestorMethods(csu, method)
     var functions = new Set();
     if (superclasses.has(csu)) {
         for (var parent of superclasses.get(csu))
-            functions.update(nearestAncestorMethods(parent, method));
+            functions.update(nearestAncestorMethods(parent, field));
     }
 
     return functions;
@@ -113,7 +121,7 @@ function findVirtualFunctions(initialCSU, field)
     var worklist = [initialCSU];
     while (worklist.length) {
         var csu = worklist.pop();
-        var key = csu + ":" + field;
+        var key = fieldKey(csu, field);
 
         if (classFunctions.has(key))
             functions.update(classFunctions.get(key));
