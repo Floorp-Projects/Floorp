@@ -28,7 +28,7 @@ InsertNodeTransaction::InsertNodeTransaction(nsIContent& aNode,
   : mNode(&aNode)
   , mParent(&aParent)
   , mOffset(aOffset)
-  , mEditorBase(aEditorBase)
+  , mEditorBase(&aEditorBase)
 {
 }
 
@@ -37,6 +37,7 @@ InsertNodeTransaction::~InsertNodeTransaction()
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertNodeTransaction, EditTransactionBase,
+                                   mEditorBase,
                                    mNode,
                                    mParent)
 
@@ -48,7 +49,9 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 NS_IMETHODIMP
 InsertNodeTransaction::DoTransaction()
 {
-  MOZ_ASSERT(mNode && mParent);
+  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mNode) || NS_WARN_IF(!mParent)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   uint32_t count = mParent->GetChildCount();
   if (mOffset > static_cast<int32_t>(count) || mOffset == -1) {
@@ -59,15 +62,15 @@ InsertNodeTransaction::DoTransaction()
   // Note, it's ok for ref to be null. That means append.
   nsCOMPtr<nsIContent> ref = mParent->GetChildAt(mOffset);
 
-  mEditorBase.MarkNodeDirty(GetAsDOMNode(mNode));
+  mEditorBase->MarkNodeDirty(GetAsDOMNode(mNode));
 
   ErrorResult rv;
   mParent->InsertBefore(*mNode, ref, rv);
   NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
 
   // Only set selection to insertion point if editor gives permission
-  if (mEditorBase.GetShouldTxnSetSelection()) {
-    RefPtr<Selection> selection = mEditorBase.GetSelection();
+  if (mEditorBase->GetShouldTxnSetSelection()) {
+    RefPtr<Selection> selection = mEditorBase->GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     // Place the selection just after the inserted element
     selection->Collapse(mParent, mOffset + 1);
@@ -80,8 +83,9 @@ InsertNodeTransaction::DoTransaction()
 NS_IMETHODIMP
 InsertNodeTransaction::UndoTransaction()
 {
-  MOZ_ASSERT(mNode && mParent);
-
+  if (NS_WARN_IF(!mNode) || NS_WARN_IF(!mParent)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   ErrorResult rv;
   mParent->RemoveChild(*mNode, rv);
   return rv.StealNSResult();

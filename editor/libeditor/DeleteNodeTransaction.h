@@ -46,7 +46,7 @@ protected:
   virtual ~DeleteNodeTransaction();
 
   // The editor for this transaction.
-  EditorBase& mEditorBase;
+  RefPtr<EditorBase> mEditorBase;
 
   // The element to delete.
   nsCOMPtr<nsINode> mNodeToDelete;

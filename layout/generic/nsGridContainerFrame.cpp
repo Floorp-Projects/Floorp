@@ -470,7 +470,7 @@ public:
   void SetGridItemCount(size_t aGridItemCount)
   {
 #ifndef CLANG_CRASH_BUG
-    MOZ_ASSERT(mIter.isSome() || mArray->Length() == aGridItemCount,
+    MOZ_ASSERT(mIter.isSome() || aGridItemCount <= mArray->Length(),
                "grid item count mismatch");
 #endif
     mGridItemCount.emplace(aGridItemCount);

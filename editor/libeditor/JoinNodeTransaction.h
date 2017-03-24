@@ -48,7 +48,7 @@ public:
   NS_DECL_EDITTRANSACTIONBASE
 
 protected:
-  EditorBase& mEditorBase;
+  RefPtr<EditorBase> mEditorBase;
 
   // The nodes to operate upon.  After the merge, mRightNode remains and
   // mLeftNode is removed from the content tree.

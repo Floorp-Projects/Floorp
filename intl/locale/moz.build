@@ -32,7 +32,6 @@ XPIDL_MODULE = 'locale'
 
 EXPORTS += [
     'DateTimeFormat.h',
-    'nsCollation.h',
     'nsCollationCID.h',
     'nsILanguageAtomService.h',
     'nsIPlatformCharset.h',
@@ -48,7 +47,7 @@ EXPORTS.mozilla.intl += [
 
 UNIFIED_SOURCES += [
     'LocaleService.cpp',
-    'nsCollation.cpp',
+    'nsCollationFactory.cpp',
     'nsLanguageAtomService.cpp',
     'nsLocale.cpp',
     'nsLocaleService.cpp',
@@ -60,10 +59,12 @@ UNIFIED_SOURCES += [
 if CONFIG['ENABLE_INTL_API']:
     UNIFIED_SOURCES += [
         'DateTimeFormat.cpp',
+        'nsCollation.cpp',
     ]
 else:
     UNIFIED_SOURCES += [
         'DateTimeFormatAndroid.cpp',
+        'nsCollationAndroid.cpp',
     ]
 
 EXTRA_JS_MODULES += [
