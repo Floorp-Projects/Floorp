@@ -1853,7 +1853,7 @@ fails pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-grid.h
 == 1062108-1.html 1062108-1.html
 fails == 1062792-1.html 1062792-1.html
 == 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow.html
-fails pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1.html # Bug 1293844
+pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1.html
 fails == 1069716-1.html 1069716-1.html
 == 1078262-1.html 1078262-1.html
 pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1.html

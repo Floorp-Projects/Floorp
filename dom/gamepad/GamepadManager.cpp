@@ -60,7 +60,8 @@ NS_IMPL_ISUPPORTS(GamepadManager, nsIObserver)
 GamepadManager::GamepadManager()
   : mEnabled(false),
     mNonstandardEventsEnabled(false),
-    mShuttingDown(false)
+    mShuttingDown(false),
+    mPromiseID(0)
 {}
 
 nsresult
@@ -206,19 +207,15 @@ uint32_t GamepadManager::GetGamepadIndexWithServiceType(uint32_t aIndex,
 
   switch (aServiceType) {
     case GamepadServiceType::Standard:
-    {
-     MOZ_ASSERT(aIndex <= VR_GAMEPAD_IDX_OFFSET);
-     newIndex = aIndex;
-     break;
-    }
+      MOZ_ASSERT(aIndex <= VR_GAMEPAD_IDX_OFFSET);
+      newIndex = aIndex;
+      break;
     case GamepadServiceType::VR:
-    {
-     newIndex = aIndex + VR_GAMEPAD_IDX_OFFSET;
-     break;
-    }
+      newIndex = aIndex + VR_GAMEPAD_IDX_OFFSET;
+      break;
     default:
-     MOZ_ASSERT(false);
-     break;
+      MOZ_ASSERT(false);
+      break;
   }
 
   return newIndex;
@@ -231,19 +228,22 @@ GamepadManager::AddGamepad(uint32_t aIndex,
                            GamepadHand aHand,
                            GamepadServiceType aServiceType,
                            uint32_t aNumButtons,
-                           uint32_t aNumAxes)
+                           uint32_t aNumAxes,
+                           uint32_t aNumHaptics)
 {
+   uint32_t newIndex = GetGamepadIndexWithServiceType(aIndex, aServiceType);
+
   //TODO: bug 852258: get initial button/axis state
   RefPtr<Gamepad> gamepad =
     new Gamepad(nullptr,
                 aId,
                 0, // index is set by global window
+                newIndex,
                 aMapping,
                 aHand,
                 aNumButtons,
-                aNumAxes);
-
-  uint32_t newIndex = GetGamepadIndexWithServiceType(aIndex, aServiceType);
+                aNumAxes,
+                aNumHaptics);
 
   // We store the gamepad related to its index given by the parent process,
   // and no duplicate index is allowed.
@@ -638,7 +638,8 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
                static_cast<GamepadMappingType>(a.mapping()),
                static_cast<GamepadHand>(a.hand()),
                a.service_type(),
-               a.num_buttons(), a.num_axes());
+               a.num_buttons(), a.num_axes(),
+               a.num_haptics());
     return;
   }
   if (aEvent.type() == GamepadChangeEvent::TGamepadRemoved) {
@@ -665,6 +666,52 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
 
   MOZ_CRASH("We shouldn't be here!");
 
+}
+
+already_AddRefed<Promise>
+GamepadManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                              double aIntensity, double aDuration,
+                              nsIGlobalObject* aGlobal, ErrorResult& aRv)
+{
+  RefPtr<Promise> promise = Promise::Create(aGlobal, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (aControllerIdx >= VR_GAMEPAD_IDX_OFFSET) {
+    uint32_t index = aControllerIdx - VR_GAMEPAD_IDX_OFFSET;
+    mVRChannelChild->AddPromise(mPromiseID, promise);
+    mVRChannelChild->SendVibrateHaptic(index, aHapticIndex,
+                                       aIntensity, aDuration,
+                                       mPromiseID);
+  } else {
+    for (const auto& channelChild: mChannelChildren) {
+      channelChild->AddPromise(mPromiseID, promise);
+      channelChild->SendVibrateHaptic(aControllerIdx, aHapticIndex,
+                                      aIntensity, aDuration,
+                                      mPromiseID);
+    }
+  }
+
+  ++mPromiseID;
+  return promise.forget();
+}
+
+void
+GamepadManager::StopHaptics()
+{
+  for (auto iter = mGamepads.Iter(); !iter.Done(); iter.Next()) {
+    const uint32_t gamepadIndex = iter.UserData()->HashKey();
+    if (gamepadIndex >= VR_GAMEPAD_IDX_OFFSET) {
+      const uint32_t index = gamepadIndex - VR_GAMEPAD_IDX_OFFSET;
+      mVRChannelChild->SendStopVibrateHaptic(index);
+    } else {
+      for (auto& channelChild : mChannelChildren) {
+        channelChild->SendStopVibrateHaptic(gamepadIndex);
+      }
+    }
+  }
 }
 
 //Override nsIIPCBackgroundChildCreateCallback

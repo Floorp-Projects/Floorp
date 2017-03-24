@@ -20,7 +20,8 @@ class GamepadTestChannelChild final : public PGamepadTestChannelChild
  private:
   virtual mozilla::ipc::IPCResult RecvReplyGamepadIndex(const uint32_t& aID,
                                                         const uint32_t& aIndex) override;
-  nsRefPtrHashtable<nsUint32HashKey, Promise> mPromiseList;
+
+  nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mPromiseList;
 };
 
 }// namespace dom

@@ -73,6 +73,29 @@ GamepadEventChannelParent::RecvGamepadListenerRemoved()
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+GamepadEventChannelParent::RecvVibrateHaptic(const uint32_t& aControllerIdx,
+                                   const uint32_t& aHapticIndex,
+                                   const double& aIntensity,
+                                   const double& aDuration,
+                                   const uint32_t& aPromiseID)
+{
+  // TODO: Bug 680289, implement for standard gamepads
+
+  if (SendReplyGamepadVibrateHaptic(aPromiseID)) {
+    return IPC_OK();
+  }
+
+  return IPC_FAIL(this, "SendReplyGamepadVibrateHaptic fail.");
+}
+
+mozilla::ipc::IPCResult
+GamepadEventChannelParent::RecvStopVibrateHaptic(const uint32_t& aGamepadIndex)
+{
+  // TODO: Bug 680289, implement for standard gamepads
+  return IPC_OK();
+}
+
 void
 GamepadEventChannelParent::ActorDestroy(ActorDestroyReason aWhy)
 {

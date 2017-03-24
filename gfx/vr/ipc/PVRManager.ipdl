@@ -54,11 +54,16 @@ parent:
 
   async ControllerListenerAdded();
   async ControllerListenerRemoved();
+  async VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                      double aIntensity, double aDuration, uint32_t aPromiseID);
+  async StopVibrateHaptic(uint32_t aControllerIdx);
+
   async CreateVRTestSystem();
   async CreateVRServiceTestDisplay(nsCString aID, uint32_t aPromiseID);
   async CreateVRServiceTestController(nsCString aID, uint32_t aPromiseID);
   async SetDisplayInfoToMockDisplay(uint32_t aDeviceID, VRDisplayInfo aDisplayInfo);
   async SetSensorStateToMockDisplay(uint32_t aDeviceID, VRHMDSensorState aSensorState);
+
   async NewButtonEventToMockController(uint32_t aDeviceID, long aButton,
                                        bool aPressed);
   async NewAxisMoveEventToMockController(uint32_t aDeviceID, long aAxis,
@@ -78,6 +83,8 @@ child:
   async NotifyVSync();
   async NotifyVRVSync(uint32_t aDisplayID);
   async GamepadUpdate(GamepadChangeEvent aGamepadEvent);
+  async ReplyGamepadVibrateHaptic(uint32_t aPromiseID);
+
   async ReplyCreateVRServiceTestDisplay(nsCString aID, uint32_t aPromiseID,
                                         uint32_t aDeviceID);
   async ReplyCreateVRServiceTestController(nsCString aID, uint32_t aPromiseID,
