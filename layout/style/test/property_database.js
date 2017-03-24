@@ -976,14 +976,6 @@ var gCSSProperties = {
     other_values: [ "cubic-bezier(0.25, 0.1, 0.25, 1.0)", "linear", "ease-in", "ease-out", "ease-in-out", "linear, ease-in, cubic-bezier(0.1, 0.2, 0.8, 0.9)", "cubic-bezier(0.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.25, 1.5, 0.75, -0.5)", "step-start", "step-end", "steps(1)", "steps(2, start)", "steps(386)", "steps(3, end)", "frames(2)", "frames(1000)", "frames( 2 )" ],
     invalid_values: [ "none", "auto", "cubic-bezier(0.25, 0.1, 0.25)", "cubic-bezier(0.25, 0.1, 0.25, 0.25, 1.0)", "cubic-bezier(-0.5, 0.5, 0.5, 0.5)", "cubic-bezier(1.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.5, 0.5, -0.5, 0.5)", "cubic-bezier(0.5, 0.5, 1.5, 0.5)", "steps(2, step-end)", "steps(0)", "steps(-2)", "steps(0, step-end, 1)", "frames(1)", "frames(-2)", "frames", "frames()", "frames(,)", "frames(a)", "frames(2.0)", "frames(2.5)", "frames(2 3)" ]
   },
-  "-moz-appearance": {
-    domProp: "MozAppearance",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "none" ],
-    other_values: [ "radio", "menulist" ],
-    invalid_values: []
-  },
   "-moz-binding": {
     domProp: "MozBinding",
     inherited: false,
@@ -7784,6 +7776,37 @@ if (IsCSSPropertyPrefEnabled("layout.css.background-clip-text.enabled")) {
 
 if (IsCSSPropertyPrefEnabled("layout.css.display-flow-root.enabled")) {
   gCSSProperties["display"].other_values.push("flow-root");
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.appearance.enabled")) {
+  gCSSProperties["appearance"] = {
+    domProp: "appearance",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "none" ],
+    invalid_values: [ "button" ]
+  };
+  gCSSProperties["-webkit-appearance"] = {
+    domProp: "webkitAppearance",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "appearance",
+    subproperties: [ "appearance" ],
+  };
+}
+if (IsCSSPropertyPrefEnabled("layout.css.moz-appearance.enabled")) {
+  gCSSProperties["-moz-appearance"] = {
+    domProp: "MozAppearance",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [ "radio", "menulist", "button", "checkbox", "textfield",
+                    "textfield-multiline", "meterbar", "progressbar", "range",
+                    "range-thumb", "spinner-upbutton", "spinner-downbutton",
+                    "number-input", "listbox", "menulist-button" ],
+    invalid_values: [ "auto" ]
+  };
 }
 
 // Copy aliased properties' fields from their alias targets.

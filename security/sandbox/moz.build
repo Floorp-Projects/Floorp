@@ -46,11 +46,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'chromium/base/lazy_instance.cc',
         'chromium/base/location.cc',
         'chromium/base/memory/ref_counted.cc',
-        'chromium/base/memory/shared_memory_handle_win.cc',
-        'chromium/base/memory/shared_memory_win.cc',
         'chromium/base/memory/singleton.cc',
-        'chromium/base/process/process_handle_win.cc',
-        'chromium/base/rand_util_win.cc',
         'chromium/base/strings/nullable_string16.cc',
         'chromium/base/strings/string_number_conversions.cc',
         'chromium/base/strings/string_piece.cc',
@@ -69,8 +65,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'chromium/base/threading/platform_thread_win.cc',
         'chromium/base/threading/thread_collision_warner.cc',
         'chromium/base/threading/thread_id_name_manager.cc',
-        'chromium/base/threading/thread_local_storage.cc',
-        'chromium/base/threading/thread_local_storage_win.cc',
+        'chromium/base/threading/thread_local_win.cc',
         'chromium/base/threading/thread_restrictions.cc',
         'chromium/base/time/time.cc',
         'chromium/base/time/time_win.cc',
@@ -80,6 +75,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'chromium/base/win/startup_information.cc',
         'chromium/base/win/windows_version.cc',
         'chromium/sandbox/win/src/acl.cc',
+        'chromium/sandbox/win/src/app_container.cc',
         'chromium/sandbox/win/src/broker_services.cc',
         'chromium/sandbox/win/src/crosscall_server.cc',
         'chromium/sandbox/win/src/eat_resolver.cc',
@@ -143,6 +139,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
             'chromium/sandbox/win/src/interceptors_64.cc',
             'chromium/sandbox/win/src/resolver_64.cc',
             'chromium/sandbox/win/src/service_resolver_64.cc',
+            'chromium/sandbox/win/src/Wow64_64.cc',
         ]
     else:
         SOURCES += [
@@ -153,6 +150,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
             'chromium/sandbox/win/src/sidestep/mini_disassembler.cpp',
             'chromium/sandbox/win/src/sidestep/preamble_patcher_with_stub.cpp',
             'chromium/sandbox/win/src/sidestep_resolver.cc',
+            'chromium/sandbox/win/src/Wow64.cc',
         ]
 
     for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM', 'SANDBOX_EXPORTS',

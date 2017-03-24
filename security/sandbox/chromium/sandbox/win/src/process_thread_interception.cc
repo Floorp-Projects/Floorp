@@ -5,7 +5,7 @@
 #include "sandbox/win/src/process_thread_interception.h"
 
 #include <stdint.h>
-#include "base/win/windows_version.h"
+
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/ipc_tags.h"
 #include "sandbox/win/src/policy_params.h"
@@ -305,10 +305,10 @@ BOOL WINAPI TargetCreateProcessW(CreateProcessWFunction orig_CreateProcessW,
 
     const wchar_t* cur_dir = NULL;
 
-    wchar_t this_current_directory[MAX_PATH];
-    DWORD result = ::GetCurrentDirectory(MAX_PATH, this_current_directory);
+    wchar_t current_directory[MAX_PATH];
+    DWORD result = ::GetCurrentDirectory(MAX_PATH, current_directory);
     if (0 != result && result < MAX_PATH)
-      cur_dir = this_current_directory;
+      cur_dir = current_directory;
 
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
@@ -317,8 +317,7 @@ BOOL WINAPI TargetCreateProcessW(CreateProcessWFunction orig_CreateProcessW,
                                  sizeof(PROCESS_INFORMATION));
 
     ResultCode code = CrossCall(ipc, IPC_CREATEPROCESSW_TAG, application_name,
-                                command_line, cur_dir, current_directory,
-                                proc_info, &answer);
+                                command_line, cur_dir, proc_info, &answer);
     if (SBOX_ALL_OK != code)
       break;
 
@@ -342,8 +341,7 @@ BOOL WINAPI TargetCreateProcessA(CreateProcessAFunction orig_CreateProcessA,
                                  LPVOID environment, LPCSTR current_directory,
                                  LPSTARTUPINFOA startup_info,
                                  LPPROCESS_INFORMATION process_information) {
-  if (SandboxFactory::GetTargetServices()->GetState()->IsCsrssConnected() &&
-      orig_CreateProcessA(application_name, command_line, process_attributes,
+  if (orig_CreateProcessA(application_name, command_line, process_attributes,
                           thread_attributes, inherit_handles, flags,
                           environment, current_directory, startup_info,
                           process_information)) {
@@ -372,7 +370,6 @@ BOOL WINAPI TargetCreateProcessA(CreateProcessAFunction orig_CreateProcessA,
     // Convert the input params to unicode.
     UNICODE_STRING *cmd_unicode = NULL;
     UNICODE_STRING *app_unicode = NULL;
-    UNICODE_STRING *cwd_unicode = NULL;
     if (command_line) {
       cmd_unicode = AnsiToUnicode(command_line);
       if (!cmd_unicode)
@@ -387,24 +384,14 @@ BOOL WINAPI TargetCreateProcessA(CreateProcessAFunction orig_CreateProcessA,
       }
     }
 
-    if (current_directory) {
-      cwd_unicode = AnsiToUnicode(current_directory);
-      if (!cwd_unicode) {
-        operator delete(cmd_unicode, NT_ALLOC);
-        operator delete(app_unicode, NT_ALLOC);
-        break;
-      }
-    }
-
     const wchar_t* cmd_line = cmd_unicode ? cmd_unicode->Buffer : NULL;
     const wchar_t* app_name = app_unicode ? app_unicode->Buffer : NULL;
-    const wchar_t* cwd = cwd_unicode ? cwd_unicode->Buffer : NULL;
     const wchar_t* cur_dir = NULL;
 
-    wchar_t target_current_directory[MAX_PATH];
-    DWORD result = ::GetCurrentDirectory(MAX_PATH, target_current_directory);
+    wchar_t current_directory[MAX_PATH];
+    DWORD result = ::GetCurrentDirectory(MAX_PATH, current_directory);
     if (0 != result && result < MAX_PATH)
-      cur_dir = target_current_directory;
+      cur_dir = current_directory;
 
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
@@ -413,11 +400,10 @@ BOOL WINAPI TargetCreateProcessA(CreateProcessAFunction orig_CreateProcessA,
                                  sizeof(PROCESS_INFORMATION));
 
     ResultCode code = CrossCall(ipc, IPC_CREATEPROCESSW_TAG, app_name,
-                                cmd_line, cur_dir, cwd, proc_info, &answer);
+                                cmd_line, cur_dir, proc_info, &answer);
 
     operator delete(cmd_unicode, NT_ALLOC);
     operator delete(app_unicode, NT_ALLOC);
-    operator delete(cwd_unicode, NT_ALLOC);
 
     if (SBOX_ALL_OK != code)
       break;
@@ -432,83 +418,6 @@ BOOL WINAPI TargetCreateProcessA(CreateProcessAFunction orig_CreateProcessA,
 
   ::SetLastError(original_error);
   return FALSE;
-}
-
-HANDLE WINAPI TargetCreateThread(CreateThreadFunction orig_CreateThread,
-                                 LPSECURITY_ATTRIBUTES thread_attributes,
-                                 SIZE_T stack_size,
-                                 LPTHREAD_START_ROUTINE start_address,
-                                 LPVOID parameter,
-                                 DWORD creation_flags,
-                                 LPDWORD thread_id) {
-  HANDLE hThread = NULL;
-
-  TargetServices* target_services = SandboxFactory::GetTargetServices();
-  if (NULL == target_services ||
-      target_services->GetState()->IsCsrssConnected()) {
-    hThread = orig_CreateThread(thread_attributes, stack_size, start_address,
-                                parameter, creation_flags, thread_id);
-    if (hThread) {
-      return hThread;
-    }
-  }
-
-  DWORD original_error = ::GetLastError();
-  do {
-    if (NULL == target_services)
-      break;
-
-    // We don't trust that the IPC can work this early.
-    if (!target_services->GetState()->InitCalled())
-      break;
-
-    __try {
-      if (NULL != thread_id &&
-          !ValidParameter(thread_id, sizeof(*thread_id), WRITE))
-        break;
-
-      if (nullptr == start_address)
-        break;
-      // We don't support thread_attributes not being null.
-      if (nullptr != thread_attributes)
-        break;
-    } __except (EXCEPTION_EXECUTE_HANDLER) {
-      break;
-    }
-
-    void* memory = GetGlobalIPCMemory();
-    if (nullptr == memory)
-      break;
-
-    SharedMemIPCClient ipc(memory);
-    CrossCallReturn answer = {0};
-
-    // NOTE: we don't pass the thread_attributes through. This matches the
-    // approach in CreateProcess and in CreateThreadInternal().
-    ResultCode code = CrossCall(ipc, IPC_CREATETHREAD_TAG,
-                                reinterpret_cast<LPVOID>(stack_size),
-                                reinterpret_cast<LPVOID>(start_address),
-                                parameter, creation_flags, &answer);
-    if (SBOX_ALL_OK != code)
-      break;
-
-    ::SetLastError(answer.win32_result);
-    if (ERROR_SUCCESS != answer.win32_result) {
-      return NULL;
-    }
-
-    __try {
-      if (thread_id != NULL) {
-        *thread_id = ::GetThreadId(answer.handle);
-      }
-      return answer.handle;
-    } __except (EXCEPTION_EXECUTE_HANDLER) {
-      break;
-    }
-  } while (false);
-
-  ::SetLastError(original_error);
-  return NULL;
 }
 
 }  // namespace sandbox

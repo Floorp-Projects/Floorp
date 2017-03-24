@@ -33,8 +33,10 @@ function startTest() {
   // Add a gamepad
   GamepadService.addGamepad("test gamepad", // id
                      GamepadService.standardMapping,
+                     GamepadService.noHand,
                      4,
-                     2).then(function(i) {
+                     2,
+                     0).then(function(i) {
                        index = i;
                        // Simulate button events on the gamepad we added
                        GamepadService.newButtonEvent(index, 0, true);

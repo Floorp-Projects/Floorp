@@ -16,52 +16,6 @@
 
 namespace sandbox {
 
-namespace {
-
-void TestDefaultDalc(bool restricted_required) {
-  RestrictedToken token;
-  ASSERT_EQ(static_cast<DWORD>(ERROR_SUCCESS), token.Init(NULL));
-  if (!restricted_required)
-    token.SetLockdownDefaultDacl();
-
-  ASSERT_EQ(static_cast<DWORD>(ERROR_SUCCESS),
-            token.AddRestrictingSid(ATL::Sids::World().GetPSID()));
-
-  base::win::ScopedHandle handle;
-  ASSERT_EQ(static_cast<DWORD>(ERROR_SUCCESS),
-            token.GetRestrictedToken(&handle));
-
-  ATL::CAccessToken restricted_token;
-  restricted_token.Attach(handle.Take());
-
-  ATL::CDacl dacl;
-  ASSERT_TRUE(restricted_token.GetDefaultDacl(&dacl));
-
-  ATL::CSid logon_sid;
-  ASSERT_TRUE(restricted_token.GetLogonSid(&logon_sid));
-
-  bool restricted_found = false;
-  bool logon_sid_found = false;
-
-  unsigned int ace_count = dacl.GetAceCount();
-  for (unsigned int i = 0; i < ace_count; ++i) {
-    ATL::CSid sid;
-    ACCESS_MASK mask = 0;
-    dacl.GetAclEntry(i, &sid, &mask);
-    if (sid == ATL::Sids::RestrictedCode() && mask == GENERIC_ALL) {
-      restricted_found = true;
-    } else if (sid == logon_sid) {
-      logon_sid_found = true;
-    }
-  }
-
-  ASSERT_EQ(restricted_required, restricted_found);
-  if (!restricted_required)
-    ASSERT_FALSE(logon_sid_found);
-}
-
-}  // namespace
-
 // Tests the initializatioin with an invalid token handle.
 TEST(RestrictedTokenTest, InvalidHandle) {
   RestrictedToken token;
@@ -187,13 +141,36 @@ TEST(RestrictedTokenTest, ResultToken) {
 
 // Verifies that the token created has "Restricted" in its default dacl.
 TEST(RestrictedTokenTest, DefaultDacl) {
-  TestDefaultDalc(true);
-}
+  RestrictedToken token;
+  ASSERT_EQ(static_cast<DWORD>(ERROR_SUCCESS), token.Init(NULL));
 
-// Verifies that the token created does not have "Restricted" in its default
-// dacl.
-TEST(RestrictedTokenTest, DefaultDaclLockdown) {
-  TestDefaultDalc(false);
+  ASSERT_EQ(static_cast<DWORD>(ERROR_SUCCESS),
+            token.AddRestrictingSid(ATL::Sids::World().GetPSID()));
+
+  base::win::ScopedHandle handle;
+  ASSERT_EQ(static_cast<DWORD>(ERROR_SUCCESS),
+            token.GetRestrictedToken(&handle));
+
+  ATL::CAccessToken restricted_token;
+  restricted_token.Attach(handle.Take());
+
+  ATL::CDacl dacl;
+  ASSERT_TRUE(restricted_token.GetDefaultDacl(&dacl));
+
+  bool restricted_found = false;
+
+  unsigned int ace_count = dacl.GetAceCount();
+  for (unsigned int i = 0; i < ace_count ; ++i) {
+    ATL::CSid sid;
+    ACCESS_MASK mask = 0;
+    dacl.GetAclEntry(i, &sid, &mask);
+    if (sid == ATL::Sids::RestrictedCode() && mask == GENERIC_ALL) {
+      restricted_found = true;
+      break;
+    }
+  }
+
+  ASSERT_TRUE(restricted_found);
 }
 
 // Tests the method "AddSidForDenyOnly".
@@ -638,23 +615,6 @@ TEST(RestrictedTokenTest, DoubleInit) {
   ASSERT_EQ(static_cast<DWORD>(ERROR_SUCCESS), token.Init(NULL));
 
   ASSERT_EQ(static_cast<DWORD>(ERROR_ALREADY_INITIALIZED), token.Init(NULL));
-}
-
-TEST(RestrictedTokenTest, LockdownDefaultDaclNoLogonSid) {
-  ATL::CAccessToken anonymous_token;
-  ASSERT_TRUE(::ImpersonateAnonymousToken(::GetCurrentThread()));
-  ASSERT_TRUE(anonymous_token.GetThreadToken(TOKEN_ALL_ACCESS));
-  ::RevertToSelf();
-  ATL::CSid logon_sid;
-  // Verify that the anonymous token doesn't have the logon sid.
-  ASSERT_FALSE(anonymous_token.GetLogonSid(&logon_sid));
-
-  RestrictedToken token;
-  ASSERT_EQ(DWORD{ERROR_SUCCESS}, token.Init(anonymous_token.GetHandle()));
-  token.SetLockdownDefaultDacl();
-
-  base::win::ScopedHandle handle;
-  ASSERT_EQ(DWORD{ERROR_SUCCESS}, token.GetRestrictedToken(&handle));
 }
 
 }  // namespace sandbox

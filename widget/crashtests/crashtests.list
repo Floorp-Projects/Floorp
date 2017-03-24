@@ -1,4 +1,4 @@
 load 303901-1.html
 load 303901-2.html
-load 380359-1.xhtml
+pref(layout.css.moz-appearance.enabled,true) load 380359-1.xhtml
 load 1128214.html

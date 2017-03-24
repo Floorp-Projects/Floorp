@@ -29,8 +29,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-
-#include <functional>
 #include <string>
 
 #include "base/base_export.h"
@@ -47,8 +45,6 @@ typedef std::char_traits<wchar_t> string16_char_traits;
 }  // namespace base
 
 #elif defined(WCHAR_T_IS_UTF32)
-
-#include <wchar.h>  // for mbstate_t
 
 namespace base {
 
@@ -185,21 +181,6 @@ BASE_EXPORT extern void PrintTo(const string16& str, std::ostream* out);
 
 extern template
 class BASE_EXPORT std::basic_string<base::char16, base::string16_char_traits>;
-
-// Specialize std::hash for base::string16. Although the style guide forbids
-// this in general, it is necessary for consistency with WCHAR_T_IS_UTF16
-// platforms, where base::string16 is a type alias for std::wstring.
-namespace std {
-template <>
-struct hash<base::string16> {
-  std::size_t operator()(const base::string16& s) const {
-    std::size_t result = 0;
-    for (base::char16 c : s)
-      result = (result * 131) + c;
-    return result;
-  }
-};
-}  // namespace std
 
 #endif  // WCHAR_T_IS_UTF32
 

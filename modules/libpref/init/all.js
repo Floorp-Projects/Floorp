@@ -2640,6 +2640,10 @@ pref("layout.css.contain.enabled", false);
 // Is support for CSS display:flow-root enabled?
 pref("layout.css.display-flow-root.enabled", true);
 
+// Is support for CSS [-moz-]appearance enabled for web content?
+pref("layout.css.appearance.enabled", true);
+pref("layout.css.moz-appearance.enabled", true);
+
 // Is support for CSS box-decoration-break enabled?
 pref("layout.css.box-decoration-break.enabled", true);
 
@@ -5643,11 +5647,12 @@ pref("dom.timeout.max_consecutive_callbacks", 5);
 pref("fuzzing.enabled", false);
 #endif
 
-// Set advanced layers preferences here.
-pref("layers.advanced.border-layers", false);
-#ifdef MOZ_ENABLE_WEBRENDER
-pref("layers.advanced.caret-layers", true);
-pref("layers.advanced.boxshadow-outer-layers", false);
-#else
-pref("layers.advanced.caret-layers", false);
-#endif
+// Set advanced layers preferences here to have them show up in about:config or
+// to be overridable in reftest.list files. They should pretty much all be set
+// to a value of 2, and the conditional-pref code in gfxPrefs.h will convert
+// it to a boolean as appropriate. In particular, do NOT add ifdefs here to
+// turn these on and off, instead use the conditional-pref code in gfxPrefs.h
+// to do that.
+pref("layers.advanced.border-layers", 2);
+pref("layers.advanced.boxshadow-outer-layers", 2);
+pref("layers.advanced.caret-layers", 2);

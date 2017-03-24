@@ -66,7 +66,7 @@ nsFirstLetterFrame::Init(nsIContent*       aContent,
     // Get proper style context for ourselves.  We're creating the frame
     // that represents everything *except* the first letter, so just create
     // a style context like we would for a text node.
-    nsStyleContext* parentStyleContext = mStyleContext->GetParent();
+    nsStyleContext* parentStyleContext = mStyleContext->GetParentAllowServo();
     if (parentStyleContext) {
       newSC = PresContext()->StyleSet()->
         ResolveStyleForFirstLetterContinuation(parentStyleContext);
@@ -331,7 +331,7 @@ nsFirstLetterFrame::CreateContinuationForFloatingParent(nsPresContext* aPresCont
   // The continuation will have gotten the first letter style from its
   // prev continuation, so we need to repair the style context so it
   // doesn't have the first letter styling.
-  nsStyleContext* parentSC = this->StyleContext()->GetParent();
+  nsStyleContext* parentSC = this->StyleContext()->GetParentAllowServo();
   if (parentSC) {
     RefPtr<nsStyleContext> newSC;
     newSC = presShell->StyleSet()->ResolveStyleForFirstLetterContinuation(parentSC);
@@ -386,7 +386,7 @@ nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext)
     if (kidContent) {
       NS_ASSERTION(kidContent->IsNodeOfType(nsINode::eTEXT),
                    "should contain only text nodes");
-      nsStyleContext* parentSC = prevInFlow ? mStyleContext->GetParent() :
+      nsStyleContext* parentSC = prevInFlow ? mStyleContext->GetParentAllowServo() :
                                               mStyleContext;
       sc = aPresContext->StyleSet()->ResolveStyleForText(kidContent, parentSC);
       kid->SetStyleContext(sc);

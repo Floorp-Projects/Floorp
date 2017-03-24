@@ -29,7 +29,8 @@ public:
     if (aAdded) {
       const int svc_id = service->AddGamepad(
           "android", GamepadMappingType::Standard,
-          kStandardGamepadButtons, kStandardGamepadAxes);
+          GamepadHand::_empty, kStandardGamepadButtons,
+          kStandardGamepadAxes, 0); // TODO: Bug 680289, implement gamepad haptics for Android
       java::AndroidGamepadManager::OnGamepadAdded(aID, svc_id);
 
     } else {

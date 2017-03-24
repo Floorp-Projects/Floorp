@@ -16,6 +16,7 @@ IPDL_SOURCES += [
 EXPORTS.mozilla.dom += [
     'Gamepad.h',
     'GamepadButton.h',
+    'GamepadHapticActuator.h',
     'GamepadManager.h',
     'GamepadMonitoring.h',
     'GamepadPlatformService.h',
@@ -33,6 +34,7 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES = [
     'Gamepad.cpp',
     'GamepadButton.cpp',
+    'GamepadHapticActuator.cpp',
     'GamepadManager.cpp',
     'GamepadMonitoring.cpp',
     'GamepadPlatformService.cpp',
