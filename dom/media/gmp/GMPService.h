@@ -24,6 +24,7 @@
 #include "mozilla/MozPromise.h"
 #include "GMPContentParent.h"
 #include "GMPCrashHelper.h"
+#include "ChromiumCDMParent.h"
 
 template <class> struct already_AddRefed;
 
@@ -35,7 +36,29 @@ extern LogModule* GetGMPLog();
 
 namespace gmp {
 
-typedef MozPromise<RefPtr<GMPContentParent::CloseBlocker>, nsresult, /* IsExclusive = */ true> GetGMPContentParentPromise;
+struct NodeId
+{
+  NodeId(const nsAString& aOrigin,
+         const nsAString& aTopLevelOrigin,
+         const nsAString& aGMPName)
+    : mOrigin(aOrigin)
+    , mTopLevelOrigin(aTopLevelOrigin)
+    , mGMPName(aGMPName)
+  {
+  }
+  nsString mOrigin;
+  nsString mTopLevelOrigin;
+  nsString mGMPName;
+};
+
+typedef MozPromise<RefPtr<GMPContentParent::CloseBlocker>,
+                   nsresult,
+                   /* IsExclusive = */ true>
+  GetGMPContentParentPromise;
+typedef MozPromise<RefPtr<ChromiumCDMParent>,
+                   nsresult,
+                   /* IsExclusive = */ true>
+  GetCDMParentPromise;
 
 class GeckoMediaPluginService : public mozIGeckoMediaPluginService
                               , public nsIObserver
@@ -46,6 +69,10 @@ public:
   virtual nsresult Init();
 
   NS_DECL_THREADSAFE_ISUPPORTS
+
+  RefPtr<GetCDMParentPromise> GetCDM(const NodeId& aNodeId,
+                                     nsTArray<nsCString> aTags,
+                                     GMPCrashHelper* aHelper);
 
   // mozIGeckoMediaPluginService
   NS_IMETHOD GetThread(nsIThread** aThread) override;
@@ -90,11 +117,17 @@ protected:
 
   virtual void InitializePlugins(AbstractThread* aAbstractGMPThread) = 0;
 
-  virtual RefPtr<GetGMPContentParentPromise>
-  GetContentParent(GMPCrashHelper* aHelper,
-                   const nsACString& aNodeId,
-                   const nsCString& aAPI,
-                   const nsTArray<nsCString>& aTags) = 0;
+  virtual RefPtr<GetGMPContentParentPromise> GetContentParent(
+    GMPCrashHelper* aHelper,
+    const nsACString& aNodeIdString,
+    const nsCString& aAPI,
+    const nsTArray<nsCString>& aTags) = 0;
+
+  virtual RefPtr<GetGMPContentParentPromise> GetContentParent(
+    GMPCrashHelper* aHelper,
+    const NodeId& aNodeId,
+    const nsCString& aAPI,
+    const nsTArray<nsCString>& aTags) = 0;
 
   nsresult GMPDispatch(nsIRunnable* event, uint32_t flags = NS_DISPATCH_NORMAL);
   nsresult GMPDispatch(already_AddRefed<nsIRunnable> event, uint32_t flags = NS_DISPATCH_NORMAL);

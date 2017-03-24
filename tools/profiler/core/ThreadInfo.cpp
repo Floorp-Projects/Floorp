@@ -61,19 +61,6 @@ ThreadInfo::SetPendingDelete()
   mPendingDelete = true;
 }
 
-bool
-ThreadInfo::CanInvokeJS() const
-{
-  if (!mThread) {
-    MOZ_ASSERT(IsMainThread());
-    return true;
-  }
-  bool result;
-  mozilla::DebugOnly<nsresult> rv = mThread->GetCanInvokeJS(&result);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  return result;
-}
-
 void
 ThreadInfo::StreamJSON(ProfileBuffer* aBuffer, SpliceableJSONWriter& aWriter,
                        const TimeStamp& aStartTime, double aSinceTime)

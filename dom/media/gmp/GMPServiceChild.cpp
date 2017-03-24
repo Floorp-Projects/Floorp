@@ -54,7 +54,7 @@ GeckoMediaPluginServiceChild::GetSingleton()
 
 RefPtr<GetGMPContentParentPromise>
 GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
-                                               const nsACString& aNodeId,
+                                               const nsACString& aNodeIdString,
                                                const nsCString& aAPI,
                                                const nsTArray<nsCString>& aTags)
 {
@@ -64,7 +64,83 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
   RefPtr<GetGMPContentParentPromise> promise = rawHolder->Ensure(__func__);
   RefPtr<AbstractThread> thread(GetAbstractGMPThread());
 
-  nsCString nodeId(aNodeId);
+  nsCString nodeIdString(aNodeIdString);
+  nsCString api(aAPI);
+  nsTArray<nsCString> tags(aTags);
+  RefPtr<GMPCrashHelper> helper(aHelper);
+  RefPtr<GeckoMediaPluginServiceChild> self(this);
+  GetServiceChild()->Then(
+    thread,
+    __func__,
+    [self, nodeIdString, api, tags, helper, rawHolder](GMPServiceChild* child) {
+      UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>> holder(rawHolder);
+      nsresult rv;
+
+      nsTArray<base::ProcessId> alreadyBridgedTo;
+      child->GetAlreadyBridgedTo(alreadyBridgedTo);
+
+      base::ProcessId otherProcess;
+      nsCString displayName;
+      uint32_t pluginId = 0;
+      ipc::Endpoint<PGMPContentParent> endpoint;
+      bool ok = child->SendLaunchGMP(nodeIdString,
+                                     api,
+                                     tags,
+                                     alreadyBridgedTo,
+                                     &pluginId,
+                                     &otherProcess,
+                                     &displayName,
+                                     &endpoint,
+                                     &rv);
+      if (helper && pluginId) {
+        // Note: Even if the launch failed, we need to connect the crash
+        // helper so that if the launch failed due to the plugin crashing,
+        // we can report the crash via the crash reporter. The crash
+        // handling notification will arrive shortly if the launch failed
+        // due to the plugin crashing.
+        self->ConnectCrashHelper(pluginId, helper);
+      }
+
+      if (!ok || NS_FAILED(rv)) {
+        LOGD(("GeckoMediaPluginServiceChild::GetContentParent SendLaunchGMP "
+              "failed rv=0x%x",
+              static_cast<uint32_t>(rv)));
+        holder->Reject(rv, __func__);
+        return;
+      }
+
+      RefPtr<GMPContentParent> parent =
+        child->GetBridgedGMPContentParent(otherProcess, Move(endpoint));
+      if (!alreadyBridgedTo.Contains(otherProcess)) {
+        parent->SetDisplayName(displayName);
+        parent->SetPluginId(pluginId);
+      }
+      RefPtr<GMPContentParent::CloseBlocker> blocker(
+        new GMPContentParent::CloseBlocker(parent));
+      holder->Resolve(blocker, __func__);
+    },
+    [rawHolder](nsresult rv) {
+      UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>> holder(rawHolder);
+      holder->Reject(rv, __func__);
+    });
+
+  return promise;
+}
+
+RefPtr<GetGMPContentParentPromise>
+GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
+                                               const NodeId& aNodeId,
+                                               const nsCString& aAPI,
+                                               const nsTArray<nsCString>& aTags)
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+
+  MozPromiseHolder<GetGMPContentParentPromise>* rawHolder =
+    new MozPromiseHolder<GetGMPContentParentPromise>();
+  RefPtr<GetGMPContentParentPromise> promise = rawHolder->Ensure(__func__);
+  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+
+  NodeIdData nodeId(aNodeId.mOrigin, aNodeId.mTopLevelOrigin, aNodeId.mGMPName);
   nsCString api(aAPI);
   nsTArray<nsCString> tags(aTags);
   RefPtr<GMPCrashHelper> helper(aHelper);
@@ -82,15 +158,15 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
       uint32_t pluginId = 0;
       ipc::Endpoint<PGMPContentParent> endpoint;
 
-      bool ok = child->SendLaunchGMP(nodeId,
-                                     api,
-                                     tags,
-                                     alreadyBridgedTo,
-                                     &pluginId,
-                                     &otherProcess,
-                                     &displayName,
-                                     &endpoint,
-                                     &rv);
+      bool ok = child->SendLaunchGMPForNodeId(nodeId,
+                                              api,
+                                              tags,
+                                              alreadyBridgedTo,
+                                              &pluginId,
+                                              &otherProcess,
+                                              &displayName,
+                                              &endpoint,
+                                              &rv);
 
       if (helper && pluginId) {
         // Note: Even if the launch failed, we need to connect the crash

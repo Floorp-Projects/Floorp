@@ -57,7 +57,7 @@ public:
 
 protected:
   // The provider of basic editing operations.
-  EditorBase& mEditorBase;
+  RefPtr<EditorBase> mEditorBase;
 
   // The CharacterData node to operate upon.
   RefPtr<nsGenericDOMDataNode> mCharData;
