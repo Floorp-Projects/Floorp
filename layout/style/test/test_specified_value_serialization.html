@@ -47,7 +47,7 @@
   ].forEach(function(arr) {
     document.documentElement.style.MozTransform = arr[0];
     is(document.documentElement.style.MozTransform, arr[1],
-      "incorrect serialization");
+      "bug-721136 incorrect serialization");
   });
 
   var elt = document.documentElement;
@@ -56,13 +56,13 @@
                    "transform: tRANslatEX(5px) TRanslATey(10px) translatez(2px) ROTATEX(30deg) rotateY(30deg) rotatez(5deg) SKEWx(10deg) skewy(10deg) scaleX(2) SCALEY(0.5) scalez(2)");
   is(elt.style.getPropertyValue("transform"),
      "translateX(5px) translateY(10px) translateZ(2px) rotateX(30deg) rotateY(30deg) rotateZ(5deg) skewX(10deg) skewY(10deg) scaleX(2) scaleY(0.5) scaleZ(2)",
-     "expected case canonicalization of transform functions");
+     "bug-721136 expected case canonicalization of transform functions");
 
   elt.setAttribute("style",
                    "font-variant-alternates: SWASH(fOo) stYLIStiC(Bar)");
   is(elt.style.getPropertyValue("font-variant-alternates"),
      "swash(fOo) stylistic(Bar)",
-     "expected case canonicalization of transform functions");
+     "bug-721136 expected case canonicalization of transform functions");
 
   elt.setAttribute("style", ""); // leave the page in a useful state
 })();
@@ -75,15 +75,17 @@
     ["rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.5)"],
     ["hsla(0, 0%, 0%, 1)", "rgb(0, 0, 0)"],
     ["hsla(0, 0%, 0%, 0.5)", "rgba(0, 0, 0, 0.5)"],
-    // css-color-4
+  ];
+
+  var css_color_4 = [
     ["rgba(0 0 0 / 1)", "rgb(0, 0, 0)"],
-    ["rgba(0 0 0 / 0.5)", "rgba(0, 0, 0, 0.5)"],
+    ["rgba(0 0 0 / 0.1)", "rgba(0, 0, 0, 0.1)"],
     ["rgb(0 0 0 / 1)", "rgb(0, 0, 0)"],
-    ["rgb(0 0 0 / 0.5)", "rgba(0, 0, 0, 0.5)"],
+    ["rgb(0 0 0 / 0.2)", "rgba(0, 0, 0, 0.2)"],
     ["hsla(0 0% 0% / 1)", "rgb(0, 0, 0)"],
-    ["hsla(0deg 0% 0% / 0.5)", "rgba(0, 0, 0, 0.5)"],
+    ["hsla(0deg 0% 0% / 0.3)", "rgba(0, 0, 0, 0.3)"],
     ["hsl(0 0% 0% / 1)", "rgb(0, 0, 0)"],
-    ["hsl(0 0% 0% / 0.5)", "rgba(0, 0, 0, 0.5)"],
+    ["hsl(0 0% 0% / 0.4)", "rgba(0, 0, 0, 0.4)"],
   ];
 
   var frame_container = document.getElementById("display");
@@ -94,6 +96,11 @@
     var test = color[i];
     p.style.color = test[0];
     is(p.style.color, test[1], "serialization value of " + test[0]);
+  }
+  for (var i = 0; i < css_color_4.length; ++i) {
+    var test = css_color_4[i];
+    p.style.color = test[0];
+    is(p.style.color, test[1], "css-color-4 serialization value of " + test[0]);
   }
 
   p.remove();
