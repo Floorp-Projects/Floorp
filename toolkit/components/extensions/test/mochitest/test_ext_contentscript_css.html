@@ -13,6 +13,10 @@
 <script type="text/javascript">
 "use strict";
 
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 add_task(function* test_content_script_css() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -32,7 +36,15 @@ add_task(function* test_content_script_css() {
   let win = window.open("file_sample.html");
   yield waitForLoad(win);
 
-  let style = win.getComputedStyle(win.document.body);
+  let style;
+  for (let i = 0; i < 1000; i++) {
+    style = win.getComputedStyle(win.document.body);
+    if (style.maxWidth == "42px") {
+      break;
+    }
+    yield delay(0);
+  }
+
   is(style.maxWidth, "42px", "Stylesheet correctly applied");
 
   yield extension.unload();

@@ -130,7 +130,7 @@ PreloadedStyleSheet::PreloadAsync(NotNull<dom::Promise*> aPromise)
   RefPtr<StyleSheet>& sheet =
     type == StyleBackendType::Gecko ? mGecko : mServo;
 
-  RefPtr<css::Loader> loader = new css::Loader(type);
+  RefPtr<css::Loader> loader = new css::Loader(type, nullptr);
 
   RefPtr<StylesheetPreloadObserver> obs =
     new StylesheetPreloadObserver(aPromise, this);
