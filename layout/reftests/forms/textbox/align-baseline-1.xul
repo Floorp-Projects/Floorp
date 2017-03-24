@@ -9,7 +9,7 @@
       padding-top: 0px;
     }
     label, textbox {
-      -moz-appearance: none; appearance: none;
+      -moz-appearance: none;
       background: inherit;
       border: none 0px;
     }

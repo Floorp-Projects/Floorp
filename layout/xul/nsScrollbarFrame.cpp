@@ -296,13 +296,13 @@ nsScrollbarFrame::MoveToNewPosition()
   // See if we have appearance information for a theme.
   const nsStyleDisplay* disp = StyleDisplay();
   nsPresContext* presContext = PresContext();
-  if (disp->UsedAppearance()) {
+  if (disp->mAppearance) {
     nsITheme *theme = presContext->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(presContext, this, disp->UsedAppearance())) {
+    if (theme && theme->ThemeSupportsWidget(presContext, this, disp->mAppearance)) {
       bool repaint;
       nsAttrValue oldValue;
       oldValue.SetTo(oldCurpos);
-      theme->WidgetStateChanged(this, disp->UsedAppearance(), nsGkAtoms::curpos,
+      theme->WidgetStateChanged(this, disp->mAppearance, nsGkAtoms::curpos,
           &repaint, &oldValue);
     }
   }

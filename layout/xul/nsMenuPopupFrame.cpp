@@ -338,7 +338,7 @@ nsMenuPopupFrame::GetShadowStyle()
   if (shadow != NS_STYLE_WINDOW_SHADOW_DEFAULT)
     return shadow;
 
-  switch (StyleDisplay()->UsedAppearance()) {
+  switch (StyleDisplay()->mAppearance) {
     case NS_THEME_TOOLTIP:
       return NS_STYLE_WINDOW_SHADOW_TOOLTIP;
     case NS_THEME_MENUPOPUP:

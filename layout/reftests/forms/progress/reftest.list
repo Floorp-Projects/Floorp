@@ -1,6 +1,3 @@
-# This enables '-moz-appearance' for author sheets:
-default-preferences pref(layout.css.moz-appearance.enabled,true)
-
 == values.html values-ref.html
 == values-rtl.html values-rtl-ref.html
 == margin-padding.html margin-padding-ref.html
