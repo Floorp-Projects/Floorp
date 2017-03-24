@@ -25,6 +25,8 @@ fn standard_routes<U:WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Ro
                 (Post, "/session/{sessionId}/window/size", Route::SetWindowSize),
                 (Get, "/session/{sessionId}/window/position", Route::GetWindowPosition),
                 (Post, "/session/{sessionId}/window/position", Route::SetWindowPosition),
+                (Get, "/session/{sessionId}/window/rect", Route::GetWindowRect),
+                (Post, "/session/{sessionId}/window/rect", Route::SetWindowRect),
                 (Post, "/session/{sessionId}/window/maximize", Route::MaximizeWindow),
                 (Post, "/session/{sessionId}/window", Route::SwitchToWindow),
                 (Post, "/session/{sessionId}/frame", Route::SwitchToFrame),
@@ -81,10 +83,12 @@ pub enum Route<U:WebDriverExtensionRoute> {
     GetWindowHandle,
     GetWindowHandles,
     CloseWindow,
-    GetWindowSize,
-    SetWindowSize,
-    GetWindowPosition,
-    SetWindowPosition,
+    GetWindowSize,  // deprecated
+    SetWindowSize,  // deprecated
+    GetWindowPosition,  // deprecated
+    SetWindowPosition,  // deprecated
+    GetWindowRect,
+    SetWindowRect,
     MaximizeWindow,
     SwitchToWindow,
     SwitchToFrame,
