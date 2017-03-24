@@ -70,7 +70,6 @@ CSS_PSEUDO_CLASS(empty, ":empty", 0, "")
 CSS_PSEUDO_CLASS(mozOnlyWhitespace, ":-moz-only-whitespace", 0, "")
 CSS_PSEUDO_CLASS(mozEmptyExceptChildrenWithLocalname, ":-moz-empty-except-children-with-localname", 0, "")
 CSS_PSEUDO_CLASS(lang, ":lang", 0, "")
-CSS_PSEUDO_CLASS(mozBoundElement, ":-moz-bound-element", 0, "")
 CSS_PSEUDO_CLASS(root, ":root", 0, "")
 CSS_PSEUDO_CLASS(any, ":-moz-any", 0, "")
 
