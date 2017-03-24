@@ -199,21 +199,6 @@ MatchPattern.prototype = {
   serialize() {
     return this.pat;
   },
-
-  removeOne(pattern) {
-    if (!Array.isArray(this.pat)) {
-      return;
-    }
-
-    let index = this.pat.indexOf(pattern);
-    if (index >= 0) {
-      if (this.matchers[index].pat != pattern) {
-        throw new Error("pat/matcher mismatch in removeOne()");
-      }
-      this.pat.splice(index, 1);
-      this.matchers.splice(index, 1);
-    }
-  },
 };
 
 // Globs can match everything. Be careful, this DOES NOT filter by allowed schemes!
