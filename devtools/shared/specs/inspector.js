@@ -374,15 +374,7 @@ const walkerSpec = generateActorSpec({
       response: {
         actor: RetVal("layout")
       }
-    },
-    getOffsetParent: {
-      request: {
-        node: Arg(0, "domnode")
-      },
-      response: {
-        node: RetVal("nullable:domnode")
-      }
-    },
+    }
   }
 });
 

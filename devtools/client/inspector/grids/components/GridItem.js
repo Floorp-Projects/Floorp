@@ -4,8 +4,7 @@
 
 "use strict";
 
-const { addons, createClass, createFactory, DOM: dom, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const { addons, createClass, createFactory, DOM: dom, PropTypes } = require("devtools/client/shared/vendor/react");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 
 // Reps
@@ -138,7 +137,7 @@ module.exports = createClass({
             object: this.translateNodeFrontToGrip(nodeFront),
             onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
             onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
-            onInspectIconClick: () => setSelectedNode(nodeFront, "layout-panel"),
+            onInspectIconClick: () => setSelectedNode(nodeFront),
           }
         )
       ),
