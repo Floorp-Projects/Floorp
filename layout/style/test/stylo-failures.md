@@ -391,6 +391,8 @@ Any line which doesn't follow the format above would be ignored like comment.
   * new syntax of rgba?() and hsla?() functions servo/rust-cssparser#113
     * test_value_storage.html `'color'` [37]
     * ... `rgb(100, 100.0, 100)` [1]
+    * test_computed_style.html `css-color-4` [8]
+    * test_specified_value_serialization.html `css-color-4` [8]
   * color interpolation hint not supported servo/servo#15166
     * test_value_storage.html `'linear-gradient` [50]
   * two-keyword form of background-repeat/mask-repeat servo/servo#14954
@@ -439,7 +441,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_storage.html `'transform` [104]
     * ... `"transform` [66]
     * ... `-webkit-transform` [109]
-    * test_specified_value_serialization.html [27]
+    * test_specified_value_serialization.html `bug-721136` [27]
     * test_units_angle.html [3]
   * test_value_storage.html `columns:`: servo/servo#15190 [32]
   * {background,mask}-position lacks comma for serialization servo/servo#15200
