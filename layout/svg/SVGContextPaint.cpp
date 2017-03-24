@@ -172,24 +172,29 @@ SVGContextPaint::GetContextPaint(nsIContent* aContent)
 mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
 SVGContextPaintImpl::GetFillPattern(const DrawTarget* aDrawTarget,
                                     float aOpacity,
-                                    const gfxMatrix& aCTM)
+                                    const gfxMatrix& aCTM,
+                                    uint32_t aFlags)
 {
-  return mFillPaint.GetPattern(aDrawTarget, aOpacity, &nsStyleSVG::mFill, aCTM);
+  return mFillPaint.GetPattern(aDrawTarget, aOpacity, &nsStyleSVG::mFill, aCTM,
+                               aFlags);
 }
 
 mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
 SVGContextPaintImpl::GetStrokePattern(const DrawTarget* aDrawTarget,
                                       float aOpacity,
-                                      const gfxMatrix& aCTM)
+                                      const gfxMatrix& aCTM,
+                                      uint32_t aFlags)
 {
-  return mStrokePaint.GetPattern(aDrawTarget, aOpacity, &nsStyleSVG::mStroke, aCTM);
+  return mStrokePaint.GetPattern(aDrawTarget, aOpacity, &nsStyleSVG::mStroke,
+                                 aCTM, aFlags);
 }
 
 mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
 SVGContextPaintImpl::Paint::GetPattern(const DrawTarget* aDrawTarget,
                                        float aOpacity,
                                        nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-                                       const gfxMatrix& aCTM)
+                                       const gfxMatrix& aCTM,
+                                       uint32_t aFlags)
 {
   RefPtr<gfxPattern> pattern;
   if (mPatternCache.Get(aOpacity, getter_AddRefs(pattern))) {
@@ -219,7 +224,9 @@ SVGContextPaintImpl::Paint::GetPattern(const DrawTarget* aDrawTarget,
                                                                 aDrawTarget,
                                                                 mContextMatrix,
                                                                 aFillOrStroke,
-                                                                aOpacity);
+                                                                aOpacity,
+                                                                nullptr,
+                                                                aFlags);
     {
       // m maps original-user-space to pattern space
       gfxMatrix m = pattern->GetMatrix();
@@ -235,14 +242,14 @@ SVGContextPaintImpl::Paint::GetPattern(const DrawTarget* aDrawTarget,
   case eStyleSVGPaintType_ContextFill:
     Tie(result, pattern) =
       mPaintDefinition.mContextPaint->GetFillPattern(aDrawTarget,
-                                                             aOpacity, aCTM);
+                                                     aOpacity, aCTM, aFlags);
     // Don't cache this. mContextPaint will have cached it anyway. If we
     // cache it, we'll have to compute mPatternMatrix, which is annoying.
     return MakePair(result, Move(pattern));
   case eStyleSVGPaintType_ContextStroke:
     Tie(result, pattern) =
       mPaintDefinition.mContextPaint->GetStrokePattern(aDrawTarget,
-                                                               aOpacity, aCTM);
+                                                       aOpacity, aCTM, aFlags);
     // Don't cache this. mContextPaint will have cached it anyway. If we
     // cache it, we'll have to compute mPatternMatrix, which is annoying.
     return MakePair(result, Move(pattern));
@@ -297,7 +304,8 @@ AutoSetRestoreSVGContextPaint::~AutoSetRestoreSVGContextPaint()
 mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
 SVGEmbeddingContextPaint::GetFillPattern(const DrawTarget* aDrawTarget,
                                          float aFillOpacity,
-                                         const gfxMatrix& aCTM)
+                                         const gfxMatrix& aCTM,
+                                         uint32_t aFlags)
 {
   if (!mFill) {
     return MakePair(DrawResult::SUCCESS, RefPtr<gfxPattern>());
@@ -314,7 +322,8 @@ SVGEmbeddingContextPaint::GetFillPattern(const DrawTarget* aDrawTarget,
 mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
 SVGEmbeddingContextPaint::GetStrokePattern(const DrawTarget* aDrawTarget,
                                            float aStrokeOpacity,
-                                           const gfxMatrix& aCTM)
+                                           const gfxMatrix& aCTM,
+                                           uint32_t aFlags)
 {
   if (!mStroke) {
     return MakePair(DrawResult::SUCCESS, RefPtr<gfxPattern>());

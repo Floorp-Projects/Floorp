@@ -471,6 +471,10 @@ nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, uint32_t aFlags)
 class SVGPaintCallback : public nsSVGFilterPaintCallback
 {
 public:
+  explicit SVGPaintCallback(uint32_t aFlags)
+    : mFlags(aFlags)
+  { }
+
   virtual DrawResult Paint(gfxContext& aContext, nsIFrame *aTarget,
                            const gfxMatrix& aTransform,
                            const nsIntRect* aDirtyRect) override
@@ -498,8 +502,11 @@ public:
 
     return svgFrame->PaintSVG(aContext,
                               nsSVGUtils::GetCSSPxToDevPxMatrix(aTarget),
-                              dirtyRect);
+                              dirtyRect, mFlags);
   }
+
+private:
+  uint32_t mFlags;
 };
 
 float
@@ -677,7 +684,8 @@ DrawResult
 nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
                                   gfxContext& aContext,
                                   const gfxMatrix& aTransform,
-                                  const nsIntRect *aDirtyRect)
+                                  const nsIntRect *aDirtyRect,
+                                  uint32_t aFlags)
 {
   NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
                (aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY) ||
@@ -881,13 +889,13 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
     MOZ_ASSERT(invertible);
     target->SetMatrix(aTransform * devPxToCssPxTM);
 
-    SVGPaintCallback paintCallback;
+    SVGPaintCallback paintCallback(aFlags);
     result =
       nsFilterInstance::PaintFilteredFrame(aFrame, target->GetDrawTarget(),
                                            aTransform, &paintCallback,
                                            dirtyRegion);
   } else {
-    result = svgFrame->PaintSVG(*target, aTransform, aDirtyRect);
+    result = svgFrame->PaintSVG(*target, aTransform, aDirtyRect, aFlags);
   }
 
   if (maskUsage.shouldApplyClipPath || maskUsage.shouldApplyBasicShape) {
@@ -1483,7 +1491,8 @@ nsSVGUtils::GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
 nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
                                gfxContext* aContext,
                                GeneralPattern* aOutPattern,
-                               SVGContextPaint* aContextPaint)
+                               SVGContextPaint* aContextPaint,
+                               uint32_t aFlags)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
   if (style->mFill.Type() == eStyleSVGPaintType_None) {
@@ -1512,7 +1521,8 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
     RefPtr<gfxPattern> pattern;
     Tie(result, pattern) =
       ps->GetPaintServerPattern(aFrame, dt, aContext->CurrentMatrix(),
-                                &nsStyleSVG::mFill, fillOpacity);
+                                &nsStyleSVG::mFill, fillOpacity, nullptr,
+                                aFlags);
     if (pattern) {
       pattern->CacheColorStops(dt);
       aOutPattern->Init(*pattern->GetPattern(dt));
@@ -1526,12 +1536,12 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
     case eStyleSVGPaintType_ContextFill:
       Tie(result, pattern) =
         aContextPaint->GetFillPattern(dt, fillOpacity,
-                                      aContext->CurrentMatrix());
+                                      aContext->CurrentMatrix(), aFlags);
       break;
     case eStyleSVGPaintType_ContextStroke:
       Tie(result, pattern) =
         aContextPaint->GetStrokePattern(dt, fillOpacity,
-                                        aContext->CurrentMatrix());
+                                        aContext->CurrentMatrix(), aFlags);
       break;
     default:
       ;
@@ -1557,7 +1567,8 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
 nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
                                  gfxContext* aContext,
                                  GeneralPattern* aOutPattern,
-                                 SVGContextPaint* aContextPaint)
+                                 SVGContextPaint* aContextPaint,
+                                 uint32_t aFlags)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
   if (style->mStroke.Type() == eStyleSVGPaintType_None) {
@@ -1586,7 +1597,8 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
     RefPtr<gfxPattern> pattern;
     Tie(result, pattern) =
       ps->GetPaintServerPattern(aFrame, dt, aContext->CurrentMatrix(),
-                                &nsStyleSVG::mStroke, strokeOpacity);
+                                &nsStyleSVG::mStroke, strokeOpacity, nullptr,
+                                aFlags);
     if (pattern) {
       pattern->CacheColorStops(dt);
       aOutPattern->Init(*pattern->GetPattern(dt));
@@ -1600,12 +1612,12 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
     case eStyleSVGPaintType_ContextFill:
       Tie(result, pattern) =
         aContextPaint->GetFillPattern(dt, strokeOpacity,
-                                      aContext->CurrentMatrix());
+                                      aContext->CurrentMatrix(), aFlags);
       break;
     case eStyleSVGPaintType_ContextStroke:
       Tie(result, pattern) =
         aContextPaint->GetStrokePattern(dt, strokeOpacity,
-                                        aContext->CurrentMatrix());
+                                        aContext->CurrentMatrix(), aFlags);
       break;
     default:
       ;

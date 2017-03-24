@@ -122,7 +122,7 @@ protected:
 private:
   enum { eRenderFill = 1, eRenderStroke = 2 };
   DrawResult Render(gfxContext* aContext, uint32_t aRenderComponents,
-                    const gfxMatrix& aTransform);
+                    const gfxMatrix& aTransform, uint32_t aFlags);
 
   /**
    * @param aMatrix The transform that must be multiplied onto aContext to

@@ -205,7 +205,8 @@ public:
     mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
     GetFillPattern(const DrawTarget* aDrawTarget,
                    float aOpacity,
-                   const gfxMatrix& aCTM) {
+                   const gfxMatrix& aCTM,
+                   uint32_t aFlags) {
         if (mFillPattern) {
             mFillPattern->SetMatrix(aCTM * mFillMatrix);
         }
@@ -216,7 +217,8 @@ public:
     mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
     GetStrokePattern(const DrawTarget* aDrawTarget,
                      float aOpacity,
-                     const gfxMatrix& aCTM) {
+                     const gfxMatrix& aCTM,
+                     uint32_t aFlags) {
         if (mStrokePattern) {
             mStrokePattern->SetMatrix(aCTM * mStrokeMatrix);
         }
