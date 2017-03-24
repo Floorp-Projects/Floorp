@@ -202,7 +202,7 @@ protected:
   AttributeMap ComputeLightAttributes(nsSVGFilterInstance* aInstance);
 
   FilterPrimitiveDescription
-    AddLightingAttributes(const FilterPrimitiveDescription& aDescription,
+    AddLightingAttributes(FilterPrimitiveDescription aDescription,
                           nsSVGFilterInstance* aInstance);
 
   enum { SURFACE_SCALE, DIFFUSE_CONSTANT, SPECULAR_CONSTANT, SPECULAR_EXPONENT };
