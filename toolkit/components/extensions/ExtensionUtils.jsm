@@ -1328,31 +1328,7 @@ class MessageManagerProxy {
   }
 }
 
-/**
- * Classify an individual permission from a webextension manifest
- * as a host/origin permission, an api permission, or a regular permission.
- *
- * @param {string} perm  The permission string to classify
- *
- * @returns {object}
- *          An object with exactly one of the following properties:
- *          "origin" to indicate this is a host/origin permission.
- *          "api" to indicate this is an api permission
- *                (as used for webextensions experiments).
- *          "permission" to indicate this is a regular permission.
- */
-function classifyPermission(perm) {
-  let match = /^(\w+)(?:\.(\w+)(?:\.\w+)*)?$/.exec(perm);
-  if (!match) {
-    return {origin: perm};
-  } else if (match[1] == "experiments" && match[2]) {
-    return {api: match[2]};
-  }
-  return {permission: perm};
-}
-
 this.ExtensionUtils = {
-  classifyPermission,
   defineLazyGetter,
   detectLanguage,
   extend,

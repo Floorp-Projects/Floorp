@@ -16,7 +16,6 @@ toolkit.jar:
     content/extensions/ext-idle.js
     content/extensions/ext-management.js
     content/extensions/ext-notifications.js
-    content/extensions/ext-permissions.js
     content/extensions/ext-privacy.js
     content/extensions/ext-protocolHandlers.js
     content/extensions/ext-proxy.js
@@ -33,7 +32,6 @@ toolkit.jar:
 #ifndef ANDROID
     content/extensions/ext-c-identity.js
 #endif
-    content/extensions/ext-c-permissions.js
     content/extensions/ext-c-runtime.js
     content/extensions/ext-c-storage.js
     content/extensions/ext-c-test.js
