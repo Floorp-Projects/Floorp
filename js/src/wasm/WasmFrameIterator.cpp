@@ -259,37 +259,37 @@ FrameIterator::debugTrapCallsite() const
 // generation.
 #if defined(JS_CODEGEN_X64)
 static const unsigned PushedRetAddr = 0;
-static const unsigned PushedFP = 1;
-static const unsigned PushedTLS = 3;
-static const unsigned PoppedTLS = 1;
+static const unsigned PushedTLS = 2;
+static const unsigned PushedFP = 3;
+static const unsigned PoppedFP = 2;
 #elif defined(JS_CODEGEN_X86)
 static const unsigned PushedRetAddr = 0;
-static const unsigned PushedFP = 1;
-static const unsigned PushedTLS = 2;
-static const unsigned PoppedTLS = 1;
+static const unsigned PushedTLS = 1;
+static const unsigned PushedFP = 2;
+static const unsigned PoppedFP = 1;
 #elif defined(JS_CODEGEN_ARM)
 static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 4;
-static const unsigned PushedFP = 8;
-static const unsigned PushedTLS = 12;
-static const unsigned PoppedTLS = 4;
+static const unsigned PushedTLS = 8;
+static const unsigned PushedFP = 12;
+static const unsigned PoppedFP = 4;
 #elif defined(JS_CODEGEN_ARM64)
 static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 0;
-static const unsigned PushedFP = 0;
 static const unsigned PushedTLS = 0;
-static const unsigned PoppedTLS = 0;
+static const unsigned PushedFP = 0;
+static const unsigned PoppedFP = 0;
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 4;
-static const unsigned PushedFP = 8;
-static const unsigned PushedTLS = 12;
-static const unsigned PoppedTLS = 4;
+static const unsigned PushedTLS = 8;
+static const unsigned PushedFP = 12;
+static const unsigned PoppedFP = 4;
 #elif defined(JS_CODEGEN_NONE)
 static const unsigned PushedRetAddr = 0;
-static const unsigned PushedFP = 0;
 static const unsigned PushedTLS = 0;
-static const unsigned PoppedTLS = 0;
+static const unsigned PushedFP = 0;
+static const unsigned PoppedFP = 0;
 #else
 # error "Unknown architecture!"
 #endif
@@ -326,10 +326,10 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
 
         PushRetAddr(masm, *entry);
         MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - *entry);
-        masm.push(FramePointer);
-        MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
         masm.push(WasmTlsReg);
         MOZ_ASSERT_IF(!masm.oom(), PushedTLS == masm.currentOffset() - *entry);
+        masm.push(FramePointer);
+        MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
         masm.moveStackPtrTo(FramePointer);
     }
 
@@ -369,12 +369,20 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
     AutoForbidPools afp(&masm, /* number of instructions in scope = */ 3);
 #endif
 
-    masm.pop(WasmTlsReg);
-    DebugOnly<uint32_t> poppedTLS = masm.currentOffset();
+    // There is an important ordering constraint here: fp must be repointed to
+    // the caller's frame before any field of the frame currently pointed to by
+    // fp is popped: asynchronous signal handlers (which use stack space
+    // starting at sp) could otherwise clobber these fields while they are still
+    // accessible via fp (fp fields are read during frame iteration which is
+    // *also* done asynchronously).
+
     masm.pop(FramePointer);
+    DebugOnly<uint32_t> poppedFP = masm.currentOffset();
+    masm.pop(WasmTlsReg);
     *ret = masm.currentOffset();
     masm.ret();
-    MOZ_ASSERT_IF(!masm.oom(), PoppedTLS == *ret - poppedTLS);
+
+    MOZ_ASSERT_IF(!masm.oom(), PoppedFP == *ret - poppedFP);
 }
 
 void
@@ -622,22 +630,22 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
             callerPC_ = sp[0];
             callerFP_ = fp;
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
-        } else if (offsetFromEntry == PushedFP) {
-            // The return address and caller's fp have been pushed on the stack; fp
+        } else if (offsetFromEntry == PushedTLS) {
+            // The return address and caller's TLS have been pushed on the stack; fp
             // is still the caller's fp.
             callerPC_ = sp[1];
-            callerFP_ = sp[0];
+            callerFP_ = fp;
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
-        } else if (offsetFromEntry == PushedTLS) {
+        } else if (offsetFromEntry == PushedFP) {
             // The full Frame has been pushed; fp is still the caller's fp.
             MOZ_ASSERT(fp == CallerFPFromFP(sp));
             callerPC_ = ReturnAddressFromFP(sp);
             callerFP_ = fp;
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
-        } else if (offsetInModule == codeRange->ret() - PoppedTLS) {
-            // The TLS field of the Frame has been popped.
+        } else if (offsetInModule == codeRange->ret() - PoppedFP) {
+            // The callerFP field of the Frame has been popped into fp.
             callerPC_ = sp[1];
-            callerFP_ = sp[0];
+            callerFP_ = fp;
         } else if (offsetInModule == codeRange->ret()) {
             // Both the TLS and callerFP fields have been popped and fp now
             // points to the caller's frame.
