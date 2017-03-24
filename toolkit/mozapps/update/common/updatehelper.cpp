@@ -600,8 +600,11 @@ IsUnpromptedElevation(BOOL &isUnpromptedElevation)
                                consent);
   success = success &&
             GetDWORDValue(baseKey, L"PromptOnSecureDesktop", secureDesktop);
-  isUnpromptedElevation = !consent && !secureDesktop;
 
   RegCloseKey(baseKey);
+  if (success) {
+    isUnpromptedElevation = !consent && !secureDesktop;
+  }
+
   return success;
 }
