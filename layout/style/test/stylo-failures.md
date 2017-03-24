@@ -368,8 +368,6 @@ to mochitest command.
   * ::-moz-color-swatch bug 1348492
     * test_selectors.html `::-moz-color-swatch` [1]
 * Unsupported pseudo-classes
-  * :default ##easy##
-    * test_bug302186.html [24]
   * :-moz-locale-dir
     * test_selectors.html `:-moz-locale-dir` [15]
   * :-moz-lwtheme-*
