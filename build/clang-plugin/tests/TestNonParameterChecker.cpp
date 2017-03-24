@@ -7,9 +7,9 @@ class MOZ_NON_PARAM NonParamClass {};
 enum MOZ_NON_PARAM NonParamEnum { X, Y, Z };
 enum class MOZ_NON_PARAM NonParamEnumClass { X, Y, Z };
 
-struct HasNonParamStruct { NonParam x; int y; }; // expected-note 14 {{'HasNonParamStruct' is a non-param type because member 'x' is a non-param type 'NonParam'}}
-union HasNonParamUnion { NonParam x; int y; }; // expected-note 18 {{'HasNonParamUnion' is a non-param type because member 'x' is a non-param type 'NonParam'}}
-struct HasNonParamStructUnion { HasNonParamUnion z; }; // expected-note 9 {{'HasNonParamStructUnion' is a non-param type because member 'z' is a non-param type 'HasNonParamUnion'}}
+struct HasNonParamStruct { NonParam x; int y; };
+union HasNonParamUnion { NonParam x; int y; };
+struct HasNonParamStructUnion { HasNonParamUnion z; };
 
 #define MAYBE_STATIC
 #include "NonParameterTestCases.h"
@@ -180,10 +180,10 @@ void testLambda()
 
 // Check that alignas() implies the MOZ_NON_PARAM attribute.
 
-struct alignas(8) AlignasStruct { char a; }; // expected-note {{'AlignasStruct' is a non-param type because it has an alignas(_) annotation}}
+struct alignas(8) AlignasStruct { char a; };
 void takesAlignasStruct(AlignasStruct x) { } // expected-error {{Type 'AlignasStruct' must not be used as parameter}} expected-note {{Please consider passing a const reference instead}}
 void takesAlignasStructByRef(const AlignasStruct& x) { }
 
-struct AlignasMember { alignas(8) char a; }; // expected-note {{'AlignasMember' is a non-param type because member 'a' has an alignas(_) annotation}}
+struct AlignasMember { alignas(8) char a; };
 void takesAlignasMember(AlignasMember x) { } // expected-error {{Type 'AlignasMember' must not be used as parameter}} expected-note {{Please consider passing a const reference instead}}
 void takesAlignasMemberByRef(const AlignasMember& x) { }
