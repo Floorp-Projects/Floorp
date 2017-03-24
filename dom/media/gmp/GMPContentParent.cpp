@@ -167,7 +167,7 @@ GMPContentParent::GetGMPDecryptor(GMPDecryptorParent** aGMPDP)
   return NS_OK;
 }
 
-nsIThread*
+nsCOMPtr<nsIThread>
 GMPContentParent::GMPThread()
 {
   if (!mGMPThread) {
