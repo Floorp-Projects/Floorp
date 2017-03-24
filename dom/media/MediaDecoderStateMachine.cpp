@@ -66,7 +66,7 @@ using namespace mozilla::media;
 
 // avoid redefined macro in unified build
 #undef FMT
-#undef DECODER_LOG
+#undef LOG
 #undef VERBOSE_LOG
 #undef SAMPLE_LOG
 #undef DECODER_WARN
@@ -75,7 +75,7 @@ using namespace mozilla::media;
 #undef SWARN
 
 #define FMT(x, ...) "Decoder=%p " x, mDecoderID, ##__VA_ARGS__
-#define DECODER_LOG(x, ...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug,   (FMT(x, ##__VA_ARGS__)))
+#define LOG(x, ...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug,   (FMT(x, ##__VA_ARGS__)))
 #define VERBOSE_LOG(x, ...) MOZ_LOG(gMediaDecoderLog, LogLevel::Verbose, (FMT(x, ##__VA_ARGS__)))
 #define SAMPLE_LOG(x, ...)  MOZ_LOG(gMediaSampleLog,  LogLevel::Debug,   (FMT(x, ##__VA_ARGS__)))
 #define DECODER_WARN(x, ...) NS_WARNING(nsPrintfCString(FMT(x, ##__VA_ARGS__)).get())
@@ -2852,7 +2852,7 @@ void
 MediaDecoderStateMachine::StopPlayback()
 {
   MOZ_ASSERT(OnTaskQueue());
-  DECODER_LOG("StopPlayback()");
+  LOG("StopPlayback()");
 
   mOnPlaybackEvent.Notify(MediaEventType::PlaybackStopped);
 
@@ -2874,11 +2874,11 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   }
 
   if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING) {
-    DECODER_LOG("Not starting playback [mPlayState=%d]", mPlayState.Ref());
+    LOG("Not starting playback [mPlayState=%d]", mPlayState.Ref());
     return;
   }
 
-  DECODER_LOG("MaybeStartPlayback() starting playback");
+  LOG("MaybeStartPlayback() starting playback");
   mOnPlaybackEvent.Notify(MediaEventType::PlaybackStarted);
   StartMediaSink();
 
@@ -3018,10 +3018,10 @@ void MediaDecoderStateMachine::SetVideoDecodeMode(VideoDecodeMode aMode)
 void MediaDecoderStateMachine::SetVideoDecodeModeInternal(VideoDecodeMode aMode)
 {
   MOZ_ASSERT(OnTaskQueue());
-  DECODER_LOG("VideoDecodeModeChanged: VideoDecodeMode=(%s->%s), mVideoDecodeSuspended=%c",
-              mVideoDecodeMode == VideoDecodeMode::Normal ? "Normal" : "Suspend",
-              aMode == VideoDecodeMode::Normal ? "Normal" : "Suspend",
-              mVideoDecodeSuspended ? 'T' : 'F');
+  LOG("VideoDecodeModeChanged: VideoDecodeMode=(%s->%s), mVideoDecodeSuspended=%c",
+      mVideoDecodeMode == VideoDecodeMode::Normal ? "Normal" : "Suspend",
+      aMode == VideoDecodeMode::Normal ? "Normal" : "Suspend",
+      mVideoDecodeSuspended ? 'T' : 'F');
 
   if (!MediaPrefs::MDSMSuspendBackgroundVideoEnabled()) {
     return;
@@ -3116,7 +3116,7 @@ void MediaDecoderStateMachine::StopMediaSink()
 {
   MOZ_ASSERT(OnTaskQueue());
   if (mMediaSink->IsStarted()) {
-    DECODER_LOG("Stop MediaSink");
+    LOG("Stop MediaSink");
     mAudibleListener.DisconnectIfExists();
 
     mMediaSink->Stop();
@@ -3405,14 +3405,14 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(!mSentFirstFrameLoadedEvent);
-  DECODER_LOG("FinishDecodeFirstFrame");
+  LOG("FinishDecodeFirstFrame");
 
   mMediaSink->Redraw(Info().mVideo);
 
-  DECODER_LOG("Media duration %" PRId64 ", "
-              "transportSeekable=%d, mediaSeekable=%d",
-              Duration().ToMicroseconds(), mResource->IsTransportSeekable(),
-              mMediaSeekable);
+  LOG("Media duration %" PRId64 ", "
+      "transportSeekable=%d, mediaSeekable=%d",
+      Duration().ToMicroseconds(), mResource->IsTransportSeekable(),
+      mMediaSeekable);
 
   // Get potentially updated metadata
   mReader->ReadUpdatedMetadata(mInfo.ptr());
@@ -3431,7 +3431,7 @@ RefPtr<ShutdownPromise>
 MediaDecoderStateMachine::FinishShutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
-  DECODER_LOG("Shutting down state machine task queue");
+  LOG("Shutting down state machine task queue");
   return OwnerThread()->BeginShutdown();
 }
 
@@ -3449,7 +3449,7 @@ void
 MediaDecoderStateMachine::ResetDecode(TrackSet aTracks)
 {
   MOZ_ASSERT(OnTaskQueue());
-  DECODER_LOG("MediaDecoderStateMachine::Reset");
+  LOG("MediaDecoderStateMachine::Reset");
 
   // Assert that aTracks specifies to reset the video track because we
   // don't currently support resetting just the audio track.
@@ -3546,7 +3546,7 @@ MediaDecoderStateMachine::UpdateNextFrameStatus(NextFrameStatus aStatus)
 {
   MOZ_ASSERT(OnTaskQueue());
   if (aStatus != mNextFrameStatus) {
-    DECODER_LOG("Changed mNextFrameStatus to %s", ToStr(aStatus));
+    LOG("Changed mNextFrameStatus to %s", ToStr(aStatus));
     mNextFrameStatus = aStatus;
   }
 }
@@ -3835,7 +3835,7 @@ void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,
                                                bool aFinishWhenEnded)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  DECODER_LOG("AddOutputStream aStream=%p!", aStream);
+  LOG("AddOutputStream aStream=%p!", aStream);
   mOutputStreamManager->Add(aStream, aFinishWhenEnded);
   nsCOMPtr<nsIRunnable> r = NewRunnableMethod<bool>(
     this, &MediaDecoderStateMachine::SetAudioCaptured, true);
@@ -3845,7 +3845,7 @@ void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,
 void MediaDecoderStateMachine::RemoveOutputStream(MediaStream* aStream)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  DECODER_LOG("RemoveOutputStream=%p!", aStream);
+  LOG("RemoveOutputStream=%p!", aStream);
   mOutputStreamManager->Remove(aStream);
   if (mOutputStreamManager->IsEmpty()) {
     nsCOMPtr<nsIRunnable> r = NewRunnableMethod<bool>(
@@ -3907,7 +3907,7 @@ MediaDecoderStateMachine::VideoRequestStatus() const
 void
 MediaDecoderStateMachine::OnSuspendTimerResolved()
 {
-  DECODER_LOG("OnSuspendTimerResolved");
+  LOG("OnSuspendTimerResolved");
   mVideoDecodeSuspendTimer.CompleteRequest();
   mStateObj->HandleVideoSuspendTimeout();
 }
@@ -3915,9 +3915,9 @@ MediaDecoderStateMachine::OnSuspendTimerResolved()
 void
 MediaDecoderStateMachine::CancelSuspendTimer()
 {
-  DECODER_LOG("CancelSuspendTimer: State: %s, Timer.IsScheduled: %c",
-              ToStateStr(mStateObj->GetState()),
-              mVideoDecodeSuspendTimer.IsScheduled() ? 'T' : 'F');
+  LOG("CancelSuspendTimer: State: %s, Timer.IsScheduled: %c",
+      ToStateStr(mStateObj->GetState()),
+      mVideoDecodeSuspendTimer.IsScheduled() ? 'T' : 'F');
   MOZ_ASSERT(OnTaskQueue());
   if (mVideoDecodeSuspendTimer.IsScheduled()) {
     mOnPlaybackEvent.Notify(MediaEventType::CancelVideoSuspendTimer);
@@ -3927,4 +3927,6 @@ MediaDecoderStateMachine::CancelSuspendTimer()
 
 } // namespace mozilla
 
+// avoid redefined macro in unified build
+#undef LOG
 #undef NS_DispatchToMainThread
