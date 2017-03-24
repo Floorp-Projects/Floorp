@@ -68,6 +68,17 @@ class CollectionRepairRequestor {
     this.service = service || Weave.Service;
   }
 
+  /* Try to resolve some issues with the server without involving other clients.
+     Returns true if we repaired some items.
+
+     @param   validationInfo       {Object}
+              The validation info as returned by the collection's validator.
+
+  */
+  tryServerOnlyRepairs(validationInfo) {
+    return false;
+  }
+
   /* See if the repairer is willing and able to begin a repair process given
      the specified validation information.
      Returns true if a repair was started and false otherwise.
