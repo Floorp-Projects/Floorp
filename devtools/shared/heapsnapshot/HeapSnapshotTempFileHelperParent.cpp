@@ -31,9 +31,11 @@ HeapSnapshotTempFileHelperParent::RecvOpenHeapSnapshotTempFile(
     auto start = TimeStamp::Now();
     ErrorResult rv;
     nsAutoString filePath;
+    nsAutoString snapshotId;
     nsCOMPtr<nsIFile> file = HeapSnapshot::CreateUniqueCoreDumpFile(rv,
                                                                     start,
-                                                                    filePath);
+                                                                    filePath,
+                                                                    snapshotId);
     if (NS_WARN_IF(rv.Failed())) {
         if (!openFileFailure(rv, outResponse)) {
           return IPC_FAIL_NO_REASON(this);
@@ -53,7 +55,7 @@ HeapSnapshotTempFileHelperParent::RecvOpenHeapSnapshotTempFile(
     FileDescriptor::PlatformHandleType handle =
         FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(prfd));
     FileDescriptor fd(handle);
-    *outResponse = OpenedFile(filePath, fd);
+    *outResponse = OpenedFile(filePath, snapshotId, fd);
     return IPC_OK();
 }
 
