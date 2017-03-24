@@ -62,6 +62,9 @@ public:
          FileSystemRequestParent* aParent,
          ErrorResult& aRv);
 
+  nsresult
+  GetTargetPath(nsAString& aPath) const override;
+
 protected:
   virtual FileSystemResponseValue
   GetSuccessRequestResult(ErrorResult& aRv) const override;
