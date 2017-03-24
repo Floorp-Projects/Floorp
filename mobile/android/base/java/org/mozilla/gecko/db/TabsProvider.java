@@ -289,7 +289,10 @@ public class TabsProvider extends SharedBrowserDatabaseProvider {
                 }
 
                 qb.setProjectionMap(TABS_PROJECTION_MAP);
-                qb.setTables(TABLE_TABS + " LEFT OUTER JOIN " + TABLE_CLIENTS + " ON (" + TABLE_TABS + "." + Tabs.CLIENT_GUID + " = " + TABLE_CLIENTS + "." + Clients.GUID + ")");
+                qb.setTables(TABLE_TABS + " LEFT OUTER JOIN " + TABLE_CLIENTS + " ON (" + TABLE_TABS + "." + Tabs.CLIENT_GUID + " = " + TABLE_CLIENTS + "." + Clients.GUID +
+                             " OR (" + TABLE_TABS + "." + Tabs.CLIENT_GUID + " IS NULL AND " + TABLE_CLIENTS + "." + Clients.GUID + " IS NULL))");
+                // 2nd OR clause is because the local client GUID is NULL and we can't assume that SQLite will compare NULL values with the equal operator
+                // More info here: http://stackoverflow.com/questions/5423751/how-do-the-sql-is-and-operators-differ/5424558#5424558
                 break;
 
             case CLIENTS_ID:
