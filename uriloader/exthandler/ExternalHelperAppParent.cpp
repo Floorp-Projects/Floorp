@@ -54,6 +54,30 @@ ExternalHelperAppParent::ExternalHelperAppParent(
 {
 }
 
+already_AddRefed<nsIInterfaceRequestor>
+GetWindowFromTabParent(PBrowserParent* aBrowser)
+{
+  if (!aBrowser) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIInterfaceRequestor> window;
+  TabParent* tabParent = TabParent::GetFrom(aBrowser);
+  if (tabParent->GetOwnerElement()) {
+    window = do_QueryInterface(tabParent->GetOwnerElement()->OwnerDoc()->GetWindow());
+  }
+
+  return window.forget();
+}
+
+void
+UpdateContentContext(nsIStreamListener* aListener, PBrowserParent* aBrowser)
+{
+  MOZ_ASSERT(aListener);
+  nsCOMPtr<nsIInterfaceRequestor> window = GetWindowFromTabParent(aBrowser);
+  static_cast<nsExternalAppHandler *>(aListener)->SetContentContext(window);
+}
+
 void
 ExternalHelperAppParent::Init(ContentParent *parent,
                               const nsCString& aMimeContentType,
@@ -117,9 +141,12 @@ ExternalHelperAppParent::Delete()
 }
 
 mozilla::ipc::IPCResult
-ExternalHelperAppParent::RecvOnStartRequest(const nsCString& entityID)
+ExternalHelperAppParent::RecvOnStartRequest(const nsCString& entityID,
+                                            PBrowserParent* contentContext)
 {
   MOZ_ASSERT(!mDiverted, "child forwarding callbacks after request was diverted");
+
+  UpdateContentContext(mListener, contentContext);
 
   mEntityID = entityID;
   mPending = true;
@@ -159,9 +186,11 @@ ExternalHelperAppParent::RecvOnStopRequest(const nsresult& code)
 }
 
 mozilla::ipc::IPCResult
-ExternalHelperAppParent::RecvDivertToParentUsing(PChannelDiverterParent* diverter)
+ExternalHelperAppParent::RecvDivertToParentUsing(PChannelDiverterParent* diverter,
+                                                 PBrowserParent* contentContext)
 {
   MOZ_ASSERT(diverter);
+  UpdateContentContext(mListener, contentContext);
   auto p = static_cast<mozilla::net::ChannelDiverterParent*>(diverter);
   p->DivertTo(this);
 #ifdef DEBUG
