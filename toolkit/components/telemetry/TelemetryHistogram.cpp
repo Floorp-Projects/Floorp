@@ -2288,46 +2288,58 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
 
   // OK, now we can actually reflect things.
   JS::Rooted<JSObject*> hobj(cx);
-  for (auto h : hs) {
-    if (!internal_ShouldReflectHistogram(h) || internal_IsEmpty(h) ||
-        internal_IsExpired(h)) {
+  GeckoProcessType const processTypes[] = { GeckoProcessType_Default, GeckoProcessType_Content, GeckoProcessType_GPU };
+  size_t numProcessTypes = (includeGPUProcess ? 3 : 2);
+  for (size_t i = 0; i < mozilla::Telemetry::HistogramCount; ++i) {
+    if (gHistograms[i].keyed) {
       continue;
     }
 
-    Histogram* original = h;
-#if !defined(MOZ_WIDGET_ANDROID)
-    if (subsession) {
-      h = internal_GetSubsessionHistogram(*h);
-      if (!h) {
+    Histogram* h = nullptr;
+    mozilla::Telemetry::HistogramID id = mozilla::Telemetry::HistogramID(i);
+
+    for (size_t type = 0; type < numProcessTypes; ++type) {
+      nsresult rv = internal_GetHistogramByEnumId(id, &h, processTypes[type]);
+      if (NS_WARN_IF(NS_FAILED(rv)) || !internal_ShouldReflectHistogram(h) ||
+        internal_IsEmpty(h) || internal_IsExpired(h)) {
         continue;
       }
-    }
+
+      Histogram* original = h;
+#if !defined(MOZ_WIDGET_ANDROID)
+      if (subsession) {
+        h = internal_GetSubsessionHistogram(*h);
+        if (!h) {
+          continue;
+        }
+      }
 #endif
 
-    hobj = JS_NewPlainObject(cx);
-    if (!hobj) {
-      return NS_ERROR_FAILURE;
-    }
-    switch (internal_ReflectHistogramSnapshot(cx, hobj, h)) {
-    case REFLECT_CORRUPT:
-      // We can still hit this case even if ShouldReflectHistograms
-      // returns true.  The histogram lies outside of our control
-      // somehow; just skip it.
-      continue;
-    case REFLECT_FAILURE:
-      return NS_ERROR_FAILURE;
-    case REFLECT_OK:
-      if (!JS_DefineProperty(cx, root_obj, original->histogram_name().c_str(),
-                             hobj, JSPROP_ENUMERATE)) {
+      hobj = JS_NewPlainObject(cx);
+      if (!hobj) {
         return NS_ERROR_FAILURE;
       }
-    }
+      switch (internal_ReflectHistogramSnapshot(cx, hobj, h)) {
+      case REFLECT_CORRUPT:
+        // We can still hit this case even if ShouldReflectHistograms
+        // returns true.  The histogram lies outside of our control
+        // somehow; just skip it.
+        continue;
+      case REFLECT_FAILURE:
+        return NS_ERROR_FAILURE;
+      case REFLECT_OK:
+        if (!JS_DefineProperty(cx, root_obj, original->histogram_name().c_str(),
+                               hobj, JSPROP_ENUMERATE)) {
+          return NS_ERROR_FAILURE;
+        }
+      }
 
 #if !defined(MOZ_WIDGET_ANDROID)
-    if (subsession && clearSubsession) {
-      h->Clear();
-    }
+      if (subsession && clearSubsession) {
+        h->Clear();
+      }
 #endif
+    }
   }
   return NS_OK;
 }
