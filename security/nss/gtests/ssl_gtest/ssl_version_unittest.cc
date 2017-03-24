@@ -135,7 +135,7 @@ TEST_P(TlsConnectGeneric, TestFallbackSCSVVersionMatch) {
 TEST_P(TlsConnectGenericPre13, TestFallbackSCSVVersionMismatch) {
   client_->SetFallbackSCSVEnabled(true);
   server_->SetVersionRange(version_, version_ + 1);
-  ConnectExpectFail();
+  ConnectExpectAlert(server_, kTlsAlertInappropriateFallback);
   client_->CheckErrorCode(SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT);
 }
 
@@ -177,6 +177,13 @@ TEST_P(TlsConnectStream, ConnectTls10AndServerRenegotiateHigher) {
   // doesn't fail.
   server_->ResetPreliminaryInfo();
   server_->StartRenegotiate();
+
+  if (test_version >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    ExpectAlert(server_, kTlsAlertUnexpectedMessage);
+  } else {
+    ExpectAlert(client_, kTlsAlertIllegalParameter);
+  }
+
   Handshake();
   if (test_version >= SSL_LIBRARY_VERSION_TLS_1_3) {
     // In TLS 1.3, the server detects this problem.
@@ -210,6 +217,11 @@ TEST_P(TlsConnectStream, ConnectTls10AndClientRenegotiateHigher) {
   // doesn't fail.
   server_->ResetPreliminaryInfo();
   client_->StartRenegotiate();
+  if (test_version >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    ExpectAlert(server_, kTlsAlertUnexpectedMessage);
+  } else {
+    ExpectAlert(client_, kTlsAlertIllegalParameter);
+  }
   Handshake();
   if (test_version >= SSL_LIBRARY_VERSION_TLS_1_3) {
     // In TLS 1.3, the server detects this problem.
@@ -241,7 +253,7 @@ TEST_F(TlsConnectTest, Tls13RejectsRehandshakeServer) {
 
 TEST_P(TlsConnectGeneric, AlertBeforeServerHello) {
   EnsureTlsSetup();
-  client_->SetExpectedAlertReceivedCount(1);
+  client_->ExpectReceiveAlert(kTlsAlertUnrecognizedName, kTlsAlertWarning);
   client_->StartConnect();
   server_->StartConnect();
   client_->Handshake();  // Send ClientHello.
@@ -268,7 +280,7 @@ class Tls13NoSupportedVersions : public TlsConnectStreamTls12 {
     auto capture = std::make_shared<TlsInspectorRecordHandshakeMessage>(
         kTlsHandshakeServerHello);
     server_->SetPacketFilter(capture);
-    ConnectExpectFail();
+    ConnectExpectAlert(server_, kTlsAlertDecryptError);
     client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
     server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
     const DataBuffer& server_hello = capture->buffer();
@@ -305,6 +317,8 @@ TEST_F(TlsConnectStreamTls13, Tls14ClientHelloWithSupportedVersions) {
   auto capture = std::make_shared<TlsInspectorRecordHandshakeMessage>(
       kTlsHandshakeServerHello);
   server_->SetPacketFilter(capture);
+  client_->ExpectSendAlert(kTlsAlertBadRecordMac);
+  server_->ExpectSendAlert(kTlsAlertBadRecordMac);
   ConnectExpectFail();
   client_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
   server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);

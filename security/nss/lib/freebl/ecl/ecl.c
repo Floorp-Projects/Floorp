@@ -267,31 +267,18 @@ ec_GetNamedCurveParams(const ECCurveName name)
 ECGroup *
 ECGroup_fromName(const ECCurveName name)
 {
-    ECGroup *group = NULL;
     const ECCurveBytes *params = NULL;
-    mp_err res = MP_OKAY;
 
     /* This doesn't work with Curve25519 but it's not necessary to. */
     PORT_Assert(name != ECCurve25519);
 
     params = ec_GetNamedCurveParams(name);
     if (params == NULL) {
-        res = MP_UNDEF;
-        goto CLEANUP;
+        return NULL;
     }
 
     /* construct actual group */
-    group = ecgroup_fromName(name, params);
-    if (group == NULL) {
-        res = MP_UNDEF;
-    }
-
-CLEANUP:
-    if (group && res != MP_OKAY) {
-        ECGroup_free(group);
-        return NULL;
-    }
-    return group;
+    return ecgroup_fromName(name, params);
 }
 
 /* Validates an EC public key as described in Section 5.2.2 of X9.62. */

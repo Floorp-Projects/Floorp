@@ -39,12 +39,17 @@ const uint8_t kTlsHandshakeFinished = 20;
 const uint8_t kTlsAlertWarning = 1;
 const uint8_t kTlsAlertFatal = 2;
 
+const uint8_t kTlsAlertCloseNotify = 0;
+const uint8_t kTlsAlertEndOfEarlyData = 1;
 const uint8_t kTlsAlertUnexpectedMessage = 10;
 const uint8_t kTlsAlertBadRecordMac = 20;
+const uint8_t kTlsAlertRecordOverflow = 22;
 const uint8_t kTlsAlertHandshakeFailure = 40;
 const uint8_t kTlsAlertIllegalParameter = 47;
 const uint8_t kTlsAlertDecodeError = 50;
 const uint8_t kTlsAlertDecryptError = 51;
+const uint8_t kTlsAlertProtocolVersion = 70;
+const uint8_t kTlsAlertInappropriateFallback = 86;
 const uint8_t kTlsAlertMissingExtension = 109;
 const uint8_t kTlsAlertUnsupportedExtension = 110;
 const uint8_t kTlsAlertUnrecognizedName = 112;

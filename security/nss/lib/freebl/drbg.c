@@ -20,10 +20,6 @@
 #include "secrng.h" /* for RNG_SystemRNG() */
 #include "secmpi.h"
 
-#ifdef UNSAFE_FUZZER_MODE
-#include "det_rng.h"
-#endif
-
 /* PRNG_SEEDLEN defined in NIST SP 800-90 section 10.1
  * for SHA-1, SHA-224, and SHA-256 it's 440 bits.
  * for SHA-384 and SHA-512 it's 888 bits */
@@ -401,10 +397,8 @@ static PRStatus
 rng_init(void)
 {
     PRUint8 bytes[PRNG_SEEDLEN * 2]; /* entropy + nonce */
-#ifndef UNSAFE_RNG_NO_URANDOM_SEED
     unsigned int numBytes;
     SECStatus rv = SECSuccess;
-#endif
 
     if (globalrng == NULL) {
         /* bytes needs to have enough space to hold
@@ -421,7 +415,6 @@ rng_init(void)
             return PR_FAILURE;
         }
 
-#ifndef UNSAFE_RNG_NO_URANDOM_SEED
         /* Try to get some seed data for the RNG */
         numBytes = (unsigned int)RNG_SystemRNG(bytes, sizeof bytes);
         PORT_Assert(numBytes == 0 || numBytes == sizeof bytes);
@@ -444,7 +437,6 @@ rng_init(void)
         if (rv != SECSuccess) {
             return PR_FAILURE;
         }
-#endif
 
         /* the RNG is in a valid state */
         globalrng->isValid = PR_TRUE;
@@ -662,21 +654,7 @@ prng_GenerateGlobalRandomBytes(RNGContext *rng,
 SECStatus
 RNG_GenerateGlobalRandomBytes(void *dest, size_t len)
 {
-#ifdef UNSAFE_FUZZER_MODE
-    return prng_GenerateDeterministicRandomBytes(globalrng->lock, dest, len);
-#else
     return prng_GenerateGlobalRandomBytes(globalrng, dest, len);
-#endif
-}
-
-SECStatus
-RNG_ResetForFuzzing(void)
-{
-#ifdef UNSAFE_FUZZER_MODE
-    return prng_ResetForFuzzing(globalrng->lock);
-#else
-    return SECFailure;
-#endif
 }
 
 void

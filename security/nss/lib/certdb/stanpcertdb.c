@@ -91,7 +91,7 @@ CERT_GetCertTrust(const CERTCertificate *cert, CERTCertTrust *trust)
 {
     SECStatus rv;
     CERT_LockCertTrust(cert);
-    if (cert->trust == NULL) {
+    if (!cert || cert->trust == NULL) {
         rv = SECFailure;
     } else {
         *trust = *cert->trust;
@@ -304,8 +304,10 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
         CERT_MapStanError();
         return SECFailure;
     }
+    CERT_LockCertTempPerm(cert);
     cert->istemp = PR_FALSE;
     cert->isperm = PR_TRUE;
+    CERT_UnlockCertTempPerm(cert);
     if (!trust) {
         return SECSuccess;
     }
@@ -436,8 +438,10 @@ CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
         return NULL;
     }
 
+    CERT_LockCertTempPerm(cc);
     cc->istemp = PR_TRUE;
     cc->isperm = PR_FALSE;
+    CERT_UnlockCertTempPerm(cc);
     return cc;
 loser:
     /* Perhaps this should be nssCertificate_Destroy(c) */
@@ -911,6 +915,7 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
 {
     const char *emailAddr;
     SECStatus rv;
+    PRBool isperm = PR_FALSE;
 
     if (!cert) {
         return SECFailure;
@@ -932,7 +937,11 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
         }
     }
 
-    if (cert->slot && cert->isperm && CERT_IsUserCert(cert) &&
+    rv = CERT_GetCertIsPerm(cert, &isperm);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+    if (cert->slot && isperm && CERT_IsUserCert(cert) &&
         (!emailProfile || !emailProfile->len)) {
         /* Don't clobber emailProfile for user certs. */
         return SECSuccess;
@@ -984,6 +993,32 @@ CERT_FindSMimeProfile(CERTCertificate *cert)
         PK11_FreeSlot(slot);
     }
     return rvItem;
+}
+
+SECStatus
+CERT_GetCertIsPerm(const CERTCertificate *cert, PRBool *isperm)
+{
+    if (cert == NULL) {
+        return SECFailure;
+    }
+
+    CERT_LockCertTempPerm(cert);
+    *isperm = cert->isperm;
+    CERT_UnlockCertTempPerm(cert);
+    return SECSuccess;
+}
+
+SECStatus
+CERT_GetCertIsTemp(const CERTCertificate *cert, PRBool *istemp)
+{
+    if (cert == NULL) {
+        return SECFailure;
+    }
+
+    CERT_LockCertTempPerm(cert);
+    *istemp = cert->istemp;
+    CERT_UnlockCertTempPerm(cert);
+    return SECSuccess;
 }
 
 /*
