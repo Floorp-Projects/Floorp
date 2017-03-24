@@ -1396,13 +1396,12 @@ AudioChannelService::AudioChannelWindow::AudioAudibleChanged(AudioChannelAgent* 
 
   if (aAudible == AudibleState::eAudible) {
     AppendAudibleAgentIfNotContained(aAgent, aReason);
+    NotifyAudioCompetingChanged(aAgent);
   } else {
     RemoveAudibleAgentIfContained(aAgent, aReason);
   }
 
-  if (aAudible == AudibleState::eAudible) {
-    NotifyAudioCompetingChanged(aAgent);
-  } else if (aAudible != AudibleState::eNotAudible) {
+  if (aAudible != AudibleState::eNotAudible) {
     MaybeNotifyMediaBlockStart(aAgent);
   }
 }
