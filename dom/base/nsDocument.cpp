@@ -13046,12 +13046,11 @@ FlashClassification
 nsDocument::PrincipalFlashClassification()
 {
   nsresult rv;
-  bool isThirdPartyDoc = IsThirdParty();
 
   // If flash blocking is disabled, it is equivalent to all sites being
-  // whitelisted.
+  // on neither list.
   if (!Preferences::GetBool("plugins.flashBlock.enabled")) {
-    return FlashClassification::Allowed;
+    return FlashClassification::Unknown;
   }
 
   nsCOMPtr<nsIPrincipal> principal = GetPrincipal();
@@ -13079,6 +13078,8 @@ nsDocument::PrincipalFlashClassification()
   Preferences::GetCString("urlclassifier.flashExceptTable",
                           &denyExceptionsTables);
   MaybeAddTableToTableList(denyExceptionsTables, tables);
+
+  bool isThirdPartyDoc = IsThirdParty();
   if (isThirdPartyDoc) {
     Preferences::GetCString("urlclassifier.flashSubDocTable",
                             &subDocDenyTables);
