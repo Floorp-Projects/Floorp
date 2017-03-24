@@ -100,7 +100,7 @@ CustomTypeAnnotation::directAnnotationReason(QualType T) {
   if (const clang::ArrayType *Array = T->getAsArrayTypeUnsafe()) {
     if (hasEffectiveAnnotation(Array->getElementType())) {
       AnnotationReason Reason = {Array->getElementType(), RK_ArrayElement,
-                                 nullptr};
+                                 nullptr, ""};
       Cache[Key] = Reason;
       return Reason;
     }
@@ -158,7 +158,7 @@ CustomTypeAnnotation::tmplArgAnnotationReason(ArrayRef<TemplateArgument> Args) {
     if (Arg.getKind() == TemplateArgument::Type) {
       QualType Type = Arg.getAsType();
       if (hasEffectiveAnnotation(Type)) {
-        AnnotationReason Reason = {Type, RK_TemplateInherited, nullptr};
+        AnnotationReason Reason = {Type, RK_TemplateInherited, nullptr, ""};
         return Reason;
       }
     } else if (Arg.getKind() == TemplateArgument::Pack) {
