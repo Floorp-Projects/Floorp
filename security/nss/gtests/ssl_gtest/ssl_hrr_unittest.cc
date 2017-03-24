@@ -144,6 +144,7 @@ TEST_P(TlsConnectTls13, SecondClientHelloRejectEarlyDataXtn) {
   PRInt32 rv = PR_Write(client_->ssl_fd(), k0RttData, k0RttDataLen);
   EXPECT_EQ(k0RttDataLen, rv);
 
+  ExpectAlert(server_, kTlsAlertUnsupportedExtension);
   Handshake();
   client_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_EXTENSION_ALERT);
 }
@@ -181,7 +182,7 @@ TEST_P(TlsConnectTls13, RetryWithSameKeyShare) {
   static const std::vector<SSLNamedGroup> groups = {ssl_grp_ec_secp384r1,
                                                     ssl_grp_ec_secp521r1};
   server_->ConfigNamedGroups(groups);
-  ConnectExpectFail();
+  ConnectExpectAlert(server_, kTlsAlertIllegalParameter);
   EXPECT_EQ(SSL_ERROR_BAD_2ND_CLIENT_HELLO, server_->error_code());
   EXPECT_EQ(SSL_ERROR_ILLEGAL_PARAMETER_ALERT, client_->error_code());
 }
@@ -258,6 +259,7 @@ TEST_F(TlsConnectTest, Select12AfterHelloRetryRequest) {
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
                            SSL_LIBRARY_VERSION_TLS_1_2);
   server_->StartConnect();
+  ExpectAlert(client_, kTlsAlertIllegalParameter);
   Handshake();
   EXPECT_EQ(SSL_ERROR_ILLEGAL_PARAMETER_ALERT, server_->error_code());
   EXPECT_EQ(SSL_ERROR_RX_MALFORMED_SERVER_HELLO, client_->error_code());
@@ -309,6 +311,7 @@ TEST_P(HelloRetryRequestAgentTest, SendSecondHelloRetryRequest) {
   MakeGroupHrr(ssl_grp_ec_secp384r1, &hrr, 0);
   ProcessMessage(hrr, TlsAgent::STATE_CONNECTING);
   MakeGroupHrr(ssl_grp_ec_secp521r1, &hrr, 1);
+  ExpectAlert(kTlsAlertUnexpectedMessage);
   ProcessMessage(hrr, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_HELLO_RETRY_REQUEST);
 }
@@ -318,6 +321,7 @@ TEST_P(HelloRetryRequestAgentTest, SendSecondHelloRetryRequest) {
 TEST_P(HelloRetryRequestAgentTest, HandleBogusHelloRetryRequest) {
   DataBuffer hrr;
   MakeGroupHrr(ssl_grp_ec_curve25519, &hrr);
+  ExpectAlert(kTlsAlertIllegalParameter);
   ProcessMessage(hrr, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_MALFORMED_HELLO_RETRY_REQUEST);
 }
@@ -325,6 +329,7 @@ TEST_P(HelloRetryRequestAgentTest, HandleBogusHelloRetryRequest) {
 TEST_P(HelloRetryRequestAgentTest, HandleNoopHelloRetryRequest) {
   DataBuffer hrr;
   MakeCannedHrr(nullptr, 0U, &hrr);
+  ExpectAlert(kTlsAlertDecodeError);
   ProcessMessage(hrr, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_MALFORMED_HELLO_RETRY_REQUEST);
 }

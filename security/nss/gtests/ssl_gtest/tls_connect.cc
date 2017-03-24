@@ -301,9 +301,6 @@ void TlsConnectTestBase::CheckConnected() {
   CheckResumption(expected_resumption_mode_);
   client_->CheckSecretsDestroyed();
   server_->CheckSecretsDestroyed();
-
-  client_->CheckAlerts();
-  server_->CheckAlerts();
 }
 
 void TlsConnectTestBase::CheckKeys(SSLKEAType kea_type, SSLNamedGroup kea_group,
@@ -373,6 +370,20 @@ void TlsConnectTestBase::ConnectExpectFail() {
   Handshake();
   ASSERT_EQ(TlsAgent::STATE_ERROR, client_->state());
   ASSERT_EQ(TlsAgent::STATE_ERROR, server_->state());
+}
+
+void TlsConnectTestBase::ExpectAlert(std::shared_ptr<TlsAgent>& sender,
+                                     uint8_t alert) {
+  EnsureTlsSetup();
+  auto receiver = (sender == client_) ? server_ : client_;
+  sender->ExpectSendAlert(alert);
+  receiver->ExpectReceiveAlert(alert);
+}
+
+void TlsConnectTestBase::ConnectExpectAlert(std::shared_ptr<TlsAgent>& sender,
+                                            uint8_t alert) {
+  ExpectAlert(sender, alert);
+  ConnectExpectFail();
 }
 
 void TlsConnectTestBase::ConnectExpectFailOneSide(TlsAgent::Role failing_side) {
@@ -560,6 +571,10 @@ void TlsConnectTestBase::ZeroRttSendReceive(
     std::function<bool()> post_clienthello_check) {
   const char* k0RttData = "ABCDEF";
   const PRInt32 k0RttDataLen = static_cast<PRInt32>(strlen(k0RttData));
+
+  if (expect_writable && expect_readable) {
+    ExpectAlert(client_, kTlsAlertEndOfEarlyData);
+  }
 
   client_->Handshake();  // Send ClientHello.
   if (post_clienthello_check) {

@@ -9,6 +9,7 @@ MODULE = nss
 CPPSRCS = \
       der_getint_unittest.cc \
       der_private_key_import_unittest.cc \
+      der_quickder_unittest.cc \
       $(NULL)
 
 INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
