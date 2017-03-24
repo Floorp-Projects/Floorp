@@ -2095,19 +2095,18 @@ GeckoDriver.prototype.getElementRect = function*(cmd, resp) {
  */
 GeckoDriver.prototype.sendKeysToElement = function*(cmd, resp) {
   let win = assert.window(this.getCurrentWindow());
-
-  let {id, value} = cmd.parameters;
-  assert.defined(value, `Expected character sequence: ${value}`);
+  let {id, text} = cmd.parameters;
+  assert.string(text);
 
   switch (this.context) {
     case Context.CHROME:
       let el = this.curBrowser.seenEls.get(id, {frame: win});
       yield interaction.sendKeysToElement(
-          el, value, true, this.a11yChecks);
+          el, text, true, this.a11yChecks);
       break;
 
     case Context.CONTENT:
-      yield this.listener.sendKeysToElement(id, value);
+      yield this.listener.sendKeysToElement(id, text);
       break;
   }
 };

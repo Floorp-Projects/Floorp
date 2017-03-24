@@ -98,10 +98,15 @@ class HTMLElement(object):
         body = {"id": self.id}
         return self.marionette._send_message("getElementText", body, key="value")
 
-    def send_keys(self, *string):
-        """Sends the string via synthesized keypresses to the element."""
-        keys = Marionette.convert_keys(*string)
-        body = {"id": self.id, "value": keys}
+    def send_keys(self, *strings):
+        """Sends the string via synthesized keypresses to the element.
+           If an array is passed in like `marionette.send_keys(Keys.SHIFT, "a")` it
+           will be joined into a string.
+           If an integer is passed in like `marionette.send_keys(1234)` it will be
+           coerced into a string.
+        """
+        keys = Marionette.convert_keys(*strings)
+        body = {"id": self.id, "text": keys}
         self.marionette._send_message("sendKeysToElement", body)
 
     def clear(self):
@@ -835,7 +840,7 @@ class Marionette(object):
             else:
                 for i in range(len(val)):
                     typing.append(val[i])
-        return typing
+        return "".join(typing)
 
     def get_permission(self, perm):
         script = """
