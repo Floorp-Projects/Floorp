@@ -8,7 +8,6 @@ use rustc_serialize::json::{ToJson, Json};
 use std::collections::BTreeMap;
 use std::default::Default;
 
-
 #[derive(PartialEq)]
 pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     NewSession(NewSessionParameters),
@@ -23,10 +22,8 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     GetWindowHandle,
     GetWindowHandles,
     CloseWindow,
-    GetWindowSize,
-    SetWindowSize(WindowSizeParameters),
-    GetWindowPosition,
-    SetWindowPosition(WindowPositionParameters),
+    GetWindowRect,
+    SetWindowRect(WindowRectParameters),
     MaximizeWindow,
 //    FullscreenWindow // Not supported in marionette
     SwitchToWindow(SwitchToWindowParameters),
@@ -136,15 +133,10 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 let parameters: TimeoutsParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::SetTimeouts(parameters)
             },
-            Route::GetWindowSize => WebDriverCommand::GetWindowSize,
-            Route::SetWindowSize => {
-                let parameters: WindowSizeParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::SetWindowSize(parameters)
-            },
-            Route::GetWindowPosition => WebDriverCommand::GetWindowPosition,
-            Route::SetWindowPosition => {
-                let parameters: WindowPositionParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::SetWindowPosition(parameters)
+            Route::GetWindowRect | Route::GetWindowPosition | Route::GetWindowSize => WebDriverCommand::GetWindowRect,
+            Route::SetWindowRect | Route::SetWindowPosition | Route::SetWindowSize => {
+                let parameters: WindowRectParameters = Parameters::from_json(&body_data)?;
+                WebDriverCommand::SetWindowRect(parameters)
             },
             Route::MaximizeWindow => WebDriverCommand::MaximizeWindow,
             Route::SwitchToWindow => {
@@ -382,8 +374,7 @@ impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
             WebDriverCommand::GetTitle |
             WebDriverCommand::GetWindowHandle |
             WebDriverCommand::GetWindowHandles |
-            WebDriverCommand::GetWindowPosition |
-            WebDriverCommand::GetWindowSize |
+            WebDriverCommand::GetWindowRect |
             WebDriverCommand::GoBack |
             WebDriverCommand::GoForward |
             WebDriverCommand::IsDisplayed(_) |
@@ -411,8 +402,7 @@ impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
             WebDriverCommand::PerformActions(ref x) => Some(x.to_json()),
             WebDriverCommand::SendAlertText(ref x) => Some(x.to_json()),
             WebDriverCommand::SetTimeouts(ref x) => Some(x.to_json()),
-            WebDriverCommand::SetWindowPosition(ref x) => Some(x.to_json()),
-            WebDriverCommand::SetWindowSize(ref x) => Some(x.to_json()),
+            WebDriverCommand::SetWindowRect(ref x) => Some(x.to_json()),
             WebDriverCommand::SwitchToFrame(ref x) => Some(x.to_json()),
             WebDriverCommand::SwitchToWindow(ref x) => Some(x.to_json()),
             WebDriverCommand::Extension(ref x) => x.parameters_json(),
@@ -568,72 +558,77 @@ impl ToJson for TimeoutsParameters {
     }
 }
 
-#[derive(PartialEq)]
-pub struct WindowSizeParameters {
-    pub width: u64,
-    pub height: u64,
+#[derive(Debug, PartialEq)]
+pub struct WindowRectParameters {
+    pub x: Nullable<i64>,
+    pub y: Nullable<i64>,
+    pub width: Nullable<u64>,
+    pub height: Nullable<u64>,
 }
 
-impl Parameters for WindowSizeParameters {
-    fn from_json(body: &Json) -> WebDriverResult<WindowSizeParameters> {
-        let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
-                            "Message body was not an object");
-        let height = try_opt!(
-            try_opt!(data.get("height"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'height' parameter").as_u64(),
-            ErrorStatus::InvalidArgument,
-            "'height' is not a positive integer");
-        let width = try_opt!(
-            try_opt!(data.get("width"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing width parameter").as_u64(),
-            ErrorStatus::InvalidArgument,
-            "'width' is not a positive integer");
-        return Ok(WindowSizeParameters {
-            height: height,
-            width: width
-        })
-    }
-}
-
-impl ToJson for WindowSizeParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("width".to_string(), self.width.to_json());
-        data.insert("height".to_string(), self.height.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(PartialEq)]
-pub struct WindowPositionParameters {
-    pub x: u64,
-    pub y: u64,
-}
-
-impl Parameters for WindowPositionParameters {
-    fn from_json(body: &Json) -> WebDriverResult<WindowPositionParameters> {
+impl Parameters for WindowRectParameters {
+    fn from_json(body: &Json) -> WebDriverResult<WindowRectParameters> {
         let data = try_opt!(body.as_object(),
-            ErrorStatus::UnknownError, "Message body was not an object");
-        let xv = try_opt!(data.get("x"),
-            ErrorStatus::InvalidArgument, "Missing 'x' parameters");
-        let x = try_opt!(xv.as_u64(),
-            ErrorStatus::InvalidArgument, "'x' is not a positive integer");
-        let yv = try_opt!(data.get("y"),
-            ErrorStatus::InvalidArgument, "Missing 'y' parameters");
-        let y = try_opt!(yv.as_u64(),
-            ErrorStatus::InvalidArgument, "'y' is not a positive integer");
-        return Ok(WindowPositionParameters { x: x, y: y });
+                            ErrorStatus::UnknownError,
+                            "Message body was not an object");
+
+        let x = match data.get("x") {
+            Some(json) => {
+                try!(Nullable::from_json(json, |n| {
+                    Ok((try_opt!(n.as_i64(),
+                                 ErrorStatus::InvalidArgument,
+                                 "'x' is not an integer")))
+                }))
+            }
+            None => Nullable::Null,
+        };
+        let y = match data.get("y") {
+            Some(json) => {
+                try!(Nullable::from_json(json, |n| {
+                    Ok((try_opt!(n.as_i64(),
+                                 ErrorStatus::InvalidArgument,
+                                 "'y' is not an integer")))
+                }))
+            }
+            None => Nullable::Null,
+        };
+        let width = match data.get("width") {
+            Some(json) => {
+                try!(Nullable::from_json(json, |n| {
+                    Ok((try_opt!(n.as_u64(),
+                                 ErrorStatus::InvalidArgument,
+                                 "'width' is not a positive integer")))
+                }))
+            }
+            None => Nullable::Null,
+        };
+        let height = match data.get("height") {
+            Some(json) => {
+                try!(Nullable::from_json(json, |n| {
+                    Ok((try_opt!(n.as_u64(),
+                                 ErrorStatus::InvalidArgument,
+                                 "'height' is not a positive integer")))
+                }))
+            }
+            None => Nullable::Null,
+        };
+
+        Ok(WindowRectParameters {
+               x: x,
+               y: y,
+               width: width,
+               height: height,
+           })
     }
 }
 
-
-impl ToJson for WindowPositionParameters {
+impl ToJson for WindowRectParameters {
     fn to_json(&self) -> Json {
         let mut data = BTreeMap::new();
         data.insert("x".to_string(), self.x.to_json());
         data.insert("y".to_string(), self.y.to_json());
+        data.insert("width".to_string(), self.width.to_json());
+        data.insert("height".to_string(), self.height.to_json());
         Json::Object(data)
     }
 }
@@ -1677,5 +1672,47 @@ impl ToJson for PointerMoveAction {
             data.insert("y".to_owned(), self.y.to_json());
         }
         Json::Object(data)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rustc_serialize::json::Json;
+    use super::{Nullable, Parameters, WindowRectParameters};
+
+    #[test]
+    fn test_window_rect() {
+        let expected = WindowRectParameters {
+            x: Nullable::Value(0i64),
+            y: Nullable::Value(1i64),
+            width: Nullable::Value(2u64),
+            height: Nullable::Value(3u64),
+        };
+        let actual = Json::from_str(r#"{"x": 0, "y": 1, "width": 2, "height": 3}"#).unwrap();
+        assert_eq!(expected, Parameters::from_json(&actual).unwrap());
+    }
+
+    #[test]
+    fn test_window_rect_nullable() {
+        let expected = WindowRectParameters {
+            x: Nullable::Value(0i64),
+            y: Nullable::Null,
+            width: Nullable::Value(2u64),
+            height: Nullable::Null,
+        };
+        let actual = Json::from_str(r#"{"x": 0, "y": null, "width": 2, "height": null}"#).unwrap();
+        assert_eq!(expected, Parameters::from_json(&actual).unwrap());
+    }
+
+    #[test]
+    fn test_window_rect_missing_fields() {
+        let expected = WindowRectParameters {
+            x: Nullable::Value(0i64),
+            y: Nullable::Null,
+            width: Nullable::Value(2u64),
+            height: Nullable::Null,
+        };
+        let actual = Json::from_str(r#"{"x": 0, "width": 2}"#).unwrap();
+        assert_eq!(expected, Parameters::from_json(&actual).unwrap());
     }
 }
