@@ -11,6 +11,7 @@ function createRelativePath(parentDir, dirOrFile) {
 function setup_tests(aNext) {
   SimpleTest.requestLongerTimeout(2);
   SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true],
+                                     ["dom.filesystem.pathcheck.disabled", true],
                                      ["dom.webkitBlink.dirPicker.enabled", true]]}, aNext);
 }
 
