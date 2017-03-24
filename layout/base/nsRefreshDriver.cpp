@@ -2163,6 +2163,19 @@ nsRefreshDriver::RevokeTransactionId(uint64_t aTransactionId)
   mPendingTransaction--;
 }
 
+void
+nsRefreshDriver::ClearPendingTransactions()
+{
+  mCompletedTransaction = mPendingTransaction;
+  mWaitingForTransaction = false;
+}
+
+void
+nsRefreshDriver::ResetInitialTransactionId(uint64_t aTransactionId)
+{
+  mCompletedTransaction = mPendingTransaction = aTransactionId;
+}
+
 mozilla::TimeStamp
 nsRefreshDriver::GetTransactionStart()
 {

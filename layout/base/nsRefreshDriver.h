@@ -309,6 +309,8 @@ public:
   uint64_t LastTransactionId() const override;
   void NotifyTransactionCompleted(uint64_t aTransactionId) override;
   void RevokeTransactionId(uint64_t aTransactionId) override;
+  void ClearPendingTransactions() override;
+  void ResetInitialTransactionId(uint64_t aTransactionId) override;
   mozilla::TimeStamp GetTransactionStart() override;
 
   bool IsWaitingForPaint(mozilla::TimeStamp aTime);

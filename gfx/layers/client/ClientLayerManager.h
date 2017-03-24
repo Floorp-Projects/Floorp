@@ -222,10 +222,7 @@ public:
   // Get a copy of the compositor-side APZ test data for our layers ID.
   void GetCompositorSideAPZTestData(APZTestData* aData) const;
 
-  virtual void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) override
-  {
-     mTransactionIdAllocator = aAllocator;
-  }
+  virtual void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) override;
 
   virtual uint64_t GetLastTransactionId() override { return mLatestTransactionId; }
 
