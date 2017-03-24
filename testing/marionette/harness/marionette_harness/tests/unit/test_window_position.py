@@ -35,7 +35,7 @@ class TestWindowPosition(MarionetteTestCase):
                                             x=None, y=None)
 
     def test_set_position_with_rect(self):
-        old_position = self.marionette.get_window_position()
+        old_position = self.marionette.window_rect
         wanted_position = {"x": old_position["x"] + 10, "y": old_position["y"] + 10}
 
         new_position = self.marionette.set_window_rect(x=wanted_position["x"], y=wanted_position["y"])
