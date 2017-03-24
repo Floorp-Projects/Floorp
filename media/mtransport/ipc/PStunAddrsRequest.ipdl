@@ -4,7 +4,6 @@
 
 include protocol PNecko;
 
-using class mozilla::NrIceStunAddr from "mtransport/nricestunaddr.h";
 using NrIceStunAddrArray from "mozilla/net/PStunAddrsParams.h";
 
 include "mozilla/net/NrIceStunAddrMessageUtils.h";
