@@ -192,6 +192,9 @@ add_task(function* testBrowserActionTabPopulation() {
   yield BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "http://example.com/");
   yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
+  // Make sure the mouse isn't hovering over the browserAction widget.
+  EventUtils.synthesizeMouseAtCenter(win.gURLBar, {type: "mouseover"}, win);
+
   yield extension.startup();
 
   let widget = getBrowserActionWidget(extension).forWindow(win);
