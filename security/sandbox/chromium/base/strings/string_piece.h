@@ -28,6 +28,7 @@
 #include <string>
 
 #include "base/base_export.h"
+#include "base/containers/hash_tables.h"
 #include "base/logging.h"
 #include "base/strings/string16.h"
 
@@ -223,8 +224,6 @@ template <typename STRING_TYPE> class BasicStringPiece {
   }
 
   value_type operator[](size_type i) const { return ptr_[i]; }
-  value_type front() const { return ptr_[0]; }
-  value_type back() const { return ptr_[length_ - 1]; }
 
   void remove_prefix(size_type n) {
     ptr_ += n;
@@ -433,32 +432,38 @@ inline bool operator>=(const StringPiece16& x, const StringPiece16& y) {
 BASE_EXPORT std::ostream& operator<<(std::ostream& o,
                                      const StringPiece& piece);
 
+}  // namespace base
+
 // Hashing ---------------------------------------------------------------------
 
 // We provide appropriate hash functions so StringPiece and StringPiece16 can
 // be used as keys in hash sets and maps.
 
-// This hash function is copied from base/strings/string16.h. We don't use the
-// ones already defined for string and string16 directly because it would
-// require the string constructors to be called, which we don't want.
-#define HASH_STRING_PIECE(StringPieceType, string_piece)         \
-  std::size_t result = 0;                                        \
-  for (StringPieceType::const_iterator i = string_piece.begin(); \
-       i != string_piece.end(); ++i)                             \
-    result = (result * 131) + *i;                                \
-  return result;
+// This hash function is copied from base/containers/hash_tables.h. We don't
+// use the ones already defined for string and string16 directly because it
+// would require the string constructors to be called, which we don't want.
+#define HASH_STRING_PIECE(StringPieceType, string_piece)                \
+  std::size_t result = 0;                                               \
+  for (StringPieceType::const_iterator i = string_piece.begin();        \
+       i != string_piece.end(); ++i)                                    \
+    result = (result * 131) + *i;                                       \
+  return result;                                                        \
 
-struct StringPieceHash {
-  std::size_t operator()(const StringPiece& sp) const {
-    HASH_STRING_PIECE(StringPiece, sp);
+namespace BASE_HASH_NAMESPACE {
+
+template<>
+struct hash<base::StringPiece> {
+  std::size_t operator()(const base::StringPiece& sp) const {
+    HASH_STRING_PIECE(base::StringPiece, sp);
   }
 };
-struct StringPiece16Hash {
-  std::size_t operator()(const StringPiece16& sp16) const {
-    HASH_STRING_PIECE(StringPiece16, sp16);
+template<>
+struct hash<base::StringPiece16> {
+  std::size_t operator()(const base::StringPiece16& sp16) const {
+    HASH_STRING_PIECE(base::StringPiece16, sp16);
   }
 };
 
-}  // namespace base
+}  // namespace BASE_HASH_NAMESPACE
 
 #endif  // BASE_STRINGS_STRING_PIECE_H_

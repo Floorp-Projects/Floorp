@@ -145,7 +145,7 @@ SBOX_TESTS_COMMAND int CheckForEventHandles(int argc, wchar_t** argv) {
       return SBOX_TEST_SUCCEEDED;
 
     case AFTER_REVERT:
-      for (HANDLE handle : to_check) {
+      for (auto handle : to_check) {
         // Set up buffers for the type info and the name.
         std::vector<BYTE> type_info_buffer(sizeof(OBJECT_TYPE_INFORMATION) +
                                            32 * sizeof(wchar_t));

@@ -5,6 +5,13 @@
 #ifndef BASE_SEQUENCE_CHECKER_H_
 #define BASE_SEQUENCE_CHECKER_H_
 
+// See comments for the similar block in thread_checker.h.
+#if (!defined(NDEBUG) || defined(DCHECK_ALWAYS_ON))
+#define ENABLE_SEQUENCE_CHECKER 1
+#else
+#define ENABLE_SEQUENCE_CHECKER 0
+#endif
+
 #include "base/sequence_checker_impl.h"
 
 namespace base {
@@ -15,22 +22,23 @@ namespace base {
 // the right version for your build configuration.
 class SequenceCheckerDoNothing {
  public:
-  bool CalledOnValidSequence() const { return true; }
+  bool CalledOnValidSequencedThread() const {
+    return true;
+  }
 
   void DetachFromSequence() {}
 };
 
-// SequenceChecker is a helper class to verify that calls to some methods of a
-// class are sequenced. Calls are sequenced when they are issued:
-// - From tasks posted to SequencedTaskRunners or SingleThreadTaskRunners bound
-//   to the same sequence, or,
-// - From a single thread outside of any task.
+// SequenceChecker is a helper class used to help verify that some
+// methods of a class are called in sequence -- that is, called from
+// the same SequencedTaskRunner. It is a generalization of
+// ThreadChecker; see comments in sequence_checker_impl.h for details.
 //
 // Example:
 // class MyClass {
 //  public:
 //   void Foo() {
-//     DCHECK(sequence_checker_.CalledOnValidSequence());
+//     DCHECK(sequence_checker_.CalledOnValidSequencedThread());
 //     ... (do stuff) ...
 //   }
 //
@@ -38,14 +46,16 @@ class SequenceCheckerDoNothing {
 //   SequenceChecker sequence_checker_;
 // }
 //
-// In Release mode, CalledOnValidSequence() will always return true.
-#if DCHECK_IS_ON()
+// In Release mode, CalledOnValidSequencedThread() will always return true.
+#if ENABLE_SEQUENCE_CHECKER
 class SequenceChecker : public SequenceCheckerImpl {
 };
 #else
 class SequenceChecker : public SequenceCheckerDoNothing {
 };
-#endif  // DCHECK_IS_ON()
+#endif  // ENABLE_SEQUENCE_CHECKER
+
+#undef ENABLE_SEQUENCE_CHECKER
 
 }  // namespace base
 

@@ -138,7 +138,6 @@ namespace base {
 
 class Pickle;
 class PickleIterator;
-class PickleSizer;
 
 // An abstraction to isolate users from the differences between native
 // pathnames on different platforms.
@@ -373,12 +372,11 @@ class BASE_EXPORT FilePath {
   // internally calls SysWideToNativeMB() on POSIX systems other than Mac
   // and Chrome OS, to mitigate the encoding issue. See the comment at
   // AsUTF8Unsafe() for details.
-  static FilePath FromUTF8Unsafe(StringPiece utf8);
+  static FilePath FromUTF8Unsafe(const std::string& utf8);
 
   // Similar to FromUTF8Unsafe, but accepts UTF-16 instead.
-  static FilePath FromUTF16Unsafe(StringPiece16 utf16);
+  static FilePath FromUTF16Unsafe(const string16& utf16);
 
-  void GetSizeForPickle(PickleSizer* sizer) const;
   void WriteToPickle(Pickle* pickle) const;
   bool ReadFromPickle(PickleIterator* iter);
 

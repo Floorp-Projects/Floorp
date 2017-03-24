@@ -15,7 +15,8 @@ EXPORTS += [
 for var in ('UNICODE', '_UNICODE'):
     DEFINES[var] = True
 
-LOCAL_INCLUDES += ['/security/sandbox/chromium-shim']
-LOCAL_INCLUDES += ['/security/sandbox/chromium']
+LOCAL_INCLUDES += [
+    '/security/sandbox/chromium',
+]
 
 FINAL_LIBRARY = 'xul'

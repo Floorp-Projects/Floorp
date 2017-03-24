@@ -10,33 +10,23 @@
 #include <string>
 
 #include "base/base_export.h"
-#include "base/strings/string_piece.h"
 #include "build/build_config.h"
 
 namespace base {
 
-// Generate a 128-bit (pseudo) random GUID in the form of version 4 as described
-// in RFC 4122, section 4.4.
-// The format of GUID version 4 must be xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx,
-// where y is one of [8, 9, A, B].
-// The hexadecimal values "a" through "f" are output as lower case characters.
+// Generate a 128-bit random GUID of the form: "%08X-%04X-%04X-%04X-%012llX".
 // If GUID generation fails an empty string is returned.
+// The POSIX implementation uses pseudo random number generation to create
+// the GUID.  The Windows implementation uses system services.
 BASE_EXPORT std::string GenerateGUID();
 
-// Returns true if the input string conforms to the version 4 GUID format.
-// Note that this does NOT check if the hexadecimal values "a" through "f"
-// are in lower case characters, as Version 4 RFC says onput they're
-// case insensitive. (Use IsValidGUIDOutputString for checking if the
-// given string is valid output string)
-BASE_EXPORT bool IsValidGUID(const base::StringPiece& guid);
+// Returns true if the input string conforms to the GUID format.
+BASE_EXPORT bool IsValidGUID(const std::string& guid);
 
-// Returns true if the input string is valid version 4 GUID output string.
-// This also checks if the hexadecimal values "a" through "f" are in lower
-// case characters.
-BASE_EXPORT bool IsValidGUIDOutputString(const base::StringPiece& guid);
-
+#if defined(OS_POSIX)
 // For unit testing purposes only.  Do not use outside of tests.
 BASE_EXPORT std::string RandomDataToGUIDString(const uint64_t bytes[2]);
+#endif
 
 }  // namespace base
 

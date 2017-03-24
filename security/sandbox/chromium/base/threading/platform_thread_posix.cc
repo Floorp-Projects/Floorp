@@ -11,14 +11,10 @@
 #include <stdint.h>
 #include <sys/resource.h>
 #include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
 
-#include <memory>
-
-#include "base/debug/activity_tracker.h"
 #include "base/lazy_instance.h"
 #include "base/logging.h"
+#include "base/memory/scoped_ptr.h"
 #include "base/threading/platform_thread_internal_posix.h"
 #include "base/threading/thread_id_name_manager.h"
 #include "base/threading/thread_restrictions.h"
@@ -26,11 +22,14 @@
 
 #if defined(OS_LINUX)
 #include <sys/syscall.h>
+#elif defined(OS_ANDROID)
+#include <sys/types.h>
 #endif
 
 namespace base {
 
 void InitThreading();
+void InitOnThread();
 void TerminateOnThread();
 size_t GetDefaultThreadStackSize(const pthread_attr_t& attributes);
 
@@ -46,22 +45,19 @@ struct ThreadParams {
 };
 
 void* ThreadFunc(void* params) {
+  base::InitOnThread();
+
   PlatformThread::Delegate* delegate = nullptr;
 
   {
-    std::unique_ptr<ThreadParams> thread_params(
-        static_cast<ThreadParams*>(params));
+    scoped_ptr<ThreadParams> thread_params(static_cast<ThreadParams*>(params));
 
     delegate = thread_params->delegate;
     if (!thread_params->joinable)
       base::ThreadRestrictions::SetSingletonAllowed(false);
 
-#if !defined(OS_NACL)
-    // Threads on linux/android may inherit their priority from the thread
-    // where they were created. This explicitly sets the priority of all new
-    // threads.
-    PlatformThread::SetCurrentThreadPriority(thread_params->priority);
-#endif
+    if (thread_params->priority != ThreadPriority::NORMAL)
+      PlatformThread::SetCurrentThreadPriority(thread_params->priority);
   }
 
   ThreadIdNameManager::GetInstance()->RegisterThread(
@@ -101,7 +97,7 @@ bool CreateThread(size_t stack_size,
   if (stack_size > 0)
     pthread_attr_setstacksize(&attributes, stack_size);
 
-  std::unique_ptr<ThreadParams> params(new ThreadParams);
+  scoped_ptr<ThreadParams> params(new ThreadParams);
   params->delegate = delegate;
   params->joinable = joinable;
   params->priority = priority;
@@ -188,32 +184,21 @@ const char* PlatformThread::GetName() {
 bool PlatformThread::CreateWithPriority(size_t stack_size, Delegate* delegate,
                                         PlatformThreadHandle* thread_handle,
                                         ThreadPriority priority) {
-  return CreateThread(stack_size, true /* joinable thread */, delegate,
-                      thread_handle, priority);
+  return CreateThread(stack_size, true,  // joinable thread
+                      delegate, thread_handle, priority);
 }
 
 // static
 bool PlatformThread::CreateNonJoinable(size_t stack_size, Delegate* delegate) {
-  return CreateNonJoinableWithPriority(stack_size, delegate,
-                                       ThreadPriority::NORMAL);
-}
-
-// static
-bool PlatformThread::CreateNonJoinableWithPriority(size_t stack_size,
-                                                   Delegate* delegate,
-                                                   ThreadPriority priority) {
   PlatformThreadHandle unused;
 
   bool result = CreateThread(stack_size, false /* non-joinable thread */,
-                             delegate, &unused, priority);
+                             delegate, &unused, ThreadPriority::NORMAL);
   return result;
 }
 
 // static
 void PlatformThread::Join(PlatformThreadHandle thread_handle) {
-  // Record the event that this thread is blocking upon (for hang diagnosis).
-  base::debug::ScopedThreadJoinActivity thread_activity(&thread_handle);
-
   // Joining another thread may block the current thread for a long time, since
   // the thread referred to by |thread_handle| may still be running long-lived /
   // blocking tasks.
@@ -221,25 +206,8 @@ void PlatformThread::Join(PlatformThreadHandle thread_handle) {
   CHECK_EQ(0, pthread_join(thread_handle.platform_handle(), NULL));
 }
 
-// static
-void PlatformThread::Detach(PlatformThreadHandle thread_handle) {
-  CHECK_EQ(0, pthread_detach(thread_handle.platform_handle()));
-}
-
 // Mac has its own Set/GetCurrentThreadPriority() implementations.
 #if !defined(OS_MACOSX)
-
-// static
-bool PlatformThread::CanIncreaseCurrentThreadPriority() {
-#if defined(OS_NACL)
-  return false;
-#else
-  // Only root can raise thread priority on POSIX environment. On Linux, users
-  // who have CAP_SYS_NICE permission also can raise the thread priority, but
-  // libcap.so would be needed to check the capability.
-  return geteuid() == 0;
-#endif  // defined(OS_NACL)
-}
 
 // static
 void PlatformThread::SetCurrentThreadPriority(ThreadPriority priority) {

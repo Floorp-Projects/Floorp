@@ -49,10 +49,9 @@ struct DllInterceptionData;
 //         sandbox::INTERCEPTION_EAT, L"MyCreateDirectoryW@12", MY_ID_2))
 //   return false;
 //
-// sandbox::ResultCode rc = interception_manager.InitializeInterceptions();
-// if (rc != sandbox::SBOX_ALL_OK) {
+// if (!interception_manager.InitializeInterceptions()) {
 //   DWORD error = ::GetLastError();
-//   return rc;
+//   return false;
 // }
 //
 // Any required syncronization must be performed outside this class. Also, it is
@@ -123,7 +122,7 @@ class InterceptionManager {
   bool AddToUnloadModules(const wchar_t* dll_name);
 
   // Initializes all interceptions on the client.
-  // Returns SBOX_ALL_OK on success, or an appropriate error code.
+  // Returns true on success.
   //
   // The child process must be created suspended, and cannot be resumed until
   // after this method returns. In addition, no action should be performed on
@@ -132,13 +131,12 @@ class InterceptionManager {
   //
   // This function must be called only once, after all interceptions have been
   // set up using AddToPatchedFunctions.
-  ResultCode InitializeInterceptions();
+  bool InitializeInterceptions();
 
  private:
   // Used to store the interception information until the actual set-up.
   struct InterceptionData {
     InterceptionData();
-    InterceptionData(const InterceptionData& other);
     ~InterceptionData();
 
     InterceptionType type;            // Interception type.
@@ -193,24 +191,24 @@ class InterceptionManager {
 
   // Allocates a buffer on the child's address space (returned on
   // remote_buffer), and fills it with the contents of a local buffer.
-  // Returns SBOX_ALL_OK on success.
-  ResultCode CopyDataToChild(const void* local_buffer, size_t buffer_bytes,
-                             void** remote_buffer) const;
+  // Returns true on success.
+  bool CopyDataToChild(const void* local_buffer, size_t buffer_bytes,
+                       void** remote_buffer) const;
 
   // Performs the cold patch (from the parent) of ntdll.
-  // Returns SBOX_ALL_OK on success.
+  // Returns true on success.
   //
   // This method will insert additional interceptions to launch the interceptor
   // agent on the child process, if there are additional interceptions to do.
-  ResultCode PatchNtdll(bool hot_patch_needed);
+  bool PatchNtdll(bool hot_patch_needed);
 
   // Peforms the actual interceptions on ntdll.
   // thunks is the memory to store all the thunks for this dll (on the child),
   // and dll_data is a local buffer to hold global dll interception info.
-  // Returns SBOX_ALL_OK on success.
-  ResultCode PatchClientFunctions(DllInterceptionData* thunks,
-                                  size_t thunk_bytes,
-                                  DllInterceptionData* dll_data);
+  // Returns true on success.
+  bool PatchClientFunctions(DllInterceptionData* thunks,
+                            size_t thunk_bytes,
+                            DllInterceptionData* dll_data);
 
   // The process to intercept.
   TargetProcess* child_;

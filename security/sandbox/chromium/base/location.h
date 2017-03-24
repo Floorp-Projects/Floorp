@@ -11,7 +11,7 @@
 #include <string>
 
 #include "base/base_export.h"
-#include "base/hash.h"
+#include "base/containers/hash_tables.h"
 
 namespace tracked_objects {
 
@@ -59,7 +59,7 @@ class BASE_EXPORT Location {
       // it comes from __FILE__, so no need to check the contents of the string.
       // See the definition of FROM_HERE in location.h, and how it is used
       // elsewhere.
-      return base::HashInts(reinterpret_cast<uintptr_t>(location.file_name()),
+      return base::HashPair(reinterpret_cast<uintptr_t>(location.file_name()),
                             location.line_number());
     }
   };
@@ -97,7 +97,7 @@ struct BASE_EXPORT LocationSnapshot {
 BASE_EXPORT const void* GetProgramCounter();
 
 // Define a macro to record the current source location.
-#define FROM_HERE FROM_HERE_WITH_EXPLICIT_FUNCTION(__func__)
+#define FROM_HERE FROM_HERE_WITH_EXPLICIT_FUNCTION(__FUNCTION__)
 
 #define FROM_HERE_WITH_EXPLICIT_FUNCTION(function_name)                        \
     ::tracked_objects::Location(function_name,                                 \
