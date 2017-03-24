@@ -58,11 +58,19 @@
                 ok(registration.activeWorker === null);
 
                 return waitForServiceWorkerRegistrationChange(registration, function () {
+                  // Activating
                   ok(registration.installingWorker === null);
                   ok(registration.waitingWorker === null);
                   ok(registration.activeWorker !== null);
 
-                  return registration;
+                  return waitForServiceWorkerRegistrationChange(registration, function () {
+                    // Activated
+                    ok(registration.installingWorker === null);
+                    ok(registration.waitingWorker === null);
+                    ok(registration.activeWorker !== null);
+
+                    return registration;
+                  });
                 });
               });
             });
@@ -83,11 +91,19 @@
               ok(registration.activeWorker !== null);
 
               return waitForServiceWorkerRegistrationChange(registration, function () {
+                // Activating
                 ok(registration.installingWorker === null);
                 ok(registration.waitingWorker === null);
                 ok(registration.activeWorker !== null);
 
-                return registration;
+                return waitForServiceWorkerRegistrationChange(registration, function () {
+                  // Activated
+                  ok(registration.installingWorker === null);
+                  ok(registration.waitingWorker === null);
+                  ok(registration.activeWorker !== null);
+
+                  return registration;
+                });
               });
             });
           });
