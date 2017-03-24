@@ -48,7 +48,7 @@ public class SearchEnginePreference extends DialogPreference {
 
     @Override
     protected void onPrepareDialogBuilder(AlertDialog.Builder builder) {
-        final SearchEngineAdapter adapter = new SearchEngineAdapter();
+        final SearchEngineAdapter adapter = new SearchEngineAdapter(getContext());
 
         builder.setTitle(R.string.preference_dialog_title_search_engine);
 

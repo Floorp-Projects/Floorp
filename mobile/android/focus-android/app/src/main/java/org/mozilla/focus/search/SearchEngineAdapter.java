@@ -5,6 +5,9 @@
 
 package org.mozilla.focus.search;
 
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,9 +24,13 @@ import java.util.List;
  */
 public class SearchEngineAdapter extends BaseAdapter {
     private List<SearchEngine> searchEngines;
+    private SearchEngine defaultSearchEngine;
 
-    public SearchEngineAdapter() {
-        searchEngines = SearchEngineManager.getInstance().getSearchEngines();
+    public SearchEngineAdapter(Context context) {
+        SearchEngineManager searchEngineManager = SearchEngineManager.getInstance();
+
+        searchEngines = searchEngineManager.getSearchEngines();
+        defaultSearchEngine = searchEngineManager.getDefaultSearchEngine(context);
     }
 
     @Override
@@ -44,6 +51,7 @@ public class SearchEngineAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         final SearchEngine searchEngine = getItem(position);
+        final boolean isDefaultSearchEngine = searchEngine.getName().equals(defaultSearchEngine.getName());
 
         if (convertView == null) {
             convertView = LayoutInflater.from(parent.getContext()).inflate(
@@ -52,6 +60,8 @@ public class SearchEngineAdapter extends BaseAdapter {
 
         final TextView titleView = (TextView) convertView.findViewById(R.id.title);
         titleView.setText(searchEngine.getName());
+        titleView.setTypeface(isDefaultSearchEngine ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+        titleView.setTextColor(isDefaultSearchEngine ? Color.WHITE : 0xFFC7C7C7);
 
         final ImageView iconView = (ImageView) convertView.findViewById(R.id.icon);
         iconView.setImageBitmap(searchEngine.getIcon());

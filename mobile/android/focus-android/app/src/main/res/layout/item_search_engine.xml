@@ -13,8 +13,7 @@
         android:id="@+id/icon"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:layout_gravity="center_vertical"
-        android:background="#555555" />
+        android:layout_gravity="center_vertical" />
 
     <TextView
         android:id="@+id/title"
