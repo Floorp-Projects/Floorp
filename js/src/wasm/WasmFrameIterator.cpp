@@ -226,8 +226,11 @@ FrameIterator::debugEnabled() const
 {
     MOZ_ASSERT(!done() && code_);
     MOZ_ASSERT_IF(!missingFrameMessage_, codeRange_->kind() == CodeRange::Function);
+    MOZ_ASSERT_IF(missingFrameMessage_, !codeRange_ && !fp_);
     // Only non-imported functions can have debug frames.
     return code_->metadata().debugEnabled &&
+           fp_ &&
+           !missingFrameMessage_ &&
            codeRange_->funcIndex() >= code_->metadata().funcImports.length();
 }
 
@@ -235,6 +238,7 @@ DebugFrame*
 FrameIterator::debugFrame() const
 {
     MOZ_ASSERT(!done() && debugEnabled());
+    MOZ_ASSERT(fp_);
     return FrameToDebugFrame(fp_);
 }
 
