@@ -64,10 +64,6 @@ import android.util.Log;
 public class Distribution {
     private static final String LOGTAG = "GeckoDistribution";
 
-    // We use "AndroidPreferences" for profile-scoped pref for backward compatibility(bug 1295675)
-    public static final String PREF_KEY_PROFILE_PREFERENCES = "AndroidPreferences";
-    public static final String PREF_KEY_APPLICATION_PREFERENCES = "ApplicationPreferences";
-
     private static final int STATE_UNKNOWN = 0;
     private static final int STATE_NONE = 1;
     private static final int STATE_SET = 2;
@@ -414,11 +410,10 @@ public class Distribution {
     }
 
     /**
-     * Get the preferences from the preferences.json file, if any exist.
-     * There are two types of preferences : Application-scoped and profile-scoped (bug 1295675)
+     * Get the Android preferences from the preferences.json file, if any exist.
      * @return The preferences in a JSONObject, or an empty JSONObject if no preferences are defined.
      */
-    public JSONObject getPreferences(String key) {
+    public JSONObject getAndroidPreferences() {
         final File descFile = getDistributionFile("preferences.json");
         if (descFile == null) {
             // Logging and existence checks are handled in getDistributionFile.
@@ -428,11 +423,11 @@ public class Distribution {
         try {
             final JSONObject all = FileUtils.readJSONObjectFromFile(descFile);
 
-            if (!all.has(key)) {
+            if (!all.has("AndroidPreferences")) {
                 return new JSONObject();
             }
 
-            return all.getJSONObject(key);
+            return all.getJSONObject("AndroidPreferences");
 
         } catch (IOException e) {
             Log.e(LOGTAG, "Error getting distribution descriptor file.", e);
