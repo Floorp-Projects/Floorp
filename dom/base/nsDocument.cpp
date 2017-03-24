@@ -1327,6 +1327,7 @@ nsIDocument::nsIDocument()
     mFontFaceSetDirty(true),
     mGetUserFontSetCalled(false),
     mPostedFlushUserFontSet(false),
+    mEverInForeground(false),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
     mStyleBackendType(StyleBackendType::None),
@@ -1425,6 +1426,8 @@ nsDocument::nsDocument(const char* aContentType)
 
   // void state used to differentiate an empty source from an unselected source
   mPreloadPictureFoundSource.SetIsVoid(true);
+
+  mEverInForeground = false;
 }
 
 void
@@ -10326,6 +10329,22 @@ nsDocument::RemoveResponsiveContent(nsIContent* aContent)
 }
 
 void
+nsDocument::AddMediaContent(nsIContent* aContent)
+{
+  MOZ_ASSERT(aContent);
+  MOZ_ASSERT(aContent->IsHTMLElement(nsGkAtoms::video) ||
+             aContent->IsHTMLElement(nsGkAtoms::audio));
+  mMediaContent.PutEntry(aContent);
+}
+
+void
+nsDocument::RemoveMediaContent(nsIContent* aContent)
+{
+  MOZ_ASSERT(aContent);
+  mMediaContent.RemoveEntry(aContent);
+}
+
+void
 nsDocument::NotifyMediaFeatureValuesChanged()
 {
   for (auto iter = mResponsiveContent.ConstIter(); !iter.Done();
@@ -12193,10 +12212,19 @@ nsDocument::PostVisibilityUpdateEvent()
 void
 nsDocument::MaybeActiveMediaComponents()
 {
+  if (mEverInForeground) {
+    return;
+  }
+
   if (!mWindow) {
     return;
   }
 
+  if (mMediaContent.IsEmpty()) {
+    return;
+  }
+
+  mEverInForeground = true;
   GetWindow()->MaybeActiveMediaComponents();
 }
 

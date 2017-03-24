@@ -369,10 +369,6 @@ private:
   friend class ContentChild;
 };
 
-const char* SuspendTypeToStr(const nsSuspendedTypes& aSuspend);
-const char* AudibleStateToStr(const AudioChannelService::AudibleState& aAudible);
-const char* AudibleChangedReasonToStr(const AudioChannelService::AudibleChangedReasons& aReason);
-
 } // namespace dom
 } // namespace mozilla
 
