@@ -430,15 +430,7 @@ NativeObject::addProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     MOZ_ASSERT(!JSID_IS_VOID(id));
     MOZ_ASSERT(getter != JS_PropertyStub);
     MOZ_ASSERT(setter != JS_StrictPropertyStub);
-
-    bool extensible;
-    if (!IsExtensible(cx, obj, &extensible))
-        return nullptr;
-    if (!extensible) {
-        if (!cx->helperThread())
-            JSObject::reportNotExtensible(cx, obj);
-        return nullptr;
-    }
+    MOZ_ASSERT(obj->nonProxyIsExtensible());
 
     AutoKeepShapeTables keep(cx);
     ShapeTable::Entry* entry = nullptr;
