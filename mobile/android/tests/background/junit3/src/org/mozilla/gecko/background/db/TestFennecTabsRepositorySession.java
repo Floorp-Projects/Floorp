@@ -198,7 +198,7 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
           TEST_TABS_CLIENT_GUID_IS_LOCAL_SELECTION, TEST_TABS_CLIENT_GUID_IS_LOCAL_SELECTION_ARGS, positionAscending);
       CursorDumper.dumpCursor(cursor);
 
-      final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, TEST_CLIENT_GUID, TEST_CLIENT_NAME);
+      final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, TEST_CLIENT_GUID, TEST_CLIENT_NAME, 0);
 
       assertEquals(TEST_CLIENT_GUID, tabsRecord.guid);
       assertEquals(TEST_CLIENT_NAME, tabsRecord.clientName);
