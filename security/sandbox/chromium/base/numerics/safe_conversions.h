@@ -18,7 +18,7 @@ namespace base {
 // Convenience function that returns true if the supplied value is in range
 // for the destination type.
 template <typename Dst, typename Src>
-constexpr bool IsValueInRangeForNumericType(Src value) {
+inline bool IsValueInRangeForNumericType(Src value) {
   return internal::DstRangeRelationToSrcRange<Dst>(value) ==
          internal::RANGE_VALID;
 }
@@ -26,7 +26,7 @@ constexpr bool IsValueInRangeForNumericType(Src value) {
 // Convenience function for determining if a numeric value is negative without
 // throwing compiler warnings on: unsigned(value) < 0.
 template <typename T>
-constexpr typename std::enable_if<std::numeric_limits<T>::is_signed, bool>::type
+typename std::enable_if<std::numeric_limits<T>::is_signed, bool>::type
 IsValueNegative(T value) {
   static_assert(std::numeric_limits<T>::is_specialized,
                 "Argument must be numeric.");
@@ -34,61 +34,38 @@ IsValueNegative(T value) {
 }
 
 template <typename T>
-constexpr typename std::enable_if<!std::numeric_limits<T>::is_signed,
-                                  bool>::type IsValueNegative(T) {
+typename std::enable_if<!std::numeric_limits<T>::is_signed, bool>::type
+    IsValueNegative(T) {
   static_assert(std::numeric_limits<T>::is_specialized,
                 "Argument must be numeric.");
   return false;
 }
 
-// Just fires a CHECK(false). Used for numeric boundary errors.
-struct CheckOnFailure {
+// checked_cast<> is analogous to static_cast<> for numeric types,
+// except that it CHECKs that the specified numeric conversion will not
+// overflow or underflow. NaN source will always trigger a CHECK.
+template <typename Dst, typename Src>
+inline Dst checked_cast(Src value) {
+  CHECK(IsValueInRangeForNumericType<Dst>(value));
+  return static_cast<Dst>(value);
+}
+
+// HandleNaN will cause this class to CHECK(false).
+struct SaturatedCastNaNBehaviorCheck {
   template <typename T>
-  static T HandleFailure() {
+  static T HandleNaN() {
     CHECK(false);
     return T();
   }
 };
 
-// checked_cast<> is analogous to static_cast<> for numeric types,
-// except that it CHECKs that the specified numeric conversion will not
-// overflow or underflow. NaN source will always trigger a CHECK.
-template <typename Dst,
-          class CheckHandler = CheckOnFailure,
-          typename Src>
-constexpr Dst checked_cast(Src value) {
-  // This throws a compile-time error on evaluating the constexpr if it can be
-  // determined at compile-time as failing, otherwise it will CHECK at runtime.
-  return IsValueInRangeForNumericType<Dst>(value)
-             ? static_cast<Dst>(value)
-             : CheckHandler::template HandleFailure<Dst>();
-}
-
 // HandleNaN will return 0 in this case.
 struct SaturatedCastNaNBehaviorReturnZero {
   template <typename T>
-  static constexpr T HandleFailure() {
+  static T HandleNaN() {
     return T();
   }
 };
-
-namespace internal {
-// This wrapper is used for C++11 constexpr support by avoiding the declaration
-// of local variables in the saturated_cast template function.
-template <typename Dst, class NaNHandler, typename Src>
-constexpr Dst saturated_cast_impl(const Src value,
-                                  const RangeConstraint constraint) {
-  return constraint == RANGE_VALID
-             ? static_cast<Dst>(value)
-             : (constraint == RANGE_UNDERFLOW
-                    ? std::numeric_limits<Dst>::min()
-                    : (constraint == RANGE_OVERFLOW
-                           ? std::numeric_limits<Dst>::max()
-                           : (constraint == RANGE_INVALID
-                                  ? NaNHandler::template HandleFailure<Dst>()
-                                  : (NOTREACHED(), static_cast<Dst>(value)))));
-}
-}  // namespace internal
 
 // saturated_cast<> is analogous to static_cast<> for numeric types, except
 // that the specified numeric conversion will saturate rather than overflow or
@@ -97,18 +74,35 @@ constexpr Dst saturated_cast_impl(const Src value,
 template <typename Dst,
           class NaNHandler = SaturatedCastNaNBehaviorReturnZero,
           typename Src>
-constexpr Dst saturated_cast(Src value) {
-  return std::numeric_limits<Dst>::is_iec559
-             ? static_cast<Dst>(value)  // Floating point optimization.
-             : internal::saturated_cast_impl<Dst, NaNHandler>(
-                   value, internal::DstRangeRelationToSrcRange<Dst>(value));
+inline Dst saturated_cast(Src value) {
+  // Optimization for floating point values, which already saturate.
+  if (std::numeric_limits<Dst>::is_iec559)
+    return static_cast<Dst>(value);
+
+  switch (internal::DstRangeRelationToSrcRange<Dst>(value)) {
+    case internal::RANGE_VALID:
+      return static_cast<Dst>(value);
+
+    case internal::RANGE_UNDERFLOW:
+      return std::numeric_limits<Dst>::min();
+
+    case internal::RANGE_OVERFLOW:
+      return std::numeric_limits<Dst>::max();
+
+    // Should fail only on attempting to assign NaN to a saturated integer.
+    case internal::RANGE_INVALID:
+      return NaNHandler::template HandleNaN<Dst>();
+  }
+
+  NOTREACHED();
+  return static_cast<Dst>(value);
 }
 
 // strict_cast<> is analogous to static_cast<> for numeric types, except that
 // it will cause a compile failure if the destination type is not large enough
 // to contain any value in the source type. It performs no runtime checking.
 template <typename Dst, typename Src>
-constexpr Dst strict_cast(Src value) {
+inline Dst strict_cast(Src value) {
   static_assert(std::numeric_limits<Src>::is_specialized,
                 "Argument must be numeric.");
   static_assert(std::numeric_limits<Dst>::is_specialized,
@@ -134,33 +128,33 @@ constexpr Dst strict_cast(Src value) {
 // compiles cleanly with truncation warnings enabled.
 // This template should introduce no runtime overhead, but it also provides no
 // runtime checking of any of the associated mathematical operations. Use
-// CheckedNumeric for runtime range checks of the actual value being assigned.
+// CheckedNumeric for runtime range checks of tha actual value being assigned.
 template <typename T>
 class StrictNumeric {
  public:
   typedef T type;
 
-  constexpr StrictNumeric() : value_(0) {}
+  StrictNumeric() : value_(0) {}
 
   // Copy constructor.
   template <typename Src>
-  constexpr StrictNumeric(const StrictNumeric<Src>& rhs)
+  StrictNumeric(const StrictNumeric<Src>& rhs)
       : value_(strict_cast<T>(rhs.value_)) {}
 
   // This is not an explicit constructor because we implicitly upgrade regular
   // numerics to StrictNumerics to make them easier to use.
   template <typename Src>
-  constexpr StrictNumeric(Src value)
+  StrictNumeric(Src value)
       : value_(strict_cast<T>(value)) {}
 
   // The numeric cast operator basically handles all the magic.
   template <typename Dst>
-  constexpr operator Dst() const {
+  operator Dst() const {
     return strict_cast<Dst>(value_);
   }
 
  private:
-  const T value_;
+  T value_;
 };
 
 // Explicitly make a shorter size_t typedef for convenience.

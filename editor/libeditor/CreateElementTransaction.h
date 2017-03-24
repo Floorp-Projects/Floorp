@@ -57,7 +57,7 @@ protected:
   virtual ~CreateElementTransaction();
 
   // The document into which the new node will be inserted.
-  EditorBase* mEditorBase;
+  RefPtr<EditorBase> mEditorBase;
 
   // The tag (mapping to object type) for the new element.
   nsCOMPtr<nsIAtom> mTag;

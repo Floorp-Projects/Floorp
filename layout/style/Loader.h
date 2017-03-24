@@ -344,6 +344,32 @@ public:
    * Asynchronously load the stylesheet at aURL.  If a successful result is
    * returned, aObserver is guaranteed to be notified asynchronously once the
    * sheet is loaded and marked complete.  This method can be used to load
+   * sheets not associated with a document.
+   *
+   * @param aURL the URL of the sheet to load
+   * @param aParsingMode the mode in which to parse the sheet
+   *        (see comments at enum SheetParsingMode, above).
+   * @param aUseSystemPrincipal if true, give the resulting sheet the system
+   * principal no matter where it's being loaded from.
+   * @param aObserver the observer to notify when the load completes.
+   *                  Must not be null.
+   * @param [out] aSheet the sheet to load. Note that the sheet may well
+   *              not be loaded by the time this method returns.
+   *
+   * NOTE: At the moment, this method assumes the sheet will be UTF-8, but
+   * ideally it would allow arbitrary encodings.  Callers should NOT depend on
+   * non-UTF8 sheets being treated as UTF-8 by this method.
+   */
+  nsresult LoadSheet(nsIURI* aURL,
+                     SheetParsingMode aParsingMode,
+                     bool aUseSystemPrincipal,
+                     nsICSSLoaderObserver* aObserver,
+                     RefPtr<StyleSheet>* aSheet);
+
+  /**
+   * Asynchronously load the stylesheet at aURL.  If a successful result is
+   * returned, aObserver is guaranteed to be notified asynchronously once the
+   * sheet is loaded and marked complete.  This method can be used to load
    * sheets not associated with a document.  This method cannot be used to
    * load user or agent sheets.
    *

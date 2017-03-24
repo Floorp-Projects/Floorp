@@ -7,7 +7,6 @@
 
 #include <stddef.h>
 
-#include <tuple>
 #include <type_traits>
 
 #include "base/bind_helpers.h"
@@ -18,6 +17,10 @@
 #include "base/tuple.h"
 #include "build/build_config.h"
 
+#if defined(OS_WIN)
+#include "base/bind_internal_win.h"
+#endif
+
 namespace base {
 namespace internal {
 
@@ -25,87 +28,63 @@ namespace internal {
 //
 //
 // CONCEPTS:
-//  Functor -- A movable type representing something that should be called.
-//             All function pointers and Callback<> are functors even if the
-//             invocation syntax differs.
+//  Runnable -- A type (really a type class) that has a single Run() method
+//              and a RunType typedef that corresponds to the type of Run().
+//              A Runnable can declare that it should treated like a method
+//              call by including a typedef named IsMethod.  The value of
+//              this typedef is NOT inspected, only the existence.  When a
+//              Runnable declares itself a method, Bind() will enforce special
+//              refcounting + WeakPtr handling semantics for the first
+//              parameter which is expected to be an object.
+//  Functor -- A copyable type representing something that should be called.
+//             All function pointers, Callback<>, and Runnables are functors
+//             even if the invocation syntax differs.
 //  RunType -- A function type (as opposed to function _pointer_ type) for
-//             a Callback<>::Run().  Usually just a convenience typedef.
+//             a Run() function.  Usually just a convenience typedef.
 //  (Bound)Args -- A set of types that stores the arguments.
 //
 // Types:
+//  RunnableAdapter<> -- Wraps the various "function" pointer types into an
+//                       object that adheres to the Runnable interface.
 //  ForceVoidReturn<> -- Helper class for translating function signatures to
 //                       equivalent forms with a "void" return type.
-//  FunctorTraits<> -- Type traits used to determine the correct RunType and
-//                     invocation manner for a Functor.  This is where function
+//  FunctorTraits<> -- Type traits used determine the correct RunType and
+//                     RunnableType for a Functor.  This is where function
 //                     signature adapters are applied.
-//  InvokeHelper<> -- Take a Functor + arguments and actully invokes it.
+//  MakeRunnable<> -- Takes a Functor and returns an object in the Runnable
+//                    type class that represents the underlying Functor.
+//  InvokeHelper<> -- Take a Runnable + arguments and actully invokes it.
 //                    Handle the differing syntaxes needed for WeakPtr<>
-//                    support.  This is separate from Invoker to avoid creating
-//                    multiple version of Invoker<>.
-//  Invoker<> -- Unwraps the curried parameters and executes the Functor.
+//                    support, and for ignoring return values.  This is separate
+//                    from Invoker to avoid creating multiple version of
+//                    Invoker<>.
+//  Invoker<> -- Unwraps the curried parameters and executes the Runnable.
 //  BindState<> -- Stores the curried parameters, and is the main entry point
-//                 into the Bind() system.
+//                 into the Bind() system, doing most of the type resolution.
+//                 There are ARITY BindState types.
 
-template <typename...>
-struct make_void {
-  using type = void;
-};
+// HasNonConstReferenceParam selects true_type when any of the parameters in
+// |Sig| is a non-const reference.
+// Implementation note: This non-specialized case handles zero-arity case only.
+// Non-zero-arity cases should be handled by the specialization below.
+template <typename List>
+struct HasNonConstReferenceItem : false_type {};
 
-// A clone of C++17 std::void_t.
-// Unlike the original version, we need |make_void| as a helper struct to avoid
-// a C++14 defect.
-// ref: http://en.cppreference.com/w/cpp/types/void_t
-// ref: http://open-std.org/JTC1/SC22/WG21/docs/cwg_defects.html#1558
-template <typename... Ts>
-using void_t = typename make_void<Ts...>::type;
-
-template <typename Callable,
-          typename Signature = decltype(&Callable::operator())>
-struct ExtractCallableRunTypeImpl;
-
-template <typename Callable, typename R, typename... Args>
-struct ExtractCallableRunTypeImpl<Callable, R(Callable::*)(Args...) const> {
-  using Type = R(Args...);
-};
-
-// Evaluated to RunType of the given callable type.
-// Example:
-//   auto f = [](int, char*) { return 0.1; };
-//   ExtractCallableRunType<decltype(f)>
-//   is evaluated to
-//   double(int, char*);
-template <typename Callable>
-using ExtractCallableRunType =
-    typename ExtractCallableRunTypeImpl<Callable>::Type;
-
-// IsConvertibleToRunType<Functor> is std::true_type if |Functor| has operator()
-// and convertible to the corresponding function pointer. Otherwise, it's
-// std::false_type.
-// Example:
-//   IsConvertibleToRunType<void(*)()>::value is false.
-//
-//   struct Foo {};
-//   IsConvertibleToRunType<void(Foo::*)()>::value is false.
-//
-//   auto f = []() {};
-//   IsConvertibleToRunType<decltype(f)>::value is true.
-//
-//   int i = 0;
-//   auto g = [i]() {};
-//   IsConvertibleToRunType<decltype(g)>::value is false.
-template <typename Functor, typename SFINAE = void>
-struct IsConvertibleToRunType : std::false_type {};
-
-template <typename Callable>
-struct IsConvertibleToRunType<Callable, void_t<decltype(&Callable::operator())>>
-    : std::is_convertible<Callable, ExtractCallableRunType<Callable>*> {};
+// Implementation note: Select true_type if the first parameter is a non-const
+// reference.  Otherwise, skip the first parameter and check rest of parameters
+// recursively.
+template <typename T, typename... Args>
+struct HasNonConstReferenceItem<TypeList<T, Args...>>
+    : std::conditional<is_non_const_reference<T>::value,
+                       true_type,
+                       HasNonConstReferenceItem<TypeList<Args...>>>::type {};
 
 // HasRefCountedTypeAsRawPtr selects true_type when any of the |Args| is a raw
 // pointer to a RefCounted type.
 // Implementation note: This non-specialized case handles zero-arity case only.
 // Non-zero-arity cases should be handled by the specialization below.
 template <typename... Args>
-struct HasRefCountedTypeAsRawPtr : std::false_type {};
+struct HasRefCountedTypeAsRawPtr : false_type {};
 
 // Implementation note: Select true_type if the first parameter is a raw pointer
 // to a RefCounted type. Otherwise, skip the first parameter and check rest of
@@ -113,8 +92,116 @@ struct HasRefCountedTypeAsRawPtr : std::false_type {};
 template <typename T, typename... Args>
 struct HasRefCountedTypeAsRawPtr<T, Args...>
     : std::conditional<NeedsScopedRefptrButGetsRawPtr<T>::value,
-                       std::true_type,
+                       true_type,
                        HasRefCountedTypeAsRawPtr<Args...>>::type {};
+
+// BindsArrayToFirstArg selects true_type when |is_method| is true and the first
+// item of |Args| is an array type.
+// Implementation note: This non-specialized case handles !is_method case and
+// zero-arity case only.  Other cases should be handled by the specialization
+// below.
+template <bool is_method, typename... Args>
+struct BindsArrayToFirstArg : false_type {};
+
+template <typename T, typename... Args>
+struct BindsArrayToFirstArg<true, T, Args...> : is_array<T> {};
+
+// HasRefCountedParamAsRawPtr is the same to HasRefCountedTypeAsRawPtr except
+// when |is_method| is true HasRefCountedParamAsRawPtr skips the first argument.
+// Implementation note: This non-specialized case handles !is_method case and
+// zero-arity case only.  Other cases should be handled by the specialization
+// below.
+template <bool is_method, typename... Args>
+struct HasRefCountedParamAsRawPtr : HasRefCountedTypeAsRawPtr<Args...> {};
+
+template <typename T, typename... Args>
+struct HasRefCountedParamAsRawPtr<true, T, Args...>
+    : HasRefCountedTypeAsRawPtr<Args...> {};
+
+// RunnableAdapter<>
+//
+// The RunnableAdapter<> templates provide a uniform interface for invoking
+// a function pointer, method pointer, or const method pointer. The adapter
+// exposes a Run() method with an appropriate signature. Using this wrapper
+// allows for writing code that supports all three pointer types without
+// undue repetition.  Without it, a lot of code would need to be repeated 3
+// times.
+//
+// For method pointers and const method pointers the first argument to Run()
+// is considered to be the received of the method.  This is similar to STL's
+// mem_fun().
+//
+// This class also exposes a RunType typedef that is the function type of the
+// Run() function.
+//
+// If and only if the wrapper contains a method or const method pointer, an
+// IsMethod typedef is exposed.  The existence of this typedef (NOT the value)
+// marks that the wrapper should be considered a method wrapper.
+
+template <typename Functor>
+class RunnableAdapter;
+
+// Function.
+template <typename R, typename... Args>
+class RunnableAdapter<R(*)(Args...)> {
+ public:
+  // MSVC 2013 doesn't support Type Alias of function types.
+  // Revisit this after we update it to newer version.
+  typedef R RunType(Args...);
+
+  explicit RunnableAdapter(R(*function)(Args...))
+      : function_(function) {
+  }
+
+  R Run(typename CallbackParamTraits<Args>::ForwardType... args) {
+    return function_(CallbackForward(args)...);
+  }
+
+ private:
+  R (*function_)(Args...);
+};
+
+// Method.
+template <typename R, typename T, typename... Args>
+class RunnableAdapter<R(T::*)(Args...)> {
+ public:
+  // MSVC 2013 doesn't support Type Alias of function types.
+  // Revisit this after we update it to newer version.
+  typedef R RunType(T*, Args...);
+  using IsMethod = true_type;
+
+  explicit RunnableAdapter(R(T::*method)(Args...))
+      : method_(method) {
+  }
+
+  R Run(T* object, typename CallbackParamTraits<Args>::ForwardType... args) {
+    return (object->*method_)(CallbackForward(args)...);
+  }
+
+ private:
+  R (T::*method_)(Args...);
+};
+
+// Const Method.
+template <typename R, typename T, typename... Args>
+class RunnableAdapter<R(T::*)(Args...) const> {
+ public:
+  using RunType = R(const T*, Args...);
+  using IsMethod = true_type;
+
+  explicit RunnableAdapter(R(T::*method)(Args...) const)
+      : method_(method) {
+  }
+
+  R Run(const T* object,
+        typename CallbackParamTraits<Args>::ForwardType... args) {
+    return (object->*method_)(CallbackForward(args)...);
+  }
+
+ private:
+  R (T::*method_)(Args...) const;
+};
+
 
 // ForceVoidReturn<>
 //
@@ -124,435 +211,215 @@ struct ForceVoidReturn;
 
 template <typename R, typename... Args>
 struct ForceVoidReturn<R(Args...)> {
-  using RunType = void(Args...);
+  // MSVC 2013 doesn't support Type Alias of function types.
+  // Revisit this after we update it to newer version.
+  typedef void RunType(Args...);
 };
+
 
 // FunctorTraits<>
 //
 // See description at top of file.
-template <typename Functor, typename SFINAE = void>
-struct FunctorTraits;
-
-// For a callable type that is convertible to the corresponding function type.
-// This specialization is intended to allow binding captureless lambdas by
-// base::Bind(), based on the fact that captureless lambdas can be convertible
-// to the function type while capturing lambdas can't.
-template <typename Functor>
-struct FunctorTraits<
-    Functor,
-    typename std::enable_if<IsConvertibleToRunType<Functor>::value>::type> {
-  using RunType = ExtractCallableRunType<Functor>;
-  static constexpr bool is_method = false;
-  static constexpr bool is_nullable = false;
-
-  template <typename... RunArgs>
-  static ExtractReturnType<RunType>
-  Invoke(const Functor& functor, RunArgs&&... args) {
-    return functor(std::forward<RunArgs>(args)...);
-  }
-};
-
-// For functions.
-template <typename R, typename... Args>
-struct FunctorTraits<R (*)(Args...)> {
-  using RunType = R(Args...);
-  static constexpr bool is_method = false;
-  static constexpr bool is_nullable = true;
-
-  template <typename... RunArgs>
-  static R Invoke(R (*function)(Args...), RunArgs&&... args) {
-    return function(std::forward<RunArgs>(args)...);
-  }
-};
-
-#if defined(OS_WIN) && !defined(ARCH_CPU_X86_64)
-
-// For functions.
-template <typename R, typename... Args>
-struct FunctorTraits<R(__stdcall*)(Args...)> {
-  using RunType = R(Args...);
-  static constexpr bool is_method = false;
-  static constexpr bool is_nullable = true;
-
-  template <typename... RunArgs>
-  static R Invoke(R(__stdcall* function)(Args...), RunArgs&&... args) {
-    return function(std::forward<RunArgs>(args)...);
-  }
-};
-
-// For functions.
-template <typename R, typename... Args>
-struct FunctorTraits<R(__fastcall*)(Args...)> {
-  using RunType = R(Args...);
-  static constexpr bool is_method = false;
-  static constexpr bool is_nullable = true;
-
-  template <typename... RunArgs>
-  static R Invoke(R(__fastcall* function)(Args...), RunArgs&&... args) {
-    return function(std::forward<RunArgs>(args)...);
-  }
-};
-
-#endif  // defined(OS_WIN) && !defined(ARCH_CPU_X86_64)
-
-// For methods.
-template <typename R, typename Receiver, typename... Args>
-struct FunctorTraits<R (Receiver::*)(Args...)> {
-  using RunType = R(Receiver*, Args...);
-  static constexpr bool is_method = true;
-  static constexpr bool is_nullable = true;
-
-  template <typename ReceiverPtr, typename... RunArgs>
-  static R Invoke(R (Receiver::*method)(Args...),
-                  ReceiverPtr&& receiver_ptr,
-                  RunArgs&&... args) {
-    // Clang skips CV qualifier check on a method pointer invocation when the
-    // receiver is a subclass. Store the receiver into a const reference to
-    // T to ensure the CV check works.
-    // https://llvm.org/bugs/show_bug.cgi?id=27037
-    Receiver& receiver = *receiver_ptr;
-    return (receiver.*method)(std::forward<RunArgs>(args)...);
-  }
-};
-
-// For const methods.
-template <typename R, typename Receiver, typename... Args>
-struct FunctorTraits<R (Receiver::*)(Args...) const> {
-  using RunType = R(const Receiver*, Args...);
-  static constexpr bool is_method = true;
-  static constexpr bool is_nullable = true;
-
-  template <typename ReceiverPtr, typename... RunArgs>
-  static R Invoke(R (Receiver::*method)(Args...) const,
-                  ReceiverPtr&& receiver_ptr,
-                  RunArgs&&... args) {
-    // Clang skips CV qualifier check on a method pointer invocation when the
-    // receiver is a subclass. Store the receiver into a const reference to
-    // T to ensure the CV check works.
-    // https://llvm.org/bugs/show_bug.cgi?id=27037
-    const Receiver& receiver = *receiver_ptr;
-    return (receiver.*method)(std::forward<RunArgs>(args)...);
-  }
-};
-
-// For IgnoreResults.
 template <typename T>
-struct FunctorTraits<IgnoreResultHelper<T>> : FunctorTraits<T> {
+struct FunctorTraits {
+  using RunnableType = RunnableAdapter<T>;
+  using RunType = typename RunnableType::RunType;
+};
+
+template <typename T>
+struct FunctorTraits<IgnoreResultHelper<T>> {
+  using RunnableType = typename FunctorTraits<T>::RunnableType;
   using RunType =
-      typename ForceVoidReturn<typename FunctorTraits<T>::RunType>::RunType;
-
-  template <typename IgnoreResultType, typename... RunArgs>
-  static void Invoke(IgnoreResultType&& ignore_result_helper,
-                     RunArgs&&... args) {
-    FunctorTraits<T>::Invoke(
-        std::forward<IgnoreResultType>(ignore_result_helper).functor_,
-        std::forward<RunArgs>(args)...);
-  }
+      typename ForceVoidReturn<typename RunnableType::RunType>::RunType;
 };
 
-// For Callbacks.
-template <typename R, typename... Args,
-          CopyMode copy_mode, RepeatMode repeat_mode>
-struct FunctorTraits<Callback<R(Args...), copy_mode, repeat_mode>> {
-  using RunType = R(Args...);
-  static constexpr bool is_method = false;
-  static constexpr bool is_nullable = true;
-
-  template <typename CallbackType, typename... RunArgs>
-  static R Invoke(CallbackType&& callback, RunArgs&&... args) {
-    DCHECK(!callback.is_null());
-    return std::forward<CallbackType>(callback).Run(
-        std::forward<RunArgs>(args)...);
-  }
+template <typename T>
+struct FunctorTraits<Callback<T>> {
+  using RunnableType = Callback<T> ;
+  using RunType = typename Callback<T>::RunType;
 };
+
+
+// MakeRunnable<>
+//
+// Converts a passed in functor to a RunnableType using type inference.
+
+template <typename T>
+typename FunctorTraits<T>::RunnableType MakeRunnable(const T& t) {
+  return RunnableAdapter<T>(t);
+}
+
+template <typename T>
+typename FunctorTraits<T>::RunnableType
+MakeRunnable(const IgnoreResultHelper<T>& t) {
+  return MakeRunnable(t.functor_);
+}
+
+template <typename T>
+const typename FunctorTraits<Callback<T>>::RunnableType&
+MakeRunnable(const Callback<T>& t) {
+  DCHECK(!t.is_null());
+  return t;
+}
+
 
 // InvokeHelper<>
 //
-// There are 2 logical InvokeHelper<> specializations: normal, WeakCalls.
+// There are 3 logical InvokeHelper<> specializations: normal, void-return,
+// WeakCalls.
 //
 // The normal type just calls the underlying runnable.
 //
-// WeakCalls need special syntax that is applied to the first argument to check
-// if they should no-op themselves.
-template <bool is_weak_call, typename ReturnType>
+// We need a InvokeHelper to handle void return types in order to support
+// IgnoreResult().  Normally, if the Runnable's RunType had a void return,
+// the template system would just accept "return functor.Run()" ignoring
+// the fact that a void function is being used with return. This piece of
+// sugar breaks though when the Runnable's RunType is not void.  Thus, we
+// need a partial specialization to change the syntax to drop the "return"
+// from the invocation call.
+//
+// WeakCalls similarly need special syntax that is applied to the first
+// argument to check if they should no-op themselves.
+template <bool IsWeakCall, typename ReturnType, typename Runnable,
+          typename ArgsType>
 struct InvokeHelper;
 
-template <typename ReturnType>
-struct InvokeHelper<false, ReturnType> {
-  template <typename Functor, typename... RunArgs>
-  static inline ReturnType MakeItSo(Functor&& functor, RunArgs&&... args) {
-    using Traits = FunctorTraits<typename std::decay<Functor>::type>;
-    return Traits::Invoke(std::forward<Functor>(functor),
-                          std::forward<RunArgs>(args)...);
+template <typename ReturnType, typename Runnable, typename... Args>
+struct InvokeHelper<false, ReturnType, Runnable, TypeList<Args...>> {
+  static ReturnType MakeItSo(Runnable runnable, Args... args) {
+    return runnable.Run(CallbackForward(args)...);
   }
 };
 
-template <typename ReturnType>
-struct InvokeHelper<true, ReturnType> {
+template <typename Runnable, typename... Args>
+struct InvokeHelper<false, void, Runnable, TypeList<Args...>> {
+  static void MakeItSo(Runnable runnable, Args... args) {
+    runnable.Run(CallbackForward(args)...);
+  }
+};
+
+template <typename Runnable, typename BoundWeakPtr, typename... Args>
+struct InvokeHelper<true, void, Runnable, TypeList<BoundWeakPtr, Args...>> {
+  static void MakeItSo(Runnable runnable, BoundWeakPtr weak_ptr, Args... args) {
+    if (!weak_ptr.get()) {
+      return;
+    }
+    runnable.Run(weak_ptr.get(), CallbackForward(args)...);
+  }
+};
+
+#if !defined(_MSC_VER)
+
+template <typename ReturnType, typename Runnable, typename ArgsType>
+struct InvokeHelper<true, ReturnType, Runnable, ArgsType> {
   // WeakCalls are only supported for functions with a void return type.
   // Otherwise, the function result would be undefined if the the WeakPtr<>
   // is invalidated.
-  static_assert(std::is_void<ReturnType>::value,
+  static_assert(is_void<ReturnType>::value,
                 "weak_ptrs can only bind to methods without return values");
-
-  template <typename Functor, typename BoundWeakPtr, typename... RunArgs>
-  static inline void MakeItSo(Functor&& functor,
-                              BoundWeakPtr&& weak_ptr,
-                              RunArgs&&... args) {
-    if (!weak_ptr)
-      return;
-    using Traits = FunctorTraits<typename std::decay<Functor>::type>;
-    Traits::Invoke(std::forward<Functor>(functor),
-                   std::forward<BoundWeakPtr>(weak_ptr),
-                   std::forward<RunArgs>(args)...);
-  }
 };
+
+#endif
 
 // Invoker<>
 //
 // See description at the top of the file.
-template <typename StorageType, typename UnboundRunType>
+template <typename BoundIndices,
+          typename StorageType, typename Unwrappers,
+          typename InvokeHelperType, typename UnboundForwardRunType>
 struct Invoker;
 
-template <typename StorageType, typename R, typename... UnboundArgs>
-struct Invoker<StorageType, R(UnboundArgs...)> {
-  static R RunOnce(BindStateBase* base, UnboundArgs&&... unbound_args) {
-    // Local references to make debugger stepping easier. If in a debugger,
-    // you really want to warp ahead and step through the
-    // InvokeHelper<>::MakeItSo() call below.
+template <size_t... bound_indices,
+          typename StorageType,
+          typename... Unwrappers,
+          typename InvokeHelperType,
+          typename R,
+          typename... UnboundForwardArgs>
+struct Invoker<IndexSequence<bound_indices...>,
+               StorageType, TypeList<Unwrappers...>,
+               InvokeHelperType, R(UnboundForwardArgs...)> {
+  static R Run(BindStateBase* base,
+               UnboundForwardArgs... unbound_args) {
     StorageType* storage = static_cast<StorageType*>(base);
-    static constexpr size_t num_bound_args =
-        std::tuple_size<decltype(storage->bound_args_)>::value;
-    return RunImpl(std::move(storage->functor_),
-                   std::move(storage->bound_args_),
-                   MakeIndexSequence<num_bound_args>(),
-                   std::forward<UnboundArgs>(unbound_args)...);
-  }
-
-  static R Run(BindStateBase* base, UnboundArgs&&... unbound_args) {
     // Local references to make debugger stepping easier. If in a debugger,
     // you really want to warp ahead and step through the
     // InvokeHelper<>::MakeItSo() call below.
-    const StorageType* storage = static_cast<StorageType*>(base);
-    static constexpr size_t num_bound_args =
-        std::tuple_size<decltype(storage->bound_args_)>::value;
-    return RunImpl(storage->functor_,
-                   storage->bound_args_,
-                   MakeIndexSequence<num_bound_args>(),
-                   std::forward<UnboundArgs>(unbound_args)...);
-  }
-
- private:
-  template <typename Functor, typename BoundArgsTuple, size_t... indices>
-  static inline R RunImpl(Functor&& functor,
-                          BoundArgsTuple&& bound,
-                          IndexSequence<indices...>,
-                          UnboundArgs&&... unbound_args) {
-    static constexpr bool is_method =
-        FunctorTraits<typename std::decay<Functor>::type>::is_method;
-
-    using DecayedArgsTuple = typename std::decay<BoundArgsTuple>::type;
-    static constexpr bool is_weak_call =
-        IsWeakMethod<is_method,
-                     typename std::tuple_element<
-                         indices,
-                         DecayedArgsTuple>::type...>::value;
-
-    return InvokeHelper<is_weak_call, R>::MakeItSo(
-        std::forward<Functor>(functor),
-        Unwrap(base::get<indices>(std::forward<BoundArgsTuple>(bound)))...,
-        std::forward<UnboundArgs>(unbound_args)...);
+    return InvokeHelperType::MakeItSo(
+        storage->runnable_,
+        Unwrappers::Unwrap(get<bound_indices>(storage->bound_args_))...,
+        CallbackForward(unbound_args)...);
   }
 };
 
-// Used to implement MakeUnboundRunType.
-template <typename Functor, typename... BoundArgs>
-struct MakeUnboundRunTypeImpl {
-  using RunType =
-      typename FunctorTraits<typename std::decay<Functor>::type>::RunType;
-  using ReturnType = ExtractReturnType<RunType>;
-  using Args = ExtractArgs<RunType>;
-  using UnboundArgs = DropTypeListItem<sizeof...(BoundArgs), Args>;
-  using Type = MakeFunctionType<ReturnType, UnboundArgs>;
-};
-template <typename Functor>
-typename std::enable_if<FunctorTraits<Functor>::is_nullable, bool>::type
-IsNull(const Functor& functor) {
-  return !functor;
-}
-
-template <typename Functor>
-typename std::enable_if<!FunctorTraits<Functor>::is_nullable, bool>::type
-IsNull(const Functor&) {
-  return false;
-}
-
-template <typename Functor, typename... BoundArgs>
-struct BindState;
-
-template <typename BindStateType, typename SFINAE = void>
-struct CancellationChecker {
-  static constexpr bool is_cancellable = false;
-  static bool Run(const BindStateBase*) {
-    return false;
-  }
-};
-
-template <typename Functor, typename... BoundArgs>
-struct CancellationChecker<
-    BindState<Functor, BoundArgs...>,
-    typename std::enable_if<IsWeakMethod<FunctorTraits<Functor>::is_method,
-                                         BoundArgs...>::value>::type> {
-  static constexpr bool is_cancellable = true;
-  static bool Run(const BindStateBase* base) {
-    using BindStateType = BindState<Functor, BoundArgs...>;
-    const BindStateType* bind_state = static_cast<const BindStateType*>(base);
-    return !base::get<0>(bind_state->bound_args_);
-  }
-};
-
-template <typename Signature,
-          typename... BoundArgs,
-          CopyMode copy_mode,
-          RepeatMode repeat_mode>
-struct CancellationChecker<
-    BindState<Callback<Signature, copy_mode, repeat_mode>, BoundArgs...>> {
-  static constexpr bool is_cancellable = true;
-  static bool Run(const BindStateBase* base) {
-    using Functor = Callback<Signature, copy_mode, repeat_mode>;
-    using BindStateType = BindState<Functor, BoundArgs...>;
-    const BindStateType* bind_state = static_cast<const BindStateType*>(base);
-    return bind_state->functor_.IsCancelled();
-  }
-};
-
-// Template helpers to detect using Bind() on a base::Callback without any
-// additional arguments. In that case, the original base::Callback object should
-// just be directly used.
-template <typename Functor, typename... BoundArgs>
-struct BindingCallbackWithNoArgs {
-  static constexpr bool value = false;
-};
-
-template <typename Signature,
-          typename... BoundArgs,
-          CopyMode copy_mode,
-          RepeatMode repeat_mode>
-struct BindingCallbackWithNoArgs<Callback<Signature, copy_mode, repeat_mode>,
-                                 BoundArgs...> {
-  static constexpr bool value = sizeof...(BoundArgs) == 0;
-};
 
 // BindState<>
 //
-// This stores all the state passed into Bind().
-template <typename Functor, typename... BoundArgs>
-struct BindState final : BindStateBase {
-  using IsCancellable = std::integral_constant<
-      bool, CancellationChecker<BindState>::is_cancellable>;
+// This stores all the state passed into Bind() and is also where most
+// of the template resolution magic occurs.
+//
+// Runnable is the functor we are binding arguments to.
+// RunType is type of the Run() function that the Invoker<> should use.
+// Normally, this is the same as the RunType of the Runnable, but it can
+// be different if an adapter like IgnoreResult() has been used.
+//
+// BoundArgs contains the storage type for all the bound arguments.
+template <typename Runnable, typename RunType, typename... BoundArgs>
+struct BindState;
 
-  template <typename ForwardFunctor, typename... ForwardBoundArgs>
-  explicit BindState(BindStateBase::InvokeFuncStorage invoke_func,
-                     ForwardFunctor&& functor,
-                     ForwardBoundArgs&&... bound_args)
-      // IsCancellable is std::false_type if the CancellationChecker<>::Run
-      // returns always false. Otherwise, it's std::true_type.
-      : BindState(IsCancellable{},
-                  invoke_func,
-                  std::forward<ForwardFunctor>(functor),
-                  std::forward<ForwardBoundArgs>(bound_args)...) {
-    static_assert(!BindingCallbackWithNoArgs<Functor, BoundArgs...>::value,
-                  "Attempting to bind a base::Callback with no additional "
-                  "arguments: save a heap allocation and use the original "
-                  "base::Callback object");
-  }
-
-  Functor functor_;
-  std::tuple<BoundArgs...> bound_args_;
-
+template <typename Runnable,
+          typename R,
+          typename... Args,
+          typename... BoundArgs>
+struct BindState<Runnable, R(Args...), BoundArgs...> final
+    : public BindStateBase {
  private:
-  template <typename ForwardFunctor, typename... ForwardBoundArgs>
-  explicit BindState(std::true_type,
-                     BindStateBase::InvokeFuncStorage invoke_func,
-                     ForwardFunctor&& functor,
-                     ForwardBoundArgs&&... bound_args)
-      : BindStateBase(invoke_func, &Destroy,
-                      &CancellationChecker<BindState>::Run),
-        functor_(std::forward<ForwardFunctor>(functor)),
-        bound_args_(std::forward<ForwardBoundArgs>(bound_args)...) {
-    DCHECK(!IsNull(functor_));
-  }
+  using StorageType = BindState<Runnable, R(Args...), BoundArgs...>;
+  using RunnableType = Runnable;
 
-  template <typename ForwardFunctor, typename... ForwardBoundArgs>
-  explicit BindState(std::false_type,
-                     BindStateBase::InvokeFuncStorage invoke_func,
-                     ForwardFunctor&& functor,
-                     ForwardBoundArgs&&... bound_args)
-      : BindStateBase(invoke_func, &Destroy),
-        functor_(std::forward<ForwardFunctor>(functor)),
-        bound_args_(std::forward<ForwardBoundArgs>(bound_args)...) {
-    DCHECK(!IsNull(functor_));
-  }
+  // true_type if Runnable is a method invocation and the first bound argument
+  // is a WeakPtr.
+  using IsWeakCall =
+      IsWeakMethod<HasIsMethodTag<Runnable>::value, BoundArgs...>;
 
-  ~BindState() {}
+  using BoundIndices = MakeIndexSequence<sizeof...(BoundArgs)>;
+  using Unwrappers = TypeList<UnwrapTraits<BoundArgs>...>;
+  using UnboundForwardArgs = DropTypeListItem<
+      sizeof...(BoundArgs),
+      TypeList<typename CallbackParamTraits<Args>::ForwardType...>>;
+  using UnboundForwardRunType = MakeFunctionType<R, UnboundForwardArgs>;
 
-  static void Destroy(const BindStateBase* self) {
-    delete static_cast<const BindState*>(self);
-  }
-};
+  using InvokeHelperArgs = ConcatTypeLists<
+      TypeList<typename UnwrapTraits<BoundArgs>::ForwardType...>,
+      UnboundForwardArgs>;
+  using InvokeHelperType =
+      InvokeHelper<IsWeakCall::value, R, Runnable, InvokeHelperArgs>;
 
-// Used to implement MakeBindStateType.
-template <bool is_method, typename Functor, typename... BoundArgs>
-struct MakeBindStateTypeImpl;
-
-template <typename Functor, typename... BoundArgs>
-struct MakeBindStateTypeImpl<false, Functor, BoundArgs...> {
-  static_assert(!HasRefCountedTypeAsRawPtr<BoundArgs...>::value,
-                "A parameter is a refcounted type and needs scoped_refptr.");
-  using Type = BindState<typename std::decay<Functor>::type,
-                         typename std::decay<BoundArgs>::type...>;
-};
-
-template <typename Functor>
-struct MakeBindStateTypeImpl<true, Functor> {
-  using Type = BindState<typename std::decay<Functor>::type>;
-};
-
-template <typename Functor, typename Receiver, typename... BoundArgs>
-struct MakeBindStateTypeImpl<true, Functor, Receiver, BoundArgs...> {
-  static_assert(
-      !std::is_array<typename std::remove_reference<Receiver>::type>::value,
-      "First bound argument to a method cannot be an array.");
-  static_assert(!HasRefCountedTypeAsRawPtr<BoundArgs...>::value,
-                "A parameter is a refcounted type and needs scoped_refptr.");
-
- private:
-  using DecayedReceiver = typename std::decay<Receiver>::type;
+  using UnboundArgs = DropTypeListItem<sizeof...(BoundArgs), TypeList<Args...>>;
 
  public:
-  using Type = BindState<
-      typename std::decay<Functor>::type,
-      typename std::conditional<
-          std::is_pointer<DecayedReceiver>::value,
-          scoped_refptr<typename std::remove_pointer<DecayedReceiver>::type>,
-          DecayedReceiver>::type,
-      typename std::decay<BoundArgs>::type...>;
+  using InvokerType = Invoker<BoundIndices, StorageType, Unwrappers,
+                              InvokeHelperType, UnboundForwardRunType>;
+  using UnboundRunType = MakeFunctionType<R, UnboundArgs>;
+
+  BindState(const Runnable& runnable, const BoundArgs&... bound_args)
+      : BindStateBase(&Destroy),
+        runnable_(runnable),
+        ref_(bound_args...),
+        bound_args_(bound_args...) {}
+
+  RunnableType runnable_;
+  MaybeScopedRefPtr<HasIsMethodTag<Runnable>::value, BoundArgs...> ref_;
+  Tuple<BoundArgs...> bound_args_;
+
+ private:
+  ~BindState() {}
+
+  static void Destroy(BindStateBase* self) {
+    delete static_cast<BindState*>(self);
+  }
 };
 
-template <typename Functor, typename... BoundArgs>
-using MakeBindStateType = typename MakeBindStateTypeImpl<
-    FunctorTraits<typename std::decay<Functor>::type>::is_method,
-    Functor,
-    BoundArgs...>::Type;
-
 }  // namespace internal
-
-// Returns a RunType of bound functor.
-// E.g. MakeUnboundRunType<R(A, B, C), A, B> is evaluated to R(C).
-template <typename Functor, typename... BoundArgs>
-using MakeUnboundRunType =
-    typename internal::MakeUnboundRunTypeImpl<Functor, BoundArgs...>::Type;
-
 }  // namespace base
 
 #endif  // BASE_BIND_INTERNAL_H_

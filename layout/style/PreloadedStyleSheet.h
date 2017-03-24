@@ -10,15 +10,21 @@
 #define mozilla_PreloadedStyleSheet_h
 
 #include "mozilla/css/SheetParsingMode.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/Result.h"
 #include "mozilla/StyleBackendType.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsICSSLoaderObserver.h"
 #include "nsIPreloadedStyleSheet.h"
 
 class nsIURI;
 
 namespace mozilla {
+namespace dom {
+  class Promise;
+}
+
 class StyleSheet;
 
 class PreloadedStyleSheet : public nsIPreloadedStyleSheet
@@ -35,15 +41,42 @@ public:
   // reference to the sheet.
   nsresult GetSheet(StyleBackendType aType, StyleSheet** aResult);
 
+  nsresult Preload();
+  nsresult PreloadAsync(NotNull<dom::Promise*> aPromise);
+
 protected:
   virtual ~PreloadedStyleSheet() {}
 
 private:
   PreloadedStyleSheet(nsIURI* aURI, css::SheetParsingMode aParsingMode);
 
+  class StylesheetPreloadObserver final : public nsICSSLoaderObserver
+  {
+  public:
+    NS_DECL_ISUPPORTS
+
+    explicit StylesheetPreloadObserver(NotNull<dom::Promise*> aPromise,
+                                       PreloadedStyleSheet* aSheet)
+      : mPromise(aPromise)
+      , mPreloadedSheet(aSheet)
+    {}
+
+    NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet,
+                                bool aWasAlternate,
+                                nsresult aStatus) override;
+
+  protected:
+    virtual ~StylesheetPreloadObserver() {}
+
+  private:
+    RefPtr<dom::Promise> mPromise;
+    RefPtr<PreloadedStyleSheet> mPreloadedSheet;
+  };
+
   RefPtr<StyleSheet> mGecko;
   RefPtr<StyleSheet> mServo;
 
+  bool mLoaded;
   nsCOMPtr<nsIURI> mURI;
   css::SheetParsingMode mParsingMode;
 };

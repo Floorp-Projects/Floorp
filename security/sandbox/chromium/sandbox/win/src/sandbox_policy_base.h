@@ -10,12 +10,11 @@
 #include <stdint.h>
 
 #include <list>
-#include <memory>
 #include <vector>
 
 #include "base/compiler_specific.h"
 #include "base/macros.h"
-#include "base/process/launch.h"
+#include "base/memory/scoped_ptr.h"
 #include "base/strings/string16.h"
 #include "base/win/scoped_handle.h"
 #include "sandbox/win/src/crosscall_server.h"
@@ -28,9 +27,12 @@
 
 namespace sandbox {
 
+class AppContainerAttributes;
 class LowLevelPolicy;
 class TargetProcess;
 struct PolicyGlobal;
+
+typedef std::vector<base::win::ScopedHandle*> HandleList;
 
 class PolicyBase final : public TargetPolicy {
  public:
@@ -43,7 +45,6 @@ class PolicyBase final : public TargetPolicy {
   TokenLevel GetInitialTokenLevel() const override;
   TokenLevel GetLockdownTokenLevel() const override;
   ResultCode SetJobLevel(JobLevel job_level, uint32_t ui_exceptions) override;
-  JobLevel GetJobLevel() const override;
   ResultCode SetJobMemoryLimit(size_t memory_limit) override;
   ResultCode SetAlternateDesktop(bool alternate_winstation) override;
   base::string16 GetAlternateDesktop() const override;
@@ -52,13 +53,13 @@ class PolicyBase final : public TargetPolicy {
   ResultCode SetIntegrityLevel(IntegrityLevel integrity_level) override;
   IntegrityLevel GetIntegrityLevel() const override;
   ResultCode SetDelayedIntegrityLevel(IntegrityLevel integrity_level) override;
+  ResultCode SetAppContainer(const wchar_t* sid) override;
   ResultCode SetCapability(const wchar_t* sid) override;
   ResultCode SetLowBox(const wchar_t* sid) override;
   ResultCode SetProcessMitigations(MitigationFlags flags) override;
   MitigationFlags GetProcessMitigations() override;
   ResultCode SetDelayedProcessMitigations(MitigationFlags flags) override;
   MitigationFlags GetDelayedProcessMitigations() const override;
-  void SetDisconnectCsrss() override;
   void SetStrictInterceptions() override;
   ResultCode SetStdoutHandle(HANDLE handle) override;
   ResultCode SetStderrHandle(HANDLE handle) override;
@@ -68,10 +69,7 @@ class PolicyBase final : public TargetPolicy {
   ResultCode AddDllToUnload(const wchar_t* dll_name) override;
   ResultCode AddKernelObjectToClose(const base::char16* handle_type,
                                     const base::char16* handle_name) override;
-  void AddHandleToShare(HANDLE handle) override;
-  void SetLockdownDefaultDacl() override;
-  void SetEnableOPMRedirection() override;
-  bool GetEnableOPMRedirection() override;
+  void* AddHandleToShare(HANDLE handle) override;
 
   // Creates a Job object with the level specified in a previous call to
   // SetJobLevel().
@@ -84,11 +82,13 @@ class PolicyBase final : public TargetPolicy {
                         base::win::ScopedHandle* lockdown,
                         base::win::ScopedHandle* lowbox);
 
+  const AppContainerAttributes* GetAppContainer() const;
+
   PSID GetLowBoxSid() const;
 
   // Adds a target process to the internal list of targets. Internally a
   // call to TargetProcess::Init() is issued.
-  ResultCode AddTarget(TargetProcess* target);
+  bool AddTarget(TargetProcess* target);
 
   // Called when there are no more active processes in a Job.
   // Removes a Job object associated with this policy and the target associated
@@ -101,13 +101,16 @@ class PolicyBase final : public TargetPolicy {
   HANDLE GetStderrHandle();
 
   // Returns the list of handles being shared with the target process.
-  const base::HandlesToInheritVector& GetHandlesBeingShared();
+  const HandleList& GetHandlesBeingShared();
+
+  // Closes the handles being shared with the target and clears out the list.
+  void ClearSharedHandles();
 
  private:
   ~PolicyBase();
 
   // Sets up interceptions for a new target.
-  ResultCode SetupAllInterceptions(TargetProcess* target);
+  bool SetupAllInterceptions(TargetProcess* target);
 
   // Sets up the handle closer for a new target.
   bool SetupHandleCloser(TargetProcess* target);
@@ -141,7 +144,6 @@ class PolicyBase final : public TargetPolicy {
   IntegrityLevel delayed_integrity_level_;
   MitigationFlags mitigations_;
   MitigationFlags delayed_mitigations_;
-  bool is_csrss_connected_;
   // Object in charge of generating the low level policy.
   LowLevelPolicy* policy_maker_;
   // Memory structure that stores the low level policy.
@@ -153,10 +155,10 @@ class PolicyBase final : public TargetPolicy {
   // given type.
   HandleCloser handle_closer_;
   std::vector<base::string16> capabilities_;
+  scoped_ptr<AppContainerAttributes> appcontainer_list_;
   PSID lowbox_sid_;
   base::win::ScopedHandle lowbox_directory_;
-  std::unique_ptr<Dispatcher> dispatcher_;
-  bool lockdown_default_dacl_;
+  scoped_ptr<Dispatcher> dispatcher_;
 
   static HDESK alternate_desktop_handle_;
   static HWINSTA alternate_winstation_handle_;
@@ -165,8 +167,7 @@ class PolicyBase final : public TargetPolicy {
   // Contains the list of handles being shared with the target process.
   // This list contains handles other than the stderr/stdout handles which are
   // shared with the target at times.
-  base::HandlesToInheritVector handles_to_share_;
-  bool enable_opm_redirection_;
+  HandleList handles_to_share_;
 
   DISALLOW_COPY_AND_ASSIGN(PolicyBase);
 };

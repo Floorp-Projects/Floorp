@@ -4557,6 +4557,8 @@ XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
 {
   ScopedLogging log;
 
+  mozilla::LogModule::Init();
+
   // NB: this must happen after the creation of |ScopedLogging log| since
   // ScopedLogging::ScopedLogging calls NS_LogInit, and
   // XRE_CreateStatsObject calls Telemetry::CreateStatisticsRecorder,

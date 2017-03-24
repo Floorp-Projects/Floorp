@@ -3,6 +3,9 @@
 "use strict";
 
 function* testExecuteBrowserActionWithOptions(options = {}) {
+  // Make sure the mouse isn't hovering over the browserAction widget.
+  EventUtils.synthesizeMouseAtCenter(gURLBar, {type: "mouseover"}, window);
+
   let extensionOptions = {};
 
   extensionOptions.manifest = {

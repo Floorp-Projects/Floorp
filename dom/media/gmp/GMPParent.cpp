@@ -43,6 +43,7 @@ using CrashReporter::GetIDFromMinidump;
 
 #include "mozilla/dom/WidevineCDMManifestBinding.h"
 #include "widevine-adapter/WidevineAdapter.h"
+#include "ChromiumCDMAdapter.h"
 
 namespace mozilla {
 
@@ -323,7 +324,7 @@ void
 GMPParent::ChildTerminated()
 {
   RefPtr<GMPParent> self(this);
-  nsIThread* gmpThread = GMPThread();
+  nsCOMPtr<nsIThread> gmpThread = GMPThread();
 
   if (!gmpThread) {
     // Bug 1163239 - this can happen on shutdown.
@@ -372,26 +373,20 @@ GMPParent::State() const
   return mState;
 }
 
-// Not changing to use mService since we'll be removing it
-nsIThread*
+nsCOMPtr<nsIThread>
 GMPParent::GMPThread()
 {
-  if (!mGMPThread) {
-    nsCOMPtr<mozIGeckoMediaPluginService> mps = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
-    MOZ_ASSERT(mps);
-    if (!mps) {
-      return nullptr;
-    }
-    // Not really safe if we just grab to the mGMPThread, as we don't know
-    // what thread we're running on and other threads may be trying to
-    // access this without locks!  However, debug only, and primary failure
-    // mode outside of compiler-helped TSAN is a leak.  But better would be
-    // to use swap() under a lock.
-    mps->GetThread(getter_AddRefs(mGMPThread));
-    MOZ_ASSERT(mGMPThread);
+  nsCOMPtr<mozIGeckoMediaPluginService> mps =
+    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+  MOZ_ASSERT(mps);
+  if (!mps) {
+    return nullptr;
   }
-
-  return mGMPThread;
+  // Note: GeckoMediaPluginService::GetThread() is threadsafe, and returns
+  // nullptr if the GeckoMediaPluginService has started shutdown.
+  nsCOMPtr<nsIThread> gmpThread;
+  mps->GetThread(getter_AddRefs(gmpThread));
+  return gmpThread;
 }
 
 /* static */
@@ -589,7 +584,8 @@ GMPParent::RecvPGMPTimerConstructor(PGMPTimerParent* actor)
 PGMPTimerParent*
 GMPParent::AllocPGMPTimerParent()
 {
-  GMPTimerParent* p = new GMPTimerParent(GMPThread());
+  nsCOMPtr<nsIThread> thread = GMPThread();
+  GMPTimerParent* p = new GMPTimerParent(thread);
   mTimers.AppendElement(p); // Released in DeallocPGMPTimerParent, or on shutdown.
   return p;
 }
@@ -734,6 +730,22 @@ GMPParent::ReadChromiumManifestFile(nsIFile* aFile)
     &GMPParent::ParseChromiumManifest, NS_ConvertUTF8toUTF16(json));
 }
 
+static bool
+IsCDMAPISupported(const mozilla::dom::WidevineCDMManifest& aManifest)
+{
+  nsresult ignored; // Note: ToInteger returns 0 on failure.
+  int32_t moduleVersion = aManifest.mX_cdm_module_versions.ToInteger(&ignored);
+  int32_t interfaceVersion =
+    aManifest.mX_cdm_interface_versions.ToInteger(&ignored);
+  int32_t hostVersion = aManifest.mX_cdm_host_versions.ToInteger(&ignored);
+  if (MediaPrefs::EMEChromiumAPIEnabled()) {
+    return ChromiumCDMAdapter::Supports(
+      moduleVersion, interfaceVersion, hostVersion);
+  }
+  return WidevineAdapter::Supports(
+    moduleVersion, interfaceVersion, hostVersion);
+}
+
 RefPtr<GenericPromise>
 GMPParent::ParseChromiumManifest(const nsAString& aJSON)
 {
@@ -745,10 +757,7 @@ GMPParent::ParseChromiumManifest(const nsAString& aJSON)
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  nsresult ignored; // Note: ToInteger returns 0 on failure.
-  if (!WidevineAdapter::Supports(m.mX_cdm_module_versions.ToInteger(&ignored),
-                                 m.mX_cdm_interface_versions.ToInteger(&ignored),
-                                 m.mX_cdm_host_versions.ToInteger(&ignored))) {
+  if (!IsCDMAPISupported(m)) {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
@@ -786,7 +795,7 @@ GMPParent::ParseChromiumManifest(const nsAString& aJSON)
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  GMPCapability video(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER));
+  GMPCapability video;
 
   nsCString codecsString = NS_ConvertUTF16toUTF8(m.mX_cdm_codecs);
   nsTArray<nsCString> codecs;
@@ -808,14 +817,19 @@ GMPParent::ParseChromiumManifest(const nsAString& aJSON)
   }
 
   video.mAPITags.AppendElement(kEMEKeySystem);
+
+  if (MediaPrefs::EMEChromiumAPIEnabled()) {
+    video.mAPIName = NS_LITERAL_CSTRING(CHROMIUM_CDM_API);
+    mAdapter = NS_LITERAL_STRING("chromium");
+  } else {
+    video.mAPIName = NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER);
+    mAdapter = NS_LITERAL_STRING("widevine");
+
+    GMPCapability decrypt(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR));
+    decrypt.mAPITags.AppendElement(kEMEKeySystem);
+    mCapabilities.AppendElement(Move(decrypt));
+  }
   mCapabilities.AppendElement(Move(video));
-
-  GMPCapability decrypt(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR));
-
-  decrypt.mAPITags.AppendElement(kEMEKeySystem);
-  mCapabilities.AppendElement(Move(decrypt));
-
-  mAdapter = NS_LITERAL_STRING("widevine");
 
   return GenericPromise::CreateAndResolve(true, __func__);
 }

@@ -209,7 +209,8 @@ GMPVideoDecoderParent::Reset()
     LogToBrowserConsole(NS_LITERAL_STRING("GMPVideoDecoderParent timed out waiting for ResetComplete()"));
   });
   CancelResetCompleteTimeout();
-  mResetCompleteTimeout = SimpleTimer::Create(task, 5000, mPlugin->GMPThread());
+  nsCOMPtr<nsIThread> thread = mPlugin->GMPThread();
+  mResetCompleteTimeout = SimpleTimer::Create(task, 5000, thread);
 
   // Async IPC, we don't have access to a return value.
   return NS_OK;

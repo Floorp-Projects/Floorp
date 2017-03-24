@@ -99,8 +99,11 @@ MediaKeySystemAccess::CreateMediaKeys(ErrorResult& aRv)
 static bool
 HavePluginForKeySystem(const nsCString& aKeySystem)
 {
-  bool havePlugin = HaveGMPFor(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
-                               { aKeySystem });
+  nsCString api = MediaPrefs::EMEChromiumAPIEnabled()
+                    ? NS_LITERAL_CSTRING(CHROMIUM_CDM_API)
+                    : NS_LITERAL_CSTRING(GMP_API_DECRYPTOR);
+
+  bool havePlugin = HaveGMPFor(api, { aKeySystem });
 #ifdef MOZ_WIDGET_ANDROID
   // Check if we can use MediaDrm for this keysystem.
   if (!havePlugin) {

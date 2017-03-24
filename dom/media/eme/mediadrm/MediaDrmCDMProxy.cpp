@@ -101,6 +101,7 @@ MediaDrmCDMProxy::CreateSession(uint32_t aCreateSessionToken,
 
 void
 MediaDrmCDMProxy::LoadSession(PromiseId aPromiseId,
+                              dom::MediaKeySessionType aSessionType,
                               const nsAString& aSessionId)
 {
   // TODO: Implement LoadSession.

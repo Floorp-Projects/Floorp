@@ -23,6 +23,7 @@
 #include "prio.h"
 #include "base/task.h"
 #include "widevine-adapter/WidevineAdapter.h"
+#include "ChromiumCDMAdapter.h"
 
 using namespace mozilla::ipc;
 
@@ -346,9 +347,10 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
 #endif
 
   bool isWidevine = aAdapter.EqualsLiteral("widevine");
+  bool isChromium = aAdapter.EqualsLiteral("chromium");
 #if defined(MOZ_GMP_SANDBOX) && defined(XP_MACOSX)
   MacSandboxPluginType pluginType = MacSandboxPluginType_GMPlugin_Default;
-  if (isWidevine) {
+  if (isWidevine || isChromium) {
     pluginType = MacSandboxPluginType_GMPlugin_EME_Widevine;
   }
   if (!SetMacSandboxInfo(pluginType)) {
@@ -358,7 +360,13 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
   }
 #endif
 
-  GMPAdapter* adapter = (isWidevine) ? new WidevineAdapter() : nullptr;
+  GMPAdapter* adapter = nullptr;
+  if (isWidevine) {
+    adapter = new WidevineAdapter();
+  } else if (isChromium) {
+    adapter = new ChromiumCDMAdapter();
+  }
+
   if (!mGMPLoader->Load(libPath.get(),
                         libPath.Length(),
                         platformAPI,

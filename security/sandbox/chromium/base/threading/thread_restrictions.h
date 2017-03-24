@@ -6,17 +6,20 @@
 #define BASE_THREADING_THREAD_RESTRICTIONS_H_
 
 #include "base/base_export.h"
-#include "base/logging.h"
 #include "base/macros.h"
+
+// See comment at top of thread_checker.h
+#if (!defined(NDEBUG) || defined(DCHECK_ALWAYS_ON))
+#define ENABLE_THREAD_RESTRICTIONS 1
+#else
+#define ENABLE_THREAD_RESTRICTIONS 0
+#endif
 
 class BrowserProcessImpl;
 class HistogramSynchronizer;
 class NativeBackendKWallet;
 class ScopedAllowWaitForLegacyWebViewApi;
 
-namespace blimp {
-class BlimpBrowserTest;
-}
 namespace cc {
 class CompletionEvent;
 class SingleThreadTaskGraphRunner;
@@ -34,14 +37,14 @@ namespace content {
 class BrowserGpuChannelHostFactory;
 class BrowserGpuMemoryBufferManager;
 class BrowserShutdownProfileDumper;
-class BrowserSurfaceViewManager;
 class BrowserTestBase;
+class GpuChannelHost;
 class NestedMessagePumpAndroid;
 class ScopedAllowWaitForAndroidLayoutTests;
 class ScopedAllowWaitForDebugURL;
 class SoftwareOutputDeviceMus;
 class TextInputClientMac;
-class CategorizedWorkerPool;
+class RasterWorkerPool;
 }  // namespace content
 namespace dbus {
 class Bus;
@@ -50,14 +53,15 @@ namespace disk_cache {
 class BackendImpl;
 class InFlightIO;
 }
-namespace gpu {
-class GpuChannelHost;
+namespace gles2 {
+class CommandBufferClientImpl;
 }
 namespace mojo {
-class SyncCallRestrictions;
+namespace common {
+class MessagePumpMojo;
 }
-namespace ui {
-class CommandBufferClientImpl;
+}
+namespace mus {
 class CommandBufferLocal;
 class GpuState;
 }
@@ -77,17 +81,13 @@ class WindowResizeHelperMac;
 }
 
 namespace views {
-class ScreenMus;
+class WindowManagerConnection;
 }
 
 namespace base {
 
 namespace android {
 class JavaHandlerThread;
-}
-
-namespace internal {
-class TaskTracker;
 }
 
 class SequencedWorkerPool;
@@ -149,7 +149,7 @@ class BASE_EXPORT ThreadRestrictions {
     DISALLOW_COPY_AND_ASSIGN(ScopedAllowSingleton);
   };
 
-#if DCHECK_IS_ON()
+#if ENABLE_THREAD_RESTRICTIONS
   // Set whether the current thread to make IO calls.
   // Threads start out in the *allowed* state.
   // Returns the previous value.
@@ -188,19 +188,16 @@ class BASE_EXPORT ThreadRestrictions {
  private:
   // DO NOT ADD ANY OTHER FRIEND STATEMENTS, talk to jam or brettw first.
   // BEGIN ALLOWED USAGE.
-  friend class blimp::BlimpBrowserTest;
   friend class content::BrowserShutdownProfileDumper;
-  friend class content::BrowserSurfaceViewManager;
   friend class content::BrowserTestBase;
   friend class content::NestedMessagePumpAndroid;
   friend class content::ScopedAllowWaitForAndroidLayoutTests;
   friend class content::ScopedAllowWaitForDebugURL;
   friend class ::HistogramSynchronizer;
-  friend class internal::TaskTracker;
   friend class ::ScopedAllowWaitForLegacyWebViewApi;
   friend class cc::CompletionEvent;
   friend class cc::SingleThreadTaskGraphRunner;
-  friend class content::CategorizedWorkerPool;
+  friend class content::RasterWorkerPool;
   friend class remoting::AutoThread;
   friend class ui::WindowResizeHelperMac;
   friend class MessagePumpDefault;
@@ -210,10 +207,10 @@ class BASE_EXPORT ThreadRestrictions {
   friend class ThreadTestHelper;
   friend class PlatformThread;
   friend class android::JavaHandlerThread;
-  friend class mojo::SyncCallRestrictions;
-  friend class ui::CommandBufferClientImpl;
-  friend class ui::CommandBufferLocal;
-  friend class ui::GpuState;
+  friend class gles2::CommandBufferClientImpl;
+  friend class mojo::common::MessagePumpMojo;
+  friend class mus::CommandBufferLocal;
+  friend class mus::GpuState;
 
   // END ALLOWED USAGE.
   // BEGIN USAGE THAT NEEDS TO BE FIXED.
@@ -224,11 +221,11 @@ class BASE_EXPORT ThreadRestrictions {
       content::BrowserGpuChannelHostFactory;      // http://crbug.com/125248
   friend class
       content::BrowserGpuMemoryBufferManager;     // http://crbug.com/420368
+  friend class content::GpuChannelHost;           // http://crbug.com/125264
   friend class content::TextInputClientMac;       // http://crbug.com/121917
   friend class dbus::Bus;                         // http://crbug.com/125222
   friend class disk_cache::BackendImpl;           // http://crbug.com/74623
   friend class disk_cache::InFlightIO;            // http://crbug.com/74623
-  friend class gpu::GpuChannelHost;               // http://crbug.com/125264
   friend class net::internal::AddressTrackerLinux;  // http://crbug.com/125097
   friend class net::NetworkChangeNotifierMac;     // http://crbug.com/125097
   friend class ::BrowserProcessImpl;              // http://crbug.com/125207
@@ -236,10 +233,10 @@ class BASE_EXPORT ThreadRestrictions {
 #if !defined(OFFICIAL_BUILD)
   friend class content::SoftwareOutputDeviceMus;  // Interim non-production code
 #endif
-  friend class views::ScreenMus;
+  friend class views::WindowManagerConnection;
 // END USAGE THAT NEEDS TO BE FIXED.
 
-#if DCHECK_IS_ON()
+#if ENABLE_THREAD_RESTRICTIONS
   static bool SetWaitAllowed(bool allowed);
 #else
   static bool SetWaitAllowed(bool allowed) { return true; }

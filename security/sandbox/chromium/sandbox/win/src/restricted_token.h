@@ -179,10 +179,6 @@ class RestrictedToken {
   // level cannot be higher than your current integrity level.
   DWORD SetIntegrityLevel(IntegrityLevel integrity_level);
 
-  // Set a flag which indicates the created token should have a locked down
-  // default DACL when created.
-  void SetLockdownDefaultDacl();
-
  private:
   // The list of restricting sids in the restricted token.
   std::vector<Sid> sids_to_restrict_;
@@ -196,8 +192,6 @@ class RestrictedToken {
   IntegrityLevel integrity_level_;
   // Tells if the object is initialized or not (if Init() has been called)
   bool init_;
-  // Lockdown the default DACL when creating new tokens.
-  bool lockdown_default_dacl_;
 
   DISALLOW_COPY_AND_ASSIGN(RestrictedToken);
 };

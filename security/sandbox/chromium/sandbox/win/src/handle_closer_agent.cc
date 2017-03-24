@@ -82,11 +82,12 @@ bool HandleCloserAgent::AttemptToStuffHandleSlot(HANDLE closed_handle,
            reinterpret_cast<uintptr_t>(dup_dummy) <
                reinterpret_cast<uintptr_t>(closed_handle));
 
-  for (HANDLE h : to_close)
+  for (auto h : to_close)
     ::CloseHandle(h);
 
-  // TODO(wfh): Investigate why stuffing handles sometimes fails.
-  // http://crbug.com/649904
+  // Useful to know when we're not able to stuff handles.
+  DCHECK(dup_dummy == closed_handle);
+
   return dup_dummy == closed_handle;
 }
 

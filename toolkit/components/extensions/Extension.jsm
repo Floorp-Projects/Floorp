@@ -965,6 +965,9 @@ this.Extension = class extends ExtensionData {
       StartupCache.clearAddonData(this.id);
     }
 
+    let data = Services.ppmm.initialProcessData;
+    data["Extension:Extensions"] = data["Extension:Extensions"].filter(e => e.id !== this.id);
+
     Services.ppmm.removeMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
     if (!this.manifest) {

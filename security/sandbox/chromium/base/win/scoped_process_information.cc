@@ -6,6 +6,7 @@
 
 #include "base/logging.h"
 #include "base/win/scoped_handle.h"
+#include "base/win/windows_version.h"
 
 namespace base {
 namespace win {
@@ -20,13 +21,49 @@ bool CheckAndDuplicateHandle(HANDLE source, ScopedHandle* target) {
     return true;
 
   HANDLE temp = NULL;
-  if (!::DuplicateHandle(::GetCurrentProcess(), source,
-                         ::GetCurrentProcess(), &temp, 0, FALSE,
-                         DUPLICATE_SAME_ACCESS)) {
-    DWORD last_error = ::GetLastError();
-    DPLOG(ERROR) << "Failed to duplicate a handle " << last_error;
-    ::SetLastError(last_error);
-    return false;
+
+  // TODO(shrikant): Remove following code as soon as we gather some
+  // information regarding AppContainer related DuplicateHandle failures that
+  // only seem to happen on certain machine and only random launches (normally
+  // renderer launches seem to succeed even on those machines.)
+  if (base::win::GetVersion() == base::win::VERSION_WIN8 ||
+      base::win::GetVersion() == base::win::VERSION_WIN8_1) {
+    typedef LONG (WINAPI *NtDuplicateObject)(
+        IN HANDLE SourceProcess,
+        IN HANDLE SourceHandle,
+        IN HANDLE TargetProcess,
+        OUT PHANDLE TargetHandle,
+        IN ACCESS_MASK DesiredAccess,
+        IN ULONG Attributes,
+        IN ULONG Options);
+
+    typedef ULONG (WINAPI *RtlNtStatusToDosError)(IN LONG Status);
+
+    NtDuplicateObject nt_duplicate_object =
+        reinterpret_cast<NtDuplicateObject>(::GetProcAddress(
+            GetModuleHandle(L"ntdll.dll"), "NtDuplicateObject"));
+    if (nt_duplicate_object != NULL) {
+      LONG status = nt_duplicate_object(::GetCurrentProcess(), source,
+                                        ::GetCurrentProcess(), &temp,
+                                        0, FALSE, DUPLICATE_SAME_ACCESS);
+      if (status < 0) {
+        DPLOG(ERROR) << "Failed to duplicate a handle.";
+        RtlNtStatusToDosError ntstatus_to_doserror =
+            reinterpret_cast<RtlNtStatusToDosError>(::GetProcAddress(
+                GetModuleHandle(L"ntdll.dll"), "RtlNtStatusToDosError"));
+        if (ntstatus_to_doserror != NULL) {
+          ::SetLastError(ntstatus_to_doserror(status));
+        }
+        return false;
+      }
+    }
+  } else {
+    if (!::DuplicateHandle(::GetCurrentProcess(), source,
+                           ::GetCurrentProcess(), &temp, 0, FALSE,
+                           DUPLICATE_SAME_ACCESS)) {
+      DPLOG(ERROR) << "Failed to duplicate a handle.";
+      return false;
+    }
   }
   target->Set(temp);
   return true;

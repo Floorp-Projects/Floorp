@@ -9,10 +9,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <memory>
-
 #include "base/macros.h"
-#include "base/memory/free_deleter.h"
+#include "base/memory/scoped_ptr.h"
 #include "base/win/scoped_handle.h"
 #include "base/win/scoped_process_information.h"
 #include "sandbox/win/src/crosscall_server.h"
@@ -40,6 +38,7 @@ class TargetProcess {
   // and |lowbox_token|.
   TargetProcess(base::win::ScopedHandle initial_token,
                 base::win::ScopedHandle lockdown_token,
+                base::win::ScopedHandle lowbox_token,
                 HANDLE job,
                 ThreadProvider* thread_pool);
   ~TargetProcess();
@@ -52,28 +51,21 @@ class TargetProcess {
   void Release() {}
 
   // Creates the new target process. The process is created suspended.
-  ResultCode Create(const wchar_t* exe_path,
-                    const wchar_t* command_line,
-                    bool inherit_handles,
-                    const base::win::StartupInformation& startup_info,
-                    base::win::ScopedProcessInformation* target_info,
-                    DWORD* win_error);
-
-  // Assign a new lowbox token to the process post creation. The process
-  // must still be in its initial suspended state, however this still
-  // might fail in the presence of third-party software.
-  ResultCode AssignLowBoxToken(const base::win::ScopedHandle& token);
+  DWORD Create(const wchar_t* exe_path,
+               const wchar_t* command_line,
+               bool inherit_handles,
+               const base::win::StartupInformation& startup_info,
+               base::win::ScopedProcessInformation* target_info);
 
   // Destroys the target process.
   void Terminate();
 
   // Creates the IPC objects such as the BrokerDispatcher and the
   // IPC server. The IPC server uses the services of the thread_pool.
-  ResultCode Init(Dispatcher* ipc_dispatcher,
-                  void* policy,
-                  uint32_t shared_IPC_size,
-                  uint32_t shared_policy_size,
-                  DWORD* win_error);
+  DWORD Init(Dispatcher* ipc_dispatcher,
+             void* policy,
+             uint32_t shared_IPC_size,
+             uint32_t shared_policy_size);
 
   // Returns the handle to the target process.
   HANDLE Process() const {
@@ -118,18 +110,21 @@ class TargetProcess {
   // The token given to the initial thread so that the target process can
   // start. It has more powers than the lockdown_token.
   base::win::ScopedHandle initial_token_;
+  // The lowbox token associated with the process. This token is set after the
+  // process creation.
+  base::win::ScopedHandle lowbox_token_;
   // Kernel handle to the shared memory used by the IPC server.
   base::win::ScopedHandle shared_section_;
   // Job object containing the target process.
   HANDLE job_;
   // Reference to the IPC subsystem.
-  std::unique_ptr<SharedMemIPCServer> ipc_server_;
+  scoped_ptr<SharedMemIPCServer> ipc_server_;
   // Provides the threads used by the IPC. This class does not own this pointer.
   ThreadProvider* thread_pool_;
   // Base address of the main executable
   void* base_address_;
   // Full name of the target executable.
-  std::unique_ptr<wchar_t, base::FreeDeleter> exe_name_;
+  scoped_ptr<wchar_t, base::FreeDeleter> exe_name_;
 
   // Function used for testing.
   friend TargetProcess* MakeTestTargetProcess(HANDLE process,
