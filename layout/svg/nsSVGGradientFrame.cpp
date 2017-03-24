@@ -229,7 +229,8 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
                                           const gfxMatrix& aContextMatrix,
                                           nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                                           float aGraphicOpacity,
-                                          const gfxRect* aOverrideBounds)
+                                          const gfxRect* aOverrideBounds,
+                                          uint32_t aFlags)
 {
   uint16_t gradientUnits = GetGradientUnits();
   MOZ_ASSERT(gradientUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX ||

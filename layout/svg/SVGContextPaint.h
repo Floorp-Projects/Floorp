@@ -63,22 +63,26 @@ public:
   virtual mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
   GetFillPattern(const DrawTarget* aDrawTarget,
                  float aOpacity,
-                 const gfxMatrix& aCTM) = 0;
+                 const gfxMatrix& aCTM,
+                 uint32_t aFlags = 0) = 0;
   virtual mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
   GetStrokePattern(const DrawTarget* aDrawTarget,
                    float aOpacity,
-                   const gfxMatrix& aCTM) = 0;
+                   const gfxMatrix& aCTM,
+                   uint32_t aFlags = 0) = 0;
   virtual float GetFillOpacity() const = 0;
   virtual float GetStrokeOpacity() const = 0;
 
   mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
-  GetFillPattern(const DrawTarget* aDrawTarget, const gfxMatrix& aCTM) {
-    return GetFillPattern(aDrawTarget, GetFillOpacity(), aCTM);
+  GetFillPattern(const DrawTarget* aDrawTarget, const gfxMatrix& aCTM,
+                 uint32_t aFlags = 0) {
+    return GetFillPattern(aDrawTarget, GetFillOpacity(), aCTM, aFlags);
   }
 
   mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
-  GetStrokePattern(const DrawTarget* aDrawTarget, const gfxMatrix& aCTM) {
-    return GetStrokePattern(aDrawTarget, GetStrokeOpacity(), aCTM);
+  GetStrokePattern(const DrawTarget* aDrawTarget, const gfxMatrix& aCTM,
+                   uint32_t aFlags) {
+    return GetStrokePattern(aDrawTarget, GetStrokeOpacity(), aCTM, aFlags);
   }
 
   static SVGContextPaint* GetContextPaint(nsIContent* aContent);
@@ -156,11 +160,13 @@ public:
   mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
   GetFillPattern(const DrawTarget* aDrawTarget,
                  float aOpacity,
-                 const gfxMatrix& aCTM) override;
+                 const gfxMatrix& aCTM,
+                 uint32_t aFlags) override;
   mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
   GetStrokePattern(const DrawTarget* aDrawTarget,
                    float aOpacity,
-                   const gfxMatrix& aCTM) override;
+                   const gfxMatrix& aCTM,
+                   uint32_t aFlags) override;
 
   void SetFillOpacity(float aOpacity) { mFillOpacity = aOpacity; }
   float GetFillOpacity() const override { return mFillOpacity; }
@@ -214,7 +220,8 @@ public:
     GetPattern(const DrawTarget* aDrawTarget,
                float aOpacity,
                nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-               const gfxMatrix& aCTM);
+               const gfxMatrix& aCTM,
+               uint32_t aFlags);
   };
 
   Paint mFillPaint;
@@ -250,14 +257,14 @@ public:
    */
   mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
   GetFillPattern(const DrawTarget* aDrawTarget, float aFillOpacity,
-                 const gfxMatrix& aCTM) override;
+                 const gfxMatrix& aCTM, uint32_t aFlags = 0) override;
 
   /**
    * Returns a pattern of type PatternType::COLOR, or else nullptr.
    */
   mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
   GetStrokePattern(const DrawTarget* aDrawTarget, float aStrokeOpacity,
-                   const gfxMatrix& aCTM) override;
+                   const gfxMatrix& aCTM, uint32_t aFlags = 0) override;
 
   float GetFillOpacity() const override {
     // Always 1.0f since we don't currently allow 'context-fill-opacity'

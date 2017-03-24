@@ -303,7 +303,7 @@ SVGGeometryFrame::PaintSVG(gfxContext& aContext,
   DrawResult result = DrawResult::SUCCESS;
 
   if (paintOrder == NS_STYLE_PAINT_ORDER_NORMAL) {
-    result = Render(&aContext, eRenderFill | eRenderStroke, newMatrix);
+    result = Render(&aContext, eRenderFill | eRenderStroke, newMatrix, aFlags);
     PaintMarkers(aContext, aTransform);
   } else {
     while (paintOrder) {
@@ -311,10 +311,10 @@ SVGGeometryFrame::PaintSVG(gfxContext& aContext,
         paintOrder & ((1 << NS_STYLE_PAINT_ORDER_BITWIDTH) - 1);
       switch (component) {
         case NS_STYLE_PAINT_ORDER_FILL:
-          result &= Render(&aContext, eRenderFill, newMatrix);
+          result &= Render(&aContext, eRenderFill, newMatrix, aFlags);
           break;
         case NS_STYLE_PAINT_ORDER_STROKE:
-          result &= Render(&aContext, eRenderStroke, newMatrix);
+          result &= Render(&aContext, eRenderStroke, newMatrix, aFlags);
           break;
         case NS_STYLE_PAINT_ORDER_MARKERS:
           PaintMarkers(aContext, aTransform);
@@ -761,7 +761,8 @@ SVGGeometryFrame::MarkerProperties::GetMarkerEndFrame()
 DrawResult
 SVGGeometryFrame::Render(gfxContext* aContext,
                          uint32_t aRenderComponents,
-                         const gfxMatrix& aNewTransform)
+                         const gfxMatrix& aNewTransform,
+                         uint32_t aFlags)
 {
   MOZ_ASSERT(!aNewTransform.IsSingular());
 
@@ -814,7 +815,7 @@ SVGGeometryFrame::Render(gfxContext* aContext,
   if (aRenderComponents & eRenderFill) {
     GeneralPattern fillPattern;
     result = nsSVGUtils::MakeFillPatternFor(this, aContext, &fillPattern,
-                                            contextPaint);
+                                            contextPaint, aFlags);
 
     if (fillPattern.GetPattern()) {
       DrawOptions drawOptions(1.0f, CompositionOp::OP_OVER, aaMode);
@@ -853,7 +854,7 @@ SVGGeometryFrame::Render(gfxContext* aContext,
     GeneralPattern strokePattern;
     result &=
       nsSVGUtils::MakeStrokePatternFor(this, aContext, &strokePattern,
-                                       contextPaint);
+                                       contextPaint, aFlags);
 
     if (strokePattern.GetPattern()) {
       SVGContentUtils::AutoStrokeOptions strokeOptions;
