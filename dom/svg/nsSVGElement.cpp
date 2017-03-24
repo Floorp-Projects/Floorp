@@ -909,6 +909,7 @@ nsSVGElement::IsNodeOfType(uint32_t aFlags) const
 void
 nsSVGElement::NodeInfoChanged(nsIDocument* aOldDoc)
 {
+  nsSVGElementBase::NodeInfoChanged(aOldDoc);
   aOldDoc->UnscheduleSVGForPresAttrEvaluation(this);
   mContentDeclarationBlock = nullptr;
   OwnerDoc()->ScheduleSVGForPresAttrEvaluation(this);
