@@ -14,15 +14,16 @@
 
 namespace mozilla {
 
-namespace workers {
-class WorkerPrivate;
-} // namespace workers
-
 namespace hal {
 class NetworkInformation;
 } // namespace hal
 
 namespace dom {
+
+namespace workers {
+class WorkerPrivate;
+} // namespace workers
+
 namespace network {
 
 class Connection : public DOMEventTargetHelper
