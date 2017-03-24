@@ -725,7 +725,7 @@ function attachUpdateHandler(install) {
     let difference = Extension.comparePermissions(oldPerms, newPerms);
 
     // If there are no new permissions, just proceed
-    if (difference.hosts.length == 0 && difference.permissions.length == 0) {
+    if (difference.origins.length == 0 && difference.permissions.length == 0) {
       return Promise.resolve();
     }
 
@@ -1291,7 +1291,7 @@ var gViewController = {
       doCommand(aAddon) {
         if (aAddon.isWebExtension && !aAddon.seen && WEBEXT_PERMISSION_PROMPTS) {
           let perms = aAddon.userPermissions;
-          if (perms.hosts.length > 0 || perms.permissions.length > 0) {
+          if (perms.origins.length > 0 || perms.permissions.length > 0) {
             let subject = {
               wrappedJSObject: {
                 target: getBrowserElement(),
