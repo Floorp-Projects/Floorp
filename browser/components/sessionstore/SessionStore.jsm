@@ -897,8 +897,24 @@ var SessionStoreInternal = {
           browser.userTypedValue = uri;
         }
 
-        // Update tab label and icon again after the tab history was updated.
-        this.updateTabLabelAndIcon(tab, tabData);
+        // If the page has a title, set it.
+        if (activePageData) {
+          if (activePageData.title) {
+            tab.label = activePageData.title;
+          } else if (activePageData.url != "about:blank") {
+            tab.label = activePageData.url;
+          }
+        } else if (tab.hasAttribute("customizemode")) {
+          win.gCustomizeMode.setTab(tab);
+        }
+
+        // Restore the tab icon.
+        if ("image" in tabData) {
+          // Use the serialized contentPrincipal with the new icon load.
+          let loadingPrincipal = Utils.deserializePrincipal(tabData.iconLoadingPrincipal);
+          win.gBrowser.setIcon(tab, tabData.image, loadingPrincipal);
+          TabStateCache.update(browser, { image: null, iconLoadingPrincipal: null });
+        }
 
         let event = win.document.createEvent("Events");
         event.initEvent("SSTabRestoring", true, false);
@@ -2581,51 +2597,6 @@ var SessionStoreInternal = {
   },
 
   /**
-   * Updates the label and icon for a <xul:tab> using the data from
-   * tabData. If the tab being updated happens to be the
-   * customization mode tab, this function will tell the window's
-   * CustomizeMode instance about it.
-   *
-   * @param tab
-   *        The <xul:tab> to update.
-   * @param tabData (optional)
-   *        The tabData to use to update the tab. If the argument is
-   *        not supplied, the data will be retrieved from the cache.
-   */
-  updateTabLabelAndIcon(tab, tabData = null) {
-    let browser = tab.linkedBrowser;
-    let win = browser.ownerGlobal;
-
-    if (!tabData) {
-      let tabData = TabState.collect(tab);
-      if (!tabData) {
-        throw new Error("tabData not found for given tab");
-      }
-    }
-
-    let activePageData = tabData.entries[tabData.index - 1] || null;
-
-    // If the page has a title, set it.
-    if (activePageData) {
-      if (activePageData.title) {
-        tab.label = activePageData.title;
-      } else if (activePageData.url != "about:blank") {
-        tab.label = activePageData.url;
-      }
-    } else if (tab.hasAttribute("customizemode")) {
-      win.gCustomizeMode.setTab(tab);
-    }
-
-    // Restore the tab icon.
-    if ("image" in tabData) {
-      // Use the serialized contentPrincipal with the new icon load.
-      let loadingPrincipal = Utils.deserializePrincipal(tabData.iconLoadingPrincipal);
-      win.gBrowser.setIcon(tab, tabData.image, loadingPrincipal);
-      TabStateCache.update(browser, { image: null, iconLoadingPrincipal: null });
-    }
-  },
-
-  /**
    * Restores the session state stored in LastSession. This will attempt
    * to merge data into the current session. If a window was opened at startup
    * with pinned tab(s), then the remaining data from the previous session for
@@ -3623,10 +3594,6 @@ var SessionStoreInternal = {
 
     browser.messageManager.sendAsyncMessage("SessionStore:restoreHistory",
                                             {tabData, epoch, loadArguments});
-
-    // Update tab label and icon to show something
-    // while we wait for the messages to be processed.
-    this.updateTabLabelAndIcon(tab, tabData);
 
     // Restore tab attributes.
     if ("attributes" in tabData) {
