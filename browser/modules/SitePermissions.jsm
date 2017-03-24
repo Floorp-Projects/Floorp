@@ -577,9 +577,16 @@ var gPermissionObject = {
     labelID: "desktop-notification2",
   },
 
-  "camera": {},
-  "microphone": {},
+  "camera": {
+    exactHostMatch: true,
+  },
+
+  "microphone": {
+    exactHostMatch: true,
+  },
+
   "screen": {
+    exactHostMatch: true,
     states: [ SitePermissions.UNKNOWN, SitePermissions.BLOCK ],
   },
 
