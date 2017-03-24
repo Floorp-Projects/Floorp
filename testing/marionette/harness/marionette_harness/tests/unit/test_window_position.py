@@ -29,6 +29,31 @@ class TestWindowPosition(MarionetteTestCase):
             with self.assertRaises(InvalidArgumentException):
                 self.marionette.set_window_position(x, y)
 
+    def test_setting_window_rect_with_nulls_errors(self):
+        with self.assertRaises(InvalidArgumentException):
+            self.marionette.set_window_rect(height=None, width=None,
+                                            x=None, y=None)
+
+    def test_set_position_with_rect(self):
+        old_position = self.marionette.get_window_position()
+        wanted_position = {"x": old_position["x"] + 10, "y": old_position["y"] + 10}
+
+        new_position = self.marionette.set_window_rect(x=wanted_position["x"], y=wanted_position["y"])
+
+        self.assertNotEqual(old_position["x"], new_position["x"])
+        self.assertNotEqual(old_position["y"], new_position["y"])
+
+    def test_set_size_with_rect(self):
+        actual = self.marionette.window_size
+        width = actual["width"] - 50
+        height = actual["height"] - 50
+
+        size = self.marionette.set_window_rect(width=width, height=height)
+        self.assertEqual(size["width"], width,
+                         "New width is {0} but should be {1}".format(size["width"], width))
+        self.assertEqual(size["height"], height,
+                         "New height is {0} but should be {1}".format(size["height"], height))
+
     def test_move_to_new_position(self):
         old_position = self.marionette.get_window_position()
         new_position = {"x": old_position["x"] + 10, "y": old_position["y"] + 10}
