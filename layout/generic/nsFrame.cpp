@@ -11442,7 +11442,7 @@ void nsFrame::DisplayReflowExit(nsPresContext* aPresContext,
     DR_state->PrettyUC(aMetrics.Height(), height, 16);
     printf("Reflow d=%s,%s", width, height);
 
-    if (!aStatus.IsFullyComplete()) {
+    if (!aStatus.IsEmpty()) {
       printf(" status=%s", ToString(aStatus).c_str());
     }
     if (aFrame->HasOverflowAreas()) {
