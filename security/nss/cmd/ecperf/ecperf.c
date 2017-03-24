@@ -482,7 +482,7 @@ ectest_curve_freebl(ECCurveName curve, int iterations, int numThreads,
 
     rv = EC_NewKey(&ecParams, &ecPriv);
     if (rv != SECSuccess) {
-        return SECFailure;
+        goto cleanup;
     }
     ecPub.ecParams = ecParams;
     ecPub.publicValue = ecPriv->publicValue;
@@ -515,7 +515,9 @@ ectest_curve_freebl(ECCurveName curve, int iterations, int numThreads,
 cleanup:
     SECITEM_FreeItem(&ecEncodedParams, PR_FALSE);
     PORT_FreeArena(arena, PR_FALSE);
-    PORT_FreeArena(ecPriv->ecParams.arena, PR_FALSE);
+    if (ecPriv) {
+        PORT_FreeArena(ecPriv->ecParams.arena, PR_FALSE);
+    }
     return rv;
 }
 

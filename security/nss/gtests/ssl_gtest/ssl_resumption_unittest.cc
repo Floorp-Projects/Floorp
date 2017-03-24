@@ -481,6 +481,12 @@ TEST_P(TlsConnectStream, TestResumptionOverrideCipher) {
   server_->SetPacketFilter(std::make_shared<SelectedCipherSuiteReplacer>(
       ChooseAnotherCipher(version_)));
 
+  if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    client_->ExpectSendAlert(kTlsAlertIllegalParameter);
+    server_->ExpectSendAlert(kTlsAlertBadRecordMac);
+  } else {
+    ExpectAlert(client_, kTlsAlertHandshakeFailure);
+  }
   ConnectExpectFail();
   client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
   if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
@@ -553,7 +559,7 @@ TEST_P(TlsConnectGenericPre13, TestResumptionOverrideVersion) {
   server_->SetPacketFilter(
       std::make_shared<SelectedVersionReplacer>(override_version));
 
-  ConnectExpectFail();
+  ConnectExpectAlert(client_, kTlsAlertHandshakeFailure);
   client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
   server_->CheckErrorCode(SSL_ERROR_HANDSHAKE_FAILURE_ALERT);
 }
@@ -691,6 +697,8 @@ TEST_F(TlsConnectTest, TestTls13ResumptionForcedDowngrade) {
       std::make_shared<SelectedVersionReplacer>(SSL_LIBRARY_VERSION_TLS_1_2));
   server_->SetPacketFilter(std::make_shared<ChainedPacketFilter>(filters));
 
+  client_->ExpectSendAlert(kTlsAlertDecodeError);
+  server_->ExpectSendAlert(kTlsAlertBadRecordMac);  // Server can't read
   ConnectExpectFail();
   client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
   server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);

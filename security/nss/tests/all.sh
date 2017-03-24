@@ -273,7 +273,11 @@ run_cycles()
 cycles="standard pkix upgradedb sharedb"
 CYCLES=${NSS_CYCLES:-$cycles}
 
-tests="cipher lowhash libpkix cert dbtests tools fips sdr crmf smime ssl ocsp merge pkits chains ec gtests ssl_gtests"
+tests="cipher lowhash libpkix cert dbtests tools fips sdr crmf smime ssl ocsp merge pkits ec gtests ssl_gtests"
+# Don't run chains tests when we have a gyp build.
+if [ "$OBJDIR" != "Debug" -a "$OBJDIR" != "Release" ]; then
+  tests="$tests chains"
+fi
 TESTS=${NSS_TESTS:-$tests}
 
 ALL_TESTS=${TESTS}

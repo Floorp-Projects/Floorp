@@ -14,7 +14,7 @@ def main():
         print('-fsanitize='+sys.argv[2]+' -fno-sanitize-recover=undefined ', end='')
         return
     if sanitizer == "asan":
-        print('-fsanitize=address ', end='')
+        print('-fsanitize=address -fsanitize-address-use-after-scope ', end='')
         print('-fno-omit-frame-pointer -fno-optimize-sibling-calls ', end='')
         return
     if sanitizer == "msan":
