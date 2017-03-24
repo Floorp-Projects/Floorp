@@ -1054,14 +1054,14 @@ reftest-stylo:
                     stylo: true
                     autoland: true
                     mozilla-central: true
-                    default: false
+                    default: true
             linux64-stylo/debug:
                 by-project:
-                    mozilla-inbound: true
                     stylo: true
                     autoland: true
                     mozilla-central: true
-                    default: false
+                    mozilla-inbound: true
+                    default: true
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
