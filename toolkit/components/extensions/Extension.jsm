@@ -375,20 +375,20 @@ this.ExtensionData = class {
   // manifest.  The current implementation just returns the contents
   // of the permissions attribute, if we add things like url_overrides,
   // they should also be added here.
-  get userPermissions() {
+  userPermissions() {
     let result = {
-      origins: this.whiteListedHosts.pat,
+      hosts: this.whiteListedHosts.pat,
       apis: [...this.apiNames],
     };
 
     if (Array.isArray(this.manifest.content_scripts)) {
       for (let entry of this.manifest.content_scripts) {
-        result.origins.push(...entry.matches);
+        result.hosts.push(...entry.matches);
       }
     }
     const EXP_PATTERN = /^experiments\.\w+/;
     result.permissions = [...this.permissions]
-      .filter(p => !result.origins.includes(p) && !EXP_PATTERN.test(p));
+      .filter(p => !result.hosts.includes(p) && !EXP_PATTERN.test(p));
     return result;
   }
 
@@ -401,7 +401,7 @@ this.ExtensionData = class {
     // a *.domain.com to specific-host.domain.com that's actually a
     // drop in permissions but the simple test below will cause a prompt.
     return {
-      origins: newPermissions.origins.filter(perm => !oldPermissions.origins.includes(perm)),
+      hosts: newPermissions.hosts.filter(perm => !oldPermissions.hosts.includes(perm)),
       permissions: newPermissions.permissions.filter(perm => !oldPermissions.permissions.includes(perm)),
     };
   }
