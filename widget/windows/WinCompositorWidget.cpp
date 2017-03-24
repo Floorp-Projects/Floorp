@@ -180,7 +180,7 @@ WinCompositorWidget::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
   }
 
   RefPtr<gfx::DrawTarget> dataTarget =
-    Factory::CreateDrawTargetForData(gfxPlatform::GetPlatform()->GetSoftwareBackend(),
+    Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                      destData,
                                      destSize,
                                      destStride,
