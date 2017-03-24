@@ -26,9 +26,9 @@
 //   // ... later, to release the memory:
 //   AlignedFree(my_array);
 //
-// Or using unique_ptr:
+// Or using scoped_ptr:
 //
-//   std::unique_ptr<float, AlignedFreeDeleter> my_array(
+//   scoped_ptr<float, AlignedFreeDeleter> my_array(
 //       static_cast<float*>(AlignedAlloc(size, alignment)));
 
 #ifndef BASE_MEMORY_ALIGNED_MEMORY_H_
@@ -104,8 +104,8 @@ inline void AlignedFree(void* ptr) {
 #endif
 }
 
-// Deleter for use with unique_ptr. E.g., use as
-//   std::unique_ptr<Foo, base::AlignedFreeDeleter> foo;
+// Deleter for use with scoped_ptr. E.g., use as
+//   scoped_ptr<Foo, base::AlignedFreeDeleter> foo;
 struct AlignedFreeDeleter {
   inline void operator()(void* ptr) const {
     AlignedFree(ptr);

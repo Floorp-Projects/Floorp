@@ -341,7 +341,10 @@ nsSVGMaskFrame::GetMaskArea(nsIFrame* aMaskedFrame)
     maskElem->mEnumAttributes[SVGMaskElement::MASKUNITS].GetAnimValue();
   gfxRect bbox;
   if (units == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-    bbox = nsSVGUtils::GetBBox(aMaskedFrame);
+    bbox =
+      nsSVGUtils::GetBBox(aMaskedFrame,
+                          nsSVGUtils::eUseFrameBoundsForOuterSVG |
+                          nsSVGUtils::eBBoxIncludeFillGeometry);
   }
 
   // Bounds in the user space of aMaskedFrame

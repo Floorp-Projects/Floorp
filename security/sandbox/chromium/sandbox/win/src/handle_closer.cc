@@ -6,10 +6,8 @@
 
 #include <stddef.h>
 
-#include <memory>
-
 #include "base/logging.h"
-#include "base/memory/free_deleter.h"
+#include "base/memory/scoped_ptr.h"
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/interceptors.h"
 #include "sandbox/win/src/internal_types.h"
@@ -97,7 +95,7 @@ bool HandleCloser::InitializeTargetHandles(TargetProcess* target) {
     return true;
 
   size_t bytes_needed = GetBufferSize();
-  std::unique_ptr<size_t[]> local_buffer(
+  scoped_ptr<size_t[]> local_buffer(
       new size_t[bytes_needed / sizeof(size_t)]);
 
   if (!SetupHandleList(local_buffer.get(), bytes_needed))
@@ -176,7 +174,7 @@ bool GetHandleName(HANDLE handle, base::string16* handle_name) {
     ResolveNTFunctionPtr("NtQueryObject", &QueryObject);
 
   ULONG size = MAX_PATH;
-  std::unique_ptr<UNICODE_STRING, base::FreeDeleter> name;
+  scoped_ptr<UNICODE_STRING, base::FreeDeleter> name;
   NTSTATUS result;
 
   do {

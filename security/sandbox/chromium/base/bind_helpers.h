@@ -28,9 +28,6 @@
 // argument will CHECK() because the first invocation would have already
 // transferred ownership to the target function.
 //
-// RetainedRef() accepts a ref counted object and retains a reference to it.
-// When the callback is called, the object is passed as a raw pointer.
-//
 // ConstRef() allows binding a constant reference to an argument rather
 // than a copy.
 //
@@ -74,19 +71,6 @@
 // Without Owned(), someone would have to know to delete |pn| when the last
 // reference to the Callback is deleted.
 //
-// EXAMPLE OF RetainedRef():
-//
-//    void foo(RefCountedBytes* bytes) {}
-//
-//    scoped_refptr<RefCountedBytes> bytes = ...;
-//    Closure callback = Bind(&foo, base::RetainedRef(bytes));
-//    callback.Run();
-//
-// Without RetainedRef, the scoped_refptr would try to implicitly convert to
-// a raw pointer and fail compilation:
-//
-//    Closure callback = Bind(&foo, bytes); // ERROR!
-//
 //
 // EXAMPLE OF ConstRef():
 //
@@ -121,11 +105,10 @@
 //
 // EXAMPLE OF Passed():
 //
-//   void TakesOwnership(std::unique_ptr<Foo> arg) { }
-//   std::unique_ptr<Foo> CreateFoo() { return std::unique_ptr<Foo>(new Foo());
-//   }
+//   void TakesOwnership(scoped_ptr<Foo> arg) { }
+//   scoped_ptr<Foo> CreateFoo() { return scoped_ptr<Foo>(new Foo()); }
 //
-//   std::unique_ptr<Foo> f(new Foo());
+//   scoped_ptr<Foo> f(new Foo());
 //
 //   // |cb| is given ownership of Foo(). |f| is now NULL.
 //   // You can use std::move(f) in place of &f, but it's more verbose.
@@ -167,17 +150,149 @@
 
 #include "base/callback.h"
 #include "base/memory/weak_ptr.h"
+#include "base/template_util.h"
 #include "build/build_config.h"
 
 namespace base {
+namespace internal {
+
+// Use the Substitution Failure Is Not An Error (SFINAE) trick to inspect T
+// for the existence of AddRef() and Release() functions of the correct
+// signature.
+//
+// http://en.wikipedia.org/wiki/Substitution_failure_is_not_an_error
+// http://stackoverflow.com/questions/257288/is-it-possible-to-write-a-c-template-to-check-for-a-functions-existence
+// http://stackoverflow.com/questions/4358584/sfinae-approach-comparison
+// http://stackoverflow.com/questions/1966362/sfinae-to-check-for-inherited-member-functions
+//
+// The last link in particular show the method used below.
+//
+// For SFINAE to work with inherited methods, we need to pull some extra tricks
+// with multiple inheritance.  In the more standard formulation, the overloads
+// of Check would be:
+//
+//   template <typename C>
+//   Yes NotTheCheckWeWant(Helper<&C::TargetFunc>*);
+//
+//   template <typename C>
+//   No NotTheCheckWeWant(...);
+//
+//   static const bool value = sizeof(NotTheCheckWeWant<T>(0)) == sizeof(Yes);
+//
+// The problem here is that template resolution will not match
+// C::TargetFunc if TargetFunc does not exist directly in C.  That is, if
+// TargetFunc in inherited from an ancestor, &C::TargetFunc will not match,
+// |value| will be false.  This formulation only checks for whether or
+// not TargetFunc exist directly in the class being introspected.
+//
+// To get around this, we play a dirty trick with multiple inheritance.
+// First, We create a class BaseMixin that declares each function that we
+// want to probe for.  Then we create a class Base that inherits from both T
+// (the class we wish to probe) and BaseMixin.  Note that the function
+// signature in BaseMixin does not need to match the signature of the function
+// we are probing for; thus it's easiest to just use void().
+//
+// Now, if TargetFunc exists somewhere in T, then &Base::TargetFunc has an
+// ambiguous resolution between BaseMixin and T.  This lets us write the
+// following:
+//
+//   template <typename C>
+//   No GoodCheck(Helper<&C::TargetFunc>*);
+//
+//   template <typename C>
+//   Yes GoodCheck(...);
+//
+//   static const bool value = sizeof(GoodCheck<Base>(0)) == sizeof(Yes);
+//
+// Notice here that the variadic version of GoodCheck() returns Yes here
+// instead of No like the previous one. Also notice that we calculate |value|
+// by specializing GoodCheck() on Base instead of T.
+//
+// We've reversed the roles of the variadic, and Helper overloads.
+// GoodCheck(Helper<&C::TargetFunc>*), when C = Base, fails to be a valid
+// substitution if T::TargetFunc exists. Thus GoodCheck<Base>(0) will resolve
+// to the variadic version if T has TargetFunc.  If T::TargetFunc does not
+// exist, then &C::TargetFunc is not ambiguous, and the overload resolution
+// will prefer GoodCheck(Helper<&C::TargetFunc>*).
+//
+// This method of SFINAE will correctly probe for inherited names, but it cannot
+// typecheck those names.  It's still a good enough sanity check though.
+//
+// Works on gcc-4.2, gcc-4.4, and Visual Studio 2008.
+//
+// TODO(ajwong): Move to ref_counted.h or template_util.h when we've vetted
+// this works well.
+//
+// TODO(ajwong): Make this check for Release() as well.
+// See http://crbug.com/82038.
+template <typename T>
+class SupportsAddRefAndRelease {
+  using Yes = char[1];
+  using No = char[2];
+
+  struct BaseMixin {
+    void AddRef();
+  };
+
+// MSVC warns when you try to use Base if T has a private destructor, the
+// common pattern for refcounted types. It does this even though no attempt to
+// instantiate Base is made.  We disable the warning for this definition.
+#if defined(OS_WIN)
+#pragma warning(push)
+#pragma warning(disable:4624)
+#endif
+  struct Base : public T, public BaseMixin {
+  };
+#if defined(OS_WIN)
+#pragma warning(pop)
+#endif
+
+  template <void(BaseMixin::*)()> struct Helper {};
+
+  template <typename C>
+  static No& Check(Helper<&C::AddRef>*);
+
+  template <typename >
+  static Yes& Check(...);
+
+ public:
+  enum { value = sizeof(Check<Base>(0)) == sizeof(Yes) };
+};
+
+// Helpers to assert that arguments of a recounted type are bound with a
+// scoped_refptr.
+template <bool IsClasstype, typename T>
+struct UnsafeBindtoRefCountedArgHelper : false_type {
+};
 
 template <typename T>
-struct IsWeakReceiver;
+struct UnsafeBindtoRefCountedArgHelper<true, T>
+    : integral_constant<bool, SupportsAddRefAndRelease<T>::value> {
+};
 
-template <typename>
-struct BindUnwrapTraits;
+template <typename T>
+struct UnsafeBindtoRefCountedArg : false_type {
+};
 
-namespace internal {
+template <typename T>
+struct UnsafeBindtoRefCountedArg<T*>
+    : UnsafeBindtoRefCountedArgHelper<is_class<T>::value, T> {
+};
+
+template <typename T>
+class HasIsMethodTag {
+  using Yes = char[1];
+  using No = char[2];
+
+  template <typename U>
+  static Yes& Check(typename U::IsMethod*);
+
+  template <typename U>
+  static No& Check(...);
+
+ public:
+  enum { value = sizeof(Check<T>(0)) == sizeof(Yes) };
+};
 
 template <typename T>
 class UnretainedWrapper {
@@ -198,26 +313,22 @@ class ConstRefWrapper {
 };
 
 template <typename T>
-class RetainedRefWrapper {
- public:
-  explicit RetainedRefWrapper(T* o) : ptr_(o) {}
-  explicit RetainedRefWrapper(scoped_refptr<T> o) : ptr_(std::move(o)) {}
-  T* get() const { return ptr_.get(); }
- private:
-  scoped_refptr<T> ptr_;
-};
-
-template <typename T>
 struct IgnoreResultHelper {
-  explicit IgnoreResultHelper(T functor) : functor_(std::move(functor)) {}
-  explicit operator bool() const { return !!functor_; }
+  explicit IgnoreResultHelper(T functor) : functor_(functor) {}
 
   T functor_;
 };
 
+template <typename T>
+struct IgnoreResultHelper<Callback<T> > {
+  explicit IgnoreResultHelper(const Callback<T>& functor) : functor_(functor) {}
+
+  const Callback<T>& functor_;
+};
+
 // An alternate implementation is to avoid the destructive copy, and instead
 // specialize ParamTraits<> for OwnedWrapper<> to change the StorageType to
-// a class that is essentially a std::unique_ptr<>.
+// a class that is essentially a scoped_ptr<>.
 //
 // The current implementation has the benefit though of leaving ParamTraits<>
 // fully in callback_internal.h as well as avoiding type conversions during
@@ -228,7 +339,7 @@ class OwnedWrapper {
   explicit OwnedWrapper(T* o) : ptr_(o) {}
   ~OwnedWrapper() { delete ptr_; }
   T* get() const { return ptr_; }
-  OwnedWrapper(OwnedWrapper&& other) {
+  OwnedWrapper(const OwnedWrapper& other) {
     ptr_ = other.ptr_;
     other.ptr_ = NULL;
   }
@@ -265,9 +376,9 @@ class PassedWrapper {
  public:
   explicit PassedWrapper(T&& scoper)
       : is_valid_(true), scoper_(std::move(scoper)) {}
-  PassedWrapper(PassedWrapper&& other)
+  PassedWrapper(const PassedWrapper& other)
       : is_valid_(other.is_valid_), scoper_(std::move(other.scoper_)) {}
-  T Take() const {
+  T Pass() const {
     CHECK(is_valid_);
     is_valid_ = false;
     return std::move(scoper_);
@@ -278,13 +389,100 @@ class PassedWrapper {
   mutable T scoper_;
 };
 
+// Unwrap the stored parameters for the wrappers above.
 template <typename T>
-using Unwrapper = BindUnwrapTraits<typename std::decay<T>::type>;
+struct UnwrapTraits {
+  using ForwardType = const T&;
+  static ForwardType Unwrap(const T& o) { return o; }
+};
 
 template <typename T>
-auto Unwrap(T&& o) -> decltype(Unwrapper<T>::Unwrap(std::forward<T>(o))) {
-  return Unwrapper<T>::Unwrap(std::forward<T>(o));
-}
+struct UnwrapTraits<UnretainedWrapper<T> > {
+  using ForwardType = T*;
+  static ForwardType Unwrap(UnretainedWrapper<T> unretained) {
+    return unretained.get();
+  }
+};
+
+template <typename T>
+struct UnwrapTraits<ConstRefWrapper<T> > {
+  using ForwardType = const T&;
+  static ForwardType Unwrap(ConstRefWrapper<T> const_ref) {
+    return const_ref.get();
+  }
+};
+
+template <typename T>
+struct UnwrapTraits<scoped_refptr<T> > {
+  using ForwardType = T*;
+  static ForwardType Unwrap(const scoped_refptr<T>& o) { return o.get(); }
+};
+
+template <typename T>
+struct UnwrapTraits<WeakPtr<T> > {
+  using ForwardType = const WeakPtr<T>&;
+  static ForwardType Unwrap(const WeakPtr<T>& o) { return o; }
+};
+
+template <typename T>
+struct UnwrapTraits<OwnedWrapper<T> > {
+  using ForwardType = T*;
+  static ForwardType Unwrap(const OwnedWrapper<T>& o) {
+    return o.get();
+  }
+};
+
+template <typename T>
+struct UnwrapTraits<PassedWrapper<T> > {
+  using ForwardType = T;
+  static T Unwrap(PassedWrapper<T>& o) {
+    return o.Pass();
+  }
+};
+
+// Utility for handling different refcounting semantics in the Bind()
+// function.
+template <bool is_method, typename... T>
+struct MaybeScopedRefPtr;
+
+template <bool is_method>
+struct MaybeScopedRefPtr<is_method> {
+  MaybeScopedRefPtr() {}
+};
+
+template <typename T, typename... Rest>
+struct MaybeScopedRefPtr<false, T, Rest...> {
+  MaybeScopedRefPtr(const T&, const Rest&...) {}
+};
+
+template <typename T, size_t n, typename... Rest>
+struct MaybeScopedRefPtr<false, T[n], Rest...> {
+  MaybeScopedRefPtr(const T*, const Rest&...) {}
+};
+
+template <typename T, typename... Rest>
+struct MaybeScopedRefPtr<true, T, Rest...> {
+  MaybeScopedRefPtr(const T& o, const Rest&...) {}
+};
+
+template <typename T, typename... Rest>
+struct MaybeScopedRefPtr<true, T*, Rest...> {
+  MaybeScopedRefPtr(T* o, const Rest&...) : ref_(o) {}
+  scoped_refptr<T> ref_;
+};
+
+// No need to additionally AddRef() and Release() since we are storing a
+// scoped_refptr<> inside the storage object already.
+template <typename T, typename... Rest>
+struct MaybeScopedRefPtr<true, scoped_refptr<T>, Rest...> {
+  MaybeScopedRefPtr(const scoped_refptr<T>&, const Rest&...) {}
+};
+
+template <typename T, typename... Rest>
+struct MaybeScopedRefPtr<true, const T*, Rest...> {
+  MaybeScopedRefPtr(const T* o, const Rest&...) : ref_(o) {}
+  scoped_refptr<const T> ref_;
+};
 
 // IsWeakMethod is a helper that determine if we are binding a WeakPtr<> to a
 // method.  It is used internally by Bind() to select the correct
@@ -293,11 +491,16 @@ auto Unwrap(T&& o) -> decltype(Unwrapper<T>::Unwrap(std::forward<T>(o))) {
 //
 // The first argument should be the type of the object that will be received by
 // the method.
-template <bool is_method, typename... Args>
-struct IsWeakMethod : std::false_type {};
+template <bool IsMethod, typename... Args>
+struct IsWeakMethod : public false_type {};
 
 template <typename T, typename... Args>
-struct IsWeakMethod<true, T, Args...> : IsWeakReceiver<T> {};
+struct IsWeakMethod<true, WeakPtr<T>, Args...> : public true_type {};
+
+template <typename T, typename... Args>
+struct IsWeakMethod<true, ConstRefWrapper<WeakPtr<T>>, Args...>
+    : public true_type {};
+
 
 // Packs a list of types to hold them in a single type.
 template <typename... Types>
@@ -380,41 +583,25 @@ struct MakeFunctionTypeImpl<R, TypeList<Args...>> {
 template <typename R, typename ArgList>
 using MakeFunctionType = typename MakeFunctionTypeImpl<R, ArgList>::Type;
 
-// Used for ExtractArgs and ExtractReturnType.
+// Used for ExtractArgs.
 template <typename Signature>
 struct ExtractArgsImpl;
 
 template <typename R, typename... Args>
 struct ExtractArgsImpl<R(Args...)> {
-  using ReturnType = R;
-  using ArgsList = TypeList<Args...>;
+  using Type = TypeList<Args...>;
 };
 
 // A type-level function that extracts function arguments into a TypeList.
 // E.g. ExtractArgs<R(A, B, C)> is evaluated to TypeList<A, B, C>.
 template <typename Signature>
-using ExtractArgs = typename ExtractArgsImpl<Signature>::ArgsList;
-
-// A type-level function that extracts the return type of a function.
-// E.g. ExtractReturnType<R(A, B, C)> is evaluated to R.
-template <typename Signature>
-using ExtractReturnType = typename ExtractArgsImpl<Signature>::ReturnType;
+using ExtractArgs = typename ExtractArgsImpl<Signature>::Type;
 
 }  // namespace internal
 
 template <typename T>
 static inline internal::UnretainedWrapper<T> Unretained(T* o) {
   return internal::UnretainedWrapper<T>(o);
-}
-
-template <typename T>
-static inline internal::RetainedRefWrapper<T> RetainedRef(T* o) {
-  return internal::RetainedRefWrapper<T>(o);
-}
-
-template <typename T>
-static inline internal::RetainedRefWrapper<T> RetainedRef(scoped_refptr<T> o) {
-  return internal::RetainedRefWrapper<T>(std::move(o));
 }
 
 template <typename T>
@@ -435,19 +622,28 @@ static inline internal::OwnedWrapper<T> Owned(T* o) {
 // Both versions of Passed() prevent T from being an lvalue reference. The first
 // via use of enable_if, and the second takes a T* which will not bind to T&.
 template <typename T,
-          typename std::enable_if<!std::is_lvalue_reference<T>::value>::type* =
+          typename std::enable_if<internal::IsMoveOnlyType<T>::value &&
+                                  !std::is_lvalue_reference<T>::value>::type* =
               nullptr>
 static inline internal::PassedWrapper<T> Passed(T&& scoper) {
   return internal::PassedWrapper<T>(std::move(scoper));
 }
-template <typename T>
+template <typename T,
+          typename std::enable_if<internal::IsMoveOnlyType<T>::value>::type* =
+              nullptr>
 static inline internal::PassedWrapper<T> Passed(T* scoper) {
   return internal::PassedWrapper<T>(std::move(*scoper));
 }
 
 template <typename T>
 static inline internal::IgnoreResultHelper<T> IgnoreResult(T data) {
-  return internal::IgnoreResultHelper<T>(std::move(data));
+  return internal::IgnoreResultHelper<T>(data);
+}
+
+template <typename T>
+static inline internal::IgnoreResultHelper<Callback<T> >
+IgnoreResult(const Callback<T>& data) {
+  return internal::IgnoreResultHelper<Callback<T> >(data);
 }
 
 BASE_EXPORT void DoNothing();
@@ -456,70 +652,6 @@ template<typename T>
 void DeletePointer(T* obj) {
   delete obj;
 }
-
-// An injection point to control |this| pointer behavior on a method invocation.
-// If IsWeakReceiver<> is true_type for |T| and |T| is used for a receiver of a
-// method, base::Bind cancels the method invocation if the receiver is tested as
-// false.
-// E.g. Foo::bar() is not called:
-//   struct Foo : base::SupportsWeakPtr<Foo> {
-//     void bar() {}
-//   };
-//
-//   WeakPtr<Foo> oo = nullptr;
-//   base::Bind(&Foo::bar, oo).Run();
-template <typename T>
-struct IsWeakReceiver : std::false_type {};
-
-template <typename T>
-struct IsWeakReceiver<internal::ConstRefWrapper<T>> : IsWeakReceiver<T> {};
-
-template <typename T>
-struct IsWeakReceiver<WeakPtr<T>> : std::true_type {};
-
-// An injection point to control how bound objects passed to the target
-// function. BindUnwrapTraits<>::Unwrap() is called for each bound objects right
-// before the target function is invoked.
-template <typename>
-struct BindUnwrapTraits {
-  template <typename T>
-  static T&& Unwrap(T&& o) { return std::forward<T>(o); }
-};
-
-template <typename T>
-struct BindUnwrapTraits<internal::UnretainedWrapper<T>> {
-  static T* Unwrap(const internal::UnretainedWrapper<T>& o) {
-    return o.get();
-  }
-};
-
-template <typename T>
-struct BindUnwrapTraits<internal::ConstRefWrapper<T>> {
-  static const T& Unwrap(const internal::ConstRefWrapper<T>& o) {
-    return o.get();
-  }
-};
-
-template <typename T>
-struct BindUnwrapTraits<internal::RetainedRefWrapper<T>> {
-  static T* Unwrap(const internal::RetainedRefWrapper<T>& o) {
-    return o.get();
-  }
-};
-
-template <typename T>
-struct BindUnwrapTraits<internal::OwnedWrapper<T>> {
-  static T* Unwrap(const internal::OwnedWrapper<T>& o) {
-    return o.get();
-  }
-};
-
-template <typename T>
-struct BindUnwrapTraits<internal::PassedWrapper<T>> {
-  static T Unwrap(const internal::PassedWrapper<T>& o) {
-    return o.Take();
-  }
-};
 
 }  // namespace base
 

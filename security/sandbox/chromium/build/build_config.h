@@ -48,10 +48,9 @@
 #endif
 #elif defined(_WIN32)
 #define OS_WIN 1
+#define TOOLKIT_VIEWS 1
 #elif defined(__FreeBSD__)
 #define OS_FREEBSD 1
-#elif defined(__NetBSD__)
-#define OS_NETBSD 1
 #elif defined(__OpenBSD__)
 #define OS_OPENBSD 1
 #elif defined(__sun)
@@ -68,16 +67,15 @@
 
 // For access to standard BSD features, use OS_BSD instead of a
 // more specific macro.
-#if defined(OS_FREEBSD) || defined(OS_NETBSD) || defined(OS_OPENBSD)
+#if defined(OS_FREEBSD) || defined(OS_OPENBSD)
 #define OS_BSD 1
 #endif
 
 // For access to standard POSIXish features, use OS_POSIX instead of a
 // more specific macro.
 #if defined(OS_MACOSX) || defined(OS_LINUX) || defined(OS_FREEBSD) ||     \
-    defined(OS_NETBSD) || defined(OS_OPENBSD) || defined(OS_SOLARIS) ||   \
-    defined(OS_ANDROID) || defined(OS_OPENBSD) || defined(OS_SOLARIS) ||  \
-    defined(OS_ANDROID) || defined(OS_NACL) || defined(OS_QNX)
+    defined(OS_OPENBSD) || defined(OS_SOLARIS) || defined(OS_ANDROID) ||  \
+    defined(OS_NACL) || defined(OS_QNX)
 #define OS_POSIX 1
 #endif
 
@@ -110,31 +108,6 @@
 #define ARCH_CPU_X86 1
 #define ARCH_CPU_32_BITS 1
 #define ARCH_CPU_LITTLE_ENDIAN 1
-#elif defined(__s390x__)
-#define ARCH_CPU_S390_FAMILY 1
-#define ARCH_CPU_S390X 1
-#define ARCH_CPU_64_BITS 1
-#define ARCH_CPU_BIG_ENDIAN 1
-#elif defined(__s390__)
-#define ARCH_CPU_S390_FAMILY 1
-#define ARCH_CPU_S390 1
-#define ARCH_CPU_31_BITS 1
-#define ARCH_CPU_BIG_ENDIAN 1
-#elif defined(__PPC64__) && defined(__BIG_ENDIAN__)
-#define ARCH_CPU_PPC64_FAMILY 1
-#define ARCH_CPU_PPC64 1
-#define ARCH_CPU_64_BITS 1
-#define ARCH_CPU_BIG_ENDIAN 1
-#elif defined(__PPC64__) && defined(__LITTLE_ENDIAN__)
-#define ARCH_CPU_PPC64_FAMILY 1
-#define ARCH_CPU_PPC64 1
-#define ARCH_CPU_64_BITS 1
-#define ARCH_CPU_LITTLE_ENDIAN 1
-#elif defined(__PPC__)
-#define ARCH_CPU_PPC_FAMILY 1
-#define ARCH_CPU_PPC 1
-#define ARCH_CPU_32_BITS 1
-#define ARCH_CPU_BIG_ENDIAN 1
 #elif defined(__ARMEL__)
 #define ARCH_CPU_ARM_FAMILY 1
 #define ARCH_CPU_ARMEL 1
@@ -150,7 +123,7 @@
 #define ARCH_CPU_LITTLE_ENDIAN 1
 #elif defined(__MIPSEL__)
 #if defined(__LP64__)
-#define ARCH_CPU_MIPS_FAMILY 1
+#define ARCH_CPU_MIPS64_FAMILY 1
 #define ARCH_CPU_MIPS64EL 1
 #define ARCH_CPU_64_BITS 1
 #define ARCH_CPU_LITTLE_ENDIAN 1

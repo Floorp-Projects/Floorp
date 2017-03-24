@@ -4,7 +4,6 @@
 
 #include "base/threading/platform_thread_internal_posix.h"
 
-#include "base/containers/adapters.h"
 #include "base/logging.h"
 
 namespace base {
@@ -12,7 +11,8 @@ namespace base {
 namespace internal {
 
 int ThreadPriorityToNiceValue(ThreadPriority priority) {
-  for (const auto& pair : kThreadPriorityToNiceValueMap) {
+  for (const ThreadPriorityToNiceValuePair& pair :
+       kThreadPriorityToNiceValueMap) {
     if (pair.priority == priority)
       return pair.nice_value;
   }
@@ -21,17 +21,13 @@ int ThreadPriorityToNiceValue(ThreadPriority priority) {
 }
 
 ThreadPriority NiceValueToThreadPriority(int nice_value) {
-  // Try to find a priority that best describes |nice_value|. If there isn't
-  // an exact match, this method returns the closest priority whose nice value
-  // is higher (lower priority) than |nice_value|.
-  for (const auto& pair : Reversed(kThreadPriorityToNiceValueMap)) {
-    if (pair.nice_value >= nice_value)
+  for (const ThreadPriorityToNiceValuePair& pair :
+       kThreadPriorityToNiceValueMap) {
+    if (pair.nice_value == nice_value)
       return pair.priority;
   }
-
-  // Reaching here means |nice_value| is more than any of the defined
-  // priorities. The lowest priority is suitable in this case.
-  return ThreadPriority::BACKGROUND;
+  NOTREACHED() << "Unknown nice value";
+  return ThreadPriority::NORMAL;
 }
 
 }  // namespace internal

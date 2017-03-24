@@ -11,6 +11,7 @@
 
 #include "base/logging.h"
 #include "base/macros.h"
+#include "base/memory/ref_counted.h"
 #include "sandbox/linux/bpf_dsl/bpf_dsl_impl.h"
 #include "sandbox/linux/bpf_dsl/errorcode.h"
 #include "sandbox/linux/bpf_dsl/policy_compiler.h"
@@ -23,7 +24,6 @@ namespace {
 class ReturnResultExprImpl : public internal::ResultExprImpl {
  public:
   explicit ReturnResultExprImpl(uint32_t ret) : ret_(ret) {}
-  ~ReturnResultExprImpl() override {}
 
   CodeGen::Node Compile(PolicyCompiler* pc) const override {
     return pc->Return(ret_);
@@ -36,6 +36,8 @@ class ReturnResultExprImpl : public internal::ResultExprImpl {
   }
 
  private:
+  ~ReturnResultExprImpl() override {}
+
   bool IsAction(uint32_t action) const {
     return (ret_ & SECCOMP_RET_ACTION) == action;
   }
@@ -51,7 +53,6 @@ class TrapResultExprImpl : public internal::ResultExprImpl {
       : func_(func), arg_(arg), safe_(safe) {
     DCHECK(func_);
   }
-  ~TrapResultExprImpl() override {}
 
   CodeGen::Node Compile(PolicyCompiler* pc) const override {
     return pc->Trap(func_, arg_, safe_);
@@ -62,6 +63,8 @@ class TrapResultExprImpl : public internal::ResultExprImpl {
   bool IsDeny() const override { return true; }
 
  private:
+  ~TrapResultExprImpl() override {}
+
   TrapRegistry::TrapFnc func_;
   const void* arg_;
   bool safe_;
@@ -71,13 +74,10 @@ class TrapResultExprImpl : public internal::ResultExprImpl {
 
 class IfThenResultExprImpl : public internal::ResultExprImpl {
  public:
-  IfThenResultExprImpl(BoolExpr cond,
-                       ResultExpr then_result,
-                       ResultExpr else_result)
-      : cond_(std::move(cond)),
-        then_result_(std::move(then_result)),
-        else_result_(std::move(else_result)) {}
-  ~IfThenResultExprImpl() override {}
+  IfThenResultExprImpl(const BoolExpr& cond,
+                       const ResultExpr& then_result,
+                       const ResultExpr& else_result)
+      : cond_(cond), then_result_(then_result), else_result_(else_result) {}
 
   CodeGen::Node Compile(PolicyCompiler* pc) const override {
     // We compile the "then" and "else" expressions in separate statements so
@@ -92,6 +92,8 @@ class IfThenResultExprImpl : public internal::ResultExprImpl {
   }
 
  private:
+  ~IfThenResultExprImpl() override {}
+
   BoolExpr cond_;
   ResultExpr then_result_;
   ResultExpr else_result_;
@@ -102,7 +104,6 @@ class IfThenResultExprImpl : public internal::ResultExprImpl {
 class ConstBoolExprImpl : public internal::BoolExprImpl {
  public:
   ConstBoolExprImpl(bool value) : value_(value) {}
-  ~ConstBoolExprImpl() override {}
 
   CodeGen::Node Compile(PolicyCompiler* pc,
                         CodeGen::Node then_node,
@@ -111,6 +112,8 @@ class ConstBoolExprImpl : public internal::BoolExprImpl {
   }
 
  private:
+  ~ConstBoolExprImpl() override {}
+
   bool value_;
 
   DISALLOW_COPY_AND_ASSIGN(ConstBoolExprImpl);
@@ -123,7 +126,6 @@ class MaskedEqualBoolExprImpl : public internal::BoolExprImpl {
                           uint64_t mask,
                           uint64_t value)
       : argno_(argno), width_(width), mask_(mask), value_(value) {}
-  ~MaskedEqualBoolExprImpl() override {}
 
   CodeGen::Node Compile(PolicyCompiler* pc,
                         CodeGen::Node then_node,
@@ -132,6 +134,8 @@ class MaskedEqualBoolExprImpl : public internal::BoolExprImpl {
   }
 
  private:
+  ~MaskedEqualBoolExprImpl() override {}
+
   int argno_;
   size_t width_;
   uint64_t mask_;
@@ -142,8 +146,7 @@ class MaskedEqualBoolExprImpl : public internal::BoolExprImpl {
 
 class NegateBoolExprImpl : public internal::BoolExprImpl {
  public:
-  explicit NegateBoolExprImpl(BoolExpr cond) : cond_(std::move(cond)) {}
-  ~NegateBoolExprImpl() override {}
+  explicit NegateBoolExprImpl(const BoolExpr& cond) : cond_(cond) {}
 
   CodeGen::Node Compile(PolicyCompiler* pc,
                         CodeGen::Node then_node,
@@ -152,6 +155,8 @@ class NegateBoolExprImpl : public internal::BoolExprImpl {
   }
 
  private:
+  ~NegateBoolExprImpl() override {}
+
   BoolExpr cond_;
 
   DISALLOW_COPY_AND_ASSIGN(NegateBoolExprImpl);
@@ -159,9 +164,8 @@ class NegateBoolExprImpl : public internal::BoolExprImpl {
 
 class AndBoolExprImpl : public internal::BoolExprImpl {
  public:
-  AndBoolExprImpl(BoolExpr lhs, BoolExpr rhs)
-      : lhs_(std::move(lhs)), rhs_(std::move(rhs)) {}
-  ~AndBoolExprImpl() override {}
+  AndBoolExprImpl(const BoolExpr& lhs, const BoolExpr& rhs)
+      : lhs_(lhs), rhs_(rhs) {}
 
   CodeGen::Node Compile(PolicyCompiler* pc,
                         CodeGen::Node then_node,
@@ -171,6 +175,8 @@ class AndBoolExprImpl : public internal::BoolExprImpl {
   }
 
  private:
+  ~AndBoolExprImpl() override {}
+
   BoolExpr lhs_;
   BoolExpr rhs_;
 
@@ -179,9 +185,8 @@ class AndBoolExprImpl : public internal::BoolExprImpl {
 
 class OrBoolExprImpl : public internal::BoolExprImpl {
  public:
-  OrBoolExprImpl(BoolExpr lhs, BoolExpr rhs)
-      : lhs_(std::move(lhs)), rhs_(std::move(rhs)) {}
-  ~OrBoolExprImpl() override {}
+  OrBoolExprImpl(const BoolExpr& lhs, const BoolExpr& rhs)
+      : lhs_(lhs), rhs_(rhs) {}
 
   CodeGen::Node Compile(PolicyCompiler* pc,
                         CodeGen::Node then_node,
@@ -191,6 +196,8 @@ class OrBoolExprImpl : public internal::BoolExprImpl {
   }
 
  private:
+  ~OrBoolExprImpl() override {}
+
   BoolExpr lhs_;
   BoolExpr rhs_;
 
@@ -230,63 +237,64 @@ BoolExpr ArgEq(int num, size_t size, uint64_t mask, uint64_t val) {
   // accordingly.
   CHECK(size == 4 || size == 8);
 
-  return std::make_shared<MaskedEqualBoolExprImpl>(num, size, mask, val);
+  return BoolExpr(new const MaskedEqualBoolExprImpl(num, size, mask, val));
 }
 
 }  // namespace internal
 
 ResultExpr Allow() {
-  return std::make_shared<ReturnResultExprImpl>(SECCOMP_RET_ALLOW);
+  return ResultExpr(new const ReturnResultExprImpl(SECCOMP_RET_ALLOW));
 }
 
 ResultExpr Error(int err) {
   CHECK(err >= ErrorCode::ERR_MIN_ERRNO && err <= ErrorCode::ERR_MAX_ERRNO);
-  return std::make_shared<ReturnResultExprImpl>(SECCOMP_RET_ERRNO + err);
+  return ResultExpr(new const ReturnResultExprImpl(SECCOMP_RET_ERRNO + err));
 }
 
 ResultExpr Kill() {
-  return std::make_shared<ReturnResultExprImpl>(SECCOMP_RET_KILL);
+  return ResultExpr(new const ReturnResultExprImpl(SECCOMP_RET_KILL));
 }
 
 ResultExpr Trace(uint16_t aux) {
-  return std::make_shared<ReturnResultExprImpl>(SECCOMP_RET_TRACE + aux);
+  return ResultExpr(new const ReturnResultExprImpl(SECCOMP_RET_TRACE + aux));
 }
 
 ResultExpr Trap(TrapRegistry::TrapFnc trap_func, const void* aux) {
-  return std::make_shared<TrapResultExprImpl>(trap_func, aux, true /* safe */);
+  return ResultExpr(
+      new const TrapResultExprImpl(trap_func, aux, true /* safe */));
 }
 
 ResultExpr UnsafeTrap(TrapRegistry::TrapFnc trap_func, const void* aux) {
-  return std::make_shared<TrapResultExprImpl>(trap_func, aux,
-                                              false /* unsafe */);
+  return ResultExpr(
+      new const TrapResultExprImpl(trap_func, aux, false /* unsafe */));
 }
 
 BoolExpr BoolConst(bool value) {
-  return std::make_shared<ConstBoolExprImpl>(value);
+  return BoolExpr(new const ConstBoolExprImpl(value));
 }
 
-BoolExpr Not(BoolExpr cond) {
-  return std::make_shared<NegateBoolExprImpl>(std::move(cond));
+BoolExpr Not(const BoolExpr& cond) {
+  return BoolExpr(new const NegateBoolExprImpl(cond));
 }
 
 BoolExpr AllOf() {
   return BoolConst(true);
 }
 
-BoolExpr AllOf(BoolExpr lhs, BoolExpr rhs) {
-  return std::make_shared<AndBoolExprImpl>(std::move(lhs), std::move(rhs));
+BoolExpr AllOf(const BoolExpr& lhs, const BoolExpr& rhs) {
+  return BoolExpr(new const AndBoolExprImpl(lhs, rhs));
 }
 
 BoolExpr AnyOf() {
   return BoolConst(false);
 }
 
-BoolExpr AnyOf(BoolExpr lhs, BoolExpr rhs) {
-  return std::make_shared<OrBoolExprImpl>(std::move(lhs), std::move(rhs));
+BoolExpr AnyOf(const BoolExpr& lhs, const BoolExpr& rhs) {
+  return BoolExpr(new const OrBoolExprImpl(lhs, rhs));
 }
 
-Elser If(BoolExpr cond, ResultExpr then_result) {
-  return Elser(nullptr).ElseIf(std::move(cond), std::move(then_result));
+Elser If(const BoolExpr& cond, const ResultExpr& then_result) {
+  return Elser(nullptr).ElseIf(cond, then_result);
 }
 
 Elser::Elser(cons::List<Clause> clause_list) : clause_list_(clause_list) {
@@ -298,12 +306,11 @@ Elser::Elser(const Elser& elser) : clause_list_(elser.clause_list_) {
 Elser::~Elser() {
 }
 
-Elser Elser::ElseIf(BoolExpr cond, ResultExpr then_result) const {
-  return Elser(Cons(std::make_pair(std::move(cond), std::move(then_result)),
-                    clause_list_));
+Elser Elser::ElseIf(const BoolExpr& cond, const ResultExpr& then_result) const {
+  return Elser(Cons(std::make_pair(cond, then_result), clause_list_));
 }
 
-ResultExpr Elser::Else(ResultExpr else_result) const {
+ResultExpr Elser::Else(const ResultExpr& else_result) const {
   // We finally have the default result expression for this
   // if/then/else sequence.  Also, we've already accumulated all
   // if/then pairs into a list of reverse order (i.e., lower priority
@@ -326,10 +333,10 @@ ResultExpr Elser::Else(ResultExpr else_result) const {
   //
   // and end up with an appropriately chained tree.
 
-  ResultExpr expr = std::move(else_result);
+  ResultExpr expr = else_result;
   for (const Clause& clause : clause_list_) {
-    expr = std::make_shared<IfThenResultExprImpl>(clause.first, clause.second,
-                                                  std::move(expr));
+    expr = ResultExpr(
+        new const IfThenResultExprImpl(clause.first, clause.second, expr));
   }
   return expr;
 }
@@ -337,7 +344,5 @@ ResultExpr Elser::Else(ResultExpr else_result) const {
 }  // namespace bpf_dsl
 }  // namespace sandbox
 
-namespace std {
-template class shared_ptr<const sandbox::bpf_dsl::internal::BoolExprImpl>;
-template class shared_ptr<const sandbox::bpf_dsl::internal::ResultExprImpl>;
-}  // namespace std
+template class scoped_refptr<const sandbox::bpf_dsl::internal::BoolExprImpl>;
+template class scoped_refptr<const sandbox::bpf_dsl::internal::ResultExprImpl>;

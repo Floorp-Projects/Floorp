@@ -31,16 +31,28 @@ public:
 
   GamepadMappingType NoMapping() const { return GamepadMappingType::_empty; }
   GamepadMappingType StandardMapping() const { return GamepadMappingType::Standard; }
+  GamepadHand NoHand() const { return GamepadHand::_empty; }
+  GamepadHand LeftHand() const { return GamepadHand::Left; }
+  GamepadHand RightHand() const { return GamepadHand::Right; }
 
   already_AddRefed<Promise> AddGamepad(const nsAString& aID,
                                        GamepadMappingType aMapping,
+                                       GamepadHand aHand,
                                        uint32_t aNumButtons,
                                        uint32_t aNumAxes,
+                                       uint32_t aNumHaptics,
                                        ErrorResult& aRv);
   void RemoveGamepad(uint32_t aIndex);
   void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed);
   void NewButtonValueEvent(uint32_t aIndex, uint32_t aButton, bool aPressed, double aValue);
   void NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue);
+  void NewPoseMove(uint32_t aIndex,
+                   const Nullable<Float32Array>& aOrient,
+                   const Nullable<Float32Array>& aPos,
+                   const Nullable<Float32Array>& aAngVelocity,
+                   const Nullable<Float32Array>& aAngAcceleration,
+                   const Nullable<Float32Array>& aLinVelocity,
+                   const Nullable<Float32Array>& aLinAcceleration);
   void Shutdown();
 
   static already_AddRefed<GamepadServiceTest> CreateTestService(nsPIDOMWindowInner* aWindow);

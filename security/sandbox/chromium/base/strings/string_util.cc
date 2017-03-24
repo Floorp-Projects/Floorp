@@ -23,6 +23,7 @@
 #include "base/logging.h"
 #include "base/macros.h"
 #include "base/memory/singleton.h"
+#include "base/strings/string_split.h"
 #include "base/strings/utf_string_conversion_utils.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/third_party/icu/icu_utf.h"
@@ -887,7 +888,6 @@ OutStringType DoReplaceStringPlaceholders(
     const std::vector<OutStringType>& subst,
     std::vector<size_t>* offsets) {
   size_t substitutions = subst.size();
-  DCHECK_LT(substitutions, 10U);
 
   size_t sub_length = 0;
   for (const auto& cur : subst)
@@ -901,6 +901,7 @@ OutStringType DoReplaceStringPlaceholders(
     if ('$' == *i) {
       if (i + 1 != format_string.end()) {
         ++i;
+        DCHECK('$' == *i || '1' <= *i) << "Invalid placeholder: " << *i;
         if ('$' == *i) {
           while (i != format_string.end() && '$' == *i) {
             formatted.push_back('$');
@@ -908,11 +909,14 @@ OutStringType DoReplaceStringPlaceholders(
           }
           --i;
         } else {
-          if (*i < '1' || *i > '9') {
-            DLOG(ERROR) << "Invalid placeholder: $" << *i;
-            continue;
+          uintptr_t index = 0;
+          while (i != format_string.end() && '0' <= *i && *i <= '9') {
+            index *= 10;
+            index += *i - '0';
+            ++i;
           }
-          uintptr_t index = *i - '1';
+          --i;
+          index -= 1;
           if (offsets) {
             ReplacementOffset r_offset(index,
                 static_cast<int>(formatted.size()));

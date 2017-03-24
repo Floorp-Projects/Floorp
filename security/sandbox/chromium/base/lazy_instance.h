@@ -55,7 +55,7 @@ namespace base {
 template <typename Type>
 struct DefaultLazyInstanceTraits {
   static const bool kRegisterOnExit = true;
-#if DCHECK_IS_ON()
+#ifndef NDEBUG
   static const bool kAllowedToAccessOnNonjoinableThread = false;
 #endif
 
@@ -89,7 +89,7 @@ namespace internal {
 template <typename Type>
 struct LeakyLazyInstanceTraits {
   static const bool kRegisterOnExit = false;
-#if DCHECK_IS_ON()
+#ifndef NDEBUG
   static const bool kAllowedToAccessOnNonjoinableThread = true;
 #endif
 
@@ -102,7 +102,7 @@ struct LeakyLazyInstanceTraits {
 };
 
 // Our AtomicWord doubles as a spinlock, where a value of
-// kLazyInstanceStateCreating means the spinlock is being held for creation.
+// kBeingCreatedMarker means the spinlock is being held for creation.
 static const subtle::AtomicWord kLazyInstanceStateCreating = 1;
 
 // Check if instance needs to be created. If so return true otherwise
@@ -138,7 +138,7 @@ class LazyInstance {
   }
 
   Type* Pointer() {
-#if DCHECK_IS_ON()
+#ifndef NDEBUG
     // Avoid making TLS lookup on release builds.
     if (!Traits::kAllowedToAccessOnNonjoinableThread)
       ThreadRestrictions::AssertSingletonAllowed();

@@ -125,7 +125,7 @@ text {
 .web-audio-inspector .error {
   background-image: url(images/alerticon-warning.png);
   background-size: 13px 12px;
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   opacity: 0;
   transition: opacity .5s ease-out 0s;
 }

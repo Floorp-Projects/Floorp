@@ -5,8 +5,7 @@
 #ifndef SANDBOX_LINUX_BPF_DSL_BPF_DSL_FORWARD_H_
 #define SANDBOX_LINUX_BPF_DSL_BPF_DSL_FORWARD_H_
 
-#include <memory>
-
+#include "base/memory/ref_counted.h"
 #include "sandbox/sandbox_export.h"
 
 namespace sandbox {
@@ -21,8 +20,8 @@ class ResultExprImpl;
 class BoolExprImpl;
 }
 
-using ResultExpr = std::shared_ptr<const internal::ResultExprImpl>;
-using BoolExpr = std::shared_ptr<const internal::BoolExprImpl>;
+typedef scoped_refptr<const internal::ResultExprImpl> ResultExpr;
+typedef scoped_refptr<const internal::BoolExprImpl> BoolExpr;
 
 template <typename T>
 class Arg;
@@ -35,11 +34,9 @@ class Caser;
 }  // namespace bpf_dsl
 }  // namespace sandbox
 
-namespace std {
 extern template class SANDBOX_EXPORT
-    shared_ptr<const sandbox::bpf_dsl::internal::BoolExprImpl>;
+    scoped_refptr<const sandbox::bpf_dsl::internal::BoolExprImpl>;
 extern template class SANDBOX_EXPORT
-    shared_ptr<const sandbox::bpf_dsl::internal::ResultExprImpl>;
-}  // namespace std
+    scoped_refptr<const sandbox::bpf_dsl::internal::ResultExprImpl>;
 
 #endif  // SANDBOX_LINUX_BPF_DSL_BPF_DSL_FORWARD_H_

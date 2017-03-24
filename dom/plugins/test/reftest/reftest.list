@@ -7,7 +7,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) =
 # fuzzy because of anti-aliasing in dashed border
 fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == border-padding-1.html border-padding-1-ref.html # bug 629430
 fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == border-padding-2.html border-padding-2-ref.html # bug 629430
-skip-if(!webrender) pref(layers.advanced.border-layers,true) fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == border-padding-2.html border-padding-2-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == border-padding-2.html border-padding-2-ref.html
 fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(!haveTestPlugin||Android) == border-padding-3.html border-padding-3-ref.html # bug 629430 # bug 773482
 # The following two "pluginproblemui-direction" tests are unreliable on all platforms. They should be re-written or replaced.
 #random-if(cocoaWidget||d2d||/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(!haveTestPlugin&&!Android) == pluginproblemui-direction-1.html pluginproblemui-direction-1-ref.html # bug 567367

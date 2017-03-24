@@ -34,7 +34,7 @@
 }
 
 #developer-toolbar {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   padding: 0;
   min-height: 32px;
   background-color: var(--gcli-background-color);
@@ -42,7 +42,7 @@
 }
 
 #developer-toolbar > toolbarbutton {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   border: none;
   background-color: transparent;
   margin: 0;
@@ -122,7 +122,7 @@ html|*#gcli-output-frame {
 #gcli-tooltip {
   border-width: 0;
   background-color: transparent;
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
 }
 
 .gclitoolbar-input-node,
@@ -140,7 +140,7 @@ html|*#gcli-output-frame {
 }
 
 .gclitoolbar-input-node {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   color: var(--gcli-input-color);
   background-color: var(--gcli-input-background);
   background-repeat: no-repeat;

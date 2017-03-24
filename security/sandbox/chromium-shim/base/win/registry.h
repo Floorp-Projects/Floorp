@@ -7,35 +7,21 @@
 // This is a stripped down version of Chromium source file base/win/registry.h
 // Within our copy of Chromium files this is only used in base/win/windows_version.cc
 // in OSInfo::processor_model_name, which we don't use.
-// It is also used in GetUBR, which is used as the VersionNumber.patch, which
-// again is not needed by the sandbox.
 
 #ifndef BASE_WIN_REGISTRY_H_
 #define BASE_WIN_REGISTRY_H_
-
-#include <winerror.h>
 
 namespace base {
 namespace win {
 
 class BASE_EXPORT RegKey {
  public:
-  RegKey() {};
   RegKey(HKEY rootkey, const wchar_t* subkey, REGSAM access) {}
   ~RegKey() {}
 
-  LONG Open(HKEY rootkey, const wchar_t* subkey, REGSAM access) {
-    return ERROR_CANTOPEN;
-  }
-
-  LONG ReadValueDW(const wchar_t* name, DWORD* out_value) const
-  {
-    return ERROR_CANTREAD;
-  }
-
   LONG ReadValue(const wchar_t* name, std::wstring* out_value) const
   {
-    return ERROR_CANTREAD;
+    return 0;
   }
 
  private:

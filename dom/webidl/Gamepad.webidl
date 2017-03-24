@@ -80,4 +80,11 @@ interface Gamepad {
    */
   [Pref="dom.gamepad.extensions.enabled"]
   readonly attribute GamepadPose? pose;
+
+  /**
+   * The current haptic actuator of the device, an array of
+   * GamepadHapticActuator.
+   */
+  [Constant, Cached, Frozen, Pref="dom.gamepad.extensions.enabled"]
+  readonly attribute sequence<GamepadHapticActuator> hapticActuators;
 };

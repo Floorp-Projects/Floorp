@@ -1,32 +1,32 @@
 == intrinsic-1a.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1a.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1a.html intrinsic-1-ref.html
 == intrinsic-1b.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1b.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1b.html intrinsic-1-ref.html
 == intrinsic-1c.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1c.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1c.html intrinsic-1-ref.html
 == intrinsic-1d.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1d.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1d.html intrinsic-1-ref.html
 == intrinsic-1e.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1e.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1e.html intrinsic-1-ref.html
 == intrinsic-1f.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1f.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1f.html intrinsic-1-ref.html
 == intrinsic-1g.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1g.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1g.html intrinsic-1-ref.html
 == intrinsic-1h.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1h.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1h.html intrinsic-1-ref.html
 == intrinsic-1i.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1i.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1i.html intrinsic-1-ref.html
 == intrinsic-1j.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1j.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1j.html intrinsic-1-ref.html
 == intrinsic-1k.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1k.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1k.html intrinsic-1-ref.html
 == intrinsic-1l.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1l.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1l.html intrinsic-1-ref.html
 == intrinsic-1m.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1m.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1m.html intrinsic-1-ref.html
 == intrinsic-1n.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1n.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1n.html intrinsic-1-ref.html
 == intrinsic-1o.html intrinsic-1-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == intrinsic-1o.html intrinsic-1-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == intrinsic-1o.html intrinsic-1-ref.html
 == computed-size-reporting.html computed-size-reporting-ref.html
-skip-if(!webrender) pref(layers.advanced.border-layers,true) == computed-size-reporting.html computed-size-reporting-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,1) == computed-size-reporting.html computed-size-reporting-ref.html

@@ -8,10 +8,10 @@
 #include <windows.h>
 
 #include "base/base_export.h"
-#include "base/gtest_prod_util.h"
 #include "base/location.h"
 #include "base/logging.h"
 #include "base/macros.h"
+#include "base/move.h"
 
 // TODO(rvargas): remove this with the rest of the verifier.
 #if defined(COMPILER_MSVC)
@@ -36,6 +36,8 @@ namespace win {
 //     this explicitly is necessary because of bug 528394 and VC++ 2015.
 template <class Traits, class Verifier>
 class GenericScopedHandle {
+  MOVE_ONLY_TYPE_FOR_CPP_03(GenericScopedHandle)
+
  public:
   typedef typename Traits::Handle Handle;
 
@@ -106,11 +108,7 @@ class GenericScopedHandle {
   }
 
  private:
-  FRIEND_TEST_ALL_PREFIXES(ScopedHandleTest, ActiveVerifierWrongOwner);
-  FRIEND_TEST_ALL_PREFIXES(ScopedHandleTest, ActiveVerifierUntrackedHandle);
   Handle handle_;
-
-  DISALLOW_COPY_AND_ASSIGN(GenericScopedHandle);
 };
 
 #undef BASE_WIN_GET_CALLER
@@ -170,17 +168,13 @@ typedef GenericScopedHandle<HandleTraits, VerifierTraits> ScopedHandle;
 // This function may be called by the embedder to disable the use of
 // VerifierTraits at runtime. It has no effect if DummyVerifierTraits is used
 // for ScopedHandle.
-BASE_EXPORT void DisableHandleVerifier();
+void BASE_EXPORT DisableHandleVerifier();
 
 // This should be called whenever the OS is closing a handle, if extended
 // verification of improper handle closing is desired. If |handle| is being
 // tracked by the handle verifier and ScopedHandle is not the one closing it,
 // a CHECK is generated.
-BASE_EXPORT void OnHandleBeingClosed(HANDLE handle);
-
-// This testing function returns the module that the ActiveVerifier concrete
-// implementation was instantiated in.
-BASE_EXPORT HMODULE GetHandleVerifierModuleForTesting();
+void BASE_EXPORT OnHandleBeingClosed(HANDLE handle);
 
 }  // namespace win
 }  // namespace base

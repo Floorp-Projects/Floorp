@@ -20,10 +20,6 @@ const char kEnableCrashReporter[]           = "enable-crash-reporter";
 // the memory-infra category is enabled.
 const char kEnableHeapProfiling[]           = "enable-heap-profiling";
 
-// Report native (walk the stack) allocation traces. By default pseudo stacks
-// derived from trace events are reported.
-const char kEnableHeapProfilingModeNative[] = "native";
-
 // Generates full memory crash dump.
 const char kFullMemoryCrashReport[]         = "full-memory-crash-report";
 
@@ -49,11 +45,6 @@ const char kNoErrorDialogs[]                = "noerrdialogs";
 // When running certain tests that spawn child processes, this switch indicates
 // to the test framework that the current process is a child process.
 const char kTestChildProcess[]              = "test-child-process";
-
-// When running certain tests that spawn child processes, this switch indicates
-// to the test framework that the current process should not initialize ICU to
-// avoid creating any scoped handles too early in startup.
-const char kTestDoNotInitializeIcu[]        = "test-do-not-initialize-icu";
 
 // Gives the default maximal active V-logging level; 0 is the default.
 // Normally positive values are used for V-logging levels.
@@ -88,16 +79,6 @@ const char kProfilerTiming[]                = "profiler-timing";
 // Value of the --profiler-timing flag that will disable timing information for
 // chrome://profiler.
 const char kProfilerTimingDisabledValue[]   = "0";
-
-// Specifies a location for profiling output. This will only work if chrome has
-// been built with the gyp variable profiling=1 or gn arg enable_profiling=true.
-//
-//   {pid} if present will be replaced by the pid of the process.
-//   {count} if present will be incremented each time a profile is generated
-//           for this process.
-// The default is chrome-profile-{pid} for the browser and test-profile-{pid}
-// for tests.
-const char kProfilingFile[] = "profiling-file";
 
 #if defined(OS_WIN)
 // Disables the USB keyboard detection for blocking the OSK on Win8+.

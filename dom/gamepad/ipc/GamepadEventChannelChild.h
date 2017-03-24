@@ -11,11 +11,17 @@ namespace dom{
 
 class GamepadEventChannelChild final : public PGamepadEventChannelChild
 {
- public:
+public:
   GamepadEventChannelChild() {}
   ~GamepadEventChannelChild() {}
   virtual mozilla::ipc::IPCResult
   RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent) override;
+  virtual mozilla::ipc::IPCResult
+  RecvReplyGamepadVibrateHaptic(const uint32_t& aPromiseID) override;
+  void AddPromise(const uint32_t& aID, dom::Promise* aPromise);
+
+private:
+  nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mPromiseList;
 };
 
 }// namespace dom

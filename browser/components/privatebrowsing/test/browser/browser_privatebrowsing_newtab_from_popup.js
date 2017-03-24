@@ -26,7 +26,7 @@ add_task(function* test_private_popup_window_opens_private_tabs() {
 
   // Sanity check - this browser better be private.
   ok(PrivateBrowsingUtils.isWindowPrivate(privWin),
-     "Could not open a private browsing window.");
+     "Opened a private browsing window.");
 
   // First, open a private browsing window, and load our
   // testing page.
@@ -36,17 +36,19 @@ add_task(function* test_private_popup_window_opens_private_tabs() {
 
   // Next, click on the link in the testing page, and ensure
   // that a private popup window is opened.
-  let openedPromise = BrowserTestUtils.waitForNewWindow();
+  let openedPromise = BrowserTestUtils.waitForNewWindow(true, (uri) => {
+    return uri.startsWith("data:");
+  });
+
   yield BrowserTestUtils.synthesizeMouseAtCenter("#first", {}, privBrowser);
   let popupWin = yield openedPromise;
   ok(PrivateBrowsingUtils.isWindowPrivate(popupWin),
-     "Popup window was not private.");
+     "Popup window was private.");
 
   // Now click on the link in the popup, and ensure that a new
   // tab is opened in the original private browsing window.
   let newTabPromise = BrowserTestUtils.waitForNewTab(privWin.gBrowser);
   let popupBrowser = popupWin.gBrowser.selectedBrowser;
-  yield BrowserTestUtils.browserLoaded(popupBrowser);
   yield BrowserTestUtils.synthesizeMouseAtCenter("#second", {}, popupBrowser);
   let newPrivTab = yield newTabPromise;
 

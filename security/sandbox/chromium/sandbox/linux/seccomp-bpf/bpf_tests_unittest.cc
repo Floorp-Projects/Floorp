@@ -10,10 +10,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <memory>
-
 #include "base/logging.h"
 #include "base/macros.h"
+#include "base/memory/scoped_ptr.h"
 #include "build/build_config.h"
 #include "sandbox/linux/bpf_dsl/bpf_dsl.h"
 #include "sandbox/linux/bpf_dsl/policy.h"
@@ -77,7 +76,7 @@ TEST(BPFTest, BPFTesterCompatibilityDelegateLeakTest) {
   }
   {
     // Test polymorphism.
-    std::unique_ptr<BPFTesterDelegate> simple_delegate(
+    scoped_ptr<BPFTesterDelegate> simple_delegate(
         new BPFTesterCompatibilityDelegate<EmptyClassTakingPolicy, FourtyTwo>(
             DummyTestFunction));
   }
@@ -114,8 +113,8 @@ class BasicBPFTesterDelegate : public BPFTesterDelegate {
   BasicBPFTesterDelegate() {}
   ~BasicBPFTesterDelegate() override {}
 
-  std::unique_ptr<bpf_dsl::Policy> GetSandboxBPFPolicy() override {
-    return std::unique_ptr<bpf_dsl::Policy>(new EnosysPtracePolicy());
+  scoped_ptr<bpf_dsl::Policy> GetSandboxBPFPolicy() override {
+    return scoped_ptr<bpf_dsl::Policy>(new EnosysPtracePolicy());
   }
   void RunTestFunction() override {
     errno = 0;

@@ -120,26 +120,15 @@ ThreadProcessDispatcher::ThreadProcessDispatcher(PolicyBase* policy_base)
 
   static const IPCCall create_params = {
       {IPC_CREATEPROCESSW_TAG,
-       {WCHAR_TYPE, WCHAR_TYPE, WCHAR_TYPE, WCHAR_TYPE, INOUTPTR_TYPE}},
+       {WCHAR_TYPE, WCHAR_TYPE, WCHAR_TYPE, INOUTPTR_TYPE}},
       reinterpret_cast<CallbackGeneric>(
           &ThreadProcessDispatcher::CreateProcessW)};
-
-  // NOTE(liamjm): 2nd param is size_t: Using VOIDPTR_TYPE as they are
-  // the same size on windows.
-  static_assert(sizeof(size_t) == sizeof(void*),
-                "VOIDPTR_TYPE not same size as size_t");
-  static const IPCCall create_thread_params = {
-      {IPC_CREATETHREAD_TAG,
-       {VOIDPTR_TYPE, VOIDPTR_TYPE, VOIDPTR_TYPE, UINT32_TYPE}},
-      reinterpret_cast<CallbackGeneric>(
-          &ThreadProcessDispatcher::CreateThread)};
 
   ipc_calls_.push_back(open_thread);
   ipc_calls_.push_back(open_process);
   ipc_calls_.push_back(process_token);
   ipc_calls_.push_back(process_tokenex);
   ipc_calls_.push_back(create_params);
-  ipc_calls_.push_back(create_thread_params);
 }
 
 bool ThreadProcessDispatcher::SetupService(InterceptionManager* manager,
@@ -149,7 +138,6 @@ bool ThreadProcessDispatcher::SetupService(InterceptionManager* manager,
     case IPC_NTOPENPROCESS_TAG:
     case IPC_NTOPENPROCESSTOKEN_TAG:
     case IPC_NTOPENPROCESSTOKENEX_TAG:
-    case IPC_CREATETHREAD_TAG:
       // There is no explicit policy for these services.
       NOTREACHED();
       return false;
@@ -218,7 +206,6 @@ bool ThreadProcessDispatcher::NtOpenProcessTokenEx(IPCInfo* ipc,
 bool ThreadProcessDispatcher::CreateProcessW(IPCInfo* ipc, base::string16* name,
                                              base::string16* cmd_line,
                                              base::string16* cur_dir,
-                                             base::string16* target_cur_dir,
                                              CountedBuffer* info) {
   if (sizeof(PROCESS_INFORMATION) != info->Size())
     return false;
@@ -251,28 +238,9 @@ bool ThreadProcessDispatcher::CreateProcessW(IPCInfo* ipc, base::string16* name,
   // If our logic was wrong, at least we wont allow create a random process.
   DWORD ret = ProcessPolicy::CreateProcessWAction(eval, *ipc->client_info,
                                                   exe_name, *cmd_line,
-                                                  *target_cur_dir, proc_info);
+                                                  proc_info);
 
   ipc->return_info.win32_result = ret;
-  return true;
-}
-
-bool ThreadProcessDispatcher::CreateThread(IPCInfo* ipc,
-                                           SIZE_T stack_size,
-                                           LPTHREAD_START_ROUTINE start_address,
-                                           LPVOID parameter,
-                                           DWORD creation_flags) {
-  if (!start_address) {
-    return false;
-  }
-
-  HANDLE handle;
-  DWORD ret = ProcessPolicy::CreateThreadAction(*ipc->client_info, stack_size,
-                                                start_address, parameter,
-                                                creation_flags, NULL, &handle);
-
-  ipc->return_info.nt_status = ret;
-  ipc->return_info.handle = handle;
   return true;
 }
 
