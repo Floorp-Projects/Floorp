@@ -529,9 +529,7 @@ txExecutionState::bindVariable(const txExpandedName& aName,
 void
 txExecutionState::removeVariable(const txExpandedName& aName)
 {
-    if (mLocalVariables) {
-      mLocalVariables->removeVariable(aName);
-    }
+    mLocalVariables->removeVariable(aName);
 }
 
 nsresult
