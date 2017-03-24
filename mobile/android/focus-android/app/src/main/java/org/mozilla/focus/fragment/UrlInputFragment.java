@@ -25,7 +25,7 @@ import org.mozilla.focus.widget.InlineAutocompleteEditText;
 /**
  * Fragment for displaying he URL input controls.
  */
-public class UrlInputFragment extends Fragment implements View.OnClickListener, InlineAutocompleteEditText.OnTextChangeListener, InlineAutocompleteEditText.OnCommitListener {
+public class UrlInputFragment extends Fragment implements View.OnClickListener, InlineAutocompleteEditText.OnCommitListener, InlineAutocompleteEditText.OnFilterListener {
     public static final String ARGUMENT_URL = "url";
 
     public static UrlInputFragment create() {
@@ -50,6 +50,8 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     private View searchViewContainer;
     private TextView searchView;
 
+    private UrlAutoCompleteFilter urlAutoCompleteFilter;
+
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_urlinput, container, false);
@@ -67,8 +69,10 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         searchView =  (TextView)view.findViewById(R.id.search_hint);
         searchView.setOnClickListener(this);
 
+        urlAutoCompleteFilter = new UrlAutoCompleteFilter(getContext());
+
         urlView = (InlineAutocompleteEditText) view.findViewById(R.id.url_edit);
-        urlView.setOnFilterListener(new UrlAutoCompleteFilter(getContext()));
+        urlView.setOnFilterListener(this);
         urlView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
@@ -79,8 +83,6 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         });
 
         urlView.setOnCommitListener(this);
-
-        urlView.setOnTextChangeListener(this);
 
         if (getArguments().containsKey(ARGUMENT_URL)) {
             urlView.setText(getArguments().getString(ARGUMENT_URL));
@@ -164,17 +166,19 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     }
 
     @Override
-    public void onTextChange(String originalText, String autocompleteText) {
-        if (originalText.length() == 0) {
+    public void onFilter(String searchText, InlineAutocompleteEditText view) {
+        urlAutoCompleteFilter.onFilter(searchText, view);
+
+        if (searchText.length() == 0) {
             clearView.setVisibility(View.GONE);
             searchViewContainer.setVisibility(View.GONE);
         } else {
             clearView.setVisibility(View.VISIBLE);
 
-            final String hint = getString(R.string.search_hint, originalText);
+            final String hint = getString(R.string.search_hint, searchText);
 
             final SpannableString content = new SpannableString(hint);
-            content.setSpan(new StyleSpan(Typeface.BOLD), hint.length() - originalText.length(), hint.length(), 0);
+            content.setSpan(new StyleSpan(Typeface.BOLD), hint.length() - searchText.length(), hint.length(), 0);
 
             searchView.setText(content);
             searchViewContainer.setVisibility(View.VISIBLE);
