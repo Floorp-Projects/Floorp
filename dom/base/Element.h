@@ -1154,10 +1154,11 @@ public:
    * node has been changed.
    *
    * The new document can be reached via OwnerDoc().
+   *
+   * If you override this method,
+   * please call up to the parent NodeInfoChanged.
    */
-  virtual void NodeInfoChanged(nsIDocument* aOldDoc)
-  {
-  }
+  virtual void NodeInfoChanged(nsIDocument* aOldDoc) {}
 
   /**
    * Parse a string into an nsAttrValue for a CORS attribute.  This

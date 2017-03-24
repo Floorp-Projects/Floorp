@@ -1673,7 +1673,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // XXXbz if we already have a style attr parsed, this won't do
     // anything... need to fix that.
     // If MayHaveStyle() is true, we must be an nsStyledElement
-    static_cast<nsStyledElement*>(this)->ReparseStyleAttribute(false);
+    static_cast<nsStyledElement*>(this)->ReparseStyleAttribute(false, false);
   }
 
   if (aDocument) {
