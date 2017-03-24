@@ -41,6 +41,7 @@ this.ExtensionsUI = {
     Services.obs.addObserver(this, "webextension-permission-prompt", false);
     Services.obs.addObserver(this, "webextension-update-permissions", false);
     Services.obs.addObserver(this, "webextension-install-notify", false);
+    Services.obs.addObserver(this, "webextension-optional-permission-prompt", false);
 
     this._checkForSideloaded();
   },
@@ -203,6 +204,14 @@ this.ExtensionsUI = {
           callback();
         }
       });
+    } else if (topic == "webextension-optional-permission-prompt") {
+      let {browser, name, icon, permissions, resolve} = subject.wrappedJSObject;
+      let strings = this._buildStrings({
+        type: "optional",
+        addon: {name},
+        permissions,
+      });
+      resolve(this.showPermissionsPrompt(browser, strings, icon));
     }
   },
 
