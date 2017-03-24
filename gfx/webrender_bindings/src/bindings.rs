@@ -882,7 +882,7 @@ pub extern "C" fn wr_api_generate_frame(api: &mut RenderApi) {
 
 #[no_mangle]
 pub extern "C" fn wr_api_send_external_event(api: &mut RenderApi, evt: usize) {
-    assert!(unsafe { is_in_compositor_thread() });
+    assert!(unsafe { !is_in_render_thread() });
 
     api.send_external_event(ExternalEvent::from_raw(evt));
 }
