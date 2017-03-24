@@ -31,8 +31,10 @@ function startTests() {
 
   GamepadService.addGamepad("test gamepad", // id
                             GamepadService.standardMapping,
+                            GamepadService.noHand,
                             4, // buttons
-                            2).then(function(i) {
+                            2,
+                            0).then(function(i) {
                               gamepad_index = i;
                               gamepad_connected()
                             });

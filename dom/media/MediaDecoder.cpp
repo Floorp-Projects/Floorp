@@ -52,14 +52,14 @@ namespace mozilla {
 static const uint64_t ESTIMATED_DURATION_FUZZ_FACTOR_USECS = USECS_PER_S / 2;
 
 // avoid redefined macro in unified build
-#undef DECODER_LOG
-#undef DUMP_LOG
+#undef LOG
+#undef DUMP
 
 LazyLogModule gMediaDecoderLog("MediaDecoder");
-#define DECODER_LOG(x, ...) \
+#define LOG(x, ...) \
   MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, ("Decoder=%p " x, this, ##__VA_ARGS__))
 
-#define DUMP_LOG(x, ...) \
+#define DUMP(x, ...) \
   printf_stderr("%s\n", nsPrintfCString("Decoder=%p " x, this, ##__VA_ARGS__).get())
 
 #define NS_DispatchToMainThread(...) CompileError_UseAbstractMainThreadInstead
@@ -130,7 +130,6 @@ StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
 
 #if defined(PR_LOGGING)
 LazyLogModule gMediaTimerLog("MediaTimer");
-LazyLogModule gMediaSampleLog("MediaSample");
 #endif
 
 void
@@ -687,7 +686,7 @@ void
 MediaDecoder::SetMinimizePrerollUntilPlaybackStarts()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  DECODER_LOG("SetMinimizePrerollUntilPlaybackStarts()");
+  LOG("SetMinimizePrerollUntilPlaybackStarts()");
   mMinimizePreroll = true;
 
   // This needs to be called before we init the state machine, otherwise it will
@@ -823,9 +822,9 @@ MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
-  DECODER_LOG("MetadataLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d",
-              aInfo->mAudio.mChannels, aInfo->mAudio.mRate,
-              aInfo->HasAudio(), aInfo->HasVideo());
+  LOG("MetadataLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d",
+      aInfo->mAudio.mChannels, aInfo->mAudio.mRate,
+      aInfo->HasAudio(), aInfo->HasVideo());
 
   mMediaSeekable = aInfo->mMediaSeekable;
   mMediaSeekableOnlyInBufferedRanges = aInfo->mMediaSeekableOnlyInBufferedRanges;
@@ -875,7 +874,7 @@ MediaDecoder::EnsureTelemetryReported()
       "resource; %s", mResource->GetContentType().OriginalString().Data()));
   }
   for (const nsCString& codec : codecs) {
-    DECODER_LOG("Telemetry MEDIA_CODEC_USED= '%s'", codec.get());
+    LOG("Telemetry MEDIA_CODEC_USED= '%s'", codec.get());
     Telemetry::Accumulate(Telemetry::HistogramID::MEDIA_CODEC_USED, codec);
   }
 
@@ -896,10 +895,10 @@ MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
-  DECODER_LOG("FirstFrameLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d "
-              "mPlayState=%s",
-              aInfo->mAudio.mChannels, aInfo->mAudio.mRate, aInfo->HasAudio(),
-              aInfo->HasVideo(), PlayStateStr());
+  LOG("FirstFrameLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d "
+      "mPlayState=%s",
+      aInfo->mAudio.mChannels, aInfo->mAudio.mRate, aInfo->HasAudio(),
+      aInfo->HasVideo(), PlayStateStr());
 
   mInfo = aInfo.forget();
 
@@ -993,13 +992,13 @@ MediaDecoder::PlaybackEnded()
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
   if (mLogicallySeeking || mPlayState == PLAY_STATE_LOADING) {
-    DECODER_LOG("MediaDecoder::PlaybackEnded bailed out, "
-                "mLogicallySeeking=%d mPlayState=%s",
-                mLogicallySeeking.Ref(), ToPlayStateStr(mPlayState));
+    LOG("MediaDecoder::PlaybackEnded bailed out, "
+        "mLogicallySeeking=%d mPlayState=%s",
+        mLogicallySeeking.Ref(), ToPlayStateStr(mPlayState));
     return;
   }
 
-  DECODER_LOG("MediaDecoder::PlaybackEnded");
+  LOG("MediaDecoder::PlaybackEnded");
 
   ChangeState(PLAY_STATE_ENDED);
   InvalidateWithFlags(VideoFrameContainer::INVALIDATE_FORCE);
@@ -1096,7 +1095,7 @@ MediaDecoder::NotifyDownloadEnded(nsresult aStatus)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
-  DECODER_LOG("NotifyDownloadEnded, status=%" PRIx32, static_cast<uint32_t>(aStatus));
+  LOG("NotifyDownloadEnded, status=%" PRIx32, static_cast<uint32_t>(aStatus));
 
   if (aStatus == NS_BINDING_ABORTED) {
     // Download has been cancelled by user.
@@ -1191,7 +1190,7 @@ MediaDecoder::ChangeState(PlayState aState)
     mNextState = PLAY_STATE_PAUSED;
   }
 
-  DECODER_LOG("ChangeState %s => %s", PlayStateStr(), ToPlayStateStr(aState));
+  LOG("ChangeState %s => %s", PlayStateStr(), ToPlayStateStr(aState));
   mPlayState = aState;
 
   if (mPlayState == PLAY_STATE_PLAYING) {
@@ -1245,7 +1244,7 @@ MediaDecoder::DurationChanged()
     return;
   }
 
-  DECODER_LOG("Duration changed to %f", mDuration);
+  LOG("Duration changed to %f", mDuration);
 
   // Duration has changed so we should recompute playback rate
   UpdatePlaybackRate();
@@ -1832,7 +1831,7 @@ MediaDecoder::DumpDebugInfo()
   }
 
   if (!GetStateMachine()) {
-    DUMP_LOG("%s", str.get());
+    DUMP("%s", str.get());
     return;
   }
 
@@ -1840,11 +1839,11 @@ MediaDecoder::DumpDebugInfo()
   GetStateMachine()->RequestDebugInfo()->Then(
     SystemGroup::AbstractMainThreadFor(TaskCategory::Other), __func__,
     [this, self, str] (const nsACString& aString) {
-      DUMP_LOG("%s", str.get());
-      DUMP_LOG("%s", aString.Data());
+      DUMP("%s", str.get());
+      DUMP("%s", aString.Data());
     },
     [this, self, str] () {
-      DUMP_LOG("%s", str.get());
+      DUMP("%s", str.get());
     });
 }
 
@@ -1894,5 +1893,6 @@ MediaMemoryTracker::~MediaMemoryTracker()
 } // namespace mozilla
 
 // avoid redefined macro in unified build
-#undef DECODER_LOG
+#undef DUMP
+#undef LOG
 #undef NS_DispatchToMainThread

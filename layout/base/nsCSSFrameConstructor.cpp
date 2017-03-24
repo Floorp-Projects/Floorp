@@ -3739,7 +3739,7 @@ nsCSSFrameConstructor::FindInputData(Element* aElement,
   // not (respectively) NS_THEME_RADIO and NS_THEME_CHECKBOX.)
   if ((controlType == NS_FORM_INPUT_CHECKBOX ||
        controlType == NS_FORM_INPUT_RADIO) &&
-      aStyleContext->StyleDisplay()->mAppearance == NS_THEME_NONE) {
+      aStyleContext->StyleDisplay()->UsedAppearance() == NS_THEME_NONE) {
     return nullptr;
   }
 #endif
@@ -7379,6 +7379,31 @@ nsCSSFrameConstructor::MaybeRecreateForFrameset(nsIFrame* aParentFrame,
 }
 
 void
+nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
+                                          nsIContent* aEndChild)
+{
+  ServoStyleSet* styleSet = mPresShell->StyleSet()->AsServo();
+
+  for (nsIContent* child = aStartChild; child != aEndChild;
+       child = child->GetNextSibling()) {
+    // Calling StyleNewChildren on one child will end up styling another child,
+    // if they share the same flattened tree parent.  So we check HasServoData()
+    // to avoid a wasteful call to GetFlattenedTreeParent (on the child) and
+    // StyleNewChildren (on the flattened tree parent) when we detect we've
+    // already handled that parent.  In the common case of inserting elements
+    // into a container that does not have an XBL binding or shadow tree with
+    // distributed children, this boils down to a single call to
+    // GetFlattenedTreeParent/StyleNewChildren, and traversing the list of
+    // children checking HasServoData (which is fast).
+    if (child->IsElement() && !child->AsElement()->HasServoData()) {
+      Element* parent = child->AsElement()->GetFlattenedTreeParentElement();
+      MOZ_ASSERT(parent);
+      styleSet->StyleNewChildren(parent);
+    }
+  }
+}
+
+void
 nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
                                        nsIContent* aFirstNewContent,
                                        bool aAllowLazyConstruction,
@@ -7428,9 +7453,47 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   }
 #endif // MOZ_XUL
 
-  if (aContainer && aContainer->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
-      !aContainer->IsInNativeAnonymousSubtree() &&
-      !aFirstNewContent->IsInNativeAnonymousSubtree()) {
+  // The frame constructor uses this codepath both for bonafide newly-added
+  // content and for RestyleManager-driven frame construction (RECONSTRUCT_FRAME
+  // and lazy frame construction). If we're using the Servo style system, we
+  // want to ensure that styles get resolved in the first case, whereas for the
+  // second case they should have already been resolved if needed.
+  bool isNewlyAddedContentForServo = aContainer->IsStyledByServo() &&
+                                     !RestyleManager()->IsInStyleRefresh();
+
+  bool isNewShadowTreeContent =
+    aContainer && aContainer->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
+    !aContainer->IsInNativeAnonymousSubtree() &&
+    !aFirstNewContent->IsInNativeAnonymousSubtree();
+
+  if (!isNewShadowTreeContent) {
+    // See comment in ContentRangeInserted for why this is necessary.
+    if (!GetContentInsertionFrameFor(aContainer) &&
+        !aContainer->IsActiveChildrenElement()) {
+      // We're punting on frame construction because there's no container frame.
+      // The Servo-backed style system handles this case like the lazy frame
+      // construction case.
+      if (isNewlyAddedContentForServo) {
+        aContainer->AsElement()->NoteDirtyDescendantsForServo();
+      }
+      return;
+    }
+
+    if (aAllowLazyConstruction &&
+        MaybeConstructLazily(CONTENTAPPEND, aContainer, aFirstNewContent)) {
+      if (isNewlyAddedContentForServo) {
+        aContainer->AsElement()->NoteDirtyDescendantsForServo();
+      }
+      return;
+    }
+  }
+
+  // We couldn't construct lazily. Make Servo eagerly traverse the new content.
+  if (isNewlyAddedContentForServo) {
+    StyleNewChildRange(aFirstNewContent, nullptr);
+  }
+
+  if (isNewShadowTreeContent) {
     // Recreate frames if content is appended into a ShadowRoot
     // because children of ShadowRoot are rendered in place of children
     // of the host.
@@ -7441,39 +7504,6 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
                              REMOVE_FOR_RECONSTRUCTION, nullptr);
     LAYOUT_PHASE_TEMP_REENTER();
     return;
-  }
-
-  // The frame constructor uses this codepath both for bonafide newly-added
-  // content and for RestyleManager-driven frame construction (RECONSTRUCT_FRAME
-  // and lazy frame construction). If we're using the Servo style system, we
-  // want to ensure that styles get resolved in the first case, whereas for the
-  // second case they should have already been resolved if needed.
-  bool isNewlyAddedContentForServo = aContainer->IsStyledByServo() &&
-                                     !RestyleManager()->IsInStyleRefresh();
-
-  // See comment in ContentRangeInserted for why this is necessary.
-  if (!GetContentInsertionFrameFor(aContainer) &&
-      !aContainer->IsActiveChildrenElement()) {
-    // We're punting on frame construction because there's no container frame.
-    // The Servo-backed style system handles this case like the lazy frame
-    // construction case.
-    if (isNewlyAddedContentForServo) {
-      aContainer->AsElement()->NoteDirtyDescendantsForServo();
-    }
-    return;
-  }
-
-  if (aAllowLazyConstruction &&
-      MaybeConstructLazily(CONTENTAPPEND, aContainer, aFirstNewContent)) {
-    if (isNewlyAddedContentForServo) {
-      aContainer->AsElement()->NoteDirtyDescendantsForServo();
-    }
-    return;
-  }
-
-  // We couldn't construct lazily. Make Servo eagerly traverse the subtree.
-  if (isNewlyAddedContentForServo) {
-    mPresShell->StyleSet()->AsServo()->StyleNewChildren(aContainer->AsElement());
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
@@ -7893,22 +7923,6 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     return;
   }
 
-  if (aContainer->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
-      !aContainer->IsInNativeAnonymousSubtree() &&
-      (!aStartChild || !aStartChild->IsInNativeAnonymousSubtree()) &&
-      (!aEndChild || !aEndChild->IsInNativeAnonymousSubtree())) {
-    // Recreate frames if content is inserted into a ShadowRoot
-    // because children of ShadowRoot are rendered in place of
-    // the children of the host.
-    //XXXsmaug This is super unefficient!
-    nsIContent* bindingParent = aContainer->GetBindingParent();
-    LAYOUT_PHASE_TEMP_EXIT();
-    RecreateFramesForContent(bindingParent, false,
-                             REMOVE_FOR_RECONSTRUCTION, nullptr);
-    LAYOUT_PHASE_TEMP_REENTER();
-    return;
-  }
-
   // The frame constructor uses this codepath both for bonafide newly-added
   // content and for RestyleManager-driven frame construction (RECONSTRUCT_FRAME
   // and lazy frame construction). If we're using the Servo style system, we
@@ -7917,10 +7931,13 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
   bool isNewlyAddedContentForServo = aContainer->IsStyledByServo() &&
                                      !RestyleManager()->IsInStyleRefresh();
 
+  bool isNewShadowTreeContent =
+    aContainer->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
+    !aContainer->IsInNativeAnonymousSubtree() &&
+    (!aStartChild || !aStartChild->IsInNativeAnonymousSubtree()) &&
+    (!aEndChild || !aEndChild->IsInNativeAnonymousSubtree());
 
-  // Put 'parentFrame' inside a scope so we don't confuse it with
-  // 'insertion.mParentFrame' later.
-  {
+  if (!isNewShadowTreeContent) {
     nsContainerFrame* parentFrame = GetContentInsertionFrameFor(aContainer);
     // The xbl:children element won't have a frame, but default content can have the children as
     // a parent. While its uncommon to change the structure of the default content itself, a label,
@@ -7948,9 +7965,22 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     }
   }
 
-  // We couldn't construct lazily. Make Servo eagerly traverse the subtree.
+  // We couldn't construct lazily. Make Servo eagerly traverse the new content.
   if (isNewlyAddedContentForServo) {
-    mPresShell->StyleSet()->AsServo()->StyleNewChildren(aContainer->AsElement());
+    StyleNewChildRange(aStartChild, aEndChild);
+  }
+
+  if (isNewShadowTreeContent) {
+    // Recreate frames if content is inserted into a ShadowRoot
+    // because children of ShadowRoot are rendered in place of
+    // the children of the host.
+    //XXXsmaug This is super unefficient!
+    nsIContent* bindingParent = aContainer->GetBindingParent();
+    LAYOUT_PHASE_TEMP_EXIT();
+    RecreateFramesForContent(bindingParent, false,
+                             REMOVE_FOR_RECONSTRUCTION, nullptr);
+    LAYOUT_PHASE_TEMP_REENTER();
+    return;
   }
 
   InsertionPoint insertion;
@@ -11495,7 +11525,7 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
     nextTextFrame =
       CreateContinuingFrame(aState.mPresContext, aTextFrame, aParentFrame);
     // Repair the continuations style context
-    nsStyleContext* parentStyleContext = aStyleContext->GetParent();
+    nsStyleContext* parentStyleContext = aStyleContext->GetParentAllowServo();
     if (parentStyleContext) {
       RefPtr<nsStyleContext> newSC = styleSet->
         ResolveStyleForText(aTextContent, parentStyleContext);

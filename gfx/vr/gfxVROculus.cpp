@@ -912,7 +912,8 @@ VRControllerOculus::VRControllerOculus(dom::GamepadHand aHand)
 
   mControllerInfo.mNumButtons = kNumOculusButton;
   mControllerInfo.mNumAxes = static_cast<uint32_t>(
-                             OculusControllerAxisType::NumVRControllerAxisType);;
+                             OculusControllerAxisType::NumVRControllerAxisType);
+  mControllerInfo.mNumHaptics = kNumOculusHaptcs;
 }
 
 float
@@ -1046,6 +1047,17 @@ VRSystemManagerOculus::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
   if (mHMDInfo) {
     aHMDResult.AppendElement(mHMDInfo);
   }
+}
+
+bool
+VRSystemManagerOculus::GetIsPresenting()
+{
+  if (mHMDInfo) {
+    VRDisplayInfo displayInfo(mHMDInfo->GetDisplayInfo());
+    return displayInfo.GetIsPresenting();
+  }
+
+  return false;
 }
 
 void
@@ -1241,6 +1253,21 @@ VRSystemManagerOculus::HandlePoseTracking(uint32_t aControllerIdx,
     aController->SetPose(aPose);
     NewPoseState(aControllerIdx, aPose);
   }
+}
+
+void
+VRSystemManagerOculus::VibrateHaptic(uint32_t aControllerIdx,
+                                     uint32_t aHapticIndex,
+                                     double aIntensity,
+                                     double aDuration,
+                                     uint32_t aPromiseID)
+{
+  // TODO: Bug 1305892
+}
+
+void
+VRSystemManagerOculus::StopVibrateHaptic(uint32_t aControllerIdx)
+{
 }
 
 void
