@@ -81,7 +81,8 @@ public:
                           const gfxMatrix& aContextMatrix,
                           nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                           float aOpacity,
-                          const gfxRect *aOverrideBounds = nullptr) = 0;
+                          const gfxRect *aOverrideBounds = nullptr,
+                          uint32_t aFlags = 0) = 0;
 
   // nsIFrame methods:
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,

@@ -46,7 +46,8 @@ public:
                           const gfxMatrix& aContextMatrix,
                           nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                           float aOpacity,
-                          const gfxRect *aOverrideBounds) override;
+                          const gfxRect *aOverrideBounds,
+                          uint32_t aFlags) override;
 
 public:
   typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
@@ -113,7 +114,8 @@ protected:
                nsIFrame *aSource,
                nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                float aGraphicOpacity,
-               const gfxRect *aOverrideBounds);
+               const gfxRect *aOverrideBounds,
+               uint32_t aFlags);
 
   /**
    * A <pattern> element may reference another <pattern> element using
