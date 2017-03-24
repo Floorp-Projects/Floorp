@@ -1581,6 +1581,22 @@ Gecko_GetMediaFeatures()
   return nsMediaFeatures::features;
 }
 
+nsCSSFontFaceRule*
+Gecko_CSSFontFaceRule_Create()
+{
+  RefPtr<nsCSSFontFaceRule> rule = new nsCSSFontFaceRule(0, 0);
+  return rule.forget().take();
+}
+
+void
+Gecko_CSSFontFaceRule_GetCssText(const nsCSSFontFaceRule* aRule,
+                                 nsAString* aResult)
+{
+  aRule->GetCssText(*aResult);
+}
+
+NS_IMPL_FFI_REFCOUNTING(nsCSSFontFaceRule, CSSFontFaceRule);
+
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 
 #define STYLE_STRUCT(name, checkdata_cb)                                      \
