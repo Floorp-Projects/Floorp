@@ -48,10 +48,10 @@ protected:
   nsresult GetWebBrowserFind(nsIDocShell *aDocShell,
                              nsIWebBrowserFind **aWebBrowserFind);
 
-  void RangeStartsInsideLink(nsIDOMRange *aRange, nsIPresShell *aPresShell, 
+  void RangeStartsInsideLink(nsIDOMRange *aRange, nsIPresShell *aPresShell,
                              bool *aIsInsideLink, bool *aIsStartingLink);
 
-  void GetSelection(nsIPresShell *aPresShell, nsISelectionController **aSelCon, 
+  void GetSelection(nsIPresShell *aPresShell, nsISelectionController **aSelCon,
                     nsISelection **aDomSel);
   // *aNewRange may not be collapsed.  If you want to collapse it in a
   // particular way, you need to do it yourself.
@@ -59,6 +59,8 @@ protected:
                         nsIDOMRange *aRange, bool aMustBeVisible, 
                         bool aGetTopVisibleLeaf, nsIDOMRange **aNewRange,
                         bool *aUsesIndependentSelection);
+  bool IsRangeRendered(nsIPresShell *aPresShell, nsPresContext *aPresContext,
+                          nsIDOMRange *aRange);
   nsresult FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
                      bool aIsFirstVisiblePreferred, bool aFindPrev,
                      uint16_t* aResult);
