@@ -3,7 +3,5 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <dimen name="menu_elevation">8dp</dimen>
-
-    <dimen name="firstrun_container_width"><!-- match_parent --> -1dp</dimen>
+    <dimen name="firstrun_container_width">320dp</dimen>
 </resources>
