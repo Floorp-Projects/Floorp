@@ -50,7 +50,7 @@ fails == bug917595-exif-rotated.jpg bug917595-exif-rotated.jpg
 == bug1106522-1.html bug1106522-1.html
 == bug1106522-2.html bug1106522-2.html
 
-fails == href-attr-change-restyles.html href-attr-change-restyles.html
+== href-attr-change-restyles.html href-attr-change-restyles.html
 == figure.html figure.html
 == pre-1.html pre-1.html
 == table-border-1.html table-border-1.html

@@ -28,17 +28,17 @@ fails == block-invalidate.html block-invalidate.html
 fails == max-height.html max-height.html
 
 # Tests for block and inline orientation in combination with writing-mode
-fails == meter-orient-vertical.html meter-orient-vertical.html
-fails == meter-orient-horizontal.html meter-orient-horizontal.html
-fails == meter-orient-block.html meter-orient-block.html
-fails == meter-orient-inline.html meter-orient-inline.html
-fails == meter-vlr.html meter-vlr.html
-fails == meter-vlr-orient-block.html meter-vlr-orient-block.html
-fails == meter-vlr-orient-inline.html meter-vlr-orient-inline.html
-fails == meter-vlr-orient-horizontal.html meter-vlr-orient-horizontal.html
-fails == meter-vlr-orient-vertical.html meter-vlr-orient-vertical.html
-fails == meter-vrl.html meter-vrl.html
-fails == meter-vrl-orient-block.html meter-vrl-orient-block.html
-fails == meter-vrl-orient-inline.html meter-vrl-orient-inline.html
-fails == meter-vrl-orient-horizontal.html meter-vrl-orient-horizontal.html
-fails == meter-vrl-orient-vertical.html meter-vrl-orient-vertical.html
+== meter-orient-vertical.html meter-orient-vertical.html
+== meter-orient-horizontal.html meter-orient-horizontal.html
+== meter-orient-block.html meter-orient-block.html
+== meter-orient-inline.html meter-orient-inline.html
+== meter-vlr.html meter-vlr.html
+== meter-vlr-orient-block.html meter-vlr-orient-block.html
+== meter-vlr-orient-inline.html meter-vlr-orient-inline.html
+== meter-vlr-orient-horizontal.html meter-vlr-orient-horizontal.html
+== meter-vlr-orient-vertical.html meter-vlr-orient-vertical.html
+== meter-vrl.html meter-vrl.html
+== meter-vrl-orient-block.html meter-vrl-orient-block.html
+== meter-vrl-orient-inline.html meter-vrl-orient-inline.html
+== meter-vrl-orient-horizontal.html meter-vrl-orient-horizontal.html
+== meter-vrl-orient-vertical.html meter-vrl-orient-vertical.html

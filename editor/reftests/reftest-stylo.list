@@ -16,7 +16,7 @@ fails == passwd-3.html passwd-3.html
 fails needs-focus == passwd-4.html passwd-4.html
 fails == emptypasswd-1.html emptypasswd-1.html
 fails == emptypasswd-2.html emptypasswd-2.html
-fails == caret_on_positioned.html caret_on_positioned.html
+== caret_on_positioned.html caret_on_positioned.html
 fails == spellcheck-input-disabled.html spellcheck-input-disabled.html
 fails == spellcheck-input-attr-before.html spellcheck-input-attr-before.html
 fails == spellcheck-input-attr-before.html spellcheck-input-attr-before.html
@@ -57,7 +57,7 @@ fails == spellcheck-textarea-attr-dynamic-override.html spellcheck-textarea-attr
 fails == spellcheck-textarea-attr-dynamic-override-inherit.html spellcheck-textarea-attr-dynamic-override-inherit.html
 fails == spellcheck-textarea-property-dynamic-override.html spellcheck-textarea-property-dynamic-override.html
 fails == spellcheck-textarea-property-dynamic-override-inherit.html spellcheck-textarea-property-dynamic-override-inherit.html
-fails needs-focus == caret_on_focus.html caret_on_focus.html
+needs-focus == caret_on_focus.html caret_on_focus.html
 fails needs-focus == caret_on_textarea_lastline.html caret_on_textarea_lastline.html
 fails needs-focus == input-text-onfocus-reframe.html input-text-onfocus-reframe.html
 fails needs-focus == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe.html
@@ -89,18 +89,18 @@ fails == selection_visibility_after_reframe-2.html selection_visibility_after_re
 fails == selection_visibility_after_reframe-3.html selection_visibility_after_reframe-3.html
 == 672709.html 672709.html
 fails == 338427-1.html 338427-1.html
-fails == 674212-spellcheck.html 674212-spellcheck.html
-fails == 338427-2.html 338427-2.html
+== 674212-spellcheck.html 674212-spellcheck.html
+== 338427-2.html 338427-2.html
 fails == 338427-3.html 338427-3.html
-fails == 462758-grabbers-resizers.html 462758-grabbers-resizers.html
+== 462758-grabbers-resizers.html 462758-grabbers-resizers.html
 fails == readwrite-non-editable.html readwrite-non-editable.html
 fails == readwrite-editable.html readwrite-editable.html
 fails == readonly-non-editable.html readonly-non-editable.html
 fails == readonly-editable.html readonly-editable.html
 fails == dynamic-overflow-change.html dynamic-overflow-change.html
-fails == 694880-1.html 694880-1.html
-fails == 694880-2.html 694880-2.html
-fails == 694880-3.html 694880-3.html
+== 694880-1.html 694880-1.html
+== 694880-2.html 694880-2.html
+== 694880-3.html 694880-3.html
 == 388980-1.html 388980-1.html
 fails needs-focus == spellcheck-superscript-1.html spellcheck-superscript-1.html
 fails == spellcheck-superscript-2.html spellcheck-superscript-2.html
