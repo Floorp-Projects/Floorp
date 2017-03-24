@@ -71,7 +71,7 @@ using namespace mozilla::media;
 #undef LOGW
 #undef SFMT
 #undef SLOG
-#undef SWARN
+#undef SLOGW
 
 #define FMT(x, ...) "Decoder=%p " x, mDecoderID, ##__VA_ARGS__
 #define LOG(x, ...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug,   (FMT(x, ##__VA_ARGS__)))
@@ -81,7 +81,7 @@ using namespace mozilla::media;
 // Used by StateObject and its sub-classes
 #define SFMT(x, ...) "Decoder=%p state=%s " x, mMaster->mDecoderID, ToStateStr(GetState()), ##__VA_ARGS__
 #define SLOG(x, ...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, (SFMT(x, ##__VA_ARGS__)))
-#define SWARN(x, ...) NS_WARNING(nsPrintfCString(SFMT(x, ##__VA_ARGS__)).get())
+#define SLOGW(x, ...) NS_WARNING(nsPrintfCString(SFMT(x, ##__VA_ARGS__)).get())
 
 // Certain constants get stored as member variables and then adjusted by various
 // scale factors on a per-decoder basis. We want to make sure to avoid using these
@@ -403,7 +403,7 @@ private:
   void OnMetadataNotRead(const MediaResult& aError)
   {
     mMetadataRequest.Complete();
-    SWARN("Decode metadata failed, shutting down decoder");
+    SLOGW("Decode metadata failed, shutting down decoder");
     mMaster->DecodeError(aError);
   }
 
@@ -1323,7 +1323,7 @@ private:
       // abort the audio decode-to-target, the state machine will play
       // silence to cover the gap. Typically this happens in poorly muxed
       // files.
-      SWARN("Audio not synced after seek, maybe a poorly muxed file?");
+      SLOGW("Audio not synced after seek, maybe a poorly muxed file?");
       mMaster->PushAudio(aAudio);
       mDoneAudioSeeking = true;
       return NS_OK;
@@ -1347,7 +1347,7 @@ private:
     if (framesToPrune.value() > aAudio->mFrames) {
       // We've messed up somehow. Don't try to trim frames, the |frames|
       // variable below will overflow.
-      SWARN("Can't prune more frames that we have!");
+      SLOGW("Can't prune more frames that we have!");
       return NS_ERROR_FAILURE;
     }
     uint32_t frames =
@@ -3926,4 +3926,5 @@ MediaDecoderStateMachine::CancelSuspendTimer()
 #undef LOG
 #undef LOGV
 #undef LOGW
+#undef SLOGW
 #undef NS_DispatchToMainThread
