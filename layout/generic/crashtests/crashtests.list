@@ -634,8 +634,8 @@ load text-overflow-iframe.html
 asserts-if(Android,2-4) asserts-if(!Android,4) asserts-if(stylo,0) load 1225005.html # bug 682647 and bug 448083
 load 1233191.html
 asserts-if(stylo,0-15) load 1271765.html # bug 1324684
-asserts(2) load 1272983-1.html # bug 1324654 # bug 586628
-asserts(2) load 1272983-2.html # bug 1324654 # bug 586628
+asserts(2) load 1272983-1.html # bug 586628
+asserts(2) load 1272983-2.html # bug 586628
 load 1275059.html
 load 1278007.html
 load 1278080.html
