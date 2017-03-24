@@ -1,0 +1,77 @@
+[
+  {
+    "arguments_schema": {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "properties": {
+        "message": {
+          "default": "",
+          "description": "Message to log to the console",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "Log a message to the console",
+      "type": "object"
+    },
+    "implementation_url": "https://localhost:8000/api/v1/action/console-log/implementation/0765c6302db2846b85543eea743f959c19b42559/",
+    "name": "console-log"
+  },
+  {
+    "arguments_schema": {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "description": "This action shows a single survey.",
+      "properties": {
+        "engagementButtonLabel": {
+          "default": "",
+          "description": "Text for the engagement button. If specified, this button will be shown instead of rating stars.",
+          "type": "string"
+        },
+        "includeTelemetryUUID": {
+          "default": false,
+          "description": "Include unique user ID in post-answer-url and Telemetry",
+          "type": "boolean"
+        },
+        "learnMoreMessage": {
+          "default": "",
+          "description": "Message to show to the user to learn more",
+          "type": "string"
+        },
+        "learnMoreUrl": {
+          "default": "",
+          "description": "URL to show to the user when they click Learn More",
+          "type": "string"
+        },
+        "message": {
+          "default": "",
+          "description": "Message to show to the user",
+          "type": "string"
+        },
+        "postAnswerUrl": {
+          "default": "",
+          "description": "URL to redirect the user to after rating Firefox or clicking the engagement button",
+          "type": "string"
+        },
+        "surveyId": {
+          "description": "Slug uniquely identifying this survey in telemetry",
+          "type": "string"
+        },
+        "thanksMessage": {
+          "default": "",
+          "description": "Thanks message to show to the user after they've rated Firefox",
+          "type": "string"
+        }
+      },
+      "required": [
+        "surveyId",
+        "message",
+        "thanksMessage"
+      ],
+      "title": "Show a Heartbeat survey.",
+      "type": "object"
+    },
+    "implementation_url": "https://localhost:8000/api/v1/action/show-heartbeat/implementation/448bbffce82ff27b3d532fd7196bcb190be5c067/",
+    "name": "show-heartbeat"
+  }
+]

@@ -1,7 +1,7 @@
 "use strict";
 
-const {utils: Cu} = Components;
-Cu.import("resource://shield-recipe-client/test/browser/Utils.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/Console.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/EventEmitter.jsm", this);
 
 const evidence = {
@@ -26,7 +26,7 @@ function listenerC(x = 1) {
   evidence.log += "c";
 }
 
-add_task(Utils.withSandboxManager(Assert, function* (sandboxManager) {
+add_task(withSandboxManager(Assert, function* (sandboxManager) {
   const eventEmitter = new EventEmitter(sandboxManager);
 
   // Fire an unrelated event, to make sure nothing goes wrong
@@ -97,7 +97,7 @@ add_task(Utils.withSandboxManager(Assert, function* (sandboxManager) {
   is(data.count, 0, "Event data cannot be mutated by handlers.");
 }));
 
-add_task(Utils.withSandboxManager(Assert, function* sandboxedEmitter(sandboxManager) {
+add_task(withSandboxManager(Assert, function* sandboxedEmitter(sandboxManager) {
   const eventEmitter = new EventEmitter(sandboxManager);
 
   // Event handlers inside the sandbox should be run in response to
