@@ -43,7 +43,7 @@
 namespace sandbox {
 
 // TODO(cpu): Move this constant to crosscall_client.h.
-const size_t kMaxServiceCount = 64;
+const size_t kMaxServiceCount = 32;
 static_assert(IPC_LAST_TAG <= kMaxServiceCount,
               "kMaxServiceCount is too low");
 

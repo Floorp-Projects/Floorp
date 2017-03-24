@@ -5,10 +5,10 @@
 #ifndef BASE_MEMORY_RAW_SCOPED_REFPTR_MISMATCH_CHECKER_H_
 #define BASE_MEMORY_RAW_SCOPED_REFPTR_MISMATCH_CHECKER_H_
 
-#include <tuple>
-#include <type_traits>
-
 #include "base/memory/ref_counted.h"
+#include "base/template_util.h"
+#include "base/tuple.h"
+#include "build/build_config.h"
 
 // It is dangerous to post a task with a T* argument where T is a subtype of
 // RefCounted(Base|ThreadSafeBase), since by the time the parameter is used, the
@@ -25,14 +25,20 @@ namespace internal {
 
 template <typename T>
 struct NeedsScopedRefptrButGetsRawPtr {
+#if defined(OS_WIN)
+  enum {
+    value = base::false_type::value
+  };
+#else
   enum {
     // Human readable translation: you needed to be a scoped_refptr if you are a
     // raw pointer type and are convertible to a RefCounted(Base|ThreadSafeBase)
     // type.
-    value = (std::is_pointer<T>::value &&
-             (std::is_convertible<T, subtle::RefCountedBase*>::value ||
-              std::is_convertible<T, subtle::RefCountedThreadSafeBase*>::value))
+    value = (is_pointer<T>::value &&
+             (is_convertible<T, subtle::RefCountedBase*>::value ||
+              is_convertible<T, subtle::RefCountedThreadSafeBase*>::value))
   };
+#endif
 };
 
 template <typename Params>
@@ -41,14 +47,14 @@ struct ParamsUseScopedRefptrCorrectly {
 };
 
 template <>
-struct ParamsUseScopedRefptrCorrectly<std::tuple<>> {
+struct ParamsUseScopedRefptrCorrectly<Tuple<>> {
   enum { value = 1 };
 };
 
 template <typename Head, typename... Tail>
-struct ParamsUseScopedRefptrCorrectly<std::tuple<Head, Tail...>> {
+struct ParamsUseScopedRefptrCorrectly<Tuple<Head, Tail...>> {
   enum { value = !NeedsScopedRefptrButGetsRawPtr<Head>::value &&
-                  ParamsUseScopedRefptrCorrectly<std::tuple<Tail...>>::value };
+                 ParamsUseScopedRefptrCorrectly<Tuple<Tail...>>::value };
 };
 
 }  // namespace internal
