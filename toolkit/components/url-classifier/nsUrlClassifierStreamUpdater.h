@@ -107,6 +107,7 @@ private:
   // The provider for current update request and should be only used by telemetry
   // since it would show up as "other" for any other providers.
   nsCString mTelemetryProvider;
+  PRIntervalTime mTelemetryClockStart;
 };
 
 #endif // nsUrlClassifierStreamUpdater_h_
