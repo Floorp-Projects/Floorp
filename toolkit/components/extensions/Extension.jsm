@@ -36,6 +36,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionAPIs",
                                   "resource://gre/modules/ExtensionAPI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionPermissions",
+                                  "resource://gre/modules/ExtensionPermissions.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
                                   "resource://gre/modules/ExtensionStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionTestCommon",
@@ -632,7 +634,7 @@ this.ExtensionData = class {
 
 let _browserUpdated = false;
 
-const PROXIED_EVENTS = new Set(["test-harness-message"]);
+const PROXIED_EVENTS = new Set(["test-harness-message", "add-permissions", "remove-permissions"]);
 
 // We create one instance of this class per extension. |addonData|
 // comes directly from bootstrap.js when initializing.
@@ -684,6 +686,28 @@ this.Extension = class extends ExtensionData {
     this.webAccessibleResources = null;
 
     this.emitter = new EventEmitter();
+
+    /* eslint-disable mozilla/balanced-listeners */
+    this.on("add-permissions", (ignoreEvent, permissions) => {
+      for (let perm of permissions.permissions) {
+        this.permissions.add(perm);
+      }
+
+      if (permissions.origins.length > 0) {
+        this.whiteListedHosts = new MatchPattern(this.whiteListedHosts.pat.concat(...permissions.origins));
+      }
+    });
+
+    this.on("remove-permissions", (ignoreEvent, permissions) => {
+      for (let perm of permissions.permissions) {
+        this.permissions.delete(perm);
+      }
+
+      for (let origin of permissions.origins) {
+        this.whiteListedHosts.removeOne(origin);
+      }
+    });
+    /* eslint-enable mozilla/balanced-listeners */
   }
 
   static set browserUpdated(updated) {
@@ -797,6 +821,7 @@ this.Extension = class extends ExtensionData {
       localeData: this.localeData.serialize(),
       permissions: this.permissions,
       principal: this.principal,
+      optionalPermissions: this.manifest.optional_permissions,
     };
   }
 
@@ -894,16 +919,19 @@ this.Extension = class extends ExtensionData {
     return super.initLocale(locale);
   }
 
-  startup() {
+  async startup() {
     let started = false;
-    return this.loadManifest().then(() => {
+
+    try {
+      let [, perms] = await Promise.all([this.loadManifest(), ExtensionPermissions.get(this)]);
+
       ExtensionManagement.startupExtension(this.uuid, this.addonData.resourceURI, this);
       started = true;
 
       if (!this.hasShutdown) {
-        return this.initLocale();
+        await this.initLocale();
       }
-    }).then(() => {
+
       if (this.errors.length) {
         return Promise.reject({errors: this.errors});
       }
@@ -914,6 +942,14 @@ this.Extension = class extends ExtensionData {
 
       GlobalManager.init(this);
 
+      // Apply optional permissions
+      for (let perm of perms.permissions) {
+        this.permissions.add(perm);
+      }
+      if (perms.origins.length > 0) {
+        this.whiteListedHosts = new MatchPattern(this.whiteListedHosts.pat.concat(...perms.origins));
+      }
+
       // The "startup" Management event sent on the extension instance itself
       // is emitted just before the Management "startup" event,
       // and it is used to run code that needs to be executed before
@@ -921,10 +957,10 @@ this.Extension = class extends ExtensionData {
       this.emit("startup", this);
       Management.emit("startup", this);
 
-      return this.runManifest(this.manifest);
-    }).then(() => {
+      await this.runManifest(this.manifest);
+
       Management.emit("ready", this);
-    }).catch(e => {
+    } catch (e) {
       dump(`Extension error: ${e.message} ${e.filename || e.fileName}:${e.lineNumber} :: ${e.stack || new Error().stack}\n`);
       Cu.reportError(e);
 
@@ -935,7 +971,7 @@ this.Extension = class extends ExtensionData {
       this.cleanupGeneratedFile();
 
       throw e;
-    });
+    }
   }
 
   cleanupGeneratedFile() {
@@ -1007,13 +1043,21 @@ this.Extension = class extends ExtensionData {
     }
   }
 
-  hasPermission(perm) {
+  hasPermission(perm, includeOptional = false) {
     let match = /^manifest:(.*)/.exec(perm);
     if (match) {
       return this.manifest[match[1]] != null;
     }
 
-    return this.permissions.has(perm);
+    if (this.permissions.has(perm)) {
+      return true;
+    }
+
+    if (includeOptional && this.manifest.optional_permissions.includes(perm)) {
+      return true;
+    }
+
+    return false;
   }
 
   get name() {
