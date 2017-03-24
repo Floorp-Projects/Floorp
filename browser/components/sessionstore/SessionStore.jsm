@@ -3492,17 +3492,9 @@ var SessionStoreInternal = {
       this._windows[aWindow.__SSi].selected = aSelectTab;
     }
 
-    // If we restore the selected tab, make sure it goes first.
-    let selectedIndex = aTabs.indexOf(tabbrowser.selectedTab);
-    if (selectedIndex > -1) {
-      this.restoreTab(tabbrowser.selectedTab, aTabData[selectedIndex]);
-    }
-
     // Restore all tabs.
     for (let t = 0; t < aTabs.length; t++) {
-      if (t != selectedIndex) {
-        this.restoreTab(aTabs[t], aTabData[t]);
-      }
+      this.restoreTab(aTabs[t], aTabData[t]);
     }
   },
 
