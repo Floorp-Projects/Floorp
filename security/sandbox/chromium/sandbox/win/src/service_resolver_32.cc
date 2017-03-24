@@ -6,9 +6,8 @@
 
 #include <stddef.h>
 
-#include <memory>
-
 #include "base/bit_cast.h"
+#include "base/memory/scoped_ptr.h"
 #include "sandbox/win/src/win_utils.h"
 
 namespace {
@@ -176,13 +175,13 @@ NTSTATUS ServiceResolverThunk::Setup(const void* target_module,
 
   relative_jump_ = 0;
   size_t thunk_bytes = GetThunkSize();
-  std::unique_ptr<char[]> thunk_buffer(new char[thunk_bytes]);
+  scoped_ptr<char[]> thunk_buffer(new char[thunk_bytes]);
   ServiceFullThunk* thunk = reinterpret_cast<ServiceFullThunk*>(
                                 thunk_buffer.get());
 
   if (!IsFunctionAService(&thunk->original) &&
       (!relaxed_ || !SaveOriginalFunction(&thunk->original, thunk_storage))) {
-    return STATUS_OBJECT_NAME_COLLISION;
+    return STATUS_UNSUCCESSFUL;
   }
 
   ret = PerformPatch(thunk, thunk_storage);
@@ -214,7 +213,7 @@ NTSTATUS ServiceResolverThunk::CopyThunk(const void* target_module,
 
   if (!IsFunctionAService(&thunk->original) &&
       (!relaxed_ || !SaveOriginalFunction(&thunk->original, thunk_storage))) {
-    return STATUS_OBJECT_NAME_COLLISION;
+    return STATUS_UNSUCCESSFUL;
   }
 
   if (NULL != storage_used)

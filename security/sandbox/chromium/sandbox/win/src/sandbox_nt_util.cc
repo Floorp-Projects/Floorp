@@ -23,67 +23,58 @@ SANDBOX_INTERCEPT NtExports g_nt;
 namespace {
 
 #if defined(_WIN64)
-// Align a pointer to the next allocation granularity boundary.
-inline char* AlignToBoundary(void* ptr, size_t increment) {
-  const size_t kAllocationGranularity = (64 * 1024) - 1;
-  uintptr_t ptr_int = reinterpret_cast<uintptr_t>(ptr);
-  uintptr_t ret_ptr =
-      (ptr_int + increment + kAllocationGranularity) & ~kAllocationGranularity;
-  // Check for overflow.
-  if (ret_ptr < ptr_int)
-    return nullptr;
-  return reinterpret_cast<char*>(ret_ptr);
-}
-
-// Allocate a memory block somewhere within 2GiB of a specified base address.
-// This is used for the DLL hooking code to get a valid trampoline location
-// which must be within +/- 2GiB of the base. We only consider +2GiB for now.
 void* AllocateNearTo(void* source, size_t size) {
   using sandbox::g_nt;
-  // 2GiB, maximum upper bound the allocation address must be within.
-  const size_t kMaxSize = 0x80000000ULL;
-  // We don't support null as a base as this would just pick an arbitrary
-  // address when passed to NtAllocateVirtualMemory.
-  if (source == nullptr)
-    return nullptr;
-  // Ignore an allocation which is larger than the maximum.
-  if (size > kMaxSize)
-    return nullptr;
 
-  // Ensure base address is aligned to the allocation granularity boundary.
-  char* base = AlignToBoundary(source, 0);
-  if (base == nullptr)
-    return nullptr;
-  // Set top address to be base + 2GiB.
-  const char* top_address = base + kMaxSize;
+  // Start with 1 GB above the source.
+  const size_t kOneGB = 0x40000000;
+  void* base = reinterpret_cast<char*>(source) + kOneGB;
+  SIZE_T actual_size = size;
+  ULONG_PTR zero_bits = 0;  // Not the correct type if used.
+  ULONG type = MEM_RESERVE;
 
-  while (base < top_address) {
-    MEMORY_BASIC_INFORMATION mem_info;
-    NTSTATUS status =
-        g_nt.QueryVirtualMemory(NtCurrentProcess, base, MemoryBasicInformation,
-                                &mem_info, sizeof(mem_info), nullptr);
-    if (!NT_SUCCESS(status))
+  NTSTATUS ret;
+  int attempts = 0;
+  for (; attempts < 41; attempts++) {
+    ret = g_nt.AllocateVirtualMemory(NtCurrentProcess, &base, zero_bits,
+                                     &actual_size, type, PAGE_READWRITE);
+    if (NT_SUCCESS(ret)) {
+      if (base < source ||
+          base >= reinterpret_cast<char*>(source) + 4 * kOneGB) {
+        // We won't be able to patch this dll.
+        VERIFY_SUCCESS(g_nt.FreeVirtualMemory(NtCurrentProcess, &base, &size,
+                                              MEM_RELEASE));
+        return NULL;
+      }
       break;
-
-    if ((mem_info.State == MEM_FREE) && (mem_info.RegionSize >= size)) {
-      // We've found a valid free block, try and allocate it for use.
-      // Note that we need to both commit and reserve the block for the
-      // allocation to succeed as per Windows virtual memory requirements.
-      void* ret_base = mem_info.BaseAddress;
-      status =
-          g_nt.AllocateVirtualMemory(NtCurrentProcess, &ret_base, 0, &size,
-                                     MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-      // Shouldn't fail, but if it does we'll just continue and try next block.
-      if (NT_SUCCESS(status))
-        return ret_base;
     }
 
-    // Update base past current allocation region.
-    base = AlignToBoundary(mem_info.BaseAddress, mem_info.RegionSize);
-    if (base == nullptr)
-      break;
+    if (attempts == 30) {
+      // Try the first GB.
+      base = reinterpret_cast<char*>(source);
+    } else if (attempts == 40) {
+      // Try the highest available address.
+      base = NULL;
+      type |= MEM_TOP_DOWN;
+    }
+
+    // Try 100 MB higher.
+    base = reinterpret_cast<char*>(base) + 100 * 0x100000;
   }
-  return nullptr;
+
+  if (attempts == 41)
+    return NULL;
+
+  ret = g_nt.AllocateVirtualMemory(NtCurrentProcess, &base, zero_bits,
+                                   &actual_size, MEM_COMMIT, PAGE_READWRITE);
+
+  if (!NT_SUCCESS(ret)) {
+    VERIFY_SUCCESS(g_nt.FreeVirtualMemory(NtCurrentProcess, &base, &size,
+                                          MEM_RELEASE));
+    base = NULL;
+  }
+
+  return base;
 }
 #else  // defined(_WIN64).
 void* AllocateNearTo(void* source, size_t size) {

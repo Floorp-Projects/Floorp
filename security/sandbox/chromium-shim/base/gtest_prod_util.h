@@ -4,9 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BASE_GTEST_PROD_UTIL_H_
-#define BASE_GTEST_PROD_UTIL_H_
-
 #ifndef FRIEND_TEST
 #define FRIEND_TEST(A, B)
 #endif
@@ -18,5 +15,3 @@
 #ifndef FORWARD_DECLARE_TEST
 #define FORWARD_DECLARE_TEST(test_case_name, test_name)
 #endif
-
-#endif  // BASE_GTEST_PROD_UTIL_H_

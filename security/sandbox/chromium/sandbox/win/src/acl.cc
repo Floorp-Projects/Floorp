@@ -8,13 +8,12 @@
 #include <sddl.h>
 
 #include "base/logging.h"
-#include "base/memory/free_deleter.h"
 
 namespace sandbox {
 
 bool GetDefaultDacl(
     HANDLE token,
-    std::unique_ptr<TOKEN_DEFAULT_DACL, base::FreeDeleter>* default_dacl) {
+    scoped_ptr<TOKEN_DEFAULT_DACL, base::FreeDeleter>* default_dacl) {
   if (token == NULL)
     return false;
 
@@ -57,19 +56,16 @@ bool AddSidToDacl(const Sid& sid, ACL* old_dacl, ACCESS_MODE access_mode,
   return true;
 }
 
-bool AddSidToDefaultDacl(HANDLE token,
-                         const Sid& sid,
-                         ACCESS_MODE access_mode,
-                         ACCESS_MASK access) {
+bool AddSidToDefaultDacl(HANDLE token, const Sid& sid, ACCESS_MASK access) {
   if (token == NULL)
     return false;
 
-  std::unique_ptr<TOKEN_DEFAULT_DACL, base::FreeDeleter> default_dacl;
+  scoped_ptr<TOKEN_DEFAULT_DACL, base::FreeDeleter> default_dacl;
   if (!GetDefaultDacl(token, &default_dacl))
     return false;
 
   ACL* new_dacl = NULL;
-  if (!AddSidToDacl(sid, default_dacl->DefaultDacl, access_mode, access,
+  if (!AddSidToDacl(sid, default_dacl->DefaultDacl, GRANT_ACCESS, access,
                     &new_dacl))
     return false;
 
@@ -82,39 +78,18 @@ bool AddSidToDefaultDacl(HANDLE token,
   return (TRUE == ret);
 }
 
-bool RevokeLogonSidFromDefaultDacl(HANDLE token) {
-  DWORD size = sizeof(TOKEN_GROUPS) + SECURITY_MAX_SID_SIZE;
-  TOKEN_GROUPS* logon_sid = reinterpret_cast<TOKEN_GROUPS*>(malloc(size));
-
-  std::unique_ptr<TOKEN_GROUPS, base::FreeDeleter> logon_sid_ptr(logon_sid);
-
-  if (!::GetTokenInformation(token, TokenLogonSid, logon_sid, size, &size)) {
-    // If no logon sid, there's nothing to revoke.
-    if (::GetLastError() == ERROR_NOT_FOUND)
-      return true;
-    return false;
-  }
-  if (logon_sid->GroupCount < 1) {
-    ::SetLastError(ERROR_INVALID_TOKEN);
-    return false;
-  }
-  return AddSidToDefaultDacl(token,
-                             reinterpret_cast<SID*>(logon_sid->Groups[0].Sid),
-                             REVOKE_ACCESS, 0);
-}
-
 bool AddUserSidToDefaultDacl(HANDLE token, ACCESS_MASK access) {
   DWORD size = sizeof(TOKEN_USER) + SECURITY_MAX_SID_SIZE;
   TOKEN_USER* token_user = reinterpret_cast<TOKEN_USER*>(malloc(size));
 
-  std::unique_ptr<TOKEN_USER, base::FreeDeleter> token_user_ptr(token_user);
+  scoped_ptr<TOKEN_USER, base::FreeDeleter> token_user_ptr(token_user);
 
   if (!::GetTokenInformation(token, TokenUser, token_user, size, &size))
     return false;
 
   return AddSidToDefaultDacl(token,
                              reinterpret_cast<SID*>(token_user->User.Sid),
-                             GRANT_ACCESS, access);
+                             access);
 }
 
 bool AddKnownSidToObject(HANDLE object, SE_OBJECT_TYPE object_type,

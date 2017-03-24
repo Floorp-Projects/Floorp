@@ -24,9 +24,9 @@ namespace internal {
 class BASE_EXPORT LockImpl {
  public:
 #if defined(OS_WIN)
-  using NativeHandle = SRWLOCK;
+  typedef CRITICAL_SECTION NativeHandle;
 #elif defined(OS_POSIX)
-  using NativeHandle =  pthread_mutex_t;
+  typedef pthread_mutex_t NativeHandle;
 #endif
 
   LockImpl();
@@ -47,11 +47,6 @@ class BASE_EXPORT LockImpl {
   // TODO(awalker): refactor lock and condition variables so that this is
   // unnecessary.
   NativeHandle* native_handle() { return &native_handle_; }
-
-#if defined(OS_POSIX)
-  // Whether this lock will attempt to use priority inheritance.
-  static bool PriorityInheritanceAvailable();
-#endif
 
  private:
   NativeHandle native_handle_;

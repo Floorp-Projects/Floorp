@@ -68,7 +68,11 @@ bool RegistryDispatcher::SetupService(InterceptionManager* manager,
 
   if (IPC_NTOPENKEY_TAG == service) {
     bool result = INTERCEPT_NT(manager, NtOpenKey, OPEN_KEY_ID, 16);
-    result &= INTERCEPT_NT(manager, NtOpenKeyEx, OPEN_KEY_EX_ID, 20);
+    if (base::win::GetVersion() >= base::win::VERSION_WIN7 ||
+        (base::win::GetVersion() == base::win::VERSION_VISTA &&
+         base::win::OSInfo::GetInstance()->version_type() ==
+             base::win::SUITE_SERVER))
+      result &= INTERCEPT_NT(manager, NtOpenKeyEx, OPEN_KEY_EX_ID, 20);
     return result;
   }
 

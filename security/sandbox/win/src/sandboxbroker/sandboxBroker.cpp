@@ -107,10 +107,7 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
   // Ceate the sandboxed process
   PROCESS_INFORMATION targetInfo = {0};
   sandbox::ResultCode result;
-  sandbox::ResultCode last_warning = sandbox::SBOX_ALL_OK;
-  DWORD last_error = ERROR_SUCCESS;
-  result = sBrokerService->SpawnTarget(aPath, aArguments, mPolicy,
-                                       &last_warning, &last_error, &targetInfo);
+  result = sBrokerService->SpawnTarget(aPath, aArguments, mPolicy, &targetInfo);
   if (sandbox::SBOX_ALL_OK != result) {
     return false;
   }

@@ -6,8 +6,6 @@
 #define BASE_VERSION_H_
 
 #include <stdint.h>
-
-#include <iosfwd>
 #include <string>
 #include <vector>
 
@@ -23,18 +21,12 @@ class BASE_EXPORT Version {
   // Version object is assign to it.
   Version();
 
-  Version(const Version& other);
+  ~Version();
 
   // Initializes from a decimal dotted version number, like "0.1.1".
   // Each component is limited to a uint16_t. Call IsValid() to learn
   // the outcome.
   explicit Version(const std::string& version_str);
-
-  // Initializes from a vector of components, like {1, 2, 3, 4}. Call IsValid()
-  // to learn the outcome.
-  explicit Version(std::vector<uint32_t> components);
-
-  ~Version();
 
   // Returns true if the object contains a valid version number.
   bool IsValid() const;
@@ -44,6 +36,14 @@ class BASE_EXPORT Version {
   // is invalid (e.g. 1.*.3 or 1.2.3*). This functions defaults to standard
   // Version behavior (IsValid) if no wildcard is present.
   static bool IsValidWildcardString(const std::string& wildcard_string);
+
+  // Commonly used pattern. Given a valid version object, compare if a
+  // |version_str| results in a newer version. Returns true if the
+  // string represents valid version and if the version is greater than
+  // than the version of this object.
+  bool IsOlderThan(const std::string& version_str) const;
+
+  bool Equals(const Version& other) const;
 
   // Returns -1, 0, 1 for <, ==, >.
   int CompareTo(const Version& other) const;
@@ -63,14 +63,10 @@ class BASE_EXPORT Version {
   std::vector<uint32_t> components_;
 };
 
-BASE_EXPORT bool operator==(const Version& v1, const Version& v2);
-BASE_EXPORT bool operator!=(const Version& v1, const Version& v2);
-BASE_EXPORT bool operator<(const Version& v1, const Version& v2);
-BASE_EXPORT bool operator<=(const Version& v1, const Version& v2);
-BASE_EXPORT bool operator>(const Version& v1, const Version& v2);
-BASE_EXPORT bool operator>=(const Version& v1, const Version& v2);
-BASE_EXPORT std::ostream& operator<<(std::ostream& stream, const Version& v);
-
 }  // namespace base
+
+// TODO(xhwang) remove this when all users are updated to explicitly use the
+// namespace
+using base::Version;
 
 #endif  // BASE_VERSION_H_

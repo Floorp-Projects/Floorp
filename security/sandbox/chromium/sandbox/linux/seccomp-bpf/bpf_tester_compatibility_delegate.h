@@ -5,9 +5,8 @@
 #ifndef SANDBOX_LINUX_SECCOMP_BPF_BPF_TESTER_COMPATIBILITY_DELEGATE_H_
 #define SANDBOX_LINUX_SECCOMP_BPF_BPF_TESTER_COMPATIBILITY_DELEGATE_H_
 
-#include <memory>
-
 #include "base/macros.h"
+#include "base/memory/scoped_ptr.h"
 #include "sandbox/linux/seccomp-bpf/sandbox_bpf_test_runner.h"
 
 namespace sandbox {
@@ -29,12 +28,12 @@ class BPFTesterCompatibilityDelegate : public BPFTesterDelegate {
 
   ~BPFTesterCompatibilityDelegate() override {}
 
-  std::unique_ptr<bpf_dsl::Policy> GetSandboxBPFPolicy() override {
+  scoped_ptr<bpf_dsl::Policy> GetSandboxBPFPolicy() override {
     // The current method is guaranteed to only run in the child process
     // running the test. In this process, the current object is guaranteed
     // to live forever. So it's ok to pass aux_pointer_for_policy_ to
     // the policy, which could in turn pass it to the kernel via Trap().
-    return std::unique_ptr<bpf_dsl::Policy>(new Policy(&aux_));
+    return scoped_ptr<bpf_dsl::Policy>(new Policy(&aux_));
   }
 
   void RunTestFunction() override {

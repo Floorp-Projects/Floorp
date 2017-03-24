@@ -1,4 +1,4 @@
 Chromium Commit                            Directory / File (relative to security/sandbox/)
 ----------------------------------------   ------------------------------------------------
-b169b9a1cc402573843e8c952af14c4e43487e91   chromium
+4ec79b7f2379a60cdc15599e93255c0fa417f1ed   chromium
 611754aea9d1c0ba5c7980fa267fd005dc249b85   chromium/sandbox/win/src/policy_target.cc
