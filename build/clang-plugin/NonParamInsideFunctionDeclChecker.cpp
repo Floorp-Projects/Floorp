@@ -15,11 +15,12 @@ protected:
   // MSVC limitations which prevent passing explcitly aligned types by value as
   // parameters. This overload of hasFakeAnnotation injects fake MOZ_NON_PARAM
   // annotations onto these types.
-  std::string getImplicitReason(const TagDecl *D) const override {
+  bool hasFakeAnnotation(const TagDecl *D) const override {
     // Check if the decl itself has an AlignedAttr on it.
     for (const Attr *A : D->attrs()) {
       if (isa<AlignedAttr>(A)) {
-        return "it has an alignas(_) annotation";
+        D->dump();
+        return true;
       }
     }
 
@@ -28,7 +29,9 @@ protected:
       for (auto F : RD->fields()) {
         for (auto A : F->attrs()) {
           if (isa<AlignedAttr>(A)) {
-            return ("member '" + F->getName() + "' has an alignas(_) annotation").str();
+            D->dump();
+
+            return true;
           }
         }
       }
@@ -36,7 +39,7 @@ protected:
 
     // We don't need to check the types of fields, as the CustomTypeAnnotation
     // infrastructure will handle that for us.
-    return "";
+    return false;
   }
 };
 NonParamAnnotation NonParam;
@@ -97,8 +100,6 @@ void NonParamInsideFunctionDeclChecker::check(
              DiagnosticIDs::Note)
           << Spec->getSpecializedTemplate();
       }
-
-      NonParam.dumpAnnotationReason(*this, T, p->getLocation());
     }
   }
 }
