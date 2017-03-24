@@ -465,6 +465,13 @@ EditorBase::PreDestroy(bool aDestroyingFrames)
   mSpellcheckCheckboxState = eTriUnset;
   mRootElement = nullptr;
 
+  // Transaction may grab this instance.  Therefore, they should be released
+  // here for stopping the circular reference with this instance.
+  if (mTxnMgr) {
+    mTxnMgr->Clear();
+    mTxnMgr = nullptr;
+  }
+
   mDidPreDestroy = true;
   return NS_OK;
 }

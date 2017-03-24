@@ -9,6 +9,7 @@
 #include "GMPServiceChild.h"
 #include "GMPVideoDecoderParent.h"
 #include "GMPVideoEncoderParent.h"
+#include "ChromiumCDMParent.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Unused.h"
@@ -65,9 +66,8 @@ private:
 void
 GMPContentParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  MOZ_ASSERT(mDecryptors.IsEmpty() &&
-             mVideoDecoders.IsEmpty() &&
-             mVideoEncoders.IsEmpty());
+  MOZ_ASSERT(mDecryptors.IsEmpty() && mVideoDecoders.IsEmpty() &&
+             mVideoEncoders.IsEmpty() && mChromiumCDMs.IsEmpty());
   NS_DispatchToCurrentThread(new ReleaseGMPContentParent(this));
 }
 
@@ -75,6 +75,15 @@ void
 GMPContentParent::CheckThread()
 {
   MOZ_ASSERT(mGMPThread == NS_GetCurrentThread());
+}
+
+void
+GMPContentParent::ChromiumCDMDestroyed(ChromiumCDMParent* aDecoder)
+{
+  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+
+  MOZ_ALWAYS_TRUE(mChromiumCDMs.RemoveElement(aDecoder));
+  CloseIfUnused();
 }
 
 void
@@ -124,9 +133,8 @@ GMPContentParent::RemoveCloseBlocker()
 void
 GMPContentParent::CloseIfUnused()
 {
-  if (mDecryptors.IsEmpty() &&
-      mVideoDecoders.IsEmpty() &&
-      mVideoEncoders.IsEmpty() &&
+  if (mDecryptors.IsEmpty() && mVideoDecoders.IsEmpty() &&
+      mVideoEncoders.IsEmpty() && mChromiumCDMs.IsEmpty() &&
       mCloseBlockerCount == 0) {
     RefPtr<GMPContentParent> toClose;
     if (mParent) {
@@ -159,7 +167,7 @@ GMPContentParent::GetGMPDecryptor(GMPDecryptorParent** aGMPDP)
   return NS_OK;
 }
 
-nsIThread*
+nsCOMPtr<nsIThread>
 GMPContentParent::GMPThread()
 {
   if (!mGMPThread) {
@@ -178,6 +186,21 @@ GMPContentParent::GMPThread()
   }
 
   return mGMPThread;
+}
+
+already_AddRefed<ChromiumCDMParent>
+GMPContentParent::GetChromiumCDM()
+{
+  PChromiumCDMParent* actor = SendPChromiumCDMConstructor();
+  if (!actor) {
+    return nullptr;
+  }
+  RefPtr<ChromiumCDMParent> parent = static_cast<ChromiumCDMParent*>(actor);
+
+  // TODO: Remove parent from mChromiumCDMs in ChromiumCDMParent::Destroy().
+  mChromiumCDMs.AppendElement(parent);
+
+  return parent.forget();
 }
 
 nsresult
@@ -217,12 +240,28 @@ GMPContentParent::GetGMPVideoEncoder(GMPVideoEncoderParent** aGMPVE)
   return NS_OK;
 }
 
+PChromiumCDMParent*
+GMPContentParent::AllocPChromiumCDMParent()
+{
+  ChromiumCDMParent* parent = new ChromiumCDMParent(this, GetPluginId());
+  NS_ADDREF(parent);
+  return parent;
+}
+
 PGMPVideoDecoderParent*
 GMPContentParent::AllocPGMPVideoDecoderParent(const uint32_t& aDecryptorId)
 {
   GMPVideoDecoderParent* vdp = new GMPVideoDecoderParent(this);
   NS_ADDREF(vdp);
   return vdp;
+}
+
+bool
+GMPContentParent::DeallocPChromiumCDMParent(PChromiumCDMParent* aActor)
+{
+  ChromiumCDMParent* parent = static_cast<ChromiumCDMParent*>(aActor);
+  NS_RELEASE(parent);
+  return true;
 }
 
 bool

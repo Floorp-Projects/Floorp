@@ -5,4 +5,4 @@ https://hg.mozilla.org/mozilla-central/rev/a05726163a79
 https://hg.mozilla.org/mozilla-central/rev/e834e810a3fa
 https://hg.mozilla.org/mozilla-central/rev/c70d06fa5302
 https://hg.mozilla.org/mozilla-central/rev/d24db55deb85
-https://hg.mozilla.org/mozilla-central/rev/0e6bf137521e
+https://bugzilla.mozilla.org/show_bug.cgi?id=1321724 bug1321724.patch

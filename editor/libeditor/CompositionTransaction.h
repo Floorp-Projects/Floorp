@@ -90,7 +90,7 @@ private:
   nsString mStringToInsert;
 
   // The editor, which is used to get the selection controller.
-  EditorBase& mEditorBase;
+  RefPtr<EditorBase> mEditorBase;
 
   RangeUpdater* mRangeUpdater;
 

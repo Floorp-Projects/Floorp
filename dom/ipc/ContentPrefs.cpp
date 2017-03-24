@@ -122,6 +122,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "media.decoder.recycle.enabled",
   "media.dormant-on-pause-timeout-ms",
   "media.eme.audio.blank",
+  "media.eme.chromium-api.enabled",
   "media.eme.enabled",
   "media.eme.video.blank",
   "media.ffmpeg.enabled",

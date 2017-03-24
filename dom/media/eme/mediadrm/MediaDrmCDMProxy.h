@@ -13,6 +13,7 @@
 #include "mozilla/CDMProxy.h"
 #include "mozilla/CDMCaps.h"
 #include "mozilla/dom/MediaKeys.h"
+#include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/MediaDrmProxySupport.h"
 #include "mozilla/UniquePtr.h"
 
@@ -47,6 +48,7 @@ public:
                      nsTArray<uint8_t>& aInitData) override;
 
   void LoadSession(PromiseId aPromiseId,
+                   dom::MediaKeySessionType aSessionType,
                    const nsAString& aSessionId) override;
 
   void SetServerCertificate(PromiseId aPromiseId,

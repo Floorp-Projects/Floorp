@@ -20,7 +20,6 @@ EXPORTS.mozilla += [
 
 SOURCES += [
     '../chromium-shim/base/logging.cpp',
-    '../chromium-shim/base/threading/platform_thread_linux.cpp',
     '../chromium/base/at_exit.cc',
     '../chromium/base/callback_internal.cc',
     '../chromium/base/lazy_instance.cc',
@@ -40,11 +39,11 @@ SOURCES += [
     '../chromium/base/synchronization/waitable_event_posix.cc',
     '../chromium/base/third_party/icu/icu_utf.cc',
     '../chromium/base/threading/platform_thread_internal_posix.cc',
+    '../chromium/base/threading/platform_thread_linux.cc',
     '../chromium/base/threading/platform_thread_posix.cc',
     '../chromium/base/threading/thread_collision_warner.cc',
     '../chromium/base/threading/thread_id_name_manager.cc',
-    '../chromium/base/threading/thread_local_storage.cc',
-    '../chromium/base/threading/thread_local_storage_posix.cc',
+    '../chromium/base/threading/thread_local_posix.cc',
     '../chromium/base/threading/thread_restrictions.cc',
     '../chromium/base/time/time.cc',
     '../chromium/base/time/time_posix.cc',

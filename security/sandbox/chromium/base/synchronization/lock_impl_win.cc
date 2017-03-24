@@ -4,26 +4,32 @@
 
 #include "base/synchronization/lock_impl.h"
 
-#include "base/debug/activity_tracker.h"
-
 namespace base {
 namespace internal {
 
-LockImpl::LockImpl() : native_handle_(SRWLOCK_INIT) {}
+LockImpl::LockImpl() {
+  // The second parameter is the spin count, for short-held locks it avoid the
+  // contending thread from going to sleep which helps performance greatly.
+  ::InitializeCriticalSectionAndSpinCount(&native_handle_, 2000);
+}
 
-LockImpl::~LockImpl() = default;
+LockImpl::~LockImpl() {
+  ::DeleteCriticalSection(&native_handle_);
+}
 
 bool LockImpl::Try() {
-  return !!::TryAcquireSRWLockExclusive(&native_handle_);
+  if (::TryEnterCriticalSection(&native_handle_) != FALSE) {
+    return true;
+  }
+  return false;
 }
 
 void LockImpl::Lock() {
-  base::debug::ScopedLockAcquireActivity lock_activity(this);
-  ::AcquireSRWLockExclusive(&native_handle_);
+  ::EnterCriticalSection(&native_handle_);
 }
 
 void LockImpl::Unlock() {
-  ::ReleaseSRWLockExclusive(&native_handle_);
+  ::LeaveCriticalSection(&native_handle_);
 }
 
 }  // namespace internal

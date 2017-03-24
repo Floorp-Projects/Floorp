@@ -11,13 +11,10 @@
 #include <cstring>
 #include <sstream>
 #include <string>
-#include <type_traits>
-#include <utility>
 
 #include "base/base_export.h"
 #include "base/debug/debugger.h"
 #include "base/macros.h"
-#include "base/template_util.h"
 #include "build/build_config.h"
 
 //
@@ -309,16 +306,15 @@ const LogSeverity LOG_DFATAL = LOG_FATAL;
 // by LOG() and LOG_IF, etc. Since these are used all over our code, it's
 // better to have compact code for these operations.
 #define COMPACT_GOOGLE_LOG_EX_INFO(ClassName, ...) \
-  ::logging::ClassName(__FILE__, __LINE__, ::logging::LOG_INFO, ##__VA_ARGS__)
-#define COMPACT_GOOGLE_LOG_EX_WARNING(ClassName, ...)              \
-  ::logging::ClassName(__FILE__, __LINE__, ::logging::LOG_WARNING, \
-                       ##__VA_ARGS__)
+  logging::ClassName(__FILE__, __LINE__, logging::LOG_INFO , ##__VA_ARGS__)
+#define COMPACT_GOOGLE_LOG_EX_WARNING(ClassName, ...) \
+  logging::ClassName(__FILE__, __LINE__, logging::LOG_WARNING , ##__VA_ARGS__)
 #define COMPACT_GOOGLE_LOG_EX_ERROR(ClassName, ...) \
-  ::logging::ClassName(__FILE__, __LINE__, ::logging::LOG_ERROR, ##__VA_ARGS__)
+  logging::ClassName(__FILE__, __LINE__, logging::LOG_ERROR , ##__VA_ARGS__)
 #define COMPACT_GOOGLE_LOG_EX_FATAL(ClassName, ...) \
-  ::logging::ClassName(__FILE__, __LINE__, ::logging::LOG_FATAL, ##__VA_ARGS__)
+  logging::ClassName(__FILE__, __LINE__, logging::LOG_FATAL , ##__VA_ARGS__)
 #define COMPACT_GOOGLE_LOG_EX_DFATAL(ClassName, ...) \
-  ::logging::ClassName(__FILE__, __LINE__, ::logging::LOG_DFATAL, ##__VA_ARGS__)
+  logging::ClassName(__FILE__, __LINE__, logging::LOG_DFATAL , ##__VA_ARGS__)
 
 #define COMPACT_GOOGLE_LOG_INFO \
   COMPACT_GOOGLE_LOG_EX_INFO(LogMessage)
@@ -377,9 +373,12 @@ const LogSeverity LOG_0 = LOG_ERROR;
 #define LOG_IF(severity, condition) \
   LAZY_STREAM(LOG_STREAM(severity), LOG_IS_ON(severity) && (condition))
 
+#define SYSLOG(severity) LOG(severity)
+#define SYSLOG_IF(severity, condition) LOG_IF(severity, condition)
+
 // The VLOG macros log with negative verbosities.
 #define VLOG_STREAM(verbose_level) \
-  ::logging::LogMessage(__FILE__, __LINE__, -verbose_level).stream()
+  logging::LogMessage(__FILE__, __LINE__, -verbose_level).stream()
 
 #define VLOG(verbose_level) \
   LAZY_STREAM(VLOG_STREAM(verbose_level), VLOG_IS_ON(verbose_level))
@@ -390,11 +389,11 @@ const LogSeverity LOG_0 = LOG_ERROR;
 
 #if defined (OS_WIN)
 #define VPLOG_STREAM(verbose_level) \
-  ::logging::Win32ErrorLogMessage(__FILE__, __LINE__, -verbose_level, \
+  logging::Win32ErrorLogMessage(__FILE__, __LINE__, -verbose_level, \
     ::logging::GetLastSystemErrorCode()).stream()
 #elif defined(OS_POSIX)
 #define VPLOG_STREAM(verbose_level) \
-  ::logging::ErrnoLogMessage(__FILE__, __LINE__, -verbose_level, \
+  logging::ErrnoLogMessage(__FILE__, __LINE__, -verbose_level, \
     ::logging::GetLastSystemErrorCode()).stream()
 #endif
 
@@ -409,6 +408,8 @@ const LogSeverity LOG_0 = LOG_ERROR;
 
 #define LOG_ASSERT(condition)  \
   LOG_IF(FATAL, !(condition)) << "Assert failed: " #condition ". "
+#define SYSLOG_ASSERT(condition) \
+  SYSLOG_IF(FATAL, !(condition)) << "Assert failed: " #condition ". "
 
 #if defined(OS_WIN)
 #define PLOG_STREAM(severity) \
@@ -434,7 +435,7 @@ const LogSeverity LOG_0 = LOG_ERROR;
 // boolean.
 class CheckOpResult {
  public:
-  // |message| must be non-null if and only if the check failed.
+  // |message| must be null if and only if the check failed.
   CheckOpResult(std::string* message) : message_(message) {}
   // Returns true if the check succeeded.
   operator bool() const { return !message_; }
@@ -452,28 +453,22 @@ class CheckOpResult {
 // We make sure CHECK et al. always evaluates their arguments, as
 // doing CHECK(FunctionWithSideEffect()) is a common idiom.
 
-#if defined(OFFICIAL_BUILD) && defined(NDEBUG)
+#if defined(OFFICIAL_BUILD) && defined(NDEBUG) && !defined(OS_ANDROID)
 
 // Make all CHECK functions discard their log strings to reduce code
-// bloat, and improve performance, for official release builds.
+// bloat for official release builds (except Android).
 
-#if defined(COMPILER_GCC) || __clang__
-#define LOGGING_CRASH() __builtin_trap()
-#else
-#define LOGGING_CRASH() ((void)(*(volatile char*)0 = 0))
-#endif
-
-// This is not calling BreakDebugger since this is called frequently, and
-// calling an out-of-line function instead of a noreturn inline macro prevents
-// compiler optimizations.
+// TODO(akalin): This would be more valuable if there were some way to
+// remove BreakDebugger() from the backtrace, perhaps by turning it
+// into a macro (like __debugbreak() on Windows).
 #define CHECK(condition)                                                \
-  !(condition) ? LOGGING_CRASH() : EAT_STREAM_PARAMETERS
+  !(condition) ? ::base::debug::BreakDebugger() : EAT_STREAM_PARAMETERS
 
 #define PCHECK(condition) CHECK(condition)
 
 #define CHECK_OP(name, op, val1, val2) CHECK((val1) op (val2))
 
-#else  // !(OFFICIAL_BUILD && NDEBUG)
+#else
 
 #if defined(_PREFAST_) && defined(OS_WIN)
 // Use __analysis_assume to tell the VC++ static analysis engine that
@@ -496,8 +491,8 @@ class CheckOpResult {
 #else  // _PREFAST_
 
 // Do as much work as possible out of line to reduce inline code size.
-#define CHECK(condition)                                                      \
-  LAZY_STREAM(::logging::LogMessage(__FILE__, __LINE__, #condition).stream(), \
+#define CHECK(condition)                                                    \
+  LAZY_STREAM(logging::LogMessage(__FILE__, __LINE__, #condition).stream(), \
               !(condition))
 
 #define PCHECK(condition)                       \
@@ -514,38 +509,14 @@ class CheckOpResult {
 //   CHECK_EQ(2, a);
 #define CHECK_OP(name, op, val1, val2)                                         \
   switch (0) case 0: default:                                                  \
-  if (::logging::CheckOpResult true_if_passed =                                \
-      ::logging::Check##name##Impl((val1), (val2),                             \
-                                   #val1 " " #op " " #val2))                   \
+  if (logging::CheckOpResult true_if_passed =                                  \
+      logging::Check##name##Impl((val1), (val2),                               \
+                                 #val1 " " #op " " #val2))                     \
    ;                                                                           \
   else                                                                         \
-    ::logging::LogMessage(__FILE__, __LINE__, true_if_passed.message()).stream()
+    logging::LogMessage(__FILE__, __LINE__, true_if_passed.message()).stream()
 
-#endif  // !(OFFICIAL_BUILD && NDEBUG)
-
-// This formats a value for a failing CHECK_XX statement.  Ordinarily,
-// it uses the definition for operator<<, with a few special cases below.
-template <typename T>
-inline typename std::enable_if<
-    base::internal::SupportsOstreamOperator<const T&>::value,
-    void>::type
-MakeCheckOpValueString(std::ostream* os, const T& v) {
-  (*os) << v;
-}
-
-// We need overloads for enums that don't support operator<<.
-// (i.e. scoped enums where no operator<< overload was declared).
-template <typename T>
-inline typename std::enable_if<
-    !base::internal::SupportsOstreamOperator<const T&>::value &&
-        std::is_enum<T>::value,
-    void>::type
-MakeCheckOpValueString(std::ostream* os, const T& v) {
-  (*os) << static_cast<typename base::underlying_type<T>::type>(v);
-}
-
-// We need an explicit overload for std::nullptr_t.
-BASE_EXPORT void MakeCheckOpValueString(std::ostream* os, std::nullptr_t p);
+#endif
 
 // Build the error message string.  This is separate from the "Impl"
 // function template because it is not performance critical and so can
@@ -554,11 +525,7 @@ BASE_EXPORT void MakeCheckOpValueString(std::ostream* os, std::nullptr_t p);
 template<class t1, class t2>
 std::string* MakeCheckOpString(const t1& v1, const t2& v2, const char* names) {
   std::ostringstream ss;
-  ss << names << " (";
-  MakeCheckOpValueString(&ss, v1);
-  ss << " vs. ";
-  MakeCheckOpValueString(&ss, v2);
-  ss << ")";
+  ss << names << " (" << v1 << " vs. " << v2 << ")";
   std::string* msg = new std::string(ss.str());
   return msg;
 }
@@ -589,11 +556,11 @@ std::string* MakeCheckOpString<std::string, std::string>(
   inline std::string* Check##name##Impl(const t1& v1, const t2& v2, \
                                         const char* names) { \
     if (v1 op v2) return NULL; \
-    else return ::logging::MakeCheckOpString(v1, v2, names);    \
+    else return MakeCheckOpString(v1, v2, names); \
   } \
   inline std::string* Check##name##Impl(int v1, int v2, const char* names) { \
     if (v1 op v2) return NULL; \
-    else return ::logging::MakeCheckOpString(v1, v2, names);    \
+    else return MakeCheckOpString(v1, v2, names); \
   }
 DEFINE_CHECK_OP_IMPL(EQ, ==)
 DEFINE_CHECK_OP_IMPL(NE, !=)
@@ -610,6 +577,12 @@ DEFINE_CHECK_OP_IMPL(GT, > )
 #define CHECK_GE(val1, val2) CHECK_OP(GE, >=, val1, val2)
 #define CHECK_GT(val1, val2) CHECK_OP(GT, > , val1, val2)
 
+#if defined(NDEBUG)
+#define ENABLE_DLOG 0
+#else
+#define ENABLE_DLOG 1
+#endif
+
 #if defined(NDEBUG) && !defined(DCHECK_ALWAYS_ON)
 #define DCHECK_IS_ON() 0
 #else
@@ -618,7 +591,7 @@ DEFINE_CHECK_OP_IMPL(GT, > )
 
 // Definitions for DLOG et al.
 
-#if DCHECK_IS_ON()
+#if ENABLE_DLOG
 
 #define DLOG_IS_ON(severity) LOG_IS_ON(severity)
 #define DLOG_IF(severity, condition) LOG_IF(severity, condition)
@@ -627,11 +600,12 @@ DEFINE_CHECK_OP_IMPL(GT, > )
 #define DVLOG_IF(verboselevel, condition) VLOG_IF(verboselevel, condition)
 #define DVPLOG_IF(verboselevel, condition) VPLOG_IF(verboselevel, condition)
 
-#else  // DCHECK_IS_ON()
+#else  // ENABLE_DLOG
 
-// If !DCHECK_IS_ON(), we want to avoid emitting any references to |condition|
-// (which may reference a variable defined only if DCHECK_IS_ON()).
-// Contrast this with DCHECK et al., which has different behavior.
+// If ENABLE_DLOG is off, we want to avoid emitting any references to
+// |condition| (which may reference a variable defined only if NDEBUG
+// is not defined).  Contrast this with DCHECK et al., which has
+// different behavior.
 
 #define DLOG_IS_ON(severity) false
 #define DLOG_IF(severity, condition) EAT_STREAM_PARAMETERS
@@ -640,14 +614,19 @@ DEFINE_CHECK_OP_IMPL(GT, > )
 #define DVLOG_IF(verboselevel, condition) EAT_STREAM_PARAMETERS
 #define DVPLOG_IF(verboselevel, condition) EAT_STREAM_PARAMETERS
 
-#endif  // DCHECK_IS_ON()
+#endif  // ENABLE_DLOG
 
-// DEBUG_MODE is for runtime uses like
+// DEBUG_MODE is for uses like
 //   if (DEBUG_MODE) foo.CheckThatFoo();
-// We tie its state to DCHECK_IS_ON().
+// instead of
+//   #ifndef NDEBUG
+//     foo.CheckThatFoo();
+//   #endif
 //
-// For compile-time checks, #if DCHECK_IS_ON() can be used.
-enum { DEBUG_MODE = DCHECK_IS_ON() };
+// We tie its state to ENABLE_DLOG.
+enum { DEBUG_MODE = ENABLE_DLOG };
+
+#undef ENABLE_DLOG
 
 #define DLOG(severity)                                          \
   LAZY_STREAM(LOG_STREAM(severity), DLOG_IS_ON(severity))
@@ -714,16 +693,16 @@ const LogSeverity LOG_DCHECK = LOG_INFO;
 // macro is used in an 'if' clause such as:
 // if (a == 1)
 //   DCHECK_EQ(2, a);
-#define DCHECK_OP(name, op, val1, val2)                                \
-  switch (0) case 0: default:                                          \
-  if (::logging::CheckOpResult true_if_passed =                        \
-      DCHECK_IS_ON() ?                                                 \
-      ::logging::Check##name##Impl((val1), (val2),                     \
-                                   #val1 " " #op " " #val2) : nullptr) \
-   ;                                                                   \
-  else                                                                 \
-    ::logging::LogMessage(__FILE__, __LINE__, ::logging::LOG_DCHECK,   \
-                          true_if_passed.message()).stream()
+#define DCHECK_OP(name, op, val1, val2)                               \
+  switch (0) case 0: default:                                         \
+  if (logging::CheckOpResult true_if_passed =                         \
+      DCHECK_IS_ON() ?                                                \
+      logging::Check##name##Impl((val1), (val2),                      \
+                                 #val1 " " #op " " #val2) : nullptr)  \
+   ;                                                                  \
+  else                                                                \
+    logging::LogMessage(__FILE__, __LINE__, ::logging::LOG_DCHECK,    \
+                        true_if_passed.message()).stream()
 
 // Equality/Inequality checks - compare two values, and log a
 // LOG_DCHECK message including the two values when the result is not
@@ -731,7 +710,7 @@ const LogSeverity LOG_DCHECK = LOG_INFO;
 // defined.
 //
 // You may append to the error message like so:
-//   DCHECK_NE(1, 2) << "The world must be ending!";
+//   DCHECK_NE(1, 2) << ": The world must be ending!";
 //
 // We are very careful to ensure that each argument is evaluated exactly
 // once, and that anything which is legal to pass as a function argument is
@@ -740,10 +719,9 @@ const LogSeverity LOG_DCHECK = LOG_INFO;
 // for example:
 //   DCHECK_EQ(string("abc")[1], 'b');
 //
-// WARNING: These don't compile correctly if one of the arguments is a pointer
-// and the other is NULL.  In new code, prefer nullptr instead.  To
-// work around this for C++98, simply static_cast NULL to the type of the
-// desired pointer.
+// WARNING: These may not compile correctly if one of the arguments is a pointer
+// and the other is NULL. To work around this, simply static_cast NULL to the
+// type of the desired pointer.
 
 #define DCHECK_EQ(val1, val2) DCHECK_OP(EQ, ==, val1, val2)
 #define DCHECK_NE(val1, val2) DCHECK_OP(NE, !=, val1, val2)
@@ -795,9 +773,6 @@ class BASE_EXPORT LogMessage {
 
   std::ostream& stream() { return stream_; }
 
-  LogSeverity severity() { return severity_; }
-  std::string str() { return stream_.str(); }
-
  private:
   void Init(const char* file, int line);
 
@@ -831,6 +806,12 @@ class BASE_EXPORT LogMessage {
 
   DISALLOW_COPY_AND_ASSIGN(LogMessage);
 };
+
+// A non-macro interface to the log facility; (useful
+// when the logging level is not a compile-time constant).
+inline void LogAtLevel(int log_level, const std::string& msg) {
+  LogMessage(__FILE__, __LINE__, log_level).stream() << msg;
+}
 
 // This class is used to explicitly ignore values in the conditional
 // logging macros.  This avoids compiler warnings like "value computed
@@ -905,14 +886,12 @@ BASE_EXPORT void CloseLogFile();
 // Async signal safe logging mechanism.
 BASE_EXPORT void RawLog(int level, const char* message);
 
-#define RAW_LOG(level, message) \
-  ::logging::RawLog(::logging::LOG_##level, message)
+#define RAW_LOG(level, message) logging::RawLog(logging::LOG_ ## level, message)
 
-#define RAW_CHECK(condition)                               \
-  do {                                                     \
-    if (!(condition))                                      \
-      ::logging::RawLog(::logging::LOG_FATAL,              \
-                        "Check failed: " #condition "\n"); \
+#define RAW_CHECK(condition)                                                   \
+  do {                                                                         \
+    if (!(condition))                                                          \
+      logging::RawLog(logging::LOG_FATAL, "Check failed: " #condition "\n");   \
   } while (0)
 
 #if defined(OS_WIN)

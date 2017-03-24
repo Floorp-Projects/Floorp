@@ -30,16 +30,12 @@ enum TokenType {
 // |integrity level| on Vista only.
 // |token| is the output value containing the handle of the newly created
 // restricted token.
-// |lockdown_default_dacl| indicates the token's default DACL should be locked
-// down to restrict what other process can open kernel resources created while
-// running under the token.
 // If the function succeeds, the return value is ERROR_SUCCESS. If the
 // function fails, the return value is the win32 error code corresponding to
 // the error.
 DWORD CreateRestrictedToken(TokenLevel security_level,
                             IntegrityLevel integrity_level,
                             TokenType token_type,
-                            bool lockdown_default_dacl,
                             base::win::ScopedHandle* token);
 
 // Sets the integrity label on a object handle.

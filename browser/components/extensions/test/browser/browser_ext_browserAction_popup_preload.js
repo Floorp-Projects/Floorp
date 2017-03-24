@@ -7,6 +7,9 @@ let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}">
 add_task(function* testBrowserActionClickCanceled() {
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 
+  // Make sure the mouse isn't hovering over the browserAction widget.
+  EventUtils.synthesizeMouseAtCenter(gURLBar, {type: "mouseover"}, window);
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "browser_action": {
@@ -82,6 +85,9 @@ add_task(function* testBrowserActionClickCanceled() {
 });
 
 add_task(function* testBrowserActionDisabled() {
+  // Make sure the mouse isn't hovering over the browserAction widget.
+  EventUtils.synthesizeMouseAtCenter(gURLBar, {type: "mouseover"}, window);
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "browser_action": {
@@ -185,6 +191,9 @@ add_task(function* testBrowserActionTabPopulation() {
   let win = yield BrowserTestUtils.openNewBrowserWindow();
   yield BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "http://example.com/");
   yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+
+  // Make sure the mouse isn't hovering over the browserAction widget.
+  EventUtils.synthesizeMouseAtCenter(win.gURLBar, {type: "mouseover"}, win);
 
   yield extension.startup();
 

@@ -4,17 +4,12 @@
 
 #include "sandbox/win/src/win_utils.h"
 
-#include <psapi.h>
 #include <stddef.h>
-#include <stdint.h>
 
 #include <map>
-#include <memory>
-#include <vector>
 
 #include "base/macros.h"
-#include "base/numerics/safe_math.h"
-#include "base/strings/string16.h"
+#include "base/memory/scoped_ptr.h"
 #include "base/strings/string_util.h"
 #include "base/win/pe_image.h"
 #include "sandbox/win/src/internal_types.h"
@@ -97,7 +92,8 @@ bool StartsWithDriveLetter(const base::string16& path) {
   if (path[1] != L':' || path[2] != L'\\')
     return false;
 
-  return base::IsAsciiAlpha(path[0]);
+  return (path[0] >= 'a' && path[0] <= 'z') ||
+         (path[0] >= 'A' && path[0] <= 'Z');
 }
 
 const wchar_t kNTDotPrefix[] = L"\\\\.\\";
@@ -107,45 +103,6 @@ const size_t kNTDotPrefixLen = arraysize(kNTDotPrefix) - 1;
 void RemoveImpliedDevice(base::string16* path) {
   if (0 == path->compare(0, kNTDotPrefixLen, kNTDotPrefix))
     *path = path->substr(kNTDotPrefixLen);
-}
-
-// Get the native path to the process.
-bool GetProcessPath(HANDLE process, base::string16* path) {
-  wchar_t process_name[MAX_PATH];
-  DWORD size = MAX_PATH;
-  if (::QueryFullProcessImageNameW(process, PROCESS_NAME_NATIVE, process_name,
-                                   &size)) {
-    *path = process_name;
-    return true;
-  }
-  // Process name is potentially greater than MAX_PATH, try larger max size.
-  std::vector<wchar_t> process_name_buffer(SHRT_MAX);
-  size = SHRT_MAX;
-  if (::QueryFullProcessImageNameW(process, PROCESS_NAME_NATIVE,
-                                   &process_name_buffer[0], &size)) {
-    *path = &process_name_buffer[0];
-    return true;
-  }
-  return false;
-}
-
-// Get the native path for a mapped file.
-bool GetImageFilePath(HANDLE process,
-                      void* base_address,
-                      base::string16* path) {
-  wchar_t mapped_path[MAX_PATH];
-  if (::GetMappedFileNameW(process, base_address, mapped_path, MAX_PATH)) {
-    *path = mapped_path;
-    return true;
-  }
-  // Image name is potentially greater than MAX_PATH, try larger max size.
-  std::vector<wchar_t> mapped_path_buffer(SHRT_MAX);
-  if (::GetMappedFileNameW(process, base_address, &mapped_path_buffer[0],
-                           SHRT_MAX)) {
-    *path = &mapped_path_buffer[0];
-    return true;
-  }
-  return false;
 }
 
 }  // namespace
@@ -346,7 +303,7 @@ bool ConvertToLongPath(base::string16* path) {
   }
 
   DWORD size = MAX_PATH;
-  std::unique_ptr<wchar_t[]> long_path_buf(new wchar_t[size]);
+  scoped_ptr<wchar_t[]> long_path_buf(new wchar_t[size]);
 
   DWORD return_value = ::GetLongPathName(temp_path.c_str(), long_path_buf.get(),
                                          size);
@@ -407,7 +364,7 @@ bool GetPathFromHandle(HANDLE handle, base::string16* path) {
   NTSTATUS status = NtQueryObject(handle, ObjectNameInformation, name, size,
                                   &size);
 
-  std::unique_ptr<BYTE[]> name_ptr;
+  scoped_ptr<BYTE[]> name_ptr;
   if (size) {
     name_ptr.reset(new BYTE[size]);
     name = reinterpret_cast<OBJECT_NAME_INFORMATION*>(name_ptr.get());
@@ -457,53 +414,6 @@ bool WriteProtectedChildMemory(HANDLE child_process, void* address,
   return ok;
 }
 
-DWORD GetLastErrorFromNtStatus(NTSTATUS status) {
-  RtlNtStatusToDosErrorFunction NtStatusToDosError = nullptr;
-  ResolveNTFunctionPtr("RtlNtStatusToDosError", &NtStatusToDosError);
-  return NtStatusToDosError(status);
-}
-
-// This function walks the virtual memory map using VirtualQueryEx to find
-// the main executable's image section. We attempt to find the first image
-// section which matches the path returned for the process.  This shouldn't
-// be a major performance problem because a new process has a very limited
-// amount of memory allocated so the majority of the valid range should be
-// skipped immediately. However if it turns out to be the case it could be
-// optimized in the specific case of the process being the same as the
-// current process, which due to ASLR rules the image load address will almost
-// always match the current process's load address.
-void* GetProcessBaseAddress(HANDLE process) {
-  MEMORY_BASIC_INFORMATION mem_info = {};
-  // Start 64KiB above zero page.
-  void* current = reinterpret_cast<void*>(0x10000);
-  base::string16 process_path;
-
-  if (!GetProcessPath(process, &process_path))
-    return nullptr;
-
-  // Walk the virtual memory mappings trying to find image sections.
-  // VirtualQueryEx will return false if it encounters a location outside of
-  // the user memory range.
-  while (::VirtualQueryEx(process, current, &mem_info, sizeof(mem_info))) {
-    base::string16 image_path;
-    if (mem_info.Type == MEM_IMAGE &&
-        GetImageFilePath(process, mem_info.BaseAddress, &image_path) &&
-        EqualPath(process_path, image_path)) {
-      return mem_info.BaseAddress;
-    }
-    // VirtualQueryEx should fail before overflow, but just in case we'll check
-    // to prevent an infinite loop.
-    base::CheckedNumeric<uintptr_t> next_base =
-        reinterpret_cast<uintptr_t>(mem_info.BaseAddress);
-    next_base += mem_info.RegionSize;
-    if (!next_base.IsValid())
-      return nullptr;
-    current = reinterpret_cast<void*>(next_base.ValueOrDie());
-  }
-
-  return nullptr;
-}
-
 };  // namespace sandbox
 
 void ResolveNTFunctionPtr(const char* name, void* ptr) {
@@ -517,6 +427,7 @@ void ResolveNTFunctionPtr(const char* name, void* ptr) {
     // Race-safe way to set static ntdll.
     ::InterlockedCompareExchangePointer(
         reinterpret_cast<PVOID volatile*>(&ntdll), ntdll_local, NULL);
+
   }
 
   CHECK_NT(ntdll);

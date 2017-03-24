@@ -20,11 +20,11 @@
 #define DISALLOW_ASSIGN(TypeName) \
   void operator=(const TypeName&) = delete
 
-// A macro to disallow the copy constructor and operator= functions.
-// This should be used in the private: declarations for a class.
+// A macro to disallow the copy constructor and operator= functions
+// This should be used in the private: declarations for a class
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-  TypeName(const TypeName&) = delete;      \
-  void operator=(const TypeName&) = delete
+  TypeName(const TypeName&);               \
+  void operator=(const TypeName&)
 
 // A macro to disallow all the implicit constructors, namely the
 // default constructor, copy constructor and operator= functions.
@@ -52,7 +52,7 @@ template <typename T, size_t N> char (&ArraySizeHelper(T (&array)[N]))[N];
 // really sure you don't want to do anything with the return value of a function
 // that has been marked WARN_UNUSED_RESULT, wrap it with this. Example:
 //
-//   std::unique_ptr<MyType> my_var = ...;
+//   scoped_ptr<MyType> my_var = ...;
 //   if (TakeOwnership(my_var.get()) == SUCCESS)
 //     ignore_result(my_var.release());
 //

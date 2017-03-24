@@ -5,14 +5,13 @@
 
 #include "DateTimeFormat.h"
 #include "mozilla/Sprintf.h"
-#include "nsILocaleService.h"
 #include "nsIScriptableDateFormat.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
 
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 
-class nsScriptableDateFormat : public nsIScriptableDateFormat {
+class nsScriptableDateFormat final : public nsIScriptableDateFormat {
  public: 
   NS_DECL_ISUPPORTS 
 
@@ -73,19 +72,7 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
     return NS_ERROR_INVALID_ARG;
 
   nsresult rv;
-  nsAutoString localeName(aLocale);
   *dateTimeString = nullptr;
-
-  nsCOMPtr<nsILocale> locale;
-  // re-initialise locale pointer only if the locale was given explicitly
-  if (!localeName.IsEmpty()) {
-    // get locale service
-    nsCOMPtr<nsILocaleService> localeService(do_GetService(kLocaleServiceCID, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-    // get locale
-    rv = localeService->NewLocale(localeName, getter_AddRefs(locale));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   tm tmTime;
   time_t timetTime;

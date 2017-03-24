@@ -33,7 +33,7 @@ CompositionTransaction::CompositionTransaction(
   , mReplaceLength(aReplaceLength)
   , mRanges(aTextRangeArray)
   , mStringToInsert(aStringToInsert)
-  , mEditorBase(aEditorBase)
+  , mEditorBase(&aEditorBase)
   , mRangeUpdater(aRangeUpdater)
   , mFixed(false)
 {
@@ -45,6 +45,7 @@ CompositionTransaction::~CompositionTransaction()
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CompositionTransaction, EditTransactionBase,
+                                   mEditorBase,
                                    mTextNode)
 // mRangeList can't lead to cycles
 
@@ -60,9 +61,13 @@ NS_IMPL_RELEASE_INHERITED(CompositionTransaction, EditTransactionBase)
 NS_IMETHODIMP
 CompositionTransaction::DoTransaction()
 {
+  if (NS_WARN_IF(!mEditorBase)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   // Fail before making any changes if there's no selection controller
   nsCOMPtr<nsISelectionController> selCon;
-  mEditorBase.GetSelectionController(getter_AddRefs(selCon));
+  mEditorBase->GetSelectionController(getter_AddRefs(selCon));
   NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
 
   // Advance caret: This requires the presentation shell to get the selection.
@@ -108,9 +113,13 @@ CompositionTransaction::DoTransaction()
 NS_IMETHODIMP
 CompositionTransaction::UndoTransaction()
 {
+  if (NS_WARN_IF(!mEditorBase)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   // Get the selection first so we'll fail before making any changes if we
   // can't get it
-  RefPtr<Selection> selection = mEditorBase.GetSelection();
+  RefPtr<Selection> selection = mEditorBase->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
 
   nsresult rv = mTextNode->DeleteData(mOffset, mStringToInsert.Length());
@@ -171,7 +180,10 @@ CompositionTransaction::GetTxnDescription(nsAString& aString)
 nsresult
 CompositionTransaction::SetSelectionForRanges()
 {
-  return SetIMESelection(mEditorBase, mTextNode, mOffset,
+  if (NS_WARN_IF(!mEditorBase)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  return SetIMESelection(*mEditorBase, mTextNode, mOffset,
                          mStringToInsert.Length(), mRanges);
 }
 

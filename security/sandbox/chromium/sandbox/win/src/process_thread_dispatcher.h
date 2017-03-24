@@ -48,15 +48,7 @@ class ThreadProcessDispatcher : public Dispatcher {
                       base::string16* name,
                       base::string16* cmd_line,
                       base::string16* cur_dir,
-                      base::string16* target_cur_dir,
                       CountedBuffer* info);
-
-  // Processes IPC requests coming from calls to CreateThread() in the target.
-  bool CreateThread(IPCInfo* ipc,
-                    SIZE_T stack_size,
-                    LPTHREAD_START_ROUTINE start_address,
-                    LPVOID parameter,
-                    DWORD creation_flags);
 
   PolicyBase* policy_base_;
   DISALLOW_COPY_AND_ASSIGN(ThreadProcessDispatcher);
