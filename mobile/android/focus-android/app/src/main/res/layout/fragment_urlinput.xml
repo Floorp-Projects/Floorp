@@ -58,6 +58,7 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:paddingEnd="8dp"
+                android:paddingStart="8dp"
                 android:layout_gravity="end"
                 android:visibility="gone"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
