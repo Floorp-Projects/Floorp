@@ -50,7 +50,6 @@
         if (this.mInputElement.value) {
           this.setFieldsFromInputValue();
         }
-        this.updateResetButtonVisibility();
       ]]>
       </constructor>
 
@@ -117,27 +116,23 @@
 
           if (this.mMonthField && !this.mMonthField.disabled &&
               !this.mMonthField.readOnly) {
-            this.mMonthField.value = "";
-            this.mMonthField.setAttribute("typeBuffer", "");
+            this.clearFieldValue(this.mMonthField);
           }
 
           if (this.mDayField && !this.mDayField.disabled &&
               !this.mDayField.readOnly) {
-            this.mDayField.value = "";
-            this.mDayField.setAttribute("typeBuffer", "");
+            this.clearFieldValue(this.mDayField);
           }
 
           if (this.mYearField && !this.mYearField.disabled &&
               !this.mYearField.readOnly) {
-            this.mYearField.value = "";
-            this.mYearField.setAttribute("typeBuffer", "");
+            this.clearFieldValue(this.mYearField);
+            this.mYearField.size = this.mYearLength;
           }
 
           if (!aFromInputElement) {
             this.mInputElement.setUserInput("");
           }
-
-          this.updateResetButtonVisibility();
         ]]>
         </body>
       </method>
@@ -179,14 +174,15 @@
         <parameter name="aField"/>
         <body>
           <![CDATA[
-            if (this.isEmpty(aField.value)) {
+            let value = this.getFieldValue(aField);
+            if (this.isEmpty(value)) {
               return true;
             }
 
             let min = Number(aField.getAttribute("min"));
             let max = Number(aField.getAttribute("max"));
 
-            if (Number(aField.value) < min || Number(aField.value) > max) {
+            if (value < min || value > max) {
               return true;
             }
 
@@ -213,15 +209,18 @@
             return;
           }
 
-          let year = this.mYearField.value;
-          let month = this.mMonthField.value;
-          let day = this.mDayField.value;
-
+          let { year, month, day } = this.getCurrentValue();
           if (day > this.getDaysInMonth(month, year)) {
             // Don't set invalid date, otherwise input element's value will be
             // set to empty.
             return;
           }
+
+          // Convert to a valid date string according to:
+          // https://html.spec.whatwg.org/multipage/infrastructure.html#valid-date-string
+          year = year.toString().padStart(this.mYearLength, "0");
+          month = (month < 10) ? ("0" + month) : month;
+          day = (day < 10) ? ("0" + day) : day;
 
           let date = [year, month, day].join("-");
 
@@ -270,7 +269,6 @@
 
             buffer = buffer.concat(key);
             this.setFieldValue(targetField, buffer);
-            targetField.select();
 
             let n = Number(buffer);
             let max = targetField.getAttribute("max");
@@ -289,10 +287,10 @@
         <parameter name="aTimes"/>
         <body>
         <![CDATA[
-          let value;
+          let value = this.getFieldValue(aTargetField);
 
           // Use current date if field is empty.
-          if (this.isEmpty(aTargetField.value)) {
+          if (this.isEmpty(value)) {
             let now = new Date();
 
             if (aTargetField == this.mYearField) {
@@ -305,8 +303,6 @@
               this.log("Field not supported in incrementFieldValue.");
               return;
             }
-          } else {
-            value = Number(aTargetField.value);
           }
 
           let min = Number(aTargetField.getAttribute("min"));
@@ -318,8 +314,8 @@
           } else if (value < min) {
             value += (max - min + 1);
           }
+
           this.setFieldValue(aTargetField, value);
-          aTargetField.select();
         ]]>
         </body>
       </method>
@@ -355,12 +351,10 @@
             case "Home":
               let min = targetField.getAttribute("min");
               this.setFieldValue(targetField, min);
-              targetField.select();
               break;
             case "End":
               let max = targetField.getAttribute("max");
               this.setFieldValue(targetField, max);
-              targetField.select();
               break;
           }
           this.setInputValueFromFields();
@@ -371,20 +365,9 @@
       <method name="getCurrentValue">
         <body>
         <![CDATA[
-          let year;
-          if (!this.isEmpty(this.mYearField.value)) {
-            year = Number(this.mYearField.value);
-          }
-
-          let month;
-          if (!this.isEmpty(this.mMonthField.value)) {
-            month = Number(this.mMonthField.value);
-          }
-
-          let day;
-          if (!this.isEmpty(this.mDayField.value)) {
-            day = Number(this.mDayField.value);
-          }
+          let year = this.getFieldValue(this.mYearField);
+          let month = this.getFieldValue(this.mMonthField);
+          let day = this.getFieldValue(this.mDayField);
 
           let date = { year, month, day };
 
@@ -399,6 +382,10 @@
        <parameter name="aValue"/>
         <body>
         <![CDATA[
+          if (!aField || !aField.classList.contains("numeric")) {
+            return;
+          }
+
           let value = Number(aValue);
           if (isNaN(value)) {
             this.log("NaN on setFieldValue!");
@@ -409,36 +396,32 @@
             let min = Number(aField.getAttribute("min"));
             let max = Number(aField.getAttribute("max"));
 
-            if (aValue < min) {
+            if (value < min) {
               value = min;
-            } else if (aValue > max) {
+            } else if (value > max) {
               value = max;
             }
           }
 
-          if (aField == this.mMonthField ||
-              aField == this.mDayField) {
-            // prepend zero
-            if (value < 10) {
-              value = "0" + value;
-            }
-          } else {
-            // prepend zeroes
-            if (value < 10) {
-              value = "000" + value;
-            } else if (value < 100) {
-              value = "00" + value;
-            } else if (value < 1000) {
-              value = "0" + value;
-            }
+          aField.setAttribute("rawValue", value);
 
-            if (value.toString().length > this.mYearLength &&
-                value.toString().length <= this.mMaxYear.toString().length) {
-              this.mYearField.size = value.toString().length;
-            }
+          // Display formatted value based on locale.
+          let minDigits = (aField == this.mYearField ? this.mYearLength
+                                                     : aField.size);
+          let formatted = value.toLocaleString(this.mLocales, {
+            minimumIntegerDigits: minDigits,
+            useGrouping: false
+          });
+
+          if (aField == this.mYearField) {
+            this.mYearField.size = formatted.length;
           }
 
-          aField.value = value;
+          aField.value = formatted;
+          if (document.activeElement == this.mInputElement &&
+              this.mLastFocusedField && this.mLastFocusedField == aField) {
+            aField.select();
+          }
           this.updateResetButtonVisibility();
         ]]>
         </body>
@@ -448,9 +431,10 @@
         <parameter name="aForPicker"/>
         <body>
         <![CDATA[
-          return !this.isEmpty(this.mMonthField.value) ||
-                 !this.isEmpty(this.mDayField.value) ||
-                 !this.isEmpty(this.mYearField.value);
+          let { year, month, day } = this.getCurrentValue();
+
+          return !this.isEmpty(year) || !this.isEmpty(month) ||
+                 !this.isEmpty(day);
         ]]>
         </body>
       </method>
@@ -510,7 +494,6 @@
         if (this.mInputElement.value) {
           this.setFieldsFromInputValue();
         }
-        this.updateResetButtonVisibility();
         ]]>
       </constructor>
 
@@ -1149,6 +1132,7 @@
 
         this.mResetButton =
           document.getAnonymousElementByAttribute(this, "anonid", "reset-button");
+        this.mResetButton.style.visibility = "hidden";
 
         this.EVENTS.forEach((eventName) => {
           this.addEventListener(eventName, this, { mozSystemGroup: true });
