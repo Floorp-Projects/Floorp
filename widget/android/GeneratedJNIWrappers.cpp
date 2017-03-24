@@ -10,12 +10,6 @@
 namespace mozilla {
 namespace java {
 
-const char AlarmReceiver::name[] =
-        "org/mozilla/gecko/AlarmReceiver";
-
-constexpr char AlarmReceiver::NotifyAlarmFired_t::name[];
-constexpr char AlarmReceiver::NotifyAlarmFired_t::signature[];
-
 const char AndroidGamepadManager::name[] =
         "org/mozilla/gecko/AndroidGamepadManager";
 
@@ -173,14 +167,6 @@ constexpr char GeckoAppShell::CreateShortcut_t::signature[];
 auto GeckoAppShell::CreateShortcut(mozilla::jni::String::Param a0, mozilla::jni::String::Param a1) -> void
 {
     return mozilla::jni::Method<CreateShortcut_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1);
-}
-
-constexpr char GeckoAppShell::DisableAlarm_t::name[];
-constexpr char GeckoAppShell::DisableAlarm_t::signature[];
-
-auto GeckoAppShell::DisableAlarm() -> void
-{
-    return mozilla::jni::Method<DisableAlarm_t>::Call(GeckoAppShell::Context(), nullptr);
 }
 
 constexpr char GeckoAppShell::DisableBatteryNotifications_t::name[];
@@ -610,14 +596,6 @@ constexpr char GeckoAppShell::ScheduleRestart_t::signature[];
 auto GeckoAppShell::ScheduleRestart() -> void
 {
     return mozilla::jni::Method<ScheduleRestart_t>::Call(GeckoAppShell::Context(), nullptr);
-}
-
-constexpr char GeckoAppShell::SetAlarm_t::name[];
-constexpr char GeckoAppShell::SetAlarm_t::signature[];
-
-auto GeckoAppShell::SetAlarm(int32_t a0, int32_t a1) -> bool
-{
-    return mozilla::jni::Method<SetAlarm_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1);
 }
 
 constexpr char GeckoAppShell::SetFullScreen_t::name[];
