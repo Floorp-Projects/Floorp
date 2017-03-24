@@ -14,8 +14,7 @@ pub enum WebDriverResponse {
     NewSession(NewSessionResponse),
     Timeouts(TimeoutsResponse),
     Void,
-    WindowPosition(WindowPositionResponse),
-    WindowSize(WindowSizeResponse),
+    WindowRect(WindowRectResponse),
 }
 
 impl WebDriverResponse {
@@ -29,8 +28,7 @@ impl WebDriverResponse {
             WebDriverResponse::NewSession(ref x) => json::encode(x),
             WebDriverResponse::Timeouts(ref x) => json::encode(x),
             WebDriverResponse::Void => Ok("{}".to_string()),
-            WebDriverResponse::WindowPosition(ref x) => json::encode(x),
-            WebDriverResponse::WindowSize(ref x) => json::encode(x),
+            WebDriverResponse::WindowRect(ref x) => json::encode(x),
         }.unwrap();
 
         match self {
@@ -113,30 +111,11 @@ impl ValueResponse {
 }
 
 #[derive(RustcEncodable, Debug)]
-pub struct WindowSizeResponse {
-    pub width: u64,
-    pub height: u64
-}
-
-impl WindowSizeResponse {
-    pub fn new(width: u64, height: u64) -> WindowSizeResponse {
-        WindowSizeResponse {
-            width: width,
-            height: height
-        }
-    }
-}
-
-#[derive(RustcEncodable, Debug)]
-pub struct WindowPositionResponse {
+pub struct WindowRectResponse {
     pub x: i64,
     pub y: i64,
-}
-
-impl WindowPositionResponse {
-    pub fn new(x: i64, y: i64) -> WindowPositionResponse {
-        WindowPositionResponse { x: x, y: y }
-    }
+    pub width: u64,
+    pub height: u64,
 }
 
 #[derive(RustcEncodable, Debug)]
@@ -233,8 +212,7 @@ mod tests {
                 NewSessionResponse,
                 ValueResponse,
                 TimeoutsResponse,
-                WindowPositionResponse,
-                WindowSizeResponse,
+                WindowRectResponse,
                 Cookie,
                 Nullable};
 
@@ -279,6 +257,18 @@ mod tests {
     }
 
     #[test]
+    fn test_window_rect() {
+        let resp = WebDriverResponse::WindowRect(WindowRectResponse {
+            x: 0i64,
+            y: 1i64,
+            width: 2u64,
+            height: 3u64,
+        });
+        let expected = r#"{"value": {"x": 0, "y": 1, "width": 2, "height": 3}}"#;
+        test(resp, expected);
+    }
+
+    #[test]
     fn test_new_session() {
         let resp = WebDriverResponse::NewSession(
             NewSessionResponse::new("test".into(),
@@ -302,22 +292,6 @@ mod tests {
         let resp = WebDriverResponse::Generic(ValueResponse::new(
             Json::Object(value)));
         let expected = r#"{"value": {"example": ["test"]}}"#;
-        test(resp, expected);
-    }
-
-    #[test]
-    fn test_window_position() {
-         let resp = WebDriverResponse::WindowPosition(WindowPositionResponse::new(
-            1, 2));
-        let expected = r#"{"value": {"x": 1, "y": 2}}"#;
-        test(resp, expected);
-    }
-
-    #[test]
-    fn test_window_size() {
-         let resp = WebDriverResponse::WindowSize(WindowSizeResponse::new(
-            1, 2));
-        let expected = r#"{"value": {"width": 1, "height": 2}}"#;
         test(resp, expected);
     }
 }
