@@ -1073,6 +1073,10 @@ WebMTrackDemuxer::Seek(const media::TimeUnit& aTime)
   mParent->SeekInternal(mType, aTime);
   nsresult rv = mParent->GetNextPacket(mType, &mSamples);
   if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+      // Ignore the error for now, the next GetSample will be rejected with EOS.
+      return SeekPromise::CreateAndResolve(media::TimeUnit(), __func__);
+    }
     return SeekPromise::CreateAndReject(rv, __func__);
   }
   mNeedKeyframe = true;
