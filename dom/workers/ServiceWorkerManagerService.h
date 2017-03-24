@@ -26,7 +26,6 @@ class ServiceWorkerRegistrationData;
 namespace workers {
 
 class ServiceWorkerManagerParent;
-class ServiceWorkerUpdaterParent;
 
 class ServiceWorkerManagerService final
 {
@@ -54,27 +53,11 @@ public:
 
   void PropagateRemoveAll(uint64_t aParentID);
 
-  void ProcessUpdaterActor(ServiceWorkerUpdaterParent* aActor,
-                           const OriginAttributes& aOriginAttributes,
-                           const nsACString& aScope,
-                           uint64_t aParentID);
-
-  void UpdaterActorDestroyed(ServiceWorkerUpdaterParent* aActor);
-
 private:
   ServiceWorkerManagerService();
   ~ServiceWorkerManagerService();
 
   nsTHashtable<nsPtrHashKey<ServiceWorkerManagerParent>> mAgents;
-
-  struct PendingUpdaterActor
-  {
-    nsCString mScope;
-    ServiceWorkerUpdaterParent* mActor;
-    uint64_t mParentId;
-  };
-
-  nsTArray<PendingUpdaterActor> mPendingUpdaterActors;
 };
 
 } // namespace workers
