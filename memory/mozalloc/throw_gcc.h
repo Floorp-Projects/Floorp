@@ -32,6 +32,9 @@
 #  define MOZ_THROW_NORETURN MOZ_NORETURN
 #endif
 
+// Handle `_GLIBCXX_THROW_OR_ABORT(regex_error(__ecode, __what));` et al.
+#define _GLIBCXX_THROW_OR_ABORT(_EXC) mozalloc_abort( (_EXC).what() )
+
 namespace std {
 
 // NB: user code is not supposed to touch the std:: namespace.  We're
@@ -135,6 +138,15 @@ __throw_system_error(int err)
     char error[128];
     snprintf(error, sizeof(error)-1,
              "fatal: STL threw system_error: %s (%d)", strerror(err), err);
+    mozalloc_abort(error);
+}
+
+MOZ_THROW_NORETURN MOZ_EXPORT MOZ_ALWAYS_INLINE void
+__throw_regex_error(int __ecode)
+{
+    char error[128];
+    snprintf(error, sizeof(error)-1,
+             "fatal: STL threw regex_error(%d)", __ecode);
     mozalloc_abort(error);
 }
 
