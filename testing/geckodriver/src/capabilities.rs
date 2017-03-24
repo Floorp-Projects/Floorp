@@ -194,8 +194,10 @@ fn unzip_buffer(buf: &[u8], dest_dir: &Path) -> WebDriverResult<()> {
         if let Some(unzip_path) = unzip_path {
             debug!("Extracting profile to {}", unzip_path.to_string_lossy());
             let dest = try!(fs::File::create(unzip_path));
-            let mut writer = BufWriter::new(dest);
-            try!(io::copy(&mut file, &mut writer));
+            if file.size() > 0 {
+                let mut writer = BufWriter::new(dest);
+                try!(io::copy(&mut file, &mut writer));
+            }
         }
     }
 
