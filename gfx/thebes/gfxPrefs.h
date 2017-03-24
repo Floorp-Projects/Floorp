@@ -486,7 +486,7 @@ private:
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps.write-to-file", WriteFPSToFile, bool, false);
   DECL_GFX_PREF(Once, "layers.acceleration.force-enabled",     LayersAccelerationForceEnabledDoNotUseDirectly, bool, false);
   DECL_OVERRIDE_PREF(Live, "layers.advanced.border-layers",    LayersAllowBorderLayers, false);
-  DECL_GFX_PREF(Live, "layers.advanced.boxshadow-inset-layers", LayersAllowInsetBoxShadow, bool, false);
+  DECL_OVERRIDE_PREF(Live, "layers.advanced.boxshadow-inset-layers", LayersAllowInsetBoxShadow, gfxPrefs::OverrideBase_WebRender());
   DECL_OVERRIDE_PREF(Live, "layers.advanced.boxshadow-outer-layers", LayersAllowOuterBoxShadow, false);
   DECL_GFX_PREF(Live, "layers.advanced.bullet-layers",         LayersAllowBulletLayers, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.button-foreground-layers", LayersAllowButtonForegroundLayers, bool, false);
