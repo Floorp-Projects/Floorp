@@ -167,6 +167,9 @@ this.Heartbeat = class {
       frag.appendChild(ratingContainer);
     }
 
+    const details = this.chromeWindow.document.getAnonymousElementByAttribute(this.notice, "anonid", "details");
+    details.style.overflow = "hidden";
+
     this.messageImage = this.chromeWindow.document.getAnonymousElementByAttribute(this.notice, "anonid", "messageImage");
     this.messageImage.classList.add("heartbeat", "pulse-onshow");
 

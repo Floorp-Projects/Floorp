@@ -1,6 +1,5 @@
 "use strict";
 
-const {utils: Cu} = Components;
 Cu.import("resource://shield-recipe-client/lib/Storage.jsm", this);
 
 const fakeSandbox = {Promise};

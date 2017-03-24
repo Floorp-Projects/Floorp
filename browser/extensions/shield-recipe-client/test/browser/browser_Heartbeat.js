@@ -1,7 +1,5 @@
 "use strict";
 
-const {utils: Cu} = Components;
-
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/Heartbeat.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/SandboxManager.jsm", this);
