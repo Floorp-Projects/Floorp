@@ -66,7 +66,7 @@ this.ExtensionPermissions = {
 
     if (added.permissions.length > 0 || added.origins.length > 0) {
       prefs.saveSoon();
-      // TODO apply the changes
+      extension.emit("add-permissions", added);
     }
   },
 
@@ -99,7 +99,7 @@ this.ExtensionPermissions = {
 
     if (removed.permissions.length > 0 || removed.origins.length > 0) {
       prefs.saveSoon();
-      // TODO apply the changes
+      extension.emit("remove-permissions", removed);
     }
   },
 
