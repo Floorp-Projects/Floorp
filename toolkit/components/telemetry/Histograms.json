@@ -2104,6 +2104,15 @@
       "n_values": 80,
       "description": "Network vs cache time load (OnStopRequest) difference (ms) not revalidated cache entries. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
+  "HTTP_ONSTART_SUSPEND_TOTAL_TIME": {
+    "expires_in_version": "58",
+      "alert_emails": ["necko@mozilla.com"],
+      "bug_numbers": [1347948],
+      "kind": "exponential",
+      "high": 60000,
+      "n_buckets": 100,
+      "description": "Time in milliseconds that http channel spent suspended between AsyncOpen and OnStartRequest."
+  },
   "HTTP_AUTH_DIALOG_STATS": {
     "expires_in_version": "never",
     "kind": "enumerated",
