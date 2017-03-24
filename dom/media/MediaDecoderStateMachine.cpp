@@ -3672,7 +3672,7 @@ MediaDecoderStateMachine::OnMediaSinkVideoComplete()
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(HasVideo());
-  LOGV("[%s]", __func__);
+  LOG("[%s]", __func__);
 
   mMediaSinkVideoPromise.Complete();
   mVideoCompleted = true;
@@ -3684,7 +3684,7 @@ MediaDecoderStateMachine::OnMediaSinkVideoError()
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(HasVideo());
-  LOGV("[%s]", __func__);
+  LOGW("[%s]", __func__);
 
   mMediaSinkVideoPromise.Complete();
   mVideoCompleted = true;
@@ -3698,7 +3698,7 @@ void MediaDecoderStateMachine::OnMediaSinkAudioComplete()
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(HasAudio());
-  LOGV("[%s]", __func__);
+  LOG("[%s]", __func__);
 
   mMediaSinkAudioPromise.Complete();
   mAudioCompleted = true;
@@ -3714,7 +3714,7 @@ void MediaDecoderStateMachine::OnMediaSinkAudioError(nsresult aResult)
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(HasAudio());
-  LOGV("[%s]", __func__);
+  LOGW("[%s]", __func__);
 
   mMediaSinkAudioPromise.Complete();
   mAudioCompleted = true;
