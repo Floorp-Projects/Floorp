@@ -65,9 +65,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/DebugOnly.h"
 
-// Memory profile
-#include "nsMemoryReporterManager.h"
-
 #include <string.h>
 #include <list>
 
@@ -84,18 +81,18 @@ SetSampleContext(TickSample* sample, mcontext_t& mcontext)
 {
   // Extracting the sample from the context is extremely machine dependent.
 #if defined(GP_ARCH_x86)
-  sample->pc = reinterpret_cast<Address>(mcontext.gregs[REG_EIP]);
-  sample->sp = reinterpret_cast<Address>(mcontext.gregs[REG_ESP]);
-  sample->fp = reinterpret_cast<Address>(mcontext.gregs[REG_EBP]);
+  sample->mPC = reinterpret_cast<Address>(mcontext.gregs[REG_EIP]);
+  sample->mSP = reinterpret_cast<Address>(mcontext.gregs[REG_ESP]);
+  sample->mFP = reinterpret_cast<Address>(mcontext.gregs[REG_EBP]);
 #elif defined(GP_ARCH_amd64)
-  sample->pc = reinterpret_cast<Address>(mcontext.gregs[REG_RIP]);
-  sample->sp = reinterpret_cast<Address>(mcontext.gregs[REG_RSP]);
-  sample->fp = reinterpret_cast<Address>(mcontext.gregs[REG_RBP]);
+  sample->mPC = reinterpret_cast<Address>(mcontext.gregs[REG_RIP]);
+  sample->mSP = reinterpret_cast<Address>(mcontext.gregs[REG_RSP]);
+  sample->mFP = reinterpret_cast<Address>(mcontext.gregs[REG_RBP]);
 #elif defined(GP_ARCH_arm)
-  sample->pc = reinterpret_cast<Address>(mcontext.arm_pc);
-  sample->sp = reinterpret_cast<Address>(mcontext.arm_sp);
-  sample->fp = reinterpret_cast<Address>(mcontext.arm_fp);
-  sample->lr = reinterpret_cast<Address>(mcontext.arm_lr);
+  sample->mPC = reinterpret_cast<Address>(mcontext.arm_pc);
+  sample->mSP = reinterpret_cast<Address>(mcontext.arm_sp);
+  sample->mFP = reinterpret_cast<Address>(mcontext.arm_fp);
+  sample->mLR = reinterpret_cast<Address>(mcontext.arm_lr);
 #else
 # error "bad platform"
 #endif
@@ -356,32 +353,15 @@ SamplerThread::Stop(PS::LockRef aLock)
 }
 
 void
-SamplerThread::SuspendAndSampleAndResumeThread(
-  PS::LockRef aLock, ThreadInfo* aThreadInfo, bool aIsFirstProfiledThread)
+SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
+                                               TickSample* aSample)
 {
   // Only one sampler thread can be sampling at once.  So we expect to have
   // complete control over |sSigHandlerCoordinator|.
   MOZ_ASSERT(!sSigHandlerCoordinator);
 
-  int sampleeTid = aThreadInfo->ThreadId();
+  int sampleeTid = aSample->mThreadInfo->ThreadId();
   MOZ_RELEASE_ASSERT(sampleeTid != mSamplerTid);
-
-  //----------------------------------------------------------------//
-  // Collect auxiliary information whilst the samplee thread is still
-  // running.
-
-  int64_t rssMemory = 0;
-  int64_t ussMemory = 0;
-  if (aIsFirstProfiledThread && gPS->FeatureMemory(aLock)) {
-    rssMemory = nsMemoryReporterManager::ResidentFast();
-    ussMemory = nsMemoryReporterManager::ResidentUnique();
-  }
-
-  TickSample sample;
-  sample.threadInfo = aThreadInfo;
-  sample.timestamp = mozilla::TimeStamp::Now();
-  sample.rssMemory = rssMemory;
-  sample.ussMemory = ussMemory;
 
   //----------------------------------------------------------------//
   // Suspend the samplee thread and get its context.
@@ -423,13 +403,13 @@ SamplerThread::SuspendAndSampleAndResumeThread(
   // The samplee thread is now frozen and sSigHandlerCoordinator->mUContext is
   // valid.  We can poke around in it and unwind its stack as we like.
 
-  sample.context = &sSigHandlerCoordinator->mUContext;
+  aSample->mContext = &sSigHandlerCoordinator->mUContext;
 
   // Extract the current pc and sp.
-  SetSampleContext(&sample,
+  SetSampleContext(aSample,
                    sSigHandlerCoordinator->mUContext.uc_mcontext);
 
-  Tick(aLock, gPS->Buffer(aLock), &sample);
+  Tick(aLock, gPS->Buffer(aLock), aSample);
 
   //----------------------------------------------------------------//
   // Resume the target thread.
@@ -640,14 +620,12 @@ PlatformInit(PS::LockRef aLock)
 #endif
 
 void
-TickSample::PopulateContext(void* aContext)
+TickSample::PopulateContext(ucontext_t* aContext)
 {
   MOZ_ASSERT(aContext);
-  ucontext_t* pContext = reinterpret_cast<ucontext_t*>(aContext);
-  if (!getcontext(pContext)) {
-    context = pContext;
-    SetSampleContext(this,
-                     reinterpret_cast<ucontext_t*>(aContext)->uc_mcontext);
+  if (!getcontext(aContext)) {
+    mContext = aContext;
+    SetSampleContext(this, aContext->uc_mcontext);
   }
 }
 
