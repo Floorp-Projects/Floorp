@@ -1247,17 +1247,23 @@ GeckoDriver.prototype.getChromeWindowHandles = function (cmd, resp) {
 }
 
 /**
- * Get the current window position.
+ * Get the current position and size of the browser window currently in focus.
+ *
+ * Will return the current browser window size in pixels. Refers to
+ * window outerWidth and outerHeight values, which include scroll bars,
+ * title bars, etc.
  *
  * @return {Object.<string, number>}
- *     Object with |x| and |y| coordinates.
+ *     Object with |x| and |y| coordinates, and |width| and |height|
+ *     of browser window.
  */
-GeckoDriver.prototype.getWindowPosition = function (cmd, resp) {
+GeckoDriver.prototype.getWindowRect = function (cmd, resp) {
   let win = assert.window(this.getCurrentWindow());
-
   return {
     x: win.screenX,
     y: win.screenY,
+    width: win.outerWidth,
+    height: win.outerHeight,
   };
 };
 
@@ -2581,21 +2587,6 @@ GeckoDriver.prototype.setScreenOrientation = function (cmd, resp) {
 };
 
 /**
- * Get the size of the browser window currently in focus.
- *
- * Will return the current browser window size in pixels. Refers to
- * window outerWidth and outerHeight values, which include scroll bars,
- * title bars, etc.
- */
-GeckoDriver.prototype.getWindowSize = function (cmd, resp) {
-  let win = assert.window(this.getCurrentWindow());
-  return {
-    width: win.outerWidth,
-    height: win.outerHeight,
-  };
-};
-
-/**
  * Maximizes the user agent window as if the user pressed the maximise
  * button.
  *
@@ -3014,9 +3005,10 @@ GeckoDriver.prototype.commands = {
   "getCurrentChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
   "getWindowHandles": GeckoDriver.prototype.getWindowHandles,
   "getChromeWindowHandles": GeckoDriver.prototype.getChromeWindowHandles,
-  "getWindowPosition": GeckoDriver.prototype.getWindowPosition,
+  "getWindowPosition": GeckoDriver.prototype.getWindowRect, // Redirecting for compatibility
   "setWindowPosition": GeckoDriver.prototype.setWindowRect, // Redirecting for compatibility
   "setWindowRect": GeckoDriver.prototype.setWindowRect,
+  "getWindowRect": GeckoDriver.prototype.getWindowRect,
   "getActiveFrame": GeckoDriver.prototype.getActiveFrame,
   "switchToFrame": GeckoDriver.prototype.switchToFrame,
   "switchToParentFrame": GeckoDriver.prototype.switchToParentFrame,
@@ -3037,7 +3029,7 @@ GeckoDriver.prototype.commands = {
   "getActiveElement": GeckoDriver.prototype.getActiveElement,
   "getScreenOrientation": GeckoDriver.prototype.getScreenOrientation,
   "setScreenOrientation": GeckoDriver.prototype.setScreenOrientation,
-  "getWindowSize": GeckoDriver.prototype.getWindowSize,
+  "getWindowSize": GeckoDriver.prototype.getWindowRect, // Redirecting for compatibility
   "setWindowSize": GeckoDriver.prototype.setWindowRect, // Redirecting for compatibility
   "maximizeWindow": GeckoDriver.prototype.maximizeWindow,
   "dismissDialog": GeckoDriver.prototype.dismissDialog,
