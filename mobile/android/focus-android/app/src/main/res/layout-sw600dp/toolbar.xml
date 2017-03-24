@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:animateLayoutChanges="false"
     android:orientation="horizontal"
-    android:paddingStart="16dp">
+    android:paddingStart="8dp">
 
     <ImageButton
         android:id="@+id/back"
