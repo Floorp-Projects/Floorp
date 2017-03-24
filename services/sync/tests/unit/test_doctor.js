@@ -82,6 +82,9 @@ add_task(async function test_repairs_start() {
       equal(validationInfo, problems);
       repairStarted = true;
       return true;
+    },
+    tryServerOnlyRepairs() {
+      return false;
     }
   }
   let doctor = mockDoctor({
@@ -110,6 +113,9 @@ add_task(async function test_repairs_advanced_daily() {
   let requestor = {
     continueRepairs() {
       repairCalls++;
+    },
+    tryServerOnlyRepairs() {
+      return false;
     }
   }
   // start now at just after REPAIR_ADVANCE_PERIOD so we do a a first one.
@@ -161,6 +167,9 @@ add_task(async function test_repairs_skip_if_cant_vaidate() {
   let requestor = {
     startRepairs(validationInfo, flowID) {
       assert.ok(false, "Never should start repairs");
+    },
+    tryServerOnlyRepairs() {
+      return false;
     }
   }
   let doctor = mockDoctor({
