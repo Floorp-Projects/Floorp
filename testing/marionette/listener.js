@@ -1462,8 +1462,7 @@ function isElementSelected(id) {
 function* sendKeysToElement(id, val) {
   let el = seenEls.get(id, curContainer);
   if (el.type == "file") {
-    let path = val.join("");
-    yield interaction.uploadFile(el, path);
+    yield interaction.uploadFile(el, val);
   } else {
     yield interaction.sendKeysToElement(
         el, val, false, capabilities.get("moz:accessibilityChecks"));
