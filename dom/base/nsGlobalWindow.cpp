@@ -4385,6 +4385,10 @@ nsPIDOMWindowOuter::MaybeActiveMediaComponents()
     return;
   }
 
+  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+         ("nsPIDOMWindowOuter, MaybeActiveMediaComponents, "
+          "resume the window from blocked, this = %p\n", this));
+
   SetMediaSuspend(nsISuspendedTypes::NONE_SUSPENDED);
 }
 
