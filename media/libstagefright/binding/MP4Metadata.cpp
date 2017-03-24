@@ -422,7 +422,8 @@ mozilla::UniquePtr<IndiceWrapper>
 MP4Metadata::GetTrackIndice(mozilla::TrackID aTrackID)
 {
   FallibleTArray<Index::Indice> indiceSF;
-  if(!mStagefright->ReadTrackIndex(indiceSF, aTrackID)) {
+  if ((!mPreferRust || mRustTestMode) &&
+       !mStagefright->ReadTrackIndex(indiceSF, aTrackID)) {
     return nullptr;
   }
 

@@ -125,6 +125,16 @@ public class ActionBarPresenter {
     }
 
     /**
+     * To get primary color of Title of ActionBar
+     *
+     * @return color code of primary color
+     */
+    @ColorInt
+    public int getTextPrimaryColor() {
+        return mTextPrimaryColor;
+    }
+
+    /**
      * To update appearance of CustomView of ActionBar, includes its icon, title and url text.
      *
      * @param identity SiteIdentity for current website. Could be null if don't want to show icon.

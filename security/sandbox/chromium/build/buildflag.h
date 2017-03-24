@@ -11,7 +11,7 @@
 // the setup to know what the flag is" as "flag is off". Normally you would
 // include the generated header rather than include this file directly.
 //
-// This is for use with generated headers. See build/buildflag_header.gni.
+// This is for use with generated headers. See build/build_header.gni.
 
 // This dance of two macros does a concatenation of two preprocessor args using
 // ## doubly indirectly because using ## directly prevents macros in that

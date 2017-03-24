@@ -200,15 +200,26 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
         mLastRefreshTime = TimeStamp::Now();
       }
     }
+
+    if (bHaveControllerListener) {
+      for (const auto& manager: mManagers) {
+        if (!manager->GetIsPresenting()) {
+          manager->HandleInput();
+        }
+      }
+    }
   }
 }
 
 void
 VRManager::NotifyVRVsync(const uint32_t& aDisplayID)
 {
-  for (uint32_t i = 0; i < mManagers.Length(); ++i) {
-    mManagers[i]->HandleInput();
+  for (const auto& manager: mManagers) {
+    if (manager->GetIsPresenting()) {
+      manager->HandleInput();
+    }
   }
+
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
     Unused << iter.Get()->GetKey()->SendNotifyVRVSync(aDisplayID);
   }
@@ -352,7 +363,7 @@ VRManager::RefreshVRControllers()
     controllerInfoChanged = true;
   }
 
-  for (const auto& controller : controllers) {
+  for (const auto& controller: controllers) {
     if (!GetController(controller->GetControllerInfo().GetControllerID())) {
       // This is a new controller
       controllerInfoChanged = true;
@@ -362,7 +373,7 @@ VRManager::RefreshVRControllers()
 
   if (controllerInfoChanged) {
     mVRControllers.Clear();
-    for (const auto& controller : controllers) {
+    for (const auto& controller: controllers) {
       mVRControllers.Put(controller->GetControllerInfo().GetControllerID(),
                          controller);
     }
@@ -409,6 +420,33 @@ VRManager::NotifyGamepadChange(const T& aInfo)
 
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
     Unused << iter.Get()->GetKey()->SendGamepadUpdate(e);
+  }
+}
+
+void
+VRManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                         double aIntensity, double aDuration, uint32_t aPromiseID)
+
+{
+  for (uint32_t i = 0; i < mManagers.Length(); ++i) {
+    mManagers[i]->VibrateHaptic(aControllerIdx, aHapticIndex,
+                                aIntensity, aDuration, aPromiseID);
+  }
+}
+
+void
+VRManager::StopVibrateHaptic(uint32_t aControllerIdx)
+{
+  for (const auto& manager: mManagers) {
+    manager->StopVibrateHaptic(aControllerIdx);
+  }
+}
+
+void
+VRManager::NotifyVibrateHapticCompleted(uint32_t aPromiseID)
+{
+  for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
+    Unused << iter.Get()->GetKey()->SendReplyGamepadVibrateHaptic(aPromiseID);
   }
 }
 

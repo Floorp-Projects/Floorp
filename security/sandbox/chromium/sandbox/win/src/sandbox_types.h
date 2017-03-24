@@ -5,17 +5,10 @@
 #ifndef SANDBOX_WIN_SRC_SANDBOX_TYPES_H_
 #define SANDBOX_WIN_SRC_SANDBOX_TYPES_H_
 
-#include "base/process/kill.h"
-#include "base/process/launch.h"
-
 namespace sandbox {
 
 // Operation result codes returned by the sandbox API.
-//
-// Note: These codes are listed in a histogram and any new codes should be added
-// at the end.
-//
-enum ResultCode : int {
+enum ResultCode {
   SBOX_ALL_OK = 0,
   // Error is originating on the win32 layer. Call GetlastError() for more
   // information.
@@ -54,58 +47,6 @@ enum ResultCode : int {
   SBOX_ERROR_PROC_THREAD_ATTRIBUTES = 17,
   // Error in creating process.
   SBOX_ERROR_CREATE_PROCESS = 18,
-  // Failure calling delegate PreSpawnTarget.
-  SBOX_ERROR_DELEGATE_PRE_SPAWN = 19,
-  // Could not assign process to job object.
-  SBOX_ERROR_ASSIGN_PROCESS_TO_JOB_OBJECT = 20,
-  // Could not assign process to job object.
-  SBOX_ERROR_SET_THREAD_TOKEN = 21,
-  // Could not get thread context of new process.
-  SBOX_ERROR_GET_THREAD_CONTEXT = 22,
-  // Could not duplicate target info of new process.
-  SBOX_ERROR_DUPLICATE_TARGET_INFO = 23,
-  // Could not set low box token.
-  SBOX_ERROR_SET_LOW_BOX_TOKEN = 24,
-  // Could not create file mapping for IPC dispatcher.
-  SBOX_ERROR_CREATE_FILE_MAPPING = 25,
-  // Could not duplicate shared section into target process for IPC dispatcher.
-  SBOX_ERROR_DUPLICATE_SHARED_SECTION = 26,
-  // Could not map view of shared memory in broker.
-  SBOX_ERROR_MAP_VIEW_OF_SHARED_SECTION = 27,
-  // Could not apply ASLR mitigations to target process.
-  SBOX_ERROR_APPLY_ASLR_MITIGATIONS = 28,
-  // Could not setup one of the required interception services.
-  SBOX_ERROR_SETUP_BASIC_INTERCEPTIONS = 29,
-  // Could not setup basic interceptions.
-  SBOX_ERROR_SETUP_INTERCEPTION_SERVICE = 30,
-  // Could not initialize interceptions. This usually means 3rd party software
-  // is stomping on our hooks, or can sometimes mean the syscall format has
-  // changed.
-  SBOX_ERROR_INITIALIZE_INTERCEPTIONS = 31,
-  // Could not setup the imports for ntdll in target process.
-  SBOX_ERROR_SETUP_NTDLL_IMPORTS = 32,
-  // Could not setup the handle closer in target process.
-  SBOX_ERROR_SETUP_HANDLE_CLOSER = 33,
-  // Cannot get the current Window Station.
-  SBOX_ERROR_CANNOT_GET_WINSTATION = 34,
-  // Cannot query the security attributes of the current Window Station.
-  SBOX_ERROR_CANNOT_QUERY_WINSTATION_SECURITY = 35,
-  // Cannot get the current Desktop.
-  SBOX_ERROR_CANNOT_GET_DESKTOP = 36,
-  // Cannot query the security attributes of the current Desktop.
-  SBOX_ERROR_CANNOT_QUERY_DESKTOP_SECURITY = 37,
-  // Cannot setup the interception manager config buffer.
-  SBOX_ERROR_CANNOT_SETUP_INTERCEPTION_CONFIG_BUFFER = 38,
-  // Cannot copy data to the child process.
-  SBOX_ERROR_CANNOT_COPY_DATA_TO_CHILD = 39,
-  // Cannot setup the interception thunk.
-  SBOX_ERROR_CANNOT_SETUP_INTERCEPTION_THUNK = 40,
-  // Cannot resolve the interception thunk.
-  SBOX_ERROR_CANNOT_RESOLVE_INTERCEPTION_THUNK = 41,
-  // Cannot write interception thunk to child process.
-  SBOX_ERROR_CANNOT_WRITE_INTERCEPTION_THUNK = 42,
-  // Cannot find the base address of the new process.
-  SBOX_ERROR_CANNOT_FIND_BASE_ADDRESS = 43,
   // Placeholder for last item of the enum.
   SBOX_ERROR_LAST
 };
@@ -123,10 +64,6 @@ enum TerminationCodes {
   SBOX_FATAL_WARMUP = 7013,           // Failed to warmup.
   SBOX_FATAL_LAST
 };
-
-static_assert(SBOX_FATAL_MEMORY_EXCEEDED ==
-                  base::win::kSandboxFatalMemoryExceeded,
-              "Value for SBOX_FATAL_MEMORY_EXCEEDED must match base.");
 
 class BrokerServices;
 class TargetServices;

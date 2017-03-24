@@ -5,9 +5,8 @@
 #ifndef SANDBOX_SRC_TOP_LEVEL_DISPATCHER_H__
 #define SANDBOX_SRC_TOP_LEVEL_DISPATCHER_H__
 
-#include <memory>
-
 #include "base/macros.h"
+#include "base/memory/scoped_ptr.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/interception.h"
 #include "sandbox/win/src/ipc_tags.h"
@@ -35,13 +34,13 @@ class TopLevelDispatcher : public Dispatcher {
   Dispatcher* GetDispatcher(int ipc_tag);
 
   PolicyBase* policy_;
-  std::unique_ptr<Dispatcher> filesystem_dispatcher_;
-  std::unique_ptr<Dispatcher> named_pipe_dispatcher_;
-  std::unique_ptr<Dispatcher> thread_process_dispatcher_;
-  std::unique_ptr<Dispatcher> sync_dispatcher_;
-  std::unique_ptr<Dispatcher> registry_dispatcher_;
-  std::unique_ptr<Dispatcher> handle_dispatcher_;
-  std::unique_ptr<Dispatcher> process_mitigations_win32k_dispatcher_;
+  scoped_ptr<Dispatcher> filesystem_dispatcher_;
+  scoped_ptr<Dispatcher> named_pipe_dispatcher_;
+  scoped_ptr<Dispatcher> thread_process_dispatcher_;
+  scoped_ptr<Dispatcher> sync_dispatcher_;
+  scoped_ptr<Dispatcher> registry_dispatcher_;
+  scoped_ptr<Dispatcher> handle_dispatcher_;
+  scoped_ptr<Dispatcher> process_mitigations_win32k_dispatcher_;
   Dispatcher* ipc_targets_[IPC_LAST_TAG];
 
   DISALLOW_COPY_AND_ASSIGN(TopLevelDispatcher);

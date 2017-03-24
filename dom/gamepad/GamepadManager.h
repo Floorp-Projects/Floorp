@@ -52,7 +52,7 @@ class GamepadManager final : public nsIObserver,
   // Add a gamepad to the list of known gamepads.
   void AddGamepad(uint32_t aIndex, const nsAString& aID, GamepadMappingType aMapping,
                   GamepadHand aHand, GamepadServiceType aServiceType,
-                  uint32_t aNumButtons, uint32_t aNumAxes);
+                  uint32_t aNumButtons, uint32_t aNumAxes, uint32_t aNumHaptics);
 
   // Remove the gamepad at |aIndex| from the list of known gamepads.
   void RemoveGamepad(uint32_t aIndex, GamepadServiceType aServiceType);
@@ -83,6 +83,13 @@ class GamepadManager final : public nsIObserver,
 
   // Receive GamepadChangeEvent messages from parent process to fire DOM events
   void Update(const GamepadChangeEvent& aGamepadEvent);
+
+  // Trigger vibrate haptic event to gamepad channels.
+  already_AddRefed<Promise> VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                                          double aIntensity, double aDuration,
+                                          nsIGlobalObject* aGlobal, ErrorResult& aRv);
+  // Send stop haptic events to gamepad channels.
+  void StopHaptics();
 
  protected:
   GamepadManager();
@@ -149,6 +156,7 @@ class GamepadManager final : public nsIObserver,
   // Inner windows that are listening for gamepad events.
   // has been sent to that window.
   nsTArray<RefPtr<nsGlobalWindow>> mListeners;
+  uint32_t mPromiseID;
 };
 
 } // namespace dom

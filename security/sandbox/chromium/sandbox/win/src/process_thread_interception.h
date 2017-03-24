@@ -36,11 +36,11 @@ typedef BOOL (WINAPI *CreateProcessAFunction)(
     LPSTARTUPINFOA lpStartupInfo,
     LPPROCESS_INFORMATION lpProcessInformation);
 
-typedef HANDLE(WINAPI* CreateThreadFunction)(
+typedef HANDLE (WINAPI *CreateThreadFunction)(
     LPSECURITY_ATTRIBUTES lpThreadAttributes,
     SIZE_T dwStackSize,
     LPTHREAD_START_ROUTINE lpStartAddress,
-    LPVOID lpParameter,
+    PVOID lpParameter,
     DWORD dwCreationFlags,
     LPDWORD lpThreadId);
 
@@ -82,16 +82,6 @@ SANDBOX_INTERCEPT BOOL WINAPI TargetCreateProcessA(
     LPSECURITY_ATTRIBUTES thread_attributes, BOOL inherit_handles, DWORD flags,
     LPVOID environment, LPCSTR current_directory, LPSTARTUPINFOA startup_info,
     LPPROCESS_INFORMATION process_information);
-
-// Interception of CreateThread in kernel32.dll.
-SANDBOX_INTERCEPT HANDLE WINAPI
-TargetCreateThread(CreateThreadFunction orig_CreateThread,
-                   LPSECURITY_ATTRIBUTES thread_attributes,
-                   SIZE_T stack_size,
-                   LPTHREAD_START_ROUTINE start_address,
-                   LPVOID parameter,
-                   DWORD creation_flags,
-                   LPDWORD thread_id);
 
 }  // extern "C"
 

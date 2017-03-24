@@ -15,8 +15,7 @@ class TargetProcess;
 bool InitGlobalNt();
 
 // Sets up interceptions not controlled by explicit policies.
-bool SetupBasicInterceptions(InterceptionManager* manager,
-                             bool is_csrss_connected);
+bool SetupBasicInterceptions(InterceptionManager* manager);
 
 // Sets up imports from NTDLL for the given target process so the interceptions
 // can work.

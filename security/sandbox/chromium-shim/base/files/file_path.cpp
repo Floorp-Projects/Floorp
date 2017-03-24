@@ -8,12 +8,9 @@
 
 #include "base/files/file_path.h"
 
-#include "mozilla/Assertions.h"
-
 namespace base {
 
 FilePath::FilePath(FilePath::StringPieceType path) {
-  MOZ_CRASH();
 }
 
 FilePath::~FilePath() {

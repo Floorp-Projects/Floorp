@@ -7,10 +7,9 @@
 
 #include <stdint.h>
 
-#include <memory>
-
 #include "base/files/scoped_file.h"
 #include "base/macros.h"
+#include "base/memory/scoped_ptr.h"
 #include "sandbox/linux/bpf_dsl/codegen.h"
 #include "sandbox/sandbox_export.h"
 
@@ -105,7 +104,7 @@ class SANDBOX_EXPORT SandboxBPF {
 
   base::ScopedFD proc_fd_;
   bool sandbox_has_started_;
-  std::unique_ptr<bpf_dsl::Policy> policy_;
+  scoped_ptr<bpf_dsl::Policy> policy_;
 
   DISALLOW_COPY_AND_ASSIGN(SandboxBPF);
 };

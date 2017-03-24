@@ -42,8 +42,10 @@ function startTest() {
   // Add a gamepad
   GamepadService.addGamepad("test gamepad 1", // id
                      GamepadService.standardMapping,
+                     GamepadService.noHand,
                      4, // buttons
-                     2).then(function(index) {
+                     2,
+                     0).then(function(index) {
                        internal_index1 = index;
                        // Press a button to make the gamepad visible to the page.
                        GamepadService.newButtonEvent(internal_index1, 0, true);
@@ -65,8 +67,10 @@ function check_first_gamepad(e) {
   // Add a second gamepad, should automatically show up.
   GamepadService.addGamepad("test gamepad 2", // id
                      GamepadService.standardMapping,
+                     GamepadService.noHand,
                      4, // buttons
-                     2).then(function(index) {
+                     2,
+                     0).then(function(index) {
                        internal_index2 = index;
                        GamepadService.newButtonEvent(internal_index2, 0, true);
                      });

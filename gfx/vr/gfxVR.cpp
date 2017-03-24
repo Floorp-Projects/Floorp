@@ -67,7 +67,8 @@ VRSystemManager::AddGamepad(const VRControllerInfo& controllerInfo)
                       controllerInfo.GetHand(),
                       dom::GamepadServiceType::VR,
                       controllerInfo.GetNumButtons(),
-                      controllerInfo.GetNumAxes());
+                      controllerInfo.GetNumAxes(),
+                      controllerInfo.GetNumHaptics());
 
   VRManager* vm = VRManager::Get();
   MOZ_ASSERT(vm);

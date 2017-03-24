@@ -99,7 +99,7 @@ const PlatformThreadId kInvalidThreadId(0);
 
 // Valid values for priority of Thread::Options and SimpleThread::Options, and
 // SetCurrentThreadPriority(), listed in increasing order of importance.
-enum class ThreadPriority : int {
+enum class ThreadPriority {
   // Suitable for threads that shouldn't disrupt high priority work.
   BACKGROUND,
   // Default priority level.
@@ -142,8 +142,8 @@ class BASE_EXPORT PlatformThread {
   // Sleeps for the specified duration.
   static void Sleep(base::TimeDelta duration);
 
-  // Sets the thread name visible to debuggers/tools. This will try to
-  // initialize the context for current thread unless it's a WorkerThread.
+  // Sets the thread name visible to debuggers/tools. This has no effect
+  // otherwise.
   static void SetName(const std::string& name);
 
   // Gets the thread name, if previously set by SetName.
@@ -175,49 +175,20 @@ class BASE_EXPORT PlatformThread {
   // PlatformThreadHandle.
   static bool CreateNonJoinable(size_t stack_size, Delegate* delegate);
 
-  // CreateNonJoinableWithPriority() does the same thing as CreateNonJoinable()
-  // except the priority of the thread is set based on |priority|.
-  static bool CreateNonJoinableWithPriority(size_t stack_size,
-                                            Delegate* delegate,
-                                            ThreadPriority priority);
-
   // Joins with a thread created via the Create function.  This function blocks
   // the caller until the designated thread exits.  This will invalidate
   // |thread_handle|.
   static void Join(PlatformThreadHandle thread_handle);
 
-  // Detaches and releases the thread handle. The thread is no longer joinable
-  // and |thread_handle| is invalidated after this call.
-  static void Detach(PlatformThreadHandle thread_handle);
-
-  // Returns true if SetCurrentThreadPriority() can be used to increase the
-  // priority of the current thread.
-  static bool CanIncreaseCurrentThreadPriority();
-
   // Toggles the current thread's priority at runtime. A thread may not be able
   // to raise its priority back up after lowering it if the process does not
-  // have a proper permission, e.g. CAP_SYS_NICE on Linux. A thread may not be
-  // able to lower its priority back down after raising it to REALTIME_AUDIO.
+  // have a proper permission, e.g. CAP_SYS_NICE on Linux.
   // Since changing other threads' priority is not permitted in favor of
   // security, this interface is restricted to change only the current thread
   // priority (https://crbug.com/399473).
   static void SetCurrentThreadPriority(ThreadPriority priority);
 
   static ThreadPriority GetCurrentThreadPriority();
-
-#if defined(OS_LINUX)
-  // Toggles a specific thread's priority at runtime. This can be used to
-  // change the priority of a thread in a different process and will fail
-  // if the calling process does not have proper permissions. The
-  // SetCurrentThreadPriority() function above is preferred in favor of
-  // security but on platforms where sandboxed processes are not allowed to
-  // change priority this function exists to allow a non-sandboxed process
-  // to change the priority of sandboxed threads for improved performance.
-  // Warning: Don't use this for a main thread because that will change the
-  // whole thread group's (i.e. process) priority.
-  static void SetThreadPriority(PlatformThreadId thread_id,
-                                ThreadPriority priority);
-#endif
 
  private:
   DISALLOW_IMPLICIT_CONSTRUCTORS(PlatformThread);

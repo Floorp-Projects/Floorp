@@ -30,7 +30,6 @@ typedef LONG NTSTATUS;
 #define STATUS_PROCEDURE_NOT_FOUND    ((NTSTATUS)0xC000007AL)
 #define STATUS_INVALID_IMAGE_FORMAT   ((NTSTATUS)0xC000007BL)
 #define STATUS_NO_TOKEN               ((NTSTATUS)0xC000007CL)
-#define STATUS_NOT_SUPPORTED          ((NTSTATUS)0xC00000BBL)
 
 #define CURRENT_PROCESS ((HANDLE) -1)
 #define CURRENT_THREAD  ((HANDLE) -2)
@@ -333,18 +332,18 @@ typedef struct _PROCESS_BASIC_INFORMATION {
   };
 } PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
-typedef NTSTATUS(WINAPI* NtQueryInformationProcessFunction)(
-    IN HANDLE ProcessHandle,
-    IN PROCESSINFOCLASS ProcessInformationClass,
-    OUT PVOID ProcessInformation,
-    IN ULONG ProcessInformationLength,
-    OUT PULONG ReturnLength OPTIONAL);
+typedef NTSTATUS (WINAPI *NtQueryInformationProcessFunction)(
+  IN HANDLE ProcessHandle,
+  IN PROCESSINFOCLASS ProcessInformationClass,
+  OUT PVOID ProcessInformation,
+  IN ULONG ProcessInformationLength,
+  OUT PULONG ReturnLength OPTIONAL);
 
-typedef NTSTATUS(WINAPI* NtSetInformationProcessFunction)(
-    HANDLE ProcessHandle,
-    IN PROCESSINFOCLASS ProcessInformationClass,
-    IN PVOID ProcessInformation,
-    IN ULONG ProcessInformationLength);
+typedef NTSTATUS (WINAPI *NtSetInformationProcessFunction)(
+  HANDLE ProcessHandle,
+  IN PROCESSINFOCLASS ProcessInformationClass,
+  IN PVOID ProcessInformation,
+  IN ULONG ProcessInformationLength);
 
 typedef NTSTATUS (WINAPI *NtOpenThreadTokenFunction) (
   IN HANDLE ThreadHandle,
@@ -370,49 +369,20 @@ typedef NTSTATUS (WINAPI *NtOpenProcessTokenExFunction) (
   IN ULONG HandleAttributes,
   OUT PHANDLE TokenHandle);
 
-typedef NTSTATUS(WINAPI* NtQueryInformationTokenFunction)(
-    IN HANDLE TokenHandle,
-    IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-    OUT PVOID TokenInformation,
-    IN ULONG TokenInformationLength,
-    OUT PULONG ReturnLength);
-
-typedef NTSTATUS(WINAPI* RtlCreateUserThreadFunction)(
-    IN HANDLE Process,
-    IN PSECURITY_DESCRIPTOR ThreadSecurityDescriptor,
-    IN BOOLEAN CreateSuspended,
-    IN ULONG ZeroBits,
-    IN SIZE_T MaximumStackSize,
-    IN SIZE_T CommittedStackSize,
-    IN LPTHREAD_START_ROUTINE StartAddress,
-    IN PVOID Parameter,
-    OUT PHANDLE Thread,
-    OUT PCLIENT_ID ClientId);
-
-typedef NTSTATUS(WINAPI* RtlConvertSidToUnicodeStringFunction)(
-    OUT PUNICODE_STRING UnicodeString,
-    IN PSID Sid,
-    IN BOOLEAN AllocateDestinationString);
-
-typedef VOID(WINAPI* RtlFreeUnicodeStringFunction)(
-    IN OUT PUNICODE_STRING UnicodeString);
+typedef NTSTATUS (WINAPI * RtlCreateUserThreadFunction)(
+  IN HANDLE Process,
+  IN PSECURITY_DESCRIPTOR ThreadSecurityDescriptor,
+  IN BOOLEAN CreateSuspended,
+  IN ULONG ZeroBits,
+  IN SIZE_T MaximumStackSize,
+  IN SIZE_T CommittedStackSize,
+  IN LPTHREAD_START_ROUTINE StartAddress,
+  IN PVOID Parameter,
+  OUT PHANDLE Thread,
+  OUT PCLIENT_ID ClientId);
 
 // -----------------------------------------------------------------------
 // Registry
-
-typedef enum _KEY_VALUE_INFORMATION_CLASS {
-  KeyValueFullInformation = 1
-} KEY_VALUE_INFORMATION_CLASS,
-    *PKEY_VALUE_INFORMATION_CLASS;
-
-typedef struct _KEY_VALUE_FULL_INFORMATION {
-  ULONG TitleIndex;
-  ULONG Type;
-  ULONG DataOffset;
-  ULONG DataLength;
-  ULONG NameLength;
-  WCHAR Name[1];
-} KEY_VALUE_FULL_INFORMATION, *PKEY_VALUE_FULL_INFORMATION;
 
 typedef NTSTATUS (WINAPI *NtCreateKeyFunction)(
   OUT PHANDLE KeyHandle,
@@ -436,24 +406,6 @@ typedef NTSTATUS (WINAPI *NtOpenKeyExFunction)(
 
 typedef NTSTATUS (WINAPI *NtDeleteKeyFunction)(
   IN HANDLE KeyHandle);
-
-typedef NTSTATUS(WINAPI* RtlFormatCurrentUserKeyPathFunction)(
-    OUT PUNICODE_STRING RegistryPath);
-
-typedef NTSTATUS(WINAPI* NtQueryValueKeyFunction)(IN HANDLE KeyHandle,
-                                                  IN PUNICODE_STRING ValueName,
-                                                  IN KEY_VALUE_INFORMATION_CLASS
-                                                      KeyValueInformationClass,
-                                                  OUT PVOID KeyValueInformation,
-                                                  IN ULONG Length,
-                                                  OUT PULONG ResultLength);
-
-typedef NTSTATUS(WINAPI* NtSetValueKeyFunction)(IN HANDLE KeyHandle,
-                                                IN PUNICODE_STRING ValueName,
-                                                IN ULONG TitleIndex OPTIONAL,
-                                                IN ULONG Type,
-                                                IN PVOID Data,
-                                                IN ULONG DataSize);
 
 // -----------------------------------------------------------------------
 // Memory
@@ -692,8 +644,6 @@ typedef VOID (WINAPI *RtlInitUnicodeStringFunction) (
   IN OUT PUNICODE_STRING DestinationString,
   IN PCWSTR SourceString);
 
-typedef ULONG (WINAPI* RtlNtStatusToDosErrorFunction)(NTSTATUS status);
-
 typedef enum _EVENT_TYPE {
   NotificationEvent,
   SynchronizationEvent
@@ -748,165 +698,6 @@ struct PROCESS_ACCESS_TOKEN {
 };
 
 const unsigned int NtProcessInformationAccessToken = 9;
-
-// -----------------------------------------------------------------------
-// GDI OPM API and Supported Calls
-
-#define DXGKMDT_OPM_OMAC_SIZE 16
-#define DXGKMDT_OPM_128_BIT_RANDOM_NUMBER_SIZE 16
-#define DXGKMDT_OPM_ENCRYPTED_PARAMETERS_SIZE 256
-#define DXGKMDT_OPM_CONFIGURE_SETTING_DATA_SIZE 4056
-#define DXGKMDT_OPM_GET_INFORMATION_PARAMETERS_SIZE 4056
-#define DXGKMDT_OPM_REQUESTED_INFORMATION_SIZE 4076
-#define DXGKMDT_OPM_HDCP_KEY_SELECTION_VECTOR_SIZE 5
-#define DXGKMDT_OPM_PROTECTION_TYPE_SIZE 4
-
-enum DXGKMDT_CERTIFICATE_TYPE {
-  DXGKMDT_OPM_CERTIFICATE = 0,
-  DXGKMDT_COPP_CERTIFICATE = 1,
-  DXGKMDT_UAB_CERTIFICATE = 2,
-  DXGKMDT_FORCE_ULONG = 0xFFFFFFFF
-};
-
-enum DXGKMDT_OPM_VIDEO_OUTPUT_SEMANTICS {
-  DXGKMDT_OPM_VOS_COPP_SEMANTICS = 0,
-  DXGKMDT_OPM_VOS_OPM_SEMANTICS = 1
-};
-
-enum DXGKMDT_DPCP_PROTECTION_LEVEL {
-  DXGKMDT_OPM_DPCP_OFF = 0,
-  DXGKMDT_OPM_DPCP_ON = 1,
-  DXGKMDT_OPM_DPCP_FORCE_ULONG = 0x7fffffff
-};
-
-enum DXGKMDT_OPM_HDCP_PROTECTION_LEVEL {
-  DXGKMDT_OPM_HDCP_OFF = 0,
-  DXGKMDT_OPM_HDCP_ON = 1,
-  DXGKMDT_OPM_HDCP_FORCE_ULONG = 0x7fffffff
-};
-
-enum DXGKMDT_OPM_HDCP_FLAG {
-  DXGKMDT_OPM_HDCP_FLAG_NONE = 0x00,
-  DXGKMDT_OPM_HDCP_FLAG_REPEATER = 0x01
-};
-
-enum DXGKMDT_OPM_PROTECTION_TYPE {
-  DXGKMDT_OPM_PROTECTION_TYPE_OTHER = 0x80000000,
-  DXGKMDT_OPM_PROTECTION_TYPE_NONE = 0x00000000,
-  DXGKMDT_OPM_PROTECTION_TYPE_COPP_COMPATIBLE_HDCP = 0x00000001,
-  DXGKMDT_OPM_PROTECTION_TYPE_ACP = 0x00000002,
-  DXGKMDT_OPM_PROTECTION_TYPE_CGMSA = 0x00000004,
-  DXGKMDT_OPM_PROTECTION_TYPE_HDCP = 0x00000008,
-  DXGKMDT_OPM_PROTECTION_TYPE_DPCP = 0x00000010,
-  DXGKMDT_OPM_PROTECTION_TYPE_MASK = 0x8000001F
-};
-
-typedef void* OPM_PROTECTED_OUTPUT_HANDLE;
-
-struct DXGKMDT_OPM_ENCRYPTED_PARAMETERS {
-  BYTE abEncryptedParameters[DXGKMDT_OPM_ENCRYPTED_PARAMETERS_SIZE];
-};
-
-struct DXGKMDT_OPM_OMAC {
-  BYTE abOMAC[DXGKMDT_OPM_OMAC_SIZE];
-};
-
-struct DXGKMDT_OPM_CONFIGURE_PARAMETERS {
-  DXGKMDT_OPM_OMAC omac;
-  GUID guidSetting;
-  ULONG ulSequenceNumber;
-  ULONG cbParametersSize;
-  BYTE abParameters[DXGKMDT_OPM_CONFIGURE_SETTING_DATA_SIZE];
-};
-
-struct DXGKMDT_OPM_RANDOM_NUMBER {
-  BYTE abRandomNumber[DXGKMDT_OPM_128_BIT_RANDOM_NUMBER_SIZE];
-};
-
-struct DXGKMDT_OPM_GET_INFO_PARAMETERS {
-  DXGKMDT_OPM_OMAC omac;
-  DXGKMDT_OPM_RANDOM_NUMBER rnRandomNumber;
-  GUID guidInformation;
-  ULONG ulSequenceNumber;
-  ULONG cbParametersSize;
-  BYTE abParameters[DXGKMDT_OPM_GET_INFORMATION_PARAMETERS_SIZE];
-};
-
-struct DXGKMDT_OPM_REQUESTED_INFORMATION {
-  DXGKMDT_OPM_OMAC omac;
-  ULONG cbRequestedInformationSize;
-  BYTE abRequestedInformation[DXGKMDT_OPM_REQUESTED_INFORMATION_SIZE];
-};
-
-struct DXGKMDT_OPM_SET_PROTECTION_LEVEL_PARAMETERS {
-  ULONG ulProtectionType;
-  ULONG ulProtectionLevel;
-  ULONG Reserved;
-  ULONG Reserved2;
-};
-
-struct DXGKMDT_OPM_STANDARD_INFORMATION {
-  DXGKMDT_OPM_RANDOM_NUMBER rnRandomNumber;
-  ULONG ulStatusFlags;
-  ULONG ulInformation;
-  ULONG ulReserved;
-  ULONG ulReserved2;
-};
-
-typedef NTSTATUS(WINAPI* GetSuggestedOPMProtectedOutputArraySizeFunction)(
-    PUNICODE_STRING device_name,
-    DWORD* suggested_output_array_size);
-
-typedef NTSTATUS(WINAPI* CreateOPMProtectedOutputsFunction)(
-    PUNICODE_STRING device_name,
-    DXGKMDT_OPM_VIDEO_OUTPUT_SEMANTICS vos,
-    DWORD output_array_size,
-    DWORD* num_in_output_array,
-    OPM_PROTECTED_OUTPUT_HANDLE* output_array);
-
-typedef NTSTATUS(WINAPI* GetCertificateFunction)(
-    PUNICODE_STRING device_name,
-    DXGKMDT_CERTIFICATE_TYPE certificate_type,
-    BYTE* certificate,
-    ULONG certificate_length);
-
-typedef NTSTATUS(WINAPI* GetCertificateSizeFunction)(
-    PUNICODE_STRING device_name,
-    DXGKMDT_CERTIFICATE_TYPE certificate_type,
-    ULONG* certificate_length);
-
-typedef NTSTATUS(WINAPI* GetCertificateByHandleFunction)(
-    OPM_PROTECTED_OUTPUT_HANDLE protected_output,
-    DXGKMDT_CERTIFICATE_TYPE certificate_type,
-    BYTE* certificate,
-    ULONG certificate_length);
-
-typedef NTSTATUS(WINAPI* GetCertificateSizeByHandleFunction)(
-    OPM_PROTECTED_OUTPUT_HANDLE protected_output,
-    DXGKMDT_CERTIFICATE_TYPE certificate_type,
-    ULONG* certificate_length);
-
-typedef NTSTATUS(WINAPI* DestroyOPMProtectedOutputFunction)(
-    OPM_PROTECTED_OUTPUT_HANDLE protected_output);
-
-typedef NTSTATUS(WINAPI* ConfigureOPMProtectedOutputFunction)(
-    OPM_PROTECTED_OUTPUT_HANDLE protected_output,
-    const DXGKMDT_OPM_CONFIGURE_PARAMETERS* parameters,
-    ULONG additional_parameters_size,
-    const BYTE* additional_parameters);
-
-typedef NTSTATUS(WINAPI* GetOPMInformationFunction)(
-    OPM_PROTECTED_OUTPUT_HANDLE protected_output,
-    const DXGKMDT_OPM_GET_INFO_PARAMETERS* parameters,
-    DXGKMDT_OPM_REQUESTED_INFORMATION* requested_information);
-
-typedef NTSTATUS(WINAPI* GetOPMRandomNumberFunction)(
-    OPM_PROTECTED_OUTPUT_HANDLE protected_output,
-    DXGKMDT_OPM_RANDOM_NUMBER* random_number);
-
-typedef NTSTATUS(WINAPI* SetOPMSigningKeyAndSequenceNumbersFunction)(
-    OPM_PROTECTED_OUTPUT_HANDLE protected_output,
-    const DXGKMDT_OPM_ENCRYPTED_PARAMETERS* parameters);
 
 #endif  // SANDBOX_WIN_SRC_NT_INTERNALS_H__
 

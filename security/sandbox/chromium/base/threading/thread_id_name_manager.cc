@@ -10,7 +10,6 @@
 #include "base/logging.h"
 #include "base/memory/singleton.h"
 #include "base/strings/string_util.h"
-#include "base/trace_event/heap_profiler_allocation_context_tracker.h"
 
 namespace base {
 namespace {
@@ -51,37 +50,27 @@ void ThreadIdNameManager::RegisterThread(PlatformThreadHandle::Handle handle,
 
 void ThreadIdNameManager::SetName(PlatformThreadId id,
                                   const std::string& name) {
+  AutoLock locked(lock_);
+  NameToInternedNameMap::iterator iter = name_to_interned_name_.find(name);
   std::string* leaked_str = NULL;
-  {
-    AutoLock locked(lock_);
-    NameToInternedNameMap::iterator iter = name_to_interned_name_.find(name);
-    if (iter != name_to_interned_name_.end()) {
-      leaked_str = iter->second;
-    } else {
-      leaked_str = new std::string(name);
-      name_to_interned_name_[name] = leaked_str;
-    }
-
-    ThreadIdToHandleMap::iterator id_to_handle_iter =
-        thread_id_to_handle_.find(id);
-
-    // The main thread of a process will not be created as a Thread object which
-    // means there is no PlatformThreadHandler registered.
-    if (id_to_handle_iter == thread_id_to_handle_.end()) {
-      main_process_name_ = leaked_str;
-      main_process_id_ = id;
-      return;
-    }
-    thread_handle_to_interned_name_[id_to_handle_iter->second] = leaked_str;
+  if (iter != name_to_interned_name_.end()) {
+    leaked_str = iter->second;
+  } else {
+    leaked_str = new std::string(name);
+    name_to_interned_name_[name] = leaked_str;
   }
 
-  // Add the leaked thread name to heap profiler context tracker. The name added
-  // is valid for the lifetime of the process. AllocationContextTracker cannot
-  // call GetName(which holds a lock) during the first allocation because it can
-  // cause a deadlock when the first allocation happens in the
-  // ThreadIdNameManager itself when holding the lock.
-  trace_event::AllocationContextTracker::SetCurrentThreadName(
-      leaked_str->c_str());
+  ThreadIdToHandleMap::iterator id_to_handle_iter =
+      thread_id_to_handle_.find(id);
+
+  // The main thread of a process will not be created as a Thread object which
+  // means there is no PlatformThreadHandler registered.
+  if (id_to_handle_iter == thread_id_to_handle_.end()) {
+    main_process_name_ = leaked_str;
+    main_process_id_ = id;
+    return;
+  }
+  thread_handle_to_interned_name_[id_to_handle_iter->second] = leaked_str;
 }
 
 const char* ThreadIdNameManager::GetName(PlatformThreadId id) {

@@ -10,10 +10,10 @@
 #include <string.h>
 
 #include <limits>
-#include <memory>
 
 #include "base/logging.h"
 #include "base/macros.h"
+#include "base/memory/scoped_ptr.h"
 #include "build/build_config.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
@@ -205,7 +205,7 @@ TEST(SafeSPrintfTest, ASANFriendlyBufferTest) {
   // There is a more complicated test in PrintLongString() that covers a lot
   // more edge case, but it is also harder to debug in case of a failure.
   const char kTestString[] = "This is a test";
-  std::unique_ptr<char[]> buf(new char[sizeof(kTestString)]);
+  scoped_ptr<char[]> buf(new char[sizeof(kTestString)]);
   EXPECT_EQ(static_cast<ssize_t>(sizeof(kTestString) - 1),
             SafeSNPrintf(buf.get(), sizeof(kTestString), kTestString));
   EXPECT_EQ(std::string(kTestString), std::string(buf.get()));
@@ -369,7 +369,7 @@ void PrintLongString(char* buf, size_t sz) {
 
   // Allocate slightly more space, so that we can verify that SafeSPrintf()
   // never writes past the end of the buffer.
-  std::unique_ptr<char[]> tmp(new char[sz + 2]);
+  scoped_ptr<char[]> tmp(new char[sz+2]);
   memset(tmp.get(), 'X', sz+2);
 
   // Use SafeSPrintf() to output a complex list of arguments:
@@ -383,7 +383,7 @@ void PrintLongString(char* buf, size_t sz) {
   char* out = tmp.get();
   size_t out_sz = sz;
   size_t len;
-  for (std::unique_ptr<char[]> perfect_buf;;) {
+  for (scoped_ptr<char[]> perfect_buf;;) {
     size_t needed = SafeSNPrintf(out, out_sz,
 #if defined(NDEBUG)
                             "A%2cong %s: %d %010X %d %p%7s", 'l', "string", "",

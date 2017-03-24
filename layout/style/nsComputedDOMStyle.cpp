@@ -4361,6 +4361,14 @@ nsComputedDOMStyle::DoGetAppearance()
   return val.forget();
 }
 
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetMozAppearance()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mMozAppearance,
+                                               nsCSSProps::kMozAppearanceKTable));
+  return val.forget();
+}
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetBoxAlign()
@@ -4646,7 +4654,7 @@ nsComputedDOMStyle::DoGetJustifyItems()
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString str;
   auto justify =
-    StylePosition()->ComputedJustifyItems(mStyleContext->GetParent());
+    StylePosition()->ComputedJustifyItems(mStyleContext->GetParentAllowServo());
   nsCSSValue::AppendAlignJustifyValueToString(justify, str);
   val->SetString(str);
   return val.forget();

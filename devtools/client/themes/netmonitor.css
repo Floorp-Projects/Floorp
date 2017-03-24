@@ -166,7 +166,7 @@
   display: flex;
   align-items: center;
   flex: auto;
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   background-color: transparent;
   border-image: linear-gradient(transparent 15%,
                                 var(--theme-splitter-color) 15%,

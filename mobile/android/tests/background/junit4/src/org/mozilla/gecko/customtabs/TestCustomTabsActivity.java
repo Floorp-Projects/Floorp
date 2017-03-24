@@ -121,7 +121,7 @@ public class TestCustomTabsActivity {
 
         // CustomTabsActivity should return a MenuItem with corresponding attributes.
         Menu menu = new RoboMenu(spyContext);
-        MenuItem item = spyActivity.insertActionButton(menu, builder.build().intent);
+        MenuItem item = spyActivity.insertActionButton(menu, builder.build().intent, 0xFF0000);
         Assert.assertNotNull(item);
         Assert.assertEquals(item.getTitle(), description);
         Assert.assertEquals(0, item.getOrder()); // should be the first one

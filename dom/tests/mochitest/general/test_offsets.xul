@@ -47,8 +47,8 @@
              onpopupshown="this.firstChild.open = true"
              onpopuphidden="if (event.target == this) SimpleTest.finish();">
     <menu id="innermenu" label="Open"
-          style="margin: 0; padding: 0; border: 2px black solid; -moz-appearance: none;">
-      <menupopup style="margin: 0; padding: 0; border: 1px black solid; -moz-appearance: none;"
+          style="margin: 0; padding: 0; border: 2px black solid; -moz-appearance: none; appearance: none;">
+      <menupopup style="margin: 0; padding: 0; border: 1px black solid; -moz-appearance: none; appearance: none;"
                  onpopupshown="testElements('outermenu', doneTests)">
         <menuitem label="Document"/>
         <menuitem id="innermenuitem" style="margin: 2px; padding: 3px;" label="Page"/>

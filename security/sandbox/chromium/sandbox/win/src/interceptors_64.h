@@ -122,15 +122,6 @@ SANDBOX_INTERCEPT BOOL WINAPI TargetCreateProcessA64(
     LPVOID environment, LPCSTR current_directory, LPSTARTUPINFOA startup_info,
     LPPROCESS_INFORMATION process_information);
 
-// Interception of CreateThread in kernel32.dll.
-SANDBOX_INTERCEPT HANDLE WINAPI
-TargetCreateThread64(LPSECURITY_ATTRIBUTES thread_attributes,
-                     SIZE_T stack_size,
-                     LPTHREAD_START_ROUTINE start_address,
-                     PVOID parameter,
-                     DWORD creation_flags,
-                     LPDWORD thread_id);
-
 // -----------------------------------------------------------------------
 // Interceptors handled by the registry dispatcher.
 
@@ -176,80 +167,6 @@ SANDBOX_INTERCEPT HGDIOBJ WINAPI TargetGetStockObject64(int object);
 
 // Interceptor for the RegisterClassW function.
 SANDBOX_INTERCEPT ATOM WINAPI TargetRegisterClassW64(const WNDCLASS* wnd_class);
-
-SANDBOX_INTERCEPT BOOL WINAPI
-TargetEnumDisplayMonitors64(HDC hdc,
-                            LPCRECT lprcClip,
-                            MONITORENUMPROC lpfnEnum,
-                            LPARAM dwData);
-
-SANDBOX_INTERCEPT BOOL WINAPI
-TargetEnumDisplayDevicesA64(LPCSTR lpDevice,
-                            DWORD iDevNum,
-                            PDISPLAY_DEVICEA lpDisplayDevice,
-                            DWORD dwFlags);
-
-SANDBOX_INTERCEPT BOOL WINAPI TargetGetMonitorInfoA64(HMONITOR hMonitor,
-                                                      LPMONITORINFO lpmi);
-
-SANDBOX_INTERCEPT BOOL WINAPI TargetGetMonitorInfoW64(HMONITOR hMonitor,
-                                                      LPMONITORINFO lpmi);
-
-SANDBOX_INTERCEPT NTSTATUS WINAPI
-TargetGetSuggestedOPMProtectedOutputArraySize64(
-    PUNICODE_STRING device_name,
-    DWORD* suggested_output_array_size);
-
-SANDBOX_INTERCEPT NTSTATUS WINAPI TargetCreateOPMProtectedOutputs64(
-    PUNICODE_STRING device_name,
-    DXGKMDT_OPM_VIDEO_OUTPUT_SEMANTICS vos,
-    DWORD protected_output_array_size,
-    DWORD* num_output_handles,
-    OPM_PROTECTED_OUTPUT_HANDLE* protected_output_array);
-
-SANDBOX_INTERCEPT NTSTATUS WINAPI
-TargetGetCertificate64(PUNICODE_STRING device_name,
-                       DXGKMDT_CERTIFICATE_TYPE certificate_type,
-                       BYTE* certificate,
-                       ULONG certificate_length);
-
-SANDBOX_INTERCEPT NTSTATUS WINAPI
-TargetGetCertificateSize64(PUNICODE_STRING device_name,
-                           DXGKMDT_CERTIFICATE_TYPE certificate_type,
-                           ULONG* certificate_length);
-
-SANDBOX_INTERCEPT NTSTATUS WINAPI
-TargetGetCertificateByHandle64(OPM_PROTECTED_OUTPUT_HANDLE protected_output,
-                               DXGKMDT_CERTIFICATE_TYPE certificate_type,
-                               BYTE* certificate,
-                               ULONG certificate_length);
-
-SANDBOX_INTERCEPT NTSTATUS WINAPI
-TargetGetCertificateSizeByHandle64(OPM_PROTECTED_OUTPUT_HANDLE protected_output,
-                                   DXGKMDT_CERTIFICATE_TYPE certificate_type,
-                                   ULONG* certificate_length);
-
-SANDBOX_INTERCEPT NTSTATUS WINAPI
-TargetDestroyOPMProtectedOutput64(OPM_PROTECTED_OUTPUT_HANDLE protected_output);
-
-SANDBOX_INTERCEPT NTSTATUS WINAPI
-TargetGetOPMInformation64(OPM_PROTECTED_OUTPUT_HANDLE protected_output,
-                          const DXGKMDT_OPM_GET_INFO_PARAMETERS* parameters,
-                          DXGKMDT_OPM_REQUESTED_INFORMATION* requested_info);
-
-SANDBOX_INTERCEPT NTSTATUS WINAPI
-TargetGetOPMRandomNumber64(OPM_PROTECTED_OUTPUT_HANDLE protected_output,
-                           DXGKMDT_OPM_RANDOM_NUMBER* random_number);
-
-SANDBOX_INTERCEPT NTSTATUS WINAPI TargetSetOPMSigningKeyAndSequenceNumbers64(
-    OPM_PROTECTED_OUTPUT_HANDLE protected_output,
-    const DXGKMDT_OPM_ENCRYPTED_PARAMETERS* parameters);
-
-SANDBOX_INTERCEPT NTSTATUS WINAPI TargetConfigureOPMProtectedOutput64(
-    OPM_PROTECTED_OUTPUT_HANDLE protected_output,
-    const DXGKMDT_OPM_CONFIGURE_PARAMETERS* parameters,
-    ULONG additional_parameters_size,
-    const BYTE* additional_parameters);
 
 }  // extern "C"
 
