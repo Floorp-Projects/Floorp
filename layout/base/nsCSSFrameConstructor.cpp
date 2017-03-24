@@ -7379,6 +7379,31 @@ nsCSSFrameConstructor::MaybeRecreateForFrameset(nsIFrame* aParentFrame,
 }
 
 void
+nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
+                                          nsIContent* aEndChild)
+{
+  ServoStyleSet* styleSet = mPresShell->StyleSet()->AsServo();
+
+  for (nsIContent* child = aStartChild; child != aEndChild;
+       child = child->GetNextSibling()) {
+    // Calling StyleNewChildren on one child will end up styling another child,
+    // if they share the same flattened tree parent.  So we check HasServoData()
+    // to avoid a wasteful call to GetFlattenedTreeParent (on the child) and
+    // StyleNewChildren (on the flattened tree parent) when we detect we've
+    // already handled that parent.  In the common case of inserting elements
+    // into a container that does not have an XBL binding or shadow tree with
+    // distributed children, this boils down to a single call to
+    // GetFlattenedTreeParent/StyleNewChildren, and traversing the list of
+    // children checking HasServoData (which is fast).
+    if (child->IsElement() && !child->AsElement()->HasServoData()) {
+      Element* parent = child->AsElement()->GetFlattenedTreeParentElement();
+      MOZ_ASSERT(parent);
+      styleSet->StyleNewChildren(parent);
+    }
+  }
+}
+
+void
 nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
                                        nsIContent* aFirstNewContent,
                                        bool aAllowLazyConstruction,
@@ -7471,9 +7496,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
     return;
   }
 
-  // We couldn't construct lazily. Make Servo eagerly traverse the subtree.
+  // We couldn't construct lazily. Make Servo eagerly traverse the new content.
   if (isNewlyAddedContentForServo) {
-    mPresShell->StyleSet()->AsServo()->StyleNewChildren(aContainer->AsElement());
+    StyleNewChildRange(aFirstNewContent, nullptr);
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
@@ -7948,9 +7973,9 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     }
   }
 
-  // We couldn't construct lazily. Make Servo eagerly traverse the subtree.
+  // We couldn't construct lazily. Make Servo eagerly traverse the new content.
   if (isNewlyAddedContentForServo) {
-    mPresShell->StyleSet()->AsServo()->StyleNewChildren(aContainer->AsElement());
+    StyleNewChildRange(aStartChild, aEndChild);
   }
 
   InsertionPoint insertion;

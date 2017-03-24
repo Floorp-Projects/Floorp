@@ -156,6 +156,15 @@ private:
                                   nsIContent* aStartChild,
                                   nsIContent* aEndChild);
 
+  /**
+   * For each child in the aStartChild/aEndChild range, calls StyleNewChildren
+   * on their flattened tree parents.  This is used when content is inserted
+   * into the document.  It handles children being rebound to different
+   * insertion points by calling StyleNewChildren on each child's flattened
+   * tree parent.  Only used when we are styled by Servo.
+   */
+  void StyleNewChildRange(nsIContent* aStartChild, nsIContent* aEndChild);
+
 public:
   /**
    * Lazy frame construction is controlled by the aAllowLazyConstruction bool
