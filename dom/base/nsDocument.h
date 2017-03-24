@@ -1022,13 +1022,6 @@ public:
   // features values changing.
   virtual void NotifyMediaFeatureValuesChanged() override;
 
-  // Adds an element to mMediaContent when the element is added to the tree.
-  virtual void AddMediaContent(nsIContent* aContent) override;
-
-  // Removes an element from mMediaContent when the element is removed from
-  // the tree.
-  virtual void RemoveMediaContent(nsIContent* aContent) override;
-
   virtual nsresult GetStateObject(nsIVariant** aResult) override;
 
   virtual nsDOMNavigationTiming* GetNavigationTiming() const override;
@@ -1580,9 +1573,6 @@ private:
 
   // A set of responsive images keyed by address pointer.
   nsTHashtable< nsPtrHashKey<nsIContent> > mResponsiveContent;
-
-  // A set of media elements keyed by address pointer.
-  nsTHashtable<nsPtrHashKey<nsIContent>> mMediaContent;
 
   // Member to store out last-selected stylesheet set.
   nsString mLastStyleSheetSet;
