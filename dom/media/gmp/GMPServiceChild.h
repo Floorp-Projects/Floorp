@@ -48,11 +48,17 @@ protected:
     // Nothing to do here.
   }
 
-  virtual RefPtr<GetGMPContentParentPromise>
-  GetContentParent(GMPCrashHelper* aHelper,
-                   const nsACString& aNodeId,
-                   const nsCString& aAPI,
-                   const nsTArray<nsCString>& aTags) override;
+  virtual RefPtr<GetGMPContentParentPromise> GetContentParent(
+    GMPCrashHelper* aHelper,
+    const nsACString& aNodeIdString,
+    const nsCString& aAPI,
+    const nsTArray<nsCString>& aTags) override;
+
+  RefPtr<GetGMPContentParentPromise> GetContentParent(
+    GMPCrashHelper* aHelper,
+    const NodeId& aNodeId,
+    const nsCString& aAPI,
+    const nsTArray<nsCString>& aTags) override;
 
 private:
   friend class OpenPGMPServiceChild;

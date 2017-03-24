@@ -79,19 +79,20 @@ GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
     return false;
   }
 
+  nsCString api = MediaPrefs::EMEChromiumAPIEnabled()
+    ? NS_LITERAL_CSTRING(CHROMIUM_CDM_API)
+    : NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER);
+
   if (MP4Decoder::IsH264(aMimeType)) {
-    return HaveGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                      { NS_LITERAL_CSTRING("h264"), aGMP.value()});
+    return HaveGMPFor(api, { NS_LITERAL_CSTRING("h264"), aGMP.value()});
   }
 
   if (VPXDecoder::IsVP9(aMimeType)) {
-    return HaveGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                      { NS_LITERAL_CSTRING("vp9"), aGMP.value()});
+    return HaveGMPFor(api, { NS_LITERAL_CSTRING("vp9"), aGMP.value()});
   }
 
   if (VPXDecoder::IsVP8(aMimeType)) {
-    return HaveGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                      { NS_LITERAL_CSTRING("vp8"), aGMP.value()});
+    return HaveGMPFor(api, { NS_LITERAL_CSTRING("vp8"), aGMP.value()});
   }
 
   return false;

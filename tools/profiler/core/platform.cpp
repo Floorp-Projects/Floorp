@@ -82,6 +82,8 @@ typedef ucontext_t tickcontext_t;
 
 using namespace mozilla;
 
+mozilla::LazyLogModule gProfilerLog("prof");
+
 #if defined(PROFILE_JAVA)
 class GeckoJavaSampler : public mozilla::java::GeckoJavaSampler::Natives<GeckoJavaSampler>
 {
@@ -1274,6 +1276,8 @@ BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
 static void
 StreamJSON(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
 {
+  LOG("StreamJSON");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS && gPS->IsActive(aLock));
 
@@ -1361,6 +1365,8 @@ StreamJSON(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
 UniquePtr<char[]>
 ToJSON(PS::LockRef aLock, double aSinceTime)
 {
+  LOG("ToJSON");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS && gPS->IsActive(aLock));
 
@@ -1421,31 +1427,6 @@ void ProfilerMarker::StreamJSON(SpliceableJSONWriter& aWriter,
   aWriter.EndArray();
 }
 
-// Verbosity control for the profiler.  The aim is to check env var
-// MOZ_PROFILER_VERBOSE only once.
-
-enum class Verbosity : int8_t { UNCHECKED, NOTVERBOSE, VERBOSE };
-
-// The verbosity global and the mutex used to protect it. Unlike other globals
-// in this file, gVerbosity is not within ProfilerState because it can be used
-// before gPS is created.
-static Verbosity gVerbosity = Verbosity::UNCHECKED;
-static StaticMutex gVerbosityMutex;
-
-bool
-profiler_verbose()
-{
-  StaticMutexAutoLock lock(gVerbosityMutex);
-
-  if (gVerbosity == Verbosity::UNCHECKED) {
-    gVerbosity = getenv("MOZ_PROFILER_VERBOSE")
-               ? Verbosity::VERBOSE
-               : Verbosity::NOTVERBOSE;
-  }
-
-  return gVerbosity == Verbosity::VERBOSE;
-}
-
 static bool
 set_profiler_interval(PS::LockRef aLock, const char* aInterval)
 {
@@ -1494,37 +1475,39 @@ profiler_usage(int aExitCode)
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
-  // Force-enable verbosity so that LOG prints something. The LOG calls below
-  // lock gVerbosityMutex themselves, so this scope only needs to cover this
-  // assignment.
-  {
-    StaticMutexAutoLock lock(gVerbosityMutex);
-    gVerbosity = Verbosity::VERBOSE;
-  }
-
-  LOG ("");
-  LOG ("Environment variable usage:");
-  LOG ("");
-  LOG ("  MOZ_PROFILER_HELP");
-  LOG ("  If set to any value, prints this message.");
-  LOG ("");
-  LOG ("  MOZ_PROFILER_ENTRIES=<1..>      (count)");
-  LOG ("  If unset, platform default is used.");
-  LOG ("");
-  LOG ("  MOZ_PROFILER_INTERVAL=<1..1000> (milliseconds)");
-  LOG ("  If unset, platform default is used.");
-  LOG ("");
-  LOG ("  MOZ_PROFILER_VERBOSE");
-  LOG ("  If set to any value, increases verbosity (recommended).");
-  LOG ("");
-  LOG ("  MOZ_PROFILER_LUL_TEST");
-  LOG ("  If set to any value, runs LUL unit tests at startup of");
-  LOG ("  the unwinder thread, and prints a short summary of ");
-  LOG ("  results.");
-  LOG ("");
-  LOGF("  This platform %s native unwinding.",
-       is_native_unwinding_avail() ? "supports" : "does not support");
-  LOG ("");
+  printf(
+    "\n"
+    "Profiler environment variable usage:\n"
+    "\n"
+    "  MOZ_PROFILER_HELP\n"
+    "  If set to any value, prints this message.\n"
+    "\n"
+    "  MOZ_PROFILER_ENTRIES=<1..>\n"
+    "  The number of entries in the profiler's circular buffer.\n"
+    "  If unset, the platform default is used.\n"
+    "\n"
+    "  MOZ_PROFILER_INTERVAL=<1..1000>\n"
+    "  The interval between samples, measured in milliseconds.\n"
+    "  If unset, platform default is used.\n"
+    "\n"
+    "  MOZ_LOG\n"
+    "  Enables logging. The levels of logging available are\n"
+    "  'prof:3' (least verbose), 'prof:4', 'prof:5' (most verbose).\n"
+    "\n"
+    "  MOZ_PROFILER_STARTUP\n"
+    "  If set to any value, starts the profiler immediately on start-up.\n"
+    "  Useful if you want profile code that runs very early.\n"
+    "\n"
+    "  MOZ_PROFILER_SHUTDOWN\n"
+    "  If set, the profiler saves a profile to the named file on shutdown.\n"
+    "\n"
+    "  MOZ_PROFILER_LUL_TEST\n"
+    "  If set to any value, runs LUL unit tests at startup.\n"
+    "\n"
+    "  This platform %s native unwinding.\n"
+    "\n",
+    is_native_unwinding_avail() ? "supports" : "does not support\n"
+  );
 
   exit(aExitCode);
 }
@@ -1547,73 +1530,202 @@ ReadProfilerEnvVars(PS::LockRef aLock)
     profiler_usage(1); // terminates execution
   }
 
-  LOGF("entries  = %d (zero means \"platform default\")",
-       gPS->EnvVarEntries(aLock));
-  LOGF("interval = %d ms (zero means \"platform default\")",
-       gPS->EnvVarInterval(aLock));
+  LOG("entries  = %d (zero means \"platform default\")",
+      gPS->EnvVarEntries(aLock));
+  LOG("interval = %d ms (zero means \"platform default\")",
+      gPS->EnvVarInterval(aLock));
 }
 
-#ifdef HAVE_VA_COPY
-#define VARARGS_ASSIGN(foo, bar)     VA_COPY(foo,bar)
-#elif defined(HAVE_VA_LIST_AS_ARRAY)
-#define VARARGS_ASSIGN(foo, bar)     foo[0] = bar[0]
-#else
-#define VARARGS_ASSIGN(foo, bar)     (foo) = (bar)
+////////////////////////////////////////////////////////////////////////
+// BEGIN SamplerThread
+
+// This suspends the calling thread for the given number of microseconds.
+// Best effort timing.
+static void SleepMicro(int aMicroseconds);
+
+#if defined(GP_OS_linux) || defined(GP_OS_android)
+struct SigHandlerCoordinator;
 #endif
 
-void
-profiler_log(const char* aStr)
-{
-  // This function runs both on and off the main thread.
+// The sampler thread controls sampling and runs whenever the profiler is
+// active. It periodically runs through all registered threads, finds those
+// that should be sampled, then pauses and samples them.
 
-  profiler_tracing("log", aStr, TRACING_EVENT);
+class SamplerThread
+{
+public:
+  // Creates a sampler thread, but doesn't start it.
+  SamplerThread(PS::LockRef aLock, uint32_t aActivityGeneration,
+                double aIntervalMilliseconds);
+  ~SamplerThread();
+
+  // This runs on the sampler thread.  It suspends and resumes the samplee
+  // threads.
+  void SuspendAndSampleAndResumeThread(PS::LockRef aLock,
+                                       ThreadInfo* aThreadInfo,
+                                       bool aIsFirstProfiledThread);
+
+  // This runs on (is!) the sampler thread.
+  void Run();
+
+  // This runs on the main thread.
+  void Stop(PS::LockRef aLock);
+
+private:
+  // The activity generation, for detecting when the sampler thread must stop.
+  const uint32_t mActivityGeneration;
+
+  // The interval between samples, measured in microseconds.
+  const int mIntervalMicroseconds;
+
+  // The OS-specific handle for the sampler thread.
+#if defined(GP_OS_windows)
+  HANDLE mThread;
+#elif defined(GP_OS_darwin) || defined(GP_OS_linux) || defined(GP_OS_android)
+  pthread_t mThread;
+#endif
+
+#if defined(GP_OS_linux) || defined(GP_OS_android)
+  // Used to restore the SIGPROF handler when ours is removed.
+  struct sigaction mOldSigprofHandler;
+
+  // This process' ID.  Needed as an argument for tgkill in
+  // SuspendAndSampleAndResumeThread.
+  int mMyPid;
+
+public:
+  // The sampler thread's ID.  Used to assert that it is not sampling itself,
+  // which would lead to deadlock.
+  int mSamplerTid;
+
+  // This is the one-and-only variable used to communicate between the sampler
+  // thread and the samplee thread's signal handler. It's static because the
+  // samplee thread's signal handler is static.
+  static struct SigHandlerCoordinator* sSigHandlerCoordinator;
+#endif
+
+private:
+  SamplerThread(const SamplerThread&) = delete;
+  void operator=(const SamplerThread&) = delete;
+};
+
+
+// This function is the sampler thread.  This implementation is used for all
+// targets.
+void
+SamplerThread::Run()
+{
+  // This will be positive if we are running behind schedule (sampling less
+  // frequently than desired) and negative if we are ahead of schedule.
+  TimeDuration lastSleepOvershoot = 0;
+  TimeStamp sampleStart = TimeStamp::Now();
+
+  while (true) {
+    // This scope is for |lock|. It ends before we sleep below.
+    {
+      PS::AutoLock lock(gPSMutex);
+
+      // At this point profiler_stop() might have been called, and
+      // profiler_start() might have been called on another thread.
+      // Alternatively, profiler_shutdown() might have been called and gPS
+      // may be null. In all these cases, PS::sActivityGeneration will no
+      // longer equal mActivityGeneration, so we must exit immediately, but
+      // without touching gPS. (This is why PS::sActivityGeneration must be
+      // static.)
+      if (PS::ActivityGeneration(lock) != mActivityGeneration) {
+        return;
+      }
+
+      gPS->Buffer(lock)->deleteExpiredStoredMarkers();
+
+      if (!gPS->IsPaused(lock)) {
+        bool isFirstProfiledThread = true;
+
+        const PS::ThreadVector& threads = gPS->Threads(lock);
+        for (uint32_t i = 0; i < threads.size(); i++) {
+          ThreadInfo* info = threads[i];
+
+          if (!info->HasProfile() || info->IsPendingDelete()) {
+            // We are not interested in profiling this thread.
+            continue;
+          }
+
+          // If the thread is asleep and has been sampled before in the same
+          // sleep episode, find and copy the previous sample, as that's
+          // cheaper than taking a new sample.
+          if (info->Stack()->CanDuplicateLastSampleDueToSleep()) {
+            bool dup_ok =
+              gPS->Buffer(lock)->DuplicateLastSample(gPS->StartTime(lock),
+                                                     info->LastSample());
+            if (dup_ok) {
+              continue;
+            }
+          }
+
+          info->UpdateThreadResponsiveness();
+
+          SuspendAndSampleAndResumeThread(lock, info, isFirstProfiledThread);
+
+          isFirstProfiledThread = false;
+        }
+
+#if defined(USE_LUL_STACKWALK)
+        // The LUL unwind object accumulates frame statistics. Periodically we
+        // should poke it to give it a chance to print those statistics.  This
+        // involves doing I/O (fprintf, __android_log_print, etc.) and so
+        // can't safely be done from the critical section inside
+        // SuspendAndSampleAndResumeThread, which is why it is done here.
+        gPS->LUL(lock)->MaybeShowStats();
+#endif
+      }
+    }
+    // gPSMutex is not held after this point.
+
+    // Calculate how long a sleep to request.  After the sleep, measure how
+    // long we actually slept and take the difference into account when
+    // calculating the sleep interval for the next iteration.  This is an
+    // attempt to keep "to schedule" in the presence of inaccuracy of the
+    // actual sleep intervals.
+    TimeStamp targetSleepEndTime =
+      sampleStart + TimeDuration::FromMicroseconds(mIntervalMicroseconds);
+    TimeStamp beforeSleep = TimeStamp::Now();
+    TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
+    double sleepTime = std::max(0.0, (targetSleepDuration -
+                                      lastSleepOvershoot).ToMicroseconds());
+    SleepMicro(static_cast<int>(sleepTime));
+    sampleStart = TimeStamp::Now();
+    lastSleepOvershoot =
+      sampleStart - (beforeSleep + TimeDuration::FromMicroseconds(sleepTime));
+  }
 }
 
-static void
-locked_profiler_add_marker(PS::LockRef aLock, const char* aMarker,
-                           ProfilerMarkerPayload* aPayload);
+// We #include these files directly because it means those files can use
+// declarations from this file trivially.  These provide target-specific
+// implementations of all SamplerThread methods except Run().
+#if defined(GP_OS_windows)
+# include "platform-win32.cpp"
+#elif defined(GP_OS_darwin)
+# include "platform-macos.cpp"
+#elif defined(GP_OS_linux) || defined(GP_OS_android)
+# include "platform-linux-android.cpp"
+#else
+# error "bad platform"
+#endif
+
+UniquePlatformData
+AllocPlatformData(int aThreadId)
+{
+  return UniquePlatformData(new PlatformData(aThreadId));
+}
 
 void
-profiler_log(const char* aFmt, va_list aArgs)
+PlatformDataDestructor::operator()(PlatformData* aData)
 {
-  // This function runs both on and off the main thread.
-
-  MOZ_RELEASE_ASSERT(gPS);
-
-  PS::AutoLock lock(gPSMutex);
-
-  if (!gPS->IsActive(lock) || gPS->FeaturePrivacy(lock)) {
-    return;
-  }
-
-  // nsAutoCString AppendPrintf would be nicer but this is mozilla external
-  // code.
-  char buf[2048];
-  va_list argsCpy;
-  VARARGS_ASSIGN(argsCpy, aArgs);
-  int required = VsprintfLiteral(buf, aFmt, argsCpy);
-  va_end(argsCpy);
-
-  if (required < 0) {
-    // silently drop for now
-
-  } else if (required < 2048) {
-    auto marker = new ProfilerMarkerTracing("log", TRACING_EVENT);
-    locked_profiler_add_marker(lock, buf, marker);
-
-  } else {
-    char* heapBuf = new char[required + 1];
-    va_list argsCpy;
-    VARARGS_ASSIGN(argsCpy, aArgs);
-    vsnprintf(heapBuf, required + 1, aFmt, argsCpy);
-    va_end(argsCpy);
-    // EVENT_BACKTRACE could be used to get a source for all log events. This
-    // could be a runtime flag later.
-    auto marker = new ProfilerMarkerTracing("log", TRACING_EVENT);
-    locked_profiler_add_marker(lock, heapBuf, marker);
-    delete[] heapBuf;
-  }
+  delete aData;
 }
+
+// END SamplerThread
+////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////
 // BEGIN externally visible functions
@@ -1762,18 +1874,6 @@ locked_register_thread(PS::LockRef aLock, const char* aName, void* stackTop)
   threads.push_back(info);
 }
 
-// We #include these files directly because it means those files can use
-// declarations from this file trivially.
-#if defined(GP_OS_windows)
-# include "platform-win32.cpp"
-#elif defined(GP_OS_darwin)
-# include "platform-macos.cpp"
-#elif defined(GP_OS_linux) || defined(GP_OS_android)
-# include "platform-linux-android.cpp"
-#else
-# error "bad platform"
-#endif
-
 static void
 NotifyProfilerStarted(const int aEntries, double aInterval,
                       const char** aFeatures, uint32_t aFeatureCount,
@@ -1828,7 +1928,7 @@ locked_profiler_start(PS::LockRef aLock, const int aEntries, double aInterval,
 void
 profiler_init(void* aStackTop)
 {
-  LOG("BEGIN profiler_init");
+  LOG("profiler_init");
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(!gPS);
@@ -1852,8 +1952,6 @@ profiler_init(void* aStackTop)
     // We've passed the possible failure point. Instantiate gPS, which
     // indicates that the profiler has initialized successfully.
     gPS = new PS();
-
-    set_stderr_callback(profiler_log);
 
     bool ignore;
     gPS->SetStartTime(lock, mozilla::TimeStamp::ProcessCreation(ignore));
@@ -1887,9 +1985,10 @@ profiler_init(void* aStackTop)
     // NOTE: Default
     const char *val = getenv("MOZ_PROFILER_STARTUP");
     if (!val || !*val) {
-      LOG("END   profiler_init: MOZ_PROFILER_STARTUP not set");
       return;
     }
+
+    LOG("MOZ_PROFILER_STARTUP is set");
 
     locked_profiler_start(lock, PROFILE_DEFAULT_ENTRIES,
                           PROFILE_DEFAULT_INTERVAL,
@@ -1902,8 +2001,6 @@ profiler_init(void* aStackTop)
   NotifyProfilerStarted(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
                         features, MOZ_ARRAY_LENGTH(features),
                         threadFilters, MOZ_ARRAY_LENGTH(threadFilters));
-
-  LOG("END   profiler_init");
 }
 
 static void
@@ -1915,7 +2012,7 @@ locked_profiler_stop(PS::LockRef aLock);
 void
 profiler_shutdown()
 {
-  LOG("BEGIN profiler_shutdown");
+  LOG("profiler_shutdown");
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
@@ -1935,8 +2032,6 @@ profiler_shutdown()
 
       samplerThread = locked_profiler_stop(lock);
     }
-
-    set_stderr_callback(nullptr);
 
     PS::ThreadVector& threads = gPS->Threads(lock);
     while (threads.size() > 0) {
@@ -1974,13 +2069,13 @@ profiler_shutdown()
     NotifyObservers("profiler-stopped");
     delete samplerThread;
   }
-
-  LOG("END   profiler_shutdown");
 }
 
-mozilla::UniquePtr<char[]>
+UniquePtr<char[]>
 profiler_get_profile(double aSinceTime)
 {
+  LOG("profiler_get_profile");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
@@ -1996,6 +2091,8 @@ profiler_get_profile(double aSinceTime)
 JSObject*
 profiler_get_profile_jsobject(JSContext *aCx, double aSinceTime)
 {
+  LOG("profiler_get_profile_jsobject");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
@@ -2024,12 +2121,15 @@ void
 profiler_get_profile_jsobject_async(double aSinceTime,
                                     mozilla::dom::Promise* aPromise)
 {
+  LOG("profiler_get_profile_jsobject_async");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
   PS::AutoLock lock(gPSMutex);
 
   if (!gPS->IsActive(lock)) {
+    LOG("END   profiler_get_profile_jsobject_async: inactive");
     return;
   }
 
@@ -2039,17 +2139,22 @@ profiler_get_profile_jsobject_async(double aSinceTime,
 void
 profiler_save_profile_to_file_async(double aSinceTime, const char* aFileName)
 {
+  LOG("BEGIN profiler_save_profile_to_file_async");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
   nsCString filename(aFileName);
   NS_DispatchToMainThread(NS_NewRunnableFunction([=] () {
 
+    LOG("profiler_save_profile_to_file_async callback");
+
     PS::AutoLock lock(gPSMutex);
 
     // It's conceivable that profiler_stop() or profiler_shutdown() was called
     // between the dispatch and running of this runnable, so check for those.
     if (!gPS || !gPS->IsActive(lock)) {
+      LOG("END   profiler_save_profile_to_file_async callback: inactive");
       return;
     }
 
@@ -2146,6 +2251,8 @@ profiler_OOP_exit_profile(const nsCString& aProfile)
 static void
 locked_profiler_save_profile_to_file(PS::LockRef aLock, const char* aFilename)
 {
+  LOG("locked_profiler_save_profile_to_file(%s)", aFilename);
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS && gPS->IsActive(aLock));
 
@@ -2155,15 +2262,14 @@ locked_profiler_save_profile_to_file(PS::LockRef aLock, const char* aFilename)
     SpliceableJSONWriter w(mozilla::MakeUnique<OStreamJSONWriteFunc>(stream));
     StreamJSON(aLock, w, /* sinceTime */ 0);
     stream.close();
-    LOGF("locked_profiler_save_profile_to_file: Saved to %s", aFilename);
-  } else {
-    LOG ("locked_profiler_save_profile_to_file: Failed to open file");
   }
 }
 
 void
 profiler_save_profile_to_file(const char* aFilename)
 {
+  LOG("profiler_save_profile_to_file(%s)", aFilename);
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
@@ -2258,7 +2364,17 @@ locked_profiler_start(PS::LockRef aLock, int aEntries, double aInterval,
                       const char** aFeatures, uint32_t aFeatureCount,
                       const char** aThreadNameFilters, uint32_t aFilterCount)
 {
-  LOG("BEGIN locked_profiler_start");
+  if (LOG_TEST) {
+    LOG("locked_profiler_start");
+    LOG("- entries  = %d", aEntries);
+    LOG("- interval = %.2f", aInterval);
+    for (uint32_t i = 0; i < aFeatureCount; i++) {
+      LOG("- feature  = %s", aFeatures[i]);
+    }
+    for (uint32_t i = 0; i < aFilterCount; i++) {
+      LOG("- threads  = %s", aThreadNameFilters[i]);
+    }
+  }
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS && !gPS->IsActive(aLock));
@@ -2392,8 +2508,6 @@ locked_profiler_start(PS::LockRef aLock, int aEntries, double aInterval,
     mozilla::IOInterposer::Register(mozilla::IOInterposeObserver::OpAll,
                                     interposeObserver);
   }
-
-  LOG("END   locked_profiler_start");
 }
 
 void
@@ -2401,7 +2515,7 @@ profiler_start(int aEntries, double aInterval,
                const char** aFeatures, uint32_t aFeatureCount,
                const char** aThreadNameFilters, uint32_t aFilterCount)
 {
-  LOG("BEGIN profiler_start");
+  LOG("profiler_start");
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -2431,14 +2545,12 @@ profiler_start(int aEntries, double aInterval,
   }
   NotifyProfilerStarted(aEntries, aInterval, aFeatures, aFeatureCount,
                         aThreadNameFilters, aFilterCount);
-
-  LOG("END   profiler_start");
 }
 
 static MOZ_MUST_USE SamplerThread*
 locked_profiler_stop(PS::LockRef aLock)
 {
-  LOG("BEGIN locked_profiler_stop");
+  LOG("locked_profiler_stop");
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS && gPS->IsActive(aLock));
@@ -2517,15 +2629,13 @@ locked_profiler_stop(PS::LockRef aLock)
 
   gPS->SetEntries(aLock, 0);
 
-  LOG("END   locked_profiler_stop");
-
   return samplerThread;
 }
 
 void
 profiler_stop()
 {
-  LOG("BEGIN profiler_stop");
+  LOG("profiler_stop");
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
@@ -2535,7 +2645,6 @@ profiler_stop()
     PS::AutoLock lock(gPSMutex);
 
     if (!gPS->IsActive(lock)) {
-      LOG("END   profiler_stop: inactive");
       return;
     }
 
@@ -2557,8 +2666,6 @@ profiler_stop()
   // in a way that's safe with respect to other gPSMutex-locking operations
   // that may have occurred in the meantime.
   delete samplerThread;
-
-  LOG("END   profiler_stop");
 }
 
 bool
@@ -2579,6 +2686,8 @@ profiler_is_paused()
 void
 profiler_pause()
 {
+  LOG("profiler_pause");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
@@ -2599,6 +2708,8 @@ profiler_pause()
 void
 profiler_resume()
 {
+  LOG("profiler_resume");
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
@@ -2674,6 +2785,8 @@ profiler_set_frame_number(int aFrameNumber)
 void
 profiler_register_thread(const char* aName, void* aGuessStackTop)
 {
+  DEBUG_LOG("profiler_register_thread(%s)", aName);
+
   MOZ_RELEASE_ASSERT(!NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
@@ -2699,6 +2812,7 @@ profiler_unregister_thread()
   for (uint32_t i = 0; i < threads.size(); i++) {
     ThreadInfo* info = threads.at(i);
     if (info->ThreadId() == id && !info->IsPendingDelete()) {
+      DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
       if (gPS->IsActive(lock)) {
         // We still want to show the results of this thread if you save the
         // profile shortly after a thread is terminated, which requires
@@ -2985,6 +3099,14 @@ profiler_tracing(const char* aCategory, const char* aInfo,
   auto marker =
     new ProfilerMarkerTracing(aCategory, aMetaData, mozilla::Move(aCause));
   locked_profiler_add_marker(lock, aInfo, marker);
+}
+
+void
+profiler_log(const char* aStr)
+{
+  // This function runs both on and off the main thread.
+
+  profiler_tracing("log", aStr, TRACING_EVENT);
 }
 
 void
