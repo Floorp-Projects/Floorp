@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1328868
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1328868</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript">
+
+  /** Test for Bug 1328868 **/
+
+  "use strict";
+
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+  Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/Messaging.jsm");
+  Cu.import("resource://gre/modules/Promise.jsm");
+  Cu.import("resource://gre/modules/Task.jsm");
+  Cu.import("resource://gre/modules/SharedPreferences.jsm");
+
+  const GECKO_PREF_FONT_INFLATION = "font.size.inflation.minTwips";
+  const ANDROID_PREF = "android.not_a_preference.font.size.use_system_font_size";
+
+  let sharedPrefs = SharedPreferences.forApp();
+  let _observerId = 0;
+
+  function resetPrefs() {
+    sharedPrefs.setBoolPref(ANDROID_PREF, false);
+    Services.prefs.setIntPref(GECKO_PREF_FONT_INFLATION, 0);
+  }
+
+  SimpleTest.registerCleanupFunction(function() {
+    // If anything goes wrong, we want to be sure to leave everything as we came
+    resetPrefs();
+  });
+
+  add_task(function* test_androidPrefControlsFontInflation() {
+    // Check that we're starting out with the default values
+    is(sharedPrefs.getBoolPref(ANDROID_PREF), false, "System font size scaling is disabled");
+    is(Services.prefs.getIntPref(GECKO_PREF_FONT_INFLATION), 0, "Gecko-side font inflation is disabled");
+
+    // Flipping the Android pref "on" should enable font inflation
+    let observer = makeObserver(_observerId++);
+    Services.prefs.addObserver(GECKO_PREF_FONT_INFLATION, observer, false);
+
+    try {
+      sharedPrefs.setBoolPref(ANDROID_PREF, true);
+      let result = yield observer.promise;
+
+      is(observer.count, 1, "Gecko pref should have changed only once");
+      is(result.data, GECKO_PREF_FONT_INFLATION, "the correct pref has changed");
+      is(Services.prefs.getIntPref(GECKO_PREF_FONT_INFLATION), 120, "Gecko-side font inflation is enabled");
+    } finally {
+      Services.prefs.removeObserver(GECKO_PREF_FONT_INFLATION, observer);
+    }
+
+    // ... and turning it back off should disable it again.
+    observer = makeObserver(_observerId++);
+    Services.prefs.addObserver(GECKO_PREF_FONT_INFLATION, observer, false);
+
+    try {
+      sharedPrefs.setBoolPref(ANDROID_PREF, false);
+      let result = yield observer.promise;
+
+      is(observer.count, 1, "Gecko pref should have changed only once");
+      is(result.data, GECKO_PREF_FONT_INFLATION, "the correct pref has changed");
+      is(Services.prefs.getIntPref(GECKO_PREF_FONT_INFLATION), 0, "Gecko-side font inflation is disabled");
+    } finally {
+      Services.prefs.removeObserver(GECKO_PREF_FONT_INFLATION, observer);
+    }
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1328868">Mozilla Bug 1328868</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
