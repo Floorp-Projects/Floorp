@@ -6,7 +6,6 @@
 
 #include "ServiceWorkerManagerParent.h"
 #include "ServiceWorkerManagerService.h"
-#include "ServiceWorkerUpdaterParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -309,38 +308,6 @@ ServiceWorkerManagerParent::RecvShutdown()
 
   Unused << Send__delete__(this);
   return IPC_OK();
-}
-
-PServiceWorkerUpdaterParent*
-ServiceWorkerManagerParent::AllocPServiceWorkerUpdaterParent(const OriginAttributes& aOriginAttributes,
-                                                             const nsCString& aScope)
-{
-  AssertIsOnBackgroundThread();
-  return new ServiceWorkerUpdaterParent();
-}
-
-mozilla::ipc::IPCResult
-ServiceWorkerManagerParent::RecvPServiceWorkerUpdaterConstructor(PServiceWorkerUpdaterParent* aActor,
-                                                                 const OriginAttributes& aOriginAttributes,
-                                                                 const nsCString& aScope)
-{
-  AssertIsOnBackgroundThread();
-
-  if (NS_WARN_IF(!mService)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  mService->ProcessUpdaterActor(static_cast<ServiceWorkerUpdaterParent*>(aActor),
-                                aOriginAttributes, aScope, mID);
-  return IPC_OK();
-}
-
-bool
-ServiceWorkerManagerParent::DeallocPServiceWorkerUpdaterParent(PServiceWorkerUpdaterParent* aActor)
-{
-  AssertIsOnBackgroundThread();
-  delete aActor;
-  return true;
 }
 
 void

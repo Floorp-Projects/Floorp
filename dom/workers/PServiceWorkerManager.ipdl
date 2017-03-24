@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
-include protocol PServiceWorkerUpdater;
 
 include PBackgroundSharedTypes;
 include ServiceWorkerRegistrarTypes;
@@ -16,7 +15,6 @@ namespace dom {
 protocol PServiceWorkerManager
 {
   manager PBackground;
-  manages PServiceWorkerUpdater;
 
 parent:
   async Register(ServiceWorkerRegistrationData data);
@@ -32,9 +30,6 @@ parent:
   async PropagateRemoveAll();
 
   async Shutdown();
-
-  async PServiceWorkerUpdater(OriginAttributes originAttributes,
-                              nsCString scope);
 
 child:
   async NotifyRegister(ServiceWorkerRegistrationData data);
