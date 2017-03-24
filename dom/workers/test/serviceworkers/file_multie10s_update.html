@@ -1,0 +1,34 @@
+<html>
+<body>
+<script>
+
+var bc = new BroadcastChannel('start');
+bc.onmessage = function(e) {
+  // This message is not for us.
+  if (e.data != 'go') {
+    return;
+  }
+
+  // It can happen that we don't have the registrations yet. Let's try with a
+  // timeout.
+  function proceed() {
+    return navigator.serviceWorker.getRegistrations().then(regs => {
+      if (regs.length == 0) {
+        setTimeout(proceed, 200);
+        return;
+      }
+
+      bc = new BroadcastChannel('result');
+      regs[0].update().then(() => {
+        bc.postMessage(0);
+      }, () => {
+        bc.postMessage(1);
+      });
+    });
+  }
+
+  proceed();
+}
+</script>
+</body>
+</html>
