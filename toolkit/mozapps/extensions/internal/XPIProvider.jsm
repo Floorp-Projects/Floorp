@@ -8660,15 +8660,21 @@ Object.assign(SystemAddonInstallLocation.prototype, {
    * Resets the add-on set so on the next startup the default set will be used.
    */
   resetAddonSet() {
+    logger.info("Removing all system add-on upgrades.");
 
+    // remove everything from the pref first, if uninstall
+    // fails then at least they will not be re-activated on
+    // next restart.
+    this._saveAddonSet({ schema: 1, addons: {} });
+
+    // If this is running at app startup, the pref being cleared
+    // will cause later stages of startup to notice that the
+    // old updates are now gone.
+    //
+    // Updates will only be explicitly uninstalled if they are
+    // removed restartlessly, for instance if they are no longer
+    // part of the latest update set.
     if (this._addonSet) {
-      logger.info("Removing all system add-on upgrades.");
-
-      // remove everything from the pref first, if uninstall
-      // fails then at least they will not be re-activated on
-      // next restart.
-      this._saveAddonSet({ schema: 1, addons: {} });
-
       for (let id of Object.keys(this._addonSet.addons)) {
         AddonManager.getAddonByID(id, addon => {
           if (addon) {
