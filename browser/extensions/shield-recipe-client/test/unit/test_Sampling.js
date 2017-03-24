@@ -1,8 +1,7 @@
 "use strict";
 // Cu is defined in xpc_head.js
-/* globals Cu, equal */
+/* globals Cu */
 
-Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/Sampling.jsm", this);
 
 add_task(function* testStableSample() {

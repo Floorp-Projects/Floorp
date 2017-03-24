@@ -1,25 +1,21 @@
 "use strict";
 
-const {utils: Cu} = Components;
-Cu.import("resource://shield-recipe-client/test/browser/Utils.jsm", this);
-Cu.import("resource://gre/modules/Console.jsm", this);
-
-add_task(Utils.withDriver(Assert, function* uuids(driver) {
+add_task(withDriver(Assert, function* uuids(driver) {
   // Test that it is a UUID
   const uuid1 = driver.uuid();
-  ok(Utils.UUID_REGEX.test(uuid1), "valid uuid format");
+  ok(UUID_REGEX.test(uuid1), "valid uuid format");
 
   // Test that UUIDs are different each time
   const uuid2 = driver.uuid();
   isnot(uuid1, uuid2, "uuids are unique");
 }));
 
-add_task(Utils.withDriver(Assert, function* userId(driver) {
+add_task(withDriver(Assert, function* userId(driver) {
   // Test that userId is a UUID
-  ok(Utils.UUID_REGEX.test(driver.userId), "userId is a uuid");
+  ok(UUID_REGEX.test(driver.userId), "userId is a uuid");
 }));
 
-add_task(Utils.withDriver(Assert, function* syncDeviceCounts(driver) {
+add_task(withDriver(Assert, function* syncDeviceCounts(driver) {
   let client = yield driver.client();
   is(client.syncMobileDevices, 0, "syncMobileDevices defaults to zero");
   is(client.syncDesktopDevices, 0, "syncDesktopDevices defaults to zero");
@@ -39,7 +35,7 @@ add_task(Utils.withDriver(Assert, function* syncDeviceCounts(driver) {
   is(client.syncTotalDevices, 9, "syncTotalDevices is read when set");
 }));
 
-add_task(Utils.withDriver(Assert, function* distribution(driver) {
+add_task(withDriver(Assert, function* distribution(driver) {
   let client = yield driver.client();
   is(client.distribution, "default", "distribution has a default value");
 
