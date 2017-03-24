@@ -157,7 +157,7 @@ browser.jar:
         content/browser/webext-panels.js              (content/webext-panels.js)
 *       content/browser/webext-panels.xul             (content/webext-panels.xul)
 *       content/browser/baseMenuOverlay.xul           (content/baseMenuOverlay.xul)
-*       content/browser/nsContextMenu.js              (content/nsContextMenu.js)
+        content/browser/nsContextMenu.js              (content/nsContextMenu.js)
 # XXX: We should exclude this one as well (bug 71895)
 *       content/browser/hiddenWindow.xul              (content/hiddenWindow.xul)
 #ifdef XP_MACOSX
