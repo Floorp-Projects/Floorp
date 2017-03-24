@@ -826,21 +826,23 @@ skip script test262/language/expressions/class/gen-method-yield-spread-obj.js
 skip script test262/language/expressions/class/dstr-meth-static-dflt-obj-ptrn-rest-val-obj.js
 skip script test262/language/expressions/class/dstr-gen-meth-static-dflt-obj-ptrn-rest-getter.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1346068
-skip script test262/built-ins/Atomics/wait/negative-timeout.js
-skip script test262/built-ins/Atomics/wait/was-woken.js
-skip script test262/built-ins/Atomics/wait/did-timeout.js
-skip script test262/built-ins/Atomics/wait/good-views.js
-skip script test262/built-ins/Atomics/wait/no-spurious-wakeup.js
-skip script test262/built-ins/Atomics/wait/nan-timeout.js
-skip script test262/built-ins/Atomics/wake/wake-all.js
-skip script test262/built-ins/Atomics/wake/wake-zero.js
-skip script test262/built-ins/Atomics/wake/wake-negative.js
-skip script test262/built-ins/Atomics/wake/wake-nan.js
-skip script test262/built-ins/Atomics/wake/wake-two.js
-skip script test262/built-ins/Atomics/wake/wake-in-order.js
-skip script test262/built-ins/Atomics/wake/wake-one.js
-skip script test262/built-ins/Atomics/wake/wake-all-on-loc.js
+# Dependent on evalInWorker, setSharedArrayBuffer, and
+# getSharedArrayBuffer, plus the test cases can't actually run in the
+# browser even if that were fixed, https://bugzil.la/1349863
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/negative-timeout.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/was-woken.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/did-timeout.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/good-views.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/no-spurious-wakeup.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wait/nan-timeout.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-all.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-zero.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-negative.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-nan.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-two.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-in-order.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-one.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-all-on-loc.js
 
 # SharedArrayBuffer API pedantry
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1346071
