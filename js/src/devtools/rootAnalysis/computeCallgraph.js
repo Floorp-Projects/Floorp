@@ -20,7 +20,8 @@ var classFunctions = new Map(); // Map from "csu:name" => set of full method nam
 
 var virtualResolutionsSeen = new Set();
 
-function addEntry(map, name, entry)
+// map is a map from names to sets of entries.
+function addToNamedSet(map, name, entry)
 {
     if (!map.has(name))
         map.set(name, new Set());
@@ -37,14 +38,14 @@ function processCSU(csuName, csu)
             var superclass = field.Field[1].Type.Name;
             var subclass = field.Field[1].FieldCSU.Type.Name;
             assert(subclass == csuName);
-            addEntry(subclasses, superclass, subclass);
-            addEntry(superclasses, subclass, superclass);
+            addToNamedSet(subclasses, superclass, subclass);
+            addToNamedSet(superclasses, subclass, superclass);
         }
         if ("Variable" in field) {
             // Note: not dealing with overloading correctly.
             var name = field.Variable.Name[0];
             var key = csuName + ":" + field.Field[0].Name[0];
-            addEntry(classFunctions, key, name);
+            addToNamedSet(classFunctions, key, name);
         }
     }
 }
