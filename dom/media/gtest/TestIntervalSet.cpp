@@ -193,8 +193,8 @@ static void Compare(const media::IntervalSet<T>& aI1,
   }
 }
 
-static void GeneratePermutations(const IntIntervals& aI1,
-                                 const IntIntervals& aI2)
+static void GeneratePermutations(IntIntervals aI1,
+                                 IntIntervals aI2)
 {
   IntIntervals i_ref = media::Intersection(aI1, aI2);
   // Test all permutations possible
