@@ -593,7 +593,7 @@ private:
         innerID = NS_LITERAL_STRING("ServiceWorker");
         // Use scope as ID so the webconsole can decide if the message should
         // show up per tab
-        id.AssignWithConversion(mWorkerPrivate->WorkerName());
+        id.AssignWithConversion(mWorkerPrivate->ServiceWorkerScope());
       } else {
         innerID = NS_LITERAL_STRING("Worker");
       }
