@@ -61,7 +61,8 @@ nsSVGInnerSVGFrame::GetType() const
 DrawResult
 nsSVGInnerSVGFrame::PaintSVG(gfxContext& aContext,
                              const gfxMatrix& aTransform,
-                             const nsIntRect *aDirtyRect)
+                             const nsIntRect *aDirtyRect,
+                             uint32_t aFlags)
 {
   NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
                (mState & NS_FRAME_IS_NONDISPLAY),
@@ -85,7 +86,7 @@ nsSVGInnerSVGFrame::PaintSVG(gfxContext& aContext,
     nsSVGUtils::SetClipRect(&aContext, aTransform, clipRect);
   }
 
-  return nsSVGDisplayContainerFrame::PaintSVG(aContext, aTransform, aDirtyRect);
+  return nsSVGDisplayContainerFrame::PaintSVG(aContext, aTransform, aDirtyRect, aFlags);
 }
 
 void

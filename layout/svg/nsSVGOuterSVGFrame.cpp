@@ -843,7 +843,8 @@ nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
 DrawResult
 nsSVGOuterSVGFrame::PaintSVG(gfxContext& aContext,
                              const gfxMatrix& aTransform,
-                             const nsIntRect* aDirtyRect)
+                             const nsIntRect* aDirtyRect,
+                             uint32_t aFlags)
 {
   NS_ASSERTION(PrincipalChildList().FirstChild()->GetType() ==
                  nsGkAtoms::svgOuterSVGAnonChildFrame &&
@@ -851,7 +852,7 @@ nsSVGOuterSVGFrame::PaintSVG(gfxContext& aContext,
                "We should have a single, anonymous, child");
   nsSVGOuterSVGAnonChildFrame *anonKid =
     static_cast<nsSVGOuterSVGAnonChildFrame*>(PrincipalChildList().FirstChild());
-  return anonKid->PaintSVG(aContext, aTransform, aDirtyRect);
+  return anonKid->PaintSVG(aContext, aTransform, aDirtyRect, aFlags);
 }
 
 SVGBBox
