@@ -56,18 +56,6 @@ private:
 
   virtual mozilla::ipc::IPCResult RecvShutdown() override;
 
-  virtual PServiceWorkerUpdaterParent*
-  AllocPServiceWorkerUpdaterParent(const OriginAttributes& aOriginAttributes,
-                                   const nsCString& aScope) override;
-
-  virtual mozilla::ipc::IPCResult
-  RecvPServiceWorkerUpdaterConstructor(PServiceWorkerUpdaterParent* aActor,
-                                       const OriginAttributes& aOriginAttributes,
-                                       const nsCString& aScope) override;
-
-  virtual bool
-  DeallocPServiceWorkerUpdaterParent(PServiceWorkerUpdaterParent* aActor) override;
-
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   RefPtr<ServiceWorkerManagerService> mService;
