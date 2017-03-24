@@ -1113,7 +1113,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchIfTrueBool(Register reg, Label* label);
 
     inline void branchIfRope(Register str, Label* label);
-    inline void branchIfRopeOrExternal(Register str, Register temp, Label* label);
 
     inline void branchLatin1String(Register string, Label* label);
     inline void branchTwoByteString(Register string, Label* label);
