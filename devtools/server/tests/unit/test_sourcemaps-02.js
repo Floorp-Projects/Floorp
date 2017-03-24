@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Check basic source map integration with the "sources" packet in the RDP.
  */
@@ -11,33 +13,32 @@ var gThreadClient;
 
 const {SourceNode} = require("source-map");
 
-function run_test()
-{
+function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    attachTestTabAndResume(gClient, "test-source-map", function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test_simple_source_map();
-    });
+    attachTestTabAndResume(gClient, "test-source-map",
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
+                             test_simple_source_map();
+                           });
   });
   do_test_pending();
 }
 
-function test_simple_source_map()
-{
+function test_simple_source_map() {
   // Because we are source mapping, we should be notified of a.js, b.js, and
   // c.js as sources, and shouldn"t receive abc.js or test_sourcemaps-01.js.
   let expectedSources = new Set(["http://example.com/www/js/a.js",
                                  "http://example.com/www/js/b.js",
                                  "http://example.com/www/js/c.js"]);
 
-  gClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    gThreadClient.getSources(function (aResponse) {
-      do_check_true(!aResponse.error, "Should not get an error");
+  gClient.addOneTimeListener("paused", function (event, packet) {
+    gThreadClient.getSources(function (response) {
+      do_check_true(!response.error, "Should not get an error");
 
-      for (let s of aResponse.sources) {
+      for (let s of response.sources) {
         do_check_neq(s.url, "http://example.com/www/js/abc.js",
                      "Shouldn't get the generated source's url.");
         expectedSources.delete(s.url);

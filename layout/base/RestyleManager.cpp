@@ -355,7 +355,7 @@ RestyleManager::ContentStateChangedInternal(Element* aElement,
                                          NS_EVENT_STATE_LOADING)) {
       *aOutChangeHint = nsChangeHint_ReconstructFrame;
     } else {
-      uint8_t app = primaryFrame->StyleDisplay()->mAppearance;
+      uint8_t app = primaryFrame->StyleDisplay()->UsedAppearance();
       if (app) {
         nsITheme* theme = PresContext()->GetTheme();
         if (theme &&
@@ -1340,7 +1340,8 @@ RestyleManager::GetNextContinuationWithSameStyle(
   nsStyleContext* nextStyle = nextContinuation->StyleContext();
   if (nextStyle != aOldStyleContext) {
     NS_ASSERTION(aOldStyleContext->GetPseudo() != nextStyle->GetPseudo() ||
-                 aOldStyleContext->GetParent() != nextStyle->GetParent(),
+                 aOldStyleContext->GetParentAllowServo() !=
+                   nextStyle->GetParentAllowServo(),
                  "continuations should have the same style context");
     nextContinuation = nullptr;
     if (aHaveMoreContinuations) {

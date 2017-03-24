@@ -271,12 +271,6 @@ function runSafe(context, f, ...args) {
   return runSafeWithoutClone(f, ...args);
 }
 
-function getInnerWindowID(window) {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindowUtils)
-    .currentInnerWindowID;
-}
-
 // Return true if the given value is an instance of the given
 // native type.
 function instanceOf(value, type) {
@@ -328,6 +322,16 @@ class DefaultMap extends Map {
     }
     return super.get(key);
   }
+}
+
+const _winUtils = new DefaultWeakMap(win => {
+  return win.QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIDOMWindowUtils);
+});
+const getWinUtils = win => _winUtils.get(win);
+
+function getInnerWindowID(window) {
+  return getWinUtils(window).currentInnerWindowID;
 }
 
 class SpreadArgs extends Array {
@@ -1334,6 +1338,8 @@ this.ExtensionUtils = {
   getInnerWindowID,
   getMessageManager,
   getUniqueId,
+  filterStack,
+  getWinUtils,
   ignoreEvent,
   injectAPI,
   instanceOf,

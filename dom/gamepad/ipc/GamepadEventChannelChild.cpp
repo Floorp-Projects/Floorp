@@ -38,5 +38,25 @@ GamepadEventChannelChild::RecvGamepadUpdate(
   return IPC_OK();
 }
 
+void
+GamepadEventChannelChild::AddPromise(const uint32_t& aID, dom::Promise* aPromise)
+{
+  MOZ_ASSERT(!mPromiseList.Get(aID, nullptr));
+  mPromiseList.Put(aID, aPromise);
+}
+
+mozilla::ipc::IPCResult
+GamepadEventChannelChild::RecvReplyGamepadVibrateHaptic(const uint32_t& aPromiseID)
+{
+  RefPtr<dom::Promise> p;
+  if (!mPromiseList.Get(aPromiseID, getter_AddRefs(p))) {
+    MOZ_CRASH("We should always have a promise.");
+  }
+
+  p->MaybeResolve(true);
+  mPromiseList.Remove(aPromiseID);
+  return IPC_OK();
+}
+
 } // namespace dom
 } // namespace mozilla

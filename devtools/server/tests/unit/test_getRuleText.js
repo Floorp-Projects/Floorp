@@ -24,7 +24,8 @@ const TEST_DATA = [
   },
   {
     desc: "Multiple rules test case",
-    input: "#id{color:red;background:yellow;}.class-one .class-two { position:absolute; line-height: 45px}",
+    input: "#id{color:red;background:yellow;}.class-one .class-two " +
+      "{ position:absolute; line-height: 45px}",
     line: 1,
     column: 34,
     expected: {offset: 56, text: " position:absolute; line-height: 45px"}

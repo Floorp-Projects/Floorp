@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Check that we only break on offsets that are entry points for the line we are
  * breaking on. Bug 907278.
@@ -11,26 +13,24 @@ var gClient;
 var gThreadClient;
 var gCallback;
 
-function run_test()
-{
+function run_test() {
   run_test_with_server(DebuggerServer, function () {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
 }
 
-function run_test_with_server(aServer, aCallback)
-{
-  gCallback = aCallback;
-  initTestDebuggerServer(aServer);
-  gDebuggee = addTestGlobal("test-breakpoints", aServer);
+function run_test_with_server(server, callback) {
+  gCallback = callback;
+  initTestDebuggerServer(server);
+  gDebuggee = addTestGlobal("test-breakpoints", server);
   gDebuggee.console = { log: x => void x };
-  gClient = new DebuggerClient(aServer.connectPipe());
+  gClient = new DebuggerClient(server.connectPipe());
   gClient.connect().then(function () {
     attachTestTabAndResume(gClient,
                            "test-breakpoints",
-                           function (aResponse, aTabClient, aThreadClient) {
-                             gThreadClient = aThreadClient;
+                           function (response, tabClient, threadClient) {
+                             gThreadClient = threadClient;
                              setUpCode();
                            });
   });
@@ -51,8 +51,8 @@ function setUpCode() {
   );
 }
 
-function setBreakpoint(aEvent, aPacket) {
-  let source = gThreadClient.source(aPacket.frame.where.source);
+function setBreakpoint(event, packet) {
+  let source = gThreadClient.source(packet.frame.where.source);
   gClient.addOneTimeListener("resumed", runCode);
 
   source.setBreakpoint({ line: 2 }, ({ error }) => {

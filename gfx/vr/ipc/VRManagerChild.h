@@ -17,6 +17,7 @@
 
 namespace mozilla {
 namespace dom {
+class Promise;
 class GamepadManager;
 class Navigator;
 class VRDisplay;
@@ -50,6 +51,8 @@ public:
   int GetInputFrameID();
   bool GetVRDisplays(nsTArray<RefPtr<VRDisplayClient> >& aDisplays);
   bool RefreshVRDisplaysWithCallback(uint64_t aWindowId);
+  void AddPromise(const uint32_t& aID, dom::Promise* aPromise);
+
   void CreateVRServiceTestDisplay(const nsCString& aID, dom::Promise* aPromise);
   void CreateVRServiceTestController(const nsCString& aID, dom::Promise* aPromise);
 
@@ -120,6 +123,8 @@ protected:
   virtual mozilla::ipc::IPCResult RecvNotifyVSync() override;
   virtual mozilla::ipc::IPCResult RecvNotifyVRVSync(const uint32_t& aDisplayID) override;
   virtual mozilla::ipc::IPCResult RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent) override;
+  virtual mozilla::ipc::IPCResult RecvReplyGamepadVibrateHaptic(const uint32_t& aPromiseID) override;
+
   virtual mozilla::ipc::IPCResult RecvReplyCreateVRServiceTestDisplay(const nsCString& aID,
                                                                       const uint32_t& aPromiseID,
                                                                       const uint32_t& aDeviceID) override;
@@ -186,6 +191,7 @@ private:
 
   layers::LayersBackend mBackend;
   RefPtr<layers::SyncObject> mSyncObject;
+  nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mGamepadPromiseList; // TODO: check if it can merge into one list?
   uint32_t mPromiseID;
   nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mPromiseList;
   RefPtr<dom::VRMockDisplay> mVRMockDisplay;

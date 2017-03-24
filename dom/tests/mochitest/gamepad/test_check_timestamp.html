@@ -24,8 +24,10 @@ runGamepadTest(checkTimestamp);
 function checkTimestamp(){
   GamepadService.addGamepad("test gamepad 1",
                             GamepadService.standardMapping,
+                            GamepadService.noHand,
                             4,
-                            2).then(function(i) {
+                            2,
+                            0).then(function(i) {
                               index = i;
                               // Press a button to make the gamepad visible
                               // to the page.

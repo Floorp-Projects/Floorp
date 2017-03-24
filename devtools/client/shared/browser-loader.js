@@ -17,8 +17,9 @@ const BROWSER_BASED_DIRS = [
   "resource://devtools/client/inspector/grids",
   "resource://devtools/client/inspector/layout",
   "resource://devtools/client/jsonview",
-  "resource://devtools/client/shared/vendor",
+  "resource://devtools/client/shared/source-map",
   "resource://devtools/client/shared/redux",
+  "resource://devtools/client/shared/vendor",
 ];
 
 const COMMON_LIBRARY_DIRS = [

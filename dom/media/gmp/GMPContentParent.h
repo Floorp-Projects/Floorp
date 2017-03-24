@@ -17,6 +17,7 @@ class GMPDecryptorParent;
 class GMPParent;
 class GMPVideoDecoderParent;
 class GMPVideoEncoderParent;
+class ChromiumCDMParent;
 
 class GMPContentParent final : public PGMPContentParent,
                                public GMPSharedMem
@@ -36,7 +37,10 @@ public:
   nsresult GetGMPDecryptor(GMPDecryptorParent** aGMPKS);
   void DecryptorDestroyed(GMPDecryptorParent* aSession);
 
-  nsIThread* GMPThread();
+  already_AddRefed<ChromiumCDMParent> GetChromiumCDM();
+  void ChromiumCDMDestroyed(ChromiumCDMParent* aCDM);
+
+  nsCOMPtr<nsIThread> GMPThread();
 
   // GMPSharedMem
   void CheckThread() override;
@@ -92,6 +96,9 @@ private:
   PGMPDecryptorParent* AllocPGMPDecryptorParent() override;
   bool DeallocPGMPDecryptorParent(PGMPDecryptorParent* aActor) override;
 
+  PChromiumCDMParent* AllocPChromiumCDMParent() override;
+  bool DeallocPChromiumCDMParent(PChromiumCDMParent* aActor) override;
+
   void CloseIfUnused();
   // Needed because NewRunnableMethod tried to use the class that the method
   // lives on to store the receiver, but PGMPContentParent isn't refcounted.
@@ -103,6 +110,7 @@ private:
   nsTArray<RefPtr<GMPVideoDecoderParent>> mVideoDecoders;
   nsTArray<RefPtr<GMPVideoEncoderParent>> mVideoEncoders;
   nsTArray<RefPtr<GMPDecryptorParent>> mDecryptors;
+  nsTArray<RefPtr<ChromiumCDMParent>> mChromiumCDMs;
   nsCOMPtr<nsIThread> mGMPThread;
   RefPtr<GMPParent> mParent;
   nsCString mDisplayName;

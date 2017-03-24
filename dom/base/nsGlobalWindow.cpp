@@ -10503,21 +10503,22 @@ void nsGlobalWindow::SetIsBackground(bool aIsBackground)
   bool resetTimers = (!aIsBackground && AsOuter()->IsBackground());
   nsPIDOMWindow::SetIsBackground(aIsBackground);
 
+  nsGlobalWindow* inner = GetCurrentInnerWindowInternal();
+
   if (aIsBackground) {
     MOZ_ASSERT(!resetTimers);
+    // Notify gamepadManager we are at the background window,
+    // we need to stop vibrate.
+    if (inner) {
+      inner->StopGamepadHaptics();
+    }
     return;
+  } else if (inner) {
+    if (resetTimers) {
+      inner->mTimeoutManager->ResetTimersForThrottleReduction();
+    }
+    inner->SyncGamepadState();
   }
-
-  nsGlobalWindow* inner = GetCurrentInnerWindowInternal();
-  if (!inner) {
-    return;
-  }
-
-  if (resetTimers) {
-    inner->mTimeoutManager->ResetTimersForThrottleReduction();
-  }
-
-  inner->SyncGamepadState();
 }
 
 void nsGlobalWindow::MaybeUpdateTouchState()
@@ -13601,6 +13602,16 @@ nsGlobalWindow::SyncGamepadState()
   }
 }
 
+void
+nsGlobalWindow::StopGamepadHaptics()
+{
+  MOZ_ASSERT(IsInnerWindow());
+  if (mHasSeenGamepadInput) {
+    RefPtr<GamepadManager> gamepadManager(GamepadManager::GetService());
+    gamepadManager->StopHaptics();
+  }
+}
+
 bool
 nsGlobalWindow::UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDevices)
 {
@@ -14832,7 +14843,7 @@ nsGlobalWindow::CreateImageBitmap(JSContext* aCx,
                                   const Sequence<ChannelPixelLayout>& aLayout,
                                   ErrorResult& aRv)
 {
-  if (!ImageBitmap::ExtensionsEnabled(aCx, nullptr)) {
+  if (!ImageBitmap::ExtensionsEnabled(aCx)) {
     aRv.Throw(NS_ERROR_TYPE_ERR);
     return nullptr;
   }

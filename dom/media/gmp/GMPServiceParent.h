@@ -117,11 +117,17 @@ protected:
   RefPtr<GenericPromise::AllPromiseType> LoadFromEnvironment();
   RefPtr<GenericPromise> AddOnGMPThread(nsString aDirectory);
 
-  virtual RefPtr<GetGMPContentParentPromise>
-  GetContentParent(GMPCrashHelper* aHelper,
-                   const nsACString& aNodeId,
-                   const nsCString& aAPI,
-                   const nsTArray<nsCString>& aTags) override;
+  virtual RefPtr<GetGMPContentParentPromise> GetContentParent(
+    GMPCrashHelper* aHelper,
+    const nsACString& aNodeIdString,
+    const nsCString& aAPI,
+    const nsTArray<nsCString>& aTags) override;
+
+  RefPtr<GetGMPContentParentPromise> GetContentParent(
+    GMPCrashHelper* aHelper,
+    const NodeId& aNodeId,
+    const nsCString& aAPI,
+    const nsTArray<nsCString>& aTags) override;
 
 private:
   // Creates a copy of aOriginal. Note that the caller is responsible for
@@ -223,23 +229,34 @@ public:
   }
   virtual ~GMPServiceParent();
 
-  mozilla::ipc::IPCResult RecvGetGMPNodeId(const nsString& aOrigin,
-                                           const nsString& aTopLevelOrigin,
-                                           const nsString& aGMPName,
-                                           nsCString* aID) override;
+  ipc::IPCResult RecvGetGMPNodeId(const nsString& aOrigin,
+                                  const nsString& aTopLevelOrigin,
+                                  const nsString& aGMPName,
+                                  nsCString* aID) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   static bool Create(Endpoint<PGMPServiceParent>&& aGMPService);
 
-  mozilla::ipc::IPCResult RecvLaunchGMP(const nsCString& aNodeId,
-                                        const nsCString& aAPI,
-                                        nsTArray<nsCString>&& aTags,
-                                        nsTArray<ProcessId>&& aAlreadyBridgedTo,
-                                        uint32_t* aOutPluginId,
-                                        ProcessId* aOutID,
-                                        nsCString* aOutDisplayName,
-                                        Endpoint<PGMPContentParent>* aOutEndpoint,
-                                        nsresult* aOutRv) override;
+  ipc::IPCResult RecvLaunchGMP(const nsCString& aNodeId,
+                               const nsCString& aAPI,
+                               nsTArray<nsCString>&& aTags,
+                               nsTArray<ProcessId>&& aAlreadyBridgedTo,
+                               uint32_t* aOutPluginId,
+                               ProcessId* aOutID,
+                               nsCString* aOutDisplayName,
+                               Endpoint<PGMPContentParent>* aOutEndpoint,
+                               nsresult* aOutRv) override;
+
+  ipc::IPCResult RecvLaunchGMPForNodeId(
+    const NodeIdData& nodeId,
+    const nsCString& aAPI,
+    nsTArray<nsCString>&& aTags,
+    nsTArray<ProcessId>&& aAlreadyBridgedTo,
+    uint32_t* aOutPluginId,
+    ProcessId* aOutID,
+    nsCString* aOutDisplayName,
+    Endpoint<PGMPContentParent>* aOutEndpoint,
+    nsresult* aOutRv) override;
 
 private:
   void CloseTransport(Monitor* aSyncMonitor, bool* aCompleted);

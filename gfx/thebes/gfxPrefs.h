@@ -75,6 +75,32 @@ static void Set##Name##ChangeCallback(Pref::ChangeCallback aCallback) {       \
 private:                                                                      \
 PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
 
+// This declares an "override" pref, which is exposed as a "bool" pref by the API,
+// but is internally stored as a tri-state int pref with three possible values:
+// - A value of 0 means that it has been force-disabled, and is exposed as a
+//   false-valued bool.
+// - A value of 1 means that it has been force-enabled, and is exposed as a
+//   true-valued bool.
+// - A value of 2 (the default) means that it returns the provided BaseValue
+//   as a boolean. The BaseValue may be a constant expression or a function.
+// If the prefs defined with this macro are listed in prefs files (e.g. all.js),
+// then they must be listed with an int value (default to 2, but you can use 0
+// or 1 if you want to force it on or off).
+#define DECL_OVERRIDE_PREF(Update, Prefname, Name, BaseValue)                 \
+public:                                                                       \
+static bool Name() { MOZ_ASSERT(SingletonExists());                           \
+    int32_t val = GetSingleton().mPref##Name.mValue;                          \
+    return val == 2 ? !!(BaseValue) : !!val; }                                  \
+static void Set##Name(bool aVal) { MOZ_ASSERT(SingletonExists());             \
+    GetSingleton().mPref##Name.Set(UpdatePolicy::Update, Get##Name##PrefName(), aVal ? 1 : 0); } \
+static const char* Get##Name##PrefName() { return Prefname; }                 \
+static int32_t Get##Name##PrefDefault() { return 2; }                         \
+static void Set##Name##ChangeCallback(Pref::ChangeCallback aCallback) {       \
+    MOZ_ASSERT(SingletonExists());                                            \
+    GetSingleton().mPref##Name.SetChangeCallback(aCallback); }                \
+private:                                                                      \
+PrefTemplate<UpdatePolicy::Update, int32_t, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
+
 namespace mozilla {
 namespace gfx {
 class GfxPrefValue;   // defined in PGPU.ipdl
@@ -459,13 +485,13 @@ private:
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps.print-histogram",  FPSPrintHistogram, bool, false);
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps.write-to-file", WriteFPSToFile, bool, false);
   DECL_GFX_PREF(Once, "layers.acceleration.force-enabled",     LayersAccelerationForceEnabledDoNotUseDirectly, bool, false);
-  DECL_GFX_PREF(Live, "layers.advanced.border-layers",         LayersAllowBorderLayers, bool, false);
+  DECL_OVERRIDE_PREF(Live, "layers.advanced.border-layers",    LayersAllowBorderLayers, false);
   DECL_GFX_PREF(Live, "layers.advanced.boxshadow-inset-layers", LayersAllowInsetBoxShadow, bool, false);
-  DECL_GFX_PREF(Live, "layers.advanced.boxshadow-outer-layers", LayersAllowOuterBoxShadow, bool, false);
+  DECL_OVERRIDE_PREF(Live, "layers.advanced.boxshadow-outer-layers", LayersAllowOuterBoxShadow, false);
   DECL_GFX_PREF(Live, "layers.advanced.bullet-layers",         LayersAllowBulletLayers, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.button-foreground-layers", LayersAllowButtonForegroundLayers, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.canvas-background-color", LayersAllowCanvasBackgroundColorLayers, bool, false);
-  DECL_GFX_PREF(Live, "layers.advanced.caret-layers",          LayersAllowCaretLayers, bool, false);
+  DECL_OVERRIDE_PREF(Live, "layers.advanced.caret-layers",     LayersAllowCaretLayers, gfxPrefs::OverrideBase_WebRender());
   DECL_GFX_PREF(Live, "layers.advanced.displaybuttonborder-layers", LayersAllowDisplayButtonBorder, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.image-layers",          LayersAllowImageLayers, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.outline-layers",        LayersAllowOutlineLayers, bool, false);
@@ -711,6 +737,11 @@ private:
   static void CopyPrefValue(const GfxPrefValue* aValue, std::string* aOutValue);
 
   static void AssertMainThread();
+
+  // Some wrapper functions for the DECL_OVERRIDE_PREF prefs' base values, so
+  // that we don't to include all sorts of header files into this gfxPrefs.h
+  // file.
+  static bool OverrideBase_WebRender();
 
   gfxPrefs();
   ~gfxPrefs();
