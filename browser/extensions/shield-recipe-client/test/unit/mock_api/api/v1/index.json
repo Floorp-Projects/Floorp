@@ -1,0 +1,8 @@
+{
+  "action-list": "/api/v1/action/",
+  "classify-client": "/api/v1/classify_client/",
+  "filters": "/api/v1/filters/",
+  "recipe-list": "/api/v1/recipe/",
+  "recipe-signed": "/api/v1/recipe/signed/",
+  "reciperevision-list": "/api/v1/recipe_revision/"
+}
