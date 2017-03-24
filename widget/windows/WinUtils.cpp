@@ -1285,7 +1285,7 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
     }
 
     RefPtr<DrawTarget> dt =
-      Factory::CreateDrawTargetForData(gfxPlatform::GetPlatform()->GetSoftwareBackend(),
+      Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                        map.mData,
                                        dataSurface->GetSize(),
                                        map.mStride,
