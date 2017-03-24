@@ -165,7 +165,7 @@ class BaseEmulator(Device):
             self.connected = False
 
         # Remove temporary files
-        if os.path.isdir(self.tempdir):
+        if os.path.isdir(self.tmpdir):
             shutil.rmtree(self.tmpdir)
 
     def _get_telnet_response(self, command=None):
