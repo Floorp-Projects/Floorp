@@ -21,6 +21,12 @@ this.EXPORTED_SYMBOLS = ["MatchPattern", "MatchGlobs", "MatchURLFilters"];
 const PERMITTED_SCHEMES = ["http", "https", "file", "ftp", "data"];
 const PERMITTED_SCHEMES_REGEXP = PERMITTED_SCHEMES.join("|");
 
+// The basic RE for matching patterns
+const PATTERN_REGEXP = new RegExp(`^(${PERMITTED_SCHEMES_REGEXP}|\\*)://(\\*|\\*\\.[^*/]+|[^*/]+|)(/.*)$`);
+
+// The schemes/protocols implied by a pattern that starts with *://
+const WILDCARD_SCHEMES = ["http", "https"];
+
 // This function converts a glob pattern (containing * and possibly ?
 // as wildcards) to a regular expression.
 function globToRegexp(pat, allowQuestion) {
@@ -47,8 +53,7 @@ function SingleMatchPattern(pat) {
   } else if (!pat) {
     this.schemes = [];
   } else {
-    let re = new RegExp(`^(${PERMITTED_SCHEMES_REGEXP}|\\*)://(\\*|\\*\\.[^*/]+|[^*/]+|)(/.*)$`);
-    let match = re.exec(pat);
+    let match = PATTERN_REGEXP.exec(pat);
     if (!match) {
       Cu.reportError(`Invalid match pattern: '${pat}'`);
       this.schemes = [];
@@ -56,7 +61,7 @@ function SingleMatchPattern(pat) {
     }
 
     if (match[1] == "*") {
-      this.schemes = ["http", "https"];
+      this.schemes = WILDCARD_SCHEMES;
     } else {
       this.schemes = [match[1]];
     }
@@ -172,6 +177,23 @@ MatchPattern.prototype = {
     }
 
     return false;
+  },
+
+  // Test if this MatchPattern subsumes the given pattern (i.e., whether
+  // this pattern matches everything the given pattern does).
+  // Note, this method considers only to protocols and hosts/domains,
+  // paths are ignored.
+  subsumes(pattern) {
+    let match = PATTERN_REGEXP.exec(pattern);
+    if (!match) {
+      throw new Error("Invalid match pattern");
+    }
+
+    if (match[1] == "*") {
+      return WILDCARD_SCHEMES.every(scheme => this.matchesIgnoringPath({scheme, host: match[2]}));
+    }
+
+    return this.matchesIgnoringPath({scheme: match[1], host: match[2]});
   },
 
   serialize() {

@@ -11,6 +11,7 @@ category webextension-scripts i18n chrome://extensions/content/ext-i18n.js
 category webextension-scripts idle chrome://extensions/content/ext-idle.js
 category webextension-scripts management chrome://extensions/content/ext-management.js
 category webextension-scripts notifications chrome://extensions/content/ext-notifications.js
+category webextension-scripts permissions chrome://extensions/content/ext-permissions.js
 category webextension-scripts privacy chrome://extensions/content/ext-privacy.js
 category webextension-scripts proxy chrome://extensions/content/ext-proxy.js
 category webextension-scripts runtime chrome://extensions/content/ext-runtime.js
@@ -23,6 +24,7 @@ category webextension-scripts webRequest chrome://extensions/content/ext-webRequ
 # scripts specific for content process.
 category webextension-scripts-content extension chrome://extensions/content/ext-c-extension.js
 category webextension-scripts-content i18n chrome://extensions/content/ext-i18n.js
+category webextension-scripts-content permissions chrome://extensions/content/ext-c-permissions.js
 category webextension-scripts-content runtime chrome://extensions/content/ext-c-runtime.js
 category webextension-scripts-content storage chrome://extensions/content/ext-c-storage.js
 category webextension-scripts-content test chrome://extensions/content/ext-c-test.js
@@ -41,6 +43,7 @@ category webextension-scripts-addon i18n chrome://extensions/content/ext-i18n.js
 #ifndef ANDROID
 category webextension-scripts-addon identity chrome://extensions/content/ext-c-identity.js
 #endif
+category webextension-scripts-addon permissions chrome://extensions/content/ext-c-permissions.js
 category webextension-scripts-addon runtime chrome://extensions/content/ext-c-runtime.js
 category webextension-scripts-addon storage chrome://extensions/content/ext-c-storage.js
 category webextension-scripts-addon test chrome://extensions/content/ext-c-test.js
@@ -62,6 +65,7 @@ category webextension-schemas idle chrome://extensions/content/schemas/idle.json
 category webextension-schemas management chrome://extensions/content/schemas/management.json
 category webextension-schemas native_host_manifest chrome://extensions/content/schemas/native_host_manifest.json
 category webextension-schemas notifications chrome://extensions/content/schemas/notifications.json
+category webextension-schemas permissions chrome://extensions/content/schemas/permissions.json
 category webextension-schemas privacy chrome://extensions/content/schemas/privacy.json
 category webextension-schemas proxy chrome://extensions/content/schemas/proxy.json
 category webextension-schemas runtime chrome://extensions/content/schemas/runtime.json
