@@ -7301,14 +7301,17 @@ HTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
     return NS_OK;
   }
 
+  if (NS_WARN_IF(!mNewBlock)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   // get the (collapsed) selection location
-  nsCOMPtr<nsIDOMNode> selNode, temp;
+  nsCOMPtr<nsIDOMNode> selNode;
   int32_t selOffset;
   nsresult rv =
     EditorBase::GetStartNodeAndOffset(aSelection,
                                       getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(rv, rv);
-  temp = selNode;
 
   // use ranges and sRangeHelper to compare sel point to new block
   nsCOMPtr<nsINode> node = do_QueryInterface(selNode);
@@ -7318,24 +7321,23 @@ HTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = range->SetEnd(selNode, selOffset);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIContent> block = mNewBlock.get();
-  NS_ENSURE_TRUE(block, NS_ERROR_NO_INTERFACE);
   bool nodeBefore, nodeAfter;
-  rv = nsRange::CompareNodeToRange(block, range, &nodeBefore, &nodeAfter);
+  rv = nsRange::CompareNodeToRange(mNewBlock, range, &nodeBefore, &nodeAfter);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (nodeBefore && nodeAfter) {
     return NS_OK;  // selection is inside block
   } else if (nodeBefore) {
     // selection is after block.  put at end of block.
-    nsCOMPtr<nsIDOMNode> tmp = GetAsDOMNode(mNewBlock);
     NS_ENSURE_STATE(mHTMLEditor);
-    tmp = GetAsDOMNode(mHTMLEditor->GetLastEditableChild(*block));
+    nsCOMPtr<nsINode> tmp = mHTMLEditor->GetLastEditableChild(*mNewBlock);
+    if (!tmp) {
+      tmp = mNewBlock;
+    }
     uint32_t endPoint;
     if (EditorBase::IsTextNode(tmp) ||
         mHTMLEditor->IsContainer(tmp)) {
-      rv = EditorBase::GetLengthOfDOMNode(tmp, endPoint);
-      NS_ENSURE_SUCCESS(rv, rv);
+      endPoint = tmp->Length();
     } else {
       tmp = EditorBase::GetNodeLocation(tmp, (int32_t*)&endPoint);
       endPoint++;  // want to be after this node
@@ -7343,9 +7345,11 @@ HTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
     return aSelection->Collapse(tmp, (int32_t)endPoint);
   } else {
     // selection is before block.  put at start of block.
-    nsCOMPtr<nsIDOMNode> tmp = GetAsDOMNode(mNewBlock);
     NS_ENSURE_STATE(mHTMLEditor);
-    tmp = GetAsDOMNode(mHTMLEditor->GetFirstEditableChild(*block));
+    nsCOMPtr<nsINode> tmp = mHTMLEditor->GetFirstEditableChild(*mNewBlock);
+    if (!tmp) {
+      tmp = mNewBlock;
+    }
     int32_t offset;
     if (EditorBase::IsTextNode(tmp) ||
         mHTMLEditor->IsContainer(tmp)) {
