@@ -99,11 +99,11 @@ PasswordEngine.prototype = {
   },
 
   pullAllChanges() {
-    let changes = {};
+    let changeset = new Changeset();
     for (let [id, info] of Object.entries(this._store.getAllIDs())) {
-      changes[id] = info.timePasswordChanged / 1000;
+      changeset.set(id, info.timePasswordChanged);
     }
-    return changes;
+    return changeset;
   }
 };
 
