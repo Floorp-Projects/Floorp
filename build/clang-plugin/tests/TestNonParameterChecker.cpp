@@ -177,13 +177,3 @@ void testLambda()
     (void)[](HasNonParamUnion x) -> void {}; //expected-error {{Type 'HasNonParamUnion' must not be used as parameter}} expected-note {{Please consider passing a const reference instead}}
     (void)[](HasNonParamStructUnion x) -> void {}; //expected-error {{Type 'HasNonParamStructUnion' must not be used as parameter}} expected-note {{Please consider passing a const reference instead}}
 }
-
-// Check that alignas() implies the MOZ_NON_PARAM attribute.
-
-struct alignas(8) AlignasStruct { char a; };
-void takesAlignasStruct(AlignasStruct x) { } // expected-error {{Type 'AlignasStruct' must not be used as parameter}} expected-note {{Please consider passing a const reference instead}}
-void takesAlignasStructByRef(const AlignasStruct& x) { }
-
-struct AlignasMember { alignas(8) char a; };
-void takesAlignasMember(AlignasMember x) { } // expected-error {{Type 'AlignasMember' must not be used as parameter}} expected-note {{Please consider passing a const reference instead}}
-void takesAlignasMemberByRef(const AlignasMember& x) { }

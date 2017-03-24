@@ -15,6 +15,8 @@ CustomTypeAnnotation HeapClass =
     CustomTypeAnnotation("moz_heap_class", "heap");
 CustomTypeAnnotation NonTemporaryClass =
     CustomTypeAnnotation("moz_non_temporary_class", "non-temporary");
+CustomTypeAnnotation NonParam =
+    CustomTypeAnnotation("moz_non_param", "non-param");
 
 void CustomTypeAnnotation::dumpAnnotationReason(BaseCheck &Check,
                                                 QualType T,
