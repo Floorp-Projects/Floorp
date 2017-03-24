@@ -182,7 +182,8 @@
           "optional_permissions": {
             "type": "array",
             "items": { "$ref": "OptionalPermission" },
-            "optional": true
+            "optional": true,
+            "default": []
           },
 
           "web_accessible_resources": {
