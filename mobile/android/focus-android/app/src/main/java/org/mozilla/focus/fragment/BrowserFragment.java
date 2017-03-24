@@ -10,11 +10,9 @@ import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -23,9 +21,13 @@ import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.menu.BrowserMenu;
 import org.mozilla.focus.open.OpenWithFragment;
 import org.mozilla.focus.utils.Browsers;
+import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
 import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.web.IWebView;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * Fragment for displaying the browser UI.
@@ -66,12 +68,16 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         return getArguments().getString(ARGUMENT_URL);
     }
 
+    private void updateURL(final String url) {
+        urlView.setText(UrlUtils.stripUserInfo(url));
+    }
+
     @Override
     public View inflateLayout(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_browser, container, false);
 
         urlView = (TextView) view.findViewById(R.id.url);
-        urlView.setText(getInitialUrl());
+        updateURL(getInitialUrl());
         urlView.setOnClickListener(this);
 
         backgroundTransition = (TransitionDrawable) view.findViewById(R.id.background).getBackground();
@@ -133,8 +139,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             @Override
-            public void onURLChanged(String url) {
-                urlView.setText(url);
+            public void onURLChanged(final String url) {
+                updateURL(url);
             }
 
             @Override
@@ -170,7 +176,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             case R.id.url:
                 getActivity().getSupportFragmentManager()
                         .beginTransaction()
-                        .add(R.id.container, UrlInputFragment.create(urlView.getText().toString()))
+                        .add(R.id.container, UrlInputFragment.create(getWebView().getUrl()))
                         .addToBackStack("url_entry")
                         .commit();
                 break;
