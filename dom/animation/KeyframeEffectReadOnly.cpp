@@ -306,9 +306,10 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 
   const ServoComputedValues* currentStyle =
     aStyleContext->StyleSource().AsServoComputedValues();
+  // FIXME: Remove GetParentAllowServo() in Bug 1349004.
   const ServoComputedValues* parentStyle =
-    aStyleContext->GetParent()
-      ? aStyleContext->GetParent()->StyleSource().AsServoComputedValues()
+    aStyleContext->GetParentAllowServo()
+      ? aStyleContext->GetParentAllowServo()->StyleSource().AsServoComputedValues()
       : nullptr;
 
   const ServoComputedValuesWithParent servoValues = { currentStyle, parentStyle };

@@ -1405,7 +1405,7 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
     bool canOverride = true;
     aPresContext->GetTheme()->
       GetMinimumWidgetSize(aPresContext, aChildFrame,
-                           disp->mAppearance,
+                           disp->UsedAppearance(),
                            &widgetMinSize, &canOverride);
 
     nscoord widgetMainMinSize =
@@ -2364,10 +2364,11 @@ nsFlexContainerFrame::Init(nsIContent*       aContent,
   bool isLegacyBox = IsDisplayValueLegacyBox(styleDisp);
 
   // If this frame is for a scrollable element, then it will actually have
-  // "display:block", and its *parent* will have the real flex-flavored display
-  // value. So in that case, check the parent to find out if we're legacy.
+  // "display:block", and its *parent frame* will have the real
+  // flex-flavored display value. So in that case, check the parent frame to
+  // find out if we're legacy.
   if (!isLegacyBox && styleDisp->mDisplay == mozilla::StyleDisplay::Block) {
-    nsStyleContext* parentStyleContext = mStyleContext->GetParent();
+    nsStyleContext* parentStyleContext = GetParent()->StyleContext();
     NS_ASSERTION(parentStyleContext &&
                  (mStyleContext->GetPseudo() == nsCSSAnonBoxes::buttonContent ||
                   mStyleContext->GetPseudo() == nsCSSAnonBoxes::scrolledContent),

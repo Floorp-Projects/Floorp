@@ -424,7 +424,7 @@ a {
   padding: 0;
   padding-inline-start: 20px;
   margin: 0;
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   background-color: transparent;
 }
 
