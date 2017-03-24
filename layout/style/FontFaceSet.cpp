@@ -30,6 +30,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
+#include "nsILoadContext.h"
 #include "nsINetworkPredictor.h"
 #include "nsIPresShell.h"
 #include "nsIPrincipal.h"
