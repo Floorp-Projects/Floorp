@@ -68,13 +68,15 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
 
-    mozilla::ipc::IPCResult RecvOnStartRequest(const nsCString& entityID) override;
+    mozilla::ipc::IPCResult RecvOnStartRequest(const nsCString& entityID,
+                                               PBrowserParent* aBrowser) override;
     mozilla::ipc::IPCResult RecvOnDataAvailable(const nsCString& data,
                                                 const uint64_t& offset,
                                                 const uint32_t& count) override;
     mozilla::ipc::IPCResult RecvOnStopRequest(const nsresult& code) override;
 
-    mozilla::ipc::IPCResult RecvDivertToParentUsing(PChannelDiverterParent* diverter) override;
+    mozilla::ipc::IPCResult RecvDivertToParentUsing(PChannelDiverterParent* diverter,
+                                                    PBrowserParent* aBrowser) override;
 
     bool WasFileChannel() override {
       return mWasFileChannel;

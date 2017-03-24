@@ -254,12 +254,20 @@ public:
    */
   void MaybeApplyDecodingForExtension(nsIRequest *request);
 
-protected:
-  ~nsExternalAppHandler();
-
+  /**
+   * Get the dialog parent. Public for ExternalHelperAppChild::OnStartRequest.
+   */
   nsIInterfaceRequestor* GetDialogParent() {
     return mWindowContext ? mWindowContext : mContentContext;
   }
+
+  void SetContentContext(nsIInterfaceRequestor* context) {
+    MOZ_ASSERT(!mWindowContext);
+    mContentContext = context;
+  }
+
+protected:
+  ~nsExternalAppHandler();
 
   nsCOMPtr<nsIFile> mTempFile;
   nsCOMPtr<nsIURI> mSourceUrl;
