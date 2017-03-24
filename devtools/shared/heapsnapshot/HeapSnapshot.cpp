@@ -1444,10 +1444,16 @@ msSinceProcessCreation(const TimeStamp& now)
 /* static */ already_AddRefed<nsIFile>
 HeapSnapshot::CreateUniqueCoreDumpFile(ErrorResult& rv,
                                        const TimeStamp& now,
-                                       nsAString& outFilePath)
+                                       nsAString& outFilePath,
+                                       nsAString& outSnapshotId)
 {
   nsCOMPtr<nsIFile> file;
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(file));
+  if (NS_WARN_IF(rv.Failed()))
+    return nullptr;
+
+  nsAutoString tempPath;
+  rv = file->GetPath(tempPath);
   if (NS_WARN_IF(rv.Failed()))
     return nullptr;
 
@@ -1462,7 +1468,12 @@ HeapSnapshot::CreateUniqueCoreDumpFile(ErrorResult& rv,
 
   rv = file->GetPath(outFilePath);
   if (NS_WARN_IF(rv.Failed()))
-    return nullptr;
+      return nullptr;
+
+  // The snapshot ID must be computed in the process that created the
+  // temp file, because TmpD may not be the same in all processes.
+  outSnapshotId.Assign(Substring(outFilePath, tempPath.Length() + 1,
+                                 outFilePath.Length() - tempPath.Length() - sizeof(".fxsnapshot")));
 
   return file.forget();
 }
@@ -1489,14 +1500,18 @@ using UniqueHeapSnapshotTempFileHelperChild = UniquePtr<PHeapSnapshotTempFileHel
 // the filesystem. Use IPDL to request a file descriptor from the parent
 // process.
 static already_AddRefed<nsIOutputStream>
-getCoreDumpOutputStream(ErrorResult& rv, TimeStamp& start, nsAString& outFilePath)
+getCoreDumpOutputStream(ErrorResult& rv,
+                        TimeStamp& start,
+                        nsAString& outFilePath,
+                        nsAString& outSnapshotId)
 {
   if (XRE_IsParentProcess()) {
     // Create the file and open the output stream directly.
 
     nsCOMPtr<nsIFile> file = HeapSnapshot::CreateUniqueCoreDumpFile(rv,
                                                                     start,
-                                                                    outFilePath);
+                                                                    outFilePath,
+                                                                    outSnapshotId);
     if (NS_WARN_IF(rv.Failed()))
       return nullptr;
 
@@ -1535,6 +1550,7 @@ getCoreDumpOutputStream(ErrorResult& rv, TimeStamp& start, nsAString& outFilePat
 
   auto opened = response.get_OpenedFile();
   outFilePath = opened.path();
+  outSnapshotId = opened.snapshotId();
   nsCOMPtr<nsIOutputStream> outputStream =
     FileDescriptorOutputStream::Create(opened.descriptor());
   if (NS_WARN_IF(!outputStream)) {
@@ -1553,10 +1569,11 @@ using namespace JS;
 using namespace devtools;
 
 /* static */ void
-ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
-                                        const HeapSnapshotBoundaries& boundaries,
-                                        nsAString& outFilePath,
-                                        ErrorResult& rv)
+ThreadSafeChromeUtils::SaveHeapSnapshotShared(GlobalObject& global,
+                                              const HeapSnapshotBoundaries& boundaries,
+                                              nsAString& outFilePath,
+                                              nsAString& outSnapshotId,
+                                              ErrorResult& rv)
 {
   auto start = TimeStamp::Now();
 
@@ -1565,7 +1582,9 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
   uint32_t nodeCount = 0;
   uint32_t edgeCount = 0;
 
-  nsCOMPtr<nsIOutputStream> outputStream = getCoreDumpOutputStream(rv, start, outFilePath);
+  nsCOMPtr<nsIOutputStream> outputStream = getCoreDumpOutputStream(rv, start,
+                                                                   outFilePath,
+                                                                   outSnapshotId);
   if (NS_WARN_IF(rv.Failed()))
     return;
 
@@ -1616,6 +1635,26 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
                         nodeCount);
   Telemetry::Accumulate(Telemetry::DEVTOOLS_HEAP_SNAPSHOT_EDGE_COUNT,
                         edgeCount);
+}
+
+/* static */ void
+ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
+                                        const HeapSnapshotBoundaries& boundaries,
+                                        nsAString& outFilePath,
+                                        ErrorResult& rv)
+{
+  nsAutoString snapshotId;
+  SaveHeapSnapshotShared(global, boundaries, outFilePath, snapshotId, rv);
+}
+
+/* static */ void
+ThreadSafeChromeUtils::SaveHeapSnapshotGetId(GlobalObject& global,
+                                             const HeapSnapshotBoundaries& boundaries,
+                                             nsAString& outSnapshotId,
+                                             ErrorResult& rv)
+{
+  nsAutoString filePath;
+  SaveHeapSnapshotShared(global, boundaries, filePath, outSnapshotId, rv);
 }
 
 /* static */ already_AddRefed<HeapSnapshot>
