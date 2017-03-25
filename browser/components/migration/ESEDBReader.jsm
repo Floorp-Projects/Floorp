@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
+XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+
 // We have a globally unique identifier for ESE instances. A new one
 // is used for each different database opened.
 let gESEInstanceCounter = 0;
@@ -114,6 +116,7 @@ function convertESEError(errorCode) {
     case -1507 /* JET_errColumnNotFound */:
       // The DB format has changed and we haven't updated this migration code:
       return "The database format has changed, error code: " + errorCode;
+    case -1032 /* JET_errFileAccessDenied */:
     case -1207 /* JET_errDatabaseLocked */:
     case -1302 /* JET_errTableLocked */:
       return "The database or table is locked, error code: " + errorCode;
@@ -579,6 +582,21 @@ let ESEDBReader = {
     // ESE is really picky about the trailing slashes according to the docs,
     // so we do as we're told and ensure those are there:
     return new ESEDB(rootDir.path + "\\", dbFilePath, logDir.path + "\\");
+  },
+
+  async dbLocked(dbFile) {
+    let options = {winShare: OS.Constants.Win.FILE_SHARE_READ};
+    let locked = true;
+    await OS.File.open(dbFile.path, {read: true}, options).then(fileHandle => {
+      locked = false;
+      // Return the close promise so we wait for the file to be closed again.
+      // Otherwise the file might still be kept open by this handle by the time
+      // that we try to use the ESE APIs to access it.
+      return fileHandle.close();
+    }, () => {
+      Cu.reportError("ESE DB at " + dbFile.path + " is locked.");
+    });
+    return locked;
   },
 
   closeDB(db) {
