@@ -21,7 +21,7 @@ __wptrunner__ = {"product": "edge",
 def check_args(**kwargs):
     require_arg(kwargs, "webdriver_binary")
 
-def browser_kwargs(test_type, run_info_data, **kwargs):
+def browser_kwargs(**kwargs):
     return {"webdriver_binary": kwargs["webdriver_binary"]}
 
 def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
