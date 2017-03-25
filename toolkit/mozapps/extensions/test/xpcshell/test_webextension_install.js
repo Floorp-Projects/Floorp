@@ -520,7 +520,7 @@ add_task(function* test_permissions_prompt() {
   notEqual(perminfo.addon, null, "Permission info includes the new addon");
   let perms = perminfo.addon.userPermissions;
   deepEqual(perms.permissions, ["tabs", "storage"], "API permissions are correct");
-  deepEqual(perms.origins, ["https://*.example.com/*", "<all_urls>"], "Host permissions are correct");
+  deepEqual(perms.hosts, ["https://*.example.com/*", "<all_urls>"], "Host permissions are correct");
   deepEqual(perms.apis, ["test"], "Experiments permissions are correct");
 
   let addon = yield promiseAddonByID(perminfo.addon.id);

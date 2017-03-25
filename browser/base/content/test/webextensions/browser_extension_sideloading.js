@@ -95,7 +95,7 @@ add_task(function* () {
     seen: false,
     userPermissions: {
       permissions: ["history"],
-      origins: ["https://*/*"],
+      hosts: ["https://*/*"],
     },
     iconURL: ICON_URL,
   });
@@ -108,7 +108,7 @@ add_task(function* () {
     seen: false,
     userPermissions: {
       permissions: [],
-      origins: [],
+      hosts: [],
     },
   });
 
@@ -121,7 +121,7 @@ add_task(function* () {
     seen: false,
     userPermissions: {
       permissions: [],
-      origins: ["<all_urls>"],
+      hosts: ["<all_urls>"],
     }
   });
 
@@ -134,7 +134,7 @@ add_task(function* () {
     seen: false,
     userPermissions: {
       permissions: [],
-      origins: ["<all_urls>"],
+      hosts: ["<all_urls>"],
     }
   });
 
