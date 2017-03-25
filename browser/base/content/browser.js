@@ -573,7 +573,7 @@ var gPopupBlockerObserver = {
       this._reportButton = document.getElementById("page-report-button");
 
     if (!gBrowser.selectedBrowser.blockedPopups ||
-        gBrowser.selectedBrowser.blockedPopups.count == 0) {
+        !gBrowser.selectedBrowser.blockedPopups.length) {
       // Hide the icon in the location bar (if the location bar exists)
       this._reportButton.hidden = true;
 

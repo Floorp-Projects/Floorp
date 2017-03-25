@@ -180,12 +180,6 @@ WMFAudioMFTManager::Init()
   hr = outputType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 32);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
-  hr = outputType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, mAudioChannels);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
-
-  hr = outputType->SetUINT32(MF_MT_ALL_SAMPLES_INDEPENDENT, 1);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
-
   hr = decoder->SetMediaTypes(inputType, outputType);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 

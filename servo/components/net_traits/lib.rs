@@ -31,7 +31,6 @@ extern crate servo_url;
 extern crate url;
 extern crate uuid;
 extern crate webrender_traits;
-extern crate websocket;
 
 use cookie_rs::Cookie;
 use filemanager_thread::FileManagerThreadMsg;
@@ -47,7 +46,6 @@ use request::{Request, RequestInit};
 use response::{HttpsState, Response};
 use servo_url::ServoUrl;
 use storage_thread::StorageThreadMsg;
-use websocket::header;
 
 pub mod blob_url_store;
 pub mod filemanager_thread;
@@ -348,10 +346,9 @@ pub enum WebSocketDomAction {
 
 #[derive(Deserialize, Serialize)]
 pub enum WebSocketNetworkEvent {
-    ConnectionEstablished(#[serde(deserialize_with = "::hyper_serde::deserialize",
-                                  serialize_with = "::hyper_serde::serialize")]
-                          header::Headers,
-                          Vec<String>),
+    ConnectionEstablished {
+        protocol_in_use: Option<String>,
+    },
     MessageReceived(MessageData),
     Close(Option<u16>, String),
     Fail,
@@ -513,11 +510,6 @@ pub fn load_whole_resource(request: RequestInit,
             FetchResponseMsg::ProcessResponseEOF(Err(e)) => return Err(e),
         }
     }
-}
-
-/// Defensively unwraps the protocol string from the response object's protocol
-pub fn unwrap_websocket_protocol(wsp: Option<&header::WebSocketProtocol>) -> Option<&str> {
-    wsp.and_then(|protocol_list| protocol_list.get(0).map(|protocol| protocol.as_ref()))
 }
 
 /// An unique identifier to keep track of each load message in the resource handler
