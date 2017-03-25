@@ -627,22 +627,6 @@ class ChildAPIManager {
     Object.assign(params, contextData);
 
     this.messageManager.sendAsyncMessage("API:CreateProxyContext", params);
-
-    this.permissionsChangedCallbacks = new Set();
-    this.updatePermissions = null;
-    if (this.context.extension.optionalPermissions.length > 0) {
-      this.updatePermissions = () => {
-        for (let callback of this.permissionsChangedCallbacks) {
-          try {
-            callback();
-          } catch (err) {
-            Cu.reportError(err);
-          }
-        }
-      };
-      this.context.extension.on("add-permissions", this.updatePermissions);
-      this.context.extension.on("remove-permissions", this.updatePermissions);
-    }
   }
 
   receiveMessage({name, messageName, data}) {
@@ -742,10 +726,6 @@ class ChildAPIManager {
 
   close() {
     this.messageManager.sendAsyncMessage("API:CloseProxyContext", {childId: this.id});
-    if (this.updatePermissions) {
-      this.context.extension.off("add-permissions", this.updatePermissions);
-      this.context.extension.off("remove-permissions", this.updatePermissions);
-    }
   }
 
   get cloneScope() {
@@ -800,14 +780,6 @@ class ChildAPIManager {
 
   hasPermission(permission) {
     return this.context.extension.hasPermission(permission);
-  }
-
-  isPermissionRevokable(permission) {
-    return this.context.extension.optionalPermissions.includes(permission);
-  }
-
-  setPermissionsChangedCallback(callback) {
-    this.permissionsChangedCallbacks.add(callback);
   }
 }
 
