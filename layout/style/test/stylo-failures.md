@@ -295,8 +295,6 @@ to mochitest command.
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
   * test_pixel_lengths.html `mozmm`: mozmm unit [3]
-  * -moz-image-rect value servo/servo#15948
-    * test_value_storage.html `-moz-image-rect` [15]
 * Unsupported values
   * SVG-only values of pointer-events not recognized
     * test_compute_data_with_start_struct.html `pointer-events` [2]
