@@ -234,23 +234,20 @@ this.pageAction = class extends ExtensionAPI {
     let {extension} = this;
     let {manifest} = extension;
 
-    let pageAction = new PageAction(manifest.page_action, extension);
-    pageActionMap.set(extension, pageAction);
+    this.pageAction = new PageAction(manifest.page_action, extension);
+    pageActionMap.set(extension, this.pageAction);
   }
 
   onShutdown(reason) {
-    let {extension} = this;
-
-    if (pageActionMap.has(extension)) {
-      pageActionMap.get(extension).shutdown();
-      pageActionMap.delete(extension);
-    }
+    pageActionMap.delete(this.extension);
+    this.pageAction.shutdown();
   }
 
   getAPI(context) {
     let {extension} = context;
 
     const {tabManager} = extension;
+    const {pageAction} = this;
 
     return {
       pageAction: {
@@ -258,7 +255,6 @@ this.pageAction = class extends ExtensionAPI {
           let listener = (evt, tab) => {
             fire.async(tabManager.convert(tab));
           };
-          let pageAction = PageAction.for(extension);
 
           pageAction.on("click", listener);
           return () => {
@@ -268,25 +264,25 @@ this.pageAction = class extends ExtensionAPI {
 
         show(tabId) {
           let tab = tabTracker.getTab(tabId);
-          PageAction.for(extension).setProperty(tab, "show", true);
+          pageAction.setProperty(tab, "show", true);
         },
 
         hide(tabId) {
           let tab = tabTracker.getTab(tabId);
-          PageAction.for(extension).setProperty(tab, "show", false);
+          pageAction.setProperty(tab, "show", false);
         },
 
         setTitle(details) {
           let tab = tabTracker.getTab(details.tabId);
 
           // Clear the tab-specific title when given a null string.
-          PageAction.for(extension).setProperty(tab, "title", details.title || null);
+          pageAction.setProperty(tab, "title", details.title || null);
         },
 
         getTitle(details) {
           let tab = tabTracker.getTab(details.tabId);
 
-          let title = PageAction.for(extension).getProperty(tab, "title");
+          let title = pageAction.getProperty(tab, "title");
           return Promise.resolve(title);
         },
 
@@ -294,7 +290,7 @@ this.pageAction = class extends ExtensionAPI {
           let tab = tabTracker.getTab(details.tabId);
 
           let icon = IconDetails.normalize(details, extension, context);
-          PageAction.for(extension).setProperty(tab, "icon", icon);
+          pageAction.setProperty(tab, "icon", icon);
         },
 
         setPopup(details) {
@@ -306,13 +302,13 @@ this.pageAction = class extends ExtensionAPI {
           // For internal consistency, we currently resolve both relative to the
           // calling context.
           let url = details.popup && context.uri.resolve(details.popup);
-          PageAction.for(extension).setProperty(tab, "popup", url);
+          pageAction.setProperty(tab, "popup", url);
         },
 
         getPopup(details) {
           let tab = tabTracker.getTab(details.tabId);
 
-          let popup = PageAction.for(extension).getProperty(tab, "popup");
+          let popup = pageAction.getProperty(tab, "popup");
           return Promise.resolve(popup);
         },
       },
