@@ -81,7 +81,6 @@ var {
 } = ExtensionParent;
 
 const {
-  classifyPermission,
   EventEmitter,
   LocaleData,
   StartupCache,
@@ -483,11 +482,12 @@ this.ExtensionData = class {
       }
 
       this.permissions.add(perm);
-      let type = classifyPermission(perm);
-      if (type.origin) {
+
+      let match = /^(\w+)(?:\.(\w+)(?:\.\w+)*)?$/.exec(perm);
+      if (!match) {
         whitelist.push(perm);
-      } else if (type.api) {
-        this.apiNames.add(type.api);
+      } else if (match[1] == "experiments" && match[2]) {
+        this.apiNames.add(match[2]);
       }
     }
     this.whiteListedHosts = new MatchPattern(whitelist);
@@ -680,7 +680,6 @@ this.Extension = class extends ExtensionData {
 
     this.apis = [];
     this.whiteListedHosts = null;
-    this._optionalOrigins = null;
     this.webAccessibleResources = null;
 
     this.emitter = new EventEmitter();
@@ -1018,13 +1017,5 @@ this.Extension = class extends ExtensionData {
 
   get name() {
     return this.manifest.name;
-  }
-
-  get optionalOrigins() {
-    if (this._optionalOrigins == null) {
-      let origins = this.manifest.optional_permissions.filter(perm => classifyPermission(perm).origin);
-      this._optionalOrigins = new MatchPattern(origins);
-    }
-    return this._optionalOrigins;
   }
 };
