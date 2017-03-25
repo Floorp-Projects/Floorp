@@ -2,6 +2,10 @@
 
 "use strict";
 
+loadRelativeToScript('utility.js');
+loadRelativeToScript('annotations.js');
+loadRelativeToScript('callgraph.js');
+
 ///////////////////////////////////////////////////////////////////////////////
 // Annotations
 ///////////////////////////////////////////////////////////////////////////////
@@ -562,11 +566,7 @@ function elapsedTime()
 }
 
 print(elapsedTime() + "Loading types...");
-
-loadRelativeToScript('utility.js');
-loadRelativeToScript('annotations.js');
-loadRelativeToScript('callgraphUtility.js');
-
+loadTypes('src_comp.xdb');
 print(elapsedTime() + "Starting analysis...");
 
 var reachable = {};
@@ -602,7 +602,7 @@ for (var i = 0; i < roots.length; i++) {
     }
 }
 
-print(elapsedTime() + "Completed analysis!");
+print(`${elapsedTime()}Completed analysis, found ${errorCount}/${errorLimit} allowed errors`);
 
 var currentBody;
 
@@ -625,6 +625,7 @@ function dumpError(entry, location, text)
     assert(stack[stack.length - 1].location == null);
     for (var i = 0; i < stack.length - 1; i++)
         print(stack[i + 1].callee + " @ " + stack[i].location + stack[i + 1].safeString());
+    print("\n");
 
     if (++errorCount == errorLimit) {
         print("Maximum number of errors encountered, exiting...");
