@@ -689,11 +689,8 @@ class SchemaAPIManager extends EventEmitter {
       }
     }
 
-    function hasPermission(perm) {
-      return context.extension.hasPermission(perm, true);
-    }
     for (let api of apis) {
-      if (Schemas.checkPermissions(api.namespace, {hasPermission})) {
+      if (Schemas.checkPermissions(api.namespace, context.extension)) {
         api = api.getAPI(context);
         copy(obj, api);
       }
