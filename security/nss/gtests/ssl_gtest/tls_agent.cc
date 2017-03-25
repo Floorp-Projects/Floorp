@@ -60,12 +60,10 @@ TlsAgent::TlsAgent(const std::string& name, Role role, Mode mode)
       can_falsestart_hook_called_(false),
       sni_hook_called_(false),
       auth_certificate_hook_called_(false),
-      alert_received_count_(0),
-      expected_alert_received_count_(0),
-      last_alert_received_({0, 0}),
-      alert_sent_count_(0),
-      expected_alert_sent_count_(0),
-      last_alert_sent_({0, 0}),
+      expected_received_alert_(kTlsAlertCloseNotify),
+      expected_received_alert_level_(kTlsAlertWarning),
+      expected_sent_alert_(kTlsAlertCloseNotify),
+      expected_sent_alert_level_(kTlsAlertWarning),
       handshake_callback_called_(false),
       error_code_(0),
       send_ctr_(0),
@@ -90,6 +88,11 @@ TlsAgent::~TlsAgent() {
   if (adapter_) {
     Poller::Instance()->Cancel(READABLE_EVENT, adapter_);
   }
+
+  EXPECT_EQ(expected_received_alert_, kTlsAlertCloseNotify);
+  EXPECT_EQ(expected_received_alert_level_, kTlsAlertWarning);
+  EXPECT_EQ(expected_sent_alert_, kTlsAlertCloseNotify);
+  EXPECT_EQ(expected_sent_alert_level_, kTlsAlertWarning);
 }
 
 void TlsAgent::SetState(State state) {
@@ -607,9 +610,53 @@ void TlsAgent::CheckErrorCode(int32_t expected) const {
       << PORT_ErrorToName(expected) << std::endl;
 }
 
-void TlsAgent::CheckAlerts() const {
-  EXPECT_EQ(expected_alert_received_count_, alert_received_count_);
-  EXPECT_EQ(expected_alert_sent_count_, alert_sent_count_);
+static uint8_t GetExpectedAlertLevel(uint8_t alert) {
+  switch (alert) {
+    case kTlsAlertCloseNotify:
+    case kTlsAlertEndOfEarlyData:
+      return kTlsAlertWarning;
+    default:
+      break;
+  }
+  return kTlsAlertFatal;
+}
+
+void TlsAgent::ExpectReceiveAlert(uint8_t alert, uint8_t level) {
+  expected_received_alert_ = alert;
+  if (level == 0) {
+    expected_received_alert_level_ = GetExpectedAlertLevel(alert);
+  } else {
+    expected_received_alert_level_ = level;
+  }
+}
+
+void TlsAgent::ExpectSendAlert(uint8_t alert, uint8_t level) {
+  expected_sent_alert_ = alert;
+  if (level == 0) {
+    expected_sent_alert_level_ = GetExpectedAlertLevel(alert);
+  } else {
+    expected_sent_alert_level_ = level;
+  }
+}
+
+void TlsAgent::CheckAlert(bool sent, const SSLAlert* alert) {
+  LOG(((alert->level == kTlsAlertWarning) ? "Warning" : "Fatal")
+      << " alert " << (sent ? "sent" : "received") << ": "
+      << static_cast<int>(alert->description));
+
+  auto& expected = sent ? expected_sent_alert_ : expected_received_alert_;
+  auto& expected_level =
+      sent ? expected_sent_alert_level_ : expected_received_alert_level_;
+  /* Silently pass close_notify in case the test has already ended. */
+  if (expected == kTlsAlertCloseNotify && expected_level == kTlsAlertWarning &&
+      alert->description == expected && alert->level == expected_level) {
+    return;
+  }
+
+  EXPECT_EQ(expected, alert->description);
+  EXPECT_EQ(expected_level, alert->level);
+  expected = kTlsAlertCloseNotify;
+  expected_level = kTlsAlertWarning;
 }
 
 void TlsAgent::WaitForErrorCode(int32_t expected, uint32_t delay) const {
@@ -944,6 +991,11 @@ void TlsAgentTestBase::EnsureInit() {
       ssl_grp_ec_curve25519, ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1,
       ssl_grp_ffdhe_2048};
   agent_->ConfigNamedGroups(groups);
+}
+
+void TlsAgentTestBase::ExpectAlert(uint8_t alert) {
+  EnsureInit();
+  agent_->ExpectSendAlert(alert);
 }
 
 void TlsAgentTestBase::ProcessMessage(const DataBuffer& buffer,

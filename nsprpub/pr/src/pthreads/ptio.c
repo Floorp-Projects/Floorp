@@ -1542,23 +1542,26 @@ static PRStatus pt_Connect(
     pt_SockLen addr_len;
 	const PRNetAddr *addrp = addr;
 #if defined(_PR_HAVE_SOCKADDR_LEN) || defined(_PR_INET6)
-	PRUint16 md_af = addr->raw.family;
     PRNetAddr addrCopy;
+#endif
+#ifdef _PR_HAVE_SOCKADDR_LEN
+    PRUint16 md_af = addr->raw.family;
 #endif
 
     if (pt_TestAbort()) return PR_FAILURE;
 
     PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
     addr_len = PR_NETADDR_SIZE(addr);
-#if defined(_PR_INET6)
-	if (addr->raw.family == PR_AF_INET6) {
-		md_af = AF_INET6;
-#ifndef _PR_HAVE_SOCKADDR_LEN
-		addrCopy = *addr;
-		addrCopy.raw.family = AF_INET6;
-		addrp = &addrCopy;
+#ifdef _PR_INET6
+    if (addr->raw.family == PR_AF_INET6) {
+#ifdef _PR_HAVE_SOCKADDR_LEN
+        md_af = AF_INET6;
+#else
+        addrCopy = *addr;
+        addrCopy.raw.family = AF_INET6;
+        addrp = &addrCopy;
 #endif
-	}
+    }
 #endif
 
 #ifdef _PR_HAVE_SOCKADDR_LEN
@@ -1732,8 +1735,10 @@ static PRStatus pt_Bind(PRFileDesc *fd, const PRNetAddr *addr)
     pt_SockLen addr_len;
 	const PRNetAddr *addrp = addr;
 #if defined(_PR_HAVE_SOCKADDR_LEN) || defined(_PR_INET6)
-	PRUint16 md_af = addr->raw.family;
     PRNetAddr addrCopy;
+#endif
+#ifdef _PR_HAVE_SOCKADDR_LEN
+    PRUint16 md_af = addr->raw.family;
 #endif
 
     if (pt_TestAbort()) return PR_FAILURE;
@@ -1749,15 +1754,16 @@ static PRStatus pt_Bind(PRFileDesc *fd, const PRNetAddr *addr)
         }
     }
 
-#if defined(_PR_INET6)
-	if (addr->raw.family == PR_AF_INET6) {
-		md_af = AF_INET6;
-#ifndef _PR_HAVE_SOCKADDR_LEN
-		addrCopy = *addr;
-		addrCopy.raw.family = AF_INET6;
-		addrp = &addrCopy;
+#ifdef _PR_INET6
+    if (addr->raw.family == PR_AF_INET6) {
+#ifdef _PR_HAVE_SOCKADDR_LEN
+        md_af = AF_INET6;
+#else
+        addrCopy = *addr;
+        addrCopy.raw.family = AF_INET6;
+        addrp = &addrCopy;
 #endif
-	}
+    }
 #endif
 
     addr_len = PR_NETADDR_SIZE(addr);
@@ -1989,22 +1995,25 @@ static PRInt32 pt_SendTo(
     pt_SockLen addr_len;
 	const PRNetAddr *addrp = addr;
 #if defined(_PR_HAVE_SOCKADDR_LEN) || defined(_PR_INET6)
-	PRUint16 md_af = addr->raw.family;
     PRNetAddr addrCopy;
+#endif
+#ifdef _PR_HAVE_SOCKADDR_LEN
+    PRUint16 md_af = addr->raw.family;
 #endif
 
     if (pt_TestAbort()) return bytes;
 
     PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
-#if defined(_PR_INET6)
-	if (addr->raw.family == PR_AF_INET6) {
-		md_af = AF_INET6;
-#ifndef _PR_HAVE_SOCKADDR_LEN
-		addrCopy = *addr;
-		addrCopy.raw.family = AF_INET6;
-		addrp = &addrCopy;
+#ifdef _PR_INET6
+    if (addr->raw.family == PR_AF_INET6) {
+#ifdef _PR_HAVE_SOCKADDR_LEN
+        md_af = AF_INET6;
+#else
+        addrCopy = *addr;
+        addrCopy.raw.family = AF_INET6;
+        addrp = &addrCopy;
 #endif
-	}
+    }
 #endif
 
     addr_len = PR_NETADDR_SIZE(addr);

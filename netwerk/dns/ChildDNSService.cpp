@@ -11,6 +11,7 @@
 #include "nsIPrefService.h"
 #include "nsIProtocolProxyService.h"
 #include "nsNetCID.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/DNSListenerProxy.h"
 #include "nsServiceManagerUtils.h"
@@ -173,9 +174,7 @@ ChildDNSService::AsyncResolveExtendedNative(const nsACString        &hostname,
   nsCOMPtr<nsIEventTarget> target = target_;
   nsCOMPtr<nsIXPConnectWrappedJS> wrappedListener = do_QueryInterface(listener);
   if (wrappedListener && !target) {
-    nsCOMPtr<nsIThread> mainThread;
-    NS_GetMainThread(getter_AddRefs(mainThread));
-    target = do_QueryInterface(mainThread);
+    target = SystemGroup::EventTargetFor(TaskCategory::Network);
   }
   if (target) {
     // Guarantee listener freed on main thread.  Not sure we need this in child

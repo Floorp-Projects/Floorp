@@ -287,7 +287,7 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
     }
 #endif
 #ifdef MOZ_TASK_TRACER
-    {
+    if (IsStartLogging()) {
       nsCString msg;
       aMessage->ToString(msg);
       int prefixPos = msg.Find(GetJSLabelPrefix());
