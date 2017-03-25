@@ -838,7 +838,7 @@ HttpChannelParent::RecvMarkOfflineCacheEntryAsForeign()
   return IPC_OK();
 }
 
-class DivertDataAvailableEvent : public MainThreadChannelEvent
+class DivertDataAvailableEvent : public ChannelEvent
 {
 public:
   DivertDataAvailableEvent(HttpChannelParent* aParent,
@@ -933,7 +933,7 @@ HttpChannelParent::DivertOnDataAvailable(const nsCString& data,
   }
 }
 
-class DivertStopRequestEvent : public MainThreadChannelEvent
+class DivertStopRequestEvent : public ChannelEvent
 {
 public:
   DivertStopRequestEvent(HttpChannelParent* aParent,
@@ -994,7 +994,7 @@ HttpChannelParent::DivertOnStopRequest(const nsresult& statusCode)
   mParentListener->OnStopRequest(mChannel, nullptr, status);
 }
 
-class DivertCompleteEvent : public MainThreadChannelEvent
+class DivertCompleteEvent : public ChannelEvent
 {
 public:
   explicit DivertCompleteEvent(HttpChannelParent* aParent)
