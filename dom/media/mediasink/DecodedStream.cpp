@@ -726,7 +726,7 @@ DecodedStream::GetEndTime(TrackType aType) const
   } else if (aType == TrackInfo::kVideoTrack && mData) {
     return mData->mNextVideoTime.ToMicroseconds();
   }
-  return -1;
+  return 0;
 }
 
 int64_t
