@@ -13,7 +13,7 @@ fails == 82711-1-ref.html 82711-1-ref.html
 == 468263-1b.html 468263-1b.html
 == 468263-1c.html 468263-1c.html
 == 468263-1d.html 468263-1d.html
-fails == 468263-2.html 468263-2.html # Bug 1341642
+== 468263-2.html 468263-2.html # Bug 1341642
 == 484200-1.html 484200-1.html
 == 485377.html 485377.html
 == 557840.html 557840.html
