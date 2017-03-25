@@ -406,8 +406,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
       // with preserveAspectRatio and viewBox.
       const Maybe<SVGImageContext> context(
         Some(SVGImageContext(Some(CSSIntSize::Truncate(width, height)),
-                             Some(imgElem->mPreserveAspectRatio.GetAnimValue()),
-                             /* aIsPaintingSVGImageElement */ true)));
+                             Some(imgElem->mPreserveAspectRatio.GetAnimValue()))));
 
       // For the actual draw operation to draw crisply (and at the right size),
       // our destination rect needs to be |width|x|height|, *in dev pixels*.

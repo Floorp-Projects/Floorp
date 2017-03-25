@@ -183,7 +183,6 @@ SVGSVGElement::SVGSVGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo
                                 aFromParser == FROM_PARSER_FRAGMENT ||
                                 aFromParser == FROM_PARSER_XSLT),
     mImageNeedsTransformInvalidation(false),
-    mIsPaintingSVGImageElement(false),
     mHasChildrenOnlyTransform(false)
 {
 }
@@ -1061,14 +1060,9 @@ SVGSVGElement::HasViewBoxRect() const
 bool
 SVGSVGElement::ShouldSynthesizeViewBox() const
 {
-  MOZ_ASSERT(!HasViewBoxRect(),
-             "Should only be called if we lack a viewBox");
+  MOZ_ASSERT(!HasViewBoxRect(), "Should only be called if we lack a viewBox");
 
-  nsIDocument* doc = GetUncomposedDoc();
-  return doc &&
-    doc->IsBeingUsedAsImage() &&
-    !mIsPaintingSVGImageElement &&
-    !GetParent();
+  return IsRoot() && OwnerDoc()->IsBeingUsedAsImage();
 }
 
 bool
@@ -1106,12 +1100,6 @@ SVGSVGElement::ClearPreserveAspectRatioProperty()
   void* valPtr = UnsetProperty(nsGkAtoms::overridePreserveAspectRatio);
   delete static_cast<SVGPreserveAspectRatio*>(valPtr);
   return valPtr;
-}
-
-void
-SVGSVGElement::SetIsPaintingForSVGImageElement(bool aIsPaintingSVGImageElement)
-{
-  mIsPaintingSVGImageElement = aIsPaintingSVGImageElement;
 }
 
 void
