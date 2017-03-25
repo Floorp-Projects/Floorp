@@ -13,8 +13,6 @@ component_stl    = ('Core', 'JavaScript: Standard Library')
 
 FILES_PER_UNIFIED_FILE = 6
 
-with Files('../public/**'):
-    BUG_COMPONENT = component_engine
 with Files('*'):
     BUG_COMPONENT = component_engine
 
@@ -33,9 +31,6 @@ with Files('jit/**'):
 for gcfile in ['jsgc*', 'devtools/rootAnalysis', 'devtools/gc-ubench', 'devtools/gctrace']:
     with Files(gcfile):
         BUG_COMPONENT = component_gc
-for header in ('GCAnnotations.h', 'GCAPI.h', 'HeapAPI.h', 'RootingAPI.h', 'SliceBudget.h', 'SweepingAPI.h', 'TraceKind.h', 'TracingAPI.h', 'WeakMapPtr.h'):
-    with Files('../public/' + header):
-        BUG_COMPONENT = component_gc
 
 for stlfile in ['jsarray.*', 'jsbool*', 'jsdate.*', 'jsnum.*', 'json.*', 'jsstr.*']:
     with Files(stlfile):
@@ -45,9 +40,6 @@ with Files('builtin/Intl*'):
     BUG_COMPONENT = component_intl
 with Files('builtin/make_intl_data.py'):
     BUG_COMPONENT = component_intl
-
-with Files('../public/TrackedOptimizationInfo.h'):
-    BUG_COMPONENT = component_jit
 
 
 if CONFIG['JS_BUNDLED_EDITLINE']:

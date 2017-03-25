@@ -177,6 +177,7 @@ macro_rules! define_string_types {
         /// This struct will leak its data if dropped from rust. See the module
         /// documentation for more information on this type.
         #[repr(C)]
+        #[derive(Debug)]
         pub struct $StringRepr {
             data: *const $char_t,
             length: u32,

@@ -97,7 +97,7 @@ TEST_P(TlsConnectGenericPre13, ConnectFfdheServer) {
     Connect();
     CheckKeys(ssl_kea_dh, ssl_auth_rsa_sign);
   } else {
-    ConnectExpectFail();
+    ConnectExpectAlert(server_, kTlsAlertHandshakeFailure);
     client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
     server_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
   }
@@ -130,7 +130,7 @@ TEST_P(TlsConnectGenericPre13, DamageServerKeyShare) {
                                       SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE));
   server_->SetPacketFilter(std::make_shared<TlsDheServerKeyExchangeDamager>());
 
-  ConnectExpectFail();
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
 
   client_->CheckErrorCode(SSL_ERROR_WEAK_SERVER_EPHEMERAL_DH_KEY);
   server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
@@ -295,6 +295,11 @@ TEST_P(TlsDamageDHYTest, DamageServerY) {
   server_->SetPacketFilter(
       std::make_shared<TlsDheSkeChangeYServer>(change, true));
 
+  if (change == TlsDheSkeChangeY::kYZeroPad) {
+    ExpectAlert(client_, kTlsAlertDecryptError);
+  } else {
+    ExpectAlert(client_, kTlsAlertIllegalParameter);
+  }
   ConnectExpectFail();
   if (change == TlsDheSkeChangeY::kYZeroPad) {
     // Zero padding Y only manifests in a signature failure.
@@ -327,6 +332,11 @@ TEST_P(TlsDamageDHYTest, DamageClientY) {
   client_->SetPacketFilter(
       std::make_shared<TlsDheSkeChangeYClient>(change, server_filter));
 
+  if (change == TlsDheSkeChangeY::kYZeroPad) {
+    ExpectAlert(server_, kTlsAlertDecryptError);
+  } else {
+    ExpectAlert(server_, kTlsAlertHandshakeFailure);
+  }
   ConnectExpectFail();
   if (change == TlsDheSkeChangeY::kYZeroPad) {
     // Zero padding Y only manifests in a finished error.
@@ -385,7 +395,7 @@ TEST_P(TlsConnectGenericPre13, MakeDhePEven) {
   EnableOnlyDheCiphers();
   server_->SetPacketFilter(std::make_shared<TlsDheSkeMakePEven>());
 
-  ConnectExpectFail();
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
 
   client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_DHE_KEY_SHARE);
   server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
@@ -416,7 +426,7 @@ TEST_P(TlsConnectGenericPre13, PadDheP) {
   EnableOnlyDheCiphers();
   server_->SetPacketFilter(std::make_shared<TlsDheSkeZeroPadP>());
 
-  ConnectExpectFail();
+  ConnectExpectAlert(client_, kTlsAlertDecryptError);
 
   // In TLS 1.0 and 1.1, the client reports a device error.
   if (version_ < SSL_LIBRARY_VERSION_TLS_1_2) {
@@ -475,7 +485,7 @@ TEST_P(TlsConnectTls13, NamedGroupMismatch13) {
   server_->ConfigNamedGroups(server_groups);
   client_->ConfigNamedGroups(client_groups);
 
-  ConnectExpectFail();
+  ConnectExpectAlert(server_, kTlsAlertHandshakeFailure);
   server_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
   client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
 }
@@ -493,7 +503,7 @@ TEST_P(TlsConnectGenericPre13, RequireNamedGroupsMismatchPre13) {
   server_->ConfigNamedGroups(server_groups);
   client_->ConfigNamedGroups(client_groups);
 
-  ConnectExpectFail();
+  ConnectExpectAlert(server_, kTlsAlertHandshakeFailure);
   server_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
   client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
 }
@@ -523,7 +533,7 @@ TEST_P(TlsConnectGenericPre13, MismatchDHE) {
   EXPECT_EQ(SECSuccess, SSL_DHEGroupPrefSet(client_->ssl_fd(), clientGroups,
                                             PR_ARRAY_SIZE(clientGroups)));
 
-  ConnectExpectFail();
+  ConnectExpectAlert(server_, kTlsAlertHandshakeFailure);
   server_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
   client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
 }
@@ -607,7 +617,7 @@ TEST_P(TlsConnectGenericPre13, InvalidDERSignatureFfdhe) {
   server_->SetPacketFilter(std::make_shared<TlsDheSkeChangeSignature>(
       version_, kBogusDheSignature, sizeof(kBogusDheSignature)));
 
-  ConnectExpectFail();
+  ConnectExpectAlert(client_, kTlsAlertDecryptError);
   client_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
 }
 

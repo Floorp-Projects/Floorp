@@ -5,11 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/SystemGroup.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/ChannelDiverterChild.h"
 #include "mozilla/net/FTPChannelChild.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabChild.h"
+#include "nsContentUtils.h"
 #include "nsFtpProtocolHandler.h"
 #include "nsITabChild.h"
 #include "nsStringStream.h"
@@ -197,6 +200,9 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
   GetLoadInfo(getter_AddRefs(loadInfo));
   rv = mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &openArgs.loadInfo());
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // This must happen before the constructor message is sent.
+  EnsureDispatcher();
 
   gNeckoChild->
     SendPFTPChannelConstructor(this, tabChild, IPC::SerializedLoadContext(this),
@@ -608,7 +614,17 @@ FTPChannelChild::DoOnStopRequest(const nsresult& aChannelStatus,
           alertEvent = new nsFtpChildAsyncAlert(prompter,
                              NS_ConvertASCIItoUTF16(aErrorMsg));
         }
-        NS_DispatchToMainThread(alertEvent);
+
+        if (mDispatcher) {
+          mDispatcher->Dispatch("FTPAlertEvent",
+                                TaskCategory::Other,
+                                alertEvent.forget());
+        } else {
+          // In case |mDispatcher| is null, dispatch by SystemGroup.
+          SystemGroup::Dispatch("FTPAlertEvent",
+                                TaskCategory::Other,
+                                alertEvent.forget());
+        }
       }
     }
 
@@ -820,6 +836,9 @@ FTPChannelChild::ConnectParent(uint32_t id)
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
   }
 
+  // This must happen before the constructor message is sent.
+  EnsureDispatcher();
+
   // The socket transport in the chrome process now holds a logical ref to us
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
   AddIPDLReference();
@@ -922,6 +941,27 @@ FTPChannelChild::GetDivertingToParent(bool* aDiverting)
   NS_ENSURE_ARG_POINTER(aDiverting);
   *aDiverting = mDivertingToParent;
   return NS_OK;
+}
+
+void
+FTPChannelChild::EnsureDispatcher()
+{
+  if (mDispatcher) {
+    return;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  GetLoadInfo(getter_AddRefs(loadInfo));
+
+  mDispatcher = nsContentUtils::GetDispatcherByLoadInfo(loadInfo);
+  if (!mDispatcher) {
+    return;
+  }
+
+  nsCOMPtr<nsIEventTarget> target =
+    mDispatcher->EventTargetFor(TaskCategory::Network);
+  gNeckoChild->SetEventTargetForActor(this, target);
+  mEventQ->RetargetDeliveryTo(target);
 }
 
 } // namespace net

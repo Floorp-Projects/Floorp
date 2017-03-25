@@ -15,7 +15,7 @@ dnl ========================================================
 dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=14
+MOD_MINOR_VERSION=15
 MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
@@ -716,6 +716,40 @@ else
 fi
 
 dnl ========================================================
+dnl Check for pragma diagnostic
+dnl ========================================================
+
+AC_MSG_CHECKING([for pragma diagnostic])
+if test "$GNU_CC" = "1"; then
+    cat >dummy-hello.c <<EOF
+#ifdef _PR_HAS_PRAGMA_DIAGNOSTIC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#endif
+int main() {
+    char *dummy = "";
+    return 0;
+}
+EOF
+    ${CC} -Werror=unused-but-set-variable -S dummy-hello.c -o dummy-hello.s 2>&5
+    if test $? != 0; then
+        ${CC} -Werror=unused-but-set-variable -D_PR_HAS_PRAGMA_DIAGNOSTIC -S dummy-hello.c -o dummy-hello.s 2>&5
+        if test $? = 0; then
+            CFLAGS="$CFLAGS -D_PR_HAS_PRAGMA_DIAGNOSTIC=1"
+            _res=yes
+        else
+            _res=no
+        fi
+    else
+        _res=no
+    fi
+    rm -f dummy-hello.c dummy-hello.s
+    AC_MSG_RESULT([$_res])
+else
+    AC_MSG_RESULT([no])
+fi
+
+dnl ========================================================
 dnl Profile guided optimization
 dnl ========================================================
 dnl Test for profiling options
@@ -1349,6 +1383,7 @@ case "$target" in
     AC_DEFINE(DARWIN)
     AC_DEFINE(HAVE_BSD_FLOCK)
     AC_DEFINE(HAVE_SOCKLEN_T)
+    AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
     AS='$(CC) -x assembler-with-cpp'
     CFLAGS="$CFLAGS -Wall -fno-common"
     case "${target_cpu}" in
@@ -1789,6 +1824,7 @@ tools are selected during the Xcode/Developer Tools installation.])
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(_GNU_SOURCE)
     AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
+    AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
     case "${target}" in
     *-android*|*-linuxandroid*)
         OS_TARGET=Android

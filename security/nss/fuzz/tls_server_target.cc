@@ -85,7 +85,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len) {
 
 #ifdef UNSAFE_FUZZER_MODE
   // Reset the RNG state.
-  assert(RNG_ResetForFuzzing() == SECSuccess);
+  assert(RNG_RandomUpdate(NULL, 0) == SECSuccess);
 #endif
 
   // Create model socket.

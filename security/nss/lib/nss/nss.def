@@ -1104,3 +1104,10 @@ PK11_HasAttributeSet;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.31 { 	# NSS 3.31 release
+;+    global:
+CERT_GetCertIsPerm;
+CERT_GetCertIsTemp;
+;+    local:
+;+       *;
+;+};

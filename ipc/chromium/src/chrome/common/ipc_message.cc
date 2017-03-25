@@ -21,7 +21,7 @@
 #ifdef MOZ_TASK_TRACER
 using namespace mozilla::tasktracer;
 
-#define MSG_HEADER_SZ (GetOrCreateTraceInfo() == nullptr ?              \
+#define MSG_HEADER_SZ (IsStartLogging() && GetOrCreateTraceInfo() == nullptr ? \
                        sizeof(Header) : sizeof(HeaderTaskTracer))
 #else
 #define MSG_HEADER_SZ sizeof(Header)
