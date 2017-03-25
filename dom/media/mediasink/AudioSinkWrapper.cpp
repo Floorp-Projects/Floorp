@@ -60,7 +60,7 @@ AudioSinkWrapper::GetEndTime(TrackType aType) const
   if (aType == TrackInfo::kAudioTrack && mAudioSink) {
     return mAudioSink->GetEndTime();
   }
-  return -1;
+  return 0;
 }
 
 int64_t

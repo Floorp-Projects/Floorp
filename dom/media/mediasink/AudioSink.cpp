@@ -232,7 +232,7 @@ AudioSink::GetEndTime() const
   CheckedInt64 playedUsecs = FramesToUsecs(written, mOutputRate) + mStartTime;
   if (!playedUsecs.isValid()) {
     NS_WARNING("Int overflow calculating audio end time");
-    return -1;
+    return 0;
   }
   // As we may be resampling, rounding errors may occur. Ensure we never get
   // past the original end time.
