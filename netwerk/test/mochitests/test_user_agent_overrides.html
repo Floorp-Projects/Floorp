@@ -29,6 +29,11 @@ const UA_PARTIAL_TO = UA_WHOLE_OVERRIDE;
 const UA_PARTIAL_OVERRIDE = UA_PARTIAL_FROM + UA_PARTIAL_SEP + UA_PARTIAL_TO;
 const UA_PARTIAL_EXPECTED = DEFAULT_UA.replace(new RegExp(UA_PARTIAL_FROM, 'g'), UA_PARTIAL_TO);
 
+const UA_PARTIAL_FROM2 = "[0-9]+";
+const UA_PARTIAL_TO2 = "number";
+const UA_PARTIAL_OVERRIDE2 = UA_PARTIAL_FROM2 + UA_PARTIAL_SEP + UA_PARTIAL_TO2;
+const UA_PARTIAL_EXPECTED2 = DEFAULT_UA.replace(new RegExp(UA_PARTIAL_FROM2, 'g'), UA_PARTIAL_TO2);
+
 function testUAIFrame(host, expected, sameQ, message, testNavQ, navSameQ, navMessage, callback) {
   let url = location.pathname;
   url = host + url.slice(0, url.lastIndexOf('/')) + '/user_agent.sjs';
@@ -120,6 +125,13 @@ var tests = [
     override: UA_PARTIAL_OVERRIDE,
     test_hosts: [location.origin],
     expected: UA_PARTIAL_EXPECTED
+  },
+
+  {
+    domain: location.hostname,
+    override: UA_PARTIAL_OVERRIDE2,
+    test_hosts: [location.origin],
+    expected: UA_PARTIAL_EXPECTED2
   },
 
   // should match domain and subdomains
