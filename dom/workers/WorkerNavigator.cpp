@@ -138,17 +138,9 @@ public:
     AssertIsOnMainThread();
 
     nsCOMPtr<nsPIDOMWindowInner> window = mWorkerPrivate->GetWindow();
-    nsCOMPtr<nsIURI> uri;
-    if (window && window->GetDocShell()) {
-      nsIDocument* doc = window->GetExtantDoc();
-      if (doc) {
-        doc->NodePrincipal()->GetURI(getter_AddRefs(uri));
-      }
-    }
 
     bool isCallerChrome = mWorkerPrivate->UsesSystemPrincipal();
-    nsresult rv = dom::Navigator::GetUserAgent(window, uri,
-                                               isCallerChrome, mUA);
+    nsresult rv = dom::Navigator::GetUserAgent(window, isCallerChrome, mUA);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to retrieve user-agent from the worker thread.");
     }
