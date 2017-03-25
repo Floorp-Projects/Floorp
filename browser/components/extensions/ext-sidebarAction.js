@@ -291,25 +291,22 @@ this.sidebarAction = class extends ExtensionAPI {
     let {extension} = this;
     let {manifest} = extension;
 
-    let sidebarAction = new SidebarAction(manifest.sidebar_action, extension);
-    sidebarActionMap.set(extension, sidebarAction);
+    this.sidebarAction = new SidebarAction(manifest.sidebar_action, extension);
+    sidebarActionMap.set(extension, this.sidebarAction);
   }
 
   onShutdown(reason) {
-    let {extension} = this;
-
-    if (sidebarActionMap.has(extension)) {
-      // Don't remove everything on app shutdown so session restore can handle
-      // restoring open sidebars.
-      if (extension.shutdownReason !== "APP_SHUTDOWN") {
-        sidebarActionMap.get(extension).shutdown();
-      }
-      sidebarActionMap.delete(extension);
+    // Don't remove everything on app shutdown so session restore can handle
+    // restoring open sidebars.
+    if (reason !== "APP_SHUTDOWN") {
+      this.sidebarAction.shutdown();
     }
+    sidebarActionMap.delete(this.extension);
   }
 
   getAPI(context) {
     let {extension} = context;
+    const {sidebarAction} = this;
 
     function getTab(tabId) {
       if (tabId !== null) {
@@ -328,13 +325,13 @@ this.sidebarAction = class extends ExtensionAPI {
           if (nativeTab && title === "") {
             title = null;
           }
-          SidebarAction.for(extension).setProperty(nativeTab, "title", title);
+          sidebarAction.setProperty(nativeTab, "title", title);
         },
 
         getTitle(details) {
           let nativeTab = getTab(details.tabId);
 
-          let title = SidebarAction.for(extension).getProperty(nativeTab, "title");
+          let title = sidebarAction.getProperty(nativeTab, "title");
           return Promise.resolve(title);
         },
 
@@ -342,7 +339,7 @@ this.sidebarAction = class extends ExtensionAPI {
           let nativeTab = getTab(details.tabId);
 
           let icon = IconDetails.normalize(details, extension, context);
-          SidebarAction.for(extension).setProperty(nativeTab, "icon", icon);
+          sidebarAction.setProperty(nativeTab, "icon", icon);
         },
 
         async setPanel(details) {
@@ -358,13 +355,13 @@ this.sidebarAction = class extends ExtensionAPI {
             throw new ExtensionError("Invalid url for sidebar panel.");
           }
 
-          SidebarAction.for(extension).setProperty(nativeTab, "panel", url);
+          sidebarAction.setProperty(nativeTab, "panel", url);
         },
 
         getPanel(details) {
           let nativeTab = getTab(details.tabId);
 
-          let panel = SidebarAction.for(extension).getProperty(nativeTab, "panel");
+          let panel = sidebarAction.getProperty(nativeTab, "panel");
           return Promise.resolve(panel);
         },
       },
