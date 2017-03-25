@@ -1,11 +1,10 @@
-# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == table-repaint-a.html table-repaint-a.html
 == table-repaint-b.html table-repaint-b.html
 == table-repaint-c.html table-repaint-c.html
 == table-repaint-d.html table-repaint-d.html
 == 540247-1.xul 540247-1.xul
 fails == 543681-1.html 543681-1.html
-fails == 1243409-1.html 1243409-1.html
+fails-if(stylo&&!browserIsRemote) == 1243409-1.html 1243409-1.html
 fails == test-image-layers.html test-image-layers.html
 fails == test-image-layers-multiple-displayitem.html test-image-layers-multiple-displayitem.html
 pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == test-animated-image-layers.html test-animated-image-layers.html

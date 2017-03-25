@@ -110,7 +110,7 @@ ImageBitmapRenderingContext::MatchWithIntrinsicSize()
   }
 
   RefPtr<DrawTarget> dt =
-    Factory::CreateDrawTargetForData(BackendType::CAIRO,
+    Factory::CreateDrawTargetForData(gfxPlatform::GetPlatform()->GetSoftwareBackend(),
                                      map.GetData(),
                                      temp->GetSize(),
                                      map.GetStride(),

@@ -169,7 +169,8 @@ PrintUsageHeader(const char *progName)
             " [-e ec_nickname]"
 #endif /* NSS_DISABLE_ECC */
             "\n"
-            "         -U [0|1] -H [0|1|2] -W [0|1]\n",
+            "         -U [0|1] -H [0|1|2] -W [0|1]\n"
+            "\n",
             progName);
 }
 
@@ -219,7 +220,7 @@ PrintParameterUsage()
         "-A <ca> Nickname of a CA used to sign a stapled cert status\n"
         "-U override default ECDHE ephemeral key reuse, 0: refresh, 1: reuse\n"
         "-H override default DHE server support, 0: disable, 1: enable, "
-        "   2: require DH named groups\n"
+        "   2: require DH named groups [RFC7919]\n"
         "-W override default DHE server weak parameters support, 0: disable, 1: enable\n"
         "-c Restrict ciphers\n"
         "-Y prints cipher values allowed for parameter -c and exits\n"

@@ -158,15 +158,11 @@
         }],
       ],
     }],
-    [ 'fuzz_oss==1', {
-      'defines': [
-        'UNSAFE_RNG_NO_URANDOM_SEED',
-      ],
+    [ 'fuzz==1', {
+      'sources!': [ 'drbg.c' ],
+      'sources': [ 'det_rng.c' ],
     }],
     [ 'fuzz_tls==1', {
-      'sources': [
-        'det_rng.c',
-      ],
       'defines': [
         'UNSAFE_FUZZER_MODE',
       ],

@@ -1,6 +1,6 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # NOTE: bug 1084564 covers "fails"/"skip" annotations for android below:
-== 444-1.html 444-1.html
+fuzzy-if(stylo,2377,28) == 444-1.html 444-1.html
 == aspect-ratio-1a.xhtml aspect-ratio-1a.xhtml
 == aspect-ratio-1b.xhtml aspect-ratio-1b.xhtml
 fails-if(Android) skip-if(gtkWidget) HTTP(..) == aspect-ratio-2a.xhtml aspect-ratio-2a.xhtml

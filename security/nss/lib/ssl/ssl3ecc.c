@@ -257,16 +257,6 @@ loser:
     return SECFailure;
 }
 
-/* This function returns the size of the key_exchange field in
- * the KeyShareEntry structure, i.e.:
- *     opaque point <1..2^8-1>; */
-unsigned int
-tls13_SizeOfECDHEKeyShareKEX(const SECKEYPublicKey *pubKey)
-{
-    PORT_Assert(pubKey->keyType == ecKey);
-    return pubKey->u.ec.publicValue.len;
-}
-
 /* This function encodes the key_exchange field in
  * the KeyShareEntry structure. */
 SECStatus

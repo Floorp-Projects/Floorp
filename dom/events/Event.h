@@ -265,6 +265,14 @@ public:
     mEvent->mSpecifiedEventType = nullptr;
   }
 
+  /**
+   * For WidgetEvent, return it's type in string.
+   *
+   * @param aEvent is a WidgetEvent to get its type.
+   * @param aType is a string where to return the type.
+   */
+  static void GetWidgetEventType(WidgetEvent* aEvent, nsAString& aType);
+
 protected:
 
   // Internal helper functions
