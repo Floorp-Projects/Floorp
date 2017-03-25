@@ -29,5 +29,5 @@ fails == input-fieldset-legend.html input-fieldset-legend.html
 == input-radio-nogroup-required-valid.html input-radio-nogroup-required-valid.html # Bug 1341739
 == input-radio-nogroup-required-invalid.html input-radio-nogroup-required-invalid.html
 fails == input-submit.html input-submit.html
-fails == input-image.html input-image.html
+== input-image.html input-image.html
 # input type='hidden' shouldn't show
