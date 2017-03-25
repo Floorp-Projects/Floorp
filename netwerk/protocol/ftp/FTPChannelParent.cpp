@@ -240,7 +240,7 @@ FTPChannelParent::RecvResume()
   return IPC_OK();
 }
 
-class FTPDivertDataAvailableEvent : public MainThreadChannelEvent
+class FTPDivertDataAvailableEvent : public ChannelEvent
 {
 public:
   FTPDivertDataAvailableEvent(FTPChannelParent* aParent,
@@ -331,7 +331,7 @@ FTPChannelParent::DivertOnDataAvailable(const nsCString& data,
   }
 }
 
-class FTPDivertStopRequestEvent : public MainThreadChannelEvent
+class FTPDivertStopRequestEvent : public ChannelEvent
 {
 public:
   FTPDivertStopRequestEvent(FTPChannelParent* aParent,
@@ -391,7 +391,7 @@ FTPChannelParent::DivertOnStopRequest(const nsresult& statusCode)
   OnStopRequest(mChannel, nullptr, status);
 }
 
-class FTPDivertCompleteEvent : public MainThreadChannelEvent
+class FTPDivertCompleteEvent : public ChannelEvent
 {
 public:
   explicit FTPDivertCompleteEvent(FTPChannelParent* aParent)
