@@ -10,8 +10,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "protocolService",
                                    "nsIExternalProtocolService");
 Cu.importGlobalProperties(["URL"]);
 
-const handlers = new WeakMap();
-
 function hasHandlerApp(handlerConfig) {
   let protoInfo = protocolService.getProtocolHandlerInfo(handlerConfig.protocol);
   let appHandlers = protoInfo.possibleApplicationHandlers;
@@ -44,16 +42,17 @@ this.protocolHandlers = class extends ExtensionAPI {
       protoInfo.possibleApplicationHandlers.appendElement(handler, false);
       handlerService.store(protoInfo);
     }
-    handlers.set(extension, manifest.protocol_handlers);
   }
 
-  onShutdown() {
+  onShutdown(shutdownReason) {
     let {extension} = this;
+    let {manifest} = extension;
 
-    if (!handlers.has(extension) || extension.shutdownReason === "APP_SHUTDOWN") {
+    if (shutdownReason === "APP_SHUTDOWN") {
       return;
     }
-    for (let handlerConfig of handlers.get(extension)) {
+
+    for (let handlerConfig of manifest.protocol_handlers) {
       let protoInfo = protocolService.getProtocolHandlerInfo(handlerConfig.protocol);
       let appHandlers = protoInfo.possibleApplicationHandlers;
       for (let i = 0; i < appHandlers.length; i++) {
@@ -70,6 +69,5 @@ this.protocolHandlers = class extends ExtensionAPI {
         }
       }
     }
-    handlers.delete(extension);
   }
 };

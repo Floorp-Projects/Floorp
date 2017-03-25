@@ -22,6 +22,7 @@ this.geolocation = class extends ExtensionAPI {
 
   onShutdown() {
     let {extension} = this;
+
     if (extension.hasPermission("geolocation") &&
         Services.perms.testPermission(extension.principal.URI, "geo") == Services.perms.ALLOW_ACTION) {
       Services.perms.remove(extension.principal.URI, "geo");
