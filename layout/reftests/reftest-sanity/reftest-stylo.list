@@ -1,6 +1,6 @@
 == data:text/html,<body> data:text/html,<body>
 == data:text/plain, data:text/plain,
-fails == data:text/plain,HELLO data:text/plain,HELLO # Bug 1341637
+== data:text/plain,HELLO data:text/plain,HELLO # Bug 1341637
 
 # these tests make sure async reftests work:
 == test-async.xul test-async.xul
@@ -86,7 +86,7 @@ include default-preferences-tests-stylo.list
 needs-focus load needs-focus.html
 
 # Bug 632636
-fails == data:text/plain,HELLO data:text/plain,HELLO # Bug 1341637
+== data:text/plain,HELLO data:text/plain,HELLO # Bug 1341637
 needs-focus == data:text/plain, data:text/plain,
 
 # Sanity check of viewport+displayport overrides

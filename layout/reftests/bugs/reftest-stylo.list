@@ -203,7 +203,7 @@ fails == 201293-1d.html 201293-1d.html
 == 211931-1.html 211931-1.html
 == 212563-1.html 212563-1.html
 == 212563-2.html 212563-2.html
-fails == 213834-1.html 213834-1.html
+== 213834-1.html 213834-1.html
 == 214077-1a.html 214077-1a.html
 == 214077-1b.html 214077-1b.html
 == 218473-1.html 218473-1.html
@@ -330,9 +330,9 @@ fails == 301726-1.html 301726-1.html
 fails == 301726-2.html 301726-2.html
 fails == 302379.html 302379.html
 == 306630-1.html 306630-1.html
-fails == 306660-1.html 306660-1.html
-fails == 306660-2.html 306660-2.html
-fails == 306660-3.html 306660-3.html
+== 306660-1.html 306660-1.html
+== 306660-2.html 306660-2.html
+== 306660-3.html 306660-3.html
 fails == 307076-1.html 307076-1.html
 == 307102-1.html 307102-1.html
 fails == 307102-2.html 307102-2.html
@@ -785,7 +785,7 @@ fails == 389468-1.html 389468-1.html
 == 390318-1e.html 390318-1e.html
 == 390318-1f.html 390318-1f.html
 skip-if(!winWidget) == 391045.html 391045.html
-fails == 391140-1.html 391140-1.html
+== 391140-1.html 391140-1.html
 == 391412-1a.html 391412-1a.html
 == 391412-1b.html 391412-1b.html
 fails == 391909-1.html 391909-1.html
@@ -931,7 +931,7 @@ fails == 407243-1.html 407243-1.html
 == 408656-1c.html 408656-1c.html
 fails == 408782-1a.html 408782-1a.html
 fails == 408782-1b.html 408782-1b.html
-fails == 408782-2a.html 408782-2a.html
+== 408782-2a.html 408782-2a.html
 fails == 408782-2b.html 408782-2b.html
 fails == 409084-1a.html 409084-1a.html
 fails == 409084-1b.html 409084-1b.html

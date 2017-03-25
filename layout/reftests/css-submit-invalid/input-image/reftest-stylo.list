@@ -7,7 +7,7 @@ fails == dynamic-invalid-barred.html dynamic-invalid-barred.html
 fails == dynamic-invalid-barred-2.html dynamic-invalid-barred-2.html
 fails == dynamic-invalid-not-barred.html dynamic-invalid-not-barred.html
 fails == static-invalid-barred.html static-invalid-barred.html
-fails == remove-invalid-element.html remove-invalid-element.html
+== remove-invalid-element.html remove-invalid-element.html
 fails == add-invalid-element.html add-invalid-element.html
 fails == add-submit-control.html add-submit-control.html
 fails == remove-submit-control.html remove-submit-control.html
