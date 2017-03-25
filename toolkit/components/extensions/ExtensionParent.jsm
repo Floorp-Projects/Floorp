@@ -143,13 +143,6 @@ let apiManager = new class extends SchemaAPIManager {
       }
     }
   }
-
-  registerSchemaAPI(namespace, envType, getAPI) {
-    if (envType == "addon_parent" || envType == "content_parent" ||
-        envType == "devtools_parent") {
-      super.registerSchemaAPI(namespace, envType, getAPI);
-    }
-  }
 }();
 
 // Subscribes to messages related to the extension messaging API and forwards it
@@ -296,7 +289,6 @@ GlobalManager = {
   },
 
   injectInObject(context, isChromeCompat, dest) {
-    apiManager.generateAPIs(context, dest);
     SchemaAPIManager.generateAPIs(context, context.extension.apis, dest);
   },
 };
