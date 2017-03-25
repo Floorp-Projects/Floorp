@@ -552,6 +552,7 @@ class IonBuilder
     AbortReasonOr<Ok> jsop_newarray_copyonwrite();
     AbortReasonOr<Ok> jsop_newobject();
     AbortReasonOr<Ok> jsop_initelem();
+    AbortReasonOr<Ok> jsop_initelem_inc();
     AbortReasonOr<Ok> jsop_initelem_array();
     AbortReasonOr<Ok> jsop_initelem_getter_setter();
     AbortReasonOr<Ok> jsop_mutateproto();
