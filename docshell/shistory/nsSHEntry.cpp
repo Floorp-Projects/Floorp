@@ -293,6 +293,19 @@ nsSHEntry::SetLayoutHistoryState(nsILayoutHistoryState* aState)
 }
 
 NS_IMETHODIMP
+nsSHEntry::InitLayoutHistoryState(nsILayoutHistoryState** aState)
+{
+  if (!mShared->mLayoutHistoryState) {
+    nsCOMPtr<nsILayoutHistoryState> historyState;
+    historyState = NS_NewLayoutHistoryState();
+    nsresult rv = SetLayoutHistoryState(historyState);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return GetLayoutHistoryState(aState);
+}
+
+NS_IMETHODIMP
 nsSHEntry::GetLoadType(uint32_t* aResult)
 {
   *aResult = mLoadType;
