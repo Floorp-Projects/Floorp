@@ -22,6 +22,10 @@ audio > xul|videocontrols {
   display: none;
 }
 
+.controlsSpacer[hideCursor] {
+  cursor: none;
+}
+
 .controlsContainer,
 .progressContainer {
   position: relative;
