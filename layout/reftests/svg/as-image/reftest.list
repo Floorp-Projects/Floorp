@@ -180,6 +180,9 @@ HTTP == svg-stylesheet-external-1.html blue100x100.svg
 != svg-image-visited-2-helper.svg about:blank
 == svg-image-visited-2.html       lime100x100.svg
 
+# tests for SVG <image> that should have a synthetic viewBox
+== svg-image-synthetic-viewBox-01.svg svg-image-synthetic-viewBox-01-ref.svg
+
 # Test for painting problems with SVGs used in border images.
 # XXXseth: The underlying problems also apply to media fragments,
 # but the test case would be much simpler. This should be switched
