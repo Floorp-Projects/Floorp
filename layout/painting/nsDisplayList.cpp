@@ -8040,8 +8040,7 @@ bool nsDisplayMask::TryMerge(nsDisplayItem* aItem)
 
   // Do not merge if mFrame has mask. Continuation frames should apply mask
   // independently(just like nsDisplayBackgroundImage).
-  const nsStyleSVGReset *style = mFrame->StyleSVGReset();
-  if (style->mMask.HasLayerWithImage()) {
+  if (mFrame->StyleSVGReset()->HasMask()) {
     return false;
   }
 

@@ -81,13 +81,6 @@ class Compartment
 
     Code* lookupCode(const void* pc) const;
 
-    // Currently, there is one Code per Instance so it is also possible to
-    // lookup a Instance given a pc. However, the goal is to share one Code
-    // between multiple Instances at which point in time this method will be
-    // removed.
-
-    Instance* lookupInstanceDeprecated(const void* pc) const;
-
     // The wasm::Compartment must be notified when execution is interrupted
     // while executing in wasm code in this compartment.
 

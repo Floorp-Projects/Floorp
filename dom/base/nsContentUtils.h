@@ -72,6 +72,7 @@ class nsIImageLoadingContent;
 class nsIInterfaceRequestor;
 class nsIIOService;
 class nsILineBreaker;
+class nsILoadInfo;
 class nsILoadGroup;
 class nsIMessageBroadcaster;
 class nsNameSpaceManager;
@@ -115,6 +116,7 @@ template<class K, class V> class nsRefPtrHashtable;
 template<class T> class nsReadingIterator;
 
 namespace mozilla {
+class Dispatcher;
 class ErrorResult;
 class EventListenerManager;
 
@@ -1256,7 +1258,7 @@ public:
                                       bool *aDefaultAction = nullptr);
 
   /**
-   * Helper function for dispatching a "DOMServiceWorkerFocusClient" event to
+   * Helper function for dispatching a "DOMWindowFocus" event to
    * the chrome event handler of the given DOM Window. This has the effect
    * of focusing the corresponding tab and bringing the browser window
    * to the foreground.
@@ -2814,6 +2816,9 @@ public:
   static uint32_t
   HtmlObjectContentTypeForMIMEType(const nsCString& aMIMEType,
                                    nsIContent* aContent);
+
+  static already_AddRefed<mozilla::Dispatcher>
+  GetDispatcherByLoadInfo(nsILoadInfo* aLoadInfo);
 
 private:
   static bool InitializeEventTable();

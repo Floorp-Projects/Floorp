@@ -1923,7 +1923,7 @@ nsHttpHandler::NewProxiedChannel2(nsIURI *uri,
         givenProxyInfo));
 
 #ifdef MOZ_TASK_TRACER
-    {
+    if (tasktracer::IsStartLogging()) {
         nsAutoCString urispec;
         uri->GetSpec(urispec);
         tasktracer::AddLabel("nsHttpHandler::NewProxiedChannel2 %s", urispec.get());

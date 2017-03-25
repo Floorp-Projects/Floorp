@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests for tab switching on link clicks.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for tab switching on link clicks.</title>
+</head>
+<body onload="setTimeout(loadTestFrame, 0);">
+  <div id="foo">Foo</div>
+  <div id="bar">Bar</div>
+  <div id="baz">Baz</div>
+  <iframe name="testFrame"></iframe>
+  <script>
+    function loadTestFrame() {
+      window.open("data:text/html;charset=utf-8,testFrame", "testFrame");
+    }
+  </script>
+</body>
+</html>

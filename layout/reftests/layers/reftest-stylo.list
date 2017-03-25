@@ -1,4 +1,3 @@
-# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == move-to-background-1.html move-to-background-1.html
 == component-alpha-exit-1.html component-alpha-exit-1.html
 fails == pull-background-1.html pull-background-1.html
@@ -15,10 +14,10 @@ fails == pull-background-animated-position-4.html pull-background-animated-posit
 fails == pull-background-animated-position-5.html pull-background-animated-position-5.html
 fails == pull-background-displayport-1.html pull-background-displayport-1.html
 fails == pull-background-displayport-2.html pull-background-displayport-2.html
-skip-if(!asyncPan) == pull-background-displayport-3.html pull-background-displayport-3.html
-skip-if(!asyncPan) == pull-background-displayport-4.html pull-background-displayport-4.html
-skip-if(!asyncPan) == pull-background-displayport-5.html pull-background-displayport-5.html
-skip-if(!asyncPan) == pull-background-displayport-6.html pull-background-displayport-6.html
+skip-if(!asyncPan) fails-if(stylo&&browserIsRemote) == pull-background-displayport-3.html pull-background-displayport-3.html
+skip-if(!asyncPan) fails-if(stylo&&browserIsRemote) == pull-background-displayport-4.html pull-background-displayport-4.html
+skip-if(!asyncPan) fails-if(stylo&&browserIsRemote) == pull-background-displayport-5.html pull-background-displayport-5.html
+skip-if(!asyncPan) fails-if(stylo&&browserIsRemote) == pull-background-displayport-6.html pull-background-displayport-6.html
 fuzzy(2,30150) == opacity-blending.html opacity-blending.html
 fuzzy(16,5) == mask-layer-transform.html mask-layer-transform.html
 fails == forced-bg-color-outside-visible-region.html forced-bg-color-outside-visible-region.html
