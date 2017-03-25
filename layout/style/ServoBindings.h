@@ -230,6 +230,7 @@ void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient)
 void Gecko_SetUrlImageValue(nsStyleImage* image,
                             ServoBundledURI uri);
 void Gecko_CopyImageValueFrom(nsStyleImage* image, const nsStyleImage* other);
+void Gecko_InitializeImageCropRect(nsStyleImage* image);
 
 nsStyleGradient* Gecko_CreateGradient(uint8_t shape,
                                       uint8_t size,

@@ -927,6 +927,14 @@ Gecko_CopyImageValueFrom(nsStyleImage* aImage, const nsStyleImage* aOther)
 }
 
 void
+Gecko_InitializeImageCropRect(nsStyleImage* aImage)
+{
+  MOZ_ASSERT(aImage);
+  nsStyleSides cropRect;
+  aImage->SetCropRect(MakeUnique<nsStyleSides>(cropRect));
+}
+
+void
 Gecko_SetCursorArrayLength(nsStyleUserInterface* aStyleUI, size_t aLen)
 {
   aStyleUI->mCursorImages.Clear();
