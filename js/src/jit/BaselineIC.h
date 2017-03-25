@@ -1534,6 +1534,8 @@ class ICTypeOf_Fallback : public ICFallbackStub
     { }
 
   public:
+    static const uint32_t MAX_OPTIMIZED_STUBS = 6;
+
     class Compiler : public ICStubCompiler {
       protected:
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);

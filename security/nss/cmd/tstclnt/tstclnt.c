@@ -178,7 +178,8 @@ PrintUsageHeader(const char *progName)
             "[-n nickname] [-Bafosvx] [-c ciphers] [-Y] [-Z]\n"
             "[-V [min-version]:[max-version]] [-K] [-T] [-U]\n"
             "[-r N] [-w passwd] [-W pwfile] [-q [-t seconds]] [-I groups]\n"
-            "[-A requestfile] [-L totalconnections]",
+            "[-A requestfile] [-L totalconnections]\n"
+            "\n",
             progName);
 }
 
@@ -242,9 +243,7 @@ PrintParameterUsage(void)
     fprintf(stderr, "%-20s Enforce using an IPv6 destination address\n", "-6");
     fprintf(stderr, "%-20s (Options -4 and -6 cannot be combined.)\n", "");
     fprintf(stderr, "%-20s Enable the extended master secret extension [RFC7627]\n", "-G");
-    fprintf(stderr, "%-20s Require the use of FFDHE supported groups "
-                    "[I-D.ietf-tls-negotiated-ff-dhe]\n",
-            "-H");
+    fprintf(stderr, "%-20s Require the use of FFDHE supported groups [RFC7919]\n", "-H");
     fprintf(stderr, "%-20s Read from a file instead of stdin\n", "-A");
     fprintf(stderr, "%-20s Allow 0-RTT data (TLS 1.3 only)\n", "-Z");
     fprintf(stderr, "%-20s Disconnect and reconnect up to N times total\n", "-L");

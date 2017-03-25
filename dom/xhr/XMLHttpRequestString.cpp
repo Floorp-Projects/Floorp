@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "XMLHttpRequestString.h"
-#include "mozilla/Mutex.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/DOMString.h"
 

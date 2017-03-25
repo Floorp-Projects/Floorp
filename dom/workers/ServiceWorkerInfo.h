@@ -8,6 +8,7 @@
 #define mozilla_dom_workers_serviceworkerinfo_h
 
 #include "mozilla/dom/ServiceWorkerBinding.h" // For ServiceWorkerState
+#include "mozilla/dom/workers/Workers.h"
 #include "nsIServiceWorkerManager.h"
 
 namespace mozilla {

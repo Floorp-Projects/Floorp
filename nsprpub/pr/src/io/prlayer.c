@@ -652,9 +652,11 @@ retry:
         if ((NULL != names) && (identity < length))
         {
             /* what we did is still okay */
-            memcpy(
-                names, identity_cache.name,
-                identity_cache.length * sizeof(char*));
+            if (identity_cache.length != 0) {
+                memcpy(
+                    names, identity_cache.name,
+                    identity_cache.length * sizeof(char*));
+            }
             old = identity_cache.name;
             identity_cache.name = names;
             identity_cache.length = length;

@@ -190,7 +190,7 @@ TEST_P(TlsConnectGenericPre13, OcspMangled) {
   auto replacer = std::make_shared<TlsExtensionReplacer>(
       ssl_cert_status_xtn, DataBuffer(val, sizeof(val)));
   server_->SetPacketFilter(replacer);
-  ConnectExpectFail();
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
   client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
   server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
 }
