@@ -991,7 +991,6 @@ class BrowserExtensionContent extends EventEmitter {
     this.webAccessibleResources = new MatchGlobs(data.webAccessibleResources);
     this.whiteListedHosts = new MatchPattern(data.whiteListedHosts);
     this.permissions = data.permissions;
-    this.optionalPermissions = data.optionalPermissions;
     this.principal = data.principal;
 
     this.localeData = new LocaleData(data.localeData);
@@ -1011,34 +1010,6 @@ class BrowserExtensionContent extends EventEmitter {
       // Extension.jsm takes care of this in the parent.
       ExtensionManagement.startupExtension(this.uuid, uri, this);
     }
-
-    /* eslint-disable mozilla/balanced-listeners */
-    this.on("add-permissions", (ignoreEvent, permissions) => {
-      if (permissions.permissions.length > 0) {
-        for (let perm of permissions.permissions) {
-          this.permissions.add(perm);
-        }
-      }
-
-      if (permissions.origins.length > 0) {
-        this.whiteListedHosts = new MatchPattern(this.whiteListedHosts.pat.concat(...permissions.origins));
-      }
-    });
-
-    this.on("remove-permissions", (ignoreEvent, permissions) => {
-      if (permissions.permissions.length > 0) {
-        for (let perm of permissions.permissions) {
-          this.permissions.delete(perm);
-        }
-      }
-
-      if (permissions.origins.length > 0) {
-        for (let origin of permissions.origins) {
-          this.whiteListedHosts.removeOne(origin);
-        }
-      }
-    });
-    /* eslint-enable mozilla/balanced-listeners */
   }
 
   shutdown() {
