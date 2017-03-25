@@ -192,54 +192,40 @@ HttpChannelChild::HttpChannelChild()
 HttpChannelChild::~HttpChannelChild()
 {
   LOG(("Destroying HttpChannelChild @%p\n", this));
-
-  ReleaseMainThreadOnlyReferences();
 }
 
-void
-HttpChannelChild::ReleaseMainThreadOnlyReferences()
-{
-  if (NS_IsMainThread()) {
-      // Already on main thread, let dtor to
-      // take care of releasing references
-      return;
-  }
-
-  nsTArray<nsCOMPtr<nsISupports>> arrayToRelease;
-  arrayToRelease.AppendElement(mCacheKey.forget());
-
-  NS_DispatchToMainThread(new ProxyReleaseRunnable(Move(arrayToRelease)));
-}
 //-----------------------------------------------------------------------------
 // HttpChannelChild::nsISupports
 //-----------------------------------------------------------------------------
 
+// Override nsHashPropertyBag's AddRef: we don't need thread-safe refcnt
 NS_IMPL_ADDREF(HttpChannelChild)
 
 NS_IMETHODIMP_(MozExternalRefCountType) HttpChannelChild::Release()
 {
-  nsrefcnt count = --mRefCnt;
-  MOZ_ASSERT(int32_t(count) >= 0, "dup release");
-  NS_LOG_RELEASE(this, count, "HttpChannelChild");
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  NS_ASSERT_OWNINGTHREAD(HttpChannelChild);
+  --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "HttpChannelChild");
 
   // Normally we Send_delete in OnStopRequest, but when we need to retain the
   // remote channel for security info IPDL itself holds 1 reference, so we
   // Send_delete when refCnt==1.  But if !mIPCOpen, then there's nobody to send
   // to, so we fall through.
-  if (mKeptAlive && count == 1 && mIPCOpen) {
+  if (mKeptAlive && mRefCnt == 1 && mIPCOpen) {
     mKeptAlive = false;
     // We send a message to the parent, which calls SendDelete, and then the
     // child calling Send__delete__() to finally drop the refcount to 0.
-    TrySendDeletingChannel();
+    SendDeletingChannel();
     return 1;
   }
 
-  if (count == 0) {
+  if (mRefCnt == 0) {
     mRefCnt = 1; /* stabilize */
     delete this;
     return 0;
   }
-  return count;
+  return mRefCnt;
 }
 
 NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
@@ -964,7 +950,7 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
   } else {
     // The parent process will respond by sending a DeleteSelf message and
     // making sure not to send any more messages after that.
-    TrySendDeletingChannel();
+    SendDeletingChannel();
   }
 }
 
@@ -1165,7 +1151,7 @@ HttpChannelChild::FailedAsyncOpen(const nsresult& status)
   HandleAsyncAbort();
 
   if (mIPCOpen) {
-    TrySendDeletingChannel();
+    SendDeletingChannel();
   }
 }
 
@@ -2876,20 +2862,6 @@ HttpChannelChild::GetResponseSynthesized(bool* aSynthesized)
   NS_ENSURE_ARG_POINTER(aSynthesized);
   *aSynthesized = mSynthesizedResponse;
   return NS_OK;
-}
-
-void
-HttpChannelChild::TrySendDeletingChannel()
-{
-  if (NS_IsMainThread()) {
-    Unused << PHttpChannelChild::SendDeletingChannel();
-    return;
-  }
-
-  DebugOnly<nsresult> rv =
-    NS_DispatchToMainThread(
-      NewNonOwningRunnableMethod(this, &HttpChannelChild::TrySendDeletingChannel));
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 void
