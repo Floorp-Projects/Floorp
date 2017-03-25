@@ -10,21 +10,20 @@ module.metadata = {
 const UNCAUGHT_ERROR = 'An error event was emitted for which there was no listener.';
 const BAD_LISTENER = 'The event listener must be a function.';
 
-const { ns } = require('../core/namespace');
-
-const event = ns();
+const { DefaultMap, DefaultWeakMap } = require('../util/object');
 
 const EVENT_TYPE_PATTERN = /^on([A-Z]\w+$)/;
 exports.EVENT_TYPE_PATTERN = EVENT_TYPE_PATTERN;
 
-// Utility function to access given event `target` object's event listeners for
-// the specific event `type`. If listeners for this type does not exists they
-// will be created.
-const observers = function observers(target, type) {
-  if (!target) throw TypeError("Event target must be an object");
-  let listeners = event(target);
-  return type in listeners ? listeners[type] : listeners[type] = [];
-};
+// Count of total listeners ever added.
+// This is used to keep track of when a listener was added, which can
+// have an effect on when it is and isn't dispatched. See comments in
+// emitOnObject for more details.
+let listenerCount = 0;
+
+const observers = new DefaultWeakMap(() => {
+  return new DefaultMap(() => new Map());
+});
 
 /**
  * Registers an event `listener` that is called every time events of
@@ -40,15 +39,13 @@ function on(target, type, listener) {
   if (typeof(listener) !== 'function')
     throw new Error(BAD_LISTENER);
 
-  let listeners = observers(target, type);
-  if (!~listeners.indexOf(listener))
-    listeners.push(listener);
+  observers.get(target).get(type).set(listener, listenerCount++);
 }
 exports.on = on;
 
 
+// Map of wrapper functions for listeners added using `once`.
 var onceWeakMap = new WeakMap();
-
 
 /**
  * Registers an event `listener` that is called only the next time an event
@@ -61,8 +58,8 @@ var onceWeakMap = new WeakMap();
  *    The listener function that processes the event.
  */
 function once(target, type, listener) {
-  let replacement = function observer(...args) {
-    off(target, type, observer);
+  function replacement(...args) {
+    off(target, type, replacement);
     onceWeakMap.delete(listener);
     listener.apply(target, args);
   };
@@ -94,33 +91,36 @@ exports.emit = emit;
  * A variant of emit that allows setting the this property for event listeners
  */
 function emitOnObject(target, type, thisArg, ...args) {
-  let all = observers(target, '*').length;
-  let state = observers(target, type);
-  let listeners = state.slice();
-  let count = listeners.length;
-  let index = 0;
+  let allListeners = observers.get(target);
+  let listeners = allListeners.get(type);
 
   // If error event and there are no handlers (explicit or catch-all)
   // then print error message to the console.
-  if (count === 0 && type === 'error' && all === 0)
+  if (type === 'error' && !listeners.size && !allListeners.get('*').size)
     console.exception(args[0]);
-  while (index < count) {
+
+  let count = listenerCount;
+  for (let [listener, added] of listeners)
     try {
-      let listener = listeners[index];
-      // Dispatch only if listener is still registered.
-      if (~state.indexOf(listener))
-        listener.apply(thisArg, args);
+      // Since our contract unfortuantely requires that we not dispatch to
+      // this event to listeners that were either added or removed during this
+      // dispatch, we need to check when each listener was added.
+      if (added >= count)
+        break;
+      listener.apply(thisArg, args);
     }
     catch (error) {
       // If exception is not thrown by a error listener and error listener is
       // registered emit `error` event. Otherwise dump exception to the console.
-      if (type !== 'error') emit(target, 'error', error);
-      else console.exception(error);
+      if (type !== 'error')
+        emitOnObject(target, 'error', target, error);
+      else
+        console.exception(error);
     }
-    index++;
-  }
-   // Also emit on `"*"` so that one could listen for all events.
-  if (type !== '*') emit(target, '*', type, ...args);
+
+  // Also emit on `"*"` so that one could listen for all events.
+  if (type !== '*' && allListeners.get('*').size)
+    emitOnObject(target, '*', target, type, ...args);
 }
 exports.emitOnObject = emitOnObject;
 
@@ -140,21 +140,21 @@ function off(target, type, listener) {
   let length = arguments.length;
   if (length === 3) {
     if (onceWeakMap.has(listener)) {
-      listener = onceWeakMap.get(listener);
+      observers.get(target).get(type)
+               .delete(onceWeakMap.get(listener));
       onceWeakMap.delete(listener);
     }
 
-    let listeners = observers(target, type);
-    let index = listeners.indexOf(listener);
-    if (~index)
-      listeners.splice(index, 1);
+    observers.get(target).get(type).delete(listener);
   }
   else if (length === 2) {
-    observers(target, type).splice(0);
+    observers.get(target).get(type).clear();
+    observers.get(target).delete(type);
   }
   else if (length === 1) {
-    let listeners = event(target);
-    Object.keys(listeners).forEach(type => delete listeners[type]);
+    for (let listeners of observers.get(target).values())
+      listeners.clear();
+    observers.delete(target);
   }
 }
 exports.off = off;
@@ -164,7 +164,7 @@ exports.off = off;
  * on the given event `target`.
  */
 function count(target, type) {
-  return observers(target, type).length;
+  return observers.get(target).get(type).size;
 }
 exports.count = count;
 
@@ -183,7 +183,8 @@ function setListeners(target, listeners) {
   Object.keys(listeners || {}).forEach(key => {
     let match = EVENT_TYPE_PATTERN.exec(key);
     let type = match && match[1].toLowerCase();
-    if (!type) return;
+    if (!type)
+      return;
 
     let listener = listeners[key];
     if (typeof(listener) === 'function')
