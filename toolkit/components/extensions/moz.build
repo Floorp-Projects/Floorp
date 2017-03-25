@@ -12,7 +12,6 @@ EXTRA_JS_MODULES += [
     'ExtensionContent.jsm',
     'ExtensionManagement.jsm',
     'ExtensionParent.jsm',
-    'ExtensionPermissions.jsm',
     'ExtensionPreferencesManager.jsm',
     'ExtensionSettingsStore.jsm',
     'ExtensionStorage.jsm',
