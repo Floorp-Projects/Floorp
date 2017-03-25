@@ -22,9 +22,39 @@ native constBool(const bool);
 template<typename> struct already_AddRefed;
 %}
 
-[uuid(aef27cb3-4df9-4eeb-b0b0-ac56cf861d04)]
+[scriptable, uuid(aef27cb3-4df9-4eeb-b0b0-ac56cf861d04)]
 interface nsILayoutHistoryState : nsISupports
 {
+  /**
+  * Whether this LayoutHistoryState contains any PresStates.
+  */
+  readonly attribute boolean hasStates;
+
+  /**
+  * Get the keys of all PresStates held by this LayoutHistoryState.
+  * Note: Check hasStates first.
+  */
+  void getKeys([optional] out uint32_t aCount,
+               [array, size_is(aCount), retval] out string aKeys);
+
+  /*
+  * Attempts to get the data of the PresState corresponding to
+  * the passed key. Throws if no data could be found.
+  */
+  void getPresState(in ACString aKey,
+                    out float aScrollX, out float aScrollY,
+                    out boolean aAllowScrollOriginDowngrade,
+                    out float aRes, out boolean aScaleToRes);
+
+  /**
+   * Constructs a new nsPresState object based on the supplied data
+   * and adds it to the LayoutHistoryState.
+   */
+  void addNewPresState(in ACString aKey,
+                   in float aScrollX, in float aScrollY,
+                   in boolean aAllowScrollOriginDowngrade,
+                   in float aRes, in boolean aScaleToRes);
+
   // Native only interface, converted from the original nsILayoutHistoryState.h
 
   /**
