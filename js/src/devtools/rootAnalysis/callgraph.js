@@ -163,7 +163,7 @@ function getCallees(edge)
             // Field call known to not GC; mark it as suppressed so direct
             // invocations will be ignored
             callees.push({'kind': "field", 'csu': csuName, 'field': fieldName,
-                          'suppressed': true, isVirtual: true});
+                          'suppressed': true, 'isVirtual': true});
         }
     } else {
         functions = new Set([null]); // field call
