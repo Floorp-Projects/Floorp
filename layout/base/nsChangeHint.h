@@ -507,13 +507,6 @@ enum nsRestyleHint {
   // work.)
   eRestyle_CSSAnimations = 1 << 5,
 
-  // Replace the style data coming from SVG animations (SMIL Animations)
-  // without updating any other style data.  If a new style context
-  // results, update style contexts on the descendants.  (Irrelevant if
-  // eRestyle_Self or eRestyle_Subtree is also set, since those imply a
-  // superset of the work.)
-  eRestyle_SVGAttrAnimations = 1 << 6,
-
   // Replace the style data coming from inline style without updating
   // any other style data.  If a new style context results, update style
   // contexts on the descendants.  (Irrelevant if eRestyle_Self or
@@ -523,22 +516,22 @@ enum nsRestyleHint {
   // eRestyle_Self.
   // If the change is for the advance of a declarative animation, use
   // the value below instead.
-  eRestyle_StyleAttribute = 1 << 7,
+  eRestyle_StyleAttribute = 1 << 6,
 
   // Same as eRestyle_StyleAttribute, but for when the change results
   // from the advance of a declarative animation.
-  eRestyle_StyleAttribute_Animations = 1 << 8,
+  eRestyle_StyleAttribute_Animations = 1 << 7,
 
   // Continue the restyling process to the current frame's children even
   // if this frame's restyling resulted in no style changes.
-  eRestyle_Force = 1 << 9,
+  eRestyle_Force = 1 << 8,
 
   // Continue the restyling process to all of the current frame's
   // descendants, even if any frame's restyling resulted in no style
   // changes.  (Implies eRestyle_Force.)  Note that this is weaker than
   // eRestyle_Subtree, which makes us rerun selector matching on all
   // descendants rather than just continuing the restyling process.
-  eRestyle_ForceDescendants = 1 << 10,
+  eRestyle_ForceDescendants = 1 << 9,
 
   // Useful unions:
   eRestyle_AllHintsWithAnimations = eRestyle_CSSTransitions |

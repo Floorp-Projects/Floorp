@@ -453,7 +453,7 @@ public:
   inline bool DirtyDescendantsBitIsPropagatedForServo();
 #endif
 
-  bool HasServoData() {
+  bool HasServoData() const {
 #ifdef MOZ_STYLO
     return !!mServoData.Get();
 #else

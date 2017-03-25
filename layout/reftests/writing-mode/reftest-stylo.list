@@ -107,7 +107,7 @@ HTTP(..) == 1127488-align-right-vertical-lr-ltr.html 1127488-align-right-vertica
 == 1131013-vertical-bidi.html 1131013-vertical-bidi.html
 == 1133945-1-vertical-align.html 1133945-1-vertical-align.html
 == 1134744-radio-checkbox-baseline-1.html 1134744-radio-checkbox-baseline-1.html
-fails == 1134849-orthogonal-inline.html 1134849-orthogonal-inline.html
+== 1134849-orthogonal-inline.html 1134849-orthogonal-inline.html
 fails == 1135361-ruby-justify-1.html 1135361-ruby-justify-1.html
 == 1136557-1-nested-spans.html 1136557-1-nested-spans.html
 == 1136557-2-nested-spans.html 1136557-2-nested-spans.html
@@ -159,7 +159,7 @@ fails == 1193519-sideways-lr-3.html 1193519-sideways-lr-3.html
 fails == 1193519-sideways-lr-4.html 1193519-sideways-lr-4.html
 fails == 1193519-sideways-lr-decoration-1.html 1193519-sideways-lr-decoration-1.html
 
-fails == 1196887-1-computed-display-inline-block.html 1196887-1-computed-display-inline-block.html
+== 1196887-1-computed-display-inline-block.html 1196887-1-computed-display-inline-block.html
 fails == 1205787-legacy-svg-values-1.html 1205787-legacy-svg-values-1.html
 
 fails == 1216747-1.html 1216747-1.html

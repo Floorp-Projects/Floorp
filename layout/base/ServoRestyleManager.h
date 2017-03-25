@@ -92,6 +92,12 @@ public:
   static void ClearServoDataFromSubtree(Element* aElement);
 
   /**
+   * Clears HasDirtyDescendants and RestyleData from all elements in the
+   * subtree rooted at aElement.
+   */
+  static void ClearRestyleStateFromSubtree(Element* aElement);
+
+  /**
    * Posts restyle hints for animations.
    * This is only called for the second traversal for CSS animations during
    * updating CSS animations in a SequentialTask.
