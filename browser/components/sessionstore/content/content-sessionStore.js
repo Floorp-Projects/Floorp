@@ -334,20 +334,24 @@ var SessionHistoryListener = {
   },
 
   OnHistoryNewEntry(newURI, oldIndex) {
+    // We ought to collect the previously current entry as well, see bug 1350567.
     this.collectFrom(oldIndex);
   },
 
   OnHistoryGoBack(backURI) {
+    // We ought to collect the previously current entry as well, see bug 1350567.
     this.collectFrom(kLastIndex);
     return true;
   },
 
   OnHistoryGoForward(forwardURI) {
+    // We ought to collect the previously current entry as well, see bug 1350567.
     this.collectFrom(kLastIndex);
     return true;
   },
 
   OnHistoryGotoIndex(index, gotoURI) {
+    // We ought to collect the previously current entry as well, see bug 1350567.
     this.collectFrom(kLastIndex);
     return true;
   },
