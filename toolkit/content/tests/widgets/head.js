@@ -1,5 +1,7 @@
 "use strict";
 
+var tests = [];
+
 function waitForCondition(condition, nextTest, errorMsg) {
   var tries = 0;
   var interval = setInterval(function() {
@@ -29,4 +31,10 @@ function getAnonElementWithinVideoByAttribute(video, aName, aValue) {
 
   return SpecialPowers.wrap(videoControl.ownerDocument)
     .getAnonymousElementByAttribute(videoControl, aName, aValue);
+}
+
+function executeTests() {
+  return tests
+    .map(fn => () => new Promise(fn))
+    .reduce((promise, task) => promise.then(task), Promise.resolve());
 }
