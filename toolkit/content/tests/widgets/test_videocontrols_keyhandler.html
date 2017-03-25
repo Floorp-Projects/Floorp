@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test - KeyHandler</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <video id="video" controls preload="auto"></video>
+</div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  const video = document.getElementById("video");
+
+  const playButton = getAnonElementWithinVideoByAttribute(video, "anonid", "playButton");
+  const scrubber = getAnonElementWithinVideoByAttribute(video, "anonid", "scrubber");
+  const volumeStack = getAnonElementWithinVideoByAttribute(video, "anonid", "volumeStack");
+
+  // Setup video
+  tests.push(done => {
+    SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, done);
+  }, done => {
+    video.src = "seek_with_sound.ogg";
+    video.addEventListener("loadedmetadata", done);
+  });
+
+  // Bug 1350191, video should not seek while changing volume by
+  // pressing up/down arrow key.
+  tests.push(done => {
+    video.addEventListener("play", done, { once: true });
+    synthesizeMouseAtCenter(playButton, {});
+  }, done => {
+    video.addEventListener("seeked", done, { once: true });
+    synthesizeMouseAtCenter(scrubber, {});
+  }, done => {
+    let counter = 0;
+    let keyCodes = ["VK_DOWN", "VK_DOWN", "VK_UP", "VK_DOWN", "VK_UP", "VK_UP"];
+
+    video.addEventListener("seeked", () => ok(false, "should not trigger seeked event"));
+    video.addEventListener("volumechange", () => {
+      if (++counter === keyCodes.length) {
+        ok(true, "change volume by up/down arrow key without trigger 'seeked' event");
+        done();
+      }
+
+      if (counter > keyCodes.length) {
+        ok(false, "trigger too much volumechange events");
+      }
+    });
+
+    for (let keyCode of keyCodes) {
+      synthesizeKey(keyCode, {});
+    }
+  });
+
+  tests.push(SimpleTest.finish);
+
+  window.addEventListener("load", executeTests);
+</script>
+</pre>
+</body>
+</html>
