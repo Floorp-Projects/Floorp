@@ -220,11 +220,11 @@ this.ExtensionsUI = {
 
     let bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
 
-    let perms = info.permissions || {origins: [], permissions: []};
+    let perms = info.permissions || {hosts: [], permissions: []};
 
     // First classify our host permissions
     let allUrls = false, wildcards = [], sites = [];
-    for (let permission of perms.origins) {
+    for (let permission of perms.hosts) {
       if (permission == "<all_urls>") {
         allUrls = true;
         break;
