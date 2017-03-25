@@ -7,7 +7,7 @@
  * Tests Curl Utils functionality.
  */
 
-const { CurlUtils } = require("devtools/client/shared/curl");
+const { Curl, CurlUtils } = require("devtools/client/shared/curl");
 
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CURL_UTILS_URL);
@@ -39,6 +39,7 @@ add_task(function* () {
   data = yield createCurlData(requests.post, getLongString);
   testIsUrlEncodedRequest(data);
   testWritePostDataTextParams(data);
+  testDataArgumentOnGeneratedCommand(data);
 
   data = yield createCurlData(requests.multipart, getLongString);
   testIsMultipartRequest(data);
@@ -98,6 +99,12 @@ function testWritePostDataTextParams(data) {
   let params = CurlUtils.writePostDataTextParams(data.postDataText);
   is(params, "param1=value1&param2=value2&param3=value3",
     "Should return a serialized representation of the request parameters");
+}
+
+function testDataArgumentOnGeneratedCommand(data) {
+  let curlCommand = Curl.generateCommand(data);
+  ok(curlCommand.includes("--data"),
+    "Should return a curl command with --data");
 }
 
 function testGetMultipartBoundary(data) {

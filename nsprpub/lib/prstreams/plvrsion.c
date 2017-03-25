@@ -74,6 +74,10 @@ static char sccsid[] = "@(#)NSPR " PR_VERSION _DEBUG_STRING
 
 #endif /* XP_UNIX */
 
+#ifdef _PR_HAS_PRAGMA_DIAGNOSTIC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#endif
 PR_IMPLEMENT(const PRVersionDescription*) libVersionPoint()
 {
 #ifdef XP_UNIX
@@ -88,6 +92,9 @@ PR_IMPLEMENT(const PRVersionDescription*) libVersionPoint()
 #endif
     return &VERSION_DESC_NAME;
 }  /* versionEntryPointType */
+#ifdef _PR_HAS_PRAGMA_DIAGNOSTIC
+#pragma GCC diagnostic pop
+#endif
 
 /* plvrsion.c */
 

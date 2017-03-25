@@ -7,6 +7,7 @@
 #include "mozilla/net/ChildDNSService.h"
 #include "mozilla/net/DNSRequestChild.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "nsIDNSRecord.h"
 #include "nsHostResolver.h"
@@ -210,10 +211,17 @@ DNSRequestChild::StartRequest()
 {
   // we can only do IPDL on the main thread
   if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(
+    SystemGroup::Dispatch(
+      "StartDNSRequestChild",
+      TaskCategory::Other,
       NewRunnableMethod(this, &DNSRequestChild::StartRequest));
     return;
   }
+
+  nsCOMPtr<nsIEventTarget> systemGroupEventTarget
+    = SystemGroup::EventTargetFor(TaskCategory::Other);
+
+  gNeckoChild->SetEventTargetForActor(this, systemGroupEventTarget);
 
   // Send request to Parent process.
   gNeckoChild->SendPDNSRequestConstructor(this, mHost, mOriginAttributes,
@@ -306,8 +314,10 @@ DNSRequestChild::Cancel(nsresult reason)
 {
   if(mIPCOpen) {
     // We can only do IPDL on the main thread
-    NS_DispatchToMainThread(
-      new CancelDNSRequestEvent(this, reason));
+    nsCOMPtr<nsIRunnable> runnable = new CancelDNSRequestEvent(this, reason);
+    SystemGroup::Dispatch("CancelDNSRequest",
+                          TaskCategory::Other,
+                          runnable.forget());
   }
   return NS_OK;
 }

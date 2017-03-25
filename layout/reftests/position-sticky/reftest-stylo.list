@@ -41,7 +41,7 @@ fails == scrollframe-auto-1.html scrollframe-auto-1.html
 fails == inline-1.html inline-1.html
 fails == inline-2.html inline-2.html
 fails == inline-3.html inline-3.html
-skip-if(!asyncPan) == inline-4.html inline-4.html
+skip-if(!asyncPan) fails-if(stylo&&browserIsRemote) == inline-4.html inline-4.html
 == column-contain-1a.html column-contain-1a.html
 == column-contain-1b.html column-contain-1b.html
 == column-contain-2.html column-contain-2.html

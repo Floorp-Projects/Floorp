@@ -378,4 +378,27 @@ PRUint32 cert_CountDNSPatterns(CERTGeneralName* firstName);
 SECStatus cert_CheckLeafTrust(CERTCertificate* cert, SECCertUsage usage,
                               unsigned int* failedFlags, PRBool* isTrusted);
 
+/*
+ * Acquire the cert temp/perm lock
+ */
+void CERT_LockCertTempPerm(const CERTCertificate* cert);
+
+/*
+ * Release the temp/perm lock
+ */
+void CERT_UnlockCertTempPerm(const CERTCertificate* cert);
+
+/*
+ * Acquire the cert trust lock
+ * There is currently one global lock for all certs, but I'm putting a cert
+ * arg here so that it will be easy to make it per-cert in the future if
+ * that turns out to be necessary.
+ */
+void CERT_LockCertTrust(const CERTCertificate* cert);
+
+/*
+ * Release the cert trust lock
+ */
+void CERT_UnlockCertTrust(const CERTCertificate* cert);
+
 #endif /* _CERTI_H_ */

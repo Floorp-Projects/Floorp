@@ -1,4 +1,3 @@
-# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == data:text/html,<body> data:text/html,<body>
 == data:text/plain, data:text/plain,
 fails == data:text/plain,HELLO data:text/plain,HELLO # Bug 1341637
@@ -100,7 +99,7 @@ pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote||layersOMTC) == te
 # Fixed layers are temporarily disabled (bug 656167).
 pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) == test-pos-fixed.html test-pos-fixed.html
 pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) == test-bg-attachment-fixed.html test-bg-attachment-fixed.html
-pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) == test-pos-fixed-transform.html test-pos-fixed-transform.html
+pref(dom.meta-viewport.enabled,true) skip-if(stylo) == test-pos-fixed-transform.html test-pos-fixed-transform.html # Bug 1348754
 
 # reftest syntax: require-or
 fails require-or(unrecognizedCondition,skip) script scripttest-fail.html
