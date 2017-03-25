@@ -9,7 +9,11 @@
  */
 function log({ dispatch, getState }) {
   return next => action => {
-    console.log("[DISPATCH]", JSON.stringify(action, null, 2));
+    try {
+      console.log("[DISPATCH]", JSON.stringify(action, null, 2));
+    } catch (e) {
+      console.log("[DISPATCH]", action);
+    }
     next(action);
   };
 }
