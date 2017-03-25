@@ -8901,14 +8901,14 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 128,
-    "description": "Negotiated cipher suite in full handshake (see key in HandshakeCallback in nsNSSCallbacks.cpp)"
+    "description": "Negotiated cipher suite in full handshake (see key in AccumulateCipherSuite in nsNSSCallbacks.cpp)"
   },
   "SSL_CIPHER_SUITE_RESUMED": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 128,
-    "description": "Negotiated cipher suite in resumed handshake (see key in HandshakeCallback in nsNSSCallbacks.cpp)"
+    "description": "Negotiated cipher suite in resumed handshake (see key in AccumulateCipherSuite in nsNSSCallbacks.cpp)"
   },
   "SSL_KEA_RSA_KEY_SIZE_FULL": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
