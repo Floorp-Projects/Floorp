@@ -179,12 +179,6 @@
             "optional": true
           },
 
-          "optional_permissions": {
-            "type": "array",
-            "items": { "$ref": "OptionalPermission" },
-            "optional": true
-          },
-
           "web_accessible_resources": {
             "type": "array",
             "items": { "type": "string" },
@@ -213,32 +207,21 @@
         "additionalProperties": { "$ref": "UnrecognizedProperty" }
       },
       {
-        "id": "OptionalPermission",
-        "choices": [
-          {
-            "type": "string",
-            "enum": [
-              "clipboardRead",
-              "clipboardWrite",
-              "geolocation",
-              "idle",
-              "notifications"
-            ]
-          },
-          { "$ref": "MatchPattern" }
-        ]
-      },
-      {
         "id": "Permission",
         "choices": [
-          { "$ref": "OptionalPermission" },
           {
             "type": "string",
             "enum": [
               "alarms",
+              "clipboardRead",
+              "clipboardWrite",
+              "geolocation",
+              "idle",
+              "notifications",
               "storage"
             ]
-          }
+          },
+          { "$ref": "MatchPattern" }
         ]
       },
       {
