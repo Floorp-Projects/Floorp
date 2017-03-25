@@ -108,16 +108,4 @@ this.ExtensionPermissions = {
     delete prefs.data[extension.id];
     prefs.saveSoon();
   },
-
-  // This is meant for tests only
-  async _uninit() {
-    if (!_initPromise) {
-      return;
-    }
-
-    await _initPromise;
-    await prefs.finalize();
-    prefs = null;
-    _initPromise = null;
-  },
 };
