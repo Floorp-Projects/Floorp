@@ -27,7 +27,7 @@ fails == 596455-2b.html 596455-2b.html
 fails == 610935.html 610935.html
 == 649134-1.html 649134-1.html
 == 649134-2.html 649134-2.html
-fails == 741776-1.vtt 741776-1.vtt
+== 741776-1.vtt 741776-1.vtt
 
 == bug448564-1_malformed.html bug448564-1_malformed.html
 == bug448564-1_malformed.html bug448564-1_malformed.html
