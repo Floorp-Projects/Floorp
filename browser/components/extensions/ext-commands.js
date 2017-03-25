@@ -9,9 +9,6 @@ var {
 
 var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-// WeakMap[Extension -> CommandList]
-let commandsMap = new WeakMap();
-
 function CommandList(manifest, extension) {
   this.extension = extension;
   this.id = makeWidgetId(extension.id);
@@ -225,25 +222,18 @@ this.commands = class extends ExtensionAPI {
     let {extension} = this;
     let {manifest} = extension;
 
-    commandsMap.set(extension, new CommandList(manifest, extension));
+    this.commandList = new CommandList(manifest, extension);
   }
 
   onShutdown(reason) {
-    let {extension} = this;
-
-    let commandsList = commandsMap.get(extension);
-    if (commandsList) {
-      commandsList.unregister();
-      commandsMap.delete(extension);
-    }
+    this.commandList.unregister();
   }
 
   getAPI(context) {
-    let {extension} = context;
     return {
       commands: {
-        getAll() {
-          let commands = commandsMap.get(extension).commands;
+        getAll: () => {
+          let commands = this.commandList.commands;
           return Promise.resolve(Array.from(commands, ([name, command]) => {
             return ({
               name,
@@ -256,9 +246,9 @@ this.commands = class extends ExtensionAPI {
           let listener = (eventName, commandName) => {
             fire.async(commandName);
           };
-          commandsMap.get(extension).on("command", listener);
+          this.commandList.on("command", listener);
           return () => {
-            commandsMap.get(extension).off("command", listener);
+            this.commandList.off("command", listener);
           };
         }).api(),
       },
