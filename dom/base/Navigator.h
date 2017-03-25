@@ -158,7 +158,6 @@ public:
                                 bool aUsePrefOverriddenValue);
 
   static nsresult GetUserAgent(nsPIDOMWindowInner* aWindow,
-                               nsIURI* aURI,
                                bool aIsCallerChrome,
                                nsAString& aUserAgent);
 
