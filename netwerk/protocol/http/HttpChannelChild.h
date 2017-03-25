@@ -30,10 +30,8 @@
 #include "nsIChildChannel.h"
 #include "nsIHttpChannelChild.h"
 #include "nsIDivertableChannel.h"
-#include "nsIThreadRetargetableRequest.h"
 #include "mozilla/net/DNS.h"
 
-class nsIEventTarget;
 class nsInputStreamPump;
 
 namespace mozilla {
@@ -53,7 +51,6 @@ class HttpChannelChild final : public PHttpChannelChild
                              , public nsIChildChannel
                              , public nsIHttpChannelChild
                              , public nsIDivertableChannel
-                             , public nsIThreadRetargetableRequest
 {
   virtual ~HttpChannelChild();
 public:
@@ -67,7 +64,6 @@ public:
   NS_DECL_NSICHILDCHANNEL
   NS_DECL_NSIHTTPCHANNELCHILD
   NS_DECL_NSIDIVERTABLECHANNEL
-  NS_DECL_NSITHREADRETARGETABLEREQUEST
 
   HttpChannelChild();
 
@@ -205,9 +201,6 @@ private:
   // Get event target for processing network events.
   already_AddRefed<nsIEventTarget> GetNeckoTarget();
 
-  // Get event target for ODA.
-  already_AddRefed<nsIEventTarget> GetODATarget();
-
   MOZ_MUST_USE nsresult ContinueAsyncOpen();
 
   void DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext);
@@ -234,10 +227,6 @@ private:
   // Try send DeletingChannel message to parent side. Dispatch an async task to
   // main thread if invoking on non-main thread.
   void TrySendDeletingChannel();
-
-  // Try invoke Cancel if on main thread, or prepend a CancelEvent in mEventQ to
-  // ensure Cacnel is processed before any other channel events.
-  void CancelOnMainThread(nsresult aRv);
 
   RequestHeaderTuples mClientSetRequestHeaders;
   nsCOMPtr<nsIChildChannel> mRedirectChannelChild;
@@ -312,9 +301,7 @@ private:
 
   // EventTarget for labeling networking events.
   nsCOMPtr<nsIEventTarget> mNeckoTarget;
-  // Target thread for delivering ODA.
-  nsCOMPtr<nsIEventTarget> mODATarget;
-  // Used to ensure atomicity of mNeckoTarget / mODATarget;
+  // Used to ensure atomicity of mNeckoTarget;
   Mutex mEventTargetMutex;
 
   void FinishInterceptedRedirect();
@@ -389,7 +376,6 @@ private:
   friend class Redirect3Event;
   friend class DeleteSelfEvent;
   friend class HttpFlushedForDiversionEvent;
-  friend class CancelEvent;
   friend class HttpAsyncAborter<HttpChannelChild>;
   friend class InterceptStreamListener;
   friend class InterceptedChannelContent;
