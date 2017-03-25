@@ -30,7 +30,6 @@ EXTRA_COMPONENTS += [
     'PresentationRequestUIGlue.js',
     'PromptService.js',
     'SessionStore.js',
-    'SiteSpecificUserAgent.js',
     'Snippets.js',
     'TabSource.js',
     'XPIDialogService.js',

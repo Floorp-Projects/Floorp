@@ -3284,15 +3284,6 @@ var DesktopUserAgent = {
     return null;
   },
 
-  getUserAgentForWindow: function ua_getUserAgentForWindow(aWindow) {
-    let tab = BrowserApp.getTabForWindow(aWindow.top);
-    if (tab) {
-      return this.getUserAgentForTab(tab);
-    }
-
-    return null;
-  },
-
   getUserAgentForTab: function ua_getUserAgentForTab(aTab) {
     // Send desktop UA if "Request Desktop Site" is enabled.
     if (aTab.desktopMode) {
