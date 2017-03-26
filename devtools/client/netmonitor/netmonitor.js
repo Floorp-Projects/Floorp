@@ -20,7 +20,7 @@ var Netmonitor = {
     const { createFactory } = require("devtools/client/shared/vendor/react");
     const { render } = require("devtools/client/shared/vendor/react-dom");
     const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
-    const { configureStore } = require("./store");
+    const { configureStore } = require("./utils/create-store");
     const store = window.gStore = configureStore();
     const { NetMonitorController } = require("./netmonitor-controller");
     this.NetMonitorController = NetMonitorController;
