@@ -44,8 +44,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -394,34 +392,6 @@ public class GeckoAppShell
     @WrapForJNI(calledFrom = "gecko")
     private static void enableLocationHighAccuracy(final boolean enable) {
         locationHighAccuracyEnabled = enable;
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static boolean setAlarm(int aSeconds, int aNanoSeconds) {
-        AlarmManager am = (AlarmManager)
-            getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-
-        Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
-        PendingIntent pi = PendingIntent.getBroadcast(
-                getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        // AlarmManager only supports millisecond precision
-        long time = ((long) aSeconds * 1000) + ((long) aNanoSeconds / 1_000_000L);
-        am.setExact(AlarmManager.RTC_WAKEUP, time, pi);
-
-        return true;
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void disableAlarm() {
-        AlarmManager am = (AlarmManager)
-            getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-
-        Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
-        PendingIntent pi = PendingIntent.getBroadcast(
-                getApplicationContext(), 0, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-        am.cancel(pi);
     }
 
     @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")

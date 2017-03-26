@@ -235,7 +235,6 @@ gvjar = add_java_jar('gecko-view')
 
 gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
                   for x in [
-    'AlarmReceiver.java',
     'AndroidGamepadManager.java',
     'BaseGeckoInterface.java',
     'Clipboard.java',
