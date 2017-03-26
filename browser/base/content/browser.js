@@ -3182,7 +3182,7 @@ var BrowserOnClick = {
     let title;
     if (reason === "malware") {
       let reportUrl = gSafeBrowsing.getReportURL("MalwareMistake", blockedInfo);
-
+      title = gNavigatorBundle.getString("safebrowsing.reportedAttackSite");
       // There's no button if we can not get report url, for example if the provider
       // of blockedInfo is not Google
       if (reportUrl) {
@@ -3196,7 +3196,7 @@ var BrowserOnClick = {
       }
     } else if (reason === "phishing") {
       let reportUrl = gSafeBrowsing.getReportURL("PhishMistake", blockedInfo);
-
+      title = gNavigatorBundle.getString("safebrowsing.deceptiveSite");
       // There's no button if we can not get report url, for example if the provider
       // of blockedInfo is not Google
       if (reportUrl) {
