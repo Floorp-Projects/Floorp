@@ -5,7 +5,7 @@
 "use strict";
 
 const { DOM, PropTypes } = require("devtools/client/shared/vendor/react");
-const { L10N } = require("../../utils/l10n");
+const { L10N } = require("../utils/l10n");
 
 const { div, span } = DOM;
 const types = ["blocked", "dns", "connect", "send", "wait", "receive"];
@@ -15,9 +15,7 @@ const TIMINGS_END_PADDING = "80px";
  * Timings panel component
  * Display timeline bars that shows the total wait time for various stages
  */
-function TimingsPanel({
-  request,
-}) {
+function TimingsPanel({ request }) {
   if (!request.eventTimings) {
     return null;
   }

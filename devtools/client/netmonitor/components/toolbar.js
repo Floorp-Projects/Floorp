@@ -13,7 +13,7 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { PluralForm } = require("devtools/shared/plural-form");
 const Actions = require("../actions/index");
-const { L10N } = require("../utils/l10n");
+const { FILTER_SEARCH_DELAY } = require("../constants");
 const {
   getDisplayedRequestsSummary,
   getRequestFilterTypes,
@@ -23,7 +23,7 @@ const {
   getFormattedSize,
   getFormattedTime
 } = require("../utils/format-utils");
-const { FILTER_SEARCH_DELAY } = require("../constants");
+const { L10N } = require("../utils/l10n");
 
 // Components
 const SearchBox = createFactory(require("devtools/client/shared/components/search-box"));

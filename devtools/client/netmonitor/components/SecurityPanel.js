@@ -9,11 +9,11 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
-const { L10N } = require("../../utils/l10n");
-const { getUrlHost } = require("../../utils/request-utils");
+const { L10N } = require("../utils/l10n");
+const { getUrlHost } = require("../utils/request-utils");
 
 // Components
-const PropertiesView = createFactory(require("./properties-view"));
+const PropertiesView = createFactory(require("./PropertiesView"));
 
 const { div, input, span } = DOM;
 
@@ -23,9 +23,7 @@ const { div, input, span } = DOM;
  * This contains details about the secure connection used including the protocol,
  * the cipher suite, and certificate details
  */
-function SecurityPanel({
-  request,
-}) {
+function SecurityPanel({ request }) {
   const { securityInfo, url } = request;
 
   if (!securityInfo || !url) {

@@ -12,9 +12,7 @@ const { div, iframe } = DOM;
  * Preview panel component
  * Display HTML content within a sandbox enabled iframe
  */
-function PreviewPanel({
-  request,
-}) {
+function PreviewPanel({ request }) {
   const htmlBody = request.responseContent ?
     request.responseContent.content.text : "";
 
