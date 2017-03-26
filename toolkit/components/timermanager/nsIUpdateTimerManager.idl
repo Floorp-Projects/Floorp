@@ -51,4 +51,12 @@ interface nsIUpdateTimerManager : nsISupports
   void registerTimer(in AString id,
                      in nsITimerCallback callback,
                      in unsigned long interval);
+
+  /**
+   * Unregister an existing interval from the timer manager.
+   *
+   * @param   id
+   *          An id that identifies the interval.
+   */
+  void unregisterTimer(in AString id);
 };
