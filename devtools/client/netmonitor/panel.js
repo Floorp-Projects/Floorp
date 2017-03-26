@@ -15,7 +15,6 @@ NetMonitorPanel.prototype = {
       await this.toolbox.target.makeRemote();
     }
     await this.panelWin.Netmonitor.bootstrap({
-      tabTarget: this.toolbox.target,
       toolbox: this.toolbox,
     });
     this.emit("ready");
