@@ -10,9 +10,9 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
+const { getFormattedSize } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
 const { getAbbreviatedMimeType } = require("../utils/request-utils");
-const { getFormattedSize } = require("../utils/format-utils");
 
 const { div, img, span } = DOM;
 

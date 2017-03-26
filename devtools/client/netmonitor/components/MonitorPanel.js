@@ -20,9 +20,9 @@ const { getSelectedRequest } = require("../selectors/index");
 
 // Components
 const SplitBox = createFactory(require("devtools/client/shared/components/splitter/split-box"));
-const NetworkDetailsPanel = createFactory(require("../shared/components/network-details-panel"));
-const RequestList = createFactory(require("./request-list"));
-const Toolbar = createFactory(require("./toolbar"));
+const NetworkDetailsPanel = createFactory(require("./NetworkDetailsPanel"));
+const RequestList = createFactory(require("./RequestList"));
+const Toolbar = createFactory(require("./Toolbar"));
 
 const { div } = DOM;
 const MediaQueryList = window.matchMedia("(min-width: 700px)");

@@ -14,11 +14,11 @@ const { Chart } = require("devtools/client/shared/widgets/Chart");
 const { PluralForm } = require("devtools/shared/plural-form");
 const Actions = require("../actions/index");
 const { Filters } = require("../utils/filter-predicates");
-const { L10N } = require("../utils/l10n");
 const {
   getSizeWithDecimals,
   getTimeWithDecimals
 } = require("../utils/format-utils");
+const { L10N } = require("../utils/l10n");
 
 const { button, div } = DOM;
 const MediaQueryList = window.matchMedia("(min-width: 700px)");

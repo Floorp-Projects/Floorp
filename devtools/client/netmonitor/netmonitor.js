@@ -25,15 +25,15 @@ var Netmonitor = {
     const { NetMonitorController } = require("./netmonitor-controller");
     this.NetMonitorController = NetMonitorController;
 
-    // Components
-    const NetworkMonitor = createFactory(require("./components/network-monitor"));
-
     // Inject EventEmitter into netmonitor window.
     EventEmitter.decorate(window);
 
+    // Components
+    const App = createFactory(require("./components/App"));
+
     this.root = document.querySelector(".root");
 
-    render(Provider({ store }, NetworkMonitor()), this.root);
+    render(Provider({ store }, App()), this.root);
 
     return NetMonitorController.startupNetMonitor({
       client: {
