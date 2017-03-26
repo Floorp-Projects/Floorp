@@ -2647,6 +2647,20 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     return this.layoutActor;
   },
+
+  /**
+   * Returns the offset parent DOMNode of the given node if it exists, otherwise, it
+   * returns null.
+   */
+  getOffsetParent: function (node) {
+    let offsetParent = node.rawNode.offsetParent;
+
+    if (!offsetParent) {
+      return null;
+    }
+
+    return this._ref(offsetParent);
+  },
 });
 
 /**

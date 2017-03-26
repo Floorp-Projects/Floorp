@@ -445,13 +445,38 @@ RasterImage::OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey)
 {
   MOZ_ASSERT(mProgressTracker);
 
-  if (mAnimationState && aSurfaceKey.Playback() == PlaybackType::eAnimated) {
+  bool animatedFramesDiscarded =
+    mAnimationState && aSurfaceKey.Playback() == PlaybackType::eAnimated;
+
+  if (animatedFramesDiscarded && NS_IsMainThread()) {
+    MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
+    mAnimationState->SetDiscarded(true);
+    // We don't need OnSurfaceDiscardedInternal to handle the animated frames
+    // being discarded because we just did.
+    animatedFramesDiscarded = false;
+  }
+
+  RefPtr<RasterImage> image = this;
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+                            "RasterImage::OnSurfaceDiscarded",
+                            [=]() -> void {
+    image->OnSurfaceDiscardedInternal(animatedFramesDiscarded);
+  }));
+}
+
+void
+RasterImage::OnSurfaceDiscardedInternal(bool aAnimatedFramesDiscarded)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (aAnimatedFramesDiscarded && mAnimationState) {
     MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
     mAnimationState->SetDiscarded(true);
   }
 
-  NS_DispatchToMainThread(NewRunnableMethod("ProgressTracker::OnDiscard",
-                                            mProgressTracker, &ProgressTracker::OnDiscard));
+  if (mProgressTracker) {
+    mProgressTracker->OnDiscard();
+  }
 }
 
 //******************************************************************************
