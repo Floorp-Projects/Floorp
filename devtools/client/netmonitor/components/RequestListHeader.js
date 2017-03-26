@@ -4,15 +4,20 @@
 
 "use strict";
 
-const { createClass, PropTypes, DOM } = require("devtools/client/shared/vendor/react");
-const { div, button } = DOM;
+const {
+  createClass,
+  PropTypes,
+  DOM,
+} = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { setNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
-const { L10N } = require("../utils/l10n");
-const { getWaterfallScale } = require("../selectors/index");
 const Actions = require("../actions/index");
-const WaterfallBackground = require("../waterfall-background");
+const { getWaterfallScale } = require("../selectors/index");
 const { getFormattedTime } = require("../utils/format-utils");
+const { L10N } = require("../utils/l10n");
+const WaterfallBackground = require("../waterfall-background");
+
+const { div, button } = DOM;
 
 const REQUESTS_WATERFALL_HEADER_TICKS_MULTIPLE = 5; // ms
 const REQUESTS_WATERFALL_HEADER_TICKS_SPACING_MIN = 60; // px
