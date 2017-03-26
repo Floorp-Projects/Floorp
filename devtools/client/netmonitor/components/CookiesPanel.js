@@ -9,10 +9,10 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
-const { L10N } = require("../../utils/l10n");
+const { L10N } = require("../utils/l10n");
 
 // Component
-const PropertiesView = createFactory(require("./properties-view"));
+const PropertiesView = createFactory(require("./PropertiesView"));
 
 const { div } = DOM;
 

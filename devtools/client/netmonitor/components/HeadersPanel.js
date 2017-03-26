@@ -10,20 +10,20 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
-const { L10N } = require("../../utils/l10n");
-const { writeHeaderText } = require("../../utils/request-utils");
+const { getFormattedSize } = require("../utils/format-utils");
+const { L10N } = require("../utils/l10n");
 const {
   getHeadersURL,
   getHTTPStatusCodeURL,
-} = require("../../utils/mdn-utils");
-const { getFormattedSize } = require("../../utils/format-utils");
-const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const Rep = createFactory(REPS.Rep);
+} = require("../utils/mdn-utils");
+const { writeHeaderText } = require("../utils/request-utils");
 
 // Components
-const MDNLink = createFactory(require("./mdn-link"));
-const PropertiesView = createFactory(require("./properties-view"));
+const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
+const MDNLink = createFactory(require("./MDNLink"));
+const PropertiesView = createFactory(require("./PropertiesView"));
 
+const Rep = createFactory(REPS.Rep);
 const { button, div, input, textarea } = DOM;
 
 const EDIT_AND_RESEND = L10N.getStr("netmonitor.summary.editAndResend");
