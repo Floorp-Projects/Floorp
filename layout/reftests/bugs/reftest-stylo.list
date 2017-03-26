@@ -308,7 +308,7 @@ fails == 280708-1b.html 280708-1b.html
 fails == 289384-1.xhtml 289384-1.xhtml
 == 289480.html#top 289480-ref.html
 == 289480-ref.html 289480-ref.html
-fails == 290129-1.html 290129-1.html
+== 290129-1.html 290129-1.html
 fails == 291078-1.html 291078-1.html
 == 291078-2.html 291078-2.html
 == 291262-1.html 291262-1.html
@@ -347,8 +347,8 @@ fails == 307102-3.html 307102-3.html
 == 311366-unknown-block-3.html 311366-unknown-block-3.html
 == 311366-unknown-block-2.html 311366-unknown-block-2.html
 == 311366-unknown-inline-2.html 311366-unknown-inline-2.html
-fails == 311822-1.html 311822-1.html # bug 1341712, bug 1341714
-fails == 311822-1.html 311822-1.html # bug 1341712, bug 1341714
+== 311822-1.html 311822-1.html # bug 1341712, bug 1341714
+== 311822-1.html 311822-1.html # bug 1341712, bug 1341714
 == 315620-1a.html 315620-1a.html
 == 315620-1b.html 315620-1b.html
 == 315620-2a.xhtml 315620-2a.xhtml
@@ -1139,8 +1139,8 @@ fails == 430412-1.html 430412-1.html
 == 431948-1.html 431948-1.html
 == 433640-1.html 433640-1.html
 fails == 433700.html 433700.html
-fails == 436356-1.html 436356-1.html
-fails == 436356-2.html 436356-2.html
+== 436356-1.html 436356-1.html
+== 436356-2.html 436356-2.html
 == 438537-1.html 438537-1.html
 == 438981-1.xhtml 438981-1.xhtml
 == 438987-1.html 438987-1.html
@@ -1158,7 +1158,7 @@ fails == 440149-1.html 440149-1.html
 == 442542-1.html 442542-1.html
 fails == 444015-1.html 444015-1.html
 == 444375-1.html 444375-1.html
-fails == 444928-1.html 444928-1.html
+== 444928-1.html 444928-1.html
 == 444928-2.html 444928-2.html
 == 444928-3.html 444928-3.html
 fails random == 445004-1.html 445004-1.html
@@ -1474,8 +1474,8 @@ fails == 538909-1.html 538909-1.html
 == 539323-1.html 539323-1.html
 == 539323-2.html 539323-2.html
 == 539323-3.html 539323-3.html
-fails == 539880-1.html 539880-1.html
-fails == 539880-1-dynamic.html 539880-1-dynamic.html
+== 539880-1.html 539880-1.html
+== 539880-1-dynamic.html 539880-1-dynamic.html
 fails == 539949-1.html#test2 539949-1-ref.html#test2
 fails == 541382-1.html 541382-1.html
 == 541406-1.html 541406-1.html
