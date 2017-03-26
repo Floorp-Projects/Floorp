@@ -13,7 +13,7 @@ add_task(function* () {
 
   let panel = monitor.panelWin;
   let { document, gStore, windowRequire } = panel;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   ok(document.querySelector(".monitor-panel"),
     "The current main panel is correct.");

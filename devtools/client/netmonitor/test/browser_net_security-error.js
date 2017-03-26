@@ -10,8 +10,8 @@
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
   let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let { EVENTS } = windowRequire("devtools/client/netmonitor/constants");
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  let { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
 
   gStore.dispatch(Actions.batchEnable(false));
 
