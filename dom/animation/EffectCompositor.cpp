@@ -332,12 +332,8 @@ EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
       // second traversal so we don't need to post any restyle requests to the
       // PresShell.
       return;
-    } else if (!mPresContext->RestyleManager()->IsInStyleRefresh()) {
-      // FIXME: stylo only supports Self and Subtree hints now, so we override
-      // it for stylo if we are not in process of restyling.
-      hint = eRestyle_Self | eRestyle_Subtree;
     } else {
-      MOZ_ASSERT_UNREACHABLE("Should not request restyle");
+      MOZ_ASSERT(!mPresContext->RestyleManager()->IsInStyleRefresh());
     }
   }
   mPresContext->PresShell()->RestyleForAnimation(element, hint);
@@ -983,8 +979,8 @@ EffectCompositor::PreTraverse()
       // We can't call PostRestyleEvent directly here since we are still in the
       // middle of the servo traversal.
       mPresContext->RestyleManager()->AsServo()->
-        PostRestyleEventForAnimations(target.mElement,
-                                      eRestyle_Self | eRestyle_Subtree);
+        PostRestyleEventForAnimations(target.mElement, eRestyle_CSSAnimations);
+
       foundElementsNeedingRestyle = true;
 
       EffectSet* effects =
@@ -1035,7 +1031,7 @@ EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
     }
 
     mPresContext->RestyleManager()->AsServo()->
-      PostRestyleEventForAnimations(aElement, eRestyle_Self);
+      PostRestyleEventForAnimations(aElement, eRestyle_CSSAnimations);
 
     EffectSet* effects = EffectSet::GetEffectSet(aElement, pseudoType);
     if (effects) {
