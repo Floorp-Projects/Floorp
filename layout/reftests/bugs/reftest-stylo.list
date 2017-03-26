@@ -466,7 +466,7 @@ fails == 345563-sub.xhtml 345563-sub.xhtml
 fails == 346774-1a.html 346774-1a.html
 fails == 346774-1b.html 346774-1b.html
 fails == 346774-1c.html 346774-1c.html
-fails == 347348-1.xhtml 347348-1.xhtml
+== 347348-1.xhtml 347348-1.xhtml
 fails == 347496-1.xhtml 347496-1.xhtml
 == 347912-1.html 347912-1.html
 fails == 348049-1.xhtml 348049-1.xhtml
