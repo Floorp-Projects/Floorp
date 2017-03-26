@@ -4077,6 +4077,9 @@ void
 nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder,
                         nsRenderingContext* aCtx) {
   // TODO join outlines together
+  MOZ_ASSERT(mFrame->StyleOutline()->ShouldPaintOutline(),
+             "Should have not created a nsDisplayOutline!");
+
   nsPoint offset = ToReferenceFrame();
   nsCSSRendering::PaintOutline(mFrame->PresContext(), *aCtx, mFrame,
                                mVisibleRect,
