@@ -11,7 +11,7 @@ add_task(function* () {
   const {
     getFormattedSize,
     getFormattedTime
-  } = require("devtools/client/netmonitor/utils/format-utils");
+  } = require("devtools/client/netmonitor/src/utils/format-utils");
 
   requestLongerTimeout(2);
 
@@ -19,10 +19,10 @@ add_task(function* () {
   info("Starting test... ");
 
   let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let { getDisplayedRequestsSummary } =
-    windowRequire("devtools/client/netmonitor/selectors/index");
-  let { L10N } = windowRequire("devtools/client/netmonitor/utils/l10n");
+    windowRequire("devtools/client/netmonitor/src/selectors/index");
+  let { L10N } = windowRequire("devtools/client/netmonitor/src/utils/l10n");
   let { PluralForm } = windowRequire("devtools/shared/plural-form");
 
   gStore.dispatch(Actions.batchEnable(false));
