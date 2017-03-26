@@ -173,7 +173,7 @@ RasterImage::RequestRefresh(const TimeStamp& aTime)
   RefreshResult res;
   if (mAnimationState) {
     MOZ_ASSERT(mFrameAnimator);
-    res = mFrameAnimator->RequestRefresh(*mAnimationState, aTime);
+    res = mFrameAnimator->RequestRefresh(*mAnimationState, aTime, mAnimationFinished);
   }
 
   if (res.mFrameAdvanced) {
@@ -450,7 +450,7 @@ RasterImage::OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey)
 
   if (animatedFramesDiscarded && NS_IsMainThread()) {
     MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
-    mAnimationState->SetDiscarded(true);
+    mAnimationState->UpdateState(mAnimationFinished, this, mSize);
     // We don't need OnSurfaceDiscardedInternal to handle the animated frames
     // being discarded because we just did.
     animatedFramesDiscarded = false;
@@ -471,7 +471,7 @@ RasterImage::OnSurfaceDiscardedInternal(bool aAnimatedFramesDiscarded)
 
   if (aAnimatedFramesDiscarded && mAnimationState) {
     MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
-    mAnimationState->SetDiscarded(true);
+    mAnimationState->UpdateState(mAnimationFinished, this, mSize);
   }
 
   if (mProgressTracker) {
@@ -1081,7 +1081,7 @@ RasterImage::Discard()
   SurfaceCache::RemoveImage(ImageKey(this));
 
   if (mAnimationState) {
-    mAnimationState->SetDiscarded(true);
+    mAnimationState->UpdateState(mAnimationFinished, this, mSize);
   }
 
   // Notify that we discarded.
@@ -1253,10 +1253,10 @@ RasterImage::Decode(const IntSize& aSize,
     task = DecoderFactory::CreateAnimationDecoder(mDecoderType, WrapNotNull(this),
                                                   mSourceBuffer, mSize,
                                                   decoderFlags, surfaceFlags);
-    mAnimationState->SetDiscarded(false);
+    mAnimationState->UpdateState(mAnimationFinished, this, mSize);
     // If the animation is finished we can draw right away because we just draw
     // the final frame all the time from now on. See comment in
-    // AnimationState::NotifyDecodeComplete.
+    // AnimationState::UpdateState.
     if (mAnimationFinished) {
       mAnimationState->SetCompositedFrameInvalid(false);
     }
@@ -1717,6 +1717,7 @@ RasterImage::NotifyDecodeComplete(const DecoderFinalStatus& aStatus,
     // We've finished a full decode of all animation frames and our AnimationState
     // has been notified about them all, so let it know not to expect anymore.
     mAnimationState->NotifyDecodeComplete();
+    mAnimationState->UpdateState(mAnimationFinished, this, mSize);
   }
 
   // Do some telemetry if this isn't a metadata decode.
