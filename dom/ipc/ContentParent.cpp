@@ -77,6 +77,7 @@
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/intl/LocaleService.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/PAPZParent.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -275,6 +276,7 @@ using namespace mozilla::gfx;
 using namespace mozilla::gmp;
 using namespace mozilla::hal;
 using namespace mozilla::ipc;
+using namespace mozilla::intl;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
 using namespace mozilla::net;
@@ -565,6 +567,8 @@ static const char* sObserverTopics[] = {
   "a11y-init-or-shutdown",
 #endif
   "cacheservice:empty-cache",
+  "intl:app-locales-changed",
+  "intl:requested-locales-changed",
 };
 
 // PreallocateProcess is called by the PreallocatedProcessManager.
@@ -2174,6 +2178,9 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
 
   spellChecker->GetDictionaryList(&xpcomInit.dictionaries());
 
+  LocaleService::GetInstance()->GetAppLocalesAsLangTags(xpcomInit.appLocales());
+  LocaleService::GetInstance()->GetRequestedLocales(xpcomInit.requestedLocales());
+
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1"));
   MOZ_ASSERT(clipboard, "No clipboard?");
 
@@ -2773,6 +2780,16 @@ ContentParent::Observe(nsISupports* aSubject,
 #endif
   else if (!strcmp(aTopic, "cacheservice:empty-cache")) {
     Unused << SendNotifyEmptyHTTPCache();
+  }
+  else if (!strcmp(aTopic, "intl:app-locales-changed")) {
+    nsTArray<nsCString> appLocales;
+    LocaleService::GetInstance()->GetAppLocalesAsLangTags(appLocales);
+    Unused << SendUpdateAppLocales(appLocales);
+  }
+  else if (!strcmp(aTopic, "intl:requested-locales-changed")) {
+    nsTArray<nsCString> requestedLocales;
+    LocaleService::GetInstance()->GetRequestedLocales(requestedLocales);
+    Unused << SendUpdateRequestedLocales(requestedLocales);
   }
   return NS_OK;
 }
