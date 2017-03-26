@@ -6,21 +6,21 @@
 Components.utils.import("resource://gre/modules/MatchPattern.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-function test(url, pattern) {
-  let uri = Services.io.newURI(url);
-  let m = new MatchPattern(pattern);
-  return m.matches(uri);
-}
+function test_matches() {
+  function test(url, pattern) {
+    let uri = Services.io.newURI(url);
+    let m = new MatchPattern(pattern);
+    return m.matches(uri);
+  }
 
-function pass({url, pattern}) {
-  do_check_true(test(url, pattern), `Expected match: ${JSON.stringify(pattern)}, ${url}`);
-}
+  function pass({url, pattern}) {
+    do_check_true(test(url, pattern), `Expected match: ${JSON.stringify(pattern)}, ${url}`);
+  }
 
-function fail({url, pattern}) {
-  do_check_false(test(url, pattern), `Expected no match: ${JSON.stringify(pattern)}, ${url}`);
-}
+  function fail({url, pattern}) {
+    do_check_false(test(url, pattern), `Expected no match: ${JSON.stringify(pattern)}, ${url}`);
+  }
 
-function run_test() {
   // Invalid pattern.
   fail({url: "http://mozilla.org", pattern: ""});
 
@@ -88,4 +88,66 @@ function run_test() {
 
   // Match url with fragments.
   pass({url: "http://mozilla.org/base#some-fragment", pattern: "http://mozilla.org/base"});
+}
+
+function test_overlaps() {
+  function test(filter, hosts) {
+    const f = new MatchPattern(filter);
+    return f.overlapsPermissions(new MatchPattern(hosts));
+  }
+
+  function pass({filter = [], hosts = []}) {
+    ok(test(filter, hosts), `Expected overlap: ${filter}, ${hosts}`);
+  }
+
+  function fail({filter = [], hosts = []}) {
+    ok(!test(filter, hosts), `Expected no overlap: ${filter}, ${hosts}`);
+  }
+
+  // Direct comparison.
+  pass({hosts: "http://ab.cd/", filter: "http://ab.cd/"});
+  fail({hosts: "http://ab.cd/", filter: "ftp://ab.cd/"});
+
+  // Wildcard protocol.
+  pass({hosts: "*://ab.cd/", filter: "https://ab.cd/"});
+  fail({hosts: "*://ab.cd/", filter: "ftp://ab.cd/"});
+
+  // Wildcard subdomain.
+  pass({hosts: "http://*.ab.cd/", filter: "http://ab.cd/"});
+  pass({hosts: "http://*.ab.cd/", filter: "http://www.ab.cd/"});
+  fail({hosts: "http://*.ab.cd/", filter: "http://ab.cd.ef/"});
+  fail({hosts: "http://*.ab.cd/", filter: "http://www.cd/"});
+
+  // Wildcard subsumed.
+  pass({hosts: "http://*.ab.cd/", filter: "http://*.cd/"});
+  fail({hosts: "http://*.cd/", filter: "http://*.xy/"});
+
+  // Subdomain vs substring.
+  fail({hosts: "http://*.ab.cd/", filter: "http://fake-ab.cd/"});
+  fail({hosts: "http://*.ab.cd/", filter: "http://*.fake-ab.cd/"});
+
+  // Wildcard domain.
+  pass({hosts: "http://*/", filter: "http://ab.cd/"});
+  fail({hosts: "http://*/", filter: "https://ab.cd/"});
+
+  // Wildcard wildcards.
+  pass({hosts: "<all_urls>", filter: "ftp://ab.cd/"});
+  fail({hosts: "<all_urls>", filter: ""});
+  fail({hosts: "<all_urls>"});
+
+  // Multiple hosts.
+  pass({hosts: ["http://ab.cd/"], filter: ["http://ab.cd/"]});
+  pass({hosts: ["http://ab.cd/", "http://ab.xy/"], filter: "http://ab.cd/"});
+  pass({hosts: ["http://ab.cd/", "http://ab.xy/"], filter: "http://ab.xy/"});
+  fail({hosts: ["http://ab.cd/", "http://ab.xy/"], filter: "http://ab.zz/"});
+
+  // Multiple Multiples.
+  pass({hosts: ["http://*.ab.cd/"], filter: ["http://ab.cd/", "http://www.ab.cd/"]});
+  pass({hosts: ["http://ab.cd/", "http://ab.xy/"], filter: ["http://ab.cd/", "http://ab.xy/"]});
+  fail({hosts: ["http://ab.cd/", "http://ab.xy/"], filter: ["http://ab.cd/", "http://ab.zz/"]});
+}
+
+function run_test() {
+  test_matches();
+  test_overlaps();
 }
