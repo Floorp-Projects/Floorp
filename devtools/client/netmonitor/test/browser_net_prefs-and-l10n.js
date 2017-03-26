@@ -8,13 +8,13 @@
  */
 
 add_task(function* () {
-  let { L10N } = require("devtools/client/netmonitor/utils/l10n");
+  let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   let { windowRequire } = monitor.panelWin;
-  let { Prefs } = windowRequire("devtools/client/netmonitor/utils/prefs");
+  let { Prefs } = windowRequire("devtools/client/netmonitor/src/utils/prefs");
 
   testL10N();
   testPrefs();

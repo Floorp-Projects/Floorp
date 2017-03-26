@@ -17,9 +17,9 @@ function* throttleUploadTest(actuallyThrottle) {
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");
 
   let { gStore, windowRequire, NetMonitorController } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let RequestListContextMenu = windowRequire(
-    "devtools/client/netmonitor/request-list-context-menu");
+    "devtools/client/netmonitor/src/request-list-context-menu");
 
   gStore.dispatch(Actions.batchEnable(false));
 

@@ -12,7 +12,7 @@ add_task(function* () {
   info("Starting test...");
 
   let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   gStore.dispatch(Actions.batchEnable(false));
 
