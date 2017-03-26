@@ -351,6 +351,10 @@ this.PermissionPromptPrototype = {
     // Permission prompts are always persistent; the close button is controlled by a pref.
     options.persistent = true;
     options.hideClose = !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton");
+    // When the docshell of the browser is aboout to be swapped to another one,
+    // the "swapping" event is called. Returning true causes the notification
+    // to be moved to the new browser.
+    options.eventCallback = topic => topic == "swapping";
 
     this.onBeforeShow();
     chromeWin.PopupNotifications.show(this.browser,

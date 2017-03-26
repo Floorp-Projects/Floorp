@@ -51,4 +51,4 @@ fails == one-color-offset.gif one-color-offset.gif
 # won't be in the text of the contents themselves. --$(boundary)\r\n means
 # "Here is the beginning of a boundary," and --$(boundary)-- means "All done
 # sending you parts.")
-fails HTTP == webcam.html webcam.html
+HTTP == webcam.html webcam.html
