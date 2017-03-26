@@ -20,16 +20,18 @@ var Netmonitor = {
     const { createFactory } = require("devtools/client/shared/vendor/react");
     const { render } = require("devtools/client/shared/vendor/react-dom");
     const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
-    const { configureStore } = require("./utils/create-store");
+    const { configureStore } = require("./src/utils/create-store");
     const store = window.gStore = configureStore();
-    const { NetMonitorController } = require("./netmonitor-controller");
+    const { NetMonitorController } = require("./src/netmonitor-controller");
+    NetMonitorController.toolbox = toolbox;
+    NetMonitorController._target = toolbox.target;
     this.NetMonitorController = NetMonitorController;
 
     // Inject EventEmitter into netmonitor window.
     EventEmitter.decorate(window);
 
     // Components
-    const App = createFactory(require("./components/App"));
+    const App = createFactory(require("./src/components/App"));
 
     this.root = document.querySelector(".root");
 
