@@ -553,6 +553,16 @@ Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed aElement,
                                                  dummyMask, false, aSetSlowSelectorFlag, nullptr);
 }
 
+nsIAtom*
+Gecko_GetXMLLangValue(RawGeckoElementBorrowed aElement)
+{
+  nsString string;
+  if (aElement->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang, string)) {
+    return NS_Atomize(string).take();
+  }
+  return nullptr;
+}
+
 template <typename Implementor>
 static nsIAtom*
 AtomAttrValue(Implementor* aElement, nsIAtom* aName)
