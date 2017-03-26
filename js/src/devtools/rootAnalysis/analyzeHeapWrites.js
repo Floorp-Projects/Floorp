@@ -21,6 +21,7 @@ function checkExternalFunction(entry)
         /^rusturl/,
         "memcmp",
         "strcmp",
+        "malloc",
 
         // Assume that atomic accesses are threadsafe.
         /^__atomic_fetch_/,
