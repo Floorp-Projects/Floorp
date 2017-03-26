@@ -943,8 +943,7 @@ void
 Gecko_InitializeImageCropRect(nsStyleImage* aImage)
 {
   MOZ_ASSERT(aImage);
-  nsStyleSides cropRect;
-  aImage->SetCropRect(MakeUnique<nsStyleSides>(cropRect));
+  aImage->SetCropRect(MakeUnique<nsStyleSides>());
 }
 
 void
