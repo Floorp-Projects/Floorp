@@ -303,8 +303,8 @@ user_pref("browser.search.countryCode", "US");
 user_pref("browser.search.geoSpecificDefaults", false);
 
 // Make sure self support doesn't hit the network.
-user_pref("browser.selfsupport.url", "https://example.com/selfsupport-dummy/");
-user_pref("extensions.shield-recipe-client.api_url", "https://example.com/selfsupport-dummy/");
+user_pref("browser.selfsupport.url", "https://%(server)s/selfsupport-dummy/");
+user_pref("extensions.shield-recipe-client.api_url", "https://%(server)s/selfsupport-dummy/");
 
 user_pref("media.eme.enabled", true);
 
