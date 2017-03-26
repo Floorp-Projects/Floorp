@@ -18,6 +18,8 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef();
   NS_IMETHOD_(MozExternalRefCountType) Release();
 
+  mozilla::ipc::IPCResult Recv__delete__() override;
+
 protected:
   virtual ~StunAddrsRequestParent() {}
 
@@ -32,6 +34,9 @@ protected:
 
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
+
+private:
+  bool mIPCClosed;  // true if IPDL channel has been closed (child crash)
 };
 
 } // namespace net
