@@ -15,11 +15,11 @@ function* throttleTest(actuallyThrottle) {
 
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   let { gStore, windowRequire, NetMonitorController } = monitor.panelWin;
-  let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/constants");
-  let { EVENTS } = windowRequire("devtools/client/netmonitor/constants");
+  let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/src/constants");
+  let { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
   let {
     getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/selectors/index");
+  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");
 
