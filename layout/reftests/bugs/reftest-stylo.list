@@ -1673,7 +1673,7 @@ fails == 641770-1.html 641770-1.html
 fails == 645491-1.html 645491-1.html
 fails == 645647-1.html 645647-1.html
 == 645647-2.html 645647-2.html
-fails == 645768-1.html 645768-1.html
+== 645768-1.html 645768-1.html
 == 650228-1.html 650228-1.html
 needs-focus == 652301-1a.html 652301-1a.html
 needs-focus == 652301-1b.html 652301-1b.html
