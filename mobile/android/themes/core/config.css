@@ -14,8 +14,9 @@ body {
 
 .toolbar {
     width: 100%;
-    height: 3em;
-    position: fixed;
+    min-height: 3em;
+    display: flow-root;
+    position: sticky;
     top: 0;
     left: 0;
     z-index: 10;
@@ -34,7 +35,7 @@ body {
 }
 
 #filter-container {
-    margin: 0.5em;
+    margin: 0.375em;
     height: 2em;
     border: 1px solid transparent;
     border-image-source: url("chrome://browser/skin/images/textfield.png");
@@ -78,9 +79,9 @@ body {
 #new-pref-toggle-button {
     background-position: center center;
     background-image: url("chrome://browser/skin/images/config-plus.png");
-    background-size: 48px 48px;
-    height: 48px;
-    width: 48px;
+    background-size: 3em 3em;
+    height: 3em;
+    width: 3em;
     display: inline-block;
     outline-style: none;
     float: left;
@@ -92,18 +93,18 @@ body {
 
 #filter-search-button {
     background-image: url("chrome://browser/skin/images/search.png");
-    background-size: 32px 32px;
-    height: 32px;
-    width: 32px;
+    background-size: 2em 2em;
+    height: 2em;
+    width: 2em;
     display: inline-block;
     outline-style: none;
 }
 
 #filter-input-clear-button {
     background-image: url("chrome://browser/skin/images/search-clear-30.png");
-    background-size: 32px 32px;
-    height: 32px;
-    width: 32px;
+    background-size: 2em 2em;
+    height: 2em;
+    width: 2em;
     display: inline-block;
     outline-style: none;
 }
@@ -124,7 +125,6 @@ body {
     margin: 0;
     margin-left: auto;
     margin-right: auto;
-    padding-top: 3em;
     padding-left: 0;
     padding-right: 0;
     min-height: 100%;
@@ -272,8 +272,9 @@ li {
 }
 
 .pref-button {
-    display: inline-block;
+    display: inline-flex;
     box-sizing: border-box;
+    align-items: center;
     text-align: center;
     padding: 10px 1em;
     border-left: 1px solid rgba(0,0,0,0.1);
@@ -304,12 +305,14 @@ li {
 
 .pref-button.up {
     background-image: url("chrome://browser/skin/images/arrowup-16.png");
+    background-size: 1em 1em;
     background-position: center center;
     background-repeat: no-repeat;
 }
 
 .pref-button.down {
     background-image: url("chrome://browser/skin/images/arrowdown-16.png");
+    background-size: 1em 1em;
     background-position: center center;
     background-repeat: no-repeat;
 }

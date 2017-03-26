@@ -19,7 +19,6 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.dlc.DownloadContentService;
 import org.mozilla.gecko.home.HomePanelsManager;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.mdns.MulticastDNSManager;
@@ -28,7 +27,6 @@ import org.mozilla.gecko.notifications.NotificationClient;
 import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
 import org.mozilla.gecko.util.BundleEventListener;
-import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -132,6 +130,7 @@ public class GeckoApplication extends Application
     public void onActivityResume(GeckoActivityStatus activity) {
         if (mIsInitialResume) {
             GeckoBatteryManager.getInstance().start(this);
+            GeckoFontScaleListener.getInstance().initialize(this);
             GeckoNetworkManager.getInstance().start(this);
             mIsInitialResume = false;
         } else if (mPausedGecko) {

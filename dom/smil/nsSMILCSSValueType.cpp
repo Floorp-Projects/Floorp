@@ -381,7 +381,7 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
     MOZ_ASSERT(aStyleAnimValue.GetUnit() == StyleAnimationValue::eUnit_Coord,
                "'font-size' value with unexpected style unit");
     aStyleAnimValue.SetCoordValue(aStyleAnimValue.GetCoordValue() /
-                                  aPresContext->TextZoom());
+                                  aPresContext->EffectiveTextZoom());
   }
   return true;
 }

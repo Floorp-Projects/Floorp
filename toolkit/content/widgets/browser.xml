@@ -552,6 +552,13 @@
         ]]></setter>
       </property>
 
+      <property name="effectiveTextZoom"
+                readonly="true">
+        <getter><![CDATA[
+          return this.markupDocumentViewer.effectiveTextZoom;
+        ]]></getter>
+      </property>
+
       <property name="isSyntheticDocument">
         <getter><![CDATA[
           return this.contentDocument.mozSyntheticDocument;
