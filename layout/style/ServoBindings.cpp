@@ -21,6 +21,7 @@
 #include "nsIContentInlines.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
+#include "nsIDocumentInlines.h"
 #include "nsIFrame.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
@@ -48,6 +49,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/HTMLTableCellElement.h"
+#include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/LookAndFeel.h"
 
 using namespace mozilla;
@@ -521,6 +523,12 @@ void
 Gecko_FillAllMaskLists(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
 {
   nsRuleNode::FillAllMaskLists(*aLayers, aMaxLen);
+}
+
+RawGeckoElementBorrowedOrNull
+Gecko_GetBody(RawGeckoPresContextBorrowed aPresContext)
+{
+  return aPresContext->Document()->GetBodyElement();
 }
 
 nscolor Gecko_GetLookAndFeelSystemColor(int32_t aId,
