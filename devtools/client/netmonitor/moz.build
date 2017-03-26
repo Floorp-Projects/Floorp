@@ -18,7 +18,6 @@ DevToolsModules(
     'panel.js',
     'request-list-context-menu.js',
     'request-list-tooltip.js',
-    'store.js',
     'waterfall-background.js',
 )
 
