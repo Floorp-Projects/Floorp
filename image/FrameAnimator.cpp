@@ -26,36 +26,80 @@ namespace image {
 ///////////////////////////////////////////////////////////////////////////////
 
 void
-AnimationState::NotifyDecodeComplete()
+AnimationState::UpdateState(bool aAnimationFinished,
+                            RasterImage *aImage,
+                            const gfx::IntSize& aSize)
 {
-  // If we weren't discarded before the decode finished then mark ourselves as
-  // currently decoded.
-  if (!mDiscarded) {
-    mIsCurrentlyDecoded = true;
+  LookupResult result =
+    SurfaceCache::Lookup(ImageKey(aImage),
+                         RasterSurfaceKey(aSize,
+                                          DefaultSurfaceFlags(),
+                                          PlaybackType::eAnimated));
 
+  UpdateStateInternal(result, aAnimationFinished);
+}
+
+void
+AnimationState::UpdateStateInternal(LookupResult& aResult,
+                                    bool aAnimationFinished)
+{
+  // Update mDiscarded and mIsCurrentlyDecoded.
+  if (aResult.Type() == MatchType::NOT_FOUND) {
+    // no frames, we've either been discarded, or never been decoded before.
+    mDiscarded = mHasBeenDecoded;
+    mIsCurrentlyDecoded = false;
+  } else if (aResult.Type() == MatchType::PENDING) {
+    // no frames yet, but a decoder is or will be working on it.
+    mDiscarded = false;
+    mIsCurrentlyDecoded = false;
+  } else {
+    MOZ_ASSERT(aResult.Type() == MatchType::EXACT);
+    mDiscarded = false;
+
+    // If mHasBeenDecoded is true then we know the true total frame count and
+    // we can use it to determine if we have all the frames now so we know if
+    // we are currently fully decoded.
+    // If mHasBeenDecoded is false then we'll get another UpdateState call
+    // when the decode finishes.
+    if (mHasBeenDecoded) {
+      Maybe<uint32_t> frameCount = FrameCount();
+      MOZ_ASSERT(frameCount.isSome());
+      aResult.Surface().Seek(*frameCount - 1);
+      if (aResult.Surface() && aResult.Surface()->IsFinished()) {
+        mIsCurrentlyDecoded = true;
+      } else {
+        mIsCurrentlyDecoded = false;
+      }
+    }
+  }
+
+  // Update the value of mCompositedFrameInvalid.
+  if (mIsCurrentlyDecoded || aAnimationFinished) {
     // Animated images that have finished their animation (ie because it is a
     // finite length animation) don't have RequestRefresh called on them, and so
     // mCompositedFrameInvalid would never get cleared. We clear it here (and
     // also in RasterImage::Decode when we create a decoder for an image that
     // has finished animated so it can display sooner than waiting until the
-    // decode completes). This is safe to do for images that aren't finished
-    // animating because before we paint the refresh driver will call into us
-    // to advance to the correct frame, and that will succeed because we have
-    // all the frames.
+    // decode completes). We also do it if we are fully decoded. This is safe
+    // to do for images that aren't finished animating because before we paint
+    // the refresh driver will call into us to advance to the correct frame,
+    // and that will succeed because we have all the frames.
     mCompositedFrameInvalid = false;
+  } else if (aResult.Type() == MatchType::NOT_FOUND ||
+             aResult.Type() == MatchType::PENDING) {
+    if (mHasBeenDecoded) {
+      MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
+      mCompositedFrameInvalid = true;
+    }
   }
-  mHasBeenDecoded = true;
+  // Otherwise don't change the value of mCompositedFrameInvalid, it will be
+  // updated by RequestRefresh.
 }
 
 void
-AnimationState::SetDiscarded(bool aDiscarded)
+AnimationState::NotifyDecodeComplete()
 {
-  if (aDiscarded) {
-    MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
-    mIsCurrentlyDecoded = false;
-    mCompositedFrameInvalid = true;
-  }
-  mDiscarded = aDiscarded;
+  mHasBeenDecoded = true;
 }
 
 void
@@ -307,7 +351,9 @@ FrameAnimator::AdvanceFrame(AnimationState& aState,
 }
 
 RefreshResult
-FrameAnimator::RequestRefresh(AnimationState& aState, const TimeStamp& aTime)
+FrameAnimator::RequestRefresh(AnimationState& aState,
+                              const TimeStamp& aTime,
+                              bool aAnimationFinished)
 {
   // By default, an empty RefreshResult.
   RefreshResult ret;
@@ -326,12 +372,8 @@ FrameAnimator::RequestRefresh(AnimationState& aState, const TimeStamp& aTime)
                                           DefaultSurfaceFlags(),
                                           PlaybackType::eAnimated));
 
-  if (!result) {
-    if (result.Type() == MatchType::NOT_FOUND) {
-      // No surface, and nothing pending, must have been discarded but
-      // we haven't been notified yet.
-      aState.SetDiscarded(true);
-    }
+  aState.UpdateStateInternal(result, aAnimationFinished);
+  if (aState.IsDiscarded() || !result) {
     return ret;
   }
 
