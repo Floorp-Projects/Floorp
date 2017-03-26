@@ -9,11 +9,11 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
-const { L10N } = require("../../utils/l10n");
-const { getUrlQuery, parseQueryString } = require("../../utils/request-utils");
+const { L10N } = require("../utils/l10n");
+const { getUrlQuery, parseQueryString } = require("../utils/request-utils");
 
 // Components
-const PropertiesView = createFactory(require("./properties-view"));
+const PropertiesView = createFactory(require("./PropertiesView"));
 
 const { div } = DOM;
 
@@ -34,9 +34,7 @@ const SECTION_NAMES = [
  * Params panel component
  * Displays the GET parameters and POST data of a request
  */
-function ParamsPanel({
-  request,
-}) {
+function ParamsPanel({ request }) {
   let {
     formDataSections,
     mimeType,
