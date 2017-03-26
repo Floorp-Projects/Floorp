@@ -1,7 +1,7 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # Please keep this list sorted by bug number (but feel free to use a
 # logical order for the tests for each bug).
-fails == 105-1.html 105-1.html
+== 105-1.html 105-1.html
 fails == 647-1.html 647-1.html
 == 9458-basic-1.html 9458-basic-1.html
 == 9458-valign-1.html 9458-valign-1.html
@@ -82,7 +82,7 @@ fails == 40596-1j.html 40596-1j.html
 == 68061-1.xml 68061-1.xml
 == 68061-2.xml 68061-2.xml
 == 76331-1.html 76331-1.html
-fails == 81947-1.html 81947-1.html
+== 81947-1.html 81947-1.html
 fails == 82711-1.html 82711-1.html
 fails == 82711-2.html 82711-2.html
 fails == 82711-3.html 82711-3.html
@@ -113,7 +113,7 @@ skip-if(stylo) == 99850-1d.html 99850-1d.html # bug 1337695
 == 120834-2h.html 120834-2h.html
 == 120834-2i.html 120834-2i.html
 == 120834-2j.html 120834-2j.html
-fails == 124903-1.html 124903-1.html
+== 124903-1.html 124903-1.html
 == 128896.html 128896.html
 == 130767-1.html 130767-1.html
 == 134706-1-left-scrollframe.html 134706-1-left-scrollframe.html
@@ -147,7 +147,7 @@ fails == 163504-2b.html 163504-2b.html
 == 167496-1.html 167496-1.html
 == 169749-1.html 169749-1.html
 == 172073-1.html 172073-1.html
-fails == 175190-1.html 175190-1.html
+== 175190-1.html 175190-1.html
 == 179596-1a.html 179596-1a.html
 == 179596-1b.html 179596-1b.html
 == 179596-2.html 179596-2.html
@@ -208,7 +208,7 @@ fails == 201293-1d.html 201293-1d.html
 == 214077-1b.html 214077-1b.html
 == 218473-1.html 218473-1.html
 fuzzy-if(skiaContent,1,4) == 220165-1.svg 220165-1.svg
-fails == 223809-1.html 223809-1.html
+== 223809-1.html 223809-1.html
 == 228856-1.html 228856-1.html
 == 228856-2.html 228856-2.html
 == 229591-1.html 229591-1.html
@@ -242,7 +242,7 @@ fails == 234964-1.html 234964-1.html
 == 234964-2.html 234964-2.html
 == 235593-1.html 235593-1.html
 fails == 236539-1.html 236539-1.html
-fails == 240029-1.html 240029-1.html
+== 240029-1.html 240029-1.html
 fails == 240470-1.html 240470-1.html
 fails == 240933-1.html 240933-1.html
 fails == 240933-2.html 240933-2.html
@@ -279,7 +279,7 @@ fails == 243519-7.html 243519-7.html
 == 252920-1.html 252920-1.html
 == 253701-1.html 253701-1.html
 == 255820-1.html 255820-1.html
-fails == 260406-1.html 260406-1.html
+== 260406-1.html 260406-1.html
 == 261826-1.xul 261826-1.xul
 == 262151-1.html 262151-1.html
 fails == 262998-1.html 262998-1.html
@@ -289,8 +289,8 @@ fails == 262998-1.html 262998-1.html
 == 269908-3.html 269908-3.html
 == 269908-4.html 269908-4.html
 == 269908-5.html 269908-5.html
-fails == 271747-1a.html 271747-1a.html
-fails == 271747-1b.html 271747-1b.html
+== 271747-1a.html 271747-1a.html
+== 271747-1b.html 271747-1b.html
 == 272646-1.xul 272646-1.xul
 == 272646-2a.xul 272646-2a.xul
 == 272646-2b.xul 272646-2b.xul
@@ -314,7 +314,7 @@ fails == 291078-1.html 291078-1.html
 == 291262-1.html 291262-1.html
 == 294306-1.html 294306-1.html
 == 294306-1.html 294306-1.html
-fails == 296361-1.html 296361-1.html
+== 296361-1.html 296361-1.html
 == 296904-1.html 296904-1.html
 fails == 299136-1.html 299136-1.html
 == 299837-1.html 299837-1.html
@@ -547,7 +547,7 @@ asserts-if(stylo,1) == 360746-1.html 360746-1.html # Bug 1341721
 == 362901-1.html 362901-1.html
 == 363247-1.html 363247-1.html
 == 363329-1.html 363329-1.html
-fails == 363329-2.html 363329-2.html
+== 363329-2.html 363329-2.html
 == 363370-1.html 363370-1.html
 == 363402-1.html 363402-1.html
 == 363637-1.html 363637-1.html
@@ -563,7 +563,7 @@ fails == 363858-5a.html 363858-5a.html
 fails == 363858-5b.html 363858-5b.html
 fails == 363858-6a.html 363858-6a.html
 fails == 363858-6b.html 363858-6b.html
-fails == 363874.html 363874.html
+== 363874.html 363874.html
 == 363874-max-width.html 363874-max-width.html
 == 364066-1.html 364066-1.html
 == 364079-1.html 364079-1.html
@@ -571,8 +571,8 @@ fails == 363874.html 363874.html
 == 364861-1.html 364861-1.html
 fails == 364862-1.html 364862-1.html
 == 364968-1.xul 364968-1.xul
-fails == 364989-1.html 364989-1.html
-fails == 365173-1.html 365173-1.html
+== 364989-1.html 364989-1.html
+== 365173-1.html 365173-1.html
 == 366207-1.xul 366207-1.xul
 == 366616-1.xul 366616-1.xul
 fails skip-if(stylo) == 367220-1.html 367220-1.html # crash bug 1342106
@@ -612,12 +612,12 @@ asserts(4-8) == 368155-negative-margins-1.html 368155-negative-margins-1.html
 == 368247-1.html 368247-1.html
 == 368247-2.html 368247-2.html
 == 368504-1.html 368504-1.html
-fails == 368504-2.html 368504-2.html
+== 368504-2.html 368504-2.html
 == 368504-3a.html 368504-3a.html
 == 368504-3b.html 368504-3b.html
 == 368504-4.html 368504-4.html
 == 368504-5.html 368504-5.html
-fails == 368504-6.html 368504-6.html
+== 368504-6.html 368504-6.html
 == 368622-1.html 368622-1.html
 == 368651-1.html 368651-1.html
 == 369361-1.html 369361-1.html
@@ -700,9 +700,9 @@ fails == 378937-1.html 378937-1.html
 == 379349-2b.xhtml 379349-2b.xhtml
 fails == 379349-3a.xhtml 379349-3a.xhtml
 fails == 379349-3b.xhtml 379349-3b.xhtml
-fails == 379361-1.html 379361-1.html
-fails == 379361-2.html 379361-2.html
-fails == 379361-3.html 379361-3.html
+== 379361-1.html 379361-1.html
+== 379361-2.html 379361-2.html
+== 379361-3.html 379361-3.html
 == 379461-1.xhtml 379461-1.xhtml
 == 379461-2.xhtml 379461-2.xhtml
 fails == 379461-3-container-xhtml.html 379461-3-container-xhtml.html # Bug 1341095
@@ -712,7 +712,7 @@ fails == 379461-3-container-xhtml.html 379461-3-container-xhtml.html # Bug 13410
 == 380825-1.html 380825-1.html
 == 380842-1.html 380842-1.html
 == 381130-1.html 381130-1.html
-fails == 381507-1.html 381507-1.html
+== 381507-1.html 381507-1.html
 == 381746-1.html 381746-1.html
 fails == 382600-1.html 382600-1.html
 == 382916-1.html 382916-1.html
@@ -726,7 +726,7 @@ fails == 382600-1.html 382600-1.html
 == 383883-4.html 383883-4.html
 == 383884-1.html 383884-1.html
 == 383885-1.html 383885-1.html
-fails == 384322-1.html 384322-1.html
+== 384322-1.html 384322-1.html
 == 384576-1.html 384576-1.html
 == 384762-1.html 384762-1.html
 == 384876-1.html 384876-1.html
@@ -734,10 +734,10 @@ fails == 384322-1.html 384322-1.html
 HTTP(..) == 385569-1a.html 385569-1a.html
 HTTP(..) == 385569-1b.html 385569-1b.html
 == 385607-1.html 385607-1.html
-fails == 385823-1.html 385823-1.html
-fails == 385823-2a.html 385823-2a.html
-fails == 385823-2b.html 385823-2b.html
-fails == 385823-2c.html 385823-2c.html
+== 385823-1.html 385823-1.html
+== 385823-2a.html 385823-2a.html
+== 385823-2b.html 385823-2b.html
+== 385823-2c.html 385823-2c.html
 fails == 385870-1.html 385870-1.html
 fails == 385870-2.html 385870-2.html
 == 386014-1a.html 386014-1a.html
@@ -820,7 +820,7 @@ fails == 395130-2.html 395130-2.html
 == 395331-1.xml 395331-1.xml
 == 395390-1.html 395390-1.html
 == 396286-1.html 396286-1.html
-fails == 397428-1.html 397428-1.html
+== 397428-1.html 397428-1.html
 == 397844-1.xhtml 397844-1.xhtml
 == 398092-1.html 398092-1.html
 fails == 398101-1.html 398101-1.html
@@ -856,9 +856,9 @@ fails == 400826-1.html 400826-1.html
 fails == 402567-2.html 402567-2.html
 fails == 402567-3.html 402567-3.html
 fails == 402567-4.html 402567-4.html
-fails == 402629-1.html 402629-1.html
-fails == 402629-2.html 402629-2.html
-fails == 402629-3.html 402629-3.html
+== 402629-1.html 402629-1.html
+== 402629-2.html 402629-2.html
+== 402629-3.html 402629-3.html
 fails == 402807-1.html 402807-1.html
 == 402940-1.html 402940-1.html
 == 402940-1b.html 402940-1b.html
@@ -883,7 +883,7 @@ fails == 403519-1.html 403519-1.html
 == 403519-2.html 403519-2.html
 == 403656-1.html 403656-1.html
 == 403656-2.html 403656-2.html
-fails == 403656-3.html 403656-3.html
+== 403656-3.html 403656-3.html
 == 403656-4.html 403656-4.html
 == 403656-5.html 403656-5.html
 == 403657-1.html 403657-1.html
@@ -921,7 +921,7 @@ fails == 407078-1.html 407078-1.html
 fails == 407095-1.html 407095-1.html
 == 407111-1.html 407111-1.html
 == 407227-1.html 407227-1.html
-fails == 407243-1.html 407243-1.html
+== 407243-1.html 407243-1.html
 == 407419-1.html 407419-1.html
 == 407937-1.html 407937-1.html
 == 408493-1.html 408493-1.html
@@ -933,8 +933,8 @@ fails == 408782-1a.html 408782-1a.html
 fails == 408782-1b.html 408782-1b.html
 == 408782-2a.html 408782-2a.html
 fails == 408782-2b.html 408782-2b.html
-fails == 409084-1a.html 409084-1a.html
-fails == 409084-1b.html 409084-1b.html
+== 409084-1a.html 409084-1a.html
+== 409084-1b.html 409084-1b.html
 == 409089-1.html 409089-1.html
 == 409089-2.html 409089-2.html
 == 409089-3.html 409089-3.html
@@ -965,14 +965,14 @@ fails == 412352-2.html 412352-2.html
 == 413286-1a.html 413286-1a.html
 == 413286-1b.html 413286-1b.html
 == 413286-1c.html 413286-1c.html
-fails == 413286-2a.html 413286-2a.html
-fails == 413286-2b.html 413286-2b.html
-fails == 413286-2c.html 413286-2c.html
-fails == 413286-3.html 413286-3.html
-fails == 413286-4a.html 413286-4a.html
-fails == 413286-4b.html 413286-4b.html
-fails == 413286-5.html 413286-5.html
-fails == 413286-6.html 413286-6.html
+== 413286-2a.html 413286-2a.html
+== 413286-2b.html 413286-2b.html
+== 413286-2c.html 413286-2c.html
+== 413286-3.html 413286-3.html
+== 413286-4a.html 413286-4a.html
+== 413286-4b.html 413286-4b.html
+== 413286-5.html 413286-5.html
+== 413286-6.html 413286-6.html
 == 413292-1.html 413292-1.html
 == 413361-1.html 413361-1.html
 == 413840-background-unchanged.html 413840-background-unchanged.html
@@ -1026,7 +1026,7 @@ fails == 422678-1.html 422678-1.html
 == 423385-1.html 423385-1.html
 == 423599-1.html 423599-1.html
 == 423676-1.html 423676-1.html
-fails == 423823-1.html 423823-1.html
+== 423823-1.html 423823-1.html
 == 424074-1.xul 424074-1.xul
 fails-if(Android) == 424074-1.xul 424074-1.xul
 random-if(gtkWidget) == 424074-1-ref2.xul 424074-1-ref2.xul
@@ -1060,9 +1060,9 @@ asserts(3-6) == 427017-1.xhtml 427017-1.xhtml
 == 428278.html 428278.html
 == 428423-1a.html 428423-1a.html
 == 428423-1b.html 428423-1b.html
-fails == 428521-1a.html 428521-1a.html
-fails == 428521-1b.html 428521-1b.html
-fails == 428521-1c.html 428521-1c.html
+== 428521-1a.html 428521-1a.html
+== 428521-1b.html 428521-1b.html
+== 428521-1c.html 428521-1c.html
 == 428810-1a-ltr.html 428810-1a-ltr.html
 == 428810-1b-ltr.html 428810-1b-ltr.html
 == 428810-1c-ltr.html 428810-1c-ltr.html
@@ -1159,8 +1159,8 @@ fails == 442542-1.html 442542-1.html
 fails == 444015-1.html 444015-1.html
 == 444375-1.html 444375-1.html
 fails == 444928-1.html 444928-1.html
-fails == 444928-2.html 444928-2.html
-fails == 444928-3.html 444928-3.html
+== 444928-2.html 444928-2.html
+== 444928-3.html 444928-3.html
 fails random == 445004-1.html 445004-1.html
 == 445142-1a.html 445142-1a.html
 == 445142-1b.html 445142-1b.html
@@ -1184,7 +1184,7 @@ fails pref(dom.use_xbl_scopes_for_remote_xul,true) == 449149-1a.html 449149-1a.h
 fails pref(dom.use_xbl_scopes_for_remote_xul,true) == 449149-1b.html 449149-1b.html
 == 449149-2.html 449149-2.html
 == 449171-1.html 449171-1.html
-fails == 449362-1.html 449362-1.html
+== 449362-1.html 449362-1.html
 == 449519-1.html 449519-1.html
 == 450670-1.html 450670-1.html
 == 451168-1.html 451168-1.html
@@ -1456,7 +1456,7 @@ fails == 523096-1.html 523096-1.html
 == 528096-1.html 528096-1.html
 fails == 530686-1.html 530686-1.html
 == 531098-1.html 531098-1.html
-fails == 531200-1.html 531200-1.html
+== 531200-1.html 531200-1.html
 == 531371-1.html 531371-1.html
 == 534526-1a.html 534526-1a.html
 fails == 534526-1b.html 534526-1b.html
@@ -1544,8 +1544,8 @@ fuzzy-if(Android,2,48) == 563584-10a.html 563584-10a.html
 fuzzy-if(Android,2,48) == 563584-10b.html 563584-10b.html
 == 563584-11.html 563584-11.html
 == 563884-1.html 563884-1.html
-fails == 564002-1.html 564002-1.html
-fails == 564054-1.html 564054-1.html
+== 564002-1.html 564002-1.html
+== 564054-1.html 564054-1.html
 == 564991-1.html 564991-1.html
 == 565819-1.html 565819-1.html
 == 565819-2.html 565819-2.html
@@ -1588,7 +1588,7 @@ fails == 582476-1.svg 582476-1.svg
 == 584400-dash-length.svg 584400-dash-length.svg
 == 584699-1.html 584699-1.html
 fails == 585598-2.xhtml 585598-2.xhtml
-fails == 586400-1.html 586400-1.html
+== 586400-1.html 586400-1.html
 fails == 586683-1.html 586683-1.html
 fails == 589615-1a.xhtml 589615-1a.xhtml
 fails == 589615-1b.html 589615-1b.html
