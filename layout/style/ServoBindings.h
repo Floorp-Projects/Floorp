@@ -141,6 +141,8 @@ nsIAtom* Gecko_LocalName(RawGeckoElementBorrowed element);
 nsIAtom* Gecko_Namespace(RawGeckoElementBorrowed element);
 nsIAtom* Gecko_GetElementId(RawGeckoElementBorrowed element);
 
+nsIAtom* Gecko_GetXMLLangValue(RawGeckoElementBorrowed element);
+
 // Attributes.
 #define SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_)  \
   nsIAtom* prefix_##AtomAttrValue(implementor_ element, nsIAtom* attribute);  \
