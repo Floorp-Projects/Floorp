@@ -2999,15 +2999,9 @@ Http2Session::Finish0RTT(bool aRestart, bool aAlpnChanged)
         aRestart, aAlpnChanged));
 
   for (size_t i = 0; i < m0RTTStreams.Length(); ++i) {
-    // Instead of passing (aRestart, aAlpnChanged) here, we use aAlpnChanged for
-    // both arguments because as long as the alpn token stayed the same, we can
-    // just reuse what we have in our buffer to send instead of having to have
-    // the transaction rewind and read it all over again. We only need to rewind
-    // the transaction if we're switching to a new protocol, because our buffer
-    // won't get used in that case.
     Http2Stream *stream = mStreamIDHash.Get(m0RTTStreams[i]);
     if (stream) {
-      stream->Finish0RTT(aAlpnChanged, aAlpnChanged);
+      stream->Finish0RTT(aRestart, aAlpnChanged);
     }
   }
 
