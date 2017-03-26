@@ -13,14 +13,14 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
   this);
 
-const { EVENTS } = require("devtools/client/netmonitor/constants");
+const { EVENTS } = require("devtools/client/netmonitor/src/constants");
 let { Toolbox } = require("devtools/client/framework/toolbox");
 const {
   decodeUnicodeUrl,
   getUrlBaseName,
   getUrlQuery,
   getUrlHost,
-} = require("devtools/client/netmonitor/utils/request-utils");
+} = require("devtools/client/netmonitor/src/utils/request-utils");
 
 /* eslint-disable no-unused-vars, max-len */
 const EXAMPLE_URL = "http://example.com/browser/devtools/client/netmonitor/test/";

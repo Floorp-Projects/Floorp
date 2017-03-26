@@ -12,7 +12,7 @@ add_task(function* () {
   info("Starting test... ");
 
   let { document, windowRequire } = monitor.panelWin;
-  let { Prefs } = windowRequire("devtools/client/netmonitor/utils/prefs");
+  let { Prefs } = windowRequire("devtools/client/netmonitor/src/utils/prefs");
   let detailsPaneToggleButton = document.querySelector(".network-details-panel-toggle");
 
   let wait = waitForNetworkEvents(monitor, 1);
