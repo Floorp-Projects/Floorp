@@ -32,8 +32,8 @@
 == 394402-1b.html 394402-1b.html
 == 398095-1.html 398095-1.html
 == 407115-1.html 407115-1.html
-fails == 443616-1a.xhtml 443616-1a.xhtml
-fails == 443616-1b.html 443616-1b.html
+== 443616-1a.xhtml 443616-1a.xhtml
+== 443616-1b.html 443616-1b.html
 == 448111-1.html 448111-1.html
 fails == 490174-1.html 490174-1.html
 == 695538-1.html 695538-1.html
@@ -47,8 +47,8 @@ fails == 490174-1.html 490174-1.html
 == infer-rows-inside-rowgroups.html infer-rows-inside-rowgroups.html
 == infer-table-row-cell.html infer-table-row-cell.html
 == infer-table.html infer-table.html
-fails == 3-tables-ref.html 3-tables-ref.html # Bug 1341775
-fails == 3-tables-ref.html 3-tables-ref.html # Bug 1341775
+== 3-tables-ref.html 3-tables-ref.html
+== 3-tables-ref.html 3-tables-ref.html
 == blocks-divide-tables-1.html blocks-divide-tables-1.html
 == blocks-divide-tables-2.html blocks-divide-tables-2.html
 == infer-cells-1.html infer-cells-1.html

@@ -5,7 +5,7 @@
 # Bugs
 == 272830-1.html 272830-1.html
 == 318022-1.html 318022-1.html
-fails == 403669-1.html 403669-1.html
+== 403669-1.html 403669-1.html
 == 381497-n.html 381497-n.html
 == test-async-print.html test-async-print.html
 == 129941-1a.html 129941-1a.html
