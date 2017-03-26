@@ -6,7 +6,11 @@
 
 "use strict";
 
-const { createClass, DOM, PropTypes } = require("devtools/client/shared/vendor/react");
+const {
+  createClass,
+  DOM,
+  PropTypes,
+} = require("devtools/client/shared/vendor/react");
 const SourceEditor = require("devtools/client/sourceeditor/editor");
 
 const { div } = DOM;
