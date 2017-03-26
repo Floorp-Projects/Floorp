@@ -330,6 +330,15 @@ TimerManager.prototype = {
     this._ensureTimer(interval * 1000);
   },
 
+  unregisterTimer: function TM_unregisterTimer(id) {
+    LOG(`TimerManager:unregisterTimer - id: ${id}`);
+    if (id in this._timers) {
+      delete this._timers[id];
+    } else {
+      LOG(`TimerManager:registerTimer - Ignoring unregistration request for unknown id: ${id}`);
+    }
+  },
+
   classID: Components.ID("{B322A5C0-A419-484E-96BA-D7182163899F}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateTimerManager,
                                          Ci.nsITimerCallback,
