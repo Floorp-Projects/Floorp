@@ -1708,6 +1708,17 @@ protected:
    */
   void RecomputeFontSizeInflationEnabled();
 
+  /**
+   * Does the actual work of figuring out the current state of font size inflation.
+   */
+  bool DetermineFontSizeInflationState();
+
+  /**
+   * Apply the system font scale from the corresponding pref to the PresContext,
+   * taking into account the current state of font size inflation.
+   */
+  void HandleSystemFontScale();
+
   void RecordAlloc(void* aPtr) {
 #ifdef DEBUG
     MOZ_ASSERT(!mAllocatedPointers.Contains(aPtr));
@@ -1915,10 +1926,11 @@ protected:
   bool mFontSizeInflationForceEnabled;
   bool mFontSizeInflationDisabledInMasterProcess;
   bool mFontSizeInflationEnabled;
-  bool mPaintingIsFrozen;
 
   // Dirty bit indicating that mFontSizeInflationEnabled needs to be recomputed.
   bool mFontSizeInflationEnabledIsDirty;
+
+  bool mPaintingIsFrozen;
 
   // If a document belongs to an invisible DocShell, this flag must be set
   // to true, so we can avoid any paint calls for widget related to this
