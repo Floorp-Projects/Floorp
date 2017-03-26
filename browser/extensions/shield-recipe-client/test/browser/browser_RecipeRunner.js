@@ -127,6 +127,11 @@ add_task(function* testStart() {
   const getStub = sinon.stub(ClientEnvironment, "getClientClassification")
     .returns(Promise.resolve(false));
 
+  yield SpecialPowers.pushPrefEnv({set: [
+    ["extensions.shield-recipe-client.api_url",
+     "https://example.com/selfsupport-dummy/"],
+  ]});
+
   // When the experiment pref is false, eagerly call getClientClassification.
   yield SpecialPowers.pushPrefEnv({set: [
     ["extensions.shield-recipe-client.experiments.lazy_classify", false],
