@@ -66,7 +66,7 @@ loader.lazyRequireGetter(this, "viewSource",
   "devtools/client/shared/view-source");
 
 loader.lazyGetter(this, "registerHarOverlay", () => {
-  return require("devtools/client/netmonitor/har/toolbox-overlay").register;
+  return require("devtools/client/netmonitor/src/har/toolbox-overlay").register;
 });
 
 /**
