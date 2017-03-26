@@ -679,6 +679,9 @@ extern "C" {
                                     other: *const nsStyleImage);
 }
 extern "C" {
+    pub fn Gecko_InitializeImageCropRect(image: *mut nsStyleImage);
+}
+extern "C" {
     pub fn Gecko_CreateGradient(shape: u8, size: u8, repeating: bool,
                                 legacy_syntax: bool, stops: u32)
      -> *mut nsStyleGradient;
@@ -1011,6 +1014,12 @@ extern "C" {
 extern "C" {
     pub fn Gecko_nsStyleFont_CopyLangFrom(aFont: *mut nsStyleFont,
                                           aSource: *const nsStyleFont);
+}
+extern "C" {
+    pub fn Gecko_nsStyleFont_GetBaseSize(font: *const nsStyleFont,
+                                         pres_context:
+                                             RawGeckoPresContextBorrowed)
+     -> nscoord;
 }
 extern "C" {
     pub fn Gecko_GetMediaFeatures() -> *const nsMediaFeature;

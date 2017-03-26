@@ -37,13 +37,17 @@ button:-moz-focusring > .button-box {
   border: 1px dotted ThreeDDarkShadow;
 }
 
-/* .......... default state .......... */
+/* .......... default/hover/focused state .......... */
 
 @media (-moz-windows-default-theme: 0) {
   @media (-moz-windows-compositor) {
-    /* This is for high-contrast themes on Windows 8 and later */
-    button[default="true"],
-    button:hover {
+    /* This is for high-contrast black and white themes on Windows 8 and later,
+       where the native appearance renders a different background (which
+       appears to be equivalent to the Highlight color) if the button is in the
+       default, hovered or focused state. However, if these states overlap with
+       the active, disabled, open or checked state, the appearance reverts back
+       to the default background. */
+    button:-moz-any([default="true"],:hover,:focus):not(:-moz-any(:active,[disabled="true"],[open="true"],[checked="true"])) {
       color: HighlightText;
     }
   }

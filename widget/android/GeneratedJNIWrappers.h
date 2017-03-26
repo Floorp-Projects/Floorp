@@ -12,36 +12,6 @@
 namespace mozilla {
 namespace java {
 
-class AlarmReceiver : public mozilla::jni::ObjectBase<AlarmReceiver>
-{
-public:
-    static const char name[];
-
-    explicit AlarmReceiver(const Context& ctx) : ObjectBase<AlarmReceiver>(ctx) {}
-
-    struct NotifyAlarmFired_t {
-        typedef AlarmReceiver Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "notifyAlarmFired";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::UI;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO;
-    };
-
-    static const mozilla::jni::CallingThread callingThread =
-            mozilla::jni::CallingThread::UI;
-
-    template<class Impl> class Natives;
-};
-
 class AndroidGamepadManager : public mozilla::jni::ObjectBase<AndroidGamepadManager>
 {
 public:
@@ -563,25 +533,6 @@ public:
     };
 
     static auto CreateShortcut(mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
-
-    struct DisableAlarm_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "disableAlarm";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto DisableAlarm() -> void;
 
     struct DisableBatteryNotifications_t {
         typedef GeckoAppShell Owner;
@@ -1730,27 +1681,6 @@ public:
     };
 
     static auto ScheduleRestart() -> void;
-
-    struct SetAlarm_t {
-        typedef GeckoAppShell Owner;
-        typedef bool ReturnType;
-        typedef bool SetterType;
-        typedef mozilla::jni::Args<
-                int32_t,
-                int32_t> Args;
-        static constexpr char name[] = "setAlarm";
-        static constexpr char signature[] =
-                "(II)Z";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto SetAlarm(int32_t, int32_t) -> bool;
 
     struct SetFullScreen_t {
         typedef GeckoAppShell Owner;

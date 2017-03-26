@@ -19,7 +19,7 @@ use style_traits::values::specified::AllowedNumericType;
 use super::{Angle, Number, SimplifiedValueNode, SimplifiedSumNode, Time};
 use values::{Auto, CSSFloat, Either, FONT_MEDIUM_PX, HasViewportPercentage, None_, Normal};
 use values::ExtremumLength;
-use values::computed::Context;
+use values::computed::{ComputedValueAsSpecified, Context};
 
 pub use super::image::{AngleOrCorner, ColorStop, EndingShape as GradientEndingShape, Gradient};
 pub use super::image::{GradientKind, HorizontalDirection, Image, LengthOrKeyword, LengthOrPercentageOrKeyword};
@@ -32,6 +32,14 @@ const AU_PER_MM: CSSFloat = AU_PER_IN / 25.4;
 const AU_PER_Q: CSSFloat = AU_PER_MM / 4.;
 const AU_PER_PT: CSSFloat = AU_PER_IN / 72.;
 const AU_PER_PC: CSSFloat = AU_PER_PT * 12.;
+
+/// Same as Gecko's AppUnitsToIntCSSPixels
+///
+/// Converts app units to integer pixel values,
+/// rounding during the conversion
+pub fn au_to_int_px(au: f32) -> i32 {
+    (au / AU_PER_PX).round() as i32
+}
 
 #[derive(Clone, PartialEq, Copy, Debug)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
@@ -912,6 +920,8 @@ impl Parse for Percentage {
         }
     }
 }
+
+impl ComputedValueAsSpecified for Percentage {}
 
 /// A length or a percentage value.
 ///

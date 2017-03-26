@@ -45,8 +45,8 @@ fails == 1124636-2-fieldset-min-height.html 1124636-2-fieldset-min-height.html
 == ua-style-sheet-margin-3.html ua-style-sheet-margin-3.html
 == ua-style-sheet-margin-4.html ua-style-sheet-margin-4.html
 == ua-style-sheet-margin-5.html ua-style-sheet-margin-5.html
-fails == ua-style-sheet-margin-6.html ua-style-sheet-margin-6.html
-fails == ua-style-sheet-margin-7.html ua-style-sheet-margin-7.html
+== ua-style-sheet-margin-6.html ua-style-sheet-margin-6.html
+== ua-style-sheet-margin-7.html ua-style-sheet-margin-7.html
 == ua-style-sheet-margin-8.html ua-style-sheet-margin-8.html
 == ua-style-sheet-margin-9.html ua-style-sheet-margin-9.html
 == ua-style-sheet-margin-10.html ua-style-sheet-margin-10.html

@@ -230,6 +230,7 @@ void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient)
 void Gecko_SetUrlImageValue(nsStyleImage* image,
                             ServoBundledURI uri);
 void Gecko_CopyImageValueFrom(nsStyleImage* image, const nsStyleImage* other);
+void Gecko_InitializeImageCropRect(nsStyleImage* image);
 
 nsStyleGradient* Gecko_CreateGradient(uint8_t shape,
                                       uint8_t size,
@@ -377,6 +378,7 @@ bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);
 
 void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsIAtom* atom);
 void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource);
+nscoord Gecko_nsStyleFont_GetBaseSize(const nsStyleFont* font, RawGeckoPresContextBorrowed pres_context);
 
 const nsMediaFeature* Gecko_GetMediaFeatures();
 
