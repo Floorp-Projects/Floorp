@@ -833,7 +833,7 @@ public:
 
   WaitUntilHandler(WorkerPrivate* aWorkerPrivate, JSContext* aCx)
     : mWorkerPrivate(aWorkerPrivate)
-    , mScope(mWorkerPrivate->WorkerName())
+    , mScope(mWorkerPrivate->ServiceWorkerScope())
     , mLine(0)
     , mColumn(0)
   {
