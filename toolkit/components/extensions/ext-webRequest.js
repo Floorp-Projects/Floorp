@@ -85,7 +85,12 @@ function WebRequestEventManager(context, eventName) {
     };
 
     let filter2 = {};
-    filter2.urls = new MatchPattern(filter.urls);
+    if (filter.urls) {
+      filter2.urls = new MatchPattern(filter.urls);
+      if (!filter2.urls.overlapsPermissions(context.extension.whiteListedHosts)) {
+        Cu.reportError("The webRequest.addListener filter doesn't overlap with host permissions.");
+      }
+    }
     if (filter.types) {
       filter2.types = filter.types;
     }

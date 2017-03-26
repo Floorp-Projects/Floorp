@@ -100,6 +100,12 @@ SingleMatchPattern.prototype = {
       ))
     );
   },
+
+  // Tests if this can possibly overlap with the |other| SingleMatchPattern.
+  overlapsIgnoringPath(other) {
+    return this.schemes.some(scheme => other.schemes.includes(scheme)) &&
+           (this.hostMatch(other) || other.hostMatch(this));
+  },
 };
 
 this.MatchPattern = function(pat) {
@@ -172,6 +178,14 @@ MatchPattern.prototype = {
     }
 
     return false;
+  },
+
+  // Checks if every part of this filter overlaps with
+  // some of the |hosts| permissions MatchPatterns.
+  overlapsPermissions(hosts) {
+    const perms = hosts.matchers;
+    return this.matchers.length &&
+           this.matchers.every(m => perms.some(p => p.overlapsIgnoringPath(m)));
   },
 
   serialize() {
