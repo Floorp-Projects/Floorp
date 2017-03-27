@@ -841,25 +841,22 @@ VectorImage::Draw(gfxContext* aContext,
     return DrawResult::NOT_READY;
   }
 
-  if (mIsDrawing) {
-    NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
-    return DrawResult::TEMPORARY_ERROR;
-  }
-
   if (mAnimationConsumers == 0) {
     SendOnUnlockedDraw(aFlags);
   }
 
-  AutoRestore<bool> autoRestoreIsDrawing(mIsDrawing);
-  mIsDrawing = true;
+  MOZ_ASSERT(!(aFlags & FLAG_FORCE_PRESERVEASPECTRATIO_NONE) ||
+             (aSVGContext && aSVGContext->GetViewportSize()),
+             "Viewport size is required when using "
+             "FLAG_FORCE_PRESERVEASPECTRATIO_NONE");
 
-  // If FLAG_FORCE_PRESERVEASPECTRATIO_NONE bit is set, that means we should
-  // overwrite SVG preserveAspectRatio attibute of this image with none, and
-  // always stretch this image to viewport non-uniformly.
-  // And we can do this only if the caller pass in the the SVG viewport, via
-  // aSVGContext.
   Maybe<SVGImageContext> newSVGContext;
   if ((aFlags & FLAG_FORCE_PRESERVEASPECTRATIO_NONE) && aSVGContext) {
+    // Create an SVGImageContext with the appropriate 'preserveAspectRatio'
+    // value so that LookupCachedSurface() below uses the appropriate key:
+    MOZ_ASSERT(!aSVGContext->GetPreserveAspectRatio(),
+               "FLAG_FORCE_PRESERVEASPECTRATIO_NONE is not expected if a "
+               "preserveAspectRatio override is supplied");
     Maybe<SVGPreserveAspectRatio> aspectRatio =
       Some(SVGPreserveAspectRatio(SVG_PRESERVEASPECTRATIO_NONE,
                                   SVG_MEETORSLICE_UNKNOWN));
@@ -867,13 +864,8 @@ VectorImage::Draw(gfxContext* aContext,
     newSVGContext->SetPreserveAspectRatio(aspectRatio);
   }
 
-  float animTime =
-    (aWhichFrame == FRAME_FIRST) ? 0.0f
-                                 : mSVGDocumentWrapper->GetCurrentTime();
-  AutoSVGRenderingState autoSVGState(newSVGContext ? newSVGContext : aSVGContext,
-                                     animTime,
-                                     mSVGDocumentWrapper->GetRootSVGElem());
-
+  float animTime = (aWhichFrame == FRAME_FIRST)
+                     ? 0.0f : mSVGDocumentWrapper->GetCurrentTime();
 
   SVGDrawingParameters params(aContext, aSize, aRegion, aSamplingFilter,
                               newSVGContext ? newSVGContext : aSVGContext,
@@ -887,6 +879,22 @@ VectorImage::Draw(gfxContext* aContext,
     return DrawResult::SUCCESS;
   }
 
+  // else, we need to paint the image:
+
+  if (mIsDrawing) {
+    NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
+    return DrawResult::TEMPORARY_ERROR;
+  }
+  AutoRestore<bool> autoRestoreIsDrawing(mIsDrawing);
+  mIsDrawing = true;
+
+  // Apply any 'preserveAspectRatio' override (if specified) to the root
+  // element, and set the animation time:
+  AutoSVGRenderingState autoSVGState(newSVGContext ? newSVGContext : aSVGContext,
+                                     animTime,
+                                     mSVGDocumentWrapper->GetRootSVGElem());
+
+  // Set context paint (if specified) on the document:
   Maybe<AutoSetRestoreSVGContextPaint> autoContextPaint;
   if (aSVGContext &&
       aSVGContext->GetContextPaint()) {
