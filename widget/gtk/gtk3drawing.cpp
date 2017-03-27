@@ -2248,17 +2248,6 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
         }
         break;
 
-    case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
-    case MOZ_GTK_SCROLLBAR_THUMB_VERTICAL:
-        {
-          if (gtk_check_version(3,20,0) == nullptr) {
-            style = ClaimStyleContext(widget);
-            moz_gtk_add_margin_border_padding(style, left, top, right, bottom);
-            ReleaseStyleContext(style);
-          }
-          return MOZ_GTK_SUCCESS;
-        }
-        break;
     /* These widgets have no borders, since they are not containers. */
     case MOZ_GTK_CHECKBUTTON_LABEL:
     case MOZ_GTK_RADIOBUTTON_LABEL:
@@ -2267,6 +2256,8 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_CHECKBUTTON:
     case MOZ_GTK_RADIOBUTTON:
     case MOZ_GTK_SCROLLBAR_BUTTON:
+    case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
+    case MOZ_GTK_SCROLLBAR_THUMB_VERTICAL:
     case MOZ_GTK_SCALE_THUMB_HORIZONTAL:
     case MOZ_GTK_SCALE_THUMB_VERTICAL:
     case MOZ_GTK_GRIPPER:
