@@ -296,7 +296,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitTypeOfV(LTypeOfV* lir);
     void visitOutOfLineTypeOfV(OutOfLineTypeOfV* ool);
     void visitToAsync(LToAsync* lir);
-    void visitToAsyncGen(LToAsyncGen* lir);
     void visitToIdV(LToIdV* lir);
     template<typename T> void emitLoadElementT(LLoadElementT* lir, const T& source);
     void visitLoadElementT(LLoadElementT* lir);

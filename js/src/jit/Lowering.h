@@ -121,7 +121,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitCompare(MCompare* comp);
     void visitTypeOf(MTypeOf* ins);
     void visitToAsync(MToAsync* ins);
-    void visitToAsyncGen(MToAsyncGen* ins);
     void visitToId(MToId* ins);
     void visitBitNot(MBitNot* ins);
     void visitBitAnd(MBitAnd* ins);
