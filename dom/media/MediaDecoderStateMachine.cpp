@@ -2398,6 +2398,12 @@ SeekingState::SeekCompleted()
     mMaster->UpdatePlaybackPositionInternal(newCurrentTime);
   }
 
+  // Dispatch an event so that the UI can change in response to the end of
+  // video-only seek
+  if (target.IsVideoOnly()) {
+    mMaster->mOnPlaybackEvent.Notify(MediaEventType::VideoOnlySeekCompleted);
+  }
+
   // Try to decode another frame to detect if we're at the end...
   SLOG("Seek completed, mCurrentPosition=%" PRId64,
        mMaster->mCurrentPosition.Ref());
