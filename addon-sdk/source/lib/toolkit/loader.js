@@ -493,6 +493,7 @@ const load = iced(function load(loader, module) {
   }
   sandboxes[module.uri] = sandbox;
 
+  let originalExports = module.exports;
   try {
     evaluate(sandbox, module.uri);
   }
@@ -545,7 +546,10 @@ const load = iced(function load(loader, module) {
     }
   }
 
-  if (module.exports && typeof(module.exports) === 'object')
+  // Only freeze the exports object if we created it ourselves. Modules
+  // which completely replace the exports object and still want it
+  // frozen need to freeze it themselves.
+  if (module.exports === originalExports)
     freeze(module.exports);
 
   return module;
