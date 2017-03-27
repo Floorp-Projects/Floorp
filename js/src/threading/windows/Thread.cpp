@@ -8,8 +8,7 @@
 #include <new.h>
 #include <process.h>
 
-#include <windows.h>
-
+#include "jswin.h"
 #include "threading/Thread.h"
 
 class js::Thread::Id::PlatformData
