@@ -458,9 +458,10 @@ CrossCompartmentWrapper::fun_toString(JSContext* cx, HandleObject wrapper, unsig
 }
 
 bool
-CrossCompartmentWrapper::regexp_toShared(JSContext* cx, HandleObject wrapper, RegExpGuard* g) const
+CrossCompartmentWrapper::regexp_toShared(JSContext* cx, HandleObject wrapper,
+                                         MutableHandleRegExpShared shared) const
 {
-    RegExpGuard re(cx);
+    RootedRegExpShared re(cx);
     {
         AutoCompartment call(cx, wrappedObject(wrapper));
         if (!Wrapper::regexp_toShared(cx, wrapper, &re))
@@ -469,7 +470,7 @@ CrossCompartmentWrapper::regexp_toShared(JSContext* cx, HandleObject wrapper, Re
 
     // Get an equivalent RegExpShared associated with the current compartment.
     cx->markAtom(re->getSource());
-    return cx->compartment()->regExps.get(cx, re->getSource(), re->getFlags(), g);
+    return cx->compartment()->regExps.get(cx, re->getSource(), re->getFlags(), shared);
 }
 
 bool
