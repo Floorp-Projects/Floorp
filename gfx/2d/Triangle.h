@@ -22,7 +22,6 @@ template<class Units, class F = Float>
 struct TriangleTyped
 {
   PointTyped<Units, F> p1, p2, p3;
-  F width, height;
 
   TriangleTyped()
     : p1(), p2(), p3() {}
