@@ -138,6 +138,7 @@ int main(int argc, char* argv[])
         test->uninit();
     }
 
+    MOZ_RELEASE_ASSERT(!JSRuntime::hasLiveRuntimes());
     JS_ShutDown();
 
     if (failures) {

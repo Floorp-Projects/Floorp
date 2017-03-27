@@ -94,6 +94,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
   : parentRuntime(parentRuntime),
 #ifdef DEBUG
     updateChildRuntimeCount(parentRuntime),
+    initialized_(false),
 #endif
     activeContext_(nullptr),
     activeContextChangeProhibited_(0),
@@ -191,9 +192,22 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     lcovOutput().init();
 }
 
+JSRuntime::~JSRuntime()
+{
+    MOZ_ASSERT(!initialized_);
+
+    DebugOnly<size_t> oldCount = liveRuntimesCount--;
+    MOZ_ASSERT(oldCount > 0);
+}
+
 bool
 JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
 {
+#ifdef DEBUG
+    MOZ_ASSERT(!initialized_);
+    initialized_ = true;
+#endif
+
     if (CanUseExtraThreads() && !EnsureHelperThreadsInitialized())
         return false;
 
@@ -265,6 +279,7 @@ JSRuntime::destroyRuntime()
 {
     MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
     MOZ_ASSERT(childRuntimeCount == 0);
+    MOZ_ASSERT(initialized_);
 
     sharedIntlData.ref().destroyInstance();
 
@@ -335,8 +350,9 @@ JSRuntime::destroyRuntime()
     js_free(defaultLocale);
     js_delete(jitRuntime_.ref());
 
-    DebugOnly<size_t> oldCount = liveRuntimesCount--;
-    MOZ_ASSERT(oldCount > 0);
+#ifdef DEBUG
+    initialized_ = false;
+#endif
 }
 
 static void
