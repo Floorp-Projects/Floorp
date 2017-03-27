@@ -364,7 +364,6 @@
     _(TypeOfV)                      \
     _(ToAsync)                      \
     _(ToAsyncGen)                   \
-    _(ToAsyncIter)                  \
     _(ToIdV)                        \
     _(Floor)                        \
     _(FloorF)                       \
