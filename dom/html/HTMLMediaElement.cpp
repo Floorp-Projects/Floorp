@@ -692,7 +692,8 @@ public:
 
     MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
            ("HTMLMediaElement::AudioChannelAgentCallback, WindowVolumeChanged, "
-            "this = %p, aVolume = %f, aMuted = %d\n", this, aVolume, aMuted));
+            "this = %p, aVolume = %f, aMuted = %s\n",
+            this, aVolume, aMuted ? "true" : "false"));
 
     if (mAudioChannelVolume != aVolume) {
       mAudioChannelVolume = aVolume;
@@ -716,7 +717,7 @@ public:
 
     MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
            ("HTMLMediaElement::AudioChannelAgentCallback, WindowSuspendChanged, "
-            "this = %p, aSuspend = %d\n", this, aSuspend));
+            "this = %p, aSuspend = %s\n", this, SuspendTypeToStr(aSuspend)));
 
     switch (aSuspend) {
       case nsISuspendedTypes::NONE_SUSPENDED:
@@ -883,10 +884,7 @@ private:
     mSuspended = aSuspend;
     MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
            ("HTMLMediaElement::AudioChannelAgentCallback, SetAudioChannelSuspended, "
-            "this = %p, aSuspend = %d\n", this, aSuspend));
-
-    NotifyAudioPlaybackChanged(
-      AudioChannelService::AudibleChangedReasons::ePauseStateChanged);
+            "this = %p, aSuspend = %s\n", this, SuspendTypeToStr(aSuspend)));
   }
 
   void
@@ -907,6 +905,9 @@ private:
     if (rv.Failed()) {
       NS_WARNING("Not able to resume from AudioChannel.");
     }
+
+    NotifyAudioPlaybackChanged(
+      AudioChannelService::AudibleChangedReasons::ePauseStateChanged);
   }
 
   void
@@ -924,6 +925,8 @@ private:
           return;
         }
     }
+    NotifyAudioPlaybackChanged(
+      AudioChannelService::AudibleChangedReasons::ePauseStateChanged);
   }
 
   void
@@ -1014,8 +1017,9 @@ private:
       return AudioChannelService::AudibleState::eMaybeAudible;
     }
 
-    // Media is suspended.
-    if (mSuspended != nsISuspendedTypes::NONE_SUSPENDED) {
+    // Suspended or paused media doesn't produce any sound.
+    if (mSuspended != nsISuspendedTypes::NONE_SUSPENDED ||
+        mOwner->mPaused) {
       return AudioChannelService::AudibleState::eNotAudible;
     }
 
@@ -4309,7 +4313,6 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
     // The preload action depends on the value of the autoplay attribute.
     // It's value may have changed, so update it.
     UpdatePreloadAction();
-    aDocument->AddMediaContent(this);
   }
 
   NotifyDecoderActivityChanges();
@@ -4542,9 +4545,6 @@ void HTMLMediaElement::UnbindFromTree(bool aDeep,
 {
   mUnboundFromTree = true;
   mVisibilityState = Visibility::UNTRACKED;
-  if (OwnerDoc()) {
-    OwnerDoc()->RemoveMediaContent(this);
-  }
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 

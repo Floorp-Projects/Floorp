@@ -228,6 +228,10 @@ def opt_seta(task, params):
 
 @optimization('files-changed')
 def opt_files_changed(task, params, file_patterns):
+    # pushlog_id == -1 - this is the case when run from a cron.yml job
+    if params.get('pushlog_id') == -1:
+        return True, None
+
     changed = files_changed.check(params, file_patterns)
     if not changed:
         logger.debug('no files found matching a pattern in `when.files-changed` for ' +

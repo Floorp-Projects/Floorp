@@ -16,7 +16,7 @@ var testServices = [
   ["browser/nav-bookmarks-service;1",
     ["nsINavBookmarksService", "nsINavHistoryObserver", "nsIAnnotationObserver"],
     ["createFolder", "getObservers", "onFrecencyChanged", "onTitleChanged",
-     "onPageAnnotationSet", "onPageAnnotationRemoved"]
+     "onPageAnnotationSet", "onPageAnnotationRemoved", "onDeleteURI"]
   ],
   ["browser/livemark-service;2", ["mozIAsyncLivemarks"], ["reloadLivemarks"]],
   ["browser/annotation-service;1", ["nsIAnnotationService"], ["getObservers"]],

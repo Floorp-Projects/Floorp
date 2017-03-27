@@ -14,21 +14,6 @@ namespace mozilla {
 namespace java {
 
 template<class Impl>
-class AlarmReceiver::Natives : public mozilla::jni::NativeImpl<AlarmReceiver, Impl>
-{
-public:
-    static const JNINativeMethod methods[1];
-};
-
-template<class Impl>
-const JNINativeMethod AlarmReceiver::Natives<Impl>::methods[] = {
-
-    mozilla::jni::MakeNativeMethod<AlarmReceiver::NotifyAlarmFired_t>(
-            mozilla::jni::NativeStub<AlarmReceiver::NotifyAlarmFired_t, Impl>
-            ::template Wrap<&Impl::NotifyAlarmFired>)
-};
-
-template<class Impl>
 class AndroidGamepadManager::Natives : public mozilla::jni::NativeImpl<AndroidGamepadManager, Impl>
 {
 public:

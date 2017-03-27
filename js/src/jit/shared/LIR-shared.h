@@ -7154,18 +7154,25 @@ class LCallSetElement : public LCallInstructionHelper<0, 1 + 2 * BOX_PIECES, 0>
 };
 
 // Call js::InitElementArray.
-class LCallInitElementArray : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
+class LCallInitElementArray : public LCallInstructionHelper<0, 2 + BOX_PIECES, 0>
 {
 public:
     LIR_HEADER(CallInitElementArray)
 
-    static const size_t Value = 1;
+    static const size_t Value = 2;
 
-    LCallInitElementArray(const LAllocation& obj, const LBoxAllocation& value) {
+    LCallInitElementArray(const LAllocation& obj, const LAllocation& index,
+                          const LBoxAllocation& value) {
         setOperand(0, obj);
+        setOperand(1, index);
         setBoxOperand(Value, value);
     }
-
+    const LAllocation* object() {
+        return getOperand(0);
+    }
+    const LAllocation* index() {
+        return getOperand(1);
+    }
     const MCallInitElementArray* mir() const {
         return mir_->toCallInitElementArray();
     }

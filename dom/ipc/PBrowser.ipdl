@@ -28,7 +28,6 @@ using class mozilla::gfx::Matrix from "mozilla/gfx/Matrix.h";
 using struct gfxSize from "gfxPoint.h";
 using CSSRect from "Units.h";
 using CSSSize from "Units.h";
-using mozilla::LayoutDeviceIntRect from "Units.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
 using mozilla::ScreenIntPoint from "Units.h";

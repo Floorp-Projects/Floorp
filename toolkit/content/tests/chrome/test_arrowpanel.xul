@@ -183,18 +183,14 @@ function* nextTest()
   // Test that a transition occurs when opening or closing the popup. The transition is
   // disabled on Linux.
   if (navigator.platform.indexOf("Linux") == -1) {
-    var transitions = 0;
     function transitionEnded(event) {
-      transitions++;
-      // Two properties transition so continue on the second one finishing.
-      if (!(transitions % 2)) {
+      if ($("animatepanel").state != "open") {
+        is($("animatepanel").state, "showing", "state is showing during transitionend");
+        ok(!animatedPopupShown, "popupshown not fired yet")
+      } else {
         is($("animatepanel").state, "open", "state is open after transitionend");
         ok(animatedPopupShown, "popupshown now fired")
         SimpleTest.executeSoon(() => runNextTest.next());
-      }
-      else {
-        is($("animatepanel").state, "showing", "state is showing during transitionend");
-        ok(!animatedPopupShown, "popupshown not fired yet")
       }
     }
 

@@ -965,13 +965,8 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
 
   // Get our style context's color struct.
   const nsStyleOutline* ourOutline = aStyleContext->StyleOutline();
-  MOZ_ASSERT(ourOutline != NS_STYLE_BORDER_STYLE_NONE,
-             "shouldn't have created nsDisplayOutline item");
 
-  uint8_t outlineStyle = ourOutline->mOutlineStyle;
-  nscoord width = ourOutline->GetOutlineWidth();
-
-  if (width == 0 && outlineStyle != NS_STYLE_BORDER_STYLE_AUTO) {
+  if (!ourOutline->ShouldPaintOutline()) {
     // Empty outline
     return Nothing();
   }
@@ -1004,6 +999,8 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
   if (innerRect.Contains(aDirtyRect))
     return Nothing();
 
+  nscoord width = ourOutline->GetOutlineWidth();
+
   nsRect outerRect = innerRect;
   outerRect.Inflate(width, width);
 
@@ -1022,6 +1019,7 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
   RectCornerRadii outlineRadii;
   ComputePixelRadii(twipsRadii, twipsPerPixel, &outlineRadii);
 
+  uint8_t outlineStyle = ourOutline->mOutlineStyle;
   if (outlineStyle == NS_STYLE_BORDER_STYLE_AUTO) {
     if (nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
       nsITheme* theme = aPresContext->GetTheme();

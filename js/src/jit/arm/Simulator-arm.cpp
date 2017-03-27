@@ -1561,7 +1561,8 @@ Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
         return false;
 
     void* pc = reinterpret_cast<void*>(get_pc());
-    wasm::Instance* instance = act->compartment()->wasm.lookupInstanceDeprecated(pc);
+    void* fp = reinterpret_cast<void*>(get_register(r11));
+    wasm::Instance* instance = wasm::LookupFaultingInstance(act, pc, fp);
     if (!instance || !instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes))
         return false;
 

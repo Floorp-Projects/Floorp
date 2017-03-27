@@ -34,7 +34,6 @@
 #include "nsIScreenManager.h"
 #include "nsIWidgetListener.h"
 #include "nsIPresShell.h"
-#include "nsScreenCocoa.h"
 
 #include "gfxPlatform.h"
 #include "qcms.h"
@@ -1398,8 +1397,7 @@ NS_IMPL_ISUPPORTS0(FullscreenTransitionData)
 nsCocoaWindow::PrepareForFullscreenTransition(nsISupports** aData)
 {
   nsCOMPtr<nsIScreen> widgetScreen = GetWidgetScreen();
-  nsScreenCocoa* screen = static_cast<nsScreenCocoa*>(widgetScreen.get());
-  NSScreen* cocoaScreen = screen->CocoaScreen();
+  NSScreen* cocoaScreen = ScreenHelperCocoa::CocoaScreenForScreen(widgetScreen);
 
   NSWindow* win =
     [[NSWindow alloc] initWithContentRect:[cocoaScreen frame]

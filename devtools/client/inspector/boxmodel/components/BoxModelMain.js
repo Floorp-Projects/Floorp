@@ -10,6 +10,9 @@ const { addons, createClass, createFactory, DOM: dom, PropTypes } =
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const BoxModelEditable = createFactory(require("./BoxModelEditable"));
+// Reps
+const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
+const Rep = createFactory(REPS.Rep);
 
 const Types = require("../types");
 
@@ -25,9 +28,11 @@ module.exports = createClass({
 
   propTypes: {
     boxModel: PropTypes.shape(Types.boxModel).isRequired,
+    setSelectedNode: PropTypes.func.isRequired,
     onHideBoxModelHighlighter: PropTypes.func.isRequired,
     onShowBoxModelEditor: PropTypes.func.isRequired,
     onShowBoxModelHighlighter: PropTypes.func.isRequired,
+    onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
@@ -92,10 +97,60 @@ module.exports = createClass({
     return layout[property] ? parseFloat(layout[property]) : "-";
   },
 
+  /**
+   * While waiting for a reps fix in https://github.com/devtools-html/reps/issues/92,
+   * translate nodeFront to a grip-like object that can be used with an ElementNode rep.
+   *
+   * @params  {NodeFront} nodeFront
+   *          The NodeFront for which we want to create a grip-like object.
+   * @returns {Object} a grip-like object that can be used with Reps.
+   */
+  translateNodeFrontToGrip(nodeFront) {
+    let {
+      attributes
+    } = nodeFront;
+
+    // The main difference between NodeFront and grips is that attributes are treated as
+    // a map in grips and as an array in NodeFronts.
+    let attributesMap = {};
+    for (let { name, value } of attributes) {
+      attributesMap[name] = value;
+    }
+
+    return {
+      actor: nodeFront.actorID,
+      preview: {
+        attributes: attributesMap,
+        attributesLength: attributes.length,
+        // nodeName is already lowerCased in Node grips
+        nodeName: nodeFront.nodeName.toLowerCase(),
+        nodeType: nodeFront.nodeType,
+      }
+    };
+  },
+
   onHighlightMouseOver(event) {
     let region = event.target.getAttribute("data-box");
+
     if (!region) {
+      let el = event.target;
+
+      do {
+        el = el.parentNode;
+
+        if (el && el.getAttribute("data-box")) {
+          region = el.getAttribute("data-box");
+          break;
+        }
+      } while (el.parentNode);
+
       this.props.onHideBoxModelHighlighter();
+    }
+
+    if (region === "offset-parent") {
+      this.props.onHideBoxModelHighlighter();
+      this.props.onShowBoxModelHighlighterForNode(this.props.boxModel.offsetParent);
+      return;
     }
 
     this.props.onShowBoxModelHighlighter({
@@ -106,9 +161,15 @@ module.exports = createClass({
   },
 
   render() {
-    let { boxModel, onShowBoxModelEditor } = this.props;
-    let { layout } = boxModel;
+    let {
+      boxModel,
+      setSelectedNode,
+      onShowBoxModelEditor,
+    } = this.props;
+    let { layout, offsetParent } = boxModel;
     let { height, width, position } = layout;
+
+    let displayOffsetParent = offsetParent && layout.position === "absolute";
 
     let borderTop = this.getBorderOrPaddingValue("border-top-width");
     let borderRight = this.getBorderOrPaddingValue("border-right-width");
@@ -175,6 +236,23 @@ module.exports = createClass({
         onMouseOver: this.onHighlightMouseOver,
         onMouseOut: this.props.onHideBoxModelHighlighter,
       },
+      displayOffsetParent ?
+        dom.span(
+          {
+            className: "boxmodel-offset-parent",
+            "data-box": "offset-parent",
+          },
+          Rep(
+            {
+              defaultRep: offsetParent,
+              mode: MODE.TINY,
+              object: this.translateNodeFrontToGrip(offsetParent),
+              onInspectIconClick: () => setSelectedNode(offsetParent, "box-model"),
+            }
+          )
+        )
+        :
+        null,
       displayPosition ?
         dom.span(
           {

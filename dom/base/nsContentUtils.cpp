@@ -4127,7 +4127,7 @@ nsContentUtils::DispatchFocusChromeEvent(nsPIDOMWindowOuter* aWindow)
   }
 
   return DispatchChromeEvent(doc, aWindow,
-                             NS_LITERAL_STRING("DOMServiceWorkerFocusClient"),
+                             NS_LITERAL_STRING("DOMWindowFocus"),
                              true, true);
 }
 
@@ -10079,4 +10079,37 @@ nsContentUtils::HtmlObjectContentTypeForMIMEType(const nsCString& aMIMEType,
   }
 
   return nsIObjectLoadingContent::TYPE_NULL;
+}
+
+/* static */ already_AddRefed<Dispatcher>
+nsContentUtils::GetDispatcherByLoadInfo(nsILoadInfo* aLoadInfo)
+{
+  if (NS_WARN_IF(!aLoadInfo)) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aLoadInfo->GetLoadingDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  RefPtr<Dispatcher> dispatcher;
+  if (doc) {
+    dispatcher = doc->GetDocGroup();
+  } else {
+    // There's no document yet, but this might be a top-level load where we can
+    // find a TabGroup.
+    uint64_t outerWindowId;
+    if (NS_FAILED(aLoadInfo->GetOuterWindowID(&outerWindowId))) {
+      // No window. This might be an add-on XHR, a service worker request, or
+      // something else.
+      return nullptr;
+    }
+    RefPtr<nsGlobalWindow> window = nsGlobalWindow::GetOuterWindowWithId(outerWindowId);
+    if (!window) {
+      return nullptr;
+    }
+
+    dispatcher = window->TabGroup();
+  }
+
+  return dispatcher.forget();
 }

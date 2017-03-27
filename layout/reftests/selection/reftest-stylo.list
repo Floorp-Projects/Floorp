@@ -33,6 +33,6 @@ fails == themed-widget.html themed-widget.html
 == addrange-1.html addrange-1.html
 == addrange-2.html addrange-2.html
 == splitText-normalize.html splitText-normalize.html
-fails == modify-range.html modify-range.html
-fails == dom-mutations.html dom-mutations.html
+== modify-range.html modify-range.html
+== dom-mutations.html dom-mutations.html
 == trailing-space-1.html trailing-space-1.html

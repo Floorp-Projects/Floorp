@@ -351,20 +351,30 @@ impl WebRenderDisplayItemConverter for DisplayItem {
                             }
                         }
                     }
+                    BorderDetails::Gradient(ref gradient) => {
+                        webrender_traits::BorderDetails::Gradient(webrender_traits::GradientBorder {
+                            gradient: builder.create_gradient(
+                                          gradient.gradient.start_point.to_pointf(),
+                                          gradient.gradient.end_point.to_pointf(),
+                                          gradient.gradient.stops.clone(),
+                                          ExtendMode::Clamp),
+                            outset: gradient.outset,
+                        })
+                    }
                 };
 
                 builder.push_border(rect, clip, widths, details);
             }
             DisplayItem::Gradient(ref item) => {
                 let rect = item.base.bounds.to_rectf();
-                let start_point = item.start_point.to_pointf();
-                let end_point = item.end_point.to_pointf();
+                let start_point = item.gradient.start_point.to_pointf();
+                let end_point = item.gradient.end_point.to_pointf();
                 let clip = item.base.clip.to_clip_region(builder);
                 builder.push_gradient(rect,
                                       clip,
                                       start_point,
                                       end_point,
-                                      item.stops.clone(),
+                                      item.gradient.stops.clone(),
                                       ExtendMode::Clamp);
             }
             DisplayItem::Line(..) => {
@@ -394,10 +404,6 @@ impl WebRenderDisplayItemConverter for DisplayItem {
                 let stacking_context = &item.stacking_context;
                 debug_assert!(stacking_context.context_type == StackingContextType::Real);
 
-                let clip = builder.new_clip_region(&stacking_context.overflow.to_rectf(),
-                                                   vec![],
-                                                   None);
-
                 let transform = stacking_context.transform.map(|transform| {
                     LayoutTransform::from_untyped(&transform).into()
                 });
@@ -407,7 +413,6 @@ impl WebRenderDisplayItemConverter for DisplayItem {
 
                 builder.push_stacking_context(stacking_context.scroll_policy,
                                               stacking_context.bounds.to_rectf(),
-                                              clip,
                                               stacking_context.z_index,
                                               transform,
                                               perspective,

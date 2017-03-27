@@ -19,7 +19,7 @@ fails == dynamic-insertion-3.html dynamic-insertion-3.html
 == float-handling.html float-handling.html
 pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == inflated-ruby-1.html inflated-ruby-1.html
 == intra-level-whitespace-1.html intra-level-whitespace-1.html
-fails == intra-level-whitespace-2.html intra-level-whitespace-2.html
+== intra-level-whitespace-2.html intra-level-whitespace-2.html
 == intra-level-whitespace-3.html intra-level-whitespace-3.html
 fails == intrinsic-isize-1.html intrinsic-isize-1.html
 == intrinsic-isize-2.html intrinsic-isize-2.html
@@ -41,14 +41,14 @@ fails pref(font.minimum-size.ja,16) == min-font-size-1.html min-font-size-1.html
 skip load nested-ruby-1.html
 == no-transform.html no-transform.html
 fails == relative-positioning-1.html relative-positioning-1.html
-fails == relative-positioning-2.html relative-positioning-2.html
+== relative-positioning-2.html relative-positioning-2.html
 fails == ruby-align-1.html ruby-align-1.html
 fails == ruby-align-1a.html ruby-align-1a.html
 fails == ruby-align-2.html ruby-align-2.html
 fails == ruby-align-2a.html ruby-align-2a.html
-fails == ruby-position-horizontal.html ruby-position-horizontal.html
-fails == ruby-position-vertical-lr.html ruby-position-vertical-lr.html
-fails == ruby-position-vertical-rl.html ruby-position-vertical-rl.html
+== ruby-position-horizontal.html ruby-position-horizontal.html
+== ruby-position-vertical-lr.html ruby-position-vertical-lr.html
+== ruby-position-vertical-rl.html ruby-position-vertical-rl.html
 == ruby-reflow-1-opaqueruby.html ruby-reflow-1-opaqueruby.html
 == ruby-reflow-1-transparentruby.html ruby-reflow-1-transparentruby.html
 == ruby-span-1.html ruby-span-1.html

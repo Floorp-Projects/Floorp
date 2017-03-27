@@ -4016,8 +4016,10 @@ LIRGenerator::visitCallSetElement(MCallSetElement* ins)
 void
 LIRGenerator::visitCallInitElementArray(MCallInitElementArray* ins)
 {
-    LCallInitElementArray* lir = new(alloc()) LCallInitElementArray(useRegisterAtStart(ins->object()),
-                                                                    useBoxAtStart(ins->value()));
+    LCallInitElementArray* lir =
+        new(alloc()) LCallInitElementArray(useRegisterAtStart(ins->object()),
+                                           useRegisterOrConstantAtStart(ins->index()),
+                                           useBoxAtStart(ins->value()));
     add(lir, ins);
     assignSafepoint(lir, ins);
 }

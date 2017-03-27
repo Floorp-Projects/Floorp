@@ -831,8 +831,10 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced
     cc->dbhandle = c->object.trustDomain;
     /* subjectList ? */
     /* istemp and isperm are supported in NSS 3.4 */
+    CERT_LockCertTempPerm(cc);
     cc->istemp = PR_FALSE; /* CERT_NewTemp will override this */
     cc->isperm = PR_TRUE;  /* by default */
+    CERT_UnlockCertTempPerm(cc);
     /* pointer back */
     cc->nssCertificate = c;
     if (trust) {

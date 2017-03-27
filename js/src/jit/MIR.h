@@ -11940,26 +11940,19 @@ class MCallSetElement
 };
 
 class MCallInitElementArray
-  : public MAryInstruction<2>,
-    public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >::Data
+  : public MTernaryInstruction,
+    public Mix3Policy<ObjectPolicy<0>, IntPolicy<1>, BoxPolicy<2> >::Data
 {
-    uint32_t index_;
-
-    MCallInitElementArray(MDefinition* obj, uint32_t index, MDefinition* val)
-      : index_(index)
+    MCallInitElementArray(MDefinition* obj, MDefinition* index, MDefinition* val)
+      : MTernaryInstruction(obj, index, val)
     {
-        initOperand(0, obj);
-        initOperand(1, val);
+        MOZ_ASSERT(index->type() == MIRType::Int32);
     }
 
   public:
     INSTRUCTION_HEADER(CallInitElementArray)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, value))
-
-    uint32_t index() const {
-        return index_;
-    }
+    NAMED_OPERANDS((0, object), (1, index), (2, value))
 
     bool possiblyCalls() const override {
         return true;

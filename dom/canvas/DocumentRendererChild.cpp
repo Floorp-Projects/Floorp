@@ -74,7 +74,7 @@ DocumentRendererChild::RenderDocument(nsPIDOMWindowOuter* window,
     data.SetLength(renderSize.width * renderSize.height * 4);
 
     RefPtr<DrawTarget> dt =
-        Factory::CreateDrawTargetForData(BackendType::CAIRO,
+        Factory::CreateDrawTargetForData(gfxPlatform::GetPlatform()->GetSoftwareBackend(),
                                          reinterpret_cast<uint8_t*>(data.BeginWriting()),
                                          IntSize(renderSize.width, renderSize.height),
                                          4 * renderSize.width,

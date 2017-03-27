@@ -169,8 +169,11 @@ void
 AsyncScriptCompiler::FinishCompile(JSContext* aCx)
 {
     Rooted<JSScript*> script(aCx, JS::FinishOffThreadScript(aCx, mToken));
-
-    Finish(aCx, script);
+    if (script) {
+        Finish(aCx, script);
+    } else {
+        Reject(aCx);
+    }
 }
 
 

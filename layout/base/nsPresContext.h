@@ -535,6 +535,30 @@ public:
   nsIAtom* GetLanguageFromCharset() const { return mLanguage; }
   already_AddRefed<nsIAtom> GetContentLanguage() const;
 
+  /**
+   * Get/set a text zoom factor that is applied on top of the normal text zoom
+   * set by the front-end/user.
+   */
+  float GetSystemFontScale() const { return mSystemFontScale; }
+  void SetSystemFontScale(float aFontScale) {
+    MOZ_ASSERT(aFontScale > 0.0f, "invalid font scale");
+    if (aFontScale == mSystemFontScale || IsPrintingOrPrintPreview()) {
+      return;
+    }
+
+    mSystemFontScale = aFontScale;
+    UpdateEffectiveTextZoom();
+  }
+
+  /**
+   * Get/set the text zoom factor in use.
+   * This value should be used if you're interested in the pure text zoom value
+   * controlled by the front-end, e.g. when transferring zoom levels to a new
+   * document.
+   * Code that wants to use this value for layouting and rendering purposes
+   * should consider using EffectiveTextZoom() instead, so as to take the system
+   * font scale into account as well.
+   */
   float TextZoom() const { return mTextZoom; }
   void SetTextZoom(float aZoom) {
     MOZ_ASSERT(aZoom > 0.0f, "invalid zoom factor");
@@ -542,13 +566,22 @@ public:
       return;
 
     mTextZoom = aZoom;
-    if (HasCachedStyleData()) {
-      // Media queries could have changed, since we changed the meaning
-      // of 'em' units in them.
-      MediaFeatureValuesChanged(eRestyle_ForceDescendants,
-                                NS_STYLE_HINT_REFLOW);
-    }
+    UpdateEffectiveTextZoom();
   }
+
+protected:
+  void UpdateEffectiveTextZoom();
+
+public:
+  /**
+   * Corresponds to the product of text zoom and system font scale, limited
+   * by zoom.maxPercent and minPercent.
+   * As the system font scale is automatically set by the PresShell, code that
+   * e.g. wants to transfer zoom levels to a new document should use TextZoom()
+   * instead, which corresponds to the text zoom level that was actually set by
+   * the front-end/user.
+   */
+  float EffectiveTextZoom() const { return mEffectiveTextZoom; }
 
   /**
    * Get the minimum font size for the specified language. If aLanguage
@@ -931,6 +964,7 @@ public:
   bool IsScreen() { return (mMedium == nsGkAtoms::screen ||
                               mType == eContext_PageLayout ||
                               mType == eContext_PrintPreview); }
+  bool IsPrintingOrPrintPreview() { return (mType == eContext_Print || mType == eContext_PrintPreview); }
 
   // Is this presentation in a chrome docshell?
   bool IsChrome() const { return mIsChrome; }
@@ -1300,7 +1334,9 @@ protected:
 
   // Base minimum font size, independent of the language-specific global preference. Defaults to 0
   int32_t               mBaseMinFontSize;
+  float                 mSystemFontScale; // Internal text zoom factor, defaults to 1.0
   float                 mTextZoom;      // Text zoom, defaults to 1.0
+  float                 mEffectiveTextZoom; // Text zoom * system font scale
   float                 mFullZoom;      // Page zoom, defaults to 1.0
   float                 mOverrideDPPX;   // DPPX overrided, defaults to 0.0
   gfxSize               mLastFontInflationScreenSize;

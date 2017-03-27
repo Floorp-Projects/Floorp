@@ -23,20 +23,6 @@
         <item>2</item>
         <item>0</item>
     </string-array>
-    <string-array name="pref_font_size_entries">
-        <item>@string/pref_font_size_tiny</item>
-        <item>@string/pref_font_size_small</item>
-        <item>@string/pref_font_size_medium</item>
-        <item>@string/pref_font_size_large</item>
-        <item>@string/pref_font_size_xlarge</item>
-    </string-array>
-    <string-array name="pref_font_size_values">
-        <item>0</item>
-        <item>80</item>
-        <item>120</item>
-        <item>160</item>
-        <item>240</item>
-    </string-array>
     <string-array name="pref_char_encoding_entries">
         <item>@string/pref_char_encoding_on</item>
         <item>@string/pref_char_encoding_off</item>

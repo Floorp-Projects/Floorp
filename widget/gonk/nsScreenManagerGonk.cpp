@@ -238,13 +238,6 @@ nsScreenGonk::GetColorDepth(int32_t *aColorDepth)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsScreenGonk::GetRotation(uint32_t* aRotation)
-{
-    *aRotation = mScreenRotation;
-    return NS_OK;
-}
-
 float
 nsScreenGonk::GetDpi()
 {
@@ -261,39 +254,6 @@ ANativeWindow*
 nsScreenGonk::GetNativeWindow()
 {
     return mNativeWindow.get();
-}
-
-NS_IMETHODIMP
-nsScreenGonk::SetRotation(uint32_t aRotation)
-{
-    if (!(aRotation <= ROTATION_270_DEG)) {
-        return NS_ERROR_ILLEGAL_VALUE;
-    }
-
-    if (mScreenRotation == aRotation) {
-        return NS_OK;
-    }
-
-    mScreenRotation = aRotation;
-    uint32_t rotation = EffectiveScreenRotation();
-    if (rotation == nsIScreen::ROTATION_90_DEG ||
-        rotation == nsIScreen::ROTATION_270_DEG) {
-        mVirtualBounds = LayoutDeviceIntRect(0, 0,
-                                             mNaturalBounds.height,
-                                             mNaturalBounds.width);
-    } else {
-        mVirtualBounds = mNaturalBounds;
-    }
-
-    nsAppShell::NotifyScreenRotation();
-
-    for (unsigned int i = 0; i < mTopWindows.Length(); i++) {
-        mTopWindows[i]->Resize(mVirtualBounds.width,
-                               mVirtualBounds.height,
-                               true);
-    }
-
-    return NS_OK;
 }
 
 LayoutDeviceIntRect
@@ -869,27 +829,6 @@ nsScreenManagerGonk::ScreenForRect(int32_t inLeft,
     // Since all screens have independent coordinate system, we could
     // only return the primary screen no matter what rect is given.
     return GetPrimaryScreen(outScreen);
-}
-
-NS_IMETHODIMP
-nsScreenManagerGonk::ScreenForNativeWidget(void *aWidget, nsIScreen **outScreen)
-{
-    for (size_t i = 0; i < mScreens.Length(); i++) {
-        if (aWidget == mScreens[i]->GetNativeWindow()) {
-            NS_IF_ADDREF(*outScreen = mScreens[i].get());
-            return NS_OK;
-        }
-    }
-
-    *outScreen = nullptr;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScreenManagerGonk::GetNumberOfScreens(uint32_t *aNumberOfScreens)
-{
-    *aNumberOfScreens = mScreens.Length();
-    return NS_OK;
 }
 
 NS_IMETHODIMP

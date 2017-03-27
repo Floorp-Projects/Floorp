@@ -675,7 +675,9 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
     }
     if (!(lastFocusMethod & nsIFocusManager::FLAG_BYMOUSE)) {
       RefPtr<ScrollOnFocusEvent> event = new ScrollOnFocusEvent(this);
-      nsresult rv = NS_DispatchToCurrentThread(event);
+      nsresult rv = mContent->OwnerDoc()->Dispatch("ScrollOnFocusEvent",
+                                                   TaskCategory::Other,
+                                                   do_AddRef(event));
       if (NS_SUCCEEDED(rv)) {
         mScrollEvent = event;
       }

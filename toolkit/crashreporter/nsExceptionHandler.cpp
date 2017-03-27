@@ -1485,8 +1485,8 @@ MINIDUMP_TYPE GetMinidumpType()
         minidump_type = MiniDumpWithFullMemoryInfo;
       }
 #ifdef NIGHTLY_BUILD
-      // TODO: Remove the NIGHTLY_BUILD wrapping if the increased size is
-      // accetable.
+      // This is Nightly only because this doubles the size of minidumps based
+      // on the experimental data.
       if (major > 5 || (major == 5 && minor > 1)) {
         minidump_type = static_cast<MINIDUMP_TYPE>(minidump_type |
             MiniDumpWithUnloadedModules |

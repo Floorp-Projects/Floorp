@@ -850,43 +850,6 @@ NotifySwitchChange(const SwitchEvent& aEvent)
   observer.Broadcast(aEvent);
 }
 
-static AlarmObserver* sAlarmObserver;
-
-bool
-RegisterTheOneAlarmObserver(AlarmObserver* aObserver)
-{
-  MOZ_ASSERT(!InSandbox());
-  MOZ_ASSERT(!sAlarmObserver);
-
-  sAlarmObserver = aObserver;
-  RETURN_PROXY_IF_SANDBOXED(EnableAlarm(), false);
-}
-
-void
-UnregisterTheOneAlarmObserver()
-{
-  if (sAlarmObserver) {
-    sAlarmObserver = nullptr;
-    PROXY_IF_SANDBOXED(DisableAlarm());
-  }
-}
-
-void
-NotifyAlarmFired()
-{
-  if (sAlarmObserver) {
-    sAlarmObserver->Notify(void_t());
-  }
-}
-
-bool
-SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
-{
-  // It's pointless to program an alarm nothing is going to observe ...
-  MOZ_ASSERT(sAlarmObserver);
-  RETURN_PROXY_IF_SANDBOXED(SetAlarm(aSeconds, aNanoseconds), false);
-}
-
 void
 SetProcessPriority(int aPid, ProcessPriority aPriority, uint32_t aLRU)
 {

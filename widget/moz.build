@@ -130,6 +130,8 @@ EXPORTS.mozilla.widget += [
     'InProcessCompositorWidget.h',
     'nsAutoRollup.h',
     'PuppetBidiKeyboard.h',
+    'Screen.h',
+    'ScreenManager.h',
     'WidgetMessageUtils.h',
     'WindowSurface.h'
 ]
@@ -157,12 +159,12 @@ UNIFIED_SOURCES += [
     'nsIWidgetListener.cpp',
     'nsPrimitiveHelpers.cpp',
     'nsPrintSettingsImpl.cpp',
-    'nsScreenManagerProxy.cpp',
     'nsTransferable.cpp',
     'nsXPLookAndFeel.cpp',
     'PuppetBidiKeyboard.cpp',
     'PuppetWidget.cpp',
-    'ScreenProxy.cpp',
+    'Screen.cpp',
+    'ScreenManager.cpp',
     'SharedWidgetUtils.cpp',
     'TextEventDispatcher.cpp',
     'VsyncDispatcher.cpp',

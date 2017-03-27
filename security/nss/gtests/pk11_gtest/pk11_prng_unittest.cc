@@ -36,12 +36,12 @@ TEST_F(PK11PrngTest, Fuzz_DetPRNG_Reset) {
   std::vector<uint8_t> rnd1(2048, 0);
   std::vector<uint8_t> rnd2(2048, 0);
 
-  RNG_ResetForFuzzing();
+  EXPECT_EQ(SECSuccess, RNG_RandomUpdate(NULL, 0));
 
   SECStatus rv = PK11_GenerateRandom(rnd1.data(), rnd1.size());
   EXPECT_EQ(rv, SECSuccess);
 
-  RNG_ResetForFuzzing();
+  EXPECT_EQ(SECSuccess, RNG_RandomUpdate(NULL, 0));
 
   rv = PK11_GenerateRandom(rnd2.data(), rnd2.size());
   EXPECT_EQ(rv, SECSuccess);
@@ -54,7 +54,7 @@ TEST_F(PK11PrngTest, Fuzz_DetPRNG_StatefulReset) {
   std::vector<uint8_t> rnd1(2048, 0);
   std::vector<uint8_t> rnd2(2048, 0);
 
-  RNG_ResetForFuzzing();
+  EXPECT_EQ(SECSuccess, RNG_RandomUpdate(NULL, 0));
 
   SECStatus rv = PK11_GenerateRandom(rnd1.data(), rnd1.size() - 1024);
   EXPECT_EQ(rv, SECSuccess);
@@ -62,7 +62,50 @@ TEST_F(PK11PrngTest, Fuzz_DetPRNG_StatefulReset) {
   rv = PK11_GenerateRandom(rnd1.data() + 1024, rnd1.size() - 1024);
   EXPECT_EQ(rv, SECSuccess);
 
-  RNG_ResetForFuzzing();
+  EXPECT_EQ(SECSuccess, RNG_RandomUpdate(NULL, 0));
+
+  rv = PK11_GenerateRandom(rnd2.data(), rnd2.size() - 1024);
+  EXPECT_EQ(rv, SECSuccess);
+
+  rv = PK11_GenerateRandom(rnd2.data() + 1024, rnd2.size() - 1024);
+  EXPECT_EQ(rv, SECSuccess);
+
+  EXPECT_EQ(rnd1, rnd2);
+}
+
+TEST_F(PK11PrngTest, Fuzz_DetPRNG_Seed) {
+  std::vector<uint8_t> rnd1(2048, 0);
+  std::vector<uint8_t> rnd2(2048, 0);
+  std::vector<uint8_t> seed = {0x01, 0x22, 0xAA, 0x45};
+
+  SECStatus rv = PK11_RandomUpdate(seed.data(), seed.size());
+  EXPECT_EQ(rv, SECSuccess);
+
+  rv = PK11_GenerateRandom(rnd1.data(), rnd1.size());
+  EXPECT_EQ(rv, SECSuccess);
+
+  rv = PK11_GenerateRandom(rnd2.data(), rnd2.size());
+  EXPECT_EQ(rv, SECSuccess);
+
+  EXPECT_NE(rnd1, rnd2);
+}
+
+TEST_F(PK11PrngTest, Fuzz_DetPRNG_StatefulReset_Seed) {
+  std::vector<uint8_t> rnd1(2048, 0);
+  std::vector<uint8_t> rnd2(2048, 0);
+  std::vector<uint8_t> seed = {0x01, 0x22, 0xAA, 0x45};
+
+  SECStatus rv = PK11_RandomUpdate(seed.data(), seed.size());
+  EXPECT_EQ(rv, SECSuccess);
+
+  rv = PK11_GenerateRandom(rnd1.data(), rnd1.size() - 1024);
+  EXPECT_EQ(rv, SECSuccess);
+
+  rv = PK11_GenerateRandom(rnd1.data() + 1024, rnd1.size() - 1024);
+  EXPECT_EQ(rv, SECSuccess);
+
+  rv = PK11_RandomUpdate(seed.data(), seed.size());
+  EXPECT_EQ(rv, SECSuccess);
 
   rv = PK11_GenerateRandom(rnd2.data(), rnd2.size() - 1024);
   EXPECT_EQ(rv, SECSuccess);

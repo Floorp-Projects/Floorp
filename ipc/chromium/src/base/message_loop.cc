@@ -296,8 +296,11 @@ void MessageLoop::PostTask_Helper(already_AddRefed<Runnable> task, int delay_ms)
   }
 
 #ifdef MOZ_TASK_TRACER
-  RefPtr<Runnable> tracedTask = mozilla::tasktracer::CreateTracedRunnable(Move(task));
-  (static_cast<mozilla::tasktracer::TracedRunnable*>(tracedTask.get()))->DispatchTask();
+  RefPtr<Runnable> tracedTask = task;
+  if (mozilla::tasktracer::IsStartLogging()) {
+    tracedTask = mozilla::tasktracer::CreateTracedRunnable(Move(task));
+    (static_cast<mozilla::tasktracer::TracedRunnable*>(tracedTask.get()))->DispatchTask();
+  }
   PendingTask pending_task(tracedTask.forget(), true);
 #else
   PendingTask pending_task(Move(task), true);

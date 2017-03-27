@@ -41,8 +41,16 @@ add_task(function* test_pingSender() {
 
   Telemetry.runPingSender(url, JSON.stringify(data));
 
-  let ping = yield PingServer.promiseNextPing();
+  let req = yield PingServer.promiseNextRequest();
+  let ping = decodeRequestPayload(req);
 
+  Assert.equal(req.getHeader("User-Agent"), "pingsender/1.0",
+               "Should have received the correct user agent string.");
+  Assert.equal(req.getHeader("X-PingSender-Version"), "1.0",
+               "Should have received the correct PingSender version string.");
+  Assert.equal(req.getHeader("Content-Encoding"), "gzip",
+               "Should have a gzip encoded ping.");
+  Assert.ok(req.getHeader("Date"), "Should have received a Date header.");
   Assert.equal(ping.id, data.id, "Should have received the correct ping id.");
   Assert.equal(ping.type, data.type,
                "Should have received the correct ping type.");

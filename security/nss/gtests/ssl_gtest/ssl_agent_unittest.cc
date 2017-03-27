@@ -56,6 +56,7 @@ static const char *k0RttData = "ABCDEF";
 TEST_P(TlsAgentTest, EarlyFinished) {
   DataBuffer buffer;
   MakeTrivialHandshakeRecord(kTlsHandshakeFinished, 0, &buffer);
+  ExpectAlert(kTlsAlertUnexpectedMessage);
   ProcessMessage(buffer, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_FINISHED);
 }
@@ -63,6 +64,7 @@ TEST_P(TlsAgentTest, EarlyFinished) {
 TEST_P(TlsAgentTest, EarlyCertificateVerify) {
   DataBuffer buffer;
   MakeTrivialHandshakeRecord(kTlsHandshakeCertificateVerify, 0, &buffer);
+  ExpectAlert(kTlsAlertUnexpectedMessage);
   ProcessMessage(buffer, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_CERT_VERIFY);
 }
@@ -90,6 +92,7 @@ TEST_P(TlsAgentTestClient13, EncryptedExtensionsInClear) {
   MakeRecord(kTlsHandshakeType, SSL_LIBRARY_VERSION_TLS_1_3,
              server_hello.data(), server_hello.len(), &buffer);
   EnsureInit();
+  ExpectAlert(kTlsAlertUnexpectedMessage);
   ProcessMessage(buffer, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_HANDSHAKE);
 }
@@ -114,6 +117,7 @@ TEST_F(TlsAgentStreamTestClient, EncryptedExtensionsInClearTwoPieces) {
   agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
                           SSL_LIBRARY_VERSION_TLS_1_3);
   ProcessMessage(buffer, TlsAgent::STATE_CONNECTING);
+  ExpectAlert(kTlsAlertUnexpectedMessage);
   ProcessMessage(buffer2, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_HANDSHAKE);
 }
@@ -144,6 +148,7 @@ TEST_F(TlsAgentDgramTestClient, EncryptedExtensionsInClearTwoPieces) {
   agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
                           SSL_LIBRARY_VERSION_TLS_1_3);
   ProcessMessage(buffer, TlsAgent::STATE_CONNECTING);
+  ExpectAlert(kTlsAlertUnexpectedMessage);
   ProcessMessage(buffer2, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_HANDSHAKE);
 }
@@ -174,6 +179,7 @@ TEST_F(TlsAgentStreamTestClient, Set0RttOptionThenRead) {
   MakeRecord(kTlsApplicationDataType, SSL_LIBRARY_VERSION_TLS_1_3,
              reinterpret_cast<const uint8_t *>(k0RttData), strlen(k0RttData),
              &buffer);
+  ExpectAlert(kTlsAlertUnexpectedMessage);
   ProcessMessage(buffer, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_APPLICATION_DATA);
 }
@@ -194,6 +200,7 @@ TEST_F(TlsAgentStreamTestServer, Set0RttOptionClientHelloThenRead) {
   MakeRecord(kTlsApplicationDataType, SSL_LIBRARY_VERSION_TLS_1_3,
              reinterpret_cast<const uint8_t *>(k0RttData), strlen(k0RttData),
              &buffer);
+  ExpectAlert(kTlsAlertBadRecordMac);
   ProcessMessage(buffer, TlsAgent::STATE_ERROR, SSL_ERROR_BAD_MAC_READ);
 }
 

@@ -24,8 +24,6 @@ namespace nss_test {
 
 TEST_P(TlsConnectTls13, ZeroRtt) {
   SetupForZeroRtt();
-  client_->SetExpectedAlertSentCount(1);
-  server_->SetExpectedAlertReceivedCount(1);
   client_->Set0RttEnabled(true);
   server_->Set0RttEnabled(true);
   ExpectResumption(RESUME_TICKET);
@@ -105,8 +103,6 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttAlpn) {
   EnableAlpn();
   SetupForZeroRtt();
   EnableAlpn();
-  client_->SetExpectedAlertSentCount(1);
-  server_->SetExpectedAlertReceivedCount(1);
   client_->Set0RttEnabled(true);
   server_->Set0RttEnabled(true);
   ExpectResumption(RESUME_TICKET);
@@ -159,6 +155,7 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttNoAlpnServer) {
     client_->CheckAlpn(SSL_NEXT_PROTO_EARLY_VALUE, "a");
     EXPECT_EQ(SECSuccess, SSLInt_Set0RttAlpn(client_->ssl_fd(), b, sizeof(b)));
     client_->CheckAlpn(SSL_NEXT_PROTO_EARLY_VALUE, "b");
+    ExpectAlert(client_, kTlsAlertIllegalParameter);
     return true;
   });
   Handshake();
@@ -178,6 +175,7 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttNoAlpnClient) {
     PRUint8 b[] = {'b'};
     EXPECT_EQ(SECSuccess, SSLInt_Set0RttAlpn(client_->ssl_fd(), b, 1));
     client_->CheckAlpn(SSL_NEXT_PROTO_EARLY_VALUE, "b");
+    ExpectAlert(client_, kTlsAlertIllegalParameter);
     return true;
   });
   Handshake();
@@ -228,6 +226,10 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttDowngrade) {
   // client sends end_of_early_data only after reading the server's flight.
   client_->Set0RttEnabled(true);
 
+  client_->ExpectSendAlert(kTlsAlertIllegalParameter);
+  if (mode_ == STREAM) {
+    server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
+  }
   client_->Handshake();
   server_->Handshake();
   ASSERT_TRUE_WAIT(
@@ -265,7 +267,13 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttDowngradeEarlyData) {
   // Send the early data xtn in the CH, followed by early app data. The server
   // will fail right after sending its flight, when receiving the early data.
   client_->Set0RttEnabled(true);
-  ZeroRttSendReceive(true, false);
+  ZeroRttSendReceive(true, false, [this]() {
+    client_->ExpectSendAlert(kTlsAlertIllegalParameter);
+    if (mode_ == STREAM) {
+      server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
+    }
+    return true;
+  });
 
   client_->Handshake();
   server_->Handshake();
@@ -301,9 +309,8 @@ TEST_P(TlsConnectTls13, SendTooMuchEarlyData) {
   client_->Set0RttEnabled(true);
   server_->Set0RttEnabled(true);
   ExpectResumption(RESUME_TICKET);
-  client_->SetExpectedAlertSentCount(1);
-  server_->SetExpectedAlertReceivedCount(1);
 
+  ExpectAlert(client_, kTlsAlertEndOfEarlyData);
   client_->Handshake();
   CheckEarlyDataLimit(client_, short_size);
 
@@ -357,6 +364,7 @@ TEST_P(TlsConnectTls13, ReceiveTooMuchEarlyData) {
   server_->Set0RttEnabled(true);
   ExpectResumption(RESUME_TICKET);
 
+  client_->ExpectSendAlert(kTlsAlertEndOfEarlyData);
   client_->Handshake();  // Send ClientHello
   CheckEarlyDataLimit(client_, limit);
 
@@ -369,6 +377,10 @@ TEST_P(TlsConnectTls13, ReceiveTooMuchEarlyData) {
   const PRInt32 message_len = static_cast<PRInt32>(strlen(message));
   EXPECT_EQ(message_len, PR_Write(client_->ssl_fd(), message, message_len));
 
+  if (mode_ == STREAM) {
+    // This error isn't fatal for DTLS.
+    ExpectAlert(server_, kTlsAlertUnexpectedMessage);
+  }
   server_->Handshake();  // Process ClientHello, send server flight.
   server_->Handshake();  // Just to make sure that we don't read ahead.
   CheckEarlyDataLimit(server_, limit);
@@ -377,7 +389,6 @@ TEST_P(TlsConnectTls13, ReceiveTooMuchEarlyData) {
   std::vector<uint8_t> buf(strlen(message) + 1);
   EXPECT_GT(0, PR_Read(server_->ssl_fd(), buf.data(), buf.capacity()));
   if (mode_ == STREAM) {
-    // This error isn't fatal for DTLS.
     server_->CheckErrorCode(SSL_ERROR_TOO_MUCH_EARLY_DATA);
   }
 

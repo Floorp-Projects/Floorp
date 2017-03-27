@@ -18,6 +18,7 @@
 #include "pk11pub.h"
 
 #include "nsNetCID.h"
+#include "nsILoadContext.h"
 #include "nsIProperty.h"
 #include "nsIPropertyBag2.h"
 #include "nsIServiceManager.h"

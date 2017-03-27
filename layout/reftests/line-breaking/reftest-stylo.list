@@ -32,7 +32,7 @@ fails == quotationmarks-cjk-1.html quotationmarks-cjk-1.html
 == smileys-1.html smileys-1.html
 == smileys-2.html smileys-2.html
 == space-cluster-1.html space-cluster-1.html
-fails == space-cluster-2.html space-cluster-2.html
+== space-cluster-2.html space-cluster-2.html
 == url-1.html url-1.html
 == url-2.html url-2.html
 == url-3.html url-3.html

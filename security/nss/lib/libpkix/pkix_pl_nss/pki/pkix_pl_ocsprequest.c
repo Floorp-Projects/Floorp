@@ -89,8 +89,8 @@ pkix_pl_OcspRequest_Hashcode(
         PKIX_HASHCODE(ocspRq->signerCert, &signerHash, plContext,
                 PKIX_CERTHASHCODEFAILED);
 
-        *pHashcode = (((((extensionHash << 8) || certHash) << 8) ||
-                dateHash) << 8) || signerHash;
+        *pHashcode = (((((extensionHash << 8) | certHash) << 8) |
+                dateHash) << 8) | signerHash;
 
 cleanup:
 

@@ -2692,7 +2692,11 @@ pref("layout.css.control-characters.visible", true);
 pref("layout.css.column-span.enabled", false);
 
 // Is effect of xml:base disabled for style attribute?
+#ifdef RELEASE_OR_BETA
 pref("layout.css.style-attr-with-xml-base.disabled", false);
+#else
+pref("layout.css.style-attr-with-xml-base.disabled", true);
+#endif
 
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
@@ -3216,6 +3220,17 @@ pref("font.size.inflation.mappingIntercept", 1);
  * i/s.
  */
 pref("font.size.inflation.maxRatio", 0);
+
+/**
+ * This setting corresponds to a global text zoom setting affecting
+ * all content that is not already subject to font size inflation.
+ * It is interpreted as a percentage value that is applied on top
+ * of the document's current text zoom setting.
+ *
+ * The resulting total zoom factor (text zoom * system font scale)
+ * will be limited by zoom.minPercent and maxPercent.
+ */
+pref("font.size.systemFontScale", 100);
 
 /*
  * When enabled, the touch.radius and mouse.radius prefs allow events to be dispatched
