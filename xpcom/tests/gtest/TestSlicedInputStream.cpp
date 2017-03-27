@@ -264,3 +264,112 @@ TEST(TestSlicedInputStream, Length0) {
   ASSERT_EQ(NS_OK, sis->Read(buf2, sizeof(buf2), &count));
   ASSERT_EQ((uint64_t)0, count);
 }
+
+// Seek test NS_SEEK_SET
+TEST(TestSlicedInputStream, Seek_SET) {
+  nsCString buf;
+  buf.Assign("Hello world");
+
+  nsCOMPtr<nsIInputStream> stream;
+  NS_NewCStringInputStream(getter_AddRefs(stream), buf);
+
+  RefPtr<SlicedInputStream> sis = new SlicedInputStream(stream, 1, buf.Length());
+
+  ASSERT_EQ(NS_OK, sis->Seek(nsISeekableStream::NS_SEEK_SET, 1));
+
+  uint64_t length;
+  ASSERT_EQ(NS_OK, sis->Available(&length));
+  ASSERT_EQ((uint64_t)buf.Length() - 2, length);
+
+  char buf2[4096];
+  uint32_t count;
+  ASSERT_EQ(NS_OK, sis->Read(buf2, sizeof(buf2), &count));
+  ASSERT_EQ((uint64_t)buf.Length() - 2, count);
+  ASSERT_EQ(0, strncmp(buf2, "llo world", count));
+}
+
+// Seek test NS_SEEK_CUR
+TEST(TestSlicedInputStream, Seek_CUR) {
+  nsCString buf;
+  buf.Assign("Hello world");
+
+  nsCOMPtr<nsIInputStream> stream;
+  NS_NewCStringInputStream(getter_AddRefs(stream), buf);
+
+  RefPtr<SlicedInputStream> sis = new SlicedInputStream(stream, 1, buf.Length());
+
+  ASSERT_EQ(NS_OK, sis->Seek(nsISeekableStream::NS_SEEK_CUR, 1));
+
+  uint64_t length;
+  ASSERT_EQ(NS_OK, sis->Available(&length));
+  ASSERT_EQ((uint64_t)buf.Length() - 2, length);
+
+  char buf2[3];
+  uint32_t count;
+  ASSERT_EQ(NS_OK, sis->Read(buf2, sizeof(buf2), &count));
+  ASSERT_EQ((uint64_t)3, count);
+  ASSERT_EQ(0, strncmp(buf2, "llo", count));
+
+  ASSERT_EQ(NS_OK, sis->Seek(nsISeekableStream::NS_SEEK_CUR, 1));
+
+  ASSERT_EQ(NS_OK, sis->Read(buf2, sizeof(buf2), &count));
+  ASSERT_EQ((uint64_t)3, count);
+  ASSERT_EQ(0, strncmp(buf2, "wor", count));
+}
+
+// Seek test NS_SEEK_END - length > real one
+TEST(TestSlicedInputStream, Seek_END_Bigger) {
+  nsCString buf;
+  buf.Assign("Hello world");
+
+  nsCOMPtr<nsIInputStream> stream;
+  NS_NewCStringInputStream(getter_AddRefs(stream), buf);
+
+  RefPtr<SlicedInputStream> sis = new SlicedInputStream(stream, 2, buf.Length());
+
+  ASSERT_EQ(NS_OK, sis->Seek(nsISeekableStream::NS_SEEK_END, -5));
+
+  NS_NewCStringInputStream(getter_AddRefs(stream), buf);
+  nsCOMPtr<nsISeekableStream> seekStream = do_QueryInterface(stream);
+  ASSERT_EQ(NS_OK, seekStream->Seek(nsISeekableStream::NS_SEEK_END, -5));
+
+  uint64_t length;
+  ASSERT_EQ(NS_OK, sis->Available(&length));
+  ASSERT_EQ((uint64_t)5, length);
+
+  ASSERT_EQ(NS_OK, stream->Available(&length));
+  ASSERT_EQ((uint64_t)5, length);
+
+  char buf2[5];
+  uint32_t count;
+  ASSERT_EQ(NS_OK, sis->Read(buf2, sizeof(buf2), &count));
+  ASSERT_EQ((uint64_t)5, count);
+  ASSERT_EQ(0, strncmp(buf2, "world", count));
+
+  ASSERT_EQ(NS_OK, stream->Read(buf2, sizeof(buf2), &count));
+  ASSERT_EQ((uint64_t)5, count);
+  ASSERT_EQ(0, strncmp(buf2, "world", count));
+}
+
+// Seek test NS_SEEK_END - length < real one
+TEST(TestSlicedInputStream, Seek_END_Lower) {
+  nsCString buf;
+  buf.Assign("Hello world");
+
+  nsCOMPtr<nsIInputStream> stream;
+  NS_NewCStringInputStream(getter_AddRefs(stream), buf);
+
+  RefPtr<SlicedInputStream> sis = new SlicedInputStream(stream, 2, 6);
+
+  ASSERT_EQ(NS_OK, sis->Seek(nsISeekableStream::NS_SEEK_END, -3));
+
+  uint64_t length;
+  ASSERT_EQ(NS_OK, sis->Available(&length));
+  ASSERT_EQ((uint64_t)3, length);
+
+  char buf2[5];
+  uint32_t count;
+  ASSERT_EQ(NS_OK, sis->Read(buf2, sizeof(buf2), &count));
+  ASSERT_EQ((uint64_t)3, count);
+  ASSERT_EQ(0, strncmp(buf2, " wo", count));
+}
