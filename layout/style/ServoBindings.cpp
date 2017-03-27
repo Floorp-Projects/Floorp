@@ -36,6 +36,7 @@
 #include "nsTArray.h"
 
 #include "mozilla/EffectCompositor.h"
+#include "mozilla/EffectSet.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Keyframe.h"
 #include "mozilla/ServoElementSnapshot.h"
@@ -456,6 +457,21 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
       UpdateAnimations(const_cast<dom::Element*>(aElement), aPseudoTagOrNull,
                        aComputedValues, aParentComputedValues);
   }
+}
+
+bool
+Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElement,
+                           nsIAtom* aPseudoTagOrNull)
+{
+  MOZ_ASSERT(!aPseudoTagOrNull ||
+             aPseudoTagOrNull == nsCSSPseudoElements::before ||
+             aPseudoTagOrNull == nsCSSPseudoElements::after);
+
+  CSSPseudoElementType pseudoType =
+    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
+                                       CSSEnabledState::eForAllContent);
+
+  return !!EffectSet::GetEffectSet(aElement, pseudoType);
 }
 
 bool
