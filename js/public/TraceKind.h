@@ -16,7 +16,6 @@ namespace js {
 class BaseShape;
 class LazyScript;
 class ObjectGroup;
-class RegExpShared;
 class Shape;
 class Scope;
 namespace jit {
@@ -60,15 +59,13 @@ enum class TraceKind
     BaseShape = 0x0F,
     JitCode = 0x1F,
     LazyScript = 0x2F,
-    Scope = 0x3F,
-    RegExpShared = 0x4F
+    Scope = 0x3F
 };
 const static uintptr_t OutOfLineTraceKindMask = 0x07;
 static_assert(uintptr_t(JS::TraceKind::BaseShape) & OutOfLineTraceKindMask, "mask bits are set");
 static_assert(uintptr_t(JS::TraceKind::JitCode) & OutOfLineTraceKindMask, "mask bits are set");
 static_assert(uintptr_t(JS::TraceKind::LazyScript) & OutOfLineTraceKindMask, "mask bits are set");
 static_assert(uintptr_t(JS::TraceKind::Scope) & OutOfLineTraceKindMask, "mask bits are set");
-static_assert(uintptr_t(JS::TraceKind::RegExpShared) & OutOfLineTraceKindMask, "mask bits are set");
 
 // When this header is imported inside SpiderMonkey, the class definitions are
 // available and we can query those definitions to find the correct kind
@@ -91,8 +88,7 @@ struct MapTypeToTraceKind {
     D(Script,        JSScript,          true) \
     D(Shape,         js::Shape,         true) \
     D(String,        JSString,          false) \
-    D(Symbol,        JS::Symbol,        false) \
-    D(RegExpShared,  js::RegExpShared,  true)
+    D(Symbol,        JS::Symbol,        false)
 
 // Map from all public types to their trace kind.
 #define JS_EXPAND_DEF(name, type, _) \

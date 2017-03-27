@@ -70,7 +70,7 @@ class ScriptedProxyHandler : public BaseProxyHandler
     virtual JSString* fun_toString(JSContext* cx, HandleObject proxy,
                                    unsigned indent) const override;
     virtual bool regexp_toShared(JSContext* cx, HandleObject proxy,
-                                 MutableHandle<RegExpShared*> shared) const override;
+                                 RegExpGuard* g) const override;
     virtual bool boxedValue_unbox(JSContext* cx, HandleObject proxy,
                                   MutableHandleValue vp) const override;
 

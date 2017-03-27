@@ -6098,10 +6098,10 @@ JS_GetRegExpFlags(JSContext* cx, HandleObject obj)
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
 
-    RootedRegExpShared shared(cx);
+    RegExpGuard shared(cx);
     if (!RegExpToShared(cx, obj, &shared))
         return false;
-    return shared->getFlags();
+    return shared.re()->getFlags();
 }
 
 JS_PUBLIC_API(JSString*)
@@ -6110,10 +6110,10 @@ JS_GetRegExpSource(JSContext* cx, HandleObject obj)
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
 
-    RootedRegExpShared shared(cx);
+    RegExpGuard shared(cx);
     if (!RegExpToShared(cx, obj, &shared))
         return nullptr;
-    return shared->getSource();
+    return shared.re()->getSource();
 }
 
 /************************************************************************/
