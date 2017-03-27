@@ -1015,8 +1015,9 @@ private:
       return AudioChannelService::AudibleState::eMaybeAudible;
     }
 
-    // Media is suspended.
-    if (mSuspended != nsISuspendedTypes::NONE_SUSPENDED) {
+    // Suspended or paused media doesn't produce any sound.
+    if (mSuspended != nsISuspendedTypes::NONE_SUSPENDED ||
+        mOwner->mPaused) {
       return AudioChannelService::AudibleState::eNotAudible;
     }
 
