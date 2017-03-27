@@ -966,6 +966,7 @@ this.Extension = class extends ExtensionData {
       await this.runManifest(this.manifest);
 
       Management.emit("ready", this);
+      this.emit("ready");
     } catch (e) {
       dump(`Extension error: ${e.message} ${e.filename || e.fileName}:${e.lineNumber} :: ${e.stack || new Error().stack}\n`);
       Cu.reportError(e);
