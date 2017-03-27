@@ -2215,6 +2215,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_TOASYNCGEN:
         return jsop_toasyncgen();
 
+      case JSOP_TOASYNCITER:
+        return jsop_toasynciter();
+
       case JSOP_TOID:
         return jsop_toid();
 
@@ -12320,6 +12323,20 @@ IonBuilder::jsop_toasyncgen()
     MOZ_ASSERT(unwrapped->type() == MIRType::Object);
 
     MToAsyncGen* ins = MToAsyncGen::New(alloc(), unwrapped);
+
+    current->add(ins);
+    current->push(ins);
+
+    return resumeAfter(ins);
+}
+
+AbortReasonOr<Ok>
+IonBuilder::jsop_toasynciter()
+{
+    MDefinition* unwrapped = current->pop();
+    MOZ_ASSERT(unwrapped->type() == MIRType::Object);
+
+    MToAsyncIter* ins = MToAsyncIter::New(alloc(), unwrapped);
 
     current->add(ins);
     current->push(ins);

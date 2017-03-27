@@ -5840,6 +5840,21 @@ class MToAsyncGen
     TRIVIAL_NEW_WRAPPERS
 };
 
+class MToAsyncIter
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
+{
+    explicit MToAsyncIter(MDefinition* unwrapped)
+      : MUnaryInstruction(unwrapped)
+    {
+        setResultType(MIRType::Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ToAsyncIter)
+    TRIVIAL_NEW_WRAPPERS
+};
+
 class MToId
   : public MUnaryInstruction,
     public BoxInputsPolicy::Data
