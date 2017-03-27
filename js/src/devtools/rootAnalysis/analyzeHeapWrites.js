@@ -91,6 +91,10 @@ function checkIndirectCall(entry, location, callee)
 {
     var name = entry.name;
 
+    // replace_malloc indirects through this table.
+    if (callee.startsWith('malloc_table_t.'))
+        return;
+
     // These hash table callbacks should be threadsafe.
     if (/PLDHashTable/.test(name) && (/matchEntry/.test(callee) || /hashKey/.test(callee)))
         return;
@@ -468,6 +472,12 @@ function WorklistEntry(name, safeArguments, stack)
     this.stack = stack;
 }
 
+WorklistEntry.prototype.readable = function()
+{
+    const [ mangled, readable ] = splitFunction(this.name);
+    return readable;
+}
+
 WorklistEntry.prototype.mangledName = function()
 {
     var str = this.name;
@@ -618,7 +628,7 @@ function dumpError(entry, location, text)
 {
     var stack = entry.stack;
     print("Error: " + text);
-    print("Location: " + entry.name + (location ? " @ " + location : "") + stack[0].safeString());
+    print("Location: " + entry.readable() + (location ? " @ " + location : "") + stack[0].safeString());
     print("Stack Trace:");
     // Include the callers in the stack trace instead of the callees. Make sure
     // the dummy stack entry we added for the original roots is in place.
@@ -794,11 +804,28 @@ function maybeProcessMissingFunction(entry, addCallee)
         return true;
     }
 
+    // Similarly, a call to a C1 constructor might invoke the C4 constructor.
+    if (name.includes("C1E")) {
+        var callee = name.replace("C1E", "C4E");
+        addCallee(new CallSite(name, entry.safeArguments, entry.stack[0].location));
+        return true;
+    }
+
     // Hack to manually follow some typedefs that show up on some functions.
     // This is a bug in the sixgill GCC plugin I think, since sixgill is
     // supposed to follow any typedefs itself.
     if (/mozilla::dom::Element/.test(name)) {
         var callee = name.replace("mozilla::dom::Element", "nsIDocument::Element");
+        addCallee(new CallSite(name, entry.safeArguments, entry.stack[0].location));
+        return true;
+    }
+
+    // Hack for contravariant return types. When overriding a virtual method
+    // with a method that returns a different return type (a subtype of the
+    // original return type), we are getting the right mangled name but the
+    // wrong return type in the unmangled name.
+    if (/\$nsTextFrame*/.test(name)) {
+        var callee = name.replace("nsTextFrame", "nsIFrame");
         addCallee(new CallSite(name, entry.safeArguments, entry.stack[0].location));
         return true;
     }
