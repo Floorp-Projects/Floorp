@@ -338,7 +338,7 @@ GeckoDriver.prototype.getCurrentWindow = function (forcedContext = undefined) {
       } else if (this.curBrowser !== null) {
         if (browser.getTabBrowser(this.curBrowser.window)) {
           // For browser windows we have to check if the current tab still exists.
-          if (this.curBrowser.tab && browser.getBrowserForTab(this.curBrowser.tab)) {
+          if (this.curBrowser.tab && this.curBrowser.contentBrowser) {
             win = this.curBrowser.window;
           }
         } else {
@@ -659,7 +659,7 @@ GeckoDriver.prototype.newSession = function* (cmd, resp) {
   yield browserListening;
 
   if (this.curBrowser.tab) {
-    browser.getBrowserForTab(this.curBrowser.tab).focus();
+    this.curBrowser.contentBrowser.focus();
   }
 
   return {
@@ -985,7 +985,8 @@ GeckoDriver.prototype.get = function*(cmd, resp) {
   });
 
   yield get;
-  browser.getBrowserForTab(this.curBrowser.tab).focus();
+
+  this.curBrowser.contentBrowser.focus();
 };
 
 /**
@@ -1061,8 +1062,7 @@ GeckoDriver.prototype.goBack = function* (cmd, resp) {
     return;
   }
 
-  let contentBrowser = browser.getBrowserForTab(this.curBrowser.tab)
-  if (!contentBrowser.webNavigation.canGoBack) {
+  if (!this.curBrowser.contentBrowser.webNavigation.canGoBack) {
     return;
   }
 
@@ -1103,8 +1103,7 @@ GeckoDriver.prototype.goForward = function* (cmd, resp) {
     return;
   }
 
-  let contentBrowser = browser.getBrowserForTab(this.curBrowser.tab)
-  if (!contentBrowser.webNavigation.canGoForward) {
+  if (!this.curBrowser.contentBrowser.webNavigation.canGoForward) {
     return;
   }
 
