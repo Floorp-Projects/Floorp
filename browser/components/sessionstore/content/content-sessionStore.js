@@ -179,7 +179,7 @@ var MessageListener = {
 
       onLoadStarted() {
         // Notify the parent that the tab is no longer pending.
-        sendSyncMessage("SessionStore:restoreTabContentStarted", {epoch});
+        sendAsyncMessage("SessionStore:restoreTabContentStarted", {epoch});
       },
 
       onLoadFinished() {
