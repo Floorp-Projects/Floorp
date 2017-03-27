@@ -26016,7 +26016,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       assert(isStream(xobj), 'XObject should be a stream');
       var type = xobj.dict.get('Subtype');
       assert(isName(type), 'XObject should have a Name subtype');
-      if ('Form' !== type.name) {
+      if (type.name !== 'Form') {
        xobjsCache.key = name;
        xobjsCache.texts = null;
        break;
@@ -27777,7 +27777,7 @@ var JpxImage = function JpxImageClosure() {
      this.parseCodestream(data, position, position + dataLength);
      break;
     case 0x6A502020:
-     if (0x0d0a870a !== readUint32(data, position)) {
+     if (readUint32(data, position) !== 0x0d0a870a) {
       warn('Invalid JP2 signature');
      }
      break;
@@ -29884,6 +29884,9 @@ var Catalog = function CatalogClosure() {
      try {
       metadata = stringToUTF8String(bytesToString(stream.getBytes()));
      } catch (e) {
+      if (e instanceof MissingDataException) {
+       throw e;
+      }
       info('Skipping invalid metadata.');
      }
     }
@@ -37756,6 +37759,9 @@ var PDFDocument = function PDFDocumentClosure() {
      }
     }
    } catch (ex) {
+    if (ex instanceof MissingDataException) {
+     throw ex;
+    }
     info('Something wrong with AcroForm entry');
     this.acroForm = null;
    }
@@ -37869,6 +37875,9 @@ var PDFDocument = function PDFDocumentClosure() {
    try {
     infoDict = this.xref.trailer.get('Info');
    } catch (err) {
+    if (err instanceof MissingDataException) {
+     throw err;
+    }
     info('The document information dictionary is invalid.');
    }
    if (infoDict) {
@@ -43370,6 +43379,7 @@ exports.Jbig2Image = Jbig2Image;
 "use strict";
 
 var sharedUtil = __w_pdfjs_require__(0);
+var warn = sharedUtil.warn;
 var error = sharedUtil.error;
 var JpegImage = function JpegImageClosure() {
  var dctZigZag = new Uint8Array([
@@ -43692,23 +43702,21 @@ var JpegImage = function JpegImageClosure() {
   } else {
    mcuExpected = mcusPerLine * frame.mcusPerColumn;
   }
-  if (!resetInterval) {
-   resetInterval = mcuExpected;
-  }
   var h, v;
   while (mcu < mcuExpected) {
+   var mcuToRead = resetInterval ? Math.min(mcuExpected - mcu, resetInterval) : mcuExpected;
    for (i = 0; i < componentsLength; i++) {
     components[i].pred = 0;
    }
    eobrun = 0;
    if (componentsLength === 1) {
     component = components[0];
-    for (n = 0; n < resetInterval; n++) {
+    for (n = 0; n < mcuToRead; n++) {
      decodeBlock(component, decodeFn, mcu);
      mcu++;
     }
    } else {
-    for (n = 0; n < resetInterval; n++) {
+    for (n = 0; n < mcuToRead; n++) {
      for (i = 0; i < componentsLength; i++) {
       component = components[i];
       h = component.h;
@@ -43910,8 +43918,23 @@ var JpegImage = function JpegImageClosure() {
     return value;
    }
    function readDataBlock() {
+    function isValidMarkerAt(pos) {
+     if (pos < data.length - 1) {
+      return data[pos] === 0xFF && data[pos + 1] >= 0xC0 && data[pos + 1] <= 0xFE;
+     }
+     return true;
+    }
     var length = readUint16();
-    var array = data.subarray(offset, offset + length - 2);
+    var endOffset = offset + length - 2;
+    if (!isValidMarkerAt(endOffset)) {
+     warn('readDataBlock - incorrect length, next marker is: ' + (data[endOffset] << 8 | data[endOffset + 1]).toString('16'));
+     var pos = offset;
+     while (!isValidMarkerAt(pos)) {
+      pos++;
+     }
+     endOffset = pos;
+    }
+    var array = data.subarray(offset, endOffset);
     offset += array.length;
     return array;
    }
@@ -49132,8 +49155,8 @@ exports.Type1Parser = Type1Parser;
 
 "use strict";
 
-var pdfjsVersion = '1.7.367';
-var pdfjsBuild = 'f0c45f03';
+var pdfjsVersion = '1.7.381';
+var pdfjsBuild = '68f2bf3b';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 ;
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;

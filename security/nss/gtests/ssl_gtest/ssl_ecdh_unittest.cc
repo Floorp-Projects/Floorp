@@ -228,7 +228,7 @@ TEST_P(TlsConnectGenericPre13, DropSupportedGroupExtensionP256) {
   auto group_capture = std::make_shared<TlsKeyExchangeGroupCapture>();
   server_->SetPacketFilter(group_capture);
 
-  ConnectExpectFail();
+  ConnectExpectAlert(server_, kTlsAlertDecryptError);
   client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
   server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
 
@@ -240,7 +240,7 @@ TEST_P(TlsConnectTls13, DropSupportedGroupExtension) {
   EnsureTlsSetup();
   client_->SetPacketFilter(
       std::make_shared<TlsExtensionDropper>(ssl_supported_groups_xtn));
-  ConnectExpectFail();
+  ConnectExpectAlert(server_, kTlsAlertMissingExtension);
   client_->CheckErrorCode(SSL_ERROR_MISSING_EXTENSION_ALERT);
   server_->CheckErrorCode(SSL_ERROR_MISSING_SUPPORTED_GROUPS_EXTENSION);
 }
@@ -485,7 +485,7 @@ TEST_P(TlsConnectGeneric, P256ClientAndCurve25519Server) {
   client_->ConfigNamedGroups(client_groups);
   server_->ConfigNamedGroups(server_groups);
 
-  ConnectExpectFail();
+  ConnectExpectAlert(server_, kTlsAlertHandshakeFailure);
   client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
   server_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
 }
@@ -562,14 +562,14 @@ class ECCServerKEXFilter : public TlsHandshakeFilter {
 TEST_P(TlsConnectGenericPre13, ConnectECDHEmptyServerPoint) {
   // add packet filter
   server_->SetPacketFilter(std::make_shared<ECCServerKEXFilter>());
-  ConnectExpectFail();
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
   client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_KEY_EXCH);
 }
 
 TEST_P(TlsConnectGenericPre13, ConnectECDHEmptyClientPoint) {
   // add packet filter
   client_->SetPacketFilter(std::make_shared<ECCClientKEXFilter>());
-  ConnectExpectFail();
+  ConnectExpectAlert(server_, kTlsAlertIllegalParameter);
   server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_KEY_EXCH);
 }
 

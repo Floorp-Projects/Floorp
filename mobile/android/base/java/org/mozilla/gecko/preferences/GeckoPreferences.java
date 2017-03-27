@@ -174,6 +174,7 @@ public class GeckoPreferences
     public static final String PREFS_SHOW_QUIT_MENU = NON_PREF_PREFIX + "distribution.show_quit_menu";
     public static final String PREFS_SEARCH_SUGGESTIONS_ENABLED = "browser.search.suggest.enabled";
     public static final String PREFS_DEFAULT_BROWSER = NON_PREF_PREFIX + "default_browser.link";
+    public static final String PREFS_SYSTEM_FONT_SIZE = NON_PREF_PREFIX + "font.size.use_system_font_size";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = "STUMBLER_PREF";
 
@@ -1270,9 +1271,6 @@ public class GeckoPreferences
         } else if (preference instanceof LinkPreference) {
             setResult(RESULT_CODE_EXIT_SETTINGS);
             finishChoosingTransition();
-        } else if (preference instanceof FontSizePreference) {
-            final FontSizePreference fontSizePref = (FontSizePreference) preference;
-            fontSizePref.setSummary(fontSizePref.getSavedFontSizeName());
         }
 
         return true;
@@ -1496,16 +1494,6 @@ public class GeckoPreferences
                         // Set the summary string to the current entry
                         CharSequence selectedEntry = ((ListPreference) pref).getEntry();
                         ((ListPreference) pref).setSummary(selectedEntry);
-                    }
-                });
-            } else if (pref instanceof FontSizePreference) {
-                final FontSizePreference fontSizePref = (FontSizePreference) pref;
-                fontSizePref.setSavedFontSize(value);
-                final String fontSizeName = fontSizePref.getSavedFontSizeName();
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        fontSizePref.setSummary(fontSizeName); // Ex: "Small".
                     }
                 });
             }

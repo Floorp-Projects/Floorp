@@ -17,9 +17,6 @@ namespace nss_test {
 #else
 #define FUZZ_F(c, f) TEST_F(c, DISABLED_Fuzz_##f)
 #define FUZZ_P(c, f) TEST_P(c, DISABLED_Fuzz_##f)
-// RNG_ResetForFuzzing() isn't exported from the shared libraries, rather than
-// fail to link to it, make it fail (we're not running it anyway).
-#define RNG_ResetForFuzzing() SECFailure
 #endif
 
 const uint8_t kShortEmptyFinished[8] = {0};
@@ -91,7 +88,7 @@ FUZZ_P(TlsConnectGeneric, DeterministicExporter) {
   DisableECDHEServerKeyReuse();
 
   // Reset the RNG state.
-  EXPECT_EQ(SECSuccess, RNG_ResetForFuzzing());
+  EXPECT_EQ(SECSuccess, RNG_RandomUpdate(NULL, 0));
   Connect();
 
   // Export a key derived from the MS and nonces.
@@ -105,7 +102,7 @@ FUZZ_P(TlsConnectGeneric, DeterministicExporter) {
   DisableECDHEServerKeyReuse();
 
   // Reset the RNG state.
-  EXPECT_EQ(SECSuccess, RNG_ResetForFuzzing());
+  EXPECT_EQ(SECSuccess, RNG_RandomUpdate(NULL, 0));
   Connect();
 
   // Export another key derived from the MS and nonces.
@@ -135,7 +132,7 @@ FUZZ_P(TlsConnectGeneric, DeterministicTranscript) {
     server_->SetPacketFilter(std::make_shared<TlsConversationRecorder>(buffer));
 
     // Reset the RNG state.
-    EXPECT_EQ(SECSuccess, RNG_ResetForFuzzing());
+    EXPECT_EQ(SECSuccess, RNG_RandomUpdate(NULL, 0));
     Connect();
 
     // Ensure the filters go away before |buffer| does.

@@ -33,12 +33,14 @@ TEST_F(TlsConnectTest, DamageSecretHandleClientFinished) {
   client_->StartConnect();
   client_->Handshake();
   server_->Handshake();
-  std::cerr << "Damaging HS secret\n";
+  std::cerr << "Damaging HS secret" << std::endl;
   SSLInt_DamageClientHsTrafficSecret(server_->ssl_fd());
   client_->Handshake();
-  server_->Handshake();
   // The client thinks it has connected.
   EXPECT_EQ(TlsAgent::STATE_CONNECTED, client_->state());
+
+  ExpectAlert(server_, kTlsAlertDecryptError);
+  server_->Handshake();
   server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
   client_->Handshake();
   client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
@@ -49,6 +51,9 @@ TEST_F(TlsConnectTest, DamageSecretHandleServerFinished) {
                            SSL_LIBRARY_VERSION_TLS_1_3);
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_3);
+  client_->ExpectSendAlert(kTlsAlertDecryptError);
+  // The server can't read the client's alert, so it also sends an alert.
+  server_->ExpectSendAlert(kTlsAlertBadRecordMac);
   server_->SetPacketFilter(std::make_shared<AfterRecordN>(
       server_, client_,
       0,  // ServerHello.

@@ -1,17 +1,17 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == background-common-usage-floating-point.html background-common-usage-floating-point.html
-fails == background-common-usage-percent.html background-common-usage-percent.html
-fails == background-common-usage-pixel.html background-common-usage-pixel.html
+== background-common-usage-floating-point.html background-common-usage-floating-point.html
+== background-common-usage-percent.html background-common-usage-percent.html
+== background-common-usage-pixel.html background-common-usage-pixel.html
 == background-draw-nothing-empty-rect.html background-draw-nothing-empty-rect.html
 == background-draw-nothing-invalid-syntax.html background-draw-nothing-invalid-syntax.html
 asserts(0-6) == background-draw-nothing-malformed-images.html background-draw-nothing-malformed-images.html
-fails == background-monster-rect.html background-monster-rect.html
-fails == background-over-size-rect.html background-over-size-rect.html
+== background-monster-rect.html background-monster-rect.html
+== background-over-size-rect.html background-over-size-rect.html
 fails == background-test-parser.html background-test-parser.html
-fails == background-with-other-properties.html background-with-other-properties.html
-fails == background-zoom-1.html background-zoom-1.html
-fails == background-zoom-2.html background-zoom-2.html
-fails == background-zoom-3.html background-zoom-3.html
-fails == background-zoom-4.html background-zoom-4.html
+== background-with-other-properties.html background-with-other-properties.html
+== background-zoom-1.html background-zoom-1.html
+== background-zoom-2.html background-zoom-2.html
+== background-zoom-3.html background-zoom-3.html
+== background-zoom-4.html background-zoom-4.html
 fails == dom-api-computed-style.html dom-api-computed-style.html # Bug 1341763
 fails == dom-api.html dom-api.html

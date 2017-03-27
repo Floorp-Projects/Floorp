@@ -30,5 +30,5 @@ fails == input-fieldset-legend.html input-fieldset-legend.html
 == input-radio-nogroup-required-invalid.html input-radio-nogroup-required-invalid.html
 == input-radio-focus-click.html input-radio-focus-click.html
 fails == input-submit.html input-submit.html
-fails == input-image.html input-image.html
+== input-image.html input-image.html
 # input type='hidden' shouldn't show

@@ -17,6 +17,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsContentUtils.h"
+#include "nsILoadContext.h"
 #include "nsIObserverService.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebNavigation.h"

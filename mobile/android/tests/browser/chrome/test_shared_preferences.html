@@ -11,6 +11,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript">
 
   Components.utils.import("resource://gre/modules/SharedPreferences.jsm");
@@ -18,25 +19,6 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   Components.utils.import("resource://gre/modules/Task.jsm");
 
   let _observerId = 0;
-
-  function makeObserver() {
-    let deferred = Promise.defer();
-
-    let ret = {
-      id: _observerId++,
-      count: 0,
-      promise: deferred.promise,
-      observe: function (subject, topic, data) {
-        ret.count += 1;
-        let msg = { subject: subject,
-                    topic: topic,
-                    data: data };
-        deferred.resolve(msg);
-      },
-    };
-
-    return ret;
-  };
 
   add_task(function* test_get_set() {
     let branch = SharedPreferences.forAndroid("test");
@@ -109,7 +91,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     branch.setBoolPref("boolKey", false);
     is(branch.getBoolPref("boolKey"), false);
 
-    let obs1 = makeObserver();
+    let obs1 = makeObserver(_observerId++);
     branch.addObserver("boolKey", obs1);
 
     try {
@@ -133,7 +115,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     // depends, of course, on the order that observers are notified, but
     // is better than nothing.
 
-    let obs2 = makeObserver();
+    let obs2 = makeObserver(_observerId++);
     branch.addObserver("boolKey", obs2);
 
     try {
@@ -161,7 +143,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     branch.setCharPref("charKey", "first value");
     is(branch.getCharPref("charKey"), "first value");
 
-    let obs = makeObserver();
+    let obs = makeObserver(_observerId++);
     branch.addObserver("charKey", obs);
 
     try {
@@ -192,7 +174,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     branch.setCharPref("charKey", "first value");
     is(branch.getCharPref("charKey"), "first value");
 
-    let obs = makeObserver();
+    let obs = makeObserver(_observerId++);
     branch.addObserver("charKey", obs);
 
     try {

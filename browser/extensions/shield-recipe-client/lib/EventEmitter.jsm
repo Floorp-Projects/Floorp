@@ -27,7 +27,7 @@ this.EventEmitter = function(sandboxManager) {
       Promise.resolve()
         .then(() => {
           if (!(eventName in listeners)) {
-            log.info(`EventEmitter: Event fired with no listeners: ${eventName}`);
+            log.debug(`EventEmitter: Event fired with no listeners: ${eventName}`);
             return;
           }
           // Clone callbacks array to avoid problems with mutation while iterating

@@ -21,32 +21,6 @@ enum class DisplayType: int32_t {
 interface nsIScreen : nsISupports
 {
   /**
-   * Levels of brightness for the screen, from off to full brightness.
-   */
-  const unsigned long BRIGHTNESS_DIM = 0;
-  const unsigned long BRIGHTNESS_FULL = 1;
-
-  /* The number of different brightness levels */
-  const unsigned long BRIGHTNESS_LEVELS = 2;
-
-  /**
-   * Allowable screen rotations, when the underlying widget toolkit
-   * supports rotating the screen.
-   *
-   * ROTATION_0_DEG is the default, unrotated configuration.
-   */
-  const unsigned long   ROTATION_0_DEG = 0;
-  const unsigned long  ROTATION_90_DEG = 1;
-  const unsigned long ROTATION_180_DEG = 2;
-  const unsigned long ROTATION_270_DEG = 3;
-
-  /**
-   * A unique identifier for this device, useful for requerying
-   * for it via nsIScreenManager.
-   */
-  readonly attribute unsigned long id;
-
-  /**
    * These report screen dimensions in (screen-specific) device pixels
    */
   void GetRect(out long left, out long top, out long width, out long height);
@@ -58,31 +32,8 @@ interface nsIScreen : nsISupports
   void GetRectDisplayPix(out long left, out long top, out long width, out long height);
   void GetAvailRectDisplayPix(out long left, out long top, out long width, out long height);
 
-  /**
-   * Locks the minimum brightness of the screen, forcing it to be at
-   * least as bright as a certain brightness level. Each call to this
-   * function must eventually be followed by a corresponding call to
-   * unlockMinimumBrightness, with the same brightness level.
-   *
-   * @param brightness A brightness level, one of the above constants.
-   */
-  void lockMinimumBrightness(in unsigned long brightness);
-
-  /**
-   * Releases a lock on the screen brightness. This must be called
-   * (eventually) after a corresponding call to lockMinimumBrightness.
-   *
-   * @param brightness A brightness level, one of the above constants.
-   */
-  void unlockMinimumBrightness(in unsigned long brightness);
-  
   readonly attribute long pixelDepth;
   readonly attribute long colorDepth;
-  /**
-   * Get/set the screen rotation, on platforms that support changing
-   * screen rotation.
-   */
-  attribute unsigned long rotation;
 
   /**
    * The number of device pixels per desktop pixel for this screen (for

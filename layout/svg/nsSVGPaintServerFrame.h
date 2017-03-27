@@ -26,6 +26,32 @@ class nsStyleContext;
 
 struct gfxRect;
 
+/**
+ * RAII class used to temporarily set and remove the
+ * NS_FRAME_DRAWING_AS_PAINTSERVER frame state bit while a frame is being
+ * drawn as a paint server.
+ */
+class MOZ_RAII AutoSetRestorePaintServerState
+{
+public:
+  explicit AutoSetRestorePaintServerState(
+             nsIFrame* aFrame
+             MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
+    mFrame(aFrame)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    mFrame->AddStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
+  }
+  ~AutoSetRestorePaintServerState()
+  {
+    mFrame->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
+  }
+
+private:
+  nsIFrame* mFrame;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 class nsSVGPaintServerFrame : public nsSVGContainerFrame
 {
 protected:

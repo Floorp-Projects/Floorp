@@ -737,6 +737,10 @@ protected:
   bool mServiceWorkersTestingEnabled;
 
   mozilla::dom::LargeAllocStatus mLargeAllocStatus; // Outer window only
+
+  // When there is any created alive media component, we can consider to resume
+  // the media content in the window.
+  bool mShouldResumeOnFirstActiveMediaComponent;
 };
 
 #define NS_PIDOMWINDOWINNER_IID \

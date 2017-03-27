@@ -1218,7 +1218,7 @@ exports['test active tab properties defined on popup closed'] = function (assert
 // related to bugs 922956 and 989288
 // https://bugzilla.mozilla.org/show_bug.cgi?id=922956
 // https://bugzilla.mozilla.org/show_bug.cgi?id=989288
-exports["test tabs ready and close after window.open"] = function*(assert, done) {
+if (0) exports["test tabs ready and close after window.open"] = function*(assert, done) {
   // ensure popups open in a new window and disable popup blocker
   setPref(OPEN_IN_NEW_WINDOW_PREF, 2);
   setPref(DISABLE_POPUP_PREF, false);

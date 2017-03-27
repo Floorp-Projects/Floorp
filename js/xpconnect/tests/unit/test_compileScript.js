@@ -53,3 +53,20 @@ add_task(function*() {
   equal(Cu.getObjectPrincipal(sandbox2.bar).origin, "http://example.org", "Object value origin is correct");
   equal(sandbox2.bar.foo, "\u00ae", "Object value has the correct charset");
 });
+
+add_task(function* test_syntaxError() {
+  // Generate an artificially large script to force off-main-thread
+  // compilation.
+  let scriptUrl = `data:,${";".repeat(1024 * 1024)}(`;
+
+  yield Assert.rejects(
+    ChromeUtils.compileScript(scriptUrl),
+    SyntaxError);
+
+  // Generate a small script to force main thread compilation.
+  scriptUrl = `data:,;(`;
+
+  yield Assert.rejects(
+    ChromeUtils.compileScript(scriptUrl),
+    SyntaxError);
+});

@@ -587,7 +587,7 @@ private:
   // The sheets in each array in mSheets are stored with the most significant
   // sheet last.
   // The arrays for ePresHintSheet, eStyleAttrSheet, eTransitionSheet,
-  // eAnimationSheet and eSVGAttrAnimationSheet are always empty.
+  // eAnimationSheet are always empty.
   // (FIXME:  We should reduce the storage needed for them.)
   mozilla::EnumeratedArray<mozilla::SheetType, mozilla::SheetType::Count,
                            nsTArray<RefPtr<mozilla::CSSStyleSheet>>> mSheets;

@@ -237,9 +237,6 @@
                  android:exported="false">
         </service>
 
-        <receiver android:name="org.mozilla.gecko.AlarmReceiver" >
-        </receiver>
-
         <receiver
             android:name="org.mozilla.gecko.notifications.WhatsNewReceiver"
             android:exported="false">

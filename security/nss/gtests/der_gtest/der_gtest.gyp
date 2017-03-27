@@ -13,6 +13,7 @@
       'sources': [
         'der_getint_unittest.cc',
         'der_private_key_import_unittest.cc',
+        'der_quickder_unittest.cc',
         '<(DEPTH)/gtests/common/gtests.cc'
       ],
       'dependencies': [

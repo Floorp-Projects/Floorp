@@ -5414,7 +5414,7 @@ nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord)
   const nsStyleFont* font = StyleFont();
   float fCoord = float(aCoord);
   if (font->mAllowZoom) {
-    fCoord /= mPresShell->GetPresContext()->TextZoom();
+    fCoord /= mPresShell->GetPresContext()->EffectiveTextZoom();
   }
   if (font->mFont.size != font->mSize) {
     fCoord = fCoord * (float(font->mSize) / float(font->mFont.size));

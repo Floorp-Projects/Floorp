@@ -2441,9 +2441,6 @@ public:
   virtual void RemoveResponsiveContent(nsIContent* aContent) = 0;
   virtual void NotifyMediaFeatureValuesChanged() = 0;
 
-  virtual void AddMediaContent(nsIContent* aContent) = 0;
-  virtual void RemoveMediaContent(nsIContent* aContent) = 0;
-
   virtual nsresult GetStateObject(nsIVariant** aResult) = 0;
 
   virtual nsDOMNavigationTiming* GetNavigationTiming() const = 0;
@@ -3185,9 +3182,6 @@ protected:
 
   // Do we currently have an event posted to call FlushUserFontSet?
   bool mPostedFlushUserFontSet : 1;
-
-  // True is document has ever been in a foreground window.
-  bool mEverInForeground : 1;
 
   // Compatibility mode
   nsCompatibility mCompatMode;

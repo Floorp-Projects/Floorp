@@ -26,8 +26,8 @@ pub use self::align::{AlignItems, AlignJustifyContent, AlignJustifySelf, Justify
 pub use self::color::Color;
 pub use self::grid::{GridLine, TrackKeyword};
 pub use self::image::{AngleOrCorner, ColorStop, EndingShape as GradientEndingShape, Gradient};
-pub use self::image::{GradientKind, HorizontalDirection, Image, LengthOrKeyword, LengthOrPercentageOrKeyword};
-pub use self::image::{SizeKeyword, VerticalDirection};
+pub use self::image::{GradientKind, HorizontalDirection, Image, ImageRect, LengthOrKeyword};
+pub use self::image::{LengthOrPercentageOrKeyword, SizeKeyword, VerticalDirection};
 pub use self::length::{FontRelativeLength, ViewportPercentageLength, CharacterWidth, Length, CalcLengthOrPercentage};
 pub use self::length::{Percentage, LengthOrNone, LengthOrNumber, LengthOrPercentage, LengthOrPercentageOrAuto};
 pub use self::length::{LengthOrPercentageOrNone, LengthOrPercentageOrAutoOrContent, NoCalcLength, CalcUnit};
@@ -538,8 +538,8 @@ impl Parse for Number {
 impl Number {
     fn parse_with_minimum(input: &mut Parser, min: CSSFloat) -> Result<Number, ()> {
         match parse_number(input) {
-            Ok(value) if value < min => Err(()),
-            value => value.map(Number),
+            Ok(value) if value >= min => Ok(Number(value)),
+            _ => Err(()),
         }
     }
 
@@ -569,6 +569,37 @@ impl ToComputedValue for Number {
 impl ToCss for Number {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
         self.0.to_css(dest)
+    }
+}
+
+/// <number-percentage>
+/// Accepts only non-negative numbers.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "servo", derive(HeapSizeOf))]
+#[allow(missing_docs)]
+pub enum NumberOrPercentage {
+    Percentage(Percentage),
+    Number(Number),
+}
+
+no_viewport_percentage!(NumberOrPercentage);
+
+impl Parse for NumberOrPercentage {
+    fn parse(_context: &ParserContext, input: &mut Parser) -> Result<Self, ()> {
+        if let Ok(per) = input.try(Percentage::parse_non_negative) {
+            return Ok(NumberOrPercentage::Percentage(per));
+        }
+
+        Number::parse_non_negative(input).map(NumberOrPercentage::Number)
+    }
+}
+
+impl ToCss for NumberOrPercentage {
+    fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
+        match *self {
+            NumberOrPercentage::Percentage(percentage) => percentage.to_css(dest),
+            NumberOrPercentage::Number(number) => number.to_css(dest),
+        }
     }
 }
 
@@ -948,18 +979,18 @@ impl ToComputedValue for SVGPaintKind {
 }
 
 /// <length> | <percentage> | <number>
-pub type LoPOrNumber = Either<LengthOrPercentage, Number>;
+pub type LengthOrPercentageOrNumber = Either<LengthOrPercentage, Number>;
 
-impl LoPOrNumber {
+impl LengthOrPercentageOrNumber {
     /// parse a <length-percentage> | <number> enforcing that the contents aren't negative
     pub fn parse_non_negative(_: &ParserContext, input: &mut Parser) -> Result<Self, ()> {
-        if let Ok(lop) = input.try(LengthOrPercentage::parse_non_negative) {
-            Ok(Either::First(lop))
-        } else if let Ok(num) = input.try(Number::parse_non_negative) {
-            Ok(Either::Second(num))
-        } else {
-            Err(())
+        // NB: Parse numbers before Lengths so we are consistent about how to
+        // recognize and serialize "0".
+        if let Ok(num) = input.try(Number::parse_non_negative) {
+            return Ok(Either::Second(num))
         }
+
+        LengthOrPercentage::parse_non_negative(input).map(Either::First)
     }
 }
 

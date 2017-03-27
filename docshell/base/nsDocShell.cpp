@@ -10199,6 +10199,19 @@ nsDocShell::InternalLoad(nsIURI* aURI,
         //      window will need to be made visible...  For now,
         //      do nothing.
       }
+
+      // Switch to target tab if we're currently focused window.
+      // Take loadDivertedInBackground into account so the behavior would be
+      // the same as how the tab first opened.
+      bool isTargetActive = false;
+      targetDocShell->GetIsActive(&isTargetActive);
+      if (mIsActive && !isTargetActive &&
+          !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false)) {
+        if (NS_FAILED(nsContentUtils::DispatchFocusChromeEvent(
+            targetDocShell->GetWindow()))) {
+          return NS_ERROR_FAILURE;
+        }
+      }
     }
 
     // Else we ran out of memory, or were a popup and got blocked,
@@ -11833,6 +11846,21 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
       (void)AddToSessionHistory(aURI, aChannel, aTriggeringPrincipal,
                                 aPrincipalToInherit, aCloneSHChildren,
                                 getter_AddRefs(mLSHE));
+    }
+  } else if (mSessionHistory && mLSHE && mURIResultedInDocument) {
+    // Even if we don't add anything to SHistory, ensure the current index
+    // points to the same SHEntry as our mLSHE.
+    int32_t index = 0;
+    mSessionHistory->GetRequestedIndex(&index);
+    if (index == -1) {
+      mSessionHistory->GetIndex(&index);
+    }
+    nsCOMPtr<nsISHEntry> currentSH;
+    mSessionHistory->GetEntryAtIndex(index, false, getter_AddRefs(currentSH));
+    if (currentSH != mLSHE) {
+      nsCOMPtr<nsISHistoryInternal> shPrivate =
+        do_QueryInterface(mSessionHistory);
+      shPrivate->ReplaceEntry(index, mLSHE);
     }
   }
 

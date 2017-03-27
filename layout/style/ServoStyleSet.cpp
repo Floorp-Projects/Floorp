@@ -220,14 +220,32 @@ ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
 
   MOZ_ASSERT(!sInServoTraversal);
   sInServoTraversal = true;
+
+  bool isInitial = !aRoot->HasServoData();
   bool postTraversalRequired =
     Servo_TraverseSubtree(aRoot, mRawSet.get(), aRootBehavior);
+  MOZ_ASSERT_IF(isInitial, !postTraversalRequired);
 
   // If there are still animation restyles needed, trigger a second traversal to
   // update CSS animations' styles.
-  if (mPresContext->EffectCompositor()->PreTraverse() &&
-      Servo_TraverseSubtree(aRoot, mRawSet.get(), aRootBehavior)) {
-    postTraversalRequired = true;
+  if (mPresContext->EffectCompositor()->PreTraverse()) {
+    if (Servo_TraverseSubtree(aRoot, mRawSet.get(), aRootBehavior)) {
+      if (isInitial) {
+        // We're doing initial styling, and the additional animation
+        // traversal changed the styles that were set by the first traversal.
+        // This would normally require a post-traversal to update the style
+        // contexts, and the DOM now has dirty descendant bits and RestyleData
+        // in expectation of that post-traversal. But since this is actually
+        // the initial styling, there are no style contexts to update and no
+        // frames to apply the change hints to, so we don't need to do that
+        // post-traversal. Instead, just drop this state and tell the caller
+        // that no post-traversal is required.
+        MOZ_ASSERT(!postTraversalRequired);
+        ServoRestyleManager::ClearRestyleStateFromSubtree(const_cast<Element*>(aRoot));
+      } else {
+        postTraversalRequired = true;
+      }
+    }
   }
 
   sInServoTraversal = false;

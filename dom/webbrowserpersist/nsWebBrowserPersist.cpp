@@ -14,6 +14,7 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsILoadContext.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIComponentRegistrar.h"

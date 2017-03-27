@@ -23,6 +23,9 @@
 #include "PrivateBrowsingChannel.h"
 
 namespace mozilla {
+
+class Dispatcher;
+
 namespace net {
 
 // This class inherits logic from nsBaseChannel that is not needed for an
@@ -150,6 +153,10 @@ private:
   // Set if SendSuspend is called. Determines if SendResume is needed when
   // diverting callbacks to parent.
   bool mSuspendSent;
+
+  RefPtr<Dispatcher> mDispatcher;
+
+  void EnsureDispatcher();
 };
 
 inline bool

@@ -1,0 +1,19 @@
+{
+  "arguments_schema": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "properties": {
+      "message": {
+        "default": "",
+        "description": "Message to log to the console",
+        "type": "string"
+      }
+    },
+    "required": [
+      "message"
+    ],
+    "title": "Log a message to the console",
+    "type": "object"
+  },
+  "implementation_url": "https://localhost:8000/api/v1/action/console-log/implementation/0765c6302db2846b85543eea743f959c19b42559/",
+  "name": "console-log"
+}

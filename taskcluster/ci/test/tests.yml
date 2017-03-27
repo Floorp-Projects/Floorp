@@ -791,6 +791,10 @@ mochitest-media:
             macosx64.*: 1
             default: 3
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['graphics']
+            default: ['all']
     mozharness:
         by-test-platform:
             android.*:
@@ -1054,14 +1058,14 @@ reftest-stylo:
                     stylo: true
                     autoland: true
                     mozilla-central: true
-                    default: false
+                    default: true
             linux64-stylo/debug:
                 by-project:
-                    mozilla-inbound: true
                     stylo: true
                     autoland: true
                     mozilla-central: true
-                    default: false
+                    mozilla-inbound: true
+                    default: true
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true

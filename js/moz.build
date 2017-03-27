@@ -1,0 +1,13 @@
+component_engine = ('Core', 'JavaScript Engine')
+component_gc     = ('Core', 'JavaScript: GC')
+component_jit    = ('Core', 'JavaScript Engine: JIT')
+
+with Files("**"):
+    BUG_COMPONENT = component_engine
+
+for header in ('GCAnnotations.h', 'GCAPI.h', 'HeapAPI.h', 'RootingAPI.h', 'SliceBudget.h', 'SweepingAPI.h', 'TraceKind.h', 'TracingAPI.h', 'WeakMapPtr.h', 'GCHashTable.h', 'GCPolicyAPI.h', 'GCVariant.h', 'GCVector.h'):
+    with Files('public/' + header):
+        BUG_COMPONENT = component_gc
+
+with Files('public/TrackedOptimizationInfo.h'):
+    BUG_COMPONENT = component_jit

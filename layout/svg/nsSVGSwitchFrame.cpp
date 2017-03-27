@@ -53,7 +53,6 @@ public:
                               const gfxMatrix& aTransform,
                               const nsIntRect* aDirtyRect = nullptr) override;
   nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
-  nsRect GetCoveredRegion() override;
   virtual void ReflowSVG() override;
   virtual SVGBBox GetBBoxContribution(const Matrix &aToBBoxUserspace,
                                       uint32_t aFlags) override;
@@ -158,19 +157,6 @@ nsSVGSwitchFrame::GetFrameForPoint(const gfxPoint& aPoint)
   }
 
   return nullptr;
-}
-
-nsRect
-nsSVGSwitchFrame::GetCoveredRegion()
-{
-  nsRect rect;
-
-  nsIFrame *kid = GetActiveChildFrame();
-  nsSVGDisplayableFrame* child = do_QueryFrame(kid);
-  if (child) {
-    rect = child->GetCoveredRegion();
-  }
-  return rect;
 }
 
 void

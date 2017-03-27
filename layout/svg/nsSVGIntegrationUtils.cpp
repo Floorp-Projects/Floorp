@@ -137,16 +137,14 @@ nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
   // painting or hit-testing anyway.
   const nsStyleSVGReset *style = aFrame->StyleSVGReset();
   return aFrame->StyleEffects()->HasFilters() ||
-         style->HasClipPath() ||
-         style->mMask.HasLayerWithImage();
+         style->HasClipPath() || style->HasMask();
 }
 
 bool
 nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(const nsIFrame* aFrame)
 {
   const nsStyleSVGReset *style = aFrame->StyleSVGReset();
-  return style->HasClipPath() ||
-         style->mMask.HasLayerWithImage();
+  return style->HasClipPath() || style->HasMask();
 }
 
 nsPoint
@@ -1138,7 +1136,7 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   if (mFrame->GetStateBits() & NS_FRAME_DRAWING_AS_PAINTSERVER)
     return false;
 
-  mFrame->AddStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
+  AutoSetRestorePaintServerState paintServer(mFrame);
 
   aContext->Save();
 
@@ -1205,8 +1203,6 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   }
 
   aContext->Restore();
-
-  mFrame->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
 
   return true;
 }

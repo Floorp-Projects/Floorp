@@ -18,7 +18,7 @@ fails == justification-1.html justification-1.html
 == justification-2c.html justification-2c.html
 == justification-2d.html justification-2d.html
 fails == justification-cjk-extension.html justification-cjk-extension.html
-fails == justification-space-diacritic.html justification-space-diacritic.html
+== justification-space-diacritic.html justification-space-diacritic.html
 skip HTTP(..) load ligature-with-space-1.html
 == line-editing-1a.html line-editing-1a.html
 == line-editing-1b.html line-editing-1b.html
@@ -182,8 +182,8 @@ fails HTTP(..) == fallback-mark-stacking-1.html fallback-mark-stacking-1.html
 == 726392-1.html 726392-1.html
 == 726392-2.html 726392-2.html
 == 726392-3.html 726392-3.html
-fails == 745555-1.html 745555-1.html
-fails == 745555-2.html 745555-2.html
+== 745555-1.html 745555-1.html
+== 745555-2.html 745555-2.html
 == 820255.html 820255.html
 fails HTTP(..) == 1170688.html 1170688.html
 
@@ -248,7 +248,7 @@ fails HTTP(..) == graphite-surrogate-selection.html graphite-surrogate-selection
 == auto-hyphenation-2.html auto-hyphenation-2.html
 == auto-hyphenation-3.html auto-hyphenation-3.html
 == auto-hyphenation-4.html auto-hyphenation-4.html
-fails == auto-hyphenation-5.html auto-hyphenation-5.html
+== auto-hyphenation-5.html auto-hyphenation-5.html
 == auto-hyphenation-6.html auto-hyphenation-6.html
 == auto-hyphenation-7.html auto-hyphenation-7.html
 == auto-hyphenation-8.html auto-hyphenation-8.html

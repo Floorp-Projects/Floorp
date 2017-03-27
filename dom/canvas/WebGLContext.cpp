@@ -1981,7 +1981,7 @@ WebGLContext::GetSurfaceSnapshot(bool* out_premultAlpha)
     }
 
     RefPtr<DrawTarget> dt =
-        Factory::CreateDrawTarget(BackendType::CAIRO,
+        Factory::CreateDrawTarget(gfxPlatform::GetPlatform()->GetSoftwareBackend(),
                                   IntSize(mWidth, mHeight),
                                   SurfaceFormat::B8G8R8A8);
 

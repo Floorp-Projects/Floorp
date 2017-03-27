@@ -1405,22 +1405,9 @@ void CERT_SetStatusConfig(CERTCertDBHandle *handle, CERTStatusConfig *config);
 void CERT_LockCertRefCount(CERTCertificate *cert);
 
 /*
- * Free the cert reference count lock
+ * Release the cert reference count lock
  */
 void CERT_UnlockCertRefCount(CERTCertificate *cert);
-
-/*
- * Acquire the cert trust lock
- * There is currently one global lock for all certs, but I'm putting a cert
- * arg here so that it will be easy to make it per-cert in the future if
- * that turns out to be necessary.
- */
-void CERT_LockCertTrust(const CERTCertificate *cert);
-
-/*
- * Free the cert trust lock
- */
-void CERT_UnlockCertTrust(const CERTCertificate *cert);
 
 /*
  * Digest the cert's subject public key using the specified algorithm.
@@ -1578,6 +1565,12 @@ extern CERTRevocationFlags *CERT_AllocCERTRevocationFlags(
  * and destroy the object pointed to by flags, too.
  */
 extern void CERT_DestroyCERTRevocationFlags(CERTRevocationFlags *flags);
+
+/*
+ * Get istemp and isperm fields from a cert in a thread safe way.
+ */
+extern SECStatus CERT_GetCertIsTemp(const CERTCertificate *cert, PRBool *istemp);
+extern SECStatus CERT_GetCertIsPerm(const CERTCertificate *cert, PRBool *isperm);
 
 SEC_END_PROTOS
 

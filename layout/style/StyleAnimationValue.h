@@ -257,9 +257,6 @@ public:
    * @param aComputedValue The computed value to be converted.
    * @param [out] aSpecifiedValue The resulting specified value.
    * @return true on success, false on failure.
-   *
-   * These functions are not MOZ_MUST_USE because failing to check the return
-   * value is common and reasonable.
    */
   static MOZ_MUST_USE bool
   UncomputeValue(nsCSSPropertyID aProperty,

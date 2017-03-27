@@ -327,8 +327,10 @@ nsresult CacheIOThread::DispatchInternal(already_AddRefed<nsIRunnable> aRunnable
 {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
 #ifdef MOZ_TASK_TRACER
-  runnable = tasktracer::CreateTracedRunnable(runnable.forget());
-  (static_cast<tasktracer::TracedRunnable*>(runnable.get()))->DispatchTask();
+  if (tasktracer::IsStartLogging()) {
+      runnable = tasktracer::CreateTracedRunnable(runnable.forget());
+      (static_cast<tasktracer::TracedRunnable*>(runnable.get()))->DispatchTask();
+  }
 #endif
 
   if (NS_WARN_IF(!runnable))
