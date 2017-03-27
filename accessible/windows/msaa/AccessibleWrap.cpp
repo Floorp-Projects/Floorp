@@ -43,6 +43,7 @@
 #include "nsEventMap.h"
 #include "nsArrayUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ReverseIterator.h"
 #include "nsIXULRuntime.h"
 #include "mozilla/mscom/AsyncInvoker.h"
 
@@ -1659,6 +1660,38 @@ AccessibleWrap::SetHandlerControl(DWORD aPid, RefPtr<IHandlerControl> aCtrl)
   sHandlerControllers->AppendElement(Move(ctrlData));
 }
 
+/* static */
+void
+AccessibleWrap::InvalidateHandlers()
+{
+  static const HRESULT kErrorServerDied =
+    HRESULT_FROM_WIN32(RPC_S_SERVER_UNAVAILABLE);
+
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!sHandlerControllers || sHandlerControllers->IsEmpty()) {
+    return;
+  }
+
+  // We iterate in reverse so that we may safely remove defunct elements while
+  // executing the loop.
+  for (auto& controller : Reversed(*sHandlerControllers)) {
+    MOZ_ASSERT(controller.mPid);
+    MOZ_ASSERT(controller.mCtrl);
+
+    ASYNC_INVOKER_FOR(IHandlerControl) invoker(controller.mCtrl,
+                                               Some(controller.mIsProxy));
+
+    HRESULT hr = ASYNC_INVOKE(invoker, Invalidate);
+
+    if (hr == CO_E_OBJNOTCONNECTED || hr == kErrorServerDied) {
+      sHandlerControllers->RemoveElement(controller);
+    } else {
+      NS_WARN_IF(FAILED(hr));
+    }
+  }
+}
 
 bool
 AccessibleWrap::DispatchTextChangeToHandler(bool aIsInsert,
