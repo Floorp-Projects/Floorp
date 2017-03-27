@@ -1710,7 +1710,8 @@ nsXPCComponents_Exception::HasInstance(nsIXPConnectWrappedNative* wrapper,
     RootedValue v(cx, val);
     if (bp) {
         Exception* e;
-        *bp = NS_SUCCEEDED(UNWRAP_OBJECT(Exception, v.toObjectOrNull(), e)) ||
+        *bp = (v.isObject() &&
+               NS_SUCCEEDED(UNWRAP_OBJECT(Exception, &v.toObject(), e))) ||
               JSValIsInterfaceOfType(cx, v, NS_GET_IID(nsIException));
     }
     return NS_OK;
