@@ -868,9 +868,8 @@ Parser<FullParseHandler>::setAwaitIsKeyword(bool isKeyword)
         parser->setAwaitIsKeyword(isKeyword);
 }
 
-template <typename ParseHandler>
 ObjectBox*
-Parser<ParseHandler>::newObjectBox(JSObject* obj)
+ParserBase::newObjectBox(JSObject* obj)
 {
     MOZ_ASSERT(obj);
 
@@ -1011,9 +1010,8 @@ ParserBase::isValidStrictBinding(PropertyName* name)
  * Returns true if all parameter names are valid strict mode binding names and
  * no duplicate parameter names are present.
  */
-template <typename ParseHandler>
 bool
-Parser<ParseHandler>::hasValidSimpleStrictParameterNames()
+ParserBase::hasValidSimpleStrictParameterNames()
 {
     MOZ_ASSERT(pc->isFunctionBox() && pc->functionBox()->hasSimpleParameterList());
 
@@ -2741,11 +2739,10 @@ Parser<ParseHandler>::functionBody(InHandling inHandling, YieldHandling yieldHan
     return finishLexicalScope(pc->varScope(), pn);
 }
 
-template <typename ParseHandler>
 JSFunction*
-Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
-                                  GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-                                  HandleObject proto)
+ParserBase::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
+                        GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+                        HandleObject proto)
 {
     MOZ_ASSERT_IF(kind == Statement, atom != nullptr);
 
