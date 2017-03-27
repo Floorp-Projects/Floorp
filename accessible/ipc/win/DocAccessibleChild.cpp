@@ -16,7 +16,7 @@ namespace a11y {
 
 static StaticAutoPtr<PlatformChild> sPlatformChild;
 
-DocAccessibleChild::DocAccessibleChild(DocAccessible* aDoc)
+DocAccessibleChild::DocAccessibleChild(DocAccessible* aDoc, IProtocol* aManager)
   : DocAccessibleChildBase(aDoc)
   , mEmulatedWindowHandle(nullptr)
   , mIsRemoteConstructed(false)
@@ -26,6 +26,8 @@ DocAccessibleChild::DocAccessibleChild(DocAccessible* aDoc)
     sPlatformChild = new PlatformChild();
     ClearOnShutdown(&sPlatformChild, ShutdownPhase::Shutdown);
   }
+
+  SetManager(aManager);
 }
 
 DocAccessibleChild::~DocAccessibleChild()
