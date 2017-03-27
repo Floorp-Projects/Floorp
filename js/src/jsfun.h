@@ -647,6 +647,9 @@ Generator(JSContext* cx, unsigned argc, Value* vp);
 extern bool
 AsyncFunctionConstructor(JSContext* cx, unsigned argc, Value* vp);
 
+extern bool
+AsyncGeneratorConstructor(JSContext* cx, unsigned argc, Value* vp);
+
 // Allocate a new function backed by a JSNative.  Note that by default this
 // creates a singleton object.
 extern JSFunction*
