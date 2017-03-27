@@ -11,8 +11,7 @@ var names = [
     "hasInstance",
     "split",
     "toPrimitive",
-    "unscopables",
-    "asyncIterator"
+    "unscopables"
 ];
 
 for (var name of names) {
