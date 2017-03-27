@@ -2954,7 +2954,7 @@ profiler_get_backtrace()
   TickSample sample(threadInfo);
   sample.mIsSamplingCurrentThread = true;
 
-#if defined(HAVE_NATIVE_UNWIND)
+#if defined(HAVE_NATIVE_UNWIND) || defined(USE_LUL_STACKWALK)
 #if defined(GP_OS_windows) || defined(GP_OS_linux) || defined(GP_OS_android)
   tick_context_t context;
   sample.PopulateContext(&context);
