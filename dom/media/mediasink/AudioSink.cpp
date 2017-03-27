@@ -33,11 +33,10 @@ static const int32_t LOW_AUDIO_USECS = 300000;
 
 AudioSink::AudioSink(AbstractThread* aThread,
                      MediaQueue<AudioData>& aAudioQueue,
-                     int64_t aStartTime,
+                     TimeUnit aStartTime,
                      const AudioInfo& aInfo,
                      dom::AudioChannel aChannel)
   : mStartTime(aStartTime)
-  , mLastGoodPosition(0)
   , mInfo(aInfo)
   , mChannel(aChannel)
   , mPlaying(true)
@@ -48,7 +47,6 @@ AudioSink::AudioSink(AbstractThread* aThread,
   , mOwnerThread(aThread)
   , mProcessedQueueLength(0)
   , mFramesParsed(0)
-  , mLastEndTime(0)
   , mIsAudioDataAudible(false)
   , mAudioQueue(aAudioQueue)
 {
@@ -103,12 +101,13 @@ AudioSink::Init(const PlaybackParams& aParams)
   return p;
 }
 
-int64_t
+TimeUnit
 AudioSink::GetPosition()
 {
-  int64_t pos;
+  int64_t tmp;
   if (mAudioStream &&
-      (pos = mAudioStream->GetPosition()) >= 0) {
+      (tmp = mAudioStream->GetPosition()) >= 0) {
+    TimeUnit pos = TimeUnit::FromMicroseconds(tmp);
     NS_ASSERTION(pos >= mLastGoodPosition,
                  "AudioStream position shouldn't go backward");
     // Update the last good position when we got a good one.
@@ -221,7 +220,7 @@ AudioSink::InitializeAudioStream(const PlaybackParams& aParams)
   return NS_OK;
 }
 
-int64_t
+TimeUnit
 AudioSink::GetEndTime() const
 {
   int64_t written;
@@ -229,14 +228,14 @@ AudioSink::GetEndTime() const
     MonitorAutoLock mon(mMonitor);
     written = mWritten;
   }
-  CheckedInt64 playedUsecs = FramesToUsecs(written, mOutputRate) + mStartTime;
-  if (!playedUsecs.isValid()) {
+  TimeUnit played = FramesToTimeUnit(written, mOutputRate) + mStartTime;
+  if (!played.IsValid()) {
     NS_WARNING("Int overflow calculating audio end time");
-    return 0;
+    return TimeUnit::Zero();
   }
   // As we may be resampling, rounding errors may occur. Ensure we never get
   // past the original end time.
-  return std::min<int64_t>(mLastEndTime, playedUsecs.value());
+  return std::min(mLastEndTime, played);
 }
 
 UniquePtr<AudioStream::Chunk>
@@ -407,8 +406,8 @@ AudioSink::NotifyAudioNeeded()
     // audio hardware, so we can play across the gap.
     // Calculate the timestamp of the next chunk of audio in numbers of
     // samples.
-    CheckedInt64 sampleTime = UsecsToFrames(data->mTime - mStartTime,
-                                            data->mRate);
+    CheckedInt64 sampleTime = TimeUnitToFrames(
+      TimeUnit::FromMicroseconds(data->mTime) - mStartTime, data->mRate);
     // Calculate the number of frames that have been pushed onto the audio hardware.
     CheckedInt64 missingFrames = sampleTime - mFramesParsed;
 
@@ -450,7 +449,7 @@ AudioSink::NotifyAudioNeeded()
       }
     }
 
-    mLastEndTime = data->GetEndTime();
+    mLastEndTime = TimeUnit::FromMicroseconds(data->GetEndTime());
     mFramesParsed += data->mFrames;
 
     if (mConverter->InputConfig() != mConverter->OutputConfig()) {
