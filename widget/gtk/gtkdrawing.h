@@ -523,12 +523,6 @@ gint moz_gtk_get_menu_separator_height(gint* size);
 gint moz_gtk_splitter_get_metrics(gint orientation, gint* size);
 
 /**
- * Retrieve an actual GTK scrollbar widget for style analysis. It will not
- * be modified.
- */
-GtkWidget* moz_gtk_get_scrollbar_widget(void);
-
-/**
  * Get the YTHICKNESS of a tab (notebook extension).
  */
 gint
