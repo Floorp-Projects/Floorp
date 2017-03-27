@@ -8,7 +8,6 @@
 #include "nsStreamUtils.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "mozilla/UniquePtrExtensions.h"
 
 NS_IMPL_ISUPPORTS(ArrayBufferInputStream, nsIArrayBufferInputStream, nsIInputStream);
 
@@ -35,14 +34,9 @@ ArrayBufferInputStream::SetData(JS::Handle<JS::Value> aBuffer,
 
   uint32_t buflen = JS_GetArrayBufferByteLength(arrayBuffer);
   uint32_t offset = std::min(buflen, aByteOffset);
-  uint32_t bufferLength = std::min(buflen - offset, aLength);
+  mBufferLength = std::min(buflen - offset, aLength);
 
-  mArrayBuffer = mozilla::MakeUniqueFallible<char[]>(bufferLength);
-  if (!mArrayBuffer) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  mBufferLength = bufferLength;
+  mArrayBuffer = mozilla::MakeUnique<char[]>(mBufferLength);
 
   JS::AutoCheckCannotGC nogc;
   bool isShared;
