@@ -152,6 +152,9 @@ MOZ_MUST_USE bool
 AsyncGeneratorEnqueue(JSContext* cx, HandleValue asyncGenVal, CompletionKind completionKind,
                       HandleValue completionValue, MutableHandleValue result);
 
+bool
+AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind completionKind);
+
 /**
  * A PromiseTask represents a task that can be dispatched to a helper thread
  * (via StartPromiseTask), executed (by implementing PromiseTask::execute()),
