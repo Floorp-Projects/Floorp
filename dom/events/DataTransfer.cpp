@@ -1495,30 +1495,37 @@ DataTransfer::FillInExternalCustomTypes(nsIVariant* aData, uint32_t aIndex,
     return;
   }
 
-  stream->SetInputStream(stringStream);
+  rv = stream->SetInputStream(stringStream);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   uint32_t type;
   do {
-    stream->Read32(&type);
+    rv = stream->Read32(&type);
+    NS_ENSURE_SUCCESS_VOID(rv);
     if (type == eCustomClipboardTypeId_String) {
       uint32_t formatLength;
-      stream->Read32(&formatLength);
+      rv = stream->Read32(&formatLength);
+      NS_ENSURE_SUCCESS_VOID(rv);
       char* formatBytes;
-      stream->ReadBytes(formatLength, &formatBytes);
+      rv = stream->ReadBytes(formatLength, &formatBytes);
+      NS_ENSURE_SUCCESS_VOID(rv);
       nsAutoString format;
       format.Adopt(reinterpret_cast<char16_t*>(formatBytes),
                    formatLength / sizeof(char16_t));
 
       uint32_t dataLength;
-      stream->Read32(&dataLength);
+      rv = stream->Read32(&dataLength);
+      NS_ENSURE_SUCCESS_VOID(rv);
       char* dataBytes;
-      stream->ReadBytes(dataLength, &dataBytes);
+      rv = stream->ReadBytes(dataLength, &dataBytes);
+      NS_ENSURE_SUCCESS_VOID(rv);
       nsAutoString data;
       data.Adopt(reinterpret_cast<char16_t*>(dataBytes),
                  dataLength / sizeof(char16_t));
 
       RefPtr<nsVariantCC> variant = new nsVariantCC();
-      variant->SetAsAString(data);
+      rv = variant->SetAsAString(data);
+      NS_ENSURE_SUCCESS_VOID(rv);
 
       SetDataWithPrincipal(format, variant, aIndex, aPrincipal);
     }
