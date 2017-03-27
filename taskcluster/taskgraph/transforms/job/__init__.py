@@ -19,6 +19,7 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import (
     validate_schema,
     Schema,
+    optionally_keyed_by,
 )
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import (
@@ -84,10 +85,14 @@ job_description_schema = Schema({
         task_description_schema['worker-type'],
         {'by-platform': {basestring: task_description_schema['worker-type']}},
     ),
-    Required('worker'): Any(
-        task_description_schema['worker'],
-        {'by-platform': {basestring: task_description_schema['worker']}},
-    ),
+
+    # for `worker`, all we need is the implementation; the rest will be verified
+    # by the task description schema
+    Required('worker'): optionally_keyed_by(
+        'platform', {
+            Required('implementation'): basestring,
+            Extra: object,
+        }),
 })
 
 transforms = TransformSequence()
