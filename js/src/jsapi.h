@@ -5601,7 +5601,7 @@ class JSErrorReport : public JSErrorBase
     // One of the JSExnType constants.
     int16_t exnType;
 
-    // See the comment in ReadOnlyCompileOptions.
+    // See the comment in TransitiveCompileOptions.
     bool isMuted : 1;
 
   private:

@@ -17,6 +17,7 @@
 #include "jit/IonBuilder.h"
 #include "threading/CpuCount.h"
 #include "vm/Debugger.h"
+#include "vm/ErrorReporting.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
@@ -1657,9 +1658,9 @@ js::PauseCurrentHelperThread()
 }
 
 bool
-JSContext::addPendingCompileError(frontend::CompileError** error)
+JSContext::addPendingCompileError(js::CompileError** error)
 {
-    auto errorPtr = make_unique<frontend::CompileError>();
+    auto errorPtr = make_unique<js::CompileError>();
     if (!errorPtr)
         return false;
     if (!helperThread()->parseTask()->errors.append(errorPtr.get())) {
