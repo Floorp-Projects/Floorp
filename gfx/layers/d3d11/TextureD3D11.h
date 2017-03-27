@@ -333,6 +333,7 @@ protected:
 
   bool OpenSharedHandle();
 
+  RefPtr<ID3D11Device> mDevice;
   RefPtr<ID3D11Texture2D> mTexture;
   RefPtr<DataTextureSourceD3D11> mTextureSource;
   gfx::IntSize mSize;
