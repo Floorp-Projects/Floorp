@@ -82,11 +82,12 @@ public:
   }
 
   // nsSVGMarkerFrame methods:
-  nsresult PaintMark(gfxContext& aContext,
-                     const gfxMatrix& aToMarkedFrameUserSpace,
-                     mozilla::SVGGeometryFrame *aMarkedFrame,
-                     nsSVGMark *aMark,
-                     float aStrokeWidth);
+  DrawResult PaintMark(gfxContext& aContext,
+                      const gfxMatrix& aToMarkedFrameUserSpace,
+                      mozilla::SVGGeometryFrame *aMarkedFrame,
+                      nsSVGMark *aMark,
+                      float aStrokeWidth,
+                      uint32_t aFlags);
 
   SVGBBox GetMarkBBoxContribution(const Matrix &aToBBoxUserspace,
                                   uint32_t aFlags,
