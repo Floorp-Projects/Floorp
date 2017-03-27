@@ -2564,22 +2564,27 @@ GetScrollbarMetrics(GtkOrientation aOrientation)
     WidgetNodeType scrollbar = aOrientation == GTK_ORIENTATION_HORIZONTAL ?
         MOZ_GTK_SCROLLBAR_HORIZONTAL : MOZ_GTK_SCROLLBAR_VERTICAL;
 
+    gboolean backward, forward, secondary_backward, secondary_forward;
+    GtkStyleContext* style = ClaimStyleContext(scrollbar);
+    gtk_style_context_get_style(style,
+                                "has-backward-stepper", &backward,
+                                "has-forward-stepper", &forward,
+                                "has-secondary-backward-stepper",
+                                &secondary_backward,
+                                "has-secondary-forward-stepper",
+                                &secondary_forward, nullptr);
+    bool hasButtons =
+        backward || forward || secondary_backward || secondary_forward;
+
     if (gtk_get_minor_version() < 20) {
         gint slider_width, trough_border, stepper_size, min_slider_size;
-        gboolean backward, forward, secondary_backward, secondary_forward;
 
-        GtkStyleContext* style = ClaimStyleContext(scrollbar);
         gtk_style_context_get_style(style,
                                     "slider-width", &slider_width,
                                     "trough-border", &trough_border,
                                     "stepper-size", &stepper_size,
                                     "min-slider-length", &min_slider_size,
-                                    "has-backward-stepper", &backward,
-                                    "has-forward-stepper", &forward,
-                                    "has-secondary-backward-stepper",
-                                    &secondary_backward,
-                                    "has-secondary-forward-stepper",
-                                    &secondary_forward, nullptr);
+                                    nullptr);
         ReleaseStyleContext(style);
 
         metrics->size.thumb =
@@ -2589,8 +2594,6 @@ GetScrollbarMetrics(GtkOrientation aOrientation)
         // overall scrollbar
         gint breadth = slider_width + 2 * trough_border;
         // Require room for the slider in the track if we don't have buttons.
-        bool hasButtons = backward || forward ||
-            secondary_backward || secondary_forward;
         gint length = hasButtons ? 0 : min_slider_size + 2 * trough_border;
         metrics->size.scrollbar =
             SizeFromLengthAndBreadth(aOrientation, length, breadth);
@@ -2617,6 +2620,10 @@ GetScrollbarMetrics(GtkOrientation aOrientation)
     }
 
     // GTK version > 3.20
+    // scrollbar
+    metrics->border.scrollbar = GetMarginBorderPadding(style);
+    ReleaseStyleContext(style);
+
     WidgetNodeType contents, track, thumb;
     if (aOrientation == GTK_ORIENTATION_HORIZONTAL) {
         contents = MOZ_GTK_SCROLLBAR_CONTENTS_HORIZONTAL;
@@ -2630,20 +2637,44 @@ GetScrollbarMetrics(GtkOrientation aOrientation)
     // thumb
     metrics->size.thumb = GetMinMarginBox(thumb);
     // track
-    GtkStyleContext* style = ClaimStyleContext(track);
+    style = ClaimStyleContext(track);
     metrics->border.track = GetMarginBorderPadding(style);
     ReleaseStyleContext(style);
+    MozGtkSize trackSizeForThumb = metrics->size.thumb + metrics->border.track;
     // button
-    metrics->size.button = GetMinMarginBox(MOZ_GTK_SCROLLBAR_BUTTON);
-    // scrollbar
-    style = ClaimStyleContext(scrollbar);
-    metrics->border.scrollbar = GetMarginBorderPadding(style);
-    ReleaseStyleContext(style);
+    if (hasButtons) {
+        metrics->size.button = GetMinMarginBox(MOZ_GTK_SCROLLBAR_BUTTON);
+        // If the buttons will cause Gecko to expand the track to fill
+        // available breadth, then add to the track border to prevent Gecko
+        // from expanding the thumb to fill available breadth.
+        if (aOrientation == GTK_ORIENTATION_HORIZONTAL) {
+            gint extra = metrics->size.button.height - trackSizeForThumb.height;
+            if (extra > 0) {
+                // If extra is odd, then the thumb is 0.5 pixels above
+                // center as in gtk_range_compute_slider_position().
+                metrics->border.track.top += extra / 2;
+                metrics->border.track.bottom += extra - extra / 2;
+                // Update size for change in border.
+                trackSizeForThumb.height += extra;
+            }
+        } else {
+            gint extra = metrics->size.button.width - trackSizeForThumb.width;
+            if (extra > 0) {
+                // If extra is odd, then the thumb is 0.5 pixels to the left
+                // of center as in gtk_range_compute_slider_position().
+                metrics->border.track.left += extra / 2;
+                metrics->border.track.right += extra - extra / 2;
+                trackSizeForThumb.width += extra;
+            }
+        }
+    }
+
     style = ClaimStyleContext(contents);
     GtkBorder contentsBorder = GetMarginBorderPadding(style);
     ReleaseStyleContext(style);
-    metrics->size.scrollbar = metrics->size.thumb + metrics->border.track +
-        contentsBorder + metrics->border.scrollbar;
+
+    metrics->size.scrollbar =
+        trackSizeForThumb + contentsBorder + metrics->border.scrollbar;
 
     return metrics;
 }
