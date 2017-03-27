@@ -196,6 +196,32 @@ class AsyncGeneratorObject : public NativeObject
     }
 };
 
+JSObject*
+CreateAsyncFromSyncIterator(JSContext* cx, HandleObject iter);
+
+class AsyncFromSyncIteratorObject : public NativeObject
+{
+  private:
+    enum AsyncFromSyncIteratorObjectSlots {
+        Slot_Iterator = 0,
+        Slots
+    };
+
+    void setIterator(HandleObject iterator_) {
+        setFixedSlot(Slot_Iterator, ObjectValue(*iterator_));
+    }
+
+  public:
+    static const Class class_;
+
+    static JSObject*
+    create(JSContext* cx, HandleObject iter);
+
+    JSObject* iterator() const {
+        return &getFixedSlot(Slot_Iterator).toObject();
+    }
+};
+
 MOZ_MUST_USE bool
 AsyncGeneratorResumeNext(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj);
 
