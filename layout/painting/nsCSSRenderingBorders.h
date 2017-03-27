@@ -107,7 +107,8 @@ public:
 
   bool CanCreateWebrenderCommands();
   void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                               mozilla::layers::WebRenderDisplayItemLayer* aLayer);
+                               mozilla::layers::WebRenderDisplayItemLayer* aLayer,
+                               Rect aClipRect = Rect(0, 0, 0, 0));
 
   // utility function used for background painting as well as borders
   static void ComputeInnerRadii(const RectCornerRadii& aRadii,
