@@ -41,7 +41,6 @@
 #include "jit/RangeAnalysis.h"
 #include "jit/SharedICHelpers.h"
 #include "vm/AsyncFunction.h"
-#include "vm/AsyncIteration.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
@@ -10698,17 +10697,6 @@ CodeGenerator::visitToAsync(LToAsync* lir)
 {
     pushArg(ToRegister(lir->unwrapped()));
     callVM(ToAsyncInfo, lir);
-}
-
-typedef JSObject* (*ToAsyncGenFn)(JSContext*, HandleFunction);
-static const VMFunction ToAsyncGenInfo =
-    FunctionInfo<ToAsyncGenFn>(js::WrapAsyncGenerator, "ToAsyncGen");
-
-void
-CodeGenerator::visitToAsyncGen(LToAsyncGen* lir)
-{
-    pushArg(ToRegister(lir->unwrapped()));
-    callVM(ToAsyncGenInfo, lir);
 }
 
 typedef bool (*ToIdFn)(JSContext*, HandleScript, jsbytecode*, HandleValue,
