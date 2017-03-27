@@ -144,7 +144,7 @@ js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res, Handle<RegExpObject*>
                         HandleLinearString input, size_t* lastIndex, bool test,
                         MutableHandleValue rval)
 {
-    RegExpGuard shared(cx);
+    RootedRegExpShared shared(cx);
     if (!RegExpObject::getShared(cx, reobj, &shared))
         return false;
 
@@ -232,7 +232,7 @@ RegExpInitializeIgnoringLastIndex(JSContext* cx, Handle<RegExpObject*> obj,
 
     if (sharedUse == UseRegExpShared) {
         /* Steps 7-8. */
-        RegExpGuard re(cx);
+        RootedRegExpShared re(cx);
         if (!cx->compartment()->regExps.get(cx, pattern, flags, &re))
             return false;
 
@@ -338,7 +338,7 @@ regexp_compile_impl(JSContext* cx, const CallArgs& args)
         RegExpFlag flags;
         {
             // Step 3b.
-            RegExpGuard g(cx);
+            RootedRegExpShared g(cx);
             if (!RegExpToShared(cx, patternObj, &g))
                 return false;
 
@@ -433,7 +433,7 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
         RegExpFlag flags;
         {
             // Step 4.a.
-            RegExpGuard g(cx);
+            RootedRegExpShared g(cx);
             if (!RegExpToShared(cx, patternObj, &g))
                 return false;
             sourceAtom = g->getSource();
@@ -560,7 +560,7 @@ js::regexp_clone(JSContext* cx, unsigned argc, Value* vp)
     RootedAtom sourceAtom(cx);
     RegExpFlag flags;
     {
-        RegExpGuard g(cx);
+        RootedRegExpShared g(cx);
         if (!RegExpToShared(cx, from, &g))
             return false;
         sourceAtom = g->getSource();
@@ -917,7 +917,7 @@ ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
     /* Steps 1-2 performed by the caller. */
     Rooted<RegExpObject*> reobj(cx, &regexp->as<RegExpObject>());
 
-    RegExpGuard re(cx);
+    RootedRegExpShared re(cx);
     if (!RegExpObject::getShared(cx, reobj, &re))
         return RegExpRunStatus_Error;
 

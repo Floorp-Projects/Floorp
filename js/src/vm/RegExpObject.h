@@ -32,10 +32,8 @@
  *
  * To save memory, a RegExpShared is not created for a RegExpObject until it is
  * needed for execution. When a RegExpShared needs to be created, it is looked
- * up in a per-compartment table to allow reuse between objects. Lastly, on
- * GC, every RegExpShared (that is not active on the callstack) is discarded.
- * Because of the last point, any code using a RegExpShared (viz., by executing
- * a regexp) must indicate the RegExpShared is active via RegExpGuard.
+ * up in a per-compartment table to allow reuse between objects. Lastly, on GC,
+ * every RegExpShared that is not in active use is discarded.
  */
 namespace js {
 
@@ -236,6 +234,10 @@ class RegExpShared : public gc::TenuredCell
 #endif
 };
 
+using RootedRegExpShared = JS::Rooted<RegExpShared*>;
+using HandleRegExpShared = JS::Handle<RegExpShared*>;
+using MutableHandleRegExpShared = JS::MutableHandle<RegExpShared*>;
+
 class RegExpCompartment
 {
     struct Key {
@@ -306,10 +308,11 @@ class RegExpCompartment
 
     bool empty() { return set_.empty(); }
 
-    bool get(JSContext* cx, JSAtom* source, RegExpFlag flags, RegExpGuard* g);
+    bool get(JSContext* cx, JSAtom* source, RegExpFlag flags, MutableHandleRegExpShared shared);
 
     /* Like 'get', but compile 'maybeOpt' (if non-null). */
-    bool get(JSContext* cx, HandleAtom source, JSString* maybeOpt, RegExpGuard* g);
+    bool get(JSContext* cx, HandleAtom source, JSString* maybeOpt,
+             MutableHandleRegExpShared shared);
 
     /* Get or create template object used to base the result of .exec() on. */
     ArrayObject* getOrCreateMatchResultTemplateObject(JSContext* cx) {
@@ -431,7 +434,7 @@ class RegExpObject : public NativeObject
     static bool isOriginalFlagGetter(JSNative native, RegExpFlag* mask);
 
     static MOZ_MUST_USE bool getShared(JSContext* cx, Handle<RegExpObject*> regexp,
-                                       RegExpGuard* g);
+                                       MutableHandleRegExpShared shared);
 
     bool hasShared() {
         return !!sharedRef();
@@ -463,7 +466,7 @@ class RegExpObject : public NativeObject
      * Side effect: sets the private field.
      */
     static MOZ_MUST_USE bool createShared(JSContext* cx, Handle<RegExpObject*> regexp,
-                                          RegExpGuard* g);
+                                          MutableHandleRegExpShared shared);
 
     ReadBarriered<RegExpShared*>& sharedRef() {
         auto& ref = NativeObject::privateRef(PRIVATE_SLOT);
@@ -485,12 +488,12 @@ ParseRegExpFlags(JSContext* cx, JSString* flagStr, RegExpFlag* flagsOut);
 
 /* Assuming GetBuiltinClass(obj) is ESClass::RegExp, return a RegExpShared for obj. */
 inline bool
-RegExpToShared(JSContext* cx, HandleObject obj, RegExpGuard* g)
+RegExpToShared(JSContext* cx, HandleObject obj, MutableHandleRegExpShared shared)
 {
     if (obj->is<RegExpObject>())
-        return RegExpObject::getShared(cx, obj.as<RegExpObject>(), g);
+        return RegExpObject::getShared(cx, obj.as<RegExpObject>(), shared);
 
-    return Proxy::regexp_toShared(cx, obj, g);
+    return Proxy::regexp_toShared(cx, obj, shared);
 }
 
 template<XDRMode mode>
