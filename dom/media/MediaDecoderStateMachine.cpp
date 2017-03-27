@@ -3249,7 +3249,7 @@ MediaDecoderStateMachine::StartMediaSink()
   MOZ_ASSERT(OnTaskQueue());
   if (!mMediaSink->IsStarted()) {
     mAudioCompleted = false;
-    mMediaSink->Start(GetMediaTime(), Info());
+    mMediaSink->Start(TimeUnit::FromMicroseconds(GetMediaTime()), Info());
 
     auto videoPromise = mMediaSink->OnEnded(TrackInfo::kVideoTrack);
     auto audioPromise = mMediaSink->OnEnded(TrackInfo::kAudioTrack);
@@ -3476,7 +3476,7 @@ int64_t
 MediaDecoderStateMachine::GetClock(TimeStamp* aTimeStamp) const
 {
   MOZ_ASSERT(OnTaskQueue());
-  int64_t clockTime = mMediaSink->GetPosition(aTimeStamp);
+  int64_t clockTime = mMediaSink->GetPosition(aTimeStamp).ToMicroseconds();
   NS_ASSERTION(GetMediaTime() <= clockTime, "Clock should go forwards.");
   return clockTime;
 }
@@ -3650,7 +3650,7 @@ MediaDecoderStateMachine::AudioEndTime() const
 {
   MOZ_ASSERT(OnTaskQueue());
   if (mMediaSink->IsStarted()) {
-    return mMediaSink->GetEndTime(TrackInfo::kAudioTrack);
+    return mMediaSink->GetEndTime(TrackInfo::kAudioTrack).ToMicroseconds();
   }
   return 0;
 }
@@ -3660,7 +3660,7 @@ MediaDecoderStateMachine::VideoEndTime() const
 {
   MOZ_ASSERT(OnTaskQueue());
   if (mMediaSink->IsStarted()) {
-    return mMediaSink->GetEndTime(TrackInfo::kVideoTrack);
+    return mMediaSink->GetEndTime(TrackInfo::kVideoTrack).ToMicroseconds();
   }
   return 0;
 }

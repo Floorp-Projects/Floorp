@@ -42,9 +42,9 @@ public:
 
   RefPtr<GenericPromise> OnEnded(TrackType aType) override;
 
-  int64_t GetEndTime(TrackType aType) const override;
+  TimeUnit GetEndTime(TrackType aType) const override;
 
-  int64_t GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
+  TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
 
   bool HasUnplayedFrames(TrackType aType) const override;
 
@@ -58,7 +58,7 @@ public:
 
   void Redraw(const VideoInfo& aInfo) override;
 
-  void Start(int64_t aStartTime, const MediaInfo& aInfo) override;
+  void Start(const TimeUnit& aStartTime, const MediaInfo& aInfo) override;
 
   void Stop() override;
 

@@ -52,15 +52,15 @@ AudioSinkWrapper::OnEnded(TrackType aType)
   return nullptr;
 }
 
-int64_t
+TimeUnit
 AudioSinkWrapper::GetEndTime(TrackType aType) const
 {
   AssertOwnerThread();
   MOZ_ASSERT(mIsStarted, "Must be called after playback starts.");
   if (aType == TrackInfo::kAudioTrack && mAudioSink) {
-    return mAudioSink->GetEndTime().ToMicroseconds();
+    return mAudioSink->GetEndTime();
   }
-  return 0;
+  return TimeUnit::Zero();
 }
 
 TimeUnit
@@ -74,7 +74,7 @@ AudioSinkWrapper::GetVideoPosition(TimeStamp aNow) const
   return mPlayDuration + TimeUnit::FromSeconds(delta * mParams.mPlaybackRate);
 }
 
-int64_t
+TimeUnit
 AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) const
 {
   AssertOwnerThread();
@@ -98,7 +98,7 @@ AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) const
     *aTimeStamp = t;
   }
 
-  return pos.ToMicroseconds();
+  return pos;
 }
 
 bool
@@ -169,7 +169,7 @@ AudioSinkWrapper::SetPlaying(bool aPlaying)
     mPlayStartTime = TimeStamp::Now();
   } else {
     // Remember how long we've played.
-    mPlayDuration = TimeUnit::FromMicroseconds(GetPosition());
+    mPlayDuration = GetPosition();
     // mPlayStartTime must be updated later since GetPosition()
     // depends on the value of mPlayStartTime.
     mPlayStartTime = TimeStamp();
@@ -177,13 +177,13 @@ AudioSinkWrapper::SetPlaying(bool aPlaying)
 }
 
 void
-AudioSinkWrapper::Start(int64_t aStartTime, const MediaInfo& aInfo)
+AudioSinkWrapper::Start(const TimeUnit& aStartTime, const MediaInfo& aInfo)
 {
   AssertOwnerThread();
   MOZ_ASSERT(!mIsStarted, "playback already started.");
 
   mIsStarted = true;
-  mPlayDuration = TimeUnit::FromMicroseconds(aStartTime);
+  mPlayDuration = aStartTime;
   mPlayStartTime = TimeStamp::Now();
 
   // no audio is equivalent to audio ended before video starts.
@@ -237,7 +237,7 @@ AudioSinkWrapper::OnAudioEnded()
 {
   AssertOwnerThread();
   mAudioSinkPromise.Complete();
-  mPlayDuration = TimeUnit::FromMicroseconds(GetPosition());
+  mPlayDuration = GetPosition();
   if (!mPlayStartTime.IsNull()) {
     mPlayStartTime = TimeStamp::Now();
   }

@@ -62,7 +62,7 @@ public:
   // Return the end time of the audio/video data that has been consumed
   // or 0 if no such track.
   // Must be called after playback starts.
-  virtual int64_t GetEndTime(TrackType aType) const = 0;
+  virtual TimeUnit GetEndTime(TrackType aType) const = 0;
 
   // Return playback position of the media.
   // Since A/V sync is always maintained by this sink, there is no need to
@@ -70,7 +70,7 @@ public:
   // aTimeStamp returns the timeStamp corresponding to the returned position
   // which is used by the compositor to derive the render time of video frames.
   // Must be called after playback starts.
-  virtual int64_t GetPosition(TimeStamp* aTimeStamp = nullptr) const = 0;
+  virtual TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) const = 0;
 
   // Return true if there are data consumed but not played yet.
   // Can be called in any state.
@@ -100,7 +100,7 @@ public:
 
   // Begin a playback session with the provided start time and media info.
   // Must be called when playback is stopped.
-  virtual void Start(int64_t aStartTime, const MediaInfo& aInfo) = 0;
+  virtual void Start(const TimeUnit& aStartTime, const MediaInfo& aInfo) = 0;
 
   // Finish a playback session.
   // Must be called after playback starts.
