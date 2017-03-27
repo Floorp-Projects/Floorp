@@ -13,8 +13,10 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIEventTarget.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Services.h"
 
@@ -42,7 +44,11 @@ struct nsExpirationState
 };
 
 /**
- * nsExpirationTracker can track the lifetimes and usage of a large number of
+ * ExpirationTracker classes:
+ * - ExpirationTrackerImpl (Thread-safe class)
+ * - nsExpirationTracker (Main-thread only class)
+ *
+ * These classes can track the lifetimes and usage of a large number of
  * objects, and send a notification some window of time after a live object was
  * last used. This is very useful when you manage a large number of objects
  * and want to flush some after they haven't been used for a while.
@@ -71,8 +77,19 @@ struct nsExpirationState
  * Future work:
  * -- Add a method to change the timer period?
  */
-template<class T, uint32_t K>
-class nsExpirationTracker
+
+/**
+ * Base class for ExiprationTracker implementations.
+ *
+ * nsExpirationTracker class below is a specialized class to be inherited by the
+ * instances to be accessed only on main-thread.
+ *
+ * For creating a thread-safe tracker, you can define a subclass inheriting this
+ * base class and specialize the Mutex and AutoLock to be used.
+ *
+ */
+template<typename T, uint32_t K, typename Mutex, typename AutoLock>
+class ExpirationTrackerImpl
 {
 public:
   /**
@@ -80,9 +97,9 @@ public:
    * @param aTimerPeriod the timer period in milliseconds. The guarantees
    * provided by the tracker are defined in terms of this period. If the
    * period is zero, then we don't use a timer and rely on someone calling
-   * AgeOneGeneration explicitly.
+   * AgeOneGenerationLocked explicitly.
    */
-  explicit nsExpirationTracker(uint32_t aTimerPeriod, const char* aName)
+  ExpirationTrackerImpl(uint32_t aTimerPeriod, const char* aName)
     : mTimerPeriod(aTimerPeriod)
     , mNewestGeneration(0)
     , mInAgeOneGeneration(false)
@@ -90,11 +107,14 @@ public:
   {
     static_assert(K >= 2 && K <= nsExpirationState::NOT_TRACKED,
                   "Unsupported number of generations (must be 2 <= K <= 15)");
+    MOZ_ASSERT(NS_IsMainThread());
     mObserver = new ExpirationTrackerObserver();
     mObserver->Init(this);
   }
-  virtual ~nsExpirationTracker()
+
+  virtual ~ExpirationTrackerImpl()
   {
+    MOZ_ASSERT(NS_IsMainThread());
     if (mTimer) {
       mTimer->Cancel();
     }
@@ -106,7 +126,7 @@ public:
    * be added to the newest generation, i.e., as if it was just used.
    * @return an error on out-of-memory
    */
-  nsresult AddObject(T* aObj)
+  nsresult AddObjectLocked(T* aObj, const AutoLock& aAutoLock)
   {
     nsExpirationState* state = aObj->GetExpirationState();
     NS_ASSERTION(!state->IsTracked(),
@@ -119,7 +139,7 @@ public:
     }
     if (index == 0) {
       // We might need to start the timer
-      nsresult rv = CheckStartTimer();
+      nsresult rv = CheckStartTimerLocked(aAutoLock);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -135,7 +155,7 @@ public:
   /**
    * Remove an object from the tracker. It must currently be tracked.
    */
-  void RemoveObject(T* aObj)
+  void RemoveObjectLocked(T* aObj, const AutoLock& aAutoLock)
   {
     nsExpirationState* state = aObj->GetExpirationState();
     NS_ASSERTION(state->IsTracked(), "Tried to remove an object that's not tracked");
@@ -161,21 +181,21 @@ public:
    * Notify that an object has been used.
    * @return an error if we lost the object from the tracker...
    */
-  nsresult MarkUsed(T* aObj)
+  nsresult MarkUsedLocked(T* aObj, const AutoLock& aAutoLock)
   {
     nsExpirationState* state = aObj->GetExpirationState();
     if (mNewestGeneration == state->mGeneration) {
       return NS_OK;
     }
-    RemoveObject(aObj);
-    return AddObject(aObj);
+    RemoveObjectLocked(aObj, aAutoLock);
+    return AddObjectLocked(aObj, aAutoLock);
   }
 
   /**
    * The timer calls this, but it can also be manually called if you want
-   * to age objects "artifically". This can result in calls to NotifyExpired.
+   * to age objects "artifically". This can result in calls to NotifyExpiredLocked.
    */
-  void AgeOneGeneration()
+  void AgeOneGenerationLocked(const AutoLock& aAutoLock)
   {
     if (mInAgeOneGeneration) {
       NS_WARNING("Can't reenter AgeOneGeneration from NotifyExpired");
@@ -188,8 +208,8 @@ public:
     nsTArray<T*>& generation = mGenerations[reapGeneration];
     // The following is rather tricky. We have to cope with objects being
     // removed from this generation either because of a call to RemoveObject
-    // (or indirectly via MarkUsed) inside NotifyExpired. Fortunately no
-    // objects can be added to this generation because it's not the newest
+    // (or indirectly via MarkUsedLocked) inside NotifyExpiredLocked. Fortunately
+    // no objects can be added to this generation because it's not the newest
     // generation. We depend on the fact that RemoveObject can only cause
     // the indexes of objects in this generation to *decrease*, not increase.
     // So if we start from the end and work our way backwards we are guaranteed
@@ -203,7 +223,7 @@ public:
         break;
       }
       --index;
-      NotifyExpired(generation[index]);
+      NotifyExpiredLocked(generation[index], aAutoLock);
     }
     // Any leftover objects from reapGeneration just end up in the new
     // newest-generation. This is bad form, though, so warn if there are any.
@@ -218,28 +238,29 @@ public:
   }
 
   /**
-   * This just calls AgeOneGeneration K times. Under normal circumstances this
-   * will result in all objects getting NotifyExpired called on them, but
-   * if NotifyExpired itself marks some objects as used, then those objects
-   * might not expire. This would be a good thing to call if we get into
+   * This just calls AgeOneGenerationLocked K times. Under normal circumstances
+   * this will result in all objects getting NotifyExpiredLocked called on them,
+   * but if NotifyExpiredLocked itself marks some objects as used, then those
+   * objects might not expire. This would be a good thing to call if we get into
    * a critically-low memory situation.
    */
-  void AgeAllGenerations()
+  void AgeAllGenerationsLocked(const AutoLock& aAutoLock)
   {
     uint32_t i;
     for (i = 0; i < K; ++i) {
-      AgeOneGeneration();
+      AgeOneGenerationLocked(aAutoLock);
     }
   }
 
   class Iterator
   {
   private:
-    nsExpirationTracker<T, K>* mTracker;
+    ExpirationTrackerImpl<T, K, Mutex, AutoLock>* mTracker;
     uint32_t mGeneration;
     uint32_t mIndex;
   public:
-    explicit Iterator(nsExpirationTracker<T, K>* aTracker)
+    Iterator(ExpirationTrackerImpl<T, K, Mutex, AutoLock>* aTracker,
+             AutoLock& aAutoLock)
       : mTracker(aTracker)
       , mGeneration(0)
       , mIndex(0)
@@ -263,7 +284,7 @@ public:
 
   friend class Iterator;
 
-  bool IsEmpty()
+  bool IsEmptyLocked(const AutoLock& aAutoLock)
   {
     for (uint32_t i = 0; i < K; ++i) {
       if (!mGenerations[i].IsEmpty()) {
@@ -278,19 +299,20 @@ protected:
    * This must be overridden to catch notifications. It is called whenever
    * we detect that an object has not been used for at least (K-1)*mTimerPeriod
    * milliseconds. If timer events are not delayed, it will be called within
-   * roughly K*mTimerPeriod milliseconds after the last use. (Unless AgeOneGeneration
-   * or AgeAllGenerations have been called to accelerate the aging process.)
+   * roughly K*mTimerPeriod milliseconds after the last use.
+   * (Unless AgeOneGenerationLocked or AgeAllGenerationsLocked have been called
+   * to accelerate the aging process.)
    *
    * NOTE: These bounds ignore delays in timer firings due to actual work being
    * performed by the browser. We use a slack timer so there is always at least
    * mTimerPeriod milliseconds between firings, which gives us (K-1)*mTimerPeriod
    * as a pretty solid lower bound. The upper bound is rather loose, however.
    * If the maximum amount by which any given timer firing is delayed is D, then
-   * the upper bound before NotifyExpired is called is K*(mTimerPeriod + D).
+   * the upper bound before NotifyExpiredLocked is called is K*(mTimerPeriod + D).
    *
-   * The NotifyExpired call is expected to remove the object from the tracker,
+   * The NotifyExpiredLocked call is expected to remove the object from the tracker,
    * but it need not. The object (or other objects) could be "resurrected"
-   * by calling MarkUsed() on them, or they might just not be removed.
+   * by calling MarkUsedLocked() on them, or they might just not be removed.
    * Any objects left over that have not been resurrected or removed
    * are placed in the new newest-generation, but this is considered "bad form"
    * and should be avoided (we'll issue a warning). (This recycling counts
@@ -299,7 +321,9 @@ protected:
    * For robustness and simplicity, we allow objects to be notified more than
    * once here in the same timer tick.
    */
-  virtual void NotifyExpired(T* aObj) = 0;
+  virtual void NotifyExpiredLocked(T*, const AutoLock&) = 0;
+
+  virtual Mutex& GetMutex() = 0;
 
 private:
   class ExpirationTrackerObserver;
@@ -312,13 +336,13 @@ private:
   const char* const  mName;   // Used for timer firing profiling.
 
   /**
-   * Whenever "memory-pressure" is observed, it calls AgeAllGenerations()
+   * Whenever "memory-pressure" is observed, it calls AgeAllGenerationsLocked()
    * to minimize memory usage.
    */
   class ExpirationTrackerObserver final : public nsIObserver
   {
   public:
-    void Init(nsExpirationTracker<T, K>* aObj)
+    void Init(ExpirationTrackerImpl<T, K, Mutex, AutoLock>* aObj)
     {
       mOwner = aObj;
       nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -337,21 +361,31 @@ private:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
   private:
-    nsExpirationTracker<T, K>* mOwner;
+    ExpirationTrackerImpl<T, K, Mutex, AutoLock>* mOwner;
   };
 
-  static void TimerCallback(nsITimer* aTimer, void* aThis)
-  {
-    nsExpirationTracker* tracker = static_cast<nsExpirationTracker*>(aThis);
-    tracker->AgeOneGeneration();
+  void HandleLowMemory() {
+    AutoLock lock(GetMutex());
+    AgeAllGenerationsLocked(lock);
+  }
+
+  void HandleTimeout() {
+    AutoLock lock(GetMutex());
+    AgeOneGenerationLocked(lock);
     // Cancel the timer if we have no objects to track
-    if (tracker->IsEmpty()) {
-      tracker->mTimer->Cancel();
-      tracker->mTimer = nullptr;
+    if (IsEmptyLocked(lock)) {
+      mTimer->Cancel();
+      mTimer = nullptr;
     }
   }
 
-  nsresult CheckStartTimer()
+  static void TimerCallback(nsITimer* aTimer, void* aThis)
+  {
+    ExpirationTrackerImpl* tracker = static_cast<ExpirationTrackerImpl*>(aThis);
+    tracker->HandleTimeout();
+  }
+
+  nsresult CheckStartTimerLocked(const AutoLock& aAutoLock)
   {
     if (mTimer || !mTimerPeriod) {
       return NS_OK;
@@ -360,26 +394,140 @@ private:
     if (!mTimer) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+    if (!NS_IsMainThread()) {
+      // TimerCallback should always be run on the main thread to prevent races
+      // to the destruction of the tracker.
+      nsCOMPtr<nsIEventTarget> target = do_GetMainThread();
+      NS_ENSURE_STATE(target);
+      mTimer->SetTarget(target);
+    }
     mTimer->InitWithNamedFuncCallback(TimerCallback, this, mTimerPeriod,
                                       nsITimer::TYPE_REPEATING_SLACK, mName);
     return NS_OK;
   }
 };
 
-template<class T, uint32_t K>
+namespace detail {
+
+class PlaceholderLock {
+public:
+  void Lock() {}
+  void Unlock() {}
+};
+
+class PlaceholderAutoLock {
+public:
+  explicit PlaceholderAutoLock(PlaceholderLock&) { }
+  ~PlaceholderAutoLock() = default;
+
+};
+
+template<typename T, uint32_t K>
+using SingleThreadedExpirationTracker =
+  ExpirationTrackerImpl<T, K, PlaceholderLock, PlaceholderAutoLock>;
+
+} // namespace detail
+
+template<typename T, uint32_t K>
+class nsExpirationTracker : protected ::detail::SingleThreadedExpirationTracker<T, K>
+{
+  typedef ::detail::PlaceholderLock Lock;
+  typedef ::detail::PlaceholderAutoLock AutoLock;
+
+  Lock mLock;
+
+  AutoLock FakeLock() {
+    return AutoLock(mLock);
+  }
+
+  Lock& GetMutex() override
+  {
+    return mLock;
+  }
+
+  void NotifyExpiredLocked(T* aObject, const AutoLock&) override
+  {
+    NotifyExpired(aObject);
+  }
+
+protected:
+  virtual void NotifyExpired(T* aObj) = 0;
+
+public:
+  nsExpirationTracker(uint32_t aTimerPeriod, const char* aName)
+    : ::detail::SingleThreadedExpirationTracker<T, K>(aTimerPeriod, aName)
+  { }
+
+  virtual ~nsExpirationTracker()
+  { }
+
+  nsresult AddObject(T* aObj)
+  {
+    return this->AddObjectLocked(aObj, FakeLock());
+  }
+
+  void RemoveObject(T* aObj)
+  {
+    this->RemoveObjectLocked(aObj, FakeLock());
+  }
+
+  nsresult MarkUsed(T* aObj)
+  {
+    return this->MarkUsedLocked(aObj, FakeLock());
+  }
+
+  void AgeOneGeneration()
+  {
+    this->AgeOneGenerationLocked(FakeLock());
+  }
+
+  void AgeAllGenerations()
+  {
+    this->AgeAllGenerationsLocked(FakeLock());
+  }
+
+  class Iterator
+  {
+  private:
+    AutoLock mAutoLock;
+    typename ExpirationTrackerImpl<T, K, Lock, AutoLock>::Iterator mIterator;
+  public:
+    explicit Iterator(nsExpirationTracker<T, K>* aTracker)
+      : mAutoLock(aTracker->GetMutex())
+      , mIterator(aTracker, mAutoLock)
+    {
+    }
+
+    T* Next()
+    {
+      return mIterator.Next();
+    }
+  };
+
+  friend class Iterator;
+
+  bool IsEmpty()
+  {
+    return this->IsEmptyLocked(FakeLock());
+  }
+};
+
+template<typename T, uint32_t K, typename Mutex, typename AutoLock>
 NS_IMETHODIMP
-nsExpirationTracker<T, K>::ExpirationTrackerObserver::Observe(
+ExpirationTrackerImpl<T, K, Mutex, AutoLock>::
+ExpirationTrackerObserver::Observe(
     nsISupports* aSubject, const char* aTopic, const char16_t* aData)
 {
   if (!strcmp(aTopic, "memory-pressure") && mOwner) {
-    mOwner->AgeAllGenerations();
+    mOwner->HandleLowMemory();
   }
   return NS_OK;
 }
 
-template<class T, uint32_t K>
+template<class T, uint32_t K, typename Mutex, typename AutoLock>
 NS_IMETHODIMP_(MozExternalRefCountType)
-nsExpirationTracker<T, K>::ExpirationTrackerObserver::AddRef(void)
+ExpirationTrackerImpl<T, K, Mutex, AutoLock>::
+ExpirationTrackerObserver::AddRef(void)
 {
   MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
   NS_ASSERT_OWNINGTHREAD(ExpirationTrackerObserver);
@@ -388,9 +536,10 @@ nsExpirationTracker<T, K>::ExpirationTrackerObserver::AddRef(void)
   return mRefCnt;
 }
 
-template<class T, uint32_t K>
+template<class T, uint32_t K, typename Mutex, typename AutoLock>
 NS_IMETHODIMP_(MozExternalRefCountType)
-nsExpirationTracker<T, K>::ExpirationTrackerObserver::Release(void)
+ExpirationTrackerImpl<T, K, Mutex, AutoLock>::
+ExpirationTrackerObserver::Release(void)
 {
   MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
   NS_ASSERT_OWNINGTHREAD(ExpirationTrackerObserver);
@@ -405,9 +554,10 @@ nsExpirationTracker<T, K>::ExpirationTrackerObserver::Release(void)
   return mRefCnt;
 }
 
-template<class T, uint32_t K>
+template<class T, uint32_t K, typename Mutex, typename AutoLock>
 NS_IMETHODIMP
-nsExpirationTracker<T, K>::ExpirationTrackerObserver::QueryInterface(
+ExpirationTrackerImpl<T, K, Mutex, AutoLock>::
+ExpirationTrackerObserver::QueryInterface(
     REFNSIID aIID, void** aInstancePtr)
 {
   NS_ASSERTION(aInstancePtr,
