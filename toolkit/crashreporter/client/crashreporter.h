@@ -118,7 +118,8 @@ namespace CrashReporter {
   bool ShouldEnableSending();
 
   // Telemetry ping
-  bool SendCrashPing(StringTable& strings, std::string& pingUuid);
+  bool SendCrashPing(StringTable& strings, std::string& pingUuid,
+                     const std::string& pingDir);
 
   static const unsigned int kSaveCount = 10;
 }
@@ -157,15 +158,16 @@ std::ofstream* UIOpenWrite(const std::string& filename,
                            bool binary=false);
 void UIPruneSavedDumps(const std::string& directory);
 
-// Run the program specified by exename, passing it the parameter in arg and
-// then sending it the contents of data (if any) via a pipe tied to its stdin.
+// Run the program specified by exename, passing it the parameters in arg.
 // If wait is true, wait for the program to terminate execution before
 // returning. Returns true if the program was launched correctly, false
 // otherwise.
 bool UIRunProgram(const std::string& exename,
-                  const std::string& arg,
-                  const std::string& data,
+                  const std::vector<std::string>& args,
                   bool wait = false);
+
+// Read the environment variable specified by name
+std::string UIGetEnv(const std::string name);
 
 #ifdef _MSC_VER
 # pragma warning( pop )

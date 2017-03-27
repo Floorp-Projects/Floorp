@@ -70,67 +70,50 @@ void UIPruneSavedDumps(const std::string& directory)
   }
 }
 
-bool UIRunProgram(const std::string& exename, const std::string& arg,
-                  const std::string& data, bool wait)
+bool UIRunProgram(const std::string& exename,
+                  const std::vector<std::string>& args,
+                  bool wait)
 {
-  bool usePipes = !data.empty();
-  int fd[2];
-
-  if (usePipes && (pipe(fd) != 0)) {
-    return false;
-  }
-
   pid_t pid = fork();
 
   if (pid == -1) {
     return false;
   } else if (pid == 0) {
     // Child
-    if (usePipes) {
-      if (dup2(fd[0], STDIN_FILENO) == -1) {
-        exit(EXIT_FAILURE);
-      }
+    size_t argvLen = args.size() + 2;
+    char** argv = new char*[argvLen];
 
-      close(fd[0]);
-      close(fd[1]);
+    argv[0] = const_cast<char*>(exename.c_str());
+
+    for (size_t i = 0; i < args.size(); i++) {
+      argv[i + 1] = const_cast<char*>(args[i].c_str());
     }
 
-    char* argv[] = {
-      const_cast<char*>(exename.c_str()),
-      const_cast<char*>(arg.c_str()),
-      nullptr
-    };
+    argv[argvLen - 1] = nullptr;
 
     // Run the program
     int rv = execv(exename.c_str(), argv);
+    delete[] argv;
 
     if (rv == -1) {
       exit(EXIT_FAILURE);
     }
   } else {
     // Parent
-    if (usePipes) {
-      ssize_t rv;
-      size_t offset = 0;
-      size_t size = data.size();
-
-      do {
-        rv = write(fd[1], data.c_str() + offset, size);
-
-        if (rv > 0) {
-          size -= rv;
-          offset += rv;
-        }
-      } while (size && ((rv > 0) || ((rv == -1) && errno == EINTR)));
-
-      close(fd[0]);
-      close(fd[1]);
-    }
-
     if (wait) {
       waitpid(pid, nullptr, 0);
     }
   }
 
   return true;
+}
+
+string UIGetEnv(const string name)
+{
+  const char *var = getenv(name.c_str());
+  if (var && *var) {
+    return var;
+  }
+
+  return "";
 }
