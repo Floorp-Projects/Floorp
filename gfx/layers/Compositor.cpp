@@ -302,8 +302,6 @@ GenerateTexturedTriangles(const gfx::Polygon& aPolygon,
       // Since the texture was created for non-split geometry, we need to
       // update the texture coordinates to account for the split.
       gfx::TexturedTriangle t(triangle);
-      t.width = rect.width;
-      t.height = rect.height;
       UpdateTextureCoordinates(t, rect, intersection, texRect);
       texturedTriangles.AppendElement(Move(t));
     }
