@@ -41,6 +41,7 @@
 #include "js/CallNonGenericMethod.h"
 #include "js/Proxy.h"
 #include "vm/AsyncFunction.h"
+#include "vm/AsyncIteration.h"
 #include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
@@ -306,6 +307,8 @@ CallerGetterImpl(JSContext* cx, const CallArgs& args)
         JSFunction* callerFun = &callerObj->as<JSFunction>();
         if (IsWrappedAsyncFunction(callerFun))
             callerFun = GetUnwrappedAsyncFunction(callerFun);
+        else if (IsWrappedAsyncGenerator(callerFun))
+            callerFun = GetUnwrappedAsyncGenerator(callerFun);
         MOZ_ASSERT(!callerFun->isBuiltin(), "non-builtin iterator returned a builtin?");
 
         if (callerFun->strict()) {
@@ -402,13 +405,15 @@ static const JSPropertySpec function_properties[] = {
 static bool
 ResolveInterpretedFunctionPrototype(JSContext* cx, HandleFunction fun, HandleId id)
 {
-    MOZ_ASSERT(fun->isInterpreted() || fun->isAsmJSNative());
+    bool isAsyncGenerator = IsWrappedAsyncGenerator(fun);
+
+    MOZ_ASSERT_IF(!isAsyncGenerator, fun->isInterpreted() || fun->isAsmJSNative());
     MOZ_ASSERT(id == NameToId(cx->names().prototype));
 
     // Assert that fun is not a compiler-created function object, which
     // must never leak to script or embedding code and then be mutated.
     // Also assert that fun is not bound, per the ES5 15.3.4.5 ref above.
-    MOZ_ASSERT(!IsInternalFunctionObject(*fun));
+    MOZ_ASSERT_IF(!isAsyncGenerator, !IsInternalFunctionObject(*fun));
     MOZ_ASSERT(!fun->isBoundFunction());
 
     // Make the prototype object an instance of Object with the same parent as
@@ -418,7 +423,9 @@ ResolveInterpretedFunctionPrototype(JSContext* cx, HandleFunction fun, HandleId 
     bool isStarGenerator = fun->isStarGenerator();
     Rooted<GlobalObject*> global(cx, &fun->global());
     RootedObject objProto(cx);
-    if (isStarGenerator)
+    if (isAsyncGenerator)
+        objProto = GlobalObject::getOrCreateAsyncGeneratorPrototype(cx, global);
+    else if (isStarGenerator)
         objProto = GlobalObject::getOrCreateStarGeneratorObjectPrototype(cx, global);
     else
         objProto = GlobalObject::getOrCreateObjectPrototype(cx, global);
@@ -434,7 +441,7 @@ ResolveInterpretedFunctionPrototype(JSContext* cx, HandleFunction fun, HandleId 
     // non-enumerable, and writable.  However, per the 15 July 2013 ES6 draft,
     // section 15.19.3, the .prototype of a generator function does not link
     // back with a .constructor.
-    if (!isStarGenerator) {
+    if (!isStarGenerator && !isAsyncGenerator) {
         RootedValue objVal(cx, ObjectValue(*fun));
         if (!DefineProperty(cx, proto, cx->names().constructor, objVal, nullptr, nullptr, 0))
             return false;
@@ -484,11 +491,13 @@ fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
          * - Arrow functions
          * - Function.prototype
          */
-        if (fun->isBuiltin())
-            return true;
-        if (!fun->isConstructor()) {
-            if (!fun->isStarGenerator() && !fun->isLegacyGenerator() && !fun->isAsync())
+        if (!IsWrappedAsyncGenerator(fun)) {
+            if (fun->isBuiltin())
                 return true;
+            if (!fun->isConstructor()) {
+                if (!fun->isStarGenerator() && !fun->isLegacyGenerator() && !fun->isAsync())
+                    return true;
+            }
         }
 
         if (!ResolveInterpretedFunctionPrototype(cx, fun, id))
@@ -983,6 +992,10 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
 
     if (IsWrappedAsyncFunction(fun)) {
         RootedFunction unwrapped(cx, GetUnwrappedAsyncFunction(fun));
+        return FunctionToString(cx, unwrapped, prettyPrint);
+    }
+    if (IsWrappedAsyncGenerator(fun)) {
+        RootedFunction unwrapped(cx, GetUnwrappedAsyncGenerator(fun));
         return FunctionToString(cx, unwrapped, prettyPrint);
     }
 
@@ -1637,10 +1650,14 @@ FunctionConstructor(JSContext* cx, const CallArgs& args, GeneratorKind generator
                                          &mutedErrors);
 
     const char* introductionType = "Function";
-    if (isAsync)
-        introductionType = "AsyncFunction";
-    else if (generatorKind != NotGenerator)
+    if (isAsync) {
+        if (isStarGenerator)
+            introductionType = "AsyncGenerator";
+        else
+            introductionType = "AsyncFunction";
+    } else if (generatorKind != NotGenerator) {
         introductionType = "GeneratorFunction";
+    }
 
     const char* introducerFilename = filename;
     if (maybeScript && maybeScript->scriptSource()->introducerFilename())
@@ -1767,12 +1784,20 @@ FunctionConstructor(JSContext* cx, const CallArgs& args, GeneratorKind generator
                                               : SourceBufferHolder::NoOwnership;
     bool ok;
     SourceBufferHolder srcBuf(chars.begin().get(), chars.length(), ownership);
-    if (isAsync)
-        ok = frontend::CompileStandaloneAsyncFunction(cx, &fun, options, srcBuf, parameterListEnd);
-    else if (isStarGenerator)
-        ok = frontend::CompileStandaloneGenerator(cx, &fun, options, srcBuf, parameterListEnd);
-    else
-        ok = frontend::CompileStandaloneFunction(cx, &fun, options, srcBuf, parameterListEnd);
+    if (isAsync) {
+        if (isStarGenerator) {
+            ok = frontend::CompileStandaloneAsyncGenerator(cx, &fun, options, srcBuf,
+                                                           parameterListEnd);
+        } else {
+            ok = frontend::CompileStandaloneAsyncFunction(cx, &fun, options, srcBuf,
+                                                          parameterListEnd);
+        }
+    } else {
+        if (isStarGenerator)
+            ok = frontend::CompileStandaloneGenerator(cx, &fun, options, srcBuf, parameterListEnd);
+        else
+            ok = frontend::CompileStandaloneFunction(cx, &fun, options, srcBuf, parameterListEnd);
+    }
 
     // Step 33.
     args.rval().setObject(*fun);
@@ -1798,7 +1823,7 @@ js::AsyncFunctionConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    // Save the callee before its reset in FunctionConstructor().
+    // Save the callee before it's reset in FunctionConstructor().
     RootedObject newTarget(cx);
     if (args.isConstructing())
         newTarget = &args.newTarget().toObject();
@@ -1823,6 +1848,40 @@ js::AsyncFunctionConstructor(JSContext* cx, unsigned argc, Value* vp)
 
     RootedFunction unwrapped(cx, &args.rval().toObject().as<JSFunction>());
     RootedObject wrapped(cx, WrapAsyncFunctionWithProto(cx, unwrapped, proto));
+    if (!wrapped)
+        return false;
+
+    args.rval().setObject(*wrapped);
+    return true;
+}
+
+bool
+js::AsyncGeneratorConstructor(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // Save the callee before its reset in FunctionConstructor().
+    RootedObject newTarget(cx);
+    if (args.isConstructing())
+        newTarget = &args.newTarget().toObject();
+    else
+        newTarget = &args.callee();
+
+    if (!FunctionConstructor(cx, args, StarGenerator, AsyncFunction))
+        return false;
+
+    RootedObject proto(cx);
+    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+        return false;
+
+    if (!proto) {
+        proto = GlobalObject::getOrCreateAsyncGenerator(cx, cx->global());
+        if (!proto)
+            return false;
+    }
+
+    RootedFunction unwrapped(cx, &args.rval().toObject().as<JSFunction>());
+    RootedObject wrapped(cx, WrapAsyncGeneratorWithProto(cx, unwrapped, proto));
     if (!wrapped)
         return false;
 
