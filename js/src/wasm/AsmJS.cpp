@@ -1736,14 +1736,34 @@ class MOZ_STACK_CLASS ModuleValidator
     ~ModuleValidator() {
         if (errorString_) {
             MOZ_ASSERT(errorOffset_ != UINT32_MAX);
-            tokenStream().reportAsmJSError(errorOffset_,
-                                           JSMSG_USE_ASM_TYPE_FAIL,
-                                           errorString_.get());
+            typeFailure(errorOffset_, errorString_.get());
         }
         if (errorOverRecursed_)
             ReportOverRecursed(cx_);
     }
 
+  private:
+    void typeFailure(uint32_t offset, ...) {
+        va_list args;
+        va_start(args, offset);
+
+        TokenStream& ts = tokenStream();
+        ErrorMetadata metadata;
+        if (ts.computeErrorMetadata(&metadata, offset)) {
+            unsigned flags = ts.options().throwOnAsmJSValidationFailureOption
+                             ? JSREPORT_ERROR
+                             : JSREPORT_WARNING;
+            if (ts.reportCompileErrorNumberVA(Move(metadata), nullptr, flags,
+                                              JSMSG_USE_ASM_TYPE_FAIL, args))
+            {
+                MOZ_ASSERT(flags == JSREPORT_WARNING);
+            }
+        }
+
+        va_end(args);
+    }
+
+  public:
     bool init() {
         asmJSMetadata_ = cx_->new_<AsmJSMetadata>();
         if (!asmJSMetadata_)
