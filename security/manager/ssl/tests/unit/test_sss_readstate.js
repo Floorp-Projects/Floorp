@@ -26,11 +26,11 @@ function checkStateRead(aSubject, aTopic, aData) {
                             Services.io.newURI("https://notexpired.example.com"),
                             0));
   ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://bugzilla.mozilla.org"),
+                            Services.io.newURI("https://includesubdomains.preloaded.test"),
                             0));
   ok(!gSSService.isSecureURI(
        Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://sub.bugzilla.mozilla.org"), 0));
+       Services.io.newURI("https://sub.includesubdomains.preloaded.test"), 0));
   ok(gSSService.isSecureURI(
        Ci.nsISiteSecurityService.HEADER_HSTS,
        Services.io.newURI("https://incsubdomain.example.com"), 0));
@@ -38,11 +38,11 @@ function checkStateRead(aSubject, aTopic, aData) {
        Ci.nsISiteSecurityService.HEADER_HSTS,
        Services.io.newURI("https://sub.incsubdomain.example.com"), 0));
   ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             Services.io.newURI("https://login.persona.org"),
+                             Services.io.newURI("https://includesubdomains2.preloaded.test"),
                              0));
   ok(!gSSService.isSecureURI(
        Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://sub.login.persona.org"), 0));
+       Services.io.newURI("https://sub.includesubdomains2.preloaded.test"), 0));
 
   // Clearing the data should make everything go back to default.
   gSSService.clearAll();
@@ -53,20 +53,20 @@ function checkStateRead(aSubject, aTopic, aData) {
        Ci.nsISiteSecurityService.HEADER_HSTS,
        Services.io.newURI("https://notexpired.example.com"), 0));
   ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://bugzilla.mozilla.org"),
+                            Services.io.newURI("https://includesubdomains.preloaded.test"),
                             0));
   ok(gSSService.isSecureURI(
        Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://sub.bugzilla.mozilla.org"), 0));
+       Services.io.newURI("https://sub.includesubdomains.preloaded.test"), 0));
   ok(!gSSService.isSecureURI(
        Ci.nsISiteSecurityService.HEADER_HSTS,
        Services.io.newURI("https://incsubdomain.example.com"), 0));
   ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
        Services.io.newURI("https://sub.incsubdomain.example.com"), 0));
   ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://login.persona.org"), 0));
+                            Services.io.newURI("https://includesubdomains2.preloaded.test"), 0));
   ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://sub.login.persona.org"),
+                            Services.io.newURI("https://sub.includesubdomains2.preloaded.test"),
                             0));
   do_test_finished();
 }
@@ -83,10 +83,10 @@ function run_test() {
   writeLine("expired.example.com:HSTS\t0\t0\t" + (now - 100000) + ",1,0\n", outputStream);
   writeLine("notexpired.example.com:HSTS\t0\t0\t" + (now + 100000) + ",1,0\n", outputStream);
   // This overrides an entry on the preload list.
-  writeLine("bugzilla.mozilla.org:HSTS\t0\t0\t" + (now + 100000) + ",1,0\n", outputStream);
+  writeLine("includesubdomains.preloaded.test:HSTS\t0\t0\t" + (now + 100000) + ",1,0\n", outputStream);
   writeLine("incsubdomain.example.com:HSTS\t0\t0\t" + (now + 100000) + ",1,1\n", outputStream);
   // This overrides an entry on the preload list.
-  writeLine("login.persona.org:HSTS\t0\t0\t0,2,0\n", outputStream);
+  writeLine("includesubdomains2.preloaded.test:HSTS\t0\t0\t0,2,0\n", outputStream);
   outputStream.close();
   Services.obs.addObserver(checkStateRead, "data-storage-ready", false);
   do_test_pending();
