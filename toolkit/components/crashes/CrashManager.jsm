@@ -640,9 +640,6 @@ this.CrashManager.prototype = Object.freeze({
     let sessionId = parseAndRemoveField(reportMeta, "TelemetrySessionId",
                                         /* parseAsJson */ false);
     let stackTraces = parseAndRemoveField(reportMeta, "StackTraces");
-    // If CrashPingUUID is not present then Telemetry will generate a new UUID
-    let pingId = parseAndRemoveField(reportMeta, "CrashPingUUID",
-                                     /* parseAsJson */ false);
 
     // Filter the remaining annotations to remove privacy-sensitive ones
     reportMeta = this._filterAnnotations(reportMeta);
@@ -662,7 +659,6 @@ this.CrashManager.prototype = Object.freeze({
         addClientId: true,
         addEnvironment: true,
         overrideEnvironment: crashEnvironment,
-        overridePingId: pingId
       }
     );
   },
@@ -688,7 +684,14 @@ this.CrashManager.prototype = Object.freeze({
           store.addCrash(this.PROCESS_TYPE_MAIN, this.CRASH_TYPE_CRASH,
                          crashID, date, metadata);
 
-          this._sendCrashPing(crashID, this.PROCESS_TYPE_MAIN, date, metadata);
+          if (!("CrashPingUUID" in metadata)) {
+            // If CrashPingUUID is not present then a ping was not generated
+            // by the crashreporter for this crash so we need to send one from
+            // here.
+            this._sendCrashPing(crashID, this.PROCESS_TYPE_MAIN, date,
+                                metadata);
+          }
+
           break;
 
         case "crash.submission.1":

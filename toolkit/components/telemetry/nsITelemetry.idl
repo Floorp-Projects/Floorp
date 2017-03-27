@@ -543,11 +543,11 @@ interface nsITelemetry : nsISupports
    * as soon as the contents of the ping have been handed over to the ping
    * sender.
    *
-   * @param aUrl The telemetry server URL
-   * @param aPing A string holding the ping contents
+   * @param {String} aUrl The telemetry server URL
+   * @param {String} aPingFilePath The path to the file holding the ping
+   *        contents, if if sent successfully the pingsender will delete it.
    *
-   * @throws NS_ERROR_FAILURE if we couldn't run the pingsender or if we
-   *         couldn't hand it the ping data
+   * @throws NS_ERROR_FAILURE if we couldn't find or run the pingsender executable.
    */
-  void runPingSender(in ACString aUrl, in ACString aPing);
+  void runPingSender(in ACString aUrl, in ACString aPingFilePath);
 };

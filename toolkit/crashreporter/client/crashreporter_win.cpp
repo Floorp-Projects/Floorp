@@ -1545,74 +1545,30 @@ void UIPruneSavedDumps(const std::string& directory)
   }
 }
 
-bool UIRunProgram(const string& exename, const string& arg,
-                  const string& data, bool wait)
+bool UIRunProgram(const string& exename,
+                  const std::vector<std::string>& args,
+                  bool wait)
 {
-  bool usePipes = !data.empty();
-  HANDLE childStdinPipeRead = nullptr;
-  HANDLE childStdinPipeWrite = nullptr;
+  wstring cmdLine = L"\"" + UTF8ToWide(exename) + L"\" ";
 
-  if (usePipes) {
-    // Set up the pipes
-    SECURITY_ATTRIBUTES sa = {};
-    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-    sa.lpSecurityDescriptor = nullptr;
-    sa.bInheritHandle = true;
-
-    // Create a pipe for the child process's stdin and ensure its writable end is
-    // not inherited by the child process.
-    if (!CreatePipe(&childStdinPipeRead, &childStdinPipeWrite, &sa, 0)) {
-      return false;
-    }
-
-    if (!SetHandleInformation(childStdinPipeWrite, HANDLE_FLAG_INHERIT, 0)) {
-      return false;
-    }
+  for (auto arg : args) {
+    cmdLine += L"\"" + UTF8ToWide(arg) + L"\" ";
   }
-
-  wstring cmdLine = L"\"" + UTF8ToWide(exename) + L"\" " +
-                    L"\"" + UTF8ToWide(arg) + L"\" ";
 
   STARTUPINFO si = {};
   si.cb = sizeof(si);
-
-  if (usePipes) {
-    si.dwFlags |= STARTF_USESTDHANDLES;
-    si.hStdInput = childStdinPipeRead;
-    si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
-  }
-
   PROCESS_INFORMATION pi = {};
 
   if (!CreateProcess(/* lpApplicationName */ nullptr,
                      (LPWSTR)cmdLine.c_str(),
                      /* lpProcessAttributes */ nullptr,
                      /* lpThreadAttributes */ nullptr,
-                     usePipes,
+                     /* bInheritHandles */ false,
                      NORMAL_PRIORITY_CLASS | CREATE_NO_WINDOW,
                      /* lpEnvironment */ nullptr,
                      /* lpCurrentDirectory */ nullptr,
                      &si, &pi)) {
     return false;
-  }
-
-  if (usePipes) {
-    size_t offset = 0;
-    size_t size = data.size();
-    while (size > 0) {
-      DWORD written = 0;
-      bool success = WriteFile(childStdinPipeWrite, data.data() + offset, size,
-                               &written, nullptr);
-      if (!success) {
-        break;
-      } else {
-        size -= written;
-        offset += written;
-      }
-    }
-
-    CloseHandle(childStdinPipeWrite);
   }
 
   if (wait) {
@@ -1622,4 +1578,15 @@ bool UIRunProgram(const string& exename, const string& arg,
   CloseHandle(pi.hProcess);
   CloseHandle(pi.hThread);
   return true;
+}
+
+string
+UIGetEnv(const string name)
+{
+  const wchar_t *var = _wgetenv(UTF8ToWide(name).c_str());
+  if (var && *var) {
+    return WideToUTF8(var);
+  }
+
+  return "";
 }
