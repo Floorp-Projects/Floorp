@@ -92,6 +92,10 @@ public:
   MOZ_IMPLICIT SVGBBox(const gfxRect& aRect)
     : mBBox(ToRect(aRect)), mIsEmpty(false) {}
 
+  operator const Rect& () {
+    return mBBox;
+  }
+
   gfxRect ToThebesRect() const {
     return ThebesRect(mBBox);
   }
@@ -327,11 +331,6 @@ public:
    */
   static void NotifyChildrenOfSVGChange(nsIFrame *aFrame, uint32_t aFlags);
 
-  /*
-   * Get frame's covered region by walking the children and doing union.
-   */
-  static nsRect GetCoveredRegion(const nsFrameList &aFrames);
-
   static nsRect TransformFrameRectToOuterSVG(const nsRect& aRect,
                                              const gfxMatrix& aMatrix,
                                              nsPresContext* aPresContext);
@@ -400,16 +399,32 @@ public:
     // Normally a getBBox call on outer-<svg> should only return the
     // bounds of the elements children.  This flag will cause the
     // element's bounds to be returned instead.
-    eUseFrameBoundsForOuterSVG = 1 << 6
+    eUseFrameBoundsForOuterSVG = 1 << 6,
+    // https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
+    eForGetClientRects         = 1 << 7,
   };
   /**
-   * Get the SVG bbox (the SVG spec's simplified idea of bounds) of aFrame in
-   * aFrame's userspace.
+   * This function in primarily for implementing the SVG DOM function getBBox()
+   * and the SVG attribute value 'objectBoundingBox'.  However, it has been
+   * extended with various extra parameters in order to become more of a
+   * general purpose getter of all sorts of bounds that we might need to obtain
+   * for SVG elements, or even for other elements that have SVG effects applied
+   * to them.
+   *
+   * @param aFrame The frame of the element for which the bounds are to be
+   *   obtained.
+   * @param aFlags One or more of the BBoxFlags values defined above.
+   * @param aToBoundsSpace If not specified the returned rect is in aFrame's
+   *   element's "user space".  A matrix can optionally be pass to specify a
+   *   transform from aFrame's user space to the bounds space of interest
+   *   (typically this will be the ancestor nsSVGOuterSVGFrame, but it could be
+   *   to any other coordinate space).
    */
   static gfxRect GetBBox(nsIFrame *aFrame,
                          // If the default arg changes, update the handling for
                          // ObjectBoundingBoxProperty() in the implementation.
-                         uint32_t aFlags = eBBoxIncludeFillGeometry);
+                         uint32_t aFlags = eBBoxIncludeFillGeometry,
+                         const gfxMatrix* aToBoundsSpace = nullptr);
 
   /*
    * "User space" is the space that the frame's BBox (as calculated by

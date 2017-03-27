@@ -51,8 +51,6 @@
   skin/classic/global/arrow/panelarrow-horizontal-themed.svg (../../windows/global/arrow/panelarrow-horizontal-themed.svg)
   skin/classic/global/arrow/panelarrow-vertical-themed.svg   (../../windows/global/arrow/panelarrow-vertical-themed.svg)
 
-  skin/classic/global/checkbox/cbox-check.gif              (../../windows/global/checkbox/cbox-check.gif)
-  skin/classic/global/checkbox/cbox-check-dis.gif          (../../windows/global/checkbox/cbox-check-dis.gif)
 * skin/classic/global/dirListing/dirListing.css            (../../windows/global/dirListing/dirListing.css)
   skin/classic/global/dirListing/folder.png                (../../windows/global/dirListing/folder.png)
   skin/classic/global/dirListing/local.png                 (../../windows/global/dirListing/local.png)

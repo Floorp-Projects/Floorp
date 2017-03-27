@@ -171,6 +171,28 @@ ResolveURI(nsIURI* aURI, nsAString& out)
     if (NS_WARN_IF(NS_FAILED(rv)))
       return rv;
   } else if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &equals)) && equals) {
+    // Going through the Chrome Registry may be prohibitively slow for many of
+    // the well-known chrome:// URI packages, so check for a few of them here
+    // first in order to fail early if we don't have a chrome:// URI which
+    // could have been provided by an add-on.
+    nsAutoCString package;
+    rv = aURI->GetHostPort(package);
+    if (NS_WARN_IF(NS_FAILED(rv)) ||
+        package.EqualsLiteral("branding") ||
+        package.EqualsLiteral("browser") ||
+        package.EqualsLiteral("branding") ||
+        package.EqualsLiteral("global") ||
+        package.EqualsLiteral("global-platform") ||
+        package.EqualsLiteral("mozapps") ||
+        package.EqualsLiteral("necko") ||
+        package.EqualsLiteral("passwordmgr") ||
+        package.EqualsLiteral("pippki") ||
+        package.EqualsLiteral("pipnss")) {
+      // Returning a failure code means the URI isn't associated with an add-on
+      // ID.
+      return NS_ERROR_FAILURE;
+    }
+
     nsCOMPtr<nsIChromeRegistry> chromeReg =
       mozilla::services::GetChromeRegistryService();
     if (NS_WARN_IF(!chromeReg))

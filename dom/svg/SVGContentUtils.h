@@ -384,17 +384,6 @@ public:
    *  to have no corners: circle or ellipse
    */
   static bool ShapeTypeHasNoCorners(const nsIContent* aContent);
-
-  /**
-   *  Prepends an element's local transforms to the transform matrix.
-   *  This is a helper for nsSVGElement::PrependLocalTransformsTo.
-   *  Any callers probably really want to call that method instead of this one.
-   */
-  static gfxMatrix PrependLocalTransformsTo(
-    const gfxMatrix &aMatrix,
-    SVGTransformTypes aWhich,
-    const Matrix* aAnimateMotionTransform,
-    const mozilla::nsSVGAnimatedTransformList* aTransforms);
 };
 
 #endif

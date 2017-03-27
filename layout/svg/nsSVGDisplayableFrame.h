@@ -94,9 +94,6 @@ public:
    */
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) = 0;
 
-  // Get bounds in our nsSVGOuterSVGFrame's coordinates space (in app units)
-  virtual nsRect GetCoveredRegion()=0;
-
   // Called on SVG child frames (except NS_FRAME_IS_NONDISPLAY frames)
   // to update and then invalidate their cached bounds. This method is not
   // called until after the nsSVGOuterSVGFrame has had its initial reflow
