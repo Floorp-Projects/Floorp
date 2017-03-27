@@ -8109,12 +8109,15 @@ nsDisplayMask::PaintMask(nsDisplayListBuilder* aBuilder,
 {
   MOZ_ASSERT(aMaskContext->GetDrawTarget()->GetFormat() == SurfaceFormat::A8);
 
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                  ? imgIContainer::FLAG_SYNC_DECODE
+                  : imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   nsSVGIntegrationUtils::PaintFramesParams params(*aMaskContext,
                                                   mFrame,  mVisibleRect,
                                                   borderArea, aBuilder,
                                                   nullptr,
-                                                  mHandleOpacity);
+                                                  mHandleOpacity, flags);
   ComputeMaskGeometry(params);
   image::DrawResult result = nsSVGIntegrationUtils::PaintMask(params);
 
@@ -8217,12 +8220,15 @@ nsDisplayMask::PaintAsLayer(nsDisplayListBuilder* aBuilder,
 {
   MOZ_ASSERT(!ShouldPaintOnMaskLayer(aManager));
 
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                  ? imgIContainer::FLAG_SYNC_DECODE
+                  : imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   nsSVGIntegrationUtils::PaintFramesParams params(*aCtx->ThebesContext(),
                                                   mFrame,  mVisibleRect,
                                                   borderArea, aBuilder,
                                                   aManager,
-                                                  mHandleOpacity);
+                                                  mHandleOpacity, flags);
 
   // Clip the drawing target by mVisibleRect, which contains the visible
   // region of the target frame and its out-of-flow and inflow descendants.
@@ -8407,12 +8413,15 @@ nsDisplayFilter::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                               nsRenderingContext* aCtx,
                               LayerManager* aManager)
 {
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                  ? imgIContainer::FLAG_SYNC_DECODE
+                  : imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   nsSVGIntegrationUtils::PaintFramesParams params(*aCtx->ThebesContext(),
                                                   mFrame,  mVisibleRect,
                                                   borderArea, aBuilder,
                                                   aManager,
-                                                  mHandleOpacity);
+                                                  mHandleOpacity, flags);
 
   image::DrawResult result = nsSVGIntegrationUtils::PaintFilter(params);
   nsDisplayFilterGeometry::UpdateDrawResult(this, result);
