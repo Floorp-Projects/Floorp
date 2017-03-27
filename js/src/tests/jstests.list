@@ -871,3 +871,6 @@ skip script test262/intl402/PluralRules/prototype/select/tainting.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1340304
 skip-if(!xulRuntime.shell) script test262/language/module-code/instn-iee-err-circular.js
 skip-if(!xulRuntime.shell) script test262/language/module-code/instn-iee-err-circular-as.js
+
+# Async generators are now a thing.
+skip script test262/language/statements/async-function/early-errors-no-async-generator-n.js
