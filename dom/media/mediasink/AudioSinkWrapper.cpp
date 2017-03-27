@@ -58,7 +58,7 @@ AudioSinkWrapper::GetEndTime(TrackType aType) const
   AssertOwnerThread();
   MOZ_ASSERT(mIsStarted, "Must be called after playback starts.");
   if (aType == TrackInfo::kAudioTrack && mAudioSink) {
-    return mAudioSink->GetEndTime();
+    return mAudioSink->GetEndTime().ToMicroseconds();
   }
   return 0;
 }
@@ -85,7 +85,7 @@ AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) const
 
   if (!mAudioEnded) {
     // Rely on the audio sink to report playback position when it is not ended.
-    pos = mAudioSink->GetPosition();
+    pos = mAudioSink->GetPosition().ToMicroseconds();
   } else if (!mPlayStartTime.IsNull()) {
     // Calculate playback position using system clock if we are still playing.
     pos = GetVideoPosition(t);
