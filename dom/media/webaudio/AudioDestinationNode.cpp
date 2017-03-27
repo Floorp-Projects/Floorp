@@ -507,6 +507,11 @@ AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted)
     return NS_OK;
   }
 
+  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+         ("AudioDestinationNode, WindowVolumeChanged, "
+          "this = %p, aVolume = %f, aMuted = %s\n",
+          this, aVolume, aMuted ? "true" : "false"));
+
   float volume = aMuted ? 0.0 : aVolume;
   mStream->SetAudioOutputVolume(&gWebAudioOutputKey, volume);
   return NS_OK;
@@ -523,6 +528,10 @@ AudioDestinationNode::WindowSuspendChanged(nsSuspendedTypes aSuspend)
   if (mAudioChannelSuspended == suspended) {
     return NS_OK;
   }
+
+  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+         ("AudioDestinationNode, WindowSuspendChanged, "
+          "this = %p, aSuspend = %s\n", this, SuspendTypeToStr(aSuspend)));
 
   mAudioChannelSuspended = suspended;
   Context()->DispatchTrustedEvent(!suspended ?
