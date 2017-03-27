@@ -157,11 +157,19 @@ TestWeakMaps()
     JSObject* weakMap = JS::NewWeakMapObject(cx);
     CHECK(weakMap);
 
-    JSObject* key = AllocWeakmapKeyObject();
-    CHECK(key);
+    JSObject* key;
+    JSObject* value;
+    {
+        JS::RootedObject rootedMap(cx, weakMap);
 
-    JSObject* value = AllocPlainObject();
-    CHECK(value);
+        key = AllocWeakmapKeyObject();
+        CHECK(key);
+
+        value = AllocPlainObject();
+        CHECK(value);
+
+        weakMap = rootedMap;
+    }
 
     {
         JS::RootedObject rootedMap(cx, weakMap);
