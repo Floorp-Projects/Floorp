@@ -8026,8 +8026,8 @@ CSSParserImpl::ParseCounter(nsCSSValue& aValue)
       break;
     }
 
-    RefPtr<nsCSSValue::ThreadSafeArray> val =
-      nsCSSValue::ThreadSafeArray::Create(unit == eCSSUnit_Counter ? 2 : 3);
+    RefPtr<nsCSSValue::Array> val =
+      nsCSSValue::Array::Create(unit == eCSSUnit_Counter ? 2 : 3);
 
     val->Item(0).SetStringValue(mToken.mIdent, eCSSUnit_Ident);
 
@@ -8058,7 +8058,7 @@ CSSParserImpl::ParseCounter(nsCSSValue& aValue)
       break;
     }
 
-    aValue.SetThreadSafeArrayValue(val, unit);
+    aValue.SetArrayValue(val, unit);
     return true;
   }
 
