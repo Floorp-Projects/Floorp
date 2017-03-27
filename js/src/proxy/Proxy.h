@@ -13,8 +13,6 @@
 
 namespace js {
 
-class RegExpGuard;
-
 /*
  * Dispatch point for handlers that executes the appropriate C++ or scripted traps.
  *
