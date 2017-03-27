@@ -304,7 +304,7 @@ SVGGeometryFrame::PaintSVG(gfxContext& aContext,
 
   if (paintOrder == NS_STYLE_PAINT_ORDER_NORMAL) {
     result = Render(&aContext, eRenderFill | eRenderStroke, newMatrix, aFlags);
-    PaintMarkers(aContext, aTransform);
+    result &= PaintMarkers(aContext, aTransform, aFlags);
   } else {
     while (paintOrder) {
       uint32_t component =
@@ -317,7 +317,7 @@ SVGGeometryFrame::PaintSVG(gfxContext& aContext,
           result &= Render(&aContext, eRenderStroke, newMatrix, aFlags);
           break;
         case NS_STYLE_PAINT_ORDER_MARKERS:
-          PaintMarkers(aContext, aTransform);
+          result &= PaintMarkers(aContext, aTransform, aFlags);
           break;
       }
       paintOrder >>= NS_STYLE_PAINT_ORDER_BITWIDTH;
@@ -881,12 +881,13 @@ SVGGeometryFrame::Render(gfxContext* aContext,
   return result;
 }
 
-void
+DrawResult
 SVGGeometryFrame::PaintMarkers(gfxContext& aContext,
-                               const gfxMatrix& aTransform)
+                               const gfxMatrix& aTransform,
+                               uint32_t aFlags)
 {
   SVGContextPaint* contextPaint = SVGContextPaint::GetContextPaint(mContent);
-
+  DrawResult result = DrawResult::SUCCESS;
   if (static_cast<SVGGeometryElement*>(mContent)->IsMarkable()) {
     MarkerProperties properties = GetMarkerProperties(this);
 
@@ -912,12 +913,15 @@ SVGGeometryFrame::PaintMarkers(gfxContext& aContext,
           nsSVGMark& mark = marks[i];
           nsSVGMarkerFrame* frame = markerFrames[mark.type];
           if (frame) {
-            frame->PaintMark(aContext, aTransform, this, &mark, strokeWidth);
+            result &= frame->PaintMark(aContext, aTransform, this, &mark,
+                                       strokeWidth, aFlags);
           }
         }
       }
     }
   }
+
+  return result;
 }
 
 uint16_t
