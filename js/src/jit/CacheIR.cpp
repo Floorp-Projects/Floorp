@@ -2082,6 +2082,8 @@ SetPropIRGenerator::tryAttachStub()
             if (IsPropertySetOp(JSOp(*pc_))) {
                 if (tryAttachSetter(obj, objId, id, rhsValId))
                     return true;
+                if (tryAttachWindowProxy(obj, objId, id, rhsValId))
+                    return true;
                 if (tryAttachProxy(obj, objId, id, rhsValId))
                     return true;
             }
@@ -2933,6 +2935,49 @@ SetPropIRGenerator::tryAttachProxyElement(HandleObject obj, ObjOperandId objId, 
     writer.returnFromIC();
 
     trackAttached("ProxyElement");
+    return true;
+}
+
+bool
+SetPropIRGenerator::tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, HandleId id,
+                                         ValOperandId rhsId)
+{
+    // Attach a stub when the receiver is a WindowProxy and we can do the set
+    // on the Window (the global object).
+
+    if (!IsWindowProxy(obj))
+        return false;
+
+    // If we're megamorphic prefer a generic proxy stub that handles a lot more
+    // cases.
+    if (mode_ == ICState::Mode::Megamorphic)
+        return false;
+
+    // This must be a WindowProxy for the current Window/global. Else it would
+    // be a cross-compartment wrapper and IsWindowProxy returns false for
+    // those.
+    MOZ_ASSERT(obj->getClass() == cx_->runtime()->maybeWindowProxyClass());
+    MOZ_ASSERT(ToWindowIfWindowProxy(obj) == cx_->global());
+
+    // Now try to do the set on the Window (the current global).
+    Handle<GlobalObject*> windowObj = cx_->global();
+
+    RootedShape propShape(cx_);
+    if (!CanAttachNativeSetSlot(cx_, windowObj, id, isTemporarilyUnoptimizable_, &propShape))
+        return false;
+
+    maybeEmitIdGuard(id);
+
+    writer.guardClass(objId, GuardClassKind::WindowProxy);
+    ObjOperandId windowObjId = writer.loadObject(windowObj);
+
+    writer.guardShape(windowObjId, windowObj->lastProperty());
+    writer.guardGroup(windowObjId, windowObj->group());
+    typeCheckInfo_.set(windowObj->group(), id);
+
+    EmitStoreSlotAndReturn(writer, windowObjId, windowObj, propShape, rhsId);
+
+    trackAttached("WindowProxySlot");
     return true;
 }
 
