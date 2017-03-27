@@ -1162,7 +1162,9 @@ GetCacheIRExpectedInputType(ICCacheIR_Monitored* stub)
         JSValueType type = reader.valueType();
         return MIRTypeFromValueType(type);
     }
-    MOZ_CRASH("Unexpected instruction");
+
+    MOZ_ASSERT_UNREACHABLE("Unexpected instruction");
+    return MIRType::Value;
 }
 
 MIRType
