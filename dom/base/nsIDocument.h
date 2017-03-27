@@ -2967,6 +2967,13 @@ protected:
     return mId;
   }
 
+  // Update our frame request callback scheduling state, if needed.  This will
+  // schedule or unschedule them, if necessary, and update
+  // mFrameRequestCallbacksScheduled.  aOldShell should only be passed when
+  // mPresShell is becoming null; in that case it will be used to get hold of
+  // the relevant refresh driver.
+  void UpdateFrameRequestCallbackSchedulingState(nsIPresShell* aOldShell = nullptr);
+
   nsCString mReferrer;
   nsString mLastModified;
 
@@ -3189,6 +3196,11 @@ protected:
 
   // True if ReportHasScrollLinkedEffect() has been called.
   bool mHasScrollLinkedEffect : 1;
+
+  // True if we have frame request callbacks scheduled with the refresh driver.
+  // This should generally be updated only via
+  // UpdateFrameRequestCallbackSchedulingState.
+  bool mFrameRequestCallbacksScheduled : 1;
 
   // Compatibility mode
   nsCompatibility mCompatMode;
