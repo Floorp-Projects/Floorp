@@ -6,6 +6,7 @@
 #ifndef NS_AUTOREFERENCELIMITER_H
 #define NS_AUTOREFERENCELIMITER_H
 
+#include "Element.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrancyGuard.h"
