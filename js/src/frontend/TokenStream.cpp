@@ -939,23 +939,6 @@ TokenStream::reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint
 }
 
 void
-TokenStream::reportAsmJSError(uint32_t offset, unsigned errorNumber, ...)
-{
-    va_list args;
-    va_start(args, errorNumber);
-
-    ErrorMetadata metadata;
-    if (computeErrorMetadata(&metadata, offset)) {
-        unsigned flags = options().throwOnAsmJSValidationFailureOption
-                         ? JSREPORT_ERROR
-                         : JSREPORT_WARNING;
-        reportCompileErrorNumberVA(Move(metadata), nullptr, flags, errorNumber, args);
-    }
-
-    va_end(args);
-}
-
-void
 TokenStream::error(unsigned errorNumber, ...)
 {
     va_list args;

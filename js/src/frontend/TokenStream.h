@@ -701,9 +701,6 @@ class MOZ_STACK_CLASS TokenStream final : public TokenStreamBase
     bool reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
                                          unsigned errorNumber, va_list args);
 
-    // asm.js reporter
-    void reportAsmJSError(uint32_t offset, unsigned errorNumber, ...);
-
     JSAtom* getRawTemplateStringAtom() {
         MOZ_ASSERT(currentToken().type == TOK_TEMPLATE_HEAD ||
                    currentToken().type == TOK_NO_SUBS_TEMPLATE);
