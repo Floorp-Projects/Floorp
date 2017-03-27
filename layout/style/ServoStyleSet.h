@@ -272,6 +272,8 @@ public:
                                const ServoComputedValuesWithParent&
                                  aServoValues);
 
+  bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
+
 private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
                                               nsStyleContext* aParentContext,

@@ -12953,16 +12953,8 @@ nsIDocument::FlushUserFontSet()
     if (gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
       nsTArray<nsFontFaceRuleContainer> rules;
       nsIPresShell* shell = GetShell();
-      if (shell) {
-        // XXXheycam ServoStyleSets don't support exposing @font-face rules yet.
-        if (shell->StyleSet()->IsGecko()) {
-          if (!shell->StyleSet()->AsGecko()->AppendFontFaceRules(rules)) {
-            return;
-          }
-        } else {
-          NS_WARNING("stylo: ServoStyleSets cannot handle @font-face rules yet. "
-                     "See bug 1290237.");
-        }
+      if (shell && !shell->StyleSet()->AppendFontFaceRules(rules)) {
+        return;
       }
 
       bool changed = false;

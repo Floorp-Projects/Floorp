@@ -275,6 +275,13 @@ StyleSetHandle::Ptr::RootStyleContextRemoved()
   }
 }
 
+bool
+StyleSetHandle::Ptr::
+AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray)
+{
+  FORWARD(AppendFontFaceRules, (aArray));
+}
+
 } // namespace mozilla
 
 #undef FORWARD
