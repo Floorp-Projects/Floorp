@@ -2641,6 +2641,12 @@ Predictor::CacheabilityAction::OnCacheEntryAvailable(nsICacheEntry *entry,
   keysToCheck.SwapElements(mKeysToCheck);
   valuesToCheck.SwapElements(mValuesToCheck);
 
+  bool hasQueryString = false;
+  nsAutoCString query;
+  if (NS_SUCCEEDED(mTargetURI->GetQuery(query)) && !query.IsEmpty()) {
+    hasQueryString = true;
+  }
+
   MOZ_ASSERT(keysToCheck.Length() == valuesToCheck.Length());
   for (size_t i = 0; i < keysToCheck.Length(); ++i) {
     const char *key = keysToCheck[i].BeginReading();
@@ -2656,7 +2662,7 @@ Predictor::CacheabilityAction::OnCacheEntryAvailable(nsICacheEntry *entry,
 
     bool eq = false;
     if (NS_SUCCEEDED(uri->Equals(mTargetURI, &eq)) && eq) {
-      if (mHttpStatus == 200 && mMethod.EqualsLiteral("GET")) {
+      if (mHttpStatus == 200 && mMethod.EqualsLiteral("GET") && !hasQueryString) {
         PREDICTOR_LOG(("    marking %s cacheable", key));
         flags |= FLAG_PREFETCHABLE;
       } else {
