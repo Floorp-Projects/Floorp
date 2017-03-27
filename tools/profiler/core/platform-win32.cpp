@@ -32,9 +32,6 @@
 #include <mmsystem.h>
 #include <process.h>
 
-// Memory profile
-#include "nsMemoryReporterManager.h"
-
 /* static */ Thread::tid_t
 Thread::GetCurrentId()
 {
@@ -160,10 +157,10 @@ SamplerThread::Stop(PS::LockRef aLock)
 }
 
 void
-SamplerThread::SuspendAndSampleAndResumeThread(
-  PS::LockRef aLock, ThreadInfo* aThreadInfo, bool aIsFirstProfiledThread)
+SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
+                                               TickSample* aSample)
 {
-  uintptr_t thread = GetThreadHandle(aThreadInfo->GetPlatformData());
+  uintptr_t thread = GetThreadHandle(aSample->mThreadInfo->GetPlatformData());
   HANDLE profiled_thread = reinterpret_cast<HANDLE>(thread);
   if (profiled_thread == nullptr)
     return;
@@ -171,22 +168,6 @@ SamplerThread::SuspendAndSampleAndResumeThread(
   // Context used for sampling the register state of the profiled thread.
   CONTEXT context;
   memset(&context, 0, sizeof(context));
-
-  //----------------------------------------------------------------//
-  // Collect auxiliary information whilst the samplee thread is still
-  // running.
-
-  TickSample sample;
-
-  // Grab the timestamp before pausing the thread, to avoid deadlocks.
-  sample.threadInfo = aThreadInfo;
-  sample.timestamp = mozilla::TimeStamp::Now();
-
-  // Unique Set Size is not supported on Windows.
-  sample.rssMemory = (aIsFirstProfiledThread && gPS->FeatureMemory(aLock))
-                   ? nsMemoryReporterManager::ResidentFast()
-                   : 0;
-  sample.ussMemory = 0;
 
   //----------------------------------------------------------------//
   // Suspend the samplee thread and get its context.
@@ -222,18 +203,18 @@ SamplerThread::SuspendAndSampleAndResumeThread(
   // platform-linux-android.cpp for details.
 
 #if defined(GP_ARCH_amd64)
-  sample.pc = reinterpret_cast<Address>(context.Rip);
-  sample.sp = reinterpret_cast<Address>(context.Rsp);
-  sample.fp = reinterpret_cast<Address>(context.Rbp);
+  aSample->mPC = reinterpret_cast<Address>(context.Rip);
+  aSample->mSP = reinterpret_cast<Address>(context.Rsp);
+  aSample->mFP = reinterpret_cast<Address>(context.Rbp);
 #else
-  sample.pc = reinterpret_cast<Address>(context.Eip);
-  sample.sp = reinterpret_cast<Address>(context.Esp);
-  sample.fp = reinterpret_cast<Address>(context.Ebp);
+  aSample->mPC = reinterpret_cast<Address>(context.Eip);
+  aSample->mSP = reinterpret_cast<Address>(context.Esp);
+  aSample->mFP = reinterpret_cast<Address>(context.Ebp);
 #endif
 
-  sample.context = &context;
+  aSample->mContext = &context;
 
-  Tick(aLock, gPS->Buffer(aLock), &sample);
+  Tick(aLock, gPS->Buffer(aLock), aSample);
 
   //----------------------------------------------------------------//
   // Resume the target thread.
@@ -254,21 +235,20 @@ PlatformInit(PS::LockRef aLock)
 }
 
 void
-TickSample::PopulateContext(void* aContext)
+TickSample::PopulateContext(CONTEXT* aContext)
 {
   MOZ_ASSERT(aContext);
-  CONTEXT* pContext = reinterpret_cast<CONTEXT*>(aContext);
-  context = pContext;
-  RtlCaptureContext(pContext);
+  mContext = aContext;
+  RtlCaptureContext(aContext);
 
 #if defined(GP_ARCH_amd64)
-  pc = reinterpret_cast<Address>(pContext->Rip);
-  sp = reinterpret_cast<Address>(pContext->Rsp);
-  fp = reinterpret_cast<Address>(pContext->Rbp);
+  mPC = reinterpret_cast<Address>(aContext->Rip);
+  mSP = reinterpret_cast<Address>(aContext->Rsp);
+  mFP = reinterpret_cast<Address>(aContext->Rbp);
 #elif defined(GP_ARCH_x86)
-  pc = reinterpret_cast<Address>(pContext->Eip);
-  sp = reinterpret_cast<Address>(pContext->Esp);
-  fp = reinterpret_cast<Address>(pContext->Ebp);
+  mPC = reinterpret_cast<Address>(aContext->Eip);
+  mSP = reinterpret_cast<Address>(aContext->Esp);
+  mFP = reinterpret_cast<Address>(aContext->Ebp);
 #endif
 }
 

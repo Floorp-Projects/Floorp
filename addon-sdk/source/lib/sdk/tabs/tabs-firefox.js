@@ -101,10 +101,8 @@ const Tabs = Class({
 });
 
 const allTabs = new Tabs();
-// Export a new object with allTabs as the prototype, otherwise allTabs becomes
-// frozen and addListItem and removeListItem don't work correctly.
-module.exports = Object.create(allTabs);
-pipe(tabEvents, module.exports);
+module.exports = allTabs;
+pipe(tabEvents, allTabs);
 
 function addWindowTab(window, tabElement) {
   let tab = new Tab(tabElement);
