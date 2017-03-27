@@ -6,8 +6,8 @@ pref(dom.animations-api.core.enabled,true) load 1216842-3.html
 pref(dom.animations-api.core.enabled,true) load 1216842-4.html
 pref(dom.animations-api.core.enabled,true) load 1216842-5.html # bug 1334036
 pref(dom.animations-api.core.enabled,true) load 1216842-6.html # bug 1334036
-skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1272475-1.html # bug 1324693 and bug 1332657 and bug 1336769
-skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1272475-2.html # bug 1324693 and bug 1332657 and bug 1336769
+pref(dom.animations-api.core.enabled,true) load 1272475-1.html
+pref(dom.animations-api.core.enabled,true) load 1272475-2.html
 pref(dom.animations-api.core.enabled,true) load 1278485-1.html
 pref(dom.animations-api.core.enabled,true) load 1277272-1.html
 pref(dom.animations-api.core.enabled,true) load 1290535-1.html
