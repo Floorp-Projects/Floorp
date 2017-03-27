@@ -30,6 +30,7 @@
     macro(ArrayValuesAt, ArrayValuesAt, "ArrayValuesAt") \
     macro(as, as, "as") \
     macro(Async, Async, "Async") \
+    macro(AsyncFromSyncIterator, AsyncFromSyncIterator, "Async-from-Sync Iterator") \
     macro(AsyncFunction, AsyncFunction, "AsyncFunction") \
     macro(AsyncGenerator, AsyncGenerator, "AsyncGenerator") \
     macro(AsyncGeneratorFunction, AsyncGeneratorFunction, "AsyncGeneratorFunction") \

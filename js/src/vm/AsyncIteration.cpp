@@ -148,6 +148,69 @@ js::AsyncGeneratorAwaitedRejected(JSContext* cx, Handle<AsyncGeneratorObject*> a
     return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw, reason);
 }
 
+const Class AsyncFromSyncIteratorObject::class_ = {
+    "AsyncFromSyncIteratorObject",
+    JSCLASS_HAS_RESERVED_SLOTS(AsyncFromSyncIteratorObject::Slots)
+};
+
+// Async Iteration proposal 6.1.3.1.
+JSObject*
+js::CreateAsyncFromSyncIterator(JSContext* cx, HandleObject iter)
+{
+    // Step 1 (implicit).
+    // Done in bytecode emitted by emitAsyncIterator.
+
+    // Steps 2-4.
+    return AsyncFromSyncIteratorObject::create(cx, iter);
+}
+
+// Async Iteration proposal 6.1.3.1 steps 2-4.
+/* static */ JSObject*
+AsyncFromSyncIteratorObject::create(JSContext* cx, HandleObject iter)
+{
+    // Step 2.
+    RootedObject proto(cx, GlobalObject::getOrCreateAsyncFromSyncIteratorPrototype(cx,
+                                                                                   cx->global()));
+    if (!proto)
+        return nullptr;
+
+    RootedObject obj(cx, NewNativeObjectWithGivenProto(cx, &class_, proto));
+    if (!obj)
+        return nullptr;
+
+    Handle<AsyncFromSyncIteratorObject*> asyncIter = obj.as<AsyncFromSyncIteratorObject>();
+
+    // Step 3.
+    asyncIter->setIterator(iter);
+
+    // Step 4.
+    return asyncIter;
+}
+
+// Async Iteration proposal 6.1.3.2.1 %AsyncFromSyncIteratorPrototype%.next.
+static bool
+AsyncFromSyncIteratorNext(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return AsyncFromSyncIteratorMethod(cx, args, CompletionKind::Normal);
+}
+
+// Async Iteration proposal 6.1.3.2.2 %AsyncFromSyncIteratorPrototype%.return.
+static bool
+AsyncFromSyncIteratorReturn(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return AsyncFromSyncIteratorMethod(cx, args, CompletionKind::Return);
+}
+
+// Async Iteration proposal 6.1.3.2.3 %AsyncFromSyncIteratorPrototype%.throw.
+static bool
+AsyncFromSyncIteratorThrow(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return AsyncFromSyncIteratorMethod(cx, args, CompletionKind::Throw);
+}
+
 // Async Iteration proposal 6.4.1.2 AsyncGenerator.prototype.next.
 static bool
 AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp)
@@ -413,17 +476,17 @@ js::AsyncGeneratorResumeNext(JSContext* cx, Handle<AsyncGeneratorObject*> asyncG
     return AsyncGeneratorResume(cx, asyncGenObj, completionKind, argument);
 }
 
-// Async Iteration proposal 6.2.1.2 (partially).
+// Async Iteration proposal 6.2.1.3 (partially).
 // Most steps are done in generator.
 static MOZ_MUST_USE bool
 AsyncGeneratorYield(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-                    HandleValue value, bool done)
+                    HandleValue value)
 {
-    // Step 6.
+    // Step 5.
     asyncGenObj->setSuspendedYield();
 
-    // Step 10.c.
-    return AsyncGeneratorResolve(cx, asyncGenObj, value, done);
+    // Step 8.
+    return AsyncGeneratorResolve(cx, asyncGenObj, value, false);
 }
 
 // Async Iteration proposal 6.4.3.5 steps 12-14, 16-20.
@@ -451,45 +514,40 @@ AsyncGeneratorResume(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
         return AsyncGeneratorThrown(cx, asyncGenObj);
     }
 
+    if (asyncGenObj->generatorObj()->isAfterAwait())
+        return AsyncGeneratorAwait(cx, asyncGenObj, result);
+
     // The following code corresponds to the following 3 cases:
     //   * yield
-    //   * await
+    //   * yield*
     //   * return
-    // For await and return, property access is done on an internal result
+    // For yield and return, property access is done on an internal result
     // object and it's not observable.
-    // For yield, it's done on an user-provided result object, and it's
-    // observable, so perform in that order in all cases.
+    // For yield*, it's done on a possibly user-provided result object, and
+    // it's observable.
 
+    // 2.2.1 yield* steps 6.a.vii, 6.b.ii.7, 6.c.ix.
     RootedObject resultObj(cx, &result.toObject());
     RootedValue value(cx);
-    RootedValue doneVal(cx);
-
-    // 6.2.1.2 step 10.a.
     if (!GetProperty(cx, resultObj, resultObj, cx->names().value, &value))
         return false;
 
-    // 6.2.1.2 step 10.b.
-    if (!GetProperty(cx, resultObj, resultObj, cx->names().done, &doneVal))
-        return false;
-
-    // 6.2.1.2 step 10.c.
     if (asyncGenObj->generatorObj()->isAfterYield())
-        return AsyncGeneratorYield(cx, asyncGenObj, value, ToBoolean(doneVal));
+        return AsyncGeneratorYield(cx, asyncGenObj, value);
 
     // 6.4.3.2 step 5.d-g.
-    if (ToBoolean(doneVal)) {
-        MOZ_ASSERT(!asyncGenObj->generatorObj()->isAfterAwait());
-        return AsyncGeneratorReturned(cx, asyncGenObj, value);
-    }
-
-    MOZ_ASSERT(asyncGenObj->generatorObj()->isAfterAwait());
-
-    // 5.1 steps 2-9.
-    return AsyncGeneratorAwait(cx, asyncGenObj, value);
+    return AsyncGeneratorReturned(cx, asyncGenObj, value);
 }
 
 static const JSFunctionSpec async_iterator_proto_methods[] = {
     JS_SELF_HOSTED_SYM_FN(asyncIterator, "AsyncIteratorIdentity", 0, 0),
+    JS_FS_END
+};
+
+static const JSFunctionSpec async_from_sync_iter_methods[] = {
+    JS_FN("next", AsyncFromSyncIteratorNext, 1, 0),
+    JS_FN("throw", AsyncFromSyncIteratorThrow, 1, 0),
+    JS_FN("return", AsyncFromSyncIteratorReturn, 1, 0),
     JS_FS_END
 };
 
@@ -512,6 +570,19 @@ GlobalObject::initAsyncGenerators(JSContext* cx, Handle<GlobalObject*> global)
         return false;
     if (!DefinePropertiesAndFunctions(cx, asyncIterProto, nullptr, async_iterator_proto_methods))
         return false;
+
+    // Async Iteration proposal 6.1.3.2 %AsyncFromSyncIteratorPrototype%.
+    RootedObject asyncFromSyncIterProto(
+        cx, GlobalObject::createBlankPrototypeInheriting(cx, global, &PlainObject::class_,
+                                                         asyncIterProto));
+    if (!asyncFromSyncIterProto)
+        return false;
+    if (!DefinePropertiesAndFunctions(cx, asyncFromSyncIterProto, nullptr,
+                                      async_from_sync_iter_methods) ||
+        !DefineToStringTag(cx, asyncFromSyncIterProto, cx->names().AsyncFromSyncIterator))
+    {
+        return false;
+    }
 
     // Async Iteration proposal 6.4.1 %AsyncGeneratorPrototype%.
     RootedObject asyncGenProto(
@@ -557,6 +628,7 @@ GlobalObject::initAsyncGenerators(JSContext* cx, Handle<GlobalObject*> global)
     }
 
     global->setReservedSlot(ASYNC_ITERATOR_PROTO, ObjectValue(*asyncIterProto));
+    global->setReservedSlot(ASYNC_FROM_SYNC_ITERATOR_PROTO, ObjectValue(*asyncFromSyncIterProto));
     global->setReservedSlot(ASYNC_GENERATOR, ObjectValue(*asyncGenerator));
     global->setReservedSlot(ASYNC_GENERATOR_FUNCTION, ObjectValue(*asyncGenFunction));
     global->setReservedSlot(ASYNC_GENERATOR_PROTO, ObjectValue(*asyncGenProto));

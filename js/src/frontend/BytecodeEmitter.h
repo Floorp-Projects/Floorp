@@ -10,6 +10,7 @@
 #define frontend_BytecodeEmitter_h
 
 #include "jscntxt.h"
+#include "jsiter.h"
 #include "jsopcode.h"
 #include "jsscript.h"
 
@@ -605,6 +606,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitPrepareIteratorResult();
     MOZ_MUST_USE bool emitFinishIteratorResult(bool done);
     MOZ_MUST_USE bool iteratorResultShape(unsigned* shape);
+    MOZ_MUST_USE bool emitToIteratorResult(bool done);
 
     MOZ_MUST_USE bool emitGetDotGenerator();
 
@@ -612,6 +614,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitYield(ParseNode* pn);
     MOZ_MUST_USE bool emitYieldOp(JSOp op);
     MOZ_MUST_USE bool emitYieldStar(ParseNode* iter);
+    MOZ_MUST_USE bool emitAwait();
     MOZ_MUST_USE bool emitAwait(ParseNode* pn);
 
     MOZ_MUST_USE bool emitPropLHS(ParseNode* pn);
@@ -694,10 +697,13 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     // It will replace that stack value with the corresponding iterator
     MOZ_MUST_USE bool emitIterator();
 
+    MOZ_MUST_USE bool emitAsyncIterator();
+
     // Pops iterator from the top of the stack. Pushes the result of |.next()|
     // onto the stack.
     MOZ_MUST_USE bool emitIteratorNext(ParseNode* pn, bool allowSelfHosted = false);
-    MOZ_MUST_USE bool emitIteratorClose(CompletionKind completionKind = CompletionKind::Normal,
+    MOZ_MUST_USE bool emitIteratorClose(IteratorKind iterKind = IteratorKind::Sync,
+                                        CompletionKind completionKind = CompletionKind::Normal,
                                         bool allowSelfHosted = false);
 
     template <typename InnerEmitter>
