@@ -14,6 +14,7 @@ import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.Tab;
@@ -28,6 +29,7 @@ import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.lwt.LightweightThemeDrawable;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.MenuPopup;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.tabs.TabHistoryController;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnStopListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnTitleChangeListener;
@@ -239,14 +241,18 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
                     if (url == null) {
                         menu.findItem(R.id.copyurl).setVisible(false);
                         menu.findItem(R.id.add_to_launcher).setVisible(false);
+                        menu.findItem(R.id.set_as_homepage).setVisible(false);
                     }
 
                     MenuUtils.safeSetVisible(menu, R.id.subscribe, tab.hasFeeds());
                     MenuUtils.safeSetVisible(menu, R.id.add_search_engine, tab.hasOpenSearch());
+                    final boolean distSetAsHomepage = GeckoSharedPrefs.forProfile(context).getBoolean(GeckoPreferences.PREFS_SET_AS_HOMEPAGE, false);
+                    MenuUtils.safeSetVisible(menu, R.id.set_as_homepage, distSetAsHomepage);
                 } else {
                     // if there is no tab, remove anything tab dependent
                     menu.findItem(R.id.copyurl).setVisible(false);
                     menu.findItem(R.id.add_to_launcher).setVisible(false);
+                    menu.findItem(R.id.set_as_homepage).setVisible(false);
                     MenuUtils.safeSetVisible(menu, R.id.subscribe, false);
                     MenuUtils.safeSetVisible(menu, R.id.add_search_engine, false);
                 }
