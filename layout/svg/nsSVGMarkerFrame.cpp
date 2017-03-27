@@ -102,30 +102,32 @@ GetAnonymousChildFrame(nsIFrame* aFrame)
   return kid;
 }
 
-nsresult
+DrawResult
 nsSVGMarkerFrame::PaintMark(gfxContext& aContext,
                             const gfxMatrix& aToMarkedFrameUserSpace,
                             SVGGeometryFrame *aMarkedFrame,
-                            nsSVGMark *aMark, float aStrokeWidth)
+                            nsSVGMark *aMark, float aStrokeWidth,
+                            uint32_t aFlags)
 {
   // If the flag is set when we get here, it means this marker frame
   // has already been used painting the current mark, and the document
   // has a marker reference loop.
-  if (mInUse)
-    return NS_OK;
+  if (mInUse) {
+    return DrawResult::SUCCESS;
+  }
 
   AutoMarkerReferencer markerRef(this, aMarkedFrame);
 
   SVGMarkerElement *marker = static_cast<SVGMarkerElement*>(mContent);
   if (!marker->HasValidDimensions()) {
-    return NS_OK;
+    return DrawResult::SUCCESS;
   }
 
   const nsSVGViewBoxRect viewBox = marker->GetViewBoxRect();
 
   if (viewBox.width <= 0.0f || viewBox.height <= 0.0f) {
     // We must disable rendering if the viewBox width or height are zero.
-    return NS_OK;
+    return DrawResult::SUCCESS;
   }
 
   mStrokeWidth = aStrokeWidth;
@@ -155,12 +157,13 @@ nsSVGMarkerFrame::PaintMark(gfxContext& aContext,
   nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
   // The CTM of each frame referencing us may be different.
   SVGFrame->NotifySVGChanged(nsSVGDisplayableFrame::TRANSFORM_CHANGED);
-  DrawResult result = nsSVGUtils::PaintFrameWithEffects(kid, aContext, markTM);
+  DrawResult result = nsSVGUtils::PaintFrameWithEffects(kid, aContext, markTM,
+                                                        nullptr, aFlags);
 
   if (StyleDisplay()->IsScrollableOverflow())
     aContext.Restore();
 
-  return (result == DrawResult::SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
+  return result;
 }
 
 SVGBBox
