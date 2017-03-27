@@ -1098,26 +1098,29 @@ private:
 
   const nsCSSValue* First() const { return mArray; }
 
+#define CSSVALUE_LIST_FOR_EXTRA_VALUES(var)                                   \
+  for (nsCSSValue *var = First() + 1, *var##_end = First() + mCount;          \
+       var != var##_end; ++var)
+
   explicit Array(size_t aItemCount)
-    : mCount(aItemCount)
+    : mRefCnt(0)
+    , mCount(aItemCount)
   {
-    for (nsCSSValue *val = First() + 1, *val_end = First() + mCount;
-         val != val_end; ++val)
-    {
+    CSSVALUE_LIST_FOR_EXTRA_VALUES(val) {
       new (val) nsCSSValue();
     }
   }
 
   ~Array()
   {
-    for (nsCSSValue *val = First() + 1, *val_end = First() + mCount;
-         val != val_end; ++val)
-    {
+    CSSVALUE_LIST_FOR_EXTRA_VALUES(val) {
       val->~nsCSSValue();
     }
   }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+#undef CSSVALUE_LIST_FOR_EXTRA_VALUES
 
 private:
   Array(const Array& aOther) = delete;
