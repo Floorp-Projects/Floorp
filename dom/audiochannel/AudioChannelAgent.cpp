@@ -220,8 +220,10 @@ AudioChannelAgent::NotifyStartedPlaying(AudioPlaybackConfig* aConfig,
 
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
          ("AudioChannelAgent, NotifyStartedPlaying, this = %p, "
-          "audible = %d, mute = %d, volume = %f, suspend = %d\n", this,
-          aAudible, config.mMuted, config.mVolume, config.mSuspend));
+          "audible = %s, mute = %s, volume = %f, suspend = %s\n", this,
+          AudibleStateToStr(static_cast<AudioChannelService::AudibleState>(aAudible)),
+          config.mMuted ? "true" : "false", config.mVolume,
+          SuspendTypeToStr(config.mSuspend)));
 
   aConfig->SetConfig(config.mVolume, config.mMuted, config.mSuspend);
   mIsRegToService = true;
@@ -253,7 +255,9 @@ AudioChannelAgent::NotifyStartedAudible(uint8_t aAudible, uint32_t aReason)
 {
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
          ("AudioChannelAgent, NotifyStartedAudible, this = %p, "
-          "audible = %d, reason = %d\n", this, aAudible, aReason));
+          "audible = %s, reason = %s\n", this,
+          AudibleStateToStr(static_cast<AudioChannelService::AudibleState>(aAudible)),
+          AudibleChangedReasonToStr(static_cast<AudioChannelService::AudibleChangedReasons>(aReason))));
 
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (NS_WARN_IF(!service)) {
@@ -287,8 +291,9 @@ AudioChannelAgent::WindowVolumeChanged()
 
   AudioPlaybackConfig config = GetMediaConfig();
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-         ("AudioChannelAgent, WindowVolumeChanged, this = %p, mute = %d, "
-          "volume = %f\n", this, config.mMuted, config.mVolume));
+         ("AudioChannelAgent, WindowVolumeChanged, this = %p, mute = %s, "
+          "volume = %f\n",
+          this, config.mMuted ? "true" : "false", config.mVolume));
 
   callback->WindowVolumeChanged(config.mVolume, config.mMuted);
 }
@@ -307,7 +312,7 @@ AudioChannelAgent::WindowSuspendChanged(nsSuspendedTypes aSuspend)
 
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
          ("AudioChannelAgent, WindowSuspendChanged, this = %p, "
-          "suspended = %d\n", this, aSuspend));
+          "suspended = %s\n", this, SuspendTypeToStr(aSuspend)));
 
   callback->WindowSuspendChanged(aSuspend);
 }
