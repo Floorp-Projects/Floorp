@@ -285,7 +285,14 @@ nsImageFrame::Init(nsIContent*       aContent,
                           getter_AddRefs(currentRequest));
 
   if (currentRequest) {
-    currentRequest->BoostPriority(imgIRequest::CATEGORY_FRAME_INIT);
+    uint32_t categoryToBoostPriority = imgIRequest::CATEGORY_FRAME_INIT;
+
+    // Increase load priority further if intrinsic size might be important for layout.
+    if (!HaveSpecifiedSize(StylePosition())) {
+      categoryToBoostPriority |= imgIRequest::CATEGORY_SIZE_QUERY;
+    }
+
+    currentRequest->BoostPriority(categoryToBoostPriority);
   }
 }
 
