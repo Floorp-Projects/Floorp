@@ -13,7 +13,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TypeTraits.h"
 
-#include "jsiter.h"
 #include "jspubtd.h"
 
 #include "frontend/BytecodeCompiler.h"
@@ -1176,7 +1175,6 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     Node forStatement(YieldHandling yieldHandling);
     bool forHeadStart(YieldHandling yieldHandling,
-                      IteratorKind iterKind,
                       ParseNodeKind* forHeadKind,
                       Node* forInitialPart,
                       mozilla::Maybe<ParseContext::Scope>& forLetImpliedScope,
