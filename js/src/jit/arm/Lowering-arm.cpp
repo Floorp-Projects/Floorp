@@ -351,6 +351,8 @@ LIRGeneratorARM::lowerDivI(MDiv* div)
         return;
     }
 
+    gen->setPerformsCall();
+
     LSoftDivI* lir = new(alloc()) LSoftDivI(useFixedAtStart(div->lhs(), r0), useFixedAtStart(div->rhs(), r1),
                                             tempFixed(r1), tempFixed(r2), tempFixed(r3));
     if (div->fallible())
@@ -402,6 +404,8 @@ LIRGeneratorARM::lowerModI(MMod* mod)
         define(lir, mod);
         return;
     }
+
+    gen->setPerformsCall();
 
     LSoftModI* lir = new(alloc()) LSoftModI(useFixedAtStart(mod->lhs(), r0), useFixedAtStart(mod->rhs(), r1),
                                             tempFixed(r0), tempFixed(r2), tempFixed(r3),
@@ -558,13 +562,16 @@ LIRGeneratorARM::lowerUDiv(MDiv* div)
         if (div->fallible())
             assignSnapshot(lir, Bailout_DoubleOutput);
         define(lir, div);
-    } else {
-        LSoftUDivOrMod* lir = new(alloc()) LSoftUDivOrMod(useFixedAtStart(lhs, r0), useFixedAtStart(rhs, r1),
-                                                          tempFixed(r1), tempFixed(r2), tempFixed(r3));
-        if (div->fallible())
-            assignSnapshot(lir, Bailout_DoubleOutput);
-        defineFixed(lir, div, LAllocation(AnyRegister(r0)));
+        return;
     }
+
+    gen->setPerformsCall();
+
+    LSoftUDivOrMod* lir = new(alloc()) LSoftUDivOrMod(useFixedAtStart(lhs, r0), useFixedAtStart(rhs, r1),
+                                                      tempFixed(r1), tempFixed(r2), tempFixed(r3));
+    if (div->fallible())
+        assignSnapshot(lir, Bailout_DoubleOutput);
+    defineFixed(lir, div, LAllocation(AnyRegister(r0)));
 }
 
 void
@@ -580,13 +587,16 @@ LIRGeneratorARM::lowerUMod(MMod* mod)
         if (mod->fallible())
             assignSnapshot(lir, Bailout_DoubleOutput);
         define(lir, mod);
-    } else {
-        LSoftUDivOrMod* lir = new(alloc()) LSoftUDivOrMod(useFixedAtStart(lhs, r0), useFixedAtStart(rhs, r1),
-                                                          tempFixed(r0), tempFixed(r2), tempFixed(r3));
-        if (mod->fallible())
-            assignSnapshot(lir, Bailout_DoubleOutput);
-        defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
+        return;
     }
+
+    gen->setPerformsCall();
+
+    LSoftUDivOrMod* lir = new(alloc()) LSoftUDivOrMod(useFixedAtStart(lhs, r0), useFixedAtStart(rhs, r1),
+                                                      tempFixed(r0), tempFixed(r2), tempFixed(r3));
+    if (mod->fallible())
+        assignSnapshot(lir, Bailout_DoubleOutput);
+    defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
 }
 
 void
