@@ -9,7 +9,7 @@ EXPORTS.gtest += [
 ]
 
 if CONFIG['ENABLE_TESTS']:
-    EXPORTS.gtest += [
+    gtest_exports = [
         'gtest/include/gtest/gtest-death-test.h',
         'gtest/include/gtest/gtest-message.h',
         'gtest/include/gtest/gtest-param-test.h',
@@ -22,6 +22,10 @@ if CONFIG['ENABLE_TESTS']:
         'gtest/include/gtest/gtest_prod.h',
         'mozilla/MozGTestBench.h',
     ]
+    EXPORTS.gtest += gtest_exports
+
+    # webrtc.org unit tests use this include path
+    EXPORTS.testing.gtest.include.gtest += gtest_exports
 
     # GTest internal are exposed in gtest.h. See comment in gtest.h
     EXPORTS.gtest.internal += [
@@ -43,7 +47,7 @@ if CONFIG['ENABLE_TESTS']:
         'gtest/include/gtest/internal/custom/gtest-printers.h',
     ]
 
-    EXPORTS.gmock += [
+    gmock_exports = [
         'gmock/include/gmock/gmock-actions.h',
         'gmock/include/gmock/gmock-cardinalities.h',
         'gmock/include/gmock/gmock-generated-actions.h',
@@ -56,6 +60,10 @@ if CONFIG['ENABLE_TESTS']:
         'gmock/include/gmock/gmock-spec-builders.h',
         'gmock/include/gmock/gmock.h',
     ]
+    EXPORTS.gmock += gmock_exports
+
+    # webrtc.org unit tests use this include path
+    EXPORTS.testing.gmock.include.gmock += gmock_exports
 
     # gmock also includes internal interfaces in it's public header
     EXPORTS.gmock.internal += [

@@ -1,0 +1,427 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Once we have gn support available in the build system
+# (see Bug 1336429) we can use the gn build files directly
+# rather than building things here.
+
+ALLOW_COMPILER_WARNINGS = True
+
+DEFINES['GTEST_RELATIVE_PATH'] = True
+
+# Hit build errors on windows with xutility otherwise
+DISABLE_STL_WRAPPING = True
+
+LOCAL_INCLUDES += [
+    '../',
+    '/',
+    '/media/libopus/celt/',
+    '/media/libopus/include',
+    '/media/libopus/src',
+]
+
+USE_LIBS += [
+    '/media/webrtc/trunk/third_party/gflags/gflags_gflags/gflags',
+    '/testing/gtest/gtest',
+    'media_libjpeg',
+    'media_libopus',
+    'media_libvpx',
+    'mozglue',
+    'speex',
+    'webrtc',
+    'webrtc_common',
+    'webrtc_i420',
+    'webrtc_lib',
+    'webrtc_utility',
+    'webrtc_vp8',
+    'webrtc_vp9',
+    'yuv',
+]
+
+if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
+    if CONFIG['OS_TARGET'] == 'Linux':
+        DEFINES['WEBRTC_LINUX'] = True
+        DEFINES['WEBRTC_POSIX'] = True
+
+        LOCAL_INCLUDES += [
+            '../third_party/gflags/gen/posix/include',
+            '../third_party/gflags/gen/posix/include/private',
+        ]
+
+        OS_LIBS += [
+            'rt',
+            'X11',
+            'Xcomposite',
+            'Xdamage',
+            'Xext',
+            'Xfixes',
+            'Xrandr',
+            'Xrender',
+        ]
+    elif CONFIG['OS_TARGET'] == 'Darwin':
+        DEFINES['WEBRTC_MAC'] = True
+        DEFINES['WEBRTC_POSIX'] = True
+        DEFINES['MOZ_JEMALLOC_IMPL'] = True
+
+        LOCAL_INCLUDES += [
+            '../third_party/gflags/gen/posix/include',
+            '../third_party/gflags/gen/posix/include/private',
+        ]
+
+        OS_LIBS += [
+            '-framework AudioToolbox',
+            '-framework AudioUnit',
+            '-framework Carbon',
+            '-framework CoreAudio',
+            '-framework OpenGL',
+            '-framework AVFoundation',
+            '-framework CoreMedia',
+            '-framework QuartzCore',
+            '-framework Security',
+            '-framework SystemConfiguration',
+            '-framework IOKit',
+            '-F%s' % CONFIG['MACOS_PRIVATE_FRAMEWORKS_DIR'],
+            '-framework CoreUI',
+        ]
+
+        SOURCES += [
+            '../webrtc/modules/desktop_capture/screen_capturer_mac_unittest.cc',
+             'OSXRunLoopSingleton.cpp',
+        ]
+    elif CONFIG['OS_TARGET'] == 'WINNT':
+        DEFINES['WEBRTC_WIN'] = True
+
+        DEFINES['UNICODE'] = True
+        DEFINES['_UNICODE'] = True
+
+        LOCAL_INCLUDES += [
+            '../third_party/gflags/gen/win/include',
+            '../third_party/gflags/gen/win/include/private',
+        ]
+
+        OS_LIBS += [
+            "amstrmid",
+            "dmoguids",
+            'msdmo',
+            'strmiids',
+            "wmcodecdspuuid",
+        ]
+
+        SOURCES += [
+            '../webrtc/modules/desktop_capture/win/cursor_unittest.cc',
+        ]
+
+    UNIFIED_SOURCES += [
+        '../webrtc/audio/audio_receive_stream_unittest.cc',
+        '../webrtc/call/call_unittest.cc',
+        '../webrtc/common_audio/audio_converter_unittest.cc',
+        '../webrtc/common_audio/audio_ring_buffer_unittest.cc',
+        '../webrtc/common_audio/audio_util_unittest.cc',
+        '../webrtc/common_audio/blocker_unittest.cc',
+        '../webrtc/common_audio/fir_filter_unittest.cc',
+        '../webrtc/common_audio/lapped_transform_unittest.cc',
+        '../webrtc/common_audio/real_fourier_unittest.cc',
+        '../webrtc/common_audio/resampler/push_resampler_unittest.cc',
+        '../webrtc/common_audio/ring_buffer_unittest.cc',
+        '../webrtc/common_audio/swap_queue_unittest.cc',
+        '../webrtc/common_audio/wav_file_unittest.cc',
+        '../webrtc/common_audio/wav_header_unittest.cc',
+        '../webrtc/common_audio/window_generator_unittest.cc',
+        '../webrtc/common_video/i420_buffer_pool_unittest.cc',
+        '../webrtc/common_video/i420_video_frame_unittest.cc',
+    # Needs external resource to run
+    #    '../webrtc/common_video/libyuv/libyuv_unittest.cc',
+    # Needs external resource to run
+    #    '../webrtc/common_video/libyuv/scaler_unittest.cc',
+    # Won't compile as written
+    #    '../webrtc/modules/audio_coding/acm2/acm_neteq_unittest.cc',
+        '../webrtc/modules/audio_coding/acm2/call_statistics_unittest.cc',
+    # Stack overflow
+    #    '../webrtc/modules/audio_coding/acm2/codec_manager_unittest.cc',
+        '../webrtc/modules/audio_coding/acm2/initial_delay_manager_unittest.cc',
+    # Stack overflow
+    #    '../webrtc/modules/audio_coding/acm2/rent_a_codec_unittest.cc',
+        '../webrtc/modules/audio_coding/codecs/cng/audio_encoder_cng_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/audio_coding/codecs/cng/cng_unittest.cc',
+        '../webrtc/modules/audio_coding/codecs/isac/fix/source/filterbanks_unittest.cc',
+        '../webrtc/modules/audio_coding/codecs/isac/fix/source/filters_unittest.cc',
+        '../webrtc/modules/audio_coding/codecs/isac/fix/source/lpc_masking_model_unittest.cc',
+        '../webrtc/modules/audio_coding/codecs/isac/fix/source/transform_unittest.cc',
+        '../webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/audio_coding/codecs/opus/opus_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/audio_coding/codecs/isac/main/source/isac_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/audio_coding/neteq/audio_classifier_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/audio_multi_vector_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/audio_vector_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/background_noise_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/buffer_level_filter_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/comfort_noise_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/decision_logic_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/decoder_database_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/delay_manager_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/delay_peak_detector_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/dsp_helper_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/dtmf_buffer_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/dtmf_tone_generator_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/merge_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/nack_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/neteq_impl_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/audio_coding/neteq/neteq_stereo_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/audio_coding/neteq/neteq_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/normal_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/packet_buffer_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/payload_splitter_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/post_decode_vad_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/random_vector_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/sync_buffer_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/audio_coding/neteq/time_stretch_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/timestamp_scaler_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/tools/audio_loop.cc',
+        '../webrtc/modules/audio_coding/neteq/tools/input_audio_file.cc',
+        '../webrtc/modules/audio_coding/neteq/tools/input_audio_file_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/tools/packet.cc',
+        '../webrtc/modules/audio_coding/neteq/tools/packet_unittest.cc',
+        '../webrtc/modules/audio_coding/neteq/tools/rtp_file_source.cc',
+        '../webrtc/modules/audio_coding/neteq/tools/rtp_generator.cc',
+        '../webrtc/modules/audio_coding/test/target_delay_unittest.cc',
+        '../webrtc/modules/audio_conference_mixer/test/audio_conference_mixer_unittest.cc',
+        '../webrtc/modules/audio_device/fine_audio_buffer_unittest.cc',
+    # Seg faults
+    #    '../webrtc/modules/audio_processing/aec/system_delay_unittest.cc',
+        '../webrtc/modules/audio_processing/agc/agc_manager_direct_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/audio_processing/agc/histogram_unittest.cc',
+        '../webrtc/modules/audio_processing/audio_processing_impl_unittest.cc',
+        '../webrtc/modules/audio_processing/beamformer/array_util_unittest.cc',
+        '../webrtc/modules/audio_processing/beamformer/complex_matrix_unittest.cc',
+        '../webrtc/modules/audio_processing/beamformer/covariance_matrix_generator_unittest.cc',
+        '../webrtc/modules/audio_processing/beamformer/matrix_unittest.cc',
+        '../webrtc/modules/audio_processing/echo_cancellation_impl_unittest.cc',
+        '../webrtc/modules/audio_processing/intelligibility/intelligibility_utils_unittest.cc',
+        '../webrtc/modules/audio_processing/splitting_filter_unittest.cc',
+        '../webrtc/modules/audio_processing/test/test_utils.cc',
+        '../webrtc/modules/audio_processing/transient/dyadic_decimator_unittest.cc',
+        '../webrtc/modules/audio_processing/transient/file_utils.cc',
+    # Requires external files
+    #    '../webrtc/modules/audio_processing/transient/file_utils_unittest.cc',
+        '../webrtc/modules/audio_processing/transient/moving_moments_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/audio_processing/transient/transient_detector_unittest.cc',
+        '../webrtc/modules/audio_processing/transient/transient_suppressor_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/audio_processing/transient/wpd_tree_unittest.cc',
+        '../webrtc/modules/audio_processing/utility/delay_estimator_unittest.cc',
+        '../webrtc/modules/audio_processing/vad/gmm_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/audio_processing/vad/pitch_based_vad_unittest.cc',
+        '../webrtc/modules/audio_processing/vad/pitch_internal_unittest.cc',
+        '../webrtc/modules/audio_processing/vad/pole_zero_filter_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/audio_processing/vad/standalone_vad_unittest.cc',
+        '../webrtc/modules/audio_processing/vad/vad_audio_proc_unittest.cc',
+        '../webrtc/modules/audio_processing/vad/vad_circular_buffer_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/audio_processing/vad/voice_activity_detector_unittest.cc',
+        '../webrtc/modules/bitrate_controller/bitrate_controller_unittest.cc',
+        '../webrtc/modules/bitrate_controller/send_side_bandwidth_estimation_unittest.cc',
+        '../webrtc/modules/desktop_capture/desktop_region_unittest.cc',
+        '../webrtc/modules/desktop_capture/differ_block_unittest.cc',
+        '../webrtc/modules/desktop_capture/differ_unittest.cc',
+    # Stack overflow
+    #    '../webrtc/modules/desktop_capture/mouse_cursor_monitor_unittest.cc',
+    # Stack overflow
+    #    '../webrtc/modules/desktop_capture/screen_capturer_helper_unittest.cc',
+    # Stack overflow
+    #    '../webrtc/modules/desktop_capture/screen_capturer_unittest.cc',
+    # Stack overflow
+    #    '../webrtc/modules/desktop_capture/window_capturer_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/media_file/media_file_unittest.cc',
+        '../webrtc/modules/module_common_types_unittest.cc',
+        '../webrtc/modules/pacing/bitrate_prober_unittest.cc',
+        '../webrtc/modules/pacing/paced_sender_unittest.cc',
+        '../webrtc/modules/pacing/packet_router_unittest.cc',
+        '../webrtc/modules/remote_bitrate_estimator/inter_arrival_unittest.cc',
+    # Test fails
+    #    '../webrtc/modules/remote_bitrate_estimator/overuse_detector_unittest.cc',
+        '../webrtc/modules/remote_bitrate_estimator/rate_statistics_unittest.cc',
+        '../webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time_unittest.cc',
+        '../webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream_unittest.cc',
+        '../webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_unittest_helper.cc',
+        '../webrtc/modules/remote_bitrate_estimator/remote_estimator_proxy_unittest.cc',
+        '../webrtc/modules/remote_bitrate_estimator/send_time_history_unittest.cc',
+        '../webrtc/modules/remote_bitrate_estimator/test/bwe.cc',
+        '../webrtc/modules/remote_bitrate_estimator/test/bwe_test_framework.cc',
+    # Requires external files
+    #    '../webrtc/modules/remote_bitrate_estimator/test/bwe_test_framework_unittest.cc',
+        '../webrtc/modules/remote_bitrate_estimator/test/estimators/nada.cc',
+        '../webrtc/modules/remote_bitrate_estimator/test/estimators/nada_unittest.cc',
+        '../webrtc/modules/remote_bitrate_estimator/test/estimators/remb.cc',
+        '../webrtc/modules/remote_bitrate_estimator/test/estimators/send_side.cc',
+        '../webrtc/modules/remote_bitrate_estimator/test/estimators/tcp.cc',
+        '../webrtc/modules/remote_bitrate_estimator/test/metric_recorder.cc',
+        '../webrtc/modules/remote_bitrate_estimator/test/metric_recorder_unittest.cc',
+        '../webrtc/modules/remote_bitrate_estimator/test/packet_sender.cc',
+        '../webrtc/modules/rtp_rtcp/source/byte_io_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/fec_receiver_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/fec_test_helper.cc',
+        '../webrtc/modules/rtp_rtcp/source/h264_bitstream_parser_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/h264_sps_parser_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/nack_rtx_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/packet_loss_stats_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/producer_fec_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/receive_statistics_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/remote_ntp_time_estimator_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/bye_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/dlrr_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/extended_jitter_report_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/voip_metric_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_utility_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtp_fec_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtp_format_vp8_test_helper.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtp_format_vp8_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtp_format_vp9_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtp_header_extension_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtp_packet_history_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtp_payload_registry_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/time_util_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/vp8_partition_aggregator_unittest.cc',
+        '../webrtc/modules/utility/source/audio_frame_operations_unittest.cc',
+        '../webrtc/modules/utility/source/process_thread_impl_unittest.cc',
+        '../webrtc/modules/video_capture/test/video_capture_unittest.cc',
+        '../webrtc/modules/video_coding/codecs/test/packet_manipulator.cc',
+        '../webrtc/modules/video_coding/codecs/test/predictive_packet_manipulator.cc',
+        '../webrtc/modules/video_coding/codecs/test/stats.cc',
+        '../webrtc/modules/video_coding/codecs/test/videoprocessor.cc',
+        '../webrtc/modules/video_coding/decoding_state_unittest.cc',
+        '../webrtc/modules/video_coding/media_optimization_unittest.cc',
+        '../webrtc/modules/video_coding/qm_select_unittest.cc',
+        '../webrtc/modules/video_coding/receiver_unittest.cc',
+        '../webrtc/modules/video_coding/session_info_unittest.cc',
+        '../webrtc/modules/video_coding/test/stream_generator.cc',
+        '../webrtc/modules/video_coding/timing_unittest.cc',
+        '../webrtc/modules/video_coding/utility/quality_scaler_unittest.cc',
+        '../webrtc/modules/video_coding/video_coding_robustness_unittest.cc',
+        '../webrtc/modules/video_coding/video_receiver_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/video_coding/video_sender_unittest.cc',
+    # Requires external files
+    #    '../webrtc/modules/video_processing/test/video_processing_unittest.cc',
+        '../webrtc/system_wrappers/source/aligned_array_unittest.cc',
+        '../webrtc/system_wrappers/source/aligned_malloc_unittest.cc',
+        '../webrtc/system_wrappers/source/clock_unittest.cc',
+        '../webrtc/system_wrappers/source/condition_variable_unittest.cc',
+        '../webrtc/system_wrappers/source/critical_section_unittest.cc',
+        '../webrtc/system_wrappers/source/data_log_c_helpers_unittest.c',
+        '../webrtc/system_wrappers/source/data_log_helpers_unittest.cc',
+    # Test failures
+    #    '../webrtc/system_wrappers/source/data_log_unittest.cc',
+        '../webrtc/system_wrappers/source/data_log_unittest_disabled.cc',
+        '../webrtc/system_wrappers/source/field_trial_default.cc',
+    # Test failures
+    #   '../webrtc/system_wrappers/source/logging_unittest.cc',
+        '../webrtc/system_wrappers/source/ntp_time_unittest.cc',
+        '../webrtc/system_wrappers/source/rtp_to_ntp_unittest.cc',
+        '../webrtc/system_wrappers/source/scoped_vector_unittest.cc',
+        '../webrtc/system_wrappers/source/stl_util_unittest.cc',
+        '../webrtc/system_wrappers/source/stringize_macros_unittest.cc',
+        '../webrtc/test/fake_texture_frame.cc',
+        '../webrtc/test/field_trial.cc',
+        '../webrtc/test/frame_generator.cc',
+        '../webrtc/test/frame_generator_capturer.cc',
+        '../webrtc/test/frame_generator_unittest.cc',
+        '../webrtc/test/rtcp_packet_parser.cc',
+        '../webrtc/test/rtp_file_reader.cc',
+    # Requires external files
+    #    '../webrtc/test/rtp_file_reader_unittest.cc',
+        '../webrtc/test/rtp_file_writer_unittest.cc',
+        '../webrtc/test/test_main.cc',
+        '../webrtc/test/testsupport/always_passing_unittest.cc',
+        '../webrtc/test/testsupport/fileutils.cc',
+        '../webrtc/test/testsupport/frame_reader.cc',
+        '../webrtc/test/testsupport/frame_reader_unittest.cc',
+        '../webrtc/test/testsupport/frame_writer.cc',
+        '../webrtc/test/testsupport/metrics/video_metrics.cc',
+    # Requires external files
+    #    '../webrtc/test/testsupport/metrics/video_metrics_unittest.cc',
+        '../webrtc/test/testsupport/packet_reader.cc',
+        '../webrtc/test/testsupport/packet_reader_unittest.cc',
+        '../webrtc/test/testsupport/trace_to_stderr.cc',
+        '../webrtc/test/vcm_capturer.cc',
+        '../webrtc/test/video_capturer.cc',
+        '../webrtc/video/call_stats_unittest.cc',
+        '../webrtc/video/encoder_state_feedback_unittest.cc',
+        '../webrtc/video/payload_router_unittest.cc',
+        '../webrtc/video/report_block_stats_unittest.cc',
+        '../webrtc/video/stream_synchronization_unittest.cc',
+        '../webrtc/video/video_capture_input_unittest.cc',
+        '../webrtc/video/video_decoder_unittest.cc',
+        '../webrtc/video/vie_codec_unittest.cc',
+        '../webrtc/video/vie_remb_unittest.cc',
+        '../webrtc/voice_engine/channel_unittest.cc',
+        '../webrtc/voice_engine/network_predictor_unittest.cc',
+        '../webrtc/voice_engine/transmit_mixer_unittest.cc',
+        '../webrtc/voice_engine/utility_unittest.cc',
+        '../webrtc/voice_engine/voe_audio_processing_unittest.cc',
+    # Fails VoEBaseTest.GetVersion!
+    #    '../webrtc/voice_engine/voe_base_unittest.cc',
+        'FakeIPC.cpp',
+    ]
+
+    # Unable to use unified build due to multiply defined symbols
+    SOURCES += [
+        '../webrtc/audio/audio_send_stream_unittest.cc',
+        '../webrtc/audio/audio_state_unittest.cc',
+        '../webrtc/modules/audio_processing/beamformer/nonlinear_beamformer_unittest.cc',
+        '../webrtc/modules/audio_processing/intelligibility/intelligibility_enhancer_unittest.cc',
+        '../webrtc/modules/audio_processing/transient/wpd_node_unittest.cc',
+        '../webrtc/modules/remote_bitrate_estimator/test/bwe_unittest.cc',
+        '../webrtc/modules/remote_bitrate_estimator/transport_feedback_adapter_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/app_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/compound_packet_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/nack_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/pli_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/receiver_report_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/report_block_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/rrtr_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/sli_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbn_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbr_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtcp_packet_unittest.cc',
+        '../webrtc/modules/video_coding/codecs/test/packet_manipulator_unittest.cc',
+        '../webrtc/modules/video_coding/codecs/test/stats_unittest.cc',
+        '../webrtc/modules/video_coding/codecs/test/videoprocessor_unittest.cc',
+        '../webrtc/test/rtp_file_writer.cc',
+        '../webrtc/test/testsupport/frame_writer_unittest.cc',
+        '../webrtc/video/overuse_frame_detector_unittest.cc',
+        '../webrtc/video/video_encoder_unittest.cc',
+        '../webrtc/voice_engine/voe_codec_unittest.cc',
+        '../webrtc/voice_engine/voe_network_unittest.cc',
+        '../webrtc/voice_engine/voice_engine_fixture.cc',
+    ]
+
+    if CONFIG['GNU_CXX']:
+        CXXFLAGS += [
+            '-Wno-error=shadow',
+            '-Wno-inconsistent-missing-override',
+            '-Wno-overloaded-virtual',
+        ]
+
+    if CONFIG['_MSC_VER']:
+        # This is intended as a temporary workaround to enable warning free building
+        # with VS2015.
+        # reinterpret_cast': conversion from 'DWORD' to 'HANDLE' of greater size
+        CXXFLAGS += ['-wd4312']
+
+    Program('webrtc-gtest')
