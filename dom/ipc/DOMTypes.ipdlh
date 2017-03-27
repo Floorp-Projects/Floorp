@@ -16,6 +16,11 @@ using struct mozilla::void_t
 using struct mozilla::SerializedStructuredCloneBuffer
   from "ipc/IPCMessageUtils.h";
 
+using LayoutDeviceIntRect from "Units.h";
+using DesktopIntRect from "Units.h";
+using DesktopToLayoutDeviceScale from "Units.h";
+using CSSToLayoutDeviceScale from "Units.h";
+
 namespace mozilla {
 namespace dom {
 
@@ -176,6 +181,17 @@ struct IPCDataTransferItem
 struct IPCDataTransfer
 {
   IPCDataTransferItem[] items;
+};
+
+struct ScreenDetails {
+  LayoutDeviceIntRect rect;
+  DesktopIntRect rectDisplayPix;
+  LayoutDeviceIntRect availRect;
+  DesktopIntRect availRectDisplayPix;
+  int32_t pixelDepth;
+  int32_t colorDepth;
+  DesktopToLayoutDeviceScale contentsScaleFactor;
+  CSSToLayoutDeviceScale defaultCSSScaleFactor;
 };
 
 } // namespace dom

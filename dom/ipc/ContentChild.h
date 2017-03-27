@@ -242,13 +242,6 @@ public:
   virtual PParentToChildStreamChild* AllocPParentToChildStreamChild() override;
   virtual bool DeallocPParentToChildStreamChild(PParentToChildStreamChild*) override;
 
-  virtual PScreenManagerChild*
-  AllocPScreenManagerChild(uint32_t* aNumberOfScreens,
-                           float* aSystemDefaultScale,
-                           bool* aSuccess) override;
-
-  virtual bool DeallocPScreenManagerChild(PScreenManagerChild*) override;
-
   virtual PPSMContentDownloaderChild*
   AllocPPSMContentDownloaderChild( const uint32_t& aCertType) override;
 
@@ -476,6 +469,9 @@ public:
   virtual mozilla::ipc::IPCResult RecvDeactivate(PBrowserChild* aTab) override;
 
   virtual mozilla::ipc::IPCResult RecvParentActivated(PBrowserChild* aTab, const bool& aActivated) override;
+
+  mozilla::ipc::IPCResult
+  RecvRefreshScreens(nsTArray<ScreenDetails>&& aScreens) override;
 
   // Get the directory for IndexedDB files. We query the parent for this and
   // cache the value

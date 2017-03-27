@@ -39,13 +39,49 @@ typedef struct {
   gint32 maxpos;
 } GtkWidgetState;
 
+/**
+ * A size in the same GTK pixel units as GtkBorder and GdkRectangle.
+ */
+struct MozGtkSize {
+  gint width;
+  gint height;
+
+  MozGtkSize& operator+=(const GtkBorder& aBorder)
+  {
+    width += aBorder.left + aBorder.right;
+    height += aBorder.top + aBorder.bottom;
+    return *this;
+  }
+  MozGtkSize operator+(const GtkBorder& aBorder) const
+  {
+    MozGtkSize result = *this;
+    return result += aBorder;
+  }
+  void Include(MozGtkSize aOther)
+  {
+    width = std::max(width, aOther.width);
+    height = std::max(height, aOther.height);
+  }
+  void Rotate()
+  {
+    gint tmp = width;
+    width = height;
+    height = tmp;
+  }
+};
+
 typedef struct {
-  gint slider_width;
-  gint trough_border;
-  gint stepper_size;
-  gint stepper_spacing;
-  gint min_slider_size;
-} MozGtkScrollbarMetrics;
+  bool initialized;
+  struct {
+    MozGtkSize scrollbar;
+    MozGtkSize thumb;
+    MozGtkSize button;
+  } size;
+  struct {
+    GtkBorder scrollbar;
+    GtkBorder track;
+  } border;
+} ScrollbarGTKMetrics;
 
 typedef enum {
   MOZ_GTK_STEPPER_DOWN        = 1 << 0,
@@ -66,9 +102,6 @@ typedef enum {
   /* the selected tab */
   MOZ_GTK_TAB_SELECTED        = 1 << 10
 } GtkTabFlags;
-
-/* function type for moz_gtk_enable_style_props */
-typedef gint (*style_prop_t)(GtkStyle*, const gchar*, gint);
 
 /*** result/error codes ***/
 #define MOZ_GTK_SUCCESS 0
@@ -272,13 +305,9 @@ typedef enum {
 gint moz_gtk_init();
 
 /**
- * Enable GTK+ 1.2.9+ theme enhancements. You must provide a pointer
- * to the GTK+ 1.2.9+ function "gtk_style_get_prop_experimental".
- * styleGetProp:  pointer to gtk_style_get_prop_experimental
- * 
- * returns: MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ * Updates the drawing library when the theme changes.
  */
-gint moz_gtk_enable_style_props(style_prop_t styleGetProp);
+void moz_gtk_refresh();
 
 /**
  * Perform cleanup of the drawing library. You should call this function
@@ -432,13 +461,10 @@ gint
 moz_gtk_get_scalethumb_metrics(GtkOrientation orient, gint* thumb_length, gint* thumb_height);
 
 /**
- * Get the desired metrics for a GtkScrollbar
- * metrics:          [IN]  struct which will contain the metrics
- *
- * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ * Get the metrics in GTK pixels for a scrollbar.
  */
-gint
-moz_gtk_get_scrollbar_metrics(MozGtkScrollbarMetrics* metrics);
+const ScrollbarGTKMetrics*
+GetScrollbarMetrics(GtkOrientation aOrientation);
 
 /**
  * Get the desired size of a dropdown arrow button
@@ -518,29 +544,10 @@ gint moz_gtk_get_menu_separator_height(gint* size);
 gint moz_gtk_splitter_get_metrics(gint orientation, gint* size);
 
 /**
- * Retrieve an actual GTK scrollbar widget for style analysis. It will not
- * be modified.
- */
-GtkWidget* moz_gtk_get_scrollbar_widget(void);
-
-/**
  * Get the YTHICKNESS of a tab (notebook extension).
  */
 gint
 moz_gtk_get_tab_thickness(WidgetNodeType aNodeType);
-
-/**
- * Get a boolean which indicates whether the theme draws scrollbar buttons.
- * If TRUE, draw scrollbar buttons.
- */
-gboolean moz_gtk_has_scrollbar_buttons(void);
-
-/**
- * Get minimum widget size as sum of margin, padding, border and min-width,
- * min-height.
- */
-void moz_gtk_get_widget_min_size(WidgetNodeType aGtkWidgetType, int* width,
-                                 int* height);
 
 #if (MOZ_WIDGET_GTK == 2)
 #ifdef __cplusplus

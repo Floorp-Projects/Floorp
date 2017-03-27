@@ -18,7 +18,7 @@
 
 #include <fontconfig/fontconfig.h>
 #include "gfxPlatformGtk.h"
-#include "nsScreenGtk.h"
+#include "ScreenHelperGTK.h"
 
 #include "gtkdrawing.h"
 #include "nsStyleConsts.h"
@@ -777,11 +777,11 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
             aResult = threshold;
         }
         break;
-    case eIntID_ScrollArrowStyle:
-        moz_gtk_init();
-        aResult =
-            ConvertGTKStepperStyleToMozillaScrollArrowStyle(moz_gtk_get_scrollbar_widget());
+    case eIntID_ScrollArrowStyle: {
+        GtkWidget* scrollbar = GetWidget(MOZ_GTK_SCROLLBAR_HORIZONTAL);
+        aResult = ConvertGTKStepperStyleToMozillaScrollArrowStyle(scrollbar);
         break;
+    }
     case eIntID_ScrollSliderStyle:
         aResult = eScrollThumbStyle_Proportional;
         break;
@@ -925,7 +925,7 @@ GetSystemFontInfo(GtkWidget *aWidget,
     // Scale fonts up on HiDPI displays.
     // This would be done automatically with cairo, but we manually manage
     // the display scale for platform consistency.
-    size *= nsScreenGtk::GetGtkMonitorScaleFactor();
+    size *= ScreenHelperGTK::GetGTKMonitorScaleFactor();
 
     // |size| is now pixels
 
@@ -1445,6 +1445,7 @@ void
 nsLookAndFeel::RefreshImpl()
 {
     nsXPLookAndFeel::RefreshImpl();
+    moz_gtk_refresh();
 
     mDefaultFontCached = false;
     mButtonFontCached = false;

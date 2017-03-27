@@ -538,8 +538,8 @@ impl Parse for Number {
 impl Number {
     fn parse_with_minimum(input: &mut Parser, min: CSSFloat) -> Result<Number, ()> {
         match parse_number(input) {
-            Ok(value) if value < min => Err(()),
-            value => value.map(Number),
+            Ok(value) if value >= min => Ok(Number(value)),
+            _ => Err(()),
         }
     }
 
@@ -585,13 +585,12 @@ pub enum NumberOrPercentage {
 no_viewport_percentage!(NumberOrPercentage);
 
 impl Parse for NumberOrPercentage {
-    fn parse(context: &ParserContext, input: &mut Parser) -> Result<Self, ()> {
-        if let Ok(per) = input.try(|input| Percentage::parse(context, input)) {
+    fn parse(_context: &ParserContext, input: &mut Parser) -> Result<Self, ()> {
+        if let Ok(per) = input.try(Percentage::parse_non_negative) {
             return Ok(NumberOrPercentage::Percentage(per));
         }
 
-        let num = try!(Number::parse_non_negative(input));
-        Ok(NumberOrPercentage::Number(num))
+        Number::parse_non_negative(input).map(NumberOrPercentage::Number)
     }
 }
 
@@ -980,18 +979,18 @@ impl ToComputedValue for SVGPaintKind {
 }
 
 /// <length> | <percentage> | <number>
-pub type LoPOrNumber = Either<LengthOrPercentage, Number>;
+pub type LengthOrPercentageOrNumber = Either<LengthOrPercentage, Number>;
 
-impl LoPOrNumber {
+impl LengthOrPercentageOrNumber {
     /// parse a <length-percentage> | <number> enforcing that the contents aren't negative
     pub fn parse_non_negative(_: &ParserContext, input: &mut Parser) -> Result<Self, ()> {
-        if let Ok(lop) = input.try(LengthOrPercentage::parse_non_negative) {
-            Ok(Either::First(lop))
-        } else if let Ok(num) = input.try(Number::parse_non_negative) {
-            Ok(Either::Second(num))
-        } else {
-            Err(())
+        // NB: Parse numbers before Lengths so we are consistent about how to
+        // recognize and serialize "0".
+        if let Ok(num) = input.try(Number::parse_non_negative) {
+            return Ok(Either::Second(num))
         }
+
+        LengthOrPercentage::parse_non_negative(input).map(Either::First)
     }
 }
 

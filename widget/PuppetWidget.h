@@ -443,13 +443,10 @@ public:
     explicit PuppetScreen(void* nativeScreen);
     ~PuppetScreen();
 
-    NS_IMETHOD GetId(uint32_t* aId) override;
     NS_IMETHOD GetRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight) override;
     NS_IMETHOD GetAvailRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight) override;
     NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth) override;
     NS_IMETHOD GetColorDepth(int32_t* aColorDepth) override;
-    NS_IMETHOD GetRotation(uint32_t* aRotation) override;
-    NS_IMETHOD SetRotation(uint32_t  aRotation) override;
 };
 
 class PuppetScreenManager final : public nsIScreenManager

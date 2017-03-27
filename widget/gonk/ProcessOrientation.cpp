@@ -21,7 +21,6 @@
 #include "mozilla/Unused.h"
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
-#include "OrientationObserver.h"
 #include "ProcessOrientation.h"
 #include "mozilla/HalSensor.h"
 #include "math.h"

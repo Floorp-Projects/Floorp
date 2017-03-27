@@ -1172,12 +1172,7 @@ NPBool nsPluginInstanceOwner::ConvertPointNoPuppet(nsIWidget *widget,
   double scaleFactor = double(nsPresContext::AppUnitsPerCSSPixel())/
     presContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
 
-  nsCOMPtr<nsIScreenManager> screenMgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
-  if (!screenMgr) {
-    return false;
-  }
-  nsCOMPtr<nsIScreen> screen;
-  screenMgr->ScreenForNativeWidget(widget->GetNativeData(NS_NATIVE_WINDOW), getter_AddRefs(screen));
+  nsCOMPtr<nsIScreen> screen = widget->GetWidgetScreen();
   if (!screen) {
     return false;
   }

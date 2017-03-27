@@ -230,7 +230,7 @@ IndiceWrapperRust::GetIndice(size_t aIndex, Index::Indice& aIndice) const
 MP4Metadata::MP4Metadata(Stream* aSource)
  : mStagefright(MakeUnique<MP4MetadataStagefright>(aSource))
  , mRust(MakeUnique<MP4MetadataRust>(aSource))
- , mPreferRust(false)
+ , mPreferRust(MediaPrefs::EnableRustMP4Parser())
  , mReportedAudioTrackTelemetry(false)
  , mReportedVideoTrackTelemetry(false)
 #ifndef RELEASE_OR_BETA

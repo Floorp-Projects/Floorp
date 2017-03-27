@@ -408,33 +408,6 @@ KeyframeEffectReadOnly::CompositeValue(
 }
 
 StyleAnimationValue
-KeyframeEffectReadOnly::ResolveBaseStyle(nsCSSPropertyID aProperty,
-                                         nsStyleContext* aStyleContext)
-{
-  StyleAnimationValue result;
-  if (mBaseStyleValues.Get(aProperty, &result)) {
-    return result;
-  }
-
-  RefPtr<nsStyleContext> styleContextWithoutAnimation =
-    aStyleContext->PresContext()->StyleSet()->AsGecko()->
-      ResolveStyleByRemovingAnimation(mTarget->mElement,
-                                      aStyleContext,
-                                      eRestyle_AllHintsWithAnimations);
-  DebugOnly<bool> success =
-    StyleAnimationValue::ExtractComputedValue(aProperty,
-                                              styleContextWithoutAnimation,
-                                              result);
-
-  MOZ_ASSERT(success, "Should be able to extract computed animation value");
-  MOZ_ASSERT(!result.IsNull(), "Should have a valid StyleAnimationValue");
-
-  mBaseStyleValues.Put(aProperty, result);
-
-  return result;
-}
-
-StyleAnimationValue
 KeyframeEffectReadOnly::GetUnderlyingStyle(
   nsCSSPropertyID aProperty,
   const RefPtr<AnimValuesStyleRule>& aAnimationRule)
@@ -490,16 +463,50 @@ KeyframeEffectReadOnly::EnsureBaseStyles(
 
   mBaseStyleValues.Clear();
 
+  RefPtr<nsStyleContext> cachedBaseStyleContext;
+
   for (const AnimationProperty& property : aProperties) {
     for (const AnimationPropertySegment& segment : property.mSegments) {
-      if (segment.HasReplacableValues()) {
+      if (segment.HasReplaceableValues()) {
         continue;
       }
 
-      Unused << ResolveBaseStyle(property.mProperty, aStyleContext);
+      EnsureBaseStyle(property.mProperty,
+                      aStyleContext,
+                      cachedBaseStyleContext);
       break;
     }
   }
+}
+
+void
+KeyframeEffectReadOnly::EnsureBaseStyle(
+  nsCSSPropertyID aProperty,
+  nsStyleContext* aStyleContext,
+  RefPtr<nsStyleContext>& aCachedBaseStyleContext)
+{
+  if (mBaseStyleValues.Contains(aProperty)) {
+    return;
+  }
+
+  if (!aCachedBaseStyleContext) {
+    aCachedBaseStyleContext =
+      aStyleContext->PresContext()->StyleSet()->AsGecko()->
+        ResolveStyleByRemovingAnimation(mTarget->mElement,
+                                        aStyleContext,
+                                        eRestyle_AllHintsWithAnimations);
+  }
+
+  StyleAnimationValue result;
+  DebugOnly<bool> success =
+    StyleAnimationValue::ExtractComputedValue(aProperty,
+                                              aCachedBaseStyleContext,
+                                              result);
+
+  MOZ_ASSERT(success, "Should be able to extract computed animation value");
+  MOZ_ASSERT(!result.IsNull(), "Should have a valid StyleAnimationValue");
+
+  mBaseStyleValues.Put(aProperty, result);
 }
 
 void
@@ -1653,7 +1660,7 @@ KeyframeEffectReadOnly::CalculateCumulativeChangeHint(
       // we can't throttle animations which will not cause any layout changes
       // on invisible elements because we can't calculate the change hint for
       // such properties until we compose it.
-      if (!segment.HasReplacableValues()) {
+      if (!segment.HasReplaceableValues()) {
         mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
         return;
       }

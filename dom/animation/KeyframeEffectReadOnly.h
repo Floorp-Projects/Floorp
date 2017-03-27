@@ -65,18 +65,18 @@ struct AnimationPropertySegment
   dom::CompositeOperation mFromComposite = dom::CompositeOperation::Replace;
   dom::CompositeOperation mToComposite = dom::CompositeOperation::Replace;
 
-  bool HasReplacableValues() const
+  bool HasReplaceableValues() const
   {
-    return HasReplacableFromValue() && HasReplacableToValue();
+    return HasReplaceableFromValue() && HasReplaceableToValue();
   }
 
-  bool HasReplacableFromValue() const
+  bool HasReplaceableFromValue() const
   {
     return !mFromValue.IsNull() &&
            mFromComposite == dom::CompositeOperation::Replace;
   }
 
-  bool HasReplacableToValue() const
+  bool HasReplaceableToValue() const
   {
     return !mToValue.IsNull() &&
            mToComposite == dom::CompositeOperation::Replace;
@@ -417,9 +417,14 @@ protected:
     // FIXME: Bug 1311257: Support missing keyframes.
   }
 
-  // Returns the base style resolved by |aStyleContext| for |aProperty|.
-  StyleAnimationValue ResolveBaseStyle(nsCSSPropertyID aProperty,
-                                       nsStyleContext* aStyleContext);
+  // If no base style is already stored for |aProperty|, resolves the base style
+  // for |aProperty| using |aStyleContext| and stores it in mBaseStyleValues.
+  // If |aCachedBaseStyleContext| is non-null, it will be used, otherwise the
+  // base style context will be resolved and stored in
+  // |aCachedBaseStyleContext|.
+  void EnsureBaseStyle(nsCSSPropertyID aProperty,
+                       nsStyleContext* aStyleContext,
+                       RefPtr<nsStyleContext>& aCachedBaseStyleContext);
 
   Maybe<OwningAnimationTarget> mTarget;
 

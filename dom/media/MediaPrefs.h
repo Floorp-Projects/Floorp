@@ -170,6 +170,8 @@ private:
   DECL_MEDIA_PREF("media.rust.test_mode",                     RustTestMode, bool, false);
 #endif
 
+  DECL_MEDIA_PREF("media.rust.mp4parser",                     EnableRustMP4Parser, bool, false);
+
 public:
   // Manage the singleton:
   static MediaPrefs& GetSingleton();

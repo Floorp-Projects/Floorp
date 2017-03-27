@@ -24,6 +24,8 @@
 #include "GeckoProfiler.h"
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
+#include "ScreenHelperWin.h"
+#include "mozilla/widget/ScreenManager.h"
 
 // These are two messages that the code in winspool.drv on Windows 7 explicitly
 // waits for while it is pumping other Windows messages, during display of the
@@ -246,6 +248,12 @@ nsAppShell::Init()
                             0, 0, 0, 10, 10, HWND_MESSAGE, nullptr, module,
                             nullptr);
   NS_ENSURE_STATE(mEventWnd);
+
+  if (XRE_IsParentProcess()) {
+    ScreenManager& screenManager = ScreenManager::GetSingleton();
+    screenManager.SetHelper(mozilla::MakeUnique<ScreenHelperWin>());
+    ScreenHelperWin::RefreshScreens();
+  }
 
   return nsBaseAppShell::Init();
 }
