@@ -31,7 +31,6 @@
 #include "nsIDOMText.h"
 #include "nsIDocument.h"
 #include "nsIEditor.h"
-#include "nsIHTMLObjectResizeListener.h"
 #include "nsIHTMLObjectResizer.h"
 #include "nsIPresShell.h"
 #include "nsISupportsUtils.h"
@@ -491,11 +490,6 @@ HTMLEditor::HideShadowAndInfo()
 nsresult
 HTMLEditor::StartResizing(nsIDOMElement* aHandle)
 {
-  // First notify the listeners if any
-  for (auto& listener : mObjectResizeEventListeners) {
-    listener->OnStartResizing(static_cast<nsIDOMElement*>(GetAsDOMNode(mResizedObject)));
-  }
-
   mIsResizing = true;
   mActivatedHandle = do_QueryInterface(aHandle);
   NS_ENSURE_STATE(mActivatedHandle || !aHandle);
@@ -970,12 +964,6 @@ HTMLEditor::SetFinalSize(int32_t aX,
                                        EmptyString());
     }
   }
-  // finally notify the listeners if any
-  for (auto& listener : mObjectResizeEventListeners) {
-    listener->OnEndResizing(static_cast<nsIDOMElement*>(GetAsDOMNode(mResizedObject)),
-                            mResizedObjectWidth, mResizedObjectHeight, width,
-                            height);
-  }
 
   // keep track of that size
   mResizedObjectWidth  = width;
@@ -1003,35 +991,6 @@ NS_IMETHODIMP
 HTMLEditor::SetObjectResizingEnabled(bool aObjectResizingEnabled)
 {
   mIsObjectResizingEnabled = aObjectResizingEnabled;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLEditor::AddObjectResizeEventListener(nsIHTMLObjectResizeListener* aListener)
-{
-  NS_ENSURE_ARG_POINTER(aListener);
-  if (mObjectResizeEventListeners.Contains(aListener)) {
-    /* listener already registered */
-    NS_ASSERTION(false,
-                 "trying to register an already registered object resize event listener");
-    return NS_OK;
-  }
-  mObjectResizeEventListeners.AppendElement(*aListener);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLEditor::RemoveObjectResizeEventListener(
-              nsIHTMLObjectResizeListener* aListener)
-{
-  NS_ENSURE_ARG_POINTER(aListener);
-  if (!mObjectResizeEventListeners.Contains(aListener)) {
-    /* listener was not registered */
-    NS_ASSERTION(false,
-                 "trying to remove an object resize event listener that was not already registered");
-    return NS_OK;
-  }
-  mObjectResizeEventListeners.RemoveElement(aListener);
   return NS_OK;
 }
 
