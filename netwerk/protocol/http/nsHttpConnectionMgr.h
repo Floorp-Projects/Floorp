@@ -221,7 +221,13 @@ private:
 
         RefPtr<nsHttpConnectionInfo> mConnInfo;
         nsTArray<RefPtr<PendingTransactionInfo> > mUrgentStartQ;// the urgent start transaction queue
-        nsTArray<RefPtr<PendingTransactionInfo> > mPendingQ;    // pending transaction queue
+
+        // This table provides a mapping from top level outer content window id
+        // to a queue of pending transaction information.
+        // Note that the window id could be 0 if the http request
+        // is initialized without a window.
+        nsClassHashtable<nsUint64HashKey,
+                         nsTArray<RefPtr<PendingTransactionInfo>>> mPendingTransactionTable;
         nsTArray<RefPtr<nsHttpConnection> >  mActiveConns; // active connections
         nsTArray<RefPtr<nsHttpConnection> >  mIdleConns;   // idle persistent connections
         nsTArray<nsHalfOpenSocket*>  mHalfOpens;   // half open connections
@@ -269,6 +275,33 @@ private:
         void RecordIPFamilyPreference(uint16_t family);
         // Resets all flags to their default values
         void ResetIPFamilyPreference();
+
+        // Return the count of pending transactions for all window ids.
+        size_t PendingQLength() const;
+
+        // Add a transaction information into the pending queue in
+        // |mPendingTransactionTable| according to the transaction's
+        // top level outer content window id.
+        void InsertTransaction(PendingTransactionInfo *info);
+
+        // Append transactions to the |result| whose window id
+        // is equal to |windowId|.
+        // NOTE: maxCount == 0 will get all transactions in the queue.
+        void AppendPendingQForFocusedWindow(
+            uint64_t windowId,
+            nsTArray<RefPtr<PendingTransactionInfo>> &result,
+            uint32_t maxCount = 0);
+
+        // Append transactions whose window id isn't equal to |windowId|.
+        // NOTE: windowId == 0 will get all transactions for both
+        // focused and non-focused windows.
+        void AppendPendingQForNonFocusedWindows(
+            uint64_t windowId,
+            nsTArray<RefPtr<PendingTransactionInfo>> &result,
+            uint32_t maxCount = 0);
+
+        // Remove the empty pendingQ in |mPendingTransactionTable|.
+        void RemoveEmptyPendingQ();
     };
 
 public:
@@ -327,8 +360,14 @@ private:
 
         void PrintDiagnostics(nsCString &log);
     private:
+        // To find out whether |mTransaction| is still in the connection entry's
+        // pending queue. If the transaction is found and |removeWhenFound| is
+        // true, the transaction will be removed from the pending queue.
+        already_AddRefed<PendingTransactionInfo>
+        FindTransactionHelper(bool removeWhenFound);
+
         nsConnectionEntry              *mEnt;
-        RefPtr<nsAHttpTransaction>   mTransaction;
+        RefPtr<nsAHttpTransaction>     mTransaction;
         bool                           mDispatchedMTransaction;
         nsCOMPtr<nsISocketTransport>   mSocketTransport;
         nsCOMPtr<nsIAsyncOutputStream> mStreamOut;
@@ -419,10 +458,14 @@ private:
 
     MOZ_MUST_USE bool ProcessPendingQForEntry(nsConnectionEntry *,
                                               bool considerAll);
-    void DispatchPendingQ(nsTArray<RefPtr<PendingTransactionInfo>> &pendingQ,
+    bool DispatchPendingQ(nsTArray<RefPtr<PendingTransactionInfo>> &pendingQ,
                                    nsConnectionEntry *ent,
-                                   bool &dispatchedSuccessfully,
                                    bool considerAll);
+
+    // Given the connection entry, return the available count for creating
+    // new connections. Return 0 if the active connection count is
+    // exceeded |mMaxPersistConnsPerProxy| or |mMaxPersistConnsPerHost|.
+    uint32_t AvailableNewConnectionCount(nsConnectionEntry * ent);
     bool     AtActiveConnectionLimit(nsConnectionEntry *, uint32_t caps);
     MOZ_MUST_USE nsresult TryDispatchTransaction(nsConnectionEntry *ent,
                                                  bool onlyReusedConnection,
@@ -483,6 +526,14 @@ private:
     MOZ_MUST_USE nsresult PostEvent(nsConnEventHandler  handler,
                                     int32_t             iparam = 0,
                                     ARefBase            *vparam = nullptr);
+
+    // Used to close all transactions in the |pendingQ| with the given |reason|.
+    // Note that the |pendingQ| will be also cleared.
+    void CancelTransactionsHelper(
+        nsTArray<RefPtr<PendingTransactionInfo>> &pendingQ,
+        const nsHttpConnectionInfo *ci,
+        const nsConnectionEntry *ent,
+        nsresult reason);
 
     // message handlers
     void OnMsgShutdown             (int32_t, ARefBase *);
