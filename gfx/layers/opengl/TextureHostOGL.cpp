@@ -204,11 +204,10 @@ void
 TextureImageTextureSourceOGL::SetTextureSourceProvider(TextureSourceProvider* aProvider)
 {
   GLContext* newGL = aProvider ? aProvider->GetGLContext() : nullptr;
-  if (!mGL) {
-    mGL = newGL;
-  } else if (mGL != newGL) {
+  if (!newGL || mGL != newGL) {
     DeallocateDeviceData();
   }
+  mGL = newGL;
 }
 
 gfx::IntSize
