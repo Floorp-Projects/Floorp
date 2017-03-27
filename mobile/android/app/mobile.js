@@ -99,9 +99,9 @@ pref("network.protocol-handler.warn-external.mailto", false);
 pref("network.protocol-handler.warn-external.vnd.youtube", false);
 
 /* http prefs */
-pref("network.http.pipelining", true);
-pref("network.http.pipelining.ssl", true);
-pref("network.http.proxy.pipelining", true);
+pref("network.http.pipelining", false);
+pref("network.http.pipelining.ssl", false);
+pref("network.http.proxy.pipelining", false);
 pref("network.http.pipelining.maxrequests" , 6);
 pref("network.http.keep-alive.timeout", 109);
 pref("network.http.max-connections", 20);
