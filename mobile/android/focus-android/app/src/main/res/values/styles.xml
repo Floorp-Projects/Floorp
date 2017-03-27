@@ -32,6 +32,10 @@
         <item name="colorAccent">#FF00A4DC</item>
     </style>
 
+    <style name="InfoTheme" parent="SettingsTheme">
+        <item name="android:colorBackground">?attr/colorPrimary</item>
+    </style>
+
     <style name="PopupMenu" parent="@style/Widget.AppCompat.Light.PopupMenu">
         <item name="overlapAnchor">true</item>
     </style>

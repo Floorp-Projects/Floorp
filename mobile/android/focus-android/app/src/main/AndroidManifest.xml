@@ -49,7 +49,7 @@
             android:label="@string/menu_settings" />
 
         <activity android:name=".activity.InfoActivity"
-                  android:theme="@style/SettingsTheme"/>
+                  android:theme="@style/InfoTheme"/>
 
         <service
             android:name=".customtabs.CustomTabsService"
