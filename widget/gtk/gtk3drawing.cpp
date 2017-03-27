@@ -21,7 +21,6 @@
 static gboolean have_arrow_scaling;
 static gboolean checkbox_check_state;
 static gboolean notebook_has_tab_gap;
-static gboolean is_initialized;
 
 static ScrollbarGTKMetrics sScrollbarMetrics[2];
 
@@ -81,10 +80,6 @@ GetStateFlagsFromGtkTabFlags(GtkTabFlags flags)
 gint
 moz_gtk_init()
 {
-    if (is_initialized)
-        return MOZ_GTK_SUCCESS;
-
-    is_initialized = TRUE;
     have_arrow_scaling = (gtk_major_version > 2 ||
                           (gtk_major_version == 2 && gtk_minor_version >= 12));
     if (gtk_major_version > 3 ||
@@ -2887,18 +2882,11 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
     return MOZ_GTK_UNKNOWN_WIDGET;
 }
 
-GtkWidget* moz_gtk_get_scrollbar_widget(void)
-{
-    return GetWidget(MOZ_GTK_SCROLLBAR_HORIZONTAL);
-}
-
 gint
 moz_gtk_shutdown()
 {
     /* This will destroy all of our widgets */
     ResetWidgetCache();
-
-    is_initialized = FALSE;
 
     return MOZ_GTK_SUCCESS;
 }
