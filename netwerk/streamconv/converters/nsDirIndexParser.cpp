@@ -153,6 +153,9 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
   // Prevent nullptr Deref - Bug 443299 
   if (mFormat == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
+  mFormat[num] = -1;
+  mFormat[0] = -1; // to detect zero header fields
+  
   int formatNum=0;
   do {
     while (*aFormatStr && nsCRT::IsAsciiSpace(char16_t(*aFormatStr)))
@@ -176,7 +179,6 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
     if (name.LowerCaseEqualsLiteral("description"))
       mHasDescription = true;
     
-    mFormat[formatNum] = -1;
     for (Field* i = gFieldTable; i->mName; ++i) {
       if (name.EqualsIgnoreCase(i->mName)) {
         mFormat[formatNum] = i->mType;
