@@ -112,24 +112,6 @@ public:
 };
 
 // ----------------------------------------------------------------------------
-// HAVE_NATIVE_UNWIND
-//
-// Pseudo backtraces are available on all platforms.  Native
-// backtraces are available only on selected platforms.  Breakpad is
-// the only supported native unwinder.  HAVE_NATIVE_UNWIND is set at
-// build time to indicate whether native unwinding is possible on this
-// platform.
-
-#undef HAVE_NATIVE_UNWIND
-#if defined(MOZ_PROFILING) && \
-    (defined(GP_OS_windows) || \
-     defined(GP_OS_darwin) || \
-     defined(GP_OS_linux) || \
-     defined(GP_PLAT_arm_android))
-# define HAVE_NATIVE_UNWIND
-#endif
-
-// ----------------------------------------------------------------------------
 // ProfilerState auxiliaries
 
 // There is a single instance of ProfilerState that holds the profiler's global
