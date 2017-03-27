@@ -94,10 +94,12 @@ class NurseryAwareHashMap
         explicit Enum(NurseryAwareHashMap& namap) : MapType::Enum(namap.map) {}
     };
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return map.sizeOfExcludingThis(mallocSizeOf);
+        return map.sizeOfExcludingThis(mallocSizeOf) +
+               nurseryEntries.sizeOfExcludingThis(mallocSizeOf);
     }
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return map.sizeOfIncludingThis(mallocSizeOf);
+        return map.sizeOfIncludingThis(mallocSizeOf) +
+               nurseryEntries.sizeOfIncludingThis(mallocSizeOf);
     }
 
     MOZ_MUST_USE bool put(const Key& k, const Value& v) {
