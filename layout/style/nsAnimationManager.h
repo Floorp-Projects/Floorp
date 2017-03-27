@@ -330,7 +330,7 @@ public:
    */
   void UpdateAnimations(
     mozilla::dom::Element* aElement,
-    nsIAtom* aPseudoTagOrNull,
+    mozilla::CSSPseudoElementType aPseudoType,
     const mozilla::ServoComputedValuesWithParent& aServoValues);
 
   /**
