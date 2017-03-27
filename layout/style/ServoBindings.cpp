@@ -469,6 +469,10 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
         UpdateAnimations(const_cast<dom::Element*>(aElement), pseudoType,
                          servoValues);
     }
+    if (tasks & UpdateAnimationsTasks::EffectProperties) {
+      presContext->EffectCompositor()->UpdateEffectProperties(
+        servoValues, const_cast<dom::Element*>(aElement), pseudoType);
+    }
   }
 }
 
