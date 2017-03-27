@@ -46,21 +46,11 @@ struct MozGtkSize {
   gint width;
   gint height;
 
-  MozGtkSize& operator+=(const GtkBorder& aBorder)
-  {
-    width += aBorder.left + aBorder.right;
-    height += aBorder.top + aBorder.bottom;
-    return *this;
-  }
   MozGtkSize operator+(const GtkBorder& aBorder) const
   {
-    MozGtkSize result = *this;
-    return result += aBorder;
-  }
-  void Include(MozGtkSize aOther)
-  {
-    width = std::max(width, aOther.width);
-    height = std::max(height, aOther.height);
+    gint resultWidth = width + aBorder.left + aBorder.right;
+    gint resultHeight = height + aBorder.top + aBorder.bottom;
+    return {resultWidth, resultHeight};
   }
   void Rotate()
   {
