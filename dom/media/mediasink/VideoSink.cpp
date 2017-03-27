@@ -83,21 +83,21 @@ VideoSink::OnEnded(TrackType aType)
   return nullptr;
 }
 
-int64_t
+TimeUnit
 VideoSink::GetEndTime(TrackType aType) const
 {
   AssertOwnerThread();
   MOZ_ASSERT(mAudioSink->IsStarted(), "Must be called after playback starts.");
 
   if (aType == TrackInfo::kVideoTrack) {
-    return mVideoFrameEndTime.ToMicroseconds();
+    return mVideoFrameEndTime;
   } else if (aType == TrackInfo::kAudioTrack) {
     return mAudioSink->GetEndTime(aType);
   }
-  return 0;
+  return TimeUnit::Zero();
 }
 
-int64_t
+TimeUnit
 VideoSink::GetPosition(TimeStamp* aTimeStamp) const
 {
   AssertOwnerThread();
@@ -164,7 +164,7 @@ VideoSink::SetPlaying(bool aPlaying)
 }
 
 void
-VideoSink::Start(int64_t aStartTime, const MediaInfo& aInfo)
+VideoSink::Start(const TimeUnit& aStartTime, const MediaInfo& aInfo)
 {
   AssertOwnerThread();
   VSINK_LOG("[%s]", __func__);
@@ -410,7 +410,7 @@ VideoSink::UpdateRenderedVideoFrames()
 
   // Get the current playback position.
   TimeStamp nowTime;
-  const int64_t clockTime = mAudioSink->GetPosition(&nowTime);
+  const int64_t clockTime = mAudioSink->GetPosition(&nowTime).ToMicroseconds();
   NS_ASSERTION(clockTime >= 0, "Should have positive clock time.");
 
   // Skip frames up to the playback position.
