@@ -126,9 +126,8 @@ private:
   MozPromiseHolder<GenericPromise> mEndPromiseHolder;
   MozPromiseRequestHolder<GenericPromise> mVideoSinkEndRequest;
 
-  // The presentation end time of the last video frame which has been displayed
-  // in microseconds.
-  int64_t mVideoFrameEndTime;
+  // The presentation end time of the last video frame which has been displayed.
+  TimeUnit mVideoFrameEndTime;
 
   // Event listeners for VideoQueue
   MediaEventListener mPushListener;

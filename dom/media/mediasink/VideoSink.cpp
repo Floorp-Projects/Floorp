@@ -41,7 +41,6 @@ VideoSink::VideoSink(AbstractThread* aThread,
   , mContainer(aContainer)
   , mProducerID(ImageContainer::AllocateProducerID())
   , mFrameStats(aFrameStats)
-  , mVideoFrameEndTime(0)
   , mHasVideo(false)
   , mUpdateScheduler(aThread)
   , mVideoQueueSendToCompositorSize(aVQueueSentToCompositerSize)
@@ -91,7 +90,7 @@ VideoSink::GetEndTime(TrackType aType) const
   MOZ_ASSERT(mAudioSink->IsStarted(), "Must be called after playback starts.");
 
   if (aType == TrackInfo::kVideoTrack) {
-    return mVideoFrameEndTime;
+    return mVideoFrameEndTime.ToMicroseconds();
   } else if (aType == TrackInfo::kAudioTrack) {
     return mAudioSink->GetEndTime(aType);
   }
@@ -102,7 +101,6 @@ int64_t
 VideoSink::GetPosition(TimeStamp* aTimeStamp) const
 {
   AssertOwnerThread();
-
   return mAudioSink->GetPosition(aTimeStamp);
 }
 
@@ -225,7 +223,7 @@ VideoSink::Stop()
     mEndPromiseHolder.ResolveIfExists(true, __func__);
     mEndPromise = nullptr;
   }
-  mVideoFrameEndTime = 0;
+  mVideoFrameEndTime = TimeUnit::Zero();
 }
 
 bool
@@ -434,8 +432,8 @@ VideoSink::UpdateRenderedVideoFrames()
   // the end time of the current frame, or if we dropped all frames in the
   // queue, the end time of the last frame we removed from the queue.
   RefPtr<VideoData> currentFrame = VideoQueue().PeekFront();
-  mVideoFrameEndTime = std::max(mVideoFrameEndTime,
-    currentFrame ? currentFrame->GetEndTime() : lastFrameEndTime);
+  mVideoFrameEndTime = std::max(mVideoFrameEndTime, TimeUnit::FromMicroseconds(
+    currentFrame ? currentFrame->GetEndTime() : lastFrameEndTime));
 
   MaybeResolveEndPromise();
 
@@ -484,7 +482,7 @@ VideoSink::GetDebugInfo()
     "size=%" PRIuSIZE ") mVideoFrameEndTime=%" PRId64 " mHasVideo=%d "
     "mVideoSinkEndRequest.Exists()=%d mEndPromiseHolder.IsEmpty()=%d\n",
     IsStarted(), IsPlaying(), VideoQueue().IsFinished(),
-    VideoQueue().GetSize(), mVideoFrameEndTime, mHasVideo,
+    VideoQueue().GetSize(), mVideoFrameEndTime.ToMicroseconds(), mHasVideo,
     mVideoSinkEndRequest.Exists(), mEndPromiseHolder.IsEmpty())
     + mAudioSink->GetDebugInfo();
 }
