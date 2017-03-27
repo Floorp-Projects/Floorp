@@ -383,28 +383,6 @@ SVGGeometryFrame::GetFrameForPoint(const gfxPoint& aPoint)
   return nullptr;
 }
 
-nsRect
-SVGGeometryFrame::GetCoveredRegion()
-{
-  gfxMatrix canvasTM = GetCanvasTM();
-  if (canvasTM.PreservesAxisAlignedRectangles()) {
-    return nsSVGUtils::TransformFrameRectToOuterSVG(
-             mRect, canvasTM, PresContext());
-  }
-
-  // To get tight bounds we need to compute directly in outer SVG coordinates
-  uint32_t flags = nsSVGUtils::eBBoxIncludeFill |
-                   nsSVGUtils::eBBoxIncludeStroke |
-                   nsSVGUtils::eBBoxIncludeMarkers;
-  gfxRect extent =
-    GetBBoxContribution(ToMatrix(canvasTM), flags).ToThebesRect();
-  nsRect region = nsLayoutUtils::RoundGfxRectToAppRect(
-                    extent, PresContext()->AppUnitsPerCSSPixel());
-
-  return nsSVGUtils::TransformFrameRectToOuterSVG(
-                       region, gfxMatrix(), PresContext());
-}
-
 void
 SVGGeometryFrame::ReflowSVG()
 {
@@ -506,6 +484,13 @@ SVGGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
 
   if (aToBBoxUserspace.IsSingular()) {
     // XXX ReportToConsole
+    return bbox;
+  }
+
+  if ((aFlags & nsSVGUtils::eForGetClientRects) &&
+      aToBBoxUserspace.PreservesAxisAlignedRectangles()) {
+    Rect rect = NSRectToRect(mRect, PresContext()->AppUnitsPerCSSPixel());
+    bbox = aToBBoxUserspace.TransformBounds(rect);
     return bbox;
   }
 

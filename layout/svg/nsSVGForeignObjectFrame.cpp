@@ -323,20 +323,6 @@ nsSVGForeignObjectFrame::GetFrameForPoint(const gfxPoint& aPoint)
   return nsLayoutUtils::GetFrameForPoint(kid, point);
 }
 
-nsRect
-nsSVGForeignObjectFrame::GetCoveredRegion()
-{
-  float x, y, w, h;
-  static_cast<SVGForeignObjectElement*>(mContent)->
-    GetAnimatedLengthValues(&x, &y, &w, &h, nullptr);
-  if (w < 0.0f) w = 0.0f;
-  if (h < 0.0f) h = 0.0f;
-  // GetCanvasTM includes the x,y translation
-  return nsSVGUtils::ToCanvasBounds(gfxRect(0.0, 0.0, w, h),
-                                    GetCanvasTM(),
-                                    PresContext());
-}
-
 void
 nsSVGForeignObjectFrame::ReflowSVG()
 {

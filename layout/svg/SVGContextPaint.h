@@ -10,6 +10,7 @@
 #include "gfxMatrix.h"
 #include "gfxPattern.h"
 #include "gfxTypes.h"
+#include "gfxUtils.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/gfx/2D.h"
@@ -219,23 +220,31 @@ public:
  */
 class SVGEmbeddingContextPaint : public SVGContextPaint
 {
+  typedef gfx::Color Color;
+
 public:
   SVGEmbeddingContextPaint() {}
 
-  void SetFill(nscolor aFill);
-  void SetStroke(nscolor aStroke);
+  void SetFill(nscolor aFill) {
+    mFill.emplace(gfx::ToDeviceColor(aFill));
+  }
+  void SetStroke(nscolor aStroke) {
+    mStroke.emplace(gfx::ToDeviceColor(aStroke));
+  }
 
+  /**
+   * Returns a pattern of type PatternType::COLOR, or else nullptr.
+   */
   already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
-                                              float aOpacity,
-                                              const gfxMatrix& aCTM) override {
-    return do_AddRef(mFill);
-  }
+                                              float aFillOpacity,
+                                              const gfxMatrix& aCTM) override;
 
+  /**
+   * Returns a pattern of type PatternType::COLOR, or else nullptr.
+   */
   already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
-                                                float aOpacity,
-                                                const gfxMatrix& aCTM) override {
-    return do_AddRef(mStroke);
-  }
+                                                float aStrokeOpacity,
+                                                const gfxMatrix& aCTM) override;
 
   float GetFillOpacity() const override {
     // Always 1.0f since we don't currently allow 'context-fill-opacity'
@@ -250,9 +259,8 @@ public:
   uint32_t Hash() const override;
 
 private:
-  // Note: if these are set at all, they'll have type PatternType::COLOR.
-  RefPtr<gfxPattern> mFill;
-  RefPtr<gfxPattern> mStroke;
+  Maybe<Color> mFill;
+  Maybe<Color> mStroke;
 };
 
 } // namespace mozilla
