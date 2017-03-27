@@ -13,7 +13,7 @@ RUN chmod +rx /build/tooltool.py
 ADD             fetch_rust.sh build_rust.sh /build/
 ADD             fetch_cargo.sh build_cargo.sh /build/
 ADD             package_rust.sh upload_rust.sh /build/
-ADD             repack_rust.py /build/
+ADD             repack_rust.py splat_rust.py /build/
 RUN             chmod +x /build/*
 
 # Create user for doing the build.

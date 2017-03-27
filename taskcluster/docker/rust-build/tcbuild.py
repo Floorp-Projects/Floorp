@@ -20,8 +20,6 @@ import tempfile
 import time
 import tooltool
 
-requests.packages.urllib3.disable_warnings()
-
 
 def local_file(filename):
     '''
@@ -63,11 +61,11 @@ def spawn_task(queue, args):
     with open(local_file('task.json'), 'rb') as template:
         keys = vars(args)
         now = datetime.datetime.utcnow()
+        deadline = (now + datetime.timedelta(hours=2))
+        expires = (now + datetime.timedelta(days=1))
         keys['task_created'] = now.isoformat() + 'Z'
-        keys['task_deadline'] = (now + datetime.timedelta(
-            hours=2)).isoformat() + 'Z'
-        keys['artifacts_expires'] = (now + datetime.timedelta(
-            days=1)).isoformat() + 'Z'
+        keys['task_deadline'] = deadline.isoformat() + 'Z'
+        keys['artifact_expires'] = expires.isoformat() + 'Z'
         payload = fill_template(template, keys)
     queue.createTask(task_id, payload)
     print('--- %s task %s submitted ---' % (now, task_id))
