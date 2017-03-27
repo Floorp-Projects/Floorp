@@ -127,7 +127,7 @@ if test "$OS_TARGET" = "Android"; then
             # Add android/support/include/ for prototyping long double math
             # functions, locale-specific C library functions, multibyte support,
             # etc.
-            STLPORT_CPPFLAGS="-I$android_ndk/sources/android/support/include -I$cxx_include -I$cxxabi_include"
+            STLPORT_CPPFLAGS="-I$cxx_include -I$android_ndk/sources/android/support/include -I$cxxabi_include"
             ;;
         *)
             AC_MSG_ERROR([Bad value for --enable-android-cxx-stl])
