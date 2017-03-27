@@ -148,7 +148,7 @@ public:
                             uint32_t((TimeStamp::Now() - start).ToMilliseconds()));
       if (hadSnowWhiteObjects && !mContinuation) {
           mContinuation = true;
-          if (NS_FAILED(NS_DispatchToCurrentThread(this))) {
+          if (NS_FAILED(Dispatch())) {
               mActive = false;
           }
       } else {
@@ -169,13 +169,25 @@ public:
       return NS_OK;
   }
 
-  void Dispatch(bool aContinuation = false, bool aPurge = false)
+  nsresult Dispatch()
+  {
+      if (NS_IsMainThread()) {
+          nsCOMPtr<nsIRunnable> self(this);
+          return SystemGroup::Dispatch("AsyncFreeSnowWhite",
+                                       TaskCategory::GarbageCollection,
+                                       self.forget());
+      } else {
+          return NS_DispatchToCurrentThread(this);
+      }
+  }
+
+  void Start(bool aContinuation = false, bool aPurge = false)
   {
       if (mContinuation) {
           mContinuation = aContinuation;
       }
       mPurge = aPurge;
-      if (!mActive && NS_SUCCEEDED(NS_DispatchToCurrentThread(this))) {
+      if (!mActive && NS_SUCCEEDED(Dispatch())) {
           mActive = true;
       }
   }
@@ -735,7 +747,7 @@ XPCJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults)
 void
 XPCJSContext::DispatchDeferredDeletion(bool aContinuation, bool aPurge)
 {
-    mAsyncSnowWhiteFreer->Dispatch(aContinuation, aPurge);
+    mAsyncSnowWhiteFreer->Start(aContinuation, aPurge);
 }
 
 void
