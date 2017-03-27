@@ -423,6 +423,10 @@ struct ByteBuffer
   bool mOwned;
 };
 
+inline WrByteSlice RangeToByteSlice(mozilla::Range<uint8_t> aRange) {
+  return WrByteSlice { aRange.begin().get(), aRange.length() };
+}
+
 struct BuiltDisplayList {
   VecU8 dl;
   WrBuiltDisplayListDescriptor dl_desc;
