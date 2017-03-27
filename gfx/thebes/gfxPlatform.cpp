@@ -2296,9 +2296,12 @@ gfxPlatform::InitWebRenderConfig()
       "WebRender is an opt-in feature",
       NS_LITERAL_CSTRING("FEATURE_FAILURE_DEFAULT_OFF"));
 
-  if (Preferences::GetBool("gfx.webrender.enabled", false)) {
+  bool prefEnabled = Preferences::GetBool("gfx.webrender.enabled", false);
+  if (prefEnabled) {
     featureWebRender.UserEnable("Enabled by pref");
   }
+
+  ScopedGfxFeatureReporter reporter("WR", prefEnabled);
 
   // WebRender relies on the GPU process when on Windows
 #ifdef XP_WIN
@@ -2325,7 +2328,10 @@ gfxPlatform::InitWebRenderConfig()
 #endif
 
   // gfxFeature is not usable in the GPU process, so we use gfxVars to transmit this feature
-  gfxVars::SetUseWebRender(gfxConfig::IsEnabled(Feature::WEBRENDER));
+  if (gfxConfig::IsEnabled(Feature::WEBRENDER)) {
+    gfxVars::SetUseWebRender(true);
+    reporter.SetSuccessful();
+  }
 }
 
 bool
