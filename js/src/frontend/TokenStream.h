@@ -26,6 +26,7 @@
 #include "frontend/TokenKind.h"
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
+#include "vm/ErrorReporting.h"
 #include "vm/RegExpObject.h"
 #include "vm/String.h"
 
@@ -241,11 +242,6 @@ struct Token
     }
 };
 
-class CompileError : public JSErrorReport {
-  public:
-    void throwError(JSContext* cx);
-};
-
 extern const char*
 ReservedWordToCharZ(PropertyName* str);
 
@@ -268,37 +264,6 @@ IsStrictReservedWord(JSLinearString* str);
 class StrictModeGetter {
   public:
     virtual bool strictMode() = 0;
-};
-
-/**
- * Metadata for a compilation error (or warning) at a particular offset, or at
- * no offset (i.e. with respect to a script overall).
- */
-struct ErrorMetadata
-{
-    // The file/URL where the error occurred.
-    const char* filename;
-
-    // The line and column numbers where the error occurred.  If the error
-    // is with respect to the entire script and not with respect to a
-    // particular location, these will both be zero.
-    uint32_t lineNumber;
-    uint32_t columnNumber;
-
-    // If the error occurs at a particular location, context surrounding the
-    // location of the error: the line that contained the error, or a small
-    // portion of it if the line is long.
-    //
-    // This information is provided on a best-effort basis: code populating
-    // ErrorMetadata instances isn't obligated to supply this.
-    UniqueTwoByteChars lineOfContext;
-
-    // If |lineOfContext| is non-null, its length.
-    size_t lineLength;
-
-    // If |lineOfContext| is non-null, the offset within it of the token that
-    // triggered the error.
-    size_t tokenOffset;
 };
 
 class TokenStreamBase
@@ -586,12 +551,6 @@ class TokenStreamBase
     bool hasLookahead() const { return lookahead > 0; }
 
   public:
-    // General-purpose error reporters.  You should avoid calling these
-    // directly, and instead use the more succinct alternatives (error(),
-    // warning(), &c.) in TokenStream, Parser, and BytecodeEmitter.
-    void compileError(ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes, unsigned flags,
-                      unsigned errorNumber, va_list args);
-
     MOZ_MUST_USE bool compileWarning(ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,
                                      unsigned flags, unsigned errorNumber, va_list args);
 

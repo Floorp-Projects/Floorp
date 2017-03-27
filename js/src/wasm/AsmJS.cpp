@@ -36,6 +36,7 @@
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
 #include "js/MemoryMetrics.h"
+#include "vm/ErrorReporting.h"
 #include "vm/SelfHosting.h"
 #include "vm/StringBuffer.h"
 #include "vm/Time.h"
@@ -1753,8 +1754,8 @@ class MOZ_STACK_CLASS ModuleValidator
         ErrorMetadata metadata;
         if (ts.computeErrorMetadata(&metadata, offset)) {
             if (ts.options().throwOnAsmJSValidationFailureOption) {
-                ts.compileError(Move(metadata), nullptr, JSREPORT_ERROR, JSMSG_USE_ASM_TYPE_FAIL,
-                                args);
+                ReportCompileError(cx_, Move(metadata), nullptr, JSREPORT_ERROR,
+                                   JSMSG_USE_ASM_TYPE_FAIL, args);
             } else {
                 // asm.js type failure is indicated by calling one of the fail*
                 // functions below.  These functions always return false to

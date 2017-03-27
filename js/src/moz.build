@@ -318,6 +318,7 @@ UNIFIED_SOURCES += [
     'vm/DebuggerMemory.cpp',
     'vm/EnvironmentObject.cpp',
     'vm/ErrorObject.cpp',
+    'vm/ErrorReporting.cpp',
     'vm/ForOfIterator.cpp',
     'vm/GeckoProfiler.cpp',
     'vm/GeneratorObject.cpp',
