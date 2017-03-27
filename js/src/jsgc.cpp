@@ -4334,14 +4334,16 @@ js::gc::MarkingValidator::validate()
                  * If a non-incremental GC wouldn't have collected a cell, then
                  * an incremental GC won't collect it.
                  */
-                MOZ_ASSERT_IF(bitmap->isMarked(cell, BLACK), incBitmap->isMarked(cell, BLACK));
+                if (bitmap->isMarked(cell, BLACK))
+                    MOZ_RELEASE_ASSERT(incBitmap->isMarked(cell, BLACK));
 
                 /*
                  * If the cycle collector isn't allowed to collect an object
                  * after a non-incremental GC has run, then it isn't allowed to
                  * collected it after an incremental GC.
                  */
-                MOZ_ASSERT_IF(!bitmap->isMarked(cell, GRAY), !incBitmap->isMarked(cell, GRAY));
+                if (!bitmap->isMarked(cell, GRAY))
+                    MOZ_RELEASE_ASSERT(!incBitmap->isMarked(cell, GRAY));
 
                 thing += Arena::thingSize(kind);
             }
