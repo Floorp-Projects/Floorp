@@ -2152,15 +2152,7 @@
      *   Stack: promise, gen => resolved
      */ \
     macro(JSOP_AWAIT,         209, "await",        NULL,  4,  2,  1,  JOF_UINT24) \
-    /*
-     * Pops the iterator from the top of the stack, and create async iterator
-     * from it and push the async iterator back onto the stack.
-     *   Category: Statements
-     *   Type: Generator
-     *   Operands:
-     *   Stack: iter => asynciter
-     */ \
-    macro(JSOP_TOASYNCITER,   210, "toasynciter",  NULL,  1,  1,  1,  JOF_BYTE) \
+    macro(JSOP_UNUSED210,     210, "unused210",    NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED211,     211, "unused211",    NULL,  1,  0,  0,  JOF_BYTE) \
     /*
      * Initializes generator frame, creates a generator and pushes it on the

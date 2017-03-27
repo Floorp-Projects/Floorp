@@ -594,5 +594,3 @@ MSG_DEF(JSMSG_ITERATOR_NO_THROW,       0, JSEXN_TYPEERR, "iterator does not have
 
 // Async Iteration
 MSG_DEF(JSMSG_NOT_AN_ASYNC_GENERATOR,  0, JSEXN_TYPEERR, "Not an async generator")
-MSG_DEF(JSMSG_NOT_AN_ASYNC_ITERATOR,   0, JSEXN_TYPEERR, "Not an async from sync iterator")
-MSG_DEF(JSMSG_GET_ASYNC_ITER_RETURNED_PRIMITIVE, 0, JSEXN_TYPEERR, "[Symbol.asyncIterator]() returned a non-object value")

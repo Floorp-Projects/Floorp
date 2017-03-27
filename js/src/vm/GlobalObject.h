@@ -99,7 +99,6 @@ class GlobalObject : public NativeObject
         ASYNC_FUNCTION_PROTO,
         ASYNC_FUNCTION,
         ASYNC_ITERATOR_PROTO,
-        ASYNC_FROM_SYNC_ITERATOR_PROTO,
         ASYNC_GENERATOR,
         ASYNC_GENERATOR_FUNCTION,
         ASYNC_GENERATOR_PROTO,
@@ -638,12 +637,6 @@ class GlobalObject : public NativeObject
     getOrCreateAsyncIteratorPrototype(JSContext* cx, Handle<GlobalObject*> global)
     {
         return MaybeNativeObject(getOrCreateObject(cx, global, ASYNC_ITERATOR_PROTO,
-                                                   initAsyncGenerators));
-    }
-
-    static NativeObject*
-    getOrCreateAsyncFromSyncIteratorPrototype(JSContext* cx, Handle<GlobalObject*> global) {
-        return MaybeNativeObject(getOrCreateObject(cx, global, ASYNC_FROM_SYNC_ITERATOR_PROTO,
                                                    initAsyncGenerators));
     }
 
