@@ -48,8 +48,11 @@ namespace stagefright {
 static const int64_t OVERFLOW_ERROR = -INT64_MAX;
 
 // Calculate units*1,000,000/hz, trying to avoid overflow.
-// Return OVERFLOW_ERROR in case of unavoidable overflow.
+// Return OVERFLOW_ERROR in case of unavoidable overflow, or div by hz==0.
 int64_t unitsToUs(int64_t units, int64_t hz) {
+    if (hz == 0) {
+        return OVERFLOW_ERROR;
+    }
     const int64_t MAX_S = INT64_MAX / 1000000;
     if (std::abs(units) <= MAX_S) {
         return units * 1000000 / hz;
