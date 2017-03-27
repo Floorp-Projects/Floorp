@@ -22,7 +22,7 @@ namespace a11y {
 class DocAccessibleChild : public DocAccessibleChildBase
 {
 public:
-  explicit DocAccessibleChild(DocAccessible* aDoc);
+  DocAccessibleChild(DocAccessible* aDoc, IProtocol* aManager);
   ~DocAccessibleChild();
 
   virtual void Shutdown() override;
