@@ -417,6 +417,8 @@ ServoRestyleManager::ProcessPendingRestyles()
     IncrementRestyleGeneration();
   }
 
+  FlushOverflowChangedTracker();
+
   mInStyleRefresh = false;
   styleSet->AssertTreeIsClean();
 
