@@ -18,7 +18,6 @@
         android:layout_marginTop="8dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:padding="4dp"
-        android:contentDescription="@string/menu_back"
         android:src="@drawable/ic_back" />
 
     <ImageButton
@@ -31,7 +30,7 @@
         android:layout_marginTop="8dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:padding="4dp"
-        android:contentDescription="@string/menu_forward"
+        android:contentDescription="@string/content_description_forward"
         android:src="@drawable/ic_forward" />
 
     <LinearLayout
@@ -80,7 +79,7 @@
         android:layout_marginTop="8dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:padding="4dp"
-        android:contentDescription="@string/menu_refresh"
+        android:contentDescription="@string/content_description_reload"
         android:src="@drawable/ic_refresh" />
 
     <ImageButton
