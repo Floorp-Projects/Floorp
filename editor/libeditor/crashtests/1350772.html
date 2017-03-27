@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+addEventListener("DOMContentLoaded", () => {
+  try {
+    document.designMode = 'on';
+    document.removeChild(document.documentElement);
+    document.appendChild(document.createElement("p"));
+    document.execCommand("insertParagraph", false, null);
+  } catch(e) {
+  }
+});
+</script>
+</head>
+</html>
