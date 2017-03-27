@@ -68,7 +68,12 @@ class PluginEventRunnable : public Runnable
 {
 public:
   PluginEventRunnable(nsNPAPIPluginInstance* instance, ANPEvent* event)
-    : mInstance(instance), mEvent(*event), mCanceled(false) {}
+    : Runnable("PluginEventRunnable"),
+      mInstance(instance),
+      mEvent(*event),
+      mCanceled(false)
+  {
+  }
 
   virtual nsresult Run() {
     if (mCanceled)
