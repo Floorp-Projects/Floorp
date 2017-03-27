@@ -469,4 +469,13 @@ interface nsIHttpChannel : nsIChannel
      * should only be relied on after the channel has established a connection.
      */
     [infallible] readonly attribute boolean isTrackingResource;
+
+    /**
+     * ID of the top-level outer content window. Identifies this channel's
+     * top-level window it comes from.
+     *
+     * NOTE: The setter of this attribute is currently for xpcshell test only.
+     *       Don't alter it otherwise.
+     */
+    [must_use] attribute uint64_t topLevelOuterContentWindowId;
 };
