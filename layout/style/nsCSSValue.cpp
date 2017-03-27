@@ -14,7 +14,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/css/ImageLoader.h"
-#include "mozilla/layers/CompositorThread.h"
 #include "CSSCalc.h"
 #include "gfxFontConstants.h"
 #include "imgIRequest.h"
@@ -429,10 +428,9 @@ nscoord nsCSSValue::GetPixelLength() const
 // Note that the caller might be an OMTA thread, which is allowed to operate off
 // main thread because it owns all of the corresponding nsCSSValues and any that
 // they might be sharing members with.
-#define DO_RELEASE(member) {                                                    \
-  MOZ_ASSERT(mozilla::layers::CompositorThreadHolder::IsInCompositorThread() || \
-             !ServoStyleSet::IsInServoTraversal());                             \
-  mValue.member->Release();                                                     \
+#define DO_RELEASE(member) {                                                     \
+  MOZ_ASSERT(NS_IsInCompositorThread() || !ServoStyleSet::IsInServoTraversal()); \
+  mValue.member->Release();                                                      \
 }
 
 void nsCSSValue::DoReset()
