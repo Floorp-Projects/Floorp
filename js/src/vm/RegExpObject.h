@@ -46,7 +46,7 @@ class RegExpStatics;
 
 namespace frontend { class TokenStream; }
 
-enum RegExpFlag
+enum RegExpFlag : uint8_t
 {
     IgnoreCaseFlag  = 0x01,
     GlobalFlag      = 0x02,
@@ -92,7 +92,7 @@ CloneRegExpObject(JSContext* cx, JSObject* regexp);
  * objects when we are preserving jitcode in their zone, to avoid the same
  * recompilation inefficiencies as normal Ion and baseline compilation.
  */
-class RegExpShared
+class RegExpShared : public gc::TenuredCell
 {
   public:
     enum CompilationMode {
@@ -113,7 +113,7 @@ class RegExpShared
 
     struct RegExpCompilation
     {
-        HeapPtr<jit::JitCode*> jitCode;
+        ReadBarriered<jit::JitCode*> jitCode;
         uint8_t* byteCode;
 
         RegExpCompilation() : byteCode(nullptr) {}
@@ -125,12 +125,11 @@ class RegExpShared
     };
 
     /* Source to the RegExp, for lazy compilation. */
-    HeapPtr<JSAtom*>     source;
+    HeapPtr<JSAtom*>   source;
 
     RegExpFlag         flags;
-    size_t             parenCount;
     bool               canStringMatch;
-    bool               marked_;
+    size_t             parenCount;
 
     RegExpCompilation  compilationArray[4];
 
@@ -146,6 +145,8 @@ class RegExpShared
     Vector<uint8_t*, 0, SystemAllocPolicy> tables;
 
     /* Internal functions. */
+    RegExpShared(JSAtom* source, RegExpFlag flags);
+
     bool compile(JSContext* cx, HandleLinearString input,
                  CompilationMode mode, ForceByteCodeEnum force);
     bool compile(JSContext* cx, HandleAtom pattern, HandleLinearString input,
@@ -163,7 +164,6 @@ class RegExpShared
     }
 
   public:
-    RegExpShared(JSAtom* source, RegExpFlag flags);
     ~RegExpShared();
 
     // Execute this RegExp on input starting from searchIndex, filling in
@@ -203,15 +203,8 @@ class RegExpShared
             || isCompiled(MatchOnly, true) || isCompiled(MatchOnly, false);
     }
 
-    void trace(JSTracer* trc);
-    bool needsSweep(JSRuntime* rt);
+    void traceChildren(JSTracer* trc);
     void discardJitCode();
-
-    bool marked() const { return marked_; }
-    void clearMarked() { marked_ = false; }
-
-    bool isMarkedGray() const;
-    void unmarkGray();
 
     static size_t offsetOfSource() {
         return offsetof(RegExpShared, source);
@@ -236,58 +229,11 @@ class RegExpShared
              + offsetof(RegExpCompilation, jitCode);
     }
 
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
 #ifdef DEBUG
     bool dumpBytecode(JSContext* cx, bool match_only, HandleLinearString input);
 #endif
-};
-
-/*
- * Extend the lifetime of a given RegExpShared to at least the lifetime of
- * the guard object. See Regular Expression comment at the top.
- */
-class RegExpGuard : public JS::CustomAutoRooter
-{
-    RegExpShared* re_;
-
-    RegExpGuard(const RegExpGuard&) = delete;
-    void operator=(const RegExpGuard&) = delete;
-
-  public:
-    explicit RegExpGuard(JSContext* cx)
-      : CustomAutoRooter(cx), re_(nullptr)
-    {}
-
-    RegExpGuard(JSContext* cx, RegExpShared& re)
-      : CustomAutoRooter(cx), re_(nullptr)
-    {
-        init(re);
-    }
-
-    ~RegExpGuard() {
-        release();
-    }
-
-  public:
-    void init(RegExpShared& re) {
-        MOZ_ASSERT(!initialized());
-        re_ = &re;
-    }
-
-    void release() {
-        re_ = nullptr;
-    }
-
-    virtual void trace(JSTracer* trc) {
-        if (re_)
-            re_->trace(trc);
-    }
-
-    bool initialized() const { return !!re_; }
-    RegExpShared* re() const { MOZ_ASSERT(initialized()); return re_; }
-    RegExpShared* operator->() { return re(); }
-    RegExpShared& operator*() { return *re(); }
 };
 
 class RegExpCompartment
@@ -300,8 +246,9 @@ class RegExpCompartment
         Key(JSAtom* atom, RegExpFlag flag)
           : atom(atom), flag(flag)
         { }
-        MOZ_IMPLICIT Key(RegExpShared* shared)
-          : atom(shared->getSource()), flag(shared->getFlags())
+        MOZ_IMPLICIT Key(const ReadBarriered<RegExpShared*>& shared)
+          : atom(shared.unbarrieredGet()->getSource()),
+            flag(shared.unbarrieredGet()->getFlags())
         { }
 
         typedef Key Lookup;
@@ -317,8 +264,8 @@ class RegExpCompartment
      * The set of all RegExpShareds in the compartment. On every GC, every
      * RegExpShared that was not marked is deleted and removed from the set.
      */
-    typedef HashSet<RegExpShared*, Key, RuntimeAllocPolicy> Set;
-    Set set_;
+    using Set = GCHashSet<ReadBarriered<RegExpShared*>, Key, RuntimeAllocPolicy>;
+    JS::WeakCache<Set> set_;
 
     /*
      * This is the template object where the result of re.exec() is based on,
@@ -351,7 +298,7 @@ class RegExpCompartment
     ArrayObject* createMatchResultTemplateObject(JSContext* cx);
 
   public:
-    explicit RegExpCompartment(JSRuntime* rt);
+    explicit RegExpCompartment(Zone* zone);
     ~RegExpCompartment();
 
     bool init(JSContext* cx);
@@ -486,12 +433,17 @@ class RegExpObject : public NativeObject
     static MOZ_MUST_USE bool getShared(JSContext* cx, Handle<RegExpObject*> regexp,
                                        RegExpGuard* g);
 
+    bool hasShared() {
+        return !!sharedRef();
+    }
+
     void setShared(RegExpShared& shared) {
-        MOZ_ASSERT(!maybeShared());
-        NativeObject::setPrivate(&shared);
+        MOZ_ASSERT(!hasShared());
+        sharedRef() = &shared;
     }
 
     static void trace(JSTracer* trc, JSObject* obj);
+    void trace(JSTracer* trc);
 
     void initIgnoringLastIndex(HandleAtom source, RegExpFlag flags);
 
@@ -512,8 +464,10 @@ class RegExpObject : public NativeObject
      */
     static MOZ_MUST_USE bool createShared(JSContext* cx, Handle<RegExpObject*> regexp,
                                           RegExpGuard* g);
-    RegExpShared* maybeShared() const {
-        return static_cast<RegExpShared*>(NativeObject::getPrivate(PRIVATE_SLOT));
+
+    ReadBarriered<RegExpShared*>& sharedRef() {
+        auto& ref = NativeObject::privateRef(PRIVATE_SLOT);
+        return reinterpret_cast<ReadBarriered<RegExpShared*>&>(ref);
     }
 
     /* Call setShared in preference to setPrivate. */
@@ -558,5 +512,30 @@ extern bool
 StringHasRegExpMetaChars(JSLinearString* str);
 
 } /* namespace js */
+
+namespace JS {
+namespace ubi {
+
+template <>
+class Concrete<js::RegExpShared> : TracerConcrete<js::RegExpShared>
+{
+  protected:
+    explicit Concrete(js::RegExpShared* ptr) : TracerConcrete<js::RegExpShared>(ptr) { }
+
+  public:
+    static void construct(void* storage, js::RegExpShared* ptr) {
+        new (storage) Concrete(ptr);
+    }
+
+    CoarseType coarseType() const final { return CoarseType::Other; }
+
+    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
+
+    const char16_t* typeName() const override { return concreteTypeName; }
+    static const char16_t concreteTypeName[];
+};
+
+} // namespace ubi
+} // namespace JS
 
 #endif /* vm_RegExpObject_h */

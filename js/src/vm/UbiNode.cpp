@@ -312,6 +312,7 @@ template JS::Zone* TracerConcrete<js::LazyScript>::zone() const;
 template JS::Zone* TracerConcrete<js::Shape>::zone() const;
 template JS::Zone* TracerConcrete<js::BaseShape>::zone() const;
 template JS::Zone* TracerConcrete<js::ObjectGroup>::zone() const;
+template JS::Zone* TracerConcrete<js::RegExpShared>::zone() const;
 template JS::Zone* TracerConcrete<js::Scope>::zone() const;
 template JS::Zone* TracerConcrete<JS::Symbol>::zone() const;
 template JS::Zone* TracerConcrete<JSString>::zone() const;
@@ -334,6 +335,7 @@ template UniquePtr<EdgeRange> TracerConcrete<js::LazyScript>::edges(JSContext* c
 template UniquePtr<EdgeRange> TracerConcrete<js::Shape>::edges(JSContext* cx, bool wantNames) const;
 template UniquePtr<EdgeRange> TracerConcrete<js::BaseShape>::edges(JSContext* cx, bool wantNames) const;
 template UniquePtr<EdgeRange> TracerConcrete<js::ObjectGroup>::edges(JSContext* cx, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<js::RegExpShared>::edges(JSContext* cx, bool wantNames) const;
 template UniquePtr<EdgeRange> TracerConcrete<js::Scope>::edges(JSContext* cx, bool wantNames) const;
 template UniquePtr<EdgeRange> TracerConcrete<JS::Symbol>::edges(JSContext* cx, bool wantNames) const;
 template UniquePtr<EdgeRange> TracerConcrete<JSString>::edges(JSContext* cx, bool wantNames) const;
@@ -398,6 +400,7 @@ const char16_t Concrete<js::Shape>::concreteTypeName[] = u"js::Shape";
 const char16_t Concrete<js::BaseShape>::concreteTypeName[] = u"js::BaseShape";
 const char16_t Concrete<js::ObjectGroup>::concreteTypeName[] = u"js::ObjectGroup";
 const char16_t Concrete<js::Scope>::concreteTypeName[] = u"js::Scope";
+const char16_t Concrete<js::RegExpShared>::concreteTypeName[] = u"js::RegExpShared";
 
 namespace JS {
 namespace ubi {

@@ -121,6 +121,7 @@ IsNurseryAllocable(AllocKind kind)
         false,     /* AllocKind::SYMBOL */
         false,     /* AllocKind::JITCODE */
         false,     /* AllocKind::SCOPE */
+        false,     /* AllocKind::REGEXP_SHARED */
     };
     JS_STATIC_ASSERT(JS_ARRAY_LENGTH(map) == size_t(AllocKind::LIMIT));
     return map[size_t(kind)];
@@ -159,6 +160,7 @@ IsBackgroundFinalized(AllocKind kind)
         true,      /* AllocKind::SYMBOL */
         false,     /* AllocKind::JITCODE */
         true,      /* AllocKind::SCOPE */
+        true,      /* AllocKind::REGEXP_SHARED */
     };
     JS_STATIC_ASSERT(JS_ARRAY_LENGTH(map) == size_t(AllocKind::LIMIT));
     return map[size_t(kind)];
@@ -1136,109 +1138,29 @@ class RelocationOverlay
 //                  to allow slots to be accessed.
 
 template <typename T>
-struct MightBeForwarded
-{
-    static_assert(mozilla::IsBaseOf<Cell, T>::value,
-                  "T must derive from Cell");
-    static_assert(!mozilla::IsSame<Cell, T>::value && !mozilla::IsSame<TenuredCell, T>::value,
-                  "T must not be Cell or TenuredCell");
-
-    static const bool value = mozilla::IsBaseOf<JSObject, T>::value ||
-                              mozilla::IsBaseOf<Shape, T>::value ||
-                              mozilla::IsBaseOf<BaseShape, T>::value ||
-                              mozilla::IsBaseOf<JSString, T>::value ||
-                              mozilla::IsBaseOf<JSScript, T>::value ||
-                              mozilla::IsBaseOf<js::LazyScript, T>::value ||
-                              mozilla::IsBaseOf<js::Scope, T>::value;
-};
+inline bool IsForwarded(T* t);
+inline bool IsForwarded(const JS::Value& value);
 
 template <typename T>
-inline bool
-IsForwarded(T* t)
-{
-    RelocationOverlay* overlay = RelocationOverlay::fromCell(t);
-    if (!MightBeForwarded<T>::value) {
-        MOZ_ASSERT(!overlay->isForwarded());
-        return false;
-    }
+inline T* Forwarded(T* t);
 
-    return overlay->isForwarded();
-}
-
-struct IsForwardedFunctor : public BoolDefaultAdaptor<Value, false> {
-    template <typename T> bool operator()(T* t) { return IsForwarded(t); }
-};
-
-inline bool
-IsForwarded(const JS::Value& value)
-{
-    return DispatchTyped(IsForwardedFunctor(), value);
-}
+inline Value Forwarded(const JS::Value& value);
 
 template <typename T>
-inline T*
-Forwarded(T* t)
-{
-    RelocationOverlay* overlay = RelocationOverlay::fromCell(t);
-    MOZ_ASSERT(overlay->isForwarded());
-    return reinterpret_cast<T*>(overlay->forwardingAddress());
-}
-
-struct ForwardedFunctor : public IdentityDefaultAdaptor<Value> {
-    template <typename T> inline Value operator()(T* t) {
-        return js::gc::RewrapTaggedPointer<Value, T>::wrap(Forwarded(t));
-    }
-};
-
-inline Value
-Forwarded(const JS::Value& value)
-{
-    return DispatchTyped(ForwardedFunctor(), value);
-}
-
-template <typename T>
-inline T
-MaybeForwarded(T t)
-{
-    if (IsForwarded(t))
-        t = Forwarded(t);
-    MakeAccessibleAfterMovingGC(t);
-    return t;
-}
+inline T MaybeForwarded(T t);
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 
 template <typename T>
-inline bool
-IsGCThingValidAfterMovingGC(T* t)
-{
-    return !IsInsideNursery(t) && !RelocationOverlay::isCellForwarded(t);
-}
+inline bool IsGCThingValidAfterMovingGC(T* t);
 
 template <typename T>
-inline void
-CheckGCThingAfterMovingGC(T* t)
-{
-    if (t)
-        MOZ_RELEASE_ASSERT(IsGCThingValidAfterMovingGC(t));
-}
+inline void CheckGCThingAfterMovingGC(T* t);
 
 template <typename T>
-inline void
-CheckGCThingAfterMovingGC(const ReadBarriered<T*>& t)
-{
-    CheckGCThingAfterMovingGC(t.unbarrieredGet());
-}
+inline void CheckGCThingAfterMovingGC(const ReadBarriered<T*>& t);
 
-struct CheckValueAfterMovingGCFunctor : public VoidDefaultAdaptor<Value> {
-    template <typename T> void operator()(T* t) { CheckGCThingAfterMovingGC(t); }
-};
-
-inline void
-CheckValueAfterMovingGC(const JS::Value& value)
-{
-    DispatchTyped(CheckValueAfterMovingGCFunctor(), value);
-}
+inline void CheckValueAfterMovingGC(const JS::Value& value);
 
 #endif // JSGC_HASH_TABLE_CHECKS
 
