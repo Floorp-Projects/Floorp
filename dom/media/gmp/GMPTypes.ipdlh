@@ -61,7 +61,7 @@ struct GMPKeyInformation {
 };
 
 struct CDMInputBuffer {
-  uint8_t[] mData;
+  Shmem mData;
   uint8_t[] mKeyId;
   uint8_t[] mIV;
   int64_t mTimestamp;

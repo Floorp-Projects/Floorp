@@ -127,6 +127,8 @@ protected:
 
   void ResolvePromise(uint32_t aPromiseId);
 
+  bool InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer, MediaRawData* aSample);
+
   const uint32_t mPluginId;
   GMPContentParent* mContentParent;
   // Note: this pointer is a weak reference because otherwise it would cause

@@ -14,6 +14,7 @@
 #include "nsPrintfCString.h"
 #include "base/time.h"
 #include "GMPUtils.h"
+#include "mozilla/ScopeExit.h"
 
 namespace mozilla {
 namespace gmp {
@@ -388,8 +389,8 @@ InitInputBuffer(const CDMInputBuffer& aBuffer,
                 nsTArray<cdm::SubsampleEntry>& aSubSamples,
                 cdm::InputBuffer& aInputBuffer)
 {
-  aInputBuffer.data = aBuffer.mData().Elements();
-  aInputBuffer.data_size = aBuffer.mData().Length();
+  aInputBuffer.data = aBuffer.mData().get<uint8_t>();
+  aInputBuffer.data_size = aBuffer.mData().Size<uint8_t>();
 
   if (aBuffer.mIsEncrypted()) {
     aInputBuffer.key_id = aBuffer.mKeyId().Elements();
@@ -415,6 +416,11 @@ ChromiumCDMChild::RecvDecrypt(const uint32_t& aId,
 {
   MOZ_ASSERT(IsOnMessageLoopThread());
   GMP_LOG("ChromiumCDMChild::RecvDecrypt()");
+
+  auto autoDeallocateShmem = MakeScopeExit([&,this] {
+    this->DeallocShmem(aBuffer.mData());
+  });
+
   if (!mCDM) {
     GMP_LOG("ChromiumCDMChild::RecvDecrypt() no CDM");
     DecryptFailed(aId, cdm::kDecryptError);
@@ -440,7 +446,7 @@ ChromiumCDMChild::RecvDecrypt(const uint32_t& aId,
   }
 
   if (!output.DecryptedBuffer() ||
-      output.DecryptedBuffer()->Size() != aBuffer.mData().Length()) {
+      output.DecryptedBuffer()->Size() != aBuffer.mData().Size<uint8_t>()) {
     // The sizes of the input and output should exactly match.
     DecryptFailed(aId, cdm::kDecryptError);
     return IPC_OK();
@@ -509,6 +515,10 @@ ChromiumCDMChild::RecvDecryptAndDecodeFrame(const CDMInputBuffer& aBuffer)
   GMP_LOG("ChromiumCDMChild::RecvDecryptAndDecodeFrame() t=%" PRId64 ")",
           aBuffer.mTimestamp());
   MOZ_ASSERT(mDecoderInitialized);
+
+  auto autoDeallocateShmem = MakeScopeExit([&, this] {
+    this->DeallocShmem(aBuffer.mData());
+  });
 
   // The output frame may not have the same timestamp as the frame we put in.
   // We may need to input a number of frames before we receive output. The

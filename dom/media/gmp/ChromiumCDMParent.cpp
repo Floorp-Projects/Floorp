@@ -169,8 +169,8 @@ ChromiumCDMParent::RemoveSession(const nsCString& aSessionId,
   }
 }
 
-static bool
-InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer, MediaRawData* aSample)
+bool
+ChromiumCDMParent::InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer, MediaRawData* aSample)
 {
   const CryptoSample& crypto = aSample->mCrypto;
   if (crypto.mEncryptedSizes.Length() != crypto.mPlainSizes.Length()) {
@@ -178,10 +178,13 @@ InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer, MediaRawData* aSample)
     return false;
   }
 
-  nsTArray<uint8_t> data;
-  data.AppendElements(aSample->Data(), aSample->Size());
+  Shmem shmem;
+  if (!AllocShmem(aSample->Size(), Shmem::SharedMemory::TYPE_BASIC, &shmem)) {
+    return false;
+  }
+  memcpy(shmem.get<uint8_t>(), aSample->Data(), aSample->Size());
 
-  aBuffer = gmp::CDMInputBuffer(data,
+  aBuffer = gmp::CDMInputBuffer(shmem,
                                 crypto.mKeyId,
                                 crypto.mIV,
                                 aSample->mTime,
@@ -209,6 +212,7 @@ ChromiumCDMParent::Decrypt(MediaRawData* aSample)
     GMP_LOG(
       "ChromiumCDMParent::Decrypt(this=%p) failed to send decrypt message",
       this);
+    DeallocShmem(buffer.mData());
     return DecryptPromise::CreateAndReject(DecryptResult(GenericErr, aSample),
                                            __func__);
   }
@@ -721,6 +725,7 @@ ChromiumCDMParent::DecryptAndDecodeFrame(MediaRawData* aSample)
     GMP_LOG(
       "ChromiumCDMParent::Decrypt(this=%p) failed to send decrypt message.",
       this);
+    DeallocShmem(buffer.mData());
     return MediaDataDecoder::DecodePromise::CreateAndReject(
       MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                   "Failed to send decrypt to CDM process."),
