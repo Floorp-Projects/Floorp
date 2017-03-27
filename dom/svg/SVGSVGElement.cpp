@@ -954,39 +954,52 @@ SVGSVGElement::GetLength(uint8_t aCtxType)
 // nsSVGElement methods
 
 /* virtual */ gfxMatrix
-SVGSVGElement::PrependLocalTransformsTo(
-  const gfxMatrix &aMatrix, SVGTransformTypes aWhich) const
+SVGSVGElement::PrependLocalTransformsTo(const gfxMatrix& aMatrix,
+                                        SVGTransformTypes aWhich) const
 {
   // 'transform' attribute (or an override from a fragment identifier):
-  gfxMatrix fromUserSpace =
-    SVGContentUtils::PrependLocalTransformsTo(
-      aMatrix, aWhich, mAnimateMotionTransform,
-      mSVGView && mSVGView->mTransforms ? mSVGView->mTransforms : mTransforms);
+  gfxMatrix userToParent;
 
-  if (aWhich == eUserSpaceToParent) {
-    return fromUserSpace;
+  if (aWhich == eUserSpaceToParent || aWhich == eAllTransforms) {
+    userToParent = GetUserToParentTransform(mAnimateMotionTransform,
+                                            mSVGView && mSVGView->mTransforms
+                                              ? mSVGView->mTransforms
+                                              : mTransforms);
+    if (aWhich == eUserSpaceToParent) {
+      return userToParent * aMatrix;
+    }
   }
+
+  gfxMatrix childToUser;
 
   if (IsInner()) {
     float x, y;
     const_cast<SVGSVGElement*>(this)->GetAnimatedLengthValues(&x, &y, nullptr);
-    if (aWhich == eAllTransforms) {
-      // the common case
-      return ThebesMatrix(GetViewBoxTransform()) * gfxMatrix::Translation(x, y) * fromUserSpace;
-    }
-    MOZ_ASSERT(aWhich == eChildToUserSpace, "Unknown TransformTypes");
-    return ThebesMatrix(GetViewBoxTransform()) * gfxMatrix::Translation(x, y) * aMatrix;
+    childToUser = ThebesMatrix(GetViewBoxTransform().PostTranslate(x, y));
+  } else if (IsRoot()) {
+    childToUser = ThebesMatrix(GetViewBoxTransform()
+                                 .PostScale(mCurrentScale, mCurrentScale)
+                                 .PostTranslate(mCurrentTranslate.GetX(),
+                                                mCurrentTranslate.GetY()));
+  } else {
+    // outer-<svg>, but inline in some other content:
+    childToUser = ThebesMatrix(GetViewBoxTransform());
   }
 
-  if (IsRoot()) {
-    gfxMatrix zoomPanTM;
-    zoomPanTM.Translate(gfxPoint(mCurrentTranslate.GetX(), mCurrentTranslate.GetY()));
-    zoomPanTM.Scale(mCurrentScale, mCurrentScale);
-    return ThebesMatrix(GetViewBoxTransform()) * zoomPanTM * fromUserSpace;
+  if (aWhich == eAllTransforms) {
+    return childToUser * userToParent * aMatrix;
   }
 
-  // outer-<svg>, but inline in some other content:
-  return ThebesMatrix(GetViewBoxTransform()) * fromUserSpace;
+  MOZ_ASSERT(aWhich == eChildToUserSpace, "Unknown TransformTypes");
+
+  // The following may look broken because pre-multiplying our eChildToUserSpace
+  // transform with another matrix without including our eUserSpaceToParent
+  // transform between the two wouldn't make sense.  We don't expect that to
+  // ever happen though.  We get here either when the identity matrix has been
+  // passed because our caller just wants our eChildToUserSpace transform, or
+  // when our eUserSpaceToParent transform has already been multiplied into the
+  // matrix that our caller passes (such as when we're called from PaintSVG).
+  return childToUser * aMatrix;
 }
 
 nsSVGAnimatedTransformList*

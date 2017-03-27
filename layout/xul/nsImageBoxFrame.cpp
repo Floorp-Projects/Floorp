@@ -97,10 +97,10 @@ nsImageBoxFrameEvent::Run()
 
 // Fire off an event that'll asynchronously call the image elements
 // onload handler once handled. This is needed since the image library
-// can't decide if it wants to call it's observer methods
+// can't decide if it wants to call its observer methods
 // synchronously or asynchronously. If an image is loaded from the
 // cache the notifications come back synchronously, but if the image
-// is loaded from the netswork the notifications come back
+// is loaded from the network the notifications come back
 // asynchronously.
 
 void
