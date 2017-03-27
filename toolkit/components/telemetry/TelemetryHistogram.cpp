@@ -591,12 +591,10 @@ GetProcessFromName(const std::string& aString)
 }
 
 Histogram*
-internal_GetSubsessionHistogram(Histogram& existing)
+internal_GetSubsessionHistogram(mozilla::Telemetry::HistogramID id,
+                                Histogram& existing)
 {
-  mozilla::Telemetry::HistogramID id;
-  nsresult rv
-    = internal_GetHistogramEnumId(existing.histogram_name().c_str(), &id);
-  if (NS_FAILED(rv) || gHistograms[id].keyed) {
+  if (gHistograms[id].keyed) {
     return nullptr;
   }
 
@@ -639,10 +637,23 @@ internal_GetSubsessionHistogram(Histogram& existing)
   cache[id] = clone;
   return clone;
 }
+
+Histogram*
+internal_GetSubsessionHistogram(Histogram& existing)
+{
+  mozilla::Telemetry::HistogramID id;
+  nsresult rv
+    = internal_GetHistogramEnumId(existing.histogram_name().c_str(), &id);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+  return internal_GetSubsessionHistogram(id, existing);
+}
 #endif
 
 nsresult
-internal_HistogramAdd(Histogram& histogram, int32_t value, uint32_t dataset)
+internal_HistogramAdd(mozilla::Telemetry::HistogramID id,
+                      Histogram& histogram, int32_t value, uint32_t dataset)
 {
   // Check if we are allowed to record the data.
   bool canRecordDataset = CanRecordDataset(dataset,
@@ -653,7 +664,7 @@ internal_HistogramAdd(Histogram& histogram, int32_t value, uint32_t dataset)
   }
 
 #if !defined(MOZ_WIDGET_ANDROID)
-  if (Histogram* subsession = internal_GetSubsessionHistogram(histogram)) {
+  if (Histogram* subsession = internal_GetSubsessionHistogram(id, histogram)) {
     subsession->Add(value);
   }
 #endif
@@ -666,24 +677,17 @@ internal_HistogramAdd(Histogram& histogram, int32_t value, uint32_t dataset)
 }
 
 nsresult
-internal_HistogramAdd(Histogram& histogram, int32_t value)
+internal_HistogramAdd(mozilla::Telemetry::HistogramID id,
+                      Histogram& histogram, int32_t value)
 {
   uint32_t dataset = nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN;
   // We only really care about the dataset of the histogram if we are not recording
   // extended telemetry. Otherwise, we always record histogram data.
   if (!internal_CanRecordExtended()) {
-    mozilla::Telemetry::HistogramID id;
-    nsresult rv
-      = internal_GetHistogramEnumId(histogram.histogram_name().c_str(), &id);
-    if (NS_FAILED(rv)) {
-      // If we can't look up the dataset, it might be because the histogram was added
-      // at runtime. Since we're not recording extended telemetry, bail out.
-      return NS_OK;
-    }
     dataset = gHistograms[id].dataset;
   }
 
-  return internal_HistogramAdd(histogram, value, dataset);
+  return internal_HistogramAdd(id, histogram, value, dataset);
 }
 
 void
@@ -1323,7 +1327,7 @@ void internal_Accumulate(mozilla::Telemetry::HistogramID aHistogram, uint32_t aS
   Histogram *h;
   nsresult rv = internal_GetHistogramByEnumId(aHistogram, &h, GeckoProcessType_Default);
   if (NS_SUCCEEDED(rv)) {
-    internal_HistogramAdd(*h, aSample, gHistograms[aHistogram].dataset);
+    internal_HistogramAdd(aHistogram, *h, aSample, gHistograms[aHistogram].dataset);
   }
 }
 
@@ -1345,14 +1349,14 @@ internal_Accumulate(mozilla::Telemetry::HistogramID aID,
 void
 internal_Accumulate(Histogram& aHistogram, uint32_t aSample)
 {
-  if (XRE_IsParentProcess()) {
-    internal_HistogramAdd(aHistogram, aSample);
-    return;
-  }
-
   mozilla::Telemetry::HistogramID id;
   nsresult rv = internal_GetHistogramEnumId(aHistogram.histogram_name().c_str(), &id);
   if (NS_SUCCEEDED(rv)) {
+    if (XRE_IsParentProcess()) {
+      internal_HistogramAdd(id, aHistogram, aSample);
+      return;
+    }
+
     internal_RemoteAccumulate(id, aSample);
   }
 }
@@ -1381,7 +1385,7 @@ internal_AccumulateChild(GeckoProcessType aProcessType, mozilla::Telemetry::Hist
   Histogram* h;
   nsresult rv = internal_GetHistogramByEnumId(aId, &h, aProcessType);
   if (NS_SUCCEEDED(rv)) {
-    internal_HistogramAdd(*h, aSample, gHistograms[aId].dataset);
+    internal_HistogramAdd(aId, *h, aSample, gHistograms[aId].dataset);
   } else {
     NS_WARNING("NS_FAILED GetHistogramByEnumId for CHILD");
   }
