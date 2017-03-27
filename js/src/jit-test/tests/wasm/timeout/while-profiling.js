@@ -5,6 +5,10 @@
 if (!wasmIsSupported())
     quit(6);
 
+// Single-step profiling currently only works in the ARM simulator
+if (!getBuildConfiguration()["arm-simulator"])
+    quit(6);
+
 var code = wasmTextToBinary(`(module
     (func (export "iloop")
         (loop $top br $top)
