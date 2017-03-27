@@ -93,8 +93,8 @@ public:
                                        : u"inactive");
 
     MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-           ("NotifyChannelActiveRunnable, type = %" PRIu32 ", active = %d\n",
-            static_cast<uint32_t>(mAudioChannel), mActive));
+           ("NotifyChannelActiveRunnable, type = %" PRIu32 ", active = %s\n",
+            static_cast<uint32_t>(mAudioChannel), mActive ? "true" : "false"));
 
     return NS_OK;
   }
@@ -137,8 +137,8 @@ public:
                                      state.get());
 
     MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-           ("AudioPlaybackRunnable, active = %d, reason = %d\n",
-            mActive, mReason));
+           ("AudioPlaybackRunnable, active = %s, reason = %s\n",
+            mActive ? "true" : "false", AudibleChangedReasonToStr(mReason)));
 
     return NS_OK;
   }
@@ -179,6 +179,72 @@ IsEnableAudioCompetingForAllAgents()
 }
 
 } // anonymous namespace
+
+namespace mozilla {
+namespace dom {
+
+const char*
+SuspendTypeToStr(const nsSuspendedTypes& aSuspend)
+{
+  MOZ_ASSERT(aSuspend == nsISuspendedTypes::NONE_SUSPENDED ||
+             aSuspend == nsISuspendedTypes::SUSPENDED_PAUSE ||
+             aSuspend == nsISuspendedTypes::SUSPENDED_BLOCK ||
+             aSuspend == nsISuspendedTypes::SUSPENDED_PAUSE_DISPOSABLE ||
+             aSuspend == nsISuspendedTypes::SUSPENDED_STOP_DISPOSABLE);
+
+  switch (aSuspend) {
+    case nsISuspendedTypes::NONE_SUSPENDED:
+      return "none";
+    case nsISuspendedTypes::SUSPENDED_PAUSE:
+      return "pause";
+    case nsISuspendedTypes::SUSPENDED_BLOCK:
+      return "block";
+    case nsISuspendedTypes::SUSPENDED_PAUSE_DISPOSABLE:
+      return "disposable-pause";
+    case nsISuspendedTypes::SUSPENDED_STOP_DISPOSABLE:
+      return "disposable-stop";
+    default:
+      return "unknown";
+  }
+}
+
+const char*
+AudibleStateToStr(const AudioChannelService::AudibleState& aAudible)
+{
+  MOZ_ASSERT(aAudible == AudioChannelService::AudibleState::eNotAudible ||
+             aAudible == AudioChannelService::AudibleState::eMaybeAudible ||
+             aAudible == AudioChannelService::AudibleState::eAudible);
+
+  switch (aAudible) {
+    case AudioChannelService::AudibleState::eNotAudible :
+      return "not-audible";
+    case AudioChannelService::AudibleState::eMaybeAudible :
+      return "maybe-audible";
+    case AudioChannelService::AudibleState::eAudible :
+      return "audible";
+    default:
+      return "unknown";
+  }
+}
+
+const char*
+AudibleChangedReasonToStr(const AudioChannelService::AudibleChangedReasons& aReason)
+{
+  MOZ_ASSERT(aReason == AudioChannelService::AudibleChangedReasons::eVolumeChanged ||
+             aReason == AudioChannelService::AudibleChangedReasons::eDataAudibleChanged ||
+             aReason == AudioChannelService::AudibleChangedReasons::ePauseStateChanged);
+
+  switch (aReason) {
+    case AudioChannelService::AudibleChangedReasons::eVolumeChanged :
+      return "volume";
+    case AudioChannelService::AudibleChangedReasons::eDataAudibleChanged :
+      return "data-audible";
+    case AudioChannelService::AudibleChangedReasons::ePauseStateChanged :
+      return "pause-state";
+    default:
+      return "unknown";
+  }
+}
 
 StaticRefPtr<AudioChannelService> gAudioChannelService;
 
@@ -903,7 +969,8 @@ AudioChannelService::SetAudioChannelMuted(nsPIDOMWindowOuter* aWindow,
 
   MOZ_LOG(GetAudioChannelLog(), LogLevel::Debug,
          ("AudioChannelService, SetAudioChannelMuted, window = %p, type = %" PRIu32 ", "
-          "mute = %d\n", aWindow, static_cast<uint32_t>(aAudioChannel), aMuted));
+          "mute = %s\n", aWindow, static_cast<uint32_t>(aAudioChannel),
+          aMuted ? "true" : "false"));
 
   if (aAudioChannel == AudioChannel::System) {
     // Workaround for bug1183033, system channel type can always playback.
@@ -1144,8 +1211,8 @@ AudioChannelService::AudioChannelWindow::RequestAudioFocus(AudioChannelAgent* aA
 
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
          ("AudioChannelWindow, RequestAudioFocus, this = %p, "
-          "agent = %p, owning audio focus = %d\n",
-          this, aAgent, mOwningAudioFocus));
+          "agent = %p, owning audio focus = %s\n",
+          this, aAgent, mOwningAudioFocus ? "true" : "false"));
 }
 
 void
@@ -1246,7 +1313,7 @@ AudioChannelService::AudioChannelWindow::AudioFocusChanged(AudioChannelAgent* aN
 
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
          ("AudioChannelWindow, AudioFocusChanged, this = %p, "
-          "OwningAudioFocus = %d\n", this, mOwningAudioFocus));
+          "OwningAudioFocus = %s\n", this, mOwningAudioFocus ? "true" : "false"));
 }
 
 bool
@@ -1274,8 +1341,9 @@ AudioChannelService::AudioChannelWindow::GetCompetingBehavior(AudioChannelAgent*
 
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
          ("AudioChannelWindow, GetCompetingBehavior, this = %p, "
-          "present type = %d, incoming channel = %d, behavior = %d\n",
-          this, presentChannelType, aIncomingChannelType, competingBehavior));
+          "present type = %d, incoming channel = %d, behavior = %s\n",
+          this, presentChannelType, aIncomingChannelType,
+          SuspendTypeToStr(competingBehavior)));
 
   return competingBehavior;
 }
@@ -1396,13 +1464,12 @@ AudioChannelService::AudioChannelWindow::AudioAudibleChanged(AudioChannelAgent* 
 
   if (aAudible == AudibleState::eAudible) {
     AppendAudibleAgentIfNotContained(aAgent, aReason);
+    NotifyAudioCompetingChanged(aAgent);
   } else {
     RemoveAudibleAgentIfContained(aAgent, aReason);
   }
 
-  if (aAudible == AudibleState::eAudible) {
-    NotifyAudioCompetingChanged(aAgent);
-  } else if (aAudible != AudibleState::eNotAudible) {
+  if (aAudible != AudibleState::eNotAudible) {
     MaybeNotifyMediaBlockStart(aAgent);
   }
 }
@@ -1519,3 +1586,7 @@ AudioChannelService::AudioChannelWindow::MaybeNotifyMediaBlockStart(AudioChannel
     );
   }
 }
+
+} // namespace dom
+} // namespace mozilla
+

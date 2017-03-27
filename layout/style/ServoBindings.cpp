@@ -927,6 +927,14 @@ Gecko_CopyImageValueFrom(nsStyleImage* aImage, const nsStyleImage* aOther)
 }
 
 void
+Gecko_InitializeImageCropRect(nsStyleImage* aImage)
+{
+  MOZ_ASSERT(aImage);
+  nsStyleSides cropRect;
+  aImage->SetCropRect(MakeUnique<nsStyleSides>(cropRect));
+}
+
+void
 Gecko_SetCursorArrayLength(nsStyleUserInterface* aStyleUI, size_t aLen)
 {
   aStyleUI->mCursorImages.Clear();
@@ -1503,6 +1511,12 @@ void
 Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource)
 {
   aFont->mLanguage = aSource->mLanguage;
+}
+
+nscoord
+Gecko_nsStyleFont_GetBaseSize(const nsStyleFont* aFont, RawGeckoPresContextBorrowed aPresContext)
+{
+  return aPresContext->GetDefaultFont(aFont->mGenericID, aFont->mLanguage)->size;
 }
 
 void

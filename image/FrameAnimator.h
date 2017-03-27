@@ -40,6 +40,19 @@ public:
   { }
 
   /**
+   * Call this whenever a decode completes, a decode starts, or the image is
+   * discarded. It will update the internal state. Specifically mDiscarded,
+   * mCompositedFrameInvalid, and mIsCurrentlyDecoded.
+   */
+  void UpdateState(bool aAnimationFinished,
+                   RasterImage *aImage,
+                   const gfx::IntSize& aSize);
+private:
+  void UpdateStateInternal(LookupResult& aResult,
+                           bool aAnimationFinished);
+
+public:
+  /**
    * Call when a decode of this image has been completed.
    */
   void NotifyDecodeComplete();
@@ -48,12 +61,6 @@ public:
    * Returns true if this image has been fully decoded before.
    */
   bool GetHasBeenDecoded() { return mHasBeenDecoded; }
-
-  /**
-   * Call this with true when this image is discarded. Call this with false
-   * when a decoder is created to decode the image.
-   */
-  void SetDiscarded(bool aDiscarded);
 
   /**
    * Returns true if this image has been discarded and a decoded has not yet
@@ -276,7 +283,9 @@ public:
    * Returns the result of that blending, including whether the current frame
    * changed and what the resulting dirty rectangle is.
    */
-  RefreshResult RequestRefresh(AnimationState& aState, const TimeStamp& aTime);
+  RefreshResult RequestRefresh(AnimationState& aState,
+                               const TimeStamp& aTime,
+                               bool aAnimationFinished);
 
   /**
    * Get the full frame for the current frame of the animation (it may or may

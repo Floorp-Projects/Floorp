@@ -34,7 +34,7 @@ to mochitest command.
   * test_bug418986-2.html: matchMedia support [3]
   * test_bug453896_deck.html: &lt;style media&gt; support [8]
   * test_media_queries.html [657]
-  * test_media_queries_dynamic.html [10]
+  * test_media_queries_dynamic.html [11]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
@@ -76,7 +76,6 @@ to mochitest command.
 * test_bug357614.html: case-insensitivity for old attrs in attr selector servo/servo#15006 [2]
 * mapped attribute not supported
   * test_bug363146.html [2]
-  * test_bug389464.html: also font-size computation [1]
   * test_html_attribute_computed_values.html: also list-style-type [8]
 * test_bug387615.html: servo/servo#15006 [1]
 * test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [1]
@@ -296,8 +295,6 @@ to mochitest command.
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
   * test_pixel_lengths.html `mozmm`: mozmm unit [3]
-  * -moz-image-rect value servo/servo#15948
-    * test_value_storage.html `-moz-image-rect` [15]
 * Unsupported values
   * SVG-only values of pointer-events not recognized
     * test_compute_data_with_start_struct.html `pointer-events` [2]
@@ -368,9 +365,6 @@ to mochitest command.
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
   * image-layer values should omit some of its parts when they are initial servo/servo#15951
     * test_shorthand_property_getters.html `background` [2]
-  * counter-{reset,increment} doesn't serialize none servo/servo#15977
-    * test_value_storage.html `counter-reset` [2]
-    * test_value_storage.html `counter-increment` [2]
   * :not(*) doesn't serialize properly servo/servo#16017
     * test_selectors.html `:not()` [8]
     * ... `:not(html|)` [1]
@@ -413,7 +407,6 @@ to mochitest command.
   * ... `perspective'`: servo/servo#15449 [20]
   * ... `'text-shadow'`: third length of text-shadow servo/servo#15999 [2]
   * ... `flex-basis`: servo/servo#15902 [6]
-  * ... `border-image-slice`: servo/servo#15339 [2]
 * Quirks mode support
   * hashless color servo/servo#15341
     * test_property_syntax_errors.html `color: 000000` [22]

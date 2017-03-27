@@ -66,7 +66,6 @@ static GtkWidget* gHPanedWidget;
 static GtkWidget* gVPanedWidget;
 static GtkWidget* gScrolledWindowWidget;
 
-static style_prop_t style_prop_func;
 static gboolean have_arrow_scaling;
 static gboolean is_initialized;
 
@@ -77,13 +76,6 @@ static void
 moz_gtk_set_widget_name(GtkWidget* widget)
 {
     gtk_widget_set_name(widget, "MozillaGtkWidget");
-}
-
-gint
-moz_gtk_enable_style_props(style_prop_t styleGetProp)
-{
-    style_prop_func = styleGetProp;
-    return MOZ_GTK_SUCCESS;
 }
 
 static gint

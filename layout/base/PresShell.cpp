@@ -807,8 +807,8 @@ nsIPresShell::nsIPresShell()
     , mFontSizeInflationForceEnabled(false)
     , mFontSizeInflationDisabledInMasterProcess(false)
     , mFontSizeInflationEnabled(false)
-    , mPaintingIsFrozen(false)
     , mFontSizeInflationEnabledIsDirty(false)
+    , mPaintingIsFrozen(false)
     , mIsNeverPainting(false)
     , mInFlush(false)
   {}
@@ -7185,17 +7185,21 @@ PresShell::HandleEvent(nsIFrame* aFrame,
                        nsIContent** aTargetContent)
 {
 #ifdef MOZ_TASK_TRACER
-  // Make touch events, mouse events and hardware key events to be the source
-  // events of TaskTracer, and originate the rest correlation tasks from here.
-  SourceEventType type = SourceEventType::Unknown;
-  if (aEvent->AsTouchEvent()) {
-    type = SourceEventType::Touch;
-  } else if (aEvent->AsMouseEvent()) {
-    type = SourceEventType::Mouse;
-  } else if (aEvent->AsKeyboardEvent()) {
-    type = SourceEventType::Key;
+  Maybe<AutoSourceEvent> taskTracerEvent;
+  if (MOZ_UNLIKELY(IsStartLogging())) {
+    // Make touch events, mouse events and hardware key events to be
+    // the source events of TaskTracer, and originate the rest
+    // correlation tasks from here.
+    SourceEventType type = SourceEventType::Unknown;
+    if (aEvent->AsTouchEvent()) {
+      type = SourceEventType::Touch;
+    } else if (aEvent->AsMouseEvent()) {
+      type = SourceEventType::Mouse;
+    } else if (aEvent->AsKeyboardEvent()) {
+      type = SourceEventType::Key;
+    }
+    taskTracerEvent.emplace(type);
   }
-  AutoSourceEvent taskTracerEvent(type);
 #endif
 
   NS_ASSERTION(aFrame, "aFrame should be not null");
@@ -11028,12 +11032,18 @@ void
 nsIPresShell::RecomputeFontSizeInflationEnabled()
 {
   mFontSizeInflationEnabledIsDirty = false;
+  mFontSizeInflationEnabled = DetermineFontSizeInflationState();
 
+  HandleSystemFontScale();
+}
+
+bool
+nsIPresShell::DetermineFontSizeInflationState()
+{
   MOZ_ASSERT(mPresContext, "our pres context should not be null");
   if ((FontSizeInflationEmPerLine() == 0 &&
       FontSizeInflationMinTwips() == 0) || mPresContext->IsChrome()) {
-    mFontSizeInflationEnabled = false;
-    return;
+    return false;
   }
 
   // Force-enabling font inflation always trumps the heuristics here.
@@ -11042,15 +11052,13 @@ nsIPresShell::RecomputeFontSizeInflationEnabled()
       // We're in a child process.  Cancel inflation if we're not
       // async-pan zoomed.
       if (!tab->AsyncPanZoomEnabled()) {
-        mFontSizeInflationEnabled = false;
-        return;
+        return false;
       }
     } else if (XRE_IsParentProcess()) {
       // We're in the master process.  Cancel inflation if it's been
       // explicitly disabled.
       if (FontSizeInflationDisabledInMasterProcess()) {
-        mFontSizeInflationEnabled = false;
-        return;
+        return false;
       }
     }
   }
@@ -11075,8 +11083,7 @@ nsIPresShell::RecomputeFontSizeInflationEnabled()
   nsCOMPtr<nsIScreenManager> screenMgr =
     do_GetService("@mozilla.org/gfx/screenmanager;1", &rv);
   if (!NS_SUCCEEDED(rv)) {
-    mFontSizeInflationEnabled = false;
-    return;
+    return false;
   }
 
   nsCOMPtr<nsIScreen> screen;
@@ -11089,12 +11096,11 @@ nsIPresShell::RecomputeFontSizeInflationEnabled()
       GetDocument()->GetViewportInfo(ScreenIntSize(screenWidth, screenHeight));
 
     if (vInf.GetDefaultZoom() >= CSSToScreenScale(1.0f) || vInf.IsAutoSizeEnabled()) {
-      mFontSizeInflationEnabled = false;
-      return;
+      return false;
     }
   }
 
-  mFontSizeInflationEnabled = true;
+  return true;
 }
 
 bool
@@ -11105,6 +11111,23 @@ nsIPresShell::FontSizeInflationEnabled()
   }
 
   return mFontSizeInflationEnabled;
+}
+
+void
+nsIPresShell::HandleSystemFontScale()
+{
+  float fontScale = nsLayoutUtils::SystemFontScale();
+  if (fontScale == 0.0f) {
+    return;
+  }
+
+  MOZ_ASSERT(mDocument && mPresContext, "our document and pres context should not be null");
+
+  if (!mFontSizeInflationEnabled && !mDocument->IsSyntheticDocument()) {
+    mPresContext->SetSystemFontScale(fontScale);
+  } else {
+    mPresContext->SetSystemFontScale(1.0f);
+  }
 }
 
 void

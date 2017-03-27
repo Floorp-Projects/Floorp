@@ -69,6 +69,7 @@ class AutoSetHandlingSegFault
 #if defined(XP_WIN)
 # define XMM_sig(p,i) ((p)->Xmm##i)
 # define EIP_sig(p) ((p)->Eip)
+# define EBP_sig(p) ((p)->Ebp)
 # define RIP_sig(p) ((p)->Rip)
 # define RAX_sig(p) ((p)->Rax)
 # define RCX_sig(p) ((p)->Rcx)
@@ -89,6 +90,7 @@ class AutoSetHandlingSegFault
 #elif defined(__OpenBSD__)
 # define XMM_sig(p,i) ((p)->sc_fpstate->fx_xmm[i])
 # define EIP_sig(p) ((p)->sc_eip)
+# define EBP_sig(p) ((p)->sc_ebp)
 # define RIP_sig(p) ((p)->sc_rip)
 # define RAX_sig(p) ((p)->sc_rax)
 # define RCX_sig(p) ((p)->sc_rcx)
@@ -110,9 +112,11 @@ class AutoSetHandlingSegFault
 # if defined(__linux__)
 #  define XMM_sig(p,i) ((p)->uc_mcontext.fpregs->_xmm[i])
 #  define EIP_sig(p) ((p)->uc_mcontext.gregs[REG_EIP])
+#  define EBP_sig(p) ((p)->uc_mcontext.gregs[REG_EBP])
 # else
 #  define XMM_sig(p,i) ((p)->uc_mcontext.fpregs.fp_reg_set.fpchip_state.xmm[i])
 #  define EIP_sig(p) ((p)->uc_mcontext.gregs[REG_PC])
+#  define EBP_sig(p) ((p)->uc_mcontext.gregs[REG_EBP])
 # endif
 # define RIP_sig(p) ((p)->uc_mcontext.gregs[REG_RIP])
 # define RAX_sig(p) ((p)->uc_mcontext.gregs[REG_RAX])
@@ -126,13 +130,14 @@ class AutoSetHandlingSegFault
 # define R8_sig(p) ((p)->uc_mcontext.gregs[REG_R8])
 # define R9_sig(p) ((p)->uc_mcontext.gregs[REG_R9])
 # define R10_sig(p) ((p)->uc_mcontext.gregs[REG_R10])
-# define R11_sig(p) ((p)->uc_mcontext.gregs[REG_R11])
 # define R12_sig(p) ((p)->uc_mcontext.gregs[REG_R12])
 # define R13_sig(p) ((p)->uc_mcontext.gregs[REG_R13])
 # define R14_sig(p) ((p)->uc_mcontext.gregs[REG_R14])
 # if defined(__linux__) && defined(__arm__)
+#  define R11_sig(p) ((p)->uc_mcontext.arm_fp)
 #  define R15_sig(p) ((p)->uc_mcontext.arm_pc)
 # else
+#  define R11_sig(p) ((p)->uc_mcontext.gregs[REG_R11])
 #  define R15_sig(p) ((p)->uc_mcontext.gregs[REG_R15])
 # endif
 # if defined(__linux__) && defined(__aarch64__)
@@ -146,6 +151,7 @@ class AutoSetHandlingSegFault
 #elif defined(__NetBSD__)
 # define XMM_sig(p,i) (((struct fxsave64*)(p)->uc_mcontext.__fpregs)->fx_xmm[i])
 # define EIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EIP])
+# define EBP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EBP])
 # define RIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_RIP])
 # define RAX_sig(p) ((p)->uc_mcontext.__gregs[_REG_RAX])
 # define RCX_sig(p) ((p)->uc_mcontext.__gregs[_REG_RCX])
@@ -170,6 +176,7 @@ class AutoSetHandlingSegFault
 #  define XMM_sig(p,i) (((struct savefpu*)(p)->uc_mcontext.mc_fpstate)->sv_xmm[i])
 # endif
 # define EIP_sig(p) ((p)->uc_mcontext.mc_eip)
+# define EBP_sig(p) ((p)->uc_mcontext.mc_ebp)
 # define RIP_sig(p) ((p)->uc_mcontext.mc_rip)
 # define RAX_sig(p) ((p)->uc_mcontext.mc_rax)
 # define RCX_sig(p) ((p)->uc_mcontext.mc_rcx)
@@ -193,7 +200,9 @@ class AutoSetHandlingSegFault
 # endif
 #elif defined(XP_DARWIN)
 # define EIP_sig(p) ((p)->uc_mcontext->__ss.__eip)
+# define EBP_sig(p) ((p)->uc_mcontext->__ss.__ebp)
 # define RIP_sig(p) ((p)->uc_mcontext->__ss.__rip)
+# define RBP_sig(p) ((p)->uc_mcontext->__ss.__rbp)
 # define R15_sig(p) ((p)->uc_mcontext->__ss.__pc)
 #else
 # error "Don't know how to read/write to the thread state via the mcontext_t."
@@ -335,14 +344,19 @@ struct macos_arm_context {
 
 #if defined(_M_X64) || defined(__x86_64__)
 # define PC_sig(p) RIP_sig(p)
+# define FP_sig(p) RBP_sig(p)
 #elif defined(_M_IX86) || defined(__i386__)
 # define PC_sig(p) EIP_sig(p)
+# define FP_sig(p) EBP_sig(p)
 #elif defined(__arm__)
 # define PC_sig(p) R15_sig(p)
+# define FP_sig(p) R11_sig(p)
 #elif defined(__aarch64__)
 # define PC_sig(p) EPC_sig(p)
+# define FP_sig(p) RFP_sig(p)
 #elif defined(__mips__)
 # define PC_sig(p) EPC_sig(p)
+# define FP_sig(p) RFP_sig(p)
 #endif
 
 static uint8_t**
@@ -352,6 +366,16 @@ ContextToPC(CONTEXT* context)
     MOZ_CRASH();
 #else
     return reinterpret_cast<uint8_t**>(&PC_sig(context));
+#endif
+}
+
+uint8_t*
+ContextToFP(CONTEXT* context)
+{
+#ifdef JS_CODEGEN_NONE
+    MOZ_CRASH();
+#else
+    return reinterpret_cast<uint8_t*>(FP_sig(context));
 #endif
 }
 
@@ -790,7 +814,25 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!activation)
         return false;
 
-    const Instance* instance = activation->compartment()->wasm.lookupInstanceDeprecated(pc);
+    Code* code = activation->compartment()->wasm.lookupCode(pc);
+    if (!code)
+        return false;
+
+    if (!code->segment().containsFunctionPC(pc)) {
+        // On Windows, it is possible for InterruptRunningCode to execute
+        // between a faulting heap access and the handling of the fault due
+        // to InterruptRunningCode's use of SuspendThread. When this happens,
+        // after ResumeThread, the exception handler is called with pc equal to
+        // CodeSegment.interrupt, which is logically wrong. The Right Thing would
+        // be for the OS to make fault-handling atomic (so that CONTEXT.pc was
+        // always the logically-faulting pc). Fortunately, we can detect this
+        // case and silence the exception ourselves (the exception will
+        // retrigger after the interrupt jumps back to resumePC).
+        return pc == code->segment().interruptCode() &&
+               code->segment().containsFunctionPC(activation->resumePC());
+    }
+
+    const Instance* instance = LookupFaultingInstance(activation, pc, ContextToFP(context));
     if (!instance)
         return false;
 
@@ -800,20 +842,6 @@ HandleFault(PEXCEPTION_POINTERS exception)
     // sure we aren't covering up a real bug.
     if (!IsHeapAccessAddress(*instance, faultingAddress))
         return false;
-
-    if (!instance->codeSegment().containsFunctionPC(pc)) {
-        // On Windows, it is possible for InterruptRunningCode to execute
-        // between a faulting heap access and the handling of the fault due
-        // to InterruptRunningCode's use of SuspendThread. When this happens,
-        // after ResumeThread, the exception handler is called with pc equal to
-        // instance.interrupt, which is logically wrong. The Right Thing would
-        // be for the OS to make fault-handling atomic (so that CONTEXT.pc was
-        // always the logically-faulting pc). Fortunately, we can detect this
-        // case and silence the exception ourselves (the exception will
-        // retrigger after the interrupt jumps back to resumePC).
-        return pc == instance->codeSegment().interruptCode() &&
-               instance->codeSegment().containsFunctionPC(activation->resumePC());
-    }
 
     HandleMemoryAccess(context, pc, faultingAddress, *instance, ppc);
     return true;
@@ -847,6 +875,20 @@ ContextToPC(EMULATOR_CONTEXT* context)
     static_assert(sizeof(context->thread.__pc) == sizeof(void*),
                   "stored IP should be compile-time pointer-sized");
     return reinterpret_cast<uint8_t**>(&context->thread.__pc);
+# else
+#  error Unsupported architecture
+# endif
+}
+
+static void*
+ContextToFP(EMULATOR_CONTEXT* context)
+{
+# if defined(__x86_64__)
+    return (void*)context->thread.__rbp;
+# elif defined(__i386__)
+    return (void*)context->thread.uts.ts32.__ebp;
+# elif defined(__arm__)
+    return (void*)context->thread.__fp;
 # else
 #  error Unsupported architecture
 # endif
@@ -927,7 +969,7 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
     if (!activation)
         return false;
 
-    const Instance* instance = activation->compartment()->wasm.lookupInstanceDeprecated(pc);
+    const Instance* instance = LookupFaultingInstance(activation, pc, ContextToFP(&context));
     if (!instance || !instance->codeSegment().containsFunctionPC(pc))
         return false;
 
@@ -1134,7 +1176,7 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
     if (!activation)
         return false;
 
-    const Instance* instance = activation->compartment()->wasm.lookupInstanceDeprecated(pc);
+    const Instance* instance = LookupFaultingInstance(activation, pc, ContextToFP(context));
     if (!instance || !instance->codeSegment().containsFunctionPC(pc))
         return false;
 
@@ -1245,17 +1287,17 @@ RedirectJitCodeToInterruptCheck(JSContext* cx, CONTEXT* context)
 
         void* pc = cx->simulator()->get_pc_as<void*>();
 
-        const Instance* instance = activation->compartment()->wasm.lookupInstanceDeprecated(pc);
-        if (instance && instance->codeSegment().containsFunctionPC(pc))
-            cx->simulator()->set_resume_pc(instance->codeSegment().interruptCode());
+        const Code* code = activation->compartment()->wasm.lookupCode(pc);
+        if (code && code->segment().containsFunctionPC(pc))
+            cx->simulator()->set_resume_pc(code->segment().interruptCode());
 #else
         uint8_t** ppc = ContextToPC(context);
         uint8_t* pc = *ppc;
 
-        const Instance* instance = activation->compartment()->wasm.lookupInstanceDeprecated(pc);
-        if (instance && instance->codeSegment().containsFunctionPC(pc)) {
+        const Code* code = activation->compartment()->wasm.lookupCode(pc);
+        if (code && code->segment().containsFunctionPC(pc)) {
             activation->setResumePC(pc);
-            *ppc = instance->codeSegment().interruptCode();
+            *ppc = code->segment().interruptCode();
             return true;
         }
 #endif
@@ -1487,5 +1529,5 @@ js::wasm::IsPCInWasmCode(void *pc)
     if (!activation)
         return false;
 
-    return !!activation->compartment()->wasm.lookupInstanceDeprecated(pc);
+    return !!activation->compartment()->wasm.lookupCode(pc);
 }

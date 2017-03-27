@@ -4215,7 +4215,10 @@ OverflowableToolbar.prototype = {
       let inserted = false;
       for (; beforeNodeIndex < placements.length; beforeNodeIndex++) {
         let beforeNode = this._target.getElementsByAttribute("id", placements[beforeNodeIndex])[0];
-        if (beforeNode) {
+        // Unfortunately, XUL add-ons can mess with nodes after they are inserted,
+        // and this breaks the following code if the button isn't where we expect
+        // it to be (ie not a child of the target). In this case, ignore the node.
+        if (beforeNode && this._target == beforeNode.parentElement) {
           this._target.insertBefore(child, beforeNode);
           inserted = true;
           break;

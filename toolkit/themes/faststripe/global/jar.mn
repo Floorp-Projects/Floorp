@@ -16,3 +16,5 @@ toolkit.jar:
    skin/classic/global/tabbox.css
    skin/classic/global/textbox.css
    skin/classic/global/scrollbars.css                       (xulscrollbars.css)
+   skin/classic/global/checkbox/cbox-check.gif              (checkbox/cbox-check.gif)
+   skin/classic/global/checkbox/cbox-check-dis.gif          (checkbox/cbox-check-dis.gif)

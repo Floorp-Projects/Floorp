@@ -1769,29 +1769,6 @@ ssl3_InitCompressionContext(ssl3CipherSpec *pwSpec)
     return SECSuccess;
 }
 
-/* This function should probably be moved to pk11wrap and be named
- * PK11_ParamFromIVAndEffectiveKeyBits
- */
-static SECItem *
-ssl3_ParamFromIV(CK_MECHANISM_TYPE mtype, SECItem *iv, CK_ULONG ulEffectiveBits)
-{
-    SECItem *param = PK11_ParamFromIV(mtype, iv);
-    if (param && param->data && param->len >= sizeof(CK_RC2_PARAMS)) {
-        switch (mtype) {
-            case CKM_RC2_KEY_GEN:
-            case CKM_RC2_ECB:
-            case CKM_RC2_CBC:
-            case CKM_RC2_MAC:
-            case CKM_RC2_MAC_GENERAL:
-            case CKM_RC2_CBC_PAD:
-                *(CK_RC2_PARAMS *)param->data = ulEffectiveBits;
-            default:
-                break;
-        }
-    }
-    return param;
-}
-
 /* ssl3_BuildRecordPseudoHeader writes the SSL/TLS pseudo-header (the data
  * which is included in the MAC or AEAD additional data) to |out| and returns
  * its length. See https://tools.ietf.org/html/rfc5246#section-6.2.3.3 for the
@@ -1973,7 +1950,6 @@ ssl3_InitPendingContexts(sslSocket *ss)
     CK_MECHANISM_TYPE mechanism;
     CK_MECHANISM_TYPE mac_mech;
     CK_ULONG macLength;
-    CK_ULONG effKeyBits;
     SECItem iv;
     SECItem mac_param;
     SSLCipherAlgorithm calg;
@@ -2043,14 +2019,13 @@ ssl3_InitPendingContexts(sslSocket *ss)
         return SECSuccess;
     }
     mechanism = ssl3_Alg2Mech(calg);
-    effKeyBits = cipher_def->key_size * BPB;
 
     /*
      * build the server context
      */
     iv.data = pwSpec->server.write_iv;
     iv.len = cipher_def->iv_size;
-    param = ssl3_ParamFromIV(mechanism, &iv, effKeyBits);
+    param = PK11_ParamFromIV(mechanism, &iv);
     if (param == NULL) {
         ssl_MapLowLevelError(SSL_ERROR_IV_PARAM_FAILURE);
         goto fail;
@@ -2074,7 +2049,7 @@ ssl3_InitPendingContexts(sslSocket *ss)
     iv.data = pwSpec->client.write_iv;
     iv.len = cipher_def->iv_size;
 
-    param = ssl3_ParamFromIV(mechanism, &iv, effKeyBits);
+    param = PK11_ParamFromIV(mechanism, &iv);
     if (param == NULL) {
         ssl_MapLowLevelError(SSL_ERROR_IV_PARAM_FAILURE);
         goto fail;

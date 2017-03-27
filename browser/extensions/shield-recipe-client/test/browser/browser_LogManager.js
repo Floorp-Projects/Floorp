@@ -1,7 +1,5 @@
 "use strict";
 
-const {utils: Cu} = Components;
-
 Cu.import("resource://gre/modules/Log.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/LogManager.jsm", this);
 

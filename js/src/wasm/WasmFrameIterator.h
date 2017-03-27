@@ -138,6 +138,12 @@ GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOf
 void
 TraceActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc);
 
+// Given a fault at pc with register fp, return the faulting instance if there
+// is such a plausible instance, and otherwise null.
+
+Instance*
+LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp);
+
 } // namespace wasm
 } // namespace js
 

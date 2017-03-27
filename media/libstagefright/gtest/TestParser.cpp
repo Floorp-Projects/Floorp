@@ -5,6 +5,7 @@
 
 #include "gtest/gtest.h"
 #include "MediaData.h"
+#include "MediaPrefs.h"
 #include "mozilla/ArrayUtils.h"
 #include "mp4_demuxer/BufferStream.h"
 #include "mp4_demuxer/MP4Metadata.h"
@@ -205,10 +206,64 @@ static const TestFileData testFiles[] = {
                                                             false,   0, false, false, 2 },
 };
 
+static const TestFileData rustTestFiles[] = {
+  // filename                      #V dur   w    h  #A dur  crypt        off   moof  headr  audio_profile
+  { "test_case_1156505.mp4",        0, -1,   0,   0, 0, -1, false, 152, false, false, 0 },
+  { "test_case_1181213.mp4",        1, 416666,
+                                           320, 240, 1, 477460,
+                                                             true,   0, false, false, 2 },
+  { "test_case_1181215.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1181220.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1181223.mp4",        1, 416666,
+                                           320, 240, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1181719.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1185230.mp4",        2, 416666,
+                                           320, 240, 2,  5, false,   0, false, false, 2 },
+  { "test_case_1187067.mp4",        1, 80000,
+                                           160,  90, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1200326.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1204580.mp4",        1, 502500,
+                                           320, 180, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1216748.mp4",        0, -1,   0,   0, 0, -1, false, 152, false, false, 0 },
+  { "test_case_1296473.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1296532.mp4",        1, 5589333,
+                                           560, 320, 1, 5589333,
+                                                            true,    0, true,  true,  2  },
+  { "test_case_1301065.mp4",        0, -1,   0,   0, 1, 100079991719000000,
+                                                            false,   0, false, false, 2 },
+  { "test_case_1301065-u32max.mp4", 0, -1,   0,   0, 1, 97391548639,
+                                                            false,   0, false, false, 2 },
+  { "test_case_1301065-max-ez.mp4", 0, -1,   0,   0, 1, 209146758205306,
+                                                            false,   0, false, false, 2 },
+  { "test_case_1301065-harder.mp4", 0, -1,   0,   0, 1, 209146758205328,
+                                                            false,   0, false, false, 2 },
+  { "test_case_1301065-max-ok.mp4", 0, -1,   0,   0, 1, 9223372036854775804,
+                                                            false,   0, false, false, 2 },
+  // The duration is overflow for int64_t in TestFileData, rust parser uses uint64_t so
+  // this file is ignore.
+  //{ "test_case_1301065-overfl.mp4", 0, -1,   0,   0, 1, 9223372036854775827,
+  //                                                          false,   0, false, false, 2 },
+  { "test_case_1301065-i64max.mp4", 0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1301065-i64min.mp4", 0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1301065-u64max.mp4", 0, -1,   0,   0, 1,  0, false,   0, false, false, 2 },
+  { "test_case_1329061.mov",        0, -1,   0,   0, 1,  234567981,
+                                                            false,   0, false, false, 2 },
+};
 TEST(stagefright_MPEG4Metadata, test_case_mp4)
 {
-  for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
-    nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test].mFilename);
+  const TestFileData* tests = nullptr;
+  size_t length = 0;
+
+  if (MediaPrefs::EnableRustMP4Parser()) {
+    tests = rustTestFiles;
+    length = ArrayLength(rustTestFiles);
+  } else {
+    tests = testFiles;
+    length = ArrayLength(testFiles);
+  }
+
+  for (size_t test = 0; test < length; ++test) {
+    nsTArray<uint8_t> buffer = ReadTestFile(tests[test].mFilename);
     ASSERT_FALSE(buffer.IsEmpty());
     RefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
 
@@ -217,15 +272,15 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
 
     MP4Metadata metadata(stream);
     EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kUndefinedTrack));
-    EXPECT_EQ(testFiles[test].mNumberAudioTracks,
+    EXPECT_EQ(tests[test].mNumberAudioTracks,
               metadata.GetNumberTracks(TrackInfo::kAudioTrack));
-    EXPECT_EQ(testFiles[test].mNumberVideoTracks,
+    EXPECT_EQ(tests[test].mNumberVideoTracks,
               metadata.GetNumberTracks(TrackInfo::kVideoTrack));
     EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kTextTrack));
     EXPECT_EQ(0u, metadata.GetNumberTracks(static_cast<TrackInfo::TrackType>(-1)));
     EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kUndefinedTrack, 0));
     UniquePtr<TrackInfo> trackInfo = metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0);
-    if (testFiles[test].mNumberVideoTracks == 0) {
+    if (tests[test].mNumberVideoTracks == 0) {
       EXPECT_TRUE(!trackInfo);
     } else {
       ASSERT_TRUE(!!trackInfo);
@@ -233,9 +288,9 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
       ASSERT_TRUE(!!videoInfo);
       EXPECT_TRUE(videoInfo->IsValid());
       EXPECT_TRUE(videoInfo->IsVideo());
-      EXPECT_EQ(testFiles[test].mVideoDuration, videoInfo->mDuration);
-      EXPECT_EQ(testFiles[test].mWidth, videoInfo->mDisplay.width);
-      EXPECT_EQ(testFiles[test].mHeight, videoInfo->mDisplay.height);
+      EXPECT_EQ(tests[test].mVideoDuration, videoInfo->mDuration);
+      EXPECT_EQ(tests[test].mWidth, videoInfo->mDisplay.width);
+      EXPECT_EQ(tests[test].mHeight, videoInfo->mDisplay.height);
 
       UniquePtr<IndiceWrapper> indices = metadata.GetTrackIndice(videoInfo->mTrackId);
       EXPECT_TRUE(!!indices);
@@ -247,7 +302,7 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
       }
     }
     trackInfo = metadata.GetTrackInfo(TrackInfo::kAudioTrack, 0);
-    if (testFiles[test].mNumberAudioTracks == 0) {
+    if (tests[test].mNumberAudioTracks == 0) {
       EXPECT_TRUE(!trackInfo);
     } else {
       ASSERT_TRUE(!!trackInfo);
@@ -255,8 +310,11 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
       ASSERT_TRUE(!!audioInfo);
       EXPECT_TRUE(audioInfo->IsValid());
       EXPECT_TRUE(audioInfo->IsAudio());
-      EXPECT_EQ(testFiles[test].mAudioDuration, audioInfo->mDuration);
-      EXPECT_EQ(testFiles[test].mAudioProfile, audioInfo->mProfile);
+      EXPECT_EQ(tests[test].mAudioDuration, audioInfo->mDuration);
+      EXPECT_EQ(tests[test].mAudioProfile, audioInfo->mProfile);
+      if (tests[test].mAudioDuration != audioInfo->mDuration) {
+        MOZ_RELEASE_ASSERT(false);
+      }
 
       UniquePtr<IndiceWrapper> indices = metadata.GetTrackIndice(audioInfo->mTrackId);
       EXPECT_TRUE(!!indices);
@@ -264,14 +322,14 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
         Index::Indice data;
         EXPECT_TRUE(indices->GetIndice(i, data));
         EXPECT_TRUE(data.start_offset <= data.end_offset);
-        EXPECT_TRUE(data.start_composition <= data.end_composition);
+        EXPECT_TRUE(int64_t(data.start_composition) <= int64_t(data.end_composition));
       }
     }
     EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kTextTrack, 0));
     EXPECT_FALSE(metadata.GetTrackInfo(static_cast<TrackInfo::TrackType>(-1), 0));
     // We can see anywhere in any MPEG4.
     EXPECT_TRUE(metadata.CanSeek());
-    EXPECT_EQ(testFiles[test].mHasCrypto, metadata.Crypto().valid);
+    EXPECT_EQ(tests[test].mHasCrypto, metadata.Crypto().valid);
   }
 }
 
@@ -315,8 +373,19 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4_subsets)
 
 TEST(stagefright_MoofParser, test_case_mp4)
 {
-  for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
-    nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test].mFilename);
+  const TestFileData* tests = nullptr;
+  size_t length = 0;
+
+  if (MediaPrefs::EnableRustMP4Parser()) {
+    tests = rustTestFiles;
+    length = ArrayLength(rustTestFiles);
+  } else {
+    tests = testFiles;
+    length = ArrayLength(testFiles);
+  }
+
+  for (size_t test = 0; test < length; ++test) {
+    nsTArray<uint8_t> buffer = ReadTestFile(tests[test].mFilename);
     ASSERT_FALSE(buffer.IsEmpty());
     RefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
 
@@ -332,20 +401,20 @@ TEST(stagefright_MoofParser, test_case_mp4)
     EXPECT_FALSE(parser.mInitRange.IsEmpty());
     const MediaByteRangeSet byteRanges(
       MediaByteRange(0, int64_t(buffer.Length())));
-    EXPECT_EQ(testFiles[test].mValidMoof,
+    EXPECT_EQ(tests[test].mValidMoof,
               parser.RebuildFragmentedIndex(byteRanges));
-    if (testFiles[test].mMoofReachedOffset == 0) {
+    if (tests[test].mMoofReachedOffset == 0) {
       EXPECT_EQ(buffer.Length(), parser.mOffset);
       EXPECT_TRUE(parser.ReachedEnd());
     } else {
-      EXPECT_EQ(testFiles[test].mMoofReachedOffset, parser.mOffset);
+      EXPECT_EQ(tests[test].mMoofReachedOffset, parser.mOffset);
       EXPECT_FALSE(parser.ReachedEnd());
     }
 
     EXPECT_FALSE(parser.mInitRange.IsEmpty());
     EXPECT_TRUE(parser.GetCompositionRange(byteRanges).IsNull());
     EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsEmpty());
-    EXPECT_EQ(testFiles[test].mHeader,
+    EXPECT_EQ(tests[test].mHeader,
               !parser.FirstCompleteMediaHeader().IsEmpty());
   }
 }

@@ -111,7 +111,7 @@ fails HTTP(..) == load-badchecksum.html load-badchecksum.html
 fails HTTP(..) == name-collision.html name-collision.html # Bug 1290237
 fails HTTP(..) == name-collision-bad-url.html name-collision-bad-url.html
 
-fails HTTP(..) == name-collision-with-prefs-font.html name-collision-with-prefs-font.html
+HTTP(..) == name-collision-with-prefs-font.html name-collision-with-prefs-font.html
 fails HTTP(..) == load-badfullname.html load-badfullname.html
 
 # 507960-1-* : a collection of tests using DeLarge from openfontlibrary.org

@@ -2841,6 +2841,7 @@ nsGenericHTMLFormElementWithState::RestoreFormControlState()
 void
 nsGenericHTMLFormElementWithState::NodeInfoChanged(nsIDocument* aOldDoc)
 {
+  nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
   mStateKey.SetIsVoid(true);
 }
 

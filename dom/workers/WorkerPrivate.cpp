@@ -538,7 +538,7 @@ private:
       RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
       if (swm) {
         swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
-                         aWorkerPrivate->WorkerName(),
+                         aWorkerPrivate->ServiceWorkerScope(),
                          aWorkerPrivate->ScriptURL(),
                          EmptyString(), EmptyString(), EmptyString(),
                          0, 0, JSREPORT_ERROR, JSEXN_ERR);
@@ -1181,7 +1181,7 @@ private:
         RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
         if (swm) {
           swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
-                           aWorkerPrivate->WorkerName(),
+                           aWorkerPrivate->ServiceWorkerScope(),
                            aWorkerPrivate->ScriptURL(),
                            mReport.mMessage,
                            mReport.mFilename, mReport.mLine, mReport.mLineNumber,
@@ -6907,7 +6907,7 @@ WorkerPrivate::GetOrCreateGlobalScope(JSContext* aCx)
     if (IsSharedWorker()) {
       globalScope = new SharedWorkerGlobalScope(this, WorkerName());
     } else if (IsServiceWorker()) {
-      globalScope = new ServiceWorkerGlobalScope(this, WorkerName());
+      globalScope = new ServiceWorkerGlobalScope(this, ServiceWorkerScope());
     } else {
       globalScope = new DedicatedWorkerGlobalScope(this);
     }

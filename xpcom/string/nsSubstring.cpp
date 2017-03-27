@@ -425,18 +425,4 @@ bool Gecko_FallibleSetLengthString(nsAString* aThis, uint32_t aLength)
   return aThis->SetLength(aLength, mozilla::fallible);
 }
 
-// NOTE: These two methods, Gecko_TruncateString and Gecko_TruncateCString are
-// not used by the nsstring bindings, but until the version in servo
-// (nsstring_vendor) is udpated, they still need to be included in the binary to
-// not break the tree. These will be removed in bug 1348398.
-void Gecko_TruncateString(nsAString* aThis)
-{
-  aThis->Truncate();
-}
-
-void Gecko_TruncateCString(nsACString* aThis)
-{
-  aThis->Truncate();
-}
-
 } // extern "C"

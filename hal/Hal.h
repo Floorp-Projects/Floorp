@@ -42,8 +42,6 @@ namespace mozilla {
 
 namespace hal {
 
-typedef Observer<void_t> AlarmObserver;
-
 class WindowIdentifier;
 
 typedef Observer<int64_t> SystemClockChangeObserver;
@@ -431,41 +429,6 @@ hal::SwitchState GetCurrentSwitchState(hal::SwitchDevice aDevice);
  */
 void NotifySwitchStateFromInputDevice(hal::SwitchDevice aDevice,
                                       hal::SwitchState aState);
-
-/**
- * Register an observer that is notified when a programmed alarm
- * expires.
- *
- * Currently, there can only be 0 or 1 alarm observers.
- */
-MOZ_MUST_USE bool RegisterTheOneAlarmObserver(hal::AlarmObserver* aObserver);
-
-/**
- * Unregister the alarm observer.  Doing so will implicitly cancel any
- * programmed alarm.
- */
-void UnregisterTheOneAlarmObserver();
-
-/**
- * Notify that the programmed alarm has expired.
- *
- * This API is internal to hal; clients shouldn't call it directly.
- */
-void NotifyAlarmFired();
-
-/**
- * Program the real-time clock to expire at the time |aSeconds|,
- * |aNanoseconds|.  These specify a point in real time relative to the
- * UNIX epoch.  The alarm will fire at this time point even if the
- * real-time clock is changed; that is, this alarm respects changes to
- * the real-time clock.  Return true iff the alarm was programmed.
- *
- * The alarm can be reprogrammed at any time.
- *
- * This API is currently only allowed to be used from non-sandboxed
- * contexts.
- */
-MOZ_MUST_USE bool SetAlarm(int32_t aSeconds, int32_t aNanoseconds);
 
 /**
  * Set the priority of the given process.

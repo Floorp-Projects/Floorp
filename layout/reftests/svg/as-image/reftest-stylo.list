@@ -26,9 +26,9 @@ include zoom/reftest-stylo.list
 == background-scale-with-viewbox-1.html background-scale-with-viewbox-1.html
 
 # Tests with -moz-image-rect()
-fails == background-image-rect-1svg.html background-image-rect-1svg.html
-fails == background-image-rect-1png.html background-image-rect-1png.html
-fails == background-image-rect-2.html background-image-rect-2.html
+== background-image-rect-1svg.html background-image-rect-1svg.html
+== background-image-rect-1png.html background-image-rect-1png.html
+== background-image-rect-2.html background-image-rect-2.html
 
 # Test for border-image
 fails == border-image-simple-1.html border-image-simple-1.html

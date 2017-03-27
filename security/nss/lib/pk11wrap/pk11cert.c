@@ -974,8 +974,10 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
         nssCertificateStore_RemoveCertLOCKED(cc->certStore, c);
         nssCertificateStore_Unlock(cc->certStore, &lockTrace, &unlockTrace);
         c->object.cryptoContext = NULL;
+        CERT_LockCertTempPerm(cert);
         cert->istemp = PR_FALSE;
         cert->isperm = PR_TRUE;
+        CERT_UnlockCertTempPerm(cert);
     }
 
     /* add the new instance to the cert, force an update of the

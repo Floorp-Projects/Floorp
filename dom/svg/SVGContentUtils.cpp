@@ -304,8 +304,8 @@ SVGContentUtils::GetFontSize(nsStyleContext *aStyleContext)
   MOZ_ASSERT(presContext, "NULL pres context in GetFontSize");
 
   nscoord fontSize = aStyleContext->StyleFont()->mSize;
-  return nsPresContext::AppUnitsToFloatCSSPixels(fontSize) / 
-         presContext->TextZoom();
+  return nsPresContext::AppUnitsToFloatCSSPixels(fontSize) /
+         presContext->EffectiveTextZoom();
 }
 
 float
@@ -352,7 +352,7 @@ SVGContentUtils::GetFontXHeight(nsStyleContext *aStyleContext)
 
   nscoord xHeight = fontMetrics->XHeight();
   return nsPresContext::AppUnitsToFloatCSSPixels(xHeight) /
-         presContext->TextZoom();
+         presContext->EffectiveTextZoom();
 }
 nsresult
 SVGContentUtils::ReportToConsole(nsIDocument* doc,
@@ -861,39 +861,4 @@ bool
 SVGContentUtils::ShapeTypeHasNoCorners(const nsIContent* aContent) {
   return aContent && aContent->IsAnyOfSVGElements(nsGkAtoms::circle,
                                                   nsGkAtoms::ellipse);
-}
-
-gfxMatrix
-SVGContentUtils::PrependLocalTransformsTo(
-  const gfxMatrix &aMatrix,
-  SVGTransformTypes aWhich,
-  const gfx::Matrix* aAnimateMotionTransform,
-  const nsSVGAnimatedTransformList* aTransforms)
-{
-  gfxMatrix result(aMatrix);
-
-  if (aWhich == eChildToUserSpace) {
-    // We don't have anything to prepend.
-    // eChildToUserSpace is not the common case, which is why we return
-    // 'result' to benefit from NRVO rather than returning aMatrix before
-    // creating 'result'.
-    return result;
-  }
-
-  MOZ_ASSERT(aWhich == eAllTransforms || aWhich == eUserSpaceToParent,
-             "Unknown TransformTypes");
-
-  // animateMotion's resulting transform is supposed to apply *on top of*
-  // any transformations from the |transform| attribute. So since we're
-  // PRE-multiplying, we need to apply the animateMotion transform *first*.
-  if (aAnimateMotionTransform) {
-    result.PreMultiply(ThebesMatrix(*aAnimateMotionTransform));
-  }
-
-  if (aTransforms) {
-    result.PreMultiply(
-      aTransforms->GetAnimValue().GetConsolidationMatrix());
-  }
-
-  return result;
 }

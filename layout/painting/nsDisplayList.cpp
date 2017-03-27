@@ -4077,6 +4077,9 @@ void
 nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder,
                         nsRenderingContext* aCtx) {
   // TODO join outlines together
+  MOZ_ASSERT(mFrame->StyleOutline()->ShouldPaintOutline(),
+             "Should have not created a nsDisplayOutline!");
+
   nsPoint offset = ToReferenceFrame();
   nsCSSRendering::PaintOutline(mFrame->PresContext(), *aCtx, mFrame,
                                mVisibleRect,
@@ -8046,8 +8049,7 @@ bool nsDisplayMask::TryMerge(nsDisplayItem* aItem)
 
   // Do not merge if mFrame has mask. Continuation frames should apply mask
   // independently(just like nsDisplayBackgroundImage).
-  const nsStyleSVGReset *style = mFrame->StyleSVGReset();
-  if (style->mMask.HasLayerWithImage()) {
+  if (mFrame->StyleSVGReset()->HasMask()) {
     return false;
   }
 

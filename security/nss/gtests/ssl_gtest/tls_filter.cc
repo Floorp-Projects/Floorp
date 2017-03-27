@@ -369,31 +369,6 @@ PacketFilter::Action TlsConversationRecorder::FilterRecord(
   return KEEP;
 }
 
-PacketFilter::Action TlsAlertRecorder::FilterRecord(
-    const TlsRecordHeader& header, const DataBuffer& input,
-    DataBuffer* output) {
-  if (level_ == kTlsAlertFatal) {  // already fatal
-    return KEEP;
-  }
-  if (header.content_type() != kTlsAlertType) {
-    return KEEP;
-  }
-
-  std::cerr << "Alert: " << input << std::endl;
-
-  TlsParser parser(input);
-  uint8_t lvl;
-  if (!parser.Read(&lvl)) {
-    return KEEP;
-  }
-  if (lvl == kTlsAlertWarning) {  // not strong enough
-    return KEEP;
-  }
-  level_ = lvl;
-  (void)parser.Read(&description_);
-  return KEEP;
-}
-
 PacketFilter::Action ChainedPacketFilter::Filter(const DataBuffer& input,
                                                  DataBuffer* output) {
   DataBuffer in(input);

@@ -589,7 +589,7 @@ nsSVGEffects::GetEffectProperties(nsIFrame* aFrame)
   }
 
   MOZ_ASSERT(style->mMask.mImageCount > 0);
-  result.mMask = style->mMask.HasLayerWithImage()
+  result.mMask = style->HasMask()
                  ? GetOrCreateMaskProperty(aFrame) : nullptr;
 
   return result;

@@ -1,0 +1,230 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1328868
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1328868</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript">
+
+  /** Test for Bug 1328868 **/
+
+  "use strict";
+
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+  Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/Messaging.jsm");
+  Cu.import("resource://gre/modules/Promise.jsm");
+  Cu.import("resource://gre/modules/Task.jsm");
+  Cu.import("resource://gre/modules/SharedPreferences.jsm");
+
+  const GECKO_PREF_FONT_INFLATION = "font.size.inflation.minTwips";
+  const FONT_INFLATION_DEFAULT_VALUE = 120;
+  const GECKO_PREF_FONT_SCALE = "font.size.systemFontScale";
+  const ANDROID_PREF = "android.not_a_preference.font.size.use_system_font_size";
+
+  // The chrome window
+  let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  let BrowserApp = chromeWin.BrowserApp;
+
+  // Track the tabs where the tests are happening
+  let tab;
+
+  // This page will be eligible for font inflation...
+  const URL_desktop = "http://example.org/chrome/mobile/android/tests/browser/chrome/basic_article.html";
+  // ... and this one won't.
+  const URL_mobile = "http://example.org/chrome/mobile/android/tests/browser/chrome/basic_article_mobile.html";
+  const URL_mobile_2x = "http://example.org/chrome/mobile/android/tests/browser/chrome/basic_article_mobile_2x.html";
+
+  let sharedPrefs = SharedPreferences.forApp();
+  let _observerId = 0;
+
+  function cleanupTabs() {
+    if (tab) {
+      BrowserApp.closeTab(tab);
+      tab = null;
+    }
+  }
+
+  function setSystemFontScale(scale) {
+    Services.prefs.setIntPref(GECKO_PREF_FONT_SCALE, Math.round(scale * 100));
+  }
+
+  function getSystemFontScale() {
+    return Services.prefs.getIntPref(GECKO_PREF_FONT_SCALE) / 100;
+  }
+
+  function resetPrefs() {
+    sharedPrefs.setBoolPref(ANDROID_PREF, false);
+    Services.prefs.setIntPref(GECKO_PREF_FONT_INFLATION, 0);
+    setSystemFontScale(1.0);
+  }
+
+  SimpleTest.registerCleanupFunction(function() {
+    // If anything goes wrong, we want to be sure to leave everything as we came
+    resetPrefs();
+    cleanupTabs();
+  });
+
+  add_task(function* test_sysFontScaleScalesMobilePages() {
+    // Check that we're starting out with the default values
+    is(sharedPrefs.getBoolPref(ANDROID_PREF), false, "System font size scaling is disabled");
+    is(Services.prefs.getIntPref(GECKO_PREF_FONT_INFLATION), 0, "Gecko-side font inflation is disabled");
+
+    // Check the system font scale factor and then enable it for testing
+    is(getSystemFontScale(), 1.0, "system font scale is default");
+    tab = BrowserApp.addTab(URL_mobile , { selected: true, parentId: BrowserApp.selectedTab.id });
+    yield promiseBrowserEvent(tab.browser, "load");
+    is(tab.browser.effectiveTextZoom, 1.0, "text zoom is default value");
+
+    setSystemFontScale(2.0);
+    tab.reloadWithMode(tab.desktopMode);
+    yield promiseBrowserEvent(tab.browser, "load");
+
+    is(getSystemFontScale(), 2.0, "system font scale is enabled");
+    is(tab.browser.effectiveTextZoom, 2.0, "text zoom set through system font scale");
+    let fontScaleOn = snapshotWindow(tab.browser.contentWindow);
+
+    // Reset the system font scale again
+    setSystemFontScale(1.0);
+    is(getSystemFontScale(), 1.0, "system font scale is default");
+
+    tab.reloadWithMode(tab.desktopMode);
+    yield promiseBrowserEvent(tab.browser, "load");
+
+    is(tab.browser.effectiveTextZoom, 1.0, "text zoom is back to default value");
+    let fontScaleOff = snapshotWindow(tab.browser.contentWindow);
+    assertSnapshots(fontScaleOn, fontScaleOff, false, null, "fontScaleOn", "fontScaleOff");
+
+    // Now compare with a document that's been zoomed through CSS
+    tab.browser.loadURI(URL_mobile_2x);
+    yield promiseBrowserEvent(tab.browser, "load");
+
+    let cssZoom = snapshotWindow(tab.browser.contentWindow);
+    assertSnapshots(fontScaleOn, cssZoom, true, null, "fontScaleOn", "cssZoom");
+
+    // Load the original document and test normal text zooming
+    tab.browser.loadURI(URL_mobile);
+    yield promiseBrowserEvent(tab.browser, "load");
+
+    tab.browser.textZoom = 2.0;
+    is(tab.browser.effectiveTextZoom, 2.0, "text zoom is enabled");
+
+    let textZoom = snapshotWindow(tab.browser.contentWindow);
+    assertSnapshots(fontScaleOn, textZoom, true, null, "fontScaleOn", "textZoom");
+
+    cleanupTabs();
+  });
+
+  add_task(function* test_fontInflationPrecedence() {
+    // Check that we're starting out with the default values
+    is(sharedPrefs.getBoolPref(ANDROID_PREF), false, "System font size scaling is disabled");
+    is(Services.prefs.getIntPref(GECKO_PREF_FONT_INFLATION), 0, "Gecko-side font inflation is disabled");
+
+    // Check the system font scale factor and then take a screenshot of this base state
+    is(getSystemFontScale(), 1.0, "system font scale is default");
+    tab = BrowserApp.addTab(URL_desktop , { selected: true, parentId: BrowserApp.selectedTab.id });
+    yield promiseBrowserEvent(tab.browser, "load");
+    is(tab.browser.effectiveTextZoom, 1.0, "text zoom is default value");
+
+    let noZoom = snapshotWindow(tab.browser.contentWindow);
+
+    // Enable font inflation and check that this has some effect
+    Services.prefs.setIntPref(GECKO_PREF_FONT_INFLATION, FONT_INFLATION_DEFAULT_VALUE);
+
+    tab.reloadWithMode(tab.desktopMode);
+    yield promiseBrowserEvent(tab.browser, "load");
+
+    let fontInflationOn = snapshotWindow(tab.browser.contentWindow);
+    assertSnapshots(noZoom, fontInflationOn, false, null, "noZoom", "fontInflationOn");
+
+    // Now enable the system font scale and make sure that this doesn't result in any visual change
+    setSystemFontScale(2.0);
+    tab.reloadWithMode(tab.desktopMode);
+    yield promiseBrowserEvent(tab.browser, "load");
+
+    is(getSystemFontScale(), 2.0, "system font scale is enabled");
+    is(tab.browser.effectiveTextZoom, 1.0, "text zoom remains at default value");
+    let fontScaleWithFontInflation = snapshotWindow(tab.browser.contentWindow);
+    assertSnapshots(fontInflationOn, fontScaleWithFontInflation, true, null, "fontInflationOn", "fontScaleWithFontInflation");
+
+    // Disable font inflation and check that system font scale zooming becomes active
+    Services.prefs.setIntPref(GECKO_PREF_FONT_INFLATION, 0);
+    tab.reloadWithMode(tab.desktopMode);
+    yield promiseBrowserEvent(tab.browser, "load");
+
+    is(tab.browser.effectiveTextZoom, 2.0, "text zoom set through system font scale zooming");
+    let fontScaleNoFontInflation = snapshotWindow(tab.browser.contentWindow);
+    assertSnapshots(noZoom, fontScaleNoFontInflation, false, null, "noZoom", "fontScaleNoFontInflation");
+
+    // Reset system font scale back to default
+    setSystemFontScale(1.0);
+
+    cleanupTabs();
+  });
+
+  // There is a slight delay between flipping the Android shared pref and the
+  // Java side listener native call actually getting through to the font scale in
+  // nsLayoutUtils, therefore this test MUST run last, otherwise the font scale
+  // could unexpectedly be reset in the middle of a following test.
+  // However as as long the test environment uses the default Android system font scale,
+  // this won't impact other unrelated tests since we set "font.size.systemFontScale"
+  // to 1.0 in that case, which already is the default value.
+  add_task(function* test_androidPrefControlsFontInflation() {
+    // Check that we're starting out with the default values
+    is(sharedPrefs.getBoolPref(ANDROID_PREF), false, "System font size scaling is disabled");
+    is(Services.prefs.getIntPref(GECKO_PREF_FONT_INFLATION), 0, "Gecko-side font inflation is disabled");
+    is(getSystemFontScale(), 1.0, "system font scale is default");
+
+    // Flipping the Android pref "on" should enable font inflation
+    let observer = makeObserver(_observerId++);
+    Services.prefs.addObserver(GECKO_PREF_FONT_INFLATION, observer, false);
+
+    try {
+      sharedPrefs.setBoolPref(ANDROID_PREF, true);
+      let result = yield observer.promise;
+
+      is(observer.count, 1, "Gecko pref should have changed only once");
+      is(result.data, GECKO_PREF_FONT_INFLATION, "the correct pref has changed");
+      is(Services.prefs.getIntPref(GECKO_PREF_FONT_INFLATION), FONT_INFLATION_DEFAULT_VALUE, "Gecko-side font inflation is enabled");
+    } finally {
+      Services.prefs.removeObserver(GECKO_PREF_FONT_INFLATION, observer);
+    }
+
+    // ... and turning it back off should disable it again.
+    observer = makeObserver(_observerId++);
+    Services.prefs.addObserver(GECKO_PREF_FONT_INFLATION, observer, false);
+
+    try {
+      sharedPrefs.setBoolPref(ANDROID_PREF, false);
+      let result = yield observer.promise;
+
+      is(observer.count, 1, "Gecko pref should have changed only once");
+      is(result.data, GECKO_PREF_FONT_INFLATION, "the correct pref has changed");
+      is(Services.prefs.getIntPref(GECKO_PREF_FONT_INFLATION), 0, "Gecko-side font inflation is disabled");
+    } finally {
+      Services.prefs.removeObserver(GECKO_PREF_FONT_INFLATION, observer);
+    }
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1328868">Mozilla Bug 1328868</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

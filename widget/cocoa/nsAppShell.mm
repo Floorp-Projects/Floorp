@@ -32,6 +32,8 @@
 #include "TextInputHandler.h"
 #include "mozilla/HangMonitor.h"
 #include "GeckoProfiler.h"
+#include "ScreenHelperCocoa.h"
+#include "mozilla/widget/ScreenManager.h"
 #include "pratom.h"
 #if !defined(RELEASE_OR_BETA) || defined(DEBUG)
 #include "nsSandboxViolationSink.h"
@@ -305,6 +307,11 @@ nsAppShell::Init()
   NS_ENSURE_STATE(mCFRunLoopSource);
 
   ::CFRunLoopAddSource(mCFRunLoop, mCFRunLoopSource, kCFRunLoopCommonModes);
+
+  if (XRE_IsParentProcess()) {
+    ScreenManager& screenManager = ScreenManager::GetSingleton();
+    screenManager.SetHelper(mozilla::MakeUnique<ScreenHelperCocoa>());
+  }
 
   rv = nsBaseAppShell::Init();
 

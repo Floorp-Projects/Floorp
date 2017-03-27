@@ -18,19 +18,9 @@ interface nsIScreenManager : nsISupports
     //
   nsIScreen screenForRect ( in long left, in long top, in long width, in long height ) ;
 
-    //
-    // Returns the screen corresponding to the id. If no such screen exists,
-    // this will throw NS_ERROR_FAILURE. The id is a unique numeric value
-    // assigned to each screen, and is an attribute available on the nsIScreen
-    // interface.
-  nsIScreen screenForId ( in unsigned long id ) ;
-
     // The screen with the menubar/taskbar. This shouldn't be needed very
     // often.
   readonly attribute nsIScreen primaryScreen;
-
-    // Holds the number of screens that are available
-  readonly attribute unsigned long numberOfScreens;
 
     // The default DPI scaling factor of the screen environment (number of
     // screen pixels corresponding to 1 CSS px, at the default zoom level).
@@ -51,14 +41,4 @@ interface nsIScreenManager : nsISupports
     // to the system-wide (X11 or Gtk2) DPI value, as Firefox does not yet
     // honor these settings. See bug 798362 and bug 712898.
   readonly attribute float systemDefaultScale;
-
-    // Returns the nsIScreen instance for the given native widget pointer;
-    // the pointer is specific to the particular widget implementation,
-    // and is generally of the same type that NS_NATIVE_WINDOW is.
-  [noscript] nsIScreen screenForNativeWidget ( in voidPtr nativeWidget );
 };
-
-
-%{ C++
-
-%}

@@ -17,7 +17,6 @@
 EXPORTS += [
     'GeckoTouchDispatcher.h',
     'GonkPermission.h',
-    'OrientationObserver.h',
 ]
 
 DIRS += ['libdisplay', 'nativewindow']
@@ -66,7 +65,6 @@ SOURCES += [
     'nsScreenManagerGonk.cpp',
     'nsWidgetFactory.cpp',
     'nsWindow.cpp',
-    'OrientationObserver.cpp',
     'ProcessOrientation.cpp',
     'WidgetTraceEvent.cpp'
 ]

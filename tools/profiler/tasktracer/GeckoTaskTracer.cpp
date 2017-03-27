@@ -57,7 +57,7 @@ static mozilla::StaticMutex sMutex;
 
 // The generation of TraceInfo. It will be > 0 if the Task Tracer is started and
 // <= 0 if stopped.
-static mozilla::Atomic<bool> sStarted(false);
+bool gStarted(false);
 static nsTArray<UniquePtr<TraceInfo>>* sTraceInfos = nullptr;
 static PRTime sStartTime;
 
@@ -139,19 +139,13 @@ ObsoleteCurrentTraceInfos()
   }
 }
 
-inline static bool
-IsStartLogging()
-{
-  return sStarted;
-}
-
 static void
 SetLogStarted(bool aIsStartLogging)
 {
-  MOZ_ASSERT(aIsStartLogging != sStarted);
+  MOZ_ASSERT(aIsStartLogging != gStarted);
   StaticMutexAutoLock lock(sMutex);
 
-  sStarted = aIsStartLogging;
+  gStarted = aIsStartLogging;
 
   if (aIsStartLogging && sTraceInfos == nullptr) {
     sTraceInfos = new nsTArray<UniquePtr<TraceInfo>>();
@@ -272,12 +266,12 @@ GenNewUniqueTaskId()
   return taskid;
 }
 
-AutoSaveCurTraceInfo::AutoSaveCurTraceInfo()
+AutoSaveCurTraceInfoImpl::AutoSaveCurTraceInfoImpl()
 {
   GetCurTraceInfo(&mSavedSourceEventId, &mSavedTaskId, &mSavedSourceEventType);
 }
 
-AutoSaveCurTraceInfo::~AutoSaveCurTraceInfo()
+AutoSaveCurTraceInfoImpl::~AutoSaveCurTraceInfoImpl()
 {
   SetCurTraceInfo(mSavedSourceEventId, mSavedTaskId, mSavedSourceEventType);
 }
@@ -391,41 +385,29 @@ LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId, uintptr_t* aVptr)
   }
 }
 
-AutoSourceEvent::AutoSourceEvent(SourceEventType aType)
-  : AutoSaveCurTraceInfo()
+void
+AutoSourceEvent::StartScope(SourceEventType aType)
 {
   CreateSourceEvent(aType);
 }
 
-AutoSourceEvent::~AutoSourceEvent()
+void
+AutoSourceEvent::StopScope()
 {
   DestroySourceEvent();
 }
 
-AutoScopedLabel::AutoScopedLabel(const char* aFormat, ...)
-  : mLabel(nullptr)
+void
+AutoScopedLabel::Init(const char* aFormat, va_list& aArgs)
 {
-  if (IsStartLogging()) {
-    // Optimization for when it is disabled.
-    nsCString label;
-    va_list args;
-    va_start(args, aFormat);
-    label.AppendPrintf(aFormat, args);
-    va_end(args);
-    mLabel = strdup(label.get());
-    AddLabel("Begin %s", mLabel);
-  }
+  nsCString label;
+  va_list& args = aArgs;
+  label.AppendPrintf(aFormat, args);
+  mLabel = strdup(label.get());
+  AddLabel("Begin %s", mLabel);
 }
 
-AutoScopedLabel::~AutoScopedLabel()
-{
-  if (mLabel) {
-    AddLabel("End %s", mLabel);
-    free(mLabel);
-  }
-}
-
-void AddLabel(const char* aFormat, ...)
+void DoAddLabel(const char* aFormat, va_list& aArgs)
 {
   TraceInfoHolder info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
@@ -434,11 +416,9 @@ void AddLabel(const char* aFormat, ...)
   // [3 taskId "label"]
   TraceInfoLogType* log = info->AppendLog();
   if (log) {
-    va_list args;
-    va_start(args, aFormat);
+    va_list& args = aArgs;
     nsCString &buffer = *info->mStrs.AppendElement();
     buffer.AppendPrintf(aFormat, args);
-    va_end(args);
 
     log->mLabel.mType = ACTION_ADD_LABEL;
     log->mLabel.mTaskId = info->mCurTaskId;

@@ -2488,7 +2488,7 @@ test -n "$target_alias" &&
   program_prefix=${target_alias}-
 
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=14
+MOD_MINOR_VERSION=15
 MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
@@ -5424,6 +5424,40 @@ $as_echo "no" >&6; }
 fi
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pragma diagnostic" >&5
+$as_echo_n "checking for pragma diagnostic... " >&6; }
+if test "$GNU_CC" = "1"; then
+    cat >dummy-hello.c <<EOF
+#ifdef _PR_HAS_PRAGMA_DIAGNOSTIC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#endif
+int main() {
+    char *dummy = "";
+    return 0;
+}
+EOF
+    ${CC} -Werror=unused-but-set-variable -S dummy-hello.c -o dummy-hello.s 2>&5
+    if test $? != 0; then
+        ${CC} -Werror=unused-but-set-variable -D_PR_HAS_PRAGMA_DIAGNOSTIC -S dummy-hello.c -o dummy-hello.s 2>&5
+        if test $? = 0; then
+            CFLAGS="$CFLAGS -D_PR_HAS_PRAGMA_DIAGNOSTIC=1"
+            _res=yes
+        else
+            _res=no
+        fi
+    else
+        _res=no
+    fi
+    rm -f dummy-hello.c dummy-hello.s
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $_res" >&5
+$as_echo "$_res" >&6; }
+else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
 _SAVE_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -fprofile-generate -fprofile-correction"
 
@@ -6524,6 +6558,8 @@ fi
 
     $as_echo "#define HAVE_SOCKLEN_T 1" >>confdefs.h
 
+    $as_echo "#define HAVE_POINTER_LOCALTIME_R 1" >>confdefs.h
+
     AS='$(CC) -x assembler-with-cpp'
     CFLAGS="$CFLAGS -Wall -fno-common"
     case "${target_cpu}" in
@@ -6974,6 +7010,8 @@ tools are selected during the Xcode/Developer Tools installation." "$LINENO" 5
     $as_echo "#define _GNU_SOURCE 1" >>confdefs.h
 
     $as_echo "#define HAVE_FCNTL_FILE_LOCKING 1" >>confdefs.h
+
+    $as_echo "#define HAVE_POINTER_LOCALTIME_R 1" >>confdefs.h
 
     case "${target}" in
     *-android*|*-linuxandroid*)

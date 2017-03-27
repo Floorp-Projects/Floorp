@@ -10146,8 +10146,11 @@ void
 CodeGenerator::visitCallInitElementArray(LCallInitElementArray* lir)
 {
     pushArg(ToValue(lir, LCallInitElementArray::Value));
-    pushArg(Imm32(lir->mir()->index()));
-    pushArg(ToRegister(lir->getOperand(0)));
+    if (lir->index()->isConstant())
+        pushArg(Imm32(ToInt32(lir->index())));
+    else
+        pushArg(ToRegister(lir->index()));
+    pushArg(ToRegister(lir->object()));
     pushArg(ImmPtr(lir->mir()->resumePoint()->pc()));
     callVM(InitElementArrayInfo, lir);
 }

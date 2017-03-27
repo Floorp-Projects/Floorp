@@ -282,20 +282,28 @@ PL_Base64MaxEncodedLength(PRUint32 size, PRUint32 line_length)
 {
     PRUint32 tokens, tokens_per_line, full_lines, line_break_chars, remainder;
 
+    /* This is the maximum length we support. */
+    if (size > 0x3fffffff) {
+        return 0;
+    }
+
     tokens = (size + 2) / 3;
 
-    if (line_length == 0)
+    if (line_length == 0) {
         return tokens * 4;
+    }
 
-    if (line_length < 4) /* too small! */
+    if (line_length < 4) { /* too small! */
         line_length = 4;
+    }
 
     tokens_per_line = line_length / 4;
     full_lines = tokens / tokens_per_line;
     remainder = (tokens - (full_lines * tokens_per_line)) * 4;
     line_break_chars = full_lines * 2;
-    if (remainder == 0)
+    if (remainder == 0) {
         line_break_chars -= 2;
+    }
 
     return (full_lines * tokens_per_line * 4) + line_break_chars + remainder;
 }
@@ -447,13 +455,18 @@ PL_Base64EncodeBuffer(const unsigned char *src, PRUint32 srclen,
     PRStatus status;
 
     PR_ASSERT(srclen > 0);
-    if (srclen == 0)
+    if (srclen == 0) {
         return dest;
+    }
 
     /*
      * How much space could we possibly need for encoding this input?
      */
     need_length = PL_Base64MaxEncodedLength(srclen, line_length);
+    if (need_length == 0) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
 
     /*
      * Make sure we have at least that much, if output buffer provided.
@@ -631,6 +644,10 @@ NSSBase64_EncodeItem(PLArenaPool *arenaOpt, char *outStrOpt,
     }
 
     max_out_len = PL_Base64MaxEncodedLength(inItem->len, 64);
+    if (max_out_len == 0) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
 
     if (arenaOpt != NULL)
         mark = PORT_ArenaMark(arenaOpt);

@@ -232,24 +232,6 @@ class TlsConversationRecorder : public TlsRecordFilter {
   DataBuffer& buffer_;
 };
 
-// Records an alert.  If an alert has already been recorded, it won't save the
-// new alert unless the old alert is a warning and the new one is fatal.
-class TlsAlertRecorder : public TlsRecordFilter {
- public:
-  TlsAlertRecorder() : level_(255), description_(255) {}
-
-  virtual PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
-                                            const DataBuffer& input,
-                                            DataBuffer* output);
-
-  uint8_t level() const { return level_; }
-  uint8_t description() const { return description_; }
-
- private:
-  uint8_t level_;
-  uint8_t description_;
-};
-
 // Runs multiple packet filters in series.
 class ChainedPacketFilter : public PacketFilter {
  public:

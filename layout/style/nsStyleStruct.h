@@ -828,7 +828,6 @@ struct nsStyleImageLayers {
   nsChangeHint CalcDifference(const nsStyleImageLayers& aNewLayers,
                               nsStyleImageLayers::LayerType aType) const;
 
-  bool HasLayerWithImage() const;
   nsStyleImageLayers& operator=(const nsStyleImageLayers& aOther);
   nsStyleImageLayers& operator=(nsStyleImageLayers&& aOther);
   bool operator==(const nsStyleImageLayers& aOther) const;
@@ -1391,6 +1390,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
   nscoord GetOutlineWidth() const
   {
     return mActualOutlineWidth;
+  }
+
+  bool ShouldPaintOutline() const
+  {
+    return mOutlineStyle == NS_STYLE_BORDER_STYLE_AUTO ||
+           (GetOutlineWidth() > 0 &&
+            mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE);
   }
 
 protected:
@@ -3625,6 +3631,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
   bool HasClipPath() const {
     return mClipPath.GetType() != mozilla::StyleShapeSourceType::None;
   }
+
+  bool HasMask() const;
 
   bool HasNonScalingStroke() const {
     return mVectorEffect == NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE;

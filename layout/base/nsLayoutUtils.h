@@ -2433,6 +2433,22 @@ public:
     return sFontSizeInflationDisabledInMasterProcess;
   }
 
+  /**
+   * See comment above "font.size.systemFontScale" in
+   * modules/libpref/init/all.js.
+   */
+  static float SystemFontScale() {
+    return sSystemFontScale / 100.0f;
+  }
+
+  static float MaxZoom() {
+    return sZoomMaxPercent / 100.0f;
+  }
+
+  static float MinZoom() {
+    return sZoomMinPercent / 100.0f;
+  }
+
   static bool SVGTransformBoxEnabled() {
     return sSVGTransformBoxEnabled;
   }
@@ -2923,6 +2939,9 @@ private:
   static uint32_t sFontSizeInflationMaxRatio;
   static bool sFontSizeInflationForceEnabled;
   static bool sFontSizeInflationDisabledInMasterProcess;
+  static uint32_t sSystemFontScale;
+  static uint32_t sZoomMaxPercent;
+  static uint32_t sZoomMinPercent;
   static bool sInvalidationDebuggingIsEnabled;
   static bool sCSSVariablesEnabled;
   static bool sInterruptibleReflowEnabled;

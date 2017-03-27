@@ -7,12 +7,10 @@
 #ifndef mozilla_dom_XMLHttpRequestString_h
 #define mozilla_dom_XMLHttpRequestString_h
 
+#include "mozilla/Mutex.h"
 #include "nsString.h"
 
 namespace mozilla {
-
-class Mutex;
-
 namespace dom {
 
 class DOMString;

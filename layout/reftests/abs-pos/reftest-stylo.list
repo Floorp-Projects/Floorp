@@ -1,7 +1,7 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == font-size-wrap.html font-size-wrap.html
 == abs-pos-auto-margin-1.html abs-pos-auto-margin-1.html
-fails == auto-offset-inline-block-1.html auto-offset-inline-block-1.html
+== auto-offset-inline-block-1.html auto-offset-inline-block-1.html
 == fieldset-1.html fieldset-1.html
 == table-1.html table-1.html
 == table-2.html table-2.html

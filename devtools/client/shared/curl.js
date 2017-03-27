@@ -76,7 +76,8 @@ const Curl = {
 
     // Create post data.
     let postData = [];
-    if (utils.isUrlEncodedRequest(data) || data.method == "PUT") {
+    if (utils.isUrlEncodedRequest(data) ||
+          ["PUT", "POST"].includes(data.method)) {
       postDataText = data.postDataText;
       postData.push("--data");
       postData.push(escapeString(utils.writePostDataTextParams(postDataText)));
