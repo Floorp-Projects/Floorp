@@ -20,7 +20,6 @@ public:
     nsScreenAndroid(DisplayType aDisplayType, nsIntRect aRect);
     ~nsScreenAndroid();
 
-    NS_IMETHOD GetId(uint32_t* aId) override;
     NS_IMETHOD GetRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight) override;
     NS_IMETHOD GetAvailRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight) override;
     NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth) override;
@@ -31,9 +30,6 @@ public:
 
     void SetDensity(double aDensity) { mDensity = aDensity; }
     float GetDensity();
-
-protected:
-    virtual void ApplyMinimumBrightness(uint32_t aBrightness) override;
 
 private:
     uint32_t mId;
@@ -55,6 +51,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCREENMANAGER
 
+    already_AddRefed<nsScreenAndroid> ScreenForId(uint32_t aId);
     already_AddRefed<nsScreenAndroid> AddScreen(DisplayType aDisplayType,
                                                 nsIntRect aRect = nsIntRect());
     void RemoveScreen(uint32_t aScreenId);

@@ -32,12 +32,13 @@
 #include "NativeKeyBindings.h"
 #include "OSXNotificationCenter.h"
 
-#include "nsScreenManagerCocoa.h"
 #include "nsDeviceContextSpecX.h"
 #include "nsPrintOptionsX.h"
 #include "nsPrintDialogX.h"
 #include "nsPrintSession.h"
 #include "nsToolkitCompsCID.h"
+
+#include "mozilla/widget/ScreenManager.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -52,12 +53,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerCocoa)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecX)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintDialogServiceX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIdleServiceX, nsIdleServiceX::GetInstance)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ScreenManager, ScreenManager::GetAddRefedSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(OSXNotificationCenter, Init)
 
 #include "nsMenuBarX.h"
@@ -138,7 +139,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_BIDIKEYBOARD_CID, false, NULL, nsBidiKeyboardConstructor,
     mozilla::Module::MAIN_PROCESS_ONLY },
   { &kNS_THEMERENDERER_CID, false, NULL, nsNativeThemeCocoaConstructor },
-  { &kNS_SCREENMANAGER_CID, false, NULL, nsScreenManagerCocoaConstructor,
+  { &kNS_SCREENMANAGER_CID, false, NULL, ScreenManagerConstructor,
     mozilla::Module::MAIN_PROCESS_ONLY },
   { &kNS_DEVICE_CONTEXT_SPEC_CID, false, NULL, nsDeviceContextSpecXConstructor },
   { &kNS_PRINTSESSION_CID, false, NULL, nsPrintSessionConstructor },

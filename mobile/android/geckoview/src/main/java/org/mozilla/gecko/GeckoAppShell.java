@@ -1061,16 +1061,6 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private static void setKeepScreenOn(final boolean on) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                // TODO
-            }
-        });
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
     private static boolean isNetworkLinkUp() {
         ConnectivityManager cm = (ConnectivityManager)
            getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
