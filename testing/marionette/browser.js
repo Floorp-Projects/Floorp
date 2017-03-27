@@ -125,6 +125,18 @@ browser.Context = class {
   }
 
   /**
+   * Returns the content browser for the currently selected tab.
+   * If there is no tab selected, null will be returned.
+   */
+  get contentBrowser() {
+    if (this.tab) {
+      return browser.getBrowserForTab(this.tab);
+    }
+
+    return null;
+  }
+
+  /**
    * The current frame ID is managed per browser element on desktop in
    * case the ID needs to be refreshed. The currently selected window is
    * identified by a tab.
@@ -134,7 +146,7 @@ browser.Context = class {
     if (this.driver.appName == "B2G") {
       rv = this._curFrameId;
     } else if (this.tab) {
-      rv = this.getIdForBrowser(browser.getBrowserForTab(this.tab));
+      rv = this.getIdForBrowser(this.contentBrowser);
     }
     return rv;
   }
@@ -150,7 +162,7 @@ browser.Context = class {
    * associated with the currently selected tab.
    */
   getTabModalUI() {
-    let br = browser.getBrowserForTab(this.tab);
+    let br = this.contentBrowser;
     if (!br.hasAttribute("tabmodalPromptShowing")) {
       return null;
     }
@@ -276,7 +288,7 @@ browser.Context = class {
     }
 
     if (this.driver.appName == "Firefox") {
-      this._browserWasRemote = browser.getBrowserForTab(this.tab).isRemoteBrowser;
+      this._browserWasRemote = this.contentBrowser.isRemoteBrowser;
       this._hasRemotenessChange = false;
     }
   }
@@ -300,8 +312,8 @@ browser.Context = class {
           this.switchToTab();
         }
 
-        if (target == browser.getBrowserForTab(this.tab)) {
-          this.updateIdForBrowser(browser.getBrowserForTab(this.tab), uid);
+        if (target === this.contentBrowser) {
+          this.updateIdForBrowser(this.contentBrowser, uid);
           this.mainContentId = uid;
         }
       } else {
@@ -325,7 +337,7 @@ browser.Context = class {
     // and may not apply on Fennec.
     if (this.driver.appName != "Firefox" ||
         this.tab === null ||
-        browser.getBrowserForTab(this.tab) === null) {
+        this.contentBrowser === null) {
       return false;
     }
 
@@ -333,7 +345,7 @@ browser.Context = class {
       return true;
     }
 
-    let currentIsRemote = browser.getBrowserForTab(this.tab).isRemoteBrowser;
+    let currentIsRemote = this.contentBrowser.isRemoteBrowser;
     this._hasRemotenessChange = this._browserWasRemote !== currentIsRemote;
     this._browserWasRemote = currentIsRemote;
     return this._hasRemotenessChange;
