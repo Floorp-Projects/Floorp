@@ -303,6 +303,16 @@ WebRenderAPI::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
 }
 
 void
+WebRenderAPI::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
+                           Range<uint8_t> aBytes)
+{
+  wr_api_add_blob_image(mWrApi,
+                        key,
+                        &aDescriptor,
+                        RangeToByteSlice(aBytes));
+}
+
+void
 WebRenderAPI::AddExternalImageHandle(ImageKey key,
                                      gfx::IntSize aSize,
                                      gfx::SurfaceFormat aFormat,

@@ -541,6 +541,10 @@ wr_api_add_image(WrAPI* api, WrImageKey key, const WrImageDescriptor* descriptor
 WR_FUNC;
 
 WR_INLINE void
+wr_api_add_blob_image(WrAPI* api, WrImageKey key, const WrImageDescriptor* descriptor, const WrByteSlice aSlice)
+WR_FUNC;
+
+WR_INLINE void
 wr_api_add_external_image_handle(WrAPI* api, WrImageKey key, uint32_t width, uint32_t height,
                                  WrImageFormat format, uint64_t external_image_id)
 WR_FUNC;
