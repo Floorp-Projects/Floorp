@@ -1151,7 +1151,7 @@ class Marionette(object):
         """
 
         # The vast majority of this function was implemented inside
-        # the quitApplication command as part of bug 1337743, and can be
+        # the quit command as part of bug 1337743, and can be
         # removed from here in Firefox 55 at the earliest.
 
         # remove duplicates
@@ -1179,6 +1179,9 @@ class Marionette(object):
         body = None
         if len(flags) > 0:
             body = {"flags": list(flags)}
+
+        # quitApplication was renamed quit in bug 1337743,
+        # and this can safely be renamed when Firefox 56 becomes stable
         self._send_message("quitApplication", body)
 
     @do_process_check
