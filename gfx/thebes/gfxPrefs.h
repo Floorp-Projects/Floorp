@@ -489,7 +489,7 @@ private:
   DECL_OVERRIDE_PREF(Live, "layers.advanced.background-image", LayersAllowBackgroundImage, false);
   DECL_OVERRIDE_PREF(Live, "layers.advanced.border-layers",    LayersAllowBorderLayers, false);
   DECL_OVERRIDE_PREF(Live, "layers.advanced.boxshadow-inset-layers", LayersAllowInsetBoxShadow, gfxPrefs::OverrideBase_WebRender());
-  DECL_OVERRIDE_PREF(Live, "layers.advanced.boxshadow-outer-layers", LayersAllowOuterBoxShadow, false);
+  DECL_OVERRIDE_PREF(Live, "layers.advanced.boxshadow-outer-layers", LayersAllowOuterBoxShadow, gfxPrefs::OverrideBase_WebRender());
   DECL_GFX_PREF(Live, "layers.advanced.bullet-layers",         LayersAllowBulletLayers, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.button-foreground-layers", LayersAllowButtonForegroundLayers, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.canvas-background-color", LayersAllowCanvasBackgroundColorLayers, bool, false);
