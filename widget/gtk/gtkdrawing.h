@@ -289,6 +289,11 @@ typedef enum {
 gint moz_gtk_init();
 
 /**
+ * Updates the drawing library when the theme changes.
+ */
+void moz_gtk_refresh();
+
+/**
  * Perform cleanup of the drawing library. You should call this function
  * when your program exits, or you no longer need the library.
  *
