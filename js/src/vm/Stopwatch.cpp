@@ -12,10 +12,10 @@
 
 #if defined(XP_WIN)
 #include <processthreadsapi.h>
-#include <windows.h>
 #endif // defined(XP_WIN)
 
 #include "jscompartment.h"
+#include "jswin.h"
 
 #include "gc/Zone.h"
 #include "vm/Runtime.h"
