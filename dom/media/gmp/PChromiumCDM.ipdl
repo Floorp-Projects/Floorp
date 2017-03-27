@@ -87,7 +87,7 @@ parent:
   async ResolveLoadSessionPromise(uint32_t aPromiseId, bool aSuccessful);
 
   // Return values of cdm::ContentDecryptionModule8::Decrypt
-  async Decrypted(uint32_t aId, uint32_t aStatus, uint8_t[] aData);
+  async Decrypted(uint32_t aId, uint32_t aStatus, Shmem aData);
 
   async OnDecoderInitDone(uint32_t aStatus);
 
