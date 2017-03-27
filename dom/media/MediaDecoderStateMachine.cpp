@@ -88,15 +88,15 @@ using namespace mozilla::media;
 // constants directly, so we put them in a namespace.
 namespace detail {
 
-// If audio queue has less than this many usecs of decoded audio, we won't risk
+// If audio queue has less than this much decoded audio, we won't risk
 // trying to decode the video, we'll skip decoding video up to the next
 // keyframe. We may increase this value for an individual decoder if we
 // encounter video frames which take a long time to decode.
-static constexpr auto LOW_AUDIO_USECS = TimeUnit::FromMicroseconds(300000);
+static constexpr auto LOW_AUDIO_THRESHOLD = TimeUnit::FromMicroseconds(300000);
 
 // If more than this many usecs of decoded audio is queued, we'll hold off
 // decoding more audio. If we increase the low audio threshold (see
-// LOW_AUDIO_USECS above) we'll also increase this value to ensure it's not
+// LOW_AUDIO_THRESHOLD above) we'll also increase this value to ensure it's not
 // less than the low audio threshold.
 static const int64_t AMPLE_AUDIO_USECS = 2000000;
 
@@ -116,7 +116,7 @@ static const int32_t LOW_VIDEO_THRESHOLD_USECS = 60000;
 // Arbitrary "frame duration" when playing only audio.
 static const int AUDIO_DURATION_USECS = 40000;
 
-// If we increase our "low audio threshold" (see LOW_AUDIO_USECS above), we
+// If we increase our "low audio threshold" (see LOW_AUDIO_THRESHOLD above), we
 // use this as a factor in all our calculations. Increasing this will cause
 // us to be more likely to increase our low audio threshold, and to
 // increase it by more.
@@ -814,20 +814,20 @@ private:
 
     TimeDuration decodeTime = TimeStamp::Now() - aDecodeStart;
     int64_t adjustedTime = THRESHOLD_FACTOR * DurationToUsecs(decodeTime);
-    if (adjustedTime > mMaster->mLowAudioThresholdUsecs.ToMicroseconds()
+    if (adjustedTime > mMaster->mLowAudioThreshold.ToMicroseconds()
         && !mMaster->HasLowBufferedData())
     {
-      mMaster->mLowAudioThresholdUsecs = TimeUnit::FromMicroseconds(
+      mMaster->mLowAudioThreshold = TimeUnit::FromMicroseconds(
         std::min(adjustedTime, mMaster->mAmpleAudioThresholdUsecs));
 
       mMaster->mAmpleAudioThresholdUsecs =
-        std::max(THRESHOLD_FACTOR * mMaster->mLowAudioThresholdUsecs.ToMicroseconds(),
+        std::max(THRESHOLD_FACTOR * mMaster->mLowAudioThreshold.ToMicroseconds(),
                  mMaster->mAmpleAudioThresholdUsecs);
 
       SLOG("Slow video decode, set "
            "mLowAudioThresholdUsecs=%" PRId64
            " mAmpleAudioThresholdUsecs=%" PRId64,
-           mMaster->mLowAudioThresholdUsecs.ToMicroseconds(),
+           mMaster->mLowAudioThreshold.ToMicroseconds(),
            mMaster->mAmpleAudioThresholdUsecs);
     }
   }
@@ -2299,7 +2299,7 @@ DecodingState::NeedToSkipToNextKeyframe()
     !Reader()->IsAsync()
     && mMaster->IsAudioDecoding()
     && (mMaster->GetDecodedAudioDuration()
-        < mMaster->mLowAudioThresholdUsecs.ToMicroseconds() * mMaster->mPlaybackRate);
+        < mMaster->mLowAudioThreshold.ToMicroseconds() * mMaster->mPlaybackRate);
   bool isLowOnDecodedVideo =
     (mMaster->GetClock() - mMaster->mDecodedVideoEndTime)
     * mMaster->mPlaybackRate
@@ -2594,7 +2594,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDecodedAudioEndTime(0),
   mDecodedVideoEndTime(0),
   mPlaybackRate(1.0),
-  mLowAudioThresholdUsecs(detail::LOW_AUDIO_USECS),
+  mLowAudioThreshold(detail::LOW_AUDIO_THRESHOLD),
   mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_USECS),
   mAudioCaptured(false),
   mMinimizePreroll(aDecoder->GetMinimizePreroll()),
