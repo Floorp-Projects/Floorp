@@ -269,6 +269,30 @@ GenerateSubmissionUrl(const string& aUrl, const string& aId,
          "?v=" + std::to_string(kTelemetryVersion);
 }
 
+// Write out the ping into the specified file.
+//
+// Returns true if the ping was written out successfully, false otherwise.
+static bool
+WritePing(const string& aPath, const string& aPing)
+{
+  ofstream* f = UIOpenWrite(aPath.c_str());
+  bool success = false;
+
+  if (f->is_open()) {
+    *f << aPing;
+    f->flush();
+
+    if (f->good()) {
+      success = true;
+    }
+
+    f->close();
+  }
+
+  delete f;
+  return success;
+}
+
 // Assembles the crash ping using the strings extracted from the .extra file
 // and sends it using the crash sender. All the telemetry specific data but the
 // environment will be stripped from the annotations so that it won't be sent
@@ -280,7 +304,7 @@ GenerateSubmissionUrl(const string& aUrl, const string& aId,
 // Returns true if the ping was assembled and handed over to the pingsender
 // correctly, false otherwise and populates the aUUID field with the ping UUID.
 bool
-SendCrashPing(StringTable& strings, string& pingUuid)
+SendCrashPing(StringTable& strings, string& pingUuid, const string& pingDir)
 {
   string clientId    = strings[kTelemetryClientId];
   string serverUrl   = strings[kTelemetryUrl];
@@ -306,12 +330,18 @@ SendCrashPing(StringTable& strings, string& pingUuid)
   Json::Value root = CreateRootNode(strings, uuid, clientId, sessionId,
                                     name, version, channel, buildId);
 
-  // Write out the result
+  // Write out the result to the pending pings directory
   Json::FastWriter writer;
   string ping = writer.write(root);
+  string pingPath = pingDir + UI_DIR_SEPARATOR + uuid + ".json";
+
+  if (!WritePing(pingPath, ping)) {
+    return false;
+  }
 
   // Hand over the ping to the sender
-  if (UIRunProgram(GetProgramPath(UI_PING_SENDER_FILENAME), url, ping)) {
+  vector<string> args = { url, pingPath };
+  if (UIRunProgram(GetProgramPath(UI_PING_SENDER_FILENAME), args)) {
     pingUuid = uuid;
     return true;
   } else {
