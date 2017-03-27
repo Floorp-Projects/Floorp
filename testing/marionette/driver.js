@@ -2719,7 +2719,7 @@ GeckoDriver.prototype.acceptConnections = function (cmd, resp) {
  *     If |flags| contains unknown or incompatible flags, for example
  *     multiple Quit flags.
  */
-GeckoDriver.prototype.quitApplication = function* (cmd, resp) {
+GeckoDriver.prototype.quit = function* (cmd, resp) {
   const quits = ["eConsiderQuit", "eAttemptQuit", "eForceQuit"];
 
   let flags = [];
@@ -3039,7 +3039,8 @@ GeckoDriver.prototype.commands = {
   "getTextFromDialog": GeckoDriver.prototype.getTextFromDialog,
   "sendKeysToDialog": GeckoDriver.prototype.sendKeysToDialog,
   "acceptConnections": GeckoDriver.prototype.acceptConnections,
-  "quitApplication": GeckoDriver.prototype.quitApplication,
+  "quitApplication": GeckoDriver.prototype.quit,  // deprecated, can be removed in Firefox 56
+  "quit": GeckoDriver.prototype.quit,
 
   "localization:l10n:localizeEntity": GeckoDriver.prototype.localizeEntity,
   "localization:l10n:localizeProperty": GeckoDriver.prototype.localizeProperty,
