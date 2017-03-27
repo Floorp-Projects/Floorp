@@ -92,7 +92,7 @@ namespace detail {
 // trying to decode the video, we'll skip decoding video up to the next
 // keyframe. We may increase this value for an individual decoder if we
 // encounter video frames which take a long time to decode.
-static const uint32_t LOW_AUDIO_USECS = 300000;
+static constexpr auto LOW_AUDIO_USECS = TimeUnit::FromMicroseconds(300000);
 
 // If more than this many usecs of decoded audio is queued, we'll hold off
 // decoding more audio. If we increase the low audio threshold (see
@@ -2594,7 +2594,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDecodedAudioEndTime(0),
   mDecodedVideoEndTime(0),
   mPlaybackRate(1.0),
-  mLowAudioThresholdUsecs(detail::LOW_AUDIO_USECS),
+  mLowAudioThresholdUsecs(detail::LOW_AUDIO_USECS.ToMicroseconds()),
   mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_USECS),
   mAudioCaptured(false),
   mMinimizePreroll(aDecoder->GetMinimizePreroll()),
