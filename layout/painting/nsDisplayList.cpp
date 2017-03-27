@@ -4550,7 +4550,7 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
   LayersBackend backend = aManager->GetBackendType();
   if (backend == layers::LayersBackend::LAYERS_WR) {
     if (br) {
-      if (!br->CanCreateWebrenderCommands()) {
+      if (!br->CanCreateWebRenderCommands()) {
         return LAYER_NONE;
       }
       mBorderRenderer = br;
@@ -5117,35 +5117,47 @@ nsDisplayBoxShadowInner::Paint(nsDisplayListBuilder* aBuilder,
   }
 }
 
+bool
+nsDisplayBoxShadowInner::CanCreateWebRenderCommands(nsDisplayListBuilder* aBuilder,
+                                                    nsIFrame* aFrame,
+                                                    nsPoint aReferenceOffset)
+{
+  nsRect borderRect = nsRect(aReferenceOffset, aFrame->GetSize());
+  RectCornerRadii innerRadii;
+  bool hasBorderRadius =
+      nsCSSRendering::GetShadowInnerRadii(aFrame, borderRect, innerRadii);
+  if (hasBorderRadius) {
+    return false;
+  }
+
+  nsCSSShadowArray *shadows = aFrame->StyleEffects()->mBoxShadow;
+  if (!shadows) {
+    // Means we don't have to paint anything
+    return true;
+  }
+
+  for (uint32_t i = shadows->Length(); i > 0; --i) {
+    nsCSSShadowItem *shadowItem = shadows->ShadowAt(i - 1);
+    if (!shadowItem->mInset) {
+      continue;
+    }
+
+    if (shadowItem->mXOffset <= 0 || shadowItem->mYOffset <= 0) {
+      // Need to wait for WR to support clip out.
+      return false;
+    }
+  }
+
+  return true;
+}
+
 LayerState
 nsDisplayBoxShadowInner::GetLayerState(nsDisplayListBuilder* aBuilder,
                                        LayerManager* aManager,
                                        const ContainerLayerParameters& aParameters)
 {
-  if (gfxPrefs::LayersAllowInsetBoxShadow()) {
-    nsPoint offset = ToReferenceFrame();
-    nsRect borderRect = nsRect(offset, mFrame->GetSize());
-    RectCornerRadii innerRadii;
-    bool hasBorderRadius = nsCSSRendering::GetShadowInnerRadii(mFrame,
-                                                               borderRect,
-                                                               innerRadii);
-    if (hasBorderRadius) {
-      return LAYER_NONE;
-    }
-
-    nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
-    for (uint32_t i = shadows->Length(); i > 0; --i) {
-      nsCSSShadowItem* shadowItem = shadows->ShadowAt(i - 1);
-      if (!shadowItem->mInset) {
-        continue;
-      }
-
-      if (shadowItem->mXOffset <= 0 || shadowItem->mYOffset <= 0) {
-        // Need to wait for WR to support clip out.
-        return LAYER_NONE;
-      }
-    }
-
+  if (gfxPrefs::LayersAllowInsetBoxShadow() &&
+      CanCreateWebRenderCommands(aBuilder, mFrame, ToReferenceFrame())) {
     return LAYER_ACTIVE;
   }
 
@@ -5166,7 +5178,7 @@ nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::Disp
                                                                nsIFrame* aFrame,
                                                                const nsRect aBorderRect)
 {
-  if (!nsCSSRendering::CanPaintBoxShadowInner(aFrame)) {
+  if (!nsCSSRendering::ShouldPaintBoxShadowInner(aFrame)) {
     return;
   }
 

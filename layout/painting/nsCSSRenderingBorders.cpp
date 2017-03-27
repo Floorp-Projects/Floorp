@@ -3532,7 +3532,7 @@ nsCSSBorderRenderer::DrawBorders()
 }
 
 bool
-nsCSSBorderRenderer::CanCreateWebrenderCommands()
+nsCSSBorderRenderer::CanCreateWebRenderCommands()
 {
   NS_FOR_CSS_SIDES(i) {
     if (mCompositeColors[i] != nullptr) {

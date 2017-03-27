@@ -1696,7 +1696,7 @@ nsCSSRendering::GetBoxShadowInnerPaddingRect(nsIFrame* aFrame,
 }
 
 bool
-nsCSSRendering::CanPaintBoxShadowInner(nsIFrame* aFrame)
+nsCSSRendering::ShouldPaintBoxShadowInner(nsIFrame* aFrame)
 {
   nsCSSShadowArray* shadows = aFrame->StyleEffects()->mBoxShadow;
   if (!shadows)
@@ -1755,7 +1755,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
                                     nsIFrame* aForFrame,
                                     const nsRect& aFrameArea)
 {
-  if (!CanPaintBoxShadowInner(aForFrame)) {
+  if (!ShouldPaintBoxShadowInner(aForFrame)) {
     return;
   }
 

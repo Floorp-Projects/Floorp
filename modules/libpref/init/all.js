@@ -5672,4 +5672,5 @@ pref("layers.advanced.border-layers", 2);
 pref("layers.advanced.boxshadow-inset-layers", 2);
 pref("layers.advanced.boxshadow-outer-layers", 2);
 pref("layers.advanced.caret-layers", 2);
+pref("layers.advanced.displaybuttonborder-layers", 2);
 pref("layers.advanced.outline-layers", 2);

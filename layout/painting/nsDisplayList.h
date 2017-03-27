@@ -3463,6 +3463,9 @@ public:
     }
   }
 
+  static bool CanCreateWebRenderCommands(nsDisplayListBuilder* aBuilder,
+                                         nsIFrame* aFrame,
+                                         nsPoint aReferencePoint);
   static void CreateInsetBoxShadowWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                                     WebRenderDisplayItemLayer* aLayer,
                                                     nsIFrame* aFrame,
