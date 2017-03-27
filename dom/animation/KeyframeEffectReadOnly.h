@@ -65,18 +65,18 @@ struct AnimationPropertySegment
   dom::CompositeOperation mFromComposite = dom::CompositeOperation::Replace;
   dom::CompositeOperation mToComposite = dom::CompositeOperation::Replace;
 
-  bool HasReplacableValues() const
+  bool HasReplaceableValues() const
   {
-    return HasReplacableFromValue() && HasReplacableToValue();
+    return HasReplaceableFromValue() && HasReplaceableToValue();
   }
 
-  bool HasReplacableFromValue() const
+  bool HasReplaceableFromValue() const
   {
     return !mFromValue.IsNull() &&
            mFromComposite == dom::CompositeOperation::Replace;
   }
 
-  bool HasReplacableToValue() const
+  bool HasReplaceableToValue() const
   {
     return !mToValue.IsNull() &&
            mToComposite == dom::CompositeOperation::Replace;
