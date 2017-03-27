@@ -603,10 +603,10 @@ GetMinAndMaxScaleForAnimationProperty(const nsIFrame* aFrame,
       for (const AnimationPropertySegment& segment : prop.mSegments) {
         // In case of add or accumulate composite, StyleAnimationValue does
         // not have a valid value.
-        if (segment.HasReplacableFromValue()) {
+        if (segment.HasReplaceableFromValue()) {
           UpdateMinMaxScale(aFrame, segment.mFromValue, aMinScale, aMaxScale);
         }
-        if (segment.HasReplacableToValue()) {
+        if (segment.HasReplaceableToValue()) {
           UpdateMinMaxScale(aFrame, segment.mToValue, aMinScale, aMaxScale);
         }
       }
