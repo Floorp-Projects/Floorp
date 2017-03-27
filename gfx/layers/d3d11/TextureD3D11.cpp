@@ -895,11 +895,14 @@ void
 DXGIYCbCrTextureHostD3D11::SetTextureSourceProvider(TextureSourceProvider* aProvider)
 {
   if (!aProvider || !aProvider->GetD3D11Device()) {
+    mProvider = nullptr;
     mTextureSources[0] = nullptr;
     mTextureSources[1] = nullptr;
     mTextureSources[2] = nullptr;
     return;
   }
+
+  mProvider = aProvider;
 
   if (mTextureSources[0]) {
     mTextureSources[0]->SetTextureSourceProvider(aProvider);
