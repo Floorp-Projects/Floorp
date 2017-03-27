@@ -1078,7 +1078,7 @@ struct nsCSSValue::Array final {
     return true;
   }
 
-  NS_INLINE_DECL_REFCOUNTING(Array);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Array);
 private:
 
   const size_t mCount;
