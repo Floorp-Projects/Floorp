@@ -32,6 +32,7 @@ class XULInfo:
         predicates on XUL build info evaluate properly."""
 
         return ('var xulRuntime = {{ OS: "{}", XPCOMABI: "{}", shell: true }};'
+                'var release_or_beta = getBuildConfiguration().release_or_beta;'
                 'var isDebugBuild={}; var Android={}; '
                 'var browserIsRemote={}'.format(
                     self.os,
