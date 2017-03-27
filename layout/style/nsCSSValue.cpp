@@ -14,6 +14,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/css/ImageLoader.h"
+#include "mozilla/layers/CompositorThread.h"
 #include "CSSCalc.h"
 #include "gfxFontConstants.h"
 #include "imgIRequest.h"
@@ -427,10 +428,11 @@ nscoord nsCSSValue::GetPixelLength() const
 // traversal, since the refcounts aren't thread-safe.
 // Note that the caller might be an OMTA thread, which is allowed to operate off
 // main thread because it owns all of the corresponding nsCSSValues and any that
-// they might be sharing members with. So pass false for aAssertServoOrMainThread.
-#define DO_RELEASE(member) {                                                  \
-  MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal(false));                      \
-  mValue.member->Release();                                                   \
+// they might be sharing members with.
+#define DO_RELEASE(member) {                                                    \
+  MOZ_ASSERT(mozilla::layers::CompositorThreadHolder::IsInCompositorThread() || \
+             !ServoStyleSet::IsInServoTraversal());                             \
+  mValue.member->Release();                                                     \
 }
 
 void nsCSSValue::DoReset()
