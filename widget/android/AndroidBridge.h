@@ -405,9 +405,9 @@ private:
   void AddObservers();
   void RemoveObservers();
 
-  void UpdateAudioPlayingWindows(uint64_t aWindowId, bool aPlaying);
+  void UpdateAudioPlayingWindows(bool aPlaying);
 
-  nsTArray<uint64_t> mAudioPlayingWindows;
+  int32_t mAudibleWindowsNum;
   nsCOMPtr<nsIAndroidEventDispatcher> mEventDispatcher;
 
 protected:
