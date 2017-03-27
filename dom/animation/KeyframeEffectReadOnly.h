@@ -419,8 +419,12 @@ protected:
 
   // If no base style is already stored for |aProperty|, resolves the base style
   // for |aProperty| using |aStyleContext| and stores it in mBaseStyleValues.
+  // If |aCachedBaseStyleContext| is non-null, it will be used, otherwise the
+  // base style context will be resolved and stored in
+  // |aCachedBaseStyleContext|.
   void EnsureBaseStyle(nsCSSPropertyID aProperty,
-                       nsStyleContext* aStyleContext);
+                       nsStyleContext* aStyleContext,
+                       RefPtr<nsStyleContext>& aCachedBaseStyleContext);
 
   Maybe<OwningAnimationTarget> mTarget;
 

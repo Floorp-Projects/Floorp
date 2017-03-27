@@ -463,35 +463,44 @@ KeyframeEffectReadOnly::EnsureBaseStyles(
 
   mBaseStyleValues.Clear();
 
+  RefPtr<nsStyleContext> cachedBaseStyleContext;
+
   for (const AnimationProperty& property : aProperties) {
     for (const AnimationPropertySegment& segment : property.mSegments) {
       if (segment.HasReplacableValues()) {
         continue;
       }
 
-      EnsureBaseStyle(property.mProperty, aStyleContext);
+      EnsureBaseStyle(property.mProperty,
+                      aStyleContext,
+                      cachedBaseStyleContext);
       break;
     }
   }
 }
 
 void
-KeyframeEffectReadOnly::EnsureBaseStyle(nsCSSPropertyID aProperty,
-                                        nsStyleContext* aStyleContext)
+KeyframeEffectReadOnly::EnsureBaseStyle(
+  nsCSSPropertyID aProperty,
+  nsStyleContext* aStyleContext,
+  RefPtr<nsStyleContext>& aCachedBaseStyleContext)
 {
   if (mBaseStyleValues.Contains(aProperty)) {
     return;
   }
 
-  RefPtr<nsStyleContext> styleContextWithoutAnimation =
-    aStyleContext->PresContext()->StyleSet()->AsGecko()->
-      ResolveStyleByRemovingAnimation(mTarget->mElement,
-                                      aStyleContext,
-                                      eRestyle_AllHintsWithAnimations);
+  if (!aCachedBaseStyleContext) {
+    aCachedBaseStyleContext =
+      aStyleContext->PresContext()->StyleSet()->AsGecko()->
+        ResolveStyleByRemovingAnimation(mTarget->mElement,
+                                        aStyleContext,
+                                        eRestyle_AllHintsWithAnimations);
+  }
+
   StyleAnimationValue result;
   DebugOnly<bool> success =
     StyleAnimationValue::ExtractComputedValue(aProperty,
-                                              styleContextWithoutAnimation,
+                                              aCachedBaseStyleContext,
                                               result);
 
   MOZ_ASSERT(success, "Should be able to extract computed animation value");
