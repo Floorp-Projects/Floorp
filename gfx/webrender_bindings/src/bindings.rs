@@ -86,6 +86,23 @@ impl ByteSlice {
 }
 
 #[repr(C)]
+pub struct MutByteSlice {
+    buffer: *mut u8,
+    len: usize,
+}
+
+impl MutByteSlice {
+    pub fn new(slice: &mut [u8]) -> MutByteSlice {
+        let len = slice.len();
+        MutByteSlice { buffer: &mut slice[0], len: len }
+    }
+
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        unsafe { slice::from_raw_parts_mut(self.buffer, self.len) }
+    }
+}
+
+#[repr(C)]
 pub enum WrGradientExtendMode {
     Clamp,
     Repeat,
