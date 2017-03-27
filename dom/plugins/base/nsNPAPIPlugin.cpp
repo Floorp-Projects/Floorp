@@ -557,7 +557,10 @@ NPPExceptionAutoHolder::~NPPExceptionAutoHolder()
 nsPluginThreadRunnable::nsPluginThreadRunnable(NPP instance,
                                                PluginThreadCallback func,
                                                void *userData)
-  : mInstance(instance), mFunc(func), mUserData(userData)
+  : Runnable("nsPluginThreadRunnable"),
+    mInstance(instance),
+    mFunc(func),
+    mUserData(userData)
 {
   if (!sPluginThreadAsyncCallLock) {
     // Failed to create lock, not much we can do here then...
