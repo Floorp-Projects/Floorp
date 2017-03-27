@@ -2004,11 +2004,15 @@ class ForOfLoopControl : public LoopControl
 
     bool allowSelfHosted_;
 
+    IteratorKind iterKind_;
+
   public:
-    ForOfLoopControl(BytecodeEmitter* bce, int32_t iterDepth, bool allowSelfHosted)
+    ForOfLoopControl(BytecodeEmitter* bce, int32_t iterDepth, bool allowSelfHosted,
+                     IteratorKind iterKind)
       : LoopControl(bce, StatementKind::ForOfLoop),
         iterDepth_(iterDepth),
-        allowSelfHosted_(allowSelfHosted)
+        allowSelfHosted_(allowSelfHosted),
+        iterKind_(iterKind)
     {
     }
 
@@ -2064,7 +2068,7 @@ class ForOfLoopControl : public LoopControl
     bool emitIteratorClose(BytecodeEmitter* bce,
                            CompletionKind completionKind = CompletionKind::Normal) {
         ptrdiff_t start = bce->offset();
-        if (!bce->emitIteratorClose(IteratorKind::Sync, completionKind, allowSelfHosted_))
+        if (!bce->emitIteratorClose(iterKind_, completionKind, allowSelfHosted_))
             return false;
         ptrdiff_t end = bce->offset();
         return bce->tryNoteList.append(JSTRY_FOR_OF_ITERCLOSE, 0, start, end);
@@ -5222,7 +5226,8 @@ BytecodeEmitter::emitSetOrInitializeDestructuring(ParseNode* target, Destructuri
 }
 
 bool
-BytecodeEmitter::emitIteratorNext(ParseNode* pn, bool allowSelfHosted /* = false */)
+BytecodeEmitter::emitIteratorNext(ParseNode* pn, IteratorKind iterKind /* = IteratorKind::Sync */,
+                                  bool allowSelfHosted /* = false */)
 {
     MOZ_ASSERT(allowSelfHosted || emitterMode != BytecodeEmitter::SelfHosting,
                ".next() iteration is prohibited in self-hosted code because it "
@@ -5236,6 +5241,12 @@ BytecodeEmitter::emitIteratorNext(ParseNode* pn, bool allowSelfHosted /* = false
         return false;
     if (!emitCall(JSOP_CALL, 0, pn))                      // ... RESULT
         return false;
+
+    if (iterKind == IteratorKind::Async) {
+        if (!emitAwait())                                 // ... RESULT
+            return false;
+    }
+
     if (!emitCheckIsObj(CheckIsObjectKind::IteratorNext)) // ... RESULT
         return false;
     checkTypeSet(JSOP_CALL);
@@ -6874,7 +6885,7 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
 
         if (!emitDupAt(2))                                // ITER ARR I ITER
             return false;
-        if (!emitIteratorNext(nullptr, allowSelfHosted))  // ITER ARR I RESULT
+        if (!emitIteratorNext(nullptr, IteratorKind::Sync, allowSelfHosted))  // ITER ARR I RESULT
             return false;
         if (!emit1(JSOP_DUP))                             // ITER ARR I RESULT RESULT
             return false;
@@ -6974,6 +6985,13 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
     MOZ_ASSERT(forOfHead->isKind(PNK_FOROF));
     MOZ_ASSERT(forOfHead->isArity(PN_TERNARY));
 
+    unsigned iflags = forOfLoop->pn_iflags;
+    IteratorKind iterKind = (iflags & JSITER_FORAWAITOF)
+                            ? IteratorKind::Async
+                            : IteratorKind::Sync;
+    MOZ_ASSERT_IF(iterKind == IteratorKind::Async, sc->asFunctionBox());
+    MOZ_ASSERT_IF(iterKind == IteratorKind::Async, sc->asFunctionBox()->isAsync());
+
     ParseNode* forHeadExpr = forOfHead->pn_kid3;
 
     // Certain builtins (e.g. Array.from) are implemented in self-hosting
@@ -6989,8 +7007,13 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
     // Evaluate the expression being iterated.
     if (!emitTree(forHeadExpr))                           // ITERABLE
         return false;
-    if (!emitIterator())                                  // ITER
-        return false;
+    if (iterKind == IteratorKind::Async) {
+        if (!emitAsyncIterator())                         // ITER
+            return false;
+    } else {
+        if (!emitIterator())                              // ITER
+            return false;
+    }
 
     int32_t iterDepth = stackDepth;
 
@@ -7001,7 +7024,7 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
     if (!emit1(JSOP_UNDEFINED))                           // ITER RESULT UNDEF
         return false;
 
-    ForOfLoopControl loopInfo(this, iterDepth, allowSelfHostedIter);
+    ForOfLoopControl loopInfo(this, iterDepth, allowSelfHostedIter, iterKind);
 
     // Annotate so IonMonkey can find the loop-closing jump.
     unsigned noteIndex;
@@ -7097,7 +7120,7 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
         if (!emitDupAt(1))                                // ITER UNDEF ITER
             return false;
 
-        if (!emitIteratorNext(forOfHead, allowSelfHostedIter)) // ITER UNDEF RESULT
+        if (!emitIteratorNext(forOfHead, iterKind, allowSelfHostedIter)) // ITER UNDEF RESULT
             return false;
 
         if (!emit1(JSOP_SWAP))                            // ITER RESULT UNDEF
