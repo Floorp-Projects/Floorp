@@ -408,33 +408,6 @@ KeyframeEffectReadOnly::CompositeValue(
 }
 
 StyleAnimationValue
-KeyframeEffectReadOnly::ResolveBaseStyle(nsCSSPropertyID aProperty,
-                                         nsStyleContext* aStyleContext)
-{
-  StyleAnimationValue result;
-  if (mBaseStyleValues.Get(aProperty, &result)) {
-    return result;
-  }
-
-  RefPtr<nsStyleContext> styleContextWithoutAnimation =
-    aStyleContext->PresContext()->StyleSet()->AsGecko()->
-      ResolveStyleByRemovingAnimation(mTarget->mElement,
-                                      aStyleContext,
-                                      eRestyle_AllHintsWithAnimations);
-  DebugOnly<bool> success =
-    StyleAnimationValue::ExtractComputedValue(aProperty,
-                                              styleContextWithoutAnimation,
-                                              result);
-
-  MOZ_ASSERT(success, "Should be able to extract computed animation value");
-  MOZ_ASSERT(!result.IsNull(), "Should have a valid StyleAnimationValue");
-
-  mBaseStyleValues.Put(aProperty, result);
-
-  return result;
-}
-
-StyleAnimationValue
 KeyframeEffectReadOnly::GetUnderlyingStyle(
   nsCSSPropertyID aProperty,
   const RefPtr<AnimValuesStyleRule>& aAnimationRule)
@@ -496,10 +469,35 @@ KeyframeEffectReadOnly::EnsureBaseStyles(
         continue;
       }
 
-      Unused << ResolveBaseStyle(property.mProperty, aStyleContext);
+      EnsureBaseStyle(property.mProperty, aStyleContext);
       break;
     }
   }
+}
+
+void
+KeyframeEffectReadOnly::EnsureBaseStyle(nsCSSPropertyID aProperty,
+                                        nsStyleContext* aStyleContext)
+{
+  if (mBaseStyleValues.Contains(aProperty)) {
+    return;
+  }
+
+  RefPtr<nsStyleContext> styleContextWithoutAnimation =
+    aStyleContext->PresContext()->StyleSet()->AsGecko()->
+      ResolveStyleByRemovingAnimation(mTarget->mElement,
+                                      aStyleContext,
+                                      eRestyle_AllHintsWithAnimations);
+  StyleAnimationValue result;
+  DebugOnly<bool> success =
+    StyleAnimationValue::ExtractComputedValue(aProperty,
+                                              styleContextWithoutAnimation,
+                                              result);
+
+  MOZ_ASSERT(success, "Should be able to extract computed animation value");
+  MOZ_ASSERT(!result.IsNull(), "Should have a valid StyleAnimationValue");
+
+  mBaseStyleValues.Put(aProperty, result);
 }
 
 void

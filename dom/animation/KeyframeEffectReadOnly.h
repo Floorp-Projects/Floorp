@@ -417,9 +417,10 @@ protected:
     // FIXME: Bug 1311257: Support missing keyframes.
   }
 
-  // Returns the base style resolved by |aStyleContext| for |aProperty|.
-  StyleAnimationValue ResolveBaseStyle(nsCSSPropertyID aProperty,
-                                       nsStyleContext* aStyleContext);
+  // If no base style is already stored for |aProperty|, resolves the base style
+  // for |aProperty| using |aStyleContext| and stores it in mBaseStyleValues.
+  void EnsureBaseStyle(nsCSSPropertyID aProperty,
+                       nsStyleContext* aStyleContext);
 
   Maybe<OwningAnimationTarget> mTarget;
 
