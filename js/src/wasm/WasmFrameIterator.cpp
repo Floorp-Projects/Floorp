@@ -396,12 +396,10 @@ void
 wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
                                FuncOffsets* offsets)
 {
-#if defined(JS_CODEGEN_ARM)
     // Flush pending pools so they do not get dumped between the 'begin' and
     // 'normalEntry' offsets since the difference must be less than UINT8_MAX
     // to be stored in CodeRange::funcBeginToNormalEntry_.
     masm.flushBuffer();
-#endif
     masm.haltingAlign(CodeAlignment);
 
     // Generate table entry:
@@ -415,12 +413,17 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
         masm.branchPtr(Assembler::Condition::NotEqual, WasmTableCallSigReg, scratch, trap);
         break;
       }
-      case SigIdDesc::Kind::Immediate:
+      case SigIdDesc::Kind::Immediate: {
         masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, Imm32(sigId.immediate()), trap);
         break;
+      }
       case SigIdDesc::Kind::None:
         break;
     }
+
+    // The table entry might have generated a small constant pool in case of
+    // immediate comparison.
+    masm.flushBuffer();
 
     // Generate normal entry:
     masm.nopAlign(CodeAlignment);
