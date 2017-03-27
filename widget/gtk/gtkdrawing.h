@@ -67,9 +67,6 @@ typedef enum {
   MOZ_GTK_TAB_SELECTED        = 1 << 10
 } GtkTabFlags;
 
-/* function type for moz_gtk_enable_style_props */
-typedef gint (*style_prop_t)(GtkStyle*, const gchar*, gint);
-
 /*** result/error codes ***/
 #define MOZ_GTK_SUCCESS 0
 #define MOZ_GTK_UNKNOWN_WIDGET -1
@@ -270,15 +267,6 @@ typedef enum {
  *                               to crash with gtkdrawing.
  */
 gint moz_gtk_init();
-
-/**
- * Enable GTK+ 1.2.9+ theme enhancements. You must provide a pointer
- * to the GTK+ 1.2.9+ function "gtk_style_get_prop_experimental".
- * styleGetProp:  pointer to gtk_style_get_prop_experimental
- * 
- * returns: MOZ_GTK_SUCCESS if there was no error, an error code otherwise
- */
-gint moz_gtk_enable_style_props(style_prop_t styleGetProp);
 
 /**
  * Perform cleanup of the drawing library. You should call this function

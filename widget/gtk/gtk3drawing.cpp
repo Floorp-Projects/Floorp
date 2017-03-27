@@ -18,7 +18,6 @@
 
 #include <math.h>
 
-static style_prop_t style_prop_func;
 static gboolean have_arrow_scaling;
 static gboolean checkbox_check_state;
 static gboolean notebook_has_tab_gap;
@@ -75,13 +74,6 @@ GetStateFlagsFromGtkTabFlags(GtkTabFlags flags)
 {
     return ((flags & MOZ_GTK_TAB_SELECTED) == 0) ?
             GTK_STATE_FLAG_NORMAL : GTK_STATE_FLAG_ACTIVE;
-}
-
-gint
-moz_gtk_enable_style_props(style_prop_t styleGetProp)
-{
-    style_prop_func = styleGetProp;
-    return MOZ_GTK_SUCCESS;
 }
 
 gint
