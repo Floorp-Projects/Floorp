@@ -86,6 +86,7 @@ class JitCode;
     D(js::PlainObject*) \
     D(js::PropertyName*) \
     D(js::RegExpObject*) \
+    D(js::RegExpShared*) \
     D(js::SavedFrame*) \
     D(js::Scope*) \
     D(js::ScriptSourceObject*) \

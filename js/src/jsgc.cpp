@@ -367,7 +367,12 @@ static const FinalizePhase BackgroundFinalizePhases[] = {
     },
     {
         gcstats::PHASE_SWEEP_SCOPE, {
-            AllocKind::SCOPE
+            AllocKind::SCOPE,
+        }
+    },
+    {
+        gcstats::PHASE_SWEEP_REGEXP_SHARED, {
+            AllocKind::REGEXP_SHARED,
         }
     },
     {
@@ -1722,7 +1727,6 @@ static const AllocKind AllocKindsToRelocate[] = {
     AllocKind::OBJECT16_BACKGROUND,
     AllocKind::SCRIPT,
     AllocKind::LAZY_SCRIPT,
-    AllocKind::SCOPE,
     AllocKind::SHAPE,
     AllocKind::ACCESSOR_SHAPE,
     AllocKind::BASE_SHAPE,
@@ -1730,7 +1734,9 @@ static const AllocKind AllocKindsToRelocate[] = {
     AllocKind::STRING,
     AllocKind::EXTERNAL_STRING,
     AllocKind::FAT_INLINE_ATOM,
-    AllocKind::ATOM
+    AllocKind::ATOM,
+    AllocKind::SCOPE,
+    AllocKind::REGEXP_SHARED
 };
 
 Arena*
@@ -2054,61 +2060,23 @@ GCRuntime::relocateArenas(Zone* zone, JS::gcreason::Reason reason, Arena*& reloc
     return true;
 }
 
-void
-MovingTracer::onObjectEdge(JSObject** objp)
+template <typename T>
+inline void
+MovingTracer::updateEdge(T** thingp)
 {
-    JSObject* obj = *objp;
-    if (obj->runtimeFromAnyThread() == runtime() && IsForwarded(obj))
-        *objp = Forwarded(obj);
+    auto thing = *thingp;
+    if (thing->runtimeFromAnyThread() == runtime() && IsForwarded(thing))
+        *thingp = Forwarded(thing);
 }
 
-void
-MovingTracer::onShapeEdge(Shape** shapep)
-{
-    Shape* shape = *shapep;
-    if (shape->runtimeFromAnyThread() == runtime() && IsForwarded(shape))
-        *shapep = Forwarded(shape);
-}
-
-void
-MovingTracer::onStringEdge(JSString** stringp)
-{
-    JSString* string = *stringp;
-    if (string->runtimeFromAnyThread() == runtime() && IsForwarded(string))
-        *stringp = Forwarded(string);
-}
-
-void
-MovingTracer::onScriptEdge(JSScript** scriptp)
-{
-    JSScript* script = *scriptp;
-    if (script->runtimeFromAnyThread() == runtime() && IsForwarded(script))
-        *scriptp = Forwarded(script);
-}
-
-void
-MovingTracer::onLazyScriptEdge(LazyScript** lazyp)
-{
-    LazyScript* lazy = *lazyp;
-    if (lazy->runtimeFromAnyThread() == runtime() && IsForwarded(lazy))
-        *lazyp = Forwarded(lazy);
-}
-
-void
-MovingTracer::onBaseShapeEdge(BaseShape** basep)
-{
-    BaseShape* base = *basep;
-    if (base->runtimeFromAnyThread() == runtime() && IsForwarded(base))
-        *basep = Forwarded(base);
-}
-
-void
-MovingTracer::onScopeEdge(Scope** scopep)
-{
-    Scope* scope = *scopep;
-    if (scope->runtimeFromAnyThread() == runtime() && IsForwarded(scope))
-        *scopep = Forwarded(scope);
-}
+void MovingTracer::onObjectEdge(JSObject** objp) { updateEdge(objp); }
+void MovingTracer::onShapeEdge(Shape** shapep) { updateEdge(shapep); }
+void MovingTracer::onStringEdge(JSString** stringp) { updateEdge(stringp); }
+void MovingTracer::onScriptEdge(JSScript** scriptp) { updateEdge(scriptp); }
+void MovingTracer::onLazyScriptEdge(LazyScript** lazyp) { updateEdge(lazyp); }
+void MovingTracer::onBaseShapeEdge(BaseShape** basep) { updateEdge(basep); }
+void MovingTracer::onScopeEdge(Scope** scopep) { updateEdge(scopep); }
+void MovingTracer::onRegExpSharedEdge(RegExpShared** sharedp) { updateEdge(sharedp); }
 
 void
 Zone::prepareForCompacting()
