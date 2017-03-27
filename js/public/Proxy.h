@@ -32,7 +32,8 @@ using JS::PrivateValue;
 using JS::PropertyDescriptor;
 using JS::Value;
 
-class RegExpGuard;
+using RegExpGuard = JS::Rooted<RegExpShared*>;
+
 class JS_FRIEND_API(Wrapper);
 
 /*
