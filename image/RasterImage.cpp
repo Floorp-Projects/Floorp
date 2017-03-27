@@ -347,6 +347,7 @@ RasterImage::LookupFrame(const IntSize& aSize,
     // one. (Or we're sync decoding and the existing decoder hasn't even started
     // yet.) Trigger decoding so it'll be available next time.
     MOZ_ASSERT(aPlaybackType != PlaybackType::eAnimated ||
+               gfxPrefs::ImageMemAnimatedDiscardable() ||
                !mAnimationState || mAnimationState->KnownFrameCount() < 1,
                "Animated frames should be locked");
 
@@ -414,7 +415,7 @@ RasterImage::WillDrawOpaqueNow()
     return false;
   }
 
-  if (mAnimationState) {
+  if (mAnimationState && !gfxPrefs::ImageMemAnimatedDiscardable()) {
     // We never discard frames of animated images.
     return true;
   }
@@ -758,9 +759,11 @@ RasterImage::SetMetadata(const ImageMetadata& aMetadata,
     mAnimationState.emplace(mAnimationMode);
     mFrameAnimator = MakeUnique<FrameAnimator>(this, mSize);
 
-    // We don't support discarding animated images (See bug 414259).
-    // Lock the image and throw away the key.
-    LockImage();
+    if (!gfxPrefs::ImageMemAnimatedDiscardable()) {
+      // We don't support discarding animated images (See bug 414259).
+      // Lock the image and throw away the key.
+      LockImage();
+    }
 
     if (!aFromMetadataDecode) {
       // The metadata decode reported that this image isn't animated, but we
@@ -1075,7 +1078,8 @@ RasterImage::Discard()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(CanDiscard(), "Asked to discard but can't");
-  MOZ_ASSERT(!mAnimationState, "Asked to discard for animated image");
+  MOZ_ASSERT(!mAnimationState || gfxPrefs::ImageMemAnimatedDiscardable(),
+    "Asked to discard for animated image");
 
   // Delete all the decoded frames.
   SurfaceCache::RemoveImage(ImageKey(this));
@@ -1092,8 +1096,9 @@ RasterImage::Discard()
 
 bool
 RasterImage::CanDiscard() {
-  return mAllSourceData &&       // ...have the source data...
-         !mAnimationState;       // Can never discard animated images
+  return mAllSourceData &&
+         // Can discard animated images if the pref is set
+         (!mAnimationState || gfxPrefs::ImageMemAnimatedDiscardable());
 }
 
 NS_IMETHODIMP
