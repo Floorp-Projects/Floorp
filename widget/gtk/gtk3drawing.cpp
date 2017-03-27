@@ -39,6 +39,9 @@ static gint
 moz_gtk_menu_item_paint(WidgetNodeType widget, cairo_t *cr, GdkRectangle* rect,
                         GtkWidgetState* state, GtkTextDirection direction);
 
+static GtkBorder
+GetMarginBorderPadding(GtkStyleContext* aStyle);
+
 // GetStateFlagsFromGtkWidgetState() can be safely used for the specific
 // GtkWidgets that set both prelight and active flags.  For other widgets,
 // either the GtkStateFlags or Gecko's GtkWidgetState need to be carefully
@@ -651,12 +654,37 @@ moz_gtk_draw_styled_frame(GtkStyleContext* style, cairo_t *cr,
 
 static gint
 moz_gtk_scrollbar_trough_paint(WidgetNodeType widget,
-                               cairo_t *cr, const GdkRectangle* rect,
+                               cairo_t *cr, const GdkRectangle* aRect,
                                GtkWidgetState* state,
                                GtkTextDirection direction)
 {
-    GtkStyleContext* style = ClaimStyleContext(widget, direction);
-    moz_gtk_draw_styled_frame(style, cr, rect, state->focused);
+    GdkRectangle rect = *aRect;
+    GtkStyleContext* style;
+
+    if (gtk_get_minor_version() >= 20) {
+        WidgetNodeType thumb = widget == MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL ?
+            MOZ_GTK_SCROLLBAR_THUMB_VERTICAL :
+            MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL;
+        MozGtkSize thumbSize = GetMinMarginBox(thumb);
+        style = ClaimStyleContext(widget, direction);
+        MozGtkSize trackSize = GetMinContentBox(style);
+        trackSize.Include(thumbSize);
+        trackSize += GetMarginBorderPadding(style);
+        // Gecko's trough |aRect| fills available breadth, but GTK's trough is
+        // centered in the contents_gadget.  The centering here round left
+        // and up, like gtk_box_gadget_allocate_child().
+        if (widget == MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL) {
+            rect.x += (rect.width - trackSize.width)/2;
+            rect.width = trackSize.width;
+        } else {
+            rect.y += (rect.height - trackSize.height)/2;
+            rect.height = trackSize.height;
+        }
+    } else {
+        style = ClaimStyleContext(widget, direction);
+    }
+
+    moz_gtk_draw_styled_frame(style, cr, &rect, state->focused);
     ReleaseStyleContext(style);
 
     return MOZ_GTK_SUCCESS;
