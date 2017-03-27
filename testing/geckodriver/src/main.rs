@@ -6,6 +6,7 @@ extern crate lazy_static;
 extern crate hyper;
 extern crate mozprofile;
 extern crate mozrunner;
+extern crate mozversion;
 extern crate regex;
 extern crate rustc_serialize;
 #[macro_use]
