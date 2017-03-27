@@ -619,8 +619,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitPropIncDec(ParseNode* pn);
 
     MOZ_MUST_USE bool emitAsyncWrapperLambda(unsigned index, bool isArrow);
-    MOZ_MUST_USE bool emitAsyncWrapper(unsigned index, bool needsHomeObject, bool isArrow,
-                                       bool isStarGenerator);
+    MOZ_MUST_USE bool emitAsyncWrapper(unsigned index, bool needsHomeObject, bool isArrow);
 
     MOZ_MUST_USE bool emitComputedPropertyName(ParseNode* computedPropName);
 
