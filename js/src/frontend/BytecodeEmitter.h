@@ -701,7 +701,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     // Pops iterator from the top of the stack. Pushes the result of |.next()|
     // onto the stack.
-    MOZ_MUST_USE bool emitIteratorNext(ParseNode* pn, bool allowSelfHosted = false);
+    MOZ_MUST_USE bool emitIteratorNext(ParseNode* pn, IteratorKind kind = IteratorKind::Sync,
+                                       bool allowSelfHosted = false);
     MOZ_MUST_USE bool emitIteratorClose(IteratorKind iterKind = IteratorKind::Sync,
                                         CompletionKind completionKind = CompletionKind::Normal,
                                         bool allowSelfHosted = false);
