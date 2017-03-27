@@ -293,7 +293,8 @@ nsSVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
         continue;
       }
     }
-    result = nsSVGUtils::PaintFrameWithEffects(kid, aContext, m, aDirtyRect);
+    result = nsSVGUtils::PaintFrameWithEffects(kid, aContext, m, aDirtyRect,
+                                               aFlags);
     if (result != DrawResult::SUCCESS) {
       return result;
     }
