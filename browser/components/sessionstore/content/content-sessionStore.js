@@ -189,13 +189,21 @@ var MessageListener = {
       }
     });
 
-    // When restoreHistory finishes, we send a synchronous message to
-    // SessionStore.jsm so that it can run SSTabRestoring. Users of
-    // SSTabRestoring seem to get confused if chrome and content are out of
-    // sync about the state of the restore (particularly regarding
-    // docShell.currentURI). Using a synchronous message is the easiest way
-    // to temporarily synchronize them.
-    sendSyncMessage("SessionStore:restoreHistoryComplete", {epoch, isRemotenessUpdate});
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
+      // For non-remote tabs, when restoreHistory finishes, we send a synchronous
+      // message to SessionStore.jsm so that it can run SSTabRestoring. Users of
+      // SSTabRestoring seem to get confused if chrome and content are out of
+      // sync about the state of the restore (particularly regarding
+      // docShell.currentURI). Using a synchronous message is the easiest way
+      // to temporarily synchronize them.
+      //
+      // For remote tabs, because all nsIWebProgress notifications are sent
+      // asynchronously using messages, we get the same-order guarantees of the
+      // message manager, and can use an async message.
+      sendSyncMessage("SessionStore:restoreHistoryComplete", {epoch, isRemotenessUpdate});
+    } else {
+      sendAsyncMessage("SessionStore:restoreHistoryComplete", {epoch, isRemotenessUpdate});
+    }
   },
 
   restoreTabContent({loadArguments, isRemotenessUpdate, reason}) {
