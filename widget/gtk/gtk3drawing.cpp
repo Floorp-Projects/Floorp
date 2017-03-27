@@ -85,6 +85,14 @@ moz_gtk_init()
     else
         checkbox_check_state = GTK_STATE_FLAG_ACTIVE;
 
+    moz_gtk_refresh();
+
+    return MOZ_GTK_SUCCESS;
+}
+
+void
+moz_gtk_refresh()
+{
     if (gtk_check_version(3, 12, 0) == nullptr &&
         gtk_check_version(3, 20, 0) != nullptr)
     {
@@ -98,7 +106,8 @@ moz_gtk_init()
         notebook_has_tab_gap = true;
     }
 
-    return MOZ_GTK_SUCCESS;
+    sScrollbarMetrics[GTK_ORIENTATION_HORIZONTAL].initialized = false;
+    sScrollbarMetrics[GTK_ORIENTATION_VERTICAL].initialized = false;
 }
 
 gint
