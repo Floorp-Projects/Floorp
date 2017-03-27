@@ -583,11 +583,11 @@ private:
   // decode video frames, in order to reduce the chance of audio underruns.
   // Note that we don't ever reset this threshold, it only ever grows as
   // we detect that the decode can't keep up with rendering.
-  media::TimeUnit mLowAudioThresholdUsecs;
+  media::TimeUnit mLowAudioThreshold;
 
   // Our "ample" audio threshold. Once we've this much audio decoded, we
-  // pause decoding. If we increase mLowAudioThresholdUsecs, we'll also
-  // increase this too appropriately (we don't want mLowAudioThresholdUsecs
+  // pause decoding. If we increase mLowAudioThreshold, we'll also
+  // increase this too appropriately (we don't want mLowAudioThreshold
   // to be greater than ampleAudioThreshold, else we'd stop decoding!).
   // Note that we don't ever reset this threshold, it only ever grows as
   // we detect that the decode can't keep up with rendering.
