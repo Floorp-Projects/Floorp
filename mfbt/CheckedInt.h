@@ -200,7 +200,7 @@ struct IsInRangeImpl {};
 template<typename T, typename U, bool IsTSigned, bool IsUSigned>
 struct IsInRangeImpl<T, U, IsTSigned, IsUSigned, true>
 {
-  static bool run(U)
+  static bool constexpr run(U)
   {
     return true;
   }
@@ -209,7 +209,7 @@ struct IsInRangeImpl<T, U, IsTSigned, IsUSigned, true>
 template<typename T, typename U>
 struct IsInRangeImpl<T, U, true, true, false>
 {
-  static bool run(U aX)
+  static bool constexpr run(U aX)
   {
     return aX <= MaxValue<T>::value && aX >= MinValue<T>::value;
   }
@@ -218,7 +218,7 @@ struct IsInRangeImpl<T, U, true, true, false>
 template<typename T, typename U>
 struct IsInRangeImpl<T, U, false, false, false>
 {
-  static bool run(U aX)
+  static bool constexpr run(U aX)
   {
     return aX <= MaxValue<T>::value;
   }
@@ -227,7 +227,7 @@ struct IsInRangeImpl<T, U, false, false, false>
 template<typename T, typename U>
 struct IsInRangeImpl<T, U, true, false, false>
 {
-  static bool run(U aX)
+  static bool constexpr run(U aX)
   {
     return sizeof(T) > sizeof(U) || aX <= U(MaxValue<T>::value);
   }
@@ -236,7 +236,7 @@ struct IsInRangeImpl<T, U, true, false, false>
 template<typename T, typename U>
 struct IsInRangeImpl<T, U, false, true, false>
 {
-  static bool run(U aX)
+  static bool constexpr run(U aX)
   {
     return sizeof(T) >= sizeof(U)
            ? aX >= 0
@@ -245,7 +245,7 @@ struct IsInRangeImpl<T, U, false, true, false>
 };
 
 template<typename T, typename U>
-inline bool
+inline constexpr bool
 IsInRange(U aX)
 {
   return IsInRangeImpl<T, U>::run(aX);
@@ -526,7 +526,7 @@ public:
    * argument is valid.
    */
   template<typename U>
-  MOZ_IMPLICIT CheckedInt(U aValue) MOZ_NO_ARITHMETIC_EXPR_IN_ARGUMENT
+  MOZ_IMPLICIT constexpr CheckedInt(U aValue) MOZ_NO_ARITHMETIC_EXPR_IN_ARGUMENT
     : mValue(T(aValue)),
       mIsValid(detail::IsInRange<T>(aValue))
   {
@@ -547,7 +547,7 @@ public:
   }
 
   /** Constructs a valid checked integer with initial value 0 */
-  CheckedInt() : mValue(0), mIsValid(true)
+  constexpr CheckedInt() : mValue(0), mIsValid(true)
   {
     static_assert(detail::IsSupported<T>::value,
                   "This type is not supported by CheckedInt");
