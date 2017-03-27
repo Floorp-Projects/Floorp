@@ -70,6 +70,22 @@ fn get_gl_format_bgra(gl: &gl::Gl) -> gl::GLuint {
 }
 
 #[repr(C)]
+pub struct ByteSlice {
+    buffer: *const u8,
+    len: usize,
+}
+
+impl ByteSlice {
+    pub fn new(slice: &[u8]) -> ByteSlice {
+        ByteSlice { buffer: &slice[0], len: slice.len() }
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        unsafe { slice::from_raw_parts(self.buffer, self.len) }
+    }
+}
+
+#[repr(C)]
 pub enum WrGradientExtendMode {
     Clamp,
     Repeat,
@@ -750,13 +766,12 @@ pub unsafe extern "C" fn wr_api_delete(api: *mut RenderApi) {
 pub extern "C" fn wr_api_add_image(api: &mut RenderApi,
                                    image_key: ImageKey,
                                    descriptor: &WrImageDescriptor,
-                                   bytes: *const u8,
-                                   size: usize) {
+                                   bytes: ByteSlice) {
     assert!(unsafe { is_in_compositor_thread() });
-    let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
+    let copied_bytes = bytes.as_slice().to_owned();
     api.add_image(image_key,
                   descriptor.to_descriptor(),
-                  ImageData::new(bytes),
+                  ImageData::new(copied_bytes),
                   None);
 }
 
@@ -797,12 +812,11 @@ pub extern "C" fn wr_api_add_external_image_buffer(api: &mut RenderApi,
 pub extern "C" fn wr_api_update_image(api: &mut RenderApi,
                                       key: ImageKey,
                                       descriptor: &WrImageDescriptor,
-                                      bytes: *const u8,
-                                      size: usize) {
+                                      bytes: ByteSlice) {
     assert!(unsafe { is_in_compositor_thread() });
-    let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
+    let copied_bytes = bytes.as_slice().to_owned();
 
-    api.update_image(key, descriptor.to_descriptor(), bytes);
+    api.update_image(key, descriptor.to_descriptor(), copied_bytes);
 }
 
 #[no_mangle]
