@@ -442,7 +442,8 @@ void
 Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
                        nsIAtom* aPseudoTagOrNull,
                        ServoComputedValuesBorrowedOrNull aComputedValues,
-                       ServoComputedValuesBorrowedOrNull aParentComputedValues)
+                       ServoComputedValuesBorrowedOrNull aParentComputedValues,
+                       UpdateAnimationsTasks aTaskBits)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aElement);
@@ -455,6 +456,7 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
     return;
   }
 
+  UpdateAnimationsTasks tasks = static_cast<UpdateAnimationsTasks>(aTaskBits);
   if (presContext->IsDynamic() && aElement->IsInComposedDoc()) {
     const ServoComputedValuesWithParent servoValues =
       { aComputedValues, aParentComputedValues };
@@ -462,9 +464,11 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
       nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
                                          CSSEnabledState::eForAllContent);
 
-    presContext->AnimationManager()->
-      UpdateAnimations(const_cast<dom::Element*>(aElement), pseudoType,
-                       servoValues);
+    if (tasks & UpdateAnimationsTasks::CSSAnimations) {
+      presContext->AnimationManager()->
+        UpdateAnimations(const_cast<dom::Element*>(aElement), pseudoType,
+                         servoValues);
+    }
   }
 }
 
