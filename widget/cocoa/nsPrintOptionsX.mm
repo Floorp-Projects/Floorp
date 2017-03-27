@@ -8,6 +8,8 @@
 #include "nsIServiceManager.h"
 #include "nsPrintOptionsX.h"
 #include "nsPrintSettingsX.h"
+#include "nsIWebBrowserPrint.h"
+#include "nsCocoaUtils.h"
 
 using namespace mozilla::embedding;
 

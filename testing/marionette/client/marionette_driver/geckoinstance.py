@@ -71,7 +71,7 @@ class GeckoInstance(object):
         "hangmonitor.timeout": 0,
 
         "javascript.options.showInConsole": True,
-        "marionette.defaultPrefs.enabled": True,
+        "marionette.enabled": True,
         "media.volume_scale": "0.01",
 
         # Make sure the disk cache doesn't get auto disabled

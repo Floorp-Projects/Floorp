@@ -55,7 +55,6 @@
 #include "nsScreenManagerGonk.h"
 #include "nsThreadUtils.h"
 #include "nsWindow.h"
-#include "OrientationObserver.h"
 #include "GonkMemoryPressureMonitoring.h"
 
 #include "android/log.h"
@@ -557,39 +556,17 @@ private:
 void
 GeckoInputReaderPolicy::setDisplayInfo()
 {
-    static_assert(static_cast<int>(nsIScreen::ROTATION_0_DEG) ==
-                  static_cast<int>(DISPLAY_ORIENTATION_0),
-                  "Orientation enums not matched!");
-    static_assert(static_cast<int>(nsIScreen::ROTATION_90_DEG) ==
-                  static_cast<int>(DISPLAY_ORIENTATION_90),
-                  "Orientation enums not matched!");
-    static_assert(static_cast<int>(nsIScreen::ROTATION_180_DEG) ==
-                  static_cast<int>(DISPLAY_ORIENTATION_180),
-                  "Orientation enums not matched!");
-    static_assert(static_cast<int>(nsIScreen::ROTATION_270_DEG) ==
-                  static_cast<int>(DISPLAY_ORIENTATION_270),
-                  "Orientation enums not matched!");
-
     RefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
 
-    uint32_t rotation = nsIScreen::ROTATION_0_DEG;
-    DebugOnly<nsresult> rv = screen->GetRotation(&rotation);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
     LayoutDeviceIntRect screenBounds = screen->GetNaturalBounds();
 
     DisplayViewport viewport;
     viewport.displayId = 0;
-    viewport.orientation = rotation;
+    viewport.orientation = DISPLAY_ORIENTATION_0;
     viewport.physicalRight = viewport.deviceWidth = screenBounds.width;
     viewport.physicalBottom = viewport.deviceHeight = screenBounds.height;
-    if (viewport.orientation == DISPLAY_ORIENTATION_90 ||
-        viewport.orientation == DISPLAY_ORIENTATION_270) {
-        viewport.logicalRight = screenBounds.height;
-        viewport.logicalBottom = screenBounds.width;
-    } else {
-        viewport.logicalRight = screenBounds.width;
-        viewport.logicalBottom = screenBounds.height;
-    }
+    viewport.logicalRight = screenBounds.width;
+    viewport.logicalBottom = screenBounds.height;
     mConfig.setDisplayInfo(false, viewport);
 }
 
@@ -966,7 +943,6 @@ nsAppShell::Observe(nsISupports* aSubject,
 NS_IMETHODIMP
 nsAppShell::Exit()
 {
-    OrientationObserver::ShutDown();
     nsCOMPtr<nsIObserverService> obsServ = GetObserverService();
     if (obsServ) {
         obsServ->RemoveObserver(this, "browser-ui-startup-complete");
@@ -1070,9 +1046,6 @@ nsAppShell::NotifyNativeEvent()
 nsAppShell::NotifyScreenInitialized()
 {
     gAppShell->InitInputDevices();
-
-    // Getting the instance of OrientationObserver to initialize it.
-    OrientationObserver::GetInstance();
 }
 
 /* static */ void

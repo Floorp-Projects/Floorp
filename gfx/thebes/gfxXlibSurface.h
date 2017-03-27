@@ -36,7 +36,7 @@ public:
 
     // construct a wrapper around the specified drawable with dpy/format,
     // and known width/height.
-    gfxXlibSurface(Screen *screen, Drawable drawable, XRenderPictFormat *format,
+    gfxXlibSurface(::Screen *screen, Drawable drawable, XRenderPictFormat *format,
                    const mozilla::gfx::IntSize& size);
 
     explicit gfxXlibSurface(cairo_surface_t *csurf);
@@ -46,13 +46,13 @@ public:
     // the pixmap should be in video or system memory.  It must be on
     // |screen| (if specified).
     static already_AddRefed<gfxXlibSurface>
-    Create(Screen *screen, Visual *visual, const mozilla::gfx::IntSize& size,
+    Create(::Screen *screen, Visual *visual, const mozilla::gfx::IntSize& size,
            Drawable relatedDrawable = X11None);
     static cairo_surface_t *
-    CreateCairoSurface(Screen *screen, Visual *visual, const mozilla::gfx::IntSize& size,
+    CreateCairoSurface(::Screen *screen, Visual *visual, const mozilla::gfx::IntSize& size,
                        Drawable relatedDrawable = X11None);
     static already_AddRefed<gfxXlibSurface>
-    Create(Screen* screen, XRenderPictFormat *format, const mozilla::gfx::IntSize& size,
+    Create(::Screen* screen, XRenderPictFormat *format, const mozilla::gfx::IntSize& size,
            Drawable relatedDrawable = X11None);
 
     virtual ~gfxXlibSurface();
@@ -65,12 +65,12 @@ public:
     virtual const mozilla::gfx::IntSize GetSize() const override;
 
     Display* XDisplay() { return mDisplay; }
-    Screen* XScreen();
+    ::Screen* XScreen();
     Drawable XDrawable() { return mDrawable; }
     XRenderPictFormat* XRenderFormat();
 
-    static int DepthOfVisual(const Screen* screen, const Visual* visual);
-    static Visual* FindVisual(Screen* screen, gfxImageFormat format);
+    static int DepthOfVisual(const ::Screen* screen, const Visual* visual);
+    static Visual* FindVisual(::Screen* screen, gfxImageFormat format);
     static XRenderPictFormat *FindRenderFormat(Display *dpy, gfxImageFormat format);
     static bool GetColormapAndVisual(cairo_surface_t* aXlibSurface, Colormap* colormap, Visual **visual);
 

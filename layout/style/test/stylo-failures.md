@@ -365,9 +365,6 @@ to mochitest command.
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
   * image-layer values should omit some of its parts when they are initial servo/servo#15951
     * test_shorthand_property_getters.html `background` [2]
-  * counter-{reset,increment} doesn't serialize none servo/servo#15977
-    * test_value_storage.html `counter-reset` [2]
-    * test_value_storage.html `counter-increment` [2]
   * :not(*) doesn't serialize properly servo/servo#16017
     * test_selectors.html `:not()` [8]
     * ... `:not(html|)` [1]
@@ -410,7 +407,6 @@ to mochitest command.
   * ... `perspective'`: servo/servo#15449 [20]
   * ... `'text-shadow'`: third length of text-shadow servo/servo#15999 [2]
   * ... `flex-basis`: servo/servo#15902 [6]
-  * ... `border-image-slice`: servo/servo#15339 [2]
 * Quirks mode support
   * hashless color servo/servo#15341
     * test_property_syntax_errors.html `color: 000000` [22]

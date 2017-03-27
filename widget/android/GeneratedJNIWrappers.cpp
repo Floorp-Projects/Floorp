@@ -606,14 +606,6 @@ auto GeckoAppShell::SetFullScreen(bool a0) -> void
     return mozilla::jni::Method<SetFullScreen_t>::Call(GeckoAppShell::Context(), nullptr, a0);
 }
 
-constexpr char GeckoAppShell::SetKeepScreenOn_t::name[];
-constexpr char GeckoAppShell::SetKeepScreenOn_t::signature[];
-
-auto GeckoAppShell::SetKeepScreenOn(bool a0) -> void
-{
-    return mozilla::jni::Method<SetKeepScreenOn_t>::Call(GeckoAppShell::Context(), nullptr, a0);
-}
-
 constexpr char GeckoAppShell::SetScreenDepthOverride_t::name[];
 constexpr char GeckoAppShell::SetScreenDepthOverride_t::signature[];
 

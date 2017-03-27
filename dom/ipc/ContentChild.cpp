@@ -61,6 +61,7 @@
 #include "mozilla/net/CaptivePortalService.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
+#include "mozilla/widget/ScreenManager.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
 #include "nsBaseDragService.h"
 #include "mozilla/media/MediaChild.h"
@@ -99,7 +100,6 @@
 #include "nsIMutable.h"
 #include "nsIObserverService.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsScreenManagerProxy.h"
 #include "nsMemoryInfoDumper.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleSheetService.h"
@@ -1748,28 +1748,6 @@ ContentChild::DeallocPParentToChildStreamChild(PParentToChildStreamChild* aActor
   return nsIContentChild::DeallocPParentToChildStreamChild(aActor);
 }
 
-PScreenManagerChild*
-ContentChild::AllocPScreenManagerChild(uint32_t* aNumberOfScreens,
-                                       float* aSystemDefaultScale,
-                                       bool* aSuccess)
-{
-  // The ContentParent should never attempt to allocate the
-  // nsScreenManagerProxy. Instead, the nsScreenManagerProxy
-  // service is requested and instantiated via XPCOM, and the
-  // constructor of nsScreenManagerProxy sets up the IPC connection.
-  MOZ_CRASH("Should never get here!");
-  return nullptr;
-}
-
-bool
-ContentChild::DeallocPScreenManagerChild(PScreenManagerChild* aService)
-{
-  // nsScreenManagerProxy is AddRef'd in its constructor.
-  nsScreenManagerProxy *child = static_cast<nsScreenManagerProxy*>(aService);
-  child->Release();
-  return true;
-}
-
 PPSMContentDownloaderChild*
 ContentChild::AllocPPSMContentDownloaderChild(const uint32_t& aCertType)
 {
@@ -3268,7 +3246,14 @@ ContentChild::RecvSetPermissionsWithKey(const nsCString& aPermissionKey,
   nsCOMPtr<nsIPermissionManager> permissionManager =
     services::GetPermissionManager();
   permissionManager->SetPermissionsWithKey(aPermissionKey, aPerms);
+  return IPC_OK();
+}
 
+mozilla::ipc::IPCResult
+ContentChild::RecvRefreshScreens(nsTArray<ScreenDetails>&& aScreens)
+{
+  ScreenManager& screenManager = ScreenManager::GetSingleton();
+  screenManager.Refresh(Move(aScreens));
   return IPC_OK();
 }
 
