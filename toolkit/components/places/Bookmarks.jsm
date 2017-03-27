@@ -1301,7 +1301,7 @@ function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
     });
 
     // We don't wait for the frecency calculation.
-    updateFrecency(db, urls).catch(Cu.reportError);
+    updateFrecency(db, urls, true).catch(Cu.reportError);
 
     return items;
   }));
@@ -1782,24 +1782,29 @@ function validateBookmarkObject(input, behavior) {
  *        the Sqlite.jsm connection handle.
  * @param urls
  *        the array of URLs to update.
+ * @param [optional] collapseNotifications
+ *        whether we can send just one onManyFrecenciesChanged
+ *        notification instead of sending one notification for every URL.
  */
-var updateFrecency = Task.async(function* (db, urls) {
-  // TODO: this can be optimized for multiple-URL usage, see bug 1346979
+var updateFrecency = Task.async(function* (db, urls, collapseNotifications = false) {
   let urlQuery = 'hash("' + urls.map(url => url.href).join('"), hash("') + '")';
+
+  let frecencyClause = "CALCULATE_FRECENCY(id)";
+  if (!collapseNotifications) {
+    frecencyClause = "NOTIFY_FRECENCY(" + frecencyClause +
+                     ", url, guid, hidden, last_visit_date)";
+  }
   // We just use the hashes, since updating a few additional urls won't hurt.
   yield db.execute(
     `UPDATE moz_places
-     SET frecency = NOTIFY_FRECENCY(
-       CALCULATE_FRECENCY(id), url, guid, hidden, last_visit_date
-     ) WHERE url_hash IN ( ${urlQuery} )
-    `);
-
-  yield db.execute(
-    `UPDATE moz_places
-     SET hidden = 0
+     SET hidden = (url_hash BETWEEN hash("place", "prefix_lo") AND hash("place", "prefix_hi")),
+         frecency = ${frecencyClause}
      WHERE url_hash IN ( ${urlQuery} )
-       AND frecency <> 0
     `);
+  if (collapseNotifications) {
+    let observers = PlacesUtils.history.getObservers();
+    notify(observers, "onManyFrecenciesChanged");
+  }
 });
 
 /**
@@ -1945,7 +1950,7 @@ Task.async(function* (db, folderGuids, options) {
   // TODO (Bug 1087576): this may leave orphan tags behind.
 
   let urls = itemsRemoved.filter(item => "url" in item).map(item => item.url);
-  updateFrecency(db, urls).then(null, Cu.reportError);
+  updateFrecency(db, urls, true).then(null, Cu.reportError);
 
   // Send onItemRemoved notifications to listeners.
   // TODO (Bug 1087580): for the case of eraseEverything, this should send a
