@@ -129,8 +129,7 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual bool isArray(JSContext* cx, HandleObject obj,
                          IsArrayAnswer* answer) const override;
     virtual const char* className(JSContext* cx, HandleObject proxy) const override;
-    virtual bool regexp_toShared(JSContext* cx, HandleObject proxy,
-                                 MutableHandle<RegExpShared*> shared) const override;
+    virtual bool regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const override;
     virtual void finalize(JSFreeOp* fop, JSObject* proxy) const override;
     virtual void objectMoved(JSObject* proxy, const JSObject* old) const override;
     virtual bool isCallable(JSObject* obj) const override;
@@ -855,14 +854,13 @@ WrapperOwner::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* is
 }
 
 bool
-CPOWProxyHandler::regexp_toShared(JSContext* cx, HandleObject proxy,
-                                  MutableHandle<RegExpShared*> shared) const
+CPOWProxyHandler::regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const
 {
-    FORWARD(regexp_toShared, (cx, proxy, shared));
+    FORWARD(regexp_toShared, (cx, proxy, g));
 }
 
 bool
-WrapperOwner::regexp_toShared(JSContext* cx, HandleObject proxy, MutableHandle<RegExpShared*> shared)
+WrapperOwner::regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g)
 {
     ObjectId objId = idOf(proxy);
 
@@ -882,7 +880,7 @@ WrapperOwner::regexp_toShared(JSContext* cx, HandleObject proxy, MutableHandle<R
     if (!regexp)
         return false;
 
-    return js::RegExpToSharedNonInline(cx, regexp, shared);
+    return js::RegExpToSharedNonInline(cx, regexp, g);
 }
 
 void

@@ -67,7 +67,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     data(nullptr),
     allocationMetadataBuilder(nullptr),
     lastAnimationTime(0),
-    regExps(zone),
+    regExps(runtime_),
     globalWriteBarriered(0),
     detachedTypedObjects(0),
     objectMetadataState(ImmediateMetadata()),
@@ -228,13 +228,6 @@ JSCompartment::ensureJitCompartmentExists(JSContext* cx)
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
-
-void
-js::DtoaCache::checkCacheAfterMovingGC()
-{
-    MOZ_ASSERT(!s || !IsForwarded(s));
-}
-
 namespace {
 struct CheckGCThingAfterMovingGCFunctor {
     template <class T> void operator()(T* t) { CheckGCThingAfterMovingGC(*t); }
@@ -257,8 +250,7 @@ JSCompartment::checkWrapperMapAfterMovingGC()
         MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &e.front());
     }
 }
-
-#endif // JSGC_HASH_TABLE_CHECKS
+#endif
 
 bool
 JSCompartment::putWrapper(JSContext* cx, const CrossCompartmentKey& wrapped,
