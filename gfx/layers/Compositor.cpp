@@ -312,6 +312,24 @@ GenerateTexturedTriangles(const gfx::Polygon& aPolygon,
   return texturedTriangles;
 }
 
+nsTArray<TexturedVertex>
+TexturedTrianglesToVertexArray(const nsTArray<gfx::TexturedTriangle>& aTriangles)
+{
+  const auto VertexFromPoints = [](const gfx::Point& p, const gfx::Point& t) {
+    return TexturedVertex { { p.x, p.y }, { t.x, t.y } };
+  };
+
+  nsTArray<TexturedVertex> vertices;
+
+  for (const gfx::TexturedTriangle& t : aTriangles) {
+    vertices.AppendElement(VertexFromPoints(t.p1, t.textureCoords.p1));
+    vertices.AppendElement(VertexFromPoints(t.p2, t.textureCoords.p2));
+    vertices.AppendElement(VertexFromPoints(t.p3, t.textureCoords.p3));
+  }
+
+  return vertices;
+}
+
 void
 Compositor::DrawPolygon(const gfx::Polygon& aPolygon,
                         const gfx::Rect& aRect,
