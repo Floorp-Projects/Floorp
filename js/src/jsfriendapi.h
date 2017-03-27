@@ -1163,7 +1163,7 @@ extern JS_FRIEND_API(unsigned)
 GetEnterCompartmentDepth(JSContext* cx);
 #endif
 
-class RegExpGuard;
+using RegExpGuard = JS::Rooted<RegExpShared*>;
 extern JS_FRIEND_API(bool)
 RegExpToSharedNonInline(JSContext* cx, JS::HandleObject regexp, RegExpGuard* shared);
 

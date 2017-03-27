@@ -65,6 +65,10 @@ template <typename T>
 void
 TraceNullableEdge(JSTracer* trc, WriteBarrieredBase<T>* thingp, const char* name);
 
+template <typename T>
+void
+TraceNullableEdge(JSTracer* trc, ReadBarriered<T>* thingp, const char* name);
+
 // Trace through a "root" edge. These edges are the initial edges in the object
 // graph traversal. Root edges are asserted to only be traversed in the initial
 // phase of a GC.
