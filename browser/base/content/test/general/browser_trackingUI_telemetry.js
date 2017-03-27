@@ -66,7 +66,7 @@ add_task(function* setup() {
 
 add_task(function* testNewWindow() {
   let newWin = yield promiseOpenAndLoadWindow({}, true);
-  let tab = newWin.gBrowser.selectedTab = newWin.gBrowser.addTab();
+  let tab = yield BrowserTestUtils.openNewForegroundTab(newWin.gBrowser);
   let TrackingProtection = newWin.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the browser window");
 
@@ -122,7 +122,7 @@ add_task(function* testNewWindow() {
 
 add_task(function* testPrivateBrowsing() {
   let privateWin = yield promiseOpenAndLoadWindow({private: true}, true);
-  let tab = privateWin.gBrowser.selectedTab = privateWin.gBrowser.addTab();
+  let tab = yield BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser);
   let TrackingProtection = privateWin.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the browser window");
 
