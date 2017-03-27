@@ -9,22 +9,27 @@ var {
 
 var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-function CommandList(manifest, extension) {
-  this.extension = extension;
-  this.id = makeWidgetId(extension.id);
-  this.windowOpenListener = null;
+this.commands = class extends ExtensionAPI {
+  onManifestEntry(entryName) {
+    let {extension} = this;
 
-  // Map[{String} commandName -> {Object} commandProperties]
-  this.commands = this.loadCommandsFromManifest(manifest);
+    this.id = makeWidgetId(extension.id);
+    this.windowOpenListener = null;
 
-  // WeakMap[Window -> <xul:keyset>]
-  this.keysetsMap = new WeakMap();
+    // Map[{String} commandName -> {Object} commandProperties]
+    this.commands = this.loadCommandsFromManifest(this.extension.manifest);
 
-  this.register();
-  EventEmitter.decorate(this);
-}
+    // WeakMap[Window -> <xul:keyset>]
+    this.keysetsMap = new WeakMap();
 
-CommandList.prototype = {
+    this.register();
+    EventEmitter.decorate(this);
+  }
+
+  onShutdown(reason) {
+    this.unregister();
+  }
+
   /**
    * Registers the commands to all open windows and to any which
    * are later created.
@@ -41,7 +46,7 @@ CommandList.prototype = {
     };
 
     windowTracker.addOpenListener(this.windowOpenListener);
-  },
+  }
 
   /**
    * Unregisters the commands from all open windows and stops commands
@@ -55,7 +60,7 @@ CommandList.prototype = {
     }
 
     windowTracker.removeOpenListener(this.windowOpenListener);
-  },
+  }
 
   /**
    * Creates a Map from commands for each command in the manifest.commands object.
@@ -78,7 +83,7 @@ CommandList.prototype = {
       });
     }
     return commands;
-  },
+  }
 
   /**
    * Registers the commands to a document.
@@ -96,7 +101,7 @@ CommandList.prototype = {
     });
     doc.documentElement.appendChild(keyset);
     this.keysetsMap.set(window, keyset);
-  },
+  }
 
   /**
    * Builds a XUL Key element and attaches an onCommand listener which
@@ -141,7 +146,7 @@ CommandList.prototype = {
     /* eslint-enable mozilla/balanced-listeners */
 
     return keyElement;
-  },
+  }
 
   /**
    * Builds a XUL Key element from the provided shortcut.
@@ -171,7 +176,7 @@ CommandList.prototype = {
     }
 
     return keyElement;
-  },
+  }
 
   /**
    * Determines the corresponding XUL keycode from the given chrome key.
@@ -188,7 +193,7 @@ CommandList.prototype = {
    */
   getKeycodeAttribute(chromeKey) {
     return `VK${chromeKey.replace(/([A-Z])/g, "_$&").toUpperCase()}`;
-  },
+  }
 
   /**
    * Determines the corresponding XUL modifiers from the chrome modifiers.
@@ -214,26 +219,13 @@ CommandList.prototype = {
     return Array.from(chromeModifiers, modifier => {
       return modifiersMap[modifier];
     }).join(" ");
-  },
-};
-
-this.commands = class extends ExtensionAPI {
-  onManifestEntry(entryName) {
-    let {extension} = this;
-    let {manifest} = extension;
-
-    this.commandList = new CommandList(manifest, extension);
-  }
-
-  onShutdown(reason) {
-    this.commandList.unregister();
   }
 
   getAPI(context) {
     return {
       commands: {
         getAll: () => {
-          let commands = this.commandList.commands;
+          let commands = this.commands;
           return Promise.resolve(Array.from(commands, ([name, command]) => {
             return ({
               name,
@@ -246,9 +238,9 @@ this.commands = class extends ExtensionAPI {
           let listener = (eventName, commandName) => {
             fire.async(commandName);
           };
-          this.commandList.on("command", listener);
+          this.on("command", listener);
           return () => {
-            this.commandList.off("command", listener);
+            this.off("command", listener);
           };
         }).api(),
       },
