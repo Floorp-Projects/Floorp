@@ -51,8 +51,8 @@ public:
     : mOwnerThread(aOwnerThread)
     , mCreator(new CreatorImpl<Function>(aFunc))
     , mIsStarted(false)
-    // Give an insane value to facilitate debug if used before playback starts.
-    , mPlayDuration(INT64_MAX)
+    // Give an invalid value to facilitate debug if used before playback starts.
+    , mPlayDuration(TimeUnit::Invalid())
     , mAudioEnded(true)
   {}
 
@@ -83,7 +83,7 @@ private:
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   }
 
-  int64_t GetVideoPosition(TimeStamp aNow) const;
+  TimeUnit GetVideoPosition(TimeStamp aNow) const;
 
   void OnAudioEnded();
 
@@ -96,7 +96,7 @@ private:
   PlaybackParams mParams;
 
   TimeStamp mPlayStartTime;
-  int64_t mPlayDuration;
+  TimeUnit mPlayDuration;
 
   bool mAudioEnded;
   MozPromiseRequestHolder<GenericPromise> mAudioSinkPromise;

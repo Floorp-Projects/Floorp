@@ -63,15 +63,15 @@ AudioSinkWrapper::GetEndTime(TrackType aType) const
   return 0;
 }
 
-int64_t
+TimeUnit
 AudioSinkWrapper::GetVideoPosition(TimeStamp aNow) const
 {
   AssertOwnerThread();
   MOZ_ASSERT(!mPlayStartTime.IsNull());
   // Time elapsed since we started playing.
-  int64_t delta = (aNow - mPlayStartTime).ToMicroseconds();
+  double delta = (aNow - mPlayStartTime).ToSeconds();
   // Take playback rate into account.
-  return mPlayDuration + delta * mParams.mPlaybackRate;
+  return mPlayDuration + TimeUnit::FromSeconds(delta * mParams.mPlaybackRate);
 }
 
 int64_t
@@ -80,12 +80,12 @@ AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) const
   AssertOwnerThread();
   MOZ_ASSERT(mIsStarted, "Must be called after playback starts.");
 
-  int64_t pos = -1;
+  TimeUnit pos;
   TimeStamp t = TimeStamp::Now();
 
   if (!mAudioEnded) {
     // Rely on the audio sink to report playback position when it is not ended.
-    pos = mAudioSink->GetPosition().ToMicroseconds();
+    pos = mAudioSink->GetPosition();
   } else if (!mPlayStartTime.IsNull()) {
     // Calculate playback position using system clock if we are still playing.
     pos = GetVideoPosition(t);
@@ -98,7 +98,7 @@ AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) const
     *aTimeStamp = t;
   }
 
-  return pos;
+  return pos.ToMicroseconds();
 }
 
 bool
@@ -169,7 +169,7 @@ AudioSinkWrapper::SetPlaying(bool aPlaying)
     mPlayStartTime = TimeStamp::Now();
   } else {
     // Remember how long we've played.
-    mPlayDuration = GetPosition();
+    mPlayDuration = TimeUnit::FromMicroseconds(GetPosition());
     // mPlayStartTime must be updated later since GetPosition()
     // depends on the value of mPlayStartTime.
     mPlayStartTime = TimeStamp();
@@ -183,7 +183,7 @@ AudioSinkWrapper::Start(int64_t aStartTime, const MediaInfo& aInfo)
   MOZ_ASSERT(!mIsStarted, "playback already started.");
 
   mIsStarted = true;
-  mPlayDuration = aStartTime;
+  mPlayDuration = TimeUnit::FromMicroseconds(aStartTime);
   mPlayStartTime = TimeStamp::Now();
 
   // no audio is equivalent to audio ended before video starts.
@@ -237,7 +237,7 @@ AudioSinkWrapper::OnAudioEnded()
 {
   AssertOwnerThread();
   mAudioSinkPromise.Complete();
-  mPlayDuration = GetPosition();
+  mPlayDuration = TimeUnit::FromMicroseconds(GetPosition());
   if (!mPlayStartTime.IsNull()) {
     mPlayStartTime = TimeStamp::Now();
   }
