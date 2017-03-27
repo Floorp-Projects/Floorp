@@ -4313,21 +4313,13 @@ Tab.prototype = {
     this.shouldShowPluginDoorhanger = true;
     this.clickToPlayPluginsActivated = false;
 
-    let documentURI = contentWin.document.documentURIObject.spec;
-
-    // If reader mode, get the base domain for the original url.
-    let strippedURI = this._stripAboutReaderURL(documentURI);
-
-    // Borrowed from desktop Firefox: http://hg.mozilla.org/mozilla-central/annotate/72835344333f/browser/base/content/urlbarBindings.xml#l236
-    let matchedURL = strippedURI.match(/^((?:[a-z]+:\/\/)?(?:[^\/]+@)?)(.+?)(?::\d+)?(?:\/|$)/);
     let baseDomain = "";
-    if (matchedURL) {
-      var domain = "";
-      [, , domain] = matchedURL;
-
+    // For recognized scheme, get base domain from host.
+    let principalURI = contentWin.document.nodePrincipal.URI;
+    if (principalURI && ["http", "https", "ftp"].includes(principalURI.scheme) && principalURI.host) {
       try {
-        baseDomain = Services.eTLD.getBaseDomainFromHost(domain);
-        if (!domain.endsWith(baseDomain)) {
+        baseDomain = Services.eTLD.getBaseDomainFromHost(principalURI.host);
+        if (!principalURI.host.endsWith(baseDomain)) {
           // getBaseDomainFromHost converts its resultant to ACE.
           let IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
           baseDomain = IDNService.convertACEtoUTF8(baseDomain);
