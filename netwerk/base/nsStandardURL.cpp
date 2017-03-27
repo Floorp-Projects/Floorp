@@ -829,11 +829,13 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         i = AppendSegmentToBuf(buf, i, spec, username, mUsername,
                                &encUsername, useEncUsername, &diff);
         ShiftFromPassword(diff);
-        if (password.mLen >= 0) {
+        if (password.mLen > 0) {
             buf[i++] = ':';
             i = AppendSegmentToBuf(buf, i, spec, password, mPassword,
                                    &encPassword, useEncPassword, &diff);
             ShiftFromHost(diff);
+        } else {
+            mPassword.mLen = -1;
         }
         buf[i++] = '@';
     }
@@ -1702,7 +1704,7 @@ nsStandardURL::SetUserPass(const nsACString &input)
                                                             usernameLen),
                                                  esc_Username | esc_AlwaysCopy,
                                                  buf, ignoredOut);
-        if (passwordLen >= 0) {
+        if (passwordLen > 0) {
             buf.Append(':');
             passwordLen = encoder.EncodeSegmentCount(userpass.get(),
                                                      URLSegment(passwordPos,
@@ -1710,6 +1712,8 @@ nsStandardURL::SetUserPass(const nsACString &input)
                                                      esc_Password |
                                                      esc_AlwaysCopy, buf,
                                                      ignoredOut);
+        } else {
+            passwordLen = -1;
         }
         if (mUsername.mLen < 0)
             buf.Append('@');
@@ -1740,8 +1744,9 @@ nsStandardURL::SetUserPass(const nsACString &input)
     // update positions and lengths
     mUsername.mLen = usernameLen;
     mPassword.mLen = passwordLen;
-    if (passwordLen)
+    if (passwordLen > 0) {
         mPassword.mPos = mUsername.mPos + mUsername.mLen + 1;
+    }
 
     CALL_RUST_SETTER(SetUserPass, input);
     return NS_OK;
