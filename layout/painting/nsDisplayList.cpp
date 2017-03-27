@@ -4133,7 +4133,13 @@ nsDisplayOutline::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                           WebRenderDisplayItemLayer* aLayer)
 {
   MOZ_ASSERT(mBorderRenderer.isSome());
-  mBorderRenderer->CreateWebRenderCommands(aBuilder, aLayer);
+
+  gfx::Rect clip(0, 0, 0, 0);
+  if (GetClip().HasClip()) {
+    int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+    clip = NSRectToRect(GetClip().GetClipRect(), appUnitsPerDevPixel);
+  }
+  mBorderRenderer->CreateWebRenderCommands(aBuilder, aLayer, clip);
 }
 
 bool
