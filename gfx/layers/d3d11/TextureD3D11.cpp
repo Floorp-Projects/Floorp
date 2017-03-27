@@ -805,7 +805,11 @@ DXGITextureHostD3D11::LockInternal()
       return false;
     }
 
-    mTextureSource = new DataTextureSourceD3D11(mFormat, mProvider, mTexture);
+    if (mProvider) {
+      mTextureSource = new DataTextureSourceD3D11(mFormat, mProvider, mTexture);
+    } else {
+      mTextureSource = new DataTextureSourceD3D11(mDevice, mFormat, mTexture);
+    }
   }
 
   mIsLocked = LockD3DTexture(mTextureSource->GetD3D11Texture());
