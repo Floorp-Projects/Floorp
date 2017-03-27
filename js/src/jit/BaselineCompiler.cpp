@@ -3945,28 +3945,6 @@ BaselineCompiler::emit_JSOP_TOASYNCGEN()
     return true;
 }
 
-typedef JSObject* (*ToAsyncIterFn)(JSContext*, HandleObject);
-static const VMFunction ToAsyncIterInfo =
-    FunctionInfo<ToAsyncIterFn>(js::CreateAsyncFromSyncIterator, "ToAsyncIter");
-
-bool
-BaselineCompiler::emit_JSOP_TOASYNCITER()
-{
-    frame.syncStack(0);
-    masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
-
-    prepareVMCall();
-    pushArg(R0.scratchReg());
-
-    if (!callVM(ToAsyncIterInfo))
-        return false;
-
-    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
-    frame.pop();
-    frame.push(R0);
-    return true;
-}
-
 typedef bool (*ThrowObjectCoercibleFn)(JSContext*, HandleValue);
 static const VMFunction ThrowObjectCoercibleInfo =
     FunctionInfo<ThrowObjectCoercibleFn>(ThrowObjectCoercible, "ThrowObjectCoercible");
