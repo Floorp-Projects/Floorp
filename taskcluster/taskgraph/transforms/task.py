@@ -202,10 +202,10 @@ task_description_schema = Schema({
         Required('env', default={}): {basestring: taskref_or_string},
 
         # the command to run
-        Required('command'): [taskref_or_string],
+        'command': [taskref_or_string],
 
         # the maximum time to run, in seconds
-        Required('max-run-time'): int,
+        'max-run-time': int,
 
         # the exit status code that indicates the task should be retried
         Optional('retry-exit-status'): int,
@@ -214,7 +214,7 @@ task_description_schema = Schema({
         Required('implementation'): 'generic-worker',
 
         # command is a list of commands to run, sequentially
-        Required('command'): [taskref_or_string],
+        'command': [taskref_or_string],
 
         # artifacts to extract from the task image after completion; note that artifacts
         # for the generic worker cannot have names
@@ -239,7 +239,7 @@ task_description_schema = Schema({
         Required('env', default={}): {basestring: taskref_or_string},
 
         # the maximum time to run, in seconds
-        Required('max-run-time'): int,
+        'max-run-time': int,
 
         # os user groups for test task workers
         Optional('os-groups', default=[]): [basestring],
@@ -248,14 +248,14 @@ task_description_schema = Schema({
 
         # see
         # https://github.com/mozilla/buildbot-bridge/blob/master/bbb/schemas/payload.yml
-        Required('buildername'): basestring,
-        Required('sourcestamp'): {
+        'buildername': basestring,
+        'sourcestamp': {
             'branch': basestring,
             Optional('revision'): basestring,
             Optional('repository'): basestring,
             Optional('project'): basestring,
         },
-        Required('properties'): {
+        'properties': {
             'product': basestring,
             Extra: basestring,  # additional properties are allowed
         },
