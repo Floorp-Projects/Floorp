@@ -3976,10 +3976,10 @@ LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins)
     gen->setPerformsCall();
 
     // We need a double/float32 temp register for typed array stubs if this is
-    // a SETELEM.
+    // a SETELEM or INITELEM op.
     LDefinition tempD = LDefinition::BogusTemp();
     LDefinition tempF32 = LDefinition::BogusTemp();
-    if (IsSetElemPC(ins->resumePoint()->pc())) {
+    if (IsElemPC(ins->resumePoint()->pc())) {
         tempD = tempDouble();
         tempF32 = hasUnaliasedDouble() ? tempFloat32() : LDefinition::BogusTemp();
     }
