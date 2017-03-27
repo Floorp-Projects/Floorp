@@ -625,13 +625,16 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
     nsLayoutUtils::PointToGfxPoint(viewportRect.TopLeft(), appUnitsPerDevPixel);
 
   aContext->ThebesContext()->Save();
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                  ? imgIContainer::FLAG_SYNC_DECODE
+                  : imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
   // We include the offset of our frame and a scale from device pixels to user
   // units (i.e. CSS px) in the matrix that we pass to our children):
   gfxMatrix tm = nsSVGUtils::GetCSSPxToDevPxMatrix(mFrame) *
                    gfxMatrix::Translation(devPixelOffset);
   DrawResult result =
     nsSVGUtils::PaintFrameWithEffects(mFrame, *aContext->ThebesContext(), tm,
-                                      &contentAreaDirtyRect);
+                                      &contentAreaDirtyRect, flags);
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
   aContext->ThebesContext()->Restore();
 
