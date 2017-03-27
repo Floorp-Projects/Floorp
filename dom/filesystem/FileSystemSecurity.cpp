@@ -89,10 +89,6 @@ FileSystemSecurity::ContentProcessHasAccessTo(ContentParentId aId,
   MOZ_ASSERT(NS_IsMainThread());
   AssertIsInMainProcess();
 
-  if (aPath.Contains('..')) {
-    return false;
-  }
-
   nsTArray<nsString>* paths;
   if (!mPaths.Get(aId, &paths)) {
     return false;
