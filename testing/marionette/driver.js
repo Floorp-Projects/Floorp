@@ -2710,6 +2710,11 @@ GeckoDriver.prototype.acceptConnections = function (cmd, resp) {
  *     Constant name of masks to pass to |Services.startup.quit|.
  *     If empty or undefined, |nsIAppStartup.eAttemptQuit| is used.
  *
+ * @return {string}
+ *     Explaining the reason why the application quit.  This can be
+ *     in response to a normal shutdown or restart, yielding "shutdown"
+ *     or "restart", respectively.
+ *
  * @throws {InvalidArgumentError}
  *     If |flags| contains unknown or incompatible flags, for example
  *     multiple Quit flags.
@@ -2749,11 +2754,18 @@ GeckoDriver.prototype.quitApplication = function* (cmd, resp) {
   this.deleteSession();
 
   // delay response until the application is about to quit
-  let quitApplication = new Promise(resolve =>
-      Services.obs.addObserver(resolve, "quit-application", false));
+  let quitApplication = new Promise(resolve => {
+    Services.obs.addObserver(
+        (subject, topic, data) => resolve(data),
+        "quit-application",
+        false);
+  });
 
   Services.startup.quit(mode);
-  yield quitApplication.then(() => resp.send());
+
+  yield quitApplication
+      .then(cause => resp.body.cause = cause)
+      .then(() => resp.send());
 };
 
 GeckoDriver.prototype.installAddon = function (cmd, resp) {

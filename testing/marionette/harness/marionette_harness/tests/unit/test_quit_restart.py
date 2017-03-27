@@ -19,7 +19,7 @@ class TestServerQuitApplication(MarionetteTestCase):
             body = {"flags": list(flags)}
 
         try:
-            self.marionette._send_message("quitApplication", body)
+            resp = self.marionette._send_message("quitApplication", body)
         finally:
             self.marionette.session_id = None
             self.marionette.session = None
@@ -27,8 +27,12 @@ class TestServerQuitApplication(MarionetteTestCase):
             self.marionette.profile = None
             self.marionette.window = None
 
+        self.assertIn("cause", resp)
+
         self.marionette.client.close()
         self.marionette.instance.runner.wait()
+
+        return resp["cause"]
 
     def test_types(self):
         for typ in [42, True, "foo", []]:
@@ -40,20 +44,24 @@ class TestServerQuitApplication(MarionetteTestCase):
             self.quit("foo")
 
     def test_undefined_default(self):
-        self.quit()
+        cause = self.quit()
+        self.assertEqual("shutdown", cause)
 
     def test_empty_default(self):
-        self.quit(())
+        cause = self.quit(())
+        self.assertEqual("shutdown", cause)
 
     def test_incompatible_flags(self):
         with self.assertRaises(errors.InvalidArgumentException):
             self.quit(("eAttemptQuit", "eForceQuit"))
 
     def test_attempt_quit(self):
-        self.quit(("eAttemptQuit",))
+        cause = self.quit(("eAttemptQuit",))
+        self.assertEqual("shutdown", cause)
 
     def test_force_quit(self):
-        self.quit(("eForceQuit",))
+        cause = self.quit(("eForceQuit",))
+        self.assertEqual("shutdown", cause)
 
 
 class TestQuitRestart(MarionetteTestCase):
