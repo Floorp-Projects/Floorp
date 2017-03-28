@@ -961,7 +961,7 @@ GeckoDriver.prototype.executeJSScript = function* (cmd, resp) {
  * @param {string} url
  *     URL to navigate to.
  */
-GeckoDriver.prototype.get = function* (cmd, resp) {
+GeckoDriver.prototype.get = function*(cmd, resp) {
   assert.content(this.context);
   assert.window(this.getCurrentWindow());
 
@@ -980,7 +980,7 @@ GeckoDriver.prototype.get = function* (cmd, resp) {
       startTime: new Date().getTime(),
     };
     this.mm.broadcastAsyncMessage(
-        "Marionette:waitForPageLoaded" + this.curBrowser.curFrameId,
+        "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
         parameters);
   });
 
@@ -1081,7 +1081,9 @@ GeckoDriver.prototype.goBack = function* (cmd, resp) {
       startTime: new Date().getTime(),
     };
     this.mm.broadcastAsyncMessage(
-        "Marionette:waitForPageLoaded" + this.curBrowser.curFrameId,
+        // TODO: combine with
+        // "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
+        "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
         parameters);
   });
 
@@ -1121,7 +1123,9 @@ GeckoDriver.prototype.goForward = function* (cmd, resp) {
       startTime: new Date().getTime(),
     };
     this.mm.broadcastAsyncMessage(
-        "Marionette:waitForPageLoaded" + this.curBrowser.curFrameId,
+        // TODO: combine with
+        // "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
+        "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
         parameters);
   });
 
