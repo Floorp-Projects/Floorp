@@ -67,16 +67,11 @@ public class GeckoView extends LayerView
         }
     }
 
-    private final StateHolder mStateHolder =
+    private static final StateHolder sDummyStateHolder =
         new StateHolder(State.INITIAL, State.READY);
 
-    @WrapForJNI(calledFrom = "gecko")
-    private void setState(final State newState) {
-        mStateHolder.setState(newState);
-    }
-
     private final EventDispatcher mEventDispatcher =
-        new EventDispatcher(mStateHolder);
+        new EventDispatcher(sDummyStateHolder);
 
     private ChromeDelegate mChromeDelegate;
     /* package */ ContentListener mContentListener;
@@ -93,6 +88,10 @@ public class GeckoView extends LayerView
     @WrapForJNI(dispatchTo = "proxy")
     protected static final class Window extends JNIObject {
         @WrapForJNI(skip = true)
+        /* package */ final StateHolder mStateHolder =
+            new StateHolder(State.INITIAL, State.READY);
+
+        @WrapForJNI(skip = true)
         /* package */ Window() {}
 
         static native void open(Window instance, GeckoView view,
@@ -101,9 +100,18 @@ public class GeckoView extends LayerView
                                 int screenId);
 
         @Override protected native void disposeNative();
+
         native void close();
-        native void reattach(GeckoView view, Object compositor, EventDispatcher dispatcher);
+
+        native void reattach(GeckoView view, Object compositor,
+                             EventDispatcher dispatcher);
+
         native void loadUri(String uri, int flags);
+
+        @WrapForJNI(calledFrom = "gecko")
+        private void setState(final State newState) {
+            mStateHolder.setState(newState);
+        }
     }
 
     // Object to hold onto our nsWindow connection when GeckoView gets destroyed.
@@ -244,7 +252,7 @@ public class GeckoView extends LayerView
         final StateBinder stateBinder = (StateBinder) state;
 
         if (stateBinder.window != null) {
-            this.window = stateBinder.window;
+            window = stateBinder.window;
         }
         stateSaved = false;
 
@@ -279,6 +287,8 @@ public class GeckoView extends LayerView
     }
 
     protected void reattachWindow() {
+        mEventDispatcher.setStateHolder(mWindow.mStateHolder);
+
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             window.reattach(this, getCompositor(), mEventDispatcher);
         } else {
@@ -295,6 +305,7 @@ public class GeckoView extends LayerView
         if (window == null) {
             // Open a new nsWindow if we didn't have one from before.
             window = new Window();
+            mEventDispatcher.setStateHolder(window.mStateHolder);
             openWindow();
         } else {
             reattachWindow();
@@ -325,6 +336,7 @@ public class GeckoView extends LayerView
                     window, "disposeNative");
         }
 
+        mEventDispatcher.setStateHolder(sDummyStateHolder);
         mOnAttachedToWindowCalled = false;
     }
 
