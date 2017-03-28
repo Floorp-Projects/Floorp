@@ -171,7 +171,7 @@ class Mutex {
   // It inhibits work being done by the destructor, which makes it
   // safer for code that tries to acqiure this mutex in their global
   // destructor.
-  inline Mutex(LinkerInitialized);
+  explicit inline Mutex(LinkerInitialized);
 
   // Destructor
   inline ~Mutex();
@@ -202,7 +202,7 @@ class Mutex {
   inline void SetIsSafe() { is_safe_ = true; }
 
   // Catch the error of writing Mutex when intending MutexLock.
-  Mutex(Mutex* /*ignored*/) {}
+  explicit Mutex(Mutex* /*ignored*/) {}
   // Disallow "evil" constructors
   Mutex(const Mutex&);
   void operator=(const Mutex&);
