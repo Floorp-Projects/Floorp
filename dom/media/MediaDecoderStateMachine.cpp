@@ -1858,11 +1858,10 @@ public:
     mMaster->StopPlayback();
 
     if (!mSentPlaybackEndedEvent) {
-      int64_t clockTime =
+      auto clockTime =
         std::max(mMaster->AudioEndTime(), mMaster->VideoEndTime());
-      clockTime = std::max(
-        int64_t(0), std::max(clockTime, mMaster->Duration().ToMicroseconds()));
-      mMaster->UpdatePlaybackPosition(clockTime);
+      clockTime = std::max(clockTime, mMaster->Duration());
+      mMaster->UpdatePlaybackPosition(clockTime.ToMicroseconds());
 
       // Ensure readyState is updated before firing the 'ended' event.
       mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
@@ -3519,7 +3518,7 @@ MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically()
   // Cap the current time to the larger of the audio and video end time.
   // This ensures that if we're running off the system clock, we don't
   // advance the clock to after the media end time.
-  if (VideoEndTime() > 0 || AudioEndTime() > 0) {
+  if (VideoEndTime() > TimeUnit::Zero() || AudioEndTime() > TimeUnit::Zero()) {
 
     const int64_t clockTime = GetClock();
     // Skip frames up to the frame at the playback position, and figure out
@@ -3529,7 +3528,8 @@ MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically()
 
     // These will be non -1 if we've displayed a video frame, or played an audio
     // frame.
-    int64_t t = std::min(clockTime, std::max(VideoEndTime(), AudioEndTime()));
+    auto maxEndTime = std::max(VideoEndTime(), AudioEndTime());
+    int64_t t = std::min(clockTime, maxEndTime.ToMicroseconds());
     // FIXME: Bug 1091422 - chained ogg files hit this assertion.
     //MOZ_ASSERT(t >= GetMediaTime());
     if (t > GetMediaTime()) {
@@ -3671,24 +3671,24 @@ MediaDecoderStateMachine::IsShutdown() const
   return mIsShutdown;
 }
 
-int64_t
+TimeUnit
 MediaDecoderStateMachine::AudioEndTime() const
 {
   MOZ_ASSERT(OnTaskQueue());
   if (mMediaSink->IsStarted()) {
-    return mMediaSink->GetEndTime(TrackInfo::kAudioTrack).ToMicroseconds();
+    return mMediaSink->GetEndTime(TrackInfo::kAudioTrack);
   }
-  return 0;
+  return TimeUnit::Zero();
 }
 
-int64_t
+TimeUnit
 MediaDecoderStateMachine::VideoEndTime() const
 {
   MOZ_ASSERT(OnTaskQueue());
   if (mMediaSink->IsStarted()) {
-    return mMediaSink->GetEndTime(TrackInfo::kVideoTrack).ToMicroseconds();
+    return mMediaSink->GetEndTime(TrackInfo::kVideoTrack);
   }
-  return 0;
+  return TimeUnit::Zero();
 }
 
 void

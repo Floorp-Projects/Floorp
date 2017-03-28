@@ -553,11 +553,11 @@ private:
   // The end time of the last audio frame that's been pushed onto the media sink
   // in microseconds. This will approximately be the end time
   // of the audio stream, unless another frame is pushed to the hardware.
-  int64_t AudioEndTime() const;
+  media::TimeUnit AudioEndTime() const;
 
   // The end time of the last rendered video frame that's been sent to
   // compositor.
-  int64_t VideoEndTime() const;
+  media::TimeUnit VideoEndTime() const;
 
   // The end time of the last decoded audio frame. This signifies the end of
   // decoded audio data. Used to check if we are low in decoded data.
