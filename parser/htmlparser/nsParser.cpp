@@ -682,7 +682,10 @@ nsParser::UnblockParser()
 NS_IMETHODIMP_(void)
 nsParser::ContinueInterruptedParsingAsync()
 {
-  mSink->ContinueInterruptedParsingAsync();
+  MOZ_ASSERT(mSink);
+  if (MOZ_LIKELY(mSink)) {
+    mSink->ContinueInterruptedParsingAsync();
+  }
 }
 
 /**
