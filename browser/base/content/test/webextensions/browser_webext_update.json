@@ -7,8 +7,7 @@
           "update_link": "https://example.com/browser/browser/base/content/test/webextensions/browser_webext_update2.xpi",
           "applications": {
             "gecko": {
-              "strict_min_version": "1",
-              "advisory_max_version": "55.0"
+              "strict_min_version": "1"
             }
           }
         }
@@ -21,8 +20,7 @@
           "update_link": "https://example.com/browser/browser/base/content/test/webextensions/browser_webext_update_icon2.xpi",
           "applications": {
             "gecko": {
-              "strict_min_version": "1",
-              "advisory_max_version": "55.0"
+              "strict_min_version": "1"
             }
           }
         }
@@ -35,8 +33,7 @@
           "update_link": "https://example.com/browser/browser/base/content/test/webextensions/browser_webext_update_perms2.xpi",
           "applications": {
             "gecko": {
-              "strict_min_version": "1",
-              "advisory_max_version": "55.0"
+              "strict_min_version": "1"
             }
           }
         }
