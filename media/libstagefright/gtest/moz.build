@@ -35,6 +35,7 @@ TEST_HARNESS_FILES.gtest += [
     'test_case_1301065-u64max.mp4',
     'test_case_1301065.mp4',
     'test_case_1329061.mov',
+    'test_case_1351094.mp4',
 ]
 
 if CONFIG['MOZ_RUST']:
