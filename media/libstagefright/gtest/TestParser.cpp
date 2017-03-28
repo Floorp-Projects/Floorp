@@ -204,6 +204,7 @@ static const TestFileData testFiles[] = {
   { "test_case_1301065-u64max.mp4", 0, -1,   0,   0, 1,  0, false,   0, false, false, 2 },
   { "test_case_1329061.mov",        0, -1,   0,   0, 1,  234567981,
                                                             false,   0, false, false, 2 },
+  { "test_case_1351094.mp4",        0, -1,   0,   0, 0, -1, false,   0, true,  true,  0 },
 };
 
 TEST(stagefright_MPEG4Metadata, test_case_mp4)
