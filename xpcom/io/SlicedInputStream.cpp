@@ -319,30 +319,40 @@ SlicedInputStream::Seek(int32_t aWhence, int64_t aOffset)
   NS_ENSURE_STATE(mWeakSeekableInputStream);
 
   int64_t offset;
+  nsresult rv;
+
   switch (aWhence) {
     case NS_SEEK_SET:
       offset = mStart + aOffset;
       break;
     case NS_SEEK_CUR:
-      offset = mStart + mCurPos + aOffset;
+      // mCurPos could be lower than mStart if the reading has not started yet.
+      offset = XPCOM_MAX(mStart, mCurPos) + aOffset;
       break;
-    case NS_SEEK_END:
-      offset = mStart + mLength + aOffset;
+    case NS_SEEK_END: {
+      uint64_t available;
+      rv = mInputStream->Available(&available);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      offset = XPCOM_MIN(mStart + mLength, available) + aOffset;
       break;
-   default:
-     return NS_ERROR_ILLEGAL_VALUE;
+    }
+    default:
+      return NS_ERROR_ILLEGAL_VALUE;
   }
 
   if (offset < (int64_t)mStart || offset > (int64_t)(mStart + mLength)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsresult rv = mWeakSeekableInputStream->Seek(NS_SEEK_SET, offset);
+  rv = mWeakSeekableInputStream->Seek(NS_SEEK_SET, offset);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  mCurPos = offset - mStart;
+  mCurPos = offset;
   return NS_OK;
 }
 

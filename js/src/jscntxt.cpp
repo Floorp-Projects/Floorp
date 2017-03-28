@@ -158,12 +158,14 @@ js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes, JSRuntime* parentRun
     }
 
     if (!runtime->init(cx, maxBytes, maxNurseryBytes)) {
+        runtime->destroyRuntime();
         js_delete(cx);
         js_delete(runtime);
         return nullptr;
     }
 
     if (!cx->init(ContextKind::Cooperative)) {
+        runtime->destroyRuntime();
         js_delete(cx);
         js_delete(runtime);
         return nullptr;

@@ -301,7 +301,17 @@ WebRenderAPI::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
   wr_api_add_image(mWrApi,
                    key,
                    &aDescriptor,
-                   &aBytes[0], aBytes.length());
+                   RangeToByteSlice(aBytes));
+}
+
+void
+WebRenderAPI::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
+                           Range<uint8_t> aBytes)
+{
+  wr_api_add_blob_image(mWrApi,
+                        key,
+                        &aDescriptor,
+                        RangeToByteSlice(aBytes));
 }
 
 void
@@ -336,7 +346,7 @@ WebRenderAPI::UpdateImageBuffer(ImageKey aKey,
   wr_api_update_image(mWrApi,
                       aKey,
                       &aDescriptor,
-                      &aBytes[0], aBytes.length());
+                      RangeToByteSlice(aBytes));
 }
 
 void

@@ -17,6 +17,7 @@ EXPORTS.mozilla.webrender += [
 ]
 
 UNIFIED_SOURCES += [
+    'Moz2DImageRenderer.cpp',
     'RendererOGL.cpp',
     'RenderTextureHost.cpp',
     'RenderThread.cpp',

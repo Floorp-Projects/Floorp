@@ -307,8 +307,22 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
     kind_(kind)
 {
     MOZ_ASSERT(begin_ <= end_);
-    MOZ_ASSERT(kind_ == Entry || kind_ == Inline || kind_ == Throw ||
-               kind_ == FarJumpIsland || kind_ == DebugTrap);
+#ifdef DEBUG
+    switch (kind_) {
+      case Entry:
+      case DebugTrap:
+      case FarJumpIsland:
+      case Inline:
+      case Throw:
+      case Interrupt:
+        break;
+      case Function:
+      case TrapExit:
+      case ImportJitExit:
+      case ImportInterpExit:
+        MOZ_CRASH("should use more specific constructor");
+    }
+#endif
 }
 
 CodeRange::CodeRange(Kind kind, CallableOffsets offsets)
