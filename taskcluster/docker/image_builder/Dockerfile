@@ -17,6 +17,7 @@ ADD topsrcdir/taskcluster/docker/recipes/run-task /usr/local/bin/run-task
 
 # Add and run setup script
 ADD build-image.sh      /usr/local/bin/build-image.sh
+ADD download-and-compress /usr/local/bin/download-and-compress
 ADD setup.sh            /setup/setup.sh
 RUN bash /setup/setup.sh
 

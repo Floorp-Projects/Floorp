@@ -60,20 +60,9 @@ fi
 # Get image from docker daemon (try up to 10 times)
 # This interacts directly with the docker remote API, see:
 # https://docs.docker.com/engine/reference/api/docker_remote_api_v1.18/
-IMAGE_FILE=/home/worker/workspace/image.tar
-count=0
-while ! curl -s --fail -X GET  \
-             --unix-socket /var/run/docker.sock "http:/images/$IMAGE_NAME:$HASH/get" \
-             -o "$IMAGE_FILE"; do
-  ((c++)) && ((c==10)) && echo 'Failed to get image from docker' && exit 1;
-  echo 'Waiting for image to be ready';
-  sleep 5;
-done
-
-# Test that image was exported
-if [ ! -s "$IMAGE_FILE" ]; then
-  raise_error "Failed to export docker image";
-fi
-
-# Compress image with zst
-zstd -3 -c -o /home/worker/workspace/artifacts/image.tar.zst "$IMAGE_FILE"
+#
+# The script will retry up to 10 times.
+/usr/local/bin/download-and-compress \
+    http+unix://%2Fvar%2Frun%2Fdocker.sock/images/${IMAGE_NAME}:${HASH}/get \
+    /home/worker/workspace/image.tar.zst.tmp \
+    /home/worker/workspace/artifacts/image.tar.zst
