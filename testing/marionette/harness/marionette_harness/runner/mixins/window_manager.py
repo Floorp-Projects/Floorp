@@ -21,10 +21,10 @@ class WindowManagerMixin(object):
         self.start_tabs = self.marionette.window_handles
 
     def tearDown(self):
-        if len(self.marionette.chrome_window_handles) != len(self.start_windows):
+        if len(self.marionette.chrome_window_handles) > len(self.start_windows):
             raise Exception("Not all windows as opened by the test have been closed")
 
-        if len(self.marionette.window_handles) != len(self.start_tabs):
+        if len(self.marionette.window_handles) > len(self.start_tabs):
             raise Exception("Not all tabs as opened by the test have been closed")
 
         super(WindowManagerMixin, self).tearDown()
