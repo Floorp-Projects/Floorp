@@ -1895,15 +1895,12 @@ InIRGenerator::tryAttachNativeIn(HandleId key, ValOperandId keyId,
     if (!LookupPropertyPure(cx_, obj, key, &holder, &prop))
         return false;
 
-    if (prop.isNonNativeProperty())
-        return false;
-
-    if (!IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, prop))
+    if (!prop.isNativeProperty())
         return false;
 
     Maybe<ObjOperandId> holderId;
     emitIdGuard(keyId, key);
-    EmitReadSlotGuard(writer, obj, holder, prop.maybeShape(), objId, &holderId);
+    EmitReadSlotGuard(writer, obj, holder, prop.shape(), objId, &holderId);
     writer.loadBooleanResult(true);
     writer.returnFromIC();
 
