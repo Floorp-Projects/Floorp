@@ -837,18 +837,34 @@ private:
     }
   }
 
+  // At the start of decoding we want to "preroll" the decode until we've
+  // got a few frames decoded before we consider whether decode is falling
+  // behind. Otherwise our "we're falling behind" logic will trigger
+  // unnecessarily if we start playing as soon as the first sample is
+  // decoded. These two fields store how many video frames and audio
+  // samples we must consume before are considered to be finished prerolling.
+  uint32_t AudioPrerollUsecs() const
+  {
+    return mMaster->mAmpleAudioThreshold.ToMicroseconds() / 2;
+  }
+
+  uint32_t VideoPrerollFrames() const
+  {
+    return mMaster->GetAmpleVideoFrames() / 2;
+  }
+
   bool DonePrerollingAudio()
   {
     return !mMaster->IsAudioDecoding()
            || mMaster->GetDecodedAudioDuration()
-              >= mMaster->AudioPrerollUsecs() * mMaster->mPlaybackRate;
+              >= AudioPrerollUsecs() * mMaster->mPlaybackRate;
   }
 
   bool DonePrerollingVideo()
   {
     return !mMaster->IsVideoDecoding()
            || static_cast<uint32_t>(mMaster->VideoQueue().GetSize())
-              >= mMaster->VideoPrerollFrames() * mMaster->mPlaybackRate + 1;
+              >= VideoPrerollFrames() * mMaster->mPlaybackRate + 1;
   }
 
   void MaybeStopPrerolling()
