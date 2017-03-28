@@ -29,8 +29,8 @@ class Wait(object):
 
     """
 
-    def __init__(self, marionette, timeout=DEFAULT_TIMEOUT,
-                 interval=DEFAULT_INTERVAL, ignored_exceptions=None,
+    def __init__(self, marionette, timeout=None,
+                 interval=None, ignored_exceptions=None,
                  clock=None):
         """Configure the Wait instance to have a custom timeout, interval, and
         list of ignored exceptions.  Optionally a different time
@@ -71,10 +71,10 @@ class Wait(object):
         """
 
         self.marionette = marionette
-        self.timeout = timeout
+        self.timeout = timeout if timeout is not None else DEFAULT_TIMEOUT
+        self.interval = interval if interval is not None else DEFAULT_INTERVAL
         self.clock = clock or SystemClock()
         self.end = self.clock.now + self.timeout
-        self.interval = interval
 
         exceptions = []
         if ignored_exceptions is not None:
