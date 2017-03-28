@@ -45,6 +45,9 @@ this.AddonWatcher = {
   TOPIC_SLOW_ADDON_DETECTED: "addon-watcher-detected-slow-addon",
 
   init() {
+    if (Preferences.get("browser.addon-watch.interval", -1) == -1) {
+      return;
+    }
     this._initializedTimeStamp = Cu.now();
 
     try {
