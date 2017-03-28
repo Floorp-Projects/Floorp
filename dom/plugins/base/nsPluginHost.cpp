@@ -1033,6 +1033,15 @@ nsPluginHost::HavePluginForExtension(const nsACString & aExtension,
                                      /* out */ nsACString & aMimeType,
                                      PluginFilter aFilter)
 {
+  // As of FF 52, we only support flash and test plugins, so if the extension types
+  // don't match for that, exit before we start loading plugins.
+  //
+  // XXX: Remove tst case when bug 1351885 lands.
+  if (!aExtension.LowerCaseEqualsLiteral("swf") &&
+      !aExtension.LowerCaseEqualsLiteral("tst")) {
+    return false;
+  }
+
   bool checkEnabled = aFilter & eExcludeDisabled;
   bool allowFake = !(aFilter & eExcludeFake);
   return FindNativePluginForExtension(aExtension, aMimeType, checkEnabled) ||
@@ -1171,6 +1180,12 @@ nsPluginHost::FindNativePluginForType(const nsACString & aMimeType,
                                       bool aCheckEnabled)
 {
   if (aMimeType.IsEmpty()) {
+    return nullptr;
+  }
+
+  // As of FF 52, we only support flash and test plugins, so if the mime types
+  // don't match for that, exit before we start loading plugins.
+  if (!nsPluginHost::CanUsePluginForMIMEType(aMimeType)) {
     return nullptr;
   }
 
@@ -3956,6 +3971,25 @@ nsPluginHost::DestroyRunningInstances(nsPluginTag* aPluginTag)
       }
     }
   }
+}
+
+/* static */
+bool
+nsPluginHost::CanUsePluginForMIMEType(const nsACString& aMIMEType)
+{
+  // We only support flash as a plugin, so if the mime types don't match for
+  // those, exit before we start loading plugins.
+  //
+  // XXX: Remove test/java cases when bug 1351885 lands.
+  if (nsPluginHost::GetSpecialType(aMIMEType) == nsPluginHost::eSpecialType_Flash ||
+      aMIMEType.LowerCaseEqualsLiteral("application/x-test") ||
+      aMIMEType.LowerCaseEqualsLiteral("application/x-second-test") ||
+      aMIMEType.LowerCaseEqualsLiteral("application/x-third-test") ||
+      aMIMEType.LowerCaseEqualsLiteral("application/x-java-test")) {
+    return true;
+  }
+
+  return false;
 }
 
 // Runnable that does an async destroy of a plugin.
