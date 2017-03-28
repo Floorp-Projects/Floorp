@@ -7,14 +7,17 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
 
 # Install dependencies
-apt-get install -y \
+apt-get install -y --no-install-recommends \
     curl \
     tar \
     jq \
     python \
-    python-pip \
     python-requests \
     python-requests-unixsocket
+
+# Extra dependencies only needed for image building. Will be removed at
+# end of script.
+apt-get install -y python-pip
 
 # Install mercurial
 . /setup/common.sh
