@@ -46,6 +46,29 @@ class ServoStyleSet
 {
   friend class ServoRestyleManager;
 public:
+  class AutoAllowStaleStyles
+  {
+  public:
+    explicit AutoAllowStaleStyles(ServoStyleSet* aStyleSet)
+      : mStyleSet(aStyleSet)
+    {
+      if (mStyleSet) {
+        MOZ_ASSERT(!mStyleSet->mAllowResolveStaleStyles);
+        mStyleSet->mAllowResolveStaleStyles = true;
+      }
+    }
+
+    ~AutoAllowStaleStyles()
+    {
+      if (mStyleSet) {
+        mStyleSet->mAllowResolveStaleStyles = false;
+      }
+    }
+
+  private:
+    ServoStyleSet* mStyleSet;
+  };
+
   static bool IsInServoTraversal()
   {
     // The callers of this function are generally main-thread-only _except_
@@ -296,6 +319,7 @@ private:
   EnumeratedArray<SheetType, SheetType::Count,
                   nsTArray<RefPtr<ServoStyleSheet>>> mSheets;
   int32_t mBatching;
+  bool mAllowResolveStaleStyles;
 
   // Stores pointers to our cached style contexts for non-inheriting anonymous
   // boxes.
