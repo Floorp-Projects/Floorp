@@ -931,7 +931,6 @@ impl MarionetteCommand {
             GetAlertText => (Some("getTextFromDialog"), None),
             SendAlertText(ref x) => {
                 let mut data = BTreeMap::new();
-
                 data.insert("value".to_string(), x.text.to_json());
                 (Some("sendKeysToDialog"), Some(Ok(data)))
             },
