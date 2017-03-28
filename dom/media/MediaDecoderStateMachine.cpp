@@ -1892,8 +1892,7 @@ public:
   {
     // Resume the video decoder and seek to the last video frame.
     // This triggers a video-only seek which won't update the playback position.
-    StateObject::HandleResumeVideoDecoding(
-      TimeUnit::FromMicroseconds(mMaster->mDecodedVideoEndTime));
+    StateObject::HandleResumeVideoDecoding(mMaster->mDecodedVideoEndTime);
   }
 
   void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) override
@@ -2323,7 +2322,7 @@ DecodingState::NeedToSkipToNextKeyframe()
     && (mMaster->GetDecodedAudioDuration().ToMicroseconds()
         < mMaster->mLowAudioThreshold.ToMicroseconds() * mMaster->mPlaybackRate);
   bool isLowOnDecodedVideo =
-    (mMaster->GetClock().ToMicroseconds() - mMaster->mDecodedVideoEndTime)
+    (mMaster->GetClock() - mMaster->mDecodedVideoEndTime).ToMicroseconds()
     * mMaster->mPlaybackRate
     > LOW_VIDEO_THRESHOLD.ToMicroseconds();
   bool lowBuffered = mMaster->HasLowBufferedData();
@@ -2612,8 +2611,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mCurrentFrameID(0),
   INIT_WATCHABLE(mObservedDuration, TimeUnit()),
   mReader(new MediaDecoderReaderWrapper(mTaskQueue, aReader)),
-  mDecodedAudioEndTime(0),
-  mDecodedVideoEndTime(0),
   mPlaybackRate(1.0),
   mLowAudioThreshold(detail::LOW_AUDIO_THRESHOLD),
   mAmpleAudioThreshold(detail::AMPLE_AUDIO_THRESHOLD),
@@ -2764,9 +2761,7 @@ MediaDecoderStateMachine::GetDecodedAudioDuration()
     // mDecodedAudioEndTime might be smaller than GetClock() when there is
     // overlap between 2 adjacent audio samples or when we are playing
     // a chained ogg file.
-    auto t = std::max<int64_t>(
-      mDecodedAudioEndTime - GetClock().ToMicroseconds(), 0);
-    return TimeUnit::FromMicroseconds(t);
+    return std::max(mDecodedAudioEndTime - GetClock(), TimeUnit::Zero());
   }
   // MediaSink not started. All audio samples are in the queue.
   return TimeUnit::FromMicroseconds(AudioQueue().Duration());
@@ -3170,8 +3165,8 @@ MediaDecoderStateMachine::RequestAudioData()
       MOZ_ASSERT(aAudio);
       mAudioDataRequest.Complete();
       // audio->GetEndTime() is not always mono-increasing in chained ogg.
-      mDecodedAudioEndTime =
-        std::max(aAudio->GetEndTime(), mDecodedAudioEndTime);
+      mDecodedAudioEndTime = std::max(
+        TimeUnit::FromMicroseconds(aAudio->GetEndTime()), mDecodedAudioEndTime);
       LOGV("OnAudioDecoded [%" PRId64 ",%" PRId64 "]", aAudio->mTime,
            aAudio->GetEndTime());
       mStateObj->HandleAudioDecoded(aAudio);
@@ -3216,8 +3211,8 @@ MediaDecoderStateMachine::RequestVideoData(bool aSkipToNextKeyframe,
       MOZ_ASSERT(aVideo);
       mVideoDataRequest.Complete();
       // Handle abnormal or negative timestamps.
-      mDecodedVideoEndTime =
-        std::max(mDecodedVideoEndTime, aVideo->GetEndTime());
+      mDecodedVideoEndTime = std::max(
+        mDecodedVideoEndTime, TimeUnit::FromMicroseconds(aVideo->GetEndTime()));
       LOGV("OnVideoDecoded [%" PRId64 ",%" PRId64 "]", aVideo->mTime,
            aVideo->GetEndTime());
       mStateObj->HandleVideoDecoded(aVideo, videoDecodeStartTime);
@@ -3361,11 +3356,9 @@ MediaDecoderStateMachine::HasLowBufferedData(const TimeUnit& aThreshold)
   // We are never low in decoded data when we don't have audio/video or have
   // decoded all audio/video samples.
   TimeUnit endOfDecodedVideo = (HasVideo() && !VideoQueue().IsFinished())
-    ? TimeUnit::FromMicroseconds(mDecodedVideoEndTime)
-    : TimeUnit::FromInfinity();
+    ? mDecodedVideoEndTime : TimeUnit::FromInfinity();
   TimeUnit endOfDecodedAudio = (HasAudio() && !AudioQueue().IsFinished())
-    ? TimeUnit::FromMicroseconds(mDecodedAudioEndTime)
-    : TimeUnit::FromInfinity();
+    ? mDecodedAudioEndTime : TimeUnit::FromInfinity();
 
   auto endOfDecodedData = std::min(endOfDecodedVideo, endOfDecodedAudio);
   if (Duration() < endOfDecodedData) {
@@ -3481,7 +3474,7 @@ MediaDecoderStateMachine::ResetDecode(TrackSet aTracks)
   MOZ_ASSERT(aTracks.contains(TrackInfo::kVideoTrack));
 
   if (aTracks.contains(TrackInfo::kVideoTrack)) {
-    mDecodedVideoEndTime = 0;
+    mDecodedVideoEndTime = TimeUnit::Zero();
     mVideoCompleted = false;
     VideoQueue().Reset();
     mVideoDataRequest.DisconnectIfExists();
@@ -3489,7 +3482,7 @@ MediaDecoderStateMachine::ResetDecode(TrackSet aTracks)
   }
 
   if (aTracks.contains(TrackInfo::kAudioTrack)) {
-    mDecodedAudioEndTime = 0;
+    mDecodedAudioEndTime = TimeUnit::Zero();
     mAudioCompleted = false;
     AudioQueue().Reset();
     mAudioDataRequest.DisconnectIfExists();
@@ -3839,7 +3832,8 @@ MediaDecoderStateMachine::GetDebugInfo()
            mMediaSink->IsStarted() ? GetClock().ToMicroseconds() : -1,
            mMediaSink.get(), ToStateStr(), mPlayState.Ref(),
            mSentFirstFrameLoadedEvent, IsPlaying(), AudioRequestStatus(),
-           VideoRequestStatus(), mDecodedAudioEndTime, mDecodedVideoEndTime,
+           VideoRequestStatus(), mDecodedAudioEndTime.ToMicroseconds(),
+           mDecodedVideoEndTime.ToMicroseconds(),
            mAudioCompleted, mVideoCompleted)
          + mStateObj->GetDebugInfo() + nsCString("\n")
          + mMediaSink->GetDebugInfo();
