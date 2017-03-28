@@ -776,6 +776,14 @@ video > .caption-box {
   overflow: hidden;
 }
 
+/* ::cue default settings */
+::cue {
+  color: rgba(255, 255, 255, 1);
+  white-space: pre-line;
+  background-color: rgba(0, 0, 0, 0.8);
+  font: var(--cue-font-size) sans-serif;
+}
+
 /* datetime elements */
 
 input[type="time"] > xul|datetimebox {
