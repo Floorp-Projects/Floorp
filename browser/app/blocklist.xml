@@ -1397,6 +1397,14 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
+    <emItem blockID="9085fdba-8498-46a9-b9fd-4c7343a15c62" id="/^(test2@test\.com)|(test3@test\.com)|(mozilla_cc2\.2@internetdownloadmanager\.com)$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3">
+        <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+          <versionRange maxVersion="*" minVersion="53.0a1"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
     <emItem blockID="i525" id="/^({65f9f6b7-2dae-46fc-bfaf-f88e4af1beca}|{9ed31f84-c8b3-4926-b950-dff74047ff79}|{0134af61-7a0c-4649-aeca-90d776060cb3}|{02edb56b-9b33-435b-b7df-b2843273a694}|{da51d4f6-3e7e-4ef8-b400-9198e0874606}|{b24577db-155e-4077-bb37-3fdd3c302bb5})$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
