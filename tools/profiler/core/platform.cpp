@@ -55,7 +55,7 @@
 #endif
 
 // This should also work on ARM Linux, but not tested there yet.
-#if defined(GP_PLAT_arm_android)
+#if defined(GP_arm_android)
 # define USE_EHABI_STACKWALK
 # include "EHABIStackWalk.h"
 #endif
@@ -604,7 +604,9 @@ DoNativeBacktrace(Profile* aBuffer, TickSample* aSample)
   const mcontext_t* mcontext =
     &reinterpret_cast<ucontext_t*>(aSample->context)->uc_mcontext;
   mcontext_t savedContext;
-  PseudoStack* pseudoStack = aSample->threadInfo->Stack();
+  PseudoStack* pseudoStack = aInfo.Stack();
+
+  nativeStack.count = 0;
 
   // The pseudostack contains an "EnterJIT" frame whenever we enter
   // JIT code with profiling enabled; the stack pointer value points
@@ -648,12 +650,12 @@ DoNativeBacktrace(Profile* aBuffer, TickSample* aSample)
   // Now unwind whatever's left (starting from either the last EnterJIT frame
   // or, if no EnterJIT was found, the original registers).
   nativeStack.count += EHABIStackWalk(*mcontext,
-                                      aSample->threadInfo->StackTop(),
+                                      aInfo.StackTop(),
                                       sp_array + nativeStack.count,
                                       pc_array + nativeStack.count,
                                       nativeStack.size - nativeStack.count);
 
-  MergeStacksIntoProfile(aBuffer, aSample, nativeStack);
+  MergeStacksIntoProfile(aInfo, aSample, nativeStack);
 }
 #endif
 
