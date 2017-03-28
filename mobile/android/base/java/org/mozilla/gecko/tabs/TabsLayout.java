@@ -105,7 +105,9 @@ public abstract class TabsLayout extends RecyclerView
 
         switch (msg) {
             case ADDED:
-                final int tabIndex = Integer.parseInt(data);
+                int tabIndex = Integer.parseInt(data);
+                // A tabIndex of -1 means "add a new last tab".
+                tabIndex = tabIndex == -1 ? tabsAdapter.getItemCount() : tabIndex;
                 tabsAdapter.notifyTabInserted(tab, tabIndex);
                 if (addAtIndexRequiresScroll(tabIndex)) {
                     // (The SELECTED tab is updated *after* this call to ADDED, so don't just call
@@ -132,8 +134,9 @@ public abstract class TabsLayout extends RecyclerView
     }
 
     /**
-     * Addition of a tab at selected positions (dependent on LayoutManager) will result in a tab
-     * being added out of view - return true if {@code index} is such a position.
+     * Addition of a tab at selected positions (dependent on LayoutManager) can result in a tab
+     * being added out of view - return true if {@code index} is such a position.  This should be
+     * called only after the add has occurred.
      */
     abstract protected boolean addAtIndexRequiresScroll(int index);
 
