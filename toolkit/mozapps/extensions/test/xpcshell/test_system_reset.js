@@ -175,7 +175,7 @@ add_task(function* test_updated() {
   updatesDir.append(dirname);
 
   // Copy in the system add-ons
-    let file = do_get_file("data/system_addons/system2_2.xpi");
+  let file = do_get_file("data/system_addons/system2_2.xpi");
   file.copyTo(updatesDir, "system2@tests.mozilla.org.xpi");
   file = do_get_file("data/system_addons/system3_2.xpi");
   file.copyTo(updatesDir, "system3@tests.mozilla.org.xpi");
@@ -380,7 +380,7 @@ add_task(function* test_bad_app_cert() {
 });
 
 // A failed upgrade should revert to the default set.
-add_task(function* test_updated() {
+add_task(function* test_updated_bad_update_set() {
   // Create a random dir to install into
   let dirname = makeUUID();
   FileUtils.getDir("ProfD", ["features", dirname], true);
