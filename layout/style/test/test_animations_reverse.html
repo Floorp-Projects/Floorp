@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1343589
+-->
+<head>
+  <meta charset=utf-8>
+  <title>Test for Animation.reverse() on compositor animations (Bug 1343589)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=1343589">Mozilla Bug 1343589</a>
+<div id="display"></div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  { "set": [[ "dom.animations-api.core.enabled", true]] },
+  function() {
+    window.open("file_animations_reverse.html");
+  });
+</script>
+</pre>
+</body>
+</html>

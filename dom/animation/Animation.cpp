@@ -546,6 +546,8 @@ Animation::Reverse(ErrorResult& aRv)
   if (IsRelevant()) {
     nsNodeUtils::AnimationChanged(this);
   }
+  // Play(), above, unconditionally calls PostUpdate so we don't need to do
+  // it here.
 }
 
 // ---------------------------------------------------------------------------
