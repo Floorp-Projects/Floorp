@@ -13,7 +13,7 @@ const { L10N } = require("../utils/l10n");
 const { getUrlHost } = require("../utils/request-utils");
 
 // Components
-const PropertiesView = createFactory(require("./PropertiesView"));
+const PropertiesView = createFactory(require("./properties-view"));
 
 const { div, input, span } = DOM;
 
