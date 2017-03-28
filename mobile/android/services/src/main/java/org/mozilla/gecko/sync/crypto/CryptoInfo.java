@@ -18,6 +18,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.mozilla.apache.commons.codec.binary.Base64;
+import org.mozilla.gecko.sync.Utils;
 
 /*
  * All info in these objects should be decoded (i.e. not BaseXX encoded).
@@ -156,9 +157,15 @@ public class CryptoInfo {
       byte[] encryptionKey = getKeys().getEncryptionKey();
       SecretKeySpec spec = new SecretKeySpec(encryptionKey, KEY_ALGORITHM_SPEC);
 
-      // If no IV is provided, we allow the cipher to provide one.
+      // If no IV is provided, use a shared SecureRandom to generate one.
       if (getIV() == null || getIV().length == 0) {
-        cipher.init(Cipher.ENCRYPT_MODE, spec);
+        cipher.init(
+                Cipher.ENCRYPT_MODE,
+                spec,
+                new IvParameterSpec(
+                        Utils.generateRandomBytes(cipher.getBlockSize())
+                )
+        );
       } else {
         cipher.init(Cipher.ENCRYPT_MODE, spec, new IvParameterSpec(getIV()));
       }
