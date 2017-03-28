@@ -110,6 +110,16 @@ const SELECT_BGCOLOR_ON_SELECT_COLOR_ON_OPTIONS =
   '  <option selected="true">{"end": "true"}</option>' +
   "</select></body></html>";
 
+const SELECT_STYLE_OF_OPTION_IS_BASED_ON_FOCUS_OF_SELECT =
+  "<html><head><style>" +
+  "  select:focus { background-color: #3a96dd; }" +
+  "  select:focus option { background-color: #fff; }" +
+  "</style></head>" +
+  "<body><select id='one'>" +
+  '  <option>{"color": "rgb(0, 0, 0)", "backgroundColor": "rgb(255, 255, 255)"}</option>' +
+  '  <option selected="true">{"end": "true"}</option>' +
+  "</select></body></html>";
+
 function getSystemColor(color) {
   // Need to convert system color to RGB color.
   let textarea = document.createElementNS("http://www.w3.org/1999/xhtml", "textarea");
@@ -315,4 +325,13 @@ add_task(function* test_bgcolor_on_select_color_on_options() {
   };
 
   yield testSelectColors(SELECT_BGCOLOR_ON_SELECT_COLOR_ON_OPTIONS, 2, options);
+});
+
+add_task(function* test_style_of_options_is_dependent_on_focus_of_select() {
+  let options = {
+    selectColor: "rgb(0, 0, 0)",
+    selectBgColor: "rgb(58, 150, 221)"
+  };
+
+  yield testSelectColors(SELECT_STYLE_OF_OPTION_IS_BASED_ON_FOCUS_OF_SELECT, 2, options);
 });
