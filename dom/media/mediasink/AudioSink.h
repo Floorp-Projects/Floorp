@@ -32,7 +32,7 @@ class AudioSink : private AudioStream::DataSource {
 public:
   AudioSink(AbstractThread* aThread,
             MediaQueue<AudioData>& aAudioQueue,
-            int64_t aStartTime,
+            TimeUnit aStartTime,
             const AudioInfo& aInfo,
             dom::AudioChannel aChannel);
 
@@ -46,8 +46,8 @@ public:
    * All public functions are not thread-safe.
    * Called on the task queue of MDSM only.
    */
-  int64_t GetPosition();
-  int64_t GetEndTime() const;
+  TimeUnit GetPosition();
+  TimeUnit GetEndTime() const;
 
   // Check whether we've pushed more frames to the audio hardware than it has
   // played.
@@ -80,15 +80,15 @@ private:
   // The audio stream resource. Used on the task queue of MDSM only.
   RefPtr<AudioStream> mAudioStream;
 
-  // The presentation time of the first audio frame that was played in
-  // microseconds. We can add this to the audio stream position to determine
+  // The presentation time of the first audio frame that was played.
+  // We can add this to the audio stream position to determine
   // the current audio time.
-  const int64_t mStartTime;
+  const TimeUnit mStartTime;
 
   // Keep the last good position returned from the audio stream. Used to ensure
   // position returned by GetPosition() is mono-increasing in spite of audio
   // stream error. Used on the task queue of MDSM only.
-  int64_t mLastGoodPosition;
+  TimeUnit mLastGoodPosition;
 
   const AudioInfo mInfo;
 
@@ -149,7 +149,7 @@ private:
   // at the current input framerate.
   int64_t mFramesParsed;
   Maybe<RefPtr<AudioData>> mLastProcessedPacket;
-  int64_t mLastEndTime;
+  TimeUnit mLastEndTime;
   // Never modifed after construction.
   uint32_t mOutputRate;
   uint32_t mOutputChannels;

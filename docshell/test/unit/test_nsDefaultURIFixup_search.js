@@ -74,7 +74,7 @@ var data = [
   },
   {
     wrong: 'user:@example.com:8080/this/is/a/test.html',
-    fixed: 'http://user:@example.com:8080/this/is/a/test.html',
+    fixed: 'http://user@example.com:8080/this/is/a/test.html',
   },
   {
     wrong: '//user:pass@example.com:8080/this/is/a/test.html',

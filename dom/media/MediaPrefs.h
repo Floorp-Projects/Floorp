@@ -170,7 +170,11 @@ private:
   DECL_MEDIA_PREF("media.rust.test_mode",                     RustTestMode, bool, false);
 #endif
 
+#if defined(OS_LINUX) && defined(DEBUG)
+  DECL_MEDIA_PREF("media.rust.mp4parser",                     EnableRustMP4Parser, bool, true);
+#else
   DECL_MEDIA_PREF("media.rust.mp4parser",                     EnableRustMP4Parser, bool, false);
+#endif
 
 public:
   // Manage the singleton:

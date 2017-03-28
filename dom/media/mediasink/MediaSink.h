@@ -60,7 +60,7 @@ public:
   virtual RefPtr<GenericPromise> OnEnded(TrackType aType) = 0;
 
   // Return the end time of the audio/video data that has been consumed
-  // or -1 if no such track.
+  // or 0 if no such track.
   // Must be called after playback starts.
   virtual int64_t GetEndTime(TrackType aType) const = 0;
 

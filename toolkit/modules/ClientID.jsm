@@ -8,7 +8,6 @@ this.EXPORTED_SYMBOLS = ["ClientID"];
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -19,6 +18,8 @@ const LOGGER_PREFIX = "ClientID::";
 
 XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
                                   "resource://services-common/utils.js");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+				  "resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gDatareportingPath", () => {
   return OS.Path.join(OS.Constants.Path.profileDir, "datareporting");

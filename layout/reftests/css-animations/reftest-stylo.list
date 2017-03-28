@@ -6,7 +6,7 @@
 == animate-opacity.html animate-opacity.html
 == animate-preserves3d.html animate-preserves3d.html
 == in-visibility-hidden-animation.html in-visibility-hidden-animation.html
-skip-if(stylo) == in-visibility-hidden-animation-pseudo-element.html in-visibility-hidden-animation-pseudo-element.html # Bug 1331047
+== in-visibility-hidden-animation-pseudo-element.html in-visibility-hidden-animation-pseudo-element.html
 == partially-out-of-view-animation.html partially-out-of-view-animation.html
 == animate-display-table-opacity.html animate-display-table-opacity.html
 # We need to run 100% opacity test case when OMTA is disabled to check that the animation creates a stacking context even if the animation is not running on the compositor

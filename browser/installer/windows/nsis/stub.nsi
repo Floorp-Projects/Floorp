@@ -441,7 +441,14 @@ Function .onInit
   StrCpy $CheckboxShortcuts "1"
   StrCpy $CheckboxSendPing "1"
 !ifdef MOZ_MAINTENANCE_SERVICE
-  StrCpy $CheckboxInstallMaintSvc "1"
+  ; We can only install the maintenance service if the user is an admin.
+  Call IsUserAdmin
+  Pop $0
+  ${If} "$0" == "true"
+    StrCpy $CheckboxInstallMaintSvc "1"
+  ${Else}
+    StrCpy $CheckboxInstallMaintSvc "0"
+  ${EndIf}
 !else
   StrCpy $CheckboxInstallMaintSvc "0"
 !endif
