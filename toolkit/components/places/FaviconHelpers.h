@@ -120,6 +120,21 @@ struct PageData
 };
 
 /**
+ * Info for a frame.
+ */
+struct FrameData
+{
+  FrameData(uint16_t aIndex, uint16_t aWidth)
+  : index(aIndex)
+  , width(aWidth)
+  {
+  }
+
+  uint16_t index;
+  uint16_t width;
+};
+
+/**
  * Async fetches icon from database or network, associates it with the required
  * page and finally notifies the change.
  */
