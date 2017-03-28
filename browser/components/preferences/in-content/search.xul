@@ -1,0 +1,86 @@
+    <preferences id="searchPreferences" hidden="true" data-category="paneSearch">
+
+      <preference id="browser.search.suggest.enabled"
+                  name="browser.search.suggest.enabled"
+                  type="bool"/>
+
+      <preference id="browser.urlbar.suggest.searches"
+                  name="browser.urlbar.suggest.searches"
+                  type="bool"/>
+
+      <preference id="browser.search.hiddenOneOffs"
+                  name="browser.search.hiddenOneOffs"
+                  type="unichar"/>
+
+    </preferences>
+
+    <script type="application/javascript"
+            src="chrome://browser/content/preferences/in-content/search.js"/>
+
+    <stringbundle id="engineManagerBundle" src="chrome://browser/locale/engineManager.properties"/>
+
+    <hbox id="header-search"
+          class="header"
+          hidden="true"
+          data-category="paneSearch">
+      <label class="header-name" flex="1">&paneSearch.title;</label>
+      <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
+    </hbox>
+
+    <!-- Default Search Engine -->
+    <groupbox id="defaultEngineGroup" align="start" data-category="paneSearch">
+      <caption label="&defaultSearchEngine.label;"/>
+      <label>&chooseYourDefaultSearchEngine.label;</label>
+      <menulist id="defaultEngine">
+        <menupopup/>
+      </menulist>
+      <checkbox id="suggestionsInSearchFieldsCheckbox"
+                label="&provideSearchSuggestions.label;"
+                accesskey="&provideSearchSuggestions.accesskey;"
+                preference="browser.search.suggest.enabled"/>
+      <vbox class="indent">
+        <checkbox id="urlBarSuggestion" label="&showURLBarSuggestions.label;"
+                  accesskey="&showURLBarSuggestions.accesskey;"
+                  preference="browser.urlbar.suggest.searches"/>
+        <hbox id="urlBarSuggestionPermanentPBLabel"
+              align="center" class="indent">
+          <label flex="1">&urlBarSuggestionsPermanentPB.label;</label>
+        </hbox>
+      </vbox>
+    </groupbox>
+
+    <groupbox id="oneClickSearchProvidersGroup" data-category="paneSearch">
+      <caption label="&oneClickSearchEngines.label;"/>
+      <label>&chooseWhichOneToDisplay.label;</label>
+
+      <tree id="engineList" flex="1" rows="8" hidecolumnpicker="true" editable="true"
+            seltype="single">
+        <treechildren id="engineChildren" flex="1"/>
+        <treecols>
+          <treecol id="engineShown" type="checkbox" editable="true" sortable="false"/>
+          <treecol id="engineName" flex="4" label="&engineNameColumn.label;" sortable="false"/>
+          <treecol id="engineKeyword" flex="1" label="&engineKeywordColumn.label;" editable="true"
+                   sortable="false"/>
+        </treecols>
+      </tree>
+
+      <hbox>
+        <button id="restoreDefaultSearchEngines"
+                label="&restoreDefaultSearchEngines.label;"
+                accesskey="&restoreDefaultSearchEngines.accesskey;"
+                />
+        <spacer flex="1"/>
+        <button id="removeEngineButton"
+                class="searchEngineAction"
+                label="&removeEngine.label;"
+                accesskey="&removeEngine.accesskey;"
+                disabled="true"
+                />
+      </hbox>
+
+      <separator class="thin"/>
+
+      <hbox id="addEnginesBox" pack="start">
+        <label id="addEngines" class="text-link" value="&addMoreSearchEngines.label;"/>
+      </hbox>
+    </groupbox>
