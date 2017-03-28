@@ -20,10 +20,12 @@
 
 #include <stdarg.h>
 
-#include "jscompartmentinlines.h"
 #include "jsfun.h"
 #include "jsobj.h"
 #include "jsscript.h"
+
+#include "jscompartmentinlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::jit;
