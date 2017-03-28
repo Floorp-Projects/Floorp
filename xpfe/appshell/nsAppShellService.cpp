@@ -31,6 +31,7 @@
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIChromeRegistry.h"
 #include "nsILoadContext.h"
 #include "nsIWebNavigation.h"
 #include "nsIWindowlessBrowser.h"
@@ -39,7 +40,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StartupTimeline.h"
-#include "mozilla/intl/LocaleService.h"
 
 #include "nsEmbedCID.h"
 #include "nsIWebBrowser.h"
@@ -50,7 +50,6 @@
 #endif
 
 using namespace mozilla;
-using mozilla::intl::LocaleService;
 
 // Default URL for the hidden window, can be overridden by a pref on Mac
 #define DEFAULT_HIDDENWINDOW_URL "resource://gre-resources/hiddenWindow.html"
@@ -721,7 +720,15 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
 
   bool center = aChromeMask & nsIWebBrowserChrome::CHROME_CENTER_SCREEN;
 
-  widgetInitData.mRTL = LocaleService::GetInstance()->IsAppLocaleRTL();
+  nsCOMPtr<nsIXULChromeRegistry> reg =
+    mozilla::services::GetXULChromeRegistryService();
+  if (reg) {
+    nsAutoCString package;
+    package.AssignLiteral("global");
+    bool isRTL = false;
+    reg->IsLocaleRTL(package, &isRTL);
+    widgetInitData.mRTL = isRTL;
+  }
 
 #ifdef MOZ_WIDGET_GONK
   // B2G multi-screen support. Screen ID is for differentiating screens of

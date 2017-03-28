@@ -167,11 +167,6 @@ public:
                           LangNegStrategy aLangNegStrategy,
                           nsTArray<nsCString>& aRetVal);
 
-  /**
-   * Returns whether the current app locale is RTL.
-   */
-  bool IsAppLocaleRTL();
-
 private:
   /**
    * Locale object, a BCP47-style tag decomposed into subtags for
