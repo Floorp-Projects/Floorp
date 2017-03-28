@@ -126,18 +126,18 @@ static const int THRESHOLD_FACTOR = 2;
 
 namespace detail {
 
-// If we have less than this much undecoded data available, we'll consider
-// ourselves to be running low on undecoded data. We determine how much
-// undecoded data we have remaining using the reader's GetBuffered()
+// If we have less than this much buffered data available, we'll consider
+// ourselves to be running low on buffered data. We determine how much
+// buffered data we have remaining using the reader's GetBuffered()
 // implementation.
-static const int64_t LOW_DATA_THRESHOLD_USECS = 5000000;
+static const int64_t LOW_BUFFER_THRESHOLD_USECS = 5000000;
 
-static constexpr auto LOW_BUFFER_THRESHOLD = TimeUnit::FromMicroseconds(LOW_DATA_THRESHOLD_USECS);
+static constexpr auto LOW_BUFFER_THRESHOLD = TimeUnit::FromMicroseconds(LOW_BUFFER_THRESHOLD_USECS);
 
-// LOW_DATA_THRESHOLD_USECS needs to be greater than AMPLE_AUDIO_USECS, otherwise
+// LOW_BUFFER_THRESHOLD_USECS needs to be greater than AMPLE_AUDIO_USECS, otherwise
 // the skip-to-keyframe logic can activate when we're running low on data.
-static_assert(LOW_DATA_THRESHOLD_USECS > AMPLE_AUDIO_USECS,
-              "LOW_DATA_THRESHOLD_USECS is too small");
+static_assert(LOW_BUFFER_THRESHOLD_USECS > AMPLE_AUDIO_USECS,
+              "LOW_BUFFER_THRESHOLD_USECS is too small");
 
 } // namespace detail
 
