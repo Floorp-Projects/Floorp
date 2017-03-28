@@ -867,6 +867,127 @@ waitForAllPaints(function() {
     yield ensureElementRemoval(div);
   });
 
+  add_task(function *no_throttling_animations_in_view_svg() {
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
+    var div = addDiv(null, { style: 'overflow: scroll;' +
+                                    'height: 100px; width: 100px;' });
+    var svg = addSVGElement(div, 'svg', { viewBox: '-10 -10 0.1 0.1',
+                                          width:   '50px',
+                                          height:  '50px' });
+    var rect = addSVGElement(svg, 'rect', { x:      '-10',
+                                            y:      '-10',
+                                            width:  '10',
+                                            height: '10',
+                                            fill:   'red' });
+    var animation = rect.animate({ fill: ['blue', 'lime'] }, 100 * MS_PER_SEC);
+    yield animation.ready;
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 5,
+       'CSS animations on an in-view svg element with post-transform should ' +
+       'not be throttled.');
+
+    yield ensureElementRemoval(div);
+  });
+
+  add_task(function *throttling_animations_out_of_view_svg() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
+    var div = addDiv(null, { style: 'overflow: scroll;' +
+                                    'height: 100px; width: 100px;' });
+    var svg = addSVGElement(div, 'svg', { viewBox: '-10 -10 0.1 0.1',
+                                          width: '50px',
+                                          height: '50px' });
+    var rect = addSVGElement(svg, 'rect', { width: '10',
+                                            height: '10',
+                                            fill: 'red' });
+
+    var animation = rect.animate({ fill: ['blue', 'lime'] }, 100 * MS_PER_SEC);
+    yield animation.ready;
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 0,
+       'CSS animations on an out-of-view svg element with post-transform ' +
+       'should be throttled.');
+
+    yield ensureElementRemoval(div);
+  });
+
+  add_task(function *no_throttling_animations_in_view_css_transform() {
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
+    var scrollDiv = addDiv(null, { style: 'overflow: scroll; ' +
+                                          'height: 100px; width: 100px;' });
+    var targetDiv = addDiv(null,
+                           { style: 'animation: background-color 100s;' +
+                                    'transform: translate(-50px, -50px);' });
+    scrollDiv.appendChild(targetDiv);
+
+    var animation = targetDiv.getAnimations()[0];
+    yield animation.ready;
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 5,
+       'CSS animation on an in-view element with pre-transform should not ' +
+       'be throttled.');
+
+    yield ensureElementRemoval(scrollDiv);
+  });
+
+  add_task(function *throttling_animations_out_of_view_css_transform() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
+    var scrollDiv = addDiv(null, { style: 'overflow: scroll;' +
+                                          'height: 100px; width: 100px;' });
+    var targetDiv = addDiv(null,
+                           { style: 'animation: background-color 100s;' +
+                                    'transform: translate(100px, 100px);' });
+    scrollDiv.appendChild(targetDiv);
+
+    var animation = targetDiv.getAnimations()[0];
+    yield animation.ready;
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 0,
+       'CSS animation on an out-of-view element with pre-transform should be ' +
+       'throttled.');
+
+    yield ensureElementRemoval(scrollDiv);
+  });
+
 });
 
 </script>

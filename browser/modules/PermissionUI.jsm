@@ -568,7 +568,7 @@ DesktopNotificationPermissionPrompt.prototype = {
   },
 
   get promptActions() {
-    return [
+    let actions = [
       {
         label: gBrowserBundle.GetStringFromName("webNotifications.allow"),
         accessKey:
@@ -582,16 +582,17 @@ DesktopNotificationPermissionPrompt.prototype = {
           gBrowserBundle.GetStringFromName("webNotifications.notNow.accesskey"),
         action: SitePermissions.BLOCK,
       },
-      {
-        label: PrivateBrowsingUtils.isBrowserPrivate(this.browser) ?
-          gBrowserBundle.GetStringFromName("webNotifications.neverForSession") :
-          gBrowserBundle.GetStringFromName("webNotifications.never"),
+    ];
+    if (!PrivateBrowsingUtils.isBrowserPrivate(this.browser)) {
+      actions.push({
+        label: gBrowserBundle.GetStringFromName("webNotifications.never"),
         accessKey:
           gBrowserBundle.GetStringFromName("webNotifications.never.accesskey"),
         action: SitePermissions.BLOCK,
         scope: SitePermissions.SCOPE_PERSISTENT,
-      },
-    ];
+      });
+    }
+    return actions;
   },
 };
 

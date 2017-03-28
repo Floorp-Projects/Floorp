@@ -13,6 +13,7 @@
 #include "mozilla/Unused.h"
 #include "nsPrintfCString.h"
 #include "base/time.h"
+#include "GMPUtils.h"
 
 namespace mozilla {
 namespace gmp {
@@ -154,15 +155,11 @@ ToString(const cdm::KeyInformation* aKeysInfo, uint32_t aKeysInfoCount)
 {
   nsCString str;
   for (uint32_t i = 0; i < aKeysInfoCount; i++) {
-    nsCString keyId;
-    const cdm::KeyInformation& key = aKeysInfo[i];
-    for (size_t k = 0; k < key.key_id_size; k++) {
-      keyId.Append(nsPrintfCString("%hhX", key.key_id[k]));
-    }
     if (!str.IsEmpty()) {
       str.AppendLiteral(",");
     }
-    str.Append(keyId);
+    const cdm::KeyInformation& key = aKeysInfo[i];
+    str.Append(ToHexString(key.key_id, key.key_id_size));
     str.AppendLiteral("=");
     str.AppendInt(key.status);
   }
@@ -509,7 +506,8 @@ mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvDecryptAndDecodeFrame(const CDMInputBuffer& aBuffer)
 {
   MOZ_ASSERT(IsOnMessageLoopThread());
-  GMP_LOG("ChromiumCDMChild::RecvDecryptAndDecodeFrame()");
+  GMP_LOG("ChromiumCDMChild::RecvDecryptAndDecodeFrame() t=%" PRId64 ")",
+          aBuffer.mTimestamp());
   MOZ_ASSERT(mDecoderInitialized);
 
   // The output frame may not have the same timestamp as the frame we put in.
@@ -525,8 +523,9 @@ ChromiumCDMChild::RecvDecryptAndDecodeFrame(const CDMInputBuffer& aBuffer)
 
   WidevineVideoFrame frame;
   cdm::Status rv = mCDM->DecryptAndDecodeFrame(input, &frame);
-  GMP_LOG("WidevineVideoDecoder::Decode(timestamp=%" PRId64 ") rv=%d",
-          input.timestamp,
+  GMP_LOG("ChromiumCDMChild::RecvDecryptAndDecodeFrame() t=%" PRId64
+          " CDM decoder rv=%d",
+          aBuffer.mTimestamp(),
           rv);
 
   switch (rv) {
