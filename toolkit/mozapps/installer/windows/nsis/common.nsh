@@ -5738,9 +5738,14 @@
           ; If the user account has a split token
           ${If} "$0" == "3"
             UAC::RunElevated
+            ${If} "$0" == "0" ; Was elevation successful
+              UAC::Unload
+              ; Nothing besides UAC initialized so no need to call OnEndCommon
+              Quit
+            ${EndIf}
+            ; Unload UAC since the elevation request was not successful and
+            ; install anyway.
             UAC::Unload
-            ; Nothing besides UAC initialized so no need to call OnEndCommon
-            Quit
           ${EndIf}
         ${Else}
           ; Check if UAC is enabled. If the user has turned UAC on or off

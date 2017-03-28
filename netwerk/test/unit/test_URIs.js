@@ -115,7 +115,7 @@ var gTests = [
     nsIURL:  true, nsINestedURI: false },
   { spec:    "ftp://foo:@ftp.mozilla.org:100/pub/mozilla.org/README",
     scheme:  "ftp",
-    prePath: "ftp://foo:@ftp.mozilla.org:100",
+    prePath: "ftp://foo@ftp.mozilla.org:100",
     port:    100,
     username: "foo",
     password: "",

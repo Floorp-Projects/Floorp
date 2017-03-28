@@ -71,6 +71,10 @@ protected:
   virtual ~DecodedStream();
 
 private:
+  media::TimeUnit FromMicroseconds(int64_t aTime)
+  {
+    return media::TimeUnit::FromMicroseconds(aTime);
+  }
   void DestroyData(UniquePtr<DecodedStreamData> aData);
   void AdvanceTracks();
   void SendAudio(double aVolume, bool aIsSameOrigin, const PrincipalHandle& aPrincipalHandle);
@@ -107,8 +111,8 @@ private:
 
   PlaybackParams mParams;
 
-  Maybe<int64_t> mStartTime;
-  int64_t mLastOutputTime = 0; // microseconds
+  media::NullableTimeUnit mStartTime;
+  media::TimeUnit mLastOutputTime;
   MediaInfo mInfo;
 
   MediaQueue<AudioData>& mAudioQueue;

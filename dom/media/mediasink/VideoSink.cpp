@@ -41,7 +41,7 @@ VideoSink::VideoSink(AbstractThread* aThread,
   , mContainer(aContainer)
   , mProducerID(ImageContainer::AllocateProducerID())
   , mFrameStats(aFrameStats)
-  , mVideoFrameEndTime(-1)
+  , mVideoFrameEndTime(0)
   , mHasVideo(false)
   , mUpdateScheduler(aThread)
   , mVideoQueueSendToCompositorSize(aVQueueSentToCompositerSize)
@@ -95,7 +95,7 @@ VideoSink::GetEndTime(TrackType aType) const
   } else if (aType == TrackInfo::kAudioTrack) {
     return mAudioSink->GetEndTime(aType);
   }
-  return -1;
+  return 0;
 }
 
 int64_t
@@ -225,7 +225,7 @@ VideoSink::Stop()
     mEndPromiseHolder.ResolveIfExists(true, __func__);
     mEndPromise = nullptr;
   }
-  mVideoFrameEndTime = -1;
+  mVideoFrameEndTime = 0;
 }
 
 bool
