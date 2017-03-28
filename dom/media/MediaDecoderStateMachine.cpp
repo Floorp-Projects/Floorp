@@ -113,7 +113,7 @@ static const uint32_t LOW_VIDEO_FRAMES = 2;
 // If the last video frame's end time |mDecodedVideoEndTime| is more than
 // |LOW_VIDEO_THRESHOLD_USECS*mPlaybackRate| after the current clock in
 // Advanceframe(), the video decode is lagging, and we skip to next keyframe.
-static const int32_t LOW_VIDEO_THRESHOLD_USECS = 60000;
+static constexpr auto LOW_VIDEO_THRESHOLD_USECS = TimeUnit::FromMicroseconds(60000);
 
 // Arbitrary "frame duration" when playing only audio.
 static const int AUDIO_DURATION_USECS = 40000;
@@ -2306,7 +2306,7 @@ DecodingState::NeedToSkipToNextKeyframe()
   bool isLowOnDecodedVideo =
     (mMaster->GetClock() - mMaster->mDecodedVideoEndTime)
     * mMaster->mPlaybackRate
-    > LOW_VIDEO_THRESHOLD_USECS;
+    > LOW_VIDEO_THRESHOLD_USECS.ToMicroseconds();
   bool lowBuffered = mMaster->HasLowBufferedData();
 
   if ((isLowOnDecodedAudio || isLowOnDecodedVideo) && !lowBuffered) {
