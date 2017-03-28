@@ -131,12 +131,6 @@ add_test(function test_setRequestedLocales() {
   run_next_test();
 });
 
-add_test(function test_isAppLocaleRTL() {
-  do_check_true(typeof localeService.isAppLocaleRTL === 'boolean');
-
-  run_next_test();
-});
-
 do_register_cleanup(() => {
     Services.prefs.clearUserPref(PREF_SELECTED_LOCALE);
     Services.prefs.clearUserPref(PREF_MATCH_OS_LOCALE);
