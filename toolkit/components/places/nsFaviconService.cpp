@@ -57,6 +57,69 @@ public:
   NS_IMETHOD HandleCompletion(uint16_t aReason);
 };
 
+namespace {
+
+/**
+ * Extracts and filters native sizes from the given container, based on the
+ * list of sizes we are supposed to retain.
+ * All calculation is done considering square sizes and the largest side.
+ * In case of multiple frames of the same size, only the first one is retained.
+ */
+nsresult
+GetFramesInfoForContainer(imgIContainer* aContainer,
+                           nsTArray<FrameData>& aFramesInfo) {
+  // Don't extract frames from animated images.
+  bool animated;
+  nsresult rv = aContainer->GetAnimated(&animated);
+  if (NS_FAILED(rv) || !animated) {
+    nsTArray<nsIntSize> nativeSizes;
+    rv = aContainer->GetNativeSizes(nativeSizes);
+    if (NS_SUCCEEDED(rv) && nativeSizes.Length() > 1) {
+      for (uint32_t i = 0; i < nativeSizes.Length(); ++i) {
+        nsIntSize nativeSize = nativeSizes[i];
+        // Only retain square frames.
+        if (nativeSize.width != nativeSize.height) {
+          continue;
+        }
+        // Check if it's one of the sizes we care about.
+        auto end = std::end(sFaviconSizes);
+        uint16_t* matchingSize = std::find(std::begin(sFaviconSizes), end,
+                                          nativeSize.width);
+        if (matchingSize != end) {
+          // We must avoid duped sizes, an image could contain multiple frames of
+          // the same size, but we can only store one. We could use an hashtable,
+          // but considered the average low number of frames, we'll just do a
+          // linear search.
+          bool dupe = false;
+          for (const auto& frameInfo : aFramesInfo) {
+            if (frameInfo.width == *matchingSize) {
+              dupe = true;
+              break;
+            }
+          }
+          if (!dupe) {
+            aFramesInfo.AppendElement(FrameData(i, *matchingSize));
+          }
+        }
+      }
+    }
+  }
+
+  if (aFramesInfo.Length() == 0) {
+    // Always have at least the default size.
+    int32_t width;
+    rv = aContainer->GetWidth(&width);
+    NS_ENSURE_SUCCESS(rv, rv);
+    int32_t height;
+    rv = aContainer->GetHeight(&height);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // For non-square images, pick the largest side.
+    aFramesInfo.AppendElement(FrameData(0, std::max(width, height)));
+  }
+  return NS_OK;
+}
+
+} // namespace
 
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsFaviconService, gFaviconService)
 
@@ -677,47 +740,46 @@ nsFaviconService::OptimizeIconSizes(IconData& aIcon)
                                       getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  IconPayload newPayload;
-  newPayload.mimeType = NS_LITERAL_CSTRING(PNG_MIME_TYPE);
-  // TODO: for ico files we should extract every single payload.
-  int32_t width;
-  rv = container->GetWidth(&width);
+  // For ICO files, we must evaluate each of the frames we care about.
+  nsTArray<FrameData> framesInfo;
+  rv = GetFramesInfoForContainer(container, framesInfo);
   NS_ENSURE_SUCCESS(rv, rv);
-  int32_t height;
-  rv = container->GetHeight(&height);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // For non-square images, pick the largest side.
-  int32_t originalSize = std::max(width, height);
-  newPayload.width = originalSize;
-  for (uint16_t size : sFaviconSizes) {
-    if (size <= originalSize) {
-      newPayload.width = size;
-      break;
+
+  for (const auto& frameInfo : framesInfo) {
+    IconPayload newPayload;
+    newPayload.mimeType = NS_LITERAL_CSTRING(PNG_MIME_TYPE);
+    newPayload.width = frameInfo.width;
+    for (uint16_t size : sFaviconSizes) {
+      if (size <= frameInfo.width) {
+        newPayload.width = size;
+        break;
+      }
     }
-  }
 
-  // If the original payload is png and the size is the same, no reason to
-  // rescale the image.
-  if (newPayload.mimeType.Equals(payload.mimeType) &&
-      newPayload.width == originalSize) {
-    newPayload.data = payload.data;
-  } else {
-    // scale and recompress
-    nsCOMPtr<nsIInputStream> iconStream;
-    rv = GetImgTools()->EncodeScaledImage(container,
-                                          newPayload.mimeType,
-                                          newPayload.width,
-                                          newPayload.width,
-                                          EmptyString(),
-                                          getter_AddRefs(iconStream));
-    NS_ENSURE_SUCCESS(rv, rv);
-    // Read the stream into the new buffer.
-    rv = NS_ConsumeStream(iconStream, UINT32_MAX, newPayload.data);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+    // If the original payload is png and the size is the same, no reason to
+    // rescale the image.
+    if (newPayload.mimeType.Equals(payload.mimeType) &&
+        newPayload.width == frameInfo.width) {
+      newPayload.data = payload.data;
+    } else {
+      // Scale and recompress.
+      // Since EncodeScaledImage use SYNC_DECODE, it will pick the best frame.
+      nsCOMPtr<nsIInputStream> iconStream;
+      rv = GetImgTools()->EncodeScaledImage(container,
+                                            newPayload.mimeType,
+                                            newPayload.width,
+                                            newPayload.width,
+                                            EmptyString(),
+                                            getter_AddRefs(iconStream));
+      NS_ENSURE_SUCCESS(rv, rv);
+      // Read the stream into the new buffer.
+      rv = NS_ConsumeStream(iconStream, UINT32_MAX, newPayload.data);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
-  if (newPayload.data.Length() < nsIFaviconService::MAX_FAVICON_BUFFER_SIZE) {
-    aIcon.payloads.AppendElement(newPayload);
+    if (newPayload.data.Length() < nsIFaviconService::MAX_FAVICON_BUFFER_SIZE) {
+      aIcon.payloads.AppendElement(newPayload);
+    }
   }
 
   return NS_OK;
