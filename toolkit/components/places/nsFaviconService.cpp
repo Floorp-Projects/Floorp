@@ -479,9 +479,12 @@ nsFaviconService::GetFaviconURLForPage(nsIURI *aPageURI,
   nsAutoCString pageSpec;
   nsresult rv = aPageURI->GetSpec(pageSpec);
   NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString pageHost;
+  // It's expected that some domains may not have a host.
+  Unused << aPageURI->GetHost(pageHost);
 
   RefPtr<AsyncGetFaviconURLForPage> event =
-    new AsyncGetFaviconURLForPage(pageSpec, aPreferredWidth, aCallback);
+    new AsyncGetFaviconURLForPage(pageSpec, pageHost, aPreferredWidth, aCallback);
 
   RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
@@ -502,9 +505,12 @@ nsFaviconService::GetFaviconDataForPage(nsIURI* aPageURI,
   nsAutoCString pageSpec;
   nsresult rv = aPageURI->GetSpec(pageSpec);
   NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString pageHost;
+  // It's expected that some domains may not have a host.
+  Unused << aPageURI->GetHost(pageHost);
 
   RefPtr<AsyncGetFaviconDataForPage> event =
-    new AsyncGetFaviconDataForPage(pageSpec, aPreferredWidth, aCallback);
+    new AsyncGetFaviconDataForPage(pageSpec, pageHost, aPreferredWidth, aCallback);
   RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
   DB->DispatchToAsyncThread(event);

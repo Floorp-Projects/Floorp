@@ -214,12 +214,15 @@ public:
    *
    * @param aPageSpec
    *        URL of the page whose favicon's URL we're fetching
+   * @param aPageHost
+   *        Host of the page whose favicon's URL we're fetching
    * @param aCallback
    *        function to be called once finished
    * @param aPreferredWidth
    *        The preferred size for the icon
    */
   AsyncGetFaviconURLForPage(const nsACString& aPageSpec,
+                            const nsACString& aPageHost,
                             uint16_t aPreferredWidth,
                             nsIFaviconDataCallback* aCallback);
 
@@ -227,6 +230,7 @@ private:
   uint16_t mPreferredWidth;
   nsMainThreadPtrHandle<nsIFaviconDataCallback> mCallback;
   nsCString mPageSpec;
+  nsCString mPageHost;
 };
 
 
@@ -244,6 +248,8 @@ public:
    *
    * @param aPageSpec
    *        URL of the page whose favicon URL and data we're fetching
+   * @param aPageHost
+   *        Host of the page whose favicon's URL we're fetching
    * @param aPreferredWidth
    *        The preferred size of the icon.  We will try to return an icon close
    *        to this size.
@@ -251,6 +257,7 @@ public:
    *        function to be called once finished
    */
   AsyncGetFaviconDataForPage(const nsACString& aPageSpec,
+                             const nsACString& aPageHost,
                              uint16_t aPreferredWidth,
                              nsIFaviconDataCallback* aCallback);
 
@@ -258,6 +265,7 @@ private:
   uint16_t mPreferredWidth;
   nsMainThreadPtrHandle<nsIFaviconDataCallback> mCallback;
   nsCString mPageSpec;
+  nsCString mPageHost;
 };
 
 class AsyncReplaceFaviconData final : public Runnable
