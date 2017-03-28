@@ -971,6 +971,8 @@ var AudioPlaybackListener = {
 
   init() {
     Services.obs.addObserver(this, "audio-playback", false);
+    Services.obs.addObserver(this, "AudioFocusChanged", false);
+    Services.obs.addObserver(this, "MediaControl", false);
 
     addMessageListener("AudioPlayback", this);
     addEventListener("unload", () => {
@@ -980,6 +982,8 @@ var AudioPlaybackListener = {
 
   uninit() {
     Services.obs.removeObserver(this, "audio-playback");
+    Services.obs.removeObserver(this, "AudioFocusChanged");
+    Services.obs.removeObserver(this, "MediaControl");
 
     removeMessageListener("AudioPlayback", this);
   },
@@ -987,12 +991,34 @@ var AudioPlaybackListener = {
   handleMediaControlMessage(msg) {
     let utils = global.content.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIDOMWindowUtils);
+    let suspendTypes = Ci.nsISuspendedTypes;
     switch (msg) {
       case "mute":
         utils.audioMuted = true;
         break;
       case "unmute":
         utils.audioMuted = false;
+        break;
+      case "lostAudioFocus":
+        utils.mediaSuspend = suspendTypes.SUSPENDED_PAUSE_DISPOSABLE;
+        break;
+      case "lostAudioFocusTransiently":
+        utils.mediaSuspend = suspendTypes.SUSPENDED_PAUSE;
+        break;
+      case "gainAudioFocus":
+        utils.mediaSuspend = suspendTypes.NONE_SUSPENDED;
+        break;
+      case "mediaControlPaused":
+        utils.mediaSuspend = suspendTypes.SUSPENDED_PAUSE_DISPOSABLE;
+        break;
+      case "mediaControlStopped":
+        utils.mediaSuspend = suspendTypes.SUSPENDED_STOP_DISPOSABLE;
+        break;
+      case "blockInactivePageMedia":
+        utils.mediaSuspend = suspendTypes.SUSPENDED_BLOCK;
+        break;
+      case "resumeMedia":
+        utils.mediaSuspend = suspendTypes.NONE_SUSPENDED;
         break;
       default:
         dump("Error : wrong media control msg!\n");
@@ -1013,6 +1039,8 @@ var AudioPlaybackListener = {
         }
         sendAsyncMessage(name);
       }
+    } else if (topic == "AudioFocusChanged" || topic == "MediaControl") {
+      this.handleMediaControlMessage(data);
     }
   },
 
