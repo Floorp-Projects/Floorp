@@ -562,11 +562,11 @@ private:
 
   // The end time of the last decoded audio frame. This signifies the end of
   // decoded audio data. Used to check if we are low in decoded data.
-  int64_t mDecodedAudioEndTime;
+  media::TimeUnit mDecodedAudioEndTime;
 
   // The end time of the last decoded video frame. Used to check if we are low
   // on decoded video data.
-  int64_t mDecodedVideoEndTime;
+  media::TimeUnit mDecodedVideoEndTime;
 
   // Playback rate. 1.0 : normal speed, 0.5 : two times slower.
   double mPlaybackRate;
