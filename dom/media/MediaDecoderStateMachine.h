@@ -451,7 +451,7 @@ protected:
   media::TimeUnit GetMediaTime() const
   {
     MOZ_ASSERT(OnTaskQueue());
-    return media::TimeUnit::FromMicroseconds(mCurrentPosition.Ref());
+    return mCurrentPosition;
   }
 
   // Returns an upper bound on the number of microseconds of audio that is
@@ -746,10 +746,10 @@ private:
   // compute ready state.
   Canonical<NextFrameStatus> mNextFrameStatus;
 
-  // The time of the current frame in microseconds, corresponding to the "current
+  // The time of the current frame, corresponding to the "current
   // playback position" in HTML5. This is referenced from 0, which is the initial
   // playback position.
-  Canonical<int64_t> mCurrentPosition;
+  Canonical<media::TimeUnit> mCurrentPosition;
 
   // Current playback position in the stream in bytes.
   Canonical<int64_t> mPlaybackOffset;
@@ -769,7 +769,7 @@ public:
   {
     return &mNextFrameStatus;
   }
-  AbstractCanonical<int64_t>* CanonicalCurrentPosition()
+  AbstractCanonical<media::TimeUnit>* CanonicalCurrentPosition()
   {
     return &mCurrentPosition;
   }
