@@ -24,8 +24,8 @@ use webdriver::command::{WebDriverCommand, WebDriverMessage, Parameters,
 use webdriver::command::WebDriverCommand::{
     NewSession, DeleteSession, Status, Get, GetCurrentUrl,
     GoBack, GoForward, Refresh, GetTitle, GetPageSource, GetWindowHandle,
-    GetWindowHandles, CloseWindow, SetWindowSize,
-    GetWindowSize, MaximizeWindow, SwitchToWindow, SwitchToFrame,
+    GetWindowHandles, CloseWindow, SetWindowRect,
+    GetWindowRect, MaximizeWindow, SwitchToWindow, SwitchToFrame,
     SwitchToParentFrame, FindElement, FindElements,
     FindElementElement, FindElementElements, GetActiveElement,
     IsDisplayed, IsSelected, GetElementAttribute, GetElementProperty, GetCSSValue,
@@ -34,15 +34,15 @@ use webdriver::command::WebDriverCommand::{
     ExecuteScript, ExecuteAsyncScript, GetCookies, GetNamedCookie, AddCookie,
     DeleteCookies, DeleteCookie, GetTimeouts, SetTimeouts, DismissAlert,
     AcceptAlert, GetAlertText, SendAlertText, TakeScreenshot, TakeElementScreenshot,
-    Extension, SetWindowPosition, GetWindowPosition, PerformActions, ReleaseActions};
+    Extension, PerformActions, ReleaseActions};
 use webdriver::command::{
-    NewSessionParameters, GetParameters, WindowSizeParameters, SwitchToWindowParameters,
+    NewSessionParameters, GetParameters, WindowRectParameters, SwitchToWindowParameters,
     SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
     GetNamedCookieParameters, AddCookieParameters, TimeoutsParameters,
-    ActionsParameters, TakeScreenshotParameters, WindowPositionParameters};
+    ActionsParameters, TakeScreenshotParameters};
 use webdriver::response::{Cookie, CookieResponse, ElementRectResponse, NewSessionResponse,
                           TimeoutsResponse, ValueResponse, WebDriverResponse,
-                          WindowPositionResponse, WindowSizeResponse};
+                          WindowRectResponse};
 use webdriver::common::{
     Date, Nullable, WebElement, FrameId, ELEMENT_KEY};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
@@ -522,8 +522,8 @@ impl MarionetteSession {
 
         Ok(match msg.command {
             //Everything that doesn't have a response value
-            Get(_) | GoBack | GoForward | Refresh | CloseWindow | SetTimeouts(_) | SetWindowPosition(_) |
-            SetWindowSize(_) | MaximizeWindow | SwitchToWindow(_) | SwitchToFrame(_) |
+            Get(_) | GoBack | GoForward | Refresh | CloseWindow | SetTimeouts(_) |
+            SetWindowRect(_) | MaximizeWindow | SwitchToWindow(_) | SwitchToFrame(_) |
             SwitchToParentFrame | AddCookie(_) | DeleteCookies | DeleteCookie(_) |
             DismissAlert | AcceptAlert | SendAlertText(_) | ElementClick(_) |
             ElementTap(_) | ElementClear(_) | ElementSendKeys(_, _) |
@@ -575,7 +575,7 @@ impl MarionetteSession {
             GetWindowHandles => {
                 WebDriverResponse::Generic(ValueResponse::new(resp.result.clone()))
             },
-            GetWindowSize => {
+            GetWindowRect => {
                 let width = try_opt!(
                     try_opt!(resp.result.find("width"),
                              ErrorStatus::UnknownError,
@@ -590,9 +590,6 @@ impl MarionetteSession {
                     ErrorStatus::UnknownError,
                     "Failed to interpret width as integer");
 
-                WebDriverResponse::WindowSize(WindowSizeResponse::new(width, height))
-            },
-            GetWindowPosition => {
                 let x = try_opt!(
                     try_opt!(resp.result.find("x"),
                              ErrorStatus::UnknownError,
@@ -607,7 +604,10 @@ impl MarionetteSession {
                     ErrorStatus::UnknownError,
                     "Failed to interpret y as integer");
 
-                WebDriverResponse::WindowPosition(WindowPositionResponse::new(x, y))
+                WebDriverResponse::WindowRect(WindowRectResponse {x: x,
+                                                                  y: y,
+                                                                  width: width,
+                                                                  height: height})
             },
             GetElementRect(_) => {
                 let x = try_opt!(
@@ -860,10 +860,8 @@ impl MarionetteCommand {
             CloseWindow => (Some("close"), None),
             GetTimeouts => (Some("getTimeouts"), None),
             SetTimeouts(ref x) => (Some("timeouts"), Some(x.to_marionette())),
-            SetWindowSize(ref x) => (Some("setWindowSize"), Some(x.to_marionette())),
-            GetWindowSize => (Some("getWindowSize"), None),
-            SetWindowPosition(ref x) => (Some("setWindowPosition"), Some(x.to_marionette())),
-            GetWindowPosition => (Some("getWindowPosition"), None),
+            SetWindowRect(ref x) => (Some("setWindowRect"), Some(x.to_marionette())),
+            GetWindowRect => (Some("getWindowRect"), None),
             MaximizeWindow => (Some("maximizeWindow"), None),
             SwitchToWindow(ref x) => (Some("switchToWindow"), Some(x.to_marionette())),
             SwitchToFrame(ref x) => (Some("switchToFrame"), Some(x.to_marionette())),
@@ -1293,13 +1291,7 @@ impl ToMarionette for TimeoutsParameters {
     }
 }
 
-impl ToMarionette for WindowSizeParameters {
-    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
-        Ok(try_opt!(self.to_json().as_object(), ErrorStatus::UnknownError, "Expected an object").clone())
-    }
-}
-
-impl ToMarionette for WindowPositionParameters {
+impl ToMarionette for WindowRectParameters {
     fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
         Ok(try_opt!(self.to_json().as_object(), ErrorStatus::UnknownError, "Expected an object").clone())
     }
