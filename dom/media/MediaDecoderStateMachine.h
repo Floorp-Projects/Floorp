@@ -372,7 +372,7 @@ protected:
   // Called on the state machine thread.
   // If aTimeStamp is non-null, set *aTimeStamp to the TimeStamp corresponding
   // to the returned stream time.
-  int64_t GetClock(TimeStamp* aTimeStamp = nullptr) const;
+  media::TimeUnit GetClock(TimeStamp* aTimeStamp = nullptr) const;
 
   void SetStartTime(int64_t aStartTimeUsecs);
 
