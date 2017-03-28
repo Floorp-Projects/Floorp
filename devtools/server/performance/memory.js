@@ -155,8 +155,7 @@ exports.Memory = Class({
         boundaries = { debugger: this.dbg };
       }
     }
-    const path = ThreadSafeChromeUtils.saveHeapSnapshot(boundaries);
-    return HeapSnapshotFileUtils.getSnapshotIdFromPath(path);
+    return ThreadSafeChromeUtils.saveHeapSnapshotGetId(boundaries);
   }, "saveHeapSnapshot"),
 
   /**

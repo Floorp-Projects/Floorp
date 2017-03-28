@@ -103,6 +103,7 @@ UNIFIED_SOURCES += [
     'nsObserverService.cpp',
     'nsProperties.cpp',
     'nsQuickSort.cpp',
+    'nsStaticNameTable.cpp',
     'nsStringEnumerator.cpp',
     'nsSupportsPrimitives.cpp',
     'nsTArray.cpp',
@@ -112,11 +113,10 @@ UNIFIED_SOURCES += [
     'Tokenizer.cpp',
 ]
 
-# These two files cannot be built in unified mode because they use the
+# This file cannot be built in unified mode because it uses the
 # PL_ARENA_CONST_ALIGN_MASK macro with plarena.h.
 SOURCES += [
     'nsPersistentProperties.cpp',
-    'nsStaticNameTable.cpp',
 ]
 
 EXTRA_COMPONENTS += [

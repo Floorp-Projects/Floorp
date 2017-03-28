@@ -38,6 +38,7 @@ namespace mozilla {
   namespace css {
     struct URLValue;
   };
+  enum class UpdateAnimationsTasks : uint8_t;
 }
 using mozilla::FontFamilyList;
 using mozilla::FontFamilyType;
@@ -201,7 +202,10 @@ bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
 void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
                             nsIAtom* aPseudoTagOrNull,
                             ServoComputedValuesBorrowedOrNull aComputedValues,
-                            ServoComputedValuesBorrowedOrNull aParentComputedValues);
+                            ServoComputedValuesBorrowedOrNull aParentComputedValues,
+                            mozilla::UpdateAnimationsTasks aTaskBits);
+bool Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElement,
+                                nsIAtom* aPseudoTagOrNull);
 bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
                                    nsIAtom* aPseudoTagOrNull);
 

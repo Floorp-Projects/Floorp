@@ -5,6 +5,7 @@
 
 #include "VRDisplayPresentation.h"
 
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/Unused.h"
 #include "VRDisplayClient.h"
 #include "VRLayerChild.h"
@@ -70,7 +71,16 @@ VRDisplayPresentation::CreateLayers()
       continue;
     }
 
-    RefPtr<VRLayerChild> vrLayer = static_cast<VRLayerChild*>(manager->CreateVRLayer(mDisplayClient->GetDisplayInfo().GetDisplayID(), leftBounds, rightBounds));
+    nsCOMPtr<nsIEventTarget> target;
+    nsIDocument* doc;
+    doc = canvasElement->OwnerDoc();
+    if (doc) {
+      target = doc->EventTargetFor(TaskCategory::Other);
+    }
+
+    RefPtr<VRLayerChild> vrLayer =
+      static_cast<VRLayerChild*>(manager->CreateVRLayer(mDisplayClient->GetDisplayInfo().GetDisplayID(),
+                                                        leftBounds, rightBounds, target));
     if (!vrLayer) {
       NS_WARNING("CreateVRLayer returned null!");
       continue;

@@ -8,6 +8,7 @@
 #ifndef mozilla_net_HttpChannelChild_h
 #define mozilla_net_HttpChannelChild_h
 
+#include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/PHttpChannelChild.h"
@@ -29,8 +30,10 @@
 #include "nsIChildChannel.h"
 #include "nsIHttpChannelChild.h"
 #include "nsIDivertableChannel.h"
+#include "nsIThreadRetargetableRequest.h"
 #include "mozilla/net/DNS.h"
 
+class nsIEventTarget;
 class nsInputStreamPump;
 
 namespace mozilla {
@@ -50,6 +53,7 @@ class HttpChannelChild final : public PHttpChannelChild
                              , public nsIChildChannel
                              , public nsIHttpChannelChild
                              , public nsIDivertableChannel
+                             , public nsIThreadRetargetableRequest
 {
   virtual ~HttpChannelChild();
 public:
@@ -63,6 +67,7 @@ public:
   NS_DECL_NSICHILDCHANNEL
   NS_DECL_NSIHTTPCHANNELCHILD
   NS_DECL_NSIDIVERTABLECHANNEL
+  NS_DECL_NSITHREADRETARGETABLEREQUEST
 
   HttpChannelChild();
 
@@ -164,6 +169,14 @@ protected:
   NS_IMETHOD GetResponseSynthesized(bool* aSynthesized) override;
 
 private:
+  // this section is for main-thread-only object
+  // all the references need to be proxy released on main thread.
+  nsCOMPtr<nsISupports> mCacheKey;
+
+  // Proxy release all members above on main thread.
+  void ReleaseMainThreadOnlyReferences();
+
+private:
 
   class OverrideRunnable : public Runnable {
   public:
@@ -189,6 +202,12 @@ private:
   // before the constructor message is sent to the parent.
   void SetEventTarget();
 
+  // Get event target for processing network events.
+  already_AddRefed<nsIEventTarget> GetNeckoTarget();
+
+  // Get event target for ODA.
+  already_AddRefed<nsIEventTarget> GetODATarget();
+
   MOZ_MUST_USE nsresult ContinueAsyncOpen();
 
   void DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext);
@@ -212,6 +231,14 @@ private:
 
   void ForceIntercepted(nsIInputStream* aSynthesizedInput);
 
+  // Try send DeletingChannel message to parent side. Dispatch an async task to
+  // main thread if invoking on non-main thread.
+  void TrySendDeletingChannel();
+
+  // Try invoke Cancel if on main thread, or prepend a CancelEvent in mEventQ to
+  // ensure Cacnel is processed before any other channel events.
+  void CancelOnMainThread(nsresult aRv);
+
   RequestHeaderTuples mClientSetRequestHeaders;
   nsCOMPtr<nsIChildChannel> mRedirectChannelChild;
   RefPtr<InterceptStreamListener> mInterceptListener;
@@ -223,7 +250,6 @@ private:
   bool mCacheEntryAvailable;
   uint32_t     mCacheExpirationTime;
   nsCString    mCachedCharset;
-  nsCOMPtr<nsISupports> mCacheKey;
 
   nsCString mProtocolVersion;
 
@@ -283,6 +309,13 @@ private:
   RefPtr<HttpChannelChild> mInterceptingChannel;
   // Used to call OverrideWithSynthesizedResponse in FinishInterceptedRedirect
   RefPtr<OverrideRunnable> mOverrideRunnable;
+
+  // EventTarget for labeling networking events.
+  nsCOMPtr<nsIEventTarget> mNeckoTarget;
+  // Target thread for delivering ODA.
+  nsCOMPtr<nsIEventTarget> mODATarget;
+  // Used to ensure atomicity of mNeckoTarget / mODATarget;
+  Mutex mEventTargetMutex;
 
   void FinishInterceptedRedirect();
   void CleanupRedirectingChannel(nsresult rv);
@@ -355,6 +388,8 @@ private:
   friend class Redirect1Event;
   friend class Redirect3Event;
   friend class DeleteSelfEvent;
+  friend class HttpFlushedForDiversionEvent;
+  friend class CancelEvent;
   friend class HttpAsyncAborter<HttpChannelChild>;
   friend class InterceptStreamListener;
   friend class InterceptedChannelContent;

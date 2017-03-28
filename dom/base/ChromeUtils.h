@@ -26,12 +26,26 @@ class Promise;
 
 class ThreadSafeChromeUtils
 {
+private:
+  // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
+  static void SaveHeapSnapshotShared(GlobalObject& global,
+                                     const HeapSnapshotBoundaries& boundaries,
+                                     nsAString& filePath,
+                                     nsAString& snapshotId,
+                                     ErrorResult& rv);
+
 public:
   // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
   static void SaveHeapSnapshot(GlobalObject& global,
                                const HeapSnapshotBoundaries& boundaries,
                                nsAString& filePath,
                                ErrorResult& rv);
+
+  // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
+  static void SaveHeapSnapshotGetId(GlobalObject& global,
+                                    const HeapSnapshotBoundaries& boundaries,
+                                    nsAString& snapshotId,
+                                    ErrorResult& rv);
 
   // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
   static already_AddRefed<devtools::HeapSnapshot> ReadHeapSnapshot(GlobalObject& global,

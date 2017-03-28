@@ -11,6 +11,7 @@
 
 #include "nsDeque.h"
 #include "MediaEventSource.h"
+#include "TimeUnits.h"
 
 namespace mozilla {
 
@@ -129,6 +130,11 @@ public:
       RefPtr<T> elem = static_cast<T*>(ObjectAt(static_cast<size_t>(i)));
       aResult->AppendElement(elem);
     }
+  }
+
+  void GetElementsAfter(const media::TimeUnit& aTime,
+                        nsTArray<RefPtr<T>>* aResult) {
+    GetElementsAfter(aTime.ToMicroseconds(), aResult);
   }
 
   void GetFirstElements(uint32_t aMaxElements, nsTArray<RefPtr<T>>* aResult) {

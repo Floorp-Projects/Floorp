@@ -18,6 +18,7 @@
 #include "nsIResumableChannel.h"
 #include "nsIChildChannel.h"
 #include "nsIDivertableChannel.h"
+#include "nsIEventTarget.h"
 
 #include "nsIStreamListener.h"
 #include "PrivateBrowsingChannel.h"
@@ -123,9 +124,13 @@ protected:
   friend class FTPStopRequestEvent;
   friend class MaybeDivertOnStopFTPEvent;
   friend class FTPFailedAsyncOpenEvent;
+  friend class FTPFlushedForDiversionEvent;
   friend class FTPDeleteSelfEvent;
 
 private:
+  // Get event target for processing network events.
+  already_AddRefed<nsIEventTarget> GetNeckoTarget();
+
   nsCOMPtr<nsIInputStream> mUploadStream;
 
   bool mIPCOpen;
@@ -153,6 +158,9 @@ private:
   // Set if SendSuspend is called. Determines if SendResume is needed when
   // diverting callbacks to parent.
   bool mSuspendSent;
+
+  // EventTarget for labeling networking events.
+  nsCOMPtr<nsIEventTarget> mNeckoTarget;
 
   RefPtr<Dispatcher> mDispatcher;
 

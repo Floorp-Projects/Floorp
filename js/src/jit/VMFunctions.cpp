@@ -357,13 +357,25 @@ ArrayPushDense(JSContext* cx, HandleObject obj, HandleValue v, uint32_t* length)
     }
 
     JS::AutoValueArray<3> argv(cx);
+    AutoDetectInvalidation adi(cx, argv[0]);
     argv[0].setUndefined();
     argv[1].setObject(*obj);
     argv[2].set(v);
     if (!js::array_push(cx, 1, argv.begin()))
         return false;
 
-    *length = argv[0].toInt32();
+    if (MOZ_LIKELY(argv[0].isInt32())) {
+        *length = argv[0].isInt32();
+        return true;
+    }
+
+    // array_push changed the length to be larger than INT32_MAX. In this case
+    // OBJECT_FLAG_LENGTH_OVERFLOW was set, TI invalidated the script, and the
+    // AutoDetectInvalidation instance on the stack will replace *length with
+    // the actual return value during bailout.
+    MOZ_ASSERT(adi.shouldSetReturnOverride());
+    MOZ_ASSERT(argv[0].toDouble() == double(INT32_MAX) + 1);
+    *length = 0;
     return true;
 }
 

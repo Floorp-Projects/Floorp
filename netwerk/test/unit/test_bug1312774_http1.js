@@ -69,6 +69,7 @@ function urgentStartHttpRequest(id) {
 }
 
 function setup_httpRequests() {
+  log("setup_httpRequests");
   for (var i = 0; i < maxConnections ; i++) {
     commonHttpRequest(i);
     do_test_pending();
@@ -105,10 +106,12 @@ HttpResponseListener.prototype =
 var responseQueue = new Array();
 function setup_http_server()
 {
+  log("setup_http_server");
   var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
   maxConnections = prefs.getIntPref("network.http.max-persistent-connections-per-server");
   urgentRequests = 2;
   totalRequests = maxConnections + urgentRequests;
+  var allCommonHttpRequestReceived = false;
   // Start server; will be stopped at test cleanup time.
   server.registerPathHandler('/', function(metadata, response)
   {
@@ -116,6 +119,11 @@ function setup_http_server()
     log("Server recived the response id=" + id);
     response.processAsync();
     responseQueue.push(response);
+
+    if (responseQueue.length == maxConnections && !allCommonHttpRequestReceived) {
+      allCommonHttpRequestReceived = true;
+      setup_urgentStartRequests();
+    }
     // Wait for all expected requests to come but don't process then.
     // Collect them in a queue for later processing.  We don't want to
     // respond to the client until all the expected requests are made
@@ -140,6 +148,5 @@ function processResponse() {
 function run_test() {
   setup_http_server();
   setup_httpRequests();
-  setup_urgentStartRequests();
 }
 

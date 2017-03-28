@@ -50,7 +50,6 @@
         if (this.mInputElement.value) {
           this.setFieldsFromInputValue();
         }
-        this.updateResetButtonVisibility();
       ]]>
       </constructor>
 
@@ -117,27 +116,23 @@
 
           if (this.mMonthField && !this.mMonthField.disabled &&
               !this.mMonthField.readOnly) {
-            this.mMonthField.value = "";
-            this.mMonthField.setAttribute("typeBuffer", "");
+            this.clearFieldValue(this.mMonthField);
           }
 
           if (this.mDayField && !this.mDayField.disabled &&
               !this.mDayField.readOnly) {
-            this.mDayField.value = "";
-            this.mDayField.setAttribute("typeBuffer", "");
+            this.clearFieldValue(this.mDayField);
           }
 
           if (this.mYearField && !this.mYearField.disabled &&
               !this.mYearField.readOnly) {
-            this.mYearField.value = "";
-            this.mYearField.setAttribute("typeBuffer", "");
+            this.clearFieldValue(this.mYearField);
+            this.mYearField.size = this.mYearLength;
           }
 
           if (!aFromInputElement) {
             this.mInputElement.setUserInput("");
           }
-
-          this.updateResetButtonVisibility();
         ]]>
         </body>
       </method>
@@ -179,14 +174,15 @@
         <parameter name="aField"/>
         <body>
           <![CDATA[
-            if (this.isEmpty(aField.value)) {
+            let value = this.getFieldValue(aField);
+            if (this.isEmpty(value)) {
               return true;
             }
 
             let min = Number(aField.getAttribute("min"));
             let max = Number(aField.getAttribute("max"));
 
-            if (Number(aField.value) < min || Number(aField.value) > max) {
+            if (value < min || value > max) {
               return true;
             }
 
@@ -213,15 +209,18 @@
             return;
           }
 
-          let year = this.mYearField.value;
-          let month = this.mMonthField.value;
-          let day = this.mDayField.value;
-
+          let { year, month, day } = this.getCurrentValue();
           if (day > this.getDaysInMonth(month, year)) {
             // Don't set invalid date, otherwise input element's value will be
             // set to empty.
             return;
           }
+
+          // Convert to a valid date string according to:
+          // https://html.spec.whatwg.org/multipage/infrastructure.html#valid-date-string
+          year = year.toString().padStart(this.mYearLength, "0");
+          month = (month < 10) ? ("0" + month) : month;
+          day = (day < 10) ? ("0" + day) : day;
 
           let date = [year, month, day].join("-");
 
@@ -270,7 +269,6 @@
 
             buffer = buffer.concat(key);
             this.setFieldValue(targetField, buffer);
-            targetField.select();
 
             let n = Number(buffer);
             let max = targetField.getAttribute("max");
@@ -289,10 +287,10 @@
         <parameter name="aTimes"/>
         <body>
         <![CDATA[
-          let value;
+          let value = this.getFieldValue(aTargetField);
 
           // Use current date if field is empty.
-          if (this.isEmpty(aTargetField.value)) {
+          if (this.isEmpty(value)) {
             let now = new Date();
 
             if (aTargetField == this.mYearField) {
@@ -305,8 +303,6 @@
               this.log("Field not supported in incrementFieldValue.");
               return;
             }
-          } else {
-            value = Number(aTargetField.value);
           }
 
           let min = Number(aTargetField.getAttribute("min"));
@@ -318,8 +314,8 @@
           } else if (value < min) {
             value += (max - min + 1);
           }
+
           this.setFieldValue(aTargetField, value);
-          aTargetField.select();
         ]]>
         </body>
       </method>
@@ -355,12 +351,10 @@
             case "Home":
               let min = targetField.getAttribute("min");
               this.setFieldValue(targetField, min);
-              targetField.select();
               break;
             case "End":
               let max = targetField.getAttribute("max");
               this.setFieldValue(targetField, max);
-              targetField.select();
               break;
           }
           this.setInputValueFromFields();
@@ -371,20 +365,9 @@
       <method name="getCurrentValue">
         <body>
         <![CDATA[
-          let year;
-          if (!this.isEmpty(this.mYearField.value)) {
-            year = Number(this.mYearField.value);
-          }
-
-          let month;
-          if (!this.isEmpty(this.mMonthField.value)) {
-            month = Number(this.mMonthField.value);
-          }
-
-          let day;
-          if (!this.isEmpty(this.mDayField.value)) {
-            day = Number(this.mDayField.value);
-          }
+          let year = this.getFieldValue(this.mYearField);
+          let month = this.getFieldValue(this.mMonthField);
+          let day = this.getFieldValue(this.mDayField);
 
           let date = { year, month, day };
 
@@ -399,6 +382,10 @@
        <parameter name="aValue"/>
         <body>
         <![CDATA[
+          if (!aField || !aField.classList.contains("numeric")) {
+            return;
+          }
+
           let value = Number(aValue);
           if (isNaN(value)) {
             this.log("NaN on setFieldValue!");
@@ -409,36 +396,32 @@
             let min = Number(aField.getAttribute("min"));
             let max = Number(aField.getAttribute("max"));
 
-            if (aValue < min) {
+            if (value < min) {
               value = min;
-            } else if (aValue > max) {
+            } else if (value > max) {
               value = max;
             }
           }
 
-          if (aField == this.mMonthField ||
-              aField == this.mDayField) {
-            // prepend zero
-            if (value < 10) {
-              value = "0" + value;
-            }
-          } else {
-            // prepend zeroes
-            if (value < 10) {
-              value = "000" + value;
-            } else if (value < 100) {
-              value = "00" + value;
-            } else if (value < 1000) {
-              value = "0" + value;
-            }
+          aField.setAttribute("rawValue", value);
 
-            if (value.toString().length > this.mYearLength &&
-                value.toString().length <= this.mMaxYear.toString().length) {
-              this.mYearField.size = value.toString().length;
-            }
+          // Display formatted value based on locale.
+          let minDigits = (aField == this.mYearField ? this.mYearLength
+                                                     : aField.size);
+          let formatted = value.toLocaleString(this.mLocales, {
+            minimumIntegerDigits: minDigits,
+            useGrouping: false
+          });
+
+          if (aField == this.mYearField) {
+            this.mYearField.size = formatted.length;
           }
 
-          aField.value = value;
+          aField.value = formatted;
+          if (document.activeElement == this.mInputElement &&
+              this.mLastFocusedField && this.mLastFocusedField == aField) {
+            aField.select();
+          }
           this.updateResetButtonVisibility();
         ]]>
         </body>
@@ -448,9 +431,10 @@
         <parameter name="aForPicker"/>
         <body>
         <![CDATA[
-          return !this.isEmpty(this.mMonthField.value) ||
-                 !this.isEmpty(this.mDayField.value) ||
-                 !this.isEmpty(this.mYearField.value);
+          let { year, month, day } = this.getCurrentValue();
+
+          return !this.isEmpty(year) || !this.isEmpty(month) ||
+                 !this.isEmpty(day);
         ]]>
         </body>
       </method>
@@ -510,7 +494,6 @@
         if (this.mInputElement.value) {
           this.setFieldsFromInputValue();
         }
-        this.updateResetButtonVisibility();
         ]]>
       </constructor>
 
@@ -706,8 +689,8 @@
           this.setFieldValue(this.mHourField, hour);
           this.setFieldValue(this.mMinuteField, minute);
           if (this.mHour12) {
-            this.mDayPeriodField.value = (hour >= this.mMaxHour) ?
-              this.mPMIndicator : this.mAMIndicator;
+            this.setDayPeriodValue(hour >= this.mMaxHour ? this.mPMIndicator
+                                                         : this.mAMIndicator);
           }
 
           if (!this.isEmpty(second)) {
@@ -742,9 +725,12 @@
             return;
           }
 
-          let hour = Number(this.mHourField.value);
+          let { hour, minute, second, millisecond } = this.getCurrentValue();
+
+          // Convert to a valid time string according to:
+          // https://html.spec.whatwg.org/multipage/infrastructure.html#valid-time-string
           if (this.mHour12) {
-            let dayPeriod = this.mDayPeriodField.value;
+            let dayPeriod = this.getDayPeriodValue();
             if (dayPeriod == this.mPMIndicator && hour < this.mMaxHour) {
               hour += this.mMaxHour;
             } else if (dayPeriod == this.mAMIndicator &&
@@ -754,14 +740,19 @@
           }
 
           hour = (hour < 10) ? ("0" + hour) : hour;
+          minute = (minute < 10) ? ("0" + minute) : minute;
 
-          let time = hour + ":" + this.mMinuteField.value;
+          let time = hour + ":" + minute;
           if (this.mSecondField) {
-            time += ":" + this.mSecondField.value;
+            second = (second < 10) ? ("0" + second) : second;
+            time += ":" + second;
           }
 
           if (this.mMillisecField) {
-            time += "." + this.mMillisecField.value;
+            // Convert milliseconds to fraction of second.
+            millisecond = millisecond.toString().padStart(
+              this.mMillisecMaxLength, "0");
+            time += "." + millisecond;
           }
 
           this.log("setInputValueFromFields: " + time);
@@ -781,9 +772,8 @@
           if (!this.isEmpty(hour)) {
             this.setFieldValue(this.mHourField, hour);
             if (this.mHour12) {
-              this.mDayPeriodField.value =
-                (hour >= this.mMaxHour) ? this.mPMIndicator
-                                        : this.mAMIndicator;
+              this.setDayPeriodValue(hour >= this.mMaxHour ? this.mPMIndicator
+                                                           : this.mAMIndicator);
             }
           }
 
@@ -806,38 +796,32 @@
 
           if (this.mHourField && !this.mHourField.disabled &&
               !this.mHourField.readOnly) {
-            this.mHourField.value = "";
-            this.mHourField.setAttribute("typeBuffer", "");
+            this.clearFieldValue(this.mHourField);
           }
 
           if (this.mMinuteField && !this.mMinuteField.disabled &&
               !this.mMinuteField.readOnly) {
-            this.mMinuteField.value = "";
-            this.mMinuteField.setAttribute("typeBuffer", "");
+            this.clearFieldValue(this.mMinuteField);
           }
 
           if (this.mSecondField && !this.mSecondField.disabled &&
               !this.mSecondField.readOnly) {
-            this.mSecondField.value = "";
-            this.mSecondField.setAttribute("typeBuffer", "");
+            this.clearFieldValue(this.mSecondField);
           }
 
           if (this.mMillisecField && !this.mMillisecField.disabled &&
               !this.mMillisecField.readOnly) {
-            this.mMillisecField.value = "";
-            this.mMillisecField.setAttribute("typeBuffer", "");
+            this.clearFieldValue(this.mMillisecField);
           }
 
           if (this.mDayPeriodField && !this.mDayPeriodField.disabled &&
               !this.mDayPeriodField.readOnly) {
-            this.mDayPeriodField.value = "";
+            this.clearFieldValue(this.mDayPeriodField);
           }
 
           if (!aFromInputElement) {
             this.mInputElement.setUserInput("");
           }
-
-          this.updateResetButtonVisibility();
         ]]>
         </body>
       </method>
@@ -847,10 +831,10 @@
         <parameter name="aTimes"/>
         <body>
         <![CDATA[
-          let value;
+          let value = this.getFieldValue(aTargetField);
 
           // Use current time if field is empty.
-          if (this.isEmpty(aTargetField.value)) {
+          if (this.isEmpty(value)) {
             let now = new Date();
 
             if (aTargetField == this.mHourField) {
@@ -868,8 +852,6 @@
               this.log("Field not supported in incrementFieldValue.");
               return;
             }
-          } else {
-            value = Number(aTargetField.value);
           }
 
           let min = aTargetField.getAttribute("min");
@@ -881,8 +863,8 @@
           } else if (value < min) {
             value += (max - min + 1);
           }
+
           this.setFieldValue(aTargetField, value);
-          aTargetField.select();
         ]]>
         </body>
       </method>
@@ -905,11 +887,9 @@
               return;
             }
 
-            this.mDayPeriodField.value =
-              this.mDayPeriodField.value == this.mAMIndicator ?
-                this.mPMIndicator : this.mAMIndicator;
-            this.mDayPeriodField.select();
-            this.updateResetButtonVisibility();
+            this.setDayPeriodValue(
+              this.getDayPeriodValue() == this.mAMIndicator ? this.mPMIndicator
+                                                            : this.mAMIndicator);
             this.setInputValueFromFields();
             return;
           }
@@ -934,12 +914,10 @@
             case "Home":
               let min = targetField.getAttribute("min");
               this.setFieldValue(targetField, min);
-              targetField.select();
               break;
             case "End":
               let max = targetField.getAttribute("max");
               this.setFieldValue(targetField, max);
-              targetField.select();
               break;
           }
           this.setInputValueFromFields();
@@ -961,13 +939,10 @@
           if (this.mDayPeriodField &&
               targetField == this.mDayPeriodField) {
             if (key == "a" || key == "A") {
-              this.mDayPeriodField.value = this.mAMIndicator;
-              this.mDayPeriodField.select();
+              this.setDayPeriodValue(this.mAMIndicator);
             } else if (key == "p" || key == "P") {
-              this.mDayPeriodField.value = this.mPMIndicator;
-              this.mDayPeriodField.select();
+              this.setDayPeriodValue(this.mPMIndicator);
             }
-            this.updateResetButtonVisibility();
             return;
           }
 
@@ -976,7 +951,6 @@
 
             buffer = buffer.concat(key);
             this.setFieldValue(targetField, buffer);
-            targetField.select();
 
             let n = Number(buffer);
             let max = targetField.getAttribute("max");
@@ -995,40 +969,75 @@
        <parameter name="aValue"/>
         <body>
         <![CDATA[
+          if (!aField || !aField.classList.contains("numeric")) {
+            return;
+          }
+
           let value = Number(aValue);
           if (isNaN(value)) {
             this.log("NaN on setFieldValue!");
             return;
           }
 
-          if (aField.maxLength == this.mMaxLength) { // For hour, minute and second
-            if (aField == this.mHourField) {
-              if (this.mHour12) {
-                // Try to change to 12hr format if user input is 0 or greater
-                // than 12.
-                if (value == 0 && aValue.length == aField.maxLength) {
-                  value = this.mMaxHour;
-                } else {
-                  value = (value > this.mMaxHour) ? value % this.mMaxHour : value;
-                }
-              } else if (value > this.mMaxHour) {
+          if (aField == this.mHourField) {
+            if (this.mHour12) {
+              // Try to change to 12hr format if user input is 0 or greater
+              // than 12.
+              if (value == 0 && aValue.length == aField.maxLength) {
                 value = this.mMaxHour;
+              } else {
+                value = (value > this.mMaxHour) ? value % this.mMaxHour : value;
               }
-            }
-            // prepend zero
-            if (value < 10) {
-              value = "0" + value;
-            }
-          } else if (aField.maxLength == this.mMillisecMaxLength) {
-            // prepend zeroes
-            if (value < 10) {
-              value = "00" + value;
-            } else if (value < 100) {
-              value = "0" + value;
+            } else if (value > this.mMaxHour) {
+              value = this.mMaxHour;
             }
           }
 
-          aField.value = value;
+          aField.setAttribute("rawValue", value);
+
+          let minDigits = aField.size;
+          let formatted = value.toLocaleString(this.mLocales, {
+            minimumIntegerDigits: minDigits,
+            useGrouping: false
+          });
+
+          aField.value = formatted;
+          if (document.activeElement == this.mInputElement &&
+              this.mLastFocusedField && this.mLastFocusedField == aField) {
+            aField.select();
+          }
+          this.updateResetButtonVisibility();
+        ]]>
+        </body>
+      </method>
+
+      <method name="getDayPeriodValue">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          if (!this.mDayPeriodField) {
+            return "";
+          }
+
+          return this.mDayPeriodField.value;
+        ]]>
+        </body>
+      </method>
+
+      <method name="setDayPeriodValue">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          if (!this.mDayPeriodField) {
+            return;
+          }
+
+          this.mDayPeriodField.value = aValue;
+          if (document.activeElement == this.mInputElement &&
+              this.mLastFocusedField &&
+              this.mLastFocusedField == this.mDayPeriodField) {
+            this.mDayPeriodField.select();
+          }
           this.updateResetButtonVisibility();
         ]]>
         </body>
@@ -1038,9 +1047,10 @@
         <parameter name="aForPicker"/>
         <body>
         <![CDATA[
-          let available = !this.isEmpty(this.mHourField.value) ||
-                          !this.isEmpty(this.mMinuteField.value);
+          let { hour, minute, second, millisecond } = this.getCurrentValue();
+          let dayPeriod = this.getDayPeriodValue();
 
+          let available = !this.isEmpty(hour) || !this.isEmpty(minute);
           if (available) {
             return true;
           }
@@ -1050,9 +1060,9 @@
             return false;
           }
 
-          return (this.mDayPeriodField && !this.isEmpty(this.mDayPeriodField.value)) ||
-                 (this.mSecondField && !this.isEmpty(this.mSecondField.value)) ||
-                 (this.mMillisecField && !this.isEmpty(this.mMillisecField.value));
+          return (this.mDayPeriodField && !this.isEmpty(dayPeriod)) ||
+                 (this.mSecondField && !this.isEmpty(second)) ||
+                 (this.mMillisecField && !this.isEmpty(millisecond));
         ]]>
         </body>
       </method>
@@ -1060,11 +1070,10 @@
       <method name="getCurrentValue">
         <body>
         <![CDATA[
-          let hour;
-          if (!this.isEmpty(this.mHourField.value)) {
-            hour = Number(this.mHourField.value);
+          let hour = this.getFieldValue(this.mHourField);
+          if (!this.isEmpty(hour)) {
             if (this.mHour12) {
-              let dayPeriod = this.mDayPeriodField.value;
+              let dayPeriod = this.getDayPeriodValue();
               if (dayPeriod == this.mPMIndicator && hour < this.mMaxHour) {
                 hour += this.mMaxHour;
               } else if (dayPeriod == this.mAMIndicator &&
@@ -1072,15 +1081,13 @@
                 hour = 0;
               }
             }
-           }
-
-          let minute;
-          if (!this.isEmpty(this.mMinuteField.value)) {
-            minute = Number(this.mMinuteField.value);
           }
 
-          // Picker only needs hour/minute.
-          let time = { hour, minute };
+          let minute = this.getFieldValue(this.mMinuteField);
+          let second = this.getFieldValue(this.mSecondField);
+          let millisecond = this.getFieldValue(this.mMillisecField);
+
+          let time = { hour, minute, second, millisecond };
 
           this.log("getCurrentValue: " + JSON.stringify(time));
           return time;
@@ -1125,6 +1132,7 @@
 
         this.mResetButton =
           document.getAnonymousElementByAttribute(this, "anonid", "reset-button");
+        this.mResetButton.style.visibility = "hidden";
 
         this.EVENTS.forEach((eventName) => {
           this.addEventListener(eventName, this, { mozSystemGroup: true });
@@ -1190,13 +1198,21 @@
 
           field.setAttribute("size", aLength);
           field.setAttribute("maxlength", aLength);
-          field.setAttribute("typeBuffer", "");
 
           if (aIsNumeric) {
             field.classList.add("numeric");
+            // Maximum value allowed.
             field.setAttribute("min", aMin);
+            // Minumim value allowed.
             field.setAttribute("max", aMax);
+            // Interval when pressing pageUp/pageDown key.
             field.setAttribute("pginterval", aPageUpDownInterval);
+            // Used to store what the user has already typed in the field,
+            // cleared when value is cleared and when field is blurred.
+            field.setAttribute("typeBuffer", "");
+            // Used to store the non-formatted number, clered when value is
+            // cleared.
+            field.setAttribute("rawValue", "");
           }
 
           return field;
@@ -1367,6 +1383,41 @@
         </body>
       </method>
 
+      <method name="getFieldValue">
+        <parameter name="aField"/>
+        <body>
+        <![CDATA[
+          if (!aField || !aField.classList.contains("numeric")) {
+            return undefined;
+          }
+
+          let value = aField.getAttribute("rawValue");
+          // Avoid returning 0 when field is empty.
+          return (this.isEmpty(value) ? undefined : Number(value));
+        ]]>
+        </body>
+      </method>
+
+      <method name="clearFieldValue">
+        <parameter name="aField"/>
+        <body>
+        <![CDATA[
+          aField.value = "";
+          if (aField.classList.contains("numeric")) {
+            aField.setAttribute("typeBuffer", "");
+            aField.setAttribute("rawValue", "");
+          }
+          this.updateResetButtonVisibility();
+        ]]>
+        </body>
+      </method>
+
+      <method name="setFieldValue">
+        <body>
+          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        </body>
+      </method>
+
       <method name="clearInputFields">
         <body>
           throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
@@ -1521,9 +1572,7 @@
             }
             case "Backspace": {
               let targetField = aEvent.originalTarget;
-              targetField.value = "";
-              targetField.setAttribute("typeBuffer", "");
-              this.updateResetButtonVisibility();
+              this.clearFieldValue(targetField);
               this.setInputValueFromFields();
               aEvent.preventDefault();
               break;
