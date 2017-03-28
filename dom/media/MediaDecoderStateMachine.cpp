@@ -94,12 +94,12 @@ namespace detail {
 // encounter video frames which take a long time to decode.
 static constexpr auto LOW_AUDIO_THRESHOLD = TimeUnit::FromMicroseconds(300000);
 
-// If more than this many usecs of decoded audio is queued, we'll hold off
+static const int64_t AMPLE_AUDIO_USECS = 2000000;
+
+// If more than this much decoded audio is queued, we'll hold off
 // decoding more audio. If we increase the low audio threshold (see
 // LOW_AUDIO_THRESHOLD above) we'll also increase this value to ensure it's not
 // less than the low audio threshold.
-static const int64_t AMPLE_AUDIO_USECS = 2000000;
-
 static constexpr auto AMPLE_AUDIO_THRESHOLD = TimeUnit::FromMicroseconds(AMPLE_AUDIO_USECS);
 
 } // namespace detail
@@ -821,17 +821,17 @@ private:
     {
       mMaster->mLowAudioThreshold = std::min(
         TimeUnit::FromMicroseconds(adjustedTime),
-        mMaster->mAmpleAudioThresholdUsecs);
+        mMaster->mAmpleAudioThreshold);
 
-      mMaster->mAmpleAudioThresholdUsecs = std::max(
+      mMaster->mAmpleAudioThreshold = std::max(
         mMaster->mLowAudioThreshold * THRESHOLD_FACTOR,
-        mMaster->mAmpleAudioThresholdUsecs);
+        mMaster->mAmpleAudioThreshold);
 
       SLOG("Slow video decode, set "
-           "mLowAudioThresholdUsecs=%" PRId64
-           " mAmpleAudioThresholdUsecs=%" PRId64,
+           "mLowAudioThreshold=%" PRId64
+           " mAmpleAudioThreshold=%" PRId64,
            mMaster->mLowAudioThreshold.ToMicroseconds(),
-           mMaster->mAmpleAudioThresholdUsecs.ToMicroseconds());
+           mMaster->mAmpleAudioThreshold.ToMicroseconds());
     }
   }
 
@@ -2598,7 +2598,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDecodedVideoEndTime(0),
   mPlaybackRate(1.0),
   mLowAudioThreshold(detail::LOW_AUDIO_THRESHOLD),
-  mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_THRESHOLD),
+  mAmpleAudioThreshold(detail::AMPLE_AUDIO_THRESHOLD),
   mAudioCaptured(false),
   mMinimizePreroll(aDecoder->GetMinimizePreroll()),
   mSentLoadedMetadataEvent(false),
@@ -2756,7 +2756,7 @@ bool
 MediaDecoderStateMachine::HaveEnoughDecodedAudio()
 {
   MOZ_ASSERT(OnTaskQueue());
-  auto ampleAudioUSecs = mAmpleAudioThresholdUsecs.ToMicroseconds() * mPlaybackRate;
+  auto ampleAudioUSecs = mAmpleAudioThreshold.ToMicroseconds() * mPlaybackRate;
   return AudioQueue().GetSize() > 0
          && GetDecodedAudioDuration() >= ampleAudioUSecs;
 }
@@ -3790,7 +3790,7 @@ MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
 
   // Don't buffer as much when audio is captured because we don't need to worry
   // about high latency audio devices.
-  mAmpleAudioThresholdUsecs = mAudioCaptured
+  mAmpleAudioThreshold = mAudioCaptured
     ? detail::AMPLE_AUDIO_THRESHOLD / 2 : detail::AMPLE_AUDIO_THRESHOLD;
 
   mStateObj->HandleAudioCaptured();
