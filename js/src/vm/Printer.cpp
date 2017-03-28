@@ -441,7 +441,7 @@ bool
 Fprinter::put(const char* s, size_t len)
 {
     MOZ_ASSERT(file_);
-    int i = fwrite(s, len, 1, file_);
+    int i = fwrite(s, /*size=*/ 1, /*nitems=*/ len, file_);
     if (size_t(i) != len) {
         reportOutOfMemory();
         return false;

@@ -13,8 +13,6 @@
 
 namespace js {
 
-class RegExpGuard;
-
 /*
  * Dispatch point for handlers that executes the appropriate C++ or scripted traps.
  *
@@ -62,7 +60,8 @@ class Proxy
     static bool isArray(JSContext* cx, HandleObject proxy, JS::IsArrayAnswer* answer);
     static const char* className(JSContext* cx, HandleObject proxy);
     static JSString* fun_toString(JSContext* cx, HandleObject proxy, unsigned indent);
-    static bool regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g);
+    static bool regexp_toShared(JSContext* cx, HandleObject proxy,
+                                MutableHandle<RegExpShared*> shared);
     static bool boxedValue_unbox(JSContext* cx, HandleObject proxy, MutableHandleValue vp);
 
     static bool watch(JSContext* cx, HandleObject proxy, HandleId id, HandleObject callable);

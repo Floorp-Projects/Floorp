@@ -1524,10 +1524,11 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   nsCOMPtr<Element> blockParent = htmlEditor->GetBlock(node);
   NS_ENSURE_TRUE(blockParent, NS_ERROR_FAILURE);
 
-  // If the active editing host is an inline element, or if the active editing
-  // host is the block parent itself, just append a br.
+  // When there is an active editing host (the <body> if it's in designMode)
+  // and a block which becomes the parent of line breaker is in it, do the
+  // standard thing.
   nsCOMPtr<Element> host = htmlEditor->GetActiveEditingHost();
-  if (!EditorUtils::IsDescendantOf(blockParent, host)) {
+  if (host && !EditorUtils::IsDescendantOf(blockParent, host)) {
     nsresult rv = StandardBreakImpl(node, offset, aSelection);
     NS_ENSURE_SUCCESS(rv, rv);
     *aHandled = true;
@@ -6491,10 +6492,14 @@ HTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
   // split the paragraph
   NS_ENSURE_STATE(mHTMLEditor);
   NS_ENSURE_STATE(selNode->IsContent());
-  mHTMLEditor->SplitNodeDeep(*para, *selNode->AsContent(), *aOffset,
-                             HTMLEditor::EmptyContainers::yes,
-                             getter_AddRefs(leftPara),
-                             getter_AddRefs(rightPara));
+  int32_t offset =
+    mHTMLEditor->SplitNodeDeep(*para, *selNode->AsContent(), *aOffset,
+                               HTMLEditor::EmptyContainers::yes,
+                               getter_AddRefs(leftPara),
+                               getter_AddRefs(rightPara));
+  if (NS_WARN_IF(offset == -1)) {
+    return NS_ERROR_FAILURE;
+  }
   // get rid of the break, if it is visible (otherwise it may be needed to prevent an empty p)
   NS_ENSURE_STATE(mHTMLEditor);
   if (mHTMLEditor->IsVisBreak(aBRNode)) {

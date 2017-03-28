@@ -86,7 +86,7 @@ protected:
   uint32_t mSize;
 
 public:
-  nsGenConList() : mSize(0) {}
+  nsGenConList() : mSize(0), mLastInserted(nullptr) {}
   ~nsGenConList() { Clear(); }
   void Clear();
   static nsGenConNode* Next(nsGenConNode* aNode) {
@@ -127,6 +127,10 @@ private:
 
   // Map from frame to the first nsGenConNode of it in the list.
   nsDataHashtable<nsPtrHashKey<nsIFrame>, nsGenConNode*> mNodes;
+
+  // A weak pointer to the node most recently inserted, used to avoid repeated
+  // list traversals in Insert().
+  nsGenConNode* mLastInserted;
 };
 
 #endif /* nsGenConList_h___ */

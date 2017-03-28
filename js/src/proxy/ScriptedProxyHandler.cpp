@@ -1268,7 +1268,8 @@ ScriptedProxyHandler::fun_toString(JSContext* cx, HandleObject proxy, unsigned i
 }
 
 bool
-ScriptedProxyHandler::regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const
+ScriptedProxyHandler::regexp_toShared(JSContext* cx, HandleObject proxy,
+                                      MutableHandleRegExpShared shared) const
 {
     MOZ_CRASH("Should not end up in ScriptedProxyHandler::regexp_toShared");
     return false;

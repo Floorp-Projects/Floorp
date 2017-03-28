@@ -225,6 +225,10 @@ static const DllBlockInfo sWindowsDllBlocklist[] = {
   // K7TotalSecurity, bug 1339083.
   { "k7pswsen.dll", MAKE_VERSION(15, 2, 2, 95) },
 
+  // smci*.dll - goobzo crashware (bug 1339908)
+  { "smci32.dll", ALL_VERSIONS },
+  { "smci64.dll", ALL_VERSIONS },
+
   { nullptr, 0 }
 };
 

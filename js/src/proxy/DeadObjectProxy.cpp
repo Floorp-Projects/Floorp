@@ -142,7 +142,8 @@ DeadObjectProxy::fun_toString(JSContext* cx, HandleObject proxy, unsigned indent
 }
 
 bool
-DeadObjectProxy::regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const
+DeadObjectProxy::regexp_toShared(JSContext* cx, HandleObject proxy,
+                                 MutableHandle<RegExpShared*> shared) const
 {
     ReportDead(cx);
     return false;

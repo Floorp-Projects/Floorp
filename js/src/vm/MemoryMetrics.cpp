@@ -598,6 +598,13 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
         break;
       }
 
+      case JS::TraceKind::RegExpShared: {
+        auto regexp = static_cast<RegExpShared*>(thing);
+        zStats->regExpSharedsGCHeap += thingSize;
+        zStats->regExpSharedsMallocHeap += regexp->sizeOfExcludingThis(rtStats->mallocSizeOf_);
+        break;
+      }
+
       default:
         MOZ_CRASH("invalid traceKind in StatsCellCallback");
     }

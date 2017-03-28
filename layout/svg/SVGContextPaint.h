@@ -92,15 +92,15 @@ public:
   void InitStrokeGeometry(gfxContext *aContext,
                           float devUnitsPerSVGUnit);
 
-  FallibleTArray<gfxFloat>& GetStrokeDashArray() {
+  const FallibleTArray<gfxFloat>& GetStrokeDashArray() const {
     return mDashes;
   }
 
-  gfxFloat GetStrokeDashOffset() {
+  gfxFloat GetStrokeDashOffset() const {
     return mDashOffset;
   }
 
-  gfxFloat GetStrokeWidth() {
+  gfxFloat GetStrokeWidth() const {
     return mStrokeWidth;
   }
 
@@ -244,6 +244,15 @@ class SVGEmbeddingContextPaint : public SVGContextPaint
 
 public:
   SVGEmbeddingContextPaint() {}
+
+  bool operator==(const SVGEmbeddingContextPaint& aOther) const {
+    MOZ_ASSERT(GetStrokeWidth() == aOther.GetStrokeWidth() &&
+               GetStrokeDashOffset() == aOther.GetStrokeDashOffset() &&
+               GetStrokeDashArray() == aOther.GetStrokeDashArray(),
+               "We don't currently include these in the context information "
+               "from an embedding element");
+    return mFill == aOther.mFill && mStroke == aOther.mStroke;
+  }
 
   void SetFill(nscolor aFill) {
     mFill.emplace(gfx::ToDeviceColor(aFill));

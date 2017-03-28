@@ -483,7 +483,10 @@ void TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer);
 // Returns true if the JS::TraceKind is one the cycle collector cares about.
 inline bool AddToCCKind(JS::TraceKind aKind)
 {
-  return aKind == JS::TraceKind::Object || aKind == JS::TraceKind::Script || aKind == JS::TraceKind::Scope;
+  return aKind == JS::TraceKind::Object ||
+         aKind == JS::TraceKind::Script ||
+         aKind == JS::TraceKind::Scope ||
+         aKind == JS::TraceKind::RegExpShared;
 }
 
 bool
