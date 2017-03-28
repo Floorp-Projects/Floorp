@@ -255,7 +255,7 @@ ContentClientRemoteBuffer::EndPaint(nsTArray<ReadbackProcessor::Update>* aReadba
   mOldTextures.Clear();
 
   if (mTextureClient && mTextureClient->IsLocked()) {
-    if (aReadbackUpdates->Length() > 0) {
+    if (aReadbackUpdates && aReadbackUpdates->Length() > 0) {
       RefPtr<TextureReadbackSink> readbackSink = new RemoteBufferReadbackProcessor(aReadbackUpdates, mBufferRect, mBufferRotation);
 
       mTextureClient->SetReadbackSink(readbackSink);
