@@ -138,16 +138,9 @@ this.GeckoDriver = function (appName, server) {
   this.mm = globalMessageManager;
   this.listener = proxy.toListener(() => this.mm, this.sendAsync.bind(this));
 
-  // always keep weak reference to current dialogue
+  // points to an alert instance if a modal dialog is present
   this.dialog = null;
-  let handleDialog = (subject, topic) => {
-    let winr;
-    if (topic == modal.COMMON_DIALOG_LOADED) {
-      winr = Cu.getWeakReference(subject);
-    }
-    this.dialog = new modal.Dialog(() => this.curBrowser, winr);
-  };
-  modal.addHandler(handleDialog);
+  this.dialogHandler = this.globalModalDialogHandler.bind(this);
 };
 
 Object.defineProperty(GeckoDriver.prototype, "a11yChecks", {
@@ -222,6 +215,19 @@ GeckoDriver.prototype.QueryInterface = XPCOMUtils.generateQI([
   Ci.nsIObserver,
   Ci.nsISupportsWeakReference,
 ]);
+
+/**
+ * Callback used to observe the creation of new modal or tab modal dialogs
+ * during the session's lifetime.
+ */
+GeckoDriver.prototype.globalModalDialogHandler = function (subject, topic) {
+  let winr;
+  if (topic === modal.COMMON_DIALOG_LOADED) {
+    // Always keep a weak reference to the current dialog
+    winr = Cu.getWeakReference(subject);
+  }
+  this.dialog = new modal.Dialog(() => this.curBrowser, winr);
+};
 
 /**
  * Switches to the global ChromeMessageBroadcaster, potentially replacing
@@ -663,6 +669,11 @@ GeckoDriver.prototype.newSession = function* (cmd, resp) {
   if (this.curBrowser.tab) {
     this.curBrowser.contentBrowser.focus();
   }
+
+  // Setup global listener for modal dialogs, and check if there is already
+  // one open for the currently selected browser window.
+  modal.addHandler(this.dialogHandler);
+  this.dialog = modal.findModalDialogs(this.curBrowser);
 
   return {
     sessionId: this.sessionId,
@@ -2413,6 +2424,8 @@ GeckoDriver.prototype.deleteSession = function (cmd, resp) {
     this.observing = null;
   }
 
+  modal.removeHandler(this.dialogHandler);
+
   this.sandboxes.clear();
   cert.uninstallOverride();
 
@@ -2662,10 +2675,9 @@ GeckoDriver.prototype.sendKeysToDialog = function (cmd, resp) {
       this.dialog.window ? this.dialog.window : win);
 };
 
-GeckoDriver.prototype._checkIfAlertIsPresent = function() {
+GeckoDriver.prototype._checkIfAlertIsPresent = function () {
   if (!this.dialog || !this.dialog.ui) {
-    throw new NoAlertOpenError(
-        "No tab modal was open when attempting to get the dialog text");
+    throw new NoAlertOpenError("No modal dialog is currently open");
   }
 };
 
