@@ -297,9 +297,6 @@ MarionetteComponent.prototype.init = function () {
     s = new server.TCPListener(prefs.port, prefs.forceLocal);
     s.start();
     this.logger.info(`Listening on port ${s.port}`);
-  } catch (e) {
-    this.logger.error(`Error on starting server: ${e}`);
-    dump(`${e.toString()}\n${e.stack}\n`);
   } finally {
     if (s) {
       this.server = s;
