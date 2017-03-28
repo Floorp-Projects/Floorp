@@ -7,6 +7,7 @@
 #include "MediaData.h"
 #include "MediaPrefs.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Preferences.h"
 #include "mp4_demuxer/BufferStream.h"
 #include "mp4_demuxer/MP4Metadata.h"
 #include "mp4_demuxer/MoofParser.h"
@@ -251,85 +252,91 @@ static const TestFileData rustTestFiles[] = {
 };
 TEST(stagefright_MPEG4Metadata, test_case_mp4)
 {
-  const TestFileData* tests = nullptr;
-  size_t length = 0;
+  for (bool rust : { !MediaPrefs::EnableRustMP4Parser(),
+                     MediaPrefs::EnableRustMP4Parser() }) {
+    mozilla::Preferences::SetBool("media.rust.mp4parser", rust);
+    ASSERT_EQ(rust, MediaPrefs::EnableRustMP4Parser());
 
-  if (MediaPrefs::EnableRustMP4Parser()) {
-    tests = rustTestFiles;
-    length = ArrayLength(rustTestFiles);
-  } else {
-    tests = testFiles;
-    length = ArrayLength(testFiles);
-  }
+    const TestFileData* tests = nullptr;
+    size_t length = 0;
 
-  for (size_t test = 0; test < length; ++test) {
-    nsTArray<uint8_t> buffer = ReadTestFile(tests[test].mFilename);
-    ASSERT_FALSE(buffer.IsEmpty());
-    RefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
-
-    RefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
-    EXPECT_TRUE(metadataBuffer);
-
-    MP4Metadata metadata(stream);
-    EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kUndefinedTrack));
-    EXPECT_EQ(tests[test].mNumberAudioTracks,
-              metadata.GetNumberTracks(TrackInfo::kAudioTrack));
-    EXPECT_EQ(tests[test].mNumberVideoTracks,
-              metadata.GetNumberTracks(TrackInfo::kVideoTrack));
-    EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kTextTrack));
-    EXPECT_EQ(0u, metadata.GetNumberTracks(static_cast<TrackInfo::TrackType>(-1)));
-    EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kUndefinedTrack, 0));
-    UniquePtr<TrackInfo> trackInfo = metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0);
-    if (tests[test].mNumberVideoTracks == 0) {
-      EXPECT_TRUE(!trackInfo);
+    if (rust) {
+      tests = rustTestFiles;
+      length = ArrayLength(rustTestFiles);
     } else {
-      ASSERT_TRUE(!!trackInfo);
-      const VideoInfo* videoInfo = trackInfo->GetAsVideoInfo();
-      ASSERT_TRUE(!!videoInfo);
-      EXPECT_TRUE(videoInfo->IsValid());
-      EXPECT_TRUE(videoInfo->IsVideo());
-      EXPECT_EQ(tests[test].mVideoDuration, videoInfo->mDuration);
-      EXPECT_EQ(tests[test].mWidth, videoInfo->mDisplay.width);
-      EXPECT_EQ(tests[test].mHeight, videoInfo->mDisplay.height);
-
-      UniquePtr<IndiceWrapper> indices = metadata.GetTrackIndice(videoInfo->mTrackId);
-      EXPECT_TRUE(!!indices);
-      for (size_t i = 0; i < indices->Length(); i++) {
-        Index::Indice data;
-        EXPECT_TRUE(indices->GetIndice(i, data));
-        EXPECT_TRUE(data.start_offset <= data.end_offset);
-        EXPECT_TRUE(data.start_composition <= data.end_composition);
-      }
+      tests = testFiles;
+      length = ArrayLength(testFiles);
     }
-    trackInfo = metadata.GetTrackInfo(TrackInfo::kAudioTrack, 0);
-    if (tests[test].mNumberAudioTracks == 0) {
-      EXPECT_TRUE(!trackInfo);
-    } else {
-      ASSERT_TRUE(!!trackInfo);
-      const AudioInfo* audioInfo = trackInfo->GetAsAudioInfo();
-      ASSERT_TRUE(!!audioInfo);
-      EXPECT_TRUE(audioInfo->IsValid());
-      EXPECT_TRUE(audioInfo->IsAudio());
-      EXPECT_EQ(tests[test].mAudioDuration, audioInfo->mDuration);
-      EXPECT_EQ(tests[test].mAudioProfile, audioInfo->mProfile);
-      if (tests[test].mAudioDuration != audioInfo->mDuration) {
-        MOZ_RELEASE_ASSERT(false);
-      }
 
-      UniquePtr<IndiceWrapper> indices = metadata.GetTrackIndice(audioInfo->mTrackId);
-      EXPECT_TRUE(!!indices);
-      for (size_t i = 0; i < indices->Length(); i++) {
-        Index::Indice data;
-        EXPECT_TRUE(indices->GetIndice(i, data));
-        EXPECT_TRUE(data.start_offset <= data.end_offset);
-        EXPECT_TRUE(int64_t(data.start_composition) <= int64_t(data.end_composition));
+    for (size_t test = 0; test < length; ++test) {
+      nsTArray<uint8_t> buffer = ReadTestFile(tests[test].mFilename);
+      ASSERT_FALSE(buffer.IsEmpty());
+      RefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
+
+      RefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
+      EXPECT_TRUE(metadataBuffer);
+
+      MP4Metadata metadata(stream);
+      EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kUndefinedTrack));
+      EXPECT_EQ(tests[test].mNumberAudioTracks,
+                metadata.GetNumberTracks(TrackInfo::kAudioTrack));
+      EXPECT_EQ(tests[test].mNumberVideoTracks,
+                metadata.GetNumberTracks(TrackInfo::kVideoTrack));
+      EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kTextTrack));
+      EXPECT_EQ(0u, metadata.GetNumberTracks(static_cast<TrackInfo::TrackType>(-1)));
+      EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kUndefinedTrack, 0));
+      UniquePtr<TrackInfo> trackInfo = metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0);
+      if (tests[test].mNumberVideoTracks == 0) {
+        EXPECT_TRUE(!trackInfo);
+      } else {
+        ASSERT_TRUE(!!trackInfo);
+        const VideoInfo* videoInfo = trackInfo->GetAsVideoInfo();
+        ASSERT_TRUE(!!videoInfo);
+        EXPECT_TRUE(videoInfo->IsValid());
+        EXPECT_TRUE(videoInfo->IsVideo());
+        EXPECT_EQ(tests[test].mVideoDuration, videoInfo->mDuration);
+        EXPECT_EQ(tests[test].mWidth, videoInfo->mDisplay.width);
+        EXPECT_EQ(tests[test].mHeight, videoInfo->mDisplay.height);
+
+        UniquePtr<IndiceWrapper> indices = metadata.GetTrackIndice(videoInfo->mTrackId);
+        EXPECT_TRUE(!!indices);
+        for (size_t i = 0; i < indices->Length(); i++) {
+          Index::Indice data;
+          EXPECT_TRUE(indices->GetIndice(i, data));
+          EXPECT_TRUE(data.start_offset <= data.end_offset);
+          EXPECT_TRUE(data.start_composition <= data.end_composition);
+        }
       }
+      trackInfo = metadata.GetTrackInfo(TrackInfo::kAudioTrack, 0);
+      if (tests[test].mNumberAudioTracks == 0) {
+        EXPECT_TRUE(!trackInfo);
+      } else {
+        ASSERT_TRUE(!!trackInfo);
+        const AudioInfo* audioInfo = trackInfo->GetAsAudioInfo();
+        ASSERT_TRUE(!!audioInfo);
+        EXPECT_TRUE(audioInfo->IsValid());
+        EXPECT_TRUE(audioInfo->IsAudio());
+        EXPECT_EQ(tests[test].mAudioDuration, audioInfo->mDuration);
+        EXPECT_EQ(tests[test].mAudioProfile, audioInfo->mProfile);
+        if (tests[test].mAudioDuration != audioInfo->mDuration) {
+          MOZ_RELEASE_ASSERT(false);
+        }
+
+        UniquePtr<IndiceWrapper> indices = metadata.GetTrackIndice(audioInfo->mTrackId);
+        EXPECT_TRUE(!!indices);
+        for (size_t i = 0; i < indices->Length(); i++) {
+          Index::Indice data;
+          EXPECT_TRUE(indices->GetIndice(i, data));
+          EXPECT_TRUE(data.start_offset <= data.end_offset);
+          EXPECT_TRUE(int64_t(data.start_composition) <= int64_t(data.end_composition));
+        }
+      }
+      EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kTextTrack, 0));
+      EXPECT_FALSE(metadata.GetTrackInfo(static_cast<TrackInfo::TrackType>(-1), 0));
+      // We can see anywhere in any MPEG4.
+      EXPECT_TRUE(metadata.CanSeek());
+      EXPECT_EQ(tests[test].mHasCrypto, metadata.Crypto().valid);
     }
-    EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kTextTrack, 0));
-    EXPECT_FALSE(metadata.GetTrackInfo(static_cast<TrackInfo::TrackType>(-1), 0));
-    // We can see anywhere in any MPEG4.
-    EXPECT_TRUE(metadata.CanSeek());
-    EXPECT_EQ(tests[test].mHasCrypto, metadata.Crypto().valid);
   }
 }
 
@@ -373,49 +380,55 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4_subsets)
 
 TEST(stagefright_MoofParser, test_case_mp4)
 {
-  const TestFileData* tests = nullptr;
-  size_t length = 0;
+  for (bool rust : { !MediaPrefs::EnableRustMP4Parser(),
+                     MediaPrefs::EnableRustMP4Parser() }) {
+    mozilla::Preferences::SetBool("media.rust.mp4parser", rust);
+    ASSERT_EQ(rust, MediaPrefs::EnableRustMP4Parser());
 
-  if (MediaPrefs::EnableRustMP4Parser()) {
-    tests = rustTestFiles;
-    length = ArrayLength(rustTestFiles);
-  } else {
-    tests = testFiles;
-    length = ArrayLength(testFiles);
-  }
+    const TestFileData* tests = nullptr;
+    size_t length = 0;
 
-  for (size_t test = 0; test < length; ++test) {
-    nsTArray<uint8_t> buffer = ReadTestFile(tests[test].mFilename);
-    ASSERT_FALSE(buffer.IsEmpty());
-    RefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
-
-    MoofParser parser(stream, 0, false);
-    EXPECT_EQ(0u, parser.mOffset);
-    EXPECT_FALSE(parser.ReachedEnd());
-    EXPECT_TRUE(parser.mInitRange.IsEmpty());
-
-    EXPECT_TRUE(parser.HasMetadata());
-    RefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
-    EXPECT_TRUE(metadataBuffer);
-
-    EXPECT_FALSE(parser.mInitRange.IsEmpty());
-    const MediaByteRangeSet byteRanges(
-      MediaByteRange(0, int64_t(buffer.Length())));
-    EXPECT_EQ(tests[test].mValidMoof,
-              parser.RebuildFragmentedIndex(byteRanges));
-    if (tests[test].mMoofReachedOffset == 0) {
-      EXPECT_EQ(buffer.Length(), parser.mOffset);
-      EXPECT_TRUE(parser.ReachedEnd());
+    if (rust) {
+      tests = rustTestFiles;
+      length = ArrayLength(rustTestFiles);
     } else {
-      EXPECT_EQ(tests[test].mMoofReachedOffset, parser.mOffset);
-      EXPECT_FALSE(parser.ReachedEnd());
+      tests = testFiles;
+      length = ArrayLength(testFiles);
     }
 
-    EXPECT_FALSE(parser.mInitRange.IsEmpty());
-    EXPECT_TRUE(parser.GetCompositionRange(byteRanges).IsNull());
-    EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsEmpty());
-    EXPECT_EQ(tests[test].mHeader,
-              !parser.FirstCompleteMediaHeader().IsEmpty());
+    for (size_t test = 0; test < length; ++test) {
+      nsTArray<uint8_t> buffer = ReadTestFile(tests[test].mFilename);
+      ASSERT_FALSE(buffer.IsEmpty());
+      RefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
+
+      MoofParser parser(stream, 0, false);
+      EXPECT_EQ(0u, parser.mOffset);
+      EXPECT_FALSE(parser.ReachedEnd());
+      EXPECT_TRUE(parser.mInitRange.IsEmpty());
+
+      EXPECT_TRUE(parser.HasMetadata());
+      RefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
+      EXPECT_TRUE(metadataBuffer);
+
+      EXPECT_FALSE(parser.mInitRange.IsEmpty());
+      const MediaByteRangeSet byteRanges(
+        MediaByteRange(0, int64_t(buffer.Length())));
+      EXPECT_EQ(tests[test].mValidMoof,
+                parser.RebuildFragmentedIndex(byteRanges));
+      if (tests[test].mMoofReachedOffset == 0) {
+        EXPECT_EQ(buffer.Length(), parser.mOffset);
+        EXPECT_TRUE(parser.ReachedEnd());
+      } else {
+        EXPECT_EQ(tests[test].mMoofReachedOffset, parser.mOffset);
+        EXPECT_FALSE(parser.ReachedEnd());
+      }
+
+      EXPECT_FALSE(parser.mInitRange.IsEmpty());
+      EXPECT_TRUE(parser.GetCompositionRange(byteRanges).IsNull());
+      EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsEmpty());
+      EXPECT_EQ(tests[test].mHeader,
+                !parser.FirstCompleteMediaHeader().IsEmpty());
+    }
   }
 }
 
