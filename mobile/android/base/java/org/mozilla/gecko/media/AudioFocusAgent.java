@@ -56,13 +56,13 @@ public class AudioFocusAgent {
                 switch (focusChange) {
                     case AudioManager.AUDIOFOCUS_LOSS:
                         Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_LOSS");
-                        notifyObservers("audioFocusChanged", "lostAudioFocus");
+                        notifyObservers("AudioFocusChanged", "lostAudioFocus");
                         notifyMediaControlService(MediaControlService.ACTION_PAUSE_BY_AUDIO_FOCUS);
                         mAudioFocusState = LOST_FOCUS;
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                         Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_LOSS_TRANSIENT");
-                        notifyObservers("audioFocusChanged", "lostAudioFocusTransiently");
+                        notifyObservers("AudioFocusChanged", "lostAudioFocusTransiently");
                         notifyMediaControlService(MediaControlService.ACTION_PAUSE_BY_AUDIO_FOCUS);
                         mAudioFocusState = LOST_FOCUS_TRANSIENT;
                         break;
@@ -77,7 +77,7 @@ public class AudioFocusAgent {
                             notifyMediaControlService(MediaControlService.ACTION_STOP_AUDIO_DUCK);
                         } else if (mAudioFocusState.equals(LOST_FOCUS_TRANSIENT)) {
                             Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_GAIN");
-                            notifyObservers("audioFocusChanged", "gainAudioFocus");
+                            notifyObservers("AudioFocusChanged", "gainAudioFocus");
                             notifyMediaControlService(MediaControlService.ACTION_RESUME_BY_AUDIO_FOCUS);
                         }
                         mAudioFocusState = OWN_FOCUS;
