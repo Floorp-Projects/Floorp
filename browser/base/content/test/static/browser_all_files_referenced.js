@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// Slow on asan builds.
+requestLongerTimeout(5);
+
 var isDevtools = SimpleTest.harnessParameters.subsuite == "devtools";
 
 var gExceptionPaths = ["chrome://browser/content/defaultthemes/",

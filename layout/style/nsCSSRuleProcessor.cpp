@@ -1968,12 +1968,6 @@ static bool SelectorMatches(Element* aElement,
       }
       break;
 
-    case CSSPseudoClassType::mozBoundElement:
-      if (aTreeMatchContext.mScopedRoot != aElement) {
-        return false;
-      }
-      break;
-
     case CSSPseudoClassType::root:
       if (aElement != aElement->OwnerDoc()->GetRootElement()) {
         return false;
