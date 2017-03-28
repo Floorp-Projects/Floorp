@@ -10,6 +10,8 @@
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/TabGroup.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
@@ -205,6 +207,12 @@ APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
 
   APZES_LOG("Active element uses style, scheduling timer for click event\n");
   nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  TabChild* tabChild = widget->GetOwningTabChild();
+
+  if (tabChild && XRE_IsContentProcess()) {
+    timer->SetTarget(
+      tabChild->TabGroup()->EventTargetFor(TaskCategory::Other));
+  }
   RefPtr<DelayedFireSingleTapEvent> callback =
     new DelayedFireSingleTapEvent(mWidget, ldPoint, aModifiers, aClickCount,
         timer, touchRollup);

@@ -53,6 +53,7 @@ def check_args(**kwargs):
 def browser_kwargs(**kwargs):
     return {"binary": kwargs["binary"],
             "prefs_root": kwargs["prefs_root"],
+            "extra_prefs": kwargs["extra_prefs"],
             "debug_info": kwargs["debug_info"],
             "symbols_path": kwargs["symbols_path"],
             "stackwalk_binary": kwargs["stackwalk_binary"],
@@ -112,13 +113,14 @@ class FirefoxBrowser(Browser):
     init_timeout = 60
     shutdown_timeout = 60
 
-    def __init__(self, logger, binary, prefs_root, debug_info=None,
+    def __init__(self, logger, binary, prefs_root, extra_prefs=None, debug_info=None,
                  symbols_path=None, stackwalk_binary=None, certutil_binary=None,
                  ca_certificate_path=None, e10s=False, stackfix_dir=None,
                  binary_args=None):
         Browser.__init__(self, logger)
         self.binary = binary
         self.prefs_root = prefs_root
+        self.extra_prefs = extra_prefs
         self.marionette_port = None
         self.runner = None
         self.debug_info = debug_info
@@ -183,14 +185,18 @@ class FirefoxBrowser(Browser):
         self.logger.debug("Firefox Started")
 
     def load_prefs(self):
+        prefs = Preferences()
+
         prefs_path = os.path.join(self.prefs_root, "prefs_general.js")
         if os.path.exists(prefs_path):
-            preferences = Preferences.read_prefs(prefs_path)
+            prefs.add(Preferences.read_prefs(prefs_path))
         else:
             self.logger.warning("Failed to find base prefs file in %s" % prefs_path)
-            preferences = []
 
-        return preferences
+        # Add any custom preferences
+        prefs.add(self.extra_prefs, cast=True)
+
+        return prefs()
 
     def stop(self, force=False):
         if self.runner is not None and self.runner.is_running():

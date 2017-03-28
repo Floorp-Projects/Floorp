@@ -35,7 +35,9 @@
 #ifdef XP_MACOSX
 ; Mac bundle stuff
 @APPNAME@/Contents/Info.plist
+#ifdef MOZ_UPDATER
 @APPNAME@/Contents/Library/LaunchServices
+#endif
 @APPNAME@/Contents/PkgInfo
 @RESPATH@/firefox.icns
 @RESPATH@/document.icns

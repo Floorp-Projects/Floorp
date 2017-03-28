@@ -116,7 +116,7 @@ struct nsCSSRendering {
                                   RectCornerRadii& aOutInnerRadii);
   static nsRect GetBoxShadowInnerPaddingRect(nsIFrame* aFrame,
                                              const nsRect& aFrameArea);
-  static bool CanPaintBoxShadowInner(nsIFrame* aFrame);
+  static bool ShouldPaintBoxShadowInner(nsIFrame* aFrame);
   static void PaintBoxShadowInner(nsPresContext* aPresContext,
                                   nsRenderingContext& aRenderingContext,
                                   nsIFrame* aForFrame,

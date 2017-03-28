@@ -38,7 +38,8 @@ class nsPluginHangUITelemetry : public mozilla::Runnable
 public:
   nsPluginHangUITelemetry(int aResponseCode, int aDontAskCode,
                           uint32_t aResponseTimeMs, uint32_t aTimeoutMs)
-    : mResponseCode(aResponseCode),
+    : Runnable("nsPluginHangUITelemetry"),
+      mResponseCode(aResponseCode),
       mDontAskCode(aDontAskCode),
       mResponseTimeMs(aResponseTimeMs),
       mTimeoutMs(aTimeoutMs)

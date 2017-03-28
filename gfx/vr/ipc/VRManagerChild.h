@@ -70,7 +70,10 @@ public:
                                        uint64_t aSerial) override;
   virtual void CancelWaitForRecycle(uint64_t aTextureId) override;
 
-  PVRLayerChild* CreateVRLayer(uint32_t aDisplayID, const Rect& aLeftEyeRect, const Rect& aRightEyeRect);
+  PVRLayerChild* CreateVRLayer(uint32_t aDisplayID,
+                               const Rect& aLeftEyeRect,
+                               const Rect& aRightEyeRect,
+                               nsIEventTarget* aTarget);
 
   static void IdentifyTextureHost(const layers::TextureFactoryIdentifier& aIdentifier);
   layers::LayersBackend GetBackendType() const;

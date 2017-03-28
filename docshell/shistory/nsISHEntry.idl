@@ -139,6 +139,12 @@ interface nsISHEntry : nsISupports
     /** LayoutHistoryState for scroll position and form values */
     attribute nsILayoutHistoryState layoutHistoryState;
 
+    /**
+     * Initialises the LayoutHistoryState if it doesn't already exist
+     * and returns a reference to it.
+     */
+    nsILayoutHistoryState initLayoutHistoryState();
+
     /** parent of this entry */
     attribute nsISHEntry parent;
 

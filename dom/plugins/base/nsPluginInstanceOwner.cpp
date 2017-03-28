@@ -134,7 +134,9 @@ class AsyncPaintWaitEvent : public Runnable
 {
 public:
   AsyncPaintWaitEvent(nsIContent* aContent, bool aFinished) :
-    mContent(aContent), mFinished(aFinished)
+    Runnable("AsyncPaintWaitEvent"),
+    mContent(aContent),
+    mFinished(aFinished)
   {
   }
 

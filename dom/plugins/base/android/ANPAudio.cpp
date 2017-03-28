@@ -112,7 +112,9 @@ class AudioRunnable : public mozilla::Runnable
 public:
   NS_DECL_NSIRUNNABLE
 
-  AudioRunnable(ANPAudioTrack* aAudioTrack) {
+  AudioRunnable(ANPAudioTrack* aAudioTrack) :
+    Runnable("AudioRunnable")
+  {
     mTrack = aAudioTrack;
   }
 

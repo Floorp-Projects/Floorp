@@ -12,8 +12,6 @@ toolkit.jar:
   content/mozapps/extensions/updateinfo.xsl                     (content/updateinfo.xsl)
   content/mozapps/extensions/about.xul                          (content/about.xul)
   content/mozapps/extensions/about.js                           (content/about.js)
-  content/mozapps/extensions/list.xul                           (content/list.xul)
-  content/mozapps/extensions/list.js                            (content/list.js)
   content/mozapps/extensions/blocklist.xul                      (content/blocklist.xul)
   content/mozapps/extensions/blocklist.js                       (content/blocklist.js)
   content/mozapps/extensions/blocklist.css                      (content/blocklist.css)

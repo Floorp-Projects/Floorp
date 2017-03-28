@@ -201,8 +201,21 @@ var SessionHistoryInternal = {
     } else {
       let x = {}, y = {};
       shEntry.getScrollPosition(x, y);
-      if (x.value != 0 || y.value != 0)
+      if (x.value !== 0 || y.value !== 0) {
         entry.scroll = x.value + "," + y.value;
+      }
+
+      let layoutHistoryState = shEntry.layoutHistoryState;
+      if (layoutHistoryState && layoutHistoryState.hasStates) {
+        let presStates = layoutHistoryState.getKeys().map(key =>
+          this._getSerializablePresState(layoutHistoryState, key)).filter(presState =>
+            // Only keep presState entries that contain more than the key itself.
+            Object.getOwnPropertyNames(presState).length > 1);
+
+        if (presStates.length > 0) {
+          entry.presState = presStates;
+        }
+      }
     }
 
     // Collect triggeringPrincipal data for the current history entry.
@@ -262,6 +275,36 @@ var SessionHistoryInternal = {
     }
 
     return entry;
+  },
+
+  /**
+   * Get an object that is a serializable representation of a PresState.
+   *
+   * @param layoutHistoryState
+   *        nsILayoutHistoryState instance
+   * @param stateKey
+   *        The state key of the presState to be retrieved.
+   * @return object
+   */
+  _getSerializablePresState(layoutHistoryState, stateKey) {
+    let presState = { stateKey };
+    let x = {}, y = {}, scrollOriginDowngrade = {}, res = {}, scaleToRes = {};
+
+    layoutHistoryState.getPresState(stateKey, x, y, scrollOriginDowngrade, res, scaleToRes);
+    if (x.value !== 0 || y.value !== 0) {
+      presState.scroll = x.value + "," + y.value;
+    }
+    if (scrollOriginDowngrade.value === false) {
+      presState.scrollOriginDowngrade = scrollOriginDowngrade.value;
+    }
+    if (res.value != 1.0) {
+      presState.res = res.value;
+    }
+    if (scaleToRes.value === true) {
+      presState.scaleToRes = scaleToRes.value;
+    }
+
+    return presState;
   },
 
   /**
@@ -385,10 +428,18 @@ var SessionHistoryInternal = {
 
     if (entry.scrollRestorationIsManual) {
       shEntry.scrollRestorationIsManual = true;
-    } else if (entry.scroll) {
-      var scrollPos = (entry.scroll || "0,0").split(",");
-      scrollPos = [parseInt(scrollPos[0]) || 0, parseInt(scrollPos[1]) || 0];
-      shEntry.setScrollPosition(scrollPos[0], scrollPos[1]);
+    } else {
+      if (entry.scroll) {
+        shEntry.setScrollPosition(...this._deserializeScrollPosition(entry.scroll));
+      }
+
+      if (entry.presState) {
+        let layoutHistoryState = shEntry.initLayoutHistoryState();
+
+        for (let presState of entry.presState) {
+          this._deserializePresState(layoutHistoryState, presState);
+        }
+      }
     }
 
     let childDocIdents = {};
@@ -441,6 +492,37 @@ var SessionHistoryInternal = {
     }
 
     return shEntry;
+  },
+
+  /**
+   * Expands serialized PresState data and adds it to the given nsILayoutHistoryState.
+   *
+   * @param layoutHistoryState
+   *        nsILayoutHistoryState instance
+   * @param presState
+   *        Object containing serialized PresState data.
+   */
+  _deserializePresState(layoutHistoryState, presState) {
+    let stateKey = presState.stateKey;
+    let scrollOriginDowngrade =
+      typeof presState.scrollOriginDowngrade == "boolean" ? presState.scrollOriginDowngrade : true;
+    let res = presState.res || 1.0;
+    let scaleToRes = presState.scaleToRes || false;
+
+    layoutHistoryState.addNewPresState(stateKey, ...this._deserializeScrollPosition(presState.scroll),
+                                       scrollOriginDowngrade, res, scaleToRes);
+  },
+
+  /**
+   * Expands serialized scroll position data into an array containing the x and y coordinates,
+   * defaulting to 0,0 if no scroll position was found.
+   *
+   * @param scroll
+   *        Object containing serialized scroll position data.
+   * @return An array containing the scroll position's x and y coordinates.
+   */
+  _deserializeScrollPosition(scroll = "0,0") {
+    return scroll.split(",").map(pos => parseInt(pos, 10) || 0);
   },
 
 };

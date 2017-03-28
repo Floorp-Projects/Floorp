@@ -41,6 +41,7 @@ const uint32_t kBatchTimeoutMs = 2000;
 // drain the probe accumulation arrays, we request an immediate flush if the
 // arrays manage to reach certain high water mark of elements.
 const size_t kHistogramAccumulationsArrayHighWaterMark = 5 * 1024;
+const size_t kScalarActionsArrayHighWaterMark = 10000;
 // With the current limits, events cost us about 1100 bytes each.
 // This limits memory use to about 10MB.
 const size_t kEventsArrayHighWaterMark = 10000;
@@ -156,6 +157,11 @@ TelemetryIPCAccumulator::RecordChildScalarAction(mozilla::Telemetry::ScalarID aI
   if (!gChildScalarsActions) {
     gChildScalarsActions = new nsTArray<ScalarAction>();
   }
+  if (gChildScalarsActions->Length() == kScalarActionsArrayHighWaterMark) {
+    TelemetryIPCAccumulator::DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
+      TelemetryIPCAccumulator::IPCTimerFired(nullptr, nullptr);
+    }));
+  }
   // Store the action.
   gChildScalarsActions->AppendElement(ScalarAction{aId, aAction, Some(aValue)});
   ArmIPCTimer(locker);
@@ -171,6 +177,11 @@ TelemetryIPCAccumulator::RecordChildKeyedScalarAction(mozilla::Telemetry::Scalar
   // Make sure to have the storage.
   if (!gChildKeyedScalarsActions) {
     gChildKeyedScalarsActions = new nsTArray<KeyedScalarAction>();
+  }
+  if (gChildKeyedScalarsActions->Length() == kScalarActionsArrayHighWaterMark) {
+    TelemetryIPCAccumulator::DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
+      TelemetryIPCAccumulator::IPCTimerFired(nullptr, nullptr);
+    }));
   }
   // Store the action.
   gChildKeyedScalarsActions->AppendElement(
