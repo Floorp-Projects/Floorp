@@ -310,7 +310,7 @@ FetchIconInfo(const RefPtr<Database>& aDB,
     "FROM moz_icons "
     "WHERE fixed_icon_url_hash = hash(fixup_url(:url)) "
       "AND icon_url = :url "
-    "ORDER BY width ASC "
+    "ORDER BY width DESC "
   );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
@@ -880,25 +880,21 @@ AsyncAssociateIconToPage::Run()
             ":icon_id) "
   );
   NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-  nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
-  rv = stmt->NewBindingParamsArray(getter_AddRefs(paramsArray));
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  // For some reason using BindingParamsArray here fails execution, so we must
+  // execute the statements one by one.
+  // In the future we may want to investigate the reasons, sounds like related
+  // to contraints.
   for (const auto& payload : mIcon.payloads) {
+    mozStorageStatementScoper scoper(stmt);
     nsCOMPtr<mozIStorageBindingParams> params;
-    rv = paramsArray->NewBindingParams(getter_AddRefs(params));
+    rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mPage.spec);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = URIBinder::Bind(params, NS_LITERAL_CSTRING("page_url"), mPage.spec);
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("icon_id"), payload.id);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = params->BindInt64ByName(NS_LITERAL_CSTRING("icon_id"), payload.id);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = paramsArray->AddParams(params);
+    rv = stmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  rv = stmt->BindParameters(paramsArray);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
 
   mIcon.status |= ICON_STATUS_ASSOCIATED;
 

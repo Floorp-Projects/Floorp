@@ -889,6 +889,16 @@ function getFaviconUrlForPage(page, width = 0) {
   });
 }
 
+function getFaviconDataForPage(page, width = 0) {
+  let pageURI = page instanceof Ci.nsIURI ? page
+                                          : NetUtil.newURI(new URL(page).href);
+  return new Promise(resolve => {
+    PlacesUtils.favicons.getFaviconDataForPage(pageURI, (iconUri, len, data, mimeType) => {
+      resolve({ data, mimeType });
+    }, width);
+  });
+}
+
 /**
  * Asynchronously compares contents from 2 favicon urls.
  */
