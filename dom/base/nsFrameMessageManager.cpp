@@ -668,8 +668,13 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
 
   uint32_t latencyMs = round((TimeStamp::Now() - start).ToMilliseconds());
   if (latencyMs >= kMinTelemetrySyncMessageManagerLatencyMs) {
+    NS_ConvertUTF16toUTF8 messageName(aMessageName);
+    // NOTE: We need to strip digit characters from the message name in order to
+    // avoid a large number of buckets due to generated names from addons (such
+    // as "ublock:sb:{N}"). See bug 1348113 comment 10.
+    messageName.StripChars("0123456789");
     Telemetry::Accumulate(Telemetry::IPC_SYNC_MESSAGE_MANAGER_LATENCY_MS,
-                          NS_ConvertUTF16toUTF8(aMessageName), latencyMs);
+                          messageName, latencyMs);
   }
 
   if (!ok) {
