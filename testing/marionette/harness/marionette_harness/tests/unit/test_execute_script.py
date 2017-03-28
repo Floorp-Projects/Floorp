@@ -239,6 +239,7 @@ class TestExecuteContent(MarionetteTestCase):
         self.assertTrue(self.marionette.execute_script(
             "return typeof arguments[0] == 'undefined'"))
 
+    @skip_if_mobile("Intermittent on Android - bug 1334035")
     def test_window_set_timeout_is_not_cancelled(self):
         def content_timeout_triggered(mn):
             return mn.execute_script("return window.n", sandbox=None) > 0
