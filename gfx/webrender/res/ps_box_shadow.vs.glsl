@@ -25,7 +25,7 @@ void main(void) {
     vUv.xy = (vi.local_pos - prim.local_rect.p0) / patch_size;
     vMirrorPoint = 0.5 * prim.local_rect.size / patch_size;
 
-    vec2 texture_size = vec2(textureSize(sCache, 0));
+    vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0));
     vCacheUvRectCoords = vec4(patch_origin, patch_origin + patch_size_device_pixels) / texture_size.xyxy;
 
     vColor = bs.color;

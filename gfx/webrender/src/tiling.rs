@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
+use device::TextureId;
 use fnv::FnvHasher;
 use gpu_store::GpuStoreAddress;
 use internal_types::{ANGLE_FLOAT_TO_FIXED, BatchTextures, CacheTextureId, LowLevelFilterOp};
@@ -128,7 +129,10 @@ impl AlphaBatchHelpers for PrimitiveStore {
                     BlendMode::Alpha
                 }
             }
-            PrimitiveKind::Image => {
+            PrimitiveKind::Image |
+            PrimitiveKind::AlignedGradient |
+            PrimitiveKind::AngleGradient |
+            PrimitiveKind::RadialGradient => {
                 if needs_blending {
                     BlendMode::PremultipliedAlpha
                 } else {
@@ -413,18 +417,11 @@ pub enum PrimitiveFlags {
     Scrollbar(ScrollLayerId, f32)
 }
 
-// TODO(gw): I've had to make several of these types below public
-//           with the changes for text-shadow. The proper solution
-//           is to split the render task and render target code into
-//           its own module. However, I'm avoiding that for now since
-//           this PR is large enough already, and other people are working
-//           on PRs that make use of render tasks.
-
 #[derive(Debug, Copy, Clone)]
 pub struct RenderTargetIndex(pub usize);
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-struct RenderPassIndex(isize);
+pub struct RenderPassIndex(isize);
 
 struct DynamicTaskInfo {
     index: RenderTaskIndex,
@@ -857,10 +854,89 @@ pub struct RenderTargetContext<'a> {
     pub resource_cache: &'a ResourceCache,
 }
 
+pub trait RenderTarget {
+    fn new(size: DeviceUintSize) -> Self;
+    fn allocate(&mut self, size: DeviceUintSize) -> Option<DeviceUintPoint>;
+    fn build(&mut self,
+             _ctx: &RenderTargetContext,
+             _render_tasks: &mut RenderTaskCollection,
+             _child_pass_index: RenderPassIndex) {}
+    fn add_task(&mut self,
+                task: RenderTask,
+                ctx: &RenderTargetContext,
+                render_tasks: &RenderTaskCollection,
+                pass_index: RenderPassIndex);
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum RenderTargetKind {
+    Color,   // RGBA32
+    Alpha,   // R8
+}
+
+pub struct RenderTargetList<T> {
+    target_size: DeviceUintSize,
+    pub targets: Vec<T>,
+}
+
+impl<T: RenderTarget> RenderTargetList<T> {
+    fn new(target_size: DeviceUintSize, create_initial_target: bool) -> RenderTargetList<T> {
+        let mut targets = Vec::new();
+        if create_initial_target {
+            targets.push(T::new(target_size));
+        }
+
+        RenderTargetList {
+            targets: targets,
+            target_size: target_size,
+        }
+    }
+
+    pub fn target_count(&self) -> usize {
+        self.targets.len()
+    }
+
+    fn build(&mut self,
+             ctx: &RenderTargetContext,
+             render_tasks: &mut RenderTaskCollection,
+             pass_index: RenderPassIndex) {
+        for target in &mut self.targets {
+            let child_pass_index = RenderPassIndex(pass_index.0 - 1);
+            target.build(ctx, render_tasks, child_pass_index);
+        }
+    }
+
+    fn add_task(&mut self,
+                task: RenderTask,
+                ctx: &RenderTargetContext,
+                render_tasks: &mut RenderTaskCollection,
+                pass_index: RenderPassIndex) {
+        self.targets.last_mut().unwrap().add_task(task, ctx, render_tasks, pass_index);
+    }
+
+    fn allocate(&mut self, alloc_size: DeviceUintSize) -> (DeviceUintPoint, RenderTargetIndex) {
+        let existing_origin = self.targets
+                                  .last_mut()
+                                  .and_then(|target| target.allocate(alloc_size));
+
+        let origin = match existing_origin {
+            Some(origin) => origin,
+            None => {
+                let mut new_target = T::new(self.target_size);
+                let origin = new_target.allocate(alloc_size)
+                                       .expect(&format!("Each render task must allocate <= size of one target! ({:?})", alloc_size));
+                self.targets.push(new_target);
+                origin
+            }
+        };
+
+        (origin, RenderTargetIndex(self.targets.len() - 1))
+    }
+}
+
 /// A render target represents a number of rendering operations on a surface.
-pub struct RenderTarget {
+pub struct ColorRenderTarget {
     pub alpha_batcher: AlphaBatcher,
-    pub clip_batcher: ClipBatcher,
     pub box_shadow_cache_prims: Vec<PrimitiveInstance>,
     // List of text runs to be cached to this render target.
     // TODO(gw): For now, assume that these all come from
@@ -880,11 +956,14 @@ pub struct RenderTarget {
     page_allocator: TexturePage,
 }
 
-impl RenderTarget {
-    fn new(size: DeviceUintSize) -> RenderTarget {
-        RenderTarget {
+impl RenderTarget for ColorRenderTarget {
+    fn allocate(&mut self, size: DeviceUintSize) -> Option<DeviceUintPoint> {
+        self.page_allocator.allocate(&size)
+    }
+
+    fn new(size: DeviceUintSize) -> ColorRenderTarget {
+        ColorRenderTarget {
             alpha_batcher: AlphaBatcher::new(),
-            clip_batcher: ClipBatcher::new(),
             box_shadow_cache_prims: Vec::new(),
             text_run_cache_prims: Vec::new(),
             text_run_textures: BatchTextures::no_texture(),
@@ -1008,15 +1087,52 @@ impl RenderTarget {
                     }
                 }
             }
+            RenderTaskKind::CacheMask(..) => {
+                panic!("Should not be added to color target!");
+            }
+            RenderTaskKind::Readback(device_rect) => {
+                self.readbacks.push(device_rect);
+            }
+        }
+    }
+}
+
+pub struct AlphaRenderTarget {
+    pub clip_batcher: ClipBatcher,
+    page_allocator: TexturePage,
+}
+
+impl RenderTarget for AlphaRenderTarget {
+    fn allocate(&mut self, size: DeviceUintSize) -> Option<DeviceUintPoint> {
+        self.page_allocator.allocate(&size)
+    }
+
+    fn new(size: DeviceUintSize) -> AlphaRenderTarget {
+        AlphaRenderTarget {
+            clip_batcher: ClipBatcher::new(),
+            page_allocator: TexturePage::new(CacheTextureId(0), size),
+        }
+    }
+
+    fn add_task(&mut self,
+                task: RenderTask,
+                ctx: &RenderTargetContext,
+                render_tasks: &RenderTaskCollection,
+                pass_index: RenderPassIndex) {
+        match task.kind {
+            RenderTaskKind::Alpha(..) |
+            RenderTaskKind::VerticalBlur(..) |
+            RenderTaskKind::HorizontalBlur(..) |
+            RenderTaskKind::CachePrimitive(..) |
+            RenderTaskKind::Readback(..) => {
+                panic!("Should not be added to alpha target!");
+            }
             RenderTaskKind::CacheMask(ref task_info) => {
                 let task_index = render_tasks.get_task_index(&task.id, pass_index);
                 self.clip_batcher.add(task_index,
                                       &task_info.clips,
                                       &ctx.resource_cache,
                                       task_info.geometry_kind);
-            }
-            RenderTaskKind::Readback(device_rect) => {
-                self.readbacks.push(device_rect);
             }
         }
     }
@@ -1031,8 +1147,10 @@ pub struct RenderPass {
     pass_index: RenderPassIndex,
     pub is_framebuffer: bool,
     tasks: Vec<RenderTask>,
-    pub targets: Vec<RenderTarget>,
-    size: DeviceUintSize,
+    pub color_targets: RenderTargetList<ColorRenderTarget>,
+    pub alpha_targets: RenderTargetList<AlphaRenderTarget>,
+    pub color_texture_id: Option<TextureId>,
+    pub alpha_texture_id: Option<TextureId>,
 }
 
 impl RenderPass {
@@ -1040,9 +1158,11 @@ impl RenderPass {
         RenderPass {
             pass_index: RenderPassIndex(pass_index),
             is_framebuffer: is_framebuffer,
-            targets: vec![ RenderTarget::new(size) ],
+            color_targets: RenderTargetList::new(size, is_framebuffer),
+            alpha_targets: RenderTargetList::new(size, false),
             tasks: vec![],
-            size: size,
+            color_texture_id: None,
+            alpha_texture_id: None,
         }
     }
 
@@ -1050,25 +1170,40 @@ impl RenderPass {
         self.tasks.push(task);
     }
 
-    fn allocate_target(&mut self, alloc_size: DeviceUintSize) -> DeviceUintPoint {
-        let existing_origin = self.targets
-                                  .last_mut()
-                                  .unwrap()
-                                  .page_allocator
-                                  .allocate(&alloc_size);
-        match existing_origin {
-            Some(origin) => origin,
-            None => {
-                let mut new_target = RenderTarget::new(self.size);
-                let origin = new_target.page_allocator
-                                       .allocate(&alloc_size)
-                                       .expect(&format!("Each render task must allocate <= size of one target! ({:?})", alloc_size));
-                self.targets.push(new_target);
-                origin
-            }
+    fn add_task(&mut self,
+                task: RenderTask,
+                ctx: &RenderTargetContext,
+                render_tasks: &mut RenderTaskCollection) {
+        match task.target_kind() {
+            RenderTargetKind::Color => self.color_targets.add_task(task, ctx, render_tasks, self.pass_index),
+            RenderTargetKind::Alpha => self.alpha_targets.add_task(task, ctx, render_tasks, self.pass_index),
         }
     }
 
+    fn allocate_target(&mut self,
+                       kind: RenderTargetKind,
+                       alloc_size: DeviceUintSize) -> (DeviceUintPoint, RenderTargetIndex) {
+        match kind {
+            RenderTargetKind::Color => self.color_targets.allocate(alloc_size),
+            RenderTargetKind::Alpha => self.alpha_targets.allocate(alloc_size),
+        }
+    }
+
+    pub fn needs_render_target_kind(&self, kind: RenderTargetKind) -> bool {
+        if self.is_framebuffer {
+            false
+        } else {
+            self.required_target_count(kind) > 0
+        }
+    }
+
+    pub fn required_target_count(&self, kind: RenderTargetKind) -> usize {
+        debug_assert!(!self.is_framebuffer);        // framebuffer never needs targets
+        match kind {
+            RenderTargetKind::Color => self.color_targets.target_count(),
+            RenderTargetKind::Alpha => self.alpha_targets.target_count(),
+        }
+    }
 
     pub fn build(&mut self, ctx: &RenderTargetContext, render_tasks: &mut RenderTaskCollection) {
         profile_scope!("RenderPass::build");
@@ -1076,6 +1211,8 @@ impl RenderPass {
         // Step through each task, adding to batches as appropriate.
         let tasks = mem::replace(&mut self.tasks, Vec::new());
         for mut task in tasks {
+            let target_kind = task.target_kind();
+
             // Find a target to assign this task to, or create a new
             // one if required.
             match task.location {
@@ -1098,25 +1235,20 @@ impl RenderPass {
                     }
 
                     let alloc_size = DeviceUintSize::new(size.width as u32, size.height as u32);
-                    let alloc_origin = self.allocate_target(alloc_size);
+                    let (alloc_origin, target_index) = self.allocate_target(target_kind, alloc_size);
 
                     *origin = Some((DeviceIntPoint::new(alloc_origin.x as i32,
-                                                     alloc_origin.y as i32),
-                                    RenderTargetIndex(self.targets.len() - 1)));
+                                                        alloc_origin.y as i32),
+                                    target_index));
                 }
             }
 
             render_tasks.add(&task, self.pass_index);
-            self.targets.last_mut().unwrap().add_task(task,
-                                                      ctx,
-                                                      render_tasks,
-                                                      self.pass_index);
+            self.add_task(task, ctx, render_tasks);
         }
 
-        for target in &mut self.targets {
-            let child_pass_index = RenderPassIndex(self.pass_index.0 - 1);
-            target.build(ctx, render_tasks, child_pass_index);
-        }
+        self.color_targets.build(ctx, render_tasks, self.pass_index);
+        self.alpha_targets.build(ctx, render_tasks, self.pass_index);
     }
 }
 
@@ -1324,10 +1456,10 @@ pub struct StackingContext {
     // context's coordinate system.
     pub reference_frame_offset: LayerPoint,
 
-    // Bounds of this stacking context in its own coordinate system.
-    pub local_rect: LayerRect,
-
+    // Bounding rectangle for this stacking context calculated based on the size
+    // and position of all its children.
     pub bounding_rect: DeviceIntRect,
+
     pub composite_ops: CompositeOps,
     pub clip_scroll_groups: Vec<ClipScrollGroupIndex>,
 
@@ -1340,20 +1472,20 @@ pub struct StackingContext {
     // when to isolate a mix-blend-mode composite.
     pub is_page_root: bool,
 
+    // Wehther or not this stacking context has any visible components, calculated
+    // based on the size and position of all children and how they are clipped.
     pub is_visible: bool,
 }
 
 impl StackingContext {
     pub fn new(pipeline_id: PipelineId,
                reference_frame_offset: LayerPoint,
-               local_rect: LayerRect,
                is_page_root: bool,
                composite_ops: CompositeOps)
                -> StackingContext {
         StackingContext {
             pipeline_id: pipeline_id,
             reference_frame_offset: reference_frame_offset,
-            local_rect: local_rect,
             bounding_rect: DeviceIntRect::zero(),
             composite_ops: composite_ops,
             clip_scroll_groups: Vec::new(),
@@ -1432,22 +1564,17 @@ impl PackedLayer {
     }
 
     pub fn set_rect(&mut self,
-                    local_rect: Option<LayerRect>,
+                    local_rect: &LayerRect,
                     screen_rect: &DeviceIntRect,
                     device_pixel_ratio: f32)
                     -> Option<TransformedRect> {
-        let local_rect = match local_rect {
-            Some(rect) if !rect.is_empty() => rect,
-            _ => return None,
-        };
-
         let xf_rect = TransformedRect::new(&local_rect, &self.transform, device_pixel_ratio);
         if !xf_rect.bounding_rect.intersects(screen_rect) {
             return None;
         }
 
         self.screen_vertices = xf_rect.vertices.clone();
-        self.local_clip_rect = local_rect;
+        self.local_clip_rect = *local_rect;
         Some(xf_rect)
     }
 }

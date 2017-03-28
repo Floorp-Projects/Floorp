@@ -244,7 +244,6 @@ pub struct PushStackingContextDisplayItem {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct StackingContext {
     pub scroll_policy: ScrollPolicy,
-    pub bounds: LayoutRect,
     pub z_index: i32,
     pub transform: Option<PropertyBinding<LayoutTransform>>,
     pub perspective: Option<LayoutTransform>,
@@ -356,7 +355,6 @@ pub struct ComplexClipRegion {
 
 impl StackingContext {
     pub fn new(scroll_policy: ScrollPolicy,
-               bounds: LayoutRect,
                z_index: i32,
                transform: Option<PropertyBinding<LayoutTransform>>,
                perspective: Option<LayoutTransform>,
@@ -366,7 +364,6 @@ impl StackingContext {
                -> StackingContext {
         StackingContext {
             scroll_policy: scroll_policy,
-            bounds: bounds,
             z_index: z_index,
             transform: transform,
             perspective: perspective,

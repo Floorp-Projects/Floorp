@@ -4,6 +4,7 @@
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use channel::{self, MsgSender, PayloadHelperMethods, PayloadSender};
+#[cfg(feature = "webgl")]
 use offscreen_gl_context::{GLContextAttributes, GLLimits};
 use std::cell::Cell;
 use std::fmt;
@@ -11,7 +12,9 @@ use std::marker::PhantomData;
 use {AuxiliaryLists, AuxiliaryListsDescriptor, BuiltDisplayList, BuiltDisplayListDescriptor};
 use {ColorF, DeviceIntPoint, DeviceIntSize, DeviceUintRect, DeviceUintSize, FontKey};
 use {GlyphDimensions, GlyphKey, ImageData, ImageDescriptor, ImageKey, LayoutPoint, LayoutSize};
-use {LayoutTransform, NativeFontHandle, ScrollLayerId, WebGLCommand, WebGLContextId, WorldPoint};
+use {LayoutTransform, NativeFontHandle, ScrollLayerId, WorldPoint};
+#[cfg(feature = "webgl")]
+use {WebGLCommand, WebGLContextId};
 
 pub type TileSize = u16;
 
@@ -25,7 +28,7 @@ pub enum ApiMsg {
     /// Adds an image from the resource cache.
     AddImage(ImageKey, ImageDescriptor, ImageData, Option<TileSize>),
     /// Updates the the resource cache with the new image data.
-    UpdateImage(ImageKey, ImageDescriptor, Vec<u8>),
+    UpdateImage(ImageKey, ImageDescriptor, Vec<u8>, Option<DeviceUintRect>),
     /// Drops an image from the resource cache.
     DeleteImage(ImageKey),
     CloneApi(MsgSender<IdNamespace>),
@@ -99,6 +102,24 @@ impl fmt::Debug for ApiMsg {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Epoch(pub u32);
+
+#[cfg(not(feature = "webgl"))]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
+pub struct WebGLContextId(pub usize);
+
+#[cfg(not(feature = "webgl"))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GLContextAttributes([u8; 0]);
+
+#[cfg(not(feature = "webgl"))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GLLimits([u8; 0]);
+
+#[cfg(not(feature = "webgl"))]
+#[derive(Clone, Deserialize, Serialize)]
+pub enum WebGLCommand {
+    Flush,
+}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -229,8 +250,9 @@ impl RenderApi {
     pub fn update_image(&self,
                         key: ImageKey,
                         descriptor: ImageDescriptor,
-                        bytes: Vec<u8>) {
-        let msg = ApiMsg::UpdateImage(key, descriptor, bytes);
+                        bytes: Vec<u8>,
+                        dirty_rect: Option<DeviceUintRect>) {
+        let msg = ApiMsg::UpdateImage(key, descriptor, bytes, dirty_rect);
         self.api_sender.send(msg).unwrap();
     }
 

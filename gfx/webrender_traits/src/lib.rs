@@ -14,6 +14,7 @@ extern crate gleam;
 extern crate heapsize;
 #[cfg(feature = "ipc")]
 extern crate ipc_channel;
+#[cfg(feature = "webgl")]
 extern crate offscreen_gl_context;
 extern crate serde;
 #[macro_use]
@@ -33,6 +34,7 @@ mod display_item;
 mod display_list;
 mod font;
 mod image;
+#[cfg(feature = "webgl")]
 mod webgl;
 
 pub use api::*;
@@ -42,4 +44,5 @@ pub use display_list::*;
 pub use font::*;
 pub use image::*;
 pub use units::*;
+#[cfg(feature = "webgl")]
 pub use webgl::*;

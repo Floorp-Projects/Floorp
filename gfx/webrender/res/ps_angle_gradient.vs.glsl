@@ -27,7 +27,7 @@ void main(void) {
     vOffset = dot(vi.local_pos - start_point, dir) / dot(dir, dir);
 
     // V coordinate of gradient row in lookup texture.
-    vGradientIndex = float(prim.sub_index) + 0.5;
+    vGradientIndex = float(prim.sub_index);
 
     // Whether to repeat the gradient instead of clamping.
     vGradientRepeat = float(int(gradient.extend_mode.x) == EXTEND_MODE_REPEAT);

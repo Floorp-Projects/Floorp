@@ -18,7 +18,7 @@ void main(void) {
     RenderTaskData child_task = fetch_render_task(prim.user_data.x);
     vUv.z = child_task.data1.x;
 
-    vec2 texture_size = vec2(textureSize(sCache, 0));
+    vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0));
     vec2 uv0 = child_task.data0.xy / texture_size;
     vec2 uv1 = (child_task.data0.xy + child_task.data0.zw) / texture_size;
 
