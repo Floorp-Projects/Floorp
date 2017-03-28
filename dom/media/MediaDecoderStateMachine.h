@@ -459,7 +459,7 @@ protected:
   // calling this, the audio hardware may play some of the audio pushed to
   // hardware, so this can only be used as a upper bound. The decoder monitor
   // must be held when calling this. Called on the decode thread.
-  int64_t GetDecodedAudioDuration();
+  media::TimeUnit GetDecodedAudioDuration();
 
   void FinishDecodeFirstFrame();
 
