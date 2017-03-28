@@ -82,11 +82,11 @@ treecol {
 }
 
 #category-application > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#applications");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#content");
 }
 
 #category-privacy > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#privacy");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#security");
 }
 
 #category-security > .category-icon {

@@ -93,7 +93,7 @@ function formatInstallDate(sec) {
 registerCleanupFunction(resetPreferences);
 
 add_task(function*() {
-  yield openPreferencesViaOpenPreferencesAPI("advanced", "updateTab", { leaveOpen: true });
+  yield openPreferencesViaOpenPreferencesAPI("advanced", { leaveOpen: true });
   resetPreferences();
   Services.prefs.setBoolPref("browser.search.update", false);
 
@@ -112,7 +112,7 @@ add_task(function*() {
 add_task(function*() {
   mockUpdateManager.register();
 
-  yield openPreferencesViaOpenPreferencesAPI("advanced", "updateTab", { leaveOpen: true });
+  yield openPreferencesViaOpenPreferencesAPI("advanced", { leaveOpen: true });
   let doc = gBrowser.selectedBrowser.contentDocument;
 
   let showBtn = doc.getElementById("showUpdateHistory");

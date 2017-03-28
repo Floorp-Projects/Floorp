@@ -8,8 +8,8 @@ registerCleanupFunction(function() {
 });
 
 add_task(function*() {
-  let prefs = yield openPreferencesViaOpenPreferencesAPI("paneContent", undefined, {leaveOpen: true});
-  is(prefs.selectedPane, "paneContent", "Content pane was selected");
+  let prefs = yield openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
+  is(prefs.selectedPane, "panePrivacy", "Privacy pane was selected");
 
   let doc = gBrowser.contentDocument;
   let notificationsDoNotDisturbRow = doc.getElementById("notificationsDoNotDisturbRow");

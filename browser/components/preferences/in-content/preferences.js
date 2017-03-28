@@ -6,12 +6,9 @@
 /* import-globals-from subdialogs.js */
 /* import-globals-from advanced.js */
 /* import-globals-from main.js */
-/* import-globals-from search.js */
 /* import-globals-from containers.js */
-/* import-globals-from content.js */
 /* import-globals-from privacy.js */
 /* import-globals-from applications.js */
-/* import-globals-from security.js */
 /* import-globals-from sync.js */
 /* import-globals-from ../../../base/content/utilityOverlay.js */
 
@@ -57,14 +54,11 @@ function init_all() {
 
   gSubDialog.init();
   register_module("paneGeneral", gMainPane);
-  register_module("paneSearch", gSearchPane);
   register_module("panePrivacy", gPrivacyPane);
   register_module("paneContainers", gContainersPane);
   register_module("paneAdvanced", gAdvancedPane);
   register_module("paneApplications", gApplicationsPane);
-  register_module("paneContent", gContentPane);
   register_module("paneSync", gSyncPane);
-  register_module("paneSecurity", gSecurityPane);
 
   let categories = document.getElementById("categories");
   categories.addEventListener("select", event => gotoPref(event.target.value));
@@ -123,29 +117,13 @@ function init_dynamic_padding() {
 
 function telemetryBucketForCategory(category) {
   switch (category) {
-    case "general":
-    case "search":
-    case "content":
     case "applications":
+    case "advanced":
+    case "containers":
+    case "general":
     case "privacy":
-    case "security":
     case "sync":
       return category;
-    case "advanced":
-      let advancedPaneTabs = document.getElementById("advancedPrefs");
-      switch (advancedPaneTabs.selectedTab.id) {
-        case "generalTab":
-          return "advancedGeneral";
-        case "dataChoicesTab":
-          return "advancedDataChoices";
-        case "networkTab":
-          return "advancedNetwork";
-        case "updateTab":
-          return "advancedUpdates";
-        case "encryptionTab":
-          return "advancedCerts";
-      }
-      // fall-through for unknown.
     default:
       return "unknown";
   }
@@ -193,7 +171,7 @@ function gotoPref(aCategory) {
   mainContent.scrollTop = 0;
 
   Services.telemetry
-          .getHistogramById("FX_PREFERENCES_CATEGORY_OPENED")
+          .getHistogramById("FX_PREFERENCES_CATEGORY_OPENED_V2")
           .add(telemetryBucketForCategory(friendlyName));
 }
 

@@ -16,7 +16,7 @@ function setupFakeHandler() {
 
 add_task(function*() {
   setupFakeHandler();
-  yield openPreferencesViaOpenPreferencesAPI("applications", null, {leaveOpen: true});
+  yield openPreferencesViaOpenPreferencesAPI("applications", {leaveOpen: true});
   info("Preferences page opened on the applications pane.");
   let win = gBrowser.selectedBrowser.contentWindow;
 
