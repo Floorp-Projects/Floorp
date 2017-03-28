@@ -29,6 +29,7 @@ EXTRA_JS_MODULES += [
     'Feeds.jsm',
     'FormSubmitObserver.jsm',
     'FormValidationHandler.jsm',
+    'FullZoomUI.jsm',
     'HiddenFrame.jsm',
     'LaterRun.jsm',
     'NetworkPrioritizer.jsm',
@@ -45,7 +46,6 @@ EXTRA_JS_MODULES += [
     'Social.jsm',
     'SocialService.jsm',
     'TransientPrefs.jsm',
-    'URLBarZoom.jsm',
     'webrtcUI.jsm',
 ]
 
