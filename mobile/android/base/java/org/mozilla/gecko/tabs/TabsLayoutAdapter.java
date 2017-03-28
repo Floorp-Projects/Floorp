@@ -82,18 +82,19 @@ public class TabsLayoutAdapter
         }
     }
 
+    /**
+     * Insert {@code tab} in the tabs list at the specified {@code index}.
+     * @param index 0 <= index <= current tab count
+     */
     /* package */ void notifyTabInserted(Tab tab, int index) {
         if (index >= 0 && index <= tabs.size()) {
             tabs.add(index, tab);
             notifyItemInserted(index);
         } else {
-            // Add to the end.
+            // The index is out of bounds; add to the end.
             tabs.add(tab);
             notifyItemInserted(tabs.size() - 1);
-            // index == -1 is a valid way to add to the end, the other cases are errors.
-            if (index != -1) {
-                Log.e(LOGTAG, "Tab was inserted at an invalid position: " + Integer.toString(index));
-            }
+            Log.e(LOGTAG, "Tab was inserted at an invalid position: " + Integer.toString(index));
         }
     }
 

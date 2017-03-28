@@ -49,8 +49,9 @@ abstract class TabsGridLayout extends TabsLayout {
         // When you add an item at the first visible position to a GridLayoutManager and there's
         // room to scroll, RecyclerView scrolls the new position to anywhere from near the bottom of
         // its row to completely offscreen (for unknown reasons), so we need to scroll to fix that.
-        // We also scroll when the item being added is the only item on the final row.
-        return index == firstVisibleIndex ||
-                (index == getAdapter().getItemCount() - 1 && index % spanCount == 0);
+        // We also always need to scroll if the new tab is a new last tab on a row by itself; more
+        // generally, another app can open a new last tab with the tabs tray open and the scroll at
+        // an arbitrary position, so we need to always scroll in that more general case as well.
+        return index == firstVisibleIndex || index == getAdapter().getItemCount() - 1;
     }
 }
