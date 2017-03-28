@@ -82,7 +82,8 @@ RegExpStatics::executeLazy(JSContext* cx)
 
     /* Retrieve or create the RegExpShared in this compartment. */
     RootedRegExpShared shared(cx);
-    if (!cx->compartment()->regExps.get(cx, lazySource, lazyFlags, &shared))
+    RootedAtom source(cx, lazySource);
+    if (!cx->compartment()->regExps.get(cx, source, lazyFlags, &shared))
         return false;
 
     /*
@@ -92,7 +93,8 @@ RegExpStatics::executeLazy(JSContext* cx)
 
     /* Execute the full regular expression. */
     RootedLinearString input(cx, matchesInput);
-    RegExpRunStatus status = shared->execute(cx, input, lazyIndex, &this->matches, nullptr);
+    RegExpRunStatus status = RegExpShared::execute(cx, &shared, input, lazyIndex, &this->matches,
+                                                   nullptr);
     if (status == RegExpRunStatus_Error)
         return false;
 

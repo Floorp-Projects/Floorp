@@ -121,10 +121,11 @@ CreateRegExpSearchResult(JSContext* cx, const MatchPairs& matches)
  * steps 3, 9-14, except 12.a.i, 12.c.i.1.
  */
 static RegExpRunStatus
-ExecuteRegExpImpl(JSContext* cx, RegExpStatics* res, RegExpShared& re, HandleLinearString input,
-                  size_t searchIndex, MatchPairs* matches, size_t* endIndex)
+ExecuteRegExpImpl(JSContext* cx, RegExpStatics* res, MutableHandleRegExpShared re,
+                  HandleLinearString input, size_t searchIndex, MatchPairs* matches,
+                  size_t* endIndex)
 {
-    RegExpRunStatus status = re.execute(cx, input, searchIndex, matches, endIndex);
+    RegExpRunStatus status = RegExpShared::execute(cx, re, input, searchIndex, matches, endIndex);
 
     /* Out of spec: Update RegExpStatics. */
     if (status == RegExpRunStatus_Success && res) {
@@ -132,7 +133,7 @@ ExecuteRegExpImpl(JSContext* cx, RegExpStatics* res, RegExpShared& re, HandleLin
             if (!res->updateFromMatchPairs(cx, input, *matches))
                 return RegExpRunStatus_Error;
         } else {
-            res->updateLazily(cx, input, &re, searchIndex);
+            res->updateLazily(cx, input, re, searchIndex);
         }
     }
     return status;
@@ -150,7 +151,7 @@ js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res, Handle<RegExpObject*>
 
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
 
-    RegExpRunStatus status = ExecuteRegExpImpl(cx, res, *shared, input, *lastIndex,
+    RegExpRunStatus status = ExecuteRegExpImpl(cx, res, &shared, input, *lastIndex,
                                                &matches, nullptr);
     if (status == RegExpRunStatus_Error)
         return false;
@@ -968,7 +969,7 @@ ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
     }
 
     /* Steps 3, 11-14, except 12.a.i, 12.c.i.1. */
-    RegExpRunStatus status = ExecuteRegExpImpl(cx, res, *re, input, lastIndex, matches, endIndex);
+    RegExpRunStatus status = ExecuteRegExpImpl(cx, res, &re, input, lastIndex, matches, endIndex);
     if (status == RegExpRunStatus_Error)
         return RegExpRunStatus_Error;
 
