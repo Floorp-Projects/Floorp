@@ -10,25 +10,54 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
-ServiceWorkerUpdaterChild::ServiceWorkerUpdaterChild(Runnable* aSuccessRunnable,
-                                                     Runnable* aFailureRunnable)
+ServiceWorkerUpdaterChild::ServiceWorkerUpdaterChild(GenericPromise* aPromise,
+                                                     CancelableRunnable* aSuccessRunnable,
+                                                     CancelableRunnable* aFailureRunnable)
   : mSuccessRunnable(aSuccessRunnable)
   , mFailureRunnable(aFailureRunnable)
 {
+  MOZ_ASSERT(aPromise);
   MOZ_ASSERT(aSuccessRunnable);
+  MOZ_ASSERT(aFailureRunnable);
+
+  aPromise->Then(AbstractThread::GetCurrent(), __func__,
+    [this]() {
+      mPromiseHolder.Complete();
+      Unused << Send__delete__(this);
+  }).Track(mPromiseHolder);
 }
 
 mozilla::ipc::IPCResult
 ServiceWorkerUpdaterChild::RecvProceed(const bool& aAllowed)
 {
+  // If we have a callback, it will resolve the promise.
+
   if (aAllowed) {
     mSuccessRunnable->Run();
-  } else if (mFailureRunnable) {
+    mFailureRunnable->Cancel();
+  } else {
     mFailureRunnable->Run();
+    mSuccessRunnable->Cancel();
   }
 
-  Unused << Send__delete__(this);
+  mSuccessRunnable = nullptr;
+  mFailureRunnable = nullptr;
+
   return IPC_OK();
+}
+
+void
+ServiceWorkerUpdaterChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  if (mSuccessRunnable) {
+    mSuccessRunnable->Cancel();
+  }
+
+  if (mFailureRunnable) {
+    mFailureRunnable->Cancel();
+  }
+
+  mPromiseHolder.DisconnectIfExists();
 }
 
 } // namespace workers
