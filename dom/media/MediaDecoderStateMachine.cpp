@@ -1888,6 +1888,14 @@ public:
     // Do nothing since no decoding is going on.
   }
 
+  void HandleResumeVideoDecoding(const TimeUnit&) override
+  {
+    // Resume the video decoder and seek to the last video frame.
+    // This triggers a video-only seek which won't update the playback position.
+    StateObject::HandleResumeVideoDecoding(
+      TimeUnit::FromMicroseconds(mMaster->mDecodedVideoEndTime));
+  }
+
   void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) override
   {
     if (aPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
