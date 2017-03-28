@@ -5406,11 +5406,7 @@ pref("intl.allow-insecure-text-input", false);
 pref("dom.meta-viewport.enabled", false);
 
 // The interval at which to check for slow running addons
-#ifdef NIGHTLY_BUILD
-pref("browser.addon-watch.interval", 15000);
-#else
 pref("browser.addon-watch.interval", -1);
-#endif
 pref("browser.addon-watch.ignore", "[\"mochikit@mozilla.org\",\"special-powers@mozilla.org\",\"fxdevtools-adapters@mozilla.org\",\"fx-devtools\",\"webcompat-reporter@mozilla.org\"]");
 
 // Search service settings
