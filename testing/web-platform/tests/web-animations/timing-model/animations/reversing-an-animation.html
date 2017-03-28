@@ -122,6 +122,16 @@ test(function(t) {
    'and the target effect end is positive infinity should throw an exception');
 
 test(function(t) {
+  var animation = createDiv(t).animate({}, { duration: 100 * MS_PER_SEC,
+                                             iterations: Infinity });
+  animation.currentTime = -200 * MS_PER_SEC;
+
+  try { animation.reverse(); } catch(e) { }
+
+  assert_equals(animation.playbackRate, 1, 'playbackRate remains unchanged');
+}, 'When reversing throws an exception, the playback rate remains unchanged');
+
+test(function(t) {
   var div = createDiv(t);
   var animation = div.animate({}, {duration: 100 * MS_PER_SEC,
                                    iterations: Infinity});
