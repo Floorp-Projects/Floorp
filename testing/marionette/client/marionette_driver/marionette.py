@@ -518,7 +518,7 @@ class Alert(object):
     ::
 
         Alert(marionette).accept()
-        Alert(merionette).dismiss()
+        Alert(marionette).dismiss()
     """
 
     def __init__(self, marionette):
