@@ -37,6 +37,7 @@
 #include "nsITokenPasswordDialogs.h"
 #include "nsIWindowWatcher.h"
 #include "nsIXULRuntime.h"
+#include "nsLiteralString.h"
 #include "nsNSSCertificateDB.h"
 #include "nsNSSHelper.h"
 #include "nsNSSShutDown.h"
@@ -571,7 +572,8 @@ PCCERT_CONTEXTToCERTCertificate(PCCERT_CONTEXT pccert)
                             true)); // copy DER
 }
 
-static const char* kMicrosoftFamilySafetyCN = "Microsoft Family Safety";
+static NS_NAMED_LITERAL_CSTRING(kMicrosoftFamilySafetyCN,
+                                "Microsoft Family Safety");
 
 nsresult
 nsNSSComponent::MaybeImportFamilySafetyRoot(PCCERT_CONTEXT certificate,
@@ -594,7 +596,7 @@ nsNSSComponent::MaybeImportFamilySafetyRoot(PCCERT_CONTEXT certificate,
   UniquePORTString subjectName(CERT_GetCommonName(&nssCertificate->subject));
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("subject name is '%s'", subjectName.get()));
-  if (nsCRT::strcmp(subjectName.get(), kMicrosoftFamilySafetyCN) == 0) {
+  if (kMicrosoftFamilySafetyCN.Equals(subjectName.get())) {
     wasFamilySafetyRoot = true;
     CERTCertTrust trust = {
       CERTDB_TRUSTED_CA | CERTDB_VALID_CA | CERTDB_USER,
@@ -974,7 +976,7 @@ nsNSSComponent::ImportEnterpriseRootsForLocation(DWORD locationFlag)
     // Safety support).
     UniquePORTString subjectName(
       CERT_GetCommonName(&nssCertificate->subject));
-    if (nsCRT::strcmp(subjectName.get(), kMicrosoftFamilySafetyCN) == 0) {
+    if (kMicrosoftFamilySafetyCN.Equals(subjectName.get())) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("skipping Family Safety Root"));
       continue;
     }
