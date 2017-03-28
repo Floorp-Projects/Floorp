@@ -27,7 +27,7 @@
 #define kMinUnwrittenChanges   300
 #define kMinDumpInterval       20000 // in milliseconds
 #define kMaxBufSize            16384
-#define kIndexVersion          0x00000004
+#define kIndexVersion          0x00000005
 #define kUpdateIndexStartDelay 50000 // in milliseconds
 
 #define INDEX_NAME      "index"
@@ -918,13 +918,18 @@ CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
                         const uint32_t      *aFrecency,
                         const uint32_t      *aExpirationTime,
                         const bool          *aHasAltData,
+                        const uint16_t      *aOnStartTime,
+                        const uint16_t      *aOnStopTime,
                         const uint32_t      *aSize)
 {
   LOG(("CacheIndex::UpdateEntry() [hash=%08x%08x%08x%08x%08x, "
-       "frecency=%s, expirationTime=%s, hasAltData=%s, size=%s]", LOGSHA1(aHash),
+       "frecency=%s, expirationTime=%s, hasAltData=%s, onStartTime=%s, "
+       "onStopTime=%s, size=%s]", LOGSHA1(aHash),
        aFrecency ? nsPrintfCString("%u", *aFrecency).get() : "",
        aExpirationTime ? nsPrintfCString("%u", *aExpirationTime).get() : "",
        aHasAltData ? (*aHasAltData ? "true" : "false") : "",
+       aOnStartTime ? nsPrintfCString("%u", *aOnStartTime).get() : "",
+       aOnStopTime ? nsPrintfCString("%u", *aOnStopTime).get() : "",
        aSize ? nsPrintfCString("%u", *aSize).get() : ""));
 
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
@@ -955,7 +960,8 @@ CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
       MOZ_ASSERT(index->mPendingUpdates.Count() == 0);
       MOZ_ASSERT(entry);
 
-      if (!HasEntryChanged(entry, aFrecency, aExpirationTime, aHasAltData, aSize)) {
+      if (!HasEntryChanged(entry, aFrecency, aExpirationTime, aHasAltData,
+                           aOnStartTime, aOnStopTime, aSize)) {
         return NS_OK;
       }
 
@@ -969,6 +975,18 @@ CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
 
       if (aExpirationTime) {
         entry->SetExpirationTime(*aExpirationTime);
+      }
+
+      if (aHasAltData) {
+        entry->SetHasAltData(*aHasAltData);
+      }
+
+      if (aOnStartTime) {
+        entry->SetOnStartTime(*aOnStartTime);
+      }
+
+      if (aOnStopTime) {
+        entry->SetOnStopTime(*aOnStopTime);
       }
 
       if (aSize) {
@@ -1005,6 +1023,18 @@ CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
 
       if (aExpirationTime) {
         updated->SetExpirationTime(*aExpirationTime);
+      }
+
+      if (aHasAltData) {
+        updated->SetHasAltData(*aHasAltData);
+      }
+
+      if (aOnStartTime) {
+        updated->SetOnStartTime(*aOnStartTime);
+      }
+
+      if (aOnStopTime) {
+        updated->SetOnStopTime(*aOnStopTime);
       }
 
       if (aSize) {
@@ -1514,6 +1544,8 @@ CacheIndex::HasEntryChanged(CacheIndexEntry *aEntry,
                             const uint32_t  *aFrecency,
                             const uint32_t  *aExpirationTime,
                             const bool      *aHasAltData,
+                            const uint16_t  *aOnStartTime,
+                            const uint16_t  *aOnStopTime,
                             const uint32_t  *aSize)
 {
   if (aFrecency && *aFrecency != aEntry->GetFrecency()) {
@@ -1525,6 +1557,14 @@ CacheIndex::HasEntryChanged(CacheIndexEntry *aEntry,
   }
 
   if (aHasAltData && *aHasAltData != aEntry->GetHasAltData()) {
+    return true;
+  }
+
+  if (aOnStartTime && *aOnStartTime != aEntry->GetOnStartTime()) {
+    return true;
+  }
+
+  if (aOnStopTime && *aOnStopTime != aEntry->GetOnStopTime()) {
     return true;
   }
 
@@ -2671,6 +2711,20 @@ CacheIndex::InitEntryFromDiskData(CacheIndexEntry *aEntry,
     return NS_ERROR_FAILURE;
   }
   aEntry->SetHasAltData(hasAltData);
+
+  static auto getUint16MetaData = [&aMetaData](const char *key) -> uint16_t {
+    const char* s64 = aMetaData->GetElement(key);
+    if (s64) {
+      nsresult rv;
+      uint64_t n64 = nsCString(s64).ToInteger64(&rv);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      return n64 <= kIndexTimeOutOfBound ? n64 : kIndexTimeOutOfBound;
+    }
+    return kIndexTimeNotAvailable;
+  };
+
+  aEntry->SetOnStartTime(getUint16MetaData("net-response-time-onstart"));
+  aEntry->SetOnStopTime(getUint16MetaData("net-response-time-onstop"));
 
   aEntry->SetFileSize(static_cast<uint32_t>(
                         std::min(static_cast<int64_t>(PR_UINT32_MAX),

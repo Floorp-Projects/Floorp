@@ -1154,7 +1154,7 @@ CacheFile::SetExpirationTime(uint32_t aExpirationTime)
   PostWriteTimer();
 
   if (mHandle && !mHandle->IsDoomed())
-    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, &aExpirationTime, nullptr);
+    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, &aExpirationTime, nullptr, nullptr, nullptr);
 
   return mMetadata->SetExpirationTime(aExpirationTime);
 }
@@ -1183,7 +1183,7 @@ CacheFile::SetFrecency(uint32_t aFrecency)
   PostWriteTimer();
 
   if (mHandle && !mHandle->IsDoomed())
-    CacheFileIOManager::UpdateIndexEntry(mHandle, &aFrecency, nullptr, nullptr);
+    CacheFileIOManager::UpdateIndexEntry(mHandle, &aFrecency, nullptr, nullptr, nullptr, nullptr);
 
   return mMetadata->SetFrecency(aFrecency);
 }
@@ -1221,7 +1221,7 @@ CacheFile::SetAltMetadata(const char* aAltMetadata)
   }
 
   if (mHandle && !mHandle->IsDoomed()) {
-    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, nullptr, &hasAltData);
+    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, nullptr, &hasAltData, nullptr, nullptr);
   }
   return rv;
 }
@@ -2393,7 +2393,23 @@ CacheFile::InitIndexEntry()
 
   bool hasAltData = mMetadata->GetElement(CacheFileUtils::kAltDataKey) ? true : false;
 
-  rv = CacheFileIOManager::UpdateIndexEntry(mHandle, &frecency, &expTime, &hasAltData);
+  static auto toUint16 = [](const char* s) -> uint16_t {
+    if (s) {
+      nsresult rv;
+      uint64_t n64 = nsCString(s).ToInteger64(&rv);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      return n64 <= kIndexTimeOutOfBound ? n64 : kIndexTimeOutOfBound ;
+    }
+    return kIndexTimeNotAvailable;
+  };
+
+  const char *onStartTimeStr = mMetadata->GetElement("net-response-time-onstart");
+  uint16_t onStartTime = toUint16(onStartTimeStr);
+
+  const char *onStopTimeStr = mMetadata->GetElement("net-response-time-onstop");
+  uint16_t onStopTime = toUint16(onStopTimeStr);
+
+  rv = CacheFileIOManager::UpdateIndexEntry(mHandle, &frecency, &expTime, &hasAltData, &onStartTime, &onStopTime);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
