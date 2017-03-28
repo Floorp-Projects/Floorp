@@ -24,7 +24,7 @@ const {
 } = require("../selectors/index");
 
 // Components
-const RequestListItem = createFactory(require("./RequestListItem"));
+const RequestListItem = createFactory(require("./request-list-item"));
 const RequestListContextMenu = require("../request-list-context-menu");
 
 const { div } = DOM;

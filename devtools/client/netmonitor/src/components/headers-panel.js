@@ -20,8 +20,8 @@ const { writeHeaderText } = require("../utils/request-utils");
 
 // Components
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const MDNLink = createFactory(require("./MDNLink"));
-const PropertiesView = createFactory(require("./PropertiesView"));
+const MDNLink = createFactory(require("./mdn-link"));
+const PropertiesView = createFactory(require("./properties-view"));
 
 const Rep = createFactory(REPS.Rep);
 const { button, div, input, textarea } = DOM;
