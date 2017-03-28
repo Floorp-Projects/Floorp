@@ -55,6 +55,7 @@ ClientPaintedLayer::PaintThebes()
 
   if (!state.mRegionToDraw.IsEmpty() && !ClientManager()->GetPaintedLayerCallback()) {
     ClientManager()->SetTransactionIncomplete();
+    mContentClient->EndPaint(nullptr);
     return;
   }
 
