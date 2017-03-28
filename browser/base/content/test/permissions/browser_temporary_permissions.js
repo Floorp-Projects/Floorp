@@ -3,12 +3,11 @@
 
 "use strict";
 
-Cu.import("resource:///modules/SitePermissions.jsm", this);
 Cu.import("resource:///modules/E10SUtils.jsm");
 
 const ORIGIN = "https://example.com";
-const PERMISSIONS_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) + "permissions.html"
-const SUBFRAME_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) + "temporary_permissions_subframe.html"
+const PERMISSIONS_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) + "permissions.html";
+const SUBFRAME_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) + "temporary_permissions_subframe.html";
 
 const EXPIRE_TIME_MS = 100;
 const TIMEOUT_MS = 500;
@@ -38,7 +37,7 @@ add_task(function* testTempPermissionChangeEvents() {
 
 // Test that temporary permissions can be re-requested after they expired
 // and that the identity block is updated accordingly.
-// TODO (blocked by bug 1334421): Write a check for webrtc permissions,
+// TODO (bug 1349144): Write a check for webrtc permissions,
 // because they use a different code path.
 add_task(function* testTempPermissionRequestAfterExpiry() {
   yield SpecialPowers.pushPrefEnv({set: [

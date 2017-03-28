@@ -253,7 +253,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
 
   mMatrixForChildren = GetMaskTransform(aParams.maskedFrame) *
                        aParams.toUserSpace;
-  DrawResult result;
+  DrawResult result = DrawResult::SUCCESS;
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
@@ -267,10 +267,8 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
       m = static_cast<nsSVGElement*>(kid->GetContent())->
             PrependLocalTransformsTo(m, eUserSpaceToParent);
     }
-    result = nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m);
-    if (result != DrawResult::SUCCESS) {
-      return MakePair(result, RefPtr<SourceSurface>());
-    }
+    result &= nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m, nullptr,
+                                                aParams.flags);
   }
 
   RefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();
@@ -324,12 +322,12 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
 
   // Moz2D transforms in the opposite direction to Thebes
   if (!maskSurfaceMatrix.Invert()) {
-    return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
+    return MakePair(DrawResult::SUCCESS, RefPtr<SourceSurface>());
   }
 
   *aParams.maskTransform = ToMatrix(maskSurfaceMatrix);
   RefPtr<SourceSurface> surface = destMaskSurface.forget();
-  return MakePair(DrawResult::SUCCESS, Move(surface));
+  return MakePair(result, Move(surface));
 }
 
 gfxRect

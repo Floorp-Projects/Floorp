@@ -67,42 +67,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
   const url2 = "http://example.org/chrome/mobile/android/tests/browser/chrome/basic_article.html";
   const url3 = "data:text/html;charset=utf-8,It%20was%20a%20dark%20and%20stormy%20night.";
 
-  add_task(function* test_sessionStoreClearTabHistory() {
-    // Add a new tab with some content
-    tabTest = BrowserApp.addTab(url1 , { selected: true, parentId: BrowserApp.selectedTab.id });
-    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
-
-    // Navigate to create some history
-    tabTest.browser.loadURI(url2);
-    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
-    tabTest.browser.loadURI(url3);
-    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
-    is(tabTest.browser.canGoBack, true, "can go back");
-    tabTest.browser.goBack();
-    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
-
-    // Check that the session store has recorded this history
-    let data = tabTest.browser.__SS_data;
-    is(data.entries.length, 3, "the session store has captured 3 history entries");
-    is(data.index, 2, "history index is correct");
-    is(data.entries[0].url, url1, "URL of first history entry is correct");
-
-    // Clear browsing history
-    let sanitize = { history:true };
-    let notification = promiseNotification("sessionstore-state-purge-complete");
-
-    BrowserApp.sanitize(sanitize);
-    yield notification;
-
-    // Only the current session history entry should remain
-    data = tabTest.browser.__SS_data;
-    is(data.entries.length, 1, "the session store has cleared all previous entries");
-    is(data.index, 1, "history index is correct");
-    is(data.entries[0].url, url2, "URL of first history entry is correct after data clearing");
-
-    cleanupTabs();
-  });
-
+  // Outside of shutting down, clearing history will trigger an async delete
+  // of the session files. To avoid any interference from that here, this test
+  // therefore has to run first.
   add_task(function* test_sessionStoreClearFiles() {
     // Temporarily set the session store to shutdown mode to test the
     // synchronous deletion code path.
@@ -146,6 +113,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
 
     // Revert back to normal
     ss.setLoadState(STATE_RUNNING);
+  });
+
+  add_task(function* test_sessionStoreClearTabHistory() {
+    // Add a new tab with some content
+    tabTest = BrowserApp.addTab(url1 , { selected: true, parentId: BrowserApp.selectedTab.id });
+    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
+
+    // Navigate to create some history
+    tabTest.browser.loadURI(url2);
+    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
+    tabTest.browser.loadURI(url3);
+    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
+    is(tabTest.browser.canGoBack, true, "can go back");
+    tabTest.browser.goBack();
+    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
+
+    // Check that the session store has recorded this history
+    let data = tabTest.browser.__SS_data;
+    is(data.entries.length, 3, "the session store has captured 3 history entries");
+    is(data.index, 2, "history index is correct");
+    is(data.entries[0].url, url1, "URL of first history entry is correct");
+
+    // Clear browsing history
+    let sanitize = { history:true };
+    let notification = promiseNotification("sessionstore-state-purge-complete");
+
+    BrowserApp.sanitize(sanitize);
+    yield notification;
+
+    // Only the current session history entry should remain
+    data = tabTest.browser.__SS_data;
+    is(data.entries.length, 1, "the session store has cleared all previous entries");
+    is(data.index, 1, "history index is correct");
+    is(data.entries[0].url, url2, "URL of first history entry is correct after data clearing");
+
+    cleanupTabs();
   });
 
   add_task(function* test_sessionStoreClearZombieTabHistory() {

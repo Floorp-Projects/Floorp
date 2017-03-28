@@ -196,13 +196,16 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
     }
 
     mTooltipTimer = do_CreateInstance("@mozilla.org/timer;1");
+    mTooltipTimer->SetTarget(
+        sourceContent->OwnerDoc()->EventTargetFor(TaskCategory::Other));
     if (mTooltipTimer) {
       mTargetNode = do_GetWeakReference(eventTarget);
       if (mTargetNode) {
         nsresult rv =
-          mTooltipTimer->InitWithFuncCallback(sTooltipCallback, this,
+          mTooltipTimer->InitWithNamedFuncCallback(sTooltipCallback, this,
             LookAndFeel::GetInt(LookAndFeel::eIntID_TooltipDelay, 500),
-            nsITimer::TYPE_ONE_SHOT);
+            nsITimer::TYPE_ONE_SHOT,
+            "sTooltipCallback");
         if (NS_FAILED(rv)) {
           mTargetNode = nullptr;
           mSourceNode = nullptr;

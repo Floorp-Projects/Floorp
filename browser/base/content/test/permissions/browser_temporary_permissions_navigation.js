@@ -3,8 +3,6 @@
 
 "use strict";
 
-Cu.import("resource:///modules/SitePermissions.jsm", this);
-
 // Test that temporary permissions are removed on user initiated reload only.
 add_task(function* testTempPermissionOnReload() {
   let uri = NetUtil.newURI("https://example.com");

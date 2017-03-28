@@ -56,6 +56,7 @@ class nsSVGPaintServerFrame : public nsSVGContainerFrame
 {
 protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::image::DrawResult DrawResult;
 
   explicit nsSVGPaintServerFrame(nsStyleContext* aContext)
     : nsSVGContainerFrame(aContext)
@@ -74,13 +75,14 @@ public:
    *   that surfaces of the correct size can be created. (SVG gradients are
    *   vector based, so it's not used there.)
    */
-  virtual already_AddRefed<gfxPattern>
+  virtual mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
     GetPaintServerPattern(nsIFrame *aSource,
                           const DrawTarget* aDrawTarget,
                           const gfxMatrix& aContextMatrix,
                           nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                           float aOpacity,
-                          const gfxRect *aOverrideBounds = nullptr) = 0;
+                          const gfxRect *aOverrideBounds = nullptr,
+                          uint32_t aFlags = 0) = 0;
 
   // nsIFrame methods:
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
