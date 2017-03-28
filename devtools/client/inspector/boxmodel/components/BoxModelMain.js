@@ -99,11 +99,22 @@ module.exports = createClass({
 
   getPositionValue(property) {
     let { layout } = this.props.boxModel;
+    let value = "-";
 
-    if (layout.position === "static") {
-      return "-";
+    if (!layout[property]) {
+      return value;
     }
-    return layout[property] ? parseFloat(layout[property]) : "-";
+
+    let parsedValue = parseFloat(layout[property]);
+
+    if (Number.isNaN(parsedValue)) {
+      // Not a number. We use the raw string.
+      value = layout[property];
+    } else {
+      value = parsedValue;
+    }
+
+    return value;
   },
 
   /**
