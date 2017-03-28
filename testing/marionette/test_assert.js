@@ -87,6 +87,18 @@ add_test(function test_string() {
   run_next_test();
 });
 
+add_test(function test_window() {
+  assert.window({ document: { defaultView: true }});
+
+  let deadWindow = { get document() { throw new TypeError("can't access dead object"); }};
+
+  for (let typ of [null, undefined, deadWindow]) {
+    Assert.throws(() => assert.window(typ), NoSuchWindowError);
+  }
+
+  run_next_test();
+});
+
 add_test(function test_object() {
   assert.object({});
   assert.object(new Object());
