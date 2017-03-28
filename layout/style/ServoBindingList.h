@@ -291,7 +291,8 @@ SERVO_BINDING_FUNC(Servo_NoteExplicitHints, void, RawGeckoElementBorrowed elemen
 SERVO_BINDING_FUNC(Servo_TakeChangeHint, nsChangeHint, RawGeckoElementBorrowed element)
 SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoComputedValuesStrong,
                    RawGeckoElementBorrowed element,
-                   RawServoStyleSetBorrowed set)
+                   RawServoStyleSetBorrowed set,
+                   bool allow_stale)
 SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoComputedValuesStrong,
                    RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
                    bool is_probe, RawServoStyleSetBorrowed set)

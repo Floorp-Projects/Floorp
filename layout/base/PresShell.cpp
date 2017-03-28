@@ -2953,6 +2953,10 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
   nsStyleChangeList changeList(mPresContext->StyleSet()->BackendType());
   changeList.AppendChange(nullptr, aContent, nsChangeHint_ReconstructFrame);
 
+  // We might have restyles pending when we're asked to recreate frames.
+  // Record that we're OK with stale styles being returned, to avoid assertions.
+  ServoStyleSet::AutoAllowStaleStyles guard(mStyleSet->GetAsServo());
+
   // Mark ourselves as not safe to flush while we're doing frame construction.
   ++mChangeNestCount;
   RestyleManager* restyleManager = mPresContext->RestyleManager();
