@@ -80,9 +80,18 @@ module.exports = createClass({
     let value = "-";
 
     if (direction in autoMargins) {
-      value = "auto";
+      value = autoMargins[direction];
     } else if (layout[property]) {
-      value = parseFloat(layout[property]);
+      let parsedValue = parseFloat(layout[property]);
+
+      if (Number.isNaN(parsedValue)) {
+        // Not a number. We use the raw string.
+        // Useful for pseudo-elements with auto margins since they
+        // don't appear in autoMargins.
+        value = layout[property];
+      } else {
+        value = parsedValue;
+      }
     }
 
     return value;
