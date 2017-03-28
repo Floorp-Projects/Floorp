@@ -120,7 +120,10 @@ this.SelectContentHelper.prototype = {
   },
 
   _buildOptionList() {
-    return buildOptionListForChildren(this.element);
+    DOMUtils.addPseudoClassLock(this.element, ":focus");
+    let result = buildOptionListForChildren(this.element);
+    DOMUtils.clearPseudoClassLocks(this.element);
+    return result;
   },
 
   _update() {
