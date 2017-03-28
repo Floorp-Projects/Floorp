@@ -39,7 +39,6 @@ LOCAL_INCLUDES += [
     '/media/webrtc/signaling/src/peerconnection',
     '/media/webrtc/signaling/src/sdp/sipcc',
     '/media/webrtc/trunk',
-    '/media/webrtc/trunk/testing/gtest/include',
     '/xpcom/base',
 ]
 
