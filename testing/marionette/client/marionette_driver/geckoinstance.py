@@ -71,7 +71,12 @@ class GeckoInstance(object):
         "hangmonitor.timeout": 0,
 
         "javascript.options.showInConsole": True,
+
+        # Enable Marionette component
         "marionette.enabled": True,
+        # Disable recommended automation prefs in CI
+        "marionette.prefs.recommended": False,
+
         "media.volume_scale": "0.01",
 
         # Make sure the disk cache doesn't get auto disabled
