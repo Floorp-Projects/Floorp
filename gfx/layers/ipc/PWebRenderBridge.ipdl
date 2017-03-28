@@ -40,6 +40,8 @@ parent:
   sync Create(IntSize aSize);
   sync AddImage(ImageKey aImageKey, IntSize aSize, uint32_t aStride,
                 SurfaceFormat aFormat, ByteBuffer aBytes);
+  async AddBlobImage(ImageKey aImageKey, IntSize aSize, uint32_t aStride,
+                     SurfaceFormat aFormat, ByteBuffer aBytes);
   sync UpdateImage(ImageKey aImageKey, IntSize aSize,
                    SurfaceFormat aFormat, ByteBuffer aBytes);
   sync DeleteImage(ImageKey aImageKey);

@@ -62,6 +62,14 @@ WR_DECL_FFI_2(WrFontKey, uint32_t, uint32_t)
 #undef WR_DECL_FFI_1
 #undef WR_DECL_FFI_2
 
+// FFI-safe slice of bytes. Use this accross the FFI boundary to pass a temporary
+// view of a buffer of bytes.
+// The canonical gecko equivalent is mozilla::Range<uint8_t>.
+struct WrByteSlice {
+  uint8_t* mBuffer;
+  size_t mLength;
+};
+
 // ----
 // Functions invoked from Rust code
 // ----
@@ -530,7 +538,11 @@ wr_api_delete(WrAPI* api)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE void
-wr_api_add_image(WrAPI* api, WrImageKey key, const WrImageDescriptor* descriptor, uint8_t *buffer, size_t buffer_size)
+wr_api_add_image(WrAPI* api, WrImageKey key, const WrImageDescriptor* descriptor, const WrByteSlice aSlice)
+WR_FUNC;
+
+WR_INLINE void
+wr_api_add_blob_image(WrAPI* api, WrImageKey key, const WrImageDescriptor* descriptor, const WrByteSlice aSlice)
 WR_FUNC;
 
 WR_INLINE void
@@ -547,7 +559,7 @@ WR_FUNC;
 WR_INLINE void
 wr_api_update_image(WrAPI* api, WrImageKey key,
                     const WrImageDescriptor* descriptor,
-                    uint8_t *bytes, size_t size)
+                    const WrByteSlice bytes)
 WR_FUNC;
 
 WR_INLINE void
