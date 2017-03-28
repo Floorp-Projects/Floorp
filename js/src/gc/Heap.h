@@ -315,9 +315,6 @@ class TenuredCell : public Cell
     static MOZ_ALWAYS_INLINE void writeBarrierPost(void* cellp, TenuredCell* prior,
                                                    TenuredCell* next);
 
-    // Default implementation for kinds that don't require finalization.
-    void finalize(FreeOp* fop) {}
-
     // Default implementation for kinds that don't require fixup.
     void fixupAfterMovingGC() {}
 
