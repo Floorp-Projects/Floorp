@@ -3,8 +3,8 @@
  */
 
 const PAGE_URL = "http://icon.mozilla.org/";
-const ICON16_URL = "http://mochi.test:8888/tests/toolkit/components/places/tests/browser/favicon-normal16.png";
-const ICON32_URL = "http://mochi.test:8888/tests/toolkit/components/places/tests/browser/favicon-normal32.png";
+const ICON16_URL = "http://places.test/favicon-normal16.png";
+const ICON32_URL = "http://places.test/favicon-normal32.png";
 
 add_task(function* () {
   yield PlacesTestUtils.addVisits(PAGE_URL);

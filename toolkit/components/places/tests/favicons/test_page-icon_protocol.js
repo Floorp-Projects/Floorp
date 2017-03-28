@@ -50,17 +50,23 @@ add_task(function* setup() {
 add_task(function* known_url() {
   let {data, contentType} = yield fetchIconForSpec(TEST_URI.spec);
   Assert.equal(contentType, gFavicon.contentType);
-  Assert.ok(data == gFavicon.data, "Got the favicon data");
+  Assert.deepEqual(data, gFavicon.data, "Got the favicon data");
 });
 
 add_task(function* unknown_url() {
   let {data, contentType} = yield fetchIconForSpec("http://www.moz.org/");
   Assert.equal(contentType, gDefaultFavicon.contentType);
-  Assert.ok(data == gDefaultFavicon.data, "Got the default favicon data");
+  Assert.deepEqual(data, gDefaultFavicon.data, "Got the default favicon data");
 });
 
 add_task(function* invalid_url() {
   let {data, contentType} = yield fetchIconForSpec("test");
   Assert.equal(contentType, gDefaultFavicon.contentType);
   Assert.ok(data == gDefaultFavicon.data, "Got the default favicon data");
+});
+
+add_task(function* subpage_url_fallback() {
+  let {data, contentType} = yield fetchIconForSpec("http://mozilla.org/missing");
+  Assert.equal(contentType, gFavicon.contentType);
+  Assert.deepEqual(data, gFavicon.data, "Got the root favicon data");
 });
