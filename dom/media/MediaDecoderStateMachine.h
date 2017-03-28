@@ -362,8 +362,8 @@ protected:
   // Returns true if we're running low on buffered data.
   bool HasLowBufferedData();
 
-  // Returns true if we have less than aUsecs of buffered data available.
-  bool HasLowBufferedData(int64_t aUsecs);
+  // Returns true if we have less than aThreshold of buffered data available.
+  bool HasLowBufferedData(const media::TimeUnit& aThreshold);
 
   void UpdateNextFrameStatus(NextFrameStatus aStatus);
 
