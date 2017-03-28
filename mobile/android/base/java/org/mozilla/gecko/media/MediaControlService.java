@@ -312,7 +312,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 Log.d(LOGTAG, "Controller, onPlay");
                 super.onPlay();
                 setState(State.PLAYING);
-                notifyObservers("MediaControl", "resumeMedia");
+                notifyObservers("mediaControl", "resumeMedia");
             }
 
             @Override
@@ -320,7 +320,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 Log.d(LOGTAG, "Controller, onPause");
                 super.onPause();
                 setState(State.PAUSED);
-                notifyObservers("MediaControl", "mediaControlPaused");
+                notifyObservers("mediaControl", "mediaControlPaused");
             }
 
             @Override
@@ -328,7 +328,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 Log.d(LOGTAG, "Controller, onStop");
                 super.onStop();
                 setState(State.STOPPED);
-                notifyObservers("MediaControl", "mediaControlStopped");
+                notifyObservers("mediaControl", "mediaControlStopped");
                 mTabReference = new WeakReference<>(null);
             }
         });
