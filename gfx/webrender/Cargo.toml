@@ -1,15 +1,16 @@
 [package]
 name = "webrender"
-version = "0.25.0"
+version = "0.26.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
 build = "build.rs"
 
 [features]
-default = ["freetype-lib"]
+default = ["freetype-lib", "webgl"]
 freetype-lib = ["freetype/servo-freetype-sys"]
 profiler = ["thread_profiler/thread_profiler"]
+webgl = ["offscreen_gl_context", "webrender_traits/webgl"]
 
 [dependencies]
 app_units = "0.4"
@@ -22,7 +23,7 @@ gleam = "0.4.1"
 lazy_static = "0.2"
 log = "0.3"
 num-traits = "0.1.32"
-offscreen_gl_context = {version = "0.8.0", features = ["serde", "osmesa"]}
+offscreen_gl_context = {version = "0.8.0", features = ["serde", "osmesa"], optional = true}
 time = "0.1"
 threadpool = "1.3.2"
 webrender_traits = {path = "../webrender_traits"}

@@ -706,7 +706,8 @@ impl TextureCache {
     pub fn update(&mut self,
                   image_id: TextureCacheItemId,
                   descriptor: ImageDescriptor,
-                  data: ImageData) {
+                  data: ImageData,
+                  dirty_rect: Option<DeviceUintRect>) {
         let existing_item = self.items.get(image_id);
 
         // TODO(gw): Handle updates to size/format!
@@ -721,14 +722,28 @@ impl TextureCache {
                 panic!("The vector image should have been rasterized into a raw image.");
             }
             ImageData::Raw(bytes) => {
-                TextureUpdateOp::Update {
-                    page_pos_x: existing_item.allocated_rect.origin.x,
-                    page_pos_y: existing_item.allocated_rect.origin.y,
-                    width: descriptor.width,
-                    height: descriptor.height,
-                    data: bytes,
-                    stride: descriptor.stride,
-                    offset: descriptor.offset,
+                if let Some(dirty) = dirty_rect {
+                    let stride = descriptor.compute_stride();
+                    let offset = descriptor.offset + dirty.origin.y * stride + dirty.origin.x;
+                    TextureUpdateOp::Update {
+                        page_pos_x: existing_item.allocated_rect.origin.x + dirty.origin.x,
+                        page_pos_y: existing_item.allocated_rect.origin.y + dirty.origin.y,
+                        width: dirty.size.width,
+                        height: dirty.size.height,
+                        data: bytes,
+                        stride: Some(stride),
+                        offset: offset,
+                    }
+                } else {
+                    TextureUpdateOp::Update {
+                        page_pos_x: existing_item.allocated_rect.origin.x,
+                        page_pos_y: existing_item.allocated_rect.origin.y,
+                        width: descriptor.width,
+                        height: descriptor.height,
+                        data: bytes,
+                        stride: descriptor.stride,
+                        offset: descriptor.offset,
+                    }
                 }
             }
         };

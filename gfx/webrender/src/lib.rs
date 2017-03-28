@@ -77,6 +77,13 @@ mod texture_cache;
 mod tiling;
 mod util;
 
+#[cfg(feature = "webgl")]
+mod webgl_types;
+
+#[cfg(not(feature = "webgl"))]
+#[path = "webgl_stubs.rs"]
+mod webgl_types;
+
 mod shader_source {
     include!(concat!(env!("OUT_DIR"), "/shaders.rs"));
 }
@@ -127,6 +134,7 @@ extern crate num_traits;
 //extern crate notify;
 extern crate time;
 extern crate webrender_traits;
+#[cfg(feature = "webgl")]
 extern crate offscreen_gl_context;
 extern crate byteorder;
 extern crate threadpool;

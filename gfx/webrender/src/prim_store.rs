@@ -280,13 +280,15 @@ pub struct GradientDataEntry {
 // color for the following entry, despite them being adjacent. Colors are stored within in BGRA8
 // format for texture upload.
 pub struct GradientData {
-    pub colors: [GradientDataEntry; GRADIENT_DATA_RESOLUTION],
+    pub colors_high: [GradientDataEntry; GRADIENT_DATA_RESOLUTION],
+    pub colors_low: [GradientDataEntry; GRADIENT_DATA_RESOLUTION],
 }
 
 impl Default for GradientData {
     fn default() -> GradientData {
         GradientData {
-            colors: unsafe { mem::uninitialized() }
+            colors_high: unsafe { mem::uninitialized() },
+            colors_low: unsafe { mem::uninitialized() }
         }
     }
 }
@@ -294,7 +296,8 @@ impl Default for GradientData {
 impl Clone for GradientData {
     fn clone(&self) -> GradientData {
         GradientData {
-            colors: self.colors,
+            colors_high: self.colors_high,
+            colors_low: self.colors_low,
         }
     }
 }
@@ -314,18 +317,24 @@ impl GradientData {
         let step_a = (end_color.a - start_color.a) * inv_steps;
 
         let mut cur_color = *start_color;
-        let mut cur_packed_color = PackedTexel::from_color(&cur_color);
+        let mut cur_color_high = PackedTexel::high_bytes(&cur_color);
+        let mut cur_color_low = PackedTexel::low_bytes(&cur_color);
 
         // Walk the ramp writing start and end colors for each entry.
-        for entry in &mut self.colors[start_idx..end_idx] {
-            entry.start_color = cur_packed_color;
+        for index in start_idx..end_idx {
+            let high_byte_entry = &mut self.colors_high[index];
+            let low_byte_entry = &mut self.colors_low[index];
 
+            high_byte_entry.start_color = cur_color_high;
+            low_byte_entry.start_color = cur_color_low;
             cur_color.r += step_r;
             cur_color.g += step_g;
             cur_color.b += step_b;
             cur_color.a += step_a;
-            cur_packed_color = PackedTexel::from_color(&cur_color);
-            entry.end_color = cur_packed_color;
+            cur_color_high = PackedTexel::high_bytes(&cur_color);
+            cur_color_low = PackedTexel::low_bytes(&cur_color);
+            high_byte_entry.end_color = cur_color_high;
+            low_byte_entry.end_color = cur_color_low;
         }
 
         end_idx

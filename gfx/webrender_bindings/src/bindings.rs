@@ -854,7 +854,7 @@ pub extern "C" fn wr_api_update_image(api: &mut RenderApi,
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
 
-    api.update_image(key, descriptor.to_descriptor(), copied_bytes);
+    api.update_image(key, descriptor.to_descriptor(), copied_bytes, None);
 }
 
 #[no_mangle]
@@ -1027,7 +1027,6 @@ pub extern "C" fn wr_dp_begin(state: &mut WrState, width: u32, height: u32) {
         .dl_builder
         .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                bounds,
-                               ClipRegion::simple(&bounds),
                                0,
                                None,
                                None,
@@ -1088,7 +1087,6 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
         })
     };
 
-    let clip_region2 = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], None);
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], mask);
 
     let mut filters: Vec<FilterOp> = Vec::new();
@@ -1100,7 +1098,6 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
         .dl_builder
         .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                bounds,
-                               clip_region2,
                                state.z_index,
                                Some(PropertyBinding::Value(*transform)),
                                None,
