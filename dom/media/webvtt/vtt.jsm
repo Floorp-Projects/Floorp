@@ -28,6 +28,8 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
 
 var Cu = Components.utils;
 Cu.import('resource://gre/modules/Services.jsm');
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 (function(global) {
 
@@ -382,11 +384,12 @@ Cu.import('resource://gre/modules/Services.jsm');
       return hours + ':' + minutes + ':' + seconds + '.' + f;
     }
 
-    var isFirefox = (/firefox/i.test(window.navigator.userAgent));
+    var isFirefoxSupportPseudo = (/firefox/i.test(window.navigator.userAgent))
+          && Services.prefs.getBoolPref("media.webvtt.pseudo.enabled");
     var root;
     if (bReturnFrag) {
       root = window.document.createDocumentFragment();
-    } else if (isFirefox) {
+    } else if (isFirefoxSupportPseudo) {
       root = window.document.createElement("div", {pseudo: "::cue"});
     } else {
       root = window.document.createElement("div");
@@ -467,13 +470,17 @@ Cu.import('resource://gre/modules/Services.jsm');
     return val === 0 ? 0 : val + unit;
   };
 
+  XPCOMUtils.defineLazyPreferenceGetter(StyleBox.prototype, "supportPseudo",
+                                        "media.webvtt.pseudo.enabled", false);
+
   // Constructs the computed display state of the cue (a div). Places the div
   // into the overlay which should be a block level element (usually a div).
   function CueStyleBox(window, cue, styleOptions) {
     var isIE8 = (typeof navigator !== "undefined") &&
       (/MSIE\s8\.0/).test(navigator.userAgent);
 
-    var isFirefox = (/firefox/i.test(window.navigator.userAgent));
+    var isFirefoxSupportPseudo = (/firefox/i.test(window.navigator.userAgent))
+          && this.supportPseudo;
     var color = "rgba(255, 255, 255, 1)";
     var backgroundColor = "rgba(0, 0, 0, 0.8)";
 
@@ -495,7 +502,7 @@ Cu.import('resource://gre/modules/Services.jsm');
       font: styleOptions.font,
       whiteSpace: "pre-line",
     };
-    if (isFirefox) {
+    if (isFirefoxSupportPseudo) {
       delete styles.color;
       delete styles.backgroundColor;
       delete styles.font;
