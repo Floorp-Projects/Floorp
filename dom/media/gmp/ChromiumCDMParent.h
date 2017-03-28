@@ -112,7 +112,9 @@ protected:
                                           const nsCString& aMessage) override;
   ipc::IPCResult RecvDecrypted(const uint32_t& aId,
                                const uint32_t& aStatus,
-                               nsTArray<uint8_t>&& aData) override;
+                               ipc::Shmem&& aData) override;
+  ipc::IPCResult RecvDecryptFailed(const uint32_t& aId,
+                                   const uint32_t& aStatus) override;
   ipc::IPCResult RecvOnDecoderInitDone(const uint32_t& aStatus) override;
   ipc::IPCResult RecvDecoded(const CDMVideoFrame& aFrame) override;
   ipc::IPCResult RecvDecodeFailed(const uint32_t& aStatus) override;
@@ -120,6 +122,7 @@ protected:
   ipc::IPCResult RecvResetVideoDecoderComplete() override;
   ipc::IPCResult RecvDrainComplete() override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
+  bool SendBufferToCDM(uint32_t aSizeInBytes);
 
   void RejectPromise(uint32_t aPromiseId,
                      nsresult aError,
@@ -146,6 +149,8 @@ protected:
   uint64_t mLastStreamOffset = 0;
 
   MozPromiseHolder<MediaDataDecoder::FlushPromise> mFlushDecoderPromise;
+
+  int32_t mVideoFrameBufferSize = 0;
 
   bool mIsShutdown = false;
   bool mVideoDecoderInitialized = false;
