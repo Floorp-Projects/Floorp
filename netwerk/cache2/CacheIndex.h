@@ -38,6 +38,9 @@ class CacheFileMetadata;
 class FileOpenHelper;
 class CacheIndexIterator;
 
+const uint16_t kIndexTimeNotAvailable = 0xFFFFU;
+const uint16_t kIndexTimeOutOfBound = 0xFFFEU;
+
 typedef struct {
   // Version of the index. The index must be ignored and deleted when the file
   // on disk was written with a newer version.
@@ -62,11 +65,14 @@ static_assert(
   sizeof(CacheIndexHeader::mIsDirty) == sizeof(CacheIndexHeader),
   "Unexpected sizeof(CacheIndexHeader)!");
 
+#pragma pack(push, 4)
 struct CacheIndexRecord {
   SHA1Sum::Hash   mHash;
   uint32_t        mFrecency;
   OriginAttrsHash mOriginAttrsHash;
   uint32_t        mExpirationTime;
+  uint16_t        mOnStartTime;
+  uint16_t        mOnStopTime;
 
   /*
    *    1000 0000 0000 0000 0000 0000 0000 0000 : initialized
@@ -85,13 +91,17 @@ struct CacheIndexRecord {
     : mFrecency(0)
     , mOriginAttrsHash(0)
     , mExpirationTime(nsICacheEntry::NO_EXPIRATION_TIME)
+    , mOnStartTime(kIndexTimeNotAvailable)
+    , mOnStopTime(kIndexTimeNotAvailable)
     , mFlags(0)
   {}
 };
+#pragma pack(pop)
 
 static_assert(
   sizeof(CacheIndexRecord::mHash) + sizeof(CacheIndexRecord::mFrecency) +
   sizeof(CacheIndexRecord::mOriginAttrsHash) + sizeof(CacheIndexRecord::mExpirationTime) +
+  sizeof(CacheIndexRecord::mOnStartTime) + sizeof(CacheIndexRecord::mOnStopTime) +
   sizeof(CacheIndexRecord::mFlags) == sizeof(CacheIndexRecord),
   "Unexpected sizeof(CacheIndexRecord)!");
 
@@ -150,6 +160,8 @@ public:
     mRec->mFrecency = aOther.mRec->mFrecency;
     mRec->mExpirationTime = aOther.mRec->mExpirationTime;
     mRec->mOriginAttrsHash = aOther.mRec->mOriginAttrsHash;
+    mRec->mOnStartTime = aOther.mRec->mOnStartTime;
+    mRec->mOnStopTime = aOther.mRec->mOnStopTime;
     mRec->mFlags = aOther.mRec->mFlags;
     return *this;
   }
@@ -159,6 +171,8 @@ public:
     mRec->mFrecency = 0;
     mRec->mExpirationTime = nsICacheEntry::NO_EXPIRATION_TIME;
     mRec->mOriginAttrsHash = 0;
+    mRec->mOnStartTime = kIndexTimeNotAvailable;
+    mRec->mOnStopTime = kIndexTimeNotAvailable;
     mRec->mFlags = 0;
   }
 
@@ -167,6 +181,8 @@ public:
     MOZ_ASSERT(mRec->mFrecency == 0);
     MOZ_ASSERT(mRec->mExpirationTime == nsICacheEntry::NO_EXPIRATION_TIME);
     MOZ_ASSERT(mRec->mOriginAttrsHash == 0);
+    MOZ_ASSERT(mRec->mOnStartTime == kIndexTimeNotAvailable);
+    MOZ_ASSERT(mRec->mOnStopTime == kIndexTimeNotAvailable);
     // When we init the entry it must be fresh and may be dirty
     MOZ_ASSERT((mRec->mFlags & ~kDirtyMask) == kFreshMask);
 
@@ -216,6 +232,18 @@ public:
   }
   bool     GetHasAltData() const { return !!(mRec->mFlags & kHasAltDataMask); }
 
+  void     SetOnStartTime(uint16_t aTime)
+  {
+    mRec->mOnStartTime = aTime;
+  }
+  uint16_t  GetOnStartTime() const { return mRec->mOnStartTime; }
+
+  void     SetOnStopTime(uint16_t aTime)
+  {
+    mRec->mOnStopTime = aTime;
+  }
+  uint16_t  GetOnStopTime() const { return mRec->mOnStopTime; }
+
   // Sets filesize in kilobytes.
   void     SetFileSize(uint32_t aFileSize)
   {
@@ -246,6 +274,8 @@ public:
     NetworkEndian::writeUint32(ptr, mRec->mFrecency); ptr += sizeof(uint32_t);
     NetworkEndian::writeUint64(ptr, mRec->mOriginAttrsHash); ptr += sizeof(uint64_t);
     NetworkEndian::writeUint32(ptr, mRec->mExpirationTime); ptr += sizeof(uint32_t);
+    NetworkEndian::writeUint16(ptr, mRec->mOnStartTime); ptr += sizeof(uint16_t);
+    NetworkEndian::writeUint16(ptr, mRec->mOnStopTime); ptr += sizeof(uint16_t);
     // Dirty and fresh flags should never go to disk, since they make sense only
     // during current session.
     NetworkEndian::writeUint32(ptr, mRec->mFlags & ~(kDirtyMask | kFreshMask));
@@ -258,16 +288,20 @@ public:
     mRec->mFrecency = NetworkEndian::readUint32(ptr); ptr += sizeof(uint32_t);
     mRec->mOriginAttrsHash = NetworkEndian::readUint64(ptr); ptr += sizeof(uint64_t);
     mRec->mExpirationTime = NetworkEndian::readUint32(ptr); ptr += sizeof(uint32_t);
+    mRec->mOnStartTime = NetworkEndian::readUint16(ptr); ptr += sizeof(uint16_t);
+    mRec->mOnStopTime = NetworkEndian::readUint16(ptr); ptr += sizeof(uint16_t);
     mRec->mFlags = NetworkEndian::readUint32(ptr);
   }
 
   void Log() const {
     LOG(("CacheIndexEntry::Log() [this=%p, hash=%08x%08x%08x%08x%08x, fresh=%u,"
          " initialized=%u, removed=%u, dirty=%u, anonymous=%u, "
-         "originAttrsHash=%" PRIx64 ", frecency=%u, expirationTime=%u, size=%u]",
+         "originAttrsHash=%" PRIx64 ", frecency=%u, expirationTime=%u, "
+         "hasAltData=%u, onStartTime=%u, onStopTime=%u, size=%u]",
          this, LOGSHA1(mRec->mHash), IsFresh(), IsInitialized(), IsRemoved(),
          IsDirty(), Anonymous(), OriginAttrsHash(), GetFrecency(),
-         GetExpirationTime(), GetFileSize()));
+         GetExpirationTime(), GetHasAltData(), GetOnStartTime(),
+         GetOnStopTime(), GetFileSize()));
   }
 
   static bool RecordMatchesLoadContextInfo(CacheIndexRecord *aRec,
@@ -357,7 +391,8 @@ public:
   void InitNew()
   {
     mUpdateFlags = kFrecencyUpdatedMask | kExpirationUpdatedMask |
-                   kFileSizeUpdatedMask;
+                   kHasAltDataUpdatedMask | kOnStartTimeUpdatedMask |
+                   kOnStopTimeUpdatedMask | kFileSizeUpdatedMask;
     CacheIndexEntry::InitNew();
   }
 
@@ -379,6 +414,18 @@ public:
     CacheIndexEntry::SetHasAltData(aHasAltData);
   }
 
+  void SetOnStartTime(uint16_t aTime)
+  {
+    mUpdateFlags |= kOnStartTimeUpdatedMask;
+    CacheIndexEntry::SetOnStartTime(aTime);
+  }
+
+  void SetOnStopTime(uint16_t aTime)
+  {
+    mUpdateFlags |= kOnStopTimeUpdatedMask;
+    CacheIndexEntry::SetOnStopTime(aTime);
+  }
+
   void SetFileSize(uint32_t aFileSize)
   {
     mUpdateFlags |= kFileSizeUpdatedMask;
@@ -395,7 +442,12 @@ public:
       aDst->mRec->mExpirationTime = mRec->mExpirationTime;
     }
     aDst->mRec->mOriginAttrsHash = mRec->mOriginAttrsHash;
-
+    if (mUpdateFlags & kOnStartTimeUpdatedMask) {
+      aDst->mRec->mOnStartTime = mRec->mOnStartTime;
+    }
+    if (mUpdateFlags & kOnStopTimeUpdatedMask) {
+      aDst->mRec->mOnStopTime = mRec->mOnStopTime;
+    }
     if (mUpdateFlags & kHasAltDataUpdatedMask &&
         ((aDst->mRec->mFlags ^ mRec->mFlags) & kHasAltDataMask)) {
       // Toggle the bit if we need to.
@@ -417,6 +469,8 @@ private:
   static const uint32_t kExpirationUpdatedMask = 0x00000002;
   static const uint32_t kFileSizeUpdatedMask = 0x00000004;
   static const uint32_t kHasAltDataUpdatedMask = 0x00000008;
+  static const uint32_t kOnStartTimeUpdatedMask = 0x00000010;
+  static const uint32_t kOnStopTimeUpdatedMask = 0x00000020;
 
   uint32_t mUpdateFlags;
 };
@@ -658,6 +712,8 @@ public:
                               const uint32_t      *aFrecency,
                               const uint32_t      *aExpirationTime,
                               const bool          *aHasAltData,
+                              const uint16_t      *aOnStartTime,
+                              const uint16_t      *aOnStopTime,
                               const uint32_t      *aSize);
 
   // Remove all entries from the index. Called when clearing the whole cache.
@@ -758,6 +814,8 @@ private:
                               const uint32_t  *aFrecency,
                               const uint32_t  *aExpirationTime,
                               const bool      *aHasAltData,
+                              const uint16_t  *aOnStartTime,
+                              const uint16_t  *aOnStopTime,
                               const uint32_t  *aSize);
 
   // Merge all pending operations from mPendingUpdates into mIndex.

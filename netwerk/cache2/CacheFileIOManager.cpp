@@ -978,7 +978,8 @@ public:
     // parsing the entry file, but we must set the filesize here since nobody is
     // going to set it if there is no write to the file.
     uint32_t sizeInK = mHandle->FileSizeInK();
-    CacheIndex::UpdateEntry(mHandle->Hash(), nullptr, nullptr, nullptr, &sizeInK);
+    CacheIndex::UpdateEntry(mHandle->Hash(), nullptr, nullptr, nullptr, nullptr,
+                            nullptr, &sizeInK);
 
     return NS_OK;
   }
@@ -995,11 +996,15 @@ public:
   UpdateIndexEntryEvent(CacheFileHandle *aHandle,
                         const uint32_t  *aFrecency,
                         const uint32_t  *aExpirationTime,
-                        const bool      *aHasAltData)
+                        const bool      *aHasAltData,
+                        const uint16_t  *aOnStartTime,
+                        const uint16_t  *aOnStopTime)
     : mHandle(aHandle)
     , mHasFrecency(false)
     , mHasExpirationTime(false)
     , mHasHasAltData(false)
+    , mHasOnStartTime(false)
+    , mHasOnStopTime(false)
   {
     if (aFrecency) {
       mHasFrecency = true;
@@ -1012,6 +1017,14 @@ public:
     if (aHasAltData) {
       mHasHasAltData = true;
       mHasAltData = *aHasAltData;
+    }
+    if (aOnStartTime) {
+      mHasOnStartTime = true;
+      mOnStartTime = *aOnStartTime;
+    }
+    if (aOnStopTime) {
+      mHasOnStopTime = true;
+      mOnStopTime = *aOnStopTime;
     }
   }
 
@@ -1031,6 +1044,8 @@ public:
                             mHasFrecency ? &mFrecency : nullptr,
                             mHasExpirationTime ? &mExpirationTime : nullptr,
                             mHasHasAltData ? &mHasAltData : nullptr,
+                            mHasOnStartTime ? &mOnStartTime : nullptr,
+                            mHasOnStopTime ? &mOnStopTime : nullptr,
                             nullptr);
     return NS_OK;
   }
@@ -1041,10 +1056,14 @@ protected:
   bool                      mHasFrecency;
   bool                      mHasExpirationTime;
   bool                      mHasHasAltData;
+  bool                      mHasOnStartTime;
+  bool                      mHasOnStopTime;
 
   uint32_t                  mFrecency;
   uint32_t                  mExpirationTime;
   bool                      mHasAltData;
+  uint16_t                  mOnStartTime;
+  uint16_t                  mOnStopTime;
 };
 
 class MetadataWriteScheduleEvent : public Runnable
@@ -2057,7 +2076,8 @@ CacheFileIOManager::WriteInternal(CacheFileHandle *aHandle, int64_t aOffset,
 
     if (oldSizeInK != newSizeInK && !aHandle->IsDoomed() &&
         !aHandle->IsSpecialFile()) {
-      CacheIndex::UpdateEntry(aHandle->Hash(), nullptr, nullptr, nullptr, &newSizeInK);
+      CacheIndex::UpdateEntry(aHandle->Hash(), nullptr, nullptr, nullptr,
+                              nullptr, nullptr, &newSizeInK);
 
       if (oldSizeInK < newSizeInK) {
         EvictIfOverLimitInternal();
@@ -2586,7 +2606,8 @@ CacheFileIOManager::TruncateSeekSetEOFInternal(CacheFileHandle *aHandle,
 
   if (oldSizeInK != newSizeInK && !aHandle->IsDoomed() &&
       !aHandle->IsSpecialFile()) {
-    CacheIndex::UpdateEntry(aHandle->Hash(), nullptr, nullptr, nullptr, &newSizeInK);
+    CacheIndex::UpdateEntry(aHandle->Hash(), nullptr, nullptr, nullptr, nullptr,
+                            nullptr, &newSizeInK);
 
     if (oldSizeInK < newSizeInK) {
       EvictIfOverLimitInternal();
@@ -2891,7 +2912,8 @@ CacheFileIOManager::OverLimitEvictionInternal()
       // failing on one entry forever.
       uint32_t frecency = 0;
       uint32_t expTime = nsICacheEntry::NO_EXPIRATION_TIME;
-      rv = CacheIndex::UpdateEntry(&hash, &frecency, &expTime, nullptr, nullptr);
+      rv = CacheIndex::UpdateEntry(&hash, &frecency, &expTime, nullptr, nullptr,
+                                   nullptr, nullptr);
       NS_ENSURE_SUCCESS(rv, rv);
 
       consecutiveFailures++;
@@ -3556,13 +3578,17 @@ nsresult
 CacheFileIOManager::UpdateIndexEntry(CacheFileHandle *aHandle,
                                      const uint32_t  *aFrecency,
                                      const uint32_t  *aExpirationTime,
-                                     const bool      *aHasAltData)
+                                     const bool      *aHasAltData,
+                                     const uint16_t  *aOnStartTime,
+                                     const uint16_t  *aOnStopTime)
 {
   LOG(("CacheFileIOManager::UpdateIndexEntry() [handle=%p, frecency=%s, "
-       "expirationTime=%s hasAltData=%s]", aHandle,
+       "expirationTime=%s, hasAltData=%s, onStartTime=%s, onStopTime=%s]", aHandle,
        aFrecency ? nsPrintfCString("%u", *aFrecency).get() : "",
        aExpirationTime ? nsPrintfCString("%u", *aExpirationTime).get() : "",
-       aHasAltData ? (*aHasAltData ? "true" : "false") : ""));
+       aHasAltData ? (*aHasAltData ? "true" : "false") : "",
+       aOnStartTime ? nsPrintfCString("%u", *aOnStartTime).get() : "",
+       aOnStopTime ? nsPrintfCString("%u", *aOnStopTime).get() : ""));
 
   nsresult rv;
   RefPtr<CacheFileIOManager> ioMan = gInstance;
@@ -3576,7 +3602,8 @@ CacheFileIOManager::UpdateIndexEntry(CacheFileHandle *aHandle,
   }
 
   RefPtr<UpdateIndexEntryEvent> ev =
-    new UpdateIndexEntryEvent(aHandle, aFrecency, aExpirationTime, aHasAltData);
+    new UpdateIndexEntryEvent(aHandle, aFrecency, aExpirationTime, aHasAltData,
+                              aOnStartTime, aOnStopTime);
   rv = ioMan->mIOThread->Dispatch(ev, aHandle->mPriority
                                   ? CacheIOThread::WRITE_PRIORITY
                                   : CacheIOThread::WRITE);
