@@ -138,6 +138,7 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
     if (!aElements.AppendElement(mCaptionDiv))
       return NS_ERROR_OUT_OF_MEMORY;
+    UpdateTextTrack();
   }
 
   // Set up "videocontrols" XUL element which will be XBL-bound to the
@@ -775,4 +776,12 @@ bool nsVideoFrame::HasVideoData()
   nsIntSize size(0, 0);
   element->GetVideoSize(&size);
   return size != nsIntSize(0,0);
+}
+
+void nsVideoFrame::UpdateTextTrack()
+{
+  HTMLMediaElement* element = static_cast<HTMLMediaElement*>(GetContent());
+  if (element) {
+    element->NotifyCueDisplayStatesChanged();
+  }
 }
