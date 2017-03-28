@@ -1640,7 +1640,7 @@ fails HTTP(..) == 615121-1.html 615121-1.html
 fails HTTP(..) == 615121-2.html 615121-2.html
 fails == 617242-1.html 617242-1.html
 fails == 618071.html 618071.html
-fails == 619117-1.html 619117-1.html
+== 619117-1.html 619117-1.html
 fails HTTP(..) == 619511-1.html 619511-1.html
 == 621253-1-externalFilter.html 621253-1-externalFilter.html
 == 621253-1-internalFilter.html 621253-1-internalFilter.html
@@ -1675,8 +1675,8 @@ fails == 645647-1.html 645647-1.html
 == 645647-2.html 645647-2.html
 fails == 645768-1.html 645768-1.html
 == 650228-1.html 650228-1.html
-fails needs-focus == 652301-1a.html 652301-1a.html
-fails needs-focus == 652301-1b.html 652301-1b.html
+needs-focus == 652301-1a.html 652301-1a.html
+needs-focus == 652301-1b.html 652301-1b.html
 fails == 652775-1.html 652775-1.html
 fails == 653930-1.html 653930-1.html
 fails HTTP(..) == 654057-1.html 654057-1.html
@@ -1712,7 +1712,7 @@ needs-focus == 703186-1.html 703186-1.html
 == 714519-2-as.html 714519-2-as.html
 == 714519-2-q.html 714519-2-q.html
 == 718521.html 718521.html
-fails == 720987.html 720987.html
+== 720987.html 720987.html
 == 722888-1.html 722888-1.html
 == 722923-1.html 722923-1.html
 == 723484-1.html 723484-1.html
@@ -1802,7 +1802,7 @@ fails == 942017.html 942017.html
 fails == 942672-1.html 942672-1.html
 == 953334-win32-clipping.html 953334-win32-clipping.html
 fuzzy-if(skiaContent,1,5) == 956513-1.svg 956513-1.svg
-fails == 944291-1.html 944291-1.html
+== 944291-1.html 944291-1.html
 fails == 950436-1.html 950436-1.html
 == 957770-1.svg 957770-1.svg
 fails == 960277-1.html 960277-1.html
@@ -1838,7 +1838,7 @@ pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1.html
 == 1022612-1.html 1022612-1.html
 == 1024473-1.html 1024473-1.html
 == 1025914-1.html 1025914-1.html
-fails == 1042104-1.html 1042104-1.html
+== 1042104-1.html 1042104-1.html
 == 1043537-1.html 1043537-1.html
 == 1044198-1.html 1044198-1.html
 == 1049499-1.html 1049499-1.html

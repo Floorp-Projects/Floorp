@@ -110,4 +110,4 @@ fails == underline-select-1.html underline-select-1.html
 fails == underline-select-2.html underline-select-2.html
 fails == 1133392.html 1133392.html
 == 1159729-offset-adjustment.html 1159729-offset-adjustment.html
-fails == emphasis-style-dynamic.html emphasis-style-dynamic.html
+== emphasis-style-dynamic.html emphasis-style-dynamic.html
