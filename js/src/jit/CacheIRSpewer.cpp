@@ -149,6 +149,9 @@ CacheIRSpewer::valueProperty(LockGuard<Mutex>&, const char* name, HandleValue v)
             QuoteString(output, &str->asLinear());
             j.endStringProperty();
         }
+    } else if (v.isObject()) {
+        j.stringProperty("value", "%p (shape: %p)", &v.toObject(),
+                         v.toObject().maybeShape());
     }
 
     j.endObject();
