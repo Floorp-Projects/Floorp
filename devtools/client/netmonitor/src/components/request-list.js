@@ -11,9 +11,9 @@ const {
 } = require("devtools/client/shared/vendor/react");
 
 // Components
-const RequestListContent = createFactory(require("./RequestListContent"));
-const RequestListEmptyNotice = createFactory(require("./RequestListEmptyNotice"));
-const RequestListHeader = createFactory(require("./RequestListHeader"));
+const RequestListContent = createFactory(require("./request-list-content"));
+const RequestListEmptyNotice = createFactory(require("./request-list-empty-notice"));
+const RequestListHeader = createFactory(require("./request-list-header"));
 
 const { div } = DOM;
 
