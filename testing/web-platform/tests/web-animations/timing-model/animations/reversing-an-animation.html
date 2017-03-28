@@ -58,6 +58,34 @@ test(function(t) {
 
 test(function(t) {
   var div = createDiv(t);
+  var animation = div.animate({}, { duration: 200 * MS_PER_SEC,
+                                    delay: -100 * MS_PER_SEC });
+  assert_equals(animation.playState, 'pending',
+    'The playState is pending before we call reverse');
+
+  animation.reverse();
+
+  assert_equals(animation.playState, 'pending',
+    'The playState is still pending after calling reverse');
+}, 'Reversing an animation does not cause it to leave the pending state');
+
+promise_test(function(t) {
+  var div = createDiv(t);
+  var animation = div.animate({}, { duration: 200 * MS_PER_SEC,
+                                    delay: -100 * MS_PER_SEC });
+  var readyResolved = false;
+  animation.ready.then(() => { readyResolved = true; });
+
+  animation.reverse();
+
+  return Promise.resolve(() => {
+    assert_false(readyResolved,
+                 'ready promise should not have been resolved yet');
+  });
+}, 'Reversing an animation does not cause it to resolve the ready promise');
+
+test(function(t) {
+  var div = createDiv(t);
   var animation = div.animate({}, 100 * MS_PER_SEC);
   animation.currentTime = 200 * MS_PER_SEC;
   animation.reverse();
