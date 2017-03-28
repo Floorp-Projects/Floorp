@@ -13,6 +13,7 @@
 
 #include "jsobjinlines.h"
 
+#include "vm/EnvironmentObject-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
 using namespace js;
