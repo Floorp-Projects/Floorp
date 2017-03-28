@@ -448,10 +448,10 @@ protected:
   // [mStartTime, mEndTime], and mStartTime will not be 0 if the media does
   // not start at 0. Note this is different than the "current playback position",
   // which is in the range [0,duration].
-  int64_t GetMediaTime() const
+  media::TimeUnit GetMediaTime() const
   {
     MOZ_ASSERT(OnTaskQueue());
-    return mCurrentPosition;
+    return media::TimeUnit::FromMicroseconds(mCurrentPosition.Ref());
   }
 
   // Returns an upper bound on the number of microseconds of audio that is
