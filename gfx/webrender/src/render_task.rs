@@ -7,7 +7,7 @@ use mask_cache::MaskCacheInfo;
 use prim_store::{PrimitiveCacheKey, PrimitiveIndex};
 use std::{cmp, f32, i32, mem, usize};
 use tiling::{ClipScrollGroupIndex, PackedLayerIndex, RenderPass, RenderTargetIndex};
-use tiling::{StackingContextIndex};
+use tiling::{RenderTargetKind, StackingContextIndex};
 use webrender_traits::{DeviceIntLength, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use webrender_traits::{MixBlendMode, ScrollLayerId};
 
@@ -437,6 +437,17 @@ impl RenderTask {
         *max_depth = cmp::max(*max_depth, depth);
         for child in &self.children {
             child.max_depth(depth, max_depth);
+        }
+    }
+
+    pub fn target_kind(&self) -> RenderTargetKind {
+        match self.kind {
+            RenderTaskKind::Alpha(..) |
+            RenderTaskKind::CachePrimitive(..) |
+            RenderTaskKind::VerticalBlur(..) |
+            RenderTaskKind::Readback(..) |
+            RenderTaskKind::HorizontalBlur(..) => RenderTargetKind::Color,
+            RenderTaskKind::CacheMask(..) => RenderTargetKind::Alpha,
         }
     }
 }

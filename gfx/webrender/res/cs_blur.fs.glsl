@@ -15,17 +15,17 @@ float gauss(float x, float sigma) {
 }
 
 void main(void) {
-    vec4 cache_sample = texture(sCache, vUv);
+    vec4 cache_sample = texture(sCacheRGBA8, vUv);
     vec4 color = vec4(cache_sample.rgb, 1.0) * (cache_sample.a * gauss(0.0, vSigma));
 
     for (int i=1 ; i < vBlurRadius ; ++i) {
         vec2 offset = vec2(float(i)) * vOffsetScale;
 
         vec2 st0 = clamp(vUv.xy + offset, vUvRect.xy, vUvRect.zw);
-        vec4 color0 = texture(sCache, vec3(st0, vUv.z));
+        vec4 color0 = texture(sCacheRGBA8, vec3(st0, vUv.z));
 
         vec2 st1 = clamp(vUv.xy - offset, vUvRect.xy, vUvRect.zw);
-        vec4 color1 = texture(sCache, vec3(st1, vUv.z));
+        vec4 color1 = texture(sCacheRGBA8, vec3(st1, vUv.z));
 
         // Alpha must be premultiplied in order to properly blur the alpha channel.
         float weight = gauss(float(i), vSigma);
@@ -36,5 +36,5 @@ void main(void) {
     // Unpremultiply the alpha.
     color.rgb /= color.a;
 
-    oFragColor = color;
+    oFragColor = dither(color);
 }

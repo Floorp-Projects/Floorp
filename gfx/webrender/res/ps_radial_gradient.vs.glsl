@@ -27,7 +27,7 @@ void main(void) {
     vEndRadius = gradient.start_end_radius_extend_mode.y;
 
     // V coordinate of gradient row in lookup texture.
-    vGradientIndex = float(prim.sub_index) + 0.5;
+    vGradientIndex = float(prim.sub_index);
 
     // Whether to repeat the gradient instead of clamping.
     vGradientRepeat = float(int(gradient.start_end_radius_extend_mode.z) == EXTEND_MODE_REPEAT);

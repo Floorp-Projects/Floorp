@@ -16,7 +16,7 @@ void main(void) {
                          dest_origin + src_task.size,
                          aPosition.xy);
 
-    vec2 texture_size = vec2(textureSize(sCache, 0));
+    vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0));
     vec2 st0 = src_task.render_target_origin / texture_size;
     vec2 st1 = (src_task.render_target_origin + src_task.size) / texture_size;
     vUv = vec3(mix(st0, st1, aPosition.xy), src_task.render_target_layer_index);

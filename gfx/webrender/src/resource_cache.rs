@@ -23,7 +23,7 @@ use texture_cache::{TextureCache, TextureCacheItemId};
 use thread_profiler::register_thread_with_profiler;
 use webrender_traits::{Epoch, FontKey, GlyphKey, ImageKey, ImageFormat, ImageRendering};
 use webrender_traits::{FontRenderMode, ImageData, GlyphDimensions, WebGLContextId};
-use webrender_traits::{DevicePoint, DeviceIntSize, ImageDescriptor, ColorF};
+use webrender_traits::{DevicePoint, DeviceIntSize, DeviceUintRect, ImageDescriptor, ColorF};
 use webrender_traits::{ExternalImageId, GlyphOptions, GlyphInstance, TileOffset, TileSize};
 use webrender_traits::{BlobImageRenderer, BlobImageDescriptor, BlobImageError};
 use threadpool::ThreadPool;
@@ -110,6 +110,7 @@ struct ImageResource {
     descriptor: ImageDescriptor,
     epoch: Epoch,
     tiling: Option<TileSize>,
+    dirty_rect: Option<DeviceUintRect>
 }
 
 struct CachedImageInfo {
@@ -285,6 +286,7 @@ impl ResourceCache {
             data: data,
             epoch: Epoch(0),
             tiling: tiling,
+            dirty_rect: None,
         };
 
         self.image_templates.insert(image_key, resource);
@@ -293,8 +295,9 @@ impl ResourceCache {
     pub fn update_image_template(&mut self,
                                  image_key: ImageKey,
                                  descriptor: ImageDescriptor,
-                                 bytes: Vec<u8>) {
-        let next_epoch = match self.image_templates.get(&image_key) {
+                                 bytes: Vec<u8>,
+                                 dirty_rect: Option<DeviceUintRect>) {
+        let (next_epoch, prev_dirty_rect) = match self.image_templates.get(&image_key) {
             Some(image) => {
                 // This image should not be an external image.
                 match image.data {
@@ -305,10 +308,10 @@ impl ResourceCache {
                 }
 
                 let Epoch(current_epoch) = image.epoch;
-                Epoch(current_epoch + 1)
+                (Epoch(current_epoch + 1), image.dirty_rect)
             }
             None => {
-                Epoch(0)
+                (Epoch(0), None)
             }
         };
 
@@ -317,6 +320,11 @@ impl ResourceCache {
             data: ImageData::new(bytes),
             epoch: next_epoch,
             tiling: None,
+            dirty_rect: match (dirty_rect, prev_dirty_rect) {
+                (Some(rect), Some(prev_rect)) => Some(rect.union(&prev_rect)),
+                (Some(rect), None) => Some(rect),
+                _ => None,
+            },
         };
 
         self.image_templates.insert(image_key, resource);
@@ -648,7 +656,7 @@ impl ResourceCache {
                               request: ImageRequest,
                               image_data: Option<ImageData>,
                               texture_cache_profile: &mut TextureCacheProfileCounters) {
-        let image_template = &self.image_templates[&request.key];
+        let image_template = self.image_templates.get_mut(&request.key).unwrap();
         let image_data = image_data.unwrap_or_else(||{
             image_template.data.clone()
         });
@@ -700,13 +708,15 @@ impl ResourceCache {
                         if entry.get().epoch != image_template.epoch {
                             self.texture_cache.update(image_id,
                                                       descriptor,
-                                                      image_data);
+                                                      image_data,
+                                                      image_template.dirty_rect);
 
                             // Update the cached epoch
                             *entry.into_mut() = CachedImageInfo {
                                 texture_cache_id: image_id,
                                 epoch: image_template.epoch,
                             };
+                            image_template.dirty_rect = None;
                         }
                     }
                     Vacant(entry) => {
