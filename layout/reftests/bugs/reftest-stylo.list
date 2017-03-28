@@ -731,8 +731,8 @@ fails == 384322-1.html 384322-1.html
 == 384762-1.html 384762-1.html
 == 384876-1.html 384876-1.html
 == 385533-1.html 385533-1.html
-fails HTTP(..) == 385569-1a.html 385569-1a.html
-fails HTTP(..) == 385569-1b.html 385569-1b.html
+HTTP(..) == 385569-1a.html 385569-1a.html
+HTTP(..) == 385569-1b.html 385569-1b.html
 == 385607-1.html 385607-1.html
 fails == 385823-1.html 385823-1.html
 fails == 385823-2a.html 385823-2a.html
@@ -1397,7 +1397,7 @@ fuzzy-if(skiaContent,1,17000) == 498228-1.xul 498228-1.xul
 fails == 501627-1.html 501627-1.html
 == 502288-1.html 502288-1.html
 fails == 502447-1.html 502447-1.html
-fails == 502795-1.html 502795-1.html
+== 502795-1.html 502795-1.html
 == 502942-1.html 502942-1.html
 == 503364-1a.html 503364-1a.html
 == 503364-1b.html 503364-1b.html
@@ -1636,12 +1636,12 @@ fails == 608636-1.html 608636-1.html
 == 613433-3.html 613433-3.html
 == 613433-3.html 613433-3.html
 == 614272-1.svg 614272-1.svg
-fails HTTP(..) == 615121-1.html 615121-1.html
-fails HTTP(..) == 615121-2.html 615121-2.html
+HTTP(..) == 615121-1.html 615121-1.html
+HTTP(..) == 615121-2.html 615121-2.html
 fails == 617242-1.html 617242-1.html
 fails == 618071.html 618071.html
 == 619117-1.html 619117-1.html
-fails HTTP(..) == 619511-1.html 619511-1.html
+HTTP(..) == 619511-1.html 619511-1.html
 == 621253-1-externalFilter.html 621253-1-externalFilter.html
 == 621253-1-internalFilter.html 621253-1-internalFilter.html
 HTTP(..) == 621253-2-externalFilter.html 621253-2-externalFilter.html
@@ -1662,8 +1662,8 @@ skip-if(stylo) == 635302-1.html 635302-1.html # Too intermittent.
 == 635373-1.html 635373-1.html
 == 635373-2.html 635373-2.html
 == 635373-3.html 635373-3.html
-fails HTTP(..) == 635639-1.html 635639-1.html
-fails HTTP(..) == 635639-2.html 635639-2.html
+HTTP(..) == 635639-1.html 635639-1.html
+HTTP(..) == 635639-2.html 635639-2.html
 fails random == 637597-1.html 637597-1.html
 fails == 637852-1.html 637852-1.html
 fails == 637852-2.html 637852-2.html
@@ -1679,7 +1679,7 @@ needs-focus == 652301-1a.html 652301-1a.html
 needs-focus == 652301-1b.html 652301-1b.html
 fails == 652775-1.html 652775-1.html
 fails == 653930-1.html 653930-1.html
-fails HTTP(..) == 654057-1.html 654057-1.html
+HTTP(..) == 654057-1.html 654057-1.html
 fails == 654950-1.html 654950-1.html
 == 655549-1.html 655549-1.html
 == 655836-1.html 655836-1.html
@@ -1798,7 +1798,7 @@ fails == 897491-2.html 897491-2.html
 fails == 933264-1.html 933264-1.html
 == 936670-1.svg 936670-1.svg
 == 941940-1.html 941940-1.html
-fails == 942017.html 942017.html
+== 942017.html 942017.html
 fails == 942672-1.html 942672-1.html
 == 953334-win32-clipping.html 953334-win32-clipping.html
 fuzzy-if(skiaContent,1,5) == 956513-1.svg 956513-1.svg
@@ -1816,9 +1816,9 @@ fuzzy-if(skiaContent,1,123) == 978911-1.svg 978911-1.svg
 == 983084-1.html 983084-1.html
 skip-if(stylo) == 983084-2.html 983084-2.html # Bug 1302946
 skip-if(stylo) == 983084-3.html 983084-3.html # Bug 1302946
-fails == 983691-1.html 983691-1.html
+== 983691-1.html 983691-1.html
 HTTP(..) == 983985-1.html 983985-1.html
-fails HTTP(..) == 983985-2.html 983985-2.html
+HTTP(..) == 983985-2.html 983985-2.html
 fails == 985303-1a.html 985303-1a.html
 fails == 985303-1b.html 985303-1b.html
 fails == 987680-1.html 987680-1.html
@@ -1861,7 +1861,7 @@ pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1
 == 1097437-1.html 1097437-1.html
 == 1103258-1.html 1103258-1.html
 == 1105137-1.html 1105137-1.html
-fails == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow.html
+== 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow.html
 skip-if(stylo) == 1111753-1.html 1111753-1.html # Bug 1302946
 fails == 1114526-1.html 1114526-1.html
 fuzzy-if(skiaContent,1,800000) == 1119117-1a.html 1119117-1a.html
@@ -1968,7 +1968,7 @@ fails == 1274368-1.html 1274368-1.html
 == 1276161-1b.html 1276161-1b.html
 == 1276161-1a.html 1276161-1a.html
 == 1275411-1.html 1275411-1.html
-fails == 1288255.html 1288255.html
+== 1288255.html 1288255.html
 fuzzy(8,1900) == 1291528.html 1291528.html
 # Buttons in 2 pages have different position and the rendering result can be
 # different, but they should use the same button style and the background color

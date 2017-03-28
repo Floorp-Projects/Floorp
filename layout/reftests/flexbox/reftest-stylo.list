@@ -83,12 +83,12 @@ fails == flexbox-position-fixed-2.xhtml flexbox-position-fixed-2.xhtml
 == flexbox-position-fixed-4.xhtml flexbox-position-fixed-4.xhtml
 
 # Tests for inline content in a flexbox that gets wrapped in an anonymous block
-fails == flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1a.xhtml
-fails == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1b.xhtml
+== flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1a.xhtml
+== flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1b.xhtml
 == flexbox-inlinecontent-horiz-2.xhtml flexbox-inlinecontent-horiz-2.xhtml
-fails == flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3a.xhtml
-fails == flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3b.xhtml
-fails == flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3c.xhtml
+== flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3a.xhtml
+== flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3b.xhtml
+== flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3c.xhtml
 == flexbox-inlinecontent-horiz-4.xhtml flexbox-inlinecontent-horiz-4.xhtml
 fails == flexbox-inlinecontent-horiz-5.xhtml flexbox-inlinecontent-horiz-5.xhtml
 

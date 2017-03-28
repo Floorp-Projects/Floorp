@@ -88,8 +88,8 @@ fails == float-in-rtl-vrl-3d.html float-in-rtl-vrl-3d.html
 fails == float-in-rtl-vrl-4d.html float-in-rtl-vrl-4d.html
 == orthogonal-floats-1a.html orthogonal-floats-1a.html
 == orthogonal-floats-1b.html orthogonal-floats-1b.html
-fails == orthogonal-floats-1c.html orthogonal-floats-1c.html
-fails == orthogonal-floats-1d.html orthogonal-floats-1d.html
+== orthogonal-floats-1c.html orthogonal-floats-1c.html
+== orthogonal-floats-1d.html orthogonal-floats-1d.html
 
 pref(layout.css.float-logical-values.enabled,true) == logical-float-side-1.html logical-float-side-1.html
 pref(layout.css.float-logical-values.enabled,true) == logical-float-side-2.html logical-float-side-2.html
