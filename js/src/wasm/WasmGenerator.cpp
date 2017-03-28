@@ -392,8 +392,11 @@ ModuleGenerator::patchCallSites()
             if (jumps.empty() ||
                 uint32_t(abs(int32_t(jumps.back()) - int32_t(callerOffset))) >= JumpRange())
             {
+                // See BaseCompiler::insertBreakablePoint for why we must
+                // reload the TLS register on this path.
                 Offsets offsets;
                 offsets.begin = masm_.currentOffset();
+                masm_.loadPtr(Address(FramePointer, offsetof(Frame, tls)), WasmTlsReg);
                 uint32_t jumpOffset = masm_.farJumpWithPatch().offset();
                 offsets.end = masm_.currentOffset();
                 if (masm_.oom())
