@@ -132,6 +132,6 @@ needs-focus == spellcheck-contenteditable-focused-reframe.html spellcheck-conten
 == spellcheck-contenteditable-property-dynamic-override.html spellcheck-contenteditable-property-dynamic-override.html
 == spellcheck-contenteditable-property-dynamic-override-inherit.html spellcheck-contenteditable-property-dynamic-override-inherit.html
 == 911201.html 911201.html
-fails needs-focus == 969773.html 969773.html
+needs-focus == 969773.html 969773.html
 fails == 997805.html 997805.html
 fails == 1088158.html 1088158.html
