@@ -67,7 +67,7 @@ fails == 429968-1b.html 429968-1b.html
 == font-text-styles.html font-text-styles.html
 random-if(gtkWidget) random-if(winWidget&&!d2d) == font-text-styles-floater.html font-text-styles-floater.html
 == inline-height-empty.html inline-height-empty.html
-fails HTTP(..) == indic-clusters-1.html indic-clusters-1.html
+HTTP(..) == indic-clusters-1.html indic-clusters-1.html
 == overflow-float-nooverflow.html overflow-float-nooverflow.html
 == overflow-float-overflow.html overflow-float-overflow.html
 == overflow-inline-nooverflow.html overflow-inline-nooverflow.html

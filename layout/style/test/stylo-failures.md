@@ -123,7 +123,6 @@ to mochitest command.
   * test_descriptor_storage.html [1]
   * test_descriptor_syntax_errors.html [1]
   * test_font_face_parser.html `@font-face` [447]
-  * test_redundant_font_download.html [3]
 * @namespace support:
   * test_namespace_rule.html [17]
 * test_dont_use_document_colors.html: support of disabling document color [21]
