@@ -82,7 +82,11 @@ bool FileSystemPolicy::GenerateRules(const wchar_t* name,
     return false;
   }
 
-  if (!PreProcessName(&mod_name)) {
+  // Don't pre-process the path name and check for reparse points if it is the
+  // special case of allowing read access to all paths.
+  if (!(semantics == TargetPolicy::FILES_ALLOW_READONLY
+        && mod_name.compare(L"*") == 0)
+      && !PreProcessName(&mod_name)) {
     // The path to be added might contain a reparse point.
     NOTREACHED();
     return false;
