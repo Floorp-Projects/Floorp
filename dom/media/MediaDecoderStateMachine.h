@@ -194,7 +194,10 @@ public:
   {
     RefPtr<MediaDecoderStateMachine> self = this;
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, aEndTime] () {
-      self->mFragmentEndTime = aEndTime;
+      // A negative number means we don't have a fragment end time at all.
+      self->mFragmentEndTime = aEndTime >= 0
+        ? media::TimeUnit::FromMicroseconds(aEndTime)
+        : media::TimeUnit::Invalid();
     });
     OwnerThread()->Dispatch(r.forget());
   }
@@ -540,8 +543,8 @@ private:
            || mNextPlayState == MediaDecoder::PLAY_STATE_PLAYING;
   }
 
-  // Media Fragment end time in microseconds. Access controlled by decoder monitor.
-  int64_t mFragmentEndTime;
+  // Media Fragment end time.
+  media::TimeUnit mFragmentEndTime = media::TimeUnit::Invalid();
 
   // The media sink resource.  Used on the state machine thread.
   RefPtr<media::MediaSink> mMediaSink;
