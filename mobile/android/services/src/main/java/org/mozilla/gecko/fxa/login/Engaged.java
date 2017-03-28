@@ -4,8 +4,6 @@
 
 package org.mozilla.gecko.fxa.login;
 
-import java.security.NoSuchAlgorithmException;
-
 import org.mozilla.gecko.background.fxa.FxAccountClient20.TwoKeys;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
@@ -17,6 +15,8 @@ import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.RemoteError;
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.Transition;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
+
+import java.security.NoSuchAlgorithmException;
 
 public class Engaged extends State {
   private static final String LOG_TAG = Engaged.class.getSimpleName();
@@ -85,6 +85,7 @@ public class Engaged extends State {
     return Action.None;
   }
 
+  @Override
   public byte[] getSessionToken() {
     return sessionToken;
   }

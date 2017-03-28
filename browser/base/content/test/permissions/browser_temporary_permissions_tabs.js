@@ -3,8 +3,6 @@
 
 "use strict";
 
-Cu.import("resource:///modules/SitePermissions.jsm", this);
-
 // Test that temp permissions are persisted through moving tabs to new windows.
 add_task(function* testTempPermissionOnTabMove() {
   let uri = NetUtil.newURI("https://example.com");

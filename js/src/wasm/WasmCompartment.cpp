@@ -83,6 +83,12 @@ Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceOb
 
     instance.code().ensureProfilingLabels(cx->runtime()->geckoProfiler().enabled());
 
+    if (instance.debugEnabled() &&
+        instance.compartment()->debuggerObservesAllExecution())
+    {
+        instance.ensureEnterFrameTrapsState(cx, true);
+    }
+
     size_t index;
     if (BinarySearchIf(instances_, 0, instances_.length(), InstanceComparator(instance), &index))
         MOZ_CRASH("duplicate registration");

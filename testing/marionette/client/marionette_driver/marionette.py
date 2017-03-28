@@ -98,10 +98,15 @@ class HTMLElement(object):
         body = {"id": self.id}
         return self.marionette._send_message("getElementText", body, key="value")
 
-    def send_keys(self, *string):
-        """Sends the string via synthesized keypresses to the element."""
-        keys = Marionette.convert_keys(*string)
-        body = {"id": self.id, "value": keys}
+    def send_keys(self, *strings):
+        """Sends the string via synthesized keypresses to the element.
+           If an array is passed in like `marionette.send_keys(Keys.SHIFT, "a")` it
+           will be joined into a string.
+           If an integer is passed in like `marionette.send_keys(1234)` it will be
+           coerced into a string.
+        """
+        keys = Marionette.convert_keys(*strings)
+        body = {"id": self.id, "text": keys}
         self.marionette._send_message("sendKeysToElement", body)
 
     def clear(self):
@@ -835,7 +840,7 @@ class Marionette(object):
             else:
                 for i in range(len(val)):
                     typing.append(val[i])
-        return typing
+        return "".join(typing)
 
     def get_permission(self, perm):
         script = """
@@ -1461,6 +1466,8 @@ class Marionette(object):
 
         :returns: a dictionary with x and y
         """
+        warnings.warn("get_window_position() has been deprecated, please use get_window_rect()",
+                      DeprecationWarning)
         return self._send_message(
             "getWindowPosition", key="value" if self.protocol == 1 else None)
 
@@ -1470,7 +1477,34 @@ class Marionette(object):
         :param x: x coordinate for the top left of the window
         :param y: y coordinate for the top left of the window
         """
+        warnings.warn("set_window_position() has been deprecated, please use set_window_rect()",
+                      DeprecationWarning)
         self._send_message("setWindowPosition", {"x": x, "y": y})
+
+    def set_window_rect(self, x=None, y=None, height=None, width=None):
+        """Set the position and size of the current window.
+
+        The supplied width and height values refer to the window outerWidth
+        and outerHeight values, which include scroll bars, title bars, etc.
+
+        An error will be returned if the requested window size would result
+        in the window being in the maximised state.
+
+        :param x: x coordinate for the top left of the window
+        :param y: y coordinate for the top left of the window
+        :param width: The width to resize the window to.
+        :param height: The height to resize the window to.
+        """
+        if (x is None and y is None) and (height is None and width is None):
+            raise errors.InvalidArgumentException("x and y or height and width need values")
+
+        return self._send_message("setWindowRect", {"x": x, "y": y,
+                                                    "height": height,
+                                                    "width": width})
+
+    @property
+    def window_rect(self):
+        return self._send_message("getWindowRect")
 
     @property
     def title(self):
@@ -2156,14 +2190,16 @@ class Marionette(object):
 
         :returns: dictionary representation of current window width and height
         """
+        warnings.warn("window_size property has been deprecated, please use get_window_rect()",
+                      DeprecationWarning)
         return self._send_message("getWindowSize",
                                   key="value" if self.protocol == 1 else None)
 
     def set_window_size(self, width, height):
         """Resize the browser window currently in focus.
 
-        The supplied width and height values refer to the window outerWidth
-        and outerHeight values, which include scroll bars, title bars, etc.
+        The supplied ``width`` and ``height`` values refer to the window `outerWidth`
+        and `outerHeight` values, which include scroll bars, title bars, etc.
 
         An error will be returned if the requested window size would result
         in the window being in the maximised state.
@@ -2172,6 +2208,8 @@ class Marionette(object):
         :param height: The height to resize the window to.
 
         """
+        warnings.warn("set_window_size() has been deprecated, please use set_window_rect()",
+                      DeprecationWarning)
         body = {"width": width, "height": height}
         return self._send_message("setWindowSize", body)
 

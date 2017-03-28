@@ -293,7 +293,8 @@ public:
   static DrawResult PaintFrameWithEffects(nsIFrame *aFrame,
                                           gfxContext& aContext,
                                           const gfxMatrix& aTransform,
-                                          const nsIntRect *aDirtyRect = nullptr);
+                                          const nsIntRect *aDirtyRect = nullptr,
+                                          uint32_t aFlags = 0);
 
   /* Hit testing - check if point hits the clipPath of indicated
    * frame.  Returns true if no clipPath set. */
@@ -509,16 +510,18 @@ public:
   static nscolor GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
 
-  static void MakeFillPatternFor(nsIFrame *aFrame,
-                                 gfxContext* aContext,
-                                 GeneralPattern* aOutPattern,
-                                 SVGContextPaint* aContextPaint = nullptr);
+  static DrawResult MakeFillPatternFor(nsIFrame *aFrame,
+                                       gfxContext* aContext,
+                                       GeneralPattern* aOutPattern,
+                                       SVGContextPaint* aContextPaint = nullptr,
+                                       uint32_t aFlags = 0);
 
-  static void
+  static DrawResult
   MakeStrokePatternFor(nsIFrame* aFrame,
                        gfxContext* aContext,
                        GeneralPattern* aOutPattern,
-                       SVGContextPaint* aContextPaint = nullptr);
+                       SVGContextPaint* aContextPaint = nullptr,
+                       uint32_t aFlags = 0);
 
   static float GetOpacity(nsStyleSVGOpacitySource aOpacityType,
                           const float& aOpacity,

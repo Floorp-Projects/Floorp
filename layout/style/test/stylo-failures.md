@@ -54,6 +54,7 @@ to mochitest command.
     * test_animations_omta_start.html [1]
     * test_animations_pausing.html [1]
     * test_animations_playbackrate.html [1]
+    * test_animations_reverse.html [1]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
   * CSS Timing Functions: Frames timing functions

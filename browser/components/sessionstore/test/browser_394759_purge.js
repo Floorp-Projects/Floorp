@@ -4,18 +4,19 @@
 
 Components.utils.import("resource://gre/modules/ForgetAboutSite.jsm");
 
-function waitForClearHistory(aCallback) {
-  let observer = {
-    observe(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(this, "browser:purge-domain-data");
-      setTimeout(aCallback, 0);
-    }
-  };
-  Services.obs.addObserver(observer, "browser:purge-domain-data", false);
+function promiseClearHistory() {
+  return new Promise(resolve => {
+    let observer = {
+      observe(aSubject, aTopic, aData) {
+        Services.obs.removeObserver(this, "browser:purge-domain-data");
+        resolve();
+      }
+    };
+    Services.obs.addObserver(observer, "browser:purge-domain-data", false);
+  });
 }
 
-function test() {
-  waitForExplicitFinish();
+add_task(function* () {
   // utility functions
   function countClosedTabsByTitle(aClosedTabList, aTitle) {
     return aClosedTabList.filter(aData => aData.title == aTitle).length;
@@ -92,39 +93,37 @@ function test() {
   ss.setBrowserState(JSON.stringify(testState));
 
   // purge domain & check that we purged correctly for closed windows
-  ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  waitForClearHistory(function() {
-    let closedWindowData = JSON.parse(ss.getClosedWindowData());
+  yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+  yield promiseClearHistory();
+  let closedWindowData = JSON.parse(ss.getClosedWindowData());
 
-    // First set of tests for _closedWindows[0] - tests basics
-    let win = closedWindowData[0];
-    is(win.tabs.length, 1, "1 tab was removed");
-    is(countOpenTabsByTitle(win.tabs, FORGET), 0,
-       "The correct tab was removed");
-    is(countOpenTabsByTitle(win.tabs, REMEMBER), 1,
-       "The correct tab was remembered");
-    is(win.selected, 1, "Selected tab has changed");
-    is(win.title, REMEMBER, "The window title was correctly updated");
+  // First set of tests for _closedWindows[0] - tests basics
+  let win = closedWindowData[0];
+  is(win.tabs.length, 1, "1 tab was removed");
+  is(countOpenTabsByTitle(win.tabs, FORGET), 0,
+     "The correct tab was removed");
+  is(countOpenTabsByTitle(win.tabs, REMEMBER), 1,
+     "The correct tab was remembered");
+  is(win.selected, 1, "Selected tab has changed");
+  is(win.title, REMEMBER, "The window title was correctly updated");
 
-    // Test more complicated case
-    win = closedWindowData[1];
-    is(win.tabs.length, 3, "2 tabs were removed");
-    is(countOpenTabsByTitle(win.tabs, FORGET), 0,
-       "The correct tabs were removed");
-    is(countOpenTabsByTitle(win.tabs, REMEMBER), 3,
-       "The correct tabs were remembered");
-    is(win.selected, 3, "Selected tab has changed");
-    is(win.title, REMEMBER, "The window title was correctly updated");
+  // Test more complicated case
+  win = closedWindowData[1];
+  is(win.tabs.length, 3, "2 tabs were removed");
+  is(countOpenTabsByTitle(win.tabs, FORGET), 0,
+     "The correct tabs were removed");
+  is(countOpenTabsByTitle(win.tabs, REMEMBER), 3,
+     "The correct tabs were remembered");
+  is(win.selected, 3, "Selected tab has changed");
+  is(win.title, REMEMBER, "The window title was correctly updated");
 
-    // Tests handling of _closedTabs
-    win = closedWindowData[2];
-    is(countClosedTabsByTitle(win._closedTabs, REMEMBER), 1,
-       "The correct number of tabs were removed, and the correct ones");
-    is(countClosedTabsByTitle(win._closedTabs, FORGET), 0,
-       "All tabs to be forgotten were indeed removed");
+  // Tests handling of _closedTabs
+  win = closedWindowData[2];
+  is(countClosedTabsByTitle(win._closedTabs, REMEMBER), 1,
+     "The correct number of tabs were removed, and the correct ones");
+  is(countClosedTabsByTitle(win._closedTabs, FORGET), 0,
+     "All tabs to be forgotten were indeed removed");
 
-    // restore pre-test state
-    ss.setBrowserState(oldState);
-    finish();
-  });
-}
+  // restore pre-test state
+  ss.setBrowserState(oldState);
+});

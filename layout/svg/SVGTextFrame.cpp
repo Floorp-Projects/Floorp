@@ -2929,7 +2929,7 @@ SVGTextDrawPathCallbacks::MakeFillPattern(GeneralPattern* aOutPattern)
 {
   if (mColor == NS_SAME_AS_FOREGROUND_COLOR ||
       mColor == NS_40PERCENT_FOREGROUND_COLOR) {
-    nsSVGUtils::MakeFillPatternFor(mFrame, gfx, aOutPattern);
+    Unused << nsSVGUtils::MakeFillPatternFor(mFrame, gfx, aOutPattern);
     return;
   }
 
@@ -3000,7 +3000,8 @@ SVGTextDrawPathCallbacks::StrokeGeometry()
       mColor == NS_40PERCENT_FOREGROUND_COLOR) {
     if (nsSVGUtils::HasStroke(mFrame, /*aContextPaint*/ nullptr)) {
       GeneralPattern strokePattern;
-      nsSVGUtils::MakeStrokePatternFor(mFrame, gfx, &strokePattern, /*aContextPaint*/ nullptr);
+      Unused << nsSVGUtils::MakeStrokePatternFor(mFrame, gfx, &strokePattern,
+                                                 /*aContextPaint*/ nullptr);
       if (strokePattern.GetPattern()) {
         if (!mFrame->GetParent()->GetContent()->IsSVGElement()) {
           // The cast that follows would be unsafe
@@ -3561,7 +3562,8 @@ ShouldPaintCaret(const TextRenderedRun& aThisRun, nsCaret* aCaret)
 DrawResult
 SVGTextFrame::PaintSVG(gfxContext& aContext,
                        const gfxMatrix& aTransform,
-                       const nsIntRect *aDirtyRect)
+                       const nsIntRect *aDirtyRect,
+                       uint32_t aFlags)
 {
   DrawTarget& aDrawTarget = *aContext.GetDrawTarget();
 
@@ -3594,7 +3596,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
 
   if (aTransform.IsSingular()) {
     NS_WARNING("Can't render text element!");
-    return DrawResult::BAD_ARGS;
+    return DrawResult::SUCCESS;
   }
 
   gfxMatrix matrixForPaintServers = aTransform * initialMatrix;
@@ -3645,7 +3647,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     SVGContextPaint::GetContextPaint(mContent);
 
   nsRenderingContext rendCtx(&aContext);
-
+  DrawResult finalResult = DrawResult::SUCCESS;
   while (run.mFrame) {
     nsTextFrame* frame = run.mFrame;
 
@@ -3658,10 +3660,12 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     aContext.SetMatrix(initialMatrix);
 
     RefPtr<SVGContextPaintImpl> contextPaint = new SVGContextPaintImpl();
-    DrawMode drawMode = contextPaint->Init(&aDrawTarget,
-                                           aContext.CurrentMatrix(),
-                                           frame, outerContextPaint);
-
+    DrawMode drawMode;
+    DrawResult result = DrawResult::SUCCESS;
+    Tie(result, drawMode) = contextPaint->Init(&aDrawTarget,
+                                               aContext.CurrentMatrix(),
+                                               frame, outerContextPaint);
+    finalResult &= result;
     if (drawMode & DrawMode::GLYPH_STROKE) {
       // This may change the gfxContext's transform (for non-scaling stroke),
       // in which case this needs to happen before we call SetMatrix() below.
@@ -3703,7 +3707,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     run = it.Next();
   }
 
-  return DrawResult::SUCCESS;
+  return finalResult;
 }
 
 nsIFrame*

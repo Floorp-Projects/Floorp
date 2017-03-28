@@ -29,6 +29,7 @@ import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountClientException;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.sync.CommandProcessor;
 import org.mozilla.gecko.sync.CommandProcessor.Command;
 import org.mozilla.gecko.sync.CryptoRecord;
@@ -194,9 +195,11 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
 
       final byte[] sessionToken;
       try {
-        sessionToken = fxAccount.getSessionToken();
-      } catch (AndroidFxAccount.InvalidFxAState invalidFxAState) {
-        Log.e(LOG_TAG, "Could not get session token", invalidFxAState);
+        sessionToken = fxAccount.getState().getSessionToken();
+      } catch (State.NotASessionTokenState e) {
+        // Most of the time we should never reach this, but there can be races with the account
+        // state, so better safe than sorry.
+        Log.e(LOG_TAG, "Could not get a session token during Sync (?)", e);
         return;
       }
 

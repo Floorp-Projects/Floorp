@@ -1623,10 +1623,16 @@ private:
                 Pattern *pat;
 
                 RefPtr<gfxPattern> fillPattern;
-                if (!mFontParams.contextPaint ||
-                    !(fillPattern = mFontParams.contextPaint->GetFillPattern(
-                                        mRunParams.context->GetDrawTarget(),
-                                        mRunParams.context->CurrentMatrix()))) {
+                if (mFontParams.contextPaint) {
+                  mozilla::image::DrawResult result = mozilla::image::DrawResult::SUCCESS;
+                  Tie(result, fillPattern) =
+                    mFontParams.contextPaint->GetFillPattern(
+                                          mRunParams.context->GetDrawTarget(),
+                                          mRunParams.context->CurrentMatrix());
+                  // XXX cku Flush should return result to the caller?
+                  Unused << result;
+                }
+                if (!fillPattern) {
                     if (state.pattern) {
                         pat = state.pattern->GetPattern(mRunParams.dt,
                                       state.patternTransformChanged ?

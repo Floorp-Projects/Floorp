@@ -437,9 +437,10 @@ PaintMaskSurface(const PaintFramesParams& aParams,
     if (maskFrame) {
       Matrix svgMaskMatrix;
       nsSVGMaskFrame::MaskParams params(maskContext, aParams.frame,
-                                                  cssPxToDevPxMatrix,
-                                                  aOpacity, &svgMaskMatrix,
-                                                  svgReset->mMask.mLayers[i].mMaskMode);
+                                        cssPxToDevPxMatrix,
+                                        aOpacity, &svgMaskMatrix,
+                                        svgReset->mMask.mLayers[i].mMaskMode,
+                                        aParams.flags);
       RefPtr<SourceSurface> svgMask;
       Tie(result, svgMask) = maskFrame->GetMaskForMaskedFrame(params);
 
@@ -515,7 +516,8 @@ CreateAndPaintMaskSurface(const PaintFramesParams& aParams,
     paintResult.opacityApplied = true;
     nsSVGMaskFrame::MaskParams params(&ctx, aParams.frame, cssPxToDevPxMatrix,
                                       aOpacity, &paintResult.maskTransform,
-                                      svgReset->mMask.mLayers[0].mMaskMode);
+                                      svgReset->mMask.mLayers[0].mMaskMode,
+                                      aParams.flags);
     Tie(paintResult.result, paintResult.maskSurface) =
       aMaskFrames[0]->GetMaskForMaskedFrame(params);
 
@@ -925,7 +927,6 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
       result &= paintResult.result;
       maskSurface = paintResult.maskSurface;
       if (maskSurface) {
-        MOZ_ASSERT(paintResult.result == DrawResult::SUCCESS);
         shouldPushMask = true;
         maskTransform = paintResult.maskTransform;
         opacityApplied = paintResult.opacityApplied;
@@ -1232,10 +1233,12 @@ nsSVGIntegrationUtils::DrawableFromPaintServer(nsIFrame*         aFrame,
     gfxRect overrideBounds(0, 0,
                            aPaintServerSize.width, aPaintServerSize.height);
     overrideBounds.ScaleInverse(aFrame->PresContext()->AppUnitsPerDevPixel());
-    RefPtr<gfxPattern> pattern =
-    server->GetPaintServerPattern(aTarget, aDrawTarget,
-                                  aContextMatrix, &nsStyleSVG::mFill, 1.0,
-                                  &overrideBounds);
+    DrawResult result = DrawResult::SUCCESS;
+    RefPtr<gfxPattern> pattern;
+    Tie(result, pattern) =
+      server->GetPaintServerPattern(aTarget, aDrawTarget,
+                                    aContextMatrix, &nsStyleSVG::mFill, 1.0,
+                                    &overrideBounds);
 
     if (!pattern)
       return nullptr;
