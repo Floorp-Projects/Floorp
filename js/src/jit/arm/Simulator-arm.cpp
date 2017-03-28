@@ -415,7 +415,7 @@ Simulator::disassemble(SimInstruction* instr, size_t n)
     while (n-- > 0) {
         dasm.InstructionDecode(buffer,
                                reinterpret_cast<uint8_t*>(instr));
-        printf("  0x%08x  %s\n", uint32_t(instr), buffer.start());
+        fprintf(stderr, "  0x%08x  %s\n", uint32_t(instr), buffer.start());
         instr = reinterpret_cast<SimInstruction*>(reinterpret_cast<uint8_t*>(instr) + 4);
     }
 }

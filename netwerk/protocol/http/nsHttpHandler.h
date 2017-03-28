@@ -358,6 +358,11 @@ public:
         return mMaxHttpResponseHeaderSize;
     }
 
+    float FocusedWindowTransactionRatio() const
+    {
+        return mFocusedWindowTransactionRatio;
+    }
+
 private:
     virtual ~nsHttpHandler();
 
@@ -565,6 +570,9 @@ private:
 
     // The max size (in bytes) for received Http response header.
     uint32_t mMaxHttpResponseHeaderSize;
+
+    // The ratio for dispatching transactions from the focused window.
+    float mFocusedWindowTransactionRatio;
 
 private:
     // For Rate Pacing Certain Network Events. Only assign this pointer on

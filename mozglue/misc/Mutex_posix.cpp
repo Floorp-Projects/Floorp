@@ -27,9 +27,10 @@ mozilla::detail::MutexImpl::MutexImpl()
 {
   pthread_mutexattr_t* attrp = nullptr;
 
-  // glibc's adaptive mutexes spin for a short number of tries before sleeping.
-  // NSPR's locks did this, too, and it seems like a reasonable thing to do.
-#if defined(__linux__) && defined(__GLIBC__)
+  // Linux with glibc and FreeBSD support adaptive mutexes that spin
+  // for a short number of tries before sleeping.  NSPR's locks did
+  // this, too, and it seems like a reasonable thing to do.
+#if (defined(__linux__) && defined(__GLIBC__)) || defined(__FreeBSD__)
 #define ADAPTIVE_MUTEX_SUPPORTED
 #endif
 

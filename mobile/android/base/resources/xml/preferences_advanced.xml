@@ -84,10 +84,10 @@
         android:key="android.not_a_preference.category_experimental"
         android:title="@string/pref_category_experimental">
 
-        <SwitchPreference android:key="android.not_a_preference.activitystream"
+        <org.mozilla.gecko.activitystream.ActivityStreamPreference
+            android:key="android.not_a_preference.experiments.activitystream"
             android:title="@string/pref_activity_stream"
-            android:summary="@string/pref_activity_stream_summary"
-            android:defaultValue="false" />
+            android:summary="@string/pref_activity_stream_summary" />
 
 
         <SwitchPreference android:key="android.not_a_preference.customtabs"

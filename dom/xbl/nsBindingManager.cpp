@@ -675,7 +675,6 @@ nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
   do {
     nsXBLBinding *binding = content->GetXBLBinding();
     if (binding) {
-      aData->mTreeMatchContext.mScopedRoot = content;
       binding->WalkRules(aFunc, aData);
       // If we're not looking at our original content, allow the binding to cut
       // off style inheritance
@@ -697,9 +696,6 @@ nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
   // If "content" is non-null that means we cut off inheritance at some point
   // in the loop.
   *aCutOffInheritance = (content != nullptr);
-
-  // Null out the scoped root that we set repeatedly
-  aData->mTreeMatchContext.mScopedRoot = nullptr;
 
   return NS_OK;
 }

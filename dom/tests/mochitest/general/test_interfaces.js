@@ -548,7 +548,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "HTMLVideoElement",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "IdleDeadline", nightly: true},
+    {name: "IdleDeadline"},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "IDBCursor",
 // IMPORTANT: Do not change this list without review from a DOM peer!

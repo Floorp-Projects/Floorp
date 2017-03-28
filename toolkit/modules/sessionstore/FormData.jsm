@@ -9,7 +9,10 @@ this.EXPORTED_SYMBOLS = ["FormData"];
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 
-Cu.import("resource://gre/modules/XPathGenerator.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "XPathGenerator",
+				  "resource://gre/modules/XPathGenerator.jsm");
 
 /**
  * Returns whether the given URL very likely has input

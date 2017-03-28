@@ -248,7 +248,15 @@ IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript, IonSetProperty
         }
     }
 
-    if (!attached && ic->state().canAttachStub()) {
+    if (attached)
+        return true;
+
+    // The SetProperty call might have entered this IC recursively, so try
+    // to transition.
+    if (ic->state().maybeTransition())
+        ic->discardStubs(cx->zone());
+
+    if (ic->state().canAttachStub()) {
         RootedValue objv(cx, ObjectValue(*obj));
         RootedScript script(cx, ic->script());
         jsbytecode* pc = ic->pc();

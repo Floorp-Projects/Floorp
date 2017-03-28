@@ -58,7 +58,7 @@ nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase *)
     mLogData.AppendPrintf("   RestrictConnections = %d\n",
                           RestrictConnections(ent));
     mLogData.AppendPrintf("   Pending Q Length = %" PRIuSIZE "\n",
-                          ent->mPendingQ.Length());
+                          ent->PendingQLength());
     mLogData.AppendPrintf("   Active Conns Length = %" PRIuSIZE "\n",
                           ent->mActiveConns.Length());
     mLogData.AppendPrintf("   Idle Conns Length = %" PRIuSIZE "\n",
@@ -83,9 +83,17 @@ nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase *)
       mLogData.AppendPrintf("   :: Half Open #%u\n", i);
       ent->mHalfOpens[i]->PrintDiagnostics(mLogData);
     }
-    for (i = 0; i < ent->mPendingQ.Length(); ++i) {
-      mLogData.AppendPrintf("   :: Pending Transaction #%u\n", i);
-      ent->mPendingQ[i]->PrintDiagnostics(mLogData);
+    i = 0;
+    for (auto it = ent->mPendingTransactionTable.Iter();
+         !it.Done();
+         it.Next()) {
+      mLogData.AppendPrintf("   :: Pending Transactions with Window ID = %"
+        PRIu64 "\n", it.Key());
+      for (uint32_t j = 0; j < it.UserData()->Length(); ++j) {
+        mLogData.AppendPrintf("     ::: Pending Transaction #%u\n", i);
+        it.UserData()->ElementAt(j)->PrintDiagnostics(mLogData);
+        ++i;
+      }
     }
     for (i = 0; i < ent->mCoalescingKeys.Length(); ++i) {
       mLogData.AppendPrintf("   :: Coalescing Key #%u %s\n",
@@ -198,10 +206,10 @@ nsHttpTransaction::PrintDiagnostics(nsCString &log)
 
   nsAutoCString requestURI;
   mRequestHead->RequestURI(requestURI);
-  log.AppendPrintf("     ::: uri = %s\n", requestURI.get());
-  log.AppendPrintf("     caps = 0x%x\n", mCaps);
-  log.AppendPrintf("     priority = %d\n", mPriority);
-  log.AppendPrintf("     restart count = %u\n", mRestartCount);
+  log.AppendPrintf("       :::: uri = %s\n", requestURI.get());
+  log.AppendPrintf("       caps = 0x%x\n", mCaps);
+  log.AppendPrintf("       priority = %d\n", mPriority);
+  log.AppendPrintf("       restart count = %u\n", mRestartCount);
 }
 
 void
