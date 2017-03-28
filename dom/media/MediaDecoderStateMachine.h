@@ -189,15 +189,14 @@ public:
 
   RefPtr<ShutdownPromise> BeginShutdown();
 
-  // Set the media fragment end time. aEndTime is in microseconds.
-  void DispatchSetFragmentEndTime(int64_t aEndTime)
+  // Set the media fragment end time.
+  void DispatchSetFragmentEndTime(const media::TimeUnit& aEndTime)
   {
     RefPtr<MediaDecoderStateMachine> self = this;
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, aEndTime] () {
       // A negative number means we don't have a fragment end time at all.
-      self->mFragmentEndTime = aEndTime >= 0
-        ? media::TimeUnit::FromMicroseconds(aEndTime)
-        : media::TimeUnit::Invalid();
+      self->mFragmentEndTime = aEndTime >= media::TimeUnit::Zero()
+        ? aEndTime : media::TimeUnit::Invalid();
     });
     OwnerThread()->Dispatch(r.forget());
   }
