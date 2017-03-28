@@ -1432,7 +1432,7 @@ MediaDecoder::SetFragmentEndTime(double aTime)
   MOZ_ASSERT(NS_IsMainThread());
   if (mDecoderStateMachine) {
     mDecoderStateMachine->DispatchSetFragmentEndTime(
-      static_cast<int64_t>(aTime * USECS_PER_S));
+      media::TimeUnit::FromSeconds(aTime));
   }
 }
 
