@@ -46,6 +46,13 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvNotifyRemoveAll() override;
 
+  virtual PServiceWorkerUpdaterChild*
+  AllocPServiceWorkerUpdaterChild(const OriginAttributes& originAttributes,
+                                  const nsCString& scope) override;
+
+  virtual bool
+  DeallocPServiceWorkerUpdaterChild(PServiceWorkerUpdaterChild* aActor) override;
+
 private:
   ServiceWorkerManagerChild()
     : mShuttingDown(false)

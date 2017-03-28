@@ -133,7 +133,7 @@ public:
    * released on the thread this is dispatched to (which should always be the
    * calling thread).
    */
-  CompletionNotifier(mozIStorageStatementCallback *aCallback,
+  CompletionNotifier(already_AddRefed<mozIStorageStatementCallback> aCallback,
                      ExecutionState aReason)
     : Runnable("storage::CompletionNotifier")
     , mCallback(aCallback)
@@ -145,14 +145,13 @@ public:
   {
     if (mCallback) {
       (void)mCallback->HandleCompletion(mReason);
-      NS_RELEASE(mCallback);
     }
 
     return NS_OK;
   }
 
 private:
-  mozIStorageStatementCallback *mCallback;
+  RefPtr<mozIStorageStatementCallback> mCallback;
   ExecutionState mReason;
 };
 
@@ -211,15 +210,15 @@ AsyncExecuteStatements::AsyncExecuteStatements(StatementDataArray &aStatements,
 , mCancelRequested(false)
 , mMutex(aConnection->sharedAsyncExecutionMutex)
 , mDBMutex(aConnection->sharedDBMutex)
-  , mRequestStartDate(TimeStamp::Now())
+, mRequestStartDate(TimeStamp::Now())
 {
   (void)mStatements.SwapElements(aStatements);
   NS_ASSERTION(mStatements.Length(), "We weren't given any statements!");
-  NS_IF_ADDREF(mCallback);
 }
 
 AsyncExecuteStatements::~AsyncExecuteStatements()
 {
+  MOZ_ASSERT(!mCallback, "Never called the Completion callback!");
   MOZ_ASSERT(!mHasTransaction, "There should be no transaction at this point");
 }
 
@@ -468,12 +467,11 @@ AsyncExecuteStatements::notifyComplete()
   // Always generate a completion notification; it is what guarantees that our
   // destruction does not happen here on the async thread.
   RefPtr<CompletionNotifier> completionEvent =
-    new CompletionNotifier(mCallback, mState);
-
+    new CompletionNotifier(mCallback.forget(), mState);
   // We no longer own mCallback (the CompletionNotifier takes ownership).
-  mCallback = nullptr;
-
-  (void)mCallingThread->Dispatch(completionEvent, NS_DISPATCH_NORMAL);
+  // Make sure we don't delete the event on this thread, since it has
+  // other-thread-only members.
+  (void)mCallingThread->Dispatch(completionEvent.forget(), NS_DISPATCH_NORMAL);
 
   return NS_OK;
 }
@@ -507,7 +505,9 @@ AsyncExecuteStatements::notifyError(mozIStorageError *aError)
     new ErrorNotifier(mCallback, aError, this);
   NS_ENSURE_TRUE(notifier, NS_ERROR_OUT_OF_MEMORY);
 
-  return mCallingThread->Dispatch(notifier, NS_DISPATCH_NORMAL);
+  // Make sure we don't delete the event on this thread, since it has
+  // other-thread-only members.
+  return mCallingThread->Dispatch(notifier.forget(), NS_DISPATCH_NORMAL);
 }
 
 nsresult
@@ -520,9 +520,13 @@ AsyncExecuteStatements::notifyResults()
     new CallbackResultNotifier(mCallback, mResultSet, this);
   NS_ENSURE_TRUE(notifier, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = mCallingThread->Dispatch(notifier, NS_DISPATCH_NORMAL);
-  if (NS_SUCCEEDED(rv))
+  // Make sure we don't delete the event on this thread, since it has
+  // other-thread-only members.
+  nsresult rv = mCallingThread->Dispatch(notifier.forget(), NS_DISPATCH_NORMAL);
+  if (NS_SUCCEEDED(rv)) {
+    // it may be freed here or on the CallingThread
     mResultSet = nullptr; // we no longer own it on success
+  }
   return rv;
 }
 

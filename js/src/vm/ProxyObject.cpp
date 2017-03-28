@@ -101,7 +101,6 @@ ProxyObject::objectMovedDuringMinorGC(TenuringTracer* trc, JSObject* dst, JSObje
 void
 ProxyObject::setCrossCompartmentPrivate(const Value& priv)
 {
-    CheckEdgeIsNotBlackToGray(this, priv);
     *slotOfPrivate() = priv;
 }
 
@@ -109,7 +108,6 @@ void
 ProxyObject::setSameCompartmentPrivate(const Value& priv)
 {
     MOZ_ASSERT(IsObjectValueInCompartment(priv, compartment()));
-    CheckEdgeIsNotBlackToGray(this, priv);
     *slotOfPrivate() = priv;
 }
 

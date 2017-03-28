@@ -23,10 +23,12 @@ define(function (require, exports, module) {
     // See the TreeView component for details related
     // to the 'member' object.
     propTypes: {
+      id: PropTypes.string.isRequired,
       member: PropTypes.object.isRequired
     },
 
     render: function () {
+      let id = this.props.id;
       let member = this.props.member;
       let level = member.level || 0;
 
@@ -50,10 +52,15 @@ define(function (require, exports, module) {
         td({
           className: "treeLabelCell",
           key: "default",
-          style: rowStyle},
-          span({ className: iconClassList.join(" ") }),
+          style: rowStyle,
+          role: "presentation"},
+          span({
+            className: iconClassList.join(" "),
+            role: "presentation"
+          }),
           span({
             className: "treeLabel " + member.type + "Label",
+            "aria-labelledby": id,
             "data-level": level
           }, member.name)
         )

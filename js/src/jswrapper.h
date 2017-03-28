@@ -118,7 +118,7 @@ class JS_FRIEND_API(Wrapper) : public BaseProxyHandler
     virtual JSString* fun_toString(JSContext* cx, HandleObject proxy,
                                    unsigned indent) const override;
     virtual bool regexp_toShared(JSContext* cx, HandleObject proxy,
-                                 RegExpGuard* g) const override;
+                                 MutableHandle<RegExpShared*> shared) const override;
     virtual bool boxedValue_unbox(JSContext* cx, HandleObject proxy,
                                   MutableHandleValue vp) const override;
     virtual bool isCallable(JSObject* obj) const override;
@@ -141,7 +141,6 @@ class JS_FRIEND_API(Wrapper) : public BaseProxyHandler
     static const Wrapper* wrapperHandler(JSObject* wrapper);
 
     static JSObject* wrappedObject(JSObject* wrapper);
-    static JSObject* wrappedObjectMaybeGray(JSObject* wrapper);
 
     unsigned flags() const {
         return mFlags;
@@ -213,7 +212,8 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual const char* className(JSContext* cx, HandleObject proxy) const override;
     virtual JSString* fun_toString(JSContext* cx, HandleObject wrapper,
                                    unsigned indent) const override;
-    virtual bool regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const override;
+    virtual bool regexp_toShared(JSContext* cx, HandleObject proxy,
+                                 MutableHandle<RegExpShared*> shared) const override;
     virtual bool boxedValue_unbox(JSContext* cx, HandleObject proxy, MutableHandleValue vp) const override;
 
     // Allocate CrossCompartmentWrappers in the nursery.
@@ -311,7 +311,8 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
                             const CallArgs& args) const override;
     virtual bool getBuiltinClass(JSContext* cx, HandleObject wrapper, ESClass* cls) const override;
     virtual bool isArray(JSContext* cx, HandleObject wrapper, JS::IsArrayAnswer* answer) const override;
-    virtual bool regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const override;
+    virtual bool regexp_toShared(JSContext* cx, HandleObject proxy,
+                                 MutableHandle<RegExpShared*> shared) const override;
     virtual bool boxedValue_unbox(JSContext* cx, HandleObject proxy, MutableHandleValue vp) const override;
 
     // Allow isCallable and isConstructor. They used to be class-level, and so could not be guarded

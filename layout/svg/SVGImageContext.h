@@ -57,7 +57,9 @@ public:
     , mIsPaintingSVGImageElement(aIsPaintingSVGImageElement)
   { }
 
-  bool MaybeStoreContextPaint(nsIFrame* aFromFrame);
+  static void MaybeInitAndStoreContextPaint(Maybe<SVGImageContext>& aContext,
+                                            nsIFrame* aFromFrame,
+                                            imgIContainer* aImgContainer);
 
   const Maybe<CSSIntSize>& GetViewportSize() const {
     return mViewportSize;
@@ -79,7 +81,7 @@ public:
     return mGlobalOpacity;
   }
 
-  const SVGContextPaint* GetContextPaint() const {
+  const SVGEmbeddingContextPaint* GetContextPaint() const {
     return mContextPaint.get();
   }
 
@@ -88,7 +90,15 @@ public:
   }
 
   bool operator==(const SVGImageContext& aOther) const {
-    return mViewportSize == aOther.mViewportSize &&
+    bool contextPaintIsEqual =
+      // neither have context paint, or they have the same object:
+      (mContextPaint == aOther.mContextPaint) ||
+      // or both have context paint that are different but equivalent objects:
+      (mContextPaint && aOther.mContextPaint &&
+       *mContextPaint == *aOther.mContextPaint);
+
+    return contextPaintIsEqual &&
+           mViewportSize == aOther.mViewportSize &&
            mPreserveAspectRatio == aOther.mPreserveAspectRatio &&
            mGlobalOpacity == aOther.mGlobalOpacity &&
            mIsPaintingSVGImageElement == aOther.mIsPaintingSVGImageElement;
@@ -119,7 +129,7 @@ private:
   }
 
   // NOTE: When adding new member-vars, remember to update Hash() & operator==.
-  RefPtr<SVGContextPaint>       mContextPaint;
+  RefPtr<SVGEmbeddingContextPaint> mContextPaint;
   Maybe<CSSIntSize>             mViewportSize;
   Maybe<SVGPreserveAspectRatio> mPreserveAspectRatio;
   gfxFloat                      mGlobalOpacity;

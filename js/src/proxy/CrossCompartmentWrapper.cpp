@@ -458,19 +458,20 @@ CrossCompartmentWrapper::fun_toString(JSContext* cx, HandleObject wrapper, unsig
 }
 
 bool
-CrossCompartmentWrapper::regexp_toShared(JSContext* cx, HandleObject wrapper, RegExpGuard* g) const
+CrossCompartmentWrapper::regexp_toShared(JSContext* cx, HandleObject wrapper,
+                                         MutableHandleRegExpShared shared) const
 {
-    RegExpGuard wrapperGuard(cx);
+    RootedRegExpShared re(cx);
     {
         AutoCompartment call(cx, wrappedObject(wrapper));
-        if (!Wrapper::regexp_toShared(cx, wrapper, &wrapperGuard))
+        if (!Wrapper::regexp_toShared(cx, wrapper, &re))
             return false;
     }
 
     // Get an equivalent RegExpShared associated with the current compartment.
-    RegExpShared* re = wrapperGuard.re();
-    cx->markAtom(re->getSource());
-    return cx->compartment()->regExps.get(cx, re->getSource(), re->getFlags(), g);
+    RootedAtom source(cx, re->getSource());
+    cx->markAtom(source);
+    return cx->compartment()->regExps.get(cx, source, re->getFlags(), shared);
 }
 
 bool
@@ -645,8 +646,6 @@ js::RemapAllWrappersForObject(JSContext* cx, JSObject* oldTargetArg,
 {
     MOZ_ASSERT(!IsInsideNursery(oldTargetArg));
     MOZ_ASSERT(!IsInsideNursery(newTargetArg));
-    MOZ_ASSERT(JS::ObjectIsNotGray(oldTargetArg));
-    MOZ_ASSERT(JS::ObjectIsNotGray(newTargetArg));
 
     RootedValue origv(cx, ObjectValue(*oldTargetArg));
     RootedObject newTarget(cx, newTargetArg);
@@ -701,8 +700,7 @@ js::RecomputeWrappers(JSContext* cx, const CompartmentFilter& sourceFilter,
     // Recompute all the wrappers in the list.
     for (const WrapperValue& v : toRecompute) {
         JSObject* wrapper = &v.toObject();
-        JSObject* wrapped = Wrapper::wrappedObjectMaybeGray(wrapper);
-        JS::ExposeObjectToActiveJS(wrapped);
+        JSObject* wrapped = Wrapper::wrappedObject(wrapper);
         RemapWrapper(cx, wrapper, wrapped);
     }
 
