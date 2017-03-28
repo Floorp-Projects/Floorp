@@ -78,6 +78,7 @@ bool is_in_compositor_thread();
 bool is_in_main_thread();
 bool is_in_render_thread();
 bool is_glcontext_egl(void* glcontext_ptr);
+void gfx_critical_note(const char* msg);
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname);
 
 // -----

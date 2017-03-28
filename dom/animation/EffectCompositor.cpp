@@ -19,6 +19,7 @@
 #include "mozilla/RestyleManagerInlines.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/TypeTraits.h" // For Forward<>
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
 #include "nsContentUtils.h"
 #include "nsCSSPseudoElements.h"
@@ -360,9 +361,10 @@ EffectCompositor::PostRestyleForThrottledAnimations()
   }
 }
 
+template<typename StyleType>
 void
-EffectCompositor::UpdateEffectProperties(nsStyleContext* aStyleContext,
-                                         dom::Element* aElement,
+EffectCompositor::UpdateEffectProperties(StyleType&& aStyleType,
+                                         Element* aElement,
                                          CSSPseudoElementType aPseudoType)
 {
   EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
@@ -370,12 +372,13 @@ EffectCompositor::UpdateEffectProperties(nsStyleContext* aStyleContext,
     return;
   }
 
-  // Style context change might cause CSS cascade level,
-  // e.g removing !important, so we should update the cascading result.
+  // Style context (Gecko) or computed values (Stylo) change might cause CSS
+  // cascade level, e.g removing !important, so we should update the cascading
+  // result.
   effectSet->MarkCascadeNeedsUpdate();
 
   for (KeyframeEffectReadOnly* effect : *effectSet) {
-    effect->UpdateProperties(aStyleContext);
+    effect->UpdateProperties(Forward<StyleType>(aStyleType));
   }
 }
 
@@ -1155,5 +1158,19 @@ EffectCompositor::AnimationStyleRuleProcessor::SizeOfIncludingThis(
 {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
+
+template
+void
+EffectCompositor::UpdateEffectProperties<RefPtr<nsStyleContext>&>(
+  RefPtr<nsStyleContext>& aStyleContext,
+  Element* aElement,
+  CSSPseudoElementType aPseudoType);
+
+template
+void
+EffectCompositor::UpdateEffectProperties<const ServoComputedValuesWithParent&>(
+  const ServoComputedValuesWithParent& aServoValues,
+  Element* aElement,
+  CSSPseudoElementType aPseudoType);
 
 } // namespace mozilla

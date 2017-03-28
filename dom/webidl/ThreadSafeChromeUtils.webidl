@@ -25,6 +25,16 @@ interface ThreadSafeChromeUtils {
   static DOMString saveHeapSnapshot(optional HeapSnapshotBoundaries boundaries);
 
   /**
+   * This is the same as saveHeapSnapshot, but with a different return value.
+   *
+   * @returns                 The snapshot ID of the file. This is the file name
+   *                          without the temp directory or the trailing
+   *                          `.fxsnapshot`.
+   */
+  [Throws]
+  static DOMString saveHeapSnapshotGetId(optional HeapSnapshotBoundaries boundaries);
+
+  /**
    * Deserialize a core dump into a HeapSnapshot.
    *
    * @param filePath          The file path to read the heap snapshot from.

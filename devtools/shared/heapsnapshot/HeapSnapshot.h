@@ -126,7 +126,8 @@ public:
   // snapshots are serialized into.
   static already_AddRefed<nsIFile> CreateUniqueCoreDumpFile(ErrorResult& rv,
                                                             const TimeStamp& now,
-                                                            nsAString& outFilePath);
+                                                            nsAString& outFilePath,
+                                                            nsAString& outSnapshotId);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(HeapSnapshot)

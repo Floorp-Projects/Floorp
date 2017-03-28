@@ -725,55 +725,6 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetAllTokenNames(uint32_t* aLength, char16_t*** aTokenNames)
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
-  NS_ENSURE_ARG(aLength);
-  NS_ENSURE_ARG(aTokenNames);
-  *aLength = 0;
-  *aTokenNames = nullptr;
-
-  // Get the slots from NSS
-  UniquePK11SlotList slots(PK11_GetAllSlotsForCert(mCert.get(), nullptr));
-  if (!slots) {
-    if (PORT_GetError() == SEC_ERROR_NO_TOKEN) {
-      return NS_OK; // List of slots is empty, return empty array
-    }
-    return NS_ERROR_FAILURE;
-  }
-
-  // read the token names from slots
-  PK11SlotListElement* le;
-
-  for (le = slots->head; le; le = le->next) {
-    ++(*aLength);
-  }
-
-  *aTokenNames = (char16_t**) moz_xmalloc(sizeof(char16_t*) * (*aLength));
-  if (!*aTokenNames) {
-    *aLength = 0;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  uint32_t iToken;
-  for (le = slots->head, iToken = 0; le; le = le->next, ++iToken) {
-    char* token = PK11_GetTokenName(le->slot);
-    (*aTokenNames)[iToken] = ToNewUnicode(NS_ConvertUTF8toUTF16(token));
-    if (!(*aTokenNames)[iToken]) {
-      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(iToken, *aTokenNames);
-      *aLength = 0;
-      *aTokenNames = nullptr;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNSSCertificate::GetSubjectName(nsAString& _subjectName)
 {
   nsNSSShutDownPreventionLock locker;
