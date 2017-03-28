@@ -16,6 +16,10 @@
 #include "sandbox/win/src/target_services.h"
 #include "mozilla/sandboxing/sandboxLogging.h"
 
+// This status occurs when trying to access a network share on the machine from
+// which it is shared.
+#define STATUS_NETWORK_OPEN_RESTRICTION ((NTSTATUS)0xC0000201L)
+
 namespace sandbox {
 
 NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
@@ -31,7 +35,8 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
                                     io_status, allocation_size,
                                     file_attributes, sharing, disposition,
                                     options, ea_buffer, ea_length);
-  if (STATUS_ACCESS_DENIED != status)
+  if (STATUS_ACCESS_DENIED != status &&
+      STATUS_NETWORK_OPEN_RESTRICTION != status)
     return status;
 
   mozilla::sandboxing::LogBlocked("NtCreateFile",
@@ -111,7 +116,8 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile, PHANDLE file,
   // Check if the process can open it first.
   NTSTATUS status = orig_OpenFile(file, desired_access, object_attributes,
                                   io_status, sharing, options);
-  if (STATUS_ACCESS_DENIED != status)
+  if (STATUS_ACCESS_DENIED != status &&
+      STATUS_NETWORK_OPEN_RESTRICTION != status)
     return status;
 
   mozilla::sandboxing::LogBlocked("NtOpenFile",
@@ -187,7 +193,8 @@ NTSTATUS WINAPI TargetNtQueryAttributesFile(
     PFILE_BASIC_INFORMATION file_attributes) {
   // Check if the process can query it first.
   NTSTATUS status = orig_QueryAttributes(object_attributes, file_attributes);
-  if (STATUS_ACCESS_DENIED != status)
+  if (STATUS_ACCESS_DENIED != status &&
+      STATUS_NETWORK_OPEN_RESTRICTION != status)
     return status;
 
   mozilla::sandboxing::LogBlocked("NtQueryAttributesFile",
@@ -249,7 +256,8 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
   // Check if the process can query it first.
   NTSTATUS status = orig_QueryFullAttributes(object_attributes,
                                              file_attributes);
-  if (STATUS_ACCESS_DENIED != status)
+  if (STATUS_ACCESS_DENIED != status &&
+      STATUS_NETWORK_OPEN_RESTRICTION != status)
     return status;
 
   mozilla::sandboxing::LogBlocked("NtQueryFullAttributesFile",
