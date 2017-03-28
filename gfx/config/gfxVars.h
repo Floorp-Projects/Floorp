@@ -66,6 +66,12 @@ public:
 
   // Return a list of updates for all variables with non-default values.
   static nsTArray<GfxVarUpdate> FetchNonDefaultVars();
+  // Fill aUpdates with serialized updates for all variables with non-default
+  // values. Return true if ok, false if length>aMax or other issue.
+  static bool SerializeNonDefaultVarUpdates(nsACString& aUpdates, size_t aMax);
+  // Inform gfxVars that some initial updates are available, to be used from
+  // a child's Initialize(), instead of doing a sync request to the parent.
+  static void GotSerializedInitialVarUpdates(const char* aUpdates);
 
 public:
   // Each variable must expose Set and Get methods for IPDL.
@@ -86,6 +92,7 @@ public:
 private:
   static StaticAutoPtr<gfxVars> sInstance;
   static StaticAutoPtr<nsTArray<VarBase*>> sVarList;
+  static const char* sSerializedInitialVarUpdates;
 
   template <typename T, T Default()>
   class VarImpl final : public VarBase
@@ -140,6 +147,8 @@ public:                                                         \
 
 private:
   gfxVars();
+
+  static bool ApplySerializedVarUpdates(const char* aUpdates);
 
   void NotifyReceivers(VarBase* aVar);
 

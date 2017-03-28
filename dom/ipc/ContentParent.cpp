@@ -2039,6 +2039,35 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   extraArgs.push_back("-stringPrefs");
   extraArgs.push_back(stringPrefs.get());
 
+  char gfxBuf[1024];
+  nsFixedCString gfxVarsUpdates(gfxBuf, 1024, 0);
+  if (gfxVars::SerializeNonDefaultVarUpdates(gfxVarsUpdates, 1023)) {
+    // Don't add gfxVarsUpdates if they risk taking too much command line space.
+    const size_t maxArg =
+#ifdef XP_WIN
+      8191;
+#else
+      size_t(sysconf(_SC_ARG_MAX));
+#endif
+    size_t extraArgsLength = 0;
+    for (const std::string& arg : extraArgs) {
+      extraArgsLength += arg.size() + 1;
+    }
+    if (extraArgsLength + size_t(gfxVarsUpdates.Length()) + 1024 < maxArg) {
+      extraArgs.push_back("-gfxVars");
+      if (gfxVarsUpdates.IsEmpty()) {
+        // Don't pass an empty string.
+        extraArgs.push_back("0");
+      } else {
+        extraArgs.push_back(gfxVarsUpdates.get());
+      }
+
+      // Since we have sent all gfxVarsUpdates known so far, we can start
+      // listening for updates.
+      gfxVars::AddReceiver(this);
+    }
+  }
+
   if (gSafeMode) {
     extraArgs.push_back("-safeMode");
   }
