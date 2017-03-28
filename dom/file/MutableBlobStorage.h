@@ -11,6 +11,9 @@
 #include "prio.h"
 
 namespace mozilla {
+
+class TaskQueue;
+
 namespace dom {
 
 class Blob;
@@ -67,7 +70,7 @@ private:
 
   nsresult MaybeCreateTemporaryFile();
 
-  static nsresult DispatchToIOThread(Runnable* aRunnable);
+  void DispatchToIOThread(already_AddRefed<nsIRunnable> aRunnable);
 
   // All these variables are touched on the main thread only.
 
@@ -88,6 +91,8 @@ private:
   PRFileDesc* mFD;
 
   nsresult mErrorResult;
+
+  RefPtr<TaskQueue> mTaskQueue;
 };
 
 } // namespace dom

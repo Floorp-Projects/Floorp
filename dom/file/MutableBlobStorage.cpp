@@ -8,6 +8,7 @@
 #include "MemoryBlobImpl.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TaskQueue.h"
 #include "File.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsNetCID.h"
@@ -362,7 +363,12 @@ MutableBlobStorage::~MutableBlobStorage()
   free(mData);
 
   if (mFD) {
-    DispatchToIOThread(new CloseFileRunnable(mFD));
+    RefPtr<Runnable> runnable = new CloseFileRunnable(mFD);
+    DispatchToIOThread(runnable.forget());
+  }
+
+  if (mTaskQueue) {
+    mTaskQueue->BeginShutdown();
   }
 }
 
@@ -383,22 +389,18 @@ MutableBlobStorage::GetBlobWhenReady(nsISupports* aParent,
     MOZ_ASSERT(mFD);
 
     if (NS_FAILED(mErrorResult)) {
-      NS_DispatchToMainThread(
-        new BlobCreationDoneRunnable(this, aCallback, nullptr, mErrorResult));
+      RefPtr<Runnable> runnable =
+        new BlobCreationDoneRunnable(this, aCallback, nullptr, mErrorResult);
+      NS_DispatchToMainThread(runnable.forget());
       return 0;
     }
 
     // We want to wait until all the WriteRunnable are completed. The way we do
     // this is to go to the I/O thread and then we come back: the runnables are
     // executed in order and this LastRunnable will be... the last one.
-    nsresult rv = DispatchToIOThread(new LastRunnable(this, aParent,
-                                                      aContentType, aCallback));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      NS_DispatchToMainThread(
-        new BlobCreationDoneRunnable(this, aCallback, nullptr, rv));
-      return 0;
-    }
-
+    RefPtr<Runnable> runnable =
+      new LastRunnable(this, aParent, aContentType, aCallback);
+    DispatchToIOThread(runnable.forget());
     return mDataLen;
   }
 
@@ -458,10 +460,7 @@ MutableBlobStorage::Append(const void* aData, uint32_t aLength)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsresult rv = DispatchToIOThread(runnable);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    DispatchToIOThread(runnable.forget());
 
     mDataLen += aLength;
     return NS_OK;
@@ -532,10 +531,8 @@ nsresult
 MutableBlobStorage::MaybeCreateTemporaryFile()
 {
   if (XRE_IsParentProcess()) {
-    nsresult rv = DispatchToIOThread(new CreateTemporaryFileRunnable(this));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    RefPtr<Runnable> runnable = new CreateTemporaryFileRunnable(this);
+    DispatchToIOThread(runnable.forget());
   } else {
     RefPtr<MutableBlobStorage> self(this);
     ContentChild::GetSingleton()->
@@ -559,7 +556,8 @@ MutableBlobStorage::TemporaryFileCreated(PRFileDesc* aFD)
              mStorageState == eClosed);
 
   if (mStorageState == eClosed) {
-    DispatchToIOThread(new CloseFileRunnable(aFD));
+    RefPtr<Runnable> runnable = new CloseFileRunnable(aFD);
+    DispatchToIOThread(runnable.forget());
     return;
   }
 
@@ -572,11 +570,7 @@ MutableBlobStorage::TemporaryFileCreated(PRFileDesc* aFD)
 
   mData = nullptr;
 
-  nsresult rv = DispatchToIOThread(runnable);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    mErrorResult = rv;
-    return;
-  }
+  DispatchToIOThread(runnable.forget());
 }
 
 void
@@ -607,19 +601,19 @@ MutableBlobStorage::ErrorPropagated(nsresult aRv)
   mErrorResult = aRv;
 }
 
-/* static */ nsresult
-MutableBlobStorage::DispatchToIOThread(Runnable* aRunnable)
+void
+MutableBlobStorage::DispatchToIOThread(already_AddRefed<nsIRunnable> aRunnable)
 {
-  nsCOMPtr<nsIEventTarget> target
-    = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-  MOZ_ASSERT(target);
+  if (!mTaskQueue) {
+    nsCOMPtr<nsIEventTarget> target
+      = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+    MOZ_ASSERT(target);
 
-  nsresult rv = target->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    mTaskQueue = new TaskQueue(target.forget());
   }
 
-  return NS_OK;
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+  mTaskQueue->Dispatch(runnable.forget());
 }
 
 } // dom namespace
