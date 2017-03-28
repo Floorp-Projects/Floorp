@@ -175,6 +175,9 @@ scheme host and port.""")
                              help="Run tests without electrolysis preferences")
     gecko_group.add_argument("--stackfix-dir", dest="stackfix_dir", action="store",
                              help="Path to directory containing assertion stack fixing scripts")
+    gecko_group.add_argument("--setpref", dest="extra_prefs", action='append',
+                             default=[], metavar="PREF=VALUE",
+                             help="Defines an extra user preference (overrides those in prefs_root)")
 
     servo_group = parser.add_argument_group("Servo-specific")
     servo_group.add_argument("--user-stylesheet",
@@ -347,6 +350,14 @@ def check_args(kwargs):
             print >> sys.stderr, "certutil-binary argument missing or not a valid executable"
             sys.exit(1)
         kwargs["certutil_binary"] = path
+
+    if kwargs['extra_prefs']:
+        missing = any('=' not in prefarg for prefarg in kwargs['extra_prefs'])
+        if missing:
+            print >> sys.stderr, "Preferences via --setpref must be in key=value format"
+            sys.exit(1)
+        kwargs['extra_prefs'] = [tuple(prefarg.split('=', 1)) for prefarg in
+                                 kwargs['extra_prefs']]
 
     return kwargs
 

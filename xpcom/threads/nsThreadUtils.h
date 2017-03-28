@@ -175,6 +175,15 @@ extern bool NS_HasPendingEvents(nsIThread* aThread = nullptr);
 extern bool NS_ProcessNextEvent(nsIThread* aThread = nullptr,
                                 bool aMayWait = true);
 
+/**
+ * Returns true if we're in the compositor thread.
+ *
+ * We declare this here because the headers required to invoke
+ * CompositorThreadHolder::IsInCompositorThread() also pull in a bunch of system
+ * headers that #define various tokens in a way that can break the build.
+ */
+extern bool NS_IsInCompositorThread();
+
 //-----------------------------------------------------------------------------
 // Helpers that work with nsCOMPtr:
 

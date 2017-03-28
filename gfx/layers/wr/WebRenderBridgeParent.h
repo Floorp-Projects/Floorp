@@ -68,6 +68,11 @@ public:
                                        const uint32_t& aStride,
                                        const gfx::SurfaceFormat& aFormat,
                                        const ByteBuffer& aBuffer) override;
+  mozilla::ipc::IPCResult RecvAddBlobImage(const wr::ImageKey& aImageKey,
+                                           const gfx::IntSize& aSize,
+                                           const uint32_t& aStride,
+                                           const gfx::SurfaceFormat& aFormat,
+                                           const ByteBuffer& aBuffer) override;
   mozilla::ipc::IPCResult RecvAddRawFont(const wr::FontKey& aFontKey,
                                          const ByteBuffer& aBuffer,
                                          const uint32_t& aFontIndex) override;

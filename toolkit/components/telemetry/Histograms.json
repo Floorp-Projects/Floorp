@@ -266,6 +266,33 @@
     "alert_emails": ["kgupta@mozilla.com"],
     "bug_numbers": [1339220]
   },
+  "COMPOSITOR_ANIMATION_MAX_CONTIGUOUS_DROPS_APZ" : {
+    "expires_in_version": "60",
+    "description": "For APZ/scrolling compositor animations, the maximum number of contiguous frame drops encountered",
+    "kind": "exponential",
+    "high": 7200,
+    "n_buckets": 50,
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1338347]
+  },
+  "COMPOSITOR_ANIMATION_MAX_CONTIGUOUS_DROPS_CHROME" : {
+    "expires_in_version": "60",
+    "description": "For compositor animations of chrome-process layers, the maximum number of contiguous frame drops encountered",
+    "kind": "exponential",
+    "high": 7200,
+    "n_buckets": 50,
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1338347]
+  },
+  "COMPOSITOR_ANIMATION_MAX_CONTIGUOUS_DROPS_CONTENT" : {
+    "expires_in_version": "60",
+    "description": "For compositor animations of content-process layers, the maximum number of contiguous frame drops encountered",
+    "kind": "exponential",
+    "high": 7200,
+    "n_buckets": 50,
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1338347]
+  },
   "COMPOSITOR_ANIMATION_MAX_LAYER_AREA" : {
     "expires_in_version": "58",
     "description": "High-watermark of layer area affected during a compositor animation. Units are layer pixels squared.",
@@ -274,6 +301,33 @@
     "n_buckets": 50,
     "alert_emails": ["kgupta@mozilla.com"],
     "bug_numbers": [1339220]
+  },
+  "COMPOSITOR_ANIMATION_THROUGHPUT_APZ" : {
+    "expires_in_version": "60",
+    "description": "Frame throughput ratio (scaled up to 1000) for APZ/scrolling animations in the compositor.",
+    "kind": "linear",
+    "high": 1500,
+    "n_buckets": 50,
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1338347]
+  },
+  "COMPOSITOR_ANIMATION_THROUGHPUT_CHROME" : {
+    "expires_in_version": "60",
+    "description": "Frame throughput ratio (scaled up to 1000) for compositor animations of chrome-process layers.",
+    "kind": "linear",
+    "high": 1500,
+    "n_buckets": 50,
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1338347]
+  },
+  "COMPOSITOR_ANIMATION_THROUGHPUT_CONTENT" : {
+    "expires_in_version": "60",
+    "description": "Frame throughput ratio (scaled up to 1000) for compositor animations of content-process layers.",
+    "kind": "linear",
+    "high": 1500,
+    "n_buckets": 50,
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1338347]
   },
   "CONTENT_PROCESS_LAUNCH_TIME_MS" : {
     "alert_emails": ["bsmedberg@mozilla.com", "mconley@mozilla.com"],
@@ -8901,14 +8955,14 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 128,
-    "description": "Negotiated cipher suite in full handshake (see key in HandshakeCallback in nsNSSCallbacks.cpp)"
+    "description": "Negotiated cipher suite in full handshake (see key in AccumulateCipherSuite in nsNSSCallbacks.cpp)"
   },
   "SSL_CIPHER_SUITE_RESUMED": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 128,
-    "description": "Negotiated cipher suite in resumed handshake (see key in HandshakeCallback in nsNSSCallbacks.cpp)"
+    "description": "Negotiated cipher suite in resumed handshake (see key in AccumulateCipherSuite in nsNSSCallbacks.cpp)"
   },
   "SSL_KEA_RSA_KEY_SIZE_FULL": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],

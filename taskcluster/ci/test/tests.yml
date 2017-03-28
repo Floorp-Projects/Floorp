@@ -1300,7 +1300,6 @@ awsy:
             by-test-platform:
                 default:
                     - awsy/linux_config.py
-                    - remove_executables.py
 
 web-platform-tests:
     description: "Web platform test run"

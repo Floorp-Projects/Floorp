@@ -1,0 +1,100 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * interface for container for information saved in session history when
+ * the document is not
+ */
+
+#include "nsISupports.idl"
+
+interface nsPresState;
+
+[ptr] native nsPresStatePtr(nsPresState);
+[ref] native nsCString(const nsCString);
+native constBool(const bool);
+
+%{C++
+#include "nsStringFwd.h"
+
+template<typename> struct already_AddRefed;
+%}
+
+[scriptable, uuid(aef27cb3-4df9-4eeb-b0b0-ac56cf861d04)]
+interface nsILayoutHistoryState : nsISupports
+{
+  /**
+  * Whether this LayoutHistoryState contains any PresStates.
+  */
+  readonly attribute boolean hasStates;
+
+  /**
+  * Get the keys of all PresStates held by this LayoutHistoryState.
+  * Note: Check hasStates first.
+  */
+  void getKeys([optional] out uint32_t aCount,
+               [array, size_is(aCount), retval] out string aKeys);
+
+  /*
+  * Attempts to get the data of the PresState corresponding to
+  * the passed key. Throws if no data could be found.
+  */
+  void getPresState(in ACString aKey,
+                    out float aScrollX, out float aScrollY,
+                    out boolean aAllowScrollOriginDowngrade,
+                    out float aRes, out boolean aScaleToRes);
+
+  /**
+   * Constructs a new nsPresState object based on the supplied data
+   * and adds it to the LayoutHistoryState.
+   */
+  void addNewPresState(in ACString aKey,
+                   in float aScrollX, in float aScrollY,
+                   in boolean aAllowScrollOriginDowngrade,
+                   in float aRes, in boolean aScaleToRes);
+
+  // Native only interface, converted from the original nsILayoutHistoryState.h
+
+  /**
+   * Set |aState| as the state object for |aKey|.
+   * This _transfers_ownership_ of |aState| to the LayoutHistoryState.
+   * It will be freed when RemoveState() is called or when the
+   * LayoutHistoryState is destroyed.
+   */
+  [noscript, notxpcom, nostdcall] void AddState(in nsCString aKey, in nsPresStatePtr aState);
+
+  /**
+   * Look up the state object for |aKey|.
+   */
+  [noscript, notxpcom, nostdcall] nsPresStatePtr GetState(in nsCString aKey);
+
+  /**
+   * Remove the state object for |aKey|.
+   */
+  [noscript, notxpcom, nostdcall] void RemoveState(in nsCString aKey);
+
+  /**
+   * Check whether this history has any states in it
+   */
+  [noscript, notxpcom, nostdcall] boolean HasStates();
+
+  /**
+   * Sets whether this history can contain only scroll position history
+   * or all possible history
+   */
+  [noscript, notxpcom, nostdcall] void SetScrollPositionOnly(in constBool aFlag);
+
+  /**
+   * Resets nsPresState::GetScrollState of all nsPresState objects to 0,0.
+   */
+  [noscript, notxpcom, nostdcall] void ResetScrollState();
+};
+
+%{C++
+already_AddRefed<nsILayoutHistoryState>
+NS_NewLayoutHistoryState();
+%}
+
+

@@ -613,7 +613,7 @@ class Marionette(object):
             return self.instance.profile.profile
 
     def cleanup(self):
-        if self.session:
+        if self.session is not None:
             try:
                 self.delete_session()
             except (errors.MarionetteException, IOError):
@@ -713,7 +713,7 @@ class Marionette(object):
         try:
             if self.protocol < 3:
                 data = {"name": name}
-                if params:
+                if params is not None:
                     data["parameters"] = params
                 self.client.send(data)
                 msg = self.client.receive()
@@ -1125,31 +1125,60 @@ class Marionette(object):
             # Restore the context as used before the restart
             self.set_context(context)
 
-    def _request_in_app_shutdown(self, shutdown_flags=None):
-        """Terminate the currently running instance from inside the application.
+    def _request_in_app_shutdown(self, *shutdown_flags):
+        """Attempt to quit the currently running instance from inside the
+        application.
 
-        :param shutdown_flags: If specified use additional flags for the shutdown
-                               of the application. Possible values here correspond
-                               to constants in nsIAppStartup: http://mzl.la/1X0JZsC.
+        Duplicate entries in `shutdown_flags` are removed, and
+        `"eAttemptQuit"` is added if no other `*Quit` flags are given.
+        This provides backwards compatible behaviour with earlier
+        Firefoxen.
+
+        This method effectively calls `Services.startup.quit` in Gecko.
+        Possible flag values are listed at http://mzl.la/1X0JZsC.
+
+        :param shutdown_flags: Optional additional quit masks to include.
+            Duplicates are removed, and `"eAttemptQuit"` is added if no
+            flags ending with `"Quit"` are present.
+
+        :throws InvalidArgumentException: If there are multiple
+            `shutdown_flags` ending with `"Quit"`.
+
         """
-        flags = set([])
-        if shutdown_flags:
-            flags.add(shutdown_flags)
 
-        # Trigger a 'quit-application-requested' observer notification so that
-        # components can safely shutdown before quitting the application.
+        # The vast majority of this function was implemented inside
+        # the quit command as part of bug 1337743, and can be
+        # removed from here in Firefox 55 at the earliest.
+
+        # remove duplicates
+        flags = set(shutdown_flags)
+
+        # add eAttemptQuit if there are no *Quits
+        if not any(flag.endswith("Quit") for flag in flags):
+            flags = flags | set(("eAttemptQuit",))
+
+        # Trigger a quit-application-requested observer notification
+        # so that components can safely shutdown before quitting the
+        # application.
         with self.using_context("chrome"):
             canceled = self.execute_script("""
                 Components.utils.import("resource://gre/modules/Services.jsm");
-                let cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"].
-                                 createInstance(Components.interfaces.nsISupportsPRBool);
+                let cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
+                    .createInstance(Components.interfaces.nsISupportsPRBool);
                 Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
                 return cancelQuit.data;
                 """)
             if canceled:
-                raise errors.MarionetteException("Something canceled the quit application request")
+                raise errors.MarionetteException(
+                    "Something cancelled the quit application request")
 
-        self._send_message("quitApplication", {"flags": list(flags)})
+        body = None
+        if len(flags) > 0:
+            body = {"flags": list(flags)}
+
+        # quitApplication was renamed quit in bug 1337743,
+        # and this can safely be renamed when Firefox 56 becomes stable
+        self._send_message("quitApplication", body)
 
     @do_process_check
     def quit(self, in_app=False, callback=None):

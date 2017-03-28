@@ -152,8 +152,6 @@ var whitelist = new Set([
   {file: "chrome://marionette/content/test_anonymous_content.xul"},
   {file: "chrome://marionette/content/test_dialog.properties"},
   {file: "chrome://marionette/content/test_dialog.xul"},
-  // Bug 1348532
-  {file: "chrome://mozapps/content/extensions/list.xul"},
   // Bug 1348533
   {file: "chrome://mozapps/skin/downloads/buttons.png", platforms: ["macosx"]},
   {file: "chrome://mozapps/skin/downloads/downloadButtons.png", platforms: ["linux", "win"]},

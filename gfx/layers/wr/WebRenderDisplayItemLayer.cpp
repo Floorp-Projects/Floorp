@@ -18,6 +18,10 @@ namespace layers {
 void
 WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
+  if (mVisibleRegion.IsEmpty()) {
+    return;
+  }
+
   if (mItem) {
     wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
     // We might have recycled this layer. Throw away the old commands.

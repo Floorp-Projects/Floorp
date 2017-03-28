@@ -28,15 +28,9 @@ SpinEvent::SpinEvent()
   : mDone(false)
 {
   static const bool sIsMulticore = []() {
-    nsCOMPtr<nsIPropertyBag2> infoService = do_GetService(NS_SYSTEMINFO_CONTRACTID);
-    if (!infoService) {
-      return false;
-    }
-
-    uint32_t cpuCount;
-    nsresult rv = infoService->GetPropertyAsUint32(NS_LITERAL_STRING("cpucount"),
-                                                   &cpuCount);
-    return NS_SUCCEEDED(rv) && cpuCount > 1;
+    SYSTEM_INFO sysInfo;
+    ::GetSystemInfo(&sysInfo);
+    return sysInfo.dwNumberOfProcessors > 1;
   }();
 
   if (!sIsMulticore) {
