@@ -1362,6 +1362,12 @@ Gecko_CSSValue_GetAbsoluteLength(nsCSSValueBorrowed aCSSValue)
 }
 
 void
+Gecko_CSSValue_SetNormal(nsCSSValueBorrowedMut aCSSValue)
+{
+  aCSSValue->SetNormalValue();
+}
+
+void
 Gecko_CSSValue_SetNumber(nsCSSValueBorrowedMut aCSSValue, float aNumber)
 {
   aCSSValue->SetFloatValue(aNumber, eCSSUnit_Number);
@@ -1433,25 +1439,23 @@ Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut aCSSValue, int32_t aLen)
 }
 
 void
-Gecko_CSSValue_SetString(nsCSSValueBorrowedMut aCSSValue, const uint8_t* aString, uint32_t aLength)
+Gecko_CSSValue_SetString(nsCSSValueBorrowedMut aCSSValue,
+                         const uint8_t* aString, uint32_t aLength,
+                         nsCSSUnit aUnit)
 {
   MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
   nsString string;
   nsDependentCSubstring slice(reinterpret_cast<const char*>(aString),
                                   aLength);
   AppendUTF8toUTF16(slice, string);
-  aCSSValue->SetStringValue(string, eCSSUnit_String);
+  aCSSValue->SetStringValue(string, aUnit);
 }
 
 void
-Gecko_CSSValue_SetIdent(nsCSSValueBorrowedMut aCSSValue, const uint8_t* aString, uint32_t aLength)
+Gecko_CSSValue_SetStringFromAtom(nsCSSValueBorrowedMut aCSSValue,
+                                 nsIAtom* aAtom, nsCSSUnit aUnit)
 {
-  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
-  nsString string;
-  nsDependentCSubstring slice(reinterpret_cast<const char*>(aString),
-                                  aLength);
-  AppendUTF8toUTF16(slice, string);
-  aCSSValue->SetStringValue(string, eCSSUnit_Ident);
+  aCSSValue->SetStringValue(nsDependentAtomString(aAtom), aUnit);
 }
 
 void
@@ -1473,18 +1477,10 @@ Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut aCSSValue,
 }
 
 void
-Gecko_CSSValue_SetLocal(nsCSSValueBorrowedMut aCSSValue, const nsString aFamily)
+Gecko_CSSValue_SetInt(nsCSSValueBorrowedMut aCSSValue,
+                      int32_t aInteger, nsCSSUnit aUnit)
 {
-  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
-  aCSSValue->SetStringValue(aFamily, eCSSUnit_Local_Font);
-}
-
-void
-Gecko_CSSValue_SetInteger(nsCSSValueBorrowedMut aCSSValue, int32_t aInteger)
-{
-  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null ||
-    aCSSValue->GetUnit() == eCSSUnit_Integer);
-  aCSSValue->SetIntValue(aInteger, eCSSUnit_Integer);
+  aCSSValue->SetIntValue(aInteger, aUnit);
 }
 
 nsCSSValueBorrowedMut

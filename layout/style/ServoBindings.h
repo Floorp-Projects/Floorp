@@ -369,18 +369,20 @@ float Gecko_CSSValue_GetPercentage(nsCSSValueBorrowed css_value);
 nsStyleCoord::CalcValue Gecko_CSSValue_GetCalc(nsCSSValueBorrowed aCSSValue);
 
 void Gecko_CSSValue_SetAbsoluteLength(nsCSSValueBorrowedMut css_value, nscoord len);
+void Gecko_CSSValue_SetNormal(nsCSSValueBorrowedMut css_value);
 void Gecko_CSSValue_SetNumber(nsCSSValueBorrowedMut css_value, float number);
 void Gecko_CSSValue_SetKeyword(nsCSSValueBorrowedMut css_value, nsCSSKeyword keyword);
 void Gecko_CSSValue_SetPercentage(nsCSSValueBorrowedMut css_value, float percent);
 void Gecko_CSSValue_SetAngle(nsCSSValueBorrowedMut css_value, float radians);
 void Gecko_CSSValue_SetCalc(nsCSSValueBorrowedMut css_value, nsStyleCoord::CalcValue calc);
 void Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut css_value, int32_t len);
-void Gecko_CSSValue_SetString(nsCSSValueBorrowedMut css_value, const uint8_t* string, uint32_t len);
-void Gecko_CSSValue_SetIdent(nsCSSValueBorrowedMut css_value, const uint8_t* string, uint32_t len);
+void Gecko_CSSValue_SetString(nsCSSValueBorrowedMut css_value,
+                              const uint8_t* string, uint32_t len, nsCSSUnit unit);
+void Gecko_CSSValue_SetStringFromAtom(nsCSSValueBorrowedMut css_value,
+                                      nsIAtom* atom, nsCSSUnit unit);
 void Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut css_value, int32_t len);
 void Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut css_value, ServoBundledURI uri);
-void Gecko_CSSValue_SetLocal(nsCSSValueBorrowedMut css_value, const nsString family);
-void Gecko_CSSValue_SetInteger(nsCSSValueBorrowedMut css_value, int32_t integer);
+void Gecko_CSSValue_SetInt(nsCSSValueBorrowedMut css_value, int32_t integer, nsCSSUnit unit);
 void Gecko_CSSValue_Drop(nsCSSValueBorrowedMut css_value);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);
