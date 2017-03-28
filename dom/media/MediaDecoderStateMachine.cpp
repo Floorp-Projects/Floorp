@@ -2456,7 +2456,7 @@ BufferingState::Step()
     if ((isLiveStream || !mMaster->CanPlayThrough())
         && elapsed
            < TimeDuration::FromSeconds(mBufferingWait * mMaster->mPlaybackRate)
-        && mMaster->HasLowBufferedData(mBufferingWait * USECS_PER_S)
+        && mMaster->HasLowBufferedData(TimeUnit::FromSeconds(mBufferingWait))
         && IsExpectingMoreData()) {
       SLOG("Buffering: wait %ds, timeout in %.3lfs",
            mBufferingWait, mBufferingWait - elapsed.ToSeconds());
@@ -3315,13 +3315,15 @@ bool MediaDecoderStateMachine::OutOfDecodedAudio()
            && !mMediaSink->HasUnplayedFrames(TrackInfo::kAudioTrack);
 }
 
-bool MediaDecoderStateMachine::HasLowBufferedData()
+bool
+MediaDecoderStateMachine::HasLowBufferedData()
 {
   MOZ_ASSERT(OnTaskQueue());
-  return HasLowBufferedData(detail::LOW_BUFFER_THRESHOLD.ToMicroseconds());
+  return HasLowBufferedData(detail::LOW_BUFFER_THRESHOLD);
 }
 
-bool MediaDecoderStateMachine::HasLowBufferedData(int64_t aUsecs)
+bool
+MediaDecoderStateMachine::HasLowBufferedData(const TimeUnit& aThreshold)
 {
   MOZ_ASSERT(OnTaskQueue());
 
@@ -3338,35 +3340,32 @@ bool MediaDecoderStateMachine::HasLowBufferedData(int64_t aUsecs)
 
   // We are never low in decoded data when we don't have audio/video or have
   // decoded all audio/video samples.
-  int64_t endOfDecodedVideoData =
-    (HasVideo() && !VideoQueue().IsFinished())
-    ? mDecodedVideoEndTime
-    : INT64_MAX;
-  int64_t endOfDecodedAudioData =
-    (HasAudio() && !AudioQueue().IsFinished())
-    ? mDecodedAudioEndTime
-    : INT64_MAX;
+  TimeUnit endOfDecodedVideo = (HasVideo() && !VideoQueue().IsFinished())
+    ? TimeUnit::FromMicroseconds(mDecodedVideoEndTime)
+    : TimeUnit::FromInfinity();
+  TimeUnit endOfDecodedAudio = (HasAudio() && !AudioQueue().IsFinished())
+    ? TimeUnit::FromMicroseconds(mDecodedAudioEndTime)
+    : TimeUnit::FromInfinity();
 
-  int64_t endOfDecodedData =
-    std::min(endOfDecodedVideoData, endOfDecodedAudioData);
-  if (Duration().ToMicroseconds() < endOfDecodedData) {
+  auto endOfDecodedData = std::min(endOfDecodedVideo, endOfDecodedAudio);
+  if (Duration() < endOfDecodedData) {
     // Our duration is not up to date. No point buffering.
     return false;
   }
 
-  if (endOfDecodedData == INT64_MAX) {
+  if (endOfDecodedData.IsInfinite()) {
     // Have decoded all samples. No point buffering.
     return false;
   }
 
-  int64_t start = endOfDecodedData;
-  int64_t end = std::min(GetMediaTime() + aUsecs, Duration().ToMicroseconds());
+  auto start = endOfDecodedData;
+  auto end = std::min(
+    TimeUnit::FromMicroseconds(GetMediaTime()) + aThreshold, Duration());
   if (start >= end) {
     // Duration of decoded samples is greater than our threshold.
     return false;
   }
-  media::TimeInterval interval(media::TimeUnit::FromMicroseconds(start),
-                               media::TimeUnit::FromMicroseconds(end));
+  media::TimeInterval interval(start, end);
   return !mBuffered.Ref().Contains(interval);
 }
 
