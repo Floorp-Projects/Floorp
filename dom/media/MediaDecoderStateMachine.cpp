@@ -1011,7 +1011,7 @@ protected:
 private:
   virtual void DoSeek() = 0;
 
-  virtual int64_t CalculateNewCurrentTime() const = 0;
+  virtual TimeUnit CalculateNewCurrentTime() const = 0;
 };
 
 class MediaDecoderStateMachine::AccurateSeekingState
@@ -1205,9 +1205,9 @@ private:
     DemuxerSeek();
   }
 
-  int64_t CalculateNewCurrentTime() const override
+  TimeUnit CalculateNewCurrentTime() const override
   {
-    const int64_t seekTime = mSeekJob.mTarget->GetTime().ToMicroseconds();
+    const auto seekTime = mSeekJob.mTarget->GetTime();
 
     // For the accurate seek, we always set the newCurrentTime = seekTime so
     // that the updated HTMLMediaElement.currentTime will always be the seek
@@ -1230,13 +1230,14 @@ private:
 
       const int64_t audioStart = audio ? audio->mTime : INT64_MAX;
       const int64_t videoStart = video ? video->mTime : INT64_MAX;
-      const int64_t audioGap = std::abs(audioStart - seekTime);
-      const int64_t videoGap = std::abs(videoStart - seekTime);
-      return audioGap <= videoGap ? audioStart : videoStart;
+      const int64_t audioGap = std::abs(audioStart - seekTime.ToMicroseconds());
+      const int64_t videoGap = std::abs(videoStart - seekTime.ToMicroseconds());
+      return TimeUnit::FromMicroseconds(
+        audioGap <= videoGap ? audioStart : videoStart);
     }
 
     MOZ_ASSERT(false, "AccurateSeekTask doesn't handle other seek types.");
-    return 0;
+    return TimeUnit::Zero();
   }
 
   void OnSeekResolved(media::TimeUnit)
@@ -1630,11 +1631,11 @@ private:
     RequestVideoData();
   }
 
-  int64_t CalculateNewCurrentTime() const override
+  TimeUnit CalculateNewCurrentTime() const override
   {
     // The HTMLMediaElement.currentTime should be updated to the seek target
     // which has been updated to the next frame's time.
-    return mSeekJob.mTarget->GetTime().ToMicroseconds();
+    return mSeekJob.mTarget->GetTime();
   }
 
   void RequestVideoData()
@@ -2369,10 +2370,10 @@ void
 MediaDecoderStateMachine::
 SeekingState::SeekCompleted()
 {
-  const int64_t newCurrentTime = CalculateNewCurrentTime();
+  const auto newCurrentTime = CalculateNewCurrentTime();
 
   bool isLiveStream = Resource()->IsLiveStream();
-  if (newCurrentTime == mMaster->Duration().ToMicroseconds() && !isLiveStream) {
+  if (newCurrentTime == mMaster->Duration() && !isLiveStream) {
     // Seeked to end of media. Explicitly finish the queues so DECODING
     // will transition to COMPLETED immediately. Note we don't do
     // this when playing a live stream, since the end of media will advance
@@ -2410,8 +2411,7 @@ SeekingState::SeekCompleted()
     // Don't update playback position for video-only seek.
     // Otherwise we might have |newCurrentTime > mMediaSink->GetPosition()|
     // and fail the assertion in GetClock() since we didn't stop MediaSink.
-    mMaster->UpdatePlaybackPositionInternal(
-      TimeUnit::FromMicroseconds(newCurrentTime));
+    mMaster->UpdatePlaybackPositionInternal(newCurrentTime);
   }
 
   // Dispatch an event so that the UI can change in response to the end of
