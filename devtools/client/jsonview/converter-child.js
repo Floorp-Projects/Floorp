@@ -29,10 +29,10 @@ const childProcessMessageManager =
 const SEGMENT_SIZE = Math.pow(2, 17);
 
 const JSON_VIEW_MIME_TYPE = "application/vnd.mozilla.json.view";
-const CONTRACT_ID = "@mozilla.org/streamconv;1?from=" +
+const JSON_VIEW_CONTRACT_ID = "@mozilla.org/streamconv;1?from=" +
   JSON_VIEW_MIME_TYPE + "&to=*/*";
-const CLASS_ID = components.ID("{d8c9acee-dec5-11e4-8c75-1681e6b88ec1}");
-const CLASS_DESCRIPTION = "JSONView converter";
+const JSON_VIEW_CLASS_ID = components.ID("{d8c9acee-dec5-11e4-8c75-1681e6b88ec1}");
+const JSON_VIEW_CLASS_DESCRIPTION = "JSONView converter";
 
 // Localization
 loader.lazyGetter(this, "jsonViewStrings", () => {
@@ -323,21 +323,25 @@ Converter.prototype = {
   }
 };
 
-const Factory = {
+function createInstance() {
+  return new Converter();
+}
+
+const JsonViewFactory = {
   createInstance: function (outer, iid) {
     if (outer) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
-    return new Converter();
+    return createInstance();
   }
 };
 
 function register() {
-  if (!registrar.isCIDRegistered(CLASS_ID)) {
-    registrar.registerFactory(CLASS_ID,
-      CLASS_DESCRIPTION,
-      CONTRACT_ID,
-      Factory);
+  if (!registrar.isCIDRegistered(JSON_VIEW_CLASS_ID)) {
+    registrar.registerFactory(JSON_VIEW_CLASS_ID,
+      JSON_VIEW_CLASS_DESCRIPTION,
+      JSON_VIEW_CONTRACT_ID,
+      JsonViewFactory);
     return true;
   }
 
@@ -345,8 +349,8 @@ function register() {
 }
 
 function unregister() {
-  if (registrar.isCIDRegistered(CLASS_ID)) {
-    registrar.unregisterFactory(CLASS_ID, Factory);
+  if (registrar.isCIDRegistered(JSON_VIEW_CLASS_ID)) {
+    registrar.unregisterFactory(JSON_VIEW_CLASS_ID, JsonViewFactory);
     return true;
   }
   return false;
