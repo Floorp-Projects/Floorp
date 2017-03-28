@@ -966,8 +966,7 @@ public:
       mMaster->StopPlayback();
     }
 
-    mMaster->UpdatePlaybackPositionInternal(
-      mSeekJob.mTarget->GetTime().ToMicroseconds());
+    mMaster->UpdatePlaybackPositionInternal(mSeekJob.mTarget->GetTime());
 
     if (aVisibility == EventVisibility::Observable) {
       mMaster->mOnPlaybackEvent.Notify(MediaEventType::SeekStarted);
@@ -2415,7 +2414,8 @@ SeekingState::SeekCompleted()
     // Don't update playback position for video-only seek.
     // Otherwise we might have |newCurrentTime > mMediaSink->GetPosition()|
     // and fail the assertion in GetClock() since we didn't stop MediaSink.
-    mMaster->UpdatePlaybackPositionInternal(newCurrentTime);
+    mMaster->UpdatePlaybackPositionInternal(
+      TimeUnit::FromMicroseconds(newCurrentTime));
   }
 
   // Dispatch an event so that the UI can change in response to the end of
@@ -2913,12 +2913,13 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   }
 }
 
-void MediaDecoderStateMachine::UpdatePlaybackPositionInternal(int64_t aTime)
+void
+MediaDecoderStateMachine::UpdatePlaybackPositionInternal(const TimeUnit& aTime)
 {
   MOZ_ASSERT(OnTaskQueue());
-  LOGV("UpdatePlaybackPositionInternal(%" PRId64 ")", aTime);
+  LOGV("UpdatePlaybackPositionInternal(%" PRId64 ")", aTime.ToMicroseconds());
 
-  mCurrentPosition = aTime;
+  mCurrentPosition = aTime.ToMicroseconds();
   NS_ASSERTION(mCurrentPosition >= 0, "CurrentTime should be positive!");
   mObservedDuration = std::max(mObservedDuration.Ref(),
                                TimeUnit::FromMicroseconds(mCurrentPosition.Ref()));
@@ -2927,7 +2928,7 @@ void MediaDecoderStateMachine::UpdatePlaybackPositionInternal(int64_t aTime)
 void MediaDecoderStateMachine::UpdatePlaybackPosition(int64_t aTime)
 {
   MOZ_ASSERT(OnTaskQueue());
-  UpdatePlaybackPositionInternal(aTime);
+  UpdatePlaybackPositionInternal(TimeUnit::FromMicroseconds(aTime));
 
   bool fragmentEnded =
     mFragmentEndTime >= 0 && GetMediaTime() >= mFragmentEndTime;
