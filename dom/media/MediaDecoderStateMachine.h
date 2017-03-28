@@ -277,7 +277,7 @@ private:
   // there is no such event currently queued.
   // Only called on the decoder thread. Must be called with
   // the decode monitor held.
-  void UpdatePlaybackPosition(int64_t aTime);
+  void UpdatePlaybackPosition(const media::TimeUnit& aTime);
 
   bool CanPlayThrough();
 
