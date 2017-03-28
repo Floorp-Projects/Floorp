@@ -67,7 +67,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     data(nullptr),
     allocationMetadataBuilder(nullptr),
     lastAnimationTime(0),
-    regExps(runtime_),
+    regExps(zone),
     globalWriteBarriered(0),
     detachedTypedObjects(0),
     objectMetadataState(ImmediateMetadata()),
@@ -228,6 +228,13 @@ JSCompartment::ensureJitCompartmentExists(JSContext* cx)
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
+
+void
+js::DtoaCache::checkCacheAfterMovingGC()
+{
+    MOZ_ASSERT(!s || !IsForwarded(s));
+}
+
 namespace {
 struct CheckGCThingAfterMovingGCFunctor {
     template <class T> void operator()(T* t) { CheckGCThingAfterMovingGC(*t); }
@@ -250,7 +257,8 @@ JSCompartment::checkWrapperMapAfterMovingGC()
         MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &e.front());
     }
 }
-#endif
+
+#endif // JSGC_HASH_TABLE_CHECKS
 
 bool
 JSCompartment::putWrapper(JSContext* cx, const CrossCompartmentKey& wrapped,
@@ -418,8 +426,6 @@ JSCompartment::getNonWrapperObjectForCurrentCompartment(JSContext* cx, MutableHa
 bool
 JSCompartment::getOrCreateWrapper(JSContext* cx, HandleObject existing, MutableHandleObject obj)
 {
-    MOZ_ASSERT(JS::ObjectIsNotGray(obj));
-
     // If we already have a wrapper for this value, use it.
     RootedValue key(cx, ObjectValue(*obj));
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(CrossCompartmentKey(key))) {

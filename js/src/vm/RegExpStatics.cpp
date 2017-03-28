@@ -81,8 +81,9 @@ RegExpStatics::executeLazy(JSContext* cx)
     MOZ_ASSERT(lazyIndex != size_t(-1));
 
     /* Retrieve or create the RegExpShared in this compartment. */
-    RegExpGuard g(cx);
-    if (!cx->compartment()->regExps.get(cx, lazySource, lazyFlags, &g))
+    RootedRegExpShared shared(cx);
+    RootedAtom source(cx, lazySource);
+    if (!cx->compartment()->regExps.get(cx, source, lazyFlags, &shared))
         return false;
 
     /*
@@ -92,7 +93,8 @@ RegExpStatics::executeLazy(JSContext* cx)
 
     /* Execute the full regular expression. */
     RootedLinearString input(cx, matchesInput);
-    RegExpRunStatus status = g->execute(cx, input, lazyIndex, &this->matches, nullptr);
+    RegExpRunStatus status = RegExpShared::execute(cx, &shared, input, lazyIndex, &this->matches,
+                                                   nullptr);
     if (status == RegExpRunStatus_Error)
         return false;
 

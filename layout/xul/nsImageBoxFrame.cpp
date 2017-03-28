@@ -410,11 +410,7 @@ nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
   }
 
   Maybe<SVGImageContext> svgContext;
-  if (imgCon->GetType() == imgIContainer::TYPE_VECTOR) {
-    // We avoid this overhead for raster images.
-    svgContext.emplace();
-    svgContext->MaybeStoreContextPaint(this);
-  }
+  SVGImageContext::MaybeInitAndStoreContextPaint(svgContext, this, imgCon);
 
   return nsLayoutUtils::DrawSingleImage(
            *aRenderingContext.ThebesContext(),

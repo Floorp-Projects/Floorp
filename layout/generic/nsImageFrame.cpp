@@ -1698,11 +1698,14 @@ nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
     flags |= imgIContainer::FLAG_SYNC_DECODE;
   }
 
+  Maybe<SVGImageContext> svgContext;
+  SVGImageContext::MaybeInitAndStoreContextPaint(svgContext, this, aImage);
+
   DrawResult result =
     nsLayoutUtils::DrawSingleImage(*aRenderingContext.ThebesContext(),
       PresContext(), aImage,
       nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
-      /* no SVGImageContext */ Nothing(), flags, &anchorPoint);
+      svgContext, flags, &anchorPoint);
 
   nsImageMap* map = GetImageMap();
   if (map) {

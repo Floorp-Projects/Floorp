@@ -429,7 +429,7 @@ class IonBuilder
     AbortReasonOr<Ok> getElemTryArguments(bool* emitted, MDefinition* obj, MDefinition* index);
     AbortReasonOr<Ok> getElemTryArgumentsInlined(bool* emitted, MDefinition* obj,
                                                  MDefinition* index);
-    AbortReasonOr<Ok> getElemTryCache(bool* emitted, MDefinition* obj, MDefinition* index);
+    AbortReasonOr<Ok> getElemAddCache(MDefinition* obj, MDefinition* index);
     AbortReasonOr<Ok> getElemTryScalarElemOfTypedObject(bool* emitted,
                                                         MDefinition* obj,
                                                         MDefinition* index,
