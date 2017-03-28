@@ -2575,17 +2575,6 @@ GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 }
 
 #ifdef DEBUG
-
-static bool
-IsCrossCompartmentEdge(JSObject* source, const Cell* target)
-{
-    if (!source->is<ProxyObject>())
-        return false;
-
-    const Value& priv = source->as<ProxyObject>().private_();
-    return priv.isGCThing() && priv.toGCThing() == target;
-}
-
 Zone*
 GCMarker::stackContainsCrossZonePointerTo(const Cell* target) const
 {
@@ -2602,7 +2591,7 @@ GCMarker::stackContainsCrossZonePointerTo(const Cell* target) const
         if (sourceZone == targetZone)
             continue;
 
-        if (IsCrossCompartmentEdge(source, target) ||
+        if ((source->is<ProxyObject>() && source->as<ProxyObject>().target() == target) ||
             Debugger::isDebuggerCrossCompartmentEdge(source, target))
         {
             return sourceZone;
