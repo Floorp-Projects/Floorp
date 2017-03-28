@@ -28,7 +28,7 @@ Cu.import("resource://gre/modules/NotificationDB.jsm");
           Social:false, TabCrashHandler:false, Task:false, TelemetryStopwatch:false,
           Translation:false, UITour:false, UpdateUtils:false, Weave:false,
           fxAccounts:false, gDevTools:false, gDevToolsBrowser:false, webrtcUI:false,
-          URLBarZoom:false
+          FullZoomUI:false
  */
 
 /**
@@ -50,6 +50,7 @@ Cu.import("resource://gre/modules/NotificationDB.jsm");
   ["E10SUtils", "resource:///modules/E10SUtils.jsm"],
   ["ExtensionsUI", "resource:///modules/ExtensionsUI.jsm"],
   ["FormValidationHandler", "resource:///modules/FormValidationHandler.jsm"],
+  ["FullZoomUI", "resource:///modules/FullZoomUI.jsm"],
   ["GMPInstallManager", "resource://gre/modules/GMPInstallManager.jsm"],
   ["LightweightThemeManager", "resource://gre/modules/LightweightThemeManager.jsm"],
   ["Log", "resource://gre/modules/Log.jsm"],
@@ -75,7 +76,6 @@ Cu.import("resource://gre/modules/NotificationDB.jsm");
   ["Translation", "resource:///modules/translation/Translation.jsm"],
   ["UITour", "resource:///modules/UITour.jsm"],
   ["UpdateUtils", "resource://gre/modules/UpdateUtils.jsm"],
-  ["URLBarZoom", "resource:///modules/URLBarZoom.jsm"],
   ["Weave", "resource://services-sync/main.js"],
   ["fxAccounts", "resource://gre/modules/FxAccounts.jsm"],
   ["gDevTools", "resource://devtools/client/framework/gDevTools.jsm"],
@@ -1138,7 +1138,7 @@ var gBrowserInit = {
     TrackingProtection.init();
     RefreshBlocker.init();
     CaptivePortalWatcher.init();
-    URLBarZoom.init(window);
+    FullZoomUI.init(window);
 
     let mm = window.getGroupMessageManager("browsers");
     mm.loadFrameScript("chrome://browser/content/tab-content.js", true);
