@@ -10554,6 +10554,7 @@ public:
     if (parser) {
       parser->BlockParser();
       mParser = do_GetWeakReference(parser);
+      mDocument = aDocument;
     }
   }
 
@@ -10583,17 +10584,23 @@ private:
   void MaybeUnblockParser() {
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mParser);
     if (parser) {
-      parser->UnblockParser();
-      parser->ContinueInterruptedParsingAsync();
-      mParser = nullptr;
+      MOZ_ASSERT(mDocument);
+      nsCOMPtr<nsIParser> docParser = mDocument->CreatorParserOrNull();
+      if (parser == docParser) {
+        parser->UnblockParser();
+        parser->ContinueInterruptedParsingAsync();
+      }
     }
+    mParser = nullptr;
+    mDocument = nullptr;
   }
 
   nsWeakPtr mParser;
   RefPtr<Promise> mPromise;
+  RefPtr<nsIDocument> mDocument;
 };
 
-NS_IMPL_CYCLE_COLLECTION(UnblockParsingPromiseHandler, mPromise)
+NS_IMPL_CYCLE_COLLECTION(UnblockParsingPromiseHandler, mDocument, mPromise)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UnblockParsingPromiseHandler)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
