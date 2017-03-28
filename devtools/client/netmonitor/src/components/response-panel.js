@@ -14,7 +14,7 @@ const { L10N } = require("../utils/l10n");
 const { formDataURI, getUrlBaseName } = require("../utils/request-utils");
 
 // Components
-const PropertiesView = createFactory(require("./PropertiesView"));
+const PropertiesView = createFactory(require("./properties-view"));
 
 const { div, img } = DOM;
 const JSON_SCOPE_NAME = L10N.getStr("jsonScopeName");
