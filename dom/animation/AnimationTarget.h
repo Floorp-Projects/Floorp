@@ -40,11 +40,19 @@ struct OwningAnimationTarget
 
 struct NonOwningAnimationTarget
 {
+  NonOwningAnimationTarget() = default;
+
   NonOwningAnimationTarget(dom::Element* aElement, CSSPseudoElementType aType)
     : mElement(aElement), mPseudoType(aType) { }
 
   explicit NonOwningAnimationTarget(const OwningAnimationTarget& aOther)
     : mElement(aOther.mElement), mPseudoType(aOther.mPseudoType) { }
+
+  bool operator==(const NonOwningAnimationTarget& aOther) const
+  {
+    return mElement == aOther.mElement &&
+           mPseudoType == aOther.mPseudoType;
+  }
 
   // mElement represents the parent element of a pseudo-element, not the
   // generated content element.

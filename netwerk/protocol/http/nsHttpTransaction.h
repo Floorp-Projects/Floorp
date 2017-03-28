@@ -171,7 +171,7 @@ public:
     MOZ_MUST_USE bool Do0RTT() override;
     MOZ_MUST_USE nsresult Finish0RTT(bool aRestart, bool aAlpnChanged /* ignored */) override;
 
-    uint64_t TopLevelOuterContentWindowId()
+    uint64_t TopLevelOuterContentWindowId() override
     {
         return mTopLevelOuterContentWindowId;
     }

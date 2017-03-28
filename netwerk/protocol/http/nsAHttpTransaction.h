@@ -183,6 +183,11 @@ public:
     virtual MOZ_MUST_USE nsresult Finish0RTT(bool aRestart, bool aAlpnChanged) {
         return NS_ERROR_NOT_IMPLEMENTED;
     }
+
+    virtual uint64_t TopLevelOuterContentWindowId() {
+        MOZ_ASSERT(false);
+        return 0;
+    }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpTransaction, NS_AHTTPTRANSACTION_IID)
