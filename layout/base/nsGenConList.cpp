@@ -19,7 +19,6 @@ nsGenConList::Clear()
     delete node;
   }
   mSize = 0;
-  mLastInserted = nullptr;
 }
 
 bool
@@ -41,9 +40,6 @@ nsGenConList::DestroyNodesFor(nsIFrame* aFrame)
     Destroy(node);
     node = nextNode;
   }
-
-  // Modification of the list invalidates the cached pointer.
-  mLastInserted = nullptr;
 
   return true;
 }
@@ -112,11 +108,6 @@ nsGenConList::Insert(nsGenConNode* aNode)
   // Check for append.
   if (mList.isEmpty() || NodeAfter(aNode, mList.getLast())) {
     mList.insertBack(aNode);
-  } else if (mLastInserted && mLastInserted != mList.getLast() &&
-             NodeAfter(aNode, mLastInserted) &&
-             NodeAfter(Next(mLastInserted), aNode)) {
-    // Fast path for inserting many consecutive nodes in one place
-    mLastInserted->setNext(aNode);
   } else {
     // Binary search.
 
@@ -150,8 +141,6 @@ nsGenConList::Insert(nsGenConNode* aNode)
     curNode->setPrevious(aNode);
   }
   ++mSize;
-
-  mLastInserted = aNode;
 
   // Set the mapping only if it is the first node of the frame.
   // The DEBUG blocks below are for ensuring the invariant required by
