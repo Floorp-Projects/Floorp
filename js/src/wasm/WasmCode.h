@@ -236,11 +236,11 @@ class CodeRange
         ImportJitExit,     // fast-path calling from wasm into JIT code
         ImportInterpExit,  // slow-path calling from wasm into C++ interp
         TrapExit,          // calls C++ to report and jumps to throw stub
-        DebugTrap,         // calls C++ to handle debug event such as
-                           // enter/leave frame or breakpoint
+        DebugTrap,         // calls C++ to handle debug event
         FarJumpIsland,     // inserted to connect otherwise out-of-range insns
         Inline,            // stub that is jumped-to within prologue/epilogue
-        Throw              // special stack-unwinding stub
+        Throw,             // special stack-unwinding stub
+        Interrupt          // stub executes asynchronously to interrupt wasm
     };
 
   private:

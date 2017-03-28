@@ -59,6 +59,7 @@ BEGIN_TEST(testNewContext)
     cx = JS_NewContext(8L * 1024 * 1024);
     if (cx)
         OOM_TEST_FINISHED;
+    CHECK(!JSRuntime::hasLiveRuntimes());
     END_OOM_TEST;
     JS_DestroyContext(cx);
     return true;
