@@ -10,6 +10,7 @@
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "mozilla/Range.h"
+#include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -412,6 +413,19 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
       case WebRenderParentCommand::TCompositableOperation: {
         if (!ReceiveCompositableUpdate(cmd.get_CompositableOperation())) {
           NS_ERROR("ReceiveCompositableUpdate failed");
+        }
+        break;
+      }
+      case WebRenderParentCommand::TOpAddCompositorAnimations: {
+        const OpAddCompositorAnimations& op = cmd.get_OpAddCompositorAnimations();
+        CompositorAnimations data(Move(op.data()));
+        if (data.animations().Length()) {
+          uint64_t id = mWidget ? 0 : mPipelineId.mHandle;
+          CompositorAnimationStorage* storage =
+            mCompositorBridge->GetAnimationStorage(id);
+          if (storage) {
+            storage->SetAnimations(data.id(), data.animations());
+          }
         }
         break;
       }

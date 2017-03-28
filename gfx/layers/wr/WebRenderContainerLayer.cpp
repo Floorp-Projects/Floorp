@@ -37,12 +37,19 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   }
   aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
                                GetLocalOpacity(),
-                               //GetLayer()->GetAnimations(),
                                transform,
                                mixBlendMode);
   aBuilder.PushScrollLayer(wr::ToWrRect(overflow),
                            wr::ToWrRect(overflow),
                            mask.ptrOr(nullptr));
+
+  if (GetCompositorAnimationsId()) {
+    CompositorAnimations anim;
+    anim.animations() = GetAnimations();
+    anim.id() = GetCompositorAnimationsId();
+    WrBridge()->AddWebRenderParentCommand(OpAddCompositorAnimations(anim));
+  }
+
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {
       continue;
