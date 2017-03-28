@@ -19,11 +19,20 @@ const OPEN_FLAGS = {
   EXCL: parseInt("0x80", 16)
 };
 
+let filePickerShown = false;
+
 /**
  * Open File Save As dialog and let the user to pick proper file location.
  */
 exports.getTargetFile = function () {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
+    if (filePickerShown) {
+      reject(null);
+      return;
+    }
+
+    filePickerShown = true;
+
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
 
     let win = getMostRecentBrowserWindow();
@@ -34,10 +43,12 @@ exports.getTargetFile = function () {
     fp.filterIndex = 0;
 
     fp.open(rv => {
+      filePickerShown = false;
+
       if (rv == Ci.nsIFilePicker.returnOK || rv == Ci.nsIFilePicker.returnReplace) {
         resolve(fp.file);
       } else {
-        resolve(null);
+        reject(null);
       }
     });
   });
