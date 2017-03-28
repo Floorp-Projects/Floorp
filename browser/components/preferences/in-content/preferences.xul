@@ -102,14 +102,44 @@
         <label class="category-name" flex="1">&paneGeneral.title;</label>
       </richlistitem>
 
+      <richlistitem id="category-search"
+                    class="category"
+                    value="paneSearch"
+                    helpTopic="prefs-search"
+                    tooltiptext="&paneSearch.title;"
+                    align="center">
+        <image class="category-icon"/>
+        <label class="category-name" flex="1">&paneSearch.title;</label>
+      </richlistitem>
+
+      <richlistitem id="category-content"
+                    class="category"
+                    value="paneContent"
+                    helpTopic="prefs-content"
+                    tooltiptext="&paneContent.title;"
+                    align="center">
+        <image class="category-icon"/>
+        <label class="category-name" flex="1">&paneContent.title;</label>
+      </richlistitem>
+
       <richlistitem id="category-application"
                     class="category"
                     value="paneApplications"
                     helpTopic="prefs-applications"
-                    tooltiptext="&paneDownloadLinks.title;"
+                    tooltiptext="&paneApplications.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1">&paneDownloadLinks.title;</label>
+        <label class="category-name" flex="1">&paneApplications.title;</label>
+      </richlistitem>
+
+      <richlistitem id="category-privacy"
+                    class="category"
+                    value="panePrivacy"
+                    helpTopic="prefs-privacy"
+                    tooltiptext="&panePrivacy.title;"
+                    align="center">
+        <image class="category-icon"/>
+        <label class="category-name" flex="1">&panePrivacy.title;</label>
       </richlistitem>
 
       <richlistitem id="category-containers"
@@ -118,34 +148,34 @@
                     helpTopic="prefs-containers"
                     hidden="true"/>
 
+      <richlistitem id="category-security"
+                    class="category"
+                    value="paneSecurity"
+                    helpTopic="prefs-security"
+                    tooltiptext="&paneSecurity.title;"
+                    align="center">
+        <image class="category-icon"/>
+        <label class="category-name" flex="1">&paneSecurity.title;</label>
+      </richlistitem>
+
       <richlistitem id="category-sync"
                     class="category"
                     value="paneSync"
                     helpTopic="prefs-weave"
-                    tooltiptext="&paneSync1.title;"
+                    tooltiptext="&paneSync.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1">&paneSync1.title;</label>
-      </richlistitem>
-
-      <richlistitem id="category-privacy"
-                    class="category"
-                    value="panePrivacy"
-                    helpTopic="prefs-privacy"
-                    tooltiptext="&panePrivacySecurity.title;"
-                    align="center">
-        <image class="category-icon"/>
-        <label class="category-name" flex="1">&panePrivacySecurity.title;</label>
+        <label class="category-name" flex="1">&paneSync.title;</label>
       </richlistitem>
 
       <richlistitem id="category-advanced"
                     class="category"
                     value="paneAdvanced"
                     helpTopic="prefs-advanced-general"
-                    tooltiptext="&paneUpdates.title;"
+                    tooltiptext="&paneAdvanced.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1">&paneUpdates.title;</label>
+        <label class="category-name" flex="1">&paneAdvanced.title;</label>
       </richlistitem>
     </richlistbox>
 
@@ -159,10 +189,13 @@
     <vbox class="main-content" flex="1">
       <prefpane id="mainPrefPane">
 #include main.xul
+#include search.xul
 #include privacy.xul
 #include containers.xul
 #include advanced.xul
 #include applications.xul
+#include content.xul
+#include security.xul
 #include sync.xul
       </prefpane>
     </vbox>
