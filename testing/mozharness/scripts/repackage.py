@@ -3,6 +3,7 @@ import sys
 
 sys.path.insert(1, os.path.dirname(sys.path[0]))  # noqa - don't warn about imports
 
+from mozharness.base.log import FATAL
 from mozharness.base.script import BaseScript
 from mozharness.mozilla.mock import ERROR_MSGS
 
@@ -55,6 +56,8 @@ class Repackage(BaseScript):
 
     def setup(self):
         self._run_tooltool()
+        self._get_mozconfig()
+        self._run_configure()
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -78,18 +81,12 @@ class Repackage(BaseScript):
         python = self.query_exe('python2.7')
         infile = os.path.join(config['input_home'], config['input_filename'])
         outfile = os.path.join(dirs['abs_upload_dir'], config['output_filename'])
-        env = {
-            'HFS_TOOL': os.path.join(dirs['abs_mozilla_dir'], config['hfs_tool']),
-            'DMG_TOOL': os.path.join(dirs['abs_mozilla_dir'], config['dmg_tool']),
-            'MKFSHFS': os.path.join(dirs['abs_mozilla_dir'], config['mkfshfs_tool'])
-        }
         command = [python, 'mach', '--log-no-times', 'repackage',
                    '--input', infile,
                    '--output', outfile]
         return self.run_command(
             command=command,
             cwd=dirs['abs_mozilla_dir'],
-            partial_env=env,
             halt_on_failure=True,
         )
 
@@ -115,6 +112,37 @@ class Repackage(BaseScript):
             cmd.extend(['-c', cache])
         self.info(str(cmd))
         self.run_command(cmd, cwd=dirs['abs_mozilla_dir'], halt_on_failure=True)
+
+    def _get_mozconfig(self):
+        """assign mozconfig."""
+        c = self.config
+        dirs = self.query_abs_dirs()
+        abs_mozconfig_path = ''
+
+        # first determine the mozconfig path
+        if c.get('src_mozconfig'):
+            self.info('Using in-tree mozconfig')
+            abs_mozconfig_path = os.path.join(dirs['abs_mozilla_dir'], c['src_mozconfig'])
+        else:
+            self.fatal("'src_mozconfig' must be in the config "
+                       "in order to determine the mozconfig.")
+
+        # print its contents
+        self.read_from_file(abs_mozconfig_path, error_level=FATAL)
+
+        # finally, copy the mozconfig to a path that 'mach build' expects it to be
+        self.copyfile(abs_mozconfig_path, os.path.join(dirs['abs_mozilla_dir'], '.mozconfig'))
+
+    def _run_configure(self):
+        dirs = self.query_abs_dirs()
+        python = self.query_exe('python2.7')
+        command = [python, 'mach', '--log-no-times', 'configure']
+        return self.run_command(
+            command=command,
+            cwd=dirs['abs_mozilla_dir'],
+            output_timeout=60*3,
+            halt_on_failure=True,
+        )
 
 
 if __name__ == '__main__':
