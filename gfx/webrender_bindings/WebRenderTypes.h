@@ -60,6 +60,20 @@ SurfaceFormatToWrImageFormat(gfx::SurfaceFormat aFormat) {
   }
 }
 
+inline gfx::SurfaceFormat
+WrImageFormatToSurfaceFormat(ImageFormat aFormat) {
+  switch (aFormat) {
+    case ImageFormat::RGBA8:
+      return gfx::SurfaceFormat::B8G8R8A8;
+    case ImageFormat::A8:
+      return gfx::SurfaceFormat::A8;
+    case ImageFormat::RGB8:
+      return gfx::SurfaceFormat::B8G8R8;
+    default:
+      return gfx::SurfaceFormat::UNKNOWN;
+  }
+}
+
 struct ImageDescriptor: public WrImageDescriptor {
   ImageDescriptor(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat)
   {
@@ -422,6 +436,14 @@ struct ByteBuffer
   uint8_t* mData;
   bool mOwned;
 };
+
+inline WrByteSlice RangeToByteSlice(mozilla::Range<uint8_t> aRange) {
+  return WrByteSlice { aRange.begin().get(), aRange.length() };
+}
+
+inline mozilla::Range<uint8_t> ByteSliceToRange(WrByteSlice aWrSlice) {
+  return mozilla::Range<uint8_t>(aWrSlice.mBuffer, aWrSlice.mLength);
+}
 
 struct BuiltDisplayList {
   VecU8 dl;

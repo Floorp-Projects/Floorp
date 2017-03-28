@@ -1301,7 +1301,10 @@ nsPluginHost::GetPluginForContentProcess(uint32_t aPluginId, nsNPAPIPlugin** aPl
 class nsPluginUnloadRunnable : public Runnable
 {
 public:
-  explicit nsPluginUnloadRunnable(uint32_t aPluginId) : mPluginId(aPluginId) {}
+  explicit nsPluginUnloadRunnable(uint32_t aPluginId) :
+    Runnable("nsPluginUnloadRunnable"),
+    mPluginId(aPluginId)
+  {}
 
   NS_IMETHOD Run() override
   {
@@ -3964,7 +3967,8 @@ class nsPluginDestroyRunnable : public Runnable,
 {
 public:
   explicit nsPluginDestroyRunnable(nsNPAPIPluginInstance *aInstance)
-    : mInstance(aInstance)
+    : Runnable("nsPluginDestroyRunnable"),
+      mInstance(aInstance)
   {
     PR_INIT_CLIST(this);
     PR_APPEND_LINK(this, &sRunnableListHead);

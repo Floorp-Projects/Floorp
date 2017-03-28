@@ -154,7 +154,8 @@ class mozilla::plugins::FinishInjectorInitTask : public mozilla::CancelableRunna
 {
 public:
     FinishInjectorInitTask()
-        : mMutex("FlashInjectorInitTask::mMutex")
+        : CancelableRunnable("FinishInjectorInitTask")
+        , mMutex("FlashInjectorInitTask::mMutex")
         , mParent(nullptr)
         , mMainThreadMsgLoop(MessageLoop::current())
     {

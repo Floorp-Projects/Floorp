@@ -23,7 +23,8 @@ class DeferNPObjectReleaseRunnable : public mozilla::Runnable
 {
 public:
   DeferNPObjectReleaseRunnable(const NPNetscapeFuncs* f, NPObject* o)
-    : mFuncs(f)
+    : Runnable("DeferNPObjectReleaseRunnable")
+    , mFuncs(f)
     , mObject(o)
   {
     NS_ASSERTION(o, "no release null objects");

@@ -67,6 +67,10 @@ public:
                 const ImageDescriptor& aDescriptor,
                 Range<uint8_t> aBytes);
 
+  void AddBlobImage(wr::ImageKey aKey,
+                    const ImageDescriptor& aDescriptor,
+                    Range<uint8_t> aBytes);
+
   void AddExternalImageHandle(ImageKey key,
                               gfx::IntSize aSize,
                               gfx::SurfaceFormat aFormat,

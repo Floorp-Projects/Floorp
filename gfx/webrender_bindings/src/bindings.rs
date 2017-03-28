@@ -2,6 +2,8 @@ use std::ffi::CString;
 use std::{mem, slice};
 use std::path::PathBuf;
 use std::os::raw::{c_void, c_char};
+use std::sync::Arc;
+use std::collections::HashMap;
 use gleam::gl;
 
 use webrender_traits::{AuxiliaryLists, AuxiliaryListsDescriptor, BorderDetails, BorderRadius};
@@ -12,6 +14,8 @@ use webrender_traits::{ExternalEvent, ExternalImageId, FilterOp, FontKey, GlyphI
 use webrender_traits::{GradientStop, IdNamespace, ImageBorder, ImageData, ImageDescriptor};
 use webrender_traits::{ImageFormat, ImageKey, ImageMask, ImageRendering, ItemRange, LayerPixel};
 use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform, MixBlendMode};
+use webrender_traits::{BlobImageData, BlobImageRenderer, BlobImageResult, BlobImageError};
+use webrender_traits::{BlobImageDescriptor, RasterizedBlobImage};
 use webrender_traits::{NinePatchDescriptor, NormalBorder, PipelineId, PropertyBinding, RenderApi};
 use webrender_traits::RepeatMode;
 use webrender::renderer::{Renderer, RendererOptions};
@@ -66,6 +70,39 @@ fn get_gl_format_bgra(gl: &gl::Gl) -> gl::GLuint {
         gl::GlType::Gles => {
             GL_FORMAT_BGRA_GLES
         }
+    }
+}
+
+#[repr(C)]
+pub struct ByteSlice {
+    buffer: *const u8,
+    len: usize,
+}
+
+impl ByteSlice {
+    pub fn new(slice: &[u8]) -> ByteSlice {
+        ByteSlice { buffer: &slice[0], len: slice.len() }
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        unsafe { slice::from_raw_parts(self.buffer, self.len) }
+    }
+}
+
+#[repr(C)]
+pub struct MutByteSlice {
+    buffer: *mut u8,
+    len: usize,
+}
+
+impl MutByteSlice {
+    pub fn new(slice: &mut [u8]) -> MutByteSlice {
+        let len = slice.len();
+        MutByteSlice { buffer: &mut slice[0], len: len }
+    }
+
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        unsafe { slice::from_raw_parts_mut(self.buffer, self.len) }
     }
 }
 
@@ -555,6 +592,7 @@ extern "C" {
     fn is_in_render_thread() -> bool;
     fn is_in_main_thread() -> bool;
     fn is_glcontext_egl(glcontext_ptr: *mut c_void) -> bool;
+    fn gfx_critical_note(msg: *const c_char);
 }
 
 struct CppNotifier {
@@ -720,6 +758,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         enable_subpixel_aa: true,
         enable_profiler: enable_profiler,
         recorder: recorder,
+        blob_image_renderer: Some(Box::new(Moz2dImageRenderer::new())),
         ..Default::default()
     };
 
@@ -728,6 +767,8 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         Ok((renderer, sender)) => (renderer, sender),
         Err(e) => {
             println!(" Failed to create a Renderer: {:?}", e);
+            let msg = CString::new(format!("wr_window_new: {:?}", e)).unwrap();
+            unsafe { gfx_critical_note(msg.as_ptr()); }
             return false;
         }
     };
@@ -750,13 +791,25 @@ pub unsafe extern "C" fn wr_api_delete(api: *mut RenderApi) {
 pub extern "C" fn wr_api_add_image(api: &mut RenderApi,
                                    image_key: ImageKey,
                                    descriptor: &WrImageDescriptor,
-                                   bytes: *const u8,
-                                   size: usize) {
+                                   bytes: ByteSlice) {
     assert!(unsafe { is_in_compositor_thread() });
-    let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
+    let copied_bytes = bytes.as_slice().to_owned();
     api.add_image(image_key,
                   descriptor.to_descriptor(),
-                  ImageData::new(bytes),
+                  ImageData::new(copied_bytes),
+                  None);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_api_add_blob_image(api: &mut RenderApi,
+                                        image_key: ImageKey,
+                                        descriptor: &WrImageDescriptor,
+                                        bytes: ByteSlice) {
+    assert!(unsafe { is_in_compositor_thread() });
+    let copied_bytes = bytes.as_slice().to_owned();
+    api.add_image(image_key,
+                  descriptor.to_descriptor(),
+                  ImageData::new_blob_image(copied_bytes),
                   None);
 }
 
@@ -797,12 +850,11 @@ pub extern "C" fn wr_api_add_external_image_buffer(api: &mut RenderApi,
 pub extern "C" fn wr_api_update_image(api: &mut RenderApi,
                                       key: ImageKey,
                                       descriptor: &WrImageDescriptor,
-                                      bytes: *const u8,
-                                      size: usize) {
+                                      bytes: ByteSlice) {
     assert!(unsafe { is_in_compositor_thread() });
-    let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
+    let copied_bytes = bytes.as_slice().to_owned();
 
-    api.update_image(key, descriptor.to_descriptor(), bytes);
+    api.update_image(key, descriptor.to_descriptor(), copied_bytes);
 }
 
 #[no_mangle]
@@ -882,7 +934,7 @@ pub extern "C" fn wr_api_generate_frame(api: &mut RenderApi) {
 
 #[no_mangle]
 pub extern "C" fn wr_api_send_external_event(api: &mut RenderApi, evt: usize) {
-    assert!(unsafe { is_in_compositor_thread() });
+    assert!(unsafe { !is_in_render_thread() });
 
     api.send_external_event(ExternalEvent::from_raw(evt));
 }
@@ -1309,4 +1361,64 @@ pub unsafe extern "C" fn wr_dp_push_built_display_list(state: &mut WrState,
     let aux = AuxiliaryLists::from_data(aux_vec, aux_descriptor);
 
     state.frame_builder.dl_builder.push_built_display_list(dl, aux);
+}
+
+struct Moz2dImageRenderer {
+    images: HashMap<ImageKey, BlobImageResult>
+}
+
+impl BlobImageRenderer for Moz2dImageRenderer {
+    fn request_blob_image(&mut self,
+                          key: ImageKey,
+                          data: Arc<BlobImageData>,
+                          descriptor: &BlobImageDescriptor) {
+        let result = self.render_blob_image(data, descriptor);
+        self.images.insert(key, result);
+    }
+
+    fn resolve_blob_image(&mut self, key: ImageKey) -> BlobImageResult {
+        return match self.images.remove(&key) {
+            Some(result) => result,
+            None => Err(BlobImageError::InvalidKey),
+        }
+    }
+}
+
+impl Moz2dImageRenderer {
+    fn new() -> Self {
+        Moz2dImageRenderer {
+            images: HashMap::new(),
+        }
+    }
+
+    fn render_blob_image(&mut self, data: Arc<BlobImageData>, descriptor: &BlobImageDescriptor) -> BlobImageResult {
+        let mut output = Vec::with_capacity(
+            (descriptor.width * descriptor.height * descriptor.format.bytes_per_pixel().unwrap()) as usize
+        );
+
+        unsafe {
+            if wr_moz2d_render_cb(ByteSlice::new(&data[..]),
+                                  descriptor.width,
+                                  descriptor.height,
+                                  descriptor.format,
+                                  MutByteSlice::new(output.as_mut_slice())) {
+                return Ok(RasterizedBlobImage {
+                    width: descriptor.width,
+                    height: descriptor.height,
+                    data: output,
+                });
+            }
+        }
+
+        Err(BlobImageError::Other("unimplemented!".to_string()))
+    }
+}
+
+extern "C" {
+    // TODO: figure out the API for tiled blob images.
+    fn wr_moz2d_render_cb(blob: ByteSlice,
+                          width: u32,
+                          height: u32,
+                          format: ImageFormat,
+                          output: MutByteSlice) -> bool;
 }

@@ -2,7 +2,7 @@
 pref(dom.animations-api.core.enabled,true) == 1246046-1.html 1246046-1.html
 pref(dom.animations-api.core.enabled,true) == 1267937-1.html 1267937-1.html
 pref(dom.animations-api.core.enabled,true) == 1298742-1.html 1298742-1.html
-fails pref(dom.animations-api.core.enabled,true) == stacking-context-transform-none-animation-before-appending-element.html stacking-context-transform-none-animation-before-appending-element.html
+pref(dom.animations-api.core.enabled,true) == stacking-context-transform-none-animation-before-appending-element.html stacking-context-transform-none-animation-before-appending-element.html
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) == stacking-context-opacity-changing-keyframe.html stacking-context-opacity-changing-keyframe.html # Too intermittent
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) == stacking-context-opacity-changing-keyframe-in-delay.html stacking-context-opacity-changing-keyframe-in-delay.html # Too intermittent
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) == stacking-context-opacity-changing-target.html stacking-context-opacity-changing-target.html # Too intermittent

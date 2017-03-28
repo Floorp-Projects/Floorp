@@ -1512,7 +1512,9 @@ WebConsoleActor.prototype =
   {
     let stack = null;
     // Convert stack objects to the JSON attributes expected by client code
-    if (aPageError.stack) {
+    // Bug 1348885: If the global from which this error came from has been
+    // nuked, stack is going to be a dead wrapper.
+    if (aPageError.stack && !Cu.isDeadWrapper(aPageError.stack)) {
       stack = [];
       let s = aPageError.stack;
       while (s !== null) {

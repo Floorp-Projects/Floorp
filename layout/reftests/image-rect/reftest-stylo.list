@@ -4,7 +4,7 @@
 == background-common-usage-pixel.html background-common-usage-pixel.html
 == background-draw-nothing-empty-rect.html background-draw-nothing-empty-rect.html
 == background-draw-nothing-invalid-syntax.html background-draw-nothing-invalid-syntax.html
-asserts(0-6) == background-draw-nothing-malformed-images.html background-draw-nothing-malformed-images.html
+asserts(0-8) == background-draw-nothing-malformed-images.html background-draw-nothing-malformed-images.html
 == background-monster-rect.html background-monster-rect.html
 == background-over-size-rect.html background-over-size-rect.html
 fails == background-test-parser.html background-test-parser.html

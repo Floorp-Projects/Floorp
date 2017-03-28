@@ -645,26 +645,41 @@ ApplyAnimatedValue(Layer* aLayer,
   }
 }
 
-static bool
+static AnimationProcessTypes
 SampleAnimations(Layer* aLayer,
                  CompositorAnimationStorage* aStorage,
                  TimeStamp aPoint,
                  uint64_t* aLayerAreaAnimated)
 {
-  bool activeAnimations = false;
+  // This tracks the first-encountered RefLayer in the layer tree. Since we are
+  // doing a depth-first traversal, it is set to a non-null value if and only if
+  // the currently-being-traversed node has a RefLayer ancestor. In the case of
+  // nested RefLayers it points to the rootmost RefLayer.
+  RefLayer* ancestorRefLayer = nullptr;
+
+  // This bitfield-enum tracks which processes have active animations. Anything
+  // "above" the |ancestorRefLayer| in the layer tree is assumed to be the
+  // chrome process, and anything "below" is assumed to be the content process.
+  AnimationProcessTypes animProcess = AnimationProcessTypes::eNone;
 
   ForEachNode<ForwardIterator>(
       aLayer,
-      [aStorage, &activeAnimations, &aPoint, &aLayerAreaAnimated] (Layer* layer)
+      [&] (Layer* layer)
       {
+        if (!ancestorRefLayer) {
+          ancestorRefLayer = layer->AsRefLayer();
+        }
+
         bool hasInEffectAnimations = false;
         StyleAnimationValue animationValue = layer->GetBaseAnimationStyle();
-        activeAnimations |=
-          AnimationHelper::SampleAnimationForEachNode(aPoint,
-                                                      layer->GetAnimations(),
-                                                      layer->GetAnimationData(),
-                                                      animationValue,
-                                                      hasInEffectAnimations);
+        if (AnimationHelper::SampleAnimationForEachNode(aPoint,
+                                                        layer->GetAnimations(),
+                                                        layer->GetAnimationData(),
+                                                        animationValue,
+                                                        hasInEffectAnimations)) {
+          animProcess |= (ancestorRefLayer ? AnimationProcessTypes::eContent
+                                           : AnimationProcessTypes::eChrome);
+        }
         if (hasInEffectAnimations) {
           Animation& animation = layer->GetAnimations().LastElement();
           ApplyAnimatedValue(layer,
@@ -676,9 +691,16 @@ SampleAnimations(Layer* aLayer,
             *aLayerAreaAnimated += (layer->GetVisibleRegion().Area());
           }
         }
+      },
+      [&ancestorRefLayer] (Layer* aLayer)
+      {
+        // If we're unwinding up past the rootmost RefLayer, clear our pointer
+        if (ancestorRefLayer && aLayer->AsRefLayer() == ancestorRefLayer) {
+          ancestorRefLayer = nullptr;
+        }
       });
 
-  return activeAnimations;
+  return animProcess;
 }
 
 static bool
@@ -1336,15 +1358,16 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
   // On the initial frame we use aVsyncTimestamp here so the timestamp on the
   // second frame are the same as the initial frame, but it does not matter.
   uint64_t layerAreaAnimated = 0;
-  bool wantNextFrame =
+  AnimationProcessTypes animationProcess =
     SampleAnimations(root,
                      storage,
                      !mPreviousFrameTimeStamp.IsNull() ?
                        mPreviousFrameTimeStamp : aCurrentFrame,
                      &layerAreaAnimated);
+  bool wantNextFrame = (animationProcess != AnimationProcessTypes::eNone);
 
   mAnimationMetricsTracker.UpdateAnimationInProgress(
-    wantNextFrame, layerAreaAnimated);
+    animationProcess, layerAreaAnimated, aVsyncRate);
 
   if (!wantNextFrame) {
     // Clean up the CompositorAnimationStorage because
@@ -1388,7 +1411,9 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
       nextFrame += aVsyncRate;
     }
 
-    wantNextFrame |= SampleAPZAnimations(LayerMetricsWrapper(root), nextFrame);
+    bool apzAnimating = SampleAPZAnimations(LayerMetricsWrapper(root), nextFrame);
+    mAnimationMetricsTracker.UpdateApzAnimationInProgress(apzAnimating, aVsyncRate);
+    wantNextFrame |= apzAnimating;
   }
 
   HostLayer* rootComposite = root->AsHostLayer();

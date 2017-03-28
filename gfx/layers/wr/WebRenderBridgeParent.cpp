@@ -48,6 +48,11 @@ bool is_glcontext_egl(void* glcontext_ptr)
   return glcontext->GetContextType() == mozilla::gl::GLContextType::EGL;
 }
 
+void gfx_critical_note(const char* msg)
+{
+  gfxCriticalNote << msg;
+}
+
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
 {
   MOZ_ASSERT(glcontext_ptr);
@@ -158,7 +163,7 @@ WebRenderBridgeParent::Destroy()
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvAddImage(const wr::ImageKey& aImageKey,
-				    const gfx::IntSize& aSize,
+                                    const gfx::IntSize& aSize,
                                     const uint32_t& aStride,
                                     const gfx::SurfaceFormat& aFormat,
                                     const ByteBuffer& aBuffer)
@@ -170,6 +175,24 @@ WebRenderBridgeParent::RecvAddImage(const wr::ImageKey& aImageKey,
   wr::ImageDescriptor descriptor(aSize, aStride, aFormat);
   mApi->AddImage(aImageKey, descriptor,
                  aBuffer.AsSlice());
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvAddBlobImage(const wr::ImageKey& aImageKey,
+                        				        const gfx::IntSize& aSize,
+                                        const uint32_t& aStride,
+                                        const gfx::SurfaceFormat& aFormat,
+                                        const ByteBuffer& aBuffer)
+{
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+  MOZ_ASSERT(mApi);
+  wr::ImageDescriptor descriptor(aSize, aStride, aFormat);
+  mApi->AddBlobImage(aImageKey, descriptor,
+                     aBuffer.AsSlice());
 
   return IPC_OK();
 }

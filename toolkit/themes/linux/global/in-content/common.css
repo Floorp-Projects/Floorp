@@ -52,7 +52,7 @@ xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
 }
 
 xul|*.checkbox-check {
-  background-image: none !important;
+  background-image: none;
 }
 
 xul|*.checkbox-check[checked] {
