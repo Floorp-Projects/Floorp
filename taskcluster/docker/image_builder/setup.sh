@@ -12,7 +12,9 @@ apt-get install -y \
     tar \
     jq \
     python \
-    build-essential # Only needed for zstd installation, will be removed later
+    python-pip \
+    python-requests \
+    python-requests-unixsocket
 
 # Install mercurial
 . /setup/common.sh
@@ -21,28 +23,31 @@ apt-get install -y \
 # Install build-image.sh script
 chmod +x /usr/local/bin/build-image.sh
 chmod +x /usr/local/bin/run-task
+chmod +x /usr/local/bin/download-and-compress
 
 # Create workspace
 mkdir -p /home/worker/workspace
 
-# Install zstd 1.1.1
+# Install python-zstandard.
 cd /setup
 tooltool_fetch <<EOF
 [
   {
-    "size": 734872,
+    "size": 463794,
     "visibility": "public",
-    "digest": "a8817e74254f21ee5b76a21691e009ede2cdc70a78facfa453902df3e710e90e78d67f2229956d835960fd1085c33312ff273771b75f9322117d85eb35d8e695",
+    "digest": "c6ba906403e5c18b374faf9f676b10f0988b9f4067bd6c52c548d7dee58fac79974babfd5c438aef8da0a5260158116db69b11f2a52a775772d9904b9d86fdbc",
     "algorithm": "sha512",
-    "filename": "zstd.tar.gz"
+    "filename": "zstandard-0.8.0.tar.gz"
   }
 ]
 EOF
 cd -
-tar -xvf /setup/zstd.tar.gz -C /setup
-make -C /setup/zstd-1.1.1/programs install
-rm -rf /tmp/zstd-1.1.1/ /tmp/zstd.tar.gz
-apt-get purge -y build-essential
+
+/usr/bin/pip -v install /setup/zstandard-0.8.0.tar.gz
+
+# python-pip only needed to install python-zstandard. Removing it removes
+# several hundred MB of dependencies from the image.
+apt-get purge -y python-pip
 
 # Purge apt-get caches to minimize image size
 apt-get auto-remove -y

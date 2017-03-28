@@ -1,0 +1,85 @@
+#!/usr/bin/python2.7
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+import os
+import sys
+import time
+
+import requests
+import requests_unixsocket
+import zstd
+
+# Allow requests to fetch from UNIX domain sockets.
+requests_unixsocket.monkeypatch()
+
+
+def download_and_compress(url, path, level):
+    r = requests.get(url, stream=True)
+
+    if r.status_code != 200:
+        raise Exception('non-200 response: %d' % r.status_code)
+
+    in_size = 0
+    out_size = 0
+    last_progress = time.time()
+
+    # Use all available CPU cores for multi-threaded compression.
+    cctx = zstd.ZstdCompressor(threads=-1, level=level, write_checksum=True)
+    cobj = cctx.compressobj()
+    with open(path, 'wb') as fh:
+        for raw in r.iter_content(zstd.COMPRESSION_RECOMMENDED_INPUT_SIZE):
+            # Print output periodically, for humans.
+            now = time.time()
+            if now - last_progress > 5.0:
+                print('%d -> %d' % (in_size, out_size))
+                last_progress = now
+
+            in_size += len(raw)
+            chunk = cobj.compress(raw)
+            if not chunk:
+                continue
+
+            out_size += len(chunk)
+            fh.write(chunk)
+
+        chunk = cobj.flush()
+        out_size += len(chunk)
+        fh.write(chunk)
+
+    return in_size, out_size
+
+
+if __name__ == '__main__':
+    url, temp_path, final_path = sys.argv[1:]
+
+    # Default zstd level is 3. We default to 10 because multi-threaded
+    # compression allows us to burn lots of CPU for significant image
+    # size reductions without a major wall time penalty.
+    level = int(os.environ.get('DOCKER_IMAGE_ZSTD_LEVEL', '10'))
+    print('using zstandard compression level %d' % level)
+
+    count = 0
+    while count < 10:
+        count += 1
+
+        try:
+            t_start = time.time()
+            raw_size, compress_size = download_and_compress(url, temp_path,
+                                                            level)
+            elapsed = time.time() - t_start
+            # Move to final path at end so partial image isn't uploaded as
+            # an artifact.
+            os.rename(temp_path, final_path)
+            speed = int(raw_size / elapsed) / 1000000
+            print('compression ratio: %.2f (%d -> %d) @ %d MB/s' % (
+                float(compress_size) / float(raw_size),
+                raw_size, compress_size, speed))
+            sys.exit(0)
+        except Exception as e:
+            print('exception: %s' % e)
+            time.sleep(5)
+
+    print('reached maximum retry attempts; giving up')
+    sys.exit(1)
