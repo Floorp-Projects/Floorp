@@ -380,7 +380,7 @@ protected:
   // if unknown).  Does not update the playback position on the decoder or
   // media element -- use UpdatePlaybackPosition for that.  Called on the state
   // machine thread, caller must hold the decoder lock.
-  void UpdatePlaybackPositionInternal(int64_t aTime);
+  void UpdatePlaybackPositionInternal(const media::TimeUnit& aTime);
 
   // Update playback position and trigger next update by default time period.
   // Called on the state machine thread.
