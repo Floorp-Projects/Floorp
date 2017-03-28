@@ -97,10 +97,9 @@ const res1 = [
   },
 ];
 
-
 add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view, testActor} = yield openBoxModelView();
+  let {inspector, view} = yield openBoxModelView();
   let node = yield getNodeFront("div", inspector);
   let children = yield inspector.markup.walker.children(node);
   let beforeElement = children.nodes[0];
