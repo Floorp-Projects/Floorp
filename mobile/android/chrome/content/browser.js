@@ -3636,9 +3636,9 @@ Tab.prototype = {
     this.browser.addEventListener("VideoBindingAttached", this, true, true);
     this.browser.addEventListener("VideoBindingCast", this, true, true);
 
+    Services.obs.addObserver(this, "AudioFocusChanged", false);
     Services.obs.addObserver(this, "before-first-paint", false);
     Services.obs.addObserver(this, "media-playback", false);
-    Services.obs.addObserver(this, "media-playback-resumed", false);
 
     // Always initialise new tabs with basic session store data to avoid
     // problems with functions that always expect it to be present
@@ -3751,9 +3751,9 @@ Tab.prototype = {
     this.browser.removeEventListener("VideoBindingAttached", this, true, true);
     this.browser.removeEventListener("VideoBindingCast", this, true, true);
 
+    Services.obs.removeObserver(this, "AudioFocusChanged");
     Services.obs.removeObserver(this, "before-first-paint");
     Services.obs.removeObserver(this, "media-playback");
-    Services.obs.removeObserver(this, "media-playback-resumed");
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are removed.
@@ -4568,6 +4568,21 @@ Tab.prototype = {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
   },
 
+  UpdateMediaPlaybackRelatedObserver: function(active) {
+    // Media control is only used for the tab which has playing media, so we
+    // only need to register observer after having the active media. And the
+    // "media-playback-resumed" is sent when user resume paused media from
+    // page, it notifies us that we should change the icon and content in media
+    // control interface.
+    if (active) {
+      Services.obs.addObserver(this, "MediaControl", false);
+      Services.obs.addObserver(this, "media-playback-resumed", false);
+    } else {
+      Services.obs.removeObserver(this, "MediaControl");
+      Services.obs.removeObserver(this, "media-playback-resumed");
+    }
+  },
+
   ShouldNotifyMediaPlaybackChange: function(activeState) {
     // If the media is active, we would check it's duration, because we don't
     // want to show the media control interface for the short sound which
@@ -4630,7 +4645,9 @@ Tab.prototype = {
 
         let status;
         if (aTopic == "media-playback") {
-          status = (aData === "inactive") ? "end" : "start";
+          let isActive = !(aData === "inactive");
+          status = isActive ? "start" : "end";
+          this.UpdateMediaPlaybackRelatedObserver(isActive);
         } else if (aTopic == "media-playback-resumed") {
           status = "resume";
         }
@@ -4640,6 +4657,36 @@ Tab.prototype = {
           tabID: this.id,
           status: status
         });
+        break;
+
+      case "AudioFocusChanged":
+      case "MediaControl":
+        let win = this.browser.contentWindow;
+        let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        let suspendTypes = Ci.nsISuspendedTypes;
+        switch (aData) {
+          case "lostAudioFocus":
+            utils.mediaSuspend = suspendTypes.SUSPENDED_PAUSE_DISPOSABLE;
+            break;
+          case "lostAudioFocusTransiently":
+            utils.mediaSuspend = suspendTypes.SUSPENDED_PAUSE;
+            break;
+          case "gainAudioFocus":
+            utils.mediaSuspend = suspendTypes.NONE_SUSPENDED;
+            break;
+          case "mediaControlPaused":
+            utils.mediaSuspend = suspendTypes.SUSPENDED_PAUSE_DISPOSABLE;
+            break;
+          case "mediaControlStopped":
+            utils.mediaSuspend = suspendTypes.SUSPENDED_STOP_DISPOSABLE;
+            break;
+          case "resumeMedia":
+            utils.mediaSuspend = suspendTypes.NONE_SUSPENDED;
+            break;
+          default:
+            dump("Error : wrong media control msg!\n");
+            break;
+        }
         break;
     }
   },
