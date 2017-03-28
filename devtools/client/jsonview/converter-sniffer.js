@@ -15,9 +15,9 @@ const categoryManager = Cc["@mozilla.org/categorymanager;1"]
 
 // Constants
 const JSON_TYPES = ["application/json", "application/manifest+json"];
-const CONTRACT_ID = "@mozilla.org/devtools/jsonview-sniffer;1";
-const CLASS_ID = components.ID("{4148c488-dca1-49fc-a621-2a0097a62422}");
-const CLASS_DESCRIPTION = "JSONView content sniffer";
+const JSON_SNIFFER_CONTRACT_ID = "@mozilla.org/devtools/jsonview-sniffer;1";
+const JSON_SNIFFER_CLASS_ID = components.ID("{4148c488-dca1-49fc-a621-2a0097a62422}");
+const JSON_SNIFFER_CLASS_DESCRIPTION = "JSONView content sniffer";
 const JSON_VIEW_MIME_TYPE = "application/vnd.mozilla.json.view";
 const JSON_VIEW_TYPE = "JSON View";
 const CONTENT_SNIFFER_CATEGORY = "net-content-sniffers";
@@ -38,9 +38,9 @@ function isTopLevelLoad(request) {
  * This internal type is consequently rendered by JSON View component
  * that represents the JSON through a viewer interface.
  */
-function Sniffer() {}
+function JsonSniffer() {}
 
-Sniffer.prototype = {
+JsonSniffer.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentSniffer]),
 
   get wrappedJSObject() {
@@ -74,23 +74,23 @@ Sniffer.prototype = {
   }
 };
 
-const Factory = {
+const JsonSnifferFactory = {
   createInstance: function (outer, iid) {
     if (outer) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
-    return new Sniffer();
+    return new JsonSniffer();
   }
 };
 
 function register() {
-  if (!registrar.isCIDRegistered(CLASS_ID)) {
-    registrar.registerFactory(CLASS_ID,
-      CLASS_DESCRIPTION,
-      CONTRACT_ID,
-      Factory);
+  if (!registrar.isCIDRegistered(JSON_SNIFFER_CLASS_ID)) {
+    registrar.registerFactory(JSON_SNIFFER_CLASS_ID,
+      JSON_SNIFFER_CLASS_DESCRIPTION,
+      JSON_SNIFFER_CONTRACT_ID,
+      JsonSnifferFactory);
     categoryManager.addCategoryEntry(CONTENT_SNIFFER_CATEGORY, JSON_VIEW_TYPE,
-      CONTRACT_ID, false, false);
+      JSON_SNIFFER_CONTRACT_ID, false, false);
     return true;
   }
 
@@ -98,8 +98,8 @@ function register() {
 }
 
 function unregister() {
-  if (registrar.isCIDRegistered(CLASS_ID)) {
-    registrar.unregisterFactory(CLASS_ID, Factory);
+  if (registrar.isCIDRegistered(JSON_SNIFFER_CLASS_ID)) {
+    registrar.unregisterFactory(JSON_SNIFFER_CLASS_ID, JsonSnifferFactory);
     categoryManager.deleteCategoryEntry(CONTENT_SNIFFER_CATEGORY,
       JSON_VIEW_TYPE, false);
     return true;
