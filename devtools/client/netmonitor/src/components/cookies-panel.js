@@ -12,7 +12,7 @@ const {
 const { L10N } = require("../utils/l10n");
 
 // Component
-const PropertiesView = createFactory(require("./PropertiesView"));
+const PropertiesView = createFactory(require("./properties-view"));
 
 const { div } = DOM;
 
