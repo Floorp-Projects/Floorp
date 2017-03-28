@@ -815,13 +815,12 @@ private:
     }
 
     TimeDuration decodeTime = TimeStamp::Now() - aDecodeStart;
-    int64_t adjustedTime = THRESHOLD_FACTOR * DurationToUsecs(decodeTime);
-    if (adjustedTime > mMaster->mLowAudioThreshold.ToMicroseconds()
+    auto adjusted = TimeUnit::FromTimeDuration(decodeTime * THRESHOLD_FACTOR);
+    if (adjusted > mMaster->mLowAudioThreshold
         && !mMaster->HasLowBufferedData())
     {
       mMaster->mLowAudioThreshold = std::min(
-        TimeUnit::FromMicroseconds(adjustedTime),
-        mMaster->mAmpleAudioThreshold);
+        adjusted, mMaster->mAmpleAudioThreshold);
 
       mMaster->mAmpleAudioThreshold = std::max(
         mMaster->mLowAudioThreshold * THRESHOLD_FACTOR,
