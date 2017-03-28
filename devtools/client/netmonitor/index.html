@@ -40,7 +40,7 @@
       window.Netmonitor = {
         bootstrap({ toolbox }) {
           this.mount = document.querySelector("#mount");
-          const App = createFactory(require("./src/components/App"));
+          const App = createFactory(require("./src/components/app"));
           render(Provider({ store }, App()), this.mount);
           return NetMonitorController.startupNetMonitor({
             client: {

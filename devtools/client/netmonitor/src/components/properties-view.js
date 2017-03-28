@@ -22,7 +22,7 @@ const { FILTER_SEARCH_DELAY } = require("../constants");
 const SearchBox = createFactory(require("devtools/client/shared/components/search-box"));
 const TreeView = createFactory(require("devtools/client/shared/components/tree/tree-view"));
 const TreeRow = createFactory(require("devtools/client/shared/components/tree/tree-row"));
-const Editor = createFactory(require("./Editor"));
+const Editor = createFactory(require("./editor"));
 
 const { div, tr, td } = DOM;
 const AUTO_EXPAND_MAX_LEVEL = 7;
