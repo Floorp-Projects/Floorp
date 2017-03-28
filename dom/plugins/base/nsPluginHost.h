@@ -190,6 +190,13 @@ public:
   // Always returns false if plugin.load_in_parent_process.<mime> is not set.
   static bool ShouldLoadTypeInParent(const nsACString& aMimeType);
 
+  /**
+   * Returns true if a plugin can be used to load the requested MIME type. Used
+   * for short circuiting before sending things to plugin code.
+   */
+  static bool
+  CanUsePluginForMIMEType(const nsACString& aMIMEType);
+
   // checks whether aType is a type we recognize for potential special handling
   enum SpecialType {
     eSpecialType_None,
