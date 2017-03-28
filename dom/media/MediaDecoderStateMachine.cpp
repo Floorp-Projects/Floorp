@@ -2421,7 +2421,7 @@ SeekingState::SeekCompleted()
 
   // Try to decode another frame to detect if we're at the end...
   SLOG("Seek completed, mCurrentPosition=%" PRId64,
-       mMaster->mCurrentPosition.Ref());
+       mMaster->mCurrentPosition.Ref().ToMicroseconds());
 
   if (mMaster->VideoQueue().PeekFront()) {
     mMaster->mMediaSink->Redraw(Info().mVideo);
@@ -2633,7 +2633,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   INIT_CANONICAL(mDuration, NullableTimeUnit()),
   INIT_CANONICAL(mIsShutdown, false),
   INIT_CANONICAL(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE),
-  INIT_CANONICAL(mCurrentPosition, 0),
+  INIT_CANONICAL(mCurrentPosition, TimeUnit::Zero()),
   INIT_CANONICAL(mPlaybackOffset, 0),
   INIT_CANONICAL(mIsAudioDataAudible, false)
 {
@@ -2911,10 +2911,10 @@ MediaDecoderStateMachine::UpdatePlaybackPositionInternal(const TimeUnit& aTime)
   MOZ_ASSERT(OnTaskQueue());
   LOGV("UpdatePlaybackPositionInternal(%" PRId64 ")", aTime.ToMicroseconds());
 
-  mCurrentPosition = aTime.ToMicroseconds();
-  NS_ASSERTION(mCurrentPosition >= 0, "CurrentTime should be positive!");
-  mObservedDuration = std::max(mObservedDuration.Ref(),
-                               TimeUnit::FromMicroseconds(mCurrentPosition.Ref()));
+  mCurrentPosition = aTime;
+  NS_ASSERTION(mCurrentPosition.Ref() >= TimeUnit::Zero(),
+               "CurrentTime should be positive!");
+  mObservedDuration = std::max(mObservedDuration.Ref(), mCurrentPosition.Ref());
 }
 
 void
