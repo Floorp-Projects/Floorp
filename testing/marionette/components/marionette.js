@@ -287,7 +287,7 @@ MarionetteComponent.prototype.init = function () {
     // This allows the following attempt by Marionette to open a socket
     // to succeed.
     let insaneSacrificialGoat =
-        new ServerSocket(666, Ci.nsIServerSocket.KeepWhenOffline, 4);
+        new ServerSocket(0, Ci.nsIServerSocket.KeepWhenOffline, 4);
     insaneSacrificialGoat.asyncListen(this);
   }
 
