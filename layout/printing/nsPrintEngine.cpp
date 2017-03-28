@@ -3556,9 +3556,15 @@ private:
 void
 nsPrintEngine::FirePrintCompletionEvent()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> event = new nsPrintCompletionEvent(mDocViewerPrint);
-  if (NS_FAILED(NS_DispatchToCurrentThread(event)))
-    NS_WARNING("failed to dispatch print completion event");
+  nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
+  NS_ENSURE_TRUE_VOID(cv);
+  nsCOMPtr<nsIDocument> doc = cv->GetDocument();
+  NS_ENSURE_TRUE_VOID(doc);
+
+  NS_ENSURE_SUCCESS_VOID(doc->Dispatch("nsPrintCompletionEvent",
+                                       TaskCategory::Other, event.forget()));
 }
 
 void
