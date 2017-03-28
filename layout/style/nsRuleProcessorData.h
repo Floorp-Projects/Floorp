@@ -342,10 +342,6 @@ struct MOZ_STACK_CLASS TreeMatchContext {
   // The document we're working with.
   nsIDocument* const mDocument;
 
-  // Root of scoped stylesheet (set and unset by the supplier of the
-  // scoped stylesheet).
-  nsIContent* mScopedRoot;
-
   // Whether our document is HTML (as opposed to XML of some sort,
   // including XHTML).
   // XXX XBL2 issue: Should we be caching this?  What should it be for XBL2?
@@ -396,7 +392,6 @@ struct MOZ_STACK_CLASS TreeMatchContext {
     , mHaveSpecifiedScope(false)
     , mVisitedHandling(aVisitedHandling)
     , mDocument(aDocument)
-    , mScopedRoot(nullptr)
     , mIsHTMLDocument(aDocument->IsHTMLDocument())
     , mCompatMode(aDocument->GetCompatibilityMode())
     , mUsingPrivateBrowsing(false)

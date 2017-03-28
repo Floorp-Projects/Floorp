@@ -206,6 +206,8 @@ public:
   NS_IMETHOD SetChannelId(const nsACString& aChannelId) override;
   NS_IMETHOD GetTopLevelContentWindowId(uint64_t *aContentWindowId) override;
   NS_IMETHOD SetTopLevelContentWindowId(uint64_t aContentWindowId) override;
+  NS_IMETHOD GetTopLevelOuterContentWindowId(uint64_t *aWindowId) override;
+  NS_IMETHOD SetTopLevelOuterContentWindowId(uint64_t aWindowId) override;
   NS_IMETHOD GetIsTrackingResource(bool* aIsTrackingResource) override;
 
   // nsIHttpChannelInternal
@@ -358,11 +360,6 @@ public: /* Necko internal use only... */
     void SetIsTrackingResource()
     {
       mIsTrackingResource = true;
-    }
-
-    void SetTopLevelOuterContentWindowId(uint64_t aTopLevelOuterContentWindowId)
-    {
-      mTopLevelOuterContentWindowId = aTopLevelOuterContentWindowId;
     }
 
 protected:
