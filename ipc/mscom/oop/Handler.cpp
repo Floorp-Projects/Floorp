@@ -8,6 +8,7 @@
 #include "Module.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
 #include "nsWindowsHelpers.h"
 
 #include <objbase.h>
@@ -21,27 +22,29 @@
 namespace mozilla {
 namespace mscom {
 
-Handler::Handler(IUnknown* aOuter, HRESULT& aResult)
+Handler::Handler(IUnknown* aOuter, HRESULT* aResult)
   : mRefCnt(0)
   , mOuter(aOuter)
   , mUnmarshal(nullptr)
   , mHasPayload(false)
 {
+  MOZ_ASSERT(aResult);
+
   if (!aOuter) {
-    aResult = E_INVALIDARG;
+    *aResult = E_INVALIDARG;
     return;
   }
 
   StabilizedRefCount<ULONG> stabilizer(mRefCnt);
 
-  aResult = ::CoGetStdMarshalEx(aOuter, SMEXF_HANDLER,
-                                getter_AddRefs(mInnerUnk));
-  if (FAILED(aResult)) {
+  *aResult = ::CoGetStdMarshalEx(aOuter, SMEXF_HANDLER,
+                                 getter_AddRefs(mInnerUnk));
+  if (FAILED(*aResult)) {
     return;
   }
 
-  aResult = mInnerUnk->QueryInterface(IID_IMarshal, (void**)&mUnmarshal);
-  if (FAILED(aResult)) {
+  *aResult = mInnerUnk->QueryInterface(IID_IMarshal, (void**)&mUnmarshal);
+  if (FAILED(*aResult)) {
     return;
   }
 
@@ -90,11 +93,12 @@ Handler::InternalAddRef()
 ULONG
 Handler::InternalRelease()
 {
-  if (--mRefCnt == 0) {
+  ULONG newRefCnt = --mRefCnt;
+  if (newRefCnt == 0) {
     delete this;
     Module::Unlock();
   }
-  return mRefCnt;
+  return newRefCnt;
 }
 
 HRESULT

@@ -101,10 +101,8 @@ Interceptor::GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
     return hr;
   }
 
-  InterceptorTargetPtr<IUnknown> targetParam(mTarget.get());
-
   DWORD payloadSize = 0;
-  hr = mEventSink->GetHandlerPayloadSize(riid, Move(targetParam), &payloadSize);
+  hr = mEventSink->GetHandlerPayloadSize(&payloadSize);
   *pSize += payloadSize;
   return hr;
 }
@@ -120,8 +118,7 @@ Interceptor::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
     return hr;
   }
 
-  InterceptorTargetPtr<IUnknown> targetParam(mTarget.get());
-  return mEventSink->WriteHandlerPayload(pStm, riid, Move(targetParam));
+  return mEventSink->WriteHandlerPayload(pStm);
 }
 
 HRESULT
