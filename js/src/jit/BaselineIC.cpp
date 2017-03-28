@@ -1641,18 +1641,10 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     if (!tailCallVM(DoSetPropFallbackInfo, masm))
         return false;
 
-    // Even though the fallback frame doesn't enter a stub frame, the CallScripted
-    // frame that we are emulating does. Again, we lie.
-#ifdef DEBUG
-    EmitRepushTailCallReg(masm);
-    EmitStowICValues(masm, 1);
-    enterStubFrame(masm, R1.scratchReg());
-#else
-    inStubFrame_ = true;
-#endif
-
-    // What follows is bailout-only code for inlined script getters.
-    // The return address pointed to by the baseline stack points here.
+    // This is the resume point used when bailout rewrites call stack to undo
+    // Ion inlined frames. The return address pushed onto reconstructed stack
+    // will point here.
+    assumeStubFrame(masm);
     returnOffset_ = masm.currentOffset();
 
     leaveStubFrame(masm, true);
@@ -2818,18 +2810,14 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     if (!callVM(DoCallFallbackInfo, masm))
         return false;
 
-    uint32_t framePushed = masm.framePushed();
     leaveStubFrame(masm);
     EmitReturnFromIC(masm);
 
-    // The following asmcode is only used when an Ion inlined frame bails out
-    // into into baseline jitcode. The return address pushed onto the
-    // reconstructed baseline stack points here.
+    // This is the resume point used when bailout rewrites call stack to undo
+    // Ion inlined frames. The return address pushed onto reconstructed stack
+    // will point here.
+    assumeStubFrame(masm);
     returnOffset_ = masm.currentOffset();
-
-    // Here we are again in a stub frame. Marking as so.
-    inStubFrame_ = true;
-    masm.setFramePushed(framePushed);
 
     // Load passed-in ThisV into R1 just in case it's needed.  Need to do this before
     // we leave the stub frame since that info will be lost.
@@ -3153,8 +3141,8 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
     EmitEnterTypeMonitorIC(masm);
 
     // Leave stub frame and restore argc for the next stub.
+    assumeStubFrame(masm);
     masm.bind(&failureLeaveStubFrame);
-    inStubFrame_ = true;
     leaveStubFrame(masm, false);
     if (argcReg != R0.scratchReg())
         masm.movePtr(argcReg, R0.scratchReg());
