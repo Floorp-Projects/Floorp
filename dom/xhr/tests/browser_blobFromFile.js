@@ -1,6 +1,10 @@
 let { classes: Cc, interfaces: Ci } = Components;
 
 add_task(function* test() {
+  yield SpecialPowers.pushPrefEnv(
+    {set: [["browser.tabs.remote.separateFileUriProcess", true]]}
+  );
+
   let file = Cc["@mozilla.org/file/directory_service;1"]
                .getService(Ci.nsIDirectoryService)
                .QueryInterface(Ci.nsIProperties)
