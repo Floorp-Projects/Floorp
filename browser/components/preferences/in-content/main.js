@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* import-globals-from preferences.js */
+/* import-globals-from ../../../../toolkit/mozapps/preferences/fontbuilder.js */
 
 Components.utils.import("resource://gre/modules/Downloads.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
@@ -17,8 +18,22 @@ if (AppConstants.E10S_TESTING_ONLY) {
   XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
                                     "resource://gre/modules/UpdateUtils.jsm");
 }
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+
+const ENGINE_FLAVOR = "text/x-moz-search-engine";
+
+var gEngineView = null;
 
 var gMainPane = {
+  /**
+   * Initialize autocomplete to ensure prefs are in sync.
+   */
+  _initAutocomplete() {
+    Components.classes["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
+              .getService(Components.interfaces.mozIPlacesAutoComplete);
+  },
+
   /**
    * Initialization of this.
    */
@@ -39,6 +54,36 @@ var gMainPane = {
         window.setInterval(this.updateSetDefaultBrowser.bind(this), 1000);
       }
     }
+
+    gEngineView = new EngineView(new EngineStore());
+    document.getElementById("engineList").view = gEngineView;
+    this.buildDefaultEngineDropDown();
+
+    let addEnginesLink = document.getElementById("addEngines");
+    let searchEnginesURL = Services.wm.getMostRecentWindow("navigator:browser")
+                                      .BrowserSearch.searchEnginesURL;
+    addEnginesLink.setAttribute("href", searchEnginesURL);
+
+    window.addEventListener("click", this);
+    window.addEventListener("command", this);
+    window.addEventListener("dragstart", this);
+    window.addEventListener("keypress", this);
+    window.addEventListener("select", this);
+    window.addEventListener("blur", this, true);
+
+    Services.obs.addObserver(this, "browser-search-engine-modified", false);
+    window.addEventListener("unload", () => {
+      Services.obs.removeObserver(this, "browser-search-engine-modified");
+    });
+
+    this._initAutocomplete();
+
+    let suggestsPref =
+      document.getElementById("browser.search.suggest.enabled");
+    suggestsPref.addEventListener("change", () => {
+      this.updateSuggestsCheckbox();
+    });
+    this.updateSuggestsCheckbox();
 
     // set up the "use current page" label-changing listener
     this._updateUseCurrentButton();
@@ -68,8 +113,6 @@ var gMainPane = {
 
     setEventListener("browser.privatebrowsing.autostart", "change",
                      gMainPane.updateBrowserStartupLastSession);
-    setEventListener("browser.download.dir", "change",
-                     gMainPane.displayDownloadDirPref);
     if (AppConstants.HAVE_SHELL_SERVICE) {
       setEventListener("setDefaultButton", "command",
                        gMainPane.setDefaultBrowser);
@@ -80,8 +123,37 @@ var gMainPane = {
                      gMainPane.setHomePageToBookmark);
     setEventListener("restoreDefaultHomePage", "command",
                      gMainPane.restoreDefaultHomePage);
-    setEventListener("chooseFolder", "command",
-                     gMainPane.chooseFolder);
+    setEventListener("chooseLanguage", "command",
+      gMainPane.showLanguages);
+    setEventListener("translationAttributionImage", "click",
+      gMainPane.openTranslationProviderAttribution);
+    setEventListener("translateButton", "command",
+      gMainPane.showTranslationExceptions);
+    setEventListener("font.language.group", "change",
+      gMainPane._rebuildFonts);
+    setEventListener("advancedFonts", "command",
+      gMainPane.configureFonts);
+    setEventListener("colors", "command",
+      gMainPane.configureColors);
+
+    // Initializes the fonts dropdowns displayed in this pane.
+    this._rebuildFonts();
+    var menulist = document.getElementById("defaultFont");
+    if (menulist.selectedIndex == -1) {
+      menulist.value = FontBuilder.readFontSelection(menulist);
+    }
+
+    // Show translation preferences if we may:
+    const prefName = "browser.translation.ui.show";
+    if (Services.prefs.getBoolPref(prefName)) {
+      let row = document.getElementById("translationBox");
+      row.removeAttribute("hidden");
+      // Showing attribution only for Bing Translator.
+      Components.utils.import("resource:///modules/translation/Translation.jsm");
+      if (Translation.translationEngine == "bing") {
+        document.getElementById("bingAttribution").removeAttribute("hidden");
+      }
+    }
 
     if (AppConstants.E10S_TESTING_ONLY) {
       setEventListener("e10sAutoStart", "command",
@@ -370,215 +442,16 @@ var gMainPane = {
     homePage.value = homePage.defaultValue;
   },
 
-  // DOWNLOADS
-
-  /*
-   * Preferences:
-   *
-   * browser.download.useDownloadDir - bool
-   *   True - Save files directly to the folder configured via the
-   *   browser.download.folderList preference.
-   *   False - Always ask the user where to save a file and default to
-   *   browser.download.lastDir when displaying a folder picker dialog.
-   * browser.download.dir - local file handle
-   *   A local folder the user may have selected for downloaded files to be
-   *   saved. Migration of other browser settings may also set this path.
-   *   This folder is enabled when folderList equals 2.
-   * browser.download.lastDir - local file handle
-   *   May contain the last folder path accessed when the user browsed
-   *   via the file save-as dialog. (see contentAreaUtils.js)
-   * browser.download.folderList - int
-   *   Indicates the location users wish to save downloaded files too.
-   *   It is also used to display special file labels when the default
-   *   download location is either the Desktop or the Downloads folder.
-   *   Values:
-   *     0 - The desktop is the default download location.
-   *     1 - The system's downloads folder is the default download location.
-   *     2 - The default download location is elsewhere as specified in
-   *         browser.download.dir.
-   * browser.download.downloadDir
-   *   deprecated.
-   * browser.download.defaultFolder
-   *   deprecated.
-   */
-
   /**
-   * Enables/disables the folder field and Browse button based on whether a
-   * default download directory is being used.
+   * Utility function to enable/disable the button specified by aButtonID based
+   * on the value of the Boolean preference specified by aPreferenceID.
    */
-  readUseDownloadDir() {
-    var downloadFolder = document.getElementById("downloadFolder");
-    var chooseFolder = document.getElementById("chooseFolder");
-    var preference = document.getElementById("browser.download.useDownloadDir");
-    downloadFolder.disabled = !preference.value || preference.locked;
-    chooseFolder.disabled = !preference.value || preference.locked;
-
-    // don't override the preference's value in UI
+  updateButtons(aButtonID, aPreferenceID) {
+    var button = document.getElementById(aButtonID);
+    var preference = document.getElementById(aPreferenceID);
+    button.disabled = preference.value != true;
     return undefined;
   },
-
-  /**
-   * Displays a file picker in which the user can choose the location where
-   * downloads are automatically saved, updating preferences and UI in
-   * response to the choice, if one is made.
-   */
-  chooseFolder() {
-    return this.chooseFolderTask().catch(Components.utils.reportError);
-  },
-  chooseFolderTask: Task.async(function* () {
-    let bundlePreferences = document.getElementById("bundlePreferences");
-    let title = bundlePreferences.getString("chooseDownloadFolderTitle");
-    let folderListPref = document.getElementById("browser.download.folderList");
-    let currentDirPref = yield this._indexToFolder(folderListPref.value);
-    let defDownloads = yield this._indexToFolder(1);
-    let fp = Components.classes["@mozilla.org/filepicker;1"].
-             createInstance(Components.interfaces.nsIFilePicker);
-
-    fp.init(window, title, Components.interfaces.nsIFilePicker.modeGetFolder);
-    fp.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
-    // First try to open what's currently configured
-    if (currentDirPref && currentDirPref.exists()) {
-      fp.displayDirectory = currentDirPref;
-    } else if (defDownloads && defDownloads.exists()) {
-      // Try the system's download dir
-      fp.displayDirectory = defDownloads;
-    } else {
-      // Fall back to Desktop
-      fp.displayDirectory = yield this._indexToFolder(0);
-    }
-
-    let result = yield new Promise(resolve => fp.open(resolve));
-    if (result != Components.interfaces.nsIFilePicker.returnOK) {
-      return;
-    }
-
-    let downloadDirPref = document.getElementById("browser.download.dir");
-    downloadDirPref.value = fp.file;
-    folderListPref.value = yield this._folderToIndex(fp.file);
-    // Note, the real prefs will not be updated yet, so dnld manager's
-    // userDownloadsDirectory may not return the right folder after
-    // this code executes. displayDownloadDirPref will be called on
-    // the assignment above to update the UI.
-  }),
-
-  /**
-   * Initializes the download folder display settings based on the user's
-   * preferences.
-   */
-  displayDownloadDirPref() {
-    this.displayDownloadDirPrefTask().catch(Components.utils.reportError);
-
-    // don't override the preference's value in UI
-    return undefined;
-  },
-
-  displayDownloadDirPrefTask: Task.async(function* () {
-    var folderListPref = document.getElementById("browser.download.folderList");
-    var bundlePreferences = document.getElementById("bundlePreferences");
-    var downloadFolder = document.getElementById("downloadFolder");
-    var currentDirPref = document.getElementById("browser.download.dir");
-
-    // Used in defining the correct path to the folder icon.
-    var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService(Components.interfaces.nsIIOService);
-    var fph = ios.getProtocolHandler("file")
-                 .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
-    var iconUrlSpec;
-
-    // Display a 'pretty' label or the path in the UI.
-    if (folderListPref.value == 2) {
-      // Custom path selected and is configured
-      downloadFolder.label = this._getDisplayNameOfFile(currentDirPref.value);
-      iconUrlSpec = fph.getURLSpecFromFile(currentDirPref.value);
-    } else if (folderListPref.value == 1) {
-      // 'Downloads'
-      // In 1.5, this pointed to a folder we created called 'My Downloads'
-      // and was available as an option in the 1.5 drop down. On XP this
-      // was in My Documents, on OSX it was in User Docs. In 2.0, we did
-      // away with the drop down option, although the special label was
-      // still supported for the folder if it existed. Because it was
-      // not exposed it was rarely used.
-      // With 3.0, a new desktop folder - 'Downloads' was introduced for
-      // platforms and versions that don't support a default system downloads
-      // folder. See nsDownloadManager for details.
-      downloadFolder.label = bundlePreferences.getString("downloadsFolderName");
-      iconUrlSpec = fph.getURLSpecFromFile(yield this._indexToFolder(1));
-    } else {
-      // 'Desktop'
-      downloadFolder.label = bundlePreferences.getString("desktopFolderName");
-      iconUrlSpec = fph.getURLSpecFromFile(yield this._getDownloadsFolder("Desktop"));
-    }
-    downloadFolder.image = "moz-icon://" + iconUrlSpec + "?size=16";
-  }),
-
-  /**
-   * Returns the textual path of a folder in readable form.
-   */
-  _getDisplayNameOfFile(aFolder) {
-    // TODO: would like to add support for 'Downloads on Macintosh HD'
-    //       for OS X users.
-    return aFolder ? aFolder.path : "";
-  },
-
-  /**
-   * Returns the Downloads folder.  If aFolder is "Desktop", then the Downloads
-   * folder returned is the desktop folder; otherwise, it is a folder whose name
-   * indicates that it is a download folder and whose path is as determined by
-   * the XPCOM directory service via the download manager's attribute
-   * defaultDownloadsDirectory.
-   *
-   * @throws if aFolder is not "Desktop" or "Downloads"
-   */
-  _getDownloadsFolder: Task.async(function* (aFolder) {
-    switch (aFolder) {
-      case "Desktop":
-        var fileLoc = Components.classes["@mozilla.org/file/directory_service;1"]
-                                    .getService(Components.interfaces.nsIProperties);
-        return fileLoc.get("Desk", Components.interfaces.nsILocalFile);
-      case "Downloads":
-        let downloadsDir = yield Downloads.getSystemDownloadsDirectory();
-        return new FileUtils.File(downloadsDir);
-    }
-    throw "ASSERTION FAILED: folder type should be 'Desktop' or 'Downloads'";
-  }),
-
-  /**
-   * Determines the type of the given folder.
-   *
-   * @param   aFolder
-   *          the folder whose type is to be determined
-   * @returns integer
-   *          0 if aFolder is the Desktop or is unspecified,
-   *          1 if aFolder is the Downloads folder,
-   *          2 otherwise
-   */
-  _folderToIndex: Task.async(function* (aFolder) {
-    if (!aFolder || aFolder.equals(yield this._getDownloadsFolder("Desktop")))
-      return 0;
-    else if (aFolder.equals(yield this._getDownloadsFolder("Downloads")))
-      return 1;
-    return 2;
-  }),
-
-  /**
-   * Converts an integer into the corresponding folder.
-   *
-   * @param   aIndex
-   *          an integer
-   * @returns the Desktop folder if aIndex == 0,
-   *          the Downloads folder if aIndex == 1,
-   *          the folder stored in browser.download.dir
-   */
-  _indexToFolder: Task.async(function* (aIndex) {
-    switch (aIndex) {
-      case 0:
-        return yield this._getDownloadsFolder("Desktop");
-      case 1:
-        return yield this._getDownloadsFolder("Downloads");
-    }
-    var currentDirPref = document.getElementById("browser.download.dir");
-    return currentDirPref.value;
-  }),
 
   /**
    * Hide/show the "Show my windows and tabs from last time" option based
@@ -696,4 +569,695 @@ var gMainPane = {
       document.getElementById("setDefaultPane").selectedIndex = selectedIndex;
     }
   },
+
+  /**
+   * Shows a dialog in which the preferred language for web content may be set.
+   */
+  showLanguages() {
+    gSubDialog.open("chrome://browser/content/preferences/languages.xul");
+  },
+
+  /**
+   * Displays the translation exceptions dialog where specific site and language
+   * translation preferences can be set.
+   */
+  showTranslationExceptions() {
+    gSubDialog.open("chrome://browser/content/preferences/translation.xul");
+  },
+
+  openTranslationProviderAttribution() {
+    Components.utils.import("resource:///modules/translation/Translation.jsm");
+    Translation.openProviderAttribution();
+  },
+
+  /**
+   * Displays the fonts dialog, where web page font names and sizes can be
+   * configured.
+   */
+  configureFonts() {
+    gSubDialog.open("chrome://browser/content/preferences/fonts.xul", "resizable=no");
+  },
+
+  /**
+   * Displays the colors dialog, where default web page/link/etc. colors can be
+   * configured.
+   */
+  configureColors() {
+    gSubDialog.open("chrome://browser/content/preferences/colors.xul", "resizable=no");
+  },
+
+  // FONTS
+
+  /**
+   * Populates the default font list in UI.
+   */
+  _rebuildFonts() {
+    var preferences = document.getElementById("mainPreferences");
+    // Ensure preferences are "visible" to ensure bindings work.
+    preferences.hidden = false;
+    // Force flush:
+    preferences.clientHeight;
+    var langGroupPref = document.getElementById("font.language.group");
+    this._selectDefaultLanguageGroup(langGroupPref.value,
+                                     this._readDefaultFontTypeForLanguage(langGroupPref.value) == "serif");
+  },
+
+  /**
+   * Returns the type of the current default font for the language denoted by
+   * aLanguageGroup.
+   */
+  _readDefaultFontTypeForLanguage(aLanguageGroup) {
+    const kDefaultFontType = "font.default.%LANG%";
+    var defaultFontTypePref = kDefaultFontType.replace(/%LANG%/, aLanguageGroup);
+    var preference = document.getElementById(defaultFontTypePref);
+    if (!preference) {
+      preference = document.createElement("preference");
+      preference.id = defaultFontTypePref;
+      preference.setAttribute("name", defaultFontTypePref);
+      preference.setAttribute("type", "string");
+      preference.setAttribute("onchange", "gMainPane._rebuildFonts();");
+      document.getElementById("mainPreferences").appendChild(preference);
+    }
+    return preference.value;
+  },
+
+  _selectDefaultLanguageGroup(aLanguageGroup, aIsSerif) {
+    const kFontNameFmtSerif         = "font.name.serif.%LANG%";
+    const kFontNameFmtSansSerif     = "font.name.sans-serif.%LANG%";
+    const kFontNameListFmtSerif     = "font.name-list.serif.%LANG%";
+    const kFontNameListFmtSansSerif = "font.name-list.sans-serif.%LANG%";
+    const kFontSizeFmtVariable      = "font.size.variable.%LANG%";
+
+    var preferences = document.getElementById("mainPreferences");
+    var prefs = [{ format: aIsSerif ? kFontNameFmtSerif : kFontNameFmtSansSerif,
+                   type: "fontname",
+                   element: "defaultFont",
+                   fonttype: aIsSerif ? "serif" : "sans-serif" },
+                 { format: aIsSerif ? kFontNameListFmtSerif : kFontNameListFmtSansSerif,
+                   type: "unichar",
+                   element: null,
+                   fonttype: aIsSerif ? "serif" : "sans-serif" },
+                 { format: kFontSizeFmtVariable,
+                   type: "int",
+                   element: "defaultFontSize",
+                   fonttype: null }];
+    for (var i = 0; i < prefs.length; ++i) {
+      var preference = document.getElementById(prefs[i].format.replace(/%LANG%/, aLanguageGroup));
+      if (!preference) {
+        preference = document.createElement("preference");
+        var name = prefs[i].format.replace(/%LANG%/, aLanguageGroup);
+        preference.id = name;
+        preference.setAttribute("name", name);
+        preference.setAttribute("type", prefs[i].type);
+        preferences.appendChild(preference);
+      }
+
+      if (!prefs[i].element)
+        continue;
+
+      var element = document.getElementById(prefs[i].element);
+      if (element) {
+        element.setAttribute("preference", preference.id);
+
+        if (prefs[i].fonttype)
+          FontBuilder.buildFontList(aLanguageGroup, prefs[i].fonttype, element);
+
+        preference.setElementValue(element);
+      }
+    }
+  },
+
+  /**
+   * Returns true if any spellchecking is enabled and false otherwise, caching
+   * the current value to enable proper pref restoration if the checkbox is
+   * never changed.
+   */
+  readCheckSpelling() {
+    var pref = document.getElementById("layout.spellcheckDefault");
+    this._storedSpellCheck = pref.value;
+
+    return (pref.value != 0);
+  },
+
+  /**
+   * Returns the value of the spellchecking preference represented by UI,
+   * preserving the preference's "hidden" value if the preference is
+   * unchanged and represents a value not strictly allowed in UI.
+   */
+  writeCheckSpelling() {
+    var checkbox = document.getElementById("checkSpelling");
+    if (checkbox.checked) {
+      if (this._storedSpellCheck == 2) {
+        return 2;
+      }
+      return 1;
+    }
+    return 0;
+  },
+
+  updateSuggestsCheckbox() {
+    let suggestsPref =
+      document.getElementById("browser.search.suggest.enabled");
+    let permanentPB =
+      Services.prefs.getBoolPref("browser.privatebrowsing.autostart");
+    let urlbarSuggests = document.getElementById("urlBarSuggestion");
+    urlbarSuggests.disabled = !suggestsPref.value || permanentPB;
+
+    let urlbarSuggestsPref =
+      document.getElementById("browser.urlbar.suggest.searches");
+    urlbarSuggests.checked = urlbarSuggestsPref.value;
+    if (urlbarSuggests.disabled) {
+      urlbarSuggests.checked = false;
+    }
+
+    let permanentPBLabel =
+      document.getElementById("urlBarSuggestionPermanentPBLabel");
+    permanentPBLabel.hidden = urlbarSuggests.hidden || !permanentPB;
+  },
+
+  buildDefaultEngineDropDown() {
+    // This is called each time something affects the list of engines.
+    let list = document.getElementById("defaultEngine");
+    // Set selection to the current default engine.
+    let currentEngine = Services.search.currentEngine.name;
+
+    // If the current engine isn't in the list any more, select the first item.
+    let engines = gEngineView._engineStore._engines;
+    if (!engines.some(e => e.name == currentEngine))
+      currentEngine = engines[0].name;
+
+    // Now clean-up and rebuild the list.
+    list.removeAllItems();
+    gEngineView._engineStore._engines.forEach(e => {
+      let item = list.appendItem(e.name);
+      item.setAttribute("class", "menuitem-iconic searchengine-menuitem menuitem-with-favicon");
+      if (e.iconURI) {
+        item.setAttribute("image", e.iconURI.spec);
+      }
+      item.engine = e;
+      if (e.name == currentEngine)
+        list.selectedItem = item;
+    });
+  },
+
+  handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "click":
+        if (aEvent.target.id != "engineChildren" &&
+            !aEvent.target.classList.contains("searchEngineAction")) {
+          let engineList = document.getElementById("engineList");
+          // We don't want to toggle off selection while editing keyword
+          // so proceed only when the input field is hidden.
+          // We need to check that engineList.view is defined here
+          // because the "click" event listener is on <window> and the
+          // view might have been destroyed if the pane has been navigated
+          // away from.
+          if (engineList.inputField.hidden && engineList.view) {
+            let selection = engineList.view.selection;
+            if (selection.count > 0) {
+              selection.toggleSelect(selection.currentIndex);
+            }
+            engineList.blur();
+          }
+        }
+        break;
+      case "command":
+        switch (aEvent.target.id) {
+          case "":
+            if (aEvent.target.parentNode &&
+                aEvent.target.parentNode.parentNode &&
+                aEvent.target.parentNode.parentNode.id == "defaultEngine") {
+              gMainPane.setDefaultEngine();
+            }
+            break;
+          case "restoreDefaultSearchEngines":
+            gMainPane.onRestoreDefaults();
+            break;
+          case "removeEngineButton":
+            Services.search.removeEngine(gEngineView.selectedEngine.originalEngine);
+            break;
+        }
+        break;
+      case "dragstart":
+        if (aEvent.target.id == "engineChildren") {
+          onDragEngineStart(aEvent);
+        }
+        break;
+      case "keypress":
+        if (aEvent.target.id == "engineList") {
+          gMainPane.onTreeKeyPress(aEvent);
+        }
+        break;
+      case "select":
+        if (aEvent.target.id == "engineList") {
+          gMainPane.onTreeSelect();
+        }
+        break;
+      case "blur":
+        if (aEvent.target.id == "engineList" &&
+            aEvent.target.inputField == document.getBindingParent(aEvent.originalTarget)) {
+          gMainPane.onInputBlur();
+        }
+        break;
+    }
+  },
+
+  observe(aEngine, aTopic, aVerb) {
+    if (aTopic == "browser-search-engine-modified") {
+      aEngine.QueryInterface(Components.interfaces.nsISearchEngine);
+      switch (aVerb) {
+      case "engine-added":
+        gEngineView._engineStore.addEngine(aEngine);
+        gEngineView.rowCountChanged(gEngineView.lastIndex, 1);
+        gMainPane.buildDefaultEngineDropDown();
+        break;
+      case "engine-changed":
+        gEngineView._engineStore.reloadIcons();
+        gEngineView.invalidate();
+        break;
+      case "engine-removed":
+        gMainPane.remove(aEngine);
+        break;
+      case "engine-current":
+        // If the user is going through the drop down using up/down keys, the
+        // dropdown may still be open (eg. on Windows) when engine-current is
+        // fired, so rebuilding the list unconditionally would get in the way.
+        let selectedEngine =
+          document.getElementById("defaultEngine").selectedItem.engine;
+        if (selectedEngine.name != aEngine.name)
+          gMainPane.buildDefaultEngineDropDown();
+        break;
+      case "engine-default":
+        // Not relevant
+        break;
+      }
+    }
+  },
+
+  onInputBlur(aEvent) {
+    let tree = document.getElementById("engineList");
+    if (!tree.hasAttribute("editing"))
+      return;
+
+    // Accept input unless discarded.
+    let accept = aEvent.charCode != KeyEvent.DOM_VK_ESCAPE;
+    tree.stopEditing(accept);
+  },
+
+  onTreeSelect() {
+    document.getElementById("removeEngineButton").disabled =
+      !gEngineView.isEngineSelectedAndRemovable();
+  },
+
+  onTreeKeyPress(aEvent) {
+    let index = gEngineView.selectedIndex;
+    let tree = document.getElementById("engineList");
+    if (tree.hasAttribute("editing"))
+      return;
+
+    if (aEvent.charCode == KeyEvent.DOM_VK_SPACE) {
+      // Space toggles the checkbox.
+      let newValue = !gEngineView._engineStore.engines[index].shown;
+      gEngineView.setCellValue(index, tree.columns.getFirstColumn(),
+                               newValue.toString());
+      // Prevent page from scrolling on the space key.
+      aEvent.preventDefault();
+    } else {
+      let isMac = Services.appinfo.OS == "Darwin";
+      if ((isMac && aEvent.keyCode == KeyEvent.DOM_VK_RETURN) ||
+          (!isMac && aEvent.keyCode == KeyEvent.DOM_VK_F2)) {
+        tree.startEditing(index, tree.columns.getLastColumn());
+      } else if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE ||
+                 (isMac && aEvent.shiftKey &&
+                  aEvent.keyCode == KeyEvent.DOM_VK_BACK_SPACE &&
+                  gEngineView.isEngineSelectedAndRemovable())) {
+        // Delete and Shift+Backspace (Mac) removes selected engine.
+        Services.search.removeEngine(gEngineView.selectedEngine.originalEngine);
+     }
+    }
+  },
+
+  onRestoreDefaults() {
+    let num = gEngineView._engineStore.restoreDefaultEngines();
+    gEngineView.rowCountChanged(0, num);
+    gEngineView.invalidate();
+  },
+
+  showRestoreDefaults(aEnable) {
+    document.getElementById("restoreDefaultSearchEngines").disabled = !aEnable;
+  },
+
+  remove(aEngine) {
+    let index = gEngineView._engineStore.removeEngine(aEngine);
+    gEngineView.rowCountChanged(index, -1);
+    gEngineView.invalidate();
+    gEngineView.selection.select(Math.min(index, gEngineView.lastIndex));
+    gEngineView.ensureRowIsVisible(gEngineView.currentIndex);
+    document.getElementById("engineList").focus();
+  },
+
+  editKeyword: Task.async(function* (aEngine, aNewKeyword) {
+    let keyword = aNewKeyword.trim();
+    if (keyword) {
+      let eduplicate = false;
+      let dupName = "";
+
+      // Check for duplicates in Places keywords.
+      let bduplicate = !!(yield PlacesUtils.keywords.fetch(keyword));
+
+      // Check for duplicates in changes we haven't committed yet
+      let engines = gEngineView._engineStore.engines;
+      for (let engine of engines) {
+        if (engine.alias == keyword &&
+            engine.name != aEngine.name) {
+          eduplicate = true;
+          dupName = engine.name;
+          break;
+        }
+      }
+
+      // Notify the user if they have chosen an existing engine/bookmark keyword
+      if (eduplicate || bduplicate) {
+        let strings = document.getElementById("engineManagerBundle");
+        let dtitle = strings.getString("duplicateTitle");
+        let bmsg = strings.getString("duplicateBookmarkMsg");
+        let emsg = strings.getFormattedString("duplicateEngineMsg", [dupName]);
+
+        Services.prompt.alert(window, dtitle, eduplicate ? emsg : bmsg);
+        return false;
+      }
+    }
+
+    gEngineView._engineStore.changeEngine(aEngine, "alias", keyword);
+    gEngineView.invalidate();
+    return true;
+  }),
+
+  saveOneClickEnginesList() {
+    let hiddenList = [];
+    for (let engine of gEngineView._engineStore.engines) {
+      if (!engine.shown)
+        hiddenList.push(engine.name);
+    }
+    document.getElementById("browser.search.hiddenOneOffs").value =
+      hiddenList.join(",");
+  },
+
+  setDefaultEngine() {
+    Services.search.currentEngine =
+      document.getElementById("defaultEngine").selectedItem.engine;
+  }
+};
+
+function onDragEngineStart(event) {
+  var selectedIndex = gEngineView.selectedIndex;
+  var tree = document.getElementById("engineList");
+  var row = { }, col = { }, child = { };
+  tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, child);
+  if (selectedIndex >= 0 && !gEngineView.isCheckBox(row.value, col.value)) {
+    event.dataTransfer.setData(ENGINE_FLAVOR, selectedIndex.toString());
+    event.dataTransfer.effectAllowed = "move";
+  }
+}
+
+
+function EngineStore() {
+  let pref = document.getElementById("browser.search.hiddenOneOffs").value;
+  this.hiddenList = pref ? pref.split(",") : [];
+
+  this._engines = Services.search.getVisibleEngines().map(this._cloneEngine, this);
+  this._defaultEngines = Services.search.getDefaultEngines().map(this._cloneEngine, this);
+
+  // check if we need to disable the restore defaults button
+  var someHidden = this._defaultEngines.some(e => e.hidden);
+  gMainPane.showRestoreDefaults(someHidden);
+}
+EngineStore.prototype = {
+  _engines: null,
+  _defaultEngines: null,
+
+  get engines() {
+    return this._engines;
+  },
+  set engines(val) {
+    this._engines = val;
+    return val;
+  },
+
+  _getIndexForEngine(aEngine) {
+    return this._engines.indexOf(aEngine);
+  },
+
+  _getEngineByName(aName) {
+    return this._engines.find(engine => engine.name == aName);
+  },
+
+  _cloneEngine(aEngine) {
+    var clonedObj = {};
+    for (var i in aEngine)
+      clonedObj[i] = aEngine[i];
+    clonedObj.originalEngine = aEngine;
+    clonedObj.shown = this.hiddenList.indexOf(clonedObj.name) == -1;
+    return clonedObj;
+  },
+
+  // Callback for Array's some(). A thisObj must be passed to some()
+  _isSameEngine(aEngineClone) {
+    return aEngineClone.originalEngine == this.originalEngine;
+  },
+
+  addEngine(aEngine) {
+    this._engines.push(this._cloneEngine(aEngine));
+  },
+
+  moveEngine(aEngine, aNewIndex) {
+    if (aNewIndex < 0 || aNewIndex > this._engines.length - 1)
+      throw new Error("ES_moveEngine: invalid aNewIndex!");
+    var index = this._getIndexForEngine(aEngine);
+    if (index == -1)
+      throw new Error("ES_moveEngine: invalid engine?");
+
+    if (index == aNewIndex)
+      return; // nothing to do
+
+    // Move the engine in our internal store
+    var removedEngine = this._engines.splice(index, 1)[0];
+    this._engines.splice(aNewIndex, 0, removedEngine);
+
+    Services.search.moveEngine(aEngine.originalEngine, aNewIndex);
+  },
+
+  removeEngine(aEngine) {
+    if (this._engines.length == 1) {
+      throw new Error("Cannot remove last engine!");
+    }
+
+    let engineName = aEngine.name;
+    let index = this._engines.findIndex(element => element.name == engineName);
+
+    if (index == -1)
+      throw new Error("invalid engine?");
+
+    this._engines.splice(index, 1);
+
+    if (this._defaultEngines.some(this._isSameEngine, this._engines[index]))
+      gMainPane.showRestoreDefaults(true);
+    gMainPane.buildDefaultEngineDropDown();
+    return index;
+  },
+
+  restoreDefaultEngines() {
+    var added = 0;
+
+    for (var i = 0; i < this._defaultEngines.length; ++i) {
+      var e = this._defaultEngines[i];
+
+      // If the engine is already in the list, just move it.
+      if (this._engines.some(this._isSameEngine, e)) {
+        this.moveEngine(this._getEngineByName(e.name), i);
+      } else {
+        // Otherwise, add it back to our internal store
+
+        // The search service removes the alias when an engine is hidden,
+        // so clear any alias we may have cached before unhiding the engine.
+        e.alias = "";
+
+        this._engines.splice(i, 0, e);
+        let engine = e.originalEngine;
+        engine.hidden = false;
+        Services.search.moveEngine(engine, i);
+        added++;
+      }
+    }
+    Services.search.resetToOriginalDefaultEngine();
+    gMainPane.showRestoreDefaults(false);
+    gMainPane.buildDefaultEngineDropDown();
+    return added;
+  },
+
+  changeEngine(aEngine, aProp, aNewValue) {
+    var index = this._getIndexForEngine(aEngine);
+    if (index == -1)
+      throw new Error("invalid engine?");
+
+    this._engines[index][aProp] = aNewValue;
+    aEngine.originalEngine[aProp] = aNewValue;
+  },
+
+  reloadIcons() {
+    this._engines.forEach(function(e) {
+      e.uri = e.originalEngine.uri;
+    });
+  }
+};
+
+function EngineView(aEngineStore) {
+  this._engineStore = aEngineStore;
+}
+EngineView.prototype = {
+  _engineStore: null,
+  tree: null,
+
+  get lastIndex() {
+    return this.rowCount - 1;
+  },
+  get selectedIndex() {
+    var seln = this.selection;
+    if (seln.getRangeCount() > 0) {
+      var min = {};
+      seln.getRangeAt(0, min, {});
+      return min.value;
+    }
+    return -1;
+  },
+  get selectedEngine() {
+    return this._engineStore.engines[this.selectedIndex];
+  },
+
+  // Helpers
+  rowCountChanged(index, count) {
+    this.tree.rowCountChanged(index, count);
+  },
+
+  invalidate() {
+    this.tree.invalidate();
+  },
+
+  ensureRowIsVisible(index) {
+    this.tree.ensureRowIsVisible(index);
+  },
+
+  getSourceIndexFromDrag(dataTransfer) {
+    return parseInt(dataTransfer.getData(ENGINE_FLAVOR));
+  },
+
+  isCheckBox(index, column) {
+    return column.id == "engineShown";
+  },
+
+  isEngineSelectedAndRemovable() {
+    return this.selectedIndex != -1 && this.lastIndex != 0;
+  },
+
+  // nsITreeView
+  get rowCount() {
+    return this._engineStore.engines.length;
+  },
+
+  getImageSrc(index, column) {
+    if (column.id == "engineName") {
+      if (this._engineStore.engines[index].iconURI)
+        return this._engineStore.engines[index].iconURI.spec;
+
+      if (window.devicePixelRatio > 1)
+        return "chrome://browser/skin/search-engine-placeholder@2x.png";
+      return "chrome://browser/skin/search-engine-placeholder.png";
+    }
+
+    return "";
+  },
+
+  getCellText(index, column) {
+    if (column.id == "engineName")
+      return this._engineStore.engines[index].name;
+    else if (column.id == "engineKeyword")
+      return this._engineStore.engines[index].alias;
+    return "";
+  },
+
+  setTree(tree) {
+    this.tree = tree;
+  },
+
+  canDrop(targetIndex, orientation, dataTransfer) {
+    var sourceIndex = this.getSourceIndexFromDrag(dataTransfer);
+    return (sourceIndex != -1 &&
+            sourceIndex != targetIndex &&
+            sourceIndex != targetIndex + orientation);
+  },
+
+  drop(dropIndex, orientation, dataTransfer) {
+    var sourceIndex = this.getSourceIndexFromDrag(dataTransfer);
+    var sourceEngine = this._engineStore.engines[sourceIndex];
+
+    const nsITreeView = Components.interfaces.nsITreeView;
+    if (dropIndex > sourceIndex) {
+      if (orientation == nsITreeView.DROP_BEFORE)
+        dropIndex--;
+    } else if (orientation == nsITreeView.DROP_AFTER) {
+      dropIndex++;
+    }
+
+    this._engineStore.moveEngine(sourceEngine, dropIndex);
+    gMainPane.showRestoreDefaults(true);
+    gMainPane.buildDefaultEngineDropDown();
+
+    // Redraw, and adjust selection
+    this.invalidate();
+    this.selection.select(dropIndex);
+  },
+
+  selection: null,
+  getRowProperties(index) { return ""; },
+  getCellProperties(index, column) { return ""; },
+  getColumnProperties(column) { return ""; },
+  isContainer(index) { return false; },
+  isContainerOpen(index) { return false; },
+  isContainerEmpty(index) { return false; },
+  isSeparator(index) { return false; },
+  isSorted(index) { return false; },
+  getParentIndex(index) { return -1; },
+  hasNextSibling(parentIndex, index) { return false; },
+  getLevel(index) { return 0; },
+  getProgressMode(index, column) { },
+  getCellValue(index, column) {
+    if (column.id == "engineShown")
+      return this._engineStore.engines[index].shown;
+    return undefined;
+  },
+  toggleOpenState(index) { },
+  cycleHeader(column) { },
+  selectionChanged() { },
+  cycleCell(row, column) { },
+  isEditable(index, column) { return column.id != "engineName"; },
+  isSelectable(index, column) { return false; },
+  setCellValue(index, column, value) {
+    if (column.id == "engineShown") {
+      this._engineStore.engines[index].shown = value == "true";
+      gEngineView.invalidate();
+      gMainPane.saveOneClickEnginesList();
+    }
+  },
+  setCellText(index, column, value) {
+    if (column.id == "engineKeyword") {
+      gMainPane.editKeyword(this._engineStore.engines[index], value)
+                 .then(valid => {
+        if (!valid)
+          document.getElementById("engineList").startEditing(index, column);
+      });
+    }
+  },
+  performAction(action) { },
+  performActionOnRow(action, index) { },
+  performActionOnCell(action, index, column) { }
 };

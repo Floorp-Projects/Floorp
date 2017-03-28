@@ -8,11 +8,10 @@ registerCleanupFunction(function() {
 });
 
 add_task(function*() {
-  let prefs = yield openPreferencesViaOpenPreferencesAPI("paneContent");
-  is(prefs.selectedPane, "paneContent", "Content pane was selected");
-  prefs = yield openPreferencesViaOpenPreferencesAPI("advanced", "updateTab");
+  let prefs = yield openPreferencesViaOpenPreferencesAPI("panePrivacy");
+  is(prefs.selectedPane, "panePrivacy", "Privacy pane was selected");
+  prefs = yield openPreferencesViaOpenPreferencesAPI("advanced");
   is(prefs.selectedPane, "paneAdvanced", "Advanced pane was selected");
-  is(prefs.selectedAdvancedTab, "updateTab", "The update tab within the advanced prefs should be selected");
   prefs = yield openPreferencesViaHash("privacy");
   is(prefs.selectedPane, "panePrivacy", "Privacy pane is selected when hash is 'privacy'");
   prefs = yield openPreferencesViaOpenPreferencesAPI("nonexistant-category");
