@@ -172,9 +172,4 @@ interface mozILocaleService : nsISupports
    */
   void getAvailableLocales([optional] out unsigned long aCount,
                            [retval, array, size_is(aCount)] out string aLocales);
-
-  /**
-   * Returns whether the current app locale is RTL.
-   */
-  readonly attribute boolean isAppLocaleRTL;
 };

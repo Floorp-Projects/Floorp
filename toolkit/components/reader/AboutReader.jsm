@@ -17,6 +17,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NarrateControls", "resource://gre/modul
 XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "gChromeRegistry",
+                                   "@mozilla.org/chrome/chrome-registry;1", Ci.nsIXULChromeRegistry);
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
 var gStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
@@ -731,7 +733,7 @@ AboutReader.prototype = {
       this._headerElement.setAttribute("dir", article.dir);
 
       // The native locale could be set differently than the article's text direction.
-      var localeDirection = Services.locale.isAppLocaleRTL ? "rtl" : "ltr";
+      var localeDirection = gChromeRegistry.isLocaleRTL("global") ? "rtl" : "ltr";
       this._readTimeElement.setAttribute("dir", localeDirection);
       this._readTimeElement.style.textAlign = article.dir == "rtl" ? "right" : "left";
     }

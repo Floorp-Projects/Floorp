@@ -630,7 +630,8 @@ LocaleData.prototype = {
     if (message == "@@ui_locale") {
       return this.uiLocale;
     } else if (message.startsWith("@@bidi_")) {
-      let rtl = Services.locale.isAppLocaleRTL;
+      let registry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
+      let rtl = registry.isLocaleRTL("global");
 
       if (message == "@@bidi_dir") {
         return rtl ? "rtl" : "ltr";
