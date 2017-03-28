@@ -1860,7 +1860,7 @@ public:
       auto clockTime =
         std::max(mMaster->AudioEndTime(), mMaster->VideoEndTime());
       clockTime = std::max(clockTime, mMaster->Duration());
-      mMaster->UpdatePlaybackPosition(clockTime.ToMicroseconds());
+      mMaster->UpdatePlaybackPosition(clockTime);
 
       // Ensure readyState is updated before firing the 'ended' event.
       mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
@@ -2925,14 +2925,15 @@ MediaDecoderStateMachine::UpdatePlaybackPositionInternal(const TimeUnit& aTime)
                                TimeUnit::FromMicroseconds(mCurrentPosition.Ref()));
 }
 
-void MediaDecoderStateMachine::UpdatePlaybackPosition(int64_t aTime)
+void
+MediaDecoderStateMachine::UpdatePlaybackPosition(const TimeUnit& aTime)
 {
   MOZ_ASSERT(OnTaskQueue());
-  UpdatePlaybackPositionInternal(TimeUnit::FromMicroseconds(aTime));
+  UpdatePlaybackPositionInternal(aTime);
 
   bool fragmentEnded =
     mFragmentEndTime >= 0 && GetMediaTime() >= mFragmentEndTime;
-  mMetadataManager.DispatchMetadataIfNeeded(TimeUnit::FromMicroseconds(aTime));
+  mMetadataManager.DispatchMetadataIfNeeded(aTime);
 
   if (fragmentEnded) {
     StopPlayback();
@@ -3534,7 +3535,7 @@ MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically()
     // FIXME: Bug 1091422 - chained ogg files hit this assertion.
     //MOZ_ASSERT(t >= GetMediaTime());
     if (t > GetMediaTime()) {
-      UpdatePlaybackPosition(t);
+      UpdatePlaybackPosition(TimeUnit::FromMicroseconds(t));
     }
   }
   // Note we have to update playback position before releasing the monitor.
