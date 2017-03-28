@@ -55,6 +55,7 @@ add_task(function* test_experiments_api() {
           return {
             meh: {
               hello(text) {
+                console.log('meh.hello API called', text);
                 Services.obs.notifyObservers(null, "webext-api-hello", text);
               }
             }
