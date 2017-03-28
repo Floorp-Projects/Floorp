@@ -282,25 +282,6 @@ if (opener) {
   }
 }
 
-/**
- * Return a new MutationObserver which started observing |target| element
- * with { animations: true, subtree: |subtree| } option.
- * NOTE: This observer should be used only with takeRecords(). If any of
- * MutationRecords are observed in the callback of the MutationObserver,
- * it will raise an assertion.
- */
-function setupSynchronousObserver(t, target, subtree) {
-   var observer = new MutationObserver(records => {
-     assert_unreached("Any MutationRecords should not be observed in this " +
-                      "callback");
-   });
-  t.add_cleanup(() => {
-    observer.disconnect();
-  });
-  observer.observe(target, { animations: true, subtree: subtree });
-  return observer;
-}
-
 /*
  * Returns a promise that is resolved when the document has finished loading.
  */
