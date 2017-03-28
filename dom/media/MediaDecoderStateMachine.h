@@ -593,24 +593,6 @@ private:
   // we detect that the decode can't keep up with rendering.
   media::TimeUnit mAmpleAudioThreshold;
 
-  // At the start of decoding we want to "preroll" the decode until we've
-  // got a few frames decoded before we consider whether decode is falling
-  // behind. Otherwise our "we're falling behind" logic will trigger
-  // unnecessarily if we start playing as soon as the first sample is
-  // decoded. These two fields store how many video frames and audio
-  // samples we must consume before are considered to be finished prerolling.
-  uint32_t AudioPrerollUsecs() const
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    return mAmpleAudioThreshold.ToMicroseconds() / 2;
-  }
-
-  uint32_t VideoPrerollFrames() const
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    return GetAmpleVideoFrames() / 2;
-  }
-
   // Only one of a given pair of ({Audio,Video}DataPromise, WaitForDataPromise)
   // should exist at any given moment.
   using AudioDataPromise = MediaDecoderReader::AudioDataPromise;
