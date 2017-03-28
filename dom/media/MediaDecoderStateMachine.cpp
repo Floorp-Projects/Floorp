@@ -144,11 +144,6 @@ static_assert(LOW_BUFFER_THRESHOLD_USECS > AMPLE_AUDIO_USECS,
 // Amount of excess usecs of data to add in to the "should we buffer" calculation.
 static const uint32_t EXHAUSTED_DATA_MARGIN_USECS = 100000;
 
-static int64_t DurationToUsecs(TimeDuration aDuration)
-{
-  return static_cast<int64_t>(aDuration.ToSeconds() * USECS_PER_S);
-}
-
 static const uint32_t MIN_VIDEO_QUEUE_SIZE = 3;
 static const uint32_t MAX_VIDEO_QUEUE_SIZE = 10;
 #ifdef MOZ_APPLEMEDIA
