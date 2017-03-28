@@ -847,12 +847,6 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
     if (attached)
         return true;
 
-    // GetElem operations on non-native objects cannot be cached by either
-    // Baseline or Ion. Indicate this in the cache so that Ion does not
-    // generate a cache for this op.
-    if (lhs.isObject() && !lhs.toObject().isNative())
-        stub->noteNonNativeAccess();
-
     // GetElem operations which could access negative indexes generally can't
     // be optimized without the potential for bailouts, as we can't statically
     // determine that an object has no properties on such indexes.
