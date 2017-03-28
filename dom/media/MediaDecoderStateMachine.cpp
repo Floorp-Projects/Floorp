@@ -819,18 +819,19 @@ private:
     if (adjustedTime > mMaster->mLowAudioThreshold.ToMicroseconds()
         && !mMaster->HasLowBufferedData())
     {
-      mMaster->mLowAudioThreshold = TimeUnit::FromMicroseconds(
-        std::min(adjustedTime, mMaster->mAmpleAudioThresholdUsecs));
+      mMaster->mLowAudioThreshold = std::min(
+        TimeUnit::FromMicroseconds(adjustedTime),
+        mMaster->mAmpleAudioThresholdUsecs);
 
-      mMaster->mAmpleAudioThresholdUsecs =
-        std::max(THRESHOLD_FACTOR * mMaster->mLowAudioThreshold.ToMicroseconds(),
-                 mMaster->mAmpleAudioThresholdUsecs);
+      mMaster->mAmpleAudioThresholdUsecs = std::max(
+        mMaster->mLowAudioThreshold * THRESHOLD_FACTOR,
+        mMaster->mAmpleAudioThresholdUsecs);
 
       SLOG("Slow video decode, set "
            "mLowAudioThresholdUsecs=%" PRId64
            " mAmpleAudioThresholdUsecs=%" PRId64,
            mMaster->mLowAudioThreshold.ToMicroseconds(),
-           mMaster->mAmpleAudioThresholdUsecs);
+           mMaster->mAmpleAudioThresholdUsecs.ToMicroseconds());
     }
   }
 
@@ -2597,7 +2598,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDecodedVideoEndTime(0),
   mPlaybackRate(1.0),
   mLowAudioThreshold(detail::LOW_AUDIO_THRESHOLD),
-  mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_THRESHOLD.ToMicroseconds()),
+  mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_THRESHOLD),
   mAudioCaptured(false),
   mMinimizePreroll(aDecoder->GetMinimizePreroll()),
   mSentLoadedMetadataEvent(false),
@@ -2755,7 +2756,7 @@ bool
 MediaDecoderStateMachine::HaveEnoughDecodedAudio()
 {
   MOZ_ASSERT(OnTaskQueue());
-  auto ampleAudioUSecs = mAmpleAudioThresholdUsecs * mPlaybackRate;
+  auto ampleAudioUSecs = mAmpleAudioThresholdUsecs.ToMicroseconds() * mPlaybackRate;
   return AudioQueue().GetSize() > 0
          && GetDecodedAudioDuration() >= ampleAudioUSecs;
 }
@@ -3789,8 +3790,8 @@ MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
 
   // Don't buffer as much when audio is captured because we don't need to worry
   // about high latency audio devices.
-  mAmpleAudioThresholdUsecs =
-    (mAudioCaptured ? detail::AMPLE_AUDIO_THRESHOLD / 2 : detail::AMPLE_AUDIO_THRESHOLD).ToMicroseconds();
+  mAmpleAudioThresholdUsecs = mAudioCaptured
+    ? detail::AMPLE_AUDIO_THRESHOLD / 2 : detail::AMPLE_AUDIO_THRESHOLD;
 
   mStateObj->HandleAudioCaptured();
 }
