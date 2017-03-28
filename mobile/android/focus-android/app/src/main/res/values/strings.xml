@@ -117,6 +117,9 @@
     <!-- Content description (not visible, for screen readers etc.): Reload current website -->
     <string name="content_description_reload">Reload website</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Navigate backw (browsing history) -->
+    <string name="content_description_back">Navigate back</string>
+
     <string name="firstrun_title">Browse like no one’s watching.</string>
     <string name="firstrun_description">Automatically block online trackers while you browse. Then tap to erase visited pages, searches, cookies and passwords from your device.</string>
     <string name="firstrun_button">OK, got it!</string>
