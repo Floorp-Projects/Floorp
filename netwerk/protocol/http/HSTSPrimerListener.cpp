@@ -306,6 +306,13 @@ HSTSPrimingListener::StartHSTSPriming(nsIChannel* aRequestChannel,
   nsCOMPtr<nsIHttpChannelInternal> internal = do_QueryInterface(primingChannel);
   NS_ENSURE_STATE(internal);
 
+  // Since this is a perfomrance critical request (blocks the page load) we
+  // want to get the response ASAP.
+  nsCOMPtr<nsIClassOfService> classOfService(do_QueryInterface(primingChannel));
+  if (classOfService) {
+    classOfService->AddClassFlags(nsIClassOfService::UrgentStart);
+  }
+
   // Currently using HEAD per the draft, but under discussion to change to GET
   // with credentials so if the upgrade is approved the result is already cached.
   rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("HEAD"));

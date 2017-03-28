@@ -238,6 +238,7 @@ nsHttpHandler::nsHttpHandler()
     , mKeepEmptyResponseHeadersAsEmtpyString(false)
     , mDefaultHpackBuffer(4096)
     , mMaxHttpResponseHeaderSize(393216)
+    , mFocusedWindowTransactionRatio(0.9f)
 {
     LOG(("Creating nsHttpHandler [this=%p].\n", this));
 
@@ -1448,6 +1449,19 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             mMaxHttpResponseHeaderSize = val;
         }
     }
+
+    if (PREF_CHANGED(HTTP_PREF("focused_window_transaction_ratio"))) {
+        float ratio = 0;
+        rv = prefs->GetFloatPref(HTTP_PREF("focused_window_transaction_ratio"), &ratio);
+        if (NS_SUCCEEDED(rv)) {
+            if (ratio > 0 && ratio < 1) {
+                mFocusedWindowTransactionRatio = ratio;
+            } else {
+                NS_WARNING("Wrong value for focused_window_transaction_ratio");
+            }
+        }
+    }
+
     //
     // INTL options
     //
