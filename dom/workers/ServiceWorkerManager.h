@@ -175,7 +175,8 @@ public:
 
   void
   SoftUpdateInternal(const OriginAttributes& aOriginAttributes,
-                     const nsACString& aScope);
+                     const nsACString& aScope,
+                     ServiceWorkerUpdateFinishCallback* aCallback);
 
 
   void
