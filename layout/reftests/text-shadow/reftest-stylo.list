@@ -1,5 +1,5 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == 723669.html 723669.html
+== 723669.html 723669.html
 
 == basic.xul basic.xul
 random-if(Android) == basic-negcoord.xul basic-negcoord.xul
