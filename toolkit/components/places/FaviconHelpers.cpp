@@ -369,26 +369,47 @@ FetchIconInfo(const RefPtr<Database>& aDB,
 nsresult
 FetchIconPerSpec(const RefPtr<Database>& aDB,
                  const nsACString& aPageSpec,
+                 const nsACString& aPageHost,
                  IconData& aIconData,
                  uint16_t aPreferredWidth)
 {
   MOZ_ASSERT(!aPageSpec.IsEmpty(), "Page spec must not be empty.");
   MOZ_ASSERT(!NS_IsMainThread());
 
+  enum IconType {
+    ePerfectMatch,
+    eRootMatch
+  };
+
   nsCOMPtr<mozIStorageStatement> stmt = aDB->GetStatement(
     "/* do not warn (bug no: not worth having a compound index) */ "
-    "SELECT width, icon_url "
+    "SELECT width, icon_url, :type_perfect_match AS type "
     "FROM moz_icons i "
     "JOIN moz_icons_to_pages ON i.id = icon_id "
     "JOIN moz_pages_w_icons p ON p.id = page_id "
     "WHERE page_url_hash = hash(:url) AND page_url = :url "
-    "ORDER BY width DESC "
+    "UNION ALL "
+    "SELECT width, icon_url, :type_root_match AS type " // Fallback root domain icon.
+    "FROM moz_icons i "
+    "WHERE fixed_icon_url_hash = hash(fixup_url(:root_icon_url)) "
+    "ORDER BY type ASC, width DESC "
   );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("url"),
-                                aPageSpec);
+  nsresult rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("type_perfect_match"),
+                                      ePerfectMatch);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("type_root_match"), eRootMatch);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("url"), aPageSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString rootIconFixedUrl(aPageHost);
+  if (!rootIconFixedUrl.IsEmpty()) {
+    rootIconFixedUrl.AppendLiteral("/favicon.ico");
+  }
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("root_icon_url"),
+                                  rootIconFixedUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Return the biggest icon close to the preferred width. It may be bigger
@@ -397,8 +418,14 @@ FetchIconPerSpec(const RefPtr<Database>& aDB,
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     int32_t width;
     rv = stmt->GetInt32(0, &width);
+    int32_t t;
+    rv = stmt->GetInt32(2, &t);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (width < aPreferredWidth && !aIconData.spec.IsEmpty()) {
+    IconType type = t == 0 ? ePerfectMatch : eRootMatch;
+    if (!aIconData.spec.IsEmpty() &&
+        (width < aPreferredWidth || type == eRootMatch)) {
+      // We found the best match, or we already found a match so we don't need
+      // to fallback to the root domain icon.
       break;
     }
     rv = stmt->GetUTF8String(1, aIconData.spec);
@@ -891,6 +918,7 @@ AsyncAssociateIconToPage::Run()
 
 AsyncGetFaviconURLForPage::AsyncGetFaviconURLForPage(
   const nsACString& aPageSpec
+, const nsACString& aPageHost
 , uint16_t aPreferredWidth
 , nsIFaviconDataCallback* aCallback
 ) : mPreferredWidth(aPreferredWidth == 0 ? UINT16_MAX : aPreferredWidth)
@@ -898,6 +926,7 @@ AsyncGetFaviconURLForPage::AsyncGetFaviconURLForPage(
 {
   MOZ_ASSERT(NS_IsMainThread());
   mPageSpec.Assign(aPageSpec);
+  mPageHost.Assign(aPageHost);
 }
 
 NS_IMETHODIMP
@@ -908,7 +937,7 @@ AsyncGetFaviconURLForPage::Run()
   RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
   IconData iconData;
-  nsresult rv = FetchIconPerSpec(DB, mPageSpec, iconData, mPreferredWidth);
+  nsresult rv = FetchIconPerSpec(DB, mPageSpec, mPageHost, iconData, mPreferredWidth);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Now notify our callback of the icon spec we retrieved, even if empty.
@@ -928,6 +957,7 @@ AsyncGetFaviconURLForPage::Run()
 
 AsyncGetFaviconDataForPage::AsyncGetFaviconDataForPage(
   const nsACString& aPageSpec
+, const nsACString& aPageHost
 ,  uint16_t aPreferredWidth
 , nsIFaviconDataCallback* aCallback
 ) : mPreferredWidth(aPreferredWidth == 0 ? UINT16_MAX : aPreferredWidth)
@@ -935,6 +965,7 @@ AsyncGetFaviconDataForPage::AsyncGetFaviconDataForPage(
  {
   MOZ_ASSERT(NS_IsMainThread());
   mPageSpec.Assign(aPageSpec);
+  mPageHost.Assign(aPageHost);
 }
 
 NS_IMETHODIMP
@@ -945,7 +976,7 @@ AsyncGetFaviconDataForPage::Run()
   RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
   IconData iconData;
-  nsresult rv = FetchIconPerSpec(DB, mPageSpec, iconData, mPreferredWidth);
+  nsresult rv = FetchIconPerSpec(DB, mPageSpec, mPageHost, iconData, mPreferredWidth);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!iconData.spec.IsEmpty()) {

@@ -14,7 +14,7 @@ interface mozIPlacesPendingOperation;
 interface mozIAsyncFavicons : nsISupports
 {
   /**
-   * Declares that a given page uses a favicon with the given URI and 
+   * Declares that a given page uses a favicon with the given URI and
    * attempts to fetch and save the icon data by loading the favicon URI
    * through an async network request.
    *
@@ -144,12 +144,14 @@ interface mozIAsyncFavicons : nsISupports
    *        This callback is always invoked to notify the result of the lookup.
    *        The aURI parameter will be the favicon URI, or null when no favicon
    *        is associated with the page or an error occurred while fetching it.
+   *        aDataLen will be always 0, aData will be an empty array, and
+   *        aMimeType will be an empty string, regardless of whether a favicon
+   *        was found.
    * @param aPreferredWidth
    *        The preferred icon width, 0 for the biggest available.
    *
-   * @note When the callback is invoked, aDataLen will be always 0, aData will
-   *       be an empty array, and aMimeType will be an empty string, regardless
-   *       of whether a favicon is associated with the page.
+   * @note If a favicon specific to this page cannot be found, this will try to
+   *       fallback to the /favicon.ico for the root domain.
    *
    * @see nsIFaviconDataCallback in nsIFaviconService.idl.
    */
@@ -174,6 +176,8 @@ interface mozIAsyncFavicons : nsISupports
    *        will be an empty string.
    * @param aPreferredWidth
    *        The preferred icon width, 0 for the biggest available.
+   * @note If a favicon specific to this page cannot be found, this will try to
+   *       fallback to the /favicon.ico for the root domain.
    *
    * @see nsIFaviconDataCallback in nsIFaviconService.idl.
    */
