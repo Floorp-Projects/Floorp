@@ -1713,7 +1713,7 @@ public:
          stats.mDownloadRate / 1024,
          stats.mDownloadRateReliable ? "" : " (unreliable)");
 
-    mMaster->ScheduleStateMachineIn(USECS_PER_S);
+    mMaster->ScheduleStateMachineIn(TimeUnit::FromMicroseconds(USECS_PER_S));
 
     mMaster->UpdateNextFrameStatus(
       MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING);
@@ -2477,7 +2477,7 @@ BufferingState::Step()
         && IsExpectingMoreData()) {
       SLOG("Buffering: wait %ds, timeout in %.3lfs",
            mBufferingWait, mBufferingWait - elapsed.ToSeconds());
-      mMaster->ScheduleStateMachineIn(USECS_PER_S);
+      mMaster->ScheduleStateMachineIn(TimeUnit::FromMicroseconds(USECS_PER_S));
       DispatchDecodeTasksIfNeeded();
       return;
     }
@@ -3547,7 +3547,7 @@ MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically()
   // assertion in GetClock().
 
   int64_t delay = std::max<int64_t>(1, AUDIO_DURATION_USECS / mPlaybackRate);
-  ScheduleStateMachineIn(delay);
+  ScheduleStateMachineIn(TimeUnit::FromMicroseconds(delay));
 }
 
 /* static */ const char*
@@ -3615,18 +3615,17 @@ MediaDecoderStateMachine::ScheduleStateMachine()
 }
 
 void
-MediaDecoderStateMachine::ScheduleStateMachineIn(int64_t aMicroseconds)
+MediaDecoderStateMachine::ScheduleStateMachineIn(const TimeUnit& aTime)
 {
   MOZ_ASSERT(OnTaskQueue()); // mDelayedScheduler.Ensure() may Disconnect()
                              // the promise, which must happen on the state
                              // machine task queue.
-  MOZ_ASSERT(aMicroseconds > 0);
+  MOZ_ASSERT(aTime > TimeUnit::Zero());
   if (mDispatchedStateMachine) {
     return;
   }
 
-  TimeStamp now = TimeStamp::Now();
-  TimeStamp target = now + TimeDuration::FromMicroseconds(aMicroseconds);
+  TimeStamp target = TimeStamp::Now() + aTime.ToTimeDuration();
 
   // It is OK to capture 'this' without causing UAF because the callback
   // always happens before shutdown.
