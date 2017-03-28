@@ -15,6 +15,7 @@ this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, "manageProfiles");
 
 function ManageProfileDialog() {
+  this.prefWin = window.opener;
   window.addEventListener("DOMContentLoaded", this, {once: true});
 }
 
@@ -169,9 +170,7 @@ ManageProfileDialog.prototype = {
    * @param  {object} address [optional]
    */
   openEditDialog(address) {
-    window.openDialog(EDIT_PROFILE_URL, null,
-                      "chrome,centerscreen,modal,width=600,height=450",
-                      address);
+    this.prefWin.gSubDialog.open(EDIT_PROFILE_URL, null, address);
   },
 
   /**
