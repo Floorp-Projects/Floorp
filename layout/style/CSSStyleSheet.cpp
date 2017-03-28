@@ -725,6 +725,12 @@ CSSStyleSheet::RegisterNamespaceRule(css::Rule* aRule)
   return NS_OK;
 }
 
+void
+CSSStyleSheet::SetScopeElement(dom::Element* aScopeElement)
+{
+  mScopeElement = aScopeElement;
+}
+
 css::Rule*
 CSSStyleSheet::GetDOMOwnerRule() const
 {

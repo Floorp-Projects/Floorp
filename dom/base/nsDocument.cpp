@@ -230,7 +230,7 @@
 #include "nsIDOMNSEditableElement.h"
 #include "nsIEditor.h"
 #include "nsIDOMCSSStyleRule.h"
-#include "mozilla/css/Rule.h"
+#include "mozilla/css/StyleRule.h"
 #include "nsIDOMLocation.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsISecurityConsoleMessage.h"
@@ -1206,6 +1206,11 @@ nsDOMStyleSheetSetList::EnsureFresh()
 nsIDocument::SelectorCache::SelectorCache()
   : nsExpirationTracker<SelectorCacheKey, 4>(1000, "nsIDocument::SelectorCache")
 { }
+
+nsIDocument::SelectorCache::~SelectorCache()
+{
+  AgeAllGenerations();
+}
 
 // CacheList takes ownership of aSelectorList.
 void nsIDocument::SelectorCache::CacheList(const nsAString& aSelector,
