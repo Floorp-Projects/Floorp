@@ -883,9 +883,6 @@ private:
     MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
            ("HTMLMediaElement::AudioChannelAgentCallback, SetAudioChannelSuspended, "
             "this = %p, aSuspend = %d\n", this, aSuspend));
-
-    NotifyAudioPlaybackChanged(
-      AudioChannelService::AudibleChangedReasons::ePauseStateChanged);
   }
 
   void
@@ -906,6 +903,9 @@ private:
     if (rv.Failed()) {
       NS_WARNING("Not able to resume from AudioChannel.");
     }
+
+    NotifyAudioPlaybackChanged(
+      AudioChannelService::AudibleChangedReasons::ePauseStateChanged);
   }
 
   void
@@ -923,6 +923,8 @@ private:
           return;
         }
     }
+    NotifyAudioPlaybackChanged(
+      AudioChannelService::AudibleChangedReasons::ePauseStateChanged);
   }
 
   void
@@ -1013,8 +1015,9 @@ private:
       return AudioChannelService::AudibleState::eMaybeAudible;
     }
 
-    // Media is suspended.
-    if (mSuspended != nsISuspendedTypes::NONE_SUSPENDED) {
+    // Suspended or paused media doesn't produce any sound.
+    if (mSuspended != nsISuspendedTypes::NONE_SUSPENDED ||
+        mOwner->mPaused) {
       return AudioChannelService::AudibleState::eNotAudible;
     }
 
