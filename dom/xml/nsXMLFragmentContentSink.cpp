@@ -224,7 +224,7 @@ nsXMLFragmentContentSink::CloseElement(nsIContent* aContent)
 {
   // don't do fancy stuff in nsXMLContentSink
   if (mPreventScriptExecution &&
-      (aContent->IsHTMLElement(nsGkAtoms::script),
+      (aContent->IsHTMLElement(nsGkAtoms::script) ||
        aContent->IsSVGElement(nsGkAtoms::script))) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aContent);
     if (sele) {
