@@ -123,6 +123,9 @@ const RECOMMENDED_PREFS = new Map([
   // Start with a blank page (about:blank)
   ["browser.startup.page", 0],
 
+  // Do not redirect user when a milstone upgrade of Firefox is detected
+  ["browser.startup.homepage_override.mstone", "ignore"],
+
   // Disable tab animation
   ["browser.tabs.animate", false],
 
