@@ -3532,7 +3532,7 @@ nsCSSBorderRenderer::DrawBorders()
 }
 
 bool
-nsCSSBorderRenderer::CanCreateWebrenderCommands()
+nsCSSBorderRenderer::CanCreateWebRenderCommands()
 {
   NS_FOR_CSS_SIDES(i) {
     if (mCompositeColors[i] != nullptr) {
@@ -3551,20 +3551,24 @@ nsCSSBorderRenderer::CanCreateWebrenderCommands()
 
 void
 nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
-                                             layers::WebRenderDisplayItemLayer* aLayer)
+                                             layers::WebRenderDisplayItemLayer* aLayer,
+                                             gfx::Rect aClipRect)
 {
-  Rect outlineTransformedRect = aLayer->RelativeToParent(mOuterRect);
+  Rect transformedRect = aLayer->RelativeToParent(mOuterRect);
   WrBorderSide side[4];
   NS_FOR_CSS_SIDES(i) {
     side[i] = wr::ToWrBorderSide(ToDeviceColor(mBorderColors[i]), mBorderStyles[i]);
   }
 
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(outlineTransformedRect));
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(transformedRect));
+  if (!aClipRect.IsEmpty()) {
+    clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(aClipRect));
+  }
   WrBorderRadius borderRadius = wr::ToWrBorderRadius(LayerSize(mBorderRadii[0].width, mBorderRadii[0].height),
                                                      LayerSize(mBorderRadii[1].width, mBorderRadii[1].height),
                                                      LayerSize(mBorderRadii[3].width, mBorderRadii[3].height),
                                                      LayerSize(mBorderRadii[2].width, mBorderRadii[2].height));
-  aBuilder.PushBorder(wr::ToWrRect(outlineTransformedRect),
+  aBuilder.PushBorder(wr::ToWrRect(transformedRect),
                       clipRegion,
                       wr::ToWrBorderWidths(mBorderWidths[0], mBorderWidths[1], mBorderWidths[2], mBorderWidths[3]),
                       side[0], side[1], side[2], side[3],

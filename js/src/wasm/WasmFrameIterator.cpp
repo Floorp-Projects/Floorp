@@ -396,12 +396,10 @@ void
 wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
                                FuncOffsets* offsets)
 {
-#if defined(JS_CODEGEN_ARM)
     // Flush pending pools so they do not get dumped between the 'begin' and
     // 'normalEntry' offsets since the difference must be less than UINT8_MAX
     // to be stored in CodeRange::funcBeginToNormalEntry_.
     masm.flushBuffer();
-#endif
     masm.haltingAlign(CodeAlignment);
 
     // Generate table entry:
@@ -415,12 +413,17 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
         masm.branchPtr(Assembler::Condition::NotEqual, WasmTableCallSigReg, scratch, trap);
         break;
       }
-      case SigIdDesc::Kind::Immediate:
+      case SigIdDesc::Kind::Immediate: {
         masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, Imm32(sigId.immediate()), trap);
         break;
+      }
       case SigIdDesc::Kind::None:
         break;
     }
+
+    // The table entry might have generated a small constant pool in case of
+    // immediate comparison.
+    masm.flushBuffer();
 
     // Generate normal entry:
     masm.nopAlign(CodeAlignment);
@@ -549,6 +552,7 @@ ProfilingFrameIterator::initFromExitFP()
       case CodeRange::DebugTrap:
       case CodeRange::Inline:
       case CodeRange::Throw:
+      case CodeRange::Interrupt:
       case CodeRange::FarJumpIsland:
         MOZ_CRASH("Unexpected CodeRange kind");
     }
@@ -666,6 +670,14 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
         }
         break;
+      case CodeRange::DebugTrap:
+      case CodeRange::Inline:
+        // Inline code stubs execute after the prologue/epilogue have completed
+        // so we can simply unwind based on fp.
+        callerPC_ = ReturnAddressFromFP(fp);
+        callerFP_ = CallerFPFromFP(fp);
+        AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
+        break;
       case CodeRange::Entry:
         // The entry trampoline is the final frame in an WasmActivation. The entry
         // trampoline also doesn't GeneratePrologue/Epilogue so we can't use
@@ -673,21 +685,16 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
         callerPC_ = nullptr;
         callerFP_ = nullptr;
         break;
-      case CodeRange::DebugTrap:
-      case CodeRange::Inline:
-        // Most inline code stubs execute after the prologue/epilogue have
-        // completed so we can simply unwind based on fp. The only exception is
-        // the async interrupt stub, since it can be executed at any time.
-        // However, the async interrupt is super rare, so we can tolerate
-        // skipped frames. Thus, we use simply unwind based on fp.
-        callerPC_ = ReturnAddressFromFP(fp);
-        callerFP_ = CallerFPFromFP(fp);
-        AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
-        break;
       case CodeRange::Throw:
         // The throw stub executes a small number of instructions before popping
         // the entire activation. To simplify testing, we simply pretend throw
         // stubs have already popped the entire stack.
+        MOZ_ASSERT(done());
+        return;
+      case CodeRange::Interrupt:
+        // When the PC is in the async interrupt stub, the fp may be garbage and
+        // so we cannot blindly unwind it. Since the percent of time spent in
+        // the interrupt stub is extremely small, just ignore the stack.
         MOZ_ASSERT(done());
         return;
     }
@@ -722,7 +729,6 @@ ProfilingFrameIterator::operator++()
 
     switch (codeRange_->kind()) {
       case CodeRange::Entry:
-      case CodeRange::Throw:
         MOZ_ASSERT(callerFP_ == nullptr);
         callerPC_ = nullptr;
         break;
@@ -738,6 +744,9 @@ ProfilingFrameIterator::operator++()
         AssertMatchesCallSite(*activation_, callerPC_, CallerFPFromFP(callerFP_));
         callerFP_ = CallerFPFromFP(callerFP_);
         break;
+      case CodeRange::Interrupt:
+      case CodeRange::Throw:
+        MOZ_CRASH("code range doesn't have frame");
     }
 
     MOZ_ASSERT(!done());
@@ -780,7 +789,8 @@ ProfilingFrameIterator::label() const
       case CodeRange::DebugTrap:        return debugTrapDescription;
       case CodeRange::Inline:           return "inline stub (in asm.js)";
       case CodeRange::FarJumpIsland:    return "interstitial (in asm.js)";
-      case CodeRange::Throw:            MOZ_CRASH("no frame for throw stubs");
+      case CodeRange::Throw:            MOZ_FALLTHROUGH;
+      case CodeRange::Interrupt:        MOZ_CRASH("does not have a frame");
     }
 
     MOZ_CRASH("bad code range kind");

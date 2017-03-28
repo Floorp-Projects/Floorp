@@ -1054,9 +1054,21 @@ wasm::GenerateInterruptExit(MacroAssembler& masm, Label* throwLabel)
     masm.as_jr(HeapReg);
     masm.loadPtr(Address(StackPointer, -sizeof(intptr_t)), HeapReg);
 #elif defined(JS_CODEGEN_ARM)
-    masm.push(Imm32(0));            // space used as return address, updated below
-    masm.setFramePushed(0);         // set to 0 now so that framePushed is offset of return address
-    masm.PushRegsInMask(AllRegsExceptPCSP); // save all GP/FP registers (except PC and SP)
+    {
+        // Be careful not to clobber scratch registers before they are saved.
+        ScratchRegisterScope scratch(masm);
+        SecondScratchRegisterScope secondScratch(masm);
+
+        // Reserve a word to receive the return address.
+        masm.as_alu(StackPointer, StackPointer, Imm8(4), OpSub);
+
+        // Set framePushed to 0 now so that framePushed can be used later as the
+        // stack offset to the return-address space reserved above.
+        masm.setFramePushed(0);
+
+        // Save all GP/FP registers (except PC and SP).
+        masm.PushRegsInMask(AllRegsExceptPCSP);
+    }
 
     // Save SP, APSR and FPSCR in non-volatile registers.
     masm.as_mrs(r4);
@@ -1075,7 +1087,7 @@ wasm::GenerateInterruptExit(MacroAssembler& masm, Label* throwLabel)
     // the resumption pc otherwise.
     masm.branchTestPtr(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
 
-    // Restore the stack pointer then store resumePC into the stack slow that
+    // Restore the stack pointer then store resumePC into the stack slot that
     // will be popped by the 'ret' below.
     masm.mov(r6, sp);
     masm.storePtr(ReturnReg, Address(sp, masm.framePushed()));
