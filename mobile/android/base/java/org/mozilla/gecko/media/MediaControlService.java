@@ -313,8 +313,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 super.onPlay();
                 setState(State.PLAYING);
                 notifyObservers("MediaControl", "resumeMedia");
-                // To make sure we always own audio focus during playing.
-                AudioFocusAgent.notifyStartedPlaying();
             }
 
             @Override
@@ -323,7 +321,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 super.onPause();
                 setState(State.PAUSED);
                 notifyObservers("MediaControl", "mediaControlPaused");
-                AudioFocusAgent.notifyStoppedPlaying();
             }
 
             @Override
