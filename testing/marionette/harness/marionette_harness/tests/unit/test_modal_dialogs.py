@@ -4,6 +4,7 @@
 
 from marionette_driver.by import By
 from marionette_driver.errors import NoAlertPresentException, ElementNotInteractableException
+from marionette_driver.expected import element_present
 from marionette_driver.marionette import Alert
 from marionette_driver.wait import Wait
 
@@ -19,8 +20,9 @@ class BaseAlertTestCase(WindowManagerMixin, MarionetteTestCase):
         except NoAlertPresentException:
             return False
 
-    def wait_for_alert(self):
-        Wait(self.marionette).until(lambda _: self.alert_present())
+    def wait_for_alert(self, timeout=None):
+        Wait(self.marionette, timeout=timeout).until(
+            lambda _: self.alert_present())
 
     def wait_for_alert_closed(self, timeout=None):
         Wait(self.marionette, timeout=timeout).until(
@@ -97,6 +99,17 @@ class TestTabModalAlerts(BaseAlertTestCase):
         alert.dismiss()
         self.wait_for_condition(
             lambda mn: mn.find_element(By.ID, "prompt-result").text == "null")
+
+    def test_alert_opened_before_session_starts(self):
+        self.marionette.find_element(By.ID, "tab-modal-alert").click()
+        self.wait_for_alert()
+
+        # Restart the session to ensure we still find the formerly left-open dialog.
+        self.marionette.delete_session()
+        self.marionette.start_session()
+
+        alert = self.marionette.switch_to_alert()
+        alert.dismiss()
 
     def test_alert_text(self):
         with self.assertRaises(NoAlertPresentException):
@@ -232,3 +245,16 @@ class TestModalAlerts(BaseAlertTestCase):
             element_present(By.ID, "status")
         )
         self.assertEqual(status.text, "restricted")
+
+    def test_alert_opened_before_session_starts(self):
+        self.marionette.navigate(self.marionette.absolute_url("http_auth"))
+        self.wait_for_alert(timeout=self.marionette.timeout.page_load)
+
+        # Restart the session to ensure we still find the formerly left-open dialog.
+        self.marionette.delete_session()
+        self.marionette.start_session()
+
+        alert = self.marionette.switch_to_alert()
+        alert.dismiss()
+
+        self.wait_for_alert_closed()
