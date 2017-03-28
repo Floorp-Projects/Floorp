@@ -30,6 +30,7 @@ import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.PRNGFixes;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.io.File;
@@ -145,6 +146,19 @@ public class GeckoApplication extends Application
     @Override
     public void onCreate() {
         Log.i(LOG_TAG, "zerdatime " + SystemClock.uptimeMillis() + " - Fennec application start");
+
+        // PRNG is a pseudorandom number generator.
+        // We need to apply PRNG Fixes before any use of Java Cryptography Architecture.
+        // We make use of various JCA methods in data providers for generating GUIDs, as part of FxA
+        // flow and during syncing. Note that this is a no-op for devices running API>18, and so we
+        // accept the performance penalty on older devices.
+        try {
+            PRNGFixes.apply();
+        } catch (Exception e) {
+            // Not much to be done here: it was weak before, so it's weak now.  Not worth aborting.
+            Log.e(LOG_TAG, "Got exception applying PRNGFixes! Cryptographic data produced on this device may be weak. Ignoring.", e);
+        }
+
         mIsInitialResume = true;
 
         mRefWatcher = LeakCanary.install(this);
