@@ -26,7 +26,7 @@ xul|checkbox {
 
 @media (-moz-windows-default-theme: 0) {
   xul|*.checkbox-check {
-    background-image: none !important;
+    background-image: none;
   }
 
   xul|*.checkbox-check[checked] {

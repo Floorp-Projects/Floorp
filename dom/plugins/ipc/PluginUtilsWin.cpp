@@ -22,7 +22,8 @@ class AudioDeviceChangedRunnable : public Runnable
 public:
   explicit AudioDeviceChangedRunnable(const PluginModuleSet* aAudioNotificationSet,
                                       NPAudioDeviceChangeDetailsIPC aChangeDetails) :
-      mChangeDetails(aChangeDetails)
+    Runnable("AudioDeviceChangedRunnable")
+    , mChangeDetails(aChangeDetails)
     , mAudioNotificationSet(aAudioNotificationSet)
   {}
 

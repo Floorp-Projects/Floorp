@@ -12,6 +12,7 @@ namespace devtools {
 struct OpenedFile
 {
     nsString       path;
+    nsString       snapshotId;
     FileDescriptor descriptor;
 };
 

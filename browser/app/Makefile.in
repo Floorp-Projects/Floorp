@@ -97,7 +97,9 @@ tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME)
 	cp -RL $(DIST)/branding/firefox.icns $(dist_dest)/Contents/Resources/firefox.icns
 	cp -RL $(DIST)/branding/document.icns $(dist_dest)/Contents/Resources/document.icns
 	$(MKDIR) -p $(dist_dest)/Contents/Library/LaunchServices
+ifdef MOZ_UPDATER
 	mv -f $(dist_dest)/Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater $(dist_dest)/Contents/Library/LaunchServices
 	ln -s ../../../../Library/LaunchServices/org.mozilla.updater $(dist_dest)/Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater
+endif
 	printf APPLMOZB > $(dist_dest)/Contents/PkgInfo
 endif

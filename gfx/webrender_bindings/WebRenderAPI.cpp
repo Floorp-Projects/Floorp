@@ -46,6 +46,7 @@ public:
 
     RefPtr<gl::GLContext> gl = gl::GLContextProvider::CreateForCompositorWidget(mCompositorWidget, true);
     if (!gl || !gl->MakeCurrent()) {
+      gfxCriticalNote << "Failed GL context creation for WebRender: " << hexa(gl.get());
       return;
     }
 
@@ -55,6 +56,7 @@ public:
     WrRenderer* wrRenderer = nullptr;
     if (!wr_window_new(aWindowId, mSize.width, mSize.height, gl.get(),
                        this->mEnableProfiler, mWrApi, &wrRenderer)) {
+      // wr_window_new puts a message into gfxCriticalNote if it returns false
       return;
     }
     MOZ_ASSERT(wrRenderer);

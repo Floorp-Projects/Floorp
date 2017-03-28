@@ -592,6 +592,7 @@ extern "C" {
     fn is_in_render_thread() -> bool;
     fn is_in_main_thread() -> bool;
     fn is_glcontext_egl(glcontext_ptr: *mut c_void) -> bool;
+    fn gfx_critical_note(msg: *const c_char);
 }
 
 struct CppNotifier {
@@ -766,6 +767,8 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         Ok((renderer, sender)) => (renderer, sender),
         Err(e) => {
             println!(" Failed to create a Renderer: {:?}", e);
+            let msg = CString::new(format!("wr_window_new: {:?}", e)).unwrap();
+            unsafe { gfx_critical_note(msg.as_ptr()); }
             return false;
         }
     };
