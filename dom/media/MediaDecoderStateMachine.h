@@ -293,10 +293,10 @@ private:
   // Schedules the shared state machine thread to run the state machine.
   void ScheduleStateMachine();
 
-  // Invokes ScheduleStateMachine to run in |aMicroseconds| microseconds,
+  // Invokes ScheduleStateMachine to run in |aTime|,
   // unless it's already scheduled to run earlier, in which case the
   // request is discarded.
-  void ScheduleStateMachineIn(int64_t aMicroseconds);
+  void ScheduleStateMachineIn(const media::TimeUnit& aTime);
 
   bool HaveEnoughDecodedAudio();
   bool HaveEnoughDecodedVideo();
