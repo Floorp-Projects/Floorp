@@ -7,6 +7,11 @@
 <script type="application/javascript"
         src="chrome://browser/content/preferences/in-content/main.js"/>
 
+<script type="application/javascript"
+        src="chrome://mozapps/content/preferences/fontbuilder.js"/>
+
+<stringbundle id="engineManagerBundle" src="chrome://browser/locale/engineManager.properties"/>
+
 <preferences id="mainPreferences" hidden="true" data-category="paneGeneral">
 
 #ifdef E10S_TESTING_ONLY
@@ -52,6 +57,19 @@
     <preference id="browser.privatebrowsing.autostart"
                 name="browser.privatebrowsing.autostart"
                 type="bool"/>
+
+    <!-- Search Engine -->
+    <preference id="browser.search.suggest.enabled"
+                  name="browser.search.suggest.enabled"
+                  type="bool"/>
+
+    <preference id="browser.urlbar.suggest.searches"
+                name="browser.urlbar.suggest.searches"
+                type="bool"/>
+
+    <preference id="browser.search.hiddenOneOffs"
+                name="browser.search.hiddenOneOffs"
+                type="unichar"/>
 
     <!-- Downloads -->
     <preference id="browser.download.useDownloadDir"
@@ -108,6 +126,60 @@
     <preference id="browser.ctrlTab.previews"
                 name="browser.ctrlTab.previews"
                 type="bool"/>
+
+  <!-- Fonts -->
+  <preference id="font.language.group"
+              name="font.language.group"
+              type="wstring"/>
+
+  <!-- Languages -->
+  <preference id="browser.translation.detectLanguage"
+              name="browser.translation.detectLanguage"
+              type="bool"/>
+
+  <!-- General tab -->
+
+  <!-- Accessibility -->
+  <preference id="accessibility.browsewithcaret"
+              name="accessibility.browsewithcaret"
+              type="bool"/>
+  <preference id="accessibility.typeaheadfind"
+              name="accessibility.typeaheadfind"
+              type="bool"/>
+  <preference id="accessibility.blockautorefresh"
+              name="accessibility.blockautorefresh"
+              type="bool"/>
+#ifdef XP_WIN
+  <preference id="ui.osk.enabled"
+              name="ui.osk.enabled"
+              type="bool"/>
+#endif
+  <!-- Browsing -->
+  <preference id="general.autoScroll"
+              name="general.autoScroll"
+              type="bool"/>
+  <preference id="general.smoothScroll"
+              name="general.smoothScroll"
+              type="bool"/>
+  <preference id="layers.acceleration.disabled"
+              name="layers.acceleration.disabled"
+              type="bool"
+              inverted="true"/>
+#ifdef XP_WIN
+  <preference id="gfx.direct2d.disabled"
+              name="gfx.direct2d.disabled"
+              type="bool"
+              inverted="true"/>
+#endif
+  <preference id="layout.spellcheckDefault"
+              name="layout.spellcheckDefault"
+              type="int"/>
+
+#ifdef MOZ_TELEMETRY_REPORTING
+  <preference id="toolkit.telemetry.enabled"
+              name="toolkit.telemetry.enabled"
+              type="bool"/>
+#endif
 </preferences>
 
 <hbox id="header-general"
@@ -226,44 +298,62 @@
   </html:table>
 </groupbox>
 
-<!-- Downloads -->
-<groupbox id="downloadsGroup"
-          data-category="paneGeneral"
-          hidden="true">
-  <caption><label>&downloads.label;</label></caption>
+<!-- Default Search Engine -->
+<groupbox id="defaultEngineGroup" align="start" data-category="paneGeneral">
+  <caption label="&defaultSearchEngine.label;"/>
+  <label>&chooseYourDefaultSearchEngine.label;</label>
+  <menulist id="defaultEngine">
+    <menupopup/>
+  </menulist>
+  <checkbox id="suggestionsInSearchFieldsCheckbox"
+            label="&provideSearchSuggestions.label;"
+            accesskey="&provideSearchSuggestions.accesskey;"
+            preference="browser.search.suggest.enabled"/>
+  <vbox class="indent">
+    <checkbox id="urlBarSuggestion" label="&showURLBarSuggestions.label;"
+              accesskey="&showURLBarSuggestions.accesskey;"
+              preference="browser.urlbar.suggest.searches"/>
+    <hbox id="urlBarSuggestionPermanentPBLabel"
+          align="center" class="indent">
+      <label flex="1">&urlBarSuggestionsPermanentPB.label;</label>
+    </hbox>
+  </vbox>
+</groupbox>
 
-  <radiogroup id="saveWhere"
-              preference="browser.download.useDownloadDir"
-              onsyncfrompreference="return gMainPane.readUseDownloadDir();">
-    <hbox id="saveToRow">
-      <radio id="saveTo"
-             value="true"
-             label="&saveTo.label;"
-             accesskey="&saveTo.accesskey;"
-             aria-labelledby="saveTo downloadFolder"/>
-      <filefield id="downloadFolder"
-                 flex="1"
-                 preference="browser.download.folderList"
-                 preference-editable="true"
-                 aria-labelledby="saveTo"
-                 onsyncfrompreference="return gMainPane.displayDownloadDirPref();"/>
-      <button id="chooseFolder"
-#ifdef XP_MACOSX
-              accesskey="&chooseFolderMac.accesskey;"
-              label="&chooseFolderMac.label;"
-#else
-              accesskey="&chooseFolderWin.accesskey;"
-              label="&chooseFolderWin.label;"
-#endif
-      />
-    </hbox>
-    <hbox>
-      <radio id="alwaysAsk"
-             value="false"
-             label="&alwaysAskWhere.label;"
-             accesskey="&alwaysAskWhere.accesskey;"/>
-    </hbox>
-  </radiogroup>
+<groupbox id="oneClickSearchProvidersGroup" data-category="paneGeneral">
+  <caption label="&oneClickSearchEngines.label;"/>
+  <label>&chooseWhichOneToDisplay.label;</label>
+
+  <tree id="engineList" flex="1" rows="8" hidecolumnpicker="true" editable="true"
+        seltype="single">
+    <treechildren id="engineChildren" flex="1"/>
+    <treecols>
+      <treecol id="engineShown" type="checkbox" editable="true" sortable="false"/>
+      <treecol id="engineName" flex="4" label="&engineNameColumn.label;" sortable="false"/>
+      <treecol id="engineKeyword" flex="1" label="&engineKeywordColumn.label;" editable="true"
+                sortable="false"/>
+    </treecols>
+  </tree>
+
+  <hbox>
+    <button id="restoreDefaultSearchEngines"
+            label="&restoreDefaultSearchEngines.label;"
+            accesskey="&restoreDefaultSearchEngines.accesskey;"
+            />
+    <spacer flex="1"/>
+    <button id="removeEngineButton"
+            class="searchEngineAction"
+            label="&removeEngine.label;"
+            accesskey="&removeEngine.accesskey;"
+            disabled="true"
+            />
+  </hbox>
+
+  <separator class="thin"/>
+
+  <hbox id="addEnginesBox" pack="start">
+    <label id="addEngines" class="text-link" value="&addMoreSearchEngines.label;"/>
+  </hbox>
 </groupbox>
 
 <!-- Tab preferences -->
@@ -298,4 +388,146 @@
               accesskey="&showTabsInTaskbar.accesskey;"
               preference="browser.taskbar.previews.enable"/>
 #endif
+</groupbox>
+
+<!-- Accessibility -->
+<groupbox data-category="paneGeneral" id="accessibilityGroup" align="start">
+  <caption><label>&accessibility.label;</label></caption>
+
+#ifdef XP_WIN
+  <checkbox id="useOnScreenKeyboard"
+            hidden="true"
+            label="&useOnScreenKeyboard.label;"
+            accesskey="&useOnScreenKeyboard.accesskey;"
+            preference="ui.osk.enabled"/>
+#endif
+  <checkbox id="useCursorNavigation"
+            label="&useCursorNavigation.label;"
+            accesskey="&useCursorNavigation.accesskey;"
+            preference="accessibility.browsewithcaret"/>
+  <checkbox id="searchStartTyping"
+            label="&searchOnStartTyping.label;"
+            accesskey="&searchOnStartTyping.accesskey;"
+            preference="accessibility.typeaheadfind"/>
+  <checkbox id="blockAutoRefresh"
+            label="&blockAutoReload.label;"
+            accesskey="&blockAutoReload.accesskey;"
+            preference="accessibility.blockautorefresh"/>
+</groupbox>
+
+<!-- Languages -->
+<groupbox id="languagesGroup" data-category="paneGeneral" hidden="true">
+  <caption><label>&languages.label;</label></caption>
+
+  <hbox id="languagesBox" align="center">
+    <description flex="1" control="chooseLanguage">&chooseLanguage.label;</description>
+    <button id="chooseLanguage"
+            label="&chooseButton.label;"
+            accesskey="&chooseButton.accesskey;"/>
+  </hbox>
+
+  <hbox id="translationBox" hidden="true">
+    <hbox align="center" flex="1">
+      <checkbox id="translate" preference="browser.translation.detectLanguage"
+                label="&translateWebPages.label;." accesskey="&translateWebPages.accesskey;"
+                onsyncfrompreference="return gMainPane.updateButtons('translateButton',
+                                              'browser.translation.detectLanguage');"/>
+      <hbox id="bingAttribution" hidden="true">
+        <label>&translation.options.attribution.beforeLogo;</label>
+        <separator orient="vertical" class="thin"/>
+        <image id="translationAttributionImage" aria-label="Microsoft Translator"
+               src="chrome://browser/content/microsoft-translator-attribution.png"/>
+        <separator orient="vertical" class="thin"/>
+        <label>&translation.options.attribution.afterLogo;</label>
+      </hbox>
+    </hbox>
+    <button id="translateButton" label="&translateExceptions.label;"
+            accesskey="&translateExceptions.accesskey;"/>
+  </hbox>
+  <hbox>
+    <checkbox id="checkSpelling"
+            label="&checkUserSpelling.label;"
+            accesskey="&checkUserSpelling.accesskey;"
+            onsyncfrompreference="return gMainPane.readCheckSpelling();"
+            onsynctopreference="return gMainPane.writeCheckSpelling();"
+            preference="layout.spellcheckDefault"/>
+  </hbox>
+</groupbox>
+
+
+<!-- Fonts and Colors -->
+<groupbox id="fontsGroup" data-category="paneGeneral" hidden="true">
+  <caption><label>&fontsAndColors.label;</label></caption>
+
+  <grid id="fontsGrid">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows id="fontsRows">
+      <row id="fontRow">
+        <hbox align="center">
+          <label control="defaultFont" accesskey="&defaultFont.accesskey;">&defaultFont.label;</label>
+          <menulist id="defaultFont" delayprefsave="true"/>
+          <label id="defaultFontSizeLabel" control="defaultFontSize" accesskey="&defaultSize.accesskey;">&defaultSize.label;</label>
+          <menulist id="defaultFontSize" delayprefsave="true">
+            <menupopup>
+              <menuitem value="9" label="9"/>
+              <menuitem value="10" label="10"/>
+              <menuitem value="11" label="11"/>
+              <menuitem value="12" label="12"/>
+              <menuitem value="13" label="13"/>
+              <menuitem value="14" label="14"/>
+              <menuitem value="15" label="15"/>
+              <menuitem value="16" label="16"/>
+              <menuitem value="17" label="17"/>
+              <menuitem value="18" label="18"/>
+              <menuitem value="20" label="20"/>
+              <menuitem value="22" label="22"/>
+              <menuitem value="24" label="24"/>
+              <menuitem value="26" label="26"/>
+              <menuitem value="28" label="28"/>
+              <menuitem value="30" label="30"/>
+              <menuitem value="32" label="32"/>
+              <menuitem value="34" label="34"/>
+              <menuitem value="36" label="36"/>
+              <menuitem value="40" label="40"/>
+              <menuitem value="44" label="44"/>
+              <menuitem value="48" label="48"/>
+              <menuitem value="56" label="56"/>
+              <menuitem value="64" label="64"/>
+              <menuitem value="72" label="72"/>
+            </menupopup>
+          </menulist>
+        </hbox>
+        <button id="advancedFonts" icon="select-font"
+                label="&advancedFonts.label;"
+                accesskey="&advancedFonts.accesskey;"/>
+      </row>
+      <row id="colorsRow">
+        <hbox/>
+        <button id="colors" icon="select-color"
+                label="&colors.label;"
+                accesskey="&colors.accesskey;"/>
+      </row>
+    </rows>
+  </grid>
+</groupbox>
+
+<!-- Browsing -->
+<groupbox id="browsingGroup" align="start" data-category="paneGeneral">
+  <caption><label>&browsing.label;</label></caption>
+
+  <checkbox id="useAutoScroll"
+            label="&useAutoScroll.label;"
+            accesskey="&useAutoScroll.accesskey;"
+            preference="general.autoScroll"/>
+  <checkbox id="useSmoothScrolling"
+            label="&useSmoothScrolling.label;"
+            accesskey="&useSmoothScrolling.accesskey;"
+            preference="general.smoothScroll"/>
+  <checkbox id="allowHWAccel"
+            label="&allowHWAccel.label;"
+            accesskey="&allowHWAccel.accesskey;"
+            preference="layers.acceleration.disabled"/>
 </groupbox>
