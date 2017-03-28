@@ -84,7 +84,8 @@ function defineCohort() {
   let userOptedOut = optedOut();
   let userOptedIn = optedIn();
   let disqualified = (Services.appinfo.multiprocessBlockPolicy != 0);
-  let testGroup = (getUserSample() < TEST_THRESHOLD[updateChannel]);
+  let testThreshold = TEST_THRESHOLD[updateChannel];
+  let testGroup = (getUserSample() < testThreshold);
   let hasNonExemptAddon = Preferences.get(PREF_E10S_HAS_NONEXEMPT_ADDON, false);
   let temporaryDisqualification = getTemporaryDisqualification();
   let temporaryQualification = getTemporaryQualification();
@@ -111,7 +112,11 @@ function defineCohort() {
     // here will be accumulated as "2 - Disabled", which is fine too.
     setCohort(`temp-disqualified-${temporaryDisqualification}`);
     Preferences.reset(PREF_TOGGLE_E10S);
-  } else if (!disqualified && temporaryQualification != "") {
+  } else if (!disqualified && testThreshold < 1.0 &&
+             temporaryQualification != "") {
+    // Users who are qualified for e10s and on channels where some population
+    // would not receive e10s can be pushed into e10s anyway via a temporary
+    // qualification which overrides the user sample value when non-empty.
     setCohort(`temp-qualified-${temporaryQualification}`);
     Preferences.set(PREF_TOGGLE_E10S, true);
   } else if (testGroup) {
