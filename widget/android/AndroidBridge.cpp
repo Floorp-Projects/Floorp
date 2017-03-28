@@ -729,7 +729,8 @@ NS_IMPL_ISUPPORTS(nsAndroidBridge,
                   nsIAndroidBridge,
                   nsIObserver)
 
-nsAndroidBridge::nsAndroidBridge()
+nsAndroidBridge::nsAndroidBridge() :
+    mAudibleWindowsNum(0)
 {
   if (jni::IsAvailable()) {
     RefPtr<widget::EventDispatcher> dispatcher = new widget::EventDispatcher();
@@ -804,45 +805,28 @@ nsAndroidBridge::Observe(nsISupports* aSubject, const char* aTopic,
 {
   if (!strcmp(aTopic, "xpcom-shutdown")) {
     RemoveObservers();
-  } else if (!strcmp(aTopic, "media-playback")) {
-    ALOG_BRIDGE("nsAndroidBridge::Observe, get media-playback event.");
-
-    nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
-    if (!wrapper) {
-      return NS_OK;
-    }
-
-    uint64_t windowId = 0;
-    nsresult rv = wrapper->GetData(&windowId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  } else if (!strcmp(aTopic, "audio-playback")) {
+    ALOG_BRIDGE("nsAndroidBridge::Observe, get audio-playback event.");
 
     nsAutoString activeStr(aData);
     bool isPlaying = activeStr.EqualsLiteral("active");
-    UpdateAudioPlayingWindows(windowId, isPlaying);
+    UpdateAudioPlayingWindows(isPlaying);
   }
   return NS_OK;
 }
 
 void
-nsAndroidBridge::UpdateAudioPlayingWindows(uint64_t aWindowId,
-                                           bool aPlaying)
+nsAndroidBridge::UpdateAudioPlayingWindows(bool aPlaying)
 {
   // Request audio focus for the first audio playing window and abandon focus
   // for the last audio playing window.
-  if (aPlaying && !mAudioPlayingWindows.Contains(aWindowId)) {
-    mAudioPlayingWindows.AppendElement(aWindowId);
-    if (mAudioPlayingWindows.Length() == 1) {
-      ALOG_BRIDGE("nsAndroidBridge, request audio focus.");
-      AudioFocusAgent::NotifyStartedPlaying();
-    }
-  } else if (!aPlaying && mAudioPlayingWindows.Contains(aWindowId)) {
-    mAudioPlayingWindows.RemoveElement(aWindowId);
-    if (mAudioPlayingWindows.Length() == 0) {
-      ALOG_BRIDGE("nsAndroidBridge, abandon audio focus.");
-      AudioFocusAgent::NotifyStoppedPlaying();
-    }
+  MOZ_ASSERT(mAudibleWindowsNum >= 0);
+  if (aPlaying && mAudibleWindowsNum++ == 0) {
+    ALOG_BRIDGE("nsAndroidBridge, request audio focus.");
+    AudioFocusAgent::NotifyStartedPlaying();
+  } else if (!aPlaying && --mAudibleWindowsNum == 0) {
+    ALOG_BRIDGE("nsAndroidBridge, abandon audio focus.");
+    AudioFocusAgent::NotifyStoppedPlaying();
   }
 }
 
@@ -853,7 +837,7 @@ nsAndroidBridge::AddObservers()
   if (obs) {
     obs->AddObserver(this, "xpcom-shutdown", false);
     if (jni::IsFennec()) { // No AudioFocusAgent in non-Fennec environment.
-        obs->AddObserver(this, "media-playback", false);
+        obs->AddObserver(this, "audio-playback", false);
     }
   }
 }
@@ -865,7 +849,7 @@ nsAndroidBridge::RemoveObservers()
   if (obs) {
     obs->RemoveObserver(this, "xpcom-shutdown");
     if (jni::IsFennec()) { // No AudioFocusAgent in non-Fennec environment.
-        obs->RemoveObserver(this, "media-playback");
+        obs->RemoveObserver(this, "audio-playback");
     }
   }
 }
