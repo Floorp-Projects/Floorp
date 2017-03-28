@@ -135,6 +135,22 @@ test(function(t) {
   var div = createDiv(t);
   var animation = div.animate({}, {duration: 100 * MS_PER_SEC,
                                    iterations: Infinity});
+  animation.currentTime = -200 * MS_PER_SEC;
+  animation.playbackRate = 0;
+
+  try {
+    animation.reverse();
+  } catch (e) {
+    assert_unreached(`Unexpected exception when calling reverse(): ${e}`);
+  }
+}, 'Reversing animation when playbackRate = 0 and currentTime < 0 ' +
+   'and the target effect end is positive infinity should NOT throw an ' +
+   'exception');
+
+test(function(t) {
+  var div = createDiv(t);
+  var animation = div.animate({}, {duration: 100 * MS_PER_SEC,
+                                   iterations: Infinity});
   animation.playbackRate = -1;
   animation.currentTime = -200 * MS_PER_SEC;
   animation.reverse();
