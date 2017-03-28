@@ -1372,6 +1372,19 @@ NS_IMETHODIMP HttpBaseChannel::GetTopLevelContentWindowId(uint64_t *aWindowId)
   return NS_OK;
 }
 
+NS_IMETHODIMP HttpBaseChannel::SetTopLevelOuterContentWindowId(uint64_t aWindowId)
+{
+  mTopLevelOuterContentWindowId = aWindowId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP HttpBaseChannel::GetTopLevelOuterContentWindowId(uint64_t *aWindowId)
+{
+  EnsureTopLevelOuterContentWindowId();
+  *aWindowId = mTopLevelOuterContentWindowId;
+  return NS_OK;
+}
+
 NS_IMETHODIMP HttpBaseChannel::SetTopLevelContentWindowId(uint64_t aWindowId)
 {
   mContentWindowId = aWindowId;

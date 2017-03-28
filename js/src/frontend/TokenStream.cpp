@@ -1938,9 +1938,9 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
     return true;
 
   error:
-    flags.isDirtyLine = true;
-    tp->pos.end = userbuf.offset();
-    MOZ_MAKE_MEM_UNDEFINED(&tp->type, sizeof(tp->type));
+    // We didn't get a token, so don't set |flags.isDirtyLine|.  And don't
+    // poison any of |*tp|: if we haven't allocated a token, |tp| could be
+    // uninitialized.
     flags.hadError = true;
 #ifdef DEBUG
     // Poisoning userbuf on error establishes an invariant: once an erroneous
