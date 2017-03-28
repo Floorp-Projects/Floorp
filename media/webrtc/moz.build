@@ -101,6 +101,11 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
 
     GYP_DIRS['signaling'].non_unified_sources += signaling_non_unified_sources
 
+    GYP_DIRS += ['trunk/third_party/gflags']
+    GYP_DIRS['trunk/third_party/gflags'].input = 'trunk/third_party/gflags/gflags.gyp'
+    GYP_DIRS['trunk/third_party/gflags'].variables = gyp_vars
+    GYP_DIRS['trunk/third_party/gflags'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
+
     if CONFIG['_MSC_VER']:
         # Avoid warnings from third-party code that we can not modify.
         if CONFIG['CLANG_CL']:
