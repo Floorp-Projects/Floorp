@@ -45,7 +45,7 @@ function* testRuleView(ruleView, nodeFront) {
     .querySelector(".ruleview-computed .ruleview-propertyvalue");
 
   // And verify that the tooltip gets shown on this property
-  yield assertHoverTooltipOn(tooltip, valueSpan);
+  let previewTooltip = yield assertShowPreviewTooltip(ruleView, valueSpan);
 
   let images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
@@ -55,4 +55,6 @@ function* testRuleView(ruleView, nodeFront) {
   let dataURL = yield getFontFamilyDataURL(valueSpan.textContent, nodeFront);
   is(images[0].getAttribute("src"), dataURL,
     "Tooltip contains the correct data-uri image");
+
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
 }
