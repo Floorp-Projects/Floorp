@@ -12,7 +12,6 @@
 #include "mozilla/HashFunctions.h"
 #include "nsISupportsImpl.h"
 
-#define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nsStaticNameTable.h"
 
 using namespace mozilla;

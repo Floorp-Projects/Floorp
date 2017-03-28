@@ -1578,7 +1578,15 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
     if (stub.invalid())
         return true;
 
-    if (!attached && stub->state().canAttachStub()) {
+    if (attached)
+        return true;
+
+    // The SetProperty call might have entered this IC recursively, so try
+    // to transition.
+    if (stub->state().maybeTransition())
+        stub->discardStubs(cx);
+
+    if (stub->state().canAttachStub()) {
         RootedValue idVal(cx, StringValue(name));
         SetPropIRGenerator gen(cx, script, pc, CacheKind::SetProp, stub->state().mode(),
                                &isTemporarilyUnoptimizable, lhs, idVal, rhs);
