@@ -425,14 +425,16 @@ nsSOCKSSocketInfo::HandshakeFinished(PRErrorCode err)
 {
     if (err == 0) {
         mState = SOCKS_CONNECTED;
+#if defined(XP_WIN)
         // Switch back to nonblocking mode after finishing handshaking.
-        if (mFD) {
+        if (IsLocalProxy() && mFD) {
             PRSocketOptionData opt_nonblock;
             opt_nonblock.option = PR_SockOpt_Nonblocking;
             opt_nonblock.value.non_blocking = PR_TRUE;
             PR_SetSocketOption(mFD, &opt_nonblock);
             mFD = nullptr;
         }
+#endif
     } else {
         mState = SOCKS_FAILED;
         PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -575,13 +577,15 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
         }
     } while (status != PR_SUCCESS);
 
+#if defined(XP_WIN)
     // Switch to blocking mode during handshaking
-    if (mFD) {
+    if (IsLocalProxy() && mFD) {
         PRSocketOptionData opt_nonblock;
         opt_nonblock.option = PR_SockOpt_Nonblocking;
         opt_nonblock.value.non_blocking = PR_FALSE;
         PR_SetSocketOption(mFD, &opt_nonblock);
     }
+#endif
 
     // Connected now, start SOCKS
     if (mVersion == 4)

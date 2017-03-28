@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+
+  <defs>
+    <radialGradient id="radialGradient" cx=".85" cy=".65" r=".75">
+      <stop stop-color="#000" offset=".2"/>
+      <stop stop-color="#fff" offset="1"/>
+    </radialGradient>
+
+    <mask id="myMask">
+      <rect width="16" height="16" fill="#fff"/>
+      <path d="M11.8,9.3A4,4,0,1,1,5.2,5.2L1.6,1.6a9,9,0,1,0,14.9,9.2Z" fill="url(#radialGradient)"/>
+    </mask>
+  </defs>
+
+  <path fill="#0077ff" fill-opacity=".15" d="M8,0A8,8,0,0,0,0,8a8,8,0,0,0,8,8,8,8,0,0,0,8-8A8,8,0,0,0,8,0ZM8,13A5,5,0,0,1,3,8,5,5,0,0,1,8,3a5,5,0,0,1,5,5A5,5,0,0,1,8,13Z"/>
+  <path mask="url(#myMask)" fill="#0090ff" d="M8,3a5,5,0,0,1,5,5h0a1.5,1.5,0,0,0,3,0h0a8,8,0,1,0-.8,3.5l-2.7-1.3A5,5,0,1,1,8,3Z"/>
+
+</svg>

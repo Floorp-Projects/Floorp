@@ -5,7 +5,7 @@ webidl-test:
         symbol: Wp
         kind: test
         tier: 1
-    worker-type: aws-provisioner-v1/b2gtest
+    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
     worker:
         implementation: docker-worker
         docker-image: {in-tree: "lint"}

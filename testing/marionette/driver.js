@@ -2710,22 +2710,80 @@ GeckoDriver.prototype.acceptConnections = function (cmd, resp) {
 }
 
 /**
- * Quits Firefox with the provided flags and tears down the current
- * session.
+ * Quits the application with the provided flags.
+ *
+ * Marionette will stop accepting new connections before ending the
+ * current session, and finally attempting to quit the application.
+ *
+ * Optional {@code nsIAppStartup} flags may be provided as
+ * an array of masks, and these will be combined by ORing
+ * them with a bitmask.  The available masks are defined in
+ * https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsIAppStartup.
+ *
+ * Crucially, only one of the *Quit flags can be specified. The |eRestart|
+ * flag may be bit-wise combined with one of the *Quit flags to cause
+ * the application to restart after it quits.
+ *
+ * @param {Array.<string>=} flags
+ *     Constant name of masks to pass to |Services.startup.quit|.
+ *     If empty or undefined, |nsIAppStartup.eAttemptQuit| is used.
+ *
+ * @return {string}
+ *     Explaining the reason why the application quit.  This can be
+ *     in response to a normal shutdown or restart, yielding "shutdown"
+ *     or "restart", respectively.
+ *
+ * @throws {InvalidArgumentError}
+ *     If |flags| contains unknown or incompatible flags, for example
+ *     multiple Quit flags.
  */
-GeckoDriver.prototype.quitApplication = function (cmd, resp) {
-  assert.firefox("Bug 1298921 - In app initiated quit not yet available beside Firefox")
+GeckoDriver.prototype.quit = function* (cmd, resp) {
+  const quits = ["eConsiderQuit", "eAttemptQuit", "eForceQuit"];
 
-  let flags = Ci.nsIAppStartup.eAttemptQuit;
-  for (let k of cmd.parameters.flags || []) {
-    flags |= Ci.nsIAppStartup[k];
+  let flags = [];
+  if (typeof cmd.parameters.flags != "undefined") {
+    flags = assert.array(cmd.parameters.flags);
+  }
+
+  // bug 1298921
+  assert.firefox()
+
+  let quitSeen;
+  let mode = 0;
+  if (flags.length > 0) {
+    for (let k of flags) {
+      assert.in(k, Ci.nsIAppStartup);
+
+      if (quits.includes(k)) {
+        if (quitSeen) {
+          throw new InvalidArgumentError(
+              `${k} cannot be combined with ${quitSeen}`);
+        }
+        quitSeen = k;
+      }
+
+      mode |= Ci.nsIAppStartup[k];
+    }
+  } else {
+    mode = Ci.nsIAppStartup.eAttemptQuit;
   }
 
   this._server.acceptConnections = false;
-  resp.send();
-
   this.deleteSession();
-  Services.startup.quit(flags);
+
+  // delay response until the application is about to quit
+  let quitApplication = new Promise(resolve => {
+    Services.obs.addObserver(
+        (subject, topic, data) => resolve(data),
+        "quit-application",
+        false);
+  });
+
+  Services.startup.quit(mode);
+
+  yield quitApplication
+      .then(cause => resp.body.cause = cause)
+      .then(() => resp.send());
 };
 
 GeckoDriver.prototype.installAddon = function (cmd, resp) {
@@ -2997,7 +3055,8 @@ GeckoDriver.prototype.commands = {
   "getTextFromDialog": GeckoDriver.prototype.getTextFromDialog,
   "sendKeysToDialog": GeckoDriver.prototype.sendKeysToDialog,
   "acceptConnections": GeckoDriver.prototype.acceptConnections,
-  "quitApplication": GeckoDriver.prototype.quitApplication,
+  "quitApplication": GeckoDriver.prototype.quit,  // deprecated, can be removed in Firefox 56
+  "quit": GeckoDriver.prototype.quit,
 
   "localization:l10n:localizeEntity": GeckoDriver.prototype.localizeEntity,
   "localization:l10n:localizeProperty": GeckoDriver.prototype.localizeProperty,

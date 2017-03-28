@@ -46,7 +46,7 @@ class ServoStyleSet
 {
   friend class ServoRestyleManager;
 public:
-  static bool IsInServoTraversal(bool aAssertServoTraversalOrMainThread = true)
+  static bool IsInServoTraversal()
   {
     // The callers of this function are generally main-thread-only _except_
     // for potentially running during the Servo traversal, in which case they may
@@ -56,8 +56,7 @@ public:
     // are generally unprepared to deal with non-Servo-but-also-non-main-thread
     // callers, and are likely to take the main-thread codepath if this function
     // returns false. So we assert against other non-main-thread callers here.
-    MOZ_ASSERT_IF(aAssertServoTraversalOrMainThread,
-                  sInServoTraversal || NS_IsMainThread());
+    MOZ_ASSERT(sInServoTraversal || NS_IsMainThread());
     return sInServoTraversal;
   }
 

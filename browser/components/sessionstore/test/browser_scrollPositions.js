@@ -5,6 +5,7 @@
 
 const BASE = "http://example.com/browser/browser/components/sessionstore/test/"
 const URL = BASE + "browser_scrollPositions_sample.html";
+const URL2 = BASE + "browser_scrollPositions_sample2.html";
 const URL_FRAMESET = BASE + "browser_scrollPositions_sample_frameset.html";
 
 // Randomized set of scroll positions we will use in this test.
@@ -108,6 +109,8 @@ add_task(function* test_scroll_nested() {
 /**
  * Test that scroll positions persist after restoring background tabs in
  * a restored window (bug 1228518).
+ * Also test that scroll positions for previous session history entries
+ * are preserved as well (bug 1265818).
  */
 add_task(function* test_scroll_background_tabs() {
   pushPrefs(["browser.sessionstore.restore_on_demand", true]);
@@ -119,7 +122,15 @@ add_task(function* test_scroll_background_tabs() {
 
   // Scroll down a little.
   yield sendMessage(browser, "ss-test:setScrollPosition", {x: SCROLL_X, y: SCROLL_Y});
-  yield checkScroll(tab, {scroll: SCROLL_STR}, "scroll is fine");
+  yield checkScroll(tab, {scroll: SCROLL_STR}, "scroll on first page is fine");
+
+  // Navigate to a different page and scroll there as well.
+  browser.loadURI(URL2);
+  yield BrowserTestUtils.browserLoaded(browser);
+
+  // Scroll down a little.
+  yield sendMessage(browser, "ss-test:setScrollPosition", {x: SCROLL2_X, y: SCROLL2_Y});
+  yield checkScroll(tab, {scroll: SCROLL2_STR}, "scroll on second page is fine");
 
   // Close the window
   yield BrowserTestUtils.closeWindow(newWin);
@@ -149,7 +160,17 @@ add_task(function* test_scroll_background_tabs() {
   newWin.gBrowser.selectedTab = tab;
   yield promiseTabRestored(tab);
 
-  yield checkScroll(tab, {scroll: SCROLL_STR}, "scroll is still fine");
+  yield checkScroll(tab, {scroll: SCROLL2_STR}, "scroll is still fine");
+
+  // Now go back in history and check that the scroll position
+  // is restored there as well.
+  is(browser.canGoBack, true, "can go back");
+  browser.goBack();
+
+  yield BrowserTestUtils.browserLoaded(browser);
+  yield TabStateFlusher.flush(browser);
+
+  yield checkScroll(tab, {scroll: SCROLL_STR}, "scroll is still fine after navigating back");
 
   yield BrowserTestUtils.closeWindow(newWin);
 });

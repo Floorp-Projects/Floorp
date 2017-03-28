@@ -1051,9 +1051,8 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
 void
 nsAnimationManager::UpdateAnimations(
   dom::Element* aElement,
-  nsIAtom* aPseudoTagOrNull,
-  const ServoComputedValues* aComputedValues,
-  const ServoComputedValues* aParentComputedValues)
+  CSSPseudoElementType aPseudoType,
+  const ServoComputedValuesWithParent& aServoValues)
 {
   MOZ_ASSERT(mPresContext->IsDynamic(),
              "Should not update animations for print or print preview");
@@ -1061,21 +1060,20 @@ nsAnimationManager::UpdateAnimations(
              "Should not update animations that are not attached to the "
              "document tree");
 
-  CSSPseudoElementType pseudoType =
-    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
-                                       CSSEnabledState::eForAllContent);
-  if (!aComputedValues) {
+  if (!aServoValues.mCurrentStyle) {
     // If we are in a display:none subtree we will have no computed values.
     // Since CSS animations should not run in display:none subtrees we should
     // stop (actually, destroy) any animations on this element here.
-    StopAnimationsForElement(aElement, pseudoType);
+    StopAnimationsForElement(aElement, aPseudoType);
     return;
   }
 
-  NonOwningAnimationTarget target(aElement, pseudoType);
-  ServoCSSAnimationBuilder builder(aComputedValues, aParentComputedValues);
+  NonOwningAnimationTarget target(aElement, aPseudoType);
+  ServoCSSAnimationBuilder builder(aServoValues.mCurrentStyle,
+                                   aServoValues.mParentStyle);
 
-  const nsStyleDisplay *disp = Servo_GetStyleDisplay(aComputedValues);
+  const nsStyleDisplay *disp =
+    Servo_GetStyleDisplay(aServoValues.mCurrentStyle);
   DoUpdateAnimations(target, *disp, builder);
 }
 

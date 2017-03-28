@@ -28,6 +28,16 @@ IPDL_SOURCES = [
     'PRtspController.ipdl',
 ]
 
+# needed so --disable-webrtc builds work (yes, a bit messy)
+if not CONFIG['MOZ_WEBRTC']:
+  IPDL_SOURCES += [
+      '../../media/mtransport/ipc/PStunAddrsRequest.ipdl',
+  ]
+  EXPORTS.mozilla.net += [
+      '../../media/mtransport/ipc/NrIceStunAddrMessageUtils.h',
+      '../../media/mtransport/ipc/PStunAddrsParams.h',
+  ]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
