@@ -74,6 +74,37 @@ const gCachedGridPattern = new Map();
 const CANVAS_SIZE = 4096;
 
 /**
+ * Utility method to draw a rounded rectangle in the provided canvas context.
+ *
+ * @param  {CanvasRenderingContext2D} ctx
+ *         The 2d canvas context.
+ * @param  {Number} x
+ *         The x-axis origin of the rectangle.
+ * @param  {Number} y
+ *         The y-axis origin of the rectangle.
+ * @param  {Number} width
+ *         The width of the rectangle.
+ * @param  {Number} height
+ *         The height of the rectangle.
+ * @param  {Number} radius
+ *         The radius of the rounding.
+ */
+const roundedRect = function (ctx, x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x, y + radius);
+  ctx.lineTo(x, y + height - radius);
+  ctx.arcTo(x, y + height, x + radius, y + height, radius);
+  ctx.lineTo(x + width - radius, y + height);
+  ctx.arcTo(x + width, y + height, x + width, y + height - radius, radius);
+  ctx.lineTo(x + width, y + radius);
+  ctx.arcTo(x + width, y, x + width - radius, y, radius);
+  ctx.lineTo(x + radius, y);
+  ctx.arcTo(x, y, x, y + radius, radius);
+  ctx.stroke();
+  ctx.fill();
+};
+
+/**
  * The CssGridHighlighter is the class that overlays a visual grid on top of
  * display:[inline-]grid elements.
  *
@@ -790,6 +821,14 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this.renderLines(fragment.rows, quad, ROWS, "top", "left", "width",
                      this.getFirstColLinePos(fragment),
                      this.getLastColLinePos(fragment));
+
+    // Line numbers are rendered in a 2nd step to avoid overlapping with existing lines.
+    if (this.options.showGridLineNumbers) {
+      this.renderLineNumbers(fragment.cols, quad, COLUMNS, "left", "top",
+                       this.getFirstRowLinePos(fragment));
+      this.renderLineNumbers(fragment.rows, quad, ROWS, "top", "left",
+                       this.getFirstColLinePos(fragment));
+    }
   },
 
   /**
@@ -833,10 +872,6 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       let line = gridDimension.lines[i];
       let linePos = (bounds[mainSide] / currentZoom) + line.start;
 
-      if (this.options.showGridLineNumbers) {
-        this.renderGridLineNumber(line.number, linePos, lineStartPos, dimensionType);
-      }
-
       if (i == 0 || i == lastEdgeLineIndex) {
         this.renderLine(linePos, lineStartPos, lineEndPos, dimensionType, "edge");
       } else {
@@ -851,6 +886,28 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
         this.renderLine(linePos + line.breadth, lineStartPos, lineEndPos, dimensionType,
                         gridDimension.tracks[i].type);
       }
+    }
+  },
+
+  /**
+   * Render the grid lines given the grid dimension information of the
+   * column or row lines.
+   *
+   * see @param for renderLines.
+   */
+  renderLineNumbers(gridDimension, {bounds}, dimensionType, mainSide, crossSide,
+              startPos) {
+    let zoom = getCurrentZoom(this.win);
+    let lineStartPos = (bounds[crossSide] / zoom) + startPos;
+    if (this.options.showInfiniteLines) {
+      lineStartPos = 0;
+    }
+
+    for (let i = 0; i < gridDimension.lines.length; i++) {
+      let line = gridDimension.lines[i];
+      let linePos = (bounds[mainSide] / zoom) + line.start;
+      this.renderGridLineNumber(line.number, linePos, lineStartPos, line.breadth,
+        dimensionType);
     }
   },
 
@@ -913,33 +970,70 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    *         y-axis for a row grid line.
    * @param  {Number} startPos
    *         The start position of the cross side of the grid line.
+   * @param  {Number} breadth
+   *         The grid line breadth value.
    * @param  {String} dimensionType
    *         The grid dimension type which is either the constant COLUMNS or ROWS.
    */
-  renderGridLineNumber(lineNumber, linePos, startPos, dimensionType) {
+  renderGridLineNumber(lineNumber, linePos, startPos, breadth, dimensionType) {
     let { devicePixelRatio } = this.win;
     let displayPixelRatio = getDisplayPixelRatio(this.win);
-    let x = Math.round(this._canvasPosition.x * devicePixelRatio);
-    let y = Math.round(this._canvasPosition.y * devicePixelRatio);
 
     linePos = Math.round(linePos * devicePixelRatio);
     startPos = Math.round(startPos * devicePixelRatio);
+    breadth = Math.round(breadth * devicePixelRatio);
+
+    if (linePos + breadth < 0) {
+      // The line is not visible on screen, don't render the line number
+      return;
+    }
 
     this.ctx.save();
-    this.ctx.translate(.5 - x, .5 - y);
+    let canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
+    let canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+    this.ctx.translate(.5 - canvasX, .5 - canvasY);
 
     let fontSize = (GRID_FONT_SIZE * displayPixelRatio);
     this.ctx.font = fontSize + "px " + GRID_FONT_FAMILY;
 
     let textWidth = this.ctx.measureText(lineNumber).width;
 
+    // The width of the character 'm' approximates the height of the text.
+    let textHeight = this.ctx.measureText("m").width;
+
+    // Padding in pixels for the line number text inside of the line number container.
+    let padding = 3 * displayPixelRatio;
+
+    let boxWidth = textWidth + 2 * padding;
+    let boxHeight = textHeight + 2 * padding;
+
+    // Calculate the x & y coordinates for the line number container, so that it is
+    // centered on the line, and in the middle of the gap if there is any.
+    let x, y;
     if (dimensionType === COLUMNS) {
-      let yPos = Math.max(startPos, fontSize);
-      this.ctx.fillText(lineNumber, linePos, yPos);
+      x = linePos - boxWidth / 2;
+      y = startPos - boxHeight / 2;
+      x += breadth / 2;
     } else {
-      let xPos = Math.max(startPos, textWidth);
-      this.ctx.fillText(lineNumber, xPos - textWidth, linePos);
+      x = startPos - boxWidth / 2;
+      y = linePos - boxHeight / 2;
+      y += breadth / 2;
     }
+
+    x = Math.max(x, padding);
+    y = Math.max(y, padding);
+
+    // Draw a rounded rectangle with a border width of 4 pixels, a border color matching
+    // the grid color and a white background (the line number will be written in black).
+    this.ctx.lineWidth = 2 * displayPixelRatio;
+    this.ctx.strokeStyle = this.color;
+    this.ctx.fillStyle = "white";
+    let radius = 2 * displayPixelRatio;
+    roundedRect(this.ctx, x, y, boxWidth, boxHeight, radius);
+
+    // Write the line number inside of the rectangle.
+    this.ctx.fillStyle = "black";
+    this.ctx.fillText(lineNumber, x + padding, y + textHeight + padding);
 
     this.ctx.restore();
   },
