@@ -660,6 +660,26 @@ function getWindowDimensions(window) {
 exports.getWindowDimensions = getWindowDimensions;
 
 /**
+ * Returns the viewport's dimensions for the `window` given.
+ *
+ * @return {Object} An object with `width` and `height` properties, representing the
+ * number of pixels for the viewport's size.
+ */
+function getViewportDimensions(window) {
+  let windowUtils = utilsFor(window);
+
+  let scrollbarHeight = {};
+  let scrollbarWidth = {};
+  windowUtils.getScrollbarSize(false, scrollbarWidth, scrollbarHeight);
+
+  let width = window.innerWidth - scrollbarWidth.value;
+  let height = window.innerHeight - scrollbarHeight.value;
+
+  return { width, height };
+}
+exports.getViewportDimensions = getViewportDimensions;
+
+/**
  * Returns the max size allowed for a surface like textures or canvas.
  * If no `webgl` context is available, DEFAULT_MAX_SURFACE_SIZE is returned instead.
  *
