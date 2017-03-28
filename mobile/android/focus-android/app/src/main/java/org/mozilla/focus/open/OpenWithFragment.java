@@ -5,6 +5,7 @@
 
 package org.mozilla.focus.open;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -46,6 +47,7 @@ public class OpenWithFragment extends AppCompatDialogFragment implements AppAdap
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         ContextThemeWrapper wrapper = new ContextThemeWrapper(getContext(), android.R.style.Theme_Material_Light);
 
+        @SuppressLint("InflateParams") // This View will have it's params ignored anyway:
         final View view = LayoutInflater.from(wrapper).inflate(R.layout.fragment_open_with, null);
 
         final Dialog dialog = new CustomWidthBottomSheetDialog(wrapper);

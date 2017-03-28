@@ -51,7 +51,7 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
         PreferenceManager.getDefaultSharedPreferences(getContext())
                 .edit()
                 .putBoolean(FIRSTRUN_PREF, true)
-                .commit();
+                .apply();
 
         ((MainActivity) getActivity()).firstrunFinished();
     }
