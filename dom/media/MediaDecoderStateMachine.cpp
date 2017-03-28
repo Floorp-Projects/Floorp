@@ -100,6 +100,8 @@ static constexpr auto LOW_AUDIO_THRESHOLD = TimeUnit::FromMicroseconds(300000);
 // less than the low audio threshold.
 static const int64_t AMPLE_AUDIO_USECS = 2000000;
 
+static constexpr auto AMPLE_AUDIO_THRESHOLD = TimeUnit::FromMicroseconds(AMPLE_AUDIO_USECS);
+
 } // namespace detail
 
 // If we have fewer than LOW_VIDEO_FRAMES decoded frames, and
@@ -2595,7 +2597,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDecodedVideoEndTime(0),
   mPlaybackRate(1.0),
   mLowAudioThreshold(detail::LOW_AUDIO_THRESHOLD),
-  mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_USECS),
+  mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_THRESHOLD.ToMicroseconds()),
   mAudioCaptured(false),
   mMinimizePreroll(aDecoder->GetMinimizePreroll()),
   mSentLoadedMetadataEvent(false),
@@ -3788,7 +3790,7 @@ MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
   // Don't buffer as much when audio is captured because we don't need to worry
   // about high latency audio devices.
   mAmpleAudioThresholdUsecs =
-    mAudioCaptured ? detail::AMPLE_AUDIO_USECS / 2 : detail::AMPLE_AUDIO_USECS;
+    (mAudioCaptured ? detail::AMPLE_AUDIO_THRESHOLD / 2 : detail::AMPLE_AUDIO_THRESHOLD).ToMicroseconds();
 
   mStateObj->HandleAudioCaptured();
 }
