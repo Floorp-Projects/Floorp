@@ -22,7 +22,7 @@
 #include "mozilla/Attributes.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsCSSPropertyID.h"
-#include "CSSValue.h"
+#include "mozilla/dom/CSSValue.h"
 #include "nsWrapperCache.h"
 #include "nsString.h"
 #include "nsIDOMCSSRule.h"
