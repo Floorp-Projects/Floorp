@@ -374,8 +374,6 @@ protected:
   // to the returned stream time.
   media::TimeUnit GetClock(TimeStamp* aTimeStamp = nullptr) const;
 
-  void SetStartTime(int64_t aStartTimeUsecs);
-
   // Update only the state machine's current playback position (and duration,
   // if unknown).  Does not update the playback position on the decoder or
   // media element -- use UpdatePlaybackPosition for that.  Called on the state
