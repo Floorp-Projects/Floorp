@@ -2293,6 +2293,8 @@ Http2Session::OnTransportStatus(nsITransport* aTransport,
   case NS_NET_STATUS_RESOLVED_HOST:
   case NS_NET_STATUS_CONNECTING_TO:
   case NS_NET_STATUS_CONNECTED_TO:
+  case NS_NET_STATUS_TLS_HANDSHAKE_STARTING:
+  case NS_NET_STATUS_TLS_HANDSHAKE_ENDED:
   {
     Http2Stream *target = mStreamIDHash.Get(1);
     nsAHttpTransaction *transaction = target ? target->Transaction() : nullptr;
