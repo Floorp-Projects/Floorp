@@ -10,7 +10,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/Mutex.h"
 #include "nsTArray.h"
-#include "mozilla/mscom/IHandlerPayload.h"
+#include "mozilla/mscom/IHandlerProvider.h"
 #include "mozilla/mscom/Ptr.h"
 #include "mozilla/mscom/WeakRef.h"
 #include "mozilla/RefPtr.h"
@@ -26,7 +26,7 @@ DEFINE_GUID(IID_IInterceptorSink,
 0x8831eb53, 0xa937, 0x42bc, 0x99, 0x21, 0xb3, 0xe1, 0x12, 0x1f, 0xdf, 0x86);
 
 struct IInterceptorSink : public ICallFrameEvents
-                        , public HandlerPayload
+                        , public HandlerProvider
 {
   virtual STDMETHODIMP SetInterceptor(IWeakReference* aInterceptor) = 0;
 };
