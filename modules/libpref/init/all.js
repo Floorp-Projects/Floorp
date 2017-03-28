@@ -1469,7 +1469,7 @@ pref("network.http.max-persistent-connections-per-server", 6);
 
 // Number of connections that we can open beyond the standard parallelism limit defined
 // by max-persistent-connections-per-server/-proxy to handle urgent-start marked requests
-pref("network.http.max-urgent-start-excessive-connections-per-host", 10);
+pref("network.http.max-urgent-start-excessive-connections-per-host", 3);
 
 // If connecting via a proxy, then a
 // new connection will only be attempted if the number of active persistent
