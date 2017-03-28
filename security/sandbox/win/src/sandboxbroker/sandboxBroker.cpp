@@ -219,6 +219,17 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "Invalid flags for SetDelayedProcessMitigations.");
 
+  // We still have edge cases where the child at low integrity can't read some
+  // files, so add a rule to allow read access to everything when required.
+  if (aSandboxLevel == 1 ||
+      aPrivs == base::ChildPrivileges::PRIVILEGES_FILEREAD) {
+    result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                              sandbox::TargetPolicy::FILES_ALLOW_READONLY,
+                              L"*");
+    MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
+                       "With these static arguments AddRule should never fail, what happened?");
+  }
+
   // Add the policy for the client side of a pipe. It is just a file
   // in the \pipe\ namespace. We restrict it to pipes that start with
   // "chrome." so the sandboxed process cannot connect to system services.
