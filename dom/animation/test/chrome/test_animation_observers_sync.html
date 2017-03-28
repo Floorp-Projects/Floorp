@@ -1,8 +1,18 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <title>
-Test chrome-only MutationObserver animation notifications for sync APIs
+Test chrome-only MutationObserver animation notifications (sync tests)
 </title>
+<!--
+
+  This file contains synchronous tests for animation mutation observers.
+
+  In general we prefer to write synchronous tests since they are less likely to
+  timeout when run on automation. Tests that require asynchronous steps (e.g.
+  waiting on events) should be added to test_animations_observers_async.html
+  instead.
+
+-->
 <script type="application/javascript" src="../testharness.js"></script>
 <script type="application/javascript" src="../testharnessreport.js"></script>
 <script type="application/javascript" src="../testcommon.js"></script>
@@ -16,6 +26,26 @@ Test chrome-only MutationObserver animation notifications for sync APIs
 }
 </style>
 <script>
+
+/**
+ * Return a new MutationObserver which observing |target| element
+ * with { animations: true, subtree: |subtree| } option.
+ *
+ * NOTE: This observer should be used only with takeRecords(). If any of
+ * MutationRecords are observed in the callback of the MutationObserver,
+ * it will raise an assertion.
+ */
+function setupSynchronousObserver(t, target, subtree) {
+   var observer = new MutationObserver(records => {
+     assert_unreached("Any MutationRecords should not be observed in this " +
+                      "callback");
+   });
+  t.add_cleanup(() => {
+    observer.disconnect();
+  });
+  observer.observe(target, { animations: true, subtree: subtree });
+  return observer;
+}
 
 function assert_record_list(actual, expected, desc, index, listName) {
   assert_equals(actual.length, expected.length,
@@ -704,6 +734,42 @@ function createPseudo(test, element, type) {
     assert_equals_records(observer.takeRecords(),
       [], "records after calling reverse()");
   }, "reverse_with_zero_playbackRate");
+
+  // Test that reverse() on an Animation does *not* dispatch a changed
+  // notification when it throws an exception.
+  test(t => {
+    // Start an infinite animation
+    var div = addDiv(t, { style: "animation: anim 10s infinite" });
+    var observer =
+      setupSynchronousObserver(t,
+                               aOptions.subtree ? div.parentNode : div,
+                               aOptions.subtree);
+
+    var animations = div.getAnimations();
+    assert_equals(animations.length, 1,
+      "getAnimations().length after animation start");
+
+    assert_equals_records(observer.takeRecords(),
+      [{ added: animations, changed: [], removed: [] }],
+      "records after animation start");
+
+    // Shift the animation into the future such that when we call reverse
+    // it will try to seek to the (infinite) end.
+    animations[0].startTime = 100 * MS_PER_SEC;
+
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [], changed: animations, removed: [] }],
+      "records after adjusting startTime");
+
+    // Reverse: should throw
+    assert_throws('InvalidStateError', () => {
+      animations[0].reverse();
+    }, 'reverse() on future infinite animation throws an exception');
+
+    // We should get no notifications.
+    assert_equals_records(observer.takeRecords(),
+      [], "records after calling reverse()");
+  }, "reverse_with_exception");
 
   // Test that attempting to start an animation that should already be finished
   // does not send any notifications.

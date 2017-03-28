@@ -291,18 +291,13 @@ NS_IMETHODIMP nsTreeSelection::SetTree(nsITreeBoxObject * aTree)
 
 NS_IMETHODIMP nsTreeSelection::GetSingle(bool* aSingle)
 {
-  if (!mTree)
-    return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
-
-  nsCOMPtr<nsIDOMElement> element;
-  boxObject->GetElement(getter_AddRefs(element));
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(element);
-
   static nsIContent::AttrValuesArray strings[] =
     {&nsGkAtoms::single, &nsGkAtoms::cell, &nsGkAtoms::text, nullptr};
+
+  nsCOMPtr<nsIContent> content = GetContent();
+  if (!content) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   *aSingle = content->FindAttrValueIn(kNameSpaceID_None,
                                       nsGkAtoms::seltype,
@@ -338,8 +333,14 @@ NS_IMETHODIMP nsTreeSelection::TimedSelect(int32_t aIndex, int32_t aMsec)
         mSelectTimer->Cancel();
 
       mSelectTimer = do_CreateInstance("@mozilla.org/timer;1");
-      mSelectTimer->InitWithFuncCallback(SelectCallback, this, aMsec, 
-                                         nsITimer::TYPE_ONE_SHOT);
+      nsCOMPtr<nsIContent> content = GetContent();
+      if (content) {
+        mSelectTimer->SetTarget(
+            content->OwnerDoc()->EventTargetFor(TaskCategory::Other));
+      }
+      mSelectTimer->InitWithNamedFuncCallback(SelectCallback, this, aMsec,
+                                              nsITimer::TYPE_ONE_SHOT,
+                                              "nsTreeSelection::SelectCallback");
     }
   }
 
@@ -851,6 +852,22 @@ nsTreeSelection::SelectCallback(nsITimer *aTimer, void *aClosure)
     aTimer->Cancel();
     self->mSelectTimer = nullptr;
   }
+}
+
+already_AddRefed<nsIContent>
+nsTreeSelection::GetContent()
+{
+  if (!mTree) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
+
+  nsCOMPtr<nsIDOMElement> element;
+  boxObject->GetElement(getter_AddRefs(element));
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(element);
+  return content.forget();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

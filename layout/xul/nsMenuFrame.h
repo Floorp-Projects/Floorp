@@ -18,6 +18,7 @@
 #include "nsGkAtoms.h"
 #include "nsMenuParent.h"
 #include "nsXULPopupManager.h"
+#include "nsINamed.h"
 #include "nsIReflowCallback.h"
 #include "nsITimer.h"
 #include "mozilla/Attributes.h"
@@ -55,13 +56,15 @@ class nsMenuFrame;
  * to it. The callback is delegated to the contained nsMenuFrame as long as
  * the contained nsMenuFrame has not been destroyed.
  */
-class nsMenuTimerMediator final : public nsITimerCallback
+class nsMenuTimerMediator final : public nsITimerCallback,
+                                  public nsINamed
 {
 public:
   explicit nsMenuTimerMediator(nsMenuFrame* aFrame);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   void ClearFrame();
 

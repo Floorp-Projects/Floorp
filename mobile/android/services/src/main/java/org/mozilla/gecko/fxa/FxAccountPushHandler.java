@@ -38,8 +38,8 @@ public class FxAccountPushHandler {
         if (message == null) {
             // An empty body means we should check the verification state of the account (FxA sends this
             // when the account email is verified for example).
-            // TODO: We're only registering the push endpoint when we are in the Married state, that's why we're skipping the message :(
-            Log.d(LOG_TAG, "Skipping empty message");
+            // See notifyUpdate in https://github.com/mozilla/fxa-auth-server/blob/master/lib/push.js
+            handleVerification(context);
             return;
         }
         try {
@@ -59,6 +59,17 @@ public class FxAccountPushHandler {
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Error while handling FxA push notification", e);
         }
+    }
+
+    private static void handleVerification(Context context) {
+        AndroidFxAccount fxAccount = AndroidFxAccount.fromContext(context);
+        if (fxAccount == null) {
+            Log.e(LOG_TAG, "The Android account does not exist anymore");
+            return;
+        }
+        Log.i(LOG_TAG, "Received 'accountVerified' push event, requesting immediate sync");
+        // This will trigger an email verification check and a sync.
+        fxAccount.requestImmediateSync(null, null);
     }
 
     private static void handleCollectionChanged(Context context, JSONObject data) throws JSONException {

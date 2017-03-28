@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+<script>
+window.onload = function(){
+  let a = document.documentElement.animate(null,
+            { duration: 100, iterations: Number.POSITIVE_INFINITY });
+  a.startTime = 100000; // Set the start time far in the future
+  // Try reversing (this should throw because the target effect end is infinity)
+  try { a.reverse(); } catch(e) {}
+  // Do something that will trigger a timing update
+  a.effect.target = document.createElement("span");
+  document.documentElement.className = '';
+};
+</script>
+</head>
+</html>

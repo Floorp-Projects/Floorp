@@ -6,6 +6,7 @@
 #include "DateTimeFormat.h"
 #include "nsIndexedToHTML.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/intl/LocaleService.h"
 #include "nsNetUtil.h"
 #include "netCore.h"
 #include "nsStringStream.h"
@@ -18,12 +19,13 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
-#include "nsIChromeRegistry.h"
 #include "nsIStringBundle.h"
 #include "nsITextToSubURI.h"
 #include "nsXPIDLString.h"
 #include <algorithm>
 #include "nsIChannel.h"
+
+using mozilla::intl::LocaleService;
 
 NS_IMPL_ISUPPORTS(nsIndexedToHTML,
                   nsIDirIndexListener,
@@ -562,14 +564,8 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
     }
 
     nsCString direction(NS_LITERAL_CSTRING("ltr"));
-    nsCOMPtr<nsIXULChromeRegistry> reg =
-      mozilla::services::GetXULChromeRegistryService();
-    if (reg) {
-      bool isRTL = false;
-      reg->IsLocaleRTL(NS_LITERAL_CSTRING("global"), &isRTL);
-      if (isRTL) {
-        direction.AssignLiteral("rtl");
-      }
+    if (LocaleService::GetInstance()->IsAppLocaleRTL()) {
+      direction.AssignLiteral("rtl");
     }
 
     buffer.AppendLiteral("</head>\n<body dir=\"");

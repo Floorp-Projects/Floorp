@@ -15,6 +15,7 @@
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Telemetry.h"
 #include "nsComponentManagerUtils.h"
+#include "nsGlobalWindow.h"
 #include "nsVariant.h"
 #include "nsVideoFrame.h"
 #include "nsIFrame.h"
@@ -580,8 +581,13 @@ TextTrackManager::DispatchUpdateCueDisplay()
   if (!mUpdateCueDisplayDispatched && !mShutdown &&
       (mMediaElement->GetHasUserInteraction() || mMediaElement->IsCurrentlyPlaying())) {
     WEBVTT_LOG("DispatchUpdateCueDisplay");
-    NS_DispatchToMainThread(NewRunnableMethod(this, &TextTrackManager::UpdateCueDisplay));
-    mUpdateCueDisplayDispatched = true;
+    nsPIDOMWindowInner* win = mMediaElement->OwnerDoc()->GetInnerWindow();
+    if (win) {
+      nsGlobalWindow::Cast(win)->Dispatch(
+        "TextTrackManager::UpdateCueDisplay", TaskCategory::Other,
+        NewRunnableMethod(this, &TextTrackManager::UpdateCueDisplay));
+      mUpdateCueDisplayDispatched = true;
+    }
   }
 }
 
@@ -595,8 +601,13 @@ TextTrackManager::DispatchTimeMarchesOn()
   if (!mTimeMarchesOnDispatched && !mShutdown &&
       (mMediaElement->GetHasUserInteraction() || mMediaElement->IsCurrentlyPlaying())) {
     WEBVTT_LOG("DispatchTimeMarchesOn");
-    NS_DispatchToMainThread(NewRunnableMethod(this, &TextTrackManager::TimeMarchesOn));
-    mTimeMarchesOnDispatched = true;
+    nsPIDOMWindowInner* win = mMediaElement->OwnerDoc()->GetInnerWindow();
+    if (win) {
+      nsGlobalWindow::Cast(win)->Dispatch(
+        "TextTrackManager::TimeMarchesOn", TaskCategory::Other,
+        NewRunnableMethod(this, &TextTrackManager::TimeMarchesOn));
+      mTimeMarchesOnDispatched = true;
+    }
   }
 }
 

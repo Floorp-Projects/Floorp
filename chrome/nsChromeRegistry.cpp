@@ -487,7 +487,6 @@ nsChromeRegistry::FlushAllCaches()
 NS_IMETHODIMP
 nsChromeRegistry::ReloadChrome()
 {
-  UpdateSelectedLocale();
   FlushAllCaches();
   // Do a reload of all top level windows.
   nsresult rv = NS_OK;
