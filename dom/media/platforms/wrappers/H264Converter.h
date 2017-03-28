@@ -63,7 +63,8 @@ private:
   // Will create the required MediaDataDecoder if need AVCC and we have a SPS NAL.
   // Returns NS_ERROR_FAILURE if error is permanent and can't be recovered and
   // will set mError accordingly.
-  nsresult CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics);
+  nsresult CreateDecoder(const VideoInfo& aConfig,
+                         DecoderDoctorDiagnostics* aDiagnostics);
   nsresult CreateDecoderAndInit(MediaRawData* aSample);
   nsresult CheckForSPSChange(MediaRawData* aSample);
   void UpdateConfigFromExtraData(MediaByteBuffer* aExtraData);
@@ -99,8 +100,6 @@ private:
   Maybe<bool> mNeedAVCC;
   nsresult mLastError;
   bool mNeedKeyframe = true;
-  // Set to true once a decoder has been created.
-  bool mUseOriginalConfig = true;
   const TrackInfo::TrackType mType;
   MediaEventProducer<TrackInfo::TrackType>* const mOnWaitingForKeyEvent;
   const CreateDecoderParams::OptionSet mDecoderOptions;

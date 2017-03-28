@@ -31,7 +31,7 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
   , mOnWaitingForKeyEvent(aParams.mOnWaitingForKeyEvent)
   , mDecoderOptions(aParams.mOptions)
 {
-  CreateDecoder(aParams.mDiagnostics);
+  CreateDecoder(mOriginalConfig, aParams.mDiagnostics);
 }
 
 H264Converter::~H264Converter()
@@ -177,16 +177,17 @@ H264Converter::SetSeekThreshold(const media::TimeUnit& aTime)
 }
 
 nsresult
-H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
+H264Converter::CreateDecoder(const VideoInfo& aConfig,
+                             DecoderDoctorDiagnostics* aDiagnostics)
 {
-  if (!mp4_demuxer::AnnexB::HasSPS(mCurrentConfig.mExtraData)) {
+  if (!mp4_demuxer::AnnexB::HasSPS(aConfig.mExtraData)) {
     // nothing found yet, will try again later
     return NS_ERROR_NOT_INITIALIZED;
   }
-  UpdateConfigFromExtraData(mCurrentConfig.mExtraData);
+  UpdateConfigFromExtraData(aConfig.mExtraData);
 
   mp4_demuxer::SPSData spsdata;
-  if (mp4_demuxer::H264::DecodeSPSFromExtraData(mCurrentConfig.mExtraData, spsdata)) {
+  if (mp4_demuxer::H264::DecodeSPSFromExtraData(aConfig.mExtraData, spsdata)) {
     // Do some format check here.
     // WMF H.264 Video Decoder and Apple ATDecoder do not support YUV444 format.
     if (spsdata.profile_idc == 244 /* Hi444PP */
@@ -204,7 +205,7 @@ H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
   }
 
   mDecoder = mPDM->CreateVideoDecoder({
-    mUseOriginalConfig ? mOriginalConfig : mCurrentConfig,
+    aConfig,
     mTaskQueue,
     aDiagnostics,
     mImageContainer,
@@ -220,7 +221,6 @@ H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
     return NS_ERROR_FAILURE;
   }
 
-  mUseOriginalConfig = false;
   mNeedKeyframe = true;
 
   return NS_OK;
@@ -236,7 +236,8 @@ H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
   }
   UpdateConfigFromExtraData(extra_data);
 
-  nsresult rv = CreateDecoder(/* DecoderDoctorDiagnostics* */ nullptr);
+  nsresult rv =
+    CreateDecoder(mCurrentConfig, /* DecoderDoctorDiagnostics* */ nullptr);
 
   if (NS_SUCCEEDED(rv)) {
     // Queue the incoming sample.
