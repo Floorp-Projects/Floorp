@@ -588,10 +588,10 @@ private:
   // Our "ample" audio threshold. Once we've this much audio decoded, we
   // pause decoding. If we increase mLowAudioThreshold, we'll also
   // increase this too appropriately (we don't want mLowAudioThreshold
-  // to be greater than ampleAudioThreshold, else we'd stop decoding!).
+  // to be greater than mAmpleAudioThreshold, else we'd stop decoding!).
   // Note that we don't ever reset this threshold, it only ever grows as
   // we detect that the decode can't keep up with rendering.
-  media::TimeUnit mAmpleAudioThresholdUsecs;
+  media::TimeUnit mAmpleAudioThreshold;
 
   // At the start of decoding we want to "preroll" the decode until we've
   // got a few frames decoded before we consider whether decode is falling
@@ -602,7 +602,7 @@ private:
   uint32_t AudioPrerollUsecs() const
   {
     MOZ_ASSERT(OnTaskQueue());
-    return mAmpleAudioThresholdUsecs.ToMicroseconds() / 2;
+    return mAmpleAudioThreshold.ToMicroseconds() / 2;
   }
 
   uint32_t VideoPrerollFrames() const
