@@ -6,6 +6,9 @@
 
 "use strict";
 
+const Ci = Components.interfaces;
+const Cm = Components.manager;
+const Cr = Components.results;
 const Cu = Components.utils;
 
 const {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
@@ -30,6 +33,25 @@ XPCOMUtils.defineLazyGetter(this, "JsonViewSniffer", function () {
 
 // Constants
 const JSON_VIEW_PREF = "devtools.jsonview.enabled";
+const JSON_VIEW_MIME_TYPE = "application/vnd.mozilla.json.view";
+const JSON_VIEW_CONTRACT_ID = "@mozilla.org/streamconv;1?from=" +
+  JSON_VIEW_MIME_TYPE + "&to=*/*";
+const JSON_VIEW_CLASS_ID = Components.ID("{d8c9acee-dec5-11e4-8c75-1681e6b88ec1}");
+const JSON_VIEW_CLASS_DESCRIPTION = "JSONView converter";
+
+/*
+ * Create instances of the JSON view converter.
+ * This is done in the .js file rather than a .jsm to avoid creating
+ * a compartment at startup when no JSON is being viewed.
+ */
+const JsonViewFactory = {
+  createInstance: function (outer, iid) {
+    if (outer) {
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    }
+    return JsonViewService.createInstance();
+  }
+};
 
 /**
  * Listen for 'devtools.jsonview.enabled' preference changes and
@@ -77,12 +99,23 @@ ConverterObserver.prototype = {
 
   register: function () {
     JsonViewSniffer.register();
-    JsonViewService.register();
+
+    const registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
+    if (!registrar.isCIDRegistered(JSON_VIEW_CLASS_ID)) {
+      registrar.registerFactory(JSON_VIEW_CLASS_ID,
+        JSON_VIEW_CLASS_DESCRIPTION,
+        JSON_VIEW_CONTRACT_ID,
+        JsonViewFactory);
+    }
   },
 
   unregister: function () {
     JsonViewSniffer.unregister();
-    JsonViewService.unregister();
+
+    const registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
+    if (registrar.isCIDRegistered(JSON_VIEW_CLASS_ID)) {
+      registrar.unregisterFactory(JSON_VIEW_CLASS_ID, JsonViewFactory);
+    }
   },
 
   isEnabled: function () {
