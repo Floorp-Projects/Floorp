@@ -119,7 +119,6 @@ class RegExpShared : public gc::TenuredCell
         uint8_t* byteCode;
 
         RegExpCompilation() : byteCode(nullptr) {}
-        ~RegExpCompilation() { js_free(byteCode); }
 
         bool compiled(ForceByteCodeEnum force = DontForceByteCode) const {
             return byteCode || (force == DontForceByteCode && jitCode);

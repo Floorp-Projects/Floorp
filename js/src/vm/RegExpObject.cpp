@@ -969,6 +969,8 @@ RegExpShared::discardJitCode()
 void
 RegExpShared::finalize(FreeOp* fop)
 {
+    for (auto& comp : compilationArray)
+        js_free(comp.byteCode);
     for (size_t i = 0; i < tables.length(); i++)
         js_free(tables[i]);
     tables.~JitCodeTables();
