@@ -1198,9 +1198,78 @@ CacheFile::GetFrecency(uint32_t *_retval)
   return mMetadata->GetFrecency(_retval);
 }
 
+nsresult CacheFile::SetNetworkTimes(uint64_t aOnStartTime, uint64_t aOnStopTime)
+{
+  CacheFileAutoLock lock(this);
+
+  LOG(("CacheFile::SetNetworkTimes() this=%p, aOnStartTime=%" PRIu64
+       ", aOnStopTime=%" PRIu64 "", this, aOnStartTime, aOnStopTime));
+
+  MOZ_ASSERT(mMetadata);
+  NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
+  MOZ_ASSERT(aOnStartTime != kIndexTimeNotAvailable);
+  MOZ_ASSERT(aOnStopTime != kIndexTimeNotAvailable);
+
+  PostWriteTimer();
+
+  nsAutoCString onStartTime;
+  onStartTime.AppendInt(aOnStartTime);
+  nsresult rv = mMetadata->SetElement("net-response-time-onstart", onStartTime.get());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsAutoCString onStopTime;
+  onStopTime.AppendInt(aOnStopTime);
+  rv = mMetadata->SetElement("net-response-time-onstop", onStopTime.get());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  uint16_t onStartTime16 = aOnStartTime <= kIndexTimeOutOfBound ? aOnStartTime : kIndexTimeOutOfBound;
+  uint16_t onStopTime16 = aOnStopTime <= kIndexTimeOutOfBound ? aOnStopTime : kIndexTimeOutOfBound;
+
+  if (mHandle && !mHandle->IsDoomed()) {
+    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, nullptr, nullptr,
+                                         &onStartTime16, &onStopTime16);
+  }
+  return NS_OK;
+}
+
+nsresult CacheFile::GetOnStartTime(uint64_t *_retval)
+{
+  CacheFileAutoLock lock(this);
+
+  MOZ_ASSERT(mMetadata);
+  const char *onStartTimeStr = mMetadata->GetElement("net-response-time-onstart");
+  if (!onStartTimeStr) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  nsresult rv;
+  *_retval = nsCString(onStartTimeStr).ToInteger64(&rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  return NS_OK;
+}
+
+nsresult CacheFile::GetOnStopTime(uint64_t *_retval)
+{
+  CacheFileAutoLock lock(this);
+
+  MOZ_ASSERT(mMetadata);
+  const char *onStopTimeStr = mMetadata->GetElement("net-response-time-onstop");
+  if (!onStopTimeStr) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  nsresult rv;
+  *_retval = nsCString(onStopTimeStr).ToInteger64(&rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  return NS_OK;
+}
+
 nsresult
 CacheFile::SetAltMetadata(const char* aAltMetadata)
 {
+  AssertOwnsLock();
   LOG(("CacheFile::SetAltMetadata() this=%p, aAltMetadata=%s",
        this, aAltMetadata ? aAltMetadata : ""));
 

@@ -61,6 +61,19 @@ interface nsICacheEntry : nsISupports
   void setExpirationTime(in uint32_t expirationTime);
 
   /**
+   * Get the last network response times for onStartReqeust/onStopRequest (in ms).
+   * @throws
+   *    - NS_ERROR_NOT_AVAILABLE if onStartTime/onStopTime does not exist.
+   */
+  readonly attribute uint64_t  onStartTime;
+  readonly attribute uint64_t  onStopTime;
+
+  /**
+   * Set the network response times for onStartReqeust/onStopRequest (in ms).
+   */
+  void setNetworkTimes(in uint64_t onStartTime, in uint64_t onStopTime);
+
+  /**
    * This method is intended to override the per-spec cache validation
    * decisions for a duration specified in seconds. The current state can
    * be examined with isForcedValid (see below). This value is not persisted,
