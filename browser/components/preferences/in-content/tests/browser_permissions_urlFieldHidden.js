@@ -3,7 +3,7 @@
 const PERMISSIONS_URL = "chrome://browser/content/preferences/permissions.xul";
 
 add_task(function* urlFieldVisibleForPopupPermissions(finish) {
-  yield openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
+  yield openPreferencesViaOpenPreferencesAPI("paneContent", null, {leaveOpen: true});
   let win = gBrowser.selectedBrowser.contentWindow;
   let doc = win.document;
   let popupPolicyCheckbox = doc.getElementById("popupPolicy");
@@ -26,7 +26,7 @@ add_task(function* urlFieldVisibleForPopupPermissions(finish) {
 });
 
 add_task(function* urlFieldHiddenForNotificationPermissions() {
-  yield openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
+  yield openPreferencesViaOpenPreferencesAPI("paneContent", null, {leaveOpen: true});
   let win = gBrowser.selectedBrowser.contentWindow;
   let doc = win.document;
   let notificationsPolicyButton = doc.getElementById("notificationsPolicyButton");
