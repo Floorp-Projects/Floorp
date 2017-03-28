@@ -385,9 +385,6 @@ BrowserGlue.prototype = {
       case "test-initialize-sanitizer":
         this._sanitizer.onStartup();
         break;
-      case AddonWatcher.TOPIC_SLOW_ADDON_DETECTED:
-        this._notifySlowAddon(data);
-        break;
     }
   },
 
@@ -426,10 +423,6 @@ BrowserGlue.prototype = {
     os.addObserver(this, "restart-in-safe-mode", false);
     os.addObserver(this, "flash-plugin-hang", false);
     os.addObserver(this, "xpi-signature-changed", false);
-
-    if (AppConstants.NIGHTLY_BUILD) {
-      os.addObserver(this, AddonWatcher.TOPIC_SLOW_ADDON_DETECTED, false);
-    }
 
     this._flashHangCount = 0;
     this._firstWindowReady = new Promise(resolve => this._firstWindowLoaded = resolve);
@@ -484,116 +477,6 @@ BrowserGlue.prototype = {
     // apply distribution customizations (prefs)
     // other customizations are applied in _finalUIStartup()
     this._distributionCustomizer.applyPrefDefaults();
-  },
-
-  _notifySlowAddon: function BG_notifySlowAddon(addonId) {
-    let addonCallback = function(addon) {
-      if (!addon) {
-        Cu.reportError("couldn't look up addon: " + addonId);
-        return;
-      }
-      let win = RecentWindow.getMostRecentBrowserWindow();
-
-      if (!win) {
-        return;
-      }
-
-      let brandBundle = win.document.getElementById("bundle_brand");
-      let brandShortName = brandBundle.getString("brandShortName");
-      let message = win.gNavigatorBundle.getFormattedString("addonwatch.slow", [addon.name, brandShortName]);
-      let notificationBox = win.document.getElementById("global-notificationbox");
-      let notificationId = "addon-slow:" + addonId;
-      let notification = notificationBox.getNotificationWithValue(notificationId);
-
-      // Monitor the response of users
-      const STATE_WARNING_DISPLAYED = 0;
-      const STATE_USER_PICKED_DISABLE = 1;
-      const STATE_USER_PICKED_IGNORE_FOR_NOW = 2;
-      const STATE_USER_PICKED_IGNORE_FOREVER = 3;
-      const STATE_USER_CLOSED_NOTIFICATION = 4;
-
-      let update = function(response) {
-        Services.telemetry.getHistogramById("SLOW_ADDON_WARNING_STATES").add(response);
-      }
-
-      let complete = false;
-      let start = Date.now();
-      let done = function(response) {
-        // Only report the first reason for closing.
-        if (complete) {
-          return;
-        }
-        complete = true;
-        update(response);
-        Services.telemetry.getHistogramById("SLOW_ADDON_WARNING_RESPONSE_TIME").add(Date.now() - start);
-      };
-
-      update(STATE_WARNING_DISPLAYED);
-
-      if (notification) {
-        notification.label = message;
-      } else {
-        let buttons = [
-          {
-            label: win.gNavigatorBundle.getFormattedString("addonwatch.disable.label", [addon.name]),
-            accessKey: "", // workaround for bug 1192901
-            callback() {
-              done(STATE_USER_PICKED_DISABLE);
-              addon.userDisabled = true;
-              if (addon.pendingOperations == addon.PENDING_NONE) {
-                return;
-              }
-              let restartMessage = win.gNavigatorBundle.getFormattedString("addonwatch.restart.message", [addon.name, brandShortName]);
-              let restartButton = [
-                {
-                  label: win.gNavigatorBundle.getFormattedString("addonwatch.restart.label", [brandShortName]),
-                  accessKey: win.gNavigatorBundle.getString("addonwatch.restart.accesskey"),
-                  callback() {
-                    let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
-                      .getService(Ci.nsIAppStartup);
-                    appStartup.quit(appStartup.eForceQuit | appStartup.eRestart);
-                  }
-                }
-              ];
-              const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-              notificationBox.appendNotification(restartMessage, "restart-" + addonId, "",
-                                                 priority, restartButton);
-            }
-          },
-          {
-            label: win.gNavigatorBundle.getString("addonwatch.ignoreSession.label"),
-            accessKey: win.gNavigatorBundle.getString("addonwatch.ignoreSession.accesskey"),
-            callback() {
-              done(STATE_USER_PICKED_IGNORE_FOR_NOW);
-              AddonWatcher.ignoreAddonForSession(addonId);
-            }
-          },
-          {
-            label: win.gNavigatorBundle.getString("addonwatch.ignorePerm.label"),
-            accessKey: win.gNavigatorBundle.getString("addonwatch.ignorePerm.accesskey"),
-            callback() {
-              done(STATE_USER_PICKED_IGNORE_FOREVER);
-              AddonWatcher.ignoreAddonPermanently(addonId);
-            }
-          },
-        ];
-
-        const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-        notification = notificationBox.appendNotification(
-          message, notificationId, "",
-          priority, buttons,
-          function(topic) {
-            if (topic == "removed") {
-              // Other callbacks are called before this one and only the first
-              // call to `done` is taken into account, so if this call to `done`
-              // gets through, this means that the user has closed the notification
-              // manually.
-              done(STATE_USER_CLOSED_NOTIFICATION);
-            }
-          });
-      }
-    };
-    AddonManager.getAddonByID(addonId, addonCallback);
   },
 
   // runs on startup, before the first command line handler is invoked
