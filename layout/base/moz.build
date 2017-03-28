@@ -20,6 +20,7 @@ with Files('AccessibleCaret*'):
     BUG_COMPONENT = ('Core', 'Selection')
 
 XPIDL_SOURCES += [
+    'nsILayoutHistoryState.idl',
     'nsIPreloadedStyleSheet.idl',
     'nsIStyleSheetService.idl',
 ]
@@ -47,7 +48,6 @@ EXPORTS += [
     'nsFrameTraversal.h',
     'nsIFrameTraversal.h',
     'nsILayoutDebugger.h',
-    'nsILayoutHistoryState.h',
     'nsIPercentBSizeObserver.h',
     'nsIPresShell.h',
     'nsIPresShellInlines.h',

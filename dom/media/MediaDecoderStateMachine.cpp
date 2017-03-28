@@ -2700,7 +2700,8 @@ MediaDecoderStateMachine::CreateAudioSink()
   auto audioSinkCreator = [self] () {
     MOZ_ASSERT(self->OnTaskQueue());
     AudioSink* audioSink = new AudioSink(
-      self->mTaskQueue, self->mAudioQueue, self->GetMediaTime(),
+      self->mTaskQueue, self->mAudioQueue,
+      TimeUnit::FromMicroseconds(self->GetMediaTime()),
       self->Info().mAudio, self->mAudioChannel);
 
     self->mAudibleListener = audioSink->AudibleEvent().Connect(
@@ -3492,7 +3493,7 @@ MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically()
   // Cap the current time to the larger of the audio and video end time.
   // This ensures that if we're running off the system clock, we don't
   // advance the clock to after the media end time.
-  if (VideoEndTime() != -1 || AudioEndTime() != -1) {
+  if (VideoEndTime() > 0 || AudioEndTime() > 0) {
 
     const int64_t clockTime = GetClock();
     // Skip frames up to the frame at the playback position, and figure out
@@ -3651,7 +3652,7 @@ MediaDecoderStateMachine::AudioEndTime() const
   if (mMediaSink->IsStarted()) {
     return mMediaSink->GetEndTime(TrackInfo::kAudioTrack);
   }
-  return -1;
+  return 0;
 }
 
 int64_t
@@ -3661,7 +3662,7 @@ MediaDecoderStateMachine::VideoEndTime() const
   if (mMediaSink->IsStarted()) {
     return mMediaSink->GetEndTime(TrackInfo::kVideoTrack);
   }
-  return -1;
+  return 0;
 }
 
 void

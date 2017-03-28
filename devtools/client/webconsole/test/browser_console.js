@@ -50,6 +50,17 @@ function consoleOpened(hud) {
   // Use another js script to not depend on the test file line numbers.
   Services.scriptloader.loadSubScript(TEST_FILE, hud.iframeWindow);
 
+  // Bug 1348885: test that error from nuked globals do not throw
+  let sandbox = new Cu.Sandbox(null, {
+    wantComponents: false,
+    wantGlobalProperties: ["URL", "URLSearchParams"],
+  });
+  let error = Cu.evalInSandbox(`
+    new Error("1348885");
+  `, sandbox);
+  Cu.reportError(error);
+  Cu.nukeSandbox(sandbox);
+
   // Add a message from a content window.
   content.console.log("bug587757b");
 
@@ -98,6 +109,12 @@ function consoleOpened(hud) {
         // just assert Cu.reportError call site
         // and consoleOpened call
         ]
+      },
+      {
+        name: "Error from nuked global works",
+        text: "1348885",
+        category: CATEGORY_JS,
+        severity: SEVERITY_ERROR,
       },
       {
         name: "content window console.log() is displayed",

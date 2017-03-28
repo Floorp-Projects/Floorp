@@ -6358,8 +6358,8 @@ nsHttpChannel::ContinueBeginConnectWithResult()
     }
 
     LOG(("nsHttpChannel::ContinueBeginConnectWithResult result [this=%p rv=%" PRIx32
-         " mCanceled=%i]\n",
-         this, static_cast<uint32_t>(rv), mCanceled));
+         " mCanceled=%u]\n",
+         this, static_cast<uint32_t>(rv), static_cast<bool>(mCanceled)));
     return rv;
 }
 

@@ -116,11 +116,12 @@ public:
   // posted because updates on the main thread are throttled.
   void PostRestyleForThrottledAnimations();
 
-  // Called when the style context on the specified (pseudo-) element might
+  // Called when computed style on the specified (pseudo-) element might
   // have changed so that any context-sensitive values stored within
   // animation effects (e.g. em-based endpoints used in keyframe effects)
   // can be re-resolved to computed values.
-  void UpdateEffectProperties(nsStyleContext* aStyleContext,
+  template<typename StyleType>
+  void UpdateEffectProperties(StyleType&& aStyleType,
                               dom::Element* aElement,
                               CSSPseudoElementType aPseudoType);
 

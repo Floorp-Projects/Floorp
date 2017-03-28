@@ -12,6 +12,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/TimeRanges.h"
+#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 namespace media {
@@ -105,7 +106,7 @@ public:
     }
   }
 
-  static TimeUnit FromMicroseconds(int64_t aValue) {
+  static constexpr TimeUnit FromMicroseconds(int64_t aValue) {
     return TimeUnit(aValue);
   }
 
@@ -113,12 +114,20 @@ public:
     return TimeUnit(aValue.mValue);
   }
 
-  static TimeUnit FromNanoseconds(int64_t aValue) {
+  static constexpr TimeUnit FromNanoseconds(int64_t aValue) {
     return TimeUnit(aValue / 1000);
   }
 
-  static TimeUnit FromInfinity() {
+  static constexpr TimeUnit FromInfinity() {
     return TimeUnit(INT64_MAX);
+  }
+
+  static TimeUnit FromTimeDuration(const TimeDuration& aDuration) {
+    return FromSeconds(aDuration.ToSeconds());
+  }
+
+  static constexpr TimeUnit Zero() {
+    return TimeUnit(0);
   }
 
   static TimeUnit Invalid() {
@@ -142,6 +151,10 @@ public:
       return PositiveInfinity<double>();
     }
     return double(mValue.value()) / USECS_PER_S;
+  }
+
+  TimeDuration ToTimeDuration() const {
+    return TimeDuration::FromMicroseconds(mValue.value());
   }
 
   bool IsInfinite() const {
@@ -207,7 +220,7 @@ public:
     return mValue.isValid();
   }
 
-  TimeUnit()
+  constexpr TimeUnit()
     : mValue(CheckedInt64(0))
   {}
 
@@ -225,7 +238,7 @@ public:
   TimeUnit& operator = (const TimeUnit&) = default;
 
 private:
-  explicit TimeUnit(CheckedInt64 aMicroseconds)
+  explicit constexpr TimeUnit(CheckedInt64 aMicroseconds)
     : mValue(aMicroseconds)
   {}
 

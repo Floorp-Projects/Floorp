@@ -13,6 +13,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Animation.h"
+#include "mozilla/AnimationTarget.h"
 #include "mozilla/Attributes.h" // For MOZ_NON_OWNING_REF
 #include "mozilla/Assertions.h"
 #include "mozilla/TimingParams.h"
@@ -111,48 +112,48 @@ protected:
 class OwningElementRef final
 {
 public:
-  OwningElementRef()
-    : mElement(nullptr)
-    , mPseudoType(CSSPseudoElementType::NotPseudo)
+  OwningElementRef() = default;
+
+  explicit OwningElementRef(const NonOwningAnimationTarget& aTarget)
+    : mTarget(aTarget)
   { }
 
   OwningElementRef(dom::Element& aElement,
                    CSSPseudoElementType aPseudoType)
-    : mElement(&aElement)
-    , mPseudoType(aPseudoType)
+    : mTarget(&aElement, aPseudoType)
   { }
 
   bool Equals(const OwningElementRef& aOther) const
   {
-    return mElement == aOther.mElement &&
-           mPseudoType == aOther.mPseudoType;
+    return mTarget == aOther.mTarget;
   }
 
   bool LessThan(const OwningElementRef& aOther) const
   {
-    MOZ_ASSERT(mElement && aOther.mElement,
+    MOZ_ASSERT(mTarget.mElement && aOther.mTarget.mElement,
                "Elements to compare should not be null");
 
-    if (mElement != aOther.mElement) {
-      return nsContentUtils::PositionIsBefore(mElement, aOther.mElement);
+    if (mTarget.mElement != aOther.mTarget.mElement) {
+      return nsContentUtils::PositionIsBefore(mTarget.mElement,
+                                              aOther.mTarget.mElement);
     }
 
-    return mPseudoType == CSSPseudoElementType::NotPseudo ||
-          (mPseudoType == CSSPseudoElementType::before &&
-           aOther.mPseudoType == CSSPseudoElementType::after);
+    return mTarget.mPseudoType == CSSPseudoElementType::NotPseudo ||
+          (mTarget.mPseudoType == CSSPseudoElementType::before &&
+           aOther.mTarget.mPseudoType == CSSPseudoElementType::after);
   }
 
-  bool IsSet() const { return !!mElement; }
+  bool IsSet() const { return !!mTarget.mElement; }
 
   void GetElement(dom::Element*& aElement,
-                  CSSPseudoElementType& aPseudoType) const {
-    aElement = mElement;
-    aPseudoType = mPseudoType;
+                  CSSPseudoElementType& aPseudoType) const
+  {
+    aElement = mTarget.mElement;
+    aPseudoType = mTarget.mPseudoType;
   }
 
 private:
-  dom::Element* MOZ_NON_OWNING_REF mElement;
-  CSSPseudoElementType             mPseudoType;
+  NonOwningAnimationTarget mTarget;
 };
 
 template <class EventInfo>

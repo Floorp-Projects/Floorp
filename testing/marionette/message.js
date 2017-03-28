@@ -9,6 +9,7 @@ var {utils: Cu} = Components;
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
+Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/error.js");
 
 this.EXPORTED_SYMBOLS = [
@@ -67,18 +68,18 @@ Message.fromMsg = function (data) {
  *
  * where
  *
- *   type:
+ *   type (integer)
  *     Must be zero (integer). Zero means that this message is a command.
  *
- *   id:
- *     Number used as a sequence number.  The server replies with a
- *     requested id.
+ *   id (integer)
+ *     Integer used as a sequence number.  The server replies with the
+ *     same ID for the response.
  *
- *   name:
+ *   name (string)
  *     String representing the command name with an associated set of
  *     remote end steps.
  *
- *   params:
+ *   params (JSON Object or null)
  *     Object of command function arguments.  The keys of this object
  *     must be strings, but the values can be arbitrary values.
  *
@@ -98,10 +99,10 @@ Message.fromMsg = function (data) {
  *     Command parameters.
  */
 this.Command = class {
-  constructor(msgId, name, params={}) {
-    this.id = msgId;
-    this.name = name;
-    this.parameters = params;
+  constructor(msgID, name, params = {}) {
+    this.id = assert.integer(msgID);
+    this.name = assert.string(name);
+    this.parameters = assert.object(params);
 
     this.onerror = null;
     this.onresult = null;
@@ -119,9 +120,9 @@ this.Command = class {
    *     {@code onerror} or {@code onresult} handlers to.
    */
   onresponse(resp) {
-    if (resp.error && this.onerror) {
+    if (this.onerror && resp.error) {
       this.onerror(resp.error);
-    } else if (resp.body && this.onresult) {
+    } else if (this.onresult && resp.body) {
       this.onresult(resp.body);
     }
   }
@@ -133,11 +134,19 @@ this.Command = class {
   toString() {
     return "Command {id: " + this.id + ", " +
         "name: " + JSON.stringify(this.name) + ", " +
-        "parameters: " + JSON.stringify(this.parameters) + "}"
+        "parameters: " + JSON.stringify(this.parameters) + "}";
   }
 
   static fromMsg(msg) {
-    return new Command(msg[1], msg[2], msg[3]);
+    let [type, msgID, name, params] = msg;
+    assert.that(n => n === Command.TYPE)(type);
+
+    // if parameters are given but null, treat them as undefined
+    if (params === null) {
+      params = undefined;
+    }
+
+    return new Command(msgID, name, params);
   }
 };
 
@@ -194,23 +203,22 @@ this.ResponseBody = () => new Proxy({}, validator);
  * has finished executing, and any modifications made subsequent to that
  * will have no effect.
  *
- * @param {number} msgId
+ * @param {number} msgID
  *     Message ID tied to the corresponding command request this is a
  *     response for.
  * @param {function(Response|Message)} respHandler
  *     Function callback called on sending the response.
  */
 this.Response = class {
-  constructor(msgId, respHandler) {
-    this.id = msgId;
+  constructor(msgID, respHandler = () => {}) {
+    this.id = assert.integer(msgID);
+    this.respHandler_ = assert.callable(respHandler);
 
     this.error = null;
     this.body = ResponseBody();
 
     this.origin = MessageOrigin.Server;
     this.sent = false;
-
-    this.respHandler_ = respHandler;
   }
 
   /**
@@ -275,9 +283,13 @@ this.Response = class {
   }
 
   static fromMsg(msg) {
-    let resp = new Response(msg[1], null);
-    resp.error = msg[2];
-    resp.body = msg[3];
+    let [type, msgID, err, body] = msg;
+    assert.that(n => n === Response.TYPE)(type);
+
+    let resp = new Response(msgID);
+    resp.error = assert.string(err);
+
+    resp.body = body;
     return resp;
   }
 };
