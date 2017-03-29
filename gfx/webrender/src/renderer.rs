@@ -21,7 +21,7 @@ use gpu_store::{GpuStore, GpuStoreLayout};
 use internal_types::{CacheTextureId, RendererFrame, ResultMsg, TextureUpdateOp};
 use internal_types::{ExternalImageUpdateList, TextureUpdateList, PackedVertex, RenderTargetMode};
 use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, SourceTexture};
-use internal_types::{BatchTextures, TextureSampler, GLContextHandleWrapper};
+use internal_types::{BatchTextures, TextureSampler};
 use prim_store::GradientData;
 use profiler::{Profiler, BackendProfileCounters};
 use profiler::{GpuProfileTag, RendererProfileTimers, RendererProfileCounters};
@@ -43,10 +43,11 @@ use std::thread;
 use texture_cache::TextureCache;
 use threadpool::ThreadPool;
 use tiling::{AlphaBatchKind, BlurCommand, Frame, PrimitiveBatch, PrimitiveBatchData};
-use tiling::{CacheClipInstance, PrimitiveInstance, RenderTarget};
+use tiling::{AlphaRenderTarget, CacheClipInstance, PrimitiveInstance, ColorRenderTarget, RenderTargetKind};
 use time::precise_time_ns;
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use util::TransformedRectKind;
+use webgl_types::GLContextHandleWrapper;
 use webrender_traits::{ColorF, Epoch, PipelineId, RenderNotifier, RenderDispatcher};
 use webrender_traits::{ExternalImageId, ImageData, ImageFormat, RenderApiSender};
 use webrender_traits::{DeviceIntRect, DevicePoint, DeviceIntPoint, DeviceIntSize, DeviceUintSize};
@@ -154,15 +155,22 @@ impl<L: GpuStoreLayout> GpuDataTexture<L> {
         }
 
         let items_per_row = L::items_per_row::<T>();
+        let rows_per_item = L::rows_per_item::<T>();
 
         // Extend the data array to be a multiple of the row size.
         // This ensures memory safety when the array is passed to
         // OpenGL to upload to the GPU.
-        while data.len() % items_per_row != 0 {
-            data.push(T::default());
+        if items_per_row != 0 {
+            while data.len() % items_per_row != 0 {
+                data.push(T::default());
+            }
         }
 
-        let height = data.len() / items_per_row;
+        let height = if items_per_row != 0 {
+            data.len() / items_per_row
+        } else {
+            data.len() * rows_per_item
+        };
 
         device.init_texture(self.id,
                             L::texture_width::<T>() as u32,
@@ -201,7 +209,7 @@ impl GpuStoreLayout for GradientDataTextureLayout {
     }
 
     fn texture_width<T>() -> usize {
-        mem::size_of::<GradientData>() / Self::texel_size()
+        mem::size_of::<GradientData>() / Self::texel_size() / 2
     }
 
     fn texture_filter() -> TextureFilter {
@@ -482,7 +490,8 @@ pub struct Renderer {
     profiler: Profiler,
     last_time: u64,
 
-    render_targets: Vec<TextureId>,
+    color_render_targets: Vec<TextureId>,
+    alpha_render_targets: Vec<TextureId>,
 
     gpu_profile: GpuProfiler<GpuProfileTag>,
     prim_vao_id: VAOId,
@@ -511,6 +520,8 @@ pub struct Renderer {
     /// with the cache but are actually running in the first pass
     /// when no target is yet provided as a cache texture input.
     dummy_cache_texture_id: TextureId,
+
+    dither_matrix_texture_id: TextureId,
 
     /// Optional trait object that allows the client
     /// application to provide external buffers for image data.
@@ -748,6 +759,18 @@ impl Renderer {
             0xff, 0xff,
             0xff, 0xff,
         ];
+
+        let dither_matrix: [u8; 64] = [
+            00, 48, 12, 60, 03, 51, 15, 63,
+            32, 16, 44, 28, 35, 19, 47, 31,
+            08, 56, 04, 52, 11, 59, 07, 55,
+            40, 24, 36, 20, 43, 27, 39, 23,
+            02, 50, 14, 62, 01, 49, 13, 61,
+            34, 18, 46, 30, 33, 17, 45, 29,
+            10, 58, 06, 54, 09, 57, 05, 53,
+            42, 26, 38, 22, 41, 25, 37, 21
+        ];
+
         // TODO: Ensure that the white texture can never get evicted when the cache supports LRU eviction!
         let white_image_id = texture_cache.new_item_id();
         texture_cache.insert(white_image_id,
@@ -771,6 +794,15 @@ impl Renderer {
                             TextureFilter::Linear,
                             RenderTargetMode::LayerRenderTarget(1),
                             None);
+
+        let dither_matrix_texture_id = device.create_texture_ids(1, TextureTarget::Default)[0];
+        device.init_texture(dither_matrix_texture_id,
+                            8,
+                            8,
+                            ImageFormat::A8,
+                            TextureFilter::Nearest,
+                            RenderTargetMode::None,
+                            Some(&dither_matrix));
 
         let debug_renderer = DebugRenderer::new(&mut device);
 
@@ -901,7 +933,8 @@ impl Renderer {
             clear_framebuffer: options.clear_framebuffer,
             clear_color: options.clear_color,
             last_time: 0,
-            render_targets: Vec::new(),
+            color_render_targets: Vec::new(),
+            alpha_render_targets: Vec::new(),
             gpu_profile: gpu_profile,
             prim_vao_id: prim_vao_id,
             blur_vao_id: blur_vao_id,
@@ -912,6 +945,7 @@ impl Renderer {
             main_thread_dispatcher: main_thread_dispatcher,
             cache_texture_id_map: Vec::new(),
             dummy_cache_texture_id: dummy_cache_texture_id,
+            dither_matrix_texture_id: dither_matrix_texture_id,
             external_image_handler: None,
             external_images: HashMap::with_hasher(Default::default()),
             vr_compositor_handler: vr_compositor,
@@ -1252,6 +1286,9 @@ impl Renderer {
             self.device.bind_texture(TextureSampler::color(i), texture_id);
         }
 
+        // TODO: this probably isn't the best place for this.
+        self.device.bind_texture(TextureSampler::Dither, self.dither_matrix_texture_id);
+
         self.device.update_vao_instances(vao, data, VertexUsageHint::Stream);
         self.device.draw_indexed_triangles_instanced_u16(6, data.len() as i32);
         self.profile_counters.vertices.add(6 * data.len());
@@ -1407,75 +1444,30 @@ impl Renderer {
         }
     }
 
-    fn draw_target(&mut self,
-                   render_target: Option<(TextureId, i32)>,
-                   target: &RenderTarget,
-                   target_size: DeviceUintSize,
-                   cache_texture: TextureId,
-                   should_clear: bool,
-                   background_color: Option<ColorF>,
-                   render_task_data: &Vec<RenderTaskData>) {
-        self.device.disable_depth();
-        self.device.enable_depth_write();
-
-        let projection = {
+    fn draw_color_target(&mut self,
+                         render_target: Option<(TextureId, i32)>,
+                         target: &ColorRenderTarget,
+                         target_size: DeviceUintSize,
+                         color_cache_texture: TextureId,
+                         clear_color: Option<[f32; 4]>,
+                         render_task_data: &Vec<RenderTaskData>,
+                         projection: &Matrix4D<f32>) {
+        {
             let _gm = self.gpu_profile.add_marker(GPU_TAG_SETUP_TARGET);
             self.device.bind_draw_target(render_target, Some(target_size));
-
+            self.device.disable_depth();
+            self.device.enable_depth_write();
             self.device.set_blend(false);
             self.device.set_blend_mode_alpha();
-            self.device.bind_texture(TextureSampler::Cache, cache_texture);
-
-            let (color, projection) = match render_target {
-                Some(..) => (
-                    // The clear color here is chosen specifically such that:
-                    // - The red channel is cleared to 1, so that the clip mask
-                    //   generation (which reads/writes the red channel) can
-                    //   assume that each allocated rect is opaque / non-clipped
-                    //   initially.
-                    // - The alpha channel is cleared to 0, so that visual render
-                    //   tasks can assume that pixels are transparent if not
-                    //   rendered. (This is relied on by the compositing support
-                    //   for mix-blend-mode etc).
-                    [1.0, 1.0, 1.0, 0.0],
-                    Matrix4D::ortho(0.0,
-                                   target_size.width as f32,
-                                   0.0,
-                                   target_size.height as f32,
-                                   ORTHO_NEAR_PLANE,
-                                   ORTHO_FAR_PLANE)
-                ),
-                None => (
-                    background_color.map_or(self.clear_color.to_array(), |color| {
-                        color.to_array()
-                    }),
-                    Matrix4D::ortho(0.0,
-                                   target_size.width as f32,
-                                   target_size.height as f32,
-                                   0.0,
-                                   ORTHO_NEAR_PLANE,
-                                   ORTHO_FAR_PLANE)
-                ),
-            };
-
-            let clear_depth = Some(1.0);
-            let clear_color = if should_clear {
-                Some(color)
-            } else {
-                None
-            };
-
-            self.device.clear_target(clear_color, clear_depth);
+            self.device.clear_target(clear_color, Some(1.0));
 
             let isolate_clear_color = Some([0.0, 0.0, 0.0, 0.0]);
             for isolate_clear in &target.isolate_clears {
                 self.device.clear_target_rect(isolate_clear_color, None, *isolate_clear);
             }
 
-            projection
-        };
-
-        self.device.disable_depth_write();
+            self.device.disable_depth_write();
+        }
 
         // Draw any blurs for this target.
         // Blurs are rendered as a standard 2-pass
@@ -1515,37 +1507,6 @@ impl Renderer {
                                       &projection);
         }
 
-        // Draw the clip items into the tiled alpha mask.
-        {
-            let _gm = self.gpu_profile.add_marker(GPU_TAG_CACHE_CLIP);
-            let vao = self.clip_vao_id;
-            // switch to multiplicative blending
-            self.device.set_blend(true);
-            self.device.set_blend_mode_multiply();
-            // draw rounded cornered rectangles
-            if !target.clip_batcher.rectangles.is_empty() {
-                let _gm2 = GpuMarker::new(self.device.rc_gl(), "clip rectangles");
-                let shader = self.cs_clip_rectangle.get(&mut self.device).unwrap();
-                self.draw_instanced_batch(&target.clip_batcher.rectangles,
-                                          vao,
-                                          shader,
-                                          &BatchTextures::no_texture(),
-                                          &projection);
-            }
-            // draw image masks
-            for (mask_texture_id, items) in target.clip_batcher.images.iter() {
-                let _gm2 = GpuMarker::new(self.device.rc_gl(), "clip images");
-                let texture_id = self.resolve_source_texture(mask_texture_id);
-                self.device.bind_texture(TextureSampler::Mask, texture_id);
-                let shader = self.cs_clip_image.get(&mut self.device).unwrap();
-                self.draw_instanced_batch(items,
-                                          vao,
-                                          shader,
-                                          &BatchTextures::no_texture(),
-                                          &projection);
-            }
-        }
-
         // Draw any textrun caches for this target. For now, this
         // is only used to cache text runs that are to be blurred
         // for text-shadow support. In the future it may be worth
@@ -1579,7 +1540,7 @@ impl Renderer {
             self.submit_batch(batch,
                               &projection,
                               render_task_data,
-                              cache_texture,
+                              color_cache_texture,
                               render_target,
                               target_size);
         }
@@ -1611,13 +1572,61 @@ impl Renderer {
             self.submit_batch(batch,
                               &projection,
                               render_task_data,
-                              cache_texture,
+                              color_cache_texture,
                               render_target,
                               target_size);
         }
 
         self.device.disable_depth();
         self.device.set_blend(false);
+    }
+
+    fn draw_alpha_target(&mut self,
+                         render_target: (TextureId, i32),
+                         target: &AlphaRenderTarget,
+                         target_size: DeviceUintSize,
+                         projection: &Matrix4D<f32>) {
+        {
+            let _gm = self.gpu_profile.add_marker(GPU_TAG_SETUP_TARGET);
+            self.device.bind_draw_target(Some(render_target), Some(target_size));
+            self.device.disable_depth();
+            self.device.disable_depth_write();
+
+            let clear_color = [1.0, 1.0, 1.0, 0.0];
+            self.device.clear_target(Some(clear_color), None);
+        }
+
+        // Draw the clip items into the tiled alpha mask.
+        {
+            let _gm = self.gpu_profile.add_marker(GPU_TAG_CACHE_CLIP);
+            let vao = self.clip_vao_id;
+            // switch to multiplicative blending
+            self.device.set_blend(true);
+            self.device.set_blend_mode_multiply();
+
+            // draw rounded cornered rectangles
+            if !target.clip_batcher.rectangles.is_empty() {
+                let _gm2 = GpuMarker::new(self.device.rc_gl(), "clip rectangles");
+                let shader = self.cs_clip_rectangle.get(&mut self.device).unwrap();
+                self.draw_instanced_batch(&target.clip_batcher.rectangles,
+                                          vao,
+                                          shader,
+                                          &BatchTextures::no_texture(),
+                                          &projection);
+            }
+            // draw image masks
+            for (mask_texture_id, items) in target.clip_batcher.images.iter() {
+                let _gm2 = GpuMarker::new(self.device.rc_gl(), "clip images");
+                let texture_id = self.resolve_source_texture(mask_texture_id);
+                self.device.bind_texture(TextureSampler::Mask, texture_id);
+                let shader = self.cs_clip_image.get(&mut self.device).unwrap();
+                self.draw_instanced_batch(items,
+                                          vao,
+                                          shader,
+                                          &BatchTextures::no_texture(),
+                                          &projection);
+            }
+        }
     }
 
     fn update_deferred_resolves(&mut self, frame: &mut Frame) {
@@ -1694,25 +1703,52 @@ impl Renderer {
         if frame.passes.is_empty() {
             self.device.clear_target(Some(self.clear_color.to_array()), Some(1.0));
         } else {
-            // Add new render targets to the pool if required.
-            let needed_targets = frame.passes.len() - 1;     // framebuffer doesn't need a target!
-            let current_target_count = self.render_targets.len();
-            if needed_targets > current_target_count {
-                let new_target_count = needed_targets - current_target_count;
-                let new_targets = self.device.create_texture_ids(new_target_count as i32,
-                                                                 TextureTarget::Array);
-                self.render_targets.extend_from_slice(&new_targets);
+            // Assign render targets to the passes.
+            for pass in &mut frame.passes {
+                debug_assert!(pass.color_texture_id.is_none());
+                debug_assert!(pass.alpha_texture_id.is_none());
+
+                if pass.needs_render_target_kind(RenderTargetKind::Color) {
+                    pass.color_texture_id = Some(self.color_render_targets
+                                                     .pop()
+                                                     .unwrap_or_else(|| {
+                                                         self.device
+                                                             .create_texture_ids(1, TextureTarget::Array)[0]
+                                                      }));
+                }
+
+                if pass.needs_render_target_kind(RenderTargetKind::Alpha) {
+                    pass.alpha_texture_id = Some(self.alpha_render_targets
+                                                     .pop()
+                                                     .unwrap_or_else(|| {
+                                                         self.device
+                                                             .create_texture_ids(1, TextureTarget::Array)[0]
+                                                      }));
+                }
             }
 
             // Init textures and render targets to match this scene.
-            for (pass, texture_id) in frame.passes.iter().zip(self.render_targets.iter()) {
-                self.device.init_texture(*texture_id,
-                                         frame.cache_size.width as u32,
-                                         frame.cache_size.height as u32,
-                                         ImageFormat::RGBA8,
-                                         TextureFilter::Linear,
-                                         RenderTargetMode::LayerRenderTarget(pass.targets.len() as i32),
-                                         None);
+            for pass in &frame.passes {
+                if let Some(texture_id) = pass.color_texture_id {
+                    let target_count = pass.required_target_count(RenderTargetKind::Color);
+                    self.device.init_texture(texture_id,
+                                             frame.cache_size.width as u32,
+                                             frame.cache_size.height as u32,
+                                             ImageFormat::RGBA8,
+                                             TextureFilter::Linear,
+                                             RenderTargetMode::LayerRenderTarget(target_count as i32),
+                                             None);
+                }
+                if let Some(texture_id) = pass.alpha_texture_id {
+                    let target_count = pass.required_target_count(RenderTargetKind::Alpha);
+                    self.device.init_texture(texture_id,
+                                             frame.cache_size.width as u32,
+                                             frame.cache_size.height as u32,
+                                             ImageFormat::A8,
+                                             TextureFilter::Nearest,
+                                             RenderTargetMode::LayerRenderTarget(target_count as i32),
+                                             None);
+                }
             }
 
             // TODO(gw): This is a hack / workaround for #728.
@@ -1722,34 +1758,78 @@ impl Renderer {
             self.gpu_data_textures[self.gdt_index].init_frame(&mut self.device, frame);
             self.gdt_index = (self.gdt_index + 1) % GPU_DATA_TEXTURE_POOL;
 
-            let mut src_id = self.dummy_cache_texture_id;
+            let mut src_color_id = self.dummy_cache_texture_id;
+            let mut src_alpha_id = self.dummy_cache_texture_id;
 
-            for (pass_index, pass) in frame.passes.iter().enumerate() {
-                let (do_clear, size, target_id) = if pass.is_framebuffer {
-                    (self.clear_framebuffer || needs_clear,
-                     framebuffer_size,
-                     None)
+            for pass in &mut frame.passes {
+                let size;
+                let clear_color;
+                let projection;
+
+                if pass.is_framebuffer {
+                    clear_color = if self.clear_framebuffer || needs_clear {
+                        Some(frame.background_color.map_or(self.clear_color.to_array(), |color| {
+                            color.to_array()
+                        }))
+                    } else {
+                        None
+                    };
+                    size = framebuffer_size;
+                    projection = Matrix4D::ortho(0.0,
+                                                 size.width as f32,
+                                                 size.height as f32,
+                                                 0.0,
+                                                 ORTHO_NEAR_PLANE,
+                                                 ORTHO_FAR_PLANE)
                 } else {
-                    (true, &frame.cache_size, Some(self.render_targets[pass_index]))
-                };
+                    size = &frame.cache_size;
+                    clear_color = Some([1.0, 1.0, 1.0, 0.0]);
+                    projection = Matrix4D::ortho(0.0,
+                                                 size.width as f32,
+                                                 0.0,
+                                                 size.height as f32,
+                                                 ORTHO_NEAR_PLANE,
+                                                 ORTHO_FAR_PLANE);
+                }
 
-                for (target_index, target) in pass.targets.iter().enumerate() {
-                    let render_target = target_id.map(|texture_id| {
+                self.device.bind_texture(TextureSampler::CacheA8, src_alpha_id);
+                self.device.bind_texture(TextureSampler::CacheRGBA8, src_color_id);
+
+                for (target_index, target) in pass.alpha_targets.targets.iter().enumerate() {
+                    self.draw_alpha_target((pass.alpha_texture_id.unwrap(), target_index as i32),
+                                           target,
+                                           *size,
+                                           &projection);
+                }
+
+                for (target_index, target) in pass.color_targets.targets.iter().enumerate() {
+                    let render_target = pass.color_texture_id.map(|texture_id| {
                         (texture_id, target_index as i32)
                     });
-                    self.draw_target(render_target,
-                                     target,
-                                     *size,
-                                     src_id,
-                                     do_clear,
-                                     frame.background_color,
-                                     &frame.render_task_data);
+                    self.draw_color_target(render_target,
+                                           target,
+                                           *size,
+                                           src_color_id,
+                                           clear_color,
+                                           &frame.render_task_data,
+                                           &projection);
 
                 }
 
-                src_id = target_id.unwrap_or(self.dummy_cache_texture_id);
+                src_color_id = pass.color_texture_id.unwrap_or(self.dummy_cache_texture_id);
+                src_alpha_id = pass.alpha_texture_id.unwrap_or(self.dummy_cache_texture_id);
+
+                // Return the texture IDs to the pool for next frame.
+                if let Some(texture_id) = pass.color_texture_id.take() {
+                    self.color_render_targets.push(texture_id);
+                }
+                if let Some(texture_id) = pass.alpha_texture_id.take() {
+                    self.alpha_render_targets.push(texture_id);
+                }
             }
 
+            self.color_render_targets.reverse();
+            self.alpha_render_targets.reverse();
             self.draw_render_target_debug(framebuffer_size);
         }
 
@@ -1784,7 +1864,7 @@ impl Renderer {
             let rt_debug_size = 512;
             let mut current_target = 0;
 
-            for texture_id in &self.render_targets {
+            for texture_id in self.color_render_targets.iter().chain(self.alpha_render_targets.iter()) {
                 let layer_count = self.device.get_render_target_layer_count(*texture_id);
                 for layer_index in 0..layer_count {
                     let x0 = rt_debug_x0 + (rt_debug_spacing + rt_debug_size) * current_target;

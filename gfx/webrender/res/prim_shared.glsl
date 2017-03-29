@@ -33,7 +33,8 @@
 #define EXTEND_MODE_CLAMP  0
 #define EXTEND_MODE_REPEAT 1
 
-uniform sampler2DArray sCache;
+uniform sampler2DArray sCacheA8;
+uniform sampler2DArray sCacheRGBA8;
 
 flat varying vec4 vClipMaskUvBounds;
 varying vec3 vClipMaskUv;
@@ -707,7 +708,7 @@ BoxShadow fetch_boxshadow(int index) {
 }
 
 void write_clip(vec2 global_pos, ClipArea area) {
-    vec2 texture_size = vec2(textureSize(sCache, 0).xy);
+    vec2 texture_size = vec2(textureSize(sCacheA8, 0).xy);
     vec2 uv = global_pos + area.task_bounds.xy - area.screen_origin_target_index.xy;
     vClipMaskUvBounds = area.task_bounds / texture_size.xyxy;
     vClipMaskUv = vec3(uv / texture_size, area.screen_origin_target_index.z);
@@ -755,6 +756,15 @@ float do_clip() {
         vec4(vClipMaskUv.xy, vClipMaskUvBounds.zw));
     // check for the dummy bounds, which are given to the opaque objects
     return vClipMaskUvBounds.xy == vClipMaskUvBounds.zw ? 1.0:
-        all(inside) ? textureLod(sCache, vClipMaskUv, 0.0).r : 0.0;
+        all(inside) ? textureLod(sCacheA8, vClipMaskUv, 0.0).r : 0.0;
+}
+
+vec4 dither(vec4 color) {
+    const int matrix_mask = 7;
+
+    ivec2 pos = ivec2(gl_FragCoord.xy) & ivec2(matrix_mask);
+    float noise_factor = 4.0 / 255.0;
+    float noise = texelFetch(sDither, pos, 0).r * noise_factor;
+    return color + vec4(noise, noise, noise, 0);
 }
 #endif //WR_FRAGMENT_SHADER

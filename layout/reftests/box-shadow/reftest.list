@@ -32,12 +32,12 @@ fuzzy(26,3610) == boxshadow-rotated.html boxshadow-rotated-ref.html # Bug 121126
 == boxshadow-inset-large-border-radius.html boxshadow-inset-large-border-radius-ref.html
 
 # fuzzy due to blur going inside, but as long as it's essentially black instead of a light gray its ok.
-fuzzy(13,9445) fuzzy-if(d2d,13,10926) fuzzy-if(webrender,13,13612) == boxshadow-inset-large-offset.html boxshadow-inset-large-offset-ref.html
+fuzzy(13,9445) fuzzy-if(d2d,13,10926) fuzzy-if(webrender,14,14307) == boxshadow-inset-large-offset.html boxshadow-inset-large-offset-ref.html
 
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref.html
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref2.html
 == overflow-not-scrollable-2.html overflow-not-scrollable-2-ref.html
-== 611574-1.html 611574-1-ref.html
+fuzzy-if(webrender,1,655) == 611574-1.html 611574-1-ref.html
 fuzzy-if(webrender,4,144) == 611574-2.html 611574-2-ref.html
 fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset.html fieldset-ref.html # minor anti-aliasing problem on Windows
 fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows

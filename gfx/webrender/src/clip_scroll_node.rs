@@ -248,9 +248,13 @@ impl ClipScrollNode {
         // Now that we have the combined viewport rectangle of the parent nodes in local space,
         // we do the intersection and get our combined viewport rect in the coordinate system
         // starting from our origin.
-        self.combined_local_viewport_rect =
-            parent_combined_viewport_in_local_space.intersection(&self.local_clip_rect)
-                                                    .unwrap_or(LayerRect::zero());
+        self.combined_local_viewport_rect = match self.node_type {
+            NodeType::Clip(_) => {
+                parent_combined_viewport_in_local_space.intersection(&self.local_clip_rect)
+                                                       .unwrap_or(LayerRect::zero())
+            }
+            NodeType::ReferenceFrame(_) => parent_combined_viewport_in_local_space,
+        };
 
         // The transformation for this viewport in world coordinates is the transformation for
         // our parent reference frame, plus any accumulated scrolling offsets from nodes

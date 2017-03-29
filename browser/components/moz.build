@@ -18,6 +18,7 @@ DIRS += [
     'places',
     'preferences',
     'privatebrowsing',
+    'resistfingerprinting',
     'search',
     'sessionstore',
     'shell',

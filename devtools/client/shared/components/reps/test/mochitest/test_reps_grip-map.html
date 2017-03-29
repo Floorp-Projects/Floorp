@@ -14,8 +14,8 @@ Test GripMap rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 "use strict";
 
 window.onload = Task.async(function* () {
@@ -41,6 +41,8 @@ window.onload = Task.async(function* () {
     yield testOnDomNodeMouseOver();
     yield testOnDomNodeMouseOut();
     yield testOnDomNodeInspectIconClick();
+
+    yield testObjectLink();
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -398,6 +400,45 @@ window.onload = Task.async(function* () {
       is(inspectIconClickedValue, keysGrips[index], "onInspectIconClick is called " +
         "with the expected argument when the inspect icon is clicked");
     });
+  }
+
+  function testObjectLink() {
+    // Test object:
+    // `new Map([["key-a",null], ["key-b",undefined], ["key-c","value-c"], ["key-d",4]])`
+    const defaultOutput =
+      `*Map** { *"key-a": null, "key-c": "value-c", "key-d": 4, *1 more…** }*`;
+    const longOutput =
+      `*Map** { *"key-a": null, "key-b": undefined, "key-c": "value-c", "key-d": 4* }*`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `*Map*`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: longOutput,
+      }
+    ];
+
+    testRepRenderModes(
+      modeTests,
+      "testObjectLink",
+      componentUnderTest,
+      getGripStub("testUninterestingEntries"),
+      {
+        objectLink: (props, ...children) => React.DOM.span({},
+          "*", ...children, "*"),
+      }
+    );
   }
 
   function getGripStub(functionName) {

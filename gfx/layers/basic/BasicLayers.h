@@ -213,14 +213,6 @@ protected:
   bool mUsingDefaultTarget;
   bool mTransactionIncomplete;
   bool mCompositorMightResample;
-
-private:
-  // Display items are only valid during this transaction.
-  // At the end of the transaction, we have to go and clear out
-  // DisplayItemLayer's and null their display item. See comment
-  // above DisplayItemLayer declaration.
-  void ClearDisplayItemLayers();
-  nsTArray<RefPtr<DisplayItemLayer>> mDisplayItemLayers;
 };
 
 } // namespace layers
