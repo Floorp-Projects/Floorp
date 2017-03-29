@@ -126,7 +126,6 @@ jsdcov-code-coverage-tests:
 # Test sets still being greened up in various ways
 
 windows-vm-tests:
-    - awsy
     - cppunit
     - crashtest
     - gtest
