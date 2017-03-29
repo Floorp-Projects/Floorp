@@ -14,8 +14,8 @@ Test Obj rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 window.onload = Task.async(function* () {
   const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/reps");
   let { Rep, Obj } = REPS;
@@ -40,6 +40,9 @@ window.onload = Task.async(function* () {
     yield testMoreProp();
 
     // Test that you can pass a custom title to the Rep
+    yield testCustomTitle();
+
+    // Test that you can pass an objectLink to the Rep
     yield testCustomTitle();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
@@ -282,6 +285,46 @@ window.onload = Task.async(function* () {
       componentUnderTest,
       stub, {
         title: customTitle
+      }
+    );
+  }
+
+  function testObjectLink() {
+    const stub = {
+      a: undefined,
+      b: 1,
+      "more": 2,
+      d: 3
+    };
+    const defaultOutput = `*Object **{ *b: 1, more: 2, d: 3, *1 more…** }*`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `*Object*`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(
+      modeTests,
+      "testObjectLink",
+      componentUnderTest,
+      stub,
+      {
+        objectLink: (props, ...children) => React.DOM.span({},
+          "*", ...children, "*"),
       }
     );
   }

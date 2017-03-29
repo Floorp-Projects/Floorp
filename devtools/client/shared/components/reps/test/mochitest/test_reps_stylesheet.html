@@ -14,8 +14,8 @@ Test Stylesheet rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 window.onload = Task.async(function* () {
   try {
     const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
@@ -42,6 +42,18 @@ window.onload = Task.async(function* () {
     // Test rendering
     const renderedComponent = renderComponent(StyleSheet.rep, { object: gripStub });
     is(renderedComponent.textContent, "StyleSheet https://example.com/styles.css", "StyleSheet rep has expected text content");
+
+    // Test rendering with objectLink
+    const objectLinkRenderedComponent = renderComponent(StyleSheet.rep, {
+      object: gripStub,
+      objectLink: (props, ...children) => React.DOM.span({},
+        "*", ...children, "*"),
+    });
+    is(
+      objectLinkRenderedComponent.textContent,
+      "*StyleSheet *https://example.com/styles.css",
+      "StyleSheet rep has expected text content when an objectLink is passed as a prop"
+    );
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
