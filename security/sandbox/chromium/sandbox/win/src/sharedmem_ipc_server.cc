@@ -7,8 +7,7 @@
 
 #include "base/callback.h"
 #include "base/logging.h"
-#include "base/memory/scoped_ptr.h"
-#include "base/stl_util.h"
+#include "base/memory/ptr_util.h"
 #include "sandbox/win/src/crosscall_params.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/sandbox.h"
@@ -59,7 +58,7 @@ SharedMemIPCServer::~SharedMemIPCServer() {
     // Better to leak than to crash.
     return;
   }
-  STLDeleteElements(&server_contexts_);
+  server_contexts_.clear();
 
   if (client_control_)
     ::UnmapViewOfFile(client_control_);
@@ -101,7 +100,7 @@ bool SharedMemIPCServer::Init(void* shared_mem,
   for (size_t ix = 0; ix != channel_count; ++ix) {
     ChannelControl* client_context = &client_control_->channels[ix];
     ServerControl* service_context = new ServerControl;
-    server_contexts_.push_back(service_context);
+    server_contexts_.push_back(base::WrapUnique(service_context));
 
     if (!MakeEvents(&service_context->ping_event,
                     &service_context->pong_event,
@@ -175,7 +174,7 @@ bool GetArgs(CrossCallParamsEx* params, IPCParams* ipc_params,
       ipc_params->args[i] = type;
       switch (type) {
         case WCHAR_TYPE: {
-          scoped_ptr<base::string16> data(new base::string16);
+          std::unique_ptr<base::string16> data(new base::string16);
           if (!params->GetParameterStr(i, data.get())) {
             args[i] = 0;
             ReleaseArgs(ipc_params, args);
@@ -228,10 +227,8 @@ bool SharedMemIPCServer::InvokeCallback(const ServerControl* service_context,
   // Parse, verify and copy the message. The handler operates on a copy
   // of the message so the client cannot play dirty tricks by changing the
   // data in the channel while the IPC is being processed.
-  scoped_ptr<CrossCallParamsEx> params(
-      CrossCallParamsEx::CreateFromBuffer(ipc_buffer,
-                                          service_context->channel_size,
-                                          &output_size));
+  std::unique_ptr<CrossCallParamsEx> params(CrossCallParamsEx::CreateFromBuffer(
+      ipc_buffer, service_context->channel_size, &output_size));
   if (!params.get())
     return false;
 
@@ -257,7 +254,7 @@ bool SharedMemIPCServer::InvokeCallback(const ServerControl* service_context,
   if (handler) {
     switch (params->GetParamsCount()) {
       case 0: {
-        // Ask the IPC dispatcher if she can service this IPC.
+        // Ask the IPC dispatcher if it can service this IPC.
         Dispatcher::Callback0 callback =
             reinterpret_cast<Dispatcher::Callback0>(callback_generic);
         if (!(handler->*callback)(&ipc_info))
@@ -396,7 +393,7 @@ void __stdcall SharedMemIPCServer::ThreadPingEventReady(void* context,
   InvokeCallback(service_context, buffer, &call_result);
 
   // Copy the answer back into the channel and signal the pong event. This
-  // should wake up the client so he can finish the the ipc cycle.
+  // should wake up the client so it can finish the ipc cycle.
   CrossCallParams* call_params = reinterpret_cast<CrossCallParams*>(buffer);
   memcpy(call_params->GetCallReturn(), &call_result, sizeof(call_result));
   ::InterlockedExchange(&service_context->channel->state, kAckChannel);

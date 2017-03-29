@@ -280,8 +280,6 @@ TEST(FilePolicyTest, AllowNtCreateCalc) {
 }
 
 TEST(FilePolicyTest, AllowNtCreateWithNativePath) {
-  if (base::win::GetVersion() < base::win::VERSION_WIN7)
-    return;
 
   base::string16 calc = MakePathToSys(L"calc.exe", false);
   base::string16 nt_path;
@@ -336,8 +334,6 @@ TEST(FilePolicyTest, AllowReadOnly) {
 
 // Tests support of "\\\\.\\DeviceName" kind of paths.
 TEST(FilePolicyTest, AllowImplicitDeviceName) {
-  if (base::win::GetVersion() < base::win::VERSION_WIN7)
-    return;
 
   TestRunner runner;
 
