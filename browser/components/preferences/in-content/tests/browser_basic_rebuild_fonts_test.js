@@ -5,7 +5,7 @@ registerCleanupFunction(function() {
 });
 
 add_task(function*() {
-  yield openPreferencesViaOpenPreferencesAPI("paneContent", null, {leaveOpen: true});
+  yield openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
   let doc = gBrowser.contentDocument;
   var langGroup = Services.prefs.getComplexValue("font.language.group", Ci.nsIPrefLocalizedString).data
   is(doc.getElementById("font.language.group").value, langGroup,

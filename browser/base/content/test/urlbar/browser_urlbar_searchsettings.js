@@ -24,7 +24,7 @@ add_task(function*() {
     yield loaded;
     yield popupclosed;
 
-    is(gBrowser.selectedBrowser.currentURI.spec, "about:preferences#search",
+    is(gBrowser.selectedBrowser.currentURI.spec, "about:preferences#general",
        "Should have loaded the right page");
   });
 });

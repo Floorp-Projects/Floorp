@@ -10,6 +10,8 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
+Components.utils.import("resource://gre/modules/Task.jsm");
+
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const TYPE_MAYBE_VIDEO_FEED = "application/vnd.mozilla.maybe.video.feed";
 const TYPE_MAYBE_AUDIO_FEED = "application/vnd.mozilla.maybe.audio.feed";
@@ -910,6 +912,8 @@ var gApplicationsPane = {
       gApplicationsPane.onSelectionChanged);
     setEventListener("typeColumn", "click", gApplicationsPane.sort);
     setEventListener("actionColumn", "click", gApplicationsPane.sort);
+    setEventListener("chooseFolder", "command", gApplicationsPane.chooseFolder);
+    setEventListener("browser.download.dir", "change", gApplicationsPane.displayDownloadDirPref);
 
     // Listen for window unload so we can remove our preference observers.
     window.addEventListener("unload", this);
@@ -1892,6 +1896,216 @@ var gApplicationsPane = {
     // the icon, or if we couldn't retrieve the icon for some other reason,
     // then use a generic icon.
     return ICON_URL_APP;
-  }
+  },
+
+  // DOWNLOADS
+
+  /*
+   * Preferences:
+   *
+   * browser.download.useDownloadDir - bool
+   *   True - Save files directly to the folder configured via the
+   *   browser.download.folderList preference.
+   *   False - Always ask the user where to save a file and default to
+   *   browser.download.lastDir when displaying a folder picker dialog.
+   * browser.download.dir - local file handle
+   *   A local folder the user may have selected for downloaded files to be
+   *   saved. Migration of other browser settings may also set this path.
+   *   This folder is enabled when folderList equals 2.
+   * browser.download.lastDir - local file handle
+   *   May contain the last folder path accessed when the user browsed
+   *   via the file save-as dialog. (see contentAreaUtils.js)
+   * browser.download.folderList - int
+   *   Indicates the location users wish to save downloaded files too.
+   *   It is also used to display special file labels when the default
+   *   download location is either the Desktop or the Downloads folder.
+   *   Values:
+   *     0 - The desktop is the default download location.
+   *     1 - The system's downloads folder is the default download location.
+   *     2 - The default download location is elsewhere as specified in
+   *         browser.download.dir.
+   * browser.download.downloadDir
+   *   deprecated.
+   * browser.download.defaultFolder
+   *   deprecated.
+   */
+
+  /**
+   * Enables/disables the folder field and Browse button based on whether a
+   * default download directory is being used.
+   */
+  readUseDownloadDir() {
+    var downloadFolder = document.getElementById("downloadFolder");
+    var chooseFolder = document.getElementById("chooseFolder");
+    var preference = document.getElementById("browser.download.useDownloadDir");
+    downloadFolder.disabled = !preference.value || preference.locked;
+    chooseFolder.disabled = !preference.value || preference.locked;
+
+    // don't override the preference's value in UI
+    return undefined;
+  },
+
+  /**
+   * Displays a file picker in which the user can choose the location where
+   * downloads are automatically saved, updating preferences and UI in
+   * response to the choice, if one is made.
+   */
+  chooseFolder() {
+    return this.chooseFolderTask().catch(Components.utils.reportError);
+  },
+  chooseFolderTask: Task.async(function* () {
+    let bundlePreferences = document.getElementById("bundlePreferences");
+    let title = bundlePreferences.getString("chooseDownloadFolderTitle");
+    let folderListPref = document.getElementById("browser.download.folderList");
+    let currentDirPref = yield this._indexToFolder(folderListPref.value);
+    let defDownloads = yield this._indexToFolder(1);
+    let fp = Components.classes["@mozilla.org/filepicker;1"].
+             createInstance(Components.interfaces.nsIFilePicker);
+
+    fp.init(window, title, Components.interfaces.nsIFilePicker.modeGetFolder);
+    fp.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
+    // First try to open what's currently configured
+    if (currentDirPref && currentDirPref.exists()) {
+      fp.displayDirectory = currentDirPref;
+    } else if (defDownloads && defDownloads.exists()) {
+      // Try the system's download dir
+      fp.displayDirectory = defDownloads;
+    } else {
+      // Fall back to Desktop
+      fp.displayDirectory = yield this._indexToFolder(0);
+    }
+
+    let result = yield new Promise(resolve => fp.open(resolve));
+    if (result != Components.interfaces.nsIFilePicker.returnOK) {
+      return;
+    }
+
+    let downloadDirPref = document.getElementById("browser.download.dir");
+    downloadDirPref.value = fp.file;
+    folderListPref.value = yield this._folderToIndex(fp.file);
+    // Note, the real prefs will not be updated yet, so dnld manager's
+    // userDownloadsDirectory may not return the right folder after
+    // this code executes. displayDownloadDirPref will be called on
+    // the assignment above to update the UI.
+  }),
+
+  /**
+   * Initializes the download folder display settings based on the user's
+   * preferences.
+   */
+  displayDownloadDirPref() {
+    this.displayDownloadDirPrefTask().catch(Components.utils.reportError);
+
+    // don't override the preference's value in UI
+    return undefined;
+  },
+
+  displayDownloadDirPrefTask: Task.async(function* () {
+    var folderListPref = document.getElementById("browser.download.folderList");
+    var bundlePreferences = document.getElementById("bundlePreferences");
+    var downloadFolder = document.getElementById("downloadFolder");
+    var currentDirPref = document.getElementById("browser.download.dir");
+
+    // Used in defining the correct path to the folder icon.
+    var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService(Components.interfaces.nsIIOService);
+    var fph = ios.getProtocolHandler("file")
+                 .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+    var iconUrlSpec;
+
+    // Display a 'pretty' label or the path in the UI.
+    if (folderListPref.value == 2) {
+      // Custom path selected and is configured
+      downloadFolder.label = this._getDisplayNameOfFile(currentDirPref.value);
+      iconUrlSpec = fph.getURLSpecFromFile(currentDirPref.value);
+    } else if (folderListPref.value == 1) {
+      // 'Downloads'
+      // In 1.5, this pointed to a folder we created called 'My Downloads'
+      // and was available as an option in the 1.5 drop down. On XP this
+      // was in My Documents, on OSX it was in User Docs. In 2.0, we did
+      // away with the drop down option, although the special label was
+      // still supported for the folder if it existed. Because it was
+      // not exposed it was rarely used.
+      // With 3.0, a new desktop folder - 'Downloads' was introduced for
+      // platforms and versions that don't support a default system downloads
+      // folder. See nsDownloadManager for details.
+      downloadFolder.label = bundlePreferences.getString("downloadsFolderName");
+      iconUrlSpec = fph.getURLSpecFromFile(yield this._indexToFolder(1));
+    } else {
+      // 'Desktop'
+      downloadFolder.label = bundlePreferences.getString("desktopFolderName");
+      iconUrlSpec = fph.getURLSpecFromFile(yield this._getDownloadsFolder("Desktop"));
+    }
+    downloadFolder.image = "moz-icon://" + iconUrlSpec + "?size=16";
+  }),
+
+  /**
+   * Returns the textual path of a folder in readable form.
+   */
+  _getDisplayNameOfFile(aFolder) {
+    // TODO: would like to add support for 'Downloads on Macintosh HD'
+    //       for OS X users.
+    return aFolder ? aFolder.path : "";
+  },
+
+  /**
+   * Returns the Downloads folder.  If aFolder is "Desktop", then the Downloads
+   * folder returned is the desktop folder; otherwise, it is a folder whose name
+   * indicates that it is a download folder and whose path is as determined by
+   * the XPCOM directory service via the download manager's attribute
+   * defaultDownloadsDirectory.
+   *
+   * @throws if aFolder is not "Desktop" or "Downloads"
+   */
+  _getDownloadsFolder: Task.async(function* (aFolder) {
+    switch (aFolder) {
+      case "Desktop":
+        var fileLoc = Components.classes["@mozilla.org/file/directory_service;1"]
+                                    .getService(Components.interfaces.nsIProperties);
+        return fileLoc.get("Desk", Components.interfaces.nsILocalFile);
+      case "Downloads":
+        let downloadsDir = yield Downloads.getSystemDownloadsDirectory();
+        return new FileUtils.File(downloadsDir);
+    }
+    throw "ASSERTION FAILED: folder type should be 'Desktop' or 'Downloads'";
+  }),
+
+  /**
+   * Determines the type of the given folder.
+   *
+   * @param   aFolder
+   *          the folder whose type is to be determined
+   * @returns integer
+   *          0 if aFolder is the Desktop or is unspecified,
+   *          1 if aFolder is the Downloads folder,
+   *          2 otherwise
+   */
+  _folderToIndex: Task.async(function* (aFolder) {
+    if (!aFolder || aFolder.equals(yield this._getDownloadsFolder("Desktop")))
+      return 0;
+    else if (aFolder.equals(yield this._getDownloadsFolder("Downloads")))
+      return 1;
+    return 2;
+  }),
+
+  /**
+   * Converts an integer into the corresponding folder.
+   *
+   * @param   aIndex
+   *          an integer
+   * @returns the Desktop folder if aIndex == 0,
+   *          the Downloads folder if aIndex == 1,
+   *          the folder stored in browser.download.dir
+   */
+  _indexToFolder: Task.async(function* (aIndex) {
+    switch (aIndex) {
+      case 0:
+        return yield this._getDownloadsFolder("Desktop");
+      case 1:
+        return yield this._getDownloadsFolder("Downloads");
+    }
+    var currentDirPref = document.getElementById("browser.download.dir");
+    return currentDirPref.value;
+  })
 
 };

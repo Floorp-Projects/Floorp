@@ -26,6 +26,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Extension",
                                   "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
                                   "resource://gre/modules/ExtensionParent.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 
 const CONSTANTS = {};
 Cu.import("resource://gre/modules/addons/AddonConstants.jsm", CONSTANTS);
@@ -1538,7 +1540,13 @@ var gViewController = {
       },
       doCommand() {
         let mainWindow = getMainWindowWithPreferencesPane();
-        mainWindow.openAdvancedPreferences("dataChoicesTab");
+        // The advanced subpanes are only supported in the old organization, which will
+        // be removed by bug 1349689.
+        if (Preferences.get("browser.preferences.useOldOrganization", false)) {
+          mainWindow.openAdvancedPreferences("dataChoicesTab");
+        } else {
+          mainWindow.openPreferences("paneAdvanced");
+        }
       },
     },
 
