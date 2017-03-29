@@ -12,8 +12,6 @@
 
 namespace mozilla {
 
-#define NS_EVENT_STATE_HIGHEST_SERVO_BIT 21
-
 /**
  * EventStates is the class used to represent the event states of nsIContent
  * instances. These states are calculated by IntrinsicState() and
@@ -163,7 +161,7 @@ public:
    */
   ServoType ServoValue() const
   {
-    return mStates & ((1 << (NS_EVENT_STATE_HIGHEST_SERVO_BIT + 1)) - 1);
+    return mStates;
   }
 
 private:
@@ -223,87 +221,73 @@ private:
 #define NS_EVENT_STATE_INVALID       NS_DEFINE_EVENT_STATE_MACRO(11)
 // UI friendly version of :valid pseudo-class.
 #define NS_EVENT_STATE_MOZ_UI_VALID NS_DEFINE_EVENT_STATE_MACRO(12)
+// UI friendly version of :invalid pseudo-class.
+#define NS_EVENT_STATE_MOZ_UI_INVALID NS_DEFINE_EVENT_STATE_MACRO(13)
 // Content could not be rendered (image/object/etc).
-#define NS_EVENT_STATE_BROKEN        NS_DEFINE_EVENT_STATE_MACRO(13)
+#define NS_EVENT_STATE_BROKEN        NS_DEFINE_EVENT_STATE_MACRO(14)
 // Content disabled by the user (images turned off, say).
-#define NS_EVENT_STATE_USERDISABLED  NS_DEFINE_EVENT_STATE_MACRO(14)
+#define NS_EVENT_STATE_USERDISABLED  NS_DEFINE_EVENT_STATE_MACRO(15)
 // Content suppressed by the user (ad blocking, etc).
-#define NS_EVENT_STATE_SUPPRESSED    NS_DEFINE_EVENT_STATE_MACRO(15)
+#define NS_EVENT_STATE_SUPPRESSED    NS_DEFINE_EVENT_STATE_MACRO(16)
 // Content is still loading such that there is nothing to show the
 // user (eg an image which hasn't started coming in yet).
-#define NS_EVENT_STATE_LOADING       NS_DEFINE_EVENT_STATE_MACRO(16)
+#define NS_EVENT_STATE_LOADING       NS_DEFINE_EVENT_STATE_MACRO(17)
 // Handler for the content has been blocked.
-#define NS_EVENT_STATE_HANDLER_BLOCKED NS_DEFINE_EVENT_STATE_MACRO(17)
+#define NS_EVENT_STATE_HANDLER_BLOCKED NS_DEFINE_EVENT_STATE_MACRO(18)
 // Handler for the content has been disabled.
-#define NS_EVENT_STATE_HANDLER_DISABLED NS_DEFINE_EVENT_STATE_MACRO(18)
+#define NS_EVENT_STATE_HANDLER_DISABLED NS_DEFINE_EVENT_STATE_MACRO(19)
 // Handler for the content has crashed
-#define NS_EVENT_STATE_HANDLER_CRASHED NS_DEFINE_EVENT_STATE_MACRO(19)
+#define NS_EVENT_STATE_HANDLER_CRASHED NS_DEFINE_EVENT_STATE_MACRO(20)
 // Content is required.
-#define NS_EVENT_STATE_REQUIRED      NS_DEFINE_EVENT_STATE_MACRO(20)
+#define NS_EVENT_STATE_REQUIRED      NS_DEFINE_EVENT_STATE_MACRO(21)
 // Content is optional (and can be required).
-#define NS_EVENT_STATE_OPTIONAL      NS_DEFINE_EVENT_STATE_MACRO(21)
-
-/*
- * Bits below here do not have Servo-related ordering constraints.
- *
- * Remember to change NS_EVENT_STATE_HIGHEST_SERVO_BIT at the top of the file if
- * this changes!
- */
-
-// Drag is hovering over content.
-#define NS_EVENT_STATE_DRAGOVER      NS_DEFINE_EVENT_STATE_MACRO(22)
+#define NS_EVENT_STATE_OPTIONAL      NS_DEFINE_EVENT_STATE_MACRO(22)
+// Element is an unresolved custom element candidate
+#define NS_EVENT_STATE_UNRESOLVED NS_DEFINE_EVENT_STATE_MACRO(23)
 // Link has been visited.
-#define NS_EVENT_STATE_VISITED       NS_DEFINE_EVENT_STATE_MACRO(23)
+#define NS_EVENT_STATE_VISITED       NS_DEFINE_EVENT_STATE_MACRO(24)
 // Link hasn't been visited.
-#define NS_EVENT_STATE_UNVISITED     NS_DEFINE_EVENT_STATE_MACRO(24)
+#define NS_EVENT_STATE_UNVISITED     NS_DEFINE_EVENT_STATE_MACRO(25)
+// Drag is hovering over content.
+#define NS_EVENT_STATE_DRAGOVER      NS_DEFINE_EVENT_STATE_MACRO(26)
 // Content value is in-range (and can be out-of-range).
-#define NS_EVENT_STATE_INRANGE       NS_DEFINE_EVENT_STATE_MACRO(25)
+#define NS_EVENT_STATE_INRANGE       NS_DEFINE_EVENT_STATE_MACRO(27)
 // Content value is out-of-range.
-#define NS_EVENT_STATE_OUTOFRANGE    NS_DEFINE_EVENT_STATE_MACRO(26)
+#define NS_EVENT_STATE_OUTOFRANGE    NS_DEFINE_EVENT_STATE_MACRO(28)
 // These two are temporary (see bug 302188)
 // Content is read-only.
-#define NS_EVENT_STATE_MOZ_READONLY  NS_DEFINE_EVENT_STATE_MACRO(27)
+#define NS_EVENT_STATE_MOZ_READONLY  NS_DEFINE_EVENT_STATE_MACRO(29)
 // Content is editable.
-#define NS_EVENT_STATE_MOZ_READWRITE NS_DEFINE_EVENT_STATE_MACRO(28)
+#define NS_EVENT_STATE_MOZ_READWRITE NS_DEFINE_EVENT_STATE_MACRO(30)
 // Content is the default one (meaning depends of the context).
-#define NS_EVENT_STATE_DEFAULT       NS_DEFINE_EVENT_STATE_MACRO(29)
-#define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL NS_DEFINE_EVENT_STATE_MACRO(30)
-// Content has focus and should show a ring.
-#define NS_EVENT_STATE_FOCUSRING     NS_DEFINE_EVENT_STATE_MACRO(31)
+#define NS_EVENT_STATE_DEFAULT       NS_DEFINE_EVENT_STATE_MACRO(31)
 // Content is a submit control and the form isn't valid.
 #define NS_EVENT_STATE_MOZ_SUBMITINVALID NS_DEFINE_EVENT_STATE_MACRO(32)
-// UI friendly version of :invalid pseudo-class.
-#define NS_EVENT_STATE_MOZ_UI_INVALID NS_DEFINE_EVENT_STATE_MACRO(33)
-// This bit is currently free.
-// #define NS_EVENT_STATE_?????????? NS_DEFINE_EVENT_STATE_MACRO(34)
-// Handler for click to play plugin
-#define NS_EVENT_STATE_TYPE_CLICK_TO_PLAY NS_DEFINE_EVENT_STATE_MACRO(35)
 // Content is in the optimum region.
-#define NS_EVENT_STATE_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(36)
+#define NS_EVENT_STATE_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(33)
 // Content is in the suboptimal region.
-#define NS_EVENT_STATE_SUB_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(37)
+#define NS_EVENT_STATE_SUB_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(34)
 // Content is in the sub-suboptimal region.
-#define NS_EVENT_STATE_SUB_SUB_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(38)
-// Handler for click to play plugin (vulnerable w/update)
-#define NS_EVENT_STATE_VULNERABLE_UPDATABLE NS_DEFINE_EVENT_STATE_MACRO(39)
-// Handler for click to play plugin (vulnerable w/no update)
-#define NS_EVENT_STATE_VULNERABLE_NO_UPDATE NS_DEFINE_EVENT_STATE_MACRO(40)
-// Element is ltr (for :dir pseudo-class)
-#define NS_EVENT_STATE_LTR NS_DEFINE_EVENT_STATE_MACRO(42)
-// Element is rtl (for :dir pseudo-class)
-#define NS_EVENT_STATE_RTL NS_DEFINE_EVENT_STATE_MACRO(43)
-// This bit is currently free.
-// #define NS_EVENT_STATE_?????????? NS_DEFINE_EVENT_STATE_MACRO(44)
+#define NS_EVENT_STATE_SUB_SUB_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(35)
 // Element is highlighted (devtools inspector)
-#define NS_EVENT_STATE_DEVTOOLS_HIGHLIGHTED NS_DEFINE_EVENT_STATE_MACRO(45)
-// Element is an unresolved custom element candidate
-#define NS_EVENT_STATE_UNRESOLVED NS_DEFINE_EVENT_STATE_MACRO(46)
+#define NS_EVENT_STATE_DEVTOOLS_HIGHLIGHTED NS_DEFINE_EVENT_STATE_MACRO(36)
 // Element is transitioning for rules changed by style editor
-#define NS_EVENT_STATE_STYLEEDITOR_TRANSITIONING NS_DEFINE_EVENT_STATE_MACRO(47)
-// This bit is currently free.
-// #define NS_EVENT_STATE_?????????? NS_DEFINE_EVENT_STATE_MACRO(48)
+#define NS_EVENT_STATE_STYLEEDITOR_TRANSITIONING NS_DEFINE_EVENT_STATE_MACRO(37)
+#define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL NS_DEFINE_EVENT_STATE_MACRO(38)
+// Content has focus and should show a ring.
+#define NS_EVENT_STATE_FOCUSRING     NS_DEFINE_EVENT_STATE_MACRO(39)
+// Handler for click to play plugin
+#define NS_EVENT_STATE_TYPE_CLICK_TO_PLAY NS_DEFINE_EVENT_STATE_MACRO(40)
+// Handler for click to play plugin (vulnerable w/update)
+#define NS_EVENT_STATE_VULNERABLE_UPDATABLE NS_DEFINE_EVENT_STATE_MACRO(41)
+// Handler for click to play plugin (vulnerable w/no update)
+#define NS_EVENT_STATE_VULNERABLE_NO_UPDATE NS_DEFINE_EVENT_STATE_MACRO(42)
 // Element has focus-within.
-#define NS_EVENT_STATE_FOCUS_WITHIN NS_DEFINE_EVENT_STATE_MACRO(49)
+#define NS_EVENT_STATE_FOCUS_WITHIN NS_DEFINE_EVENT_STATE_MACRO(43)
+// Element is ltr (for :dir pseudo-class)
+#define NS_EVENT_STATE_LTR NS_DEFINE_EVENT_STATE_MACRO(44)
+// Element is rtl (for :dir pseudo-class)
+#define NS_EVENT_STATE_RTL NS_DEFINE_EVENT_STATE_MACRO(45)
 
 // Event state that is used for values that need to be parsed but do nothing.
 #define NS_EVENT_STATE_IGNORE NS_DEFINE_EVENT_STATE_MACRO(63)

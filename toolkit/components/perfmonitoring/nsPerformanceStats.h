@@ -19,7 +19,7 @@
 class nsPerformanceGroup;
 class nsPerformanceGroupDetails;
 
-typedef mozilla::Vector<RefPtr<nsPerformanceGroup>> GroupVector;
+typedef mozilla::Vector<RefPtr<nsPerformanceGroup>, 8> GroupVector;
 
 /**
  * A data structure for registering observers interested in

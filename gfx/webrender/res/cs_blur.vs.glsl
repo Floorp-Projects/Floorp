@@ -40,7 +40,7 @@ void main(void) {
                    local_rect.xy + local_rect.zw,
                    aPosition.xy);
 
-    vec2 texture_size = vec2(textureSize(sCache, 0).xy);
+    vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0).xy);
     vUv.z = src_task.data1.x;
     vBlurRadius = int(task.data1.y);
     vSigma = task.data1.y * 0.5;

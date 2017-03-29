@@ -35,6 +35,9 @@ class gfxVarReceiver;
   _(PDMWMFDisableD3D9Dlls,      nsCString,        nsCString())          \
   _(DXInterop2Blocked,          bool,             false)                \
   _(UseWebRender,               bool,             false)                \
+  _(UseWebRenderANGLE,          bool,             false)                \
+  _(ScreenDepth,                int32_t,          0)                    \
+  _(GREDirectory,               nsCString,        nsCString())          \
 
   /* Add new entries above this line. */
 

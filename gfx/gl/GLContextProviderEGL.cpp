@@ -11,6 +11,9 @@
 #elif defined(MOZ_WIDGET_ANDROID)
     #define GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_JAVA_SURFACE))
     #define GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget) (aWidget->AsAndroid()->GetEGLNativeWindow())
+#elif defined(XP_WIN)
+    #define GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
+    #define GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget) ((EGLNativeWindowType)aWidget->AsWindows()->GetHwnd())
 #else
     #define GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
     #define GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget) ((EGLNativeWindowType)aWidget->RealWidget()->GetNativeData(NS_NATIVE_WINDOW))
@@ -27,6 +30,7 @@
     #define GLES2_LIB2 "libGLESv2.so.2"
 
 #elif defined(XP_WIN)
+    #include "mozilla/widget/WinCompositorWidget.h"
     #include "nsIFile.h"
 
     #define GLES2_LIB "libGLESv2.dll"
@@ -51,6 +55,7 @@
 #include "GLLibraryEGL.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "nsDebug.h"
@@ -693,7 +698,7 @@ CreateConfig(EGLConfig* aConfig, int32_t depth)
 static bool
 CreateConfig(EGLConfig* aConfig)
 {
-    int32_t depth = gfxPlatform::GetPlatform()->GetScreenDepth();
+    int32_t depth = gfxVars::ScreenDepth();
     if (!CreateConfig(aConfig, depth)) {
 #ifdef MOZ_WIDGET_ANDROID
         // Bug 736005

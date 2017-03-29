@@ -20,6 +20,7 @@
 #include "gc/Zone.h"
 #include "vm/Runtime.h"
 
+
 namespace js {
 
 bool
@@ -136,6 +137,9 @@ PerformanceMonitoring::start()
 bool
 PerformanceMonitoring::commit()
 {
+    // Maximal initialization size, in elements for the vector of groups.
+    static const size_t MAX_GROUPS_INIT_CAPACITY = 1024;
+
 #if !defined(MOZ_HAVE_RDTSC)
     // The AutoStopwatch is only executed if `MOZ_HAVE_RDTSC`.
     return false;
@@ -152,12 +156,21 @@ PerformanceMonitoring::commit()
         return true;
     }
 
-    PerformanceGroupVector recentGroups;
-    recentGroups_.swap(recentGroups);
+    // The move operation is generally constant time, unless
+    // `recentGroups_.length()` is very small, in which case
+    // it's fast just because it's small.
+    PerformanceGroupVector recentGroups(Move(recentGroups_));
+    recentGroups_ = PerformanceGroupVector(); // Reconstruct after `Move`.
 
     bool success = true;
     if (stopwatchCommitCallback)
         success = stopwatchCommitCallback(iteration_, recentGroups, stopwatchCommitClosure);
+
+    // Heuristic: we expect to have roughly the same number of groups as in
+    // the previous iteration.
+    const size_t capacity = std::min(recentGroups.capacity(), MAX_GROUPS_INIT_CAPACITY);
+    success = recentGroups_.reserve(capacity)
+            && success;
 
     // Reset immediately, to make sure that we're not hit by the end
     // of a nested event loop (which would cause `commit` to be called
@@ -227,7 +240,7 @@ AutoStopwatch::AutoStopwatch(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IM
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
     JSCompartment* compartment = cx_->compartment();
-    if (compartment->scheduledForDestruction)
+    if (MOZ_UNLIKELY(compartment->scheduledForDestruction))
         return;
 
     JSRuntime* runtime = cx_->runtime();
@@ -266,11 +279,11 @@ AutoStopwatch::~AutoStopwatch()
     }
 
     JSCompartment* compartment = cx_->compartment();
-    if (compartment->scheduledForDestruction)
+    if (MOZ_UNLIKELY(compartment->scheduledForDestruction))
         return;
 
     JSRuntime* runtime = cx_->runtime();
-    if (iteration_ != runtime->performanceMonitoring().iteration()) {
+    if (MOZ_UNLIKELY(iteration_ != runtime->performanceMonitoring().iteration())) {
         // We have entered a nested event loop at some point.
         // Any information we may have is obsolete.
         return;
