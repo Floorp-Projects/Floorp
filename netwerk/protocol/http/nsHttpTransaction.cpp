@@ -1848,6 +1848,11 @@ nsHttpTransaction::CheckForStickyAuthScheme()
   MOZ_ASSERT(mResponseHead);
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
+  if (mClosed) {
+      LOG(("  closed, not checking"));
+      return;
+  }
+
   CheckForStickyAuthSchemeAt(nsHttp::WWW_Authenticate);
   CheckForStickyAuthSchemeAt(nsHttp::Proxy_Authenticate);
 }
