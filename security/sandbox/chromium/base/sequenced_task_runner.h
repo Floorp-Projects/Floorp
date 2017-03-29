@@ -154,6 +154,24 @@ class BASE_EXPORT SequencedTaskRunner : public TaskRunner {
                            const void* object);
 };
 
+struct BASE_EXPORT OnTaskRunnerDeleter {
+  explicit OnTaskRunnerDeleter(scoped_refptr<SequencedTaskRunner> task_runner);
+  ~OnTaskRunnerDeleter();
+
+  OnTaskRunnerDeleter(OnTaskRunnerDeleter&&);
+  OnTaskRunnerDeleter& operator=(OnTaskRunnerDeleter&&);
+
+  template <typename T>
+  void operator()(const T* ptr) {
+    if (task_runner_->RunsTasksOnCurrentThread())
+      delete ptr;
+    else if (ptr)
+      task_runner_->DeleteSoon(FROM_HERE, ptr);
+  }
+
+  scoped_refptr<SequencedTaskRunner> task_runner_;
+};
+
 }  // namespace base
 
 #endif  // BASE_SEQUENCED_TASK_RUNNER_H_

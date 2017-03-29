@@ -1310,11 +1310,16 @@ nsIFrame::IsTransformed() const
   return ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
           (StyleDisplay()->HasTransform(this) ||
            IsSVGTransformed() ||
-           (mContent &&
-            nsLayoutUtils::HasAnimationOfProperty(this,
-                                                  eCSSProperty_transform) &&
-            IsFrameOfType(eSupportsCSSTransforms) &&
-            mContent->GetPrimaryFrame() == this)));
+           HasAnimationOfTransform()));
+}
+
+bool
+nsIFrame::HasAnimationOfTransform() const
+{
+  return mContent &&
+    nsLayoutUtils::HasAnimationOfProperty(this, eCSSProperty_transform) &&
+    IsFrameOfType(eSupportsCSSTransforms) &&
+    mContent->GetPrimaryFrame() == this;
 }
 
 bool
