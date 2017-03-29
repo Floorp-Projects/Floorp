@@ -71,4 +71,12 @@ public class UrlUtils {
             }
         }
     }
+
+    public static boolean focusSupportURLProtocol(final String url) {
+        return (!url.startsWith("http://")) &&
+                (!url.startsWith("https://")) &&
+                (!url.startsWith("file://")) &&
+                (!url.startsWith("data:")) &&
+                (!url.startsWith("error:"));
+    }
 }

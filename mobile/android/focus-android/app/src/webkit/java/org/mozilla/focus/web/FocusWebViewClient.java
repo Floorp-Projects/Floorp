@@ -18,6 +18,7 @@ import android.webkit.WebViewClient;
 import org.mozilla.focus.R;
 import org.mozilla.focus.utils.HtmlLoader;
 import org.mozilla.focus.utils.SupportUtils;
+import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.webkit.ErrorPage;
 import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
 
@@ -120,14 +121,9 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
         // (The API 24+ version of shouldOverrideUrlLoading() lets us determine whether
         // the request is for the main frame, and if it's not we could then completely
         // skip the external URL handling.)
-        if ((!url.startsWith("http://")) &&
-                (!url.startsWith("https://")) &&
-                (!url.startsWith("file://")) &&
-                (!url.startsWith("data:")) &&
-                (!url.startsWith("error:"))) {
-            if (callback.handleExternalUrl(url)) {
-                return true;
-            }
+        if (UrlUtils.focusSupportURLProtocol(url) &&
+                callback.handleExternalUrl(url)) {
+            return true;
         }
 
         return super.shouldOverrideUrlLoading(view, url);
