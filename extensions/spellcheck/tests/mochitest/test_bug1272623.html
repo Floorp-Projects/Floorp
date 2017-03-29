@@ -54,7 +54,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
   }
 
   add_task(function* () {
-    SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", window);
+    SpecialPowers.Cu.import(
+      "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
 
     // Wait for the page to be ready
     yield new Promise(resolve => SimpleTest.waitForFocus(() => SimpleTest.executeSoon(resolve), window));
