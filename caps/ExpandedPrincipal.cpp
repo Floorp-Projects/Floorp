@@ -82,7 +82,7 @@ ExpandedPrincipal::SetDomain(nsIURI* aDomain)
 }
 
 nsresult
-ExpandedPrincipal::GetOriginNoSuffixInternal(nsACString& aOrigin)
+ExpandedPrincipal::GetOriginInternal(nsACString& aOrigin)
 {
   aOrigin.AssignLiteral("[Expanded Principal [");
   for (size_t i = 0; i < mPrincipals.Length(); ++i) {

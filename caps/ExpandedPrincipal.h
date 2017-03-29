@@ -37,7 +37,7 @@ public:
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
   virtual bool AddonHasPermission(const nsAString& aPerm) override;
   virtual nsresult GetScriptLocation(nsACString &aStr) override;
-  nsresult GetOriginNoSuffixInternal(nsACString& aOrigin) override;
+  nsresult GetOriginInternal(nsACString& aOrigin) override;
 
 protected:
   virtual ~ExpandedPrincipal();

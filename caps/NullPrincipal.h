@@ -51,7 +51,7 @@ public:
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
-  nsresult GetOriginNoSuffixInternal(nsACString& aOrigin) override;
+  nsresult GetOriginInternal(nsACString& aOrigin) override;
 
   static already_AddRefed<NullPrincipal> CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom);
 

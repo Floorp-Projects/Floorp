@@ -132,7 +132,7 @@ ContentPrincipal::GetScriptLocation(nsACString &aStr)
 }
 
 nsresult
-ContentPrincipal::GetOriginNoSuffixInternal(nsACString& aOrigin)
+ContentPrincipal::GetOriginInternal(nsACString& aOrigin)
 {
   if (!mCodebase) {
     return NS_ERROR_FAILURE;

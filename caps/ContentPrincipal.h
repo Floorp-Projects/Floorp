@@ -27,7 +27,7 @@ public:
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
   bool IsCodebasePrincipal() const override { return true; }
-  nsresult GetOriginNoSuffixInternal(nsACString& aOrigin) override;
+  nsresult GetOriginInternal(nsACString& aOrigin) override;
 
   ContentPrincipal();
 
