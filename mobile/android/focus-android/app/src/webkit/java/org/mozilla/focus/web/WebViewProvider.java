@@ -69,10 +69,30 @@ public class WebViewProvider {
         // Disable access to arbitrary local files by webpages - assets can still be loaded
         // via file:///android_asset/res, so at least error page images won't be blocked.
         settings.setAllowFileAccess(false);
+        settings.setAllowFileAccessFromFileURLs(false);
+        settings.setAllowUniversalAccessFromFileURLs(false);
 
+        // We could consider calling setLoadsImagesAutomatically() here too (This will block images not laoded over the network too)
         settings.setBlockNetworkImage(appSettings.shouldBlockImages());
 
         settings.setUserAgentString(buildUserAgentString(context, settings));
+
+        // Right now I do not know why we should allow loading content from a content provider
+        settings.setAllowContentAccess(false);
+
+        // The default for those settings should be "false" - But we want to be explicit.
+        settings.setAppCacheEnabled(false);
+        settings.setDatabaseEnabled(false);
+        settings.setDomStorageEnabled(false);
+        settings.setJavaScriptCanOpenWindowsAutomatically(false);
+
+        // We do not implement the callbacks - So let's disable it.
+        settings.setGeolocationEnabled(false);
+
+        // We do not want to save any data...
+        settings.setSaveFormData(false);
+        //noinspection deprecation - This method is deprecated but let's call it in case WebView implementations still obey it.
+        settings.setSavePassword(false);
     }
 
     /**
