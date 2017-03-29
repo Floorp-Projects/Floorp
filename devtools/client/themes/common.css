@@ -290,10 +290,6 @@ checkbox:-moz-focusring {
   transition: opacity 0.05s ease-in-out;
 }
 
-.devtools-button:-moz-focusring {
-  outline: none;
-}
-
 /* Standalone buttons */
 .devtools-button[standalone],
 .devtools-button[data-standalone],
