@@ -115,18 +115,27 @@ protected:
   virtual bool MayLoadInternal(nsIURI* aURI) = 0;
   friend class ::ExpandedPrincipal;
 
+  void
+  SetHasExplicitDomain()
+  {
+    mHasExplicitDomain = true;
+  }
+
   // This function should be called as the last step of the initialization of the
   // principal objects.  It's typically called as the last step from the Init()
   // method of the child classes.
-  void FinishInit();
+  void FinishInit(const OriginAttributes& aOriginAttributes);
 
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
   nsCOMPtr<nsIContentSecurityPolicy> mPreloadCSP;
   nsCOMPtr<nsIAtom> mOriginNoSuffix;
   nsCOMPtr<nsIAtom> mOriginSuffix;
+
+private:
   OriginAttributes mOriginAttributes;
   PrincipalKind mKind;
-  bool mDomainSet;
+  bool mHasExplicitDomain;
+  bool mInitialized;
 };
 
 inline bool
@@ -169,7 +178,7 @@ BasePrincipal::FastEqualsConsideringDomain(nsIPrincipal* aOther)
   // If neither of the principals have document.domain set, we use the fast path
   // in Equals().  Otherwise, we fall back to the slow path below.
   auto other = Cast(aOther);
-  if (!mDomainSet && !other->mDomainSet) {
+  if (!mHasExplicitDomain && !other->mHasExplicitDomain) {
     return FastEquals(aOther);
   }
 
@@ -205,7 +214,7 @@ BasePrincipal::FastSubsumesConsideringDomain(nsIPrincipal* aOther)
   // If neither of the principals have document.domain set, we hand off to
   // FastSubsumes() which has fast paths for some special cases. Otherwise, we fall
   // back to the slow path below.
-  if (!mDomainSet && !Cast(aOther)->mDomainSet) {
+  if (!mHasExplicitDomain && !Cast(aOther)->mHasExplicitDomain) {
     return FastSubsumes(aOther);
   }
 
