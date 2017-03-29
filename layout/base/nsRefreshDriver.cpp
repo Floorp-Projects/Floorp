@@ -1859,7 +1859,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           // Make sure to not process observers which might have been removed
           // during previous iterations.
           nsIPresShell* shell = observers[j - 1];
-          if (!mStyleFlushObservers.Contains(shell))
+          if (!mStyleFlushObservers.RemoveElement(shell))
             continue;
 
           if (!tracingStyleFlush) {
@@ -1868,7 +1868,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           }
 
           nsCOMPtr<nsIPresShell> shellKungFuDeathGrip(shell);
-          mStyleFlushObservers.RemoveElement(shell);
           RestyleManager* restyleManager =
             shell->GetPresContext()->RestyleManager();
           restyleManager->SetObservingRefreshDriver(false);
@@ -1893,7 +1892,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
         // Make sure to not process observers which might have been removed
         // during previous iterations.
         nsIPresShell* shell = observers[j - 1];
-        if (!mLayoutFlushObservers.Contains(shell))
+        if (!mLayoutFlushObservers.RemoveElement(shell))
           continue;
 
         if (!tracingLayoutFlush) {
@@ -1902,7 +1901,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
         }
 
         nsCOMPtr<nsIPresShell> shellKungFuDeathGrip(shell);
-        mLayoutFlushObservers.RemoveElement(shell);
         shell->mReflowScheduled = false;
         shell->mSuppressInterruptibleReflows = false;
         FlushType flushType = HasPendingAnimations(shell)
