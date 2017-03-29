@@ -141,8 +141,8 @@ static_assert(LOW_BUFFER_THRESHOLD_USECS > AMPLE_AUDIO_USECS,
 
 } // namespace detail
 
-// Amount of excess usecs of data to add in to the "should we buffer" calculation.
-static const uint32_t EXHAUSTED_DATA_MARGIN_USECS = 100000;
+// Amount of excess data to add in to the "should we buffer" calculation.
+static constexpr auto EXHAUSTED_DATA_MARGIN = TimeUnit::FromMicroseconds(100000);
 
 static const uint32_t MIN_VIDEO_QUEUE_SIZE = 3;
 static const uint32_t MAX_VIDEO_QUEUE_SIZE = 10;
@@ -3300,8 +3300,8 @@ MediaDecoderStateMachine::HasLowDecodedAudio()
 {
   MOZ_ASSERT(OnTaskQueue());
   return IsAudioDecoding()
-         && GetDecodedAudioDuration().ToMicroseconds()
-            < EXHAUSTED_DATA_MARGIN_USECS * mPlaybackRate;
+         && GetDecodedAudioDuration()
+            < EXHAUSTED_DATA_MARGIN.MultDouble(mPlaybackRate);
 }
 
 bool
