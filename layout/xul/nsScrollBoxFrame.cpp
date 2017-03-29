@@ -48,10 +48,12 @@ protected:
     if (IsActivatedOnHover()) {
       // No initial delay on hover.
       nsRepeatService::GetInstance()->Start(Notify, this,
+                                            mContent->OwnerDoc(),
                                             NS_LITERAL_CSTRING("DoMouseClick"),
                                             0);
     } else {
       nsRepeatService::GetInstance()->Start(Notify, this,
+                                            mContent->OwnerDoc(),
                                             NS_LITERAL_CSTRING("DoMouseClick"));
     }
   }
