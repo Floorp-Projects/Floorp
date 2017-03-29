@@ -1124,7 +1124,8 @@ void NrIceCtx::SetConnectionState(ConnectionState state) {
         }
         break;
       case ICE_CTX_DISCONNECTED:
-        MOZ_CRASH("Transition from checking->disconnected should never happen");
+        // We get this every time an ICE disconnect gets reported.
+        // Do we want a Telemetry probe counting how often this happens?
         break;
       case ICE_CTX_CLOSED:
         // This doesn't seem to be used...
