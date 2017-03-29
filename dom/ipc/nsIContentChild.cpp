@@ -198,6 +198,11 @@ nsIContentChild::RecvAsyncMessage(const nsString& aMsg,
                                   const IPC::Principal& aPrincipal,
                                   const ClonedMessageData& aData)
 {
+  NS_LossyConvertUTF16toASCII messageNameCStr(aMsg);
+  PROFILER_LABEL_DYNAMIC("nsIContentChild", "RecvAsyncMessage",
+                         js::ProfileEntry::Category::EVENTS,
+                         messageNameCStr.get());
+
   CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::GetChildProcessManager();
   if (cpm) {
