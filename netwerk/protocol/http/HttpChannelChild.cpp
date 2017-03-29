@@ -3102,6 +3102,11 @@ void
 HttpChannelChild::TrySendDeletingChannel()
 {
   if (NS_IsMainThread()) {
+    if (NS_WARN_IF(!mIPCOpen)) {
+      // IPC actor is detroyed already, do not send more messages.
+      return;
+    }
+
     Unused << PHttpChannelChild::SendDeletingChannel();
     return;
   }
