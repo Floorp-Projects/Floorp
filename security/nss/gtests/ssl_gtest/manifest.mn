@@ -14,6 +14,7 @@ CSRCS = \
 CPPSRCS = \
       $(CORE_DEPTH)/cpputil/dummy_io.cc \
       $(CORE_DEPTH)/cpputil/dummy_io_fwd.cc \
+      $(CORE_DEPTH)/cpputil/tls_parser.cc \
       ssl_0rtt_unittest.cc \
       ssl_agent_unittest.cc \
       ssl_auth_unittest.cc \
@@ -43,7 +44,6 @@ CPPSRCS = \
       tls_connect.cc \
       tls_hkdf_unittest.cc \
       tls_filter.cc \
-      tls_parser.cc \
       tls_protect.cc \
       $(NULL)
 

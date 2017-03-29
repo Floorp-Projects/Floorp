@@ -77,9 +77,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
   return 0;
 }
 
-extern "C" size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
-                                          size_t MaxSize, unsigned int Seed) {
-  static Mutators mutators = {&ASN1MutatorFlipConstructed,
-                              &ASN1MutatorChangeType};
-  return CustomMutate(mutators, Data, Size, MaxSize, Seed);
+extern "C" size_t LLVMFuzzerCustomMutator(uint8_t *data, size_t size,
+                                          size_t max_size, unsigned int seed) {
+  return CustomMutate(
+      Mutators({ASN1MutatorFlipConstructed, ASN1MutatorChangeType}), data, size,
+      max_size, seed);
 }

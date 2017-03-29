@@ -13,6 +13,7 @@
 #include "shared.h"
 #include "tls_client_config.h"
 #include "tls_common.h"
+#include "tls_mutators.h"
 #include "tls_socket.h"
 
 static SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checksig,
@@ -79,10 +80,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len) {
   // Clear the cache. We never want to resume as we couldn't reproduce that.
   SSL_ClearSessionCache();
 
-#ifdef UNSAFE_FUZZER_MODE
   // Reset the RNG state.
   assert(RNG_RandomUpdate(NULL, 0) == SECSuccess);
-#endif
 
   // Create and import dummy socket.
   std::unique_ptr<DummyPrSocket> socket(new DummyPrSocket(data, len));
@@ -100,4 +99,19 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len) {
   DoHandshake(ssl_fd, false);
 
   return 0;
+}
+
+extern "C" size_t LLVMFuzzerCustomMutator(uint8_t* data, size_t size,
+                                          size_t max_size, unsigned int seed) {
+  return CustomMutate({TlsMutatorDropRecord, TlsMutatorShuffleRecords,
+                       TlsMutatorDuplicateRecord, TlsMutatorTruncateRecord,
+                       TlsMutatorFragmentRecord},
+                      data, size, max_size, seed);
+}
+
+extern "C" size_t LLVMFuzzerCustomCrossOver(const uint8_t* data1, size_t size1,
+                                            const uint8_t* data2, size_t size2,
+                                            uint8_t* out, size_t max_out_size,
+                                            unsigned int seed) {
+  return TlsCrossOver(data1, size1, data2, size2, out, max_out_size, seed);
 }

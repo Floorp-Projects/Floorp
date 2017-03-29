@@ -920,6 +920,9 @@ tls13_ClientSendSupportedVersionsXtn(const sslSocket *ss, TLSExtensionData *xtnD
             if (rv != SECSuccess)
                 return -1;
         }
+
+        xtnData->advertised[xtnData->numAdvertised++] =
+            ssl_tls13_supported_versions_xtn;
     }
 
     return extensions_len;
