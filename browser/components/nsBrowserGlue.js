@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
 
 // lazy module getters
 
-/* global AboutHome:false, AboutNewTab:false, AddonManager:false, AddonWatcher:false,
+/* global AboutHome:false, AboutNewTab:false, AddonManager:false,
           AsyncShutdown:false, AutoCompletePopup:false, BookmarkHTMLUtils:false,
           BookmarkJSONUtils:false, BrowserUITelemetry:false, BrowserUsageTelemetry:false,
           ContentClick:false, ContentPrefServiceParent:false, ContentSearch:false,
@@ -45,7 +45,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
   ["AboutHome", "resource:///modules/AboutHome.jsm"],
   ["AboutNewTab", "resource:///modules/AboutNewTab.jsm"],
   ["AddonManager", "resource://gre/modules/AddonManager.jsm"],
-  ["AddonWatcher", "resource://gre/modules/AddonWatcher.jsm"],
   ["AsyncShutdown", "resource://gre/modules/AsyncShutdown.jsm"],
   ["AutoCompletePopup", "resource://gre/modules/AutoCompletePopup.jsm"],
   ["BookmarkHTMLUtils", "resource://gre/modules/BookmarkHTMLUtils.jsm"],
@@ -891,9 +890,6 @@ BrowserGlue.prototype = {
     FormValidationHandler.uninit();
     AutoCompletePopup.uninit();
     DateTimePickerHelper.uninit();
-    if (AppConstants.NIGHTLY_BUILD) {
-      AddonWatcher.uninit();
-    }
   },
 
   _initServiceDiscovery() {

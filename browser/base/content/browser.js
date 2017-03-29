@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
 
 // lazy module getters
 
-/* global AboutHome:false, AddonWatcher:false,
+/* global AboutHome:false,
           BrowserUITelemetry:false, BrowserUsageTelemetry:false, BrowserUtils:false,
           CastingApps:false, CharsetMenu:false, Color:false, ContentSearch:false,
           Deprecated:false, E10SUtils:false, FormValidationHandler:false,
@@ -40,7 +40,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
  */
 [
   ["AboutHome", "resource:///modules/AboutHome.jsm"],
-  ["AddonWatcher", "resource://gre/modules/AddonWatcher.jsm"],
   ["BrowserUITelemetry", "resource:///modules/BrowserUITelemetry.jsm"],
   ["BrowserUsageTelemetry", "resource:///modules/BrowserUsageTelemetry.jsm"],
   ["BrowserUtils", "resource://gre/modules/BrowserUtils.jsm"],
@@ -1577,9 +1576,6 @@ var gBrowserInit = {
 
       SidebarUI.startDelayedLoad();
       SocialUI.init();
-
-      // Start monitoring slow add-ons
-      AddonWatcher.init();
 
       // Telemetry for master-password - we do this after 5 seconds as it
       // can cause IO if NSS/PSM has not already initialized.
