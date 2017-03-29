@@ -75,9 +75,16 @@ public:
   virtual bool IsCodebasePrincipal() const { return false; };
 
   static BasePrincipal* Cast(nsIPrincipal* aPrin) { return static_cast<BasePrincipal*>(aPrin); }
+
+  static already_AddRefed<BasePrincipal>
+  CreateCodebasePrincipal(const nsACString& aOrigin);
+
+  // These following method may not create a codebase principal in case it's
+  // not possible to generate a correct origin from the passed URI. If this
+  // happens, a NullPrincipal is returned.
+
   static already_AddRefed<BasePrincipal>
   CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAttrs);
-  static already_AddRefed<BasePrincipal> CreateCodebasePrincipal(const nsACString& aOrigin);
 
   const OriginAttributes& OriginAttributesRef() final { return mOriginAttributes; }
   uint32_t AppId() const { return mOriginAttributes.mAppId; }
@@ -130,6 +137,10 @@ protected:
   nsCOMPtr<nsIContentSecurityPolicy> mPreloadCSP;
 
 private:
+  static already_AddRefed<BasePrincipal>
+  CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAttrs,
+                          const nsACString& aOriginNoSuffix);
+
   nsCOMPtr<nsIAtom> mOriginNoSuffix;
   nsCOMPtr<nsIAtom> mOriginSuffix;
 
@@ -157,20 +168,13 @@ BasePrincipal::FastEquals(nsIPrincipal* aOther)
     return this == other;
   }
 
-  if (mOriginNoSuffix) {
-    if (Kind() == eCodebasePrincipal) {
-      return mOriginNoSuffix == other->mOriginNoSuffix &&
-             mOriginSuffix == other->mOriginSuffix;
-    }
-
-    MOZ_ASSERT(Kind() == eExpandedPrincipal);
-    return mOriginNoSuffix == other->mOriginNoSuffix;
+  if (Kind() == eCodebasePrincipal) {
+    return mOriginNoSuffix == other->mOriginNoSuffix &&
+           mOriginSuffix == other->mOriginSuffix;
   }
 
-  // If mOriginNoSuffix is null on one of our principals, we must fall back
-  // to the slow path.
-  return Subsumes(aOther, DontConsiderDocumentDomain) &&
-         other->Subsumes(this, DontConsiderDocumentDomain);
+  MOZ_ASSERT(Kind() == eExpandedPrincipal);
+  return mOriginNoSuffix == other->mOriginNoSuffix;
 }
 
 inline bool
@@ -194,14 +198,11 @@ BasePrincipal::FastSubsumes(nsIPrincipal* aOther)
   // We deal with two special cases first:
   // Null principals only subsume each other if they are equal, and are only
   // equal if they're the same object.
-  // Also, if mOriginNoSuffix is null, FastEquals falls back to the slow path
-  // using Subsumes, so we don't want to use it in that case to avoid an
-  // infinite recursion.
   auto other = Cast(aOther);
   if (Kind() == eNullPrincipal && other->Kind() == eNullPrincipal) {
     return this == other;
   }
-  if (mOriginNoSuffix && FastEquals(aOther)) {
+  if (FastEquals(aOther)) {
     return true;
   }
 

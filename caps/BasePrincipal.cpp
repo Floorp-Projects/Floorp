@@ -14,6 +14,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
+#include "nsIStandardURL.h"
 
 #include "ContentPrincipal.h"
 #include "nsNetUtil.h"
@@ -368,8 +369,31 @@ BasePrincipal::AddonHasPermission(const nsAString& aPerm)
 }
 
 already_AddRefed<BasePrincipal>
-BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAttrs)
+BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI,
+                                       const OriginAttributes& aAttrs)
 {
+  MOZ_ASSERT(aURI);
+
+  nsAutoCString originNoSuffix;
+  nsresult rv =
+    ContentPrincipal::GenerateOriginNoSuffixFromURI(aURI, originNoSuffix);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // If the generation of the origin fails, we still want to have a valid
+    // principal. Better to return a null principal here.
+    return NullPrincipal::Create(aAttrs);
+  }
+
+  return CreateCodebasePrincipal(aURI, aAttrs, originNoSuffix);
+}
+
+already_AddRefed<BasePrincipal>
+BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI,
+                                       const OriginAttributes& aAttrs,
+                                       const nsACString& aOriginNoSuffix)
+{
+  MOZ_ASSERT(aURI);
+  MOZ_ASSERT(!aOriginNoSuffix.IsEmpty());
+
   // If the URI is supposed to inherit the security context of whoever loads it,
   // we shouldn't make a codebase principal for it.
   bool inheritsPrincipal;
@@ -393,7 +417,7 @@ BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAt
 
   // Mint a codebase principal.
   RefPtr<ContentPrincipal> codebase = new ContentPrincipal();
-  rv = codebase->Init(aURI, aAttrs);
+  rv = codebase->Init(aURI, aAttrs, aOriginNoSuffix);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return codebase.forget();
 }
