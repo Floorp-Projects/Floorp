@@ -349,10 +349,7 @@ to mochitest command.
     * test_specified_value_serialization.html `bug-721136` [27]
     * test_units_angle.html [3]
   * {background,mask}-position lacks comma for serialization servo/servo#15200
-    * test_value_storage.html `background-position` [81]
-    * ... `for 'mask-position` [94]
-    * ... `for '-webkit-mask-position` [188]
-    * ... `for '-webkit-mask` [45]
+    * test_value_storage.html `background-position` [63]
     * test_shorthand_property_getters.html `background-position` [1]
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
