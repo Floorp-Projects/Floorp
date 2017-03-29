@@ -2551,12 +2551,11 @@ nsGlobalWindow::SetInitialPrincipalToSubject()
 
 #ifdef DEBUG
     // If we have a document loaded at this point, it had better be about:blank.
-    // Otherwise, something is really weird.
-    nsCOMPtr<nsIURI> uri;
-    mDoc->NodePrincipal()->GetURI(getter_AddRefs(uri));
-    NS_ASSERTION(uri && NS_IsAboutBlank(uri) &&
-                 NS_IsAboutBlank(mDoc->GetDocumentURI()),
-                 "Unexpected original document");
+    // Otherwise, something is really weird. An about:blank page has a
+    // NullPrincipal.
+    bool isNullPrincipal;
+    MOZ_ASSERT(NS_SUCCEEDED(mDoc->NodePrincipal()->GetIsNullPrincipal(&isNullPrincipal)) &&
+               isNullPrincipal);
 #endif
   }
 

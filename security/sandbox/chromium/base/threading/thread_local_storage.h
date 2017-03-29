@@ -5,6 +5,8 @@
 #ifndef BASE_THREADING_THREAD_LOCAL_STORAGE_H_
 #define BASE_THREADING_THREAD_LOCAL_STORAGE_H_
 
+#include <stdint.h>
+
 #include "base/atomicops.h"
 #include "base/base_export.h"
 #include "base/macros.h"
@@ -20,9 +22,12 @@ namespace base {
 
 namespace internal {
 
-// WARNING: You should *NOT* be using this class directly.
-// PlatformThreadLocalStorage is low-level abstraction to the OS's TLS
-// interface, you should instead be using ThreadLocalStorage::StaticSlot/Slot.
+// WARNING: You should *NOT* use this class directly.
+// PlatformThreadLocalStorage is a low-level abstraction of the OS's TLS
+// interface. Instead, you should use one of the following:
+// * ThreadLocalBoolean (from thread_local.h) for booleans.
+// * ThreadLocalPointer (from thread_local.h) for pointers.
+// * ThreadLocalStorage::StaticSlot/Slot for more direct control of the slot.
 class BASE_EXPORT PlatformThreadLocalStorage {
  public:
 
@@ -123,18 +128,25 @@ class BASE_EXPORT ThreadLocalStorage {
     // The internals of this struct should be considered private.
     base::subtle::Atomic32 initialized_;
     int slot_;
+    uint32_t version_;
   };
 
   // A convenience wrapper around StaticSlot with a constructor. Can be used
   // as a member variable.
-  class BASE_EXPORT Slot : public StaticSlot {
+  class BASE_EXPORT Slot {
    public:
-    // Calls StaticSlot::Initialize().
     explicit Slot(TLSDestructorFunc destructor = NULL);
+    ~Slot();
+
+    // Get the thread-local value stored in this slot.
+    // Values are guaranteed to initially be zero.
+    void* Get() const;
+
+    // Set the slot's thread-local value to |value|.
+    void Set(void* value);
 
    private:
-    using StaticSlot::initialized_;
-    using StaticSlot::slot_;
+    StaticSlot tls_slot_;
 
     DISALLOW_COPY_AND_ASSIGN(Slot);
   };

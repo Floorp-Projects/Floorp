@@ -33,7 +33,7 @@ add_task(function* test_remote_window_open_aboutBlank() {
 
 /**
  * For loading the initial about:blank in non-e10s mode, it will be loaded with
- * codebase principal. So we test if it has correct firstPartyDomain set.
+ * a null principal. So we test if it has correct firstPartyDomain set.
  */
 add_task(function* test_nonremote_window_open_aboutBlank() {
   let win = yield BrowserTestUtils.openNewBrowserWindow({remote: false});
@@ -43,8 +43,8 @@ add_task(function* test_nonremote_window_open_aboutBlank() {
 
   let attrs = { firstPartyDomain: "about.ef2a7dd5-93bc-417f-a698-142c3116864f.mozilla" };
   yield ContentTask.spawn(browser, attrs, function* (expectAttrs) {
-    Assert.ok(content.document.nodePrincipal.isCodebasePrincipal,
-              "The principal of non-remote about:blank should be a codebase principal.");
+    Assert.ok(!content.document.nodePrincipal.isCodebasePrincipal,
+              "The principal of non-remote about:blank should not be a codebase principal.");
     Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
                  expectAttrs.firstPartyDomain,
                  "non-remote about:blank should have firstPartyDomain set");

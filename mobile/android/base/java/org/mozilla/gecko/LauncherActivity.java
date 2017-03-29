@@ -6,12 +6,14 @@
 package org.mozilla.gecko;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.customtabs.CustomTabsIntent;
 
 import org.mozilla.gecko.webapps.WebAppActivity;
+import org.mozilla.gecko.webapps.WebAppIndexer;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.mozglue.SafeIntent;
@@ -89,11 +91,11 @@ public class LauncherActivity extends Activity {
     }
 
     private void dispatchWebAppIntent() {
-        Intent intent = new Intent(getIntent());
-        intent.setClassName(getApplicationContext(), WebAppActivity.class.getName());
-
-        filterFlags(intent);
-
+        final Intent intent = new Intent(getIntent());
+        final String manifestPath = getIntent().getStringExtra(WebAppActivity.MANIFEST_PATH);
+        final int index = WebAppIndexer.getInstance().getIndexForManifest(manifestPath, this);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setClassName(this, WebAppIndexer.WEBAPP_CLASS + index);
         startActivity(intent);
     }
 
