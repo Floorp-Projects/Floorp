@@ -32,12 +32,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        final Settings appSettings = new Settings(this);
+
+        if (appSettings.shouldUseSecureMode()) {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        }
+
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 
         setContentView(R.layout.activity_main);
 
-        final Settings appSettings = new Settings(this);
         if (Intent.ACTION_VIEW.equals(getIntent().getAction())) {
             final String url = getIntent().getDataString();
 
@@ -58,10 +63,6 @@ public class MainActivity extends AppCompatActivity {
         WebViewProvider.preload(this);
 
         PreferenceManager.setDefaultValues(this, R.xml.settings, false);
-
-        if (appSettings.shouldUseSecureMode()) {
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
-        }
     }
 
     @Override
