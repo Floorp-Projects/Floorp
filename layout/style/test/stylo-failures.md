@@ -30,7 +30,6 @@ to mochitest command.
 ## Failures
 
 * Media query support:
-  * test_bug1089417.html [1]
   * test_bug418986-2.html: matchMedia support [3]
   * test_bug453896_deck.html: &lt;style media&gt; support [8]
   * test_media_queries.html [657]

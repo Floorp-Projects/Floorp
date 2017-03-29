@@ -84,6 +84,11 @@ public:
     return mServoStyle;
   }
 
+  void ClearServoStyle() {
+    MOZ_ASSERT(NS_IsMainThread());
+    mServoStyle = nullptr;
+  }
+
   // nsIStyleRule
   virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
   virtual bool MightMapInheritedStyleData() override;
