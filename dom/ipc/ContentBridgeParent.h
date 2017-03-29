@@ -114,6 +114,11 @@ protected:
 
   virtual bool DeallocPBlobParent(PBlobParent*) override;
 
+  virtual PMemoryStreamParent*
+  AllocPMemoryStreamParent(const uint64_t& aSize) override;
+
+  virtual bool DeallocPMemoryStreamParent(PMemoryStreamParent*) override;
+
   virtual PSendStreamParent* AllocPSendStreamParent() override;
 
   virtual bool DeallocPSendStreamParent(PSendStreamParent* aActor) override;
