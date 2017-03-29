@@ -1132,9 +1132,6 @@ enum class SymbolicAddress
 bool
 IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode);
 
-void*
-AddressOf(SymbolicAddress imm);
-
 // Assumptions captures ambient state that must be the same when compiling and
 // deserializing a module for the compiled code to be valid. If it's not, then
 // the module must be recompiled from scratch.
