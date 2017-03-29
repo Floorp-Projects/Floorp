@@ -1314,20 +1314,20 @@ private:
   {
     MOZ_ASSERT(aAudio && mSeekJob.mTarget->IsAccurate());
 
-    CheckedInt64 sampleDuration =
-      FramesToUsecs(aAudio->mFrames, Info().mAudio.mRate);
-    if (!sampleDuration.isValid()) {
+    auto sampleDuration = FramesToTimeUnit(
+      aAudio->mFrames, Info().mAudio.mRate);
+    if (!sampleDuration.IsValid()) {
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
 
-    if (aAudio->mTime + sampleDuration.value()
-        <= mSeekJob.mTarget->GetTime().ToMicroseconds()) {
+    auto audioTime = TimeUnit::FromMicroseconds(aAudio->mTime);
+    if (audioTime + sampleDuration <= mSeekJob.mTarget->GetTime()) {
       // Our seek target lies after the frames in this AudioData. Don't
       // push it onto the audio queue, and keep decoding forwards.
       return NS_OK;
     }
 
-    if (aAudio->mTime > mSeekJob.mTarget->GetTime().ToMicroseconds()) {
+    if (audioTime > mSeekJob.mTarget->GetTime()) {
       // The seek target doesn't lie in the audio block just after the last
       // audio frames we've seen which were before the seek target. This
       // could have been the first audio data we've seen after seek, i.e. the
@@ -1344,15 +1344,13 @@ private:
     // The seek target lies somewhere in this AudioData's frames, strip off
     // any frames which lie before the seek target, so we'll begin playback
     // exactly at the seek target.
-    NS_ASSERTION(mSeekJob.mTarget->GetTime().ToMicroseconds() >= aAudio->mTime,
+    NS_ASSERTION(mSeekJob.mTarget->GetTime() >= audioTime,
                  "Target must at or be after data start.");
-    NS_ASSERTION(mSeekJob.mTarget->GetTime().ToMicroseconds()
-                 < aAudio->mTime + sampleDuration.value(),
+    NS_ASSERTION(mSeekJob.mTarget->GetTime() < audioTime + sampleDuration,
                  "Data must end after target.");
 
-    CheckedInt64 framesToPrune = UsecsToFrames(
-      mSeekJob.mTarget->GetTime().ToMicroseconds() - aAudio->mTime,
-      Info().mAudio.mRate);
+    CheckedInt64 framesToPrune = TimeUnitToFrames(
+      mSeekJob.mTarget->GetTime() - audioTime, Info().mAudio.mRate);
     if (!framesToPrune.isValid()) {
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
@@ -1362,8 +1360,7 @@ private:
       SLOGW("Can't prune more frames that we have!");
       return NS_ERROR_FAILURE;
     }
-    uint32_t frames =
-      aAudio->mFrames - static_cast<uint32_t>(framesToPrune.value());
+    uint32_t frames = aAudio->mFrames - uint32_t(framesToPrune.value());
     uint32_t channels = aAudio->mChannels;
     AlignedAudioBuffer audioData(frames * channels);
     if (!audioData) {
@@ -1373,13 +1370,14 @@ private:
     memcpy(audioData.get(),
            aAudio->mAudioData.get() + (framesToPrune.value() * channels),
            frames * channels * sizeof(AudioDataValue));
-    CheckedInt64 duration = FramesToUsecs(frames, Info().mAudio.mRate);
-    if (!duration.isValid()) {
+    auto duration = FramesToTimeUnit(frames, Info().mAudio.mRate);
+    if (!duration.IsValid()) {
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
     RefPtr<AudioData> data(new AudioData(
       aAudio->mOffset, mSeekJob.mTarget->GetTime().ToMicroseconds(),
-      duration.value(), frames, Move(audioData), channels, aAudio->mRate));
+      duration.ToMicroseconds(), frames, Move(audioData), channels,
+      aAudio->mRate));
     MOZ_ASSERT(AudioQueue().GetSize() == 0,
                "Should be the 1st sample after seeking");
     mMaster->PushAudio(data);
