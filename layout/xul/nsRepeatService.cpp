@@ -53,7 +53,7 @@ void nsRepeatService::Start(Callback aCallback, void* aCallbackData,
   mRepeatTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 
   if (NS_SUCCEEDED(rv))  {
-    mRepeatTimer->InitWithCallback(this, aInitialDelay, nsITimer::TYPE_ONE_SHOT);
+    InitTimerCallback(aInitialDelay);
   }
 }
 
@@ -78,10 +78,16 @@ NS_IMETHODIMP nsRepeatService::Notify(nsITimer *timer)
     mCallback(mCallbackData);
 
   // start timer again.
-  if (mRepeatTimer) {
-    mRepeatTimer->InitWithCallback(this, REPEAT_DELAY, nsITimer::TYPE_ONE_SHOT);
-  }
+  InitTimerCallback(REPEAT_DELAY);
   return NS_OK;
+}
+
+void
+nsRepeatService::InitTimerCallback(uint32_t aInitialDelay)
+{
+  if (mRepeatTimer) {
+    mRepeatTimer->InitWithCallback(this, aInitialDelay, nsITimer::TYPE_ONE_SHOT);
+  }
 }
 
 NS_IMPL_ISUPPORTS(nsRepeatService, nsITimerCallback)
