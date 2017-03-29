@@ -101,9 +101,6 @@ class GeckoInstance(object):
 
         # We want to collect telemetry, but we don't want to send in the results
         "toolkit.telemetry.server": "https://%(server)s/dummy/telemetry/",
-
-        # Enabling the support for File object creation in the content process.
-        "dom.file.createInChild": True,
     }
 
     def __init__(self, host=None, port=None, bin=None, profile=None, addons=None,
