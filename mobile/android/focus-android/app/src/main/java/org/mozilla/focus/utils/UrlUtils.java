@@ -63,6 +63,15 @@ public class UrlUtils {
 
             return uri.toString();
         } catch (URISyntaxException e) {
+            // In general this shouldn't happen. But there are some special cases that URI can't handle,
+            // such as "http:" by itself. We allow those individual special cases, but we still want
+            // to catch other special syntaxes in dev builds if possible
+            if (url.equals("http:") ||
+                    url.equals("https:") ||
+                    url.equals("file:")) {
+                return url;
+            }
+
             if (BuildConfig.DEBUG) {
                 // WebView should always have supplied a valid URL
                 throw new IllegalStateException("WebView is expected to always supply a valid URL");
