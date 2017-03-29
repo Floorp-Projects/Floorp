@@ -664,6 +664,63 @@ SerializeInputStreamInChunks(nsIInputStream* aInputStream, uint64_t aLength,
   return child;
 }
 
+void
+DeleteStreamMemoryFromBlobDataStream(BlobDataStream& aStream)
+{
+  PMemoryStreamChild* actor = aStream.streamChild();
+  if (actor) {
+    actor->Send__delete__(actor);
+  }
+}
+
+void
+DeleteStreamMemoryFromBlobData(BlobData& aBlobData)
+{
+  switch (aBlobData.type()) {
+    case BlobData::TBlobDataStream:
+      DeleteStreamMemoryFromBlobDataStream(aBlobData.get_BlobDataStream());
+      return;
+
+    case BlobData::TArrayOfBlobData: {
+      nsTArray<BlobData>& arrayBlobData = aBlobData.get_ArrayOfBlobData();
+      for (uint32_t i = 0; i < arrayBlobData.Length(); ++i) {
+        DeleteStreamMemoryFromBlobData(arrayBlobData[i]);
+      }
+      return;
+    }
+
+    default:
+      // Nothing to do here.
+      return;
+  }
+}
+
+void
+DeleteStreamMemoryFromOptionalBlobData(OptionalBlobData& aParams)
+{
+  if (aParams.type() == OptionalBlobData::Tvoid_t) {
+    return;
+  }
+
+  DeleteStreamMemoryFromBlobData(aParams.get_BlobData());
+}
+
+void
+DeleteStreamMemory(AnyBlobConstructorParams& aParams)
+{
+  if (aParams.type() == AnyBlobConstructorParams::TFileBlobConstructorParams) {
+    FileBlobConstructorParams& fileParams = aParams.get_FileBlobConstructorParams();
+    DeleteStreamMemoryFromOptionalBlobData(fileParams.optionalBlobData());
+    return;
+  }
+
+  if (aParams.type() == AnyBlobConstructorParams::TNormalBlobConstructorParams) {
+    NormalBlobConstructorParams& normalParams = aParams.get_NormalBlobConstructorParams();
+    DeleteStreamMemoryFromOptionalBlobData(normalParams.optionalBlobData());
+    return;
+  }
+}
+
 } // namespace
 
 already_AddRefed<BlobImpl>
@@ -3578,6 +3635,8 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
   if (NS_WARN_IF(!aManager->SendPBlobConstructor(actor, params))) {
     return nullptr;
   }
+
+  DeleteStreamMemory(params.blobParams());
 
   return actor;
 }
