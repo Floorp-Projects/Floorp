@@ -13,7 +13,7 @@
 include pagination/reftest.list
 
 # Tests for cross-axis alignment (align-self / align-items properties)
-fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-horiz-2-ref.xhtml # bug 793456, and possibly others
+pref(layout.css.moz-appearance.enabled,true) fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-horiz-2-ref.xhtml # bug 793456, and possibly others
 # This one fails on windows R (but not Ru, strangely) and GTK.
 # On Windows R and GTK, the single-line <label> flex item has a different
 # background size in test vs. ref

@@ -7,7 +7,7 @@
     /* Make sure our splitter's background doesn't depend on its hover styles */
     splitter {
       background-color: yellow;
-      -moz-appearance: none;
+      -moz-appearance: none; appearance: none;
     }
   </html:style>
   <script>

@@ -20,10 +20,6 @@ let whitelist = [
   {sourceName: /web\/viewer\.css$/i,
    errorMessage: /Unknown pseudo-class.*(fullscreen|selection)/i,
    isFromDevTools: false},
-  // PDFjs rules needed for compat with other UAs.
-  {sourceName: /web\/viewer\.css$/i,
-   errorMessage: /Unknown property.*appearance/i,
-   isFromDevTools: false},
   // Tracked in bug 1004428.
   {sourceName: /aboutaccounts\/(main|normalize)\.css$/i,
    isFromDevTools: false},

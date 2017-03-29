@@ -2527,7 +2527,7 @@ SizeComputationInput::InitOffsets(WritingMode aWM,
   nsIntMargin widget;
   if (isThemed &&
       presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
-                                                mFrame, disp->mAppearance,
+                                                mFrame, disp->UsedAppearance(),
                                                 &widget)) {
     ComputedPhysicalPadding().top = presContext->DevPixelsToAppUnits(widget.top);
     ComputedPhysicalPadding().right = presContext->DevPixelsToAppUnits(widget.right);
@@ -2578,7 +2578,7 @@ SizeComputationInput::InitOffsets(WritingMode aWM,
   if (isThemed) {
     nsIntMargin widget;
     presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
-                                             mFrame, disp->mAppearance,
+                                             mFrame, disp->UsedAppearance(),
                                              &widget);
     ComputedPhysicalBorderPadding().top =
       presContext->DevPixelsToAppUnits(widget.top);
