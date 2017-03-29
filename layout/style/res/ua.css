@@ -156,7 +156,7 @@
   unicode-bidi: inherit;
   text-overflow: inherit;
   /* The properties below here don't apply if our position is static,
-     and we do want them to have an effect it it's not, so it's fine
+     and we do want them to have an effect if it's not, so it's fine
      to always inherit them. */
   top: inherit;
   left: inherit;
