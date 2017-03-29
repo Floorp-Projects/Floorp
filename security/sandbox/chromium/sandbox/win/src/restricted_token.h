@@ -88,17 +88,6 @@ class RestrictedToken {
   // access to any resource. It can only be used to deny access.
   DWORD AddAllSidsForDenyOnly(std::vector<Sid> *exceptions);
 
-  // Lists all sids in the token and mark them as Deny Only if present in the
-  // deny_only_sids parameter.
-  //
-  // If the function succeeds, the return value is ERROR_SUCCESS. If the
-  // function fails, the return value is the win32 error code corresponding to
-  // the error.
-  //
-  // Note: A Sid marked for Deny Only in a token cannot be used to grant
-  // access to any resource. It can only be used to deny access.
-  DWORD AddDenyOnlySids(const std::vector<Sid>& deny_only_sids);
-
   // Adds a user or group SID for Deny Only in the restricted token.
   // Parameter: sid is the SID to add in the Deny Only list.
   // The return value is always ERROR_SUCCESS.
@@ -179,6 +168,10 @@ class RestrictedToken {
   // level cannot be higher than your current integrity level.
   DWORD SetIntegrityLevel(IntegrityLevel integrity_level);
 
+  // Set a flag which indicates the created token should have a locked down
+  // default DACL when created.
+  void SetLockdownDefaultDacl();
+
  private:
   // The list of restricting sids in the restricted token.
   std::vector<Sid> sids_to_restrict_;
@@ -192,6 +185,8 @@ class RestrictedToken {
   IntegrityLevel integrity_level_;
   // Tells if the object is initialized or not (if Init() has been called)
   bool init_;
+  // Lockdown the default DACL when creating new tokens.
+  bool lockdown_default_dacl_;
 
   DISALLOW_COPY_AND_ASSIGN(RestrictedToken);
 };

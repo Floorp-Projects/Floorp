@@ -11,8 +11,12 @@ extern "C" uint32_t SuperFastHash(const char* data, int len);
 
 namespace base {
 
-uint32_t SuperFastHash(const char* data, int len) {
-  return ::SuperFastHash(data, len);
+uint32_t SuperFastHash(const char* data, size_t length) {
+  if (length > static_cast<size_t>(std::numeric_limits<int>::max())) {
+    NOTREACHED();
+    return 0;
+  }
+  return ::SuperFastHash(data, static_cast<int>(length));
 }
 
 }  // namespace base
