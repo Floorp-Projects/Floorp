@@ -61,7 +61,7 @@ to mochitest command.
     * test_value_storage.html `frames` [30]
   * Property parsing and computation:
     * test_property_syntax_errors.html `animation` [404]
-    * test_value_storage.html `animation` [280]
+    * test_value_storage.html `animation` [91]
 * test_any_dynamic.html: slow selector handling [3]
 * test_bug635286.html: :-moz-any pseudo-class bugs [3]
 * CSSOM support:
@@ -93,7 +93,7 @@ to mochitest command.
   * test_transitions_computed_value_combinations.html [145]
   * test_transitions_dynamic_changes.html [10]
   * test_transitions_step_functions.html [24]
-  * test_value_storage.html `transition` [776]
+  * test_value_storage.html `transition` [596]
   * Events:
     * test_animations_event_handler_attribute.html [10]
     * test_animations_event_order.html [11]
@@ -339,8 +339,8 @@ to mochitest command.
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
-    * test_value_storage.html `border-radius:` [156]
-    * ... `-moz-outline-radius:` [76]
+    * test_value_storage.html `border-radius:` [92]
+    * ... `-moz-outline-radius:` [45]
     * test_shorthand_property_getters.html `should condense to shortest possible` [6]
   * transform property servo/servo#15194
     * test_value_storage.html `'transform` [104]
@@ -349,15 +349,12 @@ to mochitest command.
     * test_specified_value_serialization.html `bug-721136` [27]
     * test_units_angle.html [3]
   * {background,mask}-position lacks comma for serialization servo/servo#15200
-    * test_value_storage.html `background-position` [63]
     * test_shorthand_property_getters.html `background-position` [1]
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
   * background-position invalid 3-value form **issue to be filed**
     * test_shorthand_property_getters.html `should serialize to 4-value` [2]
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
-  * image-layer values should omit some of its parts when they are initial servo/servo#15951
-    * test_shorthand_property_getters.html `background` [2]
   * :not(*) doesn't serialize properly servo/servo#16017
     * test_selectors.html `:not()` [8]
     * ... `:not(html|)` [1]
@@ -425,7 +422,7 @@ to mochitest command.
   * test_variable_serialization_computed.html [35]
   * test_variables.html `custom property name` [2]
 * test_css_supports.html: issues around @supports syntax servo/servo#15482 [8]
-* test_author_specified_style.html: support serializing color as author specified bug 1348165 [33]
+* test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
 * test_selectors.html `this_better_be_unvisited`: visited handling [2]
 
