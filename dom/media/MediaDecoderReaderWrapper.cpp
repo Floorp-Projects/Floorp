@@ -65,19 +65,20 @@ MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
 
-  if (aTimeThreshold.ToMicroseconds() > 0) {
+  if (aTimeThreshold > media::TimeUnit::Zero()) {
     aTimeThreshold += StartTime();
   }
 
   int64_t startTime = StartTime().ToMicroseconds();
-  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                     &MediaDecoderReader::RequestVideoData,
-                     aSkipToNextKeyframe, aTimeThreshold.ToMicroseconds())
-    ->Then(mOwnerThread, __func__,
-           [startTime] (VideoData* aVideo) {
-             aVideo->AdjustForStartTime(startTime);
-           },
-           [] (const MediaResult& aError) {});
+  return InvokeAsync<bool, media::TimeUnit&&>(
+    mReader->OwnerThread(), mReader.get(), __func__,
+    &MediaDecoderReader::RequestVideoData,
+    aSkipToNextKeyframe, aTimeThreshold)
+  ->Then(mOwnerThread, __func__,
+         [startTime] (VideoData* aVideo) {
+           aVideo->AdjustForStartTime(startTime);
+         },
+         [] (const MediaResult& aError) {});
 }
 
 RefPtr<MediaDecoderReader::SeekPromise>

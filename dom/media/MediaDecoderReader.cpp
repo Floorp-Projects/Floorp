@@ -238,7 +238,7 @@ class ReRequestVideoWithSkipTask : public Runnable
 {
 public:
   ReRequestVideoWithSkipTask(MediaDecoderReader* aReader,
-                             int64_t aTimeThreshold)
+                             const media::TimeUnit& aTimeThreshold)
     : mReader(aReader)
     , mTimeThreshold(aTimeThreshold)
   {
@@ -258,7 +258,7 @@ public:
 
 private:
   RefPtr<MediaDecoderReader> mReader;
-  const int64_t mTimeThreshold;
+  const media::TimeUnit mTimeThreshold;
 };
 
 class ReRequestAudioTask : public Runnable
@@ -287,20 +287,21 @@ private:
 
 RefPtr<MediaDecoderReader::VideoDataPromise>
 MediaDecoderReader::RequestVideoData(bool aSkipToNextKeyframe,
-                                     int64_t aTimeThreshold)
+                                     const media::TimeUnit& aTimeThreshold)
 {
   RefPtr<VideoDataPromise> p = mBaseVideoPromise.Ensure(__func__);
   bool skip = aSkipToNextKeyframe;
   while (VideoQueue().GetSize() == 0 &&
          !VideoQueue().IsFinished()) {
-    if (!DecodeVideoFrame(skip, aTimeThreshold)) {
+    if (!DecodeVideoFrame(skip, aTimeThreshold.ToMicroseconds())) {
       VideoQueue().Finish();
     } else if (skip) {
       // We still need to decode more data in order to skip to the next
       // keyframe. Post another task to the decode task queue to decode
       // again. We don't just decode straight in a loop here, as that
       // would hog the decode task queue.
-      RefPtr<nsIRunnable> task(new ReRequestVideoWithSkipTask(this, aTimeThreshold));
+      RefPtr<nsIRunnable> task(
+        new ReRequestVideoWithSkipTask(this, aTimeThreshold));
       mTaskQueue->Dispatch(task.forget());
       return p;
     }
