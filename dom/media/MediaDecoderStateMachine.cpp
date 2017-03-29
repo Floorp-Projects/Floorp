@@ -2996,7 +2996,7 @@ void MediaDecoderStateMachine::RecomputeDuration()
     duration = mObservedDuration;
   }
 
-  MOZ_ASSERT(duration.ToMicroseconds() >= 0);
+  MOZ_ASSERT(duration >= TimeUnit::Zero());
   mDuration = Some(duration);
 }
 
