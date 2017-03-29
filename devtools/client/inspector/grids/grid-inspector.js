@@ -345,6 +345,9 @@ GridInspector.prototype = {
    * @param  {NodeFront} node
    *         The NodeFront of the grid container element for which the grid
    *         highlighter is highlighted for.
+   * @param  {String} color
+   *         The color of the grid cell for which the grid highlighter
+   *         is highlighted for.
    * @param  {Number|null} gridFragmentIndex
    *         The index of the grid fragment for which the grid highlighter
    *         is highlighted for.
@@ -355,9 +358,11 @@ GridInspector.prototype = {
    *         The column number of the grid cell for which the grid highlighter
    *         is highlighted for.
    */
-  onShowGridCellHighlight(node, gridFragmentIndex, rowNumber, columnNumber) {
+  onShowGridCellHighlight(node, color, gridFragmentIndex, rowNumber, columnNumber) {
     let { highlighterSettings } = this.store.getState();
+
     highlighterSettings.showGridCell = { gridFragmentIndex, rowNumber, columnNumber };
+    highlighterSettings.color = color;
 
     this.highlighters.showGridHighlighter(node, highlighterSettings);
   },

@@ -7,6 +7,7 @@
 #include "nsMenuBarFrame.h"
 #include "nsMenuPopupFrame.h"
 #include "nsIDOMEvent.h"
+#include "nsPIWindowRoot.h"
 
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"

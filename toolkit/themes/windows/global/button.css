@@ -12,7 +12,7 @@
 
 button {
   -moz-appearance: button;
-  margin: 1px 5px 2px 5px;
+  margin: 1px 5px 2px;
   min-width: 6.3em;
   color: ButtonText;
   text-shadow: none;
@@ -55,13 +55,13 @@ button:-moz-focusring > .button-box {
 
 /* .......... active/open/checked state .......... */
 
-button:hover:active > .button-box:-moz-system-metric(windows-classic),
-button[open="true"] > .button-box:-moz-system-metric(windows-classic),
-button[checked="true"] > .button-box:-moz-system-metric(windows-classic) {
-  padding-top: 2px;
-  padding-bottom: 1px;
-  padding-inline-start: 4px;
-  padding-inline-end: 3px;
+@media (-moz-windows-classic) {
+  button:-moz-any(:hover:active,[open="true"],[checked="true"]):not([disabled="true"]) > .button-box {
+    padding-top: 2px;
+    padding-bottom: 1px;
+    padding-inline-start: 4px;
+    padding-inline-end: 3px;
+  }
 }
 
 /* .......... disabled state .......... */
@@ -70,16 +70,11 @@ button[disabled="true"] {
   color: GrayText;
 }
 
-button[disabled="true"]:-moz-system-metric(windows-classic) {
-  color: ThreeDShadow;
-  text-shadow: 1px 1px ThreeDHighlight;
-}
-
-button[disabled="true"] > .button-box {
-  padding-top: 1px !important;
-  padding-bottom: 2px !important;
-  padding-inline-start: 3px !important;
-  padding-inline-end: 4px !important;
+@media (-moz-windows-classic) {
+  button[disabled="true"] {
+    color: ThreeDShadow;
+    text-shadow: 1px 1px ThreeDHighlight;
+  }
 }
 
 /* ::::: menu/menu-button buttons ::::: */

@@ -24,17 +24,7 @@ class NSSDatabase {
 
 typedef std::vector<decltype(LLVMFuzzerCustomMutator) *> Mutators;
 
-size_t CustomMutate(Mutators &mutators, uint8_t *Data, size_t Size,
-                    size_t MaxSize, unsigned int Seed) {
-  std::mt19937 rng(Seed);
-  static std::bernoulli_distribution bdist;
-
-  if (bdist(rng)) {
-    std::uniform_int_distribution<size_t> idist(0, mutators.size() - 1);
-    return mutators.at(idist(rng))(Data, Size, MaxSize, Seed);
-  }
-
-  return LLVMFuzzerMutate(Data, Size, MaxSize);
-}
+size_t CustomMutate(Mutators mutators, uint8_t *data, size_t size,
+                    size_t max_size, unsigned int seed);
 
 #endif  // shared_h__

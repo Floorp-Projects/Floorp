@@ -34,7 +34,6 @@ toolkit.jar:
   skin/classic/global/resizer.css
   skin/classic/global/richlistbox.css
   skin/classic/global/scrollbars.css                                 (nativescrollbars.css)
-  skin/classic/global/scale.css
   skin/classic/global/scrollbox.css
   skin/classic/global/spinbuttons.css
   skin/classic/global/splitter.css
@@ -122,8 +121,6 @@ toolkit.jar:
   skin/classic/global/notification/warning-icon.png                  (notification/warning-icon.png)
 * skin/classic/global/in-content/common.css                          (in-content/common.css)
 * skin/classic/global/in-content/info-pages.css                      (in-content/info-pages.css)
-  skin/classic/global/scale/scale-tray-horiz.gif                     (scale/scale-tray-horiz.gif)
-  skin/classic/global/scale/scale-tray-vert.gif                      (scale/scale-tray-vert.gif)
   skin/classic/global/splitter/dimple.png                            (splitter/dimple.png)
   skin/classic/global/splitter/grip-bottom.gif                       (splitter/grip-bottom.gif)
   skin/classic/global/splitter/grip-top.gif                          (splitter/grip-top.gif)

@@ -52,40 +52,40 @@ AudioSinkWrapper::OnEnded(TrackType aType)
   return nullptr;
 }
 
-int64_t
+TimeUnit
 AudioSinkWrapper::GetEndTime(TrackType aType) const
 {
   AssertOwnerThread();
   MOZ_ASSERT(mIsStarted, "Must be called after playback starts.");
   if (aType == TrackInfo::kAudioTrack && mAudioSink) {
-    return mAudioSink->GetEndTime().ToMicroseconds();
+    return mAudioSink->GetEndTime();
   }
-  return 0;
+  return TimeUnit::Zero();
 }
 
-int64_t
+TimeUnit
 AudioSinkWrapper::GetVideoPosition(TimeStamp aNow) const
 {
   AssertOwnerThread();
   MOZ_ASSERT(!mPlayStartTime.IsNull());
   // Time elapsed since we started playing.
-  int64_t delta = (aNow - mPlayStartTime).ToMicroseconds();
+  double delta = (aNow - mPlayStartTime).ToSeconds();
   // Take playback rate into account.
-  return mPlayDuration + delta * mParams.mPlaybackRate;
+  return mPlayDuration + TimeUnit::FromSeconds(delta * mParams.mPlaybackRate);
 }
 
-int64_t
+TimeUnit
 AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) const
 {
   AssertOwnerThread();
   MOZ_ASSERT(mIsStarted, "Must be called after playback starts.");
 
-  int64_t pos = -1;
+  TimeUnit pos;
   TimeStamp t = TimeStamp::Now();
 
   if (!mAudioEnded) {
     // Rely on the audio sink to report playback position when it is not ended.
-    pos = mAudioSink->GetPosition().ToMicroseconds();
+    pos = mAudioSink->GetPosition();
   } else if (!mPlayStartTime.IsNull()) {
     // Calculate playback position using system clock if we are still playing.
     pos = GetVideoPosition(t);
@@ -177,7 +177,7 @@ AudioSinkWrapper::SetPlaying(bool aPlaying)
 }
 
 void
-AudioSinkWrapper::Start(int64_t aStartTime, const MediaInfo& aInfo)
+AudioSinkWrapper::Start(const TimeUnit& aStartTime, const MediaInfo& aInfo)
 {
   AssertOwnerThread();
   MOZ_ASSERT(!mIsStarted, "playback already started.");

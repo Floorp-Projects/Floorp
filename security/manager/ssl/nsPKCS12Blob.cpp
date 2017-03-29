@@ -16,7 +16,6 @@
 #include "nsNSSHelper.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
-#include "nsString.h"
 #include "nsThreadUtils.h"
 #include "pkix/pkixtypes.h"
 #include "prmem.h"
@@ -328,14 +327,19 @@ finish:
 // For the NSS PKCS#12 library, must convert PRUnichars (shorts) to
 // a buffer of octets.  Must handle byte order correctly.
 nsresult
-nsPKCS12Blob::unicodeToItem(const char16_t *uni, SECItem *item)
+nsPKCS12Blob::unicodeToItem(const nsString& uni, SECItem* item)
 {
-  uint32_t len = NS_strlen(uni) + 1;
+  uint32_t len = uni.Length() + 1; // +1 for the null terminator.
   if (!SECITEM_AllocItem(nullptr, item, sizeof(char16_t) * len)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mozilla::NativeEndian::copyAndSwapToBigEndian(item->data, uni, len);
+  // We have to use a cast here because on Windows, uni.get() returns
+  // char16ptr_t instead of char16_t*.
+  mozilla::NativeEndian::copyAndSwapToBigEndian(
+    item->data,
+    static_cast<const char16_t*>(uni.get()),
+    len);
 
   return NS_OK;
 }
@@ -357,7 +361,7 @@ nsPKCS12Blob::newPKCS12FilePassword(SECItem *unicodePw)
   bool pressedOK;
   rv = certDialogs->SetPKCS12FilePassword(mUIContext, password, &pressedOK);
   if (NS_FAILED(rv) || !pressedOK) return rv;
-  return unicodeToItem(password.get(), unicodePw);
+  return unicodeToItem(password, unicodePw);
 }
 
 // getPKCS12FilePassword
@@ -377,7 +381,7 @@ nsPKCS12Blob::getPKCS12FilePassword(SECItem *unicodePw)
   bool pressedOK;
   rv = certDialogs->GetPKCS12FilePassword(mUIContext, password, &pressedOK);
   if (NS_FAILED(rv) || !pressedOK) return rv;
-  return unicodeToItem(password.get(), unicodePw);
+  return unicodeToItem(password, unicodePw);
 }
 
 // inputToDecoder

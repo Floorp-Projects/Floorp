@@ -687,6 +687,10 @@ GetPropIRGenerator::tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperan
     if (unwrapped->compartment()->zone() != cx_->compartment()->zone())
         return false;
 
+    RootedObject wrappedGlobal(cx_, &obj->global());
+    if (!cx_->compartment()->wrap(cx_, &wrappedGlobal))
+        return false;
+
     AutoCompartment ac(cx_, unwrapped);
 
     // The first CCW for iframes is almost always wrapping another WindowProxy
@@ -725,7 +729,7 @@ GetPropIRGenerator::tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperan
     ObjOperandId wrapperTargetId = writer.loadWrapperTarget(objId);
 
     // If the compartment of the wrapped object is different we should fail.
-    writer.guardCompartment(wrapperTargetId, unwrapped->compartment());
+    writer.guardCompartment(wrapperTargetId, wrappedGlobal, unwrapped->compartment());
 
     ObjOperandId unwrappedId = wrapperTargetId;
     if (isWindowProxy) {
@@ -1285,10 +1289,26 @@ GetPropIRGenerator::tryAttachStringChar(ValOperandId valId, ValOperandId indexId
     if (!val_.isString())
         return false;
 
-    JSString* str = val_.toString();
     int32_t index = idVal_.toInt32();
-    if (size_t(index) >= str->length() ||
-        !str->isLinear() ||
+    if (index < 0)
+        return false;
+
+    JSString* str = val_.toString();
+    if (size_t(index) >= str->length())
+        return false;
+
+    // This follows JSString::getChar, otherwise we fail to attach getChar in a lot of cases.
+    if (str->isRope()) {
+        JSRope* rope = &str->asRope();
+
+        // Make sure the left side contains the index.
+        if (size_t(index) >= rope->leftChild()->length())
+            return false;
+
+        str = rope->leftChild();
+    }
+
+    if (!str->isLinear() ||
         str->asLinear().latin1OrTwoByteChar(index) >= StaticStrings::UNIT_STATIC_LIMIT)
     {
         return false;

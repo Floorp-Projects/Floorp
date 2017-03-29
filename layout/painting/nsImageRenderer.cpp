@@ -7,6 +7,8 @@
 /* utility functions for drawing borders and backgrounds */
 
 #include "nsImageRenderer.h"
+#include "nsCSSRenderingGradients.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 
 nsSize
 CSSSizeOrRatio::ComputeConcreteSize() const
@@ -442,7 +444,6 @@ RGBALuminanceOperation(uint8_t *aData,
   }
 }
 
-
 DrawResult
 nsImageRenderer::Draw(nsPresContext*       aPresContext,
                       nsRenderingContext&  aRenderingContext,
@@ -508,10 +509,13 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     }
     case eStyleImageType_Gradient:
     {
-      nsCSSRendering::PaintGradient(aPresContext, *ctx,
-                                    mGradientData, aDirtyRect,
-                                    aDest, aFill, aRepeatSize, aSrc, mSize,
-                                    aOpacity);
+      Maybe<nsCSSGradientRenderer> renderer =
+        nsCSSGradientRenderer::Create(aPresContext, mGradientData,
+                                      aDest, aFill, aRepeatSize, aSrc, mSize);
+
+      if (renderer) {
+        renderer->Paint(*ctx, aDirtyRect, aOpacity);
+      }
       break;
     }
     case eStyleImageType_Element:
@@ -558,6 +562,44 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
   }
 
   return result;
+}
+
+void
+nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
+                                            mozilla::wr::DisplayListBuilder&            aBuilder,
+                                            mozilla::layers::WebRenderDisplayItemLayer* aLayer,
+                                            const nsRect&        aDirtyRect,
+                                            const nsRect&        aDest,
+                                            const nsRect&        aFill,
+                                            const nsPoint&       aAnchor,
+                                            const nsSize&        aRepeatSize,
+                                            const CSSIntRect&    aSrc,
+                                            float                aOpacity)
+{
+  if (!IsReady()) {
+    NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
+    return;
+  }
+  if (aDest.IsEmpty() || aFill.IsEmpty() ||
+      mSize.width <= 0 || mSize.height <= 0) {
+    return;
+  }
+
+  switch (mType) {
+    case eStyleImageType_Gradient:
+    {
+      Maybe<nsCSSGradientRenderer> renderer =
+        nsCSSGradientRenderer::Create(aPresContext, mGradientData,
+                                   aDest, aFill, aRepeatSize, aSrc, mSize);
+
+      if (renderer) {
+        renderer->BuildWebRenderDisplayItems(aBuilder, aLayer, aOpacity);
+      }
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 already_AddRefed<gfxDrawable>
@@ -618,6 +660,34 @@ nsImageRenderer::DrawLayer(nsPresContext*       aPresContext,
                          nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
                          nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
               aOpacity);
+}
+
+void
+nsImageRenderer::BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresContext,
+                                                    mozilla::wr::DisplayListBuilder& aBuilder,
+                                                    WebRenderDisplayItemLayer*       aLayer,
+                                                    const nsRect&        aDest,
+                                                    const nsRect&        aFill,
+                                                    const nsPoint&       aAnchor,
+                                                    const nsRect&        aDirty,
+                                                    const nsSize&        aRepeatSize,
+                                                    float                aOpacity)
+{
+  if (!IsReady()) {
+    NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
+    return;
+  }
+  if (aDest.IsEmpty() || aFill.IsEmpty() ||
+      mSize.width <= 0 || mSize.height <= 0) {
+    return;
+  }
+
+  BuildWebRenderDisplayItems(aPresContext, aBuilder, aLayer,
+                             aDirty, aDest, aFill, aAnchor, aRepeatSize,
+                             CSSIntRect(0, 0,
+                                        nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
+                                        nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
+                             aOpacity);
 }
 
 /**

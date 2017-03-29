@@ -1,0 +1,60 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html dir="">
+  <head>
+    <link rel="stylesheet" href="chrome://devtools/content/shared/widgets/widgets.css"/>
+    <link rel="stylesheet" href="chrome://devtools/skin/widgets.css"/>
+    <link rel="stylesheet" href="chrome://devtools/skin/netmonitor.css"/>
+    <script type="application/javascript;version=1.8"
+            src="chrome://devtools/content/shared/theme-switching.js">
+    </script>
+  </head>
+  <body class="theme-sidebar" role="application">
+    <div id="mount"></div>
+    <script>
+      "use strict";
+
+      const { BrowserLoader } = Components.utils.import("resource://devtools/client/shared/browser-loader.js", {});
+      const require = window.windowRequire = BrowserLoader({
+        baseURI: "resource://devtools/client/netmonitor/",
+        window,
+      }).require;
+
+      const EventEmitter = require("devtools/shared/event-emitter");
+      const { createFactory } = require("devtools/client/shared/vendor/react");
+      const { render, unmountComponentAtNode } = require("devtools/client/shared/vendor/react-dom");
+      const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
+      const { configureStore } = require("./src/utils/create-store");
+      const store = window.gStore = configureStore();
+      const { NetMonitorController } = require("./src/netmonitor-controller");
+
+      // Inject EventEmitter into global window.
+      EventEmitter.decorate(window);
+
+      // Export NetMonitorController to global window
+      // FIXME: Use module export mechanism instead of this tricky global variables
+      window.NetMonitorController = NetMonitorController;
+
+      window.Netmonitor = {
+        bootstrap({ toolbox }) {
+          this.mount = document.querySelector("#mount");
+          const App = createFactory(require("./src/components/app"));
+          render(Provider({ store }, App()), this.mount);
+          return NetMonitorController.startupNetMonitor({
+            client: {
+              getTabTarget: () => toolbox.target,
+            },
+            toolbox,
+          });
+        },
+
+        destroy() {
+          unmountComponentAtNode(this.mount);
+          return NetMonitorController.shutdownNetMonitor();
+        }
+      };
+    </script>
+  </body>
+</html>

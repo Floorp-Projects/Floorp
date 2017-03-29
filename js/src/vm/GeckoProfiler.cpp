@@ -19,6 +19,8 @@
 #include "jit/JitFrames.h"
 #include "vm/StringBuffer.h"
 
+#include "jsgcinlines.h"
+
 using namespace js;
 
 using mozilla::DebugOnly;

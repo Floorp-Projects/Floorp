@@ -32,7 +32,8 @@ using JS::PrivateValue;
 using JS::PropertyDescriptor;
 using JS::Value;
 
-class RegExpGuard;
+class RegExpShared;
+
 class JS_FRIEND_API(Wrapper);
 
 /*
@@ -330,7 +331,8 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool isArray(JSContext* cx, HandleObject proxy, JS::IsArrayAnswer* answer) const;
     virtual const char* className(JSContext* cx, HandleObject proxy) const;
     virtual JSString* fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const;
-    virtual bool regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const;
+    virtual bool regexp_toShared(JSContext* cx, HandleObject proxy,
+                                 MutableHandle<js::RegExpShared*> shared) const;
     virtual bool boxedValue_unbox(JSContext* cx, HandleObject proxy, MutableHandleValue vp) const;
     virtual void trace(JSTracer* trc, JSObject* proxy) const;
     virtual void finalize(JSFreeOp* fop, JSObject* proxy) const;

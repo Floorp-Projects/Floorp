@@ -4,20 +4,20 @@
 
 Components.utils.import("resource://gre/modules/ForgetAboutSite.jsm");
 
-function waitForClearHistory(aCallback) {
-  let observer = {
-    observe(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(this, "browser:purge-domain-data");
-      setTimeout(aCallback, 0);
-    }
-  };
-  Services.obs.addObserver(observer, "browser:purge-domain-data", false);
+function promiseClearHistory() {
+  return new Promise(resolve => {
+    let observer = {
+      observe(aSubject, aTopic, aData) {
+        Services.obs.removeObserver(this, "browser:purge-domain-data");
+        resolve();
+      }
+    };
+    Services.obs.addObserver(observer, "browser:purge-domain-data", false);
+  });
 }
 
-function test() {
+add_task(function* () {
   /** Test for Bug 464199 **/
-
-  waitForExplicitFinish();
 
   const REMEMBER = Date.now(), FORGET = Math.random();
   let test_state = { windows: [{ "tabs": [{ "entries": [] }], _closedTabs: [
@@ -53,33 +53,30 @@ function test() {
 
   // open a window and add the above closed tab list
   let newWin = openDialog(location, "", "chrome,all,dialog=no");
-  promiseWindowLoaded(newWin).then(() => {
-    gPrefService.setIntPref("browser.sessionstore.max_tabs_undo",
-                            test_state.windows[0]._closedTabs.length);
-    ss.setWindowState(newWin, JSON.stringify(test_state), true);
+  yield promiseWindowLoaded(newWin);
+  gPrefService.setIntPref("browser.sessionstore.max_tabs_undo",
+                          test_state.windows[0]._closedTabs.length);
+  ss.setWindowState(newWin, JSON.stringify(test_state), true);
 
-    let closedTabs = JSON.parse(ss.getClosedTabData(newWin));
-    is(closedTabs.length, test_state.windows[0]._closedTabs.length,
-       "Closed tab list has the expected length");
-    is(countByTitle(closedTabs, FORGET),
-       test_state.windows[0]._closedTabs.length - remember_count,
-       "The correct amout of tabs are to be forgotten");
-    is(countByTitle(closedTabs, REMEMBER), remember_count,
-       "Everything is set up.");
+  let closedTabs = JSON.parse(ss.getClosedTabData(newWin));
+  is(closedTabs.length, test_state.windows[0]._closedTabs.length,
+     "Closed tab list has the expected length");
+  is(countByTitle(closedTabs, FORGET),
+     test_state.windows[0]._closedTabs.length - remember_count,
+     "The correct amout of tabs are to be forgotten");
+  is(countByTitle(closedTabs, REMEMBER), remember_count,
+     "Everything is set up.");
 
-    ForgetAboutSite.removeDataFromDomain("example.net");
-    waitForClearHistory(function() {
-        closedTabs = JSON.parse(ss.getClosedTabData(newWin));
-        is(closedTabs.length, remember_count,
-           "The correct amout of tabs was removed");
-        is(countByTitle(closedTabs, FORGET), 0,
-           "All tabs to be forgotten were indeed removed");
-        is(countByTitle(closedTabs, REMEMBER), remember_count,
-           "... and tabs to be remembered weren't.");
-
-        // clean up
-        gPrefService.clearUserPref("browser.sessionstore.max_tabs_undo");
-        BrowserTestUtils.closeWindow(newWin).then(finish);
-    });
-  });
-}
+  yield ForgetAboutSite.removeDataFromDomain("example.net");
+  yield promiseClearHistory();
+  closedTabs = JSON.parse(ss.getClosedTabData(newWin));
+  is(closedTabs.length, remember_count,
+     "The correct amout of tabs was removed");
+  is(countByTitle(closedTabs, FORGET), 0,
+     "All tabs to be forgotten were indeed removed");
+  is(countByTitle(closedTabs, REMEMBER), remember_count,
+     "... and tabs to be remembered weren't.");
+  // clean up
+  gPrefService.clearUserPref("browser.sessionstore.max_tabs_undo");
+  yield BrowserTestUtils.closeWindow(newWin);
+});

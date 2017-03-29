@@ -1707,6 +1707,7 @@ gfxPlatform::InitBackendPrefs(uint32_t aCanvasBitmask, BackendType aCanvasDefaul
 
     if (XRE_IsParentProcess()) {
         gfxVars::SetContentBackend(mContentBackend);
+        gfxVars::SetSoftwareBackend(mSoftwareBackend);
     }
 }
 

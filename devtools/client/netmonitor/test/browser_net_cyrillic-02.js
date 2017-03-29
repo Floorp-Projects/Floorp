@@ -16,7 +16,7 @@ add_task(function* () {
   let {
     getDisplayedRequests,
     getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/selectors/index");
+  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();

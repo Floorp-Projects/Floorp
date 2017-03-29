@@ -168,7 +168,7 @@ fuzzy-if(Android,254,231) == brackets-2c-rtl.html brackets-2c-rtl-ref.html
 == brackets-3a-ltr.html brackets-3a-ltr-ref.html
 == brackets-3a-rtl.html brackets-3a-rtl-ref.html
 == brackets-3b-ltr.html brackets-3b-ltr-ref.html
-== brackets-3b-rtl.html brackets-3b-rtl-ref.html
+fuzzy-if(winWidget&&layersGPUAccelerated,49,233) fuzzy-if(winWidget&&!layersGPUAccelerated,56,75) == brackets-3b-rtl.html brackets-3b-rtl-ref.html
 == 1217833-1.html 1217833-1-ref.html
 == 1217833-2.html 1217833-2-ref.html
 == 1231175-1.html 1231175-1-ref.html

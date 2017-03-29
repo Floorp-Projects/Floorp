@@ -72,6 +72,15 @@
   text-decoration: underline;
 }
 
+.treeTable .treeRow.selected {
+  background-color: var(--theme-selection-background);
+}
+
+.treeTable .treeRow.selected:not(:hover) *,
+.treeTable .treeRow.selected:not(:hover) .treeLabelCell::after {
+  color: var(--theme-selection-color);
+}
+
 /* Filtering */
 .treeTable .treeRow.hidden {
   display: none;

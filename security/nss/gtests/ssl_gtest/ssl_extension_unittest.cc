@@ -69,22 +69,11 @@ class TlsExtensionInjector : public TlsHandshakeFilter {
   virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
                                                const DataBuffer& input,
                                                DataBuffer* output) {
-    size_t offset;
-    if (header.handshake_type() == kTlsHandshakeClientHello) {
-      TlsParser parser(input);
-      if (!TlsExtensionFilter::FindClientHelloExtensions(&parser, header)) {
-        return KEEP;
-      }
-      offset = parser.consumed();
-    } else if (header.handshake_type() == kTlsHandshakeServerHello) {
-      TlsParser parser(input);
-      if (!TlsExtensionFilter::FindServerHelloExtensions(&parser)) {
-        return KEEP;
-      }
-      offset = parser.consumed();
-    } else {
+    TlsParser parser(input);
+    if (!TlsExtensionFilter::FindExtensions(&parser, header)) {
       return KEEP;
     }
+    size_t offset = parser.consumed();
 
     *output = input;
 
@@ -116,38 +105,41 @@ class TlsExtensionInjector : public TlsHandshakeFilter {
 
 class TlsExtensionAppender : public TlsHandshakeFilter {
  public:
-  TlsExtensionAppender(uint16_t ext, DataBuffer& data)
-      : extension_(ext), data_(data) {}
+  TlsExtensionAppender(uint8_t handshake_type, uint16_t ext, DataBuffer& data)
+      : handshake_type_(handshake_type), extension_(ext), data_(data) {}
 
   virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
                                                const DataBuffer& input,
                                                DataBuffer* output) {
-    size_t offset;
-    TlsParser parser(input);
-    if (header.handshake_type() == kTlsHandshakeClientHello) {
-      if (!TlsExtensionFilter::FindClientHelloExtensions(&parser, header)) {
-        return KEEP;
-      }
-    } else if (header.handshake_type() == kTlsHandshakeServerHello) {
-      if (!TlsExtensionFilter::FindServerHelloExtensions(&parser)) {
-        return KEEP;
-      }
-    } else {
+    if (header.handshake_type() != handshake_type_) {
       return KEEP;
     }
-    offset = parser.consumed();
+
+    TlsParser parser(input);
+    if (!TlsExtensionFilter::FindExtensions(&parser, header)) {
+      return KEEP;
+    }
     *output = input;
 
-    uint32_t ext_len;
-    if (!parser.Read(&ext_len, 2)) {
-      ADD_FAILURE();
+    // Increase the length of the extensions block.
+    if (!UpdateLength(output, parser.consumed(), 2)) {
       return KEEP;
     }
 
-    ext_len += 4 + data_.len();
-    output->Write(offset, ext_len, 2);
+    // Extensions in Certificate are nested twice.  Increase the size of the
+    // certificate list.
+    if (header.handshake_type() == kTlsHandshakeCertificate) {
+      TlsParser p2(input);
+      if (!p2.SkipVariable(1)) {
+        ADD_FAILURE();
+        return KEEP;
+      }
+      if (!UpdateLength(output, p2.consumed(), 3)) {
+        return KEEP;
+      }
+    }
 
-    offset = output->len();
+    size_t offset = output->len();
     offset = output->Write(offset, extension_, 2);
     WriteVariable(output, offset, data_, 2);
 
@@ -155,6 +147,19 @@ class TlsExtensionAppender : public TlsHandshakeFilter {
   }
 
  private:
+  bool UpdateLength(DataBuffer* output, size_t offset, size_t size) {
+    uint32_t len;
+    if (!output->Read(offset, size, &len)) {
+      ADD_FAILURE();
+      return false;
+    }
+
+    len += 4 + data_.len();
+    output->Write(offset, len, size);
+    return true;
+  }
+
+  const uint8_t handshake_type_;
   const uint16_t extension_;
   const DataBuffer data_;
 };
@@ -864,9 +869,9 @@ TEST_F(TlsExtensionTest13Stream, ResumePskExtensionNotLast) {
 
   const uint8_t empty_buf[] = {0};
   DataBuffer empty(empty_buf, 0);
-  client_->SetPacketFilter(
-      // Inject an unused extension.
-      std::make_shared<TlsExtensionAppender>(0xffff, empty));
+  // Inject an unused extension after the PSK extension.
+  client_->SetPacketFilter(std::make_shared<TlsExtensionAppender>(
+      kTlsHandshakeClientHello, 0xffff, empty));
   ConnectExpectAlert(server_, kTlsAlertIllegalParameter);
   client_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
   server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
@@ -985,12 +990,162 @@ TEST_P(TlsExtensionTest13, OddVersionList) {
   ConnectWithBogusVersionList(ext, sizeof(ext));
 }
 
+// TODO: this only tests extensions in server messages.  The client can extend
+// Certificate messages, which is not checked here.
+class TlsBogusExtensionTest
+    : public TlsConnectTestBase,
+      public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
+ public:
+  TlsBogusExtensionTest()
+      : TlsConnectTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {}
+
+ protected:
+  virtual void ConnectAndFail(uint8_t message) = 0;
+
+  void AddFilter(uint8_t message, uint16_t extension) {
+    static uint8_t empty_buf[1] = {0};
+    DataBuffer empty(empty_buf, 0);
+    auto filter =
+        std::make_shared<TlsExtensionAppender>(message, extension, empty);
+    if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+      server_->SetTlsRecordFilter(filter);
+      filter->EnableDecryption();
+    } else {
+      server_->SetPacketFilter(filter);
+    }
+  }
+
+  void Run(uint8_t message, uint16_t extension = 0xff) {
+    EnsureTlsSetup();
+    AddFilter(message, extension);
+    ConnectAndFail(message);
+  }
+};
+
+class TlsBogusExtensionTestPre13 : public TlsBogusExtensionTest {
+ protected:
+  void ConnectAndFail(uint8_t) override {
+    ConnectExpectAlert(client_, kTlsAlertUnsupportedExtension);
+  }
+};
+
+class TlsBogusExtensionTest13 : public TlsBogusExtensionTest {
+ protected:
+  void ConnectAndFail(uint8_t message) override {
+    if (message == kTlsHandshakeHelloRetryRequest) {
+      ConnectExpectAlert(client_, kTlsAlertUnsupportedExtension);
+      return;
+    }
+
+    client_->StartConnect();
+    server_->StartConnect();
+    client_->Handshake();  // ClientHello
+    server_->Handshake();  // ServerHello
+
+    client_->ExpectSendAlert(kTlsAlertUnsupportedExtension);
+    client_->Handshake();
+    if (mode_ == STREAM) {
+      server_->ExpectSendAlert(kTlsAlertBadRecordMac);
+    }
+    server_->Handshake();
+  }
+};
+
+TEST_P(TlsBogusExtensionTestPre13, AddBogusExtensionServerHello) {
+  Run(kTlsHandshakeServerHello);
+}
+
+TEST_P(TlsBogusExtensionTest13, AddBogusExtensionServerHello) {
+  Run(kTlsHandshakeServerHello);
+}
+
+TEST_P(TlsBogusExtensionTest13, AddBogusExtensionEncryptedExtensions) {
+  Run(kTlsHandshakeEncryptedExtensions);
+}
+
+TEST_P(TlsBogusExtensionTest13, AddBogusExtensionCertificate) {
+  Run(kTlsHandshakeCertificate);
+}
+
+TEST_P(TlsBogusExtensionTest13, AddBogusExtensionCertificateRequest) {
+  server_->RequestClientAuth(false);
+  Run(kTlsHandshakeCertificateRequest);
+}
+
+TEST_P(TlsBogusExtensionTest13, AddBogusExtensionHelloRetryRequest) {
+  static const std::vector<SSLNamedGroup> groups = {ssl_grp_ec_secp384r1};
+  server_->ConfigNamedGroups(groups);
+
+  Run(kTlsHandshakeHelloRetryRequest);
+}
+
+TEST_P(TlsBogusExtensionTest13, AddVersionExtensionServerHello) {
+  Run(kTlsHandshakeServerHello, ssl_tls13_supported_versions_xtn);
+}
+
+TEST_P(TlsBogusExtensionTest13, AddVersionExtensionEncryptedExtensions) {
+  Run(kTlsHandshakeEncryptedExtensions, ssl_tls13_supported_versions_xtn);
+}
+
+TEST_P(TlsBogusExtensionTest13, AddVersionExtensionCertificate) {
+  Run(kTlsHandshakeCertificate, ssl_tls13_supported_versions_xtn);
+}
+
+TEST_P(TlsBogusExtensionTest13, AddVersionExtensionCertificateRequest) {
+  server_->RequestClientAuth(false);
+  Run(kTlsHandshakeCertificateRequest, ssl_tls13_supported_versions_xtn);
+}
+
+TEST_P(TlsBogusExtensionTest13, AddVersionExtensionHelloRetryRequest) {
+  static const std::vector<SSLNamedGroup> groups = {ssl_grp_ec_secp384r1};
+  server_->ConfigNamedGroups(groups);
+
+  Run(kTlsHandshakeHelloRetryRequest, ssl_tls13_supported_versions_xtn);
+}
+
+// NewSessionTicket allows unknown extensions AND it isn't protected by the
+// Finished.  So adding an unknown extension doesn't cause an error.
+TEST_P(TlsBogusExtensionTest13, AddBogusExtensionNewSessionTicket) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+
+  AddFilter(kTlsHandshakeNewSessionTicket, 0xff);
+  Connect();
+  SendReceive();
+  CheckKeys();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ExpectResumption(RESUME_TICKET);
+  Connect();
+  SendReceive();
+}
+
+TEST_P(TlsConnectStream, IncludePadding) {
+  EnsureTlsSetup();
+
+  // This needs to be long enough to push a TLS 1.0 ClientHello over 255, but
+  // short enough not to push a TLS 1.3 ClientHello over 511.
+  static const char* long_name =
+      "chickenchickenchickenchickenchickenchickenchickenchicken."
+      "chickenchickenchickenchickenchickenchickenchickenchicken."
+      "chickenchickenchickenchickenchicken.";
+  SECStatus rv = SSL_SetURL(client_->ssl_fd(), long_name);
+  EXPECT_EQ(SECSuccess, rv);
+
+  auto capture = std::make_shared<TlsExtensionCapture>(ssl_padding_xtn);
+  client_->SetPacketFilter(capture);
+  client_->StartConnect();
+  client_->Handshake();
+  EXPECT_TRUE(capture->captured());
+}
+
 INSTANTIATE_TEST_CASE_P(ExtensionStream, TlsExtensionTestGeneric,
                         ::testing::Combine(TlsConnectTestBase::kTlsModesStream,
                                            TlsConnectTestBase::kTlsVAll));
-INSTANTIATE_TEST_CASE_P(ExtensionDatagram, TlsExtensionTestGeneric,
-                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
-                                           TlsConnectTestBase::kTlsV11Plus));
+INSTANTIATE_TEST_CASE_P(
+    ExtensionDatagram, TlsExtensionTestGeneric,
+    ::testing::Combine(TlsConnectTestBase::kTlsModesDatagram,
+                       TlsConnectTestBase::kTlsV11Plus));
 INSTANTIATE_TEST_CASE_P(ExtensionDatagramOnly, TlsExtensionTestDtls,
                         TlsConnectTestBase::kTlsV11Plus);
 
@@ -1008,4 +1163,16 @@ INSTANTIATE_TEST_CASE_P(ExtensionPre13Datagram, TlsExtensionTestPre13,
 INSTANTIATE_TEST_CASE_P(ExtensionTls13, TlsExtensionTest13,
                         TlsConnectTestBase::kTlsModesAll);
 
-}  // namespace nspr_test
+INSTANTIATE_TEST_CASE_P(BogusExtensionStream, TlsBogusExtensionTestPre13,
+                        ::testing::Combine(TlsConnectTestBase::kTlsModesStream,
+                                           TlsConnectTestBase::kTlsV10ToV12));
+INSTANTIATE_TEST_CASE_P(
+    BogusExtensionDatagram, TlsBogusExtensionTestPre13,
+    ::testing::Combine(TlsConnectTestBase::kTlsModesDatagram,
+                       TlsConnectTestBase::kTlsV11V12));
+
+INSTANTIATE_TEST_CASE_P(BogusExtension13, TlsBogusExtensionTest13,
+                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                                           TlsConnectTestBase::kTlsV13));
+
+}  // namespace nss_test

@@ -6,8 +6,6 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
-interface nsIHTMLObjectResizeListener;
-
 [scriptable, uuid(8b396020-69d3-451f-80c1-1a96a7da25a9)]
 
 interface nsIHTMLObjectResizer : nsISupports
@@ -74,20 +72,5 @@ interface nsIHTMLObjectResizer : nsISupports
    * @param aMouseEvent [IN] the event
    */
   void mouseMove(in nsIDOMEvent aMouseEvent);
-
-  /* Event Listeners */
-
-  /**
-   * Creates a resize listener that can be used to get notifications
-   * that the user started to resize an object or finalized such an operation
-   * @param aListener [IN] an instance of nsIHTMLObjectResizeListener
-   */
-  void addObjectResizeEventListener(in nsIHTMLObjectResizeListener aListener);
-
-  /**
-   * Deletes a resize listener
-   * @param aListener [IN] an instance of nsIHTMLObjectResizeListener
-   */
-  void removeObjectResizeEventListener(in nsIHTMLObjectResizeListener aListener);
 };
 

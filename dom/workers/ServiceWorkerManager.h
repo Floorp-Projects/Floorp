@@ -165,8 +165,19 @@ public:
          ServiceWorkerUpdateFinishCallback* aCallback);
 
   void
+  UpdateInternal(nsIPrincipal* aPrincipal,
+                 const nsACString& aScope,
+                 ServiceWorkerUpdateFinishCallback* aCallback);
+
+  void
   SoftUpdate(const OriginAttributes& aOriginAttributes,
              const nsACString& aScope);
+
+  void
+  SoftUpdateInternal(const OriginAttributes& aOriginAttributes,
+                     const nsACString& aScope,
+                     ServiceWorkerUpdateFinishCallback* aCallback);
+
 
   void
   PropagateSoftUpdate(const OriginAttributes& aOriginAttributes,

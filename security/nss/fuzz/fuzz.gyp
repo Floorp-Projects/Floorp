@@ -25,7 +25,12 @@
   'targets': [
     {
       'target_name': 'fuzz_base',
+      'type': 'static_library',
+      'sources': [
+        'shared.cc',
+      ],
       'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports',
         '<(DEPTH)/lib/certdb/certdb.gyp:certdb',
         '<(DEPTH)/lib/certhigh/certhigh.gyp:certhi',
         '<(DEPTH)/lib/cryptohi/cryptohi.gyp:cryptohi',
@@ -41,7 +46,6 @@
       ],
       'conditions': [
         ['fuzz_oss==0', {
-          'type': 'static_library',
           'sources': [
             '<!@(ls <(DEPTH)/fuzz/libFuzzer/*.cpp)',
           ],
@@ -54,7 +58,6 @@
             ],
           },
         }, {
-          'type': 'none',
           'all_dependent_settings': {
             'libraries': ['-lFuzzingEngine'],
           }
@@ -248,12 +251,11 @@
       ],
     },
     {
-      'target_name': 'nssfuzz-tls-client',
-      'type': 'executable',
+      'target_name': 'nssfuzz-tls-base',
+      'type': 'static_library',
       'sources': [
-        'tls_client_config.cc',
-        'tls_client_target.cc',
         'tls_common.cc',
+        'tls_mutators.cc',
         'tls_socket.cc',
       ],
       'dependencies': [
@@ -262,40 +264,40 @@
         'fuzz_base',
       ],
       'include_dirs': [
-        '<(DEPTH)/lib/freebl',
+        '<(DEPTH)/lib/ssl',
       ],
-      'conditions': [
-        [ 'fuzz_tls==1', {
-          'defines': [
-            'UNSAFE_FUZZER_MODE',
-          ],
-        }],
+      'direct_dependent_settings': {
+        'include_dirs': [
+          '<(DEPTH)/lib/freebl',
+          '<(DEPTH)/lib/ssl',
+        ],
+      },
+    },
+    {
+      'target_name': 'nssfuzz-tls-client',
+      'type': 'executable',
+      'sources': [
+        'tls_client_config.cc',
+        'tls_client_target.cc',
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports',
+        '<(DEPTH)/cpputil/cpputil.gyp:cpputil',
+        'nssfuzz-tls-base',
       ],
     },
     {
       'target_name': 'nssfuzz-tls-server',
       'type': 'executable',
       'sources': [
-        'tls_common.cc',
-        'tls_socket.cc',
         'tls_server_certs.cc',
         'tls_server_config.cc',
         'tls_server_target.cc',
       ],
       'dependencies': [
-        '<(DEPTH)/cpputil/cpputil.gyp:cpputil',
         '<(DEPTH)/exports.gyp:nss_exports',
-        'fuzz_base',
-      ],
-      'include_dirs': [
-        '<(DEPTH)/lib/freebl',
-      ],
-      'conditions': [
-        [ 'fuzz_tls==1', {
-          'defines': [
-            'UNSAFE_FUZZER_MODE',
-          ],
-        }],
+        '<(DEPTH)/cpputil/cpputil.gyp:cpputil',
+        'nssfuzz-tls-base',
       ],
     },
     {

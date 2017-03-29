@@ -345,7 +345,9 @@ nsMenuBarFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
   // avoids flickering
   nsCOMPtr<nsIRunnable> event =
     new nsMenuBarSwitchMenu(GetContent(), aOldMenu, aNewMenu, aSelectFirstItem);
-  return NS_DispatchToCurrentThread(event);
+  return mContent->OwnerDoc()->Dispatch("nsMenuBarSwitchMenu",
+                                        TaskCategory::Other,
+                                        event.forget());
 }
 
 nsMenuFrame*

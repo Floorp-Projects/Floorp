@@ -265,7 +265,7 @@ public class TestTabsProvider {
 
             cursor.moveToPosition(1);
 
-            final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, TEST_CLIENT_GUID, TEST_CLIENT_NAME);
+            final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, TEST_CLIENT_GUID, TEST_CLIENT_NAME, 1234);
 
             // Make sure we clean up after ourselves.
             Assert.assertEquals(1, cursor.getPosition());
@@ -278,7 +278,7 @@ public class TestTabsProvider {
             Assert.assertEquals(testTab2, tabsRecord.tabs.get(1));
             Assert.assertEquals(testTab3, tabsRecord.tabs.get(2));
 
-            Assert.assertEquals(Math.max(Math.max(testTab1.lastUsed, testTab2.lastUsed), testTab3.lastUsed), tabsRecord.lastModified);
+            Assert.assertEquals(1234, tabsRecord.lastModified);
         } finally {
             cursor.close();
         }
@@ -297,7 +297,7 @@ public class TestTabsProvider {
             cursor = tabsClient.query(BrowserContractHelpers.TABS_CONTENT_URI, null, TABS_CLIENT_GUID_IS, new String[] { TEST_CLIENT_GUID }, positionAscending);
             Assert.assertEquals(0, cursor.getCount());
 
-            final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, TEST_CLIENT_GUID, TEST_CLIENT_NAME);
+            final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, TEST_CLIENT_GUID, TEST_CLIENT_NAME, 1234);
 
             Assert.assertEquals(TEST_CLIENT_GUID, tabsRecord.guid);
             Assert.assertEquals(TEST_CLIENT_NAME, tabsRecord.clientName);
@@ -305,7 +305,7 @@ public class TestTabsProvider {
             Assert.assertNotNull(tabsRecord.tabs);
             Assert.assertEquals(0, tabsRecord.tabs.size());
 
-            Assert.assertEquals(0, tabsRecord.lastModified);
+            Assert.assertEquals(1234, tabsRecord.lastModified);
         } finally {
             cursor.close();
         }
@@ -324,7 +324,7 @@ public class TestTabsProvider {
             cursor = tabsClient.query(BrowserContractHelpers.TABS_CONTENT_URI, null, BrowserContract.Tabs.CLIENT_GUID + " IS NULL", null, positionAscending);
             CursorDumper.dumpCursor(cursor);
 
-            final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, TEST_CLIENT_GUID, TEST_CLIENT_NAME);
+            final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, TEST_CLIENT_GUID, TEST_CLIENT_NAME, 1234);
 
             Assert.assertEquals(TEST_CLIENT_GUID, tabsRecord.guid);
             Assert.assertEquals(TEST_CLIENT_NAME, tabsRecord.clientName);

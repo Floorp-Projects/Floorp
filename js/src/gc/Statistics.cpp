@@ -184,6 +184,7 @@ static const PhaseInfo phases[] = {
         { PHASE_SWEEP_STRING, "Sweep String", PHASE_SWEEP, 34 },
         { PHASE_SWEEP_SCRIPT, "Sweep Script", PHASE_SWEEP, 35 },
         { PHASE_SWEEP_SCOPE, "Sweep Scope", PHASE_SWEEP, 59 },
+        { PHASE_SWEEP_REGEXP_SHARED, "Sweep RegExpShared", PHASE_SWEEP, 61 },
         { PHASE_SWEEP_SHAPE, "Sweep Shape", PHASE_SWEEP, 36 },
         { PHASE_SWEEP_JITCODE, "Sweep JIT code", PHASE_SWEEP, 37 },
         { PHASE_FINALIZE_END, "Finalize End Callback", PHASE_SWEEP, 38 },
@@ -211,9 +212,9 @@ static const PhaseInfo phases[] = {
         { PHASE_MARK_COMPARTMENTS, "Mark Compartments", PHASE_MARK_ROOTS, 54 },
     { PHASE_PURGE_SHAPE_TABLES, "Purge ShapeTables", PHASE_NO_PARENT, 60 },
 
-    { PHASE_LIMIT, nullptr, PHASE_NO_PARENT, 60 }
+    { PHASE_LIMIT, nullptr, PHASE_NO_PARENT, 61 }
 
-    // Current number of telemetryBuckets is 60. If you insert new phases
+    // Current number of telemetryBuckets is 61. If you insert new phases
     // somewhere, start at that number and count up. Do not change any existing
     // numbers.
 };

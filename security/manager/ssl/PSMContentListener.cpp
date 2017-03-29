@@ -7,27 +7,24 @@
 
 #include "PSMContentListener.h"
 
-#include "nsIDivertableChannel.h"
-#include "nsIStreamListener.h"
-#include "nsIX509CertDB.h"
-#include "nsIXULAppInfo.h"
-
 #include "mozilla/Casting.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
-
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/net/ChannelDiverterParent.h"
 #include "mozilla/net/ChannelDiverterChild.h"
-
-#include "nsCRT.h"
-#include "nsNetUtil.h"
+#include "mozilla/net/ChannelDiverterParent.h"
+#include "nsDependentString.h"
 #include "nsIChannel.h"
+#include "nsIDivertableChannel.h"
 #include "nsIInputStream.h"
+#include "nsIStreamListener.h"
 #include "nsIURI.h"
+#include "nsIX509CertDB.h"
+#include "nsIXULAppInfo.h"
 #include "nsNSSHelper.h"
-
-#include "mozilla/Logging.h"
+#include "nsNetUtil.h"
+#include "nsPromiseFlatString.h"
 
 extern mozilla::LazyLogModule gPIPNSSLog;
 
@@ -54,19 +51,23 @@ enum {
 */
 
 uint32_t
-getPSMContentType(const char* aContentType)
+getPSMContentType(const nsCString& aContentType)
 {
   // Don't forget to update the registration of content listeners in nsNSSModule.cpp
   // for every supported content type.
 
-  if (!nsCRT::strcasecmp(aContentType, "application/x-x509-ca-cert"))
+  if (aContentType.EqualsIgnoreCase("application/x-x509-ca-cert")) {
     return X509_CA_CERT;
-  if (!nsCRT::strcasecmp(aContentType, "application/x-x509-server-cert"))
+  }
+  if (aContentType.EqualsIgnoreCase("application/x-x509-server-cert")) {
     return X509_SERVER_CERT;
-  if (!nsCRT::strcasecmp(aContentType, "application/x-x509-user-cert"))
+  }
+  if (aContentType.EqualsIgnoreCase("application/x-x509-user-cert")) {
     return X509_USER_CERT;
-  if (!nsCRT::strcasecmp(aContentType, "application/x-x509-email-cert"))
+  }
+  if (aContentType.EqualsIgnoreCase("application/x-x509-email-cert")) {
     return X509_EMAIL_CERT;
+  }
 
   return UNKNOWN_TYPE;
 }
@@ -385,24 +386,33 @@ PSMContentListener::IsPreferred(const char* aContentType,
 
 NS_IMETHODIMP
 PSMContentListener::CanHandleContent(const char* aContentType,
-                                      bool aIsContentPreferred,
-                                      char** aDesiredContentType,
-                                      bool* aCanHandleContent)
+                                     bool /*aIsContentPreferred*/,
+                             /*out*/ char** aDesiredContentType,
+                             /*out*/ bool* aCanHandleContent)
 {
-  uint32_t type = getPSMContentType(aContentType);
+  NS_ENSURE_ARG(aDesiredContentType);
+  NS_ENSURE_ARG(aCanHandleContent);
+
+  *aDesiredContentType = nullptr;
+
+  uint32_t type = getPSMContentType(nsDependentCString(aContentType));
   *aCanHandleContent = (type != UNKNOWN_TYPE);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PSMContentListener::DoContent(const nsACString& aContentType,
-                               bool aIsContentPreferred,
-                               nsIRequest* aRequest,
-                               nsIStreamListener** aContentHandler,
-                               bool* aAbortProcess)
+                              bool /*aIsContentPreferred*/,
+                              nsIRequest* /*aRequest*/,
+                      /*out*/ nsIStreamListener** aContentHandler,
+                      /*out*/ bool* aAbortProcess)
 {
-  uint32_t type;
-  type = getPSMContentType(PromiseFlatCString(aContentType).get());
+  NS_ENSURE_ARG(aContentHandler);
+  NS_ENSURE_ARG(aAbortProcess);
+
+  *aAbortProcess = false;
+
+  uint32_t type = getPSMContentType(PromiseFlatCString(aContentType));
   if (gPIPNSSLog) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("PSMContentListener::DoContent\n"));
   }

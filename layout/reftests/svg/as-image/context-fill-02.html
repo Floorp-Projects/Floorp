@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Basic context-fill test (without a fallback color)</title>
+    <style>
+
+img {
+  width: 100px;
+  height: 100px;
+  fill: lime;
+  border: 1px solid black;
+}
+
+    </style>
+  </head>
+  <body>
+    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='context-fill'/></svg>">
+  </body>
+</html>

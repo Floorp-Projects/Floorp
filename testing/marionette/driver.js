@@ -138,16 +138,9 @@ this.GeckoDriver = function (appName, server) {
   this.mm = globalMessageManager;
   this.listener = proxy.toListener(() => this.mm, this.sendAsync.bind(this));
 
-  // always keep weak reference to current dialogue
+  // points to an alert instance if a modal dialog is present
   this.dialog = null;
-  let handleDialog = (subject, topic) => {
-    let winr;
-    if (topic == modal.COMMON_DIALOG_LOADED) {
-      winr = Cu.getWeakReference(subject);
-    }
-    this.dialog = new modal.Dialog(() => this.curBrowser, winr);
-  };
-  modal.addHandler(handleDialog);
+  this.dialogHandler = this.globalModalDialogHandler.bind(this);
 };
 
 Object.defineProperty(GeckoDriver.prototype, "a11yChecks", {
@@ -222,6 +215,19 @@ GeckoDriver.prototype.QueryInterface = XPCOMUtils.generateQI([
   Ci.nsIObserver,
   Ci.nsISupportsWeakReference,
 ]);
+
+/**
+ * Callback used to observe the creation of new modal or tab modal dialogs
+ * during the session's lifetime.
+ */
+GeckoDriver.prototype.globalModalDialogHandler = function (subject, topic) {
+  let winr;
+  if (topic === modal.COMMON_DIALOG_LOADED) {
+    // Always keep a weak reference to the current dialog
+    winr = Cu.getWeakReference(subject);
+  }
+  this.dialog = new modal.Dialog(() => this.curBrowser, winr);
+};
 
 /**
  * Switches to the global ChromeMessageBroadcaster, potentially replacing
@@ -338,7 +344,7 @@ GeckoDriver.prototype.getCurrentWindow = function (forcedContext = undefined) {
       } else if (this.curBrowser !== null) {
         if (browser.getTabBrowser(this.curBrowser.window)) {
           // For browser windows we have to check if the current tab still exists.
-          if (this.curBrowser.tab && browser.getBrowserForTab(this.curBrowser.tab)) {
+          if (this.curBrowser.tab && this.curBrowser.contentBrowser) {
             win = this.curBrowser.window;
           }
         } else {
@@ -659,8 +665,13 @@ GeckoDriver.prototype.newSession = function* (cmd, resp) {
   yield browserListening;
 
   if (this.curBrowser.tab) {
-    browser.getBrowserForTab(this.curBrowser.tab).focus();
+    this.curBrowser.contentBrowser.focus();
   }
+
+  // Setup global listener for modal dialogs, and check if there is already
+  // one open for the currently selected browser window.
+  modal.addHandler(this.dialogHandler);
+  this.dialog = modal.findModalDialogs(this.curBrowser);
 
   return {
     sessionId: this.sessionId,
@@ -985,7 +996,8 @@ GeckoDriver.prototype.get = function*(cmd, resp) {
   });
 
   yield get;
-  browser.getBrowserForTab(this.curBrowser.tab).focus();
+
+  this.curBrowser.contentBrowser.focus();
 };
 
 /**
@@ -1061,8 +1073,7 @@ GeckoDriver.prototype.goBack = function* (cmd, resp) {
     return;
   }
 
-  let contentBrowser = browser.getBrowserForTab(this.curBrowser.tab)
-  if (!contentBrowser.webNavigation.canGoBack) {
+  if (!this.curBrowser.contentBrowser.webNavigation.canGoBack) {
     return;
   }
 
@@ -1103,8 +1114,7 @@ GeckoDriver.prototype.goForward = function* (cmd, resp) {
     return;
   }
 
-  let contentBrowser = browser.getBrowserForTab(this.curBrowser.tab)
-  if (!contentBrowser.webNavigation.canGoForward) {
+  if (!this.curBrowser.contentBrowser.webNavigation.canGoForward) {
     return;
   }
 
@@ -1247,23 +1257,32 @@ GeckoDriver.prototype.getChromeWindowHandles = function (cmd, resp) {
 }
 
 /**
- * Get the current window position.
+ * Get the current position and size of the browser window currently in focus.
+ *
+ * Will return the current browser window size in pixels. Refers to
+ * window outerWidth and outerHeight values, which include scroll bars,
+ * title bars, etc.
  *
  * @return {Object.<string, number>}
- *     Object with |x| and |y| coordinates.
+ *     Object with |x| and |y| coordinates, and |width| and |height|
+ *     of browser window.
  */
-GeckoDriver.prototype.getWindowPosition = function (cmd, resp) {
+GeckoDriver.prototype.getWindowRect = function (cmd, resp) {
   let win = assert.window(this.getCurrentWindow());
-
   return {
     x: win.screenX,
     y: win.screenY,
+    width: win.outerWidth,
+    height: win.outerHeight,
   };
 };
 
 /**
- * Set the window position of the browser on the OS Window Manager
+ * Set the window position and size of the browser on the OS Window Manager
  *
+ * The supplied width and height values refer to the window outerWidth
+ * and outerHeight values, which include browser chrome and OS-level
+ * window borders.
  * @param {number} x
  *     X coordinate of the top/left of the window that it will be
  *     moved to.
@@ -1272,29 +1291,59 @@ GeckoDriver.prototype.getWindowPosition = function (cmd, resp) {
  *     moved to.
  *
  * @return {Object.<string, number>}
- *     Object with |x| and |y| coordinates.
+ *     Object with |x| and |y| coordinates
+ *     and |width| and |height| dimensions
+ *
  */
-GeckoDriver.prototype.setWindowPosition = function* (cmd, resp) {
+GeckoDriver.prototype.setWindowRect = function* (cmd, resp) {
   assert.firefox()
 
-  let {x, y} = cmd.parameters;
-  assert.integer(x);
-  assert.integer(y);
+  let win = assert.window(this.getCurrentWindow());
 
-  let win = this.getCurrentWindow();
-  let orig = {screenX: win.screenX, screenY: win.screenY};
+  let {x, y, height, width} = cmd.parameters;
 
-  win.moveTo(x, y);
-  yield wait.until((resolve, reject) => {
-    if ((x == win.screenX && y == win.screenY) ||
-      (win.screenX != orig.screenX || win.screenY != orig.screenY)) {
-      resolve();
-    } else {
-      reject();
-    }
-  });
+  if (height != null && width != null) {
+    assert.positiveInteger(height);
+    assert.positiveInteger(width);
+    yield new Promise(resolve => {
+      // When the DOM resize event claims that it fires _after_ the document
+      // view has been resized, it is lying.
+      //
+      // Because resize events fire at a high rate, DOM modifications
+      // such as updates to outerWidth/outerHeight are not guaranteed to
+      // have processed.  To overcome this... abomination... of the web
+      // platform, we throttle the event using setTimeout.  If everything
+      // was well in this world we would use requestAnimationFrame, but
+      // it does not seem to like our particular flavour of XUL.
+      const fps15 = 66;
+      const synchronousResize = () => win.setTimeout(resolve, fps15);
+      win.addEventListener("resize", synchronousResize, {once: true});
+      win.resizeTo(width, height);
+    });
+  }
 
-  return this.curBrowser.position;
+  if (x != null && y != null) {
+    assert.integer(x);
+    assert.integer(y);
+    let orig = {screenX: win.screenX, screenY: win.screenY};
+    win.moveTo(x, y);
+    yield wait.until((resolve, reject) => {
+      if ((x == win.screenX && y == win.screenY) ||
+        (win.screenX != orig.screenX || win.screenY != orig.screenY)) {
+        resolve();
+      } else {
+        reject();
+      }
+    });
+  }
+
+  return {
+    "x": win.screenX,
+    "y": win.screenY,
+    "width": win.outerWidth,
+    "height": win.outerHeight,
+  };
+
 };
 
 /**
@@ -2095,19 +2144,18 @@ GeckoDriver.prototype.getElementRect = function*(cmd, resp) {
  */
 GeckoDriver.prototype.sendKeysToElement = function*(cmd, resp) {
   let win = assert.window(this.getCurrentWindow());
-
-  let {id, value} = cmd.parameters;
-  assert.defined(value, `Expected character sequence: ${value}`);
+  let {id, text} = cmd.parameters;
+  assert.string(text);
 
   switch (this.context) {
     case Context.CHROME:
       let el = this.curBrowser.seenEls.get(id, {frame: win});
       yield interaction.sendKeysToElement(
-          el, value, true, this.a11yChecks);
+          el, text, true, this.a11yChecks);
       break;
 
     case Context.CONTENT:
-      yield this.listener.sendKeysToElement(id, value);
+      yield this.listener.sendKeysToElement(id, text);
       break;
   }
 };
@@ -2374,6 +2422,8 @@ GeckoDriver.prototype.deleteSession = function (cmd, resp) {
     this.observing = null;
   }
 
+  modal.removeHandler(this.dialogHandler);
+
   this.sandboxes.clear();
   cert.uninstallOverride();
 
@@ -2549,64 +2599,6 @@ GeckoDriver.prototype.setScreenOrientation = function (cmd, resp) {
 };
 
 /**
- * Get the size of the browser window currently in focus.
- *
- * Will return the current browser window size in pixels. Refers to
- * window outerWidth and outerHeight values, which include scroll bars,
- * title bars, etc.
- */
-GeckoDriver.prototype.getWindowSize = function (cmd, resp) {
-  let win = assert.window(this.getCurrentWindow());
-  return {
-    width: win.outerWidth,
-    height: win.outerHeight,
-  };
-};
-
-/**
- * Set the size of the browser window currently in focus.
- *
- * The supplied width and height values refer to the window outerWidth
- * and outerHeight values, which include browser chrome and OS-level
- * window borders.
- *
- * @param {number} width
- *     Requested window outer width.
- * @param {number} height
- *     Requested window outer height.
- *
- * @return {Map.<string, number>}
- *     New outerWidth/outerHeight dimensions.
- */
-GeckoDriver.prototype.setWindowSize = function* (cmd, resp) {
-  assert.firefox()
-  let win = assert.window(this.getCurrentWindow());
-
-  const {width, height} = cmd.parameters;
-
-  yield new Promise(resolve => {
-    // When the DOM resize event claims that it fires _after_ the document
-    // view has been resized, it is lying.
-    //
-    // Because resize events fire at a high rate, DOM modifications
-    // such as updates to outerWidth/outerHeight are not guaranteed to
-    // have processed.  To overcome this... abomination... of the web
-    // platform, we throttle the event using setTimeout.  If everything
-    // was well in this world we would use requestAnimationFrame, but
-    // it does not seem to like our particular flavour of XUL.
-    const fps15 = 66;
-    const synchronousResize = () => win.setTimeout(resolve, fps15);
-    win.addEventListener("resize", synchronousResize, {once: true});
-    win.resizeTo(width, height);
-  });
-
-  return {
-    width: win.outerWidth,
-    height: win.outerHeight,
-  };
-};
-
-/**
  * Maximizes the user agent window as if the user pressed the maximise
  * button.
  *
@@ -2681,10 +2673,9 @@ GeckoDriver.prototype.sendKeysToDialog = function (cmd, resp) {
       this.dialog.window ? this.dialog.window : win);
 };
 
-GeckoDriver.prototype._checkIfAlertIsPresent = function() {
+GeckoDriver.prototype._checkIfAlertIsPresent = function () {
   if (!this.dialog || !this.dialog.ui) {
-    throw new NoAlertOpenError(
-        "No tab modal was open when attempting to get the dialog text");
+    throw new NoAlertOpenError("No modal dialog is currently open");
   }
 };
 
@@ -3025,8 +3016,10 @@ GeckoDriver.prototype.commands = {
   "getCurrentChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
   "getWindowHandles": GeckoDriver.prototype.getWindowHandles,
   "getChromeWindowHandles": GeckoDriver.prototype.getChromeWindowHandles,
-  "getWindowPosition": GeckoDriver.prototype.getWindowPosition,
-  "setWindowPosition": GeckoDriver.prototype.setWindowPosition,
+  "getWindowPosition": GeckoDriver.prototype.getWindowRect, // Redirecting for compatibility
+  "setWindowPosition": GeckoDriver.prototype.setWindowRect, // Redirecting for compatibility
+  "setWindowRect": GeckoDriver.prototype.setWindowRect,
+  "getWindowRect": GeckoDriver.prototype.getWindowRect,
   "getActiveFrame": GeckoDriver.prototype.getActiveFrame,
   "switchToFrame": GeckoDriver.prototype.switchToFrame,
   "switchToParentFrame": GeckoDriver.prototype.switchToParentFrame,
@@ -3047,8 +3040,8 @@ GeckoDriver.prototype.commands = {
   "getActiveElement": GeckoDriver.prototype.getActiveElement,
   "getScreenOrientation": GeckoDriver.prototype.getScreenOrientation,
   "setScreenOrientation": GeckoDriver.prototype.setScreenOrientation,
-  "getWindowSize": GeckoDriver.prototype.getWindowSize,
-  "setWindowSize": GeckoDriver.prototype.setWindowSize,
+  "getWindowSize": GeckoDriver.prototype.getWindowRect, // Redirecting for compatibility
+  "setWindowSize": GeckoDriver.prototype.setWindowRect, // Redirecting for compatibility
   "maximizeWindow": GeckoDriver.prototype.maximizeWindow,
   "dismissDialog": GeckoDriver.prototype.dismissDialog,
   "acceptDialog": GeckoDriver.prototype.acceptDialog,

@@ -1,0 +1,49 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ #defaultEngine {
+   margin-inline-start: 0;
+ }
+
+#defaultEngine > .menulist-label-box > .menulist-icon {
+  height: 16px;
+}
+
+/* work around a display: none in Linux's menu.css, see bug 1112310 */
+.searchengine-menuitem > .menu-iconic-left {
+  display: -moz-box;
+}
+
+#engineList {
+  margin: .5em 0;
+}
+
+#engineList treechildren::-moz-tree-image(engineName) {
+  margin-inline-end: 10px;
+  margin-inline-start: 1px;
+  width: 16px;
+  height: 16px;
+}
+
+#engineList treechildren::-moz-tree-drop-feedback {
+  background-color: Highlight;
+  width: 10000px; /* 100% doesn't work; 10k is hopefully larger than any window
+                     we may have, overflow isn't visible. */
+  height: 2px;
+  margin-inline-start: 0;
+}
+
+#engineShown {
+  min-width: 26px;
+}
+
+#addEnginesBox {
+  margin-bottom: 1em;
+}
+
+#removeEngineButton,
+#restoreDefaultSearchEngines {
+  margin-right: 0;
+  margin-left: 0;
+}

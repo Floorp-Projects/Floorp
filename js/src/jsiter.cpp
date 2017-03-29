@@ -938,28 +938,30 @@ js::GetIteratorObject(JSContext* cx, HandleObject obj, uint32_t flags)
     return iterator;
 }
 
+// ES 2017 draft 7.4.7.
 JSObject*
-js::CreateItrResultObject(JSContext* cx, HandleValue value, bool done)
+js::CreateIterResultObject(JSContext* cx, HandleValue value, bool done)
 {
-    // FIXME: We can cache the iterator result object shape somewhere.
-    AssertHeapIsIdle();
+    // Step 1 (implicit).
 
-    RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, cx->global()));
-    if (!proto)
+    // Step 2.
+    RootedObject resultObj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    if (!resultObj)
         return nullptr;
 
-    RootedPlainObject obj(cx, NewObjectWithGivenProto<PlainObject>(cx, proto));
-    if (!obj)
+    // Step 3.
+    if (!DefineProperty(cx, resultObj, cx->names().value, value))
         return nullptr;
 
-    if (!DefineProperty(cx, obj, cx->names().value, value))
+    // Step 4.
+    if (!DefineProperty(cx, resultObj, cx->names().done,
+                        done ? TrueHandleValue : FalseHandleValue))
+    {
         return nullptr;
+    }
 
-    RootedValue doneBool(cx, BooleanValue(done));
-    if (!DefineProperty(cx, obj, cx->names().done, doneBool))
-        return nullptr;
-
-    return obj;
+    // Step 5.
+    return resultObj;
 }
 
 bool

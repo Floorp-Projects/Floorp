@@ -198,7 +198,7 @@ WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall)
   , mCall(aCall) // refcounted store of the call object
   , mSendStreamConfig(this) // 'this' is stored but not  dereferenced in the constructor.
   , mRecvStreamConfig(this) // 'this' is stored but not  dereferenced in the constructor.
-  , mRecvSSRCSet(false)
+  , mRecvSSRC(0)
   , mRecvSSRCSetInProgress(false)
   , mSendCodecPlugin(nullptr)
   , mRecvCodecPlugin(nullptr)
@@ -699,7 +699,6 @@ WebrtcVideoConduit::SetRemoteSSRC(unsigned int ssrc)
   if (!GetRemoteSSRC(&current_ssrc)) {
     return false;
   }
-  mRecvSSRCSet = true;
 
   if (current_ssrc == ssrc) {
     return true;
@@ -1177,7 +1176,8 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       mRecvStreamConfig.rtp.fec.red_rtx_payload_type = -1;
     }
 
-    if (!mRecvSSRCSet) {
+    // XXX ugh! same SSRC==0 problem that webrtc.org has
+    if (mRecvSSRC == 0) {
       // Handle un-signalled SSRCs by creating a random one and then when it actually gets set,
       // we'll destroy and recreate.  Simpler than trying to unwind all the logic that assumes
       // the receive stream is created and started when we ConfigureRecvMediaCodecs()
@@ -1191,6 +1191,9 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
 
       mRecvStreamConfig.rtp.remote_ssrc = ssrc;
     }
+    // Either set via SetRemoteSSRC, or temp one we created.
+    mRecvSSRC = mRecvStreamConfig.rtp.remote_ssrc;
+
     // 0 isn't allowed.  Would be best to ask for a random SSRC from the
     // RTP code.  Would need to call rtp_sender.cc -- GenerateNewSSRC(),
     // which isn't exposed.  It's called on collision, or when we decide to
@@ -1409,6 +1412,15 @@ WebrtcVideoConduit::SelectBitrates(
     out_max = std::max(static_cast<int>(out_max * ((10 - (framerate / 2)) / 30)), cap);
   }
 
+  // Note: mNegotiatedMaxBitrate is the max transport bitrate - it applies to
+  // a single codec encoding, but should also apply to the sum of all
+  // simulcast layers in this encoding!  So sum(layers.maxBitrate) <=
+  // mNegotiatedMaxBitrate
+  // Note that out_max already has had mPrefMaxBitrate applied to it
+  out_max = MinIgnoreZero((int)mNegotiatedMaxBitrate, out_max);
+  out_min = std::min(out_min, out_max);
+  out_start = std::min(out_start, out_max);
+
   if (mMinBitrate && mMinBitrate > out_min) {
     out_min = mMinBitrate;
   }
@@ -1418,13 +1430,6 @@ WebrtcVideoConduit::SelectBitrates(
     out_start = mStartBitrate;
   }
   out_start = std::max(out_start, out_min);
-
-  // Note: mNegotiatedMaxBitrate is the max transport bitrate - it applies to
-  // a single codec encoding, but should also apply to the sum of all
-  // simulcast layers in this encoding!  So sum(layers.maxBitrate) <=
-  // mNegotiatedMaxBitrate
-  // Note that out_max already has had mPrefMaxBitrate applied to it
-  out_max = MinIgnoreZero((int)mNegotiatedMaxBitrate, out_max);
 
   MOZ_ASSERT(mPrefMaxBitrate == 0 || out_max <= mPrefMaxBitrate);
 }
@@ -1803,10 +1808,15 @@ MediaConduitErrorCode
 WebrtcVideoConduit::ReceivedRTPPacket(const void* data, int len, uint32_t ssrc)
 {
   bool queue = mRecvSSRCSetInProgress;
-  if (!mRecvSSRCSet && !mRecvSSRCSetInProgress) {
+  if (mRecvSSRC != ssrc && !queue) {
+    // we "switch" here immediately, but buffer until the queue is released
+    mRecvSSRC = ssrc;
     mRecvSSRCSetInProgress = true;
     queue = true;
-    // Handle the ssrc-not-signaled case; lock onto first ssrc
+    // any queued packets are from a previous switch that hasn't completed
+    // yet; drop them and only process the latest SSRC
+    mQueuedPackets.Clear();
+    // Handle the unknown ssrc (and ssrc-not-signaled case).
     // We can't just do this here; it has to happen on MainThread :-(
     // We also don't want to drop the packet, nor stall this thread, so we hold
     // the packet (and any following) for inserting once the SSRC is set.
@@ -1826,19 +1836,23 @@ WebrtcVideoConduit::ReceivedRTPPacket(const void* data, int len, uint32_t ssrc)
           WebrtcGmpPCHandleSetter setter(self->mPCHandle);
           self->SetRemoteSSRC(ssrc); // this will likely re-create the VideoReceiveStream
           // We want to unblock the queued packets on the original thread
-          thread->Dispatch(media::NewRunnableFrom([self]() mutable {
-                self->mRecvSSRCSetInProgress = false;
-                // SSRC is set; insert queued packets
-                for (auto& packet : self->mQueuedPackets) {
-                  CSFLogDebug(logTag, "%s: seq# %u, Len %d ", __FUNCTION__,
-                              (uint16_t)ntohs(((uint16_t*) packet->mData)[1]), packet->mLen);
+          thread->Dispatch(media::NewRunnableFrom([self, ssrc]() mutable {
+                if (ssrc == self->mRecvSSRC) {
+                  // SSRC is set; insert queued packets
+                  for (auto& packet : self->mQueuedPackets) {
+                    CSFLogDebug(logTag, "%s: seq# %u, Len %d ", __FUNCTION__,
+                                (uint16_t)ntohs(((uint16_t*) packet->mData)[1]), packet->mLen);
 
-                  if (self->DeliverPacket(packet->mData, packet->mLen) != kMediaConduitNoError) {
-                    CSFLogError(logTag, "%s RTP Processing Failed", __FUNCTION__);
-                    // Keep delivering and then clear the queue
+                    if (self->DeliverPacket(packet->mData, packet->mLen) != kMediaConduitNoError) {
+                      CSFLogError(logTag, "%s RTP Processing Failed", __FUNCTION__);
+                      // Keep delivering and then clear the queue
+                    }
                   }
+                  self->mQueuedPackets.Clear();
+                  // we don't leave inprogress until there are no changes in-flight
+                  self->mRecvSSRCSetInProgress = false;
                 }
-                self->mQueuedPackets.Clear();
+                // else this is an intermediate switch; another is in-flight
 
                 return NS_OK;
               }), NS_DISPATCH_NORMAL);

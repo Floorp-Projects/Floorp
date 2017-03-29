@@ -18,8 +18,10 @@
 #include "nsMenuBarFrame.h"
 #include "nsPopupSetFrame.h"
 #include "nsPIDOMWindow.h"
+#include "nsIDOMEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMScreen.h"
+#include "nsIDOMXULMenuListElement.h"
 #include "nsIPresShell.h"
 #include "nsFrameManager.h"
 #include "nsIDocument.h"
@@ -53,6 +55,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/PopupBoxObject.h"
 #include <algorithm>
 
@@ -557,7 +560,9 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
 
     // If there are no transitions, fire the popupshown event right away.
     nsCOMPtr<nsIRunnable> event = new nsXULPopupShownEvent(GetContent(), pc);
-    NS_DispatchToCurrentThread(event);
+    mContent->OwnerDoc()->Dispatch("nsXULPopupShownEvent",
+                                   TaskCategory::Other,
+                                   event.forget());
   }
 
   if (needCallback && !mReflowCallbackData.mPosted) {

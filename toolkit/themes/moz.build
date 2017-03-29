@@ -13,7 +13,6 @@
 #                         non-mac (toolkit/themes/shared/non-mac)
 # GNOME/Linux             linux (toolkit/themes/linux)
 #                         non-mac (toolkit/themes/shared/non-mac)
-# faststripe              windows + faststripe (no native theme components)
 # mobile                  native UIs that do not use XUL for UI
 
 toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
@@ -27,9 +26,6 @@ elif app == 'mobile/android':
     DIRS += ['mobile']
 else:
     DIRS += ['windows']
-
-    if CONFIG['MOZ_THEME_FASTSTRIPE']:
-        DIRS += ['faststripe/global']
 
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Themes')

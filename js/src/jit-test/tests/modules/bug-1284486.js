@@ -8,6 +8,9 @@
 // The first attempt fails becuase module 'a' is not available. The second
 // attempt fails because of the previous failure (it would otherwise succeed as
 // 'a' is now available).
+//
+// This test exercises the path where the previously instantiated module is
+// encountered as an import.
 
 let moduleRepo = {};
 setModuleResolveHook(function(module, specifier) {

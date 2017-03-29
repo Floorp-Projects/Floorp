@@ -98,6 +98,11 @@ class GlobalObject : public NativeObject
         STAR_GENERATOR_FUNCTION,
         ASYNC_FUNCTION_PROTO,
         ASYNC_FUNCTION,
+        ASYNC_ITERATOR_PROTO,
+        ASYNC_FROM_SYNC_ITERATOR_PROTO,
+        ASYNC_GENERATOR,
+        ASYNC_GENERATOR_FUNCTION,
+        ASYNC_GENERATOR_PROTO,
         MAP_ITERATOR_PROTO,
         SET_ITERATOR_PROTO,
         COLLATOR_PROTO,
@@ -629,6 +634,36 @@ class GlobalObject : public NativeObject
         return getOrCreateObject(cx, global, ASYNC_FUNCTION, initAsyncFunction);
     }
 
+    static NativeObject*
+    getOrCreateAsyncIteratorPrototype(JSContext* cx, Handle<GlobalObject*> global)
+    {
+        return MaybeNativeObject(getOrCreateObject(cx, global, ASYNC_ITERATOR_PROTO,
+                                                   initAsyncGenerators));
+    }
+
+    static NativeObject*
+    getOrCreateAsyncFromSyncIteratorPrototype(JSContext* cx, Handle<GlobalObject*> global) {
+        return MaybeNativeObject(getOrCreateObject(cx, global, ASYNC_FROM_SYNC_ITERATOR_PROTO,
+                                                   initAsyncGenerators));
+    }
+
+    static NativeObject*
+    getOrCreateAsyncGenerator(JSContext* cx, Handle<GlobalObject*> global) {
+        return MaybeNativeObject(getOrCreateObject(cx, global, ASYNC_GENERATOR,
+                                                   initAsyncGenerators));
+    }
+
+    static JSObject*
+    getOrCreateAsyncGeneratorFunction(JSContext* cx, Handle<GlobalObject*> global) {
+        return getOrCreateObject(cx, global, ASYNC_GENERATOR_FUNCTION, initAsyncGenerators);
+    }
+
+    static NativeObject*
+    getOrCreateAsyncGeneratorPrototype(JSContext* cx, Handle<GlobalObject*> global) {
+        return MaybeNativeObject(getOrCreateObject(cx, global, ASYNC_GENERATOR_PROTO,
+                                                   initAsyncGenerators));
+    }
+
     static JSObject*
     getOrCreateMapIteratorPrototype(JSContext* cx, Handle<GlobalObject*> global) {
         return getOrCreateObject(cx, global, MAP_ITERATOR_PROTO, initMapIteratorProto);
@@ -774,6 +809,8 @@ class GlobalObject : public NativeObject
     static bool initStarGenerators(JSContext* cx, Handle<GlobalObject*> global);
 
     static bool initAsyncFunction(JSContext* cx, Handle<GlobalObject*> global);
+
+    static bool initAsyncGenerators(JSContext* cx, Handle<GlobalObject*> global);
 
     // Implemented in builtin/MapObject.cpp.
     static bool initMapIteratorProto(JSContext* cx, Handle<GlobalObject*> global);

@@ -305,6 +305,7 @@ def makensis_progs(target):
         return
 
     candidates = [
+        'makensis-3.01.exe',
         'makensis-3.0b3.exe',
         'makensis-3.0b1.exe',
         'makensis.exe',
