@@ -54,9 +54,6 @@ ProfilerMarkerTracing::ProfilerMarkerTracing(const char* aCategory, TracingMetad
   : mCategory(aCategory)
   , mMetaData(aMetaData)
 {
-  if (aMetaData == TRACING_EVENT_BACKTRACE) {
-    SetStack(profiler_get_backtrace());
-  }
 }
 
 ProfilerMarkerTracing::ProfilerMarkerTracing(const char* aCategory, TracingMetadata aMetaData,
@@ -79,12 +76,11 @@ ProfilerMarkerTracing::StreamPayload(SpliceableJSONWriter& aWriter,
   if (GetCategory()) {
     aWriter.StringProperty("category", GetCategory());
   }
-  if (GetMetaData() != TRACING_DEFAULT) {
-    if (GetMetaData() == TRACING_INTERVAL_START) {
-      aWriter.StringProperty("interval", "start");
-    } else if (GetMetaData() == TRACING_INTERVAL_END) {
-      aWriter.StringProperty("interval", "end");
-    }
+
+  if (GetMetaData() == TRACING_INTERVAL_START) {
+    aWriter.StringProperty("interval", "start");
+  } else if (GetMetaData() == TRACING_INTERVAL_END) {
+    aWriter.StringProperty("interval", "end");
   }
 }
 
