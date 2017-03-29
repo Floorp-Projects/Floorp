@@ -2741,6 +2741,7 @@ nsDisplayItem::BuildDisplayItemLayer(nsDisplayListBuilder* aBuilder,
     }
   }
 
+  aManager->TrackDisplayItemLayer(layer);
   layer->SetDisplayItem(this, aBuilder);
   layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
                                                       aContainerParameters.mOffset.y, 0));
@@ -3941,10 +3942,11 @@ nsDisplayBackgroundColor::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         const ContainerLayerParameters& aParameters)
 {
   StyleGeometryBox clip = mBackgroundStyle->mImage.mLayers[0].mClip;
-  if (!ForceActiveLayers() || clip == StyleGeometryBox::Text) {
-    return LAYER_NONE;
+  if ((ForceActiveLayers() || gfxPrefs::LayersAllowBackgroundColorLayers()) &&
+      clip != StyleGeometryBox::Text) {
+    return LAYER_ACTIVE;
   }
-  return LAYER_ACTIVE;
+  return LAYER_NONE;
 }
 
 already_AddRefed<Layer>

@@ -6,9 +6,10 @@
 
 #include <stddef.h>
 
+#include <memory>
+
 #include "base/bit_cast.h"
 #include "base/macros.h"
-#include "base/memory/scoped_ptr.h"
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/resolver.h"
 #include "sandbox/win/src/sandbox_utils.h"
@@ -108,7 +109,7 @@ NTSTATUS PatchNtdllWithResolver(const char* function, bool relaxed,
   // Any pointer will do as an interception_entry_point
   void* function_entry = resolver;
   size_t thunk_size = resolver->GetThunkSize();
-  scoped_ptr<char[]> thunk(new char[thunk_size]);
+  std::unique_ptr<char[]> thunk(new char[thunk_size]);
   size_t used;
 
   resolver->AllowLocalPatches();
@@ -246,7 +247,7 @@ TEST(ServiceResolverTest, LocalPatchesAllowed) {
   // Any pointer will do as an interception_entry_point
   void* function_entry = resolver;
   size_t thunk_size = resolver->GetThunkSize();
-  scoped_ptr<char[]> thunk(new char[thunk_size]);
+  std::unique_ptr<char[]> thunk(new char[thunk_size]);
   size_t used;
 
   NTSTATUS ret = STATUS_UNSUCCESSFUL;

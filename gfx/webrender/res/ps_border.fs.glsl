@@ -366,10 +366,24 @@ void draw_mixed_border(float distanceFromMixLine, float distanceFromMiddle, vec2
       float pixelsPerFragment = length(fwidth(localPos.xy));
       vec4 color = get_fragment_color(distanceFromMixLine, pixelsPerFragment);
 
-      float distance = distance(vRefPoint, localPos) - vRadii.z;
-      float length = vRadii.x - vRadii.z;
-      if (distanceFromMiddle < 0.0) {
-        distance = length - distance;
+      if (vRadii.x > 0.0) {
+        float distance = distance(vRefPoint, localPos) - vRadii.z;
+        float length = vRadii.x - vRadii.z;
+        if (distanceFromMiddle < 0.0) {
+          distance = length - distance;
+        }
+
+        oFragColor = 0.0 <= distance && distance <= length ?
+          draw_mixed_edge(distance, length, color, brightness_mod) : vec4(0.0, 0.0, 0.0, 0.0);
+        break;
+      }
+
+      bool is_vertical = (vBorderPart == PST_TOP_LEFT) ? distanceFromMixLine < 0.0 :
+                                                         distanceFromMixLine >= 0.0;
+      float distance = is_vertical ? abs(localPos.x - vRefPoint.x) : abs(localPos.y - vRefPoint.y);
+      float length = is_vertical ? abs(vPieceRect.z) : abs(vPieceRect.w);
+      if (distanceFromMiddle > 0.0) {
+          distance = length - distance;
       }
 
       oFragColor = 0.0 <= distance && distance <= length ?

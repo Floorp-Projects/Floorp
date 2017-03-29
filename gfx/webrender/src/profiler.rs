@@ -250,7 +250,8 @@ pub struct FrameProfileCounters {
     pub total_primitives: IntProfileCounter,
     pub visible_primitives: IntProfileCounter,
     pub passes: IntProfileCounter,
-    pub targets: IntProfileCounter,
+    pub color_targets: IntProfileCounter,
+    pub alpha_targets: IntProfileCounter,
 }
 
 impl FrameProfileCounters {
@@ -259,7 +260,8 @@ impl FrameProfileCounters {
             total_primitives: IntProfileCounter::new("Total Primitives"),
             visible_primitives: IntProfileCounter::new("Visible Primitives"),
             passes: IntProfileCounter::new("Passes"),
-            targets: IntProfileCounter::new("Render Targets"),
+            color_targets: IntProfileCounter::new("Color Targets"),
+            alpha_targets: IntProfileCounter::new("Alpha Targets"),
         }
     }
 }
@@ -661,7 +663,8 @@ impl Profiler {
             &frame_profile.total_primitives,
             &frame_profile.visible_primitives,
             &frame_profile.passes,
-            &frame_profile.targets,
+            &frame_profile.color_targets,
+            &frame_profile.alpha_targets,
         ], debug_renderer, true);
 
         self.draw_counters(&[

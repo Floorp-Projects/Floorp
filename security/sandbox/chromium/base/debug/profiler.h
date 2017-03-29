@@ -38,6 +38,9 @@ BASE_EXPORT void RestartProfilingAfterFork();
 // Returns true iff this executable is instrumented with the Syzygy profiler.
 BASE_EXPORT bool IsBinaryInstrumented();
 
+// Returns true iff this executable supports profiling.
+BASE_EXPORT bool IsProfilingSupported();
+
 // There's a class of profilers that use "return address swizzling" to get a
 // hook on function exits. This class of profilers uses some form of entry hook,
 // like e.g. binary instrumentation, or a compiler flag, that calls a hook each

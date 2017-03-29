@@ -70,8 +70,6 @@ NullPrincipal::Create(const OriginAttributes& aOriginAttributes, nsIURI* aURI)
 nsresult
 NullPrincipal::Init(const OriginAttributes& aOriginAttributes, nsIURI* aURI)
 {
-  mOriginAttributes = aOriginAttributes;
-
   if (aURI) {
     nsAutoCString scheme;
     nsresult rv = aURI->GetScheme(scheme);
@@ -86,7 +84,11 @@ NullPrincipal::Init(const OriginAttributes& aOriginAttributes, nsIURI* aURI)
     NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_AVAILABLE);
   }
 
-  FinishInit();
+  nsAutoCString originNoSuffix;
+  DebugOnly<nsresult> rv = mURI->GetSpec(originNoSuffix);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  FinishInit(originNoSuffix, aOriginAttributes);
 
   return NS_OK;
 }
@@ -141,12 +143,6 @@ NullPrincipal::SetDomain(nsIURI* aDomain)
   // I think the right thing to do here is to just throw...  Silently failing
   // seems counterproductive.
   return NS_ERROR_NOT_AVAILABLE;
-}
-
-nsresult
-NullPrincipal::GetOriginInternal(nsACString& aOrigin)
-{
-  return mURI->GetSpec(aOrigin);
 }
 
 bool
