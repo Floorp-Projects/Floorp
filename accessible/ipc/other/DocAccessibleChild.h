@@ -26,10 +26,11 @@ class TableCellAccessible;
 class DocAccessibleChild : public DocAccessibleChildBase
 {
 public:
-  explicit DocAccessibleChild(DocAccessible* aDoc)
+  DocAccessibleChild(DocAccessible* aDoc, IProtocol* aManager)
     : DocAccessibleChildBase(aDoc)
   {
     MOZ_COUNT_CTOR_INHERITED(DocAccessibleChild, DocAccessibleChildBase);
+    SetManager(aManager);
   }
 
   ~DocAccessibleChild()

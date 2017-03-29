@@ -449,14 +449,6 @@ RasterImage::OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey)
   bool animatedFramesDiscarded =
     mAnimationState && aSurfaceKey.Playback() == PlaybackType::eAnimated;
 
-  if (animatedFramesDiscarded && NS_IsMainThread()) {
-    MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
-    mAnimationState->UpdateState(mAnimationFinished, this, mSize);
-    // We don't need OnSurfaceDiscardedInternal to handle the animated frames
-    // being discarded because we just did.
-    animatedFramesDiscarded = false;
-  }
-
   RefPtr<RasterImage> image = this;
   NS_DispatchToMainThread(NS_NewRunnableFunction(
                             "RasterImage::OnSurfaceDiscarded",

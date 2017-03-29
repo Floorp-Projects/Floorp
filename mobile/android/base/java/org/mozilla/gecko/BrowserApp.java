@@ -764,6 +764,7 @@ public class BrowserApp extends GeckoApp
             "Telemetry:Gather",
             "Download:AndroidDownloadManager",
             "Website:AppInstalled",
+            "Website:AppInstallFailed",
             "Website:Metadata",
             null);
 
@@ -1519,6 +1520,7 @@ public class BrowserApp extends GeckoApp
             "Telemetry:Gather",
             "Download:AndroidDownloadManager",
             "Website:AppInstalled",
+            "Website:AppInstallFailed",
             "Website:Metadata",
             null);
 
@@ -2039,6 +2041,12 @@ public class BrowserApp extends GeckoApp
                     .decodeDataURI(getContext(), message.getString("icon"))
                     .getBestBitmap(GeckoAppShell.getPreferredIconSize());
                 createAppShortcut(name, startUrl, manifestPath, icon);
+                break;
+
+            case "Website:AppInstallFailed":
+                final String title = message.getString("title");
+                final String bookmarkUrl = message.getString("url");
+                createBrowserShortcut(title, bookmarkUrl);
                 break;
 
             case "Updater:Launch":

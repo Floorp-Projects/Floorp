@@ -361,10 +361,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     return SendFailedAsyncOpen(rv);
   }
 
-  OriginAttributes attrs;
-  rv = loadInfo->GetOriginAttributes(&attrs);
-  if (NS_FAILED(rv)) {
-    return SendFailedAsyncOpen(rv);
+  if (!loadInfo) {
+    return SendFailedAsyncOpen(NS_ERROR_UNEXPECTED);
   }
 
   nsCOMPtr<nsIChannel> channel;
