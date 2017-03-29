@@ -1039,7 +1039,8 @@ MediaDecoder::ComputePlaybackRate()
   MOZ_ASSERT(mResource);
 
   int64_t length = mResource->GetLength();
-  if (!IsNaN(mDuration) && !mozilla::IsInfinite<double>(mDuration)
+  if (mozilla::IsFinite<double>(mDuration)
+      && mDuration > 0
       && length >= 0) {
     mPlaybackRateReliable = true;
     mPlaybackBytesPerSecond = length / mDuration;
