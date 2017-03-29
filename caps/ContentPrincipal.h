@@ -47,6 +47,7 @@ public:
   // If mCodebaseImmutable is true, mCodebase is non-null and immutable
   bool mCodebaseImmutable;
   bool mDomainImmutable;
+  bool mInitialized;
 
 protected:
   virtual ~ContentPrincipal();
