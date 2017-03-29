@@ -11,12 +11,12 @@
         "artifacts": {
             "public/rustc.tar.xz": {
               "path": "/home/worker/rustc.tar.xz",
-              "expires": "{artifacts_expires}",
+              "expires": "{artifact_expires}",
               "type": "file"
             },
             "public/manifest.tt": {
               "path": "/home/worker/manifest.tt",
-              "expires": "{artifacts_expires}",
+              "expires": "{artifact_expires}",
               "type": "file"
             }
         },

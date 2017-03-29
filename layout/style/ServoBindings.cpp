@@ -205,27 +205,9 @@ Gecko_ElementState(RawGeckoElementBorrowed aElement)
 }
 
 bool
-Gecko_IsLink(RawGeckoElementBorrowed aElement)
-{
-  return nsCSSRuleProcessor::IsLink(aElement);
-}
-
-bool
 Gecko_IsTextNode(RawGeckoNodeBorrowed aNode)
 {
   return aNode->NodeInfo()->NodeType() == nsIDOMNode::TEXT_NODE;
-}
-
-bool
-Gecko_IsVisitedLink(RawGeckoElementBorrowed aElement)
-{
-  return aElement->StyleState().HasState(NS_EVENT_STATE_VISITED);
-}
-
-bool
-Gecko_IsUnvisitedLink(RawGeckoElementBorrowed aElement)
-{
-  return aElement->StyleState().HasState(NS_EVENT_STATE_UNVISITED);
 }
 
 bool
@@ -961,8 +943,7 @@ void
 Gecko_InitializeImageCropRect(nsStyleImage* aImage)
 {
   MOZ_ASSERT(aImage);
-  nsStyleSides cropRect;
-  aImage->SetCropRect(MakeUnique<nsStyleSides>(cropRect));
+  aImage->SetCropRect(MakeUnique<nsStyleSides>());
 }
 
 void
