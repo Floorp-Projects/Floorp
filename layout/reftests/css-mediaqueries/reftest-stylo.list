@@ -16,5 +16,5 @@ fails == mq_print_orientation.xhtml mq_print_orientation.xhtml
 == mq_print_minheight_updown.xhtml mq_print_minheight_updown.xhtml
 == mq_print_minwidth_updown.xhtml mq_print_minwidth_updown.xhtml
 
-fails == scoped-mq-update.html scoped-mq-update.html
+== scoped-mq-update.html scoped-mq-update.html
 fails == system-metrics-1.html system-metrics-1.html
