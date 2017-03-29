@@ -10,8 +10,6 @@
 #include "nsIServiceManager.h"
 #include "nsPrintEngine.h"
 
-using namespace mozilla;
-
 NS_IMPL_ISUPPORTS_INHERITED(nsPagePrintTimer, mozilla::Runnable, nsITimerCallback)
 
 nsPagePrintTimer::~nsPagePrintTimer()
@@ -26,7 +24,7 @@ nsPagePrintTimer::~nsPagePrintTimer()
   }
 }
 
-nsresult
+nsresult 
 nsPagePrintTimer::StartTimer(bool aUseDelay)
 {
   nsresult result;
@@ -43,7 +41,6 @@ nsPagePrintTimer::StartTimer(bool aUseDelay)
         delay = mDelay;
       }
     }
-    mTimer->SetTarget(mDocument->EventTargetFor(TaskCategory::Other));
     mTimer->InitWithCallback(this, delay, nsITimer::TYPE_ONE_SHOT);
   }
   return result;
@@ -62,7 +59,6 @@ nsPagePrintTimer::StartWatchDogTimer()
   } else {
     // Instead of just doing one timer for a long period do multiple so we
     // can check if the user cancelled the printing.
-    mWatchDogTimer->SetTarget(mDocument->EventTargetFor(TaskCategory::Other));
     mWatchDogTimer->InitWithCallback(this, WATCH_DOG_INTERVAL,
                                      nsITimer::TYPE_ONE_SHOT);
   }
@@ -162,8 +158,7 @@ nsPagePrintTimer::Notify(nsITimer *timer)
 
     if (donePrePrint && !mWaitingForRemotePrint) {
       StopWatchDogTimer();
-      // Pass nullptr here since name already was set in constructor.
-      mDocument->Dispatch(nullptr, TaskCategory::Other, do_AddRef(this));
+      NS_DispatchToMainThread(this);
     } else {
       // Start the watch dog if we're waiting for preprint to ensure that if any
       // mozPrintCallbacks take to long we error out.
@@ -193,13 +188,11 @@ nsPagePrintTimer::RemotePrintFinished()
     return;
   }
 
-  mWaitingForRemotePrint->SetTarget(
-    mDocument->EventTargetFor(mozilla::TaskCategory::Other));
   mozilla::Unused <<
     mWaitingForRemotePrint->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT);
 }
 
-nsresult
+nsresult 
 nsPagePrintTimer::Start(nsPrintObject* aPO)
 {
   mPrintObj = aPO;
@@ -208,7 +201,7 @@ nsPagePrintTimer::Start(nsPrintObject* aPO)
 }
 
 
-void
+void  
 nsPagePrintTimer::Stop()
 {
   if (mTimer) {

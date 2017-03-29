@@ -1306,7 +1306,7 @@ awsy:
         script: awsy_script.py
         config:
             by-test-platform:
-                windows.*:
+                windows.*/opt:
                     - awsy/taskcluster_windows_config.py
                 default:
                     - awsy/linux_config.py
