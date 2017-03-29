@@ -2147,35 +2147,6 @@ profiler_get_profile(double aSinceTime)
   return ToJSON(lock, aSinceTime);
 }
 
-JSObject*
-profiler_get_profile_jsobject(JSContext *aCx, double aSinceTime)
-{
-  LOG("profiler_get_profile_jsobject");
-
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(gPS);
-
-  // |val| must outlive |lock| to avoid a GC hazard.
-  JS::RootedValue val(aCx);
-  UniquePtr<char[]> buf = nullptr;
-
-  {
-    PS::AutoLock lock(gPSMutex);
-
-    if (!gPS->IsActive(lock)) {
-      return nullptr;
-    }
-
-    buf = ToJSON(lock, aSinceTime);
-  }
-
-  NS_ConvertUTF8toUTF16 js_string(nsDependentCString(buf.get()));
-  auto buf16 = static_cast<const char16_t*>(js_string.get());
-  MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, buf16, js_string.Length(), &val));
-
-  return &val.toObject();
-}
-
 void
 profiler_get_profile_jsobject_async(double aSinceTime,
                                     mozilla::dom::Promise* aPromise)
