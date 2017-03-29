@@ -25,6 +25,8 @@
 #include "nsCOMArray.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
+#include "nsIContentSecurityPolicy.h"
+#include "mozilla/dom/TabGroup.h"
 
 using mozilla::LogLevel;
 
@@ -129,6 +131,22 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
     nsresult rv;
     nsCOMArray<nsIContentPolicy> entries;
     mPolicies.GetEntries(entries);
+
+    nsCOMPtr<nsPIDOMWindowOuter> window;
+    if (nsCOMPtr<nsINode> node = do_QueryInterface(requestingContext)) {
+        window = node->OwnerDoc()->GetWindow();
+    } else {
+        window = do_QueryInterface(requestingContext);
+    }
+
+    if (requestPrincipal) {
+        nsCOMPtr<nsIContentSecurityPolicy> csp;
+        requestPrincipal->GetCsp(getter_AddRefs(csp));
+        if (csp && window) {
+            csp->EnsureEventTarget(window->EventTargetFor(TaskCategory::Other));
+        }
+    }
+
     int32_t count = entries.Count();
     for (int32_t i = 0; i < count; i++) {
         /* check the appropriate policy */
@@ -150,12 +168,6 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
 
     nsCOMPtr<nsIDOMElement> topFrameElement;
     bool isTopLevel = true;
-    nsCOMPtr<nsPIDOMWindowOuter> window;
-    if (nsCOMPtr<nsINode> node = do_QueryInterface(requestingContext)) {
-        window = node->OwnerDoc()->GetWindow();
-    } else {
-        window = do_QueryInterface(requestingContext);
-    }
 
     if (window) {
         nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
