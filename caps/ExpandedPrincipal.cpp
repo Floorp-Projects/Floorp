@@ -24,10 +24,10 @@ struct OriginComparator
   {
     nsAutoCString originA;
     nsresult rv = a->GetOrigin(originA);
-    NS_ENSURE_SUCCESS(rv, false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     nsAutoCString originB;
     rv = b->GetOrigin(originB);
-    NS_ENSURE_SUCCESS(rv, false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     return originA < originB;
   }
 
@@ -35,10 +35,10 @@ struct OriginComparator
   {
     nsAutoCString originA;
     nsresult rv = a->GetOrigin(originA);
-    NS_ENSURE_SUCCESS(rv, false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     nsAutoCString originB;
     rv = b->GetOrigin(originB);
-    NS_ENSURE_SUCCESS(rv, false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     return a == b;
   }
 };
@@ -62,7 +62,22 @@ ExpandedPrincipal::Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aWhiteList,
                           const OriginAttributes& aAttrs)
 {
   RefPtr<ExpandedPrincipal> ep = new ExpandedPrincipal(aWhiteList);
-  ep->FinishInit(aAttrs);
+
+  nsAutoCString origin;
+  origin.AssignLiteral("[Expanded Principal [");
+  for (size_t i = 0; i < ep->mPrincipals.Length(); ++i) {
+    if (i != 0) {
+      origin.AppendLiteral(", ");
+    }
+
+    nsAutoCString subOrigin;
+    nsresult rv = ep->mPrincipals.ElementAt(i)->GetOrigin(subOrigin);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    origin.Append(subOrigin);
+  }
+  origin.Append("]]");
+
+  ep->FinishInit(origin, aAttrs);
   return ep.forget();
 }
 
@@ -76,25 +91,6 @@ ExpandedPrincipal::GetDomain(nsIURI** aDomain)
 NS_IMETHODIMP
 ExpandedPrincipal::SetDomain(nsIURI* aDomain)
 {
-  return NS_OK;
-}
-
-nsresult
-ExpandedPrincipal::GetOriginNoSuffixInternal(nsACString& aOrigin)
-{
-  aOrigin.AssignLiteral("[Expanded Principal [");
-  for (size_t i = 0; i < mPrincipals.Length(); ++i) {
-    if (i != 0) {
-      aOrigin.AppendLiteral(", ");
-    }
-
-    nsAutoCString subOrigin;
-    nsresult rv = mPrincipals.ElementAt(i)->GetOrigin(subOrigin);
-    NS_ENSURE_SUCCESS(rv, rv);
-    aOrigin.Append(subOrigin);
-  }
-
-  aOrigin.Append("]]");
   return NS_OK;
 }
 

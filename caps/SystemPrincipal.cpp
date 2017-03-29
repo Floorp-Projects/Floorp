@@ -35,7 +35,8 @@ already_AddRefed<SystemPrincipal>
 SystemPrincipal::Create()
 {
   RefPtr<SystemPrincipal> sp = new SystemPrincipal();
-  sp->FinishInit(OriginAttributes());
+  sp->FinishInit(NS_LITERAL_CSTRING(SYSTEM_PRINCIPAL_SPEC),
+                 OriginAttributes());
   return sp.forget();
 }
 
@@ -61,13 +62,6 @@ NS_IMETHODIMP
 SystemPrincipal::GetURI(nsIURI** aURI)
 {
     *aURI = nullptr;
-    return NS_OK;
-}
-
-nsresult
-SystemPrincipal::GetOriginNoSuffixInternal(nsACString& aOrigin)
-{
-    aOrigin.AssignLiteral(SYSTEM_PRINCIPAL_SPEC);
     return NS_OK;
 }
 
