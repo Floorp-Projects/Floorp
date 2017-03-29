@@ -158,7 +158,10 @@ BoxModel.prototype = {
       let layout = yield this.inspector.pageStyle.getLayout(node, {
         autoMargins: true,
       });
-      let styleEntries = yield this.inspector.pageStyle.getApplied(node, {});
+      let styleEntries = yield this.inspector.pageStyle.getApplied(node, {
+        // We don't need styles applied to pseudo elements of the current node.
+        skipPseudo: true
+      });
       this.elementRules = styleEntries.map(e => e.rule);
 
       // Update the layout properties with whether or not the element's position is
