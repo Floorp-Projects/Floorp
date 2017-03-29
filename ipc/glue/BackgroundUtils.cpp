@@ -89,7 +89,8 @@ PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
         attrs = info.attrs();
       }
       principal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
-      if (NS_WARN_IF(!principal)) {
+      rv = principal ? NS_OK : NS_ERROR_FAILURE;
+      if (NS_WARN_IF(NS_FAILED(rv))) {
         return nullptr;
       }
 
