@@ -27,6 +27,7 @@ public:
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
   bool IsCodebasePrincipal() const override { return true; }
+  nsresult GetOriginNoSuffixInternal(nsACString& aOrigin) override;
 
   ContentPrincipal();
 
@@ -55,9 +56,6 @@ protected:
   bool MayLoadInternal(nsIURI* aURI) override;
 
 private:
-  static nsresult 
-  GenerateOriginNoSuffixFromURI(nsIURI* aURI, nsACString& aOriginNoSuffix);
-
   mozilla::Maybe<nsString> mAddonIdCache;
 };
 

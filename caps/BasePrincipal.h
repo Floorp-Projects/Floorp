@@ -104,6 +104,7 @@ public:
 protected:
   virtual ~BasePrincipal();
 
+  virtual nsresult GetOriginNoSuffixInternal(nsACString& aOrigin) = 0;
   // Note that this does not check OriginAttributes. Callers that depend on
   // those must call Subsumes instead.
   virtual bool SubsumesInternal(nsIPrincipal* aOther, DocumentDomainConsideration aConsider) = 0;
@@ -123,16 +124,14 @@ protected:
   // This function should be called as the last step of the initialization of the
   // principal objects.  It's typically called as the last step from the Init()
   // method of the child classes.
-  void FinishInit(const nsACString& aOriginNoSuffix,
-                  const OriginAttributes& aOriginAttributes);
+  void FinishInit(const OriginAttributes& aOriginAttributes);
 
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
   nsCOMPtr<nsIContentSecurityPolicy> mPreloadCSP;
-
-private:
   nsCOMPtr<nsIAtom> mOriginNoSuffix;
   nsCOMPtr<nsIAtom> mOriginSuffix;
 
+private:
   OriginAttributes mOriginAttributes;
   PrincipalKind mKind;
   bool mHasExplicitDomain;
