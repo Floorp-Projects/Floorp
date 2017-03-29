@@ -54,12 +54,15 @@ public class UrlUtils {
     public static String stripUserInfo(String url) {
         try {
             URI uri = new URI(url);
+
             final String userInfo = uri.getUserInfo();
-            if (userInfo != null) {
-                // Strip the userInfo to minimise spoofing ability. This only affects what's shown
-                // during browsing, this information isn't used when we start editing the URL:
-                uri = new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), uri.getQuery(), uri.getFragment());
+            if (userInfo == null) {
+                return url;
             }
+
+            // Strip the userInfo to minimise spoofing ability. This only affects what's shown
+            // during browsing, this information isn't used when we start editing the URL:
+            uri = new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), uri.getQuery(), uri.getFragment());
 
             return uri.toString();
         } catch (URISyntaxException e) {
