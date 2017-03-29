@@ -5,6 +5,8 @@ expires-after: 7 days
 deadline-after: 24 hours
 run-on-projects:
     - try
+    - mozilla-beta
+    - mozilla-release
 worker-type: aws-provisioner-v1/gecko-symbol-upload
 worker:
     implementation: docker-worker
