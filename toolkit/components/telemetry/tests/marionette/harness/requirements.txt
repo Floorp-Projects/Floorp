@@ -1,0 +1,4 @@
+firefox-puppeteer >= 52.1.0, <53.0.0
+marionette-harness >= 4.0.0
+requests==2.11.1
+simplejson
