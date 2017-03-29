@@ -259,6 +259,40 @@ DWORD RestrictedToken::AddAllSidsForDenyOnly(std::vector<Sid> *exceptions) {
   return ERROR_SUCCESS;
 }
 
+DWORD RestrictedToken::AddDenyOnlySids(const std::vector<Sid>& deny_only_sids) {
+  DCHECK(init_);
+  if (!init_) {
+    return ERROR_NO_TOKEN;
+  }
+
+  DWORD error;
+  std::unique_ptr<BYTE[]> buffer =
+      GetTokenInfo(effective_token_, TokenGroups, &error);
+
+  if (!buffer) {
+    return error;
+  }
+
+  TOKEN_GROUPS* token_groups = reinterpret_cast<TOKEN_GROUPS*>(buffer.get());
+
+  // Build the list of the deny only group SIDs
+  for (unsigned int i = 0; i < token_groups->GroupCount ; ++i) {
+    if ((token_groups->Groups[i].Attributes & SE_GROUP_INTEGRITY) == 0 &&
+        (token_groups->Groups[i].Attributes & SE_GROUP_LOGON_ID) == 0) {
+      for (unsigned int j = 0; j < deny_only_sids.size(); ++j) {
+        if (::EqualSid(const_cast<SID*>(deny_only_sids[j].GetPSID()),
+                       token_groups->Groups[i].Sid)) {
+          sids_for_deny_only_.push_back(
+              reinterpret_cast<SID*>(token_groups->Groups[i].Sid));
+          break;
+        }
+      }
+    }
+  }
+
+  return ERROR_SUCCESS;
+}
+
 DWORD RestrictedToken::AddSidForDenyOnly(const Sid &sid) {
   DCHECK(init_);
   if (!init_)
