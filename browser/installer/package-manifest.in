@@ -651,6 +651,10 @@
 ; gre location for now.
 @RESPATH@/defaults/pref/channel-prefs.js
 
+; Remote control protocol prefs
+; defined in ../../testing/marionette/prefs/marionette.js
+@RESPATH@/defaults/pref/marionette.js
+
 ; Services (gre) prefs
 @RESPATH@/defaults/pref/services-sync.js
 
