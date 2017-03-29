@@ -52,8 +52,6 @@ def calculate_memory_report_values(memory_report_path, data_point_path,
      report, ie: 'explicit/heap-unclassified'.
     :param process_name: Name of process to limit reports to. ie 'Main'
     """
-    data = None
-
     try:
         with open(memory_report_path) as f:
             data = json.load(f)

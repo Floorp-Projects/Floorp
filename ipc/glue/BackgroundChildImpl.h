@@ -76,6 +76,12 @@ protected:
   virtual bool
   DeallocPBlobChild(PBlobChild* aActor) override;
 
+  virtual PMemoryStreamChild*
+  AllocPMemoryStreamChild(const uint64_t& aSize) override;
+
+  virtual bool
+  DeallocPMemoryStreamChild(PMemoryStreamChild* aActor) override;
+
   virtual PFileDescriptorSetChild*
   AllocPFileDescriptorSetChild(const FileDescriptor& aFileDescriptor)
                                override;

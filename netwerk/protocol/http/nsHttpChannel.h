@@ -533,6 +533,11 @@ private:
     uint32_t                          mOfflineCacheLastModifiedTime;
 
     mozilla::TimeStamp                mOnStartRequestTimestamp;
+    // Timestamp of the time the cnannel was suspended.
+    mozilla::TimeStamp                mSuspendTimestamp;
+    // Total time the channel spent suspended. This value is reported to
+    // telemetry in nsHttpChannel::OnStartRequest().
+    uint32_t                          mSuspendTotalTime;
 
     // States of channel interception
     enum {

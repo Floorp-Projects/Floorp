@@ -135,6 +135,26 @@ AsyncFunctionThrown(JSContext* cx, Handle<PromiseObject*> resultPromise);
 MOZ_MUST_USE bool
 AsyncFunctionAwait(JSContext* cx, Handle<PromiseObject*> resultPromise, HandleValue value);
 
+class AsyncGeneratorObject;
+
+MOZ_MUST_USE bool
+AsyncGeneratorAwait(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj, HandleValue value);
+
+MOZ_MUST_USE bool
+AsyncGeneratorResolve(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
+                      HandleValue value, bool done);
+
+MOZ_MUST_USE bool
+AsyncGeneratorReject(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
+                     HandleValue exception);
+
+MOZ_MUST_USE bool
+AsyncGeneratorEnqueue(JSContext* cx, HandleValue asyncGenVal, CompletionKind completionKind,
+                      HandleValue completionValue, MutableHandleValue result);
+
+bool
+AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind completionKind);
+
 /**
  * A PromiseTask represents a task that can be dispatched to a helper thread
  * (via StartPromiseTask), executed (by implementing PromiseTask::execute()),

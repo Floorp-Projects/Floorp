@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1343682 - backing out a previous version didn't stop the failures from it, so it appears to need a clobber both out and in
+Bug 1265818 - deleted an exported header and added a new .idl to regenerate that same header; and this unfortunately produces an untracked generated header in your source dir whenever you build (probably due to a dangling symlink), unless you clobber

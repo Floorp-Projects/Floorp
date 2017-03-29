@@ -1676,7 +1676,7 @@ var BrowserApp = {
 
     switch (event) {
       case "Browser:LoadManifest": {
-        installManifest(browser, data.manifestUrl, data.iconSize);
+        installManifest(browser, data);
         break;
       }
 
@@ -2206,11 +2206,11 @@ var BrowserApp = {
   },
 };
 
-async function installManifest(browser, manifestUrl, iconSize) {
+async function installManifest(browser, data) {
   try {
-    const manifest = await Manifests.getManifest(browser, manifestUrl);
+    const manifest = await Manifests.getManifest(browser, data.manifestUrl);
     await manifest.install();
-    const icon = await manifest.icon(iconSize);
+    const icon = await manifest.icon(data.iconSize);
     GlobalEventDispatcher.sendRequest({
       type: "Website:AppInstalled",
       icon,
@@ -2220,6 +2220,12 @@ async function installManifest(browser, manifestUrl, iconSize) {
     });
   } catch (err) {
     Cu.reportError("Failed to install: " + err.message);
+    // If we fail to install via the manifest, we will fall back to a standard bookmark
+    GlobalEventDispatcher.sendRequest({
+      type: "Website:AppInstallFailed",
+      url: data.originalUrl,
+      title: data.originalTitle
+    });
   }
 }
 
@@ -3271,15 +3277,6 @@ var DesktopUserAgent = {
 
     let channelWindow = this._getWindowForRequest(channel);
     let tab = BrowserApp.getTabForWindow(channelWindow);
-    if (tab) {
-      return this.getUserAgentForTab(tab);
-    }
-
-    return null;
-  },
-
-  getUserAgentForWindow: function ua_getUserAgentForWindow(aWindow) {
-    let tab = BrowserApp.getTabForWindow(aWindow.top);
     if (tab) {
       return this.getUserAgentForTab(tab);
     }

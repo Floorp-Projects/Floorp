@@ -2018,23 +2018,28 @@ public abstract class GeckoApp
             final GeckoBundle message = new GeckoBundle();
             message.putInt("iconSize", GeckoAppShell.getPreferredIconSize());
             message.putString("manifestUrl", manifestUrl);
+            message.putString("originalUrl", url);
+            message.putString("originalTitle", title);
             EventDispatcher.getInstance().dispatch("Browser:LoadManifest", message);
             return;
         }
 
-        // Otherwise we try to pick best icon from favicons etc
-        Icons.with(this)
-                .pageUrl(url)
-                .skipNetwork()
-                .skipMemory()
-                .forLauncherIcon()
-                .build()
-                .execute(new IconCallback() {
-                    @Override
-                    public void onIconResponse(IconResponse response) {
-                        createShortcut(title, url, response.getBitmap());
-                    }
-                });
+        createBrowserShortcut(title, url);
+    }
+
+    public void createBrowserShortcut(final String title, final String url) {
+      Icons.with(this)
+              .pageUrl(url)
+              .skipNetwork()
+              .skipMemory()
+              .forLauncherIcon()
+              .build()
+              .execute(new IconCallback() {
+                  @Override
+                  public void onIconResponse(IconResponse response) {
+                      createShortcut(title, url, response.getBitmap());
+                  }
+              });
     }
 
     public void createShortcut(final String aTitle, final String aURI, final Bitmap aIcon) {
