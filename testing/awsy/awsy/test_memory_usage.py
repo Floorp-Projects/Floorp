@@ -50,11 +50,6 @@ class TestMemoryUsage(MarionetteTestCase):
         for f in glob.glob(os.path.join(self._resultsDir, 'perfherder_data.json')):
             os.unlink(f)
 
-        self._webservers = webservers.WebServers("localhost",
-                                                 8001,
-                                                 self._webroot_dir,
-                                                 100)
-        self._webservers.start()
         self._urls = []
 
         urls = None
@@ -65,15 +60,20 @@ class TestMemoryUsage(MarionetteTestCase):
             urls = fp.readlines()
         urls = map(lambda x:x.replace('localhost', 'localhost:{}'), urls)
 
-        for url, server in zip(urls, self._webservers.servers):
-            self._urls.append(url.strip().format(server.port))
-
         # Optional testvars.
-        self._pages_to_load = self.testvars.get("entities", len(self._urls))
+        self._pages_to_load = self.testvars.get("entities", len(urls))
         self._iterations = self.testvars.get("iterations", ITERATIONS)
         self._perTabPause = self.testvars.get("perTabPause", PER_TAB_PAUSE)
         self._settleWaitTime = self.testvars.get("settleWaitTime", SETTLE_WAIT_TIME)
         self._maxTabs = self.testvars.get("maxTabs", MAX_TABS)
+
+        self._webservers = webservers.WebServers("localhost",
+                                                 8001,
+                                                 self._webroot_dir,
+                                                 self._pages_to_load)
+        self._webservers.start()
+        for url, server in zip(urls, self._webservers.servers):
+            self._urls.append(url.strip().format(server.port))
 
         self.logger.info("areweslimyet run by %d pages, %d iterations, %d perTabPause, %d settleWaitTime"
                          % (self._pages_to_load, self._iterations, self._perTabPause, self._settleWaitTime))
