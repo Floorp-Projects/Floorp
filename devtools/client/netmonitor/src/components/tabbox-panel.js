@@ -20,7 +20,6 @@ const TabPanel = createFactory(require("devtools/client/shared/components/tabs/t
 const CookiesPanel = createFactory(require("./cookies-panel"));
 const HeadersPanel = createFactory(require("./headers-panel"));
 const ParamsPanel = createFactory(require("./params-panel"));
-const PreviewPanel = createFactory(require("./preview-panel"));
 const ResponsePanel = createFactory(require("./response-panel"));
 const SecurityPanel = createFactory(require("./security-panel"));
 const TimingsPanel = createFactory(require("./timings-panel"));
@@ -90,13 +89,6 @@ function TabboxPanel({
         title: SECURITY_TITLE,
       },
         SecurityPanel({ request }),
-      ),
-      Filters.html(request) &&
-      TabPanel({
-        id: "preview",
-        title: PREVIEW_TITLE,
-      },
-        PreviewPanel({ request }),
       ),
     )
   );
