@@ -120,6 +120,7 @@
 #include "GroupedSHistory.h"
 #include "nsIHttpChannel.h"
 #include "mozilla/dom/DocGroup.h"
+#include "nsString.h"
 #include "nsISupportsPrimitives.h"
 #include "mozilla/Telemetry.h"
 
@@ -2190,6 +2191,11 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
                            const IPC::Principal& aPrincipal,
                            const ClonedMessageData& aData)
 {
+  NS_LossyConvertUTF16toASCII messageNameCStr(aMessage);
+  PROFILER_LABEL_DYNAMIC("TabChild", "RecvAsyncMessage",
+                         js::ProfileEntry::Category::EVENTS,
+                         messageNameCStr.get());
+
   CrossProcessCpowHolder cpows(Manager(), aCpows);
   if (!mTabChildGlobal) {
     return IPC_OK();
