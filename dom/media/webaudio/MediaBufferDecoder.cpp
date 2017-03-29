@@ -291,8 +291,9 @@ MediaDecodeTask::OnMetadataRead(MetadataHolder* aMetadata)
             ("Telemetry (WebAudio) MEDIA_CODEC_USED= '%s'", codec.get()));
     Telemetry::Accumulate(Telemetry::HistogramID::MEDIA_CODEC_USED, codec);
   });
-  // Non-DocGroup version of AbstractThread::MainThread is fine for Telemetry.
-  AbstractThread::MainThread()->Dispatch(task.forget());
+  SystemGroup::Dispatch("MediaDecodeTask::OnMetadataRead()::report_telemetry",
+                        TaskCategory::Other,
+                        task.forget());
 
   RequestSample();
 }

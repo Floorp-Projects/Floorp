@@ -72,6 +72,7 @@ function AutoRefreshHighlighter(highlighterEnv) {
   this.currentQuads = {};
 
   this._winDimensions = getWindowDimensions(this.win);
+  this._scroll = { x: this.win.pageXOffset, y: this.win.pageYOffset };
 
   this.update = this.update.bind(this);
 }
@@ -193,6 +194,21 @@ AutoRefreshHighlighter.prototype = {
   },
 
   /**
+   * Update the knowledge we have of the current window's scrolling offset, both
+   * horizontal and vertical, and return `true` if they have changed since.
+   * @return {Boolean}
+   */
+  _hasWindowScrolled: function () {
+    let { pageXOffset, pageYOffset } = this.win;
+    let hasChanged = this._scroll.x !== pageXOffset ||
+                     this._scroll.y !== pageYOffset;
+
+    this._scroll = { x: pageXOffset, y: pageYOffset };
+
+    return hasChanged;
+  },
+
+  /**
    * Update the knowledge we have of the current window's dimensions and return `true`
    * if they have changed since.
    * @return {Boolean}
@@ -212,6 +228,12 @@ AutoRefreshHighlighter.prototype = {
   update: function () {
     if (!this._isNodeValid(this.currentNode) ||
        (!this._hasMoved() && !this._haveWindowDimensionsChanged())) {
+      // At this point we're not calling the `_update` method. However, if the window has
+      // scrolled, we want to invoke `_scrollUpdate`.
+      if (this._hasWindowScrolled()) {
+        this._scrollUpdate();
+      }
+
       return;
     }
 
@@ -230,8 +252,15 @@ AutoRefreshHighlighter.prototype = {
     // To be implemented by sub classes
     // When called, sub classes should update the highlighter shown for
     // this.currentNode
-    // This is called as a result of a page scroll, zoom or repaint
+    // This is called as a result of a page zoom or repaint
     throw new Error("Custom highlighter class had to implement _update method");
+  },
+
+  _scrollUpdate: function () {
+    // Can be implemented by sub classes
+    // When called, sub classes can upate the highlighter shown for
+    // this.currentNode
+    // This is called as a result of a page scroll
   },
 
   _hide: function () {

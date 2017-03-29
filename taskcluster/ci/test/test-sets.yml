@@ -128,24 +128,24 @@ jsdcov-code-coverage-tests:
 windows-vm-tests:
     - awsy
     - cppunit
-    #- crashtest
-    #- gtest
-    #- jittest
+    - crashtest
+    - gtest
+    - jittest
     - jsreftest
-    #- marionette
-    #- mochitest
-    #- mochitest-browser-chrome
+    - marionette
+    - mochitest
+    - mochitest-browser-chrome
     - mochitest-devtools-chrome
     - mochitest-jetpack
-    #- mochitest-media
-    #- web-platform-tests
+    - mochitest-media
+    - web-platform-tests
     - web-platform-tests-reftests
     #- xpcshell
 
-# windows-gpu-tests:
-#    - reftest
-#    - reftest-no-accel
-#    - mochitest-webgl
+windows-gpu-tests:
+    - reftest
+    - reftest-no-accel
+    - mochitest-webgl
 
 # these tests currently run on hardware, but may migrate above when validated
 #    - mochitest-a11y

@@ -4044,6 +4044,20 @@ Tab.prototype = {
           let errorExtra = decodeURIComponent(docURI.slice(error + 2, duffUrl));
           // Here is a list of errorExtra types (et_*)
           // http://mxr.mozilla.org/mozilla-central/source/mobile/android/chrome/content/netError.xhtml#287
+          if (errorExtra == "fileAccessDenied") {
+            // Check if we already have the permissions, then - if we do not have them, show the prompt and reload the page.
+            // If we already have them, it means access to file was denied.
+            RuntimePermissions.checkPermission(RuntimePermissions.WRITE_EXTERNAL_STORAGE).then((permissionAlreadyGranted) => {
+              if (!permissionAlreadyGranted) {
+                RuntimePermissions.waitForPermissions(RuntimePermissions.WRITE_EXTERNAL_STORAGE).then((permissionGranted) => {
+                  if (permissionGranted) {
+                    this.browser.reload();
+                  }
+                });
+              }
+            });
+          }
+
           UITelemetry.addEvent("neterror.1", "content", null, errorExtra);
           errorType = "neterror";
         }

@@ -873,6 +873,7 @@ mochitest-webgl:
     loopback-video: true
     max-run-time:
         by-test-platform:
+            windows.*: 5400
             android.*: 7200
             default: 3600
     instance-size:
@@ -979,6 +980,8 @@ reftest:
             default: 3600
     e10s:
         by-test-platform:
+            # bug 1351272
+            windows7-32/debug: false
             macosx.*: true
             default: both
     mozharness:
@@ -1023,6 +1026,11 @@ reftest-no-accel:
         by-test-platform:
             macosx.*: 1
             default: 8
+    e10s:
+        by-test-platform:
+            # bug 1351272
+            windows7-32/debug: false
+            default: both
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true

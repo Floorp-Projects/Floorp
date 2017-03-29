@@ -17,7 +17,6 @@
 #include "mozilla/Preferences.h"
 #include "nsArrayEnumerator.h"
 #include "nsCOMArray.h"
-#include "nsCRTGlue.h"
 #include "nsISSLStatus.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISocketProvider.h"

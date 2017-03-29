@@ -6910,8 +6910,7 @@ bool
 nsIFrame::IsBlockWrapper() const
 {
   nsIAtom *pseudoType = StyleContext()->GetPseudo();
-  return (pseudoType == nsCSSAnonBoxes::mozAnonymousBlock ||
-          pseudoType == nsCSSAnonBoxes::mozAnonymousPositionedBlock ||
+  return (pseudoType == nsCSSAnonBoxes::mozBlockInsideInlineWrapper ||
           pseudoType == nsCSSAnonBoxes::buttonContent ||
           pseudoType == nsCSSAnonBoxes::cellContent);
 }
@@ -8817,17 +8816,15 @@ ComputeAndIncludeOutlineArea(nsIFrame* aFrame, nsOverflowAreas& aOverflowAreas,
     return;
   }
 
-  // When the outline property is set on :-moz-anonymous-block or
-  // :-moz-anonymous-positioned-block pseudo-elements, it inherited
-  // that outline from the inline that was broken because it
-  // contained a block.  In that case, we don't want a really wide
-  // outline if the block inside the inline is narrow, so union the
-  // actual contents of the anonymous blocks.
+  // When the outline property is set on a :-moz-block-inside-inline-wrapper
+  // pseudo-element, it inherited that outline from the inline that was broken
+  // because it contained a block.  In that case, we don't want a really wide
+  // outline if the block inside the inline is narrow, so union the actual
+  // contents of the anonymous blocks.
   nsIFrame *frameForArea = aFrame;
   do {
     nsIAtom *pseudoType = frameForArea->StyleContext()->GetPseudo();
-    if (pseudoType != nsCSSAnonBoxes::mozAnonymousBlock &&
-        pseudoType != nsCSSAnonBoxes::mozAnonymousPositionedBlock)
+    if (pseudoType != nsCSSAnonBoxes::mozBlockInsideInlineWrapper)
       break;
     // If we're done, we really want it and all its later siblings.
     frameForArea = frameForArea->PrincipalChildList().FirstChild();
@@ -9177,8 +9174,7 @@ GetIBSplitSiblingForAnonymousBlock(const nsIFrame* aFrame)
                "GetIBSplitSibling should only be called on ib-split frames");
 
   nsIAtom* type = aFrame->StyleContext()->GetPseudo();
-  if (type != nsCSSAnonBoxes::mozAnonymousBlock &&
-      type != nsCSSAnonBoxes::mozAnonymousPositionedBlock) {
+  if (type != nsCSSAnonBoxes::mozBlockInsideInlineWrapper) {
     // it's not an anonymous block
     return nullptr;
   }
@@ -9279,8 +9275,7 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
     // for non-elements.  Those should not be treated as an anon box.
     if (!nsCSSAnonBoxes::IsNonElement(aChildPseudo) &&
         nsCSSAnonBoxes::IsAnonBox(aChildPseudo)) {
-      NS_ASSERTION(aChildPseudo != nsCSSAnonBoxes::mozAnonymousBlock &&
-                   aChildPseudo != nsCSSAnonBoxes::mozAnonymousPositionedBlock,
+      NS_ASSERTION(aChildPseudo != nsCSSAnonBoxes::mozBlockInsideInlineWrapper,
                    "Should have dealt with kids that have "
                    "NS_FRAME_PART_OF_IBSPLIT elsewhere");
       return aProspectiveParent;

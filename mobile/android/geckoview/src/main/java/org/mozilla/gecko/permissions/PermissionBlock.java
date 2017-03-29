@@ -127,7 +127,7 @@ public class PermissionBlock {
         return permissions;
     }
 
-    /* packacge-private */ boolean hasPermissions(Context context) {
+    /* package-private */ boolean hasPermissions(Context context) {
         return helper.hasPermissions(context, permissions);
     }
 }

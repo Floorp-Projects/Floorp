@@ -14,7 +14,7 @@ add_task(function* () {
   let testData = {
     selector: "body",
     position: "overlap",
-    style: "top:0px",
+    style: "position:fixed",
   };
 
   yield testPositionAndStyle(testData, inspector, testActor);
@@ -28,7 +28,7 @@ function* testPositionAndStyle(test, inspector, testActor) {
   let style = yield testActor.getHighlighterNodeAttribute(
     "box-model-infobar-container", "style");
 
-  is(style.split(";")[0], test.style,
+  is(style.split(";")[0].trim(), test.style,
     "Infobar shows on top of the page when page isn't scrolled");
 
   yield testActor.scrollWindow(0, 500);
@@ -36,6 +36,6 @@ function* testPositionAndStyle(test, inspector, testActor) {
   style = yield testActor.getHighlighterNodeAttribute(
     "box-model-infobar-container", "style");
 
-  is(style.split(";")[0], test.style,
+  is(style.split(";")[0].trim(), test.style,
     "Infobar shows on top of the page even if the page is scrolled");
 }

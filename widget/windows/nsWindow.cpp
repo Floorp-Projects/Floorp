@@ -3031,9 +3031,8 @@ nsWindow::SetCursor(imgIContainer* aCursor,
  *
  * SECTION: nsIWidget::Get/SetTransparencyMode
  *
- * Manage the transparency mode of the window containing this
- * widget. Only works for popup and dialog windows, and not
- * top-level windows.
+ * Manage the transparency mode of the top-level window
+ * containing this widget.
  *
  **************************************************************/
 
@@ -3045,19 +3044,7 @@ nsTransparencyMode nsWindow::GetTransparencyMode()
 
 void nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
 {
-  nsWindow* window = GetTopLevelWindow(true);
-  MOZ_ASSERT(window);
-
-  if (!window || window->DestroyCalled()) {
-      return;
-  }
-
-  if (nsWindowType::eWindowType_toplevel == window->mWindowType) {
-      NS_WARNING("Cannot set transparency mode on top-level windows.");
-      return;
-  }
-
-  window->SetWindowTranslucencyInner(aMode);
+  GetTopLevelWindow(true)->SetWindowTranslucencyInner(aMode);
 }
 
 void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion)

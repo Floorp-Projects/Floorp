@@ -42,8 +42,7 @@ CSS_NON_INHERITING_ANON_BOX(oofPlaceholder, ":-moz-oof-placeholder")
 // nsFirstLetterFrames for content outside the ::first-letter.
 CSS_ANON_BOX(firstLetterContinuation, ":-moz-first-letter-continuation")
 
-CSS_ANON_BOX(mozAnonymousBlock, ":-moz-anonymous-block")
-CSS_ANON_BOX(mozAnonymousPositionedBlock, ":-moz-anonymous-positioned-block")
+CSS_ANON_BOX(mozBlockInsideInlineWrapper, ":-moz-block-inside-inline-wrapper")
 CSS_ANON_BOX(mozMathMLAnonymousBlock, ":-moz-mathml-anonymous-block")
 CSS_ANON_BOX(mozXULAnonymousBlock, ":-moz-xul-anonymous-block")
 

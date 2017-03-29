@@ -5,6 +5,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 JAR_MANIFESTS += ['jar.mn']
-
-if CONFIG['MOZ_THEME_FASTSTRIPE']:
-    DEFINES['MOZ_THEME_FASTSTRIPE'] = True

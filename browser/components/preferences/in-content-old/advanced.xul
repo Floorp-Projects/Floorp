@@ -291,7 +291,7 @@
       </groupbox>
 
       <!-- Offline apps -->
-      <groupbox id="offlineGroup">
+      <groupbox id="offlineGroup" hidden="true">
         <caption><label>&offlineStorage2.label;</label></caption>
 
         <hbox align="center">

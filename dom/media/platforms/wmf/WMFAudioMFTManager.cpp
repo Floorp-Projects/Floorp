@@ -256,8 +256,9 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
       LOG("Reporting telemetry AUDIO_MFT_OUTPUT_NULL_SAMPLES");
       Telemetry::Accumulate(Telemetry::HistogramID::AUDIO_MFT_OUTPUT_NULL_SAMPLES, 1);
     });
-    // Non-DocGroup version of AbstractThread::MainThread is fine for Telemetry.
-    AbstractThread::MainThread()->Dispatch(task.forget());
+    SystemGroup::Dispatch("WMFAudioMFTManager::Output()::report_telemetry",
+                          TaskCategory::Other,
+                          task.forget());
     return E_FAIL;
   }
 

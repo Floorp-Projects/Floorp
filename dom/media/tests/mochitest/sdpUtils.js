@@ -70,6 +70,12 @@ reduceAudioMLineToDynamicPtAndOpus: function(sdp) {
   return sdp.replace(/m=audio .*\r\n/g, "m=audio 9 UDP/TLS/RTP/SAVPF 101 109\r\n");
 },
 
+removeSimulcastProperties: function(sdp) {
+  return sdp.replace(/a=simulcast:.*\r\n/g, "")
+            .replace(/a=rid:.*\r\n/g, "")
+            .replace(/a=extmap:[^\s]* urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id.*\r\n/g, "");
+},
+
 transferSimulcastProperties: function(offer_sdp, answer_sdp) {
   if (!offer_sdp.includes("a=simulcast:")) {
     return answer_sdp;
