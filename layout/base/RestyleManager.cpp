@@ -18,7 +18,6 @@ RestyleManager::RestyleManager(StyleBackendType aType,
   , mRestyleGeneration(1)
   , mHoverGeneration(0)
   , mType(aType)
-  , mObservingRefreshDriver(false)
   , mInStyleRefresh(false)
 {
   MOZ_ASSERT(mPresContext);
@@ -503,9 +502,8 @@ RestyleManager::PostRestyleEventInternal(bool aForLazyConstruction)
   // add ourselves as a refresh observer until then.
   bool inRefresh = !aForLazyConstruction && mInStyleRefresh;
   nsIPresShell* presShell = PresContext()->PresShell();
-  if (!ObservingRefreshDriver() && !inRefresh) {
-    SetObservingRefreshDriver(PresContext()->RefreshDriver()->
-        AddStyleFlushObserver(presShell));
+  if (!inRefresh) {
+    presShell->ObserveStyleFlushes();
   }
 
   // Unconditionally flag our document as needing a flush.  The other
