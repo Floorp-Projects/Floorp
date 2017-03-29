@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { KeyCodes } = require("devtools/client/shared/keycodes");
 const {
   createClass,
   createFactory,
@@ -176,36 +175,36 @@ const RequestListContent = createClass({
    * Handler for keyboard events. For arrow up/down, page up/down, home/end,
    * move the selection up or down.
    */
-  onKeyDown(e) {
+  onKeyDown(evt) {
     let delta;
 
-    switch (e.keyCode) {
-      case KeyCodes.DOM_VK_UP:
-      case KeyCodes.DOM_VK_LEFT:
+    switch (evt.key) {
+      case "ArrowUp":
+      case "ArrowLeft":
         delta = -1;
         break;
-      case KeyCodes.DOM_VK_DOWN:
-      case KeyCodes.DOM_VK_RIGHT:
+      case "ArrowDown":
+      case "ArrowRight":
         delta = +1;
         break;
-      case KeyCodes.DOM_VK_PAGE_UP:
+      case "PageUp":
         delta = "PAGE_UP";
         break;
-      case KeyCodes.DOM_VK_PAGE_DOWN:
+      case "PageDown":
         delta = "PAGE_DOWN";
         break;
-      case KeyCodes.DOM_VK_HOME:
+      case "Home":
         delta = -Infinity;
         break;
-      case KeyCodes.DOM_VK_END:
+      case "End":
         delta = +Infinity;
         break;
     }
 
     if (delta) {
       // Prevent scrolling when pressing navigation keys.
-      e.preventDefault();
-      e.stopPropagation();
+      evt.preventDefault();
+      evt.stopPropagation();
       this.props.onSelectDelta(delta);
     }
   },
