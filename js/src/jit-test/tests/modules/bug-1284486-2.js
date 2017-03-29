@@ -6,21 +6,19 @@
 // instantiating them.
 //
 // The first attempt fails becuase module 'a' is not available. The second
-// attempt fails because of the previous failure (it would otherwise succeed as
-// 'a' is now available).
+// attempt fails because of the previous failure.
 //
 // This test exercises the path where the previously instantiated module is
-// encountered as an import.
+// re-instantiated directly.
 
 let moduleRepo = {};
 setModuleResolveHook(function(module, specifier) {
     return moduleRepo[specifier];
 });
+let c;
 try {
     let b = moduleRepo['b'] = parseModule("export var b = 3; export var c = 4;");
-    let c = moduleRepo['c'] = parseModule("export * from 'a'; export * from 'b';");
+    c = moduleRepo['c'] = parseModule("export * from 'a'; export * from 'b';");
     c.declarationInstantiation();
 } catch (exc) {}
-let a = moduleRepo['a'] = parseModule("export var a = 1; export var b = 2;");
-let d = moduleRepo['d'] = parseModule("import { a } from 'c'; a;");
-d.declarationInstantiation();
+c.declarationInstantiation();
