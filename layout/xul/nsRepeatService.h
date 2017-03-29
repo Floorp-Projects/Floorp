@@ -53,7 +53,6 @@ private:
   Callback           mCallback;
   void*              mCallbackData;
   nsCOMPtr<nsITimer> mRepeatTimer;
-  static nsRepeatService* gInstance;
 
 }; // class nsRepeatService
 
