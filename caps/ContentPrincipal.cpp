@@ -95,8 +95,7 @@ ContentPrincipal::~ContentPrincipal()
 
 nsresult
 ContentPrincipal::Init(nsIURI *aCodebase,
-                       const OriginAttributes& aOriginAttributes,
-                       const nsACString& aOriginNoSuffix)
+                       const OriginAttributes& aOriginAttributes)
 {
   NS_ENSURE_ARG(aCodebase);
 
@@ -116,7 +115,13 @@ ContentPrincipal::Init(nsIURI *aCodebase,
   mCodebase = NS_TryToMakeImmutable(aCodebase);
   mCodebaseImmutable = URIIsImmutable(mCodebase);
 
-  FinishInit(aOriginNoSuffix, aOriginAttributes);
+  nsAutoCString originNoSuffix;
+  nsresult rv = GenerateOriginNoSuffixFromURI(mCodebase, originNoSuffix);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  FinishInit(originNoSuffix, aOriginAttributes);
 
   return NS_OK;
 }
@@ -480,11 +485,7 @@ ContentPrincipal::Read(nsIObjectInputStream* aStream)
   rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(supports));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoCString originNoSuffix;
-  rv = GenerateOriginNoSuffixFromURI(codebase, originNoSuffix);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = Init(codebase, attrs, originNoSuffix);
+  rv = Init(codebase, attrs);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mCSP = do_QueryInterface(supports, &rv);
