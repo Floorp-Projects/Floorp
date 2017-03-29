@@ -14,8 +14,8 @@ Test window rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 window.onload = Task.async(function* () {
   try {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
@@ -77,7 +77,31 @@ window.onload = Task.async(function* () {
     });
     is(displayClassLongRenderedComponent.textContent, "Custom about:newtab",
        "Window rep has expected text content in LONG mode with Custom display class");
-  } catch(e) {
+
+    const objectLinkTinyRenderedComponent = renderComponent(Window.rep, {
+      object: gripStub,
+      mode: MODE.TINY,
+      objectLink: (props, ...children) => React.DOM.span({},
+        "*", ...children, "*"),
+    });
+    is(
+      objectLinkTinyRenderedComponent.textContent,
+      "*Window*",
+      "Window rep has expected text content in TINY mode when an objectLink is passed as a prop"
+    );
+
+    const objectLinkLongRenderedComponent = renderComponent(Window.rep, {
+      object: gripStub,
+      mode: MODE.LONG,
+      objectLink: (props, ...children) => React.DOM.span({},
+        "*", ...children, "*"),
+    });
+    is(
+      objectLinkLongRenderedComponent.textContent,
+      "*Window* about:newtab",
+      "Window rep has expected text content in LONG mode when an objectLink is passed as a prop"
+   );
+  } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
     SimpleTest.finish();
