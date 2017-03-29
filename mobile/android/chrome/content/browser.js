@@ -1676,7 +1676,7 @@ var BrowserApp = {
 
     switch (event) {
       case "Browser:LoadManifest": {
-        installManifest(browser, data.manifestUrl, data.iconSize);
+        installManifest(browser, data);
         break;
       }
 
@@ -2206,11 +2206,11 @@ var BrowserApp = {
   },
 };
 
-async function installManifest(browser, manifestUrl, iconSize) {
+async function installManifest(browser, data) {
   try {
-    const manifest = await Manifests.getManifest(browser, manifestUrl);
+    const manifest = await Manifests.getManifest(browser, data.manifestUrl);
     await manifest.install();
-    const icon = await manifest.icon(iconSize);
+    const icon = await manifest.icon(data.iconSize);
     GlobalEventDispatcher.sendRequest({
       type: "Website:AppInstalled",
       icon,
@@ -2220,6 +2220,12 @@ async function installManifest(browser, manifestUrl, iconSize) {
     });
   } catch (err) {
     Cu.reportError("Failed to install: " + err.message);
+    // If we fail to install via the manifest, we will fall back to a standard bookmark
+    GlobalEventDispatcher.sendRequest({
+      type: "Website:AppInstallFailed",
+      url: data.originalUrl,
+      title: data.originalTitle
+    });
   }
 }
 
@@ -3278,15 +3284,6 @@ var DesktopUserAgent = {
     return null;
   },
 
-  getUserAgentForWindow: function ua_getUserAgentForWindow(aWindow) {
-    let tab = BrowserApp.getTabForWindow(aWindow.top);
-    if (tab) {
-      return this.getUserAgentForTab(tab);
-    }
-
-    return null;
-  },
-
   getUserAgentForTab: function ua_getUserAgentForTab(aTab) {
     // Send desktop UA if "Request Desktop Site" is enabled.
     if (aTab.desktopMode) {
@@ -4047,6 +4044,20 @@ Tab.prototype = {
           let errorExtra = decodeURIComponent(docURI.slice(error + 2, duffUrl));
           // Here is a list of errorExtra types (et_*)
           // http://mxr.mozilla.org/mozilla-central/source/mobile/android/chrome/content/netError.xhtml#287
+          if (errorExtra == "fileAccessDenied") {
+            // Check if we already have the permissions, then - if we do not have them, show the prompt and reload the page.
+            // If we already have them, it means access to file was denied.
+            RuntimePermissions.checkPermission(RuntimePermissions.WRITE_EXTERNAL_STORAGE).then((permissionAlreadyGranted) => {
+              if (!permissionAlreadyGranted) {
+                RuntimePermissions.waitForPermissions(RuntimePermissions.WRITE_EXTERNAL_STORAGE).then((permissionGranted) => {
+                  if (permissionGranted) {
+                    this.browser.reload();
+                  }
+                });
+              }
+            });
+          }
+
           UITelemetry.addEvent("neterror.1", "content", null, errorExtra);
           errorType = "neterror";
         }

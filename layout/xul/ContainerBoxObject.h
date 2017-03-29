@@ -8,6 +8,7 @@
 #define mozilla_dom_ContainerBoxObject_h
 
 #include "mozilla/dom/BoxObject.h"
+#include "nsIDocShell.h"
 
 namespace mozilla {
 namespace dom {

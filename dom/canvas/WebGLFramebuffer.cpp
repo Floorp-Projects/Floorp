@@ -1493,7 +1493,7 @@ WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnu
         return mContext->ErrorInvalidValue("%s: `level` must be >= 0.", funcName);
 
     // `texture`
-    TexImageTarget texImageTarget = LOCAL_GL_TEXTURE_3D;
+    GLenum texImageTarget = LOCAL_GL_TEXTURE_3D;
     if (tex) {
         if (!mContext->ValidateObject("framebufferTextureLayer: texture", *tex))
             return;
@@ -1505,7 +1505,7 @@ WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnu
         }
 
         texImageTarget = tex->Target().get();
-        switch (texImageTarget.get()) {
+        switch (texImageTarget) {
         case LOCAL_GL_TEXTURE_3D:
             if (uint32_t(layer) >= mContext->mImplMax3DTextureSize) {
                 mContext->ErrorInvalidValue("%s: `layer` must be < %s.", funcName,

@@ -53,8 +53,7 @@ this.SelectParentHelper = {
     // but they don't intend to change the popup to transparent.
     if (customStylingEnabled &&
         selectBackgroundColor != uaSelectBackgroundColor &&
-        selectBackgroundColor != "rgba(0, 0, 0, 0)" &&
-        selectBackgroundColor != selectColor) {
+        selectBackgroundColor != "rgba(0, 0, 0, 0)") {
       ruleBody = `background-image: linear-gradient(${selectBackgroundColor}, ${selectBackgroundColor});`;
       usedSelectBackgroundColor = selectBackgroundColor;
     } else {

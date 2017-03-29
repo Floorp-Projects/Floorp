@@ -123,7 +123,8 @@ enum class MediaEventType : int8_t
   EnterVideoSuspend,
   ExitVideoSuspend,
   StartVideoSuspendTimer,
-  CancelVideoSuspendTimer
+  CancelVideoSuspendTimer,
+  VideoOnlySeekCompleted,
 };
 
 enum class VideoDecodeMode : uint8_t

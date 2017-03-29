@@ -30,7 +30,6 @@ import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.fxa.login.StateFactory;
-import org.mozilla.gecko.fxa.login.TokensAndKeysState;
 import org.mozilla.gecko.fxa.sync.FxAccountProfileService;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
@@ -610,24 +609,6 @@ public class AndroidFxAccount {
     }
   }
 
-  public byte[] getSessionToken() throws InvalidFxAState {
-    State state = getState();
-    StateLabel stateLabel = state.getStateLabel();
-    if (stateLabel == StateLabel.Cohabiting || stateLabel == StateLabel.Married) {
-      TokensAndKeysState tokensAndKeysState = (TokensAndKeysState) state;
-      return tokensAndKeysState.getSessionToken();
-    }
-    throw new InvalidFxAState("Cannot get sessionToken: not in a TokensAndKeysState state");
-  }
-
-  public static class InvalidFxAState extends Exception {
-    private static final long serialVersionUID = -8537626959811195978L;
-
-    public InvalidFxAState(String message) {
-      super(message);
-    }
-  }
-
   /**
    * <b>For debugging only!</b>
    */
@@ -695,9 +676,9 @@ public class AndroidFxAccount {
     intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_AUTH_TOKENS, tokens.toArray(new String[tokens.size()]));
 
     try {
-      intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_SESSION_TOKEN, getSessionToken());
-    } catch (InvalidFxAState e) {
-      Logger.warn(LOG_TAG, "Could not get a session token, ignoring.", e);
+      intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_SESSION_TOKEN, getState().getSessionToken());
+    } catch (State.NotASessionTokenState e) {
+      // Ignore, if sessionToken is null we won't try to do anything anyway.
     }
     intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_SERVER_URI, getAccountServerURI());
     intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_DEVICE_ID, getDeviceId());

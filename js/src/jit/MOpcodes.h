@@ -79,6 +79,8 @@ namespace jit {
     _(BitNot)                                                               \
     _(TypeOf)                                                               \
     _(ToAsync)                                                              \
+    _(ToAsyncGen)                                                           \
+    _(ToAsyncIter)                                                          \
     _(ToId)                                                                 \
     _(BitAnd)                                                               \
     _(BitOr)                                                                \

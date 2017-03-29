@@ -14,7 +14,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsCRTGlue.h"
 #include "nsDependentString.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsICryptoHash.h"

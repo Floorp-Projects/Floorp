@@ -63,13 +63,15 @@
 }
 
 .grid-outline-border {
-  stroke-width: 0.75;
   fill: none;
+  stroke-width: 0.75;
+  vector-effect: non-scaling-stroke;
 }
 
 .grid-outline-cell {
   pointer-events: all;
   stroke-dasharray: 0.5, 2;
+  vector-effect: non-scaling-stroke;
 }
 
 .grid-outline-cell:hover {

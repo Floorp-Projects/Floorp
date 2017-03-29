@@ -68,7 +68,8 @@ public:
   // nsSVGDisplayableFrame interface:
   virtual DrawResult PaintSVG(gfxContext& aContext,
                               const gfxMatrix& aTransform,
-                              const nsIntRect* aDirtyRect = nullptr) override;
+                              const nsIntRect* aDirtyRect = nullptr,
+                              uint32_t aFlags = 0) override;
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
   virtual void ReflowSVG() override;
 
@@ -333,7 +334,8 @@ nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext,
 DrawResult
 nsSVGImageFrame::PaintSVG(gfxContext& aContext,
                           const gfxMatrix& aTransform,
-                          const nsIntRect *aDirtyRect)
+                          const nsIntRect *aDirtyRect,
+                          uint32_t aFlags)
 {
   if (!StyleVisibility()->IsVisible())
     return DrawResult::SUCCESS;
@@ -395,8 +397,6 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
       dirtyRect.MoveBy(-rootRect.TopLeft());
     }
 
-    uint32_t drawFlags = imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
-
     if (mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
       // Package up the attributes of this image element which can override the
       // attributes of mImageContainer's internal SVG document.  The 'width' &
@@ -427,7 +427,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
         destRect,
         aDirtyRect ? dirtyRect : destRect,
         context,
-        drawFlags);
+        aFlags);
     } else { // mImageContainer->GetType() == TYPE_RASTER
       result = nsLayoutUtils::DrawSingleUnscaledImage(
         aContext,
@@ -436,7 +436,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
         nsLayoutUtils::GetSamplingFilterForFrame(this),
         nsPoint(0, 0),
         aDirtyRect ? &dirtyRect : nullptr,
-        drawFlags);
+        aFlags);
     }
 
     if (opacity != 1.0f || StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {

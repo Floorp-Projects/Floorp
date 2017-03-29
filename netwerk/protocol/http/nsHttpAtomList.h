@@ -92,5 +92,6 @@ HTTP_ATOM(Warning,                   "Warning")
 HTTP_ATOM(X_Content_Type_Options,    "X-Content-Type-Options")
 HTTP_ATOM(X_Firefox_Spdy,            "X-Firefox-Spdy")
 HTTP_ATOM(X_Firefox_Spdy_Proxy,      "X-Firefox-Spdy-Proxy")
+HTTP_ATOM(X_Firefox_Early_Data,      "X-Firefox-Early-Data")
 
 // methods are case sensitive and do not use atom table

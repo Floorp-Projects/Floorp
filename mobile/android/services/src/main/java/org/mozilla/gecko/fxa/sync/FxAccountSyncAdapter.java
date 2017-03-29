@@ -404,6 +404,22 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, clientState, delegate);
   }
 
+  public void maybeRegisterDevice(Context context, AndroidFxAccount fxAccount) {
+    // Register the device if necessary (asynchronous, in another thread).
+    // As part of device registration, we obtain a PushSubscription, register our push endpoint
+    // with FxA, and update account data with fxaDeviceId, which is part of our synced
+    // clients record.
+    if (fxAccount.getDeviceRegistrationVersion() != FxAccountDeviceRegistrator.DEVICE_REGISTRATION_VERSION
+            || TextUtils.isEmpty(fxAccount.getDeviceId())) {
+      FxAccountDeviceRegistrator.register(context);
+      // We might need to re-register periodically to ensure our FxA push subscription is valid.
+      // This involves unsubscribing, subscribing and updating remote FxA device record with
+      // new push subscription information.
+    } else if (FxAccountDeviceRegistrator.needToRenewRegistration(fxAccount.getDeviceRegistrationTimestamp())) {
+      FxAccountDeviceRegistrator.renewRegistration(context);
+    }
+  }
+
   /**
    * A trivial Sync implementation that does not cache client keys,
    * certificates, or tokens.
@@ -530,6 +546,9 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           Logger.info(LOG_TAG, "handleNotMarried: in " + notMarried.getStateLabel());
           schedulePolicy.onHandleFinal(notMarried.getNeededAction());
           syncDelegate.handleCannotSync(notMarried);
+          if (notMarried.getStateLabel() == StateLabel.Engaged) {
+            maybeRegisterDevice(context, fxAccount);
+          }
         }
 
         private boolean shouldRequestToken(final BackoffHandler tokenBackoffHandler, final Bundle extras) {
@@ -578,19 +597,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
                     assertion, tokenServerEndpointURI, tokenBackoffHandler, sharedPrefs,
                     syncKeyBundle, clientState, sessionCallback, extras, fxAccount, syncDeadline);
 
-            // Register the device if necessary (asynchronous, in another thread).
-            // As part of device registration, we obtain a PushSubscription, register our push endpoint
-            // with FxA, and update account data with fxaDeviceId, which is part of our synced
-            // clients record.
-            if (fxAccount.getDeviceRegistrationVersion() != FxAccountDeviceRegistrator.DEVICE_REGISTRATION_VERSION
-              || TextUtils.isEmpty(fxAccount.getDeviceId())) {
-              FxAccountDeviceRegistrator.register(context);
-            // We might need to re-register periodically to ensure our FxA push subscription is valid.
-            // This involves unsubscribing, subscribing and updating remote FxA device record with
-            // new push subscription information.
-            } else if (FxAccountDeviceRegistrator.needToRenewRegistration(fxAccount.getDeviceRegistrationTimestamp())) {
-              FxAccountDeviceRegistrator.renewRegistration(context);
-            }
+            maybeRegisterDevice(context, fxAccount);
 
             // Force fetch the profile avatar information. (asynchronous, in another thread)
             Logger.info(LOG_TAG, "Fetching profile avatar information.");

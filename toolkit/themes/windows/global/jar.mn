@@ -6,7 +6,6 @@
 
 toolkit.jar:
   skin/classic/global/autocomplete.css
-#ifndef MOZ_THEME_FASTSTRIPE
   skin/classic/global/button.css
   skin/classic/global/checkbox.css
   skin/classic/global/dropmarker.css
@@ -17,7 +16,6 @@ toolkit.jar:
   skin/classic/global/radio.css
   skin/classic/global/tabbox.css
   skin/classic/global/textbox.css
-#endif
   skin/classic/global/colorpicker.css
   skin/classic/global/commonDialog.css
   skin/classic/global/findBar.css

@@ -251,12 +251,6 @@ CheckEdgeIsNotBlackToGray(JSObject* src, const Value& dst)
     MOZ_ASSERT_IF(IsMarkedBlack(src), JS::ValueIsNotGray(dst));
 }
 
-MOZ_ALWAYS_INLINE void
-CheckEdgeIsNotBlackToGray(JSObject* src, gc::Cell* dst)
-{
-    MOZ_ASSERT_IF(IsMarkedBlack(src), JS::CellIsNotGray(dst));
-}
-
 template <typename T>
 struct InternalBarrierMethods {};
 

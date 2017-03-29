@@ -543,7 +543,7 @@ bool
 IonCacheIRCompiler::emitGuardCompartment()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
-    objectStubField(reader.stubOffset()); // Read global.
+    objectStubField(reader.stubOffset()); // Read global wrapper.
     JSCompartment* compartment = compartmentStubField(reader.stubOffset());
 
     AutoScratchRegister scratch(allocator, masm);

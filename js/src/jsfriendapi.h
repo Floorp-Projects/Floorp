@@ -975,6 +975,7 @@ IsObjectInContextCompartment(JSObject* obj, const JSContext* cx);
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
 #define JSITER_SYMBOLS    0x20  /* also include symbol property keys */
 #define JSITER_SYMBOLSONLY 0x40 /* exclude string property keys */
+#define JSITER_FORAWAITOF 0x80  /* for-await-of */
 
 JS_FRIEND_API(bool)
 RunningWithTrustedPrincipals(JSContext* cx);
@@ -1163,9 +1164,9 @@ extern JS_FRIEND_API(unsigned)
 GetEnterCompartmentDepth(JSContext* cx);
 #endif
 
-class RegExpGuard;
 extern JS_FRIEND_API(bool)
-RegExpToSharedNonInline(JSContext* cx, JS::HandleObject regexp, RegExpGuard* shared);
+RegExpToSharedNonInline(JSContext* cx, JS::HandleObject regexp,
+                        JS::MutableHandle<RegExpShared*> shared);
 
 /* Implemented in CrossCompartmentWrapper.cpp. */
 typedef enum NukeReferencesToWindow {

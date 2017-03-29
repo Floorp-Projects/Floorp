@@ -1513,7 +1513,23 @@ Http2Stream::Finish0RTT(bool aRestart, bool aAlpnChanged)
 {
   MOZ_ASSERT(mTransaction);
   mAttempting0RTT = false;
-  return mTransaction->Finish0RTT(aRestart, aAlpnChanged);
+  // Instead of passing (aRestart, aAlpnChanged) here, we use aAlpnChanged for
+  // both arguments because as long as the alpn token stayed the same, we can
+  // just reuse what we have in our buffer to send instead of having to have
+  // the transaction rewind and read it all over again. We only need to rewind
+  // the transaction if we're switching to a new protocol, because our buffer
+  // won't get used in that case.
+  // ..
+  // however, we send in the aRestart value to indicate that early data failed
+  // for devtools purposes
+  nsresult rv = mTransaction->Finish0RTT(aAlpnChanged, aAlpnChanged);
+  if (aRestart) {
+    nsHttpTransaction *trans = mTransaction->QueryHttpTransaction();
+    if (trans) {
+      trans->Refused0RTT();
+    }
+  }
+  return rv;
 }
 
 

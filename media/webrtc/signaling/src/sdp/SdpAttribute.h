@@ -223,6 +223,37 @@ inline std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
+inline SdpDirectionAttribute::Direction
+operator~(SdpDirectionAttribute::Direction d)
+{
+  switch (d) {
+    case SdpDirectionAttribute::Direction::kInactive:
+      return SdpDirectionAttribute::Direction::kInactive;
+    case SdpDirectionAttribute::Direction::kSendonly:
+      return SdpDirectionAttribute::Direction::kRecvonly;
+    case SdpDirectionAttribute::Direction::kRecvonly:
+      return SdpDirectionAttribute::Direction::kSendonly;
+    case SdpDirectionAttribute::Direction::kSendrecv:
+      return SdpDirectionAttribute::Direction::kSendrecv;
+  }
+  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Invalid direction!");
+  MOZ_RELEASE_ASSERT(false);
+}
+
+inline SdpDirectionAttribute::Direction
+operator|(SdpDirectionAttribute::Direction d1,
+          SdpDirectionAttribute::Direction d2)
+{
+  return (SdpDirectionAttribute::Direction)((unsigned)d1 | (unsigned)d2);
+}
+
+inline SdpDirectionAttribute::Direction
+operator&(SdpDirectionAttribute::Direction d1,
+          SdpDirectionAttribute::Direction d2)
+{
+  return (SdpDirectionAttribute::Direction)((unsigned)d1 & (unsigned)d2);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // a=dtls-message, draft-rescorla-dtls-in-sdp
 //-------------------------------------------------------------------------

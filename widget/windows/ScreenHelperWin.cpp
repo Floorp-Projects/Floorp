@@ -27,15 +27,16 @@ CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam)
     MOZ_LOG(sScreenLog, LogLevel::Error, ("GetMonitorInfoW failed"));
     return TRUE; // continue the enumeration
   }
+  double scale = WinUtils::LogToPhysFactor(aMon);
   DesktopToLayoutDeviceScale contentsScaleFactor;
   if (WinUtils::IsPerMonitorDPIAware()) {
     contentsScaleFactor.scale = 1.0;
   } else {
-    contentsScaleFactor.scale = WinUtils::LogToPhysFactor(aMon);
+    contentsScaleFactor.scale = scale;
   }
   CSSToLayoutDeviceScale defaultCssScaleFactor(nsIWidget::DefaultScaleOverride());
   if (defaultCssScaleFactor.scale <= 0.0) {
-    defaultCssScaleFactor.scale = contentsScaleFactor.scale;
+    defaultCssScaleFactor.scale = scale;
   }
   LayoutDeviceIntRect rect(info.rcMonitor.left, info.rcMonitor.top,
                            info.rcMonitor.right - info.rcMonitor.left,

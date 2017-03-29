@@ -346,6 +346,7 @@ fuzzy-if(skiaContent,1,400) == path-06.svg path-06-ref.svg
 == pathLength-02.svg pass.svg
 
 == pattern-basic-01.svg pass.svg
+fuzzy(1,5) skip-if(Android) == pattern-big-image.html pattern-big-image-ref.html
 == pattern-invalid-01.svg pattern-invalid-01-ref.svg
 fuzzy-if(skiaContent,1,5) == pattern-live-01a.svg pattern-live-01-ref.svg
 fuzzy-if(skiaContent,1,5) == pattern-live-01b.svg pattern-live-01-ref.svg

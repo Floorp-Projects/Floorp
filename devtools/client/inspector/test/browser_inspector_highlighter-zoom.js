@@ -12,8 +12,8 @@ const TEST_URL = "data:text/html;charset=utf-8,<div>zoom me</div>";
 // TEST_LEVELS entries should contain the zoom level to test.
 const TEST_LEVELS = [2, 1, .5];
 
-// Returns the expected style attribute value to check for on the root highlighter
-// element, for the values given.
+// Returns the expected style attribute value to check for on the highlighter's elements
+// node, for the values given.
 const expectedStyle = (w, h, z) =>
         (z !== 1 ? `transform-origin:top left; transform:scale(${1 / z}); ` : "") +
         `position:absolute; width:${w * z}px;height:${h * z}px; ` +
@@ -40,7 +40,7 @@ add_task(function* () {
 
     info("Check that the highlighter root wrapper node was scaled down");
 
-    let style = yield getRootNodeStyle(testActor);
+    let style = yield getElementsNodeStyle(testActor);
     let { width, height } = yield testActor.getWindowDimensions();
     is(style, expectedStyle(width, height, level),
       "The style attribute of the root element is correct");
@@ -60,8 +60,8 @@ function* hoverContainer(container, inspector) {
   yield onHighlight;
 }
 
-function* getRootNodeStyle(testActor) {
+function* getElementsNodeStyle(testActor) {
   let value = yield testActor.getHighlighterNodeAttribute(
-    "box-model-root", "style");
+    "box-model-elements", "style");
   return value;
 }

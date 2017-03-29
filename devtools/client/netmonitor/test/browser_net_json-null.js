@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { L10N } = require("devtools/client/netmonitor/utils/l10n");
-
 /**
  * Tests if JSON responses containing null values are properly displayed.
  */
@@ -14,7 +12,8 @@ add_task(function* () {
   info("Starting test... ");
 
   let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { L10N } = windowRequire("devtools/client/netmonitor/src/utils/l10n");
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   gStore.dispatch(Actions.batchEnable(false));
 
@@ -24,8 +23,8 @@ add_task(function* () {
   });
   yield wait;
 
-  yield openResponsePanel(document);
-  checkResponsePanelDisplaysJSON(document);
+  yield openResponsePanel();
+  checkResponsePanelDisplaysJSON();
 
   let tabpanel = document.querySelector("#response-panel");
   is(tabpanel.querySelectorAll(".tree-section").length, 1,
@@ -44,34 +43,34 @@ add_task(function* () {
   is(values[0].textContent, "null", "The first json property value was incorrect.");
 
   yield teardown(monitor);
+
+  /**
+   * Helper to assert that the response panel found in the provided document is currently
+   * showing a preview of a JSON object.
+   */
+  function checkResponsePanelDisplaysJSON() {
+    let panel = document.querySelector("#response-panel");
+    is(panel.querySelector(".response-error-header") === null, true,
+      "The response error header doesn't have the intended visibility.");
+    let jsonView = panel.querySelector(".tree-section .treeLabel") || {};
+    is(jsonView.textContent === L10N.getStr("jsonScopeName"), true,
+      "The response json view has the intended visibility.");
+    is(panel.querySelector(".editor-mount iframe") === null, true,
+      "The response editor doesn't have the intended visibility.");
+    is(panel.querySelector(".response-image-box") === null, true,
+      "The response image box doesn't have the intended visibility.");
+  }
+
+  /**
+   * Open the netmonitor details panel and switch to the response tab.
+   * Returns a promise that will resolve when the response panel DOM element is available.
+   */
+  function openResponsePanel() {
+    let onReponsePanelReady = waitForDOM(document, "#response-panel");
+    EventUtils.sendMouseEvent({ type: "click" },
+      document.querySelector(".network-details-panel-toggle"));
+    EventUtils.sendMouseEvent({ type: "click" },
+      document.querySelector("#response-tab"));
+    return onReponsePanelReady;
+  }
 });
-
-/**
- * Helper to assert that the response panel found in the provided document is currently
- * showing a preview of a JSON object.
- */
-function checkResponsePanelDisplaysJSON(doc) {
-  let tabpanel = doc.querySelector("#response-panel");
-  is(tabpanel.querySelector(".response-error-header") === null, true,
-    "The response error header doesn't have the intended visibility.");
-  let jsonView = tabpanel.querySelector(".tree-section .treeLabel") || {};
-  is(jsonView.textContent === L10N.getStr("jsonScopeName"), true,
-    "The response json view has the intended visibility.");
-  is(tabpanel.querySelector(".editor-mount iframe") === null, true,
-    "The response editor doesn't have the intended visibility.");
-  is(tabpanel.querySelector(".response-image-box") === null, true,
-    "The response image box doesn't have the intended visibility.");
-}
-
-/**
- * Open the netmonitor details panel and switch to the response tab.
- * Returns a promise that will resolve when the response panel DOM element is available.
- */
-function openResponsePanel(document) {
-  let onReponsePanelReady = waitForDOM(document, "#response-panel");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".network-details-panel-toggle"));
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#response-tab"));
-  return onReponsePanelReady;
-}

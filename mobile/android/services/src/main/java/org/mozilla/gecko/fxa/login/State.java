@@ -11,6 +11,15 @@ import org.mozilla.gecko.sync.Utils;
 public abstract class State {
   public static final long CURRENT_VERSION = 3L;
 
+  public class NotASessionTokenState extends Exception {
+
+    private static final long serialVersionUID = 8628129091996684799L;
+
+    public NotASessionTokenState(String message) {
+      super(message);
+    }
+  }
+
   public enum StateLabel {
     Engaged,
     Cohabiting,
@@ -69,4 +78,9 @@ public abstract class State {
   public abstract void execute(ExecuteDelegate delegate);
 
   public abstract Action getNeededAction();
+
+  // Should be overridden in states that have a sessionToken
+  public byte[] getSessionToken() throws NotASessionTokenState {
+    throw new NotASessionTokenState("Cannot get a session token in " + stateLabel);
+  }
 }

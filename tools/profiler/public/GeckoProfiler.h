@@ -40,13 +40,10 @@ class Promise;
 
 class nsIProfilerStartParams;
 
-enum TracingMetadata {
-  TRACING_DEFAULT,
+enum TracingKind {
+  TRACING_EVENT,
   TRACING_INTERVAL_START,
   TRACING_INTERVAL_END,
-  TRACING_EVENT,
-  TRACING_EVENT_BACKTRACE,
-  TRACING_TIMESTAMP
 };
 
 class ProfilerBacktrace;
@@ -127,10 +124,10 @@ using UniqueProfilerBacktrace =
 // Adds a tracing marker to the PseudoStack. A no-op if the profiler is
 // inactive or in privacy mode.
 PROFILER_FUNC_VOID(profiler_tracing(const char* aCategory, const char* aInfo,
-                                    TracingMetadata metaData = TRACING_DEFAULT))
+                                    TracingKind aKind = TRACING_EVENT))
 PROFILER_FUNC_VOID(profiler_tracing(const char* aCategory, const char* aInfo,
                                     UniqueProfilerBacktrace aCause,
-                                    TracingMetadata metaData = TRACING_DEFAULT))
+                                    TracingKind aKind = TRACING_EVENT))
 
 // Initialize the profiler. If MOZ_PROFILER_STARTUP is set the profiler will be
 // started. This call must happen before any other profiler calls (except
@@ -231,8 +228,8 @@ PROFILER_FUNC_VOID(profiler_get_profile_jsobject_async(double aSinceTime = 0,
 // outparams) if the profile is inactive.
 PROFILER_FUNC_VOID(profiler_get_start_params(int* aEntrySize,
                                              double* aInterval,
-                                             mozilla::Vector<const char*>* aFilters,
-                                             mozilla::Vector<const char*>* aFeatures))
+                                             mozilla::Vector<const char*>* aFeatures,
+                                             mozilla::Vector<const char*>* aFilters))
 
 // Get the profile and write it into a file. A no-op if the profile is
 // inactive.

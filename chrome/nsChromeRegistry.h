@@ -79,10 +79,6 @@ protected:
   void FlushSkinCaches();
   void FlushAllCaches();
 
-  // Update the selected locale used by the chrome registry, and fire a
-  // notification about this change
-  virtual nsresult UpdateSelectedLocale() = 0;
-
   static void LogMessage(const char* aMsg, ...)
     MOZ_FORMAT_PRINTF(1, 2);
   static void LogMessageWithContext(nsIURI* aURL, uint32_t aLineNumber, uint32_t flags,
@@ -94,8 +90,6 @@ protected:
                                         const nsCString& aPath) = 0;
   virtual nsresult GetFlagsFromPackage(const nsCString& aPackage,
                                        uint32_t* aFlags) = 0;
-
-  nsresult SelectLocaleFromPref(nsIPrefBranch* prefs);
 
   static nsresult RefreshWindow(nsPIDOMWindowOuter* aWindow);
   static nsresult GetProviderAndPath(nsIURL* aChromeURL,

@@ -13,9 +13,8 @@ function checkStateRead(aSubject, aTopic, aData) {
   ok(!gSSService.isSecureURI(
        Ci.nsISiteSecurityService.HEADER_HSTS,
        Services.io.newURI("https://nonexistent.example.com"), 0));
-  // bugzilla.mozilla.org is preloaded
   ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://bugzilla.mozilla.org"),
+                            Services.io.newURI("https://includesubdomains.preloaded.test"),
                             0));
   // notexpired.example.com is an HSTS host in a different test - we
   // want to make sure that test hasn't interfered with this one.

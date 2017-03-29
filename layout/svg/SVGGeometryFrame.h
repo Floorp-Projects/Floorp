@@ -103,7 +103,8 @@ protected:
   // nsSVGDisplayableFrame interface:
   virtual DrawResult PaintSVG(gfxContext& aContext,
                               const gfxMatrix& aTransform,
-                              const nsIntRect* aDirtyRect = nullptr) override;
+                              const nsIntRect* aDirtyRect = nullptr,
+                              uint32_t aFlags = 0) override;
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
   virtual void ReflowSVG() override;
   virtual void NotifySVGChanged(uint32_t aFlags) override;
@@ -120,14 +121,15 @@ protected:
   virtual uint16_t GetHitTestFlags();
 private:
   enum { eRenderFill = 1, eRenderStroke = 2 };
-  void Render(gfxContext* aContext, uint32_t aRenderComponents,
-              const gfxMatrix& aTransform);
+  DrawResult Render(gfxContext* aContext, uint32_t aRenderComponents,
+                    const gfxMatrix& aTransform, uint32_t aFlags);
 
   /**
    * @param aMatrix The transform that must be multiplied onto aContext to
    *   establish this frame's SVG user space.
    */
-  void PaintMarkers(gfxContext& aContext, const gfxMatrix& aMatrix);
+  DrawResult PaintMarkers(gfxContext& aContext, const gfxMatrix& aMatrix,
+                          uint32_t aFlags);
 
   struct MarkerProperties {
     nsSVGMarkerProperty* mMarkerStart;

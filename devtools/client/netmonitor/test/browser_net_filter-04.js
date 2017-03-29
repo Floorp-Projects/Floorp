@@ -37,8 +37,8 @@ add_task(function* () {
   info("Starting test... ");
 
   let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let { Prefs } = windowRequire("devtools/client/netmonitor/utils/prefs");
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  let { Prefs } = windowRequire("devtools/client/netmonitor/src/utils/prefs");
 
   gStore.dispatch(Actions.batchEnable(false));
 

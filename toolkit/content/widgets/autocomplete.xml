@@ -1311,7 +1311,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             let reusable = false;
             let itemExists = this._currentIndex < existingItemsCount;
 
-            let originalValue, originalText;
+            let originalValue, originalText, originalType;
             let value = controller.getValueAt(this._currentIndex);
             let label = controller.getLabelAt(this._currentIndex);
             let comment = controller.getCommentAt(this._currentIndex);
@@ -1325,8 +1325,13 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
               originalValue = item.getAttribute("ac-value");
               originalText = item.getAttribute("ac-text");
+              originalType = item.getAttribute("originaltype");
 
-              reusable = item.getAttribute("originaltype") === style;
+              // All of types are reusable except for autofill-profile,
+              // which has different structure of <content> and overrides
+              // _adjustAcItem().
+              reusable = originalType === style ||
+                         (style !== "autofill-profile" && originalType !== "autofill-profile");
             } else {
               // need to create a new item
               item = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "richlistitem");
@@ -1365,7 +1370,14 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             }
 
             if (itemExists) {
-              item._adjustAcItem();
+              // Adjust only when the result's type is reusable for existing
+              // item's. Otherwise, we might insensibly call old _adjustAcItem()
+              // as new binding has not been attached yet.
+              // We don't need to worry about switching to new binding, since
+              // _adjustAcItem() will fired by its own constructor accordingly.
+              if (reusable) {
+                item._adjustAcItem();
+              }
               item.collapsed = false;
             } else {
               // set the class at the end so we can use the attributes

@@ -64,8 +64,8 @@ function testNetmonitor(toolbox) {
   let monitor = toolbox.getCurrentPanel();
 
   let { gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let { getSortedRequests } = windowRequire("devtools/client/netmonitor/selectors/index");
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  let { getSortedRequests } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   gStore.dispatch(Actions.batchEnable(false));
 

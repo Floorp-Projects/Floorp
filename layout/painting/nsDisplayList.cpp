@@ -3293,6 +3293,10 @@ nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         LayerManager* aManager,
                                         const ContainerLayerParameters& aParameters)
 {
+  if (gfxPrefs::LayersAllowBackgroundImage() && CanBuildWebRenderDisplayItems()) {
+    return LAYER_ACTIVE;
+  }
+
   ImageLayerization shouldLayerize = ShouldCreateOwnLayer(aBuilder, aManager);
   if (shouldLayerize == NO_LAYER_NEEDED) {
     // We can skip the call to CanOptimizeToImageLayer if we don't want a
@@ -3340,6 +3344,10 @@ nsDisplayBackgroundImage::BuildLayer(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
                                      const ContainerLayerParameters& aParameters)
 {
+  if (gfxPrefs::LayersAllowBackgroundImage()) {
+    return BuildDisplayItemLayer(aBuilder, aManager, aParameters);
+  }
+
   RefPtr<ImageLayer> layer = static_cast<ImageLayer*>
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
   if (!layer) {
@@ -3351,6 +3359,31 @@ nsDisplayBackgroundImage::BuildLayer(nsDisplayListBuilder* aBuilder,
   layer->SetContainer(imageContainer);
   ConfigureLayer(layer, aParameters);
   return layer.forget();
+}
+
+bool
+nsDisplayBackgroundImage::CanBuildWebRenderDisplayItems()
+{
+  return mBackgroundStyle->mImage.mLayers[mLayer].mClip != StyleGeometryBox::Text &&
+         nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(*mFrame->PresContext(),
+                                                                         mFrame,
+                                                                         mBackgroundStyle,
+                                                                         mLayer);
+}
+
+void
+nsDisplayBackgroundImage::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                                  nsTArray<WebRenderParentCommand>& aParentCommands,
+                                                  WebRenderDisplayItemLayer* aLayer)
+{
+  nsCSSRendering::PaintBGParams params =
+    nsCSSRendering::PaintBGParams::ForSingleLayer(*mFrame->PresContext(),
+                                                  mVisibleRect, mBackgroundRect,
+                                                  mFrame, 0, mLayer,
+                                                  CompositionOp::OP_OVER);
+  params.bgClipRect = &mBounds;
+
+  nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(params, aBuilder, aLayer);
 }
 
 void
@@ -3519,13 +3552,12 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
 
   nsCSSRendering::PaintBGParams params =
     nsCSSRendering::PaintBGParams::ForSingleLayer(*mFrame->PresContext(),
-                                                  *aCtx,
                                                   aBounds, mBackgroundRect,
                                                   mFrame, flags, mLayer,
                                                   CompositionOp::OP_OVER);
   params.bgClipRect = aClipRect;
   image::DrawResult result =
-    nsCSSRendering::PaintStyleImageLayer(params);
+    nsCSSRendering::PaintStyleImageLayer(params, *aCtx);
 
   if (clip == StyleGeometryBox::Text) {
     ctx->PopGroupAndBlend();
@@ -8111,12 +8143,15 @@ nsDisplayMask::PaintMask(nsDisplayListBuilder* aBuilder,
 {
   MOZ_ASSERT(aMaskContext->GetDrawTarget()->GetFormat() == SurfaceFormat::A8);
 
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                  ? imgIContainer::FLAG_SYNC_DECODE
+                  : imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   nsSVGIntegrationUtils::PaintFramesParams params(*aMaskContext,
                                                   mFrame,  mVisibleRect,
                                                   borderArea, aBuilder,
                                                   nullptr,
-                                                  mHandleOpacity);
+                                                  mHandleOpacity, flags);
   ComputeMaskGeometry(params);
   image::DrawResult result = nsSVGIntegrationUtils::PaintMask(params);
 
@@ -8219,12 +8254,15 @@ nsDisplayMask::PaintAsLayer(nsDisplayListBuilder* aBuilder,
 {
   MOZ_ASSERT(!ShouldPaintOnMaskLayer(aManager));
 
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                  ? imgIContainer::FLAG_SYNC_DECODE
+                  : imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   nsSVGIntegrationUtils::PaintFramesParams params(*aCtx->ThebesContext(),
                                                   mFrame,  mVisibleRect,
                                                   borderArea, aBuilder,
                                                   aManager,
-                                                  mHandleOpacity);
+                                                  mHandleOpacity, flags);
 
   // Clip the drawing target by mVisibleRect, which contains the visible
   // region of the target frame and its out-of-flow and inflow descendants.
@@ -8409,12 +8447,15 @@ nsDisplayFilter::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                               nsRenderingContext* aCtx,
                               LayerManager* aManager)
 {
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                  ? imgIContainer::FLAG_SYNC_DECODE
+                  : imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   nsSVGIntegrationUtils::PaintFramesParams params(*aCtx->ThebesContext(),
                                                   mFrame,  mVisibleRect,
                                                   borderArea, aBuilder,
                                                   aManager,
-                                                  mHandleOpacity);
+                                                  mHandleOpacity, flags);
 
   image::DrawResult result = nsSVGIntegrationUtils::PaintFilter(params);
   nsDisplayFilterGeometry::UpdateDrawResult(this, result);

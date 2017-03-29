@@ -429,7 +429,7 @@ class IonBuilder
     AbortReasonOr<Ok> getElemTryArguments(bool* emitted, MDefinition* obj, MDefinition* index);
     AbortReasonOr<Ok> getElemTryArgumentsInlined(bool* emitted, MDefinition* obj,
                                                  MDefinition* index);
-    AbortReasonOr<Ok> getElemTryCache(bool* emitted, MDefinition* obj, MDefinition* index);
+    AbortReasonOr<Ok> getElemAddCache(MDefinition* obj, MDefinition* index);
     AbortReasonOr<Ok> getElemTryScalarElemOfTypedObject(bool* emitted,
                                                         MDefinition* obj,
                                                         MDefinition* index,
@@ -569,6 +569,8 @@ class IonBuilder
     AbortReasonOr<Ok> jsop_globalthis();
     AbortReasonOr<Ok> jsop_typeof();
     AbortReasonOr<Ok> jsop_toasync();
+    AbortReasonOr<Ok> jsop_toasyncgen();
+    AbortReasonOr<Ok> jsop_toasynciter();
     AbortReasonOr<Ok> jsop_toid();
     AbortReasonOr<Ok> jsop_iter(uint8_t flags);
     AbortReasonOr<Ok> jsop_itermore();

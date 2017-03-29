@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <script>
+    var ok = opener.ok.bind(opener);
+    var is = opener.is.bind(opener);
+    var todo = opener.todo.bind(opener);
+    function finish() {
+      var o = opener;
+      self.close();
+      o.SimpleTest.finish();
+    }
+  </script>
+  <style type="text/css">
+    @keyframes anim {
+      0% { transform: translate(0px) }
+      100% { transform: translate(100px) }
+    }
+    .target {
+      /* The animation target needs geometry in order to qualify for OMTA */
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+  </style>
+</head>
+<body>
+<div id="display"></div>
+<script type="application/javascript">
+"use strict";
+
+runOMTATest(function() {
+  runAllAsyncAnimTests().then(function() {
+    finish();
+  });
+}, finish, opener.SpecialPowers);
+
+addAsyncAnimTest(function *() {
+  var [ div, cs ] = new_div("animation: anim 10s linear");
+  const animation = div.getAnimations()[0];
+
+  // Animation is initially running on compositor
+  yield waitForPaintsFlushed();
+  advance_clock(5000);
+  omta_is(div, 'transform', { tx: 50 }, RunningOn.Compositor,
+          'Animation is initally animating on compositor');
+
+  // Reverse animation
+  animation.reverse();
+
+  // At this point the playbackRate has changed but the transform will
+  // not have changed.
+  yield waitForPaints();
+  omta_is(div, 'transform', { tx: 50 }, RunningOn.Compositor,
+          'Animation value does not change after being reversed');
+
+  // However, we should still have sent a layer transaction to update the
+  // playbackRate on the compositor so that on the next tick we advance
+  // in the right direction.
+  advance_clock(1000);
+  omta_is(div, 'transform', { tx: 40 }, RunningOn.Compositor,
+          'Animation proceeds in reverse direction');
+
+  done_div();
+});
+</script>
+</body>
+</html>

@@ -42,7 +42,6 @@ var gAdvancedPane = {
       Services.prefs.addObserver("app.update.", this, false);
       this.updateReadPrefs();
     }
-    this.updateOfflineApps();
     if (AppConstants.MOZ_CRASHREPORTER) {
       this.initSubmitCrashes();
     }
@@ -53,7 +52,6 @@ var gAdvancedPane = {
     this.updateOnScreenKeyboardVisibility();
     this.updateCacheSizeInputField();
     this.updateActualCacheSize();
-    this.updateActualAppCacheSize();
 
     if (Services.prefs.getBoolPref("browser.storageManager.enabled")) {
       Services.obs.addObserver(this, "sitedatamanager:sites-updated", false);
@@ -85,17 +83,6 @@ var gAdvancedPane = {
                      gAdvancedPane.showConnections);
     setEventListener("clearCacheButton", "command",
                      gAdvancedPane.clearCache);
-    setEventListener("clearOfflineAppCacheButton", "command",
-                     gAdvancedPane.clearOfflineAppCache);
-    setEventListener("offlineNotifyExceptions", "command",
-                     gAdvancedPane.showOfflineExceptions);
-    setEventListener("offlineAppsList", "select",
-                     gAdvancedPane.offlineAppSelected);
-    let bundlePrefs = document.getElementById("bundlePreferences");
-    document.getElementById("offlineAppsList")
-            .style.height = bundlePrefs.getString("offlineAppsList.height");
-    setEventListener("offlineAppsListRemove", "command",
-                     gAdvancedPane.removeOfflineApp);
     if (AppConstants.MOZ_UPDATER) {
       setEventListener("updateRadioGroup", "command",
                        gAdvancedPane.updateWritePrefs);
@@ -108,6 +95,24 @@ var gAdvancedPane = {
                      gAdvancedPane.showSecurityDevices);
     setEventListener("cacheSize", "change",
                      gAdvancedPane.updateCacheSizePref);
+
+    if (Services.prefs.getBoolPref("browser.preferences.offlineGroup.enabled")) {
+      this.updateOfflineApps();
+      this.updateActualAppCacheSize();
+      setEventListener("offlineNotifyExceptions", "command",
+                      gAdvancedPane.showOfflineExceptions);
+      setEventListener("offlineAppsList", "select",
+                      gAdvancedPane.offlineAppSelected);
+      setEventListener("offlineAppsListRemove", "command",
+                      gAdvancedPane.removeOfflineApp);
+      setEventListener("clearOfflineAppCacheButton", "command",
+                      gAdvancedPane.clearOfflineAppCache);
+      let bundlePrefs = document.getElementById("bundlePreferences");
+      document.getElementById("offlineAppsList")
+              .style.height = bundlePrefs.getString("offlineAppsList.height");
+      let offlineGroup = document.getElementById("offlineGroup");
+      offlineGroup.hidden = false;
+    }
 
     if (AppConstants.MOZ_WIDGET_GTK) {
       // GTK tabbox' allow the scroll wheel to change the selected tab,
@@ -398,32 +403,6 @@ var gAdvancedPane = {
     } catch (e) {}
   },
 
-  // Retrieves the amount of space currently used by offline cache
-  updateActualAppCacheSize() {
-    var visitor = {
-      onCacheStorageInfo(aEntryCount, aConsumption, aCapacity, aDiskDirectory) {
-        var actualSizeLabel = document.getElementById("actualAppCacheSize");
-        var sizeStrings = DownloadUtils.convertByteUnits(aConsumption);
-        var prefStrBundle = document.getElementById("bundlePreferences");
-        // The XBL binding for the string bundle may have been destroyed if
-        // the page was closed before this callback was executed.
-        if (!prefStrBundle.getFormattedString) {
-          return;
-        }
-        var sizeStr = prefStrBundle.getFormattedString("actualAppCacheSize", sizeStrings);
-        actualSizeLabel.value = sizeStr;
-      }
-    };
-
-    try {
-      var cacheService =
-        Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
-                  .getService(Components.interfaces.nsICacheStorageService);
-      var storage = cacheService.appCacheStorage(LoadContextInfo.default, null);
-      storage.asyncVisitStorage(visitor, false);
-    } catch (e) {}
-  },
-
   updateCacheSizeUI(smartSizeEnabled) {
     document.getElementById("useCacheBefore").disabled = smartSizeEnabled;
     document.getElementById("cacheSize").disabled = smartSizeEnabled;
@@ -475,17 +454,6 @@ var gAdvancedPane = {
     this.updateActualCacheSize();
   },
 
-  /**
-   * Clears the application cache.
-   */
-  clearOfflineAppCache() {
-    Components.utils.import("resource:///modules/offlineAppCache.jsm");
-    OfflineAppCacheHelper.clear();
-
-    this.updateActualAppCacheSize();
-    this.updateOfflineApps();
-  },
-
   clearSiteData() {
     let flags =
       Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
@@ -501,6 +469,45 @@ var gAdvancedPane = {
     if (result == 0) {
       SiteDataManager.removeAll();
     }
+  },
+
+  // Methods for Offline Apps(Appcache)
+
+  /**
+   * Clears the application cache.
+   */
+  clearOfflineAppCache() {
+    Components.utils.import("resource:///modules/offlineAppCache.jsm");
+    OfflineAppCacheHelper.clear();
+
+    this.updateActualAppCacheSize();
+    this.updateOfflineApps();
+  },
+
+  // Retrieves the amount of space currently used by offline cache
+  updateActualAppCacheSize() {
+    var visitor = {
+      onCacheStorageInfo(aEntryCount, aConsumption, aCapacity, aDiskDirectory) {
+        var actualSizeLabel = document.getElementById("actualAppCacheSize");
+        var sizeStrings = DownloadUtils.convertByteUnits(aConsumption);
+        var prefStrBundle = document.getElementById("bundlePreferences");
+        // The XBL binding for the string bundle may have been destroyed if
+        // the page was closed before this callback was executed.
+        if (!prefStrBundle.getFormattedString) {
+          return;
+        }
+        var sizeStr = prefStrBundle.getFormattedString("actualAppCacheSize", sizeStrings);
+        actualSizeLabel.value = sizeStr;
+      }
+    };
+
+    try {
+      var cacheService =
+        Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
+                  .getService(Components.interfaces.nsICacheStorageService);
+      var storage = cacheService.appCacheStorage(LoadContextInfo.default, null);
+      storage.asyncVisitStorage(visitor, false);
+    } catch (e) {}
   },
 
   readOfflineNotify() {
@@ -646,6 +653,7 @@ var gAdvancedPane = {
     gAdvancedPane.offlineAppSelected();
     this.updateActualAppCacheSize();
   },
+  // Methods for Offline Apps(Appcache) end
 
   // UPDATE TAB
 

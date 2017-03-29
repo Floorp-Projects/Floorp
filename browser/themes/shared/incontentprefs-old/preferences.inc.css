@@ -1,0 +1,566 @@
+%if 0
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+@namespace html "http://www.w3.org/1999/xhtml";
+
+#mainPrefPane {
+  max-width: 800px;
+  padding: 0;
+  font: message-box;
+  font-size: 1.25rem;
+}
+
+* {
+  -moz-user-select: text;
+}
+
+button,
+treecol {
+  /* override the * rule */
+  -moz-user-select: none;
+}
+
+#engineList treechildren::-moz-tree-image(engineShown, checked),
+#blocklistsTree treechildren::-moz-tree-image(selectionCol, checked) {
+  list-style-image: url("chrome://global/skin/in-content/check.svg#check");
+  width: 21px;
+  height: 21px;
+}
+
+#engineList treechildren::-moz-tree-image(engineShown, checked, selected),
+#blocklistsTree treechildren::-moz-tree-image(selectionCol, checked, selected) {
+  list-style-image: url("chrome://global/skin/in-content/check.svg#check-inverted");
+}
+
+#engineList treechildren::-moz-tree-row,
+#blocklistsTree treechildren::-moz-tree-row {
+  min-height: 36px;
+}
+
+#selectionCol {
+  min-width: 26px;
+}
+
+.learnMore {
+  margin-inline-start: 10px;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
+/* Category List */
+
+#categories {
+  max-height: 100vh;
+}
+
+#categories > scrollbox {
+  overflow-x: hidden !important;
+}
+
+/**
+ * We want the last category to always have non-0 getBoundingClientRect().bottom
+ * so we can use the value to figure out the max-height of the list in
+ * preferences.js, so use collapse instead of display: none; if it's hidden
+ */
+#categories > .category[hidden="true"] {
+  display: -moz-box;
+  visibility: collapse;
+}
+
+#category-general > .category-icon {
+  list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#general");
+}
+
+#category-search > .category-icon {
+  list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#search");
+}
+
+#category-content > .category-icon {
+  list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#content");
+}
+
+#category-application > .category-icon {
+  list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#applications");
+}
+
+#category-privacy > .category-icon {
+  list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#privacy");
+}
+
+#category-security > .category-icon {
+  list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#security");
+}
+
+#category-sync > .category-icon {
+  list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#sync");
+}
+
+#category-advanced > .category-icon {
+  list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#advanced");
+}
+
+@media (max-width: 800px) {
+  .category-name {
+    display: none;
+  }
+}
+
+/* header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header[hidden=true] {
+  display: none;
+}
+
+#header-advanced {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* General Pane */
+
+#startupTable {
+  border-collapse: collapse;
+}
+
+#startupTable > tr > td {
+  padding: 0; /* remove the padding from html.css */
+}
+
+#startupTable > tr:not(:first-child) > td {
+  padding-top: 0.5em; /* add a spacing between the rows */
+}
+
+#startupTable > tr > .label-cell {
+  text-align: end;
+  width: 0; /* make the column as small as possible */
+}
+
+#startupTable > tr > .label-cell > label {
+  white-space: nowrap;
+}
+
+#startupTable > tr > .content-cell > menulist,
+#startupTable > tr > .content-cell > textbox {
+  width: calc(100% - 8px);
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
+#startupTable > tr > .homepage-buttons {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#startupTable > tr > .homepage-buttons > .content-cell-item {
+  flex-grow: 1;
+}
+
+#useFirefoxSync  {
+  font-size: 90%;
+  margin-inline-end: 8px !important;
+}
+
+#getStarted {
+  font-size: 90%;
+}
+
+#isNotDefaultLabel {
+  font-weight: bold;
+}
+
+#downloadFolder {
+  margin-inline-start: 0;
+}
+
+#browserHomePage:-moz-locale-dir(rtl) input {
+  unicode-bidi: plaintext;
+  direction: rtl;
+}
+
+/* Content pane */
+
+#defaultFontSizeLabel {
+  /* !important needed to override common !important rule */
+  margin-inline-start: 4px !important;
+}
+
+/* Applications Pane Styles */
+
+#applicationsContent {
+  padding: 15px 0;
+}
+
+#filter {
+  margin-inline-start: 0;
+}
+
+#handlersView {
+  height: 25em;
+}
+
+#handlersView > richlistitem {
+  min-height: 36px !important;
+}
+
+.typeIcon {
+  margin-inline-start: 10px !important;
+  margin-inline-end: 9px !important;
+}
+
+.actionIcon {
+  margin-inline-start: 11px !important;
+  margin-inline-end: 8px !important;
+}
+
+.actionsMenu {
+  min-height: 36px;
+}
+
+.actionsMenu > menupopup > menuitem {
+  padding-inline-start: 10px !important;
+}
+
+.actionsMenu > menupopup > menuitem > .menu-iconic-left {
+  margin-inline-end: 8px !important;
+}
+
+/* Privacy pane */
+
+.doNotTrackLearnMore {
+  margin-inline-start: calc(1em + 30px);
+  margin-bottom: 1em;
+  font-weight: normal;
+}
+
+.doNotTrackLearnMore > label {
+  font-size: 1em !important;
+  margin-left: 0;
+}
+
+/* Collapse the non-active vboxes in decks to use only the height the
+   active vbox needs */
+#historyPane:not([selectedIndex="1"]) > #historyDontRememberPane,
+#historyPane:not([selectedIndex="2"]) > #historyCustomPane,
+#weavePrefsDeck:not([selectedIndex="1"]) > #hasFxaAccount,
+#fxaLoginStatus:not([selectedIndex="1"]) > #fxaLoginUnverified,
+#fxaLoginStatus:not([selectedIndex="2"]) > #fxaLoginRejected {
+  visibility: collapse;
+}
+
+/* XXX This style is for bug 740213 and should be removed once that
+   bug has a solution. */
+description > html|a {
+  cursor: pointer;
+}
+
+#weavePrefsDeck > vbox > label,
+#weavePrefsDeck > vbox > groupbox,
+#weavePrefsDeck > vbox > description,
+#weavePrefsDeck > #hasFxaAccount > vbox > label,
+#weavePrefsDeck > #hasFxaAccount > hbox > label {
+  /* no margin-inline-start for elements at the beginning of a line */
+  margin-inline-start: 0;
+}
+
+#tabsElement {
+  margin-inline-end: 4px; /* add the 4px end-margin of other elements */
+}
+
+.indent {
+  /* !important needed to override margin-inline-start:0 !important; rule
+     define in common.css for labels */
+  margin-inline-start: 33px !important;
+}
+
+.text-link {
+  margin-bottom: 0;
+}
+
+#showUpdateHistory {
+  margin-inline-start: 0;
+}
+
+/**
+ * Dialog
+ */
+
+#dialogOverlay {
+  background-color: rgba(0,0,0,0.5);
+  visibility: hidden;
+}
+
+#dialogBox {
+  background-color: #fbfbfb;
+  background-clip: content-box;
+  color: #424e5a;
+  font-size: 14px;
+  /* `transparent` will use the dialogText color in high-contrast themes and
+     when page colors are disabled */
+  border: 1px solid transparent;
+  border-radius: 3.5px;
+  box-shadow: 0 2px 6px 0 rgba(0,0,0,0.3);
+  display: -moz-box;
+  margin: 0;
+  padding: 0;
+}
+
+#dialogBox[resizable="true"] {
+  resize: both;
+  overflow: hidden;
+  min-height: 20em;
+  min-width: 66ch;
+}
+
+#dialogBox > .groupbox-title {
+  padding: 3.5px 0;
+  background-color: #F1F1F1;
+  border-bottom: 1px solid #C1C1C1;
+}
+
+#dialogTitle {
+  text-align: center;
+  -moz-user-select: none;
+}
+
+.close-icon {
+  background-color: transparent !important;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  height: auto;
+  min-height: 16px;
+  min-width: 0;
+}
+
+#dialogBox > .groupbox-body {
+  -moz-appearance: none;
+  padding: 20px;
+}
+
+#dialogFrame {
+  -moz-box-flex: 1;
+  /* Default dialog dimensions */
+  width: 66ch;
+}
+
+.largeDialogContainer.doScroll {
+  overflow-y: auto;
+  -moz-box-flex: 1;
+}
+
+/**
+ * End Dialog
+ */
+
+/**
+ * Font dialog menulist fixes
+ */
+
+#defaultFontType,
+#serif,
+#sans-serif,
+#monospace {
+  min-width: 30ch;
+}
+
+/**
+ * Sync
+ */
+
+#fxaProfileImage {
+  max-width: 60px;
+  border-radius: 50%;
+  list-style-image: url(chrome://browser/skin/fxa/default-avatar.svg);
+  margin-inline-end: 15px;
+  image-rendering: -moz-crisp-edges;
+}
+
+#fxaLoginStatus[hasName] #fxaProfileImage {
+  max-width: 80px;
+}
+
+#fxaProfileImage.actionable {
+  cursor: pointer;
+}
+
+#fxaProfileImage.actionable:hover {
+  box-shadow: 0px 0px 0px 1px #0095DD;
+}
+
+#fxaProfileImage.actionable:hover:active {
+  box-shadow: 0px 0px 0px 1px #ff9500;
+}
+
+#noFxaAccount {
+  padding-top: 15px;
+}
+
+#fxaContentWrapper {
+  -moz-box-flex: 1;
+}
+
+#noFxaGroup {
+  -moz-box-flex: 1;
+  margin: 0;
+}
+
+#fxaContentWrapper {
+  padding-right: 15px;
+}
+
+#noFxaGroup > vbox,
+#fxaGroup {
+  -moz-box-align: start;
+}
+
+#fxaSyncEngines > vbox:first-child {
+  margin-right: 80px;
+}
+
+#fxaSyncComputerName {
+  margin-inline-start: 0px;
+  -moz-box-flex: 1;
+}
+
+#tosPP-small-ToS {
+  margin-bottom: 14px;
+}
+
+#noFxaCaption {
+  font-weight: bold;
+  margin-bottom: 11px;
+}
+
+.fxaSyncIllustration {
+  margin-top: 35px;
+}
+
+#syncOptions caption {
+  margin-bottom: 11px;
+}
+
+#fxaDeviceName {
+  margin-bottom: 27.5px;
+}
+
+#noFxaDescription {
+  margin-bottom: 20px !important;
+}
+
+.separator {
+  border-bottom: 1px solid var(--in-content-header-border-color);
+}
+
+.fxaAccountBox {
+  border: 1px solid #D1D2D3;
+  border-radius: 5px;
+  padding: 14px 20px 14px 14px;
+}
+
+#signedOutAccountBoxTitle {
+  font-weight: bold;
+}
+
+.fxaAccountBoxButtons {
+  margin-bottom: 0 !important;
+  margin-top: 11px;
+  display: flex;
+  align-items: center;
+}
+
+.fxaAccountBoxButtons > * {
+  -moz-box-flex: 1;
+}
+
+.fxaAccountBoxButtons > button {
+  text-align: center;
+  padding-left: 11px;
+  padding-right: 11px;
+  margin: 0;
+  min-width: 0;
+}
+
+.fxaAccountBoxButtons > button:first-child {
+  margin-inline-end: 14px !important;
+}
+
+#verifiedManage:visited {
+  color: var(--in-content-link-color);
+}
+
+.fxaSyncIllustration {
+  width: 231px;
+}
+
+#fxaLoginStatus[hasName] #fxaEmailAddress1 {
+  font-size: 1.1rem;
+}
+
+#fxaEmailAddress1,
+#fxaEmailAddress2,
+#fxaEmailAddress3 {
+  word-break: break-all;
+}
+
+.fxaFirefoxLogo {
+  list-style-image: url(chrome://browser/skin/fxa/logo.png);
+  max-width: 64px;
+  margin-inline-end: 14px;
+}
+
+.fxaMobilePromo {
+  margin-bottom: 20px;
+  margin-top: 25px;
+}
+
+#fxaLoginRejectedWarning {
+  list-style-image: url(chrome://browser/skin/warning.svg);
+  filter: drop-shadow(0 1px 0 hsla(206, 50%, 10%, .15));
+  margin: 4px 8px 0px 0px;
+}
+
+#syncOptions {
+  margin-bottom: 27.5px;
+}
+
+.androidLink {
+  background-image: url("chrome://browser/skin/fxa/android.png");
+}
+
+.iOSLink {
+  background-image: url("chrome://browser/skin/fxa/ios.png");
+}
+
+.androidLink,
+.iOSLink {
+  margin: 0 0 0 2px;
+  padding-left: 28px;
+  padding-top: 6px;
+  height: 28px;
+  background-repeat: no-repeat;
+  background-size: 24px 28px;
+}
+
+#tosPP-small {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .androidLink {
+    background-image: url("chrome://browser/skin/fxa/android@2x.png");
+  }
+  .iOSLink {
+    background-image: url("chrome://browser/skin/fxa/ios@2x.png");
+  }
+  .fxaFirefoxLogo {
+    list-style-image: url(chrome://browser/skin/fxa/logo@2x.png);
+  }
+}
