@@ -1179,8 +1179,14 @@ var gBrowserInit = {
     // have been initialized.
     Services.obs.notifyObservers(window, "browser-window-before-show", "");
 
+    let isResistFingerprintingEnabled = gPrefService.getBoolPref("privacy.resistFingerprinting");
+
     // Set a sane starting width/height for all resolutions on new profiles.
-    if (!document.documentElement.hasAttribute("width")) {
+    if (isResistFingerprintingEnabled) {
+      // When the fingerprinting resistance is enabled, making sure that we don't
+      // have a maximum window to interfere with generating rounded window dimensions.
+      document.documentElement.setAttribute("sizemode", "normal");
+    } else if (!document.documentElement.hasAttribute("width")) {
       const TARGET_WIDTH = 1280;
       const TARGET_HEIGHT = 1040;
       let width = Math.min(screen.availWidth * .9, TARGET_WIDTH);
@@ -3182,7 +3188,7 @@ var BrowserOnClick = {
     let title;
     if (reason === "malware") {
       let reportUrl = gSafeBrowsing.getReportURL("MalwareMistake", blockedInfo);
-
+      title = gNavigatorBundle.getString("safebrowsing.reportedAttackSite");
       // There's no button if we can not get report url, for example if the provider
       // of blockedInfo is not Google
       if (reportUrl) {
@@ -3196,7 +3202,7 @@ var BrowserOnClick = {
       }
     } else if (reason === "phishing") {
       let reportUrl = gSafeBrowsing.getReportURL("PhishMistake", blockedInfo);
-
+      title = gNavigatorBundle.getString("safebrowsing.deceptiveSite");
       // There's no button if we can not get report url, for example if the provider
       // of blockedInfo is not Google
       if (reportUrl) {

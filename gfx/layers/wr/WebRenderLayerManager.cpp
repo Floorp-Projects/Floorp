@@ -314,6 +314,8 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
 
   MakeSnapshotIfRequired(size);
 
+  ClearDisplayItemLayers();
+
   // this may result in Layers being deleted, which results in
   // PLayer::Send__delete__() and DeallocShmem()
   mKeepAlive.Clear();

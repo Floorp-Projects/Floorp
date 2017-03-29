@@ -1547,14 +1547,22 @@ impl Device {
         if u_color_2 != -1 {
             self.gl.uniform_1i(u_color_2, TextureSampler::Color2 as i32);
         }
+        let u_noise = self.gl.get_uniform_location(program.id, "sDither");
+        if u_noise != -1 {
+            self.gl.uniform_1i(u_noise, TextureSampler::Dither as i32);
+        }
         let u_mask = self.gl.get_uniform_location(program.id, "sMask");
         if u_mask != -1 {
             self.gl.uniform_1i(u_mask, TextureSampler::Mask as i32);
         }
 
-        let u_cache = self.gl.get_uniform_location(program.id, "sCache");
-        if u_cache != -1 {
-            self.gl.uniform_1i(u_cache, TextureSampler::Cache as i32);
+        let u_cache_a8 = self.gl.get_uniform_location(program.id, "sCacheA8");
+        if u_cache_a8 != -1 {
+            self.gl.uniform_1i(u_cache_a8, TextureSampler::CacheA8 as i32);
+        }
+        let u_cache_rgba8 = self.gl.get_uniform_location(program.id, "sCacheRGBA8");
+        if u_cache_rgba8 != -1 {
+            self.gl.uniform_1i(u_cache_rgba8, TextureSampler::CacheRGBA8 as i32);
         }
 
         let u_layers = self.gl.get_uniform_location(program.id, "sLayers");

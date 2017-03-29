@@ -14,8 +14,8 @@ Test Error rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 "use strict";
 
 window.onload = Task.async(function* () {
@@ -36,6 +36,8 @@ window.onload = Task.async(function* () {
     yield testSyntaxError();
     yield testTypeError();
     yield testURIError();
+
+    yield testObjectLink();
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -258,6 +260,34 @@ window.onload = Task.async(function* () {
     is(tinyRenderedComponent.textContent,
       "URIError",
       "Error Rep has expected text content for URIError in tiny mode");
+  }
+
+  function testObjectLink() {
+    // Test object = `new Error("Error message")`
+    const stub = getGripStub("testSimpleError");
+
+    const renderedComponent = renderComponent(ErrorRep.rep, {
+      object: stub,
+      objectLink: (props, ...children) => React.DOM.span({},
+        "*", ...children, "*"),
+    });
+    is(renderedComponent.textContent,
+      "*Error: Error message\n" +
+      "Stack trace:\n" +
+      "@debugger eval code:1:13\n*",
+      "Error Rep has expected text content when an objectLink is passed as a prop");
+
+    const tinyRenderedComponent = renderComponent(
+      ErrorRep.rep, {
+        object: stub,
+        mode: MODE.TINY,
+        objectLink: (props, ...children) => React.DOM.span({},
+          "*", ...children, "*"),
+      });
+    is(tinyRenderedComponent.textContent,
+      "*Error*",
+      "Error Rep has expected text content in tiny mode when an objectLink is passed " +
+      "as a prop");
   }
 
   function getGripStub(name) {

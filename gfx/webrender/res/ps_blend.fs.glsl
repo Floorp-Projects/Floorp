@@ -99,7 +99,7 @@ vec4 Opacity(vec4 Cs, float amount) {
 }
 
 void main(void) {
-    vec4 Cs = texture(sCache, vUv);
+    vec4 Cs = texture(sCacheRGBA8, vUv);
 
     if (Cs.a == 0.0) {
         discard;

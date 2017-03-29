@@ -211,8 +211,7 @@ impl FrameBuilder {
     }
 
     pub fn push_stacking_context(&mut self,
-                                 reference_frame_offset: LayerPoint,
-                                 rect: LayerRect,
+                                 reference_frame_offset: &LayerPoint,
                                  pipeline_id: PipelineId,
                                  is_page_root: bool,
                                  composite_ops: CompositeOps) {
@@ -229,8 +228,7 @@ impl FrameBuilder {
 
         let stacking_context_index = StackingContextIndex(self.stacking_context_store.len());
         self.stacking_context_store.push(StackingContext::new(pipeline_id,
-                                                              reference_frame_offset,
-                                                              rect,
+                                                              *reference_frame_offset,
                                                               is_page_root,
                                                               composite_ops));
         self.cmds.push(PrimitiveRunCmd::PushStackingContext(stacking_context_index));
@@ -1332,7 +1330,8 @@ impl FrameBuilder {
             pass.build(&ctx, &mut render_tasks);
 
             profile_counters.passes.inc();
-            profile_counters.targets.add(pass.targets.len());
+            profile_counters.color_targets.add(pass.color_targets.target_count());
+            profile_counters.alpha_targets.add(pass.alpha_targets.target_count());
         }
 
         resource_cache.end_frame();
@@ -1446,7 +1445,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
             let local_viewport_rect =
                 node.combined_local_viewport_rect.translate(&-node.local_viewport_rect.origin);
 
-            node_clip_info.xf_rect = packed_layer.set_rect(Some(local_viewport_rect),
+            node_clip_info.xf_rect = packed_layer.set_rect(&local_viewport_rect,
                                                            self.screen_rect,
                                                            self.device_pixel_ratio);
 
@@ -1493,16 +1492,13 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                 return;
             }
 
-            // Here we want to find the intersection between the clipping region and the
-            // stacking context content, so we move the viewport rectangle into the coordinate
-            // system of the stacking context content.
+            // Here we move the viewport rectangle into the coordinate system
+            // of the stacking context content.
             let viewport_rect =
                 &node.combined_local_viewport_rect
                      .translate(&-stacking_context.reference_frame_offset)
                      .translate(&-node.scrolling.offset);
-            let intersected_rect = stacking_context.local_rect.intersection(viewport_rect);
-
-            group.xf_rect = packed_layer.set_rect(intersected_rect,
+            group.xf_rect = packed_layer.set_rect(viewport_rect,
                                                   self.screen_rect,
                                                   self.device_pixel_ratio);
         }
