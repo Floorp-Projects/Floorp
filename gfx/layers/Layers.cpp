@@ -2444,6 +2444,22 @@ LayerManager::DumpPacket(layerscope::LayersPacket* aPacket)
   layer->set_parentptr(0);
 }
 
+void
+LayerManager::TrackDisplayItemLayer(RefPtr<DisplayItemLayer> aLayer)
+{
+  mDisplayItemLayers.AppendElement(aLayer);
+}
+
+void
+LayerManager::ClearDisplayItemLayers()
+{
+  for (uint32_t i = 0; i < mDisplayItemLayers.Length(); i++) {
+    mDisplayItemLayers[i]->EndTransaction();
+  }
+
+  mDisplayItemLayers.Clear();
+}
+
 /*static*/ bool
 LayerManager::IsLogEnabled()
 {
