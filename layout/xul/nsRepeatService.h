@@ -22,13 +22,12 @@
 
 class nsITimer;
 
-class nsRepeatService final : public nsITimerCallback
+class nsRepeatService final
 {
 public:
-
   typedef void (* Callback)(void* aData);
-    
-  NS_DECL_NSITIMERCALLBACK
+
+  ~nsRepeatService();
 
   // Start dispatching timer events to the callback. There is no memory
   // management of aData here; it is the caller's responsibility to call
@@ -43,11 +42,8 @@ public:
   static nsRepeatService* GetInstance();
   static void Shutdown();
 
-  NS_DECL_ISUPPORTS
-
 protected:
   nsRepeatService();
-  virtual ~nsRepeatService();
 
 private:
   // helper function to initialize callback function to mRepeatTimer

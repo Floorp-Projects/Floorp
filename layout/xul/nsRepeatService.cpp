@@ -11,11 +11,12 @@
 //
 
 #include "nsRepeatService.h"
+#include "mozilla/StaticPtr.h"
 #include "nsIServiceManager.h"
 
 using namespace mozilla;
 
-static StaticRefPtr<nsRepeatService> gRepeatService;
+static StaticAutoPtr<nsRepeatService> gRepeatService;
 
 nsRepeatService::nsRepeatService()
 : mCallback(nullptr), mCallbackData(nullptr)
@@ -71,23 +72,27 @@ void nsRepeatService::Stop(Callback aCallback, void* aCallbackData)
   mCallbackData = nullptr;
 }
 
-NS_IMETHODIMP nsRepeatService::Notify(nsITimer *timer)
-{
-  // do callback
-  if (mCallback)
-    mCallback(mCallbackData);
-
-  // start timer again.
-  InitTimerCallback(REPEAT_DELAY);
-  return NS_OK;
-}
-
 void
 nsRepeatService::InitTimerCallback(uint32_t aInitialDelay)
 {
-  if (mRepeatTimer) {
-    mRepeatTimer->InitWithCallback(this, aInitialDelay, nsITimer::TYPE_ONE_SHOT);
+  if (!mRepeatTimer) {
+    return;
   }
-}
 
-NS_IMPL_ISUPPORTS(nsRepeatService, nsITimerCallback)
+  mRepeatTimer->InitWithFuncCallback([](nsITimer* aTimer, void* aClosure) {
+    // Use gRepeatService instead of nsRepeatService::GetInstance() (because
+    // we don't want nsRepeatService::GetInstance() to re-create a new instance
+    // for us, if we happen to get invoked after nsRepeatService::Shutdown() has
+    // nulled out gRepeatService).
+    nsRepeatService* rs = gRepeatService;
+    if (!rs) {
+      return;
+    }
+
+    if (rs->mCallback) {
+      rs->mCallback(rs->mCallbackData);
+    }
+
+    rs->InitTimerCallback(REPEAT_DELAY);
+  }, nullptr, aInitialDelay, nsITimer::TYPE_ONE_SHOT);
+}
