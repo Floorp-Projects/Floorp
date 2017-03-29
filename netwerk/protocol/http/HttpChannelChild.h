@@ -256,6 +256,9 @@ private:
   // If ResumeAt is called before AsyncOpen, we need to send extra data upstream
   bool mSendResumeAt;
 
+  // To ensure only one SendDeletingChannel is triggered.
+  Atomic<bool> mDeletingChannelSent;
+
   Atomic<bool> mIPCOpen;
   bool mKeptAlive;            // IPC kept open, but only for security info
   RefPtr<ChannelEventQueue> mEventQ;
