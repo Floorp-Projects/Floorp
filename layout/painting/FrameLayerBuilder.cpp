@@ -5541,7 +5541,10 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   if ((aLayerBuilder->IsBuildingRetainedLayers() &&
        (!canDraw2D || transform2d.HasNonIntegerTranslation())) ||
       aContainerFrame->Extend3DContext() ||
-      aContainerFrame->Combines3DTransformWithAncestors()) {
+      aContainerFrame->Combines3DTransformWithAncestors() ||
+      // For async transform animation, the value would be changed at
+      // any time, integer translation is not always true.
+      aContainerFrame->HasAnimationOfTransform()) {
     aOutgoingScale.mDisableSubpixelAntialiasingInDescendants = true;
   }
   return true;
