@@ -848,8 +848,8 @@ private:
   bool DonePrerollingAudio()
   {
     return !mMaster->IsAudioDecoding()
-           || mMaster->GetDecodedAudioDuration().ToMicroseconds()
-              >= AudioPrerollThreshold().ToMicroseconds() * mMaster->mPlaybackRate;
+           || mMaster->GetDecodedAudioDuration()
+              >= AudioPrerollThreshold().MultDouble(mMaster->mPlaybackRate);
   }
 
   bool DonePrerollingVideo()
@@ -2311,12 +2311,12 @@ DecodingState::NeedToSkipToNextKeyframe()
   bool isLowOnDecodedAudio =
     !Reader()->IsAsync()
     && mMaster->IsAudioDecoding()
-    && (mMaster->GetDecodedAudioDuration().ToMicroseconds()
-        < mMaster->mLowAudioThreshold.ToMicroseconds() * mMaster->mPlaybackRate);
+    && (mMaster->GetDecodedAudioDuration()
+        < mMaster->mLowAudioThreshold.MultDouble(mMaster->mPlaybackRate));
   bool isLowOnDecodedVideo =
-    (mMaster->GetClock() - mMaster->mDecodedVideoEndTime).ToMicroseconds()
-    * mMaster->mPlaybackRate
-    > LOW_VIDEO_THRESHOLD.ToMicroseconds();
+    (mMaster->GetClock()
+     - mMaster->mDecodedVideoEndTime).MultDouble(mMaster->mPlaybackRate)
+    > LOW_VIDEO_THRESHOLD;
   bool lowBuffered = mMaster->HasLowBufferedData();
 
   if ((isLowOnDecodedAudio || isLowOnDecodedVideo) && !lowBuffered) {
@@ -2763,9 +2763,9 @@ bool
 MediaDecoderStateMachine::HaveEnoughDecodedAudio()
 {
   MOZ_ASSERT(OnTaskQueue());
-  auto ampleAudioUSecs = mAmpleAudioThreshold.ToMicroseconds() * mPlaybackRate;
+  auto ampleAudio = mAmpleAudioThreshold.MultDouble(mPlaybackRate);
   return AudioQueue().GetSize() > 0
-         && GetDecodedAudioDuration().ToMicroseconds() >= ampleAudioUSecs;
+         && GetDecodedAudioDuration() >= ampleAudio;
 }
 
 bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
