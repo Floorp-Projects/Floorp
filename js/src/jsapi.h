@@ -3879,6 +3879,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
         forceAsync(false),
         sourceIsLazy(false),
         allowHTMLComments(true),
+        isProbablySystemOrAddonCode(false),
         introductionType(nullptr),
         introductionLineno(0),
         introductionOffset(0),
@@ -3915,6 +3916,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
     bool forceAsync;
     bool sourceIsLazy;
     bool allowHTMLComments;
+    bool isProbablySystemOrAddonCode;
 
     // |introductionType| is a statically allocated C string:
     // one of "eval", "Function", or "GeneratorFunction".
@@ -5162,7 +5164,8 @@ GetSymbolDescription(HandleSymbol symbol);
     macro(split) \
     macro(toPrimitive) \
     macro(toStringTag) \
-    macro(unscopables)
+    macro(unscopables) \
+    macro(asyncIterator)
 
 enum class SymbolCode : uint32_t {
     // There is one SymbolCode for each well-known symbol.

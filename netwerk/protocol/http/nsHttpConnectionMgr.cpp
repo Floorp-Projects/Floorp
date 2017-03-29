@@ -79,7 +79,7 @@ nsHttpConnectionMgr::InsertTransactionSorted(nsTArray<RefPtr<nsHttpConnectionMgr
 
 nsHttpConnectionMgr::nsHttpConnectionMgr()
     : mReentrantMonitor("nsHttpConnectionMgr.mReentrantMonitor")
-    , mMaxUrgentStartQ(0)
+    , mMaxUrgentExcessiveConns(0)
     , mMaxConns(0)
     , mMaxPersistConnsPerHost(0)
     , mMaxPersistConnsPerProxy(0)
@@ -125,7 +125,7 @@ nsHttpConnectionMgr::EnsureSocketThreadTarget()
 }
 
 nsresult
-nsHttpConnectionMgr::Init(uint16_t maxUrgentStartQ,
+nsHttpConnectionMgr::Init(uint16_t maxUrgentExcessiveConns,
                           uint16_t maxConns,
                           uint16_t maxPersistConnsPerHost,
                           uint16_t maxPersistConnsPerProxy,
@@ -136,7 +136,7 @@ nsHttpConnectionMgr::Init(uint16_t maxUrgentStartQ,
     {
         ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-        mMaxUrgentStartQ = maxUrgentStartQ;
+        mMaxUrgentExcessiveConns = maxUrgentExcessiveConns;
         mMaxConns = maxConns;
         mMaxPersistConnsPerHost = maxPersistConnsPerHost;
         mMaxPersistConnsPerProxy = maxPersistConnsPerProxy;
@@ -1159,7 +1159,7 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, uint32_t ca
     uint32_t availableConnections = AvailableNewConnectionCount(ent);
 
     if (caps & NS_HTTP_URGENT_START) {
-        if (availableConnections > static_cast<uint32_t>(mMaxUrgentStartQ)) {
+        if (availableConnections > static_cast<uint32_t>(mMaxUrgentExcessiveConns)) {
             LOG(("The number of total connections are greater than or equal to sum of "
                  "max urgent-start queue length and the number of max persistent connections.\n"));
             return true;
@@ -2721,7 +2721,7 @@ nsHttpConnectionMgr::OnMsgUpdateParam(int32_t inParam, ARefBase *)
         mMaxConns = value;
         break;
     case MAX_URGENT_START_Q:
-        mMaxUrgentStartQ = value;
+        mMaxUrgentExcessiveConns = value;
         break;
     case MAX_PERSISTENT_CONNECTIONS_PER_HOST:
         mMaxPersistConnsPerHost = value;

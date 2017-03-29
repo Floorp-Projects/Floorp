@@ -333,7 +333,7 @@ chromeScript.addMessageListener("testProfileLoadDone", function() {
     chromeScript.sendSyncMessage("UAO-init");
     (function waitForLoad() {
       var ifr = document.createElement('IFRAME');
-      ifr.src = "about:blank";
+      ifr.src = location.origin;
 
       ifr.addEventListener('load', function() {
         var nav = ifr.contentWindow.navigator;

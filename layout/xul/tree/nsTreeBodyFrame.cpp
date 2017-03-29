@@ -4151,11 +4151,11 @@ nsTreeBodyFrame::PaintBackgroundLayer(nsStyleContext*      aStyleContext,
 {
   const nsStyleBorder* myBorder = aStyleContext->StyleBorder();
   nsCSSRendering::PaintBGParams params =
-    nsCSSRendering::PaintBGParams::ForAllLayers(*aPresContext, aRenderingContext,
+    nsCSSRendering::PaintBGParams::ForAllLayers(*aPresContext,
                                                 aDirtyRect, aRect, this,
                                                 nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES);
   DrawResult result =
-    nsCSSRendering::PaintStyleImageLayerWithSC(params, aStyleContext,
+    nsCSSRendering::PaintStyleImageLayerWithSC(params, aRenderingContext, aStyleContext,
                                                *myBorder);
 
   result &=

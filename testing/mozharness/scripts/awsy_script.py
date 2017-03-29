@@ -8,6 +8,7 @@
 run awsy tests in a virtualenv
 """
 
+import json
 import os
 import sys
 import copy
@@ -56,13 +57,12 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin,TooltoolMixin):
         self.installer_url = self.config.get("installer_url")
         self.tests = None
 
-        self.workdir = self.query_abs_dirs()['abs_work_dir']
-        self.testdir = os.path.join(self.workdir, 'tests')
-        self.awsy_path = os.path.join(
-            self.testdir, 'awsy'
-        )
+        abs_work_dir = self.query_abs_dirs()['abs_work_dir']
+        self.testdir = os.path.join(abs_work_dir, 'tests')
+        self.awsy_path = os.path.join(self.testdir, 'awsy')
         self.awsy_libdir = os.path.join(self.awsy_path, 'awsy')
-        self.awsy_testdir = os.path.join(self.awsy_path, 'page_load_test')
+        self.webroot_dir = os.path.join(self.testdir, 'html')
+        self.results_dir = os.path.join(self.testdir, 'results')
         self.binary_path = self.config.get('binary_path')
 
     def query_abs_dirs(self):
@@ -99,18 +99,19 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin,TooltoolMixin):
         """Populate the production test slaves' webroots"""
         self.info("Downloading pageset with tooltool...")
         manifest_file = os.path.join(self.awsy_path, 'tp5n-pageset.manifest')
-        if not os.path.isdir(self.awsy_testdir):
-            self.mkdir_p(self.awsy_testdir)
+        page_load_test_dir = os.path.join(self.webroot_dir, 'page_load_test')
+        if not os.path.isdir(page_load_test_dir):
+            self.mkdir_p(page_load_test_dir)
         self.tooltool_fetch(
             manifest_file,
-            output_dir=self.awsy_testdir,
+            output_dir=page_load_test_dir,
             cache=self.config.get('tooltool_cache')
         )
-        archive = os.path.join(self.awsy_testdir, 'tp5n.zip')
+        archive = os.path.join(page_load_test_dir, 'tp5n.zip')
         unzip = self.query_exe('unzip')
-        unzip_cmd = [unzip, '-q', '-o', archive, '-d', self.awsy_testdir]
+        unzip_cmd = [unzip, '-q', '-o', archive, '-d', page_load_test_dir]
         self.run_command(unzip_cmd, halt_on_failure=True)
-        self.run_command("ls %s" % self.awsy_testdir)
+        self.run_command("ls %s" % page_load_test_dir)
 
 
     def run_tests(self, args=None, **kw):
@@ -122,9 +123,17 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin,TooltoolMixin):
         error_summary_file = os.path.join(dirs['abs_blob_upload_dir'],
                                           'marionette_errorsummary.log')
 
+        runtime_testvars = {'webRootDir': self.webroot_dir,
+                            'resultsDir': self.results_dir}
+        runtime_testvars_path = os.path.join(self.awsy_path, 'runtime-testvars.json')
+        runtime_testvars_file = open(runtime_testvars_path, 'wb')
+        runtime_testvars_file.write(json.dumps(runtime_testvars, indent=2))
+        runtime_testvars_file.close()
+
         cmd = ['marionette']
         cmd.append("--preferences=%s" % os.path.join(self.awsy_path, "conf", "prefs.json"))
         cmd.append("--testvars=%s" % os.path.join(self.awsy_path, "conf", "testvars.json"))
+        cmd.append("--testvars=%s" % runtime_testvars_path)
         cmd.append("--log-raw=-")
         cmd.append("--log-errorsummary=%s" % error_summary_file)
         cmd.append("--binary=%s" % self.binary_path)
@@ -142,7 +151,8 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin,TooltoolMixin):
             self.mkdir_p(env['MOZ_UPLOAD_DIR'])
         env = self.query_env(partial_env=env)
         parser = StructuredOutputParser(config=self.config,
-                                        log_obj=self.log_obj)
+                                        log_obj=self.log_obj,
+                                        strict=False)
         return_code = self.run_command(command=cmd,
                                        cwd=self.awsy_path,
                                        output_timeout=self.config.get("cmd_timeout"),

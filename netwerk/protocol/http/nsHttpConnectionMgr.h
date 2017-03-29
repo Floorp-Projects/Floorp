@@ -63,7 +63,7 @@ public:
 
     nsHttpConnectionMgr();
 
-    MOZ_MUST_USE nsresult Init(uint16_t maxUrgentStartQ,
+    MOZ_MUST_USE nsresult Init(uint16_t maxUrgentExcessiveConns,
                                uint16_t maxConnections,
                                uint16_t maxPersistentConnectionsPerHost,
                                uint16_t maxPersistentConnectionsPerProxy,
@@ -445,7 +445,7 @@ private:
     nsCOMPtr<nsIEventTarget>     mSocketThreadTarget;
 
     // connection limits
-    uint16_t mMaxUrgentStartQ;
+    uint16_t mMaxUrgentExcessiveConns;
     uint16_t mMaxConns;
     uint16_t mMaxPersistConnsPerHost;
     uint16_t mMaxPersistConnsPerProxy;

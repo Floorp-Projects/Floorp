@@ -33,7 +33,12 @@ class DrawTarget;
 
 namespace layers {
 class ImageContainer;
+class WebRenderDisplayItemLayer;
 } // namespace layers
+
+namespace wr {
+class DisplayListBuilder;
+} // namespace wr
 
 enum class PaintBorderFlags : uint8_t
 {
@@ -402,7 +407,6 @@ struct nsCSSRendering {
 
   struct PaintBGParams {
     nsPresContext& presCtx;
-    nsRenderingContext& renderingCtx;
     nsRect dirtyRect;
     nsRect borderArea;
     nsIFrame* frame;
@@ -415,14 +419,12 @@ struct nsCSSRendering {
     float opacity;
 
     static PaintBGParams ForAllLayers(nsPresContext& aPresCtx,
-                                      nsRenderingContext& aRenderingCtx,
                                       const nsRect& aDirtyRect,
                                       const nsRect& aBorderArea,
                                       nsIFrame *aFrame,
                                       uint32_t aPaintFlags,
                                       float aOpacity = 1.0);
     static PaintBGParams ForSingleLayer(nsPresContext& aPresCtx,
-                                        nsRenderingContext& aRenderingCtx,
                                         const nsRect& aDirtyRect,
                                         const nsRect& aBorderArea,
                                         nsIFrame *aFrame,
@@ -433,7 +435,6 @@ struct nsCSSRendering {
 
   private:
     PaintBGParams(nsPresContext& aPresCtx,
-                  nsRenderingContext& aRenderingCtx,
                   const nsRect& aDirtyRect,
                   const nsRect& aBorderArea,
                   nsIFrame* aFrame,
@@ -442,7 +443,6 @@ struct nsCSSRendering {
                   CompositionOp aCompositionOp,
                   float aOpacity)
      : presCtx(aPresCtx),
-       renderingCtx(aRenderingCtx),
        dirtyRect(aDirtyRect),
        borderArea(aBorderArea),
        frame(aFrame),
@@ -452,8 +452,8 @@ struct nsCSSRendering {
        opacity(aOpacity) {}
   };
 
-  static DrawResult PaintStyleImageLayer(const PaintBGParams& aParams);
-
+  static DrawResult PaintStyleImageLayer(const PaintBGParams& aParams,
+                                         nsRenderingContext& aRenderingCtx);
 
   /**
    * Same as |PaintStyleImageLayer|, except using the provided style structs.
@@ -469,8 +469,23 @@ struct nsCSSRendering {
    * layer's composition mode) will be used.
    */
   static DrawResult PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
+                                               nsRenderingContext& aRenderingCtx,
                                                nsStyleContext *mBackgroundSC,
                                                const nsStyleBorder& aBorder);
+
+  static bool CanBuildWebRenderDisplayItemsForStyleImageLayer(nsPresContext& aPresCtx,
+                                                              nsIFrame *aFrame,
+                                                              const nsStyleBackground* aBackgroundStyle,
+                                                              int32_t aLayer);
+  static void BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams& aParams,
+                                                           mozilla::wr::DisplayListBuilder& aBuilder,
+                                                           mozilla::layers::WebRenderDisplayItemLayer* aLayer);
+
+  static void BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBGParams& aParams,
+                                                                 mozilla::wr::DisplayListBuilder& aBuilder,
+                                                                 mozilla::layers::WebRenderDisplayItemLayer* aLayer,
+                                                                 nsStyleContext *mBackgroundSC,
+                                                                 const nsStyleBorder& aBorder);
 
   /**
    * Returns the rectangle covered by the given background layer image, taking

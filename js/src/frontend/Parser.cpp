@@ -3753,9 +3753,11 @@ Parser<ParseHandler>::functionStmt(uint32_t preludeStart, YieldHandling yieldHan
 
     GeneratorKind generatorKind = NotGenerator;
     if (tt == TOK_MUL) {
-        if (asyncKind != SyncFunction) {
-            error(JSMSG_ASYNC_GENERATOR);
-            return null();
+        if (!asyncIterationSupported()) {
+            if (asyncKind != SyncFunction) {
+                error(JSMSG_ASYNC_GENERATOR);
+                return null();
+            }
         }
         generatorKind = StarGenerator;
         if (!tokenStream.getToken(&tt))
@@ -3825,9 +3827,11 @@ Parser<ParseHandler>::functionExpr(uint32_t preludeStart, InvokedPrediction invo
         return null();
 
     if (tt == TOK_MUL) {
-        if (asyncKind != SyncFunction) {
-            error(JSMSG_ASYNC_GENERATOR);
-            return null();
+        if (!asyncIterationSupported()) {
+            if (asyncKind != SyncFunction) {
+                error(JSMSG_ASYNC_GENERATOR);
+                return null();
+            }
         }
         generatorKind = StarGenerator;
         if (!tokenStream.getToken(&tt))
@@ -5857,6 +5861,7 @@ Parser<ParseHandler>::matchInOrOf(bool* isForInp, bool* isForOfp)
 template <class ParseHandler>
 bool
 Parser<ParseHandler>::forHeadStart(YieldHandling yieldHandling,
+                                   IteratorKind iterKind,
                                    ParseNodeKind* forHeadKind,
                                    Node* forInitialPart,
                                    Maybe<ParseContext::Scope>& forLoopLexicalScope,
@@ -5947,6 +5952,11 @@ Parser<ParseHandler>::forHeadStart(YieldHandling yieldHandling,
     if (!matchInOrOf(&isForIn, &isForOf))
         return false;
 
+    if (iterKind == IteratorKind::Async && !isForOf) {
+        error(JSMSG_FOR_AWAIT_NOT_OF);
+        return false;
+    }
+
     // If we don't encounter 'in'/'of', we have a for(;;) loop.  We've handled
     // the init expression; the caller handles the rest.  Allow the Operand
     // modifier when regetting: Operand must be used to examine the ';' in
@@ -6020,6 +6030,7 @@ Parser<ParseHandler>::forStatement(YieldHandling yieldHandling)
     ParseContext::Statement stmt(pc, StatementKind::ForLoop);
 
     bool isForEach = false;
+    IteratorKind iterKind = IteratorKind::Sync;
     unsigned iflags = 0;
 
     if (allowsForEachIn()) {
@@ -6032,6 +6043,19 @@ Parser<ParseHandler>::forStatement(YieldHandling yieldHandling)
             addTelemetry(JSCompartment::DeprecatedForEach);
             if (!warnOnceAboutForEach())
                 return null();
+        }
+    }
+
+    if (asyncIterationSupported()) {
+        if (pc->isAsync()) {
+            bool matched;
+            if (!tokenStream.matchToken(&matched, TOK_AWAIT))
+                return null();
+
+            if (matched) {
+                iflags |= JSITER_FORAWAITOF;
+                iterKind = IteratorKind::Async;
+            }
         }
     }
 
@@ -6072,7 +6096,7 @@ Parser<ParseHandler>::forStatement(YieldHandling yieldHandling)
     //
     // In either case the subsequent token can be consistently accessed using
     // TokenStream::None semantics.
-    if (!forHeadStart(yieldHandling, &headKind, &startNode, forLoopLexicalScope,
+    if (!forHeadStart(yieldHandling, iterKind, &headKind, &startNode, forLoopLexicalScope,
                       &iteratedExpr))
     {
         return null();
@@ -9288,11 +9312,6 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
 
     bool isGenerator = false;
     bool isAsync = false;
-    if (ltok == TOK_MUL) {
-        isGenerator = true;
-        if (!tokenStream.getToken(&ltok))
-            return null();
-    }
 
     if (ltok == TOK_ASYNC) {
         // AsyncMethod[Yield, Await]:
@@ -9321,9 +9340,16 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
         }
     }
 
-    if (isAsync && isGenerator) {
-        error(JSMSG_ASYNC_GENERATOR);
-        return null();
+    if (ltok == TOK_MUL) {
+        if (!asyncIterationSupported()) {
+            if (isAsync) {
+                error(JSMSG_ASYNC_GENERATOR);
+                return null();
+            }
+        }
+        isGenerator = true;
+        if (!tokenStream.getToken(&ltok))
+            return null();
     }
 
     propAtom.set(nullptr);

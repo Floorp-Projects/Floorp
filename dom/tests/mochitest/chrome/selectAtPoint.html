@@ -5,7 +5,9 @@
 <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
 
-<script type="application/javascript">
+<script>
+  "use strict";
+
   var SimpleTest = window.opener.SimpleTest;
   var Ci = Components.interfaces;
 
@@ -127,13 +129,7 @@
     targetPoint = { xPos: rect.left + ((charDims.width * 4) + (charDims.width / 2)),
                     yPos: rect.top + (charDims.height / 2) };
     setEnd(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_CHARACTER);
-    if (isLinux || isMac) {
-      // XXX I think this is a bug, the right hand selection is 4.5 characters over with a
-      // monspaced font. what we want: t(te)s(ts)election1 what we get: t(te)st(se)lection1
-      checkSelection(document, "split selection", "tese");
-    } else if (isWindows) {
       checkSelection(document, "split selection", "tets");
-    }
 
     // Trying to select where there's no text, should fail but not throw
     let result = dwu.selectAtPoint(rect.left - 20, rect.top - 20, Ci.nsIDOMWindowUtils.SELECT_CHARACTER, false);
@@ -228,7 +224,7 @@
 <style type="text/css">
 
 body {
-  font-family: monospace;
+  font-family: 'Courier New';
   margin-left: 40px;
   margin-top: 40px;
   padding: 0;
@@ -267,7 +263,7 @@ body {
 
 <br />
 
-<iframe id="frame1" src="data:text/html,<html><body style='margin: 0; padding: 0; font-family: monospace;' onload='window.parent.onFrameLoad();'><div id='sel2'>ttestselection2 Lorem ipsum dolor sit amet, at duo debet graeci, vivendum vulputate per ut.</div><br/><br/></body></html>"></iframe>
+<iframe id="frame1" src="data:text/html,<html><body style='margin: 0; padding: 0; font-family: \'Courier New\';' onload='window.parent.onFrameLoad();'><div id='sel2'>ttestselection2 Lorem ipsum dolor sit amet, at duo debet graeci, vivendum vulputate per ut.</div><br/><br/></body></html>"></iframe>
 
 <br/>
 

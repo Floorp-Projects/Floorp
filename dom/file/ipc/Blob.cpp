@@ -25,6 +25,8 @@
 #include "mozilla/dom/PBlobStreamChild.h"
 #include "mozilla/dom/PBlobStreamParent.h"
 #include "mozilla/dom/indexedDB/FileSnapshot.h"
+#include "mozilla/dom/ipc/MemoryStreamChild.h"
+#include "mozilla/dom/ipc/MemoryStreamParent.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
@@ -617,6 +619,108 @@ struct MOZ_STACK_CLASS CreateBlobImplMetadata final
   }
 };
 
+template<class M>
+PMemoryStreamChild*
+SerializeInputStreamInChunks(nsIInputStream* aInputStream, uint64_t aLength,
+                             M* aManager)
+{
+  MOZ_ASSERT(aInputStream);
+
+  PMemoryStreamChild* child = aManager->SendPMemoryStreamConstructor(aLength);
+  MOZ_ASSERT(child);
+
+  const uint64_t kMaxChunk = 1024 * 1024;
+
+  while (aLength) {
+    FallibleTArray<uint8_t> buffer;
+
+    uint64_t size = XPCOM_MIN(aLength, kMaxChunk);
+    if (NS_WARN_IF(!buffer.SetLength(size, fallible))) {
+      return nullptr;
+    }
+
+    uint32_t read;
+    nsresult rv = aInputStream->Read(reinterpret_cast<char*>(buffer.Elements()),
+                                     size, &read);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+
+    if (NS_WARN_IF(read == 0)) {
+      // We were not expecting a read==0 here.
+      return nullptr;
+    }
+
+    MOZ_ASSERT(read <= size);
+    aLength -= read;
+
+    if (NS_WARN_IF(!buffer.SetLength(read, fallible))) {
+      return nullptr;
+    }
+
+    child->SendAddChunk(buffer);
+  }
+
+  return child;
+}
+
+void
+DeleteStreamMemoryFromBlobDataStream(BlobDataStream& aStream)
+{
+  PMemoryStreamChild* actor = aStream.streamChild();
+  if (actor) {
+    actor->Send__delete__(actor);
+  }
+}
+
+void
+DeleteStreamMemoryFromBlobData(BlobData& aBlobData)
+{
+  switch (aBlobData.type()) {
+    case BlobData::TBlobDataStream:
+      DeleteStreamMemoryFromBlobDataStream(aBlobData.get_BlobDataStream());
+      return;
+
+    case BlobData::TArrayOfBlobData: {
+      nsTArray<BlobData>& arrayBlobData = aBlobData.get_ArrayOfBlobData();
+      for (uint32_t i = 0; i < arrayBlobData.Length(); ++i) {
+        DeleteStreamMemoryFromBlobData(arrayBlobData[i]);
+      }
+      return;
+    }
+
+    default:
+      // Nothing to do here.
+      return;
+  }
+}
+
+void
+DeleteStreamMemoryFromOptionalBlobData(OptionalBlobData& aParams)
+{
+  if (aParams.type() == OptionalBlobData::Tvoid_t) {
+    return;
+  }
+
+  DeleteStreamMemoryFromBlobData(aParams.get_BlobData());
+}
+
+void
+DeleteStreamMemory(AnyBlobConstructorParams& aParams)
+{
+  if (aParams.type() == AnyBlobConstructorParams::TFileBlobConstructorParams) {
+    FileBlobConstructorParams& fileParams = aParams.get_FileBlobConstructorParams();
+    DeleteStreamMemoryFromOptionalBlobData(fileParams.optionalBlobData());
+    return;
+  }
+
+  if (aParams.type() == AnyBlobConstructorParams::TNormalBlobConstructorParams) {
+    NormalBlobConstructorParams& normalParams = aParams.get_NormalBlobConstructorParams();
+    DeleteStreamMemoryFromOptionalBlobData(normalParams.optionalBlobData());
+    return;
+  }
+}
+
 } // namespace
 
 already_AddRefed<BlobImpl>
@@ -645,7 +749,11 @@ CreateBlobImpl(const BlobDataStream& aStream,
 {
   MOZ_ASSERT(gProcessType == GeckoProcessType_Default);
 
-  nsCOMPtr<nsIInputStream> inputStream = DeserializeIPCStream(aStream.stream());
+  MemoryStreamParent* actor =
+    static_cast<MemoryStreamParent*>(aStream.streamParent());
+
+  nsCOMPtr<nsIInputStream> inputStream;
+  actor->GetStream(getter_AddRefs(inputStream));
   if (!inputStream) {
     ASSERT_UNLESS_FUZZING();
     return nullptr;
@@ -837,10 +945,9 @@ CreateBlobImpl(const ParentBlobConstructorParams& aParams,
 }
 
 template <class ChildManagerType>
-void
+bool
 BlobDataFromBlobImpl(ChildManagerType* aManager, BlobImpl* aBlobImpl,
-                     BlobData& aBlobData,
-                     nsTArray<UniquePtr<AutoIPCStream>>& aIPCStreams)
+                     BlobData& aBlobData)
 {
   MOZ_ASSERT(gProcessType != GeckoProcessType_Default);
   MOZ_ASSERT(aBlobImpl);
@@ -858,11 +965,13 @@ BlobDataFromBlobImpl(ChildManagerType* aManager, BlobImpl* aBlobImpl,
     for (uint32_t count = subBlobs->Length(), index = 0;
          index < count;
          index++) {
-      BlobDataFromBlobImpl(aManager, subBlobs->ElementAt(index),
-                           subBlobDatas[index], aIPCStreams);
+      if (!BlobDataFromBlobImpl(aManager, subBlobs->ElementAt(index),
+                                subBlobDatas[index])) {
+        return false;
+      }
     }
 
-    return;
+    return true;
   }
 
   nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlobImpl);
@@ -871,7 +980,7 @@ BlobDataFromBlobImpl(ChildManagerType* aManager, BlobImpl* aBlobImpl,
     MOZ_ASSERT(actor);
 
     aBlobData = actor->ParentID();
-    return;
+    return true;
   }
 
   ErrorResult rv;
@@ -882,11 +991,14 @@ BlobDataFromBlobImpl(ChildManagerType* aManager, BlobImpl* aBlobImpl,
   aBlobImpl->GetInternalStream(getter_AddRefs(inputStream), rv);
   MOZ_ALWAYS_TRUE(!rv.Failed());
 
-  UniquePtr<AutoIPCStream> autoStream(new AutoIPCStream());
-  autoStream->Serialize(inputStream, aManager);
-  aBlobData = BlobDataStream(autoStream->TakeValue(), length);
+  PMemoryStreamChild* streamActor =
+    SerializeInputStreamInChunks(inputStream, length, aManager);
+  if (!streamActor) {
+    return false;
+  }
 
-  aIPCStreams.AppendElement(Move(autoStream));
+  aBlobData = BlobDataStream(nullptr, streamActor, length);
+  return true;
 }
 
 RemoteInputStream::RemoteInputStream(BlobImpl* aBlobImpl,
@@ -3477,7 +3589,6 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
   MOZ_ASSERT(!aBlobImpl->IsDateUnknown());
 
   AnyBlobConstructorParams blobParams;
-  nsTArray<UniquePtr<AutoIPCStream>> autoIPCStreams;
 
   if (gProcessType == GeckoProcessType_Default) {
     RefPtr<BlobImpl> sameProcessImpl = aBlobImpl;
@@ -3489,7 +3600,9 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
     // BlobData is going to be populate here and it _must_ be send via IPC in
     // order to avoid leaks.
     BlobData blobData;
-    BlobDataFromBlobImpl(aManager, aBlobImpl, blobData, autoIPCStreams);
+    if (NS_WARN_IF(!BlobDataFromBlobImpl(aManager, aBlobImpl, blobData))) {
+      return nullptr;
+    }
 
     nsString contentType;
     aBlobImpl->GetType(contentType);
@@ -3524,7 +3637,8 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
     return nullptr;
   }
 
-  autoIPCStreams.Clear();
+  DeleteStreamMemory(params.blobParams());
+
   return actor;
 }
 

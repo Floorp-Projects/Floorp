@@ -5,9 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBlob;
-include protocol PChildToParentStream;
-include protocol PParentToChildStream;
-include IPCStream;
+include protocol PMemoryStream;
 include ProtocolTypes;
 
 using struct mozilla::void_t
@@ -47,7 +45,7 @@ struct ClonedMessageData
 
 struct BlobDataStream
 {
-  IPCStream stream;
+  PMemoryStream stream;
   uint64_t length;
 };
 

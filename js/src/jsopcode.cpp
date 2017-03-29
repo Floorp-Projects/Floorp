@@ -2027,7 +2027,11 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex)
           case JSOP_LAMBDA:
           case JSOP_LAMBDA_ARROW:
           case JSOP_TOASYNC:
+          case JSOP_TOASYNCGEN:
             return write("FUN");
+
+          case JSOP_TOASYNCITER:
+            return write("ASYNCITER");
 
           case JSOP_MOREITER:
             // For stack dump, defIndex == 0 is not used.
@@ -2071,6 +2075,7 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex)
           case JSOP_UNINITIALIZED:
             return write("UNINITIALIZED");
 
+          case JSOP_AWAIT:
           case JSOP_YIELD:
             // Printing "yield SOMETHING" is confusing since the operand doesn't
             // match to the syntax, since the stack operand for "yield 10" is
