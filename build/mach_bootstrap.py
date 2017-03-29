@@ -119,6 +119,7 @@ MACH_MODULES = [
     'python/mozbuild/mozbuild/frontend/mach_commands.py',
     'services/common/tests/mach_commands.py',
     'taskcluster/mach_commands.py',
+    'testing/awsy/mach_commands.py',
     'testing/firefox-ui/mach_commands.py',
     'testing/mach_commands.py',
     'testing/marionette/mach_commands.py',
