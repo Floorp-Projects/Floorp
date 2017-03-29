@@ -2405,22 +2405,52 @@ nsWindowWatcher::SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
       screenHeight = NSToIntRound(screenHeight / scale);
 
       if (aSizeSpec.SizeSpecified()) {
-        /* Unlike position, force size out-of-bounds check only if
-           size actually was specified. Otherwise, intrinsically sized
-           windows are broken. */
-        if (height < 100) {
-          height = 100;
-          winHeight = height + (sizeChromeHeight ? 0 : chromeHeight);
-        }
-        if (winHeight > screenHeight) {
-          height = screenHeight - (sizeChromeHeight ? 0 : chromeHeight);
-        }
-        if (width < 100) {
-          width = 100;
-          winWidth = width + (sizeChromeWidth ? 0 : chromeWidth);
-        }
-        if (winWidth > screenWidth) {
-          width = screenWidth - (sizeChromeWidth ? 0 : chromeWidth);
+        if (!nsContentUtils::ShouldResistFingerprinting()) {
+          /* Unlike position, force size out-of-bounds check only if
+             size actually was specified. Otherwise, intrinsically sized
+             windows are broken. */
+          if (height < 100) {
+            height = 100;
+            winHeight = height + (sizeChromeHeight ? 0 : chromeHeight);
+          }
+          if (winHeight > screenHeight) {
+            height = screenHeight - (sizeChromeHeight ? 0 : chromeHeight);
+          }
+          if (width < 100) {
+            width = 100;
+            winWidth = width + (sizeChromeWidth ? 0 : chromeWidth);
+          }
+          if (winWidth > screenWidth) {
+            width = screenWidth - (sizeChromeWidth ? 0 : chromeWidth);
+          }
+        } else {
+          int32_t targetContentWidth  = 0;
+          int32_t targetContentHeight = 0;
+
+          nsContentUtils::CalcRoundedWindowSizeForResistingFingerprinting(
+            chromeWidth,
+            chromeHeight,
+            screenWidth,
+            screenHeight,
+            width,
+            height,
+            sizeChromeWidth,
+            sizeChromeHeight,
+            &targetContentWidth,
+            &targetContentHeight
+          );
+
+          if (aSizeSpec.mInnerWidthSpecified ||
+              aSizeSpec.mOuterWidthSpecified) {
+            width = targetContentWidth;
+            winWidth = width + (sizeChromeWidth ? 0 : chromeWidth);
+          }
+
+          if (aSizeSpec.mInnerHeightSpecified ||
+              aSizeSpec.mOuterHeightSpecified) {
+            height = targetContentHeight;
+            winHeight = height + (sizeChromeHeight ? 0 : chromeHeight);
+          }
         }
       }
 

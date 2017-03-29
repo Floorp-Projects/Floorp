@@ -268,6 +268,22 @@ public:
   static bool ShouldResistFingerprinting();
   static bool ShouldResistFingerprinting(nsIDocShell* aDocShell);
 
+  // A helper function to calculate the rounded window size for fingerprinting
+  // resistance. The rounded size is based on the chrome UI size and available
+  // screen size. If the inputWidth/Height is greater than the available content
+  // size, this will report the available content size. Otherwise, it will
+  // round the size to the nearest upper 200x100.
+  static void CalcRoundedWindowSizeForResistingFingerprinting(int32_t  aChromeWidth,
+                                                              int32_t  aChromeHeight,
+                                                              int32_t  aScreenWidth,
+                                                              int32_t  aScreenHeight,
+                                                              int32_t  aInputWidth,
+                                                              int32_t  aInputHeight,
+                                                              bool     aSetOuterWidth,
+                                                              bool     aSetOuterHeight,
+                                                              int32_t* aOutputWidth,
+                                                              int32_t* aOutputHeight);
+
   /**
    * Returns the parent node of aChild crossing document boundaries.
    * Uses the parent node in the composed document.
@@ -2933,6 +2949,9 @@ private:
   static bool sUseActivityCursor;
   static uint32_t sCookiesLifetimePolicy;
   static uint32_t sCookiesBehavior;
+
+  static int32_t sPrivacyMaxInnerWidth;
+  static int32_t sPrivacyMaxInnerHeight;
 
   static nsHtml5StringParser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;
