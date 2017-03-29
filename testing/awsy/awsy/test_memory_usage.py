@@ -44,8 +44,12 @@ class TestMemoryUsage(MarionetteTestCase):
 
         self._webroot_dir = self.testvars["webRootDir"]
         self._resultsDir = self.testvars["resultsDir"]
-        for f in glob.glob(os.path.join(self._resultsDir, '*')):
+        # Be conservative in what we delete automatically.
+        for f in glob.glob(os.path.join(self._resultsDir, 'memory-report-*.json.gz')):
             os.unlink(f)
+        for f in glob.glob(os.path.join(self._resultsDir, 'perfherder_data.json')):
+            os.unlink(f)
+
         self._webservers = webservers.WebServers("localhost",
                                                  8001,
                                                  self._webroot_dir,
@@ -54,8 +58,9 @@ class TestMemoryUsage(MarionetteTestCase):
         self._urls = []
 
         urls = None
-        tp5n_manifest = os.path.join(self._webroot_dir, 'page_load_test', 'tp5n',
-                                     'tp5n.manifest')
+        default_tp5n_manifest = os.path.join(self._webroot_dir, 'page_load_test', 'tp5n',
+                                             'tp5n.manifest')
+        tp5n_manifest = self.testvars.get("pageManifest", default_tp5n_manifest)
         with open(tp5n_manifest) as fp:
             urls = fp.readlines()
         if urls:
@@ -90,7 +95,8 @@ class TestMemoryUsage(MarionetteTestCase):
 
         perf_file = os.path.join(self._resultsDir, "perfherder_data.json")
         with open(perf_file, 'w') as fp:
-            json.dump(perf_blob, fp)
+            json.dump(perf_blob, fp, indent=2)
+        self.logger.info("Perfherder data written to %s" % perf_file)
 
         # copy it to moz upload dir if set
         if 'MOZ_UPLOAD_DIR' in os.environ:
