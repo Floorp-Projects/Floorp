@@ -849,8 +849,10 @@ void gfxFontUtils::ParseFontList(const nsAString& aFamilyList,
         fontname = Substring(nameStart, p);
         fontname.CompressWhitespace(true, true);
         
-        // append it to the list
-        aFontList.AppendElement(fontname);
+        // append it to the list if it's not empty
+        if (!fontname.IsEmpty()) {
+            aFontList.AppendElement(fontname);
+        }
         ++p;
     }
 }
