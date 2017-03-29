@@ -167,7 +167,8 @@ private:
   void UnsuppressDisplayport();
 
   void StartRepeat() {
-    nsRepeatService::GetInstance()->Start(Notify, this);
+    nsRepeatService::GetInstance()->Start(Notify, this,
+                                          NS_LITERAL_CSTRING("nsSliderFrame"));
   }
   void StopRepeat() {
     nsRepeatService::GetInstance()->Stop(Notify, this);

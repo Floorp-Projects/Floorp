@@ -43,13 +43,17 @@ nsRepeatService::Shutdown()
   gRepeatService = nullptr;
 }
 
-void nsRepeatService::Start(Callback aCallback, void* aCallbackData,
-                            uint32_t aInitialDelay)
+void
+nsRepeatService::Start(Callback aCallback, void* aCallbackData,
+                       const nsACString& aCallbackName,
+                       uint32_t aInitialDelay)
 {
   NS_PRECONDITION(aCallback != nullptr, "null ptr");
 
   mCallback = aCallback;
   mCallbackData = aCallbackData;
+  mCallbackName = aCallbackName;
+
   nsresult rv;
   mRepeatTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 
@@ -79,7 +83,7 @@ nsRepeatService::InitTimerCallback(uint32_t aInitialDelay)
     return;
   }
 
-  mRepeatTimer->InitWithFuncCallback([](nsITimer* aTimer, void* aClosure) {
+  mRepeatTimer->InitWithNamedFuncCallback([](nsITimer* aTimer, void* aClosure) {
     // Use gRepeatService instead of nsRepeatService::GetInstance() (because
     // we don't want nsRepeatService::GetInstance() to re-create a new instance
     // for us, if we happen to get invoked after nsRepeatService::Shutdown() has
@@ -94,5 +98,5 @@ nsRepeatService::InitTimerCallback(uint32_t aInitialDelay)
     }
 
     rs->InitTimerCallback(REPEAT_DELAY);
-  }, nullptr, aInitialDelay, nsITimer::TYPE_ONE_SHOT);
+  }, nullptr, aInitialDelay, nsITimer::TYPE_ONE_SHOT, mCallbackName.Data());
 }
