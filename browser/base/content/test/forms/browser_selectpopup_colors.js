@@ -120,6 +120,16 @@ const SELECT_STYLE_OF_OPTION_IS_BASED_ON_FOCUS_OF_SELECT =
   '  <option selected="true">{"end": "true"}</option>' +
   "</select></body></html>";
 
+const SELECT_STYLE_OF_OPTION_CHANGES_AFTER_FOCUS_EVENT =
+  "<html><body><select id='one'>" +
+  '  <option>{"color": "rgb(255, 0, 0)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
+  '  <option selected="true">{"end": "true"}</option>' +
+  "</select></body><scr" +
+  "ipt>" +
+  "  var select = document.getElementById('one');" +
+  "  select.addEventListener('focus', () => select.style.color = 'red');" +
+  "</script></html>";
+
 function getSystemColor(color) {
   // Need to convert system color to RGB color.
   let textarea = document.createElementNS("http://www.w3.org/1999/xhtml", "textarea");
@@ -168,6 +178,15 @@ function* testSelectColors(select, itemCount, options) {
   let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
   yield BrowserTestUtils.synthesizeMouseAtCenter("#one", { type: "mousedown" }, gBrowser.selectedBrowser);
   yield popupShownPromise;
+
+  if (options.waitForComputedStyle) {
+    let property = options.waitForComputedStyle.property;
+    let value = options.waitForComputedStyle.value;
+    yield BrowserTestUtils.waitForCondition(() => {
+      info(`<select> has ${property}: ${getComputedStyle(selectPopup)[property]}`);
+      return getComputedStyle(selectPopup)[property] == value;
+    }, `Waiting for <select> to have ${property}: ${value}`);
+  }
 
   is(selectPopup.parentNode.itemCount, itemCount, "Correct number of items");
   let child = selectPopup.firstChild;
@@ -334,4 +353,15 @@ add_task(function* test_style_of_options_is_dependent_on_focus_of_select() {
   };
 
   yield testSelectColors(SELECT_STYLE_OF_OPTION_IS_BASED_ON_FOCUS_OF_SELECT, 2, options);
+});
+
+add_task(function* test_style_of_options_is_dependent_on_focus_of_select() {
+  let options = {
+    skipSelectColorTest: true,
+    waitForComputedStyle: {
+      property: "color",
+      value: "rgb(255, 0, 0)"
+    }
+  };
+  yield testSelectColors(SELECT_STYLE_OF_OPTION_CHANGES_AFTER_FOCUS_EVENT, 2, options);
 });
