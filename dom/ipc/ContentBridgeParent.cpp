@@ -7,6 +7,7 @@
 #include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
+#include "mozilla/dom/ipc/MemoryStreamParent.h"
 #include "nsXULAppAPI.h"
 #include "nsIObserverService.h"
 #include "base/task.h"
@@ -126,6 +127,18 @@ bool
 ContentBridgeParent::DeallocPBlobParent(PBlobParent* aActor)
 {
   return nsIContentParent::DeallocPBlobParent(aActor);
+}
+
+PMemoryStreamParent*
+ContentBridgeParent::AllocPMemoryStreamParent(const uint64_t& aSize)
+{
+  return nsIContentParent::AllocPMemoryStreamParent(aSize);
+}
+
+bool
+ContentBridgeParent::DeallocPMemoryStreamParent(PMemoryStreamParent* aActor)
+{
+  return nsIContentParent::DeallocPMemoryStreamParent(aActor);
 }
 
 mozilla::jsipc::PJavaScriptParent *

@@ -2068,13 +2068,13 @@ CompileBackEnd(MIRGenerator* mir)
     return GenerateCode(mir, lir);
 }
 
-// Find a finished builder for the compartment.
+// Find a finished builder for the runtime.
 static IonBuilder*
 GetFinishedBuilder(JSContext* cx, GlobalHelperThreadState::IonBuilderVector& finished)
 {
     for (size_t i = 0; i < finished.length(); i++) {
         IonBuilder* testBuilder = finished[i];
-        if (testBuilder->compartment == CompileCompartment::get(cx->compartment())) {
+        if (testBuilder->script()->runtimeFromAnyThread() == cx->runtime()) {
             HelperThreadState().remove(finished, &i);
             return testBuilder;
         }
@@ -2095,10 +2095,10 @@ AttachFinishedCompilations(JSContext* cx)
 
         GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList(lock);
 
-        // Incorporate any off thread compilations for the compartment which have
+        // Incorporate any off thread compilations for the runtime which have
         // finished, failed or have been cancelled.
         while (true) {
-            // Find a finished builder for the compartment.
+            // Find a finished builder for the runtime.
             IonBuilder* builder = GetFinishedBuilder(cx, finished);
             if (!builder)
                 break;

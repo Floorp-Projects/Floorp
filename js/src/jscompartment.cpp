@@ -649,11 +649,6 @@ JSCompartment::getTemplateLiteralObject(JSContext* cx, HandleObject rawStrings,
         // registry.
         MOZ_ASSERT(!templateObj->nonProxyIsExtensible());
     } else {
-        // Add the template object to the registry before freezing to avoid
-        // needing to call relookupOrAdd.
-        if (!templateLiteralMap_.add(p, rawStrings, templateObj))
-            return false;
-
         MOZ_ASSERT(templateObj->nonProxyIsExtensible());
         RootedValue rawValue(cx, ObjectValue(*rawStrings));
         if (!DefineProperty(cx, templateObj, cx->names().raw, rawValue, nullptr, nullptr, 0))
@@ -661,6 +656,9 @@ JSCompartment::getTemplateLiteralObject(JSContext* cx, HandleObject rawStrings,
         if (!FreezeObject(cx, rawStrings))
             return false;
         if (!FreezeObject(cx, templateObj))
+            return false;
+
+        if (!templateLiteralMap_.relookupOrAdd(p, rawStrings, templateObj))
             return false;
     }
 

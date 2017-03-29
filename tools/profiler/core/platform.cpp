@@ -2165,14 +2165,14 @@ profiler_save_profile_to_file_async(double aSinceTime, const char* aFileName)
 
 void
 profiler_get_start_params(int* aEntries, double* aInterval,
-                          mozilla::Vector<const char*>* aFilters,
-                          mozilla::Vector<const char*>* aFeatures)
+                          mozilla::Vector<const char*>* aFeatures,
+                          mozilla::Vector<const char*>* aFilters)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
   if (NS_WARN_IF(!aEntries) || NS_WARN_IF(!aInterval) ||
-      NS_WARN_IF(!aFilters) || NS_WARN_IF(!aFeatures)) {
+      NS_WARN_IF(!aFeatures) || NS_WARN_IF(!aFilters)) {
     return;
   }
 
@@ -2181,16 +2181,16 @@ profiler_get_start_params(int* aEntries, double* aInterval,
   *aEntries = gPS->Entries(lock);
   *aInterval = gPS->Interval(lock);
 
-  const Vector<std::string>& threadNameFilters = gPS->ThreadNameFilters(lock);
-  MOZ_ALWAYS_TRUE(aFilters->resize(threadNameFilters.length()));
-  for (uint32_t i = 0; i < threadNameFilters.length(); ++i) {
-    (*aFilters)[i] = threadNameFilters[i].c_str();
-  }
-
   const Vector<std::string>& features = gPS->Features(lock);
   MOZ_ALWAYS_TRUE(aFeatures->resize(features.length()));
   for (size_t i = 0; i < features.length(); ++i) {
     (*aFeatures)[i] = features[i].c_str();
+  }
+
+  const Vector<std::string>& threadNameFilters = gPS->ThreadNameFilters(lock);
+  MOZ_ALWAYS_TRUE(aFilters->resize(threadNameFilters.length()));
+  for (uint32_t i = 0; i < threadNameFilters.length(); ++i) {
+    (*aFilters)[i] = threadNameFilters[i].c_str();
   }
 }
 
@@ -3064,7 +3064,7 @@ profiler_add_marker(const char* aMarker, ProfilerMarkerPayload* aPayload)
 
 void
 profiler_tracing(const char* aCategory, const char* aInfo,
-                 TracingMetadata aMetaData)
+                 TracingKind aKind)
 {
   // This function runs both on and off the main thread.
 
@@ -3076,13 +3076,13 @@ profiler_tracing(const char* aCategory, const char* aInfo,
     return;
   }
 
-  auto marker = new ProfilerMarkerTracing(aCategory, aMetaData);
+  auto marker = new ProfilerMarkerTracing(aCategory, aKind);
   locked_profiler_add_marker(lock, aInfo, marker);
 }
 
 void
 profiler_tracing(const char* aCategory, const char* aInfo,
-                 UniqueProfilerBacktrace aCause, TracingMetadata aMetaData)
+                 UniqueProfilerBacktrace aCause, TracingKind aKind)
 {
   // This function runs both on and off the main thread.
 
@@ -3095,7 +3095,7 @@ profiler_tracing(const char* aCategory, const char* aInfo,
   }
 
   auto marker =
-    new ProfilerMarkerTracing(aCategory, aMetaData, mozilla::Move(aCause));
+    new ProfilerMarkerTracing(aCategory, aKind, mozilla::Move(aCause));
   locked_profiler_add_marker(lock, aInfo, marker);
 }
 
@@ -3104,7 +3104,7 @@ profiler_log(const char* aStr)
 {
   // This function runs both on and off the main thread.
 
-  profiler_tracing("log", aStr, TRACING_EVENT);
+  profiler_tracing("log", aStr);
 }
 
 void

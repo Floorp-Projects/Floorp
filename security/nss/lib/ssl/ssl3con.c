@@ -4971,7 +4971,6 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
     PRBool isTLS = PR_FALSE;
     PRBool requestingResume = PR_FALSE, fallbackSCSV = PR_FALSE;
     PRInt32 total_exten_len = 0;
-    unsigned paddingExtensionLen;
     unsigned numCompressionMethods;
     PRUint16 version;
     PRInt32 flags;
@@ -5267,19 +5266,12 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
         length += 1 + ss->ssl3.hs.cookie.len;
     }
 
-    /* A padding extension may be included to ensure that the record containing
-     * the ClientHello doesn't have a length between 256 and 511 bytes
-     * (inclusive). Initial, ClientHello records with such lengths trigger bugs
-     * in F5 devices.
-     *
-     * This is not done for DTLS, for renegotiation, or when there are no
-     * extensions. */
-    if (!IS_DTLS(ss) && isTLS && !ss->firstHsDone && total_exten_len) {
-        paddingExtensionLen = ssl3_CalculatePaddingExtensionLength(length);
-        total_exten_len += paddingExtensionLen;
-        length += paddingExtensionLen;
-    } else {
-        paddingExtensionLen = 0;
+    if (total_exten_len > 0) {
+        ssl3_CalculatePaddingExtLen(ss, length);
+        if (ss->xtnData.paddingLen) {
+            total_exten_len += 4 + ss->xtnData.paddingLen;
+            length += 4 + ss->xtnData.paddingLen;
+        }
     }
 
     rv = ssl3_AppendHandshakeHeader(ss, client_hello, length);
@@ -5449,15 +5441,6 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
             }
             return rv; /* err set by AppendHandshake. */
         }
-
-        extLen = ssl3_AppendPaddingExtension(ss, paddingExtensionLen, maxBytes);
-        if (extLen < 0) {
-            if (sid->u.ssl3.lock) {
-                PR_RWLock_Unlock(sid->u.ssl3.lock);
-            }
-            return SECFailure;
-        }
-        maxBytes -= extLen;
 
         extLen = ssl3_CallHelloExtensionSenders(ss, PR_TRUE, maxBytes, NULL);
         if (extLen < 0) {
@@ -11165,9 +11148,7 @@ ssl3_SendNextProto(sslSocket *ss)
 
     padding_len = 32 - ((ss->xtnData.nextProto.len + 2) % 32);
 
-    rv = ssl3_AppendHandshakeHeader(ss, next_proto, ss->xtnData.nextProto.len +
-                                                        2 +
-                                                        padding_len);
+    rv = ssl3_AppendHandshakeHeader(ss, next_proto, ss->xtnData.nextProto.len + 2 + padding_len);
     if (rv != SECSuccess) {
         return rv; /* error code set by AppendHandshakeHeader */
     }

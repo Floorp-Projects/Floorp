@@ -279,7 +279,7 @@ class L10nBumper(VCSScript):
         max_retries = 5
         for _ in range(max_retries):
             changed = False
-            if not self.query_treestatus():
+            if not self.config['ignore_closed_tree'] and not self.query_treestatus():
                 # Tree is closed; exit early to avoid a bunch of wasted time
                 self.info("breaking early since treestatus is closed")
                 break

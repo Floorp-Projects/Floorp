@@ -683,6 +683,12 @@ function BuildConditionSandbox(aURL) {
     sandbox.stylo = false;
 #endif
 
+#ifdef RELEASE_OR_BETA
+    sandbox.release_or_beta = true;
+#else
+    sandbox.release_or_beta = false;
+#endif
+
     var hh = CC[NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX + "http"].
                  getService(CI.nsIHttpProtocolHandler);
     var httpProps = ["userAgent", "appName", "appVersion", "vendor",

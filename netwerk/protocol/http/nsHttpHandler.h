@@ -422,7 +422,7 @@ private:
     uint16_t mIdleSynTimeout;
 
     bool     mH2MandatorySuiteEnabled;
-    uint16_t mMaxUrgentStartQ;
+    uint16_t mMaxUrgentExcessiveConns;
     uint16_t mMaxConnections;
     uint8_t  mMaxPersistentConnectionsPerServer;
     uint8_t  mMaxPersistentConnectionsPerProxy;

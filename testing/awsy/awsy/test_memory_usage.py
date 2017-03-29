@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import glob
 import json
 import os
 import sys
@@ -14,7 +15,11 @@ from marionette_driver.errors import JavascriptException, ScriptTimeoutException
 import mozlog.structured
 from marionette_driver.keys import Keys
 
-from awsy import TEST_SITES_TEMPLATES, ITERATIONS, PER_TAB_PAUSE, SETTLE_WAIT_TIME, MAX_TABS
+AWSY_PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+if AWSY_PATH not in sys.path:
+    sys.path.append(AWSY_PATH)
+
+from awsy import ITERATIONS, PER_TAB_PAUSE, SETTLE_WAIT_TIME, MAX_TABS
 from awsy import process_perf_data, webservers
 
 
@@ -37,36 +42,40 @@ class TestMemoryUsage(MarionetteTestCase):
 
         self.marionette.set_context('chrome')
 
-        self._webroot_dir = os.path.join(os.getcwd(), 'page_load_test')
-        if not os.path.exists(self._webroot_dir):
-            os.mkdir(self._webroot_dir)
-        self._webservers = webservers.WebServers("localhost",
-                                                 8001,
-                                                 os.getcwd(),
-                                                 100)
-        self._webservers.start()
-        test_sites = []
+        self._webroot_dir = self.testvars["webRootDir"]
+        self._resultsDir = self.testvars["resultsDir"]
+        # Be conservative in what we delete automatically.
+        for f in glob.glob(os.path.join(self._resultsDir, 'memory-report-*.json.gz')):
+            os.unlink(f)
+        for f in glob.glob(os.path.join(self._resultsDir, 'perfherder_data.json')):
+            os.unlink(f)
 
-        with open(os.path.join(self._webroot_dir, 'tp5n', 'tp5n.manifest')) as fp:
+        self._urls = []
+
+        urls = None
+        default_tp5n_manifest = os.path.join(self._webroot_dir, 'page_load_test', 'tp5n',
+                                             'tp5n.manifest')
+        tp5n_manifest = self.testvars.get("pageManifest", default_tp5n_manifest)
+        with open(tp5n_manifest) as fp:
             urls = fp.readlines()
-        if urls:
-            urls = map(lambda x:x.replace('localhost', 'localhost:{}'), urls)
-            self._urls = urls
-        else:
-            urls = TEST_SITES_TEMPLATES
+        urls = map(lambda x:x.replace('localhost', 'localhost:{}'), urls)
 
-        for url, server in zip(urls, self._webservers.servers):
-            test_sites.append(url.format(server.port))
-
-        self._urls = self.testvars.get("urls", test_sites)
-        self._pages_to_load = self.testvars.get("entities", len(self._urls))
+        # Optional testvars.
+        self._pages_to_load = self.testvars.get("entities", len(urls))
         self._iterations = self.testvars.get("iterations", ITERATIONS)
         self._perTabPause = self.testvars.get("perTabPause", PER_TAB_PAUSE)
         self._settleWaitTime = self.testvars.get("settleWaitTime", SETTLE_WAIT_TIME)
         self._maxTabs = self.testvars.get("maxTabs", MAX_TABS)
-        self._resultsDir = os.path.join(os.getcwd(), "tests", "results")
 
-        self.logger.info("areweslimyet run by %d pages, %d iterations, %d perTabPause,%d settleWaitTime"
+        self._webservers = webservers.WebServers("localhost",
+                                                 8001,
+                                                 self._webroot_dir,
+                                                 self._pages_to_load)
+        self._webservers.start()
+        for url, server in zip(urls, self._webservers.servers):
+            self._urls.append(url.strip().format(server.port))
+
+        self.logger.info("areweslimyet run by %d pages, %d iterations, %d perTabPause, %d settleWaitTime"
                          % (self._pages_to_load, self._iterations, self._perTabPause, self._settleWaitTime))
         self.reset_state()
         self.logger.info("done setting up!")
@@ -83,7 +92,8 @@ class TestMemoryUsage(MarionetteTestCase):
 
         perf_file = os.path.join(self._resultsDir, "perfherder_data.json")
         with open(perf_file, 'w') as fp:
-            json.dump(perf_blob, fp)
+            json.dump(perf_blob, fp, indent=2)
+        self.logger.info("Perfherder data written to %s" % perf_file)
 
         # copy it to moz upload dir if set
         if 'MOZ_UPLOAD_DIR' in os.environ:
@@ -100,7 +110,17 @@ class TestMemoryUsage(MarionetteTestCase):
         # Close all tabs except one
         for x in range(len(self.marionette.window_handles) - 1):
             self.logger.info("closing window")
-            self.marionette.execute_script("gBrowser.removeCurrentTab();")
+            try:
+                result = self.marionette.execute_script("gBrowser.removeCurrentTab();",
+                                                        script_timeout=180000)
+            except JavascriptException, e:
+                self.logger.error("gBrowser.removeCurrentTab() JavaScript error: %s" % e)
+            except ScriptTimeoutException:
+                self.logger.error("gBrowser.removeCurrentTab() timed out")
+            except:
+                self.logger.error("gBrowser.removeCurrentTab() Unexpected error: %s" % sys.exc_info()[0])
+            else:
+                self.logger.info(result)
             time.sleep(0.25)
 
         self._tabs = self.marionette.window_handles
@@ -152,8 +172,11 @@ class TestMemoryUsage(MarionetteTestCase):
 
         checkpoint_file = "memory-report-%s-%d.json.gz" % (checkpointName, iteration)
         checkpoint_path = os.path.join(self._resultsDir, checkpoint_file)
+        # Escape the Windows directory separator \ to prevent it from
+        # being interpreted as an escape character.
+        checkpoint_path = checkpoint_path.replace('\\', '\\\\')
 
-        checkpoint_script = """
+        checkpoint_script = r"""
             const Cc = Components.classes;
             const Ci = Components.interfaces;
 

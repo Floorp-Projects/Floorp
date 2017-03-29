@@ -50,7 +50,6 @@
 #include "mozilla/dom/WebAuthentication.h"
 #include "mozilla/dom/workers/RuntimeService.h"
 #include "mozilla/Hal.h"
-#include "nsISiteSpecificUserAgent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SSE.h"
 #include "mozilla/StaticPtr.h"
@@ -314,7 +313,6 @@ void
 Navigator::GetUserAgent(nsAString& aUserAgent, CallerType aCallerType,
                         ErrorResult& aRv) const
 {
-  nsCOMPtr<nsIURI> codebaseURI;
   nsCOMPtr<nsPIDOMWindowInner> window;
 
   if (mWindow) {
@@ -328,15 +326,10 @@ Navigator::GetUserAgent(nsAString& aUserAgent, CallerType aCallerType,
         aUserAgent = customUserAgent;
         return;
       }
-
-      nsIDocument* doc = mWindow->GetExtantDoc();
-      if (doc) {
-        doc->NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
-      }
     }
   }
 
-  nsresult rv = GetUserAgent(window, codebaseURI,
+  nsresult rv = GetUserAgent(window,
                              aCallerType == CallerType::System,
                              aUserAgent);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1885,7 +1878,7 @@ Navigator::ClearUserAgentCache()
 }
 
 nsresult
-Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
+Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow,
                         bool aIsCallerChrome,
                         nsAString& aUserAgent)
 {
@@ -1916,19 +1909,30 @@ Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
 
   CopyASCIItoUTF16(ua, aUserAgent);
 
-  if (!aWindow || !aURI) {
+  if (!aWindow) {
     return NS_OK;
   }
 
   MOZ_ASSERT(aWindow->GetDocShell());
 
-  nsCOMPtr<nsISiteSpecificUserAgent> siteSpecificUA =
-    do_GetService("@mozilla.org/dom/site-specific-user-agent;1");
-  if (!siteSpecificUA) {
+  // Copy the User-Agent header from the document channel which has already been
+  // subject to UA overrides.
+  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
+  if (!doc) {
     return NS_OK;
   }
-
-  return siteSpecificUA->GetUserAgentForURIAndWindow(aURI, aWindow, aUserAgent);
+  nsCOMPtr<nsIHttpChannel> httpChannel =
+    do_QueryInterface(doc->GetChannel());
+  if (httpChannel) {
+    nsAutoCString userAgent;
+    rv = httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("User-Agent"),
+                                       userAgent);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    CopyASCIItoUTF16(userAgent, aUserAgent);
+  }
+  return NS_OK;
 }
 
 static nsCString

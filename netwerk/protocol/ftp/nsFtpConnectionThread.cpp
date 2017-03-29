@@ -2023,6 +2023,8 @@ nsFtpState::OnTransportStatus(nsITransport *transport, nsresult status,
         case NS_NET_STATUS_RESOLVED_HOST:
         case NS_NET_STATUS_CONNECTING_TO:
         case NS_NET_STATUS_CONNECTED_TO:
+        case NS_NET_STATUS_TLS_HANDSHAKE_STARTING:
+        case NS_NET_STATUS_TLS_HANDSHAKE_ENDED:
             break;
         default:
             return NS_OK;

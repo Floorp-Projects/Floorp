@@ -2185,55 +2185,73 @@ ssl3_ClientSendSigAlgsXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRBool
 
 /* Takes the size of the ClientHello, less the record header, and determines how
  * much padding is required. */
-unsigned int
-ssl3_CalculatePaddingExtensionLength(unsigned int clientHelloLength)
+void
+ssl3_CalculatePaddingExtLen(sslSocket *ss,
+                            unsigned int clientHelloLength)
 {
     unsigned int recordLength = 1 /* handshake message type */ +
                                 3 /* handshake message length */ +
                                 clientHelloLength;
-    unsigned int extensionLength;
+    unsigned int extensionLen;
 
+    /* Don't pad for DTLS, for SSLv3, or for renegotiation. */
+    if (IS_DTLS(ss) ||
+        ss->vrange.max < SSL_LIBRARY_VERSION_TLS_1_0 ||
+        ss->firstHsDone) {
+        return;
+    }
+
+    /* A padding extension may be included to ensure that the record containing
+     * the ClientHello doesn't have a length between 256 and 511 bytes
+     * (inclusive). Initial ClientHello records with such lengths trigger bugs
+     * in F5 devices. */
     if (recordLength < 256 || recordLength >= 512) {
-        return 0;
+        return;
     }
 
-    extensionLength = 512 - recordLength;
+    extensionLen = 512 - recordLength;
     /* Extensions take at least four bytes to encode. Always include at least
-     * one byte of data if including the extension. Some servers (e.g.
-     * WebSphere Application Server 7.0 and Tomcat) will time out or terminate
-     * the connection if the last extension in the client hello is empty. */
-    if (extensionLength < 4 + 1) {
-        extensionLength = 4 + 1;
+     * one byte of data if we are padding. Some servers will time out or
+     * terminate the connection if the last ClientHello extension is empty. */
+    if (extensionLen < 4 + 1) {
+        extensionLen = 4 + 1;
     }
 
-    return extensionLength;
+    ss->xtnData.paddingLen = extensionLen - 4;
 }
 
-/* ssl3_AppendPaddingExtension possibly adds an extension which ensures that a
+/* ssl3_SendPaddingExtension possibly adds an extension which ensures that a
  * ClientHello record is either < 256 bytes or is >= 512 bytes. This ensures
  * that we don't trigger bugs in F5 products. */
 PRInt32
-ssl3_AppendPaddingExtension(sslSocket *ss, unsigned int extensionLen,
-                            PRUint32 maxBytes)
+ssl3_ClientSendPaddingExtension(const sslSocket *ss, TLSExtensionData *xtnData,
+                                PRBool append, PRUint32 maxBytes)
 {
-    unsigned int paddingLen = extensionLen - 4;
-    static unsigned char padding[252];
+    static unsigned char padding[252] = { 0 };
+    unsigned int extensionLen;
+    SECStatus rv;
 
-    if (extensionLen == 0) {
+    /* On the length-calculation pass, report zero total length.  The record
+     * will be larger on the second pass if needed. */
+    if (!append || !xtnData->paddingLen) {
         return 0;
     }
 
+    extensionLen = xtnData->paddingLen + 4;
     if (extensionLen > maxBytes ||
-        !paddingLen ||
-        paddingLen > sizeof(padding)) {
+        xtnData->paddingLen > sizeof(padding)) {
         PORT_Assert(0);
         return -1;
     }
 
-    if (SECSuccess != ssl3_ExtAppendHandshakeNumber(ss, ssl_padding_xtn, 2))
+    rv = ssl3_ExtAppendHandshakeNumber(ss, ssl_padding_xtn, 2);
+    if (rv != SECSuccess) {
         return -1;
-    if (SECSuccess != ssl3_ExtAppendHandshakeVariable(ss, padding, paddingLen, 2))
+    }
+    rv = ssl3_ExtAppendHandshakeVariable(ss, padding, xtnData->paddingLen, 2);
+    if (rv != SECSuccess) {
         return -1;
+    }
 
     return extensionLen;
 }

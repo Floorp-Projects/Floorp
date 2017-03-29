@@ -89,10 +89,15 @@ TlsAgent::~TlsAgent() {
     Poller::Instance()->Cancel(READABLE_EVENT, adapter_);
   }
 
-  EXPECT_EQ(expected_received_alert_, kTlsAlertCloseNotify);
-  EXPECT_EQ(expected_received_alert_level_, kTlsAlertWarning);
-  EXPECT_EQ(expected_sent_alert_, kTlsAlertCloseNotify);
-  EXPECT_EQ(expected_sent_alert_level_, kTlsAlertWarning);
+  // Add failures manually, if any, so we don't throw in a destructor.
+  if (expected_received_alert_ != kTlsAlertCloseNotify ||
+      expected_received_alert_level_ != kTlsAlertWarning) {
+    ADD_FAILURE() << "Wrong expected_received_alert status";
+  }
+  if (expected_sent_alert_ != kTlsAlertCloseNotify ||
+      expected_sent_alert_level_ != kTlsAlertWarning) {
+    ADD_FAILURE() << "Wrong expected_sent_alert status";
+  }
 }
 
 void TlsAgent::SetState(State state) {

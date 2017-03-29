@@ -52,7 +52,7 @@ function createSpan(doc) {
   span.style.display = "inline-block";
   span.style.width = "100px";
   span.style.border = "1px solid red";
-  span.style.fontFamily = "monospace";
+  span.style.fontFamily = "Courier New";
 
   div.style.height = "100%";
   div.style.position = "absolute";

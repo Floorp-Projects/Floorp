@@ -40,6 +40,9 @@ skip script test262/built-ins/ThrowTypeError/unique-per-realm-function-proto.js
 skip-if(!Array.prototype.values) script test262/built-ins/Array/prototype/Symbol.iterator.js
 skip-if(!Array.prototype.values) include test262/built-ins/Array/prototype/values/jstests.list
 
+# Async generator is non-release-or-beta only.
+skip-if(release_or_beta) include test262/language/expressions/async-generators/jstests.list
+skip-if(release_or_beta) include test262/language/statements/async-generator/jstests.list
 
 #####################################
 # Test262 tests disabled on browser #
@@ -493,10 +496,6 @@ skip script test262/annexB/language/eval-code/indirect/global-if-decl-else-decl-
 skip script test262/annexB/language/eval-code/indirect/global-block-decl-eval-global-exsting-global-init.js
 skip script test262/annexB/language/eval-code/indirect/global-switch-case-eval-global-exsting-global-init.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1331092
-skip include test262/language/expressions/async-generators/jstests.list
-skip include test262/language/statements/async-generator/jstests.list
-
 # SIMD.
 skip script test262/built-ins/Simd/check.js
 skip script test262/built-ins/Simd/from.js
@@ -871,3 +870,11 @@ skip script test262/intl402/PluralRules/prototype/select/tainting.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1340304
 skip-if(!xulRuntime.shell) script test262/language/module-code/instn-iee-err-circular.js
 skip-if(!xulRuntime.shell) script test262/language/module-code/instn-iee-err-circular-as.js
+
+# Async generators are now a thing.
+skip script test262/language/statements/async-function/early-errors-no-async-generator-n.js
+
+# Need to be rewritten to follow the change in https://github.com/tc39/proposal-async-iteration/pull/92
+skip script test262/language/statements/async-generator/yield-star-async-next.js
+skip script test262/language/statements/async-generator/yield-star-async-return.js
+skip script test262/language/statements/async-generator/yield-star-async-throw.js
