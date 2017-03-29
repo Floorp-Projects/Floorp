@@ -3753,12 +3753,12 @@ Parser<ParseHandler>::functionStmt(uint32_t preludeStart, YieldHandling yieldHan
 
     GeneratorKind generatorKind = NotGenerator;
     if (tt == TOK_MUL) {
-#ifdef RELEASE_OR_BETA
-        if (asyncKind != SyncFunction) {
-            error(JSMSG_ASYNC_GENERATOR);
-            return null();
+        if (!asyncIterationSupported()) {
+            if (asyncKind != SyncFunction) {
+                error(JSMSG_ASYNC_GENERATOR);
+                return null();
+            }
         }
-#endif
         generatorKind = StarGenerator;
         if (!tokenStream.getToken(&tt))
             return null();
@@ -3827,12 +3827,12 @@ Parser<ParseHandler>::functionExpr(uint32_t preludeStart, InvokedPrediction invo
         return null();
 
     if (tt == TOK_MUL) {
-#ifdef RELEASE_OR_BETA
-        if (asyncKind != SyncFunction) {
-            error(JSMSG_ASYNC_GENERATOR);
-            return null();
+        if (!asyncIterationSupported()) {
+            if (asyncKind != SyncFunction) {
+                error(JSMSG_ASYNC_GENERATOR);
+                return null();
+            }
         }
-#endif
         generatorKind = StarGenerator;
         if (!tokenStream.getToken(&tt))
             return null();
@@ -6046,18 +6046,18 @@ Parser<ParseHandler>::forStatement(YieldHandling yieldHandling)
         }
     }
 
-#ifndef RELEASE_OR_BETA
-    if (pc->isAsync()) {
-        bool matched;
-        if (!tokenStream.matchToken(&matched, TOK_AWAIT))
-            return null();
+    if (asyncIterationSupported()) {
+        if (pc->isAsync()) {
+            bool matched;
+            if (!tokenStream.matchToken(&matched, TOK_AWAIT))
+                return null();
 
-        if (matched) {
-            iflags |= JSITER_FORAWAITOF;
-            iterKind = IteratorKind::Async;
+            if (matched) {
+                iflags |= JSITER_FORAWAITOF;
+                iterKind = IteratorKind::Async;
+            }
         }
     }
-#endif
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
 
@@ -9341,12 +9341,12 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
     }
 
     if (ltok == TOK_MUL) {
-#ifdef RELEASE_OR_BETA
-        if (isAsync) {
-            error(JSMSG_ASYNC_GENERATOR);
-            return null();
+        if (!asyncIterationSupported()) {
+            if (isAsync) {
+                error(JSMSG_ASYNC_GENERATOR);
+                return null();
+            }
         }
-#endif
         isGenerator = true;
         if (!tokenStream.getToken(&ltok))
             return null();
