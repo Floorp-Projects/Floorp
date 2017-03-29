@@ -4302,19 +4302,17 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected DocumentStatesChanged");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
-  nsStyleSet* styleSet = mStyleSet->GetAsGecko();
-  if (!styleSet) {
+  nsStyleSet* geckoSet = mStyleSet->GetAsGecko();
+  if (!geckoSet) {
     // XXXheycam ServoStyleSets don't support document state selectors,
     // but these are only used in chrome documents, which we are not
     // aiming to support yet.
     NS_WARNING("stylo: ServoStyleSets cannot respond to document state "
                "changes yet (only matters for chrome documents). See bug 1290285.");
-    return;
-  }
 
-  if (mDidInitialize &&
-      styleSet->HasDocumentStateDependentStyle(mDocument->GetRootElement(),
-                                               aStateMask)) {
+  } else if (mDidInitialize &&
+             geckoSet->HasDocumentStateDependentStyle(mDocument->GetRootElement(),
+                                                      aStateMask)) {
     mPresContext->RestyleManager()->PostRestyleEvent(mDocument->GetRootElement(),
                                                      eRestyle_Subtree,
                                                      nsChangeHint(0));
