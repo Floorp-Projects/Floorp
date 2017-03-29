@@ -219,7 +219,6 @@ private:
       mTokenPromise.DisconnectIfExists();
       mInitPromise.DisconnectIfExists();
       if (mDecoder) {
-        mDecoder->Flush();
         mDecoder->Shutdown();
       }
     }
