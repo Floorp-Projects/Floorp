@@ -2820,6 +2820,18 @@ ContentParent::DeallocPBlobParent(PBlobParent* aActor)
   return nsIContentParent::DeallocPBlobParent(aActor);
 }
 
+PMemoryStreamParent*
+ContentParent::AllocPMemoryStreamParent(const uint64_t& aSize)
+{
+  return nsIContentParent::AllocPMemoryStreamParent(aSize);
+}
+
+bool
+ContentParent::DeallocPMemoryStreamParent(PMemoryStreamParent* aActor)
+{
+  return nsIContentParent::DeallocPMemoryStreamParent(aActor);
+}
+
 mozilla::ipc::IPCResult
 ContentParent::RecvPBlobConstructor(PBlobParent* aActor,
                                     const BlobConstructorParams& aParams)
