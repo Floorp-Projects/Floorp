@@ -1700,9 +1700,9 @@ fails == 670467-2.html 670467-2.html
 == 691571-1.html 691571-1.html
 == 696307-1.html 696307-1.html
 == 696739-1.html 696739-1.html
-needs-focus == 703186-1.html 703186-1.html
+fails needs-focus == 703186-1.html 703186-1.html # Bug 1351724
 needs-focus == 703186-2.html 703186-2.html
-needs-focus == 703186-1.html 703186-1.html
+fails needs-focus == 703186-1.html 703186-1.html # Bug 1351724
 == 711359-1.html 711359-1.html
 == 712849-1.html 712849-1.html
 == 713856-static.html 713856-static.html
