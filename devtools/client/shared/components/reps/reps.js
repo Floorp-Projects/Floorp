@@ -883,7 +883,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  displayName: "Number",
 	
 	  propTypes: {
-	    object: React.PropTypes.oneOfType([React.PropTypes.object, React.PropTypes.number]).isRequired
+	    object: React.PropTypes.oneOfType([React.PropTypes.object, React.PropTypes.number, React.PropTypes.bool]).isRequired
 	  },
 	
 	  stringify: function (object) {
@@ -973,9 +973,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	
 	    if (array.length > max) {
-	      let objectLink = this.props.objectLink || DOM.span;
 	      items.push(Caption({
-	        object: objectLink({
+	        object: this.safeObjectLink({
 	          object: this.props.object
 	        }, array.length - max + " more…")
 	      }));
@@ -1028,6 +1027,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  onClickBracket: function (event) {},
 	
+	  safeObjectLink: function (config, ...children) {
+	    if (this.props.objectLink) {
+	      return this.props.objectLink(Object.assign({
+	        object: this.props.object
+	      }, config), ...children);
+	    }
+	
+	    if (Object.keys(config).length === 0 && children.length === 1) {
+	      return children[0];
+	    }
+	
+	    return DOM.span(config, ...children);
+	  },
+	
 	  render: wrapRender(function () {
 	    let {
 	      object,
@@ -1050,13 +1063,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      brackets = needSpace(items.length > 0);
 	    }
 	
-	    let objectLink = this.props.objectLink || DOM.span;
-	
 	    return DOM.span({
-	      className: "objectBox objectBox-array" }, objectLink({
+	      className: "objectBox objectBox-array" }, this.safeObjectLink({
 	      className: "arrayLeftBracket",
 	      object: object
-	    }, brackets.left), ...items, objectLink({
+	    }, brackets.left), ...items, this.safeObjectLink({
 	      className: "arrayRightBracket",
 	      object: object
 	    }, brackets.right), DOM.span({
@@ -1115,7 +1126,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  displayName: "Caption",
 	
 	  propTypes: {
-	    object: React.PropTypes.object
+	    object: React.PropTypes.oneOfType([React.PropTypes.number, React.PropTypes.string]).isRequired
 	  },
 	
 	  render: wrapRender(function () {
@@ -1157,12 +1168,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  getTitle: function (object) {
 	    let title = this.props.title || object.class || "Object";
-	    if (this.props.objectLink) {
-	      return this.props.objectLink({
-	        object: object
-	      }, title);
-	    }
-	    return title;
+	    return this.safeObjectLink({ className: "objectTitle" }, title);
 	  },
 	
 	  safePropIterator: function (object, max) {
@@ -1258,21 +1264,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return propsArray;
 	  },
 	
+	  safeObjectLink: function (config, ...children) {
+	    if (this.props.objectLink) {
+	      return this.props.objectLink(Object.assign({
+	        object: this.props.object
+	      }, config), ...children);
+	    }
+	
+	    if (Object.keys(config).length === 0 && children.length === 1) {
+	      return children[0];
+	    }
+	
+	    return span(config, ...children);
+	  },
+	
 	  render: wrapRender(function () {
 	    let object = this.props.object;
 	    let propsArray = this.safePropIterator(object);
-	    let objectLink = this.props.objectLink || span;
 	
 	    if (this.props.mode === MODE.TINY || !propsArray.length) {
-	      return span({ className: "objectBox objectBox-object" }, objectLink({ className: "objectTitle" }, this.getTitle(object)));
+	      return span({ className: "objectBox objectBox-object" }, this.getTitle(object));
 	    }
 	
-	    return span({ className: "objectBox objectBox-object" }, this.getTitle(object), objectLink({
-	      className: "objectLeftBrace",
-	      object: object
-	    }, " { "), ...propsArray, objectLink({
-	      className: "objectRightBrace",
-	      object: object
+	    return span({ className: "objectBox objectBox-object" }, this.getTitle(object), this.safeObjectLink({
+	      className: "objectLeftBrace"
+	    }, " { "), ...propsArray, this.safeObjectLink({
+	      className: "objectRightBrace"
 	    }, " }"));
 	  })
 	});
@@ -1408,12 +1425,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  getTitle: function (object) {
 	    let title = this.props.title || object.class || "Object";
-	    if (this.props.objectLink) {
-	      return this.props.objectLink({
-	        object: object
-	      }, title);
-	    }
-	    return title;
+	    return this.safeObjectLink({}, title);
 	  },
 	
 	  safePropIterator: function (object, max) {
@@ -1467,12 +1479,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    let propsArray = this.getProps(properties, indexes, truncate, suppressQuotes);
 	    if (truncate) {
 	      // There are some undisplayed props. Then display "more...".
-	      let objectLink = this.props.objectLink || span;
-	
 	      propsArray.push(Caption({
-	        object: objectLink({
-	          object: object
-	        }, `${propertiesLength - max} more…`)
+	        object: this.safeObjectLink({}, `${propertiesLength - max} more…`)
 	      }));
 	    }
 	
@@ -1501,7 +1509,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      let name = Object.keys(properties)[i];
 	      let value = this.getPropValue(properties[name]);
 	
-	      propsArray.push(PropRep(Object.assign({}, this.props, {
+	      let propRepProps = Object.assign({}, this.props, {
 	        mode: MODE.TINY,
 	        name: name,
 	        object: value,
@@ -1511,7 +1519,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // Do not propagate title to properties reps
 	        title: undefined,
 	        suppressQuotes
-	      })));
+	      });
+	      delete propRepProps.objectLink;
+	      propsArray.push(PropRep(propRepProps));
 	    });
 	
 	    return propsArray;
@@ -1571,24 +1581,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return value;
 	  },
 	
+	  safeObjectLink: function (config, ...children) {
+	    if (this.props.objectLink) {
+	      return this.props.objectLink(Object.assign({
+	        object: this.props.object
+	      }, config), ...children);
+	    }
+	
+	    if (Object.keys(config).length === 0 && children.length === 1) {
+	      return children[0];
+	    }
+	
+	    return span(config, ...children);
+	  },
+	
 	  render: wrapRender(function () {
 	    let object = this.props.object;
 	    let propsArray = this.safePropIterator(object, this.props.mode === MODE.LONG ? 10 : 3);
 	
-	    let objectLink = this.props.objectLink || span;
 	    if (this.props.mode === MODE.TINY) {
-	      return span({ className: "objectBox objectBox-object" }, this.getTitle(object), objectLink({
-	        className: "objectLeftBrace",
-	        object: object
-	      }, ""));
+	      return span({ className: "objectBox objectBox-object" }, this.getTitle(object));
 	    }
 	
-	    return span({ className: "objectBox objectBox-object" }, this.getTitle(object), objectLink({
-	      className: "objectLeftBrace",
-	      object: object
-	    }, " { "), ...propsArray, objectLink({
-	      className: "objectRightBrace",
-	      object: object
+	    return span({ className: "objectBox objectBox-object" }, this.getTitle(object), this.safeObjectLink({
+	      className: "objectLeftBrace"
+	    }, " { "), ...propsArray, this.safeObjectLink({
+	      className: "objectRightBrace"
 	    }, " }"));
 	  })
 	});
@@ -1757,9 +1775,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  render: wrapRender(function () {
 	    let object = this.props.object;
 	    let value = object.preview.value;
-	    let objectLink = this.props.objectLink || span;
+	    let objectLink = (config, ...children) => {
+	      if (this.props.objectLink) {
+	        return this.props.objectLink(Object.assign({ object }, config), ...children);
+	      }
+	      return span(config, ...children);
+	    };
 	
-	    return objectLink({ className: "objectLink-Attr", object }, span({}, span({ className: "attrTitle" }, this.getTitle(object)), span({ className: "attrEqual" }, "="), StringRepFactory({ object: value })));
+	    return objectLink({ className: "objectLink-Attr" }, span({ className: "attrTitle" }, this.getTitle(object)), span({ className: "attrEqual" }, "="), StringRepFactory({ object: value }));
 	  })
 	});
 	
@@ -2136,12 +2159,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  getTitle: function (object) {
 	    const title = object.class;
-	    if (this.props.objectLink) {
-	      return this.props.objectLink({
-	        object: object
-	      }, title);
-	    }
-	    return title;
+	    return this.safeObjectLink({}, title);
 	  },
 	
 	  getProps: function (promiseState) {
@@ -2163,30 +2181,39 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	  },
 	
+	  safeObjectLink: function (config, ...children) {
+	    if (this.props.objectLink) {
+	      return this.props.objectLink(Object.assign({
+	        object: this.props.object
+	      }, config), ...children);
+	    }
+	
+	    if (Object.keys(config).length === 0 && children.length === 1) {
+	      return children[0];
+	    }
+	
+	    return span(config, ...children);
+	  },
+	
 	  render: wrapRender(function () {
 	    const object = this.props.object;
 	    const { promiseState } = object;
-	    let objectLink = this.props.objectLink || span;
 	
 	    if (this.props.mode === MODE.TINY) {
 	      let { Rep } = createFactories(__webpack_require__(2));
 	
-	      return span({ className: "objectBox objectBox-object" }, this.getTitle(object), objectLink({
-	        className: "objectLeftBrace",
-	        object: object
-	      }, " { "), Rep({ object: promiseState.state }), objectLink({
-	        className: "objectRightBrace",
-	        object: object
+	      return span({ className: "objectBox objectBox-object" }, this.getTitle(object), this.safeObjectLink({
+	        className: "objectLeftBrace"
+	      }, " { "), Rep({ object: promiseState.state }), this.safeObjectLink({
+	        className: "objectRightBrace"
 	      }, " }"));
 	    }
 	
 	    const propsArray = this.getProps(promiseState);
-	    return span({ className: "objectBox objectBox-object" }, this.getTitle(object), objectLink({
-	      className: "objectLeftBrace",
-	      object: object
-	    }, " { "), ...propsArray, objectLink({
-	      className: "objectRightBrace",
-	      object: object
+	    return span({ className: "objectBox objectBox-object" }, this.getTitle(object), this.safeObjectLink({
+	      className: "objectLeftBrace"
+	    }, " { "), ...propsArray, this.safeObjectLink({
+	      className: "objectRightBrace"
 	    }, " }"));
 	  })
 	});
@@ -2237,13 +2264,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	  },
 	
 	  render: wrapRender(function () {
-	    let grip = this.props.object;
-	    let objectLink = this.props.objectLink || span;
+	    let { object } = this.props;
+	    let objectLink = (config, ...children) => {
+	      if (this.props.objectLink) {
+	        return this.props.objectLink(Object.assign({ object }, config), ...children);
+	      }
+	      return span(config, ...children);
+	    };
 	
-	    return span({ className: "objectBox objectBox-regexp" }, objectLink({
-	      object: grip,
-	      className: "regexpSource"
-	    }, this.getSource(grip)));
+	    return objectLink({
+	      className: "objectBox objectBox-regexp regexpSource"
+	    }, this.getSource(object));
 	  })
 	});
 	
@@ -2475,7 +2506,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	      onInspectIconClick
 	    } = this.props;
 	    let elements = this.getElements(object, mode);
-	    let objectLink = this.props.objectLink || span;
+	    let objectLink = (config, ...children) => {
+	      if (this.props.objectLink) {
+	        return this.props.objectLink(Object.assign({ object }, config), ...children);
+	      }
+	      return span(config, ...children);
+	    };
 	
 	    let isInTree = attachedActorIds ? attachedActorIds.includes(object.actor) : true;
 	
@@ -2505,7 +2541,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    }
 	
-	    return span(baseConfig, objectLink({ object }, ...elements), inspectIcon);
+	    return span(baseConfig, objectLink({}, ...elements), inspectIcon);
 	  })
 	});
 	
@@ -2864,8 +2900,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	      content = `${content}\nStack trace:\n${preview.stack}`;
 	    }
 	
-	    let objectLink = this.props.objectLink || span;
-	    return objectLink({ object, className: "objectBox-stackTrace" }, span({}, content));
+	    let objectLink = (config, ...children) => {
+	      if (this.props.objectLink) {
+	        return this.props.objectLink(Object.assign({ object }, config), ...children);
+	      }
+	      return span(config, ...children);
+	    };
+	
+	    return objectLink({ className: "objectBox-stackTrace" }, content);
 	  })
 	});
 	
@@ -3137,14 +3179,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  },
 	
 	  getTitle: function (object, context) {
-	    let objectLink = this.props.objectLink || span;
-	    if (this.props.mode !== MODE.TINY) {
-	      let title = this.props.title || object.class || "Array";
-	      return objectLink({
-	        object: object
-	      }, title, " ");
+	    if (this.props.mode === MODE.TINY) {
+	      return "";
 	    }
-	    return "";
+	
+	    let title = this.props.title || object.class || "Array";
+	    return this.safeObjectLink({}, title + " ");
 	  },
 	
 	  getPreviewItems: function (grip) {
@@ -3197,16 +3237,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    }
 	    if (previewItems.length > max || gripLength > previewItems.length) {
-	      let objectLink = this.props.objectLink || span;
 	      let leftItemNum = gripLength - max > 0 ? gripLength - max : gripLength - previewItems.length;
 	      items.push(Caption({
-	        object: objectLink({
-	          object: this.props.object
-	        }, leftItemNum + " more…")
+	        object: this.safeObjectLink({}, leftItemNum + " more…")
 	      }));
 	    }
 	
 	    return items;
+	  },
+	
+	  safeObjectLink: function (config, ...children) {
+	    if (this.props.objectLink) {
+	      return this.props.objectLink(Object.assign({
+	        object: this.props.object
+	      }, config), ...children);
+	    }
+	
+	    if (Object.keys(config).length === 0 && children.length === 1) {
+	      return children[0];
+	    }
+	
+	    return span(config, ...children);
 	  },
 	
 	  render: wrapRender(function () {
@@ -3232,16 +3283,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      brackets = needSpace(items.length > 0);
 	    }
 	
-	    let objectLink = this.props.objectLink || span;
 	    let title = this.getTitle(object);
 	
 	    return span({
-	      className: "objectBox objectBox-array" }, title, objectLink({
-	      className: "arrayLeftBracket",
-	      object: object
-	    }, brackets.left), ...items, objectLink({
-	      className: "arrayRightBracket",
-	      object: object
+	      className: "objectBox objectBox-array" }, title, this.safeObjectLink({
+	      className: "arrayLeftBracket"
+	    }, brackets.left), ...items, this.safeObjectLink({
+	      className: "arrayRightBracket"
 	    }, brackets.right), span({
 	      className: "arrayProperties",
 	      role: "group" }));
@@ -3257,7 +3305,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  propTypes: {
 	    delim: React.PropTypes.string,
-	    object: React.PropTypes.object.isRequired,
+	    object: React.PropTypes.oneOfType([React.PropTypes.object, React.PropTypes.number, React.PropTypes.string]).isRequired,
 	    objectLink: React.PropTypes.func,
 	    // @TODO Change this to Object.values once it's supported in Node's version of V8
 	    mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
@@ -3328,12 +3376,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  getTitle: function (object) {
 	    let title = this.props.title || (object && object.class ? object.class : "Map");
-	    if (this.props.objectLink) {
-	      return this.props.objectLink({
-	        object: object
-	      }, title);
-	    }
-	    return title;
+	    return this.safeObjectLink({}, title);
 	  },
 	
 	  safeEntriesIterator: function (object, max) {
@@ -3365,13 +3408,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    let entries = this.getEntries(mapEntries, indexes);
 	    if (entries.length < mapEntries.length) {
 	      // There are some undisplayed entries. Then display "more…".
-	      let objectLink = this.props.objectLink || span;
-	
 	      entries.push(Caption({
 	        key: "more",
-	        object: objectLink({
-	          object: object
-	        }, `${mapEntries.length - max} more…`)
+	        object: this.safeObjectLink({}, `${mapEntries.length - max} more…`)
 	      }));
 	    }
 	
@@ -3446,24 +3485,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }, []);
 	  },
 	
+	  safeObjectLink: function (config, ...children) {
+	    if (this.props.objectLink) {
+	      return this.props.objectLink(Object.assign({
+	        object: this.props.object
+	      }, config), ...children);
+	    }
+	
+	    if (Object.keys(config).length === 0 && children.length === 1) {
+	      return children[0];
+	    }
+	
+	    return span(config, ...children);
+	  },
+	
 	  render: wrapRender(function () {
 	    let object = this.props.object;
 	    let propsArray = this.safeEntriesIterator(object, this.props.mode === MODE.LONG ? 10 : 3);
 	
-	    let objectLink = this.props.objectLink || span;
 	    if (this.props.mode === MODE.TINY) {
-	      return span({ className: "objectBox objectBox-object" }, this.getTitle(object), objectLink({
-	        className: "objectLeftBrace",
-	        object: object
-	      }, ""));
+	      return span({ className: "objectBox objectBox-object" }, this.getTitle(object));
 	    }
 	
-	    return span({ className: "objectBox objectBox-object" }, this.getTitle(object), objectLink({
-	      className: "objectLeftBrace",
-	      object: object
-	    }, " { "), propsArray, objectLink({
-	      className: "objectRightBrace",
-	      object: object
+	    return span({ className: "objectBox objectBox-object" }, this.getTitle(object), this.safeObjectLink({
+	      className: "objectLeftBrace"
+	    }, " { "), propsArray, this.safeObjectLink({
+	      className: "objectRightBrace"
 	    }, " }"));
 	  })
 	});

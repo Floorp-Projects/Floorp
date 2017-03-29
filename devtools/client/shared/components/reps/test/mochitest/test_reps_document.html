@@ -14,14 +14,45 @@ Test Document rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 window.onload = Task.async(function* () {
   const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
   let { Rep, Document } = REPS;
 
   try {
-    let gripStub = {
+    testBasic();
+    testObjectLink();
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  function testBasic() {
+    // Test that correct rep is chosen
+    const renderedRep = shallowRenderComponent(Rep, { object: getStub() });
+    is(renderedRep.type, Document.rep, `Rep correctly selects ${Document.rep.displayName}`);
+
+    // Test rendering
+    const renderedComponent = renderComponent(Document.rep, { object: getStub() });
+    is(renderedComponent.textContent, "https://www.mozilla.org/en-US/firefox/new/",
+      "Document rep has expected text content");
+  }
+
+  function testObjectLink() {
+    // Test rendering
+    const renderedComponent = renderComponent(Document.rep, {
+      object: getStub(),
+      objectLink: (props, ...children) => React.DOM.span({},
+        "*", ...children, "*"),
+    });
+    is(renderedComponent.textContent, "*HTMLDocument *https://www.mozilla.org/en-US/firefox/new/",
+      "Document rep has expected text content when an objectLink is passed as a prop");
+  }
+
+  function getStub() {
+    return {
       "type": "object",
       "class": "HTMLDocument",
       "actor": "server1.conn17.obj115",
@@ -36,18 +67,6 @@ window.onload = Task.async(function* () {
         "location": "https://www.mozilla.org/en-US/firefox/new/"
       }
     };
-
-    // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
-    is(renderedRep.type, Document.rep, `Rep correctly selects ${Document.rep.displayName}`);
-
-    // Test rendering
-    const renderedComponent = renderComponent(Document.rep, { object: gripStub });
-    is(renderedComponent.textContent, "https://www.mozilla.org/en-US/firefox/new/", "Document rep has expected text content");
-  } catch(e) {
-    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
-  } finally {
-    SimpleTest.finish();
   }
 });
 </script>

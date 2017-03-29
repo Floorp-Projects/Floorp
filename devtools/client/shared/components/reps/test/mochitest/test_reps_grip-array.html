@@ -14,8 +14,8 @@ Test GripArray rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 window.onload = Task.async(function* () {
   const {
     REPS,
@@ -46,6 +46,8 @@ window.onload = Task.async(function* () {
     yield testOnDomNodeMouseOver();
     yield testOnDomNodeMouseOut();
     yield testOnDomNodeInspectIconClick();
+
+    yield testObjectLink();
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -412,6 +414,41 @@ window.onload = Task.async(function* () {
         "onInspectIconClick is called with the expected argument " +
         "when the inspect icon is clicked");
     });
+  }
+
+  function testObjectLink() {
+    // Test array = `["test string"…] //4 items`
+    const defaultOutput = `*Array **[ *${Array(maxLength.short).fill("\"test string\"").join(", ")}, *1 more…** ]*`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `*[*${maxLength.short + 1}*]*`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: `*Array **[ *${Array(maxLength.short + 1).fill("\"test string\"").join(", ")}* ]*`,
+      }
+    ];
+
+    testRepRenderModes(
+      modeTests,
+      "testObjectLink",
+      componentUnderTest,
+      getGripStub("testMoreThanShortMaxProps"),
+      {
+        objectLink: (props, ...children) => React.DOM.span({},
+          "*", ...children, "*"),
+      }
+    );
   }
 
   function getGripStub(functionName) {
