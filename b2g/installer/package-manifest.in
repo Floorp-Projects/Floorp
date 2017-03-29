@@ -361,8 +361,6 @@
 @RESPATH@/components/PeerConnection.js
 @RESPATH@/components/PeerConnection.manifest
 #endif
-@RESPATH@/components/SiteSpecificUserAgent.js
-@RESPATH@/components/SiteSpecificUserAgent.manifest
 @RESPATH@/components/storage-json.js
 @RESPATH@/components/crypto-SDR.js
 @RESPATH@/components/Downloads.manifest

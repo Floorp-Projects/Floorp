@@ -40,13 +40,14 @@ public:
   explicit nsSVGPatternFrame(nsStyleContext* aContext);
 
   // nsSVGPaintServerFrame methods:
-  virtual already_AddRefed<gfxPattern>
+  virtual mozilla::Pair<DrawResult, RefPtr<gfxPattern>>
     GetPaintServerPattern(nsIFrame *aSource,
                           const DrawTarget* aDrawTarget,
                           const gfxMatrix& aContextMatrix,
                           nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                           float aOpacity,
-                          const gfxRect *aOverrideBounds) override;
+                          const gfxRect *aOverrideBounds,
+                          uint32_t aFlags) override;
 
 public:
   typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
@@ -106,14 +107,15 @@ protected:
     return GetLengthValue(aIndex, mContent);
   }
 
-  already_AddRefed<SourceSurface>
+  mozilla::Pair<DrawResult, RefPtr<SourceSurface>>
   PaintPattern(const DrawTarget* aDrawTarget,
                Matrix *patternMatrix,
                const Matrix &aContextMatrix,
                nsIFrame *aSource,
                nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                float aGraphicOpacity,
-               const gfxRect *aOverrideBounds);
+               const gfxRect *aOverrideBounds,
+               uint32_t aFlags);
 
   /**
    * A <pattern> element may reference another <pattern> element using

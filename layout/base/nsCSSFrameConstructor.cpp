@@ -12256,10 +12256,8 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
   //   resulting translation also affects the block-level box contained
   //   in the inline box.
   RefPtr<nsStyleContext> blockSC = mPresShell->StyleSet()->
-      ResolveInheritingAnonymousBoxStyle(aIsPositioned ?
-                                           nsCSSAnonBoxes::mozAnonymousPositionedBlock :
-                                           nsCSSAnonBoxes::mozAnonymousBlock,
-                                         styleContext);
+    ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozBlockInsideInlineWrapper,
+                                       styleContext);
 
   nsContainerFrame* lastNewInline =
     static_cast<nsContainerFrame*>(aInitialInline->FirstContinuation());

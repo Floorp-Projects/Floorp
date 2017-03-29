@@ -86,7 +86,7 @@ struct RegExpCode
 };
 
 RegExpCode
-CompilePattern(JSContext* cx, RegExpShared* shared, RegExpCompileData* data,
+CompilePattern(JSContext* cx, HandleRegExpShared shared, RegExpCompileData* data,
                HandleLinearString sample,  bool is_global, bool ignore_case,
                bool is_ascii, bool match_only, bool force_bytecode, bool sticky,
                bool unicode);

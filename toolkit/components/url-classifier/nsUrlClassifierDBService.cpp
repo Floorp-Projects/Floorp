@@ -894,7 +894,10 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
       TableUpdateV2* tuV2 = TableUpdate::Cast<TableUpdateV2>(
         pParse->GetTableUpdate(resultsPtr->ElementAt(i).table));
 
-      NS_ENSURE_TRUE(tuV2, NS_ERROR_FAILURE);
+      // Ignore V4 for now.
+      if (!tuV2) {
+        continue;
+      }
 
       LOG(("CacheCompletion Addchunk %d hash %X", resultsPtr->ElementAt(i).entry.addChunk,
            resultsPtr->ElementAt(i).entry.ToUint32()));
@@ -1136,14 +1139,6 @@ nsUrlClassifierLookupCallback::Completion(const nsACString& completeHash,
   LOG(("nsUrlClassifierLookupCallback::Completion [%p, %s, %d]",
        this, PromiseFlatCString(tableName).get(), chunkId));
 
-  if (StringEndsWith(tableName, NS_LITERAL_CSTRING("-proto")) &&
-      !Preferences::GetBool(TAKE_V4_COMPLETION_RESULT_PREF,
-                            TAKE_V4_COMPLETION_RESULT_DEFAULT)) {
-    // Bug 1331534 - We temporarily ignore hash completion result
-    // for v4 tables.
-    return NS_OK;
-  }
-
   mozilla::safebrowsing::Completion hash;
   hash.Assign(completeHash);
 
@@ -1249,6 +1244,14 @@ nsUrlClassifierLookupCallback::HandleResults()
     if (!confirmed) {
       LOG(("Skipping result %s from table %s (not confirmed)",
            result.PartialHashHex().get(), result.mTableName.get()));
+      continue;
+    }
+
+    if (StringEndsWith(result.mTableName, NS_LITERAL_CSTRING("-proto")) &&
+        !Preferences::GetBool(TAKE_V4_COMPLETION_RESULT_PREF,
+                              TAKE_V4_COMPLETION_RESULT_DEFAULT)) {
+      // Bug 1331534 - We temporarily ignore hash completion result
+      // for v4 tables.
       continue;
     }
 

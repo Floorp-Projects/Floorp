@@ -6,6 +6,7 @@
 
 #include "ServiceWorkerManagerChild.h"
 #include "ServiceWorkerManager.h"
+#include "ServiceWorkerUpdaterChild.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
@@ -100,6 +101,20 @@ ServiceWorkerManagerChild::RecvNotifyRemoveAll()
   }
 
   return IPC_OK();
+}
+
+PServiceWorkerUpdaterChild*
+ServiceWorkerManagerChild::AllocPServiceWorkerUpdaterChild(const OriginAttributes& aOriginAttributes,
+                                                           const nsCString& aScope)
+{
+  MOZ_CRASH("Do no use ServiceWorkerUpdaterChild IPC CTOR.");
+}
+
+bool
+ServiceWorkerManagerChild::DeallocPServiceWorkerUpdaterChild(PServiceWorkerUpdaterChild* aActor)
+{
+  delete aActor;
+  return true;
 }
 
 } // namespace workers

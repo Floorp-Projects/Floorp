@@ -24,8 +24,8 @@ add_task(function* () {
   let panel = toolbox.getCurrentPanel();
 
   let { gStore, windowRequire } = panel.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let { getSelectedRequest } = windowRequire("devtools/client/netmonitor/selectors/index");
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  let { getSelectedRequest } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   let selected = getSelectedRequest(gStore.getState());
   is(selected.method, request.request.method,

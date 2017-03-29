@@ -18,7 +18,6 @@ import org.mozilla.gecko.background.fxa.FxAccountClient20.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.background.fxa.FxAccountRemoteError;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount.InvalidFxAState;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
 import org.mozilla.gecko.util.BundleEventListener;
@@ -123,17 +122,13 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
   @Override
   public void handleMessage(String event, GeckoBundle message, EventCallback callback) {
     if ("FxAccountsPush:Subscribe:Response".equals(event)) {
-      try {
-        doFxaRegistration(message.getBundle("subscription"));
-      } catch (InvalidFxAState e) {
-        Log.d(LOG_TAG, "Invalid state when trying to register with FxA ", e);
-      }
+      doFxaRegistration(message.getBundle("subscription"));
     } else {
       Log.e(LOG_TAG, "No action defined for " + event);
     }
   }
 
-  private void doFxaRegistration(GeckoBundle subscription) throws InvalidFxAState {
+  private void doFxaRegistration(GeckoBundle subscription) {
     final Context context = this.context.get();
     if (this.context == null) {
       throw new IllegalStateException("Application context has been gc'ed");
@@ -141,7 +136,7 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
     doFxaRegistration(context, subscription, true);
   }
 
-  private static void doFxaRegistration(final Context context, final GeckoBundle subscription, final boolean allowRecursion) throws InvalidFxAState {
+  private static void doFxaRegistration(final Context context, final GeckoBundle subscription, final boolean allowRecursion) {
     String pushCallback = subscription.getString("pushCallback");
     String pushPublicKey = subscription.getString("pushPublicKey");
     String pushAuthKey = subscription.getString("pushAuthKey");
@@ -151,7 +146,13 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
       Log.e(LOG_TAG, "AndroidFxAccount is null");
       return;
     }
-    final byte[] sessionToken = fxAccount.getSessionToken();
+    final byte[] sessionToken;
+    try {
+      sessionToken = fxAccount.getState().getSessionToken();
+    } catch (State.NotASessionTokenState e) {
+      Log.e(LOG_TAG, "Could not get a session token", e);
+      return;
+    }
     final FxAccountDevice device;
     String deviceId = fxAccount.getDeviceId();
     String clientName = getClientName(fxAccount, context);
@@ -296,13 +297,8 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
               Log.d(LOG_TAG, "Failure to register a device on the second try");
               break;
             }
-            try {
-              doFxaRegistration(context, subscription, false);
-              return;
-            } catch (InvalidFxAState e) {
-              Log.d(LOG_TAG, "Invalid state when trying to recover from a session conflict ", e);
-              break;
-            }
+            doFxaRegistration(context, subscription, false);
+            return;
           }
         }
         onError();

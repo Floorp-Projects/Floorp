@@ -24,6 +24,7 @@
 
 #ifdef XP_WIN
 #include <process.h>
+#include <shobjidl.h>
 #include "mozilla/ipc/WindowsMessageLoop.h"
 #include "mozilla/TlsAllocationTracker.h"
 #endif
@@ -135,10 +136,6 @@ using mozilla::ipc::XPCShellEnvironment;
 using mozilla::startup::sChildProcessType;
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
-#ifdef XP_WIN
-static const wchar_t kShellLibraryName[] =  L"shell32.dll";
-#endif
 
 nsresult
 XRE_LockProfileDirectory(nsIFile* aDirectory,
@@ -299,26 +296,9 @@ XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 void
 SetTaskbarGroupId(const nsString& aId)
 {
-    typedef HRESULT (WINAPI * SetCurrentProcessExplicitAppUserModelIDPtr)(PCWSTR AppID);
-
-    SetCurrentProcessExplicitAppUserModelIDPtr funcAppUserModelID = nullptr;
-
-    HMODULE hDLL = ::LoadLibraryW(kShellLibraryName);
-
-    funcAppUserModelID = (SetCurrentProcessExplicitAppUserModelIDPtr)
-                          GetProcAddress(hDLL, "SetCurrentProcessExplicitAppUserModelID");
-
-    if (!funcAppUserModelID) {
-        ::FreeLibrary(hDLL);
-        return;
-    }
-
-    if (FAILED(funcAppUserModelID(aId.get()))) {
+    if (FAILED(SetCurrentProcessExplicitAppUserModelID(aId.get()))) {
         NS_WARNING("SetCurrentProcessExplicitAppUserModelID failed for child process.");
     }
-
-    if (hDLL)
-        ::FreeLibrary(hDLL);
 }
 #endif
 
@@ -337,6 +317,30 @@ AddContentSandboxLevelAnnotation()
 }
 #endif /* MOZ_CONTENT_SANDBOX && !MOZ_WIDGET_GONK */
 #endif /* MOZ_CRASHREPORTER */
+
+namespace {
+
+int GetDebugChildPauseTime() {
+  auto pauseStr = PR_GetEnv("MOZ_DEBUG_CHILD_PAUSE");
+  if (pauseStr && *pauseStr) {
+    int pause = atoi(pauseStr);
+    if (pause != 1) { // must be !=1 since =1 enables the default pause time
+#if defined(OS_WIN)
+      pause *= 1000; // convert to ms
+#endif
+      return pause;
+    }
+  }
+#ifdef OS_POSIX
+  return 30; // seconds
+#elif defined(OS_WIN)
+  return 10000; // milliseconds
+#else
+  return 0;
+#endif
+}
+
+} // namespace
 
 nsresult
 XRE_InitChildProcess(int aArgc,
@@ -543,7 +547,7 @@ XRE_InitChildProcess(int aArgc,
 #endif
     printf_stderr("\n\nCHILDCHILDCHILDCHILD\n  debug me @ %d\n\n",
                   base::GetCurrentProcId());
-    sleep(30);
+    sleep(GetDebugChildPauseTime());
   }
 #elif defined(OS_WIN)
   if (PR_GetEnv("MOZ_DEBUG_CHILD_PROCESS")) {
@@ -553,7 +557,7 @@ XRE_InitChildProcess(int aArgc,
   } else if (PR_GetEnv("MOZ_DEBUG_CHILD_PAUSE")) {
     printf_stderr("\n\nCHILDCHILDCHILDCHILD\n  debug me @ %d\n\n",
                   base::GetCurrentProcId());
-    ::Sleep(10000);
+    ::Sleep(GetDebugChildPauseTime());
   }
 #endif
 

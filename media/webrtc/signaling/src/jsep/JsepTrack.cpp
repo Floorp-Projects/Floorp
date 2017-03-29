@@ -126,7 +126,7 @@ JsepTrack::AddToAnswer(const SdpMediaSection& offer,
   AddToMsection(codecs.values, answer);
 
   if (mDirection == sdp::kSend) {
-    std::vector<JsConstraints> constraints;
+    std::vector<JsConstraints> constraints(mJsEncodeConstraints);
     std::vector<SdpRidAttributeList::Rid> rids;
     GetRids(offer, sdp::kRecv, &rids);
     NegotiateRids(rids, &constraints);
@@ -466,7 +466,15 @@ JsepTrack::Negotiate(const SdpMediaSection& answer,
 
   if (answer.GetAttributeList().HasAttribute(SdpAttribute::kExtmapAttribute)) {
     for (auto& extmapAttr : answer.GetAttributeList().GetExtmap().mExtmaps) {
-      negotiatedDetails->mExtmap[extmapAttr.extensionname] = extmapAttr;
+      SdpDirectionAttribute::Direction direction = extmapAttr.direction;
+      if (&remote == &answer) {
+        // Answer is remote, we need to flip this.
+        direction = ~direction;
+      }
+
+      if (direction & mDirection) {
+        negotiatedDetails->mExtmap[extmapAttr.extensionname] = extmapAttr;
+      }
     }
   }
 

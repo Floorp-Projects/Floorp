@@ -1577,3 +1577,49 @@ class Vendor(MachCommandBase):
         from mozbuild.vendor_rust import VendorRust
         vendor_command = self._spawn(VendorRust)
         vendor_command.vendor(**kwargs)
+
+@CommandProvider
+class WebRTCGTestCommands(GTestCommands):
+    @Command('webrtc-gtest', category='testing',
+        description='Run WebRTC.org GTest unit tests.')
+    @CommandArgument('gtest_filter', default=b"*", nargs='?', metavar='gtest_filter',
+        help="test_filter is a ':'-separated list of wildcard patterns (called the positive patterns),"
+             "optionally followed by a '-' and another ':'-separated pattern list (called the negative patterns).")
+    @CommandArgumentGroup('debugging')
+    @CommandArgument('--debug', action='store_true', group='debugging',
+        help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.')
+    @CommandArgument('--debugger', default=None, type=str, group='debugging',
+        help='Name of debugger to use.')
+    @CommandArgument('--debugger-args', default=None, metavar='params', type=str,
+        group='debugging',
+        help='Command-line arguments to pass to the debugger itself; split as the Bourne shell would.')
+    def gtest(self, gtest_filter, debug, debugger,
+              debugger_args):
+        app_path = self.get_binary_path('webrtc-gtest')
+        args = [app_path]
+
+        if debug or debugger or debugger_args:
+            args = self.prepend_debugger_args(args, debugger, debugger_args)
+
+        # Used to locate resources used by tests
+        cwd = os.path.join(self.topsrcdir, 'media', 'webrtc', 'trunk')
+
+        if not os.path.isdir(cwd):
+            print('Unable to find working directory for tests: %s' % cwd)
+            return 1
+
+        gtest_env = {
+            # These tests are not run under ASAN upstream, so we need to
+            # disable some checks.
+            b'ASAN_OPTIONS': 'alloc_dealloc_mismatch=0',
+            # Use GTest environment variable to control test execution
+            # For details see:
+            # https://code.google.com/p/googletest/wiki/AdvancedGuide#Running_Test_Programs:_Advanced_Options
+            b'GTEST_FILTER': gtest_filter
+        }
+
+        return self.run_process(args=args,
+                                append_env=gtest_env,
+                                cwd=cwd,
+                                ensure_exit_code=False,
+                                pass_thru=True)

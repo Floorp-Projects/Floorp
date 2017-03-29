@@ -49,6 +49,9 @@ PRInt32 ssl3_ClientSendSigAlgsXtn(const sslSocket *ss, TLSExtensionData *xtnData
 SECStatus ssl3_ServerHandleSigAlgsXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRUint16 ex_type,
                                       SECItem *data);
 
+PRInt32 ssl3_ClientSendPaddingExtension(const sslSocket *ss, TLSExtensionData *xtnData,
+                                        PRBool append, PRUint32 maxBytes);
+
 PRInt32 ssl3_ClientSendSignedCertTimestampXtn(const sslSocket *ss, TLSExtensionData *xtnData,
                                               PRBool append,
                                               PRUint32 maxBytes);

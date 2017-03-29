@@ -77,6 +77,7 @@
 #include "ServiceWorkerEvents.h"
 #include "ServiceWorkerUnregisterJob.h"
 #include "ServiceWorkerUpdateJob.h"
+#include "ServiceWorkerUpdaterChild.h"
 #include "SharedWorker.h"
 #include "WorkerInlines.h"
 #include "WorkerPrivate.h"
@@ -506,6 +507,238 @@ public:
 private:
   ~PropagateRemoveAllRunnable()
   {}
+};
+
+class PromiseResolverCallback final : public ServiceWorkerUpdateFinishCallback
+{
+public:
+  PromiseResolverCallback(ServiceWorkerUpdateFinishCallback* aCallback,
+                          GenericPromise::Private* aPromise)
+    : mCallback(aCallback)
+    , mPromise(aPromise)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mPromise);
+  }
+
+  void UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo) override
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mPromise);
+
+    if (mCallback) {
+      mCallback->UpdateSucceeded(aInfo);
+    }
+
+    MaybeResolve();
+  }
+
+  void UpdateFailed(ErrorResult& aStatus) override
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mPromise);
+
+    if (mCallback) {
+      mCallback->UpdateFailed(aStatus);
+    }
+
+    MaybeResolve();
+  }
+
+private:
+  ~PromiseResolverCallback()
+  {
+    MaybeResolve();
+  }
+
+  void
+  MaybeResolve()
+  {
+    if (mPromise) {
+      mPromise->Resolve(true, __func__);
+      mPromise = nullptr;
+    }
+  }
+
+  RefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
+  RefPtr<GenericPromise::Private> mPromise;
+};
+
+// This runnable is used for 2 different tasks:
+// - to postpone the SoftUpdate() until the IPC SWM actor is created
+//   (aInternalMethod == false)
+// - to call the 'real' SoftUpdate when the ServiceWorkerUpdaterChild is
+//   notified by the parent (aInternalMethod == true)
+class SoftUpdateRunnable final : public CancelableRunnable
+{
+public:
+  SoftUpdateRunnable(const OriginAttributes& aOriginAttributes,
+                     const nsACString& aScope, bool aInternalMethod,
+                     GenericPromise::Private* aPromise)
+    : mAttrs(aOriginAttributes)
+    , mScope(aScope)
+    , mInternalMethod(aInternalMethod)
+    , mPromise(aPromise)
+  {}
+
+  NS_IMETHOD Run() override
+  {
+    AssertIsOnMainThread();
+
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (!swm) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (mInternalMethod) {
+      RefPtr<PromiseResolverCallback> callback =
+        new PromiseResolverCallback(nullptr, mPromise);
+      mPromise = nullptr;
+
+      swm->SoftUpdateInternal(mAttrs, mScope, callback);
+    } else {
+      swm->SoftUpdate(mAttrs, mScope);
+    }
+
+    return NS_OK;
+  }
+
+  nsresult
+  Cancel() override
+  {
+    mPromise = nullptr;
+    return NS_OK;
+  }
+
+private:
+  ~SoftUpdateRunnable()
+  {
+    if (mPromise) {
+      mPromise->Resolve(true, __func__);
+    }
+  }
+
+  const OriginAttributes mAttrs;
+  const nsCString mScope;
+  bool mInternalMethod;
+
+  RefPtr<GenericPromise::Private> mPromise;
+};
+
+// This runnable is used for 3 different tasks:
+// - to postpone the Update() until the IPC SWM actor is created
+//   (aType == ePostpone)
+// - to call the 'real' Update when the ServiceWorkerUpdaterChild is
+//   notified by the parent (aType == eSuccess)
+// - an error must be propagated (aType == eFailure)
+class UpdateRunnable final : public CancelableRunnable
+{
+public:
+  enum Type {
+    ePostpone,
+    eSuccess,
+    eFailure,
+  };
+
+  UpdateRunnable(nsIPrincipal* aPrincipal,
+                 const nsACString& aScope,
+                 ServiceWorkerUpdateFinishCallback* aCallback,
+                 Type aType,
+                 GenericPromise::Private* aPromise)
+    : mPrincipal(aPrincipal)
+    , mScope(aScope)
+    , mCallback(aCallback)
+    , mType(aType)
+    , mPromise(aPromise)
+  {}
+
+  NS_IMETHOD Run() override
+  {
+    AssertIsOnMainThread();
+
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (!swm) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (mType == ePostpone) {
+      swm->Update(mPrincipal, mScope, mCallback);
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(mPromise);
+
+    RefPtr<PromiseResolverCallback> callback =
+      new PromiseResolverCallback(mCallback, mPromise);
+    mPromise = nullptr;
+
+    if (mType == eSuccess) {
+      swm->UpdateInternal(mPrincipal, mScope, callback);
+      return NS_OK;
+    }
+
+    ErrorResult error(NS_ERROR_DOM_ABORT_ERR);
+    callback->UpdateFailed(error);
+    return NS_OK;
+  }
+
+  nsresult
+  Cancel() override
+  {
+    mPromise = nullptr;
+    return NS_OK;
+  }
+
+private:
+  ~UpdateRunnable()
+  {
+    if (mPromise) {
+      mPromise->Resolve(true, __func__);
+    }
+  }
+
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  const nsCString mScope;
+  RefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
+  Type mType;
+
+  RefPtr<GenericPromise::Private> mPromise;
+};
+
+class ResolvePromiseRunnable final : public CancelableRunnable
+{
+public:
+  explicit ResolvePromiseRunnable(GenericPromise::Private* aPromise)
+    : mPromise(aPromise)
+  {}
+
+  NS_IMETHOD
+  Run() override
+  {
+    MaybeResolve();
+    return NS_OK;
+  }
+
+  nsresult
+  Cancel() override
+  {
+    mPromise = nullptr;
+    return NS_OK;
+  }
+
+private:
+  ~ResolvePromiseRunnable()
+  {
+    MaybeResolve();
+  }
+
+  void
+  MaybeResolve()
+  {
+    if (mPromise) {
+      mPromise->Resolve(true, __func__);
+      mPromise = nullptr;
+    }
+  }
+
+  RefPtr<GenericPromise::Private> mPromise;
 };
 
 } // namespace
@@ -2726,6 +2959,80 @@ ServiceWorkerManager::SoftUpdate(const OriginAttributes& aOriginAttributes,
     return;
   }
 
+  if (!mActor) {
+    RefPtr<Runnable> runnable =
+      new SoftUpdateRunnable(aOriginAttributes, aScope, false, nullptr);
+    AppendPendingOperation(runnable);
+    return;
+  }
+
+  RefPtr<GenericPromise::Private> promise =
+    new GenericPromise::Private(__func__);
+
+  RefPtr<CancelableRunnable> successRunnable =
+    new SoftUpdateRunnable(aOriginAttributes, aScope, true, promise);
+
+  RefPtr<CancelableRunnable> failureRunnable =
+    new ResolvePromiseRunnable(promise);
+
+  ServiceWorkerUpdaterChild* actor =
+    new ServiceWorkerUpdaterChild(promise, successRunnable, failureRunnable);
+
+  mActor->SendPServiceWorkerUpdaterConstructor(actor, aOriginAttributes,
+                                               nsCString(aScope));
+}
+
+namespace {
+
+class UpdateJobCallback final : public ServiceWorkerJob::Callback
+{
+  RefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
+
+  ~UpdateJobCallback() = default;
+
+public:
+  explicit UpdateJobCallback(ServiceWorkerUpdateFinishCallback* aCallback)
+    : mCallback(aCallback)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(mCallback);
+  }
+
+  void
+  JobFinished(ServiceWorkerJob* aJob, ErrorResult& aStatus)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(aJob);
+
+    if (aStatus.Failed()) {
+      mCallback->UpdateFailed(aStatus);
+      return;
+    }
+
+    MOZ_DIAGNOSTIC_ASSERT(aJob->GetType() == ServiceWorkerJob::Type::Update);
+    RefPtr<ServiceWorkerUpdateJob> updateJob =
+      static_cast<ServiceWorkerUpdateJob*>(aJob);
+    RefPtr<ServiceWorkerRegistrationInfo> reg = updateJob->GetRegistration();
+    mCallback->UpdateSucceeded(reg);
+  }
+
+  NS_INLINE_DECL_REFCOUNTING(UpdateJobCallback)
+};
+
+} // anonymous namespace
+
+void
+ServiceWorkerManager::SoftUpdateInternal(const OriginAttributes& aOriginAttributes,
+                                         const nsACString& aScope,
+                                         ServiceWorkerUpdateFinishCallback* aCallback)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aCallback);
+
+  if (mShuttingDown) {
+    return;
+  }
+
   nsCOMPtr<nsIURI> scopeURI;
   nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2779,53 +3086,51 @@ ServiceWorkerManager::SoftUpdate(const OriginAttributes& aOriginAttributes,
     new ServiceWorkerUpdateJob(principal, registration->mScope,
                                newest->ScriptSpec(), nullptr,
                                registration->GetLoadFlags());
+
+  RefPtr<UpdateJobCallback> cb = new UpdateJobCallback(aCallback);
+  job->AppendResultCallback(cb);
+
   queue->ScheduleJob(job);
 }
-
-namespace {
-
-class UpdateJobCallback final : public ServiceWorkerJob::Callback
-{
-  RefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
-
-  ~UpdateJobCallback()
-  {
-  }
-
-public:
-  explicit UpdateJobCallback(ServiceWorkerUpdateFinishCallback* aCallback)
-    : mCallback(aCallback)
-  {
-    AssertIsOnMainThread();
-    MOZ_ASSERT(mCallback);
-  }
-
-  void
-  JobFinished(ServiceWorkerJob* aJob, ErrorResult& aStatus)
-  {
-    AssertIsOnMainThread();
-    MOZ_ASSERT(aJob);
-
-    if (aStatus.Failed()) {
-      mCallback->UpdateFailed(aStatus);
-      return;
-    }
-
-    MOZ_ASSERT(aJob->GetType() == ServiceWorkerJob::Type::Update);
-    RefPtr<ServiceWorkerUpdateJob> updateJob =
-      static_cast<ServiceWorkerUpdateJob*>(aJob);
-    RefPtr<ServiceWorkerRegistrationInfo> reg = updateJob->GetRegistration();
-    mCallback->UpdateSucceeded(reg);
-  }
-
-  NS_INLINE_DECL_REFCOUNTING(UpdateJobCallback)
-};
-} // anonymous namespace
 
 void
 ServiceWorkerManager::Update(nsIPrincipal* aPrincipal,
                              const nsACString& aScope,
                              ServiceWorkerUpdateFinishCallback* aCallback)
+{
+  AssertIsOnMainThread();
+
+  if (!mActor) {
+    RefPtr<Runnable> runnable =
+      new UpdateRunnable(aPrincipal, aScope, aCallback,
+                         UpdateRunnable::ePostpone, nullptr);
+    AppendPendingOperation(runnable);
+    return;
+  }
+
+  RefPtr<GenericPromise::Private> promise =
+    new GenericPromise::Private(__func__);
+
+  RefPtr<CancelableRunnable> successRunnable =
+    new UpdateRunnable(aPrincipal, aScope, aCallback,
+                       UpdateRunnable::eSuccess, promise);
+
+  RefPtr<CancelableRunnable> failureRunnable =
+    new UpdateRunnable(aPrincipal, aScope, aCallback,
+                       UpdateRunnable::eFailure, promise);
+
+  ServiceWorkerUpdaterChild* actor =
+    new ServiceWorkerUpdaterChild(promise, successRunnable, failureRunnable);
+
+  mActor->SendPServiceWorkerUpdaterConstructor(actor,
+                                               aPrincipal->OriginAttributesRef(),
+                                               nsCString(aScope));
+}
+
+void
+ServiceWorkerManager::UpdateInternal(nsIPrincipal* aPrincipal,
+                                     const nsACString& aScope,
+                                     ServiceWorkerUpdateFinishCallback* aCallback)
 {
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aCallback);

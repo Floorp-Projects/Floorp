@@ -8,19 +8,19 @@
  */
 
 function test() {
-  let { L10N } = require("devtools/client/netmonitor/utils/l10n");
+  let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
   initNetMonitor(SIMPLE_SJS).then(({ tab, monitor }) => {
     info("Starting test... ");
 
     let { document, gStore, windowRequire } = monitor.panelWin;
-    let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-    let { EVENTS } = windowRequire("devtools/client/netmonitor/constants");
+    let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+    let { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
     let {
       getDisplayedRequests,
       getSelectedRequest,
       getSortedRequests,
-    } = windowRequire("devtools/client/netmonitor/selectors/index");
+    } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
     gStore.dispatch(Actions.batchEnable(false));
 

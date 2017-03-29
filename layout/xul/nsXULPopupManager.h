@@ -324,7 +324,6 @@ private:
 
 class nsXULPopupManager final : public nsIDOMEventListener,
                                 public nsIRollupListener,
-                                public nsITimerCallback,
                                 public nsIObserver
 {
 
@@ -337,7 +336,6 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIDOMEVENTLISTENER
 
   // nsIRollupListener

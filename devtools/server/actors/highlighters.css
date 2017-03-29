@@ -33,6 +33,7 @@
   --highlighter-bubble-text-color: hsl(216, 33%, 97%);
   --highlighter-bubble-background-color: hsl(214, 13%, 24%);
   --highlighter-bubble-border-color: rgba(255, 255, 255, 0.2);
+  --highlighter-bubble-arrow-size: 8px;
 }
 
 /**
@@ -141,15 +142,11 @@
   border: 1px solid var(--highlighter-bubble-border-color);
 }
 
-:-moz-native-anonymous [class$=infobar-container][hide-arrow] > [class$=infobar] {
-  margin: 7px 0;
-}
-
 /* Arrows */
 
 :-moz-native-anonymous [class$=infobar-container] > [class$=infobar]:before {
-  left: calc(50% - 8px);
-  border: 8px solid var(--highlighter-bubble-border-color);
+  left: calc(50% - var(--highlighter-bubble-arrow-size));
+  border: var(--highlighter-bubble-arrow-size) solid var(--highlighter-bubble-border-color);
 }
 
 :-moz-native-anonymous [class$=infobar-container] > [class$=infobar]:after {

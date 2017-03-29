@@ -11,7 +11,7 @@ add_task(function* () {
 
   let { monitor } = yield initNetMonitor(INFINITE_GET_URL);
   let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   // Wait until the first request makes the empty notice disappear
   yield waitForRequestListToAppear();

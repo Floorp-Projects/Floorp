@@ -120,6 +120,7 @@ struct MovingTracer : JS::CallbackTracer
     void onLazyScriptEdge(LazyScript** lazyp) override;
     void onBaseShapeEdge(BaseShape** basep) override;
     void onScopeEdge(Scope** basep) override;
+    void onRegExpSharedEdge(RegExpShared** sharedp) override;
     void onChild(const JS::GCCellPtr& thing) override {
         MOZ_ASSERT(!RelocationOverlay::isCellForwarded(thing.asCell()));
     }
@@ -127,6 +128,10 @@ struct MovingTracer : JS::CallbackTracer
 #ifdef DEBUG
     TracerKind getTracerKind() const override { return TracerKind::Moving; }
 #endif
+
+  private:
+    template <typename T>
+    void updateEdge(T** thingp);
 };
 
 // Structure for counting how many times objects in a particular group have

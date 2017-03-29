@@ -34,6 +34,7 @@ public abstract class TokensAndKeysState extends State {
     return o;
   }
 
+  @Override
   public byte[] getSessionToken() {
     return sessionToken;
   }

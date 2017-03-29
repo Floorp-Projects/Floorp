@@ -36,6 +36,7 @@ namespace ipc {
 class PFileDescriptorSetParent;
 class PChildToParentStreamParent;
 class PParentToChildStreamParent;
+class PMemoryStreamParent;
 }
 
 namespace dom {
@@ -120,6 +121,11 @@ protected: // IPDL methods
   virtual PBlobParent* AllocPBlobParent(const BlobConstructorParams& aParams);
 
   virtual bool DeallocPBlobParent(PBlobParent* aActor);
+
+  virtual mozilla::ipc::PMemoryStreamParent*
+  AllocPMemoryStreamParent(const uint64_t& aSize);
+
+  virtual bool DeallocPMemoryStreamParent(mozilla::ipc::PMemoryStreamParent* aActor);
 
   virtual mozilla::ipc::PFileDescriptorSetParent*
   AllocPFileDescriptorSetParent(const mozilla::ipc::FileDescriptor& aFD);

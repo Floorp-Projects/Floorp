@@ -3495,11 +3495,15 @@ nsPrintEngine::StartPagePrintTimer(const UniquePtr<nsPrintObject>& aPO)
   if (!mPagePrintTimer) {
     // Get the delay time in between the printing of each page
     // this gives the user more time to press cancel
+    if (!mDocument) {
+      MOZ_LOG(gPrintingLog, LogLevel::Error,("Error! mDocument is NULL"));
+      return NS_ERROR_FAILURE;
+    }
     int32_t printPageDelay = 50;
     mPrt->mPrintSettings->GetPrintPageDelay(&printPageDelay);
 
     RefPtr<nsPagePrintTimer> timer =
-      new nsPagePrintTimer(this, mDocViewerPrint, printPageDelay);
+      new nsPagePrintTimer(this, mDocViewerPrint, mDocument, printPageDelay);
     timer.forget(&mPagePrintTimer);
 
     nsCOMPtr<nsIPrintSession> printSession;
@@ -3556,9 +3560,12 @@ private:
 void
 nsPrintEngine::FirePrintCompletionEvent()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> event = new nsPrintCompletionEvent(mDocViewerPrint);
-  if (NS_FAILED(NS_DispatchToCurrentThread(event)))
+  if (NS_FAILED(mDocument->Dispatch("nsPrintCompletionEvent",
+                                    TaskCategory::Other, event.forget()))) {
     NS_WARNING("failed to dispatch print completion event");
+  }
 }
 
 void

@@ -308,7 +308,7 @@ Tools.netMonitor = {
   visibilityswitch: "devtools.netmonitor.enabled",
   icon: "chrome://devtools/skin/images/tool-network.svg",
   invertIconForDarkTheme: true,
-  url: "chrome://devtools/content/netmonitor/netmonitor.xhtml",
+  url: "chrome://devtools/content/netmonitor/index.html",
   label: l10n("netmonitor.label"),
   panelLabel: l10n("netmonitor.panelLabel"),
   get tooltip() {

@@ -186,7 +186,10 @@ private:
   RefPtr<Connection> mConnection;
   sqlite3 *mNativeConnection;
   bool mHasTransaction;
-  mozIStorageStatementCallback *mCallback;
+  // Note, this may not be a threadsafe object - never addref/release off
+  // the calling thread.  We take a reference when this is created, and
+  // release it in the CompletionNotifier::Run() call back to this thread.
+  RefPtr<mozIStorageStatementCallback> mCallback;
   nsCOMPtr<nsIThread> mCallingThread;
   RefPtr<ResultSet> mResultSet;
 

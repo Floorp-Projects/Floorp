@@ -110,8 +110,12 @@ FireImageDOMEvent(nsIContent* aContent, EventMessage aMessage)
                "invalid message");
 
   nsCOMPtr<nsIRunnable> event = new nsImageBoxFrameEvent(aContent, aMessage);
-  if (NS_FAILED(NS_DispatchToCurrentThread(event)))
+  nsresult rv = aContent->OwnerDoc()->Dispatch("nsImageBoxFrameEvent",
+                                               TaskCategory::Other,
+                                               event.forget());
+  if (NS_FAILED(rv)) {
     NS_WARNING("failed to dispatch image event");
+  }
 }
 
 //
@@ -406,11 +410,7 @@ nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
   }
 
   Maybe<SVGImageContext> svgContext;
-  if (imgCon->GetType() == imgIContainer::TYPE_VECTOR) {
-    // We avoid this overhead for raster images.
-    svgContext.emplace();
-    svgContext->MaybeStoreContextPaint(this);
-  }
+  SVGImageContext::MaybeInitAndStoreContextPaint(svgContext, this, imgCon);
 
   return nsLayoutUtils::DrawSingleImage(
            *aRenderingContext.ThebesContext(),

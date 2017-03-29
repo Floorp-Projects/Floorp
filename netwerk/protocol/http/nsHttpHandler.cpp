@@ -182,7 +182,7 @@ nsHttpHandler::nsHttpHandler()
     , mMaxRequestDelay(10)
     , mIdleSynTimeout(250)
     , mH2MandatorySuiteEnabled(false)
-    , mMaxUrgentStartQ(10)
+    , mMaxUrgentExcessiveConns(3)
     , mMaxConnections(24)
     , mMaxPersistentConnectionsPerServer(2)
     , mMaxPersistentConnectionsPerProxy(4)
@@ -439,7 +439,7 @@ nsHttpHandler::InitConnectionMgr()
         mConnMgr = new nsHttpConnectionMgr();
     }
 
-    rv = mConnMgr->Init(mMaxUrgentStartQ,
+    rv = mConnMgr->Init(mMaxUrgentExcessiveConns,
                         mMaxConnections,
                         mMaxPersistentConnectionsPerServer,
                         mMaxPersistentConnectionsPerProxy,
@@ -1077,10 +1077,10 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("max-urgent-start-excessive-connections-per-host"))) {
         rv = prefs->GetIntPref(HTTP_PREF("max-urgent-start-excessive-connections-per-host"), &val);
         if (NS_SUCCEEDED(rv)) {
-            mMaxUrgentStartQ = (uint8_t) clamped(val, 1, 0xff);
+            mMaxUrgentExcessiveConns = (uint8_t) clamped(val, 1, 0xff);
             if (mConnMgr) {
                 rv = mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_URGENT_START_Q,
-                                           mMaxUrgentStartQ);
+                                           mMaxUrgentExcessiveConns);
                 if (NS_FAILED(rv)) {
                     LOG(("nsHttpHandler::PrefsChanged (max-urgent-start-excessive-connections-per-host)"
                          "UpdateParam failed (%08x)\n", static_cast<uint32_t>(rv)));

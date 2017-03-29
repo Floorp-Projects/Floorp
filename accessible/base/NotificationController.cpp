@@ -867,7 +867,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
         continue;
       }
 
-      ipcDoc = new DocAccessibleChild(childDoc);
+      ipcDoc = new DocAccessibleChild(childDoc, parentIPCDoc->Manager());
       childDoc->SetIPCDoc(ipcDoc);
 
 #if defined(XP_WIN)

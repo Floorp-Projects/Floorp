@@ -12,7 +12,9 @@ add_task(function* () {
   info("Starting test... ");
 
   let { document, gStore, windowRequire } = monitor.panelWin;
-  let { getSortedRequests } = windowRequire("devtools/client/netmonitor/selectors/index");
+  let {
+    getSortedRequests,
+  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   let wait = waitForNetworkEvents(monitor, 1);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {

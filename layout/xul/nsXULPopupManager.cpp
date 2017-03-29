@@ -132,7 +132,6 @@ const char* kPrefDevtoolsDisableAutoHide =
 
 NS_IMPL_ISUPPORTS(nsXULPopupManager,
                   nsIDOMEventListener,
-                  nsITimerCallback,
                   nsIObserver)
 
 nsXULPopupManager::nsXULPopupManager() :
@@ -763,7 +762,9 @@ nsXULPopupManager::ShowMenu(nsIContent *aMenu,
     nsCOMPtr<nsIRunnable> event =
       new nsXULPopupShowingEvent(popupFrame->GetContent(),
                                  parentIsContextMenu, aSelectFirstItem);
-    NS_DispatchToCurrentThread(event);
+    aMenu->OwnerDoc()->Dispatch("nsXULPopupShowingEvent",
+                                TaskCategory::Other,
+                                event.forget());
   }
   else {
     nsCOMPtr<nsIContent> popupContent = popupFrame->GetContent();
@@ -1079,7 +1080,9 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
       nsCOMPtr<nsIRunnable> event =
         new nsXULPopupHidingEvent(popupToHide, nextPopup, lastPopup,
                                   popupFrame->PopupType(), deselectMenu, aIsCancel);
-        NS_DispatchToCurrentThread(event);
+        aPopup->OwnerDoc()->Dispatch("nsXULPopupHidingEvent",
+                                     TaskCategory::Other,
+                                     event.forget());
     }
     else {
       FirePopupHidingEvent(popupToHide, nextPopup, lastPopup,
@@ -1232,7 +1235,17 @@ nsXULPopupManager::HidePopupAfterDelay(nsMenuPopupFrame* aPopup)
 
   // Kick off the timer.
   mCloseTimer = do_CreateInstance("@mozilla.org/timer;1");
-  mCloseTimer->InitWithCallback(this, menuDelay, nsITimer::TYPE_ONE_SHOT);
+  nsIContent* content = aPopup->GetContent();
+  if (content) {
+    mCloseTimer->SetTarget(
+        content->OwnerDoc()->EventTargetFor(TaskCategory::Other));
+  }
+  mCloseTimer->InitWithNamedFuncCallback([](nsITimer* aTimer, void* aClosure) {
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (pm) {
+      pm->KillMenuTimer();
+    }
+  }, nullptr, menuDelay, nsITimer::TYPE_ONE_SHOT, "KillMenuTimer");
 
   // the popup will call PopupDestroyed if it is destroyed, which checks if it
   // is set to mTimerMenu, so it should be safe to keep a reference to it
@@ -1396,7 +1409,9 @@ nsXULPopupManager::ExecuteMenu(nsIContent* aMenu, nsXULMenuCommandEvent* aEvent)
 
   aEvent->SetCloseMenuMode(cmm);
   nsCOMPtr<nsIRunnable> event = aEvent;
-  NS_DispatchToCurrentThread(event);
+  aMenu->OwnerDoc()->Dispatch("nsXULMenuCommandEvent",
+                              TaskCategory::Other,
+                              event.forget());
 }
 
 void
@@ -2033,15 +2048,6 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
 //
 // The code below melds the two cases together.
 //
-nsresult
-nsXULPopupManager::Notify(nsITimer* aTimer)
-{
-  if (aTimer == mCloseTimer)
-    KillMenuTimer();
-
-  return NS_OK;
-}
-
 void
 nsXULPopupManager::KillMenuTimer()
 {
@@ -2758,7 +2764,9 @@ nsXULPopupPositionedEvent::DispatchIfNeeded(nsIContent *aPopup,
                           nsGkAtoms::arrow, eCaseMatters)) {
     nsCOMPtr<nsIRunnable> event =
       new nsXULPopupPositionedEvent(aPopup, aIsContextMenu, aSelectFirstItem);
-    NS_DispatchToCurrentThread(event);
+    aPopup->OwnerDoc()->Dispatch("nsXULPopupPositionedEvent",
+                                 TaskCategory::Other,
+                                 event.forget());
 
     return true;
   }

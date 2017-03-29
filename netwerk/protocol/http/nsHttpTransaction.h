@@ -171,6 +171,10 @@ public:
     MOZ_MUST_USE bool Do0RTT() override;
     MOZ_MUST_USE nsresult Finish0RTT(bool aRestart, bool aAlpnChanged /* ignored */) override;
 
+    // After Finish0RTT early data may have failed but the caller did not request
+    // restart - this indicates that state for dev tools
+    void Refused0RTT();
+
     uint64_t TopLevelOuterContentWindowId() override
     {
         return mTopLevelOuterContentWindowId;
@@ -402,6 +406,12 @@ private:
     NetAddr                         mPeerAddr;
 
     bool                            m0RTTInProgress;
+    enum
+    {
+        EARLY_NONE,
+        EARLY_SENT,
+        EARLY_ACCEPTED
+    } mEarlyDataDisposition;
 
     nsresult                        mTransportStatus;
 };

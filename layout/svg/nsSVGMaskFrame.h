@@ -59,12 +59,15 @@ public:
     float opacity;
     Matrix* maskTransform;
     uint8_t maskMode;
+    uint32_t flags;  // Image flags of the imgIContainer::FLAG_* variety.
 
     explicit MaskParams(gfxContext* aCtx, nsIFrame* aMaskedFrame,
                         const gfxMatrix& aToUserSpace, float aOpacity,
-                        Matrix* aMaskTransform, uint8_t aMaskMode)
+                        Matrix* aMaskTransform, uint8_t aMaskMode,
+                        uint32_t aFlags)
     : ctx(aCtx), maskedFrame(aMaskedFrame), toUserSpace(aToUserSpace),
-      opacity(aOpacity), maskTransform(aMaskTransform), maskMode(aMaskMode)
+      opacity(aOpacity), maskTransform(aMaskTransform), maskMode(aMaskMode),
+      flags(aFlags)
     { }
   };
 

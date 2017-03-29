@@ -29,7 +29,6 @@
 #include "nsIHTMLAbsPosEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsIHTMLInlineTableEditor.h"
-#include "nsIHTMLObjectResizeListener.h"
 #include "nsIHTMLObjectResizer.h"
 #include "nsISelectionListener.h"
 #include "nsITableEditor.h"
@@ -909,8 +908,6 @@ protected:
   nsCOMPtr<nsIDOMEventListener>  mMouseMotionListenerP;
   nsCOMPtr<nsISelectionListener> mSelectionListenerP;
   nsCOMPtr<nsIDOMEventListener>  mResizeEventListenerP;
-
-  nsTArray<OwningNonNull<nsIHTMLObjectResizeListener>> mObjectResizeEventListeners;
 
   int32_t mOriginalX;
   int32_t mOriginalY;

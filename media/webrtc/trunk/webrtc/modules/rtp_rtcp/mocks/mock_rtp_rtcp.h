@@ -93,6 +93,8 @@ class MockRtpRtcp : public RtpRtcp {
       uint32_t());
   MOCK_METHOD1(SetSSRC,
       void(const uint32_t ssrc));
+  MOCK_METHOD1(SetRID,
+      int32_t(const char *rid));
   MOCK_CONST_METHOD1(CSRCs,
       int32_t(uint32_t arrOfCSRC[kRtpCsrcSize]));
   MOCK_METHOD1(SetCsrcs, void(const std::vector<uint32_t>& csrcs));
@@ -161,6 +163,12 @@ class MockRtpRtcp : public RtpRtcp {
               int64_t* avgRTT,
               int64_t* minRTT,
               int64_t* maxRTT));
+  MOCK_CONST_METHOD5(GetReportBlockInfo,
+      int32_t(const uint32_t remote_ssrc,
+              uint32_t* ntp_high,
+              uint32_t* ntp_low,
+              uint32_t* packets_received,
+              uint64_t* octets_received));
   MOCK_METHOD1(SendRTCP, int32_t(RTCPPacketType packetType));
   MOCK_METHOD1(SendCompoundRTCP,
                int32_t(const std::set<RTCPPacketType>& packetTypes));
