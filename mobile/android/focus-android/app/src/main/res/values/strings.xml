@@ -70,6 +70,8 @@
 
     <string name="preference_category_performance">Performance</string>
     <string name="preference_performance_block_webfonts">Block Web fonts</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">May result in missing icons or images</string>
     <string name="preference_performance_block_images">Block images</string>
 
     <!-- This preference does not set Focus as the default browser but instead links to Android's
@@ -117,8 +119,14 @@
     <!-- Content description (not visible, for screen readers etc.): Reload current website -->
     <string name="content_description_reload">Reload website</string>
 
-    <!-- Content description (not visible, for screen readers etc.): Navigate backw (browsing history) -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
     <string name="content_description_back">Navigate back</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Stop loading website</string>
+
+    <!-- This is a context menu item shown when long pressing on the URL bar. Selecting it will copy the text from the clipboard into the URL bar and open the URL or perform a search. -->
+    <string name="context_menu_paste_go">Paste &amp; Go</string>
 
     <string name="firstrun_title">Browse like no one’s watching.</string>
     <string name="firstrun_description">Automatically block online trackers while you browse. Then tap to erase visited pages, searches, cookies and passwords from your device.</string>
