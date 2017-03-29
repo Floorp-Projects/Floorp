@@ -112,4 +112,10 @@ interface nsIHttpAuthenticableChannel : nsIProxiedChannel
      * the same connection.
      */
     void closeStickyConnection();
+
+    /**
+     * Tells the channel to not use SPDY-like protocols, since this will be
+     * using connection-oriented auth.
+     */
+    void forceNoSpdy();
 };
