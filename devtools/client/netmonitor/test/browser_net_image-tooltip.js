@@ -14,11 +14,8 @@ add_task(function* test() {
   info("Starting test... ");
 
   let { document, gStore, windowRequire, NetMonitorController } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
-    ACTIVITY_TYPE,
-    EVENTS,
-  } = windowRequire("devtools/client/netmonitor/src/constants");
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { ACTIVITY_TYPE, EVENTS } = windowRequire("devtools/client/netmonitor/constants");
   let toolboxDoc = monitor.panelWin.parent.document;
 
   gStore.dispatch(Actions.batchEnable(false));
