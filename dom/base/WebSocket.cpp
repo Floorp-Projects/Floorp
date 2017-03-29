@@ -1639,7 +1639,7 @@ WebSocketImpl::Init(JSContext* aCx,
           isNullPrincipal = principal->GetIsNullPrincipal();
         }
 
-        if (!isNullPrincipal) {
+        if (isNullPrincipal) {
           break;
         }
 
