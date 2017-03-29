@@ -3104,7 +3104,7 @@ profiler_log(const char* aStr)
 {
   // This function runs both on and off the main thread.
 
-  profiler_tracing("log", aStr, TRACING_EVENT);
+  profiler_tracing("log", aStr);
 }
 
 void
