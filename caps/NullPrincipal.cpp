@@ -85,7 +85,7 @@ NullPrincipal::Init(const OriginAttributes& aOriginAttributes, nsIURI* aURI)
   }
 
   nsAutoCString originNoSuffix;
-  nsresult rv = mURI->GetSpec(originNoSuffix);
+  DebugOnly<nsresult> rv = mURI->GetSpec(originNoSuffix);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   FinishInit(originNoSuffix, aOriginAttributes);
