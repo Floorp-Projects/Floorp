@@ -2004,11 +2004,15 @@ class ForOfLoopControl : public LoopControl
 
     bool allowSelfHosted_;
 
+    IteratorKind iterKind_;
+
   public:
-    ForOfLoopControl(BytecodeEmitter* bce, int32_t iterDepth, bool allowSelfHosted)
+    ForOfLoopControl(BytecodeEmitter* bce, int32_t iterDepth, bool allowSelfHosted,
+                     IteratorKind iterKind)
       : LoopControl(bce, StatementKind::ForOfLoop),
         iterDepth_(iterDepth),
-        allowSelfHosted_(allowSelfHosted)
+        allowSelfHosted_(allowSelfHosted),
+        iterKind_(iterKind)
     {
     }
 
@@ -2064,7 +2068,7 @@ class ForOfLoopControl : public LoopControl
     bool emitIteratorClose(BytecodeEmitter* bce,
                            CompletionKind completionKind = CompletionKind::Normal) {
         ptrdiff_t start = bce->offset();
-        if (!bce->emitIteratorClose(completionKind, allowSelfHosted_))
+        if (!bce->emitIteratorClose(iterKind_, completionKind, allowSelfHosted_))
             return false;
         ptrdiff_t end = bce->offset();
         return bce->tryNoteList.append(JSTRY_FOR_OF_ITERCLOSE, 0, start, end);
@@ -3677,6 +3681,18 @@ BytecodeEmitter::emitFinishIteratorResult(bool done)
 }
 
 bool
+BytecodeEmitter::emitToIteratorResult(bool done)
+{
+    if (!emitPrepareIteratorResult())    // VALUE OBJ
+        return false;
+    if (!emit1(JSOP_SWAP))               // OBJ VALUE
+        return false;
+    if (!emitFinishIteratorResult(done)) // RESULT
+        return false;
+    return true;
+}
+
+bool
 BytecodeEmitter::emitGetNameAtLocation(JSAtom* name, const NameLocation& loc, bool callContext)
 {
     switch (loc.kind()) {
@@ -5210,7 +5226,8 @@ BytecodeEmitter::emitSetOrInitializeDestructuring(ParseNode* target, Destructuri
 }
 
 bool
-BytecodeEmitter::emitIteratorNext(ParseNode* pn, bool allowSelfHosted /* = false */)
+BytecodeEmitter::emitIteratorNext(ParseNode* pn, IteratorKind iterKind /* = IteratorKind::Sync */,
+                                  bool allowSelfHosted /* = false */)
 {
     MOZ_ASSERT(allowSelfHosted || emitterMode != BytecodeEmitter::SelfHosting,
                ".next() iteration is prohibited in self-hosted code because it "
@@ -5224,6 +5241,12 @@ BytecodeEmitter::emitIteratorNext(ParseNode* pn, bool allowSelfHosted /* = false
         return false;
     if (!emitCall(JSOP_CALL, 0, pn))                      // ... RESULT
         return false;
+
+    if (iterKind == IteratorKind::Async) {
+        if (!emitAwait())                                 // ... RESULT
+            return false;
+    }
+
     if (!emitCheckIsObj(CheckIsObjectKind::IteratorNext)) // ... RESULT
         return false;
     checkTypeSet(JSOP_CALL);
@@ -5231,7 +5254,8 @@ BytecodeEmitter::emitIteratorNext(ParseNode* pn, bool allowSelfHosted /* = false
 }
 
 bool
-BytecodeEmitter::emitIteratorClose(CompletionKind completionKind /* = CompletionKind::Normal */,
+BytecodeEmitter::emitIteratorClose(IteratorKind iterKind /* = IteratorKind::Sync */,
+                                   CompletionKind completionKind /* = CompletionKind::Normal */,
                                    bool allowSelfHosted /* = false */)
 {
     MOZ_ASSERT(allowSelfHosted || emitterMode != BytecodeEmitter::SelfHosting,
@@ -5316,6 +5340,11 @@ BytecodeEmitter::emitIteratorClose(CompletionKind completionKind /* = Completion
         return false;
     checkTypeSet(JSOP_CALL);
 
+    if (iterKind == IteratorKind::Async) {
+        if (!emitAwait())                                 // ... ... RESULT
+            return false;
+    }
+
     if (completionKind == CompletionKind::Throw) {
         if (!emit1(JSOP_SWAP))                            // ... RET ITER RESULT UNDEF
             return false;
@@ -5325,7 +5354,7 @@ BytecodeEmitter::emitIteratorClose(CompletionKind completionKind /* = Completion
         if (!tryCatch->emitCatch())                       // ... RET ITER RESULT
             return false;
 
-        // Just ignore the exception thrown by call.
+        // Just ignore the exception thrown by call and await.
         if (!emit1(JSOP_EXCEPTION))                       // ... RET ITER RESULT EXC
             return false;
         if (!emit1(JSOP_POP))                             // ... RET ITER RESULT
@@ -6747,6 +6776,63 @@ BytecodeEmitter::emitIterator()
 }
 
 bool
+BytecodeEmitter::emitAsyncIterator()
+{
+    // Convert iterable to iterator.
+    if (!emit1(JSOP_DUP))                                         // OBJ OBJ
+        return false;
+    if (!emit2(JSOP_SYMBOL, uint8_t(JS::SymbolCode::asyncIterator))) // OBJ OBJ @@ASYNCITERATOR
+        return false;
+    if (!emitElemOpBase(JSOP_CALLELEM))                           // OBJ ITERFN
+        return false;
+
+    IfThenElseEmitter ifAsyncIterIsUndefined(this);
+    if (!emit1(JSOP_DUP))                                         // OBJ ITERFN ITERFN
+        return false;
+    if (!emit1(JSOP_UNDEFINED))                                   // OBJ ITERFN ITERFN UNDEF
+        return false;
+    if (!emit1(JSOP_EQ))                                          // OBJ ITERFN EQ
+        return false;
+    if (!ifAsyncIterIsUndefined.emitIfElse())                     // OBJ ITERFN
+        return false;
+
+    if (!emit1(JSOP_POP))                                         // OBJ
+        return false;
+    if (!emit1(JSOP_DUP))                                         // OBJ OBJ
+        return false;
+    if (!emit2(JSOP_SYMBOL, uint8_t(JS::SymbolCode::iterator)))   // OBJ OBJ @@ITERATOR
+        return false;
+    if (!emitElemOpBase(JSOP_CALLELEM))                           // OBJ ITERFN
+        return false;
+    if (!emit1(JSOP_SWAP))                                        // ITERFN OBJ
+        return false;
+    if (!emitCall(JSOP_CALLITER, 0))                              // ITER
+        return false;
+    checkTypeSet(JSOP_CALLITER);
+    if (!emitCheckIsObj(CheckIsObjectKind::GetIterator))          // ITER
+        return false;
+
+    if (!emit1(JSOP_TOASYNCITER))                                 // ITER
+        return false;
+
+    if (!ifAsyncIterIsUndefined.emitElse())                       // OBJ ITERFN
+        return false;
+
+    if (!emit1(JSOP_SWAP))                                        // ITERFN OBJ
+        return false;
+    if (!emitCall(JSOP_CALLITER, 0))                              // ITER
+        return false;
+    checkTypeSet(JSOP_CALLITER);
+    if (!emitCheckIsObj(CheckIsObjectKind::GetIterator))          // ITER
+        return false;
+
+    if (!ifAsyncIterIsUndefined.emitEnd())                        // ITER
+        return false;
+
+    return true;
+}
+
+bool
 BytecodeEmitter::emitSpread(bool allowSelfHosted)
 {
     LoopControl loopInfo(this, StatementKind::Spread);
@@ -6799,7 +6885,7 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
 
         if (!emitDupAt(2))                                // ITER ARR I ITER
             return false;
-        if (!emitIteratorNext(nullptr, allowSelfHosted))  // ITER ARR I RESULT
+        if (!emitIteratorNext(nullptr, IteratorKind::Sync, allowSelfHosted))  // ITER ARR I RESULT
             return false;
         if (!emit1(JSOP_DUP))                             // ITER ARR I RESULT RESULT
             return false;
@@ -6899,6 +6985,13 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
     MOZ_ASSERT(forOfHead->isKind(PNK_FOROF));
     MOZ_ASSERT(forOfHead->isArity(PN_TERNARY));
 
+    unsigned iflags = forOfLoop->pn_iflags;
+    IteratorKind iterKind = (iflags & JSITER_FORAWAITOF)
+                            ? IteratorKind::Async
+                            : IteratorKind::Sync;
+    MOZ_ASSERT_IF(iterKind == IteratorKind::Async, sc->asFunctionBox());
+    MOZ_ASSERT_IF(iterKind == IteratorKind::Async, sc->asFunctionBox()->isAsync());
+
     ParseNode* forHeadExpr = forOfHead->pn_kid3;
 
     // Certain builtins (e.g. Array.from) are implemented in self-hosting
@@ -6914,8 +7007,13 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
     // Evaluate the expression being iterated.
     if (!emitTree(forHeadExpr))                           // ITERABLE
         return false;
-    if (!emitIterator())                                  // ITER
-        return false;
+    if (iterKind == IteratorKind::Async) {
+        if (!emitAsyncIterator())                         // ITER
+            return false;
+    } else {
+        if (!emitIterator())                              // ITER
+            return false;
+    }
 
     int32_t iterDepth = stackDepth;
 
@@ -6926,7 +7024,7 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
     if (!emit1(JSOP_UNDEFINED))                           // ITER RESULT UNDEF
         return false;
 
-    ForOfLoopControl loopInfo(this, iterDepth, allowSelfHostedIter);
+    ForOfLoopControl loopInfo(this, iterDepth, allowSelfHostedIter, iterKind);
 
     // Annotate so IonMonkey can find the loop-closing jump.
     unsigned noteIndex;
@@ -7022,7 +7120,7 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
         if (!emitDupAt(1))                                // ITER UNDEF ITER
             return false;
 
-        if (!emitIteratorNext(forOfHead, allowSelfHostedIter)) // ITER UNDEF RESULT
+        if (!emitIteratorNext(forOfHead, iterKind, allowSelfHostedIter)) // ITER UNDEF RESULT
             return false;
 
         if (!emit1(JSOP_SWAP))                            // ITER RESULT UNDEF
@@ -7841,7 +7939,8 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
         MOZ_ASSERT(fun->isArrow() == (pn->getOp() == JSOP_LAMBDA_ARROW));
         if (funbox->isAsync()) {
             MOZ_ASSERT(!needsProto);
-            return emitAsyncWrapper(index, funbox->needsHomeObject(), fun->isArrow());
+            return emitAsyncWrapper(index, funbox->needsHomeObject(), fun->isArrow(),
+                                    fun->isStarGenerator());
         }
 
         if (fun->isArrow()) {
@@ -7896,8 +7995,11 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             MOZ_ASSERT(pn->getOp() == JSOP_NOP);
             switchToPrologue();
             if (funbox->isAsync()) {
-                if (!emitAsyncWrapper(index, fun->isMethod(), fun->isArrow()))
+                if (!emitAsyncWrapper(index, fun->isMethod(), fun->isArrow(),
+                                      fun->isStarGenerator()))
+                {
                     return false;
+                }
             } else {
                 if (!emitIndex32(JSOP_LAMBDA, index))
                     return false;
@@ -7913,10 +8015,12 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
         // initialize the binding name of the function in the current scope.
 
         bool isAsync = funbox->isAsync();
-        auto emitLambda = [index, isAsync](BytecodeEmitter* bce, const NameLocation&, bool) {
+        bool isStarGenerator = funbox->isStarGenerator();
+        auto emitLambda = [index, isAsync, isStarGenerator](BytecodeEmitter* bce,
+                                                            const NameLocation&, bool) {
             if (isAsync) {
                 return bce->emitAsyncWrapper(index, /* needsHomeObject = */ false,
-                                             /* isArrow = */ false);
+                                             /* isArrow = */ false, isStarGenerator);
             }
             return bce->emitIndexOp(JSOP_LAMBDA, index);
         };
@@ -7951,7 +8055,8 @@ BytecodeEmitter::emitAsyncWrapperLambda(unsigned index, bool isArrow) {
 }
 
 bool
-BytecodeEmitter::emitAsyncWrapper(unsigned index, bool needsHomeObject, bool isArrow)
+BytecodeEmitter::emitAsyncWrapper(unsigned index, bool needsHomeObject, bool isArrow,
+                                  bool isStarGenerator)
 {
     // needsHomeObject can be true for propertyList for extended class.
     // In that case push both unwrapped and wrapped function, in order to
@@ -7983,8 +8088,13 @@ BytecodeEmitter::emitAsyncWrapper(unsigned index, bool needsHomeObject, bool isA
         if (!emit1(JSOP_DUP))
             return false;
     }
-    if (!emit1(JSOP_TOASYNC))
-        return false;
+    if (isStarGenerator) {
+        if (!emit1(JSOP_TOASYNCGEN))
+            return false;
+    } else {
+        if (!emit1(JSOP_TOASYNC))
+            return false;
+    }
     return true;
 }
 
@@ -8355,13 +8465,8 @@ BytecodeEmitter::emitYield(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitAwait(ParseNode* pn)
+BytecodeEmitter::emitAwait()
 {
-    MOZ_ASSERT(sc->isFunctionBox());
-    MOZ_ASSERT(pn->getOp() == JSOP_AWAIT);
-
-    if (!emitTree(pn->pn_kid))
-        return false;
     if (!emitGetDotGenerator())
         return false;
     if (!emitYieldOp(JSOP_AWAIT))
@@ -8370,15 +8475,33 @@ BytecodeEmitter::emitAwait(ParseNode* pn)
 }
 
 bool
+BytecodeEmitter::emitAwait(ParseNode* pn)
+{
+    MOZ_ASSERT(sc->isFunctionBox());
+    MOZ_ASSERT(pn->getOp() == JSOP_AWAIT);
+
+    if (!emitTree(pn->pn_kid))
+        return false;
+    return emitAwait();
+}
+
+bool
 BytecodeEmitter::emitYieldStar(ParseNode* iter)
 {
     MOZ_ASSERT(sc->isFunctionBox());
     MOZ_ASSERT(sc->asFunctionBox()->isStarGenerator());
 
+    bool isAsyncGenerator = sc->asFunctionBox()->isAsync();
+
     if (!emitTree(iter))                                  // ITERABLE
         return false;
-    if (!emitIterator())                                  // ITER
-        return false;
+    if (isAsyncGenerator) {
+        if (!emitAsyncIterator())                         // ITER
+            return false;
+    } else {
+        if (!emitIterator())                              // ITER
+            return false;
+    }
 
     // Initial send value is undefined.
     if (!emit1(JSOP_UNDEFINED))                           // ITER RECEIVED
@@ -8436,7 +8559,8 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
     //
     // If the iterator does not have a "throw" method, it calls IteratorClose
     // and then throws a TypeError.
-    if (!emitIteratorClose())                             // ITER RESULT EXCEPTION
+    IteratorKind iterKind = isAsyncGenerator ? IteratorKind::Async : IteratorKind::Sync;
+    if (!emitIteratorClose(iterKind))                    // ITER RESULT EXCEPTION
         return false;
     if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_ITERATOR_NO_THROW)) // throw
         return false;
@@ -8452,6 +8576,12 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
     if (!emitCall(JSOP_CALL, 1, iter))                    // ITER OLDRESULT RESULT
         return false;
     checkTypeSet(JSOP_CALL);
+
+    if (isAsyncGenerator) {
+        if (!emitAwait())                                 // ITER OLDRESULT RESULT
+            return false;
+    }
+
     if (!emitCheckIsObj(CheckIsObjectKind::IteratorThrow)) // ITER OLDRESULT RESULT
         return false;
     if (!emit1(JSOP_SWAP))                                // ITER RESULT OLDRESULT
@@ -8518,6 +8648,11 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
         return false;
     checkTypeSet(JSOP_CALL);
 
+    if (iterKind == IteratorKind::Async) {
+        if (!emitAwait())                                 // ... FTYPE FVALUE RESULT
+            return false;
+    }
+
     // Step v.
     if (!emitCheckIsObj(CheckIsObjectKind::IteratorReturn)) // ITER OLDRESULT FTYPE FVALUE RESULT
         return false;
@@ -8535,6 +8670,12 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
         return false;
     if (!emitAtomOp(cx->names().value, JSOP_GETPROP))     // ITER OLDRESULT FTYPE FVALUE VALUE
         return false;
+
+    if (isAsyncGenerator) {
+        if (!emitAwait())                                 // ITER OLDRESULT FTYPE FVALUE VALUE
+            return false;
+    }
+
     if (!emitPrepareIteratorResult())                     // ITER OLDRESULT FTYPE FVALUE VALUE RESULT
         return false;
     if (!emit1(JSOP_SWAP))                                // ITER OLDRESULT FTYPE FVALUE RESULT VALUE
@@ -8590,9 +8731,15 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
         return false;
     if (!emitCall(JSOP_CALL, 1, iter))                           // ITER RESULT
         return false;
+    checkTypeSet(JSOP_CALL);
+
+    if (isAsyncGenerator) {
+        if (!emitAwait())                                        // ITER RESULT RESULT
+            return false;
+    }
+
     if (!emitCheckIsObj(CheckIsObjectKind::IteratorNext))        // ITER RESULT
         return false;
-    checkTypeSet(JSOP_CALL);
     MOZ_ASSERT(this->stackDepth == startDepth);
 
     if (!emitJumpTargetAndPatch(checkResult))                    // checkResult:
@@ -8618,6 +8765,11 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
         return false;
     if (!emitAtomOp(cx->names().value, JSOP_GETPROP))            // VALUE
         return false;
+
+    if (isAsyncGenerator) {
+        if (!emitAwait())                                        // VALUE
+            return false;
+    }
 
     MOZ_ASSERT(this->stackDepth == startDepth - 1);
 

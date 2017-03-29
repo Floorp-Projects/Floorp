@@ -464,7 +464,7 @@ PaintMaskSurface(const PaintFramesParams& aParams,
       nsRenderingContext rc(maskContext);
       nsCSSRendering::PaintBGParams  params =
         nsCSSRendering::PaintBGParams::ForSingleLayer(*presContext,
-                                                      rc, aParams.dirtyRect,
+                                                      aParams.dirtyRect,
                                                       aParams.borderArea,
                                                       aParams.frame,
                                                       aParams.builder->GetBackgroundPaintFlags() |
@@ -473,7 +473,7 @@ PaintMaskSurface(const PaintFramesParams& aParams,
                                                       aOpacity);
 
       result =
-        nsCSSRendering::PaintStyleImageLayerWithSC(params, aSC,
+        nsCSSRendering::PaintStyleImageLayerWithSC(params, rc, aSC,
                                               *aParams.frame->StyleBorder());
       if (result != DrawResult::SUCCESS) {
         return result;

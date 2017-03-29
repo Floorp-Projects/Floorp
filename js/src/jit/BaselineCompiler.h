@@ -197,6 +197,8 @@ namespace jit {
     _(JSOP_RUNONCE)            \
     _(JSOP_REST)               \
     _(JSOP_TOASYNC)            \
+    _(JSOP_TOASYNCGEN)         \
+    _(JSOP_TOASYNCITER)        \
     _(JSOP_TOID)               \
     _(JSOP_TOSTRING)           \
     _(JSOP_TABLESWITCH)        \
