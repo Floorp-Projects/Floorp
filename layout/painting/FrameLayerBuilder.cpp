@@ -1545,6 +1545,11 @@ public:
   // region will be painted during a transaction than in a single call to
   // DrawPaintedLayer, for example when progressive paint is enabled.
   nsIntRegion mVisibilityComputedRegion;
+
+  /**
+   * This is set when the painted layer has no component alpha.
+   */
+  bool mDisabledAlpha;
 };
 
 /*
@@ -2395,6 +2400,8 @@ ContainerState::CreatePaintedLayer(PaintedLayerData* aData)
 
   // Mark this layer as being used for painting display items
   PaintedDisplayItemLayerUserData* userData = new PaintedDisplayItemLayerUserData();
+  userData->mDisabledAlpha =
+    mParameters.mDisableSubpixelAntialiasingInDescendants;
   layer->SetUserData(&gPaintedDisplayItemLayerUserData, userData);
   ResetScrollPositionForLayerPixelAlignment(aData->mAnimatedGeometryRoot);
 
@@ -2493,11 +2500,20 @@ ContainerState::PreparePaintedLayerForUse(PaintedLayer* aLayer,
 
   aData->mVisibilityComputedRegion.SetEmpty();
 
-  // FIXME: Temporary workaround for bug 681192 and bug 724786.
-#ifndef MOZ_WIDGET_ANDROID
   // Calculate exact position of the top-left of the active scrolled root.
   // This might not be 0,0 due to the snapping in ScaleToNearestPixels.
   gfxPoint animatedGeometryRootTopLeft = scaledOffset - ThebesPoint(matrix.GetTranslation()) + mParameters.mOffset;
+  const bool disableAlpha =
+    mParameters.mDisableSubpixelAntialiasingInDescendants;
+  if (aData->mDisabledAlpha != disableAlpha) {
+    aData->mAnimatedGeometryRootPosition = animatedGeometryRootTopLeft;
+    InvalidateEntirePaintedLayer(aLayer, aAnimatedGeometryRoot, "change of subpixel-AA");
+    aData->mDisabledAlpha = disableAlpha;
+    return;
+  }
+
+  // FIXME: Temporary workaround for bug 681192 and bug 724786.
+#ifndef MOZ_WIDGET_ANDROID
   // If it has changed, then we need to invalidate the entire layer since the
   // pixels in the layer buffer have the content at a (subpixel) offset
   // from what we need.
