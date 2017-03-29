@@ -463,6 +463,15 @@ public:
                                                                 = ImageContainer::SYNCHRONOUS);
 
   /**
+   * Since the lifetimes of display items and display item layers are different,
+   * calling this tells the layer manager that the display item layer is valid for
+   * only one transaction. Users should call ClearDisplayItemLayers() to remove
+   * references to the dead display item at the end of a transaction.
+   */
+  virtual void TrackDisplayItemLayer(RefPtr<DisplayItemLayer> aLayer);
+  virtual void ClearDisplayItemLayers();
+
+  /**
    * Type of layer manager his is. This is to be used sparsely in order to
    * avoid a lot of Layers backend specific code. It should be used only when
    * Layers backend specific functionality is necessary.
@@ -775,6 +784,14 @@ public:
   void ClearPendingScrollInfoUpdate();
 private:
   std::map<FrameMetrics::ViewID,ScrollUpdateInfo> mPendingScrollUpdates;
+
+  // Display items are only valid during this transaction.
+  // At the end of the transaction, we have to go and clear out
+  // DisplayItemLayer's and null their display item. See comment
+  // above DisplayItemLayer declaration.
+  // Since layers are ref counted, we also have to stop holding
+  // a reference to the display item layer as well.
+  nsTArray<RefPtr<DisplayItemLayer>> mDisplayItemLayers;
 };
 
 /**
