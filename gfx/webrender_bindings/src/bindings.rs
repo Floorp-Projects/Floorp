@@ -612,6 +612,20 @@ pub extern "C" fn wr_vec_u8_free(v: WrVecU8) {
     v.to_vec();
 }
 
+#[repr(C)]
+#[derive(Debug)]
+pub struct WrTransformProperty {
+    pub id: u64,
+    pub transform: WrMatrix,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct WrOpacityProperty {
+    pub id: u64,
+    pub opacity: f32,
+}
+
 fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void {
 
     extern "C" {
@@ -985,6 +999,45 @@ pub extern "C" fn wr_api_generate_frame(api: &mut WrAPI) {
     api.generate_frame(None);
 }
 
+#[no_mangle]
+pub extern "C" fn wr_api_generate_frame_with_properties(api: &mut WrAPI,
+                                                        opacity_array: *const WrOpacityProperty,
+                                                        opacity_count: usize,
+                                                        transform_array: *const WrTransformProperty,
+                                                        transform_count: usize) {
+    let mut properties = DynamicProperties {
+        transforms: Vec::new(),
+        floats: Vec::new()
+    };
+
+    if transform_count > 0 {
+        let transform_slice = unsafe { slice::from_raw_parts(transform_array, transform_count) };
+
+        for element in transform_slice.iter() {
+            let prop = PropertyValue {
+                key: PropertyBindingKey::new(element.id),
+                value: element.transform.to_transform(),
+            };
+
+            properties.transforms.push(prop);
+        }
+    }
+
+    if opacity_count > 0 {
+        let opacity_slice = unsafe { slice::from_raw_parts(opacity_array, opacity_count) };
+
+        for element in opacity_slice.iter() {
+            let prop = PropertyValue {
+                key: PropertyBindingKey::new(element.id),
+                value: element.opacity,
+            };
+            properties.floats.push(prop);
+        }
+    }
+
+    api.generate_frame(Some(properties));
+}
+
 /// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub extern "C" fn wr_api_send_external_event(api: &mut WrAPI, evt: usize) {
@@ -1127,8 +1180,9 @@ pub extern "C" fn wr_dp_new_clip_region(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               bounds: WrRect,
-                                              opacity: f32,
-                                              transform: WrMatrix,
+                                              animation_id: u64,
+                                              opacity: *const f32,
+                                              transform: *const WrMatrix,
                                               mix_blend_mode: WrMixBlendMode) {
     assert!(unsafe { is_in_main_thread() });
     state.z_index += 1;
@@ -1136,16 +1190,28 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     let bounds = bounds.to_rect();
 
     let mut filters: Vec<FilterOp> = Vec::new();
-    if opacity < 1.0 {
-        filters.push(FilterOp::Opacity(PropertyBinding::Value(opacity)));
+    let opacity = unsafe { opacity.as_ref() };
+    if let Some(opacity) = opacity {
+        if *opacity < 1.0 {
+            filters.push(FilterOp::Opacity(PropertyBinding::Value(*opacity)));
+        }
+    } else {
+        filters.push(FilterOp::Opacity(
+            PropertyBinding::Binding(PropertyBindingKey::new(animation_id))));
     }
+
+    let transform = unsafe { transform.as_ref() };
+    let transform_binding = match transform {
+        Some(transform) => PropertyBinding::Value(transform.to_transform()),
+        None => PropertyBinding::Binding(PropertyBindingKey::new(animation_id)),
+    };
 
     state.frame_builder
         .dl_builder
         .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                bounds,
                                state.z_index,
-                               Some(PropertyBinding::Value(transform.to_transform())),
+                               Some(transform_binding),
                                TransformStyle::Flat,
                                None,
                                mix_blend_mode,

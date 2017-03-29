@@ -45,6 +45,8 @@ public:
   wr::WindowId GetId() const { return mId; }
 
   void GenerateFrame();
+  void GenerateFrame(const nsTArray<WrOpacityProperty>& aOpacityArray,
+                     const nsTArray<WrTransformProperty>& aTransformArray);
 
   void SetWindowParameters(LayoutDeviceIntSize size);
   void SetRootDisplayList(gfx::Color aBgColor,
@@ -142,6 +144,11 @@ public:
                            const gfx::Matrix4x4& aTransform,
                            const WrMixBlendMode& aMixBlendMode);
 
+  void PushStackingContext(const WrRect& aBounds, // TODO: We should work with strongly typed rects
+                           const uint64_t& aAnimationId,
+                           const float* aOpacity,
+                           const gfx::Matrix4x4* aTransform,
+                           const WrMixBlendMode& aMixBlendMode);
   void PopStackingContext();
 
   void PushBuiltDisplayList(wr::BuiltDisplayList dl);
