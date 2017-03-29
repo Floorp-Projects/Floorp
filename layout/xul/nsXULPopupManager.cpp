@@ -1183,6 +1183,9 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
                             &event, nullptr, &status);
   ENSURE_TRUE(weakFrame.IsAlive());
 
+  // Force any popups that might be anchored on elements within this popup to update.
+  UpdatePopupPositions(aPopupFrame->PresContext()->RefreshDriver());
+
   // if there are more popups to close, look for the next one
   if (aNextPopup && aPopup != aLastPopup) {
     nsMenuChainItem* foundMenu = nullptr;
