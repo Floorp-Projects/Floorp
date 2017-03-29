@@ -23,28 +23,27 @@ struct OriginComparator
   bool LessThan(nsIPrincipal* a, nsIPrincipal* b) const
   {
     nsAutoCString originA;
-    nsresult rv = a->GetOrigin(originA);
-    NS_ENSURE_SUCCESS(rv, false);
+    DebugOnly<nsresult> rv = a->GetOrigin(originA);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     nsAutoCString originB;
     rv = b->GetOrigin(originB);
-    NS_ENSURE_SUCCESS(rv, false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     return originA < originB;
   }
 
   bool Equals(nsIPrincipal* a, nsIPrincipal* b) const
   {
     nsAutoCString originA;
-    nsresult rv = a->GetOrigin(originA);
-    NS_ENSURE_SUCCESS(rv, false);
+    DebugOnly<nsresult> rv = a->GetOrigin(originA);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     nsAutoCString originB;
     rv = b->GetOrigin(originB);
-    NS_ENSURE_SUCCESS(rv, false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     return a == b;
   }
 };
 
-ExpandedPrincipal::ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList,
-                                     const OriginAttributes& aAttrs)
+ExpandedPrincipal::ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList)
   : BasePrincipal(eExpandedPrincipal)
 {
   // We force the principals to be sorted by origin so that ExpandedPrincipal
@@ -53,7 +52,6 @@ ExpandedPrincipal::ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteLis
   for (size_t i = 0; i < aWhiteList.Length(); ++i) {
     mPrincipals.InsertElementSorted(aWhiteList[i], c);
   }
-  mOriginAttributes = aAttrs;
 }
 
 ExpandedPrincipal::~ExpandedPrincipal()
@@ -63,8 +61,23 @@ already_AddRefed<ExpandedPrincipal>
 ExpandedPrincipal::Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aWhiteList,
                           const OriginAttributes& aAttrs)
 {
-  RefPtr<ExpandedPrincipal> ep = new ExpandedPrincipal(aWhiteList, aAttrs);
-  ep->FinishInit();
+  RefPtr<ExpandedPrincipal> ep = new ExpandedPrincipal(aWhiteList);
+
+  nsAutoCString origin;
+  origin.AssignLiteral("[Expanded Principal [");
+  for (size_t i = 0; i < ep->mPrincipals.Length(); ++i) {
+    if (i != 0) {
+      origin.AppendLiteral(", ");
+    }
+
+    nsAutoCString subOrigin;
+    DebugOnly<nsresult> rv = ep->mPrincipals.ElementAt(i)->GetOrigin(subOrigin);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    origin.Append(subOrigin);
+  }
+  origin.Append("]]");
+
+  ep->FinishInit(origin, aAttrs);
   return ep.forget();
 }
 
@@ -78,25 +91,6 @@ ExpandedPrincipal::GetDomain(nsIURI** aDomain)
 NS_IMETHODIMP
 ExpandedPrincipal::SetDomain(nsIURI* aDomain)
 {
-  return NS_OK;
-}
-
-nsresult
-ExpandedPrincipal::GetOriginInternal(nsACString& aOrigin)
-{
-  aOrigin.AssignLiteral("[Expanded Principal [");
-  for (size_t i = 0; i < mPrincipals.Length(); ++i) {
-    if (i != 0) {
-      aOrigin.AppendLiteral(", ");
-    }
-
-    nsAutoCString subOrigin;
-    nsresult rv = mPrincipals.ElementAt(i)->GetOrigin(subOrigin);
-    NS_ENSURE_SUCCESS(rv, rv);
-    aOrigin.Append(subOrigin);
-  }
-
-  aOrigin.Append("]]");
   return NS_OK;
 }
 

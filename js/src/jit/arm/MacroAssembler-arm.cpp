@@ -5232,24 +5232,21 @@ MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
     if (secondScratchReg_ != lr)
         ma_mov(secondScratchReg_, lr);
 
-    switch (result) {
-      case MoveOp::DOUBLE:
-        if (!UseHardFpABI()) {
+    if (!UseHardFpABI()) {
+        switch (result) {
+          case MoveOp::DOUBLE:
             // Move double from r0/r1 to ReturnFloatReg.
             ma_vxfer(r0, r1, ReturnDoubleReg);
-        }
-        break;
-      case MoveOp::FLOAT32:
-        if (!UseHardFpABI()) {
+            break;
+          case MoveOp::FLOAT32:
             // Move float32 from r0 to ReturnFloatReg.
-            ma_vxfer(r0, ReturnFloat32Reg.singleOverlay());
+            ma_vxfer(r0, ReturnFloat32Reg);
+            break;
+          case MoveOp::GENERAL:
+            break;
+          default:
+            MOZ_CRASH("unexpected callWithABI result");
         }
-        break;
-      case MoveOp::GENERAL:
-        break;
-
-      default:
-        MOZ_CRASH("unexpected callWithABI result");
     }
 
     freeStack(stackAdjust);

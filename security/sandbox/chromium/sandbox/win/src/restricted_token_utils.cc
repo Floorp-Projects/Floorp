@@ -21,9 +21,12 @@ namespace sandbox {
 DWORD CreateRestrictedToken(TokenLevel security_level,
                             IntegrityLevel integrity_level,
                             TokenType token_type,
+                            bool lockdown_default_dacl,
                             base::win::ScopedHandle* token) {
   RestrictedToken restricted_token;
   restricted_token.Init(NULL);  // Initialized with the current process token
+  if (lockdown_default_dacl)
+    restricted_token.SetLockdownDefaultDacl();
 
   std::vector<base::string16> privilege_exceptions;
   std::vector<Sid> sid_exceptions;
@@ -85,12 +88,11 @@ DWORD CreateRestrictedToken(TokenLevel security_level,
       restricted_token.AddRestrictingSid(WinRestrictedCodeSid);
 
       // This token has to be able to create objects in BNO.
-      // Unfortunately, on vista, it needs the current logon sid
+      // Unfortunately, on Vista+, it needs the current logon sid
       // in the token to achieve this. You should also set the process to be
       // low integrity level so it can't access object created by other
       // processes.
-      if (base::win::GetVersion() >= base::win::VERSION_VISTA)
-        restricted_token.AddRestrictingSidLogonSession();
+      restricted_token.AddRestrictingSidLogonSession();
       break;
     }
     case USER_RESTRICTED: {
@@ -210,8 +212,6 @@ const wchar_t* GetIntegrityLevelString(IntegrityLevel integrity_level) {
   return NULL;
 }
 DWORD SetTokenIntegrityLevel(HANDLE token, IntegrityLevel integrity_level) {
-  if (base::win::GetVersion() < base::win::VERSION_VISTA)
-    return ERROR_SUCCESS;
 
   const wchar_t* integrity_level_str = GetIntegrityLevelString(integrity_level);
   if (!integrity_level_str) {
@@ -237,8 +237,6 @@ DWORD SetTokenIntegrityLevel(HANDLE token, IntegrityLevel integrity_level) {
 }
 
 DWORD SetProcessIntegrityLevel(IntegrityLevel integrity_level) {
-  if (base::win::GetVersion() < base::win::VERSION_VISTA)
-    return ERROR_SUCCESS;
 
   // We don't check for an invalid level here because we'll just let it
   // fail on the SetTokenIntegrityLevel call later on.
@@ -258,8 +256,6 @@ DWORD SetProcessIntegrityLevel(IntegrityLevel integrity_level) {
 }
 
 DWORD HardenTokenIntegrityLevelPolicy(HANDLE token) {
-  if (base::win::GetVersion() < base::win::VERSION_WIN7)
-    return ERROR_SUCCESS;
 
   DWORD last_error = 0;
   DWORD length_needed = 0;
@@ -307,8 +303,6 @@ DWORD HardenTokenIntegrityLevelPolicy(HANDLE token) {
 }
 
 DWORD HardenProcessIntegrityLevelPolicy() {
-  if (base::win::GetVersion() < base::win::VERSION_WIN7)
-    return ERROR_SUCCESS;
 
   HANDLE token_handle;
   if (!::OpenProcessToken(GetCurrentProcess(), READ_CONTROL | WRITE_OWNER,

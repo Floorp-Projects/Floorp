@@ -1,0 +1,25 @@
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.gecko.webapps;
+
+/**
+ * 10 predefined slots for homescreen webapps, in LauncherActivity
+ * launched webapps will be given an index (via WebAppIndexer) that
+ * points to one of these class names
+ **/
+
+public final class WebApps {
+    public static class WebApp0 extends WebAppActivity { }
+    public static class WebApp1 extends WebAppActivity { }
+    public static class WebApp2 extends WebAppActivity { }
+    public static class WebApp3 extends WebAppActivity { }
+    public static class WebApp4 extends WebAppActivity { }
+    public static class WebApp5 extends WebAppActivity { }
+    public static class WebApp6 extends WebAppActivity { }
+    public static class WebApp7 extends WebAppActivity { }
+    public static class WebApp8 extends WebAppActivity { }
+    public static class WebApp9 extends WebAppActivity { }
+}

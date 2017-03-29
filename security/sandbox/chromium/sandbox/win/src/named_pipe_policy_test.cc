@@ -71,12 +71,8 @@ TEST(NamedPipePolicyTest, CreatePipe) {
   EXPECT_EQ(SBOX_TEST_SUCCEEDED,
             runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\testbleh"));
 
-  // On XP, the sandbox can create a pipe without any help but it fails on
-  // Vista+, this is why we do not test the "denied" case.
-  if (base::win::OSInfo::GetInstance()->version() >= base::win::VERSION_VISTA) {
-    EXPECT_EQ(SBOX_TEST_DENIED,
-              runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\bleh"));
-  }
+  EXPECT_EQ(SBOX_TEST_DENIED,
+            runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\bleh"));
 }
 
 // Tests if we can create a pipe with a path traversal in the sandbox.
@@ -88,18 +84,14 @@ TEST(NamedPipePolicyTest, CreatePipeTraversal) {
                              TargetPolicy::NAMEDPIPES_ALLOW_ANY,
                               L"\\\\.\\pipe\\test*"));
 
-  // On XP, the sandbox can create a pipe without any help but it fails on
-  // Vista+, this is why we do not test the "denied" case.
-  if (base::win::OSInfo::GetInstance()->version() >= base::win::VERSION_VISTA) {
-    EXPECT_EQ(SBOX_TEST_DENIED,
-              runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\test\\..\\bleh"));
-    EXPECT_EQ(SBOX_TEST_DENIED,
-              runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\test/../bleh"));
-    EXPECT_EQ(SBOX_TEST_DENIED,
-              runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\test\\../bleh"));
-    EXPECT_EQ(SBOX_TEST_DENIED,
-              runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\test/..\\bleh"));
-  }
+  EXPECT_EQ(SBOX_TEST_DENIED,
+            runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\test\\..\\bleh"));
+  EXPECT_EQ(SBOX_TEST_DENIED,
+            runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\test/../bleh"));
+  EXPECT_EQ(SBOX_TEST_DENIED,
+            runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\test\\../bleh"));
+  EXPECT_EQ(SBOX_TEST_DENIED,
+            runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\test/..\\bleh"));
 }
 
 // This tests that path canonicalization is actually disabled if we use \\?\
@@ -129,12 +121,8 @@ TEST(NamedPipePolicyTest, CreatePipeStrictInterceptions) {
   EXPECT_EQ(SBOX_TEST_SUCCEEDED,
             runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\testbleh"));
 
-  // On XP, the sandbox can create a pipe without any help but it fails on
-  // Vista+, this is why we do not test the "denied" case.
-  if (base::win::OSInfo::GetInstance()->version() >= base::win::VERSION_VISTA) {
-    EXPECT_EQ(SBOX_TEST_DENIED,
-              runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\bleh"));
-  }
+  EXPECT_EQ(SBOX_TEST_DENIED,
+            runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\bleh"));
 }
 
 }  // namespace sandbox

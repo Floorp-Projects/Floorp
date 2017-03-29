@@ -5,8 +5,7 @@
 use byteorder::{LittleEndian, ReadBytesExt};
 use frame::Frame;
 use frame_builder::FrameBuilderConfig;
-use internal_types::{FontTemplate, GLContextHandleWrapper, GLContextWrapper};
-use internal_types::{SourceTexture, ResultMsg, RendererFrame};
+use internal_types::{FontTemplate, SourceTexture, ResultMsg, RendererFrame};
 use profiler::{BackendProfileCounters, TextureCacheProfileCounters};
 use record::ApiRecordingReceiver;
 use resource_cache::ResourceCache;
@@ -18,12 +17,16 @@ use std::sync::mpsc::Sender;
 use texture_cache::TextureCache;
 use thread_profiler::register_thread_with_profiler;
 use threadpool::ThreadPool;
+use webgl_types::{GLContextHandleWrapper, GLContextWrapper};
 use webrender_traits::{DeviceIntPoint, DeviceUintPoint, DeviceUintRect, DeviceUintSize, LayerPoint};
 use webrender_traits::{ApiMsg, AuxiliaryLists, BuiltDisplayList, IdNamespace, ImageData};
 use webrender_traits::{PipelineId, RenderNotifier, RenderDispatcher, WebGLCommand, WebGLContextId};
 use webrender_traits::channel::{PayloadHelperMethods, PayloadReceiver, PayloadSender, MsgReceiver};
 use webrender_traits::{BlobImageRenderer, VRCompositorCommand, VRCompositorHandler};
+#[cfg(feature = "webgl")]
 use offscreen_gl_context::GLContextDispatcher;
+#[cfg(not(feature = "webgl"))]
+use webgl_types::GLContextDispatcher;
 
 /// The render backend is responsible for transforming high level display lists into
 /// GPU-friendly work which is then submitted to the renderer in the form of a frame::Frame.
@@ -147,8 +150,8 @@ impl RenderBackend {
                             }
                             self.resource_cache.add_image_template(id, descriptor, data, tiling);
                         }
-                        ApiMsg::UpdateImage(id, descriptor, bytes) => {
-                            self.resource_cache.update_image_template(id, descriptor, bytes);
+                        ApiMsg::UpdateImage(id, descriptor, bytes, dirty_rect) => {
+                            self.resource_cache.update_image_template(id, descriptor, bytes, dirty_rect);
                         }
                         ApiMsg::DeleteImage(id) => {
                             self.resource_cache.delete_image_template(id);
