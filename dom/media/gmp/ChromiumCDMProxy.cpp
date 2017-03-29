@@ -356,7 +356,7 @@ ChromiumCDMProxy::Shutdown()
   }
   if (cdm) {
     nsCOMPtr<nsIRunnable> task =
-      NewRunnableMethod(mCDM, &gmp::ChromiumCDMParent::Shutdown);
+      NewRunnableMethod(cdm, &gmp::ChromiumCDMParent::Shutdown);
     mGMPThread->Dispatch(task.forget());
   }
 }
