@@ -2689,8 +2689,6 @@ TryNoteName(JSTryNoteKind kind)
         return "for-of";
       case JSTRY_LOOP:
         return "loop";
-      case JSTRY_FOR_OF_ITERCLOSE:
-        return "for-of-iterclose";
       case JSTRY_DESTRUCTURING_ITERCLOSE:
         return "dstr-iterclose";
     }
@@ -2704,14 +2702,14 @@ TryNotes(JSContext* cx, HandleScript script, Sprinter* sp)
     if (!script->hasTrynotes())
         return true;
 
-    if (!sp->put("\nException table:\nkind               stack    start      end\n"))
+    if (!sp->put("\nException table:\nkind             stack    start      end\n"))
         return false;
 
     JSTryNote* tn = script->trynotes()->vector;
     JSTryNote* tnlimit = tn + script->trynotes()->length;
     do {
         uint32_t startOff = script->pcToOffset(script->main()) + tn->start;
-        if (!sp->jsprintf(" %-16s %6u %8u %8u\n",
+        if (!sp->jsprintf(" %-14s %6u %8u %8u\n",
                           TryNoteName(static_cast<JSTryNoteKind>(tn->kind)),
                           tn->stackDepth, startOff, startOff + tn->length))
         {
