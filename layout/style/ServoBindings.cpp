@@ -269,6 +269,7 @@ Gecko_SetOwnerDocumentNeedsStyleFlush(RawGeckoElementBorrowed aElement)
 
   if (nsIPresShell* shell = aElement->OwnerDoc()->GetShell()) {
     shell->SetNeedStyleFlush();
+    shell->ObserveStyleFlushes();
   }
 }
 
