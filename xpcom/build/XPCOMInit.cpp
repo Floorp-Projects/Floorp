@@ -503,24 +503,16 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
     sExitManager = new AtExitManager();
   }
 
-  // Set experimental values for main thread hangs:
-  // 128ms for transient hangs and 8192ms for permanent hangs
-  static const uint32_t kTransientHangTimeout = 128;
-#ifdef NIGHTLY_BUILD
-  // On nightly, we use 128 for kPermanentHangTimeout, to get more native stacks
-  static const uint32_t kPermanentHangTimeout = kTransientHangTimeout;
-#else
-  static const uint32_t kPermanentHangTimeout = 8192;
-#endif
-
   MessageLoop* messageLoop = MessageLoop::current();
   if (!messageLoop) {
     sMessageLoop = new MessageLoopForUI(MessageLoop::TYPE_MOZILLA_PARENT);
     sMessageLoop->set_thread_name("Gecko");
-    sMessageLoop->set_hang_timeouts(kTransientHangTimeout, kPermanentHangTimeout);
+    // Set experimental values for main thread hangs:
+    // 128ms for transient hangs and 8192ms for permanent hangs
+    sMessageLoop->set_hang_timeouts(128, 8192);
   } else if (messageLoop->type() == MessageLoop::TYPE_MOZILLA_CHILD) {
     messageLoop->set_thread_name("Gecko_Child");
-    messageLoop->set_hang_timeouts(kTransientHangTimeout, kPermanentHangTimeout);
+    messageLoop->set_hang_timeouts(128, 8192);
   }
 
   if (XRE_IsParentProcess() &&
