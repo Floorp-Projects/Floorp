@@ -6,10 +6,10 @@
 
 #include <stddef.h>
 
+#include <memory>
 #include <vector>
 
 #include "base/logging.h"
-#include "base/memory/scoped_ptr.h"
 #include "sandbox/win/src/acl.h"
 #include "sandbox/win/src/win_utils.h"
 
@@ -17,9 +17,9 @@ namespace {
 
 // Calls GetTokenInformation with the desired |info_class| and returns a buffer
 // with the result.
-scoped_ptr<BYTE[]> GetTokenInfo(const base::win::ScopedHandle& token,
-                                TOKEN_INFORMATION_CLASS info_class,
-                                DWORD* error) {
+std::unique_ptr<BYTE[]> GetTokenInfo(const base::win::ScopedHandle& token,
+                                     TOKEN_INFORMATION_CLASS info_class,
+                                     DWORD* error) {
   // Get the required buffer size.
   DWORD size = 0;
   ::GetTokenInformation(token.Get(), info_class, NULL, 0,  &size);
@@ -28,7 +28,7 @@ scoped_ptr<BYTE[]> GetTokenInfo(const base::win::ScopedHandle& token,
     return nullptr;
   }
 
-  scoped_ptr<BYTE[]> buffer(new BYTE[size]);
+  std::unique_ptr<BYTE[]> buffer(new BYTE[size]);
   if (!::GetTokenInformation(token.Get(), info_class, buffer.get(), size,
                              &size)) {
     *error = ::GetLastError();
@@ -36,7 +36,7 @@ scoped_ptr<BYTE[]> GetTokenInfo(const base::win::ScopedHandle& token,
   }
 
   *error = ERROR_SUCCESS;
-  return buffer.Pass();
+  return buffer;
 }
 
 }  // namespace
@@ -45,8 +45,8 @@ namespace sandbox {
 
 RestrictedToken::RestrictedToken()
     : integrity_level_(INTEGRITY_LEVEL_LAST),
-      init_(false) {
-}
+      init_(false),
+      lockdown_default_dacl_(false) {}
 
 RestrictedToken::~RestrictedToken() {
 }
@@ -158,10 +158,19 @@ DWORD RestrictedToken::GetRestrictedToken(
 
   base::win::ScopedHandle new_token(new_token_handle);
 
-  // Modify the default dacl on the token to contain Restricted and the user.
-  if (!AddSidToDefaultDacl(new_token.Get(), WinRestrictedCodeSid, GENERIC_ALL))
-    return ::GetLastError();
+  if (lockdown_default_dacl_) {
+    // Don't add Restricted sid and also remove logon sid access.
+    if (!RevokeLogonSidFromDefaultDacl(new_token.Get()))
+      return ::GetLastError();
+  } else {
+    // Modify the default dacl on the token to contain Restricted.
+    if (!AddSidToDefaultDacl(new_token.Get(), WinRestrictedCodeSid,
+                             GRANT_ACCESS, GENERIC_ALL)) {
+      return ::GetLastError();
+    }
+  }
 
+  // Add user to default dacl.
   if (!AddUserSidToDefaultDacl(new_token.Get(), GENERIC_ALL))
     return ::GetLastError();
 
@@ -218,7 +227,7 @@ DWORD RestrictedToken::AddAllSidsForDenyOnly(std::vector<Sid> *exceptions) {
     return ERROR_NO_TOKEN;
 
   DWORD error;
-  scoped_ptr<BYTE[]> buffer =
+  std::unique_ptr<BYTE[]> buffer =
       GetTokenInfo(effective_token_, TokenGroups, &error);
 
   if (!buffer)
@@ -250,39 +259,6 @@ DWORD RestrictedToken::AddAllSidsForDenyOnly(std::vector<Sid> *exceptions) {
   return ERROR_SUCCESS;
 }
 
-DWORD RestrictedToken::AddDenyOnlySids(const std::vector<Sid>& deny_only_sids) {
-  DCHECK(init_);
-  if (!init_) {
-    return ERROR_NO_TOKEN;
-  }
-
-  DWORD error;
-  scoped_ptr<BYTE[]> buffer = GetTokenInfo(effective_token_, TokenGroups, &error);
-
-  if (!buffer) {
-    return error;
-  }
-
-  TOKEN_GROUPS* token_groups = reinterpret_cast<TOKEN_GROUPS*>(buffer.get());
-
-  // Build the list of the deny only group SIDs
-  for (unsigned int i = 0; i < token_groups->GroupCount ; ++i) {
-    if ((token_groups->Groups[i].Attributes & SE_GROUP_INTEGRITY) == 0 &&
-        (token_groups->Groups[i].Attributes & SE_GROUP_LOGON_ID) == 0) {
-      for (unsigned int j = 0; j < deny_only_sids.size(); ++j) {
-        if (::EqualSid(const_cast<SID*>(deny_only_sids[j].GetPSID()),
-                       token_groups->Groups[i].Sid)) {
-          sids_for_deny_only_.push_back(
-              reinterpret_cast<SID*>(token_groups->Groups[i].Sid));
-          break;
-        }
-      }
-    }
-  }
-
-  return ERROR_SUCCESS;
-}
-
 DWORD RestrictedToken::AddSidForDenyOnly(const Sid &sid) {
   DCHECK(init_);
   if (!init_)
@@ -298,7 +274,7 @@ DWORD RestrictedToken::AddUserSidForDenyOnly() {
     return ERROR_NO_TOKEN;
 
   DWORD size = sizeof(TOKEN_USER) + SECURITY_MAX_SID_SIZE;
-  scoped_ptr<BYTE[]> buffer(new BYTE[size]);
+  std::unique_ptr<BYTE[]> buffer(new BYTE[size]);
   TOKEN_USER* token_user = reinterpret_cast<TOKEN_USER*>(buffer.get());
 
   BOOL result = ::GetTokenInformation(effective_token_.Get(), TokenUser,
@@ -320,7 +296,7 @@ DWORD RestrictedToken::DeleteAllPrivileges(
     return ERROR_NO_TOKEN;
 
   DWORD error;
-  scoped_ptr<BYTE[]> buffer =
+  std::unique_ptr<BYTE[]> buffer =
       GetTokenInfo(effective_token_, TokenPrivileges, &error);
 
   if (!buffer)
@@ -380,7 +356,7 @@ DWORD RestrictedToken::AddRestrictingSidLogonSession() {
     return ERROR_NO_TOKEN;
 
   DWORD error;
-  scoped_ptr<BYTE[]> buffer =
+  std::unique_ptr<BYTE[]> buffer =
       GetTokenInfo(effective_token_, TokenGroups, &error);
 
   if (!buffer)
@@ -408,7 +384,7 @@ DWORD RestrictedToken::AddRestrictingSidCurrentUser() {
     return ERROR_NO_TOKEN;
 
   DWORD size = sizeof(TOKEN_USER) + SECURITY_MAX_SID_SIZE;
-  scoped_ptr<BYTE[]> buffer(new BYTE[size]);
+  std::unique_ptr<BYTE[]> buffer(new BYTE[size]);
   TOKEN_USER* token_user = reinterpret_cast<TOKEN_USER*>(buffer.get());
 
   BOOL result = ::GetTokenInformation(effective_token_.Get(), TokenUser,
@@ -433,7 +409,7 @@ DWORD RestrictedToken::AddRestrictingSidAllSids() {
   if (ERROR_SUCCESS != error)
     return error;
 
-  scoped_ptr<BYTE[]> buffer =
+  std::unique_ptr<BYTE[]> buffer =
       GetTokenInfo(effective_token_, TokenGroups, &error);
 
   if (!buffer)
@@ -453,6 +429,10 @@ DWORD RestrictedToken::AddRestrictingSidAllSids() {
 DWORD RestrictedToken::SetIntegrityLevel(IntegrityLevel integrity_level) {
   integrity_level_ = integrity_level;
   return ERROR_SUCCESS;
+}
+
+void RestrictedToken::SetLockdownDefaultDacl() {
+  lockdown_default_dacl_ = true;
 }
 
 }  // namespace sandbox

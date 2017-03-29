@@ -5,8 +5,9 @@
 #ifndef SANDBOX_LINUX_SECCOMP_BPF_SANDBOX_BPF_TEST_RUNNER_H_
 #define SANDBOX_LINUX_SECCOMP_BPF_SANDBOX_BPF_TEST_RUNNER_H_
 
+#include <memory>
+
 #include "base/macros.h"
-#include "base/memory/scoped_ptr.h"
 #include "sandbox/linux/tests/sandbox_test_runner.h"
 
 namespace sandbox {
@@ -26,7 +27,7 @@ class BPFTesterDelegate {
   // This will instanciate a policy suitable for the test we want to run. It is
   // guaranteed to only be called from the child process that will run the
   // test.
-  virtual scoped_ptr<bpf_dsl::Policy> GetSandboxBPFPolicy() = 0;
+  virtual std::unique_ptr<bpf_dsl::Policy> GetSandboxBPFPolicy() = 0;
   // This will be called from a child process with the BPF sandbox turned on.
   virtual void RunTestFunction() = 0;
 
@@ -43,7 +44,7 @@ class BPFTesterDelegate {
 class SandboxBPFTestRunner : public SandboxTestRunner {
  public:
   // This constructor takes ownership of the |bpf_tester_delegate| object.
-  // (It doesn't take a scoped_ptr since they make polymorphism verbose).
+  // (It doesn't take a std::unique_ptr since they make polymorphism verbose).
   explicit SandboxBPFTestRunner(BPFTesterDelegate* bpf_tester_delegate);
   ~SandboxBPFTestRunner() override;
 
@@ -52,7 +53,7 @@ class SandboxBPFTestRunner : public SandboxTestRunner {
   bool ShouldCheckForLeaks() const override;
 
  private:
-  scoped_ptr<BPFTesterDelegate> bpf_tester_delegate_;
+  std::unique_ptr<BPFTesterDelegate> bpf_tester_delegate_;
   DISALLOW_COPY_AND_ASSIGN(SandboxBPFTestRunner);
 };
 

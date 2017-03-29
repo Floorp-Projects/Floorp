@@ -14,7 +14,6 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
-#include "mozilla/sandboxing/sandboxLogging.h"
 
 namespace sandbox {
 
@@ -65,10 +64,6 @@ NTSTATUS WINAPI TargetNtCreateEvent(NtCreateEventFunction orig_CreateEvent,
   if (status != STATUS_ACCESS_DENIED || !object_attributes)
     return status;
 
-  mozilla::sandboxing::LogBlocked("NtCreatEvent",
-                                  object_attributes->ObjectName->Buffer,
-                                  object_attributes->ObjectName->Length);
-
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
     return status;
@@ -108,9 +103,6 @@ NTSTATUS WINAPI TargetNtCreateEvent(NtCreateEventFunction orig_CreateEvent,
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
-    mozilla::sandboxing::LogAllowed("NtCreateEvent",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
   } while (false);
 
   return status;
@@ -125,10 +117,6 @@ NTSTATUS WINAPI TargetNtOpenEvent(NtOpenEventFunction orig_OpenEvent,
   if (status != STATUS_ACCESS_DENIED || !object_attributes)
     return status;
 
-  mozilla::sandboxing::LogBlocked("NtOpenEvent",
-                                  object_attributes->ObjectName->Buffer,
-                                  object_attributes->ObjectName->Length);
-  //
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
     return status;
@@ -167,9 +155,6 @@ NTSTATUS WINAPI TargetNtOpenEvent(NtOpenEventFunction orig_OpenEvent,
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
-    mozilla::sandboxing::LogAllowed("NtOpenEvent",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
   } while (false);
 
   return status;
