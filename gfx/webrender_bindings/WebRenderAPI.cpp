@@ -179,6 +179,19 @@ WebRenderAPI::GenerateFrame()
 }
 
 void
+WebRenderAPI::GenerateFrame(const nsTArray<WrOpacityProperty>& aOpacityArray,
+                            const nsTArray<WrTransformProperty>& aTransformArray)
+{
+  wr_api_generate_frame_with_properties(mWrApi,
+                                        aOpacityArray.IsEmpty() ?
+                                          nullptr : aOpacityArray.Elements(),
+                                        aOpacityArray.Length(),
+                                        aTransformArray.IsEmpty() ?
+                                          nullptr : aTransformArray.Elements(),
+                                        aTransformArray.Length());
+}
+
+void
 WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  Epoch aEpoch,
                                  LayerSize aViewportSize,
@@ -526,12 +539,28 @@ DisplayListBuilder::Finalize()
 
 void
 DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
+                                        const uint64_t& aAnimationId,
+                                        const float* aOpacity,
+                                        const gfx::Matrix4x4* aTransform,
+                                        const WrMixBlendMode& aMixBlendMode)
+{
+  WrMatrix matrix;
+  if (aTransform) {
+    matrix = ToWrMatrix(*aTransform);
+  }
+  const WrMatrix* maybeTransform = aTransform ? &matrix : nullptr;
+  wr_dp_push_stacking_context(mWrState, aBounds, aAnimationId, aOpacity,
+                              maybeTransform, aMixBlendMode);
+}
+
+void
+DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
                                         const float aOpacity,
                                         const gfx::Matrix4x4& aTransform,
                                         const WrMixBlendMode& aMixBlendMode)
 {
-  wr_dp_push_stacking_context(mWrState, aBounds, aOpacity,
-                              ToWrMatrix(aTransform), aMixBlendMode);
+  PushStackingContext(aBounds, 0, &aOpacity,
+                      &aTransform, aMixBlendMode);
 }
 
 void

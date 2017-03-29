@@ -201,6 +201,34 @@ struct WrAuxiliaryListsDescriptor {
   }
 };
 
+struct WrOpacityProperty {
+  uint64_t id;
+  float opacity;
+
+  bool operator==(const WrOpacityProperty& aOther) const {
+    return id == aOther.id &&
+      opacity == aOther.opacity;
+  }
+};
+
+struct WrMatrix {
+  float values[16];
+
+  bool operator==(const WrMatrix& aOther) const {
+    return values == aOther.values;
+  }
+};
+
+struct WrTransformProperty {
+  uint64_t id;
+  WrMatrix transform;
+
+  bool operator==(const WrTransformProperty& aOther) const {
+    return id == aOther.id &&
+      transform == aOther.transform;
+  }
+};
+
 struct WrIdNamespace {
   uint32_t mHandle;
 
@@ -399,14 +427,6 @@ struct WrNinePatchDescriptor {
   }
 };
 
-struct WrMatrix {
-  float values[16];
-
-  bool operator==(const WrMatrix& aOther) const {
-    return values == aOther.values;
-  }
-};
-
 struct WrGlyphInstance {
   uint32_t index;
   WrPoint point;
@@ -556,6 +576,14 @@ WR_FUNC;
 
 WR_INLINE void
 wr_api_generate_frame(WrAPI* api)
+WR_FUNC;
+
+WR_INLINE void
+wr_api_generate_frame_with_properties(WrAPI* api,
+    const WrOpacityProperty* opacity_array,
+    size_t opacity_count,
+    const WrTransformProperty* transform_array,
+    size_t transform_count)
 WR_FUNC;
 
 WR_INLINE WrIdNamespace
@@ -756,8 +784,9 @@ WR_FUNC;
 WR_INLINE void
 wr_dp_push_stacking_context(WrState* state,
     WrRect bounds,
-    float opacity,
-    WrMatrix transform,
+    uint64_t animation_id,
+    const float* opacity,
+    const WrMatrix* transform,
     WrMixBlendMode mix_blend_mode)
 WR_FUNC;
 
