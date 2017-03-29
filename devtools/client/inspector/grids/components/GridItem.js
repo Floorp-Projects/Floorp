@@ -116,9 +116,7 @@ module.exports = createClass({
     let { nodeFront } = grid;
 
     return dom.li(
-      {
-        className: "grid-item",
-      },
+      {},
       dom.label(
         {},
         dom.input(
