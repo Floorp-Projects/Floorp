@@ -115,7 +115,13 @@ ContentPrincipal::Init(nsIURI *aCodebase,
   mCodebase = NS_TryToMakeImmutable(aCodebase);
   mCodebaseImmutable = URIIsImmutable(mCodebase);
 
-  FinishInit(aOriginAttributes);
+  nsAutoCString originNoSuffix;
+  nsresult rv = GenerateOriginNoSuffixFromURI(mCodebase, originNoSuffix);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  FinishInit(originNoSuffix, aOriginAttributes);
 
   return NS_OK;
 }
@@ -126,14 +132,15 @@ ContentPrincipal::GetScriptLocation(nsACString &aStr)
   return mCodebase->GetSpec(aStr);
 }
 
-nsresult
-ContentPrincipal::GetOriginNoSuffixInternal(nsACString& aOrigin)
+/* static */ nsresult
+ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
+                                                nsACString& aOriginNoSuffix)
 {
-  if (!mCodebase) {
+  if (!aURI) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIURI> origin = NS_GetInnermostURI(mCodebase);
+  nsCOMPtr<nsIURI> origin = NS_GetInnermostURI(aURI);
   if (!origin) {
     return NS_ERROR_FAILURE;
   }
@@ -145,7 +152,7 @@ ContentPrincipal::GetOriginNoSuffixInternal(nsACString& aOrigin)
       NS_URIIsLocalFile(origin)) {
     // If strict file origin policy is not in effect, all local files are
     // considered to be same-origin, so return a known dummy origin here.
-    aOrigin.AssignLiteral("file://UNIVERSAL_FILE_URI_ORIGIN");
+    aOriginNoSuffix.AssignLiteral("file://UNIVERSAL_FILE_URI_ORIGIN");
     return NS_OK;
   }
 
@@ -185,21 +192,21 @@ ContentPrincipal::GetOriginNoSuffixInternal(nsACString& aOrigin)
        // We check for moz-safe-about:blank since origin is an innermost URI.
        !origin->GetSpecOrDefault().EqualsLiteral("moz-safe-about:blank")) ||
       (NS_SUCCEEDED(origin->SchemeIs("indexeddb", &isBehaved)) && isBehaved)) {
-    rv = origin->GetAsciiSpec(aOrigin);
+    rv = origin->GetAsciiSpec(aOriginNoSuffix);
     NS_ENSURE_SUCCESS(rv, rv);
     // These URIs could technically contain a '^', but they never should.
-    if (NS_WARN_IF(aOrigin.FindChar('^', 0) != -1)) {
-      aOrigin.Truncate();
+    if (NS_WARN_IF(aOriginNoSuffix.FindChar('^', 0) != -1)) {
+      aOriginNoSuffix.Truncate();
       return NS_ERROR_FAILURE;
     }
     return NS_OK;
   }
 
   if (NS_SUCCEEDED(rv) && !isChrome) {
-    rv = origin->GetScheme(aOrigin);
+    rv = origin->GetScheme(aOriginNoSuffix);
     NS_ENSURE_SUCCESS(rv, rv);
-    aOrigin.AppendLiteral("://");
-    aOrigin.Append(hostPort);
+    aOriginNoSuffix.AppendLiteral("://");
+    aOriginNoSuffix.Append(hostPort);
     return NS_OK;
   }
 
@@ -212,7 +219,7 @@ ContentPrincipal::GetOriginNoSuffixInternal(nsACString& aOrigin)
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (uriPrincipal) {
-      return uriPrincipal->GetOriginNoSuffix(aOrigin);
+      return uriPrincipal->GetOriginNoSuffix(aOriginNoSuffix);
     }
   }
 
@@ -228,21 +235,21 @@ ContentPrincipal::GetOriginNoSuffixInternal(nsACString& aOrigin)
     return NS_ERROR_FAILURE;
   }
 
-  rv = origin->GetAsciiSpec(aOrigin);
+  rv = origin->GetAsciiSpec(aOriginNoSuffix);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The origin, when taken from the spec, should not contain the ref part of
   // the URL.
 
-  int32_t pos = aOrigin.FindChar('?');
-  int32_t hashPos = aOrigin.FindChar('#');
+  int32_t pos = aOriginNoSuffix.FindChar('?');
+  int32_t hashPos = aOriginNoSuffix.FindChar('#');
 
   if (hashPos != kNotFound && (pos == kNotFound || hashPos < pos)) {
     pos = hashPos;
   }
 
   if (pos != kNotFound) {
-    aOrigin.Truncate(pos);
+    aOriginNoSuffix.Truncate(pos);
   }
 
   return NS_OK;
