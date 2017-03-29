@@ -132,7 +132,7 @@
 
 /* Miscellaneous */
 
-*|*::-moz-anonymous-block, *|*::-moz-cell-content {
+*|*::-moz-cell-content {
   display: block !important;
   position: static !important;
   unicode-bidi: inherit;
@@ -140,8 +140,10 @@
   overflow-clip-box: inherit;
 }
 
-*|*::-moz-anonymous-block, *|*::-moz-anonymous-positioned-block {
+*|*::-moz-block-inside-inline-wrapper {
+  display: block !important;
   /* we currently inherit from the inline that is split */
+  position: inherit; /* static or relative or sticky */
   outline: inherit;
   outline-offset: inherit;
   clip-path: inherit;
@@ -151,6 +153,16 @@
   text-decoration: inherit;
   -moz-box-ordinal-group: inherit !important;
   overflow-clip-box: inherit;
+  unicode-bidi: inherit;
+  text-overflow: inherit;
+  /* The properties below here don't apply if our position is static,
+     and we do want them to have an effect if it's not, so it's fine
+     to always inherit them. */
+  top: inherit;
+  left: inherit;
+  bottom: inherit;
+  right: inherit;
+  z-index: inherit;
 }
 
 *|*::-moz-xul-anonymous-block {
@@ -266,20 +278,6 @@
 
 *|*::-moz-pagebreak {
   display: block !important;
-}
-
-*|*::-moz-anonymous-positioned-block {
-  display: block !important;
-  position: inherit; /* relative or sticky */
-  top: inherit;
-  left: inherit;
-  bottom: inherit;
-  right: inherit;
-  z-index: inherit;
-  clip: inherit;
-  opacity: inherit;
-  unicode-bidi: inherit;
-  text-overflow: inherit;
 }
 
 /* Printing */

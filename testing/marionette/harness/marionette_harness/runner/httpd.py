@@ -16,7 +16,12 @@ import sys
 import time
 import urlparse
 
-from wptserve import server, handlers, routes as default_routes
+from wptserve import (
+    handlers,
+    request,
+    routes as default_routes,
+    server
+)
 
 
 root = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
@@ -26,12 +31,34 @@ default_ssl_key = os.path.join(root, "certificates", "test.key")
 
 
 @handlers.handler
+def http_auth_handler(req, response):
+    # Allow the test to specify the username and password
+    params = dict(urlparse.parse_qsl(req.url_parts.query))
+    username = params.get("username", "guest")
+    password = params.get("password", "guest")
+
+    auth = request.Authentication(req.headers)
+    content = """<!doctype html>
+<title>HTTP Authentication</title>
+<p id="status">{}</p>"""
+
+    if auth.username == username and auth.password == password:
+        response.status = 200
+        response.content = content.format("success")
+
+    else:
+        response.status = 401
+        response.headers.set("WWW-Authenticate", "Basic realm=\"secret\"")
+        response.content = content.format("restricted")
+
+
+@handlers.handler
 def upload_handler(request, response):
     return 200, [], [request.headers.get("Content-Type")] or []
 
 
 @handlers.handler
-def slow_loading_document(request, response):
+def slow_loading_handler(request, response):
     time.sleep(5)
     return """<!doctype html>
 <title>ok</title>
@@ -64,7 +91,9 @@ class FixtureServer(object):
             port = 0
 
         routes = [("POST", "/file_upload", upload_handler),
-                  ("GET", "/slow", slow_loading_document)]
+                  ("GET", "/http_auth", http_auth_handler),
+                  ("GET", "/slow", slow_loading_handler),
+                  ]
         routes.extend(default_routes.routes)
 
         self._httpd = server.WebTestHttpd(host=host,

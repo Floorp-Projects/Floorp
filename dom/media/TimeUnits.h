@@ -205,11 +205,15 @@ public:
     return *this;
   }
 
-  friend TimeUnit operator* (int aVal, const TimeUnit& aUnit) {
-    return TimeUnit(aUnit.mValue * aVal);
+  template <typename T>
+  TimeUnit operator*(T aVal) const {
+    // See bug 853398 for the reason to block double multiplier.
+    // If required, use MultDouble below and with caution.
+    static_assert(mozilla::IsIntegral<T>::value, "Must be an integral type");
+    return TimeUnit(mValue * aVal);
   }
-  friend TimeUnit operator* (const TimeUnit& aUnit, int aVal) {
-    return TimeUnit(aUnit.mValue * aVal);
+  TimeUnit MultDouble(double aVal) const {
+    return TimeUnit::FromSeconds(ToSeconds() * aVal);
   }
   friend TimeUnit operator/ (const TimeUnit& aUnit, int aVal) {
     return TimeUnit(aUnit.mValue / aVal);

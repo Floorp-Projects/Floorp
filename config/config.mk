@@ -413,8 +413,13 @@ endif # WINNT
 
 ifdef _MSC_VER
 ifeq ($(CPU_ARCH),x86_64)
+ifdef MOZ_ASAN
+# ASan could have 3x stack memory usage of normal builds.
+WIN32_EXE_LDFLAGS	+= -STACK:6291456
+else
 # set stack to 2MB on x64 build.  See bug 582910
 WIN32_EXE_LDFLAGS	+= -STACK:2097152
+endif
 endif
 endif
 

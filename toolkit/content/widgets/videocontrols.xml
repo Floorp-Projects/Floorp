@@ -222,7 +222,7 @@
                     "playing", "waiting", "canplay", "canplaythrough",
                     "seeking", "seeked", "emptied", "loadedmetadata",
                     "error", "suspend", "stalled",
-                    "mozexitvideosuspend"],
+                    "mozexitvideosuspend", "mozvideoonlyseekcompleted"],
 
       showHours: false,
       firstFrameShown: false,
@@ -674,7 +674,6 @@
           case "seeked":
           case "playing":
           case "canplay":
-            this._cancelShowThrobberWhileResumingVideoDecoder();
           case "canplaythrough":
             this.setupStatusFader();
             break;
@@ -704,6 +703,10 @@
           case "mozexitvideosuspend":
             this._delayShowThrobberWhileResumingVideoDecoder();
             break;
+          case "mozvideoonlyseekcompleted":
+            this._cancelShowThrobberWhileResumingVideoDecoder();
+            this.setupStatusFader();
+            break;
           default:
             this.log("!!! event " + aEvent.type + " not handled!");
         }
@@ -722,7 +725,7 @@
         if (this.controlListeners) {
           for (let element of this.controlListeners) {
             element.item.removeEventListener(element.event, element.func,
-              { mozSystemGroup: true });
+              { mozSystemGroup: true, capture: element.capture });
           }
 
           delete this.controlListeners;
@@ -1835,10 +1838,10 @@
         // Due to this helper function, "Utils" is made available to the event
         // listener functions. Hence declare it as a global for ESLint.
         /* global Utils */
-        function addListener(elem, eventName, func) {
+        function addListener(elem, eventName, func, capture = false) {
           let boundFunc = func.bind(self);
-          self.controlListeners.push({ item: elem, event: eventName, func: boundFunc });
-          elem.addEventListener(eventName, boundFunc, { mozSystemGroup: true });
+          self.controlListeners.push({ item: elem, event: eventName, func: boundFunc, capture });
+          elem.addEventListener(eventName, boundFunc, { mozSystemGroup: true, capture });
         }
 
         addListener(this.muteButton, "click", this.toggleMute);
@@ -1854,7 +1857,7 @@
         addListener(this.video.ownerDocument, "mozfullscreenchange", this.onFullscreenChange);
         addListener(this.controlBar, "transitionend", this.onControlBarTransitioned);
         addListener(this.video.ownerDocument, "fullscreenchange", this.onFullscreenChange);
-        addListener(this.video, "keypress", this.keyHandler);
+        addListener(this.video, "keypress", this.keyHandler, true);
 
         addListener(this.videocontrols, "dragstart", function(event) {
           event.preventDefault(); // prevent dragging of controls image (bug 517114)

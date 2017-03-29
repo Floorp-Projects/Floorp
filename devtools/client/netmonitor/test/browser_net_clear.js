@@ -12,8 +12,8 @@ add_task(function* () {
   info("Starting test... ");
 
   let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let { EVENTS } = windowRequire("devtools/client/netmonitor/constants");
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  let { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
   let detailsPanelToggleButton = document.querySelector(".network-details-panel-toggle");
   let clearButton = document.querySelector(".requests-list-clear-button");
 

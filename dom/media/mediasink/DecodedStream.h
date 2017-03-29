@@ -47,8 +47,8 @@ public:
   void SetPlaybackParams(const PlaybackParams& aParams) override;
 
   RefPtr<GenericPromise> OnEnded(TrackType aType) override;
-  int64_t GetEndTime(TrackType aType) const override;
-  int64_t GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
+  media::TimeUnit GetEndTime(TrackType aType) const override;
+  media::TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
   bool HasUnplayedFrames(TrackType aType) const override
   {
     // TODO: implement this.
@@ -60,7 +60,7 @@ public:
   void SetPreservesPitch(bool aPreservesPitch) override;
   void SetPlaying(bool aPlaying) override;
 
-  void Start(int64_t aStartTime, const MediaInfo& aInfo) override;
+  void Start(const media::TimeUnit& aStartTime, const MediaInfo& aInfo) override;
   void Stop() override;
   bool IsStarted() const override;
   bool IsPlaying() const override;

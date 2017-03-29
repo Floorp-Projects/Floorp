@@ -21,9 +21,7 @@
   skin/classic/global/progressmeter.css                    (../../windows/global/progressmeter.css)
   skin/classic/global/resizer.css                          (../../windows/global/resizer.css)
   skin/classic/global/richlistbox.css                      (../../windows/global/richlistbox.css)
-#ifndef MOZ_THEME_FASTSTRIPE
   skin/classic/global/scrollbars.css                       (../../windows/global/xulscrollbars.css)
-#endif
   skin/classic/global/spinbuttons.css                      (../../windows/global/spinbuttons.css)
   skin/classic/global/tabprompts.css                       (../../windows/global/tabprompts.css)
   skin/classic/global/wizard.css                           (../../windows/global/wizard.css)

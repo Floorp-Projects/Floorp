@@ -762,26 +762,28 @@ public abstract class GeckoApp
         } else if ("PrivateBrowsing:Data".equals(event)) {
             mPrivateBrowsingSession = message.getString("session");
 
-        } else if ("RuntimePermissions:Prompt".equals(event)) {
-            String[] permissions = message.getStringArray("permissions");
+        } else if ("RuntimePermissions:Check".equals(event)) {
+            final String[] permissions = message.getStringArray("permissions");
+            final boolean shouldPrompt = message.getBoolean("shouldPrompt", false);
             if (callback == null || permissions == null) {
                 return;
             }
 
             Permissions.from(this)
-                       .withPermissions(permissions)
-                       .andFallback(new Runnable() {
-                           @Override
-                           public void run() {
-                               callback.sendSuccess(false);
-                           }
-                       })
-                       .run(new Runnable() {
-                           @Override
-                           public void run() {
-                               callback.sendSuccess(true);
-                           }
-                       });
+                    .withPermissions(permissions)
+                    .doNotPromptIf(!shouldPrompt)
+                    .andFallback(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.sendSuccess(false);
+                        }
+                    })
+                    .run(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.sendSuccess(true);
+                        }
+                    });
 
         } else if ("Share:Text".equals(event)) {
             final String text = message.getString("text");
@@ -1312,7 +1314,7 @@ public abstract class GeckoApp
             "DOMFullScreen:Stop",
             "Permissions:Data",
             "PrivateBrowsing:Data",
-            "RuntimePermissions:Prompt",
+            "RuntimePermissions:Check",
             "Share:Text",
             "SystemUI:Visibility",
             "ToggleChrome:Focus",
@@ -2429,7 +2431,7 @@ public abstract class GeckoApp
             "DOMFullScreen:Stop",
             "Permissions:Data",
             "PrivateBrowsing:Data",
-            "RuntimePermissions:Prompt",
+            "RuntimePermissions:Check",
             "Share:Text",
             "SystemUI:Visibility",
             "ToggleChrome:Focus",

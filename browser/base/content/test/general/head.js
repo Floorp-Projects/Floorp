@@ -775,15 +775,6 @@ function promiseOnBookmarkItemAdded(aExpectedURI) {
   });
 }
 
-function promiseErrorPageLoaded(browser) {
-  return new Promise(resolve => {
-    browser.addEventListener("DOMContentLoaded", function onLoad() {
-      browser.removeEventListener("DOMContentLoaded", onLoad, false, true);
-      resolve();
-    }, false, true);
-  });
-}
-
 function* loadBadCertPage(url) {
   const EXCEPTION_DIALOG_URI = "chrome://pippki/content/exceptionDialog.xul";
   let exceptionDialogResolved = new Promise(function(resolve) {
