@@ -9,9 +9,6 @@ Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "SiteDataManager",
-                                  "resource:///modules/SiteDataManager.jsm");
-
 const PREF_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 var gAdvancedPane = {
@@ -27,11 +24,6 @@ var gAdvancedPane = {
     }
 
     this._inited = true;
-    var advancedPrefs = document.getElementById("advancedPrefs");
-
-    var preference = document.getElementById("browser.preferences.advanced.selectedTabIndex");
-    if (preference.value !== null)
-        advancedPrefs.selectedIndex = preference.value;
 
     if (AppConstants.MOZ_UPDATER) {
       let onUnload = function() {
@@ -50,101 +42,22 @@ var gAdvancedPane = {
       this.initSubmitHealthReport();
     }
     this.updateOnScreenKeyboardVisibility();
-    this.updateCacheSizeInputField();
-    this.updateActualCacheSize();
-
-    if (Services.prefs.getBoolPref("browser.storageManager.enabled")) {
-      Services.obs.addObserver(this, "sitedatamanager:sites-updated", false);
-      let unload = () => {
-        window.removeEventListener("unload", unload);
-        Services.obs.removeObserver(this, "sitedatamanager:sites-updated");
-      };
-      window.addEventListener("unload", unload);
-      SiteDataManager.updateSites();
-      setEventListener("clearSiteDataButton", "command",
-                       gAdvancedPane.clearSiteData);
-      setEventListener("siteDataSettings", "command",
-                       gAdvancedPane.showSiteDataSettings);
-
-      let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "storage-permissions";
-      document.getElementById("siteDataLearnMoreLink").setAttribute("href", url);
-    }
 
     setEventListener("layers.acceleration.disabled", "change",
                      gAdvancedPane.updateHardwareAcceleration);
-    setEventListener("advancedPrefs", "select",
-                     gAdvancedPane.tabSelectionChanged);
     if (AppConstants.MOZ_TELEMETRY_REPORTING) {
       setEventListener("submitHealthReportBox", "command",
                        gAdvancedPane.updateSubmitHealthReport);
     }
 
-    setEventListener("connectionSettings", "command",
-                     gAdvancedPane.showConnections);
-    setEventListener("clearCacheButton", "command",
-                     gAdvancedPane.clearCache);
     if (AppConstants.MOZ_UPDATER) {
       setEventListener("updateRadioGroup", "command",
                        gAdvancedPane.updateWritePrefs);
       setEventListener("showUpdateHistory", "command",
                        gAdvancedPane.showUpdates);
     }
-    setEventListener("viewCertificatesButton", "command",
-                     gAdvancedPane.showCertificates);
-    setEventListener("viewSecurityDevicesButton", "command",
-                     gAdvancedPane.showSecurityDevices);
-    setEventListener("cacheSize", "change",
-                     gAdvancedPane.updateCacheSizePref);
-
-    if (Services.prefs.getBoolPref("browser.preferences.offlineGroup.enabled")) {
-      this.updateOfflineApps();
-      this.updateActualAppCacheSize();
-      setEventListener("offlineNotifyExceptions", "command",
-                      gAdvancedPane.showOfflineExceptions);
-      setEventListener("offlineAppsList", "select",
-                      gAdvancedPane.offlineAppSelected);
-      setEventListener("offlineAppsListRemove", "command",
-                      gAdvancedPane.removeOfflineApp);
-      setEventListener("clearOfflineAppCacheButton", "command",
-                      gAdvancedPane.clearOfflineAppCache);
-      let bundlePrefs = document.getElementById("bundlePreferences");
-      document.getElementById("offlineAppsList")
-              .style.height = bundlePrefs.getString("offlineAppsList.height");
-      let offlineGroup = document.getElementById("offlineGroup");
-      offlineGroup.hidden = false;
-    }
-
-    if (AppConstants.MOZ_WIDGET_GTK) {
-      // GTK tabbox' allow the scroll wheel to change the selected tab,
-      // but we don't want this behavior for the in-content preferences.
-      let tabsElement = document.getElementById("tabsElement");
-      tabsElement.addEventListener("DOMMouseScroll", event => {
-        event.stopPropagation();
-      }, true);
-    }
   },
 
-  /**
-   * Stores the identity of the current tab in preferences so that the selected
-   * tab can be persisted between openings of the preferences window.
-   */
-  tabSelectionChanged() {
-    if (!this._inited)
-      return;
-    var advancedPrefs = document.getElementById("advancedPrefs");
-    var preference = document.getElementById("browser.preferences.advanced.selectedTabIndex");
-
-    // tabSelectionChanged gets called twice due to the selectedIndex being set
-    // by both the selectedItem and selectedPanel callstacks. This guard is used
-    // to prevent double-counting in Telemetry.
-    if (preference.valueFromPreferences != advancedPrefs.selectedIndex) {
-      Services.telemetry
-              .getHistogramById("FX_PREFERENCES_CATEGORY_OPENED")
-              .add(telemetryBucketForCategory("advanced"));
-    }
-
-    preference.valueFromPreferences = advancedPrefs.selectedIndex;
-  },
 
   // GENERAL TAB
 
@@ -212,26 +125,6 @@ var gAdvancedPane = {
     return 0;
   },
 
-  /**
-   * security.OCSP.enabled is an integer value for legacy reasons.
-   * A value of 1 means OCSP is enabled. Any other value means it is disabled.
-   */
-  readEnableOCSP() {
-    var preference = document.getElementById("security.OCSP.enabled");
-    // This is the case if the preference is the default value.
-    if (preference.value === undefined) {
-      return true;
-    }
-    return preference.value == 1;
-  },
-
-  /**
-   * See documentation for readEnableOCSP.
-   */
-  writeEnableOCSP() {
-    var checkbox = document.getElementById("enableOCSP");
-    return checkbox.checked ? 1 : 0;
-  },
 
   /**
    * When the user toggles the layers.acceleration.disabled pref,
@@ -336,326 +229,6 @@ var gAdvancedPane = {
       }
     }
   },
-
-  // NETWORK TAB
-
-  /*
-   * Preferences:
-   *
-   * browser.cache.disk.capacity
-   * - the size of the browser cache in KB
-   * - Only used if browser.cache.disk.smart_size.enabled is disabled
-   */
-
-  /**
-   * Displays a dialog in which proxy settings may be changed.
-   */
-  showConnections() {
-    gSubDialog.open("chrome://browser/content/preferences/connection.xul");
-  },
-
-  showSiteDataSettings() {
-    gSubDialog.open("chrome://browser/content/preferences/siteDataSettings.xul");
-  },
-
-  updateTotalSiteDataSize() {
-    SiteDataManager.getTotalUsage()
-      .then(usage => {
-        let size = DownloadUtils.convertByteUnits(usage);
-        let prefStrBundle = document.getElementById("bundlePreferences");
-        let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
-        totalSiteDataSizeLabel.textContent = prefStrBundle.getFormattedString("totalSiteDataSize", size);
-        let siteDataGroup = document.getElementById("siteDataGroup");
-        siteDataGroup.hidden = false;
-      });
-  },
-
-  // Retrieves the amount of space currently used by disk cache
-  updateActualCacheSize() {
-    var actualSizeLabel = document.getElementById("actualDiskCacheSize");
-    var prefStrBundle = document.getElementById("bundlePreferences");
-
-    // Needs to root the observer since cache service keeps only a weak reference.
-    this.observer = {
-      onNetworkCacheDiskConsumption(consumption) {
-        var size = DownloadUtils.convertByteUnits(consumption);
-        // The XBL binding for the string bundle may have been destroyed if
-        // the page was closed before this callback was executed.
-        if (!prefStrBundle.getFormattedString) {
-          return;
-        }
-        actualSizeLabel.value = prefStrBundle.getFormattedString("actualDiskCacheSize", size);
-      },
-
-      QueryInterface: XPCOMUtils.generateQI([
-        Components.interfaces.nsICacheStorageConsumptionObserver,
-        Components.interfaces.nsISupportsWeakReference
-      ])
-    };
-
-    actualSizeLabel.value = prefStrBundle.getString("actualDiskCacheSizeCalculated");
-
-    try {
-      var cacheService =
-        Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
-                  .getService(Components.interfaces.nsICacheStorageService);
-      cacheService.asyncGetDiskConsumption(this.observer);
-    } catch (e) {}
-  },
-
-  updateCacheSizeUI(smartSizeEnabled) {
-    document.getElementById("useCacheBefore").disabled = smartSizeEnabled;
-    document.getElementById("cacheSize").disabled = smartSizeEnabled;
-    document.getElementById("useCacheAfter").disabled = smartSizeEnabled;
-  },
-
-  readSmartSizeEnabled() {
-    // The smart_size.enabled preference element is inverted="true", so its
-    // value is the opposite of the actual pref value
-    var disabled = document.getElementById("browser.cache.disk.smart_size.enabled").value;
-    this.updateCacheSizeUI(!disabled);
-  },
-
-  /**
-   * Converts the cache size from units of KB to units of MB and stores it in
-   * the textbox element.
-   */
-  updateCacheSizeInputField() {
-    let cacheSizeElem = document.getElementById("cacheSize");
-    let cachePref = document.getElementById("browser.cache.disk.capacity");
-    cacheSizeElem.value = cachePref.value / 1024;
-    if (cachePref.locked)
-      cacheSizeElem.disabled = true;
-  },
-
-  /**
-   * Updates the cache size preference once user enters a new value.
-   * We intentionally do not set preference="browser.cache.disk.capacity"
-   * onto the textbox directly, as that would update the pref at each keypress
-   * not only after the final value is entered.
-   */
-  updateCacheSizePref() {
-    let cacheSizeElem = document.getElementById("cacheSize");
-    let cachePref = document.getElementById("browser.cache.disk.capacity");
-    // Converts the cache size as specified in UI (in MB) to KB.
-    let intValue = parseInt(cacheSizeElem.value, 10);
-    cachePref.value = isNaN(intValue) ? 0 : intValue * 1024;
-  },
-
-  /**
-   * Clears the cache.
-   */
-  clearCache() {
-    try {
-      var cache = Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
-                            .getService(Components.interfaces.nsICacheStorageService);
-      cache.clear();
-    } catch (ex) {}
-    this.updateActualCacheSize();
-  },
-
-  clearSiteData() {
-    let flags =
-      Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
-      Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1 +
-      Services.prompt.BUTTON_POS_0_DEFAULT;
-    let prefStrBundle = document.getElementById("bundlePreferences");
-    let title = prefStrBundle.getString("clearSiteDataPromptTitle");
-    let text = prefStrBundle.getString("clearSiteDataPromptText");
-    let btn0Label = prefStrBundle.getString("clearSiteDataNow");
-
-    let result = Services.prompt.confirmEx(
-      window, title, text, flags, btn0Label, null, null, null, {});
-    if (result == 0) {
-      SiteDataManager.removeAll();
-    }
-  },
-
-  // Methods for Offline Apps(Appcache)
-
-  /**
-   * Clears the application cache.
-   */
-  clearOfflineAppCache() {
-    Components.utils.import("resource:///modules/offlineAppCache.jsm");
-    OfflineAppCacheHelper.clear();
-
-    this.updateActualAppCacheSize();
-    this.updateOfflineApps();
-  },
-
-  // Retrieves the amount of space currently used by offline cache
-  updateActualAppCacheSize() {
-    var visitor = {
-      onCacheStorageInfo(aEntryCount, aConsumption, aCapacity, aDiskDirectory) {
-        var actualSizeLabel = document.getElementById("actualAppCacheSize");
-        var sizeStrings = DownloadUtils.convertByteUnits(aConsumption);
-        var prefStrBundle = document.getElementById("bundlePreferences");
-        // The XBL binding for the string bundle may have been destroyed if
-        // the page was closed before this callback was executed.
-        if (!prefStrBundle.getFormattedString) {
-          return;
-        }
-        var sizeStr = prefStrBundle.getFormattedString("actualAppCacheSize", sizeStrings);
-        actualSizeLabel.value = sizeStr;
-      }
-    };
-
-    try {
-      var cacheService =
-        Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
-                  .getService(Components.interfaces.nsICacheStorageService);
-      var storage = cacheService.appCacheStorage(LoadContextInfo.default, null);
-      storage.asyncVisitStorage(visitor, false);
-    } catch (e) {}
-  },
-
-  readOfflineNotify() {
-    var pref = document.getElementById("browser.offline-apps.notify");
-    var button = document.getElementById("offlineNotifyExceptions");
-    button.disabled = !pref.value;
-    return pref.value;
-  },
-
-  showOfflineExceptions() {
-    var bundlePreferences = document.getElementById("bundlePreferences");
-    var params = { blockVisible: false,
-                   sessionVisible: false,
-                   allowVisible: false,
-                   prefilledHost: "",
-                   permissionType: "offline-app",
-                   manageCapability: Components.interfaces.nsIPermissionManager.DENY_ACTION,
-                   windowTitle: bundlePreferences.getString("offlinepermissionstitle"),
-                   introText: bundlePreferences.getString("offlinepermissionstext") };
-    gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
-                    null, params);
-  },
-
-  // XXX: duplicated in browser.js
-  _getOfflineAppUsage(perm, groups) {
-    let cacheService = Cc["@mozilla.org/network/application-cache-service;1"].
-                       getService(Ci.nsIApplicationCacheService);
-    if (!groups) {
-      try {
-        groups = cacheService.getGroups();
-      } catch (ex) {
-        return 0;
-      }
-    }
-
-    let usage = 0;
-    for (let group of groups) {
-      let uri = Services.io.newURI(group);
-      if (perm.matchesURI(uri, true)) {
-        let cache = cacheService.getActiveCache(group);
-        usage += cache.usage;
-      }
-    }
-
-    return usage;
-  },
-
-  /**
-   * Updates the list of offline applications
-   */
-  updateOfflineApps() {
-    var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-                       .getService(Components.interfaces.nsIPermissionManager);
-
-    var list = document.getElementById("offlineAppsList");
-    while (list.firstChild) {
-      list.firstChild.remove();
-    }
-
-    var groups;
-    try {
-      var cacheService = Components.classes["@mozilla.org/network/application-cache-service;1"].
-                         getService(Components.interfaces.nsIApplicationCacheService);
-      groups = cacheService.getGroups();
-    } catch (e) {
-      return;
-    }
-
-    var bundle = document.getElementById("bundlePreferences");
-
-    var enumerator = pm.enumerator;
-    while (enumerator.hasMoreElements()) {
-      var perm = enumerator.getNext().QueryInterface(Components.interfaces.nsIPermission);
-      if (perm.type == "offline-app" &&
-          perm.capability != Components.interfaces.nsIPermissionManager.DEFAULT_ACTION &&
-          perm.capability != Components.interfaces.nsIPermissionManager.DENY_ACTION) {
-        var row = document.createElement("listitem");
-        row.id = "";
-        row.className = "offlineapp";
-        row.setAttribute("origin", perm.principal.origin);
-        var converted = DownloadUtils.
-                        convertByteUnits(this._getOfflineAppUsage(perm, groups));
-        row.setAttribute("usage",
-                         bundle.getFormattedString("offlineAppUsage",
-                                                   converted));
-        list.appendChild(row);
-      }
-    }
-  },
-
-  offlineAppSelected() {
-    var removeButton = document.getElementById("offlineAppsListRemove");
-    var list = document.getElementById("offlineAppsList");
-    if (list.selectedItem) {
-      removeButton.setAttribute("disabled", "false");
-    } else {
-      removeButton.setAttribute("disabled", "true");
-    }
-  },
-
-  removeOfflineApp() {
-    var list = document.getElementById("offlineAppsList");
-    var item = list.selectedItem;
-    var origin = item.getAttribute("origin");
-    var principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
-
-    var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                            .getService(Components.interfaces.nsIPromptService);
-    var flags = prompts.BUTTON_TITLE_IS_STRING * prompts.BUTTON_POS_0 +
-                prompts.BUTTON_TITLE_CANCEL * prompts.BUTTON_POS_1;
-
-    var bundle = document.getElementById("bundlePreferences");
-    var title = bundle.getString("offlineAppRemoveTitle");
-    var prompt = bundle.getFormattedString("offlineAppRemovePrompt", [principal.URI.prePath]);
-    var confirm = bundle.getString("offlineAppRemoveConfirm");
-    var result = prompts.confirmEx(window, title, prompt, flags, confirm,
-                                   null, null, null, {});
-    if (result != 0)
-      return;
-
-    // get the permission
-    var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-                       .getService(Components.interfaces.nsIPermissionManager);
-    var perm = pm.getPermissionObject(principal, "offline-app", true);
-    if (perm) {
-      // clear offline cache entries
-      try {
-        var cacheService = Components.classes["@mozilla.org/network/application-cache-service;1"].
-                           getService(Components.interfaces.nsIApplicationCacheService);
-        var groups = cacheService.getGroups();
-        for (var i = 0; i < groups.length; i++) {
-          var uri = Services.io.newURI(groups[i]);
-          if (perm.matchesURI(uri, true)) {
-            var cache = cacheService.getActiveCache(groups[i]);
-            cache.discard();
-          }
-        }
-      } catch (e) {}
-
-      pm.removePermission(perm);
-    }
-    list.removeChild(item);
-    gAdvancedPane.offlineAppSelected();
-    this.updateActualAppCacheSize();
-  },
-  // Methods for Offline Apps(Appcache) end
-
-  // UPDATE TAB
 
   /*
    * Preferences:
@@ -776,19 +349,6 @@ var gAdvancedPane = {
    *                              requests one
    */
 
-  /**
-   * Displays the user's certificates and associated options.
-   */
-  showCertificates() {
-    gSubDialog.open("chrome://pippki/content/certManager.xul");
-  },
-
-  /**
-   * Displays a dialog from which the user can manage his security devices.
-   */
-  showSecurityDevices() {
-    gSubDialog.open("chrome://pippki/content/device_manager.xul");
-  },
 
   observe(aSubject, aTopic, aData) {
     if (AppConstants.MOZ_UPDATER) {

@@ -106,7 +106,7 @@ var gTests = [
   *run() {
     let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
                                                      false,
-                                                     "about:preferences#search")
+                                                     "about:preferences")
     gBrowser.contentDocument.getElementById("linkSettingsPage").click();
     yield loadPromise;
 

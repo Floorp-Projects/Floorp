@@ -8,9 +8,9 @@ function notifyStoragePressure(usage = 100) {
   return notifyPromise;
 }
 
-function advancedAboutPrefPromise() {
+function privacyAboutPrefPromise() {
   let promises = [
-    BrowserTestUtils.waitForLocationChange(gBrowser, "about:preferences#advanced"),
+    BrowserTestUtils.waitForLocationChange(gBrowser, "about:preferences#privacy"),
     TestUtils.topicObserved("advanced-pane-loaded", () => true)
   ];
   return Promise.all(promises);
@@ -53,10 +53,10 @@ add_task(function* () {
   ok(notification instanceof XULElement, "Should display storage pressure notification");
 
   let prefBtn = notification.getElementsByTagName("button")[1];
-  let aboutPrefPromise = advancedAboutPrefPromise();
+  let aboutPrefPromise = privacyAboutPrefPromise();
   prefBtn.doCommand();
   yield aboutPrefPromise;
   let prefDoc = gBrowser.selectedBrowser.contentDocument;
-  let advancedPrefs = prefDoc.getElementById("advancedPrefs");
-  is(advancedPrefs.selectedIndex, 2, "Should open the Network tab in about:preferences#advanced");
+  let offlineGroup = prefDoc.getElementById("offlineGroup");
+  is_element_visible(offlineGroup, "Should open the Network tab in about:preferences#privacy");
 });

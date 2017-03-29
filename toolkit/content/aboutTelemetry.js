@@ -20,6 +20,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 
 const Telemetry = Services.telemetry;
 const bundle = Services.strings.createBundle(
@@ -240,7 +242,13 @@ var Settings = {
         } else {
           // Show the data choices preferences on desktop.
           let mainWindow = getMainWindowWithPreferencesPane();
-          mainWindow.openAdvancedPreferences("dataChoicesTab");
+          // The advanced subpanes are only supported in the old organization, which will
+          // be removed by bug 1349689.
+          if (Preferences.get("browser.preferences.useOldOrganization", false)) {
+            mainWindow.openAdvancedPreferences("dataChoicesTab");
+          } else {
+            mainWindow.openPreferences("paneAdvanced");
+          }
         }
       });
     }
