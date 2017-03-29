@@ -5,7 +5,7 @@ var container;
 SimpleTest.requestCompleteLog();
 
 add_task(function* setup() {
-  yield openPreferencesViaOpenPreferencesAPI("applications", null, {leaveOpen: true});
+  yield openPreferencesViaOpenPreferencesAPI("applications", {leaveOpen: true});
   info("Preferences page opened on the applications pane.");
 
   registerCleanupFunction(() => {
