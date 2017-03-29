@@ -18,9 +18,13 @@ struct ContentPrincipalInfo
 {
   OriginAttributes attrs;
 
-  // nsIPrincipal.originNoSuffix can fail. In case this happens, this value
-  // will be set to void_t. So far, this is used only for dom/media.
-  // It will be removed in bug 1347817.
+  // Origin is not simply a part of the spec. Based on the scheme of the URI
+  // spec, we generate different kind of origins: for instance any file: URL
+  // shares the same origin, about: URLs have the full spec as origin and so
+  // on.
+  // Another important reason why we have this attribute is that
+  // ContentPrincipalInfo is used out of the main-thread. Having this value
+  // here allows us to retrive the origin without creating a full nsIPrincipal.
   ContentPrincipalInfoOriginNoSuffix originNoSuffix;
 
   nsCString spec;
