@@ -1029,10 +1029,12 @@ NS_IMETHODIMP nsXULWindow::ForceRoundedDimensions()
     return NS_OK;
   }
 
-  int32_t windowWidth, windowHeight;
-  int32_t availWidthCSS, availHeightCSS;
-  int32_t contentWidthCSS, contentHeightCSS;
-  int32_t contentWidth, contentHeight;
+  int32_t availWidthCSS    = 0;
+  int32_t availHeightCSS   = 0;
+  int32_t contentWidthCSS  = 0;
+  int32_t contentHeightCSS = 0;
+  int32_t windowWidthCSS   = 0;
+  int32_t windowHeightCSS  = 0;
   double devicePerCSSPixels = 1.0;
 
   GetUnscaledDevicePixelsPerCSSPixel(&devicePerCSSPixels);
@@ -1043,48 +1045,38 @@ NS_IMETHODIMP nsXULWindow::ForceRoundedDimensions()
   // size first. So, here, we size it to its available size.
   SetSpecifiedSize(availWidthCSS, availHeightCSS);
 
-  GetSize(&windowWidth, &windowHeight); // device pixels
+  // Get the current window size for calculating chrome UI size.
+  GetSize(&windowWidthCSS, &windowHeightCSS); // device pixels
+  windowWidthCSS = NSToIntRound(windowWidthCSS / devicePerCSSPixels);
+  windowHeightCSS = NSToIntRound(windowHeightCSS / devicePerCSSPixels);
 
-  int32_t availWidth = NSToIntRound(devicePerCSSPixels *
-                                    availWidthCSS); // device pixels
-  int32_t availHeight = NSToIntRound(devicePerCSSPixels *
-                                     availHeightCSS); // device pixels
+  // Get the content size for calculating chrome UI size.
   GetPrimaryContentSize(&contentWidthCSS, &contentHeightCSS);
 
-  contentWidth = NSToIntRound(devicePerCSSPixels *
-                              contentWidthCSS); // device pixels
-  contentHeight = NSToIntRound(devicePerCSSPixels *
-                               contentHeightCSS); // device pixels
+  // Calculate the chrome UI size.
+  int32_t chromeWidth = 0, chromeHeight = 0;
+  chromeWidth = windowWidthCSS - contentWidthCSS;
+  chromeHeight = windowHeightCSS - contentHeightCSS;
 
-  // Acquire the chrome UI size.
-  int32_t chromeWidth = windowWidth - contentWidth;
-  int32_t chromeHeight = windowHeight - contentHeight;
+  int32_t targetContentWidth = 0, targetContentHeight = 0;
 
-  int maxInnerWidth = Preferences::GetInt("privacy.window.maxInnerWidth",
-                                          1000);
-  int maxInnerHeight = Preferences::GetInt("privacy.window.maxInnerHeight",
-                                           1000);
+  // Here, we use the available screen dimensions as the input dimensions to
+  // force the window to be rounded as the maximum available content size.
+  nsContentUtils::CalcRoundedWindowSizeForResistingFingerprinting(
+    chromeWidth,
+    chromeHeight,
+    availWidthCSS,
+    availHeightCSS,
+    availWidthCSS,
+    availHeightCSS,
+    false, // aSetOuterWidth
+    false, // aSetOuterHeight
+    &targetContentWidth,
+    &targetContentHeight
+  );
 
-  // In the GTK window, it will not report outside system decorations when we
-  // get available window size, see Bug 581863. So, we leave a five percent
-  // space for them when calculating the available content height. It is not
-  // necessary for the width since the content width is usually pretty much
-  // the same as the chrome width.
-  int32_t availForContentWidthCSS =
-    std::min(maxInnerWidth, NSToIntRound((availWidth - chromeWidth) /
-                                         devicePerCSSPixels));
-  int32_t availForContentHeightCSS =
-    std::min(maxInnerHeight, NSToIntRound((0.95 * availHeight - chromeHeight) /
-                                          devicePerCSSPixels));
-  // Ideally, we'd like to round window size to 1000x1000, but the screen space
-  // could be too small to accommodate this size in some cases. If it happens,
-  // we would round the window size to the nearest 200x100.
-  int32_t targetContentWidth =
-    NSToIntRound(devicePerCSSPixels *
-                 (availForContentWidthCSS - (availForContentWidthCSS % 200)));
-  int32_t targetContentHeight =
-    NSToIntRound(devicePerCSSPixels *
-                 (availForContentHeightCSS - (availForContentHeightCSS % 100)));
+  targetContentWidth = NSToIntRound(targetContentWidth * devicePerCSSPixels);
+  targetContentHeight = NSToIntRound(targetContentHeight * devicePerCSSPixels);
 
   SetPrimaryContentSize(targetContentWidth, targetContentHeight);
 
