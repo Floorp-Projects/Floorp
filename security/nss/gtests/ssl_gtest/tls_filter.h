@@ -9,6 +9,7 @@
 
 #include <functional>
 #include <memory>
+#include <set>
 #include <vector>
 
 #include "test_io.h"
@@ -250,7 +251,21 @@ class ChainedPacketFilter : public PacketFilter {
   std::vector<std::shared_ptr<PacketFilter>> filters_;
 };
 
+typedef std::function<bool(TlsParser* parser, const TlsVersioned& header)>
+    TlsExtensionFinder;
+
 class TlsExtensionFilter : public TlsHandshakeFilter {
+ public:
+  TlsExtensionFilter() : handshake_types_() {
+    handshake_types_.insert(kTlsHandshakeClientHello);
+    handshake_types_.insert(kTlsHandshakeServerHello);
+  }
+
+  TlsExtensionFilter(const std::set<uint8_t>& types)
+      : handshake_types_(types) {}
+
+  static bool FindExtensions(TlsParser* parser, const HandshakeHeader& header);
+
  protected:
   PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
                                        const DataBuffer& input,
@@ -260,15 +275,12 @@ class TlsExtensionFilter : public TlsHandshakeFilter {
                                                const DataBuffer& input,
                                                DataBuffer* output) = 0;
 
- public:
-  static bool FindClientHelloExtensions(TlsParser* parser,
-                                        const TlsVersioned& header);
-  static bool FindServerHelloExtensions(TlsParser* parser);
-
  private:
   PacketFilter::Action FilterExtensions(TlsParser* parser,
                                         const DataBuffer& input,
                                         DataBuffer* output);
+
+  std::set<uint8_t> handshake_types_;
 };
 
 class TlsExtensionCapture : public TlsExtensionFilter {

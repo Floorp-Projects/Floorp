@@ -12,6 +12,7 @@
       'sources': [
         'dummy_io.cc',
         'dummy_io_fwd.cc',
+        'tls_parser.cc',
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',

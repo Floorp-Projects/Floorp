@@ -87,6 +87,10 @@ static const ssl3ExtensionHandler serverCertificateHandlers[] = {
     { -1, NULL }
 };
 
+static const ssl3ExtensionHandler certificateRequestHandlers[] = {
+    { -1, NULL }
+};
+
 /* Tables of functions to format TLS hello extensions, one function per
  * extension.
  * These static tables are for the formatting of client hello extensions.
@@ -122,6 +126,7 @@ static const ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] 
       { ssl_tls13_cookie_xtn, &tls13_ClientSendHrrCookieXtn },
       { ssl_tls13_psk_key_exchange_modes_xtn,
         &tls13_ClientSendPskKeyExchangeModesXtn },
+      { ssl_padding_xtn, &ssl3_ClientSendPaddingExtension },
       /* The pre_shared_key extension MUST be last. */
       { ssl_tls13_pre_shared_key_xtn, &tls13_ClientSendPreSharedKeyXtn },
       /* any extra entries will appear as { 0, NULL }    */
@@ -249,7 +254,10 @@ ssl3_HandleParsedExtensions(sslSocket *ss,
                             SSL3HandshakeType handshakeMessage)
 {
     const ssl3ExtensionHandler *handlers;
-    PRBool isTLS13 = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3;
+    /* HelloRetryRequest doesn't set ss->version. It might be safe to
+     * do so, but we weren't entirely sure. TODO(ekr@rtfm.com). */
+    PRBool isTLS13 = (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3) ||
+                     (handshakeMessage == hello_retry_request);
     PRCList *cursor;
 
     switch (handshakeMessage) {
@@ -276,6 +284,10 @@ ssl3_HandleParsedExtensions(sslSocket *ss,
         case certificate:
             PORT_Assert(!ss->sec.isServer);
             handlers = serverCertificateHandlers;
+            break;
+        case certificate_request:
+            PORT_Assert(!ss->sec.isServer);
+            handlers = certificateRequestHandlers;
             break;
         default:
             PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
