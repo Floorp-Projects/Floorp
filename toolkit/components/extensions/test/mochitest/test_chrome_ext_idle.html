@@ -29,6 +29,7 @@ add_task(function* testWithRealIdleService() {
           browser.test.assertEq("idle", newState, "listener fired with the expected state");
           browser.test.sendMessage("listenerFired");
         });
+        browser.test.sendMessage("listenerAdded");
       } else if (msg == "checkState") {
         browser.idle.queryState(detectionInterval).then(status => {
           browser.test.assertEq("idle", status, "Idle status is idle");
@@ -47,10 +48,11 @@ add_task(function* testWithRealIdleService() {
 
   yield extension.startup();
   let idleTime = idleService.idleTime;
-  let detectionInterval = Math.max(Math.ceil(idleTime / 1000) + 2, 15);
+  let detectionInterval = Math.max(Math.ceil(idleTime / 1000) + 10, 15);
   info(`idleTime: ${idleTime}, detectionInterval: ${detectionInterval}`);
   extension.sendMessage("addListener", detectionInterval);
-  info("Listener added");
+  yield extension.awaitMessage("listenerAdded");
+  info(`Listener added. idleTime: ${idleService.idleTime}`);
   yield extension.awaitMessage("listenerFired");
   info("Listener fired");
   extension.sendMessage("checkState", detectionInterval);

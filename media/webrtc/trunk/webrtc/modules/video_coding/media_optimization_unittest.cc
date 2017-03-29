@@ -133,7 +133,7 @@ TEST_F(TestMediaOptimization, ProtectsUsingFecBitrateAboveCodecMax) {
 
   media_opt_.SetProtectionMethod(kFec);
   media_opt_.SetEncodingData(kVideoCodecVP8, kCodecBitrateBps, kCodecBitrateBps,
-                             640, 480, 30, 1, 1000);
+                             640, 480, 30, 1, 1, 1000);
 
   // Using 10% of codec bitrate for FEC, should still be able to use all of it.
   protection_callback.fec_rate_bps_ = kCodecBitrateBps / 10;

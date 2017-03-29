@@ -60,8 +60,7 @@ VP9Benchmark::IsVP9DecodeFast()
                         Preferences::GetUint("media.benchmark.timeout", 1000))
                     });
     estimiser->Run()->Then(
-      // Non-DocGroup version of AbstractThread::MainThread for utility function.
-      AbstractThread::MainThread(), __func__,
+      SystemGroup::AbstractMainThreadFor(TaskCategory::Other), __func__,
       [](uint32_t aDecodeFps) {
         if (XRE_IsContentProcess()) {
           dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();

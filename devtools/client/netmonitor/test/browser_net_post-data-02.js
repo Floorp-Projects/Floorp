@@ -9,13 +9,13 @@
  */
 
 add_task(function* () {
-  let { L10N } = require("devtools/client/netmonitor/utils/l10n");
+  let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
   let { tab, monitor } = yield initNetMonitor(POST_RAW_URL);
   info("Starting test... ");
 
   let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   gStore.dispatch(Actions.batchEnable(false));
 

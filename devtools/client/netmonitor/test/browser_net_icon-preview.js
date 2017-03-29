@@ -13,8 +13,11 @@ add_task(function* () {
 
   let { document, gStore, windowRequire, NetMonitorController } =
     monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let { ACTIVITY_TYPE, EVENTS } = windowRequire("devtools/client/netmonitor/constants");
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  let {
+    ACTIVITY_TYPE,
+    EVENTS,
+  } = windowRequire("devtools/client/netmonitor/src/constants");
 
   gStore.dispatch(Actions.batchEnable(false));
 

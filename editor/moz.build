@@ -25,7 +25,6 @@ XPIDL_SOURCES += [
     'nsIHTMLAbsPosEditor.idl',
     'nsIHTMLEditor.idl',
     'nsIHTMLInlineTableEditor.idl',
-    'nsIHTMLObjectResizeListener.idl',
     'nsIHTMLObjectResizer.idl',
     'nsIPlaintextEditor.idl',
     'nsITableEditor.idl',

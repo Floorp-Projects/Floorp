@@ -51,8 +51,8 @@ public:
     : mOwnerThread(aOwnerThread)
     , mCreator(new CreatorImpl<Function>(aFunc))
     , mIsStarted(false)
-    // Give an insane value to facilitate debug if used before playback starts.
-    , mPlayDuration(INT64_MAX)
+    // Give an invalid value to facilitate debug if used before playback starts.
+    , mPlayDuration(TimeUnit::Invalid())
     , mAudioEnded(true)
   {}
 
@@ -60,8 +60,8 @@ public:
   void SetPlaybackParams(const PlaybackParams& aParams) override;
 
   RefPtr<GenericPromise> OnEnded(TrackType aType) override;
-  int64_t GetEndTime(TrackType aType) const override;
-  int64_t GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
+  TimeUnit GetEndTime(TrackType aType) const override;
+  TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
   bool HasUnplayedFrames(TrackType aType) const override;
 
   void SetVolume(double aVolume) override;
@@ -69,7 +69,7 @@ public:
   void SetPreservesPitch(bool aPreservesPitch) override;
   void SetPlaying(bool aPlaying) override;
 
-  void Start(int64_t aStartTime, const MediaInfo& aInfo) override;
+  void Start(const TimeUnit& aStartTime, const MediaInfo& aInfo) override;
   void Stop() override;
   bool IsStarted() const override;
   bool IsPlaying() const override;
@@ -83,7 +83,7 @@ private:
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   }
 
-  int64_t GetVideoPosition(TimeStamp aNow) const;
+  TimeUnit GetVideoPosition(TimeStamp aNow) const;
 
   void OnAudioEnded();
 
@@ -96,7 +96,7 @@ private:
   PlaybackParams mParams;
 
   TimeStamp mPlayStartTime;
-  int64_t mPlayDuration;
+  TimeUnit mPlayDuration;
 
   bool mAudioEnded;
   MozPromiseRequestHolder<GenericPromise> mAudioSinkPromise;

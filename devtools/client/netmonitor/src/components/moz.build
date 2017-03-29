@@ -1,0 +1,28 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DevToolsModules(
+    'app.js',
+    'cookies-panel.js',
+    'custom-request-panel.js',
+    'editor.js',
+    'headers-panel.js',
+    'mdn-link.js',
+    'monitor-panel.js',
+    'network-details-panel.js',
+    'params-panel.js',
+    'preview-panel.js',
+    'properties-view.js',
+    'request-list-content.js',
+    'request-list-empty-notice.js',
+    'request-list-header.js',
+    'request-list-item.js',
+    'request-list.js',
+    'response-panel.js',
+    'security-panel.js',
+    'statistics-panel.js',
+    'tabbox-panel.js',
+    'timings-panel.js',
+    'toolbar.js',
+)

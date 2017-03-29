@@ -16,7 +16,6 @@
 #include "mozilla/Unused.h"
 #include "nsArray.h"
 #include "nsCOMPtr.h"
-#include "nsCRT.h"
 #include "nsICertificateDialogs.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIObjectInputStream.h"

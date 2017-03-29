@@ -17,7 +17,6 @@
 #include "nsArray.h"
 #include "nsArrayUtils.h"
 #include "nsCOMPtr.h"
-#include "nsCRT.h"
 #include "nsComponentManagerUtils.h"
 #include "nsICertificateDialogs.h"
 #include "nsIFile.h"

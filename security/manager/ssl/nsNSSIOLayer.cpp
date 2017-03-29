@@ -23,6 +23,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsArray.h"
 #include "nsArrayUtils.h"
+#include "nsCRT.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsClientAuthRemember.h"
 #include "nsContentUtils.h"
@@ -2180,8 +2181,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
   } else { // Not Auto => ask
     // Get the SSL Certificate
 
-    nsXPIDLCString hostname;
-    mSocketInfo->GetHostName(getter_Copies(hostname));
+    const nsACString& hostname = mSocketInfo->GetHostName();
 
     RefPtr<nsClientAuthRememberService> cars =
       mSocketInfo->SharedState().GetClientAuthRememberService();

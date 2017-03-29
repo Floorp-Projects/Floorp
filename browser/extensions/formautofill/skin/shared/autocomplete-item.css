@@ -21,6 +21,7 @@ xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .profile-it
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
+  color: -moz-FieldText
 }
 
 .profile-item-box:last-child {
