@@ -6,7 +6,6 @@
 
 const { Task } = require("devtools/shared/task");
 const { getCssProperties } = require("devtools/shared/fronts/css-properties");
-const { ReflowFront } = require("devtools/shared/fronts/reflow");
 
 const { InplaceEditor } = require("devtools/client/shared/inplace-editor");
 
@@ -60,11 +59,7 @@ BoxModel.prototype = {
     this.inspector.selection.off("new-node-front", this.onNewSelection);
     this.inspector.sidebar.off("select", this.onSidebarSelect);
 
-    if (this.reflowFront) {
-      this.untrackReflows();
-      this.reflowFront.destroy();
-      this.reflowFront = null;
-    }
+    this.untrackReflows();
 
     this.document = null;
     this.highlighters = null;
@@ -109,30 +104,14 @@ BoxModel.prototype = {
    * Starts listening to reflows in the current tab.
    */
   trackReflows() {
-    if (!this.reflowFront) {
-      let { target } = this.inspector;
-      if (target.form.reflowActor) {
-        this.reflowFront = ReflowFront(target.client,
-                                       target.form);
-      } else {
-        return;
-      }
-    }
-
-    this.reflowFront.on("reflows", this.updateBoxModel);
-    this.reflowFront.start();
+    this.inspector.reflowTracker.trackReflows(this, this.updateBoxModel);
   },
 
   /**
    * Stops listening to reflows in the current tab.
    */
   untrackReflows() {
-    if (!this.reflowFront) {
-      return;
-    }
-
-    this.reflowFront.off("reflows", this.updateBoxModel);
-    this.reflowFront.stop();
+    this.inspector.reflowTracker.untrackReflows(this, this.updateBoxModel);
   },
 
   /**

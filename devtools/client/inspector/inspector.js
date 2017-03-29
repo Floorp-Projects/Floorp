@@ -29,6 +29,7 @@ const GridInspector = require("devtools/client/inspector/grids/grid-inspector");
 const {InspectorSearch} = require("devtools/client/inspector/inspector-search");
 const {RuleViewTool} = require("devtools/client/inspector/rules/rules");
 const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
+const ReflowTracker = require("devtools/client/inspector/shared/reflow-tracker");
 const {ToolSidebar} = require("devtools/client/inspector/toolsidebar");
 const MarkupView = require("devtools/client/inspector/markup/markup");
 const {CommandUtils} = require("devtools/client/shared/developer-toolbar");
@@ -95,6 +96,7 @@ function Inspector(toolbox) {
   this.panelWin.inspector = this;
 
   this.highlighters = new HighlightersOverlay(this);
+  this.reflowTracker = new ReflowTracker(this._target);
   this.store = Store();
   this.telemetry = new Telemetry();
 
@@ -967,6 +969,7 @@ Inspector.prototype = {
     let markupDestroyer = this._destroyMarkup();
 
     this.highlighters.destroy();
+    this.reflowTracker.destroy();
     this.search.destroy();
 
     this._toolbox = null;
