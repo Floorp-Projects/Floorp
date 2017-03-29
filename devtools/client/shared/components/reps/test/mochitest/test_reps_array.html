@@ -14,8 +14,8 @@ Test ArrayRep rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 "use strict";
 /* import-globals-from head.js */
 
@@ -42,6 +42,7 @@ window.onload = Task.async(function* () {
     yield testNested();
 
     yield testArray();
+    yield testObjectLink();
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -247,6 +248,42 @@ window.onload = Task.async(function* () {
     ];
 
     testRepRenderModes(modeTests, "testNested", componentUnderTest, stub);
+  }
+
+  function testObjectLink() {
+    let stub = ["a", "b", "c"];
+
+    const defaultOutput = `*[ *"a", "b", "c"* ]*`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `*[*3*]*`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(
+      modeTests,
+      "testObjectLink",
+      componentUnderTest,
+      stub,
+      {
+        objectLink: (props, ...children) => React.DOM.span({},
+          "*", ...children, "*"),
+      }
+    );
   }
 });
 </script>

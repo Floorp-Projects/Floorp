@@ -14,8 +14,8 @@ Test DateTime rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 window.onload = Task.async(function* () {
   const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
   let { Rep, DateTime } = REPS;
@@ -23,6 +23,7 @@ window.onload = Task.async(function* () {
   try {
     testValid();
     testInvalid();
+    testObjectLink();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -71,6 +72,30 @@ window.onload = Task.async(function* () {
     // Test rendering
     const renderedComponent = renderComponent(DateTime.rep, { object: gripStub });
     is(renderedComponent.textContent, "Invalid Date", "DateTime rep has expected text content for invalid date");
+  }
+
+  function testObjectLink() {
+    let gripStub = {
+      "type": "object",
+      "class": "Date",
+      "actor": "server1.conn0.child1/obj32",
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "ownPropertyLength": 0,
+      "preview": {
+        "timestamp": 1459372644859
+      }
+    };
+
+    // Test rendering
+    const renderedComponent = renderComponent(DateTime.rep, {
+      object: gripStub,
+      objectLink: (props, ...children) => React.DOM.span({},
+        "*", ...children, "*"),
+    });
+    is(renderedComponent.textContent, "*Date *2016-03-30T21:17:24.859Z",
+      "DateTime rep has expected text content when an objectLink is passed as a prop");
   }
 });
 </script>

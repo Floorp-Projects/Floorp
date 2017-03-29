@@ -171,6 +171,7 @@ HttpChannelChild::HttpChannelChild()
   , mCacheEntryAvailable(false)
   , mCacheExpirationTime(nsICacheEntry::NO_EXPIRATION_TIME)
   , mSendResumeAt(false)
+  , mDeletingChannelSent(false)
   , mIPCOpen(false)
   , mKeptAlive(false)
   , mUnknownDecoderInvolved(false)
@@ -3101,7 +3102,17 @@ HttpChannelChild::GetResponseSynthesized(bool* aSynthesized)
 void
 HttpChannelChild::TrySendDeletingChannel()
 {
+  if (!mDeletingChannelSent.compareExchange(false, true)) {
+    // SendDeletingChannel is already sent.
+    return;
+  }
+
   if (NS_IsMainThread()) {
+    if (NS_WARN_IF(!mIPCOpen)) {
+      // IPC actor is detroyed already, do not send more messages.
+      return;
+    }
+
     Unused << PHttpChannelChild::SendDeletingChannel();
     return;
   }

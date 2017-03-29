@@ -19,8 +19,7 @@ def load_manifest(path):
 
 def save_manifest(manifest, path):
     with open(path, 'w') as f:
-        json.dump(manifest, f,
-                  indent=0, separators=(',', ': '))
+        json.dump(manifest, f, indent=2, separators=(',', ': '))
         f.write('\n')
 
 

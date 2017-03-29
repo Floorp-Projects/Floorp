@@ -14,14 +14,43 @@ Test Attribute rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 window.onload = Task.async(function* () {
-  try {
-    const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-    let { Rep, Attribute } = REPS;
+  const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
+  let { Rep, Attribute } = REPS;
 
-    let gripStub = {
+  try {
+    testBasic();
+    testObjectLink();
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  function testBasic() {
+    // Test that correct rep is chosen
+    const renderedRep = shallowRenderComponent(Rep, { object: getStub() });
+    is(renderedRep.type, Attribute.rep, `Rep correctly selects ${Attribute.rep.displayName}`);
+
+    // Test rendering
+    const renderedComponent = renderComponent(Attribute.rep, { object: getStub() });
+    is(renderedComponent.textContent, "class=\"autocomplete-suggestions\"", "Attribute rep has expected text content");
+  }
+
+  function testObjectLink() {
+    const renderedComponent = renderComponent(Attribute.rep, {
+      object: getStub(),
+      objectLink: (props, ...children) => React.DOM.span({},
+        "*", ...children, "*"),
+    });
+    is(renderedComponent.textContent, "*class=\"autocomplete-suggestions\"*",
+      "Attribute rep has expected text content when an objectLink is passed as a prop");
+  }
+
+  function getStub() {
+    return {
       "type": "object",
       "class": "Attr",
       "actor": "server1.conn19.obj65",
@@ -36,18 +65,6 @@ window.onload = Task.async(function* () {
         "value": "autocomplete-suggestions"
       }
     };
-
-    // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
-    is(renderedRep.type, Attribute.rep, `Rep correctly selects ${Attribute.rep.displayName}`);
-
-    // Test rendering
-    const renderedComponent = renderComponent(Attribute.rep, { object: gripStub });
-    is(renderedComponent.textContent, "class=\"autocomplete-suggestions\"", "Attribute rep has expected text content");
-  } catch(e) {
-    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
-  } finally {
-    SimpleTest.finish();
   }
 });
 </script>

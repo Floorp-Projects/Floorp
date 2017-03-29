@@ -14798,6 +14798,101 @@ nsGlobalWindow::SetReplaceableWindowCoord(JSContext* aCx,
     return;
   }
 
+  if (nsContentUtils::ShouldResistFingerprinting(GetDocShell())) {
+    bool innerWidthSpecified = false;
+    bool innerHeightSpecified = false;
+    bool outerWidthSpecified = false;
+    bool outerHeightSpecified = false;
+
+    if (strcmp(aPropName, "innerWidth") == 0) {
+      innerWidthSpecified = true;
+    } else if (strcmp(aPropName, "innerHeight") == 0) {
+      innerHeightSpecified = true;
+    } else if (strcmp(aPropName, "outerWidth") == 0) {
+      outerWidthSpecified = true;
+    } else if (strcmp(aPropName, "outerHeight") == 0) {
+      outerHeightSpecified = true;
+    }
+
+    if (innerWidthSpecified || innerHeightSpecified ||
+        outerWidthSpecified || outerHeightSpecified)
+    {
+      nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = outer->GetTreeOwnerWindow();
+      nsCOMPtr<nsIScreen> screen;
+      nsCOMPtr<nsIScreenManager> screenMgr(
+        do_GetService("@mozilla.org/gfx/screenmanager;1"));
+      int32_t winLeft   = 0;
+      int32_t winTop    = 0;
+      int32_t winWidth  = 0;
+      int32_t winHeight = 0;
+      double scale = 1.0;
+
+
+      if (treeOwnerAsWin && screenMgr) {
+        // Acquire current window size.
+        treeOwnerAsWin->GetUnscaledDevicePixelsPerCSSPixel(&scale);
+        treeOwnerAsWin->GetPositionAndSize(&winLeft, &winTop, &winWidth, &winHeight);
+        winLeft = NSToIntRound(winHeight / scale);
+        winTop = NSToIntRound(winWidth / scale);
+        winWidth = NSToIntRound(winWidth / scale);
+        winHeight = NSToIntRound(winHeight / scale);
+
+        // Acquire content window size.
+        CSSIntSize contentSize;
+        outer->GetInnerSize(contentSize);
+
+        screenMgr->ScreenForRect(winLeft, winTop, winWidth, winHeight,
+                                 getter_AddRefs(screen));
+
+        if (screen) {
+          int32_t* targetContentWidth  = nullptr;
+          int32_t* targetContentHeight = nullptr;
+          int32_t screenWidth  = 0;
+          int32_t screenHeight = 0;
+          int32_t chromeWidth  = 0;
+          int32_t chromeHeight = 0;
+          int32_t inputWidth   = 0;
+          int32_t inputHeight  = 0;
+          int32_t unused = 0;
+
+          // Get screen dimensions (in device pixels)
+          screen->GetAvailRect(&unused, &unused, &screenWidth,
+                               &screenHeight);
+          // Convert them to CSS pixels
+          screenWidth = NSToIntRound(screenWidth / scale);
+          screenHeight = NSToIntRound(screenHeight / scale);
+
+          // Calculate the chrome UI size.
+          chromeWidth = winWidth - contentSize.width;
+          chromeHeight = winHeight - contentSize.height;
+
+          if (innerWidthSpecified || outerWidthSpecified) {
+            inputWidth = value;
+            targetContentWidth = &value;
+            targetContentHeight = &unused;
+          } else if (innerHeightSpecified || outerHeightSpecified) {
+            inputHeight = value;
+            targetContentWidth = &unused;
+            targetContentHeight = &value;
+          }
+
+          nsContentUtils::CalcRoundedWindowSizeForResistingFingerprinting(
+            chromeWidth,
+            chromeHeight,
+            screenWidth,
+            screenHeight,
+            inputWidth,
+            inputHeight,
+            outerWidthSpecified,
+            outerHeightSpecified,
+            targetContentWidth,
+            targetContentHeight
+          );
+        }
+      }
+    }
+  }
+
   (this->*aSetter)(value, aCallerType, aError);
 }
 
