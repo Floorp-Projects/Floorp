@@ -50,6 +50,9 @@ protected:
   virtual ~nsRepeatService();
 
 private:
+  // helper function to initialize callback function to mRepeatTimer
+  void InitTimerCallback(uint32_t aInitialDelay);
+
   Callback           mCallback;
   void*              mCallbackData;
   nsCOMPtr<nsITimer> mRepeatTimer;
