@@ -149,9 +149,10 @@ public:
   // Requests one video sample from the reader.
   //
   // If aSkipToKeyframe is true, the decode should skip ahead to the
-  // the next keyframe at or after aTimeThreshold microseconds.
+  // the next keyframe at or after aTimeThreshold.
   virtual RefPtr<VideoDataPromise>
-  RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold);
+  RequestVideoData(bool aSkipToNextKeyframe,
+                   const media::TimeUnit& aTimeThreshold);
 
   // By default, the state machine polls the reader once per second when it's
   // in buffering mode. Some readers support a promise-based mechanism by which
