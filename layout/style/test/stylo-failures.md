@@ -99,7 +99,7 @@ to mochitest command.
     * test_animations_event_order.html [11]
 * test_bug798843_pref.html: conditional opentype svg support [7]
 * test_computed_style.html `gradient`: -moz-prefixed radient value [9]
-* ... `mask`: mask-image isn't set properly bug 1347398 [2]
+* ... `mask`: mask-image isn't set properly bug 1347398 [10]
 * ... `fill`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * ... `stroke`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * character not properly escaped servo/servo#15947
@@ -235,12 +235,7 @@ to mochitest command.
     * test_initial_storage.html `font-feature-settings` [6]
     * test_value_storage.html `font-feature-settings` [112]
   * font-language-override property bug 1347821
-    * test_compute_data_with_start_struct.html `font-language-override` [2]
-    * test_inherit_computation.html `font-language-override` [8]
-    * test_inherit_storage.html `font-language-override` [12]
-    * test_initial_computation.html `font-language-override` [4]
-    * test_initial_storage.html `font-language-override` [6]
-    * test_value_storage.html `font-language-override` [58]
+    * test_value_storage.html `font-language-override` [16]
   * image-orientation property
     * test_compute_data_with_start_struct.html `image-orientation` [2]
     * test_inherit_computation.html `image-orientation` [4]
@@ -311,8 +306,8 @@ to mochitest command.
   * color interpolation hint not supported servo/servo#15166
     * test_value_storage.html `'linear-gradient` [50]
   * two-keyword form of background-repeat/mask-repeat servo/servo#14954
-    * test_value_storage.html `background-repeat` [14]
-    * ... `mask-repeat` [24]
+    * test_value_storage.html `background-repeat` [2]
+    * ... `mask-repeat` [6]
   * SVG-in-OpenType values not supported servo/servo#15211
     * test_value_storage.html `context-` [2]
   * writing-mode: sideways-{lr,rl} and SVG values servo/servo#15213
