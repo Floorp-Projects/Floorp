@@ -126,7 +126,7 @@ var TabStateInternal = {
 
     // Store the serialized contentPrincipal of this tab to use for the icon.
     if (!("iconLoadingPrincipal" in tabData)) {
-      tabData.iconLoadingPrincipal = Utils.serializePrincipal(browser.contentPrincipal);
+      tabData.iconLoadingPrincipal = Utils.serializePrincipal(browser.mIconLoadingPrincipal);
     }
 
     // If there is a userTypedValue set, then either the user has typed something
