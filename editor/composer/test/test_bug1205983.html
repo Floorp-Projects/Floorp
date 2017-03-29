@@ -29,8 +29,8 @@ var selcon_de;
 var script;
 
 var onSpellCheck =
-  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm")
-               .onSpellCheck;
+  SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm").onSpellCheck;
 
 /** Test for Bug 1205983 **/
 SimpleTest.waitForExplicitFinish();
