@@ -168,6 +168,7 @@ private:
 
   void StartRepeat() {
     nsRepeatService::GetInstance()->Start(Notify, this,
+                                          mContent->OwnerDoc(),
                                           NS_LITERAL_CSTRING("nsSliderFrame"));
   }
   void StopRepeat() {

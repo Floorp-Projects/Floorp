@@ -20,6 +20,7 @@
 #define REPEAT_DELAY        50
 #endif
 
+class nsIDocument;
 class nsITimer;
 
 class nsRepeatService final
@@ -35,8 +36,11 @@ public:
   //
   // aCallbackName is the label of the callback, used to pass to
   // InitWithNamedCallbackFunc.
+  //
+  // aDocument is used to get the event target in Start(). We need an event
+  // target to init mRepeatTimer.
   void Start(Callback aCallback, void* aCallbackData,
-             const nsACString& aCallbackName,
+             nsIDocument* aDocument, const nsACString& aCallbackName,
              uint32_t aInitialDelay = INITAL_REPEAT_DELAY);
   // Stop dispatching timer events to the callback. If the repeat service
   // is not currently configured with the given callback and data, this
