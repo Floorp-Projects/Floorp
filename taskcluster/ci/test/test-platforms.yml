@@ -115,6 +115,7 @@ windows7-32-vm/opt:
         - windows-vm-tests
         - external-media-tests
         - external-media-tests-slow
+        - awsy
 
 # win32 gpu
 windows7-32/debug:
@@ -138,6 +139,7 @@ windows10-64-vm/opt:
 #        - windows-vm-tests
         - external-media-tests
         - external-media-tests-slow
+        - awsy
 
 # win64 gpu
 #windows10-64/debug:

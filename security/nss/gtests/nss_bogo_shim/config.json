@@ -55,7 +55,8 @@
         "UnsolicitedServerNameAck-TLS1*":"Boring wants us to fail with an unexpected_extension alert, we simply ignore ssl_server_name_xtn.",
         "RequireAnyClientCertificate-TLS1*":"Bug 1339387",
         "SendExtensionOnClientCertificate-TLS13":"Bug 1339392",
-	"ALPNClient-Mismatch-TLS13": "NSS sends alerts in response to errors in protected handshake messages in the clear"
+        "ALPNClient-Mismatch-TLS13":"NSS sends alerts in response to errors in protected handshake messages in the clear",
+        "P224-Server":"NSS doesn't support P-224"
     },
     "ErrorMap" : {
         ":HANDSHAKE_FAILURE_ON_CLIENT_HELLO:":"SSL_ERROR_NO_CYPHER_OVERLAP",

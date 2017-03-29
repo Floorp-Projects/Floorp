@@ -30,7 +30,10 @@
     macro(ArrayValuesAt, ArrayValuesAt, "ArrayValuesAt") \
     macro(as, as, "as") \
     macro(Async, Async, "Async") \
+    macro(AsyncFromSyncIterator, AsyncFromSyncIterator, "Async-from-Sync Iterator") \
     macro(AsyncFunction, AsyncFunction, "AsyncFunction") \
+    macro(AsyncGenerator, AsyncGenerator, "AsyncGenerator") \
+    macro(AsyncGeneratorFunction, AsyncGeneratorFunction, "AsyncGeneratorFunction") \
     macro(AsyncWrapped, AsyncWrapped, "AsyncWrapped") \
     macro(async, async, "async") \
     macro(await, await, "await") \
@@ -319,6 +322,7 @@
     macro(star, star, "*") \
     macro(starDefaultStar, starDefaultStar, "*default*") \
     macro(StarGeneratorNext, StarGeneratorNext, "StarGeneratorNext") \
+    macro(StarGeneratorReturn, StarGeneratorReturn, "StarGeneratorReturn") \
     macro(StarGeneratorThrow, StarGeneratorThrow, "StarGeneratorThrow") \
     macro(startTimestamp, startTimestamp, "startTimestamp") \
     macro(state, state, "state") \

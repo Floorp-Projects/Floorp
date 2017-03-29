@@ -10,23 +10,18 @@
 
 #include "nsCollationCID.h"
 #include "nsJSUtils.h"
-#include "nsIPlatformCharset.h"
 #include "nsICollation.h"
+#include "nsNativeCharsetUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/intl/LocaleService.h"
-#include "mozilla/intl/OSPreferences.h"
 #include "mozilla/Preferences.h"
-#include "nsIUnicodeDecoder.h"
 
 #include "xpcpublic.h"
 
 using namespace JS;
-using mozilla::dom::EncodingUtils;
 using mozilla::intl::LocaleService;
-using mozilla::intl::OSPreferences;
 
 /**
  * JS locale callbacks implemented by XPCOM modules.  These are theoretically
@@ -163,60 +158,19 @@ private:
   bool
   ToUnicode(JSContext* cx, const char* src, MutableHandleValue rval)
   {
-    nsresult rv;
-
-    if (!mDecoder) {
-      // This code is only used by our prioprietary toLocaleFormat method
-      // and should be removed once we get rid of it.
-      // toLocaleFormat is used in non-ICU scenarios where we don't have
-      // access to any other date/time than the OS one, so we have to also
-      // use the OS locale for unicode conversions.
-      // See bug 1349470 for more details.
-      nsAutoCString osLocale;
-      OSPreferences::GetInstance()->GetSystemLocale(osLocale);
-      NS_ConvertUTF8toUTF16 localeStr(osLocale);
-
-      nsCOMPtr<nsIPlatformCharset> platformCharset =
-        do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoCString charset;
-        rv = platformCharset->GetDefaultCharsetForLocale(localeStr, charset);
-        if (NS_SUCCEEDED(rv)) {
-          mDecoder = EncodingUtils::DecoderForEncoding(charset);
-        }
-      }
-    }
-
-    int32_t srcLength = strlen(src);
-
-    if (mDecoder) {
-      int32_t unicharLength = srcLength;
-      char16_t* unichars =
-        (char16_t*)JS_malloc(cx, (srcLength + 1) * sizeof(char16_t));
-      if (unichars) {
-        rv = mDecoder->Convert(src, &srcLength, unichars, &unicharLength);
-        if (NS_SUCCEEDED(rv)) {
-          // terminate the returned string
-          unichars[unicharLength] = 0;
-
-          // nsIUnicodeDecoder::Convert may use fewer than srcLength PRUnichars
-          if (unicharLength + 1 < srcLength + 1) {
-            char16_t* shrunkUnichars =
-              (char16_t*)JS_realloc(cx, unichars,
-                                     (srcLength + 1) * sizeof(char16_t),
-                                     (unicharLength + 1) * sizeof(char16_t));
-            if (shrunkUnichars)
-              unichars = shrunkUnichars;
-          }
-          JSString* str = JS_NewUCString(cx, reinterpret_cast<char16_t*>(unichars), unicharLength);
-          if (str) {
-            rval.setString(str);
-            return true;
-          }
-        }
-        JS_free(cx, unichars);
-      }
+    // This code is only used by our prioprietary toLocaleFormat method
+    // and should be removed once we get rid of it.
+    // toLocaleFormat is used in non-ICU scenarios where we don't have
+    // access to any other date/time than the OS one, so we have to also
+    // use the OS locale for unicode conversions.
+    // See bug 1349470 for more details.
+    nsAutoString result;
+    NS_CopyNativeToUnicode(nsDependentCString(src), result);
+    JSString* ucstr =
+      JS_NewUCStringCopyN(cx, result.get(), result.Length());
+    if (ucstr) {
+      rval.setString(ucstr);
+      return true;
     }
 
     xpc::Throw(cx, NS_ERROR_OUT_OF_MEMORY);
@@ -230,7 +184,6 @@ private:
   }
 
   nsCOMPtr<nsICollation> mCollation;
-  nsCOMPtr<nsIUnicodeDecoder> mDecoder;
 #ifdef DEBUG
   PRThread* mThread;
 #endif

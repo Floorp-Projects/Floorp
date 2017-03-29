@@ -7,71 +7,27 @@
 #include "MemoryBlobImpl.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/SHA1.h"
-#include "nsIIPCSerializableInputStream.h"
 #include "nsPrintfCString.h"
 
 namespace mozilla {
 namespace dom {
 
-// XXXkhuey the input stream that we pass out of a File
-// can outlive the actual File object.  Thus, we must
-// ensure that the buffer underlying the stream we get
-// from NS_NewByteInputStream is held alive as long as the
-// stream is.  We do that by passing back this class instead.
-class DataOwnerAdapter final : public nsIInputStream,
-                               public nsISeekableStream,
-                               public nsIIPCSerializableInputStream
-{
-  typedef MemoryBlobImpl::DataOwner DataOwner;
-public:
-  static nsresult Create(DataOwner* aDataOwner,
-                         uint32_t aStart,
-                         uint32_t aLength,
-                         nsIInputStream** _retval);
+NS_IMPL_ADDREF(MemoryBlobImpl::DataOwnerAdapter)
+NS_IMPL_RELEASE(MemoryBlobImpl::DataOwnerAdapter)
 
-  NS_DECL_THREADSAFE_ISUPPORTS
-
-  // These are mandatory.
-  NS_FORWARD_NSIINPUTSTREAM(mStream->)
-  NS_FORWARD_NSISEEKABLESTREAM(mSeekableStream->)
-
-  // This is optional. We use a conditional QI to keep it from being called
-  // if the underlying stream doesn't support it.
-  NS_FORWARD_NSIIPCSERIALIZABLEINPUTSTREAM(mSerializableInputStream->)
-
-private:
-  ~DataOwnerAdapter() {}
-
-  DataOwnerAdapter(DataOwner* aDataOwner,
-                   nsIInputStream* aStream)
-    : mDataOwner(aDataOwner), mStream(aStream),
-      mSeekableStream(do_QueryInterface(aStream)),
-      mSerializableInputStream(do_QueryInterface(aStream))
-  {
-    MOZ_ASSERT(mSeekableStream, "Somebody gave us the wrong stream!");
-  }
-
-  RefPtr<DataOwner> mDataOwner;
-  nsCOMPtr<nsIInputStream> mStream;
-  nsCOMPtr<nsISeekableStream> mSeekableStream;
-  nsCOMPtr<nsIIPCSerializableInputStream> mSerializableInputStream;
-};
-
-NS_IMPL_ADDREF(DataOwnerAdapter)
-NS_IMPL_RELEASE(DataOwnerAdapter)
-
-NS_INTERFACE_MAP_BEGIN(DataOwnerAdapter)
+NS_INTERFACE_MAP_BEGIN(MemoryBlobImpl::DataOwnerAdapter)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
   NS_INTERFACE_MAP_ENTRY(nsISeekableStream)
+  NS_INTERFACE_MAP_ENTRY(nsICloneableInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
                                      mSerializableInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
-nsresult DataOwnerAdapter::Create(DataOwner* aDataOwner,
-                                  uint32_t aStart,
-                                  uint32_t aLength,
-                                  nsIInputStream** _retval)
+nsresult MemoryBlobImpl::DataOwnerAdapter::Create(DataOwner* aDataOwner,
+                                                  uint32_t aStart,
+                                                  uint32_t aLength,
+                                                  nsIInputStream** _retval)
 {
   nsresult rv;
   MOZ_ASSERT(aDataOwner, "Uh ...");
@@ -85,7 +41,8 @@ nsresult DataOwnerAdapter::Create(DataOwner* aDataOwner,
                              NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ADDREF(*_retval = new DataOwnerAdapter(aDataOwner, stream));
+  NS_ADDREF(*_retval =
+              new MemoryBlobImpl::DataOwnerAdapter(aDataOwner, stream));
 
   return NS_OK;
 }
@@ -110,7 +67,8 @@ MemoryBlobImpl::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
     return;
   }
 
-  aRv = DataOwnerAdapter::Create(mDataOwner, mStart, mLength, aStream);
+  aRv = MemoryBlobImpl::DataOwnerAdapter::Create(mDataOwner, mStart, mLength,
+                                                 aStream);
 }
 
 /* static */ StaticMutex
