@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 #include "mozilla/Atomics.h"
 #include "LulMain.h"
-#include "GeckoProfiler.h"       // for TracingMetadata
+#include "GeckoProfiler.h"       // for TracingKind
 #include "platform-linux-lul.h"  // for read_procmaps
 
 // Set this to 0 to make LUL be completely silent during tests.
