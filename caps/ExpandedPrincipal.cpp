@@ -23,7 +23,7 @@ struct OriginComparator
   bool LessThan(nsIPrincipal* a, nsIPrincipal* b) const
   {
     nsAutoCString originA;
-    nsresult rv = a->GetOrigin(originA);
+    DebugOnly<nsresult> rv = a->GetOrigin(originA);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     nsAutoCString originB;
     rv = b->GetOrigin(originB);
@@ -34,7 +34,7 @@ struct OriginComparator
   bool Equals(nsIPrincipal* a, nsIPrincipal* b) const
   {
     nsAutoCString originA;
-    nsresult rv = a->GetOrigin(originA);
+    DebugOnly<nsresult> rv = a->GetOrigin(originA);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     nsAutoCString originB;
     rv = b->GetOrigin(originB);
@@ -71,7 +71,7 @@ ExpandedPrincipal::Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aWhiteList,
     }
 
     nsAutoCString subOrigin;
-    nsresult rv = ep->mPrincipals.ElementAt(i)->GetOrigin(subOrigin);
+    DebugOnly<nsresult> rv = ep->mPrincipals.ElementAt(i)->GetOrigin(subOrigin);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     origin.Append(subOrigin);
   }
