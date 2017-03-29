@@ -43,7 +43,6 @@ public:
   NS_IMETHOD EnsurePreloadCSP(nsIDOMDocument* aDocument, nsIContentSecurityPolicy** aCSP) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
-  nsresult GetOriginNoSuffixInternal(nsACString& aOrigin) override;
 
   virtual nsresult GetScriptLocation(nsACString &aStr) override;
 

@@ -56,11 +56,7 @@ NS_IMETHODIMP
 BasePrincipal::GetOriginNoSuffix(nsACString& aOrigin)
 {
   MOZ_ASSERT(mInitialized);
-
-  if (mOriginNoSuffix) {
-    return mOriginNoSuffix->ToUTF8String(aOrigin);
-  }
-  return GetOriginNoSuffixInternal(aOrigin);
+  return mOriginNoSuffix->ToUTF8String(aOrigin);
 }
 
 bool
@@ -461,7 +457,8 @@ BasePrincipal::AddonAllowsLoad(nsIURI* aURI, bool aExplicit /* = false */)
 }
 
 void
-BasePrincipal::FinishInit(const OriginAttributes& aOriginAttributes)
+BasePrincipal::FinishInit(const nsACString& aOriginNoSuffix,
+                          const OriginAttributes& aOriginAttributes)
 {
   mInitialized = true;
   mOriginAttributes = aOriginAttributes;
@@ -471,17 +468,8 @@ BasePrincipal::FinishInit(const OriginAttributes& aOriginAttributes)
   mOriginAttributes.CreateSuffix(originSuffix);
   mOriginSuffix = NS_Atomize(originSuffix);
 
-  // Then compute the origin without the suffix.
-  nsAutoCString originNoSuffix;
-  nsresult rv = GetOriginNoSuffixInternal(originNoSuffix);
-  if (NS_FAILED(rv)) {
-    // If GetOriginNoSuffixInternal fails, we will get a null atom for
-    // mOriginNoSuffix, which we deal with anywhere mOriginNoSuffix is used.
-    // Once this is made infallible we can remove those null checks.
-    mOriginNoSuffix = nullptr;
-    return;
-  }
-  mOriginNoSuffix = NS_Atomize(originNoSuffix);
+  MOZ_ASSERT(!aOriginNoSuffix.IsEmpty());
+  mOriginNoSuffix = NS_Atomize(aOriginNoSuffix);
 }
 
 } // namespace mozilla
