@@ -364,8 +364,8 @@ ArrayPushDense(JSContext* cx, HandleObject obj, HandleValue v, uint32_t* length)
     if (!js::array_push(cx, 1, argv.begin()))
         return false;
 
-    if (MOZ_LIKELY(argv[0].isInt32())) {
-        *length = argv[0].isInt32();
+    if (argv[0].isInt32()) {
+        *length = argv[0].toInt32();
         return true;
     }
 
