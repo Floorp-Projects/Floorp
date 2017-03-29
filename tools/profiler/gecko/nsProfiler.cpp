@@ -190,11 +190,18 @@ NS_IMETHODIMP
 nsProfiler::GetProfileData(double aSinceTime, JSContext* aCx,
                            JS::MutableHandle<JS::Value> aResult)
 {
-  JS::RootedObject obj(aCx, profiler_get_profile_jsobject(aCx, aSinceTime));
-  if (!obj) {
+  mozilla::UniquePtr<char[]> profile = profiler_get_profile(aSinceTime);
+  if (!profile) {
     return NS_ERROR_FAILURE;
   }
-  aResult.setObject(*obj);
+
+  NS_ConvertUTF8toUTF16 js_string(nsDependentCString(profile.get()));
+  auto profile16 = static_cast<const char16_t*>(js_string.get());
+
+  JS::RootedValue val(aCx);
+  MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, profile16, js_string.Length(), &val));
+
+  aResult.set(val);
   return NS_OK;
 }
 
