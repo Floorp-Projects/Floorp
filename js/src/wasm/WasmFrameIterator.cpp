@@ -78,7 +78,12 @@ FrameIterator::FrameIterator(WasmActivation* activation, Unwind unwind)
     if (void* resumePC = activation->resumePC()) {
         code_ = activation->compartment()->wasm.lookupCode(resumePC);
         codeRange_ = code_->lookupRange(resumePC);
-        MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
+        if (codeRange_->kind() != CodeRange::Function) {
+            // We might be in a stub inserted between functions, in which case
+            // we don't have a frame.
+            codeRange_ = nullptr;
+            missingFrameMessage_ = true;
+        }
         MOZ_ASSERT(!done());
         return;
     }
