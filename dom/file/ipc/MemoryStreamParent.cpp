@@ -22,7 +22,7 @@ MemoryStreamParent::RecvAddChunk(nsTArray<unsigned char>&& aData)
 
   uint64_t dataLength = aData.Length();
 
-  if (!dataLength || mSize < (mCurSize += dataLength)) {
+  if (!dataLength || mSize < (mCurSize + dataLength)) {
     return IPC_FAIL_NO_REASON(this);
   }
 
