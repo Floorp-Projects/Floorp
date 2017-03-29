@@ -65,6 +65,13 @@ def fill_template(config, tasks):
             INDEX_PREFIX, level, image_name, context_hash)]
             for level in reversed(range(int(config.params['level']), 4))]
 
+        # Adjust the zstandard compression level based on the execution level.
+        # We use faster compression for level 1 because we care more about
+        # end-to-end times. We use slower/better compression for other levels
+        # because images are read more often and it is worth the trade-off to
+        # burn more CPU once to reduce image size.
+        zstd_level = '3' if int(config.params['level']) == 1 else '10'
+
         # include some information that is useful in reconstructing this task
         # from JSON
         taskdesc = {
@@ -103,6 +110,7 @@ def fill_template(config, tasks):
                     'HASH': context_hash,
                     'PROJECT': config.params['project'],
                     'IMAGE_NAME': image_name,
+                    'DOCKER_IMAGE_ZSTD_LEVEL': zstd_level,
                     'GECKO_BASE_REPOSITORY': config.params['base_repository'],
                     'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
                     'GECKO_HEAD_REV': config.params['head_rev'],
