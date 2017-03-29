@@ -16,7 +16,7 @@ namespace dom {
 class MemoryStreamParent final : public mozilla::ipc::PMemoryStreamParent
 {
 public:
-  MemoryStreamParent(uint64_t aSize);
+  explicit MemoryStreamParent(uint64_t aSize);
 
   mozilla::ipc::IPCResult
   RecvAddChunk(nsTArray<unsigned char>&& aData) override;
