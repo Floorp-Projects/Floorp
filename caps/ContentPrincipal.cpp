@@ -82,6 +82,7 @@ ContentPrincipal::ContentPrincipal()
   : BasePrincipal(eCodebasePrincipal)
   , mCodebaseImmutable(false)
   , mDomainImmutable(false)
+  , mInitialized(false)
 {
 }
 
@@ -97,7 +98,10 @@ nsresult
 ContentPrincipal::Init(nsIURI *aCodebase,
                        const OriginAttributes& aOriginAttributes)
 {
+  NS_ENSURE_STATE(!mInitialized);
   NS_ENSURE_ARG(aCodebase);
+
+  mInitialized = true;
 
   // Assert that the URI we get here isn't any of the schemes that we know we
   // should not get here.  These schemes always either inherit their principal
@@ -114,8 +118,9 @@ ContentPrincipal::Init(nsIURI *aCodebase,
 
   mCodebase = NS_TryToMakeImmutable(aCodebase);
   mCodebaseImmutable = URIIsImmutable(mCodebase);
+  mOriginAttributes = aOriginAttributes;
 
-  FinishInit(aOriginAttributes);
+  FinishInit();
 
   return NS_OK;
 }
@@ -367,7 +372,7 @@ ContentPrincipal::SetDomain(nsIURI* aDomain)
 {
   mDomain = NS_TryToMakeImmutable(aDomain);
   mDomainImmutable = URIIsImmutable(mDomain);
-  SetHasExplicitDomain();
+  mDomainSet = true;
 
   // Recompute all wrappers between compartments using this principal and other
   // non-chrome compartments.
