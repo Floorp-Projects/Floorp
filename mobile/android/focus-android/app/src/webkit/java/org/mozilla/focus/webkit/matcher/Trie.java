@@ -48,8 +48,12 @@ import org.mozilla.focus.webkit.matcher.util.FocusString;
 
     public Trie findNode(final FocusString string) {
         if (terminator) {
-            // Match achieved
-            return this;
+            // Match achieved - and we're at a domain boundary. This is important, because
+            // we don't want to return on partial domain matches. (E.g. if the trie node is bar.com,
+            // and the search string is foo-bar.com, we shouldn't match. But foo.bar.com should match.)
+            if (string.length() == 0 || string.charAt(0) == '.') {
+                return this;
+            }
         } else if (string.length() == 0) {
             // Finished the string, no match
             return null;
