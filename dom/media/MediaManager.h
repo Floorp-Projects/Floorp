@@ -60,9 +60,6 @@ class GetUserMediaWindowListener;
 class MediaManager;
 class SourceListener;
 
-extern LogModule* GetMediaManagerLog();
-#define MM_LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)
-
 class MediaDevice : public nsIMediaDevice
 {
 public:
