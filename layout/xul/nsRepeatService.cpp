@@ -12,6 +12,7 @@
 
 #include "nsRepeatService.h"
 #include "mozilla/StaticPtr.h"
+#include "nsIDocument.h"
 #include "nsIServiceManager.h"
 
 using namespace mozilla;
@@ -45,7 +46,7 @@ nsRepeatService::Shutdown()
 
 void
 nsRepeatService::Start(Callback aCallback, void* aCallbackData,
-                       const nsACString& aCallbackName,
+                       nsIDocument* aDocument, const nsACString& aCallbackName,
                        uint32_t aInitialDelay)
 {
   NS_PRECONDITION(aCallback != nullptr, "null ptr");
@@ -58,6 +59,7 @@ nsRepeatService::Start(Callback aCallback, void* aCallbackData,
   mRepeatTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 
   if (NS_SUCCEEDED(rv))  {
+    mRepeatTimer->SetTarget(aDocument->EventTargetFor(TaskCategory::Other));
     InitTimerCallback(aInitialDelay);
   }
 }

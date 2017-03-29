@@ -4129,7 +4129,7 @@ HTMLInputElement::StartNumberControlSpinnerSpin()
 
   mNumberControlSpinnerIsSpinning = true;
 
-  nsRepeatService::GetInstance()->Start(HandleNumberControlSpin, this,
+  nsRepeatService::GetInstance()->Start(HandleNumberControlSpin, this, OwnerDoc(),
                                         NS_LITERAL_CSTRING("HandleNumberControlSpin"));
 
   // Capture the mouse so that we can tell if the pointer moves from one
