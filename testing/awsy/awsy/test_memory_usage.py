@@ -172,8 +172,11 @@ class TestMemoryUsage(MarionetteTestCase):
 
         checkpoint_file = "memory-report-%s-%d.json.gz" % (checkpointName, iteration)
         checkpoint_path = os.path.join(self._resultsDir, checkpoint_file)
+        # Escape the Windows directory separator \ to prevent it from
+        # being interpreted as an escape character.
+        checkpoint_path = checkpoint_path.replace('\\', '\\\\')
 
-        checkpoint_script = """
+        checkpoint_script = r"""
             const Cc = Components.classes;
             const Ci = Components.interfaces;
 

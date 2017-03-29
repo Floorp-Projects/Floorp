@@ -61,8 +61,8 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin,TooltoolMixin):
         self.testdir = os.path.join(abs_work_dir, 'tests')
         self.awsy_path = os.path.join(self.testdir, 'awsy')
         self.awsy_libdir = os.path.join(self.awsy_path, 'awsy')
-        self.webroot_dir = os.path.join(self.awsy_path, 'html')
-        self.results_dir = os.path.join(self.awsy_path, 'results')
+        self.webroot_dir = os.path.join(self.testdir, 'html')
+        self.results_dir = os.path.join(self.testdir, 'results')
         self.binary_path = self.config.get('binary_path')
 
     def query_abs_dirs(self):
