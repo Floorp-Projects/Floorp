@@ -76,7 +76,6 @@ BasicLayerManager::CreateDisplayItemLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
   RefPtr<DisplayItemLayer> layer = new BasicDisplayItemLayer(this);
-  mDisplayItemLayers.AppendElement(layer);
   return layer.forget();
 }
 
