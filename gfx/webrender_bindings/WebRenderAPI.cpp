@@ -5,6 +5,7 @@
 
 #include "WebRenderAPI.h"
 #include "mozilla/webrender/RendererOGL.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/widget/CompositorWidget.h"
@@ -44,7 +45,17 @@ public:
   {
     layers::AutoCompleteTask complete(mTask);
 
-    RefPtr<gl::GLContext> gl = gl::GLContextProvider::CreateForCompositorWidget(mCompositorWidget, true);
+    RefPtr<gl::GLContext> gl;
+    if (gfxVars::UseWebRenderANGLE()) {
+      gl = gl::GLContextProviderEGL::CreateForCompositorWidget(mCompositorWidget, true);
+      if (!gl || !gl->IsANGLE()) {
+        gfxCriticalNote << "Failed ANGLE GL context creation for WebRender: " << hexa(gl.get());
+        return;
+      }
+    }
+    if (!gl) {
+      gl = gl::GLContextProvider::CreateForCompositorWidget(mCompositorWidget, true);
+    }
     if (!gl || !gl->MakeCurrent()) {
       gfxCriticalNote << "Failed GL context creation for WebRender: " << hexa(gl.get());
       return;
