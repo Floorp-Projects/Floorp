@@ -9,6 +9,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
  // The amount of people to be part of e10s
 const TEST_THRESHOLD = {
@@ -22,6 +23,24 @@ const ADDON_ROLLOUT_POLICY = {
   "release" : "50allmpc",
   "esr"     : "esrA", // WebExtensions and Addons with mpc=true
 };
+
+if (AppConstants.RELEASE_OR_BETA) {
+  // Bug 1348576 - e10s is never enabled for non-official release builds
+  // This is hacky, but the problem it solves is the following:
+  // the e10s rollout is controlled by the channel name, which
+  // is the only way to distinguish between Beta and Release.
+  // However, non-official release builds (like the ones done by distros
+  // to ship Firefox on their package managers) do not set a value
+  // for the release channel, which gets them to the default value
+  // of.. (drumroll) "default".
+  // But we can't just always configure the same settings for the
+  // "default" channel because that's also the name that a locally
+  // built Firefox gets, and e10s is managed in a different way
+  // there (directly by prefs, on Nightly and Aurora).
+  TEST_THRESHOLD.default = TEST_THRESHOLD.release;
+  ADDON_ROLLOUT_POLICY.default = ADDON_ROLLOUT_POLICY.release;
+}
+
 
 const PREF_COHORT_SAMPLE       = "e10s.rollout.cohortSample";
 const PREF_COHORT_NAME         = "e10s.rollout.cohort";
