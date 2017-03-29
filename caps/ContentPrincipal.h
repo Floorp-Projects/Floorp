@@ -32,8 +32,7 @@ public:
 
   // Init() must be called before the principal is in a usable state.
   nsresult Init(nsIURI* aCodebase,
-                const mozilla::OriginAttributes& aOriginAttributes,
-                const nsACString& aOriginNoSuffix);
+                const mozilla::OriginAttributes& aOriginAttributes);
 
   virtual nsresult GetScriptLocation(nsACString& aStr) override;
 
@@ -41,9 +40,6 @@ public:
    * Called at startup to setup static data, e.g. about:config pref-observers.
    */
   static void InitializeStatics();
-
-  static nsresult
-  GenerateOriginNoSuffixFromURI(nsIURI* aURI, nsACString& aOrigin);
 
   nsCOMPtr<nsIURI> mDomain;
   nsCOMPtr<nsIURI> mCodebase;
@@ -59,6 +55,9 @@ protected:
   bool MayLoadInternal(nsIURI* aURI) override;
 
 private:
+  static nsresult 
+  GenerateOriginNoSuffixFromURI(nsIURI* aURI, nsACString& aOriginNoSuffix);
+
   mozilla::Maybe<nsString> mAddonIdCache;
 };
 
