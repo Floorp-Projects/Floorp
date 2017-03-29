@@ -6,23 +6,13 @@
 "use strict";
 
 /**
- * An API for being informed of slow add-ons and tabs.
+ * An API for being informed of slow tabs.
  *
  * Generally, this API is both more CPU-efficient and more battery-efficient
  * than PerformanceStats. As PerformanceStats, this API does not provide any
  * information during the startup or shutdown of Firefox.
  *
- * = Examples =
- *
- * Example use: reporting whenever a specific add-on slows down Firefox.
- * let listener = function(source, details) {
- *   // This listener is triggered whenever the addon causes Firefox to miss
- *   // frames. Argument `source` contains information about the source of the
- *   // slowdown (including the process in which it happens), while `details`
- *   // contains performance statistics.
- *   console.log(`Oops, add-on ${source.addonId} seems to be slowing down Firefox.`, details);
- * };
- * PerformanceWatcher.addPerformanceListener({addonId: "myaddon@myself.name"}, listener);
+ * = Example =
  *
  * Example use: reporting whenever any webpage slows down Firefox.
  * let listener = function(alerts) {
@@ -42,7 +32,7 @@
  * This high-level API is based on the lower-level nsIPerformanceStatsService.
  * At the end of each event (including micro-tasks), the nsIPerformanceStatsService
  * updates its internal performance statistics and determines whether any
- * add-on/window in the current process has exceeded the jank threshold.
+ * window in the current process has exceeded the jank threshold.
  *
  * The PerformanceWatcher maintains low-level performance observers in each
  * process and forwards alerts to the main process. Internal observers collate
@@ -64,7 +54,7 @@ if (!isContent) {
   // Initialize communication with children.
   //
   // To keep the protocol simple, the children inform the parent whenever a slow
-  // add-on/tab is detected. We do not attempt to implement thresholds.
+  // tab is detected. We do not attempt to implement thresholds.
   Services.ppmm.loadProcessScript("resource://gre/modules/PerformanceWatcher-content.js",
     true/* including future processes*/);
 
@@ -79,11 +69,10 @@ performanceStatsService.jankAlertThreshold = 64000 /* us */;
 
 /**
  * Handle communications with child processes. Handle listening to
- * either a single add-on id (including the special add-on id "*",
- * which is notified for all add-ons) or a single window id (including
- * the special window id 0, which is notified for all windows).
+ * a single window id (including the special window id 0, which is
+ * notified for all windows).
  *
- * Acquire through `ChildManager.getAddon` and `ChildManager.getWindow`.
+ * Acquire through `ChildManager.getWindow`.
  */
 function ChildManager(map, key) {
   this.key = key;
@@ -93,7 +82,7 @@ function ChildManager(map, key) {
 ChildManager.prototype = {
   /**
    * Add a listener, which will be notified whenever a child process
-   * reports a slow performance alert for this addon/window.
+   * reports a slow performance alert for this window.
    */
   addListener(listener) {
     this._listeners.add(listener);
@@ -118,16 +107,7 @@ ChildManager.prototype = {
  *
  * Triggered by messages from content processes.
  */
-ChildManager.notifyObservers = function({data: {addons, windows}}) {
-  if (addons && addons.length > 0) {
-    // Dispatch the entire list to universal listeners
-    this._notify(ChildManager.getAddon("*").listeners(), addons);
-
-    // Dispatch individual alerts to individual listeners
-    for (let {source, details} of addons) {
-      this._notify(ChildManager.getAddon(source.addonId).listeners(), source, details);
-    }
-  }
+ChildManager.notifyObservers = function({data: {windows}}) {
   if (windows && windows.length > 0) {
     // Dispatch the entire list to universal listeners
     this._notify(ChildManager.getWindow(0).listeners(), windows);
@@ -144,11 +124,6 @@ ChildManager._notify = function(targets, ...args) {
     target(...args);
   }
 };
-
-ChildManager.getAddon = function(key) {
-  return this._get(this._addons, key);
-};
-ChildManager._addons = new Map();
 
 ChildManager.getWindow = function(key) {
   return this._get(this._windows, key);
@@ -167,7 +142,7 @@ let gListeners = new WeakMap();
 
 /**
  * An object in charge of managing all the observables for a single
- * target (window/addon/all windows/all addons).
+ * target (window/all windows).
  *
  * In a content process, a target is represented by a single observable.
  * The situation is more sophisticated in a parent process, as a target
@@ -179,11 +154,6 @@ let gListeners = new WeakMap();
  *
  * @param {object} target The target being observed, as an object
  * with one of the following fields:
- *   - {string} addonId Either "*" for the universal add-on observer
- *     or the add-on id of an addon. Note that this class does not
- *     check whether the add-on effectively exists, and that observers
- *     may be registered for an add-on before the add-on is installed
- *     or started.
  *   - {xul:tab} tab A single tab. It must already be initialized.
  *   - {number} windowId Either 0 for the universal window observer
  *     or the outer window id of the window.
@@ -191,12 +161,7 @@ let gListeners = new WeakMap();
 function Observable(target) {
   // A mapping from `listener` (function) to `Observer`.
   this._observers = new Map();
-  if ("addonId" in target) {
-    this._key = `addonId: ${target.addonId}`;
-    this._process = performanceStatsService.getObservableAddon(target.addonId);
-    this._children = isContent ? null : ChildManager.getAddon(target.addonId);
-    this._isBuffered = target.addonId == "*";
-  } else if ("tab" in target || "windowId" in target) {
+  if ("tab" in target || "windowId" in target) {
     let windowId;
     if ("tab" in target) {
       windowId = target.tab.linkedBrowser.outerWindowID;
@@ -251,9 +216,7 @@ Observable.prototype = {
  */
 Observable.get = function(target) {
   let key;
-  if ("addonId" in target) {
-    key = target.addonId;
-  } else if ("tab" in target) {
+  if ("tab" in target) {
     // We do not want to use a tab as a key, as this would prevent it from
     // being garbage-collected.
     key = target.tab.linkedBrowser.outerWindowID;
@@ -331,8 +294,6 @@ this.PerformanceWatcher = {
    * in the application.
    *
    * @param {object} target An object with one of the following fields:
-   *  - {string} addonId Either "*" to observe all add-ons or a full add-on ID.
-   *      to observe a single add-on.
    *  - {number} windowId Either 0 to observe all windows or an outer window ID
    *      to observe a single tab.
    *  - {xul:browser} tab To observe a single tab.
@@ -340,14 +301,14 @@ this.PerformanceWatcher = {
    *    the target causes a slow performance notification. The notification may
    *    have originated in any process of the application.
    *
-   *    If the listener listens to a single add-on/webpage, it is triggered with
+   *    If the listener listens to a single webpage, it is triggered with
    *    the following arguments:
-   *       source: {groupId, name, addonId, windowId, isSystem, processId}
+   *       source: {groupId, name, windowId, isSystem, processId}
    *         Information on the source of the notification.
    *       details: {reason, highestJank, highestCPOW} Information on the
    *         notification.
    *
-   *    If the listener listens to all add-ons/all webpages, it is triggered with
+   *    If the listener listens to all webpages, it is triggered with
    *    an array of {source, details}, as described above.
    */
   addPerformanceListener(target, listener) {

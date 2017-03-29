@@ -8,8 +8,6 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
-const { AddonWatcher } = Cu.import("resource://gre/modules/AddonWatcher.jsm", {});
 const { PerformanceStats } = Cu.import("resource://gre/modules/PerformanceStats.jsm", {});
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
@@ -142,12 +140,12 @@ function wait(ms = 0) {
 }
 
 /**
- * The performance of a webpage or an add-on between two instants.
+ * The performance of a webpage between two instants.
  *
  * Clients should call `promiseInit()` before using the methods of this object.
  *
  * @param {PerformanceDiff} The underlying performance data.
- * @param {"addons"|"webpages"} The kind of delta represented by this object.
+ * @param {"webpages"} The kind of delta represented by this object.
  * @param {Map<groupId, timestamp>} ageMap A map containing the oldest known
  *  appearance of each groupId, used to determine how long we have been monitoring
  *  this item.
@@ -155,12 +153,12 @@ function wait(ms = 0) {
  *  item has already triggered in the past.
  */
 function Delta(diff, kind, snapshotDate, ageMap, alertMap) {
-  if (kind != "addons" && kind != "webpages") {
+  if (kind != "webpages") {
     throw new TypeError(`Unknown kind: ${kind}`);
   }
 
   /**
-   * Either "addons" or "webpages".
+   * We only understand "webpages" right now.
    */
   this.kind = kind;
 
@@ -171,7 +169,7 @@ function Delta(diff, kind, snapshotDate, ageMap, alertMap) {
   this.diff = diff;
 
   /**
-   * A key unique to the item (webpage or add-on), shared by successive
+   * A key unique to the item (webpage), shared by successive
    * instances of `Delta`.
    * @type{string}
    */
@@ -261,8 +259,6 @@ Delta.prototype = {
   promiseInit() {
     if (this.kind == "webpages") {
       return this._initWebpage();
-    } else if (this.kind == "addons") {
-      return this._promiseInitAddon();
     }
     throw new TypeError();
   },
@@ -278,24 +274,6 @@ Delta.prototype = {
     this.fullName = this.diff.names.join(", ");
     this._show = true;
   },
-  _promiseInitAddon: Task.async(function*() {
-    let found = yield (new Promise(resolve =>
-      AddonManager.getAddonByID(this.diff.addonId, a => {
-        if (a) {
-          this.readableName = a.name;
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      })));
-
-    this._initialized = true;
-
-    // If the add-on manager doesn't know about an add-on, it's
-    // probably not a real add-on.
-    this._show = found;
-    this.fullName = this.diff.addonId;
-  }),
   toString() {
     return `[Delta] ${this.diff.key} => ${this.readableName}, ${this.fullName}`;
   }
@@ -458,7 +436,6 @@ var State = {
   /**
    * @return {Promise}
    * @resolve {{
-   *  addons: Array<Delta>,
    *  webpages: Array<Delta>,
    *  deltas: Set<Delta key>,
    *  duration: number of milliseconds
@@ -484,13 +461,12 @@ var State = {
     let cleanedUpAlerts = new Map();
 
     let result = {
-      addons: [],
       webpages: [],
       deltas: new Set(),
       duration: current.date - oldest.date
     };
 
-    for (let kind of ["webpages", "addons"]) {
+    for (let kind of ["webpages"]) {
       for (let [key, value] of current[kind]) {
         let item = ObjectUtils.strict(new Delta(value.subtract(oldest[kind].get(key)), kind, current.date, oldFirstSeen, oldAlerts));
         yield item.promiseInit();
@@ -557,16 +533,12 @@ var View = {
    * @param {Array<PerformanceDiff>} subset The items to display. They will
    * be displayed in the order of `subset`.
    * @param {string} id The id of the DOM element that will contain the items.
-   * @param {string} nature The nature of the subset. One of "addons", "webpages" or "system".
+   * @param {string} nature The nature of the subset. One of "webpages" or "system".
    * @param {string} currentMode The current display mode. One of MODE_GLOBAL or MODE_RECENT.
    */
   updateCategory(subset, id, nature, currentMode) {
     subset = subset.slice().sort(Delta.revCompare);
 
-    let watcherAlerts = null;
-    if (nature == "addons") {
-      watcherAlerts = AddonWatcher.alerts;
-    }
 
     // Grab everything from the DOM before cleaning up
     this._setupStructure(id);
@@ -585,15 +557,6 @@ var View = {
 
       let processes = delta.diff.processes.map(proc => `${proc.processId} (${proc.isChildProcess ? "child" : "parent"})`);
       cachedElements.eltProcess.textContent = `Processes: ${processes.join(", ")}`;
-      let jankSuffix = "";
-      if (watcherAlerts) {
-        let deltaAlerts = watcherAlerts.get(delta.diff.addonId);
-        if (deltaAlerts) {
-          if (deltaAlerts.occurrences) {
-            jankSuffix = ` (${deltaAlerts.occurrences} alerts)`;
-          }
-        }
-      }
 
       let eltImpact = cachedElements.eltImpact;
       if (currentMode == MODE_RECENT) {
@@ -606,7 +569,7 @@ var View = {
           eltImpact.textContent = ` is currently considerably slowing down ${BRAND_NAME}.`;
         }
 
-        cachedElements.eltFPS.textContent = `Impact on framerate: ${delta.diff.jank.longestDuration + 1}/${delta.diff.jank.durations.length}${jankSuffix}.`;
+        cachedElements.eltFPS.textContent = `Impact on framerate: ${delta.diff.jank.longestDuration + 1}/${delta.diff.jank.durations.length}`;
         cachedElements.eltCPU.textContent = `CPU usage: ${Math.ceil(delta.diff.jank.totalCPUTime / delta.diff.deltaT / 10)}%.`;
         cachedElements.eltSystem.textContent = `System usage: ${Math.ceil(delta.diff.jank.totalSystemTime / delta.diff.deltaT / 10)}%.`;
         cachedElements.eltCPOW.textContent = `Blocking process calls: ${Math.ceil(delta.diff.cpow.totalCPOWTime / delta.diff.deltaT / 10)}%.`;
@@ -644,7 +607,7 @@ var View = {
             }
 
             eltImpact.textContent = ` ${describeFrequency} ${describeImpact}`;
-            cachedElements.eltFPS.textContent = `Impact on framerate: ${delta.alerts[1] || 0} high-impacts, ${delta.alerts[0] || 0} medium-impact${jankSuffix}.`;
+            cachedElements.eltFPS.textContent = `Impact on framerate: ${delta.alerts[1] || 0} high-impacts, ${delta.alerts[0] || 0} medium-impact.`;
           }
           cachedElements.eltRoot.setAttribute("impact", Math.round(impact));
         }
@@ -758,48 +721,7 @@ var View = {
       });
 
       // Add buttons
-      if (nature == "addons") {
-        eltSpan.appendChild(document.createElement("br"));
-        let eltDisable = document.createElement("button");
-        eltDisable.textContent = "Disable";
-        eltSpan.appendChild(eltDisable);
-
-        let eltUninstall = document.createElement("button");
-        eltUninstall.textContent = "Uninstall";
-        eltSpan.appendChild(eltUninstall);
-
-        let eltRestart = document.createElement("button");
-        eltRestart.textContent = `Restart ${BRAND_NAME} to apply your changes.`
-        eltRestart.classList.add("hidden");
-        eltSpan.appendChild(eltRestart);
-
-        eltRestart.addEventListener("click", () => {
-          Services.startup.quit(Services.startup.eForceQuit | Services.startup.eRestart);
-        });
-        AddonManager.getAddonByID(delta.diff.addonId, addon => {
-          eltDisable.addEventListener("click", () => {
-            addon.userDisabled = true;
-            if (addon.pendingOperations == addon.PENDING_NONE) {
-              // Restartless add-on is now disabled.
-              return;
-            }
-            eltDisable.classList.add("hidden");
-            eltUninstall.classList.add("hidden");
-            eltRestart.classList.remove("hidden");
-          });
-
-          eltUninstall.addEventListener("click", () => {
-            addon.uninstall();
-            if (addon.pendingOperations == addon.PENDING_NONE) {
-              // Restartless add-on is now disabled.
-              return;
-            }
-            eltDisable.classList.add("hidden");
-            eltUninstall.classList.add("hidden");
-            eltRestart.classList.remove("hidden");
-          });
-        });
-      } else if (nature == "webpages") {
+      if (nature == "webpages") {
         eltSpan.appendChild(document.createElement("br"));
 
         let eltCloseTab = document.createElement("button");
@@ -872,7 +794,7 @@ var Control = {
       State.promiseDeltaSinceStartOfTime() :
       State.promiseDeltaSinceStartOfBuffer());
 
-    for (let category of ["webpages", "addons"]) {
+    for (let category of ["webpages"]) {
       yield wait(0);
       yield View.updateCategory(state[category], category, category, mode);
     }
