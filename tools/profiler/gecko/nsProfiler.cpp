@@ -276,25 +276,24 @@ nsProfiler::GetStartParams(nsIProfilerStartParams** aRetVal)
   if (!profiler_is_active()) {
     *aRetVal = nullptr;
   } else {
-    int entrySize = 0;
+    int entries = 0;
     double interval = 0;
     mozilla::Vector<const char*> filters;
     mozilla::Vector<const char*> features;
-    profiler_get_start_params(&entrySize, &interval, &filters, &features);
-
-    nsTArray<nsCString> filtersArray;
-    for (uint32_t i = 0; i < filters.length(); ++i) {
-      filtersArray.AppendElement(filters[i]);
-    }
+    profiler_get_start_params(&entries, &interval, &features, &filters);
 
     nsTArray<nsCString> featuresArray;
     for (size_t i = 0; i < features.length(); ++i) {
       featuresArray.AppendElement(features[i]);
     }
 
+    nsTArray<nsCString> filtersArray;
+    for (uint32_t i = 0; i < filters.length(); ++i) {
+      filtersArray.AppendElement(filters[i]);
+    }
+
     nsCOMPtr<nsIProfilerStartParams> startParams =
-      new nsProfilerStartParams(entrySize, interval, featuresArray,
-                                filtersArray);
+      new nsProfilerStartParams(entries, interval, featuresArray, filtersArray);
 
     startParams.forget(aRetVal);
   }
