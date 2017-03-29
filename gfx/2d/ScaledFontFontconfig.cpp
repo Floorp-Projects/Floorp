@@ -278,6 +278,7 @@ ScaledFontFontconfig::GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton)
   memcpy(data + sizeof(FontDescriptor), pathname, pathLength);
 
   aCb(data, dataLength, mSize, aBaton);
+  delete[] data;
   return true;
 }
 
