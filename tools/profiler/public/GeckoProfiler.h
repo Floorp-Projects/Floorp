@@ -40,7 +40,7 @@ class Promise;
 
 class nsIProfilerStartParams;
 
-enum TracingMetadata {
+enum TracingKind {
   TRACING_EVENT,
   TRACING_INTERVAL_START,
   TRACING_INTERVAL_END,
@@ -124,10 +124,10 @@ using UniqueProfilerBacktrace =
 // Adds a tracing marker to the PseudoStack. A no-op if the profiler is
 // inactive or in privacy mode.
 PROFILER_FUNC_VOID(profiler_tracing(const char* aCategory, const char* aInfo,
-                                    TracingMetadata metaData = TRACING_EVENT))
+                                    TracingKind aKind = TRACING_EVENT))
 PROFILER_FUNC_VOID(profiler_tracing(const char* aCategory, const char* aInfo,
                                     UniqueProfilerBacktrace aCause,
-                                    TracingMetadata metaData = TRACING_EVENT))
+                                    TracingKind aKind = TRACING_EVENT))
 
 // Initialize the profiler. If MOZ_PROFILER_STARTUP is set the profiler will be
 // started. This call must happen before any other profiler calls (except

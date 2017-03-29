@@ -50,16 +50,18 @@ ProfilerMarkerPayload::streamCommonProps(const char* aMarkerType,
   }
 }
 
-ProfilerMarkerTracing::ProfilerMarkerTracing(const char* aCategory, TracingMetadata aMetaData)
+ProfilerMarkerTracing::ProfilerMarkerTracing(const char* aCategory,
+                                             TracingKind aKind)
   : mCategory(aCategory)
-  , mMetaData(aMetaData)
+  , mKind(aKind)
 {
 }
 
-ProfilerMarkerTracing::ProfilerMarkerTracing(const char* aCategory, TracingMetadata aMetaData,
+ProfilerMarkerTracing::ProfilerMarkerTracing(const char* aCategory,
+                                             TracingKind aKind,
                                              UniqueProfilerBacktrace aCause)
   : mCategory(aCategory)
-  , mMetaData(aMetaData)
+  , mKind(aKind)
 {
   if (aCause) {
     SetStack(mozilla::Move(aCause));
@@ -77,9 +79,9 @@ ProfilerMarkerTracing::StreamPayload(SpliceableJSONWriter& aWriter,
     aWriter.StringProperty("category", GetCategory());
   }
 
-  if (GetMetaData() == TRACING_INTERVAL_START) {
+  if (GetKind() == TRACING_INTERVAL_START) {
     aWriter.StringProperty("interval", "start");
-  } else if (GetMetaData() == TRACING_INTERVAL_END) {
+  } else if (GetKind() == TRACING_INTERVAL_END) {
     aWriter.StringProperty("interval", "end");
   }
 }
