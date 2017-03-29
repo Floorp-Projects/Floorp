@@ -3,6 +3,8 @@
 
 "use strict";
 
+const { getHeadersURL } = require("devtools/client/netmonitor/utils/mdn-utils");
+
 /**
  * Tests if "Learn More" links are correctly displayed
  * next to headers.
@@ -12,11 +14,10 @@ add_task(function* () {
   info("Starting test... ");
 
   let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
   let {
     getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
-  let { getHeadersURL } = require("devtools/client/netmonitor/src/utils/mdn-utils");
+  } = windowRequire("devtools/client/netmonitor/selectors/index");
 
   gStore.dispatch(Actions.batchEnable(false));
 

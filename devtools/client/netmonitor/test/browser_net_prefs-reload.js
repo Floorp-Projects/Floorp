@@ -10,9 +10,9 @@
 add_task(function* () {
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   let { getRequestFilterTypes } = monitor.panelWin
-    .windowRequire("devtools/client/netmonitor/src/selectors/index");
+    .windowRequire("devtools/client/netmonitor/selectors/index");
   let Actions = monitor.panelWin
-    .windowRequire("devtools/client/netmonitor/src/actions/index");
+    .windowRequire("devtools/client/netmonitor/actions/index");
   info("Starting test... ");
 
   // This test reopens the network monitor a bunch of times, for different
@@ -24,7 +24,7 @@ add_task(function* () {
   // and the instances will differ.
   let getDoc = () => monitor.panelWin.document;
   let getPrefs = () => monitor.panelWin
-    .windowRequire("devtools/client/netmonitor/src/utils/prefs").Prefs;
+    .windowRequire("devtools/client/netmonitor/utils/prefs").Prefs;
   let getStore = () => monitor.panelWin.gStore;
   let getState = () => getStore().getState();
 

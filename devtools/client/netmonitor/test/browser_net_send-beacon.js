@@ -10,9 +10,8 @@
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(SEND_BEACON_URL);
   let { gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { getSortedRequests } =
-    windowRequire("devtools/client/netmonitor/src/selectors/index");
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { getSortedRequests } = windowRequire("devtools/client/netmonitor/selectors/index");
 
   gStore.dispatch(Actions.batchEnable(false));
 
