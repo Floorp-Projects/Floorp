@@ -10,7 +10,7 @@
       font-size: 36px;
     }
     label, textbox {
-      -moz-appearance: none;
+      -moz-appearance: none; appearance: none;
       background: inherit;
       border: none 0px;
     }

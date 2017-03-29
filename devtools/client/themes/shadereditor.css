@@ -28,7 +28,7 @@
 }
 
 .side-menu-widget-item-checkbox {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   opacity: 0;
   transition: opacity .15s ease-out 0s;
 }
@@ -43,7 +43,7 @@
 }
 
 .side-menu-widget-item-checkbox .checkbox-check {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   background-image: url(images/item-toggle.svg);
   background-color: transparent;
   width: 16px;
