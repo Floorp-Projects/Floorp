@@ -14,8 +14,10 @@ import requests
 import subprocess
 import toml
 
+
 def log(msg):
     print('repack: %s' % msg)
+
 
 def fetch_file(url):
     '''Download a file from the given url if it's not already present.'''
@@ -115,7 +117,7 @@ def repack(host, targets, channel='stable', suffix=''):
     manifest = toml.loads(req.content)
     if manifest['manifest-version'] != '2':
         log('ERROR: unrecognized manifest version %s.' %
-              manifest['manifest-version'])
+            manifest['manifest-version'])
         return
     log('Using manifest for rust %s as of %s.' % (channel, manifest['date']))
     log('Fetching packages...')
