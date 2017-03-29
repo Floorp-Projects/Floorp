@@ -144,7 +144,7 @@ NullPrincipal::SetDomain(nsIURI* aDomain)
 }
 
 nsresult
-NullPrincipal::GetOriginInternal(nsACString& aOrigin)
+NullPrincipal::GetOriginNoSuffixInternal(nsACString& aOrigin)
 {
   return mURI->GetSpec(aOrigin);
 }

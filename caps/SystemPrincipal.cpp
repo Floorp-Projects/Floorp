@@ -65,7 +65,7 @@ SystemPrincipal::GetURI(nsIURI** aURI)
 }
 
 nsresult
-SystemPrincipal::GetOriginInternal(nsACString& aOrigin)
+SystemPrincipal::GetOriginNoSuffixInternal(nsACString& aOrigin)
 {
     aOrigin.AssignLiteral(SYSTEM_PRINCIPAL_SPEC);
     return NS_OK;
