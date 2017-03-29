@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import glob
 import json
 import os
 import sys
@@ -13,6 +14,10 @@ from marionette_driver import Actions
 from marionette_driver.errors import JavascriptException, ScriptTimeoutException
 import mozlog.structured
 from marionette_driver.keys import Keys
+
+AWSY_PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+if AWSY_PATH not in sys.path:
+    sys.path.append(AWSY_PATH)
 
 from awsy import TEST_SITES_TEMPLATES, ITERATIONS, PER_TAB_PAUSE, SETTLE_WAIT_TIME, MAX_TABS
 from awsy import process_perf_data, webservers
@@ -37,36 +42,38 @@ class TestMemoryUsage(MarionetteTestCase):
 
         self.marionette.set_context('chrome')
 
-        self._webroot_dir = os.path.join(os.getcwd(), 'page_load_test')
-        if not os.path.exists(self._webroot_dir):
-            os.mkdir(self._webroot_dir)
+        self._webroot_dir = self.testvars["webRootDir"]
+        self._resultsDir = self.testvars["resultsDir"]
+        for f in glob.glob(os.path.join(self._resultsDir, '*')):
+            os.unlink(f)
         self._webservers = webservers.WebServers("localhost",
                                                  8001,
-                                                 os.getcwd(),
+                                                 self._webroot_dir,
                                                  100)
         self._webservers.start()
-        test_sites = []
+        self._urls = []
 
-        with open(os.path.join(self._webroot_dir, 'tp5n', 'tp5n.manifest')) as fp:
+        urls = None
+        tp5n_manifest = os.path.join(self._webroot_dir, 'page_load_test', 'tp5n',
+                                     'tp5n.manifest')
+        with open(tp5n_manifest) as fp:
             urls = fp.readlines()
         if urls:
             urls = map(lambda x:x.replace('localhost', 'localhost:{}'), urls)
-            self._urls = urls
         else:
             urls = TEST_SITES_TEMPLATES
 
         for url, server in zip(urls, self._webservers.servers):
-            test_sites.append(url.format(server.port))
+            self._urls.append(url.strip().format(server.port))
 
-        self._urls = self.testvars.get("urls", test_sites)
+        # Optional testvars.
         self._pages_to_load = self.testvars.get("entities", len(self._urls))
         self._iterations = self.testvars.get("iterations", ITERATIONS)
         self._perTabPause = self.testvars.get("perTabPause", PER_TAB_PAUSE)
         self._settleWaitTime = self.testvars.get("settleWaitTime", SETTLE_WAIT_TIME)
         self._maxTabs = self.testvars.get("maxTabs", MAX_TABS)
-        self._resultsDir = os.path.join(os.getcwd(), "tests", "results")
 
-        self.logger.info("areweslimyet run by %d pages, %d iterations, %d perTabPause,%d settleWaitTime"
+        self.logger.info("areweslimyet run by %d pages, %d iterations, %d perTabPause, %d settleWaitTime"
                          % (self._pages_to_load, self._iterations, self._perTabPause, self._settleWaitTime))
         self.reset_state()
         self.logger.info("done setting up!")
@@ -100,7 +107,17 @@ class TestMemoryUsage(MarionetteTestCase):
         # Close all tabs except one
         for x in range(len(self.marionette.window_handles) - 1):
             self.logger.info("closing window")
-            self.marionette.execute_script("gBrowser.removeCurrentTab();")
+            try:
+                result = self.marionette.execute_script("gBrowser.removeCurrentTab();",
+                                                        script_timeout=180000)
+            except JavascriptException, e:
+                self.logger.error("gBrowser.removeCurrentTab() JavaScript error: %s" % e)
+            except ScriptTimeoutException:
+                self.logger.error("gBrowser.removeCurrentTab() timed out")
+            except:
+                self.logger.error("gBrowser.removeCurrentTab() Unexpected error: %s" % sys.exc_info()[0])
+            else:
+                self.logger.info(result)
             time.sleep(0.25)
 
         self._tabs = self.marionette.window_handles
