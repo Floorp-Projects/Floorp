@@ -34,6 +34,9 @@ namespace jit {
 
 namespace wasm {
 
+void*
+AddressOf(SymbolicAddress imm, jit::ABIFunctionType*);
+
 struct TypedFuncPtr
 {
     void* funcPtr;
