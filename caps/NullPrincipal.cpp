@@ -70,8 +70,6 @@ NullPrincipal::Create(const OriginAttributes& aOriginAttributes, nsIURI* aURI)
 nsresult
 NullPrincipal::Init(const OriginAttributes& aOriginAttributes, nsIURI* aURI)
 {
-  mOriginAttributes = aOriginAttributes;
-
   if (aURI) {
     nsAutoCString scheme;
     nsresult rv = aURI->GetScheme(scheme);
@@ -86,7 +84,7 @@ NullPrincipal::Init(const OriginAttributes& aOriginAttributes, nsIURI* aURI)
     NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_AVAILABLE);
   }
 
-  FinishInit();
+  FinishInit(aOriginAttributes);
 
   return NS_OK;
 }

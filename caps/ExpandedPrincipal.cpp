@@ -43,8 +43,7 @@ struct OriginComparator
   }
 };
 
-ExpandedPrincipal::ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList,
-                                     const OriginAttributes& aAttrs)
+ExpandedPrincipal::ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList)
   : BasePrincipal(eExpandedPrincipal)
 {
   // We force the principals to be sorted by origin so that ExpandedPrincipal
@@ -53,7 +52,6 @@ ExpandedPrincipal::ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteLis
   for (size_t i = 0; i < aWhiteList.Length(); ++i) {
     mPrincipals.InsertElementSorted(aWhiteList[i], c);
   }
-  mOriginAttributes = aAttrs;
 }
 
 ExpandedPrincipal::~ExpandedPrincipal()
@@ -63,8 +61,8 @@ already_AddRefed<ExpandedPrincipal>
 ExpandedPrincipal::Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aWhiteList,
                           const OriginAttributes& aAttrs)
 {
-  RefPtr<ExpandedPrincipal> ep = new ExpandedPrincipal(aWhiteList, aAttrs);
-  ep->FinishInit();
+  RefPtr<ExpandedPrincipal> ep = new ExpandedPrincipal(aWhiteList);
+  ep->FinishInit(aAttrs);
   return ep.forget();
 }
 
