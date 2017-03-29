@@ -27,13 +27,13 @@ public:
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
   bool IsCodebasePrincipal() const override { return true; }
-  nsresult GetOriginInternal(nsACString& aOrigin) override;
 
   ContentPrincipal();
 
   // Init() must be called before the principal is in a usable state.
   nsresult Init(nsIURI* aCodebase,
-                const mozilla::OriginAttributes& aOriginAttributes);
+                const mozilla::OriginAttributes& aOriginAttributes,
+                const nsACString& aOriginNoSuffix);
 
   virtual nsresult GetScriptLocation(nsACString& aStr) override;
 
@@ -42,12 +42,14 @@ public:
    */
   static void InitializeStatics();
 
+  static nsresult
+  GenerateOriginNoSuffixFromURI(nsIURI* aURI, nsACString& aOrigin);
+
   nsCOMPtr<nsIURI> mDomain;
   nsCOMPtr<nsIURI> mCodebase;
   // If mCodebaseImmutable is true, mCodebase is non-null and immutable
   bool mCodebaseImmutable;
   bool mDomainImmutable;
-  bool mInitialized;
 
 protected:
   virtual ~ContentPrincipal();

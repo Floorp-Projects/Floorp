@@ -9,7 +9,9 @@ import java.io.File;
 import java.io.IOException;
 
 import android.app.ActivityManager;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Window;
@@ -25,7 +27,9 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
+import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FileUtils;
@@ -41,16 +45,41 @@ public class WebAppActivity extends GeckoApp {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        String manifestPath = getIntent().getStringExtra(WebAppActivity.MANIFEST_PATH);
-        if (manifestPath != null) {
-            updateFromManifest(manifestPath);
-        }
+        loadManifest(getIntent());
     }
 
     @Override
     public int getLayout() {
         return R.layout.webapp_activity;
+    }
+
+    /**
+     * In case this activity is reused (the user has opened > 10 current web apps)
+     * we check that app launched is still within the same host as the
+     * shortcut has set, if not we reload the homescreens url
+     */
+    @Override
+    protected void onNewIntent(Intent externalIntent) {
+
+        restoreLastSelectedTab();
+
+        final SafeIntent intent = new SafeIntent(externalIntent);
+        final String launchUrl = intent.getDataString();
+        final String currentUrl = Tabs.getInstance().getSelectedTab().getURL();
+        final boolean isSameDomain = Uri.parse(currentUrl).getHost()
+            .equals(Uri.parse(launchUrl).getHost());
+
+        if (!isSameDomain) {
+            loadManifest(externalIntent);
+            Tabs.getInstance().loadUrl(launchUrl);
+        }
+    }
+
+    private void loadManifest(Intent intent) {
+        String manifestPath = intent.getStringExtra(WebAppActivity.MANIFEST_PATH);
+        if (manifestPath != null) {
+            updateFromManifest(manifestPath);
+        }
     }
 
     private void updateFromManifest(String manifestPath) {

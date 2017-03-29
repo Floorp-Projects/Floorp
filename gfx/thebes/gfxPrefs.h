@@ -485,6 +485,7 @@ private:
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps.print-histogram",  FPSPrintHistogram, bool, false);
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps.write-to-file", WriteFPSToFile, bool, false);
   DECL_GFX_PREF(Once, "layers.acceleration.force-enabled",     LayersAccelerationForceEnabledDoNotUseDirectly, bool, false);
+  DECL_GFX_PREF(Live, "layers.advanced.background-color",      LayersAllowBackgroundColorLayers, bool, false);
   DECL_OVERRIDE_PREF(Live, "layers.advanced.background-image", LayersAllowBackgroundImage, false);
   DECL_OVERRIDE_PREF(Live, "layers.advanced.border-layers",    LayersAllowBorderLayers, false);
   DECL_OVERRIDE_PREF(Live, "layers.advanced.boxshadow-inset-layers", LayersAllowInsetBoxShadow, gfxPrefs::OverrideBase_WebRender());

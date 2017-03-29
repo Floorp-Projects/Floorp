@@ -24,6 +24,7 @@
 #endif
 #include "OGLShaderProgram.h"
 #include "prenv.h"
+#include "prsystem.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "gfxPrefs.h"
@@ -101,20 +102,14 @@ static PRLibrary* LoadApitraceLibrary()
 static PRLibrary*
 LoadLibraryForEGLOnWindows(const nsAString& filename)
 {
-    nsCOMPtr<nsIFile> file;
-    nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(file));
-    if (NS_FAILED(rv))
-        return nullptr;
+    nsAutoCString path(gfx::gfxVars::GREDirectory());
+    path.Append(PR_GetDirectorySeparator());
+    path.Append(ToNewUTF8String(filename));
 
-    file->Append(filename);
-    PRLibrary* lib = nullptr;
-    rv = file->Load(&lib);
-    if (NS_FAILED(rv)) {
-        nsPrintfCString msg("Failed to load %s - Expect EGL initialization to fail",
-                            NS_LossyConvertUTF16toASCII(filename).get());
-        NS_WARNING(msg.get());
-    }
-    return lib;
+    PRLibSpec lspec;
+    lspec.type = PR_LibSpec_Pathname;
+    lspec.value.pathname = path.get();
+    return PR_LoadLibraryWithFlags(lspec, PR_LD_LAZY | PR_LD_LOCAL);
 }
 
 #endif // XP_WIN
@@ -240,6 +235,10 @@ static EGLDisplay
 GetAndInitDisplayForAccelANGLE(GLLibraryEGL& egl, nsACString* const out_failureId)
 {
     EGLDisplay ret = 0;
+
+    if (wr::RenderThread::IsInRenderThread()) {
+        return GetAndInitDisplay(egl, LOCAL_EGL_D3D11_ONLY_DISPLAY_ANGLE);
+    }
 
     FeatureState& d3d11ANGLE = gfxConfig::GetFeature(Feature::D3D11_HW_ANGLE);
 

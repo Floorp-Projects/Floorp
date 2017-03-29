@@ -8,11 +8,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <memory>
 #include <utility>
 #include <vector>
 
 #include "base/macros.h"
-#include "base/memory/ref_counted.h"
 #include "sandbox/linux/bpf_dsl/bpf_dsl_forward.h"
 #include "sandbox/linux/bpf_dsl/cons.h"
 #include "sandbox/linux/bpf_dsl/trap_registry.h"
@@ -77,10 +77,10 @@ namespace sandbox {
 namespace bpf_dsl {
 
 // ResultExpr is an opaque reference to an immutable result expression tree.
-typedef scoped_refptr<const internal::ResultExprImpl> ResultExpr;
+using ResultExpr = std::shared_ptr<const internal::ResultExprImpl>;
 
 // BoolExpr is an opaque reference to an immutable boolean expression tree.
-typedef scoped_refptr<const internal::BoolExprImpl> BoolExpr;
+using BoolExpr = std::shared_ptr<const internal::BoolExprImpl>;
 
 // Allow specifies a result that the system call should be allowed to
 // execute normally.
@@ -121,21 +121,21 @@ SANDBOX_EXPORT ResultExpr
 SANDBOX_EXPORT BoolExpr BoolConst(bool value);
 
 // Not returns a BoolExpr representing the logical negation of |cond|.
-SANDBOX_EXPORT BoolExpr Not(const BoolExpr& cond);
+SANDBOX_EXPORT BoolExpr Not(BoolExpr cond);
 
 // AllOf returns a BoolExpr representing the logical conjunction ("and")
 // of zero or more BoolExprs.
 SANDBOX_EXPORT BoolExpr AllOf();
-SANDBOX_EXPORT BoolExpr AllOf(const BoolExpr& lhs, const BoolExpr& rhs);
+SANDBOX_EXPORT BoolExpr AllOf(BoolExpr lhs, BoolExpr rhs);
 template <typename... Rest>
-SANDBOX_EXPORT BoolExpr AllOf(const BoolExpr& first, const Rest&... rest);
+SANDBOX_EXPORT BoolExpr AllOf(BoolExpr first, Rest&&... rest);
 
 // AnyOf returns a BoolExpr representing the logical disjunction ("or")
 // of zero or more BoolExprs.
 SANDBOX_EXPORT BoolExpr AnyOf();
-SANDBOX_EXPORT BoolExpr AnyOf(const BoolExpr& lhs, const BoolExpr& rhs);
+SANDBOX_EXPORT BoolExpr AnyOf(BoolExpr lhs, BoolExpr rhs);
 template <typename... Rest>
-SANDBOX_EXPORT BoolExpr AnyOf(const BoolExpr& first, const Rest&... rest);
+SANDBOX_EXPORT BoolExpr AnyOf(BoolExpr first, Rest&&... rest);
 
 template <typename T>
 class SANDBOX_EXPORT Arg {
@@ -173,7 +173,7 @@ class SANDBOX_EXPORT Arg {
 
 // If begins a conditional result expression predicated on the
 // specified boolean expression.
-SANDBOX_EXPORT Elser If(const BoolExpr& cond, const ResultExpr& then_result);
+SANDBOX_EXPORT Elser If(BoolExpr cond, ResultExpr then_result);
 
 class SANDBOX_EXPORT Elser {
  public:
@@ -182,20 +182,20 @@ class SANDBOX_EXPORT Elser {
 
   // ElseIf extends the conditional result expression with another
   // "if then" clause, predicated on the specified boolean expression.
-  Elser ElseIf(const BoolExpr& cond, const ResultExpr& then_result) const;
+  Elser ElseIf(BoolExpr cond, ResultExpr then_result) const;
 
   // Else terminates a conditional result expression using |else_result| as
   // the default fallback result expression.
-  ResultExpr Else(const ResultExpr& else_result) const;
+  ResultExpr Else(ResultExpr else_result) const;
 
  private:
-  typedef std::pair<BoolExpr, ResultExpr> Clause;
+  using Clause = std::pair<BoolExpr, ResultExpr>;
 
   explicit Elser(cons::List<Clause> clause_list);
 
   cons::List<Clause> clause_list_;
 
-  friend Elser If(const BoolExpr&, const ResultExpr&);
+  friend Elser If(BoolExpr, ResultExpr);
   template <typename T>
   friend Caser<T> Switch(const Arg<T>&);
   DISALLOW_ASSIGN(Elser);
@@ -213,16 +213,16 @@ class SANDBOX_EXPORT Caser {
   ~Caser() {}
 
   // Case adds a single-value "case" clause to the switch.
-  Caser<T> Case(T value, const ResultExpr& result) const;
+  Caser<T> Case(T value, ResultExpr result) const;
 
   // Cases adds a multiple-value "case" clause to the switch.
   // See also the SANDBOX_BPF_DSL_CASES macro below for a more idiomatic way
   // of using this function.
   template <typename... Values>
-  Caser<T> CasesImpl(const ResultExpr& result, const Values&... values) const;
+  Caser<T> CasesImpl(ResultExpr result, const Values&... values) const;
 
   // Terminate the switch with a "default" clause.
-  ResultExpr Default(const ResultExpr& result) const;
+  ResultExpr Default(ResultExpr result) const;
 
  private:
   Caser(const Arg<T>& arg, Elser elser) : arg_(arg), elser_(elser) {}
@@ -299,34 +299,34 @@ SANDBOX_EXPORT Caser<T> Switch(const Arg<T>& arg) {
 }
 
 template <typename T>
-Caser<T> Caser<T>::Case(T value, const ResultExpr& result) const {
-  return SANDBOX_BPF_DSL_CASES((value), result);
+Caser<T> Caser<T>::Case(T value, ResultExpr result) const {
+  return SANDBOX_BPF_DSL_CASES((value), std::move(result));
 }
 
 template <typename T>
 template <typename... Values>
-Caser<T> Caser<T>::CasesImpl(const ResultExpr& result,
-                             const Values&... values) const {
+Caser<T> Caser<T>::CasesImpl(ResultExpr result, const Values&... values) const {
   // Theoretically we could evaluate arg_ just once and emit a more efficient
   // dispatch table, but for now we simply translate into an equivalent
   // If/ElseIf/Else chain.
 
-  return Caser<T>(arg_, elser_.ElseIf(AnyOf((arg_ == values)...), result));
+  return Caser<T>(arg_,
+                  elser_.ElseIf(AnyOf((arg_ == values)...), std::move(result)));
 }
 
 template <typename T>
-ResultExpr Caser<T>::Default(const ResultExpr& result) const {
-  return elser_.Else(result);
+ResultExpr Caser<T>::Default(ResultExpr result) const {
+  return elser_.Else(std::move(result));
 }
 
 template <typename... Rest>
-BoolExpr AllOf(const BoolExpr& first, const Rest&... rest) {
-  return AllOf(first, AllOf(rest...));
+BoolExpr AllOf(BoolExpr first, Rest&&... rest) {
+  return AllOf(std::move(first), AllOf(std::forward<Rest>(rest)...));
 }
 
 template <typename... Rest>
-BoolExpr AnyOf(const BoolExpr& first, const Rest&... rest) {
-  return AnyOf(first, AnyOf(rest...));
+BoolExpr AnyOf(BoolExpr first, Rest&&... rest) {
+  return AnyOf(std::move(first), AnyOf(std::forward<Rest>(rest)...));
 }
 
 }  // namespace bpf_dsl
