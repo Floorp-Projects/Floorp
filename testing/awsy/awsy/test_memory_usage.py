@@ -19,7 +19,7 @@ AWSY_PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 if AWSY_PATH not in sys.path:
     sys.path.append(AWSY_PATH)
 
-from awsy import TEST_SITES_TEMPLATES, ITERATIONS, PER_TAB_PAUSE, SETTLE_WAIT_TIME, MAX_TABS
+from awsy import ITERATIONS, PER_TAB_PAUSE, SETTLE_WAIT_TIME, MAX_TABS
 from awsy import process_perf_data, webservers
 
 
@@ -63,10 +63,7 @@ class TestMemoryUsage(MarionetteTestCase):
         tp5n_manifest = self.testvars.get("pageManifest", default_tp5n_manifest)
         with open(tp5n_manifest) as fp:
             urls = fp.readlines()
-        if urls:
-            urls = map(lambda x:x.replace('localhost', 'localhost:{}'), urls)
-        else:
-            urls = TEST_SITES_TEMPLATES
+        urls = map(lambda x:x.replace('localhost', 'localhost:{}'), urls)
 
         for url, server in zip(urls, self._webservers.servers):
             self._urls.append(url.strip().format(server.port))
