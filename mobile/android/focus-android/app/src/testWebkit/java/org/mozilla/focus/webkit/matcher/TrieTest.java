@@ -55,9 +55,9 @@ public class TrieTest {
         // In practice EntityList uses it's own search in order to cover all possible matching notes
         // (e.g. in case we have separate whitelists for mozilla.org and foo.mozilla.org), however
         // we don't need to test that here yet.
-        final Trie foundWhitelist = trie.findNode(FocusString.create("def"));
+        final WhiteListTrie foundWhitelist = (WhiteListTrie) trie.findNode(FocusString.create("def"));
         assertNotNull(foundWhitelist);
 
-        assertNotNull(foundWhitelist.findNode(FocusString.create("abc")));
+        assertNotNull(foundWhitelist.whitelist.findNode(FocusString.create("abc")));
     }
 }
