@@ -63,6 +63,9 @@ public:
   SendPBlobConstructor(PBlobChild* aActor,
                        const BlobConstructorParams& aParams) = 0;
 
+  virtual mozilla::ipc::PMemoryStreamChild*
+  SendPMemoryStreamConstructor(const uint64_t& aSize) = 0;
+
   virtual bool
   SendPBrowserConstructor(PBrowserChild* aActor,
                           const TabId& aTabId,
@@ -87,6 +90,11 @@ protected:
                                             const ContentParentId& aCpId,
                                             const bool& aIsForBrowser);
   virtual bool DeallocPBrowserChild(PBrowserChild*);
+
+  virtual mozilla::ipc::PMemoryStreamChild*
+  AllocPMemoryStreamChild(const uint64_t& aSize);
+
+  virtual bool DeallocPMemoryStreamChild(mozilla::ipc::PMemoryStreamChild* aActor);
 
   virtual mozilla::ipc::IPCResult RecvPBrowserConstructor(PBrowserChild* aActor,
                                                           const TabId& aTabId,
