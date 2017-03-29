@@ -377,6 +377,7 @@ if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
     # Fails VoEBaseTest.GetVersion!
     #    '../webrtc/voice_engine/voe_base_unittest.cc',
         'FakeIPC.cpp',
+        'FakeNsTraceRefcnt.cpp',
     ]
 
     # Unable to use unified build due to multiply defined symbols
