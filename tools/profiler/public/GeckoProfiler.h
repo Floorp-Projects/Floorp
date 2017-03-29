@@ -215,11 +215,6 @@ PROFILER_FUNC_VOID(profiler_set_frame_number(int frameNumber))
 PROFILER_FUNC(mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0),
               nullptr)
 
-// Get the profile encoded as a JSON object, asynchronously. A no-op if the
-// profiler is inactive.
-PROFILER_FUNC_VOID(profiler_get_profile_jsobject_async(double aSinceTime = 0,
-                                                       mozilla::dom::Promise* = 0))
-
 // Get the params used to start the profiler. Returns 0 and empty vectors (via
 // outparams) if the profile is inactive.
 PROFILER_FUNC_VOID(profiler_get_start_params(int* aEntrySize,
@@ -384,18 +379,6 @@ profiler_call_exit(void* aHandle)
 // privacy mode.
 void profiler_add_marker(const char *aMarker,
                          ProfilerMarkerPayload *aPayload = nullptr);
-
-// Saves a profile asynchronously. A no-op if the profiler is inactive when the
-// save operation begins.
-MOZ_EXPORT  // XXX: should this be 'extern "C"' as well?
-void profiler_save_profile_to_file_async(double aSinceTime,
-                                         const char* aFileName);
-
-// This function should only be called in response to the observation of a
-// "profiler-subprocess-gather" notification.
-void profiler_will_gather_OOP_profile();
-void profiler_gathered_OOP_profile();
-void profiler_OOP_exit_profile(const nsCString& aProfile);
 
 #define SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line) id ## line
 #define SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, line) SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line)
