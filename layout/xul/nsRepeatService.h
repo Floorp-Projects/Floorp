@@ -32,7 +32,11 @@ public:
   // Start dispatching timer events to the callback. There is no memory
   // management of aData here; it is the caller's responsibility to call
   // Stop() before aData's memory is released.
-  void Start(Callback aCallback, void* aData,
+  //
+  // aCallbackName is the label of the callback, used to pass to
+  // InitWithNamedCallbackFunc.
+  void Start(Callback aCallback, void* aCallbackData,
+             const nsACString& aCallbackName,
              uint32_t aInitialDelay = INITAL_REPEAT_DELAY);
   // Stop dispatching timer events to the callback. If the repeat service
   // is not currently configured with the given callback and data, this
@@ -51,6 +55,7 @@ private:
 
   Callback           mCallback;
   void*              mCallbackData;
+  nsCString          mCallbackName;
   nsCOMPtr<nsITimer> mRepeatTimer;
 
 }; // class nsRepeatService
