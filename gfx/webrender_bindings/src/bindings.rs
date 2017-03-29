@@ -1338,11 +1338,13 @@ pub unsafe extern "C" fn wr_api_finalize_builder(state: &mut WrState,
     let frame_builder = mem::replace(&mut state.frame_builder,
                                      WebRenderFrameBuilder::new(state.pipeline_id));
     let (_, dl, aux) = frame_builder.dl_builder.finalize();
-    //XXX: get rid of the copies here
-    *dl_data = WrVecU8::from_vec(dl.data().to_owned());
-    *dl_descriptor = dl.descriptor().clone();
-    *aux_data = WrVecU8::from_vec(aux.data().to_owned());
-    *aux_descriptor = aux.descriptor().clone();
+    let (data, descriptor) = dl.into_data();
+    *dl_data = WrVecU8::from_vec(data);
+    *dl_descriptor = descriptor;
+
+    let (data, descriptor) = aux.into_data();
+    *aux_data = WrVecU8::from_vec(data);
+    *aux_descriptor = descriptor;
 }
 
 #[no_mangle]
