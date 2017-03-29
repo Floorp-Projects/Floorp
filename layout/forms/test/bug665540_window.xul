@@ -10,7 +10,7 @@
   </script>
 
   <body xmlns="http://www.w3.org/1999/xhtml">
-    <select id="select" style="-moz-appearance:none">
+    <select id="select" style="-moz-appearance:none; appearance: none">
       <option id="optiona">a</option>
       <option>b</option>
     </select>

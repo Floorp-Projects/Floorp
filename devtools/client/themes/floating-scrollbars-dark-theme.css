@@ -7,7 +7,7 @@
    well as any overflow: scroll elements within the page, while excluding
    <select>. */
 *|*:not(html|select) > scrollbar {
-  -moz-appearance: none !important;
+  -moz-appearance: none !important; appearance: none !important;
   position: relative;
   background-color: transparent;
   background-image: none;
@@ -37,14 +37,14 @@
 
 *|*:not(html|select) > scrollbar thumb {
   background-color: rgba(170, 170, 170, .2) !important; /* --toolbar-tab-hover */
-  -moz-appearance: none !important;
+  -moz-appearance: none !important; appearance: none !important;
   border-width: 0px !important;
   border-radius: 3px !important;
 }
 
 *|*:root[platform="mac"] > scrollbar slider,
 *|*:root[platform="mac"] *|*:not(html|select) > scrollbar slider {
-  -moz-appearance: none !important;
+  -moz-appearance: none !important; appearance: none !important;
 }
 
 *|*:root[platform="win"] > scrollbar scrollbarbutton,

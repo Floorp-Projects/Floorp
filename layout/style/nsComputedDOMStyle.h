@@ -237,6 +237,7 @@ private:
    */
 
   already_AddRefed<CSSValue> DoGetAppearance();
+  already_AddRefed<CSSValue> DoGetMozAppearance();
 
   /* Box properties */
   already_AddRefed<CSSValue> DoGetBoxAlign();

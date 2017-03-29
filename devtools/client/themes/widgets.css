@@ -123,7 +123,7 @@
 
 .scrollbutton-up,
 .scrollbutton-down {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   background: transparent;
   box-shadow: none;
   border: none;
@@ -134,7 +134,7 @@
 
 .scrollbutton-up > .toolbarbutton-icon,
 .scrollbutton-down > .toolbarbutton-icon {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   width: 7px;
   height: 16px;
   background-size: 14px 16px;
@@ -191,7 +191,7 @@
 
 .breadcrumbs-widget-item {
   background-color: transparent;
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   min-height: 24px;
   min-width: 65px;
   margin: 0;

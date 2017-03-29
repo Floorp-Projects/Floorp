@@ -16,7 +16,7 @@
 }
 
 .devtools-responsiveui-toolbar {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   background: transparent;
   /* text color is textColor from dark theme, since no theme is applied to
    * the responsive toolbar.
@@ -29,7 +29,7 @@
 }
 
 .devtools-responsiveui-textinput {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   background: #333;
   color: #fff;
   border: 1px solid #111;
@@ -46,7 +46,7 @@
 
 .devtools-responsiveui-menulist,
 .devtools-responsiveui-toolbarbutton {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   -moz-box-align: center;
   min-width: 32px;
   min-height: 22px;
@@ -60,12 +60,12 @@
 }
 
 .devtools-responsiveui-menulist .menulist-editable-box {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   background-color: transparent;
 }
 
 .devtools-responsiveui-menulist html|*.menulist-editable-input {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   color: inherit;
   text-align: center;
 }
@@ -124,7 +124,7 @@
 }
 
 .devtools-responsiveui-menulist > .menulist-dropmarker {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   display: -moz-box;
   background-color: transparent;
   list-style-image: url("chrome://devtools/skin/images/dropmarker.svg");
@@ -134,7 +134,7 @@
 }
 
 .devtools-responsiveui-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   color: inherit;
   border-width: 0;
   border-inline-end: 1px solid hsla(210,8%,5%,.45);
@@ -152,7 +152,7 @@
 
 .devtools-responsiveui-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker,
 .devtools-responsiveui-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-dropmarker {
-  -moz-appearance: none !important;
+  -moz-appearance: none !important; appearance: none !important;
   list-style-image: url("chrome://devtools/skin/images/dropmarker.svg");
   -moz-box-align: center;
   padding: 0 3px;
@@ -266,7 +266,7 @@
 }
 
 .devtools-responsiveui-hardware-buttons {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   padding: 20px;
 
   border: 1px solid #FFFFFF;
@@ -288,7 +288,7 @@
 
 .devtools-responsiveui-sleep-button {
   -moz-user-focus: ignore;
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   /* compensate browserStack top padding */
   margin-top: -67px;
   margin-right: 10px;
@@ -316,7 +316,7 @@
 .devtools-responsiveui-volume-up-button,
 .devtools-responsiveui-volume-down-button {
   -moz-user-focus: ignore;
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   border: 1px solid red;
   min-width: 8px;
   height: 40px;
