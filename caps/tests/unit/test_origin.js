@@ -300,5 +300,12 @@ function run_test() {
 
   var aboutBlankURI = makeURI('about:blank');
   var aboutBlankPrin = ssm.createCodebasePrincipal(aboutBlankURI, {});
-  do_check_true(/^moz-nullprincipal:\{([0-9]|[a-z]|\-){36}\}$/.test(aboutBlankPrin.origin));
+  var thrown = false;
+  try {
+    aboutBlankPrin.origin;
+  } catch (e) {
+    thrown = true;
+  }
+  do_check_true(thrown);
+
 }

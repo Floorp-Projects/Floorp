@@ -95,9 +95,8 @@ var gPermissionManager = {
       try {
         uri = Services.io.newURI(input_url);
         principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-        if (principal.origin.startsWith("moz-nullprincipal:")) {
-          throw "Null principal";
-        }
+        // If we have ended up with an unknown scheme, the following will throw.
+        principal.origin;
       } catch (ex) {
         uri = Services.io.newURI("http://" + input_url);
         principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
