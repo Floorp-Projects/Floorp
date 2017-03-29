@@ -1269,6 +1269,7 @@ class HTMLMediaElement::ErrorSink
 public:
   explicit ErrorSink(HTMLMediaElement* aOwner)
     : mOwner(aOwner)
+    , mSrcIsUnsupportedTypeMedia(false)
   {
     MOZ_ASSERT(mOwner);
   }
@@ -1287,11 +1288,17 @@ public:
       return;
     }
 
-    mError = new MediaError(mOwner, aErrorCode, aErrorDetails);
-    if (CanOwnerPlayUnsupportedTypeMedia()) {
+    // TODO : remove unsupported type related codes after finishing native
+    // support for HLS, see bug 1350842.
+    if (CanOwnerPlayUnsupportedTypeMedia() &&
+        aErrorCode == MEDIA_ERR_SRC_NOT_SUPPORTED) {
+      // On Fennec, we do some hack for unsupported type media, we don't set
+      // its error state in order to open it with external app.
+      mSrcIsUnsupportedTypeMedia = true;
       mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
-      OpenUnsupportedMediaForOwner();
+      MaybeOpenUnsupportedMediaForOwner();
     } else {
+      mError = new MediaError(mOwner, aErrorCode, aErrorDetails);
       mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("error"));
       if (mOwner->ReadyState() == HAVE_NOTHING &&
           aErrorCode == MEDIA_ERR_ABORTED) {
@@ -1311,13 +1318,27 @@ public:
   void ResetError()
   {
     mError = nullptr;
+    mSrcIsUnsupportedTypeMedia = false;
   }
 
-  void NotifyPlayStarted()
+  void MaybeOpenUnsupportedMediaForOwner() const
   {
-    if (CanOwnerPlayUnsupportedTypeMedia()) {
-      OpenUnsupportedMediaForOwner();
+    // Src is supported type or we don't open the pref for external app.
+    if (!mSrcIsUnsupportedTypeMedia ||
+        !CanOwnerPlayUnsupportedTypeMedia()) {
+      return;
     }
+
+    // If media doesn't start playing, we don't need to open it.
+    if (mOwner->Paused()) {
+      return;
+    }
+
+    nsContentUtils::DispatchTrustedEvent(mOwner->OwnerDoc(),
+                                         static_cast<nsIContent*>(mOwner),
+                                         NS_LITERAL_STRING("OpenMediaWithExternalApp"),
+                                         true,
+                                         true);
   }
 
   RefPtr<MediaError> mError;
@@ -1334,42 +1355,16 @@ private:
   bool CanOwnerPlayUnsupportedTypeMedia() const
   {
 #if defined(MOZ_WIDGET_ANDROID)
-    // On Fennec, we will user an external app to open unsupported media types.
-    if (!Preferences::GetBool("media.openUnsupportedTypeWithExternalApp")) {
-      return false;
-    }
-
-    if (!mError) {
-      return false;
-    }
-
-    uint16_t errorCode = mError->Code();
-    if (errorCode != MEDIA_ERR_SRC_NOT_SUPPORTED) {
-      return false;
-    }
-
-    // If media doesn't start playing, we don't need to open it.
-    if (mOwner->Paused()) {
-      return false;
-    }
-
-    return true;
+    // On Fennec, we will use an external app to open unsupported media types.
+    return Preferences::GetBool("media.openUnsupportedTypeWithExternalApp");
 #endif
     return false;
-  }
-
-  void OpenUnsupportedMediaForOwner() const
-  {
-    nsContentUtils::DispatchTrustedEvent(mOwner->OwnerDoc(),
-                                         static_cast<nsIContent*>(mOwner),
-                                         NS_LITERAL_STRING("OpenMediaWithExternalApp"),
-                                         true,
-                                         true);
   }
 
   // Media elememt's life cycle would be longer than error sink, so we use the
   // raw pointer and this class would only be referenced by media element.
   HTMLMediaElement* mOwner;
+  bool mSrcIsUnsupportedTypeMedia;
 };
 
 NS_IMPL_ADDREF_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
@@ -6545,9 +6540,7 @@ HTMLMediaElement::GetError() const
 void
 HTMLMediaElement::OpenUnsupportedMediaWithExternalAppIfNeeded() const
 {
-  // Error sink would check the error state and other conditions to decide
-  // whether we can open unsupported type media with an external app.
-  mErrorSink->NotifyPlayStarted();
+  mErrorSink->MaybeOpenUnsupportedMediaForOwner();
 }
 
 void HTMLMediaElement::GetCurrentSpec(nsCString& aString)
