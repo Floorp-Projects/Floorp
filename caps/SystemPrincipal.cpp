@@ -35,7 +35,7 @@ already_AddRefed<SystemPrincipal>
 SystemPrincipal::Create()
 {
   RefPtr<SystemPrincipal> sp = new SystemPrincipal();
-  sp->FinishInit();
+  sp->FinishInit(OriginAttributes());
   return sp.forget();
 }
 
