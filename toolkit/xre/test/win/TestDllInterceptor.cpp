@@ -468,6 +468,7 @@ int main()
 #ifdef _M_IX86
       TestHook(TestSendMessageTimeoutW, "user32.dll", "SendMessageTimeoutW") &&
 #endif
+      TestDetour("kernel32.dll", "BaseThreadInitThunk") &&
       TestDetour("ntdll.dll", "LdrLoadDll")) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
     return 0;
