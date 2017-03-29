@@ -13,7 +13,9 @@
 #include "nsRepeatService.h"
 #include "nsIServiceManager.h"
 
-nsRepeatService* nsRepeatService::gInstance = nullptr;
+using namespace mozilla;
+
+static StaticRefPtr<nsRepeatService> gRepeatService;
 
 nsRepeatService::nsRepeatService()
 : mCallback(nullptr), mCallbackData(nullptr)
@@ -25,20 +27,19 @@ nsRepeatService::~nsRepeatService()
   NS_ASSERTION(!mCallback && !mCallbackData, "Callback was not removed before shutdown");
 }
 
-nsRepeatService* 
+/* static */ nsRepeatService*
 nsRepeatService::GetInstance()
 {
-  if (!gInstance) {
-    gInstance = new nsRepeatService();
-    NS_IF_ADDREF(gInstance);
+  if (!gRepeatService) {
+    gRepeatService = new nsRepeatService();
   }
-  return gInstance;
+  return gRepeatService;
 }
 
 /*static*/ void
 nsRepeatService::Shutdown()
 {
-  NS_IF_RELEASE(gInstance);
+  gRepeatService = nullptr;
 }
 
 void nsRepeatService::Start(Callback aCallback, void* aCallbackData,
