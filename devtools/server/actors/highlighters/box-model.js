@@ -352,10 +352,6 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     return shown;
   },
 
-  _scrollUpdate: function () {
-    this._moveInfobar();
-  },
-
   /**
    * Hide the highlighter, the outline and the infobar.
    */
@@ -512,7 +508,7 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     }
 
     // Un-zoom the root wrapper if the page was zoomed.
-    let rootId = this.ID_CLASS_PREFIX + "elements";
+    let rootId = this.ID_CLASS_PREFIX + "root";
     this.markup.scaleRootElement(this.currentNode, rootId);
 
     return true;
