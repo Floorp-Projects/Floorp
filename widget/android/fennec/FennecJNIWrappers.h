@@ -834,6 +834,8 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
+    auto DisposeNative() const -> void;
+
     struct OnError_t {
         typedef NativeCallbacks Owner;
         typedef void ReturnType;
