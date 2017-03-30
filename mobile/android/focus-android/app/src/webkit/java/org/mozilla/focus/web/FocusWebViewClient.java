@@ -120,7 +120,7 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
         // (The API 24+ version of shouldOverrideUrlLoading() lets us determine whether
         // the request is for the main frame, and if it's not we could then completely
         // skip the external URL handling.)
-        if (UrlUtils.focusSupportURLProtocol(url) &&
+        if (!UrlUtils.isSupportedProtocol(url) &&
                 callback.handleExternalUrl(url)) {
             return true;
         }
