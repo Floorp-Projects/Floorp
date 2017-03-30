@@ -2475,7 +2475,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
 
     RefPtr<nsXBLBinding> binding;
     rv = xblService->LoadBindings(aDocElement, display->mBinding->GetURI(),
-                                  display->mBinding->mOriginPrincipal,
+                                  display->mBinding->mExtraData->GetPrincipal(),
                                   getter_AddRefs(binding), &resolveStyle);
     if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED)
       return nullptr; // Binding will load asynchronously.
@@ -5779,10 +5779,10 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 
       nsAutoPtr<PendingBinding> newPendingBinding(new PendingBinding());
 
-      nsresult rv = xblService->LoadBindings(aContent, display->mBinding->GetURI(),
-                                             display->mBinding->mOriginPrincipal,
-                                             getter_AddRefs(newPendingBinding->mBinding),
-                                             &resolveStyle);
+      nsresult rv = xblService->LoadBindings(
+        aContent, display->mBinding->GetURI(),
+        display->mBinding->mExtraData->GetPrincipal(),
+        getter_AddRefs(newPendingBinding->mBinding), &resolveStyle);
       if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED)
         return;
 
