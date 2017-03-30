@@ -138,7 +138,11 @@ WidevineVideoDecoder::Decode(GMPVideoEncodedFrame* aInputFrame,
       // key status changing to "output-restricted", and is supposed to switch
       // to a stream that doesn't require OP. In order to keep the playback
       // pipeline rolling, just output a black frame. See bug 1343140.
-      frame.InitToBlack(mCodedSize.width, mCodedSize.height, sample.timestamp);
+      if (!frame.InitToBlack(mCodedSize.width, mCodedSize.height,
+                             sample.timestamp)) {
+        mCallback->Error(GMPDecodeErr);
+        return;
+      }
     }
     if (!ReturnOutput(frame)) {
       CDM_LOG("WidevineVideoDecoder::Decode() Failed in ReturnOutput()");
