@@ -19,9 +19,9 @@ fails HTTP(..) == graphite-small-caps-1.html graphite-small-caps-1.html
 == uppercase-1.html uppercase-1.html
 == uppercase-szlig-1.html uppercase-szlig-1.html
 # these use DejaVu Sans via @font-face for consistency of results
-fails == all-upper.html all-upper.html
-fails == all-lower.html all-lower.html
-fails == all-title.html all-title.html
+== all-upper.html all-upper.html
+== all-lower.html all-lower.html
+== all-title.html all-title.html
 == smtp-upper.html smtp-upper.html
 == smtp-lower.html smtp-lower.html
 == smtp-title.html smtp-title.html

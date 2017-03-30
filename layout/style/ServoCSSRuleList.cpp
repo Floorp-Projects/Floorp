@@ -42,6 +42,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServoCSSRuleList,
     if (!aRule->IsCCLeaf()) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRules[i]");
       cb.NoteXPCOMChild(aRule);
+      // Note about @font-face rule again, since there is an indirect
+      // owning edge through Servo's struct that FontFaceRule in Servo
+      // owns a Gecko nsCSSFontFaceRule object.
+      if (aRule->Type() == nsIDOMCSSRule::FONT_FACE_RULE) {
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRawRules[i]");
+        cb.NoteXPCOMChild(aRule);
+      }
     }
   });
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -81,7 +88,13 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
       CASE_RULE(MEDIA, Media)
       CASE_RULE(NAMESPACE, Namespace)
 #undef CASE_RULE
-      case nsIDOMCSSRule::FONT_FACE_RULE:
+      case nsIDOMCSSRule::FONT_FACE_RULE: {
+        // Returns a borrowed nsCSSFontFaceRule object directly, so we
+        // don't need to create anything here, but we still need to have
+        // the style sheet and parent rule set properly.
+        ruleObj = Servo_CssRules_GetFontFaceRuleAt(mRawRules, aIndex);
+        break;
+      }
       case nsIDOMCSSRule::KEYFRAMES_RULE:
         // XXX create corresponding rules
       default:
@@ -133,6 +146,7 @@ ServoCSSRuleList::DropAllRules()
     DropRule(already_AddRefed<css::Rule>(rule));
   });
   mRules.Clear();
+  mRawRules = nullptr;
 }
 
 void

@@ -1360,6 +1360,13 @@ SyncEngine.prototype = {
     // By default, assume there's no dupe items for the engine
   },
 
+  /**
+   * Called before a remote record is discarded due to failed reconciliation.
+   * Used by bookmark sync to note the child ordering of special folders.
+   */
+  beforeRecordDiscard(record) {
+  },
+
   // Called when the server has a record marked as deleted, but locally we've
   // changed it more recently than the deletion. If we return false, the
   // record will be deleted locally. If we return true, we'll reupload the
@@ -1569,6 +1576,9 @@ SyncEngine.prototype = {
     // opportunity to merge the records. Bug 720592 tracks this feature.
     this._log.warn("DATA LOSS: Both local and remote changes to record: " +
                    item.id);
+    if (!remoteIsNewer) {
+      this.beforeRecordDiscard(item);
+    }
     return remoteIsNewer;
   },
 
