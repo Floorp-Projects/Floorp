@@ -94,10 +94,8 @@ private:
 
   ThreadResponsiveness mRespInfo;
 
-  // When sampling, this holds the generation number and offset in the
-  // ProfileBuffer of the most recent sample for this thread.
-  // mLastSample.mThreadId duplicates mThreadId in this structure, which
-  // simplifies some uses of mLastSample.
+  // When sampling, this holds the generation number and offset in
+  // ProfilerState::mBuffer of the most recent sample for this thread.
   ProfileBuffer::LastSample mLastSample;
 };
 
