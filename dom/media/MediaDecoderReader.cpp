@@ -164,7 +164,7 @@ MediaDecoderReader::DecodeToFirstVideoData()
     MOZ_ASSERT(self->OnTaskQueue());
     NS_ENSURE_TRUE(!self->mShutdown, false);
     bool skip = false;
-    if (!self->DecodeVideoFrame(skip, 0)) {
+    if (!self->DecodeVideoFrame(skip, media::TimeUnit::Zero())) {
       self->VideoQueue().Finish();
       return !!self->VideoQueue().PeekFront();
     }
@@ -293,7 +293,7 @@ MediaDecoderReader::RequestVideoData(bool aSkipToNextKeyframe,
   bool skip = aSkipToNextKeyframe;
   while (VideoQueue().GetSize() == 0 &&
          !VideoQueue().IsFinished()) {
-    if (!DecodeVideoFrame(skip, aTimeThreshold.ToMicroseconds())) {
+    if (!DecodeVideoFrame(skip, aTimeThreshold)) {
       VideoQueue().Finish();
     } else if (skip) {
       // We still need to decode more data in order to skip to the next
