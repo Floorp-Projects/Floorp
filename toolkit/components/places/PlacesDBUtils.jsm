@@ -602,7 +602,7 @@ this.PlacesDBUtils = {
     cleanupStatements.push(deleteOrphanIconPages);
 
     let deleteOrphanIcons = DBConn.createAsyncStatement(
-      `DELETE FROM moz_icons WHERE id NOT IN (
+      `DELETE FROM moz_icons WHERE root = 0 AND id NOT IN (
          SELECT icon_id FROM moz_icons_to_pages
        )`);
     cleanupStatements.push(deleteOrphanIcons);

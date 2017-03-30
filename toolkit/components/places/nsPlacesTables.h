@@ -191,6 +191,7 @@
     "icon_url TEXT NOT NULL, " \
     "fixed_icon_url_hash INTEGER NOT NULL, " \
     "width INTEGER NOT NULL DEFAULT 0, " \
+    "root INTEGER NOT NULL DEFAULT 0, " \
     "color INTEGER, " \
     "expire_ms INTEGER NOT NULL DEFAULT 0, " \
     "data BLOB " \
