@@ -98,16 +98,29 @@ public:
    * provided by the tracker are defined in terms of this period. If the
    * period is zero, then we don't use a timer and rely on someone calling
    * AgeOneGenerationLocked explicitly.
+   * @param aName the name of the subclass for telemetry.
+   * @param aEventTarget the optional event target on main thread to label the
+   * runnable of the asynchronous invocation to NotifyExpired().
+
    */
-  ExpirationTrackerImpl(uint32_t aTimerPeriod, const char* aName)
+  ExpirationTrackerImpl(uint32_t aTimerPeriod,
+                        const char* aName,
+                        nsIEventTarget* aEventTarget = nullptr)
     : mTimerPeriod(aTimerPeriod)
     , mNewestGeneration(0)
     , mInAgeOneGeneration(false)
     , mName(aName)
+    , mEventTarget(aEventTarget)
   {
     static_assert(K >= 2 && K <= nsExpirationState::NOT_TRACKED,
                   "Unsupported number of generations (must be 2 <= K <= 15)");
     MOZ_ASSERT(NS_IsMainThread());
+    if (mEventTarget) {
+      bool current = false;
+      MOZ_RELEASE_ASSERT(
+        NS_SUCCEEDED(mEventTarget->IsOnCurrentThread(&current)) && current,
+        "Provided event target must be on the main thread");
+    }
     mObserver = new ExpirationTrackerObserver();
     mObserver->Init(this);
   }
@@ -334,6 +347,7 @@ private:
   uint32_t           mNewestGeneration;
   bool               mInAgeOneGeneration;
   const char* const  mName;   // Used for timer firing profiling.
+  const nsCOMPtr<nsIEventTarget> mEventTarget;
 
   /**
    * Whenever "memory-pressure" is observed, it calls AgeAllGenerationsLocked()
@@ -394,7 +408,9 @@ private:
     if (!mTimer) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    if (!NS_IsMainThread()) {
+    if (mEventTarget) {
+      mTimer->SetTarget(mEventTarget);
+    } else if (!NS_IsMainThread()) {
       // TimerCallback should always be run on the main thread to prevent races
       // to the destruction of the tracker.
       nsCOMPtr<nsIEventTarget> target = do_GetMainThread();
@@ -454,8 +470,12 @@ protected:
   virtual void NotifyExpired(T* aObj) = 0;
 
 public:
-  nsExpirationTracker(uint32_t aTimerPeriod, const char* aName)
-    : ::detail::SingleThreadedExpirationTracker<T, K>(aTimerPeriod, aName)
+  nsExpirationTracker(uint32_t aTimerPeriod,
+                      const char* aName,
+                      nsIEventTarget* aEventTarget = nullptr)
+    : ::detail::SingleThreadedExpirationTracker<T, K>(aTimerPeriod,
+                                                      aName,
+                                                      aEventTarget)
   { }
 
   virtual ~nsExpirationTracker()
