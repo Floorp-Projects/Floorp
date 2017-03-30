@@ -1343,86 +1343,92 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     int32_t pos = 0;
     NS_NAMED_LITERAL_STRING(newlineStr, LFSTR);
 
-    // for efficiency, break out the pre case separately.  This is because
-    // its a lot cheaper to search the input string for only newlines than
-    // it is to search for both tabs and newlines.
-    if (isPRE || IsPlaintextEditor()) {
-      while (unicodeBuf && pos != -1 &&
-             pos < static_cast<int32_t>(inString->Length())) {
-        int32_t oldPos = pos;
-        int32_t subStrLen;
-        pos = tString.FindChar(nsCRT::LF, oldPos);
+    {
+      NS_ENSURE_STATE(mHTMLEditor);
+      AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
+                                address_of(selNode), &selOffset);
 
-        if (pos != -1) {
-          subStrLen = pos - oldPos;
-          // if first char is newline, then use just it
-          if (!subStrLen) {
-            subStrLen = 1;
+      // for efficiency, break out the pre case separately.  This is because
+      // its a lot cheaper to search the input string for only newlines than
+      // it is to search for both tabs and newlines.
+      if (isPRE || IsPlaintextEditor()) {
+        while (unicodeBuf && pos != -1 &&
+               pos < static_cast<int32_t>(inString->Length())) {
+          int32_t oldPos = pos;
+          int32_t subStrLen;
+          pos = tString.FindChar(nsCRT::LF, oldPos);
+
+          if (pos != -1) {
+            subStrLen = pos - oldPos;
+            // if first char is newline, then use just it
+            if (!subStrLen) {
+              subStrLen = 1;
+            }
+          } else {
+            subStrLen = tString.Length() - oldPos;
+            pos = tString.Length();
           }
-        } else {
-          subStrLen = tString.Length() - oldPos;
-          pos = tString.Length();
-        }
 
-        nsDependentSubstring subStr(tString, oldPos, subStrLen);
+          nsDependentSubstring subStr(tString, oldPos, subStrLen);
 
-        // is it a return?
-        if (subStr.Equals(newlineStr)) {
-          NS_ENSURE_STATE(mHTMLEditor);
-          nsCOMPtr<Element> br =
-            mHTMLEditor->CreateBRImpl(address_of(curNode), &curOffset,
-                                      nsIEditor::eNone);
-          NS_ENSURE_STATE(br);
-          pos++;
-        } else {
-          NS_ENSURE_STATE(mHTMLEditor);
-          rv = mHTMLEditor->InsertTextImpl(subStr, address_of(curNode),
-                                           &curOffset, doc);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-      }
-    } else {
-      NS_NAMED_LITERAL_STRING(tabStr, "\t");
-      NS_NAMED_LITERAL_STRING(spacesStr, "    ");
-      char specialChars[] = {TAB, nsCRT::LF, 0};
-      while (unicodeBuf && pos != -1 &&
-             pos < static_cast<int32_t>(inString->Length())) {
-        int32_t oldPos = pos;
-        int32_t subStrLen;
-        pos = tString.FindCharInSet(specialChars, oldPos);
-
-        if (pos != -1) {
-          subStrLen = pos - oldPos;
-          // if first char is newline, then use just it
-          if (!subStrLen) {
-            subStrLen = 1;
+          // is it a return?
+          if (subStr.Equals(newlineStr)) {
+            NS_ENSURE_STATE(mHTMLEditor);
+            nsCOMPtr<Element> br =
+              mHTMLEditor->CreateBRImpl(address_of(curNode), &curOffset,
+                                        nsIEditor::eNone);
+            NS_ENSURE_STATE(br);
+            pos++;
+          } else {
+            NS_ENSURE_STATE(mHTMLEditor);
+            rv = mHTMLEditor->InsertTextImpl(subStr, address_of(curNode),
+                                             &curOffset, doc);
+            NS_ENSURE_SUCCESS(rv, rv);
           }
-        } else {
-          subStrLen = tString.Length() - oldPos;
-          pos = tString.Length();
         }
+      } else {
+        NS_NAMED_LITERAL_STRING(tabStr, "\t");
+        NS_NAMED_LITERAL_STRING(spacesStr, "    ");
+        char specialChars[] = {TAB, nsCRT::LF, 0};
+        while (unicodeBuf && pos != -1 &&
+               pos < static_cast<int32_t>(inString->Length())) {
+          int32_t oldPos = pos;
+          int32_t subStrLen;
+          pos = tString.FindCharInSet(specialChars, oldPos);
 
-        nsDependentSubstring subStr(tString, oldPos, subStrLen);
-        NS_ENSURE_STATE(mHTMLEditor);
-        WSRunObject wsObj(mHTMLEditor, curNode, curOffset);
+          if (pos != -1) {
+            subStrLen = pos - oldPos;
+            // if first char is newline, then use just it
+            if (!subStrLen) {
+              subStrLen = 1;
+            }
+          } else {
+            subStrLen = tString.Length() - oldPos;
+            pos = tString.Length();
+          }
 
-        // is it a tab?
-        if (subStr.Equals(tabStr)) {
-          rv =
-            wsObj.InsertText(spacesStr, address_of(curNode), &curOffset, doc);
-          NS_ENSURE_SUCCESS(rv, rv);
-          pos++;
-        }
-        // is it a return?
-        else if (subStr.Equals(newlineStr)) {
-          nsCOMPtr<Element> br = wsObj.InsertBreak(address_of(curNode),
-                                                   &curOffset,
-                                                   nsIEditor::eNone);
-          NS_ENSURE_TRUE(br, NS_ERROR_FAILURE);
-          pos++;
-        } else {
-          rv = wsObj.InsertText(subStr, address_of(curNode), &curOffset, doc);
-          NS_ENSURE_SUCCESS(rv, rv);
+          nsDependentSubstring subStr(tString, oldPos, subStrLen);
+          NS_ENSURE_STATE(mHTMLEditor);
+          WSRunObject wsObj(mHTMLEditor, curNode, curOffset);
+
+          // is it a tab?
+          if (subStr.Equals(tabStr)) {
+            rv =
+              wsObj.InsertText(spacesStr, address_of(curNode), &curOffset, doc);
+            NS_ENSURE_SUCCESS(rv, rv);
+            pos++;
+          }
+          // is it a return?
+          else if (subStr.Equals(newlineStr)) {
+            nsCOMPtr<Element> br = wsObj.InsertBreak(address_of(curNode),
+                                                     &curOffset,
+                                                     nsIEditor::eNone);
+            NS_ENSURE_TRUE(br, NS_ERROR_FAILURE);
+            pos++;
+          } else {
+            rv = wsObj.InsertText(subStr, address_of(curNode), &curOffset, doc);
+            NS_ENSURE_SUCCESS(rv, rv);
+          }
         }
       }
     }
