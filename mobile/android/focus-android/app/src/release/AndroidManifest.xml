@@ -5,7 +5,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools">
 
-    <application>
+    <!-- We set allowBackup=false in the main manifest. Lint isn't clever enough to cope with
+         merged manifests, so we need to ignore the warning here. (See #380) -->
+    <application
+        tools:ignore="AllowBackup">
 
         <receiver
             android:name="com.adjust.sdk.AdjustReferrerReceiver"
