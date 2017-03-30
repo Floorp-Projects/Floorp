@@ -18,8 +18,14 @@ if (AppConstants.E10S_TESTING_ONLY) {
   XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
                                     "resource://gre/modules/UpdateUtils.jsm");
 }
+
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
+
+if (AppConstants.MOZ_DEV_EDITION) {
+  XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
+                                    "resource://gre/modules/FxAccounts.jsm");
+}
 
 const ENGINE_FLAVOR = "text/x-moz-search-engine";
 
@@ -185,6 +191,11 @@ var gMainPane = {
 
       OS.File.stat(ignoreSeparateProfile).then(() => separateProfileModeCheckbox.checked = false,
                                                () => separateProfileModeCheckbox.checked = true);
+
+      fxAccounts.getSignedInUser().then(data => {
+        document.getElementById("getStarted").selectedIndex = data ? 1 : 0;
+      })
+      .catch(Cu.reportError);
     }
 
     // Notify observers that the UI is now ready
@@ -282,10 +293,17 @@ var gMainPane = {
                   .getService(Ci.nsIWindowMediator);
       let win = wm.getMostRecentWindow("navigator:browser");
 
-      if (win) {
-        let accountsTab = win.gBrowser.addTab("about:accounts?action=signin&entrypoint=dev-edition-setup");
-        win.gBrowser.selectedTab = accountsTab;
-      }
+      fxAccounts.getSignedInUser().then(data => {
+        if (win) {
+          if (data) {
+            // We have a user, open Sync preferences in the same tab
+            win.openUILinkIn("about:preferences#sync", "current");
+            return;
+          }
+          let accountsTab = win.gBrowser.addTab("about:accounts?action=signin&entrypoint=dev-edition-setup");
+          win.gBrowser.selectedTab = accountsTab;
+        }
+      });
     }
   },
 
