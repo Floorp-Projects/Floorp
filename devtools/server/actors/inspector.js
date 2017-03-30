@@ -2653,6 +2653,10 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * returns null.
    */
   getOffsetParent: function (node) {
+    if (isNodeDead(node)) {
+      return null;
+    }
+
     let offsetParent = node.rawNode.offsetParent;
 
     if (!offsetParent) {

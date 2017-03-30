@@ -41,6 +41,14 @@ addTest(function setup() {
 });
 
 addTest(function () {
+  info("Try to get the offset parent for a dead node (null)");
+  gWalker.getOffsetParent(null).then(offsetParent => {
+    ok(!offsetParent, "No offset parent found");
+    runNextTest();
+  });
+});
+
+addTest(function () {
   info("Try to get the offset parent for a node that is absolutely positioned inside a " +
     "relative node");
   gWalker.querySelector(gWalker.rootNode, "#absolute_child").then(node => {
