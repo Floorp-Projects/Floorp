@@ -93,7 +93,6 @@ GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
   , mWaitingForPluginsSyncShutdown(false)
   , mInitPromiseMonitor("GeckoMediaPluginServiceParent::mInitPromiseMonitor")
   , mLoadPluginsFromDiskComplete(false)
-  , mServiceUserCount(0)
   , mMainThread(SystemGroup::AbstractMainThreadFor(TaskCategory::Other))
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1632,10 +1631,14 @@ GeckoMediaPluginServiceParent::BlockShutdown(nsIAsyncShutdownClient*)
 }
 
 void
-GeckoMediaPluginServiceParent::ServiceUserCreated()
+GeckoMediaPluginServiceParent::ServiceUserCreated(
+  GMPServiceParent* aServiceParent)
 {
-  MOZ_ASSERT(mServiceUserCount >= 0);
-  if (++mServiceUserCount == 1) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(!mServiceParents.Contains(aServiceParent));
+  mServiceParents.AppendElement(aServiceParent);
+  if (mServiceParents.Length() == 1) {
     nsresult rv = GetShutdownBarrier()->AddBlocker(
       this, NS_LITERAL_STRING(__FILE__), __LINE__,
       NS_LITERAL_STRING("GeckoMediaPluginServiceParent shutdown"));
@@ -1644,10 +1647,15 @@ GeckoMediaPluginServiceParent::ServiceUserCreated()
 }
 
 void
-GeckoMediaPluginServiceParent::ServiceUserDestroyed()
+GeckoMediaPluginServiceParent::ServiceUserDestroyed(
+  GMPServiceParent* aServiceParent)
 {
-  MOZ_ASSERT(mServiceUserCount > 0);
-  if (--mServiceUserCount == 0) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(mServiceParents.Length() > 0);
+  MOZ_ASSERT(mServiceParents.Contains(aServiceParent));
+  mServiceParents.RemoveElement(aServiceParent);
+  if (mServiceParents.IsEmpty()) {
     nsresult rv = GetShutdownBarrier()->RemoveBlocker(this);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   }
@@ -1692,12 +1700,17 @@ GeckoMediaPluginServiceParent::GetById(uint32_t aPluginId)
   return nullptr;
 }
 
+GMPServiceParent::GMPServiceParent(GeckoMediaPluginServiceParent* aService)
+  : mService(aService)
+{
+  MOZ_ASSERT(mService);
+  mService->ServiceUserCreated(this);
+}
+
 GMPServiceParent::~GMPServiceParent()
 {
-  nsCOMPtr<nsIRunnable> task = NewRunnableMethod(
-    "GeckoMediaPluginServiceParent::ServiceUserDestroyed",
-    mService.get(), &GeckoMediaPluginServiceParent::ServiceUserDestroyed);
-  mService->MainThread()->Dispatch(task.forget());
+  MOZ_ASSERT(mService);
+  mService->ServiceUserDestroyed(this);
 }
 
 mozilla::ipc::IPCResult
@@ -1850,7 +1863,16 @@ GMPServiceParent::ActorDestroy(ActorDestroyReason aWhy)
     lock.Wait();
   }
 
-  NS_DispatchToCurrentThread(new DeleteGMPServiceParent(this));
+  // Dispatch a task to the current thread to ensure we don't delete the
+  // GMPServiceParent until the current calling context is finished with
+  // the object.
+  GMPServiceParent* self = this;
+  NS_DispatchToCurrentThread(NS_NewRunnableFunction([self]() {
+    // The GMPServiceParent must be destroyed on the main thread.
+    NS_DispatchToMainThread(NS_NewRunnableFunction([self]() {
+      delete self;
+    }));
+  }));
 }
 
 class OpenPGMPServiceParent : public mozilla::Runnable
