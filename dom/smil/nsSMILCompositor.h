@@ -9,7 +9,6 @@
 
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
-#include "nsAutoPtr.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
 #include "nsSMILAnimationFunction.h"
@@ -99,9 +98,10 @@ public:
   bool mForceCompositing;
 
   // Cached base value, so we can detect & force-recompose when it changes
-  // from one sample to the next. (nsSMILAnimationController copies this
-  // forward from the previous sample's compositor.)
-  nsAutoPtr<nsSMILValue> mCachedBaseValue;
+  // from one sample to the next. (nsSMILAnimationController moves this
+  // forward from the previous sample's compositor by calling
+  // StealCachedBaseValue.)
+  nsSMILValue mCachedBaseValue;
 };
 
 #endif // NS_SMILCOMPOSITOR_H_
