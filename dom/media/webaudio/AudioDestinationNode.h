@@ -7,7 +7,7 @@
 #ifndef AudioDestinationNode_h_
 #define AudioDestinationNode_h_
 
-#include "mozilla/dom/AudioChannelBinding.h"
+#include "AudioChannelService.h"
 #include "AudioNode.h"
 #include "nsIAudioChannelAgent.h"
 
@@ -106,6 +106,7 @@ private:
   bool mAudioChannelSuspended;
 
   bool mCaptured;
+  AudioChannelService::AudibleState mAudible;
 };
 
 } // namespace dom
