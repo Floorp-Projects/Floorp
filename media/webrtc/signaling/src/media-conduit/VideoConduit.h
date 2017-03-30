@@ -301,8 +301,11 @@ public:
   bool SetRemoteSSRC(unsigned int ssrc) override;
   bool SetLocalCNAME(const char* cname) override;
 
-  bool
-  GetPacketTypeStats(webrtc::RtcpPacketTypeCounter* aPacketCounts) override;
+  bool GetSendPacketTypeStats(
+      webrtc::RtcpPacketTypeCounter* aPacketCounts) override;
+
+  bool GetRecvPacketTypeStats(
+      webrtc::RtcpPacketTypeCounter* aPacketCounts) override;
 
   bool GetVideoEncoderStats(double* framerateMean,
                             double* framerateStdDev,
@@ -466,13 +469,14 @@ private:
   //Local database of currently applied receive codecs
   nsTArray<UniquePtr<VideoCodecConfig>> mRecvCodecList;
 
-  // protects mCurSendCodecConfig, mInReconfig,mVideoSend/RecvStreamStats, mSend/RecvStreams, mPacketCounts
+  // protects mCurSendCodecConfig, mInReconfig,mVideoSend/RecvStreamStats, mSend/RecvStreams, mSendPacketCounts, mRecvPacketCounts
   Mutex mCodecMutex;
   nsAutoPtr<VideoCodecConfig> mCurSendCodecConfig;
   bool mInReconfig;
   SendStreamStatistics mSendStreamStats;
   ReceiveStreamStatistics mRecvStreamStats;
-  webrtc::RtcpPacketTypeCounter mPacketCounts;
+  webrtc::RtcpPacketTypeCounter mSendPacketCounts;
+  webrtc::RtcpPacketTypeCounter mRecvPacketCounts;
 
   // Must call webrtc::Call::DestroyVideoReceive/SendStream to delete these:
   webrtc::VideoReceiveStream* mRecvStream;

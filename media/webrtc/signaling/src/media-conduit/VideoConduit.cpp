@@ -214,21 +214,18 @@ WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall)
     CSFLogDebug(logTag, "StreamStats polling scheduled for VideoConduit: %p", aClosure);
     auto self = static_cast<WebrtcVideoConduit*>(aClosure);
     MutexAutoLock lock(self->mCodecMutex);
-    MOZ_ASSERT(!self->mEngineTransmitting || !self->mEngineReceiving,
-      "Video conduit is not both receiving and transmitting");
     if (self->mEngineTransmitting && self->mSendStream) {
       const auto& stats = self->mSendStream->GetStats();
       self->mSendStreamStats.Update(stats);
-      if (stats.substreams.empty()) {
-        return;
+      if (!stats.substreams.empty()) {
+          self->mSendPacketCounts =
+            stats.substreams.begin()->second.rtcp_packet_type_counts;
       }
-      self->mPacketCounts =
-        stats.substreams.begin()->second.rtcp_packet_type_counts;
     }
     if (self->mEngineReceiving && self->mRecvStream) {
       const auto& stats = self->mRecvStream->GetStats();
       self->mRecvStreamStats.Update(stats);
-      self->mPacketCounts = stats.rtcp_packet_type_counts;
+      self->mRecvPacketCounts = stats.rtcp_packet_type_counts;
     }
   };
   mVideoStatsTimer->InitWithFuncCallback(
@@ -760,16 +757,26 @@ WebrtcVideoConduit::GetRemoteSSRC(unsigned int* ssrc)
 }
 
 bool
-WebrtcVideoConduit::GetPacketTypeStats(
+WebrtcVideoConduit::GetSendPacketTypeStats(
     webrtc::RtcpPacketTypeCounter* aPacketCounts)
 {
   MutexAutoLock lock(mCodecMutex);
-  if ((!mEngineTransmitting || !mSendStream) // Not transmitting
-      && (!mEngineReceiving || !mRecvStream)) // And not receiving
-  {
+  if (!mEngineTransmitting || !mSendStream) { // Not transmitting
     return false;
   }
-  *aPacketCounts = mPacketCounts;
+  *aPacketCounts = mSendPacketCounts;
+  return true;
+}
+
+bool
+WebrtcVideoConduit::GetRecvPacketTypeStats(
+    webrtc::RtcpPacketTypeCounter* aPacketCounts)
+{
+  MutexAutoLock lock(mCodecMutex);
+  if (!mEngineReceiving || !mRecvStream) { // Not receiving
+    return false;
+  }
+  *aPacketCounts = mRecvPacketCounts;
   return true;
 }
 
