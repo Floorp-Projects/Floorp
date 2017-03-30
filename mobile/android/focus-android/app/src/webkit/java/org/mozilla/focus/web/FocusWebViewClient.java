@@ -60,7 +60,7 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
 
             final boolean exactMatch = prefixMatches && (currentPageURL.length() == requestURL.length());
 
-            final boolean matchExceptForTrailingSlash = (currentPageURL.length() == requestURL.length() + 1) &&
+            final boolean matchExceptForTrailingSlash = (currentPageURL.length() + 1 == requestURL.length()) &&
                     (requestURL.charAt(requestURL.length() - 1) == '/');
 
             if (exactMatch || matchExceptForTrailingSlash) {
