@@ -9,7 +9,6 @@
 #include "Logging.h"
 #include "mozilla/RefPtr.h"
 #include "ScaledFontWin.h"
-#include "SFNTData.h"
 
 namespace mozilla {
 namespace gfx {
@@ -19,27 +18,6 @@ already_AddRefed<NativeFontResourceGDI>
 NativeFontResourceGDI::Create(uint8_t *aFontData, uint32_t aDataLength,
                               bool aNeedsCairo)
 {
-  UniquePtr<SFNTData> sfntData = SFNTData::Create(aFontData, aDataLength);
-  if (!sfntData) {
-    gfxWarning() << "Failed to create SFNTData for ScaledFontWin.";
-    return nullptr;
-  }
-
-  Vector<mozilla::u16string> fontNames;
-  if (!sfntData->GetU16FullNames(fontNames)) {
-    gfxWarning() << "Failed to get font names from font.";
-    return nullptr;
-  }
-
-  // lfFaceName has a maximum length including null.
-  for (size_t i = 0; i < fontNames.length(); ++i) {
-    if (fontNames[i].size() > LF_FACESIZE - 1) {
-      fontNames[i].resize(LF_FACESIZE - 1);
-    }
-    // Add null to end for easy copying later.
-    fontNames[i].append(1, '\0');
-  }
-
   DWORD numberOfFontsAdded;
   HANDLE fontResourceHandle = ::AddFontMemResourceEx(aFontData, aDataLength,
                                                      0, &numberOfFontsAdded);
@@ -48,13 +26,8 @@ NativeFontResourceGDI::Create(uint8_t *aFontData, uint32_t aDataLength,
     return nullptr;
   }
 
-  if (numberOfFontsAdded != fontNames.length()) {
-    gfxWarning() <<
-      "Number of fonts added doesn't match number of names extracted.";
-  }
-
   RefPtr<NativeFontResourceGDI> fontResouce =
-    new NativeFontResourceGDI(fontResourceHandle, Move(fontNames), aNeedsCairo);
+    new NativeFontResourceGDI(fontResourceHandle, aNeedsCairo);
 
   return fontResouce.forget();
 }
@@ -68,41 +41,18 @@ already_AddRefed<ScaledFont>
 NativeFontResourceGDI::CreateScaledFont(uint32_t aIndex, Float aGlyphSize,
                                         const uint8_t* aInstanceData, uint32_t aInstanceDataLength)
 {
-  if (aIndex >= mFontNames.length()) {
-    gfxWarning() << "Font index is too high for font resource.";
+  if (aInstanceDataLength < sizeof(LOGFONT)) {
+    gfxWarning() << "GDI scaled font instance data is truncated.";
     return nullptr;
   }
 
-  if (mFontNames[aIndex].empty()) {
-    gfxWarning() << "Font name for index is empty.";
-    return nullptr;
-  }
-
-  LOGFONT logFont;
-  logFont.lfHeight = 0;
-  logFont.lfWidth = 0;
-  logFont.lfEscapement = 0;
-  logFont.lfOrientation = 0;
-  logFont.lfWeight = FW_DONTCARE;
-  logFont.lfItalic = FALSE;
-  logFont.lfUnderline = FALSE;
-  logFont.lfStrikeOut = FALSE;
-  logFont.lfCharSet = DEFAULT_CHARSET;
-  logFont.lfOutPrecision = OUT_DEFAULT_PRECIS;
-  logFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-  logFont.lfQuality = DEFAULT_QUALITY;
-  logFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-
-  // Copy name to mLogFont (null already included in font name). We cast here
-  // because for VS2015 char16_t != wchar_t, even though they are both 16 bit.
-  mFontNames[aIndex].copy(reinterpret_cast<char16_t*>(logFont.lfFaceName),
-                          mFontNames[aIndex].length());
+  const LOGFONT* logFont = reinterpret_cast<const LOGFONT*>(aInstanceData);
 
   // Constructor for ScaledFontWin dereferences and copies the LOGFONT, so we
   // are safe to pass this reference.
-  RefPtr<ScaledFontBase> scaledFont = new ScaledFontWin(&logFont, aGlyphSize);
+  RefPtr<ScaledFontBase> scaledFont = new ScaledFontWin(logFont, aGlyphSize);
   if (mNeedsCairo && !scaledFont->PopulateCairoScaledFont()) {
-    gfxWarning() << "Unable to create cairo scaled font DWrite font.";
+    gfxWarning() << "Unable to create cairo scaled font GDI font.";
     return nullptr;
   }
 

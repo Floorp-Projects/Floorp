@@ -40,7 +40,9 @@ WyciwygChannelParent::ActorDestroy(ActorDestroyReason why)
   mIPCClosed = true;
 
   // We need to force the cycle to break here
-  mChannel->SetNotificationCallbacks(nullptr);
+  if (mChannel) {
+    mChannel->SetNotificationCallbacks(nullptr);
+  }
 }
 
 //-----------------------------------------------------------------------------

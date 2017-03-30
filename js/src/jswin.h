@@ -18,6 +18,7 @@
 # undef min
 # undef max
 # undef GetProp
+# undef MemoryBarrier
 # undef SetProp
 # undef CONST
 # undef STRICT

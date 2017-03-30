@@ -291,6 +291,25 @@ TexUnpackBlob::TexUnpackBlob(const WebGLContext* webgl, TexImageTarget target,
     MOZ_ASSERT_IF(!IsTarget3D(target), mDepth == 1);
 }
 
+static bool
+HasColorAndAlpha(const WebGLTexelFormat format)
+{
+    switch (format) {
+    case WebGLTexelFormat::RA8:
+    case WebGLTexelFormat::RA16F:
+    case WebGLTexelFormat::RA32F:
+    case WebGLTexelFormat::RGBA8:
+    case WebGLTexelFormat::RGBA5551:
+    case WebGLTexelFormat::RGBA4444:
+    case WebGLTexelFormat::RGBA16F:
+    case WebGLTexelFormat::RGBA32F:
+    case WebGLTexelFormat::BGRA8:
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool
 TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
                                const uint32_t rowLength, const uint32_t rowCount,
@@ -314,16 +333,18 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
     const auto dstOrigin = gl::OriginPos::BottomLeft;
 
     if (srcFormat != dstFormat) {
-        webgl->GeneratePerfWarning("%s: Conversion requires pixel reformatting.",
-                                   funcName);
-    } else if (mSrcIsPremult != dstIsPremult) {
+        webgl->GeneratePerfWarning("%s: Conversion requires pixel reformatting. (%u->%u)",
+                                   funcName, uint32_t(srcFormat),
+                                   uint32_t(dstFormat));
+    } else if (mSrcIsPremult != dstIsPremult && HasColorAndAlpha(srcFormat)) {
         webgl->GeneratePerfWarning("%s: Conversion requires change in"
-                                   "alpha-premultiplication.",
+                                   " alpha-premultiplication.",
                                    funcName);
     } else if (srcOrigin != dstOrigin) {
         webgl->GeneratePerfWarning("%s: Conversion requires y-flip.", funcName);
     } else if (srcStride != dstStride) {
-        webgl->GeneratePerfWarning("%s: Conversion requires change in stride.", funcName);
+        webgl->GeneratePerfWarning("%s: Conversion requires change in stride. (%u->%u)",
+                                   funcName, uint32_t(srcStride), uint32_t(dstStride));
     } else {
         return true;
     }
@@ -598,19 +619,32 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
             return true;
     }
 
+    const char* fallbackReason;
     do {
-        if (mDepth != 1)
+        if (mDepth != 1) {
+            fallbackReason = "depth is not 1";
             break;
+        }
 
         const auto& dstIsPremult = webgl->mPixelStore_PremultiplyAlpha;
-        if (mSrcIsPremult != dstIsPremult)
+        if (mSrcIsPremult != dstIsPremult) {
+            if (dstIsPremult) {
+                fallbackReason = "UNPACK_PREMULTIPLY_ALPHA_WEBGL is not true";
+            } else {
+                fallbackReason = "UNPACK_PREMULTIPLY_ALPHA_WEBGL is not false";
+            }
             break;
+        }
 
-        if (dui->unpackFormat != LOCAL_GL_RGB && dui->unpackFormat != LOCAL_GL_RGBA)
+        if (dui->unpackFormat != LOCAL_GL_RGB && dui->unpackFormat != LOCAL_GL_RGBA) {
+            fallbackReason = "`format` is not RGB or RGBA";
             break;
+        }
 
-        if (dui->unpackType != LOCAL_GL_UNSIGNED_BYTE)
+        if (dui->unpackType != LOCAL_GL_UNSIGNED_BYTE) {
+            fallbackReason = "`type` is not UNSIGNED_BYTE";
             break;
+        }
 
         gl::ScopedFramebuffer scopedFB(gl);
         gl::ScopedBindFramebuffer bindFB(gl, scopedFB.FB());
@@ -621,13 +655,17 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
             gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
                                       target.get(), tex->mGLName, level);
 
-            if (errorScope.GetError())
+            if (errorScope.GetError()) {
+                fallbackReason = "bug: failed to attach to FB for blit";
                 break;
+            }
         }
 
         const GLenum status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
-        if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE)
+        if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
+            fallbackReason = "bug: failed to confirm FB for blit";
             break;
+        }
 
         const gfx::IntSize destSize(mWidth, mHeight);
         const auto dstOrigin = (webgl->mPixelStore_FlipY ? gl::OriginPos::TopLeft
@@ -635,6 +673,7 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
         if (!gl->BlitHelper()->BlitImageToFramebuffer(mImage, destSize, scopedFB.FB(),
                                                       dstOrigin))
         {
+            fallbackReason = "likely bug: failed to blit";
             break;
         }
 
@@ -643,9 +682,9 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
         return true;
     } while (false);
 
-    webgl->GeneratePerfWarning("%s: Failed to hit GPU-copy fast-path. Falling back to CPU"
-                               " upload.",
-                               funcName);
+    webgl->GeneratePerfWarning("%s: Failed to hit GPU-copy fast-path. (src type %u)"
+                               " Falling back to CPU upload. (%s)",
+                               funcName, uint32_t(mImage->GetFormat()), fallbackReason);
 
     const RefPtr<gfx::SourceSurface> surf = mImage->GetAsSourceSurface();
 

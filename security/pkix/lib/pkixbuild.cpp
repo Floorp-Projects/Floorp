@@ -161,9 +161,8 @@ PathBuildingStep::Check(Input potentialIssuerDER,
   // Loop prevention, done as recommended by RFC4158 Section 5.2
   // TODO: this doesn't account for subjectAltNames!
   // TODO(perf): This probably can and should be optimized in some way.
-  bool loopDetected = false;
-  for (const BackCert* prev = potentialIssuer.childCert;
-       !loopDetected && prev != nullptr; prev = prev->childCert) {
+  for (const BackCert* prev = potentialIssuer.childCert; prev;
+       prev = prev->childCert) {
     if (InputsAreEqual(potentialIssuer.GetSubjectPublicKeyInfo(),
                        prev->GetSubjectPublicKeyInfo()) &&
         InputsAreEqual(potentialIssuer.GetSubject(), prev->GetSubject())) {

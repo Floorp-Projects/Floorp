@@ -30,8 +30,6 @@
 
 #if defined(XP_UNIX)
 #include <errno.h>
-#elif defined(XP_WIN)
-#include <windows.h>
 #endif
 
 #include "jscntxt.h"
@@ -39,6 +37,7 @@
 #include "jsfun.h"
 #include "jsnum.h"
 #include "jsprf.h"
+#include "jswin.h"
 
 #include "builtin/TypedObject.h"
 #include "ctypes/Library.h"

@@ -242,7 +242,7 @@
 .boxmodel-position.boxmodel-top,
 .boxmodel-position.boxmodel-bottom {
   border-left: 1px solid var(--theme-highlight-purple);
-  left: calc(50% - 1px);
+  left: calc(50% - 2px);
   padding-left: 1px;
 }
 
@@ -322,6 +322,14 @@
 
 .boxmodel-properties-wrapper {
   padding: 0 9px;
+}
+
+.boxmodel-properties-wrapper .property-name-container {
+  flex: 1;
+}
+
+.boxmodel-properties-wrapper .property-value-container {
+  flex: 1;
 }
 
 /* Box Model Main - Offset Parent */

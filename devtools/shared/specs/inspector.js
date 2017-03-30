@@ -377,7 +377,7 @@ const walkerSpec = generateActorSpec({
     },
     getOffsetParent: {
       request: {
-        node: Arg(0, "domnode")
+        node: Arg(0, "nullable:domnode")
       },
       response: {
         node: RetVal("nullable:domnode")

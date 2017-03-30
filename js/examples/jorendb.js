@@ -28,7 +28,7 @@ var lastExc = null;
 var todo = [];
 var activeTask;
 var options = { 'pretty': true,
-                'emacs': (os.getenv('EMACS') == 't') };
+                'emacs': !!os.getenv('INSIDE_EMACS') };
 var rerun = true;
 
 // Cleanup functions to run when we next re-enter the repl.

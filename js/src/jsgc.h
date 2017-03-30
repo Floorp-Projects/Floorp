@@ -828,6 +828,9 @@ class ArenaLists
 /* The number of GC cycles an empty chunk can survive before been released. */
 const size_t MAX_EMPTY_CHUNK_AGE = 4;
 
+extern bool
+InitializeStaticData();
+
 } /* namespace gc */
 
 class InterpreterFrame;
@@ -1203,6 +1206,8 @@ VerifyBarriers(JSRuntime* rt, VerifierType type);
 
 void
 MaybeVerifyBarriers(JSContext* cx, bool always = false);
+
+void DumpArenaInfo();
 
 #else
 

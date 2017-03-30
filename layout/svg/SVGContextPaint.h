@@ -51,7 +51,10 @@ class SVGContextPaint : public RefCounted<SVGContextPaint>
 protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
-  SVGContextPaint() {}
+  SVGContextPaint()
+    : mDashOffset(0.0f)
+    , mStrokeWidth(0.0f)
+  {}
 
 public:
   typedef image::DrawResult DrawResult;
