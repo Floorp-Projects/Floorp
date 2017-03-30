@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArenaAllocator.h"
+#include "mozilla/ArenaAllocatorExtensions.h"
 #include "nsIMemoryReporter.h" // MOZ_MALLOC_SIZE_OF
 
 #include "gtest/gtest.h"
@@ -276,4 +277,20 @@ TEST(ArenaAllocator, Clear)
   prev_sz = sz;
   sz = a.SizeOfExcludingThis(TestSizeOf);
   EXPECT_GT(sz, prev_sz);
+}
+
+TEST(ArenaAllocator, Extensions)
+{
+  ArenaAllocator<4096, 8> a;
+  const char* const kTestStr = "This is a test string.";
+  char* dup = mozilla::ArenaStrdup(kTestStr, a);
+  EXPECT_STREQ(dup, kTestStr);
+
+  NS_NAMED_LITERAL_STRING(wideStr, "A wide string.");
+  nsLiteralString::char_type* wide = mozilla::ArenaStrdup(wideStr, a);
+  EXPECT_TRUE(wideStr.Equals(wide));
+
+  NS_NAMED_LITERAL_CSTRING(cStr, "A c-string.");
+  nsLiteralCString::char_type* cstr = mozilla::ArenaStrdup(cStr, a);
+  EXPECT_TRUE(cStr.Equals(cstr));
 }
