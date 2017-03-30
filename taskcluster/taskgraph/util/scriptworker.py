@@ -144,6 +144,44 @@ BALROG_SERVER_SCOPES = {
 }
 
 
+PUSH_APK_SCOPE_ALIAS_TO_PROJECT = [[
+    'aurora', set([
+        'mozilla-aurora',
+    ])
+], [
+    'beta', set([
+        'mozilla-beta',
+    ])
+], [
+    'release', set([
+        'mozilla-release',
+    ])
+]]
+
+
+PUSH_APK_SCOPES = {
+    'aurora': 'project:releng:googleplay:aurora',
+    'beta': 'project:releng:googleplay:beta',
+    'release': 'project:releng:googleplay:release',
+    'default': 'project:releng:googleplay:invalid',
+}
+
+# See https://github.com/mozilla-releng/pushapkscript#aurora-beta-release-vs-alpha-beta-production
+PUSH_APK_GOOGLE_PLAY_TRACT = {
+    'aurora': 'beta',
+    'beta': 'production',
+    'release': 'production',
+    'default': 'invalid',
+}
+
+PUSH_APK_BREAKPOINT_WORKER_TYPE = {
+    'aurora': 'aws-provisioner-v1/taskcluster-generic',
+    'beta': 'null-provisioner/human-breakpoint',
+    'release': 'null-provisioner/human-breakpoint',
+    'default': 'invalid/invalid',
+}
+
+
 # scope functions {{{1
 def get_scope_from_project(alias_to_project_map, alias_to_scope_map, config):
     """Determine the restricted scope from `config.params['project']`.
@@ -234,6 +272,24 @@ get_balrog_server_scope = functools.partial(
     get_scope_from_project,
     BALROG_SCOPE_ALIAS_TO_PROJECT,
     BALROG_SERVER_SCOPES
+)
+
+get_push_apk_scope = functools.partial(
+    get_scope_from_project,
+    PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
+    PUSH_APK_SCOPES
+)
+
+get_push_apk_track = functools.partial(
+    get_scope_from_project,
+    PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
+    PUSH_APK_GOOGLE_PLAY_TRACT
+)
+
+get_push_apk_breakpoint_worker_type = functools.partial(
+    get_scope_from_project,
+    PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
+    PUSH_APK_BREAKPOINT_WORKER_TYPE
 )
 
 
