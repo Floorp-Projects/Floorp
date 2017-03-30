@@ -67,6 +67,7 @@ Element::NoteDirtyDescendantsForServo()
 
   if (nsIPresShell* shell = OwnerDoc()->GetShell()) {
     shell->SetNeedStyleFlush();
+    shell->ObserveStyleFlushes();
   }
 
   MOZ_ASSERT(DirtyDescendantsBitIsPropagatedForServo());
