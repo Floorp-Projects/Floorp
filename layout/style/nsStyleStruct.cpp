@@ -1236,14 +1236,7 @@ bool
 nsStyleSVGReset::HasMask() const
 {
   for (uint32_t i = 0; i < mMask.mImageCount; i++) {
-    // mMask.mLayers[i].mSourceURI can be nullptr if mask-image prop value is
-    // <element-reference> or <gradient>.
-    // mMask.mLayers[i].mImage can be empty if mask-image prop value is a
-    // reference to SVG mask element.
-    //
-    // So we need to test both mSourceURI and mImage.
-    if ((mMask.mLayers[i].mSourceURI && mMask.mLayers[i].mSourceURI->GetURI()) ||
-        !mMask.mLayers[i].mImage.IsEmpty()) {
+    if (!mMask.mLayers[i].mImage.IsEmpty()) {
       return true;
     }
   }
@@ -2796,7 +2789,8 @@ bool nsStyleImageLayers::operator==(const nsStyleImageLayers& aOther) const
 
   for (uint32_t i = 0; i < mLayers.Length(); i++) {
     if (mLayers[i].mPosition != aOther.mLayers[i].mPosition ||
-        !DefinitelyEqualURIs(mLayers[i].mSourceURI, aOther.mLayers[i].mSourceURI) ||
+        !DefinitelyEqualURIs(mLayers[i].mImage.GetURLValue(),
+                             aOther.mLayers[i].mImage.GetURLValue()) ||
         mLayers[i].mImage != aOther.mLayers[i].mImage ||
         mLayers[i].mSize != aOther.mLayers[i].mSize ||
         mLayers[i].mClip != aOther.mLayers[i].mClip ||
@@ -3010,15 +3004,15 @@ nsStyleImageLayers::Layer::operator==(const Layer& aOther) const
          mSize == aOther.mSize &&
          mImage == aOther.mImage &&
          mMaskMode == aOther.mMaskMode &&
-         mComposite == aOther.mComposite &&
-         DefinitelyEqualURIs(mSourceURI, aOther.mSourceURI);
+         mComposite == aOther.mComposite;
 }
 
 nsChangeHint
 nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewLayer) const
 {
   nsChangeHint hint = nsChangeHint(0);
-  if (!DefinitelyEqualURIs(mSourceURI, aNewLayer.mSourceURI)) {
+  if (!DefinitelyEqualURIs(mImage.GetURLValue(),
+                           aNewLayer.mImage.GetURLValue())) {
     hint |= nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects;
 
     // If Layer::mSourceURI links to a SVG mask, it has a fragment. Not vice
@@ -3033,12 +3027,12 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewL
     // That is, if mSourceURI has a fragment, it may link to a SVG mask; If
     // not, it "must" not link to a SVG mask.
     bool maybeSVGMask = false;
-    if (mSourceURI) {
-      maybeSVGMask = mSourceURI->HasRef();
+    if (mImage.GetURLValue()) {
+      maybeSVGMask = mImage.GetURLValue()->HasRef();
     }
 
-    if (!maybeSVGMask && aNewLayer.mSourceURI) {
-      maybeSVGMask = aNewLayer.mSourceURI->HasRef();
+    if (!maybeSVGMask && aNewLayer.mImage.GetURLValue()) {
+      maybeSVGMask = aNewLayer.mImage.GetURLValue()->HasRef();
     }
 
     // Return nsChangeHint_UpdateOverflow if either URI might link to an SVG
