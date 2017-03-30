@@ -163,7 +163,6 @@ let ProfileAutocomplete = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
   _lastAutoCompleteResult: null,
-  _lastAutoCompleteFocusedInput: null,
   _registered: false,
   _factory: null,
 
@@ -197,7 +196,6 @@ let ProfileAutocomplete = {
 
   setProfileAutoCompleteResult(result) {
     this._lastAutoCompleteResult = result;
-    this._lastAutoCompleteFocusedInput = formFillController.focusedInput;
   },
 
   observe(subject, topic, data) {
@@ -220,16 +218,6 @@ let ProfileAutocomplete = {
                         .getInterface(Ci.nsIContentFrameMessageManager);
   },
 
-  _getSelectedIndex(contentWindow) {
-    let mm = this._frameMMFromWindow(contentWindow);
-    let selectedIndexResult = mm.sendSyncMessage("FormAutoComplete:GetSelectedIndex", {});
-    if (selectedIndexResult.length != 1 || !Number.isInteger(selectedIndexResult[0])) {
-      throw new Error("Invalid autocomplete selectedIndex");
-    }
-
-    return selectedIndexResult[0];
-  },
-
   _fillFromAutocompleteRow(focusedInput) {
     this.log.debug("_fillFromAutocompleteRow:", focusedInput);
     let formDetails = FormAutofillContent.getFormDetails(focusedInput);
@@ -238,7 +226,13 @@ let ProfileAutocomplete = {
       return;
     }
 
-    let selectedIndex = this._getSelectedIndex(focusedInput.ownerGlobal);
+    let mm = this._frameMMFromWindow(focusedInput.ownerGlobal);
+    let selectedIndexResult = mm.sendSyncMessage("FormAutoComplete:GetSelectedIndex", {});
+    if (selectedIndexResult.length != 1 || !Number.isInteger(selectedIndexResult[0])) {
+      throw new Error("Invalid autocomplete selectedIndex");
+    }
+    let selectedIndex = selectedIndexResult[0];
+
     if (selectedIndex == -1 ||
         !this._lastAutoCompleteResult ||
         this._lastAutoCompleteResult.getStyleAt(selectedIndex) != "autofill-profile") {
@@ -249,35 +243,6 @@ let ProfileAutocomplete = {
     let formHandler = FormAutofillContent.getFormHandler(focusedInput);
 
     formHandler.autofillFormFields(profile, focusedInput);
-  },
-
-  _clearProfilePreview() {
-    let focusedInput = formFillController.focusedInput || this._lastAutoCompleteFocusedInput;
-    if (!focusedInput || !FormAutofillContent.getFormDetails(focusedInput)) {
-      return;
-    }
-
-    let formHandler = FormAutofillContent.getFormHandler(focusedInput);
-
-    formHandler.clearPreviewedFormFields();
-  },
-
-  _previewSelectedProfile(selectedIndex) {
-    let focusedInput = formFillController.focusedInput;
-    if (!focusedInput || !FormAutofillContent.getFormDetails(focusedInput)) {
-      // The observer notification is for a different process/frame.
-      return;
-    }
-
-    if (!this._lastAutoCompleteResult ||
-        this._lastAutoCompleteResult.getStyleAt(selectedIndex) != "autofill-profile") {
-      return;
-    }
-
-    let profile = JSON.parse(this._lastAutoCompleteResult.getCommentAt(selectedIndex));
-    let formHandler = FormAutofillContent.getFormHandler(focusedInput);
-
-    formHandler.previewFormFields(profile);
   },
 };
 
@@ -417,16 +382,6 @@ var FormAutofillContent = {
 
   _markAsAutofillField(field) {
     formFillController.markAsAutofillField(field);
-  },
-
-  _previewProfile(doc) {
-    let selectedIndex = ProfileAutocomplete._getSelectedIndex(doc.ownerGlobal);
-
-    if (selectedIndex === -1) {
-      ProfileAutocomplete._clearProfilePreview();
-    } else {
-      ProfileAutocomplete._previewSelectedProfile(selectedIndex);
-    }
   },
 };
 
