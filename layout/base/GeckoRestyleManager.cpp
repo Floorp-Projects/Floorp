@@ -605,14 +605,13 @@ GeckoRestyleManager::UpdateOnlyAnimationStyles()
 }
 
 void
-GeckoRestyleManager::PostRestyleEventInternal(bool aForLazyConstruction)
+GeckoRestyleManager::PostRestyleEventInternal()
 {
   // Make sure we're not in a style refresh; if we are, we still have
   // a call to ProcessPendingRestyles coming and there's no need to
   // add ourselves as a refresh observer until then.
-  bool inRefresh = !aForLazyConstruction && mInStyleRefresh;
   nsIPresShell* presShell = PresContext()->PresShell();
-  if (!inRefresh) {
+  if (!mInStyleRefresh) {
     presShell->ObserveStyleFlushes();
   }
 
@@ -650,7 +649,7 @@ GeckoRestyleManager::PostRestyleEvent(Element* aElement,
     mHavePendingNonAnimationRestyles = true;
   }
 
-  PostRestyleEventInternal(false);
+  PostRestyleEventInternal();
 }
 
 void
@@ -669,7 +668,7 @@ GeckoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
   mRebuildAllRestyleHint |= aRestyleHint;
 
   // Get a restyle event posted if necessary
-  PostRestyleEventInternal(false);
+  PostRestyleEventInternal();
 }
 
 // aContent must be the content for the frame in question, which may be
