@@ -8,11 +8,12 @@ WORKSPACE=$HOME/workspace
 STAGE=$WORKSPACE/dmg
 UPLOAD_DIR=$WORKSPACE/artifacts
 
-# There's no single well-maintained fork of libdmg-hfsplus, but this
-# branch currently has some fixes we need.
-: LIBDMG_REPOSITORY    ${LIBDMG_REPOSITORY:=https://github.com/andreas56/libdmg-hfsplus}
-# This is the current head of the `from_zarvox` branch.
-: LIBDMG_REV           ${LIBDMG_REV:=81dd75fd1549b24bf8af9736ac25518b367e6b63}
+# There's no single well-maintained fork of libdmg-hfsplus, so we forked
+# https://github.com/andreas56/libdmg-hfsplus/ to get a specific version and
+# backport some patches.
+: LIBDMG_REPOSITORY    ${LIBDMG_REPOSITORY:=https://github.com/mozilla/libdmg-hfsplus}
+# The `mozilla` branch contains our fork.
+: LIBDMG_REV           ${LIBDMG_REV:=mozilla}
 
 mkdir -p $UPLOAD_DIR $STAGE
 
