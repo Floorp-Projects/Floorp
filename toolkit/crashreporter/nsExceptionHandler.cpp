@@ -2024,6 +2024,7 @@ SetupCrashReporterDirectory(nsIFile* aAppDataDirectory,
 #else
   XP_CHAR* str = new XP_CHAR[dirEnv.size() + 1];
   strncpy(str, dirEnv.c_str(), dirEnv.size() + 1);
+  // |PR_SetEnv| requires str to leak.
   PR_SetEnv(str);
 #endif
 
