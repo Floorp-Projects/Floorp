@@ -493,17 +493,8 @@ public:
     js::ProfileEntry::Category aCategory, uint32_t aLine,
     const char* aDynamicString)
   {
-    mHandle = Enter(aInfo, aCategory, aLine, aDynamicString);
-  }
-
-  // An alternative constructor that accepts an rvalue string and moves it
-  // into this object (without copying!).
-  SamplerStackFrameDynamicRAII(const char* aInfo,
-    js::ProfileEntry::Category aCategory, uint32_t aLine,
-    nsCString&& aDynamicString)
-    : mDynamicStorage(aDynamicString)
-  {
-    mHandle = Enter(aInfo, aCategory, aLine, mDynamicStorage.get());
+    mHandle = profiler_call_enter(aInfo, aCategory, this, true, aLine,
+                                  aDynamicString);
   }
 
   ~SamplerStackFrameDynamicRAII() {
@@ -511,13 +502,6 @@ public:
   }
 
 private:
-  void* Enter(const char* aInfo, js::ProfileEntry::Category aCategory,
-              uint32_t aLine, const char* aDynamicString)
-  {
-    return profiler_call_enter(aInfo, aCategory, this, true, aLine, aDynamicString);
-  }
-
-  nsCString mDynamicStorage;
   void* mHandle;
 };
 
