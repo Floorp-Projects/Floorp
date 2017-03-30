@@ -196,7 +196,8 @@ public:
     JavaCallbacksSupport::AttachNative(
       mJavaCallbacks, mozilla::MakeUnique<CallbacksSupport>(this));
 
-    mJavaDecoder = CodecProxy::Create(mFormat,
+    mJavaDecoder = CodecProxy::Create(false, // false indicates to create a decoder and true denotes encoder
+                                      mFormat,
                                       mSurfaceTexture->JavaSurface(),
                                       mJavaCallbacks,
                                       mDrmStubId);
@@ -276,7 +277,7 @@ public:
       mJavaCallbacks, mozilla::MakeUnique<CallbacksSupport>(this));
 
     mJavaDecoder =
-      CodecProxy::Create(mFormat, nullptr, mJavaCallbacks, mDrmStubId);
+      CodecProxy::Create(false, mFormat, nullptr, mJavaCallbacks, mDrmStubId);
     if (mJavaDecoder == nullptr) {
       return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                           __func__);
