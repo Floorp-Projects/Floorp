@@ -224,7 +224,7 @@ bool Gecko_AtomEqualsUTF8IgnoreCase(nsIAtom* aAtom, const char* aString, uint32_
 
 // Font style
 void Gecko_FontFamilyList_Clear(FontFamilyList* aList);
-void Gecko_FontFamilyList_AppendNamed(FontFamilyList* aList, nsIAtom* aName);
+void Gecko_FontFamilyList_AppendNamed(FontFamilyList* aList, nsIAtom* aName, bool aQuoted);
 void Gecko_FontFamilyList_AppendGeneric(FontFamilyList* list, FontFamilyType familyType);
 void Gecko_CopyFontFamilyFrom(nsFont* dst, const nsFont* src);
 
