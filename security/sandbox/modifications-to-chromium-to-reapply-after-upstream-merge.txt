@@ -6,4 +6,4 @@ https://hg.mozilla.org/mozilla-central/rev/e834e810a3fa
 https://hg.mozilla.org/mozilla-central/rev/c70d06fa5302
 https://hg.mozilla.org/mozilla-central/rev/d24db55deb85
 https://hg.mozilla.org/mozilla-central/rev/0e6bf137521e
-https://bugzilla.mozilla.org/show_bug.cgi?id=1344453 bug1344453part1.patch
+https://hg.mozilla.org/mozilla-central/rev/1755a454e2de

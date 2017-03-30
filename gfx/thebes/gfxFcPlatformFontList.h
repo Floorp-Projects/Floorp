@@ -124,6 +124,8 @@ public:
     void ForgetHBFace() override;
     void ReleaseGrFace(gr_face* aFace) override;
 
+    double GetAspect();
+
 protected:
     virtual ~gfxFontconfigFontEntry();
 
@@ -144,8 +146,6 @@ protected:
 
     // if HB or GR faces are gone, close down the FT_Face
     void MaybeReleaseFTFace();
-
-    double GetAspect();
 
     // pattern for a single face of a family
     nsCountedRef<FcPattern> mFontPattern;
@@ -174,7 +174,8 @@ class gfxFontconfigFontFamily : public gfxFontFamily {
 public:
     explicit gfxFontconfigFontFamily(const nsAString& aName) :
         gfxFontFamily(aName),
-        mContainsAppFonts(false)
+        mContainsAppFonts(false),
+        mHasNonScalableFaces(false)
     { }
 
     void FindStyleVariations(FontInfoData *aFontInfoData = nullptr) override;
@@ -188,12 +189,18 @@ public:
         mContainsAppFonts = aContainsAppFonts;
     }
 
+    void
+    FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
+                         nsTArray<gfxFontEntry*>& aFontEntryList,
+                         bool& aNeedsSyntheticBold) override;
+
 protected:
     virtual ~gfxFontconfigFontFamily() { }
 
     nsTArray<nsCountedRef<FcPattern> > mFontPatterns;
 
     bool      mContainsAppFonts;
+    bool      mHasNonScalableFaces;
 };
 
 class gfxFontconfigFont : public gfxFontconfigFontBase {

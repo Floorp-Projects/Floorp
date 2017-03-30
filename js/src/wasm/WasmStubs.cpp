@@ -511,7 +511,7 @@ wasm::GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint3
 {
     masm.setFramePushed(0);
 
-    // Argument types for Module::callImport_*:
+    // Argument types for Instance::callImport_*:
     static const MIRType typeArray[] = { MIRType::Pointer,   // Instance*
                                          MIRType::Pointer,   // funcImportIndex
                                          MIRType::Int32,     // argc
@@ -535,7 +535,7 @@ wasm::GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint3
     Register scratch = ABINonArgReturnReg0;
     FillArgumentArray(masm, fi.sig().args(), argOffset, offsetToCallerStackArgs, scratch, ToValue(false));
 
-    // Prepare the arguments for the call to Module::callImport_*.
+    // Prepare the arguments for the call to Instance::callImport_*.
     ABIArgMIRTypeIter i(invokeArgTypes);
 
     // argument 0: Instance*

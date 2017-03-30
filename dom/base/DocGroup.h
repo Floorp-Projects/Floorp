@@ -60,6 +60,7 @@ public:
   }
   mozilla::dom::CustomElementReactionsStack* CustomElementReactionsStack()
   {
+    MOZ_ASSERT(NS_IsMainThread());
     if (!mReactionsStack) {
       mReactionsStack = new mozilla::dom::CustomElementReactionsStack();
     }
@@ -71,10 +72,12 @@ public:
   // Iterators for iterating over every document within the DocGroup
   Iterator begin()
   {
+    MOZ_ASSERT(NS_IsMainThread());
     return mDocuments.begin();
   }
   Iterator end()
   {
+    MOZ_ASSERT(NS_IsMainThread());
     return mDocuments.end();
   }
 

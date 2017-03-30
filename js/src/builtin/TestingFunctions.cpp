@@ -741,6 +741,7 @@ GCPreserveCode(JSContext* cx, unsigned argc, Value* vp)
 }
 
 #ifdef JS_GC_ZEAL
+
 static bool
 GCZeal(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -902,6 +903,16 @@ DeterministicGC(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setUndefined();
     return true;
 }
+
+static bool
+DumpGCArenaInfo(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    js::gc::DumpArenaInfo();
+    args.rval().setUndefined();
+    return true;
+}
+
 #endif /* JS_GC_ZEAL */
 
 static bool
@@ -4451,6 +4462,11 @@ gc::ZealModeHelpText),
     JS_FN_HELP("deterministicgc", DeterministicGC, 1, 0,
 "deterministicgc(true|false)",
 "  If true, only allow determinstic GCs to run."),
+
+    JS_FN_HELP("dumpGCArenaInfo", DumpGCArenaInfo, 0, 0,
+"dumpGCArenaInfo()",
+"  Prints information about the different GC things and how they are arranged\n"
+"  in arenas.\n"),
 #endif
 
     JS_FN_HELP("startgc", StartGC, 1, 0,

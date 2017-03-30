@@ -8411,6 +8411,30 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
     *aDestroyedFramesFor = aChild;
   }
 
+  // We're destroying our frame(s). This normally happens either when the content
+  // is being removed from the DOM (in which case we'll drop all Servo data in
+  // UnbindFromTree), or when we're recreating frames (usually in response to
+  // having retrieved a ReconstructFrame change hint after restyling). In both of
+  // those cases, there are no pending restyles we need to worry about.
+  //
+  // However, there is also the (rare) DestroyFramesFor path, in which we tear
+  // down (and usually recreate) the frames for a subtree. In this case, leaving
+  // the style data on the elements is problematic for our invariants, because
+  // there might be pending restyles in the subtree. If we simply leave them as-is,
+  // the subsequent traversal when recreating frames will generate a bunch of bogus
+  // change hints to update frames that no longer exist.
+  //
+  // So the two obvious options are to (1) process all pending restyles and take all
+  // the change hints before destroying the frames, or (2) drop all the style data.
+  // We chose the latter, since that matches the performance characteristics of the
+  // old Gecko style system.
+  //
+  // That said, it's almost certainly possible to optimize this if it turns out to be
+  // hot. It's just not a priority at the moment.
+  if (aFlags == REMOVE_DESTROY_FRAMES && aChild->IsElement() && aChild->IsStyledByServo()) {
+    ServoRestyleManager::ClearServoDataFromSubtree(aChild->AsElement());
+  }
+
   if (aChild->IsHTMLElement(nsGkAtoms::body) ||
       (!aContainer && aChild->IsElement())) {
     // This might be the element we propagated viewport scrollbar

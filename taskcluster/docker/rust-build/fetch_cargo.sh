@@ -5,7 +5,7 @@ set -x -e
 # Inputs, with defaults
 
 : REPOSITORY   ${REPOSITORY:=https://github.com/rust-lang/cargo}
-: BRANCH       ${BRANCH:=master}
+: BRANCH       ${BRANCH:=0.14.0}
 
 : WORKSPACE    ${WORKSPACE:=/home/worker}
 

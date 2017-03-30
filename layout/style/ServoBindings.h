@@ -150,10 +150,7 @@ RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowed
 
 // Selector Matching.
 uint64_t Gecko_ElementState(RawGeckoElementBorrowed element);
-bool Gecko_IsLink(RawGeckoElementBorrowed element);
 bool Gecko_IsTextNode(RawGeckoNodeBorrowed node);
-bool Gecko_IsVisitedLink(RawGeckoElementBorrowed element);
-bool Gecko_IsUnvisitedLink(RawGeckoElementBorrowed element);
 bool Gecko_IsRootElement(RawGeckoElementBorrowed element);
 bool Gecko_MatchesElement(mozilla::CSSPseudoClassType type, RawGeckoElementBorrowed element);
 nsIAtom* Gecko_LocalName(RawGeckoElementBorrowed element);

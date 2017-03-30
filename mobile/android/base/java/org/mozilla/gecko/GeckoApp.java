@@ -2242,9 +2242,7 @@ public abstract class GeckoApp
         GeckoAppShell.setGeckoInterface(this);
         GeckoAppShell.setScreenOrientationDelegate(this);
 
-        if (lastSelectedTabId >= 0 && (lastActiveGeckoApp == null || lastActiveGeckoApp.get() != this)) {
-            Tabs.getInstance().selectTab(lastSelectedTabId);
-        }
+        restoreLastSelectedTab();
 
         int newOrientation = getResources().getConfiguration().orientation;
         if (GeckoScreenOrientation.getInstance().update(newOrientation)) {
@@ -2294,6 +2292,12 @@ public abstract class GeckoApp
         });
 
         Restrictions.update(this);
+    }
+
+    protected void restoreLastSelectedTab() {
+        if (lastSelectedTabId >= 0 && (lastActiveGeckoApp == null || lastActiveGeckoApp.get() != this)) {
+            Tabs.getInstance().selectTab(lastSelectedTabId);
+        }
     }
 
     @Override

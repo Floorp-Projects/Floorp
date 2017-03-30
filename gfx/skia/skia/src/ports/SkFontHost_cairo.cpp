@@ -131,7 +131,8 @@ private:
     FT_LcdFilter fLcdFilter;
     SkScalar fScaleX;
     SkScalar fScaleY;
-    FT_Matrix fShapeMatrix;
+    SkMatrix fShapeMatrix;
+    FT_Matrix fShapeMatrixFT;
     bool fHaveShape;
 };
 
@@ -592,12 +593,13 @@ bool SkScalerContext_CairoFT::computeShapeMatrix(const SkMatrix& m)
 
     if (fHaveShape) {
         // Normalize the transform and convert to fixed-point.
-        double invScaleX = 65536.0 / major;
-        double invScaleY = 65536.0 / minor;
-        fShapeMatrix.xx = (FT_Fixed)(scaleX * invScaleX);
-        fShapeMatrix.yx = -(FT_Fixed)(skewY * invScaleX);
-        fShapeMatrix.xy = -(FT_Fixed)(skewX * invScaleY);
-        fShapeMatrix.yy = (FT_Fixed)(scaleY * invScaleY);
+        fShapeMatrix = m;
+        fShapeMatrix.preScale(SkDoubleToScalar(1.0 / major), SkDoubleToScalar(1.0 / minor));
+
+        fShapeMatrixFT.xx = SkScalarToFixed(fShapeMatrix.getScaleX());
+        fShapeMatrixFT.yx = SkScalarToFixed(-fShapeMatrix.getSkewY());
+        fShapeMatrixFT.xy = SkScalarToFixed(-fShapeMatrix.getSkewX());
+        fShapeMatrixFT.yy = SkScalarToFixed(fShapeMatrix.getScaleY());
     }
     return true;
 }
@@ -637,7 +639,7 @@ void SkScalerContext_CairoFT::fixVerticalLayoutBearing(FT_GlyphSlot glyph)
     vector.y = -glyph->metrics.vertBearingY - glyph->metrics.horiBearingY;
     if (glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
         if (fHaveShape) {
-            FT_Vector_Transform(&vector, &fShapeMatrix);
+            FT_Vector_Transform(&vector, &fShapeMatrixFT);
         }
         FT_Outline_Translate(&glyph->outline, vector.x, vector.y);
     } else if (glyph->format == FT_GLYPH_FORMAT_BITMAP) {
@@ -702,17 +704,20 @@ void SkScalerContext_CairoFT::generateMetrics(SkGlyph* glyph)
         }
 
         if (fHaveShape) {
+            // Ensure filtering is preserved when the bitmap is transformed.
+            // Otherwise, the result will look horrifically aliased.
+            if (fRec.fMaskFormat == SkMask::kBW_Format) {
+                fRec.fMaskFormat = SkMask::kA8_Format;
+            }
+
             // Apply the shape matrix to the glyph's bounding box.
-            SkMatrix matrix;
-            fRec.getSingleMatrix(&matrix);
-            matrix.preScale(SkScalarInvert(fScaleX), SkScalarInvert(fScaleY));
             SkRect srcRect = SkRect::MakeXYWH(
                 SkIntToScalar(face->glyph->bitmap_left),
                 -SkIntToScalar(face->glyph->bitmap_top),
                 SkIntToScalar(face->glyph->bitmap.width),
                 SkIntToScalar(face->glyph->bitmap.rows));
             SkRect destRect;
-            matrix.mapRect(&destRect, srcRect);
+            fShapeMatrix.mapRect(&destRect, srcRect);
             SkIRect glyphRect = destRect.roundOut();
             glyph->fWidth  = SkToU16(glyphRect.width());
             glyph->fHeight = SkToU16(glyphRect.height());
@@ -765,8 +770,7 @@ void SkScalerContext_CairoFT::generateImage(const SkGlyph& glyph)
     SkMatrix matrix;
     if (face->glyph->format == FT_GLYPH_FORMAT_BITMAP &&
         fHaveShape) {
-        matrix.setScale(SkIntToScalar(glyph.fWidth) / SkIntToScalar(face->glyph->bitmap.width),
-                        SkIntToScalar(glyph.fHeight) / SkIntToScalar(face->glyph->bitmap.rows));
+        matrix = fShapeMatrix;
     } else {
         matrix.setIdentity();
     }

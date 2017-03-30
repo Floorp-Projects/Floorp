@@ -64,11 +64,6 @@
 			<Tool
 				Name="VCFxCopTool"
 			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copy wow_helper to output directory"
-				CommandLine="copy $(ProjectDir)\..\wow_helper\wow_helper.exe $(OutDir) &amp;&amp; copy $(ProjectDir)\..\wow_helper\wow_helper.pdb $(OutDir)"
-			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
@@ -117,11 +112,6 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copy wow_helper to output directory"
-				CommandLine="copy $(ProjectDir)\..\wow_helper\wow_helper.exe $(OutDir) &amp;&amp; copy $(ProjectDir)\..\wow_helper\wow_helper.pdb $(OutDir)"
 			/>
 		</Configuration>
 	</Configurations>

@@ -462,11 +462,11 @@ VRControllerOpenVR::UpdateVibrateHaptic(vr::IVRSystem* aVRSystem,
     return;
   }
 
-  double duration = (aIntensity == 0) ? 0 : aDuration;
+  const double duration = (aIntensity == 0) ? 0 : aDuration;
   // We expect OpenVR to vibrate for 5 ms, but we found it only response the
   // commend ~ 3.9 ms. For duration time longer than 3.9 ms, we separate them
   // to a loop of 3.9 ms for make users feel that is a continuous events.
-  uint32_t microSec = (duration < 3.9 ? duration : 3.9) * 1000 * aIntensity;
+  const uint32_t microSec = (duration < 3.9 ? duration : 3.9) * 1000 * aIntensity;
   aVRSystem->TriggerHapticPulse(GetTrackedIndex(),
                                 aHapticIndex, microSec);
 
