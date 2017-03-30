@@ -9,8 +9,6 @@
  * of handlerService (JSON backend and RDF backend).
  */
 
-"use strict"
-
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
@@ -26,7 +24,7 @@ const pdfHandlerInfo = gMIMEService.getFromTypeAndExtension("application/pdf", n
 const gzipHandlerInfo = gMIMEService.getFromTypeAndExtension("application/x-gzip", null);
 const ircHandlerInfo = gExternalProtocolService.getProtocolHandlerInfo("irc");
 
-let executable = HandlerServiceTest._dirSvc.get("TmpD", Ci.nsIFile);
+let executable = Services.dirsvc.get("TmpD", Ci.nsIFile);
 let localHandler = {
   name: "Local Handler",
   executable: executable,
