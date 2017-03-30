@@ -15,6 +15,9 @@
  *       guid,             // 12 character...
  *
  *       // profile
+ *       given-name,
+ *       additional-name,
+ *       family-name,
  *       organization,     // Company
  *       street-address,    // (Multiline)
  *       address-level2,    // City/Town
@@ -63,6 +66,9 @@ const SCHEMA_VERSION = 1;
 
 // Name-related fields will be handled in follow-up bugs due to the complexity.
 const VALID_FIELDS = [
+  "given-name",
+  "additional-name",
+  "family-name",
   "organization",
   "street-address",
   "address-level2",

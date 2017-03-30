@@ -4,8 +4,11 @@ Cu.import("resource://formautofill/FormAutofillContent.jsm");
 
 const TESTCASES = [
   {
-    description: "Form containing 5 fields with autocomplete attribute.",
+    description: "Form containing 8 fields with autocomplete attribute.",
     document: `<form>
+                 <input id="given-name" autocomplete="given-name">
+                 <input id="additional-name" autocomplete="additional-name">
+                 <input id="family-name" autocomplete="family-name">
                  <input id="street-addr" autocomplete="street-address">
                  <input id="city" autocomplete="address-level2">
                  <input id="country" autocomplete="country">
@@ -15,6 +18,9 @@ const TESTCASES = [
                  <input id="without-autocomplete-2">
                </form>`,
     expectedResult: [
+      "given-name",
+      "additional-name",
+      "family-name",
       "street-addr",
       "city",
       "country",

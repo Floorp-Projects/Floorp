@@ -10,6 +10,9 @@ Cu.import("resource://formautofill/ProfileStorage.jsm");
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
 const TEST_PROFILE_1 = {
+  "given-name": "Timothy",
+  "additional-name": "John",
+  "family-name": "Berners-Lee",
   organization: "World Wide Web Consortium",
   "street-address": "32 Vassar Street\nMIT Room 32-G524",
   "address-level2": "Cambridge",
