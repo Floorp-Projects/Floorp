@@ -1859,7 +1859,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           // Make sure to not process observers which might have been removed
           // during previous iterations.
           nsIPresShell* shell = observers[j - 1];
-          if (!mStyleFlushObservers.Contains(shell))
+          if (!mStyleFlushObservers.RemoveElement(shell))
             continue;
 
           if (!tracingStyleFlush) {
@@ -1868,10 +1868,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           }
 
           nsCOMPtr<nsIPresShell> shellKungFuDeathGrip(shell);
-          mStyleFlushObservers.RemoveElement(shell);
-          RestyleManager* restyleManager =
-            shell->GetPresContext()->RestyleManager();
-          restyleManager->SetObservingRefreshDriver(false);
+          shell->mObservingStyleFlushes = false;
           shell->FlushPendingNotifications(ChangesToFlush(FlushType::Style, false));
           // Inform the FontFaceSet that we ticked, so that it can resolve its
           // ready promise if it needs to (though it might still be waiting on
@@ -1893,7 +1890,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
         // Make sure to not process observers which might have been removed
         // during previous iterations.
         nsIPresShell* shell = observers[j - 1];
-        if (!mLayoutFlushObservers.Contains(shell))
+        if (!mLayoutFlushObservers.RemoveElement(shell))
           continue;
 
         if (!tracingLayoutFlush) {
@@ -1902,8 +1899,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
         }
 
         nsCOMPtr<nsIPresShell> shellKungFuDeathGrip(shell);
-        mLayoutFlushObservers.RemoveElement(shell);
-        shell->mReflowScheduled = false;
+        shell->mObservingLayoutFlushes = false;
         shell->mSuppressInterruptibleReflows = false;
         FlushType flushType = HasPendingAnimations(shell)
                                ? FlushType::Layout

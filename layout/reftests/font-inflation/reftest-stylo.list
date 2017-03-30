@@ -44,10 +44,10 @@ fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabl
 fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-max-1.html intrinsic-max-1.html
 fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-1a.html intrinsic-fit-1a.html
 fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-1b.html intrinsic-fit-1b.html
-fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-1c.html intrinsic-fit-1c.html
-fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-2a.html intrinsic-fit-2a.html
-fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-2b.html intrinsic-fit-2b.html
-fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-2c.html intrinsic-fit-2c.html
+pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-1c.html intrinsic-fit-1c.html
+pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-2a.html intrinsic-fit-2a.html
+pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-2b.html intrinsic-fit-2b.html
+pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-2c.html intrinsic-fit-2c.html
 fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == select-listbox-1.html select-listbox-1.html
 fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == select-listbox-1.html select-listbox-1.html
 fails == select-combobox-1.html select-combobox-1.html

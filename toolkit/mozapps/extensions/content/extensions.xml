@@ -656,6 +656,11 @@
           let prompt = Services.prefs.getBoolPref("extensions.webextPermissionPrompts", false);
           if (prompt) {
             this.mInstall.promptHandler = info => new Promise((resolve, reject) => {
+              // Skip prompts for non-webextensions
+              if (!info.addon.userPermissions) {
+                resolve();
+                return;
+              }
               let subject = {
                 wrappedJSObject: {
                   target: window.QueryInterface(Ci.nsIInterfaceRequestor)
