@@ -6900,30 +6900,6 @@ struct BackgroundItemComputer<nsCSSValueList, nsStyleImage>
   }
 };
 
-template <>
-struct BackgroundItemComputer<nsCSSValueList, RefPtr<css::URLValueData>>
-{
-  static void ComputeValue(nsStyleContext* aStyleContext,
-                           const nsCSSValueList* aSpecifiedValue,
-                           RefPtr<css::URLValueData>& aComputedValue,
-                           RuleNodeCacheConditions& aConditions)
-  {
-    switch (aSpecifiedValue->mValue.GetUnit()) {
-      case eCSSUnit_Null:
-        break;
-      case eCSSUnit_URL:
-        aComputedValue = aSpecifiedValue->mValue.GetURLStructValue();
-        break;
-      case eCSSUnit_Image:
-        aComputedValue = aSpecifiedValue->mValue.GetImageStructValue();
-        break;
-      default:
-        aComputedValue = nullptr;
-        break;
-    }
-  }
-};
-
 template <typename T>
 struct BackgroundItemComputer<nsCSSValueList, T>
 {
@@ -9446,9 +9422,6 @@ nsRuleNode::FillAllMaskLists(nsStyleImageLayers& aMask,
                      &nsStyleImageLayers::Layer::mImage,
                      aMask.mImageCount, fillCount);
   FillImageLayerList(aMask.mLayers,
-                     &nsStyleImageLayers::Layer::mSourceURI,
-                     aMask.mImageCount, fillCount);
-  FillImageLayerList(aMask.mLayers,
                      &nsStyleImageLayers::Layer::mRepeat,
                      aMask.mRepeatCount, fillCount);
   FillImageLayerList(aMask.mLayers,
@@ -10101,14 +10074,6 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                     parentSVGReset->mMask.mLayers,
                     &nsStyleImageLayers::Layer::mImage,
                     initialImage, parentSVGReset->mMask.mImageCount,
-                    svgReset->mMask.mImageCount,
-                    maxItemCount, rebuild, conditions);
-  SetImageLayerList(aContext, *aRuleData->ValueForMaskImage(),
-                    svgReset->mMask.mLayers,
-                    parentSVGReset->mMask.mLayers,
-                    &nsStyleImageLayers::Layer::mSourceURI,
-                    RefPtr<css::URLValueData>(),
-                    parentSVGReset->mMask.mImageCount,
                     svgReset->mMask.mImageCount,
                     maxItemCount, rebuild, conditions);
 
