@@ -11,16 +11,13 @@ add_task(function* test_support_LWT_properties() {
     manifest: {
       "theme": {
         "images": {
-          "headerURL": "image1.png",
+          "headerURL": BACKGROUND,
         },
         "colors": {
           "accentcolor": ACCENT_COLOR,
           "textcolor": TEXT_COLOR,
         },
       },
-    },
-    files: {
-      "image1.png": BACKGROUND,
     },
   });
 
@@ -33,7 +30,8 @@ add_task(function* test_support_LWT_properties() {
   Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
     "LWT text color attribute should be set");
 
-  Assert.ok(style.backgroundImage.includes("image1.png"), "Expected background image");
+  Assert.equal(style.backgroundImage, 'url("' + BACKGROUND.replace(/"/g, '\\"') + '")',
+    "Expected background image");
   Assert.equal(style.backgroundColor, "rgb(" + hexToRGB(ACCENT_COLOR).join(", ") + ")",
     "Expected correct background color");
   Assert.equal(style.color, "rgb(" + hexToRGB(TEXT_COLOR).join(", ") + ")",
@@ -49,12 +47,9 @@ add_task(function* test_LWT_requires_all_properties_defined_image_only() {
     manifest: {
       "theme": {
         "images": {
-          "headerURL": "image1.png",
+          "headerURL": BACKGROUND,
         },
       },
-    },
-    files: {
-      "image1.png": BACKGROUND,
     },
   });
 
