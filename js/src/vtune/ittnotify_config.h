@@ -244,7 +244,7 @@
 
 /* OS communication functions */
 #if ITT_PLATFORM==ITT_PLATFORM_WIN
-#include <windows.h>
+#include "jswin.h"
 typedef HMODULE           lib_t;
 typedef DWORD             TIDT;
 typedef CRITICAL_SECTION  mutex_t;
