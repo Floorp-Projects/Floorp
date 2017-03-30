@@ -55,7 +55,9 @@ if CONFIG['MOZ_XUL']:
 
 XPIDL_MODULE = 'pipnss'
 
-EXTRA_JS_MODULES.psm += [
+# These aren't actually used in production code yet, so we don't want to
+# ship them with the browser.
+TESTING_JS_MODULES.psm += [
     'DER.jsm',
     'X509.jsm',
 ]
