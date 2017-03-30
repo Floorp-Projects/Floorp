@@ -2496,6 +2496,18 @@ nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
   );
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Expire orphan icons.
+  rv = mDB->MainConn()->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_pages_w_icons "
+    "WHERE page_url_hash NOT IN (SELECT url_hash FROM moz_places) "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDB->MainConn()->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_icons "
+    "WHERE root = 0 AND id NOT IN (SELECT icon_id FROM moz_icons_to_pages) "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Hosts accumulated during the places delete are updated through a trigger
   // (see nsPlacesTriggers.h).
   rv = mDB->MainConn()->ExecuteSimpleSQL(

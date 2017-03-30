@@ -338,6 +338,11 @@ nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
     icon.fetchMode = aForceReload ? FETCH_ALWAYS : FETCH_IF_MISSING;
     rv = aFaviconURI->GetSpec(icon.spec);
     NS_ENSURE_SUCCESS(rv, rv);
+    nsAutoCString path;
+    rv = aFaviconURI->GetPath(path);
+    if (NS_SUCCEEDED(rv) && path.EqualsLiteral("/favicon.ico")) {
+      icon.rootIcon = 1;
+    }
   }
 
   // If the page url points to an image, the icon's url will be the same.
@@ -378,7 +383,7 @@ nsFaviconService::ReplaceFaviconData(nsIURI* aFaviconURI,
   NS_ENSURE_ARG(aDataLen > 0);
   NS_ENSURE_ARG(aMimeType.Length() > 0);
   NS_ENSURE_ARG(imgLoader::SupportImageWithMimeType(PromiseFlatCString(aMimeType).get(),
-                                                     AcceptedMimeTypes::IMAGES));
+                                                     AcceptedMimeTypes::IMAGES_AND_DOCUMENTS));
 
   if (aExpiration == 0) {
     aExpiration = PR_Now() + MAX_FAVICON_EXPIRATION;
@@ -406,10 +411,18 @@ nsFaviconService::ReplaceFaviconData(nsIURI* aFaviconURI,
   iconData->fetchMode = FETCH_NEVER;
   nsresult rv = aFaviconURI->GetSpec(iconData->spec);
   NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString path;
+  rv = aFaviconURI->GetPath(path);
+  if (NS_SUCCEEDED(rv) && path.EqualsLiteral("/favicon.ico")) {
+    iconData->rootIcon = 1;
+  }
 
   IconPayload payload;
   payload.mimeType = aMimeType;
   payload.data.Assign(TO_CHARBUFFER(aData), aDataLen);
+  if (payload.mimeType.EqualsLiteral(SVG_MIME_TYPE)) {
+    payload.width = UINT16_MAX;
+  }
   // There may already be a previous payload, so ensure to only have one.
   iconData->payloads.Clear();
   iconData->payloads.AppendElement(payload);

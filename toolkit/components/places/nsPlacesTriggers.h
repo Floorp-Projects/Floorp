@@ -146,8 +146,10 @@
     "SET prefix = (" HOSTS_PREFIX_PRIORITY_FRAGMENT ") " \
     "WHERE host = OLD.host; " \
     "DELETE FROM moz_icons " \
-    "WHERE fixed_icon_url_hash = hash(OLD.host || '/favicon.ico') " \
-      "AND fixup_url(icon_url) = OLD.host || '/favicon.ico';" \
+    "WHERE fixed_icon_url_hash = hash(fixup_url(OLD.host || '/favicon.ico')) " \
+      "AND fixup_url(icon_url) = fixup_url(OLD.host || '/favicon.ico') "\
+      "AND NOT EXISTS (SELECT 1 FROM moz_hosts WHERE host = OLD.host " \
+                                                 "OR host = fixup_url(OLD.host));" \
   "END" \
 )
 
