@@ -105,10 +105,10 @@ LightweightThemeConsumer.prototype = {
     // so if we don't reset first, it'll keep the old value.
     root.style.removeProperty("--lwt-text-color");
     root.style.removeProperty("--lwt-accent-color");
+    let textcolor = aData.textcolor || "black";
+    _setProperty(root, active, "--lwt-text-color", textcolor);
+    _setProperty(root, active, "--lwt-accent-color", aData.accentcolor || "white");
     if (active) {
-      let textcolor = aData.textcolor || "black";
-      root.style.setProperty("--lwt-text-color", textcolor);
-      root.style.setProperty("--lwt-accent-color", aData.accentcolor || "white");
       let dummy = this._doc.createElement("dummy");
       dummy.style.color = textcolor;
       let [r, g, b] = _parseRGB(this._doc.defaultView.getComputedStyle(dummy).color);
@@ -134,6 +134,9 @@ LightweightThemeConsumer.prototype = {
 
     _setImage(root, active, "--lwt-header-image", aData.headerURL);
     _setImage(root, active, "--lwt-footer-image", aData.footerURL);
+    _setImage(root, active, "--lwt-additional-images", aData.additionalBackgrounds);
+    _setProperty(root, active, "--lwt-background-alignment", aData.backgroundsAlignment);
+    _setProperty(root, active, "--lwt-background-tiling", aData.backgroundsTiling);
 
     if (active && aData.footerURL)
       root.setAttribute("lwthemefooter", "true");
@@ -166,11 +169,18 @@ LightweightThemeConsumer.prototype = {
   }
 }
 
-function _setImage(aRoot, aActive, aVariableName, aURL) {
-  if (aActive && aURL) {
-    aRoot.style.setProperty(aVariableName, `url("${aURL.replace(/"/g, '\\"')}")`);
+function _setImage(aRoot, aActive, aVariableName, aURLs) {
+  if (aURLs && !Array.isArray(aURLs)) {
+    aURLs = [aURLs];
+  }
+  _setProperty(aRoot, aActive, aVariableName, aURLs && aURLs.map(v => `url("${v.replace(/"/g, '\\"')}")`).join(","));
+}
+
+function _setProperty(root, active, variableName, value) {
+  if (active && value) {
+    root.style.setProperty(variableName, value);
   } else {
-    aRoot.style.removeProperty(aVariableName);
+    root.style.removeProperty(variableName);
   }
 }
 

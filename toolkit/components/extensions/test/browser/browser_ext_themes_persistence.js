@@ -14,13 +14,16 @@ add_task(function* test_multiple_windows() {
     manifest: {
       "theme": {
         "images": {
-          "headerURL": BACKGROUND,
+          "headerURL": "image1.png",
         },
         "colors": {
           "accentcolor": ACCENT_COLOR,
           "textcolor": TEXT_COLOR,
         },
       },
+    },
+    files: {
+      "image1.png": BACKGROUND,
     },
   });
 
@@ -32,8 +35,7 @@ add_task(function* test_multiple_windows() {
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
     "LWT text color attribute should be set");
-  Assert.equal(style.backgroundImage, 'url("' + BACKGROUND.replace(/"/g, '\\"') + '")',
-    "Expected background image");
+  Assert.ok(style.backgroundImage.includes("image1.png"), "Expected background image");
 
   // Now we'll open a new window to see if the theme is also applied there.
   let window2 = yield BrowserTestUtils.openNewBrowserWindow();
@@ -43,8 +45,7 @@ add_task(function* test_multiple_windows() {
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
     "LWT text color attribute should be set");
-  Assert.equal(style.backgroundImage, 'url("' + BACKGROUND.replace(/"/g, '\\"') + '")',
-    "Expected background image");
+  Assert.ok(style.backgroundImage.includes("image1.png"), "Expected background image");
 
   yield BrowserTestUtils.closeWindow(window2);
   yield extension.unload();
