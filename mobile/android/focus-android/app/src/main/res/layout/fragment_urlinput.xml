@@ -3,27 +3,36 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/colorUrlInputBackground">
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="81dp"
-        android:paddingTop="25dp"
-        android:background="@drawable/background_inactive"
         android:orientation="horizontal"
-        android:elevation="4dp">
+        android:elevation="4dp"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
-        <LinearLayout
+        <View
+            android:id="@+id/toolbar_background"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="@drawable/background_inactive" />
+
+        <LinearLayout
+            android:id="@+id/url_background"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_gravity="bottom"
             android:orientation="horizontal"
             android:layout_margin="8dp"
-            android:background="@drawable/urlbar_background">
+            android:background="@drawable/urlbar_background"
+            android:transitionName="urlbar">
 
             <org.mozilla.focus.widget.InlineAutocompleteEditText
                 android:id="@+id/url_edit"
@@ -45,8 +54,7 @@
                 android:textColor="#ffffff"
                 android:textColorHighlight="@color/colorAutocompleteHighlight"
                 android:textColorHint="#40ffffff"
-                android:textSize="15sp"
-                android:transitionName="urlbar"/>
+                android:textSize="15sp" />
 
             <ImageButton
                 android:id="@+id/clear"
@@ -68,11 +76,19 @@
 
     </FrameLayout>
 
+    <View
+        android:id="@+id/dismiss"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorUrlInputBackground"
+        android:contentDescription="@string/content_description_dismiss_input" />
+
     <FrameLayout
         android:id="@+id/search_hint_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone">
+        android:visibility="gone"
+        android:layout_marginTop="81dp">
 
         <TextView
             android:id="@+id/search_hint"
@@ -83,6 +99,7 @@
             android:gravity="center_vertical"
             android:padding="16dp"
             android:lines="1"
+            android:text="Hello World!"
             android:ellipsize="end"
             android:textSize="14sp"
             android:textColor="@color/searchHintTextColor"
@@ -96,11 +113,4 @@
 
     </FrameLayout>
 
-    <View
-        android:id="@+id/dismiss"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:contentDescription="@string/content_description_dismiss_input" />
-
-</LinearLayout>
+</FrameLayout>

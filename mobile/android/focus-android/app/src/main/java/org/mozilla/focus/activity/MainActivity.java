@@ -8,7 +8,6 @@ package org.mozilla.focus.activity;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentManager;
@@ -21,6 +20,7 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.fragment.FirstrunFragment;
 import org.mozilla.focus.fragment.HomeFragment;
+import org.mozilla.focus.fragment.UrlInputFragment;
 import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
@@ -130,10 +130,24 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        final BrowserFragment browserFragment = (BrowserFragment) getSupportFragmentManager().findFragmentByTag(BrowserFragment.FRAGMENT_TAG);
-        if (browserFragment != null && browserFragment.isVisible() && browserFragment.canGoBack()) {
-            browserFragment.goBack();
-            return;
+        final FragmentManager fragmentManager = getSupportFragmentManager();
+
+        final UrlInputFragment urlInputFragment = (UrlInputFragment) fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG);
+        if (urlInputFragment != null && urlInputFragment.isVisible()) {
+            if (urlInputFragment.onBackPressed()) {
+                // The URL input fragment has handled the back press. It does its own animations so
+                // we do not try to remove it from outside.
+                return;
+            }
+        }
+
+        final BrowserFragment browserFragment = (BrowserFragment) fragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG);
+        if (browserFragment != null && browserFragment.isVisible()) {
+            if (browserFragment.onBackPressed()) {
+                // The Browser fragment handles back presses on its own because it might just go back
+                // in the browsing history.
+                return;
+            }
         }
 
         super.onBackPressed();

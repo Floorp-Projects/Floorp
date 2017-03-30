@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.PopupMenu;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -31,11 +30,15 @@ public class HomeFragment extends Fragment implements View.OnClickListener, Popu
         return new HomeFragment();
     }
 
+    private View fakeUrlBarView;
+
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        view.findViewById(R.id.url).setOnClickListener(this);
+        fakeUrlBarView = view.findViewById(R.id.fake_urlbar);
+        fakeUrlBarView.setOnClickListener(this);
+
         view.findViewById(R.id.menu).setOnClickListener(this);
 
         return view;
@@ -44,12 +47,13 @@ public class HomeFragment extends Fragment implements View.OnClickListener, Popu
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.url:
-                final FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-                fragmentManager.beginTransaction()
-                        .add(R.id.container, UrlInputFragment.create())
-                        .addToBackStack("url_input")
+            case R.id.fake_urlbar:
+                UrlInputFragment fragment = UrlInputFragment.createWithHomeScreenAnimation(fakeUrlBarView);
+
+                getActivity().getSupportFragmentManager().beginTransaction()
+                        .add(R.id.container, fragment, UrlInputFragment.FRAGMENT_TAG)
                         .commit();
+
                 break;
 
             case R.id.menu:

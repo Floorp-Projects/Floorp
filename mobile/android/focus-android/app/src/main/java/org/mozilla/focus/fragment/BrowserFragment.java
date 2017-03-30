@@ -165,6 +165,34 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         };
     }
 
+
+    public boolean onBackPressed() {
+        if (canGoBack()) {
+            goBack();
+        } else {
+            eraseAndShowHomeScreen();
+        }
+
+        return true;
+    }
+
+    private void eraseAndShowHomeScreen() {
+        final IWebView webView = getWebView();
+        if (webView != null) {
+            webView.cleanup();
+        }
+
+        getActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .setCustomAnimations(0, R.anim.erase_animation)
+                .replace(R.id.container, HomeFragment.create(), HomeFragment.FRAGMENT_TAG)
+                .commit();
+
+        ViewUtils.showBrandedSnackbar(getActivity().findViewById(android.R.id.content),
+                R.string.feedback_erase,
+                getResources().getInteger(R.integer.erase_snackbar_delay));
+    }
+
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
@@ -176,30 +204,14 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             case R.id.url:
                 getActivity().getSupportFragmentManager()
                         .beginTransaction()
-                        .add(R.id.container, UrlInputFragment.create(getWebView().getUrl()))
-                        .addToBackStack("url_entry")
+                        .add(R.id.container, UrlInputFragment.create(getWebView().getUrl()), UrlInputFragment.FRAGMENT_TAG)
                         .commit();
                 break;
 
             case R.id.erase: {
-                final IWebView webView = getWebView();
-                if (webView != null) {
-                    webView.cleanup();
-                }
-
-                getActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .setCustomAnimations(0, R.anim.erase_animation)
-                        .replace(R.id.container, HomeFragment.create(), HomeFragment.FRAGMENT_TAG)
-                        .commit();
-
-                ViewUtils.showBrandedSnackbar(getActivity().findViewById(android.R.id.content),
-                        R.string.feedback_erase,
-                        getResources().getInteger(R.integer.erase_snackbar_delay));
-
+                eraseAndShowHomeScreen();
                 break;
             }
-
 
             case R.id.back: {
                 final IWebView webView = getWebView();
@@ -310,7 +322,6 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         forwardButton.setEnabled(canGoForward);
         forwardButton.setAlpha(canGoForward ? 1.0f : 0.5f);
-
         backButton.setEnabled(canGoBack);
         backButton.setAlpha(canGoBack ? 1.0f : 0.5f);
     }

@@ -3,13 +3,11 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/background_home">
 
     <FrameLayout
-        android:id="@+id/urlbar"
         android:layout_width="match_parent"
         android:layout_height="81dp"
         android:paddingTop="25dp">
@@ -31,20 +29,21 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
+        android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:gravity="center"
         android:orientation="vertical">
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/wordmark"
-            android:paddingBottom="30dp"
             android:layout_gravity="center_horizontal"
-            android:contentDescription="@string/app_name" />
+            android:contentDescription="@string/app_name"
+            android:paddingBottom="30dp"
+            android:src="@drawable/wordmark" />
 
         <TextView
-            android:id="@+id/url"
+            android:id="@+id/fake_urlbar"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:layout_marginLeft="18dp"
@@ -53,19 +52,19 @@
             android:gravity="center"
             android:padding="8dp"
             android:text="@string/urlbar_hint"
-            android:textSize="15sp"
             android:textColor="#40ffffff"
+            android:textSize="15sp"
             android:transitionName="urlbar" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:paddingTop="30dp"
-            android:textSize="14sp"
             android:lineSpacingExtra="7sp"
+            android:paddingTop="30dp"
             android:text="@string/teaser"
-            android:textColor="#eeeeee" />
+            android:textColor="#eeeeee"
+            android:textSize="14sp" />
 
     </LinearLayout>
 

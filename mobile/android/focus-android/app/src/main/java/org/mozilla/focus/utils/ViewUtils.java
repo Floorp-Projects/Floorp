@@ -5,7 +5,10 @@
 
 package org.mozilla.focus.utils;
 
+import android.app.Activity;
 import android.content.Context;
+import android.support.annotation.IdRes;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -55,5 +58,22 @@ public class ViewUtils {
 
     public static boolean isRTL(View view) {
         return ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_RTL;
+    }
+
+    /**
+     * Update the alpha value of the view with the given id. All kinds of failures (null activity,
+     * view not found, ..) will be ignored by this method.
+     */
+    public static void updateAlphaIfViewExists(@Nullable Activity activity, @IdRes int id, float alpha) {
+        if (activity == null) {
+            return;
+        }
+
+        final View view = activity.findViewById(id);
+        if (view == null) {
+            return;
+        }
+
+        view.setAlpha(alpha);
     }
 }
