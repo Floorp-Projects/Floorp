@@ -204,7 +204,6 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "security.sandbox.content.tempDirSuffix",
   "security.sandbox.logging.enabled",
   "security.sandbox.mac.track.violations",
-  "security.sandbox.windows.log",
   "security.sandbox.windows.log.stackTraceDepth",
   "shutdown.watchdog.timeoutSecs",
   "signed.applets.codebase_principal_support",
@@ -244,4 +243,3 @@ const char*  mozilla::dom::ContentPrefs::GetContentPref(size_t aIndex)
   MOZ_ASSERT(aIndex < ArrayLength(ContentPrefs::gInitPrefs));
   return gInitPrefs[aIndex];
 }
-
