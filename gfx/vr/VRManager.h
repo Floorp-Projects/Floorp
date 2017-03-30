@@ -63,6 +63,7 @@ private:
 
   void Init();
   void Destroy();
+  void Shutdown();
 
   void DispatchVRDisplayInfoUpdate();
   void RefreshVRControllers();
