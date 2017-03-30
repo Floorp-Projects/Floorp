@@ -4,13 +4,12 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
   <Description about="urn:mozilla:install-manifest">
-    <em:id>bootstrap1@tests.mozilla.org</em:id>
+    <em:id>bootstrap3@tests.mozilla.org</em:id>
     <em:version>1.0</em:version>
     <em:bootstrap>true</em:bootstrap>
-    <em:multiprocessCompatible>true</em:multiprocessCompatible>
 
     <!-- Front End MetaData -->
-    <em:name>Test Bootstrap 1</em:name>
+    <em:name>Test Bootstrap 3</em:name>
     <em:description>Test Description</em:description>
 
     <em:iconURL>chrome://foo/skin/icon.png</em:iconURL>
