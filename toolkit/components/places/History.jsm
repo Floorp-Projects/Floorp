@@ -705,7 +705,7 @@ var cleanupPages = Task.async(function*(db, pages) {
     yield db.executeCached(`DELETE FROM moz_pages_w_icons
                             WHERE page_url_hash NOT IN (SELECT url_hash FROM moz_places)`);
     yield db.executeCached(`DELETE FROM moz_icons
-                            WHERE id NOT IN (SELECT icon_id FROM moz_icons_to_pages)`);
+                            WHERE root = 0 AND id NOT IN (SELECT icon_id FROM moz_icons_to_pages)`);
     yield db.execute(`DELETE FROM moz_annos
                       WHERE place_id IN ( ${ idsList } )`);
     yield db.execute(`DELETE FROM moz_inputhistory

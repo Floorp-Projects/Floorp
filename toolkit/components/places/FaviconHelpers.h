@@ -87,6 +87,7 @@ struct IconData
   : expiration(0)
   , fetchMode(FETCH_NEVER)
   , status(ICON_STATUS_UNKNOWN)
+  , rootIcon(0)
   {
   }
 
@@ -94,6 +95,7 @@ struct IconData
   PRTime expiration;
   enum AsyncFaviconFetchMode fetchMode;
   uint16_t status; // This is a bitset, see ICON_STATUS_* defines above.
+  uint8_t rootIcon;
   nsTArray<IconPayload> payloads;
 };
 
