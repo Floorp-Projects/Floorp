@@ -129,10 +129,10 @@ SVGAnimatedBoolean::~SVGAnimatedBoolean()
   SVGAnimatedBooleanTearoffTable().RemoveTearoff(mVal);
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 nsSVGBoolean::ToSMILAttr(nsSVGElement *aSVGElement)
 {
-  return new SMILBool(this, aSVGElement);
+  return MakeUnique<SMILBool>(this, aSVGElement);
 }
 
 nsresult

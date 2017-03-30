@@ -13,6 +13,7 @@
 #include "nsISMILAttr.h"
 #include "nsSVGElement.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 
 class nsSMILValue;
 
@@ -55,9 +56,8 @@ public:
 
   already_AddRefed<mozilla::dom::SVGAnimatedInteger>
     ToDOMAnimatedInteger(nsSVGElement* aSVGElement);
-  // Returns a new nsISMILAttr object that the caller must delete
-  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
-  
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
+
 private:
 
   int32_t mAnimVal;
