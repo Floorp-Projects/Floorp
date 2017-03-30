@@ -4324,6 +4324,16 @@
     "bug_numbers": [1311910],
     "description": "Server HTTP status code from SafeBrowsing database updates. (0=1xx, 1=200, 2=2xx, 3=204, 4=3xx, 5=400, 6=4xx, 7=403, 8=404, 9=408, 10=413, 11=5xx, 12=502|504|511, 13=503, 14=505, 15=Other). Keyed by provider"
   },
+  "URLCLASSIFIER_UPDATE_SERVER_RESPONSE_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "keyed": true,
+    "high": 100000,
+    "n_buckets": 30,
+    "bug_numbers": [1336903],
+    "description": "Server response time to update request (ms). Keyed by provider"
+  },
   "URLCLASSIFIER_COMPLETE_REMOTE_STATUS2": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
@@ -4349,6 +4359,17 @@
     "bug_numbers": [1172688, 1311926],
     "description": "This metric is recorded every time a gethash lookup is performed, `true` is recorded if the lookup times out. Keyed by provider"
   },
+  "URLCLASSIFIER_COMPLETE_SERVER_RESPONSE_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "keyed": true,
+    "high": 5000,
+    "n_buckets": 15,
+    "bug_numbers": [1336903],
+    "description": "Server response time to getHash request (ms). Keyed by provider"
+  },
+
   "URLCLASSIFIER_UPDATE_ERROR": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "59",
@@ -5628,9 +5649,18 @@
   "FX_PREFERENCES_CATEGORY_OPENED": {
     "bug_numbers": [1324167],
     "alert_emails": ["jaws@mozilla.com"],
-    "expires_in_version": "56",
+    "expires_in_version": "59",
     "kind": "categorical",
     "labels": ["unknown", "general", "search", "content", "applications", "privacy", "security", "sync", "advancedGeneral", "advancedDataChoices", "advancedNetwork", "advancedUpdates", "advancedCerts"],
+    "releaseChannelCollection": "opt-out",
+    "description": "Count how often each preference category is opened."
+  },
+  "FX_PREFERENCES_CATEGORY_OPENED_V2": {
+    "bug_numbers": [1335907],
+    "alert_emails": ["jaws@mozilla.com"],
+    "expires_in_version": "59",
+    "kind": "categorical",
+    "labels": ["unknown", "searchresults", "general", "applications", "privacy", "sync", "advanced"],
     "releaseChannelCollection": "opt-out",
     "description": "Count how often each preference category is opened."
   },

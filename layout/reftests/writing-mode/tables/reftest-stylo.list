@@ -68,12 +68,12 @@ HTTP(../..) == s72-border-spacing-002.xht s72-border-spacing-002.xht
 HTTP(../..) == s72-border-spacing-003.xht s72-border-spacing-003.xht
 HTTP(../..) == s72-border-spacing-004.xht s72-border-spacing-004.xht
 HTTP(../..) == s72-border-spacing-005.xht s72-border-spacing-005.xht
-fails == wm-row-progression-002.xht wm-row-progression-002.xht
-fails == wm-row-progression-003.xht wm-row-progression-003.xht
-fails == wm-row-progression-004.xht wm-row-progression-004.xht
-fails == wm-row-progression-005.xht wm-row-progression-005.xht
-fails == wm-row-progression-006.xht wm-row-progression-006.xht
-fails == wm-row-progression-007.xht wm-row-progression-007.xht
+== wm-row-progression-002.xht wm-row-progression-002.xht
+== wm-row-progression-003.xht wm-row-progression-003.xht
+== wm-row-progression-004.xht wm-row-progression-004.xht
+== wm-row-progression-005.xht wm-row-progression-005.xht
+== wm-row-progression-006.xht wm-row-progression-006.xht
+== wm-row-progression-007.xht wm-row-progression-007.xht
 
 == table-caption-top-1.html table-caption-top-1.html
 == table-caption-bottom-1.html table-caption-bottom-1.html

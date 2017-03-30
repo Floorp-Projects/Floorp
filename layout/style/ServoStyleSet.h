@@ -14,6 +14,7 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/SheetType.h"
 #include "mozilla/UniquePtr.h"
+#include "MainThreadUtils.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsChangeHint.h"
@@ -30,6 +31,7 @@ class ServoStyleSheet;
 struct Keyframe;
 struct ServoComputedValuesWithParent;
 } // namespace mozilla
+class nsIContent;
 class nsIDocument;
 class nsStyleContext;
 class nsPresContext;
@@ -224,7 +226,7 @@ public:
    * tree. This is used in situations where we need the style immediately and
    * cannot wait for a future batch restyle.
    */
-  void StyleNewSubtree(Element* aRoot);
+  void StyleNewSubtree(dom::Element* aRoot);
 
   /**
    * Like the above, but skips the root node, and only styles unstyled children.
@@ -232,7 +234,7 @@ public:
    * StyleNewChildren on the node rather than making multiple calls to
    * StyleNewSubtree on each child, since it allows for more parallelism.
    */
-  void StyleNewChildren(Element* aParent);
+  void StyleNewChildren(dom::Element* aParent);
 
   /**
    * Records that the contents of style sheets have changed since the last
@@ -269,6 +271,8 @@ public:
                                dom::Element* aElement,
                                const ServoComputedValuesWithParent&
                                  aServoValues);
+
+  bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
 
 private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,

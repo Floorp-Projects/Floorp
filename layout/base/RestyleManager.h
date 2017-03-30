@@ -44,12 +44,6 @@ public:
   // as a result of a change to the :hover content state.
   uint32_t GetHoverGeneration() const { return mHoverGeneration; }
 
-  bool ObservingRefreshDriver() const { return mObservingRefreshDriver; }
-
-  void SetObservingRefreshDriver(bool aObserving) {
-      mObservingRefreshDriver = aObserving;
-  }
-
   void Disconnect() { mPresContext = nullptr; }
 
   static nsCString RestyleHintToString(nsRestyleHint aHint);
@@ -234,9 +228,6 @@ private:
   uint32_t mHoverGeneration;
 
   const StyleBackendType mType;
-
-  // True if we're already waiting for a refresh notification.
-  bool mObservingRefreshDriver;
 
 protected:
   // True if we're in the middle of a nsRefreshDriver refresh

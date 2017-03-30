@@ -101,6 +101,8 @@
 <!ENTITY enableSearchUpdate.label        "Search Engines">
 <!ENTITY enableSearchUpdate.accesskey    "E">
 
+<!ENTITY reports.label                   "Reports">
+
 <!ENTITY offlineStorageNotify.label               "Tell you when a website asks to store data for offline use">
 <!ENTITY offlineStorageNotify.accesskey           "T">
 <!ENTITY offlineStorageNotifyExceptions.label     "Exceptions…">
@@ -113,7 +115,6 @@
 <!ENTITY offlineAppRemove.confirm        "Remove offline data">
 
 <!ENTITY certificateTab.label            "Certificates">
-<!ENTITY certPersonal.label              "Requests">
 <!ENTITY certPersonal.description        "When a server requests your personal certificate:">
 <!ENTITY selectCerts.auto                "Select one automatically">
 <!ENTITY selectCerts.auto.accesskey      "S">

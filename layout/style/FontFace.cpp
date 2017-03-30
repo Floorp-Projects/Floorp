@@ -12,8 +12,8 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "nsCSSFontFaceRule.h"
 #include "nsCSSParser.h"
-#include "nsCSSRules.h"
 #include "nsIDocument.h"
 #include "nsStyleUtil.h"
 

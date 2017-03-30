@@ -306,45 +306,6 @@ add_task(function* test_main_crash_event_file_noenv() {
   Assert.equal(count, 0);
 });
 
-add_task(function* test_main_crash_event_file_override_ping_uuid() {
-  let ac = new TelemetryArchiveTesting.Checker();
-  yield ac.promiseInit();
-
-  let m = yield getManager();
-  const fileContent = crashId + "\n" +
-    "ProductName=" + productName + "\n" +
-    "ProductID=" + productId + "\n" +
-    "CrashPingUUID=" + crashPingUuid + "\n";
-
-  yield m.createEventsFile(crashId, "crash.main.2", DUMMY_DATE, fileContent);
-  let count = yield m.aggregateEventsFiles();
-  Assert.equal(count, 1);
-
-  let crashes = yield m.getCrashes();
-  Assert.equal(crashes.length, 1);
-  Assert.equal(crashes[0].id, crashId);
-  Assert.equal(crashes[0].type, "main-crash");
-  Assert.deepEqual(crashes[0].metadata, {
-    CrashPingUUID: crashPingUuid,
-    ProductName: productName,
-    ProductID: productId
-  });
-  Assert.deepEqual(crashes[0].crashDate, DUMMY_DATE);
-
-  let found = yield ac.promiseFindPing("crash", [
-    [["id"], crashPingUuid],
-    [["payload", "hasCrashEnvironment"], false],
-    [["payload", "metadata", "ProductName"], productName],
-    [["payload", "metadata", "ProductID"], productId],
-  ]);
-  Assert.ok(found, "Telemetry ping submitted for found crash");
-  Assert.equal(found.payload.metadata.CrashPingUUID, undefined,
-               "Crash ping UUID should be filtered out");
-
-  count = yield m.aggregateEventsFiles();
-  Assert.equal(count, 0);
-});
-
 add_task(function* test_crash_submission_event_file() {
   let m = yield getManager();
   yield m.createEventsFile("1", "crash.main.2", DUMMY_DATE, "crash1");

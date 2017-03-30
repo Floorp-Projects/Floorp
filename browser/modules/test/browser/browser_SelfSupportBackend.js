@@ -26,28 +26,12 @@ function sendSessionRestoredNotification() {
   selfSupportBackendImpl.observe(null, "sessionstore-windows-restored", null);
 }
 
-/**
- * Find a browser, with an IFRAME as parent, who has aURL as the source attribute.
- *
- * @param aURL The URL to look for to identify the browser.
- *
- * @returns {Object} The browser element or null on failure.
- */
-function findSelfSupportBrowser(aURL) {
-  let frames = Services.appShell.hiddenDOMWindow.document.querySelectorAll("iframe");
-  for (let frame of frames) {
-    try {
-      let browser = frame.contentDocument.getElementById("win").querySelectorAll("browser")[0];
-      let url = browser.getAttribute("src");
-      if (url == aURL) {
-        return browser;
-      }
-    } catch (e) {
-      continue;
-    }
-  }
-  return null;
+function toggleSelfSupportTestMode(testing) {
+  let selfSupportBackendImpl =
+    Cu.import("resource:///modules/SelfSupportBackend.jsm", {}).SelfSupportBackendInternal;
+  selfSupportBackendImpl._testing = testing;
 }
+
 
 /**
  * Wait for self support page to load.
@@ -60,13 +44,19 @@ function findSelfSupportBrowser(aURL) {
 function promiseSelfSupportLoad(aURL) {
   return new Promise((resolve, reject) => {
     // Find the SelfSupport browser.
-    let browserPromise = waitForConditionPromise(() => !!findSelfSupportBrowser(aURL),
-                                                 "SelfSupport browser not found.",
-                                                 TEST_WAIT_RETRIES);
+    let browser = null;
+    let browserPromise = TestUtils.topicObserved("self-support-browser-created",
+        (subject, topic) => {
+          let url = subject.getAttribute("src");
+          Cu.reportError("Got browser with src: " + url);
+          if (url == aURL) {
+            browser = subject;
+          }
+          return url == aURL;
+        });
 
     // Once found, append a "load" listener to catch page loads.
     browserPromise.then(() => {
-      let browser = findSelfSupportBrowser(aURL);
       if (browser.contentDocument.readyState === "complete") {
         resolve(browser);
       } else {
@@ -78,19 +68,6 @@ function promiseSelfSupportLoad(aURL) {
       }
     }, reject);
   });
-}
-
-/**
- * Wait for self support to close.
- *
- * @param aURL The URL to look for to identify the browser.
- *
- * @returns {Promise} Return a promise which is resolved when SelfSupport browser cannot
- *          be found anymore.
- */
-function promiseSelfSupportClose(aURL) {
-  return waitForConditionPromise(() => !findSelfSupportBrowser(aURL),
-                                 "SelfSupport browser is still open.", TEST_WAIT_RETRIES);
 }
 
 /**
@@ -129,8 +106,13 @@ add_task(function* setupEnvironment() {
  * Test that the self support page can use the UITour API and close itself.
  */
 add_task(function* test_selfSupport() {
+  toggleSelfSupportTestMode(true);
+  registerCleanupFunction(toggleSelfSupportTestMode.bind(null, false));
   // Initialise the SelfSupport backend and trigger the load.
   SelfSupportBackend.init();
+
+  // Wait for the SelfSupport page to load.
+  let selfSupportBrowserPromise = promiseSelfSupportLoad(TEST_PAGE_URL_HTTPS);
 
   // SelfSupportBackend waits for "sessionstore-windows-restored" to start loading. Send it.
   info("Sending sessionstore-windows-restored");
@@ -138,7 +120,7 @@ add_task(function* test_selfSupport() {
 
   // Wait for the SelfSupport page to load.
   info("Waiting for the SelfSupport local page to load.");
-  let selfSupportBrowser = yield promiseSelfSupportLoad(TEST_PAGE_URL_HTTPS);
+  let selfSupportBrowser = yield selfSupportBrowserPromise;
   Assert.ok(!!selfSupportBrowser, "SelfSupport browser must exist.");
 
   // Get a reference to the UITour API.
@@ -176,39 +158,15 @@ add_task(function* test_selfSupport() {
   yield observePromise;
   info("Observed in the hidden frame");
 
+  let selfSupportClosed = TestUtils.topicObserved("self-support-browser-destroyed");
   // Close SelfSupport from content.
   contentWindow.close();
 
-  // Wait until SelfSupport closes.
-  info("Waiting for the SelfSupport to close.");
-  yield promiseSelfSupportClose(TEST_PAGE_URL_HTTPS);
-
-  // Find the SelfSupport browser, again. We don't expect to find it.
-  selfSupportBrowser = findSelfSupportBrowser(TEST_PAGE_URL_HTTPS);
-  Assert.ok(!selfSupportBrowser, "SelfSupport browser must not exist.");
+  yield selfSupportClosed;
+  Assert.ok(!selfSupportBrowser.parentNode, "SelfSupport browser must have been removed.");
 
   // We shouldn't need this, but let's keep it to make sure closing SelfSupport twice
   // doesn't create any problem.
   SelfSupportBackend.uninit();
 });
 
-/**
- * Test that SelfSupportBackend only allows HTTPS.
- */
-add_task(function* test_selfSupport_noHTTPS() {
-  Preferences.set(PREF_SELFSUPPORT_URL, TEST_PAGE_URL);
-
-  SelfSupportBackend.init();
-
-  // SelfSupportBackend waits for "sessionstore-windows-restored" to start loading. Send it.
-  info("Sending sessionstore-windows-restored");
-  sendSessionRestoredNotification();
-
-  // Find the SelfSupport browser. We don't expect to find it since we are not using https.
-  let selfSupportBrowser = findSelfSupportBrowser(TEST_PAGE_URL);
-  Assert.ok(!selfSupportBrowser, "SelfSupport browser must not exist.");
-
-  // We shouldn't need this, but let's keep it to make sure closing SelfSupport twice
-  // doesn't create any problem.
-  SelfSupportBackend.uninit();
-})

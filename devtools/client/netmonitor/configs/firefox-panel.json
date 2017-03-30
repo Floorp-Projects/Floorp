@@ -1,0 +1,11 @@
+{
+  "environment": "firefox-panel",
+  "baseWorkerURL": "resource://devtools/client/netmonitor/",
+  "logging": false,
+  "clientLogging": false,
+  "firefox": {
+    "mcPath": "./firefox"
+  },
+  "features": {
+  }
+}

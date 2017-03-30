@@ -43,6 +43,7 @@ use style::gecko_bindings::bindings::{nsACString, nsAString};
 use style::gecko_bindings::bindings::Gecko_AnimationAppendKeyframe;
 use style::gecko_bindings::bindings::RawGeckoComputedKeyframeValuesListBorrowedMut;
 use style::gecko_bindings::bindings::RawGeckoElementBorrowed;
+use style::gecko_bindings::bindings::RawGeckoFontFaceRuleListBorrowedMut;
 use style::gecko_bindings::bindings::RawServoAnimationValueBorrowed;
 use style::gecko_bindings::bindings::RawServoAnimationValueMapBorrowed;
 use style::gecko_bindings::bindings::RawServoAnimationValueStrong;
@@ -54,7 +55,7 @@ use style::gecko_bindings::bindings::nsTimingFunctionBorrowedMut;
 use style::gecko_bindings::structs;
 use style::gecko_bindings::structs::{SheetParsingMode, nsIAtom, nsCSSPropertyID};
 use style::gecko_bindings::structs::{ThreadSafePrincipalHolder, ThreadSafeURIHolder};
-use style::gecko_bindings::structs::{nsRestyleHint, nsChangeHint};
+use style::gecko_bindings::structs::{nsRestyleHint, nsChangeHint, nsCSSFontFaceRule};
 use style::gecko_bindings::structs::Loader;
 use style::gecko_bindings::structs::RawGeckoPresContextOwned;
 use style::gecko_bindings::structs::ServoStyleSheet;
@@ -152,7 +153,7 @@ fn traverse_subtree(element: GeckoElement, raw_data: RawServoStyleSetBorrowed,
     // servo to try to style it. Detect that here and bail out.
     if let Some(parent) = element.parent_element() {
         if parent.borrow_data().map_or(true, |d| d.styles().is_display_none()) {
-            debug!("{:?} has unstyled parent - ignoring call to traverse_subtree", parent);
+            debug!("{:?} has unstyled parent {:?} - ignoring call to traverse_subtree", element, parent);
             return;
         }
     }
@@ -603,6 +604,19 @@ impl_basic_rule_funcs! { (Namespace, NamespaceRule, RawServoNamespaceRule),
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_CssRules_GetFontFaceRuleAt(rules: ServoCssRulesBorrowed, index: u32)
+                                                   -> *mut nsCSSFontFaceRule
+{
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let guard = global_style_data.shared_lock.read();
+    let rules = Locked::<CssRules>::as_arc(&rules).read_with(&guard);
+    match rules.0[index as usize] {
+        CssRule::FontFace(ref rule) => rule.read_with(&guard).get(),
+        _ => unreachable!("Servo_CssRules_GetFontFaceRuleAt should only be called on a FontFace rule"),
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_StyleRule_GetStyle(rule: RawServoStyleRuleBorrowed) -> RawServoDeclarationBlockStrong {
     read_locked_arc(rule, |rule: &StyleRule| {
         rule.block.clone().into_strong()
@@ -800,7 +814,7 @@ pub extern "C" fn Servo_ParseProperty(property: *const nsACString, value: *const
         Ok(parsed) => {
             let global_style_data = &*GLOBAL_STYLE_DATA;
             let mut block = PropertyDeclarationBlock::new();
-            parsed.expand(|d| block.push(d, Importance::Normal));
+            parsed.expand_push_into(&mut block, Importance::Normal);
             Arc::new(global_style_data.shared_lock.wrap(block)).into_strong()
         }
         Err(_) => RawServoDeclarationBlockStrong::null()
@@ -958,13 +972,9 @@ fn set_property(declarations: RawServoDeclarationBlockBorrowed, property_id: Pro
     if let Ok(parsed) = parse_one_declaration(property_id, value, &base_url,
                                               &StdoutErrorReporter, extra_data) {
         let importance = if is_important { Importance::Important } else { Importance::Normal };
-        let mut changed = false;
         write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
-            parsed.expand(|decl| {
-                changed |= decls.set_parsed_declaration(decl, importance);
-            });
-        });
-        changed
+            parsed.expand_set_into(decls, importance)
+        })
     } else {
         false
     }
@@ -1734,3 +1744,18 @@ pub extern "C" fn Servo_StyleSet_FillKeyframesForName(raw_data: RawServoStyleSet
     false
 }
 
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_GetFontFaceRules(raw_data: RawServoStyleSetBorrowed,
+                                                  rules: RawGeckoFontFaceRuleListBorrowedMut) {
+    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+    debug_assert!(rules.len() == 0);
+
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let guard = global_style_data.shared_lock.read();
+
+    unsafe { rules.set_len(data.font_faces.len() as u32) };
+    for (src, dest) in data.font_faces.iter().zip(rules.iter_mut()) {
+        dest.mRule = src.0.read_with(&guard).clone().forget();
+        dest.mSheetType = src.1.into();
+    }
+}

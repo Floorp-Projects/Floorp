@@ -32,7 +32,7 @@
       class="header"
       hidden="true"
       data-category="paneSync">
-  <label class="header-name" flex="1">&paneSync.title;</label>
+  <label class="header-name" flex="1">&paneSync1.title;</label>
   <html:a class="help-button text-link" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
@@ -191,8 +191,8 @@
         <textbox id="fxaSyncComputerName" disabled="true"/>
         <hbox>
           <button id="fxaChangeDeviceName"
-                  label="&changeSyncDeviceName.label;"
-                  accesskey="&changeSyncDeviceName.accesskey;"/>
+                  label="&changeSyncDeviceName1.label;"
+                  accesskey="&changeSyncDeviceName1.accesskey;"/>
           <button id="fxaCancelChangeDeviceName"
                   label="&cancelChangeSyncDeviceName.label;"
                   accesskey="&cancelChangeSyncDeviceName.accesskey;"

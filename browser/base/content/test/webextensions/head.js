@@ -3,6 +3,11 @@ const BASE = getRootDirectory(gTestPath)
   .replace("chrome://mochitests/content/", "https://example.com/");
 
 Cu.import("resource:///modules/ExtensionsUI.jsm");
+XPCOMUtils.defineLazyGetter(this, "Management", () => {
+  const {Management} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
+  return Management;
+});
+
 
 /**
  * Wait for the given PopupNotification to display
@@ -65,19 +70,58 @@ function promiseInstallEvent(addon, event) {
  *          Resolves when the extension has been installed with the Addon
  *          object as the resolution value.
  */
-function promiseInstallAddon(url) {
-  return AddonManager.getInstallForURL(url, null, "application/x-xpinstall")
-                     .then(install => {
-                       ok(install, "Created install");
-                       return new Promise(resolve => {
-                         install.addListener({
-                           onInstallEnded(_install, addon) {
-                             resolve(addon);
-                           },
-                         });
-                         install.install();
-                       });
-                     });
+async function promiseInstallAddon(url) {
+  let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+  install.install();
+
+  let addon = await new Promise(resolve => {
+    install.addListener({
+      onInstallEnded(_install, _addon) {
+        resolve(_addon);
+      },
+    });
+  });
+
+  if (addon.isWebExtension) {
+    await new Promise(resolve => {
+      function listener(event, extension) {
+        if (extension.id == addon.id) {
+          Management.off("ready", listener);
+          resolve();
+        }
+      }
+      Management.on("ready", listener);
+    });
+  }
+
+  return addon;
+}
+
+/**
+ * Wait for an update to the given webextension to complete.
+ * (This does not actually perform an update, it just watches for
+ * the events that occur as a result of an update.)
+ *
+ * @param {AddonWrapper} addon
+ *        The addon to be updated.
+ *
+ * @returns {Promise}
+ *          Resolves when the extension has ben updated.
+ */
+async function waitForUpdate(addon) {
+  let installPromise = promiseInstallEvent(addon, "onInstallEnded");
+  let readyPromise = new Promise(resolve => {
+    function listener(event, extension) {
+      if (extension.id == addon.id) {
+        Management.off("ready", listener);
+        resolve();
+      }
+    }
+    Management.on("ready", listener);
+  });
+
+  let [newAddon, ] = await Promise.all([installPromise, readyPromise]);
+  return newAddon;
 }
 
 function isDefaultIcon(icon) {

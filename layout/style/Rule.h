@@ -8,7 +8,7 @@
 #ifndef mozilla_css_Rule_h___
 #define mozilla_css_Rule_h___
 
-#include "mozilla/StyleSheetInlines.h"
+#include "mozilla/StyleSheet.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsISupports.h"
 #include "nsIDOMCSSRule.h"

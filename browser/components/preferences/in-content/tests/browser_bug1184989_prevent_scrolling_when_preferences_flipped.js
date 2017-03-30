@@ -40,7 +40,7 @@ add_task(function* () {
     yield checkPageScrolling(container, "radio");
   });
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:preferences#search" }, function* (browser) {
+  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:preferences" }, function* (browser) {
     let doc = browser.contentDocument;
     let container = doc.getElementsByClassName("main-content")[0];
 

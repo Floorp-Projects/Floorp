@@ -25,11 +25,11 @@ const TESTCASES = [
                <input id="email" autocomplete="email">
                <input id="tel" autocomplete="tel"></form>`,
     fieldDetails: [
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address", "element": {}},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2", "element": {}},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "country", "element": {}},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "email", "element": {}},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel", "element": {}},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
     ],
   },
   {
@@ -42,11 +42,11 @@ const TESTCASES = [
                <input id='email' autocomplete="shipping email">
                <input id="tel" autocomplete="shipping tel"></form>`,
     fieldDetails: [
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address", "element": {}},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2", "element": {}},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country", "element": {}},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email", "element": {}},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel", "element": {}},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
     ],
   },
   {
@@ -59,11 +59,11 @@ const TESTCASES = [
                <input id='email' autocomplete="shipping email">
                <input id="tel" autocomplete="shipping tel"></form>`,
     fieldDetails: [
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address", "element": {}},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2", "element": {}},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country", "element": {}},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email", "element": {}},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel", "element": {}},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
     ],
   },
 ];
@@ -77,12 +77,22 @@ for (let tc of TESTCASES) {
       let doc = MockDocument.createTestDocument("http://localhost:8080/test/",
                                                 testcase.document);
       let form = doc.querySelector("form");
+
+      testcase.fieldDetails.forEach((detail) => {
+        detail.elementWeakRef = Cu.getWeakReference(doc.querySelector(
+          "input[autocomplete*='" + detail.fieldName + "']"));
+      });
       let handler = new FormAutofillHandler(form);
 
       handler.collectFormFields();
 
-      Assert.deepEqual(handler.fieldDetails, testcase.fieldDetails,
-                         "Check the fieldDetails were set correctly");
+      handler.fieldDetails.forEach((detail, index) => {
+        Assert.equal(detail.section, testcase.fieldDetails[index].section);
+        Assert.equal(detail.addressType, testcase.fieldDetails[index].addressType);
+        Assert.equal(detail.contactType, testcase.fieldDetails[index].contactType);
+        Assert.equal(detail.fieldName, testcase.fieldDetails[index].fieldName);
+        Assert.equal(detail.elementWeakRef.get(), testcase.fieldDetails[index].elementWeakRef.get());
+      });
     });
   })();
 }
