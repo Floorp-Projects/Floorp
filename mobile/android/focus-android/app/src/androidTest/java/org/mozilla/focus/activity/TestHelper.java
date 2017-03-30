@@ -35,13 +35,16 @@ public final class TestHelper {
 
     /********* Main View Locators ***********/
     static UiObject urlBar = mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/url")
+            .resourceId("org.mozilla.focus.debug:id/fake_urlbar")
             .clickable(true));
     static ViewInteraction menuButton = onView(
             allOf(withId(R.id.menu),
                     isDisplayed()));
 
     /********* Web View Locators ***********/
+    static UiObject browserURLbar = mDevice.findObject(new UiSelector()
+            .resourceId("org.mozilla.focus.debug:id/display_url")
+            .clickable(true));
     static UiObject inlineAutocompleteEditText = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/url_edit")
             .focused(true)

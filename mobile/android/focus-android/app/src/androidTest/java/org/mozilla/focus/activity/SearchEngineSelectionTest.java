@@ -102,9 +102,9 @@ public class SearchEngineSelectionTest {
 
         /* Browser shows google search webview*/
         googleWebView.waitForExists(waitingTime);
-        assertTrue (TestHelper.urlBar.getText().contains("google"));
-        assertTrue (TestHelper.urlBar.getText().contains("mozilla"));
-        assertTrue (TestHelper.urlBar.getText().contains("focus"));
+        assertTrue (TestHelper.browserURLbar.getText().contains("google"));
+        assertTrue (TestHelper.browserURLbar.getText().contains("mozilla"));
+        assertTrue (TestHelper.browserURLbar.getText().contains("focus"));
 
         // Now let's change the search engine back to Yahoo
         TestHelper.menuButton.perform(click());
@@ -118,7 +118,7 @@ public class SearchEngineSelectionTest {
         TestHelper.pressBackKey();
 
          /* Now do another search */
-        TestHelper.urlBar.click();
+        TestHelper.browserURLbar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText("mozilla focus");
@@ -130,8 +130,8 @@ public class SearchEngineSelectionTest {
 
         /* Browser shows google search webview*/
         yahooWebView.waitForExists(waitingTime);
-        assertTrue (TestHelper.urlBar.getText().contains("yahoo"));
-        assertTrue (TestHelper.urlBar.getText().contains("mozilla"));
-        assertTrue (TestHelper.urlBar.getText().contains("focus"));
+        assertTrue (TestHelper.browserURLbar.getText().contains("yahoo"));
+        assertTrue (TestHelper.browserURLbar.getText().contains("mozilla"));
+        assertTrue (TestHelper.browserURLbar.getText().contains("focus"));
     }
 }
