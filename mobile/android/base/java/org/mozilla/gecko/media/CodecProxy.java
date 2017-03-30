@@ -48,7 +48,9 @@ public final class CodecProxy {
         public native void onError(boolean fatal);
 
         @Override // JNIObject
-        protected native void disposeNative();
+        protected void disposeNative() {
+            throw new UnsupportedOperationException();
+        }
     }
 
     private class CallbacksForwarder extends ICodecCallbacks.Stub {
