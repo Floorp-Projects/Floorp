@@ -1,0 +1,32 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.push_apk:loader
+
+transforms:
+   - taskgraph.transforms.push_apk_breakpoint:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+  - build-signing
+
+jobs:
+    android-push-apk-breakpoint/opt:
+        description: PushApk breakpoint. Decides whether APK should be published onto Google Play Store
+        attributes:
+            build_platform: android-nightly
+            nightly: true
+        worker-type: # see transforms
+        worker:
+            implementation: push-apk-breakpoint
+        treeherder:
+            symbol: pub(Br)
+            platform: Android/opt
+            tier: 2
+            kind: other
+        run-on-projects:
+            - mozilla-aurora
+            - mozilla-beta
+            - mozilla-release
+        deadline-after: 5 days
