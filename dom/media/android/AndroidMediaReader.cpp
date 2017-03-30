@@ -15,6 +15,7 @@
 #include "AbstractMediaDecoder.h"
 #include "gfx2DGlue.h"
 #include "VideoFrameContainer.h"
+#include "mozilla/CheckedInt.h"
 
 namespace mozilla {
 
@@ -381,17 +382,30 @@ AndroidMediaReader::ImageBufferCallback::CreateI420Image(size_t aWidth,
     return nullptr;
   }
 
-  size_t frameSize = aWidth * aHeight;
+  // Use uint32_t throughout to match AllocateAndGetNewBuffer's param
+  const auto checkedFrameSize =
+    CheckedInt<uint32_t>(aWidth) * aHeight;
 
   // Allocate enough for one full resolution Y plane
   // and two quarter resolution Cb/Cr planes.
-  uint8_t *buffer = yuvImage->AllocateAndGetNewBuffer(frameSize * 3 / 2);
+  const auto checkedBufferSize =
+    checkedFrameSize + checkedFrameSize / 2;
+
+  if (!checkedBufferSize.isValid()) { // checks checkedFrameSize too
+    NS_WARNING("Could not create I420 image");
+    return nullptr;
+  }
+
+  const auto frameSize = checkedFrameSize.value();
+
+  uint8_t *buffer =
+    yuvImage->AllocateAndGetNewBuffer(checkedBufferSize.value());
 
   mozilla::layers::PlanarYCbCrData frameDesc;
 
   frameDesc.mYChannel = buffer;
   frameDesc.mCbChannel = buffer + frameSize;
-  frameDesc.mCrChannel = buffer + frameSize * 5 / 4;
+  frameDesc.mCrChannel = frameDesc.mCbChannel + frameSize / 4;
 
   frameDesc.mYSize = IntSize(aWidth, aHeight);
   frameDesc.mCbCrSize = IntSize(aWidth / 2, aHeight / 2);
