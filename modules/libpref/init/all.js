@@ -4512,7 +4512,7 @@ pref("image.mem.discardable", true);
 
 // Discards inactive image frames of _animated_ images and re-decodes them on
 // demand from compressed data. Has no effect if image.mem.discardable is false.
-pref("image.mem.animated.discardable", true);
+pref("image.mem.animated.discardable", false);
 
 // Decodes images into shared memory to allow direct use in separate
 // rendering processes.
