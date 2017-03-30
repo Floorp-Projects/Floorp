@@ -3,7 +3,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.mozilla.focus" >
+          xmlns:tools="http://schemas.android.com/tools"
+          package="org.mozilla.focus">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -53,7 +54,8 @@
 
         <service
             android:name=".customtabs.CustomTabsService"
-            android:exported="true">
+            android:exported="true"
+            tools:ignore="ExportedService">
             <intent-filter>
                 <action android:name="android.support.customtabs.action.CustomTabsService" />
             </intent-filter>
