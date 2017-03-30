@@ -33,9 +33,6 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/UnboxedObject.h"
 
-// Undo windows.h damage on Win64
-#undef MemoryBarrier
-
 namespace js {
 
 class StringObject;
