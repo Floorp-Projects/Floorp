@@ -97,11 +97,6 @@ public:
 
     int CairoStatus();
 
-    /* Provide a stride value that will respect all alignment requirements of
-     * the accelerated image-rendering code.
-     */
-    static int32_t FormatStrideForWidth(gfxImageFormat format, int32_t width);
-
     static gfxContentType ContentFromFormat(gfxImageFormat format);
 
     /**
