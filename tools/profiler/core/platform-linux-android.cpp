@@ -505,7 +505,9 @@ PlatformInit(PS::LockRef aLock)
 void
 TickSample::PopulateContext(ucontext_t* aContext)
 {
+  MOZ_ASSERT(mIsSynchronous);
   MOZ_ASSERT(aContext);
+
   if (!getcontext(aContext)) {
     mContext = aContext;
     SetSampleContext(this, aContext->uc_mcontext);
