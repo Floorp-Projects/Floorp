@@ -15,6 +15,8 @@ import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.adjust.AttributionHelperListener;
 import org.mozilla.gecko.telemetry.measurements.CampaignIdMeasurements;
 import org.mozilla.gecko.delegates.BrowserAppDelegateWithReference;
@@ -37,6 +39,7 @@ public class TelemetryCorePingDelegate extends BrowserAppDelegateWithReference
     private static final String LOGTAG = StringUtils.safeSubstring(
             "Gecko" + TelemetryCorePingDelegate.class.getSimpleName(), 0, 23);
 
+    private boolean isOnResumeCalled = false;
     private TelemetryDispatcher telemetryDispatcher; // lazy
     private final SessionMeasurements sessionMeasurements = new SessionMeasurements();
 
@@ -82,11 +85,17 @@ public class TelemetryCorePingDelegate extends BrowserAppDelegateWithReference
 
     @Override
     public void onResume(BrowserApp browserApp) {
+        isOnResumeCalled = true;
         sessionMeasurements.recordSessionStart();
     }
 
     @Override
     public void onPause(BrowserApp browserApp) {
+        if (!isOnResumeCalled) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SYSTEM, "onPauseCalledBeforeOnResume");
+            return;
+        }
+        isOnResumeCalled = false;
         // onStart/onStop is ideal over onResume/onPause. However, onStop is not guaranteed to be called and
         // dealing with that possibility adds a lot of complexity that we don't want to handle at this point.
         sessionMeasurements.recordSessionEnd(browserApp);
