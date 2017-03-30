@@ -44,6 +44,18 @@ public class CustomTabsService extends Service {
             public boolean updateVisuals(ICustomTabsCallback callback, Bundle bundle) throws RemoteException {
                 return false;
             }
+
+            @Override
+            public boolean requestPostMessageChannel(ICustomTabsCallback iCustomTabsCallback,
+                                                     Uri uri) throws RemoteException {
+                return false;
+            }
+
+            @Override
+            public int postMessage(ICustomTabsCallback iCustomTabsCallback, String s,
+                                   Bundle bundle) throws RemoteException {
+                return 0;
+            }
         };
     }
 }
