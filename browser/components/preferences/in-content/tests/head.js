@@ -119,21 +119,19 @@ function waitForEvent(aSubject, aEventName, aTimeoutMs, aTarget) {
   return eventDeferred.promise.then(cleanup, cleanup);
 }
 
-function openPreferencesViaOpenPreferencesAPI(aPane, aAdvancedTab, aOptions) {
+function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
   let deferred = Promise.defer();
   gBrowser.selectedTab = gBrowser.addTab("about:blank");
-  openPreferences(aPane, aAdvancedTab ? {advancedTab: aAdvancedTab} : undefined);
+  openPreferences(aPane);
   let newTabBrowser = gBrowser.selectedBrowser;
 
   newTabBrowser.addEventListener("Initialized", function() {
     newTabBrowser.contentWindow.addEventListener("load", function() {
       let win = gBrowser.contentWindow;
       let selectedPane = win.history.state;
-      let doc = win.document;
-      let selectedAdvancedTab = aAdvancedTab && doc.getElementById("advancedPrefs").selectedTab.id;
       if (!aOptions || !aOptions.leaveOpen)
         gBrowser.removeCurrentTab();
-      deferred.resolve({selectedPane, selectedAdvancedTab});
+      deferred.resolve({selectedPane});
     }, {once: true});
   }, {capture: true, once: true});
 

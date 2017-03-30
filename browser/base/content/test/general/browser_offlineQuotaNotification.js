@@ -25,10 +25,8 @@ registerCleanupFunction(function() {
 function checkInContentPreferences(win) {
   let doc = win.document;
   let sel = doc.getElementById("categories").selectedItems[0].id;
-  let tab = doc.getElementById("advancedPrefs").selectedTab.id;
-  is(gBrowser.currentURI.spec, "about:preferences#advanced", "about:preferences loaded");
-  is(sel, "category-advanced", "Advanced pane was selected");
-  is(tab, "networkTab", "Network tab is selected");
+  is(gBrowser.currentURI.spec, "about:preferences#privacy", "about:preferences loaded");
+  is(sel, "category-privacy", "Privacy pane was selected");
   // all good, we are done.
   win.close();
   finish();

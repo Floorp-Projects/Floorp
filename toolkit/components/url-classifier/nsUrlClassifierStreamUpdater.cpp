@@ -71,7 +71,7 @@ static MOZ_FORMAT_PRINTF(1, 2) void TrimAndLog(const char* aFmt, ...)
 
 nsUrlClassifierStreamUpdater::nsUrlClassifierStreamUpdater()
   : mIsUpdating(false), mInitialized(false), mDownloadError(false),
-    mBeganStream(false), mChannel(nullptr)
+    mBeganStream(false), mChannel(nullptr), mTelemetryClockStart(0)
 {
   LOG(("nsUrlClassifierStreamUpdater init [this=%p]", this));
 }
@@ -182,6 +182,8 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
   // Make the request.
   rv = mChannel->AsyncOpen2(this);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mTelemetryClockStart = PR_IntervalNow();
 
   mStreamTable = aStreamTable;
 
@@ -674,6 +676,12 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
            "(status=%s, uri=%s, this=%p)", errorName.get(),
            spec.get(), this));
     }
+    if (mTelemetryClockStart > 0) {
+      uint32_t msecs = PR_IntervalToMilliseconds(PR_IntervalNow() - mTelemetryClockStart);
+      mozilla::Telemetry::Accumulate(mozilla::Telemetry::URLCLASSIFIER_UPDATE_SERVER_RESPONSE_TIME,
+                                     mTelemetryProvider, msecs);
+
+    }
 
     uint8_t netErrCode = NS_FAILED(status) ? NetworkErrorToBucket(status) : 0;
     mozilla::Telemetry::Accumulate(
@@ -781,6 +789,7 @@ nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest *request, nsISupports* co
   }
 
   mTelemetryProvider.Truncate();
+  mTelemetryClockStart = 0;
   mChannel = nullptr;
 
   // If the fetch failed, return the network status rather than NS_OK, the
@@ -806,6 +815,7 @@ nsUrlClassifierStreamUpdater::Observe(nsISupports *aSubject, const char *aTopic,
       NS_ENSURE_SUCCESS(rv, rv);
       mIsUpdating = false;
       mChannel = nullptr;
+      mTelemetryClockStart = 0;
     }
     if (mTimer) {
       mTimer->Cancel();

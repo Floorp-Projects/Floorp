@@ -301,6 +301,7 @@ function HashCompleterRequest(aCompleter, aGethashUrl) {
   this.tableNames = new Map();
 
   this.telemetryProvider = "";
+  this.telemetryClockStart = 0;
 }
 HashCompleterRequest.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIRequestObserver,
@@ -438,6 +439,7 @@ HashCompleterRequest.prototype = {
       "urlclassifier.gethash.timeout_ms");
     this.timer_.initWithCallback(this, timeout, this.timer_.TYPE_ONE_SHOT);
     channel.asyncOpen2(this);
+    this.telemetryClockStart = Date.now();
   },
 
   buildRequestV4: function HCR_buildRequestV4() {
@@ -672,6 +674,12 @@ HashCompleterRequest.prototype = {
     // At this point no data is available for us and we have no reason to
     // terminate the connection, so we do nothing until |onStopRequest|.
     this._completer._nextGethashTimeMs[this.gethashUrl] = 0;
+
+    if (this.telemetryClockStart > 0) {
+      let msecs = Date.now() - this.telemetryClockStart;
+      Services.telemetry.getKeyedHistogramById("URLCLASSIFIER_COMPLETE_SERVER_RESPONSE_TIME").
+        add(this.telemetryProvider, msecs);
+    }
   },
 
   onStopRequest: function HCR_onStopRequest(aRequest, aContext, aStatusCode) {
@@ -681,6 +689,8 @@ HashCompleterRequest.prototype = {
       this.timer_.cancel();
       this.timer_ = null;
     }
+
+    this.telemetryClockStart = 0;
 
     if (this._shuttingDown) {
       throw Cr.NS_ERROR_ABORT;
@@ -731,6 +741,7 @@ HashCompleterRequest.prototype = {
       this._shuttingDown = true;
       if (this._channel) {
         this._channel.cancel(Cr.NS_ERROR_ABORT);
+        telemetryClockStart = 0;
       }
 
       Services.obs.removeObserver(this, "quit-application");

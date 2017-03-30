@@ -11,7 +11,7 @@ registerCleanupFunction(function() {
 add_task(function*() {
   originalWindowHeight = window.outerHeight;
   window.resizeTo(window.outerWidth, 300);
-  let prefs = yield openPreferencesViaOpenPreferencesAPI("paneApplications", undefined, {leaveOpen: true});
+  let prefs = yield openPreferencesViaOpenPreferencesAPI("paneApplications", {leaveOpen: true});
   is(prefs.selectedPane, "paneApplications", "Applications pane was selected");
   let mainContent = gBrowser.contentDocument.querySelector(".main-content");
   mainContent.scrollTop = 50;

@@ -1,12 +1,12 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # This directory contains tests for vertical text and logical layout coordinates.
 
-fails HTTP(..) == 1079154-1-vertical-rl-columns.html 1079154-1-vertical-rl-columns.html
+HTTP(..) == 1079154-1-vertical-rl-columns.html 1079154-1-vertical-rl-columns.html
 == 1082844.html 1082844.html
-fails HTTP(..) == 1083748.html 1083748.html
-fails HTTP(..) == 1083848-1-inline-border.html 1083848-1-inline-border.html
-fails HTTP(..) == 1083848-2-inline-background.html 1083848-2-inline-background.html # Bug 1290237
-fails == 1083848-3-inline-background-repeat.html 1083848-3-inline-background-repeat.html
+HTTP(..) == 1083748.html 1083748.html
+HTTP(..) == 1083848-1-inline-border.html 1083848-1-inline-border.html
+HTTP(..) == 1083848-2-inline-background.html 1083848-2-inline-background.html # Bug 1290237
+== 1083848-3-inline-background-repeat.html 1083848-3-inline-background-repeat.html
 == 1083892-1.html 1083892-1.html
 == 1086883-1a.html 1086883-1a.html
 == 1086883-1b.html 1086883-1b.html
@@ -33,8 +33,8 @@ fails == 1094434-2.html 1094434-2.html
 == 1106669-1-intrinsic-for-container.html 1106669-1-intrinsic-for-container.html
 == 1108923-1-percentage-margins.html 1108923-1-percentage-margins.html
 fails == 1111944-1-list-marker.html 1111944-1-list-marker.html
-fails == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics.html
-fails == 1117210-1-vertical-baseline-snap.html 1117210-1-vertical-baseline-snap.html
+== 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics.html
+== 1117210-1-vertical-baseline-snap.html 1117210-1-vertical-baseline-snap.html
 fails == 1117227-1-text-overflow.html 1117227-1-text-overflow.html
 == 1122366-1-margin-collapse.html 1122366-1-margin-collapse.html
 fails == 1124636-1-fieldset-max-height.html 1124636-1-fieldset-max-height.html
@@ -167,7 +167,7 @@ fails == 1216747-1.html 1216747-1.html
 
 == 1243125-1-floats-overflowing.html 1243125-1-floats-overflowing.html
 
-fails == 1248248-1-orientation-break-glyphrun.html 1248248-1-orientation-break-glyphrun.html
+== 1248248-1-orientation-break-glyphrun.html 1248248-1-orientation-break-glyphrun.html
 
 == 1302734-bidi-plaintext-1a.html 1302734-bidi-plaintext-1a.html
 == 1302734-bidi-plaintext-1b.html 1302734-bidi-plaintext-1b.html

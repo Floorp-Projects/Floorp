@@ -70,6 +70,13 @@ const TESTCASES = [
   },
 ];
 
+function inputDetailAssertion(detail, expected) {
+  Assert.equal(detail.section, expected.section);
+  Assert.equal(detail.addressType, expected.addressType);
+  Assert.equal(detail.contactType, expected.contactType);
+  Assert.equal(detail.fieldName, expected.fieldName);
+  Assert.equal(detail.elementWeakRef.get(), expected.elementWeakRef.get());
+}
 
 TESTCASES.forEach(testcase => {
   add_task(function* () {
@@ -84,21 +91,22 @@ TESTCASES.forEach(testcase => {
 
       // Put the input element reference to `element` to make sure the result of
       // `getInputDetails` contains the same input element.
-      testcase.expectedResult[i].input.element = input;
-      Assert.deepEqual(FormAutofillContent.getInputDetails(input),
-                       testcase.expectedResult[i].input,
-                       "Check if returned input information is correct.");
+      testcase.expectedResult[i].input.elementWeakRef = Cu.getWeakReference(input);
+
+      inputDetailAssertion(FormAutofillContent.getInputDetails(input),
+                           testcase.expectedResult[i].input);
 
       let formDetails = testcase.expectedResult[i].form;
       for (let formDetail of formDetails) {
         // Compose a query string to get the exact reference of the input
         // element, e.g. #form1 > input[autocomplete="street-address"]
         let queryString = "#" + testcase.expectedResult[i].formId + " > input[autocomplete=" + formDetail.fieldName + "]";
-        formDetail.element = doc.querySelector(queryString);
+        formDetail.elementWeakRef = Cu.getWeakReference(doc.querySelector(queryString));
       }
-      Assert.deepEqual(FormAutofillContent.getFormDetails(input),
-                       formDetails,
-                       "Check if returned form information is correct.");
+
+      FormAutofillContent.getFormDetails(input).forEach((detail, index) => {
+        inputDetailAssertion(detail, formDetails[index]);
+      });
     }
   });
 });
