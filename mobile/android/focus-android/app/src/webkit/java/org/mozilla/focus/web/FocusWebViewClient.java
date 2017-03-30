@@ -56,14 +56,7 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
             // not have a trailing URL (usually no trailing / when a link is entered via UrlInputFragment),
             // hence we do a somewhat convoluted test:
             final String requestURL = request.getUrl().toString();
-            final boolean prefixMatches = requestURL.startsWith(currentPageURL);
-
-            final boolean exactMatch = prefixMatches && (currentPageURL.length() == requestURL.length());
-
-            final boolean matchExceptForTrailingSlash = (currentPageURL.length() + 1 == requestURL.length()) &&
-                    (requestURL.charAt(requestURL.length() - 1) == '/');
-
-            if (exactMatch || matchExceptForTrailingSlash) {
+            if (UrlUtils.urlsMatchExceptForTrailingSlash(currentPageURL, requestURL)) {
                 view.post(new Runnable() {
                     @Override
                     public void run() {

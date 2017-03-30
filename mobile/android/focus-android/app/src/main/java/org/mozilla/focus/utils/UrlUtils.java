@@ -7,6 +7,7 @@ package org.mozilla.focus.utils;
 
 import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import org.mozilla.focus.BuildConfig;
@@ -90,5 +91,23 @@ public class UrlUtils {
                 (!url.startsWith("file:")) &&
                 (!url.startsWith("data:")) &&
                 (!url.startsWith("error:"));
+    }
+
+    public static boolean urlsMatchExceptForTrailingSlash(final @NonNull String url1, final @NonNull String url2) {
+        int lengthDifference = url1.length() - url2.length();
+
+        if (lengthDifference == 0) {
+            // The simplest case:
+            return url1.equals(url2);
+        } else if (lengthDifference == 1) {
+            // url1 is longer:
+            return url1.charAt(url1.length() - 1) == '/' &&
+                    url1.regionMatches(0, url2, 0, url2.length());
+        } else if (lengthDifference == -1) {
+            return url2.charAt(url2.length() - 1) == '/' &&
+                    url2.regionMatches(0, url1, 0, url1.length());
+        }
+
+        return false;
     }
 }
