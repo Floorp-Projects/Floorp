@@ -5068,9 +5068,8 @@ pref("dom.vr.osvr.enabled", false);
 pref("dom.vr.openvr.enabled", false);
 // Pose prediction reduces latency effects by returning future predicted HMD
 // poses to callers of the WebVR API.  This currently only has an effect for
-// Oculus Rift on SDK 0.8 or greater.  It is disabled by default for now due to
-// frame uniformity issues with e10s.
-pref("dom.vr.poseprediction.enabled", false);
+// Oculus Rift on SDK 0.8 or greater.
+pref("dom.vr.poseprediction.enabled", true);
 // Starting VR presentation is only allowed within a user gesture or event such
 // as VRDisplayActivate triggered by the system.  dom.vr.require-gesture allows
 // this requirement to be disabled for special cases such as during automated
