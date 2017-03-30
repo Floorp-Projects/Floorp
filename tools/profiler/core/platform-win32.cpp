@@ -237,7 +237,9 @@ PlatformInit(PS::LockRef aLock)
 void
 TickSample::PopulateContext(CONTEXT* aContext)
 {
+  MOZ_ASSERT(mIsSynchronous);
   MOZ_ASSERT(aContext);
+
   mContext = aContext;
   RtlCaptureContext(aContext);
 

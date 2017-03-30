@@ -9,7 +9,9 @@
 // generic cross-platform way without requiring custom tools or kernel support.
 //
 // Samples are collected to form a timeline with optional timeline event
-// (markers) used for filtering.
+// (markers) used for filtering. Both "periodic" (in response to a timer) and
+// "synchronous" (in response to an explicit sampling request via the API)
+// samples are supported.
 //
 // The profiler collects samples that include native stacks and
 // platform-independent "pseudostacks".
