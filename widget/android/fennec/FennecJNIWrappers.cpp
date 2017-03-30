@@ -243,6 +243,11 @@ auto CodecProxy::NativeCallbacks::New() -> NativeCallbacks::LocalRef
 constexpr char CodecProxy::NativeCallbacks::DisposeNative_t::name[];
 constexpr char CodecProxy::NativeCallbacks::DisposeNative_t::signature[];
 
+auto CodecProxy::NativeCallbacks::DisposeNative() const -> void
+{
+    return mozilla::jni::Method<DisposeNative_t>::Call(NativeCallbacks::mCtx, nullptr);
+}
+
 constexpr char CodecProxy::NativeCallbacks::OnError_t::name[];
 constexpr char CodecProxy::NativeCallbacks::OnError_t::signature[];
 
