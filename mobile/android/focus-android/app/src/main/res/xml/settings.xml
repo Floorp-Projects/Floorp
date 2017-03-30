@@ -48,6 +48,7 @@
             android:layout="@layout/focus_preference"
             android:title="@string/preference_performance_block_webfonts"
             android:key="@string/pref_key_performance_block_webfonts"
+            android:summary="@string/preference_performance_block_webfonts_summary"
             android:defaultValue="false" />
 
         <!-- Blocking images is hidden until we fix some issues with it (See #188) -->
