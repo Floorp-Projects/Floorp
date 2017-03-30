@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsConfig",
   "resource://gre/modules/FxAccountsConfig.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
-  "resource://gre/modules/services-crypto/jwcrypto.jsm");
+  "resource://services-crypto/jwcrypto.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsOAuthGrantClient",
   "resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
