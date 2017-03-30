@@ -57,6 +57,8 @@ public:
   void ContentStateChanged(nsIContent* aContent,
                            EventStates aStateMask);
 
+  void PostRestyleEventForLazyConstruction() { PostRestyleEventInternal(true); }
+
   // Forwarded nsIMutationObserver method, to handle restyling.
   void AttributeWillChange(Element* aElement,
                            int32_t  aNameSpaceID,
@@ -114,6 +116,8 @@ public:
   }
 
 private:
+  void PostRestyleEventInternal(bool aForLazyConstruction);
+
   // Used when restyling an element with a frame.
   void ComputeAndProcessStyleChange(nsIFrame*              aFrame,
                                     nsChangeHint           aMinChange,
