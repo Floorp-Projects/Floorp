@@ -253,7 +253,10 @@ public:
    */
 
   virtual bool
-  GetPacketTypeStats(webrtc::RtcpPacketTypeCounter* aPacketCounts) = 0;
+  GetSendPacketTypeStats(webrtc::RtcpPacketTypeCounter* aPacketCounts) = 0;
+
+  virtual bool
+  GetRecvPacketTypeStats(webrtc::RtcpPacketTypeCounter* aPacketCounts) = 0;
 
   virtual bool GetVideoEncoderStats(double* framerateMean,
                                     double* framerateStdDev,
