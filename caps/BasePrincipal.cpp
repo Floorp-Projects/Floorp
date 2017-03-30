@@ -14,6 +14,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
+#include "nsIStandardURL.h"
 
 #include "ContentPrincipal.h"
 #include "nsNetUtil.h"
@@ -30,7 +31,8 @@ namespace mozilla {
 
 BasePrincipal::BasePrincipal(PrincipalKind aKind)
   : mKind(aKind)
-  , mDomainSet(false)
+  , mHasExplicitDomain(false)
+  , mInitialized(false)
 {}
 
 BasePrincipal::~BasePrincipal()
@@ -39,6 +41,8 @@ BasePrincipal::~BasePrincipal()
 NS_IMETHODIMP
 BasePrincipal::GetOrigin(nsACString& aOrigin)
 {
+  MOZ_ASSERT(mInitialized);
+
   nsresult rv = GetOriginNoSuffix(aOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -52,10 +56,8 @@ BasePrincipal::GetOrigin(nsACString& aOrigin)
 NS_IMETHODIMP
 BasePrincipal::GetOriginNoSuffix(nsACString& aOrigin)
 {
-  if (mOriginNoSuffix) {
-    return mOriginNoSuffix->ToUTF8String(aOrigin);
-  }
-  return GetOriginInternal(aOrigin);
+  MOZ_ASSERT(mInitialized);
+  return mOriginNoSuffix->ToUTF8String(aOrigin);
 }
 
 bool
@@ -367,8 +369,31 @@ BasePrincipal::AddonHasPermission(const nsAString& aPerm)
 }
 
 already_AddRefed<BasePrincipal>
-BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAttrs)
+BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI,
+                                       const OriginAttributes& aAttrs)
 {
+  MOZ_ASSERT(aURI);
+
+  nsAutoCString originNoSuffix;
+  nsresult rv =
+    ContentPrincipal::GenerateOriginNoSuffixFromURI(aURI, originNoSuffix);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // If the generation of the origin fails, we still want to have a valid
+    // principal. Better to return a null principal here.
+    return NullPrincipal::Create(aAttrs);
+  }
+
+  return CreateCodebasePrincipal(aURI, aAttrs, originNoSuffix);
+}
+
+already_AddRefed<BasePrincipal>
+BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI,
+                                       const OriginAttributes& aAttrs,
+                                       const nsACString& aOriginNoSuffix)
+{
+  MOZ_ASSERT(aURI);
+  MOZ_ASSERT(!aOriginNoSuffix.IsEmpty());
+
   // If the URI is supposed to inherit the security context of whoever loads it,
   // we shouldn't make a codebase principal for it.
   bool inheritsPrincipal;
@@ -392,7 +417,7 @@ BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAt
 
   // Mint a codebase principal.
   RefPtr<ContentPrincipal> codebase = new ContentPrincipal();
-  rv = codebase->Init(aURI, aAttrs);
+  rv = codebase->Init(aURI, aAttrs, aOriginNoSuffix);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return codebase.forget();
 }
@@ -456,24 +481,19 @@ BasePrincipal::AddonAllowsLoad(nsIURI* aURI, bool aExplicit /* = false */)
 }
 
 void
-BasePrincipal::FinishInit()
+BasePrincipal::FinishInit(const nsACString& aOriginNoSuffix,
+                          const OriginAttributes& aOriginAttributes)
 {
+  mInitialized = true;
+  mOriginAttributes = aOriginAttributes;
+
   // First compute the origin suffix since it's infallible.
   nsAutoCString originSuffix;
   mOriginAttributes.CreateSuffix(originSuffix);
   mOriginSuffix = NS_Atomize(originSuffix);
 
-  // Then compute the origin without the suffix.
-  nsAutoCString originNoSuffix;
-  nsresult rv = GetOriginInternal(originNoSuffix);
-  if (NS_FAILED(rv)) {
-    // If GetOriginInternal fails, we will get a null atom for mOriginNoSuffix,
-    // which we deal with anywhere mOriginNoSuffix is used.
-    // Once this is made infallible we can remove those null checks.
-    mOriginNoSuffix = nullptr;
-    return;
-  }
-  mOriginNoSuffix = NS_Atomize(originNoSuffix);
+  MOZ_ASSERT(!aOriginNoSuffix.IsEmpty());
+  mOriginNoSuffix = NS_Atomize(aOriginNoSuffix);
 }
 
 } // namespace mozilla

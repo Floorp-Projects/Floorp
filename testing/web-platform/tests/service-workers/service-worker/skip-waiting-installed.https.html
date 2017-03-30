@@ -7,7 +7,7 @@
 <script>
 
 promise_test(function(t) {
-    var scope = 'resources/blank.html';
+    var scope = 'resources/blank.html?skip-waiting-installed';
     var url1 = 'resources/empty.js';
     var url2 = 'resources/skip-waiting-installed-worker.js';
     var frame, frame_sw, service_worker, registration, onmessage, oncontrollerchanged;

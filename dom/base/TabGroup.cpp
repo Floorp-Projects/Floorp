@@ -126,6 +126,7 @@ TabGroup::GetDocGroup(const nsACString& aKey)
 already_AddRefed<DocGroup>
 TabGroup::AddDocument(const nsACString& aKey, nsIDocument* aDocument)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   HashEntry* entry = mDocGroups.PutEntry(aKey);
   RefPtr<DocGroup> docGroup;
   if (entry->mDocGroup) {
@@ -146,6 +147,7 @@ TabGroup::AddDocument(const nsACString& aKey, nsIDocument* aDocument)
 /* static */ already_AddRefed<TabGroup>
 TabGroup::Join(nsPIDOMWindowOuter* aWindow, TabGroup* aTabGroup)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   RefPtr<TabGroup> tabGroup = aTabGroup;
   if (!tabGroup) {
     tabGroup = new TabGroup();
@@ -159,6 +161,7 @@ TabGroup::Join(nsPIDOMWindowOuter* aWindow, TabGroup* aTabGroup)
 void
 TabGroup::Leave(nsPIDOMWindowOuter* aWindow)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mWindows.Contains(aWindow));
   mWindows.RemoveElement(aWindow);
 
@@ -177,6 +180,7 @@ TabGroup::FindItemWithName(const nsAString& aName,
                            nsIDocShellTreeItem* aOriginalRequestor,
                            nsIDocShellTreeItem** aFoundItem)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG_POINTER(aFoundItem);
   *aFoundItem = nullptr;
 
@@ -214,6 +218,7 @@ TabGroup::FindItemWithName(const nsAString& aName,
 nsTArray<nsPIDOMWindowOuter*>
 TabGroup::GetTopLevelWindows()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   nsTArray<nsPIDOMWindowOuter*> array;
 
   for (nsPIDOMWindowOuter* outerWindow : mWindows) {

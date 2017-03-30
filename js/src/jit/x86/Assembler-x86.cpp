@@ -27,9 +27,6 @@ ABIArgGenerator::next(MIRType type)
         stackOffset_ += sizeof(uint32_t);
         break;
       case MIRType::Double:
-        current_ = ABIArg(stackOffset_);
-        stackOffset_ += sizeof(uint64_t);
-        break;
       case MIRType::Int64:
         current_ = ABIArg(stackOffset_);
         stackOffset_ += sizeof(uint64_t);
@@ -58,11 +55,8 @@ void
 Assembler::executableCopy(uint8_t* buffer, bool flushICache)
 {
     AssemblerX86Shared::executableCopy(buffer);
-
-    for (size_t i = 0; i < jumps_.length(); i++) {
-        RelativePatch& rp = jumps_[i];
+    for (RelativePatch& rp : jumps_)
         X86Encoding::SetRel32(buffer + rp.offset, rp.target);
-    }
 }
 
 class RelocationIterator

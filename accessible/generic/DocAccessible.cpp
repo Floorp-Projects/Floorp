@@ -2188,7 +2188,14 @@ DocAccessible::PutChildrenBack(nsTArray<RefPtr<Accessible> >* aChildren,
       TreeWalker walker(origContainer);
       if (walker.Seek(child->GetContent())) {
         Accessible* prevChild = walker.Prev();
-        idxInParent = prevChild ? prevChild->IndexInParent() + 1 : 0;
+        if (prevChild) {
+          idxInParent = prevChild->IndexInParent() + 1;
+          MOZ_ASSERT(origContainer == prevChild->Parent(), "Broken tree");
+          origContainer = prevChild->Parent();
+        }
+        else {
+          idxInParent = 0;
+        }
       }
     }
     MoveChild(child, origContainer, idxInParent);
@@ -2242,6 +2249,11 @@ DocAccessible::MoveChild(Accessible* aChild, Accessible* aNewParent,
 
   // No insertion point for the child.
   if (aIdxInParent == -1) {
+    return true;
+  }
+
+  if (aIdxInParent > static_cast<int32_t>(aNewParent->ChildCount())) {
+    MOZ_ASSERT_UNREACHABLE("Wrong insertion point for a moving child");
     return true;
   }
 

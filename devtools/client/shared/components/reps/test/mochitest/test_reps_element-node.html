@@ -14,8 +14,8 @@ Test Element node rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 "use strict";
 
 window.onload = Task.async(function* () {
@@ -39,6 +39,7 @@ window.onload = Task.async(function* () {
     yield testOnMouseOver();
     yield testOnMouseOut();
     yield testOnInspectIconClick();
+    yield testObjectLink();
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -270,6 +271,29 @@ window.onload = Task.async(function* () {
       "onInspectIconClick is called with expected value when inspect icon is clicked");
     ok(inspectIconClickedEvent !== null && inspectIconClickedEvent.type === "click",
       "onInspectIconClick forwarded the original event to the callback");
+  }
+
+  function testObjectLink() {
+    const stub = getGripStub("testBodyNode");
+
+    const renderedComponent = renderComponent(ElementNode.rep, {
+      object: stub,
+      objectLink: (props, ...children) => React.DOM.span({},
+        "*", ...children, "*"),
+    });
+    is(renderedComponent.textContent, `*<body id="body-id" class="body-class">*`,
+      "Element node rep has expected text content for body node when an objectLink is " +
+      "passed as a prop");
+
+    const tinyRenderedComponent = renderComponent(ElementNode.rep, {
+      object: stub, mode: MODE.TINY,
+      objectLink: (props, ...children) => React.DOM.span({
+        className: "object-link"
+      }, "*", ...children, "*"),
+    });
+    is(tinyRenderedComponent.textContent, `*body#body-id.body-class*`,
+      "Element node rep has expected text content for body node in tiny mode when an " +
+      "objectLink is passed as a prop");
   }
 
   function getGripStub(name) {

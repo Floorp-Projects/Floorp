@@ -15,9 +15,6 @@
 class ExpandedPrincipal : public nsIExpandedPrincipal
                         , public mozilla::BasePrincipal
 {
-  ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList,
-                    const mozilla::OriginAttributes& aAttrs);
-
 public:
   static already_AddRefed<ExpandedPrincipal>
   Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aWhiteList,
@@ -37,9 +34,10 @@ public:
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
   virtual bool AddonHasPermission(const nsAString& aPerm) override;
   virtual nsresult GetScriptLocation(nsACString &aStr) override;
-  nsresult GetOriginInternal(nsACString& aOrigin) override;
 
 protected:
+  explicit ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList);
+
   virtual ~ExpandedPrincipal();
 
   bool SubsumesInternal(nsIPrincipal* aOther,

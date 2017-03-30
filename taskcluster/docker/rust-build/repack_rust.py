@@ -5,6 +5,7 @@ with the necessary tool and target support for the Firefox
 build environment.
 '''
 
+import argparse
 import os.path
 import re
 import sys
@@ -12,6 +13,10 @@ import sys
 import requests
 import subprocess
 import toml
+
+
+def log(msg):
+    print('repack: %s' % msg)
 
 
 def fetch_file(url):
@@ -37,36 +42,34 @@ def sha256sum():
 def fetch(url):
     '''Download and verify a package url.'''
     base = os.path.basename(url)
-    print('Fetching %s...' % base)
+    log('Fetching %s...' % base)
     fetch_file(url + '.asc')
     fetch_file(url)
     fetch_file(url + '.sha256')
-    fetch_file(url + '.asc.sha256')
-    print('Verifying %s...' % base)
+    log('Verifying %s...' % base)
     shasum = sha256sum()
     subprocess.check_call([shasum, '-c', base + '.sha256'])
-    subprocess.check_call([shasum, '-c', base + '.asc.sha256'])
     subprocess.check_call(['gpg', '--verify', base + '.asc', base])
-    if False:
+    if True:
         subprocess.check_call([
-            'keybase', 'pgp', 'verify', '-d', base + '.asc', '  -i', base,
+            'keybase', 'pgp', 'verify', '-d', base + '.asc', '-i', base,
         ])
 
 
 def install(filename, target):
     '''Run a package's installer script against the given target directory.'''
-    print(' Unpacking %s...' % filename)
+    log('Unpacking %s...' % filename)
     subprocess.check_call(['tar', 'xf', filename])
     basename = filename.split('.tar')[0]
-    # Work around bad tarball naming in 1.15 cargo packages.
+    # Work around bad tarball naming in 1.15+ cargo packages.
     basename = basename.replace('cargo-beta', 'cargo-nightly')
     basename = re.sub(r'cargo-0\.[\d\.]+', 'cargo-nightly', basename)
-    print(' Installing %s...' % basename)
+    log('Installing %s...' % basename)
     install_cmd = [os.path.join(basename, 'install.sh')]
     install_cmd += ['--prefix=' + os.path.abspath(target)]
     install_cmd += ['--disable-ldconfig']
     subprocess.check_call(install_cmd)
-    print(' Cleaning %s...' % basename)
+    log('Cleaning %s...' % basename)
     subprocess.check_call(['rm', '-rf', basename])
 
 
@@ -80,9 +83,9 @@ def package(manifest, pkg, target):
 
 def fetch_package(manifest, pkg, host):
     version, info = package(manifest, pkg, host)
-    print('%s %s\n  %s\n  %s' % (pkg, version, info['url'], info['hash']))
+    log('%s %s\n  %s\n  %s' % (pkg, version, info['url'], info['hash']))
     if not info['available']:
-        print('%s marked unavailable for %s' % (pkg, host))
+        log('%s marked unavailable for %s' % (pkg, host))
         raise AssertionError
     fetch(info['url'])
     return info
@@ -107,21 +110,21 @@ def tar_for_host(host):
 
 
 def repack(host, targets, channel='stable', suffix=''):
-    print("Repacking rust for %s..." % host)
+    log("Repacking rust for %s..." % host)
     url = 'https://static.rust-lang.org/dist/channel-rust-' + channel + '.toml'
     req = requests.get(url)
     req.raise_for_status()
     manifest = toml.loads(req.content)
     if manifest['manifest-version'] != '2':
-        print('ERROR: unrecognized manifest version %s.' % manifest[
-            'manifest-version'])
+        log('ERROR: unrecognized manifest version %s.' %
+            manifest['manifest-version'])
         return
-    print('Using manifest for rust %s as of %s.' % (channel, manifest['date']))
-    print('Fetching packages...')
+    log('Using manifest for rust %s as of %s.' % (channel, manifest['date']))
+    log('Fetching packages...')
     rustc = fetch_package(manifest, 'rustc', host)
     cargo = fetch_package(manifest, 'cargo', host)
     stds = fetch_std(manifest, targets)
-    print('Installing packages...')
+    log('Installing packages...')
     tar_basename = 'rustc-' + host
     if suffix:
         tar_basename += '-' + suffix
@@ -133,7 +136,7 @@ def repack(host, targets, channel='stable', suffix=''):
     for std in stds:
         install(os.path.basename(std['url']), install_dir)
         pass
-    print('Tarring %s...' % tar_basename)
+    log('Tarring %s...' % tar_basename)
     tar_options, tar_ext = tar_for_host(host)
     subprocess.check_call(
         ['tar', tar_options, tar_basename + tar_ext, install_dir])
@@ -141,7 +144,7 @@ def repack(host, targets, channel='stable', suffix=''):
 
 
 def repack_cargo(host, channel='nightly'):
-    print("Repacking cargo for %s..." % host)
+    log('Repacking cargo for %s...' % host)
     # Cargo doesn't seem to have a .toml manifest.
     base_url = 'https://static.rust-lang.org/cargo-dist/'
     req = requests.get(os.path.join(base_url, 'channel-cargo-' + channel))
@@ -151,7 +154,7 @@ def repack_cargo(host, channel='nightly'):
         if line.find(host) != -1:
             file = line.strip()
     if not file:
-        print('No manifest entry for %s!' % host)
+        log('No manifest entry for %s!' % host)
         return
     manifest = {
         'date': req.headers['Last-Modified'],
@@ -168,15 +171,15 @@ def repack_cargo(host, channel='nightly'):
             },
         },
     }
-    print('Using manifest for cargo %s.' % channel)
-    print('Fetching packages...')
+    log('Using manifest for cargo %s.' % channel)
+    log('Fetching packages...')
     cargo = fetch_package(manifest, 'cargo', host)
-    print('Installing packages...')
+    log('Installing packages...')
     install_dir = 'cargo'
     subprocess.check_call(['rm', '-rf', install_dir])
     install(os.path.basename(cargo['url']), install_dir)
     tar_basename = 'cargo-%s-repack' % host
-    print('Tarring %s...' % tar_basename)
+    log('Tarring %s...' % tar_basename)
     tar_options, tar_ext = tar_for_host(host)
     subprocess.check_call(
         ['tar', tar_options, tar_basename + tar_ext, install_dir])
@@ -193,10 +196,25 @@ mac32 = "i686-apple-darwin"
 win64 = "x86_64-pc-windows-msvc"
 win32 = "i686-pc-windows-msvc"
 
+
+def args():
+    '''Read command line arguments and return options.'''
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--channel', help='Release channel to use: '
+                                          'stable, beta, or nightly')
+    args = parser.parse_args()
+    if args.channel:
+        return args.channel
+    else:
+        return 'stable'
+
 if __name__ == '__main__':
-    repack(mac64, [mac64, mac32])
-    repack(win32, [win32])
-    repack(win64, [win64])
-    repack(linux64, [linux64, linux32])
-    repack(linux64, [linux64, mac64, mac32], suffix='mac-cross')
-    repack(linux64, [linux64, android, android_x86], suffix='android-cross')
+    channel = args()
+    repack(mac64, [mac64, mac32], channel=channel)
+    repack(win32, [win32], channel=channel)
+    repack(win64, [win64], channel=channel)
+    repack(linux64, [linux64, linux32], channel=channel)
+    repack(linux64, [linux64, mac64, mac32],
+           channel=channel, suffix='mac-cross')
+    repack(linux64, [linux64, android, android_x86],
+           channel=channel, suffix='android-cross')

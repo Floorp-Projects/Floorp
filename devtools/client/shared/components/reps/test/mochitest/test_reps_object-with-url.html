@@ -14,8 +14,8 @@ Test ObjectWithURL rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 window.onload = Task.async(function* () {
   try {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
@@ -47,6 +47,17 @@ window.onload = Task.async(function* () {
     ok(renderedComponent.className.includes("objectBox-Location"), "ObjectWithURL rep has expected class name");
     const innerNode = renderedComponent.querySelector(".objectPropValue");
     is(innerNode.textContent, "https://www.mozilla.org/en-US/", "ObjectWithURL rep has expected inner HTML structure and text content");
+
+    // Test rendering with objectLink
+    const objectLinkRenderedComponent = renderComponent(ObjectWithURL.rep, {
+      object: gripStub,
+      objectLink: (props, ...children) => React.DOM.span({},
+        "*", ...children, "*"),
+    });
+    is(objectLinkRenderedComponent.textContent,
+      "*Location *https://www.mozilla.org/en-US/",
+      "ObjectWithURL rep has expected text content when an objectLink is passed as a prop"
+    );
 
     // @TODO test link once Bug 1245303 has been implemented.
   } catch(e) {

@@ -300,18 +300,22 @@ class JitTest:
             quotechar = '"'
         else:
             quotechar = "'"
-        expr = "const platform={}; const libdir={}; const scriptdir={}".format(
-            js_quote(quotechar, sys.platform),
-            js_quote(quotechar, libdir),
-            js_quote(quotechar, scriptdir_var))
+
+        # Don't merge the expressions: We want separate -e arguments to avoid
+        # semicolons in the command line, bug 1351607.
+        exprs = ["const platform={}".format(js_quote(quotechar, sys.platform)),
+                 "const libdir={}".format(js_quote(quotechar, libdir)),
+                 "const scriptdir={}".format(js_quote(quotechar, scriptdir_var))];
 
         if self.need_for_each:
-            expr += "; enableForEach()"
+            exprs += ["enableForEach()"]
 
         # We may have specified '-a' or '-d' twice: once via --jitflags, once
         # via the "|jit-test|" line.  Remove dups because they are toggles.
         cmd = prefix + ['--js-cache', JitTest.CacheDir]
-        cmd += list(set(self.jitflags)) + ['-e', expr]
+        cmd += list(set(self.jitflags))
+        for expr in exprs:
+            cmd += ['-e', expr]
         for inc in self.other_includes:
             cmd += ['-f', libdir + inc]
         if self.is_module:

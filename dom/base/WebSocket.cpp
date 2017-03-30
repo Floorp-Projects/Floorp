@@ -1634,13 +1634,12 @@ WebSocketImpl::Init(JSContext* aCx,
       nsCOMPtr<nsPIDOMWindowInner> innerWindow;
 
       while (true) {
-        bool isNullPrincipal = true;
         if (principal) {
+          bool isNullPrincipal = true;
           isNullPrincipal = principal->GetIsNullPrincipal();
-        }
-
-        if (!isNullPrincipal) {
-          break;
+          if (isNullPrincipal || nsContentUtils::IsSystemPrincipal(principal)) {
+            break;
+          }
         }
 
         if (!innerWindow) {

@@ -326,6 +326,11 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
   NS_ENSURE_TRUE(aEditor, NS_ERROR_NULL_POINTER);
   mEditor = aEditor;
 
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mEditor->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  NS_ENSURE_STATE(doc);
+
   nsresult rv;
 
   // We can spell check with any editor type
@@ -401,8 +406,8 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
     // discard the failure.  Do it asynchronously so that the caller is always
     // guaranteed async behavior.
     RefPtr<CallbackCaller> caller = new CallbackCaller(aCallback);
-    NS_ENSURE_STATE(caller);
-    rv = NS_DispatchToMainThread(caller);
+    rv = doc->Dispatch("nsEditorSpellCheck::CallbackCaller",
+                       TaskCategory::Other, caller.forget());
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

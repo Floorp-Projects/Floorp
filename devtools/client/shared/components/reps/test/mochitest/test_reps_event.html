@@ -14,8 +14,8 @@ Test Event rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 window.onload = Task.async(function* () {
   const {
     REPS,
@@ -38,6 +38,8 @@ window.onload = Task.async(function* () {
     yield testOnDomNodeMouseOver();
     yield testOnDomNodeMouseOut();
     yield testOnDomNodeInspectIconClick();
+
+    yield testObjectLink();
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -208,6 +210,29 @@ window.onload = Task.async(function* () {
     is(inspectIconClickedValue, grips[0],
       "onInspectIconClick is called with the expected argument " +
       "when the inspect icon is clicked");
+  }
+
+  function testObjectLink() {
+    const renderedComponent = renderComponent(Event.rep, {
+      object: getGripStub("testMouseEvent"),
+      objectLink: (props, ...children) => React.DOM.span({},
+        "*", ...children, "*"),
+    });
+    is(renderedComponent.textContent,
+      "*click** { *target: div#test, clientX: 62, clientY: 18, *3 more…** }*",
+      "Event rep has expected text content when an objectLink is passed as a prop");
+
+    const longRenderedComponent = renderComponent(Event.rep, {
+      object: getGripStub("testMouseEvent"),
+      mode: MODE.LONG,
+      objectLink: (props, ...children) => React.DOM.span({},
+        "*", ...children, "*"),
+    });
+    is(longRenderedComponent.textContent,
+      "*click** { *target: div#test, buttons: 0, clientX: 62, clientY: 18, layerX: 0, " +
+      "layerY: 0* }*",
+      "Event rep has expected text content in long mode when an objectLink is passed " +
+      "as a prop");
   }
 
   function getGripStub(name) {

@@ -16,15 +16,19 @@ addEventListener('message', function workerWrapperOnMessage(e) {
   removeEventListener('message', workerWrapperOnMessage);
   var data = e.data;
 
-  function loadTest() {
-    var done = function() {
+  function loadTest(event) {
+    var done = function(res) {
       client.postMessage({ type: 'finish', context: context });
+      return res;
     }
 
     try {
       importScripts(data.script);
       // runTest() is provided by the test.
-      runTest().then(done, done);
+      var result = runTest().then(done, done);
+      if ('waitUntil' in event) {
+        event.waitUntil(result);
+      }
     } catch(e) {
       client.postMessage({
         type: 'status',
@@ -37,7 +41,10 @@ addEventListener('message', function workerWrapperOnMessage(e) {
   }
 
   if ("ServiceWorker" in self) {
-    self.clients.matchAll().then(function(clients) {
+    // Fetch requests from a service worker are not intercepted.
+    self.isSWPresent = false;
+
+    e.waitUntil(self.clients.matchAll().then(function(clients) {
       for (var i = 0; i < clients.length; ++i) {
         if (clients[i].url.indexOf("message_receiver.html") > -1) {
           client = clients[i];
@@ -48,11 +55,11 @@ addEventListener('message', function workerWrapperOnMessage(e) {
         dump("We couldn't find the message_receiver window, the test will fail\n");
       }
       context = "ServiceWorker";
-      loadTest();
-    });
+      loadTest(e);
+    }));
   } else {
     client = self;
     context = "Worker";
-    loadTest();
+    loadTest(e);
   }
 });

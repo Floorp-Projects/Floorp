@@ -14,8 +14,8 @@ Test grip rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 window.onload = Task.async(function* () {
   const {
     REPS,
@@ -52,6 +52,8 @@ window.onload = Task.async(function* () {
     yield testOnDomNodeMouseOver();
     yield testOnDomNodeMouseOut();
     yield testOnDomNodeInspectIconClick();
+
+    yield testObjectLink();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -626,6 +628,42 @@ window.onload = Task.async(function* () {
         "onInspectIconClick is called with the expected argument " +
         "when the inspect icon is clicked");
     });
+  }
+
+  function testObjectLink() {
+    // Test object: `{a: undefined, b: 1, more: 2, d: 3}`;
+    const defaultOutput = `*Object** { *b: 1, more: 2, d: 3, *1 more…** }*`;
+    const longOutput = `*Object** { *a: undefined, b: 1, more: 2, d: 3* }*`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `*Object*`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: longOutput,
+      }
+    ];
+
+    testRepRenderModes(
+      modeTests,
+      "testObjectLink",
+      componentUnderTest,
+      getGripStub("testMoreProp"),
+      {
+        objectLink: (props, ...children) => React.DOM.span({},
+          "*", ...children, "*"),
+      }
+    );
   }
 
   function getGripStub(functionName) {

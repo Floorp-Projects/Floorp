@@ -476,21 +476,3 @@ audio > xul|videocontrols {
 [error="errorGeneric"]         > [anonid="errorGeneric"] {
   display: inline;
 }
-
-/* For high contrast theme in Windows */
-%ifdef XP_WIN
-.controlsSpacer,
-.clickToPlay {
-  background-color: transparent;
-}
-
-@media (-moz-windows-default-theme) {
-  .controlsSpacer {
-    background-color: rgba(255,255,255,.4);
-  }
-
-  .clickToPlay {
-    background-color: #1a1a1a;
-  }
-}
-%endif
