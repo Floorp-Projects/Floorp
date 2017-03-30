@@ -688,14 +688,14 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline bool hasSelfReference() const;
 
     // Push stub code and the VMFunction pointer.
-    inline void enterExitFrame(Register temp, const VMFunction* f = nullptr);
+    inline void enterExitFrame(Register cxreg, const VMFunction* f = nullptr);
 
     // Push an exit frame token to identify which fake exit frame this footer
     // corresponds to.
-    inline void enterFakeExitFrame(Register temp, enum ExitFrameTokenValues token);
+    inline void enterFakeExitFrame(Register cxreg, enum ExitFrameTokenValues token);
 
     // Push an exit frame token for a native call.
-    inline void enterFakeExitFrameForNative(Register temp, bool isConstructing);
+    inline void enterFakeExitFrameForNative(Register cxreg, bool isConstructing);
 
     // Pop ExitFrame footer in addition to the extra frame.
     inline void leaveExitFrame(size_t extraFrame = 0);
@@ -703,7 +703,7 @@ class MacroAssembler : public MacroAssemblerSpecific
   private:
     // Save the top of the stack into JSontext::jitTop of the current thread,
     // which should be the location of the latest exit frame.
-    void linkExitFrame(Register temp);
+    void linkExitFrame(Register cxreg);
 
     // Patch the value of PushStubCode with the pointer to the finalized code.
     void linkSelfReference(JitCode* code);

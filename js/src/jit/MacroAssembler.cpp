@@ -1449,6 +1449,7 @@ BailoutReportOverRecursed(JSContext* cx)
 void
 MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
 {
+    loadJSContext(scratch);
     enterExitFrame(scratch);
 
     Label baseline;
@@ -1510,6 +1511,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         push(temp);
         push(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)));
         // No GC things to mark on the stack, push a bare token.
+        loadJSContext(scratch);
         enterFakeExitFrame(scratch, ExitFrameLayoutBareToken);
 
         // If monitorStub is non-null, handle resumeAddr appropriately.
@@ -2729,10 +2731,9 @@ MacroAssembler::callWithABINoProfiler(wasm::SymbolicAddress imm, MoveOp::Type re
 // Exit frame footer.
 
 void
-MacroAssembler::linkExitFrame(Register temp)
+MacroAssembler::linkExitFrame(Register cxreg)
 {
-    loadJSContext(temp);
-    storeStackPtr(Address(temp, offsetof(JSContext, jitTop)));
+    storeStackPtr(Address(cxreg, offsetof(JSContext, jitTop)));
 }
 
 void
