@@ -366,7 +366,8 @@ private:
   // (unless they're not keyframes and aKeyframeSkip is true), but will
   // not be added to the queue. This function blocks until the decode
   // is complete.
-  virtual bool DecodeVideoFrame(bool &aKeyframeSkip, int64_t aTimeThreshold)
+  virtual bool DecodeVideoFrame(bool& aKeyframeSkip,
+                                const media::TimeUnit& aTimeThreshold)
   {
     return false;
   }
