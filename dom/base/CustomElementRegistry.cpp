@@ -550,15 +550,6 @@ CustomElementRegistry::Define(const nsAString& aName,
                               const ElementDefinitionOptions& aOptions,
                               ErrorResult& aRv)
 {
-  // We do this for [CEReaction] temporarily and it will be removed
-  // after webidl supports [CEReaction] annotation in bug 1309147.
-  DocGroup* docGroup = mWindow->GetDocGroup();
-  if (!docGroup) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  AutoCEReaction ceReaction(docGroup->CustomElementReactionsStack());
   aRv.MightThrowJSException();
 
   AutoJSAPI jsapi;
