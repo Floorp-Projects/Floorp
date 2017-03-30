@@ -141,6 +141,10 @@ nsSMILCompositor::CreateSMILAttr()
 nsCSSPropertyID
 nsSMILCompositor::GetCSSPropertyToAnimate() const
 {
+  if (mKey.mAttributeNamespaceID != kNameSpaceID_None) {
+    return eCSSProperty_UNKNOWN;
+  }
+
   nsCSSPropertyID propID =
     nsCSSProps::LookupProperty(nsDependentAtomString(mKey.mAttributeName),
                                CSSEnabledState::eForAllContent);
