@@ -27,7 +27,7 @@
          but still needed), hence we ignore deprecated warnings here.. -->
     <TextView
         tools:ignore="Deprecated"
-        android:id="@+id/url"
+        android:id="@+id/display_url"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"

@@ -10,6 +10,7 @@ import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,9 +26,6 @@ import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
 import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.web.IWebView;
-
-import java.net.URI;
-import java.net.URISyntaxException;
 
 /**
  * Fragment for displaying the browser UI.
@@ -76,7 +74,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     public View inflateLayout(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_browser, container, false);
 
-        urlView = (TextView) view.findViewById(R.id.url);
+        urlView = (TextView) view.findViewById(R.id.display_url);
         updateURL(getInitialUrl());
         urlView.setOnClickListener(this);
 
@@ -201,10 +199,12 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 menu.show(menuView);
                 break;
 
-            case R.id.url:
+            case R.id.display_url:
+                final Fragment urlFragment = UrlInputFragment.createWithBrowserScreenAnimation(getUrl(), urlView);
+
                 getActivity().getSupportFragmentManager()
                         .beginTransaction()
-                        .add(R.id.container, UrlInputFragment.create(getWebView().getUrl()), UrlInputFragment.FRAGMENT_TAG)
+                        .add(R.id.container, urlFragment, UrlInputFragment.FRAGMENT_TAG)
                         .commit();
                 break;
 

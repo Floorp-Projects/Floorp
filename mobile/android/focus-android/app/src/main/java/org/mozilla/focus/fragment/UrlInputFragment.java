@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import org.mozilla.focus.R;
@@ -41,6 +42,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     private static final String ARGUMENT_HEIGHT = "height";
 
     private static final String ANIMATION_HOME_SCREEN = "home_screen";
+    private static final String ANIMATION_BROWSER_SCREEN = "browser_screen";
 
     /**
      * Create a new UrlInputFragment and animate the url input view from the position/size of the
@@ -63,11 +65,24 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         return fragment;
     }
 
-    public static UrlInputFragment create(String url) {
-        final UrlInputFragment fragment = new UrlInputFragment();
-
+    /**
+     * Create a new UrlInputFragment and animate the url input view from the position/size of the
+     * browser toolbar's URL view.
+     */
+    public static UrlInputFragment createWithBrowserScreenAnimation(String url, View urlView) {
         final Bundle arguments = new Bundle();
+        arguments.putString(ARGUMENT_ANIMATION, ANIMATION_BROWSER_SCREEN);
         arguments.putString(ARGUMENT_URL, url);
+
+        int[] screenLocation = new int[2];
+        urlView.getLocationOnScreen(screenLocation);
+
+        arguments.putInt(ARGUMENT_X, screenLocation[0]);
+        arguments.putInt(ARGUMENT_Y, screenLocation[1]);
+        arguments.putInt(ARGUMENT_WIDTH, urlView.getWidth());
+        arguments.putInt(ARGUMENT_HEIGHT, urlView.getHeight());
+
+        final UrlInputFragment fragment = new UrlInputFragment();
         fragment.setArguments(arguments);
 
         return fragment;
@@ -80,7 +95,8 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
 
     private UrlAutoCompleteFilter urlAutoCompleteFilter;
     private View dismissView;
-    private View urlBackgroundView;
+    private View urlInputContainerView;
+    private View urlInputBackgroundView;
     private View toolbarBackgroundView;
 
     @Override
@@ -114,14 +130,14 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
             }
         });
 
-        urlBackgroundView = view.findViewById(R.id.url_background);
-
         toolbarBackgroundView = view.findViewById(R.id.toolbar_background);
+        urlInputBackgroundView = view.findViewById(R.id.url_input_background);
 
-        urlBackgroundView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+        urlInputContainerView = view.findViewById(R.id.url_input_container);
+        urlInputContainerView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
             @Override
             public boolean onPreDraw() {
-                urlBackgroundView.getViewTreeObserver().removeOnPreDrawListener(this);
+                urlInputContainerView.getViewTreeObserver().removeOnPreDrawListener(this);
 
                 animateFirstDraw();
 
@@ -170,14 +186,22 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     }
 
     private void animateFirstDraw() {
-        if (ANIMATION_HOME_SCREEN.equals(getArguments().getString(ARGUMENT_ANIMATION))) {
+        final String animation = getArguments().getString(ARGUMENT_ANIMATION);
+
+        if (ANIMATION_HOME_SCREEN.equals(animation)) {
             playHomeScreenAnimation(false);
+        } else if (ANIMATION_BROWSER_SCREEN.equals(animation)) {
+            playBrowserScreenAnimation(false);
         }
     }
 
     private void animateAndDismiss() {
-        if (ANIMATION_HOME_SCREEN.equals(getArguments().getString(ARGUMENT_ANIMATION))) {
+        final String animation = getArguments().getString(ARGUMENT_ANIMATION);
+
+        if (ANIMATION_HOME_SCREEN.equals(animation)) {
             playHomeScreenAnimation(true);
+        } else if (ANIMATION_BROWSER_SCREEN.equals(animation)) {
+            playBrowserScreenAnimation(true);
         } else {
             dismiss();
         }
@@ -188,25 +212,25 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
      */
     private void playHomeScreenAnimation(final boolean reverse) {
         int[] screenLocation = new int[2];
-        urlBackgroundView.getLocationOnScreen(screenLocation);
+        urlInputContainerView.getLocationOnScreen(screenLocation);
 
         int leftDelta = getArguments().getInt(ARGUMENT_X) - screenLocation[0];
         int topDelta = getArguments().getInt(ARGUMENT_Y) - screenLocation[1];
 
-        float widthScale = (float) getArguments().getInt(ARGUMENT_WIDTH) / urlBackgroundView.getWidth();
-        float heightScale = (float) getArguments().getInt(ARGUMENT_HEIGHT) / urlBackgroundView.getHeight();
+        float widthScale = (float) getArguments().getInt(ARGUMENT_WIDTH) / urlInputContainerView.getWidth();
+        float heightScale = (float) getArguments().getInt(ARGUMENT_HEIGHT) / urlInputContainerView.getHeight();
 
         if (!reverse) {
             // Move all views to the position of the fake URL bar on the home screen. Hide them until
             // the animation starts because we need to switch between fake URL bar and the actual URL
             // bar once the animation starts.
-            urlBackgroundView.setAlpha(0);
-            urlBackgroundView.setPivotX(0);
-            urlBackgroundView.setPivotY(0);
-            urlBackgroundView.setScaleX(widthScale);
-            urlBackgroundView.setScaleY(heightScale);
-            urlBackgroundView.setTranslationX(leftDelta);
-            urlBackgroundView.setTranslationY(topDelta);
+            urlInputContainerView.setAlpha(0);
+            urlInputContainerView.setPivotX(0);
+            urlInputContainerView.setPivotY(0);
+            urlInputContainerView.setScaleX(widthScale);
+            urlInputContainerView.setScaleY(heightScale);
+            urlInputContainerView.setTranslationX(leftDelta);
+            urlInputContainerView.setTranslationY(topDelta);
 
             toolbarBackgroundView.setAlpha(0);
             toolbarBackgroundView.setTranslationY(-toolbarBackgroundView.getHeight());
@@ -215,7 +239,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         }
 
         // Move the URL bar from its position on the home screen to the actual position (and scale it).
-        urlBackgroundView.animate()
+        urlInputContainerView.animate()
                 .setDuration(200)
                 .scaleX(reverse ? widthScale : 1)
                 .scaleY(reverse ? heightScale : 1)
@@ -227,13 +251,13 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
                     public void onAnimationStart(Animator animation) {
                         ViewUtils.updateAlphaIfViewExists(getActivity(), R.id.fake_urlbar, 0f);
 
-                        urlBackgroundView.setAlpha(1);
+                        urlInputContainerView.setAlpha(1);
                     }
 
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         if (reverse) {
-                            urlBackgroundView.setAlpha(0f);
+                            urlInputContainerView.setAlpha(0f);
 
                             ViewUtils.updateAlphaIfViewExists(getActivity(), R.id.fake_urlbar, 1f);
 
@@ -253,6 +277,77 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         dismissView.animate()
                 .alpha(reverse ? 0 : 1)
                 .setDuration(200);
+    }
+
+    private void playBrowserScreenAnimation(final boolean reverse) {
+        {
+            float containerMargin = ((FrameLayout.LayoutParams) urlInputContainerView.getLayoutParams()).bottomMargin;
+
+            float width = urlInputBackgroundView.getWidth();
+            float height = urlInputBackgroundView.getHeight();
+
+            float widthScale = (width + (2 * containerMargin)) / width;
+            float heightScale = (height + (2 * containerMargin)) / height;
+
+            if (!reverse) {
+                urlInputBackgroundView.setPivotX(0);
+                urlInputBackgroundView.setPivotY(0);
+                urlInputBackgroundView.setScaleX(widthScale);
+                urlInputBackgroundView.setScaleY(heightScale);
+                urlInputBackgroundView.setTranslationX(-containerMargin);
+                urlInputBackgroundView.setTranslationY(-containerMargin);
+            }
+
+            // Let the URL input use the full width/height and then shrink to the actual size
+            urlInputBackgroundView.animate()
+                    .setDuration(200)
+                    .scaleX(1)
+                    .scaleY(1)
+                    .alpha(reverse ? 0 : 1)
+                    .translationX(reverse ? -containerMargin : 0)
+                    .translationY(reverse ? -containerMargin : 0)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            if (reverse) {
+                                dismiss();
+                            }
+                        }
+                    });
+        }
+        {
+            int[] screenLocation = new int[2];
+            urlView.getLocationOnScreen(screenLocation);
+
+            int leftDelta = getArguments().getInt(ARGUMENT_X) - screenLocation[0] - urlView.getPaddingLeft();
+
+            if (!reverse) {
+                urlView.setPivotX(0);
+                urlView.setPivotY(0);
+                urlView.setTranslationX(leftDelta);
+            }
+
+            // The URL moves from the right (at least if the lock is visible) to it's actual position
+            urlView.animate()
+                    .setDuration(200)
+                    .translationX(reverse ? leftDelta : 0);
+        }
+
+        if (!reverse) {
+            toolbarBackgroundView.setAlpha(0);
+            clearView.setAlpha(0);
+        }
+
+        // The darker background appears with an alpha animation
+        toolbarBackgroundView.animate()
+                .setDuration(200)
+                .alpha(reverse ? 0 : 1);
+
+        // And the clear button appears slightly delayed so that it doesn't clash with the menu button
+        clearView.animate()
+                .setStartDelay(100)
+                .setDuration(200)
+                .alpha(reverse ? 0 : 1);
     }
 
     private void dismiss() {
