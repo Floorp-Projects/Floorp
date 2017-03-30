@@ -7170,7 +7170,10 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
     }
   }
 
-  RestyleManager()->PostRestyleEventForLazyConstruction();
+  if (mozilla::GeckoRestyleManager* geckoRM = RestyleManager()->GetAsGecko()) {
+    geckoRM->PostRestyleEventForLazyConstruction();
+  }
+
   return true;
 }
 
@@ -7483,6 +7486,11 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
         MaybeConstructLazily(CONTENTAPPEND, aContainer, aFirstNewContent)) {
       if (isNewlyAddedContentForServo) {
         aContainer->AsElement()->NoteDirtyDescendantsForServo();
+      } else {
+        // Lazy frame construction is done by the restyle flushes, so we need to
+        // ensure a refresh happens.
+        mPresShell->SetNeedStyleFlush();
+        mPresShell->ObserveStyleFlushes();
       }
       return;
     }
@@ -7960,6 +7968,11 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
         MaybeConstructLazily(CONTENTINSERT, aContainer, aStartChild)) {
       if (isNewlyAddedContentForServo) {
         aContainer->AsElement()->NoteDirtyDescendantsForServo();
+      } else {
+        // Lazy frame construction is done by the restyle flushes, so we need to
+        // ensure a refresh happens.
+        mPresShell->SetNeedStyleFlush();
+        mPresShell->ObserveStyleFlushes();
       }
       return;
     }

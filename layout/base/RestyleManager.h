@@ -134,8 +134,6 @@ public:
     return mAnimationsWithDestroyedFrame;
   }
 
-  void PostRestyleEventForLazyConstruction() { PostRestyleEventInternal(true); }
-
   void ContentInserted(nsINode* aContainer, nsIContent* aChild);
   void ContentAppended(nsIContent* aContainer, nsIContent* aFirstNewContent);
 
@@ -234,8 +232,6 @@ protected:
   bool mInStyleRefresh;
 
   OverflowChangedTracker mOverflowChangedTracker;
-
-  void PostRestyleEventInternal(bool aForLazyConstruction);
 
   /**
    * These are protected static methods that help with the change hint
