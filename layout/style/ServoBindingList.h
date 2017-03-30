@@ -71,6 +71,9 @@ SERVO_BINDING_FUNC(Servo_StyleSet_FillKeyframesForName, bool,
                    nsTimingFunctionBorrowed timing_function,
                    ServoComputedValuesBorrowed computed_values,
                    RawGeckoKeyframeListBorrowedMut keyframe_list)
+SERVO_BINDING_FUNC(Servo_StyleSet_GetFontFaceRules, void,
+                   RawServoStyleSetBorrowed set,
+                   RawGeckoFontFaceRuleListBorrowedMut list)
 
 // CSSRuleList
 SERVO_BINDING_FUNC(Servo_CssRules_ListTypes, void,
@@ -96,6 +99,8 @@ BASIC_RULE_FUNCS(Style)
 BASIC_RULE_FUNCS(Media)
 BASIC_RULE_FUNCS(Namespace)
 #undef BASIC_RULE_FUNCS
+SERVO_BINDING_FUNC(Servo_CssRules_GetFontFaceRuleAt, nsCSSFontFaceRule*,
+                   ServoCssRulesBorrowed rules, uint32_t index)
 SERVO_BINDING_FUNC(Servo_StyleRule_GetStyle, RawServoDeclarationBlockStrong,
                    RawServoStyleRuleBorrowed rule)
 SERVO_BINDING_FUNC(Servo_StyleRule_SetStyle, void,

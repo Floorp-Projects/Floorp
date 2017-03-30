@@ -9,6 +9,16 @@
   var osc = ac.createOscillator();
   osc.connect(dest);
   osc.start();
+
+  function start_webaudio() {
+    ac.resume();
+  }
+
+  function stop_webaudio() {
+    ac.suspend();
+  }
 </script>
 <body>
+<button id="start" onclick="start_webaudio()">Start</button>
+<button id="stop" onclick="stop_webaudio()">Stop</button>
 </body>

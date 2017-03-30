@@ -1,8 +1,8 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == fallback-01.xhtml fallback-01.xhtml
 == font-selection-by-lang-01.html font-selection-by-lang-01.html
-fails HTTP(..) == font-selection-fallback-1.html font-selection-fallback-1.html
-fails HTTP(..) == font-selection-generic-1.html font-selection-generic-1.html
+HTTP(..) == font-selection-fallback-1.html font-selection-fallback-1.html
+HTTP(..) == font-selection-generic-1.html font-selection-generic-1.html
 == font-size-adjust-01.html font-size-adjust-01.html
 # The following test passes consistently only on Mac OS X;
 # both Windows and Linux give results that vary depending on the font size/zoom factor used,
@@ -17,7 +17,7 @@ fails == justification-1.html justification-1.html
 == justification-2b.html justification-2b.html
 == justification-2c.html justification-2c.html
 == justification-2d.html justification-2d.html
-fails == justification-cjk-extension.html justification-cjk-extension.html
+== justification-cjk-extension.html justification-cjk-extension.html
 == justification-space-diacritic.html justification-space-diacritic.html
 skip HTTP(..) load ligature-with-space-1.html
 == line-editing-1a.html line-editing-1a.html
@@ -25,9 +25,9 @@ skip HTTP(..) load ligature-with-space-1.html
 == line-editing-1c.html line-editing-1c.html
 == line-editing-1d.html line-editing-1d.html
 == line-editing-1e.html line-editing-1e.html
-fails == lineheight-metrics-1.html lineheight-metrics-1.html
-fails HTTP(..) == lineheight-metrics-2a.html lineheight-metrics-2a.html
-fails HTTP(..) == lineheight-metrics-2b.html lineheight-metrics-2b.html
+== lineheight-metrics-1.html lineheight-metrics-1.html
+HTTP(..) == lineheight-metrics-2a.html lineheight-metrics-2a.html
+HTTP(..) == lineheight-metrics-2b.html lineheight-metrics-2b.html
 == lineheight-percentage-1.html lineheight-percentage-1.html
 fails == long-1.html long-1.html
 == pre-line-1.html pre-line-1.html
@@ -56,12 +56,12 @@ fails-if(Android) skip-if(d2d||cocoaWidget||skiaContent) == subpixel-glyphs-x-1a
 # subpixel.
 # D2D/DirectWrite results depend on the rendering mode chosen, so considering this as random for now.
 skip-if(!(d2d||cocoaWidget)) random-if(d2d) == subpixel-glyphs-x-2a.html subpixel-glyphs-x-2a.html
-fails HTTP(..) == subpixel-glyphs-x-3a.html subpixel-glyphs-x-3a.html
+HTTP(..) == subpixel-glyphs-x-3a.html subpixel-glyphs-x-3a.html
 # No platforms do subpixel positioning vertically
 == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1a.html
 == subpixel-lineheight-1a.html subpixel-lineheight-1a.html
 fails == swash-1.html swash-1.html
-fails HTTP(..) == synthetic-bold-metrics-01.html synthetic-bold-metrics-01.html
+HTTP(..) == synthetic-bold-metrics-01.html synthetic-bold-metrics-01.html
 HTTP(..) == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01.html
 # Tests for text-align-last
 == text-align-last-start.html text-align-last-start.html
@@ -108,7 +108,7 @@ HTTP(..) == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01.html
 == text-align-justify-last-end.html text-align-justify-last-end.html
 == text-align-justify-last-center.html text-align-justify-last-center.html
 == text-align-left-in-rtl-block.html text-align-left-in-rtl-block.html
-fails HTTP(..) == variation-selector-unsupported-1.html variation-selector-unsupported-1.html
+HTTP(..) == variation-selector-unsupported-1.html variation-selector-unsupported-1.html
 == white-space-1a.html white-space-1a.html
 == white-space-1b.html white-space-1b.html
 == white-space-2.html white-space-2.html
@@ -122,7 +122,7 @@ fails HTTP(..) == variation-selector-unsupported-1.html variation-selector-unsup
 HTTP(..) == wordbreak-7a.html wordbreak-7a.html
 HTTP(..) == wordbreak-7b.html wordbreak-7b.html
 == wordbreak-8.html wordbreak-8.html
-fails pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == wordbreak-9.html wordbreak-9.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == wordbreak-9.html wordbreak-9.html
 fails == wordbreak-dynamic-1.html wordbreak-dynamic-1.html
 fails == wordwrap-01.html wordwrap-01.html
 fails HTTP(..) == wordwrap-02.html wordwrap-02.html
@@ -154,30 +154,30 @@ HTTP(..) == zwnj-02.xhtml zwnj-02.xhtml
 fails == 444656.html 444656.html
 fails == 449555-1.html 449555-1.html
 == 467722.html 467722.html
-fails == 475092-sub.html 475092-sub.html
-fails == 475092-pos.html 475092-pos.html
+== 475092-sub.html 475092-sub.html
+== 475092-pos.html 475092-pos.html
 fails == 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback.html
 # Test for bug 484954
 == rgba-text.html rgba-text.html
 # Test for bug 575695, 'kern' table support
-fails HTTP(..) == kerning-01.html kerning-01.html
+HTTP(..) == kerning-01.html kerning-01.html
 # Test for bug 577380, support for AAT layout (on OS X only)
 random-if(!cocoaWidget) == 577380.html 577380.html
 # Test for OpenType Arabic shaping support
-fails HTTP(..) == arabic-shaping-1.html arabic-shaping-1.html
+HTTP(..) == arabic-shaping-1.html arabic-shaping-1.html
 # check ligature in Arial Bold on Windows, for bug 644184; may fail on other platforms depending on fonts
 == arial-bold-lam-alef-1.html arial-bold-lam-alef-1.html
 # Fallback (presentation-forms) shaping with a font that lacks GSUB/GPOS
 # These tests are not valid with Mac or FT2 font backends because our masking of complex-script ranges
 # in the 'cmap' will prevent the test font (without GSUB) being used.
-fails == arabic-fallback-1.html arabic-fallback-1.html
-fails == arabic-fallback-2.html arabic-fallback-2.html
-fails == arabic-fallback-3.html arabic-fallback-3.html
-fails-if(!cocoaWidget&&!Android) HTTP(..) == arabic-fallback-4.html arabic-fallback-4.html
+== arabic-fallback-1.html arabic-fallback-1.html
+== arabic-fallback-2.html arabic-fallback-2.html
+== arabic-fallback-3.html arabic-fallback-3.html
+HTTP(..) == arabic-fallback-4.html arabic-fallback-4.html
 fails == arabic-marks-1.html arabic-marks-1.html
 == arabic-final-ligature-spacing.html arabic-final-ligature-spacing.html
 # harfbuzz fallback mark stacking in the absence of GPOS:
-fails HTTP(..) == fallback-mark-stacking-1.html fallback-mark-stacking-1.html
+HTTP(..) == fallback-mark-stacking-1.html fallback-mark-stacking-1.html
 
 == 726392-1.html 726392-1.html
 == 726392-2.html 726392-2.html
@@ -185,7 +185,7 @@ fails HTTP(..) == fallback-mark-stacking-1.html fallback-mark-stacking-1.html
 == 745555-1.html 745555-1.html
 == 745555-2.html 745555-2.html
 == 820255.html 820255.html
-fails HTTP(..) == 1170688.html 1170688.html
+HTTP(..) == 1170688.html 1170688.html
 
 # ensure emoji chars don't render blank (bug 715798, bug 779042);
 # should at least render hexboxes if there's no font support
@@ -202,44 +202,44 @@ fails-if(OSX==1006||Android) == emoji-04.html emoji-04.html
 == emoji-05.html emoji-05.html
 
 # check that Graphite shaping (bug 631479) is working
-fails pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-01.html graphite-01.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-01.html graphite-01.html
 # Test 02 (using Pig Latin) is fuzzy on Win7 because glyph positioning is not guaranteed to match exactly
 # between a sequence of simple glyphs rendered individually, and the same sequence treated as a single cluster.
-fails == graphite-02.html graphite-02.html
-fails pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-03a.html graphite-03a.html
+== graphite-02.html graphite-02.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-03a.html graphite-03a.html
 fails pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-03b.html graphite-03b.html
-fails pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == graphite-01.html graphite-01.html
-fails pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == graphite-02.html graphite-02.html
+pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == graphite-01.html graphite-01.html
+pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == graphite-02.html graphite-02.html
 # test 03a (lang setting in Padauk font) now works in opentype/harfbuzz as well
-fails pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == graphite-03a.html graphite-03a.html
-fails pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == graphite-03b.html graphite-03b.html
+pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == graphite-03a.html graphite-03a.html
+pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == graphite-03b.html graphite-03b.html
 
 # tests for graphite rendering with valid and invalid lang tags
-fails pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-fa.html graphite-04-fa.html
-fails pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-sd.html graphite-04-sd.html
-fails pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-snd.html graphite-04-snd.html
-fails pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-ur.html graphite-04-ur.html
-fails pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-urd.html graphite-04-urd.html
-fails pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-sd.html graphite-04-sd.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-fa.html graphite-04-fa.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-sd.html graphite-04-sd.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-snd.html graphite-04-snd.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-ur.html graphite-04-ur.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-urd.html graphite-04-urd.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-sd.html graphite-04-sd.html
 
 # tests to compare graphite to opentype (will trivially pass when graphite not enabled)
 fails HTTP(..) == graphite-05-ot-only.html graphite-05-ot-only.html
 fails HTTP(..) == graphite-05-ot-only.html graphite-05-ot-only.html
-fails HTTP(..) == graphite-05-simple.html graphite-05-simple.html # Bug 1290237
-fails HTTP(..) == graphite-05-multipass.html graphite-05-multipass.html
-fails HTTP(..) == graphite-05-lang.html graphite-05-lang.html
-fails HTTP(..) == graphite-05-badlang.html graphite-05-badlang.html
+HTTP(..) == graphite-05-simple.html graphite-05-simple.html # Bug 1290237
+HTTP(..) == graphite-05-multipass.html graphite-05-multipass.html
+HTTP(..) == graphite-05-lang.html graphite-05-lang.html
+HTTP(..) == graphite-05-badlang.html graphite-05-badlang.html
 fails HTTP(..) == graphite-05-feat.html graphite-05-feat.html
 
 # comparing composed and decomposed characters that should render identically
 # under both OpenType and Graphite shaping
-fails pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == glyph-decomposition-opentype.html glyph-decomposition-opentype.html
-fails pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == glyph-decomposition-graphite.html glyph-decomposition-graphite.html
+pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == glyph-decomposition-opentype.html glyph-decomposition-opentype.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == glyph-decomposition-graphite.html glyph-decomposition-graphite.html
 
 # test for bidi bug in graphite 1.3.2, fixed in 1.3.3 (bug 1207061)
-fails HTTP(..) == graphite-bidi-1.html graphite-bidi-1.html
+HTTP(..) == graphite-bidi-1.html graphite-bidi-1.html
 
-fails HTTP(..) == graphite-surrogate-selection.html graphite-surrogate-selection.html
+HTTP(..) == graphite-surrogate-selection.html graphite-surrogate-selection.html
 
 # Tests for hyphenation with hyphens property
 == auto-hyphenation-1.html auto-hyphenation-1.html
@@ -336,7 +336,7 @@ pref(layout.css.control-characters.visible,true) == control-chars-04c.html contr
 pref(layout.css.control-characters.visible,true) == control-chars-04d.html control-chars-04d.html
 
 # font fallback for <space> when not supported in the primary font family - bug 970891
-fails HTTP(..) == space-font-1.html space-font-1.html
+HTTP(..) == space-font-1.html space-font-1.html
 
 # handling of highly negative letter-spacing and intrinsic width
 == negative-letter-spacing-1.html negative-letter-spacing-1.html

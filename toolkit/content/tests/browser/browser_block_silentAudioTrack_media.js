@@ -7,32 +7,6 @@ var SuspendedType = {
   SUSPENDED_PAUSE_DISPOSABLE: 3
 };
 
-function disable_non_test_mouse(disable) {
-  let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
-  utils.disableNonTestMouseEvents(disable);
-}
-
-function* hover_icon(icon, tooltip) {
-  disable_non_test_mouse(true);
-
-  let popupShownPromise = BrowserTestUtils.waitForEvent(tooltip, "popupshown");
-  EventUtils.synthesizeMouse(icon, 1, 1, {type: "mouseover"});
-  EventUtils.synthesizeMouse(icon, 2, 2, {type: "mousemove"});
-  EventUtils.synthesizeMouse(icon, 3, 3, {type: "mousemove"});
-  EventUtils.synthesizeMouse(icon, 4, 4, {type: "mousemove"});
-  return popupShownPromise;
-}
-
-function leave_icon(icon) {
-  EventUtils.synthesizeMouse(icon, 0, 0, {type: "mouseout"});
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
-
-  disable_non_test_mouse(false);
-}
-
 function* click_unblock_icon(tab) {
   let icon = document.getAnonymousElementByAttribute(tab, "anonid", "soundplaying-icon");
 

@@ -55,7 +55,7 @@ private:
   void CreatePDMs();
   void CreateNullPDM();
   // Startup the provided PDM and add it to our list if successful.
-  bool StartupPDM(PlatformDecoderModule* aPDM);
+  bool StartupPDM(PlatformDecoderModule* aPDM, bool aInsertAtBeginning = false);
   // Returns the first PDM in our list supporting the mimetype.
   already_AddRefed<PlatformDecoderModule>
   GetDecoder(const TrackInfo& aTrackInfo,

@@ -19,13 +19,13 @@
 #   program.
 @template
 def try_compile(includes=None, body='', language='C++', flags=None, check_msg=None,
-                when=None):
+                when=None, onerror=lambda: None):
     compiler = {
         'C': c_compiler,
         'C++': cxx_compiler,
     }[language]
 
-    return compiler.try_compile(includes, body, flags, check_msg, when=when)
+    return compiler.try_compile(includes, body, flags, check_msg, when=when, onerror=onerror)
 
 
 # Checks for the presence of the given header on the target system by compiling

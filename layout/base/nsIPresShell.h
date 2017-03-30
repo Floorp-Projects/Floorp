@@ -643,7 +643,16 @@ public:
   inline void SetNeedLayoutFlush();
   inline void SetNeedThrottledAnimationFlush();
 
-  bool NeedStyleFlush() { return mNeedStyleFlush; }
+  bool ObservingStyleFlushes() const { return mObservingStyleFlushes; }
+  bool ObservingLayoutFlushes() const { return mObservingLayoutFlushes; }
+
+  void ObserveStyleFlushes()
+  {
+    if (!ObservingStyleFlushes())
+      DoObserveStyleFlushes();
+  }
+
+  bool NeedStyleFlush() const { return mNeedStyleFlush; }
 
   /**
    * Callbacks will be called even if reflow itself fails for
@@ -1701,6 +1710,9 @@ protected:
   bool RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
                                      mozilla::FlushType aFlushType);
 
+  void DoObserveStyleFlushes();
+  void DoObserveLayoutFlushes();
+
   /**
    * Do computations necessary to determine if font size inflation is enabled.
    * This value is cached after computation, as the computation is somewhat
@@ -1791,7 +1803,7 @@ public:
   }
 
   bool HasPendingReflow() const
-    { return mReflowScheduled || mReflowContinueTimer; }
+    { return mObservingLayoutFlushes || mReflowContinueTimer; }
 
   void SyncWindowProperties(nsView* aView);
 
@@ -1888,10 +1900,6 @@ protected:
   bool                      mIsFirstPaint : 1;
   bool                      mObservesMutationsForPrint : 1;
 
-  // If true, we have a reflow scheduled. Guaranteed to be false if
-  // mReflowContinueTimer is non-null.
-  bool                      mReflowScheduled : 1;
-
   bool                      mSuppressInterruptibleReflows : 1;
   bool                      mScrollPositionClampingScrollPortSizeSet : 1;
 
@@ -1900,6 +1908,15 @@ protected:
 
   // True if a style flush might not be a no-op
   bool mNeedStyleFlush : 1;
+
+  // True if we're observing the refresh driver for style flushes.
+  bool mObservingStyleFlushes: 1;
+
+  // True if we're observing the refresh driver for layout flushes, that is, if
+  // we have a reflow scheduled.
+  //
+  // Guaranteed to be false if mReflowContinueTimer is non-null.
+  bool mObservingLayoutFlushes: 1;
 
   // True if there are throttled animations that would be processed when
   // performing a flush with mFlushAnimations == true.

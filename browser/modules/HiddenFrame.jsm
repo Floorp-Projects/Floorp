@@ -10,29 +10,22 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_PAGE = "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window%20id='win'/>";
 
 /**
- * An hidden frame object. It takes care of creating an IFRAME and attaching it the
- * |hiddenDOMWindow|.
+ * An hidden frame object. It takes care of creating a windowless browser and
+ * passing the window containing a blank XUL <window> back.
  */
 function HiddenFrame() {}
 
 HiddenFrame.prototype = {
   _frame: null,
+  _browser: null,
+  _listener: null,
+  _webProgress: null,
   _deferred: null,
-  _retryTimerId: null,
-
-  get hiddenDOMDocument() {
-    return Services.appShell.hiddenDOMWindow.document;
-  },
-
-  get isReady() {
-    return this.hiddenDOMDocument.readyState === "complete";
-  },
 
   /**
    * Gets the |contentWindow| of the hidden frame. Creates the frame if needed.
@@ -49,38 +42,43 @@ HiddenFrame.prototype = {
   },
 
   destroy() {
-    clearTimeout(this._retryTimerId);
-
-    if (this._frame) {
-      if (!Cu.isDeadWrapper(this._frame)) {
-        this._frame.removeEventListener("load", this, true);
-        this._frame.remove();
+    if (this._browser) {
+      if (this._listener) {
+        this._webProgress.removeProgressListener(this._listener);
+        this._listener = null;
+        this._webProgress = null;
       }
-
       this._frame = null;
       this._deferred = null;
-    }
-  },
 
-  handleEvent() {
-    let contentWindow = this._frame.contentWindow;
-    if (contentWindow.location.href === XUL_PAGE) {
-      this._frame.removeEventListener("load", this, true);
-      this._deferred.resolve(contentWindow);
-    } else {
-      contentWindow.location = XUL_PAGE;
+      this._browser.close();
+      this._browser = null;
     }
   },
 
   _create() {
-    if (this.isReady) {
-      let doc = this.hiddenDOMDocument;
-      this._frame = doc.createElementNS(HTML_NS, "iframe");
-      this._frame.addEventListener("load", this, true);
-      doc.documentElement.appendChild(this._frame);
-    } else {
-      // Check again if |hiddenDOMDocument| is ready as soon as possible.
-      this._retryTimerId = setTimeout(this._create.bind(this), 0);
-    }
+    this._browser = Services.appShell.createWindowlessBrowser(true);
+    this._browser.QueryInterface(Ci.nsIInterfaceRequestor);
+    this._webProgress = this._browser.getInterface(Ci.nsIWebProgress);
+    this._listener = {
+      QueryInterface: XPCOMUtils.generateQI([
+        Ci.nsIWebProgressListener, Ci.nsIWebProgressListener2,
+        Ci.nsISupportsWeakReference]),
+    };
+    this._listener.onStateChange = (wbp, request, stateFlags, status) => {
+      if (!request) {
+        return;
+      }
+      if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+        this._webProgress.removeProgressListener(this._listener);
+        this._listener = null;
+        this._webProgress = null;
+        // Get the window reference via the document.
+        this._frame = this._browser.document.ownerGlobal;
+        this._deferred.resolve(this._frame);
+      }
+    };
+    this._webProgress.addProgressListener(this._listener, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
+    this._browser.document.location = XUL_PAGE;
   }
 };

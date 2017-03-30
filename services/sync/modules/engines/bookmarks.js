@@ -630,6 +630,17 @@ BookmarksEngine.prototype = {
            FORBIDDEN_INCOMING_PARENT_IDS.includes(incomingItem.parentid);
   },
 
+  beforeRecordDiscard(record) {
+    let isSpecial = PlacesSyncUtils.bookmarks.ROOTS.includes(record.id);
+    if (isSpecial && record.children && !this._store._childrenToOrder[record.id]) {
+      if (this._modified.getStatus(record.id) != PlacesUtils.bookmarks.SYNC_STATUS.NEW) {
+        return;
+      }
+      this._log.debug("Recording children of " + record.id + " as " + JSON.stringify(record.children));
+      this._store._childrenToOrder[record.id] = record.children;
+    }
+  },
+
   getValidator() {
     return new BookmarkValidator();
   }
@@ -1120,6 +1131,14 @@ class BookmarksChangeset extends Changeset {
     // Weak changes are part of the changeset, but don't bump the change
     // counter, and aren't persisted anywhere.
     this.weakChanges = {};
+  }
+
+  getStatus(id) {
+    let change = this.changes[id];
+    if (!change) {
+      return PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN;
+    }
+    return change.status;
   }
 
   getModifiedTimestamp(id) {

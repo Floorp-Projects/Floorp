@@ -31,9 +31,7 @@ struct PropertyValuePair
   // (string).
   nsCSSValue mValue;
 
-  // The specified value when using the Servo backend. However, even when
-  // using the Servo backend, we still fill in |mValue| in the case where we
-  // fail to parse the value since we use it to store the original string.
+  // The specified value when using the Servo backend.
   RefPtr<RawServoDeclarationBlock> mServoDeclarationBlock;
 
   bool operator==(const PropertyValuePair&) const;

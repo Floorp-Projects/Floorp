@@ -42,11 +42,11 @@ fails == flexbox-align-self-baseline-horiz-007.xhtml flexbox-align-self-baseline
 
 # Tests for computing the baseline of a flex container
 == flexbox-baseline-align-self-baseline-horiz-001.html flexbox-baseline-align-self-baseline-horiz-001.html
-fails == flexbox-baseline-align-self-baseline-vert-001.html flexbox-baseline-align-self-baseline-vert-001.html
-fails == flexbox-baseline-empty-001a.html flexbox-baseline-empty-001a.html
-fails == flexbox-baseline-empty-001b.html flexbox-baseline-empty-001b.html
+== flexbox-baseline-align-self-baseline-vert-001.html flexbox-baseline-align-self-baseline-vert-001.html
+== flexbox-baseline-empty-001a.html flexbox-baseline-empty-001a.html
+== flexbox-baseline-empty-001b.html flexbox-baseline-empty-001b.html
 == flexbox-baseline-multi-item-horiz-001.html flexbox-baseline-multi-item-horiz-001.html
-fails == flexbox-baseline-multi-item-vert-001.html flexbox-baseline-multi-item-vert-001.html
+== flexbox-baseline-multi-item-vert-001.html flexbox-baseline-multi-item-vert-001.html
 == flexbox-baseline-multi-line-horiz-001.html flexbox-baseline-multi-line-horiz-001.html
 == flexbox-baseline-multi-line-horiz-002.html flexbox-baseline-multi-line-horiz-002.html
 == flexbox-baseline-multi-line-horiz-003.html flexbox-baseline-multi-line-horiz-003.html

@@ -552,8 +552,6 @@ add_test(function() {
     installBtn = get_install_button(remoteItem);
     is(installBtn.hidden, false, "Install button should be showing before install");
     remoteItem.mAddon.install.addListener(listener);
-    // If prompts are enabled, accept the install prompt.
-    promiseNotification();
     EventUtils.synthesizeMouseAtCenter(installBtn, { }, gManagerWindow);
   });
 });
