@@ -5,6 +5,7 @@
 #include "OpusTrackEncoder.h"
 #include "nsString.h"
 #include "GeckoProfiler.h"
+#include "mozilla/CheckedInt.h"
 
 #include <opus/opus.h>
 
@@ -344,8 +345,15 @@ OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
         AudioTrackEncoder::InterleaveTrackData(chunk, frameToCopy, mChannels,
                                                pcm.Elements() + frameCopied * mChannels);
       } else {
+        CheckedInt<int> memsetLength = CheckedInt<int>(frameToCopy) *
+                                       mChannels *
+                                       sizeof(AudioDataValue);
+        if (!memsetLength.isValid()) {
+          LOG(LogLevel::Error, ("Error calculating length of pcm buffer!"));
+          return NS_ERROR_FAILURE;
+        }
         memset(pcm.Elements() + frameCopied * mChannels, 0,
-               frameToCopy * mChannels * sizeof(AudioDataValue));
+               memsetLength.value());
       }
 
       frameCopied += frameToCopy;
