@@ -103,6 +103,7 @@ UNIFIED_SOURCES += [
     'nsINIParserImpl.cpp',
     'nsObserverList.cpp',
     'nsObserverService.cpp',
+    'nsPersistentProperties.cpp',
     'nsProperties.cpp',
     'nsQuickSort.cpp',
     'nsStaticNameTable.cpp',
@@ -113,12 +114,6 @@ UNIFIED_SOURCES += [
     'nsVariant.cpp',
     'PLDHashTable.cpp',
     'Tokenizer.cpp',
-]
-
-# This file cannot be built in unified mode because it uses the
-# PL_ARENA_CONST_ALIGN_MASK macro with plarena.h.
-SOURCES += [
-    'nsPersistentProperties.cpp',
 ]
 
 EXTRA_COMPONENTS += [

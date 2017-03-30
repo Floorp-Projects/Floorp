@@ -11,9 +11,12 @@
 #include "nsPrintfCString.h"
 #include "nsAutoPtr.h"
 
-#define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nsPersistentProperties.h"
 #include "nsIProperties.h"
+
+#include "mozilla/ArenaAllocatorExtensions.h"
+
+using mozilla::ArenaStrdup;
 
 struct PropertyTableEntry : public PLDHashEntryHdr
 {
@@ -21,34 +24,6 @@ struct PropertyTableEntry : public PLDHashEntryHdr
   const char* mKey;
   const char16_t* mValue;
 };
-
-static char16_t*
-ArenaStrdup(const nsAFlatString& aString, PLArenaPool* aArena)
-{
-  void* mem;
-  // add one to include the null terminator
-  int32_t len = (aString.Length() + 1) * sizeof(char16_t);
-  PL_ARENA_ALLOCATE(mem, aArena, len);
-  NS_ASSERTION(mem, "Couldn't allocate space!\n");
-  if (mem) {
-    memcpy(mem, aString.get(), len);
-  }
-  return static_cast<char16_t*>(mem);
-}
-
-static char*
-ArenaStrdup(const nsAFlatCString& aString, PLArenaPool* aArena)
-{
-  void* mem;
-  // add one to include the null terminator
-  int32_t len = (aString.Length() + 1) * sizeof(char);
-  PL_ARENA_ALLOCATE(mem, aArena, len);
-  NS_ASSERTION(mem, "Couldn't allocate space!\n");
-  if (mem) {
-    memcpy(mem, aString.get(), len);
-  }
-  return static_cast<char*>(mem);
-}
 
 static const struct PLDHashTableOps property_HashTableOps = {
   PLDHashTable::HashStringKey,
@@ -461,13 +436,12 @@ nsPropertiesParser::ParseBuffer(const char16_t* aBuffer,
 nsPersistentProperties::nsPersistentProperties()
   : mIn(nullptr)
   , mTable(&property_HashTableOps, sizeof(PropertyTableEntry), 16)
+  , mArena()
 {
-  PL_INIT_ARENA_POOL(&mArena, "PersistentPropertyArena", 2048);
 }
 
 nsPersistentProperties::~nsPersistentProperties()
 {
-  PL_FinishArenaPool(&mArena);
 }
 
 nsresult
@@ -533,8 +507,8 @@ nsPersistentProperties::SetStringProperty(const nsACString& aKey,
     aOldValue.Truncate();
   }
 
-  entry->mKey = ArenaStrdup(flatKey, &mArena);
-  entry->mValue = ArenaStrdup(PromiseFlatString(aNewValue), &mArena);
+  entry->mKey = ArenaStrdup(flatKey, mArena);
+  entry->mValue = ArenaStrdup(aNewValue, mArena);
 
   return NS_OK;
 }
