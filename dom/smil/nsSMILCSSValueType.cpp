@@ -418,6 +418,34 @@ nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
 }
 
 // static
+nsSMILValue
+nsSMILCSSValueType::ValueFromAnimationValue(nsCSSPropertyID aPropID,
+                                            Element* aTargetElement,
+                                            const StyleAnimationValue& aValue)
+{
+  nsSMILValue result;
+
+  nsIDocument* doc = aTargetElement->GetUncomposedDoc();
+  // We'd like to avoid serializing |aValue| if possible, and since the
+  // string passed to CSPAllowsInlineStyle is only used for reporting violations
+  // and an intermediate CSS value is not likely to be particularly useful
+  // in that case, we just use a generic placeholder string instead.
+  static const nsLiteralString kPlaceholderText =
+    NS_LITERAL_STRING("[SVG animation of CSS]");
+  if (doc && !nsStyleUtil::CSPAllowsInlineStyle(nullptr,
+                                                doc->NodePrincipal(),
+                                                doc->GetDocumentURI(),
+                                                0, kPlaceholderText, nullptr)) {
+    return result;
+  }
+
+  sSingleton.Init(result);
+  result.mU.mPtr = new ValueWrapper(aPropID, aValue);
+
+  return result;
+}
+
+// static
 bool
 nsSMILCSSValueType::ValueToString(const nsSMILValue& aValue,
                                   nsAString& aString)
