@@ -634,6 +634,10 @@ class FullParseHandler
         return new_<UnaryNode>(PNK_RETURN, JSOP_RETURN, pos, expr);
     }
 
+    ParseNode* newExpressionBody(ParseNode* expr) {
+        return new_<UnaryNode>(PNK_RETURN, JSOP_RETURN, expr->pn_pos, expr);
+    }
+
     ParseNode* newWithStatement(uint32_t begin, ParseNode* expr, ParseNode* body) {
         return new_<BinaryNode>(PNK_WITH, JSOP_NOP, TokenPos(begin, body->pn_pos.end),
                                 expr, body);
