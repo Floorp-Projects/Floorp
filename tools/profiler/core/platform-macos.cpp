@@ -130,8 +130,7 @@ void
 SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
                                                TickSample* aSample)
 {
-  thread_act_t samplee_thread =
-    aSample->mThreadInfo->GetPlatformData()->profiled_thread();
+  thread_act_t samplee_thread = aSample->mPlatformData->profiled_thread();
 
   //----------------------------------------------------------------//
   // Suspend the samplee thread and get its context.
