@@ -51,8 +51,8 @@ public:
   virtual ~DirectShowReader();
 
   bool DecodeAudioData() override;
-  bool DecodeVideoFrame(bool &aKeyframeSkip,
-                        int64_t aTimeThreshold) override;
+  bool DecodeVideoFrame(bool& aKeyframeSkip,
+                        const media::TimeUnit& aTimeThreshold) override;
 
   nsresult ReadMetadata(MediaInfo* aInfo,
                         MetadataTags** aTags) override;

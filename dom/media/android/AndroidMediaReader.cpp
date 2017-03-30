@@ -116,8 +116,8 @@ nsresult AndroidMediaReader::ResetDecode(TrackSet aTracks)
   return MediaDecoderReader::ResetDecode(aTracks);
 }
 
-bool AndroidMediaReader::DecodeVideoFrame(bool &aKeyframeSkip,
-                                          int64_t aTimeThreshold)
+bool AndroidMediaReader::DecodeVideoFrame(bool& aKeyframeSkip,
+                                          const media::TimeUnit& aTimeThreshold)
 {
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
@@ -253,7 +253,7 @@ bool AndroidMediaReader::DecodeVideoFrame(bool &aKeyframeSkip,
     // We have the start time of the next frame, so we can push the previous
     // frame into the queue, except if the end time is below the threshold,
     // in which case it wouldn't be displayed anyway.
-    if (mLastVideoFrame->GetEndTime() < aTimeThreshold) {
+    if (mLastVideoFrame->GetEndTime() < aTimeThreshold.ToMicroseconds()) {
       mLastVideoFrame = nullptr;
       continue;
     }
