@@ -13,6 +13,7 @@
   <string name="menu_about">Acerca de</string>
   <string name="menu_help">Ayuda</string>
   <string name="menu_rights">Tus derechos</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s te pone al control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#218;salo como un navegador privado:\n  "<ul>"\n    "<li>Busca y navega directo desde la app</li>"\n    "<li>Bloquea rastreadores (o cambia los ajustes para permitirlos)</li>"\n    "<li>Mantente libre de cookies y del historial de b&#250;squeda y navegaci&#243;n</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s es producido por Mozilla. Nuestra misi&#243;n es fomentar un Internet sano y abierto.<br/>\n<a href="%2$s">Aprender m&#225;s</a></p>]]></string>
   <string name="preference_category_search">Buscar</string>
   <string name="preference_search_engine_default">Predeterminado</string>
   <string name="preference_dialog_title_search_engine">Buscador predeterminado</string>

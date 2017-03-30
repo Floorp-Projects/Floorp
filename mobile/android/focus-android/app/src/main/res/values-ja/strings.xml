@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">動画やウェブページが正常に表示されない場合があります</string>
   <string name="preference_category_performance">パフォーマンス</string>
   <string name="preference_performance_block_webfonts">ウェブフォントをブロック</string>
+  <string name="preference_performance_block_webfonts_summary">アイコンや画像が正常に表示されない場合があります</string>
   <string name="preference_performance_block_images">画像をブロック</string>
   <string name="preference_default_browser">既定のブラウザにする</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">その他のオプション</string>
   <string name="content_description_forward">次のページへ進む</string>
   <string name="content_description_reload">ウェブサイトを再読み込み</string>
+  <string name="content_description_back">前のページへ戻る</string>
+  <string name="content_description_stop">サイトの読み込みを中止</string>
+  <string name="context_menu_paste_go">貼り付けて移動</string>
   <string name="firstrun_title">誰にも監視されないブラウジング。</string>
   <string name="firstrun_description">ブラウジング中のオンライン追跡を自動的にブロックします。タップするだけで、訪問したページ、検索履歴、Cookie、パスワードを端末から消去できます。</string>
   <string name="firstrun_button">了解</string>

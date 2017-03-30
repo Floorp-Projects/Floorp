@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">قد يعطل بعض الڤديو و صفحات الوب</string>
   <string name="preference_category_performance">الأداء</string>
   <string name="preference_performance_block_webfonts">احظر خطوط الوب</string>
+  <string name="preference_performance_block_webfonts_summary">قد يسبب اختفاء بعض الأيقونات أو الصور</string>
   <string name="preference_performance_block_images">امنع الصور</string>
   <string name="preference_default_browser">اجعله المتصفح المبدئي</string>
   <string name="preference_category_mozilla">موزيلا</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">المزيد من الخيارات</string>
   <string name="content_description_forward">تصفّح للأمام</string>
   <string name="content_description_reload">أعِد تحميل الموقع</string>
+  <string name="content_description_back">تصفّح للوراء</string>
+  <string name="content_description_stop">أوقف تحميل الموقع</string>
+  <string name="context_menu_paste_go">ألصق و اذهب</string>
   <string name="firstrun_title">تصفح و لا أحد يراقبك.</string>
   <string name="firstrun_description">احظر متعقبات الإنترنت تلقائيًا أثناء التصفح. ثم انقر لمسح الصفحات التي زرتها، و تأريخ البحث، و الكعكات، و كلمات السر من جهازك.</string>
   <string name="firstrun_button">حسنًا، فهمت</string>

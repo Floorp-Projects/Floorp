@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Może uniemożliwiać oglądanie niektórych filmów i stron WWW</string>
   <string name="preference_category_performance">Wydajność</string>
   <string name="preference_performance_block_webfonts">Blokowanie czcionek sieciowych</string>
+  <string name="preference_performance_block_webfonts_summary">Może spowodować, że niektóre ikony lub obrazy będą niewidoczne</string>
   <string name="preference_performance_block_images">Blokowanie obrazów</string>
   <string name="preference_default_browser">Ustaw jako domyślną przeglądarkę</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Więcej opcji</string>
   <string name="content_description_forward">Przejdź do przodu</string>
   <string name="content_description_reload">Ponownie wczytaj stronę</string>
+  <string name="content_description_back">Przejdź wstecz</string>
+  <string name="content_description_stop">Zatrzymaj wczytywanie strony</string>
+  <string name="context_menu_paste_go">Wklej i przejdź</string>
   <string name="firstrun_title">Przeglądaj, jak gdyby nikt nie patrzył.</string>
   <string name="firstrun_description">Automatycznie blokuj śledzące elementy podczas przeglądania stron. Wystarczy stuknąć, aby usunąć z urządzenia odwiedzone strony, wyszukiwania, ciasteczka i hasła.</string>
   <string name="firstrun_button">OK!</string>

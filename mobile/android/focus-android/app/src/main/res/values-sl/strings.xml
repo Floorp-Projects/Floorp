@@ -13,6 +13,7 @@
   <string name="menu_about">Predstavitev</string>
   <string name="menu_help">Pomoč</string>
   <string name="menu_rights">Vaše pravice</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s daje nadzor v va&#353;e roke.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Uporabljajte ga kot zaseben brskalnik:\n  "<ul>"\n    "<li>I&#353;&#269;ite in brskajte naravnost iz aplikacije</li>"\n    "<li>Zavra&#269;ajte sledilce (ali spremenite nastavitve zavra&#269;anja sledilcev)</li>"\n    "<li>Bri&#353;ite pi&#353;kotke ter zgodovino strani in iskanja</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s razvija Mozilla. Na&#353;e poslanstvo je spodbujati zdrav in odprt internet.<br/>\n<a href="%2$s">Ve&#269; o tem</a></p>]]></string>
   <string name="preference_category_search">Išči</string>
   <string name="preference_search_engine_default">Privzet</string>
   <string name="preference_dialog_title_search_engine">Privzeti iskalnik</string>
@@ -24,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Lahko pokvari nekatere videoposnetke in strani</string>
   <string name="preference_category_performance">Učinkovitost</string>
   <string name="preference_performance_block_webfonts">Zavračaj spletne pisave</string>
+  <string name="preference_performance_block_webfonts_summary">Lahko povzroči izginotje ikon ali slik</string>
   <string name="preference_performance_block_images">Zavračaj slike</string>
   <string name="preference_default_browser">Nastavi kot privzet brskalnik</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -39,21 +41,34 @@
   <string name="content_description_menu">Več možnosti</string>
   <string name="content_description_forward">Krmari naprej</string>
   <string name="content_description_reload">Ponovno naloži stran</string>
+  <string name="content_description_back">Krmari nazaj</string>
+  <string name="content_description_stop">Prekini nalaganje strani</string>
+  <string name="context_menu_paste_go">Prilepi in odpri</string>
   <string name="firstrun_title">Brskajte, kot da vas nihče ne gleda.</string>
   <string name="firstrun_description">Samodejno zavračajte spletne sledilce med brskanjem. Nato z enim dotikom izbrišite obiskane strani, iskanja, piškotke in gesla z naprave.</string>
   <string name="firstrun_button">V redu, razumem!</string>
   <string name="firstrun_footer">Pozor, spletna mesta sama in storitve, ki jih uporabljate, vam še vedno lahko sledijo.</string>
   <string name="your_rights">Vaše pravice</string>
   <string name="external_app_prompt_title">Odpri povezavo v drugi aplikaciji</string>
+  <string name="external_app_prompt">Lahko zapustite %1$s in to povezavo odprete v %2$s.</string>
   <string name="external_app_prompt_no_app_title">Poišči aplikacijo, ki lahko odpre povezavo</string>
+  <string name="external_app_prompt_no_app">Nobena aplikacija na napravi ne more odpreti te povezave. Lahko zapustite %1$s in v %2$s poiščete aplikacijo, ki jo lahko.</string>
   <string name="external_multiple_apps_matched_exit">Končam zasebno brskanje?</string>
   <string name="errorpage_title">Napaka pri nalaganju strani</string>
   <string name="errorpage_refresh">Poskusi znova</string>
   <string name="error_connectionfailure_title">Povezave ni mogoče vzpostaviti</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Stran trenutno morda ni na voljo ali je preobremenjena. Poskusite znova &#269;ez nekaj trenutkov.</li>"\n        "<li>&#268;e ne morete nalo&#382;iti nobene strani, na napravi preverite povezavo z omre&#382;jem.</li>"\n      "</ul>]]></string>
   <string name="error_timeout_title">Povezava je potekla</string>
   <string name="error_hostLookup_title">Strežnika ni mogoče najti</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Preverite naslov za tipkarske napake, na primer\n          "<strong>ww</strong>". example.com namesto\n          "<strong>www</strong>. example.com</li>"\n        "<li>&#268;e ne morete nalo&#382;iti nobene strani, na napravi preverite povezavo z omre&#382;jem.</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">Neveljaven naslov</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Spletne naslove se obi&#269;ajno pi&#353;e v obliki "<strong>http://www.example.com/</strong></li>"\n  "<li>"Prepri&#269;ajte se, da uporabljate po&#353;evnice naprej (t.j. "<strong>/</strong>).</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">Stran se ne preusmerja pravilno</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>To te&#382;avo obi&#269;ajno povzro&#269;ajo onemogo&#269;eni ali zavrnjeni pi&#353;kotki.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Naslova ni bilo mogoče razumeti</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Za odpiranje tega naslova boste morda morali namestiti dodaten program.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Varna povezava ni uspela</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Te&#382;ava je morda v nastavitvah stre&#382;nika ali pa nekdo posku&#353;a\nta stre&#382;nik opona&#353;ati.</li>"\n  "<li>&#268;e ste se v preteklosti &#382;e uspe&#353;no povezali na ta stre&#382;nik, je morda\nnapaka za&#269;asna in lahko znova poskusite kasneje.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
+  <string name="error_generic_message">Iz neznanega razloga ne moremo naložiti strani.</string>
 </resources>

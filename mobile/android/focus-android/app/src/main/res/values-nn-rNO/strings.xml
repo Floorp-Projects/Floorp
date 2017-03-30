@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Avbryt</string>
+  <string name="action_ok">OK</string>
+  <string name="urlbar_hint">Søk eller skriv inn adresse</string>
+  <string name="teaser">Automatisk privat nettlesing.\nSurf. Slett. Gjenta.</string>
+  <string name="feedback_erase">Nettlesarhistorikken din har blitt sletta.</string>
+  <string name="search_hint">Søk etter %1$s</string>
+  <string name="menu_share">Del…</string>
+  <string name="menu_open_with_default_browser">Opne med %1$s</string>
+  <string name="menu_open_with_a_browser">Opne med…</string>
+  <string name="menu_settings">Innstillingar</string>
+  <string name="menu_about">Om</string>
+  <string name="menu_help">Hjelp</string>
+  <string name="menu_rights">Dine rettar</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gir deg kontroll.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Bruk han som ein privat nettlesar:\n  "<ul>"\n    "<li>S&#248;k og surf rett i appen</li>"\n    "<li>Blokker sporarar (eller oppdater innstillingane for &#229; tillate sporarar)</li>"\n    "<li>Slett for &#229; fjerne infokapslar samt s&#248;k- og nettlesarhistorikk</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s er produsert av Mozilla. V&#229;r misjon er &#229; fremme eit sunt, ope Internett.<br/>\n<a href="%2$s">Les meir</a></p>]]></string>
+  <string name="preference_category_search">Søk</string>
+  <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_dialog_title_search_engine">Standard søkemotor</string>
+  <string name="preference_category_privacy">Personvern</string>
+  <string name="preference_privacy_block_ads">Blokker reklamesporarar</string>
+  <string name="preference_privacy_block_analytics">Blokker analysesporarar</string>
+  <string name="preference_privacy_block_social">Blokker sosiale media-sporarar</string>
+  <string name="preference_privacy_block_content">Blokker andre innhaldssporarar</string>
+  <string name="preference_privacy_block_content_summary">Kan øydelegge nokre videoar og nettsider</string>
+  <string name="preference_category_performance">Yting</string>
+  <string name="preference_performance_block_webfonts">Blokker nettfontar</string>
+  <string name="preference_performance_block_images">Blokker bilde</string>
+  <string name="preference_default_browser">Vel som standard nettlesar</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Send anonyme brukardata</string>
+  <string name="preference_mozilla_telemetry_summary">Les meir</string>
+  <string name="preference_about">Om %1$s</string>
+  <string name="content_description_clear_input">Tøm skrivefeltet</string>
+  <string name="content_description_dismiss_input">Lukk</string>
+  <string name="content_description_erase">Slett nettlesarhistorikk</string>
+  <string name="content_description_lock">Sikker tilkopling</string>
+  <string name="accessibility_announcement_loading">Lastar</string>
+  <string name="accessibility_announcement_loading_finished">Nettside lasta</string>
+  <string name="content_description_menu">Fleire innstillingar</string>
+  <string name="content_description_forward">Naviger framover</string>
+  <string name="content_description_reload">Last sida på nytt</string>
+  <string name="firstrun_title">Surf utan å kjenne deg overvaka.</string>
+  <string name="firstrun_description">Automatisk blokkering av nettsporarar medan du surfar. Deretter trykkjer du for å slette besøkte sider, søk, informasjonskapslar og passord frå eininga.</string>
+  <string name="firstrun_button">OK, eg forstår det!</string>
+  <string name="firstrun_footer">For å vere tydeleg, kan nettsteder og tenester du brukar framleis sjå kvar du har vore.</string>
+  <string name="your_rights">Dine rettar</string>
+  <string name="external_app_prompt_title">Opne lenke i ein annan app</string>
+  <string name="external_app_prompt">Du kan gå ut av %1$s for å opne denne lenka i %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Finn ein app som kan opne lenka</string>
+  <string name="external_app_prompt_no_app">Ingen av appane på eininga di kan opne denne lenka. Du kan gå ut av %1$s for å søke på %2$s etter ein app som kan gjere dette.</string>
+  <string name="external_multiple_apps_matched_exit">Avslutte privat nettlesing?</string>
+  <string name="errorpage_title">Problem med lasting av sida</string>
+  <string name="errorpage_refresh">Prøv igjen</string>
+  <string name="error_connectionfailure_title">Kan ikkje kople til</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sida kan vere mellombels utilgjengeleg, eller opptatt. Pr&#248;v igjen om ei stund.</li>"\n        "<li>Viss du ikkje klarer &#229; laste nokre sider, kontroller data- eller Wi-Fi-sambandet til eininga di.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Tilkoplinga fekk tidsavbrot</string>
+  <string name="error_hostLookup_title">Fant ikke serveren</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kontroller om det er skrivefeil i adressa, for eksempel\n          "<strong>ww</strong>".eksempel.no i staden for \n          "<strong>www</strong>.eksempel.no</li>"\n        "<li>Viss du ikkje klarer &#229; laste nokre nettsider, kontroller data- eller Wi-Fi-sambandet til eininga di.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">Adressa er ikkje gyldig</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Nettadresser skriv ein vanlegvis som "<strong>http://www.example.com/</strong></li>"\n  "<li>"Pass p&#229; at du brukar vanleg skr&#229;strek (dvs. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Nettsida vidaresender ikkje korrekt</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dette problemet kan av og til skyldast at infokapslar er avsl&#229;tt eller ved &#229; ikkje godta infokapslar.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Klarte ikkje å forstå adressa</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Du m&#229; kanskje installere anna programvare for &#229; opne denne adressa.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Sikker tilkopling feila</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dette kan vere p&#229; grunn av eit problem med serverkonfigurasjonen, eller det kan vere fordi nokon pr&#248;ver &#229; forfalske tilkoplinga til serveren.</li>"\n  "<li>Dersom du har klart &#229; kople til serveren tidlegare, kan problemet vere mellombels og du kan pr&#248;ve igjen seinare.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Ops</string>
+  <string name="error_generic_message">Vi kan ikkje laste inn denne sida av ulike grunnar.</string>
+</resources>

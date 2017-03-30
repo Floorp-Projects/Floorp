@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Kan få vissa videor och webbsidor att sluta fungera</string>
   <string name="preference_category_performance">Prestanda</string>
   <string name="preference_performance_block_webfonts">Blockera webbtypsnitt</string>
+  <string name="preference_performance_block_webfonts_summary">Kan resultera i att ikoner eller bilder saknas</string>
   <string name="preference_performance_block_images">Blockera bilder</string>
   <string name="preference_default_browser">Gör till standardwebbläsare</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Fler alternativ</string>
   <string name="content_description_forward">Navigera framåt</string>
   <string name="content_description_reload">Ladda om webbplats</string>
+  <string name="content_description_back">Navigera bakåt</string>
+  <string name="content_description_stop">Sluta ladda webbplats</string>
+  <string name="context_menu_paste_go">Klistra in och kör</string>
   <string name="firstrun_title">Surfa utan att känna dig övervakad.</string>
   <string name="firstrun_description">Blockera automatiskt online-trackers när du surfar. Tryck på radera för att ta bort besökta sidor, sökningar, kakor och lösenord från din enhet.</string>
   <string name="firstrun_button">Ok, jag förstår!</string>

@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Alcuni video e pagine web potrebbero non funzionare</string>
   <string name="preference_category_performance">Prestazioni</string>
   <string name="preference_performance_block_webfonts">Blocca web font</string>
+  <string name="preference_performance_block_webfonts_summary">Alcune immagini e icone potrebbero non essere visualizzate</string>
   <string name="preference_performance_block_images">Blocca immagini</string>
   <string name="preference_default_browser">Imposta come browser predefinito</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Altre opzioni</string>
   <string name="content_description_forward">Naviga in avanti</string>
   <string name="content_description_reload">Ricarica il sito web</string>
+  <string name="content_description_back">Torna indietro</string>
+  <string name="content_description_stop">Interrompi il caricamento del sito</string>
+  <string name="context_menu_paste_go">Incolla e vai</string>
   <string name="firstrun_title">Naviga come se nessuno ti stesse guardando.</string>
   <string name="firstrun_description">Blocca automaticamente gli elementi in grado di tracciarti durante la navigazione. Poi, con un semplice tocco, elimina le pagine visitate, i cookie e le password dal dispositivo.</string>
   <string name="firstrun_button">Ho capito!</string>

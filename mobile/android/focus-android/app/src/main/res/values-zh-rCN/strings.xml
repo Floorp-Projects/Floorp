@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">可能对某些网页与视频有影响</string>
   <string name="preference_category_performance">性能</string>
   <string name="preference_performance_block_webfonts">拦截网络字体</string>
+  <string name="preference_performance_block_webfonts_summary">可能导致图标或图像缺失</string>
   <string name="preference_performance_block_images">屏蔽图像</string>
   <string name="preference_default_browser">设为默认浏览器</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">更多选项</string>
   <string name="content_description_forward">向前导航</string>
   <string name="content_description_reload">重新加载网站</string>
+  <string name="content_description_back">导航回退</string>
+  <string name="content_description_stop">停止加载</string>
+  <string name="context_menu_paste_go">粘贴并转到</string>
   <string name="firstrun_title">悄然浏览。</string>
   <string name="firstrun_description">在您浏览时自动屏蔽在线跟踪器。一按即可清除您的设备上的访问记录、搜索记录、Cookie 以及保存的密码。</string>
   <string name="firstrun_button">了解了！</string>

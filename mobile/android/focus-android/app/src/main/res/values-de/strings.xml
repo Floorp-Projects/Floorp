@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Kann einige Videos und Webseiten stören</string>
   <string name="preference_category_performance">Leistung</string>
   <string name="preference_performance_block_webfonts">Web-Schriftarten blockieren</string>
+  <string name="preference_performance_block_webfonts_summary">Kann zu fehlenden Symbolen oder Grafiken führen</string>
   <string name="preference_performance_block_images">Grafiken blockieren</string>
   <string name="preference_default_browser">Als Standardbrowser verwenden</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Weitere Optionen</string>
   <string name="content_description_forward">Vorwärts navigieren</string>
   <string name="content_description_reload">Website neu laden</string>
+  <string name="content_description_back">Rückwärts navigieren</string>
+  <string name="content_description_stop">Laden der Website stoppen</string>
+  <string name="context_menu_paste_go">Einfügen &amp; Los</string>
   <string name="firstrun_title">Surfen Sie, als würde niemand zusehen.</string>
   <string name="firstrun_description">Blockieren Sie automatisch Online-Verfolgung beim Surfen. Durch Tippen können Sie dann besuchte Seiten, Suchanfragen, Cookies und Passwörter von Ihrem Gerät löschen.</string>
   <string name="firstrun_button">Ok, verstanden!</string>

@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">可能會影響網頁與影片載入</string>
   <string name="preference_category_performance">效能</string>
   <string name="preference_performance_block_webfonts">封鎖網路字型</string>
+  <string name="preference_performance_block_webfonts_summary">可能會造成網頁當中的圖示或圖片消失</string>
   <string name="preference_performance_block_images">封鎖圖片</string>
   <string name="preference_default_browser">設為預設瀏覽器</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">更多選項</string>
   <string name="content_description_forward">瀏覽下一頁</string>
   <string name="content_description_reload">重新載入網站</string>
+  <string name="content_description_back">瀏覽上一頁</string>
+  <string name="content_description_stop">停止載入網站</string>
+  <string name="context_menu_paste_go">貼上並瀏覽</string>
   <string name="firstrun_title">讓上網時不被偷看。</string>
   <string name="firstrun_description">自動在您上網時封鎖線上追蹤器；只要一點即可清除裝置中造訪過的頁面、搜尋、Cookie、密碼等紀錄。</string>
   <string name="firstrun_button">好，知道了！</string>

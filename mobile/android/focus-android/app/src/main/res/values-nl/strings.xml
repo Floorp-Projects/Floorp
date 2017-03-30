@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Kan sommige video’s en webpagina’s verstoren</string>
   <string name="preference_category_performance">Prestaties</string>
   <string name="preference_performance_block_webfonts">Weblettertypen blokkeren</string>
+  <string name="preference_performance_block_webfonts_summary">Kan tot ontbrekende pictogrammen of afbeeldingen leiden</string>
   <string name="preference_performance_block_images">Afbeeldingen blokkeren</string>
   <string name="preference_default_browser">Standaardbrowser maken</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Meer opties</string>
   <string name="content_description_forward">Vooruit bladeren</string>
   <string name="content_description_reload">Website opnieuw laden</string>
+  <string name="content_description_back">Terug bladeren</string>
+  <string name="content_description_stop">Laden van website stoppen</string>
+  <string name="context_menu_paste_go">Plakken &amp; Gaan</string>
   <string name="firstrun_title">Surf alsof niemand meekijkt.</string>
   <string name="firstrun_description">Blokkeer automatisch onlinetrackers terwijl u surft. Tik daarna om bezochte pagina’s, zoekopdrachten, cookies en wachtwoorden op uw apparaat te wissen.</string>
   <string name="firstrun_button">OK, begrepen!</string>

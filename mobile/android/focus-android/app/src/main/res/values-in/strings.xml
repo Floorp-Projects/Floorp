@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Mungkin menghentikan beberapa video dan laman Web</string>
   <string name="preference_category_performance">Kinerja</string>
   <string name="preference_performance_block_webfonts">Blokir font Web</string>
+  <string name="preference_performance_block_webfonts_summary">Dapat menyebabkan hilangnya ikon atau gambar</string>
   <string name="preference_performance_block_images">Blokir gambar</string>
   <string name="preference_default_browser">Jadikan peramban utama</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Opsi lainnya</string>
   <string name="content_description_forward">Navigasi ke selanjutnya</string>
   <string name="content_description_reload">Muat ulang situs web</string>
+  <string name="content_description_back">Arahkan kembali</string>
+  <string name="content_description_stop">Berhenti memuat situs web</string>
+  <string name="context_menu_paste_go">Tempelkan &amp; Kunjungi</string>
   <string name="firstrun_title">Menjelajah seperti tidak ada yang mengawasi.</string>
   <string name="firstrun_description">Blokir pelacak daring secara otomatis ketika Anda menjelajah. Kemudian ketuk untuk menghapus laman yang dikunjungi, pencarian, kuki, dan sandi dari perangkat Anda.</string>
   <string name="firstrun_button">Oke, beres!</string>
