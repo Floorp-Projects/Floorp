@@ -76,6 +76,10 @@ public:
   // Create a nsISMILAttr for my target, on the heap.
   mozilla::UniquePtr<nsISMILAttr> CreateSMILAttr();
 
+  // Returns the CSS property this compositor should animate, or
+  // eCSSProperty_UNKNOWN if this compositor does not animate a CSS property.
+  nsCSSPropertyID GetCSSPropertyToAnimate() const;
+
   // Finds the index of the first function that will affect our animation
   // sandwich. Also toggles the 'mForceCompositing' flag if it finds that any
   // (used) functions have changed.
