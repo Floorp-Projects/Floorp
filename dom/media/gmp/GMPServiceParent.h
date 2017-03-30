@@ -23,6 +23,7 @@ namespace mozilla {
 namespace gmp {
 
 class GMPParent;
+class GMPServiceParent;
 
 class GeckoMediaPluginServiceParent final : public GeckoMediaPluginService
                                           , public mozIGeckoMediaPluginChromeService
@@ -60,8 +61,8 @@ public:
                                 const mozilla::OriginAttributesPattern& aPattern);
 
   // Notifies that some user of this class is created/destroyed.
-  void ServiceUserCreated();
-  void ServiceUserDestroyed();
+  void ServiceUserCreated(GMPServiceParent* aServiceParent);
+  void ServiceUserDestroyed(GMPServiceParent* aServiceParent);
 
   void UpdateContentProcessGMPCapabilities();
 
@@ -207,9 +208,10 @@ private:
   // Hashes nodeId to the hashtable of storage for that nodeId.
   nsRefPtrHashtable<nsCStringHashKey, GMPStorage> mTempGMPStorage;
 
-  // Tracks how many users are running (on the GMP thread). Only when this count
-  // drops to 0 can we safely shut down the thread.
-  MainThreadOnly<int32_t> mServiceUserCount;
+  // Tracks how many IPC connections to GMPServices running in content
+  // processes we have. When this is empty we can safely shut down.
+  // Synchronized across thread via mMutex in base class.
+  nsTArray<GMPServiceParent*> mServiceParents;
 
   const RefPtr<AbstractThread> mMainThread;
 };
@@ -222,11 +224,7 @@ bool MatchOrigin(nsIFile* aPath,
 class GMPServiceParent final : public PGMPServiceParent
 {
 public:
-  explicit GMPServiceParent(GeckoMediaPluginServiceParent* aService)
-    : mService(aService)
-  {
-    mService->ServiceUserCreated();
-  }
+  explicit GMPServiceParent(GeckoMediaPluginServiceParent* aService);
   virtual ~GMPServiceParent();
 
   ipc::IPCResult RecvGetGMPNodeId(const nsString& aOrigin,
