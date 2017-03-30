@@ -3,15 +3,18 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@drawable/background_inactive">
 
+    <!-- Ignore "UselessParent": on tablets we set a limited width, but we still need a full-width
+         background, hence the FrameLayout isn't useless. -->
     <LinearLayout
+        tools:ignore="UselessParent"
         android:layout_width="@dimen/firstrun_container_width"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:layout_gravity="center"
         android:orientation="vertical">
-
 
         <TextView
             android:id="@+id/firstrun_title"
