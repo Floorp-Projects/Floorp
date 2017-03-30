@@ -359,35 +359,72 @@ CanNotifyObservers()
 ////////////////////////////////////////////////////////////////////////
 // BEGIN tick/unwinding code
 
-// TickSample captures the information collected for each sample.
+// TickSample contains all the information needed by Tick(). Some of it is
+// pointers to long-lived things, and some of it is sampled just before the
+// call to Tick().
 class TickSample {
 public:
-  explicit TickSample(ThreadInfo* aThreadInfo)
-    : mPC(nullptr)
+  // This constructor is for periodic samples, i.e. those performed in response
+  // to a timer firing. Periodic samples are performed off-thread, i.e. the
+  // SamplerThread samples the thread in question.
+  TickSample(ThreadInfo* aThreadInfo, int64_t aRSSMemory, int64_t aUSSMemory)
+    : mIsSynchronous(false)
+    , mTimeStamp(mozilla::TimeStamp::Now())
+    , mThreadInfo(aThreadInfo)
+    , mRSSMemory(aRSSMemory)    // may be zero
+    , mUSSMemory(aUSSMemory)    // may be zero
+#if !defined(GP_OS_darwin)
+    , mContext(nullptr)
+#endif
+    , mPC(nullptr)
     , mSP(nullptr)
     , mFP(nullptr)
     , mLR(nullptr)
-    , mContext(nullptr)
-    , mIsSamplingCurrentThread(false)
-    , mThreadInfo(aThreadInfo)
-    , mTimeStamp(mozilla::TimeStamp::Now())
-    , mRSSMemory(0)
-    , mUSSMemory(0)
   {}
 
+  // This constructor is for synchronous samples, i.e. those performed in
+  // response to an explicit sampling request via the API. Synchronous samples
+  // are performed on-thread, i.e. the thread samples itself.
+  explicit TickSample(ThreadInfo* aThreadInfo)
+    : mIsSynchronous(true)
+    , mTimeStamp(mozilla::TimeStamp::Now())
+    , mThreadInfo(aThreadInfo)
+    , mRSSMemory(0)
+    , mUSSMemory(0)
+#if !defined(GP_OS_darwin)
+    , mContext(nullptr)
+#endif
+    , mPC(nullptr)
+    , mSP(nullptr)
+    , mFP(nullptr)
+    , mLR(nullptr)
+  {}
+
+  // Fills in mContext, mPC, mSP, mFP, and mLR for a synchronous sample.
   void PopulateContext(tick_context_t* aContext);
 
+  // False for periodic samples, true for synchronous samples.
+  const bool mIsSynchronous;
+
+  const mozilla::TimeStamp mTimeStamp;
+
+  ThreadInfo* const mThreadInfo;
+
+  const int64_t mRSSMemory;                       // may be zero
+  const int64_t mUSSMemory;                       // may be zero
+
+  // The remaining fields are filled in, after construction, by
+  // SamplerThread::SuspendAndSampleAndResume() for periodic samples, and
+  // PopulateContext() for synchronous samples. They are filled in separately
+  // from the other fields in this class because the code that fills them in is
+  // platform-specific.
+#if !defined(GP_OS_darwin)
+  void* mContext; // The context from the signal handler.
+#endif
   Address mPC;    // Instruction pointer.
   Address mSP;    // Stack pointer.
   Address mFP;    // Frame pointer.
   Address mLR;    // ARM link register.
-  void* mContext; // The context from the signal handler, if available. On
-                  // Win32 this may contain the windows thread context.
-  bool mIsSamplingCurrentThread;
-  ThreadInfo* mThreadInfo;
-  mozilla::TimeStamp mTimeStamp;
-  int64_t mRSSMemory;
-  int64_t mUSSMemory;
 };
 
 static void
@@ -532,7 +569,7 @@ MergeStacksIntoProfile(PS::LockRef aLock, ProfileBuffer* aBuffer,
   // sampled JIT entries inside the JS engine. See note below concerning 'J'
   // entries.
   uint32_t startBufferGen;
-  startBufferGen = aSample->mIsSamplingCurrentThread
+  startBufferGen = aSample->mIsSynchronous
                  ? UINT32_MAX
                  : aBuffer->mGeneration;
   uint32_t jsCount = 0;
@@ -556,7 +593,7 @@ MergeStacksIntoProfile(PS::LockRef aLock, ProfileBuffer* aBuffer,
                                         startBufferGen);
       for (; jsCount < maxFrames && !jsIter.done(); ++jsIter) {
         // See note below regarding 'J' entries.
-        if (aSample->mIsSamplingCurrentThread || jsIter.isWasm()) {
+        if (aSample->mIsSynchronous || jsIter.isWasm()) {
           uint32_t extracted =
             jsIter.extractStack(jsFrames, jsCount, maxFrames);
           jsCount += extracted;
@@ -671,7 +708,7 @@ MergeStacksIntoProfile(PS::LockRef aLock, ProfileBuffer* aBuffer,
       // JIT code. This means that if we inserted such OptInfoAddr entries into
       // the buffer, nsRefreshDriver would now be holding on to a backtrace
       // with stale JIT code return addresses.
-      if (aSample->mIsSamplingCurrentThread ||
+      if (aSample->mIsSynchronous ||
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_Wasm) {
         AddDynamicCodeLocationTag(aBuffer, jsFrame.label);
       } else {
@@ -699,9 +736,9 @@ MergeStacksIntoProfile(PS::LockRef aLock, ProfileBuffer* aBuffer,
 
   // Update the JS context with the current profile sample buffer generation.
   //
-  // Do not do this for synchronous sampling, which create their own
-  // ProfileBuffers.
-  if (!aSample->mIsSamplingCurrentThread && pseudoStack->mContext) {
+  // Do not do this for synchronous samples, which use their own
+  // ProfileBuffers instead of the global one in ProfilerState.
+  if (!aSample->mIsSynchronous && pseudoStack->mContext) {
     MOZ_ASSERT(aBuffer->mGeneration >= startBufferGen);
     uint32_t lapCount = aBuffer->mGeneration - startBufferGen;
     JS::UpdateJSContextProfilerSampleBufferGen(pseudoStack->mContext,
@@ -1012,7 +1049,7 @@ Tick(PS::LockRef aLock, ProfileBuffer* aBuffer, TickSample* aSample)
 
   // Don't process the PeudoStack's markers if we're synchronously sampling the
   // current thread.
-  if (!aSample->mIsSamplingCurrentThread) {
+  if (!aSample->mIsSynchronous) {
     ProfilerMarkerLinkedList* pendingMarkersList = stack->getPendingMarkers();
     while (pendingMarkersList && pendingMarkersList->peek()) {
       ProfilerMarker* marker = pendingMarkersList->popHead();
@@ -1630,15 +1667,17 @@ SamplerThread::Run()
 
           info->UpdateThreadResponsiveness();
 
-          TickSample sample(info);
-
           // We only get the memory measurements once for all threads.
+          int64_t rssMemory = 0;
+          int64_t ussMemory = 0;
           if (i == 0 && gPS->FeatureMemory(lock)) {
-            sample.mRSSMemory = nsMemoryReporterManager::ResidentFast();
+            rssMemory = nsMemoryReporterManager::ResidentFast();
 #if defined(GP_OS_linux) || defined(GP_OS_android)
-            sample.mUSSMemory = nsMemoryReporterManager::ResidentUnique();
+            ussMemory = nsMemoryReporterManager::ResidentUnique();
 #endif
           }
+
+          TickSample sample(info, rssMemory, ussMemory);
 
           SuspendAndSampleAndResumeThread(lock, &sample);
         }
@@ -2914,7 +2953,6 @@ profiler_get_backtrace()
   threadInfo.SetHasProfile();
 
   TickSample sample(&threadInfo);
-  sample.mIsSamplingCurrentThread = true;
 
 #if defined(HAVE_NATIVE_UNWIND)
 #if defined(GP_OS_windows) || defined(GP_OS_linux) || defined(GP_OS_android)
