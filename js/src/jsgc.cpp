@@ -192,8 +192,8 @@
 #include "mozilla/MacroForEach.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TimeStamp.h"
 
 #include <ctype.h>
