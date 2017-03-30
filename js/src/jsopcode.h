@@ -801,6 +801,27 @@ IsStrictEvalPC(jsbytecode* pc)
     return op == JSOP_STRICTEVAL || op == JSOP_STRICTSPREADEVAL;
 }
 
+inline bool
+IsConstructorCallPC(jsbytecode* pc)
+{
+    JSOp op = JSOp(*pc);
+    return op == JSOP_NEW ||
+           op == JSOP_SUPERCALL ||
+           op == JSOP_SPREADNEW ||
+           op == JSOP_SPREADSUPERCALL;
+}
+
+inline bool
+IsSpreadCallPC(jsbytecode* pc)
+{
+    JSOp op = JSOp(*pc);
+    return op == JSOP_SPREADCALL ||
+           op == JSOP_SPREADNEW ||
+           op == JSOP_SPREADSUPERCALL ||
+           op == JSOP_SPREADEVAL ||
+           op == JSOP_STRICTSPREADEVAL;
+}
+
 static inline int32_t
 GetBytecodeInteger(jsbytecode* pc)
 {
