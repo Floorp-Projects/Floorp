@@ -23,17 +23,12 @@
             "type": "object",
             "optional": true,
             "properties": {
-              "additional_backgrounds": {
-                "type": "array",
-                "items": { "$ref": "ExtensionURL" },
-                "optional": true
-              },
               "headerURL": {
-                "$ref": "ExtensionURL",
+                "type": "string",
                 "optional": true
               },
               "theme_frame": {
-                "$ref": "ExtensionURL",
+                "type": "string",
                 "optional": true
               }
             },
@@ -194,34 +189,6 @@
               },
               "pocket": {
                 "$ref": "ExtensionURL",
-                "optional": true
-              }
-            },
-            "additionalProperties": { "$ref": "UnrecognizedProperty" }
-          },
-          "properties": {
-            "type": "object",
-            "optional": true,
-            "properties": {
-              "additional_backgrounds_alignment": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "enum": [
-                    "bottom", "center", "left", "right", "top",
-                    "center bottom", "center center", "center top",
-                    "left bottom", "left center", "left top",
-                    "right bottom", "right center", "right top"
-                  ]
-                },
-                "optional": true
-              },
-              "additional_backgrounds_tiling": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "enum": ["no-repeat", "repeat", "repeat-x", "repeat-y"]
-                },
                 "optional": true
               }
             },
