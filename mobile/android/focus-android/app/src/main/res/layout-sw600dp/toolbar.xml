@@ -10,7 +10,9 @@
     android:orientation="horizontal"
     android:paddingStart="8dp">
 
+    <!-- This button only exists in the tablet layout, hence the Ignore="InconsistentLayout" -->
     <ImageButton
+        tools:ignore="InconsistentLayout"
         android:id="@+id/back"
         android:layout_width="48dp"
         android:layout_height="48dp"
@@ -22,7 +24,9 @@
         android:contentDescription="@string/content_description_back"
         android:src="@drawable/ic_back" />
 
+    <!-- This button only exists in the tablet layout, hence the Ignore="InconsistentLayout" -->
     <ImageButton
+        tools:ignore="InconsistentLayout"
         android:id="@+id/forward"
         android:layout_width="48dp"
         android:layout_height="48dp"
@@ -74,7 +78,9 @@
 
     </LinearLayout>
 
+    <!-- This button only exists in the tablet layout, hence the Ignore="InconsistentLayout" -->
     <ImageButton
+        tools:ignore="InconsistentLayout"
         android:id="@+id/refresh"
         android:layout_width="48dp"
         android:layout_height="48dp"
