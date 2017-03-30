@@ -156,6 +156,7 @@ public:
                                              uint16_t aDuration,
                                              nsISupports* aData,
                                              nsIRunnable* aCallback) override;
+    virtual already_AddRefed<nsIScreen> GetWidgetScreen() override;
     virtual nsresult   MakeFullScreen(bool aFullScreen,
                                       nsIScreen* aTargetScreen = nullptr) override;
     virtual void       HideWindowChrome(bool aShouldHide) override;
