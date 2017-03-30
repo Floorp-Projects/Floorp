@@ -542,7 +542,6 @@ VRControllerOpenVR::StopVibrateHaptic()
 
 VRSystemManagerOpenVR::VRSystemManagerOpenVR()
   : mVRSystem(nullptr)
-  , mOpenVRInstalled(false)
 {
 }
 
@@ -559,43 +558,33 @@ VRSystemManagerOpenVR::Create()
     return nullptr;
   }
 
+  if (!vr_IsRuntimeInstalled()) {
+    return nullptr;
+  }
+
   RefPtr<VRSystemManagerOpenVR> manager = new VRSystemManagerOpenVR();
   return manager.forget();
-}
-
-bool
-VRSystemManagerOpenVR::Init()
-{
-  if (mOpenVRInstalled)
-    return true;
-
-  if (!vr_IsRuntimeInstalled())
-    return false;
-
-  mOpenVRInstalled = true;
-  return true;
 }
 
 void
 VRSystemManagerOpenVR::Destroy()
 {
-  if (mOpenVRInstalled) {
-    if (mOpenVRHMD) {
-      mOpenVRHMD = nullptr;
-    }
-    RemoveControllers();
-    mVRSystem = nullptr;
-    mOpenVRInstalled = false;
+  Shutdown();
+}
+
+void
+VRSystemManagerOpenVR::Shutdown()
+{
+  if (mOpenVRHMD) {
+    mOpenVRHMD = nullptr;
   }
+  RemoveControllers();
+  mVRSystem = nullptr;
 }
 
 void
 VRSystemManagerOpenVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 {
-  if (!mOpenVRInstalled) {
-    return;
-  }
-
   if (!vr_IsHmdPresent()) {
     if (mOpenVRHMD) {
       mOpenVRHMD = nullptr;
@@ -909,10 +898,6 @@ VRSystemManagerOpenVR::StopVibrateHaptic(uint32_t aControllerIdx)
 void
 VRSystemManagerOpenVR::GetControllers(nsTArray<RefPtr<VRControllerHost>>& aControllerResult)
 {
-  if (!mOpenVRInstalled) {
-    return;
-  }
-
   aControllerResult.Clear();
   for (uint32_t i = 0; i < mOpenVRController.Length(); ++i) {
     aControllerResult.AppendElement(mOpenVRController[i]);
