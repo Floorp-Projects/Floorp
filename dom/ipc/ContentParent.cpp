@@ -721,9 +721,18 @@ ContentParent::GetOrCreatePool(const nsAString& aContentProcessType)
 /*static*/ uint32_t
 ContentParent::GetMaxProcessCount(const nsAString& aContentProcessType)
 {
-  int32_t maxContentParents;
   nsAutoCString processCountPref("dom.ipc.processCount.");
   processCountPref.Append(NS_ConvertUTF16toUTF8(aContentProcessType));
+  bool hasUserValue = Preferences::HasUserValue(processCountPref.get()) ||
+                      Preferences::HasUserValue("dom.ipc.processCount");
+
+  // Let's respect the user's decision to enable multiple content processes
+  // despite some add-ons installed that might performing poorly.
+  if (!hasUserValue && Preferences::GetBool("extensions.e10sMultiBlockedByAddons", false)) {
+    return 1;
+  }
+
+  int32_t maxContentParents;
   if (NS_FAILED(Preferences::GetInt(processCountPref.get(), &maxContentParents))) {
     maxContentParents = Preferences::GetInt("dom.ipc.processCount", 1);
   }
@@ -824,7 +833,7 @@ ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
     if (cpp &&
         NS_SUCCEEDED(cpp->ProvideProcess(aRemoteType, openerInfo,
                                          infos.Elements(), infos.Length(),
-                                         &index))) {
+                                         maxContentParents, &index))) {
       // If the provider returned an existing ContentParent, use that one.
       if (0 <= index && static_cast<uint32_t>(index) <= maxContentParents) {
         RefPtr<ContentParent> retval = contentParents[index];
