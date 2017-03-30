@@ -13,6 +13,7 @@
 #include "nsSVGElement.h"
 #include "SVGPreserveAspectRatio.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 
 class nsSMILValue;
 
@@ -72,8 +73,7 @@ public:
 
   already_AddRefed<mozilla::dom::DOMSVGAnimatedPreserveAspectRatio>
   ToDOMAnimatedPreserveAspectRatio(nsSVGElement* aSVGElement);
-  // Returns a new nsISMILAttr object that the caller must delete
-  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
+  UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
 
 private:
 
