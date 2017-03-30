@@ -1483,6 +1483,7 @@
     "description": "Did the browser start after a successful shutdown"
   },
   "IMAGE_DECODE_LATENCY_US": {
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 50,
@@ -1491,6 +1492,7 @@
     "description": "Time spent decoding an image chunk (us)"
   },
   "IMAGE_DECODE_TIME": {
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 50,
@@ -1509,6 +1511,7 @@
     "description": "Time spent decoding an animated image (us)"
   },
   "IMAGE_DECODE_ON_DRAW_LATENCY": {
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 50,
@@ -1527,6 +1530,7 @@
     "description": "Time from starting a decode of an animated image to it showing up on the screen (us)"
   },
   "IMAGE_DECODE_CHUNKS": {
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 500,
@@ -1534,6 +1538,7 @@
     "description": "Number of chunks per decode attempt"
   },
   "IMAGE_DECODE_COUNT": {
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 500,
@@ -1550,6 +1555,7 @@
     "description": "Decode count of animated images"
   },
   "IMAGE_DECODE_SPEED_JPEG": {
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 500,
@@ -1558,6 +1564,7 @@
     "description": "JPEG image decode speed (Kbytes/sec)"
   },
   "IMAGE_DECODE_SPEED_GIF": {
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 500,
@@ -1566,7 +1573,7 @@
     "description": "GIF image decode speed (Kbytes/sec)"
   },
   "IMAGE_LOAD_TRIGGER_LATENCY_MS": {
-    "alert_emails": ["ehsan@mozilla.com"],
+    "alert_emails": ["ehsan@mozilla.com", "gfx-telemetry-alerts@mozilla.com"],
     "expires_in_version": "60",
     "bug_numbers": [1347376],
     "kind": "exponential",
@@ -1576,6 +1583,7 @@
     "description": "Measures the number of milliseconds we spend inside imgLoader::LoadImage(). Note: only calls that take more than 500 microseconds and happen in the content process are included in this probe."
   },
   "IMAGE_DECODE_SPEED_PNG": {
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 500,
