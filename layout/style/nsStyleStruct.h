@@ -305,6 +305,8 @@ private:
 class nsStyleImageRequest
 {
 public:
+  typedef mozilla::css::URLValueData URLValueData;
+
   // Flags describing whether the imgRequestProxy must be tracked in the
   // ImageTracker, whether LockImage/UnlockImage calls will be made
   // when obtaining and releasing the imgRequestProxy, and whether
@@ -360,7 +362,6 @@ public:
   mozilla::css::ImageValue* GetImageValue() const { return mImageValue; }
 
   already_AddRefed<nsIURI> GetImageURI() const;
-
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsStyleImageRequest);
 
 private:
@@ -386,7 +387,8 @@ enum nsStyleImageType {
   eStyleImageType_Null,
   eStyleImageType_Image,
   eStyleImageType_Gradient,
-  eStyleImageType_Element
+  eStyleImageType_Element,
+  eStyleImageType_URL
 };
 
 struct CachedBorderImageData
@@ -419,6 +421,9 @@ private:
  */
 struct nsStyleImage
 {
+  typedef mozilla::css::URLValue     URLValue;
+  typedef mozilla::css::URLValueData URLValueData;
+
   nsStyleImage();
   ~nsStyleImage();
   nsStyleImage(const nsStyleImage& aOther);
@@ -429,6 +434,7 @@ struct nsStyleImage
   void SetGradientData(nsStyleGradient* aGradient);
   void SetElementId(const char16_t* aElementId);
   void SetCropRect(mozilla::UniquePtr<nsStyleSides> aCropRect);
+  void SetURLValue(already_AddRefed<URLValue> aData);
 
   void ResolveImage(nsPresContext* aContext) {
     MOZ_ASSERT(mType != eStyleImageType_Image || mImage);
@@ -463,6 +469,8 @@ struct nsStyleImage
   }
 
   already_AddRefed<nsIURI> GetImageURI() const;
+
+  URLValueData* GetURLValue() const;
 
   /**
    * Compute the actual crop rect in pixels, using the source image bounds.
@@ -547,6 +555,9 @@ private:
   union {
     nsStyleImageRequest* mImage;
     nsStyleGradient* mGradient;
+    URLValue* mURLValue; // See the comment in SetStyleImage's 'case
+                         // eCSSUnit_URL' section to know why we need to
+                         // store URLValues separately from mImage.
     char16_t* mElementId;
   };
 
