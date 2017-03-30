@@ -43,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
+        WebViewProvider.performCleanup(this);
+
         if (Intent.ACTION_VIEW.equals(getIntent().getAction())) {
             final String url = getIntent().getDataString();
 
@@ -63,6 +65,15 @@ public class MainActivity extends AppCompatActivity {
         WebViewProvider.preload(this);
 
         PreferenceManager.setDefaultValues(this, R.xml.settings, false);
+    }
+
+    @Override
+    protected void onPause() {
+        if (isFinishing()) {
+            WebViewProvider.performCleanup(this);
+        }
+
+        super.onPause();
     }
 
     @Override
