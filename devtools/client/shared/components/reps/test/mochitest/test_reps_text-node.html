@@ -14,8 +14,8 @@ Test text-node rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 "use strict";
 
 window.onload = Task.async(function* () {
@@ -63,6 +63,8 @@ window.onload = Task.async(function* () {
     yield testOnMouseOver();
     yield testOnMouseOut();
     yield testOnInspectIconClick();
+
+    yield testObjectLink();
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -201,6 +203,41 @@ window.onload = Task.async(function* () {
       "onInspectIconClick is called with expected value when inspect icon is clicked");
     ok(inspectIconClickedEvent !== null && inspectIconClickedEvent.type === "click",
       "onInspectIconClick forwarded the original event to the callback");
+  }
+
+  function testObjectLink() {
+    const stub = gripStubs.get("testRendering");
+    const defaultOutput = `*#text* "hello world"`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: "*#text*",
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(
+      modeTests,
+      "testObjectLink",
+      TextNode,
+      stub,
+      {
+        objectLink: (props, ...children) => React.DOM.span({},
+          "*", ...children, "*"),
+      }
+    );
   }
 });
 </script>

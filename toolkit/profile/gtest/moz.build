@@ -8,9 +8,13 @@ LOCAL_INCLUDES += [
     '..',
 ]
 
+UNIFIED_SOURCES += [
+    'TestProfileLock.cpp',
+]
+
 if CONFIG['OS_ARCH'] == 'Linux':
     UNIFIED_SOURCES += [
-        'TestProfileLock.cpp',
+        'TestProfileLockRetry.cpp',
     ]
 
 FINAL_LIBRARY = 'xul-gtest'

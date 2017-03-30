@@ -113,8 +113,8 @@ GamepadManager::StopMonitoring()
   mGamepads.Clear();
 
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
-  mVRChannelChild = gfx::VRManagerChild::Get();
-  mVRChannelChild->SendControllerListenerRemoved();
+  gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
+  vm->SendControllerListenerRemoved();
 #endif
 }
 
@@ -681,10 +681,11 @@ GamepadManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
 
   if (aControllerIdx >= VR_GAMEPAD_IDX_OFFSET) {
     uint32_t index = aControllerIdx - VR_GAMEPAD_IDX_OFFSET;
-    mVRChannelChild->AddPromise(mPromiseID, promise);
-    mVRChannelChild->SendVibrateHaptic(index, aHapticIndex,
-                                       aIntensity, aDuration,
-                                       mPromiseID);
+    gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
+    vm->AddPromise(mPromiseID, promise);
+    vm->SendVibrateHaptic(index, aHapticIndex,
+                          aIntensity, aDuration,
+                          mPromiseID);
   } else {
     for (const auto& channelChild: mChannelChildren) {
       channelChild->AddPromise(mPromiseID, promise);
@@ -705,7 +706,8 @@ GamepadManager::StopHaptics()
     const uint32_t gamepadIndex = iter.UserData()->HashKey();
     if (gamepadIndex >= VR_GAMEPAD_IDX_OFFSET) {
       const uint32_t index = gamepadIndex - VR_GAMEPAD_IDX_OFFSET;
-      mVRChannelChild->SendStopVibrateHaptic(index);
+      gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
+      vm->SendStopVibrateHaptic(index);
     } else {
       for (auto& channelChild : mChannelChildren) {
         channelChild->SendStopVibrateHaptic(gamepadIndex);
@@ -733,8 +735,8 @@ GamepadManager::ActorCreated(PBackgroundChild *aActor)
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
   // Construct VRManagerChannel and ask adding the connected
   // VR controllers to GamepadManager
-  mVRChannelChild = gfx::VRManagerChild::Get();
-  mVRChannelChild->SendControllerListenerAdded();
+  gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
+  vm->SendControllerListenerAdded();
 #endif
 }
 

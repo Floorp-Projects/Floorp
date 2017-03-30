@@ -1,6 +1,10 @@
-// Single-step profiling currently only works in the ARM simulator
-if (!getBuildConfiguration()["arm-simulator"])
+try {
+    enableSingleStepProfiling();
+    disableSingleStepProfiling();
+} catch(e) {
+    // Single step profiling not supported here.
     quit();
+}
 
 const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
@@ -9,10 +13,10 @@ const Table = WebAssembly.Table;
 function normalize(stack)
 {
     var wasmFrameTypes = [
-        {re:/^entry trampoline \(in asm.js\)$/,             sub:">"},
-        {re:/^wasm-function\[(\d+)\] \(.*\)$/,              sub:"$1"},
-        {re:/^(fast|slow) FFI trampoline \(in asm.js\)$/,   sub:"<"},
-        {re:/ \(in asm.js\)$/,                              sub:""}
+        {re:/^entry trampoline \(in wasm\)$/,             sub:">"},
+        {re:/^wasm-function\[(\d+)\] \(.*\)$/,            sub:"$1"},
+        {re:/^(fast|slow) FFI trampoline \(in wasm\)$/,   sub:"<"},
+        {re:/ \(in wasm\)$/,                              sub:""}
     ];
 
     var framesIn = stack.split(',');

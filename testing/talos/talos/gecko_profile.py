@@ -80,9 +80,8 @@ class GeckoProfile(object):
         # itself, not by Talos JS code.
         env.update({
             'MOZ_PROFILER_STARTUP': '1',
-            'MOZ_PROFILER_INTERVAL': str(self.option('interval')),
-            'MOZ_PROFILER_ENTRIES': str(self.option('entries')),
-            "MOZ_PROFILER_THREADS": str(self.option('threads'))
+            'MOZ_PROFILER_STARTUP_INTERVAL': str(self.option('interval')),
+            'MOZ_PROFILER_STARTUP_ENTRIES': str(self.option('entries'))
         })
 
     def _save_gecko_profile(self, cycle, symbolicator, missing_symbols_zip,

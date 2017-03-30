@@ -86,7 +86,10 @@ a11y::ProxyDestroyed(ProxyAccessible* aProxy)
 {
   AccessibleWrap* wrapper =
     reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
-  MOZ_ASSERT(wrapper);
+
+  // If aProxy is a document that was created, but
+  // RecvPDocAccessibleConstructor failed then aProxy->GetWrapper() will be
+  // null.
   if (!wrapper)
     return;
 

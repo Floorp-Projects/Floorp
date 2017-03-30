@@ -4463,6 +4463,7 @@ XREMain::XRE_mainRun()
       mRemoteService->Startup(mAppData->remotingName, mProfileName.get());
     if (mRemoteLockDir) {
       mRemoteLock.Unlock();
+      mRemoteLock.Cleanup();
       mRemoteLockDir->Remove(false);
     }
 #endif /* MOZ_ENABLE_XREMOTE */

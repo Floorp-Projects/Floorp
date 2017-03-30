@@ -54,236 +54,22 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	let _resolveAndFetch = (() => {
-	  var _ref = _asyncToGenerator(function* (generatedSource) {
-	    // Fetch the sourcemap over the network and create it.
-	    const sourceMapURL = _resolveSourceMapURL(generatedSource);
-	    const fetched = yield networkRequest(sourceMapURL, { loadFromCache: false });
-
-	    // Create the source map and fix it up.
-	    const map = new SourceMapConsumer(fetched.content);
-	    _setSourceMapRoot(map, sourceMapURL, generatedSource);
-	    return map;
-	  });
-
-	  return function _resolveAndFetch(_x) {
-	    return _ref.apply(this, arguments);
-	  };
-	})();
-
-	let getOriginalURLs = (() => {
-	  var _ref2 = _asyncToGenerator(function* (generatedSource) {
-	    const map = yield _fetchSourceMap(generatedSource);
-	    return map && map.sources;
-	  });
-
-	  return function getOriginalURLs(_x2) {
-	    return _ref2.apply(this, arguments);
-	  };
-	})();
-
-	let getGeneratedLocation = (() => {
-	  var _ref3 = _asyncToGenerator(function* (location, originalSource) {
-	    if (!isOriginalId(location.sourceId)) {
-	      return location;
-	    }
-
-	    const generatedSourceId = originalToGeneratedId(location.sourceId);
-	    const map = yield _getSourceMap(generatedSourceId);
-	    if (!map) {
-	      return location;
-	    }
-
-	    const { line, column } = map.generatedPositionFor({
-	      source: originalSource.url,
-	      line: location.line,
-	      column: location.column == null ? 0 : location.column,
-	      bias: SourceMapConsumer.LEAST_UPPER_BOUND
-	    });
-
-	    return {
-	      sourceId: generatedSourceId,
-	      line: line,
-	      // Treat 0 as no column so that line breakpoints work correctly.
-	      column: column === 0 ? undefined : column
-	    };
-	  });
-
-	  return function getGeneratedLocation(_x3, _x4) {
-	    return _ref3.apply(this, arguments);
-	  };
-	})();
-
-	let getOriginalLocation = (() => {
-	  var _ref4 = _asyncToGenerator(function* (location) {
-	    if (!isGeneratedId(location.sourceId)) {
-	      return location;
-	    }
-
-	    const map = yield _getSourceMap(location.sourceId);
-	    if (!map) {
-	      return location;
-	    }
-
-	    const { source: url, line, column } = map.originalPositionFor({
-	      line: location.line,
-	      column: location.column == null ? Infinity : location.column
-	    });
-
-	    if (url == null) {
-	      // No url means the location didn't map.
-	      return location;
-	    }
-
-	    return {
-	      sourceId: generatedToOriginalId(location.sourceId, url),
-	      line,
-	      column
-	    };
-	  });
-
-	  return function getOriginalLocation(_x5) {
-	    return _ref4.apply(this, arguments);
-	  };
-	})();
-
-	let getOriginalSourceText = (() => {
-	  var _ref5 = _asyncToGenerator(function* (originalSource) {
-	    assert(isOriginalId(originalSource.id), "Source is not an original source");
-
-	    const generatedSourceId = originalToGeneratedId(originalSource.id);
-	    const map = yield _getSourceMap(generatedSourceId);
-	    if (!map) {
-	      return null;
-	    }
-
-	    let text = map.sourceContentFor(originalSource.url);
-	    if (!text) {
-	      text = (yield networkRequest(originalSource.url, { loadFromCache: false })).content;
-	    }
-
-	    return {
-	      text,
-	      contentType: getContentType(originalSource.url || "")
-	    };
-	  });
-
-	  return function getOriginalSourceText(_x6) {
-	    return _ref5.apply(this, arguments);
-	  };
-	})();
-
-	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
-	/**
-	 * Source Map Worker
-	 * @module utils/source-map-worker
-	 */
-
-	const networkRequest = __webpack_require__(70);
-	const { parse } = __webpack_require__(71);
-	const path = __webpack_require__(78);
-	const { SourceMapConsumer, SourceMapGenerator } = __webpack_require__(79);
-	const assert = __webpack_require__(90);
 	const {
-	  originalToGeneratedId,
-	  generatedToOriginalId,
-	  isGeneratedId,
-	  isOriginalId,
-	  getContentType
-	} = __webpack_require__(65);
+	  getOriginalURLs,
+	  getGeneratedLocation,
+	  getOriginalLocation,
+	  getOriginalSourceText,
+	  applySourceMap,
+	  clearSourceMaps
+	} = __webpack_require__(84);
 
-	let sourceMapRequests = new Map();
-	let sourceMapsEnabled = false;
-
-	function clearSourceMaps() {
-	  sourceMapRequests.clear();
-	}
-
-	function enableSourceMaps() {
-	  sourceMapsEnabled = true;
-	}
-
-	function _resolveSourceMapURL(source) {
-	  const { url = "", sourceMapURL = "" } = source;
-	  if (path.isURL(sourceMapURL) || url == "") {
-	    // If it's already a full URL or the source doesn't have a URL,
-	    // don't resolve anything.
-	    return sourceMapURL;
-	  } else if (path.isAbsolute(sourceMapURL)) {
-	    // If it's an absolute path, it should be resolved relative to the
-	    // host of the source.
-	    const { protocol = "", host = "" } = parse(url);
-	    return `${protocol}//${host}${sourceMapURL}`;
-	  }
-	  // Otherwise, it's a relative path and should be resolved relative
-	  // to the source.
-	  return `${path.dirname(url)}/${sourceMapURL}`;
-	}
-
-	/**
-	 * Sets the source map's sourceRoot to be relative to the source map url.
-	 * @memberof utils/source-map-worker
-	 * @static
-	 */
-	function _setSourceMapRoot(sourceMap, absSourceMapURL, source) {
-	  // No need to do this fiddling if we won't be fetching any sources over the
-	  // wire.
-	  if (sourceMap.hasContentsOfAllSources()) {
-	    return;
-	  }
-
-	  const base = path.dirname(absSourceMapURL.indexOf("data:") === 0 && source.url ? source.url : absSourceMapURL);
-
-	  if (sourceMap.sourceRoot) {
-	    sourceMap.sourceRoot = path.join(base, sourceMap.sourceRoot);
-	  } else {
-	    sourceMap.sourceRoot = base;
-	  }
-
-	  return sourceMap;
-	}
-
-	function _getSourceMap(generatedSourceId) {
-	  return sourceMapRequests.get(generatedSourceId);
-	}
-
-	function _fetchSourceMap(generatedSource) {
-	  const existingRequest = sourceMapRequests.get(generatedSource.id);
-	  if (existingRequest) {
-	    // If it has already been requested, return the request. Make sure
-	    // to do this even if sourcemapping is turned off, because
-	    // pretty-printing uses sourcemaps.
-	    //
-	    // An important behavior here is that if it's in the middle of
-	    // requesting it, all subsequent calls will block on the initial
-	    // request.
-	    return existingRequest;
-	  } else if (!generatedSource.sourceMapURL || !sourceMapsEnabled) {
-	    return Promise.resolve(null);
-	  }
-
-	  // Fire off the request, set it in the cache, and return it.
-	  const req = _resolveAndFetch(generatedSource).catch(e => console.error(e));
-	  sourceMapRequests.set(generatedSource.id, req);
-	  return req;
-	}
-
-	function applySourceMap(generatedId, url, code, mappings) {
-	  const generator = new SourceMapGenerator({ file: url });
-	  mappings.forEach(mapping => generator.addMapping(mapping));
-	  generator.setSourceContent(url, code);
-
-	  const map = SourceMapConsumer(generator.toJSON());
-	  sourceMapRequests.set(generatedId, Promise.resolve(map));
-	}
-
+	// The interface is implemented in source-map to be
+	// easier to unit test.
 	const publicInterface = {
 	  getOriginalURLs,
 	  getGeneratedLocation,
 	  getOriginalLocation,
 	  getOriginalSourceText,
-	  enableSourceMaps,
 	  applySourceMap,
 	  clearSourceMaps
 	};
@@ -299,74 +85,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 1 */,
-/* 2 */,
-/* 3 */,
-/* 4 */,
-/* 5 */,
-/* 6 */,
-/* 7 */,
-/* 8 */,
-/* 9 */,
-/* 10 */,
-/* 11 */,
-/* 12 */,
-/* 13 */,
-/* 14 */,
-/* 15 */,
-/* 16 */,
-/* 17 */,
-/* 18 */,
-/* 19 */,
-/* 20 */,
-/* 21 */,
-/* 22 */,
-/* 23 */,
-/* 24 */,
-/* 25 */,
-/* 26 */,
-/* 27 */,
-/* 28 */,
-/* 29 */,
-/* 30 */,
-/* 31 */,
-/* 32 */,
-/* 33 */,
-/* 34 */,
-/* 35 */,
-/* 36 */,
-/* 37 */,
-/* 38 */,
-/* 39 */,
-/* 40 */,
-/* 41 */,
-/* 42 */,
-/* 43 */,
-/* 44 */,
-/* 45 */,
-/* 46 */,
-/* 47 */,
-/* 48 */,
-/* 49 */,
-/* 50 */,
-/* 51 */,
-/* 52 */,
-/* 53 */,
-/* 54 */,
-/* 55 */,
-/* 56 */,
-/* 57 */,
-/* 58 */,
-/* 59 */,
-/* 60 */,
-/* 61 */,
-/* 62 */,
-/* 63 */,
-/* 64 */,
-/* 65 */
+/* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	const md5 = __webpack_require__(66);
+	const md5 = __webpack_require__(2);
 
 	function originalToGeneratedId(originalId) {
 	  const match = originalId.match(/(.*)\/originalSource/);
@@ -441,49 +163,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return "text/plain";
 	}
 
-	let msgId = 1;
-	function workerTask(worker, method) {
-	  return function (...args) {
-	    return new Promise((resolve, reject) => {
-	      const id = msgId++;
-	      worker.postMessage({ id, method, args });
-
-	      const listener = ({ data: result }) => {
-	        if (result.id !== id) {
-	          return;
-	        }
-
-	        worker.removeEventListener("message", listener);
-	        if (result.error) {
-	          reject(result.error);
-	        } else {
-	          resolve(result.response);
-	        }
-	      };
-
-	      worker.addEventListener("message", listener);
-	    });
-	  };
-	}
-
 	module.exports = {
 	  originalToGeneratedId,
 	  generatedToOriginalId,
 	  isOriginalId,
 	  isGeneratedId,
-	  getContentType,
-	  workerTask
+	  getContentType
 	};
 
 /***/ },
-/* 66 */
+/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function(){
-	  var crypt = __webpack_require__(67),
-	      utf8 = __webpack_require__(68).utf8,
-	      isBuffer = __webpack_require__(69),
-	      bin = __webpack_require__(68).bin,
+	  var crypt = __webpack_require__(3),
+	      utf8 = __webpack_require__(4).utf8,
+	      isBuffer = __webpack_require__(5),
+	      bin = __webpack_require__(4).bin,
 
 	  // The core
 	  md5 = function (message, options) {
@@ -642,7 +338,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 67 */
+/* 3 */
 /***/ function(module, exports) {
 
 	(function() {
@@ -744,7 +440,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 68 */
+/* 4 */
 /***/ function(module, exports) {
 
 	var charenc = {
@@ -783,7 +479,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 69 */
+/* 5 */
 /***/ function(module, exports) {
 
 	/*!
@@ -810,7 +506,318 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 70 */
+/* 6 */,
+/* 7 */,
+/* 8 */,
+/* 9 */,
+/* 10 */,
+/* 11 */,
+/* 12 */,
+/* 13 */,
+/* 14 */,
+/* 15 */,
+/* 16 */,
+/* 17 */,
+/* 18 */,
+/* 19 */,
+/* 20 */,
+/* 21 */,
+/* 22 */,
+/* 23 */,
+/* 24 */,
+/* 25 */,
+/* 26 */,
+/* 27 */,
+/* 28 */,
+/* 29 */,
+/* 30 */,
+/* 31 */,
+/* 32 */,
+/* 33 */,
+/* 34 */,
+/* 35 */,
+/* 36 */,
+/* 37 */,
+/* 38 */,
+/* 39 */,
+/* 40 */,
+/* 41 */,
+/* 42 */,
+/* 43 */,
+/* 44 */,
+/* 45 */,
+/* 46 */,
+/* 47 */,
+/* 48 */,
+/* 49 */,
+/* 50 */,
+/* 51 */,
+/* 52 */,
+/* 53 */,
+/* 54 */,
+/* 55 */,
+/* 56 */,
+/* 57 */,
+/* 58 */,
+/* 59 */,
+/* 60 */,
+/* 61 */,
+/* 62 */,
+/* 63 */,
+/* 64 */,
+/* 65 */,
+/* 66 */,
+/* 67 */,
+/* 68 */,
+/* 69 */,
+/* 70 */,
+/* 71 */,
+/* 72 */,
+/* 73 */,
+/* 74 */,
+/* 75 */,
+/* 76 */,
+/* 77 */,
+/* 78 */,
+/* 79 */,
+/* 80 */,
+/* 81 */,
+/* 82 */,
+/* 83 */,
+/* 84 */
+/***/ function(module, exports, __webpack_require__) {
+
+	let _resolveAndFetch = (() => {
+	  var _ref = _asyncToGenerator(function* (generatedSource) {
+	    // Fetch the sourcemap over the network and create it.
+	    const sourceMapURL = _resolveSourceMapURL(generatedSource);
+	    const fetched = yield networkRequest(sourceMapURL, { loadFromCache: false });
+
+	    // Create the source map and fix it up.
+	    const map = new SourceMapConsumer(fetched.content);
+	    _setSourceMapRoot(map, sourceMapURL, generatedSource);
+	    return map;
+	  });
+
+	  return function _resolveAndFetch(_x) {
+	    return _ref.apply(this, arguments);
+	  };
+	})();
+
+	let getOriginalURLs = (() => {
+	  var _ref2 = _asyncToGenerator(function* (generatedSource) {
+	    const map = yield _fetchSourceMap(generatedSource);
+	    return map && map.sources;
+	  });
+
+	  return function getOriginalURLs(_x2) {
+	    return _ref2.apply(this, arguments);
+	  };
+	})();
+
+	let getGeneratedLocation = (() => {
+	  var _ref3 = _asyncToGenerator(function* (location, originalSource) {
+	    if (!isOriginalId(location.sourceId)) {
+	      return location;
+	    }
+
+	    const generatedSourceId = originalToGeneratedId(location.sourceId);
+	    const map = yield _getSourceMap(generatedSourceId);
+	    if (!map) {
+	      return location;
+	    }
+
+	    const { line, column } = map.generatedPositionFor({
+	      source: originalSource.url,
+	      line: location.line,
+	      column: location.column == null ? 0 : location.column,
+	      bias: SourceMapConsumer.LEAST_UPPER_BOUND
+	    });
+
+	    return {
+	      sourceId: generatedSourceId,
+	      line: line,
+	      // Treat 0 as no column so that line breakpoints work correctly.
+	      column: column === 0 ? undefined : column
+	    };
+	  });
+
+	  return function getGeneratedLocation(_x3, _x4) {
+	    return _ref3.apply(this, arguments);
+	  };
+	})();
+
+	let getOriginalLocation = (() => {
+	  var _ref4 = _asyncToGenerator(function* (location) {
+	    if (!isGeneratedId(location.sourceId)) {
+	      return location;
+	    }
+
+	    const map = yield _getSourceMap(location.sourceId);
+	    if (!map) {
+	      return location;
+	    }
+
+	    const { source: url, line, column } = map.originalPositionFor({
+	      line: location.line,
+	      column: location.column == null ? Infinity : location.column
+	    });
+
+	    if (url == null) {
+	      // No url means the location didn't map.
+	      return location;
+	    }
+
+	    return {
+	      sourceId: generatedToOriginalId(location.sourceId, url),
+	      line,
+	      column
+	    };
+	  });
+
+	  return function getOriginalLocation(_x5) {
+	    return _ref4.apply(this, arguments);
+	  };
+	})();
+
+	let getOriginalSourceText = (() => {
+	  var _ref5 = _asyncToGenerator(function* (originalSource) {
+	    assert(isOriginalId(originalSource.id), "Source is not an original source");
+
+	    const generatedSourceId = originalToGeneratedId(originalSource.id);
+	    const map = yield _getSourceMap(generatedSourceId);
+	    if (!map) {
+	      return null;
+	    }
+
+	    let text = map.sourceContentFor(originalSource.url);
+	    if (!text) {
+	      text = (yield networkRequest(originalSource.url, { loadFromCache: false })).content;
+	    }
+
+	    return {
+	      text,
+	      contentType: getContentType(originalSource.url || "")
+	    };
+	  });
+
+	  return function getOriginalSourceText(_x6) {
+	    return _ref5.apply(this, arguments);
+	  };
+	})();
+
+	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+	/**
+	 * Source Map Worker
+	 * @module utils/source-map-worker
+	 */
+
+	const networkRequest = __webpack_require__(85);
+
+	const { parse } = __webpack_require__(86);
+	const path = __webpack_require__(93);
+	const { SourceMapConsumer, SourceMapGenerator } = __webpack_require__(94);
+	const assert = __webpack_require__(105);
+	const {
+	  originalToGeneratedId,
+	  generatedToOriginalId,
+	  isGeneratedId,
+	  isOriginalId,
+	  getContentType
+	} = __webpack_require__(1);
+
+	let sourceMapRequests = new Map();
+
+	function clearSourceMaps() {
+	  sourceMapRequests.clear();
+	}
+
+	function _resolveSourceMapURL(source) {
+	  const { url = "", sourceMapURL = "" } = source;
+	  if (path.isURL(sourceMapURL) || url == "") {
+	    // If it's already a full URL or the source doesn't have a URL,
+	    // don't resolve anything.
+	    return sourceMapURL;
+	  } else if (path.isAbsolute(sourceMapURL)) {
+	    // If it's an absolute path, it should be resolved relative to the
+	    // host of the source.
+	    const { protocol = "", host = "" } = parse(url);
+	    return `${protocol}//${host}${sourceMapURL}`;
+	  }
+	  // Otherwise, it's a relative path and should be resolved relative
+	  // to the source.
+	  return `${path.dirname(url)}/${sourceMapURL}`;
+	}
+
+	/**
+	 * Sets the source map's sourceRoot to be relative to the source map url.
+	 * @memberof utils/source-map-worker
+	 * @static
+	 */
+	function _setSourceMapRoot(sourceMap, absSourceMapURL, source) {
+	  // No need to do this fiddling if we won't be fetching any sources over the
+	  // wire.
+	  if (sourceMap.hasContentsOfAllSources()) {
+	    return;
+	  }
+
+	  const base = path.dirname(absSourceMapURL.indexOf("data:") === 0 && source.url ? source.url : absSourceMapURL);
+
+	  if (sourceMap.sourceRoot) {
+	    sourceMap.sourceRoot = path.join(base, sourceMap.sourceRoot);
+	  } else {
+	    sourceMap.sourceRoot = base;
+	  }
+
+	  return sourceMap;
+	}
+
+	function _getSourceMap(generatedSourceId) {
+	  return sourceMapRequests.get(generatedSourceId);
+	}
+
+	function _fetchSourceMap(generatedSource) {
+	  const existingRequest = sourceMapRequests.get(generatedSource.id);
+	  if (existingRequest) {
+	    // If it has already been requested, return the request. Make sure
+	    // to do this even if sourcemapping is turned off, because
+	    // pretty-printing uses sourcemaps.
+	    //
+	    // An important behavior here is that if it's in the middle of
+	    // requesting it, all subsequent calls will block on the initial
+	    // request.
+	    return existingRequest;
+	  } else if (!generatedSource.sourceMapURL) {
+	    return Promise.resolve(null);
+	  }
+
+	  // Fire off the request, set it in the cache, and return it.
+	  const req = _resolveAndFetch(generatedSource).catch(e => console.error(e));
+	  sourceMapRequests.set(generatedSource.id, req);
+	  return req;
+	}
+
+	function applySourceMap(generatedId, url, code, mappings) {
+	  const generator = new SourceMapGenerator({ file: url });
+	  mappings.forEach(mapping => generator.addMapping(mapping));
+	  generator.setSourceContent(url, code);
+
+	  const map = SourceMapConsumer(generator.toJSON());
+	  sourceMapRequests.set(generatedId, Promise.resolve(map));
+	}
+
+	module.exports = {
+	  getOriginalURLs,
+	  getGeneratedLocation,
+	  getOriginalLocation,
+	  getOriginalSourceText,
+	  applySourceMap,
+	  clearSourceMaps
+	};
+
+/***/ },
+/* 85 */
 /***/ function(module, exports) {
 
 	function networkRequest(url, opts) {
@@ -843,9 +850,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = networkRequest;
 
-
 /***/ },
-/* 71 */
+/* 86 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -871,8 +877,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var punycode = __webpack_require__(72);
-	var util = __webpack_require__(74);
+	var punycode = __webpack_require__(87);
+	var util = __webpack_require__(89);
 
 	exports.parse = urlParse;
 	exports.resolve = urlResolve;
@@ -947,7 +953,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      'gopher:': true,
 	      'file:': true
 	    },
-	    querystring = __webpack_require__(75);
+	    querystring = __webpack_require__(90);
 
 	function urlParse(url, parseQueryString, slashesDenoteHost) {
 	  if (url && util.isObject(url) && url instanceof Url) return url;
@@ -1583,7 +1589,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 72 */
+/* 87 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.3.2 by @mathias */
@@ -2115,10 +2121,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	}(this));
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(73)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(88)(module), (function() { return this; }())))
 
 /***/ },
-/* 73 */
+/* 88 */
 /***/ function(module, exports) {
 
 	module.exports = function(module) {
@@ -2134,7 +2140,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 74 */
+/* 89 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -2156,17 +2162,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 75 */
+/* 90 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	exports.decode = exports.parse = __webpack_require__(76);
-	exports.encode = exports.stringify = __webpack_require__(77);
+	exports.decode = exports.parse = __webpack_require__(91);
+	exports.encode = exports.stringify = __webpack_require__(92);
 
 
 /***/ },
-/* 76 */
+/* 91 */
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -2252,7 +2258,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 77 */
+/* 92 */
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -2322,7 +2328,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 78 */
+/* 93 */
 /***/ function(module, exports) {
 
 	function basename(path) {
@@ -2351,7 +2357,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 79 */
+/* 94 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -2359,13 +2365,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Licensed under the New BSD license. See LICENSE.txt or:
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
-	exports.SourceMapGenerator = __webpack_require__(80).SourceMapGenerator;
-	exports.SourceMapConsumer = __webpack_require__(86).SourceMapConsumer;
-	exports.SourceNode = __webpack_require__(89).SourceNode;
+	exports.SourceMapGenerator = __webpack_require__(95).SourceMapGenerator;
+	exports.SourceMapConsumer = __webpack_require__(101).SourceMapConsumer;
+	exports.SourceNode = __webpack_require__(104).SourceNode;
 
 
 /***/ },
-/* 80 */
+/* 95 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -2375,10 +2381,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 
-	var base64VLQ = __webpack_require__(81);
-	var util = __webpack_require__(83);
-	var ArraySet = __webpack_require__(84).ArraySet;
-	var MappingList = __webpack_require__(85).MappingList;
+	var base64VLQ = __webpack_require__(96);
+	var util = __webpack_require__(98);
+	var ArraySet = __webpack_require__(99).ArraySet;
+	var MappingList = __webpack_require__(100).MappingList;
 
 	/**
 	 * An instance of the SourceMapGenerator represents a source map which is
@@ -2775,7 +2781,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 81 */
+/* 96 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -2815,7 +2821,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	 */
 
-	var base64 = __webpack_require__(82);
+	var base64 = __webpack_require__(97);
 
 	// A single base 64 digit can contain 6 bits of data. For the base 64 variable
 	// length quantities we use in the source map spec, the first bit is the sign,
@@ -2921,7 +2927,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 82 */
+/* 97 */
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -2994,7 +3000,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 83 */
+/* 98 */
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3417,7 +3423,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 84 */
+/* 99 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3427,7 +3433,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 
-	var util = __webpack_require__(83);
+	var util = __webpack_require__(98);
 	var has = Object.prototype.hasOwnProperty;
 
 	/**
@@ -3527,7 +3533,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 85 */
+/* 100 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3537,7 +3543,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 
-	var util = __webpack_require__(83);
+	var util = __webpack_require__(98);
 
 	/**
 	 * Determine whether mappingB is after mappingA with respect to generated
@@ -3612,7 +3618,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 86 */
+/* 101 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3622,11 +3628,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 
-	var util = __webpack_require__(83);
-	var binarySearch = __webpack_require__(87);
-	var ArraySet = __webpack_require__(84).ArraySet;
-	var base64VLQ = __webpack_require__(81);
-	var quickSort = __webpack_require__(88).quickSort;
+	var util = __webpack_require__(98);
+	var binarySearch = __webpack_require__(102);
+	var ArraySet = __webpack_require__(99).ArraySet;
+	var base64VLQ = __webpack_require__(96);
+	var quickSort = __webpack_require__(103).quickSort;
 
 	function SourceMapConsumer(aSourceMap) {
 	  var sourceMap = aSourceMap;
@@ -4700,7 +4706,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 87 */
+/* 102 */
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4817,7 +4823,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 88 */
+/* 103 */
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4937,7 +4943,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 89 */
+/* 104 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4947,8 +4953,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 
-	var SourceMapGenerator = __webpack_require__(80).SourceMapGenerator;
-	var util = __webpack_require__(83);
+	var SourceMapGenerator = __webpack_require__(95).SourceMapGenerator;
+	var util = __webpack_require__(98);
 
 	// Matches a Windows-style `\r\n` newline or a `\n` newline used by all other
 	// operating systems these days (capturing the result).
@@ -5350,7 +5356,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 90 */
+/* 105 */
 /***/ function(module, exports) {
 
 	function assert(condition, message) {

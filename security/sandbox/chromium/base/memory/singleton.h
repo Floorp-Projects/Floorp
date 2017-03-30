@@ -22,6 +22,7 @@
 #include "base/at_exit.h"
 #include "base/atomicops.h"
 #include "base/base_export.h"
+#include "base/logging.h"
 #include "base/macros.h"
 #include "base/memory/aligned_memory.h"
 #include "base/threading/thread_restrictions.h"
@@ -63,7 +64,7 @@ struct DefaultSingletonTraits {
   // exit. See below for the required call that makes this happen.
   static const bool kRegisterAtExit = true;
 
-#ifndef NDEBUG
+#if DCHECK_IS_ON()
   // Set to false to disallow access on a non-joinable thread.  This is
   // different from kRegisterAtExit because StaticMemorySingletonTraits allows
   // access on non-joinable threads, and gracefully handles this.
@@ -78,7 +79,7 @@ struct DefaultSingletonTraits {
 template<typename Type>
 struct LeakySingletonTraits : public DefaultSingletonTraits<Type> {
   static const bool kRegisterAtExit = false;
-#ifndef NDEBUG
+#if DCHECK_IS_ON()
   static const bool kAllowedToAccessOnNonjoinableThread = true;
 #endif
 };
@@ -227,7 +228,7 @@ class Singleton {
 
   // Return a pointer to the one true instance of the class.
   static Type* get() {
-#ifndef NDEBUG
+#if DCHECK_IS_ON()
     // Avoid making TLS lookup on release builds.
     if (!Traits::kAllowedToAccessOnNonjoinableThread)
       ThreadRestrictions::AssertSingletonAllowed();

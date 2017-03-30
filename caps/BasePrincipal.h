@@ -75,9 +75,16 @@ public:
   virtual bool IsCodebasePrincipal() const { return false; };
 
   static BasePrincipal* Cast(nsIPrincipal* aPrin) { return static_cast<BasePrincipal*>(aPrin); }
+
+  static already_AddRefed<BasePrincipal>
+  CreateCodebasePrincipal(const nsACString& aOrigin);
+
+  // These following method may not create a codebase principal in case it's
+  // not possible to generate a correct origin from the passed URI. If this
+  // happens, a NullPrincipal is returned.
+
   static already_AddRefed<BasePrincipal>
   CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAttrs);
-  static already_AddRefed<BasePrincipal> CreateCodebasePrincipal(const nsACString& aOrigin);
 
   const OriginAttributes& OriginAttributesRef() final { return mOriginAttributes; }
   uint32_t AppId() const { return mOriginAttributes.mAppId; }
@@ -104,7 +111,6 @@ public:
 protected:
   virtual ~BasePrincipal();
 
-  virtual nsresult GetOriginInternal(nsACString& aOrigin) = 0;
   // Note that this does not check OriginAttributes. Callers that depend on
   // those must call Subsumes instead.
   virtual bool SubsumesInternal(nsIPrincipal* aOther, DocumentDomainConsideration aConsider) = 0;
@@ -115,18 +121,33 @@ protected:
   virtual bool MayLoadInternal(nsIURI* aURI) = 0;
   friend class ::ExpandedPrincipal;
 
+  void
+  SetHasExplicitDomain()
+  {
+    mHasExplicitDomain = true;
+  }
+
   // This function should be called as the last step of the initialization of the
   // principal objects.  It's typically called as the last step from the Init()
   // method of the child classes.
-  void FinishInit();
+  void FinishInit(const nsACString& aOriginNoSuffix,
+                  const OriginAttributes& aOriginAttributes);
 
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
   nsCOMPtr<nsIContentSecurityPolicy> mPreloadCSP;
+
+private:
+  static already_AddRefed<BasePrincipal>
+  CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAttrs,
+                          const nsACString& aOriginNoSuffix);
+
   nsCOMPtr<nsIAtom> mOriginNoSuffix;
   nsCOMPtr<nsIAtom> mOriginSuffix;
+
   OriginAttributes mOriginAttributes;
   PrincipalKind mKind;
-  bool mDomainSet;
+  bool mHasExplicitDomain;
+  bool mInitialized;
 };
 
 inline bool
@@ -147,20 +168,13 @@ BasePrincipal::FastEquals(nsIPrincipal* aOther)
     return this == other;
   }
 
-  if (mOriginNoSuffix) {
-    if (Kind() == eCodebasePrincipal) {
-      return mOriginNoSuffix == other->mOriginNoSuffix &&
-             mOriginSuffix == other->mOriginSuffix;
-    }
-
-    MOZ_ASSERT(Kind() == eExpandedPrincipal);
-    return mOriginNoSuffix == other->mOriginNoSuffix;
+  if (Kind() == eCodebasePrincipal) {
+    return mOriginNoSuffix == other->mOriginNoSuffix &&
+           mOriginSuffix == other->mOriginSuffix;
   }
 
-  // If mOriginNoSuffix is null on one of our principals, we must fall back
-  // to the slow path.
-  return Subsumes(aOther, DontConsiderDocumentDomain) &&
-         other->Subsumes(this, DontConsiderDocumentDomain);
+  MOZ_ASSERT(Kind() == eExpandedPrincipal);
+  return mOriginNoSuffix == other->mOriginNoSuffix;
 }
 
 inline bool
@@ -169,7 +183,7 @@ BasePrincipal::FastEqualsConsideringDomain(nsIPrincipal* aOther)
   // If neither of the principals have document.domain set, we use the fast path
   // in Equals().  Otherwise, we fall back to the slow path below.
   auto other = Cast(aOther);
-  if (!mDomainSet && !other->mDomainSet) {
+  if (!mHasExplicitDomain && !other->mHasExplicitDomain) {
     return FastEquals(aOther);
   }
 
@@ -184,14 +198,11 @@ BasePrincipal::FastSubsumes(nsIPrincipal* aOther)
   // We deal with two special cases first:
   // Null principals only subsume each other if they are equal, and are only
   // equal if they're the same object.
-  // Also, if mOriginNoSuffix is null, FastEquals falls back to the slow path
-  // using Subsumes, so we don't want to use it in that case to avoid an
-  // infinite recursion.
   auto other = Cast(aOther);
   if (Kind() == eNullPrincipal && other->Kind() == eNullPrincipal) {
     return this == other;
   }
-  if (mOriginNoSuffix && FastEquals(aOther)) {
+  if (FastEquals(aOther)) {
     return true;
   }
 
@@ -205,7 +216,7 @@ BasePrincipal::FastSubsumesConsideringDomain(nsIPrincipal* aOther)
   // If neither of the principals have document.domain set, we hand off to
   // FastSubsumes() which has fast paths for some special cases. Otherwise, we fall
   // back to the slow path below.
-  if (!mDomainSet && !Cast(aOther)->mDomainSet) {
+  if (!mHasExplicitDomain && !Cast(aOther)->mHasExplicitDomain) {
     return FastSubsumes(aOther);
   }
 

@@ -56,6 +56,7 @@ class BASE_EXPORT OSInfo {
     int major;
     int minor;
     int build;
+    int patch;
   };
 
   struct ServicePack {
@@ -94,6 +95,7 @@ class BASE_EXPORT OSInfo {
   VersionNumber version_number() const { return version_number_; }
   VersionType version_type() const { return version_type_; }
   ServicePack service_pack() const { return service_pack_; }
+  std::string service_pack_str() const { return service_pack_str_; }
   WindowsArchitecture architecture() const { return architecture_; }
   int processors() const { return processors_; }
   size_t allocation_granularity() const { return allocation_granularity_; }
@@ -114,6 +116,11 @@ class BASE_EXPORT OSInfo {
   VersionNumber version_number_;
   VersionType version_type_;
   ServicePack service_pack_;
+
+  // A string, such as "Service Pack 3", that indicates the latest Service Pack
+  // installed on the system. If no Service Pack has been installed, the string
+  // is empty.
+  std::string service_pack_str_;
   WindowsArchitecture architecture_;
   int processors_;
   size_t allocation_granularity_;

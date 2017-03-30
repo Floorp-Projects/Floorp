@@ -1,0 +1,9 @@
+        <activity android:name="org.mozilla.gecko.webapps.WebApps$WebApp@APPNUM@"
+                  android:label="WebApp"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/Gecko.App"
+                  android:taskAffinity="org.mozilla.gecko.webapps.WebApps@APPNUM@"
+                  android:launchMode="singleTask"
+                  android:exported="true"
+        />

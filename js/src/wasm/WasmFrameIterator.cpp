@@ -78,7 +78,12 @@ FrameIterator::FrameIterator(WasmActivation* activation, Unwind unwind)
     if (void* resumePC = activation->resumePC()) {
         code_ = activation->compartment()->wasm.lookupCode(resumePC);
         codeRange_ = code_->lookupRange(resumePC);
-        MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
+        if (codeRange_->kind() != CodeRange::Function) {
+            // We might be in a stub inserted between functions, in which case
+            // we don't have a frame.
+            codeRange_ = nullptr;
+            missingFrameMessage_ = true;
+        }
         MOZ_ASSERT(!done());
         return;
     }
@@ -762,10 +767,10 @@ ProfilingFrameIterator::label() const
     //
     // NB: these labels are parsed for location by
     //     devtools/client/performance/modules/logic/frame-utils.js
-    const char* importJitDescription = "fast FFI trampoline (in asm.js)";
-    const char* importInterpDescription = "slow FFI trampoline (in asm.js)";
-    const char* trapDescription = "trap handling (in asm.js)";
-    const char* debugTrapDescription = "debug trap handling (in asm.js)";
+    static const char* importJitDescription = "fast FFI trampoline (in wasm)";
+    static const char* importInterpDescription = "slow FFI trampoline (in wasm)";
+    static const char* trapDescription = "trap handling (in wasm)";
+    static const char* debugTrapDescription = "debug trap handling (in wasm)";
 
     switch (exitReason_) {
       case ExitReason::None:
@@ -782,13 +787,13 @@ ProfilingFrameIterator::label() const
 
     switch (codeRange_->kind()) {
       case CodeRange::Function:         return code_->profilingLabel(codeRange_->funcIndex());
-      case CodeRange::Entry:            return "entry trampoline (in asm.js)";
+      case CodeRange::Entry:            return "entry trampoline (in wasm)";
       case CodeRange::ImportJitExit:    return importJitDescription;
       case CodeRange::ImportInterpExit: return importInterpDescription;
       case CodeRange::TrapExit:         return trapDescription;
       case CodeRange::DebugTrap:        return debugTrapDescription;
-      case CodeRange::Inline:           return "inline stub (in asm.js)";
-      case CodeRange::FarJumpIsland:    return "interstitial (in asm.js)";
+      case CodeRange::Inline:           return "inline stub (in wasm)";
+      case CodeRange::FarJumpIsland:    return "interstitial (in wasm)";
       case CodeRange::Throw:            MOZ_FALLTHROUGH;
       case CodeRange::Interrupt:        MOZ_CRASH("does not have a frame");
     }

@@ -190,12 +190,6 @@ ExecutableAllocator::poolForSize(size_t n)
 /* static */ size_t
 ExecutableAllocator::roundUpAllocationSize(size_t request, size_t granularity)
 {
-    // Something included via windows.h defines a macro with this name,
-    // which causes the function below to fail to compile.
-#ifdef _MSC_VER
-# undef max
-#endif
-
     if ((std::numeric_limits<size_t>::max() - granularity) <= request)
         return OVERSIZE_ALLOCATION;
 

@@ -14,8 +14,8 @@ Test Func rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript;version=1.8"></script>
-<script type="application/javascript;version=1.8">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
 window.onload = Task.async(function* () {
   const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/reps");
   let { Rep, Func } = REPS;
@@ -36,6 +36,7 @@ window.onload = Task.async(function* () {
     yield testAnonAsyncFunction();
     yield testGeneratorFunction();
     yield testAnonGeneratorFunction();
+    yield testObjectLink();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -224,6 +225,27 @@ window.onload = Task.async(function* () {
       }
     ];
     testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testObjectLink() {
+    // Test declaration: `function testName() { let innerVar = "foo" }`
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: "*function *testName()",
+      }
+    ];
+
+    testRepRenderModes(
+      modeTests,
+      "testObjectLink",
+      componentUnderTest,
+      getGripStub("testNamed"),
+      {
+        objectLink: (props, ...children) => React.DOM.span({},
+          "*", ...children, "*"),
+      }
+    );
   }
 
   function getGripStub(functionName) {

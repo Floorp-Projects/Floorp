@@ -51,6 +51,11 @@ public:
     nsresult                Unlock(bool aFatalSignal = false);
 
     /**
+     * Clean up any left over files in the directory.
+     */
+    nsresult                Cleanup();
+
+    /**
      * Get the modification time of a replaced profile lock, otherwise 0.
      */
     nsresult                GetReplacedLockTime(PRTime* aResult);
@@ -58,6 +63,7 @@ public:
 private:
     bool                    mHaveLock;
     PRTime                  mReplacedLockTime;
+    nsCOMPtr<nsIFile>       mLockFile;
 
 #if defined (XP_WIN)
     HANDLE                  mLockFileHandle;

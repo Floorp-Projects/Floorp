@@ -8,7 +8,9 @@
 #include <AccCtrl.h>
 #include <windows.h>
 
-#include "base/memory/scoped_ptr.h"
+#include <memory>
+
+#include "base/memory/free_deleter.h"
 #include "sandbox/win/src/sid.h"
 
 namespace sandbox {
@@ -16,7 +18,7 @@ namespace sandbox {
 // Returns the default dacl from the token passed in.
 bool GetDefaultDacl(
     HANDLE token,
-    scoped_ptr<TOKEN_DEFAULT_DACL, base::FreeDeleter>* default_dacl);
+    std::unique_ptr<TOKEN_DEFAULT_DACL, base::FreeDeleter>* default_dacl);
 
 // Appends an ACE represented by |sid|, |access_mode|, and |access| to
 // |old_dacl|. If the function succeeds, new_dacl contains the new dacl and
@@ -24,9 +26,15 @@ bool GetDefaultDacl(
 bool AddSidToDacl(const Sid& sid, ACL* old_dacl, ACCESS_MODE access_mode,
                   ACCESS_MASK access, ACL** new_dacl);
 
-// Adds and ACE represented by |sid| and |access| to the default dacl present
-// in the token.
-bool AddSidToDefaultDacl(HANDLE token, const Sid& sid, ACCESS_MASK access);
+// Adds an ACE represented by |sid| and |access| with |access_mode| to the
+// default dacl present in the token.
+bool AddSidToDefaultDacl(HANDLE token,
+                         const Sid& sid,
+                         ACCESS_MODE access_mode,
+                         ACCESS_MASK access);
+
+// Revokes access to the logon SID for the default dacl present in the token.
+bool RevokeLogonSidFromDefaultDacl(HANDLE token);
 
 // Adds an ACE represented by the user sid and |access| to the default dacl
 // present in the token.
