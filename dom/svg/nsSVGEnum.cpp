@@ -129,10 +129,10 @@ nsSVGEnum::DOMAnimatedEnum::~DOMAnimatedEnum()
   sSVGAnimatedEnumTearoffTable.RemoveTearoff(mVal);
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 nsSVGEnum::ToSMILAttr(nsSVGElement *aSVGElement)
 {
-  return new SMILEnum(this, aSVGElement);
+  return MakeUnique<SMILEnum>(this, aSVGElement);
 }
 
 nsresult

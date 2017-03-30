@@ -177,10 +177,10 @@ nsSVGIntegerPair::DOMAnimatedInteger::~DOMAnimatedInteger()
   }
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 nsSVGIntegerPair::ToSMILAttr(nsSVGElement *aSVGElement)
 {
-  return new SMILIntegerPair(this, aSVGElement);
+  return MakeUnique<SMILIntegerPair>(this, aSVGElement);
 }
 
 nsresult

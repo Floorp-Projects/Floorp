@@ -8,6 +8,7 @@
 #define NS_SMILCOMPOSITOR_H_
 
 #include "mozilla/Move.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
@@ -73,9 +74,8 @@ public:
   }
 
  private:
-  // Create a nsISMILAttr for my target, on the heap.  Caller is responsible
-  // for deallocating the returned object.
-  nsISMILAttr* CreateSMILAttr();
+  // Create a nsISMILAttr for my target, on the heap.
+  mozilla::UniquePtr<nsISMILAttr> CreateSMILAttr();
 
   // Finds the index of the first function that will affect our animation
   // sandwich. Also toggles the 'mForceCompositing' flag if it finds that any

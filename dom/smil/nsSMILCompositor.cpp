@@ -56,7 +56,7 @@ nsSMILCompositor::ComposeAttribute(bool& aMightHavePendingStyleUpdates)
 
   // FIRST: Get the nsISMILAttr (to grab base value from, and to eventually
   // give animated value to)
-  nsAutoPtr<nsISMILAttr> smilAttr(CreateSMILAttr());
+  UniquePtr<nsISMILAttr> smilAttr = CreateSMILAttr();
   if (!smilAttr) {
     // Target attribute not found (or, out of memory)
     return;
@@ -113,7 +113,7 @@ nsSMILCompositor::ClearAnimationEffects()
   if (!mKey.mElement || !mKey.mAttributeName)
     return;
 
-  nsAutoPtr<nsISMILAttr> smilAttr(CreateSMILAttr());
+  UniquePtr<nsISMILAttr> smilAttr = CreateSMILAttr();
   if (!smilAttr) {
     // Target attribute not found (or, out of memory)
     return;
@@ -123,7 +123,7 @@ nsSMILCompositor::ClearAnimationEffects()
 
 // Protected Helper Functions
 // --------------------------
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 nsSMILCompositor::CreateSMILAttr()
 {
   nsCSSPropertyID propID =
@@ -140,7 +140,7 @@ nsSMILCompositor::CreateSMILAttr()
                          mKey.mElement->GetNameSpaceID() == kNameSpaceID_SVG &&
                          !mKey.mElement->IsAttributeMapped(mKey.mAttributeName);
     if (!animateAsAttr) {
-      return new nsSMILCSSProperty(propID, mKey.mElement.get());
+      return MakeUnique<nsSMILCSSProperty>(propID, mKey.mElement.get());
     }
   }
 
