@@ -5,6 +5,7 @@
 package org.mozilla.focus.webkit.matcher;
 
 
+import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.webkit.matcher.Trie.WhiteListTrie;
 import org.mozilla.focus.webkit.matcher.util.FocusString;
 
@@ -30,13 +31,20 @@ import java.net.URL;
             return true;
         }
 
-        try {
-            final FocusString revSitehost = FocusString.create(new URL(site).getHost()).reverse();
-            final FocusString revResourcehost = FocusString.create(new URL(resource).getHost()).reverse();
+        if (UrlUtils.isPermittedResourceProtocol(resource) &&
+                UrlUtils.isSupportedProtocol(site)) {
+            try {
+                final FocusString revSitehost = FocusString.create(new URL(site).getHost()).reverse();
+                final FocusString revResourcehost = FocusString.create(new URL(resource).getHost()).reverse();
 
-            return isWhiteListed(revSitehost, revResourcehost, rootNode);
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("Malformed URI supplied");
+                return isWhiteListed(revSitehost, revResourcehost, rootNode);
+            } catch (MalformedURLException e) {
+                throw new IllegalArgumentException("Malformed URI supplied");
+            }
+        } else {
+            // This might be some imaginary/custom protocol: theguardian.com loads
+            // things like "nielsenwebid://nuid/999" and/or sets an iFrame URL to that:
+            return false;
         }
     }
 
