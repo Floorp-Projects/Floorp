@@ -4375,7 +4375,7 @@ var SessionStoreInternal = {
 
     // By creating a regex we reduce overhead and there is only one loop pass
     // through either array (cookieHosts and aWinState.cookies).
-    let hosts = Object.keys(cookieHosts).join("|").replace(/\./g, "\\.");
+    let hosts = [...cookieHosts].join("|").replace(/\./g, "\\.");
     // If we don't actually have any hosts, then we don't want to do anything.
     if (!hosts.length)
       return;
