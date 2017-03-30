@@ -335,10 +335,14 @@ OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
       AudioChunk chunk = *iter;
 
       // Chunk to the required frame size.
-      int frameToCopy = chunk.GetDuration();
-      if (frameCopied + frameToCopy > framesToFetch) {
+      StreamTime frameToCopy = chunk.GetDuration();
+      if (frameToCopy > framesToFetch - frameCopied) {
         frameToCopy = framesToFetch - frameCopied;
       }
+      // Possible greatest value of framesToFetch = 3844: see
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1349421#c8. frameToCopy
+      // should not be able to exceed this value.
+      MOZ_ASSERT(frameToCopy <= 3844, "frameToCopy exceeded expected range");
 
       if (!chunk.IsNull()) {
         // Append the interleaved data to the end of pcm buffer.
@@ -349,7 +353,9 @@ OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
                                        mChannels *
                                        sizeof(AudioDataValue);
         if (!memsetLength.isValid()) {
-          LOG(LogLevel::Error, ("Error calculating length of pcm buffer!"));
+          // This should never happen, but we use a defensive check because
+          // we really don't want a bad memset
+          MOZ_ASSERT_UNREACHABLE("memsetLength invalid!");
           return NS_ERROR_FAILURE;
         }
         memset(pcm.Elements() + frameCopied * mChannels, 0,
@@ -359,6 +365,11 @@ OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
       frameCopied += frameToCopy;
       iter.Next();
     }
+
+    // Possible greatest value of framesToFetch = 3844: see
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1349421#c8. frameCopied
+    // should not be able to exceed this value.
+    MOZ_ASSERT(frameCopied <= 3844, "frameCopied exceeded expected range");
 
     RefPtr<EncodedFrame> audiodata = new EncodedFrame();
     audiodata->SetFrameType(EncodedFrame::OPUS_AUDIO_FRAME);
