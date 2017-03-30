@@ -54,5 +54,5 @@ interface nsIContentProcessProvider : nsISupports
    */
   int32_t provideProcess(in AString aType, in nsIContentProcessInfo aOpener,
                          [array, size_is(aCount)] in nsIContentProcessInfo aAliveProcesses,
-                         in uint32_t aCount);
+                         in uint32_t aCount, in uint32_t aMaxCount);
 };
