@@ -80,19 +80,22 @@ GPUChild::OnVarChanged(const GfxVarUpdate& aVar)
   SendUpdateVar(aVar);
 }
 
-void
+bool
 GPUChild::EnsureGPUReady()
 {
   if (mGPUReady) {
-    return;
+    return true;
   }
 
   GPUDeviceData data;
-  SendGetDeviceStatus(&data);
+  if (!SendGetDeviceStatus(&data)) {
+    return false;
+  }
 
   gfxPlatform::GetPlatform()->ImportGPUDeviceData(data);
   Telemetry::AccumulateTimeDelta(Telemetry::GPU_PROCESS_LAUNCH_TIME_MS_2, mHost->GetLaunchTime());
   mGPUReady = true;
+  return true;
 }
 
 mozilla::ipc::IPCResult
