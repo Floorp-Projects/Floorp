@@ -39,7 +39,7 @@ let whitelist = [
    errorMessage: /Unknown property.*-moz-/i,
    isFromDevTools: false},
   // Reserved to UA sheets unless layout.css.overflow-clip-box.enabled flipped to true.
-  {sourceName: /res\/forms\.css$/i,
+  {sourceName: /(?:res|gre-resources)\/forms\.css$/i,
    errorMessage: /Unknown property.*overflow-clip-box/i,
    isFromDevTools: false},
   // These variables are declared somewhere else, and error when we load the
@@ -112,6 +112,16 @@ var gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
                  .getService(Ci.nsIChromeRegistry);
 var gChromeMap = new Map();
 
+var resHandler = Services.io.getProtocolHandler("resource")
+                         .QueryInterface(Ci.nsIResProtocolHandler);
+var gResourceMap = [];
+function trackResourcePrefix(prefix) {
+  let uri = Services.io.newURI("resource://" + prefix + "/");
+  gResourceMap.unshift([prefix, resHandler.resolveURI(uri)]);
+}
+trackResourcePrefix("gre");
+trackResourcePrefix("app");
+
 function getBaseUriForChromeUri(chromeUri) {
   let chromeFile = chromeUri + "gobbledygooknonexistentfile.reallynothere";
   let uri = Services.io.newURI(chromeFile);
@@ -123,35 +133,34 @@ function parseManifest(manifestUri) {
   return fetchFile(manifestUri.spec).then(data => {
     for (let line of data.split("\n")) {
       let [type, ...argv] = line.split(/\s+/);
-      let component;
       if (type == "content" || type == "skin") {
-        [component] = argv;
-      } else {
-        // skip unrelated lines
-        continue;
+        let chromeUri = `chrome://${argv[0]}/${type}/`;
+        gChromeMap.set(getBaseUriForChromeUri(chromeUri), chromeUri);
+      } else if (type == "resource") {
+        trackResourcePrefix(argv[0]);
       }
-      let chromeUri = `chrome://${component}/${type}/`;
-      gChromeMap.set(getBaseUriForChromeUri(chromeUri), chromeUri);
     }
   });
 }
 
-function convertToChromeUri(fileUri) {
-  let baseUri = fileUri.spec;
+function convertToCodeURI(fileUri) {
+  let baseUri = fileUri;
   let path = "";
   while (true) {
     let slashPos = baseUri.lastIndexOf("/", baseUri.length - 2);
-    if (slashPos < 0) {
-      info(`File not accessible from chrome protocol: ${fileUri.path}`);
+    if (slashPos <= 0) {
+      // File not accessible from chrome protocol, try resource://
+      for (let res of gResourceMap) {
+        if (fileUri.startsWith(res[1]))
+          return fileUri.replace(res[1], "resource://" + res[0] + "/");
+      }
+      // Give up and return the original URL.
       return fileUri;
     }
     path = baseUri.slice(slashPos + 1) + path;
     baseUri = baseUri.slice(0, slashPos + 1);
-    if (gChromeMap.has(baseUri)) {
-      let chromeBaseUri = gChromeMap.get(baseUri);
-      let chromeUri = `${chromeBaseUri}${path}`;
-      return Services.io.newURI(chromeUri);
-    }
+    if (gChromeMap.has(baseUri))
+      return gChromeMap.get(baseUri) + path;
   }
 }
 
@@ -292,8 +301,8 @@ add_task(function* checkAllTheCSS() {
       linkEl.addEventListener("load", onLoad);
       linkEl.addEventListener("error", onError);
       linkEl.setAttribute("type", "text/css");
-      let chromeUri = convertToChromeUri(uri);
-      linkEl.setAttribute("href", chromeUri.spec + kPathSuffix);
+      let chromeUri = convertToCodeURI(uri.spec);
+      linkEl.setAttribute("href", chromeUri + kPathSuffix);
     }));
     doc.head.appendChild(linkEl);
   }
