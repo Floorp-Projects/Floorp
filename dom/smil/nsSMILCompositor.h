@@ -86,7 +86,7 @@ public:
   // method updates the cached value (and toggles the 'mForceCompositing' flag)
   void UpdateCachedBaseValue(const nsSMILValue& aBaseValue);
 
-  // The hash key (tuple of element/attributeName/attributeType)
+  // The hash key (tuple of element and attributeName)
   KeyType mKey;
 
   // Hash Value: List of animation functions that animate the specified attr
