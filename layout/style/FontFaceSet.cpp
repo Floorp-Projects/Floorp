@@ -1098,12 +1098,13 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
           face->mURI = nullptr;
           face->mFormatFlags = 0;
           break;
-        case eCSSUnit_URL:
+        case eCSSUnit_URL: {
           face->mSourceType = gfxFontFaceSrc::eSourceType_URL;
           face->mURI = val.GetURLValue();
-          face->mReferrer = val.GetURLStructValue()->mReferrer;
+          URLValue* url = val.GetURLStructValue();
+          face->mReferrer = url->mExtraData->GetReferrer();
           face->mReferrerPolicy = mDocument->GetReferrerPolicy();
-          face->mOriginPrincipal = val.GetURLStructValue()->mOriginPrincipal;
+          face->mOriginPrincipal = url->mExtraData->GetPrincipal();
           NS_ASSERTION(face->mOriginPrincipal, "null origin principal in @font-face rule");
 
           // agent and user stylesheets are treated slightly differently,
@@ -1147,6 +1148,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
             continue;
           }
           break;
+        }
         default:
           NS_ASSERTION(unit == eCSSUnit_Local_Font || unit == eCSSUnit_URL,
                        "strange unit type in font-face src array");
