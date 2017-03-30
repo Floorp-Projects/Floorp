@@ -190,14 +190,19 @@ public:
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() = 0;
 
   /**
-   * Update the placeholder visibility based on the element's state.
+   * Update the visibility of both the placholder and preview text based on the element's state.
    */
-  NS_IMETHOD_(void) UpdatePlaceholderVisibility(bool aNotify) = 0;
+  NS_IMETHOD_(void) UpdateOverlayTextVisibility(bool aNotify) = 0;
 
   /**
    * Returns the current expected placeholder visibility state.
    */
   NS_IMETHOD_(bool) GetPlaceholderVisibility() = 0;
+
+  /**
+   * Returns the current expected preview visibility state.
+   */
+  NS_IMETHOD_(bool) GetPreviewVisibility() = 0;
 
   /**
    * Callback called whenever the value is changed.
