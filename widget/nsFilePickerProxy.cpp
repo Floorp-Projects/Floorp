@@ -18,6 +18,7 @@ NS_IMPL_ISUPPORTS(nsFilePickerProxy, nsIFilePicker)
 
 nsFilePickerProxy::nsFilePickerProxy()
   : mSelectedType(0)
+  , mIPCActive(false)
 {
 }
 
@@ -40,6 +41,8 @@ nsFilePickerProxy::Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
 
   NS_ADDREF_THIS();
   tabChild->SendPFilePickerConstructor(this, nsString(aTitle), aMode);
+
+  mIPCActive = true;
   return NS_OK;
 }
 
@@ -134,6 +137,10 @@ nsFilePickerProxy::Open(nsIFilePickerShownCallback* aCallback)
   nsString displayDirectory;
   if (mDisplayDirectory) {
     mDisplayDirectory->GetPath(displayDirectory);
+  }
+
+  if (!mIPCActive) {
+    return NS_ERROR_FAILURE;
   }
 
   SendOpen(mSelectedType, mAddToRecentDocs, mDefault, mDefaultExtension,
@@ -270,4 +277,15 @@ nsFilePickerProxy::GetDomFileOrDirectoryEnumerator(nsISimpleEnumerator** aDomfil
     new SimpleEnumerator(mFilesOrDirectories);
   enumerator.forget(aDomfiles);
   return NS_OK;
+}
+
+void
+nsFilePickerProxy::ActorDestroy(ActorDestroyReason aWhy)
+{
+  mIPCActive = false;
+
+  if (mCallback) {
+    mCallback->Done(nsIFilePicker::returnCancel);
+    mCallback = nullptr;
+  }
 }
