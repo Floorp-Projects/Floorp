@@ -61,17 +61,12 @@ var SessionCookiesInternal = {
     for (let window of windows) {
       let cookies = [];
 
-      // Collect all hosts for the current window.
-      let hosts = this.getHostsForWindow(window, true);
-
-      for (let host of Object.keys(hosts)) {
-        let isPinned = hosts[host];
-
+      // Collect all cookies for the current window.
+      for (let host of this.getHostsForWindow(window, true)) {
         for (let cookie of CookieStore.getCookiesForHost(host)) {
-          // _getCookiesForHost() will only return hosts with the right privacy
-          // rules, so there is no need to do anything special with this call
-          // to PrivacyLevel.canSave().
-          if (PrivacyLevel.canSave({isHttps: cookie.secure, isPinned})) {
+          // getCookiesForHost() will only return hosts with the right privacy
+          // rules. Check again here to exclude HTTPS-only cookies if needed.
+          if (PrivacyLevel.canSave(cookie.secure)) {
             cookies.push(cookie);
           }
         }
@@ -94,17 +89,14 @@ var SessionCookiesInternal = {
    *        A window state object containing tabs with history entries.
    * @param checkPrivacy (bool)
    *        Whether to check the privacy level for each host.
-   * @return {object} A map of hosts for a given window state object. The keys
-   *                  will be hosts, the values are boolean and determine
-   *                  whether we will use the deferred privacy level when
-   *                  checking how much data to save on quitting.
+   * @return {set} A set of hosts for a given window state object.
    */
   getHostsForWindow(window, checkPrivacy = false) {
-    let hosts = {};
+    let hosts = new Set();
 
     for (let tab of window.tabs) {
       for (let entry of tab.entries) {
-        this._extractHostsFromEntry(entry, hosts, checkPrivacy, tab.pinned);
+        this._extractHostsFromEntry(entry, hosts, checkPrivacy);
       }
     }
 
@@ -178,64 +170,28 @@ var SessionCookiesInternal = {
    * @param entry
    *        the history entry, serialized
    * @param hosts
-   *        the hash that will be used to store hosts eg, { hostname: true }
+   *        the set that will be used to store hosts
    * @param checkPrivacy
    *        should we check the privacy level for https
-   * @param isPinned
-   *        is the entry we're evaluating for a pinned tab; used only if
-   *        checkPrivacy
    */
-  _extractHostsFromEntry(entry, hosts, checkPrivacy, isPinned) {
-    let host = entry._host;
-    let scheme = entry._scheme;
+  _extractHostsFromEntry(entry, hosts, checkPrivacy) {
+    try {
+      // It's alright if this throws for about: URIs.
+      let {host, scheme} = Utils.makeURI(entry.url);
 
-    // If host & scheme aren't defined, then we are likely here in the startup
-    // process via _splitCookiesFromWindow. In that case, we'll turn entry.url
-    // into an nsIURI and get host/scheme from that. This will throw for about:
-    // urls in which case we don't need to do anything.
-    if (!host && !scheme) {
-      try {
-        let uri = Utils.makeURI(entry.url);
-        host = uri.host;
-        scheme = uri.scheme;
-        this._extractHostsFromHostScheme(host, scheme, hosts, checkPrivacy, isPinned);
-      } catch (ex) { }
-    }
+      if (scheme == "file") {
+        hosts.add(host);
+      } else if (/https?/.test(scheme)) {
+        if (!checkPrivacy || PrivacyLevel.canSave(scheme == "https")) {
+          hosts.add(host);
+        }
+      }
+    } catch (ex) { }
 
     if (entry.children) {
       for (let child of entry.children) {
-        this._extractHostsFromEntry(child, hosts, checkPrivacy, isPinned);
+        this._extractHostsFromEntry(child, hosts, checkPrivacy);
       }
-    }
-  },
-
-  /**
-   * Add a given host to a given map of hosts if the privacy level allows
-   * saving cookie data for it.
-   *
-   * @param host
-   *        the host of a uri (usually via nsIURI.host)
-   * @param scheme
-   *        the scheme of a uri (usually via nsIURI.scheme)
-   * @param hosts
-   *        the hash that will be used to store hosts eg, { hostname: true }
-   * @param checkPrivacy
-   *        should we check the privacy level for https
-   * @param isPinned
-   *        is the entry we're evaluating for a pinned tab; used only if
-   *        checkPrivacy
-   */
-  _extractHostsFromHostScheme(host, scheme, hosts, checkPrivacy, isPinned) {
-    // host and scheme may not be set (for about: urls for example), in which
-    // case testing scheme will be sufficient.
-    if (/https?/.test(scheme) && !hosts[host] &&
-        (!checkPrivacy ||
-         PrivacyLevel.canSave({isHttps: scheme == "https", isPinned}))) {
-      // By setting this to true or false, we can determine when looking at
-      // the host in update() if we should check for privacy.
-      hosts[host] = isPinned;
-    } else if (scheme == "file") {
-      hosts[host] = true;
     }
   },
 
