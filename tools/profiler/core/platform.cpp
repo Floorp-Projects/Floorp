@@ -2939,7 +2939,8 @@ profiler_get_backtrace()
 
   Tick(lock, buffer, &sample);
 
-  return UniqueProfilerBacktrace(new ProfilerBacktrace(buffer, threadInfo));
+  return UniqueProfilerBacktrace(
+    new ProfilerBacktrace("SyncProfile", tid, buffer));
 }
 
 void
