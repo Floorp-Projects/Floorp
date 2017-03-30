@@ -199,6 +199,7 @@
 #include "nscore.h" // for NS_FREE_PERMANENT_DATA
 #include "VRManagerChild.h"
 #include "private/pprio.h"
+#include "nsString.h"
 
 #ifdef MOZ_WIDGET_GTK
 #include "nsAppRunner.h"
@@ -2159,6 +2160,11 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg,
                                const IPC::Principal& aPrincipal,
                                const ClonedMessageData& aData)
 {
+  NS_LossyConvertUTF16toASCII messageNameCStr(aMsg);
+  PROFILER_LABEL_DYNAMIC("ContentChild", "RecvAsyncMessage",
+                        js::ProfileEntry::Category::EVENTS,
+                        messageNameCStr.get());
+
   CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> cpm =
     nsFrameMessageManager::GetChildProcessManager();

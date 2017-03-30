@@ -14,7 +14,6 @@ Services.scriptloader.loadSubScript(
   this);
 
 const { EVENTS } = require("devtools/client/netmonitor/src/constants");
-let { Toolbox } = require("devtools/client/framework/toolbox");
 const {
   decodeUnicodeUrl,
   getUrlBaseName,

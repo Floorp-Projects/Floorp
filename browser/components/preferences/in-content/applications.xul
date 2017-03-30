@@ -63,7 +63,7 @@
       class="header"
       hidden="true"
       data-category="paneApplications">
-  <label class="header-name" flex="1">&paneApplications.title;</label>
+  <label class="header-name" flex="1">&paneDownloadLinks.title;</label>
   <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
@@ -71,6 +71,46 @@
       data-category="paneApplications"
       hidden="true"
       flex="1">
+
+  <!--Downloads-->
+  <groupbox id="downloadsGroup"
+            data-category="paneApplications"
+            hidden="false">
+    <caption><label>&downloads.label;</label></caption>
+
+    <radiogroup id="saveWhere"
+                preference="browser.download.useDownloadDir"
+                onsyncfrompreference="return gApplicationsPane.readUseDownloadDir();">
+      <hbox id="saveToRow">
+        <radio id="saveTo"
+              value="true"
+              label="&saveTo.label;"
+              accesskey="&saveTo.accesskey;"
+              aria-labelledby="saveTo downloadFolder"/>
+        <filefield id="downloadFolder"
+                  flex="1"
+                  preference="browser.download.folderList"
+                  preference-editable="true"
+                  aria-labelledby="saveTo"
+                  onsyncfrompreference="return gApplicationsPane.displayDownloadDirPref();"/>
+        <button id="chooseFolder"
+#ifdef XP_MACOSX
+                accesskey="&chooseFolderMac.accesskey;"
+                label="&chooseFolderMac.label;"
+#else
+                accesskey="&chooseFolderWin.accesskey;"
+                label="&chooseFolderWin.label;"
+#endif
+        />
+      </hbox>
+      <hbox>
+        <radio id="alwaysAsk"
+              value="false"
+              label="&alwaysAskWhere.label;"
+              accesskey="&alwaysAskWhere.accesskey;"/>
+      </hbox>
+    </radiogroup>
+  </groupbox>
   <hbox>
     <textbox id="filter" flex="1"
              type="search"

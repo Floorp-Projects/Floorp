@@ -34,7 +34,7 @@ async function testUpdateNoPrompt(filename, id,
   PopupNotifications.panel.addEventListener("popupshown", popupListener);
 
   // Trigger an update check, we should see the update get applied
-  let updatePromise = promiseInstallEvent(addon, "onInstallEnded");
+  let updatePromise = waitForUpdate(addon);
   win.gViewController.doCommand("cmd_findAllUpdates");
   await updatePromise;
 

@@ -6,29 +6,50 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
-Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
+Cu.import("resource://gre/modules/Preferences.jsm", this);
+Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
+Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
+Cu.import("resource://gre/modules/Timer.jsm", this);
+
+const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
+const PREF_TELEMETRY_SERVER = "toolkit.telemetry.server";
+
+/**
+ * Wait for a ping file to be deleted from the pending pings directory.
+ */
+function waitForPingDeletion(pingId) {
+  const path = OS.Path.join(TelemetryStorage.pingDirectoryPath, pingId);
+
+  let checkFn = (resolve, reject) => setTimeout(() => {
+    OS.File.exists(path).then(exists => {
+      if (!exists) {
+        Assert.ok(true, pingId + " was deleted");
+        resolve();
+      } else {
+        checkFn(resolve, reject);
+      }
+    }, reject);
+  }, 250);
+
+  return new Promise((resolve, reject) => checkFn(resolve, reject));
+}
+
+add_task(function* setup() {
+  // Init the profile.
+  do_get_profile(true);
+
+  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, true);
+
+  // Start the ping server and let Telemetry know about it.
+  PingServer.start();
+});
 
 add_task(function* test_pingSender() {
-  // Make sure the code can find the pingsender executable
-  const XRE_APP_DISTRIBUTION_DIR = "XREAppDist";
-  let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-  dir.initWithPath(OS.Constants.Path.libDir);
-
-  Services.dirsvc.registerProvider({
-    getFile(aProp, aPersistent) {
-      aPersistent.value = true;
-      if (aProp == XRE_APP_DISTRIBUTION_DIR) {
-        return dir.clone();
-      }
-      return null;
-    }
-  });
-
-  PingServer.start();
-
-  const url = "http://localhost:" + PingServer.port + "/submit/telemetry/";
+  // Generate a new ping and save it among the pending pings.
   const data = {
     type: "test-pingsender-type",
     id: TelemetryUtils.generateUUID(),
@@ -38,8 +59,43 @@ add_task(function* test_pingSender() {
       dummy: "stuff"
     }
   };
+  yield TelemetryStorage.savePing(data, true);
 
-  Telemetry.runPingSender(url, JSON.stringify(data));
+  // Get the local path of the saved ping.
+  const pingPath = OS.Path.join(TelemetryStorage.pingDirectoryPath, data.id);
+
+  // Spawn an HTTP server that returns an error. We will be running the
+  // PingSender twice, trying to send the ping to this server. After the
+  // second time, we will resolve |deferred404Hit|.
+  let failingServer = new HttpServer();
+  let deferred404Hit = PromiseUtils.defer();
+  let hitCount = 0;
+  failingServer.registerPathHandler("/lookup_fail", (metadata, response) => {
+    response.setStatusLine("1.1", 404, "Not Found");
+    hitCount++;
+
+    if (hitCount >= 2) {
+      // Resolve the promise on the next tick.
+      Services.tm.currentThread.dispatch(() => deferred404Hit.resolve(),
+                                         Ci.nsIThread.DISPATCH_NORMAL);
+    }
+  });
+  failingServer.start(-1);
+
+  // Try to send the ping twice using the pingsender (we expect 404 both times).
+  const errorUrl = "http://localhost:" + failingServer.identity.primaryPort + "/lookup_fail";
+  Telemetry.runPingSender(errorUrl, pingPath);
+  Telemetry.runPingSender(errorUrl, pingPath);
+
+  // Wait until we hit the 404 server twice. After that, make sure that the ping
+  // still exists locally.
+  yield deferred404Hit.promise;
+  Assert.ok((yield OS.File.exists(pingPath)),
+            "The pending ping must not be deleted if we fail to send using the PingSender");
+
+  // Try to send it using the pingsender.
+  const url = "http://localhost:" + PingServer.port + "/submit/telemetry/";
+  Telemetry.runPingSender(url, pingPath);
 
   let req = yield PingServer.promiseNextRequest();
   let ping = decodeRequestPayload(req);
@@ -56,6 +112,13 @@ add_task(function* test_pingSender() {
                "Should have received the correct ping type.");
   Assert.deepEqual(ping.payload, data.payload,
                    "Should have received the correct payload.");
+
+  // Check that the PingSender removed the pending ping.
+  yield waitForPingDeletion(data.id);
+
+  // Shut down the failing server. We do this now, and not right after using it,
+  // to make sure we're not interfering with the test.
+  yield new Promise(r => failingServer.stop(r));
 });
 
 add_task(function* cleanup() {
