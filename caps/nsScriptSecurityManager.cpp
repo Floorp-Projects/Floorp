@@ -898,14 +898,6 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
             }
         }
 
-        // Special-case the hidden window: it's allowed to load
-        // URI_IS_UI_RESOURCE no matter what.  Bug 1145470 tracks removing this.
-        nsAutoCString sourceSpec;
-        if (NS_SUCCEEDED(aSourceBaseURI->GetSpec(sourceSpec)) &&
-            sourceSpec.EqualsLiteral("resource://gre-resources/hiddenWindow.html")) {
-            return NS_OK;
-        }
-
         if (reportErrors) {
             ReportError(nullptr, errorTag, aSourceURI, aTargetURI);
         }
