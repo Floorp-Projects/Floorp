@@ -192,6 +192,7 @@
 #include "mozilla/MacroForEach.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TimeStamp.h"
 
@@ -1061,7 +1062,41 @@ GCRuntime::parseAndSetZeal(const char* str)
     return true;
 }
 
-#endif
+static const char*
+AllocKindName(AllocKind kind)
+{
+    static const char* names[] = {
+#define EXPAND_THING_NAME(allocKind, _1, _2, _3) \
+        #allocKind,
+FOR_EACH_ALLOCKIND(EXPAND_THING_NAME)
+#undef EXPAND_THING_NAME
+    };
+    static_assert(ArrayLength(names) == size_t(AllocKind::LIMIT),
+                  "names array should have an entry for every AllocKind");
+
+    size_t i = size_t(kind);
+    MOZ_ASSERT(i < ArrayLength(names));
+    return names[i];
+}
+
+void
+js::gc::DumpArenaInfo()
+{
+    fprintf(stderr, "Arena header size: %" PRIuSIZE "\n\n", ArenaHeaderSize);
+
+    fprintf(stderr, "GC thing kinds:\n");
+    fprintf(stderr, "%25s %8s %8s %8s\n", "AllocKind:", "Size:", "Count:", "Padding:");
+    for (auto kind : AllAllocKinds()) {
+        fprintf(stderr,
+                "%25s %8" PRIuSIZE " %8" PRIuSIZE " %8" PRIuSIZE "\n",
+                AllocKindName(kind),
+                Arena::thingSize(kind),
+                Arena::thingsPerArena(kind),
+                Arena::firstThingOffset(kind) - ArenaHeaderSize);
+    }
+}
+
+#endif // JS_GC_ZEAL
 
 /*
  * Lifetime in number of major GCs for type sets attached to scripts containing
