@@ -1024,7 +1024,7 @@ fails == 422249-1.html 422249-1.html
 fails == 422678-1.html 422678-1.html
 == 423130-1.html 423130-1.html
 == 423385-1.html 423385-1.html
-fails == 423599-1.html 423599-1.html
+== 423599-1.html 423599-1.html
 == 423676-1.html 423676-1.html
 fails == 423823-1.html 423823-1.html
 == 424074-1.xul 424074-1.xul
@@ -1479,8 +1479,8 @@ fails == 539880-1-dynamic.html 539880-1-dynamic.html
 fails == 539949-1.html#test2 539949-1-ref.html#test2
 fails == 541382-1.html 541382-1.html
 == 541406-1.html 541406-1.html
-fails needs-focus == 542116-1.html 542116-1.html
-fails needs-focus == 542116-2.html 542116-2.html
+needs-focus == 542116-1.html 542116-1.html
+needs-focus == 542116-2.html 542116-2.html
 needs-focus == 542116-3.html 542116-3.html
 == 542317-1.html 542317-1.html
 == 542620-1.html 542620-1.html
