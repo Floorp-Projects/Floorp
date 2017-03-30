@@ -74,3 +74,6 @@ patch -p1 < ./uplift-wasapi-fixes-aurora.patch
 
 echo "Applying a patch on top of $version"
 patch -p3 < ./fix-crashes.patch
+
+echo "Applying a patch on top of $version"
+patch -p3 < ./uplift-part-of-bug-1345049.patch

@@ -553,21 +553,31 @@ audiounit_get_input_device_id(AudioDeviceID * device_id)
   return CUBEB_OK;
 }
 
+static int audiounit_stream_get_volume(cubeb_stream * stm, float * volume);
+static int audiounit_stream_set_volume(cubeb_stream * stm, float volume);
+
 static int
 audiounit_reinit_stream(cubeb_stream * stm, bool is_started)
 {
+  auto_lock context_lock(stm->context->mutex);
   if (is_started) {
     audiounit_stream_stop_internal(stm);
   }
 
   {
     auto_lock lock(stm->mutex);
+    float volume = 0.0;
+    int vol_rv = audiounit_stream_get_volume(stm, &volume);
 
     audiounit_close_stream(stm);
 
     if (audiounit_setup_stream(stm) != CUBEB_OK) {
       LOG("(%p) Stream reinit failed.", stm);
       return CUBEB_ERROR;
+    }
+
+    if (vol_rv == CUBEB_OK) {
+      audiounit_stream_set_volume(stm, volume);
     }
 
     // Reset input frames to force new stream pre-buffer
@@ -986,10 +996,12 @@ audiounit_destroy(cubeb * ctx)
     LOG("(%p) API misuse, %d streams active when context destroyed!", ctx, ctx->active_streams.load());
   }
 
-  /* Unregister the callback if necessary. */
-  if(ctx->collection_changed_callback) {
+  {
     auto_lock lock(ctx->mutex);
-    audiounit_remove_device_listener(ctx);
+    /* Unregister the callback if necessary. */
+    if(ctx->collection_changed_callback) {
+      audiounit_remove_device_listener(ctx);
+    }
   }
 
   delete ctx;
@@ -1809,7 +1821,7 @@ audiounit_stream_destroy(cubeb_stream * stm)
 {
   stm->shutdown = true;
 
-  auto_lock context_locl(stm->context->mutex);
+  auto_lock context_lock(stm->context->mutex);
   audiounit_stream_stop_internal(stm);
 
   {
@@ -1851,7 +1863,7 @@ audiounit_stream_start(cubeb_stream * stm)
   stm->shutdown = false;
   stm->draining = false;
 
-  auto_lock context_locl(stm->context->mutex);
+  auto_lock context_lock(stm->context->mutex);
   audiounit_stream_start_internal(stm);
 
   stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STARTED);
@@ -1879,7 +1891,7 @@ audiounit_stream_stop(cubeb_stream * stm)
 {
   stm->shutdown = true;
 
-  auto_lock context_locl(stm->context->mutex);
+  auto_lock context_lock(stm->context->mutex);
   audiounit_stream_stop_internal(stm);
 
   stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STOPPED);
@@ -1974,6 +1986,21 @@ audiounit_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 
   return CUBEB_OK;
 #endif
+}
+
+static int
+audiounit_stream_get_volume(cubeb_stream * stm, float * volume)
+{
+  assert(stm->output_unit);
+  OSStatus r = AudioUnitGetParameter(stm->output_unit,
+                                     kHALOutputParam_Volume,
+                                     kAudioUnitScope_Global,
+                                     0, volume);
+  if (r != noErr) {
+    LOG("AudioUnitGetParameter/kHALOutputParam_Volume rv=%d", r);
+    return CUBEB_ERROR;
+  }
+  return CUBEB_OK;
 }
 
 int audiounit_stream_set_volume(cubeb_stream * stm, float volume)
