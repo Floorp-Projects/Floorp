@@ -15,9 +15,6 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 
-#define PL_ARENA_CONST_ALIGN_MASK 3
-#include "plarena.h"
-
 #ifdef _WIN32
   #include "windows.h"
 #endif /* _WIN32 */
@@ -25,6 +22,8 @@
 #include "plstr.h"
 #include "PLDHashTable.h"
 #include "plbase64.h"
+#include "mozilla/ArenaAllocator.h"
+#include "mozilla/ArenaAllocatorExtensions.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/PContent.h"
@@ -68,7 +67,7 @@ matchPrefEntry(const PLDHashEntryHdr* entry, const void* key)
 }
 
 PLDHashTable*       gHashTable;
-static PLArenaPool  gPrefNameArena;
+static ArenaAllocator<8192,4> gPrefNameArena;
 
 static struct CallbackNode* gCallbacks = nullptr;
 static bool         gIsAnyPrefLocked = false;
@@ -91,27 +90,12 @@ static PLDHashTableOps     pref_HashTableOps = {
 #define PR_ALIGN_OF_WORD PR_ALIGN_OF_POINTER
 #endif
 
-// making PrefName arena 8k for nice allocation
-#define PREFNAME_ARENA_SIZE 8192
-
 #define WORD_ALIGN_MASK (PR_ALIGN_OF_WORD - 1)
 
 // sanity checking
 #if (PR_ALIGN_OF_WORD & WORD_ALIGN_MASK) != 0
 #error "PR_ALIGN_OF_WORD must be a power of 2!"
 #endif
-
-// equivalent to strdup() - does no error checking,
-// we're assuming we're only called with a valid pointer
-static char *ArenaStrDup(const char* str, PLArenaPool* aArena)
-{
-    void* mem;
-    uint32_t len = strlen(str);
-    PL_ARENA_ALLOCATE(mem, aArena, len+1);
-    if (mem)
-        memcpy(mem, str, len+1);
-    return static_cast<char*>(mem);
-}
 
 static PrefsDirtyFunc gDirtyCallback = nullptr;
 
@@ -164,9 +148,6 @@ void PREF_Init()
         gHashTable = new PLDHashTable(&pref_HashTableOps,
                                       sizeof(PrefHashEntry),
                                       PREF_HASHTABLE_INITIAL_LENGTH);
-
-        PL_INIT_ARENA_POOL(&gPrefNameArena, "PrefNameArena",
-                           PREFNAME_ARENA_SIZE);
     }
 }
 
@@ -196,7 +177,7 @@ void PREF_CleanupPrefs()
     if (gHashTable) {
         delete gHashTable;
         gHashTable = nullptr;
-        PL_FinishArenaPool(&gPrefNameArena);
+        gPrefNameArena.Clear();
     }
 }
 
@@ -817,7 +798,7 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
 
         // initialize the pref entry
         pref->prefFlags.Reset().SetPrefType(type);
-        pref->key = ArenaStrDup(key, &gPrefNameArena);
+        pref->key = ArenaStrdup(key, gPrefNameArena);
         memset(&pref->defaultPref, 0, sizeof(pref->defaultPref));
         memset(&pref->userPref, 0, sizeof(pref->userPref));
     } else if (pref->prefFlags.HasDefault() && !pref->prefFlags.IsPrefType(type)) {
@@ -878,7 +859,7 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
 size_t
 pref_SizeOfPrivateData(MallocSizeOf aMallocSizeOf)
 {
-    size_t n = PL_SizeOfArenaPoolExcludingPool(&gPrefNameArena, aMallocSizeOf);
+    size_t n = gPrefNameArena.SizeOfExcludingThis(aMallocSizeOf);
     for (struct CallbackNode* node = gCallbacks; node; node = node->next) {
         n += aMallocSizeOf(node);
         n += aMallocSizeOf(node->domain);
