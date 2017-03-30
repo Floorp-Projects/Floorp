@@ -90,18 +90,28 @@ ProfileAutoCompleteResult.prototype = {
     /* TODO: Since "name" is a special case here, so the secondary "name" label
        will be refined when the handling rule for "name" is ready.
     */
-    const possibleNameFields = ["given-name", "additional-name", "family-name"];
+    const possibleNameFields = [
+      "name",
+      "given-name",
+      "additional-name",
+      "family-name",
+    ];
+
     focusedFieldName = possibleNameFields.includes(focusedFieldName) ?
                        "name" : focusedFieldName;
-    if (!profile.name) {
-      profile.name = FormAutofillUtils.generateFullName(profile["given-name"],
-                                                        profile["family-name"],
-                                                        profile["additional-name"]);
+
+    // Clones the profile to avoid exposing our modification.
+    let clonedProfile = Object.assign({}, profile);
+    if (!clonedProfile.name) {
+      clonedProfile.name =
+        FormAutofillUtils.generateFullName(clonedProfile["given-name"],
+                                           clonedProfile["family-name"],
+                                           clonedProfile["additional-name"]);
     }
 
     const secondaryLabelOrder = [
       "street-address",  // Street address
-      "name",            // Full name if needed
+      "name",            // Full name
       "address-level2",  // City/Town
       "organization",    // Company or organization name
       "address-level1",  // Province/State (Standardized code if possible)
@@ -112,10 +122,20 @@ ProfileAutoCompleteResult.prototype = {
     ];
 
     for (const currentFieldName of secondaryLabelOrder) {
-      if (focusedFieldName != currentFieldName &&
-          allFieldNames.includes(currentFieldName) &&
-          profile[currentFieldName]) {
-        return profile[currentFieldName];
+      if (focusedFieldName == currentFieldName ||
+          !clonedProfile[currentFieldName]) {
+        continue;
+      }
+
+      let matching;
+      if (currentFieldName == "name") {
+        matching = allFieldNames.some(fieldName => possibleNameFields.includes(fieldName));
+      } else {
+        matching = allFieldNames.includes(currentFieldName);
+      }
+
+      if (matching) {
+        return clonedProfile[currentFieldName];
       }
     }
 
