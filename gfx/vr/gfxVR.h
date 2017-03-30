@@ -251,8 +251,8 @@ protected:
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRSystemManager)
 
-  virtual bool Init() = 0;
   virtual void Destroy() = 0;
+  virtual void Shutdown() = 0;
   virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) = 0;
   virtual bool GetIsPresenting() = 0;
   virtual void HandleInput() = 0;

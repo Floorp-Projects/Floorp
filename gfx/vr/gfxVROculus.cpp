@@ -57,7 +57,6 @@ using namespace mozilla::dom;
 
 namespace {
 
-#ifdef OVR_CAPI_LIMITED_MOZILLA
 static pfn_ovr_Initialize ovr_Initialize = nullptr;
 static pfn_ovr_Shutdown ovr_Shutdown = nullptr;
 static pfn_ovr_GetLastErrorInfo ovr_GetLastErrorInfo = nullptr;
@@ -148,24 +147,40 @@ static const uint32_t kNumOculusButton = static_cast<uint32_t>
                                          NumButtonType);
 static const uint32_t kNumOculusHaptcs = 1;
 
-
-static bool
-InitializeOculusCAPI()
+ovrFovPort
+ToFovPort(const VRFieldOfView& aFOV)
 {
-  static PRLibrary *ovrlib = nullptr;
+  ovrFovPort fovPort;
+  fovPort.LeftTan = tan(aFOV.leftDegrees * M_PI / 180.0);
+  fovPort.RightTan = tan(aFOV.rightDegrees * M_PI / 180.0);
+  fovPort.UpTan = tan(aFOV.upDegrees * M_PI / 180.0);
+  fovPort.DownTan = tan(aFOV.downDegrees * M_PI / 180.0);
+  return fovPort;
+}
 
-  if (!ovrlib) {
+VRFieldOfView
+FromFovPort(const ovrFovPort& aFOV)
+{
+  VRFieldOfView fovInfo;
+  fovInfo.leftDegrees = atan(aFOV.LeftTan) * 180.0 / M_PI;
+  fovInfo.rightDegrees = atan(aFOV.RightTan) * 180.0 / M_PI;
+  fovInfo.upDegrees = atan(aFOV.UpTan) * 180.0 / M_PI;
+  fovInfo.downDegrees = atan(aFOV.DownTan) * 180.0 / M_PI;
+  return fovInfo;
+}
+
+} // namespace
+
+bool
+VRSystemManagerOculus::LoadOvrLib()
+{
+  if (!mOvrLib) {
     nsTArray<nsCString> libSearchPaths;
     nsCString libName;
     nsCString searchPath;
 
 #if defined(_WIN32)
     static const char dirSep = '\\';
-#else
-    static const char dirSep = '/';
-#endif
-
-#if defined(_WIN32)
     static const int pathLen = 260;
     searchPath.SetCapacity(pathLen);
     int realLen = ::GetSystemDirectoryA(searchPath.BeginWriting(), pathLen);
@@ -174,37 +189,9 @@ InitializeOculusCAPI()
       libSearchPaths.AppendElement(searchPath);
     }
     libName.AppendPrintf("LibOVRRT%d_%d.dll", BUILD_BITS, OVR_PRODUCT_VERSION);
-#elif defined(__APPLE__)
-    searchPath.Truncate();
-    searchPath.AppendPrintf("/Library/Frameworks/LibOVRRT_%d.framework/Versions/%d", OVR_PRODUCT_VERSION, OVR_MAJOR_VERSION);
-    libSearchPaths.AppendElement(searchPath);
-
-    if (PR_GetEnv("HOME")) {
-      searchPath.Truncate();
-      searchPath.AppendPrintf("%s/Library/Frameworks/LibOVRRT_%d.framework/Versions/%d", PR_GetEnv("HOME"), OVR_PRODUCT_VERSION, OVR_MAJOR_VERSION);
-      libSearchPaths.AppendElement(searchPath);
-    }
-    // The following will match the va_list overload of AppendPrintf if the product version is 0
-    // That's bad times.
-    //libName.AppendPrintf("LibOVRRT_%d", OVR_PRODUCT_VERSION);
-    libName.Append("LibOVRRT_");
-    libName.AppendInt(OVR_PRODUCT_VERSION);
 #else
-    libSearchPaths.AppendElement(nsCString("/usr/local/lib"));
-    libSearchPaths.AppendElement(nsCString("/usr/lib"));
-    libName.AppendPrintf("libOVRRT%d_%d.so.%d", BUILD_BITS, OVR_PRODUCT_VERSION, OVR_MAJOR_VERSION);
+#error "Unsupported platform!"
 #endif
-    
-    // If the pref is present, we override libName
-    nsAdoptingCString prefLibPath = mozilla::Preferences::GetCString("dom.vr.ovr_lib_path");
-    if (prefLibPath && prefLibPath.get()) {
-      libSearchPaths.InsertElementsAt(0, 1, prefLibPath);
-    }
-
-    nsAdoptingCString prefLibName = mozilla::Preferences::GetCString("dom.vr.ovr_lib_name");
-    if (prefLibName && prefLibName.get()) {
-      libName.Assign(prefLibName);
-    }
 
     // search the path/module dir
     libSearchPaths.InsertElementsAt(0, 1, nsCString());
@@ -228,22 +215,19 @@ InitializeOculusCAPI()
         fullName.AppendPrintf("%s%c%s", libPath.BeginReading(), dirSep, libName.BeginReading());
       }
 
-      ovrlib = PR_LoadLibrary(fullName.BeginReading());
-      if (ovrlib)
+      mOvrLib = PR_LoadLibrary(fullName.BeginReading());
+      if (mOvrLib) {
         break;
+      }
     }
 
-    if (!ovrlib) {
+    if (!mOvrLib) {
       return false;
     }
   }
 
-  // was it already initialized?
-  if (ovr_Initialize)
-    return true;
-
 #define REQUIRE_FUNCTION(_x) do { \
-    *(void **)&_x = (void *) PR_FindSymbol(ovrlib, #_x);                \
+    *(void **)&_x = (void *) PR_FindSymbol(mOvrLib, #_x);                \
     if (!_x) { printf_stderr(#_x " symbol missing\n"); goto fail; }       \
   } while (0)
 
@@ -310,42 +294,19 @@ InitializeOculusCAPI()
 
  fail:
   ovr_Initialize = nullptr;
+  PR_UnloadLibrary(mOvrLib);
+  mOvrLib = nullptr;
   return false;
 }
 
-#else
-#include <OVR_Version.h>
-// we're statically linked; it's available
-static bool InitializeOculusCAPI()
+void
+VRSystemManagerOculus::UnloadOvrLib()
 {
-  return true;
+  if (mOvrLib) {
+    PR_UnloadLibrary(mOvrLib);
+    mOvrLib = nullptr;
+  }
 }
-
-#endif
-
-ovrFovPort
-ToFovPort(const VRFieldOfView& aFOV)
-{
-  ovrFovPort fovPort;
-  fovPort.LeftTan = tan(aFOV.leftDegrees * M_PI / 180.0);
-  fovPort.RightTan = tan(aFOV.rightDegrees * M_PI / 180.0);
-  fovPort.UpTan = tan(aFOV.upDegrees * M_PI / 180.0);
-  fovPort.DownTan = tan(aFOV.downDegrees * M_PI / 180.0);
-  return fovPort;
-}
-
-VRFieldOfView
-FromFovPort(const ovrFovPort& aFOV)
-{
-  VRFieldOfView fovInfo;
-  fovInfo.leftDegrees = atan(aFOV.LeftTan) * 180.0 / M_PI;
-  fovInfo.rightDegrees = atan(aFOV.RightTan) * 180.0 / M_PI;
-  fovInfo.upDegrees = atan(aFOV.UpTan) * 180.0 / M_PI;
-  fovInfo.downDegrees = atan(aFOV.DownTan) * 180.0 / M_PI;
-  return fovInfo;
-}
-
-} // namespace
 
 VRDisplayOculus::VRDisplayOculus(ovrSession aSession)
   : VRDisplayHost(VRDeviceType::Oculus)
@@ -683,8 +644,6 @@ VRDisplayOculus::StopPresentation()
     return;
   }
   mIsPresenting = false;
-
-  ovr_SubmitFrame(mSession, 0, nullptr, nullptr, 0);
 
   if (mTextureSet) {
     ovr_DestroyTextureSwapChain(mSession, mTextureSet);
@@ -1108,57 +1067,67 @@ VRSystemManagerOculus::Create()
     return nullptr;
   }
 
-  if (!InitializeOculusCAPI()) {
-    return nullptr;
-  }
-
   RefPtr<VRSystemManagerOculus> manager = new VRSystemManagerOculus();
   return manager.forget();
 }
 
 bool
-VRSystemManagerOculus::Init()
+VRSystemManagerOculus::Startup()
 {
-  if (!mOculusInitialized) {
-    nsIThread* thread = nullptr;
-    NS_GetCurrentThread(&thread);
-    mOculusThread = already_AddRefed<nsIThread>(thread);
-
-    ovrInitParams params;
-    memset(&params, 0, sizeof(params));
-    params.Flags = ovrInit_RequestVersion;
-    params.RequestedMinorVersion = OVR_MINOR_VERSION;
-    params.LogCallback = nullptr;
-    params.ConnectionTimeoutMS = 0;
-
-    ovrResult orv = ovr_Initialize(&params);
-
-    if (orv == ovrSuccess) {
-      mOculusInitialized = true;
-    }
+  if (mStarted) {
+    return true;
   }
 
-  return mOculusInitialized;
+  if (!LoadOvrLib()) {
+    return false;
+  }
+
+  nsIThread* thread = nullptr;
+  NS_GetCurrentThread(&thread);
+  mOculusThread = already_AddRefed<nsIThread>(thread);
+
+  ovrInitParams params;
+  memset(&params, 0, sizeof(params));
+  params.Flags = ovrInit_RequestVersion;
+  params.RequestedMinorVersion = OVR_MINOR_VERSION;
+  params.LogCallback = nullptr;
+  params.ConnectionTimeoutMS = 0;
+
+  ovrResult orv = ovr_Initialize(&params);
+
+  if (orv == ovrSuccess) {
+    mStarted = true;
+  }
+
+  return mStarted;
 }
 
 void
 VRSystemManagerOculus::Destroy()
 {
-  if (mOculusInitialized) {
+  Shutdown();
+}
+
+void
+VRSystemManagerOculus::Shutdown()
+{
+  if (mStarted) {
+    RemoveControllers();
     MOZ_ASSERT(NS_GetCurrentThread() == mOculusThread);
     mOculusThread = nullptr;
     mSession = nullptr;
     mHMDInfo = nullptr;
 
     ovr_Shutdown();
-    mOculusInitialized = false;
+    UnloadOvrLib();
+    mStarted = false;
   }
 }
 
 void
 VRSystemManagerOculus::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 {
-  if (!mOculusInitialized) {
+  if (!Startup()) {
     return;
   }
 
@@ -1437,10 +1406,6 @@ void
 VRSystemManagerOculus::GetControllers(nsTArray<RefPtr<VRControllerHost>>&
                                       aControllerResult)
 {
-  if (!mOculusInitialized) {
-    return;
-  }
-
   aControllerResult.Clear();
   for (uint32_t i = 0; i < mOculusController.Length(); ++i) {
     aControllerResult.AppendElement(mOculusController[i]);

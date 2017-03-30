@@ -346,14 +346,14 @@ VRSystemManagerPuppet::Create()
   return manager.forget();
 }
 
-bool
-VRSystemManagerPuppet::Init()
+void
+VRSystemManagerPuppet::Destroy()
 {
-  return true;
+  Shutdown();
 }
 
 void
-VRSystemManagerPuppet::Destroy()
+VRSystemManagerPuppet::Shutdown()
 {
   mPuppetHMD = nullptr;
 }

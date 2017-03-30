@@ -117,12 +117,18 @@ VRManager::Destroy()
 }
 
 void
+VRManager::Shutdown()
+{
+  mVRDisplays.Clear();
+  mVRControllers.Clear();
+  for (uint32_t i = 0; i < mManagers.Length(); ++i) {
+    mManagers[i]->Shutdown();
+  }
+}
+
+void
 VRManager::Init()
 {
-  for (uint32_t i = 0; i < mManagers.Length(); ++i) {
-    mManagers[i]->Init();
-  }
-
   mInitialized = true;
 }
 
@@ -159,6 +165,7 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
 
   bool bHaveEventListener = false;
   bool bHaveControllerListener = false;
+  bool bHaveActiveDisplay = false;
 
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
     VRManagerParent *vmp = iter.Get()->GetKey();
@@ -172,6 +179,9 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
   for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
     gfx::VRDisplayHost* display = iter.UserData();
     display->NotifyVSync();
+    if (display->GetDisplayInfo().GetIsPresenting()) {
+      bHaveActiveDisplay = true;
+    }
   }
 
   if (bHaveEventListener) {
@@ -208,6 +218,11 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
         }
       }
     }
+  }
+
+  if (!bHaveEventListener && !bHaveControllerListener && !bHaveActiveDisplay) {
+    // Shut down the VR devices when not in use
+    Shutdown();
   }
 }
 
@@ -406,7 +421,6 @@ VRManager::CreateVRTestSystem()
 
   RefPtr<VRSystemManager> mgr = VRSystemManagerPuppet::Create();
   if (mgr) {
-    mgr->Init();
     mManagers.AppendElement(mgr);
     mVRTestSystemCreated = true;
   }

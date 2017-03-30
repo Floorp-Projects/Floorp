@@ -111,8 +111,8 @@ class VRSystemManagerOpenVR : public VRSystemManager
 public:
   static already_AddRefed<VRSystemManagerOpenVR> Create();
 
-  virtual bool Init() override;
   virtual void Destroy() override;
+  virtual void Shutdown() override;
   virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost> >& aHMDResult) override;
   virtual bool GetIsPresenting() override;
   virtual void HandleInput() override;
@@ -152,7 +152,6 @@ private:
   RefPtr<impl::VRDisplayOpenVR> mOpenVRHMD;
   nsTArray<RefPtr<impl::VRControllerOpenVR>> mOpenVRController;
   vr::IVRSystem *mVRSystem;
-  bool mOpenVRInstalled;
 };
 
 } // namespace gfx
