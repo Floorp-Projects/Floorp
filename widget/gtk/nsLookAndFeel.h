@@ -81,8 +81,9 @@ protected:
     char16_t sInvisibleCharacter;
     float   sCaretRatio;
     bool    sMenuSupportsDrag;
+    bool    mInitialized;
 
-    void Init();
+    void EnsureInit();
 };
 
 #endif
