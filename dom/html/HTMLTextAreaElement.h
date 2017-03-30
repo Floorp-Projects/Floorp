@@ -105,8 +105,9 @@ public:
   NS_IMETHOD_(Element*) GetPlaceholderNode() override;
   NS_IMETHOD_(Element*) CreatePreviewNode() override;
   NS_IMETHOD_(Element*) GetPreviewNode() override;
-  NS_IMETHOD_(void) UpdatePlaceholderVisibility(bool aNotify) override;
+  NS_IMETHOD_(void) UpdateOverlayTextVisibility(bool aNotify) override;
   NS_IMETHOD_(bool) GetPlaceholderVisibility() override;
+  NS_IMETHOD_(bool) GetPreviewVisibility() override;
   NS_IMETHOD_(void) SetPreviewValue(const nsAString& aValue) override;
   NS_IMETHOD_(void) GetPreviewValue(nsAString& aValue) override;
   NS_IMETHOD_(void) EnablePreview() override;
