@@ -13,6 +13,9 @@
 namespace mozilla {
 namespace gfx {
 
+int32_t
+StrideForFormatAndWidth(SurfaceFormat aFormat, int32_t aWidth);
+
 /**
  * Create a DataSourceSurface and init the surface with the |aData|. The stride
  * of this source surface might be different from the input data's |aDataStride|.
