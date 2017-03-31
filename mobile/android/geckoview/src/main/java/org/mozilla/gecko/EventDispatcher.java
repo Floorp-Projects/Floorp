@@ -9,7 +9,6 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.mozglue.JNIObject;
-import org.mozilla.gecko.NativeQueue.StateHolder;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -55,7 +54,7 @@ public final class EventDispatcher extends JNIObject {
         new HashMap<String, List<BundleEventListener>>(DEFAULT_BACKGROUND_EVENTS_COUNT);
 
     private boolean mAttachedToGecko;
-    private volatile StateHolder mStateHolder;
+    private final NativeQueue mNativeQueue;
 
     @ReflectionTarget
     @WrapForJNI(calledFrom = "gecko")
@@ -64,22 +63,15 @@ public final class EventDispatcher extends JNIObject {
     }
 
     /* package */ EventDispatcher() {
-        mStateHolder = GeckoThread.getStateHolder();
+        mNativeQueue = GeckoThread.getNativeQueue();
     }
 
-    /* package */ EventDispatcher(final NativeQueue.StateHolder stateHolder) {
-        mStateHolder = stateHolder;
-    }
-
-    /* package */ void setStateHolder(final NativeQueue.StateHolder stateHolder) {
-        mStateHolder = stateHolder;
-        // Force queue flushing.
-        final NativeQueue.State state = mStateHolder.getState();
-        mStateHolder.checkAndSetState(state, state);
+    /* package */ EventDispatcher(final NativeQueue queue) {
+        mNativeQueue = queue;
     }
 
     private boolean isReadyForDispatchingToGecko() {
-        return mStateHolder.isReady();
+        return mNativeQueue.isReady();
     }
 
     @WrapForJNI(dispatchTo = "gecko") @Override // JNIObject
@@ -301,8 +293,7 @@ public final class EventDispatcher extends JNIObject {
             // Gecko, we make a special exception to queue this event until
             // Gecko(View) is ready. This way, Gecko can first register its
             // listeners, and accept the event when it is ready.
-            NativeQueue.queueUntil(mStateHolder,
-                mStateHolder.getReadyState(), this, "dispatchToGecko",
+            mNativeQueue.queueUntilReady(this, "dispatchToGecko",
                 String.class, type,
                 GeckoBundle.class, message,
                 EventCallback.class, JavaCallbackDelegate.wrap(callback));
