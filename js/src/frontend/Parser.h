@@ -803,8 +803,7 @@ class ParserBase : public StrictModeGetter
 
     ParserBase(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
                const char16_t* chars, size_t length, bool foldConstants,
-               UsedNameTracker& usedNames, Parser<SyntaxParseHandler>* syntaxParser,
-               LazyScript* lazyOuterFunction);
+               UsedNameTracker& usedNames, LazyScript* lazyOuterFunction);
     ~ParserBase();
 
     const char* getFilename() const { return tokenStream.getFilename(); }

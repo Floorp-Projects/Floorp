@@ -779,7 +779,6 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
                        const char16_t* chars, size_t length,
                        bool foldConstants,
                        UsedNameTracker& usedNames,
-                       Parser<SyntaxParseHandler>* syntaxParser,
                        LazyScript* lazyOuterFunction)
   : context(cx),
     alloc(alloc),
@@ -823,8 +822,7 @@ Parser<ParseHandler>::Parser(JSContext* cx, LifoAlloc& alloc,
                              UsedNameTracker& usedNames,
                              Parser<SyntaxParseHandler>* syntaxParser,
                              LazyScript* lazyOuterFunction)
-  : ParserBase(cx, alloc, options, chars, length, foldConstants, usedNames, syntaxParser,
-              lazyOuterFunction),
+  : ParserBase(cx, alloc, options, chars, length, foldConstants, usedNames, lazyOuterFunction),
     AutoGCRooter(cx, PARSER),
     handler(cx, alloc, tokenStream, syntaxParser, lazyOuterFunction)
 {
