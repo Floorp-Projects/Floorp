@@ -117,13 +117,17 @@ public:
   void AddStateChangeTask(AbstractThread* aThread,
                           already_AddRefed<nsIRunnable> aRunnable) override
   {
-    EnsureTaskGroup(aThread).mStateChangeTasks.AppendElement(aRunnable);
+    nsCOMPtr<nsIRunnable> r = aRunnable;
+    MOZ_RELEASE_ASSERT(r);
+    EnsureTaskGroup(aThread).mStateChangeTasks.AppendElement(r.forget());
   }
 
   void AddTask(AbstractThread* aThread,
                already_AddRefed<nsIRunnable> aRunnable,
                AbstractThread::DispatchFailureHandling aFailureHandling) override
   {
+    nsCOMPtr<nsIRunnable> r = aRunnable;
+    MOZ_RELEASE_ASSERT(r);
     // To preserve the event order, we need to append a new group if the last
     // group is not targeted for |aThread|.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1318226&mark=0-3#c0
@@ -133,7 +137,7 @@ public:
     }
 
     PerThreadTaskGroup& group = *mTaskGroups.LastElement();
-    group.mRegularTasks.AppendElement(aRunnable);
+    group.mRegularTasks.AppendElement(r.forget());
 
     // The task group needs to assert dispatch success if any of the runnables
     // it's dispatching want to assert it.
