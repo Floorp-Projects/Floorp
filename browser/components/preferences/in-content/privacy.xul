@@ -627,7 +627,7 @@
 </groupbox>
 
 <!-- Offline apps -->
-<groupbox id="offlineGroup" data-category="panePrivacy" hidden="true">
+<groupbox id="offlineGroup" data-category="panePrivacy" hidden="true" data-hidden-from-search="true">
   <caption><label>&offlineStorage2.label;</label></caption>
 
   <hbox align="center">
@@ -663,7 +663,7 @@
 </groupbox>
 
 <!-- Site Data -->
-<groupbox id="siteDataGroup" hidden="true" data-category="panePrivacy">
+<groupbox id="siteDataGroup" hidden="true" data-category="panePrivacy" data-hidden-from-search="true">
   <caption><label>&siteData.label;</label></caption>
 
   <hbox align="center">
