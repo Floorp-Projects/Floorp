@@ -15,6 +15,7 @@ interface VRMockDisplay {
   void setPose(Float32Array? position, Float32Array? linearVelocity,
                Float32Array? linearAcceleration, Float32Array? orientation,
                Float32Array? angularVelocity, Float32Array? angularAcceleration);
+  void setMountState(boolean isMounted);
   void update();
 };
 
