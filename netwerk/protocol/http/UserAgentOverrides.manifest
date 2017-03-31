@@ -1,4 +1,0 @@
-# UserAgentOverrides.js
-component {965b0ca8-155b-11e7-93ae-92361f002671} UserAgentOverrides.js process=main
-contract @mozilla.org/network/useragentoverrides;1 {965b0ca8-155b-11e7-93ae-92361f002671}
-category app-startup UserAgentOverrides service,@mozilla.org/network/useragentoverrides;1
