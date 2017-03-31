@@ -2113,11 +2113,8 @@ profiler_shutdown()
     delete gPS;
     gPS = nullptr;
 
-    // We just destroyed gPS and the ThreadInfos it contains, so it is safe to
-    // delete the PseudoStack. tlsPseudoStack is certain to still be the owner
-    // of its PseudoStack because the main thread is never put in a "pending
-    // delete" state.
-    delete tlsPseudoStack.get();
+    // We just destroyed gPS and the ThreadInfos (and PseudoStacks) it
+    // contains, so we can clear this thread's tlsPseudoStack.
     tlsPseudoStack.set(nullptr);
 
 #ifdef MOZ_TASK_TRACER
@@ -2853,7 +2850,8 @@ profiler_unregister_thread()
 
   PS::AutoLock lock(gPSMutex);
 
-  bool wasPseudoStackTransferred = false;
+  // We don't call PseudoStack::stopJSSampling() here; there's no point doing
+  // that for a JS thread that is in the process of disappearing.
 
   int i;
   ThreadInfo* info = FindThreadInfo(lock, &i);
@@ -2861,16 +2859,19 @@ profiler_unregister_thread()
     DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
     if (gPS->IsActive(lock)) {
       // We still want to show the results of this thread if you save the
-      // profile shortly after a thread is terminated, which requires
-      // transferring ownership of the PseudoStack to |info|. For now we will
-      // defer the delete to profile stop.
+      // profile shortly after a thread is terminated. We defer the delete to
+      // profile stop.
       info->SetPendingDelete();
-      wasPseudoStackTransferred = true;
     } else {
       delete info;
       PS::ThreadVector& threads = gPS->Threads(lock);
       threads.erase(threads.begin() + i);
     }
+
+    // Whether or not we just destroyed the PseudoStack (via its owning
+    // ThreadInfo), we no longer need to access it via TLS.
+    tlsPseudoStack.set(nullptr);
+
   } else {
     // There are two ways FindThreadInfo() can fail.
     //
@@ -2882,14 +2883,6 @@ profiler_unregister_thread()
     // Either way, tlsPseudoStack should be empty.
     MOZ_RELEASE_ASSERT(!tlsPseudoStack.get());
   }
-
-  // We don't call PseudoStack::stopJSSampling() here; there's no point doing
-  // that for a JS thread that is in the process of disappearing.
-
-  if (!wasPseudoStackTransferred) {
-    delete tlsPseudoStack.get();
-  }
-  tlsPseudoStack.set(nullptr);
 }
 
 void

@@ -44,8 +44,7 @@ private:
   int mThreadId;
   const bool mIsMainThread;
 
-  // The thread's PseudoStack. This is an owning pointer iff mIsPendingDelete
-  // is set.
+  // The thread's PseudoStack. This is an owning pointer.
   mozilla::NotNull<PseudoStack*> mPseudoStack;
 
   UniquePlatformData mPlatformData;
@@ -56,7 +55,7 @@ private:
 
   // When a thread dies while the profiler is active we keep its ThreadInfo
   // (and its PseudoStack) around for a while, and put it in a "pending delete"
-  // state. In this state, mPseudoStack is an owning pointer.
+  // state.
   bool mPendingDelete;
 
   //

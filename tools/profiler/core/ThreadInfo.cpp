@@ -50,9 +50,7 @@ ThreadInfo::~ThreadInfo()
 {
   MOZ_COUNT_DTOR(ThreadInfo);
 
-  if (mPendingDelete) {
-    delete mPseudoStack;
-  }
+  delete mPseudoStack;
 }
 
 void
@@ -243,11 +241,7 @@ size_t
 ThreadInfo::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-
   n += aMallocSizeOf(mName.get());
-
-  // We measure the PseudoStack whether mPendingDelete is set or not, because
-  // the memory reporter doesn't measure through tlsPseudoStack.
   n += mPseudoStack->SizeOfIncludingThis(aMallocSizeOf);
 
   // Measurement of the following members may be added later if DMD finds it
