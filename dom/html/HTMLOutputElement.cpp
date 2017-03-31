@@ -21,7 +21,7 @@ namespace dom {
 
 HTMLOutputElement::HTMLOutputElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                                      FromParser aFromParser)
-  : nsGenericHTMLFormElement(aNodeInfo, NS_FORM_OUTPUT)
+  : nsGenericHTMLFormElement(aNodeInfo)
   , mValueModeFlag(eModeDefault)
   , mIsDoneAddingChildren(!aFromParser)
 {

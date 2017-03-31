@@ -296,6 +296,7 @@ public:
   virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) override;
 
   // Overriden nsIFormControl methods
+  NS_IMETHOD_(uint32_t) GetType() const override { return NS_FORM_SELECT; }
   NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
   NS_IMETHOD SaveState() override;

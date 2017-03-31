@@ -403,7 +403,7 @@ nsGenericHTMLElement::Spellcheck()
   }
 
   // Is this a multiline plaintext input?
-  int32_t controlType = formControl->ControlType();
+  int32_t controlType = formControl->GetType();
   if (controlType == NS_FORM_TEXTAREA) {
     return true;             // Spellchecked by default
   }
@@ -1730,10 +1730,8 @@ nsGenericHTMLElement::TouchEventsEnabled(JSContext* aCx, JSObject* aGlobal)
 
 //----------------------------------------------------------------------
 
-nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
-                                                   uint8_t aType)
+nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
-  , nsIFormControl(aType)
   , mForm(nullptr)
   , mFieldSet(nullptr)
 {
@@ -2092,7 +2090,7 @@ nsGenericHTMLFormElement::ForgetFieldSet(nsIContent* aFieldset)
 bool
 nsGenericHTMLFormElement::CanBeDisabled() const
 {
-  int32_t type = ControlType();
+  int32_t type = GetType();
   // It's easier to test the types that _cannot_ be disabled
   return
     type != NS_FORM_OBJECT &&
@@ -2405,7 +2403,7 @@ bool
 nsGenericHTMLFormElement::IsLabelable() const
 {
   // TODO: keygen should be in that list, see bug 101019.
-  uint32_t type = ControlType();
+  uint32_t type = GetType();
   return (type & NS_FORM_INPUT_ELEMENT && type != NS_FORM_INPUT_HIDDEN) ||
          type & NS_FORM_BUTTON_ELEMENT ||
          // type == NS_FORM_KEYGEN ||
@@ -2732,9 +2730,9 @@ nsGenericHTMLElement::ChangeEditableState(int32_t aChange)
 //----------------------------------------------------------------------
 
 nsGenericHTMLFormElementWithState::nsGenericHTMLFormElementWithState(
-    already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo, uint8_t aType
+    already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo
   )
-  : nsGenericHTMLFormElement(aNodeInfo, aType)
+  : nsGenericHTMLFormElement(aNodeInfo)
 {
   mStateKey.SetIsVoid(true);
 }

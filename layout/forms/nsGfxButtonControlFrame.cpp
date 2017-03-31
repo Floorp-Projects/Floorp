@@ -94,7 +94,7 @@ nsGfxButtonControlFrame::GetDefaultLabel(nsXPIDLString& aString) const
   nsCOMPtr<nsIFormControl> form = do_QueryInterface(mContent);
   NS_ENSURE_TRUE(form, NS_ERROR_UNEXPECTED);
 
-  int32_t type = form->ControlType();
+  int32_t type = form->GetType();
   const char *prop;
   if (type == NS_FORM_INPUT_RESET) {
     prop = "Reset";
