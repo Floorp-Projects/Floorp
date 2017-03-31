@@ -199,6 +199,10 @@ class HashMap
     // using the finish() method.
     void clear()                                      { impl.clear(); }
 
+    // Remove all entries. Unlike clear() this method tries to shrink the table.
+    // Unlike finish() it does not require the map to be initialized again.
+    void clearAndShrink()                             { impl.clearAndShrink(); }
+
     // Remove all the entries and release all internal buffers. The map must
     // be initialized again before any use.
     void finish()                                     { impl.finish(); }
@@ -441,6 +445,10 @@ class HashSet
     // Remove all entries. This does not shrink the table. For that consider
     // using the finish() method.
     void clear()                                      { impl.clear(); }
+
+    // Remove all entries. Unlike clear() this method tries to shrink the table.
+    // Unlike finish() it does not require the set to be initialized again.
+    void clearAndShrink()                             { impl.clearAndShrink(); }
 
     // Remove all the entries and release all internal buffers. The set must
     // be initialized again before any use.
@@ -1674,6 +1682,12 @@ class HashTable : private AllocPolicy
 #ifdef JS_DEBUG
         mutationCount++;
 #endif
+    }
+
+    void clearAndShrink()
+    {
+        clear();
+        compactIfUnderloaded();
     }
 
     void finish()
