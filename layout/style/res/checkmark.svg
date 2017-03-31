@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 10 10" width="10" height="10">
-    <style type="text/css">
-        path { fill: -moz-FieldText; }
-        #disabled:target { fill: GrayText; }
-    </style>
-    <path id="disabled" d="M 2 4 L 4 6 L 8 2 L 8 4 L 4 8 L 2 6 Z"/>
-</svg>

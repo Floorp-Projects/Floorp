@@ -22,6 +22,12 @@ public:
   }
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists) override;
+#endif
+
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
