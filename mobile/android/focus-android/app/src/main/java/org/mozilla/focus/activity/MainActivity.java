@@ -43,22 +43,25 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        WebViewProvider.performCleanup(this);
 
-        if (Intent.ACTION_VIEW.equals(getIntent().getAction())) {
-            final String url = getIntent().getDataString();
+        if (savedInstanceState == null) {
+            WebViewProvider.performCleanup(this);
 
-            if (appSettings.shouldShowFirstrun()) {
-                pendingUrl = url;
-                showFirstrun();
+            if (Intent.ACTION_VIEW.equals(getIntent().getAction())) {
+                final String url = getIntent().getDataString();
+
+                if (appSettings.shouldShowFirstrun()) {
+                    pendingUrl = url;
+                    showFirstrun();
+                } else {
+                    showBrowserScreen(url);
+                }
             } else {
-                showBrowserScreen(url);
-            }
-        } else {
-            if (appSettings.shouldShowFirstrun()) {
-                showFirstrun();
-            } else {
-                showHomeScreen();
+                if (appSettings.shouldShowFirstrun()) {
+                    showFirstrun();
+                } else {
+                    showHomeScreen();
+                }
             }
         }
 
