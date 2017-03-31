@@ -287,6 +287,7 @@ let ProfileAutocomplete = {
  * NOTE: Declares it by "var" to make it accessible in unit tests.
  */
 var FormAutofillContent = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver]),
   /**
    * @type {WeakMap} mapping FormLike root HTML elements to FormAutofillHandler objects.
    */
@@ -302,6 +303,7 @@ var FormAutofillContent = {
 
     Services.cpmm.addMessageListener("FormAutofill:enabledStatus", this);
     Services.cpmm.addMessageListener("FormAutofill:savedFieldNames", this);
+    Services.obs.addObserver(this, "earlyformsubmit", false);
 
     if (Services.cpmm.initialProcessData.autofillEnabled) {
       ProfileAutocomplete.ensureRegistered();
@@ -309,6 +311,23 @@ var FormAutofillContent = {
 
     this.savedFieldNames =
       Services.cpmm.initialProcessData.autofillSavedFieldNames || new Set();
+  },
+
+  _onFormSubmit(handler) {
+    // TODO: Handle form submit event for profile saving(bug 990219) and metrics(bug 1341569).
+  },
+
+  notify(formElement) {
+    this.log.debug("notified for form early submission");
+
+    let handler = this._formsDetails.get(formElement);
+    if (!handler) {
+      this.log.debug("Form element could not map to an existing handler");
+    } else {
+      this._onFormSubmit(handler);
+    }
+
+    return true;
   },
 
   receiveMessage({name, data}) {
