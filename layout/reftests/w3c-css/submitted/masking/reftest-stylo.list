@@ -29,7 +29,7 @@ fails == mask-image-3f.html mask-image-3f.html
 fails == mask-image-3g.html mask-image-3g.html
 fails pref(layout.css.clip-path-shapes.enabled,true) == mask-image-3h.html mask-image-3h.html
 fails == mask-image-3i.html mask-image-3i.html
-fails == mask-image-4a.html mask-image-4a.html
+== mask-image-4a.html mask-image-4a.html
 fails == mask-image-4b.html mask-image-4b.html
 == mask-image-5.html mask-image-5.html
 fails == mask-image-6.html mask-image-6.html
