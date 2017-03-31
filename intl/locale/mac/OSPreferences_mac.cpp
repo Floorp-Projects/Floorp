@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OSPreferences.h"
+#include "mozilla/intl/LocaleService.h"
 #include <Carbon/Carbon.h>
 
 using namespace mozilla::intl;
@@ -67,13 +68,26 @@ ToCFDateFormatterStyle(OSPreferences::DateTimeFormatStyle aFormatStyle)
 static CFLocaleRef
 CreateCFLocaleFor(const nsACString& aLocale)
 {
+  nsAutoCString reqLocale;
+  nsAutoCString systemLocale;
+
+  OSPreferences::GetInstance()->GetSystemLocale(systemLocale);
+
   if (aLocale.IsEmpty()) {
-    return CFLocaleCopyCurrent();
+    LocaleService::GetInstance()->GetAppLocaleAsBCP47(reqLocale);
+  } else {
+    reqLocale.Assign(aLocale);
   }
+
+  bool match = LocaleService::LanguagesMatch(reqLocale, systemLocale);
+  if (match) {
+    return ::CFLocaleCopyCurrent();
+  }
+
   CFStringRef identifier =
     CFStringCreateWithBytesNoCopy(kCFAllocatorDefault,
-                                  (const uint8_t*)aLocale.BeginReading(),
-                                  aLocale.Length(), kCFStringEncodingASCII,
+                                  (const uint8_t*)reqLocale.BeginReading(),
+                                  reqLocale.Length(), kCFStringEncodingASCII,
                                   false, kCFAllocatorNull);
   if (!identifier) {
     return nullptr;

@@ -25,7 +25,7 @@ add_task(function* () {
   info("Selecting the ruleview sidebar");
   inspector.sidebar.select("ruleview");
 
-  let view = inspector.ruleview.view;
+  let view = inspector.getPanel("ruleview").view;
 
   info("Selecting the test node");
   yield selectNode("#div-1", inspector);

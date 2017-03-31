@@ -7458,8 +7458,14 @@ var gIdentityHandler = {
       return; // Left click, space or enter only
     }
 
-    // Don't allow left click, space or enter if the location has been modified.
-    if (gURLBar.getAttribute("pageproxystate") != "valid") {
+    // Don't allow left click, space or enter if the location has been modified,
+    // so long as we're not sharing any devices.
+    // If we are sharing a device, the identity block is prevented by CSS from
+    // being focused (and therefore, interacted with) by the user. However, we
+    // want to allow opening the identity popup from the device control menu,
+    // which calls click() on the identity button, so we don't return early.
+    if (!this._sharingState &&
+        gURLBar.getAttribute("pageproxystate") != "valid") {
       return;
     }
 

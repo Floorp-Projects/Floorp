@@ -43,7 +43,7 @@ registerCleanupFunction(() => {
  *   yield addTab(TEST_URI);
  *   let {toolbox, inspector} = yield openInspector();
  *   inspector.sidebar.select(viewId);
- *   let view = inspector[viewId].view;
+ *   let view = inspector.getPanel(viewId).view;
  *   yield selectNode("#test", inspector);
  *   yield someAsyncTestFunction(view);
  * });

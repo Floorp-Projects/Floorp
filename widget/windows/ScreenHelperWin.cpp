@@ -58,9 +58,15 @@ CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam)
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("New screen [%d %d %d %d %d %f]",
                                         rect.x, rect.y, rect.width, rect.height,
                                         pixelDepth, defaultCssScaleFactor.scale));
-  screens->AppendElement(new Screen(rect, availRect,
-                                    pixelDepth, pixelDepth,
-                                    contentsScaleFactor, defaultCssScaleFactor));
+  auto screen = new Screen(rect, availRect,
+                           pixelDepth, pixelDepth,
+                           contentsScaleFactor, defaultCssScaleFactor);
+  if (info.dwFlags & MONITORINFOF_PRIMARY) {
+    // The primary monitor must be the first element of the screen list.
+    screens->InsertElementAt(0, Move(screen));
+  } else {
+    screens->AppendElement(Move(screen));
+  }
   return TRUE;
 }
 

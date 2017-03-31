@@ -15,7 +15,7 @@ skip-if(stylo) == ruby-inlinize-blocks-005.html ruby-inlinize-blocks-005.html # 
 # Tests for ruby with text-combine-upright
 fails == ruby-text-combine-upright-001a.html ruby-text-combine-upright-001a.html
 fails == ruby-text-combine-upright-001b.html ruby-text-combine-upright-001b.html
-fails == ruby-text-combine-upright-002a.html ruby-text-combine-upright-002a.html
+== ruby-text-combine-upright-002a.html ruby-text-combine-upright-002a.html
 fails == ruby-text-combine-upright-002b.html ruby-text-combine-upright-002b.html
 
 # Tests for nested ruby

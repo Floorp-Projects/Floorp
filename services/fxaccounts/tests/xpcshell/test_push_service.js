@@ -203,6 +203,31 @@ add_test(function observePushTopicDeviceDisconnected() {
   pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
 });
 
+add_test(function observePushTopicProfileUpdated() {
+  let msg = {
+    data: {
+      json: () => ({
+        command: ON_PROFILE_UPDATED_NOTIFICATION
+      })
+    },
+    QueryInterface() {
+      return this;
+    }
+  };
+  let obs = (subject, topic, data) => {
+    Services.obs.removeObserver(obs, topic);
+    run_next_test();
+  };
+  Services.obs.addObserver(obs, ON_PROFILE_CHANGE_NOTIFICATION, false);
+
+  let pushService = new FxAccountsPushService({
+    pushService: mockPushService,
+    fxAccounts: mockFxAccounts,
+  });
+
+  pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
+});
+
 add_test(function observePushTopicPasswordChanged() {
   let msg = {
     data: {

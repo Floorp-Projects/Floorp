@@ -172,6 +172,9 @@ public:
    */
   bool IsAppLocaleRTL();
 
+  static bool LanguagesMatch(const nsCString& aRequested,
+                             const nsCString& aAvailable);
+
 private:
   /**
    * Locale object, a BCP47-style tag decomposed into subtags for
@@ -186,6 +189,7 @@ private:
     Locale(const nsCString& aLocale, bool aRange);
 
     bool Matches(const Locale& aLocale) const;
+    bool LanguageMatches(const Locale& aLocale) const;
 
     void SetVariantRange();
     void SetRegionRange();

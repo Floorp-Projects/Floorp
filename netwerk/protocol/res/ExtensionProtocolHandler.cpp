@@ -153,11 +153,15 @@ ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
                                      aURI, getter_AddRefs(converter));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsILoadInfo> loadInfo =
-    static_cast<LoadInfo*>(aLoadInfo)->CloneForNewRequest();
-  (*result)->SetLoadInfo(loadInfo);
+  if (aLoadInfo) {
+    nsCOMPtr<nsILoadInfo> loadInfo =
+        static_cast<LoadInfo*>(aLoadInfo)->CloneForNewRequest();
+      (*result)->SetLoadInfo(loadInfo);
 
-  rv = (*result)->AsyncOpen2(converter);
+    rv = (*result)->AsyncOpen2(converter);
+  } else {
+    rv = (*result)->AsyncOpen(converter, nullptr);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> channel;

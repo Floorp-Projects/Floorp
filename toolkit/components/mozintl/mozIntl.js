@@ -11,6 +11,8 @@ const mozIntlHelper =
   Cc["@mozilla.org/mozintlhelper;1"].getService(Ci.mozIMozIntlHelper);
 const localeSvc =
   Cc["@mozilla.org/intl/localeservice;1"].getService(Ci.mozILocaleService);
+const osPrefs =
+  Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences);
 
 /**
  * This helper function retrives currently used app locales, allowing
@@ -22,6 +24,31 @@ function getLocales(locales) {
     return localeSvc.getAppLocalesAsBCP47();
   }
   return locales;
+}
+
+function getLocale(locales) {
+  if (!locales) {
+    return localeSvc.getAppLocale();
+  }
+  if (Array.isArray(locales)) {
+    return [0];
+  }
+  return locales;
+}
+
+function getDateTimePatternStyle(option) {
+  switch (option) {
+    case "full":
+      return osPrefs.dateTimeFormatStyleFull;
+    case "long":
+      return osPrefs.dateTimeFormatStyleLong;
+    case "medium":
+      return osPrefs.dateTimeFormatStyleMedium;
+    case "short":
+      return osPrefs.dateTimeFormatStyleShort;
+    default:
+      return osPrefs.dateTimeFormatStyleNone;
+  }
 }
 
 class MozIntl {
@@ -59,6 +86,29 @@ class MozIntl {
     }
 
     return new this._cache.PluralRules(getLocales(locales), ...args);
+  }
+
+  createDateTimeFormat(locales, options, ...args) {
+    if (!this._cache.hasOwnProperty("DateTimeFormat")) {
+      mozIntlHelper.addDateTimeFormatConstructor(this._cache);
+    }
+
+    let resolvedLocales =
+      this._cache.DateTimeFormat.supportedLocalesOf(getLocales(locales));
+
+    if (options) {
+      if (options.dateStyle || options.timeStyle) {
+        options.pattern = osPrefs.getDateTimePattern(
+          getDateTimePatternStyle(options.dateStyle),
+          getDateTimePatternStyle(options.timeStyle),
+          resolvedLocales[0]);
+      } else {
+        // make sure that user doesn't pass a pattern explicitly
+        options.pattern = undefined;
+      }
+    }
+
+    return new this._cache.DateTimeFormat(resolvedLocales, options, ...args);
   }
 }
 

@@ -1,0 +1,26 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#webcompat-reporter-button[cui-areatype="menu-panel"] {
+  list-style-image: url("chrome://webcompat-reporter/skin/lightbulb.svg");
+}
+
+#webcompat-reporter-button[cui-areatype="toolbar"] {
+  list-style-image: url("chrome://webcompat-reporter/skin/lightbulb.png");
+  -moz-image-region: rect(0, 18px, 18px, 0);
+}
+
+toolbar[brighttext] #webcompat-reporter-button {
+ list-style-image: url("chrome://webcompat-reporter/skin/lightbulb-inverted.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  #webcompat-reporter-button[cui-areatype="toolbar"] {
+    list-style-image: url("chrome://webcompat-reporter/skin/lightbulb@2x.png");
+    -moz-image-region: rect(0, 36px, 36px, 0px);
+  }
+
+  toolbar[brighttext] #webcompat-reporter-button {
+    list-style-image: url("chrome://webcompat-reporter/skin/lightbulb-inverted@2x.png");
+  }
+}

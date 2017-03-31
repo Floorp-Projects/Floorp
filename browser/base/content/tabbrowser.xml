@@ -5519,6 +5519,9 @@
 
           if (!tab.hasAttribute("soundplaying")) {
             tab.setAttribute("soundplaying", true);
+            // Flush style so that the opacity takes effect immediately, in
+            // case the media is stopped before the style flushes naturally.
+            getComputedStyle(tab).opacity;
             modifiedAttrs.push("soundplaying");
           }
 
