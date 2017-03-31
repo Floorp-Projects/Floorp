@@ -2213,53 +2213,19 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
     }
 
     case NPPVpluginIsPlayingAudio: {
-      bool isMuted = !result;
+      const bool isPlaying = result;
 
       nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*) npp->ndata;
       MOZ_ASSERT(inst);
 
-      if (isMuted && !inst->HasAudioChannelAgent()) {
+      if (!isPlaying && !inst->HasAudioChannelAgent()) {
         return NPERR_NO_ERROR;
       }
 
-      nsCOMPtr<nsIAudioChannelAgent> agent;
-      nsresult rv = inst->GetOrCreateAudioChannelAgent(getter_AddRefs(agent));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return NPERR_NO_ERROR;
-      }
-
-      MOZ_ASSERT(agent);
-
-      if (isMuted) {
-        rv = agent->NotifyStoppedPlaying();
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return NPERR_NO_ERROR;
-        }
+      if (isPlaying) {
+        inst->NotifyStartedPlaying();
       } else {
-
-        dom::AudioPlaybackConfig config;
-        rv = agent->NotifyStartedPlaying(&config,
-                                         dom::AudioChannelService::AudibleState::eAudible);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return NPERR_NO_ERROR;
-        }
-
-        rv = inst->WindowVolumeChanged(config.mVolume, config.mMuted);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return NPERR_NO_ERROR;
-        }
-
-        // Since we only support for muting now, the implementation of suspend
-        // is equal to muting. Therefore, if we have already muted the plugin,
-        // then we don't need to call WindowSuspendChanged() again.
-        if (config.mMuted) {
-          return NPERR_NO_ERROR;
-        }
-
-        rv = inst->WindowSuspendChanged(config.mSuspend);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return NPERR_NO_ERROR;
-        }
+        inst->NotifyStoppedPlaying();
       }
 
       return NPERR_NO_ERROR;
