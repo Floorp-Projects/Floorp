@@ -31,6 +31,7 @@
  *    mozilla::supports_sse4_2
  *    mozilla::supports_avx
  *    mozilla::supports_avx2
+ *    mozilla::supports_aes
  *
  * If you're writing code using inline assembly, you should guard it with a
  * call to one of these functions.  For instance:
@@ -136,6 +137,10 @@
   // It's ok to use AVX instructions based on the -march option.
   #define MOZILLA_PRESUME_AVX2 1
 #endif
+#ifdef __AES__
+  // It's ok to use AES instructions based on the -march option.
+  #define MOZILLA_PRESUME_AES 1
+#endif
 
 
 
@@ -216,6 +221,9 @@ namespace mozilla {
 #endif
 #if !defined(MOZILLA_PRESUME_AVX2)
     extern bool MFBT_DATA avx2_enabled;
+#endif
+#if !defined(MOZILLA_PRESUME_AES)
+    extern bool MFBT_DATA aes_enabled;
 #endif
 
 
@@ -324,6 +332,16 @@ namespace mozilla {
   inline bool supports_avx2() { return sse_private::avx2_enabled; }
 #else
   inline bool supports_avx2() { return false; }
+#endif
+
+#if defined(MOZILLA_PRESUME_AES)
+#define MOZILLA_MAY_SUPPORT_AES 1
+  inline bool supports_aes() { return true; }
+#elif defined(MOZILLA_SSE_HAVE_CPUID_DETECTION)
+#define MOZILLA_MAY_SUPPORT_AES 1
+  inline bool supports_aes() { return sse_private::aes_enabled; }
+#else
+  inline bool supports_aes() { return false; }
 #endif
 
 
