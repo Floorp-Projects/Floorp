@@ -153,11 +153,10 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
   // Prevent nullptr Deref - Bug 443299 
   if (mFormat == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
-  mFormat[num] = -1;
-  mFormat[0] = -1; // to detect zero header fields
-  
   int formatNum=0;
   do {
+    mFormat[formatNum] = -1;
+
     while (*aFormatStr && nsCRT::IsAsciiSpace(char16_t(*aFormatStr)))
       ++aFormatStr;
     
@@ -198,7 +197,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr, int32_t aLineLen)
   // Parse a "201" data line, using the field ordering specified in
   // mFormat.
 
-  if (!mFormat) {
+  if (!mFormat || (mFormat[0] == -1)) {
     // Ignore if we haven't seen a format yet.
     return NS_OK;
   }
@@ -207,15 +206,10 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr, int32_t aLineLen)
   nsAutoCString filename;
   int32_t lineLen = aLineLen;
 
-  if (mFormat[0] == -1) {
-    // no known header fields is an error
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
   for (int32_t i = 0; mFormat[i] != -1; ++i) {
     // If we've exhausted the data before we run out of fields, just bail.
     if (!*aDataStr || (lineLen < 1)) {
-      return NS_ERROR_ILLEGAL_VALUE;
+      return NS_OK;
     }
 
     while ((lineLen > 0) && nsCRT::IsAsciiSpace(*aDataStr)) {
@@ -225,7 +219,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr, int32_t aLineLen)
 
     if (lineLen < 1) {
       // invalid format, bail
-      return NS_ERROR_ILLEGAL_VALUE;
+      return NS_OK;
     }
 
     char    *value = aDataStr;
@@ -245,7 +239,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr, int32_t aLineLen)
 
       if (!lineLen) {
         // invalid format, bail
-        return NS_ERROR_ILLEGAL_VALUE;
+        return NS_OK;
       }
     } else {
       // it's unquoted. snarf until we see whitespace.
