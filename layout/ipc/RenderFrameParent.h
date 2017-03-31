@@ -80,7 +80,7 @@ public:
 
   void GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier);
 
-  inline uint64_t GetLayersId() { return mLayersId; }
+  inline uint64_t GetLayersId() const { return mLayersId; }
 
   void TakeFocusForClickFromTap();
 
@@ -94,8 +94,6 @@ protected:
 private:
   void TriggerRepaint();
   void DispatchEventForPanZoomController(const InputEvent& aEvent);
-
-  uint64_t GetLayerTreeId() const;
 
   // When our child frame is pushing transactions directly to the
   // compositor, this is the ID of its layer tree in the compositor's
