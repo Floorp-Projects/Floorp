@@ -921,7 +921,9 @@ protected:
 #ifdef PROMISE_DEBUG
   uint32_t mMagic1 = sMagic;
 #endif
-  nsTArray<RefPtr<ThenValueBase>> mThenValues;
+  // Try shows we never have more than 3 elements when IsExclusive is false.
+  // So '3' is a good value to avoid heap allocation in most cases.
+  AutoTArray<RefPtr<ThenValueBase>, IsExclusive ? 1 : 3> mThenValues;
 #ifdef PROMISE_DEBUG
   uint32_t mMagic2 = sMagic;
 #endif
