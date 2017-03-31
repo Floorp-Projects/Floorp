@@ -10,6 +10,7 @@
 #include "CertVerifier.h"
 #include "ScopedNSSTypes.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/TimeStamp.h"
 #include "nsICertBlocklist.h"
 #include "nsString.h"
 #include "pkix/pkixtypes.h"
@@ -77,6 +78,8 @@ public:
   NSSCertDBTrustDomain(SECTrustType certDBTrustType, OCSPFetching ocspFetching,
                        OCSPCache& ocspCache, void* pinArg,
                        CertVerifier::OcspGetConfig ocspGETConfig,
+                       mozilla::TimeDuration ocspTimeoutSoft,
+                       mozilla::TimeDuration ocspTimeoutHard,
                        uint32_t certShortLifetimeInDays,
                        CertVerifier::PinningMode pinningMode,
                        unsigned int minRSABits,
@@ -177,12 +180,15 @@ private:
     const mozilla::pkix::CertID& certID, mozilla::pkix::Time time,
     uint16_t maxLifetimeInDays, mozilla::pkix::Input encodedResponse,
     EncodedResponseSource responseSource, /*out*/ bool& expired);
+  TimeDuration GetOCSPTimeout() const;
 
   const SECTrustType mCertDBTrustType;
   const OCSPFetching mOCSPFetching;
   OCSPCache& mOCSPCache; // non-owning!
   void* mPinArg; // non-owning!
   const CertVerifier::OcspGetConfig mOCSPGetConfig;
+  const mozilla::TimeDuration mOCSPTimeoutSoft;
+  const mozilla::TimeDuration mOCSPTimeoutHard;
   const uint32_t mCertShortLifetimeInDays;
   CertVerifier::PinningMode mPinningMode;
   const unsigned int mMinRSABits;
