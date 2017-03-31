@@ -68,6 +68,7 @@ to mochitest command.
   * @keyframes
     * test_keyframes_rules.html [1]
     * test_rules_out_of_sheets.html [1]
+    * test_bug887741_at-rules_in_declaration_lists.html `rules[2]` [1]
   * @support
     * test_supports_rules.html [1]
 * test_box_size_keywords.html: moz-prefixed intrinsic size keyword value [64]
@@ -243,10 +244,8 @@ to mochitest command.
     * ... `justify-` [6]
     * test_value_storage.html `align-` [9]
     * ... `justify-` [14]
-* @page support
-  * test_bug887741_at-rules_in_declaration_lists.html [1]
-  * test_page_parser.html [30]
-  * test_rule_insertion.html `@page` [4]
+* @page should ignore properties with viewport units bug 1353191
+  * test_page_parser.html `2v` [8]
 * Stylesheet cloning is somehow busted bug 1348481
   * test_selectors.html `cloned correctly` [157]
   * ... `matched clone` [204]
@@ -396,6 +395,8 @@ to mochitest command.
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_length.html [5]
   * test_units_time.html [1]
+  * test_page_parser.html `192px` [8]
+  * test_bug887741_at-rules_in_declaration_lists.html `188.96666px` [1]
 * insertRule / deleteRule don't work bug 1336863
   * test_rule_insertion.html [5]
 * @-moz-document support
