@@ -1259,22 +1259,21 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
     let stops =
         WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
 
+    let gradient = state.frame_builder.dl_builder.create_gradient(start_point.to_point(),
+                                                                  end_point.to_point(),
+                                                                  stops,
+                                                                  extend_mode.to_gradient_extend_mode());
     state.frame_builder.dl_builder.push_gradient(rect.to_rect(),
                                                  clip.to_clip_region(),
-                                                 start_point.to_point(),
-                                                 end_point.to_point(),
-                                                 stops,
-                                                 extend_mode.to_gradient_extend_mode());
+                                                 gradient);
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                              rect: WrRect,
                                              clip: WrClipRegion,
-                                             start_center: WrPoint,
-                                             end_center: WrPoint,
-                                             start_radius: f32,
-                                             end_radius: f32,
+                                             center: WrPoint,
+                                             radius: WrSize,
                                              stops: *const WrGradientStop,
                                              stops_count: usize,
                                              extend_mode: WrGradientExtendMode) {
@@ -1283,14 +1282,13 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
     let stops =
         WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
 
+    let gradient = state.frame_builder.dl_builder.create_radial_gradient(center.to_point(),
+                                                                         radius.to_size(),
+                                                                         stops,
+                                                                         extend_mode.to_gradient_extend_mode());
     state.frame_builder.dl_builder.push_radial_gradient(rect.to_rect(),
                                                         clip.to_clip_region(),
-                                                        start_center.to_point(),
-                                                        start_radius,
-                                                        end_center.to_point(),
-                                                        end_radius,
-                                                        stops,
-                                                        extend_mode.to_gradient_extend_mode());
+                                                        gradient);
 }
 
 #[no_mangle]
