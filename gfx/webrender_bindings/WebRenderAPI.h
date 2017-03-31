@@ -72,8 +72,7 @@ public:
                     Range<uint8_t> aBytes);
 
   void AddExternalImageHandle(ImageKey key,
-                              gfx::IntSize aSize,
-                              gfx::SurfaceFormat aFormat,
+                              const ImageDescriptor& aDescriptor,
                               uint64_t aHandle);
 
   void AddExternalImageBuffer(ImageKey key,
