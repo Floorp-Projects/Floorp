@@ -80,8 +80,8 @@ public class BufferingMiddlewareRepositorySessionTest {
     @Test
     public void storeDone() throws Exception {
         // Trivial case, no records to merge.
-        bufferingSession.doMergeBuffer(123L);
-        verify(innerRepositorySession, times(1)).storeDone(123L);
+        bufferingSession.doMergeBuffer();
+        verify(innerRepositorySession, times(1)).storeDone();
         verify(innerRepositorySession, never()).store(any(Record.class));
 
         // Reset call counters.
@@ -102,7 +102,7 @@ public class BufferingMiddlewareRepositorySessionTest {
         bufferingSession.store(record4);
 
         // Done storing.
-        bufferingSession.doMergeBuffer(123L);
+        bufferingSession.doMergeBuffer();
 
         // Ensure all records where stored in the wrapped session.
         verify(innerRepositorySession, times(1)).store(record);
@@ -110,7 +110,7 @@ public class BufferingMiddlewareRepositorySessionTest {
         verify(innerRepositorySession, times(1)).store(record4);
 
         // Ensure storeDone was called on the wrapped session.
-        verify(innerRepositorySession, times(1)).storeDone(123L);
+        verify(innerRepositorySession, times(1)).storeDone();
 
         // Ensure buffer wasn't cleared on the wrapped session.
         assertEquals(3, bufferStorage.all().size());

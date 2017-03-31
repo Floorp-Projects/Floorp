@@ -151,7 +151,7 @@ public class BatchingUploaderTest {
 
         @Override
         public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor) {
-            return null;
+            return this;
         }
     }
 
