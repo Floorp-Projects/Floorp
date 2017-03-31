@@ -29,7 +29,7 @@ HTMLFormControlsCollection::ShouldBeInElements(nsIFormControl* aFormControl)
   // <input type=image> elements to the list of form controls in a
   // form.
 
-  switch (aFormControl->ControlType()) {
+  switch (aFormControl->GetType()) {
   case NS_FORM_BUTTON_BUTTON :
   case NS_FORM_BUTTON_RESET :
   case NS_FORM_BUTTON_SUBMIT :
