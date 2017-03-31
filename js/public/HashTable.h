@@ -103,11 +103,13 @@ class HashMap
     //
     // Also see the definition of Ptr in HashTable above (with T = Entry).
     typedef typename Impl::Ptr Ptr;
-    Ptr lookup(const Lookup& l) const                 { return impl.lookup(l); }
+    MOZ_ALWAYS_INLINE Ptr lookup(const Lookup& l) const { return impl.lookup(l); }
 
     // Like lookup, but does not assert if two threads call lookup at the same
     // time. Only use this method when none of the threads will modify the map.
-    Ptr readonlyThreadsafeLookup(const Lookup& l) const { return impl.readonlyThreadsafeLookup(l); }
+    MOZ_ALWAYS_INLINE Ptr readonlyThreadsafeLookup(const Lookup& l) const {
+        return impl.readonlyThreadsafeLookup(l);
+    }
 
     // Assuming |p.found()|, remove |*p|.
     void remove(Ptr p)                                { impl.remove(p); }
@@ -146,7 +148,7 @@ class HashMap
     //    assert(p->key == 3);
     //    char val = p->value;
     typedef typename Impl::AddPtr AddPtr;
-    AddPtr lookupForAdd(const Lookup& l) const {
+    MOZ_ALWAYS_INLINE AddPtr lookupForAdd(const Lookup& l) const {
         return impl.lookupForAdd(l);
     }
 
@@ -354,11 +356,13 @@ class HashSet
     //
     // Also see the definition of Ptr in HashTable above.
     typedef typename Impl::Ptr Ptr;
-    Ptr lookup(const Lookup& l) const                 { return impl.lookup(l); }
+    MOZ_ALWAYS_INLINE Ptr lookup(const Lookup& l) const { return impl.lookup(l); }
 
     // Like lookup, but does not assert if two threads call lookup at the same
     // time. Only use this method when none of the threads will modify the map.
-    Ptr readonlyThreadsafeLookup(const Lookup& l) const { return impl.readonlyThreadsafeLookup(l); }
+    MOZ_ALWAYS_INLINE Ptr readonlyThreadsafeLookup(const Lookup& l) const {
+        return impl.readonlyThreadsafeLookup(l);
+    }
 
     // Assuming |p.found()|, remove |*p|.
     void remove(Ptr p)                                { impl.remove(p); }
@@ -396,7 +400,9 @@ class HashSet
     // Note that relookupOrAdd(p,l,t) performs Lookup using |l| and adds the
     // entry |t|, where the caller ensures match(l,t).
     typedef typename Impl::AddPtr AddPtr;
-    AddPtr lookupForAdd(const Lookup& l) const        { return impl.lookupForAdd(l); }
+    MOZ_ALWAYS_INLINE AddPtr lookupForAdd(const Lookup& l) const {
+        return impl.lookupForAdd(l);
+    }
 
     template <typename U>
     MOZ_MUST_USE bool add(AddPtr& p, U&& u) {
@@ -1359,7 +1365,7 @@ class HashTable : private AllocPolicy
         return wouldBeUnderloaded(capacity(), entryCount);
     }
 
-    static bool match(Entry& e, const Lookup& l)
+    static MOZ_ALWAYS_INLINE bool match(Entry& e, const Lookup& l)
     {
         return HashPolicy::match(HashPolicy::getKey(e.get()), l);
     }
@@ -1369,7 +1375,8 @@ class HashTable : private AllocPolicy
     // (The use of the METER() macro to increment stats violates this
     // restriction but we will live with that for now because it's enabled so
     // rarely.)
-    Entry& lookup(const Lookup& l, HashNumber keyHash, unsigned collisionBit) const
+    MOZ_ALWAYS_INLINE Entry&
+    lookup(const Lookup& l, HashNumber keyHash, unsigned collisionBit) const
     {
         MOZ_ASSERT(isLiveHash(keyHash));
         MOZ_ASSERT(!(keyHash & sCollisionBit));
@@ -1727,7 +1734,7 @@ class HashTable : private AllocPolicy
         return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
     }
 
-    Ptr lookup(const Lookup& l) const
+    MOZ_ALWAYS_INLINE Ptr lookup(const Lookup& l) const
     {
         mozilla::ReentrancyGuard g(*this);
         if (!HasHash<HashPolicy>(l))
@@ -1736,7 +1743,7 @@ class HashTable : private AllocPolicy
         return Ptr(lookup(l, keyHash, 0), *this);
     }
 
-    Ptr readonlyThreadsafeLookup(const Lookup& l) const
+    MOZ_ALWAYS_INLINE Ptr readonlyThreadsafeLookup(const Lookup& l) const
     {
         if (!HasHash<HashPolicy>(l))
             return Ptr();
@@ -1744,7 +1751,7 @@ class HashTable : private AllocPolicy
         return Ptr(lookup(l, keyHash, 0), *this);
     }
 
-    AddPtr lookupForAdd(const Lookup& l) const
+    MOZ_ALWAYS_INLINE AddPtr lookupForAdd(const Lookup& l) const
     {
         mozilla::ReentrancyGuard g(*this);
         if (!EnsureHash<HashPolicy>(l))
