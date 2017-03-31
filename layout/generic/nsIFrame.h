@@ -765,11 +765,22 @@ public:
    *
    * Callers outside of libxul should use nsIDOMWindow::GetComputedStyle()
    * instead of these accessors.
+   *
+   * Callers can use Style*WithOptionalParam if they're in a function that
+   * accepts an *optional* pointer the style struct.
    */
   #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
     const nsStyle##name_ * Style##name_ () const {                            \
       NS_ASSERTION(mStyleContext, "No style context found!");                 \
       return mStyleContext->Style##name_ ();                                  \
+    }                                                                         \
+    const nsStyle##name_ * Style##name_##WithOptionalParam(                   \
+                             const nsStyle##name_ * aStyleStruct) const {     \
+      if (aStyleStruct) {                                                     \
+        MOZ_ASSERT(aStyleStruct == Style##name_());                           \
+        return aStyleStruct;                                                  \
+      }                                                                       \
+      return Style##name_();                                                  \
     }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
