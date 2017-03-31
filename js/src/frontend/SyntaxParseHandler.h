@@ -408,6 +408,15 @@ class SyntaxParseHandler
         return tokenStream.currentToken().pos;
     }
 
+    uint32_t getFunctionNameOffset(Node func, TokenStreamBase& ts) {
+        // XXX This offset isn't relevant to the offending function name.  But
+        //     we may not *have* that function name around, because of how lazy
+        //     parsing works -- the actual name could be outside
+        //     |tokenStream.userbuf|'s observed region.  So the current offset
+        //     is the best we can do.
+        return ts.currentToken().pos.begin;
+    }
+
     Node newList(ParseNodeKind kind, const TokenPos& pos, JSOp op = JSOP_NOP) {
         MOZ_ASSERT(kind != PNK_VAR);
         MOZ_ASSERT(kind != PNK_LET);
