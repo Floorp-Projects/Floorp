@@ -830,7 +830,7 @@ EmitGetterCall(JSContext* cx, MacroAssembler& masm,
 
         if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
             return false;
-        masm.enterFakeExitFrame(scratchReg, IonOOLNativeExitFrameLayoutToken);
+        masm.enterFakeExitFrame(argJSContextReg, IonOOLNativeExitFrameLayoutToken);
 
         // Construct and execute call.
         masm.setupUnalignedABICall(scratchReg);
@@ -888,7 +888,7 @@ EmitGetterCall(JSContext* cx, MacroAssembler& masm,
 
         if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
             return false;
-        masm.enterFakeExitFrame(scratchReg, IonOOLPropertyOpExitFrameLayoutToken);
+        masm.enterFakeExitFrame(argJSContextReg, IonOOLPropertyOpExitFrameLayoutToken);
 
         // Make the call.
         masm.setupUnalignedABICall(scratchReg);

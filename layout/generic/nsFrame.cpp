@@ -1305,10 +1305,10 @@ nsIFrame::GetMarginRectRelativeToSelf() const
 }
 
 bool
-nsIFrame::IsTransformed() const
+nsIFrame::IsTransformed(const nsStyleDisplay* aStyleDisplay) const
 {
   return ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
-          (StyleDisplay()->HasTransform(this) ||
+          (StyleDisplayWithOptionalParam(aStyleDisplay)->HasTransform(this) ||
            IsSVGTransformed() ||
            HasAnimationOfTransform()));
 }
@@ -1365,12 +1365,12 @@ nsIFrame::Extend3DContext() const
 }
 
 bool
-nsIFrame::Combines3DTransformWithAncestors() const
+nsIFrame::Combines3DTransformWithAncestors(const nsStyleDisplay* aStyleDisplay) const
 {
   if (!GetParent() || !GetParent()->Extend3DContext()) {
     return false;
   }
-  return IsTransformed() || BackfaceIsHidden();
+  return IsTransformed(aStyleDisplay) || BackfaceIsHidden(aStyleDisplay);
 }
 
 bool
@@ -2386,7 +2386,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsRect dirtyRect = aDirtyRect;
 
   bool inTransform = aBuilder->IsInTransform();
-  bool isTransformed = IsTransformed();
+  bool isTransformed = IsTransformed(disp);
   bool hasPerspective = HasPerspective();
   // reset blend mode so we can keep track if this stacking context needs have
   // a nsDisplayBlendContainer. Set the blend mode back when the routine exits
@@ -3005,7 +3005,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   const nsStyleEffects* effects = child->StyleEffects();
   const nsStylePosition* pos = child->StylePosition();
   bool isVisuallyAtomic = child->HasOpacity()
-    || child->IsTransformed()
+    || child->IsTransformed(disp)
     // strictly speaking, 'perspective' doesn't require visual atomicity,
     // but the spec says it acts like the rest of these
     || disp->mChildPerspective.GetUnit() == eStyleUnit_Coord
@@ -8907,10 +8907,13 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   MOZ_ASSERT(FrameMaintainsOverflow(),
              "Don't call - overflow rects not maintained on these SVG frames");
 
+  const nsStyleDisplay* disp = StyleDisplay();
+  bool hasTransform = IsTransformed(disp);
+
   nsRect bounds(nsPoint(0, 0), aNewSize);
   // Store the passed in overflow area if we are a preserve-3d frame or we have
   // a transform, and it's not just the frame bounds.
-  if (Combines3DTransformWithAncestors() || IsTransformed()) {
+  if (hasTransform || Combines3DTransformWithAncestors(disp)) {
     if (!aOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
         !aOverflowAreas.ScrollableOverflow().IsEqualEdges(bounds)) {
       nsOverflowAreas* initial =
@@ -8954,7 +8957,6 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   // children are actually clipped to the padding-box, but since the
   // overflow area should include the entire border-box, just set it to
   // the border-box here.
-  const nsStyleDisplay* disp = StyleDisplay();
   NS_ASSERTION((disp->mOverflowY == NS_STYLE_OVERFLOW_CLIP) ==
                (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP),
                "If one overflow is clip, the other should be too");
@@ -9008,7 +9010,6 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   }
 
   /* If we're transformed, transform the overflow rect by the current transformation. */
-  bool hasTransform = IsTransformed();
   nsSize oldSize = mRect.Size();
   bool sizeChanged = ((aOldSize ? *aOldSize : oldSize) != aNewSize);
 

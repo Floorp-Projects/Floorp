@@ -135,6 +135,18 @@ public:
   {
     return mOldInfo->GetDataSize(aDataSize);
   }
+  NS_IMETHOD GetOnStartTime(uint64_t *aTime) override
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD GetOnStopTime(uint64_t *aTime) override
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD SetNetworkTimes(uint64_t aOnStartTime, uint64_t aOnStopTime) override
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
   NS_IMETHOD GetLoadContextInfo(nsILoadContextInfo** aInfo) override
   {
     return NS_ERROR_NOT_IMPLEMENTED;

@@ -1075,6 +1075,26 @@ NS_IMETHODIMP CacheEntry::GetExpirationTime(uint32_t *aExpirationTime)
   return mFile->GetExpirationTime(aExpirationTime);
 }
 
+nsresult CacheEntry::GetOnStartTime(uint64_t *aTime)
+{
+  NS_ENSURE_SUCCESS(mFileStatus, NS_ERROR_NOT_AVAILABLE);
+  return mFile->GetOnStartTime(aTime);
+}
+
+nsresult CacheEntry::GetOnStopTime(uint64_t *aTime)
+{
+  NS_ENSURE_SUCCESS(mFileStatus, NS_ERROR_NOT_AVAILABLE);
+  return mFile->GetOnStopTime(aTime);
+}
+
+nsresult CacheEntry::SetNetworkTimes(uint64_t aOnStartTime, uint64_t aOnStopTime)
+{
+  if (NS_SUCCEEDED(mFileStatus)) {
+    return mFile->SetNetworkTimes(aOnStartTime, aOnStopTime);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 NS_IMETHODIMP CacheEntry::GetIsForcedValid(bool *aIsForcedValid)
 {
   NS_ENSURE_ARG(aIsForcedValid);
