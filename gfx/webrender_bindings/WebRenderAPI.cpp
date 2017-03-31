@@ -46,10 +46,10 @@ public:
     layers::AutoCompleteTask complete(mTask);
 
     RefPtr<gl::GLContext> gl;
-    if (gfxVars::UseWebRenderANGLE()) {
+    if (gfx::gfxVars::UseWebRenderANGLE()) {
       gl = gl::GLContextProviderEGL::CreateForCompositorWidget(mCompositorWidget, true);
       if (!gl || !gl->IsANGLE()) {
-        gfxCriticalNote << "Failed ANGLE GL context creation for WebRender: " << hexa(gl.get());
+        gfxCriticalNote << "Failed ANGLE GL context creation for WebRender: " << gfx::hexa(gl.get());
         return;
       }
     }
@@ -57,7 +57,7 @@ public:
       gl = gl::GLContextProvider::CreateForCompositorWidget(mCompositorWidget, true);
     }
     if (!gl || !gl->MakeCurrent()) {
-      gfxCriticalNote << "Failed GL context creation for WebRender: " << hexa(gl.get());
+      gfxCriticalNote << "Failed GL context creation for WebRender: " << gfx::hexa(gl.get());
       return;
     }
 
@@ -327,14 +327,12 @@ WebRenderAPI::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
 
 void
 WebRenderAPI::AddExternalImageHandle(ImageKey key,
-                                     gfx::IntSize aSize,
-                                     gfx::SurfaceFormat aFormat,
+                                     const ImageDescriptor& aDescriptor,
                                      uint64_t aHandle)
 {
-  auto format = SurfaceFormatToWrImageFormat(aFormat).value();
   wr_api_add_external_image_handle(mWrApi,
                                    key,
-                                   aSize.width, aSize.height, format,
+                                   &aDescriptor,
                                    aHandle);
 }
 
