@@ -6,7 +6,7 @@
 #include "WebRenderTextureHost.h"
 
 #include "mozilla/layers/ImageDataSerializer.h"
-#include "mozilla/webrender/RenderTextureHost.h"
+#include "mozilla/webrender/RenderBufferTextureHost.h"
 #include "mozilla/webrender/RenderThread.h"
 
 namespace mozilla {

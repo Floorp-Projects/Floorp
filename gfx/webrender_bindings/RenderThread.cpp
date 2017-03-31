@@ -9,7 +9,7 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/webrender/RendererOGL.h"
-#include "mozilla/webrender/RenderTextureHost.h"
+#include "mozilla/webrender/RenderBufferTextureHost.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "base/task.h"
 
