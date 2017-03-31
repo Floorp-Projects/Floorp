@@ -2490,17 +2490,15 @@ TabParent::AllocPRenderFrameParent()
 {
   MOZ_ASSERT(ManagedPRenderFrameParent().IsEmpty());
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  uint64_t layersId = 0;
   bool success = false;
 
-  PRenderFrameParent* renderFrame =
+  RenderFrameParent* rfp =
     new RenderFrameParent(frameLoader, &success);
   if (success) {
-    RenderFrameParent* rfp = static_cast<RenderFrameParent*>(renderFrame);
-    layersId = rfp->GetLayersId();
+    uint64_t layersId = rfp->GetLayersId();
     AddTabParentToTable(layersId, this);
   }
-  return renderFrame;
+  return rfp;
 }
 
 bool
