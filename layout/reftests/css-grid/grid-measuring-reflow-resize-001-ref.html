@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<title>Testcase simplified from layout/reftests/css-grid/grid-min-max-content-sizing-002.html</title>
+<style type="text/css">
+
+html { overflow: hidden }
+body { margin: 0 }
+
+div {
+  display: inline-block;
+  border: 1px solid fuchsia;
+}
+
+span {
+  display: block;
+  border: 4px solid blue;
+  padding: 0 8px 8px 0;
+  margin: 0 -8px -8px 0;
+}
+
+</style>
+
+<div>
+  <span>blue should overflow fuchsia on right/bottom</span>
+</div>
