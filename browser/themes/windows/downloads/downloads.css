@@ -6,14 +6,13 @@
 
 /*** Panel and outer controls ***/
 
-@keyfocus@ #downloadsSummary:focus,
-@keyfocus@ .downloadsPanelFooterButton:focus {
-  outline: 1px -moz-dialogtext dotted;
-  outline-offset: -1px;
+#downloadsSummary:-moz-focusring {
+  outline-offset: -5px;
 }
 
-@keyfocus@ #downloadsSummary:focus {
-  outline-offset: -5px;
+@notKeyfocus@ #downloadsSummary:-moz-focusring,
+@notKeyfocus@ .downloadsPanelFooterButton:-moz-focusring {
+  outline: none;
 }
 
 /*** List items and similar elements in the summary ***/
@@ -24,12 +23,8 @@
   --downloads-item-details-opacity: 0.6;
 }
 
-.downloadButton > .button-box {
-  border: 1px solid transparent;
-}
-
-@keyfocus@ .downloadButton:focus > .button-box {
-  border: 1px dotted ThreeDDarkShadow;
+@notKeyfocus@ .downloadButton:-moz-focusring {
+  outline: none;
 }
 
 @media (-moz-windows-default-theme) {
