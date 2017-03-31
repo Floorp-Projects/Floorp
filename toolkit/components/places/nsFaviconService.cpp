@@ -32,6 +32,7 @@
 #include "nsIContentPolicy.h"
 #include "nsContentUtils.h"
 #include "NullPrincipal.h"
+#include "imgICache.h"
 
 #define MAX_FAILED_FAVICONS 256
 #define FAVICON_CACHE_REDUCE_COUNT 64
@@ -260,6 +261,26 @@ nsFaviconService::SendFaviconNotifications(nsIURI* aPageURI,
   nsAutoCString faviconSpec;
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   if (history && NS_SUCCEEDED(aFaviconURI->GetSpec(faviconSpec))) {
+    // Invalide page-icon image cache, since the icon is about to change.
+    nsCString spec;
+    nsresult rv = aPageURI->GetSpec(spec);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    if (NS_SUCCEEDED(rv)) {
+      nsCString pageIconSpec("page-icon:");
+      pageIconSpec.Append(spec);
+      nsCOMPtr<nsIURI> pageIconURI;
+      rv = NS_NewURI(getter_AddRefs(pageIconURI), pageIconSpec);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<imgICache> imgCache;
+        rv = GetImgTools()->GetImgCacheForDocument(nullptr, getter_AddRefs(imgCache));
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+        if (NS_SUCCEEDED(rv)) {
+          Unused << imgCache->RemoveEntry(pageIconURI, nullptr);
+        }
+      }
+    }
+
     history->SendPageChangedNotification(aPageURI,
                                          nsINavHistoryObserver::ATTRIBUTE_FAVICON,
                                          NS_ConvertUTF8toUTF16(faviconSpec),
