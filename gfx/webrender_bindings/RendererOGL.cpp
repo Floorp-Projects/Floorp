@@ -9,7 +9,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
-#include "mozilla/webrender/RenderTextureHost.h"
+#include "mozilla/webrender/RenderBufferTextureHost.h"
 #include "mozilla/widget/CompositorWidget.h"
 
 namespace mozilla {

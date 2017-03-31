@@ -8,8 +8,8 @@ with Files('**'):
     BUG_COMPONENT = ('Core', 'Graphics: WebRender')
 
 EXPORTS.mozilla.webrender += [
+    'RenderBufferTextureHost.h',
     'RendererOGL.h',
-    'RenderTextureHost.h',
     'RenderThread.h',
     'webrender_ffi.h',
     'WebRenderAPI.h',
@@ -18,8 +18,8 @@ EXPORTS.mozilla.webrender += [
 
 UNIFIED_SOURCES += [
     'Moz2DImageRenderer.cpp',
+    'RenderBufferTextureHost.cpp',
     'RendererOGL.cpp',
-    'RenderTextureHost.cpp',
     'RenderThread.cpp',
     'WebRenderAPI.cpp',
 ]
