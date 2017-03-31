@@ -9,28 +9,25 @@
 #include "mozilla/layers/ImageDataSerializer.h"
 
 namespace mozilla {
-
-using namespace gfx;
-using namespace layers;
-
 namespace wr {
 
-RenderTextureHost::RenderTextureHost(uint8_t* aBuffer, const BufferDescriptor& aDescriptor)
+RenderBufferTextureHost::RenderBufferTextureHost(uint8_t* aBuffer,
+                                                 const layers::BufferDescriptor& aDescriptor)
   : mBuffer(aBuffer)
   , mDescriptor(aDescriptor)
   , mLocked(false)
 {
-  MOZ_COUNT_CTOR(RenderTextureHost);
+  MOZ_COUNT_CTOR_INHERITED(RenderBufferTextureHost, RenderTextureHost);
 
   switch (mDescriptor.type()) {
-    case BufferDescriptor::TYCbCrDescriptor: {
-      const YCbCrDescriptor& ycbcr = mDescriptor.get_YCbCrDescriptor();
+    case layers::BufferDescriptor::TYCbCrDescriptor: {
+      const layers::YCbCrDescriptor& ycbcr = mDescriptor.get_YCbCrDescriptor();
       mSize = ycbcr.ySize();
       mFormat = gfx::SurfaceFormat::YUV;
       break;
     }
-    case BufferDescriptor::TRGBDescriptor: {
-      const RGBDescriptor& rgb = mDescriptor.get_RGBDescriptor();
+    case layers::BufferDescriptor::TRGBDescriptor: {
+      const layers::RGBDescriptor& rgb = mDescriptor.get_RGBDescriptor();
       mSize = rgb.size();
       mFormat = rgb.format();
       break;
@@ -41,17 +38,17 @@ RenderTextureHost::RenderTextureHost(uint8_t* aBuffer, const BufferDescriptor& a
   }
 }
 
-RenderTextureHost::~RenderTextureHost()
+RenderBufferTextureHost::~RenderBufferTextureHost()
 {
-  MOZ_COUNT_DTOR(RenderTextureHost);
+  MOZ_COUNT_DTOR_INHERITED(RenderBufferTextureHost, RenderTextureHost);
 }
 
 already_AddRefed<gfx::DataSourceSurface>
-RenderTextureHost::GetAsSurface()
+RenderBufferTextureHost::GetAsSurface()
 {
   RefPtr<gfx::DataSourceSurface> result;
   if (mFormat == gfx::SurfaceFormat::YUV) {
-    result = ImageDataSerializer::DataSourceSurfaceFromYCbCrDescriptor(
+    result = layers::ImageDataSerializer::DataSourceSurfaceFromYCbCrDescriptor(
       GetBuffer(), mDescriptor.get_YCbCrDescriptor());
     if (NS_WARN_IF(!result)) {
       return nullptr;
@@ -59,14 +56,14 @@ RenderTextureHost::GetAsSurface()
   } else {
     result =
       gfx::Factory::CreateWrappingDataSourceSurface(GetBuffer(),
-        ImageDataSerializer::GetRGBStride(mDescriptor.get_RGBDescriptor()),
+          layers::ImageDataSerializer::GetRGBStride(mDescriptor.get_RGBDescriptor()),
         mSize, mFormat);
   }
   return result.forget();
 }
 
 bool
-RenderTextureHost::Lock()
+RenderBufferTextureHost::Lock()
 {
   MOZ_ASSERT(!mLocked);
 
@@ -78,7 +75,7 @@ RenderTextureHost::Lock()
     }
   }
 
-  if (NS_WARN_IF(!mSurface->Map(DataSourceSurface::MapType::READ_WRITE, &mMap))) {
+  if (NS_WARN_IF(!mSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE, &mMap))) {
     mSurface = nullptr;
     return false;
   }
@@ -88,7 +85,7 @@ RenderTextureHost::Lock()
 }
 
 void
-RenderTextureHost::Unlock()
+RenderBufferTextureHost::Unlock()
 {
   MOZ_ASSERT(mLocked);
   mLocked = false;
@@ -98,8 +95,8 @@ RenderTextureHost::Unlock()
   mSurface = nullptr;
 }
 
-uint8_t*
-RenderTextureHost::GetDataForRender() const
+const uint8_t*
+RenderBufferTextureHost::GetDataForRender() const
 {
   MOZ_ASSERT(mLocked);
   MOZ_ASSERT(mSurface);
@@ -107,7 +104,7 @@ RenderTextureHost::GetDataForRender() const
 }
 
 size_t
-RenderTextureHost::GetBufferSizeForRender() const
+RenderBufferTextureHost::GetBufferSizeForRender() const
 {
   MOZ_ASSERT(mLocked);
   MOZ_ASSERT(mSurface);

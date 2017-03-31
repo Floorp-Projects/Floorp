@@ -98,6 +98,13 @@ public:
   virtual const char* Name() override { return "MacIOSurfaceTextureHostOGL"; }
 #endif
 
+  virtual MacIOSurfaceTextureHostOGL* AsMacIOSurfaceTextureHost() override { return this; }
+
+  MacIOSurface* GetMacIOSurface()
+  {
+    return mSurface;
+  }
+
 protected:
   GLTextureSource* CreateTextureSourceForPlane(size_t aPlane);
 
