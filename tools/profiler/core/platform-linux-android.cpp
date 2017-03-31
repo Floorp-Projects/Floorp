@@ -77,22 +77,25 @@ Thread::GetCurrentId()
 }
 
 static void
-SetSampleContext(TickSample* sample, mcontext_t& mcontext)
+FillInSample(TickSample* aSample, ucontext_t* aContext)
 {
+  aSample->mContext = aContext;
+  mcontext_t& mcontext = aContext->uc_mcontext;
+
   // Extracting the sample from the context is extremely machine dependent.
 #if defined(GP_ARCH_x86)
-  sample->mPC = reinterpret_cast<Address>(mcontext.gregs[REG_EIP]);
-  sample->mSP = reinterpret_cast<Address>(mcontext.gregs[REG_ESP]);
-  sample->mFP = reinterpret_cast<Address>(mcontext.gregs[REG_EBP]);
+  aSample->mPC = reinterpret_cast<Address>(mcontext.gregs[REG_EIP]);
+  aSample->mSP = reinterpret_cast<Address>(mcontext.gregs[REG_ESP]);
+  aSample->mFP = reinterpret_cast<Address>(mcontext.gregs[REG_EBP]);
 #elif defined(GP_ARCH_amd64)
-  sample->mPC = reinterpret_cast<Address>(mcontext.gregs[REG_RIP]);
-  sample->mSP = reinterpret_cast<Address>(mcontext.gregs[REG_RSP]);
-  sample->mFP = reinterpret_cast<Address>(mcontext.gregs[REG_RBP]);
+  aSample->mPC = reinterpret_cast<Address>(mcontext.gregs[REG_RIP]);
+  aSample->mSP = reinterpret_cast<Address>(mcontext.gregs[REG_RSP]);
+  aSample->mFP = reinterpret_cast<Address>(mcontext.gregs[REG_RBP]);
 #elif defined(GP_ARCH_arm)
-  sample->mPC = reinterpret_cast<Address>(mcontext.arm_pc);
-  sample->mSP = reinterpret_cast<Address>(mcontext.arm_sp);
-  sample->mFP = reinterpret_cast<Address>(mcontext.arm_fp);
-  sample->mLR = reinterpret_cast<Address>(mcontext.arm_lr);
+  aSample->mPC = reinterpret_cast<Address>(mcontext.arm_pc);
+  aSample->mSP = reinterpret_cast<Address>(mcontext.arm_sp);
+  aSample->mFP = reinterpret_cast<Address>(mcontext.arm_fp);
+  aSample->mLR = reinterpret_cast<Address>(mcontext.arm_lr);
 #else
 # error "bad platform"
 #endif
@@ -403,11 +406,8 @@ SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
   // The samplee thread is now frozen and sSigHandlerCoordinator->mUContext is
   // valid.  We can poke around in it and unwind its stack as we like.
 
-  aSample->mContext = &sSigHandlerCoordinator->mUContext;
-
-  // Extract the current pc and sp.
-  SetSampleContext(aSample,
-                   sSigHandlerCoordinator->mUContext.uc_mcontext);
+  // Extract the current PC and sp.
+  FillInSample(aSample, &sSigHandlerCoordinator->mUContext);
 
   Tick(aLock, gPS->Buffer(aLock), aSample);
 
@@ -509,8 +509,7 @@ TickSample::PopulateContext(ucontext_t* aContext)
   MOZ_ASSERT(aContext);
 
   if (!getcontext(aContext)) {
-    mContext = aContext;
-    SetSampleContext(this, aContext->uc_mcontext);
+    FillInSample(this, aContext);
   }
 }
 
