@@ -189,6 +189,7 @@ public:
   virtual mozilla::ipc::IPCResult RecvPause() override;
   virtual mozilla::ipc::IPCResult RecvResume() override;
   virtual mozilla::ipc::IPCResult RecvNotifyChildCreated(const uint64_t& child) override;
+  virtual mozilla::ipc::IPCResult RecvMapAndNotifyChildCreated(const uint64_t& child, const base::ProcessId& pid) override;
   virtual mozilla::ipc::IPCResult RecvNotifyChildRecreated(const uint64_t& child) override;
   virtual mozilla::ipc::IPCResult RecvAdoptChild(const uint64_t& child) override;
   virtual mozilla::ipc::IPCResult RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
