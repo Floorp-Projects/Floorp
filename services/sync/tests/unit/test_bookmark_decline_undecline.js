@@ -16,45 +16,6 @@ initTestLogging("Trace");
 
 Service.engineManager.register(BookmarksEngine);
 
-function serverForFoo(engine) {
-  // The bookmarks engine *always* tracks changes, meaning we might try
-  // and sync due to the bookmarks we ourselves create! Worse, because we
-  // do an engine sync only, there's no locking - so we end up with multiple
-  // syncs running. Neuter that by making the threshold very large.
-  Service.scheduler.syncThreshold = 10000000;
-  let clientsEngine = Service.clientsEngine;
-  return serverForUsers({"foo": "password"}, {
-    meta: {
-      global: {
-        syncID: Service.syncID,
-        storageVersion: STORAGE_VERSION,
-        engines: {
-          clients: {
-            version: clientsEngine.version,
-            syncID: clientsEngine.syncID,
-          },
-          bookmarks: {
-            version: engine.version,
-            syncID: engine.syncID,
-          },
-        },
-      },
-    },
-    crypto: {
-      keys: encryptPayload({
-        id: "keys",
-        // Generate a fake default key bundle to avoid resetting the client
-        // before the first sync.
-        default: [
-          Svc.Crypto.generateRandomKey(),
-          Svc.Crypto.generateRandomKey(),
-        ],
-      }),
-    },
-    bookmarks: {}
-  });
-}
-
 // A stored reference to the collection won't be valid after disabling.
 function getBookmarkWBO(server, guid) {
   let coll = server.user("foo").collection("bookmarks");
