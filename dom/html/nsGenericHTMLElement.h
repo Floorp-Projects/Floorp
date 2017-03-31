@@ -1208,7 +1208,8 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
                                  public nsIFormControl
 {
 public:
-  explicit nsGenericHTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  nsGenericHTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+                           uint8_t aType);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -1368,7 +1369,8 @@ protected:
 class nsGenericHTMLFormElementWithState : public nsGenericHTMLFormElement
 {
 public:
-  explicit nsGenericHTMLFormElementWithState(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  nsGenericHTMLFormElementWithState(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+                                    uint8_t aType);
 
   /**
    * Get the presentation state for a piece of content, or create it if it does
