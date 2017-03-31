@@ -55,7 +55,7 @@ public:
    * chosen, then RenderFrameParent will watch input events and use
    * them to asynchronously pan and zoom.
    */
-  RenderFrameParent(nsFrameLoader* aFrameLoader, bool* aSuccess);
+  explicit RenderFrameParent(nsFrameLoader* aFrameLoader);
   virtual ~RenderFrameParent();
 
   bool Init(nsFrameLoader* aFrameLoader);

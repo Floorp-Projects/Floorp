@@ -649,8 +649,8 @@ TabParent::InitRenderFrame()
     RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
     MOZ_ASSERT(frameLoader);
     if (frameLoader) {
-      bool success;
-      RenderFrameParent* renderFrame = new RenderFrameParent(frameLoader, &success);
+      RenderFrameParent* renderFrame = new RenderFrameParent(frameLoader);
+      MOZ_ASSERT(renderFrame->IsInitted());
       uint64_t layersId = renderFrame->GetLayersId();
       AddTabParentToTable(layersId, this);
       if (!SendPRenderFrameConstructor(renderFrame)) {
@@ -2490,11 +2490,9 @@ TabParent::AllocPRenderFrameParent()
 {
   MOZ_ASSERT(ManagedPRenderFrameParent().IsEmpty());
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  bool success = false;
 
-  RenderFrameParent* rfp =
-    new RenderFrameParent(frameLoader, &success);
-  if (success) {
+  RenderFrameParent* rfp = new RenderFrameParent(frameLoader);
+  if (rfp->IsInitted()) {
     uint64_t layersId = rfp->GetLayersId();
     AddTabParentToTable(layersId, this);
   }
