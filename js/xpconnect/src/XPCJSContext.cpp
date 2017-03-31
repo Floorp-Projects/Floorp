@@ -3546,7 +3546,7 @@ XPCJSContext::Initialize()
     // isRunOnce mode and compiled function bodies (from
     // JS::CompileFunction). In practice, this means content scripts and event
     // handlers.
-    UniquePtr<XPCJSSourceHook> hook(new XPCJSSourceHook);
+    mozilla::UniquePtr<XPCJSSourceHook> hook(new XPCJSSourceHook);
     js::SetSourceHook(cx, Move(hook));
 
     // Set up locale information and callbacks for the newly-created context so

@@ -42,7 +42,8 @@ UNIFIED_SOURCES += [
     'XPCWrapper.cpp',
 ]
 
-# XPCComponents.cpp cannot be built in unified mode because it uses plarena.h.
+# Something in XPCComponents.cpp's includes also includes windows.h which ends
+# up redefining GetClassName causing a build failure in BackstagePass.h
 SOURCES += [
     'XPCComponents.cpp',
 ]
