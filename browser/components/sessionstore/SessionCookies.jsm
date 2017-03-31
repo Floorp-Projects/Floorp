@@ -28,8 +28,8 @@ this.SessionCookies = Object.freeze({
     SessionCookiesInternal.update(windows);
   },
 
-  getHostsForWindow(window, checkPrivacy = false) {
-    return SessionCookiesInternal.getHostsForWindow(window, checkPrivacy);
+  getHostsForWindow(window) {
+    return SessionCookiesInternal.getHostsForWindow(window);
   },
 
   restore(cookies) {
@@ -58,16 +58,20 @@ var SessionCookiesInternal = {
   update(windows) {
     this._ensureInitialized();
 
+    // Check whether we're allowed to store cookies.
+    let storeAnyCookies = PrivacyLevel.canSave(false);
+    let storeSecureCookies = PrivacyLevel.canSave(true);
+
     for (let window of windows) {
       let cookies = [];
 
-      // Collect all cookies for the current window.
-      for (let host of this.getHostsForWindow(window, true)) {
-        for (let cookie of CookieStore.getCookiesForHost(host)) {
-          // getCookiesForHost() will only return hosts with the right privacy
-          // rules. Check again here to exclude HTTPS-only cookies if needed.
-          if (PrivacyLevel.canSave(cookie.secure)) {
-            cookies.push(cookie);
+      if (storeAnyCookies) {
+        // Collect all cookies for the current window.
+        for (let host of this.getHostsForWindow(window)) {
+          for (let cookie of CookieStore.getCookiesForHost(host)) {
+            if (!cookie.secure || storeSecureCookies) {
+              cookies.push(cookie);
+            }
           }
         }
       }
@@ -87,16 +91,14 @@ var SessionCookiesInternal = {
    *
    * @param window
    *        A window state object containing tabs with history entries.
-   * @param checkPrivacy (bool)
-   *        Whether to check the privacy level for each host.
    * @return {set} A set of hosts for a given window state object.
    */
-  getHostsForWindow(window, checkPrivacy = false) {
+  getHostsForWindow(window) {
     let hosts = new Set();
 
     for (let tab of window.tabs) {
       for (let entry of tab.entries) {
-        this._extractHostsFromEntry(entry, hosts, checkPrivacy);
+        this._extractHostsFromEntry(entry, hosts);
       }
     }
 
@@ -171,26 +173,19 @@ var SessionCookiesInternal = {
    *        the history entry, serialized
    * @param hosts
    *        the set that will be used to store hosts
-   * @param checkPrivacy
-   *        should we check the privacy level for https
    */
-  _extractHostsFromEntry(entry, hosts, checkPrivacy) {
+  _extractHostsFromEntry(entry, hosts) {
     try {
       // It's alright if this throws for about: URIs.
       let {host, scheme} = Utils.makeURI(entry.url);
-
-      if (scheme == "file") {
+      if (/^(file|https?)$/.test(scheme)) {
         hosts.add(host);
-      } else if (/https?/.test(scheme)) {
-        if (!checkPrivacy || PrivacyLevel.canSave(scheme == "https")) {
-          hosts.add(host);
-        }
       }
     } catch (ex) { }
 
     if (entry.children) {
       for (let child of entry.children) {
-        this._extractHostsFromEntry(child, hosts, checkPrivacy);
+        this._extractHostsFromEntry(child, hosts);
       }
     }
   },
