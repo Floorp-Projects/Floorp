@@ -4,7 +4,6 @@
 
 const ID = "bootstrap1@tests.mozilla.org";
 const ID2 = "bootstrap2@tests.mozilla.org";
-const ID3 = "bootstrap3@tests.mozilla.org";
 
 const APP_STARTUP   = 1;
 const ADDON_INSTALL = 5;
@@ -327,8 +326,8 @@ add_task(function*() {
   Services.prefs.setBoolPref("extensions.e10sBlocksEnabling", true);
   Services.prefs.setCharPref("extensions.e10s.rollout.policy", "xpcshell-test");
 
-  // Both 'bootstrap1' and 'bootstrap2' addons are part of the allowed policy
-  // set, because they are marked as mpc=true.
+  // Both 'bootstrap1' and 'bootstrap2' addons are listed in the allowed policy
+  // set, so they should install and start normally.
   yield check_normal();
 
   // Check that the two add-ons can be installed together correctly as
@@ -417,25 +416,6 @@ add_task(function*() {
 
   BootstrapMonitor.checkAddonNotInstalled(ID2);
   BootstrapMonitor.checkAddonNotStarted(ID2);
-
-  yield promiseRestartManager();
-
-  blocked = Services.prefs.getBoolPref("extensions.e10sBlockedByAddons");
-  do_check_true(blocked);
-
-  // Now let's test that an add-on that is not mpc=true doesn't get installed,
-  // since the rollout policy is restricted to only mpc=true addons.
-  let install3 = yield promiseInstallFile(do_get_addon("test_bootstrap3_1"));
-
-  do_check_eq(install3.state, AddonManager.STATE_INSTALLED);
-  do_check_true(hasFlag(install3.addon.pendingOperations, AddonManager.PENDING_INSTALL));
-
-  addon3 = yield promiseAddonByID(ID3);
-
-  do_check_eq(addon3, null);
-
-  BootstrapMonitor.checkAddonNotInstalled(ID3);
-  BootstrapMonitor.checkAddonNotStarted(ID3);
 
   yield promiseRestartManager();
 
