@@ -8,7 +8,6 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.GeckoLoader;
-import org.mozilla.gecko.NativeQueue.StateHolder;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -80,11 +79,11 @@ public class GeckoThread extends Thread {
         }
     }
 
-    private static final StateHolder sStateHolder =
-        new StateHolder(State.INITIAL, State.RUNNING);
+    private static final NativeQueue sNativeQueue =
+        new NativeQueue(State.INITIAL, State.RUNNING);
 
-    /* package */ static StateHolder getStateHolder() {
-        return sStateHolder;
+    /* package */ static NativeQueue getNativeQueue() {
+        return sNativeQueue;
     }
 
     public static final State MIN_STATE = State.INITIAL;
@@ -446,7 +445,7 @@ public class GeckoThread extends Thread {
      * @return True if the current Gecko thread state matches
      */
     public static boolean isState(final State state) {
-        return sStateHolder.getState().is(state);
+        return sNativeQueue.getState().is(state);
     }
 
     /**
@@ -457,7 +456,7 @@ public class GeckoThread extends Thread {
      * @return True if the current Gecko thread state matches
      */
     public static boolean isStateAtLeast(final State state) {
-        return sStateHolder.getState().isAtLeast(state);
+        return sNativeQueue.getState().isAtLeast(state);
     }
 
     /**
@@ -468,7 +467,7 @@ public class GeckoThread extends Thread {
      * @return True if the current Gecko thread state matches
      */
     public static boolean isStateAtMost(final State state) {
-        return state.isAtLeast(sStateHolder.getState());
+        return state.isAtLeast(sNativeQueue.getState());
     }
 
     /**
@@ -485,13 +484,13 @@ public class GeckoThread extends Thread {
 
     @WrapForJNI(calledFrom = "gecko")
     private static void setState(final State newState) {
-        sStateHolder.setState(newState);
+        sNativeQueue.setState(newState);
     }
 
     @WrapForJNI(calledFrom = "gecko")
     private static boolean checkAndSetState(final State expectedState,
                                             final State newState) {
-        return sStateHolder.checkAndSetState(expectedState, newState);
+        return sNativeQueue.checkAndSetState(expectedState, newState);
     }
 
     @WrapForJNI(stubName = "SpeculativeConnect")
@@ -561,7 +560,7 @@ public class GeckoThread extends Thread {
      */
     public static void queueNativeCall(final Class<?> cls, final String methodName,
                                        final Object... args) {
-        NativeQueue.queueUntil(getStateHolder(), State.RUNNING, cls, methodName, args);
+        sNativeQueue.queueUntilReady(cls, methodName, args);
     }
 
     /**
@@ -569,7 +568,7 @@ public class GeckoThread extends Thread {
      */
     public static void queueNativeCall(final Object obj, final String methodName,
                                        final Object... args) {
-        NativeQueue.queueUntil(getStateHolder(), State.RUNNING, obj, methodName, args);
+        sNativeQueue.queueUntilReady(obj, methodName, args);
     }
 
     /**
@@ -577,7 +576,7 @@ public class GeckoThread extends Thread {
      */
     public static void queueNativeCallUntil(final State state, final Object obj, final String methodName,
                                        final Object... args) {
-        NativeQueue.queueUntil(getStateHolder(), state, obj, methodName, args);
+        sNativeQueue.queueUntil(state, obj, methodName, args);
     }
 
     /**
@@ -585,6 +584,6 @@ public class GeckoThread extends Thread {
      */
     public static void queueNativeCallUntil(final State state, final Class<?> cls, final String methodName,
                                        final Object... args) {
-        NativeQueue.queueUntil(getStateHolder(), state, cls, methodName, args);
+        sNativeQueue.queueUntil(state, cls, methodName, args);
     }
 }
