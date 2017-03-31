@@ -74,7 +74,8 @@ public final class EventDispatcher extends JNIObject {
     /* package */ void setStateHolder(final NativeQueue.StateHolder stateHolder) {
         mStateHolder = stateHolder;
         // Force queue flushing.
-        mStateHolder.setState(mStateHolder.getState());
+        final NativeQueue.State state = mStateHolder.getState();
+        mStateHolder.checkAndSetState(state, state);
     }
 
     private boolean isReadyForDispatchingToGecko() {
