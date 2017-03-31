@@ -3713,6 +3713,13 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   }
 #endif /* DEBUG */
 
+#if defined(XP_WIN)
+  // Enable the HeapEnableTerminationOnCorruption exploit mitigation. We ignore
+  // the return code because it always returns success, although it has no
+  // effect on Windows older than XP SP3.
+  HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
+#endif /* XP_WIN */
+
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_ENABLE_XREMOTE)
   // Stash DESKTOP_STARTUP_ID in malloc'ed memory because gtk_init will clear it.
 #define HAVE_DESKTOP_STARTUP_ID
