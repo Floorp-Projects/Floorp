@@ -358,7 +358,7 @@ add_task(function* uninstallWebExtensionOffersUndo() {
       manifest_version: 2,
       name: "Web Extension Name",
       version: "1.0",
-      theme: { images: { headerURL: "https://example.com/example.png" } },
+      theme: { images: { headerURL: "example.png" } },
     }
   });
 
