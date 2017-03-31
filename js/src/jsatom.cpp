@@ -328,6 +328,9 @@ AtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length, PinningB
         return atom;
     }
 
+    if (!JSString::validateLength(cx, length))
+        return nullptr;
+
     JSAtom* atom;
     {
         AutoAtomsCompartment ac(cx, lock);
@@ -406,9 +409,6 @@ js::Atomize(JSContext* cx, const char* bytes, size_t length, PinningBehavior pin
 {
     CHECK_REQUEST(cx);
 
-    if (!JSString::validateLength(cx, length))
-        return nullptr;
-
     const Latin1Char* chars = reinterpret_cast<const Latin1Char*>(bytes);
     return AtomizeAndCopyChars(cx, chars, length, pin);
 }
@@ -418,10 +418,6 @@ JSAtom*
 js::AtomizeChars(JSContext* cx, const CharT* chars, size_t length, PinningBehavior pin)
 {
     CHECK_REQUEST(cx);
-
-    if (!JSString::validateLength(cx, length))
-        return nullptr;
-
     return AtomizeAndCopyChars(cx, chars, length, pin);
 }
 
