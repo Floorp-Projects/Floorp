@@ -27,7 +27,6 @@ public:
   void SetPose(const Nullable<Float32Array>& aPosition, const Nullable<Float32Array>& aLinearVelocity,
                const Nullable<Float32Array>& aLinearAcceleration, const Nullable<Float32Array>& aOrientation,
                const Nullable<Float32Array>& aAngularVelocity, const Nullable<Float32Array>& aAngularAcceleration);
-  void SetMountState(bool aIsMounted) { mDisplayInfo.mIsMounted = aIsMounted; }
   void Update();
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
