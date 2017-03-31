@@ -42,24 +42,4 @@ class TabsListLayoutAnimator extends DefaultItemAnimatorBase {
                 .setListener(new DefaultRemoveVpaListener(holder))
                 .start();
     }
-
-    @Override
-    protected boolean preAnimateAddImpl(RecyclerView.ViewHolder holder) {
-        resetAnimation(holder);
-        final View itemView = holder.itemView;
-        itemView.setTranslationX(itemView.getWidth());
-        itemView.setAlpha(0);
-        return true;
-    }
-
-    @Override
-    protected void animateAddImpl(final RecyclerView.ViewHolder holder) {
-        final View itemView = holder.itemView;
-        ViewCompat.animate(itemView)
-                .setDuration(getAddDuration())
-                .translationX(0)
-                .alpha(1)
-                .setListener(new DefaultAddVpaListener(holder))
-                .start();
-    }
 }
