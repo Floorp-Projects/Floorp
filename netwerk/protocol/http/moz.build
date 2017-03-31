@@ -121,6 +121,8 @@ LOCAL_INCLUDES += [
 ]
 
 EXTRA_COMPONENTS += [
+    'UserAgentOverrides.js',
+    'UserAgentOverrides.manifest',
     'WellKnownOpportunisticUtils.js',
     'WellKnownOpportunisticUtils.manifest',
 ]
