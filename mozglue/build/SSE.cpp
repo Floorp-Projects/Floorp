@@ -200,6 +200,10 @@ namespace sse_private {
   bool avx2_enabled = has_avx() && has_cpuid_bits(7u, ebx, (1u<<5));
 #endif
 
+#if !defined(MOZILLA_PRESUME_AES)
+  bool aes_enabled = has_cpuid_bits(1u, ecx, (1u<<25));
+#endif
+
 #endif
 
 } // namespace sse_private
