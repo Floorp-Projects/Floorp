@@ -64,7 +64,12 @@ public:
 
     static inline const String8 empty();
 
-    static String8              format(const char* fmt, ...) __attribute__((format (printf, 1, 2)));
+    static String8              format(const char* fmt, ...)
+#ifdef __MINGW32__
+                    __attribute__((format (__MINGW_PRINTF_FORMAT, 1, 2)));
+#else
+                    __attribute__((format (printf, 1, 2)));
+#endif
     static String8              formatV(const char* fmt, va_list args);
 
     inline  const char*         string() const;
