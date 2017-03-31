@@ -87,6 +87,7 @@ GetFrom(nsFrameLoader* aFrameLoader)
 
 RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader)
   : mLayersId(0)
+  , mLayersConnected(false)
   , mFrameLoader(aFrameLoader)
   , mFrameLoaderDestroyed(false)
   , mAsyncPanZoomEnabled(false)
@@ -117,11 +118,11 @@ RenderFrameParent::Init(nsFrameLoader* aFrameLoader)
     // and we'll keep an indirect reference to that tree.
     browser->Manager()->AsContentParent()->AllocateLayerTreeId(browser, &mLayersId);
     if (lm && lm->GetCompositorBridgeChild()) {
-      lm->GetCompositorBridgeChild()->SendNotifyChildCreated(mLayersId);
+      mLayersConnected = lm->GetCompositorBridgeChild()->SendNotifyChildCreated(mLayersId);
     }
   } else if (XRE_IsContentProcess()) {
     ContentChild::GetSingleton()->SendAllocateLayerTreeId(browser->Manager()->ChildID(), browser->GetTabId(), &mLayersId);
-    CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId);
+    mLayersConnected = CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId);
   }
 
   mInitted = true;
@@ -207,7 +208,7 @@ RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
   RefPtr<LayerManager> lm = mFrameLoader ? GetFrom(mFrameLoader) : nullptr;
   // Perhaps the document containing this frame currently has no presentation?
   if (lm && lm->GetCompositorBridgeChild()) {
-    lm->GetCompositorBridgeChild()->SendAdoptChild(mLayersId);
+    mLayersConnected = lm->GetCompositorBridgeChild()->SendAdoptChild(mLayersId);
     FrameLayerBuilder::InvalidateAllLayers(lm);
   }
 }
@@ -311,7 +312,7 @@ RenderFrameParent::EnsureLayersConnected()
     return;
   }
 
-  lm->GetCompositorBridgeChild()->SendNotifyChildRecreated(mLayersId);
+  mLayersConnected = lm->GetCompositorBridgeChild()->SendNotifyChildRecreated(mLayersId);
 }
 
 } // namespace layout
