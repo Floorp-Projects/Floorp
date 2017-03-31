@@ -7,16 +7,6 @@
 
 /* arena allocation for the frame tree and closely-related objects */
 
-// Even on 32-bit systems, we allocate objects from the frame arena
-// that require 8-byte alignment.  The cast to uintptr_t is needed
-// because plarena isn't as careful about mask construction as it
-// ought to be.
-#define ALIGN_SHIFT 3
-#define PL_ARENA_CONST_ALIGN_MASK ((uintptr_t(1) << ALIGN_SHIFT) - 1)
-#include "plarena.h"
-// plarena.h needs to be included first to make it use the above
-// PL_ARENA_CONST_ALIGN_MASK in this file.
-
 #include "nsPresArena.h"
 
 #include "mozilla/Poison.h"
@@ -29,12 +19,8 @@
 
 using namespace mozilla;
 
-// Size to use for PLArena block allocations.
-static const size_t ARENA_PAGE_SIZE = 8192;
-
 nsPresArena::nsPresArena()
 {
-  PL_INIT_ARENA_POOL(&mPool, "PresArena", ARENA_PAGE_SIZE);
 }
 
 nsPresArena::~nsPresArena()
@@ -52,8 +38,6 @@ nsPresArena::~nsPresArena()
     }
   }
 #endif
-
-  PL_FinishArenaPool(&mPool);
 }
 
 /* inline */ void
@@ -114,7 +98,7 @@ nsPresArena::Allocate(uint32_t aCode, size_t aSize)
   MOZ_ASSERT(aSize > 0, "PresArena cannot allocate zero bytes");
 
   // We only hand out aligned sizes
-  aSize = PL_ARENA_ALIGN(&mPool, aSize);
+  aSize = mPool.AlignedSize(aSize);
 
   // If there is no free-list entry for this type already, we have
   // to create one now, to record its size.
@@ -162,11 +146,7 @@ nsPresArena::Allocate(uint32_t aCode, size_t aSize)
 
   // Allocate a new chunk from the arena
   list->mEntriesEverAllocated++;
-  PL_ARENA_ALLOCATE(result, &mPool, aSize);
-  if (!result) {
-    NS_ABORT_OOM(aSize);
-  }
-  return result;
+  return mPool.Allocate(aSize);
 }
 
 void
@@ -198,7 +178,7 @@ nsPresArena::AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
   // slop in the arena itself as well as the size of objects that
   // we've not measured explicitly.
 
-  size_t mallocSize = PL_SizeOfArenaPoolExcludingPool(&mPool, aMallocSizeOf);
+  size_t mallocSize = mPool.SizeOfExcludingThis(aMallocSizeOf);
   mallocSize += mFreeLists.SizeOfExcludingThis(aMallocSizeOf);
 
   size_t totalSizeInFreeLists = 0;
