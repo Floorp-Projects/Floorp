@@ -11,6 +11,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/RuleNodeCacheConditions.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/Tuple.h"
@@ -5191,4 +5192,53 @@ StyleAnimationValue::operator==(const StyleAnimationValue& aOther) const
 
   NS_NOTREACHED("incomplete case");
   return false;
+}
+
+// AnimationValue Implementation
+
+bool
+AnimationValue::operator==(const AnimationValue& aOther) const
+{
+  // It is possible to compare an empty AnimationValue with others, so both
+  // mServo and mGecko could be null while comparing.
+  MOZ_ASSERT(!mServo || mGecko.IsNull());
+  if (mServo) {
+    return Servo_AnimationValue_DeepEqual(mServo, aOther.mServo);
+  }
+  return mGecko == aOther.mGecko;
+}
+
+float
+AnimationValue::GetOpacity() const
+{
+  MOZ_ASSERT(!mServo != mGecko.IsNull());
+  return mServo ? Servo_AnimationValue_GetOpacity(mServo)
+                : mGecko.GetFloatValue();
+}
+
+gfxSize
+AnimationValue::GetScaleValue(const nsIFrame* aFrame) const
+{
+  MOZ_ASSERT(!mServo != mGecko.IsNull());
+  if (mServo) {
+    RefPtr<nsCSSValueSharedList> list;
+    Servo_AnimationValue_GetTransform(mServo, &list);
+    return nsStyleTransformMatrix::GetScaleValue(list, aFrame);
+  }
+  return mGecko.GetScaleValue(aFrame);
+}
+
+void
+AnimationValue::SerializeSpecifiedValue(nsCSSPropertyID aProperty,
+                                        nsAString& aString) const
+{
+  MOZ_ASSERT(!mServo != mGecko.IsNull());
+  if (mServo) {
+    Servo_AnimationValue_Serialize(mServo, aProperty, &aString);
+    return;
+  }
+
+  DebugOnly<bool> uncomputeResult =
+    StyleAnimationValue::UncomputeValue(aProperty, mGecko, aString);
+  MOZ_ASSERT(uncomputeResult, "failed to uncompute StyleAnimationValue");
 }
