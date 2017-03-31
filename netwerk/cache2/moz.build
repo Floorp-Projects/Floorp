@@ -25,7 +25,6 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
-    'AppCacheStorage.cpp',
     'CacheEntry.cpp',
     'CacheFile.cpp',
     'CacheFileChunk.cpp',
@@ -45,6 +44,11 @@ UNIFIED_SOURCES += [
     'CacheStorage.cpp',
     'CacheStorageService.cpp',
     'OldWrappers.cpp',
+]
+
+# AppCacheStorage.cpp cannot be built in unified mode because it uses plarena.h.
+SOURCES += [
+    'AppCacheStorage.cpp',
 ]
 
 LOCAL_INCLUDES += [
