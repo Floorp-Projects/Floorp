@@ -368,7 +368,7 @@ mozilla::detail::VectorTesting::testInsert()
   }
 
   MOZ_RELEASE_ASSERT(vec.length() == 7);
-  MOZ_RELEASE_ASSERT(vec.reserved() == 8);
+  MOZ_ASSERT(vec.reserved() == 8);
   MOZ_RELEASE_ASSERT(S::constructCount == 7);
   MOZ_RELEASE_ASSERT(S::moveCount == 0);
   MOZ_RELEASE_ASSERT(S::destructCount == 0);
@@ -377,18 +377,19 @@ mozilla::detail::VectorTesting::testInsert()
   MOZ_RELEASE_ASSERT(vec.insert(vec.begin() + 4, Move(s)));
 
   for (size_t i = 0; i < vec.length(); i++) {
-      const S& s = vec[i];
-      MOZ_RELEASE_ASSERT(s.k);
-      if (i < 4)
-          MOZ_RELEASE_ASSERT(s.j == i && *s.k == i * i);
-      else if (i == 4)
-          MOZ_RELEASE_ASSERT(s.j == 42 && *s.k == 43);
-      else
-          MOZ_RELEASE_ASSERT(s.j == i - 1 && *s.k == (i - 1) * (i - 1));
+    const S& s = vec[i];
+    MOZ_RELEASE_ASSERT(s.k);
+    if (i < 4) {
+      MOZ_RELEASE_ASSERT(s.j == i && *s.k == i * i);
+    } else if (i == 4) {
+      MOZ_RELEASE_ASSERT(s.j == 42 && *s.k == 43);
+    } else {
+      MOZ_RELEASE_ASSERT(s.j == i - 1 && *s.k == (i - 1) * (i - 1));
+    }
   }
 
   MOZ_RELEASE_ASSERT(vec.length() == 8);
-  MOZ_RELEASE_ASSERT(vec.reserved() == 8);
+  MOZ_ASSERT(vec.reserved() == 8);
   MOZ_RELEASE_ASSERT(S::constructCount == 8);
   MOZ_RELEASE_ASSERT(S::moveCount == 1 /* move in insert() call */ +
                                      1 /* move the back() element */ +
