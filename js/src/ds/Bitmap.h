@@ -78,8 +78,19 @@ class SparseBitmap
         return std::min<size_t>((size_t)WordsInBlock, std::max<long>(count, 0));
     }
 
-    BitBlock* getBlock(size_t blockId) const;
-    BitBlock& getOrCreateBlock(size_t blockId);
+    BitBlock& createBlock(Data::AddPtr p, size_t blockId);
+
+    MOZ_ALWAYS_INLINE BitBlock* getBlock(size_t blockId) const {
+        Data::Ptr p = data.lookup(blockId);
+        return p ? p->value() : nullptr;
+    }
+
+    MOZ_ALWAYS_INLINE BitBlock& getOrCreateBlock(size_t blockId) {
+        Data::AddPtr p = data.lookupForAdd(blockId);
+        if (p)
+            return *p->value();
+        return createBlock(p, blockId);
+    }
 
   public:
     bool init() { return data.init(); }
@@ -87,7 +98,13 @@ class SparseBitmap
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
-    void setBit(size_t bit);
+    MOZ_ALWAYS_INLINE void setBit(size_t bit) {
+        size_t word = bit / JS_BITS_PER_WORD;
+        size_t blockWord = blockStartWord(word);
+        BitBlock& block = getOrCreateBlock(blockWord / WordsInBlock);
+        block[word - blockWord] |= uintptr_t(1) << (bit % JS_BITS_PER_WORD);
+    }
+
     bool getBit(size_t bit) const;
 
     void bitwiseAndWith(const DenseBitmap& other);
