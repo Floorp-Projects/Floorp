@@ -803,6 +803,10 @@ class FullParseHandler
         return pn->pn_pos;
     }
 
+    uint32_t getFunctionNameOffset(ParseNode* func, TokenStreamBase& ts) {
+        return func->pn_pos.begin;
+    }
+
     bool isDeclarationKind(ParseNodeKind kind) {
         return kind == PNK_VAR || kind == PNK_LET || kind == PNK_CONST;
     }
