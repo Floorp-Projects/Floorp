@@ -4439,7 +4439,10 @@ JSCompartment::findDeadProxyZoneEdges(bool* foundAny)
             if (IsDeadProxyObject(&value.toObject())) {
                 *foundAny = true;
                 CrossCompartmentKey& key = e.front().mutableKey();
-                if (!key.as<JSObject*>()->zone()->gcZoneGroupEdges.put(zone()))
+                Zone* wrapperZone = key.as<JSObject*>()->zone();
+                if (!wrapperZone->isGCMarking())
+                    continue;
+                if (!wrapperZone->gcZoneGroupEdges.put(zone()))
                     return false;
             }
         }
