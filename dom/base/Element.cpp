@@ -2352,8 +2352,7 @@ Element::SetAttr(int32_t aNamespaceID, nsIAtom* aName,
 
   // Hold a script blocker while calling ParseAttribute since that can call
   // out to id-observers
-  nsIDocument* document = GetComposedDoc();
-  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
+  nsAutoScriptBlocker scriptBlocker;
 
   // Even the value was pre-parsed, we still need to call ParseAttribute because
   // it can have side effects.
@@ -2363,7 +2362,7 @@ Element::SetAttr(int32_t aNamespaceID, nsIAtom* aName,
 
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
                           attrValue, modType, hasListeners, aNotify,
-                          kCallAfterSetAttr, document, updateBatch);
+                          kCallAfterSetAttr);
 }
 
 nsresult
@@ -2400,11 +2399,9 @@ Element::SetParsedAttr(int32_t aNamespaceID, nsIAtom* aName,
   nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIDocument* document = GetComposedDoc();
-  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
                           aParsedValue, modType, hasListeners, aNotify,
-                          kCallAfterSetAttr, document, updateBatch);
+                          kCallAfterSetAttr);
 }
 
 nsresult
@@ -2416,11 +2413,13 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
                           uint8_t aModType,
                           bool aFireMutation,
                           bool aNotify,
-                          bool aCallAfterSetAttr,
-                          nsIDocument* aComposedDocument,
-                          const mozAutoDocUpdate&)
+                          bool aCallAfterSetAttr)
 {
   nsresult rv;
+
+  nsIDocument* document = GetComposedDoc();
+  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
+
   nsMutationGuard::DidMutate();
 
   // Copy aParsedValue for later use since it will be lost when we call
@@ -2442,7 +2441,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
     // XXXbz Perhaps we should push up the attribute mapping function
     // stuff to Element?
     if (!IsAttributeMapped(aName) ||
-        !SetMappedAttribute(aComposedDocument, aName, aParsedValue, &rv)) {
+        !SetMappedAttribute(document, aName, aParsedValue, &rv)) {
       rv = mAttrsAndChildren.SetAndSwapAttr(aName, aParsedValue);
     }
   }
@@ -2461,7 +2460,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aComposedDocument || HasFlag(NODE_FORCE_XBL_BINDINGS)) {
+  if (document || HasFlag(NODE_FORCE_XBL_BINDINGS)) {
     RefPtr<nsXBLBinding> binding = GetXBLBinding();
     if (binding) {
       binding->AttributeChanged(aName, aNamespaceID, false, aNotify);

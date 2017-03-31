@@ -42,7 +42,6 @@
 #include "Units.h"
 #include "DOMIntersectionObserver.h"
 
-class mozAutoDocUpdate;
 class nsIFrame;
 class nsIDOMMozNamedAttrMap;
 class nsIMozBrowserFrame;
@@ -1338,7 +1337,6 @@ protected:
    * @param aFireMutation should mutation-events be fired?
    * @param aNotify       should we notify document-observers?
    * @param aCallAfterSetAttr should we call AfterSetAttr?
-   * @param aComposedDocument The current composed document of the element.
    */
   nsresult SetAttrAndNotify(int32_t aNamespaceID,
                             nsIAtom* aName,
@@ -1348,9 +1346,7 @@ protected:
                             uint8_t aModType,
                             bool aFireMutation,
                             bool aNotify,
-                            bool aCallAfterSetAttr,
-                            nsIDocument* aComposedDocument,
-                            const mozAutoDocUpdate& aGuard);
+                            bool aCallAfterSetAttr);
 
   /**
    * Scroll to a new position using behavior evaluated from CSS and
