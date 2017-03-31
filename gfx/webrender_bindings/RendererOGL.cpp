@@ -9,7 +9,8 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
-#include "mozilla/webrender/RenderTextureHost.h"
+#include "mozilla/webrender/RenderBufferTextureHost.h"
+#include "mozilla/webrender/RenderTextureHostOGL.h"
 #include "mozilla/widget/CompositorWidget.h"
 
 namespace mozilla {
@@ -19,10 +20,26 @@ WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId)
 {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId.id);
-  MOZ_ASSERT(texture);
-  texture->Lock();
 
-  return RawDataToWrExternalImage(texture->GetDataForRender(), texture->GetBufferSizeForRender());
+  if (texture->AsBufferTextureHost()) {
+    RenderBufferTextureHost* bufferTexture = texture->AsBufferTextureHost();
+    MOZ_ASSERT(bufferTexture);
+    bufferTexture->Lock();
+
+    return RawDataToWrExternalImage(bufferTexture->GetDataForRender(),
+                                    bufferTexture->GetBufferSizeForRender());
+  } else {
+    // texture handle case
+    RenderTextureHostOGL* textureOGL = texture->AsTextureHostOGL();
+    MOZ_ASSERT(textureOGL);
+    gfx::IntSize size = textureOGL->GetSize();
+    textureOGL->SetGLContext(renderer->mGL);
+    textureOGL->Lock();
+
+    return NativeTextureToWrExternalImage(textureOGL->GetGLHandle(),
+                                          0, 0,
+                                          size.width, size.height);
+  }
 }
 
 void UnlockExternalImage(void* aObj, WrExternalImageId aId)
