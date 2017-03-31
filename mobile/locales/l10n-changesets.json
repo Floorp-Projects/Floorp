@@ -694,6 +694,13 @@
         ], 
         "revision": "default"
     }, 
+    "zam": {
+        "platforms": [
+            "android", 
+            "android-api-15"
+        ], 
+        "revision": "default"
+    }, 
     "zh-CN": {
         "platforms": [
             "android", 
