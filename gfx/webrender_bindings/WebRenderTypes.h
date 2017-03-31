@@ -350,6 +350,27 @@ static inline WrExternalImageId ToWrExternalImageId(uint64_t aID)
   return id;
 }
 
+static inline WrExternalImage RawDataToWrExternalImage(const uint8_t* aBuff,
+                                                       size_t size)
+{
+  return WrExternalImage {
+    WrExternalImageIdType::RawData,
+    0, 0.0f, 0.0f, 0.0f, 0.0f,
+    aBuff, size
+  };
+}
+
+static inline WrExternalImage NativeTextureToWrExternalImage(uint8_t aHandle,
+                                                             float u0, float v0,
+                                                             float u1, float v1)
+{
+  return WrExternalImage {
+    WrExternalImageIdType::NativeTexture,
+    aHandle, u0, v0, u1, v1,
+    nullptr, 0
+  };
+}
+
 struct VecU8 {
   WrVecU8 inner;
   VecU8() {
