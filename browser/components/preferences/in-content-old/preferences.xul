@@ -84,7 +84,7 @@
 
   <stringbundleset id="appManagerBundleset">
     <stringbundle id="appManagerBundle"
-                  src="chrome://browser/locale/preferences-old/applicationManager.properties"/>
+                  src="chrome://browser/locale/preferences/applicationManager.properties"/>
   </stringbundleset>
 
   <stack flex="1">

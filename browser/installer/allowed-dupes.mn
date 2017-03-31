@@ -62,11 +62,13 @@ browser/chrome/browser/skin/classic/browser/preferences/in-content-old/container
 browser/chrome/browser/skin/classic/browser/preferences/in-content-old/favicon.ico
 browser/chrome/browser/skin/classic/browser/preferences/in-content-old/icons.svg
 browser/chrome/browser/skin/classic/browser/preferences/in-content-old/preferences.css
+browser/chrome/browser/skin/classic/browser/preferences/in-content-old/dialog.css
 browser/chrome/browser/skin/classic/browser/preferences/in-content/search.css
 browser/chrome/browser/skin/classic/browser/preferences/in-content/containers.css
 browser/chrome/browser/skin/classic/browser/preferences/in-content/favicon.ico
 browser/chrome/browser/skin/classic/browser/preferences/in-content/icons.svg
 browser/chrome/browser/skin/classic/browser/preferences/in-content/preferences.css
+browser/chrome/browser/skin/classic/browser/preferences/in-content/dialog.css
 # browser branding / themes is bug 1313106
 browser/chrome/browser/content/branding/icon128.png
 browser/chrome/browser/content/branding/icon16.png
