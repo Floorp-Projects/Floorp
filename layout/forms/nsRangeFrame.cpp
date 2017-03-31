@@ -489,7 +489,7 @@ nsRangeFrame::GetValueAsFractionOfRange()
   MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::input), "bad cast");
   dom::HTMLInputElement* input = static_cast<dom::HTMLInputElement*>(mContent);
 
-  MOZ_ASSERT(input->GetType() == NS_FORM_INPUT_RANGE);
+  MOZ_ASSERT(input->ControlType() == NS_FORM_INPUT_RANGE);
 
   Decimal value = input->GetValueAsDecimal();
   Decimal minimum = input->GetMinimum();
@@ -518,7 +518,7 @@ nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent)
   MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::input), "bad cast");
   dom::HTMLInputElement* input = static_cast<dom::HTMLInputElement*>(mContent);
 
-  MOZ_ASSERT(input->GetType() == NS_FORM_INPUT_RANGE);
+  MOZ_ASSERT(input->ControlType() == NS_FORM_INPUT_RANGE);
 
   Decimal minimum = input->GetMinimum();
   Decimal maximum = input->GetMaximum();
@@ -750,7 +750,8 @@ nsRangeFrame::AttributeChanged(int32_t  aNameSpaceID,
       // and this frame will shortly be destroyed, there's no point in calling
       // UpdateForValueChange() anyway.
       MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::input), "bad cast");
-      bool typeIsRange = static_cast<dom::HTMLInputElement*>(mContent)->GetType() ==
+      bool typeIsRange =
+        static_cast<dom::HTMLInputElement*>(mContent)->ControlType() ==
                            NS_FORM_INPUT_RANGE;
       // If script changed the <input>'s type before setting these attributes
       // then we don't need to do anything since we are going to be reframed.
