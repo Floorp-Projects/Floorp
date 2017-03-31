@@ -3,39 +3,48 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_GFX_RENDERTEXTUREHOST_H
-#define MOZILLA_GFX_RENDERTEXTUREHOST_H
+#ifndef MOZILLA_GFX_RENDERBUFFERTEXTUREHOST_H
+#define MOZILLA_GFX_RENDERBUFFERTEXTUREHOST_H
 
-#include "nsISupportsImpl.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/layers/LayersSurfaces.h"
-#include "mozilla/RefPtr.h"
+#include "RenderTextureHost.h"
 
 namespace mozilla {
 namespace wr {
 
-class RenderTextureHost
+class RenderBufferTextureHost final : public RenderTextureHost
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RenderTextureHost)
+  RenderBufferTextureHost(uint8_t* aBuffer,
+                          const layers::BufferDescriptor& aDescriptor);
 
-  RenderTextureHost(uint8_t* aBuffer, const layers::BufferDescriptor& aDescriptor);
+  virtual bool Lock() override;
+  virtual void Unlock() override;
 
-  bool Lock();
+  virtual gfx::IntSize GetSize() const override
+  {
+    return mSize;
+  }
+  virtual gfx::SurfaceFormat GetFormat() const override
+  {
+    return mFormat;
+  }
 
-  void Unlock();
+  virtual RenderBufferTextureHost* AsBufferTextureHost() override
+  {
+    return this;
+  }
 
-  gfx::IntSize GetSize() const { return mSize; }
-
-  gfx::SurfaceFormat GetFormat() const { return mFormat; }
-
-  uint8_t* GetDataForRender() const;
+  const uint8_t* GetDataForRender() const;
   size_t GetBufferSizeForRender() const;
 
-protected:
-  ~RenderTextureHost();
+private:
+  virtual ~RenderBufferTextureHost();
+
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface();
-  uint8_t* GetBuffer() const { return mBuffer; }
+  uint8_t* GetBuffer() const
+  {
+    return mBuffer;
+  }
 
   uint8_t* mBuffer;
   layers::BufferDescriptor mDescriptor;
@@ -49,4 +58,4 @@ protected:
 } // namespace wr
 } // namespace mozilla
 
-#endif // MOZILLA_GFX_RENDERTEXTUREHOST_H
+#endif // MOZILLA_GFX_RENDERBUFFERTEXTUREHOST_H
