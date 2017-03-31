@@ -5,9 +5,7 @@
 
 // Tests DER.jsm functionality.
 
-// Until DER.jsm is actually used in production code, this is where we have to
-// import it from.
-var { DER } = Cu.import("resource://testing-common/psm/DER.jsm", {});
+var { DER } = Cu.import("resource://gre/modules/psm/DER.jsm", {});
 
 function run_simple_tests() {
   throws(() => new DER.DER("this is not an array"), /invalid input/,
