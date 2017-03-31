@@ -62,7 +62,7 @@ function openBoxModelView() {
     return {
       toolbox: data.toolbox,
       inspector: data.inspector,
-      view: data.inspector.computedview,
+      view: data.inspector.getPanel("computedview"),
       testActor: data.testActor
     };
   });
@@ -92,7 +92,7 @@ function openLayoutView() {
     return {
       toolbox: data.toolbox,
       inspector: data.inspector,
-      boxmodel: data.inspector.boxmodel,
+      boxmodel: data.inspector.getPanel("boxmodel"),
       testActor: data.testActor
     };
   });

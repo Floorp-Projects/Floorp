@@ -29,6 +29,5 @@ check out the :doc:`how-to section <how-tos>`.
     docker-images
     cron
     actions
-    action-spec
     how-tos
     reference

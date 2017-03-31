@@ -5,13 +5,15 @@
 
 #include <cstdlib>
 #include <ctime>
+#include <fstream>
 #include <iomanip>
 #include <string>
-#include <cstdio>
 #include <zlib.h>
 
 #include "pingsender.h"
 
+using std::ifstream;
+using std::ios;
 using std::string;
 
 namespace PingSender {
@@ -34,25 +36,33 @@ GenerateDateHeader()
 }
 
 /**
- * Read the ping contents from stdin as a string
+ * Read the ping contents from the specified file
  */
 static std::string
-ReadPingFromStdin()
+ReadPing(const string& aPingPath)
 {
-  const size_t kBufferSize = 32768;
-  char buff[kBufferSize];
   string ping;
-  size_t readBytes = 0;
+  ifstream file;
 
-  do {
-    readBytes = fread(buff, 1, kBufferSize, stdin);
-    ping.append(buff, readBytes);
-  } while (!feof(stdin) && !ferror(stdin));
+  file.open(aPingPath.c_str(), ios::in | ios::binary);
 
-  if (ferror(stdin)) {
-    PINGSENDER_LOG("ERROR: Could not read from stdin\n");
+  if (!file.is_open()) {
+    PINGSENDER_LOG("ERROR: Could not open ping file\n");
     return "";
   }
+
+  do {
+    char buff[4096];
+
+    file.read(buff, sizeof(buff));
+
+    if (file.bad()) {
+      PINGSENDER_LOG("ERROR: Could not read ping contents\n");
+      return "";
+    }
+
+    ping.append(buff, file.gcount());
+  } while (!file.eof());
 
   return ping;
 }
@@ -136,22 +146,20 @@ using namespace PingSender;
 int main(int argc, char* argv[])
 {
   string url;
+  string pingPath;
 
-  if (argc == 2) {
+  if (argc == 3) {
     url = argv[1];
+    pingPath = argv[2];
   } else {
-    PINGSENDER_LOG("Usage: pingsender URL\n"
-                   "Send the payload passed via stdin to the specified URL "
-                   "using an HTTP POST message\n");
+    PINGSENDER_LOG("Usage: pingsender URL PATH\n"
+                   "Send the payload stored in PATH to the specified URL using "
+                   "an HTTP POST message\n"
+                   "then delete the file after a successful send.\n");
     exit(EXIT_FAILURE);
   }
 
-  if (url.empty()) {
-    PINGSENDER_LOG("ERROR: No URL was provided\n");
-    exit(EXIT_FAILURE);
-  }
-
-  string ping(ReadPingFromStdin());
+  string ping(ReadPing(pingPath));
 
   if (ping.empty()) {
     PINGSENDER_LOG("ERROR: Ping payload is empty\n");
@@ -170,6 +178,12 @@ int main(int argc, char* argv[])
   }
 
   if (!Post(url, gzipPing)) {
+    exit(EXIT_FAILURE);
+  }
+
+  // If the ping was successfully sent, delete the file.
+  if (!pingPath.empty() && std::remove(pingPath.c_str())) {
+    // We failed to remove the pending ping file.
     exit(EXIT_FAILURE);
   }
 

@@ -6,6 +6,7 @@
 
 #include "DCPresentationChannelDescription.h"
 #include "mozilla/dom/ContentProcessManager.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/Unused.h"
 #include "nsIPresentationDeviceManager.h"

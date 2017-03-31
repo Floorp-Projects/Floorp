@@ -64,8 +64,8 @@ AnimationState::UpdateStateInternal(LookupResult& aResult,
     if (mHasBeenDecoded) {
       Maybe<uint32_t> frameCount = FrameCount();
       MOZ_ASSERT(frameCount.isSome());
-      aResult.Surface().Seek(*frameCount - 1);
-      if (aResult.Surface() && aResult.Surface()->IsFinished()) {
+      if (NS_SUCCEEDED(aResult.Surface().Seek(*frameCount - 1)) &&
+          aResult.Surface()->IsFinished()) {
         mIsCurrentlyDecoded = true;
       } else {
         mIsCurrentlyDecoded = false;

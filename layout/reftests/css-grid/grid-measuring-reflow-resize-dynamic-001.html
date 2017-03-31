@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<title>Testcase simplified from layout/reftests/css-grid/grid-min-max-content-sizing-002.html</title>
+<style type="text/css">
+
+html { overflow: hidden }
+body { margin: 0 }
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(min-content,max-content);
+  grid-template-rows: minmax(min-content,max-content);
+}
+
+.grid > div {
+  border: 1px solid fuchsia;
+}
+
+span {
+  display: block;
+  border: 4px solid blue;
+  width: 100%;
+  height: 100%;
+}
+
+</style>
+
+<div class="grid">
+  <div>
+    <span id="s"></span>
+  </div>
+</div>
+
+<script>
+var s = document.getElementById("s");
+s.offsetWidth; // flush layout
+s.textContent = "blue should overflow fuchsia on right/bottom";
+</script>

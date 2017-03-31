@@ -4,33 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsPosixLocale.h"
 #include "OSPreferences.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla::intl;
 
 bool
 OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
 {
-#ifdef ENABLE_INTL_API
-  MOZ_ASSERT(aLocaleList.IsEmpty());
-
-  nsAutoCString defaultLang(uloc_getDefault());
-
-  if (CanonicalizeLanguageTag(defaultLang)) {
-    aLocaleList.AppendElement(defaultLang);
-    return true;
-  }
-  return false;
-#else
-  nsAutoString locale;
-  nsPosixLocale::GetXPLocale(getenv("LANG"), locale);
-  if (locale.IsEmpty()) {
+  //XXX: This is a quite sizable hack to work around the fact that we cannot
+  //     retrieve OS locale in C++ without reaching out to JNI.
+  //     Once we fix this (bug 1337078), this hack should not be necessary.
+  nsAutoCString locale;
+  if (!NS_SUCCEEDED(Preferences::GetCString("intl.locale.os", &locale)) ||
+      locale.IsEmpty()) {
     locale.AssignLiteral("en-US");
+    aLocaleList.AppendElement(locale);
   }
-  aLocaleList.AppendElement(NS_LossyConvertUTF16toASCII(locale));
   return true;
-#endif
 }
 
 bool

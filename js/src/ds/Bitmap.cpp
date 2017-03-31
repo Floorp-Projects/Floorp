@@ -26,33 +26,15 @@ SparseBitmap::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 }
 
 SparseBitmap::BitBlock&
-SparseBitmap::getOrCreateBlock(size_t blockId)
+SparseBitmap::createBlock(Data::AddPtr p, size_t blockId)
 {
-    Data::AddPtr p = data.lookupForAdd(blockId);
-    if (!p) {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        BitBlock* block = js_new<BitBlock>();
-        if (!block || !data.add(p, blockId, block))
-            oomUnsafe.crash("Bitmap OOM");
-        PodZero(block);
-    }
-    return *p->value();
-}
-
-void
-SparseBitmap::setBit(size_t bit)
-{
-    size_t word = bit / JS_BITS_PER_WORD;
-    size_t blockWord = blockStartWord(word);
-    BitBlock& block = getOrCreateBlock(blockWord / WordsInBlock);
-    block[word - blockWord] |= uintptr_t(1) << (bit % JS_BITS_PER_WORD);
-}
-
-SparseBitmap::BitBlock*
-SparseBitmap::getBlock(size_t blockId) const
-{
-    Data::Ptr p = data.lookup(blockId);
-    return p ? p->value() : nullptr;
+    MOZ_ASSERT(!p);
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    BitBlock* block = js_new<BitBlock>();
+    if (!block || !data.add(p, blockId, block))
+        oomUnsafe.crash("Bitmap OOM");
+    PodZero(block);
+    return *block;
 }
 
 bool

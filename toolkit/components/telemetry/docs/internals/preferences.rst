@@ -50,6 +50,10 @@ Preferences
 
   Sets whether to dump Telemetry log messages to ``stdout`` too.
 
+``toolkit.telemetry.shutdownPingSender.enabled``
+
+  Allow the ``shutdown`` ping to be sent when the browser shuts down, instead of the next restart, using the :doc:`ping sender <pingsender>`.
+
 Data-choices notification
 -------------------------
 

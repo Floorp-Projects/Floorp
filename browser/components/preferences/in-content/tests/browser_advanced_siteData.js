@@ -233,7 +233,7 @@ add_task(function* () {
   yield waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-  yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
+  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
 
   // Test the initial states
   let cacheUsage = yield cacheUsageGetter.get();
@@ -299,7 +299,7 @@ add_task(function* () {
 
   mockSiteDataManager.register();
   let updatePromise = promiseSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
+  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   yield updatePromise;
   yield openSettingsDialog();
 
@@ -390,7 +390,7 @@ add_task(function* () {
 
   mockSiteDataManager.register();
   let updatePromise = promiseSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
+  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   yield updatePromise;
   yield openSettingsDialog();
 
@@ -429,7 +429,7 @@ add_task(function* () {
   fakeOrigins.forEach(origin => addPersistentStoragePerm(origin));
 
   let updatePromise = promiseSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
+  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   yield updatePromise;
   yield openSettingsDialog();
 
@@ -533,7 +533,7 @@ add_task(function* () {
   fakeOrigins.forEach(origin => addPersistentStoragePerm(origin));
 
   let updatePromise = promiseSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
+  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   yield updatePromise;
   yield openSettingsDialog();
 
@@ -617,7 +617,7 @@ add_task(function* () {
   fakeOrigins.forEach(origin => addPersistentStoragePerm(origin));
 
   let updatePromise = promiseSitesUpdated();
-  yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
+  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   yield updatePromise;
   yield openSettingsDialog();
 

@@ -277,7 +277,7 @@ private:
   // there is no such event currently queued.
   // Only called on the decoder thread. Must be called with
   // the decode monitor held.
-  void UpdatePlaybackPosition(int64_t aTime);
+  void UpdatePlaybackPosition(const media::TimeUnit& aTime);
 
   bool CanPlayThrough();
 
@@ -362,8 +362,8 @@ protected:
   // Returns true if we're running low on buffered data.
   bool HasLowBufferedData();
 
-  // Returns true if we have less than aUsecs of buffered data available.
-  bool HasLowBufferedData(int64_t aUsecs);
+  // Returns true if we have less than aThreshold of buffered data available.
+  bool HasLowBufferedData(const media::TimeUnit& aThreshold);
 
   void UpdateNextFrameStatus(NextFrameStatus aStatus);
 
@@ -372,7 +372,7 @@ protected:
   // Called on the state machine thread.
   // If aTimeStamp is non-null, set *aTimeStamp to the TimeStamp corresponding
   // to the returned stream time.
-  int64_t GetClock(TimeStamp* aTimeStamp = nullptr) const;
+  media::TimeUnit GetClock(TimeStamp* aTimeStamp = nullptr) const;
 
   void SetStartTime(int64_t aStartTimeUsecs);
 
@@ -380,7 +380,7 @@ protected:
   // if unknown).  Does not update the playback position on the decoder or
   // media element -- use UpdatePlaybackPosition for that.  Called on the state
   // machine thread, caller must hold the decoder lock.
-  void UpdatePlaybackPositionInternal(int64_t aTime);
+  void UpdatePlaybackPositionInternal(const media::TimeUnit& aTime);
 
   // Update playback position and trigger next update by default time period.
   // Called on the state machine thread.
@@ -448,10 +448,10 @@ protected:
   // [mStartTime, mEndTime], and mStartTime will not be 0 if the media does
   // not start at 0. Note this is different than the "current playback position",
   // which is in the range [0,duration].
-  int64_t GetMediaTime() const
+  media::TimeUnit GetMediaTime() const
   {
     MOZ_ASSERT(OnTaskQueue());
-    return mCurrentPosition;
+    return media::TimeUnit::FromMicroseconds(mCurrentPosition.Ref());
   }
 
   // Returns an upper bound on the number of microseconds of audio that is
@@ -553,11 +553,11 @@ private:
   // The end time of the last audio frame that's been pushed onto the media sink
   // in microseconds. This will approximately be the end time
   // of the audio stream, unless another frame is pushed to the hardware.
-  int64_t AudioEndTime() const;
+  media::TimeUnit AudioEndTime() const;
 
   // The end time of the last rendered video frame that's been sent to
   // compositor.
-  int64_t VideoEndTime() const;
+  media::TimeUnit VideoEndTime() const;
 
   // The end time of the last decoded audio frame. This signifies the end of
   // decoded audio data. Used to check if we are low in decoded data.
@@ -583,33 +583,15 @@ private:
   // decode video frames, in order to reduce the chance of audio underruns.
   // Note that we don't ever reset this threshold, it only ever grows as
   // we detect that the decode can't keep up with rendering.
-  int64_t mLowAudioThresholdUsecs;
+  media::TimeUnit mLowAudioThreshold;
 
   // Our "ample" audio threshold. Once we've this much audio decoded, we
-  // pause decoding. If we increase mLowAudioThresholdUsecs, we'll also
-  // increase this too appropriately (we don't want mLowAudioThresholdUsecs
-  // to be greater than ampleAudioThreshold, else we'd stop decoding!).
+  // pause decoding. If we increase mLowAudioThreshold, we'll also
+  // increase this too appropriately (we don't want mLowAudioThreshold
+  // to be greater than mAmpleAudioThreshold, else we'd stop decoding!).
   // Note that we don't ever reset this threshold, it only ever grows as
   // we detect that the decode can't keep up with rendering.
-  int64_t mAmpleAudioThresholdUsecs;
-
-  // At the start of decoding we want to "preroll" the decode until we've
-  // got a few frames decoded before we consider whether decode is falling
-  // behind. Otherwise our "we're falling behind" logic will trigger
-  // unnecessarily if we start playing as soon as the first sample is
-  // decoded. These two fields store how many video frames and audio
-  // samples we must consume before are considered to be finished prerolling.
-  uint32_t AudioPrerollUsecs() const
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    return mAmpleAudioThresholdUsecs / 2;
-  }
-
-  uint32_t VideoPrerollFrames() const
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    return GetAmpleVideoFrames() / 2;
-  }
+  media::TimeUnit mAmpleAudioThreshold;
 
   // Only one of a given pair of ({Audio,Video}DataPromise, WaitForDataPromise)
   // should exist at any given moment.

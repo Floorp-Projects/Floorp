@@ -22,13 +22,6 @@
 #include "nspr.h"
 #include "nsCRT.h" // for atoll
 
-// Arena used by component manager for storing contractid string, dll
-// location strings and small objects
-// CAUTION: Arena align mask needs to be defined before including plarena.h
-//          currently from nsComponentManager.h
-#define PL_ARENA_CONST_ALIGN_MASK 7
-#define NS_CM_BLOCK_SIZE (1024 * 8)
-
 #include "nsCategoryManager.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManager.h"
@@ -155,27 +148,6 @@ error:
     *mErrorPtr = rv;
   }
   return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Arena helper functions
-////////////////////////////////////////////////////////////////////////////////
-char*
-ArenaStrndup(const char* aStr, uint32_t aLen, PLArenaPool* aArena)
-{
-  void* mem;
-  // Include trailing null in the aLen
-  PL_ARENA_ALLOCATE(mem, aArena, aLen + 1);
-  if (mem) {
-    memcpy(mem, aStr, aLen + 1);
-  }
-  return static_cast<char*>(mem);
-}
-
-char*
-ArenaStrdup(const char* aStr, PLArenaPool* aArena)
-{
-  return ArenaStrndup(aStr, strlen(aStr), aArena);
 }
 
 // GetService and a few other functions need to exit their mutex mid-function
@@ -332,9 +304,6 @@ nsresult
 nsComponentManagerImpl::Init()
 {
   MOZ_ASSERT(NOT_INITIALIZED == mStatus);
-
-  // Initialize our arena
-  PL_INIT_ARENA_POOL(&mArena, "ComponentManagerArena", NS_CM_BLOCK_SIZE);
 
   nsCOMPtr<nsIFile> greDir =
     GetLocationFromDirectoryService(NS_GRE_DIR);
@@ -714,14 +683,12 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& aCx,
     mKnownModules.Put(hash, km);
   }
 
-  void* place;
-
-  PL_ARENA_ALLOCATE(place, &mArena, sizeof(nsCID));
+  void* place = mArena.Allocate(sizeof(nsCID));
   nsID* permanentCID = static_cast<nsID*>(place);
   *permanentCID = cid;
 
-  PL_ARENA_ALLOCATE(place, &mArena, sizeof(mozilla::Module::CIDEntry));
-  auto* e = new (place) mozilla::Module::CIDEntry();
+  place = mArena.Allocate(sizeof(mozilla::Module::CIDEntry));
+  auto* e = new (KnownNotNull, place) mozilla::Module::CIDEntry();
   e->cid = permanentCID;
 
   f = new nsFactoryEntry(e, km);
@@ -855,9 +822,6 @@ nsresult nsComponentManagerImpl::Shutdown(void)
 
   delete sStaticModules;
   delete sModuleLocations;
-
-  // delete arena for strings and small objects
-  PL_FinishArenaPool(&mArena);
 
   mStatus = SHUTDOWN_COMPLETE;
 
@@ -1773,7 +1737,7 @@ nsComponentManagerImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   n += mKnownStaticModules.ShallowSizeOfExcludingThis(aMallocSizeOf);
   n += mKnownModules.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
-  n += PL_SizeOfArenaPoolExcludingPool(&mArena, aMallocSizeOf);
+  n += mArena.SizeOfExcludingThis(aMallocSizeOf);
 
   n += mPendingServices.ShallowSizeOfExcludingThis(aMallocSizeOf);
 

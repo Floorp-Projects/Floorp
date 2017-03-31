@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gc/AtomMarking.h"
+#include "gc/AtomMarking-inl.h"
 
 #include "jscompartment.h"
 
@@ -152,74 +152,43 @@ AtomMarkingRuntime::updateChunkMarkBits(JSRuntime* runtime)
     }
 }
 
-static inline size_t
-GetAtomBit(TenuredCell* thing)
-{
-    MOZ_ASSERT(thing->zoneFromAnyThread()->isAtomsZone());
-    Arena* arena = thing->arena();
-    size_t arenaBit = (reinterpret_cast<uintptr_t>(thing) - arena->address()) / CellSize;
-    return arena->atomBitmapStart() * JS_BITS_PER_WORD + arenaBit;
-}
-
-static bool
-ThingIsPermanent(TenuredCell* thing)
-{
-    JS::TraceKind kind = thing->getTraceKind();
-    if (kind == JS::TraceKind::String && static_cast<JSString*>(thing)->isPermanentAtom())
-        return true;
-    if (kind == JS::TraceKind::Symbol && static_cast<JS::Symbol*>(thing)->isWellKnownSymbol())
-        return true;
-    return false;
-}
-
+template <typename T>
 void
-AtomMarkingRuntime::markAtom(JSContext* cx, TenuredCell* thing)
+AtomMarkingRuntime::markAtom(JSContext* cx, T* thing)
 {
-    // The context's zone will be null during initialization of the runtime.
-    if (!thing || !cx->zone())
-        return;
-    MOZ_ASSERT(!cx->zone()->isAtomsZone());
-
-    if (ThingIsPermanent(thing) || !thing->zoneFromAnyThread()->isAtomsZone())
-        return;
-
-    size_t bit = GetAtomBit(thing);
-    MOZ_ASSERT(bit / JS_BITS_PER_WORD < allocatedWords);
-
-    cx->zone()->markedAtoms().setBit(bit);
-
-    if (!cx->helperThread()) {
-        // Trigger a read barrier on the atom, in case there is an incremental
-        // GC in progress. This is necessary if the atom is being marked
-        // because a reference to it was obtained from another zone which is
-        // not being collected by the incremental GC.
-        TenuredCell::readBarrier(thing);
-    }
-
-    // Children of the thing also need to be marked in the context's zone.
-    // We don't have a JSTracer for this so manually handle the cases in which
-    // an atom can reference other atoms.
-    if (thing->getTraceKind() == JS::TraceKind::Symbol) {
-        JSAtom* description = static_cast<JS::Symbol*>(thing)->description();
-        markAtom(cx, description);
-    }
+    return inlinedMarkAtom(cx, thing);
 }
+
+template void AtomMarkingRuntime::markAtom(JSContext* cx, JSAtom* thing);
+template void AtomMarkingRuntime::markAtom(JSContext* cx, JS::Symbol* thing);
 
 void
 AtomMarkingRuntime::markId(JSContext* cx, jsid id)
 {
-    if (JSID_IS_GCTHING(id))
-        markAtom(cx, &JSID_TO_GCTHING(id).asCell()->asTenured());
+    if (JSID_IS_ATOM(id)) {
+        markAtom(cx, JSID_TO_ATOM(id));
+        return;
+    }
+    if (JSID_IS_SYMBOL(id)) {
+        markAtom(cx, JSID_TO_SYMBOL(id));
+        return;
+    }
+    MOZ_ASSERT(!JSID_IS_GCTHING(id));
 }
 
 void
 AtomMarkingRuntime::markAtomValue(JSContext* cx, const Value& value)
 {
-    if (value.isGCThing()) {
-        Cell* thing = value.toGCThing();
-        if (thing && !IsInsideNursery(thing))
-            markAtom(cx, &thing->asTenured());
+    if (value.isString()) {
+        if (value.toString()->isAtom())
+            markAtom(cx, &value.toString()->asAtom());
+        return;
     }
+    if (value.isSymbol()) {
+        markAtom(cx, value.toSymbol());
+        return;
+    }
+    MOZ_ASSERT_IF(value.isGCThing(), value.isObject() || value.isPrivateGCThing());
 }
 
 void
@@ -230,23 +199,26 @@ AtomMarkingRuntime::adoptMarkedAtoms(Zone* target, Zone* source)
 }
 
 #ifdef DEBUG
-
+template <typename T>
 bool
-AtomMarkingRuntime::atomIsMarked(Zone* zone, Cell* thingArg)
+AtomMarkingRuntime::atomIsMarked(Zone* zone, T* thing)
 {
-    if (!thingArg || IsInsideNursery(thingArg))
-        return true;
-    TenuredCell* thing = &thingArg->asTenured();
+    static_assert(mozilla::IsSame<T, JSAtom>::value ||
+                  mozilla::IsSame<T, JS::Symbol>::value,
+                  "Should only be called with JSAtom* or JS::Symbol* argument");
+
+    MOZ_ASSERT(thing);
+    MOZ_ASSERT(!IsInsideNursery(thing));
+    MOZ_ASSERT(thing->zoneFromAnyThread()->isAtomsZone());
 
     if (!zone->runtimeFromAnyThread()->permanentAtoms)
         return true;
 
-    if (ThingIsPermanent(thing) || !thing->zoneFromAnyThread()->isAtomsZone())
+    if (ThingIsPermanent(thing))
         return true;
 
-    JS::TraceKind kind = thing->getTraceKind();
-    if (kind == JS::TraceKind::String) {
-        JSAtom* atom = static_cast<JSAtom*>(thing);
+    if (mozilla::IsSame<T, JSAtom>::value) {
+        JSAtom* atom = reinterpret_cast<JSAtom*>(thing);
         if (AtomIsPinnedInRuntime(zone->runtimeFromAnyThread(), atom))
             return true;
     }
@@ -255,19 +227,54 @@ AtomMarkingRuntime::atomIsMarked(Zone* zone, Cell* thingArg)
     return zone->markedAtoms().getBit(bit);
 }
 
+template bool AtomMarkingRuntime::atomIsMarked(Zone* zone, JSAtom* thing);
+template bool AtomMarkingRuntime::atomIsMarked(Zone* zone, JS::Symbol* thing);
+
+template<>
+bool
+AtomMarkingRuntime::atomIsMarked(Zone* zone, TenuredCell* thing)
+{
+    if (!thing)
+        return true;
+
+    JS::TraceKind kind = thing->getTraceKind();
+    if (kind == JS::TraceKind::String) {
+        JSString* str = static_cast<JSString*>(thing);
+        if (str->isAtom())
+            return atomIsMarked(zone, &str->asAtom());
+        return true;
+    }
+    if (kind == JS::TraceKind::Symbol)
+        return atomIsMarked(zone, static_cast<JS::Symbol*>(thing));
+    return true;
+}
+
 bool
 AtomMarkingRuntime::idIsMarked(Zone* zone, jsid id)
 {
-    if (JSID_IS_GCTHING(id))
-        return atomIsMarked(zone, JSID_TO_GCTHING(id).asCell());
+    if (JSID_IS_ATOM(id))
+        return atomIsMarked(zone, JSID_TO_ATOM(id));
+
+    if (JSID_IS_SYMBOL(id))
+        return atomIsMarked(zone, JSID_TO_SYMBOL(id));
+
+    MOZ_ASSERT(!JSID_IS_GCTHING(id));
     return true;
 }
 
 bool
 AtomMarkingRuntime::valueIsMarked(Zone* zone, const Value& value)
 {
-    if (value.isGCThing())
-        return atomIsMarked(zone, value.toGCThing());
+    if (value.isString()) {
+        if (value.toString()->isAtom())
+            return atomIsMarked(zone, &value.toString()->asAtom());
+        return true;
+    }
+
+    if (value.isSymbol())
+        return atomIsMarked(zone, value.toSymbol());
+
+    MOZ_ASSERT_IF(value.isGCThing(), value.isObject() || value.isPrivateGCThing());
     return true;
 }
 

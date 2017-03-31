@@ -76,7 +76,6 @@ to mochitest command.
 * test_box_size_keywords.html: moz-prefixed intrinsic size keyword value [64]
 * test_bug357614.html: case-insensitivity for old attrs in attr selector servo/servo#15006 [2]
 * mapped attribute not supported
-  * test_bug363146.html [2]
   * test_html_attribute_computed_values.html: also list-style-type [8]
 * test_bug387615.html: servo/servo#15006 [1]
 * test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [1]
@@ -123,7 +122,6 @@ to mochitest command.
   * test_descriptor_storage.html [1]
   * test_descriptor_syntax_errors.html [1]
   * test_font_face_parser.html `@font-face` [447]
-  * test_redundant_font_download.html [3]
 * @namespace support:
   * test_namespace_rule.html [17]
 * test_dont_use_document_colors.html: support of disabling document color [21]
@@ -389,7 +387,6 @@ to mochitest command.
 * test_value_storage.html `: var(--a)`: extra whitespace is added for shorthand with variables servo/servo#15295 [*]
 * Negative value should be rejected
   * test_property_syntax_errors.html `transition-duration`: servo/servo#15343 [20]
-  * ... `perspective'`: servo/servo#15449 [20]
   * ... `'text-shadow'`: third length of text-shadow servo/servo#15999 [2]
   * ... `flex-basis`: servo/servo#15902 [6]
 * Quirks mode support

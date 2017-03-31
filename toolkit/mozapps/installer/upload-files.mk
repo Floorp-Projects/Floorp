@@ -425,6 +425,10 @@ ifdef MOZ_CODE_COVERAGE
     $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(CODE_COVERAGE_ARCHIVE_BASENAME).zip)
 endif
 
+ifdef MOZ_STYLO
+  UPLOAD_FILES += $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(STYLO_BINDINGS_PACKAGE))
+endif
+
 SIGN_CHECKSUM_CMD=
 ifdef MOZ_SIGN_CMD
   # If we're signing with gpg, we'll have a bunch of extra detached signatures to
