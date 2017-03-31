@@ -83,5 +83,6 @@ public class ShareDialogTest {
         shareMenuHeader.waitForExists(waitingTime);
         assertTrue(shareMenuHeader.exists());
         assertTrue(shareAppList.exists());
+        TestHelper.pressBackKey();
     }
 }
