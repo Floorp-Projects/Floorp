@@ -17,7 +17,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMMutationEvent.h"
 #include "mozilla/InternalMutationEvent.h"
-#include "mozAutoDocUpdate.h"
 #include "nsError.h"
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
@@ -1471,13 +1470,9 @@ nsSVGElement::DidChangeValue(nsIAtom* aName,
   uint8_t modType = HasAttr(kNameSpaceID_None, aName)
                   ? static_cast<uint8_t>(nsIDOMMutationEvent::MODIFICATION)
                   : static_cast<uint8_t>(nsIDOMMutationEvent::ADDITION);
-
-  nsIDocument* document = GetComposedDoc();
-  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL,
-                               kNotifyDocumentObservers);
   SetAttrAndNotify(kNameSpaceID_None, aName, nullptr, aEmptyOrOldValue,
                    aNewValue, modType, hasListeners, kNotifyDocumentObservers,
-                   kCallAfterSetAttr, document, updateBatch);
+                   kCallAfterSetAttr);
 }
 
 void
