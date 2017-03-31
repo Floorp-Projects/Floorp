@@ -338,7 +338,7 @@ JSCompartment::wrap(JSContext* cx, MutableHandleString strp)
      * the atom as being in use by the new zone.
      */
     if (str->isAtom()) {
-        cx->markAtom(str);
+        cx->markAtom(&str->asAtom());
         return true;
     }
 
