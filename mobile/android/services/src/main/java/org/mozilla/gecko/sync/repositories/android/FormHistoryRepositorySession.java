@@ -486,10 +486,10 @@ public class FormHistoryRepositorySession extends
           synchronized (recordsBufferMonitor) {
             flushInsertQueue();
           }
-          storeDone(now());
+          storeDelegate.deferredStoreDelegate(storeWorkQueue).onStoreCompleted(now());
         } catch (Exception e) {
           // XXX TODO
-          storeDelegate.onRecordStoreFailed(e, null);
+          storeDelegate.deferredStoreDelegate(storeWorkQueue).onRecordStoreFailed(e, null);
         }
       }
     };
