@@ -61,6 +61,10 @@ class AtomMarkingRuntime
     // Mark an atom or id as being newly reachable by the context's zone.
     template <typename T> void markAtom(JSContext* cx, T* thing);
 
+    // Version of markAtom that's always inlined, for performance-sensitive
+    // callers.
+    template <typename T> MOZ_ALWAYS_INLINE void inlinedMarkAtom(JSContext* cx, T* thing);
+
     void markId(JSContext* cx, jsid id);
     void markAtomValue(JSContext* cx, const Value& value);
 
