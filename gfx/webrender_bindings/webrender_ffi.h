@@ -413,15 +413,14 @@ struct WrExternalImage
 {
   WrExternalImageIdType type;
 
-  // Texture coordinate
+  // external texture handle
+  uint32_t handle;
+  // external texture coordinate
   float u0, v0;
   float u1, v1;
 
-  // external buffer handle
-  uint32_t handle;
-
-  // handle RawData.
-  uint8_t* buff;
+  // external image buffer
+  const uint8_t* buff;
   size_t size;
 };
 
