@@ -748,7 +748,7 @@ CustomElementRegistry::Define(const nsAString& aName,
       //       here.
       JS::RootedValue rootedv(cx, JS::ObjectValue(*constructorProtoUnwrapped));
       if (!JS_WrapValue(cx, &rootedv) || !callbacksHolder->Init(cx, rootedv)) {
-        aRv.Throw(NS_ERROR_FAILURE);
+        aRv.StealExceptionFromJSContext(cx);
         return;
       }
     } // Leave constructorProtoUnwrapped's compartment.
