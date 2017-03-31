@@ -434,16 +434,15 @@ enum WrExternalImageType {
 struct WrExternalImageStruct {
     image_type: WrExternalImageType,
 
-    // Texture coordinate
+    // external texture handle
+    handle: u32,
+    // external texture coordinate
     u0: f32,
     v0: f32,
     u1: f32,
     v1: f32,
 
-    // external buffer handle
-    handle: u32,
-
-    // handle RawData.
+    // external image buffer
     buff: *const u8,
     size: usize,
 }

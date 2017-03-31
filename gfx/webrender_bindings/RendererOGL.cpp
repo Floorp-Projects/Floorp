@@ -21,8 +21,8 @@ WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId)
   RenderTextureHost* texture = renderer->GetRenderTexture(aId.id);
   MOZ_ASSERT(texture);
   texture->Lock();
-  return WrExternalImage { WrExternalImageIdType::RawData, 0.0f, 0.0f, 0.0f, 0.0f, 0,
-                           texture->GetDataForRender(), texture->GetBufferSizeForRender() };
+
+  return RawDataToWrExternalImage(texture->GetDataForRender(), texture->GetBufferSizeForRender());
 }
 
 void UnlockExternalImage(void* aObj, WrExternalImageId aId)
