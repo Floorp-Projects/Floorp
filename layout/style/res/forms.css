@@ -649,40 +649,8 @@ input[type="checkbox"]:disabled:hover:active {
 
 input[type="checkbox"]:hover:active,
 input[type="radio"]:hover:active {
-  background-color: ThreeDFace;
-  border-style: inset;
-}
-
-input[type="radio"] {
-  background-size: calc(100% - 4px) calc(100% - 4px);
-}
-
-input[type="radio"]:checked {
-  background-image: url(radio.svg);
-}
-
-input[type="radio"]:disabled:checked {
-  background-image: url(radio.svg#disabled);
-}
-
-input[type="checkbox"] {
-  background-size: 100% 100%;
-}
-
-input[type="checkbox"]:checked {
-  background-image: url(checkmark.svg);
-}
-
-input[type="checkbox"]:disabled:checked {
-  background-image: url(checkmark.svg#disabled);
-}
-
-input[type="checkbox"]:indeterminate {
-  background-image: url(indeterminate-checkmark.svg);
-}
-
-input[type="checkbox"]:indeterminate:disabled {
-  background-image: url(indeterminate-checkmark.svg#disabled);
+  background-color: ThreeDFace ! important;
+  border-style: inset !important;
 }
 
 %endif /* defined(MOZ_WIDGET_ANDROID) */
