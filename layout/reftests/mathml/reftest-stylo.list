@@ -132,7 +132,7 @@ fails == mstyle-3.xhtml mstyle-3.xhtml
 fails == mstyle-4.xhtml mstyle-4.xhtml
 fails == mstyle-5.xhtml mstyle-5.xhtml
 == scale-stretchy-1.xhtml scale-stretchy-1.xhtml
-fails == scale-stretchy-2.xhtml scale-stretchy-2.xhtml
+== scale-stretchy-2.xhtml scale-stretchy-2.xhtml
 fails == scale-stretchy-3.xhtml scale-stretchy-3.xhtml
 fails == scale-stretchy-4.xhtml scale-stretchy-4.xhtml
 fails == scale-stretchy-5.xhtml scale-stretchy-5.xhtml
@@ -193,7 +193,7 @@ fails == mo-lspace-rspace-3.html mo-lspace-rspace-3.html
 fails == mo-lspace-rspace-4.html mo-lspace-rspace-4.html
 fails == mo-invisibleoperators.html mo-invisibleoperators.html
 fails == mo-invisibleoperators-2.html mo-invisibleoperators-2.html
-== mo-glyph-size.html mo-glyph-size.html
+fails == mo-glyph-size.html mo-glyph-size.html
 fails == maction-dynamic-3.html maction-dynamic-3.html
 == whitespace-trim-1.html whitespace-trim-1.html
 fails == whitespace-trim-2.html whitespace-trim-2.html
@@ -209,22 +209,22 @@ fails == multiscripts-1.html multiscripts-1.html
 fails == mathml-mmultiscript-base.html mathml-mmultiscript-base.html
 fails == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript.html
 fails == menclose-1a.html menclose-1a.html
-== menclose-1b.html menclose-1b.html
+fails == menclose-1b.html menclose-1b.html
 fails == menclose-1c.html menclose-1c.html
-== menclose-1d.html menclose-1d.html
-== menclose-1e.html menclose-1e.html
-== menclose-1f.html menclose-1f.html
-== menclose-1g.html menclose-1g.html
-== menclose-1h.html menclose-1h.html
-== menclose-1i.html menclose-1i.html
-== menclose-1j.html menclose-1j.html
-== menclose-1k.html menclose-1k.html
-== menclose-1l.html menclose-1l.html
-== menclose-1m.html menclose-1m.html
-== menclose-1n.html menclose-1n.html
-== menclose-1o.html menclose-1o.html
-== menclose-1p.html menclose-1p.html
-== menclose-1q.html menclose-1q.html
+fails == menclose-1d.html menclose-1d.html
+fails == menclose-1e.html menclose-1e.html
+fails == menclose-1f.html menclose-1f.html
+fails == menclose-1g.html menclose-1g.html
+fails == menclose-1h.html menclose-1h.html
+fails == menclose-1i.html menclose-1i.html
+fails == menclose-1j.html menclose-1j.html
+fails == menclose-1k.html menclose-1k.html
+fails == menclose-1l.html menclose-1l.html
+fails == menclose-1m.html menclose-1m.html
+fails == menclose-1n.html menclose-1n.html
+fails == menclose-1o.html menclose-1o.html
+fails == menclose-1p.html menclose-1p.html
+fails == menclose-1q.html menclose-1q.html
 random-if(gtkWidget) == menclose-2-actuarial.html menclose-2-actuarial.html
 random-if(gtkWidget) == menclose-2-bottom.html menclose-2-bottom.html
 random-if(gtkWidget) == menclose-2-box.html menclose-2-box.html
@@ -246,7 +246,7 @@ fails == menclose-3-madruwb.html menclose-3-madruwb.html
 fails == menclose-3-radical.html menclose-3-radical.html
 fails == menclose-3-default.html menclose-3-default.html
 fails == menclose-3-invalid.html menclose-3-invalid.html
-== menclose-3-multiple.html menclose-3-multiple.html
+fails == menclose-3-multiple.html menclose-3-multiple.html
 fails == menclose-3-unknown.html menclose-3-unknown.html
 == menclose-4.html menclose-4.html
 fails == menclose-5-actuarial.html menclose-5-actuarial.html

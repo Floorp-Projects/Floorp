@@ -300,7 +300,7 @@ HighlightersOverlay.prototype = {
       return;
     }
 
-    let ruleViewEl = this.inspector.ruleview.view.element;
+    let ruleViewEl = this.inspector.getPanel("ruleview").view.element;
 
     for (let gridIcon of ruleViewEl.querySelectorAll(".ruleview-grid")) {
       gridIcon.classList.toggle("active", active);
@@ -392,7 +392,8 @@ HighlightersOverlay.prototype = {
     this._lastHovered = event.target;
 
     let view = this.isRuleView ?
-      this.inspector.ruleview.view : this.inspector.computedview.computedView;
+      this.inspector.getPanel("ruleview").view :
+      this.inspector.getPanel("computedview").computedView;
     let nodeInfo = view.getNodeInfo(event.target);
     if (!nodeInfo) {
       return;

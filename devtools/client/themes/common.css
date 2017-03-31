@@ -279,10 +279,6 @@ checkbox:-moz-focusring {
   vertical-align: middle;
 }
 
-.devtools-button:-moz-focusring {
-  outline: none;
-}
-
 /* Standalone buttons */
 .devtools-button[standalone],
 .devtools-button[data-standalone],
