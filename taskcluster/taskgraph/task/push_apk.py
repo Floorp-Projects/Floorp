@@ -15,9 +15,9 @@ class PushApkTask(transform.TransformTask):
 
     @classmethod
     def get_inputs(cls, kind, path, config, params, loaded_tasks):
-    # def loader(kind, path, config, params, loaded_tasks):
         """
-        Generate inputs implementing PushApk jobs. These depend on signed multi-locales nightly builds.
+        Generate inputs implementing PushApk jobs. These depend on signed multi-locales nightly
+        builds.
         """
         jobs = super(PushApkTask, cls).get_inputs(kind, path, config, params, loaded_tasks)
 
