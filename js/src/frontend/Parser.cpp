@@ -3725,11 +3725,9 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
         // We already use the correct await-handling at this point, therefore
         // we don't need call AutoAwaitIsKeyword here.
 
-        if (!checkBindingIdentifier(propertyName, handler.getPosition(pn).begin,
-                                    nameYieldHandling))
-        {
+        uint32_t nameOffset = handler.getFunctionNameOffset(pn, tokenStream);
+        if (!checkBindingIdentifier(propertyName, nameOffset, nameYieldHandling))
             return false;
-        }
     }
 
     if (bodyType == StatementListBody) {
