@@ -1133,16 +1133,29 @@ nsLookAndFeel::Init()
     // with wrong color theme, see Bug 972382
     GtkSettings *settings = gtk_settings_get_for_screen(gdk_screen_get_default());
 
-    // Disable dark theme because it interacts poorly with widget styling in
-    // web content (see bug 1216658).
+    // Dark themes interacts poorly with widget styling (see bug 1216658).
+    // We disable dark themes by default for all processes (chrome, web content)
+    // but allow user to overide it by prefs.
+    const gchar* dark_setting = "gtk-application-prefer-dark-theme";
+    gboolean darkThemeDefault;
+    g_object_get(settings, dark_setting, &darkThemeDefault, nullptr);
+
     // To avoid triggering reload of theme settings unnecessarily, only set the
     // setting when necessary.
-    const gchar* dark_setting = "gtk-application-prefer-dark-theme";
-    gboolean dark;
-    g_object_get(settings, dark_setting, &dark, nullptr);
-
-    if (dark && !PR_GetEnv("MOZ_ALLOW_GTK_DARK_THEME")) {
-        g_object_set(settings, dark_setting, FALSE, nullptr);
+    if (darkThemeDefault) {
+        bool allowDarkTheme;
+        if (XRE_IsContentProcess()) {
+            allowDarkTheme =
+                mozilla::Preferences::GetBool("widget.content.allow-gtk-dark-theme",
+                                              false);
+        } else {
+            allowDarkTheme = (PR_GetEnv("MOZ_ALLOW_GTK_DARK_THEME") != nullptr) ||
+                mozilla::Preferences::GetBool("widget.chrome.allow-gtk-dark-theme",
+                                              false);
+        }
+        if (!allowDarkTheme) {
+            g_object_set(settings, dark_setting, FALSE, nullptr);
+        }
     }
 
     // Scrollbar colors
