@@ -181,6 +181,13 @@ PUSH_APK_BREAKPOINT_WORKER_TYPE = {
     'default': 'invalid/invalid',
 }
 
+PUSH_APK_DRY_RUN_OPTION = {
+    'aurora': False,
+    'beta': True,
+    'release': True,
+    'default': True,
+}
+
 
 # scope functions {{{1
 def get_scope_from_project(alias_to_project_map, alias_to_scope_map, config):
@@ -290,6 +297,12 @@ get_push_apk_breakpoint_worker_type = functools.partial(
     get_scope_from_project,
     PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
     PUSH_APK_BREAKPOINT_WORKER_TYPE
+)
+
+get_push_apk_dry_run_option = functools.partial(
+    get_scope_from_project,
+    PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
+    PUSH_APK_DRY_RUN_OPTION
 )
 
 
