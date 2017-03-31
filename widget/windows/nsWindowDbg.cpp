@@ -11,8 +11,8 @@
 #include "nsWindowDbg.h"
 #include "WinUtils.h"
 
+using namespace mozilla;
 using namespace mozilla::widget;
-
 extern mozilla::LazyLogModule gWindowsLog;
 
 #if defined(POPUP_ROLLUP_DEBUG_OUTPUT)
@@ -38,8 +38,8 @@ void PrintEvent(UINT msg, bool aShowAllEvents, bool aShowMouseMoves)
   }
   if (aShowAllEvents || (!aShowAllEvents && gLastEventMsg != (long)msg)) {
     if (aShowMouseMoves || (!aShowMouseMoves && msg != 0x0020 && msg != 0x0200 && msg != 0x0084)) {
-      MOZ_LOG(gWindowsLog, LogLevel::Info, 
-             ("%6d - 0x%04X %s\n", gEventCounter++, msg, 
+      MOZ_LOG(gWindowsLog, LogLevel::Info,
+             ("%6d - 0x%04X %s\n", gEventCounter++, msg,
               gAllEvents[inx].mStr ? gAllEvents[inx].mStr : "Unknown"));
       gLastEventMsg = msg;
     }
