@@ -50,6 +50,9 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
         // 2. And it's being loaded for the main frame (and not a fake/hidden/iframe request)
         // Note also: shouldInterceptRequest() runs on a background thread, so we can't actually
         // query WebView.getURL().
+        // We update the URL when loading has finished too (redirects can happen after a request has been
+        // made in which case we don't get shouldInterceptRequest with the final URL), but this
+        // allows us to update the URL during loading.
         if (request.isForMainFrame()) {
 
             // WebView will always add a trailing / to the request URL, but currentPageURL may or may
@@ -91,6 +94,9 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
     public void onPageFinished(WebView view, final String url) {
         if (callback != null) {
             callback.onPageFinished(view.getCertificate() != null);
+            // The URL which is supplied in onPageFinished() could be fake (see #301), but webview's
+            // URL is always correct:
+            callback.onURLChanged(view.getUrl());
         }
         super.onPageFinished(view, url);
     }
