@@ -57,7 +57,7 @@ class SecretsMixin(object):
             filename = sf['filename']
             secret_name = sf['secret_name'] % subst
             min_scm_level = sf.get('min_scm_level', 0)
-            if scm_level < min_scm_level:
+            if scm_level <= min_scm_level:
                 if 'default' in sf:
                     self.info("Using default value for " + filename)
                     secret = sf['default']
