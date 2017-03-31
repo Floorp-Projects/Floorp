@@ -247,7 +247,7 @@ public class BatchingUploader {
     }
 
     /* package-local */ void finished(AtomicLong lastModifiedTimestamp) {
-        repositorySession.storeDone(lastModifiedTimestamp.get());
+        sessionStoreDelegate.deferredStoreDelegate(executor).onStoreCompleted(lastModifiedTimestamp.get());
     }
 
     // Will be called from a thread dispatched by PayloadDispatcher.
