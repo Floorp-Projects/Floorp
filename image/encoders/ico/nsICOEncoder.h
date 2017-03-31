@@ -50,14 +50,14 @@ public:
 protected:
   ~nsICOEncoder();
 
-  nsresult ParseOptions(const nsAString& aOptions, uint32_t& aBppOut,
+  nsresult ParseOptions(const nsAString& aOptions, uint16_t& aBppOut,
                         bool& aUsePNGOut);
   void NotifyListener();
 
   // Initializes the icon file header mICOFileHeader
   void InitFileHeader();
   // Initializes the icon directory info header mICODirEntry
-  void InitInfoHeader(uint32_t aBPP, uint8_t aWidth, uint8_t aHeight);
+  void InitInfoHeader(uint16_t aBPP, uint8_t aWidth, uint8_t aHeight);
   // Encodes the icon file header mICOFileHeader
   void EncodeFileHeader();
   // Encodes the icon directory info header mICODirEntry
