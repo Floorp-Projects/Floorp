@@ -4,9 +4,6 @@
 
 body {
   font-size: 1rem;
-  /* body needs padding until the edit profile dialog could be loaded as a
-     stacked subdialog */
-  padding: 2em;
 }
 
 form,
