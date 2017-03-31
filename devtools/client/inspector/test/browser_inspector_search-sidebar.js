@@ -64,11 +64,12 @@ function isInInspectorSearchBox(inspector) {
 }
 
 function isInRuleViewSearchBox(inspector) {
-  is(inspector.panelDoc.activeElement, inspector.ruleview.view.searchField,
+  is(inspector.panelDoc.activeElement, inspector.getPanel("ruleview").view.searchField,
      "The rule-view search field is focused when ctrl+F is pressed");
 }
 
 function isInComputedViewSearchBox(inspector) {
-  is(inspector.panelDoc.activeElement, inspector.computedview.computedView.searchField,
+  is(inspector.panelDoc.activeElement,
+     inspector.getPanel("computedview").computedView.searchField,
      "The computed-view search field is focused when ctrl+F is pressed");
 }

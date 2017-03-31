@@ -149,6 +149,14 @@ add_task(function* test_verifiedUserDisplayName() {
   yield signOut();
 });
 
+add_task(function* test_profileNotificationsClearsCache() {
+  let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateUI", 1);
+  gFxAccounts._cachedProfile = { foo: "bar" };
+  Services.obs.notifyObservers(null, this.FxAccountsCommon.ON_PROFILE_CHANGE_NOTIFICATION, null);
+  Assert.ok(!gFxAccounts._cachedProfile);
+  yield promiseUpdateDone;
+});
+
 add_task(function* test_verifiedUserProfileFailure() {
   // profile failure means only one observer fires.
   let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateUI", 1);
@@ -157,7 +165,7 @@ add_task(function* test_verifiedUserProfileFailure() {
   yield setSignedInUser(true); // this will fire the observer that does the update.
   yield promiseUpdateDone;
 
-  Assert.ok(isFooterVisible())
+  Assert.ok(isFooterVisible());
   Assert.equal(panelUILabel.getAttribute("label"), "foo@example.com");
   Assert.equal(panelUIStatus.getAttribute("tooltiptext"),
                panelUIStatus.getAttribute("signedinTooltiptext"));

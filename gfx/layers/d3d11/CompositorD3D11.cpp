@@ -31,7 +31,7 @@
 
 #include "D3D11ShareHandleImage.h"
 
-#include <dxgi1_2.h>
+#include <VersionHelpers.h> // For IsWindows8OrGreater
 
 namespace mozilla {
 
@@ -166,6 +166,7 @@ CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent, widget::Compos
   , mDisableSequenceForNextFrame(false)
   , mAllowPartialPresents(false)
   , mVerifyBuffersFailed(false)
+  , mIsDoubleBuffered(false)
   , mMaximumTriangles(kInitialMaximumTriangles)
 {
 }
@@ -487,36 +488,77 @@ CompositorD3D11::Initialize(nsCString* const out_failureReason)
     RefPtr<IDXGIFactory> dxgiFactory;
     dxgiAdapter->GetParent(IID_PPV_ARGS(dxgiFactory.StartAssignment()));
 
-    DXGI_SWAP_CHAIN_DESC swapDesc;
-    ::ZeroMemory(&swapDesc, sizeof(swapDesc));
-    swapDesc.BufferDesc.Width = 0;
-    swapDesc.BufferDesc.Height = 0;
-    swapDesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    swapDesc.BufferDesc.RefreshRate.Numerator = 60;
-    swapDesc.BufferDesc.RefreshRate.Denominator = 1;
-    swapDesc.SampleDesc.Count = 1;
-    swapDesc.SampleDesc.Quality = 0;
-    swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapDesc.BufferCount = 1;
-    swapDesc.OutputWindow = mHwnd;
-    swapDesc.Windowed = TRUE;
-    swapDesc.Flags = 0;
-    swapDesc.SwapEffect = DXGI_SWAP_EFFECT_SEQUENTIAL;
+    RefPtr<IDXGIFactory2> dxgiFactory2;
+    hr = dxgiFactory->QueryInterface((IDXGIFactory2**)getter_AddRefs(dxgiFactory2));
+
+    if (gfxPrefs::Direct3D11UseDoubleBuffering() && SUCCEEDED(hr) && dxgiFactory2 && IsWindows10OrGreater()) {
+      // DXGI_SCALING_NONE is not available on Windows 7 with Platform Update.
+      // This looks awful for things like the awesome bar and browser window resizing
+      // so we don't use a flip buffer chain here. When using EFFECT_SEQUENTIAL
+      // it looks like windows doesn't stretch the surface when resizing.
+      RefPtr<IDXGISwapChain1> swapChain;
+
+      DXGI_SWAP_CHAIN_DESC1 swapDesc;
+      ::ZeroMemory(&swapDesc, sizeof(swapDesc));
+      swapDesc.Width = 0;
+      swapDesc.Height = 0;
+      swapDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+      swapDesc.SampleDesc.Count = 1;
+      swapDesc.SampleDesc.Quality = 0;
+      swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+      swapDesc.BufferCount = 2;
+      swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+      swapDesc.Scaling = DXGI_SCALING_NONE;
+      mIsDoubleBuffered = true;
+      swapDesc.Flags = 0;
+
+      /**
+      * Create a swap chain, this swap chain will contain the backbuffer for
+      * the window we draw to. The front buffer is the full screen front
+      * buffer.
+      */
+      hr = dxgiFactory2->CreateSwapChainForHwnd(mDevice, mHwnd, &swapDesc, nullptr, nullptr, getter_AddRefs(swapChain));
+      if (Failed(hr, "create swap chain")) {
+        *out_failureReason = "FEATURE_FAILURE_D3D11_SWAP_CHAIN";
+        return false;
+      }
+
+      DXGI_RGBA color = { 1.0f, 1.0f, 1.0f, 1.0f };
+      swapChain->SetBackgroundColor(&color);
+
+      mSwapChain = swapChain;
+    } else {
+      DXGI_SWAP_CHAIN_DESC swapDesc;
+      ::ZeroMemory(&swapDesc, sizeof(swapDesc));
+      swapDesc.BufferDesc.Width = 0;
+      swapDesc.BufferDesc.Height = 0;
+      swapDesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+      swapDesc.BufferDesc.RefreshRate.Numerator = 60;
+      swapDesc.BufferDesc.RefreshRate.Denominator = 1;
+      swapDesc.SampleDesc.Count = 1;
+      swapDesc.SampleDesc.Quality = 0;
+      swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+      swapDesc.BufferCount = 1;
+      swapDesc.OutputWindow = mHwnd;
+      swapDesc.Windowed = TRUE;
+      swapDesc.Flags = 0;
+      swapDesc.SwapEffect = DXGI_SWAP_EFFECT_SEQUENTIAL;
 
 
-    /**
-     * Create a swap chain, this swap chain will contain the backbuffer for
-     * the window we draw to. The front buffer is the full screen front
-     * buffer.
-     */
-    hr = dxgiFactory->CreateSwapChain(dxgiDevice, &swapDesc, getter_AddRefs(mSwapChain));
-    if (Failed(hr, "create swap chain")) {
-      *out_failureReason = "FEATURE_FAILURE_D3D11_SWAP_CHAIN";
-      return false;
+      /**
+      * Create a swap chain, this swap chain will contain the backbuffer for
+      * the window we draw to. The front buffer is the full screen front
+      * buffer.
+      */
+      hr = dxgiFactory->CreateSwapChain(dxgiDevice, &swapDesc, getter_AddRefs(mSwapChain));
+      if (Failed(hr, "create swap chain")) {
+        *out_failureReason = "FEATURE_FAILURE_D3D11_SWAP_CHAIN";
+        return false;
+      }
     }
 
     // We need this because we don't want DXGI to respond to Alt+Enter.
-    dxgiFactory->MakeWindowAssociation(swapDesc.OutputWindow,
+    dxgiFactory->MakeWindowAssociation(mHwnd,
                                        DXGI_MWA_NO_WINDOW_CHANGES);
   }
 
@@ -1262,13 +1304,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   LayoutDeviceIntSize oldSize = mSize;
 
-  // Failed to create a render target or the view.
-  if (!UpdateRenderTarget() || !mDefaultRT || !mDefaultRT->mRTView ||
-      mSize.width <= 0 || mSize.height <= 0) {
-    ReadUnlockTextures();
-    *aRenderBoundsOut = IntRect();
-    return;
-  }
+  EnsureSize();
 
   IntRect intRect = IntRect(IntPoint(0, 0), mSize.ToUnknownSize());
   // Sometimes the invalid region is larger than we want to draw.
@@ -1295,8 +1331,19 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   PrepareStaticVertexBuffer();
 
-  mInvalidRect = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
-  mInvalidRegion = invalidRegionSafe;
+  mBackBufferInvalid.Or(mBackBufferInvalid, invalidRegionSafe);
+  if (mIsDoubleBuffered) {
+    mFrontBufferInvalid.Or(mFrontBufferInvalid, invalidRegionSafe);
+  }
+
+  // We have to call UpdateRenderTarget after we've determined the invalid regi
+  // Failed to create a render target or the view.
+  if (!UpdateRenderTarget() || !mDefaultRT || !mDefaultRT->mRTView ||
+    mSize.width <= 0 || mSize.height <= 0) {
+    ReadUnlockTextures();
+    *aRenderBoundsOut = IntRect();
+    return;
+  }
 
   if (aClipRectOut) {
     *aClipRectOut = IntRect(0, 0, mSize.width, mSize.height);
@@ -1305,14 +1352,14 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     *aRenderBoundsOut = IntRect(0, 0, mSize.width, mSize.height);
   }
 
-  mCurrentClip = IntRect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
+  mCurrentClip = mBackBufferInvalid.GetBounds();
 
   mContext->RSSetState(mAttachments->mRasterizerState);
 
   SetRenderTarget(mDefaultRT);
 
   // ClearRect will set the correct blend state for us.
-  ClearRect(Rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height));
+  ClearRect(Rect(mCurrentClip.x, mCurrentClip.y, mCurrentClip.width, mCurrentClip.height));
 
   if (mAttachments->mSyncTexture) {
     RefPtr<IDXGIKeyedMutex> mutex;
@@ -1381,17 +1428,22 @@ CompositorD3D11::EndFrame()
   }
 
   if (oldSize == mSize) {
+    // This must be called before present so our back buffer has the validated window content.
+    if (mTarget) {
+      PaintToTarget();
+    }
+
     RefPtr<IDXGISwapChain1> chain;
     HRESULT hr = mSwapChain->QueryInterface((IDXGISwapChain1**)getter_AddRefs(chain));
 
-    if (SUCCEEDED(hr) && chain && mAllowPartialPresents) {
+    if (SUCCEEDED(hr) && mAllowPartialPresents) {
       DXGI_PRESENT_PARAMETERS params;
       PodZero(&params);
-      params.DirtyRectsCount = mInvalidRegion.GetNumRects();
+      params.DirtyRectsCount = mBackBufferInvalid.GetNumRects();
       StackArray<RECT, 4> rects(params.DirtyRectsCount);
 
       uint32_t i = 0;
-      for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
+      for (auto iter = mBackBufferInvalid.RectIter(); !iter.Done(); iter.Next()) {
         const IntRect& r = iter.Get();
         rects[i].left = r.x;
         rects[i].top = r.y;
@@ -1403,16 +1455,21 @@ CompositorD3D11::EndFrame()
       params.pDirtyRects = params.DirtyRectsCount ? rects.data() : nullptr;
       chain->Present1(presentInterval, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0, &params);
     } else {
-      hr = mSwapChain->Present(presentInterval, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0);
+      HRESULT hr = mSwapChain->Present(0, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0);
       if (FAILED(hr)) {
         gfxCriticalNote << "D3D11 swap chain preset failed " << hexa(hr);
         HandleError(hr);
       }
     }
-    mDisableSequenceForNextFrame = false;
-    if (mTarget) {
-      PaintToTarget();
+
+    if (mIsDoubleBuffered) {
+      mBackBufferInvalid = mFrontBufferInvalid;
+      mFrontBufferInvalid.SetEmpty();
+    } else {
+      mBackBufferInvalid.SetEmpty();
     }
+
+    mDisableSequenceForNextFrame = false;
   }
 
   // Block until the previous frame's work has been completed.
@@ -1471,6 +1528,11 @@ CompositorD3D11::ForcePresent()
 
   if (desc.BufferDesc.Width == size.width && desc.BufferDesc.Height == size.height) {
     mSwapChain->Present(0, 0);
+    if (mIsDoubleBuffered) {
+      // Make sure we present what was the front buffer before that we know is completely
+      // valid. This non v-synced present should be pretty much 'free' for a flip chain.
+      mSwapChain->Present(0, 0);
+    }
   }
 }
 
@@ -1557,7 +1619,7 @@ CompositorD3D11::VerifyBufferSize()
     }
   }
 
-  hr = mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
+  hr = mSwapChain->ResizeBuffers(0, mSize.width, mSize.height,
                                  DXGI_FORMAT_B8G8R8A8_UNORM,
                                  0);
 
@@ -1567,30 +1629,27 @@ CompositorD3D11::VerifyBufferSize()
     HandleError(hr);
   }
 
+  mBackBufferInvalid = mFrontBufferInvalid = IntRect(0, 0, mSize.width, mSize.height);
+
   return !mVerifyBuffersFailed;
 }
 
 bool
 CompositorD3D11::UpdateRenderTarget()
 {
-  EnsureSize();
+  HRESULT hr;
+
+  RefPtr<ID3D11Texture2D> backBuf;
+
   if (!VerifyBufferSize()) {
     gfxCriticalNote << "Failed VerifyBufferSize in UpdateRenderTarget " << mSize;
     return false;
-  }
-
-  if (mDefaultRT) {
-    return true;
   }
 
   if (mSize.width <= 0 || mSize.height <= 0) {
     gfxCriticalNote << "Invalid size in UpdateRenderTarget " << mSize << ", " << (int)mVerifyBuffersFailed;
     return false;
   }
-
-  HRESULT hr;
-
-  RefPtr<ID3D11Texture2D> backBuf;
 
   hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuf.StartAssignment());
   if (hr == DXGI_ERROR_INVALID_CALL) {
@@ -1600,10 +1659,35 @@ CompositorD3D11::UpdateRenderTarget()
       return false;
     }
   }
+
   if (FAILED(hr)) {
     gfxCriticalNote << "Failed in UpdateRenderTarget " << hexa(hr) << ", " << mSize << ", " << (int)mVerifyBuffersFailed;
     HandleError(hr);
     return false;
+  }
+
+  IntRegion validFront;
+  validFront.Sub(mBackBufferInvalid, mFrontBufferInvalid);
+
+  if (!validFront.IsEmpty()) {
+    RefPtr<ID3D11Texture2D> frontBuf;
+    hr = mSwapChain->GetBuffer(1, __uuidof(ID3D11Texture2D), (void**)frontBuf.StartAssignment());
+
+    if (SUCCEEDED(hr)) {
+      for (auto iter = validFront.RectIter(); !iter.Done(); iter.Next()) {
+        const IntRect& rect = iter.Get();
+
+        D3D11_BOX box;
+        box.back = 1;
+        box.front = 0;
+        box.left = rect.x;
+        box.right = rect.XMost();
+        box.top = rect.y;
+        box.bottom = rect.YMost();
+        mContext->CopySubresourceRegion(backBuf, 0, rect.x, rect.y, 0, frontBuf, 0, &box);
+      }
+      mBackBufferInvalid = mFrontBufferInvalid;
+    }
   }
 
   mDefaultRT = new CompositingRenderTargetD3D11(backBuf, IntPoint(0, 0));

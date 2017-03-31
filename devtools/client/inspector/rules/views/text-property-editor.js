@@ -384,6 +384,7 @@ TextPropertyEditor.prototype = {
         span.on("unit-change", this._onSwatchCommit);
         let title = l10n("rule.colorSwatch.tooltip");
         span.setAttribute("title", title);
+        span.dataset.propertyName = this.nameSpan.textContent;
       }
     }
 

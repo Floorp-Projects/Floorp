@@ -267,8 +267,11 @@ struct JSContext : public JS::RootingContext,
     js::gc::AtomMarkingRuntime& atomMarking() {
         return runtime_->gc.atomMarking;
     }
-    void markAtom(js::gc::TenuredCell* atom) {
+    void markAtom(JSAtom* atom) {
         atomMarking().markAtom(this, atom);
+    }
+    void markAtom(JS::Symbol* symbol) {
+        atomMarking().markAtom(this, symbol);
     }
     void markId(jsid id) {
         atomMarking().markId(this, id);

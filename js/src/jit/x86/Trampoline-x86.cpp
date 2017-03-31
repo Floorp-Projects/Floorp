@@ -225,6 +225,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
         masm.push(scratch); // Fake return address.
         masm.push(Imm32(0));
         // No GC things to mark on the stack, push a bare token.
+        masm.loadJSContext(scratch);
         masm.enterFakeExitFrame(scratch, ExitFrameLayoutBareToken);
 
         masm.push(framePtr);
@@ -709,8 +710,8 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
     //  +0  returnAddress
     //
     // We're aligned to an exit frame, so link it up.
-    masm.enterExitFrame(cxreg, &f);
     masm.loadJSContext(cxreg);
+    masm.enterExitFrame(cxreg, &f);
 
     // Save the current stack pointer as the base for copying arguments.
     Register argsBase = InvalidReg;

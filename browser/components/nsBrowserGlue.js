@@ -205,7 +205,7 @@ BrowserGlue.prototype = {
   observe: function BG_observe(subject, topic, data) {
     switch (topic) {
       case "notifications-open-settings":
-        this._openPreferences("content");
+        this._openPreferences("privacy");
         break;
       case "prefservice:after-app-defaults":
         this._onAppDefaults();

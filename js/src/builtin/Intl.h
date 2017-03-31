@@ -170,7 +170,7 @@ class SharedIntlData
      * isn't a valid IANA time zone name, |result| remains unchanged.
      */
     bool validateTimeZoneName(JSContext* cx, JS::HandleString timeZone,
-                              JS::MutableHandleString result);
+                              MutableHandleAtom result);
 
     /**
      * Returns the canonical time zone name in |result|. If no canonical name

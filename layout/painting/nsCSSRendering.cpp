@@ -2906,11 +2906,8 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
   return positionArea;
 }
 
-// Implementation of the formula for computation of background-repeat round
-// See http://dev.w3.org/csswg/css3-background/#the-background-size
-// This function returns the adjusted size of the background image.
-static nscoord
-ComputeRoundedSize(nscoord aCurrentSize, nscoord aPositioningSize)
+/* static */ nscoord
+nsCSSRendering::ComputeRoundedSize(nscoord aCurrentSize, nscoord aPositioningSize)
 {
   float repeatCount = NS_roundf(float(aPositioningSize) / float(aCurrentSize));
   if (repeatCount < 1.0f) {
@@ -2971,7 +2968,9 @@ ComputeDrawnSizeForBackground(const CSSSizeOrRatio& aIntrinsicSize,
   // Calculate the rounded size only if the background-size computation
   // returned a correct size for the image.
   if (imageSize.width && aXRepeat == NS_STYLE_IMAGELAYER_REPEAT_ROUND) {
-    imageSize.width = ComputeRoundedSize(imageSize.width, aBgPositioningArea.width);
+    imageSize.width =
+      nsCSSRendering::ComputeRoundedSize(imageSize.width,
+                                         aBgPositioningArea.width);
     if (!isRepeatRoundInBothDimensions &&
         aLayerSize.mHeightType == nsStyleImageLayers::Size::DimensionType::eAuto) {
       // Restore intrinsic rato
@@ -2985,7 +2984,9 @@ ComputeDrawnSizeForBackground(const CSSSizeOrRatio& aIntrinsicSize,
   // Calculate the rounded size only if the background-size computation
   // returned a correct size for the image.
   if (imageSize.height && aYRepeat == NS_STYLE_IMAGELAYER_REPEAT_ROUND) {
-    imageSize.height = ComputeRoundedSize(imageSize.height, aBgPositioningArea.height);
+    imageSize.height =
+      nsCSSRendering::ComputeRoundedSize(imageSize.height,
+                                         aBgPositioningArea.height);
     if (!isRepeatRoundInBothDimensions &&
         aLayerSize.mWidthType == nsStyleImageLayers::Size::DimensionType::eAuto) {
       // Restore intrinsic rato
@@ -3020,16 +3021,10 @@ ComputeSpacedRepeatSize(nscoord aImageDimension,
   }
 }
 
-/* ComputeBorderSpacedRepeatSize
- * aImageDimension: the image width/height
- * aAvailableSpace: the background positioning area width/height
- * aSpace: the space between each image
- * Returns the image size plus gap size of app units for use as spacing
- */
-static nscoord
-ComputeBorderSpacedRepeatSize(nscoord aImageDimension,
-                              nscoord aAvailableSpace,
-                              nscoord& aSpace)
+/* static */ nscoord
+nsCSSRendering::ComputeBorderSpacedRepeatSize(nscoord aImageDimension,
+                                              nscoord aAvailableSpace,
+                                              nscoord& aSpace)
 {
   int32_t count = aAvailableSpace / aImageDimension;
   aSpace = (aAvailableSpace - aImageDimension * count) / (count + 1);

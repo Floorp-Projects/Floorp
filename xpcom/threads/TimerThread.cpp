@@ -8,13 +8,13 @@
 #include "TimerThread.h"
 
 #include "nsThreadUtils.h"
-#include "plarena.h"
 #include "pratom.h"
 
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 #include "mozilla/Services.h"
 #include "mozilla/ChaosMode.h"
+#include "mozilla/ArenaAllocator.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BinarySearch.h"
 
@@ -93,7 +93,7 @@ namespace {
 // thread.  Because TimerEventAllocator has its own lock, contention over that
 // lock is limited to the allocation and deallocation of nsTimerEvent objects.
 //
-// Because this allocator is layered over PLArenaPool, it never shrinks -- even
+// Because this is layered over ArenaAllocator, it never shrinks -- even
 // "freed" nsTimerEvents aren't truly freed, they're just put onto a free-list
 // for later recycling.  So the amount of memory consumed will always be equal
 // to the high-water mark consumption.  But nsTimerEvents are small and it's
@@ -108,21 +108,20 @@ private:
     FreeEntry* mNext;
   };
 
-  PLArenaPool mPool;
+  ArenaAllocator<4096> mPool;
   FreeEntry* mFirstFree;
   mozilla::Monitor mMonitor;
 
 public:
   TimerEventAllocator()
-    : mFirstFree(nullptr)
+    : mPool()
+    , mFirstFree(nullptr)
     , mMonitor("TimerEventAllocator")
   {
-    PL_InitArenaPool(&mPool, "TimerEventPool", 4096, /* align = */ 0);
   }
 
   ~TimerEventAllocator()
   {
-    PL_FinishArenaPool(&mPool);
   }
 
   void* Alloc(size_t aSize);
@@ -221,10 +220,7 @@ TimerEventAllocator::Alloc(size_t aSize)
     p = mFirstFree;
     mFirstFree = mFirstFree->mNext;
   } else {
-    PL_ARENA_ALLOCATE(p, &mPool, aSize);
-    if (!p) {
-      return nullptr;
-    }
+    p = mPool.Allocate(aSize, fallible);
   }
 
   return p;

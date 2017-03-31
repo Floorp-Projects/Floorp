@@ -26,4 +26,27 @@ interface mozIMozIntlHelper : nsISupports
    * throw.
    */
   [implicit_jscontext] void addPluralRulesConstructor(in jsval intlObject);
+
+  /**
+   * Adds a MozDateTimeFormat contructor to the given object. This function may only
+   * be called once within a realm/global object: calling it multiple times will
+   * throw.
+   *
+   * The difference between regular Intl.DateTimeFormat and the method created here
+   * is that we support two more options:
+   *
+   *    timeStyle: full | long | medium | short
+   *    dateStyle: full | long | medium | short
+   *
+   * which allow user to create normalized date/time style formats.
+   * Additionally, when those options are used instead of the regular atomic
+   * options (hour, minute, month, etc.) this code will look into host
+   * Operating System regional preferences and adjust for that.
+   *
+   * That means that if user will manually select time format (hour12/24) or
+   * adjust how the date should be displayed, MozDateTimeFormat will use that.
+   *
+   * This API should be used everywhere in the UI instead of regular Intl  API.
+   */
+  [implicit_jscontext] void addDateTimeFormatConstructor(in jsval intlObject);
 };

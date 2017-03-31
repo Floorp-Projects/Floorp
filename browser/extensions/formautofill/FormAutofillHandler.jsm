@@ -85,7 +85,7 @@ FormAutofillHandler.prototype = {
         addressType: info.addressType,
         contactType: info.contactType,
         fieldName: info.fieldName,
-        element, // TODO: Apply Cu.getWeakReference and use get API for strong ref.
+        elementWeakRef: Cu.getWeakReference(element),
       };
 
       this.fieldDetails.push(formatWithElement);
@@ -113,15 +113,52 @@ FormAutofillHandler.prototype = {
       // 2. a non-empty input field
       // 3. the invalid value set
 
-      if (fieldDetail.element === focusedInput ||
-          fieldDetail.element.value) {
+      let element = fieldDetail.elementWeakRef.get();
+      if (!element || element === focusedInput || element.value) {
         continue;
       }
 
       let value = profile[fieldDetail.fieldName];
       if (value) {
-        fieldDetail.element.setUserInput(value);
+        element.setUserInput(value);
       }
     }
+  },
+
+  /**
+   * Populates result to the preview layers with given profile.
+   *
+   * @param {Object} profile
+   *        A profile to be previewed with
+   */
+  previewFormFields(profile) {
+    log.debug("preview profile in autofillFormFields:", profile);
+    /*
+    for (let fieldDetail of this.fieldDetails) {
+      let value = profile[fieldDetail.fieldName] || "";
+
+      // Skip the fields that already has text entered
+      if (fieldDetail.element.value) {
+        continue;
+      }
+
+      // TODO: Set highlight style and preview text.
+    }
+    */
+  },
+
+  clearPreviewedFormFields() {
+    log.debug("clear previewed fields in:", this.form);
+    /*
+    for (let fieldDetail of this.fieldDetails) {
+      // TODO: Clear preview text
+
+      // We keep the highlight of all fields if this form has
+      // already been auto-filled with a profile.
+      if (this.filledProfileGUID == null) {
+        // TODO: Remove highlight style
+      }
+    }
+    */
   },
 };

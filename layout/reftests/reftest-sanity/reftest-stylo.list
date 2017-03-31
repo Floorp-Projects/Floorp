@@ -111,7 +111,7 @@ require-or(true&&true,fails) script scripttest-pass.html
 
 # tests for pref(...) syntax in manifest, including "fails" examples with incorrect prefs
 # a boolean pref
-fails pref(gfx.downloadable_fonts.enabled,true) HTTP(..) == font-download.html font-download.html
+pref(gfx.downloadable_fonts.enabled,true) HTTP(..) == font-download.html font-download.html
 fails pref(gfx.downloadable_fonts.enabled,false) HTTP(..) == font-download.html font-download.html
 fails pref(gfx.downloadable_fonts.enabled,0) HTTP(..) == font-download.html font-download.html
 fails pref(gfx.downloadable_fonts.enabled,"foo") HTTP(..) == font-download.html font-download.html

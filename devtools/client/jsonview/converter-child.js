@@ -6,8 +6,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu, Cm, Cr, components} = require("chrome");
-const registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
+const {Cc, Ci, Cu} = require("chrome");
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const Services = require("Services");
 
@@ -27,12 +26,6 @@ const childProcessMessageManager =
 // Amount of space that will be allocated for the stream's backing-store.
 // Must be power of 2. Used to copy the data stream in onStopRequest.
 const SEGMENT_SIZE = Math.pow(2, 17);
-
-const JSON_VIEW_MIME_TYPE = "application/vnd.mozilla.json.view";
-const CONTRACT_ID = "@mozilla.org/streamconv;1?from=" +
-  JSON_VIEW_MIME_TYPE + "&to=*/*";
-const CLASS_ID = components.ID("{d8c9acee-dec5-11e4-8c75-1681e6b88ec1}");
-const CLASS_DESCRIPTION = "JSONView converter";
 
 // Localization
 loader.lazyGetter(this, "jsonViewStrings", () => {
@@ -323,36 +316,10 @@ Converter.prototype = {
   }
 };
 
-const Factory = {
-  createInstance: function (outer, iid) {
-    if (outer) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    }
-    return new Converter();
-  }
-};
-
-function register() {
-  if (!registrar.isCIDRegistered(CLASS_ID)) {
-    registrar.registerFactory(CLASS_ID,
-      CLASS_DESCRIPTION,
-      CONTRACT_ID,
-      Factory);
-    return true;
-  }
-
-  return false;
-}
-
-function unregister() {
-  if (registrar.isCIDRegistered(CLASS_ID)) {
-    registrar.unregisterFactory(CLASS_ID, Factory);
-    return true;
-  }
-  return false;
+function createInstance() {
+  return new Converter();
 }
 
 exports.JsonViewService = {
-  register: register,
-  unregister: unregister
+  createInstance: createInstance,
 };

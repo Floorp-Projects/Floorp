@@ -26,9 +26,7 @@ fails == between-whitespaces.html between-whitespaces.html
 == punctuation-open-3.html punctuation-open-3.html
 == punctuation-open-4.html punctuation-open-4.html
 == quotationmarks-1.html quotationmarks-1.html
-# The following is currently disabled on Linux because of a rendering issue with missing-glyph
-# representations on the test boxes. See bug
-fails == quotationmarks-cjk-1.html quotationmarks-cjk-1.html
+== quotationmarks-cjk-1.html quotationmarks-cjk-1.html
 == smileys-1.html smileys-1.html
 == smileys-2.html smileys-2.html
 == space-cluster-1.html space-cluster-1.html

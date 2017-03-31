@@ -11,6 +11,7 @@
 #include "mozilla/layers/Compositor.h"
 #include "TextureD3D11.h"
 #include <d3d11.h>
+#include <dxgi1_2.h>
 
 class nsWidget;
 
@@ -237,11 +238,12 @@ private:
   PixelShaderConstants mPSConstants;
   bool mDisableSequenceForNextFrame;
   bool mAllowPartialPresents;
+  bool mIsDoubleBuffered;
 
-  gfx::IntRect mInvalidRect;
+  gfx::IntRegion mFrontBufferInvalid;
+  gfx::IntRegion mBackBufferInvalid;
   // This is the clip rect applied to the default DrawTarget (i.e. the window)
   gfx::IntRect mCurrentClip;
-  nsIntRegion mInvalidRegion;
 
   bool mVerifyBuffersFailed;
 

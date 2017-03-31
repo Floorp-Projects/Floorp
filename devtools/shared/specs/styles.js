@@ -134,6 +134,7 @@ const pageStyleSpec = generateActorSpec({
         node: Arg(0, "domnode"),
         inherited: Option(1, "boolean"),
         matchedSelectors: Option(1, "boolean"),
+        skipPseudo: Option(1, "boolean"),
         filter: Option(1, "string")
       },
       response: RetVal("appliedStylesReturn")

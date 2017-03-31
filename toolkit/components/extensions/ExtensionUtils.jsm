@@ -465,6 +465,8 @@ let IconDetails = {
           dy = 0;
         }
 
+        canvas.width = dSize;
+        canvas.height = dSize;
         ctx.drawImage(this, 0, 0, this.width, this.height, dx, dy, dWidth, dHeight);
         resolve(canvas.toDataURL("image/png"));
       };

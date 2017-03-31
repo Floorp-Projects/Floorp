@@ -196,8 +196,10 @@ add_task(function* testOpenPreferences() {
     Services.obs.removeObserver(observer, "advanced-pane-loaded");
     info("Advanced preference pane opened.");
     executeSoon(function() {
-      // We want this test to fail if the preferences pane changes.
-      let el = prefWin.document.getElementById("dataChoicesPanel");
+      // We want this test to fail if the preferences pane changes,
+      // but we can't check if the data-choices button is visible
+      // since it is only in the DOM when MOZ_TELEMETRY_REPORTING=1.
+      let el = prefWin.document.getElementById("header-advanced");
       is_element_visible(el);
 
       prefWin.close();

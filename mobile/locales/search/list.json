@@ -498,7 +498,7 @@
     "nl": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "wikipedia-nl", "bolcom-nl"
+          "google", "yahoo", "bing", "bolcom-nl", "duckduckgo", "twitter", "wikipedia-nl"
         ]
       }
     },
@@ -675,6 +675,13 @@
       "default": {
         "visibleDefaultEngines": [
           "google", "yahoo", "bing", "twitter", "wikipedia"
+        ]
+      }
+    },
+    "zam": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo-espanol", "bing", "wikipedia-es"
         ]
       }
     },

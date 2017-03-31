@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
     'Helpers.cpp',
+    'TestArenaAllocator.cpp',
     'TestAtoms.cpp',
     'TestAutoPtr.cpp',
     'TestAutoRef.cpp',
