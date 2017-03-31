@@ -1421,34 +1421,6 @@ void ProfilerMarker::StreamJSON(SpliceableJSONWriter& aWriter,
   aWriter.EndArray();
 }
 
-// Only fills in aOut if aStr contains a valid value.
-static bool
-GetEntries(const char* aStr, int* aOut)
-{
-  MOZ_ASSERT(aStr);
-  errno = 0;
-  int entries = strtol(aStr, nullptr, 10);
-  if (errno == 0 && entries > 0) {
-    *aOut = entries;
-    return true;
-  }
-  return false;
-}
-
-// Only fills in aOut if aStr contains a valid value.
-static bool
-GetInterval(const char* aStr, int* aOut)
-{
-  MOZ_ASSERT(aStr);
-  errno = 0;
-  int interval = strtol(aStr, nullptr, 10);
-  if (errno == 0 && 1 <= interval && interval <= 1000) {
-    *aOut = interval;
-    return true;
-  }
-  return false;
-}
-
 static void
 PrintUsageThenExit(int aExitCode)
 {
@@ -1956,19 +1928,25 @@ profiler_init(void* aStackTop)
     int entries = PROFILE_DEFAULT_ENTRIES;
     const char* startupEntries = getenv("MOZ_PROFILER_STARTUP_ENTRIES");
     if (startupEntries) {
-      if (!GetEntries(startupEntries, &entries)) {
+      errno = 0;
+      entries = strtol(startupEntries, nullptr, 10);
+      if (errno == 0 && entries > 0) {
+        LOG("- MOZ_PROFILER_STARTUP_ENTRIES = %d", entries);
+      } else {
         PrintUsageThenExit(1);
       }
-      LOG("- MOZ_PROFILER_STARTUP_ENTRIES = %d", entries);
     }
 
     int interval = PROFILE_DEFAULT_INTERVAL;
     const char* startupInterval = getenv("MOZ_PROFILER_STARTUP_INTERVAL");
     if (startupInterval) {
-      if (!GetInterval(startupInterval, &interval)) {
+      errno = 0;
+      interval = strtol(startupInterval, nullptr, 10);
+      if (errno == 0 && 1 <= interval && interval <= 1000) {
+        LOG("- MOZ_PROFILER_STARTUP_INTERVAL = %d", interval);
+      } else {
         PrintUsageThenExit(1);
       }
-      LOG("- MOZ_PROFILER_STARTUP_INTERVAL = %d", interval);
     }
 
     locked_profiler_start(lock, entries, interval,
