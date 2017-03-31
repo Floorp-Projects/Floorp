@@ -853,6 +853,30 @@ GPUProcessManager::AllocateLayerTreeId()
   return ++mNextLayerTreeId;
 }
 
+uint64_t
+GPUProcessManager::AllocateAndConnectLayerTreeId(PCompositorBridgeChild* aCompositorBridge,
+                                                 base::ProcessId aOtherPid)
+{
+  uint64_t layersId = AllocateLayerTreeId();
+
+  if (!mGPUChild || !aCompositorBridge) {
+    // If we're not remoting to another process, or there is no compositor,
+    // then we'll send at most one message. In this case we can just keep
+    // the old behavior of making sure the mapping occurs, and maybe sending
+    // a creation notification.
+    MapLayerTreeId(layersId, aOtherPid);
+    if (aCompositorBridge) {
+      aCompositorBridge->SendNotifyChildCreated(layersId);
+    }
+    return layersId;
+  }
+
+  // Use the combined message path.
+  LayerTreeOwnerTracker::Get()->Map(layersId, aOtherPid);
+  aCompositorBridge->SendMapAndNotifyChildCreated(layersId, aOtherPid);
+  return layersId;
+}
+
 void
 GPUProcessManager::EnsureVsyncIOThread()
 {
