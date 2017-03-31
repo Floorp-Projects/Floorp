@@ -7,6 +7,7 @@
 window.performance.mark('gecko-shell-loadstart');
 
 Cu.import('resource://gre/modules/NotificationDB.jsm');
+Cu.import('resource://gre/modules/UserAgentOverrides.jsm');
 Cu.import('resource://gre/modules/Keyboard.jsm');
 Cu.import('resource://gre/modules/ErrorPage.jsm');
 Cu.import('resource://gre/modules/AlertsHelper.jsm');
@@ -406,6 +407,7 @@ var shell = {
     this.contentBrowser.addEventListener('mozbrowsercaretstatechanged', this);
 
     CustomEventManager.init();
+    UserAgentOverrides.init();
     CaptivePortalLoginHelper.init();
 
     this.contentBrowser.src = homeURL;
@@ -435,6 +437,8 @@ var shell = {
     this.contentBrowser.removeEventListener('mozbrowserscrollviewchange', this, true);
     this.contentBrowser.removeEventListener('mozbrowsercaretstatechanged', this);
     ppmm.removeMessageListener("content-handler", this);
+
+    UserAgentOverrides.uninit();
   },
 
   // If this key event represents a hardware button which needs to be send as
