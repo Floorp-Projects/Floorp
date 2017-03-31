@@ -237,6 +237,8 @@ fi
 dnl Configure an Android SDK.
 dnl Arg 1: target SDK version, like 23.
 dnl Arg 2: list of build-tools versions, like "23.0.3 23.0.1".
+dnl Arg 3: target lint version, like "25.3.1" (note: we fall back to
+dnl        unversioned lint if this version is not found).
 AC_DEFUN([MOZ_ANDROID_SDK],
 [
 
@@ -360,6 +362,26 @@ case "$target" in
     AC_SUBST(ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB)
     ;;
 esac
+
+android_lint_target=$3
+ANDROID_LINT_CLASSPATH=""
+android_lint_versioned_jar="$ANDROID_SDK_ROOT/tools/lib/lint-$android_lint_target.jar"
+android_lint_unversioned_jar="$ANDROID_SDK_ROOT/tools/lib/lint.jar"
+if test -e "$android_lint_versioned_jar" ; then
+    ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $android_lint_versioned_jar"
+    ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $ANDROID_SDK_ROOT/tools/lib/lint-checks-$android_lint_target.jar"
+    ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $ANDROID_SDK_ROOT/tools/lib/sdklib-$android_lint_target.jar"
+    ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $ANDROID_SDK_ROOT/tools/lib/repository-$android_lint_target.jar"
+    ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $ANDROID_SDK_ROOT/tools/lib/common-$android_lint_target.jar"
+    ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $ANDROID_SDK_ROOT/tools/lib/lint-api-$android_lint_target.jar"
+elif test -e "$android_lint_unversioned_jar" ; then
+    ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $android_lint_unversioned_jar"
+    ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $ANDROID_SDK_ROOT/tools/lib/lint-checks.jar"
+else
+    AC_MSG_ERROR([Unable to find android sdk's lint jar. This probably means that you need to update android.m4 to find the latest version of lint-*.jar and all its dependencies. (looked for $android_lint_versioned_jar and $android_lint_unversioned_jar)])
+fi
+AC_MSG_RESULT([$ANDROID_LINT_CLASSPATH])
+AC_SUBST(ANDROID_LINT_CLASSPATH)
 
 MOZ_ARG_WITH_STRING(android-min-sdk,
 [  --with-android-min-sdk=[VER]     Impose a minimum Firefox for Android SDK version],
