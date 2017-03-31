@@ -35,7 +35,6 @@ class SyntaxParseHandler
     // Remember the last encountered name or string literal during syntax parses.
     JSAtom* lastAtom;
     TokenPos lastStringPos;
-    TokenStream& tokenStream;
 
   public:
     enum Node {
@@ -171,10 +170,9 @@ class SyntaxParseHandler
 
   public:
     SyntaxParseHandler(JSContext* cx, LifoAlloc& alloc,
-                       TokenStream& tokenStream, Parser<SyntaxParseHandler>* syntaxParser,
+                       TokenStreamBase& tokenStream, Parser<SyntaxParseHandler>* syntaxParser,
                        LazyScript* lazyOuterFunction)
-      : lastAtom(nullptr),
-        tokenStream(tokenStream)
+      : lastAtom(nullptr)
     {}
 
     static Node null() { return NodeFailure; }
@@ -402,11 +400,6 @@ class SyntaxParseHandler
 
     void setEndPosition(Node pn, Node oth) {}
     void setEndPosition(Node pn, uint32_t end) {}
-
-    void setPosition(Node pn, const TokenPos& pos) {}
-    TokenPos getPosition(Node pn) {
-        return tokenStream.currentToken().pos;
-    }
 
     uint32_t getFunctionNameOffset(Node func, TokenStreamBase& ts) {
         // XXX This offset isn't relevant to the offending function name.  But
