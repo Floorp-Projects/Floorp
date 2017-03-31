@@ -63,7 +63,9 @@ const char js_setter_str[]          = "setter";
 // which create a small number of atoms.
 static const uint32_t JS_STRING_HASH_COUNT = 64;
 
-AtomSet::Ptr js::FrozenAtomSet::readonlyThreadsafeLookup(const AtomSet::Lookup& l) const {
+MOZ_ALWAYS_INLINE AtomSet::Ptr
+js::FrozenAtomSet::readonlyThreadsafeLookup(const AtomSet::Lookup& l) const
+{
     return mSet->readonlyThreadsafeLookup(l);
 }
 
