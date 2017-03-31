@@ -104,7 +104,7 @@ protected:
 
   // See InitData in the cpp for valid parse options
   nsresult ParseOptions(const nsAString& aOptions, Version& aVersionOut,
-                        uint32_t& aBppOut);
+                        uint16_t& aBppOut);
   // Obtains data with no alpha in machine-independent byte order
   void ConvertHostARGBRow(const uint8_t* aSrc,
                           const mozilla::UniquePtr<uint8_t[]>& aDest,
@@ -113,11 +113,11 @@ protected:
   void NotifyListener();
 
   // Initializes the bitmap file header member mBMPFileHeader
-  void InitFileHeader(Version aVersion, uint32_t aBPP, uint32_t aWidth,
-                      uint32_t aHeight);
+  nsresult InitFileHeader(Version aVersion, uint16_t aBPP, uint32_t aWidth,
+                          uint32_t aHeight);
   // Initializes the bitmap info header member mBMPInfoHeader
-  void InitInfoHeader(Version aVersion, uint32_t aBPP, uint32_t aWidth,
-                      uint32_t aHeight);
+  nsresult InitInfoHeader(Version aVersion, uint16_t aBPP, uint32_t aWidth,
+                          uint32_t aHeight);
 
   // Encodes the bitmap file header member mBMPFileHeader
   void EncodeFileHeader();
