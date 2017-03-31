@@ -5,6 +5,7 @@
 
 #include "GMPVideoi420FrameImpl.h"
 #include "mozilla/gmp/GMPTypes.h"
+#include "mozilla/CheckedInt.h"
 
 namespace mozilla {
 namespace gmp {
@@ -93,9 +94,11 @@ GMPVideoi420FrameImpl::CheckDimensions(int32_t aWidth, int32_t aHeight,
                                        int32_t aStride_y, int32_t aStride_u, int32_t aStride_v)
 {
   int32_t half_width = (aWidth + 1) / 2;
-  if (aWidth < 1 || aHeight < 1 || aStride_y < aWidth ||
-                                   aStride_u < half_width ||
-                                   aStride_v < half_width) {
+  if (aWidth < 1 || aHeight < 1 ||
+      aStride_y < aWidth || aStride_u < half_width || aStride_v < half_width ||
+      !(CheckedInt<int32_t>(aHeight) * aStride_y
+        + ((CheckedInt<int32_t>(aHeight) + 1) / 2)
+          * (CheckedInt<int32_t>(aStride_u) + aStride_v)).isValid()) {
     return false;
   }
   return true;
