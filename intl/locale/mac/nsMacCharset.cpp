@@ -28,13 +28,6 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsACString& oResult
 }
 
 NS_IMETHODIMP 
-nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACString &oResult)
-{
-  oResult.AssignLiteral("UTF-8");
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
 nsPlatformCharset::Init()
 {
   return NS_OK;
