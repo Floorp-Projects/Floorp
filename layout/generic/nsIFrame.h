@@ -1649,8 +1649,11 @@ public:
    * or if its parent is an SVG frame that has children-only transforms (e.g.
    * an SVG viewBox attribute) or if its transform-style is preserve-3d or
    * the frame has transform animations.
+   *
+   * @param aStyleDisplay:  If the caller has this->StyleDisplay(), providing
+   *   it here will improve performance.
    */
-  bool IsTransformed() const;
+  bool IsTransformed(const nsStyleDisplay* aStyleDisplay = nullptr) const;
 
   /**
    * True if this frame has any animation of transform in effect.
@@ -1704,8 +1707,12 @@ public:
    * Returns whether this frame has a parent that Extend3DContext() and has
    * its own transform (or hidden backface) to be combined with the parent's
    * transform.
+   *
+   * @param aStyleDisplay:  If the caller has this->StyleDisplay(), providing
+   *   it here will improve performance.
    */
-  bool Combines3DTransformWithAncestors() const;
+  bool Combines3DTransformWithAncestors(const nsStyleDisplay* aStyleDisplay
+                                          = nullptr) const;
 
   /**
    * Returns whether this frame has a hidden backface and has a parent that
@@ -3641,8 +3648,12 @@ public:
   virtual mozilla::dom::Element*
   GetPseudoElement(mozilla::CSSPseudoElementType aType);
 
-  bool BackfaceIsHidden() const {
-    return StyleDisplay()->BackfaceIsHidden();
+  /*
+   * @param aStyleDisplay:  If the caller has this->StyleDisplay(), providing
+   *   it here will improve performance.
+   */
+  bool BackfaceIsHidden(const nsStyleDisplay* aStyleDisplay = nullptr) const {
+    return StyleDisplayWithOptionalParam(aStyleDisplay)->BackfaceIsHidden();
   }
 
   /**
