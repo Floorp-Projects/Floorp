@@ -520,17 +520,14 @@ DisplayListBuilder::PushLinearGradient(const WrRect& aBounds,
 void
 DisplayListBuilder::PushRadialGradient(const WrRect& aBounds,
                                        const WrClipRegion& aClip,
-                                       const WrPoint& aStartCenter,
-                                       const WrPoint& aEndCenter,
-                                       float aStartRadius,
-                                       float aEndRadius,
+                                       const WrPoint& aCenter,
+                                       const WrSize& aRadius,
                                        const nsTArray<WrGradientStop>& aStops,
                                        wr::GradientExtendMode aExtendMode)
 {
   wr_dp_push_radial_gradient(mWrState,
                              aBounds, aClip,
-                             aStartCenter, aEndCenter,
-                             aStartRadius, aEndRadius,
+                             aCenter, aRadius,
                              aStops.Elements(), aStops.Length(),
                              aExtendMode);
 }

@@ -693,8 +693,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_radial_gradient(WrState* wrState, WrRect bounds, WrClipRegion clip,
-                           WrPoint startCenter, WrPoint endCenter,
-                           float startRadius, float endRadius,
+                           WrPoint center, WrSize radius,
                            const WrGradientStop* stops, size_t stopsCount,
                            WrGradientExtendMode extendMode)
 WR_FUNC;

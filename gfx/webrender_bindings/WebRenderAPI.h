@@ -165,10 +165,8 @@ public:
 
   void PushRadialGradient(const WrRect& aBounds,
                           const WrClipRegion& aClip,
-                          const WrPoint& aStartCenter,
-                          const WrPoint& aEndCenter,
-                          float aStartRadius,
-                          float aEndRadius,
+                          const WrPoint& aCenter,
+                          const WrSize& aRadius,
                           const nsTArray<WrGradientStop>& aStops,
                           wr::GradientExtendMode aExtendMode);
 
