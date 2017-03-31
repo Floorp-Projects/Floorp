@@ -6915,13 +6915,9 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         if (request == mTransactionPump && mCacheEntry && !mDidReval &&
             !mCustomConditionalRequest &&
             !mAsyncOpenTime.IsNull() && !mOnStartRequestTimestamp.IsNull()) {
-            nsAutoCString onStartTime;
-            onStartTime.AppendInt( (uint64_t) (mOnStartRequestTimestamp - mAsyncOpenTime).ToMilliseconds());
-            mCacheEntry->SetMetaDataElement("net-response-time-onstart", onStartTime.get());
-
-            nsAutoCString responseTime;
-            responseTime.AppendInt( (uint64_t) (TimeStamp::Now() - mAsyncOpenTime).ToMilliseconds());
-            mCacheEntry->SetMetaDataElement("net-response-time-onstop", responseTime.get());
+            uint64_t onStartTime = (mOnStartRequestTimestamp - mAsyncOpenTime).ToMilliseconds();
+            uint64_t onStopTime = (TimeStamp::Now() - mAsyncOpenTime).ToMilliseconds();
+            Unused << mCacheEntry->SetNetworkTimes(onStartTime, onStopTime);
         }
 
         // at this point, we're done with the transaction
@@ -8609,25 +8605,13 @@ nsHttpChannel::ReportNetVSCacheTelemetry()
         return;
     }
 
-    nsXPIDLCString tmpStr;
-    rv = mCacheEntry->GetMetaDataElement("net-response-time-onstart",
-                                         getter_Copies(tmpStr));
-    if (NS_FAILED(rv)) {
-        return;
-    }
-    uint64_t onStartNetTime = tmpStr.ToInteger64(&rv);
-    if (NS_FAILED(rv)) {
+    uint64_t onStartNetTime = 0;
+    if (NS_FAILED(mCacheEntry->GetOnStartTime(&onStartNetTime))) {
         return;
     }
 
-    tmpStr.Truncate();
-    rv = mCacheEntry->GetMetaDataElement("net-response-time-onstop",
-                                         getter_Copies(tmpStr));
-    if (NS_FAILED(rv)) {
-        return;
-    }
-    uint64_t onStopNetTime = tmpStr.ToInteger64(&rv);
-    if (NS_FAILED(rv)) {
+    uint64_t onStopNetTime = 0;
+    if (NS_FAILED(mCacheEntry->GetOnStopTime(&onStopNetTime))) {
         return;
     }
 

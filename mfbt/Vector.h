@@ -1305,10 +1305,10 @@ Vector<T, N, AP>::insert(T* aP, U&& aVal)
     }
   } else {
     T oldBack = Move(back());
-    if (!append(Move(oldBack))) { /* Dup the last element. */
+    if (!append(Move(oldBack))) {
       return nullptr;
     }
-    for (size_t i = oldLength; i > pos; --i) {
+    for (size_t i = oldLength - 1; i > pos; --i) {
       (*this)[i] = Move((*this)[i - 1]);
     }
     (*this)[pos] = Forward<U>(aVal);

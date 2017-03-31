@@ -15,6 +15,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsIServiceManager.h"
 #include "nsIFile.h"
+#include "mozilla/ArenaAllocator.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Module.h"
@@ -29,7 +30,6 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsWeakReference.h"
-#include "plarena.h"
 #include "nsCOMArray.h"
 #include "nsDataHashtable.h"
 #include "nsInterfaceHashtable.h"
@@ -310,7 +310,7 @@ public:
     SHUTDOWN_COMPLETE
   } mStatus;
 
-  PLArenaPool   mArena;
+  mozilla::ArenaAllocator<1024*8, 8> mArena;
 
   struct PendingServiceInfo
   {

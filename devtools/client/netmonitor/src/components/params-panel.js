@@ -10,7 +10,7 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../utils/l10n");
-const { getUrlQuery, parseQueryString } = require("../utils/request-utils");
+const { getUrlQuery, parseQueryString, parseFormData } = require("../utils/request-utils");
 
 // Components
 const PropertiesView = createFactory(require("./properties-view"));
@@ -61,7 +61,7 @@ function ParamsPanel({ request }) {
   // Form Data section
   if (formDataSections && formDataSections.length > 0) {
     let sections = formDataSections.filter((str) => /\S/.test(str)).join("&");
-    object[PARAMS_FORM_DATA] = getProperties(parseQueryString(sections));
+    object[PARAMS_FORM_DATA] = getProperties(parseFormData(sections));
   }
 
   // Request payload section

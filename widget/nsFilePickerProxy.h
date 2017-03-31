@@ -60,6 +60,9 @@ private:
     ~nsFilePickerProxy();
     void InitNative(nsIWidget*, const nsAString&) override;
 
+    void
+    ActorDestroy(ActorDestroyReason aWhy) override;
+
     nsTArray<mozilla::dom::OwningFileOrDirectory> mFilesOrDirectories;
     nsCOMPtr<nsIFilePickerShownCallback> mCallback;
 
@@ -67,6 +70,8 @@ private:
     nsString  mFile;
     nsString  mDefault;
     nsString  mDefaultExtension;
+
+    bool mIPCActive;
 
     InfallibleTArray<nsString> mFilters;
     InfallibleTArray<nsString> mFilterNames;

@@ -102,6 +102,9 @@ public:
   nsresult GetExpirationTime(uint32_t *_retval);
   nsresult SetFrecency(uint32_t aFrecency);
   nsresult GetFrecency(uint32_t *_retval);
+  nsresult SetNetworkTimes(uint64_t aOnStartTime, uint64_t aOnStopTime);
+  nsresult GetOnStartTime(uint64_t *_retval);
+  nsresult GetOnStopTime(uint64_t *_retval);
   nsresult GetLastModified(uint32_t *_retval);
   nsresult GetLastFetched(uint32_t *_retval);
   nsresult GetFetchCount(uint32_t *_retval);
