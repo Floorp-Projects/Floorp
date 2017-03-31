@@ -15,8 +15,7 @@ requestLongerTimeout(2);
 add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {panel, inspector} = yield openAnimationInspector();
-  let timeline = panel.animationsTimelineComponent;
+  let {panel, controller, inspector} = yield openAnimationInspector();
   let btn = panel.playTimelineButtonEl;
 
   // For a finite animation, once the scrubber reaches the end of the timeline, the pause
@@ -24,10 +23,12 @@ add_task(function* () {
   info("Select a finite animation and wait for the animation to complete");
   yield selectNodeAndWaitForAnimations(".negative-delay", inspector);
 
-  let onScrubberStopped = waitForScrubberStopped(timeline);
+  let onButtonPaused = waitForButtonPaused(btn);
+  let onTimelineUpdated = controller.once(controller.PLAYERS_UPDATED_EVENT);
   // The page is reloaded to avoid missing the animation.
   yield reloadTab(inspector);
-  yield onScrubberStopped;
+  yield onTimelineUpdated;
+  yield onButtonPaused;
 
   ok(btn.classList.contains("paused"),
      "The button is in paused state once finite animations are done");
@@ -41,14 +42,19 @@ add_task(function* () {
   yield assertScrubberMoving(panel, true);
 });
 
-function waitForScrubberStopped(timeline) {
+function waitForButtonPaused(btn) {
   return new Promise(resolve => {
-    timeline.on("timeline-data-changed",
-      function onTimelineData(e, {isMoving}) {
-        if (!isMoving) {
-          timeline.off("timeline-data-changed", onTimelineData);
+    let observer = new btn.ownerDocument.defaultView.MutationObserver(mutations => {
+      for (let mutation of mutations) {
+        if (mutation.type === "attributes" &&
+            mutation.attributeName === "class" &&
+            !mutation.oldValue.includes("paused") &&
+            btn.classList.contains("paused")) {
+          observer.disconnect();
           resolve();
         }
-      });
+      }
+    });
+    observer.observe(btn, { attributes: true, attributeOldValue: true });
   });
 }

@@ -34,6 +34,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStorage",
                                   "resource://gre/modules/TelemetryStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryReportingPolicy",
                                   "resource://gre/modules/TelemetryReportingPolicy.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
                                    "@mozilla.org/base/telemetry;1",
                                    "nsITelemetry");
@@ -213,10 +215,13 @@ this.TelemetrySend = {
    * - save the ping to disk and send it at the next opportunity
    *
    * @param {Object} ping The ping data to send, must be serializable to JSON.
+   * @param {Object} [aOptions] Options object.
+   * @param {Boolean} [options.usePingSender=false] if true, send the ping using the PingSender.
    * @return {Promise} Test-only - a promise that is resolved when the ping is sent or saved.
    */
-  submitPing(ping) {
-    return TelemetrySendImpl.submitPing(ping);
+  submitPing(ping, options = {}) {
+    options.usePingSender = options.usePingSender || false;
+    return TelemetrySendImpl.submitPing(ping, options);
   },
 
   /**
@@ -762,12 +767,44 @@ var TelemetrySendImpl = {
     }
   },
 
-  submitPing(ping) {
-    this._log.trace("submitPing - ping id: " + ping.id);
+  /**
+   * Spawn the PingSender process that sends a ping. This function does
+   * not return an error or throw, it only logs an error.
+   *
+   * Even if the function doesn't fail, it doesn't mean that the ping was
+   * successfully sent, as we have no control over the spawned process. If it,
+   * succeeds, the ping is eventually removed from the disk to prevent duplicated
+   * submissions.
+   *
+   * @param {String} pingId The id of the ping to send.
+   * @param {String} submissionURL The complete Telemetry-compliant URL for the ping.
+   */
+  _sendWithPingSender(pingId, submissionURL) {
+    this._log.trace("_sendWithPingSender - sending " + pingId + " to " + submissionURL);
+    try {
+      const pingPath = OS.Path.join(TelemetryStorage.pingDirectoryPath, pingId);
+      Telemetry.runPingSender(submissionURL, pingPath);
+    } catch (e) {
+      this._log.error("_sendWithPingSender - failed to submit shutdown ping", e);
+    }
+  },
+
+  submitPing(ping, options) {
+    this._log.trace("submitPing - ping id: " + ping.id + ", options: " + JSON.stringify(options));
 
     if (!this.sendingEnabled(ping)) {
       this._log.trace("submitPing - Telemetry is not allowed to send pings.");
       return Promise.resolve();
+    }
+
+    // Send the ping using the PingSender, if requested and the user was
+    // notified of our policy.
+    if (options.usePingSender && TelemetryReportingPolicy.canUpload()) {
+      const url = this._buildSubmissionURL(ping);
+      // Serialize the ping to the disk and spawn the PingSender.
+      let savePromise = savePing(ping);
+      savePromise.then(() => this._sendWithPingSender(ping.id, url));
+      return savePromise;
     }
 
     if (!this.canSendNow) {
@@ -929,6 +966,11 @@ var TelemetrySendImpl = {
     return Promise.resolve();
   },
 
+  _buildSubmissionURL(ping) {
+    const version = isV4PingFormat(ping) ? PING_FORMAT_VERSION : 1;
+    return this._server + this._getSubmissionPath(ping) + "?v=" + version;
+  },
+
   _getSubmissionPath(ping) {
     // The new ping format contains an "application" section, the old one doesn't.
     let pathComponents;
@@ -972,9 +1014,7 @@ var TelemetrySendImpl = {
     this._log.trace("_doPing - server: " + this._server + ", persisted: " + isPersisted +
                     ", id: " + id);
 
-    const isNewPing = isV4PingFormat(ping);
-    const version = isNewPing ? PING_FORMAT_VERSION : 1;
-    const url = this._server + this._getSubmissionPath(ping) + "?v=" + version;
+    const url = this._buildSubmissionURL(ping);
 
     let request = new ServiceRequest();
     request.mozBackgroundRequest = true;
@@ -1050,7 +1090,7 @@ var TelemetrySendImpl = {
     };
 
     // If that's a legacy ping format, just send its payload.
-    let networkPayload = isNewPing ? ping : ping.payload;
+    let networkPayload = isV4PingFormat(ping) ? ping : ping.payload;
     request.setRequestHeader("Content-Encoding", "gzip");
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);

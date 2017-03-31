@@ -22,10 +22,10 @@ add_task(function* () {
 
   let testActor = yield getTestActorWithoutToolbox(tab);
   let inspector = yield clickOnInspectMenuItem(testActor, "span");
-  yield getRuleViewSelectorHighlighterIcon(inspector.ruleview.view,
+  yield getRuleViewSelectorHighlighterIcon(inspector.getPanel("ruleview").view,
                                            "element", 3);
 
-  checkRuleViewContent(inspector.ruleview.view);
+  checkRuleViewContent(inspector.getPanel("ruleview").view);
 });
 
 function checkRuleViewContent({styleDocument}) {

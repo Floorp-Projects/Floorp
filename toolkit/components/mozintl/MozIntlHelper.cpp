@@ -83,6 +83,27 @@ MozIntlHelper::AddPluralRulesConstructor(JS::Handle<JS::Value> val, JSContext* c
 }
 
 NS_IMETHODIMP
+MozIntlHelper::AddDateTimeFormatConstructor(JS::Handle<JS::Value> val, JSContext* cx)
+{
+  if (!val.isObject()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  JS::Rooted<JSObject*> realIntlObj(cx, js::CheckedUnwrap(&val.toObject()));
+  if (!realIntlObj) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  JSAutoCompartment ac(cx, realIntlObj);
+
+  if (!js::AddMozDateTimeFormatConstructor(cx, realIntlObj)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 MozIntlHelper::AddGetLocaleInfo(JS::Handle<JS::Value> val, JSContext* cx)
 {
   static const JSFunctionSpec funcs[] = {

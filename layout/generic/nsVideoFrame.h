@@ -128,6 +128,9 @@ protected:
   // elements, not for frames for audio elements.
   void UpdatePosterSource(bool aNotify);
 
+  // Notify the mediaElement that the mCaptionDiv was created.
+  void UpdateTextTrack();
+
   virtual ~nsVideoFrame();
 
   // Anonymous child which is bound via XBL to the video controls.

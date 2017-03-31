@@ -10,6 +10,7 @@
 #include "nsStyleStruct.h"
 #include "Units.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/gfx/2D.h"
 
 namespace mozilla {
 
@@ -25,11 +26,11 @@ class DisplayListBuilder;
 // a color.
 struct ColorStop {
   ColorStop(): mPosition(0), mIsMidpoint(false) {}
-  ColorStop(double aPosition, bool aIsMidPoint, const Color& aColor) :
+  ColorStop(double aPosition, bool aIsMidPoint, const gfx::Color& aColor) :
     mPosition(aPosition), mIsMidpoint(aIsMidPoint), mColor(aColor) {}
   double mPosition; // along the gradient line; 0=start, 1=end
   bool mIsMidpoint;
-  Color mColor;
+  gfx::Color mColor;
 };
 
 class nsCSSGradientRenderer final {
