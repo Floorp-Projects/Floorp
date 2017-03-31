@@ -10,7 +10,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import functools
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.scriptworker import get_push_apk_scope, get_push_apk_track, get_push_apk_dry_run_option
+from taskgraph.util.scriptworker import get_push_apk_scope, get_push_apk_track, \
+    get_push_apk_dry_run_option
 from taskgraph.util.push_apk import fill_labels_tranform, validate_jobs_schema_transform_partial, \
     validate_dependent_tasks_transform, delete_non_required_fields_transform, generate_dependencies
 from voluptuous import Schema, Required
