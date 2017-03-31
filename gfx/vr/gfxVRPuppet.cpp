@@ -120,9 +120,8 @@ VRDisplayPuppet::~VRDisplayPuppet()
 void
 VRDisplayPuppet::SetDisplayInfo(const VRDisplayInfo& aDisplayInfo)
 {
-  // We are only interested in the eye and mount info of the display info.
+  // We are only interested in the eye info of the display info.
   mDisplayInfo.mEyeResolution = aDisplayInfo.mEyeResolution;
-  mDisplayInfo.mIsMounted = aDisplayInfo.mIsMounted;
   memcpy(&mDisplayInfo.mEyeFOV, &aDisplayInfo.mEyeFOV,
          sizeof(mDisplayInfo.mEyeFOV[0]) * VRDisplayInfo::NumEyes);
   memcpy(&mDisplayInfo.mEyeTranslation, &aDisplayInfo.mEyeTranslation,
