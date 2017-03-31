@@ -703,11 +703,15 @@ addEventListener("DOMWindowFocus", function(event) {
   sendAsyncMessage("DOMWindowFocus", {});
 }, false);
 
-addMessageListener("rtcpeer:Allow", ContentWebRTC);
-addMessageListener("rtcpeer:Deny", ContentWebRTC);
-addMessageListener("webrtc:Allow", ContentWebRTC);
-addMessageListener("webrtc:Deny", ContentWebRTC);
-addMessageListener("webrtc:StopSharing", ContentWebRTC);
+// We use this shim so that ContentWebRTC.jsm will not be loaded until
+// it is actually needed.
+var ContentWebRTCShim = message => ContentWebRTC.receiveMessage(message);
+
+addMessageListener("rtcpeer:Allow", ContentWebRTCShim);
+addMessageListener("rtcpeer:Deny", ContentWebRTCShim);
+addMessageListener("webrtc:Allow", ContentWebRTCShim);
+addMessageListener("webrtc:Deny", ContentWebRTCShim);
+addMessageListener("webrtc:StopSharing", ContentWebRTCShim);
 addMessageListener("webrtc:StartBrowserSharing", () => {
   let windowID = content.QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
