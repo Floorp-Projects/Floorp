@@ -18,8 +18,8 @@ add_task(function* () {
 
   info("do the delete");
   yield selectTreeItem(["indexedDB", "http://test1.example.org"]);
-  let actor = gUI.getCurrentActor();
-  let result = yield actor.removeDatabase("http://test1.example.org", "idb (default)");
+  let front = gUI.getCurrentFront();
+  let result = yield front.removeDatabase("http://test1.example.org", "idb (default)");
 
   ok(result.blocked, "removeDatabase attempt is blocked");
 
@@ -47,7 +47,7 @@ add_task(function* () {
   info("try to delete database from nonexistent host");
   let errorThrown = false;
   try {
-    result = yield actor.removeDatabase("http://test2.example.org", "idb (default)");
+    result = yield front.removeDatabase("http://test2.example.org", "idb (default)");
   } catch (ex) {
     errorThrown = true;
   }
