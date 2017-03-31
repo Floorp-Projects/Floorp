@@ -92,17 +92,12 @@ import java.util.concurrent.Executors;
     }
 
     @Override
-    public void storeDone() {
-        storeDone(System.currentTimeMillis());
-    }
-
-    @Override
     public void storeFlush() {
         bufferStorage.flush();
     }
 
     @Override
-    public void storeDone(final long end) {
+    public void storeDone() {
         bufferStorage.flush();
 
         // Determine if we have enough time to merge the buffer data.
@@ -113,16 +108,16 @@ import java.util.concurrent.Executors;
             return;
         }
 
-        doMergeBuffer(end);
+        doMergeBuffer();
     }
 
     @VisibleForTesting
-    /* package-local */ void doMergeBuffer(long end) {
+    /* package-local */ void doMergeBuffer() {
         final Collection<Record> bufferData = bufferStorage.all();
 
         // Trivial case of an empty buffer.
         if (bufferData.isEmpty()) {
-            super.storeDone(end);
+            super.storeDone();
             return;
         }
 
@@ -137,7 +132,7 @@ import java.util.concurrent.Executors;
         }
 
         // Let session know that there are no more records to store.
-        super.storeDone(end);
+        super.storeDone();
     }
 
     /**

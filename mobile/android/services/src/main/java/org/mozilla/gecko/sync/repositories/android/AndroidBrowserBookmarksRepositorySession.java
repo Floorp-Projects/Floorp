@@ -976,7 +976,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
         try {
           finishUp();
         } finally {
-          AndroidBrowserBookmarksRepositorySession.super.storeDone();
+          storeDelegate.deferredStoreDelegate(storeWorkQueue).onStoreCompleted(now());
         }
       }
     };

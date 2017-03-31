@@ -186,9 +186,10 @@ public class WBORepository extends Repository {
     }
 
     @Override
-    public void storeDone(long end) {
+    public void storeDone() {
       // TODO: this is not guaranteed to be called after all of the record
       // store callbacks have completed!
+      final long end = now();
       if (stats.storeBegan < 0) {
         stats.storeBegan = end;
       }

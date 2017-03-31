@@ -203,7 +203,7 @@ public class SynchronizerHelpers {
             public void run() {
               synchronized (batch) {
                 Logger.trace("XXX", "Calling storeDone.");
-                storeDone(now());
+                storeDelegate.onStoreCompleted(now());
               }
             }
           };
