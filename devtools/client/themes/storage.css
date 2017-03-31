@@ -32,10 +32,16 @@
   min-width: 250px;
 }
 
-#storage-toolbar .devtools-button {
-  min-width: unset;
+#storage-toolbar .add-button::before {
+  background-image: url("chrome://devtools/skin/images/add.svg");
+  -moz-user-focus: normal;
 }
 
+#storage-toolbar .devtools-button {
+  min-width: 0;
+}
+
+#storage-toolbar .devtools-button hbox,
 #storage-toolbar .sidebar-toggle[hidden] {
   display: none;
 }

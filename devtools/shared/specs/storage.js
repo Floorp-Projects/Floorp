@@ -90,6 +90,13 @@ createStorageSpec({
   methods: Object.assign({},
     editRemoveMethods,
     {
+      addItem: {
+        request: {
+          guid: Arg(0, "string"),
+        },
+        response: {}
+      }
+    }, {
       removeAll: {
         request: {
           host: Arg(0, "string"),

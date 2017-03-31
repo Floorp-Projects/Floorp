@@ -125,6 +125,8 @@ function TableWidget(node, options = {}) {
 TableWidget.prototype = {
 
   items: null,
+  editBookmark: null,
+  scrollIntoViewOnUpdate: null,
 
   /**
    * Getter for the headers context menu popup id.
@@ -1172,7 +1174,9 @@ Column.prototype = {
   },
 
   /**
-   * Called when a row is updated.
+   * Called when a row is updated e.g. a cell is changed. This means that
+   * for a new row this method will be called once for each column. If a single
+   * cell is changed this method will be called just once.
    *
    * @param {string} event
    *        The event name of the event. i.e. EVENTS.ROW_UPDATED
@@ -1181,7 +1185,23 @@ Column.prototype = {
    */
   onRowUpdated: function (event, id) {
     this._updateItems();
+
     if (this.highlightUpdated && this.items[id] != null) {
+      if (this.table.scrollIntoViewOnUpdate) {
+        let cell = this.cells[this.items[id]];
+
+        // When a new row is created this method is called once for each column
+        // as each cell is updated. We can only scroll to cells if they are
+        // visible. We check for visibility and once we find the first visible
+        // cell in a row we scroll it into view and reset the
+        // scrollIntoViewOnUpdate flag.
+        if (cell.label.clientHeight > 0) {
+          cell.scrollIntoView();
+
+          this.table.scrollIntoViewOnUpdate = null;
+        }
+      }
+
       if (this.table.editBookmark) {
         // A rows position in the table can change as the result of an edit. In
         // order to ensure that the correct row is highlighted after an edit we
@@ -1193,6 +1213,7 @@ Column.prototype = {
 
       this.cells[this.items[id]].flash();
     }
+
     this.updateZebra();
   },
 
@@ -1605,6 +1626,10 @@ Cell.prototype = {
 
   focus: function () {
     this.label.focus();
+  },
+
+  scrollIntoView: function () {
+    this.label.scrollIntoView(false);
   },
 
   destroy: function () {
