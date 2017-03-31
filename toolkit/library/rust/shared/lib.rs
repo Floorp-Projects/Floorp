@@ -10,12 +10,3 @@ extern crate nsstring;
 extern crate rust_url_capi;
 #[cfg(feature = "quantum_render")]
 extern crate webrender_bindings;
-
-use std::ffi::CStr;
-use std::os::raw::c_char;
-
-/// Used to implement `nsIDebug2::RustPanic` for testing purposes.
-#[no_mangle]
-pub extern "C" fn intentional_panic(message: *const c_char) {
-    panic!("{}", unsafe { CStr::from_ptr(message) }.to_string_lossy());
-}
