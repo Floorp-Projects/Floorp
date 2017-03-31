@@ -30,13 +30,9 @@ EXPORTS.mozilla += [
 UNIFIED_SOURCES += [
     'nsPrefBranch.cpp',
     'nsPrefsFactory.cpp',
+    'prefapi.cpp',
     'Preferences.cpp',
     'prefread.cpp',
-]
-
-# prefapi.cpp cannot be built in unified mode because it uses plarena.h
-SOURCES += [
-    'prefapi.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

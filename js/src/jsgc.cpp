@@ -3635,6 +3635,9 @@ GCRuntime::purgeRuntime(AutoLockForExclusiveAccess& lock)
     for (GCCompartmentsIter comp(rt); !comp.done(); comp.next())
         comp->purge();
 
+    for (GCZonesIter zone(rt); !zone.done(); zone.next())
+        zone->atomCache().clearAndShrink();
+
     for (const CooperatingContext& target : rt->cooperatingContexts()) {
         freeUnusedLifoBlocksAfterSweeping(&target.context()->tempLifoAlloc());
         target.context()->interpreterStack().purge(rt);
@@ -4508,7 +4511,10 @@ JSCompartment::findDeadProxyZoneEdges(bool* foundAny)
             if (IsDeadProxyObject(&value.toObject())) {
                 *foundAny = true;
                 CrossCompartmentKey& key = e.front().mutableKey();
-                if (!key.as<JSObject*>()->zone()->gcSweepGroupEdges().put(zone()))
+                Zone* wrapperZone = key.as<JSObject*>()->zone();
+                if (!wrapperZone->isGCMarking())
+                    continue;
+                if (!wrapperZone->gcSweepGroupEdges().put(zone()))
                     return false;
             }
         }

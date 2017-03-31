@@ -442,123 +442,7 @@ SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
 // END SamplerThread target specifics
 ////////////////////////////////////////////////////////////////////////
 
-#if defined(GP_OS_android)
-
-static struct sigaction gOldSigstartHandler;
-const int SIGSTART = SIGUSR2;
-
-static void
-freeArray(const char** aArray, int aSize)
-{
-  for (int i = 0; i < aSize; i++) {
-    free((void*) aArray[i]);
-  }
-}
-
-static uint32_t
-readCSVArray(char* aCsvList, const char** aBuffer)
-{
-  uint32_t count;
-  char* savePtr;
-  int newlinePos = strlen(aCsvList) - 1;
-  if (aCsvList[newlinePos] == '\n') {
-    aCsvList[newlinePos] = '\0';
-  }
-
-  char* item = strtok_r(aCsvList, ",", &savePtr);
-  for (count = 0; item; item = strtok_r(nullptr, ",", &savePtr)) {
-    int length = strlen(item) + 1;  // Include \0
-    char* newBuf = (char*) malloc(sizeof(char) * length);
-    aBuffer[count] = newBuf;
-    strncpy(newBuf, item, length);
-    count++;
-  }
-
-  return count;
-}
-
-static void
-DoStartTask()
-{
-  uint32_t featureCount = 0;
-  uint32_t threadCount = 0;
-
-  // Just allocate 10 features for now
-  // FIXME: these don't really point to const chars*
-  // So we free them later, but we don't want to change the const char**
-  // declaration in profiler_start. Annoying but ok for now.
-  const char* threadNames[10];
-  const char* features[10];
-  const char* profilerConfigFile = "/data/local/tmp/profiler.options";
-
-  // Support some of the usual env variables, plus some extra stuff.
-  FILE* file = fopen(profilerConfigFile, "r");
-  int entries = PROFILE_DEFAULT_ENTRIES;
-  int interval = PROFILE_DEFAULT_INTERVAL;
-
-  if (file) {
-    const int bufferSize = 1024;
-    char line[bufferSize];
-    while (fgets(line, bufferSize, file) != nullptr) {
-      char* savePtr;
-      char* feature = strtok_r(line, "=", &savePtr);
-      char* value = strtok_r(nullptr, "", &savePtr);
-
-      if (strncmp(feature, "MOZ_PROFILER_STARTUP_ENTRIES", bufferSize) == 0) {
-        GetEntries(value, &entries);
-      } else if (strncmp(feature, "MOZ_PROFILER_STARTUP_INTERVAL",
-                         bufferSize) == 0) {
-        GetInterval(value, &interval);
-      } else if (strncmp(feature, "MOZ_PROFILER_STARTUP_FEATURES",
-                         bufferSize) == 0) {
-        featureCount = readCSVArray(value, features);
-      } else if (strncmp(feature, "threads", bufferSize) == 0) {
-        threadCount = readCSVArray(value, threadNames);
-      }
-    }
-
-    fclose(file);
-  }
-
-  MOZ_ASSERT(featureCount < 10);
-  MOZ_ASSERT(threadCount < 10);
-
-  profiler_start(entries, interval,
-                 features, featureCount, threadNames, threadCount);
-
-  freeArray(threadNames, threadCount);
-  freeArray(features, featureCount);
-}
-
-static void
-SigstartHandler(int aSignal, siginfo_t* aInfo, void* aContext)
-{
-  class StartTask : public Runnable {
-  public:
-    NS_IMETHOD Run() override {
-      DoStartTask();
-      return NS_OK;
-    }
-  };
-  // XXX: technically NS_DispatchToMainThread is NOT async signal safe. We risk
-  // nasty things like deadlocks, but the probability is very low and we
-  // typically only do this once so it tends to be ok. See bug 909403.
-  NS_DispatchToMainThread(new StartTask());
-}
-
-static void
-PlatformInit(PS::LockRef aLock)
-{
-  struct sigaction sa;
-  sa.sa_sigaction = SigstartHandler;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = SA_RESTART | SA_SIGINFO;
-  if (sigaction(SIGSTART, &sa, &gOldSigstartHandler) != 0) {
-    MOZ_CRASH("Error installing SIGSTART handler in the profiler");
-  }
-}
-
-#else /* !defined(GP_OS_android) */
+#if defined(GP_OS_linux)
 
 // We use pthread_atfork() to temporarily disable signal delivery during any
 // fork() call. Without that, fork() can be repeatedly interrupted by signal
@@ -607,6 +491,13 @@ PlatformInit(PS::LockRef aLock)
 {
   // Set up the fork handlers.
   pthread_atfork(paf_prepare, paf_parent, nullptr);
+}
+
+#else
+
+static void
+PlatformInit(PS::LockRef aLock)
+{
 }
 
 #endif

@@ -281,9 +281,9 @@ MacroAssembler::PushStubCode()
 }
 
 void
-MacroAssembler::enterExitFrame(Register temp, const VMFunction* f)
+MacroAssembler::enterExitFrame(Register cxreg, const VMFunction* f)
 {
-    linkExitFrame(temp);
+    linkExitFrame(cxreg);
     // Push the JitCode pointer. (Keep the code alive, when on the stack)
     PushStubCode();
     // Push VMFunction pointer, to mark arguments.
@@ -291,18 +291,18 @@ MacroAssembler::enterExitFrame(Register temp, const VMFunction* f)
 }
 
 void
-MacroAssembler::enterFakeExitFrame(Register temp, enum ExitFrameTokenValues token)
+MacroAssembler::enterFakeExitFrame(Register cxreg, enum ExitFrameTokenValues token)
 {
-    linkExitFrame(temp);
+    linkExitFrame(cxreg);
     Push(Imm32(token));
     Push(ImmPtr(nullptr));
 }
 
 void
-MacroAssembler::enterFakeExitFrameForNative(Register temp, bool isConstructing)
+MacroAssembler::enterFakeExitFrameForNative(Register cxreg, bool isConstructing)
 {
-    enterFakeExitFrame(temp, isConstructing ? ConstructNativeExitFrameLayoutToken
-                                            : CallNativeExitFrameLayoutToken);
+    enterFakeExitFrame(cxreg, isConstructing ? ConstructNativeExitFrameLayoutToken
+                                             : CallNativeExitFrameLayoutToken);
 }
 
 void
