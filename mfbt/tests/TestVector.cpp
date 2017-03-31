@@ -22,6 +22,7 @@ struct mozilla::detail::VectorTesting
   static void testReverse();
   static void testExtractRawBuffer();
   static void testExtractOrCopyRawBuffer();
+  static void testInsert();
 };
 
 void
@@ -139,6 +140,15 @@ struct S
 
   ~S() {
     destructCount++;
+  }
+
+  S& operator=(S&& rhs) {
+    j = rhs.j;
+    rhs.j = 0;
+    k = Move(rhs.k);
+    rhs.k.reset();
+    moveCount++;
+    return *this;
   }
 
   S(const S&) = delete;
@@ -346,6 +356,47 @@ mozilla::detail::VectorTesting::testExtractOrCopyRawBuffer()
   free(buf);
 }
 
+void
+mozilla::detail::VectorTesting::testInsert()
+{
+  S::resetCounts();
+
+  Vector<S, 8> vec;
+  MOZ_RELEASE_ASSERT(vec.reserve(8));
+  for (size_t i = 0; i < 7; i++) {
+    vec.infallibleEmplaceBack(i, i * i);
+  }
+
+  MOZ_RELEASE_ASSERT(vec.length() == 7);
+  MOZ_ASSERT(vec.reserved() == 8);
+  MOZ_RELEASE_ASSERT(S::constructCount == 7);
+  MOZ_RELEASE_ASSERT(S::moveCount == 0);
+  MOZ_RELEASE_ASSERT(S::destructCount == 0);
+
+  S s(42, 43);
+  MOZ_RELEASE_ASSERT(vec.insert(vec.begin() + 4, Move(s)));
+
+  for (size_t i = 0; i < vec.length(); i++) {
+    const S& s = vec[i];
+    MOZ_RELEASE_ASSERT(s.k);
+    if (i < 4) {
+      MOZ_RELEASE_ASSERT(s.j == i && *s.k == i * i);
+    } else if (i == 4) {
+      MOZ_RELEASE_ASSERT(s.j == 42 && *s.k == 43);
+    } else {
+      MOZ_RELEASE_ASSERT(s.j == i - 1 && *s.k == (i - 1) * (i - 1));
+    }
+  }
+
+  MOZ_RELEASE_ASSERT(vec.length() == 8);
+  MOZ_ASSERT(vec.reserved() == 8);
+  MOZ_RELEASE_ASSERT(S::constructCount == 8);
+  MOZ_RELEASE_ASSERT(S::moveCount == 1 /* move in insert() call */ +
+                                     1 /* move the back() element */ +
+                                     3 /* elements to shift */);
+  MOZ_RELEASE_ASSERT(S::destructCount == 1);
+}
+
 // Declare but leave (permanently) incomplete.
 struct Incomplete;
 
@@ -398,4 +449,5 @@ main()
   VectorTesting::testReverse();
   VectorTesting::testExtractRawBuffer();
   VectorTesting::testExtractOrCopyRawBuffer();
+  VectorTesting::testInsert();
 }
