@@ -1454,6 +1454,55 @@ var TelemetryStorageImpl = {
     }
   }),
 
+  /**
+   * This function migrates pings that are stored in the userApplicationDataDir
+   * under the "Pending Pings" sub-directory.
+   */
+  _migrateAppDataPings: Task.async(function*() {
+    this._log.trace("_migrateAppDataPings");
+
+    // The tests suites might not create and define the "UAppData" directory.
+    // We account for that here instead of manually going through each test using
+    // telemetry to manually create the directory and define the constant.
+    if (!OS.Constants.Path.userApplicationDataDir) {
+      this._log.trace("_migrateAppDataPings - userApplicationDataDir is not defined. Is this a test?");
+      return;
+    }
+
+    const appDataPendingPings =
+      OS.Path.join(OS.Constants.Path.userApplicationDataDir, "Pending Pings");
+
+    // Iterate through the pending ping files.
+    let iter = new OS.File.DirectoryIterator(appDataPendingPings);
+    try {
+      // Check if appDataPendingPings exists and bail out if it doesn't.
+      if (!(yield iter.exists())) {
+        this._log.trace("_migrateAppDataPings - the AppData pending pings directory doesn't exist.");
+        return;
+      }
+
+      let files = (yield iter.nextBatch()).filter(e => !e.isDir);
+      for (let file of files) {
+        try {
+          // Load the ping data from the original file.
+          const pingData = yield this.loadPingFile(file.path);
+
+          // Save it among the pending pings in the user profile, overwrite on
+          // ping id collision.
+          yield TelemetryStorage.savePing(pingData, true);
+
+          // Finally remove the file.
+          yield OS.File.remove(file.path);
+        } catch (ex) {
+          this._log.error("_migrateAppDataPings - failed to remove file " + file.path, ex);
+          continue;
+        }
+      }
+    } finally {
+      yield iter.close();
+    }
+  }),
+
   loadPendingPingList() {
     // If we already have a pending scanning task active, return that.
     if (this._scanPendingPingsTask) {
@@ -1483,6 +1532,10 @@ var TelemetryStorageImpl = {
 
   _scanPendingPings: Task.async(function*() {
     this._log.trace("_scanPendingPings");
+
+    // Before pruning the pending pings, migrate over the ones from the user
+    // application data directory (mainly crash pings that failed to be sent).
+    yield this._migrateAppDataPings();
 
     let directory = TelemetryStorage.pingDirectoryPath;
     let iter = new OS.File.DirectoryIterator(directory);

@@ -1,0 +1,96 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/
+*/
+
+"use strict";
+
+Cu.import("resource://gre/modules/osfile.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
+Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
+Cu.import("resource://testing-common/AppData.jsm", this);
+
+// The name of the pending pings directory outside of the user profile,
+// in the user app data directory.
+const PENDING_PING_DIR_NAME = "Pending Pings";
+
+async function createFakeAppDir() {
+  // Create a directory inside the profile and register it as UAppData, so
+  // we can stick fake crash pings inside there. We put it inside the profile
+  // just because we know that will get cleaned up after the test runs.
+  let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+
+  // Create "<profile>/UAppData/Pending Pings".
+  const pendingPingsPath = OS.Path.join(profileDir.path, "UAppData", PENDING_PING_DIR_NAME);
+  await OS.File.makeDir(pendingPingsPath, { ignoreExisting: true,
+                                            from: OS.Constants.Path.profileDir });
+
+  await makeFakeAppDir();
+}
+
+add_task(function* setup() {
+  // Init the profile.
+  do_get_profile();
+  yield createFakeAppDir();
+  // Make sure we don't generate unexpected pings due to pref changes.
+  yield setEmptyPrefWatchlist();
+});
+
+add_task(function* test_migrateUnsentPings() {
+  const PINGS = [
+    {
+      type: "crash",
+      id: TelemetryUtils.generateUUID(),
+      payload: { foo: "bar"},
+      dateCreated: new Date(2010, 1, 1, 10, 0, 0),
+    },
+    {
+      type: "other",
+      id: TelemetryUtils.generateUUID(),
+      payload: { moo: "meh"},
+      dateCreated: new Date(2010, 2, 1, 10, 2, 0),
+    },
+  ];
+  const APP_DATA_DIR = Services.dirsvc.get("UAppData", Ci.nsIFile).path;
+  const APPDATA_PINGS_DIR = OS.Path.join(APP_DATA_DIR, PENDING_PING_DIR_NAME);
+
+  // Create some pending pings outside of the user profile.
+  for (let ping of PINGS) {
+    const pingPath = OS.Path.join(APPDATA_PINGS_DIR, ping.id + ".json");
+    yield TelemetryStorage.savePingToFile(ping, pingPath, true);
+  }
+
+  // Make sure the pending ping list is empty.
+  yield TelemetryStorage.testClearPendingPings();
+
+  // Start the migration from TelemetryStorage.
+  let pendingPings = yield TelemetryStorage.loadPendingPingList();
+  Assert.equal(pendingPings.length, 2,
+               "TelemetryStorage must have migrated 2 pings.");
+
+  for (let ping of PINGS) {
+    // Verify that the pings were migrated and are among the pending pings.
+    Assert.ok(pendingPings.find(p => p.id == ping.id),
+              "The ping must have been migrated.");
+
+    // Try to load the migrated ping from the user profile.
+    let migratedPing = yield TelemetryStorage.loadPendingPing(ping.id);
+    Assert.equal(ping.id, migratedPing.id, "Should have loaded the correct ping id.");
+    Assert.equal(ping.type, migratedPing.type,
+                 "Should have loaded the correct ping type.");
+    Assert.deepEqual(ping.payload, migratedPing.payload,
+                     "Should have loaded the correct payload.");
+
+    // Verify that the pings are no longer outside of the user profile.
+    const pingPath = OS.Path.join(APPDATA_PINGS_DIR, ping.id + ".json");
+    Assert.ok(!(yield OS.File.exists(pingPath)),
+              "The ping should not be in the Pending Pings directory anymore.");
+  }
+
+  // Delete the UAppData directory and make sure nothing breaks.
+  yield OS.File.removeDir(APP_DATA_DIR, {ignorePermissions: true});
+  Assert.ok(!(yield OS.File.exists(APP_DATA_DIR)),
+            "The UAppData directory must not exist anymore.");
+  TelemetryStorage.reset();
+  yield TelemetryStorage.loadPendingPingList();
+});
