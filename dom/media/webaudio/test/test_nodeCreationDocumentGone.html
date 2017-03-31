@@ -9,28 +9,36 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+SimpleTest.requestCompleteLog();
 SimpleTest.waitForExplicitFinish();
+
 
 SpecialPowers.pushPrefEnv({
   set: [
     [ "dom.disable_open_during_load", false ]
   ]
 }).then(function() {
+  todo(true, "after pref");
   var sub = encodeURI("data:text/html,<!DOCTYPE html>\n"+
                       "<html><script>"+
                       "var context = new AudioContext();"+
                       "setTimeout(function(){window.close();},1000);\x3C/script></html>");
   window.onload = function(){
+    todo(true, "after onload");
     var a = window.open(sub);
+    todo(true, "after open: " + a);
     a.onbeforeunload = function(){
       setTimeout(function(){
         try {
+          todo(true, "before sp");
           a.context.createScriptProcessor(512, 1, 1);
+          todo(true, "after sp");
         } catch(e) {
           ok (true,"got exception");
         }
         setTimeout(function() {
-        ok (true,"no crash");
+          todo(true, "finish");
+          ok (true,"no crash");
           SimpleTest.finish();
         }, 0);
       }, 0);
