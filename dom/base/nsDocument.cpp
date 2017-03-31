@@ -230,7 +230,7 @@
 #include "nsIDOMNSEditableElement.h"
 #include "nsIEditor.h"
 #include "nsIDOMCSSStyleRule.h"
-#include "mozilla/css/Rule.h"
+#include "mozilla/css/StyleRule.h"
 #include "nsIDOMLocation.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsISecurityConsoleMessage.h"
@@ -1206,6 +1206,11 @@ nsDOMStyleSheetSetList::EnsureFresh()
 nsIDocument::SelectorCache::SelectorCache()
   : nsExpirationTracker<SelectorCacheKey, 4>(1000, "nsIDocument::SelectorCache")
 { }
+
+nsIDocument::SelectorCache::~SelectorCache()
+{
+  AgeAllGenerations();
+}
 
 // CacheList takes ownership of aSelectorList.
 void nsIDocument::SelectorCache::CacheList(const nsAString& aSelector,
@@ -10549,6 +10554,7 @@ public:
     if (parser) {
       parser->BlockParser();
       mParser = do_GetWeakReference(parser);
+      mDocument = aDocument;
     }
   }
 
@@ -10578,17 +10584,23 @@ private:
   void MaybeUnblockParser() {
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mParser);
     if (parser) {
-      parser->UnblockParser();
-      parser->ContinueInterruptedParsingAsync();
-      mParser = nullptr;
+      MOZ_ASSERT(mDocument);
+      nsCOMPtr<nsIParser> docParser = mDocument->CreatorParserOrNull();
+      if (parser == docParser) {
+        parser->UnblockParser();
+        parser->ContinueInterruptedParsingAsync();
+      }
     }
+    mParser = nullptr;
+    mDocument = nullptr;
   }
 
   nsWeakPtr mParser;
   RefPtr<Promise> mPromise;
+  RefPtr<nsIDocument> mDocument;
 };
 
-NS_IMPL_CYCLE_COLLECTION(UnblockParsingPromiseHandler, mPromise)
+NS_IMPL_CYCLE_COLLECTION(UnblockParsingPromiseHandler, mDocument, mPromise)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UnblockParsingPromiseHandler)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -12948,16 +12960,8 @@ nsIDocument::FlushUserFontSet()
     if (gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
       nsTArray<nsFontFaceRuleContainer> rules;
       nsIPresShell* shell = GetShell();
-      if (shell) {
-        // XXXheycam ServoStyleSets don't support exposing @font-face rules yet.
-        if (shell->StyleSet()->IsGecko()) {
-          if (!shell->StyleSet()->AsGecko()->AppendFontFaceRules(rules)) {
-            return;
-          }
-        } else {
-          NS_WARNING("stylo: ServoStyleSets cannot handle @font-face rules yet. "
-                     "See bug 1290237.");
-        }
+      if (shell && !shell->StyleSet()->AppendFontFaceRules(rules)) {
+        return;
       }
 
       bool changed = false;
@@ -13144,12 +13148,11 @@ FlashClassification
 nsDocument::PrincipalFlashClassification()
 {
   nsresult rv;
-  bool isThirdPartyDoc = IsThirdParty();
 
   // If flash blocking is disabled, it is equivalent to all sites being
-  // whitelisted.
+  // on neither list.
   if (!Preferences::GetBool("plugins.flashBlock.enabled")) {
-    return FlashClassification::Allowed;
+    return FlashClassification::Unknown;
   }
 
   nsCOMPtr<nsIPrincipal> principal = GetPrincipal();
@@ -13177,6 +13180,8 @@ nsDocument::PrincipalFlashClassification()
   Preferences::GetCString("urlclassifier.flashExceptTable",
                           &denyExceptionsTables);
   MaybeAddTableToTableList(denyExceptionsTables, tables);
+
+  bool isThirdPartyDoc = IsThirdParty();
   if (isThirdPartyDoc) {
     Preferences::GetCString("urlclassifier.flashSubDocTable",
                             &subDocDenyTables);

@@ -22,9 +22,14 @@
 #define MATCH_OS_LOCALE_PREF "intl.locale.matchOS"
 #define SELECTED_LOCALE_PREF "general.useragent.locale"
 
+//XXX: This pref is used only by Android and we use it to emulate
+//     retrieving OS locale until we get proper hook into JNI in bug 1337078.
+#define ANDROID_OS_LOCALE_PREF "intl.locale.os"
+
 static const char* kObservedPrefs[] = {
   MATCH_OS_LOCALE_PREF,
   SELECTED_LOCALE_PREF,
+  ANDROID_OS_LOCALE_PREF,
   nullptr
 };
 
@@ -434,14 +439,24 @@ LocaleService::Observe(nsISupports *aSubject, const char *aTopic,
   // At the moment the only thing we're observing are settings indicating
   // user requested locales.
   NS_ConvertUTF16toUTF8 pref(aData);
-  if (pref.EqualsLiteral(MATCH_OS_LOCALE_PREF) || pref.EqualsLiteral(SELECTED_LOCALE_PREF)) {
+  if (pref.EqualsLiteral(MATCH_OS_LOCALE_PREF) ||
+      pref.EqualsLiteral(SELECTED_LOCALE_PREF)) {
     Refresh();
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->NotifyObservers(nullptr, "intl:requested-locales-changed", nullptr);
     }
+  } else if (pref.EqualsLiteral(ANDROID_OS_LOCALE_PREF)) {
+    Refresh();
   }
   return NS_OK;
+}
+
+bool
+LocaleService::LanguagesMatch(const nsCString& aRequested,
+                              const nsCString& aAvailable)
+{
+  return Locale(aRequested, true).LanguageMatches(Locale(aAvailable, true));
 }
 
 /**
@@ -648,20 +663,28 @@ LocaleService::Locale::Locale(const nsCString& aLocale, bool aRange)
   }
 }
 
+static bool
+SubtagMatches(const nsCString& aSubtag1, const nsCString& aSubtag2)
+{
+  return aSubtag1.EqualsLiteral("*") ||
+         aSubtag2.EqualsLiteral("*") ||
+         aSubtag1.Equals(aSubtag2, nsCaseInsensitiveCStringComparator());
+}
+
 bool
 LocaleService::Locale::Matches(const LocaleService::Locale& aLocale) const
 {
-  auto subtagMatches = [](const nsCString& aSubtag1,
-                          const nsCString& aSubtag2) {
-    return aSubtag1.EqualsLiteral("*") ||
-           aSubtag2.EqualsLiteral("*") ||
-           aSubtag1.Equals(aSubtag2, nsCaseInsensitiveCStringComparator());
-  };
+  return SubtagMatches(mLanguage, aLocale.mLanguage) &&
+         SubtagMatches(mScript, aLocale.mScript) &&
+         SubtagMatches(mRegion, aLocale.mRegion) &&
+         SubtagMatches(mVariant, aLocale.mVariant);
+}
 
-  return subtagMatches(mLanguage, aLocale.mLanguage) &&
-         subtagMatches(mScript, aLocale.mScript) &&
-         subtagMatches(mRegion, aLocale.mRegion) &&
-         subtagMatches(mVariant, aLocale.mVariant);
+bool
+LocaleService::Locale::LanguageMatches(const LocaleService::Locale& aLocale) const
+{
+  return SubtagMatches(mLanguage, aLocale.mLanguage) &&
+         SubtagMatches(mScript, aLocale.mScript);
 }
 
 void

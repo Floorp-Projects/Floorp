@@ -76,6 +76,7 @@ const {
 } = require("devtools/shared/layout/utils");
 const {getLayoutChangesObserver, releaseLayoutChangesObserver} = require("devtools/server/actors/reflow");
 const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
+const {colorUtils} = require("devtools/shared/css/color");
 
 const {EventParsers} = require("devtools/server/event-parsers");
 const {nodeSpec, nodeListSpec, walkerSpec, inspectorSpec} = require("devtools/shared/specs/inspector");
@@ -750,6 +751,29 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     let { dataURL, size } = getFontPreviewData(font, doc, options);
 
     return { data: LongStringActor(this.conn, dataURL), size: size };
+  },
+
+  /**
+   * Finds the computed background color of the closest parent with
+   * a set background color.
+   * Returns a string with the background color of the form
+   * rgba(r, g, b, a). Defaults to rgba(255, 255, 255, 1) if no
+   * background color is found.
+   */
+  getClosestBackgroundColor: function () {
+    let current = this.rawNode;
+    while (current) {
+      let computedStyle = CssLogic.getComputedStyle(current);
+      let currentStyle = computedStyle.getPropertyValue("background-color");
+      if (colorUtils.isValidCSSColor(currentStyle)) {
+        let currentCssColor = new colorUtils.CssColor(currentStyle);
+        if (!currentCssColor.isTransparent()) {
+          return currentCssColor.rgba;
+        }
+      }
+      current = current.parentNode;
+    }
+    return "rgba(255, 255, 255, 1)";
   }
 });
 

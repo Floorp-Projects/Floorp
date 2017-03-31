@@ -6,7 +6,7 @@ random-if(Android) == basic-negcoord.xul basic-negcoord.xul
 == blur.xul blur.xul
 == color-inherit.xul color-inherit.xul
 == multiple-noblur.xul multiple-noblur.xul
-fails HTTP(..) == blur-opacity.html blur-opacity.html
+HTTP(..) == blur-opacity.html blur-opacity.html
 
 == basic.html basic.html
 == basic-negcoord.html basic-negcoord.html

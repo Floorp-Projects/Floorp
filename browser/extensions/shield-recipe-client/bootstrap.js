@@ -57,16 +57,16 @@ this.install = function() {
 this.startup = function() {
   setDefaultPrefs();
 
-  if (!shouldRun) {
-    return;
-  }
-
   // Setup logging and listen for changes to logging prefs
   LogManager.configure(Services.prefs.getIntPref(PREF_LOGGING_LEVEL));
   log = LogManager.getLogger("bootstrap");
   Preferences.observe(PREF_LOGGING_LEVEL, LogManager.configure);
   CleanupManager.addCleanupHandler(
     () => Preferences.ignore(PREF_LOGGING_LEVEL, LogManager.configure));
+
+  if (!shouldRun) {
+    return;
+  }
 
   RecipeRunner.init();
 };

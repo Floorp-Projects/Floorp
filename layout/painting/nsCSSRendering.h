@@ -337,6 +337,23 @@ struct nsCSSRendering {
                                    nsIFrame** aAttachedToFrame,
                                    bool* aOutTransformedFixed);
 
+  // Implementation of the formula for computation of background-repeat round
+  // See http://dev.w3.org/csswg/css3-background/#the-background-size
+  // This function returns the adjusted size of the background image.
+  static nscoord
+  ComputeRoundedSize(nscoord aCurrentSize, nscoord aPositioningSize);
+
+  /* ComputeBorderSpacedRepeatSize
+  * aImageDimension: the image width/height
+  * aAvailableSpace: the background positioning area width/height
+  * aSpace: the space between each image
+  * Returns the image size plus gap size of app units for use as spacing
+  */
+  static nscoord
+  ComputeBorderSpacedRepeatSize(nscoord aImageDimension,
+                                nscoord aAvailableSpace,
+                                nscoord& aSpace);
+
   static nsBackgroundLayerState
   PrepareImageLayer(nsPresContext* aPresContext,
                     nsIFrame* aForFrame,

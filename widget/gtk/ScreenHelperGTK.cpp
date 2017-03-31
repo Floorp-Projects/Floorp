@@ -76,12 +76,14 @@ ScreenHelperGTK::ScreenHelperGTK()
   , mNetWorkareaAtom(0)
 {
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("ScreenHelperGTK created"));
-  mRootWindow = gdk_get_default_root_window();
-  if (!mRootWindow) {
+  GdkScreen *defaultScreen = gdk_screen_get_default();
+  if (!defaultScreen) {
     // Sometimes we don't initial X (e.g., xpcshell)
     MOZ_LOG(sScreenLog, LogLevel::Debug, ("mRootWindow is nullptr, running headless"));
     return;
   }
+  mRootWindow = gdk_get_default_root_window();
+  MOZ_ASSERT(mRootWindow);
 
   g_object_ref(mRootWindow);
 
@@ -90,7 +92,7 @@ ScreenHelperGTK::ScreenHelperGTK()
                         GdkEventMask(gdk_window_get_events(mRootWindow) |
                                      GDK_PROPERTY_CHANGE_MASK));
 
-  g_signal_connect(gdk_screen_get_default(), "monitors-changed",
+  g_signal_connect(defaultScreen, "monitors-changed",
                    G_CALLBACK(monitors_changed), this);
 #ifdef MOZ_X11
   gdk_window_add_filter(mRootWindow, root_window_event_filter, this);
@@ -104,11 +106,11 @@ ScreenHelperGTK::ScreenHelperGTK()
 
 ScreenHelperGTK::~ScreenHelperGTK()
 {
-  g_signal_handlers_disconnect_by_func(gdk_screen_get_default(),
-                                       FuncToGpointer(monitors_changed),
-                                       this);
-
   if (mRootWindow) {
+    g_signal_handlers_disconnect_by_func(gdk_screen_get_default(),
+                                         FuncToGpointer(monitors_changed),
+                                         this);
+
     gdk_window_remove_filter(mRootWindow, root_window_event_filter, this);
     g_object_unref(mRootWindow);
     mRootWindow = nullptr;

@@ -480,7 +480,7 @@ VRDisplayOculus::GetSensorState()
   if (gfxPrefs::VRPosePredictionEnabled()) {
     // XXX We might need to call ovr_GetPredictedDisplayTime even if we don't use the result.
     // If we don't call it, the Oculus driver will spew out many warnings...
-    double predictedFrameTime = ovr_GetPredictedDisplayTime(mSession, mInputFrameID);
+    double predictedFrameTime = ovr_GetPredictedDisplayTime(mSession, 0);
     frameDelta = predictedFrameTime - ovr_GetTimeInSeconds();
   }
   result = GetSensorState(frameDelta);

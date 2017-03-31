@@ -20,6 +20,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/main.js");
@@ -174,7 +175,14 @@ var TPS = {
           break;
 
         case "sessionstore-windows-restored":
-          Utils.nextTick(this.RunNextTestAction, this);
+          // This is a terrible hack, but fixes cases where tps (usually cleanup)
+          // fails because of sessionstore restoring windows before tps is able
+          // to initialize. This used to take only 1 tick, but at some point
+          // session store started restoring windows sooner, or tps started
+          // initializing later.
+          setTimeout(() => {
+            this.RunNextTestAction();
+          }, 1000);
           break;
 
         case "weave:service:setup-complete":

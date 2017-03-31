@@ -1,6 +1,8 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
+ * Copyright (C) 2002-2017 Németh László
+ *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -11,12 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Hunspell, based on MySpell.
- *
- * The Initial Developers of the Original Code are
- * Kevin Hendricks (MySpell) and Németh László (Hunspell).
- * Portions created by the Initial Developers are Copyright (C) 2002-2005
- * the Initial Developers. All Rights Reserved.
+ * Hunspell is based on MySpell which is Copyright (C) 2002 Kevin Hendricks.
  *
  * Contributor(s): David Einstein, Davide Prina, Giuseppe Modugno,
  * Gianluca Turconi, Simon Brouwer, Noll János, Bíró Árpád,
@@ -1290,8 +1287,8 @@ int AffixMgr::cpdrep_check(const char* word, int wl) {
     // search every occurence of the pattern in the word
     while ((r = strstr(r, reptable[i].pattern.c_str())) != NULL) {
       std::string candidate(word);
-      size_t type = r == word ? 1 : 0;
-      if (r - word + reptable[i].pattern.size() == lenp)
+      size_t type = r == word && langnum != LANG_hu ? 1 : 0;
+      if (r - word + reptable[i].pattern.size() == lenp && langnum != LANG_hu)
         type += 2;
       candidate.replace(r - word, lenp, reptable[i].outstrings[type]);
       if (candidate_check(candidate.c_str(), candidate.size()))
@@ -1494,9 +1491,8 @@ int AffixMgr::defcpd_check(hentry*** words,
 }
 
 inline int AffixMgr::candidate_check(const char* word, int len) {
-  struct hentry* rv = NULL;
 
-  rv = lookup(word);
+  struct hentry* rv = lookup(word);
   if (rv)
     return 1;
 
@@ -1817,7 +1813,7 @@ struct hentry* AffixMgr::compound_check(const std::string& word,
           // LANG_hu section: spec. Hungarian rule
           if (langnum == LANG_hu) {
             // calculate syllable number of the word
-            numsyllable += get_syllable(st.substr(i));
+            numsyllable += get_syllable(st.substr(0, i));
             // + 1 word, if syllable number of the prefix > 1 (hungarian
             // convention)
             if (pfx && (get_syllable(pfx->getKey()) > 1))
@@ -1902,7 +1898,7 @@ struct hentry* AffixMgr::compound_check(const std::string& word,
                  (compoundend && TESTAFF(rv->astr, compoundend, rv->alen))) &&
                 (((cpdwordmax == -1) || (wordnum + 1 < cpdwordmax)) ||
                  ((cpdmaxsyllable != 0) &&
-                  (numsyllable + get_syllable(std::string(HENTRY_WORD(rv), rv->clen)) <=
+                  (numsyllable + get_syllable(std::string(HENTRY_WORD(rv), rv->blen)) <=
                    cpdmaxsyllable))) &&
                 (
                     // test CHECKCOMPOUNDPATTERN
@@ -2383,7 +2379,7 @@ int AffixMgr::compound_check_morph(const char* word,
         // LANG_hu section: spec. Hungarian rule
         if (langnum == LANG_hu) {
           // calculate syllable number of the word
-          numsyllable += get_syllable(st.substr(i));
+          numsyllable += get_syllable(st.substr(0, i));
 
           // + 1 word, if syllable number of the prefix > 1 (hungarian
           // convention)
@@ -3045,10 +3041,9 @@ struct hentry* AffixMgr::affix_check(const char* word,
                                      int len,
                                      const FLAG needflag,
                                      char in_compound) {
-  struct hentry* rv = NULL;
 
   // check all prefixes (also crossed with suffixes if allowed)
-  rv = prefix_check(word, len, in_compound, needflag);
+  struct hentry* rv = prefix_check(word, len, in_compound, needflag);
   if (rv)
     return rv;
 
@@ -3292,7 +3287,7 @@ int AffixMgr::expand_rootword(struct guessword* wlst,
     wlst[nh].word = mystrdup(ts);
     if (!wlst[nh].word)
       return 0;
-    wlst[nh].allow = (1 == 0);
+    wlst[nh].allow = false;
     wlst[nh].orig = NULL;
     nh++;
     // add special phonetic version
@@ -3300,7 +3295,7 @@ int AffixMgr::expand_rootword(struct guessword* wlst,
       wlst[nh].word = mystrdup(phon);
       if (!wlst[nh].word)
         return nh - 1;
-      wlst[nh].allow = (1 == 0);
+      wlst[nh].allow = false;
       wlst[nh].orig = mystrdup(ts);
       if (!wlst[nh].orig)
         return nh - 1;
@@ -3341,7 +3336,7 @@ int AffixMgr::expand_rootword(struct guessword* wlst,
               wlst[nh].word = mystrdup(prefix.c_str());
               if (!wlst[nh].word)
                 return nh - 1;
-              wlst[nh].allow = (1 == 0);
+              wlst[nh].allow = false;
               wlst[nh].orig = mystrdup(newword.c_str());
               if (!wlst[nh].orig)
                 return nh - 1;

@@ -6,9 +6,9 @@ fails random == boxshadow-blur-2.html boxshadow-blur-2.html
 fails random == boxshadow-blur-2.html boxshadow-blur-2.html
 == boxshadow-multiple.html boxshadow-multiple.html
 == boxshadow-spread.html boxshadow-spread.html
-fails == tableboxshadow-basic.html tableboxshadow-basic.html
-fails == tableboxshadow-trshadow.html tableboxshadow-trshadow.html
-fails == tableboxshadow-tdshadow.html tableboxshadow-tdshadow.html
+== tableboxshadow-basic.html tableboxshadow-basic.html
+== tableboxshadow-trshadow.html tableboxshadow-trshadow.html
+== tableboxshadow-tdshadow.html tableboxshadow-tdshadow.html
 == boxshadow-rounding.html boxshadow-rounding.html
 == boxshadow-button.html boxshadow-button.html
 fails == boxshadow-fileupload.html boxshadow-fileupload.html

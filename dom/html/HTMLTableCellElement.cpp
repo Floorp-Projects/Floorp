@@ -107,14 +107,22 @@ HTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   nsresult rv = nsGenericHTMLElement::WalkContentStyleRules(aRuleWalker);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (HTMLTableElement* table = GetTable()) {
-    nsMappedAttributes* tableInheritedAttributes =
-      table->GetAttributesMappedForCell();
+  if (nsMappedAttributes* tableInheritedAttributes = GetMappedAttributesInheritedFromTable()) {
     if (tableInheritedAttributes) {
       aRuleWalker->Forward(tableInheritedAttributes);
     }
   }
   return NS_OK;
+}
+
+nsMappedAttributes*
+HTMLTableCellElement::GetMappedAttributesInheritedFromTable() const
+{
+  if (HTMLTableElement* table = GetTable()) {
+    return table->GetAttributesMappedForCell();
+  }
+
+  return nullptr;
 }
 
 NS_IMETHODIMP

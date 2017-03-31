@@ -815,4 +815,11 @@ ServoStyleSet::ResolveStyleLazily(Element* aElement, nsIAtom* aPseudoTag)
   return computedValues.forget();
 }
 
+bool
+ServoStyleSet::AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray)
+{
+  Servo_StyleSet_GetFontFaceRules(mRawSet.get(), &aArray);
+  return true;
+}
+
 bool ServoStyleSet::sInServoTraversal = false;

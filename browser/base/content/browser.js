@@ -13,6 +13,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ContextualIdentityService.jsm");
 Cu.import("resource://gre/modules/NotificationDB.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
+
 // lazy module getters
 
 /* global AboutHome:false, AddonWatcher:false,
@@ -502,7 +505,14 @@ const gStoragePressureObserver = {
         label: prefStrBundle.getString(prefButtonLabelStringID),
         accessKey: prefStrBundle.getString(prefButtonAccesskeyStringID),
         callback(notificationBar, button) {
-          gBrowser.ownerGlobal.openPreferences("advanced", { advancedTab: "networkTab" });
+          // The advanced subpanes are only supported in the old organization, which will
+          // be removed by bug 1349689.
+          let win = gBrowser.ownerGlobal;
+          if (Preferences.get("browser.preferences.useOldOrganization", false)) {
+            win.openAdvancedPreferences("networkTab");
+          } else {
+            win.openPreferences("panePrivacy");
+          }
         }
       });
     }
@@ -6275,7 +6285,13 @@ var OfflineApps = {
   },
 
   manage() {
-    openAdvancedPreferences("networkTab");
+    // The advanced subpanes are only supported in the old organization, which will
+    // be removed by bug 1349689.
+    if (Preferences.get("browser.preferences.useOldOrganization", false)) {
+      openAdvancedPreferences("networkTab");
+    } else {
+      openPreferences("panePrivacy");
+    }
   },
 
   receiveMessage(msg) {
@@ -7442,8 +7458,14 @@ var gIdentityHandler = {
       return; // Left click, space or enter only
     }
 
-    // Don't allow left click, space or enter if the location has been modified.
-    if (gURLBar.getAttribute("pageproxystate") != "valid") {
+    // Don't allow left click, space or enter if the location has been modified,
+    // so long as we're not sharing any devices.
+    // If we are sharing a device, the identity block is prevented by CSS from
+    // being focused (and therefore, interacted with) by the user. However, we
+    // want to allow opening the identity popup from the device control menu,
+    // which calls click() on the identity button, so we don't return early.
+    if (!this._sharingState &&
+        gURLBar.getAttribute("pageproxystate") != "valid") {
       return;
     }
 

@@ -299,7 +299,7 @@ class FormatProvider(MachCommandBase):
             tooltool_url = "https://api.pub.build.mozilla.org/tooltool/sha512/"
             if self.prompt and raw_input("Download clang-format executables from {0} (yN)? ".format(tooltool_url)).lower() != 'y':  # noqa: E501,F821
                 print("Download aborted.")
-                return 1
+                return None
             self.prompt = False
             plat = platform.system()
             if python_script:

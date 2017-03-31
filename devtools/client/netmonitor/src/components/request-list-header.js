@@ -10,7 +10,6 @@ const {
   DOM,
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { setNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 const Actions = require("../actions/index");
 const { getWaterfallScale } = require("../selectors/index");
 const { getFormattedTime } = require("../utils/format-utils");
@@ -71,10 +70,10 @@ const RequestListHeader = createClass({
   resizeWaterfall() {
     // Measure its width and update the 'waterfallWidth' property in the store.
     // The 'waterfallWidth' will be further updated on every window resize.
-    setNamedTimeout("resize-events", 50, () => {
-      const { width } = this.refs.header.getBoundingClientRect();
+    setTimeout(() => {
+      let { width } = this.refs.header.getBoundingClientRect();
       this.props.resizeWaterfall(width);
-    });
+    }, 50);
   },
 
   render() {

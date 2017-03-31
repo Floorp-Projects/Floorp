@@ -150,7 +150,7 @@ var openInspectorSideBar = Task.async(function* (id) {
   return {
     toolbox: toolbox,
     inspector: inspector,
-    view: inspector[id].view || inspector[id].computedView
+    view: inspector.getPanel(id).view || inspector.getPanel(id).computedView
   };
 });
 

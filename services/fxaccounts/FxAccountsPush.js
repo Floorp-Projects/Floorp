@@ -171,6 +171,11 @@ FxAccountsPushService.prototype = {
       case ON_DEVICE_DISCONNECTED_NOTIFICATION:
         this.fxAccounts.handleDeviceDisconnection(payload.data.id);
         return;
+      case ON_PROFILE_UPDATED_NOTIFICATION:
+        // We already have a "profile updated" notification sent via WebChannel,
+        // let's just re-use that.
+        Services.obs.notifyObservers(null, ON_PROFILE_CHANGE_NOTIFICATION, null);
+        return;
       case ON_PASSWORD_CHANGED_NOTIFICATION:
       case ON_PASSWORD_RESET_NOTIFICATION:
         this._onPasswordChanged();

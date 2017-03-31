@@ -24,7 +24,7 @@ function* testView(viewId, inspector) {
   info("Testing " + viewId);
 
   yield inspector.sidebar.select(viewId);
-  let view = inspector[viewId].view || inspector[viewId].computedView;
+  let view = inspector.getPanel(viewId).view || inspector.getPanel(viewId).computedView;
   yield selectNode("div", inspector);
 
   testIsColorValueNode(view);

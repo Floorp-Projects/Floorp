@@ -1913,8 +1913,6 @@ Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow,
     return NS_OK;
   }
 
-  MOZ_ASSERT(aWindow->GetDocShell());
-
   // Copy the User-Agent header from the document channel which has already been
   // subject to UA overrides.
   nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();

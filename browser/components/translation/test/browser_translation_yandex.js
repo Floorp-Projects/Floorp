@@ -72,7 +72,7 @@ add_task(function* test_yandex_attribution() {
 
 add_task(function* test_preference_attribution() {
 
-    let prefUrl = "about:preferences#content";
+    let prefUrl = "about:preferences#general";
     let tab = yield promiseTestPageLoad(prefUrl);
 
     let browser = gBrowser.getBrowserForTab(tab);

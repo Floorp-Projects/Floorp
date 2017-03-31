@@ -10,6 +10,7 @@
 #include "mozilla/StyleSheetInfo.h"
 #include "mozilla/ServoStyleSheet.h"
 #include "mozilla/CSSStyleSheet.h"
+#include "nsINode.h"
 
 namespace mozilla {
 

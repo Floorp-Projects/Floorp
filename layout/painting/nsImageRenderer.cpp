@@ -6,9 +6,24 @@
 
 /* utility functions for drawing borders and backgrounds */
 
-#include "nsImageRenderer.h"
 #include "nsCSSRenderingGradients.h"
+
 #include "mozilla/webrender/WebRenderAPI.h"
+
+#include "gfxDrawable.h"
+#include "ImageOps.h"
+#include "nsContentUtils.h"
+#include "nsCSSRendering.h"
+#include "nsIFrame.h"
+#include "nsImageRenderer.h"
+#include "nsRenderingContext.h"
+#include "nsSVGEffects.h"
+#include "nsSVGIntegrationUtils.h"
+
+using namespace mozilla;
+using namespace mozilla::gfx;
+using namespace mozilla::image;
+using namespace mozilla::layers;
 
 nsSize
 CSSSizeOrRatio::ComputeConcreteSize() const
@@ -719,14 +734,16 @@ ComputeTile(nsRect&              aFill,
     break;
   case NS_STYLE_BORDER_IMAGE_REPEAT_ROUND:
     tile.x = aFill.x;
-    tile.width = ComputeRoundedSize(aUnitSize.width, aFill.width);
+    tile.width = nsCSSRendering::ComputeRoundedSize(aUnitSize.width,
+                                                    aFill.width);
     aRepeatSize.width = tile.width;
     break;
   case NS_STYLE_BORDER_IMAGE_REPEAT_SPACE:
     {
       nscoord space;
       aRepeatSize.width =
-        ComputeBorderSpacedRepeatSize(aUnitSize.width, aFill.width, space);
+        nsCSSRendering::ComputeBorderSpacedRepeatSize(aUnitSize.width,
+                                                      aFill.width, space);
       tile.x = aFill.x + space;
       tile.width = aUnitSize.width;
       aFill.x = tile.x;
@@ -750,14 +767,16 @@ ComputeTile(nsRect&              aFill,
     break;
   case NS_STYLE_BORDER_IMAGE_REPEAT_ROUND:
     tile.y = aFill.y;
-    tile.height = ComputeRoundedSize(aUnitSize.height, aFill.height);
+    tile.height = nsCSSRendering::ComputeRoundedSize(aUnitSize.height,
+                                                     aFill.height);
     aRepeatSize.height = tile.height;
     break;
   case NS_STYLE_BORDER_IMAGE_REPEAT_SPACE:
     {
       nscoord space;
       aRepeatSize.height =
-        ComputeBorderSpacedRepeatSize(aUnitSize.height, aFill.height, space);
+        nsCSSRendering::ComputeBorderSpacedRepeatSize(aUnitSize.height,
+                                                      aFill.height, space);
       tile.y = aFill.y + space;
       tile.height = aUnitSize.height;
       aFill.y = tile.y;

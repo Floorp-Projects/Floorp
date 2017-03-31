@@ -3,7 +3,7 @@
 == pref-width-1a.html pref-width-1a.html
 == pref-width-1b.html pref-width-1b.html
 == pref-width-1c.html pref-width-1c.html
-fails == min-width-1a.html min-width-1a.html
+== min-width-1a.html min-width-1a.html
 == min-width-1b.html min-width-1b.html
 == min-width-1c.html min-width-1c.html
 == min-width-2.html min-width-2.html
@@ -19,8 +19,8 @@ fails == min-width-1a.html min-width-1a.html
 == column-balancing-003.html column-balancing-003.html
 == column-balancing-004.html column-balancing-004.html
 == column-box-alignment-rtl.html column-box-alignment-rtl.html
-fails HTTP(..) == columnfill-balance.html columnfill-balance.html
-fails == columnfill-auto.html columnfill-auto.html
+HTTP(..) == columnfill-balance.html columnfill-balance.html
+== columnfill-auto.html columnfill-auto.html
 fails HTTP(..) == columnfill-auto-2.html columnfill-auto-2.html
 fails HTTP(..) == columnfill-auto-3.html columnfill-auto-3.html
 fails == columnrule-basic.html columnrule-basic.html

@@ -150,9 +150,16 @@ OSPreferences::GetDateTimePatternForStyle(DateTimeFormatStyle aDateStyle,
   const int32_t kPatternMax = 160;
   UChar pattern[kPatternMax];
 
+  nsAutoCString locale;
+  if (aLocale.IsEmpty()) {
+    LocaleService::GetInstance()->GetAppLocaleAsBCP47(locale);
+  } else {
+    locale.Assign(aLocale);
+  }
+
   UErrorCode status = U_ZERO_ERROR;
   UDateFormat* df = udat_open(timeStyle, dateStyle,
-                              PromiseFlatCString(aLocale).get(),
+                              locale.get(),
                               nullptr, -1, nullptr, -1, &status);
   if (U_FAILURE(status)) {
     return false;

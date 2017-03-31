@@ -117,4 +117,7 @@ JSSHELL_NAME = jsshell-$(MOZ_PKG_PLATFORM).zip
 endif
 PKG_JSSHELL = $(DIST)/$(JSSHELL_NAME)
 
+# Stylo binding files
+STYLO_BINDINGS_PACKAGE = $(PKG_BASENAME).stylo-bindings.zip
+
 endif # PACKAGE_NAME_MK_INCLUDED

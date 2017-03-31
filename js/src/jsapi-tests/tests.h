@@ -224,7 +224,12 @@ class JSAPITest
               const char* filename = "-",
               int lineno = 0)
     {
-        JSAPITestString message = msg;
+        char location[256];
+        snprintf(location, mozilla::ArrayLength(location), "%s:%d:", filename, lineno);
+
+        JSAPITestString message(location);
+        message += msg;
+
         if (JS_IsExceptionPending(cx)) {
             js::gc::AutoSuppressGC gcoff(cx);
             JS::RootedValue v(cx);
@@ -237,8 +242,11 @@ class JSAPITest
                     message += bytes.ptr();
             }
         }
-        fprintf(stderr, "%s:%d:%.*s\n",
-                filename, lineno, int(message.length()), message.begin());
+
+        fprintf(stderr, "%.*s\n", int(message.length()), message.begin());
+
+        if (msgs.length() != 0)
+            msgs += " | ";
         msgs += message;
         return false;
     }

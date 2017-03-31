@@ -151,7 +151,7 @@ function* backgroundUpdateTest(url, id, checkIconFn) {
   is(win.gViewController.currentViewId, VIEW, "about:addons is at extensions list");
 
   // Wait for the permission prompt and accept it this time
-  updatePromise = promiseInstallEvent(addon, "onInstallEnded");
+  updatePromise = waitForUpdate(addon);
   panel = yield popupPromise;
   panel.button.click();
 
@@ -176,7 +176,6 @@ function checkDefaultIcon(icon) {
 
 add_task(() => backgroundUpdateTest(`${BASE}/browser_webext_update1.xpi`,
                                     ID, checkDefaultIcon));
-
 function checkNonDefaultIcon(icon) {
   // The icon should come from the extension, don't bother with the precise
   // path, just make sure we've got a jar url pointing to the right path
@@ -209,7 +208,7 @@ async function testNoPrompt(origUrl, id) {
                                             {once: true});
 
   // Trigger an update check and wait for the update to be applied.
-  let updatePromise = promiseInstallEvent(addon, "onInstallEnded");
+  let updatePromise = waitForUpdate(addon);
   AddonManagerPrivate.backgroundUpdateCheck();
   await updatePromise;
 
@@ -239,4 +238,3 @@ add_task(() => testNoPrompt(`${BASE}/browser_webext_update_perms1.xpi`,
 // doesn't show a prompt even when the webextension uses
 // promptable required permissions.
 add_task(() => testNoPrompt(`${BASE}/browser_legacy.xpi`, ID_LEGACY));
-

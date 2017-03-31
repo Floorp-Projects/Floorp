@@ -1623,3 +1623,35 @@ class WebRTCGTestCommands(GTestCommands):
                                 cwd=cwd,
                                 ensure_exit_code=False,
                                 pass_thru=True)
+
+@CommandProvider
+class Repackage(MachCommandBase):
+    '''Repackages artifacts into different formats.
+
+    This is generally used after packages are signed by the signing
+    scriptworkers in order to bundle things up into shippable formats, such as a
+    .dmg on OSX or an installer exe on Windows.
+    '''
+    @Command('repackage', category='misc',
+             description='Repackage artifacts into different formats.')
+    @CommandArgument('--input', '-i', type=str, required=True,
+        help='Input filename')
+    @CommandArgument('--output', '-o', type=str, required=True,
+        help='Output filename')
+    def repackage(self, input, output):
+        if not os.path.exists(input):
+            print('Input file does not exist: %s' % input)
+            return 1
+
+        if not os.path.exists(os.path.join(self.topobjdir, 'config.status')):
+            print('config.status not found.  Please run |mach configure| '
+                  'prior to |mach repackage|.')
+            return 1
+
+        if output.endswith('.dmg'):
+            from mozbuild.repackage import repackage_dmg
+            repackage_dmg(input, output)
+        else:
+            print("Repackaging into output '%s' is not yet supported." % output)
+            return 1
+        return 0

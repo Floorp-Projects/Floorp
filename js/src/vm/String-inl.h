@@ -349,15 +349,6 @@ js::StaticStrings::getUnitStringForElement(JSContext* cx, JSString* str, size_t 
     return NewDependentString(cx, str, index, 1);
 }
 
-inline JSAtom*
-js::StaticStrings::getLength2(char16_t c1, char16_t c2)
-{
-    MOZ_ASSERT(fitsInSmallChar(c1));
-    MOZ_ASSERT(fitsInSmallChar(c2));
-    size_t index = (((size_t)toSmallChar[c1]) << 6) + toSmallChar[c2];
-    return length2StaticTable[index];
-}
-
 MOZ_ALWAYS_INLINE void
 JSString::finalize(js::FreeOp* fop)
 {

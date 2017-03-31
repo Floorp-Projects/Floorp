@@ -128,6 +128,11 @@ public:
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
   { return eUnknownTransparency; }
 
+  /**
+   * Sets |*aShouldRepaint| to indicate whether an attribute or content state
+   * change should trigger a repaint.  Call with null |aAttribute| (and
+   * null |aOldValue|) for content state changes.
+   */
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
                                 nsIAtom* aAttribute, bool* aShouldRepaint,
                                 const nsAttrValue* aOldValue)=0;

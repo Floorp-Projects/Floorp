@@ -47,6 +47,7 @@ function GridInspector(inspector, window) {
   this.onGridLayoutChange = this.onGridLayoutChange.bind(this);
   this.onHighlighterChange = this.onHighlighterChange.bind(this);
   this.onMarkupMutation = this.onMarkupMutation.bind(this);
+  this.onReflow = this.onReflow.bind(this);
   this.onSetGridOverlayColor = this.onSetGridOverlayColor.bind(this);
   this.onShowGridAreaHighlight = this.onShowGridAreaHighlight.bind(this);
   this.onShowGridCellHighlight = this.onShowGridCellHighlight.bind(this);
@@ -100,6 +101,8 @@ GridInspector.prototype = {
     this.inspector.off("markupmutation", this.onMarkupMutation);
     this.inspector.sidebar.off("select", this.onSidebarSelect);
     this.layoutInspector.off("grid-layout-changed", this.onGridLayoutChange);
+
+    this.inspector.reflowTracker.untrackReflows(this, this.onReflow);
 
     this.swatchColorPickerTooltip.destroy();
 
@@ -295,6 +298,14 @@ GridInspector.prototype = {
   },
 
   /**
+   * Handler for the "reflow" event fired by the inspector's reflow tracker. On reflows,
+   * update the grid panel content.
+   */
+  onReflow() {
+    this.updateGridPanel();
+  },
+
+  /**
    * Handler for a change in the grid overlay color picker for a grid container.
    *
    * @param  {NodeFront} node
@@ -376,9 +387,11 @@ GridInspector.prototype = {
   onSidebarSelect() {
     if (!this.isPanelVisible()) {
       this.layoutInspector.off("grid-layout-changed", this.onGridLayoutChange);
+      this.inspector.reflowTracker.untrackReflows(this, this.onReflow);
       return;
     }
 
+    this.inspector.reflowTracker.trackReflows(this, this.onReflow);
     this.layoutInspector.on("grid-layout-changed", this.onGridLayoutChange);
     this.updateGridPanel();
   },
