@@ -192,9 +192,9 @@ Hash(const char *buf, nsACString &hash)
 // We only treat 3xx responses as redirects if they have a Location header and
 // the status code is in a whitelist.
 bool
-nsHttpChannel::WillRedirect(nsHttpResponseHead * response)
+WillRedirect(nsHttpResponseHead * response)
 {
-    return IsRedirectStatus(response->Status()) &&
+    return nsHttpChannel::IsRedirectStatus(response->Status()) &&
            response->HasHeader(nsHttp::Location);
 }
 

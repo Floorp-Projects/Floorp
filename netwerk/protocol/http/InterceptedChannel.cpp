@@ -21,6 +21,9 @@
 namespace mozilla {
 namespace net {
 
+extern bool
+WillRedirect(const nsHttpResponseHead * response);
+
 extern nsresult
 DoUpdateExpirationTime(nsHttpChannel* aSelf,
                        nsICacheEntry* aCacheEntry,
@@ -243,7 +246,7 @@ InterceptedChannelChrome::FinishSynthesizedResponse(const nsACString& aFinalURLS
 
   // If the synthesized response is a redirect, then we want to respect
   // the encoding of whatever is loaded as a result.
-  if (nsHttpChannel::WillRedirect(mSynthesizedResponseHead.ref())) {
+  if (WillRedirect(mSynthesizedResponseHead.ref())) {
     nsresult rv = mChannel->SetApplyConversion(mOldApplyConversion);
     NS_ENSURE_SUCCESS(rv, rv);
   }
