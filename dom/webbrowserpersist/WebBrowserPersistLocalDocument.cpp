@@ -1208,7 +1208,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
             RefPtr<dom::HTMLInputElement> outElt =
               dom::HTMLInputElement::FromContentOrNull(content);
             nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(*aNodeOut);
-            switch (formControl->GetType()) {
+            switch (formControl->ControlType()) {
                 case NS_FORM_INPUT_EMAIL:
                 case NS_FORM_INPUT_SEARCH:
                 case NS_FORM_INPUT_TEXT:
