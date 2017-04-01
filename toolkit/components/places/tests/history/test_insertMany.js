@@ -53,6 +53,21 @@ add_task(function* test_insertMany() {
   });
 
   let inserter = Task.async(function*(name, filter, useCallbacks) {
+    function promiseManyFrecenciesChanged() {
+      return new Promise((resolve, reject) => {
+        let obs = new NavHistoryObserver();
+        obs.onManyFrecenciesChanged = () => {
+          PlacesUtils.history.removeObserver(obs);
+          resolve();
+        };
+        obs.onFrecencyChanged = () => {
+          PlacesUtils.history.removeObserver(obs);
+          reject();
+        };
+        PlacesUtils.history.addObserver(obs, false);
+      });
+    }
+
     do_print(name);
     do_print(`filter: ${filter}`);
     do_print(`useCallbacks: ${useCallbacks}`);
@@ -81,7 +96,9 @@ add_task(function* test_insertMany() {
       Assert.equal(GOOD_URLS.sort().toString(), onResultUrls.sort().toString(), "onResult callback was called for each good url");
       Assert.equal(BAD_URLS.sort().toString(), onErrorUrls.sort().toString(), "onError callback was called for each bad url");
     } else {
+      let promiseManyFrecencies = promiseManyFrecenciesChanged();
       result = yield PlacesUtils.history.insertMany(pageInfos);
+      yield promiseManyFrecencies;
     }
 
     Assert.equal(undefined, result, "insertMany returned undefined");
