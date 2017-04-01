@@ -27,9 +27,11 @@ txApplyDefaultElementTemplate::execute(txExecutionState& aEs)
     txExecutionState::TemplateRule* rule = aEs.getCurrentTemplateRule();
     txExpandedName mode(rule->mModeNsId, rule->mModeLocalName);
     txStylesheet::ImportFrame* frame = 0;
-    txInstruction* templ =
+    txInstruction* templ;
+    nsresult rv =
         aEs.mStylesheet->findTemplate(aEs.getEvalContext()->getContextNode(),
-                                      mode, &aEs, nullptr, &frame);
+                                      mode, &aEs, nullptr, &templ, &frame);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     aEs.pushTemplateRule(frame, mode, aEs.mTemplateParams);
 
@@ -53,9 +55,11 @@ txApplyImports::execute(txExecutionState& aEs)
 
     txStylesheet::ImportFrame* frame = 0;
     txExpandedName mode(rule->mModeNsId, rule->mModeLocalName);
-    txInstruction* templ =
-        aEs.mStylesheet->findTemplate(aEs.getEvalContext()->getContextNode(),
-                                      mode, &aEs, rule->mFrame, &frame);
+    txInstruction* templ;
+    rv = aEs.mStylesheet->findTemplate(aEs.getEvalContext()->getContextNode(),
+                                       mode, &aEs, rule->mFrame, &templ,
+                                       &frame);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     aEs.pushTemplateRule(frame, mode, rule->mParams);
 
@@ -76,9 +80,11 @@ nsresult
 txApplyTemplates::execute(txExecutionState& aEs)
 {
     txStylesheet::ImportFrame* frame = 0;
-    txInstruction* templ =
+    txInstruction* templ;
+    nsresult rv =
         aEs.mStylesheet->findTemplate(aEs.getEvalContext()->getContextNode(),
-                                      mMode, &aEs, nullptr, &frame);
+                                      mMode, &aEs, nullptr, &templ, &frame);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     aEs.pushTemplateRule(frame, mMode, aEs.mTemplateParams);
 
@@ -470,7 +476,7 @@ txLoopNodeSet::execute(txExecutionState& aEs)
     txNodeSetContext* context =
         static_cast<txNodeSetContext*>(aEs.getEvalContext());
     if (!context->hasNext()) {
-        aEs.popAndDeleteEvalContext();
+        delete aEs.popEvalContext();
 
         return NS_OK;
     }

@@ -242,7 +242,7 @@ class nsWindow::GeckoViewSupport final
     , public SupportsWeakPtr<GeckoViewSupport>
 {
     nsWindow& window;
-    GeckoView::GlobalRef mView;
+    GeckoView::Window::GlobalRef mGeckoViewWindow;
 
 public:
     typedef GeckoView::Window::Natives<GeckoViewSupport> Base;
@@ -265,10 +265,9 @@ public:
     }
 
     GeckoViewSupport(nsWindow* aWindow,
-                     const GeckoView::Window::LocalRef& aInstance,
-                     GeckoView::Param aView)
+                     const GeckoView::Window::LocalRef& aInstance)
         : window(*aWindow)
-        , mView(aView)
+        , mGeckoViewWindow(aInstance)
     {
         Base::AttachNative(aInstance, static_cast<SupportsWeakPtr*>(this));
     }
@@ -1252,7 +1251,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
 
     // Attach a new GeckoView support object to the new window.
     window->mGeckoViewSupport = mozilla::MakeUnique<GeckoViewSupport>(
-            window, GeckoView::Window::LocalRef(aCls.Env(), aWindow), aView);
+        window, (GeckoView::Window::LocalRef(aCls.Env(), aWindow)));
 
     window->mGeckoViewSupport->mDOMWindow = pdomWindow;
 
@@ -1297,6 +1296,7 @@ nsWindow::GeckoViewSupport::Close()
 
     mDOMWindow->ForceClose();
     mDOMWindow = nullptr;
+    mGeckoViewWindow = nullptr;
 }
 
 void
@@ -2078,8 +2078,10 @@ nsWindow::GetEventTimeStamp(int64_t aEventTime)
 void
 nsWindow::GeckoViewSupport::EnableEventDispatcher()
 {
-    MOZ_ASSERT(mView);
-    mView->SetState(GeckoView::State::READY());
+    if (!mGeckoViewWindow) {
+        return;
+    }
+    mGeckoViewWindow->SetState(GeckoView::State::READY());
 }
 
 void
