@@ -12,10 +12,15 @@ function handleRequest(req, resp) {
   let value = params.get("value");
 
   let domain = "";
-  if  (params.has("domain")) {
+  if (params.has("domain")) {
     domain = `; Domain=${params.get("domain")}`;
   }
 
-  resp.setHeader("Set-Cookie", `foobar=${value}${domain}`);
+  let secure = "";
+  if (params.has("secure")) {
+    secure = "; Secure";
+  }
+
+  resp.setHeader("Set-Cookie", `foobar=${value}${domain}${secure}`);
   resp.write("<meta charset=utf-8>hi");
 }
