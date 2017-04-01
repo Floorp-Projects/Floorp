@@ -23,7 +23,6 @@ toolkit.jar:
     content/extensions/ext-runtime.js
     content/extensions/ext-storage.js
     content/extensions/ext-theme.js
-    content/extensions/ext-toolkit.js
     content/extensions/ext-topSites.js
     content/extensions/ext-webRequest.js
     content/extensions/ext-webNavigation.js
@@ -38,4 +37,3 @@ toolkit.jar:
     content/extensions/ext-c-runtime.js
     content/extensions/ext-c-storage.js
     content/extensions/ext-c-test.js
-    content/extensions/ext-c-toolkit.js

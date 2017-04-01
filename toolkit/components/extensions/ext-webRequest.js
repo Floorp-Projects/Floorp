@@ -1,13 +1,16 @@
 "use strict";
 
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebRequest",
                                   "resource://gre/modules/WebRequest.jsm");
 
 Cu.import("resource://gre/modules/ExtensionManagement.jsm");
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   SingletonEventManager,
 } = ExtensionUtils;
@@ -116,23 +119,21 @@ function WebRequestEventManager(context, eventName) {
 
 WebRequestEventManager.prototype = Object.create(SingletonEventManager.prototype);
 
-this.webRequest = class extends ExtensionAPI {
-  getAPI(context) {
-    return {
-      webRequest: {
-        onBeforeRequest: new WebRequestEventManager(context, "onBeforeRequest").api(),
-        onBeforeSendHeaders: new WebRequestEventManager(context, "onBeforeSendHeaders").api(),
-        onSendHeaders: new WebRequestEventManager(context, "onSendHeaders").api(),
-        onHeadersReceived: new WebRequestEventManager(context, "onHeadersReceived").api(),
-        onAuthRequired: new WebRequestEventManager(context, "onAuthRequired").api(),
-        onBeforeRedirect: new WebRequestEventManager(context, "onBeforeRedirect").api(),
-        onResponseStarted: new WebRequestEventManager(context, "onResponseStarted").api(),
-        onErrorOccurred: new WebRequestEventManager(context, "onErrorOccurred").api(),
-        onCompleted: new WebRequestEventManager(context, "onCompleted").api(),
-        handlerBehaviorChanged: function() {
-          // TODO: Flush all caches.
-        },
+extensions.registerSchemaAPI("webRequest", "addon_parent", context => {
+  return {
+    webRequest: {
+      onBeforeRequest: new WebRequestEventManager(context, "onBeforeRequest").api(),
+      onBeforeSendHeaders: new WebRequestEventManager(context, "onBeforeSendHeaders").api(),
+      onSendHeaders: new WebRequestEventManager(context, "onSendHeaders").api(),
+      onHeadersReceived: new WebRequestEventManager(context, "onHeadersReceived").api(),
+      onAuthRequired: new WebRequestEventManager(context, "onAuthRequired").api(),
+      onBeforeRedirect: new WebRequestEventManager(context, "onBeforeRedirect").api(),
+      onResponseStarted: new WebRequestEventManager(context, "onResponseStarted").api(),
+      onErrorOccurred: new WebRequestEventManager(context, "onErrorOccurred").api(),
+      onCompleted: new WebRequestEventManager(context, "onCompleted").api(),
+      handlerBehaviorChanged: function() {
+        // TODO: Flush all caches.
       },
-    };
-  }
-};
+    },
+  };
+});

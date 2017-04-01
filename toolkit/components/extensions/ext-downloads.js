@@ -1,5 +1,9 @@
 "use strict";
 
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
@@ -13,7 +17,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource://devtools/shared/event-emitter.js");
 
-var {
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+const {
   ignoreEvent,
   normalizeTime,
   SingletonEventManager,
@@ -389,407 +394,405 @@ function queryHelper(query) {
   });
 }
 
-this.downloads = class extends ExtensionAPI {
-  getAPI(context) {
-    let {extension} = context;
-    return {
-      downloads: {
-        download(options) {
-          let {filename} = options;
-          if (filename && PlatformInfo.os === "win") {
-            // cross platform javascript code uses "/"
-            filename = filename.replace(/\//g, "\\");
+extensions.registerSchemaAPI("downloads", "addon_parent", context => {
+  let {extension} = context;
+  return {
+    downloads: {
+      download(options) {
+        let {filename} = options;
+        if (filename && PlatformInfo.os === "win") {
+          // cross platform javascript code uses "/"
+          filename = filename.replace(/\//g, "\\");
+        }
+
+        if (filename != null) {
+          if (filename.length == 0) {
+            return Promise.reject({message: "filename must not be empty"});
           }
 
-          if (filename != null) {
-            if (filename.length == 0) {
-              return Promise.reject({message: "filename must not be empty"});
-            }
-
-            let path = OS.Path.split(filename);
-            if (path.absolute) {
-              return Promise.reject({message: "filename must not be an absolute path"});
-            }
-
-            if (path.components.some(component => component == "..")) {
-              return Promise.reject({message: "filename must not contain back-references (..)"});
-            }
+          let path = OS.Path.split(filename);
+          if (path.absolute) {
+            return Promise.reject({message: "filename must not be an absolute path"});
           }
 
-          if (options.conflictAction == "prompt") {
-            // TODO
-            return Promise.reject({message: "conflictAction prompt not yet implemented"});
+          if (path.components.some(component => component == "..")) {
+            return Promise.reject({message: "filename must not contain back-references (..)"});
+          }
+        }
+
+        if (options.conflictAction == "prompt") {
+          // TODO
+          return Promise.reject({message: "conflictAction prompt not yet implemented"});
+        }
+
+        if (options.headers) {
+          for (let {name} of options.headers) {
+            if (FORBIDDEN_HEADERS.includes(name.toUpperCase()) || name.match(FORBIDDEN_PREFIXES)) {
+              return Promise.reject({message: "Forbidden request header name"});
+            }
+          }
+        }
+
+        // Handle method, headers and body options.
+        function adjustChannel(channel) {
+          if (channel instanceof Ci.nsIHttpChannel) {
+            const method = options.method || "GET";
+            channel.requestMethod = method;
+
+            if (options.headers) {
+              for (let {name, value} of options.headers) {
+                channel.setRequestHeader(name, value, false);
+              }
+            }
+
+            if (options.body != null) {
+              const stream = Cc["@mozilla.org/io/string-input-stream;1"]
+                             .createInstance(Ci.nsIStringInputStream);
+              stream.setData(options.body, options.body.length);
+
+              channel.QueryInterface(Ci.nsIUploadChannel2);
+              channel.explicitSetUploadStream(stream, null, -1, method, false);
+            }
+          }
+          return Promise.resolve();
+        }
+
+        function createTarget(downloadsDir) {
+          let target;
+          if (filename) {
+            target = OS.Path.join(downloadsDir, filename);
+          } else {
+            let uri = NetUtil.newURI(options.url);
+
+            let remote = "download";
+            if (uri instanceof Ci.nsIURL) {
+              remote = uri.fileName;
+            }
+            target = OS.Path.join(downloadsDir, remote);
           }
 
-          if (options.headers) {
-            for (let {name} of options.headers) {
-              if (FORBIDDEN_HEADERS.includes(name.toUpperCase()) || name.match(FORBIDDEN_PREFIXES)) {
-                return Promise.reject({message: "Forbidden request header name"});
+          // Create any needed subdirectories if required by filename.
+          const dir = OS.Path.dirname(target);
+          return OS.File.makeDir(dir, {from: downloadsDir}).then(() => {
+            return OS.File.exists(target);
+          }).then(exists => {
+            // This has a race, something else could come along and create
+            // the file between this test and them time the download code
+            // creates the target file.  But we can't easily fix it without
+            // modifying DownloadCore so we live with it for now.
+            if (exists) {
+              switch (options.conflictAction) {
+                case "uniquify":
+                default:
+                  target = DownloadPaths.createNiceUniqueFile(new FileUtils.File(target)).path;
+                  break;
+
+                case "overwrite":
+                  break;
               }
             }
-          }
-
-          // Handle method, headers and body options.
-          function adjustChannel(channel) {
-            if (channel instanceof Ci.nsIHttpChannel) {
-              const method = options.method || "GET";
-              channel.requestMethod = method;
-
-              if (options.headers) {
-                for (let {name, value} of options.headers) {
-                  channel.setRequestHeader(name, value, false);
-                }
-              }
-
-              if (options.body != null) {
-                const stream = Cc["@mozilla.org/io/string-input-stream;1"]
-                               .createInstance(Ci.nsIStringInputStream);
-                stream.setData(options.body, options.body.length);
-
-                channel.QueryInterface(Ci.nsIUploadChannel2);
-                channel.explicitSetUploadStream(stream, null, -1, method, false);
-              }
-            }
-            return Promise.resolve();
-          }
-
-          function createTarget(downloadsDir) {
-            let target;
-            if (filename) {
-              target = OS.Path.join(downloadsDir, filename);
-            } else {
-              let uri = NetUtil.newURI(options.url);
-
-              let remote = "download";
-              if (uri instanceof Ci.nsIURL) {
-                remote = uri.fileName;
-              }
-              target = OS.Path.join(downloadsDir, remote);
-            }
-
-            // Create any needed subdirectories if required by filename.
-            const dir = OS.Path.dirname(target);
-            return OS.File.makeDir(dir, {from: downloadsDir}).then(() => {
-              return OS.File.exists(target);
-            }).then(exists => {
-              // This has a race, something else could come along and create
-              // the file between this test and them time the download code
-              // creates the target file.  But we can't easily fix it without
-              // modifying DownloadCore so we live with it for now.
-              if (exists) {
-                switch (options.conflictAction) {
-                  case "uniquify":
-                  default:
-                    target = DownloadPaths.createNiceUniqueFile(new FileUtils.File(target)).path;
-                    break;
-
-                  case "overwrite":
-                    break;
-                }
-              }
-            }).then(() => {
-              if (!options.saveAs) {
-                return Promise.resolve(target);
-              }
-
-              // Setup the file picker Save As dialog.
-              const picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-              const window = Services.wm.getMostRecentWindow("navigator:browser");
-              picker.init(window, null, Ci.nsIFilePicker.modeSave);
-              picker.displayDirectory = new FileUtils.File(dir);
-              picker.appendFilters(Ci.nsIFilePicker.filterAll);
-              picker.defaultString = OS.Path.basename(target);
-
-              // Open the dialog and resolve/reject with the result.
-              return new Promise((resolve, reject) => {
-                picker.open(result => {
-                  if (result === Ci.nsIFilePicker.returnCancel) {
-                    reject({message: "Download canceled by the user"});
-                  } else {
-                    resolve(picker.file.path);
-                  }
-                });
-              });
-            });
-          }
-
-          let download;
-          return Downloads.getPreferredDownloadsDirectory()
-            .then(downloadsDir => createTarget(downloadsDir))
-            .then(target => {
-              const source = {
-                url: options.url,
-              };
-
-              if (options.method || options.headers || options.body) {
-                source.adjustChannel = adjustChannel;
-              }
-
-              return Downloads.createDownload({
-                source,
-                target: {
-                  path: target,
-                  partFilePath: target + ".part",
-                },
-              });
-            }).then(dl => {
-              download = dl;
-              return DownloadMap.getDownloadList();
-            }).then(list => {
-              list.add(download);
-
-              // This is necessary to make pause/resume work.
-              download.tryToKeepPartialData = true;
-              download.start();
-
-              const item = DownloadMap.newFromDownload(download, extension);
-              return item.id;
-            });
-        },
-
-        removeFile(id) {
-          return DownloadMap.lazyInit().then(() => {
-            let item;
-            try {
-              item = DownloadMap.fromId(id);
-            } catch (err) {
-              return Promise.reject({message: `Invalid download id ${id}`});
-            }
-            if (item.state !== "complete") {
-              return Promise.reject({message: `Cannot remove incomplete download id ${id}`});
-            }
-            return OS.File.remove(item.filename, {ignoreAbsent: false}).catch((err) => {
-              return Promise.reject({message: `Could not remove download id ${item.id} because the file doesn't exist`});
-            });
-          });
-        },
-
-        search(query) {
-          return queryHelper(query)
-            .then(items => items.map(item => item.serialize()));
-        },
-
-        pause(id) {
-          return DownloadMap.lazyInit().then(() => {
-            let item;
-            try {
-              item = DownloadMap.fromId(id);
-            } catch (err) {
-              return Promise.reject({message: `Invalid download id ${id}`});
-            }
-            if (item.state != "in_progress") {
-              return Promise.reject({message: `Download ${id} cannot be paused since it is in state ${item.state}`});
-            }
-
-            return item.download.cancel();
-          });
-        },
-
-        resume(id) {
-          return DownloadMap.lazyInit().then(() => {
-            let item;
-            try {
-              item = DownloadMap.fromId(id);
-            } catch (err) {
-              return Promise.reject({message: `Invalid download id ${id}`});
-            }
-            if (!item.canResume) {
-              return Promise.reject({message: `Download ${id} cannot be resumed`});
-            }
-
-            return item.download.start();
-          });
-        },
-
-        cancel(id) {
-          return DownloadMap.lazyInit().then(() => {
-            let item;
-            try {
-              item = DownloadMap.fromId(id);
-            } catch (err) {
-              return Promise.reject({message: `Invalid download id ${id}`});
-            }
-            if (item.download.succeeded) {
-              return Promise.reject({message: `Download ${id} is already complete`});
-            }
-            return item.download.finalize(true);
-          });
-        },
-
-        showDefaultFolder() {
-          Downloads.getPreferredDownloadsDirectory().then(dir => {
-            let dirobj = new FileUtils.File(dir);
-            if (dirobj.isDirectory()) {
-              dirobj.launch();
-            } else {
-              throw new Error(`Download directory ${dirobj.path} is not actually a directory`);
-            }
-          }).catch(Cu.reportError);
-        },
-
-        erase(query) {
-          return queryHelper(query).then(items => {
-            let results = [];
-            let promises = [];
-            for (let item of items) {
-              promises.push(DownloadMap.erase(item));
-              results.push(item.id);
-            }
-            return Promise.all(promises).then(() => results);
-          });
-        },
-
-        open(downloadId) {
-          return DownloadMap.lazyInit().then(() => {
-            let download = DownloadMap.fromId(downloadId).download;
-            if (download.succeeded) {
-              return download.launch();
-            }
-            return Promise.reject({message: "Download has not completed."});
-          }).catch((error) => {
-            return Promise.reject({message: error.message});
-          });
-        },
-
-        show(downloadId) {
-          return DownloadMap.lazyInit().then(() => {
-            let download = DownloadMap.fromId(downloadId);
-            return download.download.showContainingDirectory();
           }).then(() => {
-            return true;
-          }).catch(error => {
-            return Promise.reject({message: error.message});
-          });
-        },
-
-        getFileIcon(downloadId, options) {
-          return DownloadMap.lazyInit().then(() => {
-            let size = options && options.size ? options.size : 32;
-            let download = DownloadMap.fromId(downloadId).download;
-            let pathPrefix = "";
-            let path;
-
-            if (download.succeeded) {
-              let file = FileUtils.File(download.target.path);
-              path = Services.io.newFileURI(file).spec;
-            } else {
-              path = OS.Path.basename(download.target.path);
-              pathPrefix = "//";
+            if (!options.saveAs) {
+              return Promise.resolve(target);
             }
 
+            // Setup the file picker Save As dialog.
+            const picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+            const window = Services.wm.getMostRecentWindow("navigator:browser");
+            picker.init(window, null, Ci.nsIFilePicker.modeSave);
+            picker.displayDirectory = new FileUtils.File(dir);
+            picker.appendFilters(Ci.nsIFilePicker.filterAll);
+            picker.defaultString = OS.Path.basename(target);
+
+            // Open the dialog and resolve/reject with the result.
             return new Promise((resolve, reject) => {
-              let chromeWebNav = Services.appShell.createWindowlessBrowser(true);
-              chromeWebNav
-                .QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIDocShell)
-                .createAboutBlankContentViewer(Services.scriptSecurityManager.getSystemPrincipal());
-
-              let img = chromeWebNav.document.createElement("img");
-              img.width = size;
-              img.height = size;
-
-              let handleLoad;
-              let handleError;
-              const cleanup = () => {
-                img.removeEventListener("load", handleLoad);
-                img.removeEventListener("error", handleError);
-                chromeWebNav.close();
-                chromeWebNav = null;
-              };
-
-              handleLoad = () => {
-                let canvas = chromeWebNav.document.createElement("canvas");
-                canvas.width = size;
-                canvas.height = size;
-                let context = canvas.getContext("2d");
-                context.drawImage(img, 0, 0, size, size);
-                let dataURL = canvas.toDataURL("image/png");
-                cleanup();
-                resolve(dataURL);
-              };
-
-              handleError = (error) => {
-                Cu.reportError(error);
-                cleanup();
-                reject(new Error("An unexpected error occurred"));
-              };
-
-              img.addEventListener("load", handleLoad);
-              img.addEventListener("error", handleError);
-              img.src = `moz-icon:${pathPrefix}${path}?size=${size}`;
+              picker.open(result => {
+                if (result === Ci.nsIFilePicker.returnCancel) {
+                  reject({message: "Download canceled by the user"});
+                } else {
+                  resolve(picker.file.path);
+                }
+              });
             });
-          }).catch((error) => {
-            return Promise.reject({message: error.message});
           });
-        },
+        }
 
-        // When we do setShelfEnabled(), check for additional "downloads.shelf" permission.
-        // i.e.:
-        // setShelfEnabled(enabled) {
-        //   if (!extension.hasPermission("downloads.shelf")) {
-        //     throw new context.cloneScope.Error("Permission denied because 'downloads.shelf' permission is missing.");
-        //   }
-        //   ...
-        // }
+        let download;
+        return Downloads.getPreferredDownloadsDirectory()
+          .then(downloadsDir => createTarget(downloadsDir))
+          .then(target => {
+            const source = {
+              url: options.url,
+            };
 
-        onChanged: new SingletonEventManager(context, "downloads.onChanged", fire => {
-          const handler = (what, item) => {
-            let changes = {};
-            const noundef = val => (val === undefined) ? null : val;
-            DOWNLOAD_ITEM_CHANGE_FIELDS.forEach(fld => {
-              if (item[fld] != item.prechange[fld]) {
-                changes[fld] = {
-                  previous: noundef(item.prechange[fld]),
-                  current: noundef(item[fld]),
-                };
-              }
-            });
-            if (Object.keys(changes).length > 0) {
-              changes.id = item.id;
-              fire.async(changes);
+            if (options.method || options.headers || options.body) {
+              source.adjustChannel = adjustChannel;
             }
-          };
 
-          let registerPromise = DownloadMap.getDownloadList().then(() => {
-            DownloadMap.on("change", handler);
-          });
-          return () => {
-            registerPromise.then(() => {
-              DownloadMap.off("change", handler);
+            return Downloads.createDownload({
+              source,
+              target: {
+                path: target,
+                partFilePath: target + ".part",
+              },
             });
-          };
-        }).api(),
+          }).then(dl => {
+            download = dl;
+            return DownloadMap.getDownloadList();
+          }).then(list => {
+            list.add(download);
 
-        onCreated: new SingletonEventManager(context, "downloads.onCreated", fire => {
-          const handler = (what, item) => {
-            fire.async(item.serialize());
-          };
-          let registerPromise = DownloadMap.getDownloadList().then(() => {
-            DownloadMap.on("create", handler);
+            // This is necessary to make pause/resume work.
+            download.tryToKeepPartialData = true;
+            download.start();
+
+            const item = DownloadMap.newFromDownload(download, extension);
+            return item.id;
           });
-          return () => {
-            registerPromise.then(() => {
-              DownloadMap.off("create", handler);
-            });
-          };
-        }).api(),
-
-        onErased: new SingletonEventManager(context, "downloads.onErased", fire => {
-          const handler = (what, item) => {
-            fire.async(item.id);
-          };
-          let registerPromise = DownloadMap.getDownloadList().then(() => {
-            DownloadMap.on("erase", handler);
-          });
-          return () => {
-            registerPromise.then(() => {
-              DownloadMap.off("erase", handler);
-            });
-          };
-        }).api(),
-
-        onDeterminingFilename: ignoreEvent(context, "downloads.onDeterminingFilename"),
       },
-    };
-  }
-};
+
+      removeFile(id) {
+        return DownloadMap.lazyInit().then(() => {
+          let item;
+          try {
+            item = DownloadMap.fromId(id);
+          } catch (err) {
+            return Promise.reject({message: `Invalid download id ${id}`});
+          }
+          if (item.state !== "complete") {
+            return Promise.reject({message: `Cannot remove incomplete download id ${id}`});
+          }
+          return OS.File.remove(item.filename, {ignoreAbsent: false}).catch((err) => {
+            return Promise.reject({message: `Could not remove download id ${item.id} because the file doesn't exist`});
+          });
+        });
+      },
+
+      search(query) {
+        return queryHelper(query)
+          .then(items => items.map(item => item.serialize()));
+      },
+
+      pause(id) {
+        return DownloadMap.lazyInit().then(() => {
+          let item;
+          try {
+            item = DownloadMap.fromId(id);
+          } catch (err) {
+            return Promise.reject({message: `Invalid download id ${id}`});
+          }
+          if (item.state != "in_progress") {
+            return Promise.reject({message: `Download ${id} cannot be paused since it is in state ${item.state}`});
+          }
+
+          return item.download.cancel();
+        });
+      },
+
+      resume(id) {
+        return DownloadMap.lazyInit().then(() => {
+          let item;
+          try {
+            item = DownloadMap.fromId(id);
+          } catch (err) {
+            return Promise.reject({message: `Invalid download id ${id}`});
+          }
+          if (!item.canResume) {
+            return Promise.reject({message: `Download ${id} cannot be resumed`});
+          }
+
+          return item.download.start();
+        });
+      },
+
+      cancel(id) {
+        return DownloadMap.lazyInit().then(() => {
+          let item;
+          try {
+            item = DownloadMap.fromId(id);
+          } catch (err) {
+            return Promise.reject({message: `Invalid download id ${id}`});
+          }
+          if (item.download.succeeded) {
+            return Promise.reject({message: `Download ${id} is already complete`});
+          }
+          return item.download.finalize(true);
+        });
+      },
+
+      showDefaultFolder() {
+        Downloads.getPreferredDownloadsDirectory().then(dir => {
+          let dirobj = new FileUtils.File(dir);
+          if (dirobj.isDirectory()) {
+            dirobj.launch();
+          } else {
+            throw new Error(`Download directory ${dirobj.path} is not actually a directory`);
+          }
+        }).catch(Cu.reportError);
+      },
+
+      erase(query) {
+        return queryHelper(query).then(items => {
+          let results = [];
+          let promises = [];
+          for (let item of items) {
+            promises.push(DownloadMap.erase(item));
+            results.push(item.id);
+          }
+          return Promise.all(promises).then(() => results);
+        });
+      },
+
+      open(downloadId) {
+        return DownloadMap.lazyInit().then(() => {
+          let download = DownloadMap.fromId(downloadId).download;
+          if (download.succeeded) {
+            return download.launch();
+          }
+          return Promise.reject({message: "Download has not completed."});
+        }).catch((error) => {
+          return Promise.reject({message: error.message});
+        });
+      },
+
+      show(downloadId) {
+        return DownloadMap.lazyInit().then(() => {
+          let download = DownloadMap.fromId(downloadId);
+          return download.download.showContainingDirectory();
+        }).then(() => {
+          return true;
+        }).catch(error => {
+          return Promise.reject({message: error.message});
+        });
+      },
+
+      getFileIcon(downloadId, options) {
+        return DownloadMap.lazyInit().then(() => {
+          let size = options && options.size ? options.size : 32;
+          let download = DownloadMap.fromId(downloadId).download;
+          let pathPrefix = "";
+          let path;
+
+          if (download.succeeded) {
+            let file = FileUtils.File(download.target.path);
+            path = Services.io.newFileURI(file).spec;
+          } else {
+            path = OS.Path.basename(download.target.path);
+            pathPrefix = "//";
+          }
+
+          return new Promise((resolve, reject) => {
+            let chromeWebNav = Services.appShell.createWindowlessBrowser(true);
+            chromeWebNav
+              .QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIDocShell)
+              .createAboutBlankContentViewer(Services.scriptSecurityManager.getSystemPrincipal());
+
+            let img = chromeWebNav.document.createElement("img");
+            img.width = size;
+            img.height = size;
+
+            let handleLoad;
+            let handleError;
+            const cleanup = () => {
+              img.removeEventListener("load", handleLoad);
+              img.removeEventListener("error", handleError);
+              chromeWebNav.close();
+              chromeWebNav = null;
+            };
+
+            handleLoad = () => {
+              let canvas = chromeWebNav.document.createElement("canvas");
+              canvas.width = size;
+              canvas.height = size;
+              let context = canvas.getContext("2d");
+              context.drawImage(img, 0, 0, size, size);
+              let dataURL = canvas.toDataURL("image/png");
+              cleanup();
+              resolve(dataURL);
+            };
+
+            handleError = (error) => {
+              Cu.reportError(error);
+              cleanup();
+              reject(new Error("An unexpected error occurred"));
+            };
+
+            img.addEventListener("load", handleLoad);
+            img.addEventListener("error", handleError);
+            img.src = `moz-icon:${pathPrefix}${path}?size=${size}`;
+          });
+        }).catch((error) => {
+          return Promise.reject({message: error.message});
+        });
+      },
+
+      // When we do setShelfEnabled(), check for additional "downloads.shelf" permission.
+      // i.e.:
+      // setShelfEnabled(enabled) {
+      //   if (!extension.hasPermission("downloads.shelf")) {
+      //     throw new context.cloneScope.Error("Permission denied because 'downloads.shelf' permission is missing.");
+      //   }
+      //   ...
+      // }
+
+      onChanged: new SingletonEventManager(context, "downloads.onChanged", fire => {
+        const handler = (what, item) => {
+          let changes = {};
+          const noundef = val => (val === undefined) ? null : val;
+          DOWNLOAD_ITEM_CHANGE_FIELDS.forEach(fld => {
+            if (item[fld] != item.prechange[fld]) {
+              changes[fld] = {
+                previous: noundef(item.prechange[fld]),
+                current: noundef(item[fld]),
+              };
+            }
+          });
+          if (Object.keys(changes).length > 0) {
+            changes.id = item.id;
+            fire.async(changes);
+          }
+        };
+
+        let registerPromise = DownloadMap.getDownloadList().then(() => {
+          DownloadMap.on("change", handler);
+        });
+        return () => {
+          registerPromise.then(() => {
+            DownloadMap.off("change", handler);
+          });
+        };
+      }).api(),
+
+      onCreated: new SingletonEventManager(context, "downloads.onCreated", fire => {
+        const handler = (what, item) => {
+          fire.async(item.serialize());
+        };
+        let registerPromise = DownloadMap.getDownloadList().then(() => {
+          DownloadMap.on("create", handler);
+        });
+        return () => {
+          registerPromise.then(() => {
+            DownloadMap.off("create", handler);
+          });
+        };
+      }).api(),
+
+      onErased: new SingletonEventManager(context, "downloads.onErased", fire => {
+        const handler = (what, item) => {
+          fire.async(item.id);
+        };
+        let registerPromise = DownloadMap.getDownloadList().then(() => {
+          DownloadMap.on("erase", handler);
+        });
+        return () => {
+          registerPromise.then(() => {
+            DownloadMap.off("erase", handler);
+          });
+        };
+      }).api(),
+
+      onDeterminingFilename: ignoreEvent(context, "downloads.onDeterminingFilename"),
+    },
+  };
+});
