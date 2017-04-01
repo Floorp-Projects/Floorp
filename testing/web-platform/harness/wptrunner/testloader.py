@@ -627,6 +627,7 @@ class PathGroupedSource(TestSource):
                     self.current_queue.put(item)
             except Empty:
                 return None
+
         return self.current_queue
 
     def requeue_test(self, test):
