@@ -142,7 +142,7 @@ class ParseContext : public Nestable<ParseContext>
 
         MOZ_MUST_USE bool init(ParseContext* pc) {
             if (id_ == UINT32_MAX) {
-                pc->tokenStream_.reportError(JSMSG_NEED_DIET, js_script_str);
+                pc->tokenStream_.reportErrorNoOffset(JSMSG_NEED_DIET, js_script_str);
                 return false;
             }
 
@@ -274,7 +274,7 @@ class ParseContext : public Nestable<ParseContext>
     SharedContext* sc_;
 
     // TokenStream used for error reporting.
-    TokenStream& tokenStream_;
+    TokenStreamBase& tokenStream_;
 
     // The innermost statement, i.e., top of the statement stack.
     Statement* innermostStatement_;
