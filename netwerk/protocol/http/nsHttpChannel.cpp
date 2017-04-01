@@ -2387,7 +2387,7 @@ nsHttpChannel::ContinueProcessResponse3(nsresult rv)
 
     LOG(("ContinueProcessResponse3 got failure result [rv=%" PRIx32 "]\n",
          static_cast<uint32_t>(rv)));
-    if (mTransaction->ProxyConnectFailed()) {
+    if (mTransaction && mTransaction->ProxyConnectFailed()) {
         return ProcessFailedProxyConnect(mRedirectType);
     }
     return ProcessNormal();
