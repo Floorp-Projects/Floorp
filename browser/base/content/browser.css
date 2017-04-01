@@ -9,6 +9,9 @@
 :root {
   --identity-popup-expander-width: 38px;
   --panelui-subview-transition-duration: 150ms;
+  --lwt-additional-images: none;
+  --lwt-background-alignment: right top;
+  --lwt-background-tiling: no-repeat;
 }
 
 :root:-moz-lwtheme {
@@ -17,7 +20,9 @@
 
 :root:-moz-lwtheme:not([customization-lwtheme]) {
   background-color: var(--lwt-accent-color) !important;
-  background-image: var(--lwt-header-image) !important;
+  background-image: var(--lwt-header-image), var(--lwt-additional-images) !important;
+  background-position: var(--lwt-background-alignment) !important;
+  background-repeat: var(--lwt-background-tiling) !important;
 }
 
 #main-window:not([chromehidden~="toolbar"]) {

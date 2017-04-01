@@ -494,24 +494,6 @@ RestyleManager::ChangeHintToString(nsChangeHint aHint)
 }
 #endif
 
-void
-RestyleManager::PostRestyleEventInternal(bool aForLazyConstruction)
-{
-  // Make sure we're not in a style refresh; if we are, we still have
-  // a call to ProcessPendingRestyles coming and there's no need to
-  // add ourselves as a refresh observer until then.
-  bool inRefresh = !aForLazyConstruction && mInStyleRefresh;
-  nsIPresShell* presShell = PresContext()->PresShell();
-  if (!inRefresh) {
-    presShell->ObserveStyleFlushes();
-  }
-
-  // Unconditionally flag our document as needing a flush.  The other
-  // option here would be a dedicated boolean to track whether we need
-  // to do so (set here and unset in ProcessPendingRestyles).
-  presShell->SetNeedStyleFlush();
-}
-
 /**
  * Frame construction helpers follow.
  */
