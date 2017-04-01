@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.Surface;
 
@@ -333,10 +334,25 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
     }
 
     @Override
+    public final void setRates(int newBitRate) {
+        if (android.os.Build.VERSION.SDK_INT >= 19) {
+            Bundle params = new Bundle();
+            params.putInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE, newBitRate * 1000);
+            mCodec.setParameters(params);
+        }
+    }
+
+    @Override
     public final void queueInputBuffer(int index, int offset, int size, long presentationTimeUs, int flags) {
         assertCallbacks();
 
         mInputEnded = (flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
+
+        if ((android.os.Build.VERSION.SDK_INT >= 19) && ((flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0)) {
+            Bundle params = new Bundle();
+            params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0);
+            mCodec.setParameters(params);
+        }
 
         try {
             mCodec.queueInputBuffer(index, offset, size, presentationTimeUs, flags);

@@ -55,7 +55,7 @@ public:
    * chosen, then RenderFrameParent will watch input events and use
    * them to asynchronously pan and zoom.
    */
-  RenderFrameParent(nsFrameLoader* aFrameLoader, bool* aSuccess);
+  explicit RenderFrameParent(nsFrameLoader* aFrameLoader);
   virtual ~RenderFrameParent();
 
   bool Init(nsFrameLoader* aFrameLoader);
@@ -80,7 +80,8 @@ public:
 
   void GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier);
 
-  inline uint64_t GetLayersId() { return mLayersId; }
+  inline uint64_t GetLayersId() const { return mLayersId; }
+  inline bool IsLayersConnected() const { return mLayersConnected; }
 
   void TakeFocusForClickFromTap();
 
@@ -95,12 +96,14 @@ private:
   void TriggerRepaint();
   void DispatchEventForPanZoomController(const InputEvent& aEvent);
 
-  uint64_t GetLayerTreeId() const;
-
   // When our child frame is pushing transactions directly to the
   // compositor, this is the ID of its layer tree in the compositor's
   // context.
   uint64_t mLayersId;
+  // A flag that indicates whether or not the compositor knows about the
+  // layers id. In some cases this RenderFrameParent is not connected to the
+  // compositor and so this flag is false.
+  bool mLayersConnected;
 
   RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<ContainerLayer> mContainer;

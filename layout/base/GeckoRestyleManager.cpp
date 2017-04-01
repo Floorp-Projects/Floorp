@@ -605,6 +605,24 @@ GeckoRestyleManager::UpdateOnlyAnimationStyles()
 }
 
 void
+GeckoRestyleManager::PostRestyleEventInternal()
+{
+  // Make sure we're not in a style refresh; if we are, we still have
+  // a call to ProcessPendingRestyles coming and there's no need to
+  // add ourselves as a refresh observer until then.
+  nsIPresShell* presShell = PresContext()->PresShell();
+  if (!mInStyleRefresh) {
+    presShell->ObserveStyleFlushes();
+  }
+
+  // Unconditionally flag our document as needing a flush.  The other
+  // option here would be a dedicated boolean to track whether we need
+  // to do so (set here and unset in ProcessPendingRestyles).
+  presShell->SetNeedStyleFlush();
+}
+
+
+void
 GeckoRestyleManager::PostRestyleEvent(Element* aElement,
                                       nsRestyleHint aRestyleHint,
                                       nsChangeHint aMinChangeHint,
@@ -631,7 +649,7 @@ GeckoRestyleManager::PostRestyleEvent(Element* aElement,
     mHavePendingNonAnimationRestyles = true;
   }
 
-  PostRestyleEventInternal(false);
+  PostRestyleEventInternal();
 }
 
 void
@@ -650,7 +668,7 @@ GeckoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
   mRebuildAllRestyleHint |= aRestyleHint;
 
   // Get a restyle event posted if necessary
-  PostRestyleEventInternal(false);
+  PostRestyleEventInternal();
 }
 
 // aContent must be the content for the frame in question, which may be

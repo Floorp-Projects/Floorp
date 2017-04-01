@@ -85,15 +85,15 @@ GetFrom(nsFrameLoader* aFrameLoader)
   return nsContentUtils::LayerManagerForDocument(doc);
 }
 
-RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader, bool* aSuccess)
+RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader)
   : mLayersId(0)
+  , mLayersConnected(false)
   , mFrameLoader(aFrameLoader)
   , mFrameLoaderDestroyed(false)
   , mAsyncPanZoomEnabled(false)
   , mInitted(false)
 {
   mInitted = Init(aFrameLoader);
-  *aSuccess = mInitted;
 }
 
 RenderFrameParent::~RenderFrameParent()
@@ -118,11 +118,11 @@ RenderFrameParent::Init(nsFrameLoader* aFrameLoader)
     // and we'll keep an indirect reference to that tree.
     browser->Manager()->AsContentParent()->AllocateLayerTreeId(browser, &mLayersId);
     if (lm && lm->GetCompositorBridgeChild()) {
-      lm->GetCompositorBridgeChild()->SendNotifyChildCreated(mLayersId);
+      mLayersConnected = lm->GetCompositorBridgeChild()->SendNotifyChildCreated(mLayersId);
     }
   } else if (XRE_IsContentProcess()) {
     ContentChild::GetSingleton()->SendAllocateLayerTreeId(browser->Manager()->ChildID(), browser->GetTabId(), &mLayersId);
-    CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId);
+    mLayersConnected = CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId);
   }
 
   mInitted = true;
@@ -170,8 +170,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
-  uint64_t id = GetLayerTreeId();
-  if (!id) {
+  if (!mLayersId) {
     return nullptr;
   }
 
@@ -185,7 +184,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     // use ref layers.
     return nullptr;
   }
-  static_cast<RefLayer*>(layer.get())->SetReferentId(id);
+  static_cast<RefLayer*>(layer.get())->SetReferentId(mLayersId);
   nsIntPoint offset = GetContentRectLayerOffset(aFrame, aBuilder);
   // We can only have an offset if we're a child of an inactive
   // container, but our display item is LAYER_ACTIVE_FORCE which
@@ -209,7 +208,7 @@ RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
   RefPtr<LayerManager> lm = mFrameLoader ? GetFrom(mFrameLoader) : nullptr;
   // Perhaps the document containing this frame currently has no presentation?
   if (lm && lm->GetCompositorBridgeChild()) {
-    lm->GetCompositorBridgeChild()->SendAdoptChild(mLayersId);
+    mLayersConnected = lm->GetCompositorBridgeChild()->SendAdoptChild(mLayersId);
     FrameLayerBuilder::InvalidateAllLayers(lm);
   }
 }
@@ -249,12 +248,6 @@ RenderFrameParent::TriggerRepaint()
   }
 
   docFrame->InvalidateLayer(nsDisplayItem::TYPE_REMOTE);
-}
-
-uint64_t
-RenderFrameParent::GetLayerTreeId() const
-{
-  return mLayersId;
 }
 
 void
@@ -319,7 +312,7 @@ RenderFrameParent::EnsureLayersConnected()
     return;
   }
 
-  lm->GetCompositorBridgeChild()->SendNotifyChildRecreated(mLayersId);
+  mLayersConnected = lm->GetCompositorBridgeChild()->SendNotifyChildRecreated(mLayersId);
 }
 
 } // namespace layout

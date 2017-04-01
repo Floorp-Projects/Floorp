@@ -113,7 +113,11 @@ public:
     mPendingRestyles.ClearSelectors();
   }
 
+  void PostRestyleEventForLazyConstruction() { PostRestyleEventInternal(); }
+
 private:
+  void PostRestyleEventInternal();
+
   // Used when restyling an element with a frame.
   void ComputeAndProcessStyleChange(nsIFrame*              aFrame,
                                     nsChangeHint           aMinChange,

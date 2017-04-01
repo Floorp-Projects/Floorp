@@ -109,7 +109,8 @@ public final class RemoteManager implements IBinder.DeathRecipient {
         return mConnection.connect();
     }
 
-    public synchronized CodecProxy createCodec(MediaFormat format,
+    public synchronized CodecProxy createCodec(boolean isEncoder,
+                                               MediaFormat format,
                                                Surface surface,
                                                CodecProxy.Callbacks callbacks,
                                                String drmStubId) {
@@ -119,7 +120,7 @@ public final class RemoteManager implements IBinder.DeathRecipient {
         }
         try {
             ICodec remote = mRemote.createCodec();
-            CodecProxy proxy = CodecProxy.createCodecProxy(format, surface, callbacks, drmStubId);
+            CodecProxy proxy = CodecProxy.createCodecProxy(isEncoder, format, surface, callbacks, drmStubId);
             if (proxy.init(remote)) {
                 mProxies.add(proxy);
                 return proxy;
