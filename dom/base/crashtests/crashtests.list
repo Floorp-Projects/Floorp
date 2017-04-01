@@ -56,7 +56,7 @@ load 395469-2.xhtml
 load 398088-1.xul
 skip load 399712-1.html # sporadically times out (bug 473680)
 load 400763-1.html
-skip-if(stylo) load 401993-1.html # bug 1323648
+load 401993-1.html
 load 404869-1.xul
 load 407818.html
 load 410860-1.xml
@@ -193,7 +193,7 @@ load 930250.html
 load 942979.html
 load 973401.html
 load 978646.html
-skip-if(stylo) pref(dom.webcomponents.enabled,true) load 1024428-1.html # bug 1340009
+pref(dom.webcomponents.enabled,true) load 1024428-1.html
 load 1026714.html
 pref(dom.webcomponents.enabled,true) load 1027461-1.html
 pref(dom.webcomponents.enabled,true) load 1029710.html
