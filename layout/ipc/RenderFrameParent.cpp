@@ -114,17 +114,12 @@ RenderFrameParent::Init(nsFrameLoader* aFrameLoader)
 
   TabParent* browser = TabParent::GetFrom(mFrameLoader);
   if (XRE_IsParentProcess()) {
-    PCompositorBridgeChild* compositor = nullptr;
-    if (lm) {
-      compositor = lm->GetCompositorBridgeChild();
-    }
-
     // Our remote frame will push layers updates to the compositor,
     // and we'll keep an indirect reference to that tree.
-    GPUProcessManager* gpm = GPUProcessManager::Get();
-    mLayersId = gpm->AllocateAndConnectLayerTreeId(
-      compositor,
-      browser->Manager()->AsContentParent()->OtherPid());
+    browser->Manager()->AsContentParent()->AllocateLayerTreeId(browser, &mLayersId);
+    if (lm && lm->GetCompositorBridgeChild()) {
+      lm->GetCompositorBridgeChild()->SendNotifyChildCreated(mLayersId);
+    }
   } else if (XRE_IsContentProcess()) {
     ContentChild::GetSingleton()->SendAllocateLayerTreeId(browser->Manager()->ChildID(), browser->GetTabId(), &mLayersId);
     CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId);
