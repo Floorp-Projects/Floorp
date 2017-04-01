@@ -202,10 +202,7 @@
               label="&separateProfileMode.label;"/>
     <hbox align="center" class="indent">
       <label id="useFirefoxSync">&useFirefoxSync.label;</label>
-      <deck id="getStarted">
-        <label class="text-link">&getStarted.notlogged.label;</label>
-        <label class="text-link">&getStarted.configured.label;</label>
-      </deck>
+      <label id="getStarted" class="text-link">&getStarted.label;</label>
     </hbox>
   </vbox>
 #endif

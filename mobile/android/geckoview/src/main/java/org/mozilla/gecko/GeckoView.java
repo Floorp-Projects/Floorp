@@ -47,10 +47,10 @@ public class GeckoView extends LayerView
         @WrapForJNI INITIAL(0),
         @WrapForJNI READY(1);
 
-        private int rank;
+        private int mRank;
 
         private State(int rank) {
-            this.rank = rank;
+            mRank = rank;
         }
 
         @Override
@@ -61,22 +61,17 @@ public class GeckoView extends LayerView
         @Override
         public boolean isAtLeast(final NativeQueue.State other) {
             if (other instanceof State) {
-                return this.rank >= ((State) other).rank;
+                return mRank >= ((State) other).mRank;
             }
             return false;
         }
     }
 
-    private final StateHolder mStateHolder =
+    private static final StateHolder sDummyStateHolder =
         new StateHolder(State.INITIAL, State.READY);
 
-    @WrapForJNI(calledFrom = "gecko")
-    private void setState(final State newState) {
-        mStateHolder.setState(newState);
-    }
-
     private final EventDispatcher mEventDispatcher =
-        new EventDispatcher(mStateHolder);
+        new EventDispatcher(sDummyStateHolder);
 
     private ChromeDelegate mChromeDelegate;
     /* package */ ContentListener mContentListener;
@@ -93,6 +88,10 @@ public class GeckoView extends LayerView
     @WrapForJNI(dispatchTo = "proxy")
     protected static final class Window extends JNIObject {
         @WrapForJNI(skip = true)
+        /* package */ final StateHolder mStateHolder =
+            new StateHolder(State.INITIAL, State.READY);
+
+        @WrapForJNI(skip = true)
         /* package */ Window() {}
 
         static native void open(Window instance, GeckoView view,
@@ -101,9 +100,18 @@ public class GeckoView extends LayerView
                                 int screenId);
 
         @Override protected native void disposeNative();
+
         native void close();
-        native void reattach(GeckoView view, Object compositor, EventDispatcher dispatcher);
+
+        native void reattach(GeckoView view, Object compositor,
+                             EventDispatcher dispatcher);
+
         native void loadUri(String uri, int flags);
+
+        @WrapForJNI(calledFrom = "gecko")
+        private void setState(final State newState) {
+            mStateHolder.setState(newState);
+        }
     }
 
     // Object to hold onto our nsWindow connection when GeckoView gets destroyed.
@@ -197,9 +205,9 @@ public class GeckoView extends LayerView
         }
     }
 
-    protected Window window;
-    private boolean stateSaved;
-    private final Listener listener = new Listener();
+    protected Window mWindow;
+    private boolean mStateSaved;
+    private final Listener mListener = new Listener();
 
     public GeckoView(Context context) {
         super(context);
@@ -227,7 +235,7 @@ public class GeckoView extends LayerView
         GeckoAppShell.setLayerView(this);
 
         initializeView();
-        listener.registerListeners();
+        mListener.registerListeners();
 
         mSettings = new GeckoViewSettings(getEventDispatcher());
     }
@@ -235,8 +243,8 @@ public class GeckoView extends LayerView
     @Override
     protected Parcelable onSaveInstanceState() {
         final Parcelable superState = super.onSaveInstanceState();
-        stateSaved = true;
-        return new StateBinder(superState, this.window);
+        mStateSaved = true;
+        return new StateBinder(superState, mWindow);
     }
 
     @Override
@@ -244,9 +252,9 @@ public class GeckoView extends LayerView
         final StateBinder stateBinder = (StateBinder) state;
 
         if (stateBinder.window != null) {
-            this.window = stateBinder.window;
+            mWindow = stateBinder.window;
         }
-        stateSaved = false;
+        mStateSaved = false;
 
         if (mOnAttachedToWindowCalled) {
             reattachWindow();
@@ -263,12 +271,12 @@ public class GeckoView extends LayerView
         }
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            Window.open(window, this, getCompositor(), mEventDispatcher,
+            Window.open(mWindow, this, getCompositor(), mEventDispatcher,
                         mChromeUri, mSettings.asBundle(), mScreenId);
         } else {
             GeckoThread.queueNativeCallUntil(
                 GeckoThread.State.PROFILE_READY,
-                Window.class, "open", window,
+                Window.class, "open", mWindow,
                 GeckoView.class, this,
                 Object.class, getCompositor(),
                 EventDispatcher.class, mEventDispatcher,
@@ -279,11 +287,13 @@ public class GeckoView extends LayerView
     }
 
     protected void reattachWindow() {
+        mEventDispatcher.setStateHolder(mWindow.mStateHolder);
+
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            window.reattach(this, getCompositor(), mEventDispatcher);
+            mWindow.reattach(this, getCompositor(), mEventDispatcher);
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                    window, "reattach", GeckoView.class, this,
+                    mWindow, "reattach", GeckoView.class, this,
                     Object.class, getCompositor(), EventDispatcher.class, mEventDispatcher);
         }
     }
@@ -292,9 +302,10 @@ public class GeckoView extends LayerView
     public void onAttachedToWindow() {
         final DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
 
-        if (window == null) {
+        if (mWindow == null) {
             // Open a new nsWindow if we didn't have one from before.
-            window = new Window();
+            mWindow = new Window();
+            mEventDispatcher.setStateHolder(mWindow.mStateHolder);
             openWindow();
         } else {
             reattachWindow();
@@ -310,21 +321,22 @@ public class GeckoView extends LayerView
         super.onDetachedFromWindow();
         super.destroy();
 
-        if (stateSaved) {
+        if (mStateSaved) {
             // If we saved state earlier, we don't want to close the nsWindow.
             return;
         }
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            window.close();
-            window.disposeNative();
+            mWindow.close();
+            mWindow.disposeNative();
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                    window, "close");
+                    mWindow, "close");
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                    window, "disposeNative");
+                    mWindow, "disposeNative");
         }
 
+        mEventDispatcher.setStateHolder(sDummyStateHolder);
         mOnAttachedToWindowCalled = false;
     }
 
@@ -339,14 +351,14 @@ public class GeckoView extends LayerView
     * @param flags The load flags (TODO).
     */
     public void loadUri(String uri, int flags) {
-        if (window == null) {
+        if (mWindow == null) {
             throw new IllegalStateException("Not attached to window");
         }
 
         if (GeckoThread.isRunning()) {
-            window.loadUri(uri, flags);
+            mWindow.loadUri(uri, flags);
         }  else {
-            GeckoThread.queueNativeCall(window, "loadUri", String.class, uri, flags);
+            GeckoThread.queueNativeCall(mWindow, "loadUri", String.class, uri, flags);
         }
     }
 
