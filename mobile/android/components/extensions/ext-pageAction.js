@@ -112,65 +112,60 @@ PageAction.prototype = {
   },
 };
 
-this.pageAction = class extends ExtensionAPI {
-  onManifestEntry(entryName) {
-    let {extension} = this;
-    let {manifest} = extension;
+/* eslint-disable mozilla/balanced-listeners */
+extensions.on("manifest_page_action", (type, directive, extension, manifest) => {
+  let pageAction = new PageAction(manifest.page_action, extension);
+  pageActionMap.set(extension, pageAction);
+});
 
-    let pageAction = new PageAction(manifest.page_action, extension);
-    pageActionMap.set(extension, pageAction);
+extensions.on("shutdown", (type, extension) => {
+  if (pageActionMap.has(extension)) {
+    pageActionMap.get(extension).shutdown();
+    pageActionMap.delete(extension);
   }
+});
+/* eslint-enable mozilla/balanced-listeners */
 
-  onShutdown(reason) {
-    let {extension} = this;
+extensions.registerSchemaAPI("pageAction", "addon_parent", context => {
+  const {extension} = context;
+  const {tabManager} = extension;
 
-    if (pageActionMap.has(extension)) {
-      pageActionMap.get(extension).shutdown();
-      pageActionMap.delete(extension);
-    }
-  }
+  return {
+    pageAction: {
+      onClicked: new SingletonEventManager(context, "pageAction.onClicked", fire => {
+        let listener = (event, tab) => {
+          fire.async(tabManager.convert(tab));
+        };
+        pageActionMap.get(extension).on("click", listener);
+        return () => {
+          pageActionMap.get(extension).off("click", listener);
+        };
+      }).api(),
 
-  getAPI(context) {
-    const {extension} = context;
-    const {tabManager} = extension;
-
-    return {
-      pageAction: {
-        onClicked: new SingletonEventManager(context, "pageAction.onClicked", fire => {
-          let listener = (event, tab) => {
-            fire.async(tabManager.convert(tab));
-          };
-          pageActionMap.get(extension).on("click", listener);
-          return () => {
-            pageActionMap.get(extension).off("click", listener);
-          };
-        }).api(),
-
-        show(tabId) {
-          return pageActionMap.get(extension)
-                              .show(tabId, context)
-                              .then(() => {});
-        },
-
-        hide(tabId) {
-          pageActionMap.get(extension).hide(tabId);
-          return Promise.resolve();
-        },
-
-        setPopup(details) {
-          // TODO: Use the Tabs API to get the tab from details.tabId.
-          let tab = null;
-          let url = details.popup && context.uri.resolve(details.popup);
-          pageActionMap.get(extension).setPopup(tab, url);
-        },
-
-        getPopup(details) {
-          // TODO: Use the Tabs API to get the tab from details.tabId.
-          let tab = null;
-          let popup = pageActionMap.get(extension).getPopup(tab);
-          return Promise.resolve(popup);
-        },
+      show(tabId) {
+        return pageActionMap.get(extension)
+                            .show(tabId, context)
+                            .then(() => {});
       },
-    };
-  }
-};
+
+      hide(tabId) {
+        pageActionMap.get(extension).hide(tabId);
+        return Promise.resolve();
+      },
+
+      setPopup(details) {
+        // TODO: Use the Tabs API to get the tab from details.tabId.
+        let tab = null;
+        let url = details.popup && context.uri.resolve(details.popup);
+        pageActionMap.get(extension).setPopup(tab, url);
+      },
+
+      getPopup(details) {
+        // TODO: Use the Tabs API to get the tab from details.tabId.
+        let tab = null;
+        let popup = pageActionMap.get(extension).getPopup(tab);
+        return Promise.resolve(popup);
+      },
+    },
+  };
+});

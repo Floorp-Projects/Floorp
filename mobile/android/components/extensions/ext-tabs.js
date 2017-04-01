@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
 var {
   SingletonEventManager,
 } = ExtensionUtils;
@@ -126,311 +128,309 @@ let tabListener = {
   },
 };
 
-this.tabs = class extends ExtensionAPI {
-  getAPI(context) {
-    let {extension} = context;
+extensions.registerSchemaAPI("tabs", "addon_parent", context => {
+  let {extension} = context;
 
-    let {tabManager} = extension;
+  let {tabManager} = extension;
 
-    function getTabOrActive(tabId) {
-      if (tabId !== null) {
-        return tabTracker.getTab(tabId);
-      }
-      return tabTracker.activeTab;
+  function getTabOrActive(tabId) {
+    if (tabId !== null) {
+      return tabTracker.getTab(tabId);
     }
-
-    async function promiseTabWhenReady(tabId) {
-      let tab;
-      if (tabId !== null) {
-        tab = tabManager.get(tabId);
-      } else {
-        tab = tabManager.getWrapper(tabTracker.activeTab);
-      }
-
-      await tabListener.awaitTabReady(tab.nativeTab);
-
-      return tab;
-    }
-
-    let self = {
-      tabs: {
-        onActivated: new GlobalEventManager(context, "tabs.onActivated", "Tab:Selected", (fire, data) => {
-          let tab = tabManager.get(data.id);
-
-          fire.async({tabId: tab.id, windowId: tab.windowId});
-        }).api(),
-
-        onCreated: new SingletonEventManager(context, "tabs.onCreated", fire => {
-          let listener = (eventName, event) => {
-            fire.async(tabManager.convert(event.nativeTab));
-          };
-
-          tabTracker.on("tab-created", listener);
-          return () => {
-            tabTracker.off("tab-created", listener);
-          };
-        }).api(),
-
-        /**
-         * Since multiple tabs currently can't be highlighted, onHighlighted
-         * essentially acts an alias for self.tabs.onActivated but returns
-         * the tabId in an array to match the API.
-         * @see  https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/Tabs/onHighlighted
-        */
-        onHighlighted: new GlobalEventManager(context, "tabs.onHighlighted", "Tab:Selected", (fire, data) => {
-          let tab = tabManager.get(data.id);
-
-          fire.async({tabIds: [tab.id], windowId: tab.windowId});
-        }).api(),
-
-        onAttached: new SingletonEventManager(context, "tabs.onAttached", fire => {
-          return () => {};
-        }).api(),
-
-        onDetached: new SingletonEventManager(context, "tabs.onDetached", fire => {
-          return () => {};
-        }).api(),
-
-        onRemoved: new SingletonEventManager(context, "tabs.onRemoved", fire => {
-          let listener = (eventName, event) => {
-            fire.async(event.tabId, {windowId: event.windowId, isWindowClosing: event.isWindowClosing});
-          };
-
-          tabTracker.on("tab-removed", listener);
-          return () => {
-            tabTracker.off("tab-removed", listener);
-          };
-        }).api(),
-
-        onReplaced: new SingletonEventManager(context, "tabs.onReplaced", fire => {
-          return () => {};
-        }).api(),
-
-        onMoved: new SingletonEventManager(context, "tabs.onMoved", fire => {
-          return () => {};
-        }).api(),
-
-        onUpdated: new SingletonEventManager(context, "tabs.onUpdated", fire => {
-          const restricted = ["url", "favIconUrl", "title"];
-
-          function sanitize(extension, changeInfo) {
-            let result = {};
-            let nonempty = false;
-            for (let prop in changeInfo) {
-              if (extension.hasPermission("tabs") || !restricted.includes(prop)) {
-                nonempty = true;
-                result[prop] = changeInfo[prop];
-              }
-            }
-            return [nonempty, result];
-          }
-
-          let fireForTab = (tab, changed) => {
-            let [needed, changeInfo] = sanitize(extension, changed);
-            if (needed) {
-              fire.async(tab.id, changeInfo, tab.convert());
-            }
-          };
-
-          let listener = event => {
-            let needed = [];
-            let nativeTab;
-            switch (event.type) {
-              case "DOMTitleChanged": {
-                let {BrowserApp} = getBrowserWindow(event.target.ownerGlobal);
-
-                nativeTab = BrowserApp.getTabForWindow(event.target.ownerGlobal);
-                needed.push("title");
-                break;
-              }
-
-              case "DOMAudioPlaybackStarted":
-              case "DOMAudioPlaybackStopped": {
-                let {BrowserApp} = event.target.ownerGlobal;
-                nativeTab = BrowserApp.getTabForBrowser(event.originalTarget);
-                needed.push("audible");
-                break;
-              }
-            }
-
-            if (!nativeTab) {
-              return;
-            }
-
-            let tab = tabManager.getWrapper(nativeTab);
-            let changeInfo = {};
-            for (let prop of needed) {
-              changeInfo[prop] = tab[prop];
-            }
-
-            fireForTab(tab, changeInfo);
-          };
-
-          let statusListener = ({browser, status, url}) => {
-            let {BrowserApp} = browser.ownerGlobal;
-            let nativeTab = BrowserApp.getTabForBrowser(browser);
-            if (nativeTab) {
-              let changed = {status};
-              if (url) {
-                changed.url = url;
-              }
-
-              fireForTab(tabManager.wrapTab(nativeTab), changed);
-            }
-          };
-
-          windowTracker.addListener("status", statusListener);
-          windowTracker.addListener("DOMTitleChanged", listener);
-          return () => {
-            windowTracker.removeListener("status", statusListener);
-            windowTracker.removeListener("DOMTitleChanged", listener);
-          };
-        }).api(),
-
-        async create(createProperties) {
-          let window = createProperties.windowId !== null ?
-            windowTracker.getWindow(createProperties.windowId, context) :
-            windowTracker.topWindow;
-
-          let {BrowserApp} = window;
-          let url;
-
-          if (createProperties.url !== null) {
-            url = context.uri.resolve(createProperties.url);
-
-            if (!context.checkLoadURL(url, {dontReportErrors: true})) {
-              return Promise.reject({message: `Illegal URL: ${url}`});
-            }
-          }
-
-          let options = {};
-
-          let active = true;
-          if (createProperties.active !== null) {
-            active = createProperties.active;
-          }
-          options.selected = active;
-
-          if (createProperties.index !== null) {
-            options.tabIndex = createProperties.index;
-          }
-
-          // Make sure things like about:blank and data: URIs never inherit,
-          // and instead always get a NullPrincipal.
-          options.disallowInheritPrincipal = true;
-
-          tabListener.initTabReady();
-          let nativeTab = BrowserApp.addTab(url, options);
-
-          if (createProperties.url) {
-            tabListener.initializingTabs.add(nativeTab);
-          }
-
-          return tabManager.convert(nativeTab);
-        },
-
-        async remove(tabs) {
-          if (!Array.isArray(tabs)) {
-            tabs = [tabs];
-          }
-
-          for (let tabId of tabs) {
-            let nativeTab = tabTracker.getTab(tabId);
-            nativeTab.browser.ownerGlobal.BrowserApp.closeTab(nativeTab);
-          }
-        },
-
-        async update(tabId, updateProperties) {
-          let nativeTab = getTabOrActive(tabId);
-
-          let {BrowserApp} = nativeTab.browser.ownerGlobal;
-
-          if (updateProperties.url !== null) {
-            let url = context.uri.resolve(updateProperties.url);
-
-            if (!context.checkLoadURL(url, {dontReportErrors: true})) {
-              return Promise.reject({message: `Illegal URL: ${url}`});
-            }
-
-            nativeTab.browser.loadURI(url);
-          }
-
-          if (updateProperties.active !== null) {
-            if (updateProperties.active) {
-              BrowserApp.selectTab(nativeTab);
-            } else {
-              // Not sure what to do here? Which tab should we select?
-            }
-          }
-          // FIXME: highlighted/selected, muted, pinned, openerTabId
-
-          return tabManager.convert(nativeTab);
-        },
-
-        async reload(tabId, reloadProperties) {
-          let nativeTab = getTabOrActive(tabId);
-
-          let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-          if (reloadProperties && reloadProperties.bypassCache) {
-            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
-          }
-          nativeTab.browser.reloadWithFlags(flags);
-        },
-
-        async get(tabId) {
-          return tabManager.get(tabId).convert();
-        },
-
-        async getCurrent() {
-          if (context.tabId) {
-            return tabManager.get(context.tabId).convert();
-          }
-        },
-
-        async query(queryInfo) {
-          if (queryInfo.url !== null) {
-            if (!extension.hasPermission("tabs")) {
-              return Promise.reject({message: 'The "tabs" permission is required to use the query API with the "url" parameter'});
-            }
-
-            queryInfo = Object.assign({}, queryInfo);
-            queryInfo.url = new MatchPattern(queryInfo.url);
-          }
-
-          return Array.from(tabManager.query(queryInfo, context),
-                            tab => tab.convert());
-        },
-
-        async captureVisibleTab(windowId, options) {
-          let window = windowId == null ?
-            windowTracker.topWindow :
-            windowTracker.getWindow(windowId, context);
-
-          let tab = tabManager.wrapTab(window.BrowserApp.selectedTab);
-          await tabListener.awaitTabReady(tab.nativeTab);
-
-          return tab.capture(context, options);
-        },
-
-        async executeScript(tabId, details) {
-          let tab = await promiseTabWhenReady(tabId);
-
-          return tab.executeScript(context, details);
-        },
-
-        async insertCSS(tabId, details) {
-          let tab = await promiseTabWhenReady(tabId);
-
-          return tab.insertCSS(context, details);
-        },
-
-        async removeCSS(tabId, details) {
-          let tab = await promiseTabWhenReady(tabId);
-
-          return tab.removeCSS(context, details);
-        },
-      },
-    };
-    return self;
+    return tabTracker.activeTab;
   }
-};
+
+  async function promiseTabWhenReady(tabId) {
+    let tab;
+    if (tabId !== null) {
+      tab = tabManager.get(tabId);
+    } else {
+      tab = tabManager.getWrapper(tabTracker.activeTab);
+    }
+
+    await tabListener.awaitTabReady(tab.nativeTab);
+
+    return tab;
+  }
+
+  let self = {
+    tabs: {
+      onActivated: new GlobalEventManager(context, "tabs.onActivated", "Tab:Selected", (fire, data) => {
+        let tab = tabManager.get(data.id);
+
+        fire.async({tabId: tab.id, windowId: tab.windowId});
+      }).api(),
+
+      onCreated: new SingletonEventManager(context, "tabs.onCreated", fire => {
+        let listener = (eventName, event) => {
+          fire.async(tabManager.convert(event.nativeTab));
+        };
+
+        tabTracker.on("tab-created", listener);
+        return () => {
+          tabTracker.off("tab-created", listener);
+        };
+      }).api(),
+
+      /**
+       * Since multiple tabs currently can't be highlighted, onHighlighted
+       * essentially acts an alias for self.tabs.onActivated but returns
+       * the tabId in an array to match the API.
+       * @see  https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/Tabs/onHighlighted
+      */
+      onHighlighted: new GlobalEventManager(context, "tabs.onHighlighted", "Tab:Selected", (fire, data) => {
+        let tab = tabManager.get(data.id);
+
+        fire.async({tabIds: [tab.id], windowId: tab.windowId});
+      }).api(),
+
+      onAttached: new SingletonEventManager(context, "tabs.onAttached", fire => {
+        return () => {};
+      }).api(),
+
+      onDetached: new SingletonEventManager(context, "tabs.onDetached", fire => {
+        return () => {};
+      }).api(),
+
+      onRemoved: new SingletonEventManager(context, "tabs.onRemoved", fire => {
+        let listener = (eventName, event) => {
+          fire.async(event.tabId, {windowId: event.windowId, isWindowClosing: event.isWindowClosing});
+        };
+
+        tabTracker.on("tab-removed", listener);
+        return () => {
+          tabTracker.off("tab-removed", listener);
+        };
+      }).api(),
+
+      onReplaced: new SingletonEventManager(context, "tabs.onReplaced", fire => {
+        return () => {};
+      }).api(),
+
+      onMoved: new SingletonEventManager(context, "tabs.onMoved", fire => {
+        return () => {};
+      }).api(),
+
+      onUpdated: new SingletonEventManager(context, "tabs.onUpdated", fire => {
+        const restricted = ["url", "favIconUrl", "title"];
+
+        function sanitize(extension, changeInfo) {
+          let result = {};
+          let nonempty = false;
+          for (let prop in changeInfo) {
+            if (extension.hasPermission("tabs") || !restricted.includes(prop)) {
+              nonempty = true;
+              result[prop] = changeInfo[prop];
+            }
+          }
+          return [nonempty, result];
+        }
+
+        let fireForTab = (tab, changed) => {
+          let [needed, changeInfo] = sanitize(extension, changed);
+          if (needed) {
+            fire.async(tab.id, changeInfo, tab.convert());
+          }
+        };
+
+        let listener = event => {
+          let needed = [];
+          let nativeTab;
+          switch (event.type) {
+            case "DOMTitleChanged": {
+              let {BrowserApp} = getBrowserWindow(event.target.ownerGlobal);
+
+              nativeTab = BrowserApp.getTabForWindow(event.target.ownerGlobal);
+              needed.push("title");
+              break;
+            }
+
+            case "DOMAudioPlaybackStarted":
+            case "DOMAudioPlaybackStopped": {
+              let {BrowserApp} = event.target.ownerGlobal;
+              nativeTab = BrowserApp.getTabForBrowser(event.originalTarget);
+              needed.push("audible");
+              break;
+            }
+          }
+
+          if (!nativeTab) {
+            return;
+          }
+
+          let tab = tabManager.getWrapper(nativeTab);
+          let changeInfo = {};
+          for (let prop of needed) {
+            changeInfo[prop] = tab[prop];
+          }
+
+          fireForTab(tab, changeInfo);
+        };
+
+        let statusListener = ({browser, status, url}) => {
+          let {BrowserApp} = browser.ownerGlobal;
+          let nativeTab = BrowserApp.getTabForBrowser(browser);
+          if (nativeTab) {
+            let changed = {status};
+            if (url) {
+              changed.url = url;
+            }
+
+            fireForTab(tabManager.wrapTab(nativeTab), changed);
+          }
+        };
+
+        windowTracker.addListener("status", statusListener);
+        windowTracker.addListener("DOMTitleChanged", listener);
+        return () => {
+          windowTracker.removeListener("status", statusListener);
+          windowTracker.removeListener("DOMTitleChanged", listener);
+        };
+      }).api(),
+
+      async create(createProperties) {
+        let window = createProperties.windowId !== null ?
+          windowTracker.getWindow(createProperties.windowId, context) :
+          windowTracker.topWindow;
+
+        let {BrowserApp} = window;
+        let url;
+
+        if (createProperties.url !== null) {
+          url = context.uri.resolve(createProperties.url);
+
+          if (!context.checkLoadURL(url, {dontReportErrors: true})) {
+            return Promise.reject({message: `Illegal URL: ${url}`});
+          }
+        }
+
+        let options = {};
+
+        let active = true;
+        if (createProperties.active !== null) {
+          active = createProperties.active;
+        }
+        options.selected = active;
+
+        if (createProperties.index !== null) {
+          options.tabIndex = createProperties.index;
+        }
+
+        // Make sure things like about:blank and data: URIs never inherit,
+        // and instead always get a NullPrincipal.
+        options.disallowInheritPrincipal = true;
+
+        tabListener.initTabReady();
+        let nativeTab = BrowserApp.addTab(url, options);
+
+        if (createProperties.url) {
+          tabListener.initializingTabs.add(nativeTab);
+        }
+
+        return tabManager.convert(nativeTab);
+      },
+
+      async remove(tabs) {
+        if (!Array.isArray(tabs)) {
+          tabs = [tabs];
+        }
+
+        for (let tabId of tabs) {
+          let nativeTab = tabTracker.getTab(tabId);
+          nativeTab.browser.ownerGlobal.BrowserApp.closeTab(nativeTab);
+        }
+      },
+
+      async update(tabId, updateProperties) {
+        let nativeTab = getTabOrActive(tabId);
+
+        let {BrowserApp} = nativeTab.browser.ownerGlobal;
+
+        if (updateProperties.url !== null) {
+          let url = context.uri.resolve(updateProperties.url);
+
+          if (!context.checkLoadURL(url, {dontReportErrors: true})) {
+            return Promise.reject({message: `Illegal URL: ${url}`});
+          }
+
+          nativeTab.browser.loadURI(url);
+        }
+
+        if (updateProperties.active !== null) {
+          if (updateProperties.active) {
+            BrowserApp.selectTab(nativeTab);
+          } else {
+            // Not sure what to do here? Which tab should we select?
+          }
+        }
+        // FIXME: highlighted/selected, muted, pinned, openerTabId
+
+        return tabManager.convert(nativeTab);
+      },
+
+      async reload(tabId, reloadProperties) {
+        let nativeTab = getTabOrActive(tabId);
+
+        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+        if (reloadProperties && reloadProperties.bypassCache) {
+          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+        }
+        nativeTab.browser.reloadWithFlags(flags);
+      },
+
+      async get(tabId) {
+        return tabManager.get(tabId).convert();
+      },
+
+      async getCurrent() {
+        if (context.tabId) {
+          return tabManager.get(context.tabId).convert();
+        }
+      },
+
+      async query(queryInfo) {
+        if (queryInfo.url !== null) {
+          if (!extension.hasPermission("tabs")) {
+            return Promise.reject({message: 'The "tabs" permission is required to use the query API with the "url" parameter'});
+          }
+
+          queryInfo = Object.assign({}, queryInfo);
+          queryInfo.url = new MatchPattern(queryInfo.url);
+        }
+
+        return Array.from(tabManager.query(queryInfo, context),
+                          tab => tab.convert());
+      },
+
+      async captureVisibleTab(windowId, options) {
+        let window = windowId == null ?
+          windowTracker.topWindow :
+          windowTracker.getWindow(windowId, context);
+
+        let tab = tabManager.wrapTab(window.BrowserApp.selectedTab);
+        await tabListener.awaitTabReady(tab.nativeTab);
+
+        return tab.capture(context, options);
+      },
+
+      async executeScript(tabId, details) {
+        let tab = await promiseTabWhenReady(tabId);
+
+        return tab.executeScript(context, details);
+      },
+
+      async insertCSS(tabId, details) {
+        let tab = await promiseTabWhenReady(tabId);
+
+        return tab.insertCSS(context, details);
+      },
+
+      async removeCSS(tabId, details) {
+        let tab = await promiseTabWhenReady(tabId);
+
+        return tab.removeCSS(context, details);
+      },
+    },
+  };
+  return self;
+});
