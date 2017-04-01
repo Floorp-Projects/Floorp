@@ -48,60 +48,44 @@ XPCOMUtils.defineLazyGetter(this, "browserAreas", () => {
   };
 });
 
-this.browserAction = class extends ExtensionAPI {
-  static for(extension) {
-    return browserActionMap.get(extension);
+// Responsible for the browser_action section of the manifest as well
+// as the associated popup.
+function BrowserAction(options, extension) {
+  this.extension = extension;
+
+  let widgetId = makeWidgetId(extension.id);
+  this.id = `${widgetId}-browser-action`;
+  this.viewId = `PanelUI-webext-${widgetId}-browser-action-view`;
+  this.widget = null;
+
+  this.pendingPopup = null;
+  this.pendingPopupTimeout = null;
+
+  this.tabManager = extension.tabManager;
+
+  this.defaults = {
+    enabled: true,
+    title: options.default_title || extension.name,
+    badgeText: "",
+    badgeBackgroundColor: null,
+    icon: IconDetails.normalize({path: options.default_icon}, extension),
+    popup: options.default_popup || "",
+    area: browserAreas[options.default_area || "navbar"],
+  };
+
+  this.browserStyle = options.browser_style || false;
+  if (options.browser_style === null) {
+    this.extension.logger.warn("Please specify whether you want browser_style " +
+                               "or not in your browser_action options.");
   }
 
-  onManifestEntry(entryName) {
-    let {extension} = this;
+  this.tabContext = new TabContext(tab => Object.create(this.defaults),
+                                   extension);
 
-    let options = extension.manifest.browser_action;
+  EventEmitter.decorate(this);
+}
 
-    let widgetId = makeWidgetId(extension.id);
-    this.id = `${widgetId}-browser-action`;
-    this.viewId = `PanelUI-webext-${widgetId}-browser-action-view`;
-    this.widget = null;
-
-    this.pendingPopup = null;
-    this.pendingPopupTimeout = null;
-
-    this.tabManager = extension.tabManager;
-
-    this.defaults = {
-      enabled: true,
-      title: options.default_title || extension.name,
-      badgeText: "",
-      badgeBackgroundColor: null,
-      icon: IconDetails.normalize({path: options.default_icon}, extension),
-      popup: options.default_popup || "",
-      area: browserAreas[options.default_area || "navbar"],
-    };
-
-    this.browserStyle = options.browser_style || false;
-    if (options.browser_style === null) {
-      this.extension.logger.warn("Please specify whether you want browser_style " +
-                                 "or not in your browser_action options.");
-    }
-
-    this.tabContext = new TabContext(tab => Object.create(this.defaults),
-                                     extension);
-
-    EventEmitter.decorate(this);
-
-    this.build();
-    browserActionMap.set(extension, this);
-  }
-
-  onShutdown(reason) {
-    browserActionMap.delete(this.extension);
-
-    this.tabContext.shutdown();
-    CustomizableUI.destroyWidget(this.id);
-
-    this.clearPopup();
-  }
-
+BrowserAction.prototype = {
   build() {
     let widget = CustomizableUI.createWidget({
       id: this.id,
@@ -176,7 +160,7 @@ this.browserAction = class extends ExtensionAPI {
                        (evt, tab) => { this.updateWindow(tab.ownerGlobal); });
 
     this.widget = widget;
-  }
+  },
 
   /**
    * Triggers this browser action for the given window, with the same effects as
@@ -184,10 +168,8 @@ this.browserAction = class extends ExtensionAPI {
    *
    * This has no effect if the browser action is disabled for, or not
    * present in, the given window.
-   *
-   * @param {Window} window
    */
-  async triggerAction(window) {
+  triggerAction: Task.async(function* (window) {
     let popup = ViewPopup.for(this.extension, window);
     if (popup) {
       popup.closePopup();
@@ -206,7 +188,7 @@ this.browserAction = class extends ExtensionAPI {
     // Google Chrome onClicked extension API.
     if (this.getProperty(tab, "popup")) {
       if (this.widget.areaType == CustomizableUI.TYPE_MENU_PANEL) {
-        await window.PanelUI.show();
+        yield window.PanelUI.show();
       }
 
       let event = new window.CustomEvent("command", {bubbles: true, cancelable: true});
@@ -214,7 +196,7 @@ this.browserAction = class extends ExtensionAPI {
     } else {
       this.emit("click");
     }
-  }
+  }),
 
   handleEvent(event) {
     let button = event.target;
@@ -297,7 +279,7 @@ this.browserAction = class extends ExtensionAPI {
         }
         break;
     }
-  }
+  },
 
   /**
    * Returns a potentially pre-loaded popup for the given URL in the given
@@ -333,7 +315,7 @@ this.browserAction = class extends ExtensionAPI {
 
     let fixedWidth = this.widget.areaType == CustomizableUI.TYPE_MENU_PANEL;
     return new ViewPopup(this.extension, window, popupURL, this.browserStyle, fixedWidth, blockParser);
-  }
+  },
 
   /**
    * Clears any pending pre-loaded popup and related timeouts.
@@ -348,7 +330,7 @@ this.browserAction = class extends ExtensionAPI {
       this.pendingPopup.destroy();
       this.pendingPopup = null;
     }
-  }
+  },
 
   /**
    * Clears any pending timeouts to clear stale, pre-loaded popups.
@@ -362,7 +344,7 @@ this.browserAction = class extends ExtensionAPI {
       clearTimeout(this.pendingPopupTimeout);
       this.pendingPopupTimeout = null;
     }
-  }
+  },
 
   // Update the toolbar button |node| with the tab context data
   // in |tabData|.
@@ -420,7 +402,7 @@ this.browserAction = class extends ExtensionAPI {
       --webextension-toolbar-image: url("${IconDetails.escapeUrl(icon)}");
       --webextension-toolbar-image-2x: url("${getIcon(baseSize * 2)}");
     `);
-  }
+  },
 
   // Update the toolbar button for a given window.
   updateWindow(window) {
@@ -429,7 +411,7 @@ this.browserAction = class extends ExtensionAPI {
       let tab = window.gBrowser.selectedTab;
       this.updateButton(widget.node, this.tabContext.get(tab));
     }
-  }
+  },
 
   // Update the toolbar button when the extension changes the icon,
   // title, badge, etc. If it only changes a parameter for a single
@@ -444,7 +426,7 @@ this.browserAction = class extends ExtensionAPI {
         this.updateWindow(window);
       }
     }
-  }
+  },
 
   // tab is allowed to be null.
   // prop should be one of "icon", "title", "badgeText", "popup", or "badgeBackgroundColor".
@@ -458,7 +440,7 @@ this.browserAction = class extends ExtensionAPI {
     }
 
     this.updateOnChange(tab);
-  }
+  },
 
   // tab is allowed to be null.
   // prop should be one of "title", "badgeText", "popup", or "badgeBackgroundColor".
@@ -467,13 +449,44 @@ this.browserAction = class extends ExtensionAPI {
       return this.defaults[prop];
     }
     return this.tabContext.get(tab)[prop];
+  },
+
+  shutdown() {
+    this.tabContext.shutdown();
+    CustomizableUI.destroyWidget(this.id);
+
+    this.clearPopup();
+  },
+};
+
+BrowserAction.for = (extension) => {
+  return browserActionMap.get(extension);
+};
+
+global.browserActionFor = BrowserAction.for;
+
+this.browserAction = class extends ExtensionAPI {
+  onManifestEntry(entryName) {
+    let {extension} = this;
+    let {manifest} = extension;
+
+    this.browserAction = new BrowserAction(manifest.browser_action, extension);
+    this.browserAction.build();
+    browserActionMap.set(extension, this.browserAction);
+  }
+
+  onShutdown(reason) {
+    let {extension} = this;
+
+    browserActionMap.delete(extension);
+    this.browserAction.shutdown();
   }
 
   getAPI(context) {
     let {extension} = context;
     let {tabManager} = extension;
 
-    let browserAction = this;
+    let {browserAction} = this;
 
     function getTab(tabId) {
       if (tabId !== null) {
@@ -581,6 +594,3 @@ this.browserAction = class extends ExtensionAPI {
     };
   }
 };
-
-global.browserActionFor = this.browserAction.for;
-
