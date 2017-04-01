@@ -33,7 +33,6 @@ const {
 
 const {
   BaseContext,
-  CanOfAPIs,
   LocalAPIImplementation,
   SchemaAPIManager,
 } = ExtensionCommon;
@@ -248,10 +247,9 @@ class ProxyScriptAPIManager extends SchemaAPIManager {
 }
 
 class ProxyScriptInjectionContext {
-  constructor(context, apiCan) {
+  constructor(context, localAPIs) {
     this.context = context;
-    this.localAPIs = apiCan.root;
-    this.apiCan = apiCan;
+    this.localAPIs = localAPIs;
   }
 
   shouldInject(namespace, name, allowedContexts) {
@@ -264,9 +262,9 @@ class ProxyScriptInjectionContext {
   }
 
   getImplementation(namespace, name) {
-    this.apiCan.findAPIPath(`${namespace}.${name}`);
-    let obj = this.apiCan.findAPIPath(namespace);
-
+    let obj = namespace.split(".").reduce(
+      (object, prop) => object && object[prop],
+      this.localAPIs);
     if (obj && name in obj) {
       return new LocalAPIImplementation(obj, name, this.context);
     }
@@ -292,10 +290,9 @@ let proxyScriptAPIManager = new ProxyScriptAPIManager();
 defineLazyGetter(ProxyScriptContext.prototype, "browserObj", function() {
   let localAPIs = {};
   proxyScriptAPIManager.generateAPIs(this, localAPIs);
-  let can = new CanOfAPIs(this, proxyScriptAPIManager, localAPIs);
 
   let browserObj = Cu.createObjectIn(this.sandbox);
-  let injectionContext = new ProxyScriptInjectionContext(this, can);
+  let injectionContext = new ProxyScriptInjectionContext(this, localAPIs);
   Schemas.inject(browserObj, injectionContext);
   return browserObj;
 });
