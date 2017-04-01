@@ -28,9 +28,18 @@ const global = this;
 class ExtensionAPI {
   constructor(extension) {
     this.extension = extension;
+
+    if (this.onShutdown) {
+      extension.once("shutdown", () => {
+        this.onShutdown(extension.shutdownReason);
+      });
+    }
   }
 
   destroy() {
+  }
+
+  onManifestEntry(entry) {
   }
 
   getAPI(context) {
