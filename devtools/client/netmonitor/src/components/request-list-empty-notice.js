@@ -12,6 +12,7 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const Actions = require("../actions/index");
 const { ACTIVITY_TYPE } = require("../constants");
+const { NetMonitorController } = require("../netmonitor-controller");
 const { L10N } = require("../utils/l10n");
 
 const { button, div, span } = DOM;
@@ -64,7 +65,7 @@ module.exports = connect(
   dispatch => ({
     onPerfClick: () => dispatch(Actions.openStatistics(true)),
     onReloadClick: () =>
-      window.NetMonitorController
+      NetMonitorController
         .triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT),
   })
 )(RequestListEmptyNotice);

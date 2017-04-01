@@ -6,7 +6,6 @@
 
 const Services = require("Services");
 const { createStore, applyMiddleware } = require("devtools/client/shared/vendor/redux");
-const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
 const batching = require("../middleware/batching");
 const prefs = require("../middleware/prefs");
 const rootReducer = require("../reducers/index");
@@ -40,15 +39,7 @@ function configureStore() {
     }),
   };
 
-  return createStore(
-    rootReducer,
-    initialState,
-    applyMiddleware(
-      thunk,
-      prefs,
-      batching
-    )
-  );
+  return createStore(rootReducer, initialState, applyMiddleware(prefs, batching));
 }
 
 exports.configureStore = configureStore;
