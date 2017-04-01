@@ -4,11 +4,11 @@
 
 "use strict";
 
+const Services = require("Services");
 const { createStore, applyMiddleware } = require("devtools/client/shared/vendor/redux");
 const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
 const batching = require("../middleware/batching");
 const prefs = require("../middleware/prefs");
-const { Prefs } = require("./prefs");
 const rootReducer = require("../reducers/index");
 const { FilterTypes, Filters } = require("../reducers/filters");
 const { Requests } = require("../reducers/requests");
@@ -18,7 +18,8 @@ const { UI, Columns } = require("../reducers/ui");
 
 function configureStore() {
   let activeFilters = {};
-  Prefs.filters.forEach((filter) => {
+  let filters = JSON.parse(Services.prefs.getCharPref("devtools.netmonitor.filters"));
+  filters.forEach((filter) => {
     activeFilters[filter] = true;
   });
 
