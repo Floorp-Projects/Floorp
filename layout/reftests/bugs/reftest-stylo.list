@@ -95,10 +95,10 @@ fails == 84400-1.html 84400-1.html
 == 97777-2.html 97777-2.html
 == 98223-1.html 98223-1.html
 == 98223-2.html 98223-2.html
-skip-if(stylo) == 99850-1a.html 99850-1a.html # bug 1337695
-skip-if(stylo) == 99850-1b.html 99850-1b.html # bug 1337695
+fails == 99850-1a.html 99850-1a.html
+fails == 99850-1b.html 99850-1b.html
 fails == 99850-1c.html 99850-1c.html
-skip-if(stylo) == 99850-1d.html 99850-1d.html # bug 1337695
+fails == 99850-1d.html 99850-1d.html
 == 105030-1.html 105030-1.html
 == 109735-1.html 109735-1.html
 == 116882-1.html 116882-1.html
