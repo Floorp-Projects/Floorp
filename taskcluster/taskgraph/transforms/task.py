@@ -201,11 +201,12 @@ task_description_schema = Schema({
         # environment variables
         Required('env', default={}): {basestring: taskref_or_string},
 
-        # the command to run
-        'command': [taskref_or_string],
+        # the command to run; if not given, docker-worker will default to the
+        # command in the docker image
+        Optional('command'): [taskref_or_string],
 
         # the maximum time to run, in seconds
-        'max-run-time': int,
+        Required('max-run-time'): int,
 
         # the exit status code that indicates the task should be retried
         Optional('retry-exit-status'): int,
@@ -214,7 +215,7 @@ task_description_schema = Schema({
         Required('implementation'): 'generic-worker',
 
         # command is a list of commands to run, sequentially
-        'command': [taskref_or_string],
+        Required('command'): [taskref_or_string],
 
         # artifacts to extract from the task image after completion; note that artifacts
         # for the generic worker cannot have names
@@ -239,7 +240,7 @@ task_description_schema = Schema({
         Required('env', default={}): {basestring: taskref_or_string},
 
         # the maximum time to run, in seconds
-        'max-run-time': int,
+        Required('max-run-time'): int,
 
         # os user groups for test task workers
         Optional('os-groups', default=[]): [basestring],
@@ -248,14 +249,14 @@ task_description_schema = Schema({
 
         # see
         # https://github.com/mozilla/buildbot-bridge/blob/master/bbb/schemas/payload.yml
-        'buildername': basestring,
-        'sourcestamp': {
+        Required('buildername'): basestring,
+        Required('sourcestamp'): {
             'branch': basestring,
             Optional('revision'): basestring,
             Optional('repository'): basestring,
             Optional('project'): basestring,
         },
-        'properties': {
+        Required('properties'): {
             'product': basestring,
             Extra: basestring,  # additional properties are allowed
         },
@@ -344,28 +345,6 @@ task_description_schema = Schema({
             # Paths to the artifacts to sign
             Required('paths'): [basestring],
         }],
-    }, {
-        Required('implementation'): 'push-apk-breakpoint',
-        Required('payload'): object,
-
-    }, {
-        Required('implementation'): 'push-apk',
-
-        # list of artifact URLs for the artifacts that should be beetmoved
-        Required('upstream-artifacts'): [{
-            # taskId of the task with the artifact
-            Required('taskId'): taskref_or_string,
-
-            # type of signing task (for CoT)
-            Required('taskType'): basestring,
-
-            # Paths to the artifacts to sign
-            Required('paths'): [basestring],
-        }],
-
-        # "Invalid" is a noop for try and other non-supported branches
-        Required('google-play-track'): Any('production', 'beta', 'alpha', 'invalid'),
-        Required('dry-run', default=True): bool,
     }),
 })
 
@@ -403,7 +382,6 @@ GROUP_NAMES = {
     'TW32': 'Toolchain builds for Windows 32-bits',
     'TW64': 'Toolchain builds for Windows 64-bits',
     'SM-tc': 'Spidermonkey builds',
-    'pub': 'APK publishing',
 }
 UNKNOWN_GROUP_NAME = "Treeherder group {} has no name; add it to " + __file__
 
@@ -618,22 +596,6 @@ def build_balrog_payload(config, task, task_def):
     task_def['payload'] = {
         'upstreamArtifacts':  worker['upstream-artifacts']
     }
-
-
-@payload_builder('push-apk')
-def build_push_apk_payload(config, task, task_def):
-    worker = task['worker']
-
-    task_def['payload'] = {
-        'dry_run': worker['dry-run'],
-        'upstreamArtifacts':  worker['upstream-artifacts'],
-        'google_play_track': worker['google-play-track'],
-    }
-
-
-@payload_builder('push-apk-breakpoint')
-def build_push_apk_breakpoint_payload(config, task, task_def):
-    task_def['payload'] = task['worker']['payload']
 
 
 @payload_builder('native-engine')
