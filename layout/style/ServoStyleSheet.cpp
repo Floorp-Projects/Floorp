@@ -90,15 +90,11 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
   RefPtr<css::URLExtraData> extraData =
     new css::URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal);
 
-  nsCString baseString;
-  nsresult rv = aBaseURI->GetSpec(baseString);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   NS_ConvertUTF16toUTF8 input(aInput);
   if (!Inner()->mSheet) {
     Inner()->mSheet =
-      Servo_StyleSheet_FromUTF8Bytes(aLoader, this, &input, mParsingMode,
-                                     &baseString, extraData).Consume();
+      Servo_StyleSheet_FromUTF8Bytes(aLoader, this, &input,
+                                     mParsingMode, extraData).Consume();
   } else {
     Servo_StyleSheet_ClearAndUpdate(Inner()->mSheet, aLoader,
                                     this, &input, extraData);

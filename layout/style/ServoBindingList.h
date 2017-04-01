@@ -29,7 +29,6 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetStrong,
                    mozilla::ServoStyleSheet* gecko_stylesheet,
                    const nsACString* data,
                    mozilla::css::SheetParsingMode parsing_mode,
-                   const nsACString* base_url,
                    RawGeckoURLExtraData* extra_data)
 SERVO_BINDING_FUNC(Servo_ImportRule_GetSheet,
                    RawServoStyleSheetStrong,
@@ -119,11 +118,9 @@ SERVO_BINDING_FUNC(Servo_NamespaceRule_GetURI, nsIAtom*,
 SERVO_BINDING_FUNC(Servo_ParseProperty,
                    RawServoDeclarationBlockStrong,
                    const nsACString* property, const nsACString* value,
-                   const nsACString* base,
                    RawGeckoURLExtraData* data)
 SERVO_BINDING_FUNC(Servo_ParseEasing, bool,
                    const nsAString* easing,
-                   const nsACString* base,
                    RawGeckoURLExtraData* data,
                    nsTimingFunctionBorrowedMut output)
 SERVO_BINDING_FUNC(Servo_GetComputedKeyframeValues, void,
@@ -159,7 +156,6 @@ SERVO_BINDING_FUNC(Servo_AnimationValue_DeepEqual, bool,
 // Style attribute
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, RawServoDeclarationBlockStrong,
                    const nsACString* data,
-                   const nsACString* base,
                    RawGeckoURLExtraData* extra_data)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_CreateEmpty,
                    RawServoDeclarationBlockStrong)
@@ -192,13 +188,11 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetProperty, bool,
                    RawServoDeclarationBlockBorrowed declarations,
                    const nsACString* property,
                    const nsACString* value, bool is_important,
-                   const nsACString* base,
                    RawGeckoURLExtraData* data)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPropertyById, bool,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property,
                    const nsACString* value, bool is_important,
-                   const nsACString* base,
                    RawGeckoURLExtraData* data)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemoveProperty, void,
                    RawServoDeclarationBlockBorrowed declarations,
