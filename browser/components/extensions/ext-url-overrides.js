@@ -4,7 +4,6 @@
 
 "use strict";
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
@@ -19,31 +18,36 @@ let overrides = {
   newtab: [],
 };
 
-/* eslint-disable mozilla/balanced-listeners */
-extensions.on("manifest_chrome_url_overrides", (type, directive, extension, manifest) => {
-  if (manifest.chrome_url_overrides.newtab) {
-    let newtab = manifest.chrome_url_overrides.newtab;
-    let url = extension.baseURI.resolve(newtab);
+this.urlOverrides = class extends ExtensionAPI {
+  onManifestEntry(entryName) {
+    let {extension} = this;
+    let {manifest} = extension;
 
-    // Only set the newtab URL if no other extension is overriding it.
-    if (!overrides.newtab.length) {
-      aboutNewTabService.newTabURL = url;
-    }
+    if (manifest.chrome_url_overrides.newtab) {
+      let newtab = manifest.chrome_url_overrides.newtab;
+      let url = extension.baseURI.resolve(newtab);
 
-    overrides.newtab.push({id: extension.id, url});
-  }
-});
+      // Only set the newtab URL if no other extension is overriding it.
+      if (!overrides.newtab.length) {
+        aboutNewTabService.newTabURL = url;
+      }
 
-extensions.on("shutdown", (type, extension) => {
-  let i = overrides.newtab.findIndex(o => o.id === extension.id);
-  if (i !== -1) {
-    overrides.newtab.splice(i, 1);
-
-    if (overrides.newtab.length) {
-      aboutNewTabService.newTabURL = overrides.newtab[0].url;
-    } else {
-      aboutNewTabService.resetNewTabURL();
+      overrides.newtab.push({id: extension.id, url});
     }
   }
-});
-/* eslint-enable mozilla/balanced-listeners */
+
+  onShutdown(reason) {
+    let {extension} = this;
+
+    let i = overrides.newtab.findIndex(o => o.id === extension.id);
+    if (i !== -1) {
+      overrides.newtab.splice(i, 1);
+
+      if (overrides.newtab.length) {
+        aboutNewTabService.newTabURL = overrides.newtab[0].url;
+      } else {
+        aboutNewTabService.resetNewTabURL();
+      }
+    }
+  }
+};
