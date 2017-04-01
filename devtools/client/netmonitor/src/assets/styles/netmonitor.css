@@ -49,10 +49,11 @@
 
 html,
 body,
-.root,
 #mount,
+.launchpad-root,
 .network-monitor,
 .monitor-panel {
+  flex: initial;
   display: flex;
   flex-direction: column;
   height: 100%;
