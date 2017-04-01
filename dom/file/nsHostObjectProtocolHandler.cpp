@@ -34,6 +34,7 @@ using mozilla::dom::MediaSource;
 using mozilla::ErrorResult;
 using mozilla::net::LoadInfo;
 using mozilla::Move;
+using mozilla::Unused;
 
 // -----------------------------------------------------------------------
 // Hash table
@@ -746,7 +747,26 @@ NS_IMETHODIMP
 nsHostObjectProtocolHandler::GetProtocolFlags(uint32_t *result)
 {
   *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_SUBSUMERS |
-            URI_IS_LOCAL_RESOURCE | URI_NON_PERSISTABLE;
+            URI_NON_PERSISTABLE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHostObjectProtocolHandler::GetFlagsForURI(nsIURI *aURI, uint32_t *aResult)
+{
+  Unused << nsHostObjectProtocolHandler::GetProtocolFlags(aResult);
+  if (IsFontTableURI(aURI) || IsBlobURI(aURI)) {
+    *aResult |= URI_IS_LOCAL_RESOURCE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBlobProtocolHandler::GetProtocolFlags(uint32_t *result)
+{
+  Unused << nsHostObjectProtocolHandler::GetProtocolFlags(result);
+  *result |= URI_IS_LOCAL_RESOURCE;
   return NS_OK;
 }
 
@@ -873,6 +893,14 @@ NS_IMETHODIMP
 nsBlobProtocolHandler::GetScheme(nsACString &result)
 {
   result.AssignLiteral(BLOBURI_SCHEME);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontTableProtocolHandler::GetProtocolFlags(uint32_t *result)
+{
+  Unused << nsHostObjectProtocolHandler::GetProtocolFlags(result);
+  *result |= URI_IS_LOCAL_RESOURCE;
   return NS_OK;
 }
 
