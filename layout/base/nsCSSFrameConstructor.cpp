@@ -7170,7 +7170,10 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
     }
   }
 
-  RestyleManager()->PostRestyleEventForLazyConstruction();
+  if (mozilla::GeckoRestyleManager* geckoRM = RestyleManager()->GetAsGecko()) {
+    geckoRM->PostRestyleEventForLazyConstruction();
+  }
+
   return true;
 }
 
@@ -7410,6 +7413,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
                                        TreeMatchContext* aProvidedTreeMatchContext)
 {
   MOZ_ASSERT_IF(aProvidedTreeMatchContext, !aAllowLazyConstruction);
+  MOZ_ASSERT_IF(aAllowLazyConstruction, !RestyleManager()->IsInStyleRefresh());
 
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   NS_PRECONDITION(mUpdateCount != 0,
@@ -7809,6 +7813,9 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
                                             bool aAllowLazyConstruction,
                                             TreeMatchContext* aProvidedTreeMatchContext)
 {
+  MOZ_ASSERT_IF(aProvidedTreeMatchContext, !aAllowLazyConstruction);
+  MOZ_ASSERT_IF(aAllowLazyConstruction, !RestyleManager()->IsInStyleRefresh());
+
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   NS_PRECONDITION(mUpdateCount != 0,
                   "Should be in an update while creating frames");

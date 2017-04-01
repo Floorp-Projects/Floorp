@@ -55,11 +55,7 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
     return;
   }
 
-  if (aRestyleHint || aMinChangeHint) {
-    Servo_NoteExplicitHints(aElement, aRestyleHint, aMinChangeHint);
-  }
-
-  PostRestyleEventInternal(false);
+  Servo_NoteExplicitHints(aElement, aRestyleHint, aMinChangeHint);
 }
 
 /* static */ void

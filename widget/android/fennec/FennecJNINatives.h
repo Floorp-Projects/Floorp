@@ -154,15 +154,11 @@ template<class Impl>
 class CodecProxy::NativeCallbacks::Natives : public mozilla::jni::NativeImpl<NativeCallbacks, Impl>
 {
 public:
-    static const JNINativeMethod methods[5];
+    static const JNINativeMethod methods[4];
 };
 
 template<class Impl>
 const JNINativeMethod CodecProxy::NativeCallbacks::Natives<Impl>::methods[] = {
-
-    mozilla::jni::MakeNativeMethod<CodecProxy::NativeCallbacks::DisposeNative_t>(
-            mozilla::jni::NativeStub<CodecProxy::NativeCallbacks::DisposeNative_t, Impl>
-            ::template Wrap<&Impl::DisposeNative>),
 
     mozilla::jni::MakeNativeMethod<CodecProxy::NativeCallbacks::OnError_t>(
             mozilla::jni::NativeStub<CodecProxy::NativeCallbacks::OnError_t, Impl>

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1483471392954" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1483646608603" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i988" id="{b12785f5-d8d0-4530-a3ea-5c4263b85bef}">
       <prefs/>
@@ -886,22 +886,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
-    <emItem blockID="i55" id="youtube@youtube7.com">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
-    <emItem blockID="i440" id="{2d069a16-fca1-4e81-81ea-5d5086dcbd0c}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
-    <emItem blockID="i1077" id="helper@vidscrab.com">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
-    <emItem blockID="i1492" id="googlotim@gmail.com">
-      <prefs/>
-      <versionRange minVersion="1.3.2" maxVersion="1.3.2" severity="1"/>
-    </emItem>
     <emItem blockID="i93" id="{68b8676b-99a5-46d1-b390-22411d8bcd61}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -1364,6 +1348,10 @@
     <emItem blockID="i344" id="lrcsTube@hansanddeta.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="0f8344d0-8211-49a1-81be-c0084b3da9b1" id="fr@fbt.ovh">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i79" id="GifBlock@facebook.com">
       <prefs/>
@@ -1955,6 +1943,10 @@
       </prefs>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="d6425f24-8c9e-4c0a-89b4-6890fc68d5c9" id="/^\{(9321F452-96D5-11E6-BC3E-3769C7AD2208)|({18ED1ECA-96D3-11E6-A373-BD66C7AD2208})\}$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
     <emItem blockID="i920" id="{FCE04E1F-9378-4f39-96F6-5689A9159E45}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3">
@@ -2066,6 +2058,22 @@
     <emItem blockID="i470" id="extension@FastFreeConverter.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="i55" id="youtube@youtube7.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="i440" id="{2d069a16-fca1-4e81-81ea-5d5086dcbd0c}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i1077" id="helper@vidscrab.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i1492" id="googlotim@gmail.com">
+      <prefs/>
+      <versionRange minVersion="1.3.2" maxVersion="1.3.2" severity="1"/>
     </emItem>
   </emItems>
   <pluginItems>

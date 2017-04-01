@@ -48,7 +48,7 @@ def docker_worker_spidermonkey(config, job, taskdesc, schema=sm_run_schema):
 
     docker_worker_add_public_artifacts(config, job, taskdesc)
 
-    env = worker['env']
+    env = worker.setdefault('env', {})
     env.update({
         'MOZHARNESS_DISABLE': 'true',
         'SPIDERMONKEY_VARIANT': run['spidermonkey-variant'],
