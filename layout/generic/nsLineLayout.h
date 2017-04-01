@@ -19,10 +19,10 @@
 
 #include "gfxTypes.h"
 #include "JustificationUtils.h"
+#include "mozilla/ArenaAllocator.h"
 #include "mozilla/WritingModes.h"
 #include "BlockReflowInput.h"
 #include "nsLineBox.h"
-#include "plarena.h"
 
 class nsFloatManager;
 struct nsStyleText;
@@ -635,7 +635,11 @@ protected:
   int32_t mSpansAllocated, mSpansFreed;
   int32_t mFramesAllocated, mFramesFreed;
 #endif
-  PLArenaPool mArena; // Per span and per frame data, 4 byte aligned
+
+  /**
+   * Per span and per frame data.
+   */
+  mozilla::ArenaAllocator<1024, sizeof(void*)> mArena;
 
   /**
    * Allocate a PerFrameData from the mArena pool. The allocation is infallible.
