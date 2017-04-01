@@ -300,6 +300,8 @@ function updateCertStatus() {
     setText("status3LongDescription", gPKIBundle.getString(longDesc3));
   }
 
+  window.sizeToContent();
+
   gNeedReset = true;
 }
 

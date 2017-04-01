@@ -55,6 +55,7 @@
 #include "nsGlobalWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsLayoutUtils.h"
+#include "nsMappedAttributes.h"
 #include "nsView.h"
 #include "GroupedSHistory.h"
 #include "PartialSHistory.h"
@@ -1203,11 +1204,27 @@ nsFrameLoader::MarginsChanged(uint32_t aMarginWidth,
   mDocShell->SetMarginWidth(aMarginWidth);
   mDocShell->SetMarginHeight(aMarginHeight);
 
+  // There's a cached property declaration block
+  // that needs to be updated
+  if (nsIDocument* doc = mDocShell->GetDocument()) {
+    // We don't need to do anything for Gecko here because
+    // we plan to RebuildAllStyleData anyway.
+    if (doc->GetStyleBackendType() == StyleBackendType::Servo) {
+      for (nsINode* cur = doc; cur; cur = cur->GetNextNode()) {
+        if (cur->IsHTMLElement(nsGkAtoms::body)) {
+          static_cast<HTMLBodyElement*>(cur)->ClearMappedServoStyle();
+        }
+      }
+    }
+  }
+
   // Trigger a restyle if there's a prescontext
   // FIXME: This could do something much less expensive.
   RefPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (presContext)
+    // rebuild, because now the same nsMappedAttributes* will produce
+    // a different style
     presContext->RebuildAllStyleData(nsChangeHint(0), eRestyle_Subtree);
 }
 

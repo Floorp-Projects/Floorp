@@ -302,9 +302,9 @@ fails == outline.html outline.html
 == overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02a.xhtml
 == overflow-on-outer-svg-02b.xhtml overflow-on-outer-svg-02b.xhtml
 == overflow-on-outer-svg-02c.xhtml overflow-on-outer-svg-02c.xhtml
-fails == overflow-on-outer-svg-02d.xhtml overflow-on-outer-svg-02d.xhtml
+== overflow-on-outer-svg-02d.xhtml overflow-on-outer-svg-02d.xhtml
 == overflow-on-outer-svg-03a.xhtml overflow-on-outer-svg-03a.xhtml
-fails == overflow-on-outer-svg-03b.xhtml overflow-on-outer-svg-03b.xhtml
+== overflow-on-outer-svg-03b.xhtml overflow-on-outer-svg-03b.xhtml
 pref(svg.paint-order.enabled,true) == paint-order-01.svg paint-order-01.svg
 pref(svg.paint-order.enabled,true) == paint-order-02.svg paint-order-02.svg
 pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03.svg
