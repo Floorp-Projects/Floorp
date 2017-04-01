@@ -153,7 +153,7 @@ load 374297-2.html
 load 376223-1.xhtml
 load 378325-1.html
 load 378682.html
-skip-if(stylo) load 379105-1.xhtml # bug 1323679
+load 379105-1.xhtml
 load 379419-1.xhtml
 load 379768-1.html
 asserts-if(stylo,6) load 379799-1.html # bug 1324977
@@ -385,7 +385,7 @@ load 635329.html
 load 636229-1.html
 == 640272.html 640272-ref.html
 load 645193.html
-skip-if(stylo) load 645572-1.html # bug 1323686
+load 645572-1.html
 load 650475.xhtml
 load 650489.xhtml
 load 651342-1.html
@@ -413,7 +413,7 @@ load 725535.html # bug 1323652
 load 727601.html # bug 1323652
 skip-if(Android) asserts(0-2) pref(dom.disable_open_during_load,false) load 735943.html # the assertion is bug 735966, for android bug 760271
 asserts(0-2) load 736389-1.xhtml # sometimes the above assertions are delayed and is reported on this test instead
-skip-if(stylo) load 736924-1.html # bug 1337695
+load 736924-1.html
 load 749816-1.html
 load 763223-1.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) load 763702.xhtml
@@ -488,5 +488,5 @@ load 1308793.svg
 load 1308848-1.html
 load 1308848-2.html
 load 1338772-1.html
-skip-if(stylo) load 1343937.html
+load 1343937.html
 asserts(0-1) load 1343606.html # bug 1343948
