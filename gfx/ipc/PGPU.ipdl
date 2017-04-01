@@ -52,8 +52,7 @@ parent:
   // Sent by the UI process to initiate core settings.
   async Init(GfxPrefSetting[] prefs,
              GfxVarUpdate[] vars,
-             DevicePrefs devicePrefs,
-             LayerTreeIdMapping[] mapping);
+             DevicePrefs devicePrefs);
 
   async InitVsyncBridge(Endpoint<PVsyncBridgeParent> endpoint);
   async InitImageBridge(Endpoint<PImageBridgeParent> endpoint);
@@ -79,7 +78,7 @@ parent:
   async NewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent> endpoint);
 
   // Called to notify the GPU process of who owns a layersId.
-  sync AddLayerTreeIdMapping(LayerTreeIdMapping mapping);
+  sync AddLayerTreeIdMapping(LayerTreeIdMapping[] mapping);
   async RemoveLayerTreeIdMapping(LayerTreeIdMapping mapping);
 
   // Request the current DeviceStatus from the GPU process. This blocks until
