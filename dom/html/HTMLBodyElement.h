@@ -15,28 +15,6 @@ namespace mozilla {
 namespace dom {
 
 class OnBeforeUnloadEventHandlerNonNull;
-class HTMLBodyElement;
-
-class BodyRule: public nsIStyleRule
-{
-  virtual ~BodyRule();
-
-public:
-  explicit BodyRule(HTMLBodyElement* aPart);
-
-  NS_DECL_ISUPPORTS
-
-  // nsIStyleRule interface
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
-  virtual bool MightMapInheritedStyleData() override;
-  virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
-                                             nsCSSValue* aValue) override;
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
-#endif
-
-  HTMLBodyElement*  mPart;  // not ref-counted, cleared by content 
-};
 
 class HTMLBodyElement final : public nsGenericHTMLElement,
                               public nsIDOMHTMLBodyElement
@@ -125,22 +103,27 @@ public:
                               nsIAtom* aAttribute,
                               const nsAString& aValue,
                               nsAttrValue& aResult) override;
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) override;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
-  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
   virtual already_AddRefed<nsIEditor> GetAssociatedEditor() override;
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   virtual bool IsEventAttributeName(nsIAtom* aName) override;
 
+
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              bool aCompileEventHandlers) override;
+  /**
+   * Called when an attribute has just been changed
+   */
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                const nsAttrValue* aValue, bool aNotify) override;
+
 protected:
   virtual ~HTMLBodyElement();
 
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  RefPtr<BodyRule> mContentStyleRule;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,

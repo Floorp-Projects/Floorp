@@ -191,16 +191,16 @@ public:
   static bool ShouldLoadTypeInParent(const nsACString& aMimeType);
 
   // checks whether aType is a type we recognize for potential special handling
-  enum SpecialType { eSpecialType_None,
-                     // Needed to whitelist for async init support
-                     eSpecialType_Test,
-                     // Informs some decisions about OOP and quirks
-                     eSpecialType_Flash,
-                     // Binds to the <applet> tag, has various special
-                     // rules around opening channels, codebase, ...
-                     eSpecialType_Java,
-                     // Native widget quirks
-                     eSpecialType_Unity };
+  enum SpecialType {
+    eSpecialType_None,
+    // Needed to whitelist for async init support
+    eSpecialType_Test,
+    // Informs some decisions about OOP and quirks
+    eSpecialType_Flash,
+    // Binds to the <applet> tag, has various special
+    // rules around opening channels, codebase, ...
+    eSpecialType_Java
+  };
   static SpecialType GetSpecialType(const nsACString & aMIMEType);
 
   static nsresult PostPluginUnloadEvent(PRLibrary* aLibrary);

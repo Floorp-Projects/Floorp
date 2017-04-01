@@ -8,8 +8,7 @@
 
 annotation_processor_jar_files := \
   $(DEPTH)/build/annotationProcessors/annotationProcessors.jar \
-  $(ANDROID_TOOLS)/lib/lint.jar \
-  $(ANDROID_TOOLS)/lib/lint-checks.jar \
+  $(ANDROID_LINT_CLASSPATH) \
   $(NULL)
 
 sdk_processor := \

@@ -35,7 +35,7 @@ fails == 596455-2b.html 596455-2b.html
 == bug448564-4a.html bug448564-4a.html
 == bug502168-1_malformed.html bug502168-1_malformed.html
 
-fails == responsive-image-load-shortcircuit.html responsive-image-load-shortcircuit.html
+== responsive-image-load-shortcircuit.html responsive-image-load-shortcircuit.html
 == image-load-shortcircuit-1.html image-load-shortcircuit-1.html
 == image-load-shortcircuit-2.html image-load-shortcircuit-2.html
 
@@ -43,7 +43,7 @@ fails == responsive-image-load-shortcircuit.html responsive-image-load-shortcirc
 # image-orientation when determining the size of the image.
 # (Fuzzy necessary due to pixel-wise comparison of different JPEGs.
 # The vast majority of the fuzziness comes from Linux and WinXP.)
-fails == bug917595-iframe-1.html bug917595-iframe-1.html # Bug 1341647
+== bug917595-iframe-1.html bug917595-iframe-1.html
 fails == bug917595-exif-rotated.jpg bug917595-exif-rotated.jpg
 
 # Test support for SVG-as-image in <picture> elements.
@@ -63,3 +63,10 @@ pref(permissions.default.image,2) HTTP == bug1196784-with-srcset.html bug1196784
 
 # Test video with rotation information can be rotated.
 == bug1228601-video-rotation-90.html bug1228601-video-rotation-90.html
+
+# Test that dynamically setting body margin attributes updates style appropriately
+== body-topmargin-dynamic.html body-topmargin-dynamic.html
+
+# Test that dynamically removing a nonmargin mapped attribute does not
+# destroy margins inherited from the frame.
+== body-frame-margin-remove-other-pres-hint.html body-frame-margin-remove-other-pres-hint.html

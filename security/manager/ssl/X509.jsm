@@ -5,7 +5,9 @@
 "use strict";
 
 const Cu = Components.utils;
-var { DER } = Cu.import("resource://gre/modules/psm/DER.jsm", {});
+// Until DER.jsm is actually used in production code, this is where we have to
+// import it from.
+var { DER } = Cu.import("resource://testing-common/psm/DER.jsm", {});
 
 const ERROR_UNSUPPORTED_ASN1 = "unsupported asn.1";
 const ERROR_TIME_NOT_VALID = "Time not valid";

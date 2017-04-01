@@ -186,13 +186,18 @@ public class FennecTabsRepository extends Repository {
     private long getLocalClientLastModified() {
       final String localClientSelection = Clients.GUID + " IS NULL";
       final String[] localClientSelectionArgs = null;
+      Cursor cursor = null;
       try {
-        final Cursor cursor = clientsHelper.safeQuery(tabsProvider, ".fetchLocalClient()", null,
+        cursor = clientsHelper.safeQuery(tabsProvider, ".fetchLocalClient()", null,
                 localClientSelection, localClientSelectionArgs, null);
         cursor.moveToFirst();
         return RepoUtils.getLongFromCursor(cursor, Clients.LAST_MODIFIED);
       } catch (Exception e) {
         return 0;
+      } finally {
+        if (cursor != null) {
+          cursor.close();
+        }
       }
     }
 

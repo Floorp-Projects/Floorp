@@ -27,180 +27,8 @@ namespace dom {
 
 //----------------------------------------------------------------------
 
-BodyRule::BodyRule(HTMLBodyElement* aPart)
-  : mPart(aPart)
-{
-}
-
-BodyRule::~BodyRule()
-{
-}
-
-NS_IMPL_ISUPPORTS(BodyRule, nsIStyleRule)
-
-/* virtual */ void
-BodyRule::MapRuleInfoInto(nsRuleData* aData)
-{
-  if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)) || !mPart)
-    return; // We only care about margins.
-
-  int32_t bodyMarginWidth  = -1;
-  int32_t bodyMarginHeight = -1;
-  int32_t bodyTopMargin = -1;
-  int32_t bodyBottomMargin = -1;
-  int32_t bodyLeftMargin = -1;
-  int32_t bodyRightMargin = -1;
-
-  // check the mode (fortunately, the ruleData has a presContext for us to use!)
-  NS_ASSERTION(aData->mPresContext, "null presContext in ruleNode was unexpected");
-  nsCompatibility mode = aData->mPresContext->CompatibilityMode();
-
-
-  const nsAttrValue* value;
-  if (mPart->GetAttrCount() > 0) {
-    // if marginwidth/marginheight are set, reflect them as 'margin'
-    value = mPart->GetParsedAttr(nsGkAtoms::marginwidth);
-    if (value && value->Type() == nsAttrValue::eInteger) {
-      bodyMarginWidth = value->GetIntegerValue();
-      if (bodyMarginWidth < 0) bodyMarginWidth = 0;
-      nsCSSValue* marginLeft = aData->ValueForMarginLeft();
-      if (marginLeft->GetUnit() == eCSSUnit_Null)
-        marginLeft->SetFloatValue((float)bodyMarginWidth, eCSSUnit_Pixel);
-      nsCSSValue* marginRight = aData->ValueForMarginRight();
-      if (marginRight->GetUnit() == eCSSUnit_Null)
-        marginRight->SetFloatValue((float)bodyMarginWidth, eCSSUnit_Pixel);
-    }
-
-    value = mPart->GetParsedAttr(nsGkAtoms::marginheight);
-    if (value && value->Type() == nsAttrValue::eInteger) {
-      bodyMarginHeight = value->GetIntegerValue();
-      if (bodyMarginHeight < 0) bodyMarginHeight = 0;
-      nsCSSValue* marginTop = aData->ValueForMarginTop();
-      if (marginTop->GetUnit() == eCSSUnit_Null)
-        marginTop->SetFloatValue((float)bodyMarginHeight, eCSSUnit_Pixel);
-      nsCSSValue* marginBottom = aData->ValueForMarginBottom();
-      if (marginBottom->GetUnit() == eCSSUnit_Null)
-        marginBottom->SetFloatValue((float)bodyMarginHeight, eCSSUnit_Pixel);
-    }
-
-      // topmargin (IE-attribute)
-    value = mPart->GetParsedAttr(nsGkAtoms::topmargin);
-    if (value && value->Type() == nsAttrValue::eInteger) {
-      bodyTopMargin = value->GetIntegerValue();
-      if (bodyTopMargin < 0) bodyTopMargin = 0;
-      nsCSSValue* marginTop = aData->ValueForMarginTop();
-      if (marginTop->GetUnit() == eCSSUnit_Null)
-        marginTop->SetFloatValue((float)bodyTopMargin, eCSSUnit_Pixel);
-    }
-
-      // bottommargin (IE-attribute)
-    value = mPart->GetParsedAttr(nsGkAtoms::bottommargin);
-    if (value && value->Type() == nsAttrValue::eInteger) {
-      bodyBottomMargin = value->GetIntegerValue();
-      if (bodyBottomMargin < 0) bodyBottomMargin = 0;
-      nsCSSValue* marginBottom = aData->ValueForMarginBottom();
-      if (marginBottom->GetUnit() == eCSSUnit_Null)
-        marginBottom->SetFloatValue((float)bodyBottomMargin, eCSSUnit_Pixel);
-    }
-
-      // leftmargin (IE-attribute)
-    value = mPart->GetParsedAttr(nsGkAtoms::leftmargin);
-    if (value && value->Type() == nsAttrValue::eInteger) {
-      bodyLeftMargin = value->GetIntegerValue();
-      if (bodyLeftMargin < 0) bodyLeftMargin = 0;
-      nsCSSValue* marginLeft = aData->ValueForMarginLeft();
-      if (marginLeft->GetUnit() == eCSSUnit_Null)
-        marginLeft->SetFloatValue((float)bodyLeftMargin, eCSSUnit_Pixel);
-    }
-
-      // rightmargin (IE-attribute)
-    value = mPart->GetParsedAttr(nsGkAtoms::rightmargin);
-    if (value && value->Type() == nsAttrValue::eInteger) {
-      bodyRightMargin = value->GetIntegerValue();
-      if (bodyRightMargin < 0) bodyRightMargin = 0;
-      nsCSSValue* marginRight = aData->ValueForMarginRight();
-      if (marginRight->GetUnit() == eCSSUnit_Null)
-        marginRight->SetFloatValue((float)bodyRightMargin, eCSSUnit_Pixel);
-    }
-
-  }
-
-  // if marginwidth or marginheight is set in the <frame> and not set in the <body>
-  // reflect them as margin in the <body>
-  if (bodyMarginWidth == -1 || bodyMarginHeight == -1) {
-    nsCOMPtr<nsIDocShell> docShell(aData->mPresContext->GetDocShell());
-    if (docShell) {
-      nscoord frameMarginWidth=-1;  // default value
-      nscoord frameMarginHeight=-1; // default value
-      docShell->GetMarginWidth(&frameMarginWidth); // -1 indicates not set
-      docShell->GetMarginHeight(&frameMarginHeight);
-      if ((frameMarginWidth >= 0) && (bodyMarginWidth == -1)) { // set in <frame> & not in <body>
-        if (eCompatibility_NavQuirks == mode) {
-          if ((bodyMarginHeight == -1) && (0 > frameMarginHeight)) // nav quirk
-            frameMarginHeight = 0;
-        }
-      }
-      if ((frameMarginHeight >= 0) && (bodyMarginHeight == -1)) { // set in <frame> & not in <body>
-        if (eCompatibility_NavQuirks == mode) {
-          if ((bodyMarginWidth == -1) && (0 > frameMarginWidth)) // nav quirk
-            frameMarginWidth = 0;
-        }
-      }
-
-      if ((bodyMarginWidth == -1) && (frameMarginWidth >= 0)) {
-        nsCSSValue* marginLeft = aData->ValueForMarginLeft();
-        if (marginLeft->GetUnit() == eCSSUnit_Null)
-          marginLeft->SetFloatValue((float)frameMarginWidth, eCSSUnit_Pixel);
-        nsCSSValue* marginRight = aData->ValueForMarginRight();
-        if (marginRight->GetUnit() == eCSSUnit_Null)
-          marginRight->SetFloatValue((float)frameMarginWidth, eCSSUnit_Pixel);
-      }
-
-      if ((bodyMarginHeight == -1) && (frameMarginHeight >= 0)) {
-        nsCSSValue* marginTop = aData->ValueForMarginTop();
-        if (marginTop->GetUnit() == eCSSUnit_Null)
-          marginTop->SetFloatValue((float)frameMarginHeight, eCSSUnit_Pixel);
-        nsCSSValue* marginBottom = aData->ValueForMarginBottom();
-        if (marginBottom->GetUnit() == eCSSUnit_Null)
-          marginBottom->SetFloatValue((float)frameMarginHeight, eCSSUnit_Pixel);
-      }
-    }
-  }
-}
-
-/* virtual */ bool
-BodyRule::MightMapInheritedStyleData()
-{
-  return false;
-}
-
-/* virtual */ bool
-BodyRule::GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
-                                        nsCSSValue* aValue)
-{
-  MOZ_ASSERT(false, "GetDiscretelyAnimatedCSSValue is not implemented yet");
-  return false;
-}
-
-#ifdef DEBUG
-/* virtual */ void
-BodyRule::List(FILE* out, int32_t aIndent) const
-{
-  nsAutoCString indent;
-  for (int32_t index = aIndent; --index >= 0; ) {
-    indent.AppendLiteral("  ");
-  }
-  fprintf_stderr(out, "%s[body rule] {}\n", indent.get());
-}
-#endif
-
-//----------------------------------------------------------------------
-
 HTMLBodyElement::~HTMLBodyElement()
 {
-  if (mContentStyleRule) {
-    mContentStyleRule->mPart = nullptr;
-  }
 }
 
 JSObject*
@@ -348,20 +176,145 @@ HTMLBodyElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 void
-HTMLBodyElement::UnbindFromTree(bool aDeep, bool aNullParent)
-{
-  if (mContentStyleRule) {
-    mContentStyleRule->mPart = nullptr;
-    mContentStyleRule = nullptr;
-  }
-
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);  
-}
-
-void
 HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                        GenericSpecifiedValues* aData)
 {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)) {
+
+    // This is the one place where we try to set the same property
+    // multiple times in presentation attributes. Servo does not support
+    // querying if a property is set (because that is O(n) behavior
+    // in ServoSpecifiedValues). Instead, we use the below values to keep
+    // track of whether we have already set a property, and if so, what value
+    // we set it to (which is used when handling margin
+    // attributes from the containing frame element)
+
+    int32_t bodyMarginWidth  = -1;
+    int32_t bodyMarginHeight = -1;
+    int32_t bodyTopMargin = -1;
+    int32_t bodyBottomMargin = -1;
+    int32_t bodyLeftMargin = -1;
+    int32_t bodyRightMargin = -1;
+
+    // check the mode (fortunately, the GenericSpecifiedValues has a presContext for us to use!)
+    NS_ASSERTION(aData->mPresContext, "null presContext in MapAttributesIntoRule was unexpected");
+    nsCompatibility mode = aData->mPresContext->CompatibilityMode();
+
+
+    const nsAttrValue* value;
+    // if marginwidth/marginheight are set, reflect them as 'margin'
+    value = aAttributes->GetAttr(nsGkAtoms::marginwidth);
+    if (value && value->Type() == nsAttrValue::eInteger) {
+      bodyMarginWidth = value->GetIntegerValue();
+      if (bodyMarginWidth < 0) {
+        bodyMarginWidth = 0;
+      }
+      aData->SetPixelValueIfUnset(eCSSProperty_margin_left, (float)bodyMarginWidth);
+      aData->SetPixelValueIfUnset(eCSSProperty_margin_right, (float)bodyMarginWidth);
+    }
+
+    value = aAttributes->GetAttr(nsGkAtoms::marginheight);
+    if (value && value->Type() == nsAttrValue::eInteger) {
+      bodyMarginHeight = value->GetIntegerValue();
+      if (bodyMarginHeight < 0) {
+        bodyMarginHeight = 0;
+      }
+      aData->SetPixelValueIfUnset(eCSSProperty_margin_top, (float)bodyMarginHeight);
+      aData->SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)bodyMarginHeight);
+    }
+
+      // topmargin (IE-attribute)
+    if (bodyMarginHeight == -1) {
+      value = aAttributes->GetAttr(nsGkAtoms::topmargin);
+      if (value && value->Type() == nsAttrValue::eInteger) {
+        bodyTopMargin = value->GetIntegerValue();
+        if (bodyTopMargin < 0) {
+          bodyTopMargin = 0;
+        }
+        aData->SetPixelValueIfUnset(eCSSProperty_margin_top, (float)bodyTopMargin);
+      }
+    }
+      // bottommargin (IE-attribute)
+
+    if (bodyMarginHeight == -1) {
+      value = aAttributes->GetAttr(nsGkAtoms::bottommargin);
+      if (value && value->Type() == nsAttrValue::eInteger) {
+        bodyBottomMargin = value->GetIntegerValue();
+        if (bodyBottomMargin < 0) {
+          bodyBottomMargin = 0;
+        }
+        aData->SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)bodyBottomMargin);
+      }
+    }
+
+      // leftmargin (IE-attribute)
+    if (bodyMarginWidth == -1) {
+      value = aAttributes->GetAttr(nsGkAtoms::leftmargin);
+      if (value && value->Type() == nsAttrValue::eInteger) {
+        bodyLeftMargin = value->GetIntegerValue();
+        if (bodyLeftMargin < 0) {
+          bodyLeftMargin = 0;
+        }
+        aData->SetPixelValueIfUnset(eCSSProperty_margin_left, (float)bodyLeftMargin);
+      }
+    }
+      // rightmargin (IE-attribute)
+    if (bodyMarginWidth == -1) {
+      value = aAttributes->GetAttr(nsGkAtoms::rightmargin);
+      if (value && value->Type() == nsAttrValue::eInteger) {
+        bodyRightMargin = value->GetIntegerValue();
+        if (bodyRightMargin < 0) {
+          bodyRightMargin = 0;
+        }
+        aData->SetPixelValueIfUnset(eCSSProperty_margin_right, (float)bodyRightMargin);
+      }
+    }
+
+    // if marginwidth or marginheight is set in the <frame> and not set in the <body>
+    // reflect them as margin in the <body>
+    if (bodyMarginWidth == -1 || bodyMarginHeight == -1) {
+      nsCOMPtr<nsIDocShell> docShell(aData->mPresContext->GetDocShell());
+      if (docShell) {
+        nscoord frameMarginWidth=-1;  // default value
+        nscoord frameMarginHeight=-1; // default value
+        docShell->GetMarginWidth(&frameMarginWidth); // -1 indicates not set
+        docShell->GetMarginHeight(&frameMarginHeight);
+        if (frameMarginWidth >= 0 && bodyMarginWidth == -1) { // set in <frame> & not in <body>
+          if (eCompatibility_NavQuirks == mode) {
+            if (bodyMarginHeight == -1 && 0 > frameMarginHeight) { // nav quirk
+              frameMarginHeight = 0;
+            }
+          }
+        }
+        if (frameMarginHeight >= 0 && bodyMarginHeight == -1) { // set in <frame> & not in <body>
+          if (eCompatibility_NavQuirks == mode) {
+            if (bodyMarginWidth == -1 && 0 > frameMarginWidth) { // nav quirk
+              frameMarginWidth = 0;
+            }
+          }
+        }
+
+        if (bodyMarginWidth == -1 && frameMarginWidth >= 0) {
+          if (bodyLeftMargin == -1) {
+            aData->SetPixelValueIfUnset(eCSSProperty_margin_left, (float)frameMarginWidth);
+          }
+          if (bodyRightMargin == -1) {
+            aData->SetPixelValueIfUnset(eCSSProperty_margin_right, (float)frameMarginWidth);
+          }
+        }
+
+        if (bodyMarginHeight == -1 && frameMarginHeight >= 0) {
+          if (bodyTopMargin == -1) {
+            aData->SetPixelValueIfUnset(eCSSProperty_margin_top, (float)frameMarginHeight);
+          }
+          if (bodyBottomMargin == -1) {
+            aData->SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)frameMarginHeight);
+          }
+        }
+      }
+    }
+  }
+
   if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Display))) {
     // When display if first asked for, go ahead and get our colors set up.
     nsIPresShell *presShell = aData->PresContext()->GetPresShell();
@@ -412,22 +365,6 @@ HTMLBodyElement::GetAttributeMappingFunction() const
   return &MapAttributesIntoRule;
 }
 
-NS_IMETHODIMP
-HTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
-{
-  nsGenericHTMLElement::WalkContentStyleRules(aRuleWalker);
-
-  if (!mContentStyleRule && IsInUncomposedDoc()) {
-    // XXXbz should this use OwnerDoc() or GetComposedDoc()?
-    // sXBL/XBL2 issue!
-    mContentStyleRule = new BodyRule(this);
-  }
-  if (aRuleWalker && mContentStyleRule) {
-    aRuleWalker->Forward(mContentStyleRule);
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP_(bool)
 HTMLBodyElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
@@ -436,12 +373,12 @@ HTMLBodyElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     { &nsGkAtoms::vlink },
     { &nsGkAtoms::alink },
     { &nsGkAtoms::text },
-    // These aren't mapped through attribute mapping, but they are
-    // mapped through a style rule, so it is attribute dependent style.
-    // XXXldb But we don't actually replace the body rule when we have
-    // dynamic changes...
     { &nsGkAtoms::marginwidth },
     { &nsGkAtoms::marginheight },
+    { &nsGkAtoms::topmargin },
+    { &nsGkAtoms::rightmargin },
+    { &nsGkAtoms::bottommargin },
+    { &nsGkAtoms::leftmargin },
     { nullptr },
   };
 
@@ -488,6 +425,36 @@ HTMLBodyElement::IsEventAttributeName(nsIAtom *aName)
   return nsContentUtils::IsEventAttributeName(aName,
                                               EventNameType_HTML |
                                               EventNameType_HTMLBodyOrFramesetOnly);
+}
+
+nsresult
+HTMLBodyElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                            nsIContent* aBindingParent,
+                            bool aCompileEventHandlers)
+{
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return mAttrsAndChildren.ForceMapped(this, OwnerDoc());
+}
+
+nsresult
+HTMLBodyElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                              const nsAttrValue* aValue,
+                              bool aNotify)
+{
+  nsresult rv = nsGenericHTMLElement::AfterSetAttr(aNameSpaceID,
+                                                   aName, aValue, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // if the last mapped attribute was removed, don't clear the
+  // nsMappedAttributes, our style can still depend on the containing frame element
+  if (!aValue && IsAttributeMapped(aName)) {
+    nsresult rv = mAttrsAndChildren.ForceMapped(this, OwnerDoc());
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
 
 #define EVENT(name_, id_, type_, struct_) /* nothing; handled by the superclass */

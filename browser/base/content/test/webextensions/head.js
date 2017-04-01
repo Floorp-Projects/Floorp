@@ -375,6 +375,104 @@ async function testInstallMethod(installFn, telemetryBase) {
   await SpecialPowers.popPrefEnv();
 }
 
+// Helper function to test a specific scenario for interactive updates.
+// `checkFn` is a callable that triggers a check for updates.
+// `autoUpdate` specifies whether the test should be run with
+// updates applied automatically or not.
+async function interactiveUpdateTest(autoUpdate, checkFn) {
+  const ID = "update2@tests.mozilla.org";
+
+  await SpecialPowers.pushPrefEnv({set: [
+    // We don't have pre-pinned certificates for the local mochitest server
+    ["extensions.install.requireBuiltInCerts", false],
+    ["extensions.update.requireBuiltInCerts", false],
+
+    ["extensions.update.autoUpdateDefault", autoUpdate],
+
+    // Point updates to the local mochitest server
+    ["extensions.update.url", `${BASE}/browser_webext_update.json`],
+  ]});
+
+  // Trigger an update check, manually applying the update if we're testing
+  // without auto-update.
+  async function triggerUpdate(win, addon) {
+    let manualUpdatePromise;
+    if (!autoUpdate) {
+      manualUpdatePromise = new Promise(resolve => {
+        let listener = {
+          onNewInstall() {
+            AddonManager.removeInstallListener(listener);
+            resolve();
+          },
+        };
+        AddonManager.addInstallListener(listener);
+      });
+    }
+
+    let promise = checkFn(win, addon);
+
+    if (manualUpdatePromise) {
+      await manualUpdatePromise;
+
+      let list = win.document.getElementById("addon-list");
+
+      // Make sure we have XBL bindings
+      list.clientHeight;
+
+      let item = list.children.find(_item => _item.value == ID);
+      EventUtils.synthesizeMouseAtCenter(item._updateBtn, {}, win);
+    }
+
+    return {promise};
+  }
+
+  // Navigate away from the starting page to force about:addons to load
+  // in a new tab during the tests below.
+  gBrowser.selectedBrowser.loadURI("about:robots");
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+  // Install version 1.0 of the test extension
+  let addon = await promiseInstallAddon(`${BASE}/browser_webext_update1.xpi`);
+  ok(addon, "Addon was installed");
+  is(addon.version, "1.0", "Version 1 of the addon is installed");
+
+  let win = await BrowserOpenAddonsMgr("addons://list/extension");
+
+  // Trigger an update check
+  let popupPromise = promisePopupNotificationShown("addon-webext-permissions");
+  let {promise: checkPromise} = await triggerUpdate(win, addon);
+  let panel = await popupPromise;
+
+  // Click the cancel button, wait to see the cancel event
+  let cancelPromise = promiseInstallEvent(addon, "onInstallCancelled");
+  panel.secondaryButton.click();
+  await cancelPromise;
+
+  addon = await AddonManager.getAddonByID(ID);
+  is(addon.version, "1.0", "Should still be running the old version");
+
+  // Make sure the update check is completely finished.
+  await checkPromise;
+
+  // Trigger a new update check
+  popupPromise = promisePopupNotificationShown("addon-webext-permissions");
+  checkPromise = (await triggerUpdate(win, addon)).promise;
+
+  // This time, accept the upgrade
+  let updatePromise = waitForUpdate(addon);
+  panel = await popupPromise;
+  panel.button.click();
+
+  addon = await updatePromise;
+  is(addon.version, "2.0", "Should have upgraded");
+
+  await checkPromise;
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  addon.uninstall();
+  await SpecialPowers.popPrefEnv();
+}
+
 // The tests in this directory install a bunch of extensions but they
 // need to uninstall them before exiting, as a stray leftover extension
 // after one test can foul up subsequent tests.

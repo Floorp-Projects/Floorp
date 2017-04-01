@@ -288,6 +288,10 @@ public:
    */
   const nsMappedAttributes* GetMappedAttributes() const;
 
+  void ClearMappedServoStyle() {
+    mAttrsAndChildren.ClearMappedServoStyle();
+  }
+
   /**
    * Set the inline style declaration for this element. This will send
    * an appropriate AttributeChanged notification if aNotify is true.
