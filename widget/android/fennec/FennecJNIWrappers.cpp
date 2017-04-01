@@ -184,9 +184,9 @@ const char CodecProxy::name[] =
 constexpr char CodecProxy::Create_t::name[];
 constexpr char CodecProxy::Create_t::signature[];
 
-auto CodecProxy::Create(mozilla::jni::Object::Param a0, mozilla::jni::Object::Param a1, mozilla::jni::Object::Param a2, mozilla::jni::String::Param a3) -> CodecProxy::LocalRef
+auto CodecProxy::Create(bool a0, mozilla::jni::Object::Param a1, mozilla::jni::Object::Param a2, mozilla::jni::Object::Param a3, mozilla::jni::String::Param a4) -> CodecProxy::LocalRef
 {
-    return mozilla::jni::Method<Create_t>::Call(CodecProxy::Context(), nullptr, a0, a1, a2, a3);
+    return mozilla::jni::Method<Create_t>::Call(CodecProxy::Context(), nullptr, a0, a1, a2, a3, a4);
 }
 
 constexpr char CodecProxy::Flush_t::name[];
@@ -229,6 +229,14 @@ auto CodecProxy::ReleaseOutput(mozilla::jni::Object::Param a0, bool a1) const ->
     return mozilla::jni::Method<ReleaseOutput_t>::Call(CodecProxy::mCtx, nullptr, a0, a1);
 }
 
+constexpr char CodecProxy::SetRates_t::name[];
+constexpr char CodecProxy::SetRates_t::signature[];
+
+auto CodecProxy::SetRates(int32_t a0) const -> bool
+{
+    return mozilla::jni::Method<SetRates_t>::Call(CodecProxy::mCtx, nullptr, a0);
+}
+
 const char CodecProxy::NativeCallbacks::name[] =
         "org/mozilla/gecko/media/CodecProxy$NativeCallbacks";
 
@@ -242,6 +250,11 @@ auto CodecProxy::NativeCallbacks::New() -> NativeCallbacks::LocalRef
 
 constexpr char CodecProxy::NativeCallbacks::DisposeNative_t::name[];
 constexpr char CodecProxy::NativeCallbacks::DisposeNative_t::signature[];
+
+auto CodecProxy::NativeCallbacks::DisposeNative() const -> void
+{
+    return mozilla::jni::Method<DisposeNative_t>::Call(NativeCallbacks::mCtx, nullptr);
+}
 
 constexpr char CodecProxy::NativeCallbacks::OnError_t::name[];
 constexpr char CodecProxy::NativeCallbacks::OnError_t::signature[];

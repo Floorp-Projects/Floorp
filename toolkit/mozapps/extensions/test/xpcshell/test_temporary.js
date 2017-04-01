@@ -321,7 +321,7 @@ add_task(function*() {
             id: ID
           }
         },
-        theme: { images: { headerURL: "https://example.com/example.png" } }
+        theme: { images: { headerURL: "example.png" } }
       }
     });
 

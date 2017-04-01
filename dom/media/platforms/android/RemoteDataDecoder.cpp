@@ -5,8 +5,8 @@
 #include "AndroidBridge.h"
 #include "AndroidDecoderModule.h"
 #include "AndroidSurfaceTexture.h"
+#include "JavaCallbacksSupport.h"
 #include "SimpleMap.h"
-#include "FennecJNINatives.h"
 #include "GLImages.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
@@ -32,70 +32,6 @@ using namespace mozilla::java::sdk;
 using media::TimeUnit;
 
 namespace mozilla {
-
-class JavaCallbacksSupport
-  : public CodecProxy::NativeCallbacks::Natives<JavaCallbacksSupport>
-{
-public:
-  typedef CodecProxy::NativeCallbacks::Natives<JavaCallbacksSupport> Base;
-  using Base::AttachNative;
-
-  JavaCallbacksSupport() : mCanceled(false) { }
-
-  virtual ~JavaCallbacksSupport() { }
-
-  virtual void HandleInputExhausted() = 0;
-
-  void OnInputExhausted()
-  {
-    if (!mCanceled) {
-      HandleInputExhausted();
-    }
-  }
-
-  virtual void HandleOutput(Sample::Param aSample) = 0;
-
-  void OnOutput(jni::Object::Param aSample)
-  {
-    if (!mCanceled) {
-      HandleOutput(Sample::Ref::From(aSample));
-    }
-  }
-
-  virtual void HandleOutputFormatChanged(MediaFormat::Param aFormat) { };
-
-  void OnOutputFormatChanged(jni::Object::Param aFormat)
-  {
-    if (!mCanceled) {
-      HandleOutputFormatChanged(MediaFormat::Ref::From(aFormat));
-    }
-  }
-
-  virtual void HandleError(const MediaResult& aError) = 0;
-
-  void OnError(bool aIsFatal)
-  {
-    if (!mCanceled) {
-      HandleError(
-        aIsFatal
-        ? MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__)
-        : MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__));
-    }
-  }
-
-  void DisposeNative()
-  {
-    // TODO
-  }
-
-  void Cancel()
-  {
-    mCanceled = true;
-  }
-
-private:
-  Atomic<bool> mCanceled;
-};
 
 class RemoteVideoDecoder : public RemoteDataDecoder
 {
@@ -260,7 +196,8 @@ public:
     JavaCallbacksSupport::AttachNative(
       mJavaCallbacks, mozilla::MakeUnique<CallbacksSupport>(this));
 
-    mJavaDecoder = CodecProxy::Create(mFormat,
+    mJavaDecoder = CodecProxy::Create(false, // false indicates to create a decoder and true denotes encoder
+                                      mFormat,
                                       mSurfaceTexture->JavaSurface(),
                                       mJavaCallbacks,
                                       mDrmStubId);
@@ -340,7 +277,7 @@ public:
       mJavaCallbacks, mozilla::MakeUnique<CallbacksSupport>(this));
 
     mJavaDecoder =
-      CodecProxy::Create(mFormat, nullptr, mJavaCallbacks, mDrmStubId);
+      CodecProxy::Create(false, mFormat, nullptr, mJavaCallbacks, mDrmStubId);
     if (mJavaDecoder == nullptr) {
       return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                           __func__);
@@ -568,6 +505,7 @@ RemoteDataDecoder::ProcessShutdown()
 
   if (mJavaCallbacks) {
     JavaCallbacksSupport::GetNative(mJavaCallbacks)->Cancel();
+    JavaCallbacksSupport::DisposeNative(mJavaCallbacks);
     mJavaCallbacks = nullptr;
   }
 

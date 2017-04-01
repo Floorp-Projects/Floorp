@@ -37,6 +37,7 @@
 % resource search-plugins chrome://browser/locale/searchplugins/
 
 # overrides for toolkit l10n, also for en-US
+# keep this file list in sync with filter.py
 relativesrcdir toolkit/locales:
   locale/@AB_CD@/browser/overrides/about.dtd                       (%chrome/global/about.dtd)
   locale/@AB_CD@/browser/overrides/aboutAbout.dtd                  (%chrome/global/aboutAbout.dtd)
@@ -86,6 +87,7 @@ relativesrcdir toolkit/locales:
 % override chrome://global/locale/aboutWebrtc.properties chrome://browser/locale/overrides/global/aboutWebrtc.properties
 
 # overrides for dom l10n, also for en-US
+# keep this file list in sync with filter.py
 relativesrcdir dom/locales:
   locale/@AB_CD@/browser/overrides/global.dtd                  (%chrome/global.dtd)
   locale/@AB_CD@/browser/overrides/AccessFu.properties         (%chrome/accessibility/AccessFu.properties)
