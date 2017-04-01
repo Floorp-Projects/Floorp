@@ -164,7 +164,10 @@ add_task(function* test_Links_onLinkChanged() {
 
   // add a visit
   let testURI = NetUtil.newURI(url);
-  yield PlacesTestUtils.addVisits(testURI);
+  yield PlacesUtils.history.insert({
+    url: testURI,
+    visits: [{ transition: PlacesUtils.history.TRANSITIONS.LINK }]
+  });
   yield linkChangedPromise;
 
   yield PlacesTestUtils.clearHistory();
