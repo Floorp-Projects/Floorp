@@ -673,10 +673,12 @@ ParentAPIManager = {
 
     // Store pending listener additions so we can be sure they're all
     // fully initialize before we consider extension startup complete.
-    const {listenerPromises} = context;
-    listenerPromises.add(promise);
-    let remove = () => { listenerPromises.delete(promise); };
-    promise.then(remove, remove);
+    if (context.viewType === "background" && context.listenerPromises) {
+      const {listenerPromises} = context;
+      listenerPromises.add(promise);
+      let remove = () => { listenerPromises.delete(promise); };
+      promise.then(remove, remove);
+    }
 
     let handler = await promise;
     handler.addListener(listener, ...args);
@@ -858,9 +860,9 @@ class HiddenExtensionPage {
 
 function promiseExtensionViewLoaded(browser) {
   return new Promise(resolve => {
-    browser.messageManager.addMessageListener("Extension:ExtensionViewLoaded", function onLoad() {
+    browser.messageManager.addMessageListener("Extension:ExtensionViewLoaded", function onLoad({data}) {
       browser.messageManager.removeMessageListener("Extension:ExtensionViewLoaded", onLoad);
-      resolve();
+      resolve(data.childId && ParentAPIManager.getContextById(data.childId));
     });
   });
 }
