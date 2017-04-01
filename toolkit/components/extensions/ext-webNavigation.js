@@ -1,5 +1,9 @@
 "use strict";
 
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
                                   "resource://gre/modules/ExtensionManagement.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MatchURLFilters",
@@ -7,6 +11,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "MatchURLFilters",
 XPCOMUtils.defineLazyModuleGetter(this, "WebNavigation",
                                   "resource://gre/modules/WebNavigation.jsm");
 
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   SingletonEventManager,
 } = ExtensionUtils;
@@ -158,48 +163,46 @@ function convertGetFrameResult(tabId, data) {
   };
 }
 
-this.webNavigation = class extends ExtensionAPI {
-  getAPI(context) {
-    let {tabManager} = context.extension;
+extensions.registerSchemaAPI("webNavigation", "addon_parent", context => {
+  let {tabManager} = context.extension;
 
-    return {
-      webNavigation: {
-        onTabReplaced: new SingletonEventManager(context, "webNavigation.onTabReplaced", fire => {
-          return () => {};
-        }).api(),
-        onBeforeNavigate: new WebNavigationEventManager(context, "onBeforeNavigate").api(),
-        onCommitted: new WebNavigationEventManager(context, "onCommitted").api(),
-        onDOMContentLoaded: new WebNavigationEventManager(context, "onDOMContentLoaded").api(),
-        onCompleted: new WebNavigationEventManager(context, "onCompleted").api(),
-        onErrorOccurred: new WebNavigationEventManager(context, "onErrorOccurred").api(),
-        onReferenceFragmentUpdated: new WebNavigationEventManager(context, "onReferenceFragmentUpdated").api(),
-        onHistoryStateUpdated: new WebNavigationEventManager(context, "onHistoryStateUpdated").api(),
-        onCreatedNavigationTarget: new WebNavigationEventManager(context, "onCreatedNavigationTarget").api(),
-        getAllFrames(details) {
-          let tab = tabManager.get(details.tabId);
+  return {
+    webNavigation: {
+      onTabReplaced: new SingletonEventManager(context, "webNavigation.onTabReplaced", fire => {
+        return () => {};
+      }).api(),
+      onBeforeNavigate: new WebNavigationEventManager(context, "onBeforeNavigate").api(),
+      onCommitted: new WebNavigationEventManager(context, "onCommitted").api(),
+      onDOMContentLoaded: new WebNavigationEventManager(context, "onDOMContentLoaded").api(),
+      onCompleted: new WebNavigationEventManager(context, "onCompleted").api(),
+      onErrorOccurred: new WebNavigationEventManager(context, "onErrorOccurred").api(),
+      onReferenceFragmentUpdated: new WebNavigationEventManager(context, "onReferenceFragmentUpdated").api(),
+      onHistoryStateUpdated: new WebNavigationEventManager(context, "onHistoryStateUpdated").api(),
+      onCreatedNavigationTarget: new WebNavigationEventManager(context, "onCreatedNavigationTarget").api(),
+      getAllFrames(details) {
+        let tab = tabManager.get(details.tabId);
 
-          let {innerWindowID, messageManager} = tab.browser;
-          let recipient = {innerWindowID};
+        let {innerWindowID, messageManager} = tab.browser;
+        let recipient = {innerWindowID};
 
-          return context.sendMessage(messageManager, "WebNavigation:GetAllFrames", {}, {recipient})
-                        .then((results) => results.map(convertGetFrameResult.bind(null, details.tabId)));
-        },
-        getFrame(details) {
-          let tab = tabManager.get(details.tabId);
-
-          let recipient = {
-            innerWindowID: tab.browser.innerWindowID,
-          };
-
-          let mm = tab.browser.messageManager;
-          return context.sendMessage(mm, "WebNavigation:GetFrame", {options: details}, {recipient})
-                        .then((result) => {
-                          return result ?
-                            convertGetFrameResult(details.tabId, result) :
-                            Promise.reject({message: `No frame found with frameId: ${details.frameId}`});
-                        });
-        },
+        return context.sendMessage(messageManager, "WebNavigation:GetAllFrames", {}, {recipient})
+                      .then((results) => results.map(convertGetFrameResult.bind(null, details.tabId)));
       },
-    };
-  }
-};
+      getFrame(details) {
+        let tab = tabManager.get(details.tabId);
+
+        let recipient = {
+          innerWindowID: tab.browser.innerWindowID,
+        };
+
+        let mm = tab.browser.messageManager;
+        return context.sendMessage(mm, "WebNavigation:GetFrame", {options: details}, {recipient})
+                      .then((result) => {
+                        return result ?
+                          convertGetFrameResult(details.tabId, result) :
+                          Promise.reject({message: `No frame found with frameId: ${details.frameId}`});
+                      });
+      },
+    },
+  };
+});

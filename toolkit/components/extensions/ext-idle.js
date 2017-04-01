@@ -1,16 +1,20 @@
 "use strict";
 
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource://devtools/shared/event-emitter.js");
 XPCOMUtils.defineLazyServiceGetter(this, "idleService",
                                    "@mozilla.org/widget/idleservice;1",
                                    "nsIIdleService");
-var {
+const {
   SingletonEventManager,
 } = ExtensionUtils;
 
 // WeakMap[Extension -> Object]
-let observersMap = new WeakMap();
+var observersMap = new WeakMap();
 
 function getObserverInfo(extension, context) {
   let observerInfo = observersMap.get(extension);
@@ -62,31 +66,29 @@ function setDetectionInterval(extension, context, newInterval) {
   observerInfo.detectionInterval = newInterval;
 }
 
-this.idle = class extends ExtensionAPI {
-  getAPI(context) {
-    let {extension} = context;
-    return {
-      idle: {
-        queryState: function(detectionIntervalInSeconds) {
-          if (idleService.idleTime < detectionIntervalInSeconds * 1000) {
-            return Promise.resolve("active");
-          }
-          return Promise.resolve("idle");
-        },
-        setDetectionInterval: function(detectionIntervalInSeconds) {
-          setDetectionInterval(extension, context, detectionIntervalInSeconds);
-        },
-        onStateChanged: new SingletonEventManager(context, "idle.onStateChanged", fire => {
-          let listener = (event, data) => {
-            fire.sync(data);
-          };
-
-          getObserver(extension, context).on("stateChanged", listener);
-          return () => {
-            getObserver(extension, context).off("stateChanged", listener);
-          };
-        }).api(),
+extensions.registerSchemaAPI("idle", "addon_parent", context => {
+  let {extension} = context;
+  return {
+    idle: {
+      queryState: function(detectionIntervalInSeconds) {
+        if (idleService.idleTime < detectionIntervalInSeconds * 1000) {
+          return Promise.resolve("active");
+        }
+        return Promise.resolve("idle");
       },
-    };
-  }
-};
+      setDetectionInterval: function(detectionIntervalInSeconds) {
+        setDetectionInterval(extension, context, detectionIntervalInSeconds);
+      },
+      onStateChanged: new SingletonEventManager(context, "idle.onStateChanged", fire => {
+        let listener = (event, data) => {
+          fire.sync(data);
+        };
+
+        getObserver(extension, context).on("stateChanged", listener);
+        return () => {
+          getObserver(extension, context).off("stateChanged", listener);
+        };
+      }).api(),
+    },
+  };
+});
