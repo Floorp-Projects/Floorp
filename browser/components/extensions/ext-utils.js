@@ -12,6 +12,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
                                    "@mozilla.org/content/style-sheet-service;1",
                                    "nsIStyleSheetService");
 
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
 var {
   ExtensionError,
   SingletonEventManager,
