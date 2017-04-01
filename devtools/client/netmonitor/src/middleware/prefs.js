@@ -21,7 +21,6 @@ const { getRequestFilterTypes } = require("../selectors/index");
 function prefsMiddleware(store) {
   return next => action => {
     const res = next(action);
-
     switch (action.type) {
       case ENABLE_REQUEST_FILTER_TYPE_ONLY:
       case TOGGLE_REQUEST_FILTER_TYPE:
