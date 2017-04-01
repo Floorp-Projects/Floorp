@@ -330,7 +330,7 @@ bool
 ParseContext::init()
 {
     if (scriptId_ == UINT32_MAX) {
-        tokenStream_.reportError(JSMSG_NEED_DIET, js_script_str);
+        tokenStream_.reportErrorNoOffset(JSMSG_NEED_DIET, js_script_str);
         return false;
     }
 
