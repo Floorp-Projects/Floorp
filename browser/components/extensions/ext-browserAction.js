@@ -470,23 +470,24 @@ this.browserAction = class extends ExtensionAPI {
     let {extension} = this;
     let {manifest} = extension;
 
-    this.browserAction = new BrowserAction(manifest.browser_action, extension);
-    this.browserAction.build();
-    browserActionMap.set(extension, this.browserAction);
+    let browserAction = new BrowserAction(manifest.browser_action, extension);
+    browserAction.build();
+    browserActionMap.set(extension, browserAction);
   }
 
   onShutdown(reason) {
     let {extension} = this;
 
-    browserActionMap.delete(extension);
-    this.browserAction.shutdown();
+    if (browserActionMap.has(extension)) {
+      browserActionMap.get(extension).shutdown();
+      browserActionMap.delete(extension);
+    }
   }
 
   getAPI(context) {
     let {extension} = context;
-    let {tabManager} = extension;
 
-    let {browserAction} = this;
+    let {tabManager} = extension;
 
     function getTab(tabId) {
       if (tabId !== null) {
@@ -501,20 +502,20 @@ this.browserAction = class extends ExtensionAPI {
           let listener = () => {
             fire.async(tabManager.convert(tabTracker.activeTab));
           };
-          browserAction.on("click", listener);
+          BrowserAction.for(extension).on("click", listener);
           return () => {
-            browserAction.off("click", listener);
+            BrowserAction.for(extension).off("click", listener);
           };
         }).api(),
 
         enable: function(tabId) {
           let tab = getTab(tabId);
-          browserAction.setProperty(tab, "enabled", true);
+          BrowserAction.for(extension).setProperty(tab, "enabled", true);
         },
 
         disable: function(tabId) {
           let tab = getTab(tabId);
-          browserAction.setProperty(tab, "enabled", false);
+          BrowserAction.for(extension).setProperty(tab, "enabled", false);
         },
 
         setTitle: function(details) {
@@ -525,13 +526,13 @@ this.browserAction = class extends ExtensionAPI {
           if (tab && title == "") {
             title = null;
           }
-          browserAction.setProperty(tab, "title", title);
+          BrowserAction.for(extension).setProperty(tab, "title", title);
         },
 
         getTitle: function(details) {
           let tab = getTab(details.tabId);
 
-          let title = browserAction.getProperty(tab, "title");
+          let title = BrowserAction.for(extension).getProperty(tab, "title");
           return Promise.resolve(title);
         },
 
@@ -539,19 +540,19 @@ this.browserAction = class extends ExtensionAPI {
           let tab = getTab(details.tabId);
 
           let icon = IconDetails.normalize(details, extension, context);
-          browserAction.setProperty(tab, "icon", icon);
+          BrowserAction.for(extension).setProperty(tab, "icon", icon);
         },
 
         setBadgeText: function(details) {
           let tab = getTab(details.tabId);
 
-          browserAction.setProperty(tab, "badgeText", details.text);
+          BrowserAction.for(extension).setProperty(tab, "badgeText", details.text);
         },
 
         getBadgeText: function(details) {
           let tab = getTab(details.tabId);
 
-          let text = browserAction.getProperty(tab, "badgeText");
+          let text = BrowserAction.for(extension).getProperty(tab, "badgeText");
           return Promise.resolve(text);
         },
 
@@ -564,13 +565,13 @@ this.browserAction = class extends ExtensionAPI {
           // For internal consistency, we currently resolve both relative to the
           // calling context.
           let url = details.popup && context.uri.resolve(details.popup);
-          browserAction.setProperty(tab, "popup", url);
+          BrowserAction.for(extension).setProperty(tab, "popup", url);
         },
 
         getPopup: function(details) {
           let tab = getTab(details.tabId);
 
-          let popup = browserAction.getProperty(tab, "popup");
+          let popup = BrowserAction.for(extension).getProperty(tab, "popup");
           return Promise.resolve(popup);
         },
 
@@ -581,13 +582,13 @@ this.browserAction = class extends ExtensionAPI {
             let col = DOMUtils.colorToRGBA(color);
             color = col && [col.r, col.g, col.b, Math.round(col.a * 255)];
           }
-          browserAction.setProperty(tab, "badgeBackgroundColor", color);
+          BrowserAction.for(extension).setProperty(tab, "badgeBackgroundColor", color);
         },
 
         getBadgeBackgroundColor: function(details, callback) {
           let tab = getTab(details.tabId);
 
-          let color = browserAction.getProperty(tab, "badgeBackgroundColor");
+          let color = BrowserAction.for(extension).getProperty(tab, "badgeBackgroundColor");
           return Promise.resolve(color || [0xd9, 0, 0, 255]);
         },
       },
