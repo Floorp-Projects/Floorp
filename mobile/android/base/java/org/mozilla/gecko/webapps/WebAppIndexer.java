@@ -105,13 +105,23 @@ public class WebAppIndexer {
     private void storeActivityList(Context context) {
         final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
         final SharedPreferences.Editor editor = prefs.edit();
-        editor.clear();
+        clearActivityListPrefs(prefs, editor);
         editor.putInt(PREF_NUM_SAVED_ENTRIES, mActivityList.size());
         for (int i = 0; i < mActivityList.size(); ++i) {
             editor.putInt(PREF_ACTIVITY_INDEX + i, mActivityList.get(i).index);
             editor.putString(PREF_ACTIVITY_ID + i, mActivityList.get(i).manifest);
         }
         editor.apply();
+    }
+
+    private void clearActivityListPrefs(SharedPreferences prefs, SharedPreferences.Editor editor) {
+        int count = prefs.getInt(PREF_NUM_SAVED_ENTRIES, 0);
+
+        for (int i = 0; i < count; ++i) {
+            editor.remove(PREF_ACTIVITY_INDEX + i);
+            editor.remove(PREF_ACTIVITY_ID + i);
+        }
+        editor.remove(PREF_NUM_SAVED_ENTRIES);
     }
 
     @UiThread
