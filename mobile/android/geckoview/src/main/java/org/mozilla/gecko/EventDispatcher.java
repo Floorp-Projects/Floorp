@@ -55,7 +55,7 @@ public final class EventDispatcher extends JNIObject {
         new HashMap<String, List<BundleEventListener>>(DEFAULT_BACKGROUND_EVENTS_COUNT);
 
     private boolean mAttachedToGecko;
-    private final StateHolder mStateHolder;
+    private volatile StateHolder mStateHolder;
 
     @ReflectionTarget
     @WrapForJNI(calledFrom = "gecko")
@@ -69,6 +69,13 @@ public final class EventDispatcher extends JNIObject {
 
     /* package */ EventDispatcher(final NativeQueue.StateHolder stateHolder) {
         mStateHolder = stateHolder;
+    }
+
+    /* package */ void setStateHolder(final NativeQueue.StateHolder stateHolder) {
+        mStateHolder = stateHolder;
+        // Force queue flushing.
+        final NativeQueue.State state = mStateHolder.getState();
+        mStateHolder.checkAndSetState(state, state);
     }
 
     private boolean isReadyForDispatchingToGecko() {

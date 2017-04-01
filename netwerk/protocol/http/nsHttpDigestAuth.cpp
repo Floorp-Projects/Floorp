@@ -8,6 +8,7 @@
 #include "HttpLog.h"
 
 #include "mozilla/Sprintf.h"
+#include "mozilla/Unused.h"
 
 #include "nsHttp.h"
 #include "nsHttpDigestAuth.h"
