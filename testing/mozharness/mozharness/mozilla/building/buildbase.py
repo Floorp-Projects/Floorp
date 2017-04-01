@@ -2126,6 +2126,10 @@ or run without that action (ie: --no-{action})"
             self.generate_balrog_props(props_path)
             return
 
+        if self.config.get('skip_balrog_uploads'):
+            self.info("Funsize will submit to balrog, skipping submission here.")
+            return
+
         if not self.config.get("balrog_servers"):
             self.fatal("balrog_servers not set; skipping balrog submission.")
             return

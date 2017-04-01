@@ -158,6 +158,7 @@ UNIFIED_SOURCES += [
     'nsIntervalSet.cpp',
     'nsLeafFrame.cpp',
     'nsLineBox.cpp',
+    'nsLineLayout.cpp',
     'nsPageContentFrame.cpp',
     'nsPageFrame.cpp',
     'nsPlaceholderFrame.cpp',
@@ -186,10 +187,8 @@ UNIFIED_SOURCES += [
     'ViewportFrame.cpp',
 ]
 
-# nsLineLayout.cpp needs to be built separately because it uses plarena.h.
 # nsPluginFrame.cpp needs to be built separately because of name clashes in the OS X headers.
 SOURCES += [
-    'nsLineLayout.cpp',
     'nsPluginFrame.cpp',
 ]
 

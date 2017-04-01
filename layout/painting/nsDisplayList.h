@@ -13,16 +13,17 @@
 #ifndef NSDISPLAYLIST_H_
 #define NSDISPLAYLIST_H_
 
+#include "mozilla/ArenaAllocator.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Array.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/TemplateLib.h" // mozilla::tl::Max
 #include "nsCOMPtr.h"
 #include "nsContainerFrame.h"
 #include "nsPoint.h"
 #include "nsRect.h"
-#include "plarena.h"
 #include "nsRegion.h"
 #include "nsDisplayListInvalidation.h"
 #include "nsRenderingContext.h"
@@ -235,7 +236,7 @@ enum class nsDisplayListBuilderMode : uint8_t {
  * This manages a display list and is passed as a parameter to
  * nsIFrame::BuildDisplayList.
  * It contains the parameters that don't change from frame to frame and manages
- * the display list memory using a PLArena. It also establishes the reference
+ * the display list memory using an arena. It also establishes the reference
  * coordinate system for all display list items. Some of the parameters are
  * available from the prescontext/presshell, but we copy them into the builder
  * for faster/more convenient access.
@@ -1455,7 +1456,11 @@ private:
   nsIFrame* const                mReferenceFrame;
   nsIFrame*                      mIgnoreScrollFrame;
   nsDisplayLayerEventRegions*    mLayerEventRegions;
-  PLArenaPool                    mPool;
+
+  static const size_t kArenaAlignment =
+      mozilla::tl::Max<NS_ALIGNMENT_OF(void*), NS_ALIGNMENT_OF(double)>::value;
+  mozilla::ArenaAllocator<4096, kArenaAlignment> mPool;
+
   nsCOMPtr<nsISelection>         mBoundingSelection;
   AutoTArray<PresShellState,8> mPresShellStates;
   AutoTArray<nsIFrame*,100>    mFramesMarkedForDisplay;

@@ -5,9 +5,6 @@
 
 /* state and methods used while laying out a single line of a block frame */
 
-// This has to be defined before nsLineLayout.h is included, because
-// nsLineLayout.h has a #include for plarena.h, which needs this defined:
-#define PL_ARENA_CONST_ALIGN_MASK (sizeof(void*)-1)
 #include "nsLineLayout.h"
 
 #include "LayoutLogging.h"
@@ -111,7 +108,6 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   // spans, we do it on demand so that situations that only use a few
   // frames and spans won't waste a lot of time in unneeded
   // initialization.
-  PL_INIT_ARENA_POOL(&mArena, "nsLineLayout", 1024);
   mFrameFreeList = nullptr;
   mSpanFreeList = nullptr;
 
@@ -129,8 +125,6 @@ nsLineLayout::~nsLineLayout()
   MOZ_COUNT_DTOR(nsLineLayout);
 
   NS_ASSERTION(nullptr == mRootSpan, "bad line-layout user");
-
-  PL_FinishArenaPool(&mArena);
 }
 
 // Find out if the frame has a non-null prev-in-flow, i.e., whether it
@@ -386,12 +380,7 @@ nsLineLayout::NewPerSpanData()
   nsLineLayout* outerLineLayout = GetOutermostLineLayout();
   PerSpanData* psd = outerLineLayout->mSpanFreeList;
   if (!psd) {
-    void *mem;
-    size_t sz = sizeof(PerSpanData);
-    PL_ARENA_ALLOCATE(mem, &outerLineLayout->mArena, sz);
-    if (!mem) {
-      NS_ABORT_OOM(sz);
-    }
+    void *mem = outerLineLayout->mArena.Allocate(sizeof(PerSpanData));
     psd = reinterpret_cast<PerSpanData*>(mem);
   }
   else {
@@ -652,12 +641,7 @@ nsLineLayout::NewPerFrameData(nsIFrame* aFrame)
   nsLineLayout* outerLineLayout = GetOutermostLineLayout();
   PerFrameData* pfd = outerLineLayout->mFrameFreeList;
   if (!pfd) {
-    void *mem;
-    size_t sz = sizeof(PerFrameData);
-    PL_ARENA_ALLOCATE(mem, &outerLineLayout->mArena, sz);
-    if (!mem) {
-      NS_ABORT_OOM(sz);
-    }
+    void *mem = outerLineLayout->mArena.Allocate(sizeof(PerFrameData));
     pfd = reinterpret_cast<PerFrameData*>(mem);
   }
   else {

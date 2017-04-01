@@ -9,13 +9,6 @@
  * matching and cascading
  */
 
-#define PL_ARENA_CONST_ALIGN_MASK 7
-// We want page-sized arenas so there's no fragmentation involved.
-// Including plarena.h must come first to avoid it being included by some
-// header file thereby making PL_ARENA_CONST_ALIGN_MASK ineffective.
-#define NS_CASCADEENUMDATA_ARENA_BLOCK_SIZE (4096)
-#include "plarena.h"
-
 #include "nsCSSRuleProcessor.h"
 
 #include "nsAutoPtr.h"
@@ -63,6 +56,8 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+
+typedef ArenaAllocator<4096, 8> CascadeAllocator;
 
 #define VISITED_PSEUDO_PREF "layout.css.visited_links_enabled"
 
@@ -3444,10 +3439,8 @@ struct PerWeightDataListItem : public RuleSelectorPair {
 
 
   // Placement new to arena allocate the PerWeightDataListItem
-  void *operator new(size_t aSize, PLArenaPool &aArena) CPP_THROW_NEW {
-    void *mem;
-    PL_ARENA_ALLOCATE(mem, &aArena, aSize);
-    return mem;
+  void *operator new(size_t aSize, CascadeAllocator &aArena) CPP_THROW_NEW {
+    return aArena.Allocate(aSize, fallible);
   }
 
   PerWeightDataListItem *mNext;
@@ -3521,14 +3514,10 @@ struct CascadeEnumData {
       mSheetType(aSheetType),
       mMustGatherDocumentRules(aMustGatherDocumentRules)
   {
-    // Initialize our arena
-    PL_INIT_ARENA_POOL(&mArena, "CascadeEnumDataArena",
-                       NS_CASCADEENUMDATA_ARENA_BLOCK_SIZE);
   }
 
   ~CascadeEnumData()
   {
-    PL_FinishArenaPool(&mArena);
   }
 
   nsPresContext* mPresContext;
@@ -3540,7 +3529,8 @@ struct CascadeEnumData {
   nsTArray<css::DocumentRule*>& mDocumentRules;
   nsMediaQueryResultCacheKey& mCacheKey;
   nsDocumentRuleResultCacheKey& mDocumentCacheKey;
-  PLArenaPool mArena;
+  // We want page-sized arenas so there's no fragmentation involved.
+  CascadeAllocator  mArena;
   // Hooray, a manual PLDHashTable since nsClassHashtable doesn't
   // provide a getter that gives me a *reference* to the value.
   PLDHashTable mRulesByWeight; // of PerWeightDataListItem linked lists

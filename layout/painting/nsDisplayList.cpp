@@ -923,8 +923,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mHitTestShouldStopAtFirstOpaque(false)
 {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
-  PL_InitArenaPool(&mPool, "displayListArena", 4096,
-                   std::max(NS_ALIGNMENT_OF(void*),NS_ALIGNMENT_OF(double))-1);
 
   nsPresContext* pc = aReferenceFrame->PresContext();
   nsIPresShell *shell = pc->PresShell();
@@ -1112,7 +1110,6 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
     c->DisplayItemClipChain::~DisplayItemClipChain();
   }
 
-  PL_FinishArenaPool(&mPool);
   MOZ_COUNT_DTOR(nsDisplayListBuilder);
 }
 
@@ -1336,12 +1333,7 @@ nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame)
 void*
 nsDisplayListBuilder::Allocate(size_t aSize)
 {
-  void *tmp;
-  PL_ARENA_ALLOCATE(tmp, &mPool, aSize);
-  if (!tmp) {
-    NS_ABORT_OOM(aSize);
-  }
-  return tmp;
+  return mPool.Allocate(aSize);
 }
 
 ActiveScrolledRoot*
