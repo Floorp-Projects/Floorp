@@ -64,7 +64,6 @@ let webpackConfig = {
       "devtools/client/shared/curl": "devtools-modules",
       "devtools/client/shared/file-saver": "devtools-modules",
       "devtools/client/shared/prefs": "devtools-modules",
-      "devtools/client/shared/redux/middleware/thunk": "devtools-launchpad/src/utils/redux/middleware/thunk",
       "devtools/client/shared/vendor/immutable": "immutable",
       "devtools/client/shared/vendor/react": "react",
       "devtools/client/shared/vendor/react-dom": "react-dom",
