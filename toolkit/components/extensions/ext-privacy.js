@@ -2,11 +2,14 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
 
 Cu.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
-var {
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+const {
   ExtensionError,
 } = ExtensionUtils;
 
@@ -105,47 +108,45 @@ ExtensionPreferencesManager.addSetting("websites.hyperlinkAuditingEnabled", {
   },
 });
 
-this.privacy = class extends ExtensionAPI {
-  getAPI(context) {
-    let {extension} = context;
-    return {
-      privacy: {
-        network: {
-          networkPredictionEnabled: getAPI(extension,
-            "network.networkPredictionEnabled",
-            () => {
-              return Preferences.get("network.predictor.enabled") &&
-                Preferences.get("network.prefetch-next") &&
-                Preferences.get("network.http.speculative-parallel-limit") > 0 &&
-                !Preferences.get("network.dns.disablePrefetch");
-            }),
-          webRTCIPHandlingPolicy: getAPI(extension,
-            "network.webRTCIPHandlingPolicy",
-            () => {
-              if (Preferences.get("media.peerconnection.ice.proxy_only")) {
-                return "disable_non_proxied_udp";
-              }
+extensions.registerSchemaAPI("privacy.network", "addon_parent", context => {
+  let {extension} = context;
+  return {
+    privacy: {
+      network: {
+        networkPredictionEnabled: getAPI(extension,
+          "network.networkPredictionEnabled",
+          () => {
+            return Preferences.get("network.predictor.enabled") &&
+              Preferences.get("network.prefetch-next") &&
+              Preferences.get("network.http.speculative-parallel-limit") > 0 &&
+              !Preferences.get("network.dns.disablePrefetch");
+          }),
+        webRTCIPHandlingPolicy: getAPI(extension,
+          "network.webRTCIPHandlingPolicy",
+          () => {
+            if (Preferences.get("media.peerconnection.ice.proxy_only")) {
+              return "disable_non_proxied_udp";
+            }
 
-              let default_address_only =
-                Preferences.get("media.peerconnection.ice.default_address_only");
-              if (default_address_only) {
-                if (Preferences.get("media.peerconnection.ice.no_host")) {
-                  return "default_public_interface_only";
-                }
-                return "default_public_and_private_interfaces";
+            let default_address_only =
+              Preferences.get("media.peerconnection.ice.default_address_only");
+            if (default_address_only) {
+              if (Preferences.get("media.peerconnection.ice.no_host")) {
+                return "default_public_interface_only";
               }
+              return "default_public_and_private_interfaces";
+            }
 
-              return "default";
-            }),
-        },
-        websites: {
-          hyperlinkAuditingEnabled: getAPI(extension,
-            "websites.hyperlinkAuditingEnabled",
-            () => {
-              return Preferences.get("browser.send_pings");
-            }),
-        },
+            return "default";
+          }),
       },
-    };
-  }
-};
+      websites: {
+        hyperlinkAuditingEnabled: getAPI(extension,
+          "websites.hyperlinkAuditingEnabled",
+          () => {
+            return Preferences.get("browser.send_pings");
+          }),
+      },
+    },
+  };
+});

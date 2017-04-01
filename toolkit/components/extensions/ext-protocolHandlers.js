@@ -25,51 +25,45 @@ function hasHandlerApp(handlerConfig) {
   return false;
 }
 
-this.protocolHandlers = class extends ExtensionAPI {
-  onManifestEntry(entryName) {
-    let {extension} = this;
-    let {manifest} = extension;
-
-    for (let handlerConfig of manifest.protocol_handlers) {
-      if (hasHandlerApp(handlerConfig)) {
-        continue;
-      }
-
-      let handler = Cc["@mozilla.org/uriloader/web-handler-app;1"]
-                      .createInstance(Ci.nsIWebHandlerApp);
-      handler.name = handlerConfig.name;
-      handler.uriTemplate = handlerConfig.uriTemplate;
-
-      let protoInfo = protocolService.getProtocolHandlerInfo(handlerConfig.protocol);
-      protoInfo.possibleApplicationHandlers.appendElement(handler, false);
-      handlerService.store(protoInfo);
+/* eslint-disable mozilla/balanced-listeners */
+extensions.on("manifest_protocol_handlers", (type, directive, extension, manifest) => {
+  for (let handlerConfig of manifest.protocol_handlers) {
+    if (hasHandlerApp(handlerConfig)) {
+      continue;
     }
-    handlers.set(extension, manifest.protocol_handlers);
+
+    let handler = Cc["@mozilla.org/uriloader/web-handler-app;1"]
+                    .createInstance(Ci.nsIWebHandlerApp);
+    handler.name = handlerConfig.name;
+    handler.uriTemplate = handlerConfig.uriTemplate;
+
+    let protoInfo = protocolService.getProtocolHandlerInfo(handlerConfig.protocol);
+    protoInfo.possibleApplicationHandlers.appendElement(handler, false);
+    handlerService.store(protoInfo);
   }
+  handlers.set(extension, manifest.protocol_handlers);
+});
 
-  onShutdown() {
-    let {extension} = this;
-
-    if (!handlers.has(extension) || extension.shutdownReason === "APP_SHUTDOWN") {
-      return;
-    }
-    for (let handlerConfig of handlers.get(extension)) {
-      let protoInfo = protocolService.getProtocolHandlerInfo(handlerConfig.protocol);
-      let appHandlers = protoInfo.possibleApplicationHandlers;
-      for (let i = 0; i < appHandlers.length; i++) {
-        let handler = appHandlers.queryElementAt(i, Ci.nsISupports);
-        if (handler instanceof Ci.nsIWebHandlerApp &&
-            handler.uriTemplate === handlerConfig.uriTemplate) {
-          appHandlers.removeElementAt(i);
-          if (protoInfo.preferredApplicationHandler === handler) {
-            protoInfo.preferredApplicationHandler = null;
-            protoInfo.alwaysAskBeforeHandling = true;
-          }
-          handlerService.store(protoInfo);
-          break;
+extensions.on("shutdown", (type, extension) => {
+  if (!handlers.has(extension) || extension.shutdownReason === "APP_SHUTDOWN") {
+    return;
+  }
+  for (let handlerConfig of handlers.get(extension)) {
+    let protoInfo = protocolService.getProtocolHandlerInfo(handlerConfig.protocol);
+    let appHandlers = protoInfo.possibleApplicationHandlers;
+    for (let i = 0; i < appHandlers.length; i++) {
+      let handler = appHandlers.queryElementAt(i, Ci.nsISupports);
+      if (handler instanceof Ci.nsIWebHandlerApp &&
+          handler.uriTemplate === handlerConfig.uriTemplate) {
+        appHandlers.removeElementAt(i);
+        if (protoInfo.preferredApplicationHandler === handler) {
+          protoInfo.preferredApplicationHandler = null;
+          protoInfo.alwaysAskBeforeHandling = true;
         }
+        handlerService.store(protoInfo);
+        break;
       }
     }
-    handlers.delete(extension);
   }
-};
+  handlers.delete(extension);
+});

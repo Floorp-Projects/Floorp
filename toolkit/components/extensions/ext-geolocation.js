@@ -1,5 +1,7 @@
 "use strict";
 
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
@@ -8,23 +10,19 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 // permission if it is not set (unknown_action), and we only remove the
 // permission on shutdown if it is always allow.
 
-this.geolocation = class extends ExtensionAPI {
-  onStartup() {
-    let {extension} = this;
-
-    if (extension.hasPermission("geolocation") &&
-        Services.perms.testPermission(extension.principal.URI, "geo") == Services.perms.UNKNOWN_ACTION) {
-      Services.perms.add(extension.principal.URI, "geo",
-                         Services.perms.ALLOW_ACTION,
-                         Services.perms.EXPIRE_SESSION);
-    }
+/* eslint-disable mozilla/balanced-listeners */
+extensions.on("startup", (type, extension) => {
+  if (extension.hasPermission("geolocation") &&
+      Services.perms.testPermission(extension.principal.URI, "geo") == Services.perms.UNKNOWN_ACTION) {
+    Services.perms.add(extension.principal.URI, "geo",
+                       Services.perms.ALLOW_ACTION,
+                       Services.perms.EXPIRE_SESSION);
   }
+});
 
-  onShutdown() {
-    let {extension} = this;
-    if (extension.hasPermission("geolocation") &&
-        Services.perms.testPermission(extension.principal.URI, "geo") == Services.perms.ALLOW_ACTION) {
-      Services.perms.remove(extension.principal.URI, "geo");
-    }
+extensions.on("shutdown", (type, extension) => {
+  if (extension.hasPermission("geolocation") &&
+      Services.perms.testPermission(extension.principal.URI, "geo") == Services.perms.ALLOW_ACTION) {
+    Services.perms.remove(extension.principal.URI, "geo");
   }
-};
+});
