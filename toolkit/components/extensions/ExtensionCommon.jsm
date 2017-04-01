@@ -28,8 +28,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
-  DefaultMap,
-  DefaultWeakMap,
   EventEmitter,
   ExtensionError,
   SpreadArgs,
@@ -550,214 +548,6 @@ class LocalAPIImplementation extends SchemaAPIInterface {
   }
 }
 
-// Recursively copy properties from source to dest.
-function deepCopy(dest, source) {
-  for (let prop in source) {
-    let desc = Object.getOwnPropertyDescriptor(source, prop);
-    if (typeof(desc.value) == "object") {
-      if (!(prop in dest)) {
-        dest[prop] = {};
-      }
-      deepCopy(dest[prop], source[prop]);
-    } else {
-      Object.defineProperty(dest, prop, desc);
-    }
-  }
-}
-
-/**
- * Manages loading and accessing a set of APIs for a specific extension
- * context.
- *
- * @param {BaseContext} context
- *        The context to manage APIs for.
- * @param {SchemaAPIManager} apiManager
- *        The API manager holding the APIs to manage.
- * @param {object} root
- *        The root object into which APIs will be injected.
- */
-class CanOfAPIs {
-  constructor(context, apiManager, root) {
-    this.context = context;
-    this.scopeName = context.envType;
-    this.apiManager = apiManager;
-    this.root = root;
-
-    this.apiPaths = new Map();
-
-    this.apis = new Map();
-  }
-
-  /**
-   * Synchronously loads and initializes an ExtensionAPI instance.
-   *
-   * @param {string} name
-   *        The name of the API to load.
-   */
-  loadAPI(name) {
-    if (this.apis.has(name)) {
-      return;
-    }
-
-    let {extension} = this.context;
-
-    let api = this.apiManager.getAPI(name, extension, this.scopeName);
-    if (!api) {
-      return;
-    }
-
-    this.apis.set(name, api);
-
-    deepCopy(this.root, api.getAPI(this.context));
-  }
-
-  /**
-   * Asynchronously loads and initializes an ExtensionAPI instance.
-   *
-   * @param {string} name
-   *        The name of the API to load.
-   */
-  async asyncLoadAPI(name) {
-    if (this.apis.has(name)) {
-      return;
-    }
-
-    let {extension} = this.context;
-    if (!Schemas.checkPermissions(name, extension)) {
-      return;
-    }
-
-    let api = await this.apiManager.asyncGetAPI(name, extension, this.scopeName);
-    // Check again, because async;
-    if (this.apis.has(name)) {
-      return;
-    }
-
-    this.apis.set(name, api);
-
-    deepCopy(this.root, api.getAPI(this.context));
-  }
-
-  /**
-   * Finds the API at the given path from the root object, and
-   * synchronously loads the API that implements it if it has not
-   * already been loaded.
-   *
-   * @param {string} path
-   *        The "."-separated path to find.
-   * @returns {*}
-   */
-  findAPIPath(path) {
-    if (this.apiPaths.has(path)) {
-      return this.apiPaths.get(path);
-    }
-
-    let obj = this.root;
-    let modules = this.apiManager.modulePaths;
-
-    for (let key of path.split(".")) {
-      if (!obj) {
-        return;
-      }
-      modules = modules.get(key);
-
-      for (let name of modules.modules) {
-        if (!this.apis.has(name)) {
-          this.loadAPI(name);
-        }
-      }
-
-      obj = obj[key];
-    }
-
-    this.apiPaths.set(path, obj);
-    return obj;
-  }
-
-  /**
-   * Finds the API at the given path from the root object, and
-   * asynchronously loads the API that implements it if it has not
-   * already been loaded.
-   *
-   * @param {string} path
-   *        The "."-separated path to find.
-   * @returns {Promise<*>}
-   */
-  async asyncFindAPIPath(path) {
-    if (this.apiPaths.has(path)) {
-      return this.apiPaths.get(path);
-    }
-
-    let obj = this.root;
-    let modules = this.apiManager.modulePaths;
-
-    for (let key of path.split(".")) {
-      if (!obj) {
-        return;
-      }
-      modules = modules.get(key);
-
-      for (let name of modules.modules) {
-        if (!this.apis.has(name)) {
-          await this.asyncLoadAPI(name);
-        }
-      }
-
-      if (typeof obj[key] === "function") {
-        obj = obj[key].bind(obj);
-      } else {
-        obj = obj[key];
-      }
-    }
-
-    this.apiPaths.set(path, obj);
-    return obj;
-  }
-}
-
-class DeepMap extends DefaultMap {
-  constructor() {
-    super(() => new DeepMap());
-
-    this.modules = new Set();
-  }
-
-  getPath(path) {
-    return path.reduce((map, key) => map.get(key), this);
-  }
-}
-
-/**
- * @class APIModule
- * @abstract
- *
- * @property {string} url
- *       The URL of the script which contains the module's
- *       implementation. This script must define a global property
- *       matching the modules name, which must be a class constructor
- *       which inherits from {@link ExtensionAPI}.
- *
- * @property {string} schema
- *       The URL of the JSON schema which describes the module's API.
- *
- * @property {Array<string>} scopes
- *       The list of scope names into which the API may be loaded.
- *
- * @property {Array<string>} manifest
- *       The list of top-level manifest properties which will trigger
- *       the module to be loaded, and its `onManifestEntry` method to be
- *       called.
- *
- * @property {Array<string>} events
- *       The list events which will trigger the module to be loaded, and
- *       its appropriate event handler method to be called. Currently
- *       only accepts "startup".
- *
- * @property {Array<Array<string>>} paths
- *       A list of paths from the root API object which, when accessed,
- *       will cause the API module to be instantiated and injected.
- */
-
 /**
  * This object loads the ext-*.js scripts that define the extension API.
  *
@@ -777,16 +567,6 @@ class SchemaAPIManager extends EventEmitter {
     super();
     this.processType = processType;
     this.global = this._createExtGlobal();
-
-    this.modules = new Map();
-    this.modulePaths = new DeepMap();
-    this.manifestKeys = new Map();
-    this.eventModules = new DefaultMap(() => new Set());
-
-    this.schemaURLs = new Set();
-
-    this.apis = new DefaultWeakMap(() => new Map());
-
     this._scriptScopes = [];
     this._schemaApis = {
       addon_parent: [],
@@ -798,266 +578,6 @@ class SchemaAPIManager extends EventEmitter {
       proxy_script: [],
     };
   }
-
-  /**
-   * Registers a set of ExtensionAPI modules to be lazily loaded and
-   * managed by this manager.
-   *
-   * @param {object} obj
-   *        An object containing property for eacy API module to be
-   *        registered. Each value should be an object implementing the
-   *        APIModule interface.
-   */
-  registerModules(obj) {
-    for (let [name, details] of Object.entries(obj)) {
-      details.namespaceName = name;
-
-      if (this.modules.has(name)) {
-        throw new Error(`Module '${name}' already registered`);
-      }
-      this.modules.set(name, details);
-
-      if (details.schema) {
-        this.schemaURLs.add(details.schema);
-      }
-
-      for (let event of details.events || []) {
-        this.eventModules.get(event).add(name);
-      }
-
-      for (let key of details.manifest || []) {
-        if (this.manifestKeys.has(key)) {
-          throw new Error(`Manifest key '${key}' already registered by '${this.manifestKeys.get(key)}'`);
-        }
-
-        this.manifestKeys.set(key, name);
-      }
-
-      for (let path of details.paths || []) {
-        this.modulePaths.getPath(path).modules.add(name);
-      }
-    }
-  }
-
-  /**
-   * Emits an `onManifestEntry` event for the top-level manifest entry
-   * on all relevant {@link ExtensionAPI} instances for the given
-   * extension.
-   *
-   * The API modules will be synchronously loaded if they have not been
-   * loaded already.
-   *
-   * @param {Extension} extension
-   *        The extension for which to emit the events.
-   * @param {string} entry
-   *        The name of the top-level manifest entry.
-   *
-   * @returns {*}
-   */
-  emitManifestEntry(extension, entry) {
-    let apiName = this.manifestKeys.get(entry);
-    if (apiName) {
-      let api = this.getAPI(apiName, extension);
-      return api.onManifestEntry(entry);
-    }
-  }
-  /**
-   * Emits an `onManifestEntry` event for the top-level manifest entry
-   * on all relevant {@link ExtensionAPI} instances for the given
-   * extension.
-   *
-   * The API modules will be asynchronously loaded if they have not been
-   * loaded already.
-   *
-   * @param {Extension} extension
-   *        The extension for which to emit the events.
-   * @param {string} entry
-   *        The name of the top-level manifest entry.
-   *
-   * @returns {Promise<*>}
-   */
-  async asyncEmitManifestEntry(extension, entry) {
-    let apiName = this.manifestKeys.get(entry);
-    if (apiName) {
-      let api = await this.asyncGetAPI(apiName, extension);
-      return api.onManifestEntry(entry);
-    }
-  }
-
-  /**
-   * Returns the {@link ExtensionAPI} instance for the given API module,
-   * for the given extension, in the given scope, synchronously loading
-   * and instantiating it if necessary.
-   *
-   * @param {string} name
-   *        The name of the API module to load.
-   * @param {Extension} extension
-   *        The extension for which to load the API.
-   * @param {string} [scope = null]
-   *        The scope type for which to retrieve the API, or null if not
-   *        being retrieved for a particular scope.
-   *
-   * @returns {ExtensionAPI?}
-   */
-  getAPI(name, extension, scope = null) {
-    if (!this._checkGetAPI(name, extension, scope)) {
-      return;
-    }
-
-    let apis = this.apis.get(extension);
-    if (apis.has(name)) {
-      return apis.get(name);
-    }
-
-    let module = this.loadModule(name);
-
-    let api = new module(extension);
-    apis.set(name, api);
-    return api;
-  }
-  /**
-   * Returns the {@link ExtensionAPI} instance for the given API module,
-   * for the given extension, in the given scope, asynchronously loading
-   * and instantiating it if necessary.
-   *
-   * @param {string} name
-   *        The name of the API module to load.
-   * @param {Extension} extension
-   *        The extension for which to load the API.
-   * @param {string} [scope = null]
-   *        The scope type for which to retrieve the API, or null if not
-   *        being retrieved for a particular scope.
-   *
-   * @returns {Promise<ExtensionAPI>?}
-   */
-  async asyncGetAPI(name, extension, scope = null) {
-    if (!this._checkGetAPI(name, extension, scope)) {
-      return;
-    }
-
-    let apis = this.apis.get(extension);
-    if (apis.has(name)) {
-      return apis.get(name);
-    }
-
-    let module = await this.asyncLoadModule(name);
-
-    // Check again, because async.
-    if (apis.has(name)) {
-      return apis.get(name);
-    }
-
-    let api = new module(extension);
-    apis.set(name, api);
-    return api;
-  }
-
-  /**
-   * Synchronously loads an API module, if not already loaded, and
-   * returns its ExtensionAPI constructor.
-   *
-   * @param {string} name
-   *        The name of the module to load.
-   *
-   * @returns {class}
-   */
-  loadModule(name) {
-    let module = this.modules.get(name);
-    if (module.loaded) {
-      return this.global[name];
-    }
-
-    this._checkLoadModule(module, name);
-
-    Services.scriptloader.loadSubScript(module.url, this.global, "UTF-8");
-
-    module.loaded = true;
-
-    return this._initModule(module, this.global[name]);
-  }
-  /**
-   * aSynchronously loads an API module, if not already loaded, and
-   * returns its ExtensionAPI constructor.
-   *
-   * @param {string} name
-   *        The name of the module to load.
-   *
-   * @returns {Promise<class>}
-   */
-  asyncLoadModule(name) {
-    let module = this.modules.get(name);
-    if (module.loaded) {
-      return Promise.resolve(this.global[name]);
-    }
-    if (module.asyncLoaded) {
-      return module.asyncLoaded;
-    }
-
-    this._checkLoadModule(module, name);
-
-    module.asyncLoaded = ChromeUtils.compileScript(module.url).then(script => {
-      script.executeInGlobal(this.global);
-
-      module.loaded = true;
-
-      return this._initModule(module, this.global[name]);
-    });
-
-    return module.asyncLoaded;
-  }
-
-  /**
-   * Checks whether the given API module may be loaded for the given
-   * extension, in the given scope.
-   *
-   * @param {string} name
-   *        The name of the API module to check.
-   * @param {Extension} extension
-   *        The extension for which to check the API.
-   * @param {string} [scope = null]
-   *        The scope type for which to check the API, or null if not
-   *        being checked for a particular scope.
-   *
-   * @returns {boolean}
-   *        Whether the module may be loaded.
-   */
-  _checkGetAPI(name, extension, scope = null) {
-    let module = this.modules.get(name);
-
-    if (!scope) {
-      return true;
-    }
-
-    if (!module.scopes.includes(scope)) {
-      return false;
-    }
-
-    if (!Schemas.checkPermissions(module.namespaceName, extension)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  _initModule(info, cls) {
-    cls.namespaceName = cls.namespaceName;
-    cls.scopes = new Set(info.scopes);
-
-    return cls;
-  }
-
-  _checkLoadModule(module, name) {
-    if (!module) {
-      throw new Error(`Module '${name}' does not exist`);
-    }
-    if (module.asyncLoaded) {
-      throw new Error(`Module '${name}' currently being lazily loaded`);
-    }
-    if (this.global[name]) {
-      throw new Error(`Module '${name}' conflicts with existing global property`);
-    }
-  }
-
 
   /**
    * Create a global object that is used as the shared global for all ext-*.js
@@ -1073,15 +593,8 @@ class SchemaAPIManager extends EventEmitter {
 
     Object.assign(global, {global, Cc, Ci, Cu, Cr, XPCOMUtils, extensions: this});
 
-    Cu.import("resource://gre/modules/AppConstants.jsm", global);
-    Cu.import("resource://gre/modules/ExtensionAPI.jsm", global);
-
     XPCOMUtils.defineLazyGetter(global, "console", getConsole);
 
-    XPCOMUtils.defineLazyModuleGetter(global, "ExtensionUtils",
-                                      "resource://gre/modules/ExtensionUtils.jsm");
-    XPCOMUtils.defineLazyModuleGetter(global, "XPCOMUtils",
-                                      "resource://gre/modules/XPCOMUtils.jsm");
     XPCOMUtils.defineLazyModuleGetter(global, "require",
                                       "resource://devtools/shared/Loader.jsm");
 
@@ -1161,13 +674,28 @@ class SchemaAPIManager extends EventEmitter {
    * @param {object} obj The destination of the API.
    */
   static generateAPIs(context, apis, obj) {
+    // Recursively copy properties from source to dest.
+    function copy(dest, source) {
+      for (let prop in source) {
+        let desc = Object.getOwnPropertyDescriptor(source, prop);
+        if (typeof(desc.value) == "object") {
+          if (!(prop in dest)) {
+            dest[prop] = {};
+          }
+          copy(dest[prop], source[prop]);
+        } else {
+          Object.defineProperty(dest, prop, desc);
+        }
+      }
+    }
+
     function hasPermission(perm) {
       return context.extension.hasPermission(perm, true);
     }
     for (let api of apis) {
       if (Schemas.checkPermissions(api.namespace, {hasPermission})) {
         api = api.getAPI(context);
-        deepCopy(obj, api);
+        copy(obj, api);
       }
     }
   }
@@ -1175,7 +703,6 @@ class SchemaAPIManager extends EventEmitter {
 
 const ExtensionCommon = {
   BaseContext,
-  CanOfAPIs,
   LocalAPIImplementation,
   SchemaAPIInterface,
   SchemaAPIManager,
