@@ -1065,7 +1065,11 @@ class ContentGlobal {
         }
 
         promiseEvent(this.global, "DOMContentLoaded", true).then(() => {
-          this.global.sendAsyncMessage("Extension:ExtensionViewLoaded");
+          let windowId = getInnerWindowID(this.global.content);
+          let context = ExtensionChild.extensionContexts.get(windowId);
+
+          this.global.sendAsyncMessage("Extension:ExtensionViewLoaded",
+                                       {childId: context && context.childManager.id});
         });
 
         /* FALLTHROUGH */

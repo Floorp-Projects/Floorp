@@ -239,52 +239,57 @@ class Theme {
   }
 }
 
-/* eslint-disable mozilla/balanced-listeners */
-extensions.on("manifest_theme", (type, directive, extension, manifest) => {
-  if (!gThemesEnabled) {
-    // Return early if themes are disabled.
-    return;
+this.theme = class extends ExtensionAPI {
+  onManifestEntry(entryName) {
+    if (!gThemesEnabled) {
+      // Return early if themes are disabled.
+      return;
+    }
+
+    let {extension} = this;
+    let {manifest} = extension;
+
+    let theme = new Theme(extension.baseURI, extension.logger);
+    theme.load(manifest.theme);
+    themeMap.set(extension, theme);
   }
 
-  let theme = new Theme(extension.baseURI, extension.logger);
-  theme.load(manifest.theme);
-  themeMap.set(extension, theme);
-});
+  onShutdown() {
+    let {extension} = this;
 
-extensions.on("shutdown", (type, extension) => {
-  let theme = themeMap.get(extension);
+    let theme = themeMap.get(extension);
 
-  if (!theme) {
-    // We won't have a theme if themes are disabled.
-    return;
+    if (!theme) {
+      // We won't have a theme if themes are disabled.
+      return;
+    }
+
+    theme.unload();
   }
 
-  theme.unload();
-});
-/* eslint-enable mozilla/balanced-listeners */
+  getAPI(context) {
+    let {extension} = context;
+    return {
+      theme: {
+        update(details) {
+          if (!gThemesEnabled) {
+            // Return early if themes are disabled.
+            return;
+          }
 
-extensions.registerSchemaAPI("theme", "addon_parent", context => {
-  let {extension} = context;
-  return {
-    theme: {
-      update(details) {
-        if (!gThemesEnabled) {
-          // Return early if themes are disabled.
-          return;
-        }
+          let theme = themeMap.get(extension);
 
-        let theme = themeMap.get(extension);
+          if (!theme) {
+            // WebExtensions using the Theme API will not have a theme defined
+            // in the manifest. Therefore, we need to initialize the theme the
+            // first time browser.theme.update is called.
+            theme = new Theme(extension.baseURI, extension.logger);
+            themeMap.set(extension, theme);
+          }
 
-        if (!theme) {
-          // WebExtensions using the Theme API will not have a theme defined
-          // in the manifest. Therefore, we need to initialize the theme the
-          // first time browser.theme.update is called.
-          theme = new Theme(extension.baseURI, extension.logger);
-          themeMap.set(extension, theme);
-        }
-
-        theme.load(details);
+          theme.load(details);
+        },
       },
-    },
-  };
-});
+    };
+  }
+};
