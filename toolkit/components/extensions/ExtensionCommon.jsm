@@ -788,6 +788,15 @@ class SchemaAPIManager extends EventEmitter {
     this.apis = new DefaultWeakMap(() => new Map());
 
     this._scriptScopes = [];
+    this._schemaApis = {
+      addon_parent: [],
+      addon_child: [],
+      content_parent: [],
+      content_child: [],
+      devtools_parent: [],
+      devtools_child: [],
+      proxy_script: [],
+    };
   }
 
   /**
@@ -1095,6 +1104,52 @@ class SchemaAPIManager extends EventEmitter {
 
     // Save the scope to avoid it being garbage collected.
     this._scriptScopes.push(scope);
+  }
+
+  /**
+   * Called by an ext-*.js script to register an API.
+   *
+   * @param {string} namespace The API namespace.
+   *     Intended to match the namespace of the generated API, but not used at
+   *     the moment - see bugzil.la/1295774.
+   * @param {string} envType Restricts the API to contexts that run in the
+   *    given environment. Must be one of the following:
+   *     - "addon_parent" - addon APIs that run in the main process.
+   *     - "addon_child" - addon APIs that run in an addon process.
+   *     - "content_parent" - content script APIs that run in the main process.
+   *     - "content_child" - content script APIs that run in a content process.
+   *     - "devtools_parent" - devtools APIs that run in the main process.
+   *     - "devtools_child" - devtools APIs that run in a devtools process.
+   *     - "proxy_script" - proxy script APIs that run in the main process.
+   * @param {function(BaseContext)} getAPI A function that returns an object
+   *     that will be merged with |chrome| and |browser|. The next example adds
+   *     the create, update and remove methods to the tabs API.
+   *
+   *     registerSchemaAPI("tabs", "addon_parent", (context) => ({
+   *       tabs: { create, update },
+   *     }));
+   *     registerSchemaAPI("tabs", "addon_parent", (context) => ({
+   *       tabs: { remove },
+   *     }));
+   */
+  registerSchemaAPI(namespace, envType, getAPI) {
+    this._schemaApis[envType].push({namespace, getAPI});
+  }
+
+  /**
+   * Exports all registered scripts to `obj`.
+   *
+   * @param {BaseContext} context The context for which the API bindings are
+   *     generated.
+   * @param {object} obj The destination of the API.
+   */
+  generateAPIs(context, obj) {
+    let apis = this._schemaApis[context.envType];
+    if (!apis) {
+      Cu.reportError(`No APIs have been registered for ${context.envType}`);
+      return;
+    }
+    SchemaAPIManager.generateAPIs(context, apis, obj);
   }
 
   /**

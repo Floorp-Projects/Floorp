@@ -469,12 +469,19 @@ var apiManager = new class extends SchemaAPIManager {
     this.initialized = false;
   }
 
-  lazyInit() {
+  generateAPIs(...args) {
     if (!this.initialized) {
       this.initialized = true;
       for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_ADDON)) {
         this.loadScript(value);
       }
+    }
+    return super.generateAPIs(...args);
+  }
+
+  registerSchemaAPI(namespace, envType, getAPI) {
+    if (envType == "addon_child") {
+      super.registerSchemaAPI(namespace, envType, getAPI);
     }
   }
 }();
@@ -485,12 +492,19 @@ var devtoolsAPIManager = new class extends SchemaAPIManager {
     this.initialized = false;
   }
 
-  lazyInit() {
+  generateAPIs(...args) {
     if (!this.initialized) {
       this.initialized = true;
       for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS)) {
         this.loadScript(value);
       }
+    }
+    return super.generateAPIs(...args);
+  }
+
+  registerSchemaAPI(namespace, envType, getAPI) {
+    if (envType == "devtools_child") {
+      super.registerSchemaAPI(namespace, envType, getAPI);
     }
   }
 }();
@@ -931,10 +945,9 @@ class ExtensionPageContextChild extends ExtensionBaseContextChild {
 }
 
 defineLazyGetter(ExtensionPageContextChild.prototype, "childManager", function() {
-  apiManager.lazyInit();
-
   let localApis = {};
   let can = new CanOfAPIs(this, apiManager, localApis);
+  apiManager.generateAPIs(this, localApis);
 
   let childManager = new ChildAPIManager(this, this.messageManager, can, {
     envType: "addon_parent",
@@ -980,10 +993,9 @@ class DevToolsContextChild extends ExtensionBaseContextChild {
 }
 
 defineLazyGetter(DevToolsContextChild.prototype, "childManager", function() {
-  devtoolsAPIManager.lazyInit();
-
   let localApis = {};
   let can = new CanOfAPIs(this, apiManager, localApis);
+  devtoolsAPIManager.generateAPIs(this, localApis);
 
   let childManager = new ChildAPIManager(this, this.messageManager, can, {
     envType: "devtools_parent",

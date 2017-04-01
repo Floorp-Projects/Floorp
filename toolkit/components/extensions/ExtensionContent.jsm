@@ -95,12 +95,19 @@ var apiManager = new class extends SchemaAPIManager {
     this.initialized = false;
   }
 
-  lazyInit() {
+  generateAPIs(...args) {
     if (!this.initialized) {
       this.initialized = true;
       for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_CONTENT)) {
         this.loadScript(value);
       }
+    }
+    return super.generateAPIs(...args);
+  }
+
+  registerSchemaAPI(namespace, envType, getAPI) {
+    if (envType == "content_child") {
+      super.registerSchemaAPI(namespace, envType, getAPI);
     }
   }
 }();
@@ -618,10 +625,9 @@ defineLazyGetter(ContentScriptContextChild.prototype, "messenger", function() {
 });
 
 defineLazyGetter(ContentScriptContextChild.prototype, "childManager", function() {
-  apiManager.lazyInit();
-
   let localApis = {};
   let can = new CanOfAPIs(this, apiManager, localApis);
+  apiManager.generateAPIs(this, localApis);
 
   let childManager = new ChildAPIManager(this, this.messageManager, can, {
     envType: "content_parent",
