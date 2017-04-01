@@ -36,7 +36,6 @@ using class mozilla::layers::FrameUniformityData from "mozilla/layers/FrameUnifo
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
-using base::ProcessId from "base/process.h";
 
 namespace mozilla {
 namespace layers {
@@ -175,12 +174,6 @@ parent:
   // See bug 1316632 comment #33 for why this has to be sync. Otherwise,
   // there are ordering issues with SendPLayerTransactionConstructor.
   sync NotifyChildCreated(uint64_t id);
-
-  // This version of NotifyChildCreated also performs a layer tree mapping.
-  //
-  // See bug 1316632 comment #33 for why this has to be sync. Otherwise,
-  // there are ordering issues with SendPLayerTransactionConstructor.
-  sync MapAndNotifyChildCreated(uint64_t id, ProcessId owner);
 
   async AdoptChild(uint64_t id);
 

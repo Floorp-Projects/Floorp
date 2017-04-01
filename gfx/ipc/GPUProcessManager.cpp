@@ -301,6 +301,12 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
 
   mVsyncBridge = VsyncBridgeChild::Create(mVsyncIOThread, mProcessToken, Move(vsyncChild));
   mGPUChild->SendInitVsyncBridge(Move(vsyncParent));
+
+  nsTArray<LayerTreeIdMapping> mappings;
+  LayerTreeOwnerTracker::Get()->Iterate([&](uint64_t aLayersId, base::ProcessId aProcessId) {
+    mappings.AppendElement(LayerTreeIdMapping(aLayersId, aProcessId));
+  });
+  mGPUChild->SendAddLayerTreeIdMapping(mappings);
 }
 
 static bool
@@ -816,7 +822,9 @@ GPUProcessManager::MapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningId)
   LayerTreeOwnerTracker::Get()->Map(aLayersId, aOwningId);
 
   if (EnsureGPUReady()) {
-    mGPUChild->SendAddLayerTreeIdMapping(LayerTreeIdMapping(aLayersId, aOwningId));
+    AutoTArray<LayerTreeIdMapping, 1> mappings;
+    mappings.AppendElement(LayerTreeIdMapping(aLayersId, aOwningId));
+    mGPUChild->SendAddLayerTreeIdMapping(mappings);
   }
 }
 
@@ -843,30 +851,6 @@ GPUProcessManager::AllocateLayerTreeId()
 {
   MOZ_ASSERT(NS_IsMainThread());
   return ++mNextLayerTreeId;
-}
-
-uint64_t
-GPUProcessManager::AllocateAndConnectLayerTreeId(PCompositorBridgeChild* aCompositorBridge,
-                                                 base::ProcessId aOtherPid)
-{
-  uint64_t layersId = AllocateLayerTreeId();
-
-  if (!mGPUChild || !aCompositorBridge) {
-    // If we're not remoting to another process, or there is no compositor,
-    // then we'll send at most one message. In this case we can just keep
-    // the old behavior of making sure the mapping occurs, and maybe sending
-    // a creation notification.
-    MapLayerTreeId(layersId, aOtherPid);
-    if (aCompositorBridge) {
-      aCompositorBridge->SendNotifyChildCreated(layersId);
-    }
-    return layersId;
-  }
-
-  // Use the combined message path.
-  LayerTreeOwnerTracker::Get()->Map(layersId, aOtherPid);
-  aCompositorBridge->SendMapAndNotifyChildCreated(layersId, aOtherPid);
-  return layersId;
 }
 
 void
