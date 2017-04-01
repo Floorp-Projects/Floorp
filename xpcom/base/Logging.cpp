@@ -44,18 +44,6 @@ namespace mozilla {
 
 namespace detail {
 
-void log_print(const PRLogModuleInfo* aModule,
-               LogLevel aLevel,
-               const char* aFmt, ...)
-{
-  va_list ap;
-  va_start(ap, aFmt);
-  char* buff = mozilla::Vsmprintf(aFmt, ap);
-  PR_LogPrint("%s", buff);
-  mozilla::SmprintfFree(buff);
-  va_end(ap);
-}
-
 void log_print(const LogModule* aModule,
                LogLevel aLevel,
                const char* aFmt, ...)
