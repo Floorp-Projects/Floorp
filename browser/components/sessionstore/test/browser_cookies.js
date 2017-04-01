@@ -6,7 +6,7 @@ const PATH = "/browser/browser/components/sessionstore/test/";
  * Remove all cookies to start off a clean slate.
  */
 add_task(function* test_setup() {
-  requestLongerTimeout(2);
+  requestLongerTimeout(3);
   Services.cookies.removeAll();
 });
 
@@ -80,6 +80,104 @@ add_task(function* test_run() {
 });
 
 /**
+ * Test multiple scenarios with different privacy levels.
+ */
+add_task(function* test_run_privacy_level() {
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.sessionstore.privacy_level");
+  });
+
+  // With the default privacy level we collect all cookies.
+  yield testCookieCollection({
+    host: "http://example.com",
+    domain: ".example.com",
+    cookieHost: ".example.com",
+    cookieURIs: ["https://example.com/" + PATH, "http://example.com/" + PATH],
+    noCookieURIs: ["about:robots"]
+  });
+
+  // With the default privacy level we collect all cookies.
+  yield testCookieCollection({
+    host: "https://example.com",
+    domain: ".example.com",
+    cookieHost: ".example.com",
+    cookieURIs: ["https://example.com/" + PATH, "http://example.com/" + PATH],
+    noCookieURIs: ["about:robots"]
+  });
+
+  // With the default privacy level we collect all cookies.
+  yield testCookieCollection({
+    isSecure: true,
+    host: "https://example.com",
+    domain: ".example.com",
+    cookieHost: ".example.com",
+    cookieURIs: ["https://example.com/" + PATH, "http://example.com/" + PATH],
+    noCookieURIs: ["about:robots"]
+  });
+
+  // Set level=encrypted, don't store any secure cookies.
+  Services.prefs.setIntPref("browser.sessionstore.privacy_level", 1);
+
+  // With level=encrypted, non-secure cookies will be stored.
+  yield testCookieCollection({
+    host: "http://example.com",
+    domain: ".example.com",
+    cookieHost: ".example.com",
+    cookieURIs: ["https://example.com/" + PATH, "http://example.com/" + PATH],
+    noCookieURIs: ["about:robots"]
+  });
+
+  // With level=encrypted, non-secure cookies will be stored,
+  // even if sent by an HTTPS site.
+  yield testCookieCollection({
+    host: "https://example.com",
+    domain: ".example.com",
+    cookieHost: ".example.com",
+    cookieURIs: ["https://example.com/" + PATH, "http://example.com/" + PATH],
+    noCookieURIs: ["about:robots"]
+  });
+
+  // With level=encrypted, secure cookies will NOT be stored.
+  yield testCookieCollection({
+    isSecure: true,
+    host: "https://example.com",
+    domain: ".example.com",
+    cookieHost: ".example.com",
+    noCookieURIs: ["https://example.com/" + PATH, "http://example.com/" + PATH]
+  });
+
+  // Set level=full, don't store any cookies.
+  Services.prefs.setIntPref("browser.sessionstore.privacy_level", 2);
+
+  // With level=full we must not store any cookies.
+  yield testCookieCollection({
+    host: "http://example.com",
+    domain: ".example.com",
+    cookieHost: ".example.com",
+    noCookieURIs: ["https://example.com/" + PATH, "http://example.com/" + PATH]
+  });
+
+  // With level=full we must not store any cookies.
+  yield testCookieCollection({
+    host: "https://example.com",
+    domain: ".example.com",
+    cookieHost: ".example.com",
+    noCookieURIs: ["https://example.com/" + PATH, "http://example.com/" + PATH]
+  });
+
+  // With level=full we must not store any cookies.
+  yield testCookieCollection({
+    isSecure: true,
+    host: "https://example.com",
+    domain: ".example.com",
+    cookieHost: ".example.com",
+    noCookieURIs: ["https://example.com/" + PATH, "http://example.com/" + PATH]
+  });
+
+  Services.prefs.clearUserPref("browser.sessionstore.privacy_level");
+});
+
+/**
  * Generic test function to check sessionstore's cookie collection module with
  * different cookie domains given in the Set-Cookie header. See above for some
  * usage examples.
@@ -94,6 +192,10 @@ var testCookieCollection = async function(params) {
 
   if (params.domain) {
     urlParams.append("domain", params.domain);
+  }
+
+  if (params.isSecure) {
+    urlParams.append("secure", "1");
   }
 
   // Construct request URI.

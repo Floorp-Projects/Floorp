@@ -206,10 +206,12 @@ EvalContextImpl::getVariable(int32_t aNamespace,
     return NS_ERROR_INVALID_ARG;
 }
 
-bool
-EvalContextImpl::isStripSpaceAllowed(const txXPathNode& aNode)
+nsresult
+EvalContextImpl::isStripSpaceAllowed(const txXPathNode& aNode, bool& aAllowed)
 {
-    return false;
+    aAllowed = false;
+
+    return NS_OK;
 }
 
 void*

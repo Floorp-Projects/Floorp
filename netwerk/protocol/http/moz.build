@@ -49,18 +49,15 @@ EXPORTS.mozilla.net += [
     'TimingStruct.h',
 ]
 
-# ASpdySession.cpp and nsHttpAuthCache cannot be built in unified mode because
-# they use plarena.h.
 SOURCES += [
-    'AlternateServices.cpp',
-    'ASpdySession.cpp',
-    'nsHttpAuthCache.cpp',
     'nsHttpChannelAuthProvider.cpp', # redefines GetAuthType
 ]
 
 UNIFIED_SOURCES += [
     'AltDataOutputStreamChild.cpp',
     'AltDataOutputStreamParent.cpp',
+    'AlternateServices.cpp',
+    'ASpdySession.cpp',
     'CacheControlParser.cpp',
     'ConnectionDiagnostics.cpp',
     'HSTSPrimerListener.cpp',
@@ -78,6 +75,7 @@ UNIFIED_SOURCES += [
     'nsCORSListenerProxy.cpp',
     'nsHttp.cpp',
     'nsHttpActivityDistributor.cpp',
+    'nsHttpAuthCache.cpp',
     'nsHttpAuthManager.cpp',
     'nsHttpBasicAuth.cpp',
     'nsHttpChannel.cpp',
