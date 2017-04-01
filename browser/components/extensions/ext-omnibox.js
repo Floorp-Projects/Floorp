@@ -8,6 +8,9 @@ var {
   SingletonEventManager,
 } = ExtensionUtils;
 
+// WeakMap[extension -> keyword]
+let gKeywordMap = new WeakMap();
+
 this.omnibox = class extends ExtensionAPI {
   onManifestEntry(entryName) {
     let {extension} = this;
@@ -17,24 +20,31 @@ this.omnibox = class extends ExtensionAPI {
     try {
       // This will throw if the keyword is already registered.
       ExtensionSearchHandler.registerKeyword(keyword, extension);
-      this.keyword = keyword;
+      gKeywordMap.set(extension, keyword);
     } catch (e) {
       extension.manifestError(e.message);
     }
   }
 
   onShutdown(reason) {
-    ExtensionSearchHandler.unregisterKeyword(this.keyword);
+    let {extension} = this;
+
+    let keyword = gKeywordMap.get(extension);
+    if (keyword) {
+      ExtensionSearchHandler.unregisterKeyword(keyword);
+      gKeywordMap.delete(extension);
+    }
   }
 
   getAPI(context) {
     let {extension} = context;
     return {
       omnibox: {
-        setDefaultSuggestion: (suggestion) => {
+        setDefaultSuggestion(suggestion) {
+          let keyword = gKeywordMap.get(extension);
           try {
             // This will throw if the keyword failed to register.
-            ExtensionSearchHandler.setDefaultSuggestion(this.keyword, suggestion);
+            ExtensionSearchHandler.setDefaultSuggestion(keyword, suggestion);
           } catch (e) {
             return Promise.reject(e.message);
           }
@@ -72,9 +82,10 @@ this.omnibox = class extends ExtensionAPI {
       },
 
       omnibox_internal: {
-        addSuggestions: (id, suggestions) => {
+        addSuggestions(id, suggestions) {
+          let keyword = gKeywordMap.get(extension);
           try {
-            ExtensionSearchHandler.addSuggestions(this.keyword, id, suggestions);
+            ExtensionSearchHandler.addSuggestions(keyword, id, suggestions);
           } catch (e) {
             // Silently fail because the extension developer can not know for sure if the user
             // has already invalidated the callback when asynchronously providing suggestions.

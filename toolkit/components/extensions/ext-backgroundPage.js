@@ -12,6 +12,9 @@ var {
   promiseExtensionViewLoaded,
 } = ExtensionParent;
 
+// WeakMap[Extension -> BackgroundPage]
+let backgroundPagesMap = new WeakMap();
+
 // Responsible for the background_page section of the manifest.
 class BackgroundPage extends HiddenExtensionPage {
   constructor(extension, options) {
@@ -76,14 +79,21 @@ class BackgroundPage extends HiddenExtensionPage {
 
 this.backgroundPage = class extends ExtensionAPI {
   onManifestEntry(entryName) {
-    let {manifest} = this.extension;
+    let {extension} = this;
+    let {manifest} = extension;
 
-    this.bgPage = new BackgroundPage(this.extension, manifest.background);
+    let bgPage = new BackgroundPage(extension, manifest.background);
 
-    return this.bgPage.build();
+    backgroundPagesMap.set(extension, bgPage);
+    return bgPage.build();
   }
 
   onShutdown() {
-    this.bgPage.shutdown();
+    let {extension} = this;
+
+    if (backgroundPagesMap.has(extension)) {
+      backgroundPagesMap.get(extension).shutdown();
+      backgroundPagesMap.delete(extension);
+    }
   }
 };
