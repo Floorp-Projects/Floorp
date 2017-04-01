@@ -143,3 +143,12 @@ def test_sequence_of_keydown_character_keys(session, key_reporter, key_chain):
     events = [filter_dict(e, expected[0]) for e in get_events(session)]
     assert events == expected
     assert get_keys(key_reporter) == "ef"
+
+
+def test_backspace_erases_keys(session, key_reporter, key_chain):
+    key_chain \
+        .send_keys("efcd") \
+        .send_keys([Keys.BACKSPACE, Keys.BACKSPACE]) \
+        .perform()
+    assert get_keys(key_reporter) == "ef"
+
