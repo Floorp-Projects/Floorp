@@ -25,7 +25,6 @@ add_task(function* () {
         title: "Click me!",
         contexts: ["page"],
       });
-      browser.contextMenus.onClicked.addListener(() => {});
       browser.test.notifyPass();
     },
   });

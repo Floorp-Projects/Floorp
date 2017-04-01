@@ -2,15 +2,18 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+Cu.import("resource://devtools/shared/event-emitter.js");
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
 var {
   SingletonEventManager,
   PlatformInfo,
 } = ExtensionUtils;
 
-var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 // WeakMap[Extension -> CommandList]
-let commandsMap = new WeakMap();
+var commandsMap = new WeakMap();
 
 function CommandList(manifest, extension) {
   this.extension = extension;
@@ -220,48 +223,44 @@ CommandList.prototype = {
   },
 };
 
-this.commands = class extends ExtensionAPI {
-  onManifestEntry(entryName) {
-    let {extension} = this;
-    let {manifest} = extension;
 
-    commandsMap.set(extension, new CommandList(manifest, extension));
+/* eslint-disable mozilla/balanced-listeners */
+extensions.on("manifest_commands", (type, directive, extension, manifest) => {
+  commandsMap.set(extension, new CommandList(manifest, extension));
+});
+
+extensions.on("shutdown", (type, extension) => {
+  let commandsList = commandsMap.get(extension);
+  if (commandsList) {
+    commandsList.unregister();
+    commandsMap.delete(extension);
   }
+});
+/* eslint-enable mozilla/balanced-listeners */
 
-  onShutdown(reason) {
-    let {extension} = this;
-
-    let commandsList = commandsMap.get(extension);
-    if (commandsList) {
-      commandsList.unregister();
-      commandsMap.delete(extension);
-    }
-  }
-
-  getAPI(context) {
-    let {extension} = context;
-    return {
-      commands: {
-        getAll() {
-          let commands = commandsMap.get(extension).commands;
-          return Promise.resolve(Array.from(commands, ([name, command]) => {
-            return ({
-              name,
-              description: command.description,
-              shortcut: command.shortcut,
-            });
-          }));
-        },
-        onCommand: new SingletonEventManager(context, "commands.onCommand", fire => {
-          let listener = (eventName, commandName) => {
-            fire.async(commandName);
-          };
-          commandsMap.get(extension).on("command", listener);
-          return () => {
-            commandsMap.get(extension).off("command", listener);
-          };
-        }).api(),
+extensions.registerSchemaAPI("commands", "addon_parent", context => {
+  let {extension} = context;
+  return {
+    commands: {
+      getAll() {
+        let commands = commandsMap.get(extension).commands;
+        return Promise.resolve(Array.from(commands, ([name, command]) => {
+          return ({
+            name,
+            description: command.description,
+            shortcut: command.shortcut,
+          });
+        }));
       },
-    };
-  }
-};
+      onCommand: new SingletonEventManager(context, "commands.onCommand", fire => {
+        let listener = (eventName, commandName) => {
+          fire.async(commandName);
+        };
+        commandsMap.get(extension).on("command", listener);
+        return () => {
+          commandsMap.get(extension).off("command", listener);
+        };
+      }).api(),
+    },
+  };
+});

@@ -4,20 +4,20 @@
 
 "use strict";
 
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionPreferencesManager",
                                   "resource://gre/modules/ExtensionPreferencesManager.jsm");
 
-this.chrome_settings_overrides = class extends ExtensionAPI {
-  onManifestEntry(entryName) {
-    let {extension} = this;
-    let {manifest} = extension;
-
-    if (manifest.chrome_settings_overrides.homepage) {
-      ExtensionPreferencesManager.setSetting(extension, "homepage_override",
-                                             manifest.chrome_settings_overrides.homepage);
-    }
+/* eslint-disable mozilla/balanced-listeners */
+extensions.on("manifest_chrome_settings_overrides", (type, directive, extension, manifest) => {
+  if (manifest.chrome_settings_overrides.homepage) {
+    ExtensionPreferencesManager.setSetting(extension, "homepage_override",
+                                           manifest.chrome_settings_overrides.homepage);
   }
-};
+});
+/* eslint-enable mozilla/balanced-listeners */
 
 ExtensionPreferencesManager.addSetting("homepage_override", {
   prefNames: [

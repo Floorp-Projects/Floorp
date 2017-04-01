@@ -13,12 +13,12 @@ browser.jar:
 #endif
     content/browser/extension.svg
     content/browser/ext-bookmarks.js
-    content/browser/ext-browser.js
     content/browser/ext-browserAction.js
     content/browser/ext-browsingData.js
     content/browser/ext-chrome-settings-overrides.js
     content/browser/ext-commands.js
     content/browser/ext-contextMenus.js
+    content/browser/ext-desktop-runtime.js
     content/browser/ext-devtools.js
     content/browser/ext-devtools-inspectedWindow.js
     content/browser/ext-devtools-network.js
@@ -32,10 +32,8 @@ browser.jar:
     content/browser/ext-url-overrides.js
     content/browser/ext-utils.js
     content/browser/ext-windows.js
-    content/browser/ext-c-browser.js
     content/browser/ext-c-contextMenus.js
     content/browser/ext-c-devtools-inspectedWindow.js
     content/browser/ext-c-devtools-panels.js
-    content/browser/ext-c-devtools.js
     content/browser/ext-c-omnibox.js
     content/browser/ext-c-tabs.js

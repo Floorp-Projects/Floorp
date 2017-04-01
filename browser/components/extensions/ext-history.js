@@ -2,12 +2,18 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
+                                  "resource://devtools/shared/event-emitter.js");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 
-var {
+const {
   normalizeTime,
   SingletonEventManager,
 } = ExtensionUtils;
@@ -126,130 +132,128 @@ function getObserver() {
   return _observer;
 }
 
-this.history = class extends ExtensionAPI {
-  getAPI(context) {
-    return {
-      history: {
-        addUrl: function(details) {
-          let transition, date;
-          try {
-            transition = getTransitionType(details.transition);
-          } catch (error) {
-            return Promise.reject({message: error.message});
-          }
-          if (details.visitTime) {
-            date = normalizeTime(details.visitTime);
-          }
-          let pageInfo = {
-            title: details.title,
-            url: details.url,
-            visits: [
-              {
-                transition,
-                date,
-              },
-            ],
-          };
-          try {
-            return PlacesUtils.history.insert(pageInfo).then(() => undefined);
-          } catch (error) {
-            return Promise.reject({message: error.message});
-          }
-        },
-
-        deleteAll: function() {
-          return PlacesUtils.history.clear();
-        },
-
-        deleteRange: function(filter) {
-          let newFilter = {
-            beginDate: normalizeTime(filter.startTime),
-            endDate: normalizeTime(filter.endTime),
-          };
-          // History.removeVisitsByFilter returns a boolean, but our API should return nothing
-          return PlacesUtils.history.removeVisitsByFilter(newFilter).then(() => undefined);
-        },
-
-        deleteUrl: function(details) {
-          let url = details.url;
-          // History.remove returns a boolean, but our API should return nothing
-          return PlacesUtils.history.remove(url).then(() => undefined);
-        },
-
-        search: function(query) {
-          let beginTime = (query.startTime == null) ?
-                            PlacesUtils.toPRTime(Date.now() - 24 * 60 * 60 * 1000) :
-                            PlacesUtils.toPRTime(normalizeTime(query.startTime));
-          let endTime = (query.endTime == null) ?
-                          Number.MAX_VALUE :
-                          PlacesUtils.toPRTime(normalizeTime(query.endTime));
-          if (beginTime > endTime) {
-            return Promise.reject({message: "The startTime cannot be after the endTime"});
-          }
-
-          let options = PlacesUtils.history.getNewQueryOptions();
-          options.sortingMode = options.SORT_BY_DATE_DESCENDING;
-          options.maxResults = query.maxResults || 100;
-
-          let historyQuery = PlacesUtils.history.getNewQuery();
-          historyQuery.searchTerms = query.text;
-          historyQuery.beginTime = beginTime;
-          historyQuery.endTime = endTime;
-          let queryResult = PlacesUtils.history.executeQuery(historyQuery, options).root;
-          let results = convertNavHistoryContainerResultNode(queryResult, convertNodeToHistoryItem);
-          return Promise.resolve(results);
-        },
-
-        getVisits: function(details) {
-          let url = details.url;
-          if (!url) {
-            return Promise.reject({message: "A URL must be provided for getVisits"});
-          }
-
-          let options = PlacesUtils.history.getNewQueryOptions();
-          options.sortingMode = options.SORT_BY_DATE_DESCENDING;
-          options.resultType = options.RESULTS_AS_VISIT;
-
-          let historyQuery = PlacesUtils.history.getNewQuery();
-          historyQuery.uri = NetUtil.newURI(url);
-          let queryResult = PlacesUtils.history.executeQuery(historyQuery, options).root;
-          let results = convertNavHistoryContainerResultNode(queryResult, convertNodeToVisitItem);
-          return Promise.resolve(results);
-        },
-
-        onVisited: new SingletonEventManager(context, "history.onVisited", fire => {
-          let listener = (event, data) => {
-            fire.sync(data);
-          };
-
-          getObserver().on("visited", listener);
-          return () => {
-            getObserver().off("visited", listener);
-          };
-        }).api(),
-
-        onVisitRemoved: new SingletonEventManager(context, "history.onVisitRemoved", fire => {
-          let listener = (event, data) => {
-            fire.sync(data);
-          };
-
-          getObserver().on("visitRemoved", listener);
-          return () => {
-            getObserver().off("visitRemoved", listener);
-          };
-        }).api(),
-
-        onTitleChanged: new SingletonEventManager(context, "history.onTitleChanged", fire => {
-          let listener = (event, data) => {
-            fire.sync(data);
-          };
-
-          getObserver().on("titleChanged", listener);
-          return () => {
-            getObserver().off("titleChanged", listener);
-          };
-        }).api(),
+extensions.registerSchemaAPI("history", "addon_parent", context => {
+  return {
+    history: {
+      addUrl: function(details) {
+        let transition, date;
+        try {
+          transition = getTransitionType(details.transition);
+        } catch (error) {
+          return Promise.reject({message: error.message});
+        }
+        if (details.visitTime) {
+          date = normalizeTime(details.visitTime);
+        }
+        let pageInfo = {
+          title: details.title,
+          url: details.url,
+          visits: [
+            {
+              transition,
+              date,
+            },
+          ],
+        };
+        try {
+          return PlacesUtils.history.insert(pageInfo).then(() => undefined);
+        } catch (error) {
+          return Promise.reject({message: error.message});
+        }
       },
-    };
-  }
-};
+
+      deleteAll: function() {
+        return PlacesUtils.history.clear();
+      },
+
+      deleteRange: function(filter) {
+        let newFilter = {
+          beginDate: normalizeTime(filter.startTime),
+          endDate: normalizeTime(filter.endTime),
+        };
+        // History.removeVisitsByFilter returns a boolean, but our API should return nothing
+        return PlacesUtils.history.removeVisitsByFilter(newFilter).then(() => undefined);
+      },
+
+      deleteUrl: function(details) {
+        let url = details.url;
+        // History.remove returns a boolean, but our API should return nothing
+        return PlacesUtils.history.remove(url).then(() => undefined);
+      },
+
+      search: function(query) {
+        let beginTime = (query.startTime == null) ?
+                          PlacesUtils.toPRTime(Date.now() - 24 * 60 * 60 * 1000) :
+                          PlacesUtils.toPRTime(normalizeTime(query.startTime));
+        let endTime = (query.endTime == null) ?
+                        Number.MAX_VALUE :
+                        PlacesUtils.toPRTime(normalizeTime(query.endTime));
+        if (beginTime > endTime) {
+          return Promise.reject({message: "The startTime cannot be after the endTime"});
+        }
+
+        let options = PlacesUtils.history.getNewQueryOptions();
+        options.sortingMode = options.SORT_BY_DATE_DESCENDING;
+        options.maxResults = query.maxResults || 100;
+
+        let historyQuery = PlacesUtils.history.getNewQuery();
+        historyQuery.searchTerms = query.text;
+        historyQuery.beginTime = beginTime;
+        historyQuery.endTime = endTime;
+        let queryResult = PlacesUtils.history.executeQuery(historyQuery, options).root;
+        let results = convertNavHistoryContainerResultNode(queryResult, convertNodeToHistoryItem);
+        return Promise.resolve(results);
+      },
+
+      getVisits: function(details) {
+        let url = details.url;
+        if (!url) {
+          return Promise.reject({message: "A URL must be provided for getVisits"});
+        }
+
+        let options = PlacesUtils.history.getNewQueryOptions();
+        options.sortingMode = options.SORT_BY_DATE_DESCENDING;
+        options.resultType = options.RESULTS_AS_VISIT;
+
+        let historyQuery = PlacesUtils.history.getNewQuery();
+        historyQuery.uri = NetUtil.newURI(url);
+        let queryResult = PlacesUtils.history.executeQuery(historyQuery, options).root;
+        let results = convertNavHistoryContainerResultNode(queryResult, convertNodeToVisitItem);
+        return Promise.resolve(results);
+      },
+
+      onVisited: new SingletonEventManager(context, "history.onVisited", fire => {
+        let listener = (event, data) => {
+          fire.sync(data);
+        };
+
+        getObserver().on("visited", listener);
+        return () => {
+          getObserver().off("visited", listener);
+        };
+      }).api(),
+
+      onVisitRemoved: new SingletonEventManager(context, "history.onVisitRemoved", fire => {
+        let listener = (event, data) => {
+          fire.sync(data);
+        };
+
+        getObserver().on("visitRemoved", listener);
+        return () => {
+          getObserver().off("visitRemoved", listener);
+        };
+      }).api(),
+
+      onTitleChanged: new SingletonEventManager(context, "history.onTitleChanged", fire => {
+        let listener = (event, data) => {
+          fire.sync(data);
+        };
+
+        getObserver().on("titleChanged", listener);
+        return () => {
+          getObserver().off("titleChanged", listener);
+        };
+      }).api(),
+    },
+  };
+});

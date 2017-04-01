@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
@@ -11,12 +13,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
-var {
+let {
   ExtensionError,
   IconDetails,
 } = ExtensionUtils;
 
-var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 // WeakMap[Extension -> SidebarAction]
 let sidebarActionMap = new WeakMap();
@@ -278,96 +280,89 @@ SidebarAction.for = (extension) => {
 global.sidebarActionFor = SidebarAction.for;
 
 /* eslint-disable mozilla/balanced-listeners */
+extensions.on("manifest_sidebar_action", (type, directive, extension, manifest) => {
+  let sidebarAction = new SidebarAction(manifest.sidebar_action, extension);
+  sidebarActionMap.set(extension, sidebarAction);
+});
+
 extensions.on("ready", (type, extension) => {
   // We build sidebars during ready to ensure the background scripts are ready.
   if (sidebarActionMap.has(extension)) {
     sidebarActionMap.get(extension).build();
   }
 });
+
+extensions.on("shutdown", (type, extension) => {
+  if (sidebarActionMap.has(extension)) {
+    // Don't remove everything on app shutdown so session restore can handle
+    // restoring open sidebars.
+    if (extension.shutdownReason !== "APP_SHUTDOWN") {
+      sidebarActionMap.get(extension).shutdown();
+    }
+    sidebarActionMap.delete(extension);
+  }
+});
 /* eslint-enable mozilla/balanced-listeners */
 
-this.sidebarAction = class extends ExtensionAPI {
-  onManifestEntry(entryName) {
-    let {extension} = this;
-    let {manifest} = extension;
+extensions.registerSchemaAPI("sidebarAction", "addon_parent", context => {
+  let {extension} = context;
 
-    let sidebarAction = new SidebarAction(manifest.sidebar_action, extension);
-    sidebarActionMap.set(extension, sidebarAction);
+  function getTab(tabId) {
+    if (tabId !== null) {
+      return tabTracker.getTab(tabId);
+    }
+    return null;
   }
 
-  onShutdown(reason) {
-    let {extension} = this;
+  return {
+    sidebarAction: {
+      async setTitle(details) {
+        let nativeTab = getTab(details.tabId);
 
-    if (sidebarActionMap.has(extension)) {
-      // Don't remove everything on app shutdown so session restore can handle
-      // restoring open sidebars.
-      if (extension.shutdownReason !== "APP_SHUTDOWN") {
-        sidebarActionMap.get(extension).shutdown();
-      }
-      sidebarActionMap.delete(extension);
-    }
-  }
-
-  getAPI(context) {
-    let {extension} = context;
-
-    function getTab(tabId) {
-      if (tabId !== null) {
-        return tabTracker.getTab(tabId);
-      }
-      return null;
-    }
-
-    return {
-      sidebarAction: {
-        async setTitle(details) {
-          let nativeTab = getTab(details.tabId);
-
-          let title = details.title;
-          // Clear the tab-specific title when given a null string.
-          if (nativeTab && title === "") {
-            title = null;
-          }
-          SidebarAction.for(extension).setProperty(nativeTab, "title", title);
-        },
-
-        getTitle(details) {
-          let nativeTab = getTab(details.tabId);
-
-          let title = SidebarAction.for(extension).getProperty(nativeTab, "title");
-          return Promise.resolve(title);
-        },
-
-        async setIcon(details) {
-          let nativeTab = getTab(details.tabId);
-
-          let icon = IconDetails.normalize(details, extension, context);
-          SidebarAction.for(extension).setProperty(nativeTab, "icon", icon);
-        },
-
-        async setPanel(details) {
-          let nativeTab = getTab(details.tabId);
-
-          let url;
-          // Clear the tab-specific url when given a null string.
-          if (nativeTab && details.panel === "") {
-            url = null;
-          } else if (details.panel !== "") {
-            url = context.uri.resolve(details.panel);
-          } else {
-            throw new ExtensionError("Invalid url for sidebar panel.");
-          }
-
-          SidebarAction.for(extension).setProperty(nativeTab, "panel", url);
-        },
-
-        getPanel(details) {
-          let nativeTab = getTab(details.tabId);
-
-          let panel = SidebarAction.for(extension).getProperty(nativeTab, "panel");
-          return Promise.resolve(panel);
-        },
+        let title = details.title;
+        // Clear the tab-specific title when given a null string.
+        if (nativeTab && title === "") {
+          title = null;
+        }
+        SidebarAction.for(extension).setProperty(nativeTab, "title", title);
       },
-    };
-  }
-};
+
+      getTitle(details) {
+        let nativeTab = getTab(details.tabId);
+
+        let title = SidebarAction.for(extension).getProperty(nativeTab, "title");
+        return Promise.resolve(title);
+      },
+
+      async setIcon(details) {
+        let nativeTab = getTab(details.tabId);
+
+        let icon = IconDetails.normalize(details, extension, context);
+        SidebarAction.for(extension).setProperty(nativeTab, "icon", icon);
+      },
+
+      async setPanel(details) {
+        let nativeTab = getTab(details.tabId);
+
+        let url;
+        // Clear the tab-specific url when given a null string.
+        if (nativeTab && details.panel === "") {
+          url = null;
+        } else if (details.panel !== "") {
+          url = context.uri.resolve(details.panel);
+        } else {
+          throw new ExtensionError("Invalid url for sidebar panel.");
+        }
+
+        SidebarAction.for(extension).setProperty(nativeTab, "panel", url);
+      },
+
+      getPanel(details) {
+        let nativeTab = getTab(details.tabId);
+
+        let panel = SidebarAction.for(extension).getProperty(nativeTab, "panel");
+        return Promise.resolve(panel);
+      },
+    },
+  };
+});
