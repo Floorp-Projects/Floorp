@@ -5,8 +5,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 findbar {
-  border-top: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
+  border-top: 1px solid ThreeDShadow;
   min-width: 1px;
   transition-property: margin-bottom, opacity, visibility;
   transition-duration: 150ms, 150ms, 0s;
