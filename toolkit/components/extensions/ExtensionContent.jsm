@@ -69,6 +69,7 @@ const {
 
 const {
   BaseContext,
+  CanOfAPIs,
   SchemaAPIManager,
 } = ExtensionCommon;
 
@@ -625,9 +626,10 @@ defineLazyGetter(ContentScriptContextChild.prototype, "messenger", function() {
 
 defineLazyGetter(ContentScriptContextChild.prototype, "childManager", function() {
   let localApis = {};
+  let can = new CanOfAPIs(this, apiManager, localApis);
   apiManager.generateAPIs(this, localApis);
 
-  let childManager = new ChildAPIManager(this, this.messageManager, localApis, {
+  let childManager = new ChildAPIManager(this, this.messageManager, can, {
     envType: "content_parent",
     url: this.url,
   });
