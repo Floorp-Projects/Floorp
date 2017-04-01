@@ -65,6 +65,8 @@ LOCAL_INCLUDES += [
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
