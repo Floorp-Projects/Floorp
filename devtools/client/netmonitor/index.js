@@ -13,7 +13,7 @@ const React = require("react");
 const ReactDOM = require("react-dom");
 const { bootstrap } = require("devtools-launchpad");
 const { EventEmitter } = require("devtools-modules");
-const { Services: { pref }} = require("devtools-modules");
+const { Services: { appinfo, pref }} = require("devtools-modules");
 const { configureStore } = require("./src/utils/create-store");
 
 require("./src/assets/styles/netmonitor.css");
@@ -40,8 +40,15 @@ const App = require("./src/components/app");
 const store = window.gStore = configureStore();
 const { NetMonitorController } = require("./src/netmonitor-controller");
 
-// FIXME: Inject NetMonitorController to global window
-window.NetMonitorController = NetMonitorController;
+window.addEventListener("DOMContentLoaded", () => {
+  if (appinfo.OS === "Darwin") {
+    document.documentElement.setAttribute("platform", "mac");
+  } else if (appinfo.OS === "Linux") {
+    document.documentElement.setAttribute("platform", "linux");
+  } else {
+    document.documentElement.setAttribute("platform", "win");
+  }
+});
 
 bootstrap(React, ReactDOM, App, null, store).then(connection => {
   if (!connection || !connection.tab) {
