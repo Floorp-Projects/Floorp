@@ -533,6 +533,9 @@ ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
   if (aAttribute == nsGkAtoms::cellpadding && aElement->IsHTMLElement(nsGkAtoms::table)) {
     PostRestyleEvent(aElement, eRestyle_Subtree, nsChangeHint(0));
   }
+  if (aElement->IsAttributeMapped(aAttribute)) {
+    Servo_NoteExplicitHints(aElement, eRestyle_Self, nsChangeHint(0));
+  }
 }
 
 nsresult

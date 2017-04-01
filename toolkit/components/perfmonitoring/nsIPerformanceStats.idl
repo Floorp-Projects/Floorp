@@ -20,7 +20,7 @@
  *
  * A performance group is a set of JavaScript compartments whose
  * performance is observed as a single entity. Typical examples of
- * performance groups: an add-on, a webpage without its frames, a
+ * performance groups: a webpage without its frames, a
  * webpage with all its frames, the entire JS runtime, ...
  */
 [scriptable, builtinclass, uuid(994c56be-939a-4f20-8364-124f6422d86a)]
@@ -39,12 +39,6 @@ interface nsIPerformanceGroupDetails: nsISupports {
   readonly attribute AString name;
 
   /**
-   * If the component is an add-on, the ID of the addon,
-   * otherwise an empty string.
-   */
-  readonly attribute AString addonId;
-
-  /**
    * If the component is code executed in a window, the ID of the topmost
    * outer window (i.e. the tab), otherwise 0.
    */
@@ -52,7 +46,7 @@ interface nsIPerformanceGroupDetails: nsISupports {
 
   /**
    * `true` if this component is executed with system privileges
-   * (e.g. the platform itself or an add-on), `false` otherwise
+   * (e.g. the platform itself), `false` otherwise
    * (e.g. webpages).
    */
   readonly attribute bool isSystem;
@@ -69,7 +63,7 @@ interface nsIPerformanceGroupDetails: nsISupports {
 };
 
 /**
- * Snapshot of the performance of a component, e.g. an add-on, a web
+ * Snapshot of the performance of a component, e.g. a web
  * page, system built-ins, a module or the entire process itself.
  *
  * All values are monotonic and are updated only when
@@ -251,8 +245,8 @@ interface nsIPerformanceStatsService : nsISupports {
 
   /**
    * `true` if all compartments need to be monitored individually,
-   * `false` if only performance groups (i.e. entire add-ons, entire
-   * webpages, etc.) need to be monitored.
+   * `false` if only performance groups (i.e. entire webpages, etc.)
+   * need to be monitored.
    */
   [implicit_jscontext] attribute bool isMonitoringPerCompartment;
 
@@ -295,21 +289,6 @@ interface nsIPerformanceStatsService : nsISupports {
    * performance.
    */
   attribute unsigned long jankAlertBufferingDelay;
-
-  /**
-   * Get a nsIPerformanceObservable representing an add-on. This
-   * observable may then be used to (un)register for watching
-   * performance alerts for this add-on.
-   *
-   * Note that this method has no way of finding out whether an add-on with this
-   * id is installed on the system. Also note that this covers only the current
-   * process.
-   *
-   * Use special add-on name "*" to get an observable that may be used
-   * to (un)register for watching performance alerts of all add-ons at
-   * once.
-   */
-  nsIPerformanceObservable getObservableAddon(in AString addonId);
 
   /**
    * Get a nsIPerformanceObservable representing a DOM window. This

@@ -30,7 +30,6 @@ to mochitest command.
 ## Failures
 
 * Media query support:
-  * test_bug1089417.html [1]
   * test_bug418986-2.html: matchMedia support [3]
   * test_bug453896_deck.html: &lt;style media&gt; support [8]
   * test_media_queries.html [657]
@@ -445,7 +444,6 @@ to mochitest command.
 * test_selectors.html `:nth-child`: &lt;an+b&gt; parsing difference [14]
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
 * test_variables.html `url`: url in custom property [1]
-* test_pseudoelement_state.html: doesn't seem to work at all, but only range-thumb fails... [4]
 * test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [6]
 
 ## Ignore

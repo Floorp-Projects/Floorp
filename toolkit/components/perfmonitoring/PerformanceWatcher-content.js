@@ -5,8 +5,7 @@
 "use strict";
 
 /**
- * An API for being informed of slow add-ons and tabs
- * (content process scripts).
+ * An API for being informed of slow tabs (content process scripts).
  */
 
 const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
@@ -26,7 +25,7 @@ let toMsg = function(alerts) {
   for (let {source, details} of alerts) {
     // Convert xpcom values to serializable data.
     let serializableSource = {};
-    for (let k of ["groupId", "name", "addonId", "windowId", "isSystem", "processId", "isContentProcess"]) {
+    for (let k of ["groupId", "name", "windowId", "isSystem", "processId", "isContentProcess"]) {
       serializableSource[k] = source[k];
     }
 
@@ -38,12 +37,6 @@ let toMsg = function(alerts) {
   }
   return result;
 }
-
-PerformanceWatcher.addPerformanceListener({addonId: "*"}, alerts => {
-  Services.cpmm.sendAsyncMessage("performancewatcher-propagate-notifications",
-    {addons: toMsg(alerts)}
-  );
-});
 
 PerformanceWatcher.addPerformanceListener({windowId: 0}, alerts => {
   Services.cpmm.sendAsyncMessage("performancewatcher-propagate-notifications",
