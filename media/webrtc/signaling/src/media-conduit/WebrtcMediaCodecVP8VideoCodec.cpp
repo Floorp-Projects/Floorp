@@ -9,6 +9,7 @@
 #include "CSFLog.h"
 #include "nspr.h"
 
+#include "JavaCallbacksSupport.h"
 #include "MediaCodec.h"
 #include "WebrtcMediaCodecVP8VideoCodec.h"
 #include "AndroidJNIWrapper.h"
@@ -16,6 +17,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Monitor.h"
 #include "runnable_utils.h"
+#include "MediaResult.h"
 
 #include "AudioConduit.h"
 #include "VideoConduit.h"
@@ -24,10 +26,12 @@
 #include "libyuv/row.h"
 
 #include "webrtc/modules/video_coding/include/video_error_codes.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 #include <webrtc/common_video/libyuv/include/webrtc_libyuv.h>
 
 using namespace mozilla;
+using namespace mozilla::java;
 using namespace mozilla::java::sdk;
 
 static const int32_t DECODER_TIMEOUT = 10 * PR_USEC_PER_MSEC; // 10ms
@@ -36,6 +40,119 @@ static const char MEDIACODEC_VIDEO_MIME_VP8[] = "video/x-vnd.on2.vp8";
 namespace mozilla {
 
 static const char* logTag ="WebrtcMediaCodecVP8VideoCodec";
+
+class CallbacksSupport final : public JavaCallbacksSupport
+{
+public:
+  CallbacksSupport(webrtc::EncodedImageCallback* aCallback) :
+    mCallback(aCallback),
+    mCritSect(webrtc::CriticalSectionWrapper::CreateCriticalSection()) {
+    CSFLogDebug(logTag,  "%s %p", __FUNCTION__, this);
+    memset(&mEncodedImage, 0, sizeof(mEncodedImage));
+  }
+
+  ~CallbacksSupport() {
+    CSFLogDebug(logTag,  "%s %p", __FUNCTION__, this);
+    if (mEncodedImage._size) {
+      delete [] mEncodedImage._buffer;
+      mEncodedImage._buffer = nullptr;
+      mEncodedImage._size = 0;
+    }
+  }
+
+  void VerifyAndAllocate(const uint32_t minimumSize)
+  {
+    CSFLogDebug(logTag,  "%s %p", __FUNCTION__, this);
+    if(minimumSize > mEncodedImage._size)
+    {
+        uint8_t* newBuffer = new uint8_t[minimumSize];
+        MOZ_RELEASE_ASSERT(newBuffer);
+
+        if(mEncodedImage._buffer) {
+            delete [] mEncodedImage._buffer;
+        }
+        mEncodedImage._buffer = newBuffer;
+        mEncodedImage._size = minimumSize;
+    }
+  }
+
+  void HandleInputExhausted() override
+  {
+    CSFLogDebug(logTag,  "%s %p", __FUNCTION__, this);
+  }
+
+  void HandleOutputFormatChanged(MediaFormat::Param aFormat) override
+  {
+    CSFLogDebug(logTag,  "%s %p", __FUNCTION__, this);
+  }
+
+  void HandleOutput(Sample::Param aSample)
+  {
+    CSFLogDebug(logTag,  "%s %p", __FUNCTION__, this);
+    BufferInfo::LocalRef info = aSample->Info();
+
+    int32_t size;
+    bool ok = NS_SUCCEEDED(info->Size(&size));
+    MOZ_RELEASE_ASSERT(ok);
+
+    if (size > 0) {
+      webrtc::CriticalSectionScoped lock(mCritSect.get());
+      VerifyAndAllocate(size);
+
+      int64_t presentationTimeUs;
+      ok = NS_SUCCEEDED(info->PresentationTimeUs(&presentationTimeUs));
+      MOZ_RELEASE_ASSERT(ok);
+
+      mEncodedImage._timeStamp = presentationTimeUs;
+      mEncodedImage.capture_time_ms_ = mEncodedImage._timeStamp;
+
+      int32_t flags;
+      ok = NS_SUCCEEDED(info->Flags(&flags));
+      MOZ_ASSERT(ok);
+
+      if (flags == MediaCodec::BUFFER_FLAG_SYNC_FRAME) {
+        mEncodedImage._frameType = webrtc::kVideoFrameKey;
+      } else {
+        mEncodedImage._frameType = webrtc::kVideoFrameDelta;
+      }
+      mEncodedImage._completeFrame = true;
+      mEncodedImage._length = size;
+
+      jni::ByteBuffer::LocalRef dest =
+        jni::ByteBuffer::New(mEncodedImage._buffer, size);
+      aSample->WriteToByteBuffer(dest);
+
+      webrtc::CodecSpecificInfo info;
+      info.codecType = webrtc::kVideoCodecVP8;
+      info.codecSpecific.VP8.pictureId = -1;
+      info.codecSpecific.VP8.tl0PicIdx = -1;
+      info.codecSpecific.VP8.keyIdx = -1;
+      info.codecSpecific.VP8.temporalIdx = 1;
+      info.codecSpecific.VP8.simulcastIdx = 0;
+
+      webrtc::RTPFragmentationHeader header;
+      memset(&header, 0, sizeof(header));
+      header.VerifyAndAllocateFragmentationHeader(1);
+      header.fragmentationLength[0] = mEncodedImage._length;
+
+      MOZ_RELEASE_ASSERT(mCallback);
+      mCallback->Encoded(mEncodedImage, &info, &header);
+    }
+  }
+
+  void HandleError(const MediaResult& aError) override
+  {
+    CSFLogDebug(logTag,  "%s %p", __FUNCTION__, this);
+  }
+
+  friend class WebrtcMediaCodecVP8VideoRemoteEncoder;
+
+private:
+  webrtc::EncodedImageCallback* mCallback;
+  Atomic<bool> mCanceled;
+  webrtc::EncodedImage mEncodedImage;
+  rtc::scoped_ptr<webrtc::CriticalSectionWrapper> mCritSect;
+};
 
 static MediaCodec::LocalRef CreateDecoder(const char* aMimeType)
 {
@@ -208,11 +325,11 @@ public:
           return NS_ERROR_FAILURE;
         }
 
-        res = format->SetInteger(nsCString("bitrate"), 1000*300);
-        res = format->SetInteger(nsCString("bitrate-mode"), 2);
-        res = format->SetInteger(nsCString("color-format"), 21);
-        res = format->SetInteger(nsCString("frame-rate"), 30);
-        res = format->SetInteger(nsCString("i-frame-interval"), 100);
+        res = format->SetInteger(MediaFormat::KEY_BIT_RATE, 1000*300);
+        res = format->SetInteger(MediaFormat::KEY_BITRATE_MODE, 2);
+        res = format->SetInteger(MediaFormat::KEY_COLOR_FORMAT, 21);
+        res = format->SetInteger(MediaFormat::KEY_FRAME_RATE, 30);
+        res = format->SetInteger(MediaFormat::KEY_I_FRAME_INTERVAL, 100);
 
       } else {
         mCoder = CreateDecoder(mime);
@@ -855,6 +972,136 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::SetRates(uint32_t newBitRate, uint32_t 
   // 1. implement MediaCodec's setParameters method
   // 2.find a way to initiate a Java Bundle instance as parameter for MediaCodec setParameters method.
   // mMediaCodecEncoder->setParameters
+
+  return WEBRTC_VIDEO_CODEC_OK;
+}
+
+WebrtcMediaCodecVP8VideoRemoteEncoder::~WebrtcMediaCodecVP8VideoRemoteEncoder() {
+  CSFLogDebug(logTag,  "%s %p", __FUNCTION__, this);
+  Release();
+}
+
+int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::InitEncode(
+    const webrtc::VideoCodec* codecSettings,
+    int32_t numberOfCores,
+    size_t maxPayloadSize) {
+  return WEBRTC_VIDEO_CODEC_OK;
+}
+
+int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::SetRates(uint32_t newBitRate, uint32_t frameRate) {
+  CSFLogDebug(logTag,  "%s, newBitRate: %d, frameRate: %d", __FUNCTION__, newBitRate, frameRate);
+  if (!mJavaEncoder) {
+    return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+  }
+  mJavaEncoder->SetRates(newBitRate);
+  return WEBRTC_VIDEO_CODEC_OK;
+}
+
+int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::Encode(
+    const webrtc::VideoFrame& inputImage,
+    const webrtc::CodecSpecificInfo* codecSpecificInfo,
+    const std::vector<webrtc::FrameType>* frame_types) {
+  CSFLogDebug(logTag,  "%s, w = %d, h = %d", __FUNCTION__, inputImage.width(), inputImage.height());
+  if (inputImage.width() == 0 || inputImage.height() == 0) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  if (!mJavaEncoder) {
+    JavaCallbacksSupport::Init();
+    mJavaCallbacks = CodecProxy::NativeCallbacks::New();
+
+    JavaCallbacksSupport::AttachNative(
+      mJavaCallbacks, mozilla::MakeUnique<CallbacksSupport>(mCallback));
+
+    MediaFormat::LocalRef format;
+
+    nsresult res = MediaFormat::CreateVideoFormat(nsCString(MEDIACODEC_VIDEO_MIME_VP8),
+                                                  inputImage.width(),
+                                                  inputImage.height(),
+                                                  &format);
+
+    if (NS_FAILED(res)) {
+      CSFLogDebug(logTag, "%s, CreateVideoFormat failed err = %d", __FUNCTION__, (int)res);
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+
+    res = format->SetInteger(nsCString("bitrate"), 300 * 1000);
+    res = format->SetInteger(nsCString("bitrate-mode"), 2);
+    res = format->SetInteger(nsCString("color-format"), 21);
+    res = format->SetInteger(nsCString("frame-rate"), 30);
+    res = format->SetInteger(nsCString("i-frame-interval"), 100);
+
+    mJavaEncoder = CodecProxy::Create(true,
+                                      format,
+                                      nullptr,
+                                      mJavaCallbacks,
+                                      EmptyString());
+
+    if (mJavaEncoder == nullptr) {
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+  }
+
+  size_t sizeY = inputImage.allocated_size(webrtc::kYPlane);
+  size_t sizeUV = inputImage.allocated_size(webrtc::kUPlane);
+  size_t size = sizeY + 2 * sizeUV;
+
+  if (mConvertBuf == nullptr) {
+    mConvertBuf = new uint8_t[size];
+    mConvertBufsize = size;
+  }
+
+  uint8_t* dstY = mConvertBuf;
+  uint16_t* dstUV = reinterpret_cast<uint16_t*>(dstY + sizeY);
+
+  bool converted = I420toNV12(dstY, dstUV, inputImage);
+  if (!converted) {
+    CSFLogError(logTag,  "%s WebrtcMediaCodecVP8VideoEncoder::Encode() convert input buffer to NV12 error.", __FUNCTION__);
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  jni::ByteBuffer::LocalRef bytes = jni::ByteBuffer::New(mConvertBuf, size);
+
+  BufferInfo::LocalRef bufferInfo;
+  nsresult rv = BufferInfo::New(&bufferInfo);
+  if (NS_FAILED(rv)) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  if((*frame_types)[0] == webrtc::kVideoFrameKey) {
+    bufferInfo->Set(0, size, inputImage.timestamp(), MediaCodec::BUFFER_FLAG_SYNC_FRAME);
+  } else {
+    bufferInfo->Set(0, size, inputImage.timestamp(), 0);
+  }
+
+  mJavaEncoder->Input(bytes, bufferInfo, nullptr);
+
+  return WEBRTC_VIDEO_CODEC_OK;
+}
+
+int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::RegisterEncodeCompleteCallback(webrtc::EncodedImageCallback* callback) {
+  mCallback = callback;
+  return WEBRTC_VIDEO_CODEC_OK;
+}
+
+int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::Release() {
+  CSFLogDebug(logTag,  "%s %p", __FUNCTION__, this);
+
+  if (mJavaEncoder) {
+    mJavaEncoder->Release();
+    mJavaEncoder = nullptr;
+  }
+
+  if (mJavaCallbacks) {
+    JavaCallbacksSupport::GetNative(mJavaCallbacks)->Cancel();
+    JavaCallbacksSupport::DisposeNative(mJavaCallbacks);
+    mJavaCallbacks = nullptr;
+  }
+
+  if (mConvertBuf) {
+    delete [] mConvertBuf;
+    mConvertBuf = nullptr;
+  }
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
