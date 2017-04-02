@@ -6,7 +6,6 @@
 #include "InsertNodeTransaction.h"
 
 #include "mozilla/EditorBase.h"         // for EditorBase
-#include "mozilla/HTMLEditor.h"         // for HTMLEditor
 
 #include "mozilla/dom/Selection.h"      // for Selection
 
@@ -73,15 +72,8 @@ InsertNodeTransaction::DoTransaction()
   if (mEditorBase->GetShouldTxnSetSelection()) {
     RefPtr<Selection> selection = mEditorBase->GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-    RefPtr<HTMLEditor> htmlEditor = mEditorBase->AsHTMLEditor();
-    if (htmlEditor) {
-      EditorDOMPoint pt =
-        htmlEditor->mHTMLEditRules->GetGoodSelPointForNode(mNode, nsIEditor::ePrevious);
-      selection->Collapse(pt.node, pt.offset);
-    } else {
-      // Place the selection just after the inserted element
-      selection->Collapse(mNode, mNode->Length());
-    }
+    // Place the selection just after the inserted element
+    selection->Collapse(mParent, mOffset + 1);
   } else {
     // Do nothing - DOM Range gravity will adjust selection
   }
