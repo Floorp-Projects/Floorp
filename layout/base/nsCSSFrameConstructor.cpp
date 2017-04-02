@@ -3728,7 +3728,7 @@ nsCSSFrameConstructor::FindInputData(Element* aElement,
   nsCOMPtr<nsIFormControl> control = do_QueryInterface(aElement);
   NS_ASSERTION(control, "input doesn't implement nsIFormControl?");
 
-  auto controlType = control->GetType();
+  auto controlType = control->ControlType();
 
   // Note that Android/Gonk widgets don't have theming support and thus
   // appearance:none is the same as any other appearance value.
