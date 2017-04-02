@@ -740,8 +740,9 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
   // If the login manager has indicated it's responsible for this field, let it
   // handle the autocomplete. Otherwise, handle with form history.
   // This method is sometimes called in unit tests and from XUL without a focused node.
-  if (mFocusedInputNode && (mPwmgrInputs.Get(mFocusedInputNode) ||
-                            formControl->GetType() == NS_FORM_INPUT_PASSWORD)) {
+  if (mFocusedInputNode &&
+      (mPwmgrInputs.Get(mFocusedInputNode) ||
+       formControl->ControlType() == NS_FORM_INPUT_PASSWORD)) {
 
     // Handle the case where a password field is focused but
     // MarkAsLoginManagerField wasn't called because password manager is disabled.
@@ -1033,7 +1034,7 @@ nsFormFillController::MaybeStartControllingInput(nsIDOMHTMLInputElement* aInput)
 
   bool isPwmgrInput = false;
   if (mPwmgrInputs.Get(inputNode) ||
-      formControl->GetType() == NS_FORM_INPUT_PASSWORD) {
+      formControl->ControlType() == NS_FORM_INPUT_PASSWORD) {
     isPwmgrInput = true;
   }
 
@@ -1048,7 +1049,7 @@ nsFormFillController::FocusEventDelayedCallback(nsIFormControl* aFormControl)
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(mFocusedInputNode);
 
   if (!formControl || formControl != aFormControl ||
-      formControl->GetType() != NS_FORM_INPUT_PASSWORD) {
+      formControl->ControlType() != NS_FORM_INPUT_PASSWORD) {
     return;
   }
 
