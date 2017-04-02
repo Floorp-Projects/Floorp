@@ -14,9 +14,14 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
+import android.support.v7.app.ActionBar;
+import android.util.Log;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.util.Log;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import org.json.JSONObject;
 import org.json.JSONException;
@@ -29,6 +34,7 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.EventCallback;
@@ -42,15 +48,79 @@ public class WebAppActivity extends GeckoApp {
 
     private static final String LOGTAG = "WebAppActivity";
 
+    private TextView mUrlView;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         loadManifest(getIntent());
+
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.actionbar);
+        setSupportActionBar(toolbar);
+
+        final ProgressBar progressBar = (ProgressBar) findViewById(R.id.page_progress);
+        progressBar.setVisibility(View.GONE);
+
+        final ActionBar actionBar = getSupportActionBar();
+        actionBar.setCustomView(R.layout.webapps_action_bar_custom_view);
+        actionBar.setDisplayShowCustomEnabled(true);
+        actionBar.setDisplayShowTitleEnabled(false);
+        actionBar.hide();
+
+        final View customView = actionBar.getCustomView();
+        mUrlView = (TextView) customView.findViewById(R.id.webapps_action_bar_url);
+
+        EventDispatcher.getInstance().registerUiThreadListener(this,
+                    "Website:AppEntered",
+                    "Website:AppLeft",
+                    null);
+
+        Tabs.registerOnTabsChangedListener(this);
     }
 
     @Override
     public int getLayout() {
-        return R.layout.webapp_activity;
+        return R.layout.customtabs_activity;
+    }
+
+    @Override
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
+        switch (event) {
+            case "Website:AppEntered":
+                getSupportActionBar().hide();
+                break;
+
+            case "Website:AppLeft":
+                getSupportActionBar().show();
+                break;
+        }
+    }
+
+    @Override
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
+        if (!Tabs.getInstance().isSelectedTab(tab)) {
+            return;
+        }
+
+        if (msg == Tabs.TabEvents.LOCATION_CHANGE) {
+            mUrlView.setText(tab.getURL());
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        EventDispatcher.getInstance().unregisterUiThreadListener(this,
+              "Website:AppEntered",
+              "Website:AppLeft",
+              null);
+        Tabs.unregisterOnTabsChangedListener(this);
+    }
+
+    @Override
+    protected int getNewTabFlags() {
+        return Tabs.LOADURL_WEBAPP | super.getNewTabFlags();
     }
 
     /**

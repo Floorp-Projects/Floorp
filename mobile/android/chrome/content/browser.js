@@ -2206,6 +2206,17 @@ var BrowserApp = {
   },
 };
 
+async function notifyManifestStatus(browser) {
+  try {
+    const manifest = await Manifests.getManifest(browser);
+    const evtType = (manifest && manifest.installed) ?
+      "Website:AppEntered" : "Website:AppLeft";
+    GlobalEventDispatcher.sendRequest({type: evtType});
+  } catch (err) {
+    Cu.reportError("Error sending status: " + err.message);
+  }
+}
+
 async function installManifest(browser, data) {
   try {
     const manifest = await Manifests.getManifest(browser, data.manifestUrl);
@@ -4499,6 +4510,8 @@ Tab.prototype = {
     GlobalEventDispatcher.sendRequest(message);
 
     BrowserEventHandler.closeZoomedView();
+
+    notifyManifestStatus(this.browser);
 
     if (!sameDocument) {
       // XXX This code assumes that this is the earliest hook we have at which

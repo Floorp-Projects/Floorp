@@ -32,6 +32,7 @@ class MediaSource;
 } // namespace mozilla
 
 class nsHostObjectProtocolHandler : public nsIProtocolHandler
+                                  , public nsIProtocolHandlerWithDynamicFlags
 {
 public:
   nsHostObjectProtocolHandler();
@@ -45,6 +46,9 @@ public:
   NS_IMETHOD NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadinfo, nsIChannel * *_retval) override;
   NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel * *_retval) override;
   NS_IMETHOD AllowPort(int32_t port, const char * scheme, bool *_retval) override;
+
+  // nsIProtocolHandlerWithDynamicFlags methods
+  NS_IMETHOD GetFlagsForURI(nsIURI *aURI, uint32_t *aResult) override;
 
   // If principal is not null, its origin will be used to generate the URI.
   static nsresult GenerateURIString(const nsACString &aScheme,
@@ -94,14 +98,19 @@ private:
 class nsBlobProtocolHandler : public nsHostObjectProtocolHandler
 {
 public:
+  NS_IMETHOD GetProtocolFlags(uint32_t *aProtocolFlags) override;
   NS_IMETHOD GetScheme(nsACString &result) override;
 };
 
 class nsFontTableProtocolHandler : public nsHostObjectProtocolHandler
 {
 public:
-  NS_IMETHOD GetScheme(nsACString &result);
-  NS_IMETHOD NewURI(const nsACString & aSpec, const char * aOriginCharset, nsIURI *aBaseURI, nsIURI * *_retval);
+  NS_IMETHOD GetProtocolFlags(uint32_t *aProtocolFlags) override;
+  NS_IMETHOD GetScheme(nsACString &result) override;
+  NS_IMETHOD NewURI(const nsACString & aSpec,
+                    const char *aOriginCharset,
+                    nsIURI *aBaseURI,
+                    nsIURI **_retval) override;
 };
 
 bool IsBlobURI(nsIURI* aUri);

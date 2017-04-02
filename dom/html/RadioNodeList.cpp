@@ -25,7 +25,7 @@ HTMLInputElement*
 GetAsRadio(nsIContent* node)
 {
   HTMLInputElement* el = HTMLInputElement::FromContent(node);
-  if (el && el->GetType() == NS_FORM_INPUT_RADIO) {
+  if (el && el->ControlType() == NS_FORM_INPUT_RADIO) {
     return el;
   }
   return nullptr;
