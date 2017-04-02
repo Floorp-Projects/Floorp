@@ -117,8 +117,7 @@ searchplugins: $(search-preqs)
 	$(call py_action,generate_searchjson,$(srcdir)/search/list.json $(AB_CD) $(tgt-gendir)/list.json)
 	$(call py_action,jar_maker,\
           $(QUIET) -d $(FINAL_TARGET) \
-          -s $(topsrcdir)/$(relativesrcdir)/en-US/searchplugins \
-          -s $(LOCALE_SRCDIR)/searchplugins \
+          -s $(topsrcdir)/$(relativesrcdir)/searchplugins \
           -s $(tgt-gendir) \
           $(MAKE_JARS_FLAGS) $(search-jar))
 	$(TOUCH) $@
