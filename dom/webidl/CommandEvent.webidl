@@ -8,7 +8,7 @@ interface CommandEvent : Event {
   readonly attribute DOMString? command;
 
   void initCommandEvent(DOMString type,
-                        boolean canBubble,
-                        boolean cancelable,
-                        DOMString? command);
+                        optional boolean canBubble = false,
+                        optional boolean cancelable = false,
+                        optional DOMString? command = null);
 };
