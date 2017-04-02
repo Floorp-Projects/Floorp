@@ -231,11 +231,6 @@ function testOverrides(callback) {
   });
 }
 
-SpecialPowers.loadChromeScript(_ => {
-  Components.utils.import("resource://gre/modules/UserAgentOverrides.jsm");
-  UserAgentOverrides.init();
-});
-
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestCompleteLog();
 SimpleTest.requestLongerTimeout(5);
