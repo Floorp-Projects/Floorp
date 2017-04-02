@@ -1836,7 +1836,7 @@ fails == 992447.html 992447.html
 == 1021564-4.html 1021564-4.html
 pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1.html
 == 1022612-1.html 1022612-1.html
-== 1024473-1.html 1024473-1.html
+fuzzy-if(stylo,1,244) == 1024473-1.html 1024473-1.html
 == 1025914-1.html 1025914-1.html
 == 1042104-1.html 1042104-1.html
 == 1043537-1.html 1043537-1.html
