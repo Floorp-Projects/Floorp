@@ -42,43 +42,43 @@ fuzzy-if(cocoaWidget,1,2) random-if(winWidget||gtkWidget) == flexbox-align-self-
 # Tests for dynamic insertions of content into a flex container
 # (with existing [div | span | text] inside the flexbox, and new content
 # inserted adjacent to that existing content.)
-== flexbox-dyn-insertAroundDiv-1.xhtml flexbox-dyn-insertAroundDiv-1.xhtml
-== flexbox-dyn-insertAroundDiv-2.xhtml flexbox-dyn-insertAroundDiv-2.xhtml
+fails == flexbox-dyn-insertAroundDiv-1.xhtml flexbox-dyn-insertAroundDiv-1.xhtml
+fails == flexbox-dyn-insertAroundDiv-2.xhtml flexbox-dyn-insertAroundDiv-2.xhtml
 fails == flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3.xhtml
 
-== flexbox-dyn-insertAroundSpan-1.xhtml flexbox-dyn-insertAroundSpan-1.xhtml
-== flexbox-dyn-insertAroundSpan-2.xhtml flexbox-dyn-insertAroundSpan-2.xhtml
+fails == flexbox-dyn-insertAroundSpan-1.xhtml flexbox-dyn-insertAroundSpan-1.xhtml
+fails == flexbox-dyn-insertAroundSpan-2.xhtml flexbox-dyn-insertAroundSpan-2.xhtml
 fails == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundSpan-3.xhtml
 
-== flexbox-dyn-insertAroundText-1.xhtml flexbox-dyn-insertAroundText-1.xhtml
-== flexbox-dyn-insertAroundText-2.xhtml flexbox-dyn-insertAroundText-2.xhtml
-== flexbox-dyn-insertAroundText-3.xhtml flexbox-dyn-insertAroundText-3.xhtml
+fails == flexbox-dyn-insertAroundText-1.xhtml flexbox-dyn-insertAroundText-1.xhtml
+fails == flexbox-dyn-insertAroundText-2.xhtml flexbox-dyn-insertAroundText-2.xhtml
+fails == flexbox-dyn-insertAroundText-3.xhtml flexbox-dyn-insertAroundText-3.xhtml
 
 # Variant of one of the above tests, to regression-test an invalidation issue
-== flexbox-dyn-insertEmptySpan-1.xhtml flexbox-dyn-insertEmptySpan-1.xhtml
+fails == flexbox-dyn-insertEmptySpan-1.xhtml flexbox-dyn-insertEmptySpan-1.xhtml
 
 # Tests for empty flexboxes (with no flex items)
 fails == flexbox-empty-1a.xhtml flexbox-empty-1a.xhtml
 fails == flexbox-empty-1b.xhtml flexbox-empty-1b.xhtml
 
 # Tests for handling of floated elements inside a flexbox
-== flexbox-float-1a.xhtml flexbox-float-1a.xhtml
-== flexbox-float-1b.xhtml flexbox-float-1b.xhtml
-== flexbox-float-1c.xhtml flexbox-float-1c.xhtml
-== flexbox-float-1d.xhtml flexbox-float-1d.xhtml
-== flexbox-float-2a.xhtml flexbox-float-2a.xhtml
-== flexbox-float-2b.xhtml flexbox-float-2b.xhtml
+fails == flexbox-float-1a.xhtml flexbox-float-1a.xhtml
+fails == flexbox-float-1b.xhtml flexbox-float-1b.xhtml
+fails == flexbox-float-1c.xhtml flexbox-float-1c.xhtml
+fails == flexbox-float-1d.xhtml flexbox-float-1d.xhtml
+fails == flexbox-float-2a.xhtml flexbox-float-2a.xhtml
+fails == flexbox-float-2b.xhtml flexbox-float-2b.xhtml
 
 # Tests for the order in which we paint flex items
 == flexbox-paint-ordering-3.html flexbox-paint-ordering-3.html
 
 # Tests for handling of absolutely/fixed/relatively-positioned flex items.
-== flexbox-position-absolute-1.xhtml flexbox-position-absolute-1.xhtml
-== flexbox-position-absolute-2.xhtml flexbox-position-absolute-2.xhtml
+fails == flexbox-position-absolute-1.xhtml flexbox-position-absolute-1.xhtml
+fails == flexbox-position-absolute-2.xhtml flexbox-position-absolute-2.xhtml
 == flexbox-position-absolute-3.xhtml flexbox-position-absolute-3.xhtml
 == flexbox-position-absolute-4.xhtml flexbox-position-absolute-4.xhtml
-== flexbox-position-fixed-1.xhtml flexbox-position-fixed-1.xhtml
-== flexbox-position-fixed-2.xhtml flexbox-position-fixed-2.xhtml
+fails == flexbox-position-fixed-1.xhtml flexbox-position-fixed-1.xhtml
+fails == flexbox-position-fixed-2.xhtml flexbox-position-fixed-2.xhtml
 == flexbox-position-fixed-3.xhtml flexbox-position-fixed-3.xhtml
 == flexbox-position-fixed-4.xhtml flexbox-position-fixed-4.xhtml
 
@@ -90,7 +90,7 @@ fails == flexbox-empty-1b.xhtml flexbox-empty-1b.xhtml
 == flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3b.xhtml
 == flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3c.xhtml
 == flexbox-inlinecontent-horiz-4.xhtml flexbox-inlinecontent-horiz-4.xhtml
-== flexbox-inlinecontent-horiz-5.xhtml flexbox-inlinecontent-horiz-5.xhtml
+fails == flexbox-inlinecontent-horiz-5.xhtml flexbox-inlinecontent-horiz-5.xhtml
 
 # Tests for intrinsic sizing of flexboxes
 fails == flexbox-intrinsic-sizing-horiz-1a.xhtml flexbox-intrinsic-sizing-horiz-1a.xhtml

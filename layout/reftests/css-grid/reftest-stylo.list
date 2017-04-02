@@ -1,8 +1,8 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 default-preferences pref(layout.css.grid.enabled,true)
 
-== grid-whitespace-handling-1a.xhtml grid-whitespace-handling-1a.xhtml
-== grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1b.xhtml
+fails == grid-whitespace-handling-1a.xhtml grid-whitespace-handling-1a.xhtml
+fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1b.xhtml
 fails == grid-whitespace-handling-2.xhtml grid-whitespace-handling-2.xhtml
 fails == grid-placement-definite-001.html grid-placement-definite-001.html
 fails == grid-placement-definite-002.html grid-placement-definite-002.html
