@@ -42,6 +42,8 @@ public:
 
   static void UpdateGMPCapabilities(nsTArray<mozilla::dom::GMPCapabilityData>&& aCapabilities);
 
+  void BeginShutdown();
+
 protected:
   void InitializePlugins(AbstractThread*) override
   {
@@ -84,6 +86,10 @@ public:
   void GetAlreadyBridgedTo(nsTArray<ProcessId>& aAlreadyBridgedTo);
 
   static bool Create(Endpoint<PGMPServiceChild>&& aGMPService);
+
+  ipc::IPCResult RecvBeginShutdown() override;
+
+  bool HaveContentParents() const;
 
 private:
   nsRefPtrHashtable<nsUint64HashKey, GMPContentParent> mContentParents;
