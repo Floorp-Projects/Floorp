@@ -43,10 +43,12 @@ import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.widget.AnchoredPopup;
 
-public class WebAppActivity extends GeckoApp {
-    public static final String MANIFEST_PATH = "MANIFEST_PATH";
+import static org.mozilla.gecko.Tabs.TabEvents;
 
+public class WebAppActivity extends GeckoApp {
     private static final String LOGTAG = "WebAppActivity";
+
+    public static final String MANIFEST_PATH = "MANIFEST_PATH";
 
     private TextView mUrlView;
     private View doorhangerOverlay;
@@ -55,9 +57,11 @@ public class WebAppActivity extends GeckoApp {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Intent savedIntent = getIntent();
         super.onCreate(savedInstanceState);
-
-        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "webapp");
+        // GeckoApp's default behaviour is to reset the intent if we've got any
+        // savedInstanceState, which we don't want here.
+        setIntent(savedIntent);
 
         if (savedInstanceState != null) {
             mManifestPath = savedInstanceState.getString(WebAppActivity.MANIFEST_PATH, null);
@@ -65,6 +69,10 @@ public class WebAppActivity extends GeckoApp {
             mManifestPath = getIntent().getStringExtra(WebAppActivity.MANIFEST_PATH);
         }
         loadManifest(mManifestPath);
+
+        if (!mIsRestoringActivity || !hasGeckoTab(new SafeIntent(getIntent()))) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "customtab");
+        }
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.actionbar);
         setSupportActionBar(toolbar);
@@ -117,11 +125,13 @@ public class WebAppActivity extends GeckoApp {
 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
-        if (!Tabs.getInstance().isSelectedTab(tab)) {
+        if (tab == null || !Tabs.getInstance().isSelectedTab(tab) ||
+                tab.getType() != Tab.TabType.WEBAPP) {
             return;
         }
 
-        if (msg == Tabs.TabEvents.LOCATION_CHANGE) {
+        if (msg == TabEvents.LOCATION_CHANGE ||
+                msg == TabEvents.SELECTED) {
             mUrlView.setText(tab.getURL());
         }
     }
@@ -155,20 +165,26 @@ public class WebAppActivity extends GeckoApp {
      */
     @Override
     protected void onNewIntent(Intent externalIntent) {
-
-        restoreLastSelectedTab();
+        super.onNewIntent(externalIntent);
 
         final SafeIntent intent = new SafeIntent(externalIntent);
-        final String launchUrl = intent.getDataString();
-        final String currentUrl = Tabs.getInstance().getSelectedTab().getURL();
-        final boolean isSameDomain = Uri.parse(currentUrl).getHost()
-                .equals(Uri.parse(launchUrl).getHost());
 
-        if (!isSameDomain) {
-            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "webapp");
-            mManifestPath = externalIntent.getStringExtra(WebAppActivity.MANIFEST_PATH);
-            loadManifest(mManifestPath);
-            Tabs.getInstance().loadUrl(launchUrl);
+        if (hasGeckoTab(intent)) {
+            loadManifest(intent.getStringExtra(WebAppActivity.MANIFEST_PATH));
+        } else {
+            restoreLastSelectedTab();
+
+            final String launchUrl = intent.getDataString();
+            final String currentUrl = Tabs.getInstance().getSelectedTab().getURL();
+            final boolean isSameDomain = Uri.parse(currentUrl).getHost()
+                    .equals(Uri.parse(launchUrl).getHost());
+
+            if (!isSameDomain) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "webapp");
+                mManifestPath = externalIntent.getStringExtra(WebAppActivity.MANIFEST_PATH);
+                loadManifest(mManifestPath);
+                Tabs.getInstance().loadUrl(launchUrl);
+            }
         }
     }
 
