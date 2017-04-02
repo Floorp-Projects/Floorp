@@ -80,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    @SuppressLint("CommitTransaction")
     protected void onNewIntent(Intent intent) {
         if (Intent.ACTION_VIEW.equals(intent.getAction())) {
             // We can't update our fragment right now because we need to wait until the activity is
