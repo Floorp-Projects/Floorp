@@ -277,6 +277,11 @@ var gPrivacyPane = {
                        gPrivacyPane.clearSiteData);
       setEventListener("siteDataSettings", "command",
                        gPrivacyPane.showSiteDataSettings);
+      let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "storage-permissions";
+      document.getElementById("siteDataLearnMoreLink").setAttribute("href", url);
+      let siteDataGroup = document.getElementById("siteDataGroup");
+      siteDataGroup.hidden = false;
+      siteDataGroup.removeAttribute("data-hidden-from-search");
     }
 
 
@@ -1182,9 +1187,6 @@ var gPrivacyPane = {
         let prefStrBundle = document.getElementById("bundlePreferences");
         let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
         totalSiteDataSizeLabel.textContent = prefStrBundle.getFormattedString("totalSiteDataSize", size);
-        let siteDataGroup = document.getElementById("siteDataGroup");
-        siteDataGroup.hidden = false;
-        siteDataGroup.removeAttribute("data-hidden-from-search");
       });
   },
 
@@ -1442,4 +1444,12 @@ var gPrivacyPane = {
     this.updateActualAppCacheSize();
   },
   // Methods for Offline Apps (AppCache) end
+
+  observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "sitedatamanager:sites-updated":
+        this.updateTotalSiteDataSize();
+        break;
+    }
+  },
 };
