@@ -206,6 +206,7 @@
   list-style-image: url("chrome://browser/skin/tabbrowser/loading.svg");
   animation-duration: 800ms;
   animation-name: tab-throbber-loading;
+  fill: #0077ff;
 }
 
 .tab-label {
