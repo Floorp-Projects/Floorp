@@ -124,7 +124,7 @@
     "cy": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yahoo-en-GB", "bing", "amazon-co-uk", "duckduckgo", "wikipedia-cy"
+          "google", "yahoo-en-GB", "bing", "amazon-en-GB", "duckduckgo", "wikipedia-cy"
         ]
       }
     },
@@ -159,7 +159,7 @@
     "en-GB": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yahoo-en-GB",  "bing", "amazon-co-uk", "duckduckgo", "qwant", "twitter", "wikipedia"
+          "google", "yahoo-en-GB",  "bing", "amazon-en-GB", "duckduckgo", "qwant", "twitter", "wikipedia"
         ]
       }
     },
@@ -246,7 +246,7 @@
     "ff": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yahoo-france", "bing", "amazon-fr", "wikipedia-fr"
+          "google", "yahoo-france", "bing", "amazon-france", "wikipedia-fr"
         ]
       }
     },
@@ -274,7 +274,7 @@
     "ga-IE": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "amazon-co-uk", "tearma", "twitter", "wikipedia-ga-IE"
+          "google", "amazon-en-GB", "tearma", "twitter", "wikipedia-ga-IE"
         ]
       }
     },
@@ -323,7 +323,7 @@
     "hr": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yahoo", "bing", "amazon-co-uk", "duckduckgo", "twitter", "wikipedia-hr"
+          "google", "yahoo", "bing", "amazon-en-GB", "duckduckgo", "twitter", "wikipedia-hr"
         ]
       }
     },
@@ -533,14 +533,14 @@
     "pt-BR": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yahoo-br", "bing", "twitter", "wikipedia-pt"
+          "google", "yahoo-br", "bing", "twitter", "wikipedia-br"
         ]
       }
     },
     "pt-PT": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "wikipedia-pt"
+          "google", "wikipedia-ptpt"
         ]
       }
     },
@@ -589,7 +589,7 @@
     "sq": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yahoo", "bing", "amazon-co-uk", "twitter", "wikipedia-sq"
+          "google", "yahoo", "bing", "amazon-en-GB", "twitter", "wikipedia-sq"
         ]
       }
     },
