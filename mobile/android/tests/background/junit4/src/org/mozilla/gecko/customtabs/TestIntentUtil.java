@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.mozglue.SafeIntent;
 import org.robolectric.RuntimeEnvironment;
 
 import java.util.List;
@@ -54,7 +55,7 @@ public class TestIntentUtil {
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
         builder.setActionButton(bitmap, description, pendingIntent, tinted);
 
-        Intent intent = builder.build().intent;
+        SafeIntent intent = new SafeIntent(builder.build().intent);
         Assert.assertTrue(IntentUtil.hasActionButton(intent));
         Assert.assertEquals(tinted, IntentUtil.isActionButtonTinted(intent));
         Assert.assertEquals(bitmap, IntentUtil.getActionButtonIcon(intent));
@@ -67,7 +68,7 @@ public class TestIntentUtil {
     public void testIntentWithoutActionButton() {
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
 
-        Intent intent = builder.build().intent;
+        SafeIntent intent = new SafeIntent(builder.build().intent);
         Assert.assertFalse(IntentUtil.hasActionButton(intent));
         Assert.assertFalse(IntentUtil.isActionButtonTinted(intent));
         Assert.assertNull(IntentUtil.getActionButtonIcon(intent));
@@ -82,7 +83,7 @@ public class TestIntentUtil {
 
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
         builder.setExitAnimations(spyContext, enterRes, exitRes);
-        final Intent i = builder.build().intent;
+        final SafeIntent i = new SafeIntent(builder.build().intent);
 
         Assert.assertEquals(true, IntentUtil.hasExitAnimation(i));
         Assert.assertEquals(THIRD_PARTY_PACKAGE_NAME, IntentUtil.getAnimationPackageName(i));
@@ -93,7 +94,7 @@ public class TestIntentUtil {
     @Test
     public void testIntentWithoutCustomAnimation() {
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-        final Intent i = builder.build().intent;
+        final SafeIntent i = new SafeIntent(builder.build().intent);
 
         Assert.assertEquals(false, IntentUtil.hasExitAnimation(i));
         Assert.assertEquals(null, IntentUtil.getAnimationPackageName(i));
@@ -114,7 +115,7 @@ public class TestIntentUtil {
         builder.addMenuItem("Label 1", intent1);
         builder.addMenuItem("Label 2", intent2);
 
-        final Intent intent = builder.build().intent;
+        final SafeIntent intent = new SafeIntent(builder.build().intent);
         List<String> titles = IntentUtil.getMenuItemsTitle(intent);
         List<PendingIntent> intents = IntentUtil.getMenuItemsPendingIntent(intent);
         Assert.assertEquals(3, titles.size());
@@ -131,28 +132,28 @@ public class TestIntentUtil {
     public void testToolbarColor() {
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
 
-        Assert.assertEquals(IntentUtil.getToolbarColor(builder.build().intent),
+        Assert.assertEquals(IntentUtil.getToolbarColor(new SafeIntent(builder.build().intent)),
                 IntentUtil.DEFAULT_ACTION_BAR_COLOR);
 
         // Test red color
         builder.setToolbarColor(0xFF0000);
-        Assert.assertEquals(IntentUtil.getToolbarColor(builder.build().intent), 0xFFFF0000);
+        Assert.assertEquals(IntentUtil.getToolbarColor(new SafeIntent(builder.build().intent)), 0xFFFF0000);
         builder.setToolbarColor(0xFFFF0000);
-        Assert.assertEquals(IntentUtil.getToolbarColor(builder.build().intent), 0xFFFF0000);
+        Assert.assertEquals(IntentUtil.getToolbarColor(new SafeIntent(builder.build().intent)), 0xFFFF0000);
 
         // Test translucent green color, it should force alpha value to be 0xFF
         builder.setToolbarColor(0x0000FF00);
-        Assert.assertEquals(IntentUtil.getToolbarColor(builder.build().intent), 0xFF00FF00);
+        Assert.assertEquals(IntentUtil.getToolbarColor(new SafeIntent(builder.build().intent)), 0xFF00FF00);
     }
 
     @Test
     public void testMenuShareItem() {
         final CustomTabsIntent.Builder builderNoShareItem = new CustomTabsIntent.Builder();
-        Assert.assertFalse(IntentUtil.hasShareItem(builderNoShareItem.build().intent));
+        Assert.assertFalse(IntentUtil.hasShareItem(new SafeIntent(builderNoShareItem.build().intent)));
 
         final CustomTabsIntent.Builder builderHasShareItem = new CustomTabsIntent.Builder();
         builderHasShareItem.addDefaultShareMenuItem();
-        Assert.assertTrue(IntentUtil.hasShareItem(builderHasShareItem.build().intent));
+        Assert.assertTrue(IntentUtil.hasShareItem(new SafeIntent(builderHasShareItem.build().intent)));
     }
 
     private PendingIntent createPendingIntent(int reqCode, @Nullable String uri) {
