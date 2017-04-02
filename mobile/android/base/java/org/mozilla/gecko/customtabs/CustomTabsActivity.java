@@ -43,6 +43,7 @@ import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
+import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -68,7 +69,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
 
     // Bug 1351605 - getIntent() not always returns the intent which started this activity.
     // Therefore we make a copy in case of this Activity is re-created.
-    private Intent startIntent;
+    private SafeIntent startIntent;
 
     private MenuItem menuItemControl;
 
@@ -77,10 +78,11 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState != null) {
-            startIntent = savedInstanceState.getParcelable(SAVED_START_INTENT);
+            final Intent restoredIntent = savedInstanceState.getParcelable(SAVED_START_INTENT);
+            startIntent = new SafeIntent(restoredIntent);
         } else {
             sendTelemetry();
-            startIntent = getIntent();
+            startIntent = new SafeIntent(getIntent());
             final String host = getReferrerHost();
             recordCustomTabUsage(host);
         }
@@ -222,7 +224,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable(SAVED_START_INTENT, startIntent);
+        outState.putParcelable(SAVED_START_INTENT, startIntent.getUnsafe());
     }
 
     @Override
