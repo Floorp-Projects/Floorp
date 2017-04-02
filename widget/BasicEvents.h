@@ -324,6 +324,7 @@ private:
         break;
       case eTransitionEventClass:
       case eAnimationEventClass:
+      case eSVGZoomEventClass:
         mFlags.mCancelable = false;
         mFlags.mBubbles = true;
         break;
