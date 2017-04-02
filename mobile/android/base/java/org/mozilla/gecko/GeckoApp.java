@@ -2180,6 +2180,8 @@ public abstract class GeckoApp
 
     @Override
     protected void onNewIntent(Intent externalIntent) {
+        super.onNewIntent(externalIntent);
+
         final SafeIntent intent = new SafeIntent(externalIntent);
 
         final boolean isFirstTab = !mWasFirstTabShownAfterActivityUnhidden;
