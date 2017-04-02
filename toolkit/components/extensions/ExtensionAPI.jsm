@@ -29,11 +29,12 @@ class ExtensionAPI {
   constructor(extension) {
     this.extension = extension;
 
-    if (this.onShutdown) {
-      extension.once("shutdown", () => {
+    extension.once("shutdown", () => {
+      if (this.onShutdown) {
         this.onShutdown(extension.shutdownReason);
-      });
-    }
+      }
+      this.extension = null;
+    });
   }
 
   destroy() {
