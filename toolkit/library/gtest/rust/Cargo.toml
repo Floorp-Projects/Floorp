@@ -32,7 +32,7 @@ debug = true
 rpath = false
 lto = false
 debug-assertions = true
-codegen-units = 1
+codegen-units = 4
 panic = "abort"
 
 [profile.release]
