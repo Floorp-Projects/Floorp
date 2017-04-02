@@ -5,7 +5,7 @@
 "use strict";
 
 const Services = require("Services");
-const { createStore, applyMiddleware } = require("devtools/client/shared/vendor/redux");
+const { applyMiddleware, createStore } = require("devtools/client/shared/vendor/redux");
 const batching = require("../middleware/batching");
 const prefs = require("../middleware/prefs");
 const thunk = require("../middleware/thunk");
