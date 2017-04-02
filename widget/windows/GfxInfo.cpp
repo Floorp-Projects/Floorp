@@ -221,6 +221,39 @@ static nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName, nsAS
   return retval;
 }
 
+static nsresult GetKeyValues(const WCHAR* keyLocation, const WCHAR* keyName, nsTArray<nsString>& destStrings)
+{
+  // First ask for the size of the value
+  DWORD size;
+  LONG rv = RegGetValueW(HKEY_LOCAL_MACHINE, keyLocation, keyName, RRF_RT_REG_MULTI_SZ, nullptr, nullptr, &size);
+  if (rv != ERROR_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Create a buffer with the proper size and retrieve the value
+  WCHAR* wCharValue = new WCHAR[size / sizeof(WCHAR)];
+  rv = RegGetValueW(HKEY_LOCAL_MACHINE, keyLocation, keyName, RRF_RT_REG_MULTI_SZ, nullptr, (LPBYTE)wCharValue, &size);
+  if (rv != ERROR_SUCCESS) {
+    delete[] wCharValue;
+    return NS_ERROR_FAILURE;
+  }
+
+  // The value is a sequence of null-terminated strings, usually terminated by an empty string (\0).
+  // RegGetValue ensures that the value is properly terminated with a null character.
+  DWORD i = 0;
+  DWORD strLen = size / sizeof(WCHAR);
+  while (i < strLen) {
+    nsString value(wCharValue + i);
+    if (!value.IsEmpty()) {
+      destStrings.AppendElement(value);
+    }
+    i += value.Length() + 1;
+  }
+  delete[] wCharValue;
+
+  return NS_OK;
+}
+
 // The device ID is a string like PCI\VEN_15AD&DEV_0405&SUBSYS_040515AD
 // this function is used to extract the id's out of it
 uint32_t
@@ -576,17 +609,37 @@ GfxInfo::Init()
              driverNumericVersion = 0, knownSafeMismatchVersion = 0;
 
     // Only parse the DLL version for those found in the driver list
-    nsAutoString elligibleDLLs;
-    if (NS_SUCCEEDED(GetAdapterDriver(elligibleDLLs))) {
-      if (FindInReadable(dllFileName, elligibleDLLs)) {
+    nsAutoString eligibleDLLs;
+    if (NS_SUCCEEDED(GetAdapterDriver(eligibleDLLs))) {
+      if (FindInReadable(dllFileName, eligibleDLLs)) {
         dllFileName += NS_LITERAL_STRING(".dll");
         gfxWindowsPlatform::GetDLLVersion(dllFileName.get(), dllVersion);
         ParseDriverVersion(dllVersion, &dllNumericVersion);
       }
-      if (FindInReadable(dllFileName2, elligibleDLLs)) {
+      if (FindInReadable(dllFileName2, eligibleDLLs)) {
         dllFileName2 += NS_LITERAL_STRING(".dll");
         gfxWindowsPlatform::GetDLLVersion(dllFileName2.get(), dllVersion2);
         ParseDriverVersion(dllVersion2, &dllNumericVersion2);
+      }
+    }
+
+    // Sometimes the DLL is not in the System32 nor SysWOW64 directories. But UserModeDriverName
+    // (or UserModeDriverNameWow, if available) might provide the full path to the DLL in some
+    // DriverStore FileRepository.
+    if (dllNumericVersion == 0 && dllNumericVersion2 == 0) {
+      nsTArray<nsString> eligibleDLLpaths;
+      const WCHAR* keyLocation = mDeviceKey[mActiveGPUIndex].get();
+      GetKeyValues(keyLocation, L"UserModeDriverName", eligibleDLLpaths);
+      GetKeyValues(keyLocation, L"UserModeDriverNameWow", eligibleDLLpaths);
+      size_t length = eligibleDLLpaths.Length();
+      for (size_t i=0; i<length && dllNumericVersion == 0 && dllNumericVersion2 == 0; ++i) {
+        if (FindInReadable(dllFileName, eligibleDLLpaths[i])) {
+          gfxWindowsPlatform::GetDLLVersion(eligibleDLLpaths[i].get(), dllVersion);
+          ParseDriverVersion(dllVersion, &dllNumericVersion);
+        } else if (FindInReadable(dllFileName2, eligibleDLLpaths[i])) {
+          gfxWindowsPlatform::GetDLLVersion(eligibleDLLpaths[i].get(), dllVersion2);
+          ParseDriverVersion(dllVersion2, &dllNumericVersion2);
+        }
       }
     }
 
@@ -602,7 +655,11 @@ GfxInfo::Init()
       if (driverNumericVersion < knownSafeMismatchVersion ||
           std::max(dllNumericVersion, dllNumericVersion2) < knownSafeMismatchVersion) {
         mHasDriverVersionMismatch = true;
-        gfxCriticalNoteOnce << "Mismatched driver versions between the registry " << NS_ConvertUTF16toUTF8(mDriverVersion[mActiveGPUIndex]).get() << " and DLL(s) " << NS_ConvertUTF16toUTF8(dllVersion).get() << ", " << NS_ConvertUTF16toUTF8(dllVersion2).get() << " reported.";
+        gfxCriticalNoteOnce << "Mismatched driver versions between the registry "
+                            << NS_ConvertUTF16toUTF8(mDriverVersion[mActiveGPUIndex]).get()
+                            << " and DLL(s) "
+                            << NS_ConvertUTF16toUTF8(dllVersion).get() << ", "
+                            << NS_ConvertUTF16toUTF8(dllVersion2).get() << " reported.";
       }
     } else if (dllNumericVersion == 0 && dllNumericVersion2 == 0) {
       // Leave it as an asserting error for now, to see if we can find

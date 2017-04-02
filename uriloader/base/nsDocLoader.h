@@ -181,7 +181,7 @@ protected:
                                        uint32_t aStateFlags) {}
 
     void doStartDocumentLoad();
-    void doStartURLLoad(nsIRequest *request);
+    void doStartURLLoad(nsIRequest *request, int32_t aExtraFlags);
     void doStopURLLoad(nsIRequest *request, nsresult aStatus);
     void doStopDocumentLoad(nsIRequest *request, nsresult aStatus);
 
