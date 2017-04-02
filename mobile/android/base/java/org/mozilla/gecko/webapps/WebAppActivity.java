@@ -158,6 +158,11 @@ public class WebAppActivity extends GeckoApp {
         return Tabs.LOADURL_WEBAPP | super.getNewTabFlags();
     }
 
+    @Override
+    protected void onDone() {
+        finish();
+    }
+
     /**
      * In case this activity is reused (the user has opened > 10 current web apps)
      * we check that app launched is still within the same host as the
