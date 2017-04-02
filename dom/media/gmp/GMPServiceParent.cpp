@@ -468,6 +468,10 @@ GeckoMediaPluginServiceParent::UnloadPlugins()
     // Move all plugins references to a local array. This way mMutex won't be
     // locked when calling CloseActive (to avoid inter-locking).
     Swap(plugins, mPlugins);
+
+    for (GMPServiceParent* parent : mServiceParents) {
+      Unused << parent->SendBeginShutdown();
+    }
   }
 
   LOGD(("%s::%s plugins:%" PRIuSIZE, __CLASS__, __FUNCTION__,

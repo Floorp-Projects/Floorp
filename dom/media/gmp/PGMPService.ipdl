@@ -36,6 +36,8 @@ parent:
 
   sync GetGMPNodeId(nsString origin, nsString topLevelOrigin, nsString gmpName)
     returns (nsCString id);
+child:
+  async BeginShutdown();
 };
 
 } // namespace gmp
