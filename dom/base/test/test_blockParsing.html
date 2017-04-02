@@ -81,8 +81,51 @@ add_task(function* () {
                 '<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"></html>',
                 '<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">\n<head>\n  <script src="file_script.js"><\/script>\n  <title></title>\n</head>\n<body>\n  <p>Hello Mochitest</p>\n</body>\n</html>');
 });
+
+add_task(function* test_cleanup() {
+  const TOPIC = "blocking-promise-destroyed";
+
+  const finalizationWitness = Components.classes["@mozilla.org/toolkit/finalizationwitness;1"]
+      .getService(Components.interfaces.nsIFinalizationWitnessService);
+
+  for (let url of ["http://mochi.test:8888/chrome/dom/base/test/file_inline_script.html",
+                   "http://mochi.test:8888/chrome/dom/base/test/file_inline_script.xhtml"]) {
+    let iframe = document.createElement("iframe");
+    iframe.src = url;
+
+    // Create a promise that never resolves.
+    let blockerPromise = new Promise(() => {});
+
+    // Create a finalization witness so we can be sure that the promises
+    // have been collected before the end of the test.
+    let destroyedPromise = TestUtils.topicObserved(TOPIC);
+    let witness = finalizationWitness.make(TOPIC, url);
+    blockerPromise.witness = witness;
+
+    let insertedPromise = TestUtils.topicObserved("document-element-inserted", document => {
+      document.blockParsing(blockerPromise).witness = witness;
+
+      return true;
+    });
+
+    document.body.appendChild(iframe);
+    yield insertedPromise;
+
+    // Clear the promise reference, destroy the document, and force GC/CC. This should
+    // trigger any potential leaks or cleanup issues.
+    blockerPromise = null;
+    witness = null;
+    iframe.remove();
+
+    Components.utils.forceGC();
+    Components.utils.forceCC();
+    Components.utils.forceGC();
+
+    // Make sure the blocker promise has been collected.
+    let [, data] = yield destroyedPromise;
+    is(data, url, "Should have correct finalizer URL");
+  }
+});
 </script>
 </body>
 </html>
-
-

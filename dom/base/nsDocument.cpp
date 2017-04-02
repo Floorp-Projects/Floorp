@@ -10643,14 +10643,18 @@ public:
 protected:
   virtual ~UnblockParsingPromiseHandler()
   {
-    MaybeUnblockParser();
+    // If we're being cleaned up by the cycle collector, our mDocument reference
+    // may have been unlinked while our mParser weak reference is still alive.
+    if (mDocument) {
+      MaybeUnblockParser();
+    }
   }
 
 private:
   void MaybeUnblockParser() {
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mParser);
     if (parser) {
-      MOZ_ASSERT(mDocument);
+      MOZ_DIAGNOSTIC_ASSERT(mDocument);
       nsCOMPtr<nsIParser> docParser = mDocument->CreatorParserOrNull();
       if (parser == docParser) {
         parser->UnblockParser();
