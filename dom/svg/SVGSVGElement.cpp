@@ -475,7 +475,7 @@ SVGSVGElement::SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv)
 }
 
 //----------------------------------------------------------------------
-// helper method for implementing SetCurrentScale/Translate
+// helper methods for implementing SVGZoomEvent:
 
 void
 SVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
@@ -499,9 +499,6 @@ SVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
   // change that caused the event's dispatch, which is *not* necessarily the
   // same thing as the values of currentScale and currentTranslate prior to
   // their own last change.
-  //
-  // XXX This comment is out-of-date due to removal of SVGZoomEvent.  Can we
-  // remove some of this code?
   mPreviousScale = mCurrentScale;
   mPreviousTranslate = mCurrentTranslate;
   
@@ -514,7 +511,10 @@ SVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
     nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
     if (presShell && IsRoot()) {
       nsEventStatus status = nsEventStatus_eIgnore;
-      if (mPreviousScale == mCurrentScale) {
+      if (mPreviousScale != mCurrentScale) {
+        InternalSVGZoomEvent svgZoomEvent(true, eSVGZoom);
+        presShell->HandleDOMEventWithTarget(this, &svgZoomEvent, &status);
+      } else {
         WidgetEvent svgScrollEvent(true, eSVGScroll);
         presShell->HandleDOMEventWithTarget(this, &svgScrollEvent, &status);
       }
