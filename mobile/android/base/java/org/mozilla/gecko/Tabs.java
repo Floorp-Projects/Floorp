@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,6 +20,8 @@ import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
@@ -31,9 +35,12 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.JavaUtil;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.webapps.WebAppActivity;
+import org.mozilla.gecko.webapps.WebAppIndexer;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -367,6 +374,17 @@ public class Tabs implements BundleEventListener {
                     intent.setData(Uri.parse(tab.getURL()));
                 }
                 break;
+            case WEBAPP:
+                intent = new Intent(GeckoApp.ACTION_WEBAPP);
+                final String manifestPath = tab.getManifestPath();
+                try {
+                    intent.setData(getStartUriFromManifest(manifestPath));
+                } catch (IOException | JSONException e) {
+                    Log.e(LOGTAG, "Failed to get start URI from manifest", e);
+                    intent.setData(Uri.parse(tab.getURL()));
+                }
+                intent.putExtra(WebAppActivity.MANIFEST_PATH, manifestPath);
+                break;
             default:
                 intent = new Intent(GeckoApp.ACTION_SWITCH_TAB);
                 break;
@@ -379,6 +397,16 @@ public class Tabs implements BundleEventListener {
         mAppContext.startActivity(intent);
     }
 
+    // TODO: When things have settled down a bit, we should split this and everything similar
+    // TODO: in the WebAppActivity into a dedicated WebAppManifest class (bug 1353868).
+    private Uri getStartUriFromManifest(String manifestPath) throws IOException, JSONException {
+        File manifestFile = new File(manifestPath);
+        final JSONObject manifest = FileUtils.readJSONObjectFromFile(manifestFile);
+        final JSONObject manifestField = manifest.getJSONObject("manifest");
+
+        return Uri.parse(manifestField.getString("start_url"));
+    }
+
     /**
      * Get the class name of the activity that should be displaying this tab.
      */
@@ -388,6 +416,10 @@ public class Tabs implements BundleEventListener {
         switch (type) {
             case CUSTOMTAB:
                 return CustomTabsActivity.class.getName();
+            case WEBAPP:
+                final int index =  WebAppIndexer.getInstance().getIndexForManifest(
+                        tab.getManifestPath(), mAppContext);
+                return WebAppIndexer.WEBAPP_CLASS + index;
             default:
                 return AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS;
         }
@@ -1110,6 +1142,9 @@ public class Tabs implements BundleEventListener {
                     // The intent can contain all sorts of customisations, so we save it in case
                     // we need to launch a new custom tab activity for this tab.
                     tabToSelect.setCustomTabIntent(intent);
+                }
+                if (intent.hasExtra(WebAppActivity.MANIFEST_PATH)) {
+                    tabToSelect.setManifestPath(intent.getStringExtra(WebAppActivity.MANIFEST_PATH));
                 }
             }
             if (isFirstShownAfterActivityUnhidden) {

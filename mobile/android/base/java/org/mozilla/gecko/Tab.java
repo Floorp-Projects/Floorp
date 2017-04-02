@@ -61,6 +61,7 @@ public class Tab {
     private boolean mHasFeeds;
     private SafeIntent mCustomTabIntent;
     private String mManifestUrl;
+    private String mManifestPath;
     private boolean mHasOpenSearch;
     private final SiteIdentity mSiteIdentity;
     private SiteLogins mSiteLogins;
@@ -307,6 +308,14 @@ public class Tab {
         return mManifestUrl;
     }
 
+    /**
+     * @return If not empty, the path to a locally installed copy of the Progressive Web App
+     *         manifest file for this tab.
+     */
+    public String getManifestPath() {
+        return mManifestPath;
+    }
+
     public boolean hasOpenSearch() {
         return mHasOpenSearch;
     }
@@ -482,6 +491,10 @@ public class Tab {
 
     public void setManifestUrl(String manifestUrl) {
         mManifestUrl = manifestUrl;
+    }
+
+    public void setManifestPath(String manifestPath) {
+        mManifestPath = manifestPath;
     }
 
     public void setHasOpenSearch(boolean hasOpenSearch) {
