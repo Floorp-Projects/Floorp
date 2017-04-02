@@ -166,6 +166,8 @@ public class GeckoApplication extends Application
 
         mRefWatcher = LeakCanary.install(this);
 
+        registerActivityLifecycleCallbacks(GeckoActivityMonitor.getInstance());
+
         final Context context = getApplicationContext();
         GeckoAppShell.setApplicationContext(context);
         HardwareUtils.init(context);
