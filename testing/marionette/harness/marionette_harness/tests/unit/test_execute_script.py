@@ -164,10 +164,10 @@ class TestExecuteContent(MarionetteTestCase):
         self.assertIn("return b", cm.exception.stacktrace)
 
     def test_permission(self):
-        with self.assertRaises(errors.JavascriptException):
-            self.marionette.execute_script("""
-                var c = Components.classes["@mozilla.org/preferences-service;1"];
-            """)
+        for sandbox in ["default", None]:
+            with self.assertRaises(errors.JavascriptException):
+               self.marionette.execute_script(
+                    "Components.classes['@mozilla.org/preferences-service;1']")
 
     def test_return_web_element(self):
         self.marionette.navigate(elements)
