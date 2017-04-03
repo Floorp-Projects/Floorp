@@ -131,7 +131,8 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 
   RefPtr<DeclarationBlock> newdecl;
   if (olddecl->IsServo()) {
-    GeckoParserExtraData data(env.mBaseURI, env.mSheetURI, env.mPrincipal);
+    RefPtr<css::URLExtraData> data =
+      new css::URLExtraData(env.mBaseURI, env.mSheetURI, env.mPrincipal);
     newdecl = ServoDeclarationBlock::FromCssText(aCssText, data);
   } else {
     RefPtr<css::Declaration> decl(new css::Declaration());
@@ -307,12 +308,13 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSPropertyID aPropID,
                             decl->AsGecko(), &changed, aIsImportant);
   } else {
     NS_ConvertUTF16toUTF8 value(aPropValue);
-    GeckoParserExtraData data(env.mBaseURI, env.mSheetURI, env.mPrincipal);
+    RefPtr<css::URLExtraData> data =
+      new css::URLExtraData(env.mBaseURI, env.mSheetURI, env.mPrincipal);
     nsCString baseString;
     // FIXME (bug 1343964): Figure out a better solution for sending the base uri to servo
     env.mBaseURI->GetSpec(baseString);
     changed = Servo_DeclarationBlock_SetPropertyById(
-      decl->AsServo()->Raw(), aPropID, &value, aIsImportant, &baseString, &data);
+      decl->AsServo()->Raw(), aPropID, &value, aIsImportant, &baseString, data);
   }
   if (!changed) {
     // Parsing failed -- but we don't throw an exception for that.
@@ -358,11 +360,12 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
   } else {
     NS_ConvertUTF16toUTF8 property(aPropertyName);
     NS_ConvertUTF16toUTF8 value(aPropValue);
-    GeckoParserExtraData data(env.mBaseURI, env.mSheetURI, env.mPrincipal);
+    RefPtr<css::URLExtraData> data =
+      new css::URLExtraData(env.mBaseURI, env.mSheetURI, env.mPrincipal);
     nsCString baseString;
     env.mBaseURI->GetSpec(baseString);
     changed = Servo_DeclarationBlock_SetProperty(
-      decl->AsServo()->Raw(), &property, &value, aIsImportant, &baseString, &data);
+      decl->AsServo()->Raw(), &property, &value, aIsImportant, &baseString, data);
   }
   if (!changed) {
     // Parsing failed -- but we don't throw an exception for that.

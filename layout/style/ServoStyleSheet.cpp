@@ -87,10 +87,8 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             nsIPrincipal* aSheetPrincipal,
                             uint32_t aLineNumber)
 {
-  RefPtr<ThreadSafeURIHolder> base = new ThreadSafeURIHolder(aBaseURI);
-  RefPtr<ThreadSafeURIHolder> referrer = new ThreadSafeURIHolder(aSheetURI);
-  RefPtr<ThreadSafePrincipalHolder> principal =
-    new ThreadSafePrincipalHolder(aSheetPrincipal);
+  RefPtr<css::URLExtraData> extraData =
+    new css::URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal);
 
   nsCString baseString;
   nsresult rv = aBaseURI->GetSpec(baseString);
@@ -100,11 +98,10 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
   if (!Inner()->mSheet) {
     Inner()->mSheet =
       Servo_StyleSheet_FromUTF8Bytes(aLoader, this, &input, mParsingMode,
-                                     &baseString, base, referrer,
-                                     principal).Consume();
+                                     &baseString, extraData).Consume();
   } else {
-    Servo_StyleSheet_ClearAndUpdate(Inner()->mSheet, aLoader, this, &input, base,
-                                    referrer, principal);
+    Servo_StyleSheet_ClearAndUpdate(Inner()->mSheet, aLoader,
+                                    this, &input, extraData);
   }
 
   return NS_OK;

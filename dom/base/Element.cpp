@@ -550,7 +550,7 @@ Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
     if (bindingURL) {
       nsCOMPtr<nsIURI> uri = bindingURL->GetURI();
-      nsCOMPtr<nsIPrincipal> principal = bindingURL->mOriginPrincipal.get();
+      nsCOMPtr<nsIPrincipal> principal = bindingURL->mExtraData->GetPrincipal();
 
       // We have a binding that must be installed.
       bool dummy;

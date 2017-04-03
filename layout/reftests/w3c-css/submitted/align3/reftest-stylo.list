@@ -30,17 +30,17 @@ fails == flex-abspos-staticpos-align-self-vertWM-002.html flex-abspos-staticpos-
 fails == flex-abspos-staticpos-align-self-vertWM-003.html flex-abspos-staticpos-align-self-vertWM-003.html
 fails == flex-abspos-staticpos-align-self-vertWM-004.html flex-abspos-staticpos-align-self-vertWM-004.html
 
-fails == flex-abspos-staticpos-fallback-align-content-001.html flex-abspos-staticpos-fallback-align-content-001.html
-fails == flex-abspos-staticpos-fallback-justify-content-001.html flex-abspos-staticpos-fallback-justify-content-001.html
+== flex-abspos-staticpos-fallback-align-content-001.html flex-abspos-staticpos-fallback-align-content-001.html
+== flex-abspos-staticpos-fallback-justify-content-001.html flex-abspos-staticpos-fallback-justify-content-001.html
 
 fails == flex-abspos-staticpos-justify-content-001.html flex-abspos-staticpos-justify-content-001.html
 fails == flex-abspos-staticpos-justify-content-002.html flex-abspos-staticpos-justify-content-002.html
-fails == flex-abspos-staticpos-justify-content-003.html flex-abspos-staticpos-justify-content-003.html
-fails == flex-abspos-staticpos-justify-content-004.html flex-abspos-staticpos-justify-content-004.html
+== flex-abspos-staticpos-justify-content-003.html flex-abspos-staticpos-justify-content-003.html
+== flex-abspos-staticpos-justify-content-004.html flex-abspos-staticpos-justify-content-004.html
 fails == flex-abspos-staticpos-justify-content-005.html flex-abspos-staticpos-justify-content-005.html
 fails == flex-abspos-staticpos-justify-content-006.html flex-abspos-staticpos-justify-content-006.html
-fails == flex-abspos-staticpos-justify-content-007.html flex-abspos-staticpos-justify-content-007.html
-fails == flex-abspos-staticpos-justify-content-008.html flex-abspos-staticpos-justify-content-008.html
+== flex-abspos-staticpos-justify-content-007.html flex-abspos-staticpos-justify-content-007.html
+== flex-abspos-staticpos-justify-content-008.html flex-abspos-staticpos-justify-content-008.html
 fails == flex-abspos-staticpos-justify-content-rtl-001.html flex-abspos-staticpos-justify-content-rtl-001.html
 fails == flex-abspos-staticpos-justify-content-rtl-002.html flex-abspos-staticpos-justify-content-rtl-002.html
 fails == flex-abspos-staticpos-justify-content-vertWM-001.html flex-abspos-staticpos-justify-content-vertWM-001.html
