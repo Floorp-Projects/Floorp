@@ -518,20 +518,13 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute unsigned long long frameOuterWindowID;
 
   /**
-   * For all loads of type other than TYPE_DOCUMENT this function resets the
-   * loadingPrincipal, the triggeringPrincipal and the
-   * principalToInherit to a freshly created NullPrincipal which inherits
-   * the current origin attributes from the loadinfo.
-   * For loads of TYPE_DOCUMENT this function resets only the
-   * TriggeringPrincipal as well as the PrincipalToInherit to a freshly
-   * created NullPrincipal which inherits the origin attributes from
-   * the loadInfo. (Please note that the loadingPrincipal for TYPE_DOCUMENT
-   * loads is always null.)
+   * Resets the PrincipalToInherit to a freshly created NullPrincipal
+   * which inherits the origin attributes from the loadInfo.
    *
    * WARNING: Please only use that function if you know exactly what
    * you are doing!!!
    */
-  void resetPrincipalsToNullPrincipal();
+  void resetPrincipalToInheritToNullPrincipal();
 
   /**
    * Customized OriginAttributes within LoadInfo to allow overwriting of the
