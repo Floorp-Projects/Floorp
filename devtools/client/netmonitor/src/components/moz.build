@@ -23,6 +23,7 @@ DevToolsModules(
     'security-panel.js',
     'stack-trace-panel.js',
     'statistics-panel.js',
+    'status-bar.js',
     'tabbox-panel.js',
     'timings-panel.js',
     'toolbar.js',
