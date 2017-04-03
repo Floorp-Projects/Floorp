@@ -101,8 +101,7 @@ function continueTest(evt) {
   editor.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor.getInlineSpellChecker(true);
 
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
+  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm")
   .onSpellCheck(elem, function () {
     var spellchecker = inlineSpellChecker.spellChecker;
     try {

@@ -49,8 +49,7 @@ function runTest() {
   gMisspeltWords = ["errror", "errror"];
   editDoc().designMode = "on";
 
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
+  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm")
                .onSpellCheck(editDoc().documentElement, evalTest);
 }
 
