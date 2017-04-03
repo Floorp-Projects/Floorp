@@ -23,12 +23,29 @@ def get_method(method):
     return _target_task_methods[method]
 
 
+def filter_on_nightly(task, parameters):
+    return not task.attributes.get('nightly') or parameters.get('include_nightly')
+
+
 def filter_for_project(task, parameters):
     """Filter tasks by project.  Optionally enable nightlies."""
-    if task.attributes.get('nightly') and not parameters.get('include_nightly'):
-        return False
     run_on_projects = set(task.attributes.get('run_on_projects', []))
     return match_run_on_projects(parameters['project'], run_on_projects)
+
+
+def filter_upload_symbols(task, parameters):
+    # Filters out symbols when there are not part of a nightly or a release build
+    # TODO Remove this too specific filter (bug 1353296)
+    return '-upload-symbols' not in task.label or \
+        task.attributes.get('nightly') or \
+        parameters.get('project') in ('mozilla-beta', 'mozilla-release')
+
+
+def standard_filter(task, parameters):
+    return all(
+        filter_func(task, parameters) for filter_func in
+        (filter_on_nightly, filter_for_project, filter_upload_symbols)
+    )
 
 
 @_target_task('try_option_syntax')
@@ -86,7 +103,7 @@ def target_tasks_default(full_task_graph, parameters):
     via the `run_on_projects` attributes."""
 
     return [l for l, t in full_task_graph.tasks.iteritems()
-            if filter_for_project(t, parameters)]
+            if standard_filter(t, parameters)]
 
 
 @_target_task('ash_tasks')
@@ -184,14 +201,16 @@ def target_tasks_code_coverage(full_task_graph, parameters):
 
 
 @_target_task('nightly_fennec')
-def target_tasks_nightly(full_task_graph, parameters):
+def target_tasks_nightly_fennec(full_task_graph, parameters):
     """Select the set of tasks required for a nightly build of fennec. The
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
     def filter(task):
         platform = task.attributes.get('build_platform')
         if platform in ('android-api-15-nightly', 'android-x86-nightly'):
-            return task.attributes.get('nightly', False)
+            if not task.attributes.get('nightly', False):
+                return False
+            return filter_for_project(task, parameters)
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
@@ -214,7 +233,7 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
     of builds and signing, but does not include beetmover or balrog jobs."""
 
     def filter(task):
-        if not filter_for_project(task, parameters):
+        if not standard_filter(task, parameters):
             return False
         platform = task.attributes.get('build_platform')
         if platform in ('linux64-pgo', 'linux-pgo', 'win32-pgo', 'win64-pgo',
@@ -248,7 +267,7 @@ def target_tasks_candidates_fennec(full_task_graph, parameters):
     """Select the set of tasks required for a candidates build of fennec. The
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    filtered_for_project = target_tasks_nightly(full_task_graph, parameters)
+    filtered_for_project = target_tasks_nightly_fennec(full_task_graph, parameters)
 
     def filter(task):
         if task.kind not in ['balrog']:
