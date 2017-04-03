@@ -92,7 +92,18 @@ class TestExecuteContent(MarionetteTestCase):
         self.assertIsNone(self.marionette.execute_script("true"))
 
     def test_argument_null(self):
-        self.assertIsNone(self.marionette.execute_script("return arguments[0]", [None]))
+        self.assertIsNone(self.marionette.execute_script(
+            "return arguments[0]",
+            script_args=(None,),
+            sandbox="default"))
+        self.assertIsNone(self.marionette.execute_script(
+            "return arguments[0]",
+            script_args=(None,),
+            sandbox="system"))
+        self.assertIsNone(self.marionette.execute_script(
+            "return arguments[0]",
+            script_args=(None,),
+            sandbox=None))
 
     def test_argument_number(self):
         self.assertEqual(
