@@ -118,9 +118,8 @@ to mochitest command.
   * ... `'content`: various value as list-style-type in counter functions [13]
 * test_default_computed_style.html: support of getDefaultComputedStyle [1]
 * @font-face support bug 1290237
-  * test_descriptor_storage.html [1]
-  * test_descriptor_syntax_errors.html [1]
-  * test_font_face_parser.html `@font-face` [447]
+  * test_descriptor_storage.html [14]
+  * test_font_face_parser.html `@font-face` [81]
 * @namespace support:
   * test_namespace_rule.html [17]
 * test_dont_use_document_colors.html: support of disabling document color [21]
