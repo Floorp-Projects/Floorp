@@ -1,7 +1,7 @@
 use mozprofile::preferences::Pref;
 
 lazy_static! {
-    pub static ref DEFAULT: [(&'static str, Pref); 74] = [
+    pub static ref DEFAULT: [(&'static str, Pref); 75] = [
         // Disable automatic downloading of new releases
         ("app.update.auto", Pref::new(false)),
 
