@@ -111,7 +111,7 @@ RawGeckoElementBorrowedOrNull Gecko_GetNextSiblingElement(RawGeckoElementBorrowe
 RawGeckoElementBorrowedOrNull Gecko_GetDocumentElement(RawGeckoDocumentBorrowed document);
 void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
                           mozilla::ServoStyleSheet* parent,
-                          RawServoImportRuleBorrowed import_rule,
+                          RawServoStyleSheetBorrowed child_sheet,
                           RawGeckoURLExtraData* base_url_data,
                           const uint8_t* url_bytes,
                           uint32_t url_length,
