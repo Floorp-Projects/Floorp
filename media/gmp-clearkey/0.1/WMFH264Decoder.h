@@ -36,7 +36,6 @@ public:
 
   HRESULT Reset();
 
-  int32_t GetFrameWidth() const;
   int32_t GetFrameHeight() const;
   const IntRect& GetPictureRegion() const;
   int32_t GetStride() const;

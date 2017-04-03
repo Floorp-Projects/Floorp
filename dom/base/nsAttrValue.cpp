@@ -1687,8 +1687,8 @@ nsAttrValue::LoadImage(nsIDocument* aDocument)
   MiscContainer* cont = GetMiscContainer();
   mozilla::css::URLValue* url = cont->mValue.mURL;
   mozilla::css::ImageValue* image =
-    new css::ImageValue(url->GetURI(), url->mString, url->mBaseURI,
-                        url->mReferrer, url->mOriginPrincipal, aDocument);
+    new css::ImageValue(url->GetURI(), url->mString,
+                        do_AddRef(url->mExtraData), aDocument);
 
   NS_ADDREF(image);
   cont->mValue.mImage = image;
@@ -1725,7 +1725,8 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
 
   RefPtr<DeclarationBlock> decl;
   if (ownerDoc->GetStyleBackendType() == StyleBackendType::Servo) {
-    GeckoParserExtraData data(baseURI, docURI, aElement->NodePrincipal());
+    RefPtr<css::URLExtraData> data =
+      new css::URLExtraData(baseURI, docURI, aElement->NodePrincipal());
     decl = ServoDeclarationBlock::FromCssText(aString, data);
   } else {
     css::Loader* cssLoader = ownerDoc->CSSLoader();

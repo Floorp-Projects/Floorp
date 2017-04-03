@@ -6366,7 +6366,7 @@ PresShell::Paint(nsView*        aViewToPaint,
   }
   nsCString uriString = uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A");
   PROFILER_LABEL_DYNAMIC("PresShell", "Paint",
-    js::ProfileEntry::Category::GRAPHICS, Move(uriString));
+    js::ProfileEntry::Category::GRAPHICS, uriString.get());
 #endif
 
   Maybe<js::AutoAssertNoContentJS> nojs;
@@ -9209,7 +9209,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   nsIURI* uri = mDocument->GetDocumentURI();
   nsCString uriString = uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A");
   PROFILER_LABEL_DYNAMIC("PresShell", "DoReflow",
-    js::ProfileEntry::Category::GRAPHICS, Move(uriString));
+    js::ProfileEntry::Category::GRAPHICS, uriString.get());
 #endif
 
   nsDocShell* docShell = static_cast<nsDocShell*>(GetPresContext()->GetDocShell());
