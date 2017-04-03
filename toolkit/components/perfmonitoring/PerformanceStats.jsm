@@ -18,7 +18,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
  * from the probes.
  *
  * Data is collected by "Performance Group". Typically, a Performance Group
- * is an add-on, or a frame, or the internals of the application.
+ * is a frame, or the internals of the application.
  *
  * Generally, if you have the choice between PerformanceStats and PerformanceWatcher,
  * you should favor PerformanceWatcher.
@@ -52,7 +52,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "finalizer",
 // and that we can release/close the probes it holds.
 const FINALIZATION_TOPIC = "performancemonitor-finalize";
 
-const PROPERTIES_META_IMMUTABLE = ["addonId", "isSystem", "isChildProcess", "groupId", "processId"];
+const PROPERTIES_META_IMMUTABLE = ["isSystem", "isChildProcess", "groupId", "processId"];
 const PROPERTIES_META = [...PROPERTIES_META_IMMUTABLE, "windowId", "title", "name"];
 
 // How long we wait for children processes to respond.
@@ -587,10 +587,7 @@ this.PerformanceStats = {
  * @field {string} name The name of the performance group:
  * - for the process itself, "<process>";
  * - for platform code, "<platform>";
- * - for an add-on, the identifier of the addon (e.g. "myaddon@foo.bar");
  * - for a webpage, the url of the page.
- *
- * @field {string} addonId The identifier of the addon (e.g. "myaddon@foo.bar").
  *
  * @field {string|null} title The title of the webpage to which this code
  *  belongs. Note that this is the title of the entire webpage (i.e. the tab),
@@ -722,16 +719,12 @@ PerformanceData.prototype = {
   subtract(to = null) {
     return (new PerformanceDiff(this, to));
   },
-  get addonId() {
-    return this._all[0].addonId;
-  },
   get title() {
     return this._all[0].title;
   }
 };
 
 function PerformanceDiff(current, old = null) {
-  this.addonId = current.addonId;
   this.title = current.title;
   this.windowId = current.windowId;
   this.deltaT = old ? current._timestamp - old._timestamp : Infinity;
@@ -777,9 +770,6 @@ PerformanceDiff.prototype = {
     return this._all.map(item => item.groupId);
   },
   get key() {
-    if (this.addonId) {
-      return this.addonId;
-    }
     if (this._parent) {
       return this._parent.windowId;
     }
@@ -857,7 +847,6 @@ function ProcessSnapshot({xpcom, probes}) {
 function ApplicationSnapshot({xpcom, childProcesses, probes, date}) {
   ProcessSnapshot.call(this, {xpcom, probes});
 
-  this.addons = new Map();
   this.webpages = new Map();
   this.date = date;
 
@@ -872,10 +861,7 @@ function ApplicationSnapshot({xpcom, childProcesses, probes, date}) {
 
   for (let leaf of this.componentsData) {
     let key, map;
-    if (leaf.addonId) {
-      key = leaf.addonId;
-      map = this.addons;
-    } else if (leaf.windowId) {
+    if (leaf.windowId) {
       key = leaf.windowId;
       map = this.webpages;
     } else {

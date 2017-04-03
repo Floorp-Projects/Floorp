@@ -24,4 +24,5 @@ interface ICodec {
     oneway void queueInput(in Sample sample);
 
     oneway void releaseOutput(in Sample sample, in boolean render);
+    oneway void setRates(in int newBitRate);
 }

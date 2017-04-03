@@ -23,8 +23,7 @@ function validateTheme(backgroundImage, accentColor, textColor) {
   Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
     "LWT text color attribute should be set");
 
-  Assert.equal(style.backgroundImage, 'url("' + backgroundImage.replace(/"/g, '\\"') + '")',
-    "Expected correct background image");
+  Assert.ok(style.backgroundImage.includes(backgroundImage), "Expected correct background image");
   Assert.equal(style.backgroundColor, "rgb(" + hexToRGB(accentColor).join(", ") + ")",
     "Expected correct accent color");
   Assert.equal(style.color, "rgb(" + hexToRGB(textColor).join(", ") + ")",
@@ -42,6 +41,10 @@ add_task(function* test_dynamic_theme_updates() {
     manifest: {
       permissions: ["theme"],
     },
+    files: {
+      "image1.png": BACKGROUND_1,
+      "image2.png": BACKGROUND_2,
+    },
     background() {
       browser.test.onMessage.addListener((msg, details) => {
         if (msg != "update-theme") {
@@ -58,7 +61,7 @@ add_task(function* test_dynamic_theme_updates() {
 
   extension.sendMessage("update-theme", {
     "images": {
-      "headerURL": BACKGROUND_1,
+      "headerURL": "image1.png",
     },
     "colors": {
       "accentcolor": ACCENT_COLOR_1,
@@ -68,11 +71,11 @@ add_task(function* test_dynamic_theme_updates() {
 
   yield extension.awaitMessage("theme-updated");
 
-  validateTheme(BACKGROUND_1, ACCENT_COLOR_1, TEXT_COLOR_1);
+  validateTheme("image1.png", ACCENT_COLOR_1, TEXT_COLOR_1);
 
   extension.sendMessage("update-theme", {
     "images": {
-      "headerURL": BACKGROUND_2,
+      "headerURL": "image2.png",
     },
     "colors": {
       "accentcolor": ACCENT_COLOR_2,
@@ -82,7 +85,7 @@ add_task(function* test_dynamic_theme_updates() {
 
   yield extension.awaitMessage("theme-updated");
 
-  validateTheme(BACKGROUND_2, ACCENT_COLOR_2, TEXT_COLOR_2);
+  validateTheme("image2.png", ACCENT_COLOR_2, TEXT_COLOR_2);
 
   yield extension.unload();
 

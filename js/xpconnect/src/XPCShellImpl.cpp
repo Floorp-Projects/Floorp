@@ -1303,8 +1303,8 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
 
     // A initializer to initialize histogram collection
     // used by telemetry.
-    UniquePtr<base::StatisticsRecorder> telStats =
-       MakeUnique<base::StatisticsRecorder>();
+    auto telStats =
+       mozilla::MakeUnique<base::StatisticsRecorder>();
 
     char aLocal;
     profiler_init(&aLocal);

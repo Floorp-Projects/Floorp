@@ -721,10 +721,26 @@ nsAttrAndChildArray::MappedAttrCount() const
   return mImpl && mImpl->mMappedAttrs ? (uint32_t)mImpl->mMappedAttrs->Count() : 0;
 }
 
+nsresult
+nsAttrAndChildArray::ForceMapped(nsMappedAttributeElement* aContent, nsIDocument* aDocument)
+{
+  nsHTMLStyleSheet* sheet = aDocument->GetAttributeStyleSheet();
+  RefPtr<nsMappedAttributes> mapped = GetModifiableMapped(aContent, sheet, false, 0);
+  return MakeMappedUnique(mapped);
+}
+
+void
+nsAttrAndChildArray::ClearMappedServoStyle() {
+  if (mImpl && mImpl->mMappedAttrs) {
+    mImpl->mMappedAttrs->ClearServoStyle();
+  }
+}
+
 nsMappedAttributes*
 nsAttrAndChildArray::GetModifiableMapped(nsMappedAttributeElement* aContent,
                                          nsHTMLStyleSheet* aSheet,
-                                         bool aWillAddAttr)
+                                         bool aWillAddAttr,
+                                         int32_t aAttrCount)
 {
   if (mImpl && mImpl->mMappedAttrs) {
     return mImpl->mMappedAttrs->Clone(aWillAddAttr);
@@ -734,7 +750,7 @@ nsAttrAndChildArray::GetModifiableMapped(nsMappedAttributeElement* aContent,
 
   nsMapRuleToAttributesFunc mapRuleFunc =
     aContent->GetAttributeMappingFunction();
-  return new nsMappedAttributes(aSheet, mapRuleFunc);
+  return new (aAttrCount) nsMappedAttributes(aSheet, mapRuleFunc);
 }
 
 nsresult

@@ -10357,24 +10357,6 @@
     "n_buckets": 20,
     "description": "Proportion (%) of reschedulings of the main process to another CPU during the execution of code inside a JS compartment. Updated while we are measuring jank."
   },
-  "PERF_MONITORING_SLOW_ADDON_JANK_US": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 1,
-    "high": 10000000,
-    "n_buckets": 20,
-    "keyed": true,
-    "description": "Contiguous time spent by an add-on blocking the main loop (microseconds, keyed by add-on ID)."
-  },
-  "PERF_MONITORING_SLOW_ADDON_CPOW_US": {
-    "expires_in_version": "70",
-    "kind": "exponential",
-    "low": 1,
-    "high": 10000000,
-    "n_buckets": 20,
-    "keyed": true,
-    "description": "Contiguous time spent by an add-on blocking the main loop by performing a blocking cross-process call (microseconds, keyed by add-on ID)."
-  },
   "VIDEO_EME_REQUEST_SUCCESS_LATENCY_MS": {
     "alert_emails": ["cpearce@mozilla.com"],
     "expires_in_version": "55",
@@ -11260,56 +11242,47 @@
     "keyed": true,
     "description": "Measures the number of milliseconds we spend waiting on the main thread for IPC messages to serialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe. This probe is keyed on the IPDL message name."
   },
-  "MOUSE_MOVE_EVENT_RECEIVED_MS": {
+  "INPUT_EVENT_QUEUED_CLICK_MS": {
     "alert_emails": ["wpan@mozilla.com"],
     "expires_in_version": "60",
     "kind": "exponential",
-    "high": 50000,
-    "n_buckets": 100,
-    "bug_numbers": [1341531],
-    "description": "Time (ms) for the mouse move event to dispatch, but before handlers executing."
-  },
-  "MOUSE_CLICK_EVENT_RECEIVED_MS": {
-    "alert_emails": ["wpan@mozilla.com"],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 50000,
+    "high": 5000,
     "n_buckets": 100,
     "bug_numbers": [1341531],
     "description": "Time (ms) for the mouse click event to dispatch, but before handlers executing."
   },
-  "KEYBOARD_EVENT_RECEIVED_MS": {
+  "INPUT_EVENT_QUEUED_KEYBOARD_MS": {
     "alert_emails": ["wpan@mozilla.com"],
     "expires_in_version": "60",
     "kind": "exponential",
-    "high": 50000,
+    "high": 5000,
     "n_buckets": 100,
     "bug_numbers": [1341531],
     "description": "Time (ms) for the keyboard event to dispatch, but before handlers executing."
   },
-  "APZ_HANDLED_TOUCH_MOVE_EVENT_RECEIVED_MS": {
+  "INPUT_EVENT_QUEUED_APZ_TOUCH_MOVE_MS": {
     "alert_emails": ["wpan@mozilla.com"],
     "expires_in_version": "60",
     "kind": "exponential",
-    "high": 50000,
+    "high": 5000,
     "n_buckets": 100,
     "bug_numbers": [1341531],
     "description": "Time (ms) for the APZ handled touch move event to dispatch, but before handlers executing."
   },
-  "APZ_HANDLED_MOUSE_MOVE_EVENT_RECEIVED_MS": {
+  "INPUT_EVENT_QUEUED_APZ_MOUSE_MOVE_MS": {
     "alert_emails": ["wpan@mozilla.com"],
     "expires_in_version": "60",
     "kind": "exponential",
-    "high": 50000,
+    "high": 5000,
     "n_buckets": 100,
     "bug_numbers": [1341531],
     "description": "Time (ms) for the APZ handled mouse move event to dispatch, but before handlers executing."
   },
-  "APZ_HANDLED_WHEEL_EVENT_RECEIVED_MS": {
+  "INPUT_EVENT_QUEUED_APZ_WHEEL_MS": {
     "alert_emails": ["wpan@mozilla.com"],
     "expires_in_version": "60",
     "kind": "exponential",
-    "high": 50000,
+    "high": 5000,
     "n_buckets": 100,
     "bug_numbers": [1341531],
     "description": "Time (ms) for the APZ handled wheel event to dispatch, but before handlers executing."

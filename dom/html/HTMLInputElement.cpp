@@ -1054,8 +1054,7 @@ static nsresult FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
 
 HTMLInputElement::HTMLInputElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                                    FromParser aFromParser, FromClone aFromClone)
-  : nsGenericHTMLFormElementWithState(aNodeInfo)
-  , mType(kInputDefaultType->value)
+  : nsGenericHTMLFormElementWithState(aNodeInfo, kInputDefaultType->value)
   , mAutocompleteAttrState(nsContentUtils::eAutocompleteAttrState_Unknown)
   , mDisabledChanged(false)
   , mValueChanged(false)
@@ -3514,7 +3513,7 @@ HTMLInputElement::Focus(ErrorResult& aError)
       // See if the child is a button control.
       nsCOMPtr<nsIFormControl> formCtrl =
         do_QueryInterface(childFrame->GetContent());
-      if (formCtrl && formCtrl->GetType() == NS_FORM_BUTTON_BUTTON) {
+      if (formCtrl && formCtrl->ControlType() == NS_FORM_BUTTON_BUTTON) {
         nsCOMPtr<nsIDOMElement> element = do_QueryInterface(formCtrl);
         nsIFocusManager* fm = nsFocusManager::GetFocusManager();
         if (fm && element) {

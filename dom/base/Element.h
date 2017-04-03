@@ -42,6 +42,7 @@
 #include "Units.h"
 #include "DOMIntersectionObserver.h"
 
+class mozAutoDocUpdate;
 class nsIFrame;
 class nsIDOMMozNamedAttrMap;
 class nsIMozBrowserFrame;
@@ -286,6 +287,10 @@ public:
    * Get the mapped attributes, if any, for this element.
    */
   const nsMappedAttributes* GetMappedAttributes() const;
+
+  void ClearMappedServoStyle() {
+    mAttrsAndChildren.ClearMappedServoStyle();
+  }
 
   /**
    * Set the inline style declaration for this element. This will send
@@ -1337,6 +1342,7 @@ protected:
    * @param aFireMutation should mutation-events be fired?
    * @param aNotify       should we notify document-observers?
    * @param aCallAfterSetAttr should we call AfterSetAttr?
+   * @param aComposedDocument The current composed document of the element.
    */
   nsresult SetAttrAndNotify(int32_t aNamespaceID,
                             nsIAtom* aName,
@@ -1346,7 +1352,9 @@ protected:
                             uint8_t aModType,
                             bool aFireMutation,
                             bool aNotify,
-                            bool aCallAfterSetAttr);
+                            bool aCallAfterSetAttr,
+                            nsIDocument* aComposedDocument,
+                            const mozAutoDocUpdate& aGuard);
 
   /**
    * Scroll to a new position using behavior evaluated from CSS and

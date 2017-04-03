@@ -76,6 +76,7 @@ public class Tabs implements BundleEventListener {
     /** Indicates the tab is the first shown after Firefox is hidden and restored. */
     public static final int LOADURL_FIRST_AFTER_ACTIVITY_UNHIDDEN = 1 << 8;
     public static final int LOADURL_CUSTOMTAB    = 1 << 9;
+    public static final int LOADURL_WEBAPP = 1 << 10;
 
     private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 2;
 
@@ -963,7 +964,9 @@ public class Tabs implements BundleEventListener {
         boolean external = (flags & LOADURL_EXTERNAL) != 0;
         final boolean isFirstShownAfterActivityUnhidden = (flags & LOADURL_FIRST_AFTER_ACTIVITY_UNHIDDEN) != 0;
         final boolean customTab = (flags & LOADURL_CUSTOMTAB) != 0;
-        final TabType type = customTab ? TabType.CUSTOMTAB : TabType.BROWSING;
+        final boolean webappTab = (flags & LOADURL_WEBAPP) != 0;
+        final TabType type = customTab ? TabType.CUSTOMTAB :
+            webappTab ? TabType.WEBAPP : TabType.BROWSING;
 
         data.putString("url", url);
         data.putString("engine", searchEngine);

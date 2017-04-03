@@ -823,6 +823,10 @@ CompositorD3D11::GetPSForEffect(Effect* aEffect,
 void
 CompositorD3D11::ClearRect(const gfx::Rect& aRect)
 {
+  if (aRect.IsEmpty()) {
+    return;
+  }
+
   mContext->OMSetBlendState(mAttachments->mDisabledBlendState, sBlendFactor, 0xFFFFFFFF);
 
   Matrix4x4 identity;
@@ -854,8 +858,6 @@ CompositorD3D11::ClearRect(const gfx::Rect& aRect)
   }
 
   mContext->Draw(4, 0);
-
-  mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor, 0xFFFFFFFF);
 }
 
 static inline bool
@@ -1358,8 +1360,12 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   SetRenderTarget(mDefaultRT);
 
-  // ClearRect will set the correct blend state for us.
-  ClearRect(Rect(mCurrentClip.x, mCurrentClip.y, mCurrentClip.width, mCurrentClip.height));
+  IntRegion regionToClear(mCurrentClip);
+  regionToClear.Sub(regionToClear, aOpaqueRegion);
+
+  ClearRect(Rect(regionToClear.GetBounds()));
+
+  mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor, 0xFFFFFFFF);
 
   if (mAttachments->mSyncTexture) {
     RefPtr<IDXGIKeyedMutex> mutex;

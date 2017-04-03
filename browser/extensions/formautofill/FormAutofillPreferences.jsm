@@ -13,6 +13,7 @@ this.EXPORTED_SYMBOLS = ["FormAutofillPreferences"];
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const PREF_AUTOFILL_ENABLED = "browser.formautofill.enabled";
 const BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
+const MANAGE_PROFILES_URL = "chrome://formautofill/content/manageProfiles.xhtml";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -126,7 +127,7 @@ FormAutofillPreferences.prototype = {
           // Set preference directly instead of relying on <Preference>
           Services.prefs.setBoolPref(PREF_AUTOFILL_ENABLED, target.checked);
         } else if (target == this.refs.savedProfilesBtn) {
-          // TODO: Open Saved Profiles dialog
+          target.ownerGlobal.gSubDialog.open(MANAGE_PROFILES_URL);
         }
         break;
       }

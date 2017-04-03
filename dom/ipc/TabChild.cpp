@@ -373,6 +373,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mChromeFlags(aChromeFlags)
   , mActiveSuppressDisplayport(0)
   , mLayersId(0)
+  , mLayersConnected(true)
   , mDidFakeShow(false)
   , mNotified(false)
   , mTriedBrowserInit(false)
@@ -1261,10 +1262,12 @@ TabChild::RecvShow(const ScreenIntSize& aSize,
 mozilla::ipc::IPCResult
 TabChild::RecvInitRendering(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                             const uint64_t& aLayersId,
+                            const bool& aLayersConnected,
                             PRenderFrameChild* aRenderFrame)
 {
   MOZ_ASSERT((!mDidFakeShow && aRenderFrame) || (mDidFakeShow && !aRenderFrame));
 
+  mLayersConnected = aLayersConnected;
   InitRenderingState(aTextureFactoryIdentifier, aLayersId, aRenderFrame);
   return IPC_OK();
 }

@@ -88,17 +88,18 @@ txStylesheet::~txStylesheet()
     }
 }
 
-txInstruction*
+nsresult
 txStylesheet::findTemplate(const txXPathNode& aNode,
                            const txExpandedName& aMode,
                            txIMatchContext* aContext,
                            ImportFrame* aImportedBy,
+                           txInstruction** aTemplate,
                            ImportFrame** aImportFrame)
 {
     NS_ASSERTION(aImportFrame, "missing ImportFrame pointer");
 
+    *aTemplate = nullptr;
     *aImportFrame = nullptr;
-    txInstruction* matchTemplate = nullptr;
     ImportFrame* endFrame = nullptr;
     txListIterator frameIter(&mImportFrames);
 
@@ -115,7 +116,7 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
 #endif
 
     ImportFrame* frame;
-    while (!matchTemplate &&
+    while (!*aTemplate &&
            (frame = static_cast<ImportFrame*>(frameIter.next())) &&
            frame != endFrame) {
 
@@ -126,10 +127,14 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
         if (templates) {
             // Find template with highest priority
             uint32_t i, len = templates->Length();
-            for (i = 0; i < len && !matchTemplate; ++i) {
+            for (i = 0; i < len && !*aTemplate; ++i) {
                 MatchableTemplate& templ = (*templates)[i];
-                if (templ.mMatch->matches(aNode, aContext)) {
-                    matchTemplate = templ.mFirstInstruction;
+                bool matched;
+                nsresult rv = templ.mMatch->matches(aNode, aContext, matched);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                if (matched) {
+                    *aTemplate = templ.mFirstInstruction;
                     *aImportFrame = frame;
 #if defined(TX_TO_STRING)
                     match = templ.mMatch;
@@ -145,7 +150,7 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
           aMode.mLocalName->ToString(mode);
       }
       txXPathNodeUtils::getNodeName(aNode, nodeName);
-      if (matchTemplate) {
+      if (*aTemplate) {
           nsAutoString matchAttr;
 #ifdef TX_TO_STRING
           match->toString(matchAttr);
@@ -164,23 +169,23 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
       }
     }
 
-    if (!matchTemplate) {
+    if (!*aTemplate) {
         // Test for these first since a node can be both a text node
         // and a root (if it is orphaned)
         if (txXPathNodeUtils::isAttribute(aNode) ||
             txXPathNodeUtils::isText(aNode)) {
-            matchTemplate = mCharactersTemplate;
+            *aTemplate = mCharactersTemplate;
         }
         else if (txXPathNodeUtils::isElement(aNode) ||
                  txXPathNodeUtils::isRoot(aNode)) {
-            matchTemplate = mContainerTemplate;
+            *aTemplate = mContainerTemplate;
         }
         else {
-            matchTemplate = mEmptyTemplate;
+            *aTemplate = mEmptyTemplate;
         }
     }
 
-    return matchTemplate;
+    return NS_OK;
 }
 
 txDecimalFormat*
@@ -219,37 +224,53 @@ txStylesheet::getKeyMap()
     return mKeys;
 }
 
-bool
-txStylesheet::isStripSpaceAllowed(const txXPathNode& aNode, txIMatchContext* aContext)
+nsresult
+txStylesheet::isStripSpaceAllowed(const txXPathNode& aNode,
+                                  txIMatchContext* aContext, bool& aAllowed)
 {
     int32_t frameCount = mStripSpaceTests.Length();
     if (frameCount == 0) {
-        return false;
+        aAllowed = false;
+
+        return NS_OK;
     }
 
     txXPathTreeWalker walker(aNode);
 
     if (txXPathNodeUtils::isText(walker.getCurrentPosition()) &&
         (!txXPathNodeUtils::isWhitespace(aNode) || !walker.moveToParent())) {
-        return false;
+        aAllowed = false;
+
+        return NS_OK;
     }
 
     const txXPathNode& node = walker.getCurrentPosition();
 
     if (!txXPathNodeUtils::isElement(node)) {
-        return false;
+        aAllowed = false;
+
+        return NS_OK;
     }
 
     // check Whitespace stipping handling list against given Node
     int32_t i;
     for (i = 0; i < frameCount; ++i) {
         txStripSpaceTest* sst = mStripSpaceTests[i];
-        if (sst->matches(node, aContext)) {
-            return sst->stripsSpace() && !XMLUtils::getXMLSpacePreserve(node);
+        bool matched;
+        nsresult rv = sst->matches(node, aContext, matched);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (matched) {
+            aAllowed = sst->stripsSpace() &&
+                       !XMLUtils::getXMLSpacePreserve(node);
+
+            return NS_OK;
         }
     }
 
-    return false;
+    aAllowed = false;
+
+    return NS_OK;
 }
 
 nsresult

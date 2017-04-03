@@ -1320,6 +1320,8 @@ nsImageLoadingContent::MakePendingRequestCurrent()
   mPendingRequest = nullptr;
   mCurrentRequestFlags = mPendingRequestFlags;
   mPendingRequestFlags = 0;
+  mCurrentRequestRegistered = mPendingRequestRegistered;
+  mPendingRequestRegistered = false;
   ResetAnimationIfNeeded();
 }
 
