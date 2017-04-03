@@ -38,7 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1315874
       return waitForAnimationFrames(2);
     }).then(function() {
       var anim = document.getAnimations()[0];
-      todo(!anim, 'Transition should not be created by restyling for SMIL');
+      ok(!anim, 'Transition should not be created by restyling for SMIL');
       SimpleTest.finish();
     });
   }

@@ -7,6 +7,8 @@
 /* representation of a value for a SMIL-animated CSS property */
 
 #include "nsSMILCSSValueType.h"
+
+#include "nsComputedDOMStyle.h"
 #include "nsString.h"
 #include "nsSMILParserUtils.h"
 #include "nsSMILValue.h"
