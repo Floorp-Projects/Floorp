@@ -2,8 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-Cu.import("resource://gre/modules/ExtensionUtils.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
@@ -13,12 +11,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
-let {
+var {
   ExtensionError,
   IconDetails,
 } = ExtensionUtils;
 
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 // WeakMap[Extension -> SidebarAction]
 let sidebarActionMap = new WeakMap();
@@ -29,9 +27,17 @@ const sidebarURL = "chrome://browser/content/webext-panels.xul";
  * Responsible for the sidebar_action section of the manifest as well
  * as the associated sidebar browser.
  */
-class SidebarAction {
-  constructor(options, extension) {
-    this.extension = extension;
+this.sidebarAction = class extends ExtensionAPI {
+  static for(extension) {
+    return sidebarActionMap.get(extension);
+  }
+
+  onManifestEntry(entryName) {
+    let {extension} = this;
+
+    extension.once("ready", this.onReady.bind(this));
+
+    let options = extension.manifest.sidebar_action;
 
     // Add the extension to the sidebar menu.  The sidebar widget will copy
     // from that when it is viewed, so we shouldn't need to update that.
@@ -54,6 +60,40 @@ class SidebarAction {
       this.createMenuItem(window, this.defaults);
     };
     windowTracker.addOpenListener(this.windowOpenListener);
+
+    sidebarActionMap.set(extension, this);
+  }
+
+  onReady() {
+    this.build();
+  }
+
+  onShutdown(reason) {
+    sidebarActionMap.delete(this.this);
+
+    this.tabContext.shutdown();
+
+    // Don't remove everything on app shutdown so session restore can handle
+    // restoring open sidebars.
+    if (reason === "APP_SHUTDOWN") {
+      return;
+    }
+
+    for (let window of windowTracker.browserWindows()) {
+      let {document, SidebarUI} = window;
+      if (SidebarUI.currentID === this.id) {
+        SidebarUI.hide();
+      }
+      let menu = document.getElementById(this.menuId);
+      if (menu) {
+        menu.remove();
+      }
+      let broadcaster = document.getElementById(this.id);
+      if (broadcaster) {
+        broadcaster.remove();
+      }
+    }
+    windowTracker.removeOpenListener(this.windowOpenListener);
   }
 
   build() {
@@ -240,25 +280,6 @@ class SidebarAction {
     return this.tabContext.get(nativeTab)[prop];
   }
 
-  shutdown() {
-    this.tabContext.shutdown();
-    for (let window of windowTracker.browserWindows()) {
-      let {document, SidebarUI} = window;
-      if (SidebarUI.currentID === this.id) {
-        SidebarUI.hide();
-      }
-      let menu = document.getElementById(this.menuId);
-      if (menu) {
-        menu.remove();
-      }
-      let broadcaster = document.getElementById(this.id);
-      if (broadcaster) {
-        broadcaster.remove();
-      }
-    }
-    windowTracker.removeOpenListener(this.windowOpenListener);
-  }
-
   /**
    * Triggers this sidebar action for the given window, with the same effects as
    * if it were toggled via menu or toolbarbutton by a user.
@@ -271,98 +292,70 @@ class SidebarAction {
       SidebarUI.toggle(this.id);
     }
   }
-}
 
-SidebarAction.for = (extension) => {
-  return sidebarActionMap.get(extension);
+  getAPI(context) {
+    let {extension} = context;
+    const sidebarAction = this;
+
+    function getTab(tabId) {
+      if (tabId !== null) {
+        return tabTracker.getTab(tabId);
+      }
+      return null;
+    }
+
+    return {
+      sidebarAction: {
+        async setTitle(details) {
+          let nativeTab = getTab(details.tabId);
+
+          let title = details.title;
+          // Clear the tab-specific title when given a null string.
+          if (nativeTab && title === "") {
+            title = null;
+          }
+          sidebarAction.setProperty(nativeTab, "title", title);
+        },
+
+        getTitle(details) {
+          let nativeTab = getTab(details.tabId);
+
+          let title = sidebarAction.getProperty(nativeTab, "title");
+          return Promise.resolve(title);
+        },
+
+        async setIcon(details) {
+          let nativeTab = getTab(details.tabId);
+
+          let icon = IconDetails.normalize(details, extension, context);
+          sidebarAction.setProperty(nativeTab, "icon", icon);
+        },
+
+        async setPanel(details) {
+          let nativeTab = getTab(details.tabId);
+
+          let url;
+          // Clear the tab-specific url when given a null string.
+          if (nativeTab && details.panel === "") {
+            url = null;
+          } else if (details.panel !== "") {
+            url = context.uri.resolve(details.panel);
+          } else {
+            throw new ExtensionError("Invalid url for sidebar panel.");
+          }
+
+          sidebarAction.setProperty(nativeTab, "panel", url);
+        },
+
+        getPanel(details) {
+          let nativeTab = getTab(details.tabId);
+
+          let panel = sidebarAction.getProperty(nativeTab, "panel");
+          return Promise.resolve(panel);
+        },
+      },
+    };
+  }
 };
 
-global.sidebarActionFor = SidebarAction.for;
-
-/* eslint-disable mozilla/balanced-listeners */
-extensions.on("manifest_sidebar_action", (type, directive, extension, manifest) => {
-  let sidebarAction = new SidebarAction(manifest.sidebar_action, extension);
-  sidebarActionMap.set(extension, sidebarAction);
-});
-
-extensions.on("ready", (type, extension) => {
-  // We build sidebars during ready to ensure the background scripts are ready.
-  if (sidebarActionMap.has(extension)) {
-    sidebarActionMap.get(extension).build();
-  }
-});
-
-extensions.on("shutdown", (type, extension) => {
-  if (sidebarActionMap.has(extension)) {
-    // Don't remove everything on app shutdown so session restore can handle
-    // restoring open sidebars.
-    if (extension.shutdownReason !== "APP_SHUTDOWN") {
-      sidebarActionMap.get(extension).shutdown();
-    }
-    sidebarActionMap.delete(extension);
-  }
-});
-/* eslint-enable mozilla/balanced-listeners */
-
-extensions.registerSchemaAPI("sidebarAction", "addon_parent", context => {
-  let {extension} = context;
-
-  function getTab(tabId) {
-    if (tabId !== null) {
-      return tabTracker.getTab(tabId);
-    }
-    return null;
-  }
-
-  return {
-    sidebarAction: {
-      async setTitle(details) {
-        let nativeTab = getTab(details.tabId);
-
-        let title = details.title;
-        // Clear the tab-specific title when given a null string.
-        if (nativeTab && title === "") {
-          title = null;
-        }
-        SidebarAction.for(extension).setProperty(nativeTab, "title", title);
-      },
-
-      getTitle(details) {
-        let nativeTab = getTab(details.tabId);
-
-        let title = SidebarAction.for(extension).getProperty(nativeTab, "title");
-        return Promise.resolve(title);
-      },
-
-      async setIcon(details) {
-        let nativeTab = getTab(details.tabId);
-
-        let icon = IconDetails.normalize(details, extension, context);
-        SidebarAction.for(extension).setProperty(nativeTab, "icon", icon);
-      },
-
-      async setPanel(details) {
-        let nativeTab = getTab(details.tabId);
-
-        let url;
-        // Clear the tab-specific url when given a null string.
-        if (nativeTab && details.panel === "") {
-          url = null;
-        } else if (details.panel !== "") {
-          url = context.uri.resolve(details.panel);
-        } else {
-          throw new ExtensionError("Invalid url for sidebar panel.");
-        }
-
-        SidebarAction.for(extension).setProperty(nativeTab, "panel", url);
-      },
-
-      getPanel(details) {
-        let nativeTab = getTab(details.tabId);
-
-        let panel = SidebarAction.for(extension).getProperty(nativeTab, "panel");
-        return Promise.resolve(panel);
-      },
-    },
-  };
-});
+global.sidebarActionFor = this.sidebarAction.for;

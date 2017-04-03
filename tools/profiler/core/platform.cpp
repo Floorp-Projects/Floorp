@@ -837,6 +837,25 @@ DoNativeBacktrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
 #endif
 
 #ifdef USE_LUL_STACKWALK
+
+// See the comment at the callsite for why this function is necessary.
+#if defined(MOZ_HAVE_ASAN_BLACKLIST)
+MOZ_ASAN_BLACKLIST static void
+ASAN_memcpy(void* aDst, const void* aSrc, size_t aLen)
+{
+  // The obvious thing to do here is call memcpy(). However, although
+  // ASAN_memcpy() is not instrumented by ASAN, memcpy() still is, and the
+  // false positive still manifests! So we must implement memcpy() ourselves
+  // within this function.
+  char* dst = static_cast<char*>(aDst);
+  const char* src = static_cast<const char*>(aSrc);
+
+  for (size_t i = 0; i < aLen; i++) {
+    dst[i] = src[i];
+  }
+}
+#endif
+
 static void
 DoNativeBacktrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
                   TickSample* aSample)
@@ -900,7 +919,20 @@ DoNativeBacktrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
     stackImg.mLen       = nToCopy;
     stackImg.mStartAvma = start;
     if (nToCopy > 0) {
+      // If this is a vanilla memcpy(), ASAN makes the following complaint:
+      //
+      //   ERROR: AddressSanitizer: stack-buffer-underflow ...
+      //   ...
+      //   HINT: this may be a false positive if your program uses some custom
+      //   stack unwind mechanism or swapcontext
+      //
+      // This code is very much a custom stack unwind mechanism! So we use an
+      // alternative memcpy() implementation that is ignored by ASAN.
+#if defined(MOZ_HAVE_ASAN_BLACKLIST)
+      ASAN_memcpy(&stackImg.mContents[0], (void*)start, nToCopy);
+#else
       memcpy(&stackImg.mContents[0], (void*)start, nToCopy);
+#endif
       (void)VALGRIND_MAKE_MEM_DEFINED(&stackImg.mContents[0], nToCopy);
     }
   }
@@ -940,6 +972,7 @@ DoNativeBacktrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
   lul->mStats.mCFI     += framesUsed - 1 - scannedFramesAcquired;
   lul->mStats.mScanned += scannedFramesAcquired;
 }
+
 #endif
 
 static void

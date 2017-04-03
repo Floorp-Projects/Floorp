@@ -101,58 +101,60 @@ class ContextMenusClickPropHandler {
   }
 }
 
-extensions.registerSchemaAPI("contextMenus", "addon_child", context => {
-  let onClickedProp = new ContextMenusClickPropHandler(context);
+this.contextMenus = class extends ExtensionAPI {
+  getAPI(context) {
+    let onClickedProp = new ContextMenusClickPropHandler(context);
 
-  return {
-    contextMenus: {
-      create(createProperties, callback) {
-        if (createProperties.id === null) {
-          createProperties.id = ++gNextMenuItemID;
-        }
-        let {onclick} = createProperties;
-        delete createProperties.onclick;
-        context.childManager.callParentAsyncFunction("contextMenus.createInternal", [
-          createProperties,
-        ]).then(() => {
-          if (onclick) {
-            onClickedProp.setListener(createProperties.id, onclick);
+    return {
+      contextMenus: {
+        create(createProperties, callback) {
+          if (createProperties.id === null) {
+            createProperties.id = ++gNextMenuItemID;
           }
-          if (callback) {
-            callback();
-          }
-        });
-        return createProperties.id;
-      },
+          let {onclick} = createProperties;
+          delete createProperties.onclick;
+          context.childManager.callParentAsyncFunction("contextMenus.createInternal", [
+            createProperties,
+          ]).then(() => {
+            if (onclick) {
+              onClickedProp.setListener(createProperties.id, onclick);
+            }
+            if (callback) {
+              callback();
+            }
+          });
+          return createProperties.id;
+        },
 
-      update(id, updateProperties) {
-        let {onclick} = updateProperties;
-        delete updateProperties.onclick;
-        return context.childManager.callParentAsyncFunction("contextMenus.update", [
-          id,
-          updateProperties,
-        ]).then(() => {
-          if (onclick) {
-            onClickedProp.setListener(id, onclick);
-          } else if (onclick === null) {
-            onClickedProp.unsetListenerFromAnyContext(id);
-          }
-          // else onclick is not set so it should not be changed.
-        });
-      },
+        update(id, updateProperties) {
+          let {onclick} = updateProperties;
+          delete updateProperties.onclick;
+          return context.childManager.callParentAsyncFunction("contextMenus.update", [
+            id,
+            updateProperties,
+          ]).then(() => {
+            if (onclick) {
+              onClickedProp.setListener(id, onclick);
+            } else if (onclick === null) {
+              onClickedProp.unsetListenerFromAnyContext(id);
+            }
+            // else onclick is not set so it should not be changed.
+          });
+        },
 
-      remove(id) {
-        onClickedProp.unsetListenerFromAnyContext(id);
-        return context.childManager.callParentAsyncFunction("contextMenus.remove", [
-          id,
-        ]);
-      },
+        remove(id) {
+          onClickedProp.unsetListenerFromAnyContext(id);
+          return context.childManager.callParentAsyncFunction("contextMenus.remove", [
+            id,
+          ]);
+        },
 
-      removeAll() {
-        onClickedProp.deleteAllListenersFromExtension();
+        removeAll() {
+          onClickedProp.deleteAllListenersFromExtension();
 
-        return context.childManager.callParentAsyncFunction("contextMenus.removeAll", []);
+          return context.childManager.callParentAsyncFunction("contextMenus.removeAll", []);
+        },
       },
-    },
-  };
-});
+    };
+  }
+};
