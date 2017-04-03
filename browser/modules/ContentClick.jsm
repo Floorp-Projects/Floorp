@@ -85,7 +85,6 @@ var ContentClick = {
       allowMixedContent: json.allowMixedContent,
       isContentWindowPrivate: json.isContentWindowPrivate,
       originPrincipal: json.originPrincipal,
-      triggeringPrincipal: json.triggeringPrincipal,
       frameOuterWindowID: json.frameOuterWindowID,
     };
 
