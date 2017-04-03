@@ -113,6 +113,31 @@ ServoStyleSheet::LoadFailed()
   Inner()->mSheet = Servo_StyleSheet_Empty(mParsingMode).Consume();
 }
 
+// nsICSSLoaderObserver implementation
+NS_IMETHODIMP
+ServoStyleSheet::StyleSheetLoaded(StyleSheet* aSheet,
+                                  bool aWasAlternate,
+                                  nsresult aStatus)
+{
+  MOZ_ASSERT(aSheet->IsServo(),
+             "why we were called back with a CSSStyleSheet?");
+
+  ServoStyleSheet* sheet = aSheet->AsServo();
+  if (sheet->GetParentSheet() == nullptr) {
+    return NS_OK; // ignore if sheet has been detached already
+  }
+  NS_ASSERTION(this == sheet->GetParentSheet(),
+               "We are being notified of a sheet load for a sheet that is not our child!");
+
+  if (mDocument && NS_SUCCEEDED(aStatus)) {
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
+    NS_WARNING("stylo: Import rule object not implemented");
+    mDocument->StyleRuleAdded(this, nullptr);
+  }
+
+  return NS_OK;
+}
+
 void
 ServoStyleSheet::DropRuleList()
 {
@@ -167,9 +192,9 @@ ServoStyleSheet::InsertRuleInternal(const nsAString& aRule,
   if (aRv.Failed()) {
     return 0;
   }
+  // XXX If the inserted rule is an import rule, we should only notify
+  // the document if its associated child stylesheet has been loaded.
   if (mDocument) {
-    // XXX When we support @import rules, we should not notify here,
-    // but rather when the sheet the rule is importing is loaded.
     // XXX We may not want to get the rule when stylesheet change event
     // is not enabled.
     mDocument->StyleRuleAdded(this, mRuleList->GetRule(aIndex));
