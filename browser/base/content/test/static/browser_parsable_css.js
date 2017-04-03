@@ -42,6 +42,21 @@ let whitelist = [
   {sourceName: /res\/forms\.css$/i,
    errorMessage: /Unknown property.*overflow-clip-box/i,
    isFromDevTools: false},
+  // These variables are declared somewhere else, and error when we load the
+  // files directly. They're all marked intermittent because their appearance
+  // in the error console seems to not be consistent.
+  {sourceName: /jsonview\/css\/general\.css$/i,
+   intermittent: true,
+   errorMessage: /Property contained reference to invalid variable.*color/i,
+   isFromDevTools: true},
+  {sourceName: /webide\/skin\/logs\.css$/i,
+   intermittent: true,
+   errorMessage: /Property contained reference to invalid variable.*color/i,
+   isFromDevTools: true},
+  {sourceName: /devtools\/skin\/animationinspector\.css$/i,
+   intermittent: true,
+   errorMessage: /Property contained reference to invalid variable.*color/i,
+   isFromDevTools: true},
 ];
 
 if (!Services.prefs.getBoolPref("full-screen-api.unprefix.enabled")) {
@@ -91,16 +106,6 @@ function ignoredError(aErrorObject) {
     }
   }
   return false;
-}
-
-function once(target, name) {
-  return new Promise((resolve, reject) => {
-    let cb = () => {
-      target.removeEventListener(name, cb);
-      resolve();
-    };
-    target.addEventListener(name, cb);
-  });
 }
 
 var gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
@@ -235,10 +240,12 @@ add_task(function* checkAllTheCSS() {
   // Create a clean iframe to load all the files into. This needs to live at a
   // chrome URI so that it's allowed to load and parse any styles.
   let testFile = getRootDirectory(gTestPath) + "dummy_page.html";
-  let windowless = Services.appShell.createWindowlessBrowser();
-  let iframe = windowless.document.createElementNS("http://www.w3.org/1999/xhtml", "html:iframe");
-  windowless.document.documentElement.appendChild(iframe);
-  let iframeLoaded = once(iframe, "load");
+  let HiddenFrame = Cu.import("resource:///modules/HiddenFrame.jsm", {}).HiddenFrame;
+  let hiddenFrame = new HiddenFrame();
+  let win = yield hiddenFrame.get();
+  let iframe = win.document.createElementNS("http://www.w3.org/1999/xhtml", "html:iframe");
+  win.document.documentElement.appendChild(iframe);
+  let iframeLoaded = BrowserTestUtils.waitForEvent(iframe, "load", true);
   iframe.contentWindow.location = testFile;
   yield iframeLoaded;
   let doc = iframe.contentWindow.document;
@@ -322,7 +329,7 @@ add_task(function* checkAllTheCSS() {
 
   // Confirm that all whitelist rules have been used.
   for (let item of whitelist) {
-    if (!item.used && isDevtools == item.isFromDevTools) {
+    if (!item.used && isDevtools == item.isFromDevTools && !item.intermittent) {
       ok(false, "Unused whitelist item. " +
                 (item.sourceName ? " sourceName: " + item.sourceName : "") +
                 (item.errorMessage ? " errorMessage: " + item.errorMessage : ""));
@@ -344,7 +351,8 @@ add_task(function* checkAllTheCSS() {
   doc.head.innerHTML = "";
   doc = null;
   iframe = null;
-  windowless.close();
-  windowless = null;
+  win = null;
+  hiddenFrame.destroy();
+  hiddenFrame = null;
   imageURIsToReferencesMap = null;
 });
