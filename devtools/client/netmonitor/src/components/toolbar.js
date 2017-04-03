@@ -11,7 +11,6 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { PluralForm } = require("devtools/shared/plural-form");
 const Actions = require("../actions/index");
 const { FILTER_SEARCH_DELAY } = require("../constants");
 const {
@@ -19,10 +18,7 @@ const {
   getRequestFilterTypes,
   isNetworkDetailsToggleButtonDisabled,
 } = require("../selectors/index");
-const {
-  getFormattedSize,
-  getFormattedTime
-} = require("../utils/format-utils");
+
 const { L10N } = require("../utils/l10n");
 
 // Components
@@ -45,12 +41,10 @@ const Toolbar = createClass({
 
   propTypes: {
     clearRequests: PropTypes.func.isRequired,
-    openStatistics: PropTypes.func.isRequired,
     requestFilterTypes: PropTypes.array.isRequired,
     setRequestFilterText: PropTypes.func.isRequired,
     networkDetailsToggleDisabled: PropTypes.bool.isRequired,
     networkDetailsOpen: PropTypes.bool.isRequired,
-    summary: PropTypes.object.isRequired,
     toggleNetworkDetails: PropTypes.func.isRequired,
     toggleRequestFilterType: PropTypes.func.isRequired,
   },
@@ -65,12 +59,10 @@ const Toolbar = createClass({
   render() {
     let {
       clearRequests,
-      openStatistics,
       requestFilterTypes,
       setRequestFilterText,
       networkDetailsToggleDisabled,
       networkDetailsOpen,
-      summary,
       toggleNetworkDetails,
     } = this.props;
 
@@ -81,14 +73,6 @@ const Toolbar = createClass({
     if (!networkDetailsOpen) {
       toggleButtonClassName.push("pane-collapsed");
     }
-
-    let { count, contentSize, transferredSize, millis } = summary;
-    let text = (count === 0) ? L10N.getStr("networkMenu.empty") :
-      PluralForm.get(count, L10N.getStr("networkMenu.summary3"))
-      .replace("#1", count)
-      .replace("#2", getFormattedSize(contentSize))
-      .replace("#3", getFormattedSize(transferredSize))
-      .replace("#4", getFormattedTime(millis));
 
     let buttons = requestFilterTypes.map(([type, checked]) => {
       let classList = ["devtools-button", `requests-list-filter-${type}-button`];
@@ -119,14 +103,6 @@ const Toolbar = createClass({
           div({ className: "requests-list-filter-buttons" }, buttons),
         ),
         span({ className: "devtools-toolbar-group" },
-          button({
-            className: "devtools-button requests-list-network-summary-button",
-            title: count ? text : L10N.getStr("netmonitor.toolbar.perf"),
-            onClick: openStatistics,
-          },
-            span({ className: "summary-info-icon" }),
-            span({ className: "summary-info-text" }, text),
-          ),
           SearchBox({
             delay: FILTER_SEARCH_DELAY,
             keyShortcut: SEARCH_KEY_SHORTCUT,
@@ -156,7 +132,6 @@ module.exports = connect(
   }),
   (dispatch) => ({
     clearRequests: () => dispatch(Actions.clearRequests()),
-    openStatistics: () => dispatch(Actions.openStatistics(true)),
     setRequestFilterText: (text) => dispatch(Actions.setRequestFilterText(text)),
     toggleRequestFilterType: (type) => dispatch(Actions.toggleRequestFilterType(type)),
     toggleNetworkDetails: () => dispatch(Actions.toggleNetworkDetails()),
