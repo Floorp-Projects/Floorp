@@ -12,7 +12,6 @@ class SpliceableJSONWriter;
 class ThreadInfo;
 class UniqueStacks;
 
-// ProfilerBacktrace encapsulates a synchronous sample.
 class ProfilerBacktrace
 {
 public:

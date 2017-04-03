@@ -693,7 +693,6 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
               unsigned depth = aUniqueStacks.LookupJITFrameDepth(pc);
               if (depth == 0) {
                 StreamJSFramesOp framesOp(pc, stack);
-                MOZ_RELEASE_ASSERT(aContext);
                 JS::ForEachProfiledFrame(aContext, pc, framesOp);
                 aUniqueStacks.AddJITFrameDepth(pc, framesOp.depth());
               } else {
