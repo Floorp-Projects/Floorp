@@ -131,16 +131,60 @@ BALROG_SCOPE_ALIAS_TO_PROJECT = [[
     'release', set([
         'mozilla-release',
     ])
+], [
+    'esr', set([
+        'mozilla-esr52',
+    ])
 ]]
 
 """Map the balrog scope aliases to the actual scopes.
 """
 BALROG_SERVER_SCOPES = {
-    'nightly': 'project:releng:balrog:nightly',
-    'aurora': 'project:releng:balrog:nightly',
-    'beta': 'project:releng:balrog:nightly',
-    'release': 'project:releng:balrog:nightly',
-    'default': 'project:releng:balrog:nightly',
+    'nightly': 'project:releng:balrog:server:nightly',
+    'aurora': 'project:releng:balrog:server:aurora',
+    'beta': 'project:releng:balrog:server:beta',
+    'release': 'project:releng:balrog:server:release',
+    'esr': 'project:releng:balrog:server:esr',
+    'default': 'project:releng:balrog:server:dep',
+}
+
+"""Map the balrog scope aliases to the actual channel scopes.
+"""
+BALROG_CHANNEL_SCOPES = {
+    'nightly': [
+        'project:releng:balrog:channel:nightly'
+    ],
+    'aurora': [
+        'project:releng:balrog:channel:aurora'
+    ],
+    'beta': [
+        'project:releng:balrog:channel:beta',
+        'project:releng:balrog:channel:beta-localtest',
+        'project:releng:balrog:channel:beta-cdntest'
+    ],
+    'release': [
+        'project:releng:balrog:channel:release',
+        'project:releng:balrog:channel:release-localtest',
+        'project:releng:balrog:channel:release-cdntest'
+    ],
+    'esr': [
+        'project:releng:balrog:channel:esr',
+        'project:releng:balrog:channel:esr-localtest',
+        'project:releng:balrog:channel:esr-cdntest'
+    ],
+    'default': [
+        'project:releng:balrog:channel:nightly'
+        'project:releng:balrog:channel:aurora'
+        'project:releng:balrog:channel:beta',
+        'project:releng:balrog:channel:beta-localtest',
+        'project:releng:balrog:channel:beta-cdntest'
+        'project:releng:balrog:channel:release',
+        'project:releng:balrog:channel:release-localtest',
+        'project:releng:balrog:channel:release-cdntest'
+        'project:releng:balrog:channel:esr',
+        'project:releng:balrog:channel:esr-localtest',
+        'project:releng:balrog:channel:esr-cdntest'
+    ]
 }
 
 
@@ -279,6 +323,12 @@ get_balrog_server_scope = functools.partial(
     get_scope_from_project,
     BALROG_SCOPE_ALIAS_TO_PROJECT,
     BALROG_SERVER_SCOPES
+)
+
+get_balrog_channel_scopes = functools.partial(
+    get_scope_from_project,
+    BALROG_SCOPE_ALIAS_TO_PROJECT,
+    BALROG_CHANNEL_SCOPES
 )
 
 get_push_apk_scope = functools.partial(
