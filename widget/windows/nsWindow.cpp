@@ -5058,8 +5058,12 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case MOZ_WM_STARTA11Y:
+#if defined(ACCESSIBILITY)
       (void*)GetAccessible();
       result = true;
+#else
+      result = false;
+#endif
       break;
 
     case WM_ENDSESSION:
