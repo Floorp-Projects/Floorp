@@ -210,21 +210,34 @@ class TestExecuteContent(MarionetteTestCase):
         self.assertEqual(self.marionette.execute_script(
             "return this.foobar", new_sandbox=False), [23, 42])
 
-    def test_wrappedjsobject(self):
+    def test_mutable_sandbox_wrappedjsobject(self):
+        self.assert_is_defined("window.wrappedJSObject")
+        with self.assertRaises(errors.JavascriptException):
+            self.marionette.execute_script("window.wrappedJSObject.foo = 1", sandbox=None)
+
+    def test_default_sandbox_wrappedjsobject(self):
+        self.assert_is_defined("window.wrappedJSObject", sandbox="default")
+
         try:
-            self.marionette.execute_script("window.wrappedJSObject.foo = 3")
-            self.assertEqual(
-                self.marionette.execute_script("return window.wrappedJSObject.foo"), 3)
+            self.marionette.execute_script(
+                "window.wrappedJSObject.foo = 4", sandbox="default")
+            self.assertEqual(self.marionette.execute_script(
+                "return window.wrappedJSObject.foo", sandbox="default"), 4)
         finally:
-            self.marionette.execute_script("delete window.wrappedJSObject.foo")
+            self.marionette.execute_script(
+                "delete window.wrappedJSObject.foo", sandbox="default")
 
     def test_system_sandbox_wrappedjsobject(self):
+        self.assert_is_defined("window.wrappedJSObject", sandbox="system")
+
         self.marionette.execute_script(
             "window.wrappedJSObject.foo = 4", sandbox="system")
         self.assertEqual(self.marionette.execute_script(
             "return window.wrappedJSObject.foo", sandbox="system"), 4)
 
     def test_system_dead_object(self):
+        self.assert_is_defined("window.wrappedJSObject", sandbox="system")
+
         self.marionette.execute_script(
             "window.wrappedJSObject.foo = function() { return 'yo' }",
             sandbox="system")
@@ -374,7 +387,13 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
     def test_window_set_timeout_is_not_cancelled(self):
         pass
 
-    def test_privileged_code_inspection(self):
+    def test_mutable_sandbox_wrappedjsobject(self):
+        pass
+
+    def test_default_sandbox_wrappedjsobject(self):
+        pass
+
+    def test_system_sandbox_wrappedjsobject(self):
         pass
 
     def test_access_chrome_objects_in_event_listeners(self):
