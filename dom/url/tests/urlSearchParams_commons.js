@@ -298,5 +298,12 @@ function testCTORs() {
   }
   is(result, 43, "CTOR throws if the sequence doesn't contain exactly 2 elements");
 
+  var c = new URLSearchParams({ a: 'b', c: 42, d: null, e: [1,2,3], f: {a:42} });
+  is(c.get('a'), 'b', "CTOR with record<>");
+  is(c.get('c'), '42', "CTOR with record<>");
+  is(c.get('d'), 'null', "CTOR with record<>");
+  is(c.get('e'), [1,2,3].toString(), "CTOR with record<>");
+  is(c.get('f'), {a:42}.toString(), "CTOR with record<>");
+
   runTest();
 }
