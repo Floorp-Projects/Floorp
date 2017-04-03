@@ -2269,10 +2269,7 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
     LOG(("  No parent load; must be CSSOM"));
     // No parent load data, so the sheet will need to be notified when
     // we finish, if it can be, if we do the load asynchronously.
-    // XXXheycam ServoStyleSheet doesn't implement nsICSSLoaderObserver yet.
-    MOZ_ASSERT(aParentSheet->IsGecko(),
-               "stylo: ServoStyleSheets don't support child sheet loading yet");
-    observer = aParentSheet->AsGecko();
+    observer = aParentSheet;
   }
 
   // Now that we know it's safe to load this (passes security check and not a

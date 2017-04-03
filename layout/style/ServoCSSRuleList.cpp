@@ -185,6 +185,16 @@ ServoCSSRuleList::DeleteRule(uint32_t aIndex)
   return rv;
 }
 
+uint16_t
+ServoCSSRuleList::GetRuleType(uint32_t aIndex) const
+{
+  uintptr_t rule = mRules[aIndex];
+  if (rule <= kMaxRuleType) {
+    return rule;
+  }
+  return CastToPtr(rule)->Type();
+}
+
 ServoCSSRuleList::~ServoCSSRuleList()
 {
   DropAllRules();
