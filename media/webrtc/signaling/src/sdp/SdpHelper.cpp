@@ -755,7 +755,8 @@ SdpHelper::AddCommonExtmaps(
 
       auto negotiatedExt = theirExt;
 
-      negotiatedExt.direction = ~negotiatedExt.direction & ourExt.direction;
+      negotiatedExt.direction =
+        reverse(negotiatedExt.direction) & ourExt.direction;
       if (negotiatedExt.direction ==
             SdpDirectionAttribute::Direction::kInactive) {
         continue;
