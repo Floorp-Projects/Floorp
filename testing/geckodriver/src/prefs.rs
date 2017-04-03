@@ -180,9 +180,13 @@ lazy_static! {
         // Make sure SNTP requests do not hit the network
         ("network.sntp.pools", Pref::new("%(server)s")),
 
+        // Disable Flash.  The plugin container it is run in is
+        // causing problems when quitting Firefox from geckodriver,
+        // c.f. https://github.com/mozilla/geckodriver/issues/225.
+        ("plugin.state.flash", Pref::new(0)),
+
         // Local documents have access to all other local docments,
         // including directory listings.
-
         ("security.fileuri.strict_origin_policy", Pref::new(false)),
 
         // Tests don't wait for the notification button security delay
