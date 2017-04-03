@@ -2933,6 +2933,9 @@ pref("dom.ipc.processCount", 4);
 pref("dom.ipc.processCount", 1);
 #endif
 
+// Default to allow only one file:// URL content process.
+pref("dom.ipc.processCount.file", 1);
+
 // WebExtensions only support a single extension process.
 pref("dom.ipc.processCount.extension", 1);
 
