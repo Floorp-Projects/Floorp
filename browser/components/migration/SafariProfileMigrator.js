@@ -179,7 +179,7 @@ Bookmarks.prototype = {
         return { url, title };
       }
       return null;
-    }).filter(e => !!e);
+    }, this).filter(e => !!e);
   },
 };
 
