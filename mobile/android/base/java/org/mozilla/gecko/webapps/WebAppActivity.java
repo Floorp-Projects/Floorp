@@ -49,11 +49,18 @@ public class WebAppActivity extends GeckoApp {
     private static final String LOGTAG = "WebAppActivity";
 
     private TextView mUrlView;
+    private String mManifestPath;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        loadManifest(getIntent());
+
+        if (savedInstanceState != null) {
+            mManifestPath = savedInstanceState.getString(WebAppActivity.MANIFEST_PATH, null);
+        } else {
+            mManifestPath = getIntent().getStringExtra(WebAppActivity.MANIFEST_PATH);
+        }
+        loadManifest(mManifestPath);
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.actionbar);
         setSupportActionBar(toolbar);
@@ -109,6 +116,13 @@ public class WebAppActivity extends GeckoApp {
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putString(WebAppActivity.MANIFEST_PATH, mManifestPath);
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
@@ -140,19 +154,18 @@ public class WebAppActivity extends GeckoApp {
             .equals(Uri.parse(launchUrl).getHost());
 
         if (!isSameDomain) {
-            loadManifest(externalIntent);
+            mManifestPath = externalIntent.getStringExtra(WebAppActivity.MANIFEST_PATH);
+            loadManifest(mManifestPath);
             Tabs.getInstance().loadUrl(launchUrl);
         }
     }
 
-    private void loadManifest(Intent intent) {
-        String manifestPath = intent.getStringExtra(WebAppActivity.MANIFEST_PATH);
-        if (manifestPath != null) {
-            updateFromManifest(manifestPath);
+    private void loadManifest(String manifestPath) {
+        if (manifestPath == null) {
+            Log.e(LOGTAG, "Missing manifest");
+            return;
         }
-    }
 
-    private void updateFromManifest(String manifestPath) {
         try {
             final File manifestFile = new File(manifestPath);
             final JSONObject manifest = FileUtils.readJSONObjectFromFile(manifestFile);
