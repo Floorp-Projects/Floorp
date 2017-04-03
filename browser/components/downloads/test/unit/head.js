@@ -7,8 +7,7 @@
  * Provides infrastructure for automated download components tests.
  */
 
-////////////////////////////////////////////////////////////////////////////////
-//// Globals
+// Globals
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
