@@ -74,7 +74,11 @@ public:
 
  private:
   // Create a nsISMILAttr for my target, on the heap.
-  mozilla::UniquePtr<nsISMILAttr> CreateSMILAttr();
+  //
+  // @param aBaseStyleContext  An optional style context which, if set, will be
+  //                           used when fetching the base style.
+  mozilla::UniquePtr<nsISMILAttr>
+  CreateSMILAttr(nsStyleContext* aBaseStyleContext);
 
   // Returns the CSS property this compositor should animate, or
   // eCSSProperty_UNKNOWN if this compositor does not animate a CSS property.

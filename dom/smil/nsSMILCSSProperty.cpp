@@ -53,8 +53,11 @@ GetCSSComputedValue(Element* aElem,
 
 // Class Methods
 nsSMILCSSProperty::nsSMILCSSProperty(nsCSSPropertyID aPropID,
-                                     Element* aElement)
-  : mPropID(aPropID), mElement(aElement)
+                                     Element* aElement,
+                                     nsStyleContext* aBaseStyleContext)
+  : mPropID(aPropID)
+  , mElement(aElement)
+  , mBaseStyleContext(aBaseStyleContext)
 {
   MOZ_ASSERT(IsPropertyAnimatable(mPropID),
              "Creating a nsSMILCSSProperty for a property "
