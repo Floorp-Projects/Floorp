@@ -215,6 +215,7 @@ nsHttpHandler::nsHttpHandler()
     , mAllowPush(true)
     , mEnableAltSvc(false)
     , mEnableAltSvcOE(false)
+    , mEnableOriginExtension(false)
     , mSpdySendingChunkSize(ASpdySession::kSendingChunkSize)
     , mSpdySendBufferSize(ASpdySession::kTCPSendBufferSize)
     , mSpdyPushAllowance(32768)
@@ -1379,6 +1380,13 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                                 &cVar);
         if (NS_SUCCEEDED(rv))
             mEnableAltSvcOE = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("originextension"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("originextension"),
+                                &cVar);
+        if (NS_SUCCEEDED(rv))
+            mEnableOriginExtension = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.push-allowance"))) {
