@@ -113,7 +113,7 @@ Converter.prototype = {
     // Because content might still have a reference to this window,
     // force setting it to a null principal to avoid it being same-
     // origin with (other) content.
-    this.channel.loadInfo.resetPrincipalsToNullPrincipal();
+    this.channel.loadInfo.resetPrincipalToInheritToNullPrincipal();
 
     this.listener.onStartRequest(this.channel, context);
   },

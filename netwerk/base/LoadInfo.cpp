@@ -721,7 +721,7 @@ LoadInfo::GetScriptableOriginAttributes(JSContext* aCx,
 }
 
 NS_IMETHODIMP
-LoadInfo::ResetPrincipalsToNullPrincipal()
+LoadInfo::ResetPrincipalToInheritToNullPrincipal()
 {
   // take the originAttributes from the LoadInfo and create
   // a new NullPrincipal using those origin attributes.
@@ -729,15 +729,6 @@ LoadInfo::ResetPrincipalsToNullPrincipal()
   attrs.Inherit(mOriginAttributes);
   nsCOMPtr<nsIPrincipal> newNullPrincipal = nsNullPrincipal::Create(attrs);
 
-  MOZ_ASSERT(mInternalContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT ||
-             !mLoadingPrincipal,
-             "LoadingPrincipal should be null for toplevel loads");
-
-  // the loadingPrincipal for toplevel loads is always a nullptr;
-  if (mInternalContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT) {
-    mLoadingPrincipal = newNullPrincipal;
-  }
-  mTriggeringPrincipal = newNullPrincipal;
   mPrincipalToInherit = newNullPrincipal;
 
   // setting SEC_FORCE_INHERIT_PRINCIPAL_OVERRULE_OWNER will overrule
