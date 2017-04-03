@@ -32,9 +32,6 @@ public:
   PlatformData* GetPlatformData() const { return mPlatformData.get(); }
   void* StackTop() const { return mStackTop; }
 
-  void SetPendingDelete();
-  bool IsPendingDelete() const { return mPendingDelete; }
-
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   ProfileBuffer::LastSample& LastSample() { return mLastSample; }
@@ -49,11 +46,6 @@ private:
 
   UniquePlatformData mPlatformData;
   void* mStackTop;
-
-  // When a thread dies while the profiler is active we keep its ThreadInfo
-  // (and its PseudoStack) around for a while, and put it in a "pending delete"
-  // state.
-  bool mPendingDelete;
 
   //
   // The following code is only used for threads that are being profiled, i.e.

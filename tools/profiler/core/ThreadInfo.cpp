@@ -28,7 +28,6 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
   , mPseudoStack(aPseudoStack)
   , mPlatformData(AllocPlatformData(aThreadId))
   , mStackTop(aStackTop)
-  , mPendingDelete(false)
   , mHasProfile(false)
   , mLastSample()
 {
@@ -54,12 +53,6 @@ ThreadInfo::~ThreadInfo()
   MOZ_COUNT_DTOR(ThreadInfo);
 
   delete mPseudoStack;
-}
-
-void
-ThreadInfo::SetPendingDelete()
-{
-  mPendingDelete = true;
 }
 
 void
