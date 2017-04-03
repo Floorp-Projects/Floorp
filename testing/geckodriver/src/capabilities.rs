@@ -15,32 +15,40 @@ use std::io::Cursor;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use webdriver::capabilities::BrowserCapabilities;
+use webdriver::capabilities::{BrowserCapabilities, Capabilities};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use zip;
 
+/// Provides matching of `moz:firefoxOptions` and resolution of which Firefox
+/// binary to use.
+///
+/// `FirefoxCapabilities` is constructed with the fallback binary, should
+/// `moz:firefoxOptions` not contain a binary entry.  This may either be the
+/// system Firefox installation or an override, for example given to the
+/// `--binary` flag of geckodriver.
 pub struct FirefoxCapabilities<'a> {
     pub chosen_binary: Option<PathBuf>,
     fallback_binary: Option<&'a PathBuf>,
     version_cache: BTreeMap<PathBuf, String>,
 }
 
-impl <'a> FirefoxCapabilities<'a> {
+
+impl<'a> FirefoxCapabilities<'a> {
     pub fn new(fallback_binary: Option<&'a PathBuf>) -> FirefoxCapabilities<'a> {
         FirefoxCapabilities {
             chosen_binary: None,
             fallback_binary: fallback_binary,
-            version_cache: BTreeMap::new()
+            version_cache: BTreeMap::new(),
         }
     }
 
     fn set_binary(&mut self, capabilities: &BTreeMap<String, Json>) {
-        self.chosen_binary = capabilities.get("moz:firefoxOptions")
+        self.chosen_binary = capabilities
+            .get("moz:firefoxOptions")
             .and_then(|x| x.find("binary"))
             .and_then(|x| x.as_string())
             .map(|x| PathBuf::from(x))
-            .or_else(|| self.fallback_binary
-                     .map(|x| x.clone()))
+            .or_else(|| self.fallback_binary.map(|x| x.clone()))
             .or_else(|| firefox_default_path())
             .and_then(|x| x.canonicalize().ok())
     }
@@ -48,17 +56,16 @@ impl <'a> FirefoxCapabilities<'a> {
     fn version(&mut self) -> Result<Option<String>, mozversion::Error> {
         if let Some(ref binary) = self.chosen_binary {
             if let Some(value) = self.version_cache.get(binary) {
-                return Ok(Some((*value).clone()))
+                return Ok(Some((*value).clone()));
             }
-            let rv = try!(firefox_version(&*binary))
-                .version_string;
+            let rv = try!(firefox_version(&*binary)).version_string;
             if let Some(ref version) = rv {
-                self.version_cache.insert(binary.clone(), version.clone());
+                self.version_cache
+                    .insert(binary.clone(), version.clone());
             }
             Ok(rv)
-        }
-        else {
-            //TODO: try launching the binary here to figure out the version
+        } else {
+            // TODO: try launching the binary here to figure out the version
             Ok(None)
         }
     }
@@ -71,51 +78,50 @@ fn convert_version_error(err: mozversion::Error) -> WebDriverError {
         err.description().to_string())
 }
 
-impl <'a> BrowserCapabilities for FirefoxCapabilities<'a> {
-    fn init(&mut self, capabilities: &BTreeMap<String, Json>) {
+impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
+    fn init(&mut self, capabilities: &Capabilities) {
         self.set_binary(capabilities);
     }
 
-    fn browser_name(&mut self, _: &BTreeMap<String, Json>) -> WebDriverResult<Option<String>> {
+    fn browser_name(&mut self, _: &Capabilities) -> WebDriverResult<Option<String>> {
         Ok(Some("firefox".into()))
     }
 
-    fn browser_version(&mut self, _: &BTreeMap<String, Json>) -> WebDriverResult<Option<String>> {
-        self.version()
-            .or_else(|x| Err(convert_version_error(x)))
+    fn browser_version(&mut self, _: &Capabilities) -> WebDriverResult<Option<String>> {
+        self.version().or_else(|x| Err(convert_version_error(x)))
     }
 
-    fn platform_name(&mut self, _: &BTreeMap<String, Json>) -> WebDriverResult<Option<String>> {
-        Ok(if cfg!(target_os="windows") {
-            Some("windows".into())
-        } else if cfg!(target_os="macos") {
+    fn platform_name(&mut self, _: &Capabilities) -> WebDriverResult<Option<String>> {
+        Ok(if cfg!(target_os = "windows") {
+               Some("windows".into())
+           } else if cfg!(target_os = "macos") {
             Some("mac".into())
-        } else if cfg!(target_os="linux") {
+        } else if cfg!(target_os = "linux") {
             Some("linux".into())
         } else {
             None
         })
     }
 
-    fn accept_insecure_certs(&mut self, _: &BTreeMap<String, Json>) -> WebDriverResult<bool> {
-        let version_str = try!(self.version()
-                               .or_else(|x| Err(convert_version_error(x))));
+    fn accept_insecure_certs(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
+        let version_str = try!(self.version().or_else(|x| Err(convert_version_error(x))));
         if let Some(x) = version_str {
-            Ok(try!(Version::from_str(&*x)
-                    .or_else(|x| Err(convert_version_error(x)))).major > 52)
+            Ok(try!(Version::from_str(&*x).or_else(|x| Err(convert_version_error(x)))).major > 52)
         } else {
             Ok(false)
         }
     }
 
-    fn compare_browser_version(&mut self, version: &str, comparison: &str) -> WebDriverResult<bool> {
-        try!(Version::from_str(version)
-             .or_else(|x| Err(convert_version_error(x))))
+    fn compare_browser_version(&mut self,
+                               version: &str,
+                               comparison: &str)
+                               -> WebDriverResult<bool> {
+        try!(Version::from_str(version).or_else(|x| Err(convert_version_error(x))))
             .matches(comparison)
             .or_else(|x| Err(convert_version_error(x)))
     }
 
-    fn accept_proxy(&mut self, _: &BTreeMap<String, Json>,  _: &BTreeMap<String, Json>) -> WebDriverResult<bool> {
+    fn accept_proxy(&mut self, _: &Capabilities, _: &Capabilities) -> WebDriverResult<bool> {
         Ok(true)
     }
 
@@ -201,18 +207,24 @@ impl <'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         Ok(())
     }
 
-    fn accept_custom(&mut self, _: &str, _: &Json, _: &BTreeMap<String, Json>) -> WebDriverResult<bool> {
+    fn accept_custom(&mut self, _: &str, _: &Json, _: &Capabilities) -> WebDriverResult<bool> {
         Ok(true)
     }
 }
 
+/// Rust representation of `moz:firefoxOptions`.
+///
+/// Calling `FirefoxOptions::from_capabilities(binary, capabilities)` causes
+/// the encoded profile, the binary arguments, log settings, and additional
+/// preferences to be checked and unmarshaled from the `moz:firefoxOptions`
+/// JSON Object into a Rust representation.
 #[derive(Default)]
 pub struct FirefoxOptions {
     pub binary: Option<PathBuf>,
     pub profile: Option<Profile>,
     pub args: Option<Vec<String>>,
     pub log: LogOptions,
-    pub prefs: Vec<(String, Pref)>
+    pub prefs: Vec<(String, Pref)>,
 }
 
 impl FirefoxOptions {
@@ -221,44 +233,43 @@ impl FirefoxOptions {
     }
 
     pub fn from_capabilities(binary_path: Option<PathBuf>,
-                             capabilities: &mut BTreeMap<String, Json>)
+                             matched: &mut Capabilities)
                              -> WebDriverResult<FirefoxOptions> {
-
         let mut rv = FirefoxOptions::new();
-
         rv.binary = binary_path;
 
-        if let Some(options) = capabilities.remove("moz:firefoxOptions") {
-            let firefox_options = try!(options
-                                       .as_object()
-                                       .ok_or(WebDriverError::new(
-                                           ErrorStatus::InvalidArgument,
-                                           "'moz:firefoxOptions' capability is not an object")));
+        if let Some(json) = matched.remove("moz:firefoxOptions") {
+            let options = try!(json.as_object()
+                                   .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                                              "'moz:firefoxOptions' \
+                                                               capability is not an object")));
 
-            rv.profile = try!(FirefoxOptions::load_profile(&firefox_options));
-            rv.args = try!(FirefoxOptions::load_args(&firefox_options));
-            rv.log = try!(FirefoxOptions::load_log(&firefox_options));
-            rv.prefs = try!(FirefoxOptions::load_prefs(&firefox_options));
+            rv.profile = try!(FirefoxOptions::load_profile(&options));
+            rv.args = try!(FirefoxOptions::load_args(&options));
+            rv.log = try!(FirefoxOptions::load_log(&options));
+            rv.prefs = try!(FirefoxOptions::load_prefs(&options));
         }
+
         Ok(rv)
     }
 
-    fn load_profile(options: &BTreeMap<String, Json>) -> WebDriverResult<Option<Profile>> {
+    fn load_profile(options: &Capabilities) -> WebDriverResult<Option<Profile>> {
         if let Some(profile_json) = options.get("profile") {
-            let profile_base64 = try!(profile_json
-                                      .as_string()
-                                      .ok_or(
-                                          WebDriverError::new(ErrorStatus::UnknownError,
-                                                              "Profile is not a string")));
+            let profile_base64 =
+                try!(profile_json
+                         .as_string()
+                         .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
+                                                    "Profile is not a string")));
             let profile_zip = &*try!(profile_base64.from_base64());
 
             // Create an emtpy profile directory
             let profile = try!(Profile::new(None));
             try!(unzip_buffer(profile_zip,
-                              profile.temp_dir
-                              .as_ref()
-                              .expect("Profile doesn't have a path")
-                              .path()));
+                              profile
+                                  .temp_dir
+                                  .as_ref()
+                                  .expect("Profile doesn't have a path")
+                                  .path()));
 
             Ok(Some(profile))
         } else {
@@ -266,36 +277,42 @@ impl FirefoxOptions {
         }
     }
 
-    fn load_args(options: &BTreeMap<String, Json>) -> WebDriverResult<Option<Vec<String>>> {
+    fn load_args(options: &Capabilities) -> WebDriverResult<Option<Vec<String>>> {
         if let Some(args_json) = options.get("args") {
-            let args_array = try!(args_json.as_array()
-                                  .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
-                                                             "Arguments were not an array")));
+            let args_array = try!(args_json
+                                      .as_array()
+                                      .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
+                                                                 "Arguments were not an \
+                                                                  array")));
             let args = try!(args_array
-                            .iter()
-                            .map(|x| x.as_string().map(|x| x.to_owned()))
-                            .collect::<Option<Vec<String>>>()
-                            .ok_or(WebDriverError::new(
-                                ErrorStatus::UnknownError,
-                                "Arguments entries were not all strings")));
+                                .iter()
+                                .map(|x| x.as_string().map(|x| x.to_owned()))
+                                .collect::<Option<Vec<String>>>()
+                                .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
+                                                           "Arguments entries were not all \
+                                                            strings")));
             Ok(Some(args))
         } else {
             Ok(None)
         }
     }
 
-    fn load_log(options: &BTreeMap<String, Json>) -> WebDriverResult<LogOptions> {
+    fn load_log(options: &Capabilities) -> WebDriverResult<LogOptions> {
         if let Some(json) = options.get("log") {
             let log = try!(json.as_object()
-                .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument, "Log section is not an object")));
+                               .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                                          "Log section is not an object")));
 
             let level = match log.get("level") {
                 Some(json) => {
                     let s = try!(json.as_string()
-                        .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument, "Log level is not a string")));
-                    Some(try!(LogLevel::from_str(s).ok()
-                        .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument, "Log level is unknown"))))
-                },
+                                     .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                                                "Log level is not a string")));
+                    Some(try!(LogLevel::from_str(s)
+                                  .ok()
+                                  .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                                             "Log level is unknown"))))
+                }
                 None => None,
             };
 
@@ -306,15 +323,16 @@ impl FirefoxOptions {
         }
     }
 
-    pub fn load_prefs(options: &BTreeMap<String, Json>) -> WebDriverResult<Vec<(String, Pref)>> {
+    pub fn load_prefs(options: &Capabilities) -> WebDriverResult<Vec<(String, Pref)>> {
         if let Some(prefs_data) = options.get("prefs") {
             let prefs = try!(prefs_data
-                             .as_object()
-                             .ok_or(WebDriverError::new(ErrorStatus::UnknownError,"Prefs were not an object")));
+                                 .as_object()
+                                 .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
+                                                            "Prefs were not an object")));
             let mut rv = Vec::with_capacity(prefs.len());
             for (key, value) in prefs.iter() {
                 rv.push((key.clone(), try!(pref_from_json(value))));
-            };
+            }
             Ok(rv)
         } else {
             Ok(vec![])
@@ -388,18 +406,17 @@ mod tests {
     extern crate mozprofile;
     extern crate rustc_serialize;
 
+    use self::mozprofile::preferences::Pref;
+    use self::rustc_serialize::base64::{CharacterSet, Config, Newline, ToBase64};
+    use self::rustc_serialize::json::Json;
+    use super::FirefoxOptions;
+    use marionette::MarionetteHandler;
     use std::collections::BTreeMap;
     use std::default::Default;
     use std::fs::File;
     use std::io::Read;
 
-    use self::mozprofile::preferences::Pref;
-    use self::rustc_serialize::base64::{ToBase64, Config, CharacterSet, Newline};
-    use self::rustc_serialize::json::Json;
-
-    use webdriver::command::NewSessionParameters;
-    use marionette::MarionetteHandler;
-    use super::FirefoxOptions;
+    use webdriver::capabilities::Capabilities;
 
     fn example_profile() -> Json {
         let mut profile_data = Vec::with_capacity(1024);
@@ -409,34 +426,29 @@ mod tests {
             char_set: CharacterSet::Standard,
             newline: Newline::LF,
             pad: true,
-            line_length: None
+            line_length: None,
         };
         Json::String(profile_data.to_base64(base64_config))
     }
 
-    fn capabilities() -> NewSessionParameters {
-        let desired: BTreeMap<String, Json> = BTreeMap::new();
-        let required: BTreeMap<String, Json> = BTreeMap::new();
-        NewSessionParameters {
-            desired: desired,
-            required: required
-        }
+    fn make_options(firefox_opts: Capabilities) -> FirefoxOptions {
+        let mut caps = Capabilities::new();
+        caps.insert("moz:firefoxOptions".into(), Json::Object(firefox_opts));
+        let binary = None;
+        FirefoxOptions::from_capabilities(binary, &mut caps).unwrap()
     }
 
     #[test]
     fn test_profile() {
         let encoded_profile = example_profile();
+        let mut firefox_opts = Capabilities::new();
+        firefox_opts.insert("profile".into(), encoded_profile);
 
-        let mut capabilities = capabilities();
-        let mut firefox_options: BTreeMap<String, Json> = BTreeMap::new();
-        firefox_options.insert("profile".into(), encoded_profile);
-        capabilities.required.insert("moz:firefoxOptions".into(), Json::Object(firefox_options));
-
-        let options = FirefoxOptions::from_capabilities(&mut capabilities).unwrap();
-        let mut profile = options.profile.unwrap();
+        let opts = make_options(firefox_opts);
+        let mut profile = opts.profile.unwrap();
         let prefs = profile.user_prefs().unwrap();
 
-        println!("{:?}",prefs.prefs);
+        println!("{:#?}", prefs.prefs);
 
         assert_eq!(prefs.get("startup.homepage_welcome_url"),
                    Some(&Pref::new("data:text/html,PASS")));
@@ -445,24 +457,25 @@ mod tests {
     #[test]
     fn test_prefs() {
         let encoded_profile = example_profile();
-
-        let mut capabilities = capabilities();
-        let mut firefox_options: BTreeMap<String, Json> = BTreeMap::new();
-        firefox_options.insert("profile".into(), encoded_profile);
         let mut prefs: BTreeMap<String, Json> = BTreeMap::new();
-        prefs.insert("browser.display.background_color".into(), Json::String("#00ff00".into()));
-        firefox_options.insert("prefs".into(), Json::Object(prefs));
-        capabilities.required.insert("moz:firefoxOptions".into(), Json::Object(firefox_options));
+        prefs.insert("browser.display.background_color".into(),
+                     Json::String("#00ff00".into()));
 
+        let mut firefox_opts = Capabilities::new();
+        firefox_opts.insert("profile".into(), encoded_profile);
+        firefox_opts.insert("prefs".into(), Json::Object(prefs));
 
-        let options = FirefoxOptions::from_capabilities(&mut capabilities).unwrap();
-        let mut profile = options.profile.unwrap();
+        let opts = make_options(firefox_opts);
+        let mut profile = opts.profile.unwrap();
 
         let handler = MarionetteHandler::new(Default::default());
-        handler.set_prefs(2828, &mut profile, true, options.prefs).unwrap();
+        handler
+            .set_prefs(2828, &mut profile, true, opts.prefs)
+            .unwrap();
 
         let prefs_set = profile.user_prefs().unwrap();
-        println!("{:?}",prefs_set.prefs);
+        println!("{:#?}", prefs_set.prefs);
+
         assert_eq!(prefs_set.get("startup.homepage_welcome_url"),
                    Some(&Pref::new("data:text/html,PASS")));
         assert_eq!(prefs_set.get("browser.display.background_color"),
