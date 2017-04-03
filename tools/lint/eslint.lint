@@ -72,7 +72,7 @@ def eslint_setup():
 
     # npm sometimes fails to respect cwd when it is run using check_call so
     # we manually switch folders here instead.
-    os.chdir(module_path)
+    os.chdir(get_project_root())
 
     npm_path = get_node_or_npm_path("npm")
     if not npm_path:
@@ -125,7 +125,7 @@ def call_process(name, cmd, cwd=None):
 
 def expected_eslint_modules():
     # Read the expected version of ESLint and external modules
-    expected_modules_path = os.path.join(get_eslint_module_path(), "package.json")
+    expected_modules_path = os.path.join(get_project_root(), "package.json")
     with open(expected_modules_path, "r") as f:
         expected_modules = json.load(f)["dependencies"]
 
@@ -146,7 +146,7 @@ def expected_eslint_modules():
 
 def eslint_module_has_issues():
     has_issues = False
-    node_modules_path = os.path.join(get_eslint_module_path(), "node_modules")
+    node_modules_path = os.path.join(get_project_root(), "node_modules")
 
     for name, version_range in expected_eslint_modules().iteritems():
         path = os.path.join(node_modules_path, name, "package.json")
@@ -277,7 +277,7 @@ def lint(paths, binary=None, fix=None, setup=None, **lintargs):
     global project_root
     project_root = lintargs['root']
 
-    module_path = get_eslint_module_path()
+    module_path = get_project_root()
 
     # eslint requires at least node 6.9.1
     node_path = get_node_or_npm_path("node", LooseVersion("6.9.1"))

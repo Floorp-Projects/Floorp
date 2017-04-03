@@ -9,13 +9,9 @@ const {
   getImageDimensions,
 } = require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
 const { getLongString } = require("./utils/client");
-const { WEBCONSOLE_L10N } = require("./utils/l10n");
 const { formDataURI } = require("./utils/request-utils");
 
 const REQUESTS_TOOLTIP_IMAGE_MAX_DIM = 400; // px
-const REQUESTS_TOOLTIP_STACK_TRACE_WIDTH = 600; // px
-
-const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 async function setTooltipImageContent(tooltip, itemEl, requestItem) {
   let { mimeType, text, encoding } = requestItem.responseContent.content;
@@ -34,72 +30,6 @@ async function setTooltipImageContent(tooltip, itemEl, requestItem) {
   return itemEl.querySelector(".requests-list-icon");
 }
 
-async function setTooltipStackTraceContent(tooltip, requestItem) {
-  let {stacktrace} = requestItem.cause;
-
-  if (!stacktrace || stacktrace.length == 0) {
-    return false;
-  }
-
-  let doc = tooltip.doc;
-  let el = doc.createElementNS(HTML_NS, "div");
-  el.className = "stack-trace-tooltip devtools-monospace";
-
-  for (let f of stacktrace) {
-    let { functionName, filename, lineNumber, columnNumber, asyncCause } = f;
-
-    if (asyncCause) {
-      // if there is asyncCause, append a "divider" row into the trace
-      let asyncFrameEl = doc.createElementNS(HTML_NS, "div");
-      asyncFrameEl.className = "stack-frame stack-frame-async";
-      asyncFrameEl.textContent =
-        WEBCONSOLE_L10N.getFormatStr("stacktrace.asyncStack", asyncCause);
-      el.appendChild(asyncFrameEl);
-    }
-
-    // Parse a source name in format "url -> url"
-    let sourceUrl = filename.split(" -> ").pop();
-
-    let frameEl = doc.createElementNS(HTML_NS, "div");
-    frameEl.className = "stack-frame stack-frame-call";
-
-    let funcEl = doc.createElementNS(HTML_NS, "span");
-    funcEl.className = "stack-frame-function-name";
-    funcEl.textContent =
-      functionName || WEBCONSOLE_L10N.getStr("stacktrace.anonymousFunction");
-    frameEl.appendChild(funcEl);
-
-    let sourceEl = doc.createElementNS(HTML_NS, "span");
-    sourceEl.className = "stack-frame-source-name";
-    frameEl.appendChild(sourceEl);
-
-    let sourceInnerEl = doc.createElementNS(HTML_NS, "span");
-    sourceInnerEl.className = "stack-frame-source-name-inner";
-    sourceEl.appendChild(sourceInnerEl);
-
-    sourceInnerEl.textContent = sourceUrl;
-    sourceInnerEl.title = sourceUrl;
-
-    let lineEl = doc.createElementNS(HTML_NS, "span");
-    lineEl.className = "stack-frame-line";
-    lineEl.textContent = `:${lineNumber}:${columnNumber}`;
-    sourceInnerEl.appendChild(lineEl);
-
-    frameEl.addEventListener("click", () => {
-      // hide the tooltip immediately, not after delay
-      tooltip.hide();
-      window.NetMonitorController.viewSourceInDebugger(filename, lineNumber);
-    });
-
-    el.appendChild(frameEl);
-  }
-
-  tooltip.setContent(el, {width: REQUESTS_TOOLTIP_STACK_TRACE_WIDTH});
-
-  return true;
-}
-
 module.exports = {
   setTooltipImageContent,
-  setTooltipStackTraceContent,
 };
