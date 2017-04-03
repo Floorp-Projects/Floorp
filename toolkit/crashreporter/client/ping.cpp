@@ -94,12 +94,12 @@ GenerateUUID()
 }
 
 const char kISO8601Date[] = "%F";
-const char kISO8601FullDate[] = "%FT%T.000Z";
+const char kISO8601DateHours[] = "%FT%H:00:00.000Z";
 
 // Return the current date as a string in the specified format, the following
 // constants are provided:
 // - kISO8601Date, the ISO 8601 date format, YYYY-MM-DD
-// - kISO8601FullDate, the ISO 8601 full date format, YYYY-MM-DDTHH:MM:SS.000Z
+// - kISO8601DateHours, the ISO 8601 full date format, YYYY-MM-DDTHH:00:00.000Z
 static string
 CurrentDate(string format)
 {
@@ -226,7 +226,7 @@ CreateRootNode(StringTable& strings, const string& aUuid,
   root["type"] = "crash"; // This is a crash ping
   root["id"] = aUuid;
   root["version"] = kTelemetryVersion;
-  root["creationDate"] = CurrentDate(kISO8601FullDate);
+  root["creationDate"] = CurrentDate(kISO8601DateHours);
   root["clientId"] = aClientId;
 
   // Parse the telemetry environment
