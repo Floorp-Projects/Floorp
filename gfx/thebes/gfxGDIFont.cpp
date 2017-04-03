@@ -90,6 +90,7 @@ gfxGDIFont::ShapeText(DrawTarget     *aDrawTarget,
                       uint32_t        aLength,
                       Script          aScript,
                       bool            aVertical,
+                      RoundingFlags   aRounding,
                       gfxShapedText  *aShapedText)
 {
     if (!mIsValid) {
@@ -106,7 +107,7 @@ gfxGDIFont::ShapeText(DrawTarget     *aDrawTarget,
     }
 
     return gfxFont::ShapeText(aDrawTarget, aText, aOffset, aLength, aScript,
-                              aVertical, aShapedText);
+                              aVertical, aRounding, aShapedText);
 }
 
 const gfxFont::Metrics&

@@ -19,23 +19,24 @@ public:
     explicit gfxGraphiteShaper(gfxFont *aFont);
     virtual ~gfxGraphiteShaper();
 
-    virtual bool ShapeText(DrawTarget      *aDrawTarget,
-                           const char16_t *aText,
-                           uint32_t         aOffset,
-                           uint32_t         aLength,
-                           Script           aScript,
-                           bool             aVertical,
-                           gfxShapedText   *aShapedText);
+    bool ShapeText(DrawTarget      *aDrawTarget,
+                   const char16_t *aText,
+                   uint32_t         aOffset,
+                   uint32_t         aLength,
+                   Script           aScript,
+                   bool             aVertical,
+                   RoundingFlags    aRounding,
+                   gfxShapedText   *aShapedText) override;
 
     static void Shutdown();
 
 protected:
-    nsresult SetGlyphsFromSegment(DrawTarget      *aDrawTarget,
-                                  gfxShapedText   *aShapedText,
+    nsresult SetGlyphsFromSegment(gfxShapedText   *aShapedText,
                                   uint32_t         aOffset,
                                   uint32_t         aLength,
                                   const char16_t *aText,
-                                  gr_segment      *aSegment);
+                                  gr_segment      *aSegment,
+                                  RoundingFlags    aRounding);
 
     static float GrGetAdvance(const void* appFontHandle, uint16_t glyphid);
 

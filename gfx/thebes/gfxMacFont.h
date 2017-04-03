@@ -85,6 +85,7 @@ protected:
                    uint32_t        aLength,
                    Script          aScript,
                    bool            aVertical,
+                   RoundingFlags   aRounding,
                    gfxShapedText  *aShapedText) override;
 
     void InitMetrics();
