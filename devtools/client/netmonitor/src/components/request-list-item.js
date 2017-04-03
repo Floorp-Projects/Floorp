@@ -66,6 +66,7 @@ const RequestListItem = createClass({
     isSelected: PropTypes.bool.isRequired,
     firstRequestStartedMillis: PropTypes.number.isRequired,
     fromCache: PropTypes.bool.isRequired,
+    onCauseBadgeClick: PropTypes.func.isRequired,
     onContextMenu: PropTypes.func.isRequired,
     onFocusedNodeChange: PropTypes.func,
     onMouseDown: PropTypes.func.isRequired,
@@ -101,6 +102,7 @@ const RequestListItem = createClass({
       fromCache,
       onContextMenu,
       onMouseDown,
+      onCauseBadgeClick,
       onSecurityIconClick
     } = this.props;
 
@@ -128,7 +130,7 @@ const RequestListItem = createClass({
         MethodColumn({ item }),
         FileColumn({ item }),
         DomainColumn({ item, onSecurityIconClick }),
-        CauseColumn({ item }),
+        CauseColumn({ item, onCauseBadgeClick }),
         TypeColumn({ item }),
         TransferredSizeColumn({ item }),
         ContentSizeColumn({ item }),
@@ -301,6 +303,7 @@ const CauseColumn = createFactory(createClass({
 
   propTypes: {
     item: PropTypes.object.isRequired,
+    onCauseBadgeClick: PropTypes.func.isRequired,
   },
 
   shouldComponentUpdate(nextProps) {
@@ -308,7 +311,12 @@ const CauseColumn = createFactory(createClass({
   },
 
   render() {
-    const { cause } = this.props.item;
+    const {
+      item,
+      onCauseBadgeClick,
+    } = this.props;
+
+    const { cause } = item;
 
     let causeType = "";
     let causeUri = undefined;
@@ -329,6 +337,7 @@ const CauseColumn = createFactory(createClass({
         span({
           className: "requests-list-cause-stack",
           hidden: !causeHasStack,
+          onClick: onCauseBadgeClick,
         }, "JS"),
         span({ className: "subitem-label" }, causeType),
       )

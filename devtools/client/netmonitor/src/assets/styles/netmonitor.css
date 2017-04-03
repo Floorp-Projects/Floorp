@@ -6,6 +6,7 @@
 @import "resource://devtools/client/shared/components/tree/tree-view.css";
 @import "resource://devtools/client/shared/components/tabs/tabs.css";
 @import "resource://devtools/client/shared/components/tabs/tabbar.css";
+@import "chrome://devtools/skin/components-frame.css";
 
 * {
   box-sizing: border-box;
@@ -744,6 +745,39 @@
 
 .theme-firebug .requests-list-timings-total {
   color: var(--theme-body-color);
+}
+
+/* Stack trace panel */
+
+.stack-trace {
+  font-family: var(--monospace-font-family);
+  /* The markup contains extra whitespace to improve formatting of clipboard text.
+     Make sure this whitespace doesn't affect the HTML rendering */
+  white-space: normal;
+  padding: 5px;
+}
+
+.stack-trace .frame-link-source,
+.message-location .frame-link-source {
+  /* Makes the file name truncated (and ellipsis shown) on the left side */
+  direction: rtl;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stack-trace .frame-link-source-inner,
+.message-location .frame-link-source-inner {
+  /* Enforce LTR direction for the file name - fixes bug 1290056 */
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+.stack-trace .frame-link-function-display-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-inline-end: 1ch;
 }
 
 /* Security tabpanel */
