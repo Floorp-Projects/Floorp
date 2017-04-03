@@ -19,6 +19,7 @@ import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.fragment.FirstrunFragment;
 import org.mozilla.focus.fragment.HomeFragment;
 import org.mozilla.focus.fragment.UrlInputFragment;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
@@ -67,12 +68,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+        TelemetryWrapper.startSession();
+    }
+
+    @Override
     protected void onPause() {
         if (isFinishing()) {
             WebViewProvider.performCleanup(this);
         }
 
         super.onPause();
+
+        TelemetryWrapper.stopSession();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        TelemetryWrapper.stopMainActivity();
     }
 
     @Override

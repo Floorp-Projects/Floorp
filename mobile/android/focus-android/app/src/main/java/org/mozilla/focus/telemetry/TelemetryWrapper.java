@@ -1,0 +1,126 @@
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.focus.telemetry;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.preference.PreferenceManager;
+
+import org.mozilla.focus.BuildConfig;
+import org.mozilla.focus.R;
+import org.mozilla.focus.utils.AppConstants;
+import org.mozilla.telemetry.Telemetry;
+import org.mozilla.telemetry.TelemetryHolder;
+import org.mozilla.telemetry.config.TelemetryConfiguration;
+import org.mozilla.telemetry.event.TelemetryEvent;
+import org.mozilla.telemetry.net.DebugLogClient;
+import org.mozilla.telemetry.net.TelemetryClient;
+import org.mozilla.telemetry.ping.TelemetryEventPingBuilder;
+import org.mozilla.telemetry.schedule.TelemetryScheduler;
+import org.mozilla.telemetry.schedule.jobscheduler.JobSchedulerTelemetryScheduler;
+import org.mozilla.telemetry.serialize.JSONPingSerializer;
+import org.mozilla.telemetry.serialize.TelemetryPingSerializer;
+import org.mozilla.telemetry.storage.FileTelemetryStorage;
+import org.mozilla.telemetry.storage.TelemetryStorage;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public final class TelemetryWrapper {
+    private static final String TELEMETRY_APP_NAME = "Focus";
+
+    private TelemetryWrapper() {}
+
+    private static class Category {
+        private static final String ACTION = "action";
+    }
+
+    private static class Method {
+        private static final String TYPE_URL = "type_url";
+        private static final String TYPE_QUERY = "type_query";
+        private static final String CLICK = "click";
+        private static final String CHANGE = "change";
+    }
+
+    private static class Object {
+        private static final String SEARCH_BAR = "search_bar";
+        private static final String ERASE_BUTTON = "erase_button";
+        private static final String SETTING = "setting";
+    }
+
+    private static class Extra {
+        private static final String TO = "to";
+    }
+
+    public static void init(Context context) {
+        final Resources resources = context.getResources();
+        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(context)
+                .setServerEndpoint("TODO") // TODO: For now we just use DebugLogClient which will only log
+                .setAppName(TELEMETRY_APP_NAME)
+                .setUpdateChannel(BuildConfig.BUILD_TYPE)
+                .setPreferencesImportantForTelemetry(
+                        resources.getString(R.string.pref_key_search_engine),
+                        resources.getString(R.string.pref_key_privacy_block_ads),
+                        resources.getString(R.string.pref_key_privacy_block_analytics),
+                        resources.getString(R.string.pref_key_privacy_block_social),
+                        resources.getString(R.string.pref_key_privacy_block_other),
+                        resources.getString(R.string.pref_key_performance_block_webfonts))
+                .setCollectionEnabled(true) // TODO: We want to use !AppConstants.isDevBuild() here, but right now we are only logging.
+                .setUploadEnabled(preferences.getBoolean(resources.getString(R.string.pref_key_telemetry), true));
+
+        final TelemetryPingSerializer serializer = new JSONPingSerializer();
+        final TelemetryStorage storage = new FileTelemetryStorage(configuration, serializer);
+        final TelemetryClient client = new DebugLogClient("Focus/Telemetry");
+        final TelemetryScheduler scheduler = new JobSchedulerTelemetryScheduler();
+
+        final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler)
+                .addPingBuilder(new TelemetryEventPingBuilder(configuration));
+        TelemetryHolder.set(telemetry);
+    }
+
+    public static void startSession() {
+        TelemetryHolder.get().recordSessionStart();
+    }
+
+    public static void stopSession() {
+        TelemetryHolder.get().recordSessionEnd();
+    }
+
+    public static void stopMainActivity() {
+        TelemetryHolder.get().queuePing(TelemetryEventPingBuilder.TYPE);
+        TelemetryHolder.get().scheduleUpload(TelemetryEventPingBuilder.TYPE);
+    }
+
+    public static void urlBarEvent(boolean isUrl) {
+        if (isUrl) {
+            TelemetryWrapper.browseEvent();
+        } else {
+            TelemetryWrapper.searchEvent();
+        }
+    }
+
+    public static void browseEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.TYPE_URL, Object.SEARCH_BAR).queue();
+    }
+
+    public static void searchEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.TYPE_QUERY, Object.SEARCH_BAR).queue();
+    }
+
+    public static void eraseEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.ERASE_BUTTON).queue();
+    }
+
+    public static void settingsEvent(String key, String value) {
+        Map<String, java.lang.Object> extras = new HashMap<>();
+        extras.put(Extra.TO, value);
+
+        TelemetryEvent.create(Category.ACTION, Method.CHANGE, Object.SETTING, key, extras).queue();
+    }
+}

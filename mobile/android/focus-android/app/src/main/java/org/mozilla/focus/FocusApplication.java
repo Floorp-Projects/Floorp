@@ -9,6 +9,7 @@ import android.app.Application;
 import android.preference.PreferenceManager;
 
 import org.mozilla.focus.search.SearchEngineManager;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.AdjustHelper;
 
 public class FocusApplication extends Application {
@@ -20,6 +21,7 @@ public class FocusApplication extends Application {
 
         SearchEngineManager.getInstance().init(this);
 
+        TelemetryWrapper.init(this);
         AdjustHelper.setupAdjustIfNeeded(this);
     }
 }

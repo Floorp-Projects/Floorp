@@ -21,6 +21,7 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.menu.BrowserMenu;
 import org.mozilla.focus.open.OpenWithFragment;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
@@ -210,6 +211,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
             case R.id.erase: {
                 eraseAndShowHomeScreen();
+
+                TelemetryWrapper.eraseEvent();
                 break;
             }
 

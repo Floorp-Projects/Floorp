@@ -24,6 +24,7 @@ import android.widget.TextView;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.autocomplete.UrlAutoCompleteFilter;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
 import org.mozilla.focus.widget.InlineAutocompleteEditText;
@@ -363,17 +364,23 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
 
         final String rawUrl = urlView.getText().toString();
 
-        final String url = UrlUtils.isUrl(rawUrl)
+        final boolean isUrl = UrlUtils.isUrl(rawUrl);
+
+        final String url = isUrl
                 ? UrlUtils.normalize(rawUrl)
                 : UrlUtils.createSearchUrl(getContext(), rawUrl);
 
         openUrl(url);
+
+        TelemetryWrapper.urlBarEvent(isUrl);
     }
 
     private void onSearch() {
         final String searchUrl = UrlUtils.createSearchUrl(getContext(), urlView.getOriginalText());
 
         openUrl(searchUrl);
+
+        TelemetryWrapper.searchEvent();
     }
 
     private void openUrl(String url) {
