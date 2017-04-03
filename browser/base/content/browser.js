@@ -1340,7 +1340,6 @@ var gBrowserInit = {
         //                 [5]: referrerPolicy (int)
         //                 [6]: userContextId (int)
         //                 [7]: originPrincipal (nsIPrincipal)
-        //                 [8]: triggeringPrincipal (nsIPrincipal)
         let referrerURI = window.arguments[2];
         if (typeof(referrerURI) == "string") {
           try {
@@ -1357,7 +1356,7 @@ var gBrowserInit = {
                 window.arguments[4] || false, referrerPolicy, userContextId,
                 // pass the origin principal (if any) and force its use to create
                 // an initial about:blank viewer if present:
-                window.arguments[7], !!window.arguments[7], window.arguments[8]);
+                window.arguments[7], !!window.arguments[7]);
         window.focus();
       } else {
         // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
@@ -2249,8 +2248,7 @@ function BrowserTryToCloseWindow() {
 }
 
 function loadURI(uri, referrer, postData, allowThirdPartyFixup, referrerPolicy,
-                 userContextId, originPrincipal, forceAboutBlankViewerInCurrent,
-                 triggeringPrincipal) {
+                 userContextId, originPrincipal, forceAboutBlankViewerInCurrent) {
   try {
     openLinkIn(uri, "current",
                { referrerURI: referrer,
@@ -2259,7 +2257,6 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup, referrerPolicy,
                  allowThirdPartyFixup,
                  userContextId,
                  originPrincipal,
-                 triggeringPrincipal,
                  forceAboutBlankViewerInCurrent,
                });
   } catch (e) {}
@@ -5785,7 +5782,6 @@ function handleLinkClick(event, href, linkNode) {
     referrerPolicy,
     noReferrer: BrowserUtils.linkHasNoReferrer(linkNode),
     originPrincipal: doc.nodePrincipal,
-    triggeringPrincipal: doc.nodePrincipal,
     frameOuterWindowID,
   };
 
