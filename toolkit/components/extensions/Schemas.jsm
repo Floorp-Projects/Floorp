@@ -14,7 +14,6 @@ const global = this;
 Cu.importGlobalProperties(["URL"]);
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -26,6 +25,8 @@ var {
   instanceOf,
 } = ExtensionUtils;
 
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+				  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "contentPolicyService",
                                    "@mozilla.org/addons/content-policy;1",
                                    "nsIAddonContentPolicy");
