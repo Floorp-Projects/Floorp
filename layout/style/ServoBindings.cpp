@@ -7,6 +7,7 @@
 #include "mozilla/ServoBindings.h"
 
 #include "ChildIterator.h"
+#include "NullPrincipalURI.h"
 #include "gfxFontFamilyList.h"
 #include "nsAnimationManager.h"
 #include "nsAttrValueInlines.h"
@@ -1536,7 +1537,7 @@ Gecko_nsStyleFont_GetBaseSize(const nsStyleFont* aFont, RawGeckoPresContextBorro
 void
 Gecko_LoadStyleSheet(css::Loader* aLoader,
                      ServoStyleSheet* aParent,
-                     RawServoImportRuleBorrowed aImportRule,
+                     RawServoStyleSheetBorrowed aChildSheet,
                      RawGeckoURLExtraData* aBaseURLData,
                      const uint8_t* aURLString,
                      uint32_t aURLStringLength,
@@ -1574,7 +1575,16 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
     return;
   }
 
-  aLoader->LoadChildSheet(aParent, uri, media, nullptr, aImportRule, nullptr);
+  aLoader->LoadChildSheet(aParent, uri, media, nullptr, aChildSheet, nullptr);
+}
+
+RawGeckoURLExtraData*
+Gecko_URLExtraData_CreateDummy()
+{
+  RefPtr<css::URLExtraData> data =
+    new css::URLExtraData(NullPrincipalURI::Create(), nullptr,
+                          NullPrincipal::Create());
+  return data.forget().take();
 }
 
 const nsMediaFeature*

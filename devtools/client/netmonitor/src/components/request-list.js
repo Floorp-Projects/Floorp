@@ -14,6 +14,7 @@ const {
 const RequestListContent = createFactory(require("./request-list-content"));
 const RequestListEmptyNotice = createFactory(require("./request-list-empty-notice"));
 const RequestListHeader = createFactory(require("./request-list-header"));
+const StatusBar = createFactory(require("./status-bar"));
 
 const { div } = DOM;
 
@@ -25,6 +26,7 @@ function RequestList({ isEmpty }) {
     div({ className: "request-list-container" },
       RequestListHeader(),
       isEmpty ? RequestListEmptyNotice() : RequestListContent(),
+      StatusBar(),
     )
   );
 }
