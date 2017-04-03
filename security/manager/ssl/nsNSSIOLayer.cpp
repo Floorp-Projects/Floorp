@@ -473,10 +473,10 @@ nsNSSSocketInfo::IsAcceptableForHost(const nsACString& hostname, bool* _retval)
 }
 
 NS_IMETHODIMP
-nsNSSSocketInfo::JoinConnection(const nsACString& npnProtocol,
-                                const nsACString& hostname,
-                                int32_t port,
-                                bool* _retval)
+nsNSSSocketInfo::TestJoinConnection(const nsACString& npnProtocol,
+                                    const nsACString& hostname,
+                                    int32_t port,
+                                    bool* _retval)
 {
   *_retval = false;
 
@@ -494,13 +494,22 @@ nsNSSSocketInfo::JoinConnection(const nsACString& npnProtocol,
     return NS_OK;
   }
 
-  IsAcceptableForHost(hostname, _retval);
+  IsAcceptableForHost(hostname, _retval); // sets _retval
+  return NS_OK;
+}
 
-  if (*_retval) {
+NS_IMETHODIMP
+nsNSSSocketInfo::JoinConnection(const nsACString& npnProtocol,
+                                const nsACString& hostname,
+                                int32_t port,
+                                bool* _retval)
+{
+  nsresult rv = TestJoinConnection(npnProtocol, hostname, port, _retval);
+  if (NS_SUCCEEDED(rv) && *_retval) {
     // All tests pass - this is joinable
     mJoined = true;
   }
-  return NS_OK;
+  return rv;
 }
 
 bool
