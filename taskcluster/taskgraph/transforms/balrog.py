@@ -9,7 +9,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import validate_schema
-from taskgraph.util.scriptworker import get_balrog_server_scope
+from taskgraph.util.scriptworker import (get_balrog_server_scope,
+                                         get_balrog_channel_scopes)
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Schema, Any, Required, Optional
 
@@ -92,6 +93,8 @@ def make_task_description(config, jobs):
         }]
 
         server_scope = get_balrog_server_scope(config)
+        channel_scopes = get_balrog_channel_scopes(config)
+
         task = {
             'label': label,
             'description': "{} Balrog".format(
@@ -102,7 +105,7 @@ def make_task_description(config, jobs):
                 'implementation': 'balrog',
                 'upstream-artifacts': upstream_artifacts,
             },
-            'scopes': [server_scope],
+            'scopes': [server_scope] + channel_scopes,
             'dependencies': {'beetmover': dep_job.label},
             'attributes': attributes,
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
