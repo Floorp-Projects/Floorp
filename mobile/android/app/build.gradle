@@ -448,3 +448,7 @@ android.applicationVariants.all { variant ->
         dependsOn "assemble${variant.name.capitalize()}"
     }
 }
+
+// Bug 1353055 - Strip 'vars' debugging information to agree with moz.build.
+apply from: "${topsrcdir}/mobile/android/gradle/debug_level.gradle"
+android.applicationVariants.all configureVariantDebugLevel
