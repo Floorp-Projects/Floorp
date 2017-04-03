@@ -400,20 +400,23 @@ nsXULPopupManager::GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain)
   NS_ASSERTION(aWidgetChain, "null parameter");
   nsMenuChainItem* item = GetTopVisibleMenu();
   while (item) {
-    nsCOMPtr<nsIWidget> widget = item->Frame()->GetWidget();
-    NS_ASSERTION(widget, "open popup has no widget");
-    aWidgetChain->AppendElement(widget.get());
-    // In the case when a menulist inside a panel is open, clicking in the
-    // panel should still roll up the menu, so if a different type is found,
-    // stop scanning.
     nsMenuChainItem* parent = item->GetParent();
-    if (!sameTypeCount) {
-      count++;
-      if (!parent || item->Frame()->PopupType() != parent->Frame()->PopupType() ||
-                     item->IsContextMenu() != parent->IsContextMenu()) {
-        sameTypeCount = count;
+    if (!item->IsNoAutoHide()) {
+      nsCOMPtr<nsIWidget> widget = item->Frame()->GetWidget();
+      NS_ASSERTION(widget, "open popup has no widget");
+      aWidgetChain->AppendElement(widget.get());
+      // In the case when a menulist inside a panel is open, clicking in the
+      // panel should still roll up the menu, so if a different type is found,
+      // stop scanning.
+      if (!sameTypeCount) {
+        count++;
+        if (!parent || item->Frame()->PopupType() != parent->Frame()->PopupType() ||
+                       item->IsContextMenu() != parent->IsContextMenu()) {
+          sameTypeCount = count;
+        }
       }
     }
+
     item = parent;
   }
 
@@ -1048,7 +1051,13 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
       // entire chain or the item to hide isn't the topmost popup.
       nsMenuChainItem* parent = topMenu->GetParent();
       if (parent && (aHideChain || topMenu != foundPopup)) {
-        nextPopup = parent->Content();
+        while (parent && parent->IsNoAutoHide()) {
+          parent = parent->GetParent();
+        }
+
+        if (parent) {
+          nextPopup = parent->Content();
+        }
       }
 
       lastPopup = aLastPopup ? aLastPopup : (aHideChain ? nullptr : aPopup);

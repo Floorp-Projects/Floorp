@@ -11,6 +11,8 @@
 #include "nsIAtom.h"
 #include "nsIThread.h"
 
+#define RECENTLY_USED_PARSER_ATOMS_SIZE 31
+
 class nsHtml5Atom;
 
 class nsHtml5AtomEntry : public nsStringHashKey
@@ -87,6 +89,9 @@ class nsHtml5AtomTable
      */
     void Clear()
     {
+      for (uint32_t i = 0; i < RECENTLY_USED_PARSER_ATOMS_SIZE; ++i) {
+        mRecentlyUsedParserAtoms[i] = nullptr;
+      }
       mTable.Clear();
     }
     
@@ -99,6 +104,7 @@ class nsHtml5AtomTable
   
   private:
     nsTHashtable<nsHtml5AtomEntry> mTable;
+    nsIAtom* mRecentlyUsedParserAtoms[RECENTLY_USED_PARSER_ATOMS_SIZE];
 #ifdef DEBUG
     nsCOMPtr<nsIThread>            mPermittedLookupThread;
 #endif

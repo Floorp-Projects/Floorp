@@ -182,7 +182,6 @@ add_task(function* () {
 
     let panel = document.querySelector("#params-panel");
     let statusParamValue = data.uri.split("=").pop();
-    let statusParamShownValue = "\"" + statusParamValue + "\"";
     let treeSections = panel.querySelectorAll(".tree-section");
 
     is(treeSections.length, 1,
@@ -202,7 +201,7 @@ add_task(function* () {
       "The params scope doesn't have the correct title.");
 
     is(labels[0].textContent, "sts", "The param name was incorrect.");
-    is(values[0].textContent, statusParamShownValue, "The param value was incorrect.");
+    is(values[0].textContent, statusParamValue, "The param value was incorrect.");
 
     ok(panel.querySelector(".treeTable"),
       "The request params tree view should be displayed.");
