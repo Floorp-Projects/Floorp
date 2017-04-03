@@ -61,6 +61,10 @@ public class Browsers {
 
     private final Map<String, ActivityInfo> browsers;
     private ActivityInfo defaultBrowser;
+    // This will contain installed firefox branded browser ordered by priority from Firefox,
+    // Firefox_Beta, Firefox Aurora and Firefox_Nightly. If multiple firefox branded browser is
+    // installed then higher priority one will be stored here
+    private ActivityInfo firefoxBrandedBrowser;
 
     public Browsers(Context context, String url) {
         final PackageManager packageManager = context.getPackageManager();
@@ -75,6 +79,20 @@ public class Browsers {
 
         this.browsers = browsers;
         this.defaultBrowser = findDefault(packageManager, url);
+        this.firefoxBrandedBrowser = findFirefoxBrandedBrowser();
+    }
+
+    private ActivityInfo findFirefoxBrandedBrowser() {
+        if (browsers.containsKey(KnownBrowser.FIREFOX.packageName)) {
+            return browsers.get(KnownBrowser.FIREFOX.packageName);
+        } else if (browsers.containsKey(KnownBrowser.FIREFOX_BETA.packageName)) {
+            return browsers.get(KnownBrowser.FIREFOX_BETA.packageName);
+        } else if (browsers.containsKey(KnownBrowser.FIREFOX_AURORA.packageName)) {
+            return browsers.get(KnownBrowser.FIREFOX_AURORA.packageName);
+        } else if (browsers.containsKey(KnownBrowser.FIREFOX_NIGHTLY.packageName)) {
+            return browsers.get(KnownBrowser.FIREFOX_NIGHTLY.packageName);
+        }
+        return null;
     }
 
     private Map<String, ActivityInfo> resolveBrowsers(PackageManager packageManager, String url) {
@@ -180,5 +198,13 @@ public class Browsers {
         final Collection<ActivityInfo> collection = browsers.values();
 
         return collection.toArray(new ActivityInfo[collection.size()]);
+    }
+
+    public boolean hasFirefoxBrandedBrowserInstalled() {
+        return firefoxBrandedBrowser != null;
+    }
+
+    public ActivityInfo getFirefoxBrandedBrowser() {
+        return firefoxBrandedBrowser;
     }
 }

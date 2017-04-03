@@ -331,13 +331,13 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                 final Browsers browsers = new Browsers(getContext(), webView.getUrl());
 
-                if (browsers.isInstalled(Browsers.KnownBrowser.FIREFOX)) {
+                if (browsers.hasFirefoxBrandedBrowserInstalled()) {
                     final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(webView.getUrl()));
-                    intent.setPackage(Browsers.KnownBrowser.FIREFOX.packageName);
+                    intent.setPackage(browsers.getFirefoxBrandedBrowser().packageName);
                     startActivity(intent);
                 } else {
                     final Intent intent = new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("market://details?id=" + Browsers.KnownBrowser.FIREFOX));
+                            Uri.parse("market://details?id=" + Browsers.KnownBrowser.FIREFOX.packageName));
                     startActivity(intent);
                 }
 
