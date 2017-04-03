@@ -597,7 +597,9 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
   // XXX the !aElement->IsHTMLElement(nsGkAtoms::area)
   // check is needed due to bug 135040 (to avoid using
   // mPrimaryFrame). Remove it once that's fixed.
-  if (!aPseudo && aStyleType == eAll && inDocWithShell &&
+  if (!aPseudo &&
+      aStyleType == eAll &&
+      inDocWithShell &&
       !aElement->IsHTMLElement(nsGkAtoms::area)) {
     nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
     if (frame) {
