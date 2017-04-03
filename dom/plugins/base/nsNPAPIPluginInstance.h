@@ -136,8 +136,7 @@ public:
     return !!mAudioChannelAgent;
   }
 
-  void NotifyStartedPlaying();
-  void NotifyStoppedPlaying();
+  nsresult GetOrCreateAudioChannelAgent(nsIAudioChannelAgent** aAgent);
 
   nsresult SetMuted(bool aIsMuted);
 
@@ -341,8 +340,6 @@ protected:
   void CheckJavaC2PJSObjectQuirk(uint16_t paramCount,
                                  const char* const* names,
                                  const char* const* values);
-
-  nsresult CreateAudioChannelAgentIfNeeded();
 
   // The structure used to communicate between the plugin instance and
   // the browser.
