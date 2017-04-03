@@ -902,6 +902,8 @@ LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
     if (byteSize(ins->access().type()) != 4 && !HasLDSTREXBHD()) {
+        gen->setPerformsCall();
+
         LAsmJSCompareExchangeCallout* lir =
             new(alloc()) LAsmJSCompareExchangeCallout(useFixedAtStart(base, IntArgReg2),
                                                       useFixedAtStart(ins->oldValue(), IntArgReg3),
@@ -929,6 +931,8 @@ LIRGeneratorARM::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
     MOZ_ASSERT(ins->access().offset() == 0);
 
     if (byteSize(ins->access().type()) < 4 && !HasLDSTREXBHD()) {
+        gen->setPerformsCall();
+
         // Call out on ARMv6.
         defineReturn(new(alloc()) LAsmJSAtomicExchangeCallout(useFixedAtStart(ins->base(), IntArgReg2),
                                                               useFixedAtStart(ins->value(), IntArgReg3),
@@ -953,6 +957,8 @@ LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
     if (byteSize(ins->access().type()) != 4 && !HasLDSTREXBHD()) {
+        gen->setPerformsCall();
+
         LAsmJSAtomicBinopCallout* lir =
             new(alloc()) LAsmJSAtomicBinopCallout(useFixedAtStart(base, IntArgReg2),
                                                   useFixedAtStart(ins->value(), IntArgReg3),

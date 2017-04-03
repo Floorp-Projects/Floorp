@@ -35,19 +35,21 @@ public:
     
     NS_INLINE_DECL_REFCOUNTING(txStylesheet)
 
-    txInstruction* findTemplate(const txXPathNode& aNode,
-                                const txExpandedName& aMode,
-                                txIMatchContext* aContext,
-                                ImportFrame* aImportedBy,
-                                ImportFrame** aImportFrame);
+    nsresult findTemplate(const txXPathNode& aNode,
+                          const txExpandedName& aMode,
+                          txIMatchContext* aContext,
+                          ImportFrame* aImportedBy,
+                          txInstruction** aTemplate,
+                          ImportFrame** aImportFrame);
     txDecimalFormat* getDecimalFormat(const txExpandedName& aName);
     txInstruction* getAttributeSet(const txExpandedName& aName);
     txInstruction* getNamedTemplate(const txExpandedName& aName);
     txOutputFormat* getOutputFormat();
     GlobalVariable* getGlobalVariable(const txExpandedName& aName);
     const txOwningExpandedNameMap<txXSLKey>& getKeyMap();
-    bool isStripSpaceAllowed(const txXPathNode& aNode,
-                               txIMatchContext* aContext);
+    nsresult isStripSpaceAllowed(const txXPathNode& aNode,
+                                 txIMatchContext* aContext,
+                                 bool& aAllowed);
 
     /**
      * Called by the stylesheet compiler once all stylesheets has been read.
@@ -166,8 +168,10 @@ public:
     {
     }
 
-    bool matches(const txXPathNode& aNode, txIMatchContext* aContext) {
-        return mNameTest.matches(aNode, aContext);
+    nsresult matches(const txXPathNode& aNode, txIMatchContext* aContext,
+                     bool& aMatched)
+    {
+        return mNameTest.matches(aNode, aContext, aMatched);
     }
 
     bool stripsSpace() {

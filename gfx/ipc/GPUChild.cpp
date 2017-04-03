@@ -69,8 +69,8 @@ GPUChild::Init()
 
   gfxVars::AddReceiver(this);
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
-  mProfilerController = CrossProcessProfilerController::ForProtocol(this);
+#ifdef MOZ_GECKO_PROFILER
+  mProfilerController = MakeUnique<CrossProcessProfilerController>(this);
 #endif
 }
 
@@ -286,7 +286,7 @@ GPUChild::ActorDestroy(ActorDestroyReason aWhy)
 
   }
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_GECKO_PROFILER
   mProfilerController = nullptr;
 #endif
 

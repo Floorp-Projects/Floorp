@@ -7,7 +7,6 @@ var { utils: Cu, interfaces: Ci, classes: Cc } = Components;
 
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/AddonManager.jsm", this);
-Cu.import("resource://gre/modules/AddonWatcher.jsm", this);
 Cu.import("resource://gre/modules/PerformanceWatcher.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);

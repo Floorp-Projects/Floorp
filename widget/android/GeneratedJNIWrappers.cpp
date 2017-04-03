@@ -967,14 +967,6 @@ auto GeckoThread::State::RUNNING() -> State::LocalRef
 const char GeckoView::name[] =
         "org/mozilla/gecko/GeckoView";
 
-constexpr char GeckoView::SetState_t::name[];
-constexpr char GeckoView::SetState_t::signature[];
-
-auto GeckoView::SetState(mozilla::jni::Object::Param a0) const -> void
-{
-    return mozilla::jni::Method<SetState_t>::Call(GeckoView::mCtx, nullptr, a0);
-}
-
 const char GeckoView::State::name[] =
         "org/mozilla/gecko/GeckoView$State";
 
@@ -1011,6 +1003,14 @@ constexpr char GeckoView::Window::Open_t::signature[];
 
 constexpr char GeckoView::Window::Reattach_t::name[];
 constexpr char GeckoView::Window::Reattach_t::signature[];
+
+constexpr char GeckoView::Window::SetState_t::name[];
+constexpr char GeckoView::Window::SetState_t::signature[];
+
+auto GeckoView::Window::SetState(mozilla::jni::Object::Param a0) const -> void
+{
+    return mozilla::jni::Method<SetState_t>::Call(Window::mCtx, nullptr, a0);
+}
 
 const char PrefsHelper::name[] =
         "org/mozilla/gecko/PrefsHelper";

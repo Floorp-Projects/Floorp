@@ -1979,7 +1979,7 @@ nsTextEditorState::GetParentNumberControl(nsFrame* aFrame) const
     // that situation, the type of the control has changed, but its frame has
     // not been reconstructed yet.  So we need to check the type of the input
     // control in addition to the type of the frame.
-    return (input->GetType() == NS_FORM_INPUT_NUMBER) ? input : nullptr;
+    return (input->ControlType() == NS_FORM_INPUT_NUMBER) ? input : nullptr;
   }
 
   return nullptr;

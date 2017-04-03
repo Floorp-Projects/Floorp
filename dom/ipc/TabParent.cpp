@@ -649,8 +649,8 @@ TabParent::InitRenderFrame()
     RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
     MOZ_ASSERT(frameLoader);
     if (frameLoader) {
-      bool success;
-      RenderFrameParent* renderFrame = new RenderFrameParent(frameLoader, &success);
+      RenderFrameParent* renderFrame = new RenderFrameParent(frameLoader);
+      MOZ_ASSERT(renderFrame->IsInitted());
       uint64_t layersId = renderFrame->GetLayersId();
       AddTabParentToTable(layersId, this);
       if (!SendPRenderFrameConstructor(renderFrame)) {
@@ -659,7 +659,8 @@ TabParent::InitRenderFrame()
 
       TextureFactoryIdentifier textureFactoryIdentifier;
       renderFrame->GetTextureFactoryIdentifier(&textureFactoryIdentifier);
-      Unused << SendInitRendering(textureFactoryIdentifier, layersId, renderFrame);
+      Unused << SendInitRendering(textureFactoryIdentifier, layersId,
+        renderFrame->IsLayersConnected(), renderFrame);
     }
   } else {
     // Otherwise, the child should have constructed the RenderFrame,
@@ -2490,17 +2491,13 @@ TabParent::AllocPRenderFrameParent()
 {
   MOZ_ASSERT(ManagedPRenderFrameParent().IsEmpty());
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  uint64_t layersId = 0;
-  bool success = false;
 
-  PRenderFrameParent* renderFrame =
-    new RenderFrameParent(frameLoader, &success);
-  if (success) {
-    RenderFrameParent* rfp = static_cast<RenderFrameParent*>(renderFrame);
-    layersId = rfp->GetLayersId();
+  RenderFrameParent* rfp = new RenderFrameParent(frameLoader);
+  if (rfp->IsInitted()) {
+    uint64_t layersId = rfp->GetLayersId();
     AddTabParentToTable(layersId, this);
   }
-  return renderFrame;
+  return rfp;
 }
 
 bool

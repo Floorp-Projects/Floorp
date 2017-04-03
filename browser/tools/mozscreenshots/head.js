@@ -6,7 +6,6 @@
 
 "use strict";
 
-const {AddonWatcher} = Cu.import("resource://gre/modules/AddonWatcher.jsm", {});
 const chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 const EXTENSION_DIR = "chrome://mochitests/content/extensions/mozscreenshots/browser/";
@@ -27,7 +26,6 @@ function* setup() {
   return new Promise((resolve) => {
     AddonManager.getAddonByID("mozscreenshots@mozilla.org", function(aAddon) {
       isnot(aAddon, null, "The mozscreenshots extension should be installed");
-      AddonWatcher.ignoreAddonPermanently(aAddon.id);
       TestRunner = Cu.import("chrome://mozscreenshots/content/TestRunner.jsm", {}).TestRunner;
       resolve();
     });

@@ -570,22 +570,27 @@ private:
 
 struct AnimationValue
 {
+  // mGecko and mServo are mutually exclusive: only one or the other should
+  // ever be set.
+  // FIXME: After obsoleting StyleAnimationValue, we should remove mGecko, and
+  // make AnimationValue a wrapper of RawServoAnimationValue to hide these
+  // FFIs.
   StyleAnimationValue mGecko;
   RefPtr<RawServoAnimationValue> mServo;
 
-  inline bool operator==(const AnimationValue& aOther) const;
+  bool operator==(const AnimationValue& aOther) const;
 
   bool IsNull() const { return mGecko.IsNull() && !mServo; }
 
-  inline float GetOpacity() const;
+  float GetOpacity() const;
 
   // Returns the scale for mGecko or mServo, which are calculated with
   // reference to aFrame.
-  inline gfxSize GetScaleValue(const nsIFrame* aFrame) const;
+  gfxSize GetScaleValue(const nsIFrame* aFrame) const;
 
   // Uncompute this AnimationValue and then serialize it.
-  inline void SerializeSpecifiedValue(nsCSSPropertyID aProperty,
-                                      nsAString& aString) const;
+  void SerializeSpecifiedValue(nsCSSPropertyID aProperty,
+                               nsAString& aString) const;
 };
 
 struct PropertyStyleAnimationValuePair

@@ -115,7 +115,6 @@ EXPORTS.mozilla += [
     'ServoUtils.h',
     'SheetType.h',
     'StyleAnimationValue.h',
-    'StyleAnimationValueInlines.h',
     'StyleBackendType.h',
     'StyleComplexColor.h',
     'StyleContextSource.h',
@@ -187,6 +186,7 @@ UNIFIED_SOURCES += [
     'nsCSSProps.cpp',
     'nsCSSPseudoClasses.cpp',
     'nsCSSPseudoElements.cpp',
+    'nsCSSRuleProcessor.cpp',
     'nsCSSRules.cpp',
     'nsCSSScanner.cpp',
     'nsCSSValue.cpp',
@@ -231,12 +231,9 @@ UNIFIED_SOURCES += [
     'StyleSheet.cpp',
 ]
 
-# - nsCSSRuleProcessor.cpp needs to be built separately because it uses
-# plarena.h.
 # - nsLayoutStylesheetCache.cpp needs to be built separately because it uses
 # nsExceptionHandler.h, which includes windows.h.
 SOURCES += [
-    'nsCSSRuleProcessor.cpp',
     'nsLayoutStylesheetCache.cpp',
 ]
 

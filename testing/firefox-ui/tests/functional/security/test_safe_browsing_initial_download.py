@@ -33,9 +33,7 @@ class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
 
     prefs_provider_update_time = {
         # Force an immediate download of the safebrowsing files
-        # Bug 1330253 - Leave the next line disabled until we have google API key
-        #               on the CI machines.
-        # 'browser.safebrowsing.provider.google4.nextupdatetime': 1,
+        'browser.safebrowsing.provider.google4.nextupdatetime': 1,
         'browser.safebrowsing.provider.google.nextupdatetime': 1,
         'browser.safebrowsing.provider.mozilla.nextupdatetime': 1,
     }
@@ -48,9 +46,6 @@ class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
         'browser.safebrowsing.malware.enabled': True,
         'privacy.trackingprotection.enabled': True,
         'privacy.trackingprotection.pbmode.enabled': True,
-        'urlclassifier.malwareTable':
-        'goog-malware-shavar,goog-unwanted-shavar,test-malware-simple,test-unwanted-simple',
-        'urlclassifier.phishTable': 'googpub-phish-shavar,test-phish-simple',
     }
 
     def get_safebrowsing_files(self, is_v4):
@@ -80,10 +75,7 @@ class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
         self.safebrowsing_path = os.path.join(self.marionette.instance.profile.profile,
                                               'safebrowsing')
         self.safebrowsing_v2_files = self.get_safebrowsing_files(False)
-        # Bug 1330253 - Leave the next line disabled until we have google API key
-        #               on the CI machines.
-        # self.safebrowsing_v4_files = self.get_safebrowsing_files(True)
-        self.safebrowsing_v4_files = []
+        self.safebrowsing_v4_files = self.get_safebrowsing_files(True)
 
     def tearDown(self):
         try:
