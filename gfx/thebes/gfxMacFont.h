@@ -106,7 +106,7 @@ protected:
     Metrics               mMetrics;
     uint32_t              mSpaceGlyph;
 
-    bool                  mVariationFont; // true if variations are in effect
+    bool                  mVariationFont; // true if font has OpenType variations
 };
 
 #endif /* GFX_MACFONT_H */

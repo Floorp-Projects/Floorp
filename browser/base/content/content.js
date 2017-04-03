@@ -578,6 +578,7 @@ var ClickEventHandler = {
         } catch (e) {}
       }
       json.originPrincipal = ownerDoc.nodePrincipal;
+      json.triggeringPrincipal = ownerDoc.nodePrincipal;
 
       sendAsyncMessage("Content:Click", json);
       return;

@@ -30,31 +30,31 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#params-tab"));
   yield wait;
-  testParamsTab1("a", '""', '{ "foo": "bar" }', '""');
+  testParamsTab1("a", "", '{ "foo": "bar" }', "");
 
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]);
   yield wait;
-  testParamsTab1("a", '"b"', '{ "foo": "bar" }', '""');
+  testParamsTab1("a", "b", '{ "foo": "bar" }', "");
 
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[2]);
   yield wait;
-  testParamsTab1("a", '"b"', "?foo", '"bar"');
+  testParamsTab1("a", "b", "?foo", "bar");
 
   wait = waitForDOM(document, "#params-panel tr:not(.tree-section).treeRow", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[3]);
   yield wait;
-  testParamsTab2("a", '""', '{ "foo": "bar" }', "js");
+  testParamsTab2("a", "", '{ "foo": "bar" }', "js");
 
   wait = waitForDOM(document, "#params-panel tr:not(.tree-section).treeRow", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[4]);
   yield wait;
-  testParamsTab2("a", '"b"', '{ "foo": "bar" }', "js");
+  testParamsTab2("a", "b", '{ "foo": "bar" }', "js");
 
   // Wait for all tree sections and editor updated by react
   let waitSections = waitForDOM(document, "#params-panel .tree-section", 2);
@@ -64,7 +64,7 @@ add_task(function* () {
   let [, editorFrames] = yield Promise.all([waitSections, waitEditor]);
   yield once(editorFrames[0], "DOMContentLoaded");
   yield waitForDOM(editorFrames[0].contentDocument, ".CodeMirror-code");
-  testParamsTab2("a", '"b"', "?foo=bar", "text");
+  testParamsTab2("a", "b", "?foo=bar", "text");
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[6]);

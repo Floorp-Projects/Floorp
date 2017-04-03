@@ -29,10 +29,10 @@ add_task(function* test_indicatorDrop() {
     let succeeded = new Set();
     yield new Promise(function(resolve) {
       let view = {
-        onDownloadAdded: function(download) {
+        onDownloadAdded(download) {
           added.add(download.source.url);
         },
-        onDownloadChanged: function(download) {
+        onDownloadChanged(download) {
           if (!added.has(download.source.url))
             return;
           if (!download.succeeded)

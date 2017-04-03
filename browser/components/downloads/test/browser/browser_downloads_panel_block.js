@@ -108,20 +108,18 @@ function* openPanel() {
           clearInterval(interval);
           resolve();
         }
-      } else {
-        if (iBackoff < backoff) {
+      } else if (iBackoff < backoff) {
           // Keep backing off before trying again.
           iBackoff++;
-        } else {
+      } else {
           // Try (or retry) opening the panel.
           verifyCount = 5;
           backoff = Math.max(1, 2 * backoff);
           iBackoff = 0;
           if (DownloadsPanel._state != DownloadsPanel.kStateUninitialized) {
-            DownloadsPanel._state = DownloadsPanel.kStateHidden;
+              DownloadsPanel._state = DownloadsPanel.kStateHidden;
           }
           DownloadsPanel.showPanel();
-        }
       }
     }, 100);
   });
@@ -162,7 +160,6 @@ function promiseSubviewShown(shown) {
           !DownloadsBlockedSubview.view._transitioning) {
         clearInterval(interval);
         setTimeout(resolve, 1000);
-        return;
       }
     }, 0);
   });
