@@ -72,12 +72,8 @@ ThreadInfo::StreamJSON(ProfileBuffer* aBuffer, SpliceableJSONWriter& aWriter,
 
   aWriter.Start(SpliceableJSONWriter::SingleLineStyle);
   {
-    StreamSamplesAndMarkers(Name(), ThreadId(), aBuffer, aWriter, aStartTime,
-                            aSinceTime, mPseudoStack->mContext,
-                            mSavedStreamedSamples.get(),
-                            mSavedStreamedMarkers.get(), *mUniqueStacks);
-    mSavedStreamedSamples.reset();
-    mSavedStreamedMarkers.reset();
+    StreamSamplesAndMarkers(aBuffer, aWriter, aStartTime, aSinceTime,
+                            *mUniqueStacks);
 
     aWriter.StartObjectProperty("stackTable");
     {
@@ -126,22 +122,17 @@ ThreadInfo::StreamJSON(ProfileBuffer* aBuffer, SpliceableJSONWriter& aWriter,
 }
 
 void
-StreamSamplesAndMarkers(const char* aName,
-                        int aThreadId,
-                        ProfileBuffer* aBuffer,
-                        SpliceableJSONWriter& aWriter,
-                        const TimeStamp& aStartTime,
-                        double aSinceTime,
-                        JSContext* aContext,
-                        char* aSavedStreamedSamples,
-                        char* aSavedStreamedMarkers,
-                        UniqueStacks& aUniqueStacks)
+ThreadInfo::StreamSamplesAndMarkers(ProfileBuffer* aBuffer,
+                                    SpliceableJSONWriter& aWriter,
+                                    const TimeStamp& aStartTime,
+                                    double aSinceTime,
+                                    UniqueStacks& aUniqueStacks)
 {
   aWriter.StringProperty("processType",
                          XRE_ChildProcessTypeToString(XRE_GetProcessType()));
 
-  aWriter.StringProperty("name", aName);
-  aWriter.IntProperty("tid", static_cast<int64_t>(aThreadId));
+  aWriter.StringProperty("name", Name());
+  aWriter.IntProperty("tid", static_cast<int64_t>(mThreadId));
   aWriter.IntProperty("pid", static_cast<int64_t>(getpid()));
 
   aWriter.StartObjectProperty("samples");
@@ -158,15 +149,16 @@ StreamSamplesAndMarkers(const char* aName,
 
     aWriter.StartArrayProperty("data");
     {
-      if (aSavedStreamedSamples) {
+      if (mSavedStreamedSamples) {
         // We would only have saved streamed samples during shutdown
         // streaming, which cares about dumping the entire buffer, and thus
         // should have passed in 0 for aSinceTime.
         MOZ_ASSERT(aSinceTime == 0);
-        aWriter.Splice(aSavedStreamedSamples);
+        aWriter.Splice(mSavedStreamedSamples.get());
+        mSavedStreamedSamples.reset();
       }
-      aBuffer->StreamSamplesToJSON(aWriter, aThreadId, aSinceTime, aContext,
-                                   aUniqueStacks);
+      aBuffer->StreamSamplesToJSON(aWriter, mThreadId, aSinceTime,
+                                   mPseudoStack->mContext, aUniqueStacks);
     }
     aWriter.EndArray();
   }
@@ -183,11 +175,12 @@ StreamSamplesAndMarkers(const char* aName,
 
     aWriter.StartArrayProperty("data");
     {
-      if (aSavedStreamedMarkers) {
+      if (mSavedStreamedMarkers) {
         MOZ_ASSERT(aSinceTime == 0);
-        aWriter.Splice(aSavedStreamedMarkers);
+        aWriter.Splice(mSavedStreamedMarkers.get());
+        mSavedStreamedMarkers.reset();
       }
-      aBuffer->StreamMarkersToJSON(aWriter, aThreadId, aStartTime, aSinceTime,
+      aBuffer->StreamMarkersToJSON(aWriter, mThreadId, aStartTime, aSinceTime,
                                    aUniqueStacks);
     }
     aWriter.EndArray();
