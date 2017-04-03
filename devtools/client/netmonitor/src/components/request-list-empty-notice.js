@@ -37,7 +37,7 @@ const RequestListEmptyNotice = createClass({
         span(null, L10N.getStr("netmonitor.reloadNotice1")),
         button(
           {
-            className: "devtools-toolbarbutton requests-list-reload-notice-button",
+            className: "devtools-button requests-list-reload-notice-button",
             "data-standalone": true,
             onClick: this.props.onReloadClick,
           },
