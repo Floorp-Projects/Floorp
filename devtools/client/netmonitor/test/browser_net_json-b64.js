@@ -56,7 +56,7 @@ add_task(function* () {
 
   is(labels[0].textContent, "greeting",
     "The first json property name was incorrect.");
-  is(values[0].textContent, "\"This is a base 64 string.\"",
+  is(values[0].textContent, "This is a base 64 string.",
     "The first json property value was incorrect.");
 
   yield teardown(monitor);
