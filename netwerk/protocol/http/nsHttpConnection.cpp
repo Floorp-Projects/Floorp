@@ -884,6 +884,24 @@ nsHttpConnection::DontReuse()
 }
 
 bool
+nsHttpConnection::TestJoinConnection(const nsACString &hostname, int32_t port)
+{
+    if (mSpdySession && CanDirectlyActivate()) {
+        return mSpdySession->TestJoinConnection(hostname, port);
+    }
+    return false;
+}
+
+bool
+nsHttpConnection::JoinConnection(const nsACString &hostname, int32_t port)
+{
+    if (mSpdySession && CanDirectlyActivate()) {
+        return mSpdySession->JoinConnection(hostname, port);
+    }
+    return false;
+}
+
+bool
 nsHttpConnection::CanReuse()
 {
     if (mDontReuse || !mRemainingConnectionUses) {
