@@ -50,6 +50,11 @@ public class DownloadAction extends BaseAction {
     public void perform(Context context, DownloadContentCatalog catalog) {
         Log.d(LOGTAG, "Downloading content..");
 
+        if (!catalog.hasScheduledDownloads()) {
+            Log.d(LOGTAG, "No scheduled downloads. Nothing to do.");
+            return;
+        }
+
         if (!isConnectedToNetwork(context)) {
             Log.d(LOGTAG, "No connected network available. Postponing download.");
             // TODO: Reschedule download (bug 1209498)
