@@ -263,16 +263,38 @@ class TestExecuteContent(MarionetteTestCase):
             content_timeout_triggered,
             message="Scheduled setTimeout event was cancelled by call to execute_script")
 
-    def test_privileged_code_inspection(self):
-        # test permission denied on toString of unload event handler
+    def test_access_chrome_objects_in_event_listeners(self):
+        # sandbox.window.addEventListener/removeEventListener
+        # is used by Marionette for installing the unloadHandler which
+        # is used to return an error when a document is unloaded during
+        # script execution.
+        #
+        # Certain web frameworks, notably Angular, override
+        # window.addEventListener/removeEventListener and introspects
+        # objects passed to them.  If these objects originates from chrome
+        # without having been cloned, a permission denied error is thrown
+        # as part of the security precautions put in place by the sandbox.
+
+        # addEventListener is called when script is injected
         self.marionette.navigate(inline("""
             <script>
-            window.addEventListener = (type, handler) => handler.toString();
-            </script>"""))
+            window.addEventListener = (event, listener) => listener.toString();
+            </script>
+            """))
         self.marionette.execute_script("", sandbox=None)
 
+        # removeEventListener is called when sandbox is unloaded
+        self.marionette.navigate(inline("""
+            <script>
+            window.removeEventListener = (event, listener) => listener.toString();
+            </script>
+            """))
+        self.marionette.execute_script("", sandbox=None)
+
+    def test_access_global_objects_from_chrome(self):
         # test inspection of arguments
         self.marionette.execute_script("__webDriverArguments.toString()")
+
 
 
 class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
@@ -331,6 +353,9 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
         pass
 
     def test_privileged_code_inspection(self):
+        pass
+
+    def test_access_chrome_objects_in_event_listeners(self):
         pass
 
 
