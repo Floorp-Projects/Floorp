@@ -41,7 +41,7 @@ to mochitest command.
   * test_display_mode_reflow.html [2]
 * test_all_shorthand.html: all shorthand servo/servo#15055 [*]
 * Animation support:
-  * test_animations.html [35]
+  * test_animations.html [22]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
   * OMTA
