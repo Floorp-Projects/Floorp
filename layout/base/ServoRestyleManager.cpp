@@ -55,11 +55,7 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
     return;
   }
 
-  if (aRestyleHint || aMinChangeHint) {
-    Servo_NoteExplicitHints(aElement, aRestyleHint, aMinChangeHint);
-  }
-
-  PostRestyleEventInternal(false);
+  Servo_NoteExplicitHints(aElement, aRestyleHint, aMinChangeHint);
 }
 
 /* static */ void
@@ -536,6 +532,9 @@ ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
   // so we should restyle the whole subtree
   if (aAttribute == nsGkAtoms::cellpadding && aElement->IsHTMLElement(nsGkAtoms::table)) {
     PostRestyleEvent(aElement, eRestyle_Subtree, nsChangeHint(0));
+  }
+  if (aElement->IsAttributeMapped(aAttribute)) {
+    Servo_NoteExplicitHints(aElement, eRestyle_Self, nsChangeHint(0));
   }
 }
 

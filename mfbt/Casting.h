@@ -238,6 +238,19 @@ AssertedCast(const From aFrom)
   return static_cast<To>(aFrom);
 }
 
+/**
+ * Cast a value of integral type |From| to a value of integral type |To|,
+ * release asserting that the cast will be a safe cast per C++ (that is, that
+ * |to| is in the range of values permitted for the type |From|).
+ */
+template<typename To, typename From>
+inline To
+ReleaseAssertedCast(const From aFrom)
+{
+  MOZ_RELEASE_ASSERT((detail::IsInBounds<From, To>(aFrom)));
+  return static_cast<To>(aFrom);
+}
+
 } // namespace mozilla
 
 #endif /* mozilla_Casting_h */

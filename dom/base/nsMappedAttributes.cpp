@@ -70,16 +70,22 @@ nsMappedAttributes::Clone(bool aWillAddAttr)
 
 void* nsMappedAttributes::operator new(size_t aSize, uint32_t aAttrCount) CPP_THROW_NEW
 {
-  NS_ASSERTION(aAttrCount > 0, "zero-attribute nsMappedAttributes requested");
+
+  size_t size = aSize + aAttrCount * sizeof(InternalAttr);
 
   // aSize will include the mAttrs buffer so subtract that.
-  void* newAttrs = ::operator new(aSize - sizeof(void*[1]) +
-                                  aAttrCount * sizeof(InternalAttr));
+  // We don't want to under-allocate, however, so do not subtract
+  // if we have zero attributes. The zero attribute case only happens
+  // for <body>'s mapped attributes
+  if (aAttrCount != 0) {
+    size -= sizeof(void*[1]);
+  }
+
+  void* newAttrs = ::operator new(size);
 
 #ifdef DEBUG
   static_cast<nsMappedAttributes*>(newAttrs)->mBufferSize = aAttrCount;
 #endif
-
   return newAttrs;
 }
 
@@ -90,7 +96,6 @@ void
 nsMappedAttributes::SetAndTakeAttr(nsIAtom* aAttrName, nsAttrValue& aValue)
 {
   NS_PRECONDITION(aAttrName, "null name");
-
   uint32_t i;
   for (i = 0; i < mAttrCount && !Attrs()[i].mName.IsSmaller(aAttrName); ++i) {
     if (Attrs()[i].mName.Equals(aAttrName)) {

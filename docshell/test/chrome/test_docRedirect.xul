@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1342989
+-->
+<window title="Mozilla Bug 1342989"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+  SimpleTest.waitForExplicitFinish();
+
+  var Ci = Components.interfaces;
+  var Cc = Components.classes;
+
+  const WEB_PROGRESS_LISTENER_FLAGS =
+      Object.keys(Ci.nsIWebProgressListener).filter(
+    propName => propName.startsWith("STATE_")
+  );
+
+  function bitFlagsToNames(flags, knownNames, intf) {
+    return knownNames.map( (F) => {
+      return (flags & intf[F]) ? F : undefined;
+    }).filter( (s) => !!s );
+  }
+
+  var progressListener = {
+    add: function(docShell, callback) {
+      this.callback = callback;
+      this.docShell = docShell;
+      docShell.
+            QueryInterface(Ci.nsIInterfaceRequestor).
+            getInterface(Ci.nsIWebProgress).
+            addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_ALL);
+    },
+
+    finish: function(success) {
+      this.docShell.
+            QueryInterface(Ci.nsIInterfaceRequestor).
+            getInterface(Ci.nsIWebProgress).
+            removeProgressListener(this);
+      this.callback(success);
+    },
+
+    onStateChange: function (webProgress, req, flags, status) {
+      if (!(flags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) &&
+          !(flags & Ci.nsIWebProgressListener.STATE_IS_REDIRECTED_DOCUMENT))
+        return;
+
+      var channel = req.QueryInterface(Ci.nsIChannel);
+
+      if (flags & Ci.nsIWebProgressListener.STATE_IS_REDIRECTED_DOCUMENT) {
+        SimpleTest.is(channel.URI.host, "example.org",
+            "Should be redirected to example.org (see test_docRedirect.sjs)");
+        this.finish(true);
+      }
+
+      // Fail in case we didn't receive document redirection event.
+      if (flags & Ci.nsIWebProgressListener.STATE_STOP)
+        this.finish(false);
+    },
+
+    QueryInterface: function(iid) {
+      if (iid.equals(Components.interfaces.nsIWebProgressListener) ||
+          iid.equals(Components.interfaces.nsISupportsWeakReference))
+        return this;
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    }
+  }
+
+  var webNav = Cc["@mozilla.org/appshell/appShellService;1"].
+      getService(Ci.nsIAppShellService).createWindowlessBrowser(true);
+  var docShell = webNav.QueryInterface(Ci.nsIInterfaceRequestor).
+      getInterface(Ci.nsIDocShell);
+  docShell.createAboutBlankContentViewer(
+      Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal));
+
+  progressListener.add(docShell, function(success) {
+    webNav.close();
+    SimpleTest.is(success, true, "Received document redirect event");
+    SimpleTest.finish();
+  });
+
+  var win = docShell.contentViewer.DOMDocument.defaultView;
+  win.location = "http://example.com/chrome/docshell/test/chrome/test_docRedirect.sjs"
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1342989"
+     target="_blank">Mozilla Bug 1342989</a>
+  </body>
+</window>

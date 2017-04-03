@@ -339,7 +339,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         if (DEBUG) { Log.d(LOGTAG, "configure " + this); }
 
         MediaFormat fmt = format.asFormat();
-        String codecName = getDecoderForFormat(fmt);
+        String codecName = getCodecForFormat(fmt, flags == MediaCodec.CONFIGURE_FLAG_ENCODE ? true : false);
         if (codecName == null) {
             Log.e(LOGTAG, "FAIL: cannot find codec");
             return false;
@@ -401,7 +401,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         mCodec = null;
     }
 
-    private String getDecoderForFormat(MediaFormat format) {
+    private String getCodecForFormat(MediaFormat format, boolean isEncoder) {
         String mime = format.getString(MediaFormat.KEY_MIME);
         if (mime == null) {
             return null;
@@ -409,7 +409,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         int numCodecs = MediaCodecList.getCodecCount();
         for (int i = 0; i < numCodecs; i++) {
             MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
-            if (info.isEncoder()) {
+            if (info.isEncoder() == !isEncoder) {
                 continue;
             }
             String[] types = info.getSupportedTypes();
@@ -491,6 +491,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     @Override
     public synchronized void queueInput(Sample sample) throws RemoteException {
         mInputProcessor.onSample(sample);
+    }
+
+    @Override
+    public synchronized void setRates(int newBitRate) {
+        try {
+            mCodec.setRates(newBitRate);
+        } catch (Exception e) {
+            reportError(Error.FATAL, e);
+        }
     }
 
     @Override

@@ -93,9 +93,9 @@ var isShuttingDown = false;
 function monotinicity_tester(source, testName) {
   // In the background, check invariants:
   // - numeric data can only ever increase;
-  // - the name, addonId, isSystem of a component never changes;
-  // - the name, addonId, isSystem of the process data;
-  // - there is at most one component with a combination of `name` and `addonId`;
+  // - the name, isSystem of a component never changes;
+  // - the name, isSystem of the process data;
+  // - there is at most one component with `name`;
   // - types, etc.
   let previous = {
     processData: null,
@@ -106,7 +106,7 @@ function monotinicity_tester(source, testName) {
     if (prev == null) {
       return;
     }
-    for (let k of ["groupId", "addonId", "isSystem"]) {
+    for (let k of ["groupId", "isSystem"]) {
       SilentAssert.equal(prev[k], next[k], `Sanity check (${testName}): ${k} hasn't changed (${prev.name}).`);
     }
     for (let [probe, k] of [
@@ -119,7 +119,8 @@ function monotinicity_tester(source, testName) {
       SilentAssert.leq(prev[probe][k], next[probe][k], `Sanity check (${testName}): ${k} is monotonic.`);
       SilentAssert.leq(0, next[probe][k], `Sanity check (${testName}): ${k} is >= 0.`)
     }
-    SilentAssert.equal(prev.jank.durations.length, next.jank.durations.length);
+    SilentAssert.equal(prev.jank.durations.length, next.jank.durations.length,
+                       `Sanity check (${testName}): Jank durations should be equal`);
     for (let i = 0; i < next.jank.durations.length; ++i) {
       SilentAssert.ok(typeof next.jank.durations[i] == "number" && next.jank.durations[i] >= 0,
         `Sanity check (${testName}): durations[${i}] is a non-negative number.`);
@@ -149,10 +150,9 @@ function monotinicity_tester(source, testName) {
 
     // Sanity check on the process data.
     sanityCheck(previous.processData, snapshot.processData);
-    SilentAssert.equal(snapshot.processData.isSystem, true);
-    SilentAssert.equal(snapshot.processData.name, "<process>");
-    SilentAssert.equal(snapshot.processData.addonId, "");
-    SilentAssert.equal(snapshot.processData.processId, pid);
+    SilentAssert.equal(snapshot.processData.isSystem, true, "Should be system");
+    SilentAssert.equal(snapshot.processData.name, "<process>", "Should have '<process>' name");
+    SilentAssert.equal(snapshot.processData.processId, pid, "Process id should match");
     previous.procesData = snapshot.processData;
 
     // Sanity check on components data.
@@ -176,7 +176,7 @@ function monotinicity_tester(source, testName) {
       let key = item.groupId;
       if (map.has(key)) {
         let old = map.get(key);
-        Assert.ok(false, `Component ${key} has already been seen. Latest: ${item.addonId || item.name}, previous: ${old.addonId || old.name}`);
+        Assert.ok(false, `Component ${key} has already been seen. Latest: ${item.name}, previous: ${old.name}`);
       }
       map.set(key, item);
     }

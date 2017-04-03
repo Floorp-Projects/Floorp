@@ -203,7 +203,7 @@
     <hbox align="center" class="indent">
       <label id="useFirefoxSync">&useFirefoxSync.label;</label>
       <deck id="getStarted">
-        <label class="text-link">&getStarted.notlogged.label;</label>
+        <label class="text-link">&getStarted.notloggedin.label;</label>
         <label class="text-link">&getStarted.configured.label;</label>
       </deck>
     </hbox>

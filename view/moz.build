@@ -12,8 +12,7 @@ EXPORTS += [
     'nsViewManager.h',
 ]
 
-# nsViewManager.cpp cannot be built in unified mode because it uses PL_ARENA_CONST_ALIGN_MASK.
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsView.cpp',
     'nsViewManager.cpp',
 ]

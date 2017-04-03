@@ -76,7 +76,9 @@ FormAutofillParent.prototype = {
     this._profileStore.initialize();
 
     Services.obs.addObserver(this, "advanced-pane-loaded", false);
+    Services.ppmm.addMessageListener("FormAutofill:GetProfiles", this);
     Services.ppmm.addMessageListener("FormAutofill:SaveProfile", this);
+    Services.ppmm.addMessageListener("FormAutofill:RemoveProfiles", this);
 
     // Observing the pref and storage changes
     Services.prefs.addObserver(ENABLED_PREF, this, false);
@@ -131,17 +133,10 @@ FormAutofillParent.prototype = {
   },
 
   /**
-   * Add/remove message listener and broadcast the status to frames while the
-   * form autofill status changed.
+   * Broadcast the status to frames when the form autofill status changes.
    */
   _onStatusChanged() {
     log.debug("_onStatusChanged: Status changed to", this._enabled);
-    if (this._enabled) {
-      Services.ppmm.addMessageListener("FormAutofill:GetProfiles", this);
-    } else {
-      Services.ppmm.removeMessageListener("FormAutofill:GetProfiles", this);
-    }
-
     Services.ppmm.broadcastAsyncMessage("FormAutofill:enabledStatus", this._enabled);
     // Sync process data autofillEnabled to make sure the value up to date
     // no matter when the new content process is initialized.
@@ -193,6 +188,10 @@ FormAutofillParent.prototype = {
         }
         break;
       }
+      case "FormAutofill:RemoveProfiles": {
+        data.guids.forEach(guid => this.getProfileStore().remove(guid));
+        break;
+      }
     }
   },
 
@@ -220,6 +219,7 @@ FormAutofillParent.prototype = {
 
     Services.ppmm.removeMessageListener("FormAutofill:GetProfiles", this);
     Services.ppmm.removeMessageListener("FormAutofill:SaveProfile", this);
+    Services.ppmm.removeMessageListener("FormAutofill:RemoveProfiles", this);
     Services.obs.removeObserver(this, "advanced-pane-loaded");
     Services.prefs.removeObserver(ENABLED_PREF, this);
   },

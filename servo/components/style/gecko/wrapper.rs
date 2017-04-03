@@ -17,7 +17,7 @@
 use atomic_refcell::AtomicRefCell;
 use context::UpdateAnimationsTasks;
 use data::ElementData;
-use dom::{AnimationRules, LayoutIterator, NodeInfo, TElement, TNode, UnsafeNode};
+use dom::{self, AnimationRules, DescendantsBit, LayoutIterator, NodeInfo, TElement, TNode, UnsafeNode};
 use dom::{OpaqueNode, PresentationalHintsSynthetizer};
 use element_state::ElementState;
 use error_reporting::StdoutErrorReporter;
@@ -47,6 +47,7 @@ use gecko_bindings::structs::EffectCompositor_CascadeLevel as CascadeLevel;
 use gecko_bindings::structs::NODE_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO;
 use gecko_bindings::structs::NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO;
 use gecko_bindings::structs::NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE;
+use gecko_bindings::structs::NODE_IS_NATIVE_ANONYMOUS;
 use gecko_bindings::sugar::ownership::HasArcFFI;
 use parking_lot::RwLock;
 use parser::ParserContextExtraData;
@@ -505,8 +506,26 @@ impl<'le> TElement for GeckoElement<'le> {
     }
 
     unsafe fn set_dirty_descendants(&self) {
+        debug_assert!(self.get_data().is_some());
         debug!("Setting dirty descendants: {:?}", self);
         self.set_flags(NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO as u32)
+    }
+
+    unsafe fn note_descendants<B: DescendantsBit<Self>>(&self) {
+        // FIXME(emilio): We seem to reach this in Gecko's
+        // layout/style/test/test_pseudoelement_state.html, while changing the
+        // state of an anonymous content element which is styled, but whose
+        // parent isn't, presumably because we've cleared the data and haven't
+        // reached it yet.
+        //
+        // Otherwise we should be able to assert this.
+        if self.get_data().is_none() {
+            return;
+        }
+
+        if dom::raw_note_descendants::<Self, B>(*self) {
+            bindings::Gecko_SetOwnerDocumentNeedsStyleFlush(self.0);
+        }
     }
 
     unsafe fn unset_dirty_descendants(&self) {
@@ -523,6 +542,10 @@ impl<'le> TElement for GeckoElement<'le> {
 
     unsafe fn unset_animation_only_dirty_descendants(&self) {
         self.unset_flags(NODE_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO as u32)
+    }
+
+    fn is_native_anonymous(&self) -> bool {
+        self.flags() & (NODE_IS_NATIVE_ANONYMOUS as u32) != 0
     }
 
     fn store_children_to_process(&self, _: isize) {

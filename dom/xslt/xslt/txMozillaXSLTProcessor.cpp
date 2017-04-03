@@ -441,9 +441,11 @@ public:
         aResult = nullptr;
         return NS_ERROR_INVALID_ARG;
     }
-    bool isStripSpaceAllowed(const txXPathNode& aNode)
+    nsresult isStripSpaceAllowed(const txXPathNode& aNode, bool& aAllowed)
     {
-        return false;
+        aAllowed = false;
+
+        return NS_OK;
     }
     void* getPrivateContext()
     {

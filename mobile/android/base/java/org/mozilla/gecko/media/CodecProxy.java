@@ -27,6 +27,7 @@ public final class CodecProxy {
     private static final boolean DEBUG = false;
 
     private ICodec mRemote;
+    private boolean mIsEncoder;
     private FormatParam mFormat;
     private Surface mOutputSurface;
     private CallbacksForwarder mCallbacks;
@@ -48,7 +49,9 @@ public final class CodecProxy {
         public native void onError(boolean fatal);
 
         @Override // JNIObject
-        protected native void disposeNative();
+        protected void disposeNative() {
+            throw new UnsupportedOperationException();
+        }
     }
 
     private class CallbacksForwarder extends ICodecCallbacks.Stub {
@@ -100,21 +103,24 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
-    public static CodecProxy create(MediaFormat format,
+    public static CodecProxy create(boolean isEncoder,
+                                    MediaFormat format,
                                     Surface surface,
                                     Callbacks callbacks,
                                     String drmStubId) {
-        return RemoteManager.getInstance().createCodec(format, surface, callbacks, drmStubId);
+        return RemoteManager.getInstance().createCodec(isEncoder, format, surface, callbacks, drmStubId);
     }
 
-    public static CodecProxy createCodecProxy(MediaFormat format,
+    public static CodecProxy createCodecProxy(boolean isEncoder,
+                                              MediaFormat format,
                                               Surface surface,
                                               Callbacks callbacks,
                                               String drmStubId) {
-        return new CodecProxy(format, surface, callbacks, drmStubId);
+        return new CodecProxy(isEncoder, format, surface, callbacks, drmStubId);
     }
 
-    private CodecProxy(MediaFormat format, Surface surface, Callbacks callbacks, String drmStubId) {
+    private CodecProxy(boolean isEncoder, MediaFormat format, Surface surface, Callbacks callbacks, String drmStubId) {
+        mIsEncoder = isEncoder;
         mFormat = new FormatParam(format);
         mOutputSurface = surface;
         mRemoteDrmStubId = drmStubId;
@@ -124,7 +130,7 @@ public final class CodecProxy {
     boolean init(ICodec remote) {
         try {
             remote.setCallbacks(mCallbacks);
-            if (!remote.configure(mFormat, mOutputSurface, 0, mRemoteDrmStubId)) {
+            if (!remote.configure(mFormat, mOutputSurface, mIsEncoder ? MediaCodec.CONFIGURE_FLAG_ENCODE : 0, mRemoteDrmStubId)) {
                 return false;
             }
             remote.start();
@@ -251,6 +257,32 @@ public final class CodecProxy {
         } catch (RemoteException e) {
             e.printStackTrace();
             return false;
+        }
+        return true;
+    }
+
+    @WrapForJNI
+    public synchronized boolean setRates(int newBitRate) {
+        if (!mIsEncoder) {
+            Log.w(LOGTAG, "this api is encoder-only");
+            return false;
+        }
+
+        if (android.os.Build.VERSION.SDK_INT < 19) {
+            Log.w(LOGTAG, "this api was added in API level 19");
+            return false;
+        }
+
+        if (mRemote == null) {
+            Log.w(LOGTAG, "codec already ended");
+            return true;
+        }
+
+        try {
+            mRemote.setRates(newBitRate);
+        } catch (RemoteException e) {
+            Log.e(LOGTAG, "remote fail to set rates:" + newBitRate);
+            e.printStackTrace();
         }
         return true;
     }

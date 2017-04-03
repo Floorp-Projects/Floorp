@@ -18,7 +18,4 @@ jar.sources += [
     'utils/GeneratableElementIterator.java',
     'utils/Utils.java',
 ]
-jar.extra_jars += [
-    CONFIG['ANDROID_TOOLS'] + '/lib/lint.jar',
-    CONFIG['ANDROID_TOOLS'] + '/lib/lint-checks.jar',
-]
+jar.extra_jars += CONFIG['ANDROID_LINT_CLASSPATH'].split()

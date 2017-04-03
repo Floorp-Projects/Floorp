@@ -385,20 +385,23 @@ impl Stylist {
 
     /// Returns the style for an anonymous box of the given type.
     #[cfg(feature = "servo")]
-    pub fn style_for_anonymous_box(&self,
-                                   guards: &StylesheetGuards,
-                                   pseudo: &PseudoElement,
-                                   parent_style: &Arc<ComputedValues>)
-                                   -> Arc<ComputedValues> {
+    pub fn style_for_anonymous(&self,
+                               guards: &StylesheetGuards,
+                               pseudo: &PseudoElement,
+                               parent_style: &Arc<ComputedValues>)
+                               -> Arc<ComputedValues> {
         // For most (but not all) pseudo-elements, we inherit all values from the parent.
         let inherit_all = match *pseudo {
+            PseudoElement::ServoText |
             PseudoElement::ServoInputText => false,
             PseudoElement::ServoAnonymousBlock |
             PseudoElement::ServoAnonymousTable |
             PseudoElement::ServoAnonymousTableCell |
             PseudoElement::ServoAnonymousTableRow |
             PseudoElement::ServoAnonymousTableWrapper |
-            PseudoElement::ServoTableWrapper => true,
+            PseudoElement::ServoTableWrapper |
+            PseudoElement::ServoInlineBlockWrapper |
+            PseudoElement::ServoInlineAbsolute => true,
             PseudoElement::Before |
             PseudoElement::After |
             PseudoElement::Selection |
@@ -622,19 +625,21 @@ impl Stylist {
                                               CascadeLevel::UANormal);
         debug!("UA normal: {:?}", relations);
 
-        // Step 2: Presentational hints.
-        let length_before_preshints = applicable_declarations.len();
-        element.synthesize_presentational_hints_for_legacy_attributes(applicable_declarations);
-        if applicable_declarations.len() != length_before_preshints {
-            if cfg!(debug_assertions) {
-                for declaration in &applicable_declarations[length_before_preshints..] {
-                    assert_eq!(declaration.level, CascadeLevel::PresHints);
+        if pseudo_element.is_none() {
+            // Step 2: Presentational hints.
+            let length_before_preshints = applicable_declarations.len();
+            element.synthesize_presentational_hints_for_legacy_attributes(applicable_declarations);
+            if applicable_declarations.len() != length_before_preshints {
+                if cfg!(debug_assertions) {
+                    for declaration in &applicable_declarations[length_before_preshints..] {
+                        assert_eq!(declaration.level, CascadeLevel::PresHints);
+                    }
                 }
+                // Never share style for elements with preshints
+                relations |= AFFECTED_BY_PRESENTATIONAL_HINTS;
             }
-            // Never share style for elements with preshints
-            relations |= AFFECTED_BY_PRESENTATIONAL_HINTS;
+            debug!("preshints: {:?}", relations);
         }
-        debug!("preshints: {:?}", relations);
 
         if element.matches_user_and_author_rules() {
             // Step 3: User and author normal rules.

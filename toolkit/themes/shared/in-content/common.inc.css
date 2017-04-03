@@ -196,7 +196,7 @@ xul|menulist {
 }
 
 html|button:enabled:hover,
-html|select:enabled:hover,
+html|select:not([size]):not([multiple]):enabled:hover,
 xul|button:not([disabled="true"]):hover,
 xul|colorpicker[type="button"]:not([disabled="true"]):hover,
 xul|menulist:not([disabled="true"]):hover {
@@ -204,7 +204,7 @@ xul|menulist:not([disabled="true"]):hover {
 }
 
 html|button:enabled:hover:active,
-html|select:enabled:hover:active,
+html|select:not([size]):not([multiple]):enabled:hover:active,
 xul|button:not([disabled="true"]):hover:active,
 xul|colorpicker[type="button"]:not([disabled="true"]):hover:active,
 xul|menulist[open="true"]:not([disabled="true"]) {
@@ -711,6 +711,7 @@ xul|filefield + xul|button {
 
 /* List boxes */
 
+html|select[size][multiple],
 xul|richlistbox,
 xul|listbox {
   -moz-appearance: none;
@@ -720,6 +721,7 @@ xul|listbox {
   color: var(--in-content-text-color);
 }
 
+html|select[size][multiple] > html|option,
 xul|treechildren::-moz-tree-row,
 xul|listbox xul|listitem {
   padding: 0.3em;
@@ -729,6 +731,7 @@ xul|listbox xul|listitem {
   background-image: none;
 }
 
+html|select[size][multiple] > html|option:hover,
 xul|treechildren::-moz-tree-row(hover),
 xul|listbox xul|listitem:hover {
   background-color: var(--in-content-item-hover);

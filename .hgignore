@@ -137,5 +137,7 @@ GPATH
 # tup database
 ^\.tup
 
-subinclude:servo/.hgignore
+# Ignore Visual Studio Code workspace files.
+\.vscode/(?!extensions.json$)
 
+subinclude:servo/.hgignore

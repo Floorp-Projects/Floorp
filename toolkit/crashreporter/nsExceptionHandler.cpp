@@ -116,6 +116,13 @@ using google_breakpad::PageAllocator;
 using namespace mozilla;
 using mozilla::ipc::CrashReporterClient;
 
+// From toolkit/library/rust/shared/lib.rs
+extern "C" {
+  void install_rust_panic_hook();
+  bool get_rust_panic_reason(char** reason, size_t* length);
+}
+
+
 namespace CrashReporter {
 
 #ifdef XP_WIN32
@@ -1131,7 +1138,17 @@ bool MinidumpCallback(
     WriteGlobalMemoryStatus(&apiData, &eventFile);
 #endif // XP_WIN
 
-    if (gMozCrashReason) {
+    char* rust_panic_reason;
+    size_t rust_panic_len;
+    if (get_rust_panic_reason(&rust_panic_reason, &rust_panic_len)) {
+      // rust_panic_reason is not null-terminated.
+      WriteLiteral(apiData, "MozCrashReason=");
+      apiData.WriteBuffer(rust_panic_reason, rust_panic_len);
+      WriteLiteral(apiData, "\n");
+      WriteLiteral(eventFile, "MozCrashReason=");
+      eventFile.WriteBuffer(rust_panic_reason, rust_panic_len);
+      WriteLiteral(eventFile, "\n");
+    } else if (gMozCrashReason) {
       WriteAnnotation(apiData, "MozCrashReason", gMozCrashReason);
       WriteAnnotation(eventFile, "MozCrashReason", gMozCrashReason);
     }
@@ -1576,6 +1593,8 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 {
   if (gExceptionHandler)
     return NS_ERROR_ALREADY_INITIALIZED;
+
+  install_rust_panic_hook();
 
 #if !defined(DEBUG) || defined(MOZ_WIDGET_GONK)
   // In non-debug builds, enable the crash reporter by default, and allow

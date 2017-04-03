@@ -1,0 +1,21 @@
+<script id=o_xml type="text/plain"><?xml version="1.0" encoding="UTF-8"?>
+<xb></xb>
+</script>
+<script id=o_xslt type="text/plain"><?xml version="1.0" encoding="UTF-8"?>
+<xsl:transform version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:template match="xb[$v1]"></xsl:template>
+  <xsl:variable name="v1">
+    <xsl:attribute name="a1" namespace="z">
+      <xsl:variable name="v2" select="$v2"></xsl:variable>
+    </xsl:attribute>
+  </xsl:variable>
+</xsl:transform>
+</script>
+<script>
+addEventListener("DOMContentLoaded", function(){
+  let doc = new DOMParser();
+  let xsltPrs = new XSLTProcessor();
+  xsltPrs.importStylesheet(doc.parseFromString(o_xslt.textContent, "text/xml"));
+  xsltPrs.transformToDocument(doc.parseFromString(o_xml.textContent, "text/xml"));
+});
+</script>

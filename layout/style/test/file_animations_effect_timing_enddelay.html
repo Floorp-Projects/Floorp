@@ -122,19 +122,22 @@ addAsyncAnimTest(function *() {
 
   advance_clock(100);
   yield waitForPaints();
-  omta_is(div, "transform", { tx: 50 }, RunningOn.MainThread,
+  // Bug 1352336: The following should be RunningOn.MainThread
+  omta_is(div, "transform", { tx: 50 }, RunningOn.Either,
           "Animation is updated on main thread " +
           "duration 1000, endDelay -500, fill forwards, current time 500");
 
   advance_clock(400);
   yield waitForPaints();
-  omta_is(div, "transform", { tx: 50 }, RunningOn.MainThread,
+  // Bug 1352336: The following should be RunningOn.MainThread
+  omta_is(div, "transform", { tx: 50 }, RunningOn.Either,
           "Animation is updated on main thread " +
           "duration 1000, endDelay -500, fill forwards, current time 900");
 
   advance_clock(100);
   yield waitForPaints();
-  omta_is(div, "transform", { tx: 50 }, RunningOn.MainThread,
+  // Bug 1352336: The following should be RunningOn.MainThread
+  omta_is(div, "transform", { tx: 50 }, RunningOn.Either,
           "Animation is updated on main thread " +
           "duration 1000, endDelay -500, fill forwards, current time 1000");
 

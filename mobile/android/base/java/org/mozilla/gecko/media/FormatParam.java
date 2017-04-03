@@ -19,6 +19,11 @@ import java.nio.ByteBuffer;
  *  <li>{@link MediaFormat#KEY_HEIGHT}</li>
  *  <li>{@link MediaFormat#KEY_CHANNEL_COUNT}</li>
  *  <li>{@link MediaFormat#KEY_SAMPLE_RATE}</li>
+ *  <li>{@link MediaFormat#KEY_BIT_RATE}</li>
+ *  <li>{@link MediaFormat#KEY_BITRATE_MODE}</li>
+ *  <li>{@link MediaFormat#KEY_COLOR_FORMAT}</li>
+ *  <li>{@link MediaFormat#KEY_FRAME_RATE}</li>
+ *  <li>{@link MediaFormat#KEY_I_FRAME_INTERVAL}</li>
  *  <li>"csd-0"</li>
  *  <li>"csd-1"</li>
  *  </ul>
@@ -94,6 +99,26 @@ public final class FormatParam implements Parcelable {
             mFormat.setByteBuffer(KEY_CONFIG_1,
                     ByteBuffer.wrap(bundle.getByteArray((KEY_CONFIG_1))));
         }
+        if (bundle.containsKey(MediaFormat.KEY_BIT_RATE)) {
+            mFormat.setInteger(MediaFormat.KEY_BIT_RATE,
+                    bundle.getInt(MediaFormat.KEY_BIT_RATE));
+        }
+        if (bundle.containsKey(MediaFormat.KEY_BITRATE_MODE)) {
+            mFormat.setInteger(MediaFormat.KEY_BITRATE_MODE,
+                    bundle.getInt(MediaFormat.KEY_BITRATE_MODE));
+        }
+        if (bundle.containsKey(MediaFormat.KEY_COLOR_FORMAT)) {
+            mFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT,
+                    bundle.getInt(MediaFormat.KEY_COLOR_FORMAT));
+        }
+        if (bundle.containsKey(MediaFormat.KEY_FRAME_RATE)) {
+            mFormat.setInteger(MediaFormat.KEY_FRAME_RATE,
+                    bundle.getInt(MediaFormat.KEY_FRAME_RATE));
+        }
+        if (bundle.containsKey(MediaFormat.KEY_I_FRAME_INTERVAL)) {
+            mFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL,
+                    bundle.getInt(MediaFormat.KEY_I_FRAME_INTERVAL));
+        }
     }
 
     @Override
@@ -127,6 +152,21 @@ public final class FormatParam implements Parcelable {
             ByteBuffer bytes = mFormat.getByteBuffer(KEY_CONFIG_1);
             bundle.putByteArray(KEY_CONFIG_1,
                 Sample.byteArrayFromBuffer(bytes, 0, bytes.capacity()));
+        }
+        if (mFormat.containsKey(MediaFormat.KEY_BIT_RATE)) {
+            bundle.putInt(MediaFormat.KEY_BIT_RATE, mFormat.getInteger(MediaFormat.KEY_BIT_RATE));
+        }
+        if (mFormat.containsKey(MediaFormat.KEY_BITRATE_MODE)) {
+            bundle.putInt(MediaFormat.KEY_BITRATE_MODE, mFormat.getInteger(MediaFormat.KEY_BITRATE_MODE));
+        }
+        if (mFormat.containsKey(MediaFormat.KEY_COLOR_FORMAT)) {
+            bundle.putInt(MediaFormat.KEY_COLOR_FORMAT, mFormat.getInteger(MediaFormat.KEY_COLOR_FORMAT));
+        }
+        if (mFormat.containsKey(MediaFormat.KEY_FRAME_RATE)) {
+            bundle.putInt(MediaFormat.KEY_FRAME_RATE, mFormat.getInteger(MediaFormat.KEY_FRAME_RATE));
+        }
+        if (mFormat.containsKey(MediaFormat.KEY_I_FRAME_INTERVAL)) {
+            bundle.putInt(MediaFormat.KEY_I_FRAME_INTERVAL, mFormat.getInteger(MediaFormat.KEY_I_FRAME_INTERVAL));
         }
         return bundle;
     }

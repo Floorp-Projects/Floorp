@@ -10,6 +10,7 @@
 #ifndef nsPresArena_h___
 #define nsPresArena_h___
 
+#include "mozilla/ArenaAllocator.h"
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/ArenaRefPtr.h"
 #include "mozilla/MemoryChecking.h" // Note: Do not remove this, needed for MOZ_HAVE_MEM_CHECKS below
@@ -20,7 +21,6 @@
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
-#include "plarena.h"
 
 struct nsArenaMemoryStats;
 
@@ -156,7 +156,7 @@ private:
   };
 
   nsTHashtable<FreeList> mFreeLists;
-  PLArenaPool mPool;
+  mozilla::ArenaAllocator<8192, 8> mPool;
   nsDataHashtable<nsPtrHashKey<void>, mozilla::ArenaObjectID> mArenaRefPtrs;
 };
 

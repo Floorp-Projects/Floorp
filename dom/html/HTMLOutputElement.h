@@ -31,7 +31,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIFormControl
-  NS_IMETHOD_(uint32_t) GetType() const override { return NS_FORM_OUTPUT; }
   NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
 

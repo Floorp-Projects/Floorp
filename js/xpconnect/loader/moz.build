@@ -4,12 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# These files cannot be built in unified mode because they rely on plarena.h
-SOURCES += [
+UNIFIED_SOURCES += [
     'ChromeScriptLoader.cpp',
-    'mozJSComponentLoader.cpp',
     'mozJSLoaderUtils.cpp',
     'mozJSSubScriptLoader.cpp',
+]
+
+# mozJSComponentLoader.cpp cannot be built in unified mode because it uses
+# windows.h
+SOURCES += [
+    'mozJSComponentLoader.cpp'
 ]
 
 EXPORTS.mozilla.dom += [

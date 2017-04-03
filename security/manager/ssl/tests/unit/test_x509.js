@@ -5,7 +5,9 @@
 
 // Tests X509.jsm functionality.
 
-var { X509 } = Cu.import("resource://gre/modules/psm/X509.jsm", {});
+// Until X509.jsm is actually used in production code, this is where we have to
+// import it from.
+var { X509 } = Cu.import("resource://testing-common/psm/X509.jsm", {});
 
 function stringToBytes(s) {
   let b = [];

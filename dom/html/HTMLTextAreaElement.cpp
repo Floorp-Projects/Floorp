@@ -53,7 +53,7 @@ namespace dom {
 
 HTMLTextAreaElement::HTMLTextAreaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                                          FromParser aFromParser)
-  : nsGenericHTMLFormElementWithState(aNodeInfo),
+  : nsGenericHTMLFormElementWithState(aNodeInfo, NS_FORM_TEXTAREA),
     mValueChanged(false),
     mLastValueChangeWasInteractive(false),
     mHandlingSelect(false),

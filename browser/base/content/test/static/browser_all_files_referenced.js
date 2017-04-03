@@ -132,8 +132,6 @@ var whitelist = new Set([
    platforms: ["linux", "win"]},
   // Bug 1320058
   {file: "chrome://browser/skin/preferences/saveFile.png", platforms: ["win"]},
-  // Bug 1348369
-  {file: "chrome://formautofill/content/editProfile.xhtml"},
   // Bug 1316187
   {file: "chrome://global/content/customizeToolbar.xul"},
   // Bug 1343837
@@ -257,8 +255,6 @@ var whitelist = new Set([
   {file: "resource://gre/modules/accessibility/AccessFu.jsm"},
   // Bug 1351099
   {file: "resource://gre/modules/addons/AddonLogging.jsm"},
-  // Bug 1351604
-  {file: "resource://gre/modules/psm/X509.jsm"},
   // Bug 1351637
   {file: "resource://gre/modules/sdk/bootstrap.js"},
   // Bug 1351657

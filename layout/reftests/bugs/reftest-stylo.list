@@ -282,7 +282,7 @@ fails == 243519-7.html 243519-7.html
 == 260406-1.html 260406-1.html
 == 261826-1.xul 261826-1.xul
 == 262151-1.html 262151-1.html
-fails == 262998-1.html 262998-1.html
+== 262998-1.html 262998-1.html
 == 267353-1.html 267353-1.html
 == 269908-1.html 269908-1.html
 == 269908-2.html 269908-2.html
@@ -871,10 +871,10 @@ fails == 402940-3.html 402940-3.html
 == 403129-4.html 403129-4.html
 fails random == 403134-1.html 403134-1.html
 == 403181-1.xml 403181-1.xml
-fails == 403249-1a.html 403249-1a.html
-fails == 403249-1b.html 403249-1b.html
-fails == 403249-2a.html 403249-2a.html
-fails == 403249-2b.html 403249-2b.html
+== 403249-1a.html 403249-1a.html
+== 403249-1b.html 403249-1b.html
+== 403249-2a.html 403249-2a.html
+== 403249-2b.html 403249-2b.html
 == 403328-1.html 403328-1.html
 == 403426-1.html 403426-1.html
 == 403455-1.html 403455-1.html
@@ -899,8 +899,8 @@ fails == 404123-2.html 404123-2.html
 random-if(cocoaWidget) HTTP(..) == 404149-1.xul 404149-1.xul
 == 404180-1.html 404180-1.html
 == 404301-1.html 404301-1.html
-fails == 404309-1a.html 404309-1a.html
-fails == 404309-1b.html 404309-1b.html
+== 404309-1a.html 404309-1a.html
+== 404309-1b.html 404309-1b.html
 # Disabled due to compartments for now.
 == data:application/xml,<foo/> data:application/xml,<foo/>
 fails == 404553-1.html 404553-1.html
@@ -1155,7 +1155,7 @@ fails == 440112.html 440112.html
 fails == 440149-1.html 440149-1.html
 == 441259-1.html 441259-1.html
 == 441259-2.html 441259-2.html
-fails == 442542-1.html 442542-1.html
+== 442542-1.html 442542-1.html
 fails == 444015-1.html 444015-1.html
 == 444375-1.html 444375-1.html
 fails == 444928-1.html 444928-1.html
@@ -1356,8 +1356,8 @@ fails == 485275-1.html 485275-1.html
 == 490173-2.html 490173-2.html
 == 490176-1.html 490176-1.html
 == 490177-1.svg 490177-1.svg
-fails == 490182-1a.html 490182-1a.html
-fails == 490182-1b.html 490182-1b.html
+== 490182-1a.html 490182-1a.html
+== 490182-1b.html 490182-1b.html
 pref(browser.display.focus_ring_width,1) == 491180-1.html 491180-1.html
 pref(browser.display.focus_ring_width,1) == 491180-2.html 491180-2.html
 == 491323-1.xul 491323-1.xul
@@ -1836,7 +1836,7 @@ fails == 992447.html 992447.html
 == 1021564-4.html 1021564-4.html
 pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1.html
 == 1022612-1.html 1022612-1.html
-== 1024473-1.html 1024473-1.html
+fuzzy-if(stylo,1,244) == 1024473-1.html 1024473-1.html
 == 1025914-1.html 1025914-1.html
 == 1042104-1.html 1042104-1.html
 == 1043537-1.html 1043537-1.html
@@ -1989,5 +1989,4 @@ HTTP == 652991-2.html 652991-2.html
 HTTP == 652991-3.html 652991-3.html
 fails HTTP == 652991-4.html 652991-4.html
 == 1330051.svg 1330051.svg
-
-
+== 1352464-1.html 1352464-1.html
