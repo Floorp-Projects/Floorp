@@ -255,7 +255,8 @@ bool
 mozilla::PrintfTarget::cvt_f(double d, const char* fmt0, const char* fmt1)
 {
     char fin[20];
-    char fout[300];
+    // The size is chosen such that we can print DBL_MAX.  See bug#1350097.
+    char fout[320];
     int amount = fmt1 - fmt0;
 
     MOZ_ASSERT((amount > 0) && (amount < (int)sizeof(fin)));
@@ -277,7 +278,7 @@ mozilla::PrintfTarget::cvt_f(double d, const char* fmt0, const char* fmt1)
     }
 #endif
     size_t len = SprintfLiteral(fout, fin, d);
-    MOZ_ASSERT(len <= sizeof(fout));
+    MOZ_RELEASE_ASSERT(len <= sizeof(fout));
 
     return emit(fout, len);
 }
