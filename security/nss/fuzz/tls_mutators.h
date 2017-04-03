@@ -5,19 +5,25 @@
 #ifndef tls_mutators_h__
 #define tls_mutators_h__
 
-size_t TlsMutatorDropRecord(uint8_t *data, size_t size, size_t max_size,
-                            unsigned int seed);
-size_t TlsMutatorShuffleRecords(uint8_t *data, size_t size, size_t max_size,
-                                unsigned int seed);
-size_t TlsMutatorDuplicateRecord(uint8_t *data, size_t size, size_t max_size,
-                                 unsigned int seed);
-size_t TlsMutatorTruncateRecord(uint8_t *data, size_t size, size_t max_size,
-                                unsigned int seed);
-size_t TlsMutatorFragmentRecord(uint8_t *data, size_t size, size_t max_size,
-                                unsigned int seed);
+namespace TlsMutators {
 
-size_t TlsCrossOver(const uint8_t *data1, size_t size1, const uint8_t *data2,
-                    size_t size2, uint8_t *out, size_t max_out_size,
-                    unsigned int seed);
+void SetIsDTLS();
+
+size_t DropRecord(uint8_t *data, size_t size, size_t max_size,
+                  unsigned int seed);
+size_t ShuffleRecords(uint8_t *data, size_t size, size_t max_size,
+                      unsigned int seed);
+size_t DuplicateRecord(uint8_t *data, size_t size, size_t max_size,
+                       unsigned int seed);
+size_t TruncateRecord(uint8_t *data, size_t size, size_t max_size,
+                      unsigned int seed);
+size_t FragmentRecord(uint8_t *data, size_t size, size_t max_size,
+                      unsigned int seed);
+
+size_t CrossOver(const uint8_t *data1, size_t size1, const uint8_t *data2,
+                 size_t size2, uint8_t *out, size_t max_out_size,
+                 unsigned int seed);
+
+}  // namespace TlsMutators
 
 #endif  // tls_mutators_h__
