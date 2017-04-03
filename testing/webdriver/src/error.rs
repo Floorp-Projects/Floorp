@@ -140,8 +140,8 @@ impl WebDriverError {
         }
     }
 
-    pub fn status_code(&self) -> &'static str {
-        self.error.status_code()
+    pub fn error_code(&self) -> &'static str {
+        self.error.error_code()
     }
 
     pub fn http_status(&self) -> StatusCode {
@@ -156,7 +156,7 @@ impl WebDriverError {
 impl ToJson for WebDriverError {
     fn to_json(&self) -> Json {
         let mut data = BTreeMap::new();
-        data.insert("error".into(), self.status_code().to_json());
+        data.insert("error".into(), self.error_code().to_json());
         data.insert("message".into(), self.message.to_json());
         data.insert("stacktrace".into(),
                     format!("{:?}", self.backtrace).to_json());
@@ -168,7 +168,7 @@ impl ToJson for WebDriverError {
 
 impl Error for WebDriverError {
     fn description(&self) -> &str {
-        self.status_code()
+        self.error_code()
     }
 
     fn cause(&self) -> Option<&Error> {
