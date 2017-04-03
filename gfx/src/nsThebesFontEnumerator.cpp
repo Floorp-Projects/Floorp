@@ -91,8 +91,18 @@ nsThebesFontEnumerator::GetDefaultFont(const char *aLangGroup,
                                        const char *aGeneric,
                                        char16_t **aResult)
 {
-    NS_ENSURE_ARG_POINTER(aResult);
+    if (NS_WARN_IF(!aResult) || NS_WARN_IF(!aLangGroup) ||
+        NS_WARN_IF(!aGeneric)) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
     *aResult = nullptr;
+    nsAutoString defaultFontName(gfxPlatform::GetPlatform()->
+        GetDefaultFontName(nsDependentCString(aLangGroup),
+                           nsDependentCString(aGeneric)));
+    if (!defaultFontName.IsEmpty()) {
+        *aResult = ToNewUnicode(defaultFontName);
+    }
     return NS_OK;
 }
 
