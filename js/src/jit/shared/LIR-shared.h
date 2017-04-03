@@ -1062,6 +1062,24 @@ class LNewArrayDynamicLength : public LInstructionHelper<1, 1, 1>
     }
 };
 
+class LNewArrayIterator : public LInstructionHelper<1, 0, 1>
+{
+  public:
+    LIR_HEADER(NewArrayIterator)
+
+    explicit LNewArrayIterator(const LDefinition& temp) {
+        setTemp(0, temp);
+    }
+
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+
+    MNewArrayIterator* mir() const {
+        return mir_->toNewArrayIterator();
+    }
+};
+
 class LNewTypedArray : public LInstructionHelper<1, 0, 2>
 {
   public:
