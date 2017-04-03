@@ -81,12 +81,6 @@ public:
     mRespInfo.Update(mIsMainThread, mThread);
   }
 
-  void StreamSamplesAndMarkers(ProfileBuffer* aBuffer,
-                               SpliceableJSONWriter& aWriter,
-                               const mozilla::TimeStamp& aStartTime,
-                               double aSinceTime,
-                               UniqueStacks& aUniqueStacks);
-
 private:
   bool mHasProfile;
 
@@ -106,5 +100,16 @@ private:
   // simplifies some uses of mLastSample.
   ProfileBuffer::LastSample mLastSample;
 };
+
+void
+StreamSamplesAndMarkers(const char* aName, int aThreadId,
+                        ProfileBuffer* aBuffer,
+                        SpliceableJSONWriter& aWriter,
+                        const mozilla::TimeStamp& aStartTime,
+                        double aSinceTime,
+                        JSContext* aContext,
+                        char* aSavedStreamedSamples,
+                        char* aSavedStreamedMarkers,
+                        UniqueStacks& aUniqueStacks);
 
 #endif
